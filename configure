@@ -226,7 +226,8 @@ def GetConfigurationOptions(argv):
       '--nowith_cuda', dest='with_cuda', action='store_false',
       help='Disable CUDA support.')
   parser.set_defaults(with_cuda=GuessIfCudaIsAvailable())
-  yes_no_prompts.append(('with_cuda', 'Enable CUDA support?'))
+  yes_no_prompts.append(
+      ('with_cuda', 'Enable CUDA support? (Stricly optional, not required)'))
 
   # --[no]update_git_submodules.
   parser.add_argument(
@@ -323,7 +324,7 @@ def CreateBootstrapScriptOrDie(platform):
 
   print("""
 Created bootstrap script to install system dependencies. If this is
-your first time build this code, inspect and then run the script:
+your first time building this code, inspect and then run the script:
     bash ./bootstrap.sh""")
 
 
