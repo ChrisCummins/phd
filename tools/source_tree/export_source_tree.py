@@ -342,8 +342,8 @@ def ExportToDirectoryOrDie(destination: pathlib.Path,
 def CloneRepoToDestinationOrDie(repo: github_lib.Repository,
                                 destination: pathlib.Path):
   """Clone repo from github."""
-  logging.info('Cloning from %s', repo.clone_url)
-  subprocess.check_call(['git', 'clone', repo.clone_url, str(destination)])
+  logging.info('Cloning from %s', repo.ssh_url)
+  subprocess.check_call(['git', 'clone', repo.ssh_url, str(destination)])
   # Delete everything except the .git directory. This is to enable files to be
   # removed between commits, as otherwise incremental commits would only ever
   # be additive.
