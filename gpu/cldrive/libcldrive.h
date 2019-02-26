@@ -26,7 +26,7 @@ class Cldrive {
  public:
   Cldrive(CldriveInstance* instance, const cl::Device& device);
 
-  void RunOrDie();
+  void RunOrDie(const bool streaming_csv_output = false);
 
  private:
   CldriveInstance* instance_;

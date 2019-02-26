@@ -25,6 +25,8 @@
 #include "phd/status.h"
 #include "phd/statusor.h"
 
+#include "absl/time/time.h"
+#include "absl/time/clock.h"
 #include "absl/strings/str_format.h"
 
 #define LOG_CL_ERROR(level, error)                                  \
@@ -39,9 +41,13 @@ namespace {
 // Attempt to build OpenCL program.
 phd::StatusOr<cl::Program> BuildOpenClProgram(
     const std::string& opencl_kernel, const std::vector<cl::Device>& devices) {
+  auto start_time = absl::Now();
   try {
     cl::Program program(opencl_kernel);
     program.build(devices, "-cl-kernel-arg-info");
+    auto end_time = absl::Now();
+    auto duration = (end_time - start_time) / absl::Milliseconds(1);
+    LOG(INFO) << "OpenCL program build completed in " << duration << " ms";
     return program;
   } catch (cl::Error e) {
     LOG_CL_ERROR(ERROR, e);
@@ -58,7 +64,7 @@ Cldrive::Cldrive(CldriveInstance* instance, const cl::Device& device)
         queue_(context_, /*devices=*/context_.getInfo<CL_CONTEXT_DEVICES>()[0],
                /*properties=*/CL_QUEUE_PROFILING_ENABLE) {}
 
-void Cldrive::RunOrDie() {
+void Cldrive::RunOrDie(const bool streaming_csv_output) {
   // Compile program or fail.
   phd::StatusOr<cl::Program> program_or =
       BuildOpenClProgram(string(instance_->opencl_src()),
@@ -80,7 +86,7 @@ void Cldrive::RunOrDie() {
   }
 
   for (auto& kernel : kernels) {
-    KernelDriver(context_, queue_, kernel, instance_).RunOrDie();
+    KernelDriver(context_, queue_, kernel, instance_).RunOrDie(streaming_csv_output);
   }
 
   instance_->set_outcome(CldriveInstance::PASS);

@@ -33,7 +33,7 @@ KernelDriver::KernelDriver(const cl::Context& context,
       name_(kernel.getInfo<CL_KERNEL_FUNCTION_NAME>()),
       args_set_(context, &kernel_) {}
 
-void KernelDriver::RunOrDie() {
+void KernelDriver::RunOrDie(const bool streaming_csv_output) {
   kernel_instance_->set_name(name_);
   kernel_instance_->set_work_item_local_mem_size_in_bytes(
       kernel_.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device_));
@@ -46,7 +46,7 @@ void KernelDriver::RunOrDie() {
   }
 
   for (size_t i = 0; i < instance_->dynamic_params_size(); ++i) {
-    auto run = RunDynamicParams(instance_->dynamic_params(i));
+    auto run = RunDynamicParams(instance_->dynamic_params(i), streaming_csv_output);
     if (run.ok()) {
       *kernel_instance_->add_run() = run.ValueOrDie();
     } else {
@@ -58,7 +58,7 @@ void KernelDriver::RunOrDie() {
 }
 
 phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
-    const DynamicParams& dynamic_params) {
+    const DynamicParams& dynamic_params, const bool streaming_csv_output) {
   CldriveKernelRun run;
 
   // Check that the dynamic params are within legal range.
@@ -74,8 +74,8 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   KernelArgValuesSet output_a, output_b;
 
-  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a);
-  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b);
+  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
+  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
 
   if (output_a != output_b) {
     run.clear_log();  // Remove performance logs.
@@ -84,10 +84,14 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   }
 
   bool maybe_no_output = output_a == inputs;
+  if (maybe_no_output) {
+    // LOG(INFO) << "Inputs\n" << inputs.ToString();
+    // LOG(INFO) << "Outputs\n" << inputs.ToString();
+  }
 
   CHECK(args_set_.SetRandom(dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
-  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b);
+  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
 
   if (output_a == output_b) {
     run.clear_log();  // Remove performance logs.
@@ -95,14 +99,14 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
     return run;
   }
 
-  if (maybe_no_output && output_b == inputs) {
-    run.clear_log();  // Remove performance logs.
-    run.set_outcome(CldriveKernelRun::NO_OUTPUT);
-    return run;
-  }
+  // if (maybe_no_output && output_b == inputs) {
+  //   run.clear_log();  // Remove performance logs.
+  //   run.set_outcome(CldriveKernelRun::NO_OUTPUT);
+  //   return run;
+  // }
 
   for (size_t i = 3; i < instance_->min_runs_per_kernel(); ++i) {
-    *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a);
+    *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
   }
 
   run.set_outcome(CldriveKernelRun::PASS);
@@ -111,18 +115,13 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
     const DynamicParams& dynamic_params, const KernelArgValuesSet& inputs,
-    KernelArgValuesSet* outputs) {
-  LOG(INFO) << "KernelDriver::RunOnceOrDie(" << dynamic_params.local_size_x()
-            << "," << dynamic_params.global_size_x() << ")";
+    KernelArgValuesSet* outputs, const bool streaming_csv_output) {
   gpu::libcecl::OpenClKernelInvocation log;
   ProfilingData profiling;
   cl::Event event;
 
   size_t global_size = dynamic_params.global_size_x();
   size_t local_size = dynamic_params.local_size_x();
-
-  log.set_global_size(global_size);
-  log.set_local_size(local_size);
 
   inputs.CopyToDevice(queue_, &profiling);
 
@@ -134,10 +133,17 @@ gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
 
   inputs.CopyFromDeviceToNewValueSet(queue_, outputs, &profiling);
 
-  // Set remained of run proto fields.
-  log.set_kernel_name(name_);
-  log.set_runtime_ms(profiling.elapsed_nanoseconds / 1000000.0);
-  log.set_transferred_bytes(profiling.transferred_bytes);
+  if (streaming_csv_output) {
+    std::cout << name_ << ", " << global_size << ", " << local_size << ", " << profiling.transferred_bytes
+    << ", " << profiling.elapsed_nanoseconds << std::endl;
+  } else {
+    // Set run proto fields.
+    log.set_global_size(global_size);
+    log.set_local_size(local_size);
+    log.set_kernel_name(name_);
+    log.set_runtime_ms(profiling.elapsed_nanoseconds / 1000000.0);
+    log.set_transferred_bytes(profiling.transferred_bytes);
+  }
 
   return log;
 }

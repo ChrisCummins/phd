@@ -6,10 +6,10 @@ import "gpu/clinfo/proto/clinfo.proto";
 import "gpu/libcecl/proto/libcecl.proto";
 
 message CldriveInstance {
-  required gpu.clinfo.OpenClDevice device = 1;
-  required string opencl_src = 2;
-  optional DynamicParams dynamic_params = 3;
-  required int32 min_runs_per_kernel = 4;
+  optional gpu.clinfo.OpenClDevice device = 1;
+  optional string opencl_src = 2;
+  repeated DynamicParams dynamic_params = 3;
+  optional int32 min_runs_per_kernel = 4;
   // Output fields:
 
   enum InstanceOutcome {
@@ -39,13 +39,13 @@ message CldriveKernelInstance {
 }
 
 message DynamicParams {
-  required int32 global_size_x = 1;
-  required int32 local_size_x = 2;
+  optional int32 global_size_x = 1;
+  optional int32 local_size_x = 2;
 }
 
 message CldriveKernelRun {
-  optional gpu.libcecl.OpenClKernelInvocation log = 1;
-  required KernelRunOutcome outcome = 2;
+  repeated gpu.libcecl.OpenClKernelInvocation log = 1;
+  optional KernelRunOutcome outcome = 2;
   enum KernelRunOutcome {
     UNKNOWN_ERROR = 0;
     PASS = 1;

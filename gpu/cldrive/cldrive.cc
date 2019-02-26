@@ -49,10 +49,23 @@ static bool ValidateEnv(const char* flagname, const string& value) {
 }
 DEFINE_validator(env, &ValidateEnv);
 
-DEFINE_int32(gsize, 64, "The global size to use.");
-DEFINE_int32(lsize, 32, "The local (workgroup) size.");
+DEFINE_string(output_format, "csv", "The output format. One of: {csv,pb,pbtxt}.");
+static bool ValidateOutputFormat(const char* flagname, const string& value) {
+  if (value.empty()) {
+    LOG(FATAL) << "Flag --" << flagname << " must be set";
+  }
+  if (value.compare("csv") && value.compare("pb") && value.compare("pbtxt")) {
+    LOG(FATAL) << "Illegal value for --" << flagname << ". Must be one of: "
+               << "{csv,pb,pbtxt}";
+  }
+  return true;
+}
+DEFINE_validator(output_format, &ValidateOutputFormat);
+
+DEFINE_int32(gsize, 1024, "The global size to use.");
+DEFINE_int32(lsize, 128, "The local (workgroup) size.");
 DEFINE_bool(cl_opt, true, "Whether OpenCL optimizations are enabled.");
-DEFINE_int32(num_runs, 10, "The number of runs per kernel.");
+DEFINE_int32(num_runs, 30, "The number of runs per kernel.");
 DEFINE_bool(binary_output, false, "Whether to print binary protobuf to stdout.");
 
 namespace gpu {
@@ -84,13 +97,25 @@ int main(int argc, char** argv) {
   dp->set_local_size_x(FLAGS_lsize);
   instance.set_min_runs_per_kernel(FLAGS_num_runs);
 
-  gpu::cldrive::Cldrive(&instance, device).RunOrDie();
+  bool csv = !FLAGS_output_format.compare("csv");
+  if (csv) {
+    std::cout << "Kernel Name, Global Size, Local Size, Transferred Bytes, "
+              << "Runtime (ns)\n";
+  }
 
-  if (FLAGS_binary_output) {
+  gpu::cldrive::Cldrive(&instance, device).RunOrDie(csv);
+
+  if (!FLAGS_output_format.compare("pb")) {
     instance.SerializeToOstream(&std::cout);
-  } else {
+  } else if (!FLAGS_output_format.compare("pbtxt")) {
     std::cout << "# File: //gpu/cldrive/proto/cldrive.proto\n"
               << "# Proto: gpu.cldrive.CldriveInstance\n"
               << instance.DebugString();
+  } else if (csv) {
+    // Already handled
+  } else {
+    CHECK(false) << "unreachable!";
   }
+
+  return 0;
 }

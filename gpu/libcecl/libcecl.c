@@ -461,16 +461,18 @@ cl_context CECL_CREATE_CONTEXT(cl_context_properties *properties_unused,
                                                        void *user_data),
                                void *user_data,
                                cl_int *errcode_ret) {
-  if (num_devices != 1) {
-    fprintf(stderr, "[CECL] libcecl only supports OpenCL contexts for 1 "
-            "device!");
-    exit(E_CL_FAILURE);
-  }
+    return clCreateContext(properties_unused, num_devices, unused_devices,
+        unused_pfn_notify, user_data, errcode_ret);
+  // if (num_devices != 1) {
+  //   fprintf(stderr, "[CECL] libcecl only supports OpenCL contexts for 1 "
+  //           "device!");
+  //   exit(E_CL_FAILURE);
+  // }
 
-  const cl_device_id device_id = cecGetForcedDeviceIdOrDie();
+  // const cl_device_id device_id = cecGetForcedDeviceIdOrDie();
 
-  return clCreateContext(
-      NULL, 1, &device_id, NULL, user_data, errcode_ret);
+  // return clCreateContext(
+  //     NULL, 1, &device_id, NULL, user_data, errcode_ret);
 }
 
 
@@ -495,16 +497,16 @@ cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
                                            cl_int* err) {
     cl_int local_err;
 
-    cl_device_id device_id = cecGetForcedDeviceIdOrDie();
+    // cl_device_id device_id = cecGetForcedDeviceIdOrDie();
     cl_command_queue q = clCreateCommandQueue(
-        context, device_id, props | CL_QUEUE_PROFILING_ENABLE, &local_err);
+        context, device_unused, props | CL_QUEUE_PROFILING_ENABLE, &local_err);
     if (local_err == CL_SUCCESS) {
       cl_device_type devtype;
       char devname[100];
 
-      cecl_get_device_info(device_id, CL_DEVICE_TYPE, sizeof(devtype),
+      cecl_get_device_info(device_unused, CL_DEVICE_TYPE, sizeof(devtype),
                            &devtype, NULL);
-      cecl_get_device_info(device_id, CL_DEVICE_NAME, sizeof(devname),
+      cecl_get_device_info(device_unused, CL_DEVICE_NAME, sizeof(devname),
                            devname, NULL);
 
       fprintf(stderr, "\n[CECL] clCreateCommandQueue ; ");

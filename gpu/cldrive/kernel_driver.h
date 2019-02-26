@@ -29,14 +29,14 @@ class KernelDriver {
   KernelDriver(const cl::Context& context, const cl::CommandQueue& queue,
                const cl::Kernel& kernel, CldriveInstance* instance);
 
-  void RunOrDie();
+  void RunOrDie(const bool streaming_csv_output = false);
 
   phd::StatusOr<CldriveKernelRun> RunDynamicParams(
-      const DynamicParams& dynamic_params);
+      const DynamicParams& dynamic_params, bool streaming_csv_output = false);
 
   gpu::libcecl::OpenClKernelInvocation RunOnceOrDie(
       const DynamicParams& dynamic_params, const KernelArgValuesSet& inputs,
-      KernelArgValuesSet* outputs);
+      KernelArgValuesSet* outputs, bool streaming_csv_output = false);
 
  private:
   cl::Context context_;

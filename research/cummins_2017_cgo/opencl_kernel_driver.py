@@ -16,6 +16,7 @@ from compilers.llvm import clang
 from deeplearning.deepsmith.harnesses import cldrive as cldrive_harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from gpu.cldrive.legacy import env as cldrive_env
+from gpu.cldrive.proto import cldrive_pb2
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
@@ -100,7 +101,7 @@ def Drive(opencl_kernel: str,
       device=_env.OclgrindOpenCLEnvironment().proto,
       opencl_src="""
 kernel void A(global int* a, global float* b, const int c) {
-if (get_global_id(0) < c) { 
+if (get_global_id(0) < c) {
   a[get_global_id(0)] = get_global_id(0);
   b[get_global_id(0)] *= 2.0;
 }
