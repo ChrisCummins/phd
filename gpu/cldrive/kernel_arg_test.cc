@@ -46,6 +46,13 @@ class KernelArgTest : public ::testing::Test {
   cl::Context context_;
 };
 
+TEST_F(KernelArgTest, UnsupportedType) {
+  cl::Kernel kernel = test::CreateClKernel("kernel void A(read_only image2d_t a) {}");
+
+  KernelArg arg(&kernel, 0);
+  EXPECT_FALSE(arg.Init().ok());
+}
+
 TEST_F(KernelArgTest, GlobalPointerIsGlobal) {
   cl::Kernel kernel = test::CreateClKernel("kernel void A(global int* a) {}");
 
