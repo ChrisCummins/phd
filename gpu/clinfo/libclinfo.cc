@@ -370,6 +370,7 @@ cl::Device GetOpenClDeviceOrDie(const ::gpu::clinfo::OpenClDevice& device) {
     return GetOpenClDevice(device);
   } catch (std::invalid_argument e) {
     LOG(FATAL) << "Could not find device '" << device.name() << "'";
+    abort();  // Unreachable since LOG(FATAL) terminates.
   }
 }
 
@@ -390,6 +391,7 @@ cl::Device GetOpenClDeviceOrDie(const string& name) {
     return GetOpenClDevice(name);
   } catch (std::invalid_argument e) {
     LOG(FATAL) << "Could not find device '" << name << "'";
+    abort();  // Unreachable since LOG(FATAL) terminates.
   }
 }
 
