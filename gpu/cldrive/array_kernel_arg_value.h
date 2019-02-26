@@ -16,10 +16,10 @@
 #pragma once
 
 #include "gpu/cldrive/kernel_arg_value.h"
+#include "gpu/cldrive/opencl_type.h"
 
 #include "third_party/opencl/cl.hpp"
 
-#include "opencl_type.h"
 #include "phd/logging.h"
 #include "phd/string.h"
 
@@ -27,11 +27,11 @@ namespace gpu {
 namespace cldrive {
 
 // An array argument.
+template <typename T>
 class ArrayKernelArgValue : public KernelArgValue {
  public:
   template <typename... Args>
-  ArrayKernelArgValue(const OpenClType &type, size_t size, Args &&... args)
-      : KernelArgValue(type), vector_(size, args...) {}
+  ArrayKernelArgValue(size_t size, Args &&... args) : vector_(size, args...) {}
 
   virtual bool operator==(const KernelArgValue *const rhs) const override {
     auto array_ptr = dynamic_cast<const ArrayKernelArgValue *const>(rhs);
@@ -44,7 +44,7 @@ class ArrayKernelArgValue : public KernelArgValue {
     }
 
     for (size_t i = 0; i < vector().size(); ++i) {
-      if (!type().ElementsAreEqual(vector()[i], array_ptr->vector()[i])) {
+      if (!opencl_type::Equal(vector()[i], array_ptr->vector()[i])) {
         return false;
       }
     }
@@ -56,9 +56,9 @@ class ArrayKernelArgValue : public KernelArgValue {
     return !(*this == rhs);
   }
 
-  std::vector<Scalar> &vector() { return vector_; }
+  std::vector<T> &vector() { return vector_; }
 
-  const std::vector<Scalar> &vector() const { return vector_; }
+  const std::vector<T> &vector() const { return vector_; }
 
   size_t size() const { return vector().size(); }
 
@@ -80,26 +80,26 @@ class ArrayKernelArgValue : public KernelArgValue {
   virtual string ToString() const override {
     string s = "";
     for (auto &value : vector()) {
-      absl::StrAppend(&s, type().FormatToString(value));
+      absl::StrAppend(&s, opencl_type::ToString(value));
       absl::StrAppend(&s, ",");
     }
     return s;
   };
 
  protected:
-  std::vector<Scalar> vector_;
+  std::vector<T> vector_;
 };
 
 // An array value with a device-side buffer.
-class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue {
+template <typename T>
+class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue<T> {
  public:
   template <typename... Args>
-  ArrayKernelArgValueWithBuffer(const OpenClType &type,
-                                const cl::Context &context, size_t size,
+  ArrayKernelArgValueWithBuffer(const cl::Context &context, size_t size,
                                 Args &&... args)
-      : ArrayKernelArgValue(type, size, args...),
+      : ArrayKernelArgValue<T>(size, args...),
         buffer_(context, /*flags=*/CL_MEM_READ_WRITE,
-                /*size=*/type.ElementSize() * size) {}
+                /*size=*/sizeof(T) * size) {}
 
   cl::Buffer &buffer() { return buffer_; }
 
@@ -115,7 +115,7 @@ class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue {
 
   virtual std::unique_ptr<KernelArgValue> CopyFromDevice(
       const cl::CommandQueue &queue, ProfilingData *profiling) override {
-    auto new_arg = std::make_unique<ArrayKernelArgValue>(type(), this->size());
+    auto new_arg = std::make_unique<ArrayKernelArgValue<T>>(this->size());
     CopyDeviceToHost(queue, buffer(), new_arg->vector().begin(),
                      new_arg->vector().end(), profiling);
     return std::move(new_arg);

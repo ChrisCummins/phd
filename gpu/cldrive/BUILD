@@ -158,6 +158,18 @@ cc_test(
 )
 
 cc_library(
+    name = "kernel_arg_util",
+    srcs = ["kernel_arg_util.cc"],
+    hdrs = ["kernel_arg_util.h"],
+    deps = [
+        ":array_kernel_arg_value",
+        ":kernel_arg_value",
+        ":scalar_kernel_arg_value",
+        "//third_party/opencl",
+    ],
+)
+
+cc_library(
     name = "kernel_arg_value",
     srcs = ["kernel_arg_value.cc"],
     hdrs = ["kernel_arg_value.h"],

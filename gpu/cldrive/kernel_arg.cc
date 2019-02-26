@@ -80,13 +80,14 @@ phd::Status KernelArg::Init() {
 
 namespace {
 
+template <typename T>
 std::unique_ptr<KernelArgValue> CreateArrayArgValue(const OpenClType& type,
                                                     size_t size,
                                                     const cl::Context& context,
                                                     int value,
                                                     bool rand_values) {
   auto arg_value = std::make_unique<ArrayKernelArgValueWithBuffer>(
-      type, context, size, /*value=*/type.Create(value));
+      type, context, size, /*value=*/CreateScalar(value));
   if (rand_values) {
     for (size_t i = 0; i < size; ++i) {
       arg_value->vector()[i] = type.Create(rand());
@@ -107,7 +108,8 @@ std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
 
 std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
     const cl::Context& context, const DynamicParams& dynamic_params,
-    bool rand_values) const {
+    bool rand_values) -
+{
   CHECK(type().type_num() != OpenClTypeEnum::DEFAULT_UNKNOWN)
       << "Init() not called";
   if (IsPointer() && IsGlobal()) {

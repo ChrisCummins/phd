@@ -32,8 +32,6 @@ namespace cldrive {
 // Abstract base class.
 class KernelArgValue {
  public:
-  explicit KernelArgValue(const OpenClType &type) : type_(type){};
-
   virtual ~KernelArgValue(){};
 
   virtual void CopyToDevice(const cl::CommandQueue &queue,
@@ -49,12 +47,6 @@ class KernelArgValue {
   virtual bool operator!=(const KernelArgValue *const rhs) const = 0;
 
   virtual string ToString() const = 0;
-
- protected:
-  const OpenClType &type() const { return type_; }
-
- private:
-  OpenClType type_;
 };
 
 }  // namespace cldrive

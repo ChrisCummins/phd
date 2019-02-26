@@ -1,20 +1,15 @@
 #pragma once
 
-#include <cstdlib>
-
-#include "phd/logging.h"
+#include "absl/strings/str_cat.h"
 #include "phd/statusor.h"
 #include "phd/string.h"
 #include "third_party/opencl/cl.hpp"
-
-#include "absl/strings/str_cat.h"
-#include "boost/variant.hpp"
 
 namespace gpu {
 namespace cldrive {
 
 // The list of supported OpenCL types.
-enum OpenClTypeEnum {
+enum OpenClType {
   DEFAULT_UNKNOWN,  // Used as default constructor value.
   // Scalar data types. See:
   // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
@@ -89,78 +84,28 @@ enum OpenClTypeEnum {
   HALF16
 };
 
-using Scalar =
-    boost::variant<cl_bool, cl_char, cl_uchar, cl_short, cl_ushort, cl_int,
-                   cl_uint, cl_long, cl_ulong, cl_float, cl_double, cl_half>;
-using Array = std::vector<Scalar>;
+phd::StatusOr<OpenClType> OpenClTypeFromString(const string& type_name);
 
-class OpenClType {
- public:
-  OpenClType() : type_num_(OpenClTypeEnum::DEFAULT_UNKNOWN){};
+namespace opencl_type {
 
-  explicit OpenClType(const OpenClTypeEnum& type_num) : type_num_(type_num){};
-
-  bool ElementsAreEqual(const Scalar& lhs, const Scalar& rhs) const {
-    switch (type_num()) {
-      case OpenClTypeEnum::INT: {
-        const cl_int* left = boost::get<cl_int>(&lhs);
-        const cl_int* right = boost::get<cl_int>(&rhs);
-        DCHECK(left);
-        DCHECK(right);
-        return *left == *right;
-      }
-      case OpenClTypeEnum::FLOAT: {
-        const cl_float* left = boost::get<cl_float>(&lhs);
-        const cl_float* right = boost::get<cl_float>(&rhs);
-        DCHECK(left);
-        DCHECK(right);
-        return *left == *right;
-      }
-    }
-  }
-
-  string FormatToString(const Scalar& value) const {
-    string s = "";
-    switch (type_num()) {
-      case OpenClTypeEnum::INT: {
-        absl::StrAppend(&s, *boost::get<cl_int>(&value));
-        break;
-      }
-      case OpenClTypeEnum::FLOAT: {
-        absl::StrAppend(&s, *boost::get<cl_float>(&value));
-        break;
-      }
-    }
-    DCHECK(s.size());
-    return s;
-  }
-
-  Scalar Create(const int& value) const {
-    switch (type_num()) {
-      case OpenClTypeEnum::INT:
-        return static_cast<cl_int>(value);
-      case OpenClTypeEnum::FLOAT:
-        return static_cast<cl_float>(value);
-    }
-  }
-
-  size_t ElementSize() const {
-    switch (type_num()) {
-      case OpenClTypeEnum::INT:
-        return sizeof(cl_int);
-      case OpenClTypeEnum::FLOAT:
-        return sizeof(cl_float);
-    }
-    return -1;
-  }
-
-  const OpenClTypeEnum& type_num() const { return type_num_; }
-
-  static phd::StatusOr<OpenClType> FromString(const string& type_name);
-
- private:
-  OpenClTypeEnum type_num_;
+template <typename T, typename U>
+bool Equal(const T& left, const U& right) {
+  return false;
 };
+
+template <typename T>
+bool Equal(const T& left, const T& right) {
+  return left == right;
+};
+
+template <typename T>
+string ToString(const T& t) {
+  string s = "";
+  absl::StrAppend(&s, t);
+  return s;
+}
+
+}  // namespace opencl_type
 
 }  // namespace cldrive
 }  // namespace gpu
