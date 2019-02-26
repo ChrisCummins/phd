@@ -1,16 +1,14 @@
 // Protocol buffers used for organizing mass-clones of GitHub repos.
-
 syntax = "proto2";
-
 package scrape_repos;
 
-option java_outer_classname = "ScrapeReposProtos";
 option java_package = "datasets.github.scrape_repos";
+option java_outer_classname = "ScrapeReposProtos";
 
 // The schema for "clone lists", which are used to determine the GitHub queries
 // to run and repos to clone.
 message LanguageCloneList {
-  optional LanguageToClone language = 1;
+  repeated LanguageToClone language = 1;
 }
 
 // A single programming language to clone repositories of.
@@ -20,12 +18,12 @@ message LanguageToClone {
   // searched in the order they appear, until num_repos_to_clone repositories
   // have been cloned. For parameters, see the GitHub API docs:
   // https://developer.github.com/v3/search/#search-repositories
-  optional GitHubRepositoryQuery query = 2;
+  repeated GitHubRepositoryQuery query = 2;
   // The base directory to clone GitHub repositories to.
   optional string destination_directory = 3;
   // The configuration for the program which imports source code from cloned
   // repositories into contentfile databases.
-  optional ContentFilesImporterConfig importer = 6;
+  repeated ContentFilesImporterConfig importer = 6;
 }
 
 // A GitHub query to search for repositories.
@@ -49,7 +47,7 @@ message ContentFilesImporterConfig {
   optional string source_code_pattern = 1;
   // A list of preprocessor passes to run on each imported source code, in the
   // order in which they should be executed.
-  optional string preprocessor = 2;
+  repeated string preprocessor = 2;
 }
 
 // The "metafile" schema. Each repository which is scraped produces one of these
@@ -75,8 +73,8 @@ message ImportWorker {
   optional string clone_from_url = 1;
   optional string clone_dir = 2;
   optional string abspath = 3;
-  optional string all_files_relpaths = 4;
-  optional string preprocessors = 5;
+  repeated string all_files_relpaths = 4;
+  repeated string preprocessors = 5;
   optional string index_dir = 6;
 }
 
@@ -94,5 +92,5 @@ message ContentFile {
 // Used by JavaMethodsExtractor to extract a list of methods from an input
 // source.
 message MethodsList {
-  optional string method = 1;
+  repeated string method = 1;
 }

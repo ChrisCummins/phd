@@ -1,15 +1,14 @@
 // A Harness executes testcases.
 
 syntax = "proto2";
-
 package deepsmith;
 
 import "deeplearning/deepsmith/proto/deepsmith.proto";
 import "deeplearning/deepsmith/proto/service.proto";
 
 service HarnessService {
-  rpc GetHarnessCapabilities(GetHarnessCapabilitiesRequest) returns (GetHarnessCapabilitiesResponse);
-  rpc RunTestcases(RunTestcasesRequest) returns (RunTestcasesResponse);
+  rpc GetHarnessCapabilities (GetHarnessCapabilitiesRequest) returns (GetHarnessCapabilitiesResponse);
+  rpc RunTestcases (RunTestcasesRequest) returns (RunTestcasesResponse);
 }
 
 message GetHarnessCapabilitiesRequest {
@@ -19,18 +18,18 @@ message GetHarnessCapabilitiesRequest {
 message GetHarnessCapabilitiesResponse {
   optional ServiceStatus status = 1;
   optional Harness harness = 2;
-  optional Testbed testbed = 3;
+  repeated Testbed testbed = 3;
 }
 
 message RunTestcasesRequest {
   optional ServiceStatus status = 1;
   optional Testbed testbed = 2;
-  optional Testcase testcases = 3;
+  repeated Testcase testcases = 3;
 }
 
 message RunTestcasesResponse {
   optional ServiceStatus status = 1;
-  optional Result results = 2;
+  repeated Result results = 2;
 }
 
 // A harness which passes a source code input to a compiler.
@@ -48,14 +47,14 @@ message CldriveHarness {
   // A list of OpenCL environments to run test cases on.
   // Use `//gpu/cldrive --ls_env` to list the available environments.
   // If no environments are specified, all available environments will be used.
-  optional string opencl_env = 2;
+  repeated string opencl_env = 2;
   // A list of bools determining whether OpenCL optimizations should be enabled
   // for the corresponding opencl_env.
-  optional bool opencl_opt = 3;
+  repeated bool opencl_opt = 3;
   // A list of additional command line options to pass to the compiler during
   // compilation of C harness programs. These flags are appended to the existing
   // command line.
-  optional string driver_cflag = 4;
+  repeated string driver_cflag = 4;
 }
 
 // A harness which uses cldrive to run testcases.
@@ -64,11 +63,11 @@ message ClLauncherHarness {
   // A list of OpenCL environments to run test cases on.
   // Use `//gpu/cldrive --ls_env` to list the available environments.
   // If no environments are specified, all available environments will be used.
-  optional string opencl_env = 2;
+  repeated string opencl_env = 2;
   // A list of bools determining whether OpenCL optimizations should be enabled
   // for the corresponding opencl_env.
-  optional bool opencl_opt = 3;
+  repeated bool opencl_opt = 3;
   // A list of additional command line options to pass to cl_launcher. These
   // flags are appended to the existing command line.
-  optional string opts = 4;
+  repeated string opts = 4;
 }

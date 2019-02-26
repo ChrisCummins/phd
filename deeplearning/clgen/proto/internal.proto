@@ -16,11 +16,10 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
-
 package clgen;
 
-option java_outer_classname = "InternalProtos";
 option java_package = "deeplearning.clgen";
+option java_outer_classname = "InternalProtos";
 
 import "deeplearning/clgen/proto/corpus.proto";
 import "deeplearning/clgen/proto/model.proto";
@@ -50,7 +49,7 @@ message SamplerMeta {
 message PreprocessorWorkerJob {
   optional string contentfile_id = 1;
   optional string src = 2;
-  optional string preprocessors = 3;
+  repeated string preprocessors = 3;
 }
 
 // The output of a preprocessor worker.
@@ -59,16 +58,19 @@ message PreprocessorWorkerJobOutcome {
     OK = 0;
     FAIL = 1;
   }
+
   optional string contentfile_id = 1;
   optional string contents = 2;
   optional Status status = 3;
 }
 
+
 message PreprocessorWorker {
   optional string contentfile_root = 1;
   optional string relpath = 2;
-  optional string preprocessors = 3;
+  repeated string preprocessors = 3;
 }
+
 
 message EncoderWorker {
   optional int64 id = 1;
@@ -77,11 +79,13 @@ message EncoderWorker {
   optional bytes pickled_atomizer = 5;
 }
 
+
 message JavaRewriterJob {
   enum Status {
     OK = 0;
     FAIL = 1;
   }
+
   // The path of the source file.
   optional string file_path = 1;
   // The string source code.

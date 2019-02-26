@@ -1,5 +1,4 @@
 // Protos for testing.
-
 syntax = "proto2";
 
 message AddXandY {

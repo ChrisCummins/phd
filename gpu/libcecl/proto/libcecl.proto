@@ -14,12 +14,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
-
 syntax = "proto2";
 
-package gpu.libcecl;
-
 import "gpu/clinfo/proto/clinfo.proto";
+
+package gpu.libcecl;
 
 // Recording of a libcecl executable execution.
 message LibceclExecutableRun {
@@ -29,9 +28,9 @@ message LibceclExecutableRun {
   required string stdout = 7;
   required string stderr = 8;
   required gpu.clinfo.OpenClDevice device = 9;
-  optional OpenClKernelInvocation kernel_invocation = 11;
+  repeated OpenClKernelInvocation kernel_invocation = 11;
   required int64 elapsed_time_ms = 12;
-  optional string opencl_program_source = 13;
+  repeated string opencl_program_source = 13;
 }
 
 // A single kernel invocation event.

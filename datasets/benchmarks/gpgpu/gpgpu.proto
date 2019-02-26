@@ -1,8 +1,8 @@
 syntax = "proto2";
 
-package datasets.benchmarks.gpgpu;
-
 import "gpu/libcecl/proto/libcecl.proto";
+
+package datasets.benchmarks.gpgpu;
 
 // Recording of a single GPGPU benchmark execution.
 message GpgpuBenchmarkRun {
@@ -12,3 +12,4 @@ message GpgpuBenchmarkRun {
   required string hostname = 4;
   required gpu.libcecl.LibceclExecutableRun run = 5;
 }
+

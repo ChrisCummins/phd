@@ -22,7 +22,6 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
-
 package clgen;
 
 option java_package = "deeplearning.clgen";
@@ -42,7 +41,7 @@ message Sampler {
   // which they will be executed. Duplicates are allowed, for example if you
   // would like to have symmetrical token depth counters for two pairs of
   // tokens.
-  optional SampleTerminationCriterion termination_criteria = 4;
+  repeated SampleTerminationCriterion termination_criteria = 4;
 }
 
 // Criteria used for determining when to stop sampling.

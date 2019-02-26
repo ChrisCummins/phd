@@ -30,7 +30,7 @@ package me;
 // A container for Series messages. The series contained in this message do not
 // need to be related.
 message SeriesCollection {
-  optional Series series = 1;
+  repeated Series series = 1;
   // An optional field used to track the source of the collection of series.
   // This is purely optional, and is not imported into the database. It's main
   // use is to simplify the interface to data importing "worker" jobs. A worker
@@ -52,7 +52,7 @@ message Series {
   // a series.
   required string unit = 3;
   // The measurements within the series.
-  optional Measurement measurement = 4;
+  repeated Measurement measurement = 4;
 }
 
 // A single data point as aggregated from some third party data source. This

@@ -36,7 +36,6 @@ def WhichOrDie(name):
 BUILDIFIER = WhichOrDie('buildifier')
 CLANG_FORMAT = WhichOrDie('clang-format')
 YAPF = WhichOrDie('yapf')
-PROTOTOOL = WhichOrDie('prototool')
 
 YAPF_RC = os.path.join(_PHD_ROOT, 'tools/code_style/yapf.yml')
 assert os.path.isfile(YAPF_RC)
@@ -145,26 +144,14 @@ class YapfThread(LinterThread):
     ExecOrDie([YAPF, '--style', YAPF_RC, '-i'] + self._paths)
 
 
-class PrototoolThread(LinterThread):
-
-  def __init__(self, paths):
-    super(PrototoolThread, self).__init__(paths)
-
-  def run(self):
-    for path in self._paths:
-      ExecOrDie([PROTOTOOL, 'format', '-w', path])
-
-
 class LinterActions(object):
 
   def __init__(self, paths):
     self._paths = paths
-    self._modified_paths = []
-
     self._buildifier = []
     self._clang_format = []
     self._yapf = []
-    self._prototool = []
+    self._modified_paths = []
 
     for path in paths:
       basename = os.path.basename(path)
@@ -177,8 +164,6 @@ class LinterActions(object):
         self._clang_format.append(path)
       elif extension == '.py':
         self._yapf.append(path)
-      elif extension == '.proto':
-        self._prototool.append(path)
 
   @property
   def paths(self):
@@ -186,7 +171,7 @@ class LinterActions(object):
 
   @property
   def paths_with_actions(self):
-    return self._buildifier + self._clang_format + self._yapf + self._prototool
+    return self._buildifier + self._clang_format + self._yapf
 
   @property
   def modified_paths(self):
@@ -201,8 +186,6 @@ class LinterActions(object):
       linter_threads.append(ClangFormatThread(self._clang_format))
     if self._yapf:
       linter_threads.append(YapfThread(self._yapf))
-    if self._prototool:
-      linter_threads.append(PrototoolThread(self._prototool))
 
     for thread in linter_threads:
       thread.start()

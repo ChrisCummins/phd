@@ -16,7 +16,6 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
-
 package clgen;
 
 import "deeplearning/clgen/proto/model.proto";
@@ -42,5 +41,5 @@ message Instance {
 
 // A collection of instances.
 message Instances {
-  optional Instance instance = 1;
+  repeated Instance instance = 1;
 }

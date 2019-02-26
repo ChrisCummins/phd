@@ -22,7 +22,6 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
 syntax = "proto2";
-
 package clgen;
 
 option java_package = "deeplearning.clgen";
@@ -42,11 +41,13 @@ message NetworkArchitecture {
     TENSORFLOW = 0;
     KERAS = 1;
   }
+
   enum NeuronType {
     LSTM = 0;
     RNN = 1;
     GRU = 2;
   }
+
   optional Backend backend = 1;
   // The size of the input embedding layer. Only required if backend == KERAS.
   // Must be > 0.
@@ -81,7 +82,7 @@ message TrainingOptions {
   oneof optimizer {
     AdamOptimizer adam_optimizer = 10;
     RmsPropOptimizer rmsprop_optimizer = 11;
-  }
+  };
 }
 
 // The field name suffix '_micros' shows that the value contained in the field

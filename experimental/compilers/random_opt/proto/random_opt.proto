@@ -6,18 +6,19 @@ package phd.experimental.compilers.random_opt;
 
 // A random optimization environment.
 message Environment {
-  //
+  /////////////////////////////////////////////////////////////////////////////
   // TARGET PROGRAM:
 
   // A list of input sources to compile into LLVM bitcode files, which will be
   // linked to produce a single bytecode target.
-  optional string input_src = 1;
+  repeated string input_src = 1;
   // A list of additional flags to pass to clang when producing bitcode files
   // from input sources.
-  optional string copt = 2;
+  repeated string copt = 2;
   // A list of additional flags to pass to llvm-link when linking bitcode files
   // to produce a bytecode target.
-  optional string linkopt = 3;
+  repeated string linkopt = 3;
+
   // Target program execution:
   // Each of these fields is a string passed to `bash -c`. The following make
   // variables are substituted: $@ is the compiled target binary, $< is the
@@ -34,12 +35,13 @@ message Environment {
   // command should return a non-zero returncode if the binary is not behaving
   // correctly.
   optional string eval_cmd = 7;
-  //
+
+  /////////////////////////////////////////////////////////////////////////////
   // ACTION AND OBSERVATION SPACE:
 
   // The list of candidate opt passes to run. This specifies the action space
   // of the reinforcement learning environment.
-  optional string candidate_pass = 8;
+  repeated string candidate_pass = 8;
 }
 
 // A single reinforcement learning step.
@@ -48,27 +50,32 @@ message Step {
   optional int64 start_time_epoch_ms = 1;
   // The total number of milliseconds during step execution.
   optional int32 total_step_runtime_ms = 2;
+
   // The input LLVM bytecode source.
   optional string input_src = 3;
   // The names of opt passes run during the step.
-  optional string opt_pass = 4;
+  repeated string opt_pass = 4;
+
   enum Status {
     PASS = 0;
     OPT_FAILED = 1;
     COMPILE_FAILED = 2;
     EXEC_FAILED = 3;
     EVAL_FAILED = 4;
-  }
+  };
   optional Status status = 5;
   // An optional message providing additional information about non-PASS
   // statuses.
   optional string status_msg = 6;
+
   // Whether the bytecode and binary have changed since the last step,
   // respectively.
   optional bool bytecode_changed = 8;
   optional bool binary_changed = 9;
+
   // The runtimes of the binary.
-  optional int32 binary_runtime_ms = 10;
+  repeated int32 binary_runtime_ms = 10;
+
   optional float reward = 11;
   optional float total_reward = 12;
   optional float speedup = 13;
@@ -77,12 +84,12 @@ message Step {
 
 // An episode is a sequence of steps.
 message Episode {
-  optional Step step = 1;
+  repeated Step step = 1;
 }
 
 message Experiment {
   optional Environment env = 1;
-  optional Episode episode = 2;
+  repeated Episode episode = 2;
 }
 
 // Delayed reward enviornment.
@@ -106,23 +113,23 @@ message DelayedRewardStep {
 // An episode for delayed-reward random opt.
 message DelayedRewardEpisode {
   // The sequence of steps for the episode.
-  optional DelayedRewardStep step = 1;
+  repeated DelayedRewardStep step = 1;
   // The outcome of the episode.
   enum Outcome {
     PASS = 0;
     COMPILE_FAILED = 1;
     EXEC_FAILED = 2;
     EVAL_FAILED = 3;
-  }
+  };
   optional Outcome outcome = 2;
   // An optional message providing additional information about non-PASS
   // statuses.
   optional string outcome_error_msg = 3;
   // The runtimes of the binary. These are produced at the endo f the
-  optional int32 binary_runtime_ms = 4;
+  repeated int32 binary_runtime_ms = 4;
 }
 
 message DelayedRewardExperiment {
   optional Environment env = 1;
-  optional DelayedRewardEpisode episode = 2;
+  repeated DelayedRewardEpisode episode = 2;
 }

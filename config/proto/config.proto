@@ -1,5 +1,4 @@
 // Global configuration options for this repository.
-
 syntax = "proto2";
 
 package phd;

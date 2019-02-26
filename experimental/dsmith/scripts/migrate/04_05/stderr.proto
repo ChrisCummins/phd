@@ -1,6 +1,6 @@
 syntax = "proto2";
-
 package dsmith;
+
 
 message Stderr {
   optional int32 id = 1;
@@ -14,6 +14,7 @@ message Stderr {
   optional string stderr = 9;
 }
 
+
 message Stderrs {
-  optional Stderr stderrs = 1;
+  repeated Stderr stderrs = 1;
 }

@@ -1,39 +1,44 @@
 syntax = "proto2";
 
-package gpu.cldrive;
-
 import "gpu/clinfo/proto/clinfo.proto";
 import "gpu/libcecl/proto/libcecl.proto";
+
+package gpu.cldrive;
+
 
 message CldriveInstance {
   optional gpu.clinfo.OpenClDevice device = 1;
   optional string opencl_src = 2;
   repeated DynamicParams dynamic_params = 3;
   optional int32 min_runs_per_kernel = 4;
+
   // Output fields:
 
   enum InstanceOutcome {
-    UNKNOWN_ERROR = 0; // Default value is an error.
+    UNKNOWN_ERROR = 0;  // Default value is an error.
     PASS = 1;
     PROGRAM_COMPILATION_FAILURE = 2;
     NO_KERNELS_IN_PROGRAM = 3;
   }
   optional InstanceOutcome outcome = 5;
-  optional CldriveKernelInstance kernel = 6;
+  repeated CldriveKernelInstance kernel = 6;
 }
 
 message CldriveKernelInstance {
-  optional CldriveKernelRun run = 1;
+  repeated CldriveKernelRun run = 1;
+
   // Per-work-item memory requirements of the kernel.
   optional string name = 2;
+
   enum KernelInstanceOutcome {
-    UNKNOWN_ERROR = 0; // Default value is an error.
+    UNKNOWN_ERROR = 0;  // Default value is an error.
     PASS = 1;
     NO_ARGUMENTS = 2;
     NO_MUTABLE_ARGUMENTS = 3;
     UNSUPPORTED_ARGUMENTS = 4;
   }
   optional KernelInstanceOutcome outcome = 3;
+
   optional int64 work_item_local_mem_size_in_bytes = 4;
   optional int64 work_item_private_mem_size_in_bytes = 5;
 }
@@ -46,6 +51,7 @@ message DynamicParams {
 message CldriveKernelRun {
   repeated gpu.libcecl.OpenClKernelInvocation log = 1;
   optional KernelRunOutcome outcome = 2;
+
   enum KernelRunOutcome {
     UNKNOWN_ERROR = 0;
     PASS = 1;

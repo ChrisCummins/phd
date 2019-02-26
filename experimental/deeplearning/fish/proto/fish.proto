@@ -1,7 +1,6 @@
 // Protos for project fish.
 
 syntax = "proto2";
-
 package experimental.fish;
 
 message CompilerCrashDiscriminatorTrainingExample {
@@ -11,6 +10,7 @@ message CompilerCrashDiscriminatorTrainingExample {
     BUILD_TIMEOUT = 3;
     PASS = 6;
   }
+
   optional string src = 1;
   optional Outcome outcome = 2;
   optional bool raised_assertion = 3;
@@ -22,6 +22,7 @@ message DiscriminatorDatapoint {
     NEGATIVE = 0;
     POSITIVE = 1;
   }
+
   optional string input = 1;
   optional Class label = 2;
 }
