@@ -47,6 +47,10 @@ cc_library(
 cc_test(
     name = "array_kernel_arg_value_test",
     srcs = ["array_kernel_arg_value_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":array_kernel_arg_value",
         "//phd:test",
@@ -56,15 +60,15 @@ cc_test(
     }),
 )
 
-py_binary(
+cc_binary(
     name = "cldrive",
-    srcs = ["cldrive.py"],
-    visibility = ["//visibility:public"],
+    srcs = ["cldrive.cc"],
     deps = [
-        ":api",
-        "//gpu/cldrive/legacy:env",
-        "//gpu/cldrive/proto:cldrive_py_pb2",
-        "//third_party/py/absl",
+        ":libcldrive",
+        "//gpu/clinfo:libclinfo",
+        "//phd:logging",
+        "@boost//:filesystem",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -87,6 +91,10 @@ cc_library(
 cc_test(
     name = "kernel_arg_test",
     srcs = ["kernel_arg_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":array_kernel_arg_value",
         ":kernel_arg",
@@ -118,6 +126,10 @@ cc_library(
 cc_test(
     name = "kernel_arg_set_test",
     srcs = ["kernel_arg_set_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":kernel_arg_set",
         "//phd:test",
@@ -145,6 +157,10 @@ cc_library(
 cc_test(
     name = "kernel_arg_values_test",
     srcs = ["kernel_arg_values_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":kernel_arg_value",
         "//phd:port",
@@ -171,6 +187,10 @@ cc_library(
 cc_test(
     name = "kernel_arg_values_set_test",
     srcs = ["kernel_arg_values_set_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":kernel_arg_values_set",
         "//phd:test",
@@ -198,6 +218,10 @@ cc_library(
 cc_test(
     name = "kernel_driver_test",
     srcs = ["kernel_driver_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":kernel_driver",
         "//phd:test",
@@ -231,6 +255,10 @@ cc_library(
 cc_test(
     name = "libcldrive_test",
     srcs = ["libcldrive_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":libcldrive",
         "//phd:test",
@@ -262,6 +290,10 @@ cc_library(
 cc_test(
     name = "opencl_util_test",
     srcs = ["opencl_util_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":opencl_util",
         "//phd:test",
@@ -284,6 +316,10 @@ cc_library(
 cc_test(
     name = "profiling_data_test",
     srcs = ["profiling_data_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":profiling_data",
         "//phd:test",
@@ -308,6 +344,10 @@ cc_library(
 cc_test(
     name = "scalar_kernel_arg_value_test",
     srcs = ["scalar_kernel_arg_value_test.cc"],
+    linkopts = ["-ldl"] + select({
+        "//:darwin": ["-framework OpenCL"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":scalar_kernel_arg_value",
         "//phd:test",

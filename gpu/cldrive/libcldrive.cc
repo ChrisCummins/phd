@@ -26,7 +26,6 @@
 #include "phd/statusor.h"
 
 #include "absl/strings/str_format.h"
-#include "third_party/opencl/cl.hpp"
 
 #define LOG_CL_ERROR(level, error)                                  \
   LOG(level) << "OpenCL exception: " << error.what() << ", error: " \
@@ -52,53 +51,46 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(
 
 }  // namespace
 
-class Cldrive {
- public:
-  explicit Cldrive(CldriveInstance* instance)
+Cldrive::Cldrive(CldriveInstance* instance, const cl::Device& device)
       : instance_(instance),
-        device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device())),
+        device_(device),
         context_(device_),
         queue_(context_, /*devices=*/context_.getInfo<CL_CONTEXT_DEVICES>()[0],
                /*properties=*/CL_QUEUE_PROFILING_ENABLE) {}
 
-  void RunOrDie() {
-    // Compile program or fail.
-    phd::StatusOr<cl::Program> program_or =
-        BuildOpenClProgram(string(instance_->opencl_src()),
-                           context_.getInfo<CL_CONTEXT_DEVICES>());
-    if (!program_or.ok()) {
-      LOG(ERROR) << "OpenCL program compilation failed!";
-      instance_->set_outcome(CldriveInstance::PROGRAM_COMPILATION_FAILURE);
-      return;
-    }
-    cl::Program program = program_or.ValueOrDie();
+void Cldrive::RunOrDie() {
+  // Compile program or fail.
+  phd::StatusOr<cl::Program> program_or =
+      BuildOpenClProgram(string(instance_->opencl_src()),
+                         context_.getInfo<CL_CONTEXT_DEVICES>());
+  if (!program_or.ok()) {
+    LOG(ERROR) << "OpenCL program compilation failed!";
+    instance_->set_outcome(CldriveInstance::PROGRAM_COMPILATION_FAILURE);
+    return;
+  }
+  cl::Program program = program_or.ValueOrDie();
 
-    std::vector<cl::Kernel> kernels;
-    program.createKernels(&kernels);
+  std::vector<cl::Kernel> kernels;
+  program.createKernels(&kernels);
 
-    if (!kernels.size()) {
-      LOG(ERROR) << "OpenCL program contains no kernels!";
-      instance_->set_outcome(CldriveInstance::NO_KERNELS_IN_PROGRAM);
-      return;
-    }
+  if (!kernels.size()) {
+    LOG(ERROR) << "OpenCL program contains no kernels!";
+    instance_->set_outcome(CldriveInstance::NO_KERNELS_IN_PROGRAM);
+    return;
+  }
 
-    for (auto& kernel : kernels) {
-      KernelDriver(context_, queue_, kernel, instance_).RunOrDie();
-    }
+  for (auto& kernel : kernels) {
+    KernelDriver(context_, queue_, kernel, instance_).RunOrDie();
+  }
 
-    instance_->set_outcome(CldriveInstance::PASS);
-  };
+  instance_->set_outcome(CldriveInstance::PASS);
+}
 
- private:
-  CldriveInstance* instance_;
-  cl::Device device_;
-  cl::Context context_;
-  cl::CommandQueue queue_;
-};
 
 void ProcessCldriveInstanceOrDie(CldriveInstance* instance) {
   try {
-    Cldrive(instance).RunOrDie();
+    auto device = phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device());
+    Cldrive(instance, device).RunOrDie();
   } catch (cl::Error error) {
     LOG_CL_ERROR(FATAL, error);
   }

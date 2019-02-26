@@ -77,7 +77,7 @@ phd::Status KernelArg::Init() {
   auto access_qualifier =
       kernel_->getArgInfo<CL_KERNEL_ARG_ACCESS_QUALIFIER>(arg_index_);
   if (access_qualifier != CL_KERNEL_ARG_ACCESS_NONE) {
-    LOG(ERROR) << "Argument " << arg_index_ << " is an image type";
+    LOG(ERROR) << "Argument " << arg_index_ << " is an unsupported image type";
     return phd::Status::UNKNOWN;
   }
 
@@ -87,13 +87,22 @@ phd::Status KernelArg::Init() {
 
   is_pointer_ = full_type_name[full_type_name.size() - 2] == '*';
 
-  // Strip the trailing '*' on pointer types.
+  // Strip the trailing '*' on pointer types, and the trailing null char on
+  // both.
   string type_name = full_type_name;
   if (is_pointer_) {
     type_name = full_type_name.substr(0, full_type_name.size() - 2);
+  } else {
+    type_name = full_type_name.substr(0, full_type_name.size() - 1);
   }
 
-  ASSIGN_OR_RETURN(type_, OpenClArgTypeFromString(type_name));
+  auto type_or = OpenClArgTypeFromString(type_name);
+  if (!type_or.ok()) {
+    LOG(ERROR) << "Argument " << arg_index_ << " of kernel '" <<
+    kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()  << "' is of unknown type: " << full_type_name;
+    return type_or.status();
+  }
+  type_ = type_or.ValueOrDie();
 
   return phd::Status::OK;
 }

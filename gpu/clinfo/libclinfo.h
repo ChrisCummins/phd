@@ -33,12 +33,20 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
 ::gpu::clinfo::OpenClDevice GetOpenClDevice(const int platform_id,
                                             const int device_id);
 
-// Lookup an OpenCL device by it's proto representation. Raises
+// Lookup an OpenCL device by its proto representation. Raises
 // std::invalid_argument if not found.
 cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device);
 
 // Same as above, but abort if device is not available.
 cl::Device GetOpenClDeviceOrDie(const ::gpu::clinfo::OpenClDevice& device);
+
+// Lookup an OpenCL device by its name. Raises std::invalid_argument if not
+// found.
+cl::Device GetOpenClDevice(const string& name);
+
+// Same as above, but abort if device is not available.
+cl::Device GetOpenClDeviceOrDie(const string& name);
+
 
 }  // namespace clinfo
 

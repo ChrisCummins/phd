@@ -341,6 +341,26 @@ cl::Device GetOpenClDeviceOrDie(const ::gpu::clinfo::OpenClDevice& device) {
   }
 }
 
+cl::Device GetOpenClDevice(const string& name) {
+  auto devices = GetOpenClDevices();
+
+  for (int i = 0; i < devices.device_size(); ++i) {
+    if (!devices.device(i).name().compare(name)) {
+      return GetOpenClDeviceOrDie(devices.device(i));
+    }
+  }
+
+  throw std::invalid_argument("Device not found");
+}
+
+cl::Device GetOpenClDeviceOrDie(const string& name) {
+  try {
+    return GetOpenClDevice(name);
+  } catch (std::invalid_argument e) {
+    LOG(FATAL) << "Could not find device '" << name << "'";
+  }
+}
+
 }  // namespace clinfo
 
 }  // namespace gpu

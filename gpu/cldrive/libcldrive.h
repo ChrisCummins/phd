@@ -17,8 +17,23 @@
 
 #include "gpu/cldrive/proto/cldrive.pb.h"
 
+#include "third_party/opencl/cl.hpp"
+
 namespace gpu {
 namespace cldrive {
+
+class Cldrive {
+ public:
+  Cldrive(CldriveInstance* instance, const cl::Device& device);
+
+  void RunOrDie();
+
+ private:
+  CldriveInstance* instance_;
+  cl::Device device_;
+  cl::Context context_;
+  cl::CommandQueue queue_;
+};
 
 void ProcessCldriveInstanceOrDie(CldriveInstance *instance);
 

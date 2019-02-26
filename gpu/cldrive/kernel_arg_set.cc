@@ -24,18 +24,12 @@ namespace cldrive {
 KernelArgSet::KernelArgSet(const cl::Context& context, cl::Kernel* kernel)
     : context_(context), kernel_(kernel) {}
 
-CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::LogErrorOutcome(
-    const CldriveKernelInstance::KernelInstanceOutcome& outcome) {
-  LOG(ERROR) << "Kernel " << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>() << " "
-             << CldriveKernelInstance::KernelInstanceOutcome_Name(outcome);
-  return outcome;
-}
-
 CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
-  // Early exit if the kernel has no arguments.
   size_t num_args = kernel_->getInfo<CL_KERNEL_NUM_ARGS>();
   if (!num_args) {
-    return LogErrorOutcome(CldriveKernelInstance::NO_ARGUMENTS);
+    LOG(ERROR) << "Kernel '" << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
+               << "' has no arguments";
+    return CldriveKernelInstance::NO_ARGUMENTS;
   }
 
   // Create args.
@@ -43,8 +37,9 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   for (size_t i = 0; i < num_args; ++i) {
     auto arg_driver = KernelArg(kernel_, i);
     if (!arg_driver.Init().ok()) {
-      // Early exit if argument is not supported.
-      return LogErrorOutcome(CldriveKernelInstance::UNSUPPORTED_ARGUMENTS);
+      LOG(ERROR) << "Kernel '" << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
+                 << "' has unsupported arguments";
+      return CldriveKernelInstance::UNSUPPORTED_ARGUMENTS;
     }
     if (arg_driver.IsGlobal()) {
       ++num_mutable_args;
@@ -52,9 +47,10 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
     args_.push_back(std::move(arg_driver));
   }
 
-  // Early exit if the kernel has no mutable arguments.
   if (!num_mutable_args) {
-    return LogErrorOutcome(CldriveKernelInstance::NO_MUTABLE_ARGUMENTS);
+    LOG(ERROR) << "Kernel '" << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
+               << "' has no mutable arguments";
+    return CldriveKernelInstance::NO_MUTABLE_ARGUMENTS;
   }
 
   return CldriveKernelInstance::PASS;
