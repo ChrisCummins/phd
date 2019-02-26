@@ -16,6 +16,7 @@
 #pragma once
 
 #include "gpu/cldrive/profiling_data.h"
+#include "phd/logging.h"
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {

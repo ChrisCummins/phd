@@ -38,7 +38,7 @@ bool KernelArgValuesSet::operator!=(const KernelArgValuesSet &rhs) const {
 
 void KernelArgValuesSet::CopyToDevice(const cl::CommandQueue &queue,
                                       ProfilingData *profiling) const {
-  for (auto &value : values_) {
+  for (auto &value : values()) {
     value->CopyToDevice(queue, profiling);
   }
 }
@@ -48,31 +48,40 @@ void KernelArgValuesSet::CopyFromDeviceToNewValueSet(
     ProfilingData *profiling) const {
   // TODO(cec): Refactor so this isn't causing mallocs() for every run.
   new_values->Clear();
-  for (auto &value : values_) {
+  for (auto &value : values()) {
     new_values->AddKernelArgValue(value->CopyFromDevice(queue, profiling));
   }
 }
 
 void KernelArgValuesSet::AddKernelArgValue(
     std::unique_ptr<KernelArgValue> value) {
-  values_.push_back(std::move(value));
+  values().push_back(std::move(value));
 }
 
 void KernelArgValuesSet::SetAsArgs(cl::Kernel *kernel) {
-  for (size_t i = 0; i < values_.size(); ++i) {
-    values_[i]->SetAsArg(kernel, i);
+  for (size_t i = 0; i < values().size(); ++i) {
+    values()[i]->SetAsArg(kernel, i);
   }
 }
 
-void KernelArgValuesSet::Clear() { values_.clear(); }
+void KernelArgValuesSet::Clear() { values().clear(); }
 
 string KernelArgValuesSet::ToString() const {
   string s = "";
-  for (size_t i = 0; i < values_.size(); ++i) {
+  for (size_t i = 0; i < values().size(); ++i) {
     absl::StrAppend(
-        &s, absl::StrFormat("Value[%d] = %s\n", i, values_[i]->ToString()));
+        &s, absl::StrFormat("Arg[%d]: %s\n", i + 1, values()[i]->ToString()));
   }
   return s;
+}
+
+std::vector<std::unique_ptr<KernelArgValue>> &KernelArgValuesSet::values() {
+  return values_;
+}
+
+const std::vector<std::unique_ptr<KernelArgValue>> &KernelArgValuesSet::values()
+    const {
+  return values_;
 }
 
 }  // namespace cldrive

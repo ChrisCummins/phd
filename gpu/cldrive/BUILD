@@ -318,6 +318,7 @@ cc_library(
     hdrs = ["opencl_util.h"],
     deps = [
         ":profiling_data",
+        "//phd:logging",
         "//third_party/opencl",
     ],
 )

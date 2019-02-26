@@ -43,6 +43,10 @@ class KernelArgValuesSet {
 
   string ToString() const;
 
+  std::vector<std::unique_ptr<KernelArgValue>> &values();
+
+  const std::vector<std::unique_ptr<KernelArgValue>> &values() const;
+
  private:
   std::vector<std::unique_ptr<KernelArgValue>> values_;
 };

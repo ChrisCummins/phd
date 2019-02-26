@@ -46,7 +46,8 @@ void KernelDriver::RunOrDie(const bool streaming_csv_output) {
   }
 
   for (int i = 0; i < instance_.dynamic_params_size(); ++i) {
-    auto run = RunDynamicParams(instance_.dynamic_params(i), streaming_csv_output);
+    auto run =
+        RunDynamicParams(instance_.dynamic_params(i), streaming_csv_output);
     if (run.ok()) {
       *kernel_instance_->add_run() = run.ValueOrDie();
     } else {
@@ -74,8 +75,10 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   KernelArgValuesSet output_a, output_b;
 
-  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
-  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
+  *run.add_log() =
+      RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
+  *run.add_log() =
+      RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
 
   if (output_a != output_b) {
     run.clear_log();  // Remove performance logs.
@@ -85,13 +88,14 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   bool maybe_no_output = output_a == inputs;
   if (maybe_no_output) {
-    // LOG(INFO) << "Inputs\n" << inputs.ToString();
-    // LOG(INFO) << "Outputs\n" << inputs.ToString();
+    LOG(INFO) << "Inputs\n" << inputs.ToString();
+    LOG(INFO) << "Outputs\n" << output_a.ToString();
   }
 
   CHECK(args_set_.SetRandom(dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
-  *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
+  *run.add_log() =
+      RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
 
   if (output_a == output_b) {
     run.clear_log();  // Remove performance logs.
@@ -106,7 +110,8 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   // }
 
   for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
-    *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
+    *run.add_log() =
+        RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
   }
 
   run.set_outcome(CldriveKernelRun::PASS);

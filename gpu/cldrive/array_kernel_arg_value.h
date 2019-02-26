@@ -81,7 +81,7 @@ class ArrayKernelArgValue : public KernelArgValue {
     string s = "";
     for (auto &value : vector()) {
       absl::StrAppend(&s, type().FormatToString(value));
-      absl::StrAppend(&s, ", ");
+      absl::StrAppend(&s, ",");
     }
     return s;
   };
