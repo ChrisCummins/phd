@@ -389,6 +389,8 @@ def main(argv: typing.List[str]):
   if not FLAGS.destination:
     raise app.UsageError('--destination must be a directory to create')
 
+  targets = list(sorted(targets))
+
   with DestinationDirectoryFromFlags() as destination:
 
     if FLAGS.github_repo:
