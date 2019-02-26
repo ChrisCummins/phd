@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include <cl.h>
+#include "third_party/opencl/cl.h"
 
 #include "./err_code.h"
 

@@ -19,7 +19,7 @@
 #define __CL_ENABLE_EXCEPTIONS
 #pragma GCC diagnostic pop
 
-#include <cl.hpp>
+#include "third_party/opencl/cl.hpp"
 
 #include "./util.hpp"
 #include "./err_code.h"

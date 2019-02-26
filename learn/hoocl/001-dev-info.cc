@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include <cl.hpp>
+#include "third_party/opencl/cl.hpp"
 
 #include "./err_code.h"
 
