@@ -12,6 +12,8 @@
 
 #include <sstream>
 
+namespace {
+
 // Split a string into a vector of comma separated strings, e.g.
 //     'a,b' -> 'a', 'b'
 //     'ab' -> 'ab'
@@ -19,6 +21,8 @@ std::vector<string> SplitCommaSeparated(const string& str) {
   std::vector<absl::string_view> str_paths = absl::StrSplit(str, ',', absl::SkipEmpty());
   return std::vector<string>(str_paths.begin(), str_paths.end());
 }
+
+}  // anonymous namespace
 
 DEFINE_string(srcs, "",
               "A comma separated list of OpenCL source files.");
@@ -74,12 +78,21 @@ DEFINE_string(cl_build_opt, "", "Build options passed to clBuildProgram().");
 DEFINE_int32(num_runs, 30, "The number of runs per kernel.");
 DEFINE_bool(clinfo, false, "List the available devices and exit.");
 
-namespace gpu {
-namespace cldrive {
+namespace {
 
+// Read file to string or abort.
+string ReadFileOrDie(const string& path) {
+  const boost::filesystem::path fs_path(path);
+  boost::filesystem::is_regular_file(fs_path);
+  boost::filesystem::ifstream istream(fs_path);
+  CHECK(istream.is_open());
 
-}  // namespace cldrive
-}  // namespace gpu
+  std::stringstream buffer;
+  buffer << istream.rdbuf();
+  return buffer.str();
+}
+
+}  // anonymous namespace
 
 int main(int argc, char** argv) {
   gflags::SetUsageMessage("Drive arbitrary OpenCL kernels.");
@@ -128,22 +141,15 @@ int main(int argc, char** argv) {
   dp->set_local_size_x(FLAGS_lsize);
   instance->set_min_runs_per_kernel(FLAGS_num_runs);
 
-  for (auto str_path : SplitCommaSeparated(FLAGS_srcs)) {
+  for (auto path : SplitCommaSeparated(FLAGS_srcs)) {
+    instance->set_opencl_src(ReadFileOrDie(path));
+
     for (size_t i = 0; i < devices.size(); ++i) {
       // Reset fields from previous loop iterations.
       instance->clear_outcome();
       instance->clear_kernel();
 
       instance->mutable_device()->CopyFrom(device_protos[i]);
-
-      // Read OpenCL source.
-      const boost::filesystem::path src_path(str_path);
-      boost::filesystem::ifstream istream(src_path);
-      CHECK(istream.is_open());
-
-      std::stringstream buffer;
-      buffer << istream.rdbuf();
-      instance->set_opencl_src(buffer.str());
 
       gpu::cldrive::Cldrive(instance, devices[i]).RunOrDie(csv);
 
