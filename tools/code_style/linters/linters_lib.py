@@ -132,7 +132,7 @@ class ClangFormatThread(LinterThread):
 
   def run(self):
     # TODO(cec): Use project-local clang-format style file.
-    ExecOrDie([CLANG_FORMAT, '-style', 'Google'] + self._paths)
+    ExecOrDie([CLANG_FORMAT, '-style', 'Google', '-i'] + self._paths)
 
 
 class YapfThread(LinterThread):
