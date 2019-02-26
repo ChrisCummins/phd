@@ -1,5 +1,7 @@
 # Cldrive drives arbitrary OpenCL kernels.
 
+load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
+
 licenses(["restricted"])  # GPL v3
 
 exports_files([
@@ -63,6 +65,19 @@ cc_test(
 cc_binary(
     name = "cldrive",
     srcs = ["cldrive.cc"],
+    deps = [
+        ":libcldrive",
+        "//gpu/clinfo:libclinfo",
+        "//phd:logging",
+        "@boost//:filesystem",
+        "@com_github_gflags_gflags//:gflags",
+    ],
+)
+
+cc_image(
+    name = "cldrive_image",
+    srcs = ["cldrive.cc"],
+    base = "@base//image",
     deps = [
         ":libcldrive",
         "//gpu/clinfo:libclinfo",
