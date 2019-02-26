@@ -108,8 +108,7 @@ std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
 
 std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
     const cl::Context& context, const DynamicParams& dynamic_params,
-    bool rand_values) -
-{
+    bool rand_values) {
   CHECK(type().type_num() != OpenClTypeEnum::DEFAULT_UNKNOWN)
       << "Init() not called";
   if (IsPointer() && IsGlobal()) {
