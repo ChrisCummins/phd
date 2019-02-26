@@ -313,6 +313,20 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
   throw std::invalid_argument("Platform and device ID not found");
 }
 
+StatusOr<::gpu::clinfo::OpenClDevice>
+GetOpenClDeviceProto(const string& name) {
+  auto devices = GetOpenClDevices();
+
+  for (int i = 0; i < devices.device_size(); ++i) {
+    if (!devices.device(i).name().compare(name)) {
+      return devices.device(i);
+    }
+  }
+
+  return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                     "OpenCL device not found");
+}
+
 cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
   string platform_name, device_name, driver_version, opencl_version;
 

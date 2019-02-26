@@ -12,13 +12,17 @@
 #include "third_party/opencl/cl.hpp"
 
 #include "gpu/clinfo/proto/clinfo.pb.h"
+#include "phd/statusor.h"
 #include "phd/string.h"
 
+// TODO(cec): Refactor to remove phd:: namespace.
 namespace phd {
 
 namespace gpu {
 
 namespace clinfo {
+
+// TODO(cec): Refactor so that each returns StatusOr, not exception.
 
 const char *OpenClErrorString(cl_int err);
 
@@ -32,6 +36,9 @@ void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
 
 ::gpu::clinfo::OpenClDevice GetOpenClDevice(const int platform_id,
                                             const int device_id);
+
+// Find and return the OpenCL device proto by name.
+StatusOr<::gpu::clinfo::OpenClDevice> GetOpenClDeviceProto(const string& name);
 
 // Lookup an OpenCL device by its proto representation. Raises
 // std::invalid_argument if not found.
