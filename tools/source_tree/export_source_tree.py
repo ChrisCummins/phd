@@ -34,6 +34,9 @@ from labm8 import fs
 FLAGS = flags.FLAGS
 
 flags.DEFINE_list('target', [], 'The bazel target(s) to export.')
+flags.DEFINE_string(
+    'targets_list', None, 'Path to a file containing a list of bazel targets. '
+    'Supersedes --target flag.')
 flags.DEFINE_string('destination', '/tmp/phd/tools/source_tree/export',
                     'The destination directory to export to.')
 flags.DEFINE_string('github_repo', None, 'Name of a GitHub repo to export to.')
@@ -188,13 +191,16 @@ def GetPythonRequirementsForTargetOrDie(
 
   stdout, _ = grep.communicate()
   assert not bazel.returncode
-  assert not grep.returncode
 
   with open(source_root / 'tools/requirements.txt') as f:
     requirements = set(f.readlines())
 
+  output = stdout.rstrip()
+  if not output:
+    return []
+
   needed = []
-  for line in stdout.rstrip().split('\n'):
+  for line in output.split('\n'):
     # This is a pretty hacky approach that tries to match the package component
     # of the generated @pypi__<package>_<vesion> package to the name as it
     # appears in tools/requirements.txt.
@@ -371,8 +377,14 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  if not FLAGS.target:
+  # Get the list of targets to export.
+  if not FLAGS.target and not FLAGS.targets_list:
     raise app.UsageError('--target must be a bazel target(s)')
+  elif FLAGS.targets_list:
+    with open(FLAGS.targets_list) as f:
+      targets = f.read().rstrip().split('\n')
+  else:
+    targets = FLAGS.target
 
   if not FLAGS.destination:
     raise app.UsageError('--destination must be a directory to create')
@@ -383,10 +395,10 @@ def main(argv: typing.List[str]):
       github = api.GetGithubConectionFromFlagsOrDie()
       repo = GetOrCreateRepoOrDie(github)
       CloneRepoToDestinationOrDie(repo, destination)
-      ExportToDirectoryOrDie(destination, FLAGS.target)
+      ExportToDirectoryOrDie(destination, targets)
       CommitAndPushOrDie(destination, repo)
     else:
-      ExportToDirectoryOrDie(destination, FLAGS.target)
+      ExportToDirectoryOrDie(destination, targets)
       logging.info('Exported subtree to %s', destination)
 
 
