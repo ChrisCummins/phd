@@ -43,7 +43,7 @@ class KernelDriver {
   cl::CommandQueue queue_;
   cl::Device device_;
   cl::Kernel kernel_;
-  CldriveInstance* instance_;
+  const CldriveInstance& instance_;
   CldriveKernelInstance* kernel_instance_;
   string name_;
   KernelArgSet args_set_;

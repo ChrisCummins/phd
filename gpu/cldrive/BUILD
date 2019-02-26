@@ -71,6 +71,7 @@ cc_binary(
         "//phd:logging",
         "@boost//:filesystem",
         "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/strings",
     ],
 )
 

@@ -6,6 +6,10 @@ import "gpu/libcecl/proto/libcecl.proto";
 package gpu.cldrive;
 
 
+message CldriveInstances {
+  repeated CldriveInstance instance = 1;
+}
+
 message CldriveInstance {
   optional gpu.clinfo.OpenClDevice device = 1;
   optional string opencl_src = 2;

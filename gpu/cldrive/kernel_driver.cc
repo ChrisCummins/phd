@@ -28,7 +28,7 @@ KernelDriver::KernelDriver(const cl::Context& context,
       queue_(queue),
       device_(context.getInfo<CL_CONTEXT_DEVICES>()[0]),
       kernel_(kernel),
-      instance_(instance),
+      instance_(*instance),
       kernel_instance_(instance->add_kernel()),
       name_(kernel.getInfo<CL_KERNEL_FUNCTION_NAME>()),
       args_set_(context, &kernel_) {}
@@ -45,8 +45,8 @@ void KernelDriver::RunOrDie(const bool streaming_csv_output) {
     return;
   }
 
-  for (size_t i = 0; i < instance_->dynamic_params_size(); ++i) {
-    auto run = RunDynamicParams(instance_->dynamic_params(i), streaming_csv_output);
+  for (int i = 0; i < instance_.dynamic_params_size(); ++i) {
+    auto run = RunDynamicParams(instance_.dynamic_params(i), streaming_csv_output);
     if (run.ok()) {
       *kernel_instance_->add_run() = run.ValueOrDie();
     } else {
@@ -63,7 +63,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   // Check that the dynamic params are within legal range.
   auto max_work_group_size = device_.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
-  if (max_work_group_size < dynamic_params.global_size_x()) {
+  if (static_cast<int>(max_work_group_size) < dynamic_params.global_size_x()) {
     run.set_outcome(CldriveKernelRun::INVALID_DYNAMIC_PARAMS);
     return run;
   }
@@ -105,7 +105,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   //   return run;
   // }
 
-  for (size_t i = 3; i < instance_->min_runs_per_kernel(); ++i) {
+  for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
     *run.add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
   }
 
@@ -134,8 +134,10 @@ gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
   inputs.CopyFromDeviceToNewValueSet(queue_, outputs, &profiling);
 
   if (streaming_csv_output) {
-    std::cout << name_ << ", " << global_size << ", " << local_size << ", " << profiling.transferred_bytes
-    << ", " << profiling.elapsed_nanoseconds << std::endl;
+    std::cout << instance_.device().name() << ", " << name_ << ", "
+              << global_size << ", " << local_size << ", "
+              << profiling.transferred_bytes << ", "
+              << profiling.elapsed_nanoseconds << std::endl;
   } else {
     // Set run proto fields.
     log.set_global_size(global_size);
