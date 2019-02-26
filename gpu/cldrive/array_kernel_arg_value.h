@@ -25,6 +25,12 @@
 namespace gpu {
 namespace cldrive {
 
+// TODO(cldrive): Work in progress!
+template <typename T>
+bool ScalarEquality(const T &lhs, const T &rhs) {
+  return lhs == rhs;
+}
+
 // An array argument.
 template <typename T>
 class ArrayKernelArgValue : public KernelArgValue {
@@ -33,22 +39,26 @@ class ArrayKernelArgValue : public KernelArgValue {
   ArrayKernelArgValue(size_t size, Args &&... args) : vector_(size, args...) {}
 
   virtual bool operator==(const KernelArgValue *const rhs) const override {
-    auto rhs_ptr = dynamic_cast<const ArrayKernelArgValue *const>(rhs);
-    if (!rhs_ptr) {
+    auto array_ptr = dynamic_cast<const ArrayKernelArgValue *const>(rhs);
+    if (!array_ptr) {
       return false;
     }
 
-    if (vector().size() != rhs_ptr->vector().size()) {
+    if (vector().size() != array_ptr->vector().size()) {
       return false;
     }
 
     for (size_t i = 0; i < vector().size(); ++i) {
-      if (vector()[i] != rhs_ptr->vector()[i]) {
+      if (!ElementEquality(vector()[i], array_ptr->vector()[i])) {
         return false;
       }
     }
 
     return true;
+  }
+
+  bool ElementEquality(const T &lhs, const T &rhs) const {
+    return ScalarEquality(lhs, rhs);
   }
 
   virtual bool operator!=(const KernelArgValue *const rhs) const override {
@@ -76,18 +86,29 @@ class ArrayKernelArgValue : public KernelArgValue {
     CHECK(false);
   }
 
-  virtual string ToString() const override {
-    string s = "";
-    for (auto &value : vector()) {
-      absl::StrAppend(&s, value);
-      absl::StrAppend(&s, ", ");
-    }
-    return s;
-  }
+  virtual string ToString() const override;
 
  protected:
   std::vector<T> vector_;
 };
+
+// TODO(cldrive): Work in progress!
+template <typename T>
+/*virtual*/ string ArrayKernelArgValue<T>::ToString() const {
+  string s = "";
+  for (auto &value : vector()) {
+    absl::StrAppend(&s, value);
+    absl::StrAppend(&s, ", ");
+  }
+  return s;
+}
+
+template <>
+/*virtual*/ string ArrayKernelArgValue<cl_char2>::ToString() const;
+
+template <>
+/*virtual*/ bool ArrayKernelArgValue<cl_char2>::ElementEquality(
+    const cl_char2 &lhs, const cl_char2 &rhs) const;
 
 // An array value with a device-side buffer.
 template <typename T>
@@ -114,8 +135,7 @@ class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue<T> {
 
   virtual std::unique_ptr<KernelArgValue> CopyFromDevice(
       const cl::CommandQueue &queue, ProfilingData *profiling) override {
-    auto new_arg =
-        std::make_unique<ArrayKernelArgValue<T>>(this->size());
+    auto new_arg = std::make_unique<ArrayKernelArgValue<T>>(this->size());
     CopyDeviceToHost(queue, buffer(), new_arg->vector().begin(),
                      new_arg->vector().end(), profiling);
     return std::move(new_arg);

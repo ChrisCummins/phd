@@ -24,10 +24,11 @@
 namespace gpu {
 namespace cldrive {
 
-// A list of OpenCL types. Each item corresponds to an element in the table at:
-// https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
+// A list of supported OpenCL types.
 enum OpenClArgType {
   DEFAULT_UNKNOWN,  // Used as default constructor value.
+  // Scalar data types. See:
+  // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
   BOOL,
   CHAR,
   UCHAR,
@@ -39,7 +40,64 @@ enum OpenClArgType {
   ULONG,
   FLOAT,
   DOUBLE,
-  HALF
+  HALF,
+  // Vector data types. See:
+  // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/vectorDataTypes.html
+  CHAR2,
+  CHAR3,
+  CHAR4,
+  CHAR8,
+  CHAR16,
+  UCHAR2,
+  UCHAR3,
+  UCHAR4,
+  UCHAR8,
+  UCHAR16,
+  SHORT2,
+  SHORT3,
+  SHORT4,
+  SHORT8,
+  SHORT16,
+  USHORT2,
+  USHORT3,
+  USHORT4,
+  USHORT8,
+  USHORT16,
+  INT2,
+  INT3,
+  INT4,
+  INT8,
+  INT16,
+  UINT2,
+  UINT3,
+  UINT4,
+  UINT8,
+  UINT16,
+  LONG2,
+  LONG3,
+  LONG4,
+  LONG8,
+  LONG16,
+  ULONG2,
+  ULONG3,
+  ULONG4,
+  ULONG8,
+  ULONG16,
+  FLOAT2,
+  FLOAT3,
+  FLOAT4,
+  FLOAT8,
+  FLOAT16,
+  DOUBLE2,
+  DOUBLE3,
+  DOUBLE4,
+  DOUBLE8,
+  DOUBLE16,
+  //  HALF2,
+  //  HALF3,
+  //  HALF4,
+  //  HALF8,
+  //  HALF16
 };
 
 // Look up a string type name and return the OpenClArgType. If not found,

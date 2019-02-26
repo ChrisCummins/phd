@@ -37,6 +37,7 @@ py_test(
 
 cc_library(
     name = "array_kernel_arg_value",
+    srcs = ["array_kernel_arg_value.cc"],
     hdrs = ["array_kernel_arg_value.h"],
     deps = [
         ":kernel_arg_value",
@@ -292,6 +293,15 @@ cc_binary(
         ":libcldrive",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:pbutil",
+    ],
+)
+
+cc_library(
+    name = "opencl_type",
+    srcs = ["opencl_type.cc"],
+    hdrs = ["opencl_type.h"],
+    deps = [
+        "//third_party/opencl",
     ],
 )
 
