@@ -1,158 +1,140 @@
-#pragme once
+#pragma once
 
+#include <cstdlib>
+
+#include "phd/statusor.h"
+#include "phd/string.h"
 #include "third_party/opencl/cl.hpp"
+
+#include "absl/strings/str_cat.h"
+#include "boost/variant.hpp"
 
 namespace gpu {
 namespace cldrive {
 
-template <typename T>
-class OpenClType {
-  string ToString();
+// The list of supported OpenCL types.
+enum OpenClTypeEnum {
+  DEFAULT_UNKNOWN,  // Used as default constructor value.
+  // Scalar data types. See:
+  // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
+  BOOL,
+  CHAR,
+  UCHAR,
+  SHORT,
+  USHORT,
+  INT,
+  UINT,
+  LONG,
+  ULONG,
+  FLOAT,
+  DOUBLE,
+  HALF,
+  // Vector data types. See:
+  // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/vectorDataTypes.html
+  CHAR2,
+  CHAR3,
+  CHAR4,
+  CHAR8,
+  CHAR16,
+  UCHAR2,
+  UCHAR3,
+  UCHAR4,
+  UCHAR8,
+  UCHAR16,
+  SHORT2,
+  SHORT3,
+  SHORT4,
+  SHORT8,
+  SHORT16,
+  USHORT2,
+  USHORT3,
+  USHORT4,
+  USHORT8,
+  USHORT16,
+  INT2,
+  INT3,
+  INT4,
+  INT8,
+  INT16,
+  UINT2,
+  UINT3,
+  UINT4,
+  UINT8,
+  UINT16,
+  LONG2,
+  LONG3,
+  LONG4,
+  LONG8,
+  LONG16,
+  ULONG2,
+  ULONG3,
+  ULONG4,
+  ULONG8,
+  ULONG16,
+  FLOAT2,
+  FLOAT3,
+  FLOAT4,
+  FLOAT8,
+  FLOAT16,
+  DOUBLE2,
+  DOUBLE3,
+  DOUBLE4,
+  DOUBLE8,
+  DOUBLE16,
+  HALF2,
+  HALF3,
+  HALF4,
+  HALF8,
+  HALF16
 };
 
-phd::StatusOr<OpenClType> OpenClTypeFromString(const string& type_name) {
-  if (!type_name.compare("bool")) {
-    return OpenClType<cl_bool>();
-  } else if (!type_name.compare("char")) {
-    return OpenClType<cl_char>();
-  } else if (!type_name.compare("unsigned char") ||
-             !type_name.compare("uchar")) {
-    return OpenClType<cl_uchar>();
-  } else if (!type_name.compare("short")) {
-    return OpenClType<cl_short>();
-  } else if (!type_name.compare("unsigned short") ||
-             !type_name.compare("ushort")) {
-    return OpenClType<cl_ushort>();
-  } else if (!type_name.compare("int")) {
-    return OpenClType<cl_int>();
-  } else if (!type_name.compare("unsigned int") || !type_name.compare("uint")) {
-    return OpenClType<cl_uint>();
-  } else if (!type_name.compare("long")) {
-    return OpenClType<cl_long>();
-  } else if (!type_name.compare("unsigned long") ||
-             !type_name.compare("ulong")) {
-    return OpenClType<cl_ulong>();
-  } else if (!type_name.compare("float")) {
-    return OpenClType<cl_float>();
-  } else if (!type_name.compare("double")) {
-    return OpenClType<cl_double>();
-  } else if (!type_name.compare("half")) {
-    return OpenClType<cl_half>();
-    // Vector types.
-  } else if (!type_name.compare("char2")) {
-    return OpenClType<cl_char2>();
-  } else if (!type_name.compare("char3")) {
-    return OpenClType<cl_char3>();
-  } else if (!type_name.compare("char4")) {
-    return OpenClType<cl_char4>();
-  } else if (!type_name.compare("char8")) {
-    return OpenClType<cl_char8>();
-  } else if (!type_name.compare("char16")) {
-    return OpenClType<cl_char16>();
-  } else if (!type_name.compare("uchar2")) {
-    return OpenClType<cl_uchar2>();
-  } else if (!type_name.compare("uchar3")) {
-    return OpenClType<cl_uchar3>();
-  } else if (!type_name.compare("uchar4")) {
-    return OpenClType<cl_uchar4>();
-  } else if (!type_name.compare("uchar8")) {
-    return OpenClType<cl_uchar8>();
-  } else if (!type_name.compare("uchar16")) {
-    return OpenClType<cl_uchar16>();
-  } else if (!type_name.compare("short2")) {
-    return OpenClType<cl_short2>();
-  } else if (!type_name.compare("short3")) {
-    return OpenClType<cl_short3>();
-  } else if (!type_name.compare("short4")) {
-    return OpenClType<cl_short4>();
-  } else if (!type_name.compare("short8")) {
-    return OpenClType<cl_short8>();
-  } else if (!type_name.compare("short16")) {
-    return OpenClType<cl_short16>();
-  } else if (!type_name.compare("ushort2")) {
-    return OpenClType<cl_ushort2>();
-  } else if (!type_name.compare("ushort3")) {
-    return OpenClType<cl_ushort3>();
-  } else if (!type_name.compare("ushort4")) {
-    return OpenClType<cl_ushort4>();
-  } else if (!type_name.compare("ushort8")) {
-    return OpenClType<cl_ushort8>();
-  } else if (!type_name.compare("ushort16")) {
-    return OpenClType<cl_ushort16>();
-  } else if (!type_name.compare("int2")) {
-    return OpenClType<cl_int2>();
-  } else if (!type_name.compare("int3")) {
-    return OpenClType<cl_int3>();
-  } else if (!type_name.compare("int4")) {
-    return OpenClType<cl_int4>();
-  } else if (!type_name.compare("int8")) {
-    return OpenClType<cl_int8>();
-  } else if (!type_name.compare("int16")) {
-    return OpenClType<cl_int16>();
-  } else if (!type_name.compare("uint2")) {
-    return OpenClType<cl_uint2>();
-  } else if (!type_name.compare("uint3")) {
-    return OpenClType<cl_uint3>();
-  } else if (!type_name.compare("uint4")) {
-    return OpenClType<cl_uint4>();
-  } else if (!type_name.compare("uint8")) {
-    return OpenClType<cl_uint8>();
-  } else if (!type_name.compare("uint16")) {
-    return OpenClType<cl_uint16>();
-  } else if (!type_name.compare("long2")) {
-    return OpenClType<cl_long2>();
-  } else if (!type_name.compare("long3")) {
-    return OpenClType<cl_long3>();
-  } else if (!type_name.compare("long4")) {
-    return OpenClType<cl_long4>();
-  } else if (!type_name.compare("long8")) {
-    return OpenClType<cl_long8>();
-  } else if (!type_name.compare("long16")) {
-    return OpenClType<cl_long16>();
-  } else if (!type_name.compare("ulong2")) {
-    return OpenClType<cl_ulong2>();
-  } else if (!type_name.compare("ulong3")) {
-    return OpenClType<cl_ulong3>();
-  } else if (!type_name.compare("ulong4")) {
-    return OpenClType<cl_ulong4>();
-  } else if (!type_name.compare("ulong8")) {
-    return OpenClType<cl_ulong8>();
-  } else if (!type_name.compare("ulong16")) {
-    return OpenClType<cl_ulong16>();
-  } else if (!type_name.compare("float2")) {
-    return OpenClType<cl_float2>();
-  } else if (!type_name.compare("float3")) {
-    return OpenClType<cl_float3>();
-  } else if (!type_name.compare("float4")) {
-    return OpenClType<cl_float4>();
-  } else if (!type_name.compare("float8")) {
-    return OpenClType<cl_float8>();
-  } else if (!type_name.compare("float16")) {
-    return OpenClType<cl_float16>();
-  } else if (!type_name.compare("double2")) {
-    return OpenClType<cl_double2>();
-  } else if (!type_name.compare("double3")) {
-    return OpenClType<cl_double3>();
-  } else if (!type_name.compare("double4")) {
-    return OpenClType<cl_double4>();
-  } else if (!type_name.compare("double8")) {
-    return OpenClType<cl_double8>();
-  } else if (!type_name.compare("double16")) {
-    return OpenClType<cl_double16>();
-    //  } else if (!type_name.compare("half2")) {
-    //    return OpenClType<cl_half2>();
-    //  } else if (!type_name.compare("half3")) {
-    //    return OpenClType<cl_half3>();
-    //  } else if (!type_name.compare("half4")) {
-    //    return OpenClType<cl_half4>();
-    //  } else if (!type_name.compare("half8")) {
-    //    return OpenClType<cl_half8>();
-    //  } else if (!type_name.compare("half16")) {
-    //    return OpenClType<cl_half16>();
-  } else {
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT, type_name);
+using Scalar =
+    boost::variant<cl_bool, cl_char, cl_uchar, cl_short, cl_ushort, cl_int,
+                   cl_uint, cl_long, cl_ulong, cl_float, cl_double, cl_half>;
+using Array = std::vector<Scalar>;
+
+class OpenClType {
+ public:
+  OpenClType() : type_num_(OpenClTypeEnum::DEFAULT_UNKNOWN){};
+
+  explicit OpenClType(const OpenClTypeEnum& type_num) : type_num_(type_num){};
+
+  bool ElementsAreEqual(const Scalar& lhs, const Scalar& rhs) const {
+    const cl_int *cl_int_lhs = boost::get<cl_int>(&lhs),
+                 *cl_int_rhs = boost::get<cl_int>(&rhs);
+    if (cl_int_lhs && cl_int_rhs) {
+      return *cl_int_lhs == *cl_int_rhs;
+    }
+    return false;
   }
-}
+
+  string FormatToString(const Scalar& value) const {
+    string s = "";
+    switch (type_num()) {
+      case OpenClTypeEnum::BOOL:
+        absl::StrAppend(&s, *boost::get<cl_bool>(&value));
+        return s;
+      default:
+        return s;
+    }
+  }
+
+  Scalar Create(const int& value) const {
+    switch (type_num()) {
+      case OpenClTypeEnum::BOOL:
+        return true;
+      default:
+        return 1;
+    }
+  }
+
+  const OpenClTypeEnum& type_num() const { return type_num_; }
+
+  static phd::StatusOr<OpenClType> FromString(const string& type_name);
+
+ private:
+  OpenClTypeEnum type_num_;
+};
 
 }  // namespace cldrive
 }  // namespace gpu

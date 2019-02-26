@@ -19,6 +19,7 @@
 
 #include "third_party/opencl/cl.hpp"
 
+#include "opencl_type.h"
 #include "phd/logging.h"
 #include "phd/string.h"
 
@@ -29,7 +30,8 @@ namespace cldrive {
 template <typename T>
 class ScalarKernelArgValue : public KernelArgValue {
  public:
-  ScalarKernelArgValue(const T &value) : value_(value) {}
+  ScalarKernelArgValue(const OpenClType &type, const T &value)
+      : KernelArgValue(type), value_(value) {}
 
   virtual bool operator==(const KernelArgValue *const rhs) const override {
     auto rhs_ptr = dynamic_cast<const ScalarKernelArgValue *const>(rhs);
@@ -37,7 +39,7 @@ class ScalarKernelArgValue : public KernelArgValue {
       return false;
     }
 
-    return value() == rhs_ptr->value();
+    return type().ElementsAreEqual(value(), rhs_ptr->value());
   }
 
   virtual bool operator!=(const KernelArgValue *const rhs) const override {
@@ -56,14 +58,12 @@ class ScalarKernelArgValue : public KernelArgValue {
     return std::make_unique<ScalarKernelArgValue>(value());
   }
 
+  virtual string ToString() const override {
+    return type().FormatToString(value());
+  }
+
   const T &value() const { return value_; }
   T &value() { return value_; }
-
-  virtual string ToString() const override {
-    string s = "";
-    absl::StrAppend(&s, value());
-    return s;
-  }
 
  private:
   T value_;

@@ -96,6 +96,7 @@ cc_library(
     deps = [
         ":array_kernel_arg_value",
         ":kernel_arg_value",
+        ":opencl_type",
         ":scalar_kernel_arg_value",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:status",
@@ -161,6 +162,7 @@ cc_library(
     srcs = ["kernel_arg_value.cc"],
     hdrs = ["kernel_arg_value.h"],
     deps = [
+        ":opencl_type",
         ":opencl_util",
         ":profiling_data",
         "//phd:logging",
@@ -301,7 +303,12 @@ cc_library(
     srcs = ["opencl_type.cc"],
     hdrs = ["opencl_type.h"],
     deps = [
+        "//phd:status_macros",
+        "//phd:statusor",
+        "//phd:string",
         "//third_party/opencl",
+        "@boost//:variant",
+        "@com_google_absl//absl/strings",
     ],
 )
 

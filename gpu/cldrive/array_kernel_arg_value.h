@@ -19,24 +19,19 @@
 
 #include "third_party/opencl/cl.hpp"
 
+#include "opencl_type.h"
 #include "phd/logging.h"
 #include "phd/string.h"
 
 namespace gpu {
 namespace cldrive {
 
-// TODO(cldrive): Work in progress!
-template <typename T>
-bool ScalarEquality(const T &lhs, const T &rhs) {
-  return lhs == rhs;
-}
-
 // An array argument.
-template <typename T>
 class ArrayKernelArgValue : public KernelArgValue {
  public:
   template <typename... Args>
-  ArrayKernelArgValue(size_t size, Args &&... args) : vector_(size, args...) {}
+  ArrayKernelArgValue(const OpenClType &type, size_t size, Args &&... args)
+      : KernelArgValue(type), vector_(size, args...) {}
 
   virtual bool operator==(const KernelArgValue *const rhs) const override {
     auto array_ptr = dynamic_cast<const ArrayKernelArgValue *const>(rhs);
@@ -49,16 +44,12 @@ class ArrayKernelArgValue : public KernelArgValue {
     }
 
     for (size_t i = 0; i < vector().size(); ++i) {
-      if (!ElementEquality(vector()[i], array_ptr->vector()[i])) {
+      if (!type().ElementsAreEqual(vector()[i], array_ptr->vector()[i])) {
         return false;
       }
     }
 
     return true;
-  }
-
-  bool ElementEquality(const T &lhs, const T &rhs) const {
-    return ScalarEquality(lhs, rhs);
   }
 
   virtual bool operator!=(const KernelArgValue *const rhs) const override {
@@ -86,29 +77,18 @@ class ArrayKernelArgValue : public KernelArgValue {
     CHECK(false);
   }
 
-  virtual string ToString() const override;
+  virtual string ToString() const override {
+    string s = "";
+    for (auto &value : vector()) {
+      absl::StrAppend(&s, type().FormatToString(value));
+      absl::StrAppend(&s, ", ");
+    }
+    return s;
+  };
 
  protected:
   std::vector<T> vector_;
 };
-
-// TODO(cldrive): Work in progress!
-template <typename T>
-/*virtual*/ string ArrayKernelArgValue<T>::ToString() const {
-  string s = "";
-  for (auto &value : vector()) {
-    absl::StrAppend(&s, value);
-    absl::StrAppend(&s, ", ");
-  }
-  return s;
-}
-
-template <>
-/*virtual*/ string ArrayKernelArgValue<cl_char2>::ToString() const;
-
-template <>
-/*virtual*/ bool ArrayKernelArgValue<cl_char2>::ElementEquality(
-    const cl_char2 &lhs, const cl_char2 &rhs) const;
 
 // An array value with a device-side buffer.
 template <typename T>

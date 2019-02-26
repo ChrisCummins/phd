@@ -16,93 +16,16 @@
 #pragma once
 
 #include "gpu/cldrive/kernel_arg_value.h"
+#include "gpu/cldrive/opencl_type.h"
+#include "gpu/cldrive/opencl_type.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
+#include "opencl_type.h"
 #include "phd/status.h"
 #include "phd/statusor.h"
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {
 namespace cldrive {
-
-// A list of supported OpenCL types.
-enum OpenClArgType {
-  DEFAULT_UNKNOWN,  // Used as default constructor value.
-  // Scalar data types. See:
-  // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
-  BOOL,
-  CHAR,
-  UCHAR,
-  SHORT,
-  USHORT,
-  INT,
-  UINT,
-  LONG,
-  ULONG,
-  FLOAT,
-  DOUBLE,
-  HALF,
-  // Vector data types. See:
-  // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/vectorDataTypes.html
-  CHAR2,
-  CHAR3,
-  CHAR4,
-  CHAR8,
-  CHAR16,
-  UCHAR2,
-  UCHAR3,
-  UCHAR4,
-  UCHAR8,
-  UCHAR16,
-  SHORT2,
-  SHORT3,
-  SHORT4,
-  SHORT8,
-  SHORT16,
-  USHORT2,
-  USHORT3,
-  USHORT4,
-  USHORT8,
-  USHORT16,
-  INT2,
-  INT3,
-  INT4,
-  INT8,
-  INT16,
-  UINT2,
-  UINT3,
-  UINT4,
-  UINT8,
-  UINT16,
-  LONG2,
-  LONG3,
-  LONG4,
-  LONG8,
-  LONG16,
-  ULONG2,
-  ULONG3,
-  ULONG4,
-  ULONG8,
-  ULONG16,
-  FLOAT2,
-  FLOAT3,
-  FLOAT4,
-  FLOAT8,
-  FLOAT16,
-  DOUBLE2,
-  DOUBLE3,
-  DOUBLE4,
-  DOUBLE8,
-  DOUBLE16,
-  //  HALF2,
-  //  HALF3,
-  //  HALF4,
-  //  HALF8,
-  //  HALF16
-};
-
-// Look up a string type name and return the OpenClArgType. If not found,
-// an error status is returned.
-phd::StatusOr<OpenClArgType> OpenClArgTypeFromString(const string &type_name);
 
 class KernelArg {
  public:
@@ -113,12 +36,12 @@ class KernelArg {
   // Create a random value for this argument. If the argument is not supported,
   // returns nullptr.
   std::unique_ptr<KernelArgValue> TryToCreateRandomValue(
-      const cl::Context &context, const DynamicParams &dynamic_params);
+      const cl::Context &context, const DynamicParams &dynamic_params) const;
 
   // Create a "ones" value for this argument. If the argument is not supported,
   // returns nullptr.
   std::unique_ptr<KernelArgValue> TryToCreateOnesValue(
-      const cl::Context &context, const DynamicParams &dynamic_params);
+      const cl::Context &context, const DynamicParams &dynamic_params) const;
 
   // Address qualifier accessors.
 
@@ -132,6 +55,8 @@ class KernelArg {
 
   bool IsPointer() const;
 
+  const OpenClType &type() const;
+
  private:
   std::unique_ptr<KernelArgValue> TryToCreateKernelArgValue(
       const cl::Context &context, const DynamicParams &dynamic_params,
@@ -139,9 +64,9 @@ class KernelArg {
 
   cl::Kernel *kernel_;
   size_t arg_index_;
+  OpenClType type_;
 
   cl_kernel_arg_address_qualifier address_;
-  OpenClArgType type_;
   bool is_pointer_;
 };
 

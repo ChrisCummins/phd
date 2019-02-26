@@ -25,29 +25,7 @@
 namespace gpu {
 namespace cldrive {
 
-namespace {
-
-// TODO(cldrive): Work in progress!
-
-template <typename T>
-bool Vec2Equality(const T& lhs, const T& rhs) {
-  return true;
-  // TODO: return (l[0] == r[0]) && (l[1] == r[1]);
-}
-
-}  // anonymous namespace
-
-template <>
-/*virtual*/ string ArrayKernelArgValue<cl_char2>::ToString() const {
-  string s = "";
-  return s;
-}
-
-template <>
-/*virtual*/ bool ArrayKernelArgValue<cl_char2>::ElementEquality(
-    const cl_char2& lhs, const cl_char2& rhs) const {
-  return Vec2Equality(lhs, rhs);
-}
+namespace {}
 
 }  // namespace cldrive
 }  // namespace gpu

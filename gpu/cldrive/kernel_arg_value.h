@@ -15,12 +15,15 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
+#include "gpu/cldrive/opencl_type.h"
 #include "gpu/cldrive/opencl_util.h"
 #include "gpu/cldrive/profiling_data.h"
+
 #include "third_party/opencl/cl.hpp"
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "opencl_type.h"
 #include "phd/string.h"
 
 namespace gpu {
@@ -29,6 +32,8 @@ namespace cldrive {
 // Abstract base class.
 class KernelArgValue {
  public:
+  explicit KernelArgValue(const OpenClType &type) : type_(type){};
+
   virtual ~KernelArgValue(){};
 
   virtual void CopyToDevice(const cl::CommandQueue &queue,
@@ -44,6 +49,12 @@ class KernelArgValue {
   virtual bool operator!=(const KernelArgValue *const rhs) const = 0;
 
   virtual string ToString() const = 0;
+
+ protected:
+  const OpenClType &type() const { return type_; }
+
+ private:
+  OpenClType type_;
 };
 
 }  // namespace cldrive
