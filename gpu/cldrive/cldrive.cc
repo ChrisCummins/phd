@@ -15,7 +15,8 @@
 DEFINE_string(src, "", "Path to a file containing OpenCL kernels.");
 static bool ValidateSrc(const char* flagname, const string& value) {
   if (value.empty()) {
-    LOG(FATAL) << "Flag --" << flagname << " must be set";
+    // Not valid.
+    return true;
   }
 
   boost::filesystem::path path(value);
@@ -33,7 +34,7 @@ DEFINE_string(env, "",
               "builtin CPU simulator.");
 static bool ValidateEnv(const char* flagname, const string& value) {
   if (value.empty()) {
-    LOG(FATAL) << "Flag --" << flagname << " must be set";
+    return true;
   }
   try {
     phd::gpu::clinfo::GetOpenClDevice(value);
@@ -51,9 +52,6 @@ DEFINE_validator(env, &ValidateEnv);
 
 DEFINE_string(output_format, "csv", "The output format. One of: {csv,pb,pbtxt}.");
 static bool ValidateOutputFormat(const char* flagname, const string& value) {
-  if (value.empty()) {
-    LOG(FATAL) << "Flag --" << flagname << " must be set";
-  }
   if (value.compare("csv") && value.compare("pb") && value.compare("pbtxt")) {
     LOG(FATAL) << "Illegal value for --" << flagname << ". Must be one of: "
                << "{csv,pb,pbtxt}";
@@ -66,7 +64,7 @@ DEFINE_int32(gsize, 1024, "The global size to use.");
 DEFINE_int32(lsize, 128, "The local (workgroup) size.");
 DEFINE_bool(cl_opt, true, "Whether OpenCL optimizations are enabled.");
 DEFINE_int32(num_runs, 30, "The number of runs per kernel.");
-DEFINE_bool(binary_output, false, "Whether to print binary protobuf to stdout.");
+DEFINE_bool(clinfo, false, "List the available devices and exit.");
 
 namespace gpu {
 namespace cldrive {
@@ -77,6 +75,23 @@ namespace cldrive {
 
 int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+  LOG(INFO) << "FLAGS" << FLAGS_clinfo;
+  if (FLAGS_clinfo) {
+    auto devices = phd::gpu::clinfo::GetOpenClDevices();
+    for (int i = 0; i < devices.device_size(); ++i) {
+      std::cout << devices.device(i).name() << std::endl;
+    }
+    return 0;
+  }
+
+  if (FLAGS_env.empty()) {
+    LOG(FATAL) << "Flag --env must be set";
+  }
+
+  if (FLAGS_src.empty()) {
+    LOG(FATAL) << "Flag --src must be set";
+  }
 
   // Read OpenCL source.
   const boost::filesystem::path src_path(FLAGS_src);
