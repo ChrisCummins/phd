@@ -95,6 +95,7 @@ cc_library(
     hdrs = ["kernel_arg.h"],
     deps = [
         ":array_kernel_arg_value",
+        ":kernel_arg_util",
         ":kernel_arg_value",
         ":opencl_type",
         ":scalar_kernel_arg_value",

@@ -16,6 +16,7 @@
 #include "gpu/cldrive/kernel_arg.h"
 
 #include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/kernel_arg_util.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
 
 #include <cstdlib>
@@ -110,6 +111,23 @@ bool KernelArg::IsPrivate() const {
 }
 
 bool KernelArg::IsPointer() const { return is_pointer_; }
+
+std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
+    const cl::Context& context, const DynamicParams& dynamic_params,
+    bool rand_values) const {
+  CHECK(type() != OpenClType::DEFAULT_UNKNOWN);
+
+  if (IsPointer() && IsGlobal()) {
+    return CreateArrayArgValue(type(), context,
+                               /*size=*/dynamic_params.global_size_x(),
+                               /*value=*/1, rand_values);
+  } else if (!IsPointer()) {
+    return CreateScalarArgValue(type(),
+                                /*value=*/dynamic_params.global_size_x());
+  } else {
+    return std::unique_ptr<KernelArgValue>(nullptr);
+  }
+}
 
 }  // namespace cldrive
 }  // namespace gpu
