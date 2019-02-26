@@ -156,8 +156,8 @@
 #include <malloc.h>
 
 #if defined(USE_DX_INTEROP)
-#include <CL/cl_d3d10.h>
-#include <CL/cl_dx9_media_sharing.h>
+#include "third_party/opencl/cl_d3d10.h"
+#include "third_party/opencl/cl_dx9_media_sharing.h"
 #endif
 #endif // _WIN32
 
@@ -167,14 +167,10 @@
 
 //
 #if defined(USE_CL_DEVICE_FISSION)
-#include <CL/cl_ext.h>
+#include "third_party/opencl/cl_ext.h"
 #endif
 
-#if defined(__APPLE__) || defined(__MACOSX)
-#include <OpenCL/opencl.h>
-#else
-#include <CL/opencl.h>
-#endif // !__APPLE__
+#include "third_party/opencl/opencl.h"
 
 #if (_MSC_VER >= 1700) || (__cplusplus >= 201103L)
 #define CL_HPP_RVALUE_REFERENCES_SUPPORTED
