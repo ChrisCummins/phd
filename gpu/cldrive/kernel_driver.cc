@@ -63,7 +63,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   // Check that the dynamic params are within legal range.
   auto max_work_group_size = device_.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
-  if (static_cast<int>(max_work_group_size) < dynamic_params.global_size_x()) {
+  if (static_cast<int>(max_work_group_size) < dynamic_params.local_size_x()) {
     run.set_outcome(CldriveKernelRun::INVALID_DYNAMIC_PARAMS);
     return run;
   }
