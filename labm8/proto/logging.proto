@@ -1,4 +1,5 @@
 // The file defines the schema for log records.
+
 syntax = "proto2";
 
 // A log record is the result of a single call to logging.debug(),

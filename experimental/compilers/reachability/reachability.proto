@@ -6,15 +6,15 @@ package phd.experimental.compilers.reachability;
 
 // A collection of control flow graphs.
 message ControlFlowGraphSet {
-  repeated ControlFlowGraph graph = 1;
+  optional ControlFlowGraph graph = 1;
   optional int64 initial_random_seed = 2;
 }
 
 // A control flow graph is a collection of basic blocks and edges between them.
 message ControlFlowGraph {
   optional string name = 1;
-  repeated BasicBlock block = 2;
-  repeated ControlFlowGraphEdge edge = 3;
+  optional BasicBlock block = 2;
+  optional ControlFlowGraphEdge edge = 3;
   optional int64 entry_block_index = 4;
   optional int64 exit_block_index = 5;
 }

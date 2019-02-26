@@ -1,7 +1,9 @@
-/*
- * Protocol specification for OpenCL fuzztesting results.
- */
+//
+// * Protocol specification for OpenCL fuzztesting results.
+// 
+
 syntax = "proto2";
+
 package dsmith;
 
 // A single result.
@@ -13,11 +15,9 @@ message Result {
   optional int32 returncode = 5;
   optional string stdout = 6;
   optional string stderr = 7;
-
   message Testbed {
     optional Platform platform = 1;
     optional bool cl_opt = 2;
-
     message Platform {
       optional string cl_platform = 1;
       optional string cl_device = 2;
@@ -27,35 +27,29 @@ message Result {
       optional string host_os = 5;
     }
   }
-
   message TestCase {
     optional Program program = 1;
     optional Threads threads = 2;
     optional Harness harness = 3;
     optional int32 input_seed = 4;
     optional float timeout = 5;
-
     message Program {
       optional string src = 1;
       optional Generator generator = 2;
       optional float generation_time = 3;
-
       enum Generator {
         DSMITH = 0;
         CLSMITH = 1;
       }
     }
-
     message Threads {
       optional uint32 gsize_x = 1;
       optional uint32 gsize_y = 2;
       optional uint32 gsize_z = 3;
-
       optional uint32 lsize_x = 4;
       optional uint32 lsize_y = 5;
       optional uint32 lsize_z = 6;
     }
-
     enum Harness {
       CLDRIVE = 0;
       CL_LAUNCHER = 1;
@@ -66,5 +60,5 @@ message Result {
 
 // Concatenated array of results.
 message Results {
-  repeated Result results = 1;
+  optional Result results = 1;
 }

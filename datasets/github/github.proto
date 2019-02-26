@@ -1,6 +1,7 @@
 // Common protobufs for GitHub.
 
 syntax = "proto2";
+
 package github;
 
 // A GitHub user's credentials and API token, used for authenticating API calls.

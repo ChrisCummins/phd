@@ -8,3 +8,6 @@ linux: sudo apt install -y --no-install-recommends clang-format
 macos: brew install clang-format
 # For linting Python files.
 all: pip install yapf
+# For linting Protobuf files.
+linux: go get github.com/uber/prototool/cmd/prototool@dev
+macos: brew install prototool

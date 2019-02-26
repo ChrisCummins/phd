@@ -1,4 +1,5 @@
 syntax = "proto2";
+
 package deepsmith;
 
 message ServiceStatus {
@@ -8,13 +9,10 @@ message ServiceStatus {
     NOT_IMPLEMENTED_ERROR = 2;
     INVALID_REQUEST_PARAMETERS = 3;
   }
-
   // The name of the server sending the response.
   optional string client = 1 [default = "<anon>"];
-
   // The return code of the response.
   optional ReturnCode returncode = 2 [default = NOT_IMPLEMENTED_ERROR];
-
   // If status != SUCCESS, a message describing the error.
   optional string error_message = 3;
 }

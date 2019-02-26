@@ -2,28 +2,25 @@
 
 syntax = "proto2";
 
-import "config/proto/config.proto";
-
 package phd;
+
+import "config/proto/config.proto";
 
 // A ledger entry records the invocation and outcome of a single command.
 // A command is a bazel target and a set of arguments.
 message LedgerEntry {
-
   enum JobStatus {
     WAITING = 0; // Currently not used.
     BUILDING = 1;
     RUNNING = 2;
     COMPLETE = 3;
-  };
-
+  }
   enum JobOutcome {
     UNKNOWN = 0;
     RUN_SUCCEEDED = 1;
     BUILD_FAILED = 2;
     RUN_FAILED = 3;
-  };
-
+  }
   // A numeric counter of this entry in the ledger. >= 1.
   optional int64 id = 1;
   optional string worker_id = 2;
@@ -50,19 +47,18 @@ message LedgerId {
 
 service Ledger {
   // Client methods.
-  rpc Add (RunRequest) returns (LedgerId);
-  rpc Get (LedgerId) returns (LedgerEntry);
-
+  rpc Add(RunRequest) returns (LedgerId);
+  rpc Get(LedgerId) returns (LedgerEntry);
   // Worker bee methods.
-  rpc Update (LedgerEntry) returns (Null);
-  rpc RegisterWorkerBee (String) returns (Null);
-  rpc UnRegisterWorkerBee (String) returns (Null);
+  rpc Update(LedgerEntry) returns (Null);
+  rpc RegisterWorkerBee(String) returns (Null);
+  rpc UnRegisterWorkerBee(String) returns (Null);
 }
 
 service WorkerBee {
-  rpc Run (RunRequest) returns (Null);
-  rpc Ping (Null) returns (Null);
-  rpc Get (LedgerId) returns (LedgerEntry);
+  rpc Run(RunRequest) returns (Null);
+  rpc Ping(Null) returns (Null);
+  rpc Get(LedgerId) returns (LedgerEntry);
 }
 
 message RepoState {
@@ -86,9 +82,9 @@ message RunRequest {
   // The target which is to be built and executed.
   optional string target = 2;
   // The list of arguments to be passed to bazel.
-  repeated string bazel_args = 3;
+  optional string bazel_args = 3;
   // The list of arguments to be passed to the built target.
-  repeated string bin_args = 4;
+  optional string bin_args = 4;
   // The number of seconds to allow for execution.
   optional int64 timeout_seconds = 5;
   // This is set only when used as an argument to WorkerBee.Run().
@@ -101,5 +97,4 @@ message String {
   optional string string = 1;
 }
 
-message Null {
-}
+message Null {}

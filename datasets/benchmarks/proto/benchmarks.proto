@@ -11,7 +11,7 @@ message Benchmark {
   // The path to the compiled binary.
   optional string binary = 3;
   // The list of source files.
-  repeated string srcs = 4;
+  optional string srcs = 4;
   // An optional list of header files which are required for compilation.
-  repeated string hdrs = 5;
+  optional string hdrs = 5;
 }
