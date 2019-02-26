@@ -52,7 +52,15 @@ def PullAndRebaseOrDie():
   linters_lib.ExecOrDie(['git', 'pull', '--rebase'])
 
   # Apply the stash and reset the index.
-  linters_lib.ExecOrDie(['git', 'stash', 'pop', '--index'])
+  try:
+    subprocess.check_output(['git', 'stash', 'pop', '--index'],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+  except subprocess.CalledProcessError:
+    # If the stash fails to pop, this is because of a merge conflict. Pop the
+    # stash but without restoring the conflicted index. This command will
+    # cause the script to abort.
+    linters_lib.ExecOrDie(['git', 'stash', 'pop'])
 
 
 def GitAddOrDie(paths):
