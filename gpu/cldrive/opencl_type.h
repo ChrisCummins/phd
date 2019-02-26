@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 
+#include "phd/logging.h"
 #include "phd/statusor.h"
 #include "phd/string.h"
 #include "third_party/opencl/cl.hpp"
@@ -100,32 +101,57 @@ class OpenClType {
   explicit OpenClType(const OpenClTypeEnum& type_num) : type_num_(type_num){};
 
   bool ElementsAreEqual(const Scalar& lhs, const Scalar& rhs) const {
-    const cl_int *cl_int_lhs = boost::get<cl_int>(&lhs),
-                 *cl_int_rhs = boost::get<cl_int>(&rhs);
-    if (cl_int_lhs && cl_int_rhs) {
-      return *cl_int_lhs == *cl_int_rhs;
+    switch (type_num()) {
+      case OpenClTypeEnum::INT: {
+        const cl_int* left = boost::get<cl_int>(&lhs);
+        const cl_int* right = boost::get<cl_int>(&rhs);
+        DCHECK(left);
+        DCHECK(right);
+        return *left == *right;
+      }
+      case OpenClTypeEnum::FLOAT: {
+        const cl_float* left = boost::get<cl_float>(&lhs);
+        const cl_float* right = boost::get<cl_float>(&rhs);
+        DCHECK(left);
+        DCHECK(right);
+        return *left == *right;
+      }
     }
-    return false;
   }
 
   string FormatToString(const Scalar& value) const {
     string s = "";
     switch (type_num()) {
-      case OpenClTypeEnum::BOOL:
-        absl::StrAppend(&s, *boost::get<cl_bool>(&value));
-        return s;
-      default:
-        return s;
+      case OpenClTypeEnum::INT: {
+        absl::StrAppend(&s, *boost::get<cl_int>(&value));
+        break;
+      }
+      case OpenClTypeEnum::FLOAT: {
+        absl::StrAppend(&s, *boost::get<cl_float>(&value));
+        break;
+      }
     }
+    DCHECK(s.size());
+    return s;
   }
 
   Scalar Create(const int& value) const {
     switch (type_num()) {
-      case OpenClTypeEnum::BOOL:
-        return true;
-      default:
-        return 1;
+      case OpenClTypeEnum::INT:
+        return static_cast<cl_int>(value);
+      case OpenClTypeEnum::FLOAT:
+        return static_cast<cl_float>(value);
     }
+  }
+
+  size_t ElementSize() const {
+    switch (type_num()) {
+      case OpenClTypeEnum::INT:
+        return sizeof(cl_int);
+      case OpenClTypeEnum::FLOAT:
+        return sizeof(cl_float);
+    }
+    return -1;
   }
 
   const OpenClTypeEnum& type_num() const { return type_num_; }

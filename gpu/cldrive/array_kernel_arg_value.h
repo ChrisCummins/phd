@@ -56,9 +56,9 @@ class ArrayKernelArgValue : public KernelArgValue {
     return !(*this == rhs);
   }
 
-  std::vector<T> &vector() { return vector_; }
+  std::vector<Scalar> &vector() { return vector_; }
 
-  const std::vector<T> &vector() const { return vector_; }
+  const std::vector<Scalar> &vector() const { return vector_; }
 
   size_t size() const { return vector().size(); }
 
@@ -87,19 +87,19 @@ class ArrayKernelArgValue : public KernelArgValue {
   };
 
  protected:
-  std::vector<T> vector_;
+  std::vector<Scalar> vector_;
 };
 
 // An array value with a device-side buffer.
-template <typename T>
-class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue<T> {
+class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue {
  public:
   template <typename... Args>
-  ArrayKernelArgValueWithBuffer(const cl::Context &context, size_t size,
+  ArrayKernelArgValueWithBuffer(const OpenClType &type,
+                                const cl::Context &context, size_t size,
                                 Args &&... args)
-      : ArrayKernelArgValue<T>(size, args...),
+      : ArrayKernelArgValue(type, size, args...),
         buffer_(context, /*flags=*/CL_MEM_READ_WRITE,
-                /*size=*/sizeof(T) * size) {}
+                /*size=*/type.ElementSize() * size) {}
 
   cl::Buffer &buffer() { return buffer_; }
 
@@ -115,7 +115,7 @@ class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue<T> {
 
   virtual std::unique_ptr<KernelArgValue> CopyFromDevice(
       const cl::CommandQueue &queue, ProfilingData *profiling) override {
-    auto new_arg = std::make_unique<ArrayKernelArgValue<T>>(this->size());
+    auto new_arg = std::make_unique<ArrayKernelArgValue>(type(), this->size());
     CopyDeviceToHost(queue, buffer(), new_arg->vector().begin(),
                      new_arg->vector().end(), profiling);
     return std::move(new_arg);

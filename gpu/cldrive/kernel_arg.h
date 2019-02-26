@@ -17,7 +17,6 @@
 
 #include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/opencl_type.h"
-#include "gpu/cldrive/opencl_type.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "opencl_type.h"
 #include "phd/status.h"
@@ -60,7 +59,7 @@ class KernelArg {
  private:
   std::unique_ptr<KernelArgValue> TryToCreateKernelArgValue(
       const cl::Context &context, const DynamicParams &dynamic_params,
-      bool rand_values);
+      bool rand_values) const;
 
   cl::Kernel *kernel_;
   size_t arg_index_;

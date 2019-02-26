@@ -303,6 +303,7 @@ cc_library(
     srcs = ["opencl_type.cc"],
     hdrs = ["opencl_type.h"],
     deps = [
+        "//phd:logging",
         "//phd:status_macros",
         "//phd:statusor",
         "//phd:string",

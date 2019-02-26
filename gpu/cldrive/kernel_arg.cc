@@ -107,8 +107,9 @@ std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
 
 std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
     const cl::Context& context, const DynamicParams& dynamic_params,
-    bool rand_values) {
-  CHECK(type_ != OpenClTypeEnum::DEFAULT_UNKNOWN) << "Init() not called";
+    bool rand_values) const {
+  CHECK(type().type_num() == OpenClTypeEnum::DEFAULT_UNKNOWN)
+      << "Init() not called";
   if (IsPointer() && IsGlobal()) {
     return CreateArrayArgValue(type(), /*size=*/dynamic_params.global_size_x(),
                                context, /*value=*/1, rand_values);
@@ -123,13 +124,13 @@ std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
 const OpenClType& KernelArg::type() const { return type_; }
 
 std::unique_ptr<KernelArgValue> KernelArg::TryToCreateRandomValue(
-    const cl::Context& context, const DynamicParams& dynamic_params) {
+    const cl::Context& context, const DynamicParams& dynamic_params) const {
   return TryToCreateKernelArgValue(context, dynamic_params,
                                    /*rand_values=*/true);
 }
 
 std::unique_ptr<KernelArgValue> KernelArg::TryToCreateOnesValue(
-    const cl::Context& context, const DynamicParams& dynamic_params) {
+    const cl::Context& context, const DynamicParams& dynamic_params) const {
   return TryToCreateKernelArgValue(context, dynamic_params,
                                    /*rand_values=*/false);
 }
