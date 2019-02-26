@@ -11,6 +11,10 @@ message CldriveInstance {
   optional string opencl_src = 2;
   repeated DynamicParams dynamic_params = 3;
   optional int32 min_runs_per_kernel = 4;
+  // A string of options to pass to clBuildProgram(). One option,
+  // '-cl-kernel-arg-info', is always enabled. For other valid options, see:
+  // https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html
+  optional string build_opts = 5;
 
   // Output fields:
 
@@ -20,8 +24,8 @@ message CldriveInstance {
     PROGRAM_COMPILATION_FAILURE = 2;
     NO_KERNELS_IN_PROGRAM = 3;
   }
-  optional InstanceOutcome outcome = 5;
-  repeated CldriveKernelInstance kernel = 6;
+  optional InstanceOutcome outcome = 10;
+  repeated CldriveKernelInstance kernel = 11;
 }
 
 message CldriveKernelInstance {

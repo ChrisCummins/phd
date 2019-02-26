@@ -27,6 +27,7 @@
 
 #include "absl/time/time.h"
 #include "absl/time/clock.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 
 #define LOG_CL_ERROR(level, error)                                  \
@@ -43,8 +44,13 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(
     const std::string& opencl_kernel, const std::vector<cl::Device>& devices) {
   auto start_time = absl::Now();
   try {
+    // Assemble the build options. We ned -cl-kernel-arg-info so that we can
+    // read the kernel signatures.
+    string build_opts = "-cl-kernel-arg-info "
+    absl::StrAppend(&build_opts, build_opts.c_str());
+
     cl::Program program(opencl_kernel);
-    program.build(devices, "-cl-kernel-arg-info");
+    program.build(devices, build_opts);
     auto end_time = absl::Now();
     auto duration = (end_time - start_time) / absl::Milliseconds(1);
     LOG(INFO) << "OpenCL program build completed in " << duration << " ms";
