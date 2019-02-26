@@ -53,6 +53,7 @@ DEFINE_int32(gsize, 64, "The global size to use.");
 DEFINE_int32(lsize, 32, "The local (workgroup) size.");
 DEFINE_bool(cl_opt, true, "Whether OpenCL optimizations are enabled.");
 DEFINE_int32(num_runs, 10, "The number of runs per kernel.");
+DEFINE_bool(binary_output, false, "Whether to print binary protobuf to stdout.");
 
 namespace gpu {
 namespace cldrive {
@@ -85,5 +86,11 @@ int main(int argc, char** argv) {
 
   gpu::cldrive::Cldrive(&instance, device).RunOrDie();
 
-  std::cout << instance.DebugString();
+  if (FLAGS_binary_output) {
+    instance.SerializeToOstream(&std::cout);
+  } else {
+    std::cout << "# File: //gpu/cldrive/proto/cldrive.proto\n"
+              << "# Proto: gpu.cldrive.CldriveInstance\n"
+              << instance.DebugString();
+  }
 }
