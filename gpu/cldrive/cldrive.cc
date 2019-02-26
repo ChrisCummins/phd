@@ -60,8 +60,11 @@ static bool ValidateOutputFormat(const char* flagname, const string& value) {
 }
 DEFINE_validator(output_format, &ValidateOutputFormat);
 
-DEFINE_int32(gsize, 1024, "The global size to use.");
-DEFINE_int32(lsize, 128, "The local (workgroup) size.");
+DEFINE_int32(gsize, 1024,
+             "The global size to drive each kernel with. Buffers of this size "
+             "are allocated and transferred for array arguments, and this many "
+             "work items are instantiated.");
+DEFINE_int32(lsize, 128, "The local (work group) size. Must be <= gsize.");
 DEFINE_bool(cl_opt, true, "Whether OpenCL optimizations are enabled.");
 DEFINE_int32(num_runs, 30, "The number of runs per kernel.");
 DEFINE_bool(clinfo, false, "List the available devices and exit.");
