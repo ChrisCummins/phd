@@ -79,7 +79,7 @@ class ArrayKernelArgValue : public KernelArgValue {
 
   virtual string ToString() const override {
     string s = "";
-    for (auto &value : vector()) {
+    for (const auto &value : vector()) {
       absl::StrAppend(&s, opencl_type::ToString(value));
       absl::StrAppend(&s, ",");
     }

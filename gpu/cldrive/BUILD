@@ -323,6 +323,7 @@ cc_library(
         "//third_party/opencl",
         "@boost//:variant",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
     ],
 )
 

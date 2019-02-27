@@ -47,33 +47,34 @@ class KernelArgTest : public ::testing::Test {
 };
 
 TEST_F(KernelArgTest, UnsupportedType) {
-  cl::Kernel kernel = test::CreateClKernel("kernel void A(read_only image2d_t a) {}");
+  cl::Kernel kernel =
+      test::CreateClKernel("kernel void A(read_only image2d_t a) {}");
 
-  KernelArg arg(&kernel, 0);
-  EXPECT_FALSE(arg.Init().ok());
+  KernelArg arg;
+  EXPECT_FALSE(arg.Init(&kernel, 0).ok());
 }
 
 TEST_F(KernelArgTest, GlobalPointerIsGlobal) {
   cl::Kernel kernel = test::CreateClKernel("kernel void A(global int* a) {}");
 
-  KernelArg arg(&kernel, 0);
-  ASSERT_TRUE(arg.Init().ok());
+  KernelArg arg;
+  ASSERT_TRUE(arg.Init(&kernel, 0).ok());
   EXPECT_TRUE(arg.IsGlobal());
 }
 
 TEST_F(KernelArgTest, GlobalPointerIsNotLocal) {
   cl::Kernel kernel = test::CreateClKernel("kernel void A(global int* a) {}");
 
-  KernelArg arg(&kernel, 0);
-  ASSERT_TRUE(arg.Init().ok());
+  KernelArg arg;
+  ASSERT_TRUE(arg.Init(&kernel, 0).ok());
   EXPECT_FALSE(arg.IsLocal());
 }
 
 TEST_F(KernelArgTest, TryToCreateOnesValueGlobalInt) {
   cl::Kernel kernel = test::CreateClKernel("kernel void A(global int* a) {}");
 
-  KernelArg arg(&kernel, 0);
-  ASSERT_TRUE(arg.Init().ok());
+  KernelArg arg;
+  ASSERT_TRUE(arg.Init(&kernel, 0).ok());
 
   auto arg_value = arg.TryToCreateOnesValue(context_, test::MakeParams(50));
   ASSERT_NE(arg_value, nullptr);
@@ -82,8 +83,8 @@ TEST_F(KernelArgTest, TryToCreateOnesValueGlobalInt) {
 TEST_F(KernelArgTest, TryToCreateOnesValueGlobalIntSize) {
   cl::Kernel kernel = test::CreateClKernel("kernel void A(global int* a) {}");
 
-  KernelArg arg(&kernel, 0);
-  ASSERT_TRUE(arg.Init().ok());
+  KernelArg arg;
+  ASSERT_TRUE(arg.Init(&kernel, 0).ok());
 
   auto arg_value = arg.TryToCreateOnesValue(context_, test::MakeParams(50));
   auto array_value =
@@ -94,8 +95,8 @@ TEST_F(KernelArgTest, TryToCreateOnesValueGlobalIntSize) {
 TEST_F(KernelArgTest, TryToCreateOnesValueGlobalIntValues) {
   cl::Kernel kernel = test::CreateClKernel("kernel void A(global int* a) {}");
 
-  KernelArg arg(&kernel, 0);
-  ASSERT_TRUE(arg.Init().ok());
+  KernelArg arg;
+  ASSERT_TRUE(arg.Init(&kernel, 0).ok());
 
   auto arg_value = arg.TryToCreateOnesValue(context_, test::MakeParams(50));
   auto array_value =
