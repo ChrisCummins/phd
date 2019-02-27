@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Configure and build the phd toolchain.
 
-Creates the //config.pbtxt proto.
+Creates the //:config.pbtxt proto.
 
 Unlike the other files in this repository, this is not intended to be executed
 under a bazel environment, so must be compatible with whatever system python
