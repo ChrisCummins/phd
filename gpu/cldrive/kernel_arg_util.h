@@ -240,13 +240,14 @@ std::unique_ptr<KernelArgValue> CreateArrayArgValue(const OpenClType& type,
     case OpenClType::HALF16: {
       return CreateArrayArgValue<cl_half16>(context, size, value, rand_values);
     }
-    default: {
+    case OpenClType::DEFAULT_UNKNOWN: {
       // This condition should never occur as KernelArg::Init() will return an
-      // error status.
-      LOG(FATAL) << "Unsupported OpenClType enum type: " << type;
-      return std::unique_ptr<KernelArgValue>(nullptr);
+      // error status if the type cannot be determined.
+      LOG(FATAL) << "CreateArrayArgValue() called with type "
+                 << "OpenClType::DEFAULT_UNKNOWN";
     }
   }
+  return nullptr;  // Unreachable so long as switch covers all enum values.
 }
 
 template <typename T>
@@ -459,13 +460,14 @@ std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
     case OpenClType::HALF16: {
       return CreateScalarArgValue<cl_half16>(value);
     }
-    default: {
+    case OpenClType::DEFAULT_UNKNOWN: {
       // This condition should never occur as KernelArg::Init() will return an
-      // error status.
-      LOG(FATAL) << "Unsupported OpenClType enum type: " << type;
-      return std::unique_ptr<KernelArgValue>(nullptr);
+      // error status if the type cannot be determined.
+      LOG(FATAL) << "CreateScalarArgValue() called with type "
+                 << "OpenClType::DEFAULT_UNKNOWN";
     }
   }
+  return nullptr;  // Unreachable so long as switch covers all enum values.
 }
 
 }  // namespace cldrive
