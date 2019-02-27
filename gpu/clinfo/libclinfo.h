@@ -5,10 +5,6 @@
 
 #include <vector>
 
-// Enable OpenCL cl::Error class and exceptions.
-// This must be defined before including the OpenCL header.
-#define __CL_ENABLE_EXCEPTIONS
-
 #include "third_party/opencl/cl.hpp"
 
 #include "gpu/clinfo/proto/clinfo.pb.h"
@@ -24,13 +20,13 @@ namespace clinfo {
 
 // TODO(cec): Refactor so that each returns StatusOr, not exception.
 
-const char *OpenClErrorString(cl_int err);
+const char* OpenClErrorString(cl_int err);
 
 void OpenClCheckError(const string& api_call, cl_int err);
 
-void SetOpenClDevice(const cl::Platform &platform, const cl::Device &device,
+void SetOpenClDevice(const cl::Platform& platform, const cl::Device& device,
                      const int platform_id, const int device_id,
-                     ::gpu::clinfo::OpenClDevice *const message);
+                     ::gpu::clinfo::OpenClDevice* const message);
 
 ::gpu::clinfo::OpenClDevices GetOpenClDevices();
 
@@ -60,4 +56,4 @@ cl::Device GetOpenClDeviceOrDie(const string& name);
 
 }  // namespace phd
 
-#endif //PHD_GPU_LIBCLINFO_H
+#endif  // PHD_GPU_LIBCLINFO_H

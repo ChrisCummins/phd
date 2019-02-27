@@ -9,7 +9,6 @@
 */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreserved-id-macro"
-#define __CL_ENABLE_EXCEPTIONS
 #pragma GCC diagnostic pop
 
 #include <iostream>
@@ -25,8 +24,8 @@ int main(void) {
     // Discover number of platforms
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
-    std::cout << "\nNumber of OpenCL plaforms: "
-              << platforms.size() << std::endl;
+    std::cout << "\nNumber of OpenCL plaforms: " << platforms.size()
+              << std::endl;
 
     // Investigate each platform
     std::cout << "\n-------------------------" << std::endl;
@@ -62,16 +61,16 @@ int main(void) {
 
         size_t size;
         dev.getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &size);
-        std::cout << "\t\tLocal Memory Size: " << size/1024 << " KB"
+        std::cout << "\t\tLocal Memory Size: " << size / 1024 << " KB"
                   << std::endl;
 
         dev.getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &size);
-        std::cout << "\t\tGlobal Memory Size: " << size/(1024*1024)
-                  << " MB" << std::endl;
+        std::cout << "\t\tGlobal Memory Size: " << size / (1024 * 1024) << " MB"
+                  << std::endl;
 
         dev.getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &size);
-        std::cout << "\t\tMax Alloc Size: " << size/(1024*1024)
-                  << " MB" << std::endl;
+        std::cout << "\t\tMax Alloc Size: " << size / (1024 * 1024) << " MB"
+                  << std::endl;
 
         dev.getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &size);
         std::cout << "\t\tMax Work-group Total Size: " << size << std::endl;
@@ -79,8 +78,7 @@ int main(void) {
         std::vector<size_t> d;
         dev.getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &d);
         std::cout << "\t\tMax Work-group Dims: (";
-        for (const auto& st : d)
-          std::cout << st << " ";
+        for (const auto& st : d) std::cout << st << " ";
         std::cout << "\x08)" << std::endl;
 
         std::cout << "\t-------------------------" << std::endl;
@@ -88,8 +86,7 @@ int main(void) {
 
       std::cout << "\n-------------------------\n";
     }
-  }
-  catch (cl::Error err) {
+  } catch (cl::Error err) {
     std::cout << "OpenCL Error: " << err.what() << " returned "
               << err_code(err.err()) << std::endl;
     std::cout << "Check cl.h for error codes." << std::endl;

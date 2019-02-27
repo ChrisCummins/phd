@@ -14,15 +14,10 @@
 //
 //------------------------------------------------------------------------------
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreserved-id-macro"
-#define __CL_ENABLE_EXCEPTIONS
-#pragma GCC diagnostic pop
-
 #include "third_party/opencl/cl.hpp"
 
-#include "./util.hpp"
 #include "./err_code.h"
+#include "./util.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -45,8 +40,8 @@ static const float tolerance = 0.001f;
 static const size_t count = 1024;
 
 int main(void) {
-  std::vector<float> h_a(count);  // a vector
-  std::vector<float> h_b(count);  // b vector
+  std::vector<float> h_a(count);              // a vector
+  std::vector<float> h_b(count);              // b vector
   std::vector<float> h_c(count, 0xdeadbeef);  // c = a + b
 
   cl::Buffer d_a;  // device memory used for the input  a vector
@@ -71,16 +66,16 @@ int main(void) {
     cl::CommandQueue queue(context);
 
     // Create the kernel functor
-    auto vadd = cl::make_kernel<cl::Buffer, cl::Buffer,
-                                cl::Buffer, int>(program, "vadd");
+    auto vadd = cl::make_kernel<cl::Buffer, cl::Buffer, cl::Buffer, int>(
+        program, "vadd");
 
     d_a = cl::Buffer(context, begin(h_a), end(h_a), true);
     d_b = cl::Buffer(context, begin(h_b), end(h_b), true);
     d_c = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(float) * count);
 
     util::Timer timer;
-    vadd(cl::EnqueueArgs(queue, cl::NDRange(count)),
-         d_a, d_b, d_c, static_cast<int>(count));
+    vadd(cl::EnqueueArgs(queue, cl::NDRange(count)), d_a, d_b, d_c,
+         static_cast<int>(count));
 
     queue.finish();
 
@@ -95,7 +90,7 @@ int main(void) {
 
     for (size_t i = 0; i < count; i++) {
       tmp = h_a[i] + h_b[i];  // expected value for d_c[i]
-      tmp -= h_c[i];  // compute errors
+      tmp -= h_c[i];          // compute errors
       if (tmp * tmp < tolerance * tolerance)
         correct++;
       else
