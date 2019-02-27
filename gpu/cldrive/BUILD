@@ -134,6 +134,7 @@ cc_library(
     deps = [
         ":kernel_arg",
         ":kernel_arg_values_set",
+        ":opencl_util",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:logging",
         "//phd:status",
@@ -238,6 +239,7 @@ cc_library(
     hdrs = ["kernel_driver.h"],
     deps = [
         ":kernel_arg_set",
+        ":opencl_util",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:logging",
         "//phd:status_macros",
@@ -329,6 +331,7 @@ cc_library(
 
 cc_library(
     name = "opencl_util",
+    srcs = ["opencl_util.cc"],
     hdrs = ["opencl_util.h"],
     deps = [
         ":profiling_data",

@@ -15,6 +15,8 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/kernel_driver.h"
 
+#include "gpu/cldrive/opencl_util.h"
+
 #include "phd/logging.h"
 #include "phd/status_macros.h"
 
@@ -30,7 +32,7 @@ KernelDriver::KernelDriver(const cl::Context& context,
       kernel_(kernel),
       instance_(*instance),
       kernel_instance_(instance->add_kernel()),
-      name_(kernel.getInfo<CL_KERNEL_FUNCTION_NAME>()),
+      name_(util::GetOpenClKernelName(kernel)),
       args_set_(&kernel_) {}
 
 void KernelDriver::RunOrDie(const bool streaming_csv_output) {

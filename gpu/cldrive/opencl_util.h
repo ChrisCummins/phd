@@ -24,6 +24,7 @@ namespace cldrive {
 
 // Blocking host to device copy operation between iterators and a buffer.
 // Returns the elapsed nanoseconds.
+// TODO(cldrive): Move into util namespace.
 template <typename IteratorType>
 void CopyHostToDevice(const cl::CommandQueue &queue, IteratorType startIterator,
                       IteratorType endIterator, const cl::Buffer &buffer,
@@ -51,6 +52,7 @@ void CopyHostToDevice(const cl::CommandQueue &queue, IteratorType startIterator,
 
 // Blocking host to device copy operation between iterators and a buffer.
 // Returns the elapsed nanoseconds.
+// TODO(cldrive): Move into util namespace.
 template <typename IteratorType>
 void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
                       IteratorType startIterator,
@@ -77,5 +79,11 @@ void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
   profiling->transferred_bytes += byteLength;
 }
 
+namespace util {
+
+// Kernel names are \000 terminated. Trim that.
+string GetOpenClKernelName(const cl::Kernel &kernel);
+
+}  // namespace util
 }  // namespace cldrive
 }  // namespace gpu

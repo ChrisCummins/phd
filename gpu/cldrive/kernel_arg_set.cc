@@ -15,6 +15,8 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/kernel_arg_set.h"
 
+#include "gpu/cldrive/opencl_util.h"
+
 #include "phd/logging.h"
 #include "phd/status_macros.h"
 
@@ -26,8 +28,8 @@ KernelArgSet::KernelArgSet(cl::Kernel* kernel) : kernel_(kernel) {}
 CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   size_t num_args = kernel_->getInfo<CL_KERNEL_NUM_ARGS>();
   if (!num_args) {
-    LOG(ERROR) << "Kernel '" << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
-               << "' has no arguments";
+    LOG(WARNING) << "Kernel '" << util::GetOpenClKernelName(*kernel_)
+                 << "' has no arguments";
     return CldriveKernelInstance::NO_ARGUMENTS;
   }
 
@@ -37,7 +39,7 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
     KernelArg arg_driver;
     if (!arg_driver.Init(kernel_, i).ok()) {
       LOG(WARNING) << "Skipping kernel with no mutable arguments: '"
-                   << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>() << "'";
+                   << util::GetOpenClKernelName(*kernel_) << "'";
       return CldriveKernelInstance::UNSUPPORTED_ARGUMENTS;
     }
     if (arg_driver.IsGlobal()) {
@@ -48,7 +50,7 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
 
   if (!num_mutable_args) {
     LOG(WARNING) << "Skipping kernel with no mutable arguments: '"
-                 << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>() << "'";
+                 << util::GetOpenClKernelName(*kernel_) << "'";
     return CldriveKernelInstance::NO_MUTABLE_ARGUMENTS;
   }
 
