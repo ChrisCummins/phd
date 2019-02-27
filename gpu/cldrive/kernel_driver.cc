@@ -78,7 +78,11 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   }
 
   KernelArgValuesSet inputs;
-  RETURN_IF_ERROR(args_set_.SetOnes(context_, dynamic_params, &inputs));
+  auto args_status = args_set_.SetOnes(context_, dynamic_params, &inputs);
+  if (!args_status.ok()) {
+    LOG(WARNING) << "Unsupported params for kernel: '" << name_ << "'";
+    return args_status;
+  }
 
   KernelArgValuesSet output_a, output_b;
 

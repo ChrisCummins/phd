@@ -68,7 +68,8 @@ phd::Status KernelArgSet::SetRandom(const cl::Context& context,
     } else {
       // TryToCreateRandomValue() returns nullptr if the argument is not
       // supported.
-      return phd::Status::UNKNOWN;
+      return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                         "Unsupported argument type.");
     }
   }
   return phd::Status::OK;
@@ -85,7 +86,8 @@ phd::Status KernelArgSet::SetOnes(const cl::Context& context,
     } else {
       // TryToCreateRandomValue() returns nullptr if the argument is not
       // supported.
-      return phd::Status::UNKNOWN;
+      return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                         "Unsupported argument type.");
     }
   }
   return phd::Status::OK;
