@@ -28,15 +28,10 @@
 namespace gpu {
 namespace cldrive {
 
-KernelArg::KernelArg(cl::Kernel* kernel, size_t arg_index)
-    : kernel_(kernel),
-      arg_index_(arg_index),
-      type_(OpenClType::DEFAULT_UNKNOWN),
-      address_(kernel->getArgInfo<CL_KERNEL_ARG_ADDRESS_QUALIFIER>(arg_index)) {
+phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
+  address_ = kernel->getArgInfo<CL_KERNEL_ARG_ADDRESS_QUALIFIER>(arg_index);
   CHECK(IsGlobal() || IsLocal() || IsConstant() || IsPrivate());
-}
 
-phd::Status KernelArg::Init() {
   // Address qualifier is one of:
   //   CL_KERNEL_ARG_ACCESS_READ_ONLY
   //   CL_KERNEL_ARG_ACCESS_WRITE_ONLY
@@ -47,14 +42,14 @@ phd::Status KernelArg::Init() {
   // If argument is an image type, the access qualifier specified or the
   // default access qualifier is returned.
   auto access_qualifier =
-      kernel_->getArgInfo<CL_KERNEL_ARG_ACCESS_QUALIFIER>(arg_index_);
+      kernel->getArgInfo<CL_KERNEL_ARG_ACCESS_QUALIFIER>(arg_index);
   if (access_qualifier != CL_KERNEL_ARG_ACCESS_NONE) {
-    LOG(ERROR) << "Argument " << arg_index_ << " is an unsupported image type";
+    LOG(ERROR) << "Argument " << arg_index << " is an unsupported image type";
     return phd::Status::UNKNOWN;
   }
 
   string full_type_name =
-      kernel_->getArgInfo<CL_KERNEL_ARG_TYPE_NAME>(arg_index_);
+      kernel->getArgInfo<CL_KERNEL_ARG_TYPE_NAME>(arg_index);
   CHECK(full_type_name.size());
 
   is_pointer_ = full_type_name[full_type_name.size() - 2] == '*';
@@ -70,8 +65,8 @@ phd::Status KernelArg::Init() {
 
   auto type_or = OpenClTypeFromString(type_name);
   if (!type_or.ok()) {
-    LOG(ERROR) << "Argument " << arg_index_ << " of kernel '"
-               << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
+    LOG(ERROR) << "Argument " << arg_index << " of kernel '"
+               << kernel->getInfo<CL_KERNEL_FUNCTION_NAME>()
                << "' is of unknown type: " << full_type_name;
     return type_or.status();
   }

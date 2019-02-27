@@ -34,8 +34,8 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   // Create args.
   int num_mutable_args = 0;
   for (size_t i = 0; i < num_args; ++i) {
-    auto arg_driver = KernelArg(kernel_, i);
-    if (!arg_driver.Init().ok()) {
+    KernelArg arg_driver;
+    if (!arg_driver.Init(kernel_, i).ok()) {
       LOG(ERROR) << "Kernel '" << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
                  << "' has unsupported arguments";
       return CldriveKernelInstance::UNSUPPORTED_ARGUMENTS;
