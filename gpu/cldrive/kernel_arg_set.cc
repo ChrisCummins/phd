@@ -21,8 +21,7 @@
 namespace gpu {
 namespace cldrive {
 
-KernelArgSet::KernelArgSet(const cl::Context& context, cl::Kernel* kernel)
-    : context_(context), kernel_(kernel) {}
+KernelArgSet::KernelArgSet(cl::Kernel* kernel) : kernel_(kernel) {}
 
 CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   size_t num_args = kernel_->getInfo<CL_KERNEL_NUM_ARGS>();
@@ -56,11 +55,12 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   return CldriveKernelInstance::PASS;
 }
 
-phd::Status KernelArgSet::SetRandom(const DynamicParams& dynamic_params,
+phd::Status KernelArgSet::SetRandom(const cl::Context& context,
+                                    const DynamicParams& dynamic_params,
                                     KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    auto value = arg.TryToCreateRandomValue(context_, dynamic_params);
+    auto value = arg.TryToCreateRandomValue(context, dynamic_params);
     if (value) {
       values->AddKernelArgValue(std::move(value));
     } else {
@@ -72,11 +72,12 @@ phd::Status KernelArgSet::SetRandom(const DynamicParams& dynamic_params,
   return phd::Status::OK;
 }
 
-phd::Status KernelArgSet::SetOnes(const DynamicParams& dynamic_params,
+phd::Status KernelArgSet::SetOnes(const cl::Context& context,
+                                  const DynamicParams& dynamic_params,
                                   KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
-    auto value = arg.TryToCreateOnesValue(context_, dynamic_params);
+    auto value = arg.TryToCreateOnesValue(context, dynamic_params);
     if (value) {
       values->AddKernelArgValue(std::move(value));
     } else {

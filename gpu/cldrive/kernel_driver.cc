@@ -31,7 +31,7 @@ KernelDriver::KernelDriver(const cl::Context& context,
       instance_(*instance),
       kernel_instance_(instance->add_kernel()),
       name_(kernel.getInfo<CL_KERNEL_FUNCTION_NAME>()),
-      args_set_(context, &kernel_) {}
+      args_set_(&kernel_) {}
 
 void KernelDriver::RunOrDie(const bool streaming_csv_output) {
   kernel_instance_->set_name(name_);
@@ -70,8 +70,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   }
 
   KernelArgValuesSet inputs;
-  RETURN_IF_ERROR(args_set_.SetOnes(dynamic_params, &inputs));
-  inputs.SetAsArgs(&kernel_);
+  RETURN_IF_ERROR(args_set_.SetOnes(context_, dynamic_params, &inputs));
 
   KernelArgValuesSet output_a, output_b;
 
@@ -87,12 +86,8 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   }
 
   bool maybe_no_output = output_a == inputs;
-  if (maybe_no_output) {
-    LOG(INFO) << "Inputs\n" << inputs.ToString();
-    LOG(INFO) << "Outputs\n" << output_a.ToString();
-  }
 
-  CHECK(args_set_.SetRandom(dynamic_params, &inputs).ok());
+  CHECK(args_set_.SetRandom(context_, dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
   *run.add_log() =
       RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
@@ -103,11 +98,11 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
     return run;
   }
 
-  // if (maybe_no_output && output_b == inputs) {
-  //   run.clear_log();  // Remove performance logs.
-  //   run.set_outcome(CldriveKernelRun::NO_OUTPUT);
-  //   return run;
-  // }
+  if (maybe_no_output && output_b == inputs) {
+    run.clear_log();  // Remove performance logs.
+    run.set_outcome(CldriveKernelRun::NO_OUTPUT);
+    return run;
+  }
 
   for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
     *run.add_log() =
@@ -119,7 +114,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 }
 
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
-    const DynamicParams& dynamic_params, const KernelArgValuesSet& inputs,
+    const DynamicParams& dynamic_params, KernelArgValuesSet& inputs,
     KernelArgValuesSet* outputs, const bool streaming_csv_output) {
   gpu::libcecl::OpenClKernelInvocation log;
   ProfilingData profiling;
@@ -129,6 +124,7 @@ gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
   size_t local_size = dynamic_params.local_size_x();
 
   inputs.CopyToDevice(queue_, &profiling);
+  inputs.SetAsArgs(&kernel_);
 
   queue_.enqueueNDRangeKernel(kernel_, /*offset=*/cl::NullRange,
                               /*global=*/cl::NDRange(global_size),

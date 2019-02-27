@@ -31,11 +31,9 @@ class Cldrive {
  private:
   CldriveInstance* instance_;
   cl::Device device_;
-  cl::Context context_;
-  cl::CommandQueue queue_;
 };
 
-void ProcessCldriveInstanceOrDie(CldriveInstance *instance);
+void ProcessCldriveInstanceOrDie(CldriveInstance* instance);
 
 }  // namespace cldrive
 }  // namespace gpu

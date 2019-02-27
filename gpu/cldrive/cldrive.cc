@@ -1,7 +1,7 @@
 #include "gpu/cldrive/libcldrive.h"
 
-#include "gpu/clinfo/libclinfo.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
+#include "gpu/clinfo/libclinfo.h"
 
 #include "phd/logging.h"
 
@@ -18,14 +18,14 @@ namespace {
 //     'a,b' -> 'a', 'b'
 //     'ab' -> 'ab'
 std::vector<string> SplitCommaSeparated(const string& str) {
-  std::vector<absl::string_view> str_paths = absl::StrSplit(str, ',', absl::SkipEmpty());
+  std::vector<absl::string_view> str_paths =
+      absl::StrSplit(str, ',', absl::SkipEmpty());
   return std::vector<string>(str_paths.begin(), str_paths.end());
 }
 
 }  // anonymous namespace
 
-DEFINE_string(srcs, "",
-              "A comma separated list of OpenCL source files.");
+DEFINE_string(srcs, "", "A comma separated list of OpenCL source files.");
 static bool ValidateSrcs(const char* flagname, const string& value) {
   for (auto str_path : SplitCommaSeparated(value)) {
     // string str_path(str_path_view);
@@ -59,7 +59,8 @@ static bool ValidateEnvs(const char* flagname, const string& value) {
 }
 DEFINE_validator(envs, &ValidateEnvs);
 
-DEFINE_string(output_format, "csv", "The output format. One of: {csv,pb,pbtxt}.");
+DEFINE_string(output_format, "csv",
+              "The output format. One of: {csv,pb,pbtxt}.");
 static bool ValidateOutputFormat(const char* flagname, const string& value) {
   if (value.compare("csv") && value.compare("pb") && value.compare("pbtxt")) {
     LOG(FATAL) << "Illegal value for --" << flagname << ". Must be one of: "
@@ -151,7 +152,13 @@ int main(int argc, char** argv) {
 
       instance->mutable_device()->CopyFrom(device_protos[i]);
 
-      gpu::cldrive::Cldrive(instance, devices[i]).RunOrDie(csv);
+      try {
+        gpu::cldrive::Cldrive(instance, devices[i]).RunOrDie(csv);
+      } catch (cl::Error e) {
+        LOG(FATAL) << "Unhandled OpenCL exception "
+                   << phd::gpu::clinfo::OpenClErrorString(e.err())
+                   << " raised by " << e.what();
+      }
 
       if (!FLAGS_output_format.compare("pb")) {
         instances.SerializeToOstream(&std::cout);

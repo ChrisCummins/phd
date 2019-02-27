@@ -26,21 +26,22 @@ namespace cldrive {
 
 class KernelArgSet {
  public:
-  KernelArgSet(const cl::Context& context, cl::Kernel* kernel);
+  KernelArgSet(cl::Kernel* kernel);
 
   CldriveKernelInstance::KernelInstanceOutcome LogErrorOutcome(
       const CldriveKernelInstance::KernelInstanceOutcome& outcome);
 
   CldriveKernelInstance::KernelInstanceOutcome Init();
 
-  phd::Status SetRandom(const DynamicParams& dynamic_params,
+  phd::Status SetRandom(const cl::Context& context,
+                        const DynamicParams& dynamic_params,
                         KernelArgValuesSet* values);
 
-  phd::Status SetOnes(const DynamicParams& dynamic_params,
+  phd::Status SetOnes(const cl::Context& context,
+                      const DynamicParams& dynamic_params,
                       KernelArgValuesSet* values);
 
  private:
-  cl::Context context_;
   cl::Kernel* kernel_;
   std::vector<KernelArg> args_;
 };

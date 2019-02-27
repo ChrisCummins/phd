@@ -37,6 +37,8 @@ void CopyHostToDevice(const cl::CommandQueue &queue, IteratorType startIterator,
       buffer, /*blocking=*/true, /*flags=*/CL_MAP_WRITE, /*offset=*/0,
       /*size=*/byteLength, /*events=*/nullptr, /*event=*/&event,
       /*error=*/nullptr));
+  DCHECK(pointer);
+
   profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
   std::copy(startIterator, endIterator, pointer);
 
@@ -63,6 +65,8 @@ void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
       buffer, /*blocking=*/true, /*flags=*/CL_MAP_READ, /*offset=*/0,
       /*size=*/byteLength, /*events=*/nullptr, /*event=*/&event,
       /*error=*/nullptr));
+  DCHECK(pointer);
+
   profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
   std::copy(pointer, pointer + length, startIterator);
 

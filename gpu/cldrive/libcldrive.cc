@@ -25,11 +25,11 @@
 #include "phd/status.h"
 #include "phd/statusor.h"
 
-#include "absl/time/time.h"
-#include "absl/time/clock.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 
 #define LOG_CL_ERROR(level, error)                                  \
   LOG(level) << "OpenCL exception: " << error.what() << ", error: " \
@@ -41,9 +41,9 @@ namespace cldrive {
 namespace {
 
 // Attempt to build OpenCL program.
-phd::StatusOr<cl::Program> BuildOpenClProgram(
-    const std::string& opencl_kernel, const std::vector<cl::Device>& devices,
-    const string& cl_build_opts) {
+phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
+                                              const cl::Context& context,
+                                              const string& cl_build_opts) {
   auto start_time = absl::Now();
   try {
     // Assemble the build options. We need -cl-kernel-arg-info so that we can
@@ -52,8 +52,9 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(
     absl::StrAppend(&all_build_opts, cl_build_opts);
     phd::TrimRight(all_build_opts);
 
-    cl::Program program(opencl_kernel);
-    program.build(devices, all_build_opts.c_str());
+    cl::Program program(context, opencl_kernel);
+    program.build(context.getInfo<CL_CONTEXT_DEVICES>(),
+                  all_build_opts.c_str());
     auto end_time = absl::Now();
     auto duration = (end_time - start_time) / absl::Milliseconds(1);
     LOG(INFO) << "clBuildProgram() with options '" << all_build_opts
@@ -68,18 +69,17 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(
 }  // namespace
 
 Cldrive::Cldrive(CldriveInstance* instance, const cl::Device& device)
-      : instance_(instance),
-        device_(device),
-        context_(device_),
-        queue_(context_, /*devices=*/context_.getInfo<CL_CONTEXT_DEVICES>()[0],
-               /*properties=*/CL_QUEUE_PROFILING_ENABLE) {}
+    : instance_(instance), device_(device) {}
 
 void Cldrive::RunOrDie(const bool streaming_csv_output) {
+  cl::Context context(device_);
+  cl::CommandQueue queue(context,
+                         /*devices=*/context.getInfo<CL_CONTEXT_DEVICES>()[0],
+                         /*properties=*/CL_QUEUE_PROFILING_ENABLE);
+
   // Compile program or fail.
-  phd::StatusOr<cl::Program> program_or =
-      BuildOpenClProgram(string(instance_->opencl_src()),
-                         context_.getInfo<CL_CONTEXT_DEVICES>(),
-                         instance_->build_opts());
+  phd::StatusOr<cl::Program> program_or = BuildOpenClProgram(
+      string(instance_->opencl_src()), context, instance_->build_opts());
   if (!program_or.ok()) {
     LOG(ERROR) << "OpenCL program compilation failed!";
     instance_->set_outcome(CldriveInstance::PROGRAM_COMPILATION_FAILURE);
@@ -97,12 +97,12 @@ void Cldrive::RunOrDie(const bool streaming_csv_output) {
   }
 
   for (auto& kernel : kernels) {
-    KernelDriver(context_, queue_, kernel, instance_).RunOrDie(streaming_csv_output);
+    KernelDriver(context, queue, kernel, instance_)
+        .RunOrDie(streaming_csv_output);
   }
 
   instance_->set_outcome(CldriveInstance::PASS);
 }
-
 
 void ProcessCldriveInstanceOrDie(CldriveInstance* instance) {
   try {
