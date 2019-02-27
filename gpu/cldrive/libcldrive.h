@@ -29,6 +29,8 @@ class Cldrive {
   void RunOrDie(const bool streaming_csv_output = false);
 
  private:
+  void DoRunOrDie(const bool streaming_csv_output);
+
   CldriveInstance* instance_;
   cl::Device device_;
 };

@@ -152,13 +152,7 @@ int main(int argc, char** argv) {
 
       instance->mutable_device()->CopyFrom(device_protos[i]);
 
-      try {
-        gpu::cldrive::Cldrive(instance, devices[i]).RunOrDie(csv);
-      } catch (cl::Error e) {
-        LOG(FATAL) << "Unhandled OpenCL exception "
-                   << phd::gpu::clinfo::OpenClErrorString(e.err())
-                   << " raised by " << e.what();
-      }
+      gpu::cldrive::Cldrive(instance, devices[i]).RunOrDie(csv);
 
       if (!FLAGS_output_format.compare("pb")) {
         instances.SerializeToOstream(&std::cout);

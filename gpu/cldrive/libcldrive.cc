@@ -71,6 +71,19 @@ Cldrive::Cldrive(CldriveInstance* instance, const cl::Device& device)
     : instance_(instance), device_(device) {}
 
 void Cldrive::RunOrDie(const bool streaming_csv_output) {
+  try {
+    DoRunOrDie(streaming_csv_output);
+  } catch (cl::Error error) {
+    LOG(FATAL) << "Unhandled OpenCL exception.\n"
+               << "    Raised by:  " << error.what() << '\n'
+               << "    Error code: " << error.err() << " ("
+               << phd::gpu::clinfo::OpenClErrorString(error.err()) << ")\n"
+               << "This is a bug! Please report to "
+               << "<https://github.com/ChrisCummins/cldrive/issues>.";
+  }
+}
+
+void Cldrive::DoRunOrDie(const bool streaming_csv_output) {
   cl::Context context(device_);
   cl::CommandQueue queue(context,
                          /*devices=*/context.getInfo<CL_CONTEXT_DEVICES>()[0],
@@ -104,15 +117,8 @@ void Cldrive::RunOrDie(const bool streaming_csv_output) {
 }
 
 void ProcessCldriveInstanceOrDie(CldriveInstance* instance) {
-  try {
-    auto device = phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device());
-    Cldrive(instance, device).RunOrDie();
-  } catch (cl::Error error) {
-    LOG(FATAL) << "Unhandled OpenCL exception caused by " << error.what()
-               << ": " << phd::gpu::clinfo::OpenClErrorString(error.err())
-               << ". This is a bug! Please report to "
-               << "<https://github.com/ChrisCummins/cldrive/issues>.";
-  }
+  auto device = phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device());
+  Cldrive(instance, device).RunOrDie(false);
 }
 
 }  // namespace cldrive
