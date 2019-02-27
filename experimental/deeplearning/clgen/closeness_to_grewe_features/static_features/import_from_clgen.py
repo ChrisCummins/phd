@@ -125,7 +125,9 @@ def main(argv: typing.List[str]):
               ],
           )))
   db = grewe_features_db.Database(FLAGS.db)
-  profile = prof.AutoCsvProfiler(FLAGS.profile_dir)
+  profile_dir = pathlib.Path(FLAGS.profile_dir)
+  profile_dir.mkdir(parents=True, exist_ok=True)
+  profiler = prof.AutoCsvProfiler(profile_dir)
 
   with instance.Session():
     while True:
