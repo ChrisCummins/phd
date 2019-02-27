@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Configure and build the phd toolchain.
 
 Creates the //:config.pbtxt proto.
