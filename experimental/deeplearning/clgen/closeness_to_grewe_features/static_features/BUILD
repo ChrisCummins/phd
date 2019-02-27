@@ -20,6 +20,7 @@ py_binary(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
+        "//labm8:prof",
         "//third_party/py/absl",
     ],
 )

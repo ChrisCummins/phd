@@ -13,6 +13,7 @@ from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from labm8 import prof
 
 FLAGS = flags.FLAGS
 
@@ -28,6 +29,10 @@ flags.DEFINE_string('clgen_dir', '~/.cache/clgen',
 flags.DEFINE_string('clgen_corpus_dir',
                     "/mnt/cc/data/datasets/github/corpuses/opencl",
                     "WHere the corpus is stored.")
+flags.DEFINE_string(
+    'profile_dir',
+    '/tmp/phd/experimental/deeplearning/clgen/closeness_to_grewe_features/clgen_profiles',
+    'Path to a directory to store profiling data in.')
 
 
 def CreateTempFileFromSample(tempdir: pathlib.Path, sample: model_pb2.Sample,
@@ -39,18 +44,23 @@ def CreateTempFileFromSample(tempdir: pathlib.Path, sample: model_pb2.Sample,
   return path
 
 
-def Sample(instance: clgen.Instance, db: grewe_features_db.Database):
-  samples = instance.model.SampleFast(
-      instance.sampler, min_num_samples=FLAGS.batch_size)
+def Sample(instance: clgen.Instance, db: grewe_features_db.Database,
+           profiler: prof.AutoCsvProfiler):
+  with profiler.Profile(f'Create {FLAGS.batch_size} samples'):
+    samples = instance.model.SampleFast(
+        instance.sampler, min_num_samples=FLAGS.batch_size)
   prefix = 'phd_experimental_deeplearning_'
   with tempfile.TemporaryDirectory(prefix=prefix) as d:
     d = pathlib.Path(d)
-    paths_to_import = [
-        CreateTempFileFromSample(d, sample, i)
-        for i, sample in enumerate(samples)
-    ]
-    db.ImportStaticFeaturesFromPaths(
-        paths_to_import, FLAGS.origin, multiprocess=False)
+    with profiler.Profile(f'Create {FLAGS.batch_size} tempfiles'):
+      paths_to_import = [
+          CreateTempFileFromSample(d, sample, i)
+          for i, sample in enumerate(samples)
+      ]
+    with profiler.Profile() as p:
+      num_successes = db.ImportStaticFeaturesFromPaths(
+          paths_to_import, FLAGS.origin, multiprocess=False)
+      p.name = f'Import {num_successes} / {FLAGS.batch_size} samples'
 
 
 def main(argv: typing.List[str]):
@@ -115,10 +125,11 @@ def main(argv: typing.List[str]):
               ],
           )))
   db = grewe_features_db.Database(FLAGS.db)
+  profile = prof.AutoCsvProfiler(FLAGS.profile_dir)
 
   with instance.Session():
     while True:
-      Sample(instance, db)
+      Sample(instance, db, profiler)
 
 
 if __name__ == '__main__':

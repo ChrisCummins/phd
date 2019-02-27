@@ -140,7 +140,7 @@ class Database(sqlutil.Database):
       self,
       paths_to_import: typing.Iterable[pathlib.Path],
       origin: str,
-      multiprocess: bool = True) -> None:
+      multiprocess: bool = True) -> int:
     """Import a sequence of paths into the database.
 
     Each path should point to a file containing a single OpenCL kernel.
@@ -149,7 +149,11 @@ class Database(sqlutil.Database):
       paths_to_import: The paths to import.
       origin: The origin of the kernels.
       multiprocess: If true, process each file in parallel.
+
+    Returns:
+      The number of samples that were successfully imported.
     """
+    success_count = 0
     paths_to_import = list(paths_to_import)
     random.shuffle(paths_to_import)
     logging.info('Importing %s files ...',
@@ -168,6 +172,7 @@ class Database(sqlutil.Database):
       bar.update(i)
       # None type return if feature extraction failed.
       if src:
+        success_count += 1
         with self.Session(commit=False) as session:
           obj = StaticFeatures.FromSrcOriginAndFeatures(src, origin, features)
           # Check if it already exists in the database.
@@ -179,3 +184,5 @@ class Database(sqlutil.Database):
               session.commit()
             except (sql.exc.OperationalError, sql.exc.DataError) as e:
               logging.warning('Failed to commit database entry: %s', e)
+
+    return success_count

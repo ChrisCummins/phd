@@ -1,8 +1,10 @@
 """Profiling API for timing critical paths in code.
 """
 import contextlib
+import csv
 import inspect
 import os
+import pathlib
 import sys
 import time
 import typing
@@ -10,7 +12,9 @@ import typing
 import humanize
 from absl import logging
 
+from labm8 import labdate
 from labm8 import labtypes
+from labm8 import system
 
 _TIMERS = {}
 
@@ -160,6 +164,13 @@ def ProfileToFile(file_object, name: str = ''):
   yield Profile(name=name, print_to=_WriteToFile)
 
 
+class ProfilingEvent(object):
+
+  def __init__(self, start_time: int, name: str):
+    self.start_time = start_time
+    self.name = name
+
+
 @contextlib.contextmanager
 def ProfileToStdout(name: str = ''):
   """A context manager which prints the elapsed time to stdout on exit.
@@ -169,3 +180,45 @@ def ProfileToStdout(name: str = ''):
   """
   with Profile(name, print_to=print):
     yield
+
+
+class AutoCsvProfiler(object):
+
+  def __init__(self, directory: pathlib.Path, name: str = 'profile'):
+    self._directory = pathlib.Path(directory)
+    if not self._directory.is_dir():
+      raise ValueError(f"Directory not found: {directory}")
+    self._name = name
+
+    # Create the name of the logfile now, so that is timestamped to the start of
+    # execution.
+    timestamp = labdate.MillisecondsTimestamp()
+    log_name = '.'.join([self._name, system.HOSTNAME, str(timestamp), 'csv'])
+    self._path = self._dir / log_name
+
+    with self._writer() as writer:
+      writer.writerow(
+          ['Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)', 'Event'])
+
+  @contextlib.contextmanager
+  def Profile(self, event_name: str = ''):
+    """A context manager which prints the elapsed time upon exit.
+
+    Args:
+      event_name: The name of the event being profiled.
+    """
+    event = ProfilingEvent(labdate.MillisecondsTimestamp(), event_name)
+    yield event
+    elapsed = labdate.MillisecondsTimestamp() - event.start_time
+    with self._writer() as writer:
+      writer.writerow(event.start_time, elapsed, event.name)
+
+  @contextlib.contextmanager
+  def _writer(self):
+    with open(self.path, 'a') as f:
+      writer = csv.writer(f)
+      yield writer
+
+  @property
+  def path(self) -> pathlib.Path:
+    return self._path
