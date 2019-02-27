@@ -36,8 +36,8 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   for (size_t i = 0; i < num_args; ++i) {
     KernelArg arg_driver;
     if (!arg_driver.Init(kernel_, i).ok()) {
-      LOG(ERROR) << "Kernel '" << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
-                 << "' has unsupported arguments";
+      LOG(WARNING) << "Skipping kernel with no mutable arguments: '"
+                   << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>() << "'";
       return CldriveKernelInstance::UNSUPPORTED_ARGUMENTS;
     }
     if (arg_driver.IsGlobal()) {
@@ -47,8 +47,8 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   }
 
   if (!num_mutable_args) {
-    LOG(ERROR) << "Kernel '" << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>()
-               << "' has no mutable arguments";
+    LOG(WARNING) << "Skipping kernel with no mutable arguments: '"
+                 << kernel_->getInfo<CL_KERNEL_FUNCTION_NAME>() << "'";
     return CldriveKernelInstance::NO_MUTABLE_ARGUMENTS;
   }
 
