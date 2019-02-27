@@ -1,3 +1,8 @@
+// Chris edit: Always use exceptions!
+#ifndef __CL_ENABLE_EXCEPTIONS
+#define __CL_ENABLE_EXCEPTIONS
+#endif
+
 #pragma GCC diagnostic push  // Chris edit
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wundef"
