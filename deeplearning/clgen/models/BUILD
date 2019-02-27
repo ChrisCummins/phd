@@ -184,7 +184,7 @@ py_test(
 
 py_library(
     name = "tensorflow_backend",
-    srcs = ["tensorflow_backend.py"],
+    srcs = ["tensorflow_backend.py", "helper.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":backends",

@@ -49,9 +49,12 @@ class TensorFlowBackend(backends.BackendBase):
     self.cell = None
     self.input_data = None
     self.targets = None
+    self.lengths = None
+    self.seed_length = None
+    self.temperature = None
     self.initial_state = None
     self.logits = None
-    self.probs = None
+    self.generated = None
     self.loss = None
     self.final_state = None
     self.learning_rate = None
@@ -60,7 +63,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     self.inference_tf = None
     self.inference_sess = None
-    self.inference_state = None
+    self.first_sample = None
     self.inference_indices = None
 
   def InitTfGraph(self, inference: bool) -> 'tf':
@@ -84,12 +87,13 @@ class TensorFlowBackend(backends.BackendBase):
 
     # Deferred importing of TensorFlow.
     import tensorflow as tf
-    import tensorflow.contrib.legacy_seq2seq as seq2seq
+    import tensorflow.contrib.seq2seq as seq2seq
     from tensorflow.contrib import rnn
+    from deeplearning.clgen.models import helper
 
     cell_type = {
-        model_pb2.NetworkArchitecture.LSTM: rnn.BasicLSTMCell,
-        model_pb2.NetworkArchitecture.GRU: rnn.GRUCell,
+        model_pb2.NetworkArchitecture.LSTM: rnn.LSTMBlockCell,
+        model_pb2.NetworkArchitecture.GRU: rnn.GRUBlockCellV2,
         model_pb2.NetworkArchitecture.RNN: rnn.BasicRNNCell,
     }.get(self.config.architecture.neuron_type, None)
     if cell_type is None:
@@ -99,73 +103,74 @@ class TensorFlowBackend(backends.BackendBase):
     tf.reset_default_graph()
 
     # Corpus attributes.
-    sequence_length = 1 if inference else self.config.training.sequence_length
+    sequence_length = 1024 if inference else self.config.training.sequence_length
 
+    batch_size = self.config.training.batch_size
     vocab_size = self.atomizer.vocab_size
 
-    cell = cell_type(
-        self.config.architecture.neurons_per_layer, state_is_tuple=True)
-    self.cell = cell = rnn.MultiRNNCell(
-        [cell] * self.config.architecture.num_layers, state_is_tuple=True)
-    self.input_data = tf.placeholder(
-        tf.int32, [self.config.training.batch_size, sequence_length])
-    self.targets = tf.placeholder(
-        tf.int32, [self.config.training.batch_size, sequence_length])
-    self.initial_state = self.cell.zero_state(self.config.training.batch_size,
-                                              tf.float32)
+    cells_lst = []
+    for _ in range(self.config.architecture.num_layers):
+      cells_lst.append(cell_type(
+        self.config.architecture.neurons_per_layer))
+    self.cell = cell = rnn.MultiRNNCell(cells_lst, state_is_tuple=True)
+
+    self.input_data = tf.placeholder(tf.int32, [batch_size, sequence_length])
+    self.targets = tf.placeholder(tf.int32, [batch_size, sequence_length])
+    self.initial_state = self.cell.zero_state(batch_size, tf.float32)
+    self.temperature = tf.Variable(1.0, trainable=False)
+    self.seed_length = tf.Variable(32, trainable=False)
+
+    if inference:
+      self.lengths = tf.placeholder(tf.int32, [batch_size])
+    else:
+      self.lengths = tf.fill([batch_size], sequence_length)
 
     scope_name = 'rnnlm'
     with tf.variable_scope(scope_name):
-      softmax_w = tf.get_variable(
-          'softmax_w', [self.config.architecture.neurons_per_layer, vocab_size])
-      softmax_b = tf.get_variable('softmax_b', [vocab_size])
-
       with tf.device('/cpu:0'):
         embedding = tf.get_variable(
             'embedding',
             [vocab_size, self.config.architecture.neurons_per_layer])
-        inputs = tf.split(
-            axis=1,
-            num_or_size_splits=sequence_length,
-            value=tf.nn.embedding_lookup(embedding, self.input_data))
-        inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
+        inputs = tf.nn.embedding_lookup(embedding, self.input_data)
 
-    def InferenceLoop(prev, _):
-      prev = tf.matmul(prev, softmax_w) + softmax_b
-      prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
-      return tf.nn.embedding_lookup(embedding, prev_symbol)
+    if inference:
+      decode_helper = helper.CustomInferenceHelper(
+          inputs,
+          self.lengths,
+          self.seed_length,
+          embedding,
+          self.temperature)
+    else:
+      decode_helper = seq2seq.TrainingHelper(
+          inputs,
+          self.lengths,
+          time_major=False)
 
-    outputs, last_state = seq2seq.rnn_decoder(
-        inputs,
-        self.initial_state,
+    decoder = seq2seq.BasicDecoder(
         cell,
-        scope=scope_name,
-        loop_function=InferenceLoop if inference else None)
-    output = tf.reshape(
-        tf.concat(axis=1, values=outputs),
-        [-1, self.config.architecture.neurons_per_layer])
-    self.logits = tf.matmul(output, softmax_w) + softmax_b
-    self.probs = tf.nn.softmax(self.logits)
-    sequence_loss = seq2seq.sequence_loss_by_example(
-        [self.logits], [tf.reshape(self.targets, [-1])],
-        [tf.ones([self.config.training.batch_size * sequence_length])],
-        vocab_size)
-    self.loss = tf.reduce_sum(
-        sequence_loss) / self.config.training.batch_size / sequence_length
-    self.final_state = last_state
+        decode_helper,
+        self.initial_state,
+        tf.layers.Dense(vocab_size))
+    outputs, self.final_state, _ = seq2seq.dynamic_decode(
+        decoder,
+        output_time_major=False,
+        impute_finished=True,
+        swap_memory=True,
+        scope=scope_name)
+
+    self.generated = outputs.sample_id
+    self.logits = outputs.rnn_output
+
+    sequence_weigths = tf.ones([self.config.training.batch_size, sequence_length])
+    self.loss = seq2seq.sequence_loss(self.logits, self.targets, sequence_weigths)
+    
     self.learning_rate = tf.Variable(0.0, trainable=False)
     self.epoch = tf.Variable(0, trainable=False)
     trainable_variables = tf.trainable_variables()
 
     # TODO(cec): Support non-adam optimizers.
     grads, _ = tf.clip_by_global_norm(
-        # Argument of potential interest:
-        #   aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE
-        #
-        # See:
-        #   https://www.tensorflow.org/api_docs/python/tf/gradients
-        #   https://www.tensorflow.org/api_docs/python/tf/AggregationMethod
-        tf.gradients(self.loss, trainable_variables),
+        tf.gradients(self.loss, trainable_variables, aggregation_method=2),
         self.config.training.adam_optimizer.normalized_gradient_clip_micros /
         1e6)
     optimizer = tf.train.AdamOptimizer(self.learning_rate)
@@ -348,6 +353,7 @@ class TensorFlowBackend(backends.BackendBase):
                    sampler: samplers.Sampler,
                    seed: typing.Optional[int] = None) -> int:
     """Initialize model for sampling."""
+    import tensorflow as tf
     # Delete any previous sampling session.
     if self.inference_tf:
       del self.inference_tf
@@ -376,36 +382,34 @@ class TensorFlowBackend(backends.BackendBase):
     assert checkpoint_state.model_checkpoint_path
 
     saver.restore(self.inference_sess, checkpoint_state.model_checkpoint_path)
+    self.inference_sess.run(tf.assign(self.temperature, sampler.temperature))
 
     return self.config.training.batch_size
 
   def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
-    self.inference_state = self.inference_sess.run(
-        self.cell.zero_state(batch_size, self.inference_tf.float32))
-    self.inference_indices = np.zeros((batch_size, 1))
+    #self.inference_state = self.inference_sess.run(
+    #    self.cell.zero_state(batch_size, self.inference_tf.float32))
+    self.first_sample = True
+    self.inference_indices = np.tile(sampler.encoded_start_text, [batch_size, 1])
 
-    # Seed the model state with the starting text.
-    for symbol in sampler.encoded_start_text[:-1]:
-      self.inference_indices[:] = symbol
-      feed = {
-          self.input_data: self.inference_indices,
-          self.initial_state: self.inference_state
-      }
-      [self.inference_state] = self.inference_sess.run([self.final_state], feed)
-    self.inference_indices[:] = sampler.encoded_start_text[-1]
-
-  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int):
-    # Sample distribution to pick next symbol.
+  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int, done: np.ndarray):
+    length = self.inference_indices.shape[1]
+    assert length < 1024
+    expanded_indices = np.zeros((batch_size, 1024))
+    expanded_indices[:, :length] = self.inference_indices
+    synthesized_lengths = np.full([batch_size], 1024)
+    synthesized_lengths[done] = 0
     feed = {
-        self.input_data: self.inference_indices,
-        self.initial_state: self.inference_state
-    }
-    [predictions, self.inference_state] = self.inference_sess.run(
-        [self.probs, self.final_state], feed)
-    self.inference_indices[:, 0] = [
-        WeightedPick(p, sampler.temperature) for p in predictions
-    ]
-    return [i[0] for i in self.inference_indices]
+        self.input_data: expanded_indices,
+        self.lengths: synthesized_lengths,
+        self.seed_length: length}
+
+    generated, = self.inference_sess.run([self.generated], feed)
+    self.inference_indices = generated[:, -1]
+    if self.first_sample:
+      generated = generated[:, len(sampler.encoded_start_text):]
+    self.first_sample = False
+    return generated
 
   @property
   def is_trained(self) -> bool:
@@ -418,13 +422,3 @@ class TensorFlowBackend(backends.BackendBase):
     ]
     epoch_nums = [int(x.split('-')[-1]) for x in checkpoint_files]
     return self.config.training.num_epochs in epoch_nums
-
-
-def WeightedPick(predictions: np.ndarray, temperature: float) -> np.ndarray:
-  """Make a weighted choice from a predictions array."""
-  predictions = np.log(np.asarray(predictions).astype('float64')) / temperature
-  predictions_exp = np.exp(predictions)
-  # Normalize the probabilities.
-  predictions = predictions_exp / np.sum(predictions_exp)
-  predictions = np.random.multinomial(1, predictions, 1)
-  return np.argmax(predictions)

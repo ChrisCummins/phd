@@ -53,7 +53,7 @@ class BackendBase(object):
     raise NotImplementedError
 
   def SampleNextIndices(self, sampler: samplers.Sampler,
-                        batch_size: int) -> np.ndarray:
+                        batch_size: int, done: np.ndarray) -> np.ndarray:
     """Sample the next indices for the current sample batch.
 
     Returns:
