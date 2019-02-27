@@ -4,14 +4,14 @@ from tensorflow.python.ops.distributions import categorical
 from tensorflow.python.util import nest
 from tensorflow.python.ops import math_ops
 
+
 class CustomInferenceHelper(seq2seq.TrainingHelper):
   """An inference helper that takes a seed text"""
 
-  def __init__(self, input_seed, sequence_length, seed_length, embedding, temperature):
+  def __init__(self, input_seed, sequence_length, seed_length, embedding,
+               temperature):
     super(CustomInferenceHelper, self).__init__(
-        inputs=input_seed,
-        sequence_length=sequence_length,
-        time_major=False)
+        inputs=input_seed, sequence_length=sequence_length, time_major=False)
 
     self._xlate = embedding
     self._seed_length = seed_length
@@ -40,6 +40,8 @@ class CustomInferenceHelper(seq2seq.TrainingHelper):
 
       next_inputs = tf.case(
           [(all_finished, lambda: self._zero_inputs),
-           (tf.logical_not(seed_done), lambda: nest.map_structure(read_from_ta, self._input_tas))],
-           default=lambda: tf.stop_gradient(tf.nn.embedding_lookup(self._xlate, sample_ids)))
+           (tf.logical_not(seed_done),
+            lambda: nest.map_structure(read_from_ta, self._input_tas))],
+          default=lambda: tf.stop_gradient(
+              tf.nn.embedding_lookup(self._xlate, sample_ids)))
       return (finished, next_inputs, state)

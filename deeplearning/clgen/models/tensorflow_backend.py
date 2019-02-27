@@ -110,8 +110,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     cells_lst = []
     for _ in range(self.config.architecture.num_layers):
-      cells_lst.append(cell_type(
-        self.config.architecture.neurons_per_layer))
+      cells_lst.append(cell_type(self.config.architecture.neurons_per_layer))
     self.cell = cell = rnn.MultiRNNCell(cells_lst, state_is_tuple=True)
 
     self.input_data = tf.placeholder(tf.int32, [batch_size, sequence_length])
@@ -135,22 +134,13 @@ class TensorFlowBackend(backends.BackendBase):
 
     if inference:
       decode_helper = helper.CustomInferenceHelper(
-          inputs,
-          self.lengths,
-          self.seed_length,
-          embedding,
-          self.temperature)
+          inputs, self.lengths, self.seed_length, embedding, self.temperature)
     else:
       decode_helper = seq2seq.TrainingHelper(
-          inputs,
-          self.lengths,
-          time_major=False)
+          inputs, self.lengths, time_major=False)
 
-    decoder = seq2seq.BasicDecoder(
-        cell,
-        decode_helper,
-        self.initial_state,
-        tf.layers.Dense(vocab_size))
+    decoder = seq2seq.BasicDecoder(cell, decode_helper, self.initial_state,
+                                   tf.layers.Dense(vocab_size))
     outputs, self.final_state, _ = seq2seq.dynamic_decode(
         decoder,
         output_time_major=False,
@@ -161,9 +151,11 @@ class TensorFlowBackend(backends.BackendBase):
     self.generated = outputs.sample_id
     self.logits = outputs.rnn_output
 
-    sequence_weigths = tf.ones([self.config.training.batch_size, sequence_length])
-    self.loss = seq2seq.sequence_loss(self.logits, self.targets, sequence_weigths)
-    
+    sequence_weigths = tf.ones(
+        [self.config.training.batch_size, sequence_length])
+    self.loss = seq2seq.sequence_loss(self.logits, self.targets,
+                                      sequence_weigths)
+
     self.learning_rate = tf.Variable(0.0, trainable=False)
     self.epoch = tf.Variable(0, trainable=False)
     trainable_variables = tf.trainable_variables()
@@ -390,9 +382,11 @@ class TensorFlowBackend(backends.BackendBase):
     #self.inference_state = self.inference_sess.run(
     #    self.cell.zero_state(batch_size, self.inference_tf.float32))
     self.first_sample = True
-    self.inference_indices = np.tile(sampler.encoded_start_text, [batch_size, 1])
+    self.inference_indices = np.tile(sampler.encoded_start_text,
+                                     [batch_size, 1])
 
-  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int, done: np.ndarray):
+  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int,
+                        done: np.ndarray):
     length = self.inference_indices.shape[1]
     assert length < 1024
     expanded_indices = np.zeros((batch_size, 1024))
@@ -402,7 +396,8 @@ class TensorFlowBackend(backends.BackendBase):
     feed = {
         self.input_data: expanded_indices,
         self.lengths: synthesized_lengths,
-        self.seed_length: length}
+        self.seed_length: length
+    }
 
     generated, = self.inference_sess.run([self.generated], feed)
     self.inference_indices = generated[:, -1]

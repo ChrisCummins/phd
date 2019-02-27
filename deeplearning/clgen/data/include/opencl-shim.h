@@ -30,7 +30,6 @@
 #define AS
 #endif  // CLGEN_OPENCL_SHIM_NO_UNSUPPORTED_STORAGE_CLASSES_AND_QUALIFIERS
 
-
 // Common types.
 #ifndef CLGEN_OPENCL_SHIM_NO_COMMON_TYPES
 #define CONVT float
@@ -182,7 +181,7 @@
 #define PADDINGX 4
 #define PADDINGY 2
 #define PI 3.14
-#define PRESCAN_THREADS 128  /* Used in parboil-0.2 histo */
+#define PRESCAN_THREADS 128 /* Used in parboil-0.2 histo */
 #define PULSELOCALOFFSET 8
 #define PULSEOFF 16
 #define QPEX 1

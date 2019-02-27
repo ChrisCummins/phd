@@ -214,12 +214,13 @@ class KerasBackend(backends.BackendBase):
 
     self.inference_indices = [sampler.encoded_start_text[-1]] * batch_size
 
-  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int, done: np.ndarray):
+  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int,
+                        done: np.ndarray):
     result = np.zeros((batch_size, 1024))
     for idx in range(1024):
       # Predict the next index for the entire batch.
       x = np.reshape(self.inference_indices, [batch_size, 1])
-      # Input shape: (bath_size, 1).
+      # Input shape: (batch_size, 1).
       probabilities = self.inference_model.predict(x)
       # Output shape: (batch_size, 1, vocab_size).
       self.inference_indices = [
