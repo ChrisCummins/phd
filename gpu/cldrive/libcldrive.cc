@@ -59,8 +59,9 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
               << "' completed in " << duration << " ms";
     return program;
   } catch (cl::Error e) {
-    LOG_CL_ERROR(ERROR, e);
-    return phd::Status::UNKNOWN;
+    LOG_CL_ERROR(WARNING, e);
+    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                       "clBuildProgram failed");
   }
 }
 
@@ -107,7 +108,10 @@ void ProcessCldriveInstanceOrDie(CldriveInstance* instance) {
     auto device = phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device());
     Cldrive(instance, device).RunOrDie();
   } catch (cl::Error error) {
-    LOG_CL_ERROR(FATAL, error);
+    LOG(FATAL) << "Unhandled OpenCL exception caused by " << error.what()
+               << ": " << phd::gpu::clinfo::OpenClErrorString(error.err())
+               << ". This is a bug! Please report to "
+               << "<https://github.com/ChrisCummins/cldrive/issues>.";
   }
 }
 

@@ -42,6 +42,8 @@ void KernelDriver::RunOrDie(const bool streaming_csv_output) {
 
   kernel_instance_->set_outcome(args_set_.Init());
   if (kernel_instance_->outcome() != CldriveKernelInstance::PASS) {
+    LOG(WARNING) << "Skipping kernel with unsupported arguments: '" << name_
+                 << "'";
     return;
   }
 
@@ -66,6 +68,10 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   auto max_work_group_size = device_.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
   if (static_cast<int>(max_work_group_size) < dynamic_params.local_size_x()) {
     run.set_outcome(CldriveKernelRun::INVALID_DYNAMIC_PARAMS);
+    LOG(WARNING) << "Unsupported dynamic params to kernel '" << name_
+                 << "' (local size " << dynamic_params.local_size_x()
+                 << " exceeds maximum device work group size "
+                 << max_work_group_size << ")";
     return run;
   }
 
@@ -81,6 +87,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   if (output_a != output_b) {
     run.clear_log();  // Remove performance logs.
+    LOG(WARNING) << "Skipping non-deterministic kernel: '" << name_ << "'";
     run.set_outcome(CldriveKernelRun::NONDETERMINISTIC);
     return run;
   }
@@ -94,12 +101,15 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   if (output_a == output_b) {
     run.clear_log();  // Remove performance logs.
+    LOG(WARNING) << "Skipping input insensitive kernel: '" << name_ << "'";
     run.set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
     return run;
   }
 
   if (maybe_no_output && output_b == inputs) {
     run.clear_log();  // Remove performance logs.
+    LOG(WARNING) << "Skipping kernel that produces no output: '" << name_
+                 << "'";
     run.set_outcome(CldriveKernelRun::NO_OUTPUT);
     return run;
   }
