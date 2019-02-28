@@ -241,6 +241,7 @@ cc_library(
         ":kernel_arg_set",
         ":opencl_util",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/clinfo:libclinfo",
         "//phd:logging",
         "//phd:status_macros",
         "//phd:statusor",

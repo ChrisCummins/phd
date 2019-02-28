@@ -39,7 +39,7 @@ message CldriveKernelInstance {
   optional string name = 2;
 
   enum KernelInstanceOutcome {
-    UNKNOWN_ERROR = 0;  // Default value is an error.
+    UNKNOWN_ERROR = 0;  // Default error value.
     PASS = 1;
     NO_ARGUMENTS = 2;
     NO_MUTABLE_ARGUMENTS = 3;
@@ -57,16 +57,28 @@ message DynamicParams {
 }
 
 message CldriveKernelRun {
-  repeated gpu.libcecl.OpenClKernelInvocation log = 1;
-  optional KernelRunOutcome outcome = 2;
+  optional KernelRunOutcome outcome = 1;
+  repeated gpu.libcecl.OpenClKernelInvocation log = 2;
 
   enum KernelRunOutcome {
+    // The default (uninitialized) value is an error.
     UNKNOWN_ERROR = 0;
+    // The kernel run succeeded. This is the only outcome value which permits
+    // values in the CldriveKernelRun.log field.
     PASS = 1;
-    INVALID_KERNEL = 2;
+    // An OpenCL API call raised an error. The error code will be logged to
+    // stderr, but is not recorded here.
+    CL_ERROR = 2;
+    // The requested global or local size exceeds the device capabilities.
     INVALID_DYNAMIC_PARAMS = 4;
+    // The kernel is determined to produce no output - i.e. it does not modify
+    // any of its argument values.
     NO_OUTPUT = 5;
+    // The kernel is determined to be input insensitive - i.e. it produces the
+    // same values for different input values.
     INPUT_INSENSITIVE = 6;
+    // The kernel is determined to be non-deterministic - i.e. it produces
+    // different values when run twice with the same input.
     NONDETERMINISTIC = 7;
   }
 }

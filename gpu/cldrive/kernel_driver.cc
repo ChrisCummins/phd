@@ -16,6 +16,7 @@
 #include "gpu/cldrive/kernel_driver.h"
 
 #include "gpu/cldrive/opencl_util.h"
+#include "gpu/clinfo/libclinfo.h"
 
 #include "phd/logging.h"
 #include "phd/status_macros.h"
@@ -66,15 +67,32 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
     const DynamicParams& dynamic_params, const bool streaming_csv_output) {
   CldriveKernelRun run;
 
+  try {
+    RunDynamicParams(dynamic_params, streaming_csv_output, &run);
+  } catch (cl::Error error) {
+    LOG(WARNING) << "Error code " << error.err() << " ("
+                 << phd::gpu::clinfo::OpenClErrorString(error.err()) << ") "
+                 << "raised by " << error.what() << "() while driving kernel: '"
+                 << name_ << "'";
+    run.set_outcome(CldriveKernelRun::CL_ERROR);
+  }
+
+  return run;
+}
+
+phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
+                                           const bool streaming_csv_output,
+                                           CldriveKernelRun* run) {
   // Check that the dynamic params are within legal range.
   auto max_work_group_size = device_.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
   if (static_cast<int>(max_work_group_size) < dynamic_params.local_size_x()) {
-    run.set_outcome(CldriveKernelRun::INVALID_DYNAMIC_PARAMS);
+    run->set_outcome(CldriveKernelRun::INVALID_DYNAMIC_PARAMS);
     LOG(WARNING) << "Unsupported dynamic params to kernel '" << name_
                  << "' (local size " << dynamic_params.local_size_x()
                  << " exceeds maximum device work group size "
                  << max_work_group_size << ")";
-    return run;
+    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                       "Unsupported dynamic params");
   }
 
   KernelArgValuesSet inputs;
@@ -86,47 +104,47 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
 
   KernelArgValuesSet output_a, output_b;
 
-  *run.add_log() =
+  *run->add_log() =
       RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
-  *run.add_log() =
+  *run->add_log() =
       RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
 
   if (output_a != output_b) {
-    run.clear_log();  // Remove performance logs.
+    run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping non-deterministic kernel: '" << name_ << "'";
-    run.set_outcome(CldriveKernelRun::NONDETERMINISTIC);
-    return run;
+    run->set_outcome(CldriveKernelRun::NONDETERMINISTIC);
+    return phd::Status(phd::error::Code::INVALID_ARGUMENT, "non-deterministic");
   }
 
   bool maybe_no_output = output_a == inputs;
 
   CHECK(args_set_.SetRandom(context_, dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
-  *run.add_log() =
+  *run->add_log() =
       RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
 
   if (output_a == output_b) {
-    run.clear_log();  // Remove performance logs.
+    run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping input insensitive kernel: '" << name_ << "'";
-    run.set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
-    return run;
+    run->set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
+    return phd::Status(phd::error::Code::INVALID_ARGUMENT, "Input insensitive");
   }
 
   if (maybe_no_output && output_b == inputs) {
-    run.clear_log();  // Remove performance logs.
+    run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping kernel that produces no output: '" << name_
                  << "'";
-    run.set_outcome(CldriveKernelRun::NO_OUTPUT);
-    return run;
+    run->set_outcome(CldriveKernelRun::NO_OUTPUT);
+    return phd::Status(phd::error::Code::INVALID_ARGUMENT, "No argument");
   }
 
   for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
-    *run.add_log() =
+    *run->add_log() =
         RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
   }
 
-  run.set_outcome(CldriveKernelRun::PASS);
-  return run;
+  run->set_outcome(CldriveKernelRun::PASS);
+  return phd::Status::OK;
 }
 
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(

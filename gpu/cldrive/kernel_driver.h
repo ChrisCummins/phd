@@ -39,6 +39,12 @@ class KernelDriver {
       KernelArgValuesSet* outputs, bool streaming_csv_output = false);
 
  private:
+  // Private helper to public RunDynamicParams() method that doesn't catch
+  // OpenCL exceptions.
+  phd::Status RunDynamicParams(const DynamicParams& dynamic_params,
+                               const bool streaming_csv_output,
+                               CldriveKernelRun* run);
+
   cl::Context context_;
   cl::CommandQueue queue_;
   cl::Device device_;
