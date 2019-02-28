@@ -44,8 +44,9 @@ phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
   auto access_qualifier =
       kernel->getArgInfo<CL_KERNEL_ARG_ACCESS_QUALIFIER>(arg_index);
   if (access_qualifier != CL_KERNEL_ARG_ACCESS_NONE) {
-    LOG(ERROR) << "Argument " << arg_index << " is an unsupported image type";
-    return phd::Status::UNKNOWN;
+    LOG(WARNING) << "Argument " << arg_index << " is an unsupported image type";
+    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                       "Unsupported argument");
   }
 
   string full_type_name =
@@ -71,6 +72,13 @@ phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
     return type_or.status();
   }
   type_ = type_or.ValueOrDie();
+
+  // Check for invalid private pointer arguments.
+  if (is_pointer_ && IsPrivate()) {
+    LOG(WARNING) << "Pointer to private argument is not allowed";
+    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                       "Unsupported argument");
+  }
 
   return phd::Status::OK;
 }
