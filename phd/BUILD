@@ -1,6 +1,28 @@
 # Core C++ libraries for the phd repo.
 
 cc_library(
+    name = "bazelutil",
+    srcs = ["bazelutil.cc"],
+    hdrs = ["bazelutil.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":logging",
+        ":string",
+        "@boost//:filesystem",
+    ],
+)
+
+cc_test(
+    name = "bazelutil_test",
+    srcs = ["bazelutil_test.cc"],
+    data = ["//phd/test:data_file"],
+    deps = [
+        ":bazelutil",
+        ":test",
+    ],
+)
+
+cc_library(
     name = "callback",
     hdrs = ["callback.h"],
     visibility = ["//visibility:public"],

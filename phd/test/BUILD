@@ -9,3 +9,9 @@ cc_proto_library(
     protos = ["protos.proto"],
     with_grpc = False,
 )
+
+filegroup(
+    name = "data_file",
+    srcs = ["data_file.txt"],
+    visibility = ["//phd:__subpackages__"],
+)
