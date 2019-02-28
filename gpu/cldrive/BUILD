@@ -108,6 +108,7 @@ cc_library(
         ":kernel_arg_util",
         ":kernel_arg_value",
         ":opencl_type",
+        ":opencl_util",
         ":scalar_kernel_arg_value",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:status",

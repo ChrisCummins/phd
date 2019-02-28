@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
-
 #include "gpu/cldrive/logger.h"
 #include "phd/logging.h"
+
 namespace gpu {
 namespace cldrive {
 

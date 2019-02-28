@@ -17,13 +17,13 @@
 
 #include "gpu/cldrive/global_memory_arg_value.h"
 #include "gpu/cldrive/kernel_arg_util.h"
+#include "gpu/cldrive/opencl_type.h"
+#include "gpu/cldrive/opencl_util.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
 
-#include <cstdlib>
-
-#include "gpu/cldrive/global_memory_arg_value.h"
-#include "gpu/cldrive/opencl_type.h"
 #include "phd/status_macros.h"
+
+#include <cstdlib>
 
 namespace gpu {
 namespace cldrive {
@@ -67,7 +67,7 @@ phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
   auto type_or = OpenClTypeFromString(type_name);
   if (!type_or.ok()) {
     LOG(ERROR) << "Argument " << arg_index << " of kernel '"
-               << kernel->getInfo<CL_KERNEL_FUNCTION_NAME>()
+               << GetOpenClKernelName(kernel)
                << "' is of unknown type: " << full_type_name;
     return type_or.status();
   }
