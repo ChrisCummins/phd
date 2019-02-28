@@ -18,5 +18,19 @@
 
 #include "phd/pbutil.h"
 
+namespace gpu {
+namespace cldrive {
+
+void ProcessCldriveInstancesOrDie(CldriveInstances* instances) {
+  for (int i = 0; i < instances->instance_size(); ++i) {
+    Cldrive(instances->mutable_instance(i))
+        .RunOrDie(
+            /*streaming_csv_output=*/false);
+  }
+}
+
+}  // namespace cldrive
+}  // namespace gpu
+
 PBUTIL_INPLACE_PROCESS_MAIN(gpu::cldrive::ProcessCldriveInstancesOrDie,
                             gpu::cldrive::CldriveInstances);

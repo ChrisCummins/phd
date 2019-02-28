@@ -115,11 +115,9 @@ int main(int argc, char** argv) {
     LOG(FATAL) << "Flag --srcs must be set";
   }
 
-  std::vector<cl::Device> devices;
-  std::vector<::gpu::clinfo::OpenClDevice> device_protos;
+  std::vector<::gpu::clinfo::OpenClDevice> devices;
   for (auto device_name : SplitCommaSeparated(FLAGS_envs)) {
-    devices.push_back(phd::gpu::clinfo::GetOpenClDeviceOrDie(device_name));
-    device_protos.push_back(
+    devices.push_back(
         phd::gpu::clinfo::GetOpenClDeviceProto(device_name).ValueOrDie());
   }
 
@@ -150,9 +148,7 @@ int main(int argc, char** argv) {
       instance->clear_outcome();
       instance->clear_kernel();
 
-      instance->mutable_device()->CopyFrom(device_protos[i]);
-
-      gpu::cldrive::Cldrive(instance, devices[i]).RunOrDie(csv);
+      gpu::cldrive::Cldrive(instance).RunOrDie(csv);
 
       if (!FLAGS_output_format.compare("pb")) {
         instances.SerializeToOstream(&std::cout);

@@ -24,7 +24,7 @@ namespace cldrive {
 
 class Cldrive {
  public:
-  Cldrive(CldriveInstance* instance, const cl::Device& device);
+  Cldrive(CldriveInstance* instance);
 
   void RunOrDie(const bool streaming_csv_output = false);
 

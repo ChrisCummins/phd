@@ -68,7 +68,9 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
 }  // namespace
 
 Cldrive::Cldrive(CldriveInstance* instance, const cl::Device& device)
-    : instance_(instance), device_(device) {}
+    : instance_(instance),
+      device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(
+          instances->instance(i).device())) {}
 
 void Cldrive::RunOrDie(const bool streaming_csv_output) {
   try {
@@ -114,14 +116,6 @@ void Cldrive::DoRunOrDie(const bool streaming_csv_output) {
   }
 
   instance_->set_outcome(CldriveInstance::PASS);
-}
-
-void ProcessCldriveInstancesOrDie(CldriveInstances* instances) {
-  for (int i = 0; i < instances->instance_size(); ++i) {
-    auto device =
-        phd::gpu::clinfo::GetOpenClDeviceOrDie(instances->instance(i).device());
-    Cldrive(instances->mutable_instance(i), device).RunOrDie(false);
-  }
 }
 
 }  // namespace cldrive
