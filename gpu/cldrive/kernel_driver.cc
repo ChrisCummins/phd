@@ -102,6 +102,19 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     return args_status;
   }
 
+  // Check that each input is within the device's maximum for parameter sizes.
+  size_t max_parameter_size = device_.getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>();
+  for (const auto& value : inputs.values()) {
+    if (value.SizeInBytes() > max_parameter_size) {
+      LOG(WARNING) < < < < value.SizeInBytes() << " bytes argument exceeds "
+                                               << "device max parameter size ("
+                                               << max_parameter_size
+                                               << " bytes)";
+      return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+                         "Buffer too large for device");
+    }
+  }
+
   KernelArgValuesSet output_a, output_b;
 
   *run->add_log() =

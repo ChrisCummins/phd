@@ -61,6 +61,8 @@ class ScalarKernelArgValue : public KernelArgValue {
     return opencl_type::ToString(value());
   }
 
+  virtual size_t SizeInBytes() const override { return sizeof(T); }
+
   const T &value() const { return value_; }
   T &value() { return value_; }
 

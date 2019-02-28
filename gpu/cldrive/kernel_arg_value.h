@@ -47,6 +47,8 @@ class KernelArgValue {
   virtual bool operator!=(const KernelArgValue *const rhs) const = 0;
 
   virtual string ToString() const = 0;
+
+  virtual size_t SizeInBytes() const = 0;
 };
 
 }  // namespace cldrive

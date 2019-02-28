@@ -86,6 +86,10 @@ class ArrayKernelArgValue : public KernelArgValue {
     return s;
   };
 
+  virtual size_t SizeInBytes() const override {
+    return sizeof(T) * vector_.size();
+  }
+
  protected:
   std::vector<T> vector_;
 };
