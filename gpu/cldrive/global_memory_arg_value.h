@@ -28,13 +28,13 @@ namespace cldrive {
 
 // An array argument.
 template <typename T>
-class ArrayKernelArgValue : public KernelArgValue {
+class GlobalMemoryArgValue : public KernelArgValue {
  public:
   template <typename... Args>
-  ArrayKernelArgValue(size_t size, Args &&... args) : vector_(size, args...) {}
+  GlobalMemoryArgValue(size_t size, Args &&... args) : vector_(size, args...) {}
 
   virtual bool operator==(const KernelArgValue *const rhs) const override {
-    auto array_ptr = dynamic_cast<const ArrayKernelArgValue *const>(rhs);
+    auto array_ptr = dynamic_cast<const GlobalMemoryArgValue *const>(rhs);
     if (!array_ptr) {
       return false;
     }
@@ -96,12 +96,12 @@ class ArrayKernelArgValue : public KernelArgValue {
 
 // An array value with a device-side buffer.
 template <typename T>
-class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue<T> {
+class GlobalMemoryArgValueWithBuffer : public GlobalMemoryArgValue<T> {
  public:
   template <typename... Args>
-  ArrayKernelArgValueWithBuffer(const cl::Context &context, size_t size,
-                                Args &&... args)
-      : ArrayKernelArgValue<T>(size, args...),
+  GlobalMemoryArgValueWithBuffer(const cl::Context &context, size_t size,
+                                 Args &&... args)
+      : GlobalMemoryArgValue<T>(size, args...),
         buffer_(context, /*flags=*/CL_MEM_READ_WRITE,
                 /*size=*/sizeof(T) * size) {}
 
@@ -119,7 +119,7 @@ class ArrayKernelArgValueWithBuffer : public ArrayKernelArgValue<T> {
 
   virtual std::unique_ptr<KernelArgValue> CopyFromDevice(
       const cl::CommandQueue &queue, ProfilingData *profiling) override {
-    auto new_arg = std::make_unique<ArrayKernelArgValue<T>>(this->size());
+    auto new_arg = std::make_unique<GlobalMemoryArgValue<T>>(this->size());
     CopyDeviceToHost(queue, buffer(), new_arg->vector().begin(),
                      new_arg->vector().end(), profiling);
     return std::move(new_arg);
