@@ -7,6 +7,7 @@
 namespace gpu {
 namespace cldrive {
 
+// Print a value only if it is not zero.
 template <typename T>
 std::ostream& NullIfZero(std::ostream& stream, const T& value) {
   if (value != 0) {
@@ -15,6 +16,7 @@ std::ostream& NullIfZero(std::ostream& stream, const T& value) {
   return stream;
 }
 
+// Print a value only if it is not empty().
 template <typename T>
 std::ostream& NullIfEmpty(std::ostream& stream, const T& value) {
   if (!value.empty()) {
@@ -23,6 +25,7 @@ std::ostream& NullIfEmpty(std::ostream& stream, const T& value) {
   return stream;
 }
 
+// Print a value only if it is not less than zero.
 template <typename T>
 std::ostream& NullIfNegative(std::ostream& stream, const T& value) {
   if (value >= 0) {
@@ -39,15 +42,15 @@ std::ostream& operator<<(std::ostream& stream, const CsvLogHeader& header) {
 }
 
 std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
-  stream << log.instance_id << "," << log.device << "," << log.build_opts
+  stream << log.instance_id_ << "," << log.device_ << "," << log.build_opts_
          << ",";
-  NullIfEmpty(stream, log.kernel) << ",";
-  NullIfNegative(stream, log.work_item_local_mem_size) << ",";
-  NullIfNegative(stream, log.work_item_private_mem_size) << ",";
-  NullIfZero(stream, log.global_size) << ",";
-  NullIfZero(stream, log.local_size) << "," << log.outcome << ",";
-  NullIfZero(stream, log.runtime_ms) << ",";
-  NullIfZero(stream, log.transferred_bytes) << "," << std::endl;
+  NullIfEmpty(stream, log.kernel_) << ",";
+  NullIfNegative(stream, log.work_item_local_mem_size_) << ",";
+  NullIfNegative(stream, log.work_item_private_mem_size_) << ",";
+  NullIfZero(stream, log.global_size_) << ",";
+  NullIfZero(stream, log.local_size_) << "," << log.outcome_ << ",";
+  NullIfZero(stream, log.runtime_ms_) << ",";
+  NullIfZero(stream, log.transferred_bytes_) << "," << std::endl;
   return stream;
 }
 
@@ -57,32 +60,32 @@ std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
     const CldriveKernelRun* const run,
     const gpu::libcecl::OpenClKernelInvocation* const log) {
   CsvLog csv;
-  csv.instance_id = instance_id;
+  csv.instance_id_ = instance_id;
 
-  CHECK(instance);
-  csv.device = instance->device().name();
-  csv.build_opts = instance->build_opts();
-  csv.work_item_local_mem_size = -1;
-  csv.work_item_private_mem_size = -1;
+  CHECK(instance) << "CldriveInstance pointer cannot be null";
+  csv.device_ = instance->device().name();
+  csv.build_opts_ = instance->build_opts();
+  csv.work_item_local_mem_size_ = -1;
+  csv.work_item_private_mem_size_ = -1;
 
-  csv.outcome = CldriveInstance::InstanceOutcome_Name(instance->outcome());
+  csv.outcome_ = CldriveInstance::InstanceOutcome_Name(instance->outcome());
   if (kernel_instance) {
-    csv.kernel = kernel_instance->name();
-    csv.work_item_local_mem_size =
+    csv.kernel_ = kernel_instance->name();
+    csv.work_item_local_mem_size_ =
         kernel_instance->work_item_local_mem_size_in_bytes();
-    csv.work_item_private_mem_size =
+    csv.work_item_private_mem_size_ =
         kernel_instance->work_item_private_mem_size_in_bytes();
 
-    csv.outcome = CldriveKernelInstance::KernelInstanceOutcome_Name(
+    csv.outcome_ = CldriveKernelInstance::KernelInstanceOutcome_Name(
         kernel_instance->outcome());
     if (run) {
-      csv.outcome = CldriveKernelRun::KernelRunOutcome_Name(run->outcome());
+      csv.outcome_ = CldriveKernelRun::KernelRunOutcome_Name(run->outcome());
       if (log) {
-        csv.outcome = "PASS";
-        csv.global_size = log->global_size();
-        csv.local_size = log->local_size();
-        csv.runtime_ms = log->runtime_ms();
-        csv.transferred_bytes = log->transferred_bytes();
+        csv.outcome_ = "PASS";
+        csv.global_size_ = log->global_size();
+        csv.local_size_ = log->local_size();
+        csv.runtime_ms_ = log->runtime_ms();
+        csv.transferred_bytes_ = log->transferred_bytes();
       }
     }
   }
