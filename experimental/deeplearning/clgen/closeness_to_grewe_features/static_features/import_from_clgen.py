@@ -107,11 +107,12 @@ def main(argv: typing.List[str]):
                       beta_1_micros=900000,
                       beta_2_micros=999000,
                       normalized_gradient_clip_micros=5000000,
-                  )),
+                  ),
+              ),
           ),
           sampler=sampler_pb2.Sampler(
               start_text="kernel void ",
-              batch_size=1,
+              batch_size=64,
               temperature_micros=1000000,  # = 1.0 real value
               termination_criteria=[
                   sampler_pb2.SampleTerminationCriterion(
@@ -121,9 +122,10 @@ def main(argv: typing.List[str]):
                       )),
                   sampler_pb2.SampleTerminationCriterion(
                       maxlen=sampler_pb2.MaxTokenLength(
-                          maximum_tokens_in_sample=10000,)),
+                          maximum_tokens_in_sample=20000,)),
               ],
-          )))
+          ),
+      ),)
   db = grewe_features_db.Database(FLAGS.db)
   profile_dir = pathlib.Path(FLAGS.profile_dir)
   profile_dir.mkdir(parents=True, exist_ok=True)
