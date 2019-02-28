@@ -21,6 +21,7 @@ py_library(
         "//labm8:bazelutil",
         "//labm8:pbutil",
         "//third_party/py/absl",
+        "//third_party/py/pandas",
     ],
 )
 

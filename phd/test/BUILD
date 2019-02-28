@@ -12,6 +12,7 @@ cc_proto_library(
 
 filegroup(
     name = "data_file",
+    testonly = 1,
     srcs = ["data_file.txt"],
     visibility = ["//phd:__subpackages__"],
 )

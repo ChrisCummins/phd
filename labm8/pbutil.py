@@ -395,10 +395,9 @@ def AssertFieldConstraint(
     return value
 
 
-def RunProcessMessageBinary(cmd: typing.List[str],
-                            input_proto: ProtocolBuffer,
-                            output_proto: ProtocolBuffer,
-                            timeout_seconds: int = 360):
+def RunProcessMessage(cmd: typing.List[str],
+                      input_proto: ProtocolBuffer,
+                      timeout_seconds: int = 360) -> str:
   # Run the C++ worker process, capturing it's output.
   process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
   # Send the input proto to the C++ worker process.
@@ -411,28 +410,23 @@ def RunProcessMessageBinary(cmd: typing.List[str],
   elif process.returncode:
     raise subprocess.CalledProcessError(process.returncode, cmd)
 
-  output_proto.ParseFromString(stdout)
+  return stdout
+
+
+def RunProcessMessageToProto(cmd: typing.List[str],
+                             input_proto: ProtocolBuffer,
+                             output_proto: ProtocolBuffer,
+                             timeout_seconds: int = 360):
+  output_proto.ParseFromString(
+      RunProcessMessage(cmd, input_proto, timeout_seconds=timeout_seconds))
   return output_proto
 
 
 def RunProcessMessageInPlace(cmd: typing.List[str],
                              input_proto: ProtocolBuffer,
                              timeout_seconds: int = 360):
-  # Run the C++ worker process, capturing it's output.
-  process = subprocess.Popen(
-      ['timeout', '-s9', str(timeout_seconds)] + cmd,
-      stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE)
-  # Send the input proto to the C++ worker process.
-  # TODO: Add timeout.
-  stdout, _ = process.communicate(input_proto.SerializeToString())
-
-  if process.returncode == -9:
-    raise ProtoWorkerTimeoutError(cmd=cmd, timeout_seconds=timeout_seconds)
-  elif process.returncode:
-    raise subprocess.CalledProcessError(process.returncode, cmd)
-
-  input_proto.ParseFromString(stdout)
+  input_proto.ParseFromString(
+      RunProcessMessage(cmd, input_proto, timeout_seconds=timeout_seconds))
   return input_proto
 
 
