@@ -72,6 +72,7 @@ cc_binary(
         ":libcldrive",
         "//gpu/clinfo:libclinfo",
         "//phd:logging",
+        "//phd:app",
         "@boost//:filesystem",
         "@com_github_gflags_gflags//:gflags",
         "@com_google_absl//absl/strings",
