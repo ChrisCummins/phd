@@ -50,7 +50,7 @@ void KernelDriver::RunOrDie(Logger& logger) {
   if (kernel_instance_->outcome() != CldriveKernelInstance::PASS) {
     LOG(WARNING) << "Skipping kernel with unsupported arguments: '" << name_
                  << "'";
-    logger.RecordLog(instance_, kernel_instance_, /*run=*/nullptr,
+    logger.RecordLog(&instance_, kernel_instance_, /*run=*/nullptr,
                      /*log=*/nullptr);
     return;
   }
@@ -79,7 +79,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
                  << "raised by " << error.what() << "() while driving kernel: '"
                  << name_ << "'";
     run.set_outcome(CldriveKernelRun::CL_ERROR);
-    logger.RecordLog(instance_, kernel_instance_, &run, /*log=*/nullptr);
+    logger.RecordLog(&instance_, kernel_instance_, &run, /*log=*/nullptr);
   }
 
   return run;

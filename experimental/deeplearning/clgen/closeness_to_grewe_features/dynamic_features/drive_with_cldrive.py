@@ -83,7 +83,7 @@ def DriveBatchAndRecordResults(db: grewe_features_db.Database,
                                env: cldrive_env.OpenCLEnvironment) -> None:
   """Drive a batch of kernels and record dynamic features."""
   try:
-    instances = cldrive.Drive(
+    instances = cldrive.DriveToDataFrame(
         cldrive_pb2.CldriveInstances(instance=[
             cldrive_pb2.CldriveInstance(
                 device=env.proto,
@@ -92,6 +92,9 @@ def DriveBatchAndRecordResults(db: grewe_features_db.Database,
                 dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
             ) for _, src in batch
         ]))
+    print(instances)
+    import sys
+    sys.exit(0)
     if len(instances.instance) != len(batch):
       raise OSError(f"Number of instances ({len(instances.instance)}) != "
                     f"batch size ({len(batch)})")

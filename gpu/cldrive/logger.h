@@ -15,11 +15,15 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
-#include "phd/status.h"
-
+#include "gpu/cldrive/csv_log.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 
+#include "phd/status.h"
+
 #include <iostream>
+
+namespace gpu {
+namespace cldrive {
 
 // Abstract logging interface for producing consumable output.
 class Logger {
@@ -37,7 +41,7 @@ class Logger {
       const gpu::libcecl::OpenClKernelInvocation* const log);
 
  protected:
-  CldriveInstances* instances();
+  const CldriveInstances* instances();
   std::ostream& ostream();
   int instance_num() const;
 
@@ -50,12 +54,26 @@ class Logger {
 // Logging interface for producing protocol buffers.
 class ProtocolBufferLogger : public Logger {
  public:
-  ProtocolBufferLogger(std::ostream& ostream, bool text_format);
+  ProtocolBufferLogger(std::ostream& ostream,
+                       const CldriveInstances* const instances,
+                       bool text_format);
 
   virtual ~ProtocolBufferLogger();
-
-  virtual phd::Status End() override;
 
  private:
   bool text_format_ = text_format_;
 };
+
+class CsvLogger : public Logger {
+ public:
+  CsvLogger(std::ostream& ostream, const CldriveInstances* const instances);
+
+  virtual phd::Status RecordLog(
+      const CldriveInstance* const instance,
+      const CldriveKernelInstance* const kernel_instance,
+      const CldriveKernelRun* const run,
+      const gpu::libcecl::OpenClKernelInvocation* const log) override;
+};
+
+}  // namespace cldrive
+}  // namespace gpu

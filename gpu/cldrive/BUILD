@@ -93,6 +93,7 @@ cc_test(
     srcs = ["global_memory_arg_value_test.cc"],
     deps = [
         ":global_memory_arg_value",
+        ":testutil",
         "//phd:port",
         "//phd:test",
     ],
@@ -332,7 +333,9 @@ cc_library(
     srcs = ["logger.cc"],
     hdrs = ["logger.h"],
     deps = [
+        ":csv_log",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//phd:logging",
         "//phd:status",
     ],
 )

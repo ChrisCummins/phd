@@ -73,31 +73,25 @@ class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
     )
 
 
-class DriverResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-  static_features_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
-  opencl_env: str = sql.Column(sql.String(256), nullable=False)
-  hostname: str = sql.Column(sql.String(32), nullable=False)
-  result: str = sql.Column(sql.String(32), nullable=False)
-
-  __table_args__ = (
-      # <src,origin> pairs must be unique.
-      sql.PrimaryKeyConstraint(
-          'static_features_id', 'opencl_env', 'hostname',
-          name='id_device_host'),)
-
-
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
   static_features_id: int = sql.Column(
       sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
-  opencl_env: str = sql.Column(sql.String(256), nullable=False)
+  device: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
-  dataset: str = sql.Column(sql.String(32), nullable=False)
+  outcome: str = sql.Column(sql.String(32), nullable=False)
+  build_opts: str = sql.Column(sql.String(128), nullable=False)
+  kernel: str = sql.Column(sql.String(128), nullable=False)
+  work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=False)
+  work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=False)
   gsize: int = sql.Column(sql.Integer, nullable=False)
   wgsize: int = sql.Column(sql.Integer, nullable=False)
   transferred_bytes: int = sql.Column(sql.Integer, nullable=False)
   runtime_ms: float = sql.Column(sql.Float, nullable=False)
+
+  @classmethod
+  def FromDataFrame(cls, df: pd.DataFrame):
+    return [cls(**row) for _, row in df.iterrows()]
 
 
 def _DatabaseImporterWorker(

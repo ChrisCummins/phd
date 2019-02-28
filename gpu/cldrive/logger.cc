@@ -15,38 +15,63 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "gpu/cldrive/logger.h"
-#include "logger.h"
+#include "phd/logging.h"
+namespace gpu {
+namespace cldrive {
 
-Logger::Logger(std::ostream& ostream, const ClDriveInstances* const instances)
+Logger::Logger(std::ostream& ostream, const CldriveInstances* const instances)
     : ostream_(ostream), instances_(instances), instance_num_(-1) {}
 
-/*virtual*/ phd::Status StartNewInstance() { ++instance_num_; }
+/*virtual*/ phd::Status Logger::StartNewInstance() {
+  ++instance_num_;
+  return phd::Status::OK;
+}
 
-/*virtual*/ phd::Status Logger::RecordLog(CldriveInstance* instance) {
+/*virtual*/ phd::Status Logger::RecordLog(
+    const CldriveInstance* const instance,
+    const CldriveKernelInstance* const kernel_instance,
+    const CldriveKernelRun* const run,
+    const gpu::libcecl::OpenClKernelInvocation* const log) {
   CHECK(instance_num() >= 0);
+  return phd::Status::OK;
 }
 
-/*virtual*/ phd::Status Logger::End() {
-  CHECK(instances_ != nullptr);
-  instances_ = nullptr;
-}
-
-ClDriveInstances* Logger::instances() { return instances_; }
+const CldriveInstances* Logger::instances() { return instances_; }
 
 std::ostream& Logger::ostream() { return ostream_; }
 
 int Logger::instance_num() const { return instance_num_; }
 
-ProtocolBufferLogger::ProtocolBufferLogger(std::ostream& ostream,
-                                           bool text_format)
-    : Logger(ostream), text_format_(text_format) {}
+ProtocolBufferLogger::ProtocolBufferLogger(
+    std::ostream& ostream, const CldriveInstances* const instances,
+    bool text_format)
+    : Logger(ostream, instances), text_format_(text_format) {}
 
 /*virtual*/ ProtocolBufferLogger::~ProtocolBufferLogger() {
   if (text_format_) {
     ostream() << "# File: //gpu/cldrive/proto/cldrive.proto\n"
               << "# Proto: gpu.cldrive.CldriveInstances\n"
-              << instances()->SerializeToString();
+              << instances()->DebugString();
   } else {
-    ostream() << instances()->DebugString();
+    instances()->SerializeToOstream(&ostream());
   }
 }
+
+CsvLogger::CsvLogger(std::ostream& ostream,
+                     const CldriveInstances* const instances)
+    : Logger(ostream, instances) {
+  this->ostream() << CsvLogHeader();
+}
+
+/*virtual*/ phd::Status CsvLogger::RecordLog(
+    const CldriveInstance* const instance,
+    const CldriveKernelInstance* const kernel_instance,
+    const CldriveKernelRun* const run,
+    const gpu::libcecl::OpenClKernelInvocation* const log) {
+  ostream() << CsvLog::FromProtos(instance_num(), instance, kernel_instance,
+                                  run, log);
+  return phd::Status::OK;
+}
+
+}  // namespace cldrive
+}  // namespace gpu

@@ -48,11 +48,11 @@ std::vector<string> SplitCommaSeparated(const string& str) {
   return std::vector<string>(str_paths.begin(), str_paths.end());
 }
 
-// Read file to string or abort.
+// Read the entire contents of a file to string or abort.
 string ReadFileOrDie(const string& path) {
   const boost::filesystem::path fs_path(path);
-  CHECK(boost::filesystem::is_regular_file(fs_path))
-      << "Not a regular file: '" << path << "'";
+  CHECK(boost::filesystem::is_regular_file(fs_path)) << "Not a regular file: '"
+                                                     << path << "'";
   boost::filesystem::ifstream istream(fs_path);
   CHECK(istream.is_open()) << "Failed to open: '" << path << "'";
 
@@ -121,21 +121,32 @@ DEFINE_bool(clinfo, false, "List the available devices and exit.");
 
 // End flag definitions ------------------------------------
 
-Logger MakeLoggerFromFlags(std::ostream& ostream) {
+namespace gpu {
+namespace cldrive {
+
+std::unique_ptr<Logger> MakeLoggerFromFlags(
+    std::ostream& ostream, const CldriveInstances* const instances) {
   if (!FLAGS_output_format.compare("pb")) {
-    return ProtocolBufferLogger(std::cout, /*text_format=*/false);
+    return std::make_unique<ProtocolBufferLogger>(std::cout, instances,
+                                                  /*text_format=*/false);
   } else if (!FLAGS_output_format.compare("pbtxt")) {
-    return ProtocolBufferLogger(std::cout, /*text_format=*/false);
+    return std::make_unique<ProtocolBufferLogger>(std::cout, instances,
+                                                  /*text_format=*/true);
   } else if (!FLAGS_output_format.compare("csv")) {
-    CHECK(false) << "TODO!";
+    return std::make_unique<CsvLogger>(std::cout, instances);
   } else {
     CHECK(false) << "unreachable!";
   }
 }
 
+}  // namespace cldrive
+}  // namespace gpu
+
 int main(int argc, char** argv) {
   phd::InitApp(&argc, &argv, "Drive arbitrary OpenCL kernels.");
 
+  // Special case handling for --clinfo argument which prints to stdout then
+  // quits.
   if (FLAGS_clinfo) {
     auto devices = phd::gpu::clinfo::GetOpenClDevices();
     for (int i = 0; i < devices.device_size(); ++i) {
@@ -144,6 +155,9 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  // Check that required flags are set. We can't check this in the flag
+  // validator functions as they are only required if the early-exit flags
+  // above are not set.
   if (FLAGS_envs.empty()) {
     LOG(FATAL) << "Flag --envs must be set";
   }
@@ -158,10 +172,7 @@ int main(int argc, char** argv) {
         phd::gpu::clinfo::GetOpenClDeviceProto(device_name).ValueOrDie());
   }
 
-  // Parse logger flag.
-  Logger logger = MakeLoggerFromFlags(std::cout);
-
-  // Setup instance proto.
+  // Create instances proto.
   gpu::cldrive::CldriveInstances instances;
   gpu::cldrive::CldriveInstance* instance = instances.add_instance();
   instance->set_build_opts(FLAGS_cl_build_opt);
@@ -170,9 +181,13 @@ int main(int argc, char** argv) {
   dp->set_local_size_x(FLAGS_lsize);
   instance->set_min_runs_per_kernel(FLAGS_num_runs);
 
+  // Parse logger flag.
+  std::unique_ptr<gpu::cldrive::Logger> logger =
+      gpu::cldrive::MakeLoggerFromFlags(std::cout, &instances);
+
   int instance_num = 0;
   for (auto path : SplitCommaSeparated(FLAGS_srcs)) {
-    logger.StartNewInstance();
+    logger->StartNewInstance();
     instance->set_opencl_src(ReadFileOrDie(path));
 
     for (size_t i = 0; i < devices.size(); ++i) {
@@ -182,7 +197,7 @@ int main(int argc, char** argv) {
 
       *instance->mutable_device() = devices[i];
 
-      gpu::cldrive::Cldrive(instance, instance_num).RunOrDie(logger);
+      gpu::cldrive::Cldrive(instance, instance_num).RunOrDie(*logger);
     }
 
     ++instance_num;

@@ -21,7 +21,7 @@ namespace gpu {
 namespace cldrive {
 
 void ProcessCldriveInstancesOrDie(CldriveInstances* instances) {
-  ProtocolBufferLogger logger(std::cout, /*text_format=*/false);
+  ProtocolBufferLogger logger(std::cout, instances, /*text_format=*/false);
   for (int i = 0; i < instances->instance_size(); ++i) {
     logger.StartNewInstance();
     Cldrive(instances->mutable_instance(i), i).RunOrDie(logger);

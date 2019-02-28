@@ -30,14 +30,14 @@ namespace gpu {
 namespace cldrive {
 namespace {
 
-TEST(OpenClArgTypeFromString, Int) {
-  auto arg_type = OpenClArgTypeFromString("int");
+TEST(OpenClTypeFromString, Int) {
+  auto arg_type = OpenClTypeFromString("int");
   ASSERT_TRUE(arg_type.ok());
-  EXPECT_EQ(arg_type.ValueOrDie(), OpenClArgType::INT);
+  EXPECT_EQ(arg_type.ValueOrDie(), OpenClType::INT);
 }
 
-TEST(OpenClArgTypeFromString, Unknown) {
-  EXPECT_FALSE(OpenClArgTypeFromString("unknown").ok());
+TEST(OpenClTypeFromString, Unknown) {
+  EXPECT_FALSE(OpenClTypeFromString("unknown").ok());
 }
 
 class KernelArgTest : public ::testing::Test {
