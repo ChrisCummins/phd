@@ -53,9 +53,9 @@ def PullAndRebaseOrDie():
 
   # Apply the stash and reset the index.
   try:
-    subprocess.check_output(['git', 'stash', 'pop', '--index'],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    subprocess.check_call(['git', 'stash', 'pop', '--index'],
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
   except subprocess.CalledProcessError:
     # If the stash fails to pop, this is because of a merge conflict. Pop the
     # stash but without restoring the conflicted index. This command will
