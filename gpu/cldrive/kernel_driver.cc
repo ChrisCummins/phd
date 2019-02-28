@@ -26,12 +26,14 @@ namespace cldrive {
 
 KernelDriver::KernelDriver(const cl::Context& context,
                            const cl::CommandQueue& queue,
-                           const cl::Kernel& kernel, CldriveInstance* instance)
+                           const cl::Kernel& kernel, CldriveInstance* instance,
+                           int instance_num)
     : context_(context),
       queue_(queue),
       device_(context.getInfo<CL_CONTEXT_DEVICES>()[0]),
       kernel_(kernel),
       instance_(*instance),
+      instance_num_(instance_num),
       kernel_instance_(instance->add_kernel()),
       name_(util::GetOpenClKernelName(kernel)),
       args_set_(&kernel_) {}
@@ -80,9 +82,10 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   return run;
 }
 
-phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
-                                           const bool streaming_csv_output,
-                                           CldriveKernelRun* run) {
+phd::Status KernelDriver::RunDynamicParams(
+    const DynamicParams& dynamic_params,
+    const bool strestreaming_csv_outputaming_csv_output,
+    CldriveKernelRun* run) {
   // Check that the dynamic params are within legal range.
   auto max_work_group_size = device_.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
   if (static_cast<int>(max_work_group_size) < dynamic_params.local_size_x()) {

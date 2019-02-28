@@ -90,6 +90,19 @@ cc_image(
 )
 
 cc_library(
+    name = "csv_log",
+    srcs = ["csv_log.cc"],
+    hdrs = ["csv_log.h"],
+    deps = [
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//phd:logging",
+        "//phd:port",
+        "//phd:string",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
     name = "kernel_arg",
     srcs = ["kernel_arg.cc"],
     hdrs = ["kernel_arg.h"],

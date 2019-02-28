@@ -24,7 +24,7 @@ namespace cldrive {
 
 class Cldrive {
  public:
-  Cldrive(CldriveInstance* instance);
+  Cldrive(CldriveInstance* instance, int instance_num = 0);
 
   void RunOrDie(const bool streaming_csv_output = false);
 
@@ -32,6 +32,7 @@ class Cldrive {
   void DoRunOrDie(const bool streaming_csv_output);
 
   CldriveInstance* instance_;
+  int instance_num_;
   cl::Device device_;
 };
 

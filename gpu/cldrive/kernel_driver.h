@@ -27,7 +27,8 @@ namespace cldrive {
 class KernelDriver {
  public:
   KernelDriver(const cl::Context& context, const cl::CommandQueue& queue,
-               const cl::Kernel& kernel, CldriveInstance* instance);
+               const cl::Kernel& kernel, CldriveInstance* instance,
+               int instance_num);
 
   void RunOrDie(const bool streaming_csv_output = false);
 
@@ -50,6 +51,7 @@ class KernelDriver {
   cl::Device device_;
   cl::Kernel kernel_;
   const CldriveInstance& instance_;
+  int instance_num_;
   CldriveKernelInstance* kernel_instance_;
   string name_;
   KernelArgSet args_set_;
