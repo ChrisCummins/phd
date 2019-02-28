@@ -304,6 +304,17 @@ cc_test(
     }),
 )
 
+cc_library(
+    name = "local_memory_arg_value",
+    hdrs = ["local_memory_arg_value.h"],
+    deps = [
+        ":kernel_arg_value",
+        ":profiling_data",
+        "//phd:string",
+        "//third_party/opencl",
+    ],
+)
+
 cc_binary(
     name = "native_driver",
     srcs = ["native_driver.cc"],

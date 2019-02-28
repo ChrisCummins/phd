@@ -116,6 +116,9 @@ std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
     return CreateArrayArgValue(type(), context,
                                /*size=*/dynamic_params.global_size_x(),
                                /*value=*/1, rand_values);
+  } else if (IsPointer() && IsLocal()) {
+    return CreateLocalMemoryValue(type(),
+                                  /*size=*/dynamic_params.global_size_x());
   } else if (!IsPointer()) {
     return CreateScalarArgValue(type(),
                                 /*value=*/dynamic_params.global_size_x());
