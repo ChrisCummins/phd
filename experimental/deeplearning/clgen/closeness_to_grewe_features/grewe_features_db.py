@@ -131,7 +131,7 @@ class Database(sqlutil.Database):
       self,
       paths_to_import: typing.Iterable[pathlib.Path],
       origin: str,
-      multiprocess: bool = True) -> int:
+      pool: typing.Optional[multiprocessing.Pool] = None) -> int:
     """Import a sequence of paths into the database.
 
     Each path should point to a file containing a single OpenCL kernel.
@@ -139,7 +139,8 @@ class Database(sqlutil.Database):
     Args:
       paths_to_import: The paths to import.
       origin: The origin of the kernels.
-      multiprocess: If true, process each file in parallel.
+      pool: A multiprocessing pool to execute workers in. If not provided,
+        workers are processed sequentially.
 
     Returns:
       The number of samples that were successfully imported.
@@ -153,8 +154,7 @@ class Database(sqlutil.Database):
         max_value=len(paths_to_import), redirect_stderr=True)
 
     # Optionally multiprocess.
-    if multiprocess:
-      pool = multiprocessing.Pool(FLAGS.grewe_db_import_process_count)
+    if pool:
       to_import = pool.imap_unordered(_DatabaseImporterWorker, paths_to_import)
     else:
       to_import = (_DatabaseImporterWorker(p) for p in paths_to_import)

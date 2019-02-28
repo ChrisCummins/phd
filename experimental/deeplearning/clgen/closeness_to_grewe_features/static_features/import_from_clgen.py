@@ -1,4 +1,5 @@
 """Sample and import from CLgen."""
+import multiprocessing
 import pathlib
 import tempfile
 import typing
@@ -45,7 +46,7 @@ def CreateTempFileFromSample(tempdir: pathlib.Path, sample: model_pb2.Sample,
 
 
 def Sample(instance: clgen.Instance, db: grewe_features_db.Database,
-           profiler: prof.AutoCsvProfiler):
+           profiler: prof.AutoCsvProfiler, pool: multiprocessing.Pool):
   with profiler.Profile(f'Create {FLAGS.batch_size} samples'):
     samples = instance.model.SampleFast(
         instance.sampler, min_num_samples=FLAGS.batch_size)
@@ -58,8 +59,8 @@ def Sample(instance: clgen.Instance, db: grewe_features_db.Database,
           for i, sample in enumerate(samples)
       ]
     with profiler.Profile() as p:
-      num_successes = db.ImportStaticFeaturesFromPaths(
-          paths_to_import, FLAGS.origin, multiprocess=False)
+      num_successes = db.ImportStaticFeaturesFromPaths(paths_to_import,
+                                                       FLAGS.origin)
       p.name = f'Import {num_successes} / {FLAGS.batch_size} samples'
 
 
@@ -131,9 +132,9 @@ def main(argv: typing.List[str]):
   profile_dir.mkdir(parents=True, exist_ok=True)
   profiler = prof.AutoCsvProfiler(profile_dir)
 
-  with instance.Session():
+  with instance.Session(), multiprocessing.Pool() as pool:
     while True:
-      Sample(instance, db, profiler)
+      Sample(instance, db, profiler, pool)
 
 
 if __name__ == '__main__':
