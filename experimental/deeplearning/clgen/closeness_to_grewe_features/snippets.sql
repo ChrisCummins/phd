@@ -41,6 +41,7 @@ SELECT
     df.wgsize,
     df.transferred_bytes, 
 	df.opencl_env,
+    COUNT(df.runtime_ms) as runtime_count,
     AVG(df.runtime_ms) as avg_runtime,
     (MAX(df.runtime_ms) - MIN(df.runtime_ms)) / AVG(df.runtime_ms) as norm_range
 FROM
@@ -59,3 +60,14 @@ GROUP BY
     df.transferred_bytes,
     df.dataset,
     df.opencl_env;
+
+# OpenCL sources containing kernels with unsupported arguments.
+SELECT
+	src
+FROM
+	driver_result as dr
+LEFT JOIN
+	static_features as sf
+ON dr.static_features_id=sf.id
+WHERE
+	result = 'UNSUPPORTED_ARGUMENTS';
