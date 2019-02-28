@@ -198,7 +198,7 @@ class AutoCsvProfiler(object):
 
     with self._writer() as writer:
       writer.writerow(
-          ['Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)', 'Event'])
+          ('Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)', 'Event'))
 
   @contextlib.contextmanager
   def Profile(self, event_name: str = ''):
@@ -211,7 +211,7 @@ class AutoCsvProfiler(object):
     yield event
     elapsed = labdate.MillisecondsTimestamp() - event.start_time
     with self._writer() as writer:
-      writer.writerow(event.start_time, elapsed, event.name)
+      writer.writerow((event.start_time, elapsed, event.name))
 
   @contextlib.contextmanager
   def _writer(self):
