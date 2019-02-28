@@ -30,3 +30,13 @@ cc_library(
         "//conditions:default": ["@libopencl//:libOpenCL"],
     }),
 )
+
+cc_test(
+    name = "libclinfo_test",
+    srcs = ["libclinfo.cc"],
+    deps = [
+        ":libclinfo",
+        "//phd:test",
+        "//third_party/opencl",
+    ],
+)
