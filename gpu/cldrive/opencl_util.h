@@ -29,14 +29,14 @@ template <typename IteratorType>
 void CopyHostToDevice(const cl::CommandQueue &queue, IteratorType startIterator,
                       IteratorType endIterator, const cl::Buffer &buffer,
                       ProfilingData *profiling) {
-  typedef typename std::iterator_traits<IteratorType>::value_type ValueType;
+  using ValueType = typename std::iterator_traits<IteratorType>::value_type;
   size_t length = endIterator - startIterator;
-  size_t byteLength = length * sizeof(ValueType);
+  size_t buffer_size = length * sizeof(ValueType);
 
   cl::Event event;
   ValueType *pointer = static_cast<ValueType *>(queue.enqueueMapBuffer(
       buffer, /*blocking=*/true, /*flags=*/CL_MAP_WRITE, /*offset=*/0,
-      /*size=*/byteLength, /*events=*/nullptr, /*event=*/&event,
+      /*size=*/buffer_size, /*events=*/nullptr, /*event=*/&event,
       /*error=*/nullptr));
   DCHECK(pointer);
 
@@ -47,7 +47,7 @@ void CopyHostToDevice(const cl::CommandQueue &queue, IteratorType startIterator,
 
   // Set profiling data.
   profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
-  profiling->transferred_bytes += byteLength;
+  profiling->transferred_bytes += buffer_size;
 }
 
 // Blocking host to device copy operation between iterators and a buffer.
@@ -58,14 +58,14 @@ void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
                       IteratorType startIterator,
                       const IteratorType endIterator,
                       ProfilingData *profiling) {
-  typedef typename std::iterator_traits<IteratorType>::value_type ValueType;
+  using ValueType = typename std::iterator_traits<IteratorType>::value_type;
   size_t length = endIterator - startIterator;
-  size_t byteLength = length * sizeof(ValueType);
+  size_t buffer_size = length * sizeof(ValueType);
 
   cl::Event event;
   ValueType *pointer = static_cast<ValueType *>(queue.enqueueMapBuffer(
       buffer, /*blocking=*/true, /*flags=*/CL_MAP_READ, /*offset=*/0,
-      /*size=*/byteLength, /*events=*/nullptr, /*event=*/&event,
+      /*size=*/buffer_size, /*events=*/nullptr, /*event=*/&event,
       /*error=*/nullptr));
   DCHECK(pointer);
 
@@ -76,7 +76,7 @@ void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
 
   // Set profiling data.
   profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
-  profiling->transferred_bytes += byteLength;
+  profiling->transferred_bytes += buffer_size;
 }
 
 namespace util {
