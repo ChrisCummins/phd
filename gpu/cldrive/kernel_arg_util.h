@@ -5,6 +5,7 @@
 
 #include "gpu/cldrive/array_kernel_arg_value.h"
 #include "gpu/cldrive/kernel_arg_value.h"
+#include "gpu/cldrive/local_memory_arg_value.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
 
 #include "gpu/cldrive/opencl_type.h"

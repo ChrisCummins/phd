@@ -166,6 +166,7 @@ cc_library(
     deps = [
         ":array_kernel_arg_value",
         ":kernel_arg_value",
+        ":local_memory_arg_value",
         ":scalar_kernel_arg_value",
         "//third_party/opencl",
     ],
