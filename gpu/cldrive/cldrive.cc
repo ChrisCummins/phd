@@ -1,5 +1,6 @@
 #include "gpu/cldrive/libcldrive.h"
 
+#include "gpu/cldrive/csv_log.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "gpu/clinfo/libclinfo.h"
 
@@ -124,8 +125,7 @@ int main(int argc, char** argv) {
   // Print output headers.
   bool csv = !FLAGS_output_format.compare("csv");
   if (csv) {
-    std::cout << "OpenCL Device, Kernel Name, Global Size, Local Size, "
-              << "Transferred Bytes, Runtime (ns)\n";
+    std::cout << gpu::cldrive::CsvLogHeader();
   } else if (!FLAGS_output_format.compare("pbtxt")) {
     std::cout << "# File: //gpu/cldrive/proto/cldrive.proto\n"
               << "# Proto: gpu.cldrive.CldriveInstances\n";
@@ -140,6 +140,7 @@ int main(int argc, char** argv) {
   dp->set_local_size_x(FLAGS_lsize);
   instance->set_min_runs_per_kernel(FLAGS_num_runs);
 
+  int instance_num = 0;
   for (auto path : SplitCommaSeparated(FLAGS_srcs)) {
     instance->set_opencl_src(ReadFileOrDie(path));
 
@@ -148,7 +149,9 @@ int main(int argc, char** argv) {
       instance->clear_outcome();
       instance->clear_kernel();
 
-      gpu::cldrive::Cldrive(instance).RunOrDie(csv);
+      *instance->mutable_device() = devices[i];
+
+      gpu::cldrive::Cldrive(instance, instance_num).RunOrDie(csv);
 
       if (!FLAGS_output_format.compare("pb")) {
         instances.SerializeToOstream(&std::cout);
@@ -160,6 +163,8 @@ int main(int argc, char** argv) {
         CHECK(false) << "unreachable!";
       }
     }
+
+    ++instance_num;
   }
 
   return 0;

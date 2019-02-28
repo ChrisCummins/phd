@@ -60,10 +60,11 @@ class CsvLog {
   // be empty.
   phd::int64 transferred_bytes;
 
-  static CsvLog FromProtos(int instance_id, CldriveInstance* instance,
-                           CldriveKernelInstance* kernel_instance,
-                           CldriveKernelRun* run,
-                           gpu::libcecl::OpenClKernelInvocation* log);
+  static CsvLog FromProtos(
+      int instance_id, const CldriveInstance* const instance,
+      const CldriveKernelInstance* const kernel_instance,
+      const CldriveKernelRun* const run,
+      const gpu::libcecl::OpenClKernelInvocation* const log);
 
   friend std::ostream& operator<<(std::ostream& stream, const CsvLog& log);
 };

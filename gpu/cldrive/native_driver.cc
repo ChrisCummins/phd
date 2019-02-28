@@ -23,7 +23,7 @@ namespace cldrive {
 
 void ProcessCldriveInstancesOrDie(CldriveInstances* instances) {
   for (int i = 0; i < instances->instance_size(); ++i) {
-    Cldrive(instances->mutable_instance(i))
+    Cldrive(instances->mutable_instance(i), i)
         .RunOrDie(
             /*streaming_csv_output=*/false);
   }

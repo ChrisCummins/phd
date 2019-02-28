@@ -68,6 +68,7 @@ cc_binary(
     name = "cldrive",
     srcs = ["cldrive.cc"],
     deps = [
+        ":csv_log",
         ":libcldrive",
         "//gpu/clinfo:libclinfo",
         "//phd:logging",
@@ -253,6 +254,7 @@ cc_library(
     srcs = ["kernel_driver.cc"],
     hdrs = ["kernel_driver.h"],
     deps = [
+        ":csv_log",
         ":kernel_arg_set",
         ":opencl_util",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
@@ -286,6 +288,7 @@ cc_library(
     srcs = ["libcldrive.cc"],
     hdrs = ["libcldrive.h"],
     deps = [
+        ":csv_log",
         ":kernel_arg_set",
         ":kernel_arg_value",
         ":kernel_arg_values_set",

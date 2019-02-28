@@ -15,6 +15,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/kernel_driver.h"
 
+#include "gpu/cldrive/csv_log.h"
 #include "gpu/cldrive/opencl_util.h"
 #include "gpu/clinfo/libclinfo.h"
 
@@ -77,15 +78,18 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
                  << "raised by " << error.what() << "() while driving kernel: '"
                  << name_ << "'";
     run.set_outcome(CldriveKernelRun::CL_ERROR);
+    if (streaming_csv_output) {
+      std::cout << CsvLog::FromProtos(instance_num_, &instance_,
+                                      kernel_instance_, &run, nullptr);
+    }
   }
 
   return run;
 }
 
-phd::Status KernelDriver::RunDynamicParams(
-    const DynamicParams& dynamic_params,
-    const bool strestreaming_csv_outputaming_csv_output,
-    CldriveKernelRun* run) {
+phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
+                                           const bool streaming_csv_output,
+                                           CldriveKernelRun* run) {
   // Check that the dynamic params are within legal range.
   auto max_work_group_size = device_.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
   if (static_cast<int>(max_work_group_size) < dynamic_params.local_size_x()) {
@@ -94,6 +98,10 @@ phd::Status KernelDriver::RunDynamicParams(
                  << "' (local size " << dynamic_params.local_size_x()
                  << " exceeds maximum device work group size "
                  << max_work_group_size << ")";
+    if (streaming_csv_output) {
+      std::cout << CsvLog::FromProtos(instance_num_, &instance_,
+                                      kernel_instance_, run, nullptr);
+    }
     return phd::Status(phd::error::Code::INVALID_ARGUMENT,
                        "Unsupported dynamic params");
   }
@@ -102,6 +110,10 @@ phd::Status KernelDriver::RunDynamicParams(
   auto args_status = args_set_.SetOnes(context_, dynamic_params, &inputs);
   if (!args_status.ok()) {
     LOG(WARNING) << "Unsupported params for kernel: '" << name_ << "'";
+    if (streaming_csv_output) {
+      std::cout << CsvLog::FromProtos(instance_num_, &instance_,
+                                      kernel_instance_, run, nullptr);
+    }
     return args_status;
   }
 
@@ -121,15 +133,19 @@ phd::Status KernelDriver::RunDynamicParams(
 
   KernelArgValuesSet output_a, output_b;
 
-  *run->add_log() =
-      RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
-  *run->add_log() =
-      RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
+  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, run,
+                                 streaming_csv_output);
+  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, run,
+                                 streaming_csv_output);
 
   if (output_a != output_b) {
     run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping non-deterministic kernel: '" << name_ << "'";
     run->set_outcome(CldriveKernelRun::NONDETERMINISTIC);
+    if (streaming_csv_output) {
+      std::cout << CsvLog::FromProtos(instance_num_, &instance_,
+                                      kernel_instance_, run, nullptr);
+    }
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "non-deterministic");
   }
 
@@ -137,13 +153,17 @@ phd::Status KernelDriver::RunDynamicParams(
 
   CHECK(args_set_.SetRandom(context_, dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
-  *run->add_log() =
-      RunOnceOrDie(dynamic_params, inputs, &output_b, streaming_csv_output);
+  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, run,
+                                 streaming_csv_output);
 
   if (output_a == output_b) {
     run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping input insensitive kernel: '" << name_ << "'";
     run->set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
+    if (streaming_csv_output) {
+      std::cout << CsvLog::FromProtos(instance_num_, &instance_,
+                                      kernel_instance_, run, nullptr);
+    }
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "Input insensitive");
   }
 
@@ -152,12 +172,16 @@ phd::Status KernelDriver::RunDynamicParams(
     LOG(WARNING) << "Skipping kernel that produces no output: '" << name_
                  << "'";
     run->set_outcome(CldriveKernelRun::NO_OUTPUT);
+    if (streaming_csv_output) {
+      std::cout << CsvLog::FromProtos(instance_num_, &instance_,
+                                      kernel_instance_, run, nullptr);
+    }
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "No argument");
   }
 
   for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
-    *run->add_log() =
-        RunOnceOrDie(dynamic_params, inputs, &output_a, streaming_csv_output);
+    *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, run,
+                                   streaming_csv_output);
   }
 
   run->set_outcome(CldriveKernelRun::PASS);
@@ -166,13 +190,18 @@ phd::Status KernelDriver::RunDynamicParams(
 
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
     const DynamicParams& dynamic_params, KernelArgValuesSet& inputs,
-    KernelArgValuesSet* outputs, const bool streaming_csv_output) {
+    KernelArgValuesSet* outputs, const CldriveKernelRun* const run,
+    const bool streaming_csv_output) {
   gpu::libcecl::OpenClKernelInvocation log;
   ProfilingData profiling;
   cl::Event event;
 
   size_t global_size = dynamic_params.global_size_x();
   size_t local_size = dynamic_params.local_size_x();
+
+  log.set_global_size(global_size);
+  log.set_local_size(local_size);
+  log.set_kernel_name(name_);
 
   inputs.CopyToDevice(queue_, &profiling);
   inputs.SetAsArgs(&kernel_);
@@ -185,18 +214,13 @@ gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
 
   inputs.CopyFromDeviceToNewValueSet(queue_, outputs, &profiling);
 
+  // Set run proto fields.
+  log.set_runtime_ms(profiling.elapsed_nanoseconds / 1000000.0);
+  log.set_transferred_bytes(profiling.transferred_bytes);
+
   if (streaming_csv_output) {
-    std::cout << instance_.device().name() << ", " << name_ << ", "
-              << global_size << ", " << local_size << ", "
-              << profiling.transferred_bytes << ", "
-              << profiling.elapsed_nanoseconds << std::endl;
-  } else {
-    // Set run proto fields.
-    log.set_global_size(global_size);
-    log.set_local_size(local_size);
-    log.set_kernel_name(name_);
-    log.set_runtime_ms(profiling.elapsed_nanoseconds / 1000000.0);
-    log.set_transferred_bytes(profiling.transferred_bytes);
+    std::cout << CsvLog::FromProtos(instance_num_, &instance_, kernel_instance_,
+                                    run, &log);
   }
 
   return log;

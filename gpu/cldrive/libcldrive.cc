@@ -15,6 +15,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/libcldrive.h"
 
+#include "gpu/cldrive/csv_log.h"
 #include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/kernel_driver.h"
 #include "gpu/clinfo/libclinfo.h"
@@ -67,7 +68,7 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
 
 }  // namespace
 
-Cldrive::Cldrive(CldriveInstance* instance, int instance_num_)
+Cldrive::Cldrive(CldriveInstance* instance, int instance_num)
     : instance_(instance),
       instance_num_(instance_num),
       device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device())) {}
@@ -97,6 +98,10 @@ void Cldrive::DoRunOrDie(const bool streaming_csv_output) {
   if (!program_or.ok()) {
     LOG(ERROR) << "OpenCL program compilation failed!";
     instance_->set_outcome(CldriveInstance::PROGRAM_COMPILATION_FAILURE);
+    if (streaming_csv_output) {
+      std::cout << CsvLog::FromProtos(instance_num_, instance_, nullptr,
+                                      nullptr, nullptr);
+    }
     return;
   }
   cl::Program program = program_or.ValueOrDie();
