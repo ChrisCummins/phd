@@ -69,8 +69,7 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
 
 Cldrive::Cldrive(CldriveInstance* instance)
     : instance_(instance),
-      device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(
-          instances->instance(i).device())) {}
+      device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device())) {}
 
 void Cldrive::RunOrDie(const bool streaming_csv_output) {
   try {
