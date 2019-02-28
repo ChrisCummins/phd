@@ -67,7 +67,7 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
 
 }  // namespace
 
-Cldrive::Cldrive(CldriveInstance* instance, const cl::Device& device)
+Cldrive::Cldrive(CldriveInstance* instance)
     : instance_(instance),
       device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(
           instances->instance(i).device())) {}
