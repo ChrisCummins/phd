@@ -34,6 +34,18 @@ class DecodeError(ProtoValueError):
   pass
 
 
+class ProtoWorkerTimeoutError(subprocess.CalledProcessError):
+  """Raised is a protobuf worker binary times out."""
+
+  def __init__(self, cmd: typing.List[str], timeout_seconds: int):
+    self.cmd = cmd
+    self.timeout_seconds
+
+  def __repr__(self) -> str:
+    return (f"Proto worker timeout after {self.timeout_seconds} "
+            f"seconds: {' '.join(self.cmd)}")
+
+
 def FromString(string: str,
                message: ProtocolBuffer,
                uninitialized_okay: bool = False) -> ProtocolBuffer:
@@ -383,31 +395,40 @@ def AssertFieldConstraint(
     return value
 
 
-def RunProcessMessageBinary(cmd: typing.List[str], input_proto: ProtocolBuffer,
-                            output_proto: ProtocolBuffer):
+def RunProcessMessageBinary(cmd: typing.List[str],
+                            input_proto: ProtocolBuffer,
+                            output_proto: ProtocolBuffer,
+                            timeout_seconds: int = 360):
   # Run the C++ worker process, capturing it's output.
   process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
   # Send the input proto to the C++ worker process.
   # TODO: Add timeout.
   stdout, _ = process.communicate(input_proto.SerializeToString())
 
-  if process.returncode:
-    raise EnvironmentError(
-        f"Process failed with returncode {process.returncode}")
+  if process.returncode == 9:
+    raise ProtoWorkerTimeoutError(cmd=cmd, timeout_seconds=timeout_seconds)
+  elif process.returncode:
+    raise subprocess.CalledProcessError(process.returncode, cmd)
 
   output_proto.ParseFromString(stdout)
   return output_proto
 
 
 def RunProcessMessageInPlace(cmd: typing.List[str],
-                             input_proto: ProtocolBuffer):
+                             input_proto: ProtocolBuffer,
+                             timeout_seconds: int = 360):
   # Run the C++ worker process, capturing it's output.
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  process = subprocess.Popen(
+      ['timeout', '-s9', str(timeout_seconds)] + cmd,
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE)
   # Send the input proto to the C++ worker process.
   # TODO: Add timeout.
   stdout, _ = process.communicate(input_proto.SerializeToString())
 
-  if process.returncode:
+  if process.returncode == 9:
+    raise ProtoWorkerTimeoutError(cmd=cmd, timeout_seconds=timeout_seconds)
+  elif process.returncode:
     raise subprocess.CalledProcessError(process.returncode, cmd)
 
   input_proto.ParseFromString(stdout)

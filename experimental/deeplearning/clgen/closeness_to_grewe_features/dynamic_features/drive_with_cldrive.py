@@ -12,6 +12,7 @@ from gpu.cldrive import api as cldrive
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.cldrive.proto import cldrive_pb2
 from labm8 import system
+from labm8 import pbutil
 
 FLAGS = flags.FLAGS
 
@@ -81,61 +82,72 @@ def DriveBatchAndRecordResults(db: grewe_features_db.Database,
                                batch: typing.List[KernelToDrive],
                                env: cldrive_env.OpenCLEnvironment) -> None:
   """Drive a batch of kernels and record dynamic features."""
-  instances = cldrive.Drive(
-      cldrive_pb2.CldriveInstances(instance=[
-          cldrive_pb2.CldriveInstance(
-              device=env.proto,
-              opencl_src=src,
-              min_runs_per_kernel=FLAGS.num_runs,
-              dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
-          ) for _, src in batch
-      ]))
-  if len(instances.instance) != len(batch):
-    raise OSError(f"Number of instances ({len(instances.instance)}) != "
-                  f"batch size ({len(batch)})")
+  try:
+    instances = cldrive.Drive(
+        cldrive_pb2.CldriveInstances(instance=[
+            cldrive_pb2.CldriveInstance(
+                device=env.proto,
+                opencl_src=src,
+                min_runs_per_kernel=FLAGS.num_runs,
+                dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
+            ) for _, src in batch
+        ]))
+    if len(instances.instance) != len(batch):
+      raise OSError(f"Number of instances ({len(instances.instance)}) != "
+                    f"batch size ({len(batch)})")
 
-  for (static_features_id, _), instance in zip(batch, instances.instance):
-    with db.Session(commit=True) as session:
-      if len(instance.kernel) < 1:
-        session.add(
-            grewe_features_db.DriverResult(
-                static_features_id=static_features_id,
-                opencl_env=env.name,
-                hostname=system.HOSTNAME,
-                result=cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
-                    instance.outcome),
-            ))
-      else:
-        if len(instance.kernel) != 1:
-          raise OSError(f"{instance.kernel} kernels found!")
-
-        result = cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
-            instance.outcome)
-        if result == 'PASS':
-          result = cldrive_pb2.CldriveKernelInstance.KernelInstanceOutcome.Name(
-              instance.kernel[0].outcome)
-
-        session.add(
-            grewe_features_db.DriverResult(
-                static_features_id=static_features_id,
-                opencl_env=env.name,
-                hostname=system.HOSTNAME,
-                result=result,
-            ))
-
-        for run in instance.kernel[0].run:
-          session.add_all([
-              grewe_features_db.DynamicFeatures(
+    for (static_features_id, _), instance in zip(batch, instances.instance):
+      with db.Session(commit=True) as session:
+        if len(instance.kernel) < 1:
+          session.add(
+              grewe_features_db.DriverResult(
                   static_features_id=static_features_id,
                   opencl_env=env.name,
                   hostname=system.HOSTNAME,
-                  dataset=f'{log.global_size},{log.local_size}',
-                  gsize=log.global_size,
-                  wgsize=log.local_size,
-                  transferred_bytes=log.transferred_bytes,
-                  runtime_ms=log.runtime_ms,
-              ) for log in run.log
-          ])
+                  result=cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
+                      instance.outcome),
+              ))
+        else:
+          if len(instance.kernel) != 1:
+            raise OSError(f"{instance.kernel} kernels found!")
+
+          result = cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
+              instance.outcome)
+          if result == 'PASS':
+            result = cldrive_pb2.CldriveKernelInstance.KernelInstanceOutcome.Name(
+                instance.kernel[0].outcome)
+
+          session.add(
+              grewe_features_db.DriverResult(
+                  static_features_id=static_features_id,
+                  opencl_env=env.name,
+                  hostname=system.HOSTNAME,
+                  result=result,
+              ))
+
+          for run in instance.kernel[0].run:
+            session.add_all([
+                grewe_features_db.DynamicFeatures(
+                    static_features_id=static_features_id,
+                    opencl_env=env.name,
+                    hostname=system.HOSTNAME,
+                    dataset=f'{log.global_size},{log.local_size}',
+                    gsize=log.global_size,
+                    wgsize=log.local_size,
+                    transferred_bytes=log.transferred_bytes,
+                    runtime_ms=log.runtime_ms,
+                ) for log in run.log
+            ])
+  except pbutil.ProtoWorkerTimeoutError:
+    with db.Session(commit=True) as session:
+      session.add_all([
+          grewe_features_db.DriverResult(
+              static_features_id=static_features_id,
+              opencl_env=env.name,
+              hostname=system.HOSTNAME,
+              result='DRIVER_TIMEOUT',
+          ) for (static_features_id, _) in batch
+      ])
 
 
 def main(argv: typing.List[str]):
