@@ -15,7 +15,6 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/libcldrive.h"
 
-#include "gpu/cldrive/csv_log.h"
 #include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/kernel_driver.h"
 #include "gpu/clinfo/libclinfo.h"
@@ -73,9 +72,9 @@ Cldrive::Cldrive(CldriveInstance* instance, int instance_num)
       instance_num_(instance_num),
       device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device())) {}
 
-void Cldrive::RunOrDie(const bool streaming_csv_output) {
+void Cldrive::RunOrDie(Logger& logger) {
   try {
-    DoRunOrDie(streaming_csv_output);
+    DoRunOrDie(logger);
   } catch (cl::Error error) {
     LOG(FATAL) << "Unhandled OpenCL exception.\n"
                << "    Raised by:  " << error.what() << '\n'
@@ -86,7 +85,7 @@ void Cldrive::RunOrDie(const bool streaming_csv_output) {
   }
 }
 
-void Cldrive::DoRunOrDie(const bool streaming_csv_output) {
+void Cldrive::DoRunOrDie(Logger& logger) {
   cl::Context context(device_);
   cl::CommandQueue queue(context,
                          /*devices=*/context.getInfo<CL_CONTEXT_DEVICES>()[0],
@@ -98,10 +97,8 @@ void Cldrive::DoRunOrDie(const bool streaming_csv_output) {
   if (!program_or.ok()) {
     LOG(ERROR) << "OpenCL program compilation failed!";
     instance_->set_outcome(CldriveInstance::PROGRAM_COMPILATION_FAILURE);
-    if (streaming_csv_output) {
-      std::cout << CsvLog::FromProtos(instance_num_, instance_, nullptr,
-                                      nullptr, nullptr);
-    }
+    logger.RecordLog(instance_, /*kernel_instance=*/nullptr, /*run=*/nullptr,
+                     /*log=*/nullptr);
     return;
   }
   cl::Program program = program_or.ValueOrDie();
@@ -117,7 +114,7 @@ void Cldrive::DoRunOrDie(const bool streaming_csv_output) {
 
   for (auto& kernel : kernels) {
     KernelDriver(context, queue, kernel, instance_, instance_num_)
-        .RunOrDie(streaming_csv_output);
+        .RunOrDie(logger);
   }
 
   instance_->set_outcome(CldriveInstance::PASS);

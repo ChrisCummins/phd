@@ -16,6 +16,7 @@
 #pragma once
 
 #include "gpu/cldrive/kernel_arg_set.h"
+#include "gpu/cldrive/logger.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "phd/statusor.h"
 #include "phd/string.h"
@@ -30,22 +31,21 @@ class KernelDriver {
                const cl::Kernel& kernel, CldriveInstance* instance,
                int instance_num);
 
-  void RunOrDie(const bool streaming_csv_output = false);
+  void RunOrDie(Logger& logger);
 
   phd::StatusOr<CldriveKernelRun> RunDynamicParams(
-      const DynamicParams& dynamic_params, bool streaming_csv_output = false);
+      const DynamicParams& dynamic_params, Logger& logger);
 
   gpu::libcecl::OpenClKernelInvocation RunOnceOrDie(
       const DynamicParams& dynamic_params, KernelArgValuesSet& inputs,
       KernelArgValuesSet* outputs, const CldriveKernelRun* const run,
-      bool streaming_csv_output = false);
+      Logger& logger);
 
  private:
   // Private helper to public RunDynamicParams() method that doesn't catch
   // OpenCL exceptions.
   phd::Status RunDynamicParams(const DynamicParams& dynamic_params,
-                               const bool streaming_csv_output,
-                               CldriveKernelRun* run);
+                               Logger& logger, CldriveKernelRun* run);
 
   cl::Context context_;
   cl::CommandQueue queue_;

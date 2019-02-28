@@ -24,24 +24,26 @@
 // Abstract logging interface for producing consumable output.
 class Logger {
  public:
-  Logger(std::ostream& ostream);
+  Logger(std::ostream& ostream, const CldriveInstances* const instances);
 
-  virtual phd::Status Init(const ClDriveInstances* const instances);
+  virtual ~Logger() {}
 
   virtual phd::Status StartNewInstance();
 
-  virtual phd::Status RecordLog(CldriveInstance* instance);
-
-  virtual phd::Status End();
+  virtual phd::Status RecordLog(
+      const CldriveInstance* const instance,
+      const CldriveKernelInstance* const kernel_instance,
+      const CldriveKernelRun* const run,
+      const gpu::libcecl::OpenClKernelInvocation* const log);
 
  protected:
-  ClDriveInstances* instances();
+  CldriveInstances* instances();
   std::ostream& ostream();
   int instance_num() const;
 
  private:
   std::ostream& ostream_;
-  const ClDriveInstances* const instances_;
+  const CldriveInstances* const instances_;
   int instance_num_;
 };
 
@@ -49,6 +51,8 @@ class Logger {
 class ProtocolBufferLogger : public Logger {
  public:
   ProtocolBufferLogger(std::ostream& ostream, bool text_format);
+
+  virtual ~ProtocolBufferLogger();
 
   virtual phd::Status End() override;
 

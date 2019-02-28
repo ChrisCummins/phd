@@ -23,7 +23,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/libcldrive.h"
 
-#include "gpu/cldrive/csv_log.h"
+#include "gpu/cldrive/logger.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "gpu/clinfo/libclinfo.h"
 
@@ -51,8 +51,8 @@ std::vector<string> SplitCommaSeparated(const string& str) {
 // Read file to string or abort.
 string ReadFileOrDie(const string& path) {
   const boost::filesystem::path fs_path(path);
-  CHECK(boost::filesystem::is_regular_file(fs_path)) << "Not a regular file: '"
-                                                     << path << "'";
+  CHECK(boost::filesystem::is_regular_file(fs_path))
+      << "Not a regular file: '" << path << "'";
   boost::filesystem::ifstream istream(fs_path);
   CHECK(istream.is_open()) << "Failed to open: '" << path << "'";
 
@@ -121,6 +121,18 @@ DEFINE_bool(clinfo, false, "List the available devices and exit.");
 
 // End flag definitions ------------------------------------
 
+Logger MakeLoggerFromFlags(std::ostream& ostream) {
+  if (!FLAGS_output_format.compare("pb")) {
+    return ProtocolBufferLogger(std::cout, /*text_format=*/false);
+  } else if (!FLAGS_output_format.compare("pbtxt")) {
+    return ProtocolBufferLogger(std::cout, /*text_format=*/false);
+  } else if (!FLAGS_output_format.compare("csv")) {
+    CHECK(false) << "TODO!";
+  } else {
+    CHECK(false) << "unreachable!";
+  }
+}
+
 int main(int argc, char** argv) {
   phd::InitApp(&argc, &argv, "Drive arbitrary OpenCL kernels.");
 
@@ -146,14 +158,8 @@ int main(int argc, char** argv) {
         phd::gpu::clinfo::GetOpenClDeviceProto(device_name).ValueOrDie());
   }
 
-  // Print output headers.
-  bool csv = !FLAGS_output_format.compare("csv");
-  if (csv) {
-    std::cout << gpu::cldrive::CsvLogHeader();
-  } else if (!FLAGS_output_format.compare("pbtxt")) {
-    std::cout << "# File: //gpu/cldrive/proto/cldrive.proto\n"
-              << "# Proto: gpu.cldrive.CldriveInstances\n";
-  }
+  // Parse logger flag.
+  Logger logger = MakeLoggerFromFlags(std::cout);
 
   // Setup instance proto.
   gpu::cldrive::CldriveInstances instances;
@@ -166,6 +172,7 @@ int main(int argc, char** argv) {
 
   int instance_num = 0;
   for (auto path : SplitCommaSeparated(FLAGS_srcs)) {
+    logger.StartNewInstance();
     instance->set_opencl_src(ReadFileOrDie(path));
 
     for (size_t i = 0; i < devices.size(); ++i) {
@@ -175,17 +182,7 @@ int main(int argc, char** argv) {
 
       *instance->mutable_device() = devices[i];
 
-      gpu::cldrive::Cldrive(instance, instance_num).RunOrDie(csv);
-
-      if (!FLAGS_output_format.compare("pb")) {
-        instances.SerializeToOstream(&std::cout);
-      } else if (!FLAGS_output_format.compare("pbtxt")) {
-        std::cout << instances.DebugString();
-      } else if (csv) {
-        // Already handled
-      } else {
-        CHECK(false) << "unreachable!";
-      }
+      gpu::cldrive::Cldrive(instance, instance_num).RunOrDie(logger);
     }
 
     ++instance_num;

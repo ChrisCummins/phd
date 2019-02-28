@@ -17,13 +17,8 @@
 #include "gpu/cldrive/logger.h"
 #include "logger.h"
 
-Logger::Logger(std::ostream& ostream)
-    : ostream_(ostream), instances_(nullptr), instance_num_(-1) {}
-
-/*virtual*/ phd::Status Logger::Init(const ClDriveInstances* const instances) {
-  CHECK(instances_ == nullptr);
-  instances_ = instances;
-}
+Logger::Logger(std::ostream& ostream, const ClDriveInstances* const instances)
+    : ostream_(ostream), instances_(instances), instance_num_(-1) {}
 
 /*virtual*/ phd::Status StartNewInstance() { ++instance_num_; }
 
@@ -46,11 +41,12 @@ ProtocolBufferLogger::ProtocolBufferLogger(std::ostream& ostream,
                                            bool text_format)
     : Logger(ostream), text_format_(text_format) {}
 
-/*virtual*/ phd::Status ProtocolBufferLogger::End() {
+/*virtual*/ ProtocolBufferLogger::~ProtocolBufferLogger() {
   if (text_format_) {
-    ostream() << instances()->SerializeToString();
+    ostream() << "# File: //gpu/cldrive/proto/cldrive.proto\n"
+              << "# Proto: gpu.cldrive.CldriveInstances\n"
+              << instances()->SerializeToString();
   } else {
     ostream() << instances()->DebugString();
   }
-  return Logger::End();
 }

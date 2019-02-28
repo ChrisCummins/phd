@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/libcldrive.h"
-#include "gpu/cldrive/proto/cldrive.pb.h"
 
 #include "phd/pbutil.h"
 
@@ -22,10 +21,10 @@ namespace gpu {
 namespace cldrive {
 
 void ProcessCldriveInstancesOrDie(CldriveInstances* instances) {
+  ProtocolBufferLogger logger(std::cout, /*text_format=*/false);
   for (int i = 0; i < instances->instance_size(); ++i) {
-    Cldrive(instances->mutable_instance(i), i)
-        .RunOrDie(
-            /*streaming_csv_output=*/false);
+    logger.StartNewInstance();
+    Cldrive(instances->mutable_instance(i), i).RunOrDie(logger);
   }
 }
 

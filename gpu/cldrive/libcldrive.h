@@ -15,6 +15,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
+#include "gpu/cldrive/logger.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 
 #include "third_party/opencl/cl.hpp"
@@ -26,10 +27,10 @@ class Cldrive {
  public:
   Cldrive(CldriveInstance* instance, int instance_num = 0);
 
-  void RunOrDie(const bool streaming_csv_output = false);
+  void RunOrDie(Logger& logger);
 
  private:
-  void DoRunOrDie(const bool streaming_csv_output);
+  void DoRunOrDie(Logger& logger);
 
   CldriveInstance* instance_;
   int instance_num_;
