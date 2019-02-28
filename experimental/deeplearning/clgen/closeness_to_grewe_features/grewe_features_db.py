@@ -78,17 +78,13 @@ class DriverResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
       sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
   opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
-  dataset: str = sql.Column(sql.String(32), nullable=False)
   result: str = sql.Column(sql.String(32), nullable=False)
 
   __table_args__ = (
       # <src,origin> pairs must be unique.
       sql.PrimaryKeyConstraint(
-          'static_features_id',
-          'opencl_env',
-          'hostname',
-          'dataset',
-          name='id_device_dataset'),)
+          'static_features_id', 'opencl_env', 'hostname',
+          name='id_device_host'),)
 
 
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):

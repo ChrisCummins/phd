@@ -116,9 +116,11 @@ void Cldrive::DoRunOrDie(const bool streaming_csv_output) {
   instance_->set_outcome(CldriveInstance::PASS);
 }
 
-void ProcessCldriveInstanceOrDie(CldriveInstance* instance) {
+void ProcessCldriveInstancesOrDie(CldriveInstances* instance) {
   auto device = phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device());
-  Cldrive(instance, device).RunOrDie(false);
+  for (int i = 0; i < instance->instance_size(); ++i) {
+    Cldrive(&instance->instance(i), device).RunOrDie(false);
+  }
 }
 
 }  // namespace cldrive
