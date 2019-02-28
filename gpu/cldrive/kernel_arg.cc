@@ -15,13 +15,13 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/kernel_arg.h"
 
-#include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/global_memory_arg_value.h"
 #include "gpu/cldrive/kernel_arg_util.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
 
 #include <cstdlib>
 
-#include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/global_memory_arg_value.h"
 #include "gpu/cldrive/opencl_type.h"
 #include "phd/status_macros.h"
 

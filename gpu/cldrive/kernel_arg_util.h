@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/global_memory_arg_value.h"
 #include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/local_memory_arg_value.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
@@ -19,10 +19,10 @@ namespace gpu {
 namespace cldrive {
 
 template <typename T>
-std::unique_ptr<ArrayKernelArgValueWithBuffer<T>> CreateArrayArgValue(
+std::unique_ptr<GlobalMemoryArgValueWithBuffer<T>> CreateArrayArgValue(
     const cl::Context& context, size_t size, const int& value,
     bool rand_values) {
-  auto arg_value = std::make_unique<ArrayKernelArgValueWithBuffer<T>>(
+  auto arg_value = std::make_unique<GlobalMemoryArgValueWithBuffer<T>>(
       context, size, /*value=*/opencl_type::MakeScalar<T>(value));
   if (rand_values) {
     for (size_t i = 0; i < size; ++i) {

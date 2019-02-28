@@ -15,7 +15,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/kernel_arg.h"
 
-#include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/global_memory_arg_value.h"
 #include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
@@ -88,7 +88,7 @@ TEST_F(KernelArgTest, TryToCreateOnesValueGlobalIntSize) {
 
   auto arg_value = arg.TryToCreateOnesValue(context_, test::MakeParams(50));
   auto array_value =
-      test::Downcast<ArrayKernelArgValue<cl_int>>(arg_value.get());
+      test::Downcast<GlobalMemoryArgValue<cl_int>>(arg_value.get());
   EXPECT_EQ(array_value->size(), 50);
 }
 
@@ -100,7 +100,7 @@ TEST_F(KernelArgTest, TryToCreateOnesValueGlobalIntValues) {
 
   auto arg_value = arg.TryToCreateOnesValue(context_, test::MakeParams(50));
   auto array_value =
-      test::Downcast<ArrayKernelArgValue<cl_int>>(arg_value.get());
+      test::Downcast<GlobalMemoryArgValue<cl_int>>(arg_value.get());
 
   for (auto value : array_value->vector()) {
     EXPECT_EQ(value, 1);

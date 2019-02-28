@@ -15,10 +15,10 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
-#include "gpu/cldrive/array_kernel_arg_value.h"
+#include "gpu/cldrive/global_memory_arg_value.h"
 #include "gpu/cldrive/kernel_arg_value.h"
-#include "gpu/cldrive/scalar_kernel_arg_value.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
+#include "gpu/cldrive/scalar_kernel_arg_value.h"
 
 #include "third_party/opencl/cl.hpp"
 
@@ -31,7 +31,6 @@ namespace test {
 // The string must contain the OpenCL source for a single kernel,
 // e.g. cl::Kernel kernel = CreateClKernel("kernel void A() {}");
 cl::Kernel CreateClKernel(const string& opencl_kernel);
-
 
 // Downcast a KernelArgValue to the given type.
 //
