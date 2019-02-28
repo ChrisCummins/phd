@@ -327,6 +327,16 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "logger",
+    srcs = ["logger.cc"],
+    hdrs = ["logger.h"],
+    deps = [
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//phd:status",
+    ],
+)
+
 cc_binary(
     name = "native_driver",
     srcs = ["native_driver.cc"],
