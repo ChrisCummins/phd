@@ -77,9 +77,10 @@ class FeatureExtractionError(ValueError):
 
 
 # TODO(polyglot): Add support for multiple languages.
-def ExtractFeaturesFromPath(path: pathlib.Path,
-                            extra_args: typing.Optional[typing.List[str]] = None
-                           ) -> typing.Iterator[GreweEtAlFeatures]:
+def ExtractFeaturesFromPath(
+    path: pathlib.Path,
+    extra_args: typing.Optional[typing.List[str]] = None,
+    timeout_seconds: int = 60) -> typing.Iterator[GreweEtAlFeatures]:
   """Print CSV format features of file.
 
   Args:
@@ -98,9 +99,13 @@ def ExtractFeaturesFromPath(path: pathlib.Path,
   if not path.is_file():
     raise FileNotFoundError(f"File not found: {path}")
 
-  cmd = [str(FEATURE_EXTRACTOR_BINARY),
-         str(INLINED_OPENCL_HEADER),
-         str(path)] + [f'-extra_arg={arg}' for arg in extra_args]
+  cmd = [
+      'timeout', '-s9',
+      str(timeout_seconds),
+      str(FEATURE_EXTRACTOR_BINARY),
+      str(INLINED_OPENCL_HEADER),
+      str(path)
+  ] + [f'-extra_arg={arg}' for arg in extra_args]
   logging.debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
