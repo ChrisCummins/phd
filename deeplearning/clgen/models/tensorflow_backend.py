@@ -405,6 +405,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.inference_indices = generated[:, -1]
     if self.first_sample:
       generated = generated[:, len(sampler.encoded_start_text):]
+    self.inference_indices = self.inference_indices.reshape((batch_size, 1))
     self.first_sample = False
     return generated
 
