@@ -53,7 +53,7 @@ LSIZE_GSIZE_PAIRS = [
 ]
 
 LSIZE_GSIZE_PROTO_PAIRS = [
-    cldrive_pb2.DynamicParams(global_size_x=x, local_size_x=y)
+    cldrive_pb2.DynamicParams(global_size_x=y, local_size_x=x)
     for x, y in LSIZE_GSIZE_PAIRS
 ]
 
@@ -62,11 +62,9 @@ def GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
                              env: cldrive_env.OpenCLEnvironment):
   with db.Session(commit=False) as session:
     for lsize, gsize in LSIZE_GSIZE_PAIRS:
-      dataset = f'{lsize},{gsize}'
       already_done_ids = session.query(
           grewe_features_db.DriverResult.static_features_id) \
-        .filter(grewe_features_db.DriverResult.opencl_env == env.name) \
-        .filter(grewe_features_db.DriverResult.dataset == dataset)
+        .filter(grewe_features_db.DriverResult.opencl_env == env.name)
 
       # TODO(cec): Why exclude benchmarks from cldrive?
       q = session.query(grewe_features_db.StaticFeatures.id,
@@ -98,28 +96,44 @@ def DriveBatchAndRecordResults(db: grewe_features_db.Database,
 
   for (static_features_id, _), instance in zip(batch, instances.instance):
     with db.Session(commit=True) as session:
-      session.add(
-          grewe_features_db.DriverResult(
-              static_features_id=static_features_id,
-              opencl_env=env.name,
-              hostname=system.HOSTNAME,
-              result=cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
-                  instance.name),
-          ))
+      if len(instance.kernel) < 1:
+        session.add(
+            grewe_features_db.DriverResult(
+                static_features_id=static_features_id,
+                opencl_env=env.name,
+                hostname=system.HOSTNAME,
+                result=cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
+                    instance.outcome),
+            ))
+      else:
+        if len(instance.kernel) != 1:
+          raise OSError(f"{instance.kernel} kernels found!")
 
-      for kernel in instance.kernel:
-        for run in kernel.run:
+        result = cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
+            instance.outcome)
+        if result == 'PASS':
+          result = cldrive_pb2.CldriveKernelInstance.KernelInstanceOutcome.Name(
+              instance.kernel[0].outcome)
+
+        session.add(
+            grewe_features_db.DriverResult(
+                static_features_id=static_features_id,
+                opencl_env=env.name,
+                hostname=system.HOSTNAME,
+                result=result,
+            ))
+
+        for run in instance.kernel[0].run:
           session.add_all([
               grewe_features_db.DynamicFeatures(
                   static_features_id=static_features_id,
                   opencl_env=env.name,
                   hostname=system.HOSTNAME,
-                  dataset=
-                  f'{log.kernel_invocation[0].global_size},{log.kernel_invocation[0].local_size}',
-                  gsize=log.kernel_invocation[0].global_size,
-                  wgsize=log.kernel_invocation[0].local_size,
-                  transferred_bytes=log.kernel_invocation[0].transferred_bytes,
-                  runtime_ms=log.kernel_invocation[0].runtime_ms,
+                  dataset=f'{log.global_size},{log.local_size}',
+                  gsize=log.global_size,
+                  wgsize=log.local_size,
+                  transferred_bytes=log.transferred_bytes,
+                  runtime_ms=log.runtime_ms,
               ) for log in run.log
           ])
 

@@ -35,7 +35,7 @@ class Cldrive {
   cl::Device device_;
 };
 
-void ProcessCldriveInstanceOrDie(CldriveInstance* instance);
+void ProcessCldriveInstancesOrDie(CldriveInstances* instance);
 
 }  // namespace cldrive
 }  // namespace gpu

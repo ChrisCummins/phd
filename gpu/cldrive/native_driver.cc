@@ -19,4 +19,4 @@
 #include "phd/pbutil.h"
 
 PBUTIL_INPLACE_PROCESS_MAIN(gpu::cldrive::ProcessCldriveInstancesOrDie,
-                            gpu::cldrive::CldriveInstance);
+                            gpu::cldrive::CldriveInstances);
