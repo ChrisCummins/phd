@@ -1,6 +1,25 @@
 # Core C++ libraries for the phd repo.
 
 cc_library(
+    name = "app",
+    srcs = ["app.cc"],
+    hdrs = ["app.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_gflags_gflags//:gflags",
+    ],
+)
+
+cc_test(
+    name = "app_test",
+    srcs = ["app_test.cc"],
+    deps = [
+        ":app",
+        ":test",
+    ],
+)
+
+cc_library(
     name = "bazelutil",
     srcs = ["bazelutil.cc"],
     hdrs = ["bazelutil.h"],

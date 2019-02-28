@@ -1,9 +1,33 @@
+// Main entry point for cldrive command line executable.
+//
+// Usage summary:
+//   cldrive --srcs=<opencl_sources> --envs=<opencl_devices>
+//       --gsize=<gsize> --lsize=<lsize> --output_format=(txt|pb|pbtxt)
+//
+// Run with `--help` argument to see full usage options.
+//
+// Copyright (c) 2016, 2017, 2018, 2019 Chris Cummins.
+// This file is part of cldrive.
+//
+// cldrive is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// cldrive is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/libcldrive.h"
 
 #include "gpu/cldrive/csv_log.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "gpu/clinfo/libclinfo.h"
 
+#include "phd/app.h"
 #include "phd/logging.h"
 
 #include "absl/strings/str_split.h"
@@ -24,7 +48,22 @@ std::vector<string> SplitCommaSeparated(const string& str) {
   return std::vector<string>(str_paths.begin(), str_paths.end());
 }
 
+// Read file to string or abort.
+string ReadFileOrDie(const string& path) {
+  const boost::filesystem::path fs_path(path);
+  CHECK(boost::filesystem::is_regular_file(fs_path)) << "Not a regular file: '"
+                                                     << path << "'";
+  boost::filesystem::ifstream istream(fs_path);
+  CHECK(istream.is_open()) << "Failed to open: '" << path << "'";
+
+  std::stringstream buffer;
+  buffer << istream.rdbuf();
+  return buffer.str();
+}
+
 }  // anonymous namespace
+
+// Flag definitions ------------------------------------
 
 DEFINE_string(srcs, "", "A comma separated list of OpenCL source files.");
 static bool ValidateSrcs(const char* flagname, const string& value) {
@@ -80,25 +119,10 @@ DEFINE_string(cl_build_opt, "", "Build options passed to clBuildProgram().");
 DEFINE_int32(num_runs, 30, "The number of runs per kernel.");
 DEFINE_bool(clinfo, false, "List the available devices and exit.");
 
-namespace {
-
-// Read file to string or abort.
-string ReadFileOrDie(const string& path) {
-  const boost::filesystem::path fs_path(path);
-  boost::filesystem::is_regular_file(fs_path);
-  boost::filesystem::ifstream istream(fs_path);
-  CHECK(istream.is_open());
-
-  std::stringstream buffer;
-  buffer << istream.rdbuf();
-  return buffer.str();
-}
-
-}  // anonymous namespace
+// End flag definitions ------------------------------------
 
 int main(int argc, char** argv) {
-  gflags::SetUsageMessage("Drive arbitrary OpenCL kernels.");
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  phd::InitApp(&argc, &argv, "Drive arbitrary OpenCL kernels.");
 
   if (FLAGS_clinfo) {
     auto devices = phd::gpu::clinfo::GetOpenClDevices();
