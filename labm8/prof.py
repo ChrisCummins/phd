@@ -194,7 +194,7 @@ class AutoCsvProfiler(object):
     # execution.
     timestamp = labdate.MillisecondsTimestamp()
     log_name = '.'.join([self._name, system.HOSTNAME, str(timestamp), 'csv'])
-    self._path = self._dir / log_name
+    self._path = self._directory / log_name
 
     with self._writer() as writer:
       writer.writerow(
