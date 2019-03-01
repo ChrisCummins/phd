@@ -19,30 +19,50 @@ namespace gpu {
 namespace cldrive {
 namespace util {
 
-namespace {
-
-// Workaround for a defect in which getInfo<>() methods return strings
-// including terminating '\0' character. See discussion at:
-// https://github.com/KhronosGroup/OpenCL-CLHPP/issues/8
-void StripTrailingNullCharacter(string* str) {
-  if (!str->empty() && str->back() == '\0') {
-    str->resize(str->size() - 1);
-  }
-}
-
-}  // anonymous namespace
-
 string GetOpenClKernelName(const cl::Kernel& kernel) {
-  string name = kernel.getInfo<CL_KERNEL_FUNCTION_NAME>();
-  StripTrailingNullCharacter(&name);
-  CHECK(name.size()) << "Empty string returned by getInfo()";
+  // Rather than determine the size of the character array needed to store the
+  // string, allocate a buffer that *should be* large enough. This is a
+  // workaround for a bug in an OpenCL implementation.
+  size_t buffer_size = 512;
+  char* chars = new char[buffer_size];
+
+  size_t actual_size;
+  CHECK(clGetKernelInfo(kernel(), CL_KERNEL_FUNCTION_NAME, buffer_size, chars,
+                        /*param_value_size_ret=*/&actual_size) == CL_SUCCESS);
+
+  CHECK(actual_size <= buffer_size) << "OpenCL kernel name exceeds "
+                                    << buffer_size << " characters";
+
+  // Construct a string from the buffer.
+  string name(chars);
+  // name_size includes trailing '\0' character, name.size() does not.
+  CHECK(name.size() == actual_size - 1);
+  delete[] chars;
+
   return name;
 }
 
 string GetKernelArgTypeName(const cl::Kernel& kernel, size_t arg_index) {
-  string name = kernel.getArgInfo<CL_KERNEL_ARG_TYPE_NAME>(arg_index);
-  StripTrailingNullCharacter(&name);
-  CHECK(name.size()) << "Empty string returned by getArgInfo()";
+  // Rather than determine the size of the character array needed to store the
+  // string, allocate a buffer that *should be* large enough. This is a
+  // workaround for a bug in an OpenCL implementation.
+  size_t buffer_size = 512;
+  char* chars = new char[buffer_size];
+
+  size_t actual_size;
+  CHECK(clGetKernelArgInfo(
+            kernel(), arg_index, CL_KERNEL_ARG_TYPE_NAME, buffer_size, chars,
+            /*param_value_size_ret=*/&actual_size) == CL_SUCCESS);
+
+  CHECK(actual_size <= buffer_size) << "OpenCL kernel name exceeds "
+                                    << buffer_size << " characters";
+
+  // Construct a string from the buffer.
+  string name(chars);
+  // name_size includes trailing '\0' character, name.size() does not.
+  CHECK(name.size() == actual_size - 1);
+  delete[] chars;
+
   return name;
 }
 

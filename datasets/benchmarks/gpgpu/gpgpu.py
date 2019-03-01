@@ -817,7 +817,7 @@ def main(argv: typing.List[str]):
                      env.name)
         benchmark_suite.ForceOpenCLEnvironment(env)
         for i in range(FLAGS.gpgpu_benchmark_run_count):
-          logging.info('Starting run %d of %s', i, benchmark_suite.name)
+          logging.info('Starting run %d of %s', i + 1, benchmark_suite.name)
           benchmark_suite.Run(outdir)
 
       kernel_invocation_count = sum(
