@@ -56,11 +56,15 @@ cc_image(
     srcs = ["cldrive.cc"],
     base = "@base//image",
     deps = [
+        # TODO(cec): This is a duplicate of the dependencies of :cldrive.
+        ":csv_log",
         ":libcldrive",
         "//gpu/clinfo:libclinfo",
+        "//phd:app",
         "//phd:logging",
         "@boost//:filesystem",
         "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -383,9 +387,9 @@ cc_test(
     srcs = ["opencl_util_test.cc"],
     deps = [
         ":opencl_util",
-        "//phd:test",
         ":testutil",
-    ]
+        "//phd:test",
+    ],
 )
 
 cc_library(
