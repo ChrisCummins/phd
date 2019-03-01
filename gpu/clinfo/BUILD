@@ -33,7 +33,7 @@ cc_library(
 
 cc_test(
     name = "libclinfo_test",
-    srcs = ["libclinfo.cc"],
+    srcs = ["libclinfo_test.cc"],
     deps = [
         ":libclinfo",
         "//phd:test",

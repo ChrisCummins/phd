@@ -1,9 +1,9 @@
 #include "gpu/clinfo/libclinfo.h"
 
+#include "phd/test.h"
 #include "third_party/opencl/cl.hpp"
 
 #include <vector>
-#include "phd/test.h"
 
 namespace phd {
 namespace gpu {
@@ -41,3 +41,5 @@ TEST(GetDefaultOpenClDeviceOrDie, CreateABufferUsingDefaultDevice) {
 }  // namespace clinfo
 }  // namespace gpu
 }  // namespace phd
+
+TEST_MAIN();
