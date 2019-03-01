@@ -32,7 +32,7 @@ phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
   address_ = kernel->getArgInfo<CL_KERNEL_ARG_ADDRESS_QUALIFIER>(arg_index);
   CHECK(IsGlobal() || IsLocal() || IsConstant() || IsPrivate());
 
-  // Address qualifier is one of:
+  // Access qualifier is one of:
   //   CL_KERNEL_ARG_ACCESS_READ_ONLY
   //   CL_KERNEL_ARG_ACCESS_WRITE_ONLY
   //   CL_KERNEL_ARG_ACCESS_READ_WRITE
@@ -49,26 +49,20 @@ phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
                        "Unsupported argument");
   }
 
-  string full_type_name =
-      kernel->getArgInfo<CL_KERNEL_ARG_TYPE_NAME>(arg_index);
-  CHECK(full_type_name.size());
+  string type_name = util::GetKernelArgTypeName(*kernel, arg_index);
 
-  is_pointer_ = full_type_name[full_type_name.size() - 2] == '*';
+  is_pointer_ = type_name.back() == '*';
 
-  // Strip the trailing '*' on pointer types, and the trailing null char on
-  // both.
-  string type_name = full_type_name;
+  // Strip the trailing '*' on pointer types.
   if (is_pointer_) {
-    type_name = full_type_name.substr(0, full_type_name.size() - 2);
-  } else {
-    type_name = full_type_name.substr(0, full_type_name.size() - 1);
+    type_name.resize(type_name.size() - 1);
   }
 
   auto type_or = OpenClTypeFromString(type_name);
   if (!type_or.ok()) {
-    LOG(ERROR) << "Argument " << arg_index << " of kernel '"
-               << GetOpenClKernelName(kernel)
-               << "' is of unknown type: " << full_type_name;
+    LOG(WARNING) << "Argument " << arg_index << " of kernel '"
+                 << util::GetOpenClKernelName(*kernel)
+                 << "' is of unknown type: " << type_name;
     return type_or.status();
   }
   type_ = type_or.ValueOrDie();

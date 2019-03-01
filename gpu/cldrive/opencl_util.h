@@ -81,8 +81,11 @@ void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
 
 namespace util {
 
-// Kernel names are \000 terminated. Trim that.
+// Get the name of a kernel.
 string GetOpenClKernelName(const cl::Kernel &kernel);
+
+// Get the type name of a kernel argument.
+string GetKernelArgTypeName(const cl::Kernel &kernel, size_t arg_index);
 
 }  // namespace util
 }  // namespace cldrive
