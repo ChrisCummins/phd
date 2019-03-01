@@ -28,6 +28,7 @@
 
 namespace gpu {
 namespace cldrive {
+namespace util {
 
 std::unique_ptr<KernelArgValue> CreateGlobalMemoryArgValue(
     const OpenClType& type, const cl::Context& context, size_t size,
@@ -39,5 +40,6 @@ std::unique_ptr<KernelArgValue> CreateLocalMemoryArgValue(
 std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
                                                      const int& value);
 
+}  // namespace util
 }  // namespace cldrive
 }  // namespace gpu

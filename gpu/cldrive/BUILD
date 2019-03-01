@@ -105,9 +105,9 @@ cc_library(
     hdrs = ["kernel_arg.h"],
     deps = [
         ":global_memory_arg_value",
-        ":kernel_arg_util",
         ":kernel_arg_value",
         ":opencl_type",
+        ":opencl_type_util",
         ":opencl_util",
         ":scalar_kernel_arg_value",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
@@ -168,19 +168,6 @@ cc_test(
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],
     }),
-)
-
-cc_library(
-    name = "kernel_arg_util",
-    srcs = ["kernel_arg_util.cc"],
-    hdrs = ["kernel_arg_util.h"],
-    deps = [
-        ":global_memory_arg_value",
-        ":kernel_arg_value",
-        ":local_memory_arg_value",
-        ":scalar_kernel_arg_value",
-        "//third_party/opencl",
-    ],
 )
 
 cc_library(
@@ -364,6 +351,19 @@ cc_library(
         "@boost//:variant",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_library(
+    name = "opencl_type_util",
+    srcs = ["opencl_type_util.cc"],
+    hdrs = ["opencl_type_util.h"],
+    deps = [
+        ":global_memory_arg_value",
+        ":kernel_arg_value",
+        ":local_memory_arg_value",
+        ":scalar_kernel_arg_value",
+        "//third_party/opencl",
     ],
 )
 

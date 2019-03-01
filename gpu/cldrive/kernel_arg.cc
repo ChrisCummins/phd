@@ -16,8 +16,8 @@
 #include "gpu/cldrive/kernel_arg.h"
 
 #include "gpu/cldrive/global_memory_arg_value.h"
-#include "gpu/cldrive/kernel_arg_util.h"
 #include "gpu/cldrive/opencl_type.h"
+#include "gpu/cldrive/opencl_type_util.h"
 #include "gpu/cldrive/opencl_util.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
 
@@ -115,15 +115,17 @@ std::unique_ptr<KernelArgValue> KernelArg::TryToCreateKernelArgValue(
   CHECK(type() != OpenClType::DEFAULT_UNKNOWN);
 
   if (IsPointer() && IsGlobal()) {
-    return CreateGlobalMemoryArgValue(type(), context,
-                                      /*size=*/dynamic_params.global_size_x(),
-                                      /*value=*/1, rand_values);
+    return util::CreateGlobalMemoryArgValue(
+        type(), context,
+        /*size=*/dynamic_params.global_size_x(),
+        /*value=*/1, rand_values);
   } else if (IsPointer() && IsLocal()) {
-    return CreateLocalMemoryArgValue(type(),
-                                     /*size=*/dynamic_params.global_size_x());
+    return util::CreateLocalMemoryArgValue(
+        type(),
+        /*size=*/dynamic_params.global_size_x());
   } else if (!IsPointer()) {
-    return CreateScalarArgValue(type(),
-                                /*value=*/dynamic_params.global_size_x());
+    return util::CreateScalarArgValue(type(),
+                                      /*value=*/dynamic_params.global_size_x());
   } else {
     return std::unique_ptr<KernelArgValue>(nullptr);
   }

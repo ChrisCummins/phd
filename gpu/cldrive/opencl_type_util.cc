@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
-#include "gpu/cldrive/kernel_arg_util.h"
+#include "gpu/cldrive/opencl_type_util.h"
 
 #include "gpu/cldrive/global_memory_arg_value.h"
 #include "gpu/cldrive/local_memory_arg_value.h"
@@ -21,6 +21,7 @@
 
 namespace gpu {
 namespace cldrive {
+namespace util {
 
 namespace {
 
@@ -758,5 +759,6 @@ std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
   return nullptr;  // Unreachable so long as switch covers all enum values.
 }
 
+}  // namespace util
 }  // namespace cldrive
 }  // namespace gpu
