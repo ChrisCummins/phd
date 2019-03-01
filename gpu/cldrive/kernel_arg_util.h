@@ -35,7 +35,7 @@ namespace gpu {
 namespace cldrive {
 
 template <typename T>
-std::unique_ptr<GlobalMemoryArgValueWithBuffer<T>> CreateArrayArgValue(
+std::unique_ptr<GlobalMemoryArgValueWithBuffer<T>> CreateGlobalMemoryArgValue(
     const cl::Context& context, size_t size, const int& value,
     bool rand_values) {
   auto arg_value = std::make_unique<GlobalMemoryArgValueWithBuffer<T>>(
@@ -48,228 +48,291 @@ std::unique_ptr<GlobalMemoryArgValueWithBuffer<T>> CreateArrayArgValue(
   return arg_value;
 }
 
-std::unique_ptr<KernelArgValue> CreateArrayArgValue(const OpenClType& type,
-                                                    const cl::Context& context,
-                                                    size_t size,
-                                                    const int& value,
-                                                    bool rand_values) {
+std::unique_ptr<KernelArgValue> CreateGlobalMemoryArgValue(
+    const OpenClType& type, const cl::Context& context, size_t size,
+    const int& value, bool rand_values) {
   DCHECK(size) << "Cannot create array with 0 elements";
   switch (type) {
     case OpenClType::BOOL: {
-      return CreateArrayArgValue<bool>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<bool>(context, size, value,
+                                              rand_values);
     }
     case OpenClType::CHAR: {
-      return CreateArrayArgValue<cl_char>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_char>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::UCHAR: {
-      return CreateArrayArgValue<cl_uchar>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uchar>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::SHORT: {
-      return CreateArrayArgValue<cl_short>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_short>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::USHORT: {
-      return CreateArrayArgValue<cl_ushort>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ushort>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::INT: {
-      return CreateArrayArgValue<cl_int>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_int>(context, size, value,
+                                                rand_values);
     }
     case OpenClType::UINT: {
-      return CreateArrayArgValue<cl_uint>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uint>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::LONG: {
-      return CreateArrayArgValue<cl_long>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_long>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::ULONG: {
-      return CreateArrayArgValue<cl_ulong>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ulong>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::FLOAT: {
-      return CreateArrayArgValue<cl_float>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_float>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::DOUBLE: {
-      return CreateArrayArgValue<cl_double>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_double>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::HALF: {
-      return CreateArrayArgValue<cl_half>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_half>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::CHAR2: {
-      return CreateArrayArgValue<cl_char2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_char2>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::CHAR3: {
-      return CreateArrayArgValue<cl_char3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_char3>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::CHAR4: {
-      return CreateArrayArgValue<cl_char4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_char4>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::CHAR8: {
-      return CreateArrayArgValue<cl_char8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_char8>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::CHAR16: {
-      return CreateArrayArgValue<cl_char16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_char16>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::UCHAR2: {
-      return CreateArrayArgValue<cl_uchar2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uchar2>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::UCHAR3: {
-      return CreateArrayArgValue<cl_uchar3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uchar3>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::UCHAR4: {
-      return CreateArrayArgValue<cl_uchar4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uchar4>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::UCHAR8: {
-      return CreateArrayArgValue<cl_uchar8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uchar8>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::UCHAR16: {
-      return CreateArrayArgValue<cl_uchar16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uchar16>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::SHORT2: {
-      return CreateArrayArgValue<cl_short2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_short2>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::SHORT3: {
-      return CreateArrayArgValue<cl_short3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_short3>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::SHORT4: {
-      return CreateArrayArgValue<cl_short4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_short4>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::SHORT8: {
-      return CreateArrayArgValue<cl_short8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_short8>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::SHORT16: {
-      return CreateArrayArgValue<cl_short16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_short16>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::USHORT2: {
-      return CreateArrayArgValue<cl_ushort2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ushort2>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::USHORT3: {
-      return CreateArrayArgValue<cl_ushort3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ushort3>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::USHORT4: {
-      return CreateArrayArgValue<cl_ushort4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ushort4>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::USHORT8: {
-      return CreateArrayArgValue<cl_ushort8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ushort8>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::USHORT16: {
-      return CreateArrayArgValue<cl_ushort16>(context, size, value,
-                                              rand_values);
+      return CreateGlobalMemoryArgValue<cl_ushort16>(context, size, value,
+                                                     rand_values);
     }
     case OpenClType::INT2: {
-      return CreateArrayArgValue<cl_int2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_int2>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::INT3: {
-      return CreateArrayArgValue<cl_int3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_int3>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::INT4: {
-      return CreateArrayArgValue<cl_int4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_int4>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::INT8: {
-      return CreateArrayArgValue<cl_int8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_int8>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::INT16: {
-      return CreateArrayArgValue<cl_int16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_int16>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::UINT2: {
-      return CreateArrayArgValue<cl_uint2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uint2>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::UINT3: {
-      return CreateArrayArgValue<cl_uint3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uint3>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::UINT4: {
-      return CreateArrayArgValue<cl_uint4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uint4>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::UINT8: {
-      return CreateArrayArgValue<cl_uint8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uint8>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::UINT16: {
-      return CreateArrayArgValue<cl_uint16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_uint16>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::LONG2: {
-      return CreateArrayArgValue<cl_long2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_long2>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::LONG3: {
-      return CreateArrayArgValue<cl_long3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_long3>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::LONG4: {
-      return CreateArrayArgValue<cl_long4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_long4>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::LONG8: {
-      return CreateArrayArgValue<cl_long8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_long8>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::LONG16: {
-      return CreateArrayArgValue<cl_long16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_long16>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::ULONG2: {
-      return CreateArrayArgValue<cl_ulong2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ulong2>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::ULONG3: {
-      return CreateArrayArgValue<cl_ulong3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ulong3>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::ULONG4: {
-      return CreateArrayArgValue<cl_ulong4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ulong4>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::ULONG8: {
-      return CreateArrayArgValue<cl_ulong8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ulong8>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::ULONG16: {
-      return CreateArrayArgValue<cl_ulong16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_ulong16>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::FLOAT2: {
-      return CreateArrayArgValue<cl_float2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_float2>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::FLOAT3: {
-      return CreateArrayArgValue<cl_float3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_float3>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::FLOAT4: {
-      return CreateArrayArgValue<cl_float4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_float4>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::FLOAT8: {
-      return CreateArrayArgValue<cl_float8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_float8>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::FLOAT16: {
-      return CreateArrayArgValue<cl_float16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_float16>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::DOUBLE2: {
-      return CreateArrayArgValue<cl_double2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_double2>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::DOUBLE3: {
-      return CreateArrayArgValue<cl_double3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_double3>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::DOUBLE4: {
-      return CreateArrayArgValue<cl_double4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_double4>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::DOUBLE8: {
-      return CreateArrayArgValue<cl_double8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_double8>(context, size, value,
+                                                    rand_values);
     }
     case OpenClType::DOUBLE16: {
-      return CreateArrayArgValue<cl_double16>(context, size, value,
-                                              rand_values);
+      return CreateGlobalMemoryArgValue<cl_double16>(context, size, value,
+                                                     rand_values);
     }
     case OpenClType::HALF2: {
-      return CreateArrayArgValue<cl_half2>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_half2>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::HALF3: {
-      return CreateArrayArgValue<cl_half3>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_half3>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::HALF4: {
-      return CreateArrayArgValue<cl_half4>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_half4>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::HALF8: {
-      return CreateArrayArgValue<cl_half8>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_half8>(context, size, value,
+                                                  rand_values);
     }
     case OpenClType::HALF16: {
-      return CreateArrayArgValue<cl_half16>(context, size, value, rand_values);
+      return CreateGlobalMemoryArgValue<cl_half16>(context, size, value,
+                                                   rand_values);
     }
     case OpenClType::DEFAULT_UNKNOWN: {
       // This condition should never occur as KernelArg::Init() will return an
       // error status if the type cannot be determined.
-      LOG(FATAL) << "CreateArrayArgValue() called with type "
+      LOG(FATAL) << "CreateGlobalMemoryArgValue() called with type "
                  << "OpenClType::DEFAULT_UNKNOWN";
     }
   }
   return nullptr;  // Unreachable so long as switch covers all enum values.
 }
 
-std::unique_ptr<KernelArgValue> CreateLocalMemoryValue(const OpenClType& type,
-                                                       size_t size) {
+std::unique_ptr<KernelArgValue> CreateLocalMemoryArgValue(
+    const OpenClType& type, size_t size) {
   DCHECK(size) << "Cannot create array with 0 elements";
   switch (type) {
     case OpenClType::BOOL: {
@@ -476,7 +539,7 @@ std::unique_ptr<KernelArgValue> CreateLocalMemoryValue(const OpenClType& type,
     case OpenClType::DEFAULT_UNKNOWN: {
       // This condition should never occur as KernelArg::Init() will return an
       // error status if the type cannot be determined.
-      LOG(FATAL) << "CreateLocalMemoryValue() called with type "
+      LOG(FATAL) << "CreateLocalMemoryArgValue() called with type "
                  << "OpenClType::DEFAULT_UNKNOWN";
     }
   }
