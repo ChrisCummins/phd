@@ -163,7 +163,7 @@ static double cecl_get_elapsed_ms(cl_event event) {
 
 /* External: see cecl.h for documentation. */
 
-cl_int cecl_nd_range_kernel(cl_command_queue command_queue, cl_kernel kernel,
+cl_int CECL_ND_RANGE_KERNEL(cl_command_queue command_queue, cl_kernel kernel,
                             cl_uint work_dim, const size_t* global_work_offset,
                             const size_t* global_work_size,
                             const size_t* local_work_size,
@@ -287,7 +287,7 @@ cl_int cecl_nd_range_kernel(cl_command_queue command_queue, cl_kernel kernel,
   exit(E_CL_FAILURE);
 }
 
-cl_int cecl_task(cl_command_queue command_queue, cl_kernel kernel,
+cl_int CECL_TASK(cl_command_queue command_queue, cl_kernel kernel,
                  cl_uint num_events_in_wait_list,
                  const cl_event* event_wait_list, cl_event* event) {
   cl_event local_event;

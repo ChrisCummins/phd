@@ -89,18 +89,16 @@ cl_int CECL_GET_KERNEL_WORK_GROUP_INFO(cl_kernel kernel,
 #define CECL_BUFFER(context, flags, size, host_ptr, err) \
   cecl_buffer(context, flags, size, host_ptr, err, #host_ptr, #flags)
 
-#define CECL_ND_RANGE_KERNEL(command_queue, kernel, work_dim,               \
-                             global_work_offset, global_work_size,          \
-                             local_work_size, num_events_in_wait_list,      \
-                             event_wait_list, event)                        \
-  cecl_nd_range_kernel(command_queue, kernel, work_dim, global_work_offset, \
-                       global_work_size, local_work_size,                   \
-                       num_events_in_wait_list, event_wait_list, event)
+cl_int CECL_ND_RANGE_KERNEL(cl_command_queue command_queue, cl_kernel kernel,
+                            cl_uint work_dim, const size_t* global_work_offset,
+                            const size_t* global_work_size,
+                            const size_t* local_work_size,
+                            cl_uint num_events_in_wait_list,
+                            const cl_event* event_wait_list, cl_event* event);
 
-#define CECL_TASK(command_queue, kernel, num_events_in_wait_list,            \
-                  event_wait_list, event)                                    \
-  cecl_task(command_queue, kernel, num_events_in_wait_list, event_wait_list, \
-            event)
+cl_int CECL_TASK(cl_command_queue command_queue, cl_kernel kernel,
+                 cl_uint num_events_in_wait_list,
+                 const cl_event* event_wait_list, cl_event* event);
 
 #define CECL_READ_BUFFER(command_queue, buffer, blocking_read__UNUSED__, \
                          offset, cb, ptr, num_events_in_wait_list,       \
