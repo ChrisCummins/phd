@@ -62,11 +62,10 @@ def KernelInvocationsFromCeclLog(
     if opcode == "clCreateCommandQueue":
       devtype, devname = operands
 
-      # FIXME(cec): temporarily disable while debugging logs.
-      # if devname != expected_device_name:
-      #   raise ValueError(
-      #       f"Expected device name '{expected_device_name}' does not match "
-      #       f"actual device name '{devname}'")
+      if devname != expected_device_name:
+        raise ValueError(
+            f"Expected device name '{expected_device_name}' does not match "
+            f"actual device name '{devname}'")
 
       # If we don't know the device type, don't check it. This isn't a problem -
       # not all drivers report device type correctly, e.g. POCL returns a
