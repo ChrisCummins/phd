@@ -329,6 +329,7 @@ cc_library(
     hdrs = ["test.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         "@com_github_google_benchmark//:benchmark",
         "@gtest",
     ],
