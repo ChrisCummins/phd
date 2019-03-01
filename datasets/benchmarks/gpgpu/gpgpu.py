@@ -686,7 +686,7 @@ class RodiniaBenchmarkSuite(_BenchmarkSuite):
         'gaussian',
         'heartwall',
         'hotspot',
-        'hotspot3D',
+        # 'hotspot3D',  # TODO(cec): Fails to build.
         'hybridsort',
         'kmeans',
         'lavaMD',
