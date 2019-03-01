@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //
@@ -38,8 +39,7 @@
 // This subroutine initializes the field variable u using
 // tri-linear transfinite interpolation of the boundary values
 //---------------------------------------------------------------------
-void initialize()
-{
+void initialize() {
   cl_kernel k_initialize1;
   cl_kernel k_initialize2;
   cl_kernel k_initialize3;
@@ -57,7 +57,7 @@ void initialize()
   k_initialize1 = CECL_KERNEL(p_initialize, "initialize1", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize1, 0, sizeof(cl_mem), &m_u);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize1, 0, sizeof(cl_mem), &m_u);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize1, 1, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize1, 2, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize1, 3, sizeof(int), &d2);
@@ -70,12 +70,8 @@ void initialize()
   global_ws[0] = clu_RoundWorkSize((size_t)d1, local_ws[0]);
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_initialize1,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_initialize1, 2, NULL, global_ws,
+                               local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
@@ -85,8 +81,8 @@ void initialize()
   k_initialize2 = CECL_KERNEL(p_initialize, "initialize2", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize2, 0, sizeof(cl_mem), &m_u);
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize2, 1, sizeof(cl_mem), &m_ce);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize2, 0, sizeof(cl_mem), &m_u);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize2, 1, sizeof(cl_mem), &m_ce);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize2, 2, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize2, 3, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize2, 4, sizeof(int), &d2);
@@ -112,12 +108,8 @@ void initialize()
   }
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_initialize2,
-                                 INITIALIZE2_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_initialize2, INITIALIZE2_DIM, NULL,
+                               global_ws, local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
@@ -127,8 +119,8 @@ void initialize()
   k_initialize3 = CECL_KERNEL(p_initialize, "initialize3", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize3, 0, sizeof(cl_mem), &m_u);
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize3, 1, sizeof(cl_mem), &m_ce);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize3, 0, sizeof(cl_mem), &m_u);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize3, 1, sizeof(cl_mem), &m_ce);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize3, 2, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize3, 3, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize3, 4, sizeof(int), &d2);
@@ -142,20 +134,16 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_initialize3,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_initialize3, 2, NULL, global_ws,
+                               local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
   k_initialize4 = CECL_KERNEL(p_initialize, "initialize4", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize4, 0, sizeof(cl_mem), &m_u);
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize4, 1, sizeof(cl_mem), &m_ce);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize4, 0, sizeof(cl_mem), &m_u);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize4, 1, sizeof(cl_mem), &m_ce);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize4, 2, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize4, 3, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize4, 4, sizeof(int), &d2);
@@ -169,20 +157,16 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_initialize4,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_initialize4, 2, NULL, global_ws,
+                               local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
   k_initialize5 = CECL_KERNEL(p_initialize, "initialize5", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize5, 0, sizeof(cl_mem), &m_u);
-  ecode  = CECL_SET_KERNEL_ARG(k_initialize5, 1, sizeof(cl_mem), &m_ce);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize5, 0, sizeof(cl_mem), &m_u);
+  ecode = CECL_SET_KERNEL_ARG(k_initialize5, 1, sizeof(cl_mem), &m_ce);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize5, 2, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize5, 3, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_initialize5, 4, sizeof(int), &d2);
@@ -196,12 +180,8 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d1, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_initialize5,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_initialize5, 2, NULL, global_ws,
+                               local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 

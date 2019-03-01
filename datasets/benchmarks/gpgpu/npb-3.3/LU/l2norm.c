@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -42,23 +43,21 @@
 // To improve cache performance, second two dimensions padded by 1
 // for even number sizes only.  Only needed in v.
 //---------------------------------------------------------------------
-void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
-             int ist, int iend, int jst, int jend,
-             cl_mem *m_v, double sum[5])
-{
+void l2norm(int ldx, int ldy, int ldz, int nx0, int ny0, int nz0, int ist,
+            int iend, int jst, int jend, cl_mem *m_v, double sum[5]) {
   //---------------------------------------------------------------------
   // local variables
   //---------------------------------------------------------------------
   int i, m;
   size_t wg_num;
-  double (*g_sum)[5];
+  double(*g_sum)[5];
   cl_int ecode;
 
   for (m = 0; m < 5; m++) {
     sum[m] = 0.0;
   }
 
-  ecode  = CECL_SET_KERNEL_ARG(k_l2norm, 0, sizeof(cl_mem), m_v);
+  ecode = CECL_SET_KERNEL_ARG(k_l2norm, 0, sizeof(cl_mem), m_v);
   ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 3, sizeof(int), &nz0);
   ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 4, sizeof(int), &ist);
   ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 5, sizeof(int), &iend);
@@ -66,23 +65,15 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
   ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 7, sizeof(int), &jend);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_l2norm,
-                                 1, NULL,
-                                 l2norm_gws,
-                                 l2norm_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_l2norm, 1, NULL, l2norm_gws,
+                               l2norm_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   wg_num = l2norm_gws[0] / l2norm_lws[0];
-  g_sum = (double (*)[5])malloc(sum_size);
+  g_sum = (double(*)[5])malloc(sum_size);
 
-  ecode = CECL_READ_BUFFER(cmd_queue,
-                              m_sum,
-                              CL_TRUE,
-                              0, sum_size,
-                              g_sum,
-                              0, NULL, NULL);
+  ecode = CECL_READ_BUFFER(cmd_queue, m_sum, CL_TRUE, 0, sum_size, g_sum, 0,
+                           NULL, NULL);
   clu_CheckError(ecode, "clReadBuffer()");
 
   // reduction
@@ -93,7 +84,7 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
   }
 
   for (m = 0; m < 5; m++) {
-    sum[m] = sqrt ( sum[m] / ( (nx0-2)*(ny0-2)*(nz0-2) ) );
+    sum[m] = sqrt(sum[m] / ((nx0 - 2) * (ny0 - 2) * (nz0 - 2)));
   }
 
   free(g_sum);

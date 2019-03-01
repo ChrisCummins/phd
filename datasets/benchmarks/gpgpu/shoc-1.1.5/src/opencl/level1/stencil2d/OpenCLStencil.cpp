@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #include <cassert>
 #include <fstream>
 #include <sstream>

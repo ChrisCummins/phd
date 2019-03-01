@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //
@@ -40,18 +41,13 @@
 // simultaneously. The Thomas algorithm is employed to solve the
 // systems for the y-lines. Boundary conditions are non-periodic
 //---------------------------------------------------------------------
-void y_solve()
-{
+void y_solve() {
   cl_int ecode;
 
   if (timeron) timer_start(t_ysolve);
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_y_solve,
-                                 Y_SOLVE_DIM, NULL,
-                                 y_solve_gws,
-                                 y_solve_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_y_solve, Y_SOLVE_DIM, NULL,
+                               y_solve_gws, y_solve_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 

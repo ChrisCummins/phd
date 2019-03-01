@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //
@@ -32,21 +33,20 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
-#include "header.h"
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
+#include "header.h"
 
 //---------------------------------------------------------------------
 // this function computes the norm of the difference between the
 // computed solution and the exact solution
 //---------------------------------------------------------------------
-void error_norm(double rms[5])
-{
+void error_norm(double rms[5]) {
   int i, m, d;
 
   cl_kernel k_error_norm;
   cl_mem m_rms;
-  double (*g_rms)[5];
+  double(*g_rms)[5];
   size_t local_ws, global_ws, temp, wg_num, buf_size;
   cl_int ecode;
 
@@ -59,45 +59,35 @@ void error_norm(double rms[5])
   }
 
   temp = d2 / max_compute_units;
-  local_ws  = temp == 0 ? 1 : temp;
+  local_ws = temp == 0 ? 1 : temp;
   global_ws = clu_RoundWorkSize((size_t)d2, local_ws);
   wg_num = global_ws / local_ws;
 
   buf_size = sizeof(double) * 5 * wg_num;
-  m_rms = CECL_BUFFER(context,
-                         CL_MEM_READ_WRITE,
-                         buf_size,
-                         NULL, &ecode);
+  m_rms = CECL_BUFFER(context, CL_MEM_READ_WRITE, buf_size, NULL, &ecode);
   clu_CheckError(ecode, "CECL_BUFFER()");
 
   k_error_norm = CECL_KERNEL(p_error, "error_norm", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_error_norm, 0, sizeof(cl_mem), &m_u);
+  ecode = CECL_SET_KERNEL_ARG(k_error_norm, 0, sizeof(cl_mem), &m_u);
   ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 1, sizeof(cl_mem), &m_ce);
   ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 2, sizeof(cl_mem), &m_rms);
-  ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 3, sizeof(double)*5*local_ws, NULL);
+  ecode |=
+      CECL_SET_KERNEL_ARG(k_error_norm, 3, sizeof(double) * 5 * local_ws, NULL);
   ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 4, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 5, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 6, sizeof(int), &d2);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_error_norm,
-                                 1, NULL,
-                                 &global_ws,
-                                 &local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_error_norm, 1, NULL, &global_ws,
+                               &local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-  g_rms = (double (*)[5])malloc(buf_size);
+  g_rms = (double(*)[5])malloc(buf_size);
 
-  ecode = CECL_READ_BUFFER(cmd_queue,
-                              m_rms,
-                              CL_TRUE,
-                              0, buf_size,
-                              g_rms,
-                              0, NULL, NULL);
+  ecode = CECL_READ_BUFFER(cmd_queue, m_rms, CL_TRUE, 0, buf_size, g_rms, 0,
+                           NULL, NULL);
   clu_CheckError(ecode, "clReadBuffer()");
 
   // reduction
@@ -109,7 +99,7 @@ void error_norm(double rms[5])
 
   for (m = 0; m < 5; m++) {
     for (d = 0; d < 3; d++) {
-      rms[m] = rms[m] / (double)(grid_points[d]-2);
+      rms[m] = rms[m] / (double)(grid_points[d] - 2);
     }
     rms[m] = sqrt(rms[m]);
   }
@@ -119,14 +109,12 @@ void error_norm(double rms[5])
   clReleaseKernel(k_error_norm);
 }
 
-
-void rhs_norm(double rms[5])
-{
+void rhs_norm(double rms[5]) {
   int i, m, d;
 
   cl_kernel k_rhs_norm;
   cl_mem m_rms;
-  double (*g_rms)[5];
+  double(*g_rms)[5];
   size_t local_ws, global_ws, temp, wg_num, buf_size;
   cl_int ecode;
 
@@ -135,44 +123,34 @@ void rhs_norm(double rms[5])
   }
 
   temp = nz2 / max_compute_units;
-  local_ws  = temp == 0 ? 1 : temp;
+  local_ws = temp == 0 ? 1 : temp;
   global_ws = clu_RoundWorkSize((size_t)nz2, local_ws);
   wg_num = global_ws / local_ws;
 
   buf_size = sizeof(double) * 5 * wg_num;
-  m_rms = CECL_BUFFER(context,
-                         CL_MEM_READ_WRITE,
-                         buf_size,
-                         NULL, &ecode);
+  m_rms = CECL_BUFFER(context, CL_MEM_READ_WRITE, buf_size, NULL, &ecode);
   clu_CheckError(ecode, "CECL_BUFFER()");
 
   k_rhs_norm = CECL_KERNEL(p_error, "rhs_norm", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_rhs_norm, 0, sizeof(cl_mem), &m_rhs);
+  ecode = CECL_SET_KERNEL_ARG(k_rhs_norm, 0, sizeof(cl_mem), &m_rhs);
   ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 1, sizeof(cl_mem), &m_rms);
-  ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 2, sizeof(double)*5*local_ws, NULL);
+  ecode |=
+      CECL_SET_KERNEL_ARG(k_rhs_norm, 2, sizeof(double) * 5 * local_ws, NULL);
   ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 3, sizeof(int), &nx2);
   ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 4, sizeof(int), &ny2);
   ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 5, sizeof(int), &nz2);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_rhs_norm,
-                                 1, NULL,
-                                 &global_ws,
-                                 &local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_rhs_norm, 1, NULL, &global_ws,
+                               &local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-  g_rms = (double (*)[5])malloc(buf_size);
+  g_rms = (double(*)[5])malloc(buf_size);
 
-  ecode = CECL_READ_BUFFER(cmd_queue,
-                              m_rms,
-                              CL_TRUE,
-                              0, buf_size,
-                              g_rms,
-                              0, NULL, NULL);
+  ecode = CECL_READ_BUFFER(cmd_queue, m_rms, CL_TRUE, 0, buf_size, g_rms, 0,
+                           NULL, NULL);
   clu_CheckError(ecode, "clReadBuffer()");
 
   // reduction
@@ -184,7 +162,7 @@ void rhs_norm(double rms[5])
 
   for (m = 0; m < 5; m++) {
     for (d = 0; d < 3; d++) {
-      rms[m] = rms[m] / (double)(grid_points[d]-2);
+      rms[m] = rms[m] / (double)(grid_points[d] - 2);
     }
     rms[m] = sqrt(rms[m]);
   }

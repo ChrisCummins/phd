@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //
@@ -40,18 +41,13 @@
 // simultaneously. The Thomas algorithm is employed to solve the
 // systems for the z-lines. Boundary conditions are non-periodic
 //---------------------------------------------------------------------
-void z_solve()
-{
+void z_solve() {
   cl_int ecode;
 
   if (timeron) timer_start(t_zsolve);
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_z_solve,
-                                 Z_SOLVE_DIM, NULL,
-                                 z_solve_gws,
-                                 z_solve_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_z_solve, Z_SOLVE_DIM, NULL,
+                               z_solve_gws, z_solve_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 

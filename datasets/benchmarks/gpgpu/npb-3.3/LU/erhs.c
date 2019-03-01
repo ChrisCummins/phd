@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -36,8 +37,7 @@
 //---------------------------------------------------------------------
 // compute the right hand side based on exact solution
 //---------------------------------------------------------------------
-void erhs()
-{
+void erhs() {
   DTIMER_START(t_erhs);
 
   cl_kernel k_erhs1, k_erhs2, k_erhs3, k_erhs4;
@@ -51,7 +51,7 @@ void erhs()
   //------------------------------------------------------------------------
   k_erhs1 = CECL_KERNEL(p_pre, "erhs1", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for erhs1");
-  ecode  = CECL_SET_KERNEL_ARG(k_erhs1, 0, sizeof(cl_mem), &m_frct);
+  ecode = CECL_SET_KERNEL_ARG(k_erhs1, 0, sizeof(cl_mem), &m_frct);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs1, 1, sizeof(cl_mem), &m_rsd);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs1, 2, sizeof(cl_mem), &m_ce);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs1, 3, sizeof(int), &nx);
@@ -79,18 +79,14 @@ void erhs()
     erhs1_gws[0] = clu_RoundWorkSize((size_t)nz, erhs1_lws[0]);
   }
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_erhs1,
-                                 ERHS1_DIM, NULL,
-                                 erhs1_gws,
-                                 erhs1_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_erhs1, ERHS1_DIM, NULL, erhs1_gws,
+                               erhs1_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   //------------------------------------------------------------------------
   k_erhs2 = CECL_KERNEL(p_pre, "erhs2", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for erhs2");
-  ecode  = CECL_SET_KERNEL_ARG(k_erhs2, 0, sizeof(cl_mem), &m_rsd);
+  ecode = CECL_SET_KERNEL_ARG(k_erhs2, 0, sizeof(cl_mem), &m_rsd);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs2, 1, sizeof(cl_mem), &m_frct);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs2, 2, sizeof(cl_mem), &m_flux);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs2, 3, sizeof(int), &nx);
@@ -98,30 +94,27 @@ void erhs()
   ecode |= CECL_SET_KERNEL_ARG(k_erhs2, 5, sizeof(int), &nz);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (ERHS2_DIM == 2) {
-    erhs2_lws[0] = (jend-jst) < work_item_sizes[0] ? (jend-jst) : work_item_sizes[0];
+    erhs2_lws[0] =
+        (jend - jst) < work_item_sizes[0] ? (jend - jst) : work_item_sizes[0];
     temp = max_work_group_size / erhs2_lws[0];
-    erhs2_lws[1] = (nz-2) < temp ? (nz-2) : temp;
-    erhs2_gws[0] = clu_RoundWorkSize((size_t)(jend-jst), erhs2_lws[0]);
-    erhs2_gws[1] = clu_RoundWorkSize((size_t)(nz-2), erhs2_lws[1]);
+    erhs2_lws[1] = (nz - 2) < temp ? (nz - 2) : temp;
+    erhs2_gws[0] = clu_RoundWorkSize((size_t)(jend - jst), erhs2_lws[0]);
+    erhs2_gws[1] = clu_RoundWorkSize((size_t)(nz - 2), erhs2_lws[1]);
   } else {
-    //temp = (nz-2) / max_compute_units;
+    // temp = (nz-2) / max_compute_units;
     temp = 1;
     erhs2_lws[0] = temp == 0 ? 1 : temp;
-    erhs2_gws[0] = clu_RoundWorkSize((size_t)(nz-2), erhs2_lws[0]);
+    erhs2_gws[0] = clu_RoundWorkSize((size_t)(nz - 2), erhs2_lws[0]);
   }
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_erhs2,
-                                 ERHS2_DIM, NULL,
-                                 erhs2_gws,
-                                 erhs2_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_erhs2, ERHS2_DIM, NULL, erhs2_gws,
+                               erhs2_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   //------------------------------------------------------------------------
   k_erhs3 = CECL_KERNEL(p_pre, "erhs3", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for erhs3");
-  ecode  = CECL_SET_KERNEL_ARG(k_erhs3, 0, sizeof(cl_mem), &m_rsd);
+  ecode = CECL_SET_KERNEL_ARG(k_erhs3, 0, sizeof(cl_mem), &m_rsd);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs3, 1, sizeof(cl_mem), &m_frct);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs3, 2, sizeof(cl_mem), &m_flux);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs3, 3, sizeof(int), &nx);
@@ -129,30 +122,27 @@ void erhs()
   ecode |= CECL_SET_KERNEL_ARG(k_erhs3, 5, sizeof(int), &nz);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (ERHS3_DIM == 2) {
-    erhs3_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
+    erhs3_lws[0] =
+        (iend - ist) < work_item_sizes[0] ? (iend - ist) : work_item_sizes[0];
     temp = max_work_group_size / erhs3_lws[0];
-    erhs3_lws[1] = (nz-2) < temp ? (nz-2) : temp;
-    erhs3_gws[0] = clu_RoundWorkSize((size_t)(iend-ist), erhs3_lws[0]);
-    erhs3_gws[1] = clu_RoundWorkSize((size_t)(nz-2), erhs3_lws[1]);
+    erhs3_lws[1] = (nz - 2) < temp ? (nz - 2) : temp;
+    erhs3_gws[0] = clu_RoundWorkSize((size_t)(iend - ist), erhs3_lws[0]);
+    erhs3_gws[1] = clu_RoundWorkSize((size_t)(nz - 2), erhs3_lws[1]);
   } else {
-    //temp = (nz-2) / max_compute_units;
+    // temp = (nz-2) / max_compute_units;
     temp = 1;
     erhs3_lws[0] = temp == 0 ? 1 : temp;
-    erhs3_gws[0] = clu_RoundWorkSize((size_t)(nz-2), erhs3_lws[0]);
+    erhs3_gws[0] = clu_RoundWorkSize((size_t)(nz - 2), erhs3_lws[0]);
   }
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_erhs3,
-                                 ERHS3_DIM, NULL,
-                                 erhs3_gws,
-                                 erhs3_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_erhs3, ERHS3_DIM, NULL, erhs3_gws,
+                               erhs3_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   //------------------------------------------------------------------------
   k_erhs4 = CECL_KERNEL(p_pre, "erhs4", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for erhs4");
-  ecode  = CECL_SET_KERNEL_ARG(k_erhs4, 0, sizeof(cl_mem), &m_rsd);
+  ecode = CECL_SET_KERNEL_ARG(k_erhs4, 0, sizeof(cl_mem), &m_rsd);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs4, 1, sizeof(cl_mem), &m_frct);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs4, 2, sizeof(cl_mem), &m_flux);
   ecode |= CECL_SET_KERNEL_ARG(k_erhs4, 3, sizeof(int), &nx);
@@ -160,24 +150,21 @@ void erhs()
   ecode |= CECL_SET_KERNEL_ARG(k_erhs4, 5, sizeof(int), &nz);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (ERHS4_DIM == 2) {
-    erhs4_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
+    erhs4_lws[0] =
+        (iend - ist) < work_item_sizes[0] ? (iend - ist) : work_item_sizes[0];
     temp = max_work_group_size / erhs4_lws[0];
-    erhs4_lws[1] = (jend-jst) < temp ? (jend-jst) : temp;
-    erhs4_gws[0] = clu_RoundWorkSize((size_t)(iend-ist), erhs4_lws[0]);
-    erhs4_gws[1] = clu_RoundWorkSize((size_t)(jend-jst), erhs4_lws[1]);
+    erhs4_lws[1] = (jend - jst) < temp ? (jend - jst) : temp;
+    erhs4_gws[0] = clu_RoundWorkSize((size_t)(iend - ist), erhs4_lws[0]);
+    erhs4_gws[1] = clu_RoundWorkSize((size_t)(jend - jst), erhs4_lws[1]);
   } else {
-    //temp = (jend-jst) / max_compute_units;
+    // temp = (jend-jst) / max_compute_units;
     temp = 1;
     erhs4_lws[0] = temp == 0 ? 1 : temp;
-    erhs4_gws[0] = clu_RoundWorkSize((size_t)(jend-jst), erhs4_lws[0]);
+    erhs4_gws[0] = clu_RoundWorkSize((size_t)(jend - jst), erhs4_lws[0]);
   }
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_erhs4,
-                                 ERHS4_DIM, NULL,
-                                 erhs4_gws,
-                                 erhs4_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_erhs4, ERHS4_DIM, NULL, erhs4_gws,
+                               erhs4_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 

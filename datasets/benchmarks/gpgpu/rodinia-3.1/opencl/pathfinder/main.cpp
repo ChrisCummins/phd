@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /***********************************************************************
  * PathFinder uses dynamic programming to find a path on a 2-D grid from
  * the bottom row to the top row with the smallest accumulated weights,

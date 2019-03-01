@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB BT code. This OpenCL    //
@@ -37,10 +38,9 @@
 //---------------------------------------------------------------------
 // compute the right hand side based on exact solution
 //---------------------------------------------------------------------
-void exact_rhs()
-{
-  cl_kernel k_exact_rhs1, k_exact_rhs2, k_exact_rhs3,
-            k_exact_rhs4, k_exact_rhs5;
+void exact_rhs() {
+  cl_kernel k_exact_rhs1, k_exact_rhs2, k_exact_rhs3, k_exact_rhs4,
+      k_exact_rhs5;
   cl_mem m_cuf, m_q, m_ue, m_buf;
   size_t local_ws[3], global_ws[3], temp;
   cl_int ecode;
@@ -50,37 +50,25 @@ void exact_rhs()
   int d2 = grid_points[2];
 
   size_t max_work_items = PROBLEM_SIZE * PROBLEM_SIZE;
-  size_t buf_size1 = sizeof(double)*PROBLEM_SIZE * max_work_items;
-  size_t buf_size2 = sizeof(double)*PROBLEM_SIZE*5 * max_work_items;
-  m_cuf = CECL_BUFFER(context,
-                        CL_MEM_READ_WRITE,
-                        buf_size1,
-                        NULL, &ecode);
+  size_t buf_size1 = sizeof(double) * PROBLEM_SIZE * max_work_items;
+  size_t buf_size2 = sizeof(double) * PROBLEM_SIZE * 5 * max_work_items;
+  m_cuf = CECL_BUFFER(context, CL_MEM_READ_WRITE, buf_size1, NULL, &ecode);
   clu_CheckError(ecode, "CECL_BUFFER() for m_cuf");
 
-  m_q = CECL_BUFFER(context,
-                        CL_MEM_READ_WRITE,
-                        buf_size1,
-                        NULL, &ecode);
+  m_q = CECL_BUFFER(context, CL_MEM_READ_WRITE, buf_size1, NULL, &ecode);
   clu_CheckError(ecode, "CECL_BUFFER() for m_q");
 
-  m_ue = CECL_BUFFER(context,
-                        CL_MEM_READ_WRITE,
-                        buf_size2,
-                        NULL, &ecode);
+  m_ue = CECL_BUFFER(context, CL_MEM_READ_WRITE, buf_size2, NULL, &ecode);
   clu_CheckError(ecode, "CECL_BUFFER() for m_ue");
 
-  m_buf = CECL_BUFFER(context,
-                        CL_MEM_READ_WRITE,
-                        buf_size2,
-                        NULL, &ecode);
+  m_buf = CECL_BUFFER(context, CL_MEM_READ_WRITE, buf_size2, NULL, &ecode);
   clu_CheckError(ecode, "CECL_BUFFER() for m_buf");
 
   //-----------------------------------------------------------------------
   k_exact_rhs1 = CECL_KERNEL(p_exact_rhs, "exact_rhs1", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for exact_rhs1");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_exact_rhs1, 0, sizeof(cl_mem), &m_forcing);
+  ecode = CECL_SET_KERNEL_ARG(k_exact_rhs1, 0, sizeof(cl_mem), &m_forcing);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs1, 1, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs1, 2, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs1, 3, sizeof(int), &d2);
@@ -109,12 +97,8 @@ void exact_rhs()
     global_ws[0] = clu_RoundWorkSize((size_t)d2, local_ws[0]);
   }
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_exact_rhs1,
-                                 EXACT_RHS1_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_exact_rhs1, EXACT_RHS1_DIM, NULL,
+                               global_ws, local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
@@ -122,7 +106,7 @@ void exact_rhs()
   k_exact_rhs2 = CECL_KERNEL(p_exact_rhs, "exact_rhs2", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for exact_rhs2");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_exact_rhs2, 0, sizeof(cl_mem), &m_forcing);
+  ecode = CECL_SET_KERNEL_ARG(k_exact_rhs2, 0, sizeof(cl_mem), &m_forcing);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs2, 1, sizeof(cl_mem), &m_ue);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs2, 2, sizeof(cl_mem), &m_buf);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs2, 3, sizeof(cl_mem), &m_cuf);
@@ -133,20 +117,16 @@ void exact_rhs()
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs2, 8, sizeof(int), &d2);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  local_ws[0] = (d1-2) < work_item_sizes[0] ? (d1-2) : work_item_sizes[0];
+  local_ws[0] = (d1 - 2) < work_item_sizes[0] ? (d1 - 2) : work_item_sizes[0];
   temp = max_work_group_size / local_ws[0];
-  local_ws[1] = (d2-2) < temp ? (d2-1) : temp;
+  local_ws[1] = (d2 - 2) < temp ? (d2 - 1) : temp;
 
-  global_ws[0] = clu_RoundWorkSize((size_t)(d1-2), local_ws[0]);
-  global_ws[1] = clu_RoundWorkSize((size_t)(d2-2), local_ws[1]);
+  global_ws[0] = clu_RoundWorkSize((size_t)(d1 - 2), local_ws[0]);
+  global_ws[1] = clu_RoundWorkSize((size_t)(d2 - 2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_exact_rhs2,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_exact_rhs2, 2, NULL, global_ws,
+                               local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
@@ -154,7 +134,7 @@ void exact_rhs()
   k_exact_rhs3 = CECL_KERNEL(p_exact_rhs, "exact_rhs3", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for exact_rhs3");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_exact_rhs3, 0, sizeof(cl_mem), &m_forcing);
+  ecode = CECL_SET_KERNEL_ARG(k_exact_rhs3, 0, sizeof(cl_mem), &m_forcing);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs3, 1, sizeof(cl_mem), &m_ue);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs3, 2, sizeof(cl_mem), &m_buf);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs3, 3, sizeof(cl_mem), &m_cuf);
@@ -165,20 +145,16 @@ void exact_rhs()
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs3, 8, sizeof(int), &d2);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  local_ws[0] = (d0-2) < work_item_sizes[0] ? (d0-2) : work_item_sizes[0];
+  local_ws[0] = (d0 - 2) < work_item_sizes[0] ? (d0 - 2) : work_item_sizes[0];
   temp = max_work_group_size / local_ws[0];
-  local_ws[1] = (d2-2) < temp ? (d2-2) : temp;
+  local_ws[1] = (d2 - 2) < temp ? (d2 - 2) : temp;
 
-  global_ws[0] = clu_RoundWorkSize((size_t)(d0-2), local_ws[0]);
-  global_ws[1] = clu_RoundWorkSize((size_t)(d2-2), local_ws[1]);
+  global_ws[0] = clu_RoundWorkSize((size_t)(d0 - 2), local_ws[0]);
+  global_ws[1] = clu_RoundWorkSize((size_t)(d2 - 2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_exact_rhs3,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_exact_rhs3, 2, NULL, global_ws,
+                               local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
@@ -186,7 +162,7 @@ void exact_rhs()
   k_exact_rhs4 = CECL_KERNEL(p_exact_rhs, "exact_rhs4", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for exact_rhs4");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_exact_rhs4, 0, sizeof(cl_mem), &m_forcing);
+  ecode = CECL_SET_KERNEL_ARG(k_exact_rhs4, 0, sizeof(cl_mem), &m_forcing);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs4, 1, sizeof(cl_mem), &m_ue);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs4, 2, sizeof(cl_mem), &m_buf);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs4, 3, sizeof(cl_mem), &m_cuf);
@@ -197,20 +173,16 @@ void exact_rhs()
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs4, 8, sizeof(int), &d2);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  local_ws[0] = (d0-2) < work_item_sizes[0] ? (d0-2) : work_item_sizes[0];
+  local_ws[0] = (d0 - 2) < work_item_sizes[0] ? (d0 - 2) : work_item_sizes[0];
   temp = max_work_group_size / local_ws[0];
-  local_ws[1] = (d1-2) < temp ? (d1-2) : temp;
+  local_ws[1] = (d1 - 2) < temp ? (d1 - 2) : temp;
 
-  global_ws[0] = clu_RoundWorkSize((size_t)(d0-2), local_ws[0]);
-  global_ws[1] = clu_RoundWorkSize((size_t)(d1-2), local_ws[1]);
+  global_ws[0] = clu_RoundWorkSize((size_t)(d0 - 2), local_ws[0]);
+  global_ws[1] = clu_RoundWorkSize((size_t)(d1 - 2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_exact_rhs4,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_exact_rhs4, 2, NULL, global_ws,
+                               local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 
@@ -219,42 +191,38 @@ void exact_rhs()
   k_exact_rhs5 = CECL_KERNEL(p_exact_rhs, "exact_rhs5", &ecode);
   clu_CheckError(ecode, "CECL_KERNEL() for exact_rhs5");
 
-  ecode  = CECL_SET_KERNEL_ARG(k_exact_rhs5, 0, sizeof(cl_mem), &m_forcing);
+  ecode = CECL_SET_KERNEL_ARG(k_exact_rhs5, 0, sizeof(cl_mem), &m_forcing);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs5, 1, sizeof(int), &d0);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs5, 2, sizeof(int), &d1);
   ecode |= CECL_SET_KERNEL_ARG(k_exact_rhs5, 3, sizeof(int), &d2);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
   if (EXACT_RHS5_DIM == 3) {
-    local_ws[0] = (d0-2) < work_item_sizes[0] ? (d0-2) : work_item_sizes[0];
+    local_ws[0] = (d0 - 2) < work_item_sizes[0] ? (d0 - 2) : work_item_sizes[0];
     temp = max_work_group_size / local_ws[0];
-    local_ws[1] = (d1-2) < temp ? (d1-2) : temp;
+    local_ws[1] = (d1 - 2) < temp ? (d1 - 2) : temp;
     temp = temp / local_ws[1];
-    local_ws[2] = (d2-2) < temp ? (d2-2) : temp;
+    local_ws[2] = (d2 - 2) < temp ? (d2 - 2) : temp;
 
-    global_ws[0] = clu_RoundWorkSize((size_t)(d0-2), local_ws[0]);
-    global_ws[1] = clu_RoundWorkSize((size_t)(d1-2), local_ws[1]);
-    global_ws[2] = clu_RoundWorkSize((size_t)(d2-2), local_ws[2]);
+    global_ws[0] = clu_RoundWorkSize((size_t)(d0 - 2), local_ws[0]);
+    global_ws[1] = clu_RoundWorkSize((size_t)(d1 - 2), local_ws[1]);
+    global_ws[2] = clu_RoundWorkSize((size_t)(d2 - 2), local_ws[2]);
   } else if (EXACT_RHS5_DIM == 2) {
-    local_ws[0] = (d1-2) < work_item_sizes[0] ? (d1-2) : work_item_sizes[0];
+    local_ws[0] = (d1 - 2) < work_item_sizes[0] ? (d1 - 2) : work_item_sizes[0];
     temp = max_work_group_size / local_ws[0];
-    local_ws[1] = (d2-2) < temp ? (d2-2) : temp;
+    local_ws[1] = (d2 - 2) < temp ? (d2 - 2) : temp;
 
-    global_ws[0] = clu_RoundWorkSize((size_t)(d1-2), local_ws[0]);
-    global_ws[1] = clu_RoundWorkSize((size_t)(d2-2), local_ws[1]);
+    global_ws[0] = clu_RoundWorkSize((size_t)(d1 - 2), local_ws[0]);
+    global_ws[1] = clu_RoundWorkSize((size_t)(d2 - 2), local_ws[1]);
   } else {
-    temp = (d2-2) / max_compute_units;
+    temp = (d2 - 2) / max_compute_units;
     local_ws[0] = temp == 0 ? 1 : temp;
-    global_ws[0] = clu_RoundWorkSize((size_t)(d2-2), local_ws[0]);
+    global_ws[0] = clu_RoundWorkSize((size_t)(d2 - 2), local_ws[0]);
   }
 
   CHECK_FINISH();
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_exact_rhs5,
-                                 EXACT_RHS5_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_exact_rhs5, EXACT_RHS5_DIM, NULL,
+                               global_ws, local_ws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   //-----------------------------------------------------------------------
 

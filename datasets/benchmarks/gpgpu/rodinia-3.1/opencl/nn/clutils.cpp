@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /****************************************************************************\ 
  * Copyright (c) 2011, Advanced Micro Devices, Inc.                           *
  * All rights reserved.                                                       *

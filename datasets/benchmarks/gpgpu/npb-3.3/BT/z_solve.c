@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB BT code. This OpenCL    //
@@ -44,52 +45,31 @@
 // Make sure we treat elements zero to cell_size in the direction
 // of the sweep.
 //---------------------------------------------------------------------
-void z_solve()
-{
+void z_solve() {
   cl_int ecode;
 
   if (timeron) timer_start(t_zsolve);
 
   if (Z_SOLVE_DIM == 3) {
-    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                   k_z_solve1,
-                                   Z_SOLVE_DIM, NULL,
-                                   z_solve1_gws,
-                                   z_solve1_lws,
-                                   0, NULL, NULL);
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_z_solve1, Z_SOLVE_DIM, NULL,
+                                 z_solve1_gws, z_solve1_lws, 0, NULL, NULL);
     clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                   k_z_solve2,
-                                   Z_SOLVE_DIM, NULL,
-                                   z_solve2_gws,
-                                   z_solve2_lws,
-                                   0, NULL, NULL);
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_z_solve2, Z_SOLVE_DIM, NULL,
+                                 z_solve2_gws, z_solve2_lws, 0, NULL, NULL);
     clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                   k_z_solve3,
-                                   Z_SOLVE_DIM, NULL,
-                                   z_solve3_gws,
-                                   z_solve3_lws,
-                                   0, NULL, NULL);
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_z_solve3, Z_SOLVE_DIM, NULL,
+                                 z_solve3_gws, z_solve3_lws, 0, NULL, NULL);
     clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                   k_z_solve,
-                                   2, NULL,
-                                   z_solve_gws,
-                                   z_solve_lws,
-                                   0, NULL, NULL);
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_z_solve, 2, NULL, z_solve_gws,
+                                 z_solve_lws, 0, NULL, NULL);
     clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
   } else {
-    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                   k_z_solve,
-                                   Z_SOLVE_DIM, NULL,
-                                   z_solve_gws,
-                                   z_solve_lws,
-                                   0, NULL, NULL);
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_z_solve, Z_SOLVE_DIM, NULL,
+                                 z_solve_gws, z_solve_lws, 0, NULL, NULL);
     clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
   }

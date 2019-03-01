@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -40,8 +41,7 @@
 // to perform pseudo-time stepping SSOR iterations
 // for five nonlinear pde's.
 //---------------------------------------------------------------------
-void ssor(int niter)
-{
+void ssor(int niter) {
   //---------------------------------------------------------------------
   // local variables
   //---------------------------------------------------------------------
@@ -56,7 +56,7 @@ void ssor(int niter)
   //---------------------------------------------------------------------
   // begin pseudo-time stepping iterations
   //---------------------------------------------------------------------
-  tmp = 1.0 / ( omega * ( 2.0 - omega ) );
+  tmp = 1.0 / (omega * (2.0 - omega));
 
   //---------------------------------------------------------------------
   // initialize a,b,c,d to zero (guarantees that page tables have been
@@ -74,8 +74,8 @@ void ssor(int niter)
   //---------------------------------------------------------------------
   // compute the L2 norms of newton iteration residuals
   //---------------------------------------------------------------------
-  l2norm( ISIZ1, ISIZ2, ISIZ3, nx0, ny0, nz0,
-          ist, iend, jst, jend, &m_rsd, rsdnm );
+  l2norm(ISIZ1, ISIZ2, ISIZ3, nx0, ny0, nz0, ist, iend, jst, jend, &m_rsd,
+         rsdnm);
 
   for (i = 1; i <= t_last; i++) {
     timer_clear(i);
@@ -99,12 +99,8 @@ void ssor(int niter)
     ecode = CECL_SET_KERNEL_ARG(k_ssor2, 1, sizeof(double), &tmp2);
     clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                   k_ssor2,
-                                   SSOR2_DIM, NULL,
-                                   ssor2_gws,
-                                   ssor2_lws,
-                                   0, NULL, NULL);
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_ssor2, SSOR2_DIM, NULL, ssor2_gws,
+                                 ssor2_lws, 0, NULL, NULL);
     clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
 
@@ -112,24 +108,28 @@ void ssor(int niter)
 
     if (timeron) timer_start(t_blts);
 
-    for (k = 0; k <= (nz-3)+(iend-ist-1)+(jend-jst-1); k++) {
-      lbk = (k-(iend-ist-1)-(jend-jst-1)) >= 0 ? (k-(iend-ist-1)-(jend-jst-1)) : 0;
-      ubk = k < (nz-3) ? k : (nz-3);
-      lbj = (k-(iend-ist-1)-(nz-3)) >= 0 ? (k-(iend-ist-1)-(nz-3)) : 0;
-      ubj = k < (jend-jst-1) ? k : (jend-jst-1);
+    for (k = 0; k <= (nz - 3) + (iend - ist - 1) + (jend - jst - 1); k++) {
+      lbk = (k - (iend - ist - 1) - (jend - jst - 1)) >= 0
+                ? (k - (iend - ist - 1) - (jend - jst - 1))
+                : 0;
+      ubk = k < (nz - 3) ? k : (nz - 3);
+      lbj = (k - (iend - ist - 1) - (nz - 3)) >= 0
+                ? (k - (iend - ist - 1) - (nz - 3))
+                : 0;
+      ubj = k < (jend - jst - 1) ? k : (jend - jst - 1);
 
-      ecode  = CECL_SET_KERNEL_ARG(k_blts, 7, sizeof(int), &k);
+      ecode = CECL_SET_KERNEL_ARG(k_blts, 7, sizeof(int), &k);
       ecode |= CECL_SET_KERNEL_ARG(k_blts, 8, sizeof(int), &lbk);
       ecode |= CECL_SET_KERNEL_ARG(k_blts, 9, sizeof(int), &lbj);
       clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
-      blts_lws[0] = (ubj-lbj+1) < work_item_sizes[0] ? (ubj-lbj+1) : work_item_sizes[0];
+      blts_lws[0] = (ubj - lbj + 1) < work_item_sizes[0] ? (ubj - lbj + 1)
+                                                         : work_item_sizes[0];
       temp = max_work_group_size / blts_lws[0];
-      blts_lws[1] = (ubk-lbk+1) < temp ? (ubk-lbk+1) : temp;
-      blts_gws[0] = clu_RoundWorkSize((size_t)(ubj-lbj+1), blts_lws[0]);
-      blts_gws[1] = clu_RoundWorkSize((size_t)(ubk-lbk+1), blts_lws[1]);
-      ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_blts, 2, NULL,
-                                     blts_gws, blts_lws,
-                                     0, NULL, NULL);
+      blts_lws[1] = (ubk - lbk + 1) < temp ? (ubk - lbk + 1) : temp;
+      blts_gws[0] = clu_RoundWorkSize((size_t)(ubj - lbj + 1), blts_lws[0]);
+      blts_gws[1] = clu_RoundWorkSize((size_t)(ubk - lbk + 1), blts_lws[1]);
+      ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_blts, 2, NULL, blts_gws,
+                                   blts_lws, 0, NULL, NULL);
       clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     }
 
@@ -137,24 +137,28 @@ void ssor(int niter)
 
     if (timeron) timer_start(t_buts);
 
-    for (k = (nz-3)+(iend-ist-1)+(jend-jst-1); k >= 0; k--) {
-      lbk = (k-(iend-ist-1)-(jend-jst-1)) >= 0 ? (k-(iend-ist-1)-(jend-jst-1)) : 0;
-      ubk = k < (nz-3) ? k : (nz-3);
-      lbj = (k-(iend-ist-1)-(nz-3)) >= 0 ? (k-(iend-ist-1)-(nz-3)) : 0;
-      ubj = k < (jend-jst-1) ? k : (jend-jst-1);
+    for (k = (nz - 3) + (iend - ist - 1) + (jend - jst - 1); k >= 0; k--) {
+      lbk = (k - (iend - ist - 1) - (jend - jst - 1)) >= 0
+                ? (k - (iend - ist - 1) - (jend - jst - 1))
+                : 0;
+      ubk = k < (nz - 3) ? k : (nz - 3);
+      lbj = (k - (iend - ist - 1) - (nz - 3)) >= 0
+                ? (k - (iend - ist - 1) - (nz - 3))
+                : 0;
+      ubj = k < (jend - jst - 1) ? k : (jend - jst - 1);
 
-      ecode  = CECL_SET_KERNEL_ARG(k_buts, 7, sizeof(int), &k);
+      ecode = CECL_SET_KERNEL_ARG(k_buts, 7, sizeof(int), &k);
       ecode |= CECL_SET_KERNEL_ARG(k_buts, 8, sizeof(int), &lbk);
       ecode |= CECL_SET_KERNEL_ARG(k_buts, 9, sizeof(int), &lbj);
       clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
-      buts_lws[0] = (ubj-lbj+1) < work_item_sizes[0] ? (ubj-lbj+1) : work_item_sizes[0];
+      buts_lws[0] = (ubj - lbj + 1) < work_item_sizes[0] ? (ubj - lbj + 1)
+                                                         : work_item_sizes[0];
       temp = max_work_group_size / buts_lws[0];
-      buts_lws[1] = (ubk-lbk+1) < temp ? (ubk-lbk+1) : temp;
-      buts_gws[0] = clu_RoundWorkSize((size_t)(ubj-lbj+1), buts_lws[0]);
-      buts_gws[1] = clu_RoundWorkSize((size_t)(ubk-lbk+1), buts_lws[1]);
-      ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_buts, 2, NULL,
-                                     buts_gws, buts_lws,
-                                     0, NULL, NULL);
+      buts_lws[1] = (ubk - lbk + 1) < temp ? (ubk - lbk + 1) : temp;
+      buts_gws[0] = clu_RoundWorkSize((size_t)(ubj - lbj + 1), buts_lws[0]);
+      buts_gws[1] = clu_RoundWorkSize((size_t)(ubk - lbk + 1), buts_lws[1]);
+      ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_buts, 2, NULL, buts_gws,
+                                   buts_lws, 0, NULL, NULL);
       clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     }
 
@@ -169,12 +173,8 @@ void ssor(int niter)
     ecode = CECL_SET_KERNEL_ARG(k_ssor3, 2, sizeof(double), &tmp2);
     clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                   k_ssor3,
-                                   SSOR3_DIM, NULL,
-                                   ssor3_gws,
-                                   ssor3_lws,
-                                   0, NULL, NULL);
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_ssor3, SSOR3_DIM, NULL, ssor3_gws,
+                                 ssor3_lws, 0, NULL, NULL);
     clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
     if (timeron) timer_stop(t_add);
@@ -182,11 +182,10 @@ void ssor(int niter)
     //---------------------------------------------------------------------
     // compute the max-norms of newton iteration corrections
     //---------------------------------------------------------------------
-    if ( (istep % inorm) == 0 ) {
+    if ((istep % inorm) == 0) {
       if (timeron) timer_start(t_l2norm);
-      l2norm( ISIZ1, ISIZ2, ISIZ3, nx0, ny0, nz0,
-              ist, iend, jst, jend,
-              &m_rsd, delunm );
+      l2norm(ISIZ1, ISIZ2, ISIZ3, nx0, ny0, nz0, ist, iend, jst, jend, &m_rsd,
+             delunm);
       if (timeron) timer_stop(t_l2norm);
       /*
         if ( ipr == 1 ) {
@@ -215,10 +214,10 @@ void ssor(int niter)
     //---------------------------------------------------------------------
     // compute the max-norms of newton iteration residuals
     //---------------------------------------------------------------------
-    if ( ((istep % inorm ) == 0 ) || ( istep == itmax ) ) {
+    if (((istep % inorm) == 0) || (istep == itmax)) {
       if (timeron) timer_start(t_l2norm);
-      l2norm( ISIZ1, ISIZ2, ISIZ3, nx0, ny0, nz0,
-              ist, iend, jst, jend, &m_rsd, rsdnm );
+      l2norm(ISIZ1, ISIZ2, ISIZ3, nx0, ny0, nz0, ist, iend, jst, jend, &m_rsd,
+             rsdnm);
       if (timeron) timer_stop(t_l2norm);
       /*
         if ( ipr == 1 ) {
@@ -240,10 +239,10 @@ void ssor(int niter)
     //---------------------------------------------------------------------
     // check the newton-iteration residuals against the tolerance levels
     //---------------------------------------------------------------------
-    if ( ( rsdnm[0] < tolrsd[0] ) && ( rsdnm[1] < tolrsd[1] ) &&
-         ( rsdnm[2] < tolrsd[2] ) && ( rsdnm[3] < tolrsd[3] ) &&
-         ( rsdnm[4] < tolrsd[4] ) ) {
-      //if (ipr == 1 ) {
+    if ((rsdnm[0] < tolrsd[0]) && (rsdnm[1] < tolrsd[1]) &&
+        (rsdnm[2] < tolrsd[2]) && (rsdnm[3] < tolrsd[3]) &&
+        (rsdnm[4] < tolrsd[4])) {
+      // if (ipr == 1 ) {
       printf(" \n convergence was achieved after %4d pseudo-time steps\n",
              istep);
       //}

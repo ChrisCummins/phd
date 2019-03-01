@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -37,34 +38,21 @@
 //---------------------------------------------------------------------
 // set the boundary values of dependent variables
 //---------------------------------------------------------------------
-void setbv()
-{
+void setbv() {
   DTIMER_START(t_setbv);
 
   cl_int ecode;
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_setbv1,
-                                 SETBV1_DIM, NULL,
-                                 setbv1_gws,
-                                 setbv1_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_setbv1, SETBV1_DIM, NULL,
+                               setbv1_gws, setbv1_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_setbv2,
-                                 SETBV2_DIM, NULL,
-                                 setbv2_gws,
-                                 setbv2_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_setbv2, SETBV2_DIM, NULL,
+                               setbv2_gws, setbv2_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_setbv3,
-                                 SETBV3_DIM, NULL,
-                                 setbv3_gws,
-                                 setbv3_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_setbv3, SETBV3_DIM, NULL,
+                               setbv3_gws, setbv3_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 

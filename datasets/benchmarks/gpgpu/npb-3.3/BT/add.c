@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB BT code. This OpenCL    //
@@ -38,18 +39,13 @@
 //---------------------------------------------------------------------
 // addition of update to the vector u
 //---------------------------------------------------------------------
-void add()
-{
+void add() {
   cl_int ecode;
 
   if (timeron) timer_start(t_add);
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_add,
-                                 ADD_DIM, NULL,
-                                 add_gws,
-                                 add_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_add, ADD_DIM, NULL, add_gws,
+                               add_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 

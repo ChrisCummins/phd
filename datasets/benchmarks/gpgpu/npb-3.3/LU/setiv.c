@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -40,18 +41,13 @@
 // interpolation of boundary values in the computational space.
 //
 //---------------------------------------------------------------------
-void setiv()
-{
+void setiv() {
   DTIMER_START(t_setiv);
 
   cl_int ecode;
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_setiv,
-                                 SETIV_DIM, NULL,
-                                 setiv_gws,
-                                 setiv_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_setiv, SETIV_DIM, NULL, setiv_gws,
+                               setiv_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 

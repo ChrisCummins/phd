@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //
@@ -37,18 +38,13 @@
 //---------------------------------------------------------------------
 // block-diagonal matrix-vector multiplication
 //---------------------------------------------------------------------
-void pinvr()
-{
+void pinvr() {
   cl_int ecode;
 
   if (timeron) timer_start(t_pinvr);
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_pinvr,
-                                 PINVR_DIM, NULL,
-                                 pinvr_gws,
-                                 pinvr_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_pinvr, PINVR_DIM, NULL, pinvr_gws,
+                               pinvr_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 

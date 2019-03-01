@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #include "OpenCLDeviceInfo.h"
 #include <iostream>
 #include "OptionParser.h"

@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -38,50 +39,33 @@
 //---------------------------------------------------------------------
 // compute the right hand sides
 //---------------------------------------------------------------------
-void rhs()
-{
+void rhs() {
   cl_int ecode;
 
   if (timeron) timer_start(t_rhs);
 
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_rhs,
-                                 RHS_DIM, NULL,
-                                 rhs_gws,
-                                 rhs_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_rhs, RHS_DIM, NULL, rhs_gws,
+                               rhs_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 
   if (timeron) timer_start(t_rhsx);
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_rhsx,
-                                 RHSX_DIM, NULL,
-                                 rhsx_gws,
-                                 rhsx_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_rhsx, RHSX_DIM, NULL, rhsx_gws,
+                               rhsx_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsx);
 
   if (timeron) timer_start(t_rhsy);
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_rhsy,
-                                 RHSY_DIM, NULL,
-                                 rhsy_gws,
-                                 rhsy_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_rhsy, RHSY_DIM, NULL, rhsy_gws,
+                               rhsy_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsy);
 
   if (timeron) timer_start(t_rhsz);
-  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
-                                 k_rhsz,
-                                 RHSZ_DIM, NULL,
-                                 rhsz_gws,
-                                 rhsz_lws,
-                                 0, NULL, NULL);
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_rhsz, RHSZ_DIM, NULL, rhsz_gws,
+                               rhsz_lws, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsz);

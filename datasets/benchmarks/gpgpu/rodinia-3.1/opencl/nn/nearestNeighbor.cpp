@@ -1,3 +1,4 @@
+#include <libcecl.h>
 #ifndef __NEAREST_NEIGHBOR__
 #define __NEAREST_NEIGHBOR__
 

@@ -1,3 +1,4 @@
+#include <libcecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -34,8 +35,7 @@
 
 #include "applu.incl"
 
-void setcoeff()
-{
+void setcoeff() {
   //---------------------------------------------------------------------
   // local variables
   //---------------------------------------------------------------------
@@ -43,20 +43,20 @@ void setcoeff()
   //---------------------------------------------------------------------
   // set up coefficients
   //---------------------------------------------------------------------
-  dxi = 1.0 / ( nx0 - 1 );
-  deta = 1.0 / ( ny0 - 1 );
-  dzeta = 1.0 / ( nz0 - 1 );
+  dxi = 1.0 / (nx0 - 1);
+  deta = 1.0 / (ny0 - 1);
+  dzeta = 1.0 / (nz0 - 1);
 
-  tx1 = 1.0 / ( dxi * dxi );
-  tx2 = 1.0 / ( 2.0 * dxi );
+  tx1 = 1.0 / (dxi * dxi);
+  tx2 = 1.0 / (2.0 * dxi);
   tx3 = 1.0 / dxi;
 
-  ty1 = 1.0 / ( deta * deta );
-  ty2 = 1.0 / ( 2.0 * deta );
+  ty1 = 1.0 / (deta * deta);
+  ty2 = 1.0 / (2.0 * deta);
   ty3 = 1.0 / deta;
 
-  tz1 = 1.0 / ( dzeta * dzeta );
-  tz2 = 1.0 / ( 2.0 * dzeta );
+  tz1 = 1.0 / (dzeta * dzeta);
+  tz2 = 1.0 / (2.0 * dzeta);
   tz3 = 1.0 / dzeta;
 
   //---------------------------------------------------------------------
@@ -83,7 +83,7 @@ void setcoeff()
   //---------------------------------------------------------------------
   // fourth difference dissipation
   //---------------------------------------------------------------------
-  dssp = ( max(max(dx1, dy1), dz1) ) / 4.0;
+  dssp = (max(max(dx1, dy1), dz1)) / 4.0;
 
   //---------------------------------------------------------------------
   // coefficients of the exact solution to the first pde
@@ -172,12 +172,8 @@ void setcoeff()
 
   //------------------------------------------------------------------------
   cl_int ecode;
-  ecode = CECL_WRITE_BUFFER(cmd_queue,
-                               m_ce,
-                               CL_FALSE,
-                               0, sizeof(double)*5*13,
-                               ce,
-                               0, NULL, NULL);
+  ecode = CECL_WRITE_BUFFER(cmd_queue, m_ce, CL_FALSE, 0,
+                            sizeof(double) * 5 * 13, ce, 0, NULL, NULL);
   clu_CheckError(ecode, "CECL_WRITE_BUFFER() for m_ce");
   //------------------------------------------------------------------------
 }

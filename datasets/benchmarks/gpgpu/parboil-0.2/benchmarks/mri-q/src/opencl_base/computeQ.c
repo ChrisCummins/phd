@@ -1,3 +1,4 @@
+#include <libcecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2007 The Board of Trustees of the
@@ -6,70 +7,64 @@
  *cr
  ***************************************************************************/
 
-#include <stdio.h>
-#include <malloc.h>
 #include <CL/cl.h>
-#include "ocl.h"
-#include "macros.h"
+#include <malloc.h>
+#include <stdio.h>
 #include "computeQ.h"
+#include "macros.h"
+#include "ocl.h"
 
 #define NC 4
 
-void computePhiMag_GPU(int numK,cl_mem phiR_d,cl_mem phiI_d,cl_mem phiMag_d,clPrmtr* clPrm)
-{
+void computePhiMag_GPU(int numK, cl_mem phiR_d, cl_mem phiI_d, cl_mem phiMag_d,
+                       clPrmtr* clPrm) {
   int phiMagBlocks = numK / KERNEL_PHI_MAG_THREADS_PER_BLOCK;
-  if (numK % KERNEL_PHI_MAG_THREADS_PER_BLOCK)
-    phiMagBlocks++;
-  
+  if (numK % KERNEL_PHI_MAG_THREADS_PER_BLOCK) phiMagBlocks++;
+
   size_t DimPhiMagBlock = KERNEL_PHI_MAG_THREADS_PER_BLOCK;
-  size_t DimPhiMagGrid = phiMagBlocks*KERNEL_PHI_MAG_THREADS_PER_BLOCK;
+  size_t DimPhiMagGrid = phiMagBlocks * KERNEL_PHI_MAG_THREADS_PER_BLOCK;
 
   cl_int clStatus;
-  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,0,sizeof(cl_mem),&phiR_d);
-  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,1,sizeof(cl_mem),&phiI_d);
-  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,2,sizeof(cl_mem),&phiMag_d);
-  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,3,sizeof(int),&numK);
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 0, sizeof(cl_mem), &phiR_d);
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 1, sizeof(cl_mem), &phiI_d);
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 2, sizeof(cl_mem), &phiMag_d);
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 3, sizeof(int), &numK);
   CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
-  clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimPhiMagGrid,&DimPhiMagBlock,0,NULL,NULL);
+  clStatus =
+      CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue, clPrm->clKernel, 1, NULL,
+                           &DimPhiMagGrid, &DimPhiMagBlock, 0, NULL, NULL);
   CHECK_ERROR("CECL_ND_RANGE_KERNEL")
 }
 
-static
-unsigned long long int
-readElapsedTime(cl_event internal)
-{
+static unsigned long long int readElapsedTime(cl_event internal) {
   cl_int status;
   cl_ulong t_begin, t_end;
   status = clGetEventProfilingInfo(internal, CL_PROFILING_COMMAND_START,
-    sizeof(cl_ulong), &t_begin, NULL);
+                                   sizeof(cl_ulong), &t_begin, NULL);
   if (status != CL_SUCCESS) return 0;
   status = clGetEventProfilingInfo(internal, CL_PROFILING_COMMAND_END,
-  sizeof(cl_ulong), &t_end, NULL);
+                                   sizeof(cl_ulong), &t_end, NULL);
   if (status != CL_SUCCESS) return 0;
   return (unsigned long long int)(t_end - t_begin);
 }
 
-
-void computeQ_GPU (int numK,int numX,
-		   cl_mem x_d, cl_mem y_d, cl_mem z_d,
-		   struct kValues* kVals,
-		   cl_mem Qr_d, cl_mem Qi_d,
-		   clPrmtr* clPrm)
-{
+void computeQ_GPU(int numK, int numX, cl_mem x_d, cl_mem y_d, cl_mem z_d,
+                  struct kValues* kVals, cl_mem Qr_d, cl_mem Qi_d,
+                  clPrmtr* clPrm) {
   int QGrids = numK / KERNEL_Q_K_ELEMS_PER_GRID;
-  if (numK % KERNEL_Q_K_ELEMS_PER_GRID)
-    QGrids++;
+  if (numK % KERNEL_Q_K_ELEMS_PER_GRID) QGrids++;
   int QBlocks = numX / KERNEL_Q_THREADS_PER_BLOCK;
-  if (numX % KERNEL_Q_THREADS_PER_BLOCK)
-    QBlocks++;
+  if (numX % KERNEL_Q_THREADS_PER_BLOCK) QBlocks++;
 
-  size_t DimQBlock = KERNEL_Q_THREADS_PER_BLOCK/NC;
-  size_t DimQGrid = QBlocks*KERNEL_Q_THREADS_PER_BLOCK/NC;
+  size_t DimQBlock = KERNEL_Q_THREADS_PER_BLOCK / NC;
+  size_t DimQGrid = QBlocks * KERNEL_Q_THREADS_PER_BLOCK / NC;
 
   cl_int clStatus;
   cl_mem ck;
-  ck = CECL_BUFFER(clPrm->clContext,CL_MEM_READ_WRITE,KERNEL_Q_K_ELEMS_PER_GRID*sizeof(struct kValues),NULL,&clStatus);
+  ck = CECL_BUFFER(clPrm->clContext, CL_MEM_READ_WRITE,
+                   KERNEL_Q_K_ELEMS_PER_GRID * sizeof(struct kValues), NULL,
+                   &clStatus);
 
   int QGrid;
   for (QGrid = 0; QGrid < QGrids; QGrid++) {
@@ -78,40 +73,42 @@ void computeQ_GPU (int numK,int numX,
     struct kValues* kValsTile = kVals + QGridBase;
     int numElems = MIN(KERNEL_Q_K_ELEMS_PER_GRID, numK - QGridBase);
 
-    clStatus = CECL_WRITE_BUFFER(clPrm->clCommandQueue,ck,CL_TRUE,0,numElems*sizeof(struct kValues),kValsTile,0,NULL,NULL);
+    clStatus = CECL_WRITE_BUFFER(clPrm->clCommandQueue, ck, CL_TRUE, 0,
+                                 numElems * sizeof(struct kValues), kValsTile,
+                                 0, NULL, NULL);
     CHECK_ERROR("CECL_WRITE_BUFFER")
-    
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,0,sizeof(int),&numK);
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,1,sizeof(int),&QGridBase);
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,2,sizeof(cl_mem),&x_d);
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,3,sizeof(cl_mem),&y_d);
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,4,sizeof(cl_mem),&z_d);
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,5,sizeof(cl_mem),&Qr_d);
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,6,sizeof(cl_mem),&Qi_d);
-    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,7,sizeof(cl_mem),&ck);
+
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 0, sizeof(int), &numK);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 1, sizeof(int), &QGridBase);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 2, sizeof(cl_mem), &x_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 3, sizeof(cl_mem), &y_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 4, sizeof(cl_mem), &z_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 5, sizeof(cl_mem), &Qr_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 6, sizeof(cl_mem), &Qi_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel, 7, sizeof(cl_mem), &ck);
     CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
-    printf ("Grid: %d, Block: %d\n", DimQGrid, DimQBlock);
+    printf("Grid: %d, Block: %d\n", DimQGrid, DimQBlock);
 
-    #define TIMED_EXECUTION
-    #ifdef TIMED_EXECUTION
+#define TIMED_EXECUTION
+#ifdef TIMED_EXECUTION
     cl_event e;
-    clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimQGrid,&DimQBlock,0,NULL,&e);
+    clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue, clPrm->clKernel, 1,
+                                    NULL, &DimQGrid, &DimQBlock, 0, NULL, &e);
     CHECK_ERROR("CECL_ND_RANGE_KERNEL")
     clWaitForEvents(1, &e);
-    printf ("%llu\n", readElapsedTime(e));
-    #else
-    clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimQGrid,&DimQBlock,0,NULL,NULL);
+    printf("%llu\n", readElapsedTime(e));
+#else
+    clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue, clPrm->clKernel, 1,
+                                    NULL, &DimQGrid, &DimQBlock, 0, NULL, NULL);
     CHECK_ERROR("CECL_ND_RANGE_KERNEL")
-    #endif
+#endif
   }
 }
 
-void createDataStructsCPU(int numK, int numX, float** phiMag,
-	 float** Qr, float** Qi)
-{
-  *phiMag = (float* ) memalign(16, numK * sizeof(float));
-  *Qr = (float*) memalign(16, numX * sizeof (float));
-  *Qi = (float*) memalign(16, numX * sizeof (float));
+void createDataStructsCPU(int numK, int numX, float** phiMag, float** Qr,
+                          float** Qi) {
+  *phiMag = (float*)memalign(16, numK * sizeof(float));
+  *Qr = (float*)memalign(16, numX * sizeof(float));
+  *Qi = (float*)memalign(16, numX * sizeof(float));
 }
-
