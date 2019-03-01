@@ -381,17 +381,11 @@ cc_library(
 cc_test(
     name = "opencl_util_test",
     srcs = ["opencl_util_test.cc"],
-    linkopts = ["-ldl"] + select({
-        "//:darwin": ["-framework OpenCL"],
-        "//conditions:default": [],
-    }),
     deps = [
         ":opencl_util",
         "//phd:test",
-    ] + select({
-        "//:darwin": [],
-        "//conditions:default": ["@libopencl//:libOpenCL"],
-    }),
+        ":testutil",
+    ]
 )
 
 cc_library(

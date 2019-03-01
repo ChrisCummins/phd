@@ -15,15 +15,53 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/opencl_util.h"
 
+#include "gpu/cldrive/testutil.h"
+
 #include "phd/test.h"
 
 namespace gpu {
 namespace cldrive {
+namespace util {
 namespace {
 
-TEST(TODO, TODO) { EXPECT_EQ(1, 1); }
+using ::gpu::cldrive::test::CreateClKernel;
+
+TEST(GetOpenClKernelName, SingleCharacterName) {
+  auto kernel = CreateClKernel("kernel void A(global int *a) {}");
+  EXPECT_EQ(GetOpenClKernelName(kernel), "A");
+}
+
+TEST(GetOpenClKernelName, MultiCharacterName) {
+  auto kernel = CreateClKernel("kernel void FooBar(global int *a) {}");
+  EXPECT_EQ(GetOpenClKernelName(kernel), "FooBar");
+}
+
+TEST(GetKernelArgTypeName, IntPointer) {
+  auto kernel = CreateClKernel("kernel void A(global int *a) {}");
+  EXPECT_EQ(GetKernelArgTypeName(kernel, 0), "int*");
+}
+
+TEST(GetKernelArgTypeName, IntScalar) {
+  auto kernel = CreateClKernel("kernel void A(const int a) {}");
+  EXPECT_EQ(GetKernelArgTypeName(kernel, 0), "int");
+}
+
+TEST(GetKernelArgTypeName, FloatVectorPointer) {
+  auto kernel = CreateClKernel("kernel void A(local float8 *a) {}");
+  EXPECT_EQ(GetKernelArgTypeName(kernel, 0), "float8*");
+}
+
+TEST(GetKernelArgTypeName, SecondArg) {
+  auto kernel =
+      CreateClKernel("kernel void A(const int a, local float8 *b) {}");
+  EXPECT_EQ(GetKernelArgTypeName(kernel, 1), "float8*");
+}
+
+// GetOpenClKernelName
+// GetKernelArgTypeName
 
 }  // anonymous namespace
+}  // namespace util
 }  // namespace cldrive
 }  // namespace gpu
 
