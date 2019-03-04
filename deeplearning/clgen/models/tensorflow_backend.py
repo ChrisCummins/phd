@@ -114,9 +114,9 @@ class TensorFlowBackend(backends.BackendBase):
     sequence_length = 1024 if inference else self.config.training.sequence_length
 
     if inference:
-      batch_size = self.config.training.batch_size
-    else:
       batch_size = inference_batch_size
+    else:
+      batch_size = self.config.training.batch_size
     vocab_size = self.atomizer.vocab_size
 
     cells_lst = []
