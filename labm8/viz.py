@@ -82,8 +82,11 @@ def RotateYLabels(rotation: int = 90, ax: axes.Axes = None):
 def Distplot(x=None,
              hue=None,
              data=None,
+             log_x: bool = False,
+             log1p_x: bool = False,
              kde=False,
              bins=None,
+             nbins: typing.Optional[int] = None,
              norm_hist=False,
              hue_order=None,
              ax=None):
@@ -93,8 +96,12 @@ def Distplot(x=None,
     x: The x label for dataframe.
     hue: An optional categorical grouping for data.
     data: Dataset for plotting.
+    log_x: If True, log transform the data before plotting.
+    log1p_x: If True, log1p transform the data before plotting.
     kde: Whether to plot a gaussian kernel density estimate.
     bins: Specification of hist bins, or None to use Freedman-Diaconis rule.
+    nbins: If bins is None, specify the number of bins to use. If not provided,
+      use min(30, Freedman-Diaconis rule).
     norm_hist: If True, the histogram height shows a density rather than a
       count. This is implied if a KDE or fitted density is plotted.
     hue_order: Order to plot the categorical levels in, otherwise the levels are
@@ -159,27 +166,34 @@ def Distplot(x=None,
 
   # End of seaborn utility code.
 
+  values_to_plot = data[x]
+  if log_x:
+    values_to_plot = np.log(values_to_plot)
+  elif log1p_x:
+    values_to_plot = np.log1p(values_to_plot)
+
   if bins is None:
-    nbins = min(_freedman_diaconis_bins(data[x]), 50)
-    bins = np.linspace(min(data[x]), max(data[x]), nbins)
+    if nbins is None:
+      nbins = min(_freedman_diaconis_bins(values_to_plot), 50)
+    bins = np.linspace(min(values_to_plot), max(values_to_plot), nbins)
 
   if ax is None:
     ax = plt.gca()
 
   if hue is None:
     sns.distplot(
-        data[x], kde=kde, bins=bins, label=x, norm_hist=norm_hist, ax=ax)
+        values_to_plot, kde=kde, bins=bins, label=x, norm_hist=norm_hist, ax=ax)
   else:
     hue_order = hue_order or sorted(set(data[hue]))
-
     for h in hue_order:
       sns.distplot(
-          data[data[hue] == h][x],
+          values_to_plot[data[hue] == h],
           kde=kde,
           bins=bins,
           label=h,
           norm_hist=norm_hist,
           ax=ax)
+    plt.legend()
 
   return ax
 
