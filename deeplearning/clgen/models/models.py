@@ -313,6 +313,7 @@ class Model(object):
                    print_samples: typing.Optional[bool] = False
                   ) -> typing.List[model_pb2.Sample]:
     """Run a single iteration of the batched sample inner-loop."""
+    samples = []
     samples_in_progress = [
         sampler.tokenized_start_text.copy() for _ in range(batch_size)
     ]
@@ -343,6 +344,7 @@ class Model(object):
                 sample_time_ms=end_time - start_time,
                 wall_time_ms=end_time - wall_time_start,
                 num_tokens=len(samples_in_progress[i]))
+            samples.append(sample)
 
             if print_samples:
               print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
@@ -351,6 +353,8 @@ class Model(object):
             # sample and the end of the current sample.
             wall_time_start = labdate.MillisecondsTimestamp()
             break
+
+    return samples
 
   def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
     """Get the path to a sampler cache.
