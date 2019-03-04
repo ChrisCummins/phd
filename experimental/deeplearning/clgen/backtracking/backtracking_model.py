@@ -56,17 +56,17 @@ class BacktrackingModel(models.Model):
       raise TypeError(f"{self(type).__name__} only compatible with "
                       "TensorFlow backend!")
 
-  def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
+  def SamplerCache(self, s: samplers.Sampler) -> pathlib.Path:
     """Custom override to prevent cache conflicts with base samplers.
 
     Args:
-      sampler: A Sampler instance.
+      s: A Sampler instance.
 
     Returns:
       A path to a directory. Note that this directory may not exist - it is
       created only after a call to Sample().
     """
-    return self.cache.path / 'samples' / f'backtracking_{sampler.hash}'
+    return self.cache.path / 'samples' / f'backtracking_{s.hash}'
 
   def _SampleBatch(self,
                    sampler: samplers.Sampler,

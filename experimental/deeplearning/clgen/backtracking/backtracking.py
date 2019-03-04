@@ -25,7 +25,7 @@ def main(argv: typing.List[str]):
   model = backtracking_model.BacktrackingModel(config.model)
   sampler = samplers.Sampler(config.sampler)
 
-  model.Sample(samplers, FLAGS.clgen_min_sample_count, FLAGS.sample_seed)
+  model.Sample(sampler, FLAGS.clgen_min_sample_count, FLAGS.sample_seed)
 
 
 if __name__ == '__main__':
