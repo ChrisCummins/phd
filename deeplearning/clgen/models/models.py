@@ -227,57 +227,26 @@ class Model(object):
 
       # Per-sample batch outer loop. Continues until we have as many samples
       # as we want.
-      while True:
-        samples_in_progress = [
-            sampler.tokenized_start_text.copy() for _ in range(batch_size)
-        ]
-        done = np.zeros(batch_size, dtype=np.bool)
-        start_time = labdate.MillisecondsTimestamp()
-        wall_time_start = start_time
+      while len(samples) < min_num_samples:
+        sample_batch = self._SampleBatch(
+            sampler, atomizer, batch_size, print_samples=True)
 
-        self.backend.InitSampleBatch(sampler, batch_size)
+        # Only keep the samples in memory if we are going to return them.
+        if min_num_samples > 0:
+          samples += batch_size
 
-        # Sampling loop. Continues until all samples in the batch are done.
-        while not done.all():
-          indices = self.backend.SampleNextIndices(sampler, batch_size, done)
+        # Dump the samples in the sampler cache.
+        for sample in samples:
+          sample_id = crypto.sha256_str(sample.text)
+          sample_path = sample_dir / f'{sample_id}.pbtxt'
+          pbutil.ToFile(sample, sample_path)
 
-          # Iterate over all samples in batch to determine whether they're
-          # done.
-          for i in range(batch_size):
-            if done[i]:
-              continue
-
-            for index in indices[i]:
-              samples_in_progress[i].append(atomizer.decoder[index])
-              if sampler.SampleIsComplete(samples_in_progress[i]):
-                end_time = labdate.MillisecondsTimestamp()
-                done[i] = 1
-                sample = model_pb2.Sample(
-                    text=''.join(samples_in_progress[i]),
-                    sample_start_epoch_ms_utc=start_time,
-                    sample_time_ms=end_time - start_time,
-                    wall_time_ms=end_time - wall_time_start,
-                    num_tokens=len(samples_in_progress[i]))
-                print(f'=== BEGIN CLGEN SAMPLE {sample_count} '
-                      f'===\n\n{sample.text}\n')
-                sample_count += 1
-                sample_id = crypto.sha256_str(sample.text)
-                sample_path = sample_dir / f'{sample_id}.pbtxt'
-                pbutil.ToFile(sample, sample_path)
-                if min_num_samples > 0:
-                  samples.append(sample)
-                wall_time_start = labdate.MillisecondsTimestamp()
-                break
-
-        # Complete sampling. Note that sample_count starts at 1.
-        if sample_count > min_num_samples:
-          now = labdate.MillisecondsTimestamp()
-          logging.info(
-              'Produced %s samples at a rate of %s ms / sample.',
-              humanize.intcomma(len(samples)),
-              humanize.intcomma(
-                  int((now - sample_start_time) / max(len(samples), 1))))
-          break
+      now = labdate.MillisecondsTimestamp()
+      logging.info(
+          'Produced %s samples at a rate of %s ms / sample.',
+          humanize.intcomma(len(samples)),
+          humanize.intcomma(
+              int((now - sample_start_time) / max(len(samples), 1))))
 
     return samples
 
@@ -326,52 +295,62 @@ class Model(object):
 
       # Per-sample batch outer loop. Continues until we have as many samples
       # as we want.
-      while True:
-        samples_in_progress = [
-            sampler.tokenized_start_text.copy() for _ in range(batch_size)
-        ]
-        done = np.zeros(batch_size, dtype=np.bool)
-        start_time = labdate.MillisecondsTimestamp()
-        wall_time_start = start_time
+      while len(samples) < min_num_samples:
+        samples += self._SampleBatch(sampler, atomizer, batch_size)
 
-        self.backend.InitSampleBatch(sampler, batch_size)
-
-        # Sampling loop. Continues until all samples in the batch are done.
-        while not done.all():
-          indices = self.backend.SampleNextIndices(sampler, batch_size, done)
-
-          # Iterate over all samples in batch to determine whether they're
-          # done.
-          for i in range(batch_size):
-            if done[i]:
-              continue
-
-            for index in indices[i]:
-              samples_in_progress[i].append(atomizer.decoder[index])
-              if sampler.SampleIsComplete(samples_in_progress[i]):
-                end_time = labdate.MillisecondsTimestamp()
-                done[i] = 1
-                sample = model_pb2.Sample(
-                    text=''.join(samples_in_progress[i]),
-                    sample_start_epoch_ms_utc=start_time,
-                    sample_time_ms=end_time - start_time,
-                    wall_time_ms=end_time - wall_time_start,
-                    num_tokens=len(samples_in_progress[i]))
-                sample_count += 1
-                samples.append(sample)
-                wall_time_start = labdate.MillisecondsTimestamp()
-                break
-
-        # Complete sampling. Note that sample_count starts at 1.
-        if sample_count > min_num_samples:
-          now = labdate.MillisecondsTimestamp()
-          logging.info(
-              'Produced %s samples at a rate of %s ms / sample.',
-              humanize.intcomma(len(samples)),
-              humanize.intcomma(int((now - sample_start_time) / len(samples))))
-          break
+      now = labdate.MillisecondsTimestamp()
+      logging.info(
+          'Produced %s samples at a rate of %s ms / sample.',
+          humanize.intcomma(len(samples)),
+          humanize.intcomma(int((now - sample_start_time) / len(samples))))
 
     return samples
+
+  def _SampleBatch(self,
+                   sampler: samplers.Sampler,
+                   atomizer: atomizers.AtomizerBase,
+                   batch_size: int,
+                   print_samples: typing.Optional[bool] = False
+                  ) -> typing.List[model_pb2.Sample]:
+    """Run a single iteration of the batched sample inner-loop."""
+    samples_in_progress = [
+        sampler.tokenized_start_text.copy() for _ in range(batch_size)
+    ]
+    done = np.zeros(batch_size, dtype=np.bool)
+    start_time = labdate.MillisecondsTimestamp()
+    wall_time_start = start_time
+
+    self.backend.InitSampleBatch(sampler, batch_size)
+
+    # Sampling loop. Continues until all samples in the batch are done.
+    while not done.all():
+      indices = self.backend.SampleNextIndices(sampler, batch_size, done)
+
+      # Iterate over all samples in batch to determine whether they're
+      # done.
+      for i in range(batch_size):
+        if done[i]:
+          continue
+
+        for index in indices[i]:
+          samples_in_progress[i].append(atomizer.decoder[index])
+          if sampler.SampleIsComplete(samples_in_progress[i]):
+            end_time = labdate.MillisecondsTimestamp()
+            done[i] = 1
+            sample = model_pb2.Sample(
+                text=''.join(samples_in_progress[i]),
+                sample_start_epoch_ms_utc=start_time,
+                sample_time_ms=end_time - start_time,
+                wall_time_ms=end_time - wall_time_start,
+                num_tokens=len(samples_in_progress[i]))
+
+            if print_samples:
+              print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
+
+            # Wall sample time is the difference between the end of the previous
+            # sample and the end of the current sample.
+            wall_time_start = labdate.MillisecondsTimestamp()
+            break
 
   def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
     """Get the path to a sampler cache.
