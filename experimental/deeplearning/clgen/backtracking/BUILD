@@ -7,6 +7,7 @@ py_binary(
         ":backtracking_model",
         "//deeplearning/clgen:samplers",
         "//research/cummins_2017_cgo:generative_model",
+        "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/absl",
     ],
 )

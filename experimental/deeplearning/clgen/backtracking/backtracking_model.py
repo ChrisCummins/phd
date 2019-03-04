@@ -2,6 +2,8 @@
 
 import pathlib
 import typing
+import tempfile
+import shutil
 
 import numpy as np
 from absl import flags
@@ -14,6 +16,7 @@ from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import labdate
+from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = flags.FLAGS
 
@@ -24,27 +27,38 @@ flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 100,
 class Backtracker(object):
   END_OF_STATEMENT_TOKEN = ';'
 
-  @staticmethod
+  def __init__(self, atomizer: atomizers.AtomizerBase):
+    self.working_dir = pathlib.Path(
+        tempfile.mkdtemp(prefix='phd_clgen_backtracking_'))
+    self.symtok = samplers.SymmetricalTokenDepthCriterion(
+        sampler_pb2.SymmetricalTokenDepth(
+            depth_increase_token='{', depth_decrease_token='}'))
+    self.symtok.Specialize(atomizer)
+
+  def __del__(self):
+    shutil.rmtree(self.working_dir)
+
   def TryToCloseProgram(
-      sample_in_progress: typing.List[str],
-      symtok: samplers.SymmetricalTokenDepthCriterion) -> typing.Optional[str]:
-    bracket_depth = symtok.GetTokenDepth(sample_in_progress)
+      self, sample_in_progress: typing.List[str]) -> typing.Optional[str]:
+    bracket_depth = self.symtok.GetTokenDepth(sample_in_progress)
     if bracket_depth > 0:
       return ''.join(sample_in_progress) + ('}' * bracket_depth)
 
-  @classmethod
-  def ShouldProceed(cls, self, sample_in_progress: typing.List[str],
-                    symtok: samplers.SymmetricalTokenDepthCriterion) -> bool:
-    candidate_src = cls.TryToCloseProgram(sample_in_progress, symtok)
+  def ShouldProceed(self, sample_in_progress: typing.List[str]) -> bool:
+    candidate_src = self.TryToCloseProgram(sample_in_progress, self.symtok)
 
     if not candidate_src:
       return False
 
-    if not cls.Compiles(candidate_src):
+    # Extract features.
+    try:
+      path = self.working_dir / 'kernel.cl'
+      with open(path, 'w') as f:
+        f.write(candidate_src)
+      list(grewe_features.ExtractFeaturesFromPath(path))
+      return True
+    except grewe_features.FeatureExtractionError as e:
       return False
-
-    # TODO(cec): Check if progress is made towards goal.
-    return True
 
 
 class BacktrackingModel(models.Model):
@@ -77,21 +91,19 @@ class BacktrackingModel(models.Model):
     """Implementation of backtracking sampling."""
     start_time = labdate.MillisecondsTimestamp()
 
-    assert batch_size == 1  # No support for batched inference.
+    if batch_size != 1:  # No support for batched inference.
+      raise TypeError(f"Batch size {batch_size} != 1")
     sample_in_progress = sampler.tokenized_start_text.copy()
     backtrack_state = sampler.encoded_start_text.copy()
     original_backtrack_state = sampler.encoded_start_text.copy()
 
-    symtok = samplers.SymmetricalTokenDepthCriterion(
-        sampler_pb2.SymmetricalTokenDepth(
-            depth_increase_token='{', depth_decrease_token='}'))
-    symtok.Specialize(atomizer)
+    backtracker = Backtracker(atomizer)
 
     self.backend.InitSampleBatch(sampler, batch_size=1)
     backtrack_attempt_count = 0
 
-    # Sampling loop. Continues until all samples in the batch are done.
-    while not sampler.SampleIsComplete(sample_in_progress):
+    while True:  #not sampler.SampleIsComplete(sample_in_progress):
+      logging.info("INFER!")
       indices = self.backend.SampleNextIndices(
           sampler, batch_size=1, done=np.array([0]))
       assert len(indices) == 1  # No support for batched inference.
@@ -101,7 +113,7 @@ class BacktrackingModel(models.Model):
       token = atomizer.decoder[index]
       sample_in_progress.append(token)
       if token == Backtracker.END_OF_STATEMENT_TOKEN:
-        if Backtracker.ShouldProceed(sample_in_progress):
+        if backtracker.ShouldProceed(sample_in_progress):
           backtrack_state = sample_in_progress
           logging.debug(
               'Reached new backtrack state after %d attempts, %d tokens',
@@ -116,6 +128,7 @@ class BacktrackingModel(models.Model):
           # Backtrack.
           self.backend.InitSampleBatch(sampler, batch_size=1)
           backtrack_attempt_count += 1
+          logging.info("Backtrack attempt %d!", backtrack_attempt_count)
 
     end_time = labdate.MillisecondsTimestamp()
     sample = model_pb2.Sample(
@@ -130,3 +143,5 @@ class BacktrackingModel(models.Model):
 
     # Restore the sampler's start text.
     sampler.encoded_start_text = original_backtrack_state
+
+    return [sample]
