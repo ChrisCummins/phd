@@ -353,13 +353,13 @@ class TensorFlowBackend(backends.BackendBase):
     if self.inference_sess:
       del self.inference_sess
 
+    self.inference_tf = self.InitTfGraph(inference=True)
+    self.inference_sess = self.inference_tf.Session()
+
     # Seed the RNG.
     if seed is not None:
       np.random.seed(seed)
       self.inference_tf.set_random_seed(seed)
-
-    self.inference_tf = self.InitTfGraph(inference=True)
-    self.inference_sess = self.inference_tf.Session()
 
     self.inference_tf.global_variables_initializer().run(
         session=self.inference_sess)
@@ -401,7 +401,8 @@ class TensorFlowBackend(backends.BackendBase):
         self.seed_length: length,
     }
 
-    generated, self.inference_state = self.inference_sess.run([self.generated, self.final_state], feed)
+    generated, self.inference_state = self.inference_sess.run(
+        [self.generated, self.final_state], feed)
     self.inference_indices = generated[:, -1]
     if self.first_sample:
       generated = generated[:, len(sampler.encoded_start_text):]
