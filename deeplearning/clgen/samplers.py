@@ -143,9 +143,9 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
         to more than one token.
     """
     try:
-      l = atomizer.AtomizeString(self.left_token)
-      r = atomizer.AtomizeString(self.right_token)
-      if len(l) > 1 or len(r) > 1:
+      left = atomizer.AtomizeString(self.left_token)
+      right = atomizer.AtomizeString(self.right_token)
+      if len(left) > 1 or len(right) > 1:
         raise errors.InvalidSymtokTokens(
             'Sampler symmetrical depth tokens do not encode to a single '
             'token using the corpus vocabulary')
@@ -156,6 +156,16 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling."""
+    return self.GetTokenDepth(sample_in_progress) == 0
+
+  def GetTokenDepth(self, sample_in_progress: typing.List[str]) -> int:
+    """Calculate the symmetrical token depth.
+
+    The symmetrical token depth is the difference between the left and right
+    token counts, provided that the left token count is nonzero, and the right
+    token count is less than the left token count. If either of those
+    constraints are not met, the returned value is negative.
+    """
     if not sample_in_progress:
       return False
     if not sample_in_progress[-1] == self.right_token:
@@ -164,11 +174,11 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
     right_token_count = sample_in_progress.count(self.right_token)
     # We have descending into negative depth, so abort.
     if right_token_count and not left_token_count:
-      return True
+      return -1
     # We haven't started balancing the tokens yet.
     if not left_token_count:
-      return False
-    return left_token_count - right_token_count == 0
+      return -1
+    return left_token_count - right_token_count
 
 
 def GetTerminationCriteria(
