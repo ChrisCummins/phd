@@ -45,7 +45,7 @@ class Backtracker(object):
       return ''.join(sample_in_progress) + ('}' * bracket_depth)
 
   def ShouldProceed(self, sample_in_progress: typing.List[str]) -> bool:
-    candidate_src = self.TryToCloseProgram(sample_in_progress, self.symtok)
+    candidate_src = self.TryToCloseProgram(sample_in_progress)
 
     if not candidate_src:
       return False
@@ -88,46 +88,66 @@ class BacktrackingModel(models.Model):
                    batch_size: int,
                    print_samples: typing.Optional[bool] = False
                   ) -> typing.List[model_pb2.Sample]:
-    """Implementation of backtracking sampling."""
+    """Run a single iteration of the batched sample inner-loop."""
     start_time = labdate.MillisecondsTimestamp()
 
     if batch_size != 1:  # No support for batched inference.
       raise TypeError(f"Batch size {batch_size} != 1")
+
+    # We're going to be modifying the sampler.encoded_start_text attribute,
+    # so save the original value here.
+    original_sampler_encoded_start_text = sampler.encoded_start_text.copy()
+
     sample_in_progress = sampler.tokenized_start_text.copy()
-    backtrack_state = sampler.encoded_start_text.copy()
-    original_backtrack_state = sampler.encoded_start_text.copy()
+    rollback_state = sample_in_progress.copy()
 
     backtracker = Backtracker(atomizer)
-
-    self.backend.InitSampleBatch(sampler, batch_size=1)
     backtrack_attempt_count = 0
 
-    while True:  # TODO: not sampler.SampleIsComplete(sample_in_progress):
-      indices = self.backend.SampleNextIndices(
-          sampler, batch_size=1, done=np.array([0]))
-      assert len(indices) == 1  # No support for batched inference.
-      assert len(indices[0] == 1)  # No support for multi-indices inference.
+    self.backend.InitSampleBatch(sampler, batch_size=1)
+    done = False
 
-      index = indices[0]
-      token = atomizer.decoder[index]
-      sample_in_progress.append(token)
-      if token == Backtracker.END_OF_STATEMENT_TOKEN:
-        if backtracker.ShouldProceed(sample_in_progress):
-          backtrack_state = sample_in_progress
-          logging.debug(
-              'Reached new backtrack state after %d attempts, %d tokens',
-              backtrack_attempt_count, len(backtrack_state))
-          sampler.encoded_start_text = atomizer.AtomizeString(
-              ''.join(backtrack_state))
-        elif backtrack_attempt_count >= FLAGS.experimental_clgen_backtracking_attempts:
-          logging.warning("Crashing out of backtracking after %d attempts",
-                          backtrack_attempt_count)
+    i = 0
+    while not done:
+      i += 1
+      indices = self.backend.SampleNextIndices(
+          sampler, batch_size=1, done=np.array([False]))
+      assert len(indices) == 1
+
+      for j, index in enumerate(indices[0]):
+        token = atomizer.decoder[index]
+        sample_in_progress.append(token)
+
+        if token == Backtracker.END_OF_STATEMENT_TOKEN:
+          if backtracker.ShouldProceed(sample_in_progress):
+            logging.debug(
+                'i=%d j=%d Reached new backtrack state after %d attempts, %d tokens',
+                i, j, backtrack_attempt_count, len(rollback_state))
+            rollback_state = sample_in_progress.copy()
+            sampler.encoded_start_text = atomizer.AtomizeString(
+                ''.join(rollback_state))
+          elif backtrack_attempt_count >= FLAGS.experimental_clgen_backtracking_attempts:
+            logging.warning(
+                "i=%d j=%d Crashing out of backtracking after %d attempts", i,
+                j, backtrack_attempt_count)
+            done = True
+            break
+          else:
+            # Backtrack.
+            self.backend.InitSampleBatch(sampler, batch_size=1)
+            backtrack_attempt_count += 1
+            logging.info(
+                "i=%d j=%d Backtrack attempt %d! %d %d Rejected candidate statement: `%s`",
+                i, j, backtrack_attempt_count, len(sample_in_progress),
+                len(rollback_state), ''.join(
+                    sample_in_progress[len(rollback_state):]))
+            logging.info("Sample so far: `%s`", ''.join(sample_in_progress))
+            sample_in_progress = rollback_state.copy()
+            break
+        elif sampler.SampleIsComplete(sample_in_progress):
+          logging.debug("i=%d j=%d Reached natural sampling termination", i, j)
+          done = True
           break
-        else:
-          # Backtrack.
-          self.backend.InitSampleBatch(sampler, batch_size=1)
-          backtrack_attempt_count += 1
-          logging.info("Backtrack attempt %d!", backtrack_attempt_count)
 
     end_time = labdate.MillisecondsTimestamp()
     sample = model_pb2.Sample(
@@ -141,6 +161,6 @@ class BacktrackingModel(models.Model):
       print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
 
     # Restore the sampler's start text.
-    sampler.encoded_start_text = original_backtrack_state
+    sampler.encoded_start_text = original_sampler_encoded_start_text
 
     return [sample]
