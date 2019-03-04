@@ -8,6 +8,7 @@ import typing
 
 import humanize
 import progressbar
+import pandas as pd
 import sqlalchemy as sql
 from absl import flags
 from absl import logging
