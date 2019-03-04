@@ -156,6 +156,10 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling."""
+    if not sample_in_progress:
+      return False
+    if not sample_in_progress[-1] == self.right_token:
+      return False
     return self.GetTokenDepth(sample_in_progress) == 0
 
   def GetTokenDepth(self, sample_in_progress: typing.List[str]) -> int:
@@ -166,10 +170,6 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
     is nonzero, the right token count is less than the left token count. If
     either of those constraints are not met, the returned value is negative.
     """
-    if not sample_in_progress:
-      return -1
-    if not sample_in_progress[-1] == self.right_token:
-      return -1
     left_token_count = sample_in_progress.count(self.left_token)
     right_token_count = sample_in_progress.count(self.right_token)
     # We have descending into negative depth, so abort.

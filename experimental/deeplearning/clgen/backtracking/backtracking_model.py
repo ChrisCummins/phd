@@ -1,9 +1,9 @@
 """A CLgen model with backtracking inference."""
 
 import pathlib
-import typing
-import tempfile
 import shutil
+import tempfile
+import typing
 
 import numpy as np
 from absl import flags
@@ -40,7 +40,9 @@ class Backtracker(object):
 
   def TryToCloseProgram(
       self, sample_in_progress: typing.List[str]) -> typing.Optional[str]:
+    assert sample_in_progress[-1] == ';'
     bracket_depth = self.symtok.GetTokenDepth(sample_in_progress)
+    logging.info("BRACKET DEPTH: %d", bracket_depth)
     if bracket_depth > 0:
       return ''.join(sample_in_progress) + ('}' * bracket_depth)
 

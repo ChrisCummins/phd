@@ -7,7 +7,6 @@ py_binary(
         ":backtracking_model",
         "//deeplearning/clgen:samplers",
         "//research/cummins_2017_cgo:generative_model",
-        "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/absl",
     ],
 )
@@ -18,11 +17,23 @@ py_binary(
     deps = [
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen/corpuses:atomizers",
+        "//deeplearning/clgen/models",
         "//deeplearning/clgen/models:tensorflow_backend",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//labm8:labdate",
+        "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/absl",
         "//third_party/py/numpy",
+    ],
+)
+
+py_test(
+    name = "backtracking_model_test",
+    srcs = ["backtracking_model_test.py"],
+    deps = [
+        ":backtracking_model",
+        "//labm8:test",
+        "//third_party/py/pytest",
     ],
 )
