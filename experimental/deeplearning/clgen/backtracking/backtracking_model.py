@@ -102,8 +102,7 @@ class BacktrackingModel(models.Model):
     self.backend.InitSampleBatch(sampler, batch_size=1)
     backtrack_attempt_count = 0
 
-    while True:  #not sampler.SampleIsComplete(sample_in_progress):
-      logging.info("INFER!")
+    while True:  # TODO: not sampler.SampleIsComplete(sample_in_progress):
       indices = self.backend.SampleNextIndices(
           sampler, batch_size=1, done=np.array([0]))
       assert len(indices) == 1  # No support for batched inference.
