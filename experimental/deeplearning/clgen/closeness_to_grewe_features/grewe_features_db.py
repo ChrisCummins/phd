@@ -33,7 +33,7 @@ class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   src_sha256: str = sql.Column(sql.String(64), nullable=False)
   # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
   # benchmark.
-  origin: str = sql.Column(sql.String(32), nullable=False)
+  origin: str = sql.Column(sql.String(128), nullable=False)
 
   # Raw values of Grewe et. al. feature space.
   grewe_compute_operation_count: int = sql.Column(sql.Integer, nullable=False)
