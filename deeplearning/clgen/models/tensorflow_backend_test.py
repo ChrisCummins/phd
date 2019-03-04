@@ -41,7 +41,7 @@ class MockSampler(object):
     self.encoded_start_text = np.array([1, 2, 3])
     self.tokenized_start_text = ['a', 'b', 'c']
     self.temperature = 1.0
-    self.batch_size = 8
+    self.batch_size = 1
     self.hash = hash
 
   @staticmethod
@@ -171,6 +171,7 @@ def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
   abc_tensorflow_model_config.training.batch_size = 1
   m = models.Model(abc_tensorflow_model_config)
   samples = m.Sample(MockSampler(hash='hash'), 1)
+  # Samples are produced in batches of sampler.batch_size elements.
   assert len(samples) == 1
   assert len(list((m.cache.path / 'samples' / 'hash').iterdir())) == 1
   cached_sample_path = (m.cache.path / 'samples' / 'hash' / list(
@@ -187,22 +188,25 @@ def test_TensorFlowBackend_Sample_exact_multiple_of_batch_size(
     clgen_cache_dir, abc_tensorflow_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
-  abc_tensorflow_model_config.training.batch_size = 2
   m = models.Model(abc_tensorflow_model_config)
-  assert len(m.Sample(MockSampler(), 2)) == 2
-  assert len(m.Sample(MockSampler(), 4)) == 4
+  sampler = MockSampler()
+  sampler.batch_size = 2
+  assert len(m.Sample(sampler, 2)) == 2
+  sampler.batch_size = 4
+  assert len(m.Sample(sampler, 4)) == 4
 
 
 def test_TensorFlowBackend_Sample_inexact_multiple_of_batch_size(
     clgen_cache_dir, abc_tensorflow_model_config):
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
-  abc_tensorflow_model_config.training.batch_size = 3
   m = models.Model(abc_tensorflow_model_config)
+  sampler = MockSampler()
+  sampler.batch_size = 3
   # 3 = 1 * sizeof(batch).
-  assert len(m.Sample(MockSampler(), 2)) == 3
+  assert len(m.Sample(sampler, 2)) == 3
   # 6 = 2 * sizeof(batch).
-  assert len(m.Sample(MockSampler(), 4)) == 6
+  assert len(m.Sample(sampler, 4)) == 6
 
 
 # WeightedPick() tests.
