@@ -1,5 +1,6 @@
 """A CLgen model with backtracking inference."""
 
+import pathlib
 import typing
 
 import numpy as np
@@ -55,11 +56,17 @@ class BacktrackingModel(models.Model):
       raise TypeError(f"{self(type).__name__} only compatible with "
                       "TensorFlow backend!")
 
-  @staticmethod
-  def _ComputeHash(*args, **kwargs) -> str:
-    """Override to prevent name conflicts with default model."""
-    original_hash = BacktrackingModel._ComputeHash(*args, **Kwargs)
-    return f'backtracking_{original_hash}'
+  def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
+    """Custom override to prevent cache conflicts with base samplers.
+
+    Args:
+      sampler: A Sampler instance.
+
+    Returns:
+      A path to a directory. Note that this directory may not exist - it is
+      created only after a call to Sample().
+    """
+    return self.cache.path / 'samples' / f'backtracking_{sampler.hash}'
 
   def _SampleBatch(self,
                    sampler: samplers.Sampler,
