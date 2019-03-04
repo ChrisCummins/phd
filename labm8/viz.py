@@ -198,13 +198,15 @@ def Distplot(x=None,
   return ax
 
 
-def SummarizeFloats(floats: typing.Iterable[float]) -> str:
+def SummarizeFloats(floats: typing.Iterable[float], nplaces: int = 2) -> str:
   """Summarize a sequence of floats."""
   arr = np.array(floats, dtype=np.float32)
-  percs = " ".join(
-      [f'{p}%={np.percentile(arr, p):.2f}' for p in [0, 50, 95, 99, 100]])
-  return (f"n={len(arr)}, mean={arr.mean():.2f}, stdev={arr.std():.2f}, "
-          f"percentiles=[{percs}]")
+  percs = " ".join([
+      f'{p}%={np.percentile(arr, p):.{nplaces}f}' for p in [0, 50, 95, 99, 100]
+  ])
+  return (
+      f"n={len(arr)}, mean={arr.mean():.{nplaces}f}, stdev={arr.std():.{nplaces}f}, "
+      f"percentiles=[{percs}]")
 
 
 def SummarizeInts(ints: typing.Iterable[int]) -> str:
