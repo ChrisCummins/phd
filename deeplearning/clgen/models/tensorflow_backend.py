@@ -371,6 +371,13 @@ class TensorFlowBackend(backends.BackendBase):
       np.random.seed(seed)
       self.inference_tf.set_random_seed(seed)
 
+    # If --clgen_tf_backend_reset_inference_state_between_batches, the state
+    # is reset at the beginning of every sample batch. Else, this is the only
+    # place it is initialized.
+    self.inference_state = self.inference_sess.run(
+        self.cell.zero_state(sampler.config.batch_size,
+                             self.inference_tf.float32))
+
     self.inference_tf.global_variables_initializer().run(
         session=self.inference_sess)
     # Restore trained model weights.
