@@ -70,6 +70,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.inference_sess = None
     self.first_sample = None
     self.inference_indices = None
+    self.inference_state = None
 
   def InitTfGraph(self,
                   inference: bool,
@@ -405,12 +406,14 @@ class TensorFlowBackend(backends.BackendBase):
     synthesized_lengths = np.full([batch_size], 1024)
     synthesized_lengths[done] = 0
     feed = {
+        self.initial_state: self.inference_state,
         self.input_data: expanded_indices,
         self.lengths: synthesized_lengths,
-        self.seed_length: length
+        self.seed_length: length,
     }
 
-    generated, = self.inference_sess.run([self.generated], feed)
+    generated, self.inference_state = self.inference_sess.run(
+        [self.generated, self.final_state], feed)
     self.inference_indices = generated[:, -1]
     if self.first_sample:
       generated = generated[:, len(sampler.encoded_start_text):]
