@@ -433,7 +433,8 @@ static cl_device_id cecGetForcedDeviceIdOrDie() {
     exit(E_CL_FAILURE);
   }
 
-  cl_device_id devices[device_count];
+  cl_device_id* devices =
+      (cl_device_id*)malloc(device_count * sizeof(cl_device_id));
   local_err =
       clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, device_count, devices, NULL);
   if (local_err != CL_SUCCESS) {
@@ -445,7 +446,7 @@ static cl_device_id cecGetForcedDeviceIdOrDie() {
     size_t buffer_size;
     cecl_get_device_info(devices[i], CL_DEVICE_NAME, 0, NULL, &buffer_size);
 
-    char* buffer = malloc(buffer_size);
+    char* buffer = (char*)malloc(buffer_size);
     cecl_get_device_info(devices[i], CL_DEVICE_NAME, buffer_size, buffer, NULL);
 
     if (!strcmp(buffer, target_device)) {
