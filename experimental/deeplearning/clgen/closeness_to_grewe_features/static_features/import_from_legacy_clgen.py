@@ -78,7 +78,10 @@ def main(argv: typing.List[str]):
             for i, (src,) in enumerate(batch)
         ]
         db = grewe_features_db.Database(FLAGS.db)
-        db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin, pool)
+        success_count, new_row_count = db.ImportStaticFeaturesFromPaths(
+            paths_to_import, FLAGS.origin, pool)
+        logging.info('Extracted features from %d of %d kernels, %d new rows',
+                     success_count, FLAGS.batch_size, new_row_count)
 
 
 if __name__ == '__main__':

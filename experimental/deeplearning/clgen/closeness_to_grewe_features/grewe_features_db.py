@@ -142,6 +142,7 @@ class Database(sqlutil.Database):
       The number of samples that were successfully imported.
     """
     success_count = 0
+    new_row_count = 0
     paths_to_import = list(paths_to_import)
     random.shuffle(paths_to_import)
     logging.info('Importing %s files ...',
@@ -164,12 +165,13 @@ class Database(sqlutil.Database):
           obj = StaticFeatures.FromSrcOriginAndFeatures(src, origin, features)
           # Check if it already exists in the database.
           exists = session.query(StaticFeatures) \
-            .filter_by(src_sha256=obj.src_sha256).first()
+            .filter_by(src_sha256=obj.src_sha256, origin=origin).first()
           if not exists:
             session.add(obj)
+            new_row_count += 1
             try:
               session.commit()
             except (sql.exc.OperationalError, sql.exc.DataError) as e:
               logging.warning('Failed to commit database entry: %s', e)
 
-    return success_count
+    return success_count, new_row_count
