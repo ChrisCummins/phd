@@ -67,7 +67,9 @@ class TensorFlowBackend(backends.BackendBase):
     self.inference_indices = None
     self.inference_state = None
 
-  def InitTfGraph(self, inference: bool) -> 'tf':
+  def InitTfGraph(self,
+                  inference: bool,
+                  inference_batch_size: typing.Optional[int] = None) -> 'tf':
     """Instantiate a TensorFlow graph for training or inference.
 
     The tensorflow graph is different for training and inference, so must be
@@ -76,6 +78,7 @@ class TensorFlowBackend(backends.BackendBase):
     Args:
       inference: If True, initialize model for inference. If False, initialize
         model for training.
+      inference_batch_size: The batch size for inference.
 
     Returns:
       The imported TensorFlow module.
@@ -106,7 +109,10 @@ class TensorFlowBackend(backends.BackendBase):
     # Corpus attributes.
     sequence_length = 1024 if inference else self.config.training.sequence_length
 
-    batch_size = self.config.training.batch_size
+    if inference:
+      batch_size = self.config.training.batch_size
+    else:
+      batch_size = inference_batch_size
     vocab_size = self.atomizer.vocab_size
 
     cells_lst = []
@@ -353,7 +359,8 @@ class TensorFlowBackend(backends.BackendBase):
     if self.inference_sess:
       del self.inference_sess
 
-    self.inference_tf = self.InitTfGraph(inference=True)
+    self.inference_tf = self.InitTfGraph(
+        inference=True, inference_batch_size=sampler.config.batch_size)
     self.inference_sess = self.inference_tf.Session()
 
     # Seed the RNG.
@@ -377,7 +384,7 @@ class TensorFlowBackend(backends.BackendBase):
     saver.restore(self.inference_sess, checkpoint_state.model_checkpoint_path)
     self.inference_sess.run(tf.assign(self.temperature, sampler.temperature))
 
-    return self.config.training.batch_size
+    return sampler.config.batch_size
 
   def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
     #self.inference_state = self.inference_sess.run(
