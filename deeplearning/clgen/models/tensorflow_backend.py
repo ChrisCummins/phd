@@ -161,8 +161,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.generated = outputs.sample_id
     self.logits = outputs.rnn_output
 
-    sequence_weigths = tf.ones(
-        [self.config.training.batch_size, sequence_length])
+    sequence_weigths = tf.ones([batch_size, sequence_length])
     self.loss = seq2seq.sequence_loss(self.logits, self.targets,
                                       sequence_weigths)
 
