@@ -162,19 +162,19 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
     """Calculate the symmetrical token depth.
 
     The symmetrical token depth is the difference between the left and right
-    token counts, provided that the left token count is nonzero, and the right
-    token count is less than the left token count. If either of those
-    constraints are not met, the returned value is negative.
+    token counts, provided that the last token is the right, left token count
+    is nonzero, the right token count is less than the left token count. If
+    either of those constraints are not met, the returned value is negative.
     """
     if not sample_in_progress:
-      return False
+      return -1
     if not sample_in_progress[-1] == self.right_token:
-      return False
+      return -1
     left_token_count = sample_in_progress.count(self.left_token)
     right_token_count = sample_in_progress.count(self.right_token)
     # We have descending into negative depth, so abort.
     if right_token_count and not left_token_count:
-      return -1
+      return 0
     # We haven't started balancing the tokens yet.
     if not left_token_count:
       return -1
