@@ -57,9 +57,6 @@ TEST(GetKernelArgTypeName, SecondArg) {
   EXPECT_EQ(GetKernelArgTypeName(kernel, 1), "float8*");
 }
 
-// GetOpenClKernelName
-// GetKernelArgTypeName
-
 }  // anonymous namespace
 }  // namespace util
 }  // namespace cldrive
