@@ -32,6 +32,11 @@ from deeplearning.clgen.proto import model_pb2
 
 FLAGS = flags.FLAGS
 
+flags.DEFINE_boolean(
+    'clgen_tf_backend_reset_inference_state_between_batches', False,
+    'If set, reset the network state between sample batches. Else, the model '
+    'state is unaffected.')
+
 
 class TensorFlowBackend(backends.BackendBase):
   """A model with an embedding layer, using a keras backend."""
@@ -387,8 +392,9 @@ class TensorFlowBackend(backends.BackendBase):
     return sampler.config.batch_size
 
   def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
-    #self.inference_state = self.inference_sess.run(
-    #    self.cell.zero_state(batch_size, self.inference_tf.float32))
+    if FLAGS.clgen_tf_backend_reset_inference_state_between_batches:
+      self.inference_state = self.inference_sess.run(
+          self.cell.zero_state(batch_size, self.inference_tf.float32))
     self.first_sample = True
     self.inference_indices = np.tile(sampler.encoded_start_text,
                                      [batch_size, 1])
