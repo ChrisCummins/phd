@@ -41,6 +41,7 @@ class MockSampler(object):
     self.encoded_start_text = np.array([1, 2, 3])
     self.tokenized_start_text = ['a', 'b', 'c']
     self.temperature = 1.0
+    self.batch_size = 8
     self.hash = hash
 
   @staticmethod

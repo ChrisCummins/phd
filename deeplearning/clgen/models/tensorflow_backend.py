@@ -363,7 +363,7 @@ class TensorFlowBackend(backends.BackendBase):
       del self.inference_sess
 
     self.inference_tf = self.InitTfGraph(
-        inference=True, inference_batch_size=sampler.config.batch_size)
+        inference=True, inference_batch_size=sampler.batch_size)
     self.inference_sess = self.inference_tf.Session()
 
     # Seed the RNG.
@@ -375,7 +375,7 @@ class TensorFlowBackend(backends.BackendBase):
     # is reset at the beginning of every sample batch. Else, this is the only
     # place it is initialized.
     self.inference_state = self.inference_sess.run(
-        self.cell.zero_state(sampler.config.batch_size,
+        self.cell.zero_state(sampler.batch_size,
                              self.inference_tf.float32))
 
     self.inference_tf.global_variables_initializer().run(
@@ -394,7 +394,7 @@ class TensorFlowBackend(backends.BackendBase):
     saver.restore(self.inference_sess, checkpoint_state.model_checkpoint_path)
     self.inference_sess.run(tf.assign(self.temperature, sampler.temperature))
 
-    return sampler.config.batch_size
+    return sampler.batch_size
 
   def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
     if FLAGS.clgen_tf_backend_reset_inference_state_between_batches:
