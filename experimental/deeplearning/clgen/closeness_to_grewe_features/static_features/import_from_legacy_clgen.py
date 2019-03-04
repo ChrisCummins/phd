@@ -4,7 +4,7 @@ import pathlib
 import sqlite3
 import tempfile
 import typing
-
+import multiprocessing
 from absl import app
 from absl import flags
 from absl import logging
@@ -24,6 +24,9 @@ flags.DEFINE_string('origin', 'clgen_legacy',
                     'Name of the origin of the kernels, e.g. "github".')
 flags.DEFINE_integer('batch_size', 256,
                      'The number of kernels to process in a batch.')
+flags.DEFINE_integer(
+    'grewe_db_import_process_count', multiprocessing.cpu_count(),
+    'The number of processes to spawn when importing files to database.')
 
 
 def BatchQueryResults(query):
@@ -65,16 +68,17 @@ def main(argv: typing.List[str]):
       c.execute('SELECT kernel FROM PreprocessedKernels'))
 
   prefix = 'phd_experimental_deeplearning_clgen_'
-  for i, batch in enumerate(batches):
-    with tempfile.TemporaryDirectory(prefix=prefix) as d:
-      logging.info('Batch %d of %d', i + 1, num_batches)
-      d = pathlib.Path(d)
-      paths_to_import = [
-          CreateTempFileFromTestcase(d, src, i)
-          for i, (src,) in enumerate(batch)
-      ]
-      db = grewe_features_db.Database(FLAGS.db)
-      db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin)
+  with multiprocessing.Pool() as pool:
+    for i, batch in enumerate(batches):
+      with tempfile.TemporaryDirectory(prefix=prefix) as d:
+        logging.info('Batch %d of %d', i + 1, num_batches)
+        d = pathlib.Path(d)
+        paths_to_import = [
+            CreateTempFileFromTestcase(d, src, i)
+            for i, (src,) in enumerate(batch)
+        ]
+        db = grewe_features_db.Database(FLAGS.db)
+        db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin, pool)
 
 
 if __name__ == '__main__':

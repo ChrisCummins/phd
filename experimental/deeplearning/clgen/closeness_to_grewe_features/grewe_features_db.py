@@ -19,10 +19,6 @@ from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer(
-    'grewe_db_import_process_count', multiprocessing.cpu_count(),
-    'The number of processes to spawn when importing files to database.')
-
 Base = declarative.declarative_base()
 
 
