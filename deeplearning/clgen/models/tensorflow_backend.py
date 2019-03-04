@@ -110,12 +110,11 @@ class TensorFlowBackend(backends.BackendBase):
     # Reset the graph when switching between training and inference.
     tf.reset_default_graph()
 
-    # Corpus attributes.
-    sequence_length = 1024 if inference else self.config.training.sequence_length
-
     if inference:
+      sequence_length = 1024
       batch_size = inference_batch_size
     else:
+      sequence_length = self.config.training.sequence_length
       batch_size = self.config.training.batch_size
     vocab_size = self.atomizer.vocab_size
 
