@@ -9,10 +9,9 @@
 --
 --     |scenario|perf|
 --
+
 SELECT stats.scenario AS scenario,
        (oracle.runtime / stats.mean) AS perf
 FROM runtime_stats AS stats
-LEFT JOIN oracle_params AS oracle
-    ON stats.scenario=oracle.scenario
-WHERE stats.params={}
-WHERE stats.scenario IN ({})
+LEFT JOIN oracle_params AS oracle ON stats.scenario=oracle.scenario
+WHERE stats.params={} WHERE stats.scenario IN ({})

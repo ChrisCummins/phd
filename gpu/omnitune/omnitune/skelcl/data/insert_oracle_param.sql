@@ -9,12 +9,14 @@
 --
 --     |scenario|params|runtime|
 --
+
 INSERT INTO oracle_params
-SELECT
-    scenario,
-    params,
-    mean AS runtime
+SELECT scenario,
+       params,
+       mean AS runtime
 FROM runtime_stats
-WHERE
-    scenario=? AND
-    mean=(SELECT MIN(mean) FROM runtime_stats WHERE scenario=?)
+WHERE scenario=?
+  AND mean=
+    (SELECT min(mean)
+     FROM runtime_stats
+     WHERE scenario=?)

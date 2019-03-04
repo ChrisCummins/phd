@@ -11,15 +11,15 @@
 --
 --     |params|perf|
 --
+
 SELECT params,
-       (
-           SELECT mean AS oracle
-           FROM runtime_stats
-           WHERE scenario=? AND params=(
-               SELECT params
-               FROM oracle_params
-               WHERE scenario=?
-           )
-       ) / mean AS perf
+
+  (SELECT mean AS oracle
+   FROM runtime_stats
+   WHERE scenario=?
+     AND params=
+       (SELECT params
+        FROM oracle_params
+        WHERE scenario=? ) ) / mean AS perf
 FROM runtime_stats
 WHERE scenario=?
