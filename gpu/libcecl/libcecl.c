@@ -449,9 +449,14 @@ static cl_device_id cecGetForcedDeviceIdOrDie() {
     char* buffer = (char*)malloc(buffer_size);
     cecl_get_device_info(devices[i], CL_DEVICE_NAME, buffer_size, buffer, NULL);
 
-    if (!strcmp(buffer, target_device)) {
+    // Bound the name comparison.
+    size_t n = buffer_size ? buffer_size < 512 : 512;
+
+    if (!strncmp(buffer, target_device, n)) {
       free(buffer);
-      return devices[i];
+      free(devices);
+      cl_device_id device = devices[i];
+      return device;
     }
 
     free(buffer);
