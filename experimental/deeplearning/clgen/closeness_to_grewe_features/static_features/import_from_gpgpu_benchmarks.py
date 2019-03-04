@@ -4,6 +4,7 @@ import typing
 
 import progressbar
 from absl import app
+from absl import logging
 from absl import flags
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
@@ -25,9 +26,15 @@ def RowToStaticFeatures(row: typing.Dict[str, typing.Any],
     src = f.read().decode('unicode_escape')
   src = src.encode('ascii', 'ignore').decode('ascii')
 
+  identifier = ':'.join([
+      row['program:benchmark_suite_name'],
+      row['program:benchmark_name'],
+      row['program:opencl_kernel_name'],
+  ])
+
   return grewe_features_db.StaticFeatures(
       src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
-      origin=f'benchmarks',
+      origin=f'benchmarks_{identifier}',
       grewe_compute_operation_count=row["feature:comp"],
       grewe_rational_operation_count=row["feature:rational"],
       grewe_global_memory_access_count=row["feature:mem"],
@@ -46,15 +53,20 @@ def main(argv: typing.List[str]):
   db = grewe_features_db.Database(FLAGS.db)
   df = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df
 
+  new_count = 0
   with ncc.DEEPTUNE_INST2VEC_DATA_ARCHIVE as datafolder:
     for _, row in progressbar.progressbar(list(df.iterrows())):
       with db.Session(commit=True) as session:
         obj = RowToStaticFeatures(row, datafolder)
         # Check if it already exists in the database.
         exists = session.query(grewe_features_db.StaticFeatures) \
-          .filter_by(src_sha256=obj.src_sha256).first()
+            .filter_by(src_sha256=obj.src_sha256) \
+            .filter(grewe_features_db.StaticFeatures.origin.like('benchmarks_%')).first()
         if not exists:
+          new_count += 1
           session.add(obj)
+
+  logging.info("Added %d new database entries", new_count)
 
 
 if __name__ == '__main__':
