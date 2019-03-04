@@ -1,4 +1,5 @@
 """Import from legacy CLgen sampler database format."""
+import math
 import pathlib
 import sqlite3
 import tempfile
@@ -55,13 +56,18 @@ def main(argv: typing.List[str]):
   conn = sqlite3.connect(FLAGS.legacy_clgen_db)
   c = conn.cursor()
 
+  num_kernels, = c.execute(
+      'SELECT COUNT(*) FROM PreprocessedKernels').fetchone()
+  logging.info("Database contains %d kernels", num_kernels)
+  num_batches = math.ceil(num_kernels / FLAGS.batch_size)
+
   batches = BatchQueryResults(
       c.execute('SELECT kernel FROM PreprocessedKernels'))
 
   prefix = 'phd_experimental_deeplearning_clgen_'
   for i, batch in enumerate(batches):
     with tempfile.TemporaryDirectory(prefix=prefix) as d:
-      logging.info('Batch %03d', i)
+      logging.info('Batch %d of %d', i + 1, num_batches)
       d = pathlib.Path(d)
       paths_to_import = [
           CreateTempFileFromTestcase(d, src, i)
