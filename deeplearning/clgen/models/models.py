@@ -233,7 +233,7 @@ class Model(object):
 
         # Only keep the samples in memory if we are going to return them.
         if min_num_samples > 0:
-          samples += batch_size
+          samples += self._SampleBatch(sampler, atomizer, batch_size)
 
         # Dump the samples in the sampler cache.
         for sample in samples:
