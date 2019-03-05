@@ -127,7 +127,8 @@ class Database(sqlutil.Database):
       self,
       paths_to_import: typing.Iterable[pathlib.Path],
       origin: str,
-      pool: typing.Optional[multiprocessing.Pool] = None) -> int:
+      pool: typing.Optional[multiprocessing.Pool] = None
+  ) -> typing.Tuple[int, int]:
     """Import a sequence of paths into the database.
 
     Each path should point to a file containing a single OpenCL kernel.
