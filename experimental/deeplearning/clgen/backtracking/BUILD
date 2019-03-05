@@ -38,6 +38,7 @@ py_binary(
     srcs = ["backtracking_model.py"],
     deps = [
         ":logger",
+        "//compilers/llvm:clang",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/models",

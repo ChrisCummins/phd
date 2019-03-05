@@ -3,6 +3,7 @@
 import copy
 import pathlib
 import re
+import random
 import shutil
 import tempfile
 import typing
@@ -12,11 +13,14 @@ import scipy
 from absl import flags
 from absl import logging
 
+from compilers.llvm import clang
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.models import models
 from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.preprocessors import opencl
+from deeplearning.clgen import errors as clgen_errors
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import labdate
@@ -28,8 +32,13 @@ flags.DEFINE_integer(
     'experimental_clgen_backtracking_max_attempts', 1000,
     'The maximum number of attempts to make when backtracking.')
 flags.DEFINE_integer(
-    'experimental_clgen_backtracking_max_steps', 1000,
+    'experimental_clgen_backtracking_max_steps', 10000,
     'The maximum number of checkpoints to make when backtracking.')
+flags.DEFINE_float(
+    'experimental_clgen_backtracking_reject_no_progress_probability', 0.5,
+    'The probability that a step which does not improve feature distance is '
+    'rejected. A higher value means that a larger fraction of steps must '
+    'directly contribute towards an improved feature distance.')
 flags.DEFINE_bool(
     'experimental_clgen_backtracking_lstm_state', False,
     'If set, restore LSTM state tuples during backtracking. '
@@ -112,9 +121,22 @@ class OpenClBacktrackingHelper(object):
       # sample.
       return False
 
-    features = self.TryToExtractFeatures(candidate_src)
+    # Feature extractor reads from files.
+    path = self.working_dir / 'kernel.cl'
+    with open(path, 'w') as f:
+      f.write(candidate_src)
+
+    features = self.TryToExtractFeatures(path)
     if features is None:
       # Was unable to extract features from the partial sample.
+      return False
+
+    # Grewe feature extractor is robust to code that doesn't compile (i.e. code
+    # containing implicit declarations). Run the code through clang to check
+    # if it actually compiles, else reject it.
+    try:
+      opencl.Compile(candidate_src)
+    except clgen_errors.ClangException:
       return False
 
     # Implement pure hill climbing approach to match a target feature vector.
@@ -123,11 +145,19 @@ class OpenClBacktrackingHelper(object):
     if self._target_features is not None:
       new_feature_distance = scipy.spatial.distance.euclidean(
           features, self._target_features)
-      logging.info('Current features: %s, distance=%f, delta=%f', features,
+      logging.info('Features: %s, distance=%f, norm=%f, delta=%f', features,
                    new_feature_distance,
+                   new_feature_distance / self._init_feature_distance,
                    new_feature_distance - self._previous_feature_distance)
       if new_feature_distance > self._previous_feature_distance:
+        # This will only happen once feature values are great than target
+        # feature values.
         logging.info("Rejecting candidate because of positive feature delta")
+        return False
+      if (new_feature_distance == self._previous_feature_distance and
+          random.random() >
+          FLAGS.experimental_clgen_backtracking_reject_no_progress_probability):
+        logging.info("Randomly rejecting candidate with no progress")
         return False
       self._previous_features = features
       self._previous_src = candidate_src
@@ -135,14 +165,14 @@ class OpenClBacktrackingHelper(object):
 
     return True
 
-  def TryToExtractFeatures(self, candidate_src: str) -> typing.Optional[str]:
+  def TryToExtractFeatures(self, path: pathlib.Path) -> typing.Optional[str]:
     """ """
     try:
-      path = self.working_dir / 'kernel.cl'
-      with open(path, 'w') as f:
-        f.write(candidate_src)
       features = list(grewe_features.ExtractFeaturesFromPath(path))
-      assert len(features) == 1
+      if len(features) != 1:
+        # It is possible to bleed from one kernel to the next. Treat that as an
+        # error.
+        return None
       return np.array([
           features[0].compute_operation_count,
           features[0].global_memory_access_count,
