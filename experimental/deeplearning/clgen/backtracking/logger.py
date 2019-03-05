@@ -45,7 +45,7 @@ class BacktrackingDatabaseLogger(object):
               backtracker.current_features))
       session.flush()
 
-      step = backtracking_db.BactrackingStep(
+      step = backtracking_db.BacktrackingStep(
           job_id=job_id,
           runtime_ms=int((time.time() - self._start_time) * 1000),
           target_features_id=self._target_features_id,
@@ -71,8 +71,8 @@ class BacktrackingDatabaseLogger(object):
     """Get the unique job ID."""
     if self._job_id is None:
       with self._db.Session(commit=True) as session:
-        result = session.query(backtracking_db.BactrackingStep.job_id).order_by(
-            backtracking_db.BactrackingStep.job_id.desc()) \
+        result = session.query(backtracking_db.BacktrackingStep.job_id).order_by(
+            backtracking_db.BacktrackingStep.job_id.desc()) \
             .limit(1).first()
         if result:
           self._job_id = result[0] + 1

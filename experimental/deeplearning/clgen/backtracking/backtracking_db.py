@@ -56,7 +56,7 @@ class FeatureVector(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
     }
 
 
-class BactrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+class BacktrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A unique ID used to group backtracking jobs.
@@ -93,7 +93,6 @@ class BactrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
       'FeatureVector', foreign_keys=[target_features_id])
   features: FeatureVector = sql.orm.relationship(
       'FeatureVector', foreign_keys=[features_id])
-
 
 
 class Database(sqlutil.Database):
