@@ -10,6 +10,7 @@ import numpy as np
 from absl import flags
 from absl import logging
 
+from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.models import models
@@ -131,15 +132,26 @@ class BacktrackingModel(models.Model):
                                                     backtracker)
 
     end_time = labdate.MillisecondsTimestamp()
+
+    # Format text.
+    text = preprocessors.Preprocess(''.join(sampled_tokens), [
+        'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
+        'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
+        'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
+        'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
+        'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
+        'deeplearning.clgen.preprocessors.cxx:ClangFormat',
+    ])
+
     sample = model_pb2.Sample(
-        text=''.join(sampled_tokens),
+        text=text,
         sample_start_epoch_ms_utc=start_time,
         sample_time_ms=end_time - start_time,
         wall_time_ms=end_time - start_time,
         num_tokens=len(sampled_tokens))
 
     if print_samples:
-      print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
+      print(f'=== CLGEN SAMPLE ===\n\n{text}\n')
 
     # Restore the sampler's start text.
     sampler.encoded_start_text = original_sampler_encoded_start_text
@@ -193,7 +205,8 @@ class BacktrackingModel(models.Model):
                 'Reached checkpoint %d after %d attempts, '
                 '%d tokens', checkpoint_count, backtrack_attempt_count,
                 len(sample_in_progress))
-            logging.debug("Sample so far: `%s`", ''.join(sample_in_progress))
+            logging.debug("Sample so far << EOF\n%s\nEOF",
+                          ''.join(sample_in_progress))
             rollback_state = sample_in_progress.copy()
             # Reset the backtracking ticking clock.
             backtrack_attempt_count = 0

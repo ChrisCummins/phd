@@ -6,6 +6,7 @@ py_binary(
     deps = [
         ":backtracking_model",
         "//deeplearning/clgen:samplers",
+        "//deeplearning/clgen/preprocessors",
         "//research/cummins_2017_cgo:generative_model",
         "//third_party/py/absl",
     ],
