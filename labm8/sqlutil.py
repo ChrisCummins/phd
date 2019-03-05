@@ -11,6 +11,7 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
+from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
 
@@ -543,6 +544,32 @@ class ColumnTypes(object):
     This isn't truly unbounded, but 2^32 chars should be enough!
 
     Returns:
-       A column type.
+      A column type.
     """
     return sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql')
+
+  @staticmethod
+  def MillisecondDatetime():
+    """Return a datetime type with millisecond precision.
+
+    Returns:
+      A column type.
+    """
+    return sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql')
+
+
+class ColumnFactory(object):
+  """Abstract class containing methods for generating columns."""
+
+  @staticmethod
+  def MillisecondDatetime(nullable: bool = False,
+                          default=labdate.GetUtcMillisecondsNow):
+    """Return a datetime column with millisecond precision.
+
+    Returns:
+      A column which defaults to UTC now.
+    """
+    return sql.Column(
+        sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+        nullable=nullable,
+        default=default)
