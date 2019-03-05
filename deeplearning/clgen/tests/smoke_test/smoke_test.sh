@@ -60,6 +60,7 @@ model {
 sampler {
   start_text: "kernel void "
   batch_size: 1
+  sequence_length: 64
   temperature_micros: 1000000
   termination_criteria {
     maxlen {

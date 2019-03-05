@@ -26,6 +26,7 @@ research/cummins_2017_cgo/generative_model -- \
     --clgen_working_dir=$workdir \
     --clgen_corpus_dir=$corpus \
     --clgen_layer_size=8 \
+    --clgen_sample_sequence_length=10 \
     --clgen_max_sample_length=8 \
     --clgen_num_epochs=2 \
     --clgen_min_samples=5

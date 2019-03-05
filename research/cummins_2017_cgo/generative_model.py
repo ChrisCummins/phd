@@ -50,8 +50,10 @@ flags.DEFINE_string("clgen_seed_text", "kernel void ",
                     "CLgen sample seed text.")
 flags.DEFINE_float("clgen_sample_temperature", 1.0,
                    "CLgen sampling temperature.")
+flags.DEFINE_integer("clgen_sample_sequence_length", 1024,
+                     "CLgen sampling sequence length.")
 flags.DEFINE_integer("clgen_sample_batch_size", 64,
-                     "CLgen sampling btach size.")
+                     "CLgen sampling batch size.")
 flags.DEFINE_integer("clgen_min_sample_count", 0,
                      "If not zero, set the maximum number of samples.")
 
@@ -204,6 +206,7 @@ def CreateSamplerProtoFromFlags() -> sampler_pb2.Sampler:
   return sampler_pb2.Sampler(
       start_text=FLAGS.clgen_seed_text,
       batch_size=FLAGS.clgen_sample_batch_size,
+      sequence_length=FLAGS.clgen_sample_sequence_length,
       temperature_micros=int(FLAGS.clgen_sample_temperature * 1000000),
       termination_criteria=[
           sampler_pb2.SampleTerminationCriterion(

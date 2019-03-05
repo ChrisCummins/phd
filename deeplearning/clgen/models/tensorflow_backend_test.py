@@ -42,6 +42,7 @@ class MockSampler(object):
     self.tokenized_start_text = ['a', 'b', 'c']
     self.temperature = 1.0
     self.batch_size = 1
+    self.sequence_length = 5
     self.hash = hash
 
   @staticmethod

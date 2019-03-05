@@ -47,6 +47,8 @@ def AssertConfigIsValid(config: sampler_pb2.Sampler) -> sampler_pb2.Sampler:
                                  'Sampler.start_text must be a string')
     pbutil.AssertFieldConstraint(config, 'batch_size', lambda x: 0 < x,
                                  'Sampler.batch_size must be > 0')
+    pbutil.AssertFieldConstraint(config, 'sequence_length', lambda x: 0 < x,
+                                 'Sampler.sequence_length must be > 0')
     pbutil.AssertFieldConstraint(config, 'temperature_micros', lambda x: 0 < x,
                                  'Sampler.temperature_micros must be > 0')
     return config
@@ -236,6 +238,7 @@ class Sampler(object):
     self.start_text = self.config.start_text
     self.temperature = self.config.temperature_micros / 1e6
     self.batch_size = self.config.batch_size
+    self.sequence_length = self.config.sequence_length
     # Set in Specialize().
     self.encoded_start_text = None
     self.tokenized_start_text = None

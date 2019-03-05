@@ -28,6 +28,7 @@ experimental/deeplearning/clgen/backtracking/backtracking \
     --clgen_training_batch_size=1 \
     --clgen_training_sequence_length=2 \
     --clgen_layer_size=8 \
+    --clgen_sample_sequence_length=10 \
     --clgen_min_sample_count=10 \
     --clgen_max_sample_length=8 \
     --clgen_num_epochs=1 \

@@ -34,6 +34,8 @@ message Sampler {
   // The sampling batch size.
   // TODO(cec): Always sample with max batch size.
   optional int32 batch_size = 2;
+  // The length of sampling sequences.
+  optional int32 sequence_length = 5;
   // The sampling temperature. Must be >= 0. A recommended starting value is
   // 1000000 (i.e. 1.0 in real values).
   optional int32 temperature_micros = 3;

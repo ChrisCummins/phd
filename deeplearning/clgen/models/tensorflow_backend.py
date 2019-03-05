@@ -73,17 +73,15 @@ class TensorFlowBackend(backends.BackendBase):
     self.inference_state = None
 
   def InitTfGraph(self,
-                  inference: bool,
-                  inference_batch_size: typing.Optional[int] = None) -> 'tf':
+                  sampler: typing.Optional[samplers.Sampler] = None) -> 'tf':
     """Instantiate a TensorFlow graph for training or inference.
 
     The tensorflow graph is different for training and inference, so must be
     reset when switching between modes.
 
     Args:
-      inference: If True, initialize model for inference. If False, initialize
-        model for training.
-      inference_batch_size: The batch size for inference.
+      sampler: If set, initialize the model for inference using the given
+        sampler. If not set, initialize model for training.
 
     Returns:
       The imported TensorFlow module.
@@ -111,9 +109,9 @@ class TensorFlowBackend(backends.BackendBase):
     # Reset the graph when switching between training and inference.
     tf.reset_default_graph()
 
-    if inference:
-      sequence_length = 1024
-      batch_size = inference_batch_size
+    if sampler:
+      sequence_length = sampler.sequence_length
+      batch_size = sampler.batch_size
     else:
       sequence_length = self.config.training.sequence_length
       batch_size = self.config.training.batch_size
@@ -130,7 +128,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.temperature = tf.Variable(1.0, trainable=False)
     self.seed_length = tf.Variable(32, trainable=False)
 
-    if inference:
+    if sampler:
       self.lengths = tf.placeholder(tf.int32, [batch_size])
     else:
       self.lengths = tf.fill([batch_size], sequence_length)
@@ -143,7 +141,7 @@ class TensorFlowBackend(backends.BackendBase):
             [vocab_size, self.config.architecture.neurons_per_layer])
         inputs = tf.nn.embedding_lookup(embedding, self.input_data)
 
-    if inference:
+    if sampler:
       decode_helper = helper.CustomInferenceHelper(
           inputs, self.lengths, self.seed_length, embedding, self.temperature)
     else:
@@ -270,7 +268,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     data_generator = data_generators.TensorflowBatchGenerator(
         corpus, self.config.training)
-    tf = self.InitTfGraph(inference=False)
+    tf = self.InitTfGraph()
 
     logger = telemetry.TrainingLogger(self.cache.path / 'logs')
 
@@ -362,8 +360,7 @@ class TensorFlowBackend(backends.BackendBase):
     if self.inference_sess:
       del self.inference_sess
 
-    self.inference_tf = self.InitTfGraph(
-        inference=True, inference_batch_size=sampler.batch_size)
+    self.inference_tf = self.InitTfGraph(sampler=sampler)
     self.inference_sess = self.inference_tf.Session()
 
     # Seed the RNG.
@@ -375,8 +372,7 @@ class TensorFlowBackend(backends.BackendBase):
     # is reset at the beginning of every sample batch. Else, this is the only
     # place it is initialized.
     self.inference_state = self.inference_sess.run(
-        self.cell.zero_state(sampler.batch_size,
-                             self.inference_tf.float32))
+        self.cell.zero_state(sampler.batch_size, self.inference_tf.float32))
 
     self.inference_tf.global_variables_initializer().run(
         session=self.inference_sess)
@@ -407,10 +403,10 @@ class TensorFlowBackend(backends.BackendBase):
   def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int,
                         done: np.ndarray):
     length = self.inference_indices.shape[1]
-    assert length < 1024
-    expanded_indices = np.zeros((batch_size, 1024))
+    assert length < sampler.sequence_length
+    expanded_indices = np.zeros((batch_size, sampler.sequence_length))
     expanded_indices[:, :length] = self.inference_indices
-    synthesized_lengths = np.full([batch_size], 1024)
+    synthesized_lengths = np.full([batch_size], sampler.sequence_length)
     synthesized_lengths[done] = 0
     feed = {
         self.initial_state: self.inference_state,
