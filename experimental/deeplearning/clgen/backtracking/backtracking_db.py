@@ -88,6 +88,13 @@ class BactrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   src: str = sql.Column(
       sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
 
+  # Relationship.
+  target_features: FeatureVector = sql.orm.relationship(
+      'FeatureVector', foreign_keys=[target_features_id])
+  features: FeatureVector = sql.orm.relationship(
+      'FeatureVector', foreign_keys=[features_id])
+
+
 
 class Database(sqlutil.Database):
   """Database of kernels."""
