@@ -452,7 +452,7 @@ py_test(
 py_library(
     name = "preprocessors",
     srcs = ["preprocessors.py"],
-    visibility = ["//deeplearning/clgen:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         # This target *must* depend on all modules which expose a
         # @public.clgen_preprocessor decorated function, since the method
