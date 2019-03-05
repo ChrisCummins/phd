@@ -68,7 +68,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     self.inference_tf = None
     self.inference_sess = None
-    self.first_sample = None
+    self.first_sample: typing.Optional[bool] = None
     self.inference_indices = None
     self.inference_state = None
 
