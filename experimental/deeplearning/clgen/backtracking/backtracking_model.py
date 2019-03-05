@@ -42,7 +42,6 @@ class Backtracker(object):
       self, sample_in_progress: typing.List[str]) -> typing.Optional[str]:
     assert sample_in_progress[-1] == ';'
     bracket_depth = self.symtok.GetTokenDepth(sample_in_progress)
-    logging.info("BRACKET DEPTH: %d", bracket_depth)
     if bracket_depth > 0:
       return ''.join(sample_in_progress) + ('}' * bracket_depth)
 
@@ -122,9 +121,10 @@ class BacktrackingModel(models.Model):
 
         if token == Backtracker.END_OF_STATEMENT_TOKEN:
           if backtracker.ShouldProceed(sample_in_progress):
-            logging.debug(
+            logging.info(
                 'i=%d j=%d Reached new backtrack state after %d attempts, %d tokens',
                 i, j, backtrack_attempt_count, len(rollback_state))
+            logging.debug("Sample so far: `%s`", ''.join(sample_in_progress))
             rollback_state = sample_in_progress.copy()
             sampler.encoded_start_text = atomizer.AtomizeString(
                 ''.join(rollback_state))
@@ -138,16 +138,14 @@ class BacktrackingModel(models.Model):
             # Backtrack.
             self.backend.InitSampleBatch(sampler, batch_size=1)
             backtrack_attempt_count += 1
-            logging.info(
-                "i=%d j=%d Backtrack attempt %d! %d %d Rejected candidate statement: `%s`",
-                i, j, backtrack_attempt_count, len(sample_in_progress),
-                len(rollback_state), ''.join(
+            logging.debug(
+                "i=%d j=%d Backtrack attempt %d! Rejected candidate statement: `%s`",
+                i, j, backtrack_attempt_count, ''.join(
                     sample_in_progress[len(rollback_state):]))
-            logging.info("Sample so far: `%s`", ''.join(sample_in_progress))
             sample_in_progress = rollback_state.copy()
             break
         elif sampler.SampleIsComplete(sample_in_progress):
-          logging.debug("i=%d j=%d Reached natural sampling termination", i, j)
+          logging.info("i=%d j=%d Reached natural sampling termination", i, j)
           done = True
           break
 
