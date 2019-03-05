@@ -40,9 +40,10 @@ flags.DEFINE_integer('clgen_max_sample_length', 20000,
 
 # Training options.
 flags.DEFINE_integer("clgen_num_epochs", 50, "The number of training epochs.")
-flags.DEFINE_integer("clgen_sequence_length", 64, "CLgen sequence length.")
+flags.DEFINE_integer("clgen_training_sequence_length", 64,
+                     "CLgen training sequence length.")
 flags.DEFINE_integer("clgen_training_batch_size", 64,
-                     "CLgen sampling batch size.")
+                     "CLgen training batch size.")
 
 # Sampling options.
 flags.DEFINE_string("clgen_seed_text", "kernel void ",
