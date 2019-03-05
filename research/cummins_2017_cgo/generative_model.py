@@ -187,7 +187,7 @@ def CreateModelProtoFromFlags() -> model_pb2.Model:
       ),
       training=model_pb2.TrainingOptions(
           num_epochs=FLAGS.clgen_num_epochs,
-          sequence_length=FLAGS.clgen_sequence_length,
+          sequence_length=FLAGS.clgen_training_sequence_length,
           batch_size=FLAGS.clgen_training_batch_size,
           shuffle_corpus_contentfiles_between_epochs=True,
           adam_optimizer=model_pb2.AdamOptimizer(
