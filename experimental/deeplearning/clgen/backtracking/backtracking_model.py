@@ -1,5 +1,6 @@
 """A CLgen model with backtracking inference."""
 
+import copy
 import pathlib
 import shutil
 import tempfile
@@ -22,6 +23,10 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 250,
                      'The number of attempts to make when backtracking.')
+flags.DEFINE_bool(
+    'experimental_clgen_backtracking_lstm_state', False,
+    'If set, restore LSTM state tuples during backtracking. '
+    'Else re-seed model.')
 
 
 class OpenClBacktrackingHelper(object):
@@ -159,6 +164,9 @@ class BacktrackingModel(models.Model):
     # 'sample_in_progress' at the last point that
     sample_in_progress = sampler.tokenized_start_text.copy()
     rollback_state = sample_in_progress.copy()
+    if FLAGS.experimental_clgen_backtracking_lstm_state:
+      rollback_backend_state = copy.deepcopy(self.backend.inference_state)
+      rollback_backend_indices = self.backend.inference_indices.copy()
 
     # This counter is incremented every time ShouldProceed() returns False. If
     # the value grows to exceed the --experimental_clgen_backtracking_attempts
@@ -187,13 +195,18 @@ class BacktrackingModel(models.Model):
                 len(sample_in_progress))
             logging.debug("Sample so far: `%s`", ''.join(sample_in_progress))
             rollback_state = sample_in_progress.copy()
-            # Set the sampler's seed text to be the new rollback state so that
-            # when InitSampleBatch() is called during backtracking (below), the
-            # model is re-seeded with the entire sample up to this point.
-            sampler.encoded_start_text = atomizer.AtomizeString(
-                ''.join(rollback_state))
             # Reset the backtracking ticking clock.
             backtrack_attempt_count = 0
+            if FLAGS.experimental_clgen_backtracking_lstm_state:
+              rollback_backend_state = copy.deepcopy(
+                  self.backend.inference_state)
+              rollback_backend_indices = self.backend.inference_indices.copy()
+            else:
+              # Set the sampler's seed text to be the new rollback state so that
+              # when InitSampleBatch() is called during backtracking (below), the
+              # model is re-seeded with the entire sample up to this point.
+              sampler.encoded_start_text = atomizer.AtomizeString(
+                  ''.join(rollback_state))[-sampler.sequence_length:]
           elif (backtrack_attempt_count >=
                 FLAGS.experimental_clgen_backtracking_attempts):
             # This branch provides a get-out in case sampling ever gets "stuck".
@@ -212,7 +225,12 @@ class BacktrackingModel(models.Model):
                 checkpoint_count, ''.join(
                     sample_in_progress[len(rollback_state):]))
             sample_in_progress = rollback_state.copy()
-            self.backend.InitSampleBatch(sampler, batch_size=1)
+            if FLAGS.experimental_clgen_backtracking_lstm_state:
+              self.backend.inference_state = copy.deepcopy(
+                  rollback_backend_state)
+              self.backend.inference_indices = rollback_backend_indices.copy()
+            else:
+              self.backend.InitSampleBatch(sampler, batch_size=1)
             backtrack_attempt_count += 1
             # Tokens are sampled in batches. Don't proceed any further in the
             # batch.
