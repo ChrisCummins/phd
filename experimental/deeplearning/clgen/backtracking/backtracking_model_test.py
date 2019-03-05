@@ -21,17 +21,19 @@ kernel void A(global int* a, global int* b, const int c) {
 """)
 
 
-def test_Backtracker_TryToCloseProgram_depth1(atomizer: atomizers.AtomizerBase):
+def test_OpenClBacktrackingHelper_TryToCloseProgram_depth1(
+    atomizer: atomizers.AtomizerBase):
   """Depth one test case."""
-  backtracker = backtracking_model.Backtracker(atomizer)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
   assert backtracker.TryToCloseProgram("""kernel void A() {
   int a = 0;""") == """kernel void A() {
   int a = 0;}"""
 
 
-def test_Backtracker_TryToCloseProgram_depth2(atomizer: atomizers.AtomizerBase):
+def test_OpenClBacktrackingHelper_TryToCloseProgram_depth2(
+    atomizer: atomizers.AtomizerBase):
   """Depth two test case."""
-  backtracker = backtracking_model.Backtracker(atomizer)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
   assert backtracker.TryToCloseProgram("""kernel void A() {
   int a = 0;
   if (global_global(0) < 10) {
@@ -41,44 +43,47 @@ def test_Backtracker_TryToCloseProgram_depth2(atomizer: atomizers.AtomizerBase):
     int a = 2;}}"""
 
 
-def test_Backtracker_TryToCloseProgram_invalid(
+def test_OpenClBacktrackingHelper_TryToCloseProgram_invalid(
     atomizer: atomizers.AtomizerBase):
   """For loop cannot be closed, but it is anyway."""
   # TODO(cec): Can this be fixed?
-  backtracker = backtracking_model.Backtracker(atomizer)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
   assert backtracker.TryToCloseProgram("""kernel void A() {
   for (int a = 0;""") == """kernel void A() {
   for (int a = 0;}"""
 
 
-def test_Backtracker_TryToCloseProgram_not_end_of_statement(
+def test_OpenClBacktrackingHelper_TryToCloseProgram_not_end_of_statement(
     atomizer: atomizers.AtomizerBase):
   """Must only be called at end of statement."""
-  backtracker = backtracking_model.Backtracker(atomizer)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
   with pytest.raises(AssertionError):
     backtracker.TryToCloseProgram("kernel void A(".split())
 
 
-def test_Backtracker_ShouldProceed_depth1(atomizer: atomizers.AtomizerBase):
+def test_OpenClBacktrackingHelper_ShouldProceed_depth1(
+    atomizer: atomizers.AtomizerBase):
   """Depth one test case."""
-  backtracker = backtracking_model.Backtracker(atomizer)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
   assert backtracker.ShouldProceed("""kernel void A() {
   int a = 0;""")
 
 
-def test_Backtracker_ShouldProceed_depth2(atomizer: atomizers.AtomizerBase):
+def test_OpenClBacktrackingHelper_ShouldProceed_depth2(
+    atomizer: atomizers.AtomizerBase):
   """Depth two test case."""
-  backtracker = backtracking_model.Backtracker(atomizer)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
   assert backtracker.ShouldProceed("""kernel void A() {
   int a = 0;
   if (global_global(0) < 10) {
     int a = 2;""")
 
 
-def test_Backtracker_ShouldProceed_invalid(atomizer: atomizers.AtomizerBase):
+def test_OpenClBacktrackingHelper_ShouldProceed_invalid(
+    atomizer: atomizers.AtomizerBase):
   """For loop closes to an invalid program."""
   # TODO(cec): Can this be fixed?
-  backtracker = backtracking_model.Backtracker(atomizer)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
   assert not backtracker.ShouldProceed("""kernel void A() {
   for (int a = 0;""")
 
