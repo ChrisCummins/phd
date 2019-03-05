@@ -1,4 +1,13 @@
-"""Sample the experimental backtracking sampler."""
+"""Sample the experimental backtracking sampler.
+
+Usage:
+  bazel run //experimental/deeplearning/clgen/backtracking --
+    --clgen_sample_batch_size=1 --clgen_max_sample_length=0
+    --clgen_min_sample_count=100
+    --clgen_seed_text='kernel void A(global int* a, global float* b, const int c) {'
+    --experimental_clgen_backtracking_target_features='100,10,0,0'
+    --experimental_clgen_backtracking_feature_distance_epsilon=0.5
+"""
 import os
 import typing
 

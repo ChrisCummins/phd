@@ -24,7 +24,8 @@ kernel void A(global int* a, global int* b, const int c) {
 @pytest.fixture(scope='function')
 def backtracker(atomizer: atomizers.AtomizerBase
                ) -> backtracking_model.OpenClBacktrackingHelper:
-  return backtracking_model.OpenClBacktrackingHelper(atomizer)
+  return backtracking_model.OpenClBacktrackingHelper(
+      atomizer, target_features=None)
 
 
 def test_OpenClBacktrackingHelper_ShouldCheckpoint_no(

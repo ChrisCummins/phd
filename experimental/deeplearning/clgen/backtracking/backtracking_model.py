@@ -5,7 +5,9 @@ import pathlib
 import shutil
 import tempfile
 import typing
+import numpy
 import re
+import scipy
 
 import numpy as np
 from absl import flags
@@ -23,12 +25,22 @@ from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 100,
-                     'The number of attempts to make when backtracking.')
+flags.DEFINE_integer(
+    'experimental_clgen_backtracking_max_attempts', 1000,
+    'The maximum number of attempts to make when backtracking.')
+flags.DEFINE_integer(
+    'experimental_clgen_backtracking_max_checkpoints', 1000,
+    'The maximum number of checkpoints to make when backtracking.')
 flags.DEFINE_bool(
     'experimental_clgen_backtracking_lstm_state', False,
     'If set, restore LSTM state tuples during backtracking. '
     'Else re-seed model.')
+flags.DEFINE_string('experimental_clgen_backtracking_target_features', None,
+                    'A stringified array of 4 features to max.')
+flags.DEFINE_float(
+    'experimental_clgen_backtracking_feature_distance_epsilon', 1,
+    'Maximum diff between current and target features before sampling may '
+    'terminate.')
 
 
 class OpenClBacktrackingHelper(object):
@@ -45,7 +57,10 @@ class OpenClBacktrackingHelper(object):
   FOR_LOOP_1 = re.compile(r'(.|\n)*for(\s|\n)*\([^;]*;')
   FOR_LOOP_2 = re.compile(r'(.|\n)*for(\s|\n)*\([^;]*;[^;]*;')
 
-  def __init__(self, atomizer: atomizers.AtomizerBase):
+  def __init__(self,
+               atomizer: atomizers.AtomizerBase,
+               target_features: typing.Optional[np.array],
+               feature_distance_epislon: typing.Optional[float] = 0.1):
     # Temporary working directory is used to write files that the Grewe feature
     # extractor can use.
     self.working_dir = pathlib.Path(
@@ -54,6 +69,9 @@ class OpenClBacktrackingHelper(object):
         sampler_pb2.SymmetricalTokenDepth(
             depth_increase_token='{', depth_decrease_token='}'))
     self.symtok.Specialize(atomizer)
+    self._target_features = target_features
+    self._previous_feature_distance = np.inf
+    self._feature_distance_epislon = feature_distance_epislon
 
   def __del__(self):
     shutil.rmtree(self.working_dir)
@@ -81,19 +99,49 @@ class OpenClBacktrackingHelper(object):
       False.
     """
     candidate_src = self.TryToCloseProgram(sample_in_progress)
-
     if not candidate_src:
+      # Was unable to create a syntactically valid program from the partial
+      # sample.
       return False
 
-    # Extract features.
+    features = self.TryToExtractFeatures(candidate_src)
+    if features is None:
+      # Was unable to extract features from the partial sample.
+      return False
+
+    # Implement pure hill climbing approach to match a target feature vector.
+    # When enabled, partial samples which increase the distance to the target
+    # feature vector are rejected.
+    if self._target_features is not None:
+      new_feature_distance = scipy.spatial.distance.euclidean(
+          features, self._target_features)
+      logging.info('Current features: %s, distance=%f, delta=%f', features,
+                   new_feature_distance,
+                   new_feature_distance - self._previous_feature_distance)
+      if new_feature_distance > self._previous_feature_distance:
+        logging.info("Rejecting candidate because of positive feature delta")
+        return False
+      self._previous_feature_distance = new_feature_distance
+
+    return True
+
+  def TryToExtractFeatures(self, candidate_src: str) -> typing.Optional[str]:
+    """ """
     try:
       path = self.working_dir / 'kernel.cl'
       with open(path, 'w') as f:
         f.write(candidate_src)
-      list(grewe_features.ExtractFeaturesFromPath(path))
-      return True
+      features = list(grewe_features.ExtractFeaturesFromPath(path))
+      assert len(features) == 1
+      return np.array([
+          features[0].compute_operation_count,
+          features[0].global_memory_access_count,
+          features[0].local_memory_access_count,
+          features[0].coalesced_memory_access_count,
+      ],
+                      dtype=int)
     except grewe_features.FeatureExtractionError as e:
-      return False
+      pass
 
   def TryToCloseProgram(
       self, sample_in_progress: typing.List[str]) -> typing.Optional[str]:
@@ -121,15 +169,31 @@ class OpenClBacktrackingHelper(object):
       else:
         return text + '}' * bracket_depth
 
+  def IsDone(self):
+    if self._target_features is None:
+      return True
+    else:
+      return self._previous_feature_distance <= self._feature_distance_epislon
+
 
 class BacktrackingModel(models.Model):
   """A CLgen model which uses a backtracking approach to sampling."""
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *args, target_features=None, **kwargs):
     super(BacktrackingModel, self).__init__(*args, **kwargs)
     if not isinstance(self.backend, tensorflow_backend.TensorFlowBackend):
       raise TypeError(f"{self(type).__name__} only compatible with "
                       "TensorFlow backend!")
+
+    self._target_features = None
+    if FLAGS.experimental_clgen_backtracking_target_features:
+      self._target_features = np.fromstring(
+          FLAGS.experimental_clgen_backtracking_target_features,
+          dtype=int,
+          sep=',')
+      logging.info("Using target features %s", self._target_features)
+      assert self._target_features.shape == (4,)
+      self._feature_distance_epislon = FLAGS.experimental_clgen_backtracking_feature_distance_epsilon
 
   def SamplerCache(self, s: samplers.Sampler) -> pathlib.Path:
     """Custom override to prevent cache conflicts with base samplers."""
@@ -154,7 +218,8 @@ class BacktrackingModel(models.Model):
 
     self.backend.InitSampleBatch(sampler, batch_size=1)
 
-    backtracker = OpenClBacktrackingHelper(atomizer)
+    backtracker = OpenClBacktrackingHelper(atomizer, self._target_features,
+                                           self._feature_distance_epislon)
     sampled_tokens = self.SampleOneWithBacktracking(sampler, atomizer,
                                                     backtracker)
 
@@ -208,7 +273,7 @@ class BacktrackingModel(models.Model):
       rollback_backend_indices = self.backend.inference_indices.copy()
 
     # This counter is incremented every time ShouldProceed() returns False. If
-    # the value grows to exceed the --experimental_clgen_backtracking_attempts
+    # the value grows to exceed the --experimental_clgen_backtracking_max_attempts
     # flag, backtracking aborts. This is reset when ShouldProceed() returns
     # True.
     backtrack_attempt_count = 0
@@ -247,11 +312,14 @@ class BacktrackingModel(models.Model):
               # model is re-seeded with the entire sample up to this point.
               sampler.encoded_start_text = atomizer.AtomizeString(
                   ''.join(rollback_state))[-(sampler.sequence_length - 1):]
-          elif (backtrack_attempt_count >=
-                FLAGS.experimental_clgen_backtracking_attempts):
+          elif ((backtrack_attempt_count >=
+                 FLAGS.experimental_clgen_backtracking_max_attempts) or
+                (checkpoint_count >=
+                 FLAGS.experimental_clgen_backtracking_max_checkpoints)):
             # This branch provides a get-out in case sampling ever gets "stuck".
-            # The value of --experimental_clgen_backtracking_attempts should be
-            # large enough that this should never realistically happen.
+            # The value of --experimental_clgen_backtracking_max_attempts
+            # should be large enough that this should never realistically
+            # happen.
             logging.warning("Crashing out at checkpoint %d after %d attempts",
                             checkpoint_count, backtrack_attempt_count)
             rollback_src = backtracker.TryToCloseProgram(rollback_state)
@@ -275,7 +343,8 @@ class BacktrackingModel(models.Model):
             # Tokens are sampled in batches. Don't proceed any further in the
             # batch.
             break
-        elif sampler.SampleIsComplete(sample_in_progress):
+        elif (sampler.SampleIsComplete(sample_in_progress) and
+              backtracker.IsDone()):
           logging.info(
               "Reached natural sampling termination at checkpoint %d, "
               "%d tokens", checkpoint_count, len(sample_in_progress))

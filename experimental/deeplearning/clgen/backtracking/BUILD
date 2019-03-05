@@ -34,6 +34,7 @@ py_binary(
         "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/absl",
         "//third_party/py/numpy",
+        "//third_party/py/scipy",
     ],
 )
 
