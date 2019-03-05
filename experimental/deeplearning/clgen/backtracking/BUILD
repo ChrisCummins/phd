@@ -23,6 +23,7 @@ sh_test(
 py_library(
     name = "backtracking_db",
     srcs = ["backtracking_db.py"],
+    visibility = ["//experimental/deeplearning/clgen:__subpackages__"],
     deps = [
         "//labm8:sqlutil",
         "//research/grewe_2013_cgo:feature_extractor",
