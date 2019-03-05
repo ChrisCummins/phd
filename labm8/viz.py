@@ -1,7 +1,9 @@
 """Plotting and visualization utilities."""
 import pathlib
+import time
 import typing
 
+import matplotlib
 import numpy as np
 import seaborn as sns
 from absl import flags
@@ -77,6 +79,22 @@ def RotateYLabels(rotation: int = 90, ax: axes.Axes = None):
   """
   ax = ax or plt.gca()
   plt.setp(ax.get_yticklabels(), rotation=rotation)
+
+
+def FormatXLabelsAsTimestamps(format='%H:%M:%S',
+                              convert_to_seconds=lambda t: t / 1000,
+                              ax: axes.Axes = None) -> None:
+  """Format the X labels
+
+  Args:
+    format: The time formatting string.
+    convert_to_seconds: A function to convert values to seconds.
+    ax: The plot axis.
+  """
+  ax = ax or plt.gca()
+  formatter = matplotlib.ticker.FuncFormatter(lambda t, _: time.strftime(
+      format, time.gmtime(convert_to_seconds(t))))
+  ax.xaxis.set_major_formatter(formatter)
 
 
 def Distplot(x=None,
