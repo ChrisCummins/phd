@@ -59,5 +59,29 @@ def test_Backtracker_TryToCloseProgram_not_end_of_statement(
     backtracker.TryToCloseProgram("kernel void A(".split())
 
 
+def test_Backtracker_ShouldProceed_depth1(atomizer: atomizers.AtomizerBase):
+  """Depth one test case."""
+  backtracker = backtracking_model.Backtracker(atomizer)
+  assert backtracker.ShouldProceed("""kernel void A() {
+  int a = 0;""")
+
+
+def test_Backtracker_ShouldProceed_depth2(atomizer: atomizers.AtomizerBase):
+  """Depth two test case."""
+  backtracker = backtracking_model.Backtracker(atomizer)
+  assert backtracker.ShouldProceed("""kernel void A() {
+  int a = 0;
+  if (global_global(0) < 10) {
+    int a = 2;""")
+
+
+def test_Backtracker_ShouldProceed_invalid(atomizer: atomizers.AtomizerBase):
+  """For loop closes to an invalid program."""
+  # TODO(cec): Can this be fixed?
+  backtracker = backtracking_model.Backtracker(atomizer)
+  assert not backtracker.ShouldProceed("""kernel void A() {
+  for (int a = 0;""")
+
+
 if __name__ == '__main__':
   test.Main()

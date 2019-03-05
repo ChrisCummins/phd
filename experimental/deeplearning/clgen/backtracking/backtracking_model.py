@@ -20,7 +20,7 @@ from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 100,
+flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 250,
                      'The number of attempts to make when backtracking.')
 
 
