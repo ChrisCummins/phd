@@ -46,7 +46,7 @@ class FeatureVector(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
     }
 
   @staticmethod
-  def FromNumpArray(features: np.array) -> typing.Dict[str, int]:
+  def FromNumpyArray(features: np.array) -> typing.Dict[str, int]:
     assert features.shape == (4,)
     return {
         'compute_operation_count': features[0],

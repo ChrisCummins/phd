@@ -25,7 +25,7 @@ class BacktrackingDatabaseLogger(object):
       target_features = session.GetOrAdd(
           backtracking_db.FeatureVector,
           **backtracking_db.FeatureVector.FromNumpyArray(
-              backtracker.target_feature_vector))
+              backtracker.target_features))
       session.flush()
       self._target_features_id = target_features.id
 
@@ -35,9 +35,8 @@ class BacktrackingDatabaseLogger(object):
   def OnSampleStep(self,
                    backtracker: backtracking_model.OpenClBacktrackingHelper,
                    attempt_count: int, token_count: int):
-    assert self._job_id
-    self._step_count += 1
     job_id = self.job_id
+    self._step_count += 1
 
     with self._db.Session(commit=True) as session:
       features = session.GetOrAdd(
@@ -72,11 +71,11 @@ class BacktrackingDatabaseLogger(object):
     """Get the unique job ID."""
     if self._job_id is None:
       with self._db.Session(commit=True) as session:
-        id_, = session.query(backtracking_db.BactrackingStep.job_id).order_by(
-            backtracking_db.BactrackingStep.job_id, ascending=False) \
-          .limit(1).first()
-        if id_:
-          self._job_id = id_ + 1
+        result = session.query(backtracking_db.BactrackingStep.job_id).order_by(
+            backtracking_db.BactrackingStep.job_id.desc()) \
+            .limit(1).first()
+        if result:
+          self._job_id = result[0] + 1
         else:
           self._job_id = 1
       logging.info('New job ID %d', self._job_id)

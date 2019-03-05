@@ -187,6 +187,10 @@ class OpenClBacktrackingHelper(object):
               self._feature_distance_epsilon)
 
   @property
+  def target_features(self) -> np.array:
+    return self._target_features
+
+  @property
   def current_features(self) -> np.array:
     return self._previous_features
 
@@ -302,6 +306,8 @@ class BacktrackingModel(models.Model):
     if FLAGS.experimental_clgen_backtracking_lstm_state:
       rollback_backend_state = copy.deepcopy(self.backend.inference_state)
       rollback_backend_indices = self.backend.inference_indices.copy()
+
+    self._logger.OnSampleStart(backtracker)
 
     # This counter is incremented every time ShouldProceed() returns False. If
     # the value grows to exceed the --experimental_clgen_backtracking_max_attempts
