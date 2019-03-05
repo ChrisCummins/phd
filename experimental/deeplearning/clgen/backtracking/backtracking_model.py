@@ -2,22 +2,21 @@
 
 import copy
 import pathlib
+import re
 import shutil
 import tempfile
 import typing
-import numpy
-import re
-import scipy
 
 import numpy as np
+import scipy
 from absl import flags
 from absl import logging
 
-from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.models import models
 from deeplearning.clgen.models import tensorflow_backend
+from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import labdate
@@ -29,18 +28,21 @@ flags.DEFINE_integer(
     'experimental_clgen_backtracking_max_attempts', 1000,
     'The maximum number of attempts to make when backtracking.')
 flags.DEFINE_integer(
-    'experimental_clgen_backtracking_max_checkpoints', 1000,
+    'experimental_clgen_backtracking_max_steps', 1000,
     'The maximum number of checkpoints to make when backtracking.')
 flags.DEFINE_bool(
     'experimental_clgen_backtracking_lstm_state', False,
     'If set, restore LSTM state tuples during backtracking. '
     'Else re-seed model.')
-flags.DEFINE_string('experimental_clgen_backtracking_target_features', None,
-                    'A stringified array of 4 features to max.')
+flags.DEFINE_string(
+    'experimental_clgen_backtracking_target_features', None,
+    'A comma-separated list of four target feature values. If not set, no '
+    'target features are used.')
 flags.DEFINE_float(
-    'experimental_clgen_backtracking_feature_distance_epsilon', 1,
-    'Maximum diff between current and target features before sampling may '
-    'terminate.')
+    'experimental_clgen_backtracking_feature_distance_epsilon', 0.01,
+    'Maximum difference between current and target features before sampling '
+    'may terminate. The value is normalized to the starting difference, were '
+    '1.0 is the starting difference and 0.0 is an exact match.')
 
 
 class OpenClBacktrackingHelper(object):
@@ -69,9 +71,15 @@ class OpenClBacktrackingHelper(object):
         sampler_pb2.SymmetricalTokenDepth(
             depth_increase_token='{', depth_decrease_token='}'))
     self.symtok.Specialize(atomizer)
+
+    # Feature hill climbing state.
     self._target_features = target_features
-    self._previous_feature_distance = np.inf
-    self._feature_distance_epislon = feature_distance_epislon
+    self._previous_features = np.array([0, 0, 0, 0], dtype=np.int)
+    self._init_feature_distance = scipy.spatial.distance.euclidean(
+        self._previous_features, self._target_features)
+    self._previous_src = None
+    self._previous_feature_distance = self._init_feature_distance
+    self._feature_distance_epsilon = feature_distance_epislon
 
   def __del__(self):
     shutil.rmtree(self.working_dir)
@@ -121,6 +129,8 @@ class OpenClBacktrackingHelper(object):
       if new_feature_distance > self._previous_feature_distance:
         logging.info("Rejecting candidate because of positive feature delta")
         return False
+      self._previous_features = features
+      self._previous_src = candidate_src
       self._previous_feature_distance = new_feature_distance
 
     return True
@@ -173,18 +183,36 @@ class OpenClBacktrackingHelper(object):
     if self._target_features is None:
       return True
     else:
-      return self._previous_feature_distance <= self._feature_distance_epislon
+      return ((self._previous_feature_distance / self._init_feature_distance) <=
+              self._feature_distance_epsilon)
+
+  @property
+  def current_features(self) -> np.array:
+    return self._previous_features
+
+  @property
+  def feature_distance(self) -> float:
+    return self._previous_feature_distance
+
+  @property
+  def norm_feature_distance(self) -> float:
+    return self._previous_feature_distance / self._init_feature_distance
+
+  @property
+  def current_src(self) -> str:
+    return self._previous_src
 
 
 class BacktrackingModel(models.Model):
   """A CLgen model which uses a backtracking approach to sampling."""
 
-  def __init__(self, *args, target_features=None, **kwargs):
+  def __init__(self, *args, logger=None, **kwargs):
     super(BacktrackingModel, self).__init__(*args, **kwargs)
     if not isinstance(self.backend, tensorflow_backend.TensorFlowBackend):
       raise TypeError(f"{self(type).__name__} only compatible with "
                       "TensorFlow backend!")
 
+    self._logger = logger
     self._target_features = None
     if FLAGS.experimental_clgen_backtracking_target_features:
       self._target_features = np.fromstring(
@@ -193,7 +221,7 @@ class BacktrackingModel(models.Model):
           sep=',')
       logging.info("Using target features %s", self._target_features)
       assert self._target_features.shape == (4,)
-      self._feature_distance_epislon = FLAGS.experimental_clgen_backtracking_feature_distance_epsilon
+      self._feature_distance_epsilon = FLAGS.experimental_clgen_backtracking_feature_distance_epsilon
 
   def SamplerCache(self, s: samplers.Sampler) -> pathlib.Path:
     """Custom override to prevent cache conflicts with base samplers."""
@@ -219,21 +247,24 @@ class BacktrackingModel(models.Model):
     self.backend.InitSampleBatch(sampler, batch_size=1)
 
     backtracker = OpenClBacktrackingHelper(atomizer, self._target_features,
-                                           self._feature_distance_epislon)
+                                           self._feature_distance_epsilon)
     sampled_tokens = self.SampleOneWithBacktracking(sampler, atomizer,
                                                     backtracker)
 
     end_time = labdate.MillisecondsTimestamp()
 
     # Format text.
-    text = preprocessors.Preprocess(''.join(sampled_tokens), [
-        'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
-        'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
-        'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
-        'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
-        'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
-        'deeplearning.clgen.preprocessors.cxx:ClangFormat',
-    ])
+    if sampled_tokens:
+      text = preprocessors.Preprocess(''.join(sampled_tokens), [
+          'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
+          'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
+          'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
+          'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
+          'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
+          'deeplearning.clgen.preprocessors.cxx:ClangFormat',
+      ])
+    else:
+      text = ''
 
     sample = model_pb2.Sample(
         text=text,
@@ -297,6 +328,8 @@ class BacktrackingModel(models.Model):
                 'Reached checkpoint %d after %d attempts, '
                 '%d tokens', checkpoint_count, backtrack_attempt_count,
                 len(sample_in_progress))
+            self._logger.OnSampleStep(backtracker, backtrack_attempt_count,
+                                      len(sample_in_progress))
             logging.debug("Sample so far << EOF\n%s\nEOF",
                           ''.join(sample_in_progress))
             rollback_state = sample_in_progress.copy()
@@ -315,15 +348,21 @@ class BacktrackingModel(models.Model):
           elif ((backtrack_attempt_count >=
                  FLAGS.experimental_clgen_backtracking_max_attempts) or
                 (checkpoint_count >=
-                 FLAGS.experimental_clgen_backtracking_max_checkpoints)):
+                 FLAGS.experimental_clgen_backtracking_max_steps)):
             # This branch provides a get-out in case sampling ever gets "stuck".
             # The value of --experimental_clgen_backtracking_max_attempts
             # should be large enough that this should never realistically
             # happen.
             logging.warning("Crashing out at checkpoint %d after %d attempts",
                             checkpoint_count, backtrack_attempt_count)
-            rollback_src = backtracker.TryToCloseProgram(rollback_state)
-            assert rollback_src
+            self._logger.OnSampleEnd(backtracker)
+            # If no progress was made, rollback_state will still be the
+            # (invalid) kernel seed text, so cannot be closed.
+            if rollback_state[-1][-1] == ';':
+              rollback_src = backtracker.TryToCloseProgram(rollback_state)
+              assert rollback_src
+            else:
+              rollback_src = ''
             return atomizer.TokenizeString(rollback_src)
           else:
             # Backtrack. Re-seed the network with the last
@@ -348,4 +387,5 @@ class BacktrackingModel(models.Model):
           logging.info(
               "Reached natural sampling termination at checkpoint %d, "
               "%d tokens", checkpoint_count, len(sample_in_progress))
+          self._logger.OnSampleEnd(backtracker)
           return sample_in_progress

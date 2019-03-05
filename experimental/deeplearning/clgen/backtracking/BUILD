@@ -20,10 +20,23 @@ sh_test(
     ],
 )
 
+py_library(
+    name = "backtracking_db",
+    srcs = ["backtracking_db.py"],
+    deps = [
+        "//labm8:sqlutil",
+        "//research/grewe_2013_cgo:feature_extractor",
+        "//third_party/py/absl",
+        "//third_party/py/numpy",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
 py_binary(
     name = "backtracking_model",
     srcs = ["backtracking_model.py"],
     deps = [
+        ":logger",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/models",
@@ -45,5 +58,14 @@ py_test(
         ":backtracking_model",
         "//labm8:test",
         "//third_party/py/pytest",
+    ],
+)
+
+py_library(
+    name = "logger",
+    srcs = ["logger.py"],
+    deps = [
+        ":backtracking_db",
+        "//third_party/py/absl",
     ],
 )
