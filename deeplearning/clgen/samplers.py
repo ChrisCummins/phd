@@ -267,6 +267,12 @@ class Sampler(object):
           'Sampler start text cannot be encoded using the corpus vocabulary: '
           f"'{self.start_text}'")
 
+    if len(self.encoded_start_text) >= self.sequence_length:
+      raise errors.InvalidStartText(
+          'Encoded sampler start text must be less than sampler sequence '
+          f'length. Sampler sequence length={self.sequence_length}, encoded '
+          f'start text length={len(self.encoded_start_text)}')
+
     [terminator.Specialize(atomizer) for terminator in self.terminators]
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
