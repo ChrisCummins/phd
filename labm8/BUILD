@@ -487,6 +487,7 @@ py_library(
     srcs = ["sqlutil.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":labdate",
         ":pbutil",
         ":text",
         "//third_party/py/absl",
