@@ -24,10 +24,13 @@ flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 250,
                      'The number of attempts to make when backtracking.')
 
 
-class Backtracker(object):
+class OpenClBacktrackingHelper(object):
+  """A backtracking helper for OpenCL kernels."""
   END_OF_STATEMENT_TOKEN = ';'
 
   def __init__(self, atomizer: atomizers.AtomizerBase):
+    # Temporary working directory is used to write files that the Grewe feature
+    # extractor can use.
     self.working_dir = pathlib.Path(
         tempfile.mkdtemp(prefix='phd_clgen_backtracking_'))
     self.symtok = samplers.SymmetricalTokenDepthCriterion(
@@ -38,14 +41,17 @@ class Backtracker(object):
   def __del__(self):
     shutil.rmtree(self.working_dir)
 
-  def TryToCloseProgram(
-      self, sample_in_progress: typing.List[str]) -> typing.Optional[str]:
-    assert sample_in_progress[-1] == ';'
-    bracket_depth = self.symtok.GetTokenDepth(sample_in_progress)
-    if bracket_depth > 0:
-      return ''.join(sample_in_progress) + ('}' * bracket_depth)
-
   def ShouldProceed(self, sample_in_progress: typing.List[str]) -> bool:
+    """Determine if a partial sample should be used as the new rollback state.
+
+    Args:
+      sample_in_progress: A list of strings, where each string is a token. The
+        last token must be ';'.
+
+    Returns:
+      True if sampling should proceed with the current partial sample, else
+      False.
+    """
     candidate_src = self.TryToCloseProgram(sample_in_progress)
 
     if not candidate_src:
@@ -57,30 +63,43 @@ class Backtracker(object):
       with open(path, 'w') as f:
         f.write(candidate_src)
       list(grewe_features.ExtractFeaturesFromPath(path))
+      # TODO(cec): Record new "best" towards matching a feature vector.
       return True
     except grewe_features.FeatureExtractionError as e:
       return False
 
+  def TryToCloseProgram(
+      self, sample_in_progress: typing.List[str]) -> typing.Optional[str]:
+    """Try to construct a syntactically valid program from a partial sample.
+
+    Given a partially complete sample, this method attempts to make the smallest
+    addition to the code in order to produce a syntactically valid program.
+
+    Args:
+      sample_in_progress: A list of strings, where each string is a token. The
+        last token must be ';'.
+
+    Returns:
+      A string of OpenCL code, if closing the partial sample succeeded, else
+      None.
+    """
+    assert sample_in_progress[-1] == ';'
+    bracket_depth = self.symtok.GetTokenDepth(sample_in_progress)
+    if bracket_depth > 0:
+      return ''.join(sample_in_progress) + ('}' * bracket_depth)
+
 
 class BacktrackingModel(models.Model):
+  """A CLgen model which uses a backtracking approach to sampling."""
 
   def __init__(self, *args, **kwargs):
     super(BacktrackingModel, self).__init__(*args, **kwargs)
-
     if not isinstance(self.backend, tensorflow_backend.TensorFlowBackend):
       raise TypeError(f"{self(type).__name__} only compatible with "
                       "TensorFlow backend!")
 
   def SamplerCache(self, s: samplers.Sampler) -> pathlib.Path:
-    """Custom override to prevent cache conflicts with base samplers.
-
-    Args:
-      s: A Sampler instance.
-
-    Returns:
-      A path to a directory. Note that this directory may not exist - it is
-      created only after a call to Sample().
-    """
+    """Custom override to prevent cache conflicts with base samplers."""
     return self.cache.path / 'samples' / f'backtracking_{s.hash}'
 
   def _SampleBatch(self,
@@ -95,67 +114,24 @@ class BacktrackingModel(models.Model):
     if batch_size != 1:  # No support for batched inference.
       raise TypeError(f"Batch size {batch_size} != 1")
 
-    # We're going to be modifying the sampler.encoded_start_text attribute,
-    # so save the original value here.
+    # We're use the sampler.encoded_start_text attribute as a way to re-seed the
+    # model state during rollback, so save the original value here so that we
+    # can restore it at the end of the sample batch.
     original_sampler_encoded_start_text = sampler.encoded_start_text.copy()
 
-    sample_in_progress = sampler.tokenized_start_text.copy()
-    rollback_state = sample_in_progress.copy()
-
-    backtracker = Backtracker(atomizer)
-    backtrack_attempt_count = 0
-
     self.backend.InitSampleBatch(sampler, batch_size=1)
-    done = False
 
-    i = 0
-    while not done:
-      i += 1
-      indices = self.backend.SampleNextIndices(
-          sampler, batch_size=1, done=np.array([False]))
-      assert len(indices) == 1
-
-      for j, index in enumerate(indices[0]):
-        token = atomizer.decoder[index]
-        sample_in_progress.append(token)
-
-        if token == Backtracker.END_OF_STATEMENT_TOKEN:
-          if backtracker.ShouldProceed(sample_in_progress):
-            logging.info(
-                'i=%d j=%d Reached new backtrack state after %d attempts, %d tokens',
-                i, j, backtrack_attempt_count, len(rollback_state))
-            logging.debug("Sample so far: `%s`", ''.join(sample_in_progress))
-            rollback_state = sample_in_progress.copy()
-            sampler.encoded_start_text = atomizer.AtomizeString(
-                ''.join(rollback_state))
-          elif backtrack_attempt_count >= FLAGS.experimental_clgen_backtracking_attempts:
-            logging.warning(
-                "i=%d j=%d Crashing out of backtracking after %d attempts", i,
-                j, backtrack_attempt_count)
-            done = True
-            break
-          else:
-            # Backtrack.
-            self.backend.InitSampleBatch(sampler, batch_size=1)
-            backtrack_attempt_count += 1
-            logging.debug(
-                "i=%d j=%d Backtrack attempt %d! Rejected candidate statement: `%s`",
-                i, j, backtrack_attempt_count, ''.join(
-                    sample_in_progress[len(rollback_state):]))
-            sample_in_progress = rollback_state.copy()
-            break
-        elif sampler.SampleIsComplete(sample_in_progress):
-          logging.info("i=%d j=%d Reached natural sampling termination", i, j)
-          done = True
-          break
+    backtracker = OpenClBacktrackingHelper(atomizer)
+    sampled_tokens = self.SampleOneWithBacktracking(sampler, atomizer,
+                                                    backtracker)
 
     end_time = labdate.MillisecondsTimestamp()
     sample = model_pb2.Sample(
-        text=''.join(sample_in_progress),
+        text=''.join(sampled_tokens),
         sample_start_epoch_ms_utc=start_time,
         sample_time_ms=end_time - start_time,
         wall_time_ms=end_time - start_time,
-        num_tokens=len(sample_in_progress))
+        num_tokens=len(sampled_tokens))
 
     if print_samples:
       print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
@@ -164,3 +140,85 @@ class BacktrackingModel(models.Model):
     sampler.encoded_start_text = original_sampler_encoded_start_text
 
     return [sample]
+
+  def SampleOneWithBacktracking(
+      self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
+      backtracker: OpenClBacktrackingHelper) -> typing.List[str]:
+    """Produce a single sample using backtracking.
+
+    Args:
+      sampler: The sampler.
+      atomizer: The corpus atomizer.
+      backtracker: An instance of the backtracking helper class.
+
+    Returns:
+      A sample, as a sequence of strings.
+    """
+    # During sampling, the 'sample_in_progress' contains the current candidate
+    # sequence of tokens, and 'rollback_state' contains a copy of
+    # 'sample_in_progress' at the last point that
+    sample_in_progress = sampler.tokenized_start_text.copy()
+    rollback_state = sample_in_progress.copy()
+
+    # This counter is incremented every time ShouldProceed() returns False. If
+    # the value grows to exceed the --experimental_clgen_backtracking_attempts
+    # flag, backtracking aborts. This is reset when ShouldProceed() returns
+    # True.
+    backtrack_attempt_count = 0
+    # This counter is incremented every time ShouldProceed() returns True. It is
+    # used only for logging / debugging.
+    checkpoint_count = 0
+
+    while True:
+      indices = self.backend.SampleNextIndices(
+          sampler, batch_size=1, done=np.array([False]))
+      assert len(indices) == 1
+
+      for encoded_token in indices[0]:
+        token = atomizer.decoder[encoded_token]
+        sample_in_progress.append(token)
+
+        if token == OpenClBacktrackingHelper.END_OF_STATEMENT_TOKEN:
+          if backtracker.ShouldProceed(sample_in_progress):
+            checkpoint_count += 1
+            logging.info(
+                'Reached checkpoint %d after %d attempts, '
+                '%d tokens', checkpoint_count, backtrack_attempt_count,
+                len(sample_in_progress))
+            logging.debug("Sample so far: `%s`", ''.join(sample_in_progress))
+            rollback_state = sample_in_progress.copy()
+            # Set the sampler's seed text to be the new rollback state so that
+            # when InitSampleBatch() is called during backtracking (below), the
+            # model is re-seeded with the entire sample up to this point.
+            sampler.encoded_start_text = atomizer.AtomizeString(
+                ''.join(rollback_state))
+            # Reset the backtracking ticking clock.
+            backtrack_attempt_count = 0
+          elif (backtrack_attempt_count >=
+                FLAGS.experimental_clgen_backtracking_attempts):
+            # This branch provides a get-out in case sampling ever gets "stuck".
+            # The value of --experimental_clgen_backtracking_attempts should be
+            # large enough that this should never realistically happen.
+            logging.warning("Crashing out at checkpoint %d after %d attempts",
+                            checkpoint_count, backtrack_attempt_count)
+            rollback_src = backtracker.TryToCloseProgram(rollback_state)
+            assert rollback_src
+            return atomizer.TokenizeString(rollback_src)
+          else:
+            # Backtrack. Re-seed the network with the last
+            logging.debug(
+                "Backtrack attempt %d rejected at checkpoint %d. "
+                "Rejected statement: `%s`", backtrack_attempt_count,
+                checkpoint_count, ''.join(
+                    sample_in_progress[len(rollback_state):]))
+            sample_in_progress = rollback_state.copy()
+            self.backend.InitSampleBatch(sampler, batch_size=1)
+            backtrack_attempt_count += 1
+            # Tokens are sampled in batches. Don't proceed any further in the
+            # batch.
+            break
+        elif sampler.SampleIsComplete(sample_in_progress):
+          logging.info(
+              "Reached natural sampling termination at checkpoint %d, "
+              "%d tokens", checkpoint_count, len(sample_in_progress))
+          return sample_in_progress
