@@ -36,7 +36,7 @@ flags.DEFINE_boolean('clgen_multichar_tokenizer', False,
 flags.DEFINE_integer('clgen_layer_size', 512, 'Size of LSTM model layers.')
 flags.DEFINE_integer('clgen_num_layers', 2, 'Number of layers in LSTM model.')
 flags.DEFINE_integer('clgen_max_sample_length', 20000,
-                     'The maximum length of CLgen samples.')
+                     'The maximum length of CLgen samples. If 0, no limit.')
 
 # Training options.
 flags.DEFINE_integer("clgen_num_epochs", 50, "The number of training epochs.")
@@ -203,7 +203,7 @@ def CreateModelProtoFromFlags() -> model_pb2.Model:
 
 
 def CreateSamplerProtoFromFlags() -> sampler_pb2.Sampler:
-  return sampler_pb2.Sampler(
+  sampler = sampler_pb2.Sampler(
       start_text=FLAGS.clgen_seed_text,
       batch_size=FLAGS.clgen_sample_batch_size,
       sequence_length=FLAGS.clgen_sample_sequence_length,
@@ -214,11 +214,15 @@ def CreateSamplerProtoFromFlags() -> sampler_pb2.Sampler:
                   depth_increase_token="{",
                   depth_decrease_token="}",
               )),
-          sampler_pb2.SampleTerminationCriterion(
-              maxlen=sampler_pb2.MaxTokenLength(
-                  maximum_tokens_in_sample=FLAGS.clgen_max_sample_length,)),
       ],
   )
+  if FLAGS.clgen_max_sample_length:
+    sampler.termination_criteria.extend([
+        sampler_pb2.SampleTerminationCriterion(
+            maxlen=sampler_pb2.MaxTokenLength(
+                maximum_tokens_in_sample=FLAGS.clgen_max_sample_length,)),
+    ])
+  return sampler
 
 
 def CreateInstanceProtoFromFlags() -> clgen_pb2.Instance:
