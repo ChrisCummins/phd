@@ -11,6 +11,14 @@ py_binary(
     ],
 )
 
+sh_test(
+    name = "backtracking_smoke_test",
+    srcs = ["backtracking_smoke_test.sh"],
+    data = [
+        ":backtracking",
+    ],
+)
+
 py_binary(
     name = "backtracking_model",
     srcs = ["backtracking_model.py"],
