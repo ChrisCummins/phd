@@ -233,10 +233,10 @@ class Model(object):
 
         # Only keep the samples in memory if we are going to return them.
         if min_num_samples > 0:
-          samples += self._SampleBatch(sampler, atomizer, batch_size)
+          samples += sample_batch
 
         # Dump the samples in the sampler cache.
-        for sample in samples:
+        for sample in sample_batch:
           sample_id = crypto.sha256_str(sample.text)
           sample_path = sample_dir / f'{sample_id}.pbtxt'
           pbutil.ToFile(sample, sample_path)
