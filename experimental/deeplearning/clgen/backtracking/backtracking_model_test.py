@@ -21,19 +21,46 @@ kernel void A(global int* a, global int* b, const int c) {
 """)
 
 
+@pytest.fixture(scope='function')
+def backtracker(atomizer: atomizers.AtomizerBase
+               ) -> backtracking_model.OpenClBacktrackingHelper:
+  return backtracking_model.OpenClBacktrackingHelper(atomizer)
+
+
+def test_OpenClBacktrackingHelper_ShouldCheckpoint_no(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert not backtracker.ShouldCheckpoint('int x = 5')
+
+
+def test_OpenClBacktrackingHelper_ShouldCheckpoint_yes(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.ShouldCheckpoint('int x = 5;')
+
+
+def test_OpenClBacktrackingHelper_ShouldCheckpoint_for_loop_1(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.ShouldCheckpoint('for (int i = 0;')
+
+
+def test_OpenClBacktrackingHelper_ShouldCheckpoint_for_loop_2(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.ShouldCheckpoint('for (int i = 0; i < 10;')
+
+
+def test_OpenClBacktrackingHelper_ShouldCheckpoint_for_loop_3(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.ShouldCheckpoint('for (int i = 0; i < 10; ++i) { int x;')
+
+
 def test_OpenClBacktrackingHelper_TryToCloseProgram_depth1(
-    atomizer: atomizers.AtomizerBase):
-  """Depth one test case."""
-  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
   assert backtracker.TryToCloseProgram("""kernel void A() {
   int a = 0;""") == """kernel void A() {
   int a = 0;}"""
 
 
 def test_OpenClBacktrackingHelper_TryToCloseProgram_depth2(
-    atomizer: atomizers.AtomizerBase):
-  """Depth two test case."""
-  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
   assert backtracker.TryToCloseProgram("""kernel void A() {
   int a = 0;
   if (global_global(0) < 10) {
@@ -43,49 +70,65 @@ def test_OpenClBacktrackingHelper_TryToCloseProgram_depth2(
     int a = 2;}}"""
 
 
-def test_OpenClBacktrackingHelper_TryToCloseProgram_invalid(
-    atomizer: atomizers.AtomizerBase):
-  """For loop cannot be closed, but it is anyway."""
-  # TODO(cec): Can this be fixed?
-  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
+def test_OpenClBacktrackingHelper_TryToCloseProgram_loop1(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
   assert backtracker.TryToCloseProgram("""kernel void A() {
   for (int a = 0;""") == """kernel void A() {
-  for (int a = 0;}"""
+  for (int a = 0;;){}}"""
+
+
+def test_OpenClBacktrackingHelper_TryToCloseProgram_loop2(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.TryToCloseProgram("""kernel void A() {
+  for (int a = 0; a < 10;""") == """kernel void A() {
+  for (int a = 0; a < 10;){}}"""
+
+
+def test_OpenClBacktrackingHelper_TryToCloseProgram_loop3(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.TryToCloseProgram("""kernel void A() {
+  for (int a = 0; a < 10; ++a) {
+    { int x = 10;""") == """kernel void A() {
+  for (int a = 0; a < 10; ++a) {
+    { int x = 10;}}}"""
 
 
 def test_OpenClBacktrackingHelper_TryToCloseProgram_not_end_of_statement(
-    atomizer: atomizers.AtomizerBase):
-  """Must only be called at end of statement."""
-  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
   with pytest.raises(AssertionError):
     backtracker.TryToCloseProgram("kernel void A(".split())
 
 
 def test_OpenClBacktrackingHelper_ShouldProceed_depth1(
-    atomizer: atomizers.AtomizerBase):
-  """Depth one test case."""
-  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
   assert backtracker.ShouldProceed("""kernel void A() {
   int a = 0;""")
 
 
 def test_OpenClBacktrackingHelper_ShouldProceed_depth2(
-    atomizer: atomizers.AtomizerBase):
-  """Depth two test case."""
-  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
   assert backtracker.ShouldProceed("""kernel void A() {
   int a = 0;
   if (global_global(0) < 10) {
     int a = 2;""")
 
 
-def test_OpenClBacktrackingHelper_ShouldProceed_invalid(
-    atomizer: atomizers.AtomizerBase):
-  """For loop closes to an invalid program."""
-  # TODO(cec): Can this be fixed?
-  backtracker = backtracking_model.OpenClBacktrackingHelper(atomizer)
-  assert not backtracker.ShouldProceed("""kernel void A() {
-  for (int a = 0;""")
+def test_OpenClBacktrackingHelper_ShouldProceed_loop1(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.ShouldProceed("""kernel void A() {
+  for (int i = 0;""")
+
+
+def test_OpenClBacktrackingHelper_ShouldProceed_loop2(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.ShouldProceed("""kernel void A() {
+  for (int i = 0; i < 10;""")
+
+
+def test_OpenClBacktrackingHelper_ShouldProceed_loop3(
+    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  assert backtracker.ShouldProceed("""kernel void A() {
+  for (int i = 0; i < 10; ++i) { int x = 10;""")
 
 
 if __name__ == '__main__':

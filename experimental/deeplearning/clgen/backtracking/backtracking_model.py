@@ -5,6 +5,7 @@ import pathlib
 import shutil
 import tempfile
 import typing
+import re
 
 import numpy as np
 from absl import flags
@@ -22,7 +23,7 @@ from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 250,
+flags.DEFINE_integer('experimental_clgen_backtracking_attempts', 100,
                      'The number of attempts to make when backtracking.')
 flags.DEFINE_bool(
     'experimental_clgen_backtracking_lstm_state', False,
@@ -32,7 +33,17 @@ flags.DEFINE_bool(
 
 class OpenClBacktrackingHelper(object):
   """A backtracking helper for OpenCL kernels."""
+  # We want to checkpoint at the end of every logicial statement. An easy way
+  # to get us most of the way there is to checkpoint when the last produced
+  # character is ';', however, "for" loop syntax provides two exceptions. Given
+  # the example:
+  #   for (int i = 0; i < 10; ++i) { int x = 10; }
+  # there is only a single logical statement, "int x = 10;". A crude workaround
+  # to prevent logical statement ends being triggered within the for loop
+  # header is to use a pair of regexes to detect them:
   END_OF_STATEMENT_TOKEN = ';'
+  FOR_LOOP_1 = re.compile(r'(.|\n)*for(\s|\n)*\([^;]*;')
+  FOR_LOOP_2 = re.compile(r'(.|\n)*for(\s|\n)*\([^;]*;[^;]*;')
 
   def __init__(self, atomizer: atomizers.AtomizerBase):
     # Temporary working directory is used to write files that the Grewe feature
@@ -46,6 +57,17 @@ class OpenClBacktrackingHelper(object):
 
   def __del__(self):
     shutil.rmtree(self.working_dir)
+
+  def ShouldCheckpoint(self, sampled_token: str) -> bool:
+    """Determine whether ShouldProceed() should be called.
+
+    Args:
+      sampled_token: The newly sampled token.
+
+    Returns:
+      True if ShouldProceed() should be called, else False.
+    """
+    return sampled_token[-1] == self.END_OF_STATEMENT_TOKEN
 
   def ShouldProceed(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine if a partial sample should be used as the new rollback state.
@@ -69,7 +91,6 @@ class OpenClBacktrackingHelper(object):
       with open(path, 'w') as f:
         f.write(candidate_src)
       list(grewe_features.ExtractFeaturesFromPath(path))
-      # TODO(cec): Record new "best" towards matching a feature vector.
       return True
     except grewe_features.FeatureExtractionError as e:
       return False
@@ -92,7 +113,13 @@ class OpenClBacktrackingHelper(object):
     assert sample_in_progress[-1] == ';'
     bracket_depth = self.symtok.GetTokenDepth(sample_in_progress)
     if bracket_depth > 0:
-      return ''.join(sample_in_progress) + ('}' * bracket_depth)
+      text = ''.join(sample_in_progress)
+      if re.fullmatch(self.FOR_LOOP_1, text):
+        return text + ';){}' + '}' * bracket_depth
+      elif re.fullmatch(self.FOR_LOOP_2, text):
+        return text + '){}' + '}' * bracket_depth
+      else:
+        return text + '}' * bracket_depth
 
 
 class BacktrackingModel(models.Model):
@@ -198,7 +225,7 @@ class BacktrackingModel(models.Model):
         token = atomizer.decoder[encoded_token]
         sample_in_progress.append(token)
 
-        if token == OpenClBacktrackingHelper.END_OF_STATEMENT_TOKEN:
+        if backtracker.ShouldCheckpoint(token):
           if backtracker.ShouldProceed(sample_in_progress):
             checkpoint_count += 1
             logging.info(
@@ -219,7 +246,7 @@ class BacktrackingModel(models.Model):
               # when InitSampleBatch() is called during backtracking (below), the
               # model is re-seeded with the entire sample up to this point.
               sampler.encoded_start_text = atomizer.AtomizeString(
-                  ''.join(rollback_state))[-sampler.sequence_length:]
+                  ''.join(rollback_state))[-(sampler.sequence_length - 1):]
           elif (backtrack_attempt_count >=
                 FLAGS.experimental_clgen_backtracking_attempts):
             # This branch provides a get-out in case sampling ever gets "stuck".
