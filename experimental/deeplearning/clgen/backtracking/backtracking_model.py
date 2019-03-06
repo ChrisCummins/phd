@@ -46,11 +46,12 @@ flags.DEFINE_string(
     'experimental_clgen_backtracking_target_features', None,
     'A comma-separated list of four target feature values. If not set, no '
     'target features are used.')
-flags.DEFINE_integer(
-    'experimental_clgen_backtracking_max_feature_distance', 0.1,
-    'The maximum (absolute) feature distance before sampling may terminate.')
 flags.DEFINE_float(
-    'experimental_clgen_backtracking_feature_distance_epsilon', 0.01,
+    'experimental_clgen_backtracking_max_feature_distance', 0.1,
+    'Maximum difference between current and target features before sampling '
+    'may terminate.')
+flags.DEFINE_float(
+    'experimental_clgen_backtracking_max_norm_feature_distance', 0.01,
     'Maximum difference between current and target features before sampling '
     'may terminate. The value is normalized to the starting difference, were '
     '1.0 is the starting difference and 0.0 is an exact match.')
@@ -214,10 +215,10 @@ class OpenClBacktrackingHelper(object):
     if self._target_features is None:
       return True
     else:
-      return ((self._previous_feature_distance <
+      return ((self._previous_feature_distance <=
                FLAGS.experimental_clgen_backtracking_max_feature_distance) or
               (self._previous_feature_distance / self._init_feature_distance <=
-               FLAGS.experimental_clgen_backtracking_feature_distance_epsilon))
+               FLAGS.experimental_clgen_backtracking_max_norm_feature_distance))
 
   @property
   def target_features(self) -> np.array:
