@@ -254,6 +254,22 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
   return engine
 
 
+def ColumnNames(model) -> typing.List[str]:
+  """Return the names of all columns in a mapped object.
+
+  Args:
+    model: A mapped class.
+
+  Returns:
+    A list of string column names in the order that they are declared.
+  """
+  try:
+    inst = sql.inspect(model)
+    return [c_attr.key for c_attr in inst.mapper.column_attrs]
+  except sql.exc.NoInspectionAvailable as e:
+    raise TypeError(str(e))
+
+
 class Session(orm.session.Session):
   """A subclass of the default SQLAlchemy Session with added functionality.
 

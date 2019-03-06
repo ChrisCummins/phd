@@ -65,6 +65,40 @@ def test_CreateEngine_sqlite_from_file_with_suffix(tempdir: pathlib.Path):
   assert db_path.is_file()
 
 
+def test_AllColumnNames_two_fields():
+  """Test that column names are returned."""
+  base = declarative.declarative_base()
+
+  class Table(base, sqlutil.TablenameFromClassNameMixin):
+    """A table containing two columns."""
+    col_a = sql.Column(sql.Integer, primary_key=True)
+    col_b = sql.Column(sql.Integer)
+
+  assert sqlutil.ColumnNames(Table) == ['col_a', 'col_b']
+
+
+def test_AllColumnNames_two_fields_model_instance():
+  """Test that column names are returned on instance."""
+  base = declarative.declarative_base()
+
+  class Table(base, sqlutil.TablenameFromClassNameMixin):
+    """A table containing two columns."""
+    col_a = sql.Column(sql.Integer, primary_key=True)
+    col_b = sql.Column(sql.Integer)
+
+  instance = Table(col_a=1, col_b=2)
+  assert sqlutil.ColumnNames(instance) == ['col_a', 'col_b']
+
+
+def test_AllColumnNames_invalid_object():
+  """TypeError raised when called on an invalid object."""
+  class NotAModel(object):
+    col_a = sql.Column(sql.Integer, primary_key=True)
+
+  with pytest.raises(TypeError):
+    sqlutil.ColumnNames(NotAModel)
+
+
 def test_Session_GetOrAdd():
   """Test that GetOrAdd() does not create duplicates."""
   base = declarative.declarative_base()
