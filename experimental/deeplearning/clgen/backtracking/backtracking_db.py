@@ -55,6 +55,15 @@ class FeatureVector(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
         'coalesced_memory_access_count': features[3]
     }
 
+  def ToNumpyArray(self) -> np.array:
+    return np.array([
+        self.compute_operation_count,
+        self.global_memory_access_count,
+        self.local_memory_access_count,
+        self.coalesced_memory_access_count,
+    ],
+                    dtype=int)
+
 
 class BacktrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
