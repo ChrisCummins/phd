@@ -65,6 +65,7 @@ class BacktrackingDatabaseLogger(object):
   def OnSampleEnd(self,
                   backtracker: backtracking_model.OpenClBacktrackingHelper):
     del backtracker
+    self._step_count += 1
     logging.info("Sampling concluded at step %d", self._step_count)
     self._job_id = None
     self._step_count = 0
