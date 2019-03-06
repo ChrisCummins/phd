@@ -12,7 +12,10 @@ exports_files([
 py_library(
     name = "api",
     srcs = ["api.py"],
-    data = [":native_driver"],
+    data = [
+        ":native_csv_driver",
+        ":native_driver",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/cldrive/legacy:env",
@@ -21,6 +24,7 @@ py_library(
         "//labm8:bazelutil",
         "//labm8:pbutil",
         "//third_party/py/absl",
+        "//third_party/py/numpy",
         "//third_party/py/pandas",
     ],
 )
@@ -339,6 +343,15 @@ cc_binary(
         ":libcldrive",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
         "//phd:pbutil",
+    ],
+)
+
+cc_binary(
+    name = "native_csv_driver",
+    srcs = ["native_csv_driver.cc"],
+    deps = [
+        ":libcldrive",
+        "//gpu/cldrive/proto:cldrive_cc_pb2",
     ],
 )
 

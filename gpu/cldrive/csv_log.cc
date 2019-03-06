@@ -52,7 +52,7 @@ std::ostream& NullIfNegative(std::ostream& stream, const T& value) {
 std::ostream& operator<<(std::ostream& stream, const CsvLogHeader& header) {
   stream << "instance,device,build_opts,kernel,work_item_local_mem_size,"
          << "work_item_private_mem_size,global_size,local_size,outcome,"
-         << "transferred_bytes,runtime_ns\n";
+         << "transferred_bytes,runtime_ms\n";
   return stream;
 }
 
