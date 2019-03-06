@@ -96,8 +96,7 @@ def test_OpenClBacktrackingHelper_TryToCloseProgram_loop3(
 
 def test_OpenClBacktrackingHelper_TryToCloseProgram_not_end_of_statement(
     backtracker: backtracking_model.OpenClBacktrackingHelper):
-  with pytest.raises(AssertionError):
-    backtracker.TryToCloseProgram("kernel void A(".split())
+  assert not backtracker.TryToCloseProgram("kernel void A(".split())
 
 
 def test_OpenClBacktrackingHelper_ShouldProceed_depth1(

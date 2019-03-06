@@ -38,6 +38,9 @@ class BacktrackingDatabaseLogger(object):
     job_id = self.job_id
     self._step_count += 1
 
+    logging.info('Reached step %d after %d attempts, %d tokens',
+                 self._step_count, attempt_count, token_count)
+
     with self._db.Session(commit=True) as session:
       features = session.GetOrAdd(
           backtracking_db.FeatureVector,
@@ -62,6 +65,7 @@ class BacktrackingDatabaseLogger(object):
   def OnSampleEnd(self,
                   backtracker: backtracking_model.OpenClBacktrackingHelper):
     del backtracker
+    logging.info("Sampling concluded at step %d", self._step_count)
     self._job_id = None
     self._step_count = 0
     self._target_features_id = None

@@ -6,7 +6,8 @@ Usage:
     --clgen_min_sample_count=100
     --clgen_seed_text='kernel void A(global int* a, global float* b, const int c) {'
     --experimental_clgen_backtracking_target_features='100,10,0,0'
-    --experimental_clgen_backtracking_feature_distance_epsilon=0.5
+    --experimental_clgen_backtracking_feature_distance_epsilon=0.01
+    --experimental_clgen_backtracking_max_feature_distance=0.01
     --db='file:///var/phd/db/cc1.mysql?backtracking?charset=utf8'
 """
 import os
