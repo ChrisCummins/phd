@@ -5,10 +5,8 @@ DeepSmith\footnote{DeepSmith available at: \emph{[URL redacted for double-blind 
 \begin{figure}
   \centering
   \includegraphics[width=.75\columnwidth]{img/deepsmith} %
-  % \vspace{-2em}%
   \caption{%
     DeepSmith system overview.
-    \vspace{-1.1em}
   }%
   \label{fig:deeptune}
 \end{figure}
@@ -73,7 +71,6 @@ Unlike the generative model, this test harness is language-specific and the desi
   \includegraphics[width=.8\columnwidth]{img/testprocess-long}%
   \caption{%
  	  Test case execution, and possible results.%
-     \vspace{-1.1em}
   }%
   \label{fig:test-process} %
 \end{figure}
@@ -101,18 +98,16 @@ We employ established Differential Testing methodologies to expose compiler defe
 %	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
 %\end{enumerate}
 
-\begin{table*}[t!]
-	\footnotesize %
+\begin{table}
+	\scriptsize %
 	\centering %
 	% \rowcolors{2}{white}{gray!25}
 	\input{build/tab/platforms}
 	\caption{%
 		OpenCL systems and the number of bug reports submitted to date. For each system, two testbeds are created, one with compiler optimizations, the other without.%
-		\vspace{-.5em}
 	}
-  \vspace{-1.8em}
 	\label{tab:platforms}
-\end{table*}
+\end{table}
 
 When evaluating the outcomes of test cases, build crash (\bc) and build timeout (\bto) outcomes are of immediate interest, indicative of erroneous compiler behavior (examples may be found in Section~\ref{subsec:compile-time-defects}). For all other outcomes, \emph{differential tests} are required to confirm anomalous behavior. We look for test cases where there is a majority outcome -- i.e. for which some fraction of the testbeds behave the same -- but some testbed deviates. We use the presence of the majority increasing the likelihood that there is a `correct' behavior for the test case. In this work, we choose the majority fraction to be $\ceil{\frac{2}{3}n}$, where $n$ is the number of testbeds.
 
