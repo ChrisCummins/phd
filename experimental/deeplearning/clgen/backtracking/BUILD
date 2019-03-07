@@ -69,5 +69,6 @@ py_library(
     deps = [
         ":backtracking_db",
         "//third_party/py/absl",
+        "//third_party/py/humanize",
     ],
 )

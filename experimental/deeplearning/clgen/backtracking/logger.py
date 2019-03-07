@@ -1,6 +1,8 @@
 """Results logging for backtracking experiments."""
+import datetime
 import time
 
+import humanize
 from absl import flags
 from absl import logging
 
@@ -38,8 +40,12 @@ class BacktrackingDatabaseLogger(object):
     job_id = self.job_id
     self._step_count += 1
 
+    runtime_ms = int((time.time() - self._start_time) * 1000)
     logging.info('Reached step %d after %d attempts, %d tokens',
                  self._step_count, attempt_count, token_count)
+    logging.info(
+        'Job %d started %s', job_id,
+        humanize.naturaldelta(datetime.timedelta(seconds=runtime_ms / 1000)))
 
     with self._db.Session(commit=True) as session:
       features = session.GetOrAdd(
@@ -50,7 +56,7 @@ class BacktrackingDatabaseLogger(object):
 
       step = backtracking_db.BacktrackingStep(
           job_id=job_id,
-          runtime_ms=int((time.time() - self._start_time) * 1000),
+          runtime_ms=runtime_ms,
           target_features_id=self._target_features_id,
           features_id=features.id,
           feature_distance=backtracker.feature_distance,
