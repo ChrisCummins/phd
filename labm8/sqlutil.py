@@ -398,7 +398,7 @@ def QueryToDataFrame(session: Session, query: Query) -> pd.DataFrame:
 
 def ModelToDataFrame(session: Session,
                      model,
-                     columns: typing.Optional[typing.List[str]],
+                     columns: typing.Optional[typing.List[str]] = None,
                      query_identity=lambda q: q):
   """Construct and execute a query reads an object's fields to a dataframe.
 
