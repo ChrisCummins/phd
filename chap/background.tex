@@ -1,8 +1,18 @@
-\chapter{Background}
+\chapter{Deep Learning and Methodologies}
+
+\section{Introduction}
+
+\section{Terminology}
 
 Notation: $\odot$ point-wise multiplication of tensors.
 
 \section{Machine Learning}
+
+\subsection{Principal Component Analysis}
+
+\subsection{Decision Trees}
+
+\section{Deep Learning}
 
 \subsection{Recurrent Neural Networks}
 
@@ -33,7 +43,7 @@ block output:
 Number of params = \todo{\ldots}
 
 
-\subsection{Generative Adversarial Networks}
+% TODO: \subsection{Generative Adversarial Networks}
 
 The Generative Adversarial Network (GAN) is a means to estimate a generative model~\cite{Goodfellow2014}. It uses an adversarial process in which two models are simultaneously trained: a generator model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximize the probability of $D$ making a mistake.
 
@@ -44,3 +54,7 @@ Simultaneously train $D$ to maximize the probability of assigning the correct la
 \[ \min_G \max_D V(D, G) = \mathbb{E}_{\bm{x} \sim  p_{data}(\bm{x})} [ \log D(\bm{x}) ] + \mathbb{E}_{\bm{z} \sim p_z(\bm{z})} [ \log (1 - D(G(\bm{z}))) ] \]
 
 Challenge: there may not be sufficient gradient for $G$ to learn well. Early in learning, when $G$ is poor, $D$ can reject samples with high confidence because they are clearly different from the training data.
+
+\section{Evaluation Techniques}
+
+\section{Summary}

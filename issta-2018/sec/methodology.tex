@@ -4,15 +4,31 @@ In this section we describe the experimental parameters used.
 
 \subsection{OpenCL Systems}
 
-We conducted testing of 10 OpenCL systems, summarized in Table~\ref{tab:platforms}.  We covered a broad range of hardware: 3 GPUs, 4 CPUs, a co-processor, and an emulator. 7 of the compilers tested are commercial products, 3 of them are open source. Our suite of systems includes both combinations of different drivers for the same device, and different devices using the same driver.
+We conducted testing of 10 OpenCL systems, summarized in
+Table~\ref{tab:platforms}. We covered a broad range of hardware: 3 GPUs, 4
+CPUs, a co-processor, and an emulator. 7 of the compilers tested are commercial
+products, 3 of them are open source. Our suite of systems includes both
+combinations of different drivers for the same device, and different devices
+using the same driver.
 
 \subsection{Testbeds}
-For each OpenCL system, we create two testbeds. In the first, the compiler is run with optimizations disabled. In the second, optimizations are enabled. Each testbed is then a triple, consisting of \emph{<device, driver, is\_optimized>} settings. This mechanism gives 20 testbeds to evaluate.
 
-% \cc{TODO: 6 testbeds have not been tested by CLSmith}
+For each OpenCL system, we create two testbeds. In the first, the compiler is
+run with optimizations disabled. In the second, optimizations are enabled. Each
+testbed is then a triple, consisting of \emph{<device, driver, is\_optimized>}
+settings. This mechanism gives 20 testbeds to evaluate.
+
 
 \subsection{Test Cases}
-For each generated program we create inputs as described in Section~\ref{sec:test-harness}. In addition, we need to choose the number of threads to use. We generate two test cases, one using one thread, the other using 2048 threads. A test case is then a triple, consisting of \emph{<program, inputs, threads>} settings.
+
+For each generated program we create inputs as described in
+Section~\ref{sec:test-harness}. In addition, we need to choose the number of
+threads to use. We generate two test cases, one using one thread, the other
+using 2048 threads. A test case is then a triple, consisting of \emph{<program,
+inputs, threads>} settings.
 
 \subsection{Bug Search Time Allowance}
-We compare both our fuzzer and CLSmith. We allow both to run for 48 hours on each of the 20 testbeds.  CLSmith used its default configuration. The total runtime for a test case consists of the generation and execution time.
+
+We compare both our fuzzer and CLSmith. We allow both to run for 48 hours on
+each of the 20 testbeds. CLSmith used its default configuration. The total
+runtime for a test case consists of the generation and execution time.

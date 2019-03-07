@@ -1,6 +1,6 @@
-\chapter{Literature Review}
+\chapter{Related Work}
 
-\section{Automating Parallelism}
+% \subsection{Automating Parallelism}
 
 It is widely accepted that parallel programming is difficult, and the
 continued repetition of this claim has become something of a trite
@@ -79,8 +79,7 @@ responsibility of providing performant, well tuned implementations for
 these patterns on the skeleton author.
 
 
-\section{Iterative Compilation \& Machine
-	Learning}\label{sec:iterative-compilation}
+\section{Iterative Compilation \& Machine Learning}\label{sec:iterative-compilation}
 
 Iterative compilation is the method of performance tuning in which a
 program is compiled and profiled using multiple different
@@ -222,35 +221,7 @@ instructions. If the conjecture cannot be disproved, the size of $n$
 is increased and the process repeats.
 
 
-\subsection{Training with Synthetic Benchmarks}
-
-The use of synthetic benchmarks for providing empirical performance
-evaluations dates back to as early as 1974~\cite{Curnow1976}. The
-\emph{automatic generation} of such synthetic benchmarks is a more
-recent innovation, serving the purpose initially of stress-testing
-increasingly complex software systems for behaviour validation and
-automatic bug detection~\cite{Verplaetse2000,Godefroid2008}. A range
-of techniques have been developed for these purposes, ranging from
-applying random mutations to a known dataset to generate test stimuli,
-to so-called ``whitebox fuzz testing'' which analyses program traces
-to explore the space of a program's control flow. Csmith is one such
-tool which generates randomised C source programs for the purpose of
-automatically detecting compiler bugs~\cite{Yang2012}.
-
-A method for the automatic generation of synthetic benchmarks for the
-purpose of \emph{performance} tuning is presented
-in~\cite{Chiu2015}. \citeauthor{Chiu2015} use template substitution
-over a user-defined range of values to generate training programs with
-a statistically controlled range of features. A Perl preprocessor
-generates output source codes from an input description using a custom
-input language Genesis. Genesis is more flexible than the system
-presented in this thesis, supporting substitution of arbitrary
-sources. The authors describe an application of their tool for
-generating OpenCL stencil kernels, but do not report any performance
-results.
-
-
-\section{Performance Tuning for Heterogeneous Parallelism}
+% \section{Performance Tuning for Heterogeneous Parallelism}
 
 As briefly discussed in Section~\ref{sec:gpgpu}, the complex
 interactions between optimisations and heterogeneous hardware makes
@@ -304,7 +275,7 @@ level. The authors report performance on a par with that of hand
 written OpenCL kernels.
 
 
-\section{Autotuning Algorithmic Skeletons}
+% \section{Autotuning Algorithmic Skeletons}
 
 An enumeration of the optimisation space of Intel Thread Building
 Blocks in~\cite{Contreras2008} shows that runtime knowledge of the
@@ -331,7 +302,7 @@ reporting up to a $33.4\times$ speedup over the previous
 implementation.
 
 
-\section{Code Generation and Autotuning for Stencils}
+% \section{Code Generation and Autotuning for Stencils}
 
 Stencil codes have a variety of computationally expensive uses from
 fluid dynamics to quantum mechanics. Efficient, tuned stencil kernels
@@ -452,7 +423,24 @@ custom DSL rather than the generic interface provided by SkelCL, and
 PARTANS does not learn the results of tuning across programs, or
 across multiple runs of the same program.
 
-\subsection{Deep learning}
+% \section{Compilers}
+
+Using active learning to minimize the cost of iterative compilation~\cite{Ogilvie2017}.
+Continuous learning of compiler heuristics~\cite{Tartara2013,Fursin2011}.
+
+\subsection{Feature Generation for Compilers}
+
+Machine learning has emerged as a viable means in automatically constructing heuristics for code optimization~\cite{Stephenson2005,Agakov,Wang2010,Kulkarni2012,Ding2015,Muralidharan2016}. Its great advantage is that it can adapt to changing hardware platforms as it has no a priori assumptions about their behavior. The success of machine learning based code optimization has required having a set of high-quality features that can capture the important characteristics of the target program. Given that there is an infinite number of these potential features, finding the right set of features is a non-trivial, time-consuming task.
+
+Various forms of program features have been used in compiler-based machine learning. These include static code structures~\cite{Jiang2010} and runtime information such as system load~\cite{Wen2015} and performance counters~\cite{Dubach2009}. In compiler research, the feature sets used for predictive models are often provided without explanation and rarely is the quality of those features evaluated. More commonly, an initial large, high dimensional candidate feature space is pruned via feature selection~\cite{Stephenson2005}, or projected into a lower dimensional space~\cite{Collins2013,Dubach2007}. FEAST employs a range of existing feature selection methods to select useful candidate features~\cite{Ting2016}. Unlike these approaches, DeepTune extracts features and reduces the dimensionality of the feature space completely internally and without expert guidance.
+
+Park \emph{et al.} present a unique graph-based approach for feature representations~\cite{Park2012}. They use a Support Vector Machine where the kernel is based on graph similarity metric. Their technique still requires hand coded features at the basic block level, but thereafter, graph similarity against each of the training programs takes the place of global features. Being a kernel method, it requires that training data graphs be shipped with the compiler, which may not scale as the size of the training data grows with the number of instances, and some training programs may be very large. Finally, their graph matching metric is expensive, requiring $O(n^3)$ to compare against each training example. By contrast, our method does not need any hand built static code features, and the deployment memory footprint is constant and prediction time is linear in the length of the program, regardless of the size of the training set.
+
+A few methods have been proposed to automatically generate features from the compiler's intermediate representation~\cite{Namolaru2010a,Leather2014}. These approaches closely tie the implementation of the predictive model to the compiler IR, which means changes to the IR will require modifications to the model. The work of \cite{Leather2014} uses genetic programming to search for features, and required a huge grammar to be written, some 160kB in length. Although much of this can be created from templates, selecting the right range of capabilities and search space bias is non trivial and up to the expert. The work of \cite{Namolaru2010a} expresses the space of features via logic programming over relations that represent information from the IRs. It greedily searches for expressions that represent good features. However, their approach relies on expert selected relations, combinators and constraints to work. For both approaches, the search time may be significant.
+
+Cavazos \emph{et al.\ }present a reaction-based predictive model for software-hardware co-design~\cite{Cavazos2006}. Their approach profiles the target program using several carefully selected compiler options to see how program runtime changes under these options for a given micro-architecture setting. They then use the program ``reactions'' to predict the best available application speedup. While their approach does not use static code features, developers must carefully select a few settings from a large number of candidate options for profiling, because poorly chosen options can significantly affect the quality of the model. Moreover, the program must be run several times before optimization, while our technique does not require the program to be profiled.
+
+\section{Deep Learning for Programming Langauges}
 
 Deep learning is a nascent branch of machine learning in which deep or multi-level graphs of processing layers are used to detect patterns in natural data~\cite{Buduma2015,LeCun2015}. It is proving especially successful for its ability to ability to process natural data in its raw form. This overcomes the traditionally laborious and time-consuming practise of engineering feature extractors to process raw data into an internal representation or feature vector. Deep learning has successfully discovered structures in high-dimensional data, and is responsible for many breakthrough achievements in machine learning, including human parity in conversational speech recognition~\cite{Xiong2016}; professional level performance in video games~\cite{Mnih2015}; and autonomous vehicle control~\cite{Lozano-Perez2012}.
 
@@ -465,12 +453,13 @@ The application of language modeling for generating executable programs is novel
 Neural networks are computationally expensive, though their implementations can be generic and parallelised. Library implementations are available in Torch~\cite{Collobert2011}, Caffe~\cite{Jia2014}, and TensorFlow~\cite{Abadi}. The increasing size and depth of computation graphs in deep learning has challenged the ability to compute results in reasonable time. Possible methods for reducing computational overhead involve fusing operations across layers in the graph using domain specific languages~\cite{Truong2016,Ashari2015a,Potter2015}; decoupling interfaces between layers using small networks to synthesise learning gradients during training~\cite{Jaderberg2016a}; and specialising hardware for computing data parallel workloads using FPGAs and ASICs~\cite{Misra2010}.
 
 
-\subsubsection{Software engineering} Machine learning has been applied to source code to aid software engineering.  Naturalize employs techniques developed in the natural language processing domain to model coding conventions~\cite{Allamanis2014a}. JSNice leverages probabilistic graphical models to predict program properties such as identifier names for Javascript~\cite{Raychev}. \citeauthor{Zhang2015a} use deep learning to generate example code for APIs as responses to natural language queries~\cite{Zhang2015a}. \citeauthor{Allamanis2016} use attentional neural networks to generate summaries of source code~\cite{Allamanis2016}. \citeauthor{Wong2013} mines Q\&A site StackOverflow to automatically generate code comments~\cite{Wong2013}. \citeauthor{Raychev2014} use statistical models to provide contextual code completion~\cite{Raychev2014}.
+% \subsubsection{Software engineering}
+Machine learning has been applied to source code to aid software engineering.  Naturalize employs techniques developed in the natural language processing domain to model coding conventions~\cite{Allamanis2014a}. JSNice leverages probabilistic graphical models to predict program properties such as identifier names for Javascript~\cite{Raychev}. \citeauthor{Zhang2015a} use deep learning to generate example code for APIs as responses to natural language queries~\cite{Zhang2015a}. \citeauthor{Allamanis2016} use attentional neural networks to generate summaries of source code~\cite{Allamanis2016}. \citeauthor{Wong2013} mines Q\&A site StackOverflow to automatically generate code comments~\cite{Wong2013}. \citeauthor{Raychev2014} use statistical models to provide contextual code completion~\cite{Raychev2014}.
 
 There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}; however, no work so far has exploited mined source code for program generation.
 
 
-\subsection{Iterative compilation}
+% \subsection{Iterative compilation}
 
 Iterative compilation is the method of performance tuning in which a program is compiled and profiled using multiple different configurations of optimisations in order to find the configuration which maximises performance. One of the the first formalised publications of the technique appeared in \citeyear{Bodin1998} by \citeauthor{Bodin1998}~\cite{Bodin1998}.  Iterative compilation has since been demonstrated to be a highly effective form of empirical performance tuning for selecting compiler optimisations.
 
@@ -478,7 +467,8 @@ An enumeration of the optimisation space of Intel Thread Building Blocks in~\cit
 
 Frameworks for iterative compilation offer mechanisms for abstracting the iterative compilation process from the optimisation space. \emph{OpenTuner} presents a generic framework for optimisation space exploration~\cite{Ansel2013}. \emph{CLTune} is a generic autotuner for OpenCL kernels~\cite{Nugteren2015}. Both frameworks implement \emph{search}, however, the huge number of possible compiler optimisations makes such a search expensive to perform for every new configuration of program, architecture and dataset.
 
-\subsubsection{Machine learning} Machine learning has been used to guide iterative compilation and predict optimisations for code. \citeauthor{Stephenson2003} use ``meta optimisation'' to tune compiler heuristics through an evolutionary algorithm to automate the search of the optimisation space~\cite{Stephenson2003}. \citeauthor{Fursin2011} continued this with Milepost GCC, the first machine learning-enabled self-tuning compiler~\cite{Fursin2011}. A survey of machine learning heuristics quality concludes that the automatic \emph{generation} of self-tuning heuristics is an ongoing research challenge that offers the greatest generalisation benefits~\cite{Burke2013}.
+% \subsubsection{Machine learning}
+Machine learning has been used to guide iterative compilation and predict optimisations for code. \citeauthor{Stephenson2003} use ``meta optimisation'' to tune compiler heuristics through an evolutionary algorithm to automate the search of the optimisation space~\cite{Stephenson2003}. \citeauthor{Fursin2011} continued this with Milepost GCC, the first machine learning-enabled self-tuning compiler~\cite{Fursin2011}. A survey of machine learning heuristics quality concludes that the automatic \emph{generation} of self-tuning heuristics is an ongoing research challenge that offers the greatest generalisation benefits~\cite{Burke2013}.
 
 \citeauthor{Dastgeer2011} developed a machine learning based autotuner for the SkePU skeleton library in~\cite{Dastgeer2011}. Training data is used to predict the optimal execution device (i.e.\ CPU, GPU) for a given program by predicting execution time and memory copy overhead based on problem size. The autotuner only supports vector operations, and there is limited cross-architecture evaluation. In~\cite{Dastgeer2015a}, the authors extend SkePU to improve the data consistency and transfer overhead of container types, reporting up to a $33.4\times$ speedup over the previous implementation.
 
@@ -489,13 +479,16 @@ PetaBricks is a language and compiler for algorithmic choice~\cite{Ansel2009a}. 
 In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014} advocate a ``big data'' driven approach to autotuning, arguing that the challenges facing widespread adoption of autotuning and machine learning methodologies can be attributed to: a lack of common, diverse benchmarks and datasets; a lack of common experimental methodology; problems with continuously changing hardware and software stacks; and the difficulty to validate techniques due to a lack of sharing in publications. They propose a system for addressing these concerns, the Collective Mind knowledge system, which provides a modular infrastructure for sharing autotuning performance data and related artifacts across the internet.
 
 
-\subsubsection{Dynamic optimisers} Iterative compilation typically involves searching the optimisation space offline --- dynamic optimisers perform this optimisation space exploration at runtime, allowing optimisations tailored to dynamic feature values. This is a challenging task, as a random search of an optimisation space may result in many configurations with suboptimal performance. In a real world system, evaluating many suboptimal configurations will cause significant slowdowns to a program. A resulting requirement of dynamic optimisers is that convergence time towards optimal parameters is minimised.
+% \subsubsection{Dynamic optimisers}
+Iterative compilation typically involves searching the optimisation space offline --- dynamic optimisers perform this optimisation space exploration at runtime, allowing optimisations tailored to dynamic feature values. This is a challenging task, as a random search of an optimisation space may result in many configurations with suboptimal performance. In a real world system, evaluating many suboptimal configurations will cause significant slowdowns to a program. A resulting requirement of dynamic optimisers is that convergence time towards optimal parameters is minimised.
 
 Existing dynamic optimisation research has typically taken a low level approach to performing optimisations. Dynamo is a dynamic optimiser which performs binary level transformations of programs using information gathered from runtime profiling and tracing~\cite{Bala2000}. While this provides the ability to respond to dynamic features, it restricts the range of optimisations that can be applied to binary transformations. These low level transformations cannot match the performance gains that higher level parameter tuning produces.
 
-\subsubsection{Superoptimisers} In~\cite{Massalin1987}, the smallest possible program which performs a specific function is found through an iterative enumeration of the entire instruction set. Starting with a program of a single instruction, the superoptimiser tests to see if any possible instruction passes a set of conformity tests. If not, the program length is increased by a single instruction and the process repeats. The exponential growth in the size of the search space is far too expensive for all but the smallest of hot paths, typically less than 13 instructions. The optimiser is limited to register to register memory transfers, with no support for pointers, a limitation which is addressed in~\cite{Joshi2002}. Denali is a superoptimiser which uses constraint satisfaction and rewrite rules to generate programs which are \emph{provably} optimal, instead of searching for the optimal configuration through empirical testing. Denali first translates a low level machine code into guarded multi-assignment form, then uses a matching algorithm to build a graph of all of a set of logical axioms which match parts of the graph, before using boolean satisfiability to disprove the conjecture that a program cannot be written in $n$ instructions. If the conjecture cannot be disproved, the size of $n$ is increased and the process repeats.
+% \subsubsection{Superoptimisers}
+In~\cite{Massalin1987}, the smallest possible program which performs a specific function is found through an iterative enumeration of the entire instruction set. Starting with a program of a single instruction, the superoptimiser tests to see if any possible instruction passes a set of conformity tests. If not, the program length is increased by a single instruction and the process repeats. The exponential growth in the size of the search space is far too expensive for all but the smallest of hot paths, typically less than 13 instructions. The optimiser is limited to register to register memory transfers, with no support for pointers, a limitation which is addressed in~\cite{Joshi2002}. Denali is a superoptimiser which uses constraint satisfaction and rewrite rules to generate programs which are \emph{provably} optimal, instead of searching for the optimal configuration through empirical testing. Denali first translates a low level machine code into guarded multi-assignment form, then uses a matching algorithm to build a graph of all of a set of logical axioms which match parts of the graph, before using boolean satisfiability to disprove the conjecture that a program cannot be written in $n$ instructions. If the conjecture cannot be disproved, the size of $n$ is increased and the process repeats.
 
-\subsubsection{GPUs} Performant GPGPU programs require careful attention from the developer to properly manage data layout in DRAM, caching, diverging control flow, and thread communication. The performance of programs depends heavily on fully utilising zero-overhead thread scheduling, memory bandwidth, and thread grouping. \citeauthor{Ryoo2008a} illustrate the importance of these factors by demonstrating speedups of up to $432\times$ for matrix multiplication in CUDA by appropriate use of tiling and loop unrolling~\cite{Ryoo2008a}. The importance of proper exploitation of local shared memory and synchronisation costs is explored in~\cite{Lee2010}.
+% \subsubsection{GPUs}
+Performant GPGPU programs require careful attention from the developer to properly manage data layout in DRAM, caching, diverging control flow, and thread communication. The performance of programs depends heavily on fully utilising zero-overhead thread scheduling, memory bandwidth, and thread grouping. \citeauthor{Ryoo2008a} illustrate the importance of these factors by demonstrating speedups of up to $432\times$ for matrix multiplication in CUDA by appropriate use of tiling and loop unrolling~\cite{Ryoo2008a}. The importance of proper exploitation of local shared memory and synchronisation costs is explored in~\cite{Lee2010}.
 
 In~\cite{Chen2014}, data locality optimisations are automated using a description of the hardware and a memory-placement-agnostic compiler. The authors demonstrate speedups of up to $2.08\times$, although at the cost of requiring accurate memory hierarchy descriptor files for all targeted hardware. The descriptor files must be hand generated, requiring expert knowledge of the underlying hardware in order to properly exploit memory locality.
 
@@ -507,7 +500,8 @@ Reduction of the GPGPU optimisation space is demonstrated in~\cite{Ryoo2008}, us
 
 A framework for the automatic generation of OpenCL kernels from high-level programming concepts is described in~\cite{Steuwer2015}. A set of rewrite rules is used to transform high-level expressions to OpenCL code, creating a space of possible implementations. This approach is ideologically similar to that of PetaBricks, in that optimisations are made through algorithmic choice, although in this case the transformations are performed automatically at the compiler level. The authors report performance on a par with that of hand written OpenCL kernels.
 
-\subsubsection{Stencils} Stencil codes have a variety of computationally expensive uses from fluid dynamics to quantum mechanics. Efficient, tuned stencil kernels are highly sought after, with early work in \citeyear{Bolz2003} by \citeauthor{Bolz2003} demonstrating the capability of GPUs for massively parallel stencil operations~\cite{Bolz2003}. In the resulting years, stencil codes have received much attention from the performance tuning research community.
+% \subsubsection{Stencils}
+Stencil codes have a variety of computationally expensive uses from fluid dynamics to quantum mechanics. Efficient, tuned stencil kernels are highly sought after, with early work in \citeyear{Bolz2003} by \citeauthor{Bolz2003} demonstrating the capability of GPUs for massively parallel stencil operations~\cite{Bolz2003}. In the resulting years, stencil codes have received much attention from the performance tuning research community.
 
 \citeauthor{Ganapathi2009} demonstrated early attempts at autotuning multicore stencil codes in~\cite{Ganapathi2009}, drawing upon the successes of statistical machine learning techniques in the compiler community. They present an autotuner which can achieve performance up to 18\% better than that of a human expert. From a space of 10 million configurations, they evaluate the performance of a randomly selected 1500 combinations, using Kernel Canonical Correlation Analysis to build correlations between tunable parameter values and measured performance targets. Performance targets are L1 cache misses, TLB misses, cycles per thread, and power consumption. The use of KCAA restricts the scalability of their system as the complexity of model building grows exponentially with the number of features. In their evaluation, the system requires two hours of compute time to build the KCAA model for only 400 seconds of benchmark data. They present a compelling argument for the use of energy efficiency as an optimisation target in addition to runtime, citing that it was the power wall that lead to the multicore revolution in the first place. Their choice of only 2 benchmarks and 2 platforms makes the evaluation of their autotuner somewhat limited.
 
@@ -524,13 +518,84 @@ A stencil grid can be decomposed into smaller subsections so that multiple GPUs 
 In applications of machine learning for iterative compilation, a limiting factor of the effectiveness of learned models is the number of benchamrks used. The development of automatic program generation alleviates this problem by allowing an unbounded number of programs to enumerate the feature space at an increasingly granular scale.
 
 
-\subsection{Program generation}
+% \subsection{Learning Representations}
+
+Recently, deep neural networks~\cite{LeCun2015} have been shown to be a powerful tool for feature engineering in various tasks including image recognition~\cite{Krizhevsky2012,He2016} and audio processing~\cite{Lee2009b}. In the field of compiler optimization, no work so far has applied deep neural networks for program feature generation and selection. Our work is the first to do so.
+
+% \subsection{Generative Modeling}
+
+Generative models for video~\cite{Srivastava2015}.
+
+%% Jozefowicz, R., Vinyals, O., Schuster, M., Shazeer, N., & Wu, Y. (2016). Exploring the Limits of Language Modeling. arXiv:1602.02410. Retrieved from http://arxiv.org/abs/1602.02410%5Cnhttp://www.arxiv.org/pdf/1602.02410.pdf
+Limits of language modeling~\cite{Jozefowicz2016a}.
+
+%% Sutskever, I., Vinyals, O., & Le, Q. V. (2014). Sequence to Sequence Learning with Neural Networks. In NIPS.
+Sequence to sequence learning, NIPS paper~\cite{Sutskever2014}.
+
+%% Wang, H., Raj, B., & Xing, E. P. (2017). On the Origin of Deep Learning, 1–81. Retrieved from http://arxiv.org/abs/1702.07800
+Deep Learning is an emerging branch of machine learning, offering breakthrough domains in a number of domains~\cite{Wang2017}.
+
+Automatic inference from raw inputs in other fields. Review of representation learning~\cite{Bengio2013}. Object detection, image classification, text classification~\cite{Conneau2016}, and even to the optimizations themselves~\cite{Andrychowicz2016a}. We are the first to apply this approach to compilers.
+
+End to end training of robotic control policies~\cite{Levine2016}.
+
+
+
+% \subsection{Transfer Learning}
+
+%% Razavian, A. S., Azizpour, H., Sullivan, J., & Carlsson, S. (2014). CNN Features off-the-shelf: an Astounding Baseline for Recognition. In CVPRW. https://doi.org/10.1109/CVPRW.2014.131
+Exploring relevance of inferred features in model hidden layers~\cite{Yosinski2014}. Transfer learning is common in other domains, e.g. vision~\cite{Razavian2014,Oquab2014}. Often using the hidden layers as fixed feature extractors (by using the output of one sub-model as input to a new model), rather than using the same model structure and transferring weights (as we did).
+
+
+\subsection{Mining Source Code}
+
+There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, code summarization~\cite{Allamanis2016}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for benchmark generation. This work is the first to do so.
+
+In recent years, machine learning techniques have been employed to model and learn from program source code on various tasks. These include mining coding conventions~\cite{Allamanis2014a} and idioms~\cite{Allamanis2014}, API example code~\cite{Zhang2015a} and pseudo-code generation~\cite{Oda2015}, and benchmark generation~\cite{Cummins2017a}. Our work is the first attempt to extend the already challenging task of modeling distributions over source code to learning distributions over source code with respect to code optimizations.
+
+In a recent work~\cite{Bunel2017a}, Bunel \emph{et al.} formulate code super-optimization as a stochastic search problem to learn the distribution of different code transformations and expected performance improvement. As acknowledged by the authors, their approach can be improved by having temporal information of the code structures.
+
+
+\section{Program Generation}
 
 \emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. The essence of the approach is to construct a probabilistic grammar with embedded semantic actions that defines a language of possible programs. New programs may be created by sampling the grammar and, through setting probabilities on the grammar productions, the sampling is biased towards producing programs from one part of the space or another. This technique is potentially completely general, since a grammar can theoretically be constructed to match any desired program domain. However, despite being theoretically possible, it is not easy to construct grammars which are both suitably general and also produce programs that are in any way similar to human written programs. It has been shown to be successful over a highly restricted space of stencil benchmarks with little control flow or program variability~\cite{Garvey2015b,Falch2015} (Appendix~\ref{app:adapt}). But, it is not clear how much effort it will take, or even if it is possible for human experts to define grammars capable of producing human like programs in more complex domains. By contrast, learning from a corpus provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from real world code.
 
 Random program generation is an effective method for software testing. Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2012} and OpenCL~\cite{Lidbury2015a}. Programs generated by grammar-based approaches are often  unlike real handwritten code, and are typically very large. As such, once a bug has been identified, test case reduction~\cite{Regehr2012a} is required to minimise the size of the program and isolate the code of interest. A mutation-based approach for differential testing the Java Virtual Machine is demonstrated in~\cite{Chena}.
 
 Goal-directed program generators have been used for a variety of domains, including generating linear transforms~\cite{Voronenko2009}, MapReduce programs~\cite{Smith}, and data structure implementations~\cite{Loncaric2016}.
+
+\subsection{Training with Synthetic Benchmarks}
+
+The use of synthetic benchmarks for providing empirical performance
+evaluations dates back to as early as 1974~\cite{Curnow1976}. The
+\emph{automatic generation} of such synthetic benchmarks is a more
+recent innovation, serving the purpose initially of stress-testing
+increasingly complex software systems for behaviour validation and
+automatic bug detection~\cite{Verplaetse2000,Godefroid2008}. A range
+of techniques have been developed for these purposes, ranging from
+applying random mutations to a known dataset to generate test stimuli,
+to so-called ``whitebox fuzz testing'' which analyses program traces
+to explore the space of a program's control flow. Csmith is one such
+tool which generates randomised C source programs for the purpose of
+automatically detecting compiler bugs~\cite{Yang2012}.
+
+A method for the automatic generation of synthetic benchmarks for the
+purpose of \emph{performance} tuning is presented
+in~\cite{Chiu2015}. \citeauthor{Chiu2015} use template substitution
+over a user-defined range of values to generate training programs with
+a statistically controlled range of features. A Perl preprocessor
+generates output source codes from an input description using a custom
+input language Genesis. Genesis is more flexible than the system
+presented in this thesis, supporting substitution of arbitrary
+sources. The authors describe an application of their tool for
+generating OpenCL stencil kernels, but do not report any performance
+results.
+
+\emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. Users annotate template programs with statistical distributions over features, which are instantiated to generate statistically controlled permutations of templates. Template based approaches provide domain-specific solutions for a constrained feature and program space, for example, generating permutations of Stencil codes~\cite{Garvey2015b,Cummins2015a}. Our approach provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from real world code.
+
+Random program generation is an effective method for software testing. Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2012} and OpenCL~\cite{Lidbury2015a}. A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}. Goal-directed program generators have been used for a variety of domains, including generating linear transforms~\cite{Voronenko2009}, MapReduce programs~\cite{Smith}, and data structure implementations~\cite{Loncaric2016}. Program synthesis from input/output examples is used for simple algorithms in~\cite{Zaremba2015a}, string manipulation in~\cite{Gulwani2011}, and geometry constructions in~\cite{Gulwani2012}.
+
+Machine learning has been applied to source code to aid software engineering. Naturalize employs techniques developed in the natural language processing domain to model coding conventions~\cite{Allamanis2014a}. JSNice leverages probabilistic graphical models to predict program properties such as identifier names for Javascript~\cite{Raychev}.
 
 
 %\subsection{Parallelism}
@@ -621,66 +686,12 @@ Goal-directed program generators have been used for a variety of domains, includ
 %\subsection{Self-Tuning Software}
 %
 
-\section{Compilers}
-
-Using active learning to minimize the cost of iterative compilation~\cite{Ogilvie2017}.
-Continuous learning of compiler heuristics~\cite{Tartara2013,Fursin2011}.
-
-\subsection{Feature Generation for Compilers}
-
-Machine learning has emerged as a viable means in automatically constructing heuristics for code optimization~\cite{Stephenson2005,Agakov,Wang2010,Kulkarni2012,Ding2015,Muralidharan2016}. Its great advantage is that it can adapt to changing hardware platforms as it has no a priori assumptions about their behavior. The success of machine learning based code optimization has required having a set of high-quality features that can capture the important characteristics of the target program. Given that there is an infinite number of these potential features, finding the right set of features is a non-trivial, time-consuming task.
-
-Various forms of program features have been used in compiler-based machine learning. These include static code structures~\cite{Jiang2010} and runtime information such as system load~\cite{Wen2015} and performance counters~\cite{Dubach2009}. In compiler research, the feature sets used for predictive models are often provided without explanation and rarely is the quality of those features evaluated. More commonly, an initial large, high dimensional candidate feature space is pruned via feature selection~\cite{Stephenson2005}, or projected into a lower dimensional space~\cite{Collins2013,Dubach2007}. FEAST employs a range of existing feature selection methods to select useful candidate features~\cite{Ting2016}. Unlike these approaches, DeepTune extracts features and reduces the dimensionality of the feature space completely internally and without expert guidance.
-
-Park \emph{et al.} present a unique graph-based approach for feature representations~\cite{Park2012}. They use a Support Vector Machine where the kernel is based on graph similarity metric. Their technique still requires hand coded features at the basic block level, but thereafter, graph similarity against each of the training programs takes the place of global features. Being a kernel method, it requires that training data graphs be shipped with the compiler, which may not scale as the size of the training data grows with the number of instances, and some training programs may be very large. Finally, their graph matching metric is expensive, requiring $O(n^3)$ to compare against each training example. By contrast, our method does not need any hand built static code features, and the deployment memory footprint is constant and prediction time is linear in the length of the program, regardless of the size of the training set.
-
-A few methods have been proposed to automatically generate features from the compiler's intermediate representation~\cite{Namolaru2010a,Leather2014}. These approaches closely tie the implementation of the predictive model to the compiler IR, which means changes to the IR will require modifications to the model. The work of \cite{Leather2014} uses genetic programming to search for features, and required a huge grammar to be written, some 160kB in length. Although much of this can be created from templates, selecting the right range of capabilities and search space bias is non trivial and up to the expert. The work of \cite{Namolaru2010a} expresses the space of features via logic programming over relations that represent information from the IRs. It greedily searches for expressions that represent good features. However, their approach relies on expert selected relations, combinators and constraints to work. For both approaches, the search time may be significant.
-
-Cavazos \emph{et al.\ }present a reaction-based predictive model for software-hardware co-design~\cite{Cavazos2006}. Their approach profiles the target program using several carefully selected compiler options to see how program runtime changes under these options for a given micro-architecture setting. They then use the program ``reactions'' to predict the best available application speedup. While their approach does not use static code features, developers must carefully select a few settings from a large number of candidate options for profiling, because poorly chosen options can significantly affect the quality of the model. Moreover, the program must be run several times before optimization, while our technique does not require the program to be profiled.
-
-\section{Machine Learning}
-
-\subsection{Learning Representations}
-
-Recently, deep neural networks~\cite{LeCun2015} have been shown to be a powerful tool for feature engineering in various tasks including image recognition~\cite{Krizhevsky2012,He2016} and audio processing~\cite{Lee2009b}. In the field of compiler optimization, no work so far has applied deep neural networks for program feature generation and selection. Our work is the first to do so.
-
-\subsection{Machine Learning over Programs}
-
-There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, code summarization~\cite{Allamanis2016}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for benchmark generation. This work is the first to do so.
-
-In recent years, machine learning techniques have been employed to model and learn from program source code on various tasks. These include mining coding conventions~\cite{Allamanis2014a} and idioms~\cite{Allamanis2014}, API example code~\cite{Zhang2015a} and pseudo-code generation~\cite{Oda2015}, and benchmark generation~\cite{Cummins2017a}. Our work is the first attempt to extend the already challenging task of modeling distributions over source code to learning distributions over source code with respect to code optimizations.
-
-In a recent work~\cite{Bunel2017a}, Bunel \emph{et al.} formulate code super-optimization as a stochastic search problem to learn the distribution of different code transformations and expected performance improvement. As acknowledged by the authors, their approach can be improved by having temporal information of the code structures.
-
-\subsection{Generative Modeling}
-
-Generative models for video~\cite{Srivastava2015}.
-
-%% Jozefowicz, R., Vinyals, O., Schuster, M., Shazeer, N., & Wu, Y. (2016). Exploring the Limits of Language Modeling. arXiv:1602.02410. Retrieved from http://arxiv.org/abs/1602.02410%5Cnhttp://www.arxiv.org/pdf/1602.02410.pdf
-Limits of language modeling~\cite{Jozefowicz2016a}.
-
-%% Sutskever, I., Vinyals, O., & Le, Q. V. (2014). Sequence to Sequence Learning with Neural Networks. In NIPS.
-Sequence to sequence learning, NIPS paper~\cite{Sutskever2014}.
 
 
-\subsection{Transfer Learning}
-
-%% Razavian, A. S., Azizpour, H., Sullivan, J., & Carlsson, S. (2014). CNN Features off-the-shelf: an Astounding Baseline for Recognition. In CVPRW. https://doi.org/10.1109/CVPRW.2014.131
-Exploring relevance of inferred features in model hidden layers~\cite{Yosinski2014}. Transfer learning is common in other domains, e.g. vision~\cite{Razavian2014,Oquab2014}. Often using the hidden layers as fixed feature extractors (by using the output of one sub-model as input to a new model), rather than using the same model structure and transferring weights (as we did).
+% TODO(cec): CGO'17 related wrok section:
 
 
-
-\subsection{Deep Learning}
-
-%% Wang, H., Raj, B., & Xing, E. P. (2017). On the Origin of Deep Learning, 1–81. Retrieved from http://arxiv.org/abs/1702.07800
-Deep Learning is an emerging branch of machine learning, offering breakthrough domains in a number of domains~\cite{Wang2017}.
-
-Automatic inference from raw inputs in other fields. Review of representation learning~\cite{Bengio2013}. Object detection, image classification, text classification~\cite{Conneau2016}, and even to the optimizations themselves~\cite{Andrychowicz2016a}. We are the first to apply this approach to compilers.
-
-End to end training of robotic control policies~\cite{Levine2016}.
-
-
-\section{Synthetic Benchmarking}
+Our work lies at the intersections of a number of areas: program generation, benchmark characterization, and language modeling and learning from source code. There is no existing work which is similar to ours, in respect to learning from large corpuses of source code for benchmark generation.
 
 \emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. Users annotate template programs with statistical distributions over features, which are instantiated to generate statistically controlled permutations of templates. Template based approaches provide domain-specific solutions for a constrained feature and program space, for example, generating permutations of Stencil codes~\cite{Garvey2015b,Cummins2015a}. Our approach provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from real world code.
 
@@ -688,5 +699,141 @@ Random program generation is an effective method for software testing. Grammar-b
 
 Machine learning has been applied to source code to aid software engineering. Naturalize employs techniques developed in the natural language processing domain to model coding conventions~\cite{Allamanis2014a}. JSNice leverages probabilistic graphical models to predict program properties such as identifier names for Javascript~\cite{Raychev}.
 
+There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, code summarization~\cite{Allamanis2016}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for benchmark generation. This work is the first to do so.
 
-\todo{Software testing: a research travelogue (2000–2014)~\cite{Orso2014}.}
+
+% TODO(cec):  ISSTA'18 related work section:
+
+The random generation of test cases is a well established approach to the
+compiler validation problem. Prior approaches are surveyed
+in~\cite{Kossatchev2005,Boujarwah1997} and empirically contrasted
+in~\cite{Chen2014a}. The main question of interest is in how to efficiently
+generate codes which trigger bugs. There are two main approaches: \emph{program
+	generation}, where inputs are synthesized from scratch; and \emph{program
+	mutation}, where existing codes are modified so as to identify anomalous
+behavior.
+
+\begin{figure}
+	\centering %
+	\includegraphics[width=.85\columnwidth]{img/clang-crashes}%
+	\vspace{-2em}
+	\caption{%
+		Crash rate of the Clang front-end of every LLVM release in the past 24
+		months compiling 75k DeepSmith kernels.%
+	}%
+	\vspace{-1em}
+	\label{fig:clangs}
+	%
+\end{figure}
+\begin{table}
+	\footnotesize %
+	\centering %
+	\caption{%
+		The number of DeepSmith programs which trigger distinct Clang front-end
+		assertions, and the number of programs which trigger unreachables.%
+	}
+	\vspace{-1.5em}
+	\input{tab/clang-assert-counts}
+	\label{tab:clangs}
+\end{table}
+
+\paragraph{Program Generation}
+
+In the foundational work on differential testing for compilers, McKeeman
+\emph{et al.\ }present generators capable of enumerating programs of a range of
+qualities, from random ASCII sequences to C model conforming
+programs~\cite{McKeeman1998}. Subsequent works have presented increasingly
+complex generators which improve in some metric of interest, generally
+expressiveness or probability of correctness. CSmith~\cite{Yang2011} is a widely
+known and effective generator which enumerates programs by pairing infrequently
+combined language features. In doing so, it produces correct programs with
+clearly defined behavior but very unlikely functionality, increasing the chances
+of triggering a bug. Achieving this required extensive engineering work, most of
+it not portable across languages, and ignoring some language features.
+Subsequent generators influenced by CSmith, like Orange3~\cite{Nagai2013}, focus
+on features and bug types beyond the scope of CSmith, arithmetic bugs in the
+case of Orange3. Glade~\cite{Bastani2017} derives a grammar from a corpus of
+example programs. The derived grammar is enumerated to produce new programs,
+though unlike our approach, no distribution is learned over the grammar; program
+enumeration is uniformly random.
+
+\paragraph{Program Mutation}
+
+Equivalence Modulo Inputs (EMI) testing~\cite{Le2013a,Sun2016a} follows a
+different approach to test case generation. Starting with existing code, it
+inserts or deletes statements that will not be executed, so functionality should
+remain the same. If it is affected, it is due to a compiler bug. While a
+powerful technique able to find hard to detect bugs, it relies on having a very
+large number of programs to mutate. As such, it still requires an external code
+generator. Similarly to CSmith, EMI favors very long test programs.
+LangFuzz~\cite{Holler2012} also uses mutation but does this by inserting code
+segments which have previously exposed bugs. This increases the chances of
+discovering vulnerabilities in scripting language engines. Skeletal program
+enumeration~\cite{Zhang2017a} again works by transforming existing code. It
+identifies algorithmic patterns in short pieces of code and enumerates all the
+possible permutations of variable usage. Compared to all these, our fuzzing
+approach is low cost, easy to develop, portable, capable of detecting a wide
+range of errors, and focusing by design on bugs that are more likely to be
+encountered in a production scenario.
+
+\paragraph{Machine Learning}
+
+There is an increasing interest in applying machine learning to software
+testing. Most similar to our work is Learn\&fuzz~\cite{Godefroid2017}, in which
+an LSTM network is trained over a corpus of PDF files to generate test inputs
+for the Microsoft Edge renderer, yielding one bug. Unlike compiler testing, PDF
+test cases require no inputs and no pre-processing of the training corpus.
+Skyfire~\cite{Wang2017c} learns a probabilistic context-sensitive grammar over a
+corpus of programs to generate input seeds for mutation testing. The generated
+seeds are shown to improve the code coverage of AFL~\cite{Zalewski} when fuzzing
+XSLT and XML engines, though the seeds are not directly used as test cases.
+Machine learning has also been applied to other areas such as improving bug
+finding static analyzers~\cite{Heo2017,Koc2017}, repairing
+programs~\cite{Koukoutos2017a,White}, prioritizing test
+programs~\cite{Chen2017}, identifying buffer overruns~\cite{Choi2016}, and
+processing bug reports~\cite{Lam2016,Huo2016}. To the best of our knowledge, no
+work so far has succeeded in finding compiler bugs by exploiting the learned
+syntax of mined source code for test case generation. Ours is the first to do
+so.
+
+
+\begin{table}
+	\footnotesize %
+	\centering %
+	\caption{%
+		The number of DeepSmith programs that trigger Solidity compiler crashes from
+		12 hours of testing.%
+		\vspace{-1em}
+	}
+	\begin{tabular}{rc|ccc}
+		\toprule
+		\textbf{Compiler} & $\pm$ & \textbf{Silent Crashes} & \textbf{Assertion 1} & \textbf{Assertion 2}\\
+		\midrule
+		\multirow{ 2}{*}{solc}    & $-$ & 204 & 1 & \\
+		& $+$ & 204 & 1 & \\
+		\hline
+		\multirow{ 2}{*}{solc-js} & $-$ & 3628 & 1 & 1\\
+		& $+$ & 908 & 1 & 1\\
+		\bottomrule
+	\end{tabular}
+	\vspace{-2em}
+	\label{tab:solidity}
+\end{table}
+
+
+% TODO(cec): PACT'17 Related work section:
+
+
+Machine learning has emerged as a viable means in automatically constructing heuristics for code optimization~\cite{Wang2010,Kulkarni2012,Muralidharan2016,Ogilvie2017,Ren,Cummins2016}. Its great advantage is that it can adapt to changing hardware platforms as it has no a priori assumptions about their behavior. The success of machine learning based code optimization has required having a set of high-quality features that can capture the important characteristics of the target program. Given that there is an infinite number of these potential features, finding the right set of features is a non-trivial, time-consuming task.
+
+Various forms of program features have been used in compiler-based machine learning. These include static code structures~\cite{Jiang2010} and runtime information such as system load~\cite{Wen2015} and performance counters~\cite{Dubach2009}. In compiler research, the feature sets used for predictive models are often provided without explanation and rarely is the quality of those features evaluated. More commonly, an initial large, high dimensional candidate feature space is pruned via feature selection~\cite{Stephenson2005,Taylor}, or projected into a lower dimensional space~\cite{Collins2013,Dubach2007}. FEAST employs a range of existing feature selection methods to select useful candidate features~\cite{Ting2016}. Unlike these approaches, DeepTune extracts features and reduces the dimensionality of the feature space completely internally and without expert guidance.
+
+Park \emph{et al.} present a unique graph-based approach for feature representations~\cite{Park2012}. They use a Support Vector Machine where the kernel is based on a graph similarity metric. Their technique still requires hand coded features at the basic block level, but thereafter, graph similarity against each of the training programs takes the place of global features. Being a kernel method, it requires that training data graphs be shipped with the compiler, which may not scale as the size of the training data grows with the number of instances, and some training programs may be very large. Finally, their graph matching metric is expensive, requiring $O(n^3)$ to compare against each training example. By contrast, our method does not need any hand built static code features, and the deployment memory footprint is constant and prediction time is linear in the length of the program, regardless of the size of the training set.
+
+A few methods have been proposed to automatically generate features from the compiler's intermediate representation~\cite{Namolaru2010a,Leather2014}. These approaches closely tie the implementation of the predictive model to the compiler IR, which means changes to the IR will require modifications to the model. The work of \cite{Leather2014} uses genetic programming to search for features, and required a huge grammar to be written, some 160kB in length. Although much of this can be created from templates, selecting the right range of capabilities and search space bias is non trivial and up to the expert. The work of \cite{Namolaru2010a} expresses the space of features via logic programming over relations that represent information from the IRs. It greedily searches for expressions that represent good features. However, their approach relies on expert selected relations, combinators and constraints to work. For both approaches, the search time may be significant.
+
+Cavazos \emph{et al.\ }present a reaction-based predictive model for software-hardware co-design~\cite{Cavazos2006}. Their approach profiles the targetprogram using several carefully selected compiler options to see how programruntime changes under these options for a given micro-architecture setting. Theythen use the program ``reactions'' to predict the best available applicationspeedup. While their approach does not use static code features, developers mustcarefully select a few settings from a large number of candidate options forprofiling, because poorly chosen options can significantly affect the quality ofthe model. Moreover, the program must be run several times before optimization,while our technique does not require the program to be profiled.
+
+In recent years, machine learning techniques have been employed to model and learn from program source code on various tasks. These include mining coding conventions~\cite{Allamanis2014a} and idioms~\cite{Allamanis2014}, API example code~\cite{Zhang2015a} and pseudo-code generation~\cite{Oda2015}, and benchmark generation~\cite{Cummins2017a}. Our work is the first attempt to extend the already challenging task of modeling distributions over source code to learning distributions over source code with respect to code optimizations.
+
+Recently, deep neural networks have been shown to be a powerful tool for feature engineering in various tasks including image recognition~\cite{Krizhevsky2012,He2016} and audio processing~\cite{Lee2009b}. No work so far has applied deep neural networks for program feature generation. Our work is the first to do so.

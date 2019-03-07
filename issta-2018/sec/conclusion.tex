@@ -1,9 +1,17 @@
-\section{Conclusions}\label{sec:conclusion}
+\section{Summary}%
+\label{sec:conclusion}
 
-We present a novel framework for compiler fuzzing. By posing the generation of random programs as an unsupervised machine learning problem, we dramatically reduce the cost and human effort required to engineer a random program generator. Large parts of the stack are programming language-agnostic, requiring only a corpus of example programs, an encoder, and a test harness to target a new language.
+We present a novel framework for compiler fuzzing. By posing the generation of
+random programs as an unsupervised machine learning problem, we dramatically
+reduce the cost and human effort required to engineer a random program
+generator. Large parts of the stack are programming language-agnostic, requiring
+only a corpus of example programs, an encoder, and a test harness to target a
+new language.
 
-We demonstrated our approach by targeting the challenging many-core domain of OpenCL. Our implementation, DeepSmith, has uncovered dozens of bugs in OpenCL implementations. We have exposed bugs in parts of the compiler where current approaches have not, for example in missing error handling. We provided a preliminary exploration of the extensibility of our approach. Our test cases are small, two orders of magnitude shorter than the state-of-the-art, and easily interpretable.
-
-%\cc{TODO:} Our future work will focus on guiding the generation of code so that, with little to no additional effort, we are able to test specific properties of interest (i.e. programs containing volatiles) or subsets of the language. 
-
-%\cc{TODO:} Future work in targeted fuzzing. Either re-train the models on a corpus in which all programs match some property of interest (i.e. programs containing volatile), or by selective sampling to test isolated features. A grammar based implementation of that~\cite{Kusner2017} uses masking to ensure sampling only from valid production rules.
+We demonstrated our approach by targeting the challenging many-core domain of
+OpenCL. Our implementation, DeepSmith, has uncovered dozens of bugs in OpenCL
+implementations. We have exposed bugs in parts of the compiler where current
+approaches have not, for example in missing error handling. We provided a
+preliminary exploration of the extensibility of our approach. Our test cases are
+small, two orders of magnitude shorter than the state-of-the-art, and easily
+interpretable.
