@@ -246,6 +246,7 @@ def StripDoubleUnderscorePrefixes(text: str) -> str:
       '__private': 'private',
       '__read_only': 'read_only',
       '__read_write': 'read_write',
+      '__restrict': 'restrict',
       '__write_only': 'write_only',
   }
   for old, new in replacements.items():
