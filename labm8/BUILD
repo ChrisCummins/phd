@@ -491,6 +491,7 @@ py_library(
         ":pbutil",
         ":text",
         "//third_party/py/absl",
+        "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
     ],
 )
