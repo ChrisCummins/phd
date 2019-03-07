@@ -1,6 +1,31 @@
 \section{Evaluation}%
 \label{sec:eval}
 
+\begin{figure}
+	\centering %
+	\includegraphics[width=.85\columnwidth]{img/clang-crashes}%
+	\vspace{-2em}
+	\caption{%
+		Crash rate of the Clang front-end of every LLVM release in the past 24
+		months compiling 75k DeepSmith kernels.%
+	}%
+	\vspace{-1em}
+	\label{fig:clangs}
+	%
+\end{figure}
+
+\begin{table}
+	\footnotesize %
+	\centering %
+	\caption{%
+		The number of DeepSmith programs which trigger distinct Clang front-end
+		assertions, and the number of programs which trigger unreachables.%
+	}
+	\vspace{-1.5em}
+	\input{tab/clang-assert-counts}
+	\label{tab:clangs}
+\end{table}
+
 \input{lst/samples}
 
 \begin{figure}

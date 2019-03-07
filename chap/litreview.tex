@@ -713,30 +713,6 @@ generate codes which trigger bugs. There are two main approaches: \emph{program
 	mutation}, where existing codes are modified so as to identify anomalous
 behavior.
 
-\begin{figure}
-	\centering %
-	\includegraphics[width=.85\columnwidth]{img/clang-crashes}%
-	\vspace{-2em}
-	\caption{%
-		Crash rate of the Clang front-end of every LLVM release in the past 24
-		months compiling 75k DeepSmith kernels.%
-	}%
-	\vspace{-1em}
-	\label{fig:clangs}
-	%
-\end{figure}
-\begin{table}
-	\footnotesize %
-	\centering %
-	\caption{%
-		The number of DeepSmith programs which trigger distinct Clang front-end
-		assertions, and the number of programs which trigger unreachables.%
-	}
-	\vspace{-1.5em}
-	\input{tab/clang-assert-counts}
-	\label{tab:clangs}
-\end{table}
-
 \paragraph{Program Generation}
 
 In the foundational work on differential testing for compilers, McKeeman
