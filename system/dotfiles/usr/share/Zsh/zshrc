@@ -361,6 +361,10 @@ gpu() {
         echo 'Invalid GPU!' >&2
     fi
 }
+# By default, disable GPU.
+if [[ -d /usr/local/cuda ]]; then
+    export CUDA_VISIBLE_DEVICES=
+fi
 
 # List file and directory contents.
 unalias l
