@@ -151,7 +151,6 @@ traitlets==4.3.2
 trash-cli==0.17.1.14
 urllib3==1.22
 virtualenv==15.1.0
-vizdoom==1.1.6
 wcwidth==0.1.7
 webencodings==0.5.1
 widgetsnbextension==3.1.4
