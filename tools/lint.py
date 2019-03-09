@@ -43,17 +43,16 @@ def main(argv):
   args = parser.parse_args(argv)
 
   if args.paths:
-    lint_candidates = linters_lib.ExecOrDie(['git', 'ls-files'] +
-                                            args.paths).rstrip().split('\n')
+    lint_candidates = linters_lib.ExecOrDie(['find'] + args.paths +
+                                            ['-type', 'f']).rstrip().split('\n')
   else:
     lint_candidates = set(
         linters_lib.GetGitDiffFilesOrDie(staged=False) +
         linters_lib.GetGitDiffFilesOrDie(staged=True))
+    # Changed files may include deleted files.
+    lint_candidates = [f for f in lint_candidates if os.path.isfile(f)]
 
-  # Changed files may include deleted files.
-  files_that_exist = [f for f in lint_candidates if os.path.isfile(f)]
-
-  linters = linters_lib.LinterActions(files_that_exist)
+  linters = linters_lib.LinterActions(lint_candidates)
 
   start_time = time.time()
   linters_lib.Print(
