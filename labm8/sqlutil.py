@@ -45,6 +45,11 @@ class DatabaseNotFound(FileNotFoundError):
     return repr(self)
 
 
+def Base(*args, **kwargs) -> sql.ext.declarative.DeclarativeMeta:
+  """Construct a base class for declarative class definitions."""
+  return sql.ext.declarative.declarative_base(*args, **kwargs)
+
+
 def GetOrAdd(session: sql.orm.session.Session,
              model,
              defaults: typing.Dict[str, object] = None,
