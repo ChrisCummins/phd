@@ -11,7 +11,4 @@ exports_files([
 py_binary(
     name = "lmk",
     srcs = ["lmk.py"],
-    deps = [
-        "//third_party/py/humanize",
-    ],
 )

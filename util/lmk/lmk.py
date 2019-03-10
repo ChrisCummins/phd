@@ -29,9 +29,9 @@ import string
 import subprocess
 import sys
 from datetime import datetime
+from datetime import timedelta
 from email.mime.application import MIMEApplication
 
-import humanize
 
 # Python 2 and 3 have different email module layouts:
 if sys.version_info >= (3, 0):
@@ -44,7 +44,7 @@ else:
 DEFAULT_CFG_PATH = os.path.expanduser('~/.lmkrc')
 
 __description__ = """\
-{bin}: let me know. Patiently awaits the completion of the 
+{bin}: let me know. Patiently awaits the completion of the
 specified command, and emails you with the output and result.
 
 Examples
@@ -139,6 +139,164 @@ class ArgumentParser(argparse.ArgumentParser):
       sys.exit(0)
 
     return super(ArgumentParser, self).parse_args(args, namespace)
+
+
+#### From humanize.
+# To remove the dependency on any pip package and make this script
+# self-contained, I have inlined the naturaltime() function from Jason's
+# excellent humanize library. See: <https://github.com/jmoiron/humanize>.
+#
+# Copyright (c) 2010 Jason Moiron and Contributors
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+def abs_timedelta(delta):
+  """Returns an "absolute" value for a timedelta, always representing a
+  time distance."""
+  if delta.days < 0:
+    now = datetime.now()
+    return now - (now + delta)
+  return delta
+
+
+def date_and_delta(value):
+  """Turn a value into a date and a timedelta which represents how long ago
+  it was.  If that's not possible, return (None, value)."""
+  now = datetime.now()
+  if isinstance(value, datetime):
+    date = value
+    delta = now - value
+  elif isinstance(value, timedelta):
+    date = now - value
+    delta = value
+  else:
+    try:
+      value = int(value)
+      delta = timedelta(seconds=value)
+      date = now - delta
+    except (ValueError, TypeError):
+      return (None, value)
+  return date, abs_timedelta(delta)
+
+
+def _(message):
+  return message
+
+
+def ngettext(message, plural, num):
+  if num == 1:
+    return message
+  else:
+    return plural
+
+
+def naturaldelta(value, months=True):
+  """Given a timedelta or a number of seconds, return a natural
+  representation of the amount of time elapsed.  This is similar to
+  ``naturaltime``, but does not add tense to the result.  If ``months``
+  is True, then a number of months (based on 30.5 days) will be used
+  for fuzziness between years."""
+  date, delta = date_and_delta(value)
+  if date is None:
+    return value
+
+  use_months = months
+
+  seconds = abs(delta.seconds)
+  days = abs(delta.days)
+  years = days // 365
+  days = days % 365
+  months = int(days // 30.5)
+
+  if not years and days < 1:
+    if seconds == 0:
+      return _("a moment")
+    elif seconds == 1:
+      return _("a second")
+    elif seconds < 60:
+      return ngettext("%d second", "%d seconds", seconds) % seconds
+    elif 60 <= seconds < 120:
+      return _("a minute")
+    elif 120 <= seconds < 3600:
+      minutes = seconds // 60
+      return ngettext("%d minute", "%d minutes", minutes) % minutes
+    elif 3600 <= seconds < 3600 * 2:
+      return _("an hour")
+    elif 3600 < seconds:
+      hours = seconds // 3600
+      return ngettext("%d hour", "%d hours", hours) % hours
+  elif years == 0:
+    if days == 1:
+      return _("a day")
+    if not use_months:
+      return ngettext("%d day", "%d days", days) % days
+    else:
+      if not months:
+        return ngettext("%d day", "%d days", days) % days
+      elif months == 1:
+        return _("a month")
+      else:
+        return ngettext("%d month", "%d months", months) % months
+  elif years == 1:
+    if not months and not days:
+      return _("a year")
+    elif not months:
+      return ngettext("1 year, %d day", "1 year, %d days", days) % days
+    elif use_months:
+      if months == 1:
+        return _("1 year, 1 month")
+      else:
+        return ngettext("1 year, %d month", "1 year, %d months",
+                        months) % months
+    else:
+      return ngettext("1 year, %d day", "1 year, %d days", days) % days
+  else:
+    return ngettext("%d year", "%d years", years) % years
+
+
+def naturaltime(value, future=False, months=True):
+  """Given a datetime or a number of seconds, return a natural representation
+  of that time in a resolution that makes sense.  This is more or less
+  compatible with Django's ``naturaltime`` filter.  ``future`` is ignored for
+  datetimes, where the tense is always figured out based on the current time.
+  If an integer is passed, the return value will be past tense by default,
+  unless ``future`` is set to True."""
+  now = datetime.now()
+  date, delta = date_and_delta(value)
+  if date is None:
+    return value
+  # determine tense by value only if datetime/timedelta were passed
+  if isinstance(value, (datetime, timedelta)):
+    future = date > now
+
+  ago = _('%s from now') if future else _('%s ago')
+  delta = naturaldelta(delta, months)
+
+  if delta == _("a moment"):
+    return _("now")
+
+  return ago % delta
+
+
+#### End humanize.
 
 
 def parse_args(args):
@@ -500,7 +658,7 @@ def build_html_message_body(output,
   html = '<table>\n'
   style = 'padding-right:15px;'
   if date_started:
-    delta = humanize.naturaltime(datetime.now() - date_started)
+    delta = naturaltime(datetime.now() - date_started)
     html += (u'  <tr><td style="{style}">Started</td>'
              u'<td>{date_started} ({delta})</td></tr>\n'.format(
                  style=style, date_started=date_started, delta=delta))
@@ -659,7 +817,7 @@ def build_message_subject(output,
     return u'{user}@{host} $ {command}'.format(
         user=user, host=host, command=command)
   elif date_started is not None:
-    delta = humanize.naturaltime(datetime.now() - date_started)
+    delta = naturaltime(datetime.now() - date_started)
     return u'{user}@{host} finished job started {delta}'.format(
         user=user, host=host, delta=delta)
   else:
