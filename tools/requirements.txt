@@ -22,6 +22,7 @@ configparser==3.5.0
 coverage==4.5.1
 cpplint==1.3.0
 cycler==0.10.0
+dash==0.39.0
 decorator==4.3.0
 # The graph_nets package depends on a specific version of dm-sonnet. See:
 # https://github.com/deepmind/graph_nets/blob/master/setup.py
@@ -84,6 +85,7 @@ pathlib2==2.3.2
 pathlib==1.0.1
 pexpect==4.4.0
 pickleshare==0.7.4
+plotly==3.7.0
 pluggy==0.6.0
 ply==3.11
 portpicker==1.3.1
