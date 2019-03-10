@@ -36,4 +36,5 @@ $ pip install lmk
 
 ## License
 
-Made with ❤️ by [Chris Cummins](http://chriscummins.cc). Released under [MIT License](https://tldrlegal.com/license/mit-license).
+Made with ❤️ by [Chris Cummins](http://chriscummins.cc).
+Released under [MIT License](https://tldrlegal.com/license/mit-license).
