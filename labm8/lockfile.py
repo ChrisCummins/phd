@@ -50,6 +50,16 @@ process holds the lock, you may remove the lock file:
    {self.lock.path}"""
 
 
+class MalformedLockfileError(UnableToAcquireLockError):
+  """ thrown if lockfile is malformed """
+
+  def __init__(self, path: pathlib.Path):
+    self.path = path
+
+  def __str__(self):
+    return f"Lock file is malformed: {self.path}"
+
+
 class UnableToReleaseLockError(Error):
   """ thrown if cannot release lock """
 
@@ -242,8 +252,11 @@ class LockFile:
     """
     path = pathlib.Path(path)
     if path.is_file():
-      return pbutil.FromFile(
-          path, lockfile_pb2.LockFile(), assume_filename='LOCK.pbtxt')
+      try:
+        return pbutil.FromFile(
+            path, lockfile_pb2.LockFile(), assume_filename='LOCK.pbtxt')
+      except pbutil.DecodeError:
+        raise MalformedLockfileError(path)
     else:
       return lockfile_pb2.LockFile()
 
