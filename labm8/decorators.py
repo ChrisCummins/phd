@@ -1,5 +1,7 @@
 """Useful function decorators."""
+import contextlib
 import functools
+import signal
 import typing
 
 from absl import flags
@@ -35,3 +37,56 @@ def memoized_property(func: AnyFunction) -> AnyFunction:
     return getattr(self, attribute_name)
 
   return decorator
+
+
+@contextlib.contextmanager
+def timeout(seconds: int):
+  """A function decorator that raises TimeoutError after specified time limit.
+
+  Args:
+    seconds: The number of seconds before timing out.
+
+  Raises:
+    TimeoutError: If the number of seconds have been reached.
+  """
+
+  def _RaiseTimoutError(signum, frame):
+    raise TimeoutError(f"Function failed to complete within {seconds} seconds")
+
+  # Register a function to raise a TimeoutError on the signal.
+  signal.signal(signal.SIGALRM, _RaiseTimoutError)
+  signal.alarm(seconds)
+
+  try:
+    yield
+  except TimeoutError as e:
+    raise e
+  finally:
+    # Unregister the signal so it won't be triggered
+    # if the timeout is not reached.
+    signal.signal(signal.SIGALRM, signal.SIG_IGN)
+
+
+@contextlib.contextmanager
+def timeout_without_exception(seconds: int):
+  """A function decorator that adds a timeout.
+
+  Args:
+    seconds: The number of seconds before timing out.
+  """
+
+  def _RaiseTimoutError(signum, frame):
+    raise TimeoutError
+
+  # Register a function to raise a TimeoutError on the signal.
+  signal.signal(signal.SIGALRM, _RaiseTimoutError)
+  signal.alarm(seconds)
+
+  try:
+    yield
+  except TimeoutError:
+    pass
+  finally:
+    # Unregister the signal so it won't be triggered
+    # if the timeout is not reached.
+    signal.signal(signal.SIGALRM, signal.SIG_IGN)

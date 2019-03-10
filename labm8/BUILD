@@ -148,6 +148,7 @@ py_test(
         ":decorators",
         ":test",
         "//third_party/py/absl",
+        "//third_party/py/pytest",
     ],
 )
 
