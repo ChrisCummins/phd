@@ -31,14 +31,14 @@ class Solidity(Language):
   __name__ = "solidity"
 
   __generators__ = {
-    None: RandChar,  # default
-    "randchar": RandChar,
-    "dsmith": DSmith,
-    "github": GitHub,
+      None: RandChar,  # default
+      "randchar": RandChar,
+      "dsmith": DSmith,
+      "github": GitHub,
   }
 
   __harnesses__ = {
-    "solc": Solc,
+      "solc": Solc,
   }
 
   def __init__(self):
@@ -48,8 +48,10 @@ class Solidity(Language):
   def mktestbeds(self, string: str) -> List[Testbed]:
     """ Instantiate testbed(s) by name """
     with Session() as s:
-      return [TestbedProxy(testbed) for testbed in
-              Testbed.from_str(string, session=s)]
+      return [
+          TestbedProxy(testbed)
+          for testbed in Testbed.from_str(string, session=s)
+      ]
 
   def run_testcases(self, testbeds: List[str],
                     pairs: List[Tuple[Generator, Harness]]) -> None:
@@ -63,8 +65,8 @@ class Solidity(Language):
                         file=sys.stdout) -> None:
     with Session() as s:
       if not available_only:
-        print(f"The following {self} testbeds are in the data store:",
-              file=file)
+        print(
+            f"The following {self} testbeds are in the data store:", file=file)
         for harness in sorted(self.harnesses):
           for testbed in sorted(harness.testbeds()):
             print(
@@ -72,8 +74,9 @@ class Solidity(Language):
                 file=file)
         print(file=file)
 
-      print(f"The following {self} testbeds are available on this machine:",
-            file=file)
+      print(
+          f"The following {self} testbeds are available on this machine:",
+          file=file)
       for harness in sorted(self.harnesses):
         for testbed in sorted(harness.available_testbeds()):
           print(f"    {harness} {testbed} {testbed.platform}", file=file)
@@ -86,10 +89,12 @@ class Solidity(Language):
             testbed = str(testbed)
             num_results = harness.num_results(generator, testbed)
             if num_results:
-              word_num = humanize.intcomma(num_results)
-              print(f"There are {Colors.BOLD}{word_num}{Colors.END} "
-                    f"{generator}:{harness} "
-                    f"results on {testbed}.", file=file)
+              word_num = humanize.Commas(num_results)
+              print(
+                  f"There are {Colors.BOLD}{word_num}{Colors.END} "
+                  f"{generator}:{harness} "
+                  f"results on {testbed}.",
+                  file=file)
 
   def difftest(self) -> None:
     difftest.difftest()

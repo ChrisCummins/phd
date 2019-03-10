@@ -61,10 +61,10 @@ py_binary(
         "//deeplearning/clgen/proto:corpus_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//labm8:humanize",
         "//labm8:lockfile",
         "//labm8:pbutil",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
     ],
 )
 

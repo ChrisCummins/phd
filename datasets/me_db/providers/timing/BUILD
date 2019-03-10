@@ -8,8 +8,8 @@ py_binary(
         "//datasets/me_db:importers",
         "//datasets/me_db:me_proto_pb2",
         "//labm8:bazelutil",
+        "//labm8:humanize",
         "//labm8:pbutil",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
     ],
 )

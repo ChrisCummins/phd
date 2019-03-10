@@ -1,13 +1,12 @@
 """Results logging for backtracking experiments."""
-import datetime
 import time
 
-import humanize
 from absl import flags
 from absl import logging
 
 from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.backtracking import backtracking_model
+from labm8 import humanize
 
 FLAGS = flags.FLAGS
 
@@ -43,9 +42,8 @@ class BacktrackingDatabaseLogger(object):
     runtime_ms = int((time.time() - self._start_time) * 1000)
     logging.info('Reached step %d after %d attempts, %d tokens',
                  self._step_count, attempt_count, token_count)
-    logging.info(
-        'Job %d started %s', job_id,
-        humanize.naturaldelta(datetime.timedelta(seconds=runtime_ms / 1000)))
+    logging.info('Job %d started %s', job_id,
+                 humanize.Duration(runtime_ms / 1000))
 
     with self._db.Session(commit=True) as session:
       features = session.GetOrAdd(

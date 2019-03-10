@@ -16,7 +16,6 @@
 import pathlib
 import typing
 
-import humanize
 import numpy as np
 from absl import flags
 from absl import logging
@@ -30,6 +29,7 @@ from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from labm8 import cache
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 
@@ -142,8 +142,8 @@ class PreTrainedModel(object):
         now = labdate.MillisecondsTimestamp()
         logging.info(
             'Produced %s samples at a rate of %s ms / sample.',
-            humanize.intcomma(sample_count - 1),
-            humanize.intcomma(
+            humanize.Commas(sample_count - 1),
+            humanize.Commas(
                 int((now - sample_start_time) / max(sample_count - 1, 1))))
         break
 

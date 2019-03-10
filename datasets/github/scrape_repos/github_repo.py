@@ -7,7 +7,6 @@ import pathlib
 import subprocess
 import typing
 
-import humanize
 import progressbar
 from absl import flags
 from absl import logging
@@ -15,6 +14,7 @@ from absl import logging
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -91,10 +91,10 @@ class GitHubRepo(object):
       return self
     if i:
       logging.info("[%s / %s] Importing %s files from %s ...", i.i, i.n,
-                   humanize.intcomma(len(paths)), self.name)
+                   humanize.Commas(len(paths)), self.name)
     else:
-      logging.info("Importing %s files from %s ...",
-                   humanize.intcomma(len(paths)), self.name)
+      logging.info("Importing %s files from %s ...", humanize.Commas(
+          len(paths)), self.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(self.clone_dir)
     jobs = (scrape_repos_pb2.ImportWorker(
         clone_from_url=self.meta.clone_from_url,

@@ -21,10 +21,10 @@ py_binary(
         "//gpu/cldrive/legacy:env",
         "//gpu/oclgrind",
         "//labm8:bazelutil",
+        "//labm8:humanize",
         "//labm8:labdate",
         "//labm8:pbutil",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
     ],
 )
 
@@ -53,8 +53,8 @@ py_binary(
     deps = [
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//labm8:fmt",
+        "//labm8:humanize",
         "//labm8:pbutil",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
     ],
 )

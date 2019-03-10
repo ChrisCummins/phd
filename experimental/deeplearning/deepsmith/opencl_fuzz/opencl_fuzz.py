@@ -13,7 +13,6 @@ import time
 import typing
 
 import gpu.cldrive.env
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -31,6 +30,7 @@ from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from gpu.cldrive.legacy import env
 from labm8 import bazelutil
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 
@@ -296,7 +296,7 @@ def TestingLoop(min_interesting_results: int,
   logging.info(
       'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
       'Found %s interesting results.',
-      time.time() - start_time, humanize.intcomma(batch_num),
+      time.time() - start_time, humanize.Commas(batch_num),
       (((time.time() - start_time) / (batch_num * batch_size)) * 1000),
       num_interesting_results)
   logging.flush()

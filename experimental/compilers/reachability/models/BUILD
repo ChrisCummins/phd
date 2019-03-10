@@ -46,7 +46,7 @@ py_binary(
         "//labm8:pbutil",
         "//labm8:prof",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
+        "//labm8:humanize",
         "//third_party/py/keras",
         "//third_party/py/numpy",
     ],

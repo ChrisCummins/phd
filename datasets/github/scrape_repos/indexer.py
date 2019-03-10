@@ -4,7 +4,6 @@ import os
 import pathlib
 import random
 
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -12,6 +11,7 @@ from absl import logging
 from datasets.github.scrape_repos import github_repo
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -46,8 +46,8 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
   num_todo = len(repos_to_import)
   num_pruned = num_repos - num_todo
   random.shuffle(repos_to_import)
-  logging.info('Importing %s of %s %s repos ...', humanize.intcomma(num_todo),
-               humanize.intcomma(num_repos), language.language.capitalize())
+  logging.info('Importing %s of %s %s repos ...', humanize.Commas(num_todo),
+               humanize.Commas(num_repos), language.language.capitalize())
   for i, repo in enumerate(repos_to_import):
     repo.Index(
         list(language.importer), pool,

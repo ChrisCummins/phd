@@ -68,7 +68,7 @@ py_library(
     srcs = ["logger.py"],
     deps = [
         ":backtracking_db",
+        "//labm8:humanize",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
     ],
 )

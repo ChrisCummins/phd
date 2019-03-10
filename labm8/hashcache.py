@@ -13,7 +13,6 @@ import time
 import typing
 
 import checksumdir
-import humanize
 import sqlalchemy as sql
 from absl import flags
 from absl import logging
@@ -21,6 +20,7 @@ from sqlalchemy.ext import declarative
 
 from labm8 import crypto
 from labm8 import fs
+from labm8 import humanize
 from labm8 import sqlutil
 
 FLAGS = flags.FLAGS
@@ -191,7 +191,7 @@ class HashCache(sqlutil.Database):
       start_time = time.time()
       checksum = hash_fn(absolute_path)
       logging.debug("New cache entry '%s' in %s ms.", absolute_path,
-                    humanize.intcomma(int((time.time() - start_time) * 1000)))
+                    humanize.Commas(int((time.time() - start_time) * 1000)))
       new_entry = HashCacheRecord(
           absolute_path=str(absolute_path),
           last_modified=last_modified,

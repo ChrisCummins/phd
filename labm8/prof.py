@@ -9,9 +9,9 @@ import sys
 import time
 import typing
 
-import humanize
 from absl import logging
 
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import labtypes
 from labm8 import system
@@ -144,8 +144,7 @@ def Profile(name: str = '',
   start_time = time.time()
   yield
   elapsed = time.time() - start_time
-  print_to(f"{name} in {elapsed:.3f} seconds "
-           f"(started {humanize.naturaltime(elapsed)})")
+  print_to(f"{name} in {humanize.Duration(elapsed)}")
 
 
 @contextlib.contextmanager
@@ -197,8 +196,8 @@ class AutoCsvProfiler(object):
     self._path = self._directory / log_name
 
     with self._writer() as writer:
-      writer.writerow(
-          ('Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)', 'Event'))
+      writer.writerow(('Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)',
+                       'Event'))
 
   @contextlib.contextmanager
   def Profile(self, event_name: str = ''):

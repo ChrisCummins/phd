@@ -94,7 +94,7 @@ class OpenCL(Language):
             testbed = str(testbed)
             num_results = harness.num_results(generator, testbed)
             if num_results:
-              word_num = humanize.intcomma(num_results)
+              word_num = humanize.Commas(num_results)
               print(
                   f"There are {Colors.BOLD}{word_num}{Colors.END} "
                   f"{generator}:{harness} "

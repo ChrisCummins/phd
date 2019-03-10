@@ -25,13 +25,13 @@ import sys
 import time
 import typing
 
-import humanize
 import numpy as np
 from absl import flags
 from absl import logging
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
+from labm8 import humanize
 
 FLAGS = flags.FLAGS
 
@@ -150,9 +150,9 @@ class TensorflowBatchGenerator(object):
     ]
     logging.info(
         'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
-        humanize.intcomma(clipped_corpus_length),
-        humanize.intcomma(len(self.encoded_corpus) - clipped_corpus_length),
-        humanize.intcomma(int((time.time() - start_time) * 1000)))
+        humanize.Commas(clipped_corpus_length),
+        humanize.Commas(len(self.encoded_corpus) - clipped_corpus_length),
+        humanize.Commas(int((time.time() - start_time) * 1000)))
 
   def NextBatch(self) -> DataBatch:
     """Fetch next batch.
@@ -205,9 +205,9 @@ def GetTrainingCorpus(corpus: 'corpuses.Corpus',
   ])
 
   logging.info('Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
-               humanize.intcomma(clipped_corpus_length),
-               humanize.intcomma(corpus_length - clipped_corpus_length),
-               humanize.intcomma(int((time.time() - start_time) * 1000)))
+               humanize.Commas(clipped_corpus_length),
+               humanize.Commas(corpus_length - clipped_corpus_length),
+               humanize.Commas(int((time.time() - start_time) * 1000)))
   return x, y, steps_per_epoch
 
 
@@ -231,7 +231,8 @@ def LogBatchTelemetry(batch: DataBatch, steps_per_epoch: int,
   # sys.getsizeof() includes only the memory required for an object, not any
   # objects it refernces, so we must manually sum the X and y arrays.
   batch_size = sys.getsizeof(batch) + batch.X.nbytes + batch.y.nbytes
-  logging.info('Memory: %s per batch, %s per epoch, %s total.',
-               humanize.naturalsize(batch_size),
-               humanize.naturalsize(batch_size * steps_per_epoch),
-               humanize.naturalsize(batch_size * steps_per_epoch * num_epochs))
+  logging.info(
+      'Memory: %s per batch, %s per epoch, %s total.',
+      humanize.BinaryPrefix(batch_size, 'B'),
+      humanize.BinaryPrefix(batch_size * steps_per_epoch, 'B'),
+      humanize.BinaryPrefix(batch_size * steps_per_epoch * num_epochs, 'B'))

@@ -4,13 +4,13 @@ import pathlib
 import random
 import typing
 
-import humanize
 import numpy as np
 from absl import app
 from absl import flags
 from absl import logging
 
 from experimental.deeplearning.fish.proto import fish_pb2
+from labm8 import humanize
 from labm8 import labtypes
 from labm8 import pbutil
 
@@ -86,8 +86,7 @@ def LoadPositiveProtos(export_path: pathlib.Path,
       p for p in GetProtos(export_path, positive_class_outcomes, max_src_len)
       if (not assertions_only) or p.raised_assertion
   ][:max_num]
-  logging.info('Loaded %s positive data protos.', humanize.intcomma(
-      len(protos)))
+  logging.info('Loaded %s positive data protos.', humanize.Commas(len(protos)))
   return protos
 
 
@@ -103,7 +102,7 @@ def LoadNegativeProtos(
   if balance_class_lengths:
     positive_proto_sizes = [len(p.src) for p in positive_protos]
     logging.info('Loaded %s negative protos. Balancing lengths ...',
-                 humanize.intcomma(len(candidate_protos)))
+                 humanize.Commas(len(candidate_protos)))
     negative_proto_sizes = np.array([len(p.src) for p in candidate_protos],
                                     dtype=np.int32)
     negative_protos = []
@@ -113,8 +112,8 @@ def LoadNegativeProtos(
       logging.info(
           'Found negative example of size %s to match positive '
           'example of size %s (diff %s)',
-          humanize.intcomma(negative_proto_sizes[idx_of_closest]),
-          humanize.intcomma(positive_proto_size), size_diffs.min())
+          humanize.Commas(negative_proto_sizes[idx_of_closest]),
+          humanize.Commas(positive_proto_size), size_diffs.min())
       negative_protos.append(candidate_protos[idx_of_closest])
       negative_proto_sizes = np.delete(negative_proto_sizes, [idx_of_closest])
       del candidate_protos[idx_of_closest]
@@ -129,7 +128,7 @@ def LoadNegativeProtos(
       positive_protos = positive_protos[:min_count]
     negative_protos = candidate_protos
   logging.info('Loaded %s negative data protos',
-               humanize.intcomma(len(negative_protos)))
+               humanize.Commas(len(negative_protos)))
   return positive_protos, negative_protos
 
 
@@ -193,7 +192,7 @@ def main(argv):
     pbutil.ToFile(proto,
                   (dataset_root / 'training' / f'negative-{i:04d}.pbtxt'))
   logging.info('Wrote %s training examples',
-               humanize.intcomma(positive_sizes[0] + negative_sizes[0]))
+               humanize.Commas(positive_sizes[0] + negative_sizes[0]))
   positive_protos = positive_protos[positive_sizes[0]:]
   negative_protos = negative_protos[negative_sizes[0]:]
 
@@ -204,7 +203,7 @@ def main(argv):
     pbutil.ToFile(proto,
                   (dataset_root / 'validation' / f'negative-{i:04d}.pbtxt'))
   logging.info('Wrote %s validation examples',
-               humanize.intcomma(positive_sizes[1] + negative_sizes[1]))
+               humanize.Commas(positive_sizes[1] + negative_sizes[1]))
   positive_protos = positive_protos[positive_sizes[1]:]
   negative_protos = negative_protos[negative_sizes[1]:]
 
@@ -213,7 +212,7 @@ def main(argv):
   for i, proto in enumerate(negative_protos[:negative_sizes[2]]):
     pbutil.ToFile(proto, (dataset_root / 'testing' / f'negative-{i:04d}.pbtxt'))
   logging.info('Wrote %s testing examples',
-               humanize.intcomma(positive_sizes[2] + negative_sizes[2]))
+               humanize.Commas(positive_sizes[2] + negative_sizes[2]))
 
 
 if __name__ == '__main__':

@@ -8,12 +8,12 @@ import os
 import pathlib
 import subprocess
 
-import humanize
 import pandas as pd
 from absl import app
 from absl import flags
 from absl import logging
 
+from labm8 import humanize
 from labm8 import pbutil
 from system.machines.proto import data_tiers_pb2
 
@@ -65,7 +65,7 @@ def main(argv) -> None:
     df = pd.DataFrame([{
         'Path': d.path,
         'Tier': d.tier,
-        'Size': humanize.naturalsize(d.size_bytes),
+        'Size': humanize.BinaryPrefix(d.size_bytes, 'B'),
         'Size (bytes)': d.size_bytes
     } for d in tiers.directory if d.size_bytes])
     df = df.sort_values(['Tier', 'Size (bytes)'], ascending=[True, False])
@@ -74,7 +74,8 @@ def main(argv) -> None:
     # Print the total size per tier.
     df2 = df.groupby('Tier').sum()
     df2['Size'] = [
-        humanize.naturalsize(d['Size (bytes)']) for _, d in df2.iterrows()
+        humanize.BinaryPrefix(d['Size (bytes)'], 'B')
+        for _, d in df2.iterrows()
     ]
     df2 = df2.reset_index()
     df2 = df2.sort_values('Tier')

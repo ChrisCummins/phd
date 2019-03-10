@@ -31,12 +31,11 @@ import re
 import sys
 import traceback
 
-import humanize
-
 from experimental import dsmith
 from experimental.dsmith import Colors
 from experimental.dsmith.langs import Generator, Language, mklang
 from labm8 import fs
+from labm8 import humanize
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
@@ -138,8 +137,8 @@ def _describe_generators(lang: Language, file=sys.stdout):
 
 def _describe_programs(lang: Language, file=sys.stdout):
   for generator in lang.generators:
-    num = humanize.intcomma(generator.num_programs())
-    sloc = humanize.intcomma(generator.sloc_total())
+    num = humanize.Commas(generator.num_programs())
+    sloc = humanize.Commas(generator.sloc_total())
     print(
         f"You have {Colors.BOLD}{num} {generator}{Colors.END} "
         f"programs, total {Colors.BOLD}{sloc}{Colors.END} SLOC.",
@@ -148,7 +147,7 @@ def _describe_programs(lang: Language, file=sys.stdout):
 
 def _describe_testcases(lang: Language, generator: Generator, file=sys.stdout):
   for harness in generator.harnesses:
-    num = humanize.intcomma(generator.num_testcases())
+    num = humanize.Commas(generator.num_testcases())
     print(f"There are {Colors.BOLD}{num} {generator}:{harness} "
           "testcases.",
           file=file)

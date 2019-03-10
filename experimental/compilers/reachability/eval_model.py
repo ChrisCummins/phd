@@ -2,7 +2,6 @@
 import pathlib
 import pickle
 
-import humanize
 import keras
 from absl import app
 from absl import flags
@@ -11,6 +10,7 @@ from experimental.compilers.reachability.proto import reachability_pb2
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import train_model
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -29,8 +29,8 @@ def main(argv):
   telemetry_ = logger.EpochTelemetry()
   num_epochs = len(telemetry_)
   training_time_ms = sum(t.epoch_wall_time_ms for t in telemetry_)
-  training_time_natural = humanize.naturaldelta(training_time_ms / 1000)
-  time_per_epoch_natural = humanize.naturaldelta(
+  training_time_natural = humanize.Duration(training_time_ms / 1000)
+  time_per_epoch_natural = humanize.Duration(
       training_time_ms / num_epochs / 1000)
   losses = [round(t.loss, 2) for t in telemetry_]
 
@@ -54,9 +54,9 @@ def main(argv):
   data.entry.extend(testing_data.entry)
 
   num_nodes = len(training_data.entry[0].graph.node)
-  num_nodes_natural = humanize.intcomma(num_nodes)
-  num_training_graphs_natural = humanize.intcomma(len(training_data.entry))
-  num_testing_graphs_natural = humanize.intcomma(len(testing_data.entry))
+  num_nodes_natural = humanize.Commas(num_nodes)
+  num_training_graphs_natural = humanize.Commas(len(training_data.entry))
+  num_testing_graphs_natural = humanize.Commas(len(testing_data.entry))
   print(f'Training data: {num_training_graphs_natural} graphs of '
         f'{num_nodes_natural} nodes each.')
   print(f'Testing data: {num_testing_graphs_natural} graphs of '
@@ -93,12 +93,12 @@ def main(argv):
   ]
   num_uniq_seqs = len(set(seqs))
   print('Unique sequences: {} of {} ({:.2f}%)'.format(
-      humanize.intcomma(num_uniq_seqs), humanize.intcomma(len(seqs)),
+      humanize.Commas(num_uniq_seqs), humanize.Commas(len(seqs)),
       (num_uniq_seqs / len(seqs)) * 100))
   num_uniq_labels = len(
       set([''.join(str(x) for x in e.reachable) for e in data.entry]))
   print('Unique labels: {} of {} ({:.2f}%)'.format(
-      humanize.intcomma(num_uniq_labels), humanize.intcomma(len(seqs)),
+      humanize.Commas(num_uniq_labels), humanize.Commas(len(seqs)),
       (num_uniq_labels / len(seqs)) * 100))
 
   test_x, test_y = train_model.ProtosToModelData(testing_data, sequence_length,

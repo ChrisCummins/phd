@@ -6,7 +6,6 @@ import tempfile
 import time
 import typing
 
-import humanize
 import progressbar
 import pyparsing
 from absl import app
@@ -28,6 +27,7 @@ from experimental.compilers.reachability import reachability_pb2
 from experimental.compilers.reachability.datasets import import_from_github
 from experimental.compilers.reachability.datasets import linux
 from experimental.compilers.reachability.datasets import opencl
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -250,8 +250,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
       if cloner.IsRepoMetaFile(f)
   ]
   worker = cloner.AsyncWorker(meta_files)
-  logging.info('Cloning %s repos from GitHub ...',
-               humanize.intcomma(worker.max))
+  logging.info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():

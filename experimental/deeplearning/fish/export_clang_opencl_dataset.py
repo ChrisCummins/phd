@@ -4,13 +4,13 @@ import pathlib
 import typing
 
 import MySQLdb
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
 
 from experimental.deeplearning.fish.proto import fish_pb2
 from labm8 import fs
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -36,7 +36,7 @@ def ExportOpenCLResults(cursor, start_id, proto_dir):
   batch_size = 1000
   result_id = start_id
   while True:
-    logging.info('Exporting batch of %s results', humanize.intcomma(batch_size))
+    logging.info('Exporting batch of %s results', humanize.Commas(batch_size))
     cursor.execute(
         """
 SELECT
@@ -130,7 +130,7 @@ def main(argv):
   cursor.close()
   cnx.close()
   logging.info('Exported training set of %s files to %s',
-               humanize.intcomma(len(list(export_path.iterdir()))), export_path)
+               humanize.Commas(len(list(export_path.iterdir()))), export_path)
 
 
 if __name__ == '__main__':

@@ -9,12 +9,12 @@ import re
 import subprocess
 import typing
 
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
 
 from labm8 import fs
+from labm8 import humanize
 from labm8 import system
 
 FLAGS = flags.FLAGS
@@ -72,8 +72,8 @@ def MaybeTranscodeMp3(path: str,
         tempfile_suffix='.mp3')
     size_after = os.path.getsize(path)
     logging.info(f'%s changed from %s to %s (%.1f%% reduction)',
-                 os.path.basename(path), humanize.naturalsize(size_before),
-                 humanize.naturalsize(size_after),
+                 os.path.basename(path), humanize.BinaryPrefix(
+                     size_before, 'B'), humanize.BinaryPrefix(size_after, 'B'),
                  (1 - (size_after / size_before)) * 100)
     out_csv.writerow(
         [datetime.datetime.now(), path, bit_rate, size_before, size_after])

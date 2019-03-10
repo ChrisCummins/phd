@@ -113,9 +113,9 @@ py_library(
         ":crypto",
         ":fs",
         ":sqlutil",
+        "//labm8:humanize",
         "//third_party/py/absl",
         "//third_party/py/checksumdir",
-        "//third_party/py/humanize",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -126,6 +126,27 @@ py_test(
     srcs = ["hashcache_test.py"],
     deps = [
         ":hashcache",
+        ":test",
+        "//third_party/py/absl",
+    ],
+)
+
+py_library(
+    name = "humanize",
+    srcs = ["humanize.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/py/humanize",
+    ],
+)
+
+py_test(
+    name = "humanize_test",
+    size = "small",
+    srcs = ["humanize_test.py"],
+    deps = [
+        ":humanize",
+        ":labdate",
         ":test",
         "//third_party/py/absl",
     ],
@@ -163,8 +184,8 @@ py_library(
     srcs = ["fs.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":humanize",
         ":labtypes",
-        "//third_party/py/humanize",
         "//third_party/py/send2trash",
     ],
 )
@@ -429,8 +450,8 @@ py_library(
         ":bazelutil",
         ":pbutil",
         ":sqlutil",
+        "//labm8:humanize",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
     ],
 )
 
@@ -457,8 +478,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":labtypes",
+        "//labm8:humanize",
         "//third_party/py/absl",
-        "//third_party/py/humanize",
     ],
 )
 

@@ -6,11 +6,12 @@ import random
 import typing
 
 import gym
-import humanize
 import numpy as np
 from absl import app
 from absl import flags
 from absl import logging
+
+from labm8 import humanize
 
 FLAGS = flags.FLAGS
 
@@ -64,12 +65,12 @@ def Train(env: gym.Env,
       'Beginning training for %s episodes (max %s steps per episode). '
       'Initial learning rate: %.3f, decay rate: %.3f, '
       'initial epsilon: %.3f, min learning rate: %.3f, gamma: %.3f.',
-      humanize.intcomma(total_episodes), humanize.intcomma(max_steps),
+      humanize.Commas(total_episodes), humanize.Commas(max_steps),
       learning_rate, decay_rate, init_epsilon, min_epsilon, gamma)
 
   logging.info('State space size: %s, action space size: %s. Q table: %dx%d.',
-               humanize.intcomma(env.observation_space.n),
-               humanize.intcomma(env.action_space.n), env.observation_space.n,
+               humanize.Commas(env.observation_space.n),
+               humanize.Commas(env.action_space.n), env.observation_space.n,
                env.action_space.n)
 
   q_table = np.zeros((env.observation_space.n, env.action_space.n))

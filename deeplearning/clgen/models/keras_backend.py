@@ -17,7 +17,6 @@ import io
 import pathlib
 import typing
 
-import humanize
 import numpy as np
 from absl import flags
 from absl import logging
@@ -27,6 +26,7 @@ from deeplearning.clgen import telemetry
 from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import data_generators
+from labm8 import humanize
 from labm8 import logutil
 
 FLAGS = flags.FLAGS
@@ -156,10 +156,10 @@ class KerasBackend(backends.BackendBase):
           self.config.training.sequence_length)
       logging.info(
           'Step counts: %s per epoch, %s left to do, %s total',
-          humanize.intcomma(steps_per_epoch),
-          humanize.intcomma(
+          humanize.Commas(steps_per_epoch),
+          humanize.Commas(
               (target_num_epochs - starting_epoch) * steps_per_epoch),
-          humanize.intcomma(target_num_epochs * steps_per_epoch))
+          humanize.Commas(target_num_epochs * steps_per_epoch))
       model.fit_generator(
           generator,
           steps_per_epoch=steps_per_epoch,

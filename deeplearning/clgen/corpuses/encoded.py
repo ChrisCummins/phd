@@ -21,7 +21,6 @@ import pickle
 import time
 import typing
 
-import humanize
 import numpy as np
 import progressbar
 import sqlalchemy as sql
@@ -34,6 +33,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
+from labm8 import humanize
 from labm8 import sqlutil
 
 FLAGS = flags.FLAGS
@@ -161,10 +161,10 @@ class EncodedContentFiles(sqlutil.Database):
           func.sum(EncodedContentFile.encoding_time_ms),
       ).first()
     logging.info('Encoded %s files in %s ms (%.2fx speedup).',
-                 humanize.intcomma(num_files),
-                 humanize.intcomma(total_walltime), total_time / total_walltime)
+                 humanize.Commas(num_files), humanize.Commas(total_walltime),
+                 total_time / total_walltime)
     logging.info('Encoded corpus: %s tokens, %s files.',
-                 humanize.intcomma(token_count), humanize.intcomma(num_files))
+                 humanize.Commas(token_count), humanize.Commas(num_files))
 
   @property
   def size(self):
@@ -213,8 +213,8 @@ class EncodedContentFiles(sqlutil.Database):
 
       logging.info(
           'Encoding %s of %s preprocessed files',
-          humanize.intcomma(query.count()),
-          humanize.intcomma(
+          humanize.Commas(query.count()),
+          humanize.Commas(
               p_session.query(preprocessed.PreprocessedContentFile).filter(
                   preprocessed.PreprocessedContentFile.preprocessing_succeeded
                   == True).count()))

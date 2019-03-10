@@ -7,7 +7,6 @@ import random
 import subprocess
 import typing
 
-import humanize
 import progressbar
 from absl import app
 from absl import flags
@@ -18,6 +17,7 @@ from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -106,7 +106,7 @@ def ImportRepo(session: orm.session.Session,
       logging.debug('No files to import from %s', clone_dir)
       return
     logging.info("Importing %s '%s' files from %s ...",
-                 humanize.intcomma(len(paths)), importer.source_code_pattern,
+                 humanize.Commas(len(paths)), importer.source_code_pattern,
                  clone_dir)
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
     jobs = [
@@ -148,9 +148,8 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
                             pathlib.Path(language.destination_directory / f))
     ]
   random.shuffle(repos_to_import)
-  logging.info('Importing %s %s repos ...',
-               humanize.intcomma(len(repos_to_import)),
-               language.language.capitalize())
+  logging.info('Importing %s %s repos ...', humanize.Commas(
+      len(repos_to_import)), language.language.capitalize())
   for metafile in repos_to_import:
     with db.Session(commit=True) as session:
       ImportRepo(session, language, metafile, pool)

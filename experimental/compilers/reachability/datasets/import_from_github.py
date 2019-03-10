@@ -15,7 +15,6 @@ buffer and packet values:
   mysql> set global net_buffer_length=1000000;
   mysql> set global max_allowed_packet=1000000000;
 """
-import humanize
 import multiprocessing
 import typing
 
@@ -29,6 +28,7 @@ from datasets.github.scrape_repos import contentfiles
 from deeplearning.clgen.preprocessors import opencl
 from experimental.compilers.reachability import database
 from experimental.compilers.reachability import reachability_pb2
+from labm8 import humanize
 from labm8 import lockfile
 from labm8 import ppar
 
@@ -126,8 +126,8 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
             contentfiles.GitHubRepository.language == language).order_by(
                 contentfiles.ContentFile.id.desc()).limit(1).one_or_none() or
          (0,))[0]
-    logging.info('Starting at row %s / %s', humanize.intcomma(resume_from),
-                 humanize.intcomma(n))
+    logging.info('Starting at row %s / %s', humanize.Commas(resume_from),
+                 humanize.Commas(n))
 
     # A query to return the <id,text> tuples of files to process.
     q = (cf_s.query(contentfiles.ContentFile.id, contentfiles.ContentFile.text).
@@ -150,8 +150,8 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
     def _StartBatch(i: int):
       logging.info(
           'Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)',
-          batch_size, humanize.intcomma((i + resume_from)),
-          humanize.intcomma(n), ((i + resume_from) / n) * 100)
+          batch_size, humanize.Commas((i + resume_from)), humanize.Commas(n),
+          ((i + resume_from) / n) * 100)
 
     ppar.MapDatabaseRowBatchProcessor(
         GetBytecodesFromContentFiles,

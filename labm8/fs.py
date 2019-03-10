@@ -10,9 +10,9 @@ import tempfile
 import typing
 from glob import iglob
 
-from humanize import naturalsize
 from send2trash import send2trash
 
+from labm8 import humanize
 from labm8 import labtypes
 
 
@@ -480,7 +480,7 @@ def du(*components, **kwargs):
     raise Error("file '{}' not found".format(_path))
   size = os.stat(_path).st_size
   if human_readable:
-    return naturalsize(size)
+    return humanize.BinaryPrefix(size, 'B')
   else:
     return size
 

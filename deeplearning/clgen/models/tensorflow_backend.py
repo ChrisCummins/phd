@@ -18,7 +18,6 @@ import pathlib
 import time
 import typing
 
-import humanize
 import numpy as np
 import progressbar
 from absl import flags
@@ -29,6 +28,7 @@ from deeplearning.clgen import telemetry
 from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import model_pb2
+from labm8 import humanize
 
 FLAGS = flags.FLAGS
 
@@ -180,8 +180,8 @@ class TensorFlowBackend(backends.BackendBase):
         np.sum([np.prod(v.shape) for v in tf.trainable_variables()]))
     logging.info(
         'Instantiated TensorFlow graph with %s trainable parameters '
-        'in %s ms.', humanize.intcomma(num_trainable_params),
-        humanize.intcomma(int((time.time() - start_time) * 1000)))
+        'in %s ms.', humanize.Commas(num_trainable_params),
+        humanize.Commas(int((time.time() - start_time) * 1000)))
 
     return tf
 
@@ -342,7 +342,7 @@ class TensorFlowBackend(backends.BackendBase):
         saver.save(sess, checkpoint_prefix, global_step=global_step)
         checkpoint_path = f'{checkpoint_prefix}-{global_step}'
         logging.info('Saved checkpoint %s in %s ms.', checkpoint_path,
-                     humanize.intcomma(int((time.time() - start_time) * 1000)))
+                     humanize.Commas(int((time.time() - start_time) * 1000)))
         assert pathlib.Path(
             f'{checkpoint_prefix}-{global_step}.index').is_file()
         assert pathlib.Path(f'{checkpoint_prefix}-{global_step}.meta').is_file()

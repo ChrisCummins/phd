@@ -3,7 +3,6 @@ import binascii
 import os
 import pathlib
 
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -11,6 +10,7 @@ from sqlalchemy import orm
 
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -24,7 +24,7 @@ def ExportDatabase(session: orm.session.Session,
                    export_path: pathlib.Path) -> None:
   """Export the contents of a database to a directory."""
   query = session.query(contentfiles.ContentFile)
-  logging.info('Exporting %s files to %s ...', humanize.intcomma(query.count()),
+  logging.info('Exporting %s files to %s ...', humanize.Commas(query.count()),
                export_path)
   for contentfile in query:
     path = export_path / (contentfile.sha256_hex + '.txt')

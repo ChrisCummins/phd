@@ -37,9 +37,7 @@ def CreateTableHtml(df: pd.DataFrame, max_rows: int = 10):
 
 def CreateApp() -> dash.Dash:
   """Create dash app."""
-  dash_app = dash.Dash(
-      __name__,
-      external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
+  dash_app = dash.Dash(__name__)
 
   dash_app.layout = html.Div(children=[
       html.H1(children="Hello World"),

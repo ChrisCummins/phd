@@ -17,7 +17,6 @@ import os
 import pathlib
 import typing
 
-import humanize
 import numpy as np
 from absl import flags
 from absl import logging
@@ -35,6 +34,7 @@ from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from labm8 import crypto
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import lockfile
 from labm8 import logutil
@@ -171,8 +171,8 @@ class Model(object):
         for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
     logging.info('Trained model for %d epochs in %s ms (%s).',
                  self.config.training.num_epochs,
-                 humanize.intcomma(total_time_ms),
-                 humanize.naturaldelta(total_time_ms / 1000))
+                 humanize.Commas(total_time_ms),
+                 humanize.Duration(total_time_ms / 1000))
     return self
 
   def Sample(self,
@@ -244,8 +244,8 @@ class Model(object):
       now = labdate.MillisecondsTimestamp()
       logging.info(
           'Produced %s samples at a rate of %s ms / sample.',
-          humanize.intcomma(len(samples)),
-          humanize.intcomma(
+          humanize.Commas(len(samples)),
+          humanize.Commas(
               int((now - sample_start_time) / max(len(samples), 1))))
 
     return samples
@@ -301,8 +301,8 @@ class Model(object):
       now = labdate.MillisecondsTimestamp()
       logging.info(
           'Produced %s samples at a rate of %s ms / sample.',
-          humanize.intcomma(len(samples)),
-          humanize.intcomma(int((now - sample_start_time) / len(samples))))
+          humanize.Commas(len(samples)),
+          humanize.Commas(int((now - sample_start_time) / len(samples))))
 
     return samples
 

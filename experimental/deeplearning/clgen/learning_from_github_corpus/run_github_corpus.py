@@ -10,7 +10,6 @@ import pathlib
 import pickle
 import typing
 
-import humanize
 import numpy as np
 import pandas as pd
 from absl import app
@@ -25,6 +24,7 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.oclgrind import oclgrind
+from labm8 import humanize
 from labm8 import labtypes
 
 FLAGS = flags.FLAGS
@@ -204,9 +204,8 @@ def main(argv: typing.List[str]):
     num_good_files = q.count()
     num_files = session.query(preprocessed.PreprocessedContentFile).count()
     logging.info('Corpus of %s files (%.1f%% of %s)',
-                 humanize.intcomma(num_good_files),
-                 (num_good_files / num_files) * 100,
-                 humanize.intcomma(num_files))
+                 humanize.Commas(num_good_files),
+                 (num_good_files / num_files) * 100, humanize.Commas(num_files))
 
     srcs = [x[0] for x in q]
     batch_size = 8
@@ -249,7 +248,7 @@ def main(argv: typing.List[str]):
           # grand total row.
           2 * summary['count'].values / summary['count'].sum()
       ]
-      summary['count'] = [humanize.intcomma(int(x)) for x in summary['count']]
+      summary['count'] = [humanize.Commas(int(x)) for x in summary['count']]
       print(summary)
       del df
       del summary

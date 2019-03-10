@@ -5,7 +5,6 @@ import pickle
 import random
 import typing
 
-import humanize
 import keras
 import numpy as np
 import pandas as pd
@@ -21,6 +20,7 @@ from experimental.compilers.reachability import \
   control_flow_graph_generator as cfg_generator
 from experimental.compilers.reachability.datasets import \
   make_reachability_dataset as dataset
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import prof
 
@@ -200,11 +200,10 @@ class LstmReachabilityModel(object):
       with open(outdir / 'atomizer.pkl', 'rb') as f:
         atomizer = pickle.load(f)
     else:
-      logging.info('Deriving atomizer from %s charss',
-                   humanize.intcomma(len(text)))
+      logging.info('Deriving atomizer from %s charss', humanize.Commas(
+          len(text)))
       atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
-      logging.info('Vocabulary size: %s', humanize.intcomma(
-          len(atomizer.vocab)))
+      logging.info('Vocabulary size: %s', humanize.Commas(len(atomizer.vocab)))
       with open(outdir / 'atomizer.pkl', 'wb') as f:
         pickle.dump(atomizer, f)
       logging.info('Pickled atomizer to %s', outdir / 'atomizer.pkl')
@@ -236,7 +235,7 @@ class LstmReachabilityModel(object):
 
     num_uniq_seqs = len(set(df['text:successors']))
     logging.info('Unique sequences: %s of %s (%.2f %%)',
-                 humanize.intcomma(num_uniq_seqs), humanize.intcomma(len(df)),
+                 humanize.Commas(num_uniq_seqs), humanize.Commas(len(df)),
                  (num_uniq_seqs / len(df)) * 100)
 
     np.random.seed(FLAGS.reachability_model_seed)
@@ -381,11 +380,10 @@ class ZeroRReachabilityModel(LstmReachabilityModel):
       with open(outdir / 'atomizer.pkl', 'rb') as f:
         atomizer = pickle.load(f)
     else:
-      logging.info('Deriving atomizer from %s charss',
-                   humanize.intcomma(len(text)))
+      logging.info('Deriving atomizer from %s charss', humanize.Commas(
+          len(text)))
       atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
-      logging.info('Vocabulary size: %s', humanize.intcomma(
-          len(atomizer.vocab)))
+      logging.info('Vocabulary size: %s', humanize.Commas(len(atomizer.vocab)))
       with open(outdir / 'atomizer.pkl', 'wb') as f:
         pickle.dump(atomizer, f)
       logging.info('Pickled atomizer to %s', outdir / 'atomizer.pkl')

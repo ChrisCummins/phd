@@ -24,7 +24,6 @@ import tempfile
 import time
 
 import checksumdir
-import humanize
 import numpy as np
 from absl import flags
 from absl import logging
@@ -40,6 +39,7 @@ from deeplearning.clgen.proto import corpus_pb2
 from labm8 import bazelutil
 from labm8 import crypto
 from labm8 import hashcache
+from labm8 import humanize
 from labm8 import lockfile
 from labm8 import pbutil
 
@@ -196,8 +196,8 @@ class Corpus(object):
       atomizer = self.atomizer
       logging.info('%s: %s tokens in %s ms',
                    type(atomizer).__name__,
-                   humanize.intcomma(atomizer.vocab_size),
-                   humanize.intcomma(int((time.time() - start_time) * 1000)))
+                   humanize.Commas(atomizer.vocab_size),
+                   humanize.Commas(int((time.time() - start_time) * 1000)))
       self.encoded.Create(self.preprocessed, atomizer,
                           self.config.contentfile_separator)
 
@@ -383,7 +383,7 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
   logging.debug('Resolved Content ID %s in %s ms.', content_id,
-                humanize.intcomma(int((time.time() - start_time) * 1000)))
+                humanize.Commas(int((time.time() - start_time) * 1000)))
   return content_id
 
 

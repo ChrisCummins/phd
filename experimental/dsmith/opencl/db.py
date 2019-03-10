@@ -27,7 +27,6 @@ from signal import Signals
 from typing import Iterable, List, Tuple, Union
 
 import clgen
-import humanize
 import progressbar
 import sqlalchemy as sql
 from experimental.dsmith.db_base import *
@@ -38,6 +37,7 @@ from experimental.dsmith import Colors
 from experimental.dsmith import db_base
 from experimental.dsmith.opencl import oclgrind
 from labm8 import crypto, prof
+from labm8 import humanize
 
 # Global state to manage database connections. Must call init() before
 # creating sessions.
@@ -796,9 +796,9 @@ class Testbed(Base):
                   .scalar() or 0
 
       estimated_time = (runtime / max(ndone, 1)) * ntodo
-      eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
+      eta = humanize.Duration(estimated_time)
 
-      words_ntodo = humanize.intcomma(ntodo)
+      words_ntodo = humanize.Commas(ntodo)
       print(f"Running {Colors.BOLD}{words_ntodo} "
             f"{harness}:{generator} testcases on {self}"
             f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")

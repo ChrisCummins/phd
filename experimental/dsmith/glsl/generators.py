@@ -99,7 +99,7 @@ class GlslGenerator(Generator):
       if num_to_generate < math.inf:
         estimated_time = (
             self.generation_time(s) / max(num_progs, 1)) * num_to_generate
-        eta = humanize.naturaldelta(datetime.timedelta(seconds=estimated_time))
+        eta = humanize.Duration(estimated_time)
         print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
               "to be generated. Estimated generation time is " +
               f"{Colors.BOLD}{eta}{Colors.END}.")
@@ -163,7 +163,7 @@ class GlslGenerator(Generator):
 
       # Print a preamble message:
       paths = fs.ls(indir, abspaths=True)
-      num_to_import = humanize.intcomma(len(paths))
+      num_to_import = humanize.Commas(len(paths))
       print(f"{Colors.BOLD}{num_to_import}{Colors.END} files are "
             "to be imported.")
 
@@ -179,8 +179,8 @@ class GlslGenerator(Generator):
           buf = []
       save_proxies_uniq_on(s, buf, "sha1")
 
-    num_imported = humanize.intcomma(self.num_programs(s) - start_num_progs)
-    num_progs = humanize.intcomma(self.num_programs(s))
+    num_imported = humanize.Commas(self.num_programs(s) - start_num_progs)
+    num_progs = humanize.Commas(self.num_programs(s))
     print(f"All done! Imported {Colors.BOLD}{num_imported}{Colors.END} "
           f"new {self} programs. You now have "
           f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "

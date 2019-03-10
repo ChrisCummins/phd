@@ -3,7 +3,6 @@ import pathlib
 import tempfile
 import typing
 
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -14,6 +13,7 @@ from deeplearning.deepsmith import testcase
 from deeplearning.deepsmith import toolchain
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from labm8 import humanize
 from labm8 import sqlutil
 
 FLAGS = flags.FLAGS
@@ -72,10 +72,10 @@ def main(argv: typing.List[str]):
         compute_max_rows=True)
 
     for batch in batches:
-      logging.info('Batch %03d containing testcases %s..%s of %s',
-                   batch.batch_num, humanize.intcomma(batch.offset),
-                   humanize.intcomma(batch.limit),
-                   humanize.intcomma(batch.max_rows))
+      logging.info(
+          'Batch %03d containing testcases %s..%s of %s', batch.batch_num,
+          humanize.Commas(batch.offset), humanize.Commas(batch.limit),
+          humanize.Commas(batch.max_rows))
       prefix = 'phd_experimental_deeplearning_clgen_'
       with tempfile.TemporaryDirectory(prefix=prefix) as d:
         d = pathlib.Path(d)

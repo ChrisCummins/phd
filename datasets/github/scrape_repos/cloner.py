@@ -9,7 +9,6 @@ import subprocess
 import threading
 import typing
 
-import humanize
 import progressbar
 from absl import app
 from absl import flags
@@ -17,6 +16,7 @@ from absl import logging
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import fs
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -120,8 +120,7 @@ def main(argv) -> None:
       ]
   random.shuffle(meta_files)
   worker = AsyncWorker(meta_files)
-  logging.info('Cloning %s repos from GitHub ...',
-               humanize.intcomma(worker.max))
+  logging.info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():

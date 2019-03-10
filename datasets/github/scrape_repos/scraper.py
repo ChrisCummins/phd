@@ -11,7 +11,6 @@ import time
 import typing
 
 import github
-import humanize
 import progressbar
 from absl import app
 from absl import flags
@@ -20,6 +19,7 @@ from github import Repository
 
 from datasets.github import api as github_api
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 
@@ -121,7 +121,7 @@ class QueryScraper(threading.Thread):
     Args:
       repos: A list of GitHub Repository instances.
     """
-    logging.debug('Scraping %s repositories', humanize.intcomma(len(repos)))
+    logging.debug('Scraping %s repositories', humanize.Commas(len(repos)))
     for repo in repos:
       self.i += 1
       concat_name = '_'.join([repo.owner.login, repo.name])
@@ -143,8 +143,8 @@ def RunQuery(worker: QueryScraper) -> None:
   sys.stderr.flush()
   logging.info("Query '%s' returned %s results. Processing first %s ...",
                worker.repo_query.string,
-               humanize.intcomma(worker.total_result_count),
-               humanize.intcomma(worker.repo_query.max_results))
+               humanize.Commas(worker.total_result_count),
+               humanize.Commas(worker.repo_query.max_results))
   bar = progressbar.ProgressBar(
       max_value=worker.repo_query.max_results, redirect_stderr=True)
   worker.start()
@@ -208,14 +208,14 @@ def main(argv) -> None:
 
   for language in clone_list.language:
     logging.info('Scraping %s repos using %s queries ...', language.language,
-                 humanize.intcomma(len(language.query)))
+                 humanize.Commas(len(language.query)))
     for query in language.query:
       RunQuery(QueryScraper(language, query, connection))
 
   logging.info('Finished scraping. Indexed repository counts:')
   for language in clone_list.language:
     logging.info('  %s: %s', language.language,
-                 humanize.intcomma(GetNumberOfRepoMetas(language)))
+                 humanize.Commas(GetNumberOfRepoMetas(language)))
 
 
 if __name__ == '__main__':

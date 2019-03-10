@@ -4,7 +4,6 @@ import pathlib
 import random
 import time
 
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -16,6 +15,7 @@ from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from labm8 import crypto
+from labm8 import humanize
 from labm8 import lockfile
 from labm8 import pbutil
 
@@ -119,7 +119,7 @@ def main(argv):
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)
   logging.info('Loaded %d instances in %s ms', len(candidate_instances),
-               humanize.intcomma(int((time.time() - start_time) * 1000)))
+               humanize.Commas(int((time.time() - start_time) * 1000)))
 
   while candidate_instances:
     instance = candidate_instances.popleft()

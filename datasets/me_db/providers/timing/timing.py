@@ -6,13 +6,13 @@ import subprocess
 import time
 import typing
 
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
 
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
+from labm8 import humanize
 
 FLAGS = flags.FLAGS
 
@@ -74,7 +74,7 @@ WHERE
         ) for date, value, group in cursor
     ])
     logging.info('Processed %s %s:%s measurements in %.3f seconds',
-                 humanize.intcomma(len(series.measurement)), series.family,
+                 humanize.Commas(len(series.measurement)), series.family,
                  series.name,
                  time.time() - start_time)
 

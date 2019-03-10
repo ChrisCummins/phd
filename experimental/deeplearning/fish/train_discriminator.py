@@ -4,7 +4,6 @@ import pathlib
 import pickle
 import typing
 
-import humanize
 import keras
 import numpy as np
 from absl import app
@@ -15,6 +14,7 @@ from keras.preprocessing import sequence
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.deeplearning.fish.proto import fish_pb2
+from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = flags.FLAGS
@@ -91,15 +91,15 @@ def LoadPositiveNegativeProtos(path: pathlib.Path) -> PositiveNegativeDataset:
       for p in path.iterdir()
       if p.name.startswith('positive-')
   ]
-  logging.info('Loaded %s positive protos',
-               humanize.intcomma(len(positive_protos)))
+  logging.info('Loaded %s positive protos', humanize.Commas(
+      len(positive_protos)))
   negative_protos = [
       pbutil.FromFile(p, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
       for p in path.iterdir()
       if p.name.startswith('negative-')
   ]
-  logging.info('Loaded %s negative protos',
-               humanize.intcomma(len(negative_protos)))
+  logging.info('Loaded %s negative protos', humanize.Commas(
+      len(negative_protos)))
   return PositiveNegativeDataset(positive_protos, negative_protos)
 
 
@@ -137,15 +137,15 @@ def main(argv):
   testing_protos = LoadPositiveNegativeProtos(dataset_root / 'testing')
   logging.info(
       'Number of training examples: %s.',
-      humanize.intcomma(
+      humanize.Commas(
           len(training_protos.positive) + len(training_protos.negative)))
   logging.info(
       'Number of validation examples: %s.',
-      humanize.intcomma(
+      humanize.Commas(
           len(validation_protos.positive) + len(validation_protos.negative)))
   logging.info(
       'Number of testing examples: %s.',
-      humanize.intcomma(
+      humanize.Commas(
           len(testing_protos.positive) + len(testing_protos.negative)))
 
   sequence_length = FLAGS.sequence_length
@@ -154,9 +154,9 @@ def main(argv):
       validation_protos.positive + validation_protos.negative +
       testing_protos.positive + testing_protos.negative
   ])
-  logging.info('Deriving atomizer from %s chars.', humanize.intcomma(len(text)))
+  logging.info('Deriving atomizer from %s chars.', humanize.Commas(len(text)))
   atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
-  logging.info('Vocabulary size: %s.', humanize.intcomma(len(atomizer.vocab)))
+  logging.info('Vocabulary size: %s.', humanize.Commas(len(atomizer.vocab)))
   logging.info('Pickled atomizer to %s.', model_path / 'atomizer.pkl')
   with open(model_path / 'atomizer.pkl', 'wb') as f:
     pickle.dump(atomizer, f)

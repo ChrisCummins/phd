@@ -11,7 +11,6 @@ import pathlib
 import time
 import typing
 
-import humanize
 import sqlalchemy as sql
 from absl import app
 from absl import flags
@@ -25,6 +24,7 @@ from datasets.me_db.providers.health_kit import health_kit
 from datasets.me_db.providers.life_cycle import life_cycle
 from datasets.me_db.providers.timing import timing
 from datasets.me_db.providers.ynab import ynab
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import sqlutil
 
@@ -99,7 +99,7 @@ class Database(sqlutil.Database):
     for series in series_collection.series:
       num_measurements += len(series.measurement)
       logging.info('Importing %s %s:%s measurements',
-                   humanize.intcomma(len(series.measurement)), series.family,
+                   humanize.Commas(len(series.measurement)), series.family,
                    series.name)
       session.add_all(MeasurementsFromSeries(series))
     return num_measurements
@@ -131,7 +131,7 @@ class Database(sqlutil.Database):
 
     duration_seconds = time.time() - start_time
     logging.info('Processed %s records in %.3f seconds (%.2f rows per second)',
-                 humanize.intcomma(num_measurements), duration_seconds,
+                 humanize.Commas(num_measurements), duration_seconds,
                  num_measurements / duration_seconds)
 
 

@@ -23,7 +23,6 @@ import subprocess
 import tempfile
 import typing
 
-import humanize
 from absl import app
 from absl import flags
 from absl import logging
@@ -35,6 +34,7 @@ from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import fs
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import labtypes
 from labm8 import pbutil
@@ -823,8 +823,8 @@ def main(argv: typing.List[str]):
       kernel_invocation_count = sum(
           len(log.run.kernel_invocation) for log in benchmark_suite.logs)
       logging.info('Extracted %s kernel invocations from %s logs',
-                   humanize.intcomma(kernel_invocation_count),
-                   humanize.intcomma(benchmark_suite.log_count))
+                   humanize.Commas(kernel_invocation_count),
+                   humanize.Commas(benchmark_suite.log_count))
 
 
 if __name__ == '__main__':
