@@ -54,7 +54,8 @@ def main(argv: typing.List[str]):
 
   testlogs = pathlib.Path(FLAGS.testlogs)
   if not testlogs.is_dir():
-    raise FileNotFoundError("--testlogs must be a directory")
+    raise FileNotFoundError("--testlogs not a directory: {}".format(
+        FLAGS.testlogs))
 
   database = db.Database(FLAGS.db)
 
