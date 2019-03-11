@@ -280,6 +280,9 @@ py_library(
     name = "labdate",
     srcs = ["labdate.py"],
     visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/py/pytz",
+    ],
 )
 
 py_test(
