@@ -19,11 +19,11 @@ import pytest
 from sqlalchemy.sql.expression import func
 
 from datasets.me_db import me_db
-from labm8 import app
+from datasets.me_db.tests.acceptance_tests import flags
 from labm8 import bazelutil
 from labm8 import test
 
-FLAGS = app.FLAGS
+FLAGS = flags.FLAGS
 
 TEST_INBOX_PATH = bazelutil.DataPath('phd/datasets/me_db/tests/test_inbox')
 
