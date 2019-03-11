@@ -79,7 +79,7 @@ def Exec(args: typing.List[str],
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG)] + args
   if log:
-    app.Debug('$ %s', ' '.join(cmd))
+    app.Log(2, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=stdout,
@@ -161,7 +161,7 @@ def Preprocess(src: str,
   """
   copts = copts or []
   cmd = ['-E', '-c', '-', '-o', '-'] + copts
-  app.Debug('$ %s', ' '.join(cmd))
+  app.Log(2, '$ %s', ' '.join(cmd))
   process = Exec(cmd, timeout_seconds=timeout_seconds, stdin=src)
   if process.returncode:
     raise ClangException(returncode=process.returncode, stderr=process.stderr)

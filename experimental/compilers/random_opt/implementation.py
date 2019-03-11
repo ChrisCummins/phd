@@ -103,13 +103,13 @@ class Environment(gym.Env):
     if self.config.HasField('setup_cmd'):
       cmd = self._MakeVariableSubstitution(self.config.setup_cmd)
       cmd = f"timeout -s9 {timeout_seconds} bash -c '{cmd}'"
-      app.Debug('$ %s', cmd)
+      app.Log(2, '$ %s', cmd)
       subprocess.check_call(cmd, shell=True)
 
   def RunBinary(self, timeout_seconds: int = 60) -> int:
     """Run the binary and return runtime. Requires that binary exists."""
     exec_cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.exec_cmd}'"
-    app.Debug('$ %s', exec_cmd)
+    app.Log(2, '$ %s', exec_cmd)
     start_time = time.time()
     proc = subprocess.Popen(exec_cmd, shell=True)
     proc.communicate()
@@ -135,7 +135,7 @@ class Environment(gym.Env):
     if self.eval_cmd:
       try:
         cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.eval_cmd}'"
-        app.Debug('$ %s', cmd)
+        app.Log(2, '$ %s', cmd)
         subprocess.check_call(cmd, shell=True)
         return True
       except subprocess.CalledProcessError:
@@ -189,7 +189,7 @@ class LlvmOptEnv(Environment):
     self.observation_space = spaces.Discrete(10)
 
   def reset(self):
-    app.Debug('$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
+    app.Log(2, '$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
     shutil.copyfile(self.bytecode_path, self.working_bytecode_path)
     clang.Compile([self.working_bytecode_path], self.binary_path, copts=['-O0'])
     start_time = labdate.MillisecondsTimestamp()
@@ -268,7 +268,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
     if step.status == random_opt_pb2.Step.PASS:
       # Update bytecode file.
-      app.Debug('$ mv %s %s', temp_bytecode, self.working_bytecode_path)
+      app.Log(2, '$ mv %s %s', temp_bytecode, self.working_bytecode_path)
       step.bytecode_changed = BytecodesAreEqual(temp_bytecode,
                                                 self.working_bytecode_path)
       os.rename(str(temp_bytecode), str(self.working_bytecode_path))
@@ -383,7 +383,7 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
   def reset(self):
     """Reset the environment state."""
-    app.Debug('$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
+    app.Log(2, '$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
     shutil.copyfile(self.bytecode_path, self.working_bytecode_path)
     clang.Compile([self.bytecode_path], self.binary_path, copts=['-O0'])
     self.RunSetupCommand()

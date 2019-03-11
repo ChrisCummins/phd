@@ -51,7 +51,7 @@ def Exec(data: str, args: typing.List[str],
     A Popen instance with stdout and stderr set to strings.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(BZIP2)] + args
-  app.Debug('$ %s', ' '.join(cmd))
+  app.Log(2, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,

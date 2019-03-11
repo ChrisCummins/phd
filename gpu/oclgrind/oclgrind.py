@@ -20,6 +20,7 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import system
 
+
 FLAGS = app.FLAGS
 
 _OCLGRIND_PKG = 'oclgrind_linux' if system.is_linux() else 'oclgrind_mac'
@@ -54,7 +55,7 @@ def Exec(argv: typing.List[str],
     A Popen instance, with string stdout and stderr attributes set.
   """
   cmd = [str(OCLGRIND_PATH)] + argv
-  # app.Debug('$ %s', ' '.join(cmd))
+  # app.Log(2, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,

@@ -118,7 +118,7 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
   interesting_results = []
 
   # Generate testcases.
-  app.Info('Generating %d testcases ...', batch_size)
+  app.Log(1, 'Generating %d testcases ...', batch_size)
   req = generator_pb2.GenerateTestcasesRequest()
   req.num_testcases = batch_size
   res = generator.GenerateTestcases(req, None)
@@ -126,18 +126,18 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
       testcase for testcase in res.testcases if filters.PreExec(testcase)
   ]
   if len(res.testcases) - len(testcases):
-    app.Info('Discarded %d testcases prior to execution.',
+    app.Log(1, 'Discarded %d testcases prior to execution.',
              len(res.testcases) - len(testcases))
 
   # Evaluate testcases.
-  app.Info('Evaluating %d testcases on %s ...', len(testcases),
+  app.Log(1, 'Evaluating %d testcases on %s ...', len(testcases),
            dut_harness.testbeds[0].opts['platform'][:12])
   unfiltered_results = RunTestcases(dut_harness, testcases)
   results = [
       result for result in unfiltered_results if filters.PostExec(result)
   ]
   if len(unfiltered_results) - len(results):
-    app.Info('Discarded %d results.', len(unfiltered_results) - len(results))
+    app.Log(1, 'Discarded %d results.', len(unfiltered_results) - len(results))
 
   for i, result in enumerate(results):
     interesting_result = ResultIsInteresting(result, unary_difftester,
@@ -205,7 +205,7 @@ def ResultIsInteresting(
 
   dt_outcomes = gs_difftester([gs_result, result])
   dt_outcome = dt_outcomes[1]
-  app.Info('Differential test outcome: %s.',
+  app.Log(1, 'Differential test outcome: %s.',
            deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
 
   # Determine whether we can use the difftest result.
@@ -213,7 +213,7 @@ def ResultIsInteresting(
       deepsmith_pb2.DifferentialTest(
           result=[gs_result, result], outcome=dt_outcomes))
   if not dt:
-    app.Info('Cannot use gold standard difftest result.')
+    app.Log(1, 'Cannot use gold standard difftest result.')
     return NotInteresting(result)
   result = dt.result[1]
 
@@ -281,7 +281,7 @@ def TestingLoop(min_interesting_results: int,
   while (num_interesting_results < min_interesting_results and
          time.time() < start_time + max_testing_time_seconds):
     batch_num += 1
-    app.Info('Starting generate / test / eval batch %d ...', batch_num)
+    app.Log(1, 'Starting generate / test / eval batch %d ...', batch_num)
     interesting_results = RunBatch(generator, dut_harness, gs_harness, filters,
                                    batch_size)
     num_interesting_results += len(interesting_results)
@@ -290,7 +290,7 @@ def TestingLoop(min_interesting_results: int,
           result, interesting_results_dir /
           (str(labdate.MillisecondsTimestamp()) + '.pbtxt'))
 
-  app.Info(
+  app.Log(1, 
       'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
       'Found %s interesting results.',
       time.time() - start_time, humanize.Commas(batch_num),
@@ -356,7 +356,7 @@ def GetDeviceUnderTestHarness() -> base_harness.HarnessBase:
   else:
     raise app.UsageError(
         f"Unrecognized value for --generator: '{FLAGS.generator}'")
-  app.Info('Preparing device under test.')
+  app.Log(1, 'Preparing device under test.')
   config = GetBaseHarnessConfig(config_class)
   config.opencl_env.extend([FLAGS.dut])
   config.opencl_opt.extend([FLAGS.opencl_opt])
@@ -382,7 +382,7 @@ def GetGoldStandardTestHarness() -> base_harness.HarnessBase:
   else:
     raise app.UsageError(
         f"Unrecognized value for --generator: '{FLAGS.generator}'")
-  app.Info('Preparing gold standard testbed.')
+  app.Log(1, 'Preparing gold standard testbed.')
   config = GetBaseHarnessConfig(config_class)
   config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
@@ -392,7 +392,7 @@ def GetGoldStandardTestHarness() -> base_harness.HarnessBase:
 
 
 def GetGenerator() -> base_generator.GeneratorServiceBase:
-  app.Info('Preparing generator.')
+  app.Log(1, 'Preparing generator.')
   if FLAGS.generator == 'clgen':
     generator = GeneratorFromFlag(generator_pb2.ClgenGenerator,
                                   clgen_pretrained.ClgenGenerator)
@@ -402,7 +402,7 @@ def GetGenerator() -> base_generator.GeneratorServiceBase:
   else:
     raise app.UsageError(
         f"Unrecognized value for --generator: '{FLAGS.generator}'")
-  app.Info('%s:\n %s', type(generator).__name__, generator.config)
+  app.Log(1, '%s:\n %s', type(generator).__name__, generator.config)
   return generator
 
 
@@ -473,7 +473,7 @@ def WriteFile(path: pathlib.Path, text: str) -> None:
   """
   with open(path, 'w') as f:
     f.write(text)
-  app.Info('Wrote %s', path)
+  app.Log(1, 'Wrote %s', path)
 
 
 def UnpackResult(result_path: typing.Optional[str]) -> None:
@@ -529,7 +529,7 @@ def main(argv):
   interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
   if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
     raise app.UsageError('--interesting_results_dir must be a directory')
-  app.Info('Recording interesting results in %s.', interesting_results_dir)
+  app.Log(1, 'Recording interesting results in %s.', interesting_results_dir)
 
   generator = GetGenerator()
   filters = GetFilters()

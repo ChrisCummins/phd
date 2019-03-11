@@ -124,8 +124,8 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
             contentfiles.GitHubRepository.language == language).order_by(
                 contentfiles.ContentFile.id.desc()).limit(1).one_or_none() or
          (0,))[0]
-    app.Info('Starting at row %s / %s', humanize.Commas(resume_from),
-             humanize.Commas(n))
+    app.Log(1, 'Starting at row %s / %s', humanize.Commas(resume_from),
+            humanize.Commas(n))
 
     # A query to return the <id,text> tuples of files to process.
     q = (cf_s.query(contentfiles.ContentFile.id, contentfiles.ContentFile.text).
@@ -146,7 +146,8 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
         s.add_all(bytecodes)
 
     def _StartBatch(i: int):
-      app.Info(
+      app.Log(
+          1,
           'Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)',
           batch_size, humanize.Commas((i + resume_from)), humanize.Commas(n),
           ((i + resume_from) / n) * 100)

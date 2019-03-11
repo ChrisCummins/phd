@@ -317,7 +317,7 @@ def GetOrCreateRepoOrDie(github: github_lib.Github) -> github_lib.Repository:
     return github.get_user().get_repo(repo_name)
   except github_lib.UnknownObjectException as e:
     assert e.status == 404
-    app.Info("Creating repo %s", repo_name)
+    app.Log(1, "Creating repo %s", repo_name)
     github.get_user().create_repo(
         repo_name,
         description='PhD repo subtree export',
@@ -341,7 +341,7 @@ def ExportToDirectoryOrDie(destination: pathlib.Path,
 def CloneRepoToDestinationOrDie(repo: github_lib.Repository,
                                 destination: pathlib.Path):
   """Clone repo from github."""
-  app.Info('Cloning from %s', repo.ssh_url)
+  app.Log(1, 'Cloning from %s', repo.ssh_url)
   subprocess.check_call(['git', 'clone', repo.ssh_url, str(destination)])
   # Delete everything except the .git directory. This is to enable files to be
   # removed between commits, as otherwise incremental commits would only ever
@@ -358,7 +358,7 @@ def CommitAndPushOrDie(local: pathlib.Path, remote: github_lib.Repository):
   parent_hash = phd_repo.head.object.hexsha
 
   tag_name = datetime.datetime.now().strftime("%y%m%dT%H%M%S")
-  app.Info("Creating tag %s", tag_name)
+  app.Log(1, "Creating tag %s", tag_name)
   with fs.chdir(local):
     subprocess.check_call(['git', 'add', '.'])
     subprocess.check_call(
@@ -368,7 +368,7 @@ def CommitAndPushOrDie(local: pathlib.Path, remote: github_lib.Repository):
     ])
     subprocess.check_call(['git', 'push', 'origin', 'master'])
     subprocess.check_call(['git', 'push', 'origin', tag_name])
-  app.Info('Exported to %s', remote.html_url)
+  app.Log(1, 'Exported to %s', remote.html_url)
 
 
 def main(argv: typing.List[str]):
@@ -400,7 +400,7 @@ def main(argv: typing.List[str]):
       CommitAndPushOrDie(destination, repo)
     else:
       ExportToDirectoryOrDie(destination, targets)
-      app.Info('Exported subtree to %s', destination)
+      app.Log(1, 'Exported subtree to %s', destination)
 
 
 if __name__ == '__main__':

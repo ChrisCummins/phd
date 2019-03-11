@@ -170,7 +170,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
                         context) -> alice_pb2.Null:
     del context
 
-    app.Info('Worker bee %s registered', request.string)
+    app.Log(1, 'Worker bee %s registered', request.string)
     channel = grpc.insecure_channel(request.string)
     worker_bee = alice_pb2_grpc.WorkerBeeStub(channel)
     worker_bee.id = request.string
@@ -183,7 +183,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
                           context) -> alice_pb2.Null:
     del context
 
-    app.Info('Worker bee %s unregistered', request.string)
+    app.Log(1, 'Worker bee %s unregistered', request.string)
     if request.string in self.worker_bees:
       del self.worker_bees[request.string]
     return alice_pb2.Null()
@@ -202,7 +202,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
       s.flush()
 
       entry_id = entry.id
-      app.Info('Created new ledger entry %s', entry_id)
+      app.Log(1, 'Created new ledger entry %s', entry_id)
 
       worker_bee = self.SelectWorkerIdForRunRequest(request)
       entry.worker_id = worker_bee.id
@@ -285,7 +285,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
 
     port = FLAGS.ledger_port
     port = server.add_insecure_port(f'[::]:{port}')
-    app.Info('📜  Listening for commands on %s ...', port)
+    app.Log(1, '📜  Listening for commands on %s ...', port)
     server.start()
     try:
       while True:

@@ -42,7 +42,7 @@ class ToplevelLinter(linters.Linter):
 
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
-    app.Debug("Running //%s linters: %s", self.toplevel_dir,
+    app.Log(2, "Running //%s linters: %s", self.toplevel_dir,
               ", ".join(linter_names))
 
   def _LintThisDirectory(

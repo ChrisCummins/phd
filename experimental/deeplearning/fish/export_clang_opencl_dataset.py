@@ -34,7 +34,7 @@ def ExportOpenCLResults(cursor, start_id, proto_dir):
   batch_size = 1000
   result_id = start_id
   while True:
-    app.Info('Exporting batch of %s results', humanize.Commas(batch_size))
+    app.Log(1, 'Exporting batch of %s results', humanize.Commas(batch_size))
     cursor.execute(
         """
 SELECT
@@ -109,7 +109,7 @@ def main(argv):
   for key in fish_pb2.CompilerCrashDiscriminatorTrainingExample.Outcome.keys():
     (export_path / key.lower()).mkdir(parents=True, exist_ok=True)
 
-  app.Info('Connecting to MySQL database')
+  app.Log(1, 'Connecting to MySQL database')
   credentials = GetMySqlCredentials()
   cnx = MySQLdb.connect(
       database='dsmith_04_opencl',
@@ -117,17 +117,17 @@ def main(argv):
       user=credentials[0],
       password=credentials[1])
   cursor = cnx.cursor()
-  app.Info('Determining last export ID')
+  app.Log(1, 'Determining last export ID')
   ids = sorted([
       int(pathlib.Path(f).stem)
       for f in fs.lsfiles(export_path, recursive=True, abspaths=True)
   ])
   last_export_id = ids[-1] if ids else 0
-  app.Info('Exporting results from ID %s', last_export_id)
+  app.Log(1, 'Exporting results from ID %s', last_export_id)
   ExportOpenCLResults(cursor, last_export_id, export_path)
   cursor.close()
   cnx.close()
-  app.Info('Exported training set of %s files to %s',
+  app.Log(1, 'Exported training set of %s files to %s',
            humanize.Commas(len(list(export_path.iterdir()))), export_path)
 
 

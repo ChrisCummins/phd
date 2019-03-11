@@ -2,6 +2,8 @@
 
 See: <https://github.com/abseil/abseil-py>
 """
+import fnmatch
+import functools
 import sys
 from typing import Callable, List, Optional
 
@@ -9,8 +11,16 @@ from absl import app as absl_app
 from absl import flags as absl_flags
 from absl import logging as absl_logging
 
+
 FLAGS = absl_flags.FLAGS
 
+absl_flags.DEFINE_list(
+    'vmodule', [],
+    "Per-module verbose level. The argument has to contain a comma-separated "
+    "list of <module name>=<log level>. <module name> is a glob pattern (e.g., "
+    "gfs* for all modules whose name starts with \"gfs\"), matched against the "
+    "filename base (that is, name ignoring .py). <log level> overrides any "
+    "value given by --v.")
 
 class UsageError(absl_app.UsageError):
   """Exception raised when the arguments supplied by the user are invalid.
@@ -80,49 +90,6 @@ def Run(main: Callable[[], None]):
 
 # Logging functions.
 
-# TODO(cec): Emulate vmodule behavior.
-
-
-def Fatal(msg, *args, **kwargs):
-  """Logs a fatal message."""
-  absl_logging.fatal(msg, *args, **kwargs)
-
-
-def Error(msg, *args, **kwargs):
-  """Logs an error message."""
-  absl_logging.error(msg, *args, **kwargs)
-
-
-def Warning(msg, *args, **kwargs):
-  """Logs a warning message."""
-  absl_logging.warning(msg, *args, **kwargs)
-
-
-def Info(msg, *args, **kwargs):
-  """Logs an info message."""
-  absl_logging.info(msg, *args, **kwargs)
-
-
-def Debug(msg, *args, **kwargs):
-  """Logs a debug message."""
-  absl_logging.debug(msg, *args, **kwargs)
-
-
-def FlushLogs():
-  """Flushes all log files."""
-  absl_logging.flush()
-
-
-def DebugLogging() -> bool:
-  """Return whether debug logging is enabled."""
-  return absl_logging.level_debug()
-
-
-# Flags functions.
-
-# TODO(cec): Implement DEFINE_path.
-# TODO(cec): Add validator callbacks.
-# TODO(cec): Add 'required' keyword to each flag.
 
 # This is a set of module ids for the modules that disclaim key flags.
 # This module is explicitly added to this set so that we never consider it to
@@ -150,7 +117,7 @@ def _GetCallingModuleName():
   We generally use this function to get the name of the module calling a
   DEFINE_foo... function.
   Returns:
-    The module object that called into this one.
+    The module name that called into this one.
   Raises:
     AssertionError: Raised when no calling module could be identified.
   """
@@ -162,6 +129,80 @@ def _GetCallingModuleName():
     if id(module) not in disclaim_module_ids and module_name is not None:
       return module_name
   raise AssertionError('No module was found')
+
+
+@functools.lru_cache(maxsize=1)
+def ModuleGlob():
+  return [(x.split('=')[0], int(x.split('=')[1])) for x in FLAGS.vmodule]
+
+
+@functools.lru_cache(maxsize=128)
+def _GetModuleVerbosity(module: str) -> int:
+  """Return the verbosity level for the given module."""
+  module_basename = module.split('.')[-1]
+  for module_glob, level in ModuleGlob():
+    if fnmatch.fnmatch(module_basename, module_glob):
+      return level
+
+  return absl_logging.get_verbosity()
+
+
+def GetVerbosity() -> int:
+  """Get the verbosity level.
+
+  This can be set per-module using --vmodule flag.
+  """
+  return _GetModuleVerbosity(_GetCallingModuleName())
+
+
+def Log(level: int, msg, *args, **kwargs):
+  """Logs a message at the given level.
+
+  Per-module verbose level. The argument has to contain a comma-separated
+  list of <module name>=<log level>. <module name> is a glob pattern (e.g., "
+    "gfs* for all modules whose name starts with \"gfs\"), matched against the "
+    "filename base (that is, name ignoring .py). <log level> overrides any "
+    "value given by --v."
+  """
+  if level <= _GetModuleVerbosity(_GetCallingModuleName()):
+    absl_logging.vlog(1 if level > 1 else 0, msg, *args, **kwargs)
+
+
+def LogIf(level: int, condition, msg, *args, **kwargs):
+  if condition:
+    Log(level, msg, *args, **kwargs)
+
+
+def Fatal(msg, *args, **kwargs):
+  """Logs a fatal message."""
+  absl_logging.fatal(
+      msg, *args, **kwargs)
+
+
+def Error(msg, *args, **kwargs):
+  """Logs an error message."""
+  absl_logging.error(msg, *args, **kwargs)
+
+
+def Warning(msg, *args, **kwargs):
+  """Logs a warning message."""
+  absl_logging.warning(msg, *args, **kwargs)
+
+def FlushLogs():
+  """Flushes all log files."""
+  absl_logging.flush()
+
+
+def DebugLogging() -> bool:
+  """Return whether debug logging is enabled."""
+  return absl_logging.level_debug()
+
+
+# Flags functions.
+
+# TODO(cec): Implement DEFINE_path.
+# TODO(cec): Add validator callbacks.
+# TODO(cec): Add 'required' keyword to each flag.
 
 
 def DEFINE_string(name, default, help):

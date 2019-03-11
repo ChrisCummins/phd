@@ -77,8 +77,8 @@ class OpenClFunction(object):
         # can insert the block here.
         break
       else:
-        app.Debug(
-            'Previous line "%s" not valid as a code block insertion '
+        app.Log(
+            2, 'Previous line "%s" not valid as a code block insertion '
             'point', previous_line)
     else:
       raise ValueError(

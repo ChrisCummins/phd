@@ -161,10 +161,10 @@ def main(argv: typing.List[str]):
   batch_num = 0
   while True:
     batch_num += 1
-    app.Info('Batch %d', batch_num)
+    app.Log(1, 'Batch %d', batch_num)
     batch = GetBatchOfKernelsToDrive(db, env)
     if not batch:
-      app.Info('Done. Nothing more to run!')
+      app.Log(1, 'Done. Nothing more to run!')
       return
 
     DriveBatchAndRecordResults(db, batch, env)

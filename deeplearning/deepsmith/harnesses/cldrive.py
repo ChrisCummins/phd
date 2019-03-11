@@ -103,7 +103,7 @@ class CldriveHarness(harness.HarnessBase,
 
     # Logging output.
     for testbed in self.testbeds:
-      app.Info('OpenCL testbed:\n%s', testbed)
+      app.Log(1, 'OpenCL testbed:\n%s', testbed)
 
   def GetHarnessCapabilities(
       self, request: harness_pb2.GetHarnessCapabilitiesRequest,
@@ -129,8 +129,8 @@ class CldriveHarness(harness.HarnessBase,
     for i, testcase in enumerate(request.testcases):
       result = RunTestcase(self.envs[testbed_idx], self.testbeds[testbed_idx],
                            testcase, self.config.driver_cflag)
-      app.Info('Testcase %d: %s.', i + 1,
-               deepsmith_pb2.Result.Outcome.Name(result.outcome))
+      app.Log(1, 'Testcase %d: %s.', i + 1,
+              deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])
 
     return response
@@ -345,7 +345,7 @@ def CompileDriver(src: str,
   if cflags:
     cmd += cflags
 
-  # app.Debug('$ %s', ' '.join(cmd))
+  # app.Log(2, '$ %s', ' '.join(cmd))
   proc = subprocess.Popen(
       cmd,
       stdin=subprocess.PIPE,
@@ -454,9 +454,9 @@ def main(argv):
   service = CldriveHarness(harness_config)
   harness_pb2_grpc.add_HarnessServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{harness_config.service.port}')
-  app.Info('%s listening on %s:%s',
-           type(service).__name__, harness_config.service.hostname,
-           harness_config.service.port)
+  app.Log(1, '%s listening on %s:%s',
+          type(service).__name__, harness_config.service.hostname,
+          harness_config.service.port)
   server.start()
   try:
     while True:

@@ -177,8 +177,8 @@ class TensorFlowBackend(backends.BackendBase):
 
     num_trainable_params = int(
         np.sum([np.prod(v.shape) for v in tf.trainable_variables()]))
-    app.Info(
-        'Instantiated TensorFlow graph with %s trainable parameters '
+    app.Log(
+        1, 'Instantiated TensorFlow graph with %s trainable parameters '
         'in %s ms.', humanize.Commas(num_trainable_params),
         humanize.Commas(int((time.time() - start_time) * 1000)))
 
@@ -297,7 +297,7 @@ class TensorFlowBackend(backends.BackendBase):
 
       # restore model from closest checkpoint.
       if ckpt_path:
-        app.Info("Restoring checkpoint {}".format(ckpt_path))
+        app.Log(1, "Restoring checkpoint {}".format(ckpt_path))
         saver.restore(sess, ckpt_path)
 
       # make sure we don't lose track of other checkpoints
@@ -318,7 +318,7 @@ class TensorFlowBackend(backends.BackendBase):
         # TODO(cec): refactor data generator to a Python generator.
         data_generator.CreateBatches()
 
-        app.Info('Epoch %d/%d:', epoch_num, self.config.training.num_epochs)
+        app.Log(1, 'Epoch %d/%d:', epoch_num, self.config.training.num_epochs)
         state = sess.run(self.initial_state)
         # Per-batch inner loop.
         bar = progressbar.ProgressBar(max_value=data_generator.num_batches)
@@ -332,7 +332,7 @@ class TensorFlowBackend(backends.BackendBase):
               [self.loss, self.final_state, self.train_op], feed)
 
         # Log the loss and delta.
-        app.Info('Loss: %.6f.', loss)
+        app.Log(1, 'Loss: %.6f.', loss)
 
         # Save after every epoch.
         start_time = time.time()
@@ -340,8 +340,8 @@ class TensorFlowBackend(backends.BackendBase):
         checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
         saver.save(sess, checkpoint_prefix, global_step=global_step)
         checkpoint_path = f'{checkpoint_prefix}-{global_step}'
-        app.Info('Saved checkpoint %s in %s ms.', checkpoint_path,
-                 humanize.Commas(int((time.time() - start_time) * 1000)))
+        app.Log(1, 'Saved checkpoint %s in %s ms.', checkpoint_path,
+                humanize.Commas(int((time.time() - start_time) * 1000)))
         assert pathlib.Path(
             f'{checkpoint_prefix}-{global_step}.index').is_file()
         assert pathlib.Path(f'{checkpoint_prefix}-{global_step}.meta').is_file()

@@ -290,13 +290,13 @@ def _ExportProtos() -> None:
   (proto_dir / 'testcases').mkdir(parents=True, exist_ok=True)
   (proto_dir / 'results').mkdir(parents=True, exist_ok=True)
   for program_id in FLAGS.program_ids:
-    app.Info("Exporting OpenCL program %s", program_id)
+    app.Log(1, "Exporting OpenCL program %s", program_id)
     _ExportOpenCLResults(cursor, program_id, proto_dir)
 
   cursor.close()
   cnx.close()
 
-  app.Info('Exported %d testcases and %d results',
+  app.Log(1, 'Exported %d testcases and %d results',
            len(fs.ls(proto_dir / 'testcases')), len(
                fs.ls(proto_dir / 'results')))
 

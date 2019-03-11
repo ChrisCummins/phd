@@ -29,6 +29,7 @@ from experimental import dsmith
 from experimental.dsmith import Colors
 from labm8 import fs
 
+
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
@@ -58,7 +59,7 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
   start_time = time()
 
   cli = clsmith_cli(*args)
-  app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
+  app.Log(2, f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
   process = Popen(cli, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate()
 
@@ -93,7 +94,7 @@ def cl_launcher(*args, **kwargs) -> return_t:
   start_time = time()
 
   cli = cl_launcher_cli(*args, **kwargs)
-  app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
+  app.Log(2, f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
   process = Popen(cli, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate()
 

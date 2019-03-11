@@ -64,7 +64,7 @@ def Exec(text: str,
       str(timeout_seconds),
       str(CLANG_FORMAT), '-assume-filename', f'input{suffix}'
   ] + args
-  app.Debug('$ %s', ' '.join(cmd))
+  app.Log(2, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdin=subprocess.PIPE,

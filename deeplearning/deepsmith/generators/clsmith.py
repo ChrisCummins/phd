@@ -47,7 +47,7 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
       for i in range(num_programs):
         response.testcases.extend(
             self.SourceToTestcases(*self.GenerateOneSource()))
-        app.Info('Generated file %d.', i + 1)
+        app.Log(1, 'Generated file %d.', i + 1)
     except clsmith.CLSmithError as e:
       response.status.returncode = service_pb2.ServiceStatus.ERROR
       response.status.error_message = str(e)

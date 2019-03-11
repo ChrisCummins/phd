@@ -64,7 +64,7 @@ def task_count(tasks, date, completed: bool):
 def process_json(infile, outpath):
   me.mkdir(os.path.dirname(outpath))
 
-  app.Debug(f"Parsing {infile.name}")
+  app.Log(2, f"Parsing {infile.name}")
   data = json.load(infile)
 
   completed = count_tasks(0, data, complete=True)
@@ -97,11 +97,11 @@ def process_json(infile, outpath):
       last_complete = complete
 
     nrows = len(tasks)
-    app.Info(f"Exported {nrows} records to \"{outfile.name}\"")
+    app.Log(1, f"Exported {nrows} records to \"{outfile.name}\"")
 
 
 def generate_json(of2path, outpath):
-  app.Debug(f"Exporting OmniFocus database to JSON")
+  app.Log(2, f"Exporting OmniFocus database to JSON")
   subprocess.check_output([of2path, '-o', outpath])
   return outpath
 

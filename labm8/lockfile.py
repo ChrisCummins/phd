@@ -200,7 +200,7 @@ class LockFile:
         elif not block:
           raise UnableToAcquireLockError(self)
         # Block and try again later.
-        app.Info('Blocking on lockfile %s for %f seconds', self.path,
+        app.Log(1, 'Blocking on lockfile %s for %f seconds', self.path,
                  FLAGS.lockfile_block_seconds)
         time.sleep(FLAGS.lockfile_block_seconds)
       else:  # new lock

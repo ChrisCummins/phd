@@ -75,7 +75,7 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   if not FLAGS.test_capture_output:
     pytest_args.append('-s')
 
-  app.Info('Running pytest with arguments: %s', pytest_args)
+  app.Log(1, 'Running pytest with arguments: %s', pytest_args)
   sys.exit(pytest.main(pytest_args))
 
 

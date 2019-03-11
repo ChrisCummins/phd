@@ -36,6 +36,7 @@ from experimental.dsmith.langs import Generator, Language, mklang
 from labm8 import fs
 from labm8 import humanize
 
+
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
 _harness_str = f"{Colors.YELLOW}<harness>{Colors.END}{Colors.BOLD}"
@@ -185,7 +186,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
       return _execute(statement, file=file)
 
   csv = ", ".join(f"'{x}'" for x in components)
-  app.Debug(f"parsing input [{csv}]")
+  app.Log(2, f"parsing input [{csv}]")
 
   # Full command parser:
   if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):

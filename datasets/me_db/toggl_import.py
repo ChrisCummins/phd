@@ -116,4 +116,4 @@ def export_csvs(outpath, keypath, workspace_name, start_date):
         writer.writerow(row)
 
       nrows = len(data[project])
-      app.Info(f"Exported {nrows} records to \"{outfile.name}\"")
+      app.Log(1, f"Exported {nrows} records to \"{outfile.name}\"")

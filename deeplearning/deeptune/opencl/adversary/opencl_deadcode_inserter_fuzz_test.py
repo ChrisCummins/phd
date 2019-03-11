@@ -118,8 +118,8 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
   num_mutations_per_kernel = (num_mutations_per_kernel_min,
                               num_mutations_per_kernel_max)
 
-  app.Info(
-      'num_kernels=%d, seed=%d, num_permutations_of_kernel=%d, '
+  app.Log(
+      1, 'num_kernels=%d, seed=%d, num_permutations_of_kernel=%d, '
       'num_mutations_per_kernel=%s', len(kernels), seed,
       num_permutations_of_kernel, num_mutations_per_kernel)
 
@@ -131,7 +131,7 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
       num_mutations_per_kernel=num_mutations_per_kernel)
 
   for i, mutated_kernel in enumerate(generator):
-    app.Info("Testing mutated kernel: %s", mutated_kernel)
+    app.Log(1, "Testing mutated kernel: %s", mutated_kernel)
 
     # Create a DeepSmith testcase for the mutated kernel.
     testcase = deepsmith_pb2.Testcase(inputs={
@@ -150,7 +150,7 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
       # Execute the driver.
       proc = oclgrind.Exec([str(binary)])
 
-    app.Info("Testcase driver output: '%s'", proc.stderr.rstrip())
+    app.Log(1, "Testcase driver output: '%s'", proc.stderr.rstrip())
     assert not proc.returncode
     assert '[cldrive] Platform:' in proc.stderr
     assert '[cldrive] Device:' in proc.stderr
@@ -159,7 +159,7 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
     assert 'done.\n' in proc.stderr
 
   # Sanity check that the correct number of kernels have been generated.
-  app.Info('Generated %d mutations', i + 1)
+  app.Log(1, 'Generated %d mutations', i + 1)
   assert i + 1 == len(kernels) * num_permutations_of_kernel
 
 

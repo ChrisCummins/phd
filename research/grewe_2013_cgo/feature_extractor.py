@@ -103,7 +103,7 @@ def ExtractFeaturesFromPath(
       str(INLINED_OPENCL_HEADER),
       str(path)
   ] + [f'-extra_arg={arg}' for arg in extra_args]
-  app.Debug('$ %s', ' '.join(cmd))
+  app.Log(2, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,

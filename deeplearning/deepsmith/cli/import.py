@@ -35,7 +35,7 @@ def ImportResultsFromDirectory(session: db.session_t,
   for path in progressbar.ProgressBar()(results_dir.iterdir()):
     deeplearning.deepsmith.result.Result.FromFile(session, path)
     files_to_delete.append(path)
-    app.Info('Imported result %s', path)
+    app.Log(1, 'Imported result %s', path)
     if time.time() - last_commit_time > 10:
       session.commit()
       if FLAGS.delete_after_import:
@@ -43,7 +43,7 @@ def ImportResultsFromDirectory(session: db.session_t,
           path.unlink()
       files_to_delete = []
       last_commit_time = time.time()
-      app.Info('Committed database')
+      app.Log(1, 'Committed database')
   session.commit()
   if FLAGS.delete_after_import:
     for path in files_to_delete:
@@ -65,7 +65,7 @@ def ImportTestcasesFromDirectory(session: db.session_t,
   for path in progressbar.ProgressBar()(testcases_dir.iterdir()):
     deeplearning.deepsmith.testcase.Testcase.FromFile(session, path)
     files_to_delete.append(path)
-    app.Info('Imported testcase %s', path)
+    app.Log(1, 'Imported testcase %s', path)
     if time.time() - last_commit_time > 10:
       session.commit()
       if FLAGS.delete_after_import:
@@ -73,7 +73,7 @@ def ImportTestcasesFromDirectory(session: db.session_t,
           path.unlink()
       files_to_delete = []
       last_commit_time = time.time()
-      app.Info('Committed database')
+      app.Log(1, 'Committed database')
   session.commit()
   if FLAGS.delete_after_import:
     for path in files_to_delete:

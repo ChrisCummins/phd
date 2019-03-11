@@ -72,7 +72,7 @@ def Javac(text: str,
     with open(path, 'w') as f:
       f.write(text)
     cmd = ['timeout', '-s9', str(timeout_seconds), 'javac', f.name] + cflags
-    app.Debug('$ %s', ' '.join(cmd))
+    app.Log(2, '$ %s', ' '.join(cmd))
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -162,7 +162,7 @@ def JavaRewrite(text: str) -> str:
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
       universal_newlines=True)
-  app.Debug('$ %s', ' '.join(cmd))
+  app.Log(2, '$ %s', ' '.join(cmd))
   stdout, stderr = process.communicate(text)
   if process.returncode == 9:
     raise errors.RewriterException('JavaRewriter failed to complete after 60s')

@@ -14,6 +14,7 @@ from labm8 import fs
 from labm8 import humanize
 from labm8 import system
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string('root_dir', fs.path('~/Music/Music Library'), 'Directory of ')
@@ -67,7 +68,7 @@ def MaybeTranscodeMp3(path: str,
         tempfile_prefix='phd_system_machines_florence_transcode_musiclib_',
         tempfile_suffix='.mp3')
     size_after = os.path.getsize(path)
-    app.Info(f'%s changed from %s to %s (%.1f%% reduction)',
+    app.Log(1, f'%s changed from %s to %s (%.1f%% reduction)',
              os.path.basename(path), humanize.BinaryPrefix(size_before, 'B'),
              humanize.BinaryPrefix(size_after, 'B'),
              (1 - (size_after / size_before)) * 100)
@@ -75,7 +76,7 @@ def MaybeTranscodeMp3(path: str,
         [datetime.datetime.now(), path, bit_rate, size_before, size_after])
     return True
   else:
-    app.Debug('Ignoring %s', path)
+    app.Log(2, 'Ignoring %s', path)
     return False
 
 

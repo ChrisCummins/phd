@@ -325,7 +325,7 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
   else:
     raise NotImplementedError(f'unsupported database engine')
 
-  app.Info("Database engine: '%s'", public_url)
+  app.Log(1, "Database engine: '%s'", public_url)
   return sql.create_engine(url, encoding='utf-8', echo=FLAGS.sql_echo)
 
 

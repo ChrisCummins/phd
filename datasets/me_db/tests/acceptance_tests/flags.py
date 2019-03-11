@@ -7,6 +7,7 @@ have already been defined.
 """
 
 from labm8 import app
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string(

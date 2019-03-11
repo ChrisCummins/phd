@@ -26,15 +26,15 @@ app.DEFINE_string(
 def GenerateTestcases(generator_config: generator_pb2.ClgenGenerator,
                       output_directory: pathlib.Path,
                       num_testcases: int) -> None:
-  app.Info('Writing output to %s', output_directory)
+  app.Log(1, 'Writing output to %s', output_directory)
   (output_directory / 'generated_kernels').mkdir(parents=True, exist_ok=True)
   (output_directory / 'generated_testcases').mkdir(parents=True, exist_ok=True)
 
-  app.Info('Preparing test case generator.')
+  app.Log(1, 'Preparing test case generator.')
   generator = clgen.ClgenGenerator(generator_config)
 
   # Generate testcases.
-  app.Info('Generating %d testcases ...', num_testcases)
+  app.Log(1, 'Generating %d testcases ...', num_testcases)
   req = generator_pb2.GenerateTestcasesRequest()
   req.num_testcases = num_testcases
   res = generator.GenerateTestcases(req, None)
@@ -53,13 +53,13 @@ def GenerateTestcases(generator_config: generator_pb2.ClgenGenerator,
         testcase,
         output_directory / 'generated_testcases' / f'{testcase_id}.pbtxt')
 
-  app.Info('%d testcases written to %s', num_testcases,
-           output_directory / 'generated_testcases')
+  app.Log(1, '%d testcases written to %s', num_testcases,
+          output_directory / 'generated_testcases')
   generation_times = [
       testcase.profiling_events[0].duration_ms for testcase in res.testcases
   ]
-  app.Info('Average time to generate testcase: %.2f ms',
-           sum(generation_times) / len(generation_times))
+  app.Log(1, 'Average time to generate testcase: %.2f ms',
+          sum(generation_times) / len(generation_times))
 
 
 def main(argv):

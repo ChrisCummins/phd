@@ -22,7 +22,7 @@ def main(argv):
   interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
   if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
     raise app.UsageError('--interesting_results_dir must be a directory')
-  app.Info('Recording interesting results in %s.', interesting_results_dir)
+  app.Log(1, 'Recording interesting results in %s.', interesting_results_dir)
 
   for path in interesting_results_dir.iterdir():
     result = pbutil.FromFile(path, deepsmith_pb2.Result())

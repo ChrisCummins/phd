@@ -6,6 +6,7 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 app.DEFINE_string('kernels_dir', None,
                   'Path to directory containing kernels to import.')
@@ -35,7 +36,7 @@ def main(argv: typing.List[str]):
     raise app.UsageError('Non-file input found')
 
   db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin)
-  app.Info('done')
+  app.Log(1, 'done')
 
 
 if __name__ == '__main__':

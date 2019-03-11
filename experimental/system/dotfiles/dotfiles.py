@@ -41,7 +41,7 @@ def main(argv):
   io.SetVerbosity(verbose=args.verbose)
 
   # Get the list of tasks to run
-  app.Debug("creating tasks list ...")
+  app.Log(2, "creating tasks list ...")
   queue = task.GetTasksToRun(args.tasks)
   done = set()
   ntasks = len(queue)
@@ -53,7 +53,7 @@ def main(argv):
   if args.describe:
     msg = ("There are {fmt_bld}{ntasks}{fmt_end} tasks to run on {platform}:".
            format(**vars()))
-    app.Info(msg)
+    app.Log(1, msg)
     for i, t in enumerate(queue):
       task_name = type(t).__name__
       j = i + 1
@@ -61,10 +61,10 @@ def main(argv):
       msg = (
           "[{j:2d}/{ntasks:2d}]  {fmt_bld}{task_name}{fmt_end} ({desc})".format(
               **vars()))
-      app.Info(msg)
+      app.Log(1, msg)
       # build a list of generated files
       for file in t.genfiles:
-        app.Debug("    " + os.path.abspath(os.path.expanduser(file)))
+        app.Log(2, "    " + os.path.abspath(os.path.expanduser(file)))
 
     return 0
 
@@ -74,7 +74,7 @@ def main(argv):
       for name in sorted(t.versions.keys()):
         task_name = type(t).__name__
         version = t.versions[name]
-        app.Info("{task_name}:{name}=={version}".format(**vars()))
+        app.Log(1, "{task_name}:{name}=={version}".format(**vars()))
     return 0
 
   if args.upgrade:
@@ -86,7 +86,7 @@ def main(argv):
 
   msg = ("Running {fmt_bld}{ntasks} {task_type}{fmt_end} tasks on {platform}:".
          format(**vars()))
-  app.Info(msg)
+  app.Log(1, msg)
 
   # Run the tasks
   ctx = context.CallContext()
@@ -98,7 +98,7 @@ def main(argv):
       j = i + 1
       msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task_name}{fmt_end} ...".format(
           **vars())
-      app.Info(msg)
+      app.Log(1, msg)
 
       start_time = time.time()
 
@@ -110,7 +110,7 @@ def main(argv):
       if task_type == "install":
         for file in t.genfiles:
           file = os.path.abspath(os.path.expanduser(file))
-          app.Debug("assert exists: '{file}'".format(**vars()))
+          app.Log(2, "assert exists: '{file}'".format(**vars()))
           if not (os.path.exists(file) or host.CheckShellCommand(
               "sudo test -f '{file}'".format(**vars())) or
                   host.CheckShellCommand(
@@ -119,10 +119,10 @@ def main(argv):
                 'genfile "{file}" not created'.format(**vars()))
       runtime = time.time() - start_time
 
-      app.Debug("{task_name} task completed in {runtime:.3f}s".format(**vars()))
+      app.Log(2, "{task_name} task completed in {runtime:.3f}s".format(**vars()))
       sys.stdout.flush()
   except KeyboardInterrupt:
-    app.Info("\ninterrupt")
+    app.Log(1, "\ninterrupt")
     errored = True
   except Exception as e:
     e_name = type(e).__name__
@@ -133,7 +133,7 @@ def main(argv):
       raise
   finally:
     # Task teardowm
-    app.Debug(io.Colors.BOLD + "Running teardowns" + io.Colors.END)
+    app.Log(2, io.Colors.BOLD + "Running teardowns" + io.Colors.END)
     for t in done:
       t.TearDown(ctx)
 
@@ -145,7 +145,7 @@ def main(argv):
       for file in tmpfiles:
         file = os.path.abspath(os.path.expanduser(file))
         if os.path.exists(file):
-          app.Debug("rm {file}".format(**vars()))
+          app.Log(2, "rm {file}".format(**vars()))
           os.remove(file)
 
   return 1 if errored else 0

@@ -80,9 +80,9 @@ class GeneratorServiceBase(services.ServiceBase):
       service = cls(generator_config)
       generator_pb2_grpc.add_GeneratorServiceServicer_to_server(service, server)
       server.add_insecure_port(f'[::]:{generator_config.service.port}')
-      app.Info('%s listening on %s:%s',
-               type(service).__name__, generator_config.service.hostname,
-               generator_config.service.port)
+      app.Log(1, '%s listening on %s:%s',
+              type(service).__name__, generator_config.service.hostname,
+              generator_config.service.port)
       server.start()
       try:
         while True:

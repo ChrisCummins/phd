@@ -36,7 +36,7 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
     app.Error('Metafile missing owner and name fields %s', metafile)
     return
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
-  app.Debug('%s', meta)
+  app.Log(2, '%s', meta)
   if (clone_dir / '.git').is_dir():
     return
 
@@ -48,7 +48,7 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
       'clone', meta.clone_from_url,
       str(clone_dir)
   ]
-  app.Debug('$ %s', ' '.join(cmd))
+  app.Log(2, '$ %s', ' '.join(cmd))
 
   # Try to checkout the repository and submodules.
   p = subprocess.Popen(
@@ -118,7 +118,7 @@ def main(argv) -> None:
       ]
   random.shuffle(meta_files)
   worker = AsyncWorker(meta_files)
-  app.Info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
+  app.Log(1, 'Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():

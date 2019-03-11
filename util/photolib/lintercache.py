@@ -98,7 +98,7 @@ def InitializeErrorsCache(workspace_abspath: str) -> None:
   os.makedirs(cache_dir, exist_ok=True)
   path = os.path.join(cache_dir, "errors.db")
   uri = f"sqlite:///{path}"
-  app.Debug("Errors cache %s", uri)
+  app.Log(2, "Errors cache %s", uri)
 
   ENGINE = sql.create_engine(uri, encoding="utf-8")
   Base.metadata.create_all(ENGINE)
@@ -123,7 +123,7 @@ def RefreshLintersVersion():
         key=meta_key, value=common.Md5String(f.read()).hexdigest())
 
   if cached_checksum != actual_linters_version.value:
-    app.Debug("linters.py has changed, emptying cache ...")
+    app.Log(2, "linters.py has changed, emptying cache ...")
     SESSION.query(Directory).delete()
     SESSION.query(CachedError).delete()
     if cached_linters_version:
@@ -162,7 +162,7 @@ def AddLinterErrors(entry: CacheLookupResult, errors: typing.List[str]) -> None:
   if errors_:
     SESSION.bulk_save_objects(errors_)
   SESSION.commit()
-  app.Debug("cached directory %s", entry.relpath)
+  app.Log(2, "cached directory %s", entry.relpath)
 
 
 def GetDirectoryMTime(abspath) -> int:
@@ -226,9 +226,9 @@ def GetLinterErrors(abspath: str, relpath: str) -> CacheLookupResult:
     ret.errors = SESSION \
       .query(CachedError) \
       .filter(CachedError.dir == ret.relpath_md5)
-    app.Debug("cache hit %s", relpath)
+    app.Log(2, "cache hit %s", relpath)
   elif directory:
-    app.Debug("removing stale directory cache %s", relpath)
+    app.Log(2, "removing stale directory cache %s", relpath)
 
     # Delete all existing cache entries.
     SESSION.delete(directory)

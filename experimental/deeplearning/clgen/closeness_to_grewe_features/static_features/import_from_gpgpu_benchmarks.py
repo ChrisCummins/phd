@@ -64,7 +64,7 @@ def main(argv: typing.List[str]):
           new_count += 1
           session.add(obj)
 
-  app.Info("Added %d new database entries", new_count)
+  app.Log(1, "Added %d new database entries", new_count)
 
 
 if __name__ == '__main__':

@@ -91,7 +91,7 @@ def _BazelRunRequest(run_request: alice_pb2.RunRequest,
   if run_request.timeout_seconds:
     cmd = ['timeout', '-s9', str(run_request.timeout_seconds)] + cmd
 
-  app.Info('$ %s', ' '.join(cmd))
+  app.Log(1, '$ %s', ' '.join(cmd))
   with fs.chdir(bazel_repo_dir):
     process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -109,6 +109,6 @@ def _BazelRunRequest(run_request: alice_pb2.RunRequest,
   stdout.communicate()
   stderr.communicate()
   returncode = process.returncode
-  app.Info("Process completed with returncode %d", returncode)
+  app.Log(1, "Process completed with returncode %d", returncode)
   with open(workdir / f'returncode.txt', 'w') as f:
     f.write(str(returncode))

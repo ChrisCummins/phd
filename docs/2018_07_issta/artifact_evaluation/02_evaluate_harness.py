@@ -36,7 +36,7 @@ def main(argv):
     unknown_args = ', '.join(argv[1:])
     raise app.UsageError(f"Unknown arguments {unknown_args}")
 
-  app.Info('Preparing OpenCL testbed.')
+  app.Log(1, 'Preparing OpenCL testbed.')
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([FLAGS.opencl_opt])
@@ -44,10 +44,10 @@ def main(argv):
   assert len(harness.testbeds) >= 1
 
   input_directories = FLAGS.input_directories
-  app.Info('Reading testcases from: %s', ' '.join(input_directories))
+  app.Log(1, 'Reading testcases from: %s', ' '.join(input_directories))
 
   output_directory = pathlib.Path(FLAGS.output_directory)
-  app.Info('Writing results to %s', output_directory)
+  app.Log(1, 'Writing results to %s', output_directory)
   output_directory.mkdir(parents=True, exist_ok=True)
 
   # Load testcases.
@@ -62,7 +62,7 @@ def main(argv):
   testcases = [
       pbutil.FromFile(path, deepsmith_pb2.Testcase()) for path in testcase_paths
   ]
-  app.Info('Read %d testcases.', len(testcases))
+  app.Log(1, 'Read %d testcases.', len(testcases))
   if not len(testcases):
     raise app.UsageError("No testcases found: '%s'",
                          ' '.join(input_directories))
@@ -78,13 +78,13 @@ def main(argv):
     result_id = crypto.md5_str(str(testcase))
     pbutil.ToFile(result, output_directory / f'{result_id}.pbtxt')
 
-  app.Info('Executed %d testcases and wrote results to %s', len(res.results),
-           output_directory)
+  app.Log(1, 'Executed %d testcases and wrote results to %s', len(res.results),
+          output_directory)
   execution_times = [
       result.profiling_events[0].duration_ms for result in res.results
   ]
-  app.Info('Average time to evaluate testcase: %.2f ms',
-           sum(execution_times) / len(execution_times))
+  app.Log(1, 'Average time to evaluate testcase: %.2f ms',
+          sum(execution_times) / len(execution_times))
 
 
 if __name__ == '__main__':

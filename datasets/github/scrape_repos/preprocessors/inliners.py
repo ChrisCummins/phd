@@ -177,7 +177,7 @@ def InlineHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
   Returns:
     The path with as many included files inlined as possible.
   """
-  app.Debug('Inlining: %s.', file_relpath)
+  app.Log(2, 'Inlining: %s.', file_relpath)
   inline_candidate_relpaths.remove(file_relpath)
   already_inlined_relpaths.add(file_relpath)
   output = []

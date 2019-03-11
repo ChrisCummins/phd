@@ -26,7 +26,7 @@ def main(argv: typing.List[str]):
 
   database_path.parent.mkdir(parents=True, exist_ok=True)
   db = sql.Database(f'sqlite:///{database_path}')
-  app.Info(db)
+  app.Log(1, db)
 
 
 if __name__ == '__main__':

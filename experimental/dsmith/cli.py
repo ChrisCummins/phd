@@ -32,6 +32,7 @@ from experimental.dsmith import Colors
 from experimental.dsmith.repl import repl, run_command
 from labm8 import fs, prof
 
+
 __help_epilog__ = """
 Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>.
 <https://github.com/ChrisCummins/dsmith/>
@@ -206,7 +207,7 @@ def main(self, args: List[str] = sys.argv[1:]):
   # load custom config:
   if args.rc_path:
     path = fs.abspath(args.rc_path.name)
-    app.Debug(f"loading configuration file '{Colors.BOLD}{path}{Colors.END}'")
+    app.Log(2, f"loading configuration file '{Colors.BOLD}{path}{Colors.END}'")
     dsmith.init_globals(args.rc_path.name)
 
   # options whch override the normal argument parsing process.

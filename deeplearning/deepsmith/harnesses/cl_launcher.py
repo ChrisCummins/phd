@@ -81,7 +81,7 @@ class ClLauncherHarness(harness.HarnessBase,
 
     # Logging output.
     for testbed in self.testbeds:
-      app.Info('OpenCL testbed:\n%s', testbed)
+      app.Log(1, 'OpenCL testbed:\n%s', testbed)
 
   def GetHarnessCapabilities(
       self, request: harness_pb2.GetHarnessCapabilitiesRequest,
@@ -108,8 +108,8 @@ class ClLauncherHarness(harness.HarnessBase,
     for i, testcase in enumerate(request.testcases):
       result = RunTestcase(self.envs[testbed_idx], self.testbeds[testbed_idx],
                            testcase, list(self.config.opts))
-      app.Info('Testcase %d: %s.', i + 1,
-               deepsmith_pb2.Result.Outcome.Name(result.outcome))
+      app.Log(1, 'Testcase %d: %s.', i + 1,
+              deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])
 
     return response
@@ -266,8 +266,8 @@ def main(argv):
   service = ClLauncherHarness(config)
   harness_pb2_grpc.add_HarnessServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{config.service.port}')
-  app.Info('%s listening on %s:%s',
-           type(service).__name__, config.service.hostname, config.service.port)
+  app.Log(1, '%s listening on %s:%s',
+          type(service).__name__, config.service.hostname, config.service.port)
   server.start()
   try:
     while True:

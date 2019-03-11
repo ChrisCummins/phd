@@ -76,23 +76,23 @@ def main(argv: typing.List[str]):
     adversarial_df = CreateAugmentedDataset(experiment.dataset.df)
     adversarial_df.to_pickle(str(augmented_df_path))
 
-  app.Info('Reading %s', augmented_df_path)
+  app.Log(1, 'Reading %s', augmented_df_path)
   augmented_df = pd.read_pickle(str(augmented_df_path))
 
-  app.Info('Augmented dataframe: %s', augmented_df.shape)
-  app.Info('Atomizer: %s', experiment.atomizer)
+  app.Log(1, 'Augmented dataframe: %s', augmented_df.shape)
+  app.Log(1, 'Atomizer: %s', experiment.atomizer)
   longest_seq = max(
       len(experiment.atomizer.AtomizeString(src))
       for src in augmented_df['program:opencl_src'])
-  app.Info('Longest sequence: %d', longest_seq)
+  app.Log(1, 'Longest sequence: %d', longest_seq)
 
   results_path = cache_directory / 'adversarial_results.pkl'
   if not results_path.is_file():
     # TODO(cec): Dervice input_shape from maxlen.
     model = AdversarialDeeptune(input_shape=(4096,))
-    app.Info('Model: %s', model)
+    app.Log(1, 'Model: %s', model)
 
-    app.Info('Evaluating model ...')
+    app.Log(1, 'Evaluating model ...')
     results = utils.evaluate(
         model,
         df=augmented_df,
@@ -100,14 +100,14 @@ def main(argv: typing.List[str]):
         workdir=experiment.cache_dir,
         seed=0x204)
 
-    app.Info('Writing %s', cache_directory / 'adversarial_results.pkl')
+    app.Log(1, 'Writing %s', cache_directory / 'adversarial_results.pkl')
     results.to_pickle(str(cache_directory / 'adversarial_results.pkl'))
   else:
     results = pd.read_pickle(str(results_path))
 
-  app.Info('Results: %s', results.shape)
+  app.Log(1, 'Results: %s', results.shape)
 
-  app.Info('done')
+  app.Log(1, 'done')
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from labm8 import pbutil
 from system.machines.mirrored_directory import MirroredDirectory
 from system.machines.proto import machine_spec_pb2
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string('machine', None, 'Path to MachineSpec proto.')
@@ -55,10 +56,10 @@ def ResolveHost(
   """
   for host in hosts[:-1]:
     if RespondsToPing(host.host):
-      app.Info('Resolved host %s', host.host)
+      app.Log(1, 'Resolved host %s', host.host)
       return host
     else:
-      app.Debug('Failed to resolve host %s', host.host)
+      app.Log(2, 'Failed to resolve host %s', host.host)
   return hosts[-1]
 
 

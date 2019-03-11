@@ -12,6 +12,7 @@ from scipy import stats
 
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 
 
@@ -43,7 +44,7 @@ def Finalize(output: typing.Optional[typing.Union[str, pathlib.Path]] = None,
     output = pathlib.Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(str(output), **savefig_opts)
-    app.Info("Wrote '%s'", output)
+    app.Log(1, "Wrote '%s'", output)
   plt.close()
 
 

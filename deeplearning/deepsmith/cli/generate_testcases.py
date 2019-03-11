@@ -49,7 +49,7 @@ def GetNumberOfTestcasesInDataStore(
 def GenerateTestcases(
     generator_stub: generator_pb2_grpc.GeneratorServiceStub,
     num_to_generate: int) -> typing.List[deepsmith_pb2.Testcase]:
-  app.Info(f'Generating batch of {num_to_generate} testcases')
+  app.Log(1, f'Generating batch of {num_to_generate} testcases')
   request = services.BuildDefaultRequest(generator_pb2.GenerateTestcasesRequest)
   response = generator_stub.GenerateTestcases(request)
   services.AssertResponseStatus(response.status)
@@ -90,10 +90,10 @@ def main(argv):
   while True:
     num_testcases = GetNumberOfTestcasesInDataStore(datastore_stub,
                                                     capabilities)
-    app.Info(f'Number of testcases in datastore: %d', num_testcases)
+    app.Log(1, f'Number of testcases in datastore: %d', num_testcases)
     if 0 <= target_total_testcases <= num_testcases:
-      app.Info('Stopping generation with %d testcases in the DataStore.',
-               num_testcases)
+      app.Log(1, 'Stopping generation with %d testcases in the DataStore.',
+              num_testcases)
       break
 
     num_to_generate = generator_batch_size

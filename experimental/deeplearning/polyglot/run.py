@@ -35,27 +35,27 @@ POSTPROCESSORS = {
 def IsEligible(instance: clgen.Instance) -> bool:
   """Return whether an instance is eligible for training or sampling."""
   if instance.model.corpus.is_locked:
-    app.Info('Corpus is locked')
+    app.Log(1, 'Corpus is locked')
     return False
   if instance.model.training_lock.islocked:
-    app.Info('Model is locked')
+    app.Log(1, 'Model is locked')
     return False
   sample_dir = instance.model.SamplerCache(instance.sampler)
   sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
   if sample_lock.islocked:
-    app.Info('Sampler is locked')
+    app.Log(1, 'Sampler is locked')
     return False
   return True
 
 
 def SampleModel(instance: clgen.Instance) -> None:
   """Take --output_corpus_size samples from model."""
-  app.Info('Training and sampling the CLgen model ...')
+  app.Log(1, 'Training and sampling the CLgen model ...')
   target_samples = FLAGS.output_corpus_size
   sample_dir = instance.model.SamplerCache(instance.sampler)
   sample_dir.mkdir(exist_ok=True)
   num_samples = len(list(sample_dir.iterdir()))
-  app.Info('Need to generate %d samples in %s',
+  app.Log(1, 'Need to generate %d samples in %s',
            max(target_samples - num_samples, 0), sample_dir)
   if num_samples < target_samples:
     sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
@@ -77,14 +77,14 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   # Read the sample protos and write them to a directory of content files.
   contentfiles_dir = pathlib.Path(str(sample_dir) + '.contentfiles')
   contentfiles_dir.mkdir(exist_ok=True)
-  app.Info('Writing output contentfiles to %s', contentfiles_dir)
+  app.Log(1, 'Writing output contentfiles to %s', contentfiles_dir)
   if len(list(contentfiles_dir.iterdir())) != len(list(sample_dir.iterdir())):
     for proto_path in sample_dir.iterdir():
       sample = pbutil.FromFile(proto_path, model_pb2.Sample())
       with open(contentfiles_dir / proto_path.name, 'w') as f:
         f.write(sample.text)
 
-  app.Info('Creating output corpus')
+  app.Log(1, 'Creating output corpus')
   output_corpus_config = corpus_pb2.Corpus()
   output_corpus_config.CopyFrom(instance.model.corpus.config)
   output_corpus_config.local_directory = str(contentfiles_dir)
@@ -115,22 +115,22 @@ def main(argv):
   ]
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)
-  app.Info('Loaded %d instances in %s ms', len(candidate_instances),
+  app.Log(1, 'Loaded %d instances in %s ms', len(candidate_instances),
            humanize.Commas(int((time.time() - start_time) * 1000)))
 
   while candidate_instances:
     instance = candidate_instances.popleft()
     with instance.Session():
       if IsEligible(instance):
-        app.Info('Found an eligible candidate to work on')
+        app.Log(1, 'Found an eligible candidate to work on')
         SampleModel(instance)
         PostprocessSampleCorpus(instance)
       else:
-        app.Info('Candidate is ineligible')
+        app.Log(1, 'Candidate is ineligible')
         candidate_instances.append(instance)
         time.sleep(1)
 
-  app.Info('Done.')
+  app.Log(1, 'Done.')
 
 
 if __name__ == '__main__':

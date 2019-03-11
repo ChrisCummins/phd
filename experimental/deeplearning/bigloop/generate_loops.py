@@ -64,7 +64,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  app.Info('Hello, world!')
+  app.Log(1, 'Hello, world!')
   print(Loop(100, DummyLoopBody()).Finalize(Context()))
   inner_loop = Loop(10, DummyLoopBody())
   print(Loop(10, inner_loop).Finalize(Context()))

@@ -477,10 +477,10 @@ class CompilerGraphNeuralNetwork(object):
 
     # Lookup the loss op and evaluator functions from the table.
     make_loss_op = getattr(LossOps, df['graphnet:loss_op'].values[0])
-    app.Info('Using loss op %s', make_loss_op.__name__)
+    app.Log(1, 'Using loss op %s', make_loss_op.__name__)
     evaluate_outputs = getattr(AccuracyEvaluators,
                                df['graphnet:accuracy_evaluator'].values[0])
-    app.Info('Using evaluator %s', evaluate_outputs.__name__)
+    app.Log(1, 'Using evaluator %s', evaluate_outputs.__name__)
 
     # Create output directories.
     (outdir / 'telemetry').mkdir(exist_ok=True, parents=True)
@@ -489,14 +489,14 @@ class CompilerGraphNeuralNetwork(object):
 
     # Get the number of message passing steps.
     num_processing_steps = GetNumberOfMessagePassingSteps(df)
-    app.Info('Number of processing steps: %d', num_processing_steps)
+    app.Log(1, 'Number of processing steps: %d', num_processing_steps)
 
     with prof.Profile('create placeholders'):
       input_ph, target_ph = CreatePlaceholdersFromGraphs(
           df['networkx:input_graph'], df['networkx:target_graph'])
 
-    app.Debug("Input placeholders:\n%s", GraphTupleToString(input_ph))
-    app.Debug("Target placeholders:\n%s", GraphTupleToString(target_ph))
+    app.Log(2, "Input placeholders:\n%s", GraphTupleToString(input_ph))
+    app.Log(2, "Target placeholders:\n%s", GraphTupleToString(target_ph))
 
     # Instantiate the model.
     with tf.name_scope('model'):
@@ -566,8 +566,8 @@ class CompilerGraphNeuralNetwork(object):
     validation_df = self.df[self.df['split:type'] == 'validation']
     test_df = self.df[self.df['split:type'] == 'test']
 
-    app.Info("%d train graphs, %d validation graphs, %d test graphs",
-             len(train_df), len(validation_df), len(test_df))
+    app.Log(1, "%d train graphs, %d validation graphs, %d test graphs",
+            len(train_df), len(validation_df), len(test_df))
 
     with prof.Profile('train split'):
       batches = list(range(0, len(train_df), FLAGS.batch_size))
@@ -654,7 +654,8 @@ class CompilerGraphNeuralNetwork(object):
             log['batch_runtime_ms'].append(int(batch_runtime * 1000))
             log['training_losses'].append(float(train_values['loss']))
 
-            app.Info(
+            app.Log(
+                1,
                 'Epoch %02d / %02d, batch %02d / %02d in %.3fs (%02d graphs/sec), '
                 'training loss: %.4f', epoch_num + 1, FLAGS.num_epochs, j + 1,
                 len(batches), batch_runtime, int(graphs_per_second),
@@ -705,8 +706,8 @@ class CompilerGraphNeuralNetwork(object):
         log['validation_loss'] = sum(losses) / len(losses)
         log['validation_runtime_ms'] = validation_runtime * 1000
 
-        app.Info(
-            'Validation set in %.3f seconds (%02d graphs/sec), '
+        app.Log(
+            1, 'Validation set in %.3f seconds (%02d graphs/sec), '
             'loss: %.4f, %.2f%% accuracy, %.2f%% solved', validation_runtime,
             graphs_per_second, log['validation_loss'],
             eval_result.accuracy * 100, eval_result.solved * 100)
@@ -748,8 +749,8 @@ class CompilerGraphNeuralNetwork(object):
         log['test_loss'] = sum(losses) / len(losses)
         log['test_runtime_ms'] = test_runtime * 1000
 
-        app.Info(
-            'Test set in %.3f seconds (%02d graphs/sec), '
+        app.Log(
+            1, 'Test set in %.3f seconds (%02d graphs/sec), '
             'loss: %.4f, %.2f%% accuracy, %.2f%% solved', test_runtime,
             graphs_per_second, log['test_loss'], eval_result.accuracy * 100,
             eval_result.solved * 100)
@@ -759,7 +760,7 @@ class CompilerGraphNeuralNetwork(object):
                    f'T{labdate.MillisecondsTimestamp()}.json')
         with open(logpath, 'w') as f:
           json.dump(log, f)
-        app.Info("Wrote %s", logpath)
+        app.Log(1, "Wrote %s", logpath)
 
         test_outputs_path = (
             f'{self.outdir}/test_outputs/epoch_{epoch_num+1:03d}.'
@@ -802,7 +803,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  app.Info('Starting evaluating graph model')
+  app.Log(1, 'Starting evaluating graph model')
 
   # Load graphs from file.
   df_path = pathlib.Path(FLAGS.df)
@@ -815,7 +816,7 @@ def main(argv):
 
   with prof.Profile('load dataframe'):
     df = pd.read_pickle(df_path)
-  app.Info('Loaded %s dataframe from %s', df.shape, df_path)
+  app.Log(1, 'Loaded %s dataframe from %s', df.shape, df_path)
 
   # Prepare TensorFlow profiler.
   builder = tf.profiler.ProfileOptionBuilder

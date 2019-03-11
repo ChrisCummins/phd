@@ -178,7 +178,7 @@ class Corpus(object):
         pre-processed files.
     """
     self._created = True
-    app.Info('Content ID: %s', self.content_id)
+    app.Log(1, 'Content ID: %s', self.content_id)
     preprocessed_lock_path = pathlib.Path(
         self.preprocessed.url[len('sqlite:///'):]).parent / 'LOCK'
     with lockfile.LockFile(preprocessed_lock_path).acquire(
@@ -193,9 +193,9 @@ class Corpus(object):
         replace_stale=True, block=True):
       start_time = time.time()
       atomizer = self.atomizer
-      app.Info('%s: %s tokens in %s ms',
-               type(atomizer).__name__, humanize.Commas(atomizer.vocab_size),
-               humanize.Commas(int((time.time() - start_time) * 1000)))
+      app.Log(1, '%s: %s tokens in %s ms',
+              type(atomizer).__name__, humanize.Commas(atomizer.vocab_size),
+              humanize.Commas(int((time.time() - start_time) * 1000)))
       self.encoded.Create(self.preprocessed, atomizer,
                           self.config.contentfile_separator)
 
@@ -271,7 +271,7 @@ class Corpus(object):
 
   def _CreateAtomizer(self) -> atomizers.AtomizerBase:
     """Creates and caches an atomizer."""
-    app.Info('Deriving atomizer from preprocessed corpus')
+    app.Log(1, 'Deriving atomizer from preprocessed corpus')
     corpus_txt = self.GetTextCorpus(shuffle=False)
 
     if self.config.HasField('ascii_character_atomizer'):
@@ -355,7 +355,7 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
     # file if the directory is changed.
     hash_file_path = pathlib.Path(str(local_directory) + '.sha1.txt')
     if hash_file_path.is_file():
-      app.Info("Reading directory hash: '%s'.", hash_file_path)
+      app.Log(1, "Reading directory hash: '%s'.", hash_file_path)
       with open(hash_file_path) as f:
         content_id = f.read().rstrip()
     else:
@@ -368,7 +368,7 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
       # to reference the hash cache.
       with open(hash_file_path, 'w') as f:
         print(content_id, file=f)
-      app.Info("Wrote directory hash: '%s'.", hash_file_path)
+      app.Log(1, "Wrote directory hash: '%s'.", hash_file_path)
   elif config.HasField('local_tar_archive'):
     # This if not an efficient means of getting the hash, as it requires always
     # unpacking the archive and reading the entire contents. It would be nicer
@@ -380,8 +380,8 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
             path_prefix=FLAGS.clgen_local_path_prefix))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
-  app.Debug('Resolved Content ID %s in %s ms.', content_id,
-            humanize.Commas(int((time.time() - start_time) * 1000)))
+  app.Log(2, 'Resolved Content ID %s in %s ms.', content_id,
+          humanize.Commas(int((time.time() - start_time) * 1000)))
   return content_id
 
 

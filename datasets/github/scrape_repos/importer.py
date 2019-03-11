@@ -97,14 +97,14 @@ def ImportRepo(session: orm.session.Session,
         'find',
         str(clone_dir), '-type', 'f', '-regex', pat, '-not', '-path', '*/.git/*'
     ]
-    app.Debug('$ %s', ' '.join(cmd))
+    app.Log(2, '$ %s', ' '.join(cmd))
     paths = subprocess.check_output(
         cmd, universal_newlines=True).rstrip().split('\n')
     if len(paths) == 1 and not paths[0]:
-      app.Debug('No files to import from %s', clone_dir)
+      app.Log(2, 'No files to import from %s', clone_dir)
       return
-    app.Info("Importing %s '%s' files from %s ...", humanize.Commas(len(paths)),
-             importer.source_code_pattern, clone_dir)
+    app.Log(1, "Importing %s '%s' files from %s ...", humanize.Commas(
+        len(paths)), importer.source_code_pattern, clone_dir)
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
     jobs = [
         scrape_repos_pb2.ImportWorker(
@@ -145,8 +145,8 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
                             pathlib.Path(language.destination_directory / f))
     ]
   random.shuffle(repos_to_import)
-  app.Info('Importing %s %s repos ...', humanize.Commas(len(repos_to_import)),
-           language.language.capitalize())
+  app.Log(1, 'Importing %s %s repos ...', humanize.Commas(len(repos_to_import)),
+          language.language.capitalize())
   for metafile in repos_to_import:
     with db.Session(commit=True) as session:
       ImportRepo(session, language, metafile, pool)

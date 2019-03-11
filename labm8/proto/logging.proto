@@ -1,8 +1,8 @@
 // The file defines the schema for log records.
 syntax = "proto2";
 
-// A log record is the result of a single call to app.Debug(),
-// app.Info(), app.Warning(), app.Error(), or app.Fatal().
+// A log record is the result of a single call to app.Log(),
+// app.Warning(), app.Error(), or app.Fatal().
 message LogRecord {
   enum LogLevel {
     DEBUG = 0;

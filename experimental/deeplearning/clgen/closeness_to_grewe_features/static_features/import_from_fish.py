@@ -57,7 +57,7 @@ def main(argv: typing.List[str]):
           for p in paths_to_import[stride:stride + FLAGS.batch_size]
       ]
       db.ImportStaticFeaturesFromPaths(srcs, FLAGS.origin)
-  app.Info('done')
+  app.Log(1, 'done')
 
 
 if __name__ == '__main__':

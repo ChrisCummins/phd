@@ -34,7 +34,7 @@ def ExtractJavaMethods(text: str, static_only: bool = True) -> typing.List[str]:
   Raises:
     ValueError: In case method extraction fails.
   """
-  app.Debug('$ %s', JAVA_METHODS_EXTRACTOR)
+  app.Log(2, '$ %s', JAVA_METHODS_EXTRACTOR)
   process = subprocess.Popen([JAVA_METHODS_EXTRACTOR],
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,

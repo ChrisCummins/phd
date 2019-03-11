@@ -31,20 +31,20 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
   if not language.importer:
     raise ValueError('LanguageToClone.importer field not set')
 
-  app.Info('Enumerating all repos ...')
+  app.Log(1, 'Enumerating all repos ...')
   all_repos = [
       github_repo.GitHubRepo(pathlib.Path(language.destination_directory / f))
       for f in pathlib.Path(language.destination_directory).iterdir()
       if f.name.endswith('.pbtxt')
   ]
-  app.Info('Pruning indexed repos ...')
+  app.Log(1, 'Pruning indexed repos ...')
   num_repos = len(all_repos)
   repos_to_import = [repo for repo in all_repos if not repo.IsIndexed()]
   num_todo = len(repos_to_import)
   num_pruned = num_repos - num_todo
   random.shuffle(repos_to_import)
-  app.Info('Importing %s of %s %s repos ...', humanize.Commas(num_todo),
-           humanize.Commas(num_repos), language.language.capitalize())
+  app.Log(1, 'Importing %s of %s %s repos ...', humanize.Commas(num_todo),
+          humanize.Commas(num_repos), language.language.capitalize())
   for i, repo in enumerate(repos_to_import):
     repo.Index(
         list(language.importer), pool,

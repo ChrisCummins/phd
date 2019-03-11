@@ -54,7 +54,7 @@ def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
   if not (inbox / 'health_kit' / 'export.zip').is_file():
     return me_pb2.SeriesCollection()
 
-  app.Info('Unpacking %s', inbox / 'health_kit' / 'export.zip')
+  app.Log(1, 'Unpacking %s', inbox / 'health_kit' / 'export.zip')
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
     temp_xml = pathlib.Path(d) / 'export.xml'
     with zipfile.ZipFile(inbox / 'health_kit' / 'export.zip') as z:

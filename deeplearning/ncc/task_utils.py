@@ -67,12 +67,12 @@ def ReadEmbeddingFile(path: pathlib.Path) -> np.ndarray:
   """Load embedding matrix from file"""
   if not path.is_file():
     raise app.UsageError(f"Embedding file not found: '{path}'")
-  app.Info('Loading pre-trained embeddings from %s', path)
+  app.Log(1, 'Loading pre-trained embeddings from %s', path)
   with open(path, 'rb') as f:
     embedding_matrix = pickle.load(f)
   vocabulary_size, embedding_dimension = embedding_matrix.shape
-  app.Info(
-      'Loaded pre-trained embeddings with vocabulary size: %d and '
+  app.Log(
+      1, 'Loaded pre-trained embeddings with vocabulary size: %d and '
       'embedding dimension: %d', vocabulary_size, embedding_dimension)
   return embedding_matrix
 
@@ -128,7 +128,7 @@ def CreateSeqDirFromIr(folder_ir: str,
   assert os.path.exists(folder_ir), "Folder not found: " + folder_ir
   folder_seq = re.sub('_ir$', '_seq', folder_ir)
   if folder_seq:
-    app.Info('Preparing to write LLVM IR index sequences to %s', folder_seq)
+    app.Log(1, 'Preparing to write LLVM IR index sequences to %s', folder_seq)
     if not os.path.exists(folder_seq):
       os.makedirs(folder_seq)
 
@@ -143,9 +143,9 @@ def CreateSeqDirFromIr(folder_ir: str,
       folders_seq.append(os.path.join(folder_seq, path))
       found_subfolder = True
   if found_subfolder:
-    app.Info('Found %d subfolders', len(folders_ir))
+    app.Log(1, 'Found %d subfolders', len(folders_ir))
   else:
-    app.Info('No subfolders found in %s', folder_ir)
+    app.Log(1, 'No subfolders found in %s', folder_ir)
     folders_ir = [folder_ir]
     folders_seq = [folder_seq]
 

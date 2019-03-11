@@ -118,12 +118,12 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
   repeat_result = RunTestCasesOrDie(driver, [result.testcase])[0]
   repeat_outcome = deepsmith_pb2.Result.Outcome.Name(result.outcome)
   if repeat_outcome != 'PASS':
-    app.Info('Kernel failed when run a second time: %s', repeat_outcome)
+    app.Log(1, 'Kernel failed when run a second time: %s', repeat_outcome)
     return 'DIFFTEST_FAIL'
 
   # The output should be the same when run twice with the same input.
   if len(set(r.outputs['stdout'] for r in [result, repeat_result])) != 1:
-    app.Info('Kernel failed nondeterminism test on first input')
+    app.Log(1, 'Kernel failed nondeterminism test on first input')
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # Run kernel twice more, with a pair of identical inputs.
@@ -137,19 +137,19 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
       for r in different_input_results
   ]
   if not set(outcomes) == {'PASS'}:
-    app.Info('Kernel failed when run on second inputs')
+    app.Log(1, 'Kernel failed when run on second inputs')
     return 'DIFFTEST_FAIL'
 
   # The output should be the same when run twice with the same input.
   if len(set(r.outputs['stdout'] for r in different_input_results)) != 1:
-    app.Info('Kernel failed nondeterminism test on seocnd inputs')
+    app.Log(1, 'Kernel failed nondeterminism test on seocnd inputs')
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # The outputs must be different when run twice with the same inputs.
   if len(
       set(r.outputs['stdout']
           for r in [result, different_input_results[0]])) == 1:
-    app.Info('Kernel produced identicial outputs with differnet inputs')
+    app.Log(1, 'Kernel produced identicial outputs with differnet inputs')
     return 'INPUT_INSENSITIVE'
 
   return 'PASS'
@@ -200,7 +200,7 @@ def main(argv: typing.List[str]):
 
     num_good_files = q.count()
     num_files = session.query(preprocessed.PreprocessedContentFile).count()
-    app.Info('Corpus of %s files (%.1f%% of %s)',
+    app.Log(1, 'Corpus of %s files (%.1f%% of %s)',
              humanize.Commas(num_good_files),
              (num_good_files / num_files) * 100, humanize.Commas(num_files))
 
@@ -213,14 +213,14 @@ def main(argv: typing.List[str]):
       cached_results_path = cache_dir / f'{i}.pkl'
 
       if cached_results_path.is_file():
-        app.Info('batch %d of %d', i + 1, max_batch)
+        app.Log(1, 'batch %d of %d', i + 1, max_batch)
         # Read cached results.
         with open(cached_results_path, 'rb') as f:
           outcomes = pickle.load(f)
       elif FLAGS.summarize_only:
         continue
       else:
-        app.Info('batch %d of %d', i + 1, max_batch)
+        app.Log(1, 'batch %d of %d', i + 1, max_batch)
         # Evaluate OpenCL kernels and cache results.
         batch = srcs[start_idx:start_idx + batch_size]
         testcases = labtypes.flatten(

@@ -45,8 +45,8 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
     for ledger_id, process in self._processes.items():
       if process.is_alive():
-        app.Info('Waiting on job %d (process=%d) to finish', ledger_id,
-                 process.pid)
+        app.Log(1, 'Waiting on job %d (process=%d) to finish', ledger_id,
+                process.pid)
         process.join()
       else:
         self.EndProcess(ledger_id)
@@ -140,7 +140,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
     port = FLAGS.worker_bee_port
     server.add_insecure_port(f'[::]:{port}')
-    app.Info('🐝  Listening for commands on %s. Buzz ...', port)
+    app.Log(1, '🐝  Listening for commands on %s. Buzz ...', port)
     server.start()
     try:
       while True:

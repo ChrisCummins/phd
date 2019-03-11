@@ -135,7 +135,7 @@ def main(argv: typing.List[str]):
   assert df is not None
 
   # Write results to file.
-  app.Info('Writing results to %s', summary_csv_path)
+  app.Log(1, 'Writing results to %s', summary_csv_path)
   df.sort_values(
       by=['Benchmark Suite', 'Benchmark', 'Dataset', 'Platform', 'Model'],
       inplace=True)

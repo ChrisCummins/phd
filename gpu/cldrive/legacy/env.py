@@ -24,6 +24,7 @@ from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import pbutil
 
+
 CLINFO = bazelutil.DataPath('phd/gpu/clinfo/clinfo')
 
 
@@ -106,7 +107,7 @@ class OpenCLEnvironment(object):
     Returns:
       A Popen instance, with string stdout and stderr attributes set.
     """
-    # app.Debug('$ %s', ' '.join(argv))
+    # app.Log(2, '$ %s', ' '.join(argv))
     process = subprocess.Popen(
         argv,
         stdout=subprocess.PIPE,

@@ -15,6 +15,7 @@ from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_boolean(
@@ -79,7 +80,7 @@ def GetOrAdd(session: sql.orm.session.Session,
     instance = model(**params)
     session.add(instance)
     if app.DebugLogging():
-      app.Debug('New record: %s(%s)', model.__name__,
+      app.Log(2, 'New record: %s(%s)', model.__name__,
                 ', '.join([f'{k}={v}' for k, v in params.items()]))
   return instance
 

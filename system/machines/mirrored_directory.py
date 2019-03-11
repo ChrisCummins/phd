@@ -115,7 +115,7 @@ class MirroredDirectory(object):
       cmd.append('--delete')
     if progress:
       cmd.append('--progress')
-    app.Info(' '.join(cmd))
+    app.Log(1, ' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.communicate()
     if p.returncode:

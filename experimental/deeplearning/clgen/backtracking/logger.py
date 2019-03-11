@@ -38,9 +38,9 @@ class BacktrackingDatabaseLogger(object):
     self._step_count += 1
 
     runtime_ms = int((time.time() - self._start_time) * 1000)
-    app.Info('Reached step %d after %d attempts, %d tokens', self._step_count,
+    app.Log(1, 'Reached step %d after %d attempts, %d tokens', self._step_count,
              attempt_count, token_count)
-    app.Info('Job %d started %s', job_id, humanize.Duration(runtime_ms / 1000))
+    app.Log(1, 'Job %d started %s', job_id, humanize.Duration(runtime_ms / 1000))
 
     with self._db.Session(commit=True) as session:
       features = session.GetOrAdd(
@@ -67,7 +67,7 @@ class BacktrackingDatabaseLogger(object):
                   backtracker: backtracking_model.OpenClBacktrackingHelper):
     del backtracker
     self._step_count += 1
-    app.Info("Sampling concluded at step %d", self._step_count)
+    app.Log(1, "Sampling concluded at step %d", self._step_count)
     self._job_id = None
     self._step_count = 0
     self._target_features_id = None
@@ -84,5 +84,5 @@ class BacktrackingDatabaseLogger(object):
           self._job_id = result[0] + 1
         else:
           self._job_id = 1
-      app.Info('New job ID %d', self._job_id)
+      app.Log(1, 'New job ID %d', self._job_id)
     return self._job_id

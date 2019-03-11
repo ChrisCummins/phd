@@ -512,7 +512,7 @@ def Exec(args: typing.List[str],
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(OPT)] + args
   if log:
-    app.Debug('$ %s', ' '.join(cmd))
+    app.Log(2, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,

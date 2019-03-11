@@ -12,11 +12,11 @@ def test_log_to_file(tempdir: pathlib.Path):
   """Benchmark instantiation of a one layer LSTM network without compiling."""
   app.SetLogLevel(app.DEBUG)
   logutil.StartTeeLogsToFile('foo', logdir)
-  app.Info('Hello, info!')
-  app.Debug('Hello, debug!')
+  app.Log(1, 'Hello, info!')
+  app.Log(2, 'Hello, debug!')
   app.Warning('Hello, warning!')
   app.Error('Hello, error!')
-  app.Info('Hello, ...\nmultiline!')
+  app.Log(1, 'Hello, ...\nmultiline!')
   app.FlushLogs()
 
   assert (logdir / 'foo.INFO').is_file()

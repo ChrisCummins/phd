@@ -147,10 +147,10 @@ class TensorflowBatchGenerator(object):
             np.split(xdata.reshape(batch_size, -1), self.num_batches, 1),
             np.split(ydata.reshape(batch_size, -1), self.num_batches, 1))
     ]
-    app.Info('Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
-             humanize.Commas(clipped_corpus_length),
-             humanize.Commas(len(self.encoded_corpus) - clipped_corpus_length),
-             humanize.Commas(int((time.time() - start_time) * 1000)))
+    app.Log(1, 'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
+            humanize.Commas(clipped_corpus_length),
+            humanize.Commas(len(self.encoded_corpus) - clipped_corpus_length),
+            humanize.Commas(int((time.time() - start_time) * 1000)))
 
   def NextBatch(self) -> DataBatch:
     """Fetch next batch.
@@ -202,10 +202,10 @@ def GetTrainingCorpus(corpus: 'corpuses.Corpus',
       training_opts.batch_size, steps_per_epoch * training_opts.sequence_length
   ])
 
-  app.Info('Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
-           humanize.Commas(clipped_corpus_length),
-           humanize.Commas(corpus_length - clipped_corpus_length),
-           humanize.Commas(int((time.time() - start_time) * 1000)))
+  app.Log(1, 'Encoded corpus of %s tokens (clipped last %s tokens) in %s ms.',
+          humanize.Commas(clipped_corpus_length),
+          humanize.Commas(corpus_length - clipped_corpus_length),
+          humanize.Commas(int((time.time() - start_time) * 1000)))
   return x, y, steps_per_epoch
 
 
@@ -225,12 +225,11 @@ def OneHotEncode(indices: np.ndarray, vocabulary_size: int):
 def LogBatchTelemetry(batch: DataBatch, steps_per_epoch: int,
                       num_epochs: int) -> None:
   """Log analytics about the batch."""
-  app.Info("Step shape: X: %s, y" ": %s.", batch.X.shape, batch.y.shape)
+  app.Log(1, "Step shape: X: %s, y" ": %s.", batch.X.shape, batch.y.shape)
   # sys.getsizeof() includes only the memory required for an object, not any
   # objects it refernces, so we must manually sum the X and y arrays.
   batch_size = sys.getsizeof(batch) + batch.X.nbytes + batch.y.nbytes
-  app.Info(
-      'Memory: %s per batch, %s per epoch, %s total.',
-      humanize.BinaryPrefix(batch_size, 'B'),
-      humanize.BinaryPrefix(batch_size * steps_per_epoch, 'B'),
-      humanize.BinaryPrefix(batch_size * steps_per_epoch * num_epochs, 'B'))
+  app.Log(1, 'Memory: %s per batch, %s per epoch, %s total.',
+          humanize.BinaryPrefix(batch_size, 'B'),
+          humanize.BinaryPrefix(batch_size * steps_per_epoch, 'B'),
+          humanize.BinaryPrefix(batch_size * steps_per_epoch * num_epochs, 'B'))

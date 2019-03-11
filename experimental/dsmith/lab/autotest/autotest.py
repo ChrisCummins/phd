@@ -103,7 +103,7 @@ def autotest(num_batches: int,
   outbox = []
 
   for i in range(1, num_batches + 1):
-    app.Info(f"generating {batch_size} testcases, batch {i} of {num_batches}")
+    app.Log(1, f"generating {batch_size} testcases, batch {i} of {num_batches}")
     testcases = generator.next_batch(batch_size)
 
     assert len(testcases)
@@ -111,43 +111,43 @@ def autotest(num_batches: int,
     for testcase in testcases:
       if len(preflight_checks):
         # Do all the pre-flight checks before running:
-        app.Info("running static analysis on testcase")
+        app.Log(1, "running static analysis on testcase")
         if not all(checker.is_valid(testcase) for checker in preflight_checks):
-          app.Info("-> testcase failed static analysis")
+          app.Log(1, "-> testcase failed static analysis")
           continue
 
-      app.Info(f"running testcase on {num_devices} devices")
+      app.Log(1, f"running testcase on {num_devices} devices")
       outputs = [dut.run(testcase) for dut in duts]
 
       assert len(outputs) == num_devices
 
       # Check if outputs are interesting:
-      app.Info("comparing outputs of tests")
+      app.Log(1, "comparing outputs of tests")
       majority_output, majority_size = comparator.majority(outputs)
       if majority_size == num_devices:
-        app.Info("-> testcase outcomes are all equal")
+        app.Log(1, "-> testcase outcomes are all equal")
         continue
       # TODO: take config size as constructor argument
       elif majority_size < math.ceil(2 * num_devices / 3):
-        app.Info("-> majority size of {majority_size}, no consensus")
+        app.Log(1, "-> majority size of {majority_size}, no consensus")
         continue
 
       if len(postflight_checks):
         # Do all the post-flight checks to validate testcase:
-        app.Info("running dynamic analysis on testcase")
+        app.Log(1, "running dynamic analysis on testcase")
         if not all(
             checker.is_valid(testcase, duts, outputs)
             for checker in postflight_checks):
-          app.Info("-> testcase failed dynamic analysis")
+          app.Log(1, "-> testcase failed dynamic analysis")
           continue
 
-      app.Info("identifying outputs of interest")
+      app.Log(1, "identifying outputs of interest")
       for j in range(len(outputs)):
         if outputs[j] != majority_output:
-          app.Info("reducing testcase for device")
+          app.Log(1, "reducing testcase for device")
           reduced, expected, actual = reducer.reduce(testcase, duts[j],
                                                      outputs[j])
-          app.Info("-> reduced testcase")
+          app.Log(1, "-> reduced testcase")
           outbox.append(outbox_t(duts[j], reduced_t))
 
   export_outbox(outbox, "outbox.json")

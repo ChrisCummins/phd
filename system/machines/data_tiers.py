@@ -37,7 +37,7 @@ def _SetDirectorySize(tier: data_tiers_pb2.Directory):
       '--exclude={}'.format(pathlib.Path(e).expanduser()) for e in tier.exclude
   ]
   cmd = ['du', '-b', '-s', '.'] + excludes
-  app.Info('$ cd %s && %s', path, ' '.join(cmd))
+  app.Log(1, '$ cd %s && %s', path, ' '.join(cmd))
   proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
   stdout, _ = proc.communicate()
   if proc.returncode:
@@ -55,7 +55,7 @@ def main(argv) -> None:
   tiers = pbutil.FromFile(
       pathlib.Path(FLAGS.data_tiers), data_tiers_pb2.DataTiers())
   for tier in tiers.directory:
-    app.Info('Processing %s', tier.path)
+    app.Log(1, 'Processing %s', tier.path)
     _SetDirectorySize(tier)
 
   if FLAGS.summary:

@@ -82,7 +82,7 @@ def pytest_collection_modifyitems(config, items):
     supported_platforms = PLATFORM_NAMES.intersection(item.keywords)
     if supported_platforms and this_platform not in supported_platforms:
       skip_msg = f"Skipping `{item.name}` for platforms: {supported_platforms}"
-      app.Info(skip_msg)
+      app.Log(1, skip_msg)
       item.add_marker(pytest.mark.skip(reason=skip_msg))
       continue
 
@@ -90,7 +90,7 @@ def pytest_collection_modifyitems(config, items):
     supported_hosts = HOST_NAMES.intersection(item.keywords)
     if supported_hosts and this_host not in supported_hosts:
       skip_msg = f"Skipping `{item.name}` for hosts: {supported_hosts}"
-      app.Info(skip_msg)
+      app.Log(1, skip_msg)
       item.add_marker(pytest.mark.skip(reason=skip_msg))
       continue
 
@@ -107,6 +107,6 @@ def pytest_collection_modifyitems(config, items):
     # name still appears in the test output, with a 'skipped' message. This is
     # useful for keeping track of how many tests in a file are *not* being run.
     if FLAGS.test_skip_slow and 'slow' in item.keywords:
-      app.Info('Skipping `%s` because it is slow', item.name)
+      app.Log(1, 'Skipping `%s` because it is slow', item.name)
       item.add_marker(slow_skip_marker)
       continue

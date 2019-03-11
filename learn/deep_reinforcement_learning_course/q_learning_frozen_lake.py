@@ -58,15 +58,15 @@ def Train(env: gym.Env,
 
   np.random.seed(seed)
   random.seed(seed)
-  app.Info('Random seed: %d.', seed)
-  app.Info(
+  app.Log(1, 'Random seed: %d.', seed)
+  app.Log(1, 
       'Beginning training for %s episodes (max %s steps per episode). '
       'Initial learning rate: %.3f, decay rate: %.3f, '
       'initial epsilon: %.3f, min learning rate: %.3f, gamma: %.3f.',
       humanize.Commas(total_episodes), humanize.Commas(max_steps),
       learning_rate, decay_rate, init_epsilon, min_epsilon, gamma)
 
-  app.Info('State space size: %s, action space size: %s. Q table: %dx%d.',
+  app.Log(1, 'State space size: %s, action space size: %s. Q table: %dx%d.',
            humanize.Commas(env.observation_space.n),
            humanize.Commas(env.action_space.n), env.observation_space.n,
            env.action_space.n)
@@ -109,7 +109,7 @@ def Train(env: gym.Env,
         -decay_rate * episode)
     rewards.append(total_rewards)
 
-  app.Info('Score over time: %.3f.', sum(rewards) / total_episodes)
+  app.Log(1, 'Score over time: %.3f.', sum(rewards) / total_episodes)
   return q_table
 
 

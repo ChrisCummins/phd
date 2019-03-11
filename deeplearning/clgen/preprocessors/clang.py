@@ -107,7 +107,7 @@ def Preprocess(src: str,
       str(timeout_seconds),
       str(CLANG), '-E', '-c', '-', '-o', '-'
   ] + cflags
-  app.Debug('$ %s', ' '.join(cmd))
+  app.Log(2, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdin=subprocess.PIPE,
@@ -155,7 +155,7 @@ def CompileLlvmBytecode(src: str,
     cmd = ['timeout', '-s9',
            str(timeout_seconds),
            str(CLANG), f.name] + builtin_cflags + cflags
-    app.Debug('$ %s', ' '.join(cmd))
+    app.Log(2, '$ %s', ' '.join(cmd))
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,

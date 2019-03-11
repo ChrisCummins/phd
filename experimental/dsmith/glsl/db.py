@@ -345,7 +345,7 @@ class Testbed(Base):
       ndone = already_done.count()
       ntodo = todo.count()
 
-      app.Debug(
+      app.Log(2,
           f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done"
       )
 
@@ -487,7 +487,7 @@ class TestbedProxy(Proxy, dsmith.ReprComparable):
     # If there wasn't a record in the database, we need to create a new one:
     testbed = Testbed.from_bin(self.platform, session)
     session.commit()
-    app.Debug(f"Added new Testbed {testbed}")
+    app.Log(2, f"Added new Testbed {testbed}")
     return testbed
 
   def run_testcases(self, harness, generator) -> None:

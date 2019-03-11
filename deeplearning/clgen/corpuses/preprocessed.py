@@ -160,18 +160,18 @@ class PreprocessedContentFiles(sqlutil.Database):
           func.sum(PreprocessedContentFile.charcount),
           func.sum(PreprocessedContentFile.linecount),
       ).filter(PreprocessedContentFile.preprocessing_succeeded == True).first()
-    app.Info('Content files: %s chars, %s lines, %s files.',
-             humanize.Commas(input_chars), humanize.Commas(input_lines),
-             humanize.Commas(num_input_files))
-    app.Info('Pre-processed %s files in %s ms (%.2fx speedup).',
-             num_input_files, humanize.Commas(total_walltime),
-             (total_time or 0) / (total_walltime or 1))
-    app.Info('Pre-processing discard rate: %.1f%% (%s files).',
-             (1 - (num_files / max(num_input_files, 1))) * 100,
-             humanize.Commas(num_input_files - num_files))
-    app.Info('Pre-processed corpus: %s chars, %s lines, %s files.',
-             humanize.Commas(char_count), humanize.Commas(line_count),
-             humanize.Commas(num_files))
+    app.Log(1, 'Content files: %s chars, %s lines, %s files.',
+            humanize.Commas(input_chars), humanize.Commas(input_lines),
+            humanize.Commas(num_input_files))
+    app.Log(1, 'Pre-processed %s files in %s ms (%.2fx speedup).',
+            num_input_files, humanize.Commas(total_walltime),
+            (total_time or 0) / (total_walltime or 1))
+    app.Log(1, 'Pre-processing discard rate: %.1f%% (%s files).',
+            (1 - (num_files / max(num_input_files, 1))) * 100,
+            humanize.Commas(num_input_files - num_files))
+    app.Log(1, 'Pre-processed corpus: %s chars, %s lines, %s files.',
+            humanize.Commas(char_count), humanize.Commas(line_count),
+            humanize.Commas(num_files))
 
   def IsDone(self, session: sqlutil.Session):
     if session.query(Meta).filter(Meta.key == 'done').first():
@@ -188,8 +188,8 @@ class PreprocessedContentFiles(sqlutil.Database):
       done = set(
           [x[0] for x in session.query(PreprocessedContentFile.input_relpath)])
       todo = relpaths - done
-      app.Info('Preprocessing %s of %s content files', humanize.Commas(
-          len(todo)), humanize.Commas(len(relpaths)))
+      app.Log(1, 'Preprocessing %s of %s content files',
+              humanize.Commas(len(todo)), humanize.Commas(len(relpaths)))
       jobs = [
           internal_pb2.PreprocessorWorker(
               contentfile_root=str(contentfile_root),
@@ -234,9 +234,9 @@ class PreprocessedContentFiles(sqlutil.Database):
             str(ExpandConfigPath(config.local_tar_archive)), '-C', d
         ]
         subprocess.check_call(cmd)
-        app.Info('Unpacked %s in %s ms',
-                 ExpandConfigPath(config.local_tar_archive).name,
-                 humanize.Commas(int((time.time() - start_time) * 1000)))
+        app.Log(1, 'Unpacked %s in %s ms',
+                ExpandConfigPath(config.local_tar_archive).name,
+                humanize.Commas(int((time.time() - start_time) * 1000)))
         yield pathlib.Path(d)
     else:
       raise NotImplementedError

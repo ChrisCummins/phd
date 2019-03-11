@@ -32,7 +32,7 @@ def ToFile(env: implementation.Environment) -> None:
   out_path = pathlib.Path(FLAGS.proto_out)
   out_path.parent.mkdir(parents=True, exist_ok=True)
   pbutil.ToFile(env.ToProto(), out_path)
-  app.Info('Wrote experimental results to: %s', out_path)
+  app.Log(1, 'Wrote experimental results to: %s', out_path)
 
 
 def main(argv: typing.List[str]):
@@ -40,10 +40,10 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  app.Info('Generating environment %s ...', FLAGS.env)
+  app.Log(1, 'Generating environment %s ...', FLAGS.env)
   env = gym.make(FLAGS.env)
-  app.Info('Starting %d random walk episodes of %d steps each ...',
-           FLAGS.num_episodes, FLAGS.max_steps)
+  app.Log(1, 'Starting %d random walk episodes of %d steps each ...',
+          FLAGS.num_episodes, FLAGS.max_steps)
 
   for i in range(FLAGS.num_episodes):
     env.reset()
@@ -61,7 +61,7 @@ def main(argv: typing.List[str]):
       Render(env)
 
   ToFile(env)
-  app.Info('Done.')
+  app.Log(1, 'Done.')
 
 
 if __name__ == '__main__':

@@ -287,9 +287,9 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
   data = []
 
   for split in TrainTestSplitGenerator(df, seed):
-    app.Info('Evaluating %s on %s, split %d with train=%d/test=%d programs',
-             model.__name__, split.gpu_name, split.i, len(split.train_df),
-             len(split.test_df))
+    app.Log(1, 'Evaluating %s on %s, split %d with train=%d/test=%d programs',
+            model.__name__, split.gpu_name, split.i, len(split.train_df),
+            len(split.test_df))
 
     # Path of cached model and predictions.
     model_path = (
@@ -305,11 +305,11 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
 
     if predictions_path.is_file():
       # Load predictions from cache, which means we don't need to train a model.
-      app.Info('Loading %s', predictions_path)
+      app.Log(1, 'Loading %s', predictions_path)
       predictions = LoadPredictionsFromFile(predictions_path)
     else:
       if model_path.is_file():
-        app.Info('Loading %s', model_path)
+        app.Log(1, 'Loading %s', model_path)
         # Restore trained model from cache.
         model.restore(model_path)
       else:
@@ -322,13 +322,13 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         model.save(model_path)
 
       # Test the model.
-      app.Info("Predicting %d %s mappings for device %s", len(split.test_df),
-               model.__name__, split.gpu_name)
+      app.Log(1, "Predicting %d %s mappings for device %s", len(split.test_df),
+              model.__name__, split.gpu_name)
       predictions = model.predict(
           df=split.test_df,
           platform_name=split.gpu_name,
           verbose=FLAGS.verbosity)
-      app.Info('Writing %s', predictions_path)
+      app.Log(1, 'Writing %s', predictions_path)
       SavePredictionsToFile(predictions, predictions_path)
 
     data += EvaluatePredictions(model, split, predictions)
@@ -418,8 +418,8 @@ def EvaluatePredictions(
   gpu_predicted_count = sum(d['Predicted Mapping'] for d in split_data)
   cpu_predicted_count = len(split_data) - gpu_predicted_count
 
-  app.Info(
-      'Results: model=%s, platform=%s, split=%s, n=%d, '
+  app.Log(
+      1, 'Results: model=%s, platform=%s, split=%s, n=%d, '
       'predictions=(cpu=%d,gpu=%d) accuracy=%.2f%%, speedup=%.2fx',
       model.__basename__, split.gpu_name, split.global_step, len(split.test_df),
       cpu_predicted_count, gpu_predicted_count,

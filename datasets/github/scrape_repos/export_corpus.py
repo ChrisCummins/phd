@@ -21,11 +21,11 @@ def ExportDatabase(session: orm.session.Session,
                    export_path: pathlib.Path) -> None:
   """Export the contents of a database to a directory."""
   query = session.query(contentfiles.ContentFile)
-  app.Info('Exporting %s files to %s ...', humanize.Commas(query.count()),
-           export_path)
+  app.Log(1, 'Exporting %s files to %s ...', humanize.Commas(query.count()),
+          export_path)
   for contentfile in query:
     path = export_path / (contentfile.sha256_hex + '.txt')
-    app.Debug(path)
+    app.Log(2, path)
     with open(path, 'w') as f:
       f.write(contentfile.text)
 
@@ -43,7 +43,7 @@ def ExportIndex(index_path: pathlib.Path, export_path: pathlib.Path) -> None:
           if not out_path.is_file():
             with open(out_path, 'w') as f:
               f.write(contentfile.text)
-              app.Debug(out_path)
+              app.Log(2, out_path)
         except pbutil.DecodeError:
           pass
 

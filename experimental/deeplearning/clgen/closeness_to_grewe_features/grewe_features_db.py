@@ -16,6 +16,7 @@ from labm8 import humanize
 from labm8 import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
+
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -98,18 +99,18 @@ def _DatabaseImporterWorker(
   try:
     features = list(grewe_features.ExtractFeaturesFromPath(path))
   except grewe_features.FeatureExtractionError as e:
-    app.Debug("Feature extraction failed with message: %s", e)
+    app.Log(2, "Feature extraction failed with message: %s", e)
     return None, None
 
   if len(features) != 1:
-    app.Debug("Expected 1 feature vector in %s, found %d", path, len(features))
+    app.Log(2, "Expected 1 feature vector in %s, found %d", path, len(features))
     return None, None
 
   try:
     with open(path) as f:
       src = f.read()
   except UnicodeEncodeError:
-    app.Debug("Failed to encode %s", src)
+    app.Log(2, "Failed to encode %s", src)
     return None, None
 
   return src, features[0]
@@ -144,7 +145,7 @@ class Database(sqlutil.Database):
     new_row_count = 0
     paths_to_import = list(paths_to_import)
     random.shuffle(paths_to_import)
-    app.Info('Importing %s files ...', humanize.Commas(len(paths_to_import)))
+    app.Log(1, 'Importing %s files ...', humanize.Commas(len(paths_to_import)))
     bar = progressbar.ProgressBar(
         max_value=len(paths_to_import), redirect_stderr=True)
 

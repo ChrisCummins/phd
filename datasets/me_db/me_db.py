@@ -96,9 +96,9 @@ class Database(sqlutil.Database):
     num_measurements = 0
     for series in series_collection.series:
       num_measurements += len(series.measurement)
-      app.Info('Importing %s %s:%s measurements',
-               humanize.Commas(len(series.measurement)), series.family,
-               series.name)
+      app.Log(1, 'Importing %s %s:%s measurements',
+              humanize.Commas(len(series.measurement)), series.family,
+              series.name)
       session.add_all(MeasurementsFromSeries(series))
     return num_measurements
 
@@ -117,7 +117,7 @@ class Database(sqlutil.Database):
       process = multiprocessing.Process(target=importer, args=(inbox, queue))
       process.start()
       processes.append(process)
-    app.Info('Started %d importer processes', len(processes))
+    app.Log(1, 'Started %d importer processes', len(processes))
 
     # Get the results of each process as it finishes.
     num_measurements = 0
@@ -128,9 +128,9 @@ class Database(sqlutil.Database):
                                                      series_collections)
 
     duration_seconds = time.time() - start_time
-    app.Info('Processed %s records in %.3f seconds (%.2f rows per second)',
-             humanize.Commas(num_measurements), duration_seconds,
-             num_measurements / duration_seconds)
+    app.Log(1, 'Processed %s records in %.3f seconds (%.2f rows per second)',
+            humanize.Commas(num_measurements), duration_seconds,
+            num_measurements / duration_seconds)
 
 
 def main(argv):
@@ -151,7 +151,7 @@ def main(argv):
     db.Drop(are_you_sure_about_this_flag=True)
 
   db = Database(FLAGS.db)
-  app.Info('Using database `%s`', db.url)
+  app.Log(1, 'Using database `%s`', db.url)
 
   db.ImportMeasurementsFromInboxImporters(inbox_path)
 

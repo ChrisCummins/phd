@@ -80,9 +80,9 @@ def DownloadAndUnzip(url, data_folder, delete_after_download: bool = True):
     delete_after_download: If True, delete the file after downloading and
       unzipping.
   """
-  app.Info('Downloading dataset from %s', url)
+  app.Log(1, 'Downloading dataset from %s', url)
   data_zip = wget.download(url, out=str(data_folder))
-  app.Info('Unzipping %s to %s', data_zip, data_folder)
+  app.Log(1, 'Unzipping %s to %s', data_zip, data_folder)
   with zipfile.ZipFile(data_zip, 'r') as f:
     f.extractall(path=data_folder)
   # Delete the zip.

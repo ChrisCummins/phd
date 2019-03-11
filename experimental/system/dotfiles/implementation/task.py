@@ -69,14 +69,14 @@ def IsRunnableTask(t):
   hosts = getattr(t, "__hosts__", [])
   if hosts and socket.gethostname() not in hosts:
     msg = "skipping " + type(t).__name__ + " on host " + socket.gethostname()
-    app.Debug(msg)
+    app.Log(2, msg)
     return False
 
   # Check that task passes all req tests:
   reqs = getattr(t, "__reqs__", [])
   if reqs and not all(req() for req in reqs):
     msg = "skipping " + type(t).__name__ + ", failed req check"
-    app.Debug(msg)
+    app.Log(2, msg)
     return False
 
   return True

@@ -85,7 +85,7 @@ class KerasBackend(backends.BackendBase):
     # Print a model summary.
     buf = io.StringIO()
     model.summary(print_fn=lambda x: buf.write(x + '\n'))
-    app.Info('Model summary:\n%s', buf.getvalue())
+    app.Log(1, 'Model summary:\n%s', buf.getvalue())
 
     # TODO(cec): Add an atomizer.CreateVocabularyFile() method, with frequency
     # counts for a given corpus.
@@ -113,8 +113,8 @@ class KerasBackend(backends.BackendBase):
     if len(epoch_checkpoints) >= target_num_epochs:
       # We have already trained a model to at least this number of epochs, so
       # simply the weights from that epoch and call it a day.
-      app.Info('Loading weights from %s',
-               epoch_checkpoints[target_num_epochs - 1])
+      app.Log(1, 'Loading weights from %s',
+              epoch_checkpoints[target_num_epochs - 1])
       model.load_weights(epoch_checkpoints[target_num_epochs - 1])
       return model
 
@@ -128,7 +128,7 @@ class KerasBackend(backends.BackendBase):
         # We have already trained a model at least part of the way to our target
         # number of epochs, so load the most recent one.
         starting_epoch = len(epoch_checkpoints)
-        app.Info('Resuming training from epoch %d.', starting_epoch)
+        app.Log(1, 'Resuming training from epoch %d.', starting_epoch)
         model.load_weights(epoch_checkpoints[-1])
 
       callbacks = [
@@ -153,8 +153,8 @@ class KerasBackend(backends.BackendBase):
       steps_per_epoch = (corpus.encoded.token_count - 1) // (
           self.config.training.batch_size *
           self.config.training.sequence_length)
-      app.Info(
-          'Step counts: %s per epoch, %s left to do, %s total',
+      app.Log(
+          1, 'Step counts: %s per epoch, %s left to do, %s total',
           humanize.Commas(steps_per_epoch),
           humanize.Commas(
               (target_num_epochs - starting_epoch) * steps_per_epoch),
@@ -176,7 +176,7 @@ class KerasBackend(backends.BackendBase):
     # TensorFlow backend every time we import this module.
     import keras
 
-    app.Info('Building inference model.')
+    app.Log(1, 'Building inference model.')
     model = self.GetTrainingModel()
     config = model.get_config()
     # TODO(cec): Decide on whether this should be on by default, or in the
@@ -186,7 +186,7 @@ class KerasBackend(backends.BackendBase):
       batch_size = min(config[0]['config']['output_dim'], 32)
     else:
       batch_size = 1
-    app.Info('Sampling with batch size %d', batch_size)
+    app.Log(1, 'Sampling with batch size %d', batch_size)
     config[0]['config']['batch_input_shape'] = (batch_size, 1)
     inference_model = keras.models.Sequential.from_config(config)
     inference_model.trainable = False

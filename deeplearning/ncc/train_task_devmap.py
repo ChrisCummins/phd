@@ -151,8 +151,8 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
   num_unks = 0
   seq_lengths = list()
 
-  app.Info('Preparing to read %d input files from folder %s', num_files,
-           data_folder)
+  app.Log(1, 'Preparing to read %d input files from folder %s', num_files,
+          data_folder)
   seqs = list()
   for i in range(num_files):
     file = input_files[i]
@@ -173,12 +173,12 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
       assert True, 'input file not found: ' + file
 
   max_len = max(seq_lengths)
-  app.Info('Sequence lengths: min=%d, avg=%.2f, max=%d', min(seq_lengths),
-           np.mean(seq_lengths), max_len)
-  app.Info('Number of \'UNK\': %d', num_unks)
-  app.Info('Percentage of \'UNK\': %.3f %% among all stmts',
-           (num_unks * 100) / sum(seq_lengths))
-  app.Info('\'UNK\' index: %d', unk_index)
+  app.Log(1, 'Sequence lengths: min=%d, avg=%.2f, max=%d', min(seq_lengths),
+          np.mean(seq_lengths), max_len)
+  app.Log(1, 'Number of \'UNK\': %d', num_unks)
+  app.Log(1, 'Percentage of \'UNK\': %.3f %% among all stmts',
+          (num_unks * 100) / sum(seq_lengths))
+  app.Log(1, '\'UNK\' index: %d', unk_index)
 
   encoded = np.array(pad_sequences(seqs, maxlen=max_len, value=unk_index))
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded]), max_len
@@ -225,7 +225,7 @@ class NCC_devmap:
         metrics=['accuracy'],
         loss=["categorical_crossentropy", "categorical_crossentropy"],
         loss_weights=[1., .2])
-    app.Info('Built Keras model')
+    app.Log(1, 'Built Keras model')
 
     return self
 
@@ -455,7 +455,7 @@ def main(argv):
   deeptune_sp_mean = 2.373917
 
   # Train model
-  app.Info("Evaluating ncc model")
+  app.Log(1, "Evaluating ncc model")
   ncc_devmap = evaluate(NCC_devmap(), device, input_data, out, embeddings,
                         dense_layer_size, print_summary, num_epochs, batch_size)
 
@@ -507,7 +507,7 @@ def main(argv):
               'Static mapping', 'Grewe et al.', 'DeepTune', 'DeepTuneInst2Vec'
           ],
           index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
-  app.Info('done')
+  app.Log(1, 'done')
 
 
 if __name__ == '__main__':

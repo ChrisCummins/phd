@@ -40,7 +40,7 @@ def _PrettifySource(src: str) -> str:
 
 def ProcessBatch(batch: typing.List[typing.Tuple[str,]],
                  db: grewe_features_db.Database, pool: multiprocessing.Pool):
-  app.Info('Formatting files')
+  app.Log(1, 'Formatting files')
   srcs = pool.imap_unordered(_PrettifySource, [row[0] for row in batch])
   srcs = [s for s in srcs if s]
 
@@ -51,10 +51,10 @@ def ProcessBatch(batch: typing.List[typing.Tuple[str,]],
       with open(path, 'w') as f:
         f.write(src)
 
-    app.Info('Importing files')
+    app.Log(1, 'Importing files')
     success_count, new_row_count = db.ImportStaticFeaturesFromPaths(
         paths, FLAGS.origin, pool)
-    app.Info('Extracted features from %d of %d kernels, %d new rows',
+    app.Log(1, 'Extracted features from %d of %d kernels, %d new rows',
              success_count, len(batch), new_row_count)
 
 
@@ -72,7 +72,7 @@ def main(argv: typing.List[str]):
         batch_size=FLAGS.batch_size,
         compute_max_rows=True)
     for batch in batches:
-      app.Info('Batch %d of %d rows', batch.batch_num, batch.max_rows)
+      app.Log(1, 'Batch %d of %d rows', batch.batch_num, batch.max_rows)
       ProcessBatch(batch.rows, db, pool)
 
 

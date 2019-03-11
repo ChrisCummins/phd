@@ -113,11 +113,11 @@ def main(argv):
 
   for path in FLAGS.opencl_rewrite_paths:
     for path in GetFilesToRewriteFromPath(pathlib.Path(path)):
-      app.Info('%s', path)
+      app.Log(1, '%s', path)
       RewriteOpenClFileInPlace(path)
   for path in FLAGS.libcecl_rewrite_paths:
     for path in GetFilesToRewriteFromPath(pathlib.Path(path)):
-      app.Info('%s', path)
+      app.Log(1, '%s', path)
       RewriteLibceclFileInPlace(path)
 
 

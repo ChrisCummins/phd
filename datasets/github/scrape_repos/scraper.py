@@ -55,7 +55,7 @@ class QueryScraper(threading.Thread):
         self.total_result_count = self.query.totalCount
         break
       except (github.RateLimitExceededException, github.GithubException) as e:
-        app.Debug('Pausing on GitHub error: %s', e)
+        app.Log(2, 'Pausing on GitHub error: %s', e)
         time.sleep(3)
     self.next_page_num = 0
     super(QueryScraper, self).__init__()
@@ -72,13 +72,13 @@ class QueryScraper(threading.Thread):
     """
     while True:
       try:
-        app.Debug('Requesting page %d', self.next_page_num)
+        app.Log(2, 'Requesting page %d', self.next_page_num)
         page = list(self.query.get_page(self.next_page_num))
-        app.Debug('Page %d contains %d results', self.next_page_num, len(page))
+        app.Log(2, 'Page %d contains %d results', self.next_page_num, len(page))
         self.next_page_num += 1
         return page
       except github.RateLimitExceededException:
-        app.Debug('Pausing on GitHub rate limit')
+        app.Log(2, 'Pausing on GitHub rate limit')
         time.sleep(3)
       except github.GithubException:
         # One possible cause for this exception is when trying to request
@@ -118,7 +118,7 @@ class QueryScraper(threading.Thread):
     Args:
       repos: A list of GitHub Repository instances.
     """
-    app.Debug('Scraping %s repositories', humanize.Commas(len(repos)))
+    app.Log(2, 'Scraping %s repositories', humanize.Commas(len(repos)))
     for repo in repos:
       self.i += 1
       concat_name = '_'.join([repo.owner.login, repo.name])
@@ -127,7 +127,7 @@ class QueryScraper(threading.Thread):
       if not pbutil.ProtoIsReadable(meta_path,
                                     scrape_repos_pb2.GitHubRepoMetadata()):
         meta = GetRepositoryMetadata(repo)
-        app.Debug('%s', meta)
+        app.Log(2, '%s', meta)
         pbutil.ToFile(meta, meta_path)
 
 
@@ -138,9 +138,9 @@ def RunQuery(worker: QueryScraper) -> None:
     worker: A QueryScraper worker instance.
   """
   sys.stderr.flush()
-  app.Info("Query '%s' returned %s results. Processing first %s ...",
-           worker.repo_query.string, humanize.Commas(worker.total_result_count),
-           humanize.Commas(worker.repo_query.max_results))
+  app.Log(1, "Query '%s' returned %s results. Processing first %s ...",
+          worker.repo_query.string, humanize.Commas(worker.total_result_count),
+          humanize.Commas(worker.repo_query.max_results))
   bar = progressbar.ProgressBar(
       max_value=worker.repo_query.max_results, redirect_stderr=True)
   worker.start()
@@ -203,15 +203,15 @@ def main(argv) -> None:
                                scrape_repos_pb2.LanguageCloneList())
 
   for language in clone_list.language:
-    app.Info('Scraping %s repos using %s queries ...', language.language,
-             humanize.Commas(len(language.query)))
+    app.Log(1, 'Scraping %s repos using %s queries ...', language.language,
+            humanize.Commas(len(language.query)))
     for query in language.query:
       RunQuery(QueryScraper(language, query, connection))
 
-  app.Info('Finished scraping. Indexed repository counts:')
+  app.Log(1, 'Finished scraping. Indexed repository counts:')
   for language in clone_list.language:
-    app.Info('  %s: %s', language.language,
-             humanize.Commas(GetNumberOfRepoMetas(language)))
+    app.Log(1, '  %s: %s', language.language,
+            humanize.Commas(GetNumberOfRepoMetas(language)))
 
 
 if __name__ == '__main__':

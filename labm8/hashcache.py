@@ -22,6 +22,7 @@ from labm8 import fs
 from labm8 import humanize
 from labm8 import sqlutil
 
+
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -145,7 +146,7 @@ class HashCache(sqlutil.Database):
     IN_MEMORY_CACHE.clear()
     with self.Session(commit=True) as session:
       session.query(HashCacheRecord).delete()
-    app.Debug('Emptied cache')
+    app.Log(2, 'Emptied cache')
 
   def _HashDirectory(self, absolute_path: pathlib.Path) -> str:
     if fs.directory_is_empty(absolute_path):
@@ -168,7 +169,7 @@ class HashCache(sqlutil.Database):
     if self.keep_in_memory:
       in_memory_key = InMemoryCacheKey(self.hash_fn_name, absolute_path)
       if in_memory_key in IN_MEMORY_CACHE:
-        app.Debug("In-memory cache hit: '%s'", absolute_path)
+        app.Log(2, "In-memory cache hit: '%s'", absolute_path)
         return IN_MEMORY_CACHE[in_memory_key]
     hash_ = self._DoHash(absolute_path, last_modified_fn(absolute_path),
                          hash_fn)
@@ -182,14 +183,14 @@ class HashCache(sqlutil.Database):
       cached_entry = session.query(HashCacheRecord).filter(
           HashCacheRecord.absolute_path == str(absolute_path)).first()
       if cached_entry and cached_entry.last_modified == last_modified:
-        app.Debug("Cache hit: '%s'", absolute_path)
+        app.Log(2, "Cache hit: '%s'", absolute_path)
         return cached_entry.hash
       elif cached_entry:
-        app.Debug("Cache miss: '%s'", absolute_path)
+        app.Log(2, "Cache miss: '%s'", absolute_path)
         session.delete(cached_entry)
       start_time = time.time()
       checksum = hash_fn(absolute_path)
-      app.Debug("New cache entry '%s' in %s ms.", absolute_path,
+      app.Log(2, "New cache entry '%s' in %s ms.", absolute_path,
                 humanize.Commas(int((time.time() - start_time) * 1000)))
       new_entry = HashCacheRecord(
           absolute_path=str(absolute_path),

@@ -31,7 +31,7 @@ class CLSmithGenerator(autotest.Generator):
   def __init__(self, exec: Path):
     self.exec = exec
     exec_checksum = crypto.sha1_file(self.exec)
-    app.Debug(f"CLSmith binary '{self.exec}' {exec_checksum}")
+    app.Log(2, f"CLSmith binary '{self.exec}' {exec_checksum}")
 
   def _clsmith(self, path: Path, *flags, attempt_num=1) -> Path:
     """ Generate a program using CLSmith """
@@ -41,15 +41,15 @@ class CLSmithGenerator(autotest.Generator):
       )
 
     flags = ['-o', path, *flags]
-    app.Debug(" ".join([self.exec] + flags))
+    app.Log(2, " ".join([self.exec] + flags))
 
     _, returncode, stdout, stderr = clsmith.clsmith(*flags, exec_path=self.exec)
 
     # A non-zero returncode of clsmith implies that no program was
     # generated. Try again
     if returncode:
-      app.Debug(f"CLSmith call failed with returncode {returncode}:")
-      app.Debug(stdout)
+      app.Log(2, f"CLSmith call failed with returncode {returncode}:")
+      app.Log(2, stdout)
       self._clsmith(path, *flags, attempt_num=attempt_num + 1)
 
     return path
@@ -121,7 +121,7 @@ def main(args):
 
   with open(args[0]) as infile:
     json_config = json.loads(infile.read())
-    app.Debug(f"parsed config file '{args[0]}'")
+    app.Log(2, f"parsed config file '{args[0]}'")
   num_batches = int(args[1])
 
   generator = CLSmithGenerator(clsmith.exec_path)

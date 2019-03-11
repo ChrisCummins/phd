@@ -99,10 +99,10 @@ def GetFilesInDirectory(
   for path in sorted(fs.lsfiles(directory, recursive=True)):
     for pattern in exclude_patterns:
       if fnmatch.fnmatch(path, pattern):
-        app.Info('- %s', path)
+        app.Log(1, '- %s', path)
         break
     else:
-      app.Info('+ %s', path)
+      app.Log(1, '+ %s', path)
       files.append(pathlib.Path(path))
   return files
 
@@ -241,13 +241,13 @@ def CreatePackageArchive(package_dir: pathlib.Path,
   os.chdir(package_dir.parent)
   with tarfile.open(archive_path.absolute(), 'w:bz2') as tar:
     path = os.path.join(package_dir.name, 'MANIFEST.pbtxt')
-    app.Info('+ %s', path)
+    app.Log(1, '+ %s', path)
     tar.add(path)
     for f in manifest.file:
-      app.Info('+ %s', f.relative_path)
+      app.Log(1, '+ %s', f.relative_path)
       path = os.path.join(package_dir.name, f.relative_path)
       tar.add(path)
-  app.Info('Created %s', archive_path.absolute())
+  app.Log(1, 'Created %s', archive_path.absolute())
 
 
 def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
@@ -280,7 +280,7 @@ def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
   sidecar.checksum_hash = dpack_pb2.SHA256
   sidecar.checksum = crypto.sha256_file(archive_path)
   pbutil.ToFile(sidecar, sidecar_path)
-  app.Info('Wrote %s', sidecar_path.absolute())
+  app.Log(1, 'Wrote %s', sidecar_path.absolute())
 
 
 def PackDataPackage(package_dir: pathlib.Path) -> None:
@@ -306,20 +306,20 @@ def InitManifest(package_dir: pathlib.Path, contents: typing.List[pathlib.Path],
   elif manifest_path.is_file():
     raise OSError('Refusing to overwrite MANIFEST.pbtxt file.')
   pbutil.ToFile(manifest, manifest_path)
-  app.Info('Wrote %s', manifest_path.absolute())
+  app.Log(1, 'Wrote %s', manifest_path.absolute())
 
 
 def VerifyManifest(package_dir: pathlib.Path) -> bool:
   """Verify that the MANIFEST.pbtext file matches the contents."""
   if not (package_dir / 'MANIFEST.pbtxt').is_file():
-    app.Info('%s/MANIFEST.pbtxt missing, nothing to do.', package_dir)
+    app.Log(1, '%s/MANIFEST.pbtxt missing, nothing to do.', package_dir)
     return False
   manifest = pbutil.FromFile(package_dir / 'MANIFEST.pbtxt',
                              dpack_pb2.DataPackage())
   if not PackageManifestIsValid(package_dir, manifest):
     app.Error('Package %s contains errors.', package_dir)
     return False
-  app.Info('%s verified. No changes to files in the manifest.', package_dir)
+  app.Log(1, '%s verified. No changes to files in the manifest.', package_dir)
   return True
 
 
@@ -337,7 +337,7 @@ def SidecarIsValid(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
   if sidecar_manifest.checksum != checksum:
     app.Warning("the contents of '%s' have changed", archive.absolute())
     return False
-  app.Info('Package verified using the sidecar.')
+  app.Log(1, 'Package verified using the sidecar.')
   return True
 
 

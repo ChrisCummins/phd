@@ -25,6 +25,7 @@ from gpu.libcecl.proto import libcecl_pb2
 from labm8 import app
 from labm8 import labdate
 
+
 FLAGS = app.FLAGS
 
 
@@ -47,7 +48,7 @@ def KernelInvocationsFromCeclLog(
   expected_device_name = env.device_name
 
   # Iterate over each line in the cec log.
-  app.Debug('Processing %d lines of libcecl logs', len(cecl_log))
+  app.Log(2, 'Processing %d lines of libcecl logs', len(cecl_log))
   for line in cecl_log:
     # Split line based on ; delimiter into opcode and operands.
     components = [x.strip() for x in line.strip().split(';')]
@@ -86,7 +87,7 @@ def KernelInvocationsFromCeclLog(
               global_size=global_size,
               local_size=local_size,
               runtime_ms=elapsed))
-      app.Debug('Extracted clEnqueueNDRangeKernel from log')
+      app.Log(2, 'Extracted clEnqueueNDRangeKernel from log')
     elif opcode == "clEnqueueTask":
       kernel_name, elapsed = operands
       elapsed = float(elapsed)
@@ -96,7 +97,7 @@ def KernelInvocationsFromCeclLog(
               global_size=1,
               local_size=1,
               runtime_ms=elapsed))
-      app.Debug('Extracted clEnqueueTask from log')
+      app.Log(2, 'Extracted clEnqueueTask from log')
     elif opcode == "clCreateBuffer":
       size, _, flags = operands
       size = int(size)
@@ -107,7 +108,7 @@ def KernelInvocationsFromCeclLog(
       else:
         # Host -> Device, or Device -> host.
         total_transferred_bytes += size
-      app.Debug('Extracted clCreateBuffer from log')
+      app.Log(2, 'Extracted clCreateBuffer from log')
     elif (opcode == "clEnqueueReadBuffer" or opcode == "clEnqueueWriteBuffer" or
           opcode == "clEnqueueMapBuffer"):
       _, size, elapsed = operands

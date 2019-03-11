@@ -28,11 +28,11 @@ def mkdir(path):
 
 def create_csv(rows, outpath):
   with open(outpath, "w") as outfile:
-    app.Info(f"Creating CSV file {outfile.name}")
+    app.Log(1, f"Creating CSV file {outfile.name}")
 
     writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
     for row in rows:
       writer.writerow(row)
 
   nrows = len(rows) - 1
-  app.Info(f"Exported {nrows} records to '{outpath}'")
+  app.Log(1, f"Exported {nrows} records to '{outpath}'")

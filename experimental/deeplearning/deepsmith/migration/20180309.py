@@ -487,14 +487,14 @@ def _ExportProtos() -> None:
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'opencl' / 'results')])
   last_result_id = int(ids[-1]) if ids else 0
   _ExportOpenCLResults(cursor, last_result_id, proto_dir)
-  app.Info("Exported OpenCL results")
+  app.Log(1, "Exported OpenCL results")
 
   # Get the last exported testcase.
   (proto_dir / 'opencl' / 'testcases').mkdir(parents=True, exist_ok=True)
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'opencl' / 'testcases')])
   last_testcase_id = int(ids[-1]) if ids else 0
   _ExportOpenCLTestcases(cursor, last_testcase_id, proto_dir)
-  app.Info("Exported OpenCL testcases")
+  app.Log(1, "Exported OpenCL testcases")
 
   cursor.close()
   cnx.close()
@@ -508,14 +508,14 @@ def _ExportProtos() -> None:
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'sol' / 'results')])
   last_result_id = int(ids[-1]) if ids else 0
   _ExportSolidityResults(cursor, last_result_id, proto_dir)
-  app.Info("Exported Solidity results")
+  app.Log(1, "Exported Solidity results")
 
   # Get the last exported testcase.
   (proto_dir / 'sol' / 'testcases').mkdir(parents=True, exist_ok=True)
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'sol' / 'testcases')])
   last_testcase_id = int(ids[-1]) if ids else 0
   _ExportSolidityTestcases(cursor, last_testcase_id, proto_dir)
-  app.Info("Exported Solidity testcases")
+  app.Log(1, "Exported Solidity testcases")
 
   cursor.close()
   cnx.close()

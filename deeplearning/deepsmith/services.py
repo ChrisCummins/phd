@@ -67,5 +67,5 @@ def GetServiceStub(service_config: service_pb2.ServiceConfig, service_stub_cls):
              f'{service_config.service.port}')
   channel = grpc.insecure_channel(address)
   stub = service_stub_cls(channel)
-  app.Info(f'Connected to {service_stub_cls.__name__} at {address}')
+  app.Log(1, f'Connected to {service_stub_cls.__name__} at {address}')
   return stub

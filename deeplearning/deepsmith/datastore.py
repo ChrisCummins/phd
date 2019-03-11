@@ -79,7 +79,7 @@ class DataStore(object):
 
     path = pathlib.Path(FLAGS.datastore)
     ds = DataStore.FromFile(path)
-    app.Info('Read datastore proto %s', FLAGS.datastore)
+    app.Log(1, 'Read datastore proto %s', FLAGS.datastore)
     return ds
 
   @contextlib.contextmanager

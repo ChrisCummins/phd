@@ -168,9 +168,9 @@ class Model(object):
     total_time_ms = sum(
         t.epoch_wall_time_ms
         for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
-    app.Info('Trained model for %d epochs in %s ms (%s).',
-             self.config.training.num_epochs, humanize.Commas(total_time_ms),
-             humanize.Duration(total_time_ms / 1000))
+    app.Log(1, 'Trained model for %d epochs in %s ms (%s).',
+            self.config.training.num_epochs, humanize.Commas(total_time_ms),
+            humanize.Duration(total_time_ms / 1000))
     return self
 
   def Sample(self,
@@ -210,7 +210,7 @@ class Model(object):
     self.SamplerCache(sampler).mkdir(exist_ok=True)
     with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
                                self.cache.path / 'logs'):
-      app.Info("Sampling: '%s'", sampler.start_text)
+      app.Log(1, "Sampling: '%s'", sampler.start_text)
       if min_num_samples < 0:
         app.Warning(
             'Entering an infinite sample loop, this process will never end!')
@@ -240,8 +240,8 @@ class Model(object):
           pbutil.ToFile(sample, sample_path)
 
       now = labdate.MillisecondsTimestamp()
-      app.Info(
-          'Produced %s samples at a rate of %s ms / sample.',
+      app.Log(
+          1, 'Produced %s samples at a rate of %s ms / sample.',
           humanize.Commas(len(samples)),
           humanize.Commas(
               int((now - sample_start_time) / max(len(samples), 1))))
@@ -284,7 +284,7 @@ class Model(object):
     sample_count = 1
     with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
                                self.cache.path / 'logs'):
-      app.Info("Sampling: '%s'", sampler.start_text)
+      app.Log(1, "Sampling: '%s'", sampler.start_text)
       sample_start_time = labdate.MillisecondsTimestamp()
       atomizer = self.corpus.atomizer
       sampler.Specialize(atomizer)
@@ -297,9 +297,9 @@ class Model(object):
         samples += self._SampleBatch(sampler, atomizer, batch_size)
 
       now = labdate.MillisecondsTimestamp()
-      app.Info('Produced %s samples at a rate of %s ms / sample.',
-               humanize.Commas(len(samples)),
-               humanize.Commas(int((now - sample_start_time) / len(samples))))
+      app.Log(1, 'Produced %s samples at a rate of %s ms / sample.',
+              humanize.Commas(len(samples)),
+              humanize.Commas(int((now - sample_start_time) / len(samples))))
 
     return samples
 

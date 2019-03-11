@@ -207,7 +207,7 @@ def main(argv):
     unknown_args = ', '.join(argv[1:])
     raise app.UsageError(f'Unknown arguments "{unknown_args}"')
 
-  app.Info('Initializing datastore.')
+  app.Log(1, 'Initializing datastore.')
   config = pathlib.Path(FLAGS.datastore)
   ds = datastore.DataStore.FromFile(config)
 
@@ -231,7 +231,7 @@ def main(argv):
       [pathlib.Path(x)
        for x in fs.lsfiles(x, recursive=True, abspaths=True)]
       for x in result_dirs)
-  app.Info('Importing %d results into datastore ...', len(results_paths))
+  app.Log(1, 'Importing %d results into datastore ...', len(results_paths))
   with ds.Session(commit=True) as s:
     for path in progressbar.ProgressBar()(results_paths):
       # Instantiating a result from file has the side effect of adding the
@@ -240,7 +240,7 @@ def main(argv):
 
   with ds.Session() as s:
     testcases = s.query(testcase.Testcase)
-    app.Info('Difftesting the results of %d testcases ...', testcases.count())
+    app.Log(1, 'Difftesting the results of %d testcases ...', testcases.count())
     for t in progressbar.ProgressBar(max_value=testcases.count())(testcases):
       DifftestTestcase(s, t, output_dir)
   df = ReadClassificationsToTable(output_dir)

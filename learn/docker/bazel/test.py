@@ -6,6 +6,7 @@ import pytest
 from labm8 import app
 from labm8 import bazelutil
 
+
 FLAGS = app.FLAGS
 
 
@@ -17,9 +18,9 @@ def test_datafile_read():
 
 def main(argv):
   """Main entry point."""
-  app.Info('Platform: %s', sys.platform)
-  app.Info('Exec:     %s', sys.executable)
-  app.Info('Args:     %s', ' '.join(argv))
+  app.Log(1, 'Platform: %s', sys.platform)
+  app.Log(1, 'Exec:     %s', sys.executable)
+  app.Log(1, 'Args:     %s', ' '.join(argv))
   if len(argv) > 1:
     app.Warning("Unknown arguments: '%s'", ' '.join(argv[1:]))
   sys.exit(pytest.main([__file__, '-vv']))

@@ -79,7 +79,7 @@ def TrainAndTest(session,
   feed_dict = dict(zip(model["inputs"], [test_data.images, test_data.labels]))
   error = 1 - session(model["eval"], feed_dict=feed_dict)
 
-  app.Info("MNIST with batch size %d for %d iterations: %.3f %% error ",
+  app.Log(1, "MNIST with batch size %d for %d iterations: %.3f %% error ",
            batch_size, num_iterations, error * 100)
   return error
 
@@ -92,7 +92,7 @@ def Denormalize(inputs):
 
 def HyperParamSweep(maxiter: int = 50) -> typing.Dict[str, int]:
   """Perform a hyper-parameter sweep to find the best batch size and numiter."""
-  app.Info("loading dataset ... ")
+  app.Log(1, "loading dataset ... ")
   mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
   image_width = 28  # MNIST image dimensions
   tensor_size = image_width * image_width  # Flatten image to 1D
@@ -127,7 +127,7 @@ def main(argv):
   del argv
 
   params = HyperParamSweep(FLAGS.maxiter)
-  app.Info("batch size: %d, nuber of iterations: %d", params['batch_size'],
+  app.Log(1, "batch size: %d, nuber of iterations: %d", params['batch_size'],
            params['numiter'])
 
 

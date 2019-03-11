@@ -70,10 +70,10 @@ WHERE
             source='Timing.app',
         ) for date, value, group in cursor
     ])
-    app.Info('Processed %s %s:%s measurements in %.3f seconds',
-             humanize.Commas(len(series.measurement)), series.family,
-             series.name,
-             time.time() - start_time)
+    app.Log(1, 'Processed %s %s:%s measurements in %.3f seconds',
+            humanize.Commas(len(series.measurement)), series.family,
+            series.name,
+            time.time() - start_time)
 
   return me_pb2.SeriesCollection(series=title_series_map.values())
 

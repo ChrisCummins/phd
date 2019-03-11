@@ -139,8 +139,8 @@ class PreTrainedModel(object):
       # Complete sampling. Note that sample_count starts at 1.
       if sample_count > min_num_samples:
         now = labdate.MillisecondsTimestamp()
-        app.Info(
-            'Produced %s samples at a rate of %s ms / sample.',
+        app.Log(
+            1, 'Produced %s samples at a rate of %s ms / sample.',
             humanize.Commas(sample_count - 1),
             humanize.Commas(
                 int((now - sample_start_time) / max(sample_count - 1, 1))))

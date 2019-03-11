@@ -101,7 +101,7 @@ class MonteCarloControlBlackjack(object):
     for i in range(n):
       self.num_episodes += 1
       episode = self.GetAnEpisode()
-      app.Debug(
+      app.Log(2,
           'Episode %d, steps = %d, final_score = %02d:%02d, reward = %.1f', i,
           len(episode), episode[-1].observation.player_score,
           episode[-1].observation.dealer_score, episode[-1].reward)

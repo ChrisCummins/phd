@@ -143,19 +143,19 @@ class OpenClBacktrackingHelper(object):
     if self._target_features is not None:
       new_feature_distance = scipy.spatial.distance.euclidean(
           features, self._target_features)
-      app.Info('Features: %s, distance=%f, norm=%f, delta=%f', features,
+      app.Log(1, 'Features: %s, distance=%f, norm=%f, delta=%f', features,
                new_feature_distance,
                new_feature_distance / self._init_feature_distance,
                new_feature_distance - self._previous_feature_distance)
       if new_feature_distance > self._previous_feature_distance:
         # This will only happen once feature values are great than target
         # feature values.
-        app.Info("Rejecting candidate because of positive feature delta")
+        app.Log(1, "Rejecting candidate because of positive feature delta")
         return False
       if (new_feature_distance == self._previous_feature_distance and
           random.random() >
           FLAGS.experimental_clgen_backtracking_reject_no_progress_probability):
-        app.Info("Randomly rejecting candidate with no progress")
+        app.Log(1, "Randomly rejecting candidate with no progress")
         return False
       self._previous_features = features
       self._previous_src = candidate_src
@@ -255,7 +255,7 @@ class BacktrackingModel(models.Model):
           FLAGS.experimental_clgen_backtracking_target_features,
           dtype=int,
           sep=',')
-      app.Info("Using target features %s", self._target_features)
+      app.Log(1, "Using target features %s", self._target_features)
       assert self._target_features.shape == (4,)
 
   def SamplerCache(self, s: samplers.Sampler) -> pathlib.Path:

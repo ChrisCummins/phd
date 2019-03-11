@@ -273,7 +273,7 @@ def DoFlagsAction():
       instance.model.corpus.Create()
     elif FLAGS.stop_after == 'train':
       instance.model.Train()
-      app.Info('Model: %s', instance.model.cache.path)
+      app.Log(1, 'Model: %s', instance.model.cache.path)
     elif FLAGS.stop_after:
       raise app.UsageError(
           f"Invalid --stop_after argument: '{FLAGS.stop_after}'")

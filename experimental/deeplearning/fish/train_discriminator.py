@@ -88,13 +88,13 @@ def LoadPositiveNegativeProtos(path: pathlib.Path) -> PositiveNegativeDataset:
       for p in path.iterdir()
       if p.name.startswith('positive-')
   ]
-  app.Info('Loaded %s positive protos', humanize.Commas(len(positive_protos)))
+  app.Log(1, 'Loaded %s positive protos', humanize.Commas(len(positive_protos)))
   negative_protos = [
       pbutil.FromFile(p, fish_pb2.CompilerCrashDiscriminatorTrainingExample())
       for p in path.iterdir()
       if p.name.startswith('negative-')
   ]
-  app.Info('Loaded %s negative protos', humanize.Commas(len(negative_protos)))
+  app.Log(1, 'Loaded %s negative protos', humanize.Commas(len(negative_protos)))
   return PositiveNegativeDataset(positive_protos, negative_protos)
 
 
@@ -130,15 +130,15 @@ def main(argv):
   training_protos = LoadPositiveNegativeProtos(dataset_root / 'training')
   validation_protos = LoadPositiveNegativeProtos(dataset_root / 'validation')
   testing_protos = LoadPositiveNegativeProtos(dataset_root / 'testing')
-  app.Info(
+  app.Log(1, 
       'Number of training examples: %s.',
       humanize.Commas(
           len(training_protos.positive) + len(training_protos.negative)))
-  app.Info(
+  app.Log(1, 
       'Number of validation examples: %s.',
       humanize.Commas(
           len(validation_protos.positive) + len(validation_protos.negative)))
-  app.Info(
+  app.Log(1, 
       'Number of testing examples: %s.',
       humanize.Commas(
           len(testing_protos.positive) + len(testing_protos.negative)))
@@ -149,45 +149,45 @@ def main(argv):
       validation_protos.positive + validation_protos.negative +
       testing_protos.positive + testing_protos.negative
   ])
-  app.Info('Deriving atomizer from %s chars.', humanize.Commas(len(text)))
+  app.Log(1, 'Deriving atomizer from %s chars.', humanize.Commas(len(text)))
   atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
-  app.Info('Vocabulary size: %s.', humanize.Commas(len(atomizer.vocab)))
-  app.Info('Pickled atomizer to %s.', model_path / 'atomizer.pkl')
+  app.Log(1, 'Vocabulary size: %s.', humanize.Commas(len(atomizer.vocab)))
+  app.Log(1, 'Pickled atomizer to %s.', model_path / 'atomizer.pkl')
   with open(model_path / 'atomizer.pkl', 'wb') as f:
     pickle.dump(atomizer, f)
 
-  app.Info('Encoding training corpus')
+  app.Log(1, 'Encoding training corpus')
   x, y = ProtosToModelData(training_protos, sequence_length, atomizer)
 
   validation_data = None
   if validation_protos.positive:
-    app.Info('Encoding validation corpus')
+    app.Log(1, 'Encoding validation corpus')
     validation_data = ProtosToModelData(validation_protos, sequence_length,
                                         atomizer)
 
-  app.Info('Encoding test corpus')
+  app.Log(1, 'Encoding test corpus')
   test_x, test_y = ProtosToModelData(testing_protos, sequence_length, atomizer)
 
   np.random.seed(FLAGS.seed)
-  app.Info('Building Keras model')
+  app.Log(1, 'Building Keras model')
   model = BuildKerasModel(
       sequence_length=sequence_length,
       lstm_size=FLAGS.lstm_size,
       num_layers=FLAGS.num_layers,
       dnn_size=FLAGS.dnn_size,
       atomizer=atomizer)
-  app.Info('Training model')
+  app.Log(1, 'Training model')
 
   def OnEpochEnd(epoch, logs):
     """End-of-epoch model evaluate."""
     del logs
-    app.Info('Evaluating model at epoch %d', epoch)
+    app.Log(1, 'Evaluating model at epoch %d', epoch)
     score, accuracy = model.evaluate(
         test_x,
         Encode1HotLabels(test_y),
         batch_size=FLAGS.batch_size,
         verbose=0)
-    app.Info('Score: %.2f, Accuracy: %.2f', score * 100, accuracy * 100)
+    app.Log(1, 'Score: %.2f, Accuracy: %.2f', score * 100, accuracy * 100)
 
   logger = telemetry.TrainingLogger(pathlib.Path(FLAGS.model_path))
   model.fit(

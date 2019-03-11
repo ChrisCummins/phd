@@ -82,18 +82,18 @@ class GitHubRepo(object):
         str(self.clone_dir), '-type', 'f', '-regex', pattern, '-not', '-path',
         '*/.git/*'
     ]
-    app.Debug('$ %s', ' '.join(cmd))
+    app.Log(2, '$ %s', ' '.join(cmd))
     paths = subprocess.check_output(
         cmd, universal_newlines=True).rstrip().split('\n')
     if len(paths) == 1 and not paths[0]:
-      app.Debug('No files to import from %s', self.clone_dir)
+      app.Log(2, 'No files to import from %s', self.clone_dir)
       return self
     if i:
-      app.Info("[%s / %s] Importing %s files from %s ...", i.i, i.n,
-               humanize.Commas(len(paths)), self.name)
+      app.Log(1, "[%s / %s] Importing %s files from %s ...", i.i, i.n,
+              humanize.Commas(len(paths)), self.name)
     else:
-      app.Info("Importing %s files from %s ...", humanize.Commas(len(paths)),
-               self.name)
+      app.Log(1, "Importing %s files from %s ...", humanize.Commas(len(paths)),
+              self.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(self.clone_dir)
     jobs = (scrape_repos_pb2.ImportWorker(
         clone_from_url=self.meta.clone_from_url,

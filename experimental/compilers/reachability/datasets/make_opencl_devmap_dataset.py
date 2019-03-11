@@ -43,8 +43,9 @@ def MakeOpenClDevmapDataset(df: pd.DataFrame, outdir: pathlib.Path):
       for _, g in encoded_graphs
   ])
 
-  app.Info(f'{unknowns.mean():.1%} of statements are unknown '
-           f'(min={unknowns.min():.1%}, max={unknowns.max():.1%})')
+  app.Log(
+      1, f'{unknowns.mean():.1%} of statements are unknown '
+      f'(min={unknowns.min():.1%}, max={unknowns.max():.1%})')
 
   # Set CFG properties columns.
   graphs = [x[1] for x in encoded_graphs]
@@ -91,9 +92,9 @@ def MakeOpenClDevmapDataset(df: pd.DataFrame, outdir: pathlib.Path):
   assert len(input_graphs) == len(target_graphs) == len(encoded_graphs) == len(
       amd_df) == len(nvidia_df)
 
-  app.Info("Writing %s", outdir / 'amd.pkl')
+  app.Log(1, "Writing %s", outdir / 'amd.pkl')
   amd_df.to_pickle(str(outdir / 'amd.pkl'))
-  app.Info("Writing %s", outdir / 'nvidia.pkl')
+  app.Log(1, "Writing %s", outdir / 'nvidia.pkl')
   nvidia_df.to_pickle(str(outdir / 'nvidia.pkl'))
 
 

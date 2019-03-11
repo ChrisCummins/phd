@@ -156,7 +156,7 @@ class SolidityGenerator(Generator):
         s.commit()
 
         nprog, nuniq = len(programs), len(uniq)
-        app.Info(f"imported {nuniq} of {nprog} unique programs")
+        app.Log(1, f"imported {nuniq} of {nprog} unique programs")
 
       num_progs = self.num_programs(s)
 
@@ -188,7 +188,7 @@ class SolidityGenerator(Generator):
   def import_from_file(self, session: session_t,
                        path: Path) -> Union[None, ProgramProxy]:
     """ Import a program from a file. """
-    # app.Debug(f"importing '{path}'")
+    # app.Log(2, f"importing '{path}'")
     # Simply ignore non-ASCII chars:
     src = ''.join(
         [i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])

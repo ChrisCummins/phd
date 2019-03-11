@@ -122,22 +122,22 @@ def main(argv):
   capabilities = GetHarnessCapabilities(harness_stub)
   testbeds = collections.deque(capabilities.testbeds)
   if testbeds:
-    app.Info('%d testbeds: %s', len(capabilities.testbeds),
-             ', '.join(x.name for x in capabilities.testbeds))
+    app.Log(1, '%d testbeds: %s', len(capabilities.testbeds),
+            ', '.join(x.name for x in capabilities.testbeds))
     while testbeds:
       testbed = testbeds.popleft()
       testcases = GetTestcasesToRun(datastore_stub, capabilities.harness,
                                     testbed, target_total_results,
                                     harness_batch_size)
-      app.Info('Received %d testcases to execute on %s', len(testcases),
-               testbed.name)
+      app.Log(1, 'Received %d testcases to execute on %s', len(testcases),
+              testbed.name)
       if testcases:
         results = RunTestcases(harness_stub, testbed, testcases)
         SubmitResults(datastore_stub, results)
         # If there are testcases to run, then we add it back to the testbeds
         # queue, as there may be more.
         testbeds.append(testbed)
-    app.Info('done')
+    app.Log(1, 'done')
   else:
     app.Warning('No testbeds, nothing to do!')
 

@@ -42,7 +42,7 @@ def create_results_metas(s: session_t):
 
   print("creating results metas ...")
   s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
-  app.Debug("deleted existing result metas")
+  app.Log(2, "deleted existing result metas")
   testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness) \
     .join(Testcase) \
     .group_by(Result.testbed_id, Testcase.harness) \

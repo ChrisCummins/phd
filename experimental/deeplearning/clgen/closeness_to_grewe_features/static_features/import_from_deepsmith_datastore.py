@@ -69,7 +69,7 @@ def main(argv: typing.List[str]):
         compute_max_rows=True)
 
     for batch in batches:
-      app.Info('Batch %03d containing testcases %s..%s of %s', batch.batch_num,
+      app.Log(1, 'Batch %03d containing testcases %s..%s of %s', batch.batch_num,
                humanize.Commas(batch.offset), humanize.Commas(batch.limit),
                humanize.Commas(batch.max_rows))
       prefix = 'phd_experimental_deeplearning_clgen_'
@@ -77,7 +77,7 @@ def main(argv: typing.List[str]):
         d = pathlib.Path(d)
         paths_to_import = [CreateTempFileFromTestcase(d, r) for r in batch.rows]
         db.ImportStaticFeaturesFromPaths(paths_to_import, 'clgen_dsmith')
-  app.Info('done')
+  app.Log(1, 'done')
 
 
 if __name__ == '__main__':

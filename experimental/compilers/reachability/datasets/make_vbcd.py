@@ -235,7 +235,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
               ]),
       ])
 
-  app.Info("Scraping repos ...")
+  app.Log(1, "Scraping repos ...")
   connection = github_api.GetGithubConectionFromFlagsOrDie()
   for query in language_to_clone.query:
     scraper.RunQuery(scraper.QueryScraper(language_to_clone, query, connection))
@@ -248,7 +248,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
       if cloner.IsRepoMetaFile(f)
   ]
   worker = cloner.AsyncWorker(meta_files)
-  app.Info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
+  app.Log(1, 'Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():
@@ -256,7 +256,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
     worker.join(.5)
   bar.update(worker.i)
 
-  app.Info("Importing repos to contentfiles database ...")
+  app.Log(1, "Importing repos to contentfiles database ...")
   for imp in language_to_clone.importer:
     [preprocessors.GetPreprocessorFunction(p) for p in imp.preprocessor]
 
@@ -267,7 +267,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
   if pathlib.Path(language_to_clone.destination_directory).is_dir():
     importer.ImportFromLanguage(contentfiles_db, language_to_clone, pool)
 
-  app.Info("Populating bytecode table ...")
+  app.Log(1, "Populating bytecode table ...")
   import_from_github.PopulateBytecodeTable(contentfiles_db, language_to_clone,
                                            db)
 
@@ -287,7 +287,7 @@ def main(argv):
     opencl_dataset_imported = session.query(database.Meta) \
       .filter(database.Meta.key == 'opencl_dataset_imported').first()
   if not opencl_dataset_imported:
-    app.Info("Importing OpenCL dataset ...")
+    app.Log(1, "Importing OpenCL dataset ...")
     opencl.OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
     with db.Session(commit=True) as session:
       session.add(
@@ -297,7 +297,7 @@ def main(argv):
     linux_sources_imported = session.query(database.Meta) \
       .filter(database.Meta.key == 'linux_sources_imported').first()
   if not linux_sources_imported:
-    app.Info("Processing Linux dataset ...")
+    app.Log(1, "Processing Linux dataset ...")
     linux.LinuxSourcesDataset().PopulateBytecodeTable(db)
     with db.Session(commit=True) as session:
       session.add(
@@ -307,17 +307,17 @@ def main(argv):
     github_c_sources_imported = session.query(database.Meta) \
       .filter(database.Meta.key == 'github_c_sources_imported').first()
   if not github_c_sources_imported:
-    app.Info('Processing GitHub C sources ...')
+    app.Log(1, 'Processing GitHub C sources ...')
     with tempfile.TemporaryDirectory(prefix='phd_') as d:
       PopulateBytecodeTableFromGithubCSources(db, pathlib.Path(d))
     with db.Session(commit=True) as session:
       session.add(
           database.Meta(key='github_c_sources_imported', value=NowString()))
 
-  # app.Info("Processing CFGs ...")
+  # app.Log(1, "Processing CFGs ...")
   # PopulateControlFlowGraphTable(db)
   #
-  # app.Info("Processing full flow graphs ...")
+  # app.Log(1, "Processing full flow graphs ...")
   # PopulateFullFlowGraphTable(db)
 
 

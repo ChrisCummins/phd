@@ -10,6 +10,7 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
@@ -59,7 +60,7 @@ def main(argv: typing.List[str]):
 
   num_kernels, = c.execute(
       'SELECT COUNT(*) FROM PreprocessedKernels').fetchone()
-  app.Info("Database contains %d kernels", num_kernels)
+  app.Log(1, "Database contains %d kernels", num_kernels)
   num_batches = math.ceil(num_kernels / FLAGS.batch_size)
 
   batches = BatchQueryResults(
@@ -69,7 +70,7 @@ def main(argv: typing.List[str]):
   with multiprocessing.Pool() as pool:
     for i, batch in enumerate(batches):
       with tempfile.TemporaryDirectory(prefix=prefix) as d:
-        app.Info('Batch %d of %d', i + 1, num_batches)
+        app.Log(1, 'Batch %d of %d', i + 1, num_batches)
         d = pathlib.Path(d)
         paths_to_import = [
             CreateTempFileFromTestcase(d, src, i)
@@ -78,7 +79,7 @@ def main(argv: typing.List[str]):
         db = grewe_features_db.Database(FLAGS.db)
         success_count, new_row_count = db.ImportStaticFeaturesFromPaths(
             paths_to_import, FLAGS.origin, pool)
-        app.Info('Extracted features from %d of %d kernels, %d new rows',
+        app.Log(1, 'Extracted features from %d of %d kernels, %d new rows',
                  success_count, FLAGS.batch_size, new_row_count)
 
 

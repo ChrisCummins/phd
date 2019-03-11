@@ -21,10 +21,10 @@ class ClgenOpenClFilters(difftests.FiltersBase):
     if any(result.outcome == deepsmith_pb2.Result.PASS
            for result in difftest.result):
       if ContainsFloatingPoint(difftest.result[0].testcase):
-        app.Info('Cannot difftest OpenCL kernel with floating point.')
+        app.Log(1, 'Cannot difftest OpenCL kernel with floating point.')
         return None
       if HasVectorInputs(difftest.result[0].testcase):
-        app.Info('Cannot difftest OpenCL kernel with vector inputs.')
+        app.Log(1, 'Cannot difftest OpenCL kernel with vector inputs.')
         return None
     return difftest
 
@@ -36,13 +36,13 @@ class ClgenOpenClFilters(difftests.FiltersBase):
       # automatically disqualifies from difftesting.
       if (result.outcome == deepsmith_pb2.Result.BUILD_FAILURE and
           LegitimateBuildFailure(result)):
-        app.Info('Cannot difftest legitimate build failure.')
+        app.Log(1, 'Cannot difftest legitimate build failure.')
         return None
       # An anomalous build failure for an earlier OpenCL version can't be
       # difftested, since we don't know if the failure is legitimate.
       if (outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE and
           result.testbed.opts['opencl_version'] == '1.2'):
-        app.Info('Cannot difftest build failures on OpenCL 1.2.')
+        app.Log(1, 'Cannot difftest build failures on OpenCL 1.2.')
         # TODO(cec): Determine if build succeeded on any 1.2 testbed before
         # discarding.
         return None
@@ -53,8 +53,9 @@ class ClgenOpenClFilters(difftests.FiltersBase):
           outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_WRONG_OUTPUT or
           outcome == deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_TIMEOUT):
         if RedFlagCompilerWarnings(result):
-          app.Info('Cannot difftest anomalous runtime behaviour with red '
-                   'flag compiler warnings.')
+          app.Log(
+              1, 'Cannot difftest anomalous runtime behaviour with red '
+              'flag compiler warnings.')
           return None
         # TODO(cec): Verify testcase with oclgrind.
         # TODO(cec): Verify testcase with gpuverify.

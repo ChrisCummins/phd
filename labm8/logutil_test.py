@@ -11,6 +11,7 @@ from labm8 import logutil
 from labm8 import test
 from labm8.proto import logging_pb2
 
+
 FLAGS = app.FLAGS
 
 
@@ -172,11 +173,11 @@ def test_TeeLogsToFile(capsys):
   """Test that StartTeeLogs also logs to file, and StopTeeLogs prevents that."""
   with tempfile.TemporaryDirectory() as d:
     FLAGS.logtostderr = True
-    app.Info('This is not going in a file')
+    app.Log(1, 'This is not going in a file')
     logutil.StartTeeLogsToFile('test', d)
-    app.Info('Hello, file!')
+    app.Log(1, 'Hello, file!')
     logutil.StopTeeLogsToFile()
-    app.Info('This is not going in a file')
+    app.Log(1, 'This is not going in a file')
     # Test file contents.
     with open(pathlib.Path(d) / 'test.INFO') as f:
       lines = f.read().rstrip().split('\n')
@@ -196,10 +197,10 @@ def test_TeeLogsToFile_contextmanager(capsys):
   """Test that contextmanager temporarily also logs to file."""
   with tempfile.TemporaryDirectory() as d:
     FLAGS.logtostderr = True
-    app.Info('This is not going in a file')
+    app.Log(1, 'This is not going in a file')
     with logutil.TeeLogsToFile('test', d):
-      app.Info('Hello, file!')
-    app.Info('This is not going in a file')
+      app.Log(1, 'Hello, file!')
+    app.Log(1, 'This is not going in a file')
     # Test file contents.
     with open(pathlib.Path(d) / 'test.INFO') as f:
       lines = f.read().rstrip().split('\n')

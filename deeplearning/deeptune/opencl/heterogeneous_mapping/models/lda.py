@@ -113,7 +113,7 @@ def _ExtractGraphBatchOrDie(
   batch = []
 
   for src_file_path in src_file_paths:
-    app.Info('Compiling %s', src_file_path.name)
+    app.Log(1, 'Compiling %s', src_file_path.name)
     bytecode = ncc.ExtractLlvmByteCodeOrDie(src_file_path, headers_dir)
     dot_strings = list(llvm_util.DotCfgsFromBytecode(bytecode))
     cfgs = [llvm_util.ControlFlowGraphFromDotSource(dot) for dot in dot_strings]
@@ -201,7 +201,7 @@ class Lda(base.HeterogeneousMappingModel):
     # if self.num_processing_steps is None:
     #   self.num_processing_steps = self.GetNumberOfMessagePassingSteps(
     #       input_graphs, target_graphs)
-    #   app.Info("Derived processing step count of %d",
+    #   app.Log(1, "Derived processing step count of %d",
     #                self.num_processing_steps)
     #
     # # Create the placeholders.
@@ -313,7 +313,7 @@ class Lda(base.HeterogeneousMappingModel):
 
       with tf.Session() as session:
         for i, (row, graph) in enumerate(data):
-          app.Info('Encoding graph %d %s', i, row['program:benchmark_name'])
+          app.Log(1, 'Encoding graph %d %s', i, row['program:benchmark_name'])
           yield row, EncodeGraph(graph, vocab, session, embedding_lookup_op,
                                  embedding_lookup_input_ph)
 

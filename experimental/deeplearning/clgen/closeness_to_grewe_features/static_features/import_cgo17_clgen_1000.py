@@ -28,7 +28,7 @@ def main(argv: typing.List[str]):
     assert len(paths_to_import) == 1000
     db.ImportStaticFeaturesFromPaths(paths_to_import, 'clgen_1000')
 
-  app.Info('done')
+  app.Log(1, 'done')
 
 
 if __name__ == '__main__':

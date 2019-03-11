@@ -83,7 +83,7 @@ def LoadPositiveProtos(export_path: pathlib.Path,
       p for p in GetProtos(export_path, positive_class_outcomes, max_src_len)
       if (not assertions_only) or p.raised_assertion
   ][:max_num]
-  app.Info('Loaded %s positive data protos.', humanize.Commas(len(protos)))
+  app.Log(1, 'Loaded %s positive data protos.', humanize.Commas(len(protos)))
   return protos
 
 
@@ -98,7 +98,7 @@ def LoadNegativeProtos(
 
   if balance_class_lengths:
     positive_proto_sizes = [len(p.src) for p in positive_protos]
-    app.Info('Loaded %s negative protos. Balancing lengths ...',
+    app.Log(1, 'Loaded %s negative protos. Balancing lengths ...',
              humanize.Commas(len(candidate_protos)))
     negative_proto_sizes = np.array([len(p.src) for p in candidate_protos],
                                     dtype=np.int32)
@@ -106,7 +106,7 @@ def LoadNegativeProtos(
     for i, positive_proto_size in enumerate(positive_proto_sizes):
       size_diffs = np.abs(negative_proto_sizes - positive_proto_size)
       idx_of_closest: int = np.argmin(size_diffs)
-      app.Info(
+      app.Log(1, 
           'Found negative example of size %s to match positive '
           'example of size %s (diff %s)',
           humanize.Commas(negative_proto_sizes[idx_of_closest]),
@@ -124,7 +124,7 @@ def LoadNegativeProtos(
       candidate_protos = candidate_protos[:min_count]
       positive_protos = positive_protos[:min_count]
     negative_protos = candidate_protos
-  app.Info('Loaded %s negative data protos',
+  app.Log(1, 'Loaded %s negative data protos',
            humanize.Commas(len(negative_protos)))
   return positive_protos, negative_protos
 
@@ -177,7 +177,7 @@ def main(argv):
   (dataset_root / 'validation').mkdir(exist_ok=True, parents=True)
   (dataset_root / 'testing').mkdir(exist_ok=True, parents=True)
 
-  app.Info('Shuffling protos with seed %d', FLAGS.seed)
+  app.Log(1, 'Shuffling protos with seed %d', FLAGS.seed)
   random.seed(FLAGS.seed)
   random.shuffle(positive_protos)
   random.shuffle(negative_protos)
@@ -188,7 +188,7 @@ def main(argv):
   for i, proto in enumerate(negative_protos[:negative_sizes[0]]):
     pbutil.ToFile(proto,
                   (dataset_root / 'training' / f'negative-{i:04d}.pbtxt'))
-  app.Info('Wrote %s training examples',
+  app.Log(1, 'Wrote %s training examples',
            humanize.Commas(positive_sizes[0] + negative_sizes[0]))
   positive_protos = positive_protos[positive_sizes[0]:]
   negative_protos = negative_protos[negative_sizes[0]:]
@@ -199,7 +199,7 @@ def main(argv):
   for i, proto in enumerate(negative_protos[:negative_sizes[1]]):
     pbutil.ToFile(proto,
                   (dataset_root / 'validation' / f'negative-{i:04d}.pbtxt'))
-  app.Info('Wrote %s validation examples',
+  app.Log(1, 'Wrote %s validation examples',
            humanize.Commas(positive_sizes[1] + negative_sizes[1]))
   positive_protos = positive_protos[positive_sizes[1]:]
   negative_protos = negative_protos[negative_sizes[1]:]
@@ -208,7 +208,7 @@ def main(argv):
     pbutil.ToFile(proto, (dataset_root / 'testing' / f'positive-{i:04d}.pbtxt'))
   for i, proto in enumerate(negative_protos[:negative_sizes[2]]):
     pbutil.ToFile(proto, (dataset_root / 'testing' / f'negative-{i:04d}.pbtxt'))
-  app.Info('Wrote %s testing examples',
+  app.Log(1, 'Wrote %s testing examples',
            humanize.Commas(positive_sizes[2] + negative_sizes[2]))
 
 

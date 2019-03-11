@@ -664,19 +664,19 @@ class Platform(Base):
     for j, cl_platform in enumerate(cl.get_platforms()):
       platform_name = cl_platform.get_info(cl.platform_info.NAME)
       if platform_name == platform:
-        app.Debug(f"trying to match '{platform}' to '{platform_name}'")
+        app.Log(2, f"trying to match '{platform}' to '{platform_name}'")
         # match device ID:
         for i, cl_device in enumerate(cl_platform.get_devices()):
-          app.Debug(f"matched platform '{platform_name}'")
+          app.Log(2, f"matched platform '{platform_name}'")
 
           device_name = cl_device.get_info(cl.device_info.NAME)
           device_driver = cl_device.get_info(cl.device_info.DRIVER_VERSION)
 
-          app.Debug(f"trying to match '{device} "
+          app.Log(2, f"trying to match '{device} "
                     f"{driver}' to '{device_name} "
                     f"{device_driver}'")
           if (device_name == device and device_driver == driver):
-            app.Debug(f"matched device '{device_name}'")
+            app.Log(2, f"matched device '{device_name}'")
             return j, i
 
     # after iterating over all OpenCL platforms and devices, no match found:
@@ -779,7 +779,7 @@ class Testbed(Base):
       ndone = already_done.count()
       ntodo = todo.count()
 
-      app.Debug(
+      app.Log(2,
           f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done"
       )
 
@@ -945,7 +945,7 @@ class TestbedProxy(Proxy, dsmith.ReprComparable):
         platform_id=platform.id,
         optimizations=self._optimizations)
     session.commit()
-    app.Debug(f"Added new Testbed {testbed}")
+    app.Log(2, f"Added new Testbed {testbed}")
     return testbed
 
   def run_testcases(self, harness, generator) -> None:
