@@ -1,3 +1,3 @@
 # Code Templates
 
-All new source code files in the project should be based from these templates.
+This package contains templates for various target types.
