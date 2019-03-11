@@ -16,6 +16,7 @@ from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, abort, flash, g, redirect, render_template, request, \
   session, url_for
 
+
 # create our little application :)
 app = Flask(__name__)
 

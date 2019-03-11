@@ -9,6 +9,7 @@ from labm8 import test
 from util.freefocus import freefocus_pb2
 from util.freefocus import sql
 
+
 FLAGS = app.FLAGS
 
 

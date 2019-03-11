@@ -17,6 +17,7 @@ from sqlalchemy.ext import declarative
 from labm8 import app
 from util.photolib import common
 
+
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name

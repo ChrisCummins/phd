@@ -7,6 +7,7 @@ import sqlalchemy as sql
 from labm8 import app
 from labm8 import sqlutil
 
+
 FLAGS = app.FLAGS
 
 Base = sqlutil.Base()

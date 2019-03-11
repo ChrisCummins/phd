@@ -29,6 +29,7 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_list('target', [], 'The bazel target(s) to export.')

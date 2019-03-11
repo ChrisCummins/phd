@@ -8,6 +8,7 @@ from github import Github
 
 from util.freefocus.sql import *
 
+
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
   parser.add_argument("owner")

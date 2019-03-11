@@ -8,6 +8,7 @@ from labm8 import app
 from labm8 import test
 from util.photolib.shutterbug import shutterbug
 
+
 FLAGS = app.FLAGS
 
 # Test fixtures.

@@ -10,6 +10,7 @@ import subprocess
 import sys
 import threading
 
+
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
 # WARNING: Moving this file may require updating this path!

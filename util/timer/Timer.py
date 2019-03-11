@@ -5,6 +5,7 @@ import requests
 import rumps
 from pync import Notifier
 
+
 # Read global configuration file
 with open(path.expanduser("~/.config/toggl.json")) as infile:
   config = json.load(infile)

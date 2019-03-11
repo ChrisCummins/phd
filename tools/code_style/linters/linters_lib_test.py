@@ -8,6 +8,7 @@ from labm8 import app
 from labm8 import test
 from tools.code_style.linters import linters_lib
 
+
 FLAGS = app.FLAGS
 
 

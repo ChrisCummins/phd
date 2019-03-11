@@ -12,6 +12,7 @@ from util.photolib import common
 from util.photolib import lightroom
 from util.photolib.proto import photolint_pb2
 
+
 FLAGS = app.FLAGS
 app.DEFINE_boolean("counts", False, "Show only the counts of errors.")
 app.DEFINE_boolean("fix_it", False, "Show how to fix it.")

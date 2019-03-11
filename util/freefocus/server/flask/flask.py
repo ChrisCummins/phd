@@ -12,6 +12,7 @@ from flask import abort, request
 from util.freefocus import freefocus
 from util.freefocus import sql
 
+
 app = flask.Flask(__name__)
 flask_cors.CORS(app)
 app.config.from_object('config')

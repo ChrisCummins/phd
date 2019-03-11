@@ -22,6 +22,7 @@ from labm8 import shell
 from util.photolib import common
 from util.photolib import linters
 
+
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name

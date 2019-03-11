@@ -6,6 +6,7 @@ from labm8 import app
 from labm8 import test
 from util.photolib import workspace
 
+
 FLAGS = app.FLAGS
 
 

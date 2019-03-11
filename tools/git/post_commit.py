@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import sys
 
+
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
 # WARNING: Moving this file may require updating this path!

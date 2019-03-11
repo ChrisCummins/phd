@@ -14,6 +14,7 @@ from shutil import copy, copyfileobj
 
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 
 # Metadata used in README.txt files.

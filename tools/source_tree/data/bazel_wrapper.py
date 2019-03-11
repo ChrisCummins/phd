@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 
+
 # The subset of bazel targets that are supported in this WORKSPACE.
 EXPORTED_TARGETS = [
     # @EXPORTED_TARGETS@ #

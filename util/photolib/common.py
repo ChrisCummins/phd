@@ -4,6 +4,7 @@ import re
 
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 
 # The top level photolib directories.

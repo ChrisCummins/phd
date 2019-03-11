@@ -63,7 +63,7 @@ py_library(
     deps = [
         ":args",
         ":driver",
-        "//labm8:err",
+        "//labm8:app",
         "//third_party/py/numpy",
     ],
 )
@@ -89,7 +89,7 @@ py_binary(
         ":env",
         "//gpu/cldrive/proto:cldrive_py_pb2",
         "//labm8:bazelutil",
-        "//labm8:err",
+        "//labm8:app",
         "//third_party/py/numpy",
     ],
 )

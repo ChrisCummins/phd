@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 
 from util.freefocus.sql import *
 
+
 OMNIFOCUS_DB_PATH = (
     "~/Library/Containers/com.omnigroup.OmniFocus2/Data/Library/Caches/"
     "com.omnigroup.OmniFocus2/OmniFocusDatabase2")

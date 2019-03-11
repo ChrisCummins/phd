@@ -25,10 +25,10 @@ from tempfile import NamedTemporaryFile
 
 import numpy as np
 
-import labm8.app
 from gpu.cldrive.legacy import args as _args
 from gpu.cldrive.legacy import env as _env
 from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -176,22 +176,22 @@ def DriveKernel(env: _env.OpenCLEnvironment,
       print(*args, **kwargs, file=sys.stderr)
 
   # Assert input types.
-  labm8.app.AssertOrRaise(
+  app.AssertOrRaise(
       isinstance(env, _env.OpenCLEnvironment), ValueError,
       "env argument is of incorrect type")
-  labm8.app.AssertOrRaise(
+  app.AssertOrRaise(
       isinstance(src, str), ValueError, "source is not a string")
 
   # Validate global and local sizes.
-  labm8.app.AssertOrRaise(len(gsize) == 3, TypeError)
-  labm8.app.AssertOrRaise(len(lsize) == 3, TypeError)
+  app.AssertOrRaise(len(gsize) == 3, TypeError)
+  app.AssertOrRaise(len(lsize) == 3, TypeError)
   gsize, lsize = NDRange(*gsize), NDRange(*lsize)
 
-  labm8.app.AssertOrRaise(gsize.product >= 1, ValueError,
+  app.AssertOrRaise(gsize.product >= 1, ValueError,
                           f"Scalar global size {gsize.product} must be >= 1")
-  labm8.app.AssertOrRaise(lsize.product >= 1, ValueError,
+  app.AssertOrRaise(lsize.product >= 1, ValueError,
                           f"Scalar local size {lsize.product} must be >= 1")
-  labm8.app.AssertOrRaise(
+  app.AssertOrRaise(
       gsize >= lsize, ValueError,
       f"Global size {gsize} must be larger than local size {lsize}")
 
@@ -203,14 +203,14 @@ def DriveKernel(env: _env.OpenCLEnvironment,
   args_with_inputs = [
       i for i, arg in enumerate(args) if not arg.address_space == 'local'
   ]
-  labm8.app.AssertOrRaise(
+  app.AssertOrRaise(
       len(args_with_inputs) == len(inputs), ValueError,
       "Kernel expects {} inputs, but {} were provided".format(
           len(args_with_inputs), len(inputs)))
 
   # All inputs must have some length.
   for i, x in enumerate(inputs):
-    labm8.app.AssertOrRaise(len(x), ValueError, f"Input {i} has size zero")
+    app.AssertOrRaise(len(x), ValueError, f"Input {i} has size zero")
 
   # Copy inputs into the expected data types.
   data = np.array(

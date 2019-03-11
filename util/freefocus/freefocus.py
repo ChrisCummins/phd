@@ -4,6 +4,7 @@ import typing
 from labm8 import app
 from util.freefocus import sql
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string('database_path', '/tmp/phd/util/freefocus/freefocus.db',

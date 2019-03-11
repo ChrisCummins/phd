@@ -24,6 +24,7 @@ from zipfile import BadZipfile, LargeZipFile, ZipFile
 
 from util import hash_file, resolve_url
 
+
 GERRIT_HOME = path.expanduser('~/.gerritcodereview')
 CACHE_DIR = path.join(GERRIT_HOME, 'bazel-cache', 'downloaded-artifacts')
 LOCAL_PROPERTIES = 'local.properties'

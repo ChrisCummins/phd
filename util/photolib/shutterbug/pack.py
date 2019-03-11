@@ -4,6 +4,7 @@ import pathlib
 from labm8 import app
 from util.photolib.shutterbug import shutterbug
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
