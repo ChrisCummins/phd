@@ -154,7 +154,7 @@ def test_AutoLockFile_path(granularity: str):
   # line number of the lockfile declaration:
   if granularity == 'line':
     path = ('/tmp/phd/labm8/autolockfiles/'
-            'lockfile_test_test_AutoLockFile_path_151.pbtxt')
+            'lockfile_test_test_AutoLockFile_path_150.pbtxt')
   elif granularity == 'function':
     path = ('/tmp/phd/labm8/autolockfiles/'
             'lockfile_test_test_AutoLockFile_path.pbtxt')
