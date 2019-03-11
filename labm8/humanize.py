@@ -36,6 +36,7 @@ HumanReadableInt in strings/human_readable.h.
 import datetime
 import math
 import re
+from typing import Optional
 
 from labm8 import app
 
@@ -54,7 +55,7 @@ SPECIAL_PLURALS = {
 VOWELS = frozenset('AEIOUaeiou')
 
 
-def Commas(value):
+def Commas(value: Optional[int]):
   """Formats an integer with thousands-separating commas.
 
   Args:
@@ -63,6 +64,8 @@ def Commas(value):
   Returns:
     A string.
   """
+  if value is None:
+    return '0'
   if value < 0:
     sign = '-'
     value = -value
