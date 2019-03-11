@@ -511,8 +511,7 @@ def Exec(args: typing.List[str],
     A Popen instance with stdout and stderr set to strings.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(OPT)] + args
-  if log:
-    app.Log(2, '$ %s', ' '.join(cmd))
+  app.LogIf(log, 3, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,
@@ -579,7 +578,9 @@ def GetAllOptimizationsAvailable() -> typing.List[str]:
   Raises:
     OptException: If unable to interpret opt output.
   """
-  proc = Exec(['-help-list-hidden'])
+  # We must disable logging here - this function is invoked to set
+  # OPTIMIZATION_PASSES variable below, before flags are parsed.
+  proc = Exec(['-help-list-hidden'], log=False)
   lines = proc.stdout.split('\n')
   # Find the start of the list of optimizations.
   for i in range(len(lines)):
