@@ -44,6 +44,7 @@ py_library(
     deps = [
         ":alice_py_pb2",
         "//labm8:app",
+        "//third_party/py/git",
     ],
 )
 

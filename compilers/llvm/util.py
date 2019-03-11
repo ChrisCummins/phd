@@ -5,6 +5,7 @@ import typing
 from compilers.llvm import llvm
 from compilers.llvm import llvm_as
 from compilers.llvm import opt
+from labm8 import app
 
 FLAGS = app.FLAGS
 

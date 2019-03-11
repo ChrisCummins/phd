@@ -161,6 +161,7 @@ py_library(
         ":llvm",
         ":llvm_as",
         ":opt",
+        "//labm8:app",
     ],
 )
 

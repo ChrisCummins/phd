@@ -7,6 +7,7 @@ import pathlib
 import git
 
 from alice import alice_pb2
+from labm8 import app
 
 FLAGS = app.FLAGS
 

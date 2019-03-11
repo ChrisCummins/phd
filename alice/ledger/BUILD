@@ -16,5 +16,6 @@ py_test(
     deps = [
         ":ledger",
         "//labm8:test",
+        "//third_party/py/grpcio",
     ],
 )
