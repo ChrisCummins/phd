@@ -113,6 +113,11 @@ def FlushLogs():
   absl_logging.flush()
 
 
+def DebugLogging() -> bool:
+  """Return whether debug logging is enabled."""
+  return absl_logging.level_debug()
+
+
 # Flags functions.
 
 # TODO(cec): Implement DEFINE_path.
