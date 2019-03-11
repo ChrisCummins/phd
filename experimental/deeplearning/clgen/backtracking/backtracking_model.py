@@ -1,6 +1,5 @@
 """A CLgen model with backtracking inference."""
-
-import copy
+import collections
 import pathlib
 import random
 import re
@@ -22,24 +21,25 @@ from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import app
 from labm8 import labdate
+from labm8 import viz
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer('experimental_clgen_backtracking_max_attempts', 1000,
-                   'The maximum number of attempts to make when backtracking.')
+app.DEFINE_integer(
+    'experimental_clgen_backtracking_max_attempts', 1000,
+    'The maximum number of attempts to generate a single '
+    'step candidate.')
+app.DEFINE_integer('experimental_clgen_backtracking_candidates_per_step', 10,
+                   'The number of candidates to produce for each step.')
 app.DEFINE_integer(
     'experimental_clgen_backtracking_max_steps', 10000,
-    'The maximum number of checkpoints to make when backtracking.')
+    'The maximum number of steps to make when generating a program.')
 app.DEFINE_float(
     'experimental_clgen_backtracking_reject_no_progress_probability', 0.5,
     'The probability that a step which does not improve feature distance is '
     'rejected. A higher value means that a larger fraction of steps must '
     'directly contribute towards an improved feature distance.')
-app.DEFINE_boolean(
-    'experimental_clgen_backtracking_lstm_state', False,
-    'If set, restore LSTM state tuples during backtracking. '
-    'Else re-seed model.')
 app.DEFINE_string(
     'experimental_clgen_backtracking_target_features', None,
     'A comma-separated list of four target feature values. If not set, no '
@@ -144,9 +144,9 @@ class OpenClBacktrackingHelper(object):
       new_feature_distance = scipy.spatial.distance.euclidean(
           features, self._target_features)
       app.Log(1, 'Features: %s, distance=%f, norm=%f, delta=%f', features,
-               new_feature_distance,
-               new_feature_distance / self._init_feature_distance,
-               new_feature_distance - self._previous_feature_distance)
+              new_feature_distance,
+              new_feature_distance / self._init_feature_distance,
+              new_feature_distance - self._previous_feature_distance)
       if new_feature_distance > self._previous_feature_distance:
         # This will only happen once feature values are great than target
         # feature values.
@@ -239,6 +239,11 @@ class OpenClBacktrackingHelper(object):
     return self._previous_src
 
 
+# A candidate statement for an in-progress synthesized program.
+CandidateStatement = collections.namedtuple('CandidateStatement',
+                                            ['statement', 'feature_distance'])
+
+
 class BacktrackingModel(models.Model):
   """A CLgen model which uses a backtracking approach to sampling."""
 
@@ -317,6 +322,64 @@ class BacktrackingModel(models.Model):
 
     return [sample]
 
+  def GenerateCandidateStatement(
+      self, backtrack_state: typing.List[str],
+      backtracker: OpenClBacktrackingHelper, sampler: samplers.Sampler,
+      atomizer: atomizers.AtomizerBase) -> CandidateStatement:
+    """Generate a candidate statement for the current sample in progress.
+
+    Args:
+      backtrack_state: The current sample in progress.
+      backtracker: A backtracking helper instance.
+      sampler: A sampler.
+      atomizer: An atomizer.
+
+    Returns:
+      A tuple candidate sequence of sampled tokens, and the feature distance of
+      this candidate.
+    """
+    self.backend.InitSampleBatch(sampler, batch_size=1)
+    candidate_statement = []
+    backtrack_attempt_count = 0
+
+    # Set sampler state to the last good state.
+    for i in range(FLAGS.experimental_clgen_backtracking_max_attempts):
+      app.Log(3, 'Beginning backtracking attempt %d', i + 1)
+      self.backend.InitSampleBatch(sampler, batch_size=1)
+      sampled_indices = self.backend.SampleNextIndices(
+          sampler, batch_size=1, done=np.array([False]))[0]
+
+      for j, sampled_index in enumerate(sampled_indices):
+        token = atomizer.decoder[sampled_index]
+        candidate_statement.append(token)
+
+        if backtracker.ShouldCheckpoint(token):
+          app.Log(3, 'Reached checkpoint after %d tokens', j + 1)
+          backtrack_attempt_count += 1
+          # There are two possible outcomes:
+          #   1. Sampling should proceed.
+          #   3. Sampling should backtrack.
+          if backtracker.ShouldProceed(backtrack_state + candidate_statement):
+            return CandidateStatement(
+                statement=candidate_statement,
+                feature_distance=backtracker.feature_distance)
+          else:
+            # Backtrack. Reset the backend state to the last good state.
+            self.backend.InitSampleBatch(sampler, batch_size=1)
+            # Tokens are sampled in batches. Don't proceed any further in the
+            # batch. Instead, produce a new batch.
+            break
+
+    # Reached the end of the sample batch without hitting a checkpoint.
+    return CandidateStatement(statement=[], feature_distance=np.inf)
+
+  def MakeProgram(self, sampled_tokens: typing.List[str],
+                  backtracker: OpenClBacktrackingHelper,
+                  atomizer: atomizers.AtomizerBase) -> typing.List[str]:
+    """Produce a kernel from a sample."""
+    src = backtracker.TryToCloseProgram(sampled_tokens) or ''
+    return atomizer.AtomizeString(src)
+
   def SampleOneWithBacktracking(
       self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
       backtracker: OpenClBacktrackingHelper) -> typing.List[str]:
@@ -331,77 +394,40 @@ class BacktrackingModel(models.Model):
     Returns:
       A sample, as a sequence of strings.
     """
-    # During sampling, 'sample_in_progress' contains the current candidate
-    # sequence of tokens, and 'backtrack_state' contains the sequence of tokens
-    # that is restored when backtracking.
+    # During sampling, 'sample_in_progress' contains the sequence of tokens that
+    # is restored when backtracking.
     sample_in_progress = sampler.tokenized_start_text.copy()
-    backtrack_state = sample_in_progress.copy()
-    if FLAGS.experimental_clgen_backtracking_lstm_state:
-      rollback_backend_state = copy.deepcopy(self.backend.inference_state)
-      rollback_backend_indices = self.backend.inference_indices.copy()
 
-    # This counter is incremented every time ShouldProceed() returns False. If
-    # the value grows to exceed the
-    # --experimental_clgen_backtracking_max_attempts flag, backtracking aborts.
-    # The value is reset when ShouldProceed() returns True.
-    backtrack_attempt_count = 0
-    # This counter is incremented every time ShouldProceed() returns True. If it
-    # grows to exceed the --experimental_clgen_backtracking_max_step
-    step_count = 0
+    for step_count in range(FLAGS.experimental_clgen_backtracking_max_steps):
+      self._logger.OnSampleStep(backtracker, 0, len(sample_in_progress))
 
-    while True:
-      sampled_indices = self.backend.SampleNextIndices(
-          sampler, batch_size=1, done=np.array([False]))[0]
+      # Generate a batch of candidates and select the best.
+      candidates_statements = [
+          self.GenerateCandidateStatement(sample_in_progress, backtracker,
+                                          sampler, atomizer) for _ in
+          range(FLAGS.experimental_clgen_backtracking_candidates_per_step)
+      ]
 
-      for sampled_index in sampled_indices:
-        token = atomizer.decoder[sampled_index]
-        sample_in_progress.append(token)
+      best_candidate = min(
+          candidates_statements, key=lambda x: x.feature_distance)
+      app.Log(
+          2, 'Selecting best feature distance (%f) from candidates: %s',
+          best_candidate.feature_distance,
+          viz.SummarizeFloats(
+              c.feature_distance for c in candidates_statements))
+      app.Log(4, 'Selected best statement: %s', best_candidate.statement)
 
-        if backtracker.ShouldCheckpoint(token):
-          # There are three possible outcomes:
-          #   1. Sampling should proceed.
-          #   2. Sampling should terminate (because we're reached some counter
-          #      limit).
-          #   3. Sampling should backtrack.
-          if backtracker.ShouldProceed(sample_in_progress):
-            step_count += 1
-            self._logger.OnSampleStep(backtracker, backtrack_attempt_count,
-                                      len(sample_in_progress))
-            # Set a new state to backtrack to.
-            backtrack_state = sample_in_progress.copy()
-            backtrack_attempt_count = 0
-            if FLAGS.experimental_clgen_backtracking_lstm_state:
-              rollback_backend_state = copy.deepcopy(
-                  self.backend.inference_state)
-              rollback_backend_indices = self.backend.inference_indices.copy()
-            else:
-              # Set the sampler's seed text to be the new rollback state so that
-              # when InitSampleBatch() is called during backtracking (below),
-              # the model is re-seeded with the entire sample up to this point.
-              sampler.encoded_start_text = atomizer.AtomizeString(
-                  ''.join(backtrack_state))[-(sampler.sequence_length - 1):]
-          elif (
-              (backtrack_attempt_count >=
-               FLAGS.experimental_clgen_backtracking_max_attempts) or
-              (step_count >= FLAGS.experimental_clgen_backtracking_max_steps)):
-            # This branch provides a get-out in case sampling ever gets "stuck".
-            # If no progress was made, backtrack_state will still be the
-            # (invalid) kernel seed text, so cannot be closed.
-            rollback_src = backtracker.TryToCloseProgram(backtrack_state) or ''
-            return atomizer.TokenizeString(rollback_src)
-          else:
-            # Backtrack. Reset the backend state to the last good state.
-            sample_in_progress = backtrack_state.copy()
-            if FLAGS.experimental_clgen_backtracking_lstm_state:
-              self.backend.inference_state = copy.deepcopy(
-                  rollback_backend_state)
-              self.backend.inference_indices = rollback_backend_indices.copy()
-            else:
-              self.backend.InitSampleBatch(sampler, batch_size=1)
-            backtrack_attempt_count += 1
-            # Tokens are sampled in batches. Don't proceed any further in the
-            # batch.
-            break
-        elif (sampler.SampleIsComplete(sample_in_progress) and
-              backtracker.IsDone()):
-          return sample_in_progress
+      # Set the sampler's seed text to be the new backtrack state so that
+      # when InitSampleBatch() is called during backtracking, the model is
+      # re-seeded with the entire sample up to this point.
+      sample_in_progress += best_candidate
+      sampler.encoded_start_text = atomizer.AtomizeString(
+          ''.join(sample_in_progress))[-(sampler.sequence_length - 1):]
+
+      if backtracker.IsDone(sample_in_progress):
+        app.Log(2, 'Backtracking complete after %d steps', step_count)
+        break
+    else:
+      app.Log(2, 'Backtracking failed to complete after %d steps', step_count)
+
+    return self.MakeProgram(sample_in_progress, backtracker, atomizer)
