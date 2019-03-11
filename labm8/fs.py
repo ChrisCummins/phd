@@ -497,7 +497,7 @@ def write_file(path, contents):
     outfile.write(contents)
 
 
-def read_file(path):
+def read_file(path: typing.Union[str, pathlib.Path]):
   """
   Read file to string.
 

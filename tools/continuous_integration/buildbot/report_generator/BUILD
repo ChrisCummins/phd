@@ -14,9 +14,12 @@ py_library(
 py_binary(
     name = "report_generator",
     srcs = ["report_generator.py"],
+    visibility = ["//tools/continuous_integration/buildbot/report_generator:__subpackages__"],
     deps = [
         ":bazel_test_db",
         "//config:getconfig",
         "//labm8:app",
+        "//labm8:fs",
+        "//labm8:humanize",
     ],
 )

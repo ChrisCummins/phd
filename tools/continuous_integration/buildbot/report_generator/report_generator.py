@@ -11,10 +11,11 @@ import sqlalchemy as sql
 
 from config import getconfig
 from labm8 import app
+from labm8 import fs
+from labm8 import humanize
 from labm8 import prof
 from tools.continuous_integration.buildbot.report_generator import \
   bazel_test_db as db
-
 
 FLAGS = app.FLAGS
 app.DEFINE_string("testlogs", None, "Path to bazel testlogs directory.")
@@ -70,8 +71,8 @@ def main(argv: typing.List[str]):
       ['git', '-C', phd_root, 'rev-parse', 'HEAD'],
       universal_newlines=True).rstrip()
 
-  results = []
-  with prof.Profile('Read bazel test XML files'):
+  with prof.Profile('Import testlogs'), database.Session(
+      commit=True) as session:
     for dir_, _, files in os.walk(testlogs):
       dir_ = pathlib.Path(dir_)
       for file_ in [f for f in files if f.endswith('.xml')]:
@@ -86,11 +87,13 @@ def main(argv: typing.List[str]):
         result.host = host
         result.target = GetBazelTarget(testlogs, xml_path)
         result.git_commit = git_commit
-        results.append(result)
+        if result.failed_count:
+          log_path = dir_ / 'test.log'
+          assert log_path.is_file()
+          result.log = fs.read_file(log_path).rstrip()
 
-  with prof.Profile('Import to database'):
-    with database.Session(commit=True) as session:
-      session.add_all(results)
+        # Add result to database.
+        session.add(result)
 
   with database.Session(commit=False) as session:
     failed = session.query(db.TestTargetResult.bazel_target) \
@@ -100,6 +103,8 @@ def main(argv: typing.List[str]):
       .filter(db.TestTargetResult.invocation_datetime == invocation_datetime)\
       .filter(db.TestTargetResult.failed_count == 0)
 
+    num_targets = session.query(db.TestTargetResult.id) \
+      .filter(db.TestTargetResult.invocation_datetime == invocation_datetime).count()
     num_tests, = session.query(sql.func.sum_(db.TestTargetResult.test_count)) \
       .filter(db.TestTargetResult.invocation_datetime == invocation_datetime).one()
     num_failed = failed.count()
@@ -132,8 +137,8 @@ def main(argv: typing.List[str]):
     new_passed = [r[0] for r in new_passed]
     new_failed = [r[0] for r in new_failed]
 
-  print(f'{len(results)} targets ({num_tests} tests in '
-        f'{total_runtime_ms/1000}s), {num_failed} failed')
+  print(f'{num_targets} targets ({num_tests} tests in '
+        f'{humanize.Duration(total_runtime_ms/1000)}), {num_failed} failed')
   print(f'{len(new_passed)} new passes, {len(new_failed)} new failures')
   for target in new_failed:
     print("NEW FAIL", target)

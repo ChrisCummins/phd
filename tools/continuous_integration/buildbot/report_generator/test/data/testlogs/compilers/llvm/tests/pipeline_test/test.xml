@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="compilers/llvm/tests/pipeline_test" tests="1" failures="0" errors="0">
+    <testcase name="compilers/llvm/tests/pipeline_test" status="run" duration="4" time="4"></testcase>
+    <system-out><![CDATA[I0308 11:12:32.677814 4396725696 test.py:79] Running pytest with arguments: ['/private/var/tmp/_bazel_cec/ce66aefd86f9b09aced8556389d9936d/sandbox/darwin-sandbox/95/execroot/phd/bazel-out/darwin-fastbuild/bin/compilers/llvm/tests/pipeline_test.runfiles/phd/compilers/llvm/tests/pipeline_test.py', '-vv', '--maxfail=1', '--durations=1']
+fatal: --local can only be used inside a git repository
+============================= test session starts ==============================
+platform darwin -- Python 3.6.5, pytest-3.4.1, py-1.5.2, pluggy-0.6.0 -- /usr/local/opt/python/bin/python3.6
+cachedir: .pytest_cache
+benchmark: 3.1.1 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /private/var/tmp/_bazel_cec/ce66aefd86f9b09aced8556389d9936d/sandbox/darwin-sandbox/95/execroot/phd/bazel-out/darwin-fastbuild/bin/compilers/llvm/tests/pipeline_test.runfiles/phd, inifile:
+plugins: benchmark-3.1.1, mock-1.10.0, cov-2.5.1
+collecting ... collected 1 item
+
+compilers/llvm/tests/pipeline_test.py::test_LlvmPipeline PASSED          [100%]
+
+=========================== slowest 1 test durations ===========================
+0.19s call     compilers/llvm/tests/pipeline_test.py::test_LlvmPipeline
+=========================== 1 passed in 0.23 seconds ===========================]]></system-out>
+  </testsuite>
+</testsuites>

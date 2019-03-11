@@ -7,7 +7,6 @@ import sqlalchemy as sql
 from labm8 import app
 from labm8 import sqlutil
 
-
 FLAGS = app.FLAGS
 
 Base = sqlutil.Base()
@@ -26,8 +25,7 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   test_count = sql.Column(sql.Integer, nullable=False)
   failed_count = sql.Column(sql.Integer, nullable=False)
   runtime_ms = sql.Column(sql.Integer, nullable=False)
-  system_output = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=True)
+  log = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=True)
 
   __table_args__ = (
       # Each target is only invoked once.
@@ -38,8 +36,6 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   @staticmethod
   def FromXml(xml: etree.ElementTree) -> typing.Dict[str, typing.Any]:
-    system_outs = []
-
     test_count = 0
     failed_count = 0
     runtime_ms = 0
@@ -48,10 +44,6 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
       if testsuite.tag != 'testsuite':
         return ValueError(
             f"Expected tag 'testsuite', found tag '{testsuite.tag}'")
-
-      system_out = testsuite.find('system-out')
-      if system_out:
-        system_outs.append(system_out)
 
       test_count += int(testsuite.attrib.get('tests', '0'))
       failed_count += int(testsuite.attrib.get('errors', '0'))
@@ -64,7 +56,6 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
         'test_count': test_count,
         'failed_count': failed_count,
         'runtime_ms': runtime_ms,
-        'system_output': '\n'.join(system_outs) or None,
     }
 
 
