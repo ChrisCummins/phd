@@ -131,7 +131,9 @@ def timers():
 
 
 @contextlib.contextmanager
-def Profile(name: str = '', print_to: typing.Callable[[str], None] = app.Debug):
+def Profile(
+    name: str = '',
+    print_to: typing.Callable[[str], None] = lambda msg: app.Log(1, msg)):
   """A context manager which prints the elapsed time upon exit.
 
   Args:

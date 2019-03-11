@@ -9,7 +9,6 @@ import pytest
 from labm8 import app
 from labm8 import test
 
-
 FLAGS = app.FLAGS
 
 
@@ -85,12 +84,12 @@ def test_captured_stderr():
 
 
 def test_captured_logging_info():
-  """A test which prints to app.Info"""
+  """A test which prints to app.Log"""
   app.Log(1, "This message is captured unless run with --notest_capture_output")
 
 
 def test_captured_logging_debug():
-  """A test which prints to app.Debug"""
+  """A test which prints to app.Log"""
   app.Log(2, "This message is captured unless run with --notest_capture_output")
 
 
