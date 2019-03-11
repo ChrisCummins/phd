@@ -14,22 +14,20 @@ import pathlib
 import typing
 
 import pandas as pd
-from absl import app
-from absl import flags
-from absl import logging
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
+from labm8 import app
 from labm8 import decorators
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'cache_directory',
     '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
     'Path of directory to store cached models and predictions in.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'summary_csv_path',
     '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping/results.csv',
     'A path which is used to store a CSV summary of results.')
@@ -137,7 +135,7 @@ def main(argv: typing.List[str]):
   assert df is not None
 
   # Write results to file.
-  logging.info('Writing results to %s', summary_csv_path)
+  app.Info('Writing results to %s', summary_csv_path)
   df.sort_values(
       by=['Benchmark Suite', 'Benchmark', 'Dataset', 'Platform', 'Model'],
       inplace=True)
@@ -153,4 +151,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -2,14 +2,13 @@
 import hashlib
 import random
 
-from absl import flags
-
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.toolchain
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_Testbed_ToProto():

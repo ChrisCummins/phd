@@ -19,15 +19,15 @@ import tarfile
 import tempfile
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

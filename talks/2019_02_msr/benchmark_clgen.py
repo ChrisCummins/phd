@@ -5,15 +5,13 @@ TODO: Detailed explanation of the file.
 import pathlib
 import typing
 
-from absl import app
-from absl import flags
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
+from labm8 import app
 from labm8 import pbutil
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The CLgen instance to benchmark. This is a multichar token model with a 512x2
 # TensorFlow LSTM.
@@ -198,4 +196,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

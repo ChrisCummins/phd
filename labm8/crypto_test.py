@@ -1,11 +1,10 @@
 """Unit tests for //labm8:crypto."""
 
-from absl import flags
-
+from labm8 import app
 from labm8 import crypto
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 # sha1()

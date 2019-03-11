@@ -10,52 +10,47 @@ artifact in //docs/2017_02_cgo/code.
 import pathlib
 import typing
 
-from absl import app
-from absl import flags
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('clgen_working_dir',
-                    str(pathlib.Path('~/.cache/clgen').expanduser()),
-                    'The directory for CLgen working files.')
+app.DEFINE_string('clgen_working_dir',
+                  str(pathlib.Path('~/.cache/clgen').expanduser()),
+                  'The directory for CLgen working files.')
 
 # Corpus options.
-flags.DEFINE_string('clgen_corpus_dir',
-                    "/mnt/cc/data/datasets/github/corpuses/opencl",
-                    "Directory where the corpus is stored.")
-flags.DEFINE_boolean('clgen_multichar_tokenizer', False,
-                     'If true, use multichar OpenCL token.')
+app.DEFINE_string('clgen_corpus_dir',
+                  "/mnt/cc/data/datasets/github/corpuses/opencl",
+                  "Directory where the corpus is stored.")
+app.DEFINE_boolean('clgen_multichar_tokenizer', False,
+                   'If true, use multichar OpenCL token.')
 
 # Model options.
-flags.DEFINE_integer('clgen_layer_size', 512, 'Size of LSTM model layers.')
-flags.DEFINE_integer('clgen_num_layers', 2, 'Number of layers in LSTM model.')
-flags.DEFINE_integer('clgen_max_sample_length', 20000,
-                     'The maximum length of CLgen samples. If 0, no limit.')
+app.DEFINE_integer('clgen_layer_size', 512, 'Size of LSTM model layers.')
+app.DEFINE_integer('clgen_num_layers', 2, 'Number of layers in LSTM model.')
+app.DEFINE_integer('clgen_max_sample_length', 20000,
+                   'The maximum length of CLgen samples. If 0, no limit.')
 
 # Training options.
-flags.DEFINE_integer("clgen_num_epochs", 50, "The number of training epochs.")
-flags.DEFINE_integer("clgen_training_sequence_length", 64,
-                     "CLgen training sequence length.")
-flags.DEFINE_integer("clgen_training_batch_size", 64,
-                     "CLgen training batch size.")
+app.DEFINE_integer("clgen_num_epochs", 50, "The number of training epochs.")
+app.DEFINE_integer("clgen_training_sequence_length", 64,
+                   "CLgen training sequence length.")
+app.DEFINE_integer("clgen_training_batch_size", 64,
+                   "CLgen training batch size.")
 
 # Sampling options.
-flags.DEFINE_string("clgen_seed_text", "kernel void ",
-                    "CLgen sample seed text.")
-flags.DEFINE_float("clgen_sample_temperature", 1.0,
-                   "CLgen sampling temperature.")
-flags.DEFINE_integer("clgen_sample_sequence_length", 1024,
-                     "CLgen sampling sequence length.")
-flags.DEFINE_integer("clgen_sample_batch_size", 64,
-                     "CLgen sampling batch size.")
-flags.DEFINE_integer("clgen_min_sample_count", 0,
-                     "If not zero, set the maximum number of samples.")
+app.DEFINE_string("clgen_seed_text", "kernel void ", "CLgen sample seed text.")
+app.DEFINE_float("clgen_sample_temperature", 1.0, "CLgen sampling temperature.")
+app.DEFINE_integer("clgen_sample_sequence_length", 1024,
+                   "CLgen sampling sequence length.")
+app.DEFINE_integer("clgen_sample_batch_size", 64, "CLgen sampling batch size.")
+app.DEFINE_integer("clgen_min_sample_count", 0,
+                   "If not zero, set the maximum number of samples.")
 
 
 def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
@@ -253,4 +248,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

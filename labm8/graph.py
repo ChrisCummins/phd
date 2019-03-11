@@ -1,11 +1,10 @@
 """This module defines classes and helper functions for working with graphs."""
 import typing
 
-from absl import flags
-
+from labm8 import app
 from labm8 import fmt
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class Graph(object):

@@ -10,8 +10,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/benchmarks/proto:benchmarks_py_pb2",
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -20,8 +20,8 @@ py_test(
     srcs = ["bzip2_test.py"],
     deps = [
         ":bzip2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -74,7 +74,7 @@ py_test(
         ":llvm_test_suite",
         "//compilers/llvm:clang",
         "//datasets/benchmarks/proto:benchmarks_py_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

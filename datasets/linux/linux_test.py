@@ -1,12 +1,12 @@
 """Unit tests for //datasets/linux."""
 
 import pytest
-from absl import flags
 
 from datasets.linux import linux
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='session')

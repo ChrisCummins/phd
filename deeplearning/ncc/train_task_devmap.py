@@ -69,32 +69,30 @@ import pickle
 
 import numpy as np
 import pandas as pd
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
 # Parameters of devmap
-flags.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/devmap',
-                    'Path to input data')
-flags.DEFINE_string(
+app.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/devmap',
+                  'Path to input data')
+app.DEFINE_string(
     'out', '/tmp/phd/deeplearning/ncc/task/devmap',
     'Path to folder in which to write saved Keras models and predictions')
-flags.DEFINE_string(
+app.DEFINE_string(
     'vocabulary_zip_path', None,
     'Path to the vocabulary zip file associated with those embeddings')
-flags.DEFINE_string('device', 'all',
-                    'Device to evaluate model on. Options: all, amd, nvidia')
-flags.DEFINE_integer('num_epochs', 50, 'number of training epochs')
-flags.DEFINE_integer('batch_size', 64, 'training batch size')
-flags.DEFINE_integer('dense_layer', 32, 'dense layer size')
-flags.DEFINE_bool('print_summary', False, 'Print summary of Keras model')
+app.DEFINE_string('device', 'all',
+                  'Device to evaluate model on. Options: all, amd, nvidia')
+app.DEFINE_integer('num_epochs', 50, 'number of training epochs')
+app.DEFINE_integer('batch_size', 64, 'training batch size')
+app.DEFINE_integer('dense_layer', 32, 'dense layer size')
+app.DEFINE_boolean('print_summary', False, 'Print summary of Keras model')
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def platform2str(platform: str) -> str:
@@ -153,8 +151,8 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
   num_unks = 0
   seq_lengths = list()
 
-  logging.info('Preparing to read %d input files from folder %s', num_files,
-               data_folder)
+  app.Info('Preparing to read %d input files from folder %s', num_files,
+           data_folder)
   seqs = list()
   for i in range(num_files):
     file = input_files[i]
@@ -175,12 +173,12 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
       assert True, 'input file not found: ' + file
 
   max_len = max(seq_lengths)
-  logging.info('Sequence lengths: min=%d, avg=%.2f, max=%d', min(seq_lengths),
-               np.mean(seq_lengths), max_len)
-  logging.info('Number of \'UNK\': %d', num_unks)
-  logging.info('Percentage of \'UNK\': %.3f %% among all stmts',
-               (num_unks * 100) / sum(seq_lengths))
-  logging.info('\'UNK\' index: %d', unk_index)
+  app.Info('Sequence lengths: min=%d, avg=%.2f, max=%d', min(seq_lengths),
+           np.mean(seq_lengths), max_len)
+  app.Info('Number of \'UNK\': %d', num_unks)
+  app.Info('Percentage of \'UNK\': %.3f %% among all stmts',
+           (num_unks * 100) / sum(seq_lengths))
+  app.Info('\'UNK\' index: %d', unk_index)
 
   encoded = np.array(pad_sequences(seqs, maxlen=max_len, value=unk_index))
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded]), max_len
@@ -227,7 +225,7 @@ class NCC_devmap:
         metrics=['accuracy'],
         loss=["categorical_crossentropy", "categorical_crossentropy"],
         loss_weights=[1., .2])
-    logging.info('Built Keras model')
+    app.Info('Built Keras model')
 
     return self
 
@@ -457,7 +455,7 @@ def main(argv):
   deeptune_sp_mean = 2.373917
 
   # Train model
-  logging.info("Evaluating ncc model")
+  app.Info("Evaluating ncc model")
   ncc_devmap = evaluate(NCC_devmap(), device, input_data, out, embeddings,
                         dense_layer_size, print_summary, num_epochs, batch_size)
 
@@ -509,8 +507,8 @@ def main(argv):
               'Static mapping', 'Grewe et al.', 'DeepTune', 'DeepTuneInst2Vec'
           ],
           index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
-  logging.info('done')
+  app.Info('done')
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

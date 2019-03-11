@@ -4,29 +4,26 @@ import pathlib
 import tempfile
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.clgen.preprocessors import preprocessors
 from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from labm8 import app
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'backtracking_db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/backtracking/db.db',
     'URL of the backtracking database.')
-flags.DEFINE_integer('batch_size', 512, 'Number of samples to make per batch.')
-flags.DEFINE_string('origin', 'clgen_backtracking',
-                    'Name of the origin of the kernels, e.g. "clgen".')
+app.DEFINE_integer('batch_size', 512, 'Number of samples to make per batch.')
+app.DEFINE_string('origin', 'clgen_backtracking',
+                  'Name of the origin of the kernels, e.g. "clgen".')
 
 
 def _PrettifySource(src: str) -> str:
@@ -43,7 +40,7 @@ def _PrettifySource(src: str) -> str:
 
 def ProcessBatch(batch: typing.List[typing.Tuple[str,]],
                  db: grewe_features_db.Database, pool: multiprocessing.Pool):
-  logging.info('Formatting files')
+  app.Info('Formatting files')
   srcs = pool.imap_unordered(_PrettifySource, [row[0] for row in batch])
   srcs = [s for s in srcs if s]
 
@@ -54,11 +51,11 @@ def ProcessBatch(batch: typing.List[typing.Tuple[str,]],
       with open(path, 'w') as f:
         f.write(src)
 
-    logging.info('Importing files')
+    app.Info('Importing files')
     success_count, new_row_count = db.ImportStaticFeaturesFromPaths(
         paths, FLAGS.origin, pool)
-    logging.info('Extracted features from %d of %d kernels, %d new rows',
-                 success_count, len(batch), new_row_count)
+    app.Info('Extracted features from %d of %d kernels, %d new rows',
+             success_count, len(batch), new_row_count)
 
 
 def main(argv: typing.List[str]):
@@ -75,9 +72,9 @@ def main(argv: typing.List[str]):
         batch_size=FLAGS.batch_size,
         compute_max_rows=True)
     for batch in batches:
-      logging.info('Batch %d of %d rows', batch.batch_num, batch.max_rows)
+      app.Info('Batch %d of %d rows', batch.batch_num, batch.max_rows)
       ProcessBatch(batch.rows, db, pool)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

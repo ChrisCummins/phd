@@ -18,15 +18,15 @@ import tempfile
 
 import numpy as np
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

@@ -5,16 +5,14 @@ import pathlib
 import typing
 
 import MySQLdb
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 from labm8 import dateutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('proto_dir', None, 'Directory to export protos to.')
+app.DEFINE_string('proto_dir', None, 'Directory to export protos to.')
 
 OPENCL_DEVTYPE_MAP = {
     '3': 'CPU',
@@ -567,14 +565,14 @@ def _ExportProtos() -> None:
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'opencl' / 'results')])
   last_result_id = int(ids[-1]) if ids else 0
   _ExportOpenCLResults(cursor, last_result_id, proto_dir)
-  logging.info("Exported OpenCL results")
+  app.Info("Exported OpenCL results")
 
   # Get the last exported testcase.
   (proto_dir / 'opencl' / 'testcases').mkdir(parents=True, exist_ok=True)
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'opencl' / 'testcases')])
   last_testcase_id = int(ids[-1]) if ids else 0
   _ExportOpenCLTestcases(cursor, last_testcase_id, proto_dir)
-  logging.info("Exported OpenCL testcases")
+  app.Info("Exported OpenCL testcases")
 
   cursor.close()
   cnx.close()
@@ -588,14 +586,14 @@ def _ExportProtos() -> None:
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'sol' / 'results')])
   last_result_id = int(ids[-1]) if ids else 0
   _ExportSolidityResults(cursor, last_result_id, proto_dir)
-  logging.info("Exported Solidity results")
+  app.Info("Exported Solidity results")
 
   # Get the last exported testcase.
   (proto_dir / 'sol' / 'testcases').mkdir(parents=True, exist_ok=True)
   ids = sorted([int(x) for x in os.listdir(proto_dir / 'sol' / 'testcases')])
   last_testcase_id = int(ids[-1]) if ids else 0
   _ExportSolidityTestcases(cursor, last_testcase_id, proto_dir)
-  logging.info("Exported Solidity testcases")
+  app.Info("Exported Solidity testcases")
 
   cursor.close()
   cnx.close()
@@ -607,4 +605,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

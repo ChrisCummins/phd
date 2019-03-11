@@ -4,9 +4,9 @@ py_library(
     name = "bazel_test_db",
     srcs = ["bazel_test_db.py"],
     deps = [
+        "//labm8:app",
         "//labm8:prof",
         "//labm8:sqlutil",
-        "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -17,6 +17,6 @@ py_binary(
     deps = [
         ":bazel_test_db",
         "//config:getconfig",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )

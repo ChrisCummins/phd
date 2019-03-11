@@ -32,7 +32,7 @@ py_test(
         "//compilers/llvm:clang",
         "//gpu/libcecl:libcecl_rewriter",
         "//gpu/libcecl:libcecl_runtime",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

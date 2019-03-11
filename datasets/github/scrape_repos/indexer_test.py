@@ -3,15 +3,15 @@ import multiprocessing
 import pathlib
 
 import pytest
-from absl import flags
 
 from datasets.github.scrape_repos import github_repo
 from datasets.github.scrape_repos import indexer
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import pbutil
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Test fixtures.
 

@@ -5,16 +5,15 @@ import sys
 import tempfile
 
 import pytest
-from absl import flags
-from absl import logging
 
+from labm8 import app
 
 # *WARNING* Flags used in this file are not defined here! They are declared in
 # //labm8:test.
-FLAGS = flags.FLAGS
-
+FLAGS = app.FLAGS
 
 # Test fixtures.
+
 
 @pytest.fixture(scope='function')
 def tempdir() -> pathlib.Path:
@@ -62,8 +61,8 @@ def pytest_collection_modifyitems(config, items):
   try:
     FLAGS.test_color
   except AttributeError:
-    logging.fatal("Failed to access flags defined in //labm8:test. Are you "
-                  "sure you are running this test using labm8.test.Main()?")
+    app.Fatal("Failed to access flags defined in //labm8:test. Are you "
+              "sure you are running this test using labm8.test.Main()?")
 
   this_platform = sys.platform
   this_host = socket.gethostname()
@@ -83,7 +82,7 @@ def pytest_collection_modifyitems(config, items):
     supported_platforms = PLATFORM_NAMES.intersection(item.keywords)
     if supported_platforms and this_platform not in supported_platforms:
       skip_msg = f"Skipping `{item.name}` for platforms: {supported_platforms}"
-      logging.info(skip_msg)
+      app.Info(skip_msg)
       item.add_marker(pytest.mark.skip(reason=skip_msg))
       continue
 
@@ -91,7 +90,7 @@ def pytest_collection_modifyitems(config, items):
     supported_hosts = HOST_NAMES.intersection(item.keywords)
     if supported_hosts and this_host not in supported_hosts:
       skip_msg = f"Skipping `{item.name}` for hosts: {supported_hosts}"
-      logging.info(skip_msg)
+      app.Info(skip_msg)
       item.add_marker(pytest.mark.skip(reason=skip_msg))
       continue
 
@@ -108,6 +107,6 @@ def pytest_collection_modifyitems(config, items):
     # name still appears in the test output, with a 'skipped' message. This is
     # useful for keeping track of how many tests in a file are *not* being run.
     if FLAGS.test_skip_slow and 'slow' in item.keywords:
-      logging.info('Skipping `%s` because it is slow', item.name)
+      app.Info('Skipping `%s` because it is slow', item.name)
       item.add_marker(slow_skip_marker)
       continue

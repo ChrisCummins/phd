@@ -19,9 +19,9 @@ py_library(
     visibility = ["//alice:__subpackages__"],
     deps = [
         ":alice_py_pb2",
+        "//labm8:app",
         "//labm8:fs",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -43,7 +43,7 @@ py_library(
     visibility = ["//alice:__subpackages__"],
     deps = [
         ":alice_py_pb2",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -66,7 +66,7 @@ py_binary(
     deps = [
         ":alice_py_pb2",
         ":git_repo",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/grpcio",
     ],
 )
@@ -84,7 +84,7 @@ py_library(
     name = "xdata",
     srcs = ["xdata.py"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 

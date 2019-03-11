@@ -15,9 +15,9 @@ py_test(
     deps = [
         ":flags",
         "//datasets/me_db",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
     ],
@@ -29,7 +29,7 @@ py_library(
     srcs = ["flags.py"],
     deps = [
         "//datasets/me_db",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

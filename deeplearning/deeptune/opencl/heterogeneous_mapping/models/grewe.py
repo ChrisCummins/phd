@@ -2,14 +2,14 @@
 import pickle
 
 import pandas as pd
-from absl import flags
 from sklearn import tree as sktree
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class Grewe(base.HeterogeneousMappingModel):

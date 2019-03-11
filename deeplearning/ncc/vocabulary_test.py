@@ -1,14 +1,14 @@
 """Unit tests for //deeplearning/ncc:vocabulary."""
 
 import pytest
-from absl import flags
 
 from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import vocabulary
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 VOCABULARY_PATH = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/vocabulary.zip')

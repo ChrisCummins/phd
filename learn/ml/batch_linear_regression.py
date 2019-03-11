@@ -1,4 +1,4 @@
-from absl import app
+from labm8 import app
 
 
 # Univariate linear regression using iterative batch gradient descent.
@@ -70,4 +70,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-  app.run(main)
+  app.RunWithArgs(main)

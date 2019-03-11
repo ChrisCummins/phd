@@ -2,12 +2,11 @@
 import os
 from tempfile import TemporaryDirectory
 
-from absl import flags
-
+from labm8 import app
 from labm8 import test
 from util.photolib import workspace
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_find_workspace_rootpath():

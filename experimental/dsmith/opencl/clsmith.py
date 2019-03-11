@@ -18,7 +18,6 @@
 """
 Interface to CLSmith binaries
 """
-import logging
 import re
 from collections import namedtuple
 from subprocess import PIPE, Popen
@@ -59,7 +58,7 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
   start_time = time()
 
   cli = clsmith_cli(*args)
-  logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
+  app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
   process = Popen(cli, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate()
 
@@ -94,7 +93,7 @@ def cl_launcher(*args, **kwargs) -> return_t:
   start_time = time()
 
   cli = cl_launcher_cli(*args, **kwargs)
-  logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
+  app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cli))
   process = Popen(cli, stdout=PIPE, stderr=PIPE)
   stdout, stderr = process.communicate()
 

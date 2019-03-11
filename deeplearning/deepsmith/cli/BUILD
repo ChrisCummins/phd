@@ -5,8 +5,8 @@ py_binary(
         "//deeplearning/deepsmith:datastore",
         "//deeplearning/deepsmith:db",
         "//deeplearning/deepsmith:result",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -18,7 +18,7 @@ py_binary(
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -30,8 +30,8 @@ py_binary(
         "//deeplearning/deepsmith:db",
         "//deeplearning/deepsmith:result",
         "//deeplearning/deepsmith:testcase",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/progressbar",
     ],
 )
@@ -44,6 +44,6 @@ py_binary(
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )

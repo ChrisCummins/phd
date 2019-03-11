@@ -6,7 +6,6 @@ import typing
 import pandas as pd
 import progressbar
 import pyparsing
-from absl import flags
 
 from compilers.llvm import clang
 from compilers.llvm import opt
@@ -16,9 +15,10 @@ from experimental.compilers.reachability import database
 from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
 from experimental.compilers.reachability.datasets import opencl
+from labm8 import app
 from labm8 import decorators
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def BytecodeFromLinuxSrc(path: pathlib.Path, optimization_level: str) -> str:

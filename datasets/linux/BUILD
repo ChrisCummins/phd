@@ -11,10 +11,10 @@ py_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:decorators",
         "//labm8:fs",
-        "//third_party/py/absl",
     ],
 )
 
@@ -23,7 +23,7 @@ py_test(
     srcs = ["linux_test.py"],
     deps = [
         ":linux",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

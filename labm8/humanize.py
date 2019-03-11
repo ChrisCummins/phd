@@ -37,9 +37,9 @@ import datetime
 import math
 import re
 
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 SIBILANT_ENDINGS = frozenset(['sh', 'ss', 'tch', 'ax', 'ix', 'ex'])
 DIGIT_SPLITTER = re.compile(r'\d+|\D+').findall

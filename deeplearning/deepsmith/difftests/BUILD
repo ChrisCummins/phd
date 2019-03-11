@@ -6,7 +6,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -16,8 +16,8 @@ py_test(
     deps = [
         ":difftests",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -29,6 +29,6 @@ py_library(
         ":difftests",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//gpu/cldrive/legacy:args",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )

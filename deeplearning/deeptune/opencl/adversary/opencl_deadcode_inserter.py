@@ -13,15 +13,14 @@ import re
 import typing
 
 import numpy as np
-from absl import flags
-from absl import logging
 
 from deeplearning.clgen.preprocessors import opencl
 from experimental.compilers.reachability import control_flow_graph_generator
 from gpu.cldrive.legacy import args
+from labm8 import app
 from labm8 import fmt
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class OpenClFunction(object):
@@ -78,7 +77,7 @@ class OpenClFunction(object):
         # can insert the block here.
         break
       else:
-        logging.debug(
+        app.Debug(
             'Previous line "%s" not valid as a code block insertion '
             'point', previous_line)
     else:
@@ -126,7 +125,7 @@ def GetKernelArguments(kernel: str):
     kernel_declaration = kernel[:kernel.index('{')] + '{}'
     return args.GetKernelArguments(kernel_declaration)
   except ValueError as e:
-    logging.error("Failure processing kernel: '%s'", kernel)
+    app.Error("Failure processing kernel: '%s'", kernel)
     raise e
 
 

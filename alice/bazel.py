@@ -3,19 +3,16 @@
 TODO: Detailed explanation of the file.
 """
 import collections
-import logging
 import multiprocessing
 import pathlib
 import subprocess
-import sys
 import typing
 
-from absl import flags
-
 from alice import alice_pb2
+from labm8 import app
 from labm8 import fs
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 RunContext = collections.namedtuple('RunContext', ['process'])
 
@@ -94,7 +91,7 @@ def _BazelRunRequest(run_request: alice_pb2.RunRequest,
   if run_request.timeout_seconds:
     cmd = ['timeout', '-s9', str(run_request.timeout_seconds)] + cmd
 
-  logging.info('$ %s', ' '.join(cmd))
+  app.Info('$ %s', ' '.join(cmd))
   with fs.chdir(bazel_repo_dir):
     process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -112,6 +109,6 @@ def _BazelRunRequest(run_request: alice_pb2.RunRequest,
   stdout.communicate()
   stderr.communicate()
   returncode = process.returncode
-  logging.info("Process completed with returncode %d", returncode)
+  app.Info("Process completed with returncode %d", returncode)
   with open(workdir / f'returncode.txt', 'w') as f:
     f.write(str(returncode))

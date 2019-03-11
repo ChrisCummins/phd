@@ -1,15 +1,13 @@
 """A command-line interface for printing results."""
 import random
 
-from absl import app
-from absl import flags
-
 import deeplearning.deepsmith.result
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def _SelectRandomRow(query: db.query_t):
@@ -44,4 +42,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -1,12 +1,11 @@
 """Unit tests for //deeplearning/ncc/inst2vec:inst2vec_datagen."""
 import pathlib
 
-from absl import flags
-
 from deeplearning.ncc.inst2vec import inst2vec_datagen
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_DownloadDatasets_one_url(tempdir: pathlib.Path):

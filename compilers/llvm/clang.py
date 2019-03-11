@@ -15,18 +15,15 @@ import subprocess
 import sys
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from compilers.llvm import llvm
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_integer('clang_timeout_seconds', 60,
-                     'The maximum number of seconds to allow process to run.')
+app.DEFINE_integer('clang_timeout_seconds', 60,
+                   'The maximum number of seconds to allow process to run.')
 
 _LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
 
@@ -82,7 +79,7 @@ def Exec(args: typing.List[str],
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG)] + args
   if log:
-    logging.debug('$ %s', ' '.join(cmd))
+    app.Debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=stdout,
@@ -164,7 +161,7 @@ def Preprocess(src: str,
   """
   copts = copts or []
   cmd = ['-E', '-c', '-', '-o', '-'] + copts
-  logging.debug('$ %s', ' '.join(cmd))
+  app.Debug('$ %s', ' '.join(cmd))
   process = Exec(cmd, timeout_seconds=timeout_seconds, stdin=src)
   if process.returncode:
     raise ClangException(returncode=process.returncode, stderr=process.stderr)
@@ -213,4 +210,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

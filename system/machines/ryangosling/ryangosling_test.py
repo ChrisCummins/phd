@@ -5,14 +5,14 @@ These tests will NOT pass if run on one of my personal machines.
 import os
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
 from system.machines import machine
 from system.machines import mirrored_directory
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _MACHINE_SPEC_PATH = bazelutil.DataPath(
     'phd/system/machines/ryangosling/ryangosling.pbtxt')

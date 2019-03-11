@@ -3,11 +3,11 @@ import typing
 
 import networkx as nx
 import numpy as np
-from absl import flags
 
 from experimental.compilers.reachability import control_flow_graph as cfg
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class UniqueNameSequence(object):

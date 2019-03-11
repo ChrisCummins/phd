@@ -2,19 +2,16 @@
 import pathlib
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from labm8 import app
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string('kernels_dir', None,
-                    'Path to directory containing kernels to import.')
-flags.DEFINE_string('origin', None,
-                    'Name of the origin of the kernels, e.g. "github".')
-flags.DEFINE_string(
+FLAGS = app.FLAGS
+app.DEFINE_string('kernels_dir', None,
+                  'Path to directory containing kernels to import.')
+app.DEFINE_string('origin', None,
+                  'Name of the origin of the kernels, e.g. "github".')
+app.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
@@ -38,8 +35,8 @@ def main(argv: typing.List[str]):
     raise app.UsageError('Non-file input found')
 
   db.ImportStaticFeaturesFromPaths(paths_to_import, FLAGS.origin)
-  logging.info('done')
+  app.Info('done')
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

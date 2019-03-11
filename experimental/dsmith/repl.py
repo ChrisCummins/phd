@@ -23,7 +23,6 @@ Attributes:
     __available_commands__ (str): Help string for available commands.
 """
 import datetime
-import logging
 import math
 import os
 import random
@@ -186,7 +185,7 @@ def _execute(statement: str, file=sys.stdout) -> None:
       return _execute(statement, file=file)
 
   csv = ", ".join(f"'{x}'" for x in components)
-  logging.debug(f"parsing input [{csv}]")
+  app.Debug(f"parsing input [{csv}]")
 
   # Full command parser:
   if len(components) == 1 and re.match(r'(hi|hello|hey)', components[0]):

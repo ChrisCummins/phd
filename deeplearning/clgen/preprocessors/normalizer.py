@@ -18,13 +18,11 @@ import subprocess
 import tempfile
 import typing
 
-from absl import flags
-from absl import logging
-
 from deeplearning.clgen import errors
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 CLGEN_REWRITER = bazelutil.DataPath(
     'phd/deeplearning/clgen/preprocessors/clang_rewriter')
@@ -72,7 +70,7 @@ def NormalizeIdentifiers(text: str,
            str(timeout_seconds),
            str(CLGEN_REWRITER), f.name] + ['-extra-arg=' + x for x in cflags
                                           ] + ['--']
-    logging.debug(
+    app.Debug(
         '$ %s%s', f'LD_PRELOAD={CLGEN_REWRITER_ENV["LD_PRELOAD"]} '
         if 'LD_PRELOAD' in CLGEN_REWRITER_ENV else '', ' '.join(cmd))
     process = subprocess.Popen(
@@ -83,7 +81,7 @@ def NormalizeIdentifiers(text: str,
         universal_newlines=True,
         env=CLGEN_REWRITER_ENV)
     stdout, stderr = process.communicate()
-    logging.debug(stderr)
+    app.Debug(stderr)
   # If there was nothing to rewrite, rewriter exits with error code:
   EUGLY_CODE = 204
   if process.returncode == EUGLY_CODE:

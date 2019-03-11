@@ -30,8 +30,8 @@ def _log_outcome(outcome: Outcomes, runtime: float):
   """ verbose logging output """
   outcome_name = Outcomes.to_str(outcome)
   return_color = Colors.GREEN if outcome == Outcomes.PASS else Colors.RED
-  logging.info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
-               f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+  app.Info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
+           f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
 
 
 class GlslHarness(Harness):
@@ -63,7 +63,7 @@ class GlslHarness(Harness):
       ndone = already_exists.count()
       ntodo = todo.count()
       ntotal = ndone + ntodo
-      logging.debug(f"{self}:{generator} testcases = {ndone} / {ntotal}")
+      app.Debug(f"{self}:{generator} testcases = {ndone} / {ntotal}")
 
       # Break early if there's nothing to do:
       if not ntodo:
@@ -139,7 +139,7 @@ class GlslFrag(GlslHarness):
         dsmith.root_path("third_party", "glsl", "my.conf"), path
     ]
     # TODO: testbed.optimizations
-    logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
+    app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
     try:
       start_time = time()

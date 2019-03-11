@@ -1,8 +1,7 @@
 """Utility code for working with shells."""
 
-from absl import flags
-
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
 
 class ShellEscapeCodes(object):

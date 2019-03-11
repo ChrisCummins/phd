@@ -12,20 +12,18 @@ import typing
 
 import github
 import progressbar
-from absl import app
-from absl import flags
-from absl import logging
 from github import Repository
 
 from datasets.github import api as github_api
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
+app.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 
 
 class QueryScraper(threading.Thread):
@@ -57,7 +55,7 @@ class QueryScraper(threading.Thread):
         self.total_result_count = self.query.totalCount
         break
       except (github.RateLimitExceededException, github.GithubException) as e:
-        logging.debug('Pausing on GitHub error: %s', e)
+        app.Debug('Pausing on GitHub error: %s', e)
         time.sleep(3)
     self.next_page_num = 0
     super(QueryScraper, self).__init__()
@@ -74,14 +72,13 @@ class QueryScraper(threading.Thread):
     """
     while True:
       try:
-        logging.debug('Requesting page %d', self.next_page_num)
+        app.Debug('Requesting page %d', self.next_page_num)
         page = list(self.query.get_page(self.next_page_num))
-        logging.debug('Page %d contains %d results', self.next_page_num,
-                      len(page))
+        app.Debug('Page %d contains %d results', self.next_page_num, len(page))
         self.next_page_num += 1
         return page
       except github.RateLimitExceededException:
-        logging.debug('Pausing on GitHub rate limit')
+        app.Debug('Pausing on GitHub rate limit')
         time.sleep(3)
       except github.GithubException:
         # One possible cause for this exception is when trying to request
@@ -121,7 +118,7 @@ class QueryScraper(threading.Thread):
     Args:
       repos: A list of GitHub Repository instances.
     """
-    logging.debug('Scraping %s repositories', humanize.Commas(len(repos)))
+    app.Debug('Scraping %s repositories', humanize.Commas(len(repos)))
     for repo in repos:
       self.i += 1
       concat_name = '_'.join([repo.owner.login, repo.name])
@@ -130,7 +127,7 @@ class QueryScraper(threading.Thread):
       if not pbutil.ProtoIsReadable(meta_path,
                                     scrape_repos_pb2.GitHubRepoMetadata()):
         meta = GetRepositoryMetadata(repo)
-        logging.debug('%s', meta)
+        app.Debug('%s', meta)
         pbutil.ToFile(meta, meta_path)
 
 
@@ -141,10 +138,9 @@ def RunQuery(worker: QueryScraper) -> None:
     worker: A QueryScraper worker instance.
   """
   sys.stderr.flush()
-  logging.info("Query '%s' returned %s results. Processing first %s ...",
-               worker.repo_query.string,
-               humanize.Commas(worker.total_result_count),
-               humanize.Commas(worker.repo_query.max_results))
+  app.Info("Query '%s' returned %s results. Processing first %s ...",
+           worker.repo_query.string, humanize.Commas(worker.total_result_count),
+           humanize.Commas(worker.repo_query.max_results))
   bar = progressbar.ProgressBar(
       max_value=worker.repo_query.max_results, redirect_stderr=True)
   worker.start()
@@ -207,16 +203,16 @@ def main(argv) -> None:
                                scrape_repos_pb2.LanguageCloneList())
 
   for language in clone_list.language:
-    logging.info('Scraping %s repos using %s queries ...', language.language,
-                 humanize.Commas(len(language.query)))
+    app.Info('Scraping %s repos using %s queries ...', language.language,
+             humanize.Commas(len(language.query)))
     for query in language.query:
       RunQuery(QueryScraper(language, query, connection))
 
-  logging.info('Finished scraping. Indexed repository counts:')
+  app.Info('Finished scraping. Indexed repository counts:')
   for language in clone_list.language:
-    logging.info('  %s: %s', language.language,
-                 humanize.Commas(GetNumberOfRepoMetas(language)))
+    app.Info('  %s: %s', language.language,
+             humanize.Commas(GetNumberOfRepoMetas(language)))
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

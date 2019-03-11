@@ -4,9 +4,6 @@ import pathlib
 import tempfile
 import typing
 
-from absl import app
-from absl import flags
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
@@ -14,23 +11,24 @@ from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from labm8 import app
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
-flags.DEFINE_integer('batch_size', 512, 'Number of samples to make per batch.')
-flags.DEFINE_string('origin', 'clgen',
-                    'Name of the origin of the kernels, e.g. "clgen".')
-flags.DEFINE_string('clgen_dir', '~/.cache/clgen',
-                    'Name of the origin of the kernels, e.g. "clgen".')
-flags.DEFINE_string('clgen_corpus_dir',
-                    "/mnt/cc/data/datasets/github/corpuses/opencl",
-                    "WHere the corpus is stored.")
-flags.DEFINE_string(
+app.DEFINE_integer('batch_size', 512, 'Number of samples to make per batch.')
+app.DEFINE_string('origin', 'clgen',
+                  'Name of the origin of the kernels, e.g. "clgen".')
+app.DEFINE_string('clgen_dir', '~/.cache/clgen',
+                  'Name of the origin of the kernels, e.g. "clgen".')
+app.DEFINE_string('clgen_corpus_dir',
+                  "/mnt/cc/data/datasets/github/corpuses/opencl",
+                  "WHere the corpus is stored.")
+app.DEFINE_string(
     'profile_dir',
     '/tmp/phd/experimental/deeplearning/clgen/closeness_to_grewe_features/clgen_profiles',
     'Path to a directory to store profiling data in.')
@@ -138,4 +136,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

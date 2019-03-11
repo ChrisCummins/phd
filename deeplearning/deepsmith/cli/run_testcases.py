@@ -1,28 +1,25 @@
 import collections
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import harness_pb2_grpc
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
-flags.DEFINE_string('harness_config', None, 'Path to a Harness config.')
-flags.DEFINE_integer(
+app.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
+app.DEFINE_string('harness_config', None, 'Path to a Harness config.')
+app.DEFINE_integer(
     'target_total_results', -1,
     'The number of results to collect from each Testbed. Results already in the '
     'datastore contribute towards this total. If --target_total_results is '
     'negative, results are collected for all testcases in the DataStore.')
-flags.DEFINE_integer('harness_batch_size', 100,
-                     'The number of results to collect in each batch.')
+app.DEFINE_integer('harness_batch_size', 100,
+                   'The number of results to collect in each batch.')
 
 
 def GetHarnessCapabilities(harness_stub: harness_pb2_grpc.HarnessServiceStub
@@ -125,25 +122,25 @@ def main(argv):
   capabilities = GetHarnessCapabilities(harness_stub)
   testbeds = collections.deque(capabilities.testbeds)
   if testbeds:
-    logging.info('%d testbeds: %s', len(capabilities.testbeds),
-                 ', '.join(x.name for x in capabilities.testbeds))
+    app.Info('%d testbeds: %s', len(capabilities.testbeds),
+             ', '.join(x.name for x in capabilities.testbeds))
     while testbeds:
       testbed = testbeds.popleft()
       testcases = GetTestcasesToRun(datastore_stub, capabilities.harness,
                                     testbed, target_total_results,
                                     harness_batch_size)
-      logging.info('Received %d testcases to execute on %s', len(testcases),
-                   testbed.name)
+      app.Info('Received %d testcases to execute on %s', len(testcases),
+               testbed.name)
       if testcases:
         results = RunTestcases(harness_stub, testbed, testcases)
         SubmitResults(datastore_stub, results)
         # If there are testcases to run, then we add it back to the testbeds
         # queue, as there may be more.
         testbeds.append(testbed)
-    logging.info('done')
+    app.Info('done')
   else:
-    logging.warning('No testbeds, nothing to do!')
+    app.Warning('No testbeds, nothing to do!')
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -4,12 +4,12 @@ import typing
 
 import networkx as nx
 import numpy as np
-from absl import flags
 from scipy import spatial
 
+from labm8 import app
 from labm8 import labtypes
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class GraphGeneratorOptions(object):

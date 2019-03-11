@@ -2,13 +2,11 @@
 import subprocess
 import typing
 
-from absl import flags
-
 from compilers.llvm import llvm
 from compilers.llvm import llvm_as
 from compilers.llvm import opt
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None

@@ -16,16 +16,16 @@
 import pathlib
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
+from labm8 import app
 from labm8 import pbutil
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The Model.hash for an instance of abc_model_config.
 ABC_MODEL_HASH = 'bf95e335177883a9204a560617990caf3fd1efc6'

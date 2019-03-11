@@ -6,16 +6,15 @@ import sys
 import typing
 from collections import defaultdict
 
-from absl import flags
-
+from labm8 import app
 from labm8 import shell
 from util.photolib import common
 from util.photolib import lightroom
 from util.photolib.proto import photolint_pb2
 
-FLAGS = flags.FLAGS
-flags.DEFINE_boolean("counts", False, "Show only the counts of errors.")
-flags.DEFINE_boolean("fix_it", False, "Show how to fix it.")
+FLAGS = app.FLAGS
+app.DEFINE_boolean("counts", False, "Show only the counts of errors.")
+app.DEFINE_boolean("fix_it", False, "Show how to fix it.")
 
 # A global list of all error categories. Every time you add a new linter rule, add it
 # here!

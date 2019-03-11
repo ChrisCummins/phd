@@ -30,8 +30,8 @@ def _log_outcome(outcome: Outcomes, runtime: float):
   """ verbose logging output """
   outcome_name = Outcomes.to_str(outcome)
   return_color = Colors.GREEN if outcome == Outcomes.PASS else Colors.RED
-  logging.info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
-               f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+  app.Info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
+           f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
 
 
 class SolidityHarness(Harness):
@@ -63,7 +63,7 @@ class SolidityHarness(Harness):
       ndone = already_exists.count()
       ntodo = todo.count()
       ntotal = ndone + ntodo
-      logging.debug(f"{self}:{generator} testcases = {ndone} / {ntotal}")
+      app.Debug(f"{self}:{generator} testcases = {ndone} / {ntotal}")
 
       # Break early if there's nothing to do:
       if not ntodo:
@@ -73,11 +73,12 @@ class SolidityHarness(Harness):
             f"{self}:{generator} testcases")
 
       # Bulk insert new testcases:
-      s.add_all(Testcase(
-          program_id=program.id,
-          harness=self.id,
-          timeout=self.default_timeout,
-      ) for program in todo)
+      s.add_all(
+          Testcase(
+              program_id=program.id,
+              harness=self.id,
+              timeout=self.default_timeout,
+          ) for program in todo)
       s.commit()
 
   def testbeds(self, session: session_t = None) -> List[TestbedProxy]:
@@ -94,7 +95,9 @@ class SolidityHarness(Harness):
       testbeds += Testbed.from_bin("solcjs", session=s)
       return sorted(TestbedProxy(testbed) for testbed in testbeds)
 
-  def num_results(self, generator: Generator, testbed: str,
+  def num_results(self,
+                  generator: Generator,
+                  testbed: str,
                   session: session_t = None):
     with ReuseSession(session) as s:
       testbed_ = Testbed.from_str(testbed, session=s)[0]
@@ -114,9 +117,9 @@ class Solc(SolidityHarness):
   """
   __name__ = "solc"
   __generators__ = {
-    "randchar": generators.RandChar,
-    "github": generators.GitHub,
-    "dsmith": generators.DSmith,
+      "randchar": generators.RandChar,
+      "github": generators.GitHub,
+      "dsmith": generators.DSmith,
   }
 
   id = Harnesses.SOLC
@@ -126,8 +129,8 @@ class Solc(SolidityHarness):
           testbed: Testbed) -> ResultProxy:
     """ execute a testcase using cl_launcher """
 
-    with NamedTemporaryFile(prefix='dsmith-solc-', suffix='.sol',
-                            delete=False) as tmp:
+    with NamedTemporaryFile(
+        prefix='dsmith-solc-', suffix='.sol', delete=False) as tmp:
       tmp.write(testcase.program.src.encode("utf-8"))
       tmp.flush()
       path = tmp.name
@@ -135,12 +138,14 @@ class Solc(SolidityHarness):
     cmd = [testbed.platform.platform, '--bin', path]
     if testbed.optimizations:
       cmd.append('--optimize')
-    logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
+    app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
     try:
       start_time = time()
       process = subprocess.Popen(
-          cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+          cmd,
+          stdout=subprocess.PIPE,
+          stderr=subprocess.PIPE,
           universal_newlines=True)
       stdout, stderr = process.communicate()
       runtime = time() - start_time

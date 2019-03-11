@@ -8,9 +8,6 @@ import typing
 import keras
 import numpy as np
 import pandas as pd
-from absl import app
-from absl import flags
-from absl import logging
 from keras import layers
 from keras.preprocessing import sequence
 
@@ -20,29 +17,29 @@ from experimental.compilers.reachability import \
   control_flow_graph_generator as cfg_generator
 from experimental.compilers.reachability.datasets import \
   make_reachability_dataset as dataset
+from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'df', '/tmp/phd/docs/wip_graph/lda_opencl_device_mapping_dataset.pkl',
     'Path of the dataframe to load')
-flags.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/model_files',
-                    'Path of directory to generate files')
-flags.DEFINE_integer('lstm_size', 64,
-                     'The number of neurons in each LSTM layer.')
-flags.DEFINE_integer('num_classes', 15, 'The number of classes')
-flags.DEFINE_integer('dnn_size', 32, 'The number of neurons in the DNN layer.')
-flags.DEFINE_integer('num_epochs', 50, 'The number of epochs to train for.')
-flags.DEFINE_integer('batch_size', 64, 'The training batch size.')
-flags.DEFINE_integer('reachability_model_seed', 0, 'Random seed for the model.')
-flags.DEFINE_boolean(
+app.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/model_files',
+                  'Path of directory to generate files')
+app.DEFINE_integer('lstm_size', 64, 'The number of neurons in each LSTM layer.')
+app.DEFINE_integer('num_classes', 15, 'The number of classes')
+app.DEFINE_integer('dnn_size', 32, 'The number of neurons in the DNN layer.')
+app.DEFINE_integer('num_epochs', 50, 'The number of epochs to train for.')
+app.DEFINE_integer('batch_size', 64, 'The training batch size.')
+app.DEFINE_integer('reachability_model_seed', 0, 'Random seed for the model.')
+app.DEFINE_boolean(
     'neighbors_only', False,
     'If true, generate lists of only immediate neighbors for each node, not '
     'all successor nodes.')
-flags.DEFINE_boolean(
+app.DEFINE_boolean(
     'zero_r', False,
     'If true, train and evaluate a ZeroR model, not an LSTM model.')
 
@@ -188,59 +185,57 @@ class LstmReachabilityModel(object):
     text = '\n'.join(df['text:successors'])
 
     sequence_length = max(len(s) for s in df['text:successors'])
-    logging.info("Sequence length: %d", sequence_length)
+    app.Info("Sequence length: %d", sequence_length)
 
     df = ExpandToClassificationDataset(df, self.num_classes)
     if not len(df):
       raise ValueError("Empty dataframe!")
-    logging.info('Expanded dataframe to %s classification data points', len(df))
+    app.Info('Expanded dataframe to %s classification data points', len(df))
 
     # Create the model.
     if (outdir / 'atomizer.pkl').is_file():
       with open(outdir / 'atomizer.pkl', 'rb') as f:
         atomizer = pickle.load(f)
     else:
-      logging.info('Deriving atomizer from %s charss', humanize.Commas(
-          len(text)))
+      app.Info('Deriving atomizer from %s charss', humanize.Commas(len(text)))
       atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
-      logging.info('Vocabulary size: %s', humanize.Commas(len(atomizer.vocab)))
+      app.Info('Vocabulary size: %s', humanize.Commas(len(atomizer.vocab)))
       with open(outdir / 'atomizer.pkl', 'wb') as f:
         pickle.dump(atomizer, f)
-      logging.info('Pickled atomizer to %s', outdir / 'atomizer.pkl')
+      app.Info('Pickled atomizer to %s', outdir / 'atomizer.pkl')
 
     train_df = df[df['split:type'] == 'training']
     if not len(train_df):
       raise ValueError("No training graphs!")
     self.train_x, self.train_y = DataFrameToModelData(train_df, sequence_length,
                                                       atomizer)
-    logging.info('Training data: x=[%s, %s], y=[15x %s]', self.train_x[0].shape,
-                 self.train_x[1].shape, self.train_y[0].shape)
+    app.Info('Training data: x=[%s, %s], y=[15x %s]', self.train_x[0].shape,
+             self.train_x[1].shape, self.train_y[0].shape)
 
     valid_df = df[df['split:type'] == 'validation']
     if not len(valid_df):
       raise ValueError("No validation graphs!")
     self.valid_x, self.valid_y = DataFrameToModelData(valid_df, sequence_length,
                                                       atomizer)
-    logging.info('Validation data: x=[%s, %s], y=[15x %s]',
-                 self.valid_x[0].shape, self.valid_x[1].shape,
-                 self.valid_y[0].shape)
+    app.Info('Validation data: x=[%s, %s], y=[15x %s]', self.valid_x[0].shape,
+             self.valid_x[1].shape, self.valid_y[0].shape)
 
     test_df = df[df['split:type'] == 'test']
     if not len(test_df):
       raise ValueError("No test graphs!")
     self.test_x, self.test_y = DataFrameToModelData(test_df, sequence_length,
                                                     atomizer)
-    logging.info('Testing data: x=[%s, %s], y=[15x %s]', self.test_x[0].shape,
-                 self.test_x[1].shape, self.test_y[0].shape)
+    app.Info('Testing data: x=[%s, %s], y=[15x %s]', self.test_x[0].shape,
+             self.test_x[1].shape, self.test_y[0].shape)
 
     num_uniq_seqs = len(set(df['text:successors']))
-    logging.info('Unique sequences: %s of %s (%.2f %%)',
-                 humanize.Commas(num_uniq_seqs), humanize.Commas(len(df)),
-                 (num_uniq_seqs / len(df)) * 100)
+    app.Info('Unique sequences: %s of %s (%.2f %%)',
+             humanize.Commas(num_uniq_seqs), humanize.Commas(len(df)),
+             (num_uniq_seqs / len(df)) * 100)
 
     np.random.seed(FLAGS.reachability_model_seed)
     random.seed(FLAGS.reachability_model_seed)
-    logging.info('Building Keras model ...')
+    app.Info('Building Keras model ...')
     self.model = BuildKerasModel(
         sequence_length=sequence_length,
         num_classes=num_classes,
@@ -252,13 +247,13 @@ class LstmReachabilityModel(object):
 
     with open(outdir / 'model.json', 'w') as f:
       f.write(self.model.to_json())
-    logging.info('Wrote model to %s', outdir / 'model.json')
+    app.Info('Wrote model to %s', outdir / 'model.json')
 
   def TrainAndEvaluate(self, num_epochs: int):
 
     def OnEpochEnd(epoch, logs):
       """End-of-epoch model evaluate."""
-      logging.info('Evaluating model at epoch %d', epoch + 1)
+      app.Info('Evaluating model at epoch %d', epoch + 1)
 
       with prof.Profile('test set'):
         test_logs = dict(
@@ -292,7 +287,7 @@ class LstmReachabilityModel(object):
         solutions = np.array(solutions).T
         solved = np.mean([row.all() for row in solutions])
 
-      logging.info(
+      app.Info(
           "Evaluated test set at epoch %s, accuracy: %.2f%%, "
           "solved: %.2f%%", epoch + 1, accuracy * 100, solved * 100)
 
@@ -368,41 +363,40 @@ class ZeroRReachabilityModel(LstmReachabilityModel):
     text = '\n'.join(df['text:successors'])
 
     sequence_length = max(len(s) for s in df['text:successors'])
-    logging.info("Sequence length: %d", sequence_length)
+    app.Info("Sequence length: %d", sequence_length)
 
     df = ExpandToClassificationDataset(df, self.num_classes)
     if not len(df):
       raise ValueError("Empty dataframe!")
-    logging.info('Expanded dataframe to %s classification data points', len(df))
+    app.Info('Expanded dataframe to %s classification data points', len(df))
 
     # Create the model.
     if (outdir / 'atomizer.pkl').is_file():
       with open(outdir / 'atomizer.pkl', 'rb') as f:
         atomizer = pickle.load(f)
     else:
-      logging.info('Deriving atomizer from %s charss', humanize.Commas(
-          len(text)))
+      app.Info('Deriving atomizer from %s charss', humanize.Commas(len(text)))
       atomizer = atomizers.AsciiCharacterAtomizer.FromText(text)
-      logging.info('Vocabulary size: %s', humanize.Commas(len(atomizer.vocab)))
+      app.Info('Vocabulary size: %s', humanize.Commas(len(atomizer.vocab)))
       with open(outdir / 'atomizer.pkl', 'wb') as f:
         pickle.dump(atomizer, f)
-      logging.info('Pickled atomizer to %s', outdir / 'atomizer.pkl')
+      app.Info('Pickled atomizer to %s', outdir / 'atomizer.pkl')
 
     train_df = df[df['split:type'] == 'training']
     if not len(train_df):
       raise ValueError("No training graphs!")
     self.train_x, self.train_y = DataFrameToModelData(train_df, sequence_length,
                                                       atomizer)
-    logging.info('Training data: x=[%s, %s], y=[15x %s]', self.train_x[0].shape,
-                 self.train_x[1].shape, self.train_y[0].shape)
+    app.Info('Training data: x=[%s, %s], y=[15x %s]', self.train_x[0].shape,
+             self.train_x[1].shape, self.train_y[0].shape)
 
     test_df = df[df['split:type'] == 'test']
     if not len(test_df):
       raise ValueError("No test graphs!")
     self.test_x, self.test_y = DataFrameToModelData(test_df, sequence_length,
                                                     atomizer)
-    logging.info('Testing data: x=[%s, %s], y=[15x %s]', self.test_x[0].shape,
-                 self.test_x[1].shape, self.test_y[0].shape)
+    app.Info('Testing data: x=[%s, %s], y=[15x %s]', self.test_x[0].shape,
+             self.test_x[1].shape, self.test_y[0].shape)
 
   def TrainAndEvaluate(self, num_epochs: int):
     del num_epochs
@@ -414,7 +408,7 @@ class ZeroRReachabilityModel(LstmReachabilityModel):
     correct = y == self.test_y
     accuracy = correct.mean()
     solved = np.mean([row.all() for row in correct])
-    logging.info('Rule: %s, Accuracy: %s, Solved: %s', avg, accuracy, solved)
+    app.Info('Rule: %s, Accuracy: %s, Solved: %s', avg, accuracy, solved)
 
     return accuracy, solved
 
@@ -424,7 +418,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  logging.info('Starting evaluating LSTM model')
+  app.Info('Starting evaluating LSTM model')
 
   # Load graphs from file.
   df_path = pathlib.Path(FLAGS.df)
@@ -435,14 +429,14 @@ def main(argv):
 
   with prof.Profile('load dataframe'):
     df = pd.read_pickle(df_path)
-  logging.info('Loaded %s dataframe from %s', df.shape, df_path)
+  app.Info('Loaded %s dataframe from %s', df.shape, df_path)
   # Keep only the test set.
   test_df = df[df['split:type'] == 'test']
   old_len = len(test_df)
   # Filter the test set to match the num classes we want.
   test_df = test_df[test_df['cfg:block_count'] == FLAGS.num_classes]
-  logging.info('Filtered test set from %d to %d graphs with %d blocks in each',
-               old_len, len(test_df), FLAGS.num_classes)
+  app.Info('Filtered test set from %d to %d graphs with %d blocks in each',
+           old_len, len(test_df), FLAGS.num_classes)
   del df
 
   # Replace the training and validation data in the loaded dataset with our own
@@ -480,4 +474,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

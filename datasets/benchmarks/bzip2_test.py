@@ -1,11 +1,10 @@
 """Unit tests for //datasets/benchmarks/bzip2.py."""
 
-from absl import flags
-
 from datasets.benchmarks import bzip2
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_Exec_compress_decompress():

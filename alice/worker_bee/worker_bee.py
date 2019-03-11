@@ -8,27 +8,23 @@ import typing
 from concurrent import futures
 
 import grpc
-from absl import app
-from absl import flags
-from absl import logging
 
 from alice import alice_pb2
 from alice import alice_pb2_grpc
 from alice import bazel
 from alice import git_repo
+from labm8 import app
 from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('worker_bee_hostname', None, 'The hostname.')
-flags.DEFINE_integer('worker_bee_port', 5087, 'Port to listen for commands on.')
-flags.DEFINE_string('worker_bee_repo_root',
-                    str(pathlib.Path('~/phd').expanduser()),
-                    'Path of worker bee root.')
-flags.DEFINE_string('worker_bee_output_root', '/var/phd/alice/outputs/',
-                    'Path of worker bee root.')
-flags.DEFINE_string('ledger', 'localhost:5088',
-                    'The path of the ledger service.')
+app.DEFINE_string('worker_bee_hostname', None, 'The hostname.')
+app.DEFINE_integer('worker_bee_port', 5087, 'Port to listen for commands on.')
+app.DEFINE_string('worker_bee_repo_root', str(
+    pathlib.Path('~/phd').expanduser()), 'Path of worker bee root.')
+app.DEFINE_string('worker_bee_output_root', '/var/phd/alice/outputs/',
+                  'Path of worker bee root.')
+app.DEFINE_string('ledger', 'localhost:5088', 'The path of the ledger service.')
 
 
 class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
@@ -49,8 +45,8 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
     for ledger_id, process in self._processes.items():
       if process.is_alive():
-        logging.info('Waiting on job %d (process=%d) to finish', ledger_id,
-                     process.pid)
+        app.Info('Waiting on job %d (process=%d) to finish', ledger_id,
+                 process.pid)
         process.join()
       else:
         self.EndProcess(ledger_id)
@@ -144,7 +140,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
     port = FLAGS.worker_bee_port
     server.add_insecure_port(f'[::]:{port}')
-    logging.info('🐝  Listening for commands on %s. Buzz ...', port)
+    app.Info('🐝  Listening for commands on %s. Buzz ...', port)
     server.start()
     try:
       while True:
@@ -154,4 +150,4 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
 
 
 if __name__ == '__main__':
-  app.run(WorkerBee.Main)
+  app.RunWithArgs(WorkerBee.Main)

@@ -20,15 +20,13 @@ import subprocess
 import tempfile
 import typing
 
-from absl import flags
-from absl import logging
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import public
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 CLASS_NAME_RE = re.compile(r'public\s+class\s+(\w+)')
 
@@ -74,7 +72,7 @@ def Javac(text: str,
     with open(path, 'w') as f:
       f.write(text)
     cmd = ['timeout', '-s9', str(timeout_seconds), 'javac', f.name] + cflags
-    logging.debug('$ %s', ' '.join(cmd))
+    app.Debug('$ %s', ' '.join(cmd))
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -164,7 +162,7 @@ def JavaRewrite(text: str) -> str:
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE,
       universal_newlines=True)
-  logging.debug('$ %s', ' '.join(cmd))
+  app.Debug('$ %s', ' '.join(cmd))
   stdout, stderr = process.communicate(text)
   if process.returncode == 9:
     raise errors.RewriterException('JavaRewriter failed to complete after 60s')

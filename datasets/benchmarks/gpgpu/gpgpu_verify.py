@@ -1,29 +1,19 @@
-import contextlib
-import functools
-import multiprocessing
 import os
-import pandas as pd
 import pathlib
-import subprocess
-import tempfile
-import time
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
+import pandas as pd
 
 from datasets.benchmarks.gpgpu import gpgpu_pb2
-from labm8 import bazelutil
-from labm8 import fs
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('cgo17_features_csv', '',
-                    'The csv file containing the features published in cgo17.')
-flags.DEFINE_string('gpgpu_log_dir', '',
-                    'The directory containing the libcecl event logs.')
+app.DEFINE_string('cgo17_features_csv', '',
+                  'The csv file containing the features published in cgo17.')
+app.DEFINE_string('gpgpu_log_dir', '',
+                  'The directory containing the libcecl event logs.')
 
 
 def print_df(df):
@@ -84,4 +74,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

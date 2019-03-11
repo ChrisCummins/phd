@@ -7,15 +7,14 @@ import typing
 
 import numpy as np
 import tensorflow as tf
-from absl import app
-from absl import flags
-from absl import logging
 from scipy.optimize import minimize
 from tensorflow.examples.tutorials.mnist import input_data
 
-FLAGS = flags.FLAGS
-flags.DEFINE_integer('maxiter', 10,
-                     'Maximum number of steps when sweeping hyperparms.')
+from labm8 import app
+
+FLAGS = app.FLAGS
+app.DEFINE_integer('maxiter', 10,
+                   'Maximum number of steps when sweeping hyperparms.')
 
 
 def SoftmaxRegressor(tensor_size):
@@ -80,8 +79,8 @@ def TrainAndTest(session,
   feed_dict = dict(zip(model["inputs"], [test_data.images, test_data.labels]))
   error = 1 - session(model["eval"], feed_dict=feed_dict)
 
-  logging.info("MNIST with batch size %d for %d iterations: %.3f %% error ",
-               batch_size, num_iterations, error * 100)
+  app.Info("MNIST with batch size %d for %d iterations: %.3f %% error ",
+           batch_size, num_iterations, error * 100)
   return error
 
 
@@ -93,7 +92,7 @@ def Denormalize(inputs):
 
 def HyperParamSweep(maxiter: int = 50) -> typing.Dict[str, int]:
   """Perform a hyper-parameter sweep to find the best batch size and numiter."""
-  logging.info("loading dataset ... ")
+  app.Info("loading dataset ... ")
   mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
   image_width = 28  # MNIST image dimensions
   tensor_size = image_width * image_width  # Flatten image to 1D
@@ -128,9 +127,9 @@ def main(argv):
   del argv
 
   params = HyperParamSweep(FLAGS.maxiter)
-  logging.info("batch size: %d, nuber of iterations: %d", params['batch_size'],
-               params['numiter'])
+  app.Info("batch size: %d, nuber of iterations: %d", params['batch_size'],
+           params['numiter'])
 
 
 if __name__ == "__main__":
-  app.run(main)
+  app.RunWithArgs(main)

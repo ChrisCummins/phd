@@ -2,11 +2,11 @@
 import typing
 
 import numpy as np
-from absl import flags
 
 from deeplearning.ncc import vocabulary
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def PreprocessLlvmBytecode(bytecode: str) -> str:

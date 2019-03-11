@@ -2,13 +2,13 @@
 import datetime
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Adapted from Google's unittests.
 # Copyright 2008 Google Inc. All Rights Reserved.

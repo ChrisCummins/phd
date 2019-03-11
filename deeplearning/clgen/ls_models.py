@@ -15,19 +15,16 @@
 """Enumerate cached models."""
 import pathlib
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('working_dir',
-                    str(pathlib.Path('~/.cache/clgen').expanduser()),
-                    'The path to the CLgen working directory.')
+app.DEFINE_string('working_dir', str(
+    pathlib.Path('~/.cache/clgen').expanduser()),
+                  'The path to the CLgen working directory.')
 
 
 def LsModels(cache_root: pathlib.Path) -> None:
@@ -41,9 +38,9 @@ def LsModels(cache_root: pathlib.Path) -> None:
       n = len(telemetry)
       print(f'{model_dir} {n} / {num_epochs} epochs')
     elif meta_file.is_file():
-      logging.warning('Meta file %s cannot be read.', meta_file)
+      app.Warning('Meta file %s cannot be read.', meta_file)
     else:
-      logging.warning('Meta file %s not found.', meta_file)
+      app.Warning('Meta file %s not found.', meta_file)
 
 
 def main(argv):
@@ -61,4 +58,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

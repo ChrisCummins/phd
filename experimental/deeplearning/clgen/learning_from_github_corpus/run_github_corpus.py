@@ -12,9 +12,6 @@ import typing
 
 import numpy as np
 import pandas as pd
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.corpuses import preprocessed
@@ -24,23 +21,23 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.oclgrind import oclgrind
+from labm8 import app
 from labm8 import humanize
 from labm8 import labtypes
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('github_kernels_dir',
-                    '/var/phd/datasets/github/corpuses/opencl',
-                    'Directory containing OpenCL github kernels.')
-flags.DEFINE_string(
+app.DEFINE_string('github_kernels_dir',
+                  '/var/phd/datasets/github/corpuses/opencl',
+                  'Directory containing OpenCL github kernels.')
+app.DEFINE_string(
     'result_cache_dir',
     '/tmp/phd/experimental/deeplearning/clgen/learning_from_github_corpus/run_github_corpus',
     'Path to cache experimental results in.')
-flags.DEFINE_string('opencl_env', oclgrind.CLINFO_DESCRIPTION.name,
-                    'The OpenCL environment to execute programs on.')
-flags.DEFINE_boolean('opencl_opt', True,
-                     'If true, enable OpenCL optimizations.')
-flags.DEFINE_boolean(
+app.DEFINE_string('opencl_env', oclgrind.CLINFO_DESCRIPTION.name,
+                  'The OpenCL environment to execute programs on.')
+app.DEFINE_boolean('opencl_opt', True, 'If true, enable OpenCL optimizations.')
+app.DEFINE_boolean(
     'summarize_only', False,
     'If true, only summarize cached results, do not run new experiments.')
 
@@ -95,7 +92,7 @@ def RunTestCasesOrDie(driver: cldrive.CldriveHarness,
 
   # Harness returned correct number of results without complaining.
   if response.status.returncode != service_pb2.ServiceStatus.SUCCESS:
-    logging.fatal(
+    app.Fatal(
         'Driver failed with return code %s',
         service_pb2.ServiceStatus.ReturnCode.Name(response.status.returncode))
   assert len(response.results) == len(testcases)
@@ -121,12 +118,12 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
   repeat_result = RunTestCasesOrDie(driver, [result.testcase])[0]
   repeat_outcome = deepsmith_pb2.Result.Outcome.Name(result.outcome)
   if repeat_outcome != 'PASS':
-    logging.info('Kernel failed when run a second time: %s', repeat_outcome)
+    app.Info('Kernel failed when run a second time: %s', repeat_outcome)
     return 'DIFFTEST_FAIL'
 
   # The output should be the same when run twice with the same input.
   if len(set(r.outputs['stdout'] for r in [result, repeat_result])) != 1:
-    logging.info('Kernel failed nondeterminism test on first input')
+    app.Info('Kernel failed nondeterminism test on first input')
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # Run kernel twice more, with a pair of identical inputs.
@@ -140,19 +137,19 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
       for r in different_input_results
   ]
   if not set(outcomes) == {'PASS'}:
-    logging.info('Kernel failed when run on second inputs')
+    app.Info('Kernel failed when run on second inputs')
     return 'DIFFTEST_FAIL'
 
   # The output should be the same when run twice with the same input.
   if len(set(r.outputs['stdout'] for r in different_input_results)) != 1:
-    logging.info('Kernel failed nondeterminism test on seocnd inputs')
+    app.Info('Kernel failed nondeterminism test on seocnd inputs')
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # The outputs must be different when run twice with the same inputs.
   if len(
       set(r.outputs['stdout']
           for r in [result, different_input_results[0]])) == 1:
-    logging.info('Kernel produced identicial outputs with differnet inputs')
+    app.Info('Kernel produced identicial outputs with differnet inputs')
     return 'INPUT_INSENSITIVE'
 
   return 'PASS'
@@ -203,9 +200,9 @@ def main(argv: typing.List[str]):
 
     num_good_files = q.count()
     num_files = session.query(preprocessed.PreprocessedContentFile).count()
-    logging.info('Corpus of %s files (%.1f%% of %s)',
-                 humanize.Commas(num_good_files),
-                 (num_good_files / num_files) * 100, humanize.Commas(num_files))
+    app.Info('Corpus of %s files (%.1f%% of %s)',
+             humanize.Commas(num_good_files),
+             (num_good_files / num_files) * 100, humanize.Commas(num_files))
 
     srcs = [x[0] for x in q]
     batch_size = 8
@@ -216,14 +213,14 @@ def main(argv: typing.List[str]):
       cached_results_path = cache_dir / f'{i}.pkl'
 
       if cached_results_path.is_file():
-        logging.info('batch %d of %d', i + 1, max_batch)
+        app.Info('batch %d of %d', i + 1, max_batch)
         # Read cached results.
         with open(cached_results_path, 'rb') as f:
           outcomes = pickle.load(f)
       elif FLAGS.summarize_only:
         continue
       else:
-        logging.info('batch %d of %d', i + 1, max_batch)
+        app.Info('batch %d of %d', i + 1, max_batch)
         # Evaluate OpenCL kernels and cache results.
         batch = srcs[start_idx:start_idx + batch_size]
         testcases = labtypes.flatten(
@@ -255,4 +252,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

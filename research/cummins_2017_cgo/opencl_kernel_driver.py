@@ -10,8 +10,6 @@ import pathlib
 import tempfile
 import typing
 
-from absl import flags
-
 from compilers.llvm import clang
 from deeplearning.deepsmith.harnesses import cldrive as cldrive_harness
 from deeplearning.deepsmith.proto import deepsmith_pb2
@@ -21,8 +19,9 @@ from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
 from gpu.libcecl.proto import libcecl_pb2
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # All the combinations of local and global sizes used for synthetic kernels in
 # the CGO'17 experiments. These are the first dimension values, the other two

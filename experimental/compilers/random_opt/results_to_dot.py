@@ -3,16 +3,15 @@ import pathlib
 import typing
 
 import graphviz
-from absl import app
-from absl import flags
 
 from experimental.compilers.random_opt.proto import random_opt_pb2
+from labm8 import app
 from labm8 import graph
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'delayed_reward_experiment_path',
     '/tmp/phd/experimental/compilers/random_opt/random_opt.pbtxt',
     'Path to a DelayedRewardExperiment proto.')
@@ -82,4 +81,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

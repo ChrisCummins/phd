@@ -10,10 +10,20 @@ exports_files([
 ])
 
 py_library(
-    name = "archive",
-    srcs = ["archive.py"],
+    name = "app",
+    srcs = ["app.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//third_party/py/absl",
+    ],
+)
+
+py_library(
+    name = "archive",
+    srcs = ["archive.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":app",
     ],
 )
 
@@ -21,9 +31,9 @@ py_test(
     name = "archive_test",
     srcs = ["archive_test.py"],
     deps = [
+        ":app",
         ":archive",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -43,10 +53,10 @@ py_test(
     srcs = ["bazelutil_test.py"],
     data = ["data/test/hello_world"],
     deps = [
+        ":app",
         ":bazelutil",
         ":fs",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -67,10 +77,10 @@ py_test(
     srcs = ["cache_test.py"],
     data = ["data/test/jsoncache.json"],
     deps = [
+        ":app",
         ":cache",
         ":fs",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -89,9 +99,9 @@ py_test(
         "data/test/hello_world",
     ],
     deps = [
+        ":app",
         ":crypto",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -100,8 +110,8 @@ py_library(
     srcs = ["graph.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":fmt",
-        "//third_party/py/absl",
     ],
 )
 
@@ -110,11 +120,11 @@ py_library(
     srcs = ["hashcache.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":crypto",
         ":fs",
         ":sqlutil",
         "//labm8:humanize",
-        "//third_party/py/absl",
         "//third_party/py/checksumdir",
         "//third_party/py/sqlalchemy",
     ],
@@ -125,9 +135,9 @@ py_test(
     size = "small",
     srcs = ["hashcache_test.py"],
     deps = [
+        ":app",
         ":hashcache",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -145,10 +155,10 @@ py_test(
     size = "small",
     srcs = ["humanize_test.py"],
     deps = [
+        ":app",
         ":humanize",
         ":labdate",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -157,7 +167,7 @@ py_library(
     srcs = ["decorators.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party/py/absl",
+        ":app",
     ],
 )
 
@@ -166,17 +176,11 @@ py_test(
     srcs = ["decorators_test.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":decorators",
         ":test",
-        "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
-)
-
-py_library(
-    name = "err",
-    srcs = ["err.py"],
-    visibility = ["//visibility:public"],
 )
 
 py_library(
@@ -201,10 +205,10 @@ py_test(
         "data/test/testdir/**",
     ]),
     deps = [
+        ":app",
         ":fs",
         ":system",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -224,9 +228,9 @@ py_test(
     size = "small",
     srcs = ["fmt_test.py"],
     deps = [
+        ":app",
         ":fmt",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -245,10 +249,10 @@ py_test(
     size = "small",
     srcs = ["io_test.py"],
     deps = [
+        ":app",
         ":io",
         ":system",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -264,11 +268,11 @@ py_test(
     size = "small",
     srcs = ["jsonutil_test.py"],
     deps = [
+        ":app",
         ":fs",
         ":jsonutil",
         ":system",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -283,9 +287,9 @@ py_test(
     size = "small",
     srcs = ["labdate_test.py"],
     deps = [
+        ":app",
         ":labdate",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -305,9 +309,9 @@ py_test(
     size = "small",
     srcs = ["labmath_test.py"],
     deps = [
+        ":app",
         ":labmath",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -322,9 +326,9 @@ py_test(
     size = "small",
     srcs = ["labtypes_test.py"],
     deps = [
+        ":app",
         ":labtypes",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -343,9 +347,9 @@ py_test(
     size = "small",
     srcs = ["latex_test.py"],
     deps = [
+        ":app",
         ":latex",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -354,12 +358,12 @@ py_library(
     srcs = ["lockfile.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":fs",
         ":labdate",
         ":pbutil",
         ":system",
         "//labm8/proto:lockfile_py_pb2",
-        "//third_party/py/absl",
     ],
 )
 
@@ -368,11 +372,11 @@ py_test(
     size = "small",
     srcs = ["lockfile_test.py"],
     deps = [
+        ":app",
         ":lockfile",
         ":pbutil",
         ":test",
         "//labm8/proto:lockfile_py_pb2",
-        "//third_party/py/absl",
     ],
 )
 
@@ -381,6 +385,7 @@ py_library(
     srcs = ["logutil.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":labdate",
         "//labm8/proto:logging_py_pb2",
         "//third_party/py/absl",
@@ -392,9 +397,9 @@ py_test(
     size = "small",
     srcs = ["logutil_test.py"],
     deps = [
+        ":app",
         ":logutil",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -414,10 +419,10 @@ py_test(
     srcs = ["make_test.py"],
     data = glob(["data/test/makeproj/**"]),
     deps = [
+        ":app",
         ":fs",
         ":make",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -435,10 +440,10 @@ py_test(
     name = "pbutil_test",
     srcs = ["pbutil_test.py"],
     deps = [
+        ":app",
         ":pbutil",
         ":test",
         "//labm8/proto:test_protos",
-        "//third_party/py/absl",
     ],
 )
 
@@ -447,11 +452,11 @@ py_library(
     srcs = ["ppar.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":bazelutil",
         ":pbutil",
         ":sqlutil",
         "//labm8:humanize",
-        "//third_party/py/absl",
     ],
 )
 
@@ -464,10 +469,10 @@ py_test(
         "//labm8/data/test/ppar:unexpected_output_proto_worker",
     ],
     deps = [
+        ":app",
         ":ppar",
         ":test",
         "//labm8/data/test/ppar:protos_py_pb2",
-        "//third_party/py/absl",
         "//third_party/py/progressbar",
     ],
 )
@@ -477,9 +482,9 @@ py_library(
     srcs = ["prof.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":labtypes",
         "//labm8:humanize",
-        "//third_party/py/absl",
     ],
 )
 
@@ -488,10 +493,10 @@ py_test(
     size = "small",
     srcs = ["prof_test.py"],
     deps = [
+        ":app",
         ":prof",
         ":system",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -500,7 +505,7 @@ py_library(
     srcs = ["shell.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party/py/absl",
+        ":app",
     ],
 )
 
@@ -509,10 +514,10 @@ py_library(
     srcs = ["sqlutil.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         ":labdate",
         ":pbutil",
         ":text",
-        "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
     ],
@@ -523,10 +528,10 @@ py_test(
     size = "small",
     srcs = ["sqlutil_test.py"],
     deps = [
+        ":app",
         ":sqlutil",
         ":test",
         "//labm8/proto:test_protos",
-        "//third_party/py/absl",
     ],
 )
 
@@ -543,10 +548,10 @@ py_test(
     srcs = ["system_test.py"],
     data = ["data/test/bin/scp"],
     deps = [
+        ":app",
         ":fs",
         ":system",
         ":test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -563,8 +568,8 @@ py_library(
     srcs = ["test.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":app",
         "//:conftest",
-        "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
 )
@@ -593,9 +598,9 @@ py_test(
     size = "small",
     srcs = ["text_test.py"],
     deps = [
+        ":app",
         ":test",
         ":text",
-        "//third_party/py/absl",
     ],
 )
 
@@ -604,7 +609,7 @@ py_library(
     srcs = ["viz.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party/py/absl",
+        ":app",
         "//third_party/py/matplotlib",
     ],
 )
@@ -614,9 +619,9 @@ py_test(
     size = "small",
     srcs = ["viz_test.py"],
     deps = [
+        ":app",
         ":test",
         ":viz",
-        "//third_party/py/absl",
         "//third_party/py/matplotlib",
         "//third_party/py/numpy",
         "//third_party/py/pytest",

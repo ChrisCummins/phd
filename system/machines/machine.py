@@ -7,23 +7,21 @@ import pathlib
 import subprocess
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from labm8 import pbutil
 from system.machines.mirrored_directory import MirroredDirectory
 from system.machines.proto import machine_spec_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('machine', None, 'Path to MachineSpec proto.')
-flags.DEFINE_list('push', [], 'Mirrored directories to push.')
-flags.DEFINE_list('pull', [], 'Mirrored directories to push.')
-flags.DEFINE_bool('dry_run', True, 'Whether to run ops without making changes.')
-flags.DEFINE_bool('delete', False, 'Whether to delete files during push/pull'
-                  'mirroring.')
-flags.DEFINE_bool('progress', False, 'Show progress during file transfers.')
+app.DEFINE_string('machine', None, 'Path to MachineSpec proto.')
+app.DEFINE_list('push', [], 'Mirrored directories to push.')
+app.DEFINE_list('pull', [], 'Mirrored directories to push.')
+app.DEFINE_boolean('dry_run', True,
+                   'Whether to run ops without making changes.')
+app.DEFINE_boolean('delete', False, 'Whether to delete files during push/pull'
+                   'mirroring.')
+app.DEFINE_boolean('progress', False, 'Show progress during file transfers.')
 
 
 def RespondsToPing(host: str) -> typing.Optional[str]:
@@ -57,10 +55,10 @@ def ResolveHost(
   """
   for host in hosts[:-1]:
     if RespondsToPing(host.host):
-      logging.info('Resolved host %s', host.host)
+      app.Info('Resolved host %s', host.host)
       return host
     else:
-      logging.debug('Failed to resolve host %s', host.host)
+      app.Debug('Failed to resolve host %s', host.host)
   return hosts[-1]
 
 
@@ -136,4 +134,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -16,12 +16,11 @@
 import pathlib
 import tempfile
 
-from absl import flags
-
 from deeplearning.clgen import telemetry
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # TrainingLogger tests.
 

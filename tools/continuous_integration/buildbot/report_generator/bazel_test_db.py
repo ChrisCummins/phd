@@ -3,11 +3,11 @@ import typing
 from xml import etree
 
 import sqlalchemy as sql
-from absl import flags
 
+from labm8 import app
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = sqlutil.Base()
 

@@ -6,13 +6,11 @@ import pathlib
 import subprocess
 import typing
 
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from labm8 import labtypes
 from system.machines.proto import machine_spec_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class InvalidOperation(ValueError):
@@ -117,7 +115,7 @@ class MirroredDirectory(object):
       cmd.append('--delete')
     if progress:
       cmd.append('--progress')
-    logging.info(' '.join(cmd))
+    app.Info(' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.communicate()
     if p.returncode:

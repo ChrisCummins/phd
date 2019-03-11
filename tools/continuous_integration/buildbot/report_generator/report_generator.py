@@ -8,18 +8,17 @@ import typing
 import xml.etree.ElementTree as ET
 
 import sqlalchemy as sql
-from absl import app
-from absl import flags
 
 from config import getconfig
+from labm8 import app
 from labm8 import prof
 from tools.continuous_integration.buildbot.report_generator import \
   bazel_test_db as db
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string("testlogs", None, "Path to bazel testlogs directory.")
-flags.DEFINE_string("host", None, "The name of the build host.")
-flags.DEFINE_string(
+FLAGS = app.FLAGS
+app.DEFINE_string("testlogs", None, "Path to bazel testlogs directory.")
+app.DEFINE_string("host", None, "The name of the build host.")
+app.DEFINE_string(
     "db", "sqlite:////tmp/phd/tools/continuous_integration/buildbot.db",
     "Path to testlogs summary database.")
 
@@ -142,4 +141,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

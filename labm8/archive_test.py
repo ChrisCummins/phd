@@ -5,12 +5,12 @@ import tarfile
 import zipfile
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import archive
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(

@@ -4,15 +4,15 @@ import datetime
 import typing
 
 import sqlalchemy as sql
-from absl import flags
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
 

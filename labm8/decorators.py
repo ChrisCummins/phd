@@ -4,9 +4,9 @@ import functools
 import signal
 import typing
 
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # A type hint that specifies a callable function with any number of arguments
 # and any return type.

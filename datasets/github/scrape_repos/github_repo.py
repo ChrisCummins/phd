@@ -8,16 +8,15 @@ import subprocess
 import typing
 
 import progressbar
-from absl import flags
-from absl import logging
 
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 IndexProgress = collections.namedtuple('IndexProgress', ['i', 'n'])
 
@@ -83,18 +82,18 @@ class GitHubRepo(object):
         str(self.clone_dir), '-type', 'f', '-regex', pattern, '-not', '-path',
         '*/.git/*'
     ]
-    logging.debug('$ %s', ' '.join(cmd))
+    app.Debug('$ %s', ' '.join(cmd))
     paths = subprocess.check_output(
         cmd, universal_newlines=True).rstrip().split('\n')
     if len(paths) == 1 and not paths[0]:
-      logging.debug('No files to import from %s', self.clone_dir)
+      app.Debug('No files to import from %s', self.clone_dir)
       return self
     if i:
-      logging.info("[%s / %s] Importing %s files from %s ...", i.i, i.n,
-                   humanize.Commas(len(paths)), self.name)
+      app.Info("[%s / %s] Importing %s files from %s ...", i.i, i.n,
+               humanize.Commas(len(paths)), self.name)
     else:
-      logging.info("Importing %s files from %s ...", humanize.Commas(
-          len(paths)), self.name)
+      app.Info("Importing %s files from %s ...", humanize.Commas(len(paths)),
+               self.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(self.clone_dir)
     jobs = (scrape_repos_pb2.ImportWorker(
         clone_from_url=self.meta.clone_from_url,
@@ -139,4 +138,4 @@ def IndexContentFiles(job: scrape_repos_pb2.ImportWorker) -> None:
           binascii.hexlify(proto.sha256).decode('utf-8') + '.pbtxt')
       pbutil.ToFile(proto, path)
   except UnicodeDecodeError:
-    logging.warning('Failed to decode %s', relpath)
+    app.Warning('Failed to decode %s', relpath)

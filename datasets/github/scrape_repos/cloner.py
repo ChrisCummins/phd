@@ -10,35 +10,33 @@ import threading
 import typing
 
 import progressbar
-from absl import app
-from absl import flags
-from absl import logging
 
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import fs
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('cloner_clone_list', None,
-                    'The path to a LanguageCloneList file.')
-flags.DEFINE_integer(
+app.DEFINE_string('cloner_clone_list', None,
+                  'The path to a LanguageCloneList file.')
+app.DEFINE_integer(
     'repository_clone_timeout_minutes', 30,
     'The maximum number of minutes to attempt to clone a '
     'repository before '
     'quitting and moving on to the next repository.')
-flags.DEFINE_integer('num_cloner_threads', 4,
-                     'The number of cloner threads to spawn.')
+app.DEFINE_integer('num_cloner_threads', 4,
+                   'The number of cloner threads to spawn.')
 
 
 def CloneFromMetafile(metafile: pathlib.Path) -> None:
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   if not meta.owner and meta.name:
-    logging.error('Metafile missing owner and name fields %s', metafile)
+    app.Error('Metafile missing owner and name fields %s', metafile)
     return
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
-  logging.debug('%s', meta)
+  app.Debug('%s', meta)
   if (clone_dir / '.git').is_dir():
     return
 
@@ -50,7 +48,7 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
       'clone', meta.clone_from_url,
       str(clone_dir)
   ]
-  logging.debug('$ %s', ' '.join(cmd))
+  app.Debug('$ %s', ' '.join(cmd))
 
   # Try to checkout the repository and submodules.
   p = subprocess.Popen(
@@ -72,7 +70,7 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
 
   if p.returncode:
     # Give up.
-    logging.warning('\nClone failed %s:\n%s', meta.clone_from_url, stderr)
+    app.Warning('\nClone failed %s:\n%s', meta.clone_from_url, stderr)
     # Remove anything left over.
     subprocess.check_call(['rm', '-rf', str(clone_dir)])
 
@@ -120,7 +118,7 @@ def main(argv) -> None:
       ]
   random.shuffle(meta_files)
   worker = AsyncWorker(meta_files)
-  logging.info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
+  app.Info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():
@@ -130,4 +128,4 @@ def main(argv) -> None:
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

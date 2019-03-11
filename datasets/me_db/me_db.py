@@ -12,9 +12,6 @@ import time
 import typing
 
 import sqlalchemy as sql
-from absl import app
-from absl import flags
-from absl import logging
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
@@ -24,16 +21,17 @@ from datasets.me_db.providers.health_kit import health_kit
 from datasets.me_db.providers.life_cycle import life_cycle
 from datasets.me_db.providers.timing import timing
 from datasets.me_db.providers.ynab import ynab
+from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('inbox', None, 'Path to inbox.')
-flags.DEFINE_string('db', 'me.db', 'Path to database.')
-flags.DEFINE_bool('replace_existing', False,
-                  'Remove existing database, if it exists.')
+app.DEFINE_string('inbox', None, 'Path to inbox.')
+app.DEFINE_string('db', 'me.db', 'Path to database.')
+app.DEFINE_boolean('replace_existing', False,
+                   'Remove existing database, if it exists.')
 
 Base = declarative.declarative_base()
 
@@ -98,9 +96,9 @@ class Database(sqlutil.Database):
     num_measurements = 0
     for series in series_collection.series:
       num_measurements += len(series.measurement)
-      logging.info('Importing %s %s:%s measurements',
-                   humanize.Commas(len(series.measurement)), series.family,
-                   series.name)
+      app.Info('Importing %s %s:%s measurements',
+               humanize.Commas(len(series.measurement)), series.family,
+               series.name)
       session.add_all(MeasurementsFromSeries(series))
     return num_measurements
 
@@ -119,7 +117,7 @@ class Database(sqlutil.Database):
       process = multiprocessing.Process(target=importer, args=(inbox, queue))
       process.start()
       processes.append(process)
-    logging.info('Started %d importer processes', len(processes))
+    app.Info('Started %d importer processes', len(processes))
 
     # Get the results of each process as it finishes.
     num_measurements = 0
@@ -130,9 +128,9 @@ class Database(sqlutil.Database):
                                                      series_collections)
 
     duration_seconds = time.time() - start_time
-    logging.info('Processed %s records in %.3f seconds (%.2f rows per second)',
-                 humanize.Commas(num_measurements), duration_seconds,
-                 num_measurements / duration_seconds)
+    app.Info('Processed %s records in %.3f seconds (%.2f rows per second)',
+             humanize.Commas(num_measurements), duration_seconds,
+             num_measurements / duration_seconds)
 
 
 def main(argv):
@@ -153,10 +151,10 @@ def main(argv):
     db.Drop(are_you_sure_about_this_flag=True)
 
   db = Database(FLAGS.db)
-  logging.info('Using database `%s`', db.url)
+  app.Info('Using database `%s`', db.url)
 
   db.ImportMeasurementsFromInboxImporters(inbox_path)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

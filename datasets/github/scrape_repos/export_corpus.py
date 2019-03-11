@@ -3,32 +3,29 @@ import binascii
 import os
 import pathlib
 
-from absl import app
-from absl import flags
-from absl import logging
 from sqlalchemy import orm
 
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
-flags.DEFINE_string('export_path', None,
-                    'The root directory to export files to.')
+app.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
+app.DEFINE_string('export_path', None, 'The root directory to export files to.')
 
 
 def ExportDatabase(session: orm.session.Session,
                    export_path: pathlib.Path) -> None:
   """Export the contents of a database to a directory."""
   query = session.query(contentfiles.ContentFile)
-  logging.info('Exporting %s files to %s ...', humanize.Commas(query.count()),
-               export_path)
+  app.Info('Exporting %s files to %s ...', humanize.Commas(query.count()),
+           export_path)
   for contentfile in query:
     path = export_path / (contentfile.sha256_hex + '.txt')
-    logging.debug(path)
+    app.Debug(path)
     with open(path, 'w') as f:
       f.write(contentfile.text)
 
@@ -46,7 +43,7 @@ def ExportIndex(index_path: pathlib.Path, export_path: pathlib.Path) -> None:
           if not out_path.is_file():
             with open(out_path, 'w') as f:
               f.write(contentfile.text)
-              logging.debug(out_path)
+              app.Debug(out_path)
         except pbutil.DecodeError:
           pass
 
@@ -85,4 +82,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -15,11 +15,10 @@
 """This file defines the decorator for marking a CLgen preprocessor function."""
 import typing
 
-from absl import flags
-
 from deeplearning.clgen import errors
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Type hint for a preprocessor function. See @clgen_preprocess for details.
 PreprocessorFunction = typing.Callable[[str], str]

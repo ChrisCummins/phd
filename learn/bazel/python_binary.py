@@ -3,12 +3,10 @@ import os
 import subprocess
 import sys
 
-from absl import app
-from absl import flags
-
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 DATA_FILE = bazelutil.DataPath('phd/learn/bazel/data_file.txt')
 DATA_BINARY = bazelutil.DataPath('phd/learn/bazel/data_binary')
@@ -32,4 +30,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

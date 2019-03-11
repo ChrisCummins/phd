@@ -7,9 +7,6 @@ import typing
 from concurrent import futures
 
 import grpc
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.harnesses import harness
@@ -21,12 +18,13 @@ from gpu.cldrive.legacy import cgen
 from gpu.cldrive.legacy import data
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import labdate
 from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _UNAME = 'linux' if system.is_linux() else 'mac'
 # Path to clang binary.
@@ -105,7 +103,7 @@ class CldriveHarness(harness.HarnessBase,
 
     # Logging output.
     for testbed in self.testbeds:
-      logging.info('OpenCL testbed:\n%s', testbed)
+      app.Info('OpenCL testbed:\n%s', testbed)
 
   def GetHarnessCapabilities(
       self, request: harness_pb2.GetHarnessCapabilitiesRequest,
@@ -131,8 +129,8 @@ class CldriveHarness(harness.HarnessBase,
     for i, testcase in enumerate(request.testcases):
       result = RunTestcase(self.envs[testbed_idx], self.testbeds[testbed_idx],
                            testcase, self.config.driver_cflag)
-      logging.info('Testcase %d: %s.', i + 1,
-                   deepsmith_pb2.Result.Outcome.Name(result.outcome))
+      app.Info('Testcase %d: %s.', i + 1,
+               deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])
 
     return response
@@ -200,7 +198,7 @@ def RunTestcase(opencl_environment: env.OpenCLEnvironment,
     runtime.event_start_epoch_ms = labdate.MillisecondsTimestamp(start_time)
     result.outcome = GetResultOutcome(result)
   except DriverCompilationError as e:
-    logging.warning('%s', e)
+    app.Warning('%s', e)
     result.outcome = deepsmith_pb2.Result.UNKNOWN
   finally:
     fs.rm(path)
@@ -347,7 +345,7 @@ def CompileDriver(src: str,
   if cflags:
     cmd += cflags
 
-  # logging.debug('$ %s', ' '.join(cmd))
+  # app.Debug('$ %s', ' '.join(cmd))
   proc = subprocess.Popen(
       cmd,
       stdin=subprocess.PIPE,
@@ -456,9 +454,9 @@ def main(argv):
   service = CldriveHarness(harness_config)
   harness_pb2_grpc.add_HarnessServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{harness_config.service.port}')
-  logging.info('%s listening on %s:%s',
-               type(service).__name__, harness_config.service.hostname,
-               harness_config.service.port)
+  app.Info('%s listening on %s:%s',
+           type(service).__name__, harness_config.service.hostname,
+           harness_config.service.port)
   server.start()
   try:
     while True:
@@ -468,4 +466,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

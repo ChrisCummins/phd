@@ -9,14 +9,13 @@ import typing
 
 import pydot
 import pyparsing
-from absl import app
-from absl import flags
 
 from compilers.llvm import opt
 from experimental.compilers.reachability import control_flow_graph as cfg
+from labm8 import app
 from labm8 import fs
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def DotCfgsFromBytecode(bytecode: str) -> typing.Iterator[str]:
@@ -396,4 +395,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

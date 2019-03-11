@@ -183,7 +183,7 @@ class CLSmith(OpenCLGenerator):
       # generated. Try again:
       if status:
         if attempt > max_attempts:
-          logging.error(stderr)
+          app.Error(stderr)
           raise OSError(f"Failed to produce {self} program after "
                         f"{max_attempts} attempts")
         else:

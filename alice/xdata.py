@@ -6,9 +6,9 @@ import contextlib
 import os
 import pathlib
 
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class NotInWonderland(EnvironmentError):

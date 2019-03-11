@@ -7,12 +7,11 @@ import pathlib
 import subprocess
 import typing
 
-from absl import flags
-
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class LinuxSourcesDataset(object):

@@ -5,16 +5,15 @@ import tempfile
 import typing
 
 import pytest
-from absl import flags
-from absl import logging
 
+from labm8 import app
 from labm8 import fs
 from labm8 import labtypes
 from labm8 import test
 from system.machines import mirrored_directory
 from system.machines.proto import machine_spec_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='module')
@@ -52,7 +51,7 @@ class LocalMirroredDirectory(mirrored_directory.MirroredDirectory):
       cmd.append('--delete')
     if progress:
       cmd.append('--progress')
-    logging.info(' '.join(cmd))
+    app.Info(' '.join(cmd))
     p = subprocess.Popen(cmd)
     p.communicate()
     if p.returncode:

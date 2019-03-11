@@ -65,8 +65,8 @@ py_binary(
     srcs = ["libcecl_rewriter.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8:app",
         "//labm8:fs",
-        "//third_party/py/absl",
     ],
 )
 
@@ -92,9 +92,9 @@ py_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -106,8 +106,8 @@ py_library(
         ":libcecl_compile",
         "//gpu/cldrive/legacy:env",
         "//gpu/libcecl/proto:libcecl_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
-        "//third_party/py/absl",
     ],
 )
 

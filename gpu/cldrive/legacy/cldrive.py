@@ -23,62 +23,57 @@ import pickle
 import sys
 
 import numpy as np
-from absl import app
-from absl import flags
-from absl import logging
 
 from gpu.cldrive.legacy import args
 from gpu.cldrive.legacy import cgen
 from gpu.cldrive.legacy import data
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
+from labm8 import app
 
-FLAGS = flags.FLAGS
-flags.DEFINE_boolean(
+FLAGS = app.FLAGS
+app.DEFINE_boolean(
     'ls_env', False,
     'If set, list the names and details of available OpenCL environments, and '
     'exit.')
-flags.DEFINE_boolean('emit_c', False, 'Generate standalone C code.')
-flags.DEFINE_boolean(
+app.DEFINE_boolean('emit_c', False, 'Generate standalone C code.')
+app.DEFINE_boolean(
     'compile_only', False,
     'If --emit_c, generate standalone code C code which only compiles kernel.')
-flags.DEFINE_boolean(
+app.DEFINE_boolean(
     'with_kernel', False,
     'If --compile_only, this creates kernel object after compilation.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'platform', None,
     "Specify the OpenCL platform name to use, e.g. 'NVIDIA CUDA'")
-flags.DEFINE_string(
+app.DEFINE_string(
     'device', None,
     "Specify the OpenCL device name to use, e.g. 'GeForce GTX 1080'")
-flags.DEFINE_string('devtype', "all",
-                    "Use any OpenCL device of type: {all,cpu,gpu}.")
-flags.DEFINE_integer('size', 64, 'Size of the input arrays to generate.')
-flags.DEFINE_string(
+app.DEFINE_string('devtype', "all",
+                  "Use any OpenCL device of type: {all,cpu,gpu}.")
+app.DEFINE_integer('size', 64, 'Size of the input arrays to generate.')
+app.DEFINE_string(
     'generator', 'arange',
     'The input generator to use, one of: {rand,arange,zeros,ones}.')
-flags.DEFINE_float('scalar_val', None, 'Values to assign to scalar inputs.')
-flags.DEFINE_string("gsize", "64,1,1",
-                    "Comma separated NDRange for global size.")
-flags.DEFINE_string("lsize", "32,1,1",
-                    "Comma separated NDRange for local (workgroup) size.")
-flags.DEFINE_integer(
+app.DEFINE_float('scalar_val', None, 'Values to assign to scalar inputs.')
+app.DEFINE_string("gsize", "64,1,1", "Comma separated NDRange for global size.")
+app.DEFINE_string("lsize", "32,1,1",
+                  "Comma separated NDRange for local (workgroup) size.")
+app.DEFINE_integer(
     "timeout", -1,
     "Error if execution has not completed after this many seconds.")
-flags.DEFINE_boolean("cl_opt", True,
-                     "Whether OpenCL optimizations are enabled.")
-flags.DEFINE_boolean("profiling", False,
-                     "Enable kernel and transfer profiling.")
-flags.DEFINE_boolean("debug", False,
-                     "Enable more verbose OpenCL compilation and execution.")
-flags.DEFINE_boolean("binary", False,
-                     "Print outputs as a pickled binary numpy array.")
+app.DEFINE_boolean("cl_opt", True, "Whether OpenCL optimizations are enabled.")
+app.DEFINE_boolean("profiling", False, "Enable kernel and transfer profiling.")
+app.DEFINE_boolean("debug", False,
+                   "Enable more verbose OpenCL compilation and execution.")
+app.DEFINE_boolean("binary", False,
+                   "Print outputs as a pickled binary numpy array.")
 
 
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    logging.warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    app.Warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   if FLAGS.ls_env:
     env.PrintOpenClEnvironments()
@@ -140,4 +135,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

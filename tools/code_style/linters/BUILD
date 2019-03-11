@@ -11,7 +11,7 @@ py_test(
     srcs = ["linters_lib_test.py"],
     deps = [
         ":linters_lib",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

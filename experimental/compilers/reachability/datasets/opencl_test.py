@@ -1,11 +1,11 @@
 """Unit tests for //experimental/compilers/reachability/datasets:opencl.py."""
 import pytest
-from absl import flags
 
 from experimental.compilers.reachability.datasets import opencl
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='session')

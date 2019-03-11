@@ -3,10 +3,9 @@ import csv
 import datetime
 import os
 
-from absl import flags
-from absl import logging
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def daterange(start_date, end_date, reverse=False):
@@ -29,11 +28,11 @@ def mkdir(path):
 
 def create_csv(rows, outpath):
   with open(outpath, "w") as outfile:
-    logging.info(f"Creating CSV file {outfile.name}")
+    app.Info(f"Creating CSV file {outfile.name}")
 
     writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
     for row in rows:
       writer.writerow(row)
 
   nrows = len(rows) - 1
-  logging.info(f"Exported {nrows} records to '{outpath}'")
+  app.Info(f"Exported {nrows} records to '{outpath}'")

@@ -18,16 +18,15 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import app
-from absl import flags
 
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import clgen_pb2
+from labm8 import app
 from labm8 import pbutil
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Instance tests.
 
@@ -112,7 +111,7 @@ def test_RunWithErrorHandling_system_exit(clgen_cache_dir):
 def test_RunWithErrorHandling_exception_debug(clgen_cache_dir):
   """Test that FLAGS.debug disables exception catching."""
   del clgen_cache_dir
-  flags.FLAGS(['argv[0]', '--clgen_debug'])
+  app.FLAGS(['argv[0]', '--clgen_debug'])
   with pytest.raises(ZeroDivisionError):
     clgen.RunWithErrorHandling(lambda a, b: a // b, 1, 0)
 
@@ -137,8 +136,8 @@ def test_main_no_config_flag():
 def test_main_config_file_not_found():
   """Test that UsageError is raised if --config flag not found."""
   with tempfile.TemporaryDirectory() as d:
-    flags.FLAGS.unparse_flags()
-    flags.FLAGS(['argv[0]', '--config', f'{d}/config.pbtxt'])
+    app.FLAGS.unparse_flags()
+    app.FLAGS(['argv[0]', '--config', f'{d}/config.pbtxt'])
     with pytest.raises(app.UsageError) as e_info:
       clgen.main(['argv[0]'])
     assert f"File not found: '{d}/config.pbtxt'" == str(e_info.value)
@@ -146,8 +145,8 @@ def test_main_config_file_not_found():
 
 def test_main_print_cache_path_corpus(abc_instance_file, capsys):
   """Test that --print_cache_path=corpus prints directory path."""
-  flags.FLAGS.unparse_flags()
-  flags.FLAGS(
+  app.FLAGS.unparse_flags()
+  app.FLAGS(
       ['argv[0]', '--config', abc_instance_file, '--print_cache_path=corpus'])
   clgen.main([])
   out, err = capsys.readouterr()
@@ -157,8 +156,8 @@ def test_main_print_cache_path_corpus(abc_instance_file, capsys):
 
 def test_main_print_cache_path_model(abc_instance_file, capsys):
   """Test that --print_cache_path=model prints directory path."""
-  flags.FLAGS.unparse_flags()
-  flags.FLAGS(
+  app.FLAGS.unparse_flags()
+  app.FLAGS(
       ['argv[0]', '--config', abc_instance_file, '--print_cache_path=model'])
   clgen.main([])
   out, err = capsys.readouterr()
@@ -168,8 +167,8 @@ def test_main_print_cache_path_model(abc_instance_file, capsys):
 
 def test_main_print_cache_path_sampler(abc_instance_file, capsys):
   """Test that --print_cache_path=sampler prints directory path."""
-  flags.FLAGS.unparse_flags()
-  flags.FLAGS(
+  app.FLAGS.unparse_flags()
+  app.FLAGS(
       ['argv[0]', '--config', abc_instance_file, '--print_cache_path=sampler'])
   clgen.main([])
   out, err = capsys.readouterr()
@@ -180,8 +179,8 @@ def test_main_print_cache_path_sampler(abc_instance_file, capsys):
 
 def test_main_print_cache_invalid_argument(abc_instance_file):
   """Test that UsageError raised if --print_cache_path arg not valid."""
-  flags.FLAGS.unparse_flags()
-  flags.FLAGS(
+  app.FLAGS.unparse_flags()
+  app.FLAGS(
       ['argv[0]', '--config', abc_instance_file, '--print_cache_path=foo'])
   with pytest.raises(app.UsageError) as e_info:
     clgen.main([])
@@ -190,15 +189,15 @@ def test_main_print_cache_invalid_argument(abc_instance_file):
 
 def test_main_min_samples(abc_instance_file):
   """Test that min_samples samples are produced."""
-  flags.FLAGS.unparse_flags()
-  flags.FLAGS(['argv[0]', '--config', abc_instance_file, '--min_samples', '1'])
+  app.FLAGS.unparse_flags()
+  app.FLAGS(['argv[0]', '--config', abc_instance_file, '--min_samples', '1'])
   clgen.main([])
 
 
 def test_main_stop_after_corpus(abc_instance_file):
   """Test that --stop_after corpus prevents model training."""
-  flags.FLAGS.unparse_flags()
-  flags.FLAGS(
+  app.FLAGS.unparse_flags()
+  app.FLAGS(
       ['argv[0]', '--config', abc_instance_file, '--stop_after', 'corpus'])
   clgen.main([])
   instance = clgen.Instance(
@@ -208,9 +207,8 @@ def test_main_stop_after_corpus(abc_instance_file):
 
 def test_main_stop_after_train(abc_instance_file):
   """Test that --stop_after train trains the model."""
-  flags.FLAGS.unparse_flags()
-  flags.FLAGS(
-      ['argv[0]', '--config', abc_instance_file, '--stop_after', 'train'])
+  app.FLAGS.unparse_flags()
+  app.FLAGS(['argv[0]', '--config', abc_instance_file, '--stop_after', 'train'])
   clgen.main([])
   instance = clgen.Instance(
       pbutil.FromFile(pathlib.Path(abc_instance_file), clgen_pb2.Instance()))

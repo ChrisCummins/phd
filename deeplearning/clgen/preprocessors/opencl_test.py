@@ -16,15 +16,15 @@
 import subprocess
 
 import pytest
-from absl import flags
 
 import deeplearning.clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import opencl
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 SHIMFILE = bazelutil.DataPath(
     'phd/deeplearning/clgen/data/include/opencl-shim.h')

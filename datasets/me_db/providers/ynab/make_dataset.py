@@ -5,12 +5,10 @@ import random
 import time
 import typing
 
-from absl import app
-from absl import flags
-
+from labm8 import app
 from labm8 import jsonutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class RandomDatasetGenerator(object):
@@ -138,4 +136,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

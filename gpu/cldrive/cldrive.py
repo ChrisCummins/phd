@@ -2,34 +2,30 @@
 import pathlib
 import sys
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from gpu.cldrive import api
 from gpu.cldrive.legacy import env
 from gpu.cldrive.proto import cldrive_pb2
+from labm8 import app
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string('src', None, 'Path to a file containing OpenCL kernels.')
-flags.DEFINE_string(
+FLAGS = app.FLAGS
+app.DEFINE_string('src', None, 'Path to a file containing OpenCL kernels.')
+app.DEFINE_string(
     'env',
     env.OclgrindOpenCLEnvironment().name,
     "Specify the OpenCL device to use. Run `bazel run //gpu/clinfo` to see a "
     "list of available devices. Defaults to using the builtin CPU simulator.")
-flags.DEFINE_integer("gsize", 64, "The global size to use.")
-flags.DEFINE_integer("lsize", 32, "The local (workgroup) size.")
-flags.DEFINE_integer("timeout", 60,
-                     "Terminate execution after this many seconds.")
-flags.DEFINE_boolean("cl_opt", True,
-                     "Whether OpenCL optimizations are enabled.")
-flags.DEFINE_integer("num_runs", 10, "The number of runs per kernel.")
+app.DEFINE_integer("gsize", 64, "The global size to use.")
+app.DEFINE_integer("lsize", 32, "The local (workgroup) size.")
+app.DEFINE_integer("timeout", 60,
+                   "Terminate execution after this many seconds.")
+app.DEFINE_boolean("cl_opt", True, "Whether OpenCL optimizations are enabled.")
+app.DEFINE_integer("num_runs", 10, "The number of runs per kernel.")
 
 
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    logging.warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    app.Warning("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   try:
     opencl_environment = env.OpenCLEnvironment.FromName(FLAGS.env)
@@ -57,4 +53,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

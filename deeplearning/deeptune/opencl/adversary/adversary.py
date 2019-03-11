@@ -4,20 +4,18 @@ import typing
 
 import numpy as np
 import pandas as pd
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deeptune.opencl.adversary import opencl_deadcode_inserter
 from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
+from labm8 import app
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'adversary_cache_directory',
     '/tmp/phd/deeplearning/deeptune/opencl/heterogeneous_mapping',
     'Path of directory to store cached models and predictions in.')
@@ -78,23 +76,23 @@ def main(argv: typing.List[str]):
     adversarial_df = CreateAugmentedDataset(experiment.dataset.df)
     adversarial_df.to_pickle(str(augmented_df_path))
 
-  logging.info('Reading %s', augmented_df_path)
+  app.Info('Reading %s', augmented_df_path)
   augmented_df = pd.read_pickle(str(augmented_df_path))
 
-  logging.info('Augmented dataframe: %s', augmented_df.shape)
-  logging.info('Atomizer: %s', experiment.atomizer)
+  app.Info('Augmented dataframe: %s', augmented_df.shape)
+  app.Info('Atomizer: %s', experiment.atomizer)
   longest_seq = max(
       len(experiment.atomizer.AtomizeString(src))
       for src in augmented_df['program:opencl_src'])
-  logging.info('Longest sequence: %d', longest_seq)
+  app.Info('Longest sequence: %d', longest_seq)
 
   results_path = cache_directory / 'adversarial_results.pkl'
   if not results_path.is_file():
     # TODO(cec): Dervice input_shape from maxlen.
     model = AdversarialDeeptune(input_shape=(4096,))
-    logging.info('Model: %s', model)
+    app.Info('Model: %s', model)
 
-    logging.info('Evaluating model ...')
+    app.Info('Evaluating model ...')
     results = utils.evaluate(
         model,
         df=augmented_df,
@@ -102,15 +100,15 @@ def main(argv: typing.List[str]):
         workdir=experiment.cache_dir,
         seed=0x204)
 
-    logging.info('Writing %s', cache_directory / 'adversarial_results.pkl')
+    app.Info('Writing %s', cache_directory / 'adversarial_results.pkl')
     results.to_pickle(str(cache_directory / 'adversarial_results.pkl'))
   else:
     results = pd.read_pickle(str(results_path))
 
-  logging.info('Results: %s', results.shape)
+  app.Info('Results: %s', results.shape)
 
-  logging.info('done')
+  app.Info('done')
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

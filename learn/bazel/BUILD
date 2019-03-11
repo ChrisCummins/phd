@@ -8,8 +8,8 @@ py_test(
         ":data_file",
     ],
     deps = [
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -27,8 +27,8 @@ py_test(
     name = "tensorflow_test",
     srcs = ["tensorflow_test.py"],
     deps = [
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/tensorflow",
     ],
 )

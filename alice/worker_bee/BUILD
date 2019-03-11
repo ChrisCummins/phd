@@ -5,8 +5,8 @@ py_binary(
         "//alice:alice_py_pb2",
         "//alice:bazel",
         "//alice:git_repo",
+        "//labm8:app",
         "//labm8:system",
-        "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],
 )

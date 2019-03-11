@@ -42,7 +42,7 @@ def create_results_metas(s: session_t):
 
   print("creating results metas ...")
   s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
-  logging.debug("deleted existing result metas")
+  app.Debug("deleted existing result metas")
   testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness) \
     .join(Testcase) \
     .group_by(Result.testbed_id, Testcase.harness) \
@@ -52,7 +52,8 @@ def create_results_metas(s: session_t):
   bar = progressbar.ProgressBar(redirect_stdout=True)
   for testbed_id, harness in bar(testbeds_harnesses):
     # FIXME: @cumtime variable is not supported by SQLite.
-    s.execute(sql_query(f"""
+    s.execute(
+        sql_query(f"""
 INSERT INTO {ResultMeta.__tablename__} (id, total_time, cumtime)
 SELECT  results.id,
         results.runtime + programs.generation_time AS total_time,

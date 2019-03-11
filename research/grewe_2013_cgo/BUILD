@@ -13,8 +13,8 @@ py_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -23,8 +23,8 @@ py_test(
     srcs = ["feature_extractor_test.py"],
     deps = [
         ":feature_extractor",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
 )

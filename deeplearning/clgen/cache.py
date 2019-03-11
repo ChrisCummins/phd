@@ -16,12 +16,11 @@
 import os
 import pathlib
 
-from absl import flags
-
+from labm8 import app
 from labm8 import cache
 from labm8 import fs
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def cachepath(*relative_path_components: str) -> pathlib.Path:

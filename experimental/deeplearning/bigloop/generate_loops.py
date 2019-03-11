@@ -1,9 +1,7 @@
 """Generate code fragments with loops."""
-from absl import app
-from absl import flags
-from absl import logging
 
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
 
 class Context(object):
@@ -66,11 +64,11 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  logging.info('Hello, world!')
+  app.Info('Hello, world!')
   print(Loop(100, DummyLoopBody()).Finalize(Context()))
   inner_loop = Loop(10, DummyLoopBody())
   print(Loop(10, inner_loop).Finalize(Context()))
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

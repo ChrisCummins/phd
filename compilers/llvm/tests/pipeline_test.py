@@ -2,13 +2,12 @@
 import pathlib
 import subprocess
 
-from absl import flags
-
 from compilers.llvm import clang
 from compilers.llvm import opt
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_LlvmPipeline(tempdir: pathlib.Path):

@@ -11,32 +11,29 @@ import sys
 import tarfile
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from labm8 import crypto
 from labm8 import fs
 from labm8 import labdate
 from labm8 import pbutil
 from system.dpack.proto import dpack_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('package', None, 'The path of the target package.')
-flags.DEFINE_string('sidecar', None, 'The path of the archive sidecar.')
-flags.DEFINE_list(
+app.DEFINE_string('package', None, 'The path of the target package.')
+app.DEFINE_string('sidecar', None, 'The path of the archive sidecar.')
+app.DEFINE_list(
     'exclude', [], 'A list of patterns to exclude from the package. Supports '
     'UNIX-style globbing: *,?,[],[!].')
-flags.DEFINE_bool(
+app.DEFINE_boolean(
     'init', False, 'If set, create the package MANIFEST.pbtxt file. This will '
     'not overwrite an existing manifest file.')
-flags.DEFINE_bool(
+app.DEFINE_boolean(
     'update', False,
     'If set, update the file attributes in MANIFEST.pbtxt file. '
     'This can only be used in conjunction with --init flag. '
     'If no MANIFEST.pbtxt exists, it is created.')
-flags.DEFINE_bool('pack', False, 'If set, create the package archive.')
+app.DEFINE_boolean('pack', False, 'If set, create the package archive.')
 
 
 def _IsPackage(path: pathlib.Path) -> bool:
@@ -102,10 +99,10 @@ def GetFilesInDirectory(
   for path in sorted(fs.lsfiles(directory, recursive=True)):
     for pattern in exclude_patterns:
       if fnmatch.fnmatch(path, pattern):
-        logging.info('- %s', path)
+        app.Info('- %s', path)
         break
     else:
-      logging.info('+ %s', path)
+      app.Info('+ %s', path)
       files.append(pathlib.Path(path))
   return files
 
@@ -140,25 +137,25 @@ def DataPackageFileAttributesAreValid(package_root: pathlib.Path,
   """
   abspath = package_root / f.relative_path
   if not abspath.is_file():
-    logging.warning("'%s' has vanished", f.relative_path)
+    app.Warning("'%s' has vanished", f.relative_path)
     return False
 
   size_in_bytes = abspath.stat().st_size
   if f.size_in_bytes != size_in_bytes:
-    logging.warning("the contents of '%s' has changed", f.relative_path)
+    app.Warning("the contents of '%s' has changed", f.relative_path)
     return False
 
   hash_fn = dpack_pb2.ChecksumHash.Name(f.checksum_hash).lower()
   try:
     checksum_fn = getattr(crypto, hash_fn + '_file')
   except AttributeError:
-    logging.warning("unknown value for field checksum_hash in '%s'",
-                    f.relative_path)
+    app.Warning("unknown value for field checksum_hash in '%s'",
+                f.relative_path)
     return False
 
   checksum = checksum_fn(abspath)
   if f.checksum != checksum:
-    logging.warning(
+    app.Warning(
         "the contents of '%s' have changed but the size remains "
         "the same", f.relative_path)
     return False
@@ -244,13 +241,13 @@ def CreatePackageArchive(package_dir: pathlib.Path,
   os.chdir(package_dir.parent)
   with tarfile.open(archive_path.absolute(), 'w:bz2') as tar:
     path = os.path.join(package_dir.name, 'MANIFEST.pbtxt')
-    logging.info('+ %s', path)
+    app.Info('+ %s', path)
     tar.add(path)
     for f in manifest.file:
-      logging.info('+ %s', f.relative_path)
+      app.Info('+ %s', f.relative_path)
       path = os.path.join(package_dir.name, f.relative_path)
       tar.add(path)
-  logging.info('Created %s', archive_path.absolute())
+  app.Info('Created %s', archive_path.absolute())
 
 
 def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
@@ -283,7 +280,7 @@ def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
   sidecar.checksum_hash = dpack_pb2.SHA256
   sidecar.checksum = crypto.sha256_file(archive_path)
   pbutil.ToFile(sidecar, sidecar_path)
-  logging.info('Wrote %s', sidecar_path.absolute())
+  app.Info('Wrote %s', sidecar_path.absolute())
 
 
 def PackDataPackage(package_dir: pathlib.Path) -> None:
@@ -309,20 +306,20 @@ def InitManifest(package_dir: pathlib.Path, contents: typing.List[pathlib.Path],
   elif manifest_path.is_file():
     raise OSError('Refusing to overwrite MANIFEST.pbtxt file.')
   pbutil.ToFile(manifest, manifest_path)
-  logging.info('Wrote %s', manifest_path.absolute())
+  app.Info('Wrote %s', manifest_path.absolute())
 
 
 def VerifyManifest(package_dir: pathlib.Path) -> bool:
   """Verify that the MANIFEST.pbtext file matches the contents."""
   if not (package_dir / 'MANIFEST.pbtxt').is_file():
-    logging.info('%s/MANIFEST.pbtxt missing, nothing to do.', package_dir)
+    app.Info('%s/MANIFEST.pbtxt missing, nothing to do.', package_dir)
     return False
   manifest = pbutil.FromFile(package_dir / 'MANIFEST.pbtxt',
                              dpack_pb2.DataPackage())
   if not PackageManifestIsValid(package_dir, manifest):
-    logging.error('Package %s contains errors.', package_dir)
+    app.Error('Package %s contains errors.', package_dir)
     return False
-  logging.info('%s verified. No changes to files in the manifest.', package_dir)
+  app.Info('%s verified. No changes to files in the manifest.', package_dir)
   return True
 
 
@@ -334,13 +331,13 @@ def SidecarIsValid(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
   try:
     checksum_fn = getattr(crypto, hash_fn + '_file')
   except AttributeError:
-    logging.warning("unknown value for field checksum_hash in manifest")
+    app.Warning("unknown value for field checksum_hash in manifest")
     return False
   checksum = checksum_fn(archive)
   if sidecar_manifest.checksum != checksum:
-    logging.warning("the contents of '%s' have changed", archive.absolute())
+    app.Warning("the contents of '%s' have changed", archive.absolute())
     return False
-  logging.info('Package verified using the sidecar.')
+  app.Info('Package verified using the sidecar.')
   return True
 
 
@@ -354,7 +351,7 @@ def main(argv) -> None:
     raise app.UsageError('--package argument is required.')
 
   if FLAGS.update and not FLAGS.init:
-    logging.warning('--update flag ignored.')
+    app.Warning('--update flag ignored.')
 
   package = pathlib.Path(FLAGS.package)
 
@@ -373,4 +370,4 @@ def main(argv) -> None:
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

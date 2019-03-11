@@ -23,7 +23,7 @@ py_test(
     srcs = ["0101-unique-chars-in-string.py"],
     main = "0101-unique-chars-in-string.py",
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -47,7 +47,7 @@ py_test(
     srcs = ["0103-permutations.py"],
     main = "0103-permutations.py",
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -64,7 +64,7 @@ py_test(
     srcs = ["0104-escape-string.py"],
     main = "0104-escape-string.py",
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -102,7 +102,7 @@ py_test(
     srcs = ["0201-list-remove-dups.py"],
     main = "0201-list-remove-dups.py",
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 

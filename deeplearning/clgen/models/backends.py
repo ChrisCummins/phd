@@ -16,14 +16,14 @@
 import typing
 
 import numpy as np
-from absl import flags
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import model_pb2
+from labm8 import app
 from labm8 import cache
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class BackendBase(object):

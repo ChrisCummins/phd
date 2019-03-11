@@ -38,44 +38,39 @@ import sys
 import traceback
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import models
 from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
+from labm8 import app
 from labm8 import pbutil
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('config', None, 'Path to a clgen.Instance proto file.')
-flags.DEFINE_integer('min_samples', -1,
-                     'The minimum number of samples to make.')
-flags.DEFINE_string(
-    'stop_after', None,
-    'Stop CLgen early. Valid options are: "corpus", or "train".')
-flags.DEFINE_string(
+app.DEFINE_string('config', None, 'Path to a clgen.Instance proto file.')
+app.DEFINE_integer('min_samples', -1, 'The minimum number of samples to make.')
+app.DEFINE_string('stop_after', None,
+                  'Stop CLgen early. Valid options are: "corpus", or "train".')
+app.DEFINE_string(
     'print_cache_path', None,
     'Print the directory of a cache and exit. Valid options are: "corpus", '
     '"model", or "sampler".')
-flags.DEFINE_bool('print_preprocessed', False,
-                  'Print the pre-processed corpus to stdout and exit.')
-flags.DEFINE_string(
+app.DEFINE_boolean('print_preprocessed', False,
+                   'Print the pre-processed corpus to stdout and exit.')
+app.DEFINE_string(
     'export_model', None,
     'Path to export a trained TensorFlow model to. This exports all of the '
     'files required for sampling to specified directory. The directory can '
     'then be used as the pretrained_model field of an Instance proto config.')
-flags.DEFINE_bool(
+app.DEFINE_boolean(
     'clgen_debug', False,
     'Enable a debugging mode of CLgen python runtime. When enabled, errors '
     'which may otherwise be caught lead to program crashes and stack traces.')
-flags.DEFINE_bool('clgen_profiling', False,
-                  'Enable CLgen self profiling. Profiling results be logged.')
+app.DEFINE_boolean('clgen_profiling', False,
+                   'Enable CLgen self profiling. Profiling results be logged.')
 
 
 class Instance(object):
@@ -144,14 +139,14 @@ class Instance(object):
 
 def Flush():
   """Flush logging and stout/stderr outputs."""
-  logging.flush()
+  app.FlushLogs()
   sys.stdout.flush()
   sys.stderr.flush()
 
 
 def LogException(exception: Exception):
   """Log an error."""
-  logging.error(
+  app.Error(
       f"""\
 %s (%s)
 
@@ -176,7 +171,7 @@ def LogExceptionWithStackTrace(exception: Exception):
   NUM_ROWS = 5  # number of rows in traceback
   trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS + 1)[1:])
   message = "\n".join(_msg(*r) for r in enumerate(trace))
-  logging.error(
+  app.Error(
       """\
 %s (%s)
 
@@ -222,10 +217,10 @@ def RunWithErrorHandling(function_to_run: typing.Callable, *args,
     else:
       return RunContext()
   except app.UsageError as err:
-    # UsageError is handled by the call to app.run(), not here.
+    # UsageError is handled by the call to app.RunWithArgs(), not here.
     raise err
   except errors.UserError as err:
-    logging.error("%s (%s)", err, type(err).__name__)
+    app.Error("%s (%s)", err, type(err).__name__)
     sys.exit(1)
   except KeyboardInterrupt:
     Flush()
@@ -278,7 +273,7 @@ def DoFlagsAction():
       instance.model.corpus.Create()
     elif FLAGS.stop_after == 'train':
       instance.model.Train()
-      logging.info('Model: %s', instance.model.cache.path)
+      app.Info('Model: %s', instance.model.cache.path)
     elif FLAGS.stop_after:
       raise app.UsageError(
           f"Invalid --stop_after argument: '{FLAGS.stop_after}'")
@@ -304,4 +299,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

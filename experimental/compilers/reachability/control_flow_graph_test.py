@@ -2,12 +2,12 @@
 
 import networkx as nx
 import pytest
-from absl import flags
 
 from experimental.compilers.reachability import control_flow_graph
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_ControlFlowGraph_IsReachable_reachable():

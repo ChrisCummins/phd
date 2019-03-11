@@ -16,12 +16,12 @@
 """Unit tests for //gpu/cldrive/legacy/env.py."""
 
 import pytest
-from absl import flags
 
 from gpu.cldrive.legacy import env
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_OclgrindOpenCLEnvironment_Exec_version():

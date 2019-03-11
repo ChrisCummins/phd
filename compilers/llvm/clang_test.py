@@ -2,12 +2,12 @@
 import pathlib
 
 import pytest
-from absl import flags
 
 from compilers.llvm import clang
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def _StripPreprocessorLines(out: str):

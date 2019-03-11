@@ -9,15 +9,11 @@ import csv
 import json
 import sys
 
-from absl import app
-from absl import flags
+from labm8 import app
 
+FLAGS = app.FLAGS
 
-FLAGS = flags.FLAGS
-
-flags.DEFINE_string(
-    'input_json', None,
-    'Path of the HotCRP JSON file to read.')
+app.DEFINE_string('input_json', None, 'Path of the HotCRP JSON file to read.')
 
 
 def ReadJsonFromPath(path):
@@ -41,7 +37,11 @@ def JsonToCsv(data, output_fp, paper_type="Full Paper") -> None:
     primary_email = paper['authors'][0]['email']
     emails_str = ';'.join(a.get('email', '') for a in paper['authors'][1:])
     writer.writerow([
-      paper_type, paper['title'], authors_str, primary_email, emails_str,
+        paper_type,
+        paper['title'],
+        authors_str,
+        primary_email,
+        emails_str,
     ])
 
 
@@ -55,4 +55,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

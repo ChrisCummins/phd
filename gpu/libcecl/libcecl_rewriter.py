@@ -19,18 +19,15 @@ import collections
 import pathlib
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from labm8 import fs
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_list('opencl_rewrite_paths', [],
-                  'A list of paths to rewrite using libcecl.')
-flags.DEFINE_list('libcecl_rewrite_paths', [],
-                  'A list of paths to rewrite using OpenCL.')
+app.DEFINE_list('opencl_rewrite_paths', [],
+                'A list of paths to rewrite using libcecl.')
+app.DEFINE_list('libcecl_rewrite_paths', [],
+                'A list of paths to rewrite using OpenCL.')
 
 Rewrite = collections.namedtuple('Rewrite', ('opencl', 'libcecl'))
 
@@ -116,13 +113,13 @@ def main(argv):
 
   for path in FLAGS.opencl_rewrite_paths:
     for path in GetFilesToRewriteFromPath(pathlib.Path(path)):
-      logging.info('%s', path)
+      app.Info('%s', path)
       RewriteOpenClFileInPlace(path)
   for path in FLAGS.libcecl_rewrite_paths:
     for path in GetFilesToRewriteFromPath(pathlib.Path(path)):
-      logging.info('%s', path)
+      app.Info('%s', path)
       RewriteLibceclFileInPlace(path)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -2,10 +2,6 @@
 import math
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from compilers.clsmith import clsmith
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.generators import generator
@@ -13,9 +9,10 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
+from labm8 import app
 from labm8 import labdate
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def ConfigToGenerator(
@@ -50,7 +47,7 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
       for i in range(num_programs):
         response.testcases.extend(
             self.SourceToTestcases(*self.GenerateOneSource()))
-        logging.info('Generated file %d.', i + 1)
+        app.Info('Generated file %d.', i + 1)
     except clsmith.CLSmithError as e:
       response.status.returncode = service_pb2.ServiceStatus.ERROR
       response.status.error_message = str(e)
@@ -86,4 +83,4 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
 
 
 if __name__ == '__main__':
-  app.run(ClsmithGenerator.Main(generator_pb2.ClsmithGenerator))
+  app.RunWithArgs(ClsmithGenerator.Main(generator_pb2.ClsmithGenerator))

@@ -8,9 +8,9 @@ import pytest
 
 from labm8 import bazelutil
 from labm8 import test
-from absl import flags
-FLAGS = flags.FLAGS
 
+from labm8 import app
+FLAGS = app.FLAGS
 
 # The path of the configure script.
 CONFIG_SCRIPT = bazelutil.DataPath('phd/configure')

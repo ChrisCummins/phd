@@ -3,15 +3,15 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import \
   models
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='session')

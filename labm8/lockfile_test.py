@@ -3,15 +3,15 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import fs
 from labm8 import lockfile
 from labm8 import pbutil
 from labm8 import test
 from labm8.proto import lockfile_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

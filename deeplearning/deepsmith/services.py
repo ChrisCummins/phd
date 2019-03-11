@@ -2,14 +2,12 @@ import pathlib
 import socket
 
 import grpc
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith.proto import service_pb2
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class ServiceBase(object):
@@ -35,8 +33,8 @@ def AssertLocalServiceHostname(service_config: service_pb2.ServiceConfig):
 
 def AssertResponseStatus(status: service_pb2.ServiceStatus):
   if status.returncode != service_pb2.ServiceStatus.SUCCESS:
-    logging.fatal('Error! %s responded with status %s: %s', status.client,
-                  status.returncode, status.error_message)
+    app.Fatal('Error! %s responded with status %s: %s', status.client,
+              status.returncode, status.error_message)
 
 
 def BuildDefaultRequest(cls) -> pbutil.ProtocolBuffer:
@@ -69,5 +67,5 @@ def GetServiceStub(service_config: service_pb2.ServiceConfig, service_stub_cls):
              f'{service_config.service.port}')
   channel = grpc.insecure_channel(address)
   stub = service_stub_cls(channel)
-  logging.info(f'Connected to {service_stub_cls.__name__} at {address}')
+  app.Info(f'Connected to {service_stub_cls.__name__} at {address}')
   return stub

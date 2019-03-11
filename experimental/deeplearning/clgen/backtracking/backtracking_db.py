@@ -4,13 +4,13 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
-from absl import flags
 from sqlalchemy.ext import declarative
 
+from labm8 import app
 from labm8 import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
 

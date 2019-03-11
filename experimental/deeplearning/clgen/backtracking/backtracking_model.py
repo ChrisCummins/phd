@@ -10,8 +10,6 @@ import typing
 
 import numpy as np
 import scipy
-from absl import flags
-from absl import logging
 
 from deeplearning.clgen import errors as clgen_errors
 from deeplearning.clgen import samplers
@@ -22,35 +20,35 @@ from deeplearning.clgen.preprocessors import opencl
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import app
 from labm8 import labdate
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_integer(
-    'experimental_clgen_backtracking_max_attempts', 1000,
-    'The maximum number of attempts to make when backtracking.')
-flags.DEFINE_integer(
+app.DEFINE_integer('experimental_clgen_backtracking_max_attempts', 1000,
+                   'The maximum number of attempts to make when backtracking.')
+app.DEFINE_integer(
     'experimental_clgen_backtracking_max_steps', 10000,
     'The maximum number of checkpoints to make when backtracking.')
-flags.DEFINE_float(
+app.DEFINE_float(
     'experimental_clgen_backtracking_reject_no_progress_probability', 0.5,
     'The probability that a step which does not improve feature distance is '
     'rejected. A higher value means that a larger fraction of steps must '
     'directly contribute towards an improved feature distance.')
-flags.DEFINE_bool(
+app.DEFINE_boolean(
     'experimental_clgen_backtracking_lstm_state', False,
     'If set, restore LSTM state tuples during backtracking. '
     'Else re-seed model.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'experimental_clgen_backtracking_target_features', None,
     'A comma-separated list of four target feature values. If not set, no '
     'target features are used.')
-flags.DEFINE_float(
+app.DEFINE_float(
     'experimental_clgen_backtracking_max_feature_distance', 0.1,
     'Maximum difference between current and target features before sampling '
     'may terminate.')
-flags.DEFINE_float(
+app.DEFINE_float(
     'experimental_clgen_backtracking_max_norm_feature_distance', 0.01,
     'Maximum difference between current and target features before sampling '
     'may terminate. The value is normalized to the starting difference, were '
@@ -145,19 +143,19 @@ class OpenClBacktrackingHelper(object):
     if self._target_features is not None:
       new_feature_distance = scipy.spatial.distance.euclidean(
           features, self._target_features)
-      logging.info('Features: %s, distance=%f, norm=%f, delta=%f', features,
-                   new_feature_distance,
-                   new_feature_distance / self._init_feature_distance,
-                   new_feature_distance - self._previous_feature_distance)
+      app.Info('Features: %s, distance=%f, norm=%f, delta=%f', features,
+               new_feature_distance,
+               new_feature_distance / self._init_feature_distance,
+               new_feature_distance - self._previous_feature_distance)
       if new_feature_distance > self._previous_feature_distance:
         # This will only happen once feature values are great than target
         # feature values.
-        logging.info("Rejecting candidate because of positive feature delta")
+        app.Info("Rejecting candidate because of positive feature delta")
         return False
       if (new_feature_distance == self._previous_feature_distance and
           random.random() >
           FLAGS.experimental_clgen_backtracking_reject_no_progress_probability):
-        logging.info("Randomly rejecting candidate with no progress")
+        app.Info("Randomly rejecting candidate with no progress")
         return False
       self._previous_features = features
       self._previous_src = candidate_src
@@ -257,7 +255,7 @@ class BacktrackingModel(models.Model):
           FLAGS.experimental_clgen_backtracking_target_features,
           dtype=int,
           sep=',')
-      logging.info("Using target features %s", self._target_features)
+      app.Info("Using target features %s", self._target_features)
       assert self._target_features.shape == (4,)
 
   def SamplerCache(self, s: samplers.Sampler) -> pathlib.Path:

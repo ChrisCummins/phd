@@ -1,28 +1,24 @@
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
-flags.DEFINE_string('generator_config', None,
-                    'Path to a ClgenGenerator message.')
-flags.DEFINE_integer(
+app.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
+app.DEFINE_string('generator_config', None, 'Path to a ClgenGenerator message.')
+app.DEFINE_integer(
     'target_total_testcases', -1,
     'The number of testcases to generate. Testcases already in the datastore '
     'contribute towards this total. If --target_total_testcases is negative, '
     'testcases are generated indefinitely.')
-flags.DEFINE_integer('generator_batch_size', 1000,
-                     'The number of testcases to generate in each batch.')
+app.DEFINE_integer('generator_batch_size', 1000,
+                   'The number of testcases to generate in each batch.')
 
 
 def GetGeneratorCapabilities(
@@ -53,13 +49,13 @@ def GetNumberOfTestcasesInDataStore(
 def GenerateTestcases(
     generator_stub: generator_pb2_grpc.GeneratorServiceStub,
     num_to_generate: int) -> typing.List[deepsmith_pb2.Testcase]:
-  logging.info(f'Generating batch of {num_to_generate} testcases')
+  app.Info(f'Generating batch of {num_to_generate} testcases')
   request = services.BuildDefaultRequest(generator_pb2.GenerateTestcasesRequest)
   response = generator_stub.GenerateTestcases(request)
   services.AssertResponseStatus(response.status)
   num_generated = len(response.testcases)
   if num_generated != num_to_generate:
-    logging.warning(
+    app.Warning(
         f'Requested {num_to_generate} testcases, received {num_generated}')
   return response.testcases
 
@@ -94,10 +90,10 @@ def main(argv):
   while True:
     num_testcases = GetNumberOfTestcasesInDataStore(datastore_stub,
                                                     capabilities)
-    logging.info(f'Number of testcases in datastore: %d', num_testcases)
+    app.Info(f'Number of testcases in datastore: %d', num_testcases)
     if 0 <= target_total_testcases <= num_testcases:
-      logging.info('Stopping generation with %d testcases in the DataStore.',
-                   num_testcases)
+      app.Info('Stopping generation with %d testcases in the DataStore.',
+               num_testcases)
       break
 
     num_to_generate = generator_batch_size
@@ -110,4 +106,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

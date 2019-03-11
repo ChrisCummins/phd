@@ -1,12 +1,10 @@
-from absl import app
-from absl import flags
-
 from deeplearning.clgen import clgen
 from deeplearning.deepsmith.generators import clgen_pretrained
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
 
 def ClgenInstanceToGenerator(
@@ -33,4 +31,4 @@ class ClgenGenerator(clgen_pretrained.ClgenGenerator):
 
 
 if __name__ == '__main__':
-  app.run(ClgenGenerator.Main(generator_pb2.ClgenGenerator))
+  app.RunWithArgs(ClgenGenerator.Main(generator_pb2.ClgenGenerator))

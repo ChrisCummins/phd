@@ -4,19 +4,17 @@ import pathlib
 import typing
 
 import MySQLdb
-from absl import app
-from absl import flags
-from absl import logging
 
 from experimental.deeplearning.fish.proto import fish_pb2
+from labm8 import app
 from labm8 import fs
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('export_path', None,
-                    'Directory to write training dataset to.')
+app.DEFINE_string('export_path', None,
+                  'Directory to write training dataset to.')
 
 
 def _SetIf(out: typing.Dict[str, typing.Any],
@@ -36,7 +34,7 @@ def ExportOpenCLResults(cursor, start_id, proto_dir):
   batch_size = 1000
   result_id = start_id
   while True:
-    logging.info('Exporting batch of %s results', humanize.Commas(batch_size))
+    app.Info('Exporting batch of %s results', humanize.Commas(batch_size))
     cursor.execute(
         """
 SELECT
@@ -111,7 +109,7 @@ def main(argv):
   for key in fish_pb2.CompilerCrashDiscriminatorTrainingExample.Outcome.keys():
     (export_path / key.lower()).mkdir(parents=True, exist_ok=True)
 
-  logging.info('Connecting to MySQL database')
+  app.Info('Connecting to MySQL database')
   credentials = GetMySqlCredentials()
   cnx = MySQLdb.connect(
       database='dsmith_04_opencl',
@@ -119,19 +117,19 @@ def main(argv):
       user=credentials[0],
       password=credentials[1])
   cursor = cnx.cursor()
-  logging.info('Determining last export ID')
+  app.Info('Determining last export ID')
   ids = sorted([
       int(pathlib.Path(f).stem)
       for f in fs.lsfiles(export_path, recursive=True, abspaths=True)
   ])
   last_export_id = ids[-1] if ids else 0
-  logging.info('Exporting results from ID %s', last_export_id)
+  app.Info('Exporting results from ID %s', last_export_id)
   ExportOpenCLResults(cursor, last_export_id, export_path)
   cursor.close()
   cnx.close()
-  logging.info('Exported training set of %s files to %s',
-               humanize.Commas(len(list(export_path.iterdir()))), export_path)
+  app.Info('Exported training set of %s files to %s',
+           humanize.Commas(len(list(export_path.iterdir()))), export_path)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

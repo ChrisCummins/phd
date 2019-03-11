@@ -6,9 +6,9 @@ import tempfile
 import typing
 import zipfile
 
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class UnsupportedArchiveFormat(ValueError):

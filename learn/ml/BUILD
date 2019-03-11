@@ -3,6 +3,6 @@ py_test(
     size = "small",
     srcs = ["batch_linear_regression.py"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )

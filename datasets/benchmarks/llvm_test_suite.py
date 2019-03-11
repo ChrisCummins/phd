@@ -4,12 +4,11 @@ See: https://llvm.org/docs/TestingGuide.html#test-suite-overview
 """
 import typing
 
-from absl import flags
-
 from datasets.benchmarks.proto import benchmarks_pb2
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class _SingleSource_Benchmarks_McGill(object):

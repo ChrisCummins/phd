@@ -4,15 +4,14 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
-from absl import logging
 
+from labm8 import app
 from labm8 import labdate
 from labm8 import logutil
 from labm8 import test
 from labm8.proto import logging_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_ABSL_LOGGING_PREFIX_RE_match():
@@ -173,11 +172,11 @@ def test_TeeLogsToFile(capsys):
   """Test that StartTeeLogs also logs to file, and StopTeeLogs prevents that."""
   with tempfile.TemporaryDirectory() as d:
     FLAGS.logtostderr = True
-    logging.info('This is not going in a file')
+    app.Info('This is not going in a file')
     logutil.StartTeeLogsToFile('test', d)
-    logging.info('Hello, file!')
+    app.Info('Hello, file!')
     logutil.StopTeeLogsToFile()
-    logging.info('This is not going in a file')
+    app.Info('This is not going in a file')
     # Test file contents.
     with open(pathlib.Path(d) / 'test.INFO') as f:
       lines = f.read().rstrip().split('\n')
@@ -197,10 +196,10 @@ def test_TeeLogsToFile_contextmanager(capsys):
   """Test that contextmanager temporarily also logs to file."""
   with tempfile.TemporaryDirectory() as d:
     FLAGS.logtostderr = True
-    logging.info('This is not going in a file')
+    app.Info('This is not going in a file')
     with logutil.TeeLogsToFile('test', d):
-      logging.info('Hello, file!')
-    logging.info('This is not going in a file')
+      app.Info('Hello, file!')
+    app.Info('This is not going in a file')
     # Test file contents.
     with open(pathlib.Path(d) / 'test.INFO') as f:
       lines = f.read().rstrip().split('\n')

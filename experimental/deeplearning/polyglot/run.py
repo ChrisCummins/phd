@@ -4,28 +4,25 @@ import pathlib
 import random
 import time
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
+from labm8 import app
 from labm8 import crypto
 from labm8 import humanize
 from labm8 import lockfile
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'output_corpus_size', 10000,
     'The minimum number of samples to generate in the output'
     'corpus.')
-flags.DEFINE_string('instances', None, 'Path to a clgen.Instances proto')
+app.DEFINE_string('instances', None, 'Path to a clgen.Instances proto')
 
 # A mapping from language name to a list of CLgen pre-processor functions.
 # These pre-processors are used as rejection samplers on the sample corpuses.
@@ -38,28 +35,28 @@ POSTPROCESSORS = {
 def IsEligible(instance: clgen.Instance) -> bool:
   """Return whether an instance is eligible for training or sampling."""
   if instance.model.corpus.is_locked:
-    logging.info('Corpus is locked')
+    app.Info('Corpus is locked')
     return False
   if instance.model.training_lock.islocked:
-    logging.info('Model is locked')
+    app.Info('Model is locked')
     return False
   sample_dir = instance.model.SamplerCache(instance.sampler)
   sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
   if sample_lock.islocked:
-    logging.info('Sampler is locked')
+    app.Info('Sampler is locked')
     return False
   return True
 
 
 def SampleModel(instance: clgen.Instance) -> None:
   """Take --output_corpus_size samples from model."""
-  logging.info('Training and sampling the CLgen model ...')
+  app.Info('Training and sampling the CLgen model ...')
   target_samples = FLAGS.output_corpus_size
   sample_dir = instance.model.SamplerCache(instance.sampler)
   sample_dir.mkdir(exist_ok=True)
   num_samples = len(list(sample_dir.iterdir()))
-  logging.info('Need to generate %d samples in %s',
-               max(target_samples - num_samples, 0), sample_dir)
+  app.Info('Need to generate %d samples in %s',
+           max(target_samples - num_samples, 0), sample_dir)
   if num_samples < target_samples:
     sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
     with sample_lock.acquire(replace_stale=True, block=True):
@@ -80,14 +77,14 @@ def PostprocessSampleCorpus(instance: clgen.Instance):
   # Read the sample protos and write them to a directory of content files.
   contentfiles_dir = pathlib.Path(str(sample_dir) + '.contentfiles')
   contentfiles_dir.mkdir(exist_ok=True)
-  logging.info('Writing output contentfiles to %s', contentfiles_dir)
+  app.Info('Writing output contentfiles to %s', contentfiles_dir)
   if len(list(contentfiles_dir.iterdir())) != len(list(sample_dir.iterdir())):
     for proto_path in sample_dir.iterdir():
       sample = pbutil.FromFile(proto_path, model_pb2.Sample())
       with open(contentfiles_dir / proto_path.name, 'w') as f:
         f.write(sample.text)
 
-  logging.info('Creating output corpus')
+  app.Info('Creating output corpus')
   output_corpus_config = corpus_pb2.Corpus()
   output_corpus_config.CopyFrom(instance.model.corpus.config)
   output_corpus_config.local_directory = str(contentfiles_dir)
@@ -118,23 +115,23 @@ def main(argv):
   ]
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)
-  logging.info('Loaded %d instances in %s ms', len(candidate_instances),
-               humanize.Commas(int((time.time() - start_time) * 1000)))
+  app.Info('Loaded %d instances in %s ms', len(candidate_instances),
+           humanize.Commas(int((time.time() - start_time) * 1000)))
 
   while candidate_instances:
     instance = candidate_instances.popleft()
     with instance.Session():
       if IsEligible(instance):
-        logging.info('Found an eligible candidate to work on')
+        app.Info('Found an eligible candidate to work on')
         SampleModel(instance)
         PostprocessSampleCorpus(instance)
       else:
-        logging.info('Candidate is ineligible')
+        app.Info('Candidate is ineligible')
         candidate_instances.append(instance)
         time.sleep(1)
 
-  logging.info('Done.')
+  app.Info('Done.')
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

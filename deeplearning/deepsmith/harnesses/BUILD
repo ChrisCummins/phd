@@ -28,12 +28,12 @@ py_binary(
         "//gpu/cldrive/legacy:driver",
         "//gpu/cldrive/legacy:env",
         "//gpu/oclgrind",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:fs",
         "//labm8:labdate",
         "//labm8:pbutil",
         "//labm8:system",
-        "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],
 )
@@ -47,8 +47,8 @@ py_test(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//gpu/oclgrind",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -71,7 +71,7 @@ py3_image(
 #     deps = [
 #         ":cldrive",
 #         "//labm8:test",
-#         "//third_party/py/absl",
+#         "//labm8:app",
 #     ],
 # )
 
@@ -86,8 +86,8 @@ py_binary(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//gpu/cldrive/legacy:driver",
         "//gpu/cldrive/legacy:env",
+        "//labm8:app",
         "//labm8:labdate",
-        "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],
 )
@@ -101,8 +101,8 @@ py_test(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
         "//gpu/cldrive/legacy:env",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 

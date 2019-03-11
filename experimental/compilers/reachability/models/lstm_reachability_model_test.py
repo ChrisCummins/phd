@@ -3,14 +3,14 @@ import pathlib
 
 import pandas as pd
 import pytest
-from absl import flags
 
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import control_flow_graph
 from experimental.compilers.reachability.models import lstm_reachability_model
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='module')

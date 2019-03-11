@@ -5,9 +5,9 @@ py_library(
     srcs = ["grewe_features_db.py"],
     visibility = ["//experimental/deeplearning/clgen:__subpackages__"],
     deps = [
+        "//labm8:app",
         "//labm8:sqlutil",
         "//research/grewe_2013_cgo:feature_extractor",
-        "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
     ],

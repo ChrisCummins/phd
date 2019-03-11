@@ -1,14 +1,14 @@
 """Unit tests for //gpu/cldrive:api."""
 import pytest
-from absl import flags
 
 from gpu.cldrive import api
 from gpu.cldrive.legacy import env
 from gpu.cldrive.proto import cldrive_pb2
 from gpu.clinfo.proto import clinfo_pb2
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def _MakeInstance(device, src, num_runs: int = 1, dynamic_params=[

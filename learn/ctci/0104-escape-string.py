@@ -1,4 +1,4 @@
-from absl import app
+from labm8 import app
 
 
 # Exercise 1.4:
@@ -59,4 +59,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-  app.run(main)
+  app.RunWithArgs(main)

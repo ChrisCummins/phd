@@ -4,13 +4,12 @@ NOTE: this code has been librified and moved into //labm8:ppar.
 """
 import subprocess
 
-from absl import flags
-
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
 from learn.python import cpp_interop_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Paths of the C++ binaries to be tested.
 CPP_INTEROP_BIN = bazelutil.DataPath('phd/learn/python/cpp_interop_bin')

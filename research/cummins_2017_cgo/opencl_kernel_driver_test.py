@@ -1,12 +1,12 @@
 """Unit tests for //research/cummins_2017_cgo:opencl_kernel_driver."""
 import pytest
-from absl import flags
 
 from gpu.cldrive.legacy import env as cldrive_env
+from labm8 import app
 from labm8 import test
 from research.cummins_2017_cgo import opencl_kernel_driver
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

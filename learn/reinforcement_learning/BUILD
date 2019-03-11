@@ -4,7 +4,7 @@ py_binary(
     name = "monte_carlo_control_blackjack",
     srcs = ["monte_carlo_control_blackjack.py"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/gym",
     ],
 )
@@ -14,7 +14,7 @@ py_binary(
     srcs = ["//notebooks"],
     deps = [
         ":monte_carlo_control_blackjack",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/jupyter",
     ],
 )

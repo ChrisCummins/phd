@@ -28,7 +28,6 @@ import re
 import numpy as np
 import tensorflow as tf
 import umap
-from absl import flags
 from bokeh.models import CategoricalColorMapper, ColumnDataSource
 from bokeh.palettes import Category20
 from bokeh.plotting import figure, output_file, show
@@ -37,8 +36,9 @@ from sklearn.manifold import TSNE
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_analogygen as analogygen
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 ########################################################################################################################

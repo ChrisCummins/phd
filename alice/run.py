@@ -7,21 +7,20 @@ import sys
 import time
 
 import grpc
-from absl import app
-from absl import flags
 
 from alice import alice_pb2
 from alice import alice_pb2_grpc
 from alice import git_repo
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('phd', str(pathlib.Path("~/phd").expanduser()), 'Path.')
-flags.DEFINE_string('ledger', 'localhost:5088', 'Ledger URL.')
-flags.DEFINE_string('target', '', 'Target')
-flags.DEFINE_list('bazel_args', [], 'Bazel args')
-flags.DEFINE_list('bin_args', [], 'Binary args')
-flags.DEFINE_integer('timeout_seconds', None, 'Timeout.')
+app.DEFINE_string('phd', str(pathlib.Path("~/phd").expanduser()), 'Path.')
+app.DEFINE_string('ledger', 'localhost:5088', 'Ledger URL.')
+app.DEFINE_string('target', '', 'Target')
+app.DEFINE_list('bazel_args', [], 'Bazel args')
+app.DEFINE_list('bin_args', [], 'Binary args')
+app.DEFINE_integer('timeout_seconds', None, 'Timeout.')
 
 
 def SummarizeJobStatus(ledger: alice_pb2.LedgerEntry):
@@ -67,4 +66,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

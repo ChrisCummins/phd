@@ -7,14 +7,13 @@ import typing
 
 import gym
 import numpy as np
-from absl import app
-from absl import flags
-from absl import logging
 
-FLAGS = flags.FLAGS
+from labm8 import app
 
-flags.DEFINE_integer('num_episodes', 10000, 'The number of episodes to run.')
-flags.DEFINE_bool(
+FLAGS = app.FLAGS
+
+app.DEFINE_integer('num_episodes', 10000, 'The number of episodes to run.')
+app.DEFINE_boolean(
     'casino_blackjack_reward', True,
     'If True, the reward for a natural hand (an Ace and a 10 or face card) is '
     '1.5. Else the reward for the natural hand is the same as for a winning '
@@ -102,7 +101,7 @@ class MonteCarloControlBlackjack(object):
     for i in range(n):
       self.num_episodes += 1
       episode = self.GetAnEpisode()
-      logging.debug(
+      app.Debug(
           'Episode %d, steps = %d, final_score = %02d:%02d, reward = %.1f', i,
           len(episode), episode[-1].observation.player_score,
           episode[-1].observation.dealer_score, episode[-1].reward)
@@ -147,4 +146,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

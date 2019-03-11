@@ -1,11 +1,10 @@
 """Integration tests for HealthKit import to me_db."""
 
-from absl import flags
-
 from datasets.me_db import me_db
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # These tests have been hardcoded to the values in the test_inbox dataset.
 

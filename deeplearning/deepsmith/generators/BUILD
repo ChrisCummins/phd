@@ -15,7 +15,7 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -29,7 +29,7 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/grpcio",
     ],
 )
@@ -54,8 +54,8 @@ py_binary(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
-        "//third_party/py/absl",
     ],
 )
 
@@ -64,8 +64,8 @@ py_test(
     srcs = ["clsmith_test.py"],
     deps = [
         ":clsmith",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -81,9 +81,9 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],
 )
@@ -95,8 +95,8 @@ py_library(
     deps = [
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],
 )
@@ -110,9 +110,9 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],
 )

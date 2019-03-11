@@ -1,13 +1,12 @@
 """Unit tests for //experimental/compilers/random_opt/implementation.py."""
 import pathlib
 
-from absl import flags
-
 from compilers.llvm import clang
 from experimental.compilers.random_opt import implementation
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_BytecodesAreEqual(tempdir: pathlib.Path):

@@ -1,13 +1,13 @@
 """Unit tests for //deeplearning/deepsmith/difftests/difftests.py."""
 
 import pytest
-from absl import flags
 
 import deeplearning.deepsmith.difftests.difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 DiffTest = deepsmith_pb2.DifferentialTest
 Result = deepsmith_pb2.Result

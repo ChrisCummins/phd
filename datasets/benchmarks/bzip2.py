@@ -3,17 +3,14 @@ import subprocess
 import sys
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from datasets.benchmarks.proto import benchmarks_pb2
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_integer('bzip2_timeout_seconds', 60,
-                     'The maximum number of seconds to allow process to run.')
+app.DEFINE_integer('bzip2_timeout_seconds', 60,
+                   'The maximum number of seconds to allow process to run.')
 
 # Path to bzip2.
 BZIP2 = bazelutil.DataPath('bzip2/bzip2')
@@ -54,7 +51,7 @@ def Exec(data: str, args: typing.List[str],
     A Popen instance with stdout and stderr set to strings.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(BZIP2)] + args
-  logging.debug('$ %s', ' '.join(cmd))
+  app.Debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,
@@ -96,4 +93,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

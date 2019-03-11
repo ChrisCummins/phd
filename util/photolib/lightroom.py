@@ -4,8 +4,6 @@ import os
 import typing
 
 import sqlalchemy as sql
-from absl import flags
-from absl import logging
 from libxmp import utils as xmputils
 from sqlalchemy import Binary
 from sqlalchemy import Column
@@ -16,9 +14,10 @@ from sqlalchemy import String
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
+from labm8 import app
 from util.photolib import common
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
@@ -71,7 +70,7 @@ def InitializeKeywordsCache(workspace_abspath: str) -> None:
   os.makedirs(cache_dir, exist_ok=True)
   path = os.path.join(cache_dir, "keywords.db")
   uri = f"sqlite:///{path}"
-  logging.debug("Keywords cache %s", uri)
+  app.Debug("Keywords cache %s", uri)
 
   ENGINE = sql.create_engine(uri, encoding="utf-8")
 
@@ -140,7 +139,7 @@ def _ReadKeywordsFromFile(abspath: str) -> typing.Set[str]:
     keywords = set([e[1] for e in lrtags if e[1]])
     return keywords
   except KeyError:
-    logging.error(abspath)
+    app.Error(abspath)
     return set()
 
 
@@ -164,16 +163,16 @@ def GetLightroomKeywords(abspath: str, relpath: str) -> typing.Set[str]:
     .first()
 
   if entry and entry.mtime == mtime:
-    # logging.debug("keywords cache hit %s", relpath)
+    # app.Debug("keywords cache hit %s", relpath)
     keywords = set(entry.keywords.keywords.split(","))
   elif entry and entry.mtime != mtime and not abspath.endswith('.mov'):
     SESSION.delete(entry)
     keywords = _ReadKeywordsFromFile(abspath)
     _AddKeywordsToCache(relpath_md5, mtime, keywords)
-    logging.debug("refreshed keywords cache %s", relpath)
+    app.Debug("refreshed keywords cache %s", relpath)
   else:
     keywords = _ReadKeywordsFromFile(abspath)
     _AddKeywordsToCache(relpath_md5, mtime, keywords)
-    logging.debug("cached keywords %s", relpath)
+    app.Debug("cached keywords %s", relpath)
 
   return keywords

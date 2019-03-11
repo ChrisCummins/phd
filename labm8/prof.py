@@ -9,8 +9,7 @@ import sys
 import time
 import typing
 
-from absl import logging
-
+from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import labtypes
@@ -132,8 +131,7 @@ def timers():
 
 
 @contextlib.contextmanager
-def Profile(name: str = '',
-            print_to: typing.Callable[[str], None] = logging.debug):
+def Profile(name: str = '', print_to: typing.Callable[[str], None] = app.Debug):
   """A context manager which prints the elapsed time upon exit.
 
   Args:

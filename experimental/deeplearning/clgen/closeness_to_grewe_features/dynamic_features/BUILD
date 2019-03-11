@@ -6,9 +6,9 @@ py_binary(
         "//gpu/cldrive:api",
         "//gpu/cldrive/legacy:env",
         "//gpu/cldrive/proto:cldrive_py_pb2",
+        "//labm8:app",
         "//labm8:system",
         "//labm8:text",
         "//research/cummins_2017_cgo:opencl_kernel_driver",
-        "//third_party/py/absl",
     ],
 )

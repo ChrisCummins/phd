@@ -21,8 +21,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:labdate",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
     ],
 )
@@ -32,8 +32,8 @@ py_test(
     srcs = ["atomizers_test.py"],
     deps = [
         ":atomizers",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -49,13 +49,13 @@ py_library(
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:crypto",
         "//labm8:hashcache",
         "//labm8:humanize",
         "//labm8:lockfile",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/checksumdir",
         "//third_party/py/numpy",
         "//third_party/py/sqlalchemy",
@@ -73,9 +73,9 @@ py_test(
         "//deeplearning/clgen/preprocessors:cxx",
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//labm8:app",
         "//labm8:fs",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -87,9 +87,9 @@ py_library(
         ":preprocessed",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
+        "//labm8:app",
         "//labm8:humanize",
         "//labm8:sqlutil",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
@@ -104,8 +104,8 @@ py_test(
         ":encoded",
         ":preprocessed",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -117,10 +117,10 @@ py_library(
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:fs",
         "//labm8:sqlutil",
-        "//third_party/py/absl",
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],

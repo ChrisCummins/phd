@@ -13,22 +13,20 @@ Usage:
 import os
 import typing
 
-from absl import app
-from absl import flags
-
 from deeplearning.clgen import samplers
 from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.backtracking import backtracking_model
 from experimental.deeplearning.clgen.backtracking.logger import \
   BacktrackingDatabaseLogger
+from labm8 import app
 from research.cummins_2017_cgo import generative_model
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'db', 'sqlite:///tmp/phd/experimental/deplearning/clgen/backtracking/db.db',
     'URL of the database for backtracking.')
-flags.DEFINE_integer('sample_seed', 0, 'Random seed.')
+app.DEFINE_integer('sample_seed', 0, 'Random seed.')
 
 
 def main(argv: typing.List[str]):
@@ -49,4 +47,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

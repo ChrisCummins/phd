@@ -29,7 +29,8 @@ import typing
 import zipfile
 
 import wget
-from absl import logging
+
+from labm8 import app
 
 # Datasets and their URLs.
 DATASETS = {
@@ -79,9 +80,9 @@ def DownloadAndUnzip(url, data_folder, delete_after_download: bool = True):
     delete_after_download: If True, delete the file after downloading and
       unzipping.
   """
-  logging.info('Downloading dataset from %s', url)
+  app.Info('Downloading dataset from %s', url)
   data_zip = wget.download(url, out=str(data_folder))
-  logging.info('Unzipping %s to %s', data_zip, data_folder)
+  app.Info('Unzipping %s to %s', data_zip, data_folder)
   with zipfile.ZipFile(data_zip, 'r') as f:
     f.extractall(path=data_folder)
   # Delete the zip.

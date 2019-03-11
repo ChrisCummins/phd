@@ -35,8 +35,8 @@ py_library(
         "//compilers/llvm",
         "//compilers/llvm:clang_format",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -45,8 +45,8 @@ py_test(
     srcs = ["clang_test.py"],
     deps = [
         ":clang",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -282,7 +282,7 @@ py_library(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -292,8 +292,8 @@ py_test(
     deps = [
         ":common",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -314,8 +314,8 @@ py_library(
         ":normalizer",
         ":public",
         "//compilers/llvm:clang",
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -325,8 +325,8 @@ py_test(
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -341,7 +341,7 @@ py_test(
 #         ":cxx",
 #         "//deeplearning/clgen:errors",
 #         "//labm8:test",
-#         "//third_party/py/absl",
+#         "//labm8:app",
 #     ],
 # )
 
@@ -354,8 +354,8 @@ py_library(
         ":clang",
         ":public",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -365,8 +365,8 @@ py_test(
     deps = [
         ":java",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -402,8 +402,8 @@ py_library(
     ],
     deps = [
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -413,8 +413,8 @@ py_test(
     deps = [
         ":normalizer",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -443,9 +443,9 @@ py_test(
         ":clang",
         ":opencl",
         "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -468,7 +468,7 @@ py_library(
         ":public",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:internal_py_pb2",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -480,8 +480,8 @@ py_test(
         ":public",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -490,7 +490,7 @@ py_library(
     srcs = ["public.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -500,7 +500,7 @@ py_test(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

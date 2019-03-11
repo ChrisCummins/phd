@@ -16,13 +16,13 @@
 import typing
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # A full preprocessing pipeline for the C++ programming language.
 CXX_PREPROCESSORS = [

@@ -2,13 +2,13 @@
 
 import numpy as np
 import pytest
-from absl import flags
 
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_SetFunctionName_name_not_changed():

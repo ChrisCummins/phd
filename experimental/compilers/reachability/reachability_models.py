@@ -4,12 +4,12 @@ import collections
 import typing
 
 import numpy as np
-from absl import flags
 from graph_nets import utils_tf as graph_net_utils_tf
 
 from experimental.compilers.reachability import control_flow_graph as cfg
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 TargetGraphSpec = collections.namedtuple('TargetGraphSpec',
                                          ['graph', 'target_node_index'])

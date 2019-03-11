@@ -17,8 +17,6 @@ import pathlib
 import typing
 
 import numpy as np
-from absl import flags
-from absl import logging
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
@@ -28,12 +26,13 @@ from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
+from labm8 import app
 from labm8 import cache
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class PreTrainedModel(object):
@@ -140,7 +139,7 @@ class PreTrainedModel(object):
       # Complete sampling. Note that sample_count starts at 1.
       if sample_count > min_num_samples:
         now = labdate.MillisecondsTimestamp()
-        logging.info(
+        app.Info(
             'Produced %s samples at a rate of %s ms / sample.',
             humanize.Commas(sample_count - 1),
             humanize.Commas(

@@ -2,14 +2,14 @@
 import numpy as np
 import pandas as pd
 import pytest
-from absl import flags
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import lda
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import testlib
 from experimental.compilers.reachability import llvm_util
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

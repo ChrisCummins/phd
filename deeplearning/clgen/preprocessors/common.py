@@ -13,12 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Common preprocessor passes."""
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
 
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
 
 def _MinimumLineCount(text: str, min_line_count: int) -> str:

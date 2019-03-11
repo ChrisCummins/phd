@@ -134,7 +134,7 @@ class SolidityGenerator(Generator):
         # Create records from proxies:
         programs = [proxy.to_record(s) for proxy in proxies]
 
-        logging.warning(getattr(type(programs[0]), "sha1"))
+        app.Warning(getattr(type(programs[0]), "sha1"))
 
         import sys
         sys.exit(0)
@@ -156,7 +156,7 @@ class SolidityGenerator(Generator):
         s.commit()
 
         nprog, nuniq = len(programs), len(uniq)
-        logging.info(f"imported {nuniq} of {nprog} unique programs")
+        app.Info(f"imported {nuniq} of {nprog} unique programs")
 
       num_progs = self.num_programs(s)
 
@@ -188,7 +188,7 @@ class SolidityGenerator(Generator):
   def import_from_file(self, session: session_t,
                        path: Path) -> Union[None, ProgramProxy]:
     """ Import a program from a file. """
-    # logging.debug(f"importing '{path}'")
+    # app.Debug(f"importing '{path}'")
     # Simply ignore non-ASCII chars:
     src = ''.join(
         [i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])

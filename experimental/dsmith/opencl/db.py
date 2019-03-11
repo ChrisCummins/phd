@@ -664,19 +664,19 @@ class Platform(Base):
     for j, cl_platform in enumerate(cl.get_platforms()):
       platform_name = cl_platform.get_info(cl.platform_info.NAME)
       if platform_name == platform:
-        logging.debug(f"trying to match '{platform}' to '{platform_name}'")
+        app.Debug(f"trying to match '{platform}' to '{platform_name}'")
         # match device ID:
         for i, cl_device in enumerate(cl_platform.get_devices()):
-          logging.debug(f"matched platform '{platform_name}'")
+          app.Debug(f"matched platform '{platform_name}'")
 
           device_name = cl_device.get_info(cl.device_info.NAME)
           device_driver = cl_device.get_info(cl.device_info.DRIVER_VERSION)
 
-          logging.debug(f"trying to match '{device} "
-                        f"{driver}' to '{device_name} "
-                        f"{device_driver}'")
+          app.Debug(f"trying to match '{device} "
+                    f"{driver}' to '{device_name} "
+                    f"{device_driver}'")
           if (device_name == device and device_driver == driver):
-            logging.debug(f"matched device '{device_name}'")
+            app.Debug(f"matched device '{device_name}'")
             return j, i
 
     # after iterating over all OpenCL platforms and devices, no match found:
@@ -779,7 +779,7 @@ class Testbed(Base):
       ndone = already_done.count()
       ntodo = todo.count()
 
-      logging.debug(
+      app.Debug(
           f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done"
       )
 
@@ -945,7 +945,7 @@ class TestbedProxy(Proxy, dsmith.ReprComparable):
         platform_id=platform.id,
         optimizations=self._optimizations)
     session.commit()
-    logging.debug(f"Added new Testbed {testbed}")
+    app.Debug(f"Added new Testbed {testbed}")
     return testbed
 
   def run_testcases(self, harness, generator) -> None:
@@ -1135,13 +1135,13 @@ class Stderr(Base):
     # Sanity check:
     errs = sum(1 if x else 0 for x in [assertion, unreachable, stackdump])
     if errs > 1:
-      logging.error("Stderr: " + string)
+      app.Error("Stderr: " + string)
       if assertion:
-        logging.error("Assertion: " + assertion.assertion)
+        app.Error("Assertion: " + assertion.assertion)
       if unreachable:
-        logging.error("Assertion: " + unreachable.unreachable)
+        app.Error("Assertion: " + unreachable.unreachable)
       if stackdump:
-        logging.error("Stackdump: " + stackdump.stackdump)
+        app.Error("Stackdump: " + stackdump.stackdump)
       raise LookupError(f"Multiple errors types found in stderr:\n\n" +
                         f"Assertion: {assertion}\n" +
                         f"Unreachable: {unreachable}\n" +
@@ -1319,12 +1319,12 @@ class Cl_launcherResult(Result):
     elif returncode == 1:
       return crash_or_build_failure()
     else:
-      logging.error("Stderr: " + stderr[:200])
-      logging.error(f"Runtime: {runtime:.1f}s (timeout = {timeout:.0f}s)")
+      app.Error("Stderr: " + stderr[:200])
+      app.Error(f"Runtime: {runtime:.1f}s (timeout = {timeout:.0f}s)")
       try:
-        logging.error("Signal: " + str(Signals(-returncode).name))
+        app.Error("Signal: " + str(Signals(-returncode).name))
       except ValueError:
-        logging.error("Returncode: " + str(returncode))
+        app.Error("Returncode: " + str(returncode))
       raise LookupError(f"failed to determine outcome of Cl_launcherResult")
 
 
@@ -1383,12 +1383,12 @@ class CldriveResult(Result):
     elif returncode == 127:
       return crash_or_build_failure()
     else:
-      logging.error("Stderr: " + stderr[:200])
-      logging.error(f"Runtime: {runtime:.1f}s (timeout = {timeout:.0f}s)")
+      app.Error("Stderr: " + stderr[:200])
+      app.Error(f"Runtime: {runtime:.1f}s (timeout = {timeout:.0f}s)")
       try:
-        logging.error("Signal: " + str(Signals(-returncode).name))
+        app.Error("Signal: " + str(Signals(-returncode).name))
       except ValueError:
-        logging.error("Returncode: " + str(returncode))
+        app.Error("Returncode: " + str(returncode))
       raise LookupError(f"failed to determine outcome of CldriveResult")
 
 

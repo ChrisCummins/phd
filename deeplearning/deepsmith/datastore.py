@@ -3,8 +3,6 @@
 import contextlib
 import pathlib
 
-from absl import flags
-from absl import logging
 from sqlalchemy import orm
 
 import deeplearning.deepsmith.client
@@ -19,9 +17,10 @@ import labm8.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class InvalidRequest(ValueError):
@@ -76,11 +75,11 @@ class DataStore(object):
     if not FLAGS.datastore and raise_exception:
       raise EnvironmentError('Flag --datastore not set')
     elif not FLAGS.datastore:
-      logging.fatal('Flag --datastore not set')
+      app.Fatal('Flag --datastore not set')
 
     path = pathlib.Path(FLAGS.datastore)
     ds = DataStore.FromFile(path)
-    logging.info('Read datastore proto %s', FLAGS.datastore)
+    app.Info('Read datastore proto %s', FLAGS.datastore)
     return ds
 
   @contextlib.contextmanager

@@ -2,18 +2,16 @@
 import random
 import string
 
-from absl import app
-from absl import flags
-
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.generators import generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
+from labm8 import app
 from labm8 import labdate
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class RandCharGenerator(generator.GeneratorServiceBase,
@@ -69,4 +67,4 @@ class RandCharGenerator(generator.GeneratorServiceBase,
 
 
 if __name__ == '__main__':
-  app.run(RandCharGenerator.Main(generator_pb2.RandCharGenerator))
+  app.RunWithArgs(RandCharGenerator.Main(generator_pb2.RandCharGenerator))

@@ -9,18 +9,16 @@ import pathlib
 import subprocess
 
 import pandas as pd
-from absl import app
-from absl import flags
-from absl import logging
 
+from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 from system.machines.proto import data_tiers_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('data_tiers', None, 'The path of the directory to package.')
-flags.DEFINE_bool('summary', False, 'TODO')
+app.DEFINE_string('data_tiers', None, 'The path of the directory to package.')
+app.DEFINE_boolean('summary', False, 'TODO')
 
 flags.register_validator(
     'data_tiers',
@@ -31,7 +29,7 @@ flags.register_validator(
 def _SetDirectorySize(tier: data_tiers_pb2.Directory):
   path = pathlib.Path(tier.path).expanduser()
   if not path.is_dir():
-    logging.warning("Directory '%s' not found", path)
+    app.Warning("Directory '%s' not found", path)
     return
 
   os.chdir(path)
@@ -39,7 +37,7 @@ def _SetDirectorySize(tier: data_tiers_pb2.Directory):
       '--exclude={}'.format(pathlib.Path(e).expanduser()) for e in tier.exclude
   ]
   cmd = ['du', '-b', '-s', '.'] + excludes
-  logging.info('$ cd %s && %s', path, ' '.join(cmd))
+  app.Info('$ cd %s && %s', path, ' '.join(cmd))
   proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
   stdout, _ = proc.communicate()
   if proc.returncode:
@@ -57,7 +55,7 @@ def main(argv) -> None:
   tiers = pbutil.FromFile(
       pathlib.Path(FLAGS.data_tiers), data_tiers_pb2.DataTiers())
   for tier in tiers.directory:
-    logging.info('Processing %s', tier.path)
+    app.Info('Processing %s', tier.path)
     _SetDirectorySize(tier)
 
   if FLAGS.summary:
@@ -87,4 +85,4 @@ def main(argv) -> None:
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

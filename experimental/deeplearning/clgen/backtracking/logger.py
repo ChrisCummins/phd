@@ -1,14 +1,12 @@
 """Results logging for backtracking experiments."""
 import time
 
-from absl import flags
-from absl import logging
-
 from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.backtracking import backtracking_model
+from labm8 import app
 from labm8 import humanize
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class BacktrackingDatabaseLogger(object):
@@ -40,10 +38,9 @@ class BacktrackingDatabaseLogger(object):
     self._step_count += 1
 
     runtime_ms = int((time.time() - self._start_time) * 1000)
-    logging.info('Reached step %d after %d attempts, %d tokens',
-                 self._step_count, attempt_count, token_count)
-    logging.info('Job %d started %s', job_id,
-                 humanize.Duration(runtime_ms / 1000))
+    app.Info('Reached step %d after %d attempts, %d tokens', self._step_count,
+             attempt_count, token_count)
+    app.Info('Job %d started %s', job_id, humanize.Duration(runtime_ms / 1000))
 
     with self._db.Session(commit=True) as session:
       features = session.GetOrAdd(
@@ -70,7 +67,7 @@ class BacktrackingDatabaseLogger(object):
                   backtracker: backtracking_model.OpenClBacktrackingHelper):
     del backtracker
     self._step_count += 1
-    logging.info("Sampling concluded at step %d", self._step_count)
+    app.Info("Sampling concluded at step %d", self._step_count)
     self._job_id = None
     self._step_count = 0
     self._target_features_id = None
@@ -87,5 +84,5 @@ class BacktrackingDatabaseLogger(object):
           self._job_id = result[0] + 1
         else:
           self._job_id = 1
-      logging.info('New job ID %d', self._job_id)
+      app.Info('New job ID %d', self._job_id)
     return self._job_id

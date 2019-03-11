@@ -17,10 +17,10 @@ py_binary(
     deps = [
         "//deeplearning/deepsmith/generators:clgen",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:crypto",
         "//labm8:pbutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -32,9 +32,9 @@ py_test(
         "//deeplearning/clgen:conftest",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -47,12 +47,12 @@ py_binary(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//gpu/cldrive/legacy:env",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:crypto",
         "//labm8:fs",
         "//labm8:labtypes",
         "//labm8:pbutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -69,11 +69,11 @@ py_binary(
         "//deeplearning/deepsmith:result",
         "//deeplearning/deepsmith:testbed",
         "//deeplearning/deepsmith:testcase",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:fs",
         "//labm8:labtypes",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/progressbar",
     ],

@@ -2,13 +2,12 @@
 import pathlib
 import tempfile
 
-from absl import flags
-
+from labm8 import app
 from labm8 import test
 from system.dpack import dpack
 from system.dpack.proto import dpack_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The sha256sum of an empty file.
 SHA256_EMPTY_FILE = (

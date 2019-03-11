@@ -17,14 +17,14 @@ import typing
 
 import numpy as np
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class AtomizerMock(object):

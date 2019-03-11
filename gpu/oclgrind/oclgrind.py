@@ -15,14 +15,12 @@ import subprocess
 import sys
 import typing
 
-from absl import app
-from absl import flags
-
 from gpu.clinfo.proto import clinfo_pb2
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _OCLGRIND_PKG = 'oclgrind_linux' if system.is_linux() else 'oclgrind_mac'
 # The path to the oclgrind binary.
@@ -56,7 +54,7 @@ def Exec(argv: typing.List[str],
     A Popen instance, with string stdout and stderr attributes set.
   """
   cmd = [str(OCLGRIND_PATH)] + argv
-  # logging.debug('$ %s', ' '.join(cmd))
+  # app.Debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,
@@ -81,4 +79,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

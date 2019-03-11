@@ -4,7 +4,7 @@ py_library(
     name = "shutterbug",
     srcs = ["shutterbug.py"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -13,8 +13,8 @@ py_test(
     srcs = ["shutterbug_test.py"],
     deps = [
         ":shutterbug",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -23,7 +23,7 @@ py_binary(
     srcs = ["pack.py"],
     deps = [
         ":shutterbug",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -32,6 +32,6 @@ py_binary(
     srcs = ["unpack.py"],
     deps = [
         ":shutterbug",
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )

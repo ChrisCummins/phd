@@ -3,23 +3,20 @@ import pathlib
 import typing
 
 import gym
-from absl import app
-from absl import flags
-from absl import logging
 
 from experimental.compilers.random_opt import environments
 from experimental.compilers.random_opt import implementation as implementation
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('env', environments.DEFAULT_ENV_ID,
-                    'The name of the environment to use.')
-flags.DEFINE_integer('num_episodes', 10, 'The number of episodes to run for.')
-flags.DEFINE_integer('max_steps', 200,
-                     'The maximum number of steps per episode.')
-flags.DEFINE_boolean('render', True, 'Render the environment after every step.')
-flags.DEFINE_string(
+app.DEFINE_string('env', environments.DEFAULT_ENV_ID,
+                  'The name of the environment to use.')
+app.DEFINE_integer('num_episodes', 10, 'The number of episodes to run for.')
+app.DEFINE_integer('max_steps', 200, 'The maximum number of steps per episode.')
+app.DEFINE_boolean('render', True, 'Render the environment after every step.')
+app.DEFINE_string(
     'proto_out', '/tmp/phd/experimental/compilers/random_opt/random_opt.pbtxt',
     'The output path to write experiment proto to.')
 
@@ -35,7 +32,7 @@ def ToFile(env: implementation.Environment) -> None:
   out_path = pathlib.Path(FLAGS.proto_out)
   out_path.parent.mkdir(parents=True, exist_ok=True)
   pbutil.ToFile(env.ToProto(), out_path)
-  logging.info('Wrote experimental results to: %s', out_path)
+  app.Info('Wrote experimental results to: %s', out_path)
 
 
 def main(argv: typing.List[str]):
@@ -43,10 +40,10 @@ def main(argv: typing.List[str]):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  logging.info('Generating environment %s ...', FLAGS.env)
+  app.Info('Generating environment %s ...', FLAGS.env)
   env = gym.make(FLAGS.env)
-  logging.info('Starting %d random walk episodes of %d steps each ...',
-               FLAGS.num_episodes, FLAGS.max_steps)
+  app.Info('Starting %d random walk episodes of %d steps each ...',
+           FLAGS.num_episodes, FLAGS.max_steps)
 
   for i in range(FLAGS.num_episodes):
     env.reset()
@@ -64,8 +61,8 @@ def main(argv: typing.List[str]):
       Render(env)
 
   ToFile(env)
-  logging.info('Done.')
+  app.Info('Done.')
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -1,13 +1,13 @@
 """Unit tests for //labm8:make."""
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import fs
 from labm8 import make
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 # make()

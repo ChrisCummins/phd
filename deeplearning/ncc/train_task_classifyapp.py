@@ -29,37 +29,35 @@ import struct
 
 import numpy as np
 import tensorflow as tf
-from absl import app
-from absl import flags
 from keras import utils
 from keras.callbacks import Callback
 from sklearn.utils import resample
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
+from labm8 import app
 from labm8 import fs
 
 # Parameters of classifyapp
-flags.DEFINE_string('input_data',
-                    '/tmp/phd/deeplearning/ncc/task/classifyapp/ir',
-                    'Path to input data')
-flags.DEFINE_string(
+app.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/classifyapp/ir',
+                  'Path to input data')
+app.DEFINE_string(
     'out', '/tmp/phd/deeplearning/ncc/task/classifyapp',
     'Path to folder in which to write saved Keras models and predictions')
-flags.DEFINE_string(
+app.DEFINE_string(
     'vocabulary_zip_path', None,
     'Path to the vocabulary zip file associated with those embeddings')
-flags.DEFINE_integer('num_epochs', 50, 'number of training epochs')
-flags.DEFINE_integer('batch_size', 64, 'training batch size')
-flags.DEFINE_integer('dense_layer', 32, 'dense layer size')
-flags.DEFINE_integer('train_samples', 1500,
-                     'Number of training samples per class')
-flags.DEFINE_integer('vsamples', 0, 'Sampling on validation set')
-flags.DEFINE_integer('save_every', 100, 'Save checkpoint every N batches')
-flags.DEFINE_integer('ring_size', 5, 'Checkpoint ring buffer length')
-flags.DEFINE_bool('print_summary', False, 'Print summary of Keras model')
+app.DEFINE_integer('num_epochs', 50, 'number of training epochs')
+app.DEFINE_integer('batch_size', 64, 'training batch size')
+app.DEFINE_integer('dense_layer', 32, 'dense layer size')
+app.DEFINE_integer('train_samples', 1500,
+                   'Number of training samples per class')
+app.DEFINE_integer('vsamples', 0, 'Sampling on validation set')
+app.DEFINE_integer('save_every', 100, 'Save checkpoint every N batches')
+app.DEFINE_integer('ring_size', 5, 'Checkpoint ring buffer length')
+app.DEFINE_boolean('print_summary', False, 'Print summary of Keras model')
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 ########################################################################################################################
@@ -540,4 +538,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

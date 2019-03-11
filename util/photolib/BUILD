@@ -32,8 +32,8 @@ py_library(
     deps = [
         ":common",
         ":linters",
+        "//labm8:app",
         "//labm8:shell",
-        "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -43,7 +43,7 @@ py_library(
     srcs = ["lightroom.py"],
     deps = [
         ":common",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/libxmp",
         "//third_party/py/sqlalchemy",
     ],
@@ -55,8 +55,8 @@ py_library(
     deps = [
         ":common",
         ":lightroom",
+        "//labm8:app",
         "//labm8:shell",
-        "//third_party/py/absl",
         "//third_party/py/protobuf",
     ],
 )
@@ -65,7 +65,7 @@ py_library(
     name = "common",
     srcs = ["common.py"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
         "//util/photolib/proto:photolint_py_pb2",
     ],
 )
@@ -76,8 +76,8 @@ py_test(
     srcs = ["tests/linters_test.py"],
     deps = [
         ":linters",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -87,7 +87,7 @@ py_test(
     srcs = ["tests/workspace_test.py"],
     deps = [
         ":workspace",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

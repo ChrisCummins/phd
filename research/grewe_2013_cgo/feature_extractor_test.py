@@ -2,12 +2,12 @@
 import pathlib
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 from research.grewe_2013_cgo import feature_extractor
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_ExtractFeaturesFromPath_file_not_found(tempdir: pathlib.Path):

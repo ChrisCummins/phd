@@ -8,10 +8,6 @@ import math
 import sys
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.clgen import sample
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.deepsmith import services
@@ -19,8 +15,9 @@ from deeplearning.deepsmith.generators import generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def ClgenInstanceToGenerator(
@@ -75,7 +72,7 @@ class ClgenGenerator(generator.GeneratorServiceBase,
           request.num_testcases / len(self.config.testcase_skeleton))
       for i, sample_ in enumerate(
           self.instance.model.Sample(self.instance.sampler, num_programs)):
-        logging.info('Generated sample %d.', i + 1)
+        app.Info('Generated sample %d.', i + 1)
         response.testcases.extend(self.SampleToTestcases(sample_))
 
     # Flush any remaining output generated during Sample().
@@ -99,4 +96,4 @@ class ClgenGenerator(generator.GeneratorServiceBase,
 
 
 if __name__ == '__main__':
-  app.run(ClgenGenerator.Main(generator_pb2.ClgenGenerator))
+  app.RunWithArgs(ClgenGenerator.Main(generator_pb2.ClgenGenerator))

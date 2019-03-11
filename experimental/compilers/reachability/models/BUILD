@@ -9,7 +9,7 @@ py_binary(
         "//experimental/compilers/reachability:llvm_util",  # keep
         "//labm8:labdate",
         "//labm8:prof",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/graph_nets",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
@@ -24,8 +24,8 @@ py_test(
     srcs = ["graph_model_test.py"],
     deps = [
         ":graph_model",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/pytest",
     ],
@@ -45,7 +45,7 @@ py_binary(
         "//labm8:labdate",
         "//labm8:pbutil",
         "//labm8:prof",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//labm8:humanize",
         "//third_party/py/keras",
         "//third_party/py/numpy",
@@ -57,8 +57,8 @@ py_test(
     srcs = ["lstm_reachability_model_test.py"],
     deps = [
         ":lstm_reachability_model",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
 )

@@ -15,13 +15,13 @@
 """Unit tests for //deeplearning/clgen/preprocessors/java.py."""
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import java
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # ClangFormat() tests.
 

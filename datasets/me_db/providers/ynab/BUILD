@@ -21,8 +21,8 @@ py_binary(
     testonly = 1,
     srcs = ["make_dataset.py"],
     deps = [
+        "//labm8:app",
         "//labm8:jsonutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -34,9 +34,9 @@ py_binary(
     deps = [
         "//datasets/me_db:importers",
         "//datasets/me_db:me_proto_pb2",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -47,7 +47,7 @@ py_test(
         ":make_dataset",
         ":ynab",
         "//datasets/me_db:me_proto_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

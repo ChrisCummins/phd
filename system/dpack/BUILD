@@ -5,12 +5,12 @@ py_binary(
     srcs = ["dpack.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:fs",
         "//labm8:labdate",
         "//labm8:pbutil",
         "//system/dpack/proto:dpack_pb2_py",
-        "//third_party/py/absl",
     ],
 )
 
@@ -20,7 +20,7 @@ py_test(
     srcs = ["dpack_test.py"],
     deps = [
         ":dpack",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

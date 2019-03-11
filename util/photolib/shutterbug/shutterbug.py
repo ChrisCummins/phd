@@ -12,9 +12,9 @@ from datetime import datetime
 from hashlib import md5
 from shutil import copy, copyfileobj
 
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Metadata used in README.txt files.
 __author__ = 'Chris Cummins'

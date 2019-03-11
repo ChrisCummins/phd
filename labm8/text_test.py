@@ -1,12 +1,12 @@
 """Unit tests for //labm8:text."""
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 from labm8 import text
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 # get_substring_idxs()

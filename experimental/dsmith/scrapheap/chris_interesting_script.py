@@ -63,23 +63,23 @@ def verify_with_oclgrind(clprogram):
 
   # Check to see if Oclgrind actually completed successfully
   if run.timed_out:
-    logging.debug("Oclgrind: Timed out")
+    app.Debug("Oclgrind: Timed out")
     return False
 
   stdout, stderr = run.stdout, run.stderr
-  logging.debug("Oclgrind:\nOut: %r\nErr: %r\n", stdout, stderr)
+  app.Debug("Oclgrind:\nOut: %r\nErr: %r\n", stdout, stderr)
   # Check if the compilation process was successful
   compiled = "ompilation terminated successfully" in stderr
   if not compiled:
-    logging.debug("Oclgrind: Compilation failed")
+    app.Debug("Oclgrind: Compilation failed")
     return False
 
   # Check for issues in the Oclgrind output
   if "ninitialized value" in stderr:
-    logging.debug("Oclgrind: Uninitialized value detected")
+    app.Debug("Oclgrind: Uninitialized value detected")
     return False
   if "initialized address" in stderr:
-    logging.debug("Oclgrind: Uninitialized address detected")
+    app.Debug("Oclgrind: Uninitialized address detected")
     return False
 
   # We didn't find any issues so everything must be okay
@@ -98,18 +98,18 @@ def get_reference_run(clprogram):
          str(device)] + LAUNCHER_OPTS, timeout)
 
     stdout, stderr = run.stdout, run.stderr
-    logging.debug("Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout,
-                  stderr)
+    app.Debug("Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout,
+              stderr)
 
     compiled = "ompilation terminated successfully" in stderr
     if compiled and not run.timed_out:
       result[platform_name] = stdout.split("\n")
     else:
       if run.timed_out:
-        logging.debug("Reference[%s]: Timed out", platform_name)
+        app.Debug("Reference[%s]: Timed out", platform_name)
         result[platform_name] = platform_name + " timed out!"
       else:
-        logging.debug("Reference[%s]: Compilation failed", platform_name)
+        app.Debug("Reference[%s]: Compilation failed", platform_name)
         result[platform_name] = platform_name + " did not compile!"
       return None
 
@@ -119,21 +119,21 @@ def get_reference_run(clprogram):
     _rand_key = list(result.keys())[0]
     random_result = result[_rand_key]
     if len(random_result) < 2 or not random_result[1]:
-      logging.debug("Reference: No result")
+      app.Debug("Reference: No result")
       return None
     if len(random_result) > 1:
       if "error" in random_result[1]:
-        logging.debug("\"error\" found in output")
+        app.Debug("\"error\" found in output")
         return False
       if "Error" in random_result[1]:
-        logging.debug("\"Error\" found in output")
+        app.Debug("\"Error\" found in output")
         return False
       if random_result[1] == "0,":
-        logging.debug("Zero output is not interesting")
+        app.Debug("Zero output is not interesting")
         return False
     all_match = all(result[x] == random_result for x in result.keys())
     if not all_match:
-      logging.debug("Reference: Mismatched results (\n%r\n)", result)
+      app.Debug("Reference: Mismatched results (\n%r\n)", result)
       return None
 
   # They are all the same anyway
@@ -149,7 +149,7 @@ def get_ocl_run(clprogram):
        str(0), "-d", str(device)] + LAUNCHER_OPTS, timeout)
 
   out, err = run.stdout, run.stderr
-  logging.debug("OCL:\nOut: %r\nErr: %r\n", out, err)
+  app.Debug("OCL:\nOut: %r\nErr: %r\n", out, err)
 
   compiled = "ompilation terminated successfully" in out
 
@@ -157,10 +157,10 @@ def get_ocl_run(clprogram):
     result = out.split("\n")
   else:
     if run.timed_out:
-      logging.debug("OCL: Timed out")
+      app.Debug("OCL: Timed out")
       result = platform_name + " timed out!"
     else:
-      logging.debug("OCL: Compilation failed")
+      app.Debug("OCL: Compilation failed")
       result = platform_name + " did not compile!"
     return None
 
@@ -206,7 +206,7 @@ def main(argv):
   no_oclgrind = args.no_oclgrind
   logfile = args.logfile
 
-  logging.debug("%r\n", argv)
+  app.Debug("%r\n", argv)
 
   if run(clprogram, no_oclgrind, args.vectors):
     sys.exit(0)

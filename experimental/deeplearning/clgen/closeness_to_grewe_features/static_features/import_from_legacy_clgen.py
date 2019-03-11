@@ -1,30 +1,28 @@
 """Import from legacy CLgen sampler database format."""
 import math
+import multiprocessing
 import pathlib
 import sqlite3
 import tempfile
 import typing
-import multiprocessing
-from absl import app
-from absl import flags
-from absl import logging
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
-flags.DEFINE_string('legacy_clgen_db', None,
-                    'Path of the legacy CLgen sqlite database.')
-flags.DEFINE_string('origin', 'clgen_legacy',
-                    'Name of the origin of the kernels, e.g. "github".')
-flags.DEFINE_integer('batch_size', 256,
-                     'The number of kernels to process in a batch.')
-flags.DEFINE_integer(
+app.DEFINE_string('legacy_clgen_db', None,
+                  'Path of the legacy CLgen sqlite database.')
+app.DEFINE_string('origin', 'clgen_legacy',
+                  'Name of the origin of the kernels, e.g. "github".')
+app.DEFINE_integer('batch_size', 256,
+                   'The number of kernels to process in a batch.')
+app.DEFINE_integer(
     'grewe_db_import_process_count', multiprocessing.cpu_count(),
     'The number of processes to spawn when importing files to database.')
 
@@ -61,7 +59,7 @@ def main(argv: typing.List[str]):
 
   num_kernels, = c.execute(
       'SELECT COUNT(*) FROM PreprocessedKernels').fetchone()
-  logging.info("Database contains %d kernels", num_kernels)
+  app.Info("Database contains %d kernels", num_kernels)
   num_batches = math.ceil(num_kernels / FLAGS.batch_size)
 
   batches = BatchQueryResults(
@@ -71,7 +69,7 @@ def main(argv: typing.List[str]):
   with multiprocessing.Pool() as pool:
     for i, batch in enumerate(batches):
       with tempfile.TemporaryDirectory(prefix=prefix) as d:
-        logging.info('Batch %d of %d', i + 1, num_batches)
+        app.Info('Batch %d of %d', i + 1, num_batches)
         d = pathlib.Path(d)
         paths_to_import = [
             CreateTempFileFromTestcase(d, src, i)
@@ -80,9 +78,9 @@ def main(argv: typing.List[str]):
         db = grewe_features_db.Database(FLAGS.db)
         success_count, new_row_count = db.ImportStaticFeaturesFromPaths(
             paths_to_import, FLAGS.origin, pool)
-        logging.info('Extracted features from %d of %d kernels, %d new rows',
-                     success_count, FLAGS.batch_size, new_row_count)
+        app.Info('Extracted features from %d of %d kernels, %d new rows',
+                 success_count, FLAGS.batch_size, new_row_count)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

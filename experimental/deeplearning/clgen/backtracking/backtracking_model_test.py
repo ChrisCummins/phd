@@ -1,12 +1,12 @@
 """Unit tests for //experimental/deeplearning/clgen/backtracking:backtracking_model."""
 import pytest
-from absl import flags
 
 from deeplearning.clgen.corpuses import atomizers
 from experimental.deeplearning.clgen.backtracking import backtracking_model
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

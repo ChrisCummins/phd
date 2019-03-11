@@ -3,25 +3,22 @@ import pathlib
 import tempfile
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from experimental.deeplearning.fish.proto import fish_pb2
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string('protos_dir', None,
-                    'Path to directory containing kernels to import.')
-flags.DEFINE_string('origin', None,
-                    'Name of the origin of the kernels, e.g. "github".')
-flags.DEFINE_string(
+FLAGS = app.FLAGS
+app.DEFINE_string('protos_dir', None,
+                  'Path to directory containing kernels to import.')
+app.DEFINE_string('origin', None,
+                  'Name of the origin of the kernels, e.g. "github".')
+app.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
-flags.DEFINE_integer('batch_size', 512, 'Number of protos to process at once.')
+app.DEFINE_integer('batch_size', 512, 'Number of protos to process at once.')
 
 
 def CreateTempFileFromProto(tempdir: pathlib.Path,
@@ -60,8 +57,8 @@ def main(argv: typing.List[str]):
           for p in paths_to_import[stride:stride + FLAGS.batch_size]
       ]
       db.ImportStaticFeaturesFromPaths(srcs, FLAGS.origin)
-  logging.info('done')
+  app.Info('done')
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

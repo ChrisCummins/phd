@@ -6,9 +6,9 @@ py_binary(
     data = ["@CLSmith"],
     visibility = ["//visibility:public"],
     deps = [
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:fs",
-        "//third_party/py/absl",
     ],
 )
 
@@ -17,8 +17,8 @@ py_test(
     srcs = ["clsmith_test.py"],
     deps = [
         ":clsmith",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -40,10 +40,10 @@ py_binary(
     deps = [
         "//gpu/cldrive/legacy:driver",
         "//gpu/cldrive/legacy:env",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:fs",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -53,7 +53,7 @@ py_test(
     deps = [
         ":cl_launcher",
         "//gpu/cldrive/legacy:env",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

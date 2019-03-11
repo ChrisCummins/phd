@@ -3,13 +3,13 @@
 import tempfile
 
 import pytest
-from absl import flags
 
 from datasets.me_db import me_db
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string(
+FLAGS = app.FLAGS
+app.DEFINE_string(
     'integration_tests_inbox', None,
     'If set, this sets the inbox path to be used by the '
     'integration tests. This overrides the default in '

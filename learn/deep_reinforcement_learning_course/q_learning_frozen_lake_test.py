@@ -1,12 +1,12 @@
 """Unit tests for :q_learning_frozen_lake.py."""
 
 import gym
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 from learn.deep_reinforcement_learning_course import q_learning_frozen_lake
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_Train():

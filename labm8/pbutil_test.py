@@ -3,13 +3,13 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import pbutil
 from labm8 import test
 from labm8.proto import test_protos_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # A list of all of the filename suffixes to test each function with.
 SUFFIXES_TO_TEST = [

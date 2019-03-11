@@ -3,12 +3,11 @@ import os
 import pathlib
 import subprocess
 
-from absl import flags
-
 from config import getconfig
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_GetGlobalConfig_system_values():

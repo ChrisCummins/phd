@@ -2,22 +2,20 @@
 import itertools
 import typing
 
-from absl import app
-from absl import flags
-
 from deeplearning.clgen import clgen
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('working_dir',
-                    '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
-                    'Path to CLgen working directory')
+app.DEFINE_string('working_dir',
+                  '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
+                  'Path to CLgen working directory')
 
 # Paths to protos within //experimental/polyglot/baselines.
 LANGUAGES = {
@@ -136,4 +134,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

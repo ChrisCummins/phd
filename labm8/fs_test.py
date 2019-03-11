@@ -4,13 +4,13 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import fs
 from labm8 import system
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 # path()

@@ -8,14 +8,13 @@ import configparser
 import pathlib
 
 import github
-from absl import flags
-from absl import logging
 
 from datasets.github import github_pb2
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'github_credentials_path', '~/.githubrc',
     'The path to a file containing GitHub login credentials. See '
     '//datasets/github/scrape_repos/README.md for details.')
@@ -46,4 +45,4 @@ def GetGithubConectionFromFlagsOrDie() -> github.Github:
         pathlib.Path(FLAGS.github_credentials_path).expanduser())
     return github.Github(credentials.username, credentials.password)
   except Exception as e:  # Deliberately broad catch-all.
-    logging.fatal('Failed to create GitHub API connection: %s', e)
+    app.Fatal('Failed to create GitHub API connection: %s', e)

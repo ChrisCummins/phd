@@ -1,15 +1,13 @@
 """A very basic "generator" which always returns the same testcase."""
-from absl import app
-from absl import flags
-
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.generators import generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
+from labm8 import app
 from labm8 import labdate
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class DummyGenerator(generator.GeneratorServiceBase,
@@ -45,4 +43,4 @@ class DummyGenerator(generator.GeneratorServiceBase,
 
 
 if __name__ == '__main__':
-  app.run(DummyGenerator.Main(generator_pb2.DummyGenerator))
+  app.RunWithArgs(DummyGenerator.Main(generator_pb2.DummyGenerator))

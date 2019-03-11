@@ -3,17 +3,16 @@ import pathlib
 import pickle
 
 import keras
-from absl import app
-from absl import flags
 from experimental.compilers.reachability.proto import reachability_pb2
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.compilers.reachability import train_model
+from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def main(argv):
@@ -118,4 +117,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

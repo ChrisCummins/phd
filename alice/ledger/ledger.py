@@ -10,22 +10,20 @@ from concurrent import futures
 
 import grpc
 import sqlalchemy as sql
-from absl import app
-from absl import flags
-from absl import logging
 from sqlalchemy.ext import declarative
 
 from alice import alice_pb2
 from alice import alice_pb2_grpc
 from config.proto import config_pb2
+from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('ledger_db', 'sqlite:////tmp/ledger.db', 'Ledger database.')
-flags.DEFINE_integer('ledger_port', 5088, 'Port to service.')
-flags.DEFINE_integer('ledger_service_thread_count', 10, 'Number of threads.')
+app.DEFINE_string('ledger_db', 'sqlite:////tmp/ledger.db', 'Ledger database.')
+app.DEFINE_integer('ledger_port', 5088, 'Port to service.')
+app.DEFINE_integer('ledger_service_thread_count', 10, 'Number of threads.')
 
 Base = declarative.declarative_base()
 
@@ -172,7 +170,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
                         context) -> alice_pb2.Null:
     del context
 
-    logging.info('Worker bee %s registered', request.string)
+    app.Info('Worker bee %s registered', request.string)
     channel = grpc.insecure_channel(request.string)
     worker_bee = alice_pb2_grpc.WorkerBeeStub(channel)
     worker_bee.id = request.string
@@ -185,7 +183,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
                           context) -> alice_pb2.Null:
     del context
 
-    logging.info('Worker bee %s unregistered', request.string)
+    app.Info('Worker bee %s unregistered', request.string)
     if request.string in self.worker_bees:
       del self.worker_bees[request.string]
     return alice_pb2.Null()
@@ -204,7 +202,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
       s.flush()
 
       entry_id = entry.id
-      logging.info('Created new ledger entry %s', entry_id)
+      app.Info('Created new ledger entry %s', entry_id)
 
       worker_bee = self.SelectWorkerIdForRunRequest(request)
       entry.worker_id = worker_bee.id
@@ -287,7 +285,7 @@ class LedgerService(alice_pb2_grpc.LedgerServicer):
 
     port = FLAGS.ledger_port
     port = server.add_insecure_port(f'[::]:{port}')
-    logging.info('📜  Listening for commands on %s ...', port)
+    app.Info('📜  Listening for commands on %s ...', port)
     server.start()
     try:
       while True:
@@ -303,4 +301,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(LedgerService.Main)
+  app.RunWithArgs(LedgerService.Main)

@@ -2,19 +2,16 @@
 
 TODO: Detailed explanation of the file.
 """
-import typing
 
-from absl import app
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
-def main(argv: typing.List[str]):
+def main():
   """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+  # TODO: Implement!
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.Run(main)

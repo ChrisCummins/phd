@@ -1,11 +1,11 @@
 """A simple test to ensure that TensorFlow is working."""
 
 import tensorflow as tf
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_Tensorflow_hello_world():

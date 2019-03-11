@@ -1,6 +1,5 @@
 import csv
 import datetime
-import logging
 from collections import defaultdict
 
 from toggl import TogglPy
@@ -117,4 +116,4 @@ def export_csvs(outpath, keypath, workspace_name, start_date):
         writer.writerow(row)
 
       nrows = len(data[project])
-      logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+      app.Info(f"Exported {nrows} records to \"{outfile.name}\"")

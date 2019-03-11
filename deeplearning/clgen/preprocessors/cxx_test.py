@@ -15,13 +15,13 @@
 """Unit tests for :cxx_test.py."""
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import cxx
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # ClangPreprocess() tests.
 

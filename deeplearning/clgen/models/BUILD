@@ -22,8 +22,8 @@ py_library(
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:app",
         "//labm8:cache",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
     ],
 )
@@ -34,8 +34,8 @@ py_library(
     deps = [
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/keras",
         "//third_party/py/tensorflow",
     ],
@@ -48,8 +48,8 @@ py_test(
         ":builders",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -59,8 +59,8 @@ py_library(
     deps = [
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:app",
         "//labm8:humanize",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
     ],
 )
@@ -72,8 +72,8 @@ py_test(
         ":data_generators",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -111,10 +111,10 @@ py_test(
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:fs",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -134,11 +134,11 @@ py_library(
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:humanize",
         "//labm8:lockfile",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
     ],
 )
@@ -158,11 +158,11 @@ py_library(
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//labm8:app",
         "//labm8:cache",
         "//labm8:humanize",
         "//labm8:labdate",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
     ],
 )
@@ -175,10 +175,10 @@ py_test(
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:fs",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -198,12 +198,12 @@ py_library(
         "//deeplearning/clgen/proto:internal_py_pb2",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:humanize",
         "//labm8:labdate",
         "//labm8:logutil",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/progressbar",
         "//third_party/py/tensorflow",
@@ -220,9 +220,9 @@ py_test(
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:telemetry_py_pb2",
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:fs",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

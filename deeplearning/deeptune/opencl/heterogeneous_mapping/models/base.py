@@ -3,11 +3,11 @@ import pathlib
 import typing
 
 import pandas as pd
-from absl import flags
 
 from deeplearning.clgen.corpuses import atomizers
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class HeterogeneousMappingModel(object):

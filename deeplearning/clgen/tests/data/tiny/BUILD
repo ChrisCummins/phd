@@ -31,9 +31,9 @@ py_test(
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_py_pb2",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

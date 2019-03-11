@@ -14,13 +14,11 @@ Usage:
 import subprocess
 import sys
 
-from absl import app
-from absl import flags
-
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 CLSMITH = bazelutil.DataPath('CLSmith/CLSmith')
 
@@ -66,4 +64,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

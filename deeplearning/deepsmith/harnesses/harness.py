@@ -1,12 +1,11 @@
-from absl import flags
-
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import harness_pb2
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('harness_config', None, 'Path to a harness config proto.')
+app.DEFINE_string('harness_config', None, 'Path to a harness config proto.')
 
 
 class HarnessBase(services.ServiceBase):

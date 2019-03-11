@@ -9,12 +9,12 @@ import numpy as np
 import pandas as pd
 import pytest
 import tensorflow as tf
-from absl import flags
 
 from experimental.compilers.reachability.models import graph_model
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='module')

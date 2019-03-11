@@ -4,20 +4,17 @@ import os
 import pathlib
 import random
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from datasets.github.scrape_repos import github_repo
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
-flags.DEFINE_integer('indexer_processes', os.cpu_count(),
-                     'The number of indexer processes to run.')
-flags.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
+FLAGS = app.FLAGS
+app.DEFINE_integer('indexer_processes', os.cpu_count(),
+                   'The number of indexer processes to run.')
+app.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
 
 
 def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
@@ -34,20 +31,20 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
   if not language.importer:
     raise ValueError('LanguageToClone.importer field not set')
 
-  logging.info('Enumerating all repos ...')
+  app.Info('Enumerating all repos ...')
   all_repos = [
       github_repo.GitHubRepo(pathlib.Path(language.destination_directory / f))
       for f in pathlib.Path(language.destination_directory).iterdir()
       if f.name.endswith('.pbtxt')
   ]
-  logging.info('Pruning indexed repos ...')
+  app.Info('Pruning indexed repos ...')
   num_repos = len(all_repos)
   repos_to_import = [repo for repo in all_repos if not repo.IsIndexed()]
   num_todo = len(repos_to_import)
   num_pruned = num_repos - num_todo
   random.shuffle(repos_to_import)
-  logging.info('Importing %s of %s %s repos ...', humanize.Commas(num_todo),
-               humanize.Commas(num_repos), language.language.capitalize())
+  app.Info('Importing %s of %s %s repos ...', humanize.Commas(num_todo),
+           humanize.Commas(num_repos), language.language.capitalize())
   for i, repo in enumerate(repos_to_import):
     repo.Index(
         list(language.importer), pool,
@@ -76,4 +73,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

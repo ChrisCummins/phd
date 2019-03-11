@@ -3,12 +3,12 @@ import pickle
 
 import numpy as np
 import pandas as pd
-from absl import flags
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class StaticMapping(base.HeterogeneousMappingModel):

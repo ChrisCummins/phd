@@ -1,12 +1,12 @@
 """Unit tests for //compilers/llvm/opt.py."""
 
 import pytest
-from absl import flags
 
 from compilers.llvm import opt
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.mark.parametrize("o", ("-O0", "-O1", "-O2", "-O3", "-Os", "-Oz"))

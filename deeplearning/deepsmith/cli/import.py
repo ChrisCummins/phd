@@ -3,24 +3,21 @@ import pathlib
 import time
 
 import progressbar
-from absl import app
-from absl import flags
-from absl import logging
 
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_list('results', [], 'Result proto paths to import')
-flags.DEFINE_string('results_dir', None, 'Directory containing result protos')
-flags.DEFINE_list('testcases', [], 'Testcase proto paths to import')
-flags.DEFINE_string('testcases_dir', None,
-                    'Directory containing testcase protos')
-flags.DEFINE_bool('delete_after_import', False,
-                  'Delete the proto files after importing.')
+app.DEFINE_list('results', [], 'Result proto paths to import')
+app.DEFINE_string('results_dir', None, 'Directory containing result protos')
+app.DEFINE_list('testcases', [], 'Testcase proto paths to import')
+app.DEFINE_string('testcases_dir', None, 'Directory containing testcase protos')
+app.DEFINE_boolean('delete_after_import', False,
+                   'Delete the proto files after importing.')
 
 
 def ImportResultsFromDirectory(session: db.session_t,
@@ -34,11 +31,11 @@ def ImportResultsFromDirectory(session: db.session_t,
   files_to_delete = []
   last_commit_time = time.time()
   if not results_dir.is_dir():
-    logging.fatal('directory %s does not exist', results_dir)
+    app.Fatal('directory %s does not exist', results_dir)
   for path in progressbar.ProgressBar()(results_dir.iterdir()):
     deeplearning.deepsmith.result.Result.FromFile(session, path)
     files_to_delete.append(path)
-    logging.info('Imported result %s', path)
+    app.Info('Imported result %s', path)
     if time.time() - last_commit_time > 10:
       session.commit()
       if FLAGS.delete_after_import:
@@ -46,7 +43,7 @@ def ImportResultsFromDirectory(session: db.session_t,
           path.unlink()
       files_to_delete = []
       last_commit_time = time.time()
-      logging.info('Committed database')
+      app.Info('Committed database')
   session.commit()
   if FLAGS.delete_after_import:
     for path in files_to_delete:
@@ -64,11 +61,11 @@ def ImportTestcasesFromDirectory(session: db.session_t,
   files_to_delete = []
   last_commit_time = time.time()
   if not testcases_dir.is_dir():
-    logging.fatal('directory %s does not exist', testcases_dir)
+    app.Fatal('directory %s does not exist', testcases_dir)
   for path in progressbar.ProgressBar()(testcases_dir.iterdir()):
     deeplearning.deepsmith.testcase.Testcase.FromFile(session, path)
     files_to_delete.append(path)
-    logging.info('Imported testcase %s', path)
+    app.Info('Imported testcase %s', path)
     if time.time() - last_commit_time > 10:
       session.commit()
       if FLAGS.delete_after_import:
@@ -76,7 +73,7 @@ def ImportTestcasesFromDirectory(session: db.session_t,
           path.unlink()
       files_to_delete = []
       last_commit_time = time.time()
-      logging.info('Committed database')
+      app.Info('Committed database')
   session.commit()
   if FLAGS.delete_after_import:
     for path in files_to_delete:
@@ -104,4 +101,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -1,17 +1,14 @@
 import pathlib
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 from labm8 import fmt
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('interesting_results_dir', '/tmp/',
-                    'Directory to write interesting results to.')
+app.DEFINE_string('interesting_results_dir', '/tmp/',
+                  'Directory to write interesting results to.')
 
 
 def main(argv):
@@ -25,7 +22,7 @@ def main(argv):
   interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
   if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
     raise app.UsageError('--interesting_results_dir must be a directory')
-  logging.info('Recording interesting results in %s.', interesting_results_dir)
+  app.Info('Recording interesting results in %s.', interesting_results_dir)
 
   for path in interesting_results_dir.iterdir():
     result = pbutil.FromFile(path, deepsmith_pb2.Result())
@@ -43,4 +40,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -3,12 +3,12 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
 
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

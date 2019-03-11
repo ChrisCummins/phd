@@ -6,13 +6,13 @@ import re
 import sys
 import typing
 
-from absl import flags
 from absl import logging
 
+from labm8 import app
 from labm8 import labdate
 from labm8.proto import logging_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # A regular expression to match the components of an absl logging prefix. See:
 # https://github.com/abseil/abseil-py/blob/e69e200f680a20c50e0e2cd9e74e9850ff69b856/absl/logging/__init__.py#L554-L583

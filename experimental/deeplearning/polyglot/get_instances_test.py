@@ -2,18 +2,18 @@
 import tempfile
 
 import pytest
-from absl import flags
 
 from experimental.deeplearning.polyglot import get_instances
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_GetInstanceConfigs_working_dir():
   """Check the working directory of instance configs."""
   with tempfile.TemporaryDirectory() as working_dir:
-    flags.FLAGS(['argv[0]', '--working_dir', working_dir])
+    app.FLAGS(['argv[0]', '--working_dir', working_dir])
     assert FLAGS.working_dir == working_dir
     configs = get_instances.GetInstanceConfigs()
     for instance in configs.instance:
@@ -24,7 +24,7 @@ def test_GetInstanceConfigs_working_dir():
 def test_GetInstances():
   """Instantiate all of the instances."""
   with tempfile.TemporaryDirectory() as working_dir:
-    flags.FLAGS(['argv[0]', '--working_dir', working_dir])
+    app.FLAGS(['argv[0]', '--working_dir', working_dir])
     assert FLAGS.working_dir == working_dir
     assert get_instances.GetInstances()
 

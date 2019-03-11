@@ -21,9 +21,9 @@ py_library(
         "//gpu/cldrive/legacy:env",
         "//gpu/cldrive/proto:cldrive_py_pb2",
         "//gpu/oclgrind",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
     ],
@@ -34,8 +34,8 @@ py_test(
     srcs = ["api_test.py"],
     deps = [
         ":api",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/pytest",
     ],
 )

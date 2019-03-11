@@ -3,16 +3,14 @@
 import pathlib
 import sys
 
-from absl import app
-from absl import flags
-
+from labm8 import app
 from labm8 import fs
 from system.dpack import dpack
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('musiclib', None, 'The path of the music library.')
-flags.DEFINE_bool('update_musiclib_manifests', False, '')
+app.DEFINE_string('musiclib', None, 'The path of the music library.')
+app.DEFINE_boolean('update_musiclib_manifests', False, '')
 
 # The --package argument points to either a directory or an archive file.
 flags.register_validator(
@@ -61,4 +59,4 @@ def main(argv) -> None:
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

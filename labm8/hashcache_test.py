@@ -4,12 +4,12 @@ import tempfile
 import time
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import hashcache
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The hash_fn arguments accepted by HashCache constructor.
 HASH_FUNCTIONS = ['md5', 'sha1', 'sha256']

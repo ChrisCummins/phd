@@ -2,13 +2,13 @@
 import tempfile
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 from system.machines import machine
 from system.machines.proto import machine_spec_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

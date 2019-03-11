@@ -2,10 +2,10 @@
 import typing
 
 import ipdb
-from absl import app
-from absl import flags
 
-FLAGS = flags.FLAGS
+from labm8 import app
+
+FLAGS = app.FLAGS
 
 
 def main(argv: typing.List[str]):
@@ -17,4 +17,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

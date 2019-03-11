@@ -4,17 +4,15 @@ import pathlib
 import subprocess
 import typing
 
-from absl import app
-from absl import flags
-
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('ynab_inbox', None, 'Inbox to process.')
+app.DEFINE_string('ynab_inbox', None, 'Inbox to process.')
 
 
 def ProcessBudgetJsonFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
@@ -70,4 +68,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

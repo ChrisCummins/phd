@@ -9,13 +9,13 @@ matplotlib.use('Agg')
 
 import numpy as np
 import pytest
-from absl import flags
 from matplotlib import pyplot as plt
 
 from labm8 import test
 from labm8 import viz
 
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

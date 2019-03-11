@@ -1,13 +1,13 @@
 """Unit tests for :db."""
 
 import pytest
-from absl import flags
 
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import toolchain
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def HasFieldMock(self, name):

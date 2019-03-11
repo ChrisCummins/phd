@@ -3,13 +3,13 @@ import pathlib
 import typing
 
 import pytest
-from absl import flags
 
 from datasets.benchmarks.gpgpu import gpgpu
 from gpu.cldrive.legacy import env as cldrive_env
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 BENCHMARK_SUITES_TO_TEST = [
     gpgpu.DummyJustForTesting,

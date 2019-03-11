@@ -7,27 +7,25 @@ import typing
 
 import gym
 import numpy as np
-from absl import app
-from absl import flags
-from absl import logging
 
+from labm8 import app
 from labm8 import humanize
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_integer('q_learning_seed', None,
-                     'Random seed to initialize Q learning.')
-flags.DEFINE_integer('total_training_episodes', 10000,
-                     'The total number of episodes to train for.')
-flags.DEFINE_float('q_learning_rate', 0.8, 'Initial Q learning rate.')
-flags.DEFINE_integer('max_steps_per_episode', 99,
-                     'The maximum steps per episode.')
-flags.DEFINE_float('q_learning_gamma', 0.95, 'Q learning discounting rate.')
-flags.DEFINE_float('q_learning_init_epsilon', 1.0,
-                   'Initial Q learning exploration rate.')
-flags.DEFINE_float('q_learning_min_epsilon', 0.01,
-                   'Minimum Q learning exploration rate.')
-flags.DEFINE_float('q_learning_decay_rate', 0.01, 'The epsilon decay rate.')
+app.DEFINE_integer('q_learning_seed', None,
+                   'Random seed to initialize Q learning.')
+app.DEFINE_integer('total_training_episodes', 10000,
+                   'The total number of episodes to train for.')
+app.DEFINE_float('q_learning_rate', 0.8, 'Initial Q learning rate.')
+app.DEFINE_integer('max_steps_per_episode', 99,
+                   'The maximum steps per episode.')
+app.DEFINE_float('q_learning_gamma', 0.95, 'Q learning discounting rate.')
+app.DEFINE_float('q_learning_init_epsilon', 1.0,
+                 'Initial Q learning exploration rate.')
+app.DEFINE_float('q_learning_min_epsilon', 0.01,
+                 'Minimum Q learning exploration rate.')
+app.DEFINE_float('q_learning_decay_rate', 0.01, 'The epsilon decay rate.')
 
 
 def Train(env: gym.Env,
@@ -60,18 +58,18 @@ def Train(env: gym.Env,
 
   np.random.seed(seed)
   random.seed(seed)
-  logging.info('Random seed: %d.', seed)
-  logging.info(
+  app.Info('Random seed: %d.', seed)
+  app.Info(
       'Beginning training for %s episodes (max %s steps per episode). '
       'Initial learning rate: %.3f, decay rate: %.3f, '
       'initial epsilon: %.3f, min learning rate: %.3f, gamma: %.3f.',
       humanize.Commas(total_episodes), humanize.Commas(max_steps),
       learning_rate, decay_rate, init_epsilon, min_epsilon, gamma)
 
-  logging.info('State space size: %s, action space size: %s. Q table: %dx%d.',
-               humanize.Commas(env.observation_space.n),
-               humanize.Commas(env.action_space.n), env.observation_space.n,
-               env.action_space.n)
+  app.Info('State space size: %s, action space size: %s. Q table: %dx%d.',
+           humanize.Commas(env.observation_space.n),
+           humanize.Commas(env.action_space.n), env.observation_space.n,
+           env.action_space.n)
 
   q_table = np.zeros((env.observation_space.n, env.action_space.n))
   epsilon = init_epsilon
@@ -111,7 +109,7 @@ def Train(env: gym.Env,
         -decay_rate * episode)
     rewards.append(total_rewards)
 
-  logging.info('Score over time: %.3f.', sum(rewards) / total_episodes)
+  app.Info('Score over time: %.3f.', sum(rewards) / total_episodes)
   return q_table
 
 
@@ -134,4 +132,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

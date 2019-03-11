@@ -12,54 +12,52 @@ import numpy as np
 import pandas as pd
 import sonnet as snt
 import tensorflow as tf
-from absl import app
-from absl import flags
-from absl import logging
 from graph_nets import graphs
 from graph_nets import modules
 from graph_nets import utils_np
 from graph_nets import utils_tf
 
+from labm8 import app
 from labm8 import labdate
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'df', '/tmp/phd/docs/wip_graph/lda_opencl_device_mapping_dataset.pkl',
     'Path of the dataframe to load')
-flags.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/model_files',
-                    'Path of directory to generate files')
-flags.DEFINE_bool('profile_tensorflow', False,
-                  'Enable profiling of tensorflow.')
-flags.DEFINE_integer('model_seed', 0, 'Seed to use for reproducible results')
-flags.DEFINE_integer('num_epochs', 3, 'The number of epochs to train for.')
-flags.DEFINE_integer('batch_size', 64, 'Batch size.')
-flags.DEFINE_float('initial_learning_rate', 1e-3,
-                   'The initial Adam learning rate.')
-flags.DEFINE_float(
+app.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/model_files',
+                  'Path of directory to generate files')
+app.DEFINE_boolean('profile_tensorflow', False,
+                   'Enable profiling of tensorflow.')
+app.DEFINE_integer('model_seed', 0, 'Seed to use for reproducible results')
+app.DEFINE_integer('num_epochs', 3, 'The number of epochs to train for.')
+app.DEFINE_integer('batch_size', 64, 'Batch size.')
+app.DEFINE_float('initial_learning_rate', 1e-3,
+                 'The initial Adam learning rate.')
+app.DEFINE_float(
     'learning_rate_exponential_decay', 0.1,
     'The rate at which learning decays. If 1.0, the learning rate does not '
     'decay.')
 
 # Experimental flags.
 
-flags.DEFINE_integer('experimental_force_num_processing_steps', 0,
-                     'If > 0, sets the number of processing steps.')
-flags.DEFINE_bool(
+app.DEFINE_integer('experimental_force_num_processing_steps', 0,
+                   'If > 0, sets the number of processing steps.')
+app.DEFINE_boolean(
     'experimental_graph_diameter_processing_steps', True,
     'Use the undirected CFG diameter to derive the number of '
     'processing steps.')
-flags.DEFINE_integer('experimental_mlp_model_latent_size', 16,
-                     'Latent layer size in edge/node/global models.')
-flags.DEFINE_integer('experimental_mlp_model_layer_count', 2,
-                     'Number of layers in edge/node/global models.')
-flags.DEFINE_bool(
+app.DEFINE_integer('experimental_mlp_model_latent_size', 16,
+                   'Latent layer size in edge/node/global models.')
+app.DEFINE_integer('experimental_mlp_model_layer_count', 2,
+                   'Number of layers in edge/node/global models.')
+app.DEFINE_boolean(
     'experimental_use_encode_process_decode_with_loop', False,
     'Use an experimental encode-process-decode model which '
     'uses a TensorFlow while loop rather than being unrolled '
     'for each time step')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'experimental_while_loop_sequence_length', 10,
     'The number of unrolled steps inside while loop '
     'sequences. Only matters is '
@@ -479,10 +477,10 @@ class CompilerGraphNeuralNetwork(object):
 
     # Lookup the loss op and evaluator functions from the table.
     make_loss_op = getattr(LossOps, df['graphnet:loss_op'].values[0])
-    logging.info('Using loss op %s', make_loss_op.__name__)
+    app.Info('Using loss op %s', make_loss_op.__name__)
     evaluate_outputs = getattr(AccuracyEvaluators,
                                df['graphnet:accuracy_evaluator'].values[0])
-    logging.info('Using evaluator %s', evaluate_outputs.__name__)
+    app.Info('Using evaluator %s', evaluate_outputs.__name__)
 
     # Create output directories.
     (outdir / 'telemetry').mkdir(exist_ok=True, parents=True)
@@ -491,14 +489,14 @@ class CompilerGraphNeuralNetwork(object):
 
     # Get the number of message passing steps.
     num_processing_steps = GetNumberOfMessagePassingSteps(df)
-    logging.info('Number of processing steps: %d', num_processing_steps)
+    app.Info('Number of processing steps: %d', num_processing_steps)
 
     with prof.Profile('create placeholders'):
       input_ph, target_ph = CreatePlaceholdersFromGraphs(
           df['networkx:input_graph'], df['networkx:target_graph'])
 
-    logging.debug("Input placeholders:\n%s", GraphTupleToString(input_ph))
-    logging.debug("Target placeholders:\n%s", GraphTupleToString(target_ph))
+    app.Debug("Input placeholders:\n%s", GraphTupleToString(input_ph))
+    app.Debug("Target placeholders:\n%s", GraphTupleToString(target_ph))
 
     # Instantiate the model.
     with tf.name_scope('model'):
@@ -568,8 +566,8 @@ class CompilerGraphNeuralNetwork(object):
     validation_df = self.df[self.df['split:type'] == 'validation']
     test_df = self.df[self.df['split:type'] == 'test']
 
-    logging.info("%d train graphs, %d validation graphs, %d test graphs",
-                 len(train_df), len(validation_df), len(test_df))
+    app.Info("%d train graphs, %d validation graphs, %d test graphs",
+             len(train_df), len(validation_df), len(test_df))
 
     with prof.Profile('train split'):
       batches = list(range(0, len(train_df), FLAGS.batch_size))
@@ -656,7 +654,7 @@ class CompilerGraphNeuralNetwork(object):
             log['batch_runtime_ms'].append(int(batch_runtime * 1000))
             log['training_losses'].append(float(train_values['loss']))
 
-            logging.info(
+            app.Info(
                 'Epoch %02d / %02d, batch %02d / %02d in %.3fs (%02d graphs/sec), '
                 'training loss: %.4f', epoch_num + 1, FLAGS.num_epochs, j + 1,
                 len(batches), batch_runtime, int(graphs_per_second),
@@ -707,7 +705,7 @@ class CompilerGraphNeuralNetwork(object):
         log['validation_loss'] = sum(losses) / len(losses)
         log['validation_runtime_ms'] = validation_runtime * 1000
 
-        logging.info(
+        app.Info(
             'Validation set in %.3f seconds (%02d graphs/sec), '
             'loss: %.4f, %.2f%% accuracy, %.2f%% solved', validation_runtime,
             graphs_per_second, log['validation_loss'],
@@ -750,7 +748,7 @@ class CompilerGraphNeuralNetwork(object):
         log['test_loss'] = sum(losses) / len(losses)
         log['test_runtime_ms'] = test_runtime * 1000
 
-        logging.info(
+        app.Info(
             'Test set in %.3f seconds (%02d graphs/sec), '
             'loss: %.4f, %.2f%% accuracy, %.2f%% solved', test_runtime,
             graphs_per_second, log['test_loss'], eval_result.accuracy * 100,
@@ -761,7 +759,7 @@ class CompilerGraphNeuralNetwork(object):
                    f'T{labdate.MillisecondsTimestamp()}.json')
         with open(logpath, 'w') as f:
           json.dump(log, f)
-        logging.info("Wrote %s", logpath)
+        app.Info("Wrote %s", logpath)
 
         test_outputs_path = (
             f'{self.outdir}/test_outputs/epoch_{epoch_num+1:03d}.'
@@ -804,7 +802,7 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
-  logging.info('Starting evaluating graph model')
+  app.Info('Starting evaluating graph model')
 
   # Load graphs from file.
   df_path = pathlib.Path(FLAGS.df)
@@ -817,7 +815,7 @@ def main(argv):
 
   with prof.Profile('load dataframe'):
     df = pd.read_pickle(df_path)
-  logging.info('Loaded %s dataframe from %s', df.shape, df_path)
+  app.Info('Loaded %s dataframe from %s', df.shape, df_path)
 
   # Prepare TensorFlow profiler.
   builder = tf.profiler.ProfileOptionBuilder
@@ -843,4 +841,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

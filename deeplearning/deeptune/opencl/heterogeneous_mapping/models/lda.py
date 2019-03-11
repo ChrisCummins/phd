@@ -8,8 +8,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from absl import flags
-from absl import logging
 from graph_nets.demos import models as gn_models
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
@@ -18,8 +16,9 @@ from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from experimental.compilers.reachability import llvm_util
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # A value which has different values for training and testing.
 TrainTestValue = collections.namedtuple('TrainTestValue', ['train', 'test'])
@@ -114,13 +113,13 @@ def _ExtractGraphBatchOrDie(
   batch = []
 
   for src_file_path in src_file_paths:
-    logging.info('Compiling %s', src_file_path.name)
+    app.Info('Compiling %s', src_file_path.name)
     bytecode = ncc.ExtractLlvmByteCodeOrDie(src_file_path, headers_dir)
     dot_strings = list(llvm_util.DotCfgsFromBytecode(bytecode))
     cfgs = [llvm_util.ControlFlowGraphFromDotSource(dot) for dot in dot_strings]
     if len(cfgs) != 1:
-      logging.fatal('Found %d CFGs in %s: %s', len(dot_strings),
-                    src_file_path.name, [c.graph['name'] for c in cfgs])
+      app.Fatal('Found %d CFGs in %s: %s', len(dot_strings), src_file_path.name,
+                [c.graph['name'] for c in cfgs])
     ffg = cfgs[0].BuildFullFlowGraph()
 
     # Set the input bytecode as a graph property.
@@ -202,7 +201,7 @@ class Lda(base.HeterogeneousMappingModel):
     # if self.num_processing_steps is None:
     #   self.num_processing_steps = self.GetNumberOfMessagePassingSteps(
     #       input_graphs, target_graphs)
-    #   logging.info("Derived processing step count of %d",
+    #   app.Info("Derived processing step count of %d",
     #                self.num_processing_steps)
     #
     # # Create the placeholders.
@@ -314,7 +313,7 @@ class Lda(base.HeterogeneousMappingModel):
 
       with tf.Session() as session:
         for i, (row, graph) in enumerate(data):
-          logging.info('Encoding graph %d %s', i, row['program:benchmark_name'])
+          app.Info('Encoding graph %d %s', i, row['program:benchmark_name'])
           yield row, EncodeGraph(graph, vocab, session, embedding_lookup_op,
                                  embedding_lookup_input_ph)
 

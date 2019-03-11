@@ -8,24 +8,22 @@ import subprocess
 import typing
 
 import progressbar
-from absl import app
-from absl import flags
-from absl import logging
 from sqlalchemy import orm
 
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
-flags.DEFINE_integer('processes', os.cpu_count(),
-                     'The number of simultaneous processes.')
+FLAGS = app.FLAGS
+app.DEFINE_integer('processes', os.cpu_count(),
+                   'The number of simultaneous processes.')
 
-flags.DEFINE_string('importer_clone_list', None,
-                    'The path to a LanguageCloneList file.')
+app.DEFINE_string('importer_clone_list', None,
+                  'The path to a LanguageCloneList file.')
 
 
 def ShouldImportRepo(session: orm.session.Session,
@@ -68,7 +66,7 @@ def ImportWorker(job: scrape_repos_pb2.ImportWorker
               linecount=len(text.split('\n')),
               text=text))
   except UnicodeDecodeError:
-    logging.warning('Failed to decode %s', relpath)
+    app.Warning('Failed to decode %s', relpath)
   return outputs
 
 
@@ -90,7 +88,7 @@ def ImportRepo(session: orm.session.Session,
 
   for importer in language.importer:
     if not importer.source_code_pattern:
-      logging.error('No source_code_pattern specified! Stopping now.')
+      app.Error('No source_code_pattern specified! Stopping now.')
       return
 
     pat = importer.source_code_pattern
@@ -99,15 +97,14 @@ def ImportRepo(session: orm.session.Session,
         'find',
         str(clone_dir), '-type', 'f', '-regex', pat, '-not', '-path', '*/.git/*'
     ]
-    logging.debug('$ %s', ' '.join(cmd))
+    app.Debug('$ %s', ' '.join(cmd))
     paths = subprocess.check_output(
         cmd, universal_newlines=True).rstrip().split('\n')
     if len(paths) == 1 and not paths[0]:
-      logging.debug('No files to import from %s', clone_dir)
+      app.Debug('No files to import from %s', clone_dir)
       return
-    logging.info("Importing %s '%s' files from %s ...",
-                 humanize.Commas(len(paths)), importer.source_code_pattern,
-                 clone_dir)
+    app.Info("Importing %s '%s' files from %s ...", humanize.Commas(len(paths)),
+             importer.source_code_pattern, clone_dir)
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
     jobs = [
         scrape_repos_pb2.ImportWorker(
@@ -148,8 +145,8 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
                             pathlib.Path(language.destination_directory / f))
     ]
   random.shuffle(repos_to_import)
-  logging.info('Importing %s %s repos ...', humanize.Commas(
-      len(repos_to_import)), language.language.capitalize())
+  app.Info('Importing %s %s repos ...', humanize.Commas(len(repos_to_import)),
+           language.language.capitalize())
   for metafile in repos_to_import:
     with db.Session(commit=True) as session:
       ImportRepo(session, language, metafile, pool)
@@ -181,4 +178,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -24,8 +24,6 @@ import typing
 import numpy as np
 import progressbar
 import sqlalchemy as sql
-from absl import flags
-from absl import logging
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
@@ -33,10 +31,11 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
+from labm8 import app
 from labm8 import humanize
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
 
@@ -160,11 +159,11 @@ class EncodedContentFiles(sqlutil.Database):
           func.sum(EncodedContentFile.wall_time_ms),
           func.sum(EncodedContentFile.encoding_time_ms),
       ).first()
-    logging.info('Encoded %s files in %s ms (%.2fx speedup).',
-                 humanize.Commas(num_files), humanize.Commas(total_walltime),
-                 total_time / total_walltime)
-    logging.info('Encoded corpus: %s tokens, %s files.',
-                 humanize.Commas(token_count), humanize.Commas(num_files))
+    app.Info('Encoded %s files in %s ms (%.2fx speedup).',
+             humanize.Commas(num_files), humanize.Commas(total_walltime),
+             total_time / total_walltime)
+    app.Info('Encoded corpus: %s tokens, %s files.',
+             humanize.Commas(token_count), humanize.Commas(num_files))
 
   @property
   def size(self):
@@ -211,7 +210,7 @@ class EncodedContentFiles(sqlutil.Database):
             "Pre-processed corpus contains no files: "
             f"'{preprocessed_db.url}'")
 
-      logging.info(
+      app.Info(
           'Encoding %s of %s preprocessed files',
           humanize.Commas(query.count()),
           humanize.Commas(

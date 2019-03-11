@@ -4,19 +4,18 @@ import datetime
 import pathlib
 
 import sqlalchemy as sql
-from absl import flags
-from absl import logging
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.declarative import declarative_base
 
 from deeplearning.deepsmith.proto import datastore_pb2
+from labm8 import app
 from labm8 import labdate
 from labm8 import pbutil
 from labm8.sqlutil import GetOrAdd
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_bool('sql_echo', None, 'Print all executed SQL statements')
+app.DEFINE_boolean('sql_echo', None, 'Print all executed SQL statements')
 
 # The database session type.
 session_t = sql.orm.session.Session
@@ -326,7 +325,7 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
   else:
     raise NotImplementedError(f'unsupported database engine')
 
-  logging.info("Database engine: '%s'", public_url)
+  app.Info("Database engine: '%s'", public_url)
   return sql.create_engine(url, encoding='utf-8', echo=FLAGS.sql_echo)
 
 

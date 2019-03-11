@@ -41,8 +41,8 @@ py_test(
     srcs = ["args_test.py"],
     deps = [
         ":args",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -75,8 +75,8 @@ py_test(
     deps = [
         ":data",
         ":testlib",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -102,8 +102,8 @@ py_test(
         ":data",
         ":driver",
         ":testlib",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
     ],
 )
@@ -116,9 +116,9 @@ py_library(
     deps = [
         "//gpu/clinfo/proto:clinfo_py_pb2",
         "//gpu/oclgrind",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -128,8 +128,8 @@ py_test(
     srcs = ["env_test.py"],
     deps = [
         ":env",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 

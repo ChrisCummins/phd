@@ -17,13 +17,13 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
 
 import deeplearning.clgen.errors
 from deeplearning.clgen.corpuses import atomizers
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The set of multichar tokens for the OpenCL programming language.
 OPENCL_ATOMS = set([

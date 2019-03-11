@@ -13,9 +13,6 @@ import time
 import typing
 
 import gpu.cldrive.env
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.difftests import opencl as opencl_filters
@@ -29,57 +26,58 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from gpu.cldrive.legacy import env
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_boolean('ls_env', False,
-                     'List the available OpenCL devices and exit.')
-flags.DEFINE_string('generator', 'clgen',
-                    'The type of generator to use. One of: {clgen,clsmith}.')
-flags.DEFINE_string(
+app.DEFINE_boolean('ls_env', False,
+                   'List the available OpenCL devices and exit.')
+app.DEFINE_string('generator', 'clgen',
+                  'The type of generator to use. One of: {clgen,clsmith}.')
+app.DEFINE_string(
     'generator_config', None,
     'The path of the generator config proto. If --generator=clgen, this must '
     'be a ClgenGenerator proto. If --generator=clsmith, this must be a '
     'ClSmithGenerator proto.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'base_harness', None,
     'The path to an optional base harness config proto. If set, the harness '
     'configs are copied from this. Else, the default config is used. If '
     '--clgen_generator is set, this must be a cldrive harness proto. If '
     '--clsmith_generator is set, this must be a cl_launcher harness proto.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'dut', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
     'The name of the device under test, as described by cldrive. Run '
     '//gpu/cldrive --ls_env to see a list of available devices.')
-flags.DEFINE_bool('opencl_opt', True,
-                  'If --noopencl_opt, OpenCL optimizations are disabled.')
-flags.DEFINE_string(
+app.DEFINE_boolean('opencl_opt', True,
+                   'If --noopencl_opt, OpenCL optimizations are disabled.')
+app.DEFINE_string(
     'interesting_results_dir',
     '/tmp/phd/experimental/deeplearning/deepsmith/opencl_fuzz/'
     'interesting_results', 'Directory to write interesting results to.')
-flags.DEFINE_bool(
+app.DEFINE_boolean(
     'all_results_are_interesting', False,
     'If set, all results are written to interesting_results_dir.')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'min_interesting_results', 1,
     'The minimum number of interesting testcases to discover before stopping.')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'max_testing_time_seconds', 60,
     'The maximum number of time to run in seconds. The actual runtime may be '
     'higher, as the in-progress batch must complete.')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'batch_size', 128,
     'The number of test cases to generate and execute in a single batch.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'rerun_result', None,
     'If --rerun_result points to the path of a Result proto, the result '
     'testcase is executed under the specified --dut, and the new Result is '
     'printed to stdout.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'unpack_result', None,
     'If --unpack_result points to the path of a Result proto, the result '
     'proto is unpacked into the testcase OpenCL kernel, and C source code. '
@@ -120,7 +118,7 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
   interesting_results = []
 
   # Generate testcases.
-  logging.info('Generating %d testcases ...', batch_size)
+  app.Info('Generating %d testcases ...', batch_size)
   req = generator_pb2.GenerateTestcasesRequest()
   req.num_testcases = batch_size
   res = generator.GenerateTestcases(req, None)
@@ -128,19 +126,18 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
       testcase for testcase in res.testcases if filters.PreExec(testcase)
   ]
   if len(res.testcases) - len(testcases):
-    logging.info('Discarded %d testcases prior to execution.',
-                 len(res.testcases) - len(testcases))
+    app.Info('Discarded %d testcases prior to execution.',
+             len(res.testcases) - len(testcases))
 
   # Evaluate testcases.
-  logging.info('Evaluating %d testcases on %s ...', len(testcases),
-               dut_harness.testbeds[0].opts['platform'][:12])
+  app.Info('Evaluating %d testcases on %s ...', len(testcases),
+           dut_harness.testbeds[0].opts['platform'][:12])
   unfiltered_results = RunTestcases(dut_harness, testcases)
   results = [
       result for result in unfiltered_results if filters.PostExec(result)
   ]
   if len(unfiltered_results) - len(results):
-    logging.info('Discarded %d results.',
-                 len(unfiltered_results) - len(results))
+    app.Info('Discarded %d results.', len(unfiltered_results) - len(results))
 
   for i, result in enumerate(results):
     interesting_result = ResultIsInteresting(result, unary_difftester,
@@ -208,15 +205,15 @@ def ResultIsInteresting(
 
   dt_outcomes = gs_difftester([gs_result, result])
   dt_outcome = dt_outcomes[1]
-  logging.info('Differential test outcome: %s.',
-               deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
+  app.Info('Differential test outcome: %s.',
+           deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
 
   # Determine whether we can use the difftest result.
   dt = filters.PostDifftest(
       deepsmith_pb2.DifferentialTest(
           result=[gs_result, result], outcome=dt_outcomes))
   if not dt:
-    logging.info('Cannot use gold standard difftest result.')
+    app.Info('Cannot use gold standard difftest result.')
     return NotInteresting(result)
   result = dt.result[1]
 
@@ -284,7 +281,7 @@ def TestingLoop(min_interesting_results: int,
   while (num_interesting_results < min_interesting_results and
          time.time() < start_time + max_testing_time_seconds):
     batch_num += 1
-    logging.info('Starting generate / test / eval batch %d ...', batch_num)
+    app.Info('Starting generate / test / eval batch %d ...', batch_num)
     interesting_results = RunBatch(generator, dut_harness, gs_harness, filters,
                                    batch_size)
     num_interesting_results += len(interesting_results)
@@ -293,13 +290,13 @@ def TestingLoop(min_interesting_results: int,
           result, interesting_results_dir /
           (str(labdate.MillisecondsTimestamp()) + '.pbtxt'))
 
-  logging.info(
+  app.Info(
       'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
       'Found %s interesting results.',
       time.time() - start_time, humanize.Commas(batch_num),
       (((time.time() - start_time) / (batch_num * batch_size)) * 1000),
       num_interesting_results)
-  logging.flush()
+  app.FlushLogs()
 
 
 def GetBaseHarnessConfig(config_class):
@@ -359,7 +356,7 @@ def GetDeviceUnderTestHarness() -> base_harness.HarnessBase:
   else:
     raise app.UsageError(
         f"Unrecognized value for --generator: '{FLAGS.generator}'")
-  logging.info('Preparing device under test.')
+  app.Info('Preparing device under test.')
   config = GetBaseHarnessConfig(config_class)
   config.opencl_env.extend([FLAGS.dut])
   config.opencl_opt.extend([FLAGS.opencl_opt])
@@ -385,7 +382,7 @@ def GetGoldStandardTestHarness() -> base_harness.HarnessBase:
   else:
     raise app.UsageError(
         f"Unrecognized value for --generator: '{FLAGS.generator}'")
-  logging.info('Preparing gold standard testbed.')
+  app.Info('Preparing gold standard testbed.')
   config = GetBaseHarnessConfig(config_class)
   config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
@@ -395,7 +392,7 @@ def GetGoldStandardTestHarness() -> base_harness.HarnessBase:
 
 
 def GetGenerator() -> base_generator.GeneratorServiceBase:
-  logging.info('Preparing generator.')
+  app.Info('Preparing generator.')
   if FLAGS.generator == 'clgen':
     generator = GeneratorFromFlag(generator_pb2.ClgenGenerator,
                                   clgen_pretrained.ClgenGenerator)
@@ -405,7 +402,7 @@ def GetGenerator() -> base_generator.GeneratorServiceBase:
   else:
     raise app.UsageError(
         f"Unrecognized value for --generator: '{FLAGS.generator}'")
-  logging.info('%s:\n %s', type(generator).__name__, generator.config)
+  app.Info('%s:\n %s', type(generator).__name__, generator.config)
   return generator
 
 
@@ -429,20 +426,18 @@ def ReRunResult(result: deepsmith_pb2.Result,
     dut_harness: The device harness to re-run the result using.
   """
   if dut_harness.testbeds[0] != result.testbed:
-    logging.warning('Re-running result on a different testbed!')
+    app.Warning('Re-running result on a different testbed!')
   results = RunTestcases(dut_harness, [result.testcase])
   assert len(results) == 1
   new_result = results[0]
-  logging.warning(f'Re-run result has same outcome: '
-                  f'{new_result.outcome == result.outcome}.')
-  logging.warning(f'Re-run result has same returncode: '
-                  f'{new_result.returncode == result.returncode}.')
-  logging.warning(
-      'Re-run result has same stdout: '
-      f"{new_result.outputs['stdout'] == result.outputs['stdout']}.")
-  logging.warning(
-      'Re-run result has same stderr: '
-      f"{new_result.outputs['stderr'] == result.outputs['stderr']}.")
+  app.Warning(f'Re-run result has same outcome: '
+              f'{new_result.outcome == result.outcome}.')
+  app.Warning(f'Re-run result has same returncode: '
+              f'{new_result.returncode == result.returncode}.')
+  app.Warning('Re-run result has same stdout: '
+              f"{new_result.outputs['stdout'] == result.outputs['stdout']}.")
+  app.Warning('Re-run result has same stderr: '
+              f"{new_result.outputs['stderr'] == result.outputs['stderr']}.")
   return result
 
 
@@ -478,7 +473,7 @@ def WriteFile(path: pathlib.Path, text: str) -> None:
   """
   with open(path, 'w') as f:
     f.write(text)
-  logging.info('Wrote %s', path)
+  app.Info('Wrote %s', path)
 
 
 def UnpackResult(result_path: typing.Optional[str]) -> None:
@@ -534,7 +529,7 @@ def main(argv):
   interesting_results_dir = pathlib.Path(FLAGS.interesting_results_dir)
   if interesting_results_dir.exists() and not interesting_results_dir.is_dir():
     raise app.UsageError('--interesting_results_dir must be a directory')
-  logging.info('Recording interesting results in %s.', interesting_results_dir)
+  app.Info('Recording interesting results in %s.', interesting_results_dir)
 
   generator = GetGenerator()
   filters = GetFilters()
@@ -554,9 +549,9 @@ def main(argv):
 
 if __name__ == '__main__':
   try:
-    app.run(main)
+    app.RunWithArgs(main)
   except KeyboardInterrupt:
-    logging.flush()
+    app.FlushLogs()
     sys.stdout.flush()
     sys.stderr.flush()
     print('keyboard interrupt')

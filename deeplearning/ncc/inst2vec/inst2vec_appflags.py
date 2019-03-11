@@ -21,61 +21,59 @@
 # ==============================================================================
 """Execution flags for inst2vec parameters"""
 
-from absl import flags
-
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
 # Vocabulary parameters
-flags.DEFINE_integer('context_width', 2, 'width of skip-gram context')
-flags.DEFINE_integer(
+app.DEFINE_integer('context_width', 2, 'width of skip-gram context')
+app.DEFINE_integer(
     'cutoff_unknown', 300,
     'replace stmts which appear less than "cutoff" times by "unknown token')
-flags.DEFINE_float('subsampling', 1e-7, 'frequent pairs subsampling')
+app.DEFINE_float('subsampling', 1e-7, 'frequent pairs subsampling')
 
 # Parameters of inst2vec (default)
-flags.DEFINE_integer('embedding_size', 200, 'Dimension of embedding space')
-flags.DEFINE_integer('mini_batch_size', 64,
-                     'size of mini-batches of data to feed the neural network')
-flags.DEFINE_integer('num_sampled', 60,
-                     'number of negative classes to sample/batch for NCE')
-flags.DEFINE_integer('num_epochs', 5, 'number of training epochs')
-flags.DEFINE_float('learning_rate', 0.001,
-                   "learning rate used by Adam's optimizer")
-flags.DEFINE_float(
+app.DEFINE_integer('embedding_size', 200, 'Dimension of embedding space')
+app.DEFINE_integer('mini_batch_size', 64,
+                   'size of mini-batches of data to feed the neural network')
+app.DEFINE_integer('num_sampled', 60,
+                   'number of negative classes to sample/batch for NCE')
+app.DEFINE_integer('num_epochs', 5, 'number of training epochs')
+app.DEFINE_float('learning_rate', 0.001,
+                 "learning rate used by Adam's optimizer")
+app.DEFINE_float(
     'beta', 0.0,
     'scale of L2 regularization applied to weights (0: no regularization)')
 
 # Embedding training parameters
-flags.DEFINE_string(
+app.DEFINE_string(
     'embeddings_folder', 'data/emb',
     'Folder in which to store embedding training data and their evaluation')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'freq_print_loss', 100,
     'how many times to print the average loss per epoch (0: no printing)')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'step_print_neighbors', -1, 'frequency for printing nearest neighbours ' +
     '(0: no printing, -1: print at last step)')
-flags.DEFINE_bool('restore', False, 'Restore from checkpoint')
-flags.DEFINE_bool('profile', False, 'Write traces to Chrome tracing JSON')
-flags.DEFINE_bool('xla', False,
-                  'Use XLA JIT compilation (need to compile TF from source)')
-flags.DEFINE_string('optimizer', 'adam',
-                    'Choose an optimizer (options: adam, nadam, momentum)')
-flags.DEFINE_bool('extreme', False, 'Kill training every step')
-flags.DEFINE_bool('softmax', True, 'Use softmax instead of NCE')
-flags.DEFINE_string('savebest', None,
-                    'Folder to save the best training results to')
+app.DEFINE_boolean('restore', False, 'Restore from checkpoint')
+app.DEFINE_boolean('profile', False, 'Write traces to Chrome tracing JSON')
+app.DEFINE_boolean('xla', False,
+                   'Use XLA JIT compilation (need to compile TF from source)')
+app.DEFINE_string('optimizer', 'adam',
+                  'Choose an optimizer (options: adam, nadam, momentum)')
+app.DEFINE_boolean('extreme', False, 'Kill training every step')
+app.DEFINE_boolean('softmax', True, 'Use softmax instead of NCE')
+app.DEFINE_string('savebest', None,
+                  'Folder to save the best training results to')
 
 # Parameters of embeddings intrinsic evaluation
-flags.DEFINE_string(
+app.DEFINE_string(
     'embeddings_file', '',
     'Path to embeddings file to be used for evaluation and NCC task training')
-flags.DEFINE_string(
+app.DEFINE_string(
     'vocabulary_folder', '',
     'Path to the vocabulary folder associated with those embeddings')
-flags.DEFINE_bool('verbose', False, 'Use verbosity in UMAP')
-flags.DEFINE_string('metric', 'euclidean', 'Distance metric for UMAP')
-flags.DEFINE_bool('tsne', True, 'Use t-SNE')
-flags.DEFINE_bool('newtags', False, 'Use type-based tags')
-flags.DEFINE_string('taglist', 'tags.np',
-                    'Use existing taglist (or save to it)')
+app.DEFINE_boolean('verbose', False, 'Use verbosity in UMAP')
+app.DEFINE_string('metric', 'euclidean', 'Distance metric for UMAP')
+app.DEFINE_boolean('tsne', True, 'Use t-SNE')
+app.DEFINE_boolean('newtags', False, 'Use type-based tags')
+app.DEFINE_string('taglist', 'tags.np', 'Use existing taglist (or save to it)')

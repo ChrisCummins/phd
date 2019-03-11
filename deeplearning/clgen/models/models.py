@@ -18,8 +18,6 @@ import pathlib
 import typing
 
 import numpy as np
-from absl import flags
-from absl import logging
 
 from deeplearning.clgen import cache
 from deeplearning.clgen import errors
@@ -33,6 +31,7 @@ from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
+from labm8 import app
 from labm8 import crypto
 from labm8 import humanize
 from labm8 import labdate
@@ -40,9 +39,9 @@ from labm8 import lockfile
 from labm8 import logutil
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_bool(
+app.DEFINE_boolean(
     'experimental_batched_sampling', False,
     'Enable an experimental batched sampling feature. THIS FEATURE IS STILL '
     'EXPERIMENTAL AND HAS NOT BEEN THOROUGHLY REVIEWED OR UNDERSTOOD.')
@@ -169,10 +168,9 @@ class Model(object):
     total_time_ms = sum(
         t.epoch_wall_time_ms
         for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
-    logging.info('Trained model for %d epochs in %s ms (%s).',
-                 self.config.training.num_epochs,
-                 humanize.Commas(total_time_ms),
-                 humanize.Duration(total_time_ms / 1000))
+    app.Info('Trained model for %d epochs in %s ms (%s).',
+             self.config.training.num_epochs, humanize.Commas(total_time_ms),
+             humanize.Duration(total_time_ms / 1000))
     return self
 
   def Sample(self,
@@ -212,9 +210,9 @@ class Model(object):
     self.SamplerCache(sampler).mkdir(exist_ok=True)
     with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
                                self.cache.path / 'logs'):
-      logging.info("Sampling: '%s'", sampler.start_text)
+      app.Info("Sampling: '%s'", sampler.start_text)
       if min_num_samples < 0:
-        logging.warning(
+        app.Warning(
             'Entering an infinite sample loop, this process will never end!')
       sample_start_time = labdate.MillisecondsTimestamp()
 
@@ -242,7 +240,7 @@ class Model(object):
           pbutil.ToFile(sample, sample_path)
 
       now = labdate.MillisecondsTimestamp()
-      logging.info(
+      app.Info(
           'Produced %s samples at a rate of %s ms / sample.',
           humanize.Commas(len(samples)),
           humanize.Commas(
@@ -286,7 +284,7 @@ class Model(object):
     sample_count = 1
     with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
                                self.cache.path / 'logs'):
-      logging.info("Sampling: '%s'", sampler.start_text)
+      app.Info("Sampling: '%s'", sampler.start_text)
       sample_start_time = labdate.MillisecondsTimestamp()
       atomizer = self.corpus.atomizer
       sampler.Specialize(atomizer)
@@ -299,10 +297,9 @@ class Model(object):
         samples += self._SampleBatch(sampler, atomizer, batch_size)
 
       now = labdate.MillisecondsTimestamp()
-      logging.info(
-          'Produced %s samples at a rate of %s ms / sample.',
-          humanize.Commas(len(samples)),
-          humanize.Commas(int((now - sample_start_time) / len(samples))))
+      app.Info('Produced %s samples at a rate of %s ms / sample.',
+               humanize.Commas(len(samples)),
+               humanize.Commas(int((now - sample_start_time) / len(samples))))
 
     return samples
 

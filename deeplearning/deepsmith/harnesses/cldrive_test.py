@@ -3,18 +3,18 @@ import pathlib
 import subprocess
 import tempfile
 
-import pytest
-from absl import flags
-
 import gpu.cldrive.env
+import pytest
+
 from deeplearning.deepsmith.harnesses import cldrive
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.oclgrind import oclgrind
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Test fixtures.
 

@@ -256,7 +256,7 @@ def main():
   sql.Base.metadata.bind = engine
   make_session = sqlalchemy.orm.sessionmaker(bind=engine)
 
-  app.run(debug=True, host='0.0.0.0')
+  app.RunWithArgs(debug=True, host='0.0.0.0')
 
 
 if __name__ == "__main__":

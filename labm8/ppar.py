@@ -7,13 +7,12 @@ import multiprocessing
 import subprocess
 import typing
 
-from absl import flags
-
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class MapWorkerError(EnvironmentError):

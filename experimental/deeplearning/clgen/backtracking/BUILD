@@ -7,8 +7,8 @@ py_binary(
         ":backtracking_model",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen/preprocessors",
+        "//labm8:app",
         "//research/cummins_2017_cgo:generative_model",
-        "//third_party/py/absl",
     ],
 )
 
@@ -25,9 +25,9 @@ py_library(
     srcs = ["backtracking_db.py"],
     visibility = ["//experimental/deeplearning/clgen:__subpackages__"],
     deps = [
+        "//labm8:app",
         "//labm8:sqlutil",
         "//research/grewe_2013_cgo:feature_extractor",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/sqlalchemy",
     ],
@@ -45,9 +45,9 @@ py_binary(
         "//deeplearning/clgen/models:tensorflow_backend",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//research/grewe_2013_cgo:feature_extractor",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/scipy",
     ],
@@ -68,7 +68,7 @@ py_library(
     srcs = ["logger.py"],
     deps = [
         ":backtracking_db",
+        "//labm8:app",
         "//labm8:humanize",
-        "//third_party/py/absl",
     ],
 )

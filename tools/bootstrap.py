@@ -8,15 +8,15 @@
 #     [python_path, '-m', 'pip', 'freeze'], subprocess.check_output).decode(
 #     'utf-8')
 # if args.with_cuda and 'tensorflow==' in pip_packages:
-#   logging.info('Detected CUDA, so uninstalling CPU TensorFlow')
+#   app.Info('Detected CUDA, so uninstalling CPU TensorFlow')
 #   RunAsHomebrewUser(
 #       [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow'])
 # elif not args.with_cuda and 'tensorflow-gpu==' in pip_packages:
-#   logging.info('CUDA not detected, so uninstalling GPU TensorFlow')
+#   app.Info('CUDA not detected, so uninstalling GPU TensorFlow')
 #   RunAsHomebrewUser(
 #       [python_path, '-m', 'pip', 'uninstall', '-y', '-q', 'tensorflow-gpu'])
 #
-# logging.info('Installing Python packages')
+# app.Info('Installing Python packages')
 # # If the current user is root, then the linuxbrew user will not have
 # # permissions to read the requirements.txt file. Therefore we create a
 # # temproary copy of the requirements.txt and install using that.

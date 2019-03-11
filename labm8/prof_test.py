@@ -3,13 +3,13 @@ import os
 import re
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import prof
 from labm8 import system
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 if system.is_python3():
   from io import StringIO

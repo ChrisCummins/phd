@@ -12,17 +12,15 @@ import sys
 import time
 import typing
 
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import system
 from labm8.proto import lockfile_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_float(
+app.DEFINE_float(
     'lockfile_block_seconds', 10.0,
     'The number of seconds to block for when waiting for a lock '
     'files.')
@@ -202,8 +200,8 @@ class LockFile:
         elif not block:
           raise UnableToAcquireLockError(self)
         # Block and try again later.
-        logging.info('Blocking on lockfile %s for %f seconds', self.path,
-                     FLAGS.lockfile_block_seconds)
+        app.Info('Blocking on lockfile %s for %f seconds', self.path,
+                 FLAGS.lockfile_block_seconds)
         time.sleep(FLAGS.lockfile_block_seconds)
       else:  # new lock
         _create_lock()

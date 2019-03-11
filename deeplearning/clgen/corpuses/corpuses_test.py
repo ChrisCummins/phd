@@ -18,15 +18,15 @@ import pathlib
 import tempfile
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import corpus_pb2
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The Corpus.hash for an OpenCL corpus of the abc_corpus.
 ABC_CORPUS_HASH = 'cb7c7a23c433a1f628c9b120378759f1723fdf42'

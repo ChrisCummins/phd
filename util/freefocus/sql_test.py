@@ -2,14 +2,14 @@
 import pathlib
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import sqlutil
 from labm8 import test
 from util.freefocus import freefocus_pb2
 from util.freefocus import sql
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

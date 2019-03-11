@@ -15,14 +15,13 @@
 """Preprocessor passes for the OpenCL programming language."""
 import typing
 
-from absl import flags
-
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 LIBCLC = bazelutil.DataPath('phd/third_party/libclc/generic/include')
 OPENCL_H = bazelutil.DataPath('phd/deeplearning/clgen/data/include/opencl.h')

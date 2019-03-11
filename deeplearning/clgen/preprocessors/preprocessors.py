@@ -17,12 +17,11 @@ import importlib
 import typing
 from io import open
 
-from absl import flags
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:

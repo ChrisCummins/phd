@@ -4,12 +4,11 @@ import multiprocessing
 import pathlib
 import typing
 
-from absl import flags
-
 from datasets.me_db import me_pb2
+from labm8 import app
 from labm8 import labtypes
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # An inbox importer is a function that takes a path to a directory (the inbox)
 # and a Queue. When called, the function places a SeriesCollection proto on the

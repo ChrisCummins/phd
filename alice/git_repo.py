@@ -5,11 +5,10 @@ TODO: Detailed explanation of the file.
 import pathlib
 
 import git
-from absl import flags
 
 from alice import alice_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class PhdRepo(object):

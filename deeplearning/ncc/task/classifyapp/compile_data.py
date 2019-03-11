@@ -27,7 +27,8 @@ import random
 import subprocess
 
 import template_vars
-from absl import app, flags
+
+from labm8 import app
 
 
 class CompilerArgumentGenerator(object):
@@ -53,13 +54,13 @@ class CompilerArgumentGenerator(object):
             additional_flags + ' -o ', output_filename)
 
 
-flags.DEFINE_string('input_path', None, 'Input path of rendered .cpp files')
-flags.DEFINE_string('output_path', None, 'Output path to store .ll files')
-flags.DEFINE_string('compile_one', None, 'Define a single template to compile')
-flags.DEFINE_integer('ir_per_file', 32,
-                     'Number of .ll files generated per input')
-flags.DEFINE_string('compiler_flags', '', 'Additional compiler flags')
-FLAGS = flags.FLAGS
+app.DEFINE_string('input_path', None, 'Input path of rendered .cpp files')
+app.DEFINE_string('output_path', None, 'Output path to store .ll files')
+app.DEFINE_string('compile_one', None, 'Define a single template to compile')
+app.DEFINE_integer('ir_per_file', 32, 'Number of .ll files generated per input')
+app.DEFINE_string('compiler_flags', '', 'Additional compiler flags')
+from labm8 import app
+FLAGS = app.FLAGS
 
 
 def _createdir(dname):
@@ -110,4 +111,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -16,13 +16,13 @@
 """Unit tests for //gpu/cldrive/legacy/data.py."""
 
 import numpy as np
-from absl import flags
 
 from gpu.cldrive.legacy import data
 from gpu.cldrive.legacy import testlib
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_MakeZeros():

@@ -6,18 +6,15 @@ import tempfile
 import typing
 import zipfile
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('healthkit_inbox', None, 'Inbox to process.')
+app.DEFINE_string('healthkit_inbox', None, 'Inbox to process.')
 
 
 def ProcessXmlFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
@@ -57,7 +54,7 @@ def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
   if not (inbox / 'health_kit' / 'export.zip').is_file():
     return me_pb2.SeriesCollection()
 
-  logging.info('Unpacking %s', inbox / 'health_kit' / 'export.zip')
+  app.Info('Unpacking %s', inbox / 'health_kit' / 'export.zip')
   with tempfile.TemporaryDirectory(prefix='phd_') as d:
     temp_xml = pathlib.Path(d) / 'export.xml'
     with zipfile.ZipFile(inbox / 'health_kit' / 'export.zip') as z:
@@ -81,4 +78,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

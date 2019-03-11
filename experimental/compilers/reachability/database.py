@@ -2,13 +2,13 @@
 import typing
 
 import sqlalchemy as sql
-from absl import flags
 from sqlalchemy.ext import declarative
 
 from experimental.compilers.reachability import reachability_pb2
+from labm8 import app
 from labm8 import sqlutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
 

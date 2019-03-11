@@ -2,31 +2,28 @@
 import collections
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from gpu.cldrive import api as cldrive
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.cldrive.proto import cldrive_pb2
-from labm8 import system
+from labm8 import app
 from labm8 import pbutil
+from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to load and store results to.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'env', 'Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
     'The OpenCL environment to execute benchmark suites on. To list the '
     'available environments, run `bazel run //gpu/clinfo`.')
-flags.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
-flags.DEFINE_integer('batch_size', 16,
-                     'The number of kernels to process at a time.')
+app.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
+app.DEFINE_integer('batch_size', 16,
+                   'The number of kernels to process at a time.')
 
 KernelToDrive = collections.namedtuple('KernelToDrive', ['id', 'src'])
 
@@ -164,14 +161,14 @@ def main(argv: typing.List[str]):
   batch_num = 0
   while True:
     batch_num += 1
-    logging.info('Batch %d', batch_num)
+    app.Info('Batch %d', batch_num)
     batch = GetBatchOfKernelsToDrive(db, env)
     if not batch:
-      logging.info('Done. Nothing more to run!')
+      app.Info('Done. Nothing more to run!')
       return
 
     DriveBatchAndRecordResults(db, batch, env)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

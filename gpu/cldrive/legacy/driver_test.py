@@ -17,15 +17,15 @@
 
 import numpy as np
 import pytest
-from absl import flags
 
 from gpu.cldrive.legacy import data
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
 from gpu.cldrive.legacy import testlib
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.mark.skip(reason="FIXME(cec)")

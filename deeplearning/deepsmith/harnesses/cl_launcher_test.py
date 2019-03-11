@@ -1,16 +1,16 @@
 """Unit tests for //deeplearning/deepsmith/harnesses/cl_launcher.py."""
 
 import pytest
-from absl import flags
 
 from deeplearning.deepsmith.harnesses import cl_launcher
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.cldrive.legacy import env
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # A bare-bones CLSmith program.
 CLSMITH_EXAMPLE_SRC = """

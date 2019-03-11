@@ -9,26 +9,25 @@ import sys
 import typing
 
 import pytest
-from absl import app
-from absl import flags
-from absl import logging
 
-FLAGS = flags.FLAGS
+from labm8 import app
 
-flags.DEFINE_boolean('test_color', False, 'Colorize pytest output.')
-flags.DEFINE_boolean('test_skip_slow', True,
-                     'Skip tests that have been marked slow.')
-flags.DEFINE_integer(
+FLAGS = app.FLAGS
+
+app.DEFINE_boolean('test_color', False, 'Colorize pytest output.')
+app.DEFINE_boolean('test_skip_slow', True,
+                   'Skip tests that have been marked slow.')
+app.DEFINE_integer(
     'test_maxfail', 1,
     'The maximum number of tests that can fail before execution terminates. '
     'If --test_maxfail=0, all tests will execute.')
-flags.DEFINE_boolean('test_capture_output', True,
-                     'Capture stdout and stderr during test execution.')
-flags.DEFINE_boolean(
+app.DEFINE_boolean('test_capture_output', True,
+                   'Capture stdout and stderr during test execution.')
+app.DEFINE_boolean(
     'test_print_durations', True,
     'Print the duration of the slowest tests at the end of execution. Use '
     '--test_durations to set the number of tests to print the durations of.')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'test_durations', 1,
     'The number of slowest tests to print the durations of after execution. '
     'If --test_durations=0, the duration of all tests is printed.')
@@ -37,7 +36,7 @@ flags.DEFINE_integer(
 def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   """Run pytest on a file and exit.
 
-  This is invoked by absl.app.run(), and has access to absl flags.
+  This is invoked by absl.app.RunWithArgs(), and has access to absl flags.
 
   This function does not return.
 
@@ -52,7 +51,7 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   # Test files must end with _test.py suffix. This is a code style choice, not
   # a hard requirement.
   if not file_path.endswith('_test.py'):
-    logging.fatal("File `%s` does not end in suffix _test.py", file_path)
+    app.Fatal("File `%s` does not end in suffix _test.py", file_path)
 
   # Assemble the arguments to run pytest with. Note that the //:conftest file
   # performs some additional configuration not captured here.
@@ -76,13 +75,13 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   if not FLAGS.test_capture_output:
     pytest_args.append('-s')
 
-  logging.info('Running pytest with arguments: %s', pytest_args)
+  app.Info('Running pytest with arguments: %s', pytest_args)
   sys.exit(pytest.main(pytest_args))
 
 
 def Main():
   """Main entry point."""
-  flags.FLAGS(['argv[0]', '-v=1'])
+  app.FLAGS(['argv[0]', '-v=1'])
 
   # Get the file path of the calling function. This is used to identify the
   # script to run the tests of.
@@ -90,4 +89,4 @@ def Main():
   module = inspect.getmodule(frame[0])
   file_path = module.__file__
 
-  app.run(lambda argv: RunPytestOnFileAndExit(file_path, argv))
+  app.RunWithArgs(lambda argv: RunPytestOnFileAndExit(file_path, argv))

@@ -26,15 +26,13 @@ import sys
 import tempfile
 import typing
 
-from absl import flags
-from absl import logging
-
 from compilers.llvm import clang_format
 from compilers.llvm import llvm
 from deeplearning.clgen import errors
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _LLVM_REPO = 'llvm_mac' if sys.platform == 'darwin' else 'llvm_linux'
 # Path to clang binary.
@@ -109,7 +107,7 @@ def Preprocess(src: str,
       str(timeout_seconds),
       str(CLANG), '-E', '-c', '-', '-o', '-'
   ] + cflags
-  logging.debug('$ %s', ' '.join(cmd))
+  app.Debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdin=subprocess.PIPE,
@@ -157,7 +155,7 @@ def CompileLlvmBytecode(src: str,
     cmd = ['timeout', '-s9',
            str(timeout_seconds),
            str(CLANG), f.name] + builtin_cflags + cflags
-    logging.debug('$ %s', ' '.join(cmd))
+    app.Debug('$ %s', ' '.join(cmd))
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,

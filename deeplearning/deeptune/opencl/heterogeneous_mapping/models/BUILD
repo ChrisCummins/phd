@@ -5,7 +5,7 @@ py_library(
     srcs = ["base.py"],
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
     ],
@@ -17,7 +17,7 @@ py_library(
     deps = [
         ":base",
         "//deeplearning/clgen/corpuses:atomizers",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/keras",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
@@ -42,7 +42,7 @@ py_library(
         ":base",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/pandas",
         "//third_party/py/scipy:scikit_learn",
     ],
@@ -69,7 +69,7 @@ py_library(
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
         "//experimental/compilers/reachability:llvm_util",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/graph_nets",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
@@ -104,8 +104,8 @@ py_library(
         ":lda",
         ":ncc",
         ":static_mapping",
+        "//labm8:app",
         "//labm8:labtypes",
-        "//third_party/py/absl",
     ],
 )
 
@@ -135,8 +135,8 @@ py_library(
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
+        "//labm8:app",
         "//labm8:bazelutil",
-        "//third_party/py/absl",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/tensorflow",
@@ -160,7 +160,7 @@ py_library(
     deps = [
         ":base",
         "//deeplearning/clgen/corpuses:atomizers",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/pandas",
     ],
 )
@@ -181,6 +181,6 @@ py_library(
     testonly = 1,
     srcs = ["testlib.py"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )

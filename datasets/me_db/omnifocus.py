@@ -1,7 +1,6 @@
 import csv
 import datetime
 import json
-import logging
 import os
 import subprocess
 from tempfile import TemporaryDirectory
@@ -65,7 +64,7 @@ def task_count(tasks, date, completed: bool):
 def process_json(infile, outpath):
   me.mkdir(os.path.dirname(outpath))
 
-  logging.debug(f"Parsing {infile.name}")
+  app.Debug(f"Parsing {infile.name}")
   data = json.load(infile)
 
   completed = count_tasks(0, data, complete=True)
@@ -98,11 +97,11 @@ def process_json(infile, outpath):
       last_complete = complete
 
     nrows = len(tasks)
-    logging.info(f"Exported {nrows} records to \"{outfile.name}\"")
+    app.Info(f"Exported {nrows} records to \"{outfile.name}\"")
 
 
 def generate_json(of2path, outpath):
-  logging.debug(f"Exporting OmniFocus database to JSON")
+  app.Debug(f"Exporting OmniFocus database to JSON")
   subprocess.check_output([of2path, '-o', outpath])
   return outpath
 

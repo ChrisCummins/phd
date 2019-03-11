@@ -2,12 +2,12 @@
 
 import gym
 import pytest
-from absl import flags
 
 from experimental.compilers.random_opt import environments
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.mark.parametrize('environment', environments.ENVIRONMENTS)

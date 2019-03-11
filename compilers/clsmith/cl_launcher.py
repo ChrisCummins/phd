@@ -16,16 +16,14 @@ import subprocess
 import sys
 import typing
 
-from absl import app
-from absl import flags
-
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The path to cl_launcher.
 CL_LAUNCHER = bazelutil.DataPath('CLSmith/cl_launcher')
@@ -163,4 +161,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

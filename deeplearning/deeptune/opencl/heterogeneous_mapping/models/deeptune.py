@@ -7,7 +7,6 @@ import typing
 
 import numpy as np
 import pandas as pd
-from absl import flags
 from keras import Input
 from keras import Model
 from keras import models as keras_models
@@ -20,8 +19,9 @@ from keras.preprocessing import sequence as keras_sequence
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,

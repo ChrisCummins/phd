@@ -9,25 +9,21 @@ import re
 import subprocess
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from labm8 import fs
 from labm8 import humanize
 from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('root_dir', fs.path('~/Music/Music Library'),
-                    'Directory of ')
-flags.DEFINE_string('csv_log_path',
-                    fs.path('~/Music/Music Library/transcode_mp3s.csv'),
-                    'Path to CSV log file.')
-flags.DEFINE_string(
+app.DEFINE_string('root_dir', fs.path('~/Music/Music Library'), 'Directory of ')
+app.DEFINE_string('csv_log_path',
+                  fs.path('~/Music/Music Library/transcode_mp3s.csv'),
+                  'Path to CSV log file.')
+app.DEFINE_string(
     'find_bin', 'find', 'Path of `find` binary. Set this flag is find is not '
     'in the system $PATH.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'ffmpeg_bin', 'ffmpeg',
     'Path of `ffmpeg` binary. Set this flag is ffmpeg is not '
     'in the system $PATH.')
@@ -71,15 +67,15 @@ def MaybeTranscodeMp3(path: str,
         tempfile_prefix='phd_system_machines_florence_transcode_musiclib_',
         tempfile_suffix='.mp3')
     size_after = os.path.getsize(path)
-    logging.info(f'%s changed from %s to %s (%.1f%% reduction)',
-                 os.path.basename(path), humanize.BinaryPrefix(
-                     size_before, 'B'), humanize.BinaryPrefix(size_after, 'B'),
-                 (1 - (size_after / size_before)) * 100)
+    app.Info(f'%s changed from %s to %s (%.1f%% reduction)',
+             os.path.basename(path), humanize.BinaryPrefix(size_before, 'B'),
+             humanize.BinaryPrefix(size_after, 'B'),
+             (1 - (size_after / size_before)) * 100)
     out_csv.writerow(
         [datetime.datetime.now(), path, bit_rate, size_before, size_after])
     return True
   else:
-    logging.debug('Ignoring %s', path)
+    app.Debug('Ignoring %s', path)
     return False
 
 
@@ -94,8 +90,8 @@ def main(argv):
       try:
         MaybeTranscodeMp3(f, out_csv)
       except Exception:
-        logging.warning('Failed to process %s', f)
+        app.Warning('Failed to process %s', f)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

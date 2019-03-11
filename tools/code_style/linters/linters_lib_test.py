@@ -3,12 +3,12 @@ import os
 import pathlib
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 from tools.code_style.linters import linters_lib
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_WhichOrDie_file_exists(tempdir: pathlib.Path):

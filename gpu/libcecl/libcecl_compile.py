@@ -18,11 +18,10 @@
 import functools
 import typing
 
-from absl import flags
-
+from labm8 import app
 from labm8 import bazelutil, system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
 

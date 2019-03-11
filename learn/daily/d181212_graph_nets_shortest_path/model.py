@@ -1,7 +1,7 @@
 """A model for predicting the shortest path in a graph."""
-from absl import flags
 
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
 
 class ShortestPathModel(object):

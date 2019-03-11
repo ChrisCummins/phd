@@ -3,12 +3,12 @@
 import numpy as np
 import pandas as pd
 import pytest
-from absl import flags
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_GetAtomizerFromOpenClSources_abc():

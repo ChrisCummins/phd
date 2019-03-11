@@ -9,12 +9,12 @@ py_library(
         "//compilers/llvm:llvm_link",
         "//compilers/llvm:opt",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//labm8:app",
         "//labm8:crypto",
         "//labm8:jsonutil",
         "//labm8:labdate",
         "//labm8:pbutil",
         "//labm8:text",
-        "//third_party/py/absl",
         "//third_party/py/gym",
         "//third_party/py/numpy",
     ],
@@ -26,8 +26,8 @@ py_test(
     deps = [
         ":implementation",
         "//compilers/llvm:clang",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -40,7 +40,7 @@ py_library(
         ":implementation",
         "//compilers/llvm:util",
         "//labm8:labtypes",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//datasets/benchmarks:bzip2",
         "//datasets/benchmarks:llvm_test_suite",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
@@ -52,8 +52,8 @@ py_test(
     srcs = ["environments_test.py"],
     deps = [
         ":environments",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/gym",
     ],
 )
@@ -63,9 +63,9 @@ py_binary(
     srcs = ["results_to_dot.py"],
     deps = [
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//labm8:app",
         "//labm8:graph",
         "//labm8:pbutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -76,8 +76,8 @@ py_binary(
         ":environments",
         ":implementation",
         "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/gym",
     ],
 )

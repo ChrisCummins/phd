@@ -3,17 +3,15 @@ import hashlib
 import typing
 
 import progressbar
-from absl import app
-from absl import logging
-from absl import flags
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
+from labm8 import app
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string(
+FLAGS = app.FLAGS
+app.DEFINE_string(
     'db',
     'sqlite:///tmp/phd/experimental/deplearning/clgen/closeness_to_grewe_features/db.db',
     'URL of the database to import OpenCL kernels to.')
@@ -66,8 +64,8 @@ def main(argv: typing.List[str]):
           new_count += 1
           session.add(obj)
 
-  logging.info("Added %d new database entries", new_count)
+  app.Info("Added %d new database entries", new_count)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

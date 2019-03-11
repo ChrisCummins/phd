@@ -4,14 +4,14 @@ import typing
 
 import numpy as np
 import pandas as pd
-from absl import flags
 
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _AMD_CSV_PATH = bazelutil.DataPath('phd/datasets/opencl/device_mapping/amd.csv')
 _NVIDIA_CSV_PATH = bazelutil.DataPath(

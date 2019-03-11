@@ -6,10 +6,10 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:fs",
         "//labm8:humanize",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/progressbar",
     ],
 )
@@ -20,9 +20,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:sqlutil",
-        "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -33,9 +33,9 @@ py_binary(
     deps = [
         ":contentfiles",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:humanize",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -47,8 +47,8 @@ py_library(
         "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
     ],
 )
 
@@ -58,10 +58,10 @@ py_test(
     deps = [
         ":github_repo",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:fs",
         "//labm8:pbutil",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -74,9 +74,9 @@ py_binary(
         "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:humanize",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
@@ -89,9 +89,9 @@ py_test(
         ":contentfiles",
         ":importer",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -104,9 +104,9 @@ py_binary(
         "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:humanize",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
@@ -119,9 +119,9 @@ py_test(
         ":github_repo",
         ":indexer",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -132,11 +132,11 @@ py_binary(
     deps = [
         "//datasets/github:api",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:fs",
         "//labm8:humanize",
         "//labm8:labdate",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/github",
         "//third_party/py/progressbar",
     ],
@@ -148,8 +148,8 @@ py_test(
     deps = [
         ":scraper",
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

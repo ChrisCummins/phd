@@ -2,13 +2,13 @@
 import typing
 
 import networkx as nx
-from absl import flags
 
 from experimental.compilers.reachability import reachability_pb2
+from labm8 import app
 from labm8 import pbutil
 from labm8.pbutil import ProtocolBuffer
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class MalformedControlFlowGraphError(ValueError):

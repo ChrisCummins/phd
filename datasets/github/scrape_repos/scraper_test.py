@@ -1,15 +1,14 @@
 """Tests for //datasets/github/scrape_repos:scraper."""
 
 import pytest
-from absl import app
-from absl import flags
 
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8 import app
 from labm8 import labdate
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class MockNamedUser(object):

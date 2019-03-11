@@ -4,11 +4,10 @@ Things I learned from this file:
  * Module imports are approx: Numpy 2 ms, Keras 26 ms, TensorFlow 4,153 ms.
 """
 
-from absl import flags
-
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_Numpy_import(benchmark):

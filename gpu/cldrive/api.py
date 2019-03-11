@@ -4,15 +4,15 @@ import io
 
 import numpy as np
 import pandas as pd
-from absl import flags
 
 from gpu.cldrive.legacy import env as _env
 from gpu.cldrive.proto import cldrive_pb2
 from gpu.oclgrind import oclgrind
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _NATIVE_DRIVER = bazelutil.DataPath('phd/gpu/cldrive/native_driver')
 _NATIVE_CSV_DRIVER = bazelutil.DataPath('phd/gpu/cldrive/native_csv_driver')

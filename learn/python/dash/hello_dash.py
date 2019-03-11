@@ -5,10 +5,10 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-from absl import app
-from absl import flags
 
-FLAGS = flags.FLAGS
+from labm8 import app
+
+FLAGS = app.FLAGS
 
 
 def CreateDataFrame() -> pd.DataFrame:
@@ -80,8 +80,8 @@ def main(argv: typing.List[str]):
     raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   dash_app = CreateApp()
-  dash_app.run_server(debug=True)
+  dash_app.RunWithArgs_server(debug=True)
 
 
 if __name__ == "__main__":
-  app.run(main)
+  app.RunWithArgs(main)

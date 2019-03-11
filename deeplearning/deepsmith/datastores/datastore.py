@@ -2,17 +2,15 @@ import time
 from concurrent import futures
 
 import grpc
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
+app.DEFINE_string('datastore_config', None, 'Path to a DataStore message.')
 
 
 class DataStore(services.ServiceBase,
@@ -24,7 +22,7 @@ class DataStore(services.ServiceBase,
   def GetTestcases(self, request: datastore_pb2.GetTestcasesRequest,
                    context) -> datastore_pb2.GetTestcasesResponse:
     del context
-    logging.info('GetTestcases() client=%s', request.status.client)
+    app.Info('GetTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(datastore_pb2.GetTestcasesResponse)
     # TODO(cec): Implement!
     return response
@@ -32,7 +30,7 @@ class DataStore(services.ServiceBase,
   def SubmitTestcases(self, request: datastore_pb2.SubmitTestcasesRequest,
                       context) -> datastore_pb2.SubmitTestcasesResponse:
     del context
-    logging.info('SubmitTestcases() client=%s', request.status.client)
+    app.Info('SubmitTestcases() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
         datastore_pb2.SubmitTestcasesResponse)
     # TODO(cec): Implement!
@@ -41,7 +39,7 @@ class DataStore(services.ServiceBase,
   def SubmitResults(self, request: datastore_pb2.SubmitResultsRequest,
                     context) -> datastore_pb2.SubmitResultsResponse:
     del context
-    logging.info('SubmitResults() client=%s', request.status.client)
+    app.Info('SubmitResults() client=%s', request.status.client)
     response = services.BuildDefaultResponse(
         datastore_pb2.SubmitResultsResponse)
     # TODO(cec): Implement!
@@ -58,9 +56,9 @@ def main(argv):
   service = DataStore(datastore_config)
   datastore_pb2_grpc.add_DataStoreServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{datastore_config.service.port}')
-  logging.info('%s listening on %s:%s',
-               type(service).__name__, datastore_config.service.hostname,
-               datastore_config.service.port)
+  app.Info('%s listening on %s:%s',
+           type(service).__name__, datastore_config.service.hostname,
+           datastore_config.service.port)
   server.start()
   try:
     while True:
@@ -70,4 +68,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

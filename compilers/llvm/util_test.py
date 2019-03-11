@@ -2,13 +2,13 @@
 import typing
 
 import pytest
-from absl import flags
 
 from compilers.llvm import llvm
 from compilers.llvm import util
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.mark.parametrize('cflags', [['-O0'], ['-O1'], ['-O2'], ['-O3']])

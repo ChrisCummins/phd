@@ -2,9 +2,9 @@
 import hashlib
 import re
 
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The top level photolib directories.
 TOP_LEVEL_DIRS = set(["photos", "gallery", "lightroom"])

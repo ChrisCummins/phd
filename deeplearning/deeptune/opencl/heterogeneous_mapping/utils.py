@@ -6,13 +6,12 @@ import typing
 
 import numpy as np
 import pandas as pd
-from absl import flags
-from absl import logging
 from sklearn import model_selection
 
 from deeplearning.clgen.corpuses import atomizers
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
 # GitHub corpus:
@@ -288,9 +287,9 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
   data = []
 
   for split in TrainTestSplitGenerator(df, seed):
-    logging.info('Evaluating %s on %s, split %d with train=%d/test=%d programs',
-                 model.__name__, split.gpu_name, split.i, len(split.train_df),
-                 len(split.test_df))
+    app.Info('Evaluating %s on %s, split %d with train=%d/test=%d programs',
+             model.__name__, split.gpu_name, split.i, len(split.train_df),
+             len(split.test_df))
 
     # Path of cached model and predictions.
     model_path = (
@@ -306,11 +305,11 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
 
     if predictions_path.is_file():
       # Load predictions from cache, which means we don't need to train a model.
-      logging.info('Loading %s', predictions_path)
+      app.Info('Loading %s', predictions_path)
       predictions = LoadPredictionsFromFile(predictions_path)
     else:
       if model_path.is_file():
-        logging.info('Loading %s', model_path)
+        app.Info('Loading %s', model_path)
         # Restore trained model from cache.
         model.restore(model_path)
       else:
@@ -323,13 +322,13 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
         model.save(model_path)
 
       # Test the model.
-      logging.info("Predicting %d %s mappings for device %s",
-                   len(split.test_df), model.__name__, split.gpu_name)
+      app.Info("Predicting %d %s mappings for device %s", len(split.test_df),
+               model.__name__, split.gpu_name)
       predictions = model.predict(
           df=split.test_df,
           platform_name=split.gpu_name,
           verbose=FLAGS.verbosity)
-      logging.info('Writing %s', predictions_path)
+      app.Info('Writing %s', predictions_path)
       SavePredictionsToFile(predictions, predictions_path)
 
     data += EvaluatePredictions(model, split, predictions)
@@ -419,7 +418,7 @@ def EvaluatePredictions(
   gpu_predicted_count = sum(d['Predicted Mapping'] for d in split_data)
   cpu_predicted_count = len(split_data) - gpu_predicted_count
 
-  logging.info(
+  app.Info(
       'Results: model=%s, platform=%s, split=%s, n=%d, '
       'predictions=(cpu=%d,gpu=%d) accuracy=%.2f%%, speedup=%.2fx',
       model.__basename__, split.gpu_name, split.global_step, len(split.test_df),

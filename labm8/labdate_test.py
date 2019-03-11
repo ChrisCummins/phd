@@ -1,12 +1,12 @@
 """Unit tests for //labm8:labdate."""
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import labdate
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_GetUtcMillisecondsNow_millisecond_precision():

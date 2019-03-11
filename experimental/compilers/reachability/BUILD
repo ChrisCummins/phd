@@ -8,8 +8,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":reachability_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/networkx",
     ],
 )
@@ -19,8 +19,8 @@ py_test(
     srcs = ["control_flow_graph_test.py"],
     deps = [
         ":control_flow_graph",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/networkx",
     ],
 )
@@ -31,7 +31,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":control_flow_graph",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
     ],
@@ -42,8 +42,8 @@ py_test(
     srcs = ["control_flow_graph_generator_test.py"],
     deps = [
         ":control_flow_graph_generator",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
         "//third_party/py/networkx",
     ],
 )
@@ -68,9 +68,9 @@ py_binary(
         ":reachability_py_pb2",
         "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/corpuses:atomizers",
+        "//labm8:app",
         "//labm8:humanize",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/keras",
         "//third_party/py/numpy",
     ],
@@ -83,7 +83,7 @@ py_library(
     deps = [
         ":control_flow_graph",
         "//compilers/llvm:opt",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/networkx",
         "//third_party/py/pydot",
     ],
@@ -95,8 +95,8 @@ py_test(
     deps = [
         ":llvm_util",
         "//compilers/llvm:opt",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 

@@ -7,9 +7,9 @@ py_binary(
     deps = [
         "//config:getconfig",
         "//datasets/github:api",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:fs",
-        "//third_party/py/absl",
         "//third_party/py/git",
         "//third_party/py/github",
     ],

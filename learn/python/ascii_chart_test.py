@@ -1,11 +1,11 @@
 """Simple demo using ascii art package."""
 
 import ascii_art
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def MultiLineRightStrip(s):

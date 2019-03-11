@@ -5,15 +5,15 @@ import typing
 
 import pytest
 import sqlalchemy as sql
-from absl import flags
 from sqlalchemy.ext import declarative
 
+from labm8 import app
 from labm8 import pbutil
 from labm8 import sqlutil
 from labm8 import test
 from labm8.proto import test_protos_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):

@@ -33,14 +33,14 @@ from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
-from absl import flags
 from tensorflow.contrib.tensorboard.plugins import projector
 from tensorflow.python.client import timeline
 
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 ########################################################################################################################

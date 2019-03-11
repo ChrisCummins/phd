@@ -17,8 +17,11 @@ from experimental.system.dotfiles.implementation import task
 
 def BuildArgumentParser():
   parser = argparse.ArgumentParser()
-  parser.add_argument('tasks', metavar='<task>', nargs='*',
-                      help="the name of tasks to run (default: all)")
+  parser.add_argument(
+      'tasks',
+      metavar='<task>',
+      nargs='*',
+      help="the name of tasks to run (default: all)")
   action_group = parser.add_mutually_exclusive_group()
   action_group.add_argument('-d', '--describe', action="store_true")
   action_group.add_argument('-u', '--upgrade', action='store_true')
@@ -38,7 +41,7 @@ def main(argv):
   io.SetVerbosity(verbose=args.verbose)
 
   # Get the list of tasks to run
-  logging.debug("creating tasks list ...")
+  app.Debug("creating tasks list ...")
   queue = task.GetTasksToRun(args.tasks)
   done = set()
   ntasks = len(queue)
@@ -48,19 +51,20 @@ def main(argv):
   # --describe flag prints a description of the work to be done:
   platform = host.GetPlatform()
   if args.describe:
-    msg = ("There are {fmt_bld}{ntasks}{fmt_end} tasks to run on {platform}:"
-           .format(**vars()))
-    logging.info(msg)
+    msg = ("There are {fmt_bld}{ntasks}{fmt_end} tasks to run on {platform}:".
+           format(**vars()))
+    app.Info(msg)
     for i, t in enumerate(queue):
       task_name = type(t).__name__
       j = i + 1
       desc = type(t).__name__
-      msg = ("[{j:2d}/{ntasks:2d}]  {fmt_bld}{task_name}{fmt_end} ({desc})"
-             .format(**vars()))
-      logging.info(msg)
+      msg = (
+          "[{j:2d}/{ntasks:2d}]  {fmt_bld}{task_name}{fmt_end} ({desc})".format(
+              **vars()))
+      app.Info(msg)
       # build a list of generated files
       for file in t.genfiles:
-        logging.debug("    " + os.path.abspath(os.path.expanduser(file)))
+        app.Debug("    " + os.path.abspath(os.path.expanduser(file)))
 
     return 0
 
@@ -70,7 +74,7 @@ def main(argv):
       for name in sorted(t.versions.keys()):
         task_name = type(t).__name__
         version = t.versions[name]
-        logging.info("{task_name}:{name}=={version}".format(**vars()))
+        app.Info("{task_name}:{name}=={version}".format(**vars()))
     return 0
 
   if args.upgrade:
@@ -80,9 +84,9 @@ def main(argv):
   else:
     task_type = "install"
 
-  msg = ("Running {fmt_bld}{ntasks} {task_type}{fmt_end} tasks on {platform}:"
-         .format(**vars()))
-  logging.info(msg)
+  msg = ("Running {fmt_bld}{ntasks} {task_type}{fmt_end} tasks on {platform}:".
+         format(**vars()))
+  app.Info(msg)
 
   # Run the tasks
   ctx = context.CallContext()
@@ -94,7 +98,7 @@ def main(argv):
       j = i + 1
       msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task_name}{fmt_end} ...".format(
           **vars())
-      logging.info(msg)
+      app.Info(msg)
 
       start_time = time.time()
 
@@ -106,32 +110,30 @@ def main(argv):
       if task_type == "install":
         for file in t.genfiles:
           file = os.path.abspath(os.path.expanduser(file))
-          logging.debug("assert exists: '{file}'".format(**vars()))
-          if not (os.path.exists(file) or
-                  host.CheckShellCommand(
-                      "sudo test -f '{file}'".format(**vars())) or
+          app.Debug("assert exists: '{file}'".format(**vars()))
+          if not (os.path.exists(file) or host.CheckShellCommand(
+              "sudo test -f '{file}'".format(**vars())) or
                   host.CheckShellCommand(
                       "sudo test -d '{file}'".format(**vars()))):
             raise task.InvalidTaskError(
                 'genfile "{file}" not created'.format(**vars()))
       runtime = time.time() - start_time
 
-      logging.debug(
-          "{task_name} task completed in {runtime:.3f}s".format(**vars()))
+      app.Debug("{task_name} task completed in {runtime:.3f}s".format(**vars()))
       sys.stdout.flush()
   except KeyboardInterrupt:
-    logging.info("\ninterrupt")
+    app.Info("\ninterrupt")
     errored = True
   except Exception as e:
     e_name = type(e).__name__
-    logging.error("{fmt_bld}{fmt_red}fatal error: {e_name}".format(**vars()))
-    logging.error(str(e) + io.Colors.END)
+    app.Error("{fmt_bld}{fmt_red}fatal error: {e_name}".format(**vars()))
+    app.Error(str(e) + io.Colors.END)
     errored = True
     if logging.getLogger().level <= logging.DEBUG:
       raise
   finally:
     # Task teardowm
-    logging.debug(io.Colors.BOLD + "Running teardowns" + io.Colors.END)
+    app.Debug(io.Colors.BOLD + "Running teardowns" + io.Colors.END)
     for t in done:
       t.TearDown(ctx)
 
@@ -143,7 +145,7 @@ def main(argv):
       for file in tmpfiles:
         file = os.path.abspath(os.path.expanduser(file))
         if os.path.exists(file):
-          logging.debug("rm {file}".format(**vars()))
+          app.Debug("rm {file}".format(**vars()))
           os.remove(file)
 
   return 1 if errored else 0

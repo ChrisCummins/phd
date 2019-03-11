@@ -16,7 +16,7 @@ py_test(
     srcs = ["getconfig_test.py"],
     deps = [
         ":getconfig",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

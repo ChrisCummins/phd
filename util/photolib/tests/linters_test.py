@@ -1,12 +1,12 @@
 """Unit tests for linters.py."""
 
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 from util.photolib import linters
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_error():

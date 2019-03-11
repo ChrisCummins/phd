@@ -19,25 +19,23 @@ import multiprocessing
 import typing
 
 import sqlalchemy as sql
-from absl import app
-from absl import flags
-from absl import logging
 
 from compilers.llvm import clang
 from datasets.github.scrape_repos import contentfiles
 from deeplearning.clgen.preprocessors import opencl
 from experimental.compilers.reachability import database
 from experimental.compilers.reachability import reachability_pb2
+from labm8 import app
 from labm8 import humanize
 from labm8 import lockfile
 from labm8 import ppar
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('db', None, 'Path of database to populate.')
-flags.DEFINE_string('cf', None, 'Path of contentfiles database.')
-flags.DEFINE_string('lang', None,
-                    'Name of the language to process. One of: {c,opencl}.')
+app.DEFINE_string('db', None, 'Path of database to populate.')
+app.DEFINE_string('cf', None, 'Path of contentfiles database.')
+app.DEFINE_string('lang', None,
+                  'Name of the language to process. One of: {c,opencl}.')
 
 # A dictionary mapping language name to a list of language-specific arguments
 # to pass to clang.
@@ -126,8 +124,8 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
             contentfiles.GitHubRepository.language == language).order_by(
                 contentfiles.ContentFile.id.desc()).limit(1).one_or_none() or
          (0,))[0]
-    logging.info('Starting at row %s / %s', humanize.Commas(resume_from),
-                 humanize.Commas(n))
+    app.Info('Starting at row %s / %s', humanize.Commas(resume_from),
+             humanize.Commas(n))
 
     # A query to return the <id,text> tuples of files to process.
     q = (cf_s.query(contentfiles.ContentFile.id, contentfiles.ContentFile.text).
@@ -148,7 +146,7 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
         s.add_all(bytecodes)
 
     def _StartBatch(i: int):
-      logging.info(
+      app.Info(
           'Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)',
           batch_size, humanize.Commas((i + resume_from)), humanize.Commas(n),
           ((i + resume_from) / n) * 100)
@@ -181,4 +179,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -26,24 +26,22 @@ import os
 import pathlib
 import pickle
 
-from absl import app
-from absl import flags
-
 from deeplearning.ncc.inst2vec import inst2vec_appflags
 from deeplearning.ncc.inst2vec import inst2vec_datagen as i2v_datagen
 from deeplearning.ncc.inst2vec import inst2vec_embedding as i2v_emb
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_preprocess as i2v_prep
 from deeplearning.ncc.inst2vec import inst2vec_vocabulary as i2v_vocab
+from labm8 import app
 
 # Get the app flags from a file.
 FLAGS = inst2vec_appflags.FLAGS
 
 # Data set parameters.
-flags.DEFINE_string('data_folder', '/tmp/phd/deeplearning/ncc/inst2vec/data',
-                    'Dataset folder path.')
-flags.DEFINE_bool('download_datasets', True, 'Whether to use default dataset.')
-flags.DEFINE_list(
+app.DEFINE_string('data_folder', '/tmp/phd/deeplearning/ncc/inst2vec/data',
+                  'Dataset folder path.')
+app.DEFINE_boolean('download_datasets', True, 'Whether to use default dataset.')
+app.DEFINE_list(
     'dataset_urls', [],
     'URLs of datasets to download. If not provided, all datasets will be used.')
 
@@ -90,4 +88,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

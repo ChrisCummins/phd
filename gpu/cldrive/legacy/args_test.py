@@ -16,12 +16,12 @@
 """Unit tests for //gpu/cldrive/legacy/args.py."""
 
 import pytest
-from absl import flags
 
 from gpu.cldrive.legacy import args
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # GetKernelArguments() tests.
 

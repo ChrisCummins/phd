@@ -106,7 +106,7 @@ class OpenCLEnvironment(object):
     Returns:
       A Popen instance, with string stdout and stderr attributes set.
     """
-    # logging.debug('$ %s', ' '.join(argv))
+    # app.Debug('$ %s', ' '.join(argv))
     process = subprocess.Popen(
         argv,
         stdout=subprocess.PIPE,

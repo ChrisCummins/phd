@@ -4,18 +4,18 @@ To add a new environment, add a new call to registration.register(), and add the
 name to the ENVIRONMENTS list. The environment class is defined in:
     //experimental/compilers/random_opt/implementation.py
 """
-from absl import flags
 from gym.envs import registration
 
 from compilers.llvm import util as llvm_util
 from datasets.benchmarks import bzip2
 from datasets.benchmarks import llvm_test_suite
 from experimental.compilers.random_opt.proto import random_opt_pb2
+from labm8 import app
 from labm8 import labtypes
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'runtime_num_runs', 10,
     'The number of times to execute a binary to get its runtime.')
 

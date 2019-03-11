@@ -1,16 +1,13 @@
 import pathlib
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from util.freefocus import sql
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('database_path', '/tmp/phd/util/freefocus/freefocus.db',
-                    'Path to database.')
+app.DEFINE_string('database_path', '/tmp/phd/util/freefocus/freefocus.db',
+                  'Path to database.')
 
 SPEC_MAJOR = 1
 SPEC_MINOR = 0
@@ -28,8 +25,8 @@ def main(argv: typing.List[str]):
 
   database_path.parent.mkdir(parents=True, exist_ok=True)
   db = sql.Database(f'sqlite:///{database_path}')
-  logging.info(db)
+  app.Info(db)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -5,15 +5,15 @@ import pathlib
 import typing
 
 import sqlalchemy as sql
-from absl import flags
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
+from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
 from util.freefocus import freefocus_pb2
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
 

@@ -19,11 +19,11 @@ import pytest
 from sqlalchemy.sql.expression import func
 
 from datasets.me_db import me_db
-from datasets.me_db.tests.acceptance_tests import flags
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 TEST_INBOX_PATH = bazelutil.DataPath('phd/datasets/me_db/tests/test_inbox')
 
@@ -45,7 +45,7 @@ def GetInboxPath() -> pathlib.Path:
 
 
 # Pytest fixtures cannot be moved out to a conftest.py file since they need to
-# access FLAGS, and conftest loading occurs before app.run().
+# access FLAGS, and conftest loading occurs before app.RunWithArgs().
 @pytest.fixture(scope='function')
 def mutable_db() -> me_db.Database:
   """Returns a populated database for the scope of the function."""

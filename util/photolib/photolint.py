@@ -4,19 +4,16 @@ import sys
 import time
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
+from labm8 import app
 from util.photolib import common
 from util.photolib import lightroom
 from util.photolib import lintercache
 from util.photolib import linters
 from util.photolib import workspace
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
-flags.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
+FLAGS = app.FLAGS
+app.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
+app.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
 
 
 class Timers(object):
@@ -44,8 +41,8 @@ class ToplevelLinter(linters.Linter):
 
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
-    logging.debug("Running //%s linters: %s", self.toplevel_dir,
-                  ", ".join(linter_names))
+    app.Debug("Running //%s linters: %s", self.toplevel_dir,
+              ", ".join(linter_names))
 
   def _LintThisDirectory(
       self, abspath: str, relpath: str, dirnames: typing.List[str],
@@ -148,7 +145,7 @@ def main(argv):  # pylint: disable=missing-docstring
 
 if __name__ == "__main__":
   try:
-    app.run(main)
+    app.RunWithArgs(main)
   except KeyboardInterrupt:
     print("interrupt")
     sys.exit(1)

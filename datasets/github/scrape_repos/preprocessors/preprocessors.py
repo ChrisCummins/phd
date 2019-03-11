@@ -3,11 +3,10 @@ import importlib
 import pathlib
 import typing
 
-from absl import flags
-
 from datasets.github.scrape_repos.preprocessors import public
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:

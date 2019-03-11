@@ -22,26 +22,24 @@ import typing
 
 import git
 import github as github_lib
-from absl import app
-from absl import flags
-from absl import logging
 
 from config import getconfig
 from datasets.github import api
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_list('target', [], 'The bazel target(s) to export.')
-flags.DEFINE_string(
+app.DEFINE_list('target', [], 'The bazel target(s) to export.')
+app.DEFINE_string(
     'targets_list', None, 'Path to a file containing a list of bazel targets. '
     'Supersedes --target flag.')
-flags.DEFINE_string('destination', '/tmp/phd/tools/source_tree/export',
-                    'The destination directory to export to.')
-flags.DEFINE_string('github_repo', None, 'Name of a GitHub repo to export to.')
-flags.DEFINE_boolean('github_repo_create_private', True,
-                     'Whether to create new GitHub repos as private.')
+app.DEFINE_string('destination', '/tmp/phd/tools/source_tree/export',
+                  'The destination directory to export to.')
+app.DEFINE_string('github_repo', None, 'Name of a GitHub repo to export to.')
+app.DEFINE_boolean('github_repo_create_private', True,
+                   'Whether to create new GitHub repos as private.')
 
 BAZEL_WRAPPER = bazelutil.DataPath(
     'phd/tools/source_tree/data/bazel_wrapper.py')
@@ -318,7 +316,7 @@ def GetOrCreateRepoOrDie(github: github_lib.Github) -> github_lib.Repository:
     return github.get_user().get_repo(repo_name)
   except github_lib.UnknownObjectException as e:
     assert e.status == 404
-    logging.info("Creating repo %s", repo_name)
+    app.Info("Creating repo %s", repo_name)
     github.get_user().create_repo(
         repo_name,
         description='PhD repo subtree export',
@@ -342,7 +340,7 @@ def ExportToDirectoryOrDie(destination: pathlib.Path,
 def CloneRepoToDestinationOrDie(repo: github_lib.Repository,
                                 destination: pathlib.Path):
   """Clone repo from github."""
-  logging.info('Cloning from %s', repo.ssh_url)
+  app.Info('Cloning from %s', repo.ssh_url)
   subprocess.check_call(['git', 'clone', repo.ssh_url, str(destination)])
   # Delete everything except the .git directory. This is to enable files to be
   # removed between commits, as otherwise incremental commits would only ever
@@ -359,7 +357,7 @@ def CommitAndPushOrDie(local: pathlib.Path, remote: github_lib.Repository):
   parent_hash = phd_repo.head.object.hexsha
 
   tag_name = datetime.datetime.now().strftime("%y%m%dT%H%M%S")
-  logging.info("Creating tag %s", tag_name)
+  app.Info("Creating tag %s", tag_name)
   with fs.chdir(local):
     subprocess.check_call(['git', 'add', '.'])
     subprocess.check_call(
@@ -369,7 +367,7 @@ def CommitAndPushOrDie(local: pathlib.Path, remote: github_lib.Repository):
     ])
     subprocess.check_call(['git', 'push', 'origin', 'master'])
     subprocess.check_call(['git', 'push', 'origin', tag_name])
-  logging.info('Exported to %s', remote.html_url)
+  app.Info('Exported to %s', remote.html_url)
 
 
 def main(argv: typing.List[str]):
@@ -401,8 +399,8 @@ def main(argv: typing.List[str]):
       CommitAndPushOrDie(destination, repo)
     else:
       ExportToDirectoryOrDie(destination, targets)
-      logging.info('Exported subtree to %s', destination)
+      app.Info('Exported subtree to %s', destination)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

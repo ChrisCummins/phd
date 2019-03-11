@@ -3,12 +3,12 @@
 import networkx as nx
 import numpy as np
 import pytest
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 from learn.daily.d181212_graph_nets_shortest_path import graph_util
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_GenerateGraph_return_type():

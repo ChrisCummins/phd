@@ -11,10 +11,6 @@ import pathlib
 import subprocess
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from labm8 import bazelutil
 
 FEATURE_EXTRACTOR_BINARY = bazelutil.DataPath('phd/research/grewe_2013_cgo/'
@@ -31,10 +27,11 @@ _LIBLTO_SO = bazelutil.DataPath('llvm_linux/lib/libLTO.so', must_exist=False)
 if _LIBCLANG_SO.is_file() and _LIBLTO_SO.is_file():
   FEATURE_EXTRACTOR_ENV['LD_PRELOAD'] = f'{_LIBCLANG_SO}:{_LIBLTO_SO}'
 
-FLAGS = flags.FLAGS
+from labm8 import app
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('feature_extractor_opencl_src_path', None,
-                    'Path of OpenCL file to extract features of.')
+app.DEFINE_string('feature_extractor_opencl_src_path', None,
+                  'Path of OpenCL file to extract features of.')
 
 # The definition of features extracted by the feature extractor.
 GreweEtAlFeatures = collections.namedtuple(
@@ -106,7 +103,7 @@ def ExtractFeaturesFromPath(
       str(INLINED_OPENCL_HEADER),
       str(path)
   ] + [f'-extra_arg={arg}' for arg in extra_args]
-  logging.debug('$ %s', ' '.join(cmd))
+  app.Debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,
@@ -144,8 +141,8 @@ def main(argv):
     for line in features:
       print(*line, sep=',')
   except FeatureExtractionError as e:
-    logging.fatal(e)
+    app.Fatal(e)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

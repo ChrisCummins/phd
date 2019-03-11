@@ -3,13 +3,13 @@ import pathlib
 import typing
 
 import pytest
-from absl import flags
 
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def MakeFile(directory: pathlib.Path, relpath: str, contents: str) -> None:

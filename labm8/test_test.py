@@ -5,12 +5,11 @@ import sys
 import tempfile
 
 import pytest
-from absl import flags
-from absl import logging
 
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 # The //:conftest is included implicitly when you depend on //labm8:test.
@@ -85,20 +84,18 @@ def test_captured_stderr():
 
 
 def test_captured_logging_info():
-  """A test which prints to logging.info"""
-  logging.info(
-      "This message is captured unless run with --notest_capture_output")
+  """A test which prints to app.Info"""
+  app.Info("This message is captured unless run with --notest_capture_output")
 
 
 def test_captured_logging_debug():
-  """A test which prints to logging.debug"""
-  logging.debug(
-      "This message is captured unless run with --notest_capture_output")
+  """A test which prints to app.Debug"""
+  app.Debug("This message is captured unless run with --notest_capture_output")
 
 
 def test_captured_logging_warning():
-  """A test which prints to logging.warning"""
-  logging.warning(
+  """A test which prints to app.Warning"""
+  app.Warning(
       "This message is captured unless run with --notest_capture_output")
 
 

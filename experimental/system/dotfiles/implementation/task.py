@@ -3,7 +3,6 @@ import logging
 import socket
 import sys
 
-
 TASKS = {}
 
 
@@ -70,14 +69,14 @@ def IsRunnableTask(t):
   hosts = getattr(t, "__hosts__", [])
   if hosts and socket.gethostname() not in hosts:
     msg = "skipping " + type(t).__name__ + " on host " + socket.gethostname()
-    logging.debug(msg)
+    app.Debug(msg)
     return False
 
   # Check that task passes all req tests:
   reqs = getattr(t, "__reqs__", [])
   if reqs and not all(req() for req in reqs):
     msg = "skipping " + type(t).__name__ + ", failed req check"
-    logging.debug(msg)
+    app.Debug(msg)
     return False
 
   return True
@@ -87,8 +86,8 @@ def ScheduleTask(task_name, schedule, all_tasks, depth=1):
   """ recursively schedule a task and its dependencies """
   # Sanity check for scheduling errors:
   if depth > 1000:
-    raise SchedulingError("failed to resolve schedule for task '" +
-                          task_name + "' after 1000 tries")
+    raise SchedulingError("failed to resolve schedule for task '" + task_name +
+                          "' after 1000 tries")
     sys.exit(1)
 
   # Instantiate the task class:
@@ -147,5 +146,6 @@ def AssertSet(value, name):
 
 
 class MissingRequiredArgument(TaskArgumentError):
+
   def __init__(self, argument):
     super(MissingRequiredArgument, self).__init__(argument, 'not set')

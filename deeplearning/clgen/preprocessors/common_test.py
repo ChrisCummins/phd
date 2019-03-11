@@ -15,13 +15,13 @@
 """Unit tests for ///common_test.py."""
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import common
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # MinimumLineCount3() tests.
 

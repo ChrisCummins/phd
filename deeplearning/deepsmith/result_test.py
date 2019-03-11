@@ -1,8 +1,6 @@
 """Tests for //deeplearning/deepsmith:result."""
 import datetime
 
-from absl import flags
-
 import deeplearning.deepsmith.client
 import deeplearning.deepsmith.generator
 import deeplearning.deepsmith.harness
@@ -10,10 +8,11 @@ import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 from labm8 import labdate
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_Result_ToProto():

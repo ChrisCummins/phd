@@ -3,19 +3,17 @@ import pathlib
 
 import numpy as np
 import pandas as pd
-from absl import app
-from absl import flags
-from absl import logging
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
+from labm8 import app
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/datasets/opencl_devmap',
-                    'The directory to write the output dataframes to.')
+app.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/datasets/opencl_devmap',
+                  'The directory to write the output dataframes to.')
 
 
 def SplitToDataFrame(split):
@@ -45,8 +43,8 @@ def MakeOpenClDevmapDataset(df: pd.DataFrame, outdir: pathlib.Path):
       for _, g in encoded_graphs
   ])
 
-  logging.info(f'{unknowns.mean():.1%} of statements are unknown '
-               f'(min={unknowns.min():.1%}, max={unknowns.max():.1%})')
+  app.Info(f'{unknowns.mean():.1%} of statements are unknown '
+           f'(min={unknowns.min():.1%}, max={unknowns.max():.1%})')
 
   # Set CFG properties columns.
   graphs = [x[1] for x in encoded_graphs]
@@ -93,9 +91,9 @@ def MakeOpenClDevmapDataset(df: pd.DataFrame, outdir: pathlib.Path):
   assert len(input_graphs) == len(target_graphs) == len(encoded_graphs) == len(
       amd_df) == len(nvidia_df)
 
-  logging.info("Writing %s", outdir / 'amd.pkl')
+  app.Info("Writing %s", outdir / 'amd.pkl')
   amd_df.to_pickle(str(outdir / 'amd.pkl'))
-  logging.info("Writing %s", outdir / 'nvidia.pkl')
+  app.Info("Writing %s", outdir / 'nvidia.pkl')
   nvidia_df.to_pickle(str(outdir / 'nvidia.pkl'))
 
 
@@ -113,4 +111,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -6,17 +6,14 @@ import subprocess
 import time
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
+from labm8 import app
 from labm8 import humanize
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('timing_inbox', None, 'Inbox to process.')
+app.DEFINE_string('timing_inbox', None, 'Inbox to process.')
 
 
 def _ReadDatabaseToSeriesCollection(db) -> me_pb2.SeriesCollection:
@@ -73,10 +70,10 @@ WHERE
             source='Timing.app',
         ) for date, value, group in cursor
     ])
-    logging.info('Processed %s %s:%s measurements in %.3f seconds',
-                 humanize.Commas(len(series.measurement)), series.family,
-                 series.name,
-                 time.time() - start_time)
+    app.Info('Processed %s %s:%s measurements in %.3f seconds',
+             humanize.Commas(len(series.measurement)), series.family,
+             series.name,
+             time.time() - start_time)
 
   return me_pb2.SeriesCollection(series=title_series_map.values())
 
@@ -131,4 +128,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

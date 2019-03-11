@@ -4,17 +4,15 @@ import typing
 from concurrent import futures
 
 import grpc
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
+from labm8 import app
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class GeneratorServiceBase(services.ServiceBase):
@@ -82,9 +80,9 @@ class GeneratorServiceBase(services.ServiceBase):
       service = cls(generator_config)
       generator_pb2_grpc.add_GeneratorServiceServicer_to_server(service, server)
       server.add_insecure_port(f'[::]:{generator_config.service.port}')
-      logging.info('%s listening on %s:%s',
-                   type(service).__name__, generator_config.service.hostname,
-                   generator_config.service.port)
+      app.Info('%s listening on %s:%s',
+               type(service).__name__, generator_config.service.hostname,
+               generator_config.service.port)
       server.start()
       try:
         while True:

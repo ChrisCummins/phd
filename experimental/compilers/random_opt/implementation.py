@@ -11,8 +11,6 @@ import typing
 
 import gym
 import numpy as np
-from absl import flags
-from absl import logging
 from gym import spaces
 from gym.utils import seeding
 
@@ -21,15 +19,16 @@ from compilers.llvm import llvm
 from compilers.llvm import llvm_link
 from compilers.llvm import opt
 from experimental.compilers.random_opt.proto import random_opt_pb2
+# WARNING: No flags can be defined in this file, because it is loaded at runtime
+# by gym to resolve string entry points.
+from labm8 import app
 from labm8 import crypto
 from labm8 import jsonutil
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
 
-# WARNING: No flags can be defined in this file, because it is loaded at runtime
-# by gym to resolve string entry points.
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class Environment(gym.Env):
@@ -104,13 +103,13 @@ class Environment(gym.Env):
     if self.config.HasField('setup_cmd'):
       cmd = self._MakeVariableSubstitution(self.config.setup_cmd)
       cmd = f"timeout -s9 {timeout_seconds} bash -c '{cmd}'"
-      logging.debug('$ %s', cmd)
+      app.Debug('$ %s', cmd)
       subprocess.check_call(cmd, shell=True)
 
   def RunBinary(self, timeout_seconds: int = 60) -> int:
     """Run the binary and return runtime. Requires that binary exists."""
     exec_cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.exec_cmd}'"
-    logging.debug('$ %s', exec_cmd)
+    app.Debug('$ %s', exec_cmd)
     start_time = time.time()
     proc = subprocess.Popen(exec_cmd, shell=True)
     proc.communicate()
@@ -136,7 +135,7 @@ class Environment(gym.Env):
     if self.eval_cmd:
       try:
         cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.eval_cmd}'"
-        logging.debug('$ %s', cmd)
+        app.Debug('$ %s', cmd)
         subprocess.check_call(cmd, shell=True)
         return True
       except subprocess.CalledProcessError:
@@ -190,7 +189,7 @@ class LlvmOptEnv(Environment):
     self.observation_space = spaces.Discrete(10)
 
   def reset(self):
-    logging.debug('$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
+    app.Debug('$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
     shutil.copyfile(self.bytecode_path, self.working_bytecode_path)
     clang.Compile([self.working_bytecode_path], self.binary_path, copts=['-O0'])
     start_time = labdate.MillisecondsTimestamp()
@@ -269,7 +268,7 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
     if step.status == random_opt_pb2.Step.PASS:
       # Update bytecode file.
-      logging.debug('$ mv %s %s', temp_bytecode, self.working_bytecode_path)
+      app.Debug('$ mv %s %s', temp_bytecode, self.working_bytecode_path)
       step.bytecode_changed = BytecodesAreEqual(temp_bytecode,
                                                 self.working_bytecode_path)
       os.rename(str(temp_bytecode), str(self.working_bytecode_path))
@@ -384,7 +383,7 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
   def reset(self):
     """Reset the environment state."""
-    logging.debug('$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
+    app.Debug('$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
     shutil.copyfile(self.bytecode_path, self.working_bytecode_path)
     clang.Compile([self.bytecode_path], self.binary_path, copts=['-O0'])
     self.RunSetupCommand()

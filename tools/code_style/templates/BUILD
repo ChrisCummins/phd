@@ -12,7 +12,7 @@ py_library(
     name = "python",
     srcs = ["python.py"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -21,7 +21,7 @@ py_test(
     size = "small",
     srcs = ["python_test.py"],
     deps = [
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

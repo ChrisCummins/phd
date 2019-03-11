@@ -2,12 +2,12 @@
 
 import numpy as np
 import pytest
-from absl import flags
 
 from experimental.compilers.reachability import control_flow_graph_generator
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_UniqueNameSequence_next():

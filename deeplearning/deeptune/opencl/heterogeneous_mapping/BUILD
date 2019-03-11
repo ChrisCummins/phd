@@ -21,7 +21,7 @@ py_binary(
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
     ],
@@ -34,8 +34,8 @@ py_test(
     deps = [
         ":conftest",
         ":heterogeneous_mapping",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -45,7 +45,7 @@ py_library(
     visibility = ["//deeplearning/deeptune/opencl/heterogeneous_mapping:__subpackages__"],
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
-        "//third_party/py/absl",
+        "//labm8:app",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/scipy:scikit_learn",
@@ -59,7 +59,7 @@ py_test(
         ":conftest",
         ":utils",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

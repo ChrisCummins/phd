@@ -3,9 +3,9 @@ py_binary(
     srcs = ["ledger.py"],
     deps = [
         "//alice:alice_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:sqlutil",
-        "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
 )

@@ -10,35 +10,33 @@ import typing
 
 import pandas as pd
 import progressbar
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import result
 from deeplearning.deepsmith import testbed
 from deeplearning.deepsmith import testcase
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import labtypes
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'datastore',
     str(
         bazelutil.DataPath(
             'phd/docs/2018_07_issta/artifact_evaluation/data/datastore.pbtxt')),
     'Path to datastore configuration file.')
-flags.DEFINE_list('input_directories', [
+app.DEFINE_list('input_directories', [
     str(
         bazelutil.DataPath(
             'phd/docs/2018_07_issta/artifact_evaluation/data/our_results')),
     '/tmp/phd/docs/2018_07_issta/artifact_evaluation/results',
 ], 'Directories to read results from.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'output_directory',
     '/tmp/phd/docs/2018_07_issta/artifact_evaluation/difftest_classifications',
     'Directory to write classified results to.')
@@ -209,7 +207,7 @@ def main(argv):
     unknown_args = ', '.join(argv[1:])
     raise app.UsageError(f'Unknown arguments "{unknown_args}"')
 
-  logging.info('Initializing datastore.')
+  app.Info('Initializing datastore.')
   config = pathlib.Path(FLAGS.datastore)
   ds = datastore.DataStore.FromFile(config)
 
@@ -233,7 +231,7 @@ def main(argv):
       [pathlib.Path(x)
        for x in fs.lsfiles(x, recursive=True, abspaths=True)]
       for x in result_dirs)
-  logging.info('Importing %d results into datastore ...', len(results_paths))
+  app.Info('Importing %d results into datastore ...', len(results_paths))
   with ds.Session(commit=True) as s:
     for path in progressbar.ProgressBar()(results_paths):
       # Instantiating a result from file has the side effect of adding the
@@ -242,8 +240,7 @@ def main(argv):
 
   with ds.Session() as s:
     testcases = s.query(testcase.Testcase)
-    logging.info('Difftesting the results of %d testcases ...',
-                 testcases.count())
+    app.Info('Difftesting the results of %d testcases ...', testcases.count())
     for t in progressbar.ProgressBar(max_value=testcases.count())(testcases):
       DifftestTestcase(s, t, output_dir)
   df = ReadClassificationsToTable(output_dir)
@@ -259,4 +256,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -15,9 +15,9 @@ py_binary(
     visibility = ["//system/machines:__subpackages__"],
     deps = [
         ":mirrored_directory",
+        "//labm8:app",
         "//labm8:pbutil",
         "//system/machines/proto:machine_spec_pb2_py",
-        "//third_party/py/absl",
     ],
 )
 
@@ -26,9 +26,9 @@ py_test(
     srcs = ["machine_test.py"],
     deps = [
         ":machine",
+        "//labm8:app",
         "//labm8:test",
         "//system/machines/proto:machine_spec_pb2_py",
-        "//third_party/py/absl",
     ],
 )
 
@@ -37,9 +37,9 @@ py_library(
     srcs = ["mirrored_directory.py"],
     visibility = ["//system/machines:__subpackages__"],
     deps = [
+        "//labm8:app",
         "//labm8:labtypes",
         "//system/machines/proto:machine_spec_pb2_py",
-        "//third_party/py/absl",
     ],
 )
 
@@ -48,8 +48,8 @@ py_test(
     srcs = ["mirrored_directory_test.py"],
     deps = [
         ":mirrored_directory",
+        "//labm8:app",
         "//labm8:fs",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

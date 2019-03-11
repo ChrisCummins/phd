@@ -23,15 +23,12 @@ import subprocess
 import tempfile
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from datasets.benchmarks.gpgpu import gpgpu_pb2
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import humanize
@@ -41,7 +38,7 @@ from labm8 import pbutil
 from labm8 import system
 from labm8 import text
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The list of all GPGPU benchmark suites.
 _BENCHMARK_SUITE_NAMES = [
@@ -55,27 +52,27 @@ _BENCHMARK_SUITE_NAMES = [
     'dummy_just_for_testing',
 ]
 
-flags.DEFINE_list(
+app.DEFINE_list(
     'gpgpu_benchmark_suites', _BENCHMARK_SUITE_NAMES,
     'The names of benchmark suites to run. Defaults to all '
     'benchmark suites.')
-flags.DEFINE_list(
+app.DEFINE_list(
     'gpgpu_envs', ['Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2'],
     'The OpenCL environment names to execute benchmark suites '
     'on. To list the available environments, run '
     '`bazel run //gpu/clinfo`.')
-flags.DEFINE_string('gpgpu_logdir', '/tmp/phd/datasets/benchmarks/gpgpu',
-                    'The directory to write log files to.')
-flags.DEFINE_integer(
+app.DEFINE_string('gpgpu_logdir', '/tmp/phd/datasets/benchmarks/gpgpu',
+                  'The directory to write log files to.')
+app.DEFINE_integer(
     'gpgpu_build_process_count', multiprocessing.cpu_count(),
     'The number of parallel threads to use when building '
     'GPGPU benchmark suites. Defaults to the number of '
     'processors on your system.')
-flags.DEFINE_integer('gpgpu_benchmark_run_count', 1,
-                     'The number of times to execute each benchmark suite.')
-flags.DEFINE_string('gpgpu_log_extension', '.pb',
-                    'The file extension for generated log files.')
-flags.DEFINE_boolean(
+app.DEFINE_integer('gpgpu_benchmark_run_count', 1,
+                   'The number of times to execute each benchmark suite.')
+app.DEFINE_string('gpgpu_log_extension', '.pb',
+                  'The file extension for generated log files.')
+app.DEFINE_boolean(
     'gpgpu_record_outputs', True,
     "Record each benchmark's stdout and stderr. This "
     "information is not needed to get performance data, and "
@@ -91,11 +88,11 @@ def CheckCall(command: typing.Union[str, typing.List[str]],
               env: typing.Dict[str, str] = None):
   """Wrapper around subprocess.check_call() to log executed commands."""
   if shell:
-    logging.debug('$ %s', command)
+    app.Debug('$ %s', command)
     subprocess.check_call(command, shell=True, env=env)
   else:
     command = [str(x) for x in command]
-    logging.debug('$ %s', ' '.join(command))
+    app.Debug('$ %s', ' '.join(command))
     subprocess.check_call(command, env=env)
 
 
@@ -176,7 +173,7 @@ def Make(
   # Build relative to the path, rather than using `make -c <path>`. This is
   # because some of the source codes have hard-coded relative paths.
   with MakeEnv(make_dir) as env:
-    logging.debug('Running make %s in %s', target, make_dir)
+    app.Debug('Running make %s in %s', target, make_dir)
     CheckCall(
         ['make', '-j', FLAGS.gpgpu_build_process_count] +
         ([target] if target else []) + (extra_make_args or []),
@@ -277,7 +274,7 @@ class _BenchmarkSuite(object):
       dataset_name: str = 'default',
       env: typing.Optional[typing.Dict[str, str]] = None) -> None:
     """Run executable using runcecl script and log output."""
-    logging.info('Executing %s:%s', self.name, benchmark_name)
+    app.Info('Executing %s:%s', self.name, benchmark_name)
     self._logdir.mkdir(exist_ok=True, parents=True)
 
     device_name = '_'.join([x.lower() for x in self.env.device_name.split()])
@@ -318,7 +315,7 @@ class _BenchmarkSuite(object):
             run=libcecl_log,
         ), log_produced)
 
-    logging.info('Wrote %s', log_produced)
+    app.Info('Wrote %s', log_produced)
     self._log_paths.append(log_produced)
 
   # Abstract attributes that must be provided by subclasses.
@@ -357,7 +354,7 @@ class DummyJustForTesting(_BenchmarkSuite):
     return ['hello']
 
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
-    logging.info("Dummy benchmark running on %s", env.name)
+    app.Info("Dummy benchmark running on %s", env.name)
 
     CheckCall([_MKCECL, self.path / 'hello.cc'])
 
@@ -368,7 +365,7 @@ class DummyJustForTesting(_BenchmarkSuite):
           shell=True)
 
   def _Run(self):
-    logging.info("Executing dummy benchmarks!")
+    app.Info("Executing dummy benchmarks!")
     self._ExecToLogFile(self.path / 'hello', 'hello')
 
 
@@ -427,7 +424,7 @@ class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
         env['CFLAGS'] = f'{env["CFLAGS"]} -isystem {self.path}/include'
         env['CXXFLAGS'] = f'{env["CXXFLAGS"]} -isystem {self.path}/include'
 
-        logging.debug('Building %s:%s in %s', self.name, benchmark)
+        app.Debug('Building %s:%s in %s', self.name, benchmark)
         CheckCall(['cmake', '.'], env=env)
         CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count, 'VERBOSE=1'],
                   env=env)
@@ -584,10 +581,10 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
       for benchmark in self.benchmarks:
         dataset_archive = self.path / f'datasets/{benchmark}.tar.bz2'
         if dataset_archive.is_file():
-          logging.info('Unpacking datasets for %s:%s', self.name, benchmark)
+          app.Info('Unpacking datasets for %s:%s', self.name, benchmark)
           CheckCall(['tar', 'xjvf', dataset_archive])
         elif pathlib.Path(f'{dataset_archive}.part1').is_file():
-          logging.info('Unpacking datasets for %s:%s', self.name, benchmark)
+          app.Info('Unpacking datasets for %s:%s', self.name, benchmark)
           CheckCall(
               f'cat {dataset_archive}.part1 {dataset_archive}.part2 '
               f'> {dataset_archive}',
@@ -645,7 +642,7 @@ class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
     RewriteClDeviceType(env, self.path / 'OpenCL')
     for benchmark in self.benchmarks:
-      logging.info('Building benchmark %s', benchmark)
+      app.Info('Building benchmark %s', benchmark)
       Make('clean', self.path / 'OpenCL' / benchmark)
       Make('all', self.path / 'OpenCL' / benchmark)
 
@@ -704,13 +701,13 @@ class RodiniaBenchmarkSuite(_BenchmarkSuite):
   def _ForceOpenCLEnvironment(self, env: cldrive_env.OpenCLEnvironment):
     RewriteClDeviceType(env, self.path / 'opencl')
 
-    logging.info("Building Rodinia benchmarks")
+    app.Info("Building Rodinia benchmarks")
 
     # This directory is not generated by the Makefile, but is needed by it.
     (self.path / 'bin/linux/opencl').mkdir(parents=True, exist_ok=True)
 
     # Copy and unpack the data sets, which come from a data-only file tree.
-    logging.info('Unpacking compressed data archives.')
+    app.Info('Unpacking compressed data archives.')
     fs.cp(_RODINIA_DATA_ROOT, self.path / 'data')
     Make('all', self.path / 'data')
 
@@ -813,19 +810,19 @@ def main(argv: typing.List[str]):
       FLAGS.gpgpu_benchmark_suites):
     with benchmark_suite_class() as benchmark_suite:
       for env in envs:
-        logging.info('Building and running %s on %s', benchmark_suite.name,
-                     env.name)
+        app.Info('Building and running %s on %s', benchmark_suite.name,
+                 env.name)
         benchmark_suite.ForceOpenCLEnvironment(env)
         for i in range(FLAGS.gpgpu_benchmark_run_count):
-          logging.info('Starting run %d of %s', i + 1, benchmark_suite.name)
+          app.Info('Starting run %d of %s', i + 1, benchmark_suite.name)
           benchmark_suite.Run(outdir)
 
       kernel_invocation_count = sum(
           len(log.run.kernel_invocation) for log in benchmark_suite.logs)
-      logging.info('Extracted %s kernel invocations from %s logs',
-                   humanize.Commas(kernel_invocation_count),
-                   humanize.Commas(benchmark_suite.log_count))
+      app.Info('Extracted %s kernel invocations from %s logs',
+               humanize.Commas(kernel_invocation_count),
+               humanize.Commas(benchmark_suite.log_count))
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

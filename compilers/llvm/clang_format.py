@@ -16,20 +16,17 @@ import subprocess
 import sys
 import typing
 
-from absl import app
-from absl import flags
-from absl import logging
-
 from compilers.llvm import llvm
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import system
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('clang_format_file_suffix', '.c',
-                    'The file name suffix to assume for files.')
-flags.DEFINE_integer('clang_format_timeout_seconds', 60,
-                     'The maximum number of seconds to allow process to run.')
+app.DEFINE_string('clang_format_file_suffix', '.c',
+                  'The file name suffix to assume for files.')
+app.DEFINE_integer('clang_format_timeout_seconds', 60,
+                   'The maximum number of seconds to allow process to run.')
 
 _LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
 
@@ -67,7 +64,7 @@ def Exec(text: str,
       str(timeout_seconds),
       str(CLANG_FORMAT), '-assume-filename', f'input{suffix}'
   ] + args
-  logging.debug('$ %s', ' '.join(cmd))
+  app.Debug('$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdin=subprocess.PIPE,
@@ -97,4 +94,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

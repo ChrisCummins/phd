@@ -15,14 +15,14 @@
 """Unit tests for //deeplearning/clgen/models/builders.py."""
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.proto import model_pb2
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # AssertIsBuildable() tests.
 

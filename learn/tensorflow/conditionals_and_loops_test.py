@@ -2,11 +2,11 @@
 import collections
 
 import tensorflow as tf
-from absl import flags
 
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def ConditionalLessThan(x, y: int):

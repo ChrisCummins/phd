@@ -1,12 +1,11 @@
 """Unit tests for //datasets/github/scrape_repos/public.py."""
 import pathlib
 
-from absl import flags
-
 from datasets.github.scrape_repos.preprocessors import public
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # GetAllFilesRelativePaths() tests.
 

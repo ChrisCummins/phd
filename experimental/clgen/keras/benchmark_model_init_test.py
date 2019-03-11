@@ -8,13 +8,13 @@ Things I learned from this file:
 """
 import tempfile
 
-from absl import flags
 from keras import layers
 from keras import models
 
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_1layer_LSTM_no_compile(benchmark):

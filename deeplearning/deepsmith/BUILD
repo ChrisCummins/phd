@@ -41,9 +41,9 @@ py_library(
         ":toolchain",
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
         "//labm8:sqlutil",
-        "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -54,9 +54,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:datastore_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -69,8 +69,8 @@ py_test(
         ":conftest",
         ":db",
         ":toolchain",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -95,8 +95,8 @@ py_test(
         ":conftest",
         ":generator",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -122,8 +122,8 @@ py_test(
         ":conftest",
         ":harness",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -179,9 +179,9 @@ py_test(
         ":testbed",
         ":testcase",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -191,8 +191,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//labm8:app",
         "//labm8:pbutil",
-        "//third_party/py/absl",
         "//third_party/py/grpcio",
     ],
 )
@@ -220,8 +220,8 @@ py_test(
         ":testbed",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -256,8 +256,8 @@ py_test(
         ":testcase",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//labm8:app",
         "//labm8:labdate",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

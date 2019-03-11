@@ -5,19 +5,17 @@ import pathlib
 import typing
 
 import MySQLdb
-from absl import app
-from absl import flags
-from absl import logging
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 from labm8 import fs
 from labm8 import labdate
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('proto_dir', None, 'Directory to export protos to.')
-flags.DEFINE_list('program_ids', None, 'IDs of OpenCL programs to export.')
+app.DEFINE_string('proto_dir', None, 'Directory to export protos to.')
+app.DEFINE_list('program_ids', None, 'IDs of OpenCL programs to export.')
 
 OPENCL_DEVTYPE_MAP = {
     '3': 'CPU',
@@ -292,15 +290,15 @@ def _ExportProtos() -> None:
   (proto_dir / 'testcases').mkdir(parents=True, exist_ok=True)
   (proto_dir / 'results').mkdir(parents=True, exist_ok=True)
   for program_id in FLAGS.program_ids:
-    logging.info("Exporting OpenCL program %s", program_id)
+    app.Info("Exporting OpenCL program %s", program_id)
     _ExportOpenCLResults(cursor, program_id, proto_dir)
 
   cursor.close()
   cnx.close()
 
-  logging.info('Exported %d testcases and %d results',
-               len(fs.ls(proto_dir / 'testcases')),
-               len(fs.ls(proto_dir / 'results')))
+  app.Info('Exported %d testcases and %d results',
+           len(fs.ls(proto_dir / 'testcases')), len(
+               fs.ls(proto_dir / 'results')))
 
 
 def main(argv):
@@ -309,4 +307,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

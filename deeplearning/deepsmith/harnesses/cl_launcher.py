@@ -6,9 +6,6 @@ import typing
 from concurrent import futures
 
 import grpc
-from absl import app
-from absl import flags
-from absl import logging
 
 from compilers.clsmith import cl_launcher
 from deeplearning.deepsmith import services
@@ -19,9 +16,10 @@ from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
+from labm8 import app
 from labm8 import labdate
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class ClLauncherHarness(harness.HarnessBase,
@@ -83,7 +81,7 @@ class ClLauncherHarness(harness.HarnessBase,
 
     # Logging output.
     for testbed in self.testbeds:
-      logging.info('OpenCL testbed:\n%s', testbed)
+      app.Info('OpenCL testbed:\n%s', testbed)
 
   def GetHarnessCapabilities(
       self, request: harness_pb2.GetHarnessCapabilitiesRequest,
@@ -110,8 +108,8 @@ class ClLauncherHarness(harness.HarnessBase,
     for i, testcase in enumerate(request.testcases):
       result = RunTestcase(self.envs[testbed_idx], self.testbeds[testbed_idx],
                            testcase, list(self.config.opts))
-      logging.info('Testcase %d: %s.', i + 1,
-                   deepsmith_pb2.Result.Outcome.Name(result.outcome))
+      app.Info('Testcase %d: %s.', i + 1,
+               deepsmith_pb2.Result.Outcome.Name(result.outcome))
       response.results.extend([result])
 
     return response
@@ -234,7 +232,7 @@ def GetResultOutcome(
     # SIGKILL
     return RuntimeTimoutOrBuildTimeout()
   elif result.returncode == -9:
-    logging.warning('SIGKILL, but only ran for %d ms', runtime_ms)
+    app.Warning('SIGKILL, but only ran for %d ms', runtime_ms)
     return RuntimeCrashOrBuildCrash()
   elif result.returncode == -4:
     # SIGILL
@@ -268,9 +266,8 @@ def main(argv):
   service = ClLauncherHarness(config)
   harness_pb2_grpc.add_HarnessServiceServicer_to_server(service, server)
   server.add_insecure_port(f'[::]:{config.service.port}')
-  logging.info('%s listening on %s:%s',
-               type(service).__name__, config.service.hostname,
-               config.service.port)
+  app.Info('%s listening on %s:%s',
+           type(service).__name__, config.service.hostname, config.service.port)
   server.start()
   try:
     while True:
@@ -280,4 +277,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

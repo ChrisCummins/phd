@@ -6,12 +6,12 @@ import time
 import zipfile
 
 import pytest
-from absl import flags
 
 from datasets.me_db.providers.life_cycle import make_dataset
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

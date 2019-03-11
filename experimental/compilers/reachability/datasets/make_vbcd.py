@@ -8,9 +8,6 @@ import typing
 
 import progressbar
 import pyparsing
-from absl import app
-from absl import flags
-from absl import logging
 
 from compilers.llvm import opt
 from datasets.github import api as github_api
@@ -27,17 +24,18 @@ from experimental.compilers.reachability import reachability_pb2
 from experimental.compilers.reachability.datasets import import_from_github
 from experimental.compilers.reachability.datasets import linux
 from experimental.compilers.reachability.datasets import opencl
+from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'vbcd',
     'sqlite:////tmp/phd/experimental/compilers/reachability/datasets/vbcd.db',
     'Path of database to populate.')
 
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'vbcd_process_count', multiprocessing.cpu_count(),
     'The number of parallel processes to use when creating '
     'the dataset.')
@@ -237,7 +235,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
               ]),
       ])
 
-  logging.info("Scraping repos ...")
+  app.Info("Scraping repos ...")
   connection = github_api.GetGithubConectionFromFlagsOrDie()
   for query in language_to_clone.query:
     scraper.RunQuery(scraper.QueryScraper(language_to_clone, query, connection))
@@ -250,7 +248,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
       if cloner.IsRepoMetaFile(f)
   ]
   worker = cloner.AsyncWorker(meta_files)
-  logging.info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
+  app.Info('Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():
@@ -258,7 +256,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
     worker.join(.5)
   bar.update(worker.i)
 
-  logging.info("Importing repos to contentfiles database ...")
+  app.Info("Importing repos to contentfiles database ...")
   for imp in language_to_clone.importer:
     [preprocessors.GetPreprocessorFunction(p) for p in imp.preprocessor]
 
@@ -269,7 +267,7 @@ def PopulateBytecodeTableFromGithubCSources(db: database.Database,
   if pathlib.Path(language_to_clone.destination_directory).is_dir():
     importer.ImportFromLanguage(contentfiles_db, language_to_clone, pool)
 
-  logging.info("Populating bytecode table ...")
+  app.Info("Populating bytecode table ...")
   import_from_github.PopulateBytecodeTable(contentfiles_db, language_to_clone,
                                            db)
 
@@ -289,7 +287,7 @@ def main(argv):
     opencl_dataset_imported = session.query(database.Meta) \
       .filter(database.Meta.key == 'opencl_dataset_imported').first()
   if not opencl_dataset_imported:
-    logging.info("Importing OpenCL dataset ...")
+    app.Info("Importing OpenCL dataset ...")
     opencl.OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
     with db.Session(commit=True) as session:
       session.add(
@@ -299,7 +297,7 @@ def main(argv):
     linux_sources_imported = session.query(database.Meta) \
       .filter(database.Meta.key == 'linux_sources_imported').first()
   if not linux_sources_imported:
-    logging.info("Processing Linux dataset ...")
+    app.Info("Processing Linux dataset ...")
     linux.LinuxSourcesDataset().PopulateBytecodeTable(db)
     with db.Session(commit=True) as session:
       session.add(
@@ -309,19 +307,19 @@ def main(argv):
     github_c_sources_imported = session.query(database.Meta) \
       .filter(database.Meta.key == 'github_c_sources_imported').first()
   if not github_c_sources_imported:
-    logging.info('Processing GitHub C sources ...')
+    app.Info('Processing GitHub C sources ...')
     with tempfile.TemporaryDirectory(prefix='phd_') as d:
       PopulateBytecodeTableFromGithubCSources(db, pathlib.Path(d))
     with db.Session(commit=True) as session:
       session.add(
           database.Meta(key='github_c_sources_imported', value=NowString()))
 
-  # logging.info("Processing CFGs ...")
+  # app.Info("Processing CFGs ...")
   # PopulateControlFlowGraphTable(db)
   #
-  # logging.info("Processing full flow graphs ...")
+  # app.Info("Processing full flow graphs ...")
   # PopulateFullFlowGraphTable(db)
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

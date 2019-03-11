@@ -4,13 +4,13 @@ import tempfile
 import time
 
 import pytest
-from absl import flags
 
 from datasets.me_db.providers.ynab import make_dataset
 from datasets.me_db.providers.ynab import ynab
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')

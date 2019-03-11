@@ -6,13 +6,13 @@ import typing
 import matplotlib
 import numpy as np
 import seaborn as sns
-from absl import flags
-from absl import logging
 from matplotlib import axes
 from matplotlib import pyplot as plt
 from scipy import stats
 
-FLAGS = flags.FLAGS
+from labm8 import app
+
+FLAGS = app.FLAGS
 
 
 def Finalize(output: typing.Optional[typing.Union[str, pathlib.Path]] = None,
@@ -43,7 +43,7 @@ def Finalize(output: typing.Optional[typing.Union[str, pathlib.Path]] = None,
     output = pathlib.Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(str(output), **savefig_opts)
-    logging.info("Wrote '%s'", output)
+    app.Info("Wrote '%s'", output)
   plt.close()
 
 

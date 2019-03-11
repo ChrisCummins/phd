@@ -71,8 +71,8 @@ def _log_outcome(outcome: Outcomes, runtime: float):
   """ verbose logging output """
   outcome_name = Outcomes.to_str(outcome)
   return_color = Colors.GREEN if outcome == Outcomes.PASS else Colors.RED
-  logging.info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
-               f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+  app.Info(f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
+           f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
 
 
 class OpenCLHarness(Harness):
@@ -109,7 +109,7 @@ class OpenCLHarness(Harness):
         ndone = already_exists.count()
         ntodo = todo.count()
         ntotal = ndone + ntodo
-        logging.debug(
+        app.Debug(
             f"{self}:{generator} {threads} testcases = {ndone} / {ntotal}")
 
         # Break early if there's nothing to do:
@@ -292,7 +292,7 @@ class Cldrive(OpenCLHarness):
 
       cmd = ['timeout', '-s9', str(testcase.timeout), tmpfile.name]
 
-      logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
+      app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
       start_time = time()
       proc = subprocess.Popen(
@@ -373,7 +373,7 @@ class Clang(OpenCLHarness):
     testbed = get_or_add(
         session, Testbed, platform_id=platform.id, optimizations=True)
     session.commit()
-    logging.debug(f"Added new Testbed {testbed}")
+    app.Debug(f"Added new Testbed {testbed}")
     return testbed
 
   def testbeds(self, session: session_t = None) -> List[TestbedProxy]:
@@ -418,7 +418,7 @@ class Clang(OpenCLHarness):
           str(testcase.timeout), clang, '-cc1', '-xcl', src_path
       ]
 
-      logging.debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
+      app.Debug(f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
       start_time = time()
       process = subprocess.Popen(

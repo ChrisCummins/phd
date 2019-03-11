@@ -2,7 +2,6 @@
 import pathlib
 
 import pytest
-from absl import flags
 
 from compilers.llvm import clang
 from gpu.cldrive.legacy import env as cldrive_env
@@ -10,10 +9,11 @@ from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
+from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _HELLO = bazelutil.DataPath('phd/gpu/libcecl/integration_test/hello.cc')
 

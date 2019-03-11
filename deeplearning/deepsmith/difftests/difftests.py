@@ -1,11 +1,10 @@
 """This module defines differential tests for results."""
 import typing
 
-from absl import flags
-
 from deeplearning.deepsmith.proto import deepsmith_pb2
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class DiffTesterBase(object):

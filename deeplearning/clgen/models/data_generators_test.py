@@ -16,13 +16,13 @@
 
 import numpy as np
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import data_generators
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class CorpusMock(object):

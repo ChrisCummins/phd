@@ -9,15 +9,14 @@ import typing
 import pandas as pd
 import progressbar
 import sqlalchemy as sql
-from absl import flags
-from absl import logging
 from sqlalchemy.ext import declarative
 
+from labm8 import app
 from labm8 import humanize
 from labm8 import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
 
@@ -99,19 +98,18 @@ def _DatabaseImporterWorker(
   try:
     features = list(grewe_features.ExtractFeaturesFromPath(path))
   except grewe_features.FeatureExtractionError as e:
-    logging.debug("Feature extraction failed with message: %s", e)
+    app.Debug("Feature extraction failed with message: %s", e)
     return None, None
 
   if len(features) != 1:
-    logging.debug("Expected 1 feature vector in %s, found %d", path,
-                  len(features))
+    app.Debug("Expected 1 feature vector in %s, found %d", path, len(features))
     return None, None
 
   try:
     with open(path) as f:
       src = f.read()
   except UnicodeEncodeError:
-    logging.debug("Failed to encode %s", src)
+    app.Debug("Failed to encode %s", src)
     return None, None
 
   return src, features[0]
@@ -146,8 +144,7 @@ class Database(sqlutil.Database):
     new_row_count = 0
     paths_to_import = list(paths_to_import)
     random.shuffle(paths_to_import)
-    logging.info('Importing %s files ...', humanize.Commas(
-        len(paths_to_import)))
+    app.Info('Importing %s files ...', humanize.Commas(len(paths_to_import)))
     bar = progressbar.ProgressBar(
         max_value=len(paths_to_import), redirect_stderr=True)
 
@@ -173,6 +170,6 @@ class Database(sqlutil.Database):
             try:
               session.commit()
             except (sql.exc.OperationalError, sql.exc.DataError) as e:
-              logging.warning('Failed to commit database entry: %s', e)
+              app.Warning('Failed to commit database entry: %s', e)
 
     return success_count, new_row_count

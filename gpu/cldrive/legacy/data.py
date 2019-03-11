@@ -19,8 +19,8 @@ from enum import Enum
 
 import numpy as np
 
+import labm8.app
 from gpu.cldrive.legacy import args as _args
-from labm8 import err
 
 
 class Generator(Enum):
@@ -86,8 +86,8 @@ def MakeData(src: str,
           dtype=object)
   """
   # check the input types
-  err.assert_or_raise(isinstance(src, str), TypeError)
-  err.assert_or_raise(
+  labm8.app.AssertOrRaise(isinstance(src, str), TypeError)
+  labm8.app.AssertOrRaise(
       isinstance(data_generator, Generator), TypeError,
       "invalid argument type for enum data_generator")
 

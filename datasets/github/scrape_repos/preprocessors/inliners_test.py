@@ -1,12 +1,11 @@
 """Tests for //datasets/github.scrape_repos.preprocessors/inliners_test.py."""
 import pathlib
 
-from absl import flags
-
 from datasets.github.scrape_repos.preprocessors import inliners
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def MakeFile(directory: pathlib.Path, relpath: str, contents: str):

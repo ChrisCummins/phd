@@ -15,13 +15,13 @@
 """Unit tests for //deeplearning/clgen/preprocessors/public.py."""
 
 import pytest
-from absl import flags
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_clgen_preprocessor_good():

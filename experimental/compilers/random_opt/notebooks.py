@@ -1,9 +1,9 @@
 """Launch a Jupyter notebook server. This process never terminates."""
-from absl import app
-from absl import flags
 from notebook import notebookapp
 
-FLAGS = flags.FLAGS
+from labm8 import app
+
+FLAGS = app.FLAGS
 
 
 def main(argv):
@@ -14,4 +14,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

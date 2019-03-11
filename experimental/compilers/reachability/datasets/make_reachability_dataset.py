@@ -5,27 +5,26 @@ import typing
 
 import numpy as np
 import pandas as pd
-from absl import app
-from absl import flags
 
 from experimental.compilers.reachability import control_flow_graph as cfg
 from experimental.compilers.reachability import \
   control_flow_graph_generator as cfg_generator
 from experimental.compilers.reachability.datasets import linux
 from experimental.compilers.reachability.datasets import opencl
+from labm8 import app
 from labm8 import prof
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string('dataset_outdir',
-                    '/tmp/phd/docs/wip_graph/datasets/reachability',
-                    'The directory to write the output dataframes to.')
-flags.DEFINE_integer('synthetic_generator_seed', 0xCEC,
-                     'Random seed for synthetic training graph generator.')
-flags.DEFINE_integer('num_synthetic_training_graphs', 2000,
-                     'The number of training graphs to generate.')
-flags.DEFINE_integer('num_synthetic_validation_graphs', 850,
-                     'The number of validation graphs to generate.')
+app.DEFINE_string('dataset_outdir',
+                  '/tmp/phd/docs/wip_graph/datasets/reachability',
+                  'The directory to write the output dataframes to.')
+app.DEFINE_integer('synthetic_generator_seed', 0xCEC,
+                   'Random seed for synthetic training graph generator.')
+app.DEFINE_integer('num_synthetic_training_graphs', 2000,
+                   'The number of training graphs to generate.')
+app.DEFINE_integer('num_synthetic_validation_graphs', 850,
+                   'The number of validation graphs to generate.')
 
 # Synthetic graph properties.
 num_nodes_min_max_tr = (5, 20)
@@ -279,4 +278,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

@@ -14,9 +14,9 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -26,8 +26,8 @@ py_test(
     deps = [
         ":clang",
         ":llvm",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -45,9 +45,9 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -57,8 +57,8 @@ py_test(
     deps = [
         ":clang_format",
         ":llvm",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -76,9 +76,9 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -96,9 +96,9 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -108,8 +108,8 @@ py_test(
     deps = [
         ":llvm",
         ":llvm_link",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -118,7 +118,7 @@ py_library(
     srcs = ["llvm.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party/py/absl",
+        "//labm8:app",
     ],
 )
 
@@ -136,9 +136,9 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:system",
-        "//third_party/py/absl",
     ],
 )
 
@@ -148,8 +148,8 @@ py_test(
     deps = [
         ":llvm",
         ":opt",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )
 
@@ -170,7 +170,7 @@ py_test(
     deps = [
         ":llvm",
         ":util",
+        "//labm8:app",
         "//labm8:test",
-        "//third_party/py/absl",
     ],
 )

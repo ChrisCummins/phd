@@ -5,14 +5,13 @@ import re
 import sys
 import typing
 
-from absl import flags
-from absl import logging
 from fuzzywuzzy import process
 
 from datasets.github.scrape_repos.preprocessors import public
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 # The set of standard headers available in C99.
 C99_HEADERS = {
@@ -178,7 +177,7 @@ def InlineHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
   Returns:
     The path with as many included files inlined as possible.
   """
-  logging.debug('Inlining: %s.', file_relpath)
+  app.Debug('Inlining: %s.', file_relpath)
   inline_candidate_relpaths.remove(file_relpath)
   already_inlined_relpaths.add(file_relpath)
   output = []

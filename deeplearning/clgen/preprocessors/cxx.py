@@ -16,17 +16,16 @@
 import re
 import sys
 
-from absl import flags
-
 from compilers.llvm import clang as clanglib
 from compilers.llvm import llvm
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import normalizer
 from deeplearning.clgen.preprocessors import public
+from labm8 import app
 from labm8 import bazelutil
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 _UNAME = 'mac' if sys.platform == 'darwin' else 'linux'
 LIBCXX_HEADERS = bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1')

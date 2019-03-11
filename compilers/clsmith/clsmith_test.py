@@ -1,12 +1,12 @@
 """Unit tests for //compilers/clsmith/clsmith.py."""
 
 import pytest
-from absl import flags
 
 from compilers.clsmith import clsmith
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_Exec_no_args():

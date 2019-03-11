@@ -1,39 +1,37 @@
 """This file is the entry point for creating chunks."""
 import pathlib
 
-from absl import app
-from absl import flags
-
+from labm8 import app
 from util.photolib.shutterbug import shutterbug
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
-flags.DEFINE_string(
+app.DEFINE_string(
     'src_dir', None,
     'The directory to create chunks from. All files in this directory are '
     'packed into chunks.')
-flags.DEFINE_string(
+app.DEFINE_string(
     'chunks_dir', None,
     'The root directory of the chunks. Each chunk is a directory containing '
     'files and a manifest.')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'size_mb', 4695,
     'The smaximum size of each chunk in megabytes. This excludes the MANIFEST '
     'and README files which are generated.')
-flags.DEFINE_string('chunk_prefix', 'chunk_',
-                    'The name to prepend to generated chunks.')
-flags.DEFINE_bool(
+app.DEFINE_string('chunk_prefix', 'chunk_',
+                  'The name to prepend to generated chunks.')
+app.DEFINE_boolean(
     'random_ordering', True,
     'Whether to randomize the ordering of files across and within chunks. If '
     '--norandom_ordering is used, the files are arranged in chunks in the order '
     'in which they are found in --src_dir. This is not recommended, as it means '
     'the loss of a chunk causes a loss in a contiguous block of files.')
-flags.DEFINE_integer(
+app.DEFINE_integer(
     'random_ordering_seed', 0,
     'The number used to seed the random number generator. Not used if '
     '--norandom_ordering is set. Using the same seed produces the same ordering '
     'of files.')
-flags.DEFINE_bool(
+app.DEFINE_boolean(
     'gzip_files', False,
     'Whether to gzip individual files in chunks. Files are only stored in gzip '
     'form if it is smaller than the original file. For compressed image formats '
@@ -71,4 +69,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.run(main)
+  app.RunWithArgs(main)

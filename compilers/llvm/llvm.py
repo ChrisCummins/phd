@@ -1,9 +1,9 @@
 """Shared code for LLVM modules."""
 import typing
 
-from absl import flags
+from labm8 import app
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 class LlvmError(EnvironmentError):

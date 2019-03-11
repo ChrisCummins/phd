@@ -3,13 +3,13 @@ import logging
 
 def LogShellCommand(*args):
   if logging.getLogger().level <= logging.INFO:
-    logging.debug(Colors.PURPLE + "    $ " + "".join(*args) + Colors.END)
+    app.Debug(Colors.PURPLE + "    $ " + "".join(*args) + Colors.END)
 
 
 def LogShellOutput(stdout):
   if logging.getLogger().level <= logging.INFO and len(stdout):
     indented = '    ' + '\n    '.join(stdout.rstrip().split('\n'))
-    logging.debug(Colors.YELLOW + indented + Colors.END)
+    app.Debug(Colors.YELLOW + indented + Colors.END)
 
 
 class Colors(object):
@@ -34,4 +34,4 @@ def Print(*msg, **kwargs):
   sep = kwargs.get("sep", " ")
   text = sep.join(msg)
   indented = "\n        > ".join(text.split("\n"))
-  logging.info(io.Colors.GREEN + "        > " + indented + io.Colors.END)
+  app.Info(io.Colors.GREEN + "        > " + indented + io.Colors.END)

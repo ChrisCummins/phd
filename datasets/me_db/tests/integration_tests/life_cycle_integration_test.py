@@ -1,12 +1,11 @@
 """Integration tests for Life Cycle import to me_db."""
 import datetime
 
-from absl import flags
-
 from datasets.me_db import me_db
+from labm8 import app
 from labm8 import test
 
-FLAGS = flags.FLAGS
+FLAGS = app.FLAGS
 
 
 def test_measurements_count(db: me_db.Database):
