@@ -913,13 +913,22 @@ class Tmux(Task):
   __osx_genfiles__ = ['/usr/local/bin/tmux']
   __linux_genfiles__ = ['/usr/bin/tmux']
 
-  def install(self):
+  def install_osx(self):
     Homebrew().install_package("tmux")
     self._install_common()
+
+  def install_linux(self):
+    Apt().install_package("tmux")
+    self._install_common()
+
+  def _install_common(self):
     symlink(usr_share("tmux/tmux.conf"), "~/.tmux.conf")
 
-  def upgrade(self):
+  def upgrade_osx(self):
     Homebrew().upgrade_package("tmux")
+
+  def upgrade_linux(self):
+    Apt().upgrade_package("tmux")
 
 
 class Vim(Task):
