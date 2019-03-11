@@ -49,6 +49,7 @@ py_library(
         "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
         "//labm8:app",
         "//labm8:pbutil",
+        "//third_party/py/progressbar",
     ],
 )
 
