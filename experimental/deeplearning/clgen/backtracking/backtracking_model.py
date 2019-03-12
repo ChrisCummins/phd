@@ -386,6 +386,7 @@ class BacktrackingModel(models.Model):
             candidate_statements.append(CandidateStatement(
                 statement=candidate_statement,
                 feature_distance=new_feature_distance))
+            break;
           else:
             app.Log(4, 'Rejecting candidate statement: `%s`',
                     ''.join(candidate_statement))
@@ -434,7 +435,7 @@ class BacktrackingModel(models.Model):
       candidate_statements = []
       while len(candidate_statements) < \
               FLAGS.experimental_clgen_backtracking_candidates_per_step:
-        candidate_statements.append(
+        candidate_statements.extend(
           self.GenerateCandidateStatements(sample_in_progress,
               rollback_state, rollback_index,
               backtracker, sampler, atomizer)) 
@@ -445,7 +446,7 @@ class BacktrackingModel(models.Model):
           2,
           'Selected best feature distance (%f) at step %d from candidates: %s',
           best_candidate.feature_distance, step_count,
-          SummarizeFloats(c.feature_distance for c in candidates_statements))
+          SummarizeFloats(c.feature_distance for c in candidate_statements))
       app.Log(4, 'Selected best statement: %s',
               ''.join(best_candidate.statement))
 
