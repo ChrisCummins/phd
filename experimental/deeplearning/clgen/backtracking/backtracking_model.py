@@ -244,6 +244,10 @@ class OpenClBacktrackingHelper(object):
   def feature_distance(self) -> float:
     return self._previous_feature_distance
 
+  @feature_distance.setter
+  def feature_distance(self, feature_distance: float) -> float:
+    self._previous_feature_distance = feature_distance
+
   @property
   def norm_feature_distance(self) -> float:
     return self._previous_feature_distance / self._init_feature_distance
@@ -352,6 +356,7 @@ class BacktrackingModel(models.Model):
       A tuple candidate sequence of sampled tokens, and the feature distance of
       this candidate.
     """
+    init_feature_distance = backtracker.feature_distance
     self.backend.InitSampleBatch(sampler, batch_size=1)
     candidate_statement = []
 
@@ -374,15 +379,18 @@ class BacktrackingModel(models.Model):
           if backtracker.ShouldProceed(backtrack_state + candidate_statement):
             app.Log(4, 'Produced candidate statement: `%s`',
                     ''.join(candidate_statement))
+            # Reset feature distance.
+            new_feature_distance = backtracker.feature_distance
+            backtracker.feature_distance = init_feature_distance
             return CandidateStatement(
                 statement=candidate_statement,
-                feature_distance=backtracker.feature_distance)
+                feature_distance=new_feature_distance)
           else:
-            candidate_statement = []
             # Backtrack. Reset the backend state to the last good state.
             app.Log(4, 'Rejecting candidate statement: `%s`',
                     ''.join(candidate_statement))
             self.backend.InitSampleBatch(sampler, batch_size=1)
+            candidate_statement = []
             # Tokens are sampled in batches. Don't proceed any further in the
             # batch. Instead, produce a new batch.
             break
@@ -415,7 +423,8 @@ class BacktrackingModel(models.Model):
     # is restored when backtracking.
     sample_in_progress = sampler.tokenized_start_text.copy()
 
-    for step_count in range(FLAGS.experimental_clgen_backtracking_max_steps):
+    for step_count in range(
+        1, FLAGS.experimental_clgen_backtracking_max_steps + 1):
       self._logger.OnSampleStep(backtracker, 0, len(sample_in_progress))
       app.Log(4, 'Current sample in progress: `%s`',
               ''.join(sample_in_progress))
@@ -430,8 +439,9 @@ class BacktrackingModel(models.Model):
       best_candidate = min(
           candidates_statements, key=lambda x: x.feature_distance)
       app.Log(
-          2, 'Selecting best feature distance (%f) from candidates: %s',
-          best_candidate.feature_distance,
+          2,
+          'Selected best feature distance (%f) at step %d from candidates: %s',
+          best_candidate.feature_distance, step_count,
           SummarizeFloats(c.feature_distance for c in candidates_statements))
       app.Log(4, 'Selected best statement: %s',
               ''.join(best_candidate.statement))
@@ -442,6 +452,8 @@ class BacktrackingModel(models.Model):
       sample_in_progress += best_candidate.statement
       sampler.encoded_start_text = atomizer.AtomizeString(
           ''.join(sample_in_progress))[-(sampler.sequence_length - 1):]
+      app.Log(5, 'Current sample at step %d: %s', step_count,
+              ''.join(sample_in_progress))
 
       if backtracker.IsDone(sample_in_progress):
         app.Log(2, 'Backtracking complete after %d steps', step_count)
