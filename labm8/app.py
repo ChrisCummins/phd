@@ -143,7 +143,7 @@ def _GetModuleVerbosity(module: str) -> int:
     if fnmatch.fnmatch(module_basename, module_glob):
       return level
 
-  return absl_logging.get_verbosity()
+  return absl_logging.get_verbosity() + 1
 
 
 def GetVerbosity() -> int:
@@ -166,8 +166,10 @@ def Log(level: int, msg, *args, **kwargs):
     "filename base (that is, name ignoring .py). <log level> overrides any "
     "value given by --v."
   """
-  if level <= _GetModuleVerbosity(_GetCallingModuleName()):
-    absl_logging.vlog(1 if level > 1 else 0, msg, *args, **kwargs)
+  calling_module = _GetCallingModuleName()
+  module_level = _GetModuleVerbosity(calling_module)
+  if level <= module_level:
+    absl_logging.info(msg, *args, **kwargs)
 
 
 def LogIf(level: int, condition, msg, *args, **kwargs):
