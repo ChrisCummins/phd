@@ -1,10 +1,10 @@
-"""Import bazel test logs and report delta in passes and failures."""
+"""Import bazel test results and report delta in passes and failures."""
+import collections
 import datetime
 import os
 import pathlib
 import subprocess
 import sys
-import typing
 import xml.etree.ElementTree as ET
 
 import sqlalchemy as sql
@@ -23,6 +23,9 @@ app.DEFINE_string("host", None, "The name of the build host.")
 app.DEFINE_string(
     "db", "sqlite:////tmp/phd/tools/continuous_integration/buildbot.db",
     "Path to testlogs summary database.")
+
+TestDelta = collections.namedtuple(
+    'TestDelta', ['broken', 'fixed', 'still_broken', 'still_pass'])
 
 
 def GetBazelTarget(testlogs_root: pathlib.Path, xml_path: pathlib.Path):
@@ -45,11 +48,61 @@ def GetGitBranchOrDie():
   sys.exit(1)
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+def GetTestDelta(session, invocation_datetime: datetime.datetime, host: str,
+                 git_branch: str) -> TestDelta:
+  """Get the test delta."""
+  failed = session.query(db.TestTargetResult.bazel_target) \
+    .filter(db.TestTargetResult.invocation_datetime == invocation_datetime) \
+    .filter(db.TestTargetResult.failed_count > 0)
+  passed = session.query(db.TestTargetResult.bazel_target) \
+    .filter(db.TestTargetResult.invocation_datetime == invocation_datetime) \
+    .filter(db.TestTargetResult.failed_count == 0)
 
+  # Get the last run.
+  previous_invocation = session.query(
+      sql.func.max_(db.TestTargetResult.invocation_datetime)) \
+    .filter(db.TestTargetResult.host == host) \
+    .filter(db.TestTargetResult.git_branch == git_branch) \
+    .filter(db.TestTargetResult.invocation_datetime < invocation_datetime).first()
+
+  def Read(query):
+    """Read rows of a query."""
+    return [r[0] for r in query]
+
+  if previous_invocation:
+    previous_invocation = previous_invocation[0]
+    return TestDelta(
+        broken=Read(failed.filter(~db.TestTargetResult.bazel_target.in_(
+            session.query(db.TestTargetResult.bazel_target) \
+              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(db.TestTargetResult.failed_count > 0)
+        ))),
+        fixed=Read(passed.filter(~db.TestTargetResult.bazel_target.in_(
+            session.query(db.TestTargetResult.bazel_target) \
+              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(db.TestTargetResult.failed_count == 0)
+        ))),
+        still_broken=Read(passed.filter(db.TestTargetResult.bazel_target.in_(
+            session.query(db.TestTargetResult.bazel_target) \
+              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(db.TestTargetResult.failed_count > 0)
+        ))),
+        still_pass=Read(passed.filter(db.TestTargetResult.bazel_target.in_(
+            session.query(db.TestTargetResult.bazel_target) \
+              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(db.TestTargetResult.failed_count == 0)
+        ))),
+    )
+  else:
+    return TestDelta(
+        broken=Read(passed),
+        fixed=Read(failed),
+        still_broken=[],
+        still_passing=[])
+
+
+def main():
+  """Main entry point."""
   if not FLAGS.testlogs:
     raise app.UsageError("--testlogs must be set")
 
@@ -96,55 +149,33 @@ def main(argv: typing.List[str]):
         session.add(result)
 
   with database.Session(commit=False) as session:
-    failed = session.query(db.TestTargetResult.bazel_target) \
-      .filter(db.TestTargetResult.invocation_datetime == invocation_datetime) \
-      .filter(db.TestTargetResult.failed_count > 0)
-    passed = session.query(db.TestTargetResult.bazel_target)\
-      .filter(db.TestTargetResult.invocation_datetime == invocation_datetime)\
-      .filter(db.TestTargetResult.failed_count == 0)
-
     num_targets = session.query(db.TestTargetResult.id) \
       .filter(db.TestTargetResult.invocation_datetime == invocation_datetime).count()
     num_tests, = session.query(sql.func.sum_(db.TestTargetResult.test_count)) \
       .filter(db.TestTargetResult.invocation_datetime == invocation_datetime).one()
-    num_failed = failed.count()
+    num_failed = session.query(db.TestTargetResult.bazel_target) \
+      .filter(db.TestTargetResult.invocation_datetime == invocation_datetime) \
+      .filter(db.TestTargetResult.failed_count > 0).count()
     total_runtime_ms, = session.query(sql.func.sum_(db.TestTargetResult.runtime_ms))\
       .filter(db.TestTargetResult.invocation_datetime == invocation_datetime).one()
 
-    # Get the last run.
-    previous_invocation = session.query(
-        sql.func.max_(db.TestTargetResult.invocation_datetime))\
-      .filter(db.TestTargetResult.host == host)\
-      .filter(db.TestTargetResult.git_branch == git_branch)\
-      .filter(db.TestTargetResult.invocation_datetime < invocation_datetime).first()
+    print(f'{humanize.Commas(num_targets)} targets ('
+          f'{humanize.Commas(num_tests)} tests in '
+          f'{humanize.Duration(total_runtime_ms/1000)}), {num_failed} failed')
 
-    if previous_invocation:
-      previous_invocation = previous_invocation[0]
-      new_passed = passed.filter(~db.TestTargetResult.bazel_target.in_(
-          session.query(db.TestTargetResult.bazel_target) \
-            .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
-            .filter(db.TestTargetResult.failed_count == 0)
-      ))
-      new_failed = failed.filter(~db.TestTargetResult.bazel_target.in_(
-          session.query(db.TestTargetResult.bazel_target) \
-            .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
-            .filter(db.TestTargetResult.failed_count > 0)
-        ))
-    else:
-      new_passed = passed
-      new_failed = failed
+    delta = GetTestDelta(session, invocation_datetime, host, git_branch)
 
-    new_passed = [r[0] for r in new_passed]
-    new_failed = [r[0] for r in new_failed]
+    print(f'{humanize.Commas(len(delta.fixed))} fixed, '
+          f'{humanize.Commas(len(delta.broken))} broken.')
+    for target in delta.broken:
+      print("BROKEN", target)
 
-  print(f'{num_targets} targets ({num_tests} tests in '
-        f'{humanize.Duration(total_runtime_ms/1000)}), {num_failed} failed')
-  print(f'{len(new_passed)} new passes, {len(new_failed)} new failures')
-  for target in new_failed:
-    print("NEW FAIL", target)
-  if new_failed:
-    sys.exit(1)
+    for target in delta.fixed:
+      print("FIXED", target)
+
+    if delta.broken:
+      sys.exit(1)
 
 
 if __name__ == '__main__':
-  app.RunWithArgs(main)
+  app.Run(main)
