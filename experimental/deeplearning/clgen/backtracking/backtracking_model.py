@@ -56,7 +56,7 @@ app.DEFINE_float(
 
 def SummarizeFloats(floats: typing.Iterable[float], nplaces: int = 2) -> str:
   """Summarize a sequence of floats."""
-  arr = np.array(floats, dtype=np.float32)
+  arr = np.array(list(floats), dtype=np.float32)
   percs = " ".join([
       f'{p}%={np.percentile(arr, p):.{nplaces}f}' for p in [0, 50, 95, 99, 100]
   ])
