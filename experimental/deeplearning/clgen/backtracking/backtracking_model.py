@@ -161,13 +161,13 @@ class OpenClBacktrackingHelper(object):
       if not force and new_feature_distance > self._previous_feature_distance:
         # This will only happen once feature values are great than target
         # feature values.
-        app.Log(1, "Rejecting candidate because of positive feature delta")
+        app.Log(2, "Rejecting candidate because of positive feature delta")
         return False
       if (not force and
           new_feature_distance == self._previous_feature_distance and
           random.random() >
           FLAGS.experimental_clgen_backtracking_reject_no_progress_probability):
-        app.Log(1, "Randomly rejecting candidate with no progress")
+        app.Log(2, "Randomly rejecting candidate with no progress")
         return False
       self._previous_features = features
       self._previous_src = candidate_src
@@ -396,6 +396,7 @@ class BacktrackingModel(models.Model):
             break
 
     # Reached the end of the sample batch without hitting a checkpoint.
+    app.Log(3, "Didn't reach checkpoint after %d tokens", len(sampled_indices))
     return CandidateStatement(statement=[], feature_distance=np.inf)
 
   def MakeProgram(self, sampled_tokens: typing.List[str],
