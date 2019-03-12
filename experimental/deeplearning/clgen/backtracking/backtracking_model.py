@@ -440,7 +440,7 @@ class BacktrackingModel(models.Model):
               backtracker, sampler, atomizer)) 
 
       best_candidate = min(
-          candidates_statements, key=lambda x: x.feature_distance)
+          candidate_statements, key=lambda x: x.feature_distance)
       app.Log(
           2,
           'Selected best feature distance (%f) at step %d from candidates: %s',
