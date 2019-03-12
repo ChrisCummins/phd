@@ -18,10 +18,7 @@ from labm8.time import nowstr
 from labm8 import fs
 from phd import labm8
 
-if labm8.is_python3():
-  from io import StringIO
-else:
-  from StringIO import StringIO
+from io import StringIO
 
 
 def features_from_file(path):

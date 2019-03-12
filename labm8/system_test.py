@@ -255,13 +255,6 @@ def test_exit():
   assert ctx.value.code == 1
 
 
-def test_is_python3():
-  if sys.version_info >= (3, 0):
-    assert system.is_python3()
-  else:
-    assert not system.is_python3()
-
-
 def test_ProcessFileAndReplace_ok(tempfile_path: str):
   """Test ProcessFileAndReplace with a callback which reverses a file."""
   with open(tempfile_path, 'w') as f:
