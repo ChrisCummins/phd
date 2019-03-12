@@ -163,8 +163,9 @@ class OpenClBacktrackingHelper(object):
 
     return True
 
-  def TryToExtractFeatures(self, path: pathlib.Path) -> typing.Optional[str]:
-    """ """
+  def TryToExtractFeatures(self,
+                           path: pathlib.Path) -> typing.Optional[np.array]:
+    """Try and extract a feature vector for the program at the given path."""
     try:
       features = list(grewe_features.ExtractFeaturesFromPath(path))
       if len(features) != 1:
