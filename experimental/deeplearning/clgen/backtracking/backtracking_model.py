@@ -370,11 +370,15 @@ class BacktrackingModel(models.Model):
           #   1. Sampling should proceed.
           #   3. Sampling should backtrack.
           if backtracker.ShouldProceed(backtrack_state + candidate_statement):
+            app.Log(4, 'Produced candidate statement: `%s`',
+                    ''.join(candidate_statement))
             return CandidateStatement(
                 statement=candidate_statement,
                 feature_distance=backtracker.feature_distance)
           else:
             # Backtrack. Reset the backend state to the last good state.
+            app.Log(4, 'Rejecting candidate statement: `%s`',
+                    ''.join(candidate_statement))
             self.backend.InitSampleBatch(sampler, batch_size=1)
             # Tokens are sampled in batches. Don't proceed any further in the
             # batch. Instead, produce a new batch.
@@ -410,6 +414,8 @@ class BacktrackingModel(models.Model):
 
     for step_count in range(FLAGS.experimental_clgen_backtracking_max_steps):
       self._logger.OnSampleStep(backtracker, 0, len(sample_in_progress))
+      app.Log(4, 'Current sample in progress: `%s`',
+              ''.join(sample_in_progress))
 
       # Generate a batch of candidates and select the best.
       candidates_statements = [
