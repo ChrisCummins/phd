@@ -1,4 +1,4 @@
-"""A database for storing bazel test logs."""
+"""A database for storing bazel test results."""
 import typing
 from xml import etree
 
@@ -13,22 +13,32 @@ Base = sqlutil.Base()
 
 
 class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  """The result of a bazel test invocation on a single test target."""
   id = sql.Column(sql.Integer, primary_key=True)
-  # A name to describe the build environment.
+  # A name to describe the build environment. Use this column to group test
+  # results on the same environment.
   host = sql.Column(sql.String(256), nullable=False)
+  # The name of the current git branch.
   git_branch = sql.Column(sql.String(128), nullable=False)
+  # The hash of the git head. The result of $(git rev-parse HEAD).
   git_commit = sql.Column(sql.String(40), nullable=False)
-  # A datetime used to group all test target results.
+  # A datetime used to group all test target results from a single bazel test
+  # invocation.
   invocation_datetime = sql.Column(
       sqlutil.ColumnTypes.MillisecondDatetime(), nullable=False)
+  # The name of the bazel target.
   bazel_target = sql.Column(sql.String(256), nullable=False)
+  # The number of tests executed.
   test_count = sql.Column(sql.Integer, nullable=False)
+  # The number of tests that failed.
   failed_count = sql.Column(sql.Integer, nullable=False)
+  # The runtime of the test target, as reported by bazel.
   runtime_ms = sql.Column(sql.Integer, nullable=False)
+  # The test target output.
   log = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=True)
 
   __table_args__ = (
-      # Each target is only invoked once.
+      # Each target is invoked only once.
       sql.UniqueConstraint(
           'invocation_datetime',
           'bazel_target',
@@ -36,6 +46,7 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   @staticmethod
   def FromXml(xml: etree.ElementTree) -> typing.Dict[str, typing.Any]:
+    """Get field values from a bazel XML junit file."""
     test_count = 0
     failed_count = 0
     runtime_ms = 0
@@ -60,6 +71,7 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
 
 class Database(sqlutil.Database):
+  """A database of test target results."""
 
   def __init__(self, url: str):
     super(Database, self).__init__(url, Base)
