@@ -154,6 +154,9 @@ def GetVerbosity() -> int:
   return _GetModuleVerbosity(_GetCallingModuleName())
 
 
+# Skip this function when determining the calling module and line number for
+# logging.
+@absl_logging.skip_log_prefix
 def Log(level: int, msg, *args, **kwargs):
   """Logs a message at the given level.
 
