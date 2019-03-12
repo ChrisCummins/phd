@@ -84,7 +84,7 @@ def test_MapWorker_one_failure():
   assert workers[1].output() is None
   error = workers[1].error()
   assert type(error) is ppar.MapWorkerError
-  assert error.returncode == 1
+  assert error.returncode
 
 
 def test_MapWorker_wrap_progressbar():
