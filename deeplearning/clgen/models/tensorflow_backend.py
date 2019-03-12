@@ -67,7 +67,6 @@ class TensorFlowBackend(backends.BackendBase):
 
     self.inference_tf = None
     self.inference_sess = None
-    self.first_sample: typing.Optional[bool] = None
     self.inference_indices = None
     self.inference_state = None
 
@@ -391,21 +390,19 @@ class TensorFlowBackend(backends.BackendBase):
 
     return sampler.batch_size
 
-  def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
+  def InitSampleBatch(self, sampler: samplers.Sampler) -> None:
     if FLAGS.clgen_tf_backend_reset_inference_state_between_batches:
       self.inference_state = self.inference_sess.run(
-          self.cell.zero_state(batch_size, self.inference_tf.float32))
-    self.first_sample = True
+          self.cell.zero_state(sampler.batch_size, self.inference_tf.float32))
     self.inference_indices = np.tile(sampler.encoded_start_text,
-                                     [batch_size, 1])
+        [sampler.batch_size, 1])
 
-  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int,
-                        done: np.ndarray):
+  def SampleNextIndices(self, sampler: samplers.Sampler, done: np.ndarray):
     length = self.inference_indices.shape[1]
     assert length < sampler.sequence_length
-    expanded_indices = np.zeros((batch_size, sampler.sequence_length))
+    expanded_indices = np.zeros((sampler.batch_size, sampler.sequence_length))
     expanded_indices[:, :length] = self.inference_indices
-    synthesized_lengths = np.full([batch_size], sampler.sequence_length)
+    synthesized_lengths = np.full([sampler.batch_size], sampler.sequence_length)
     synthesized_lengths[done] = 0
     feed = {
         self.initial_state: self.inference_state,
@@ -416,12 +413,39 @@ class TensorFlowBackend(backends.BackendBase):
 
     generated, self.inference_state = self.inference_sess.run(
         [self.generated, self.final_state], feed)
-    self.inference_indices = generated[:, -1]
-    if self.first_sample:
-      generated = generated[:, len(sampler.encoded_start_text):]
-    self.inference_indices = self.inference_indices.reshape((batch_size, 1))
-    self.first_sample = False
+    self.inference_indices = generated[:, -1].reshape((sampler.batch_size, 1))
+    if length > 1:
+      generated = generated[:, length-1:]
     return generated
+
+  def ResetSampleState(self, sampler: samplers.Sampler, state, seed) -> None:
+    self.inference_state = [state] * sampler.batch_size
+    self.inference_indices = np.tile(seed, [sampler.batch_size, 1])
+
+  def EvaluateSampleState(self, sampler: samplers.Sampler):
+    length = self.inference_indices.shape[1] - 1
+    if length == 0:
+      return
+    last_indices = self.inference_indices[:, -1]
+    self.inference_indices = self.inference_indices[:,:-1]
+
+    expanded_indices = np.zeros((sampler.batch_size, sampler.sequence_length))
+    expanded_indices[:, :length] = self.inference_indices
+    synthesized_lengths = np.full([sampler.batch_size], length)
+
+    feed = {
+        self.initial_state: self.inference_state,
+        self.input_data: expanded_indices,
+        self.lengths: synthesized_lengths,
+        self.seed_length: length,
+    }
+
+    self.inference_state = self.inference_sess.run([self.final_state], feed)
+    self.inference_indices = last_indices
+
+    state_copy = copy.deepcopy(self.inference_state[0])
+    input_carry_copy = self.inference_indices[0]
+    return state_copy, input_carry_copy
 
   @property
   def is_trained(self) -> bool:
