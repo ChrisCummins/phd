@@ -42,7 +42,7 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
     A Popen instance with stdout and stderr set to strings.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(LLVM_LINK)] + args
-  app.Log(2, '$ %s', ' '.join(cmd))
+  app.Log(3, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,

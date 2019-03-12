@@ -52,7 +52,7 @@ def Exec(args: typing.List[str],
     LlvmTimeout: If llvm-as does not complete before timeout_seconds.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(LLVM_AS)] + args
-  app.Log(2, '$ %s', ' '.join(cmd))
+  app.Log(3, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,
