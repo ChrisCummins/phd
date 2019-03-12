@@ -143,7 +143,7 @@ def main():
         if result.failed_count:
           log_path = dir_ / 'test.log'
           assert log_path.is_file()
-          result.log = fs.read_file(log_path).rstrip()
+          result.log = fs.Read(log_path).rstrip()
 
         # Add result to database.
         session.add(result)

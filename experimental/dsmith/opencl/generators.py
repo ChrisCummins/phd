@@ -190,7 +190,7 @@ class CLSmith(OpenCLGenerator):
           return self.generate_one(
               session, attempt=attempt + 1, max_attempts=max_attempts)
 
-      src = fs.read_file(tmp.name)
+      src = fs.Read(tmp.name)
 
     return ProgramProxy(generator=self.id, generation_time=runtime, src=src)
 

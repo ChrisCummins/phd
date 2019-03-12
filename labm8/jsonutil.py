@@ -70,9 +70,9 @@ def write_file(path, data, format=True):
       format (bool, optional): Pretty-print JSON data.
   """
   if format:
-    fs.write_file(path, format_json(data))
+    fs.Write(path, format_json(data).encode('utf-8'))
   else:
-    fs.write_file(path, json.dumps(data))
+    fs.Write(path, json.dumps(data).encode('utf-8'))
 
 
 def loads(text, **kwargs):

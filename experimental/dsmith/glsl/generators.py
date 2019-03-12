@@ -191,8 +191,7 @@ class GlslGenerator(Generator):
     """ Import a program from a file. """
     # app.Log(2, f"importing '{path}'")
     # Simply ignore non-ASCII chars:
-    src = ''.join(
-        [i if ord(i) < 128 else '' for i in fs.read_file(path).strip()])
+    src = ''.join([i if ord(i) < 128 else '' for i in fs.Read(path).strip()])
     return ProgramProxy(generator=self.id, generation_time=0, src=src)
 
 

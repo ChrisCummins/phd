@@ -485,30 +485,6 @@ def du(*components, **kwargs):
     return size
 
 
-def write_file(path, contents):
-  """
-  Write string to file.
-
-  Arguments:
-      path (str): Destination.
-      contents (str): Contents.
-  """
-  with mkopen(path, 'w') as outfile:
-    outfile.write(contents)
-
-
-def read_file(path: typing.Union[str, pathlib.Path]):
-  """
-  Read file to string.
-
-  Arguments:
-      path (str): Source.
-  """
-  with open(must_exist(path)) as infile:
-    r = infile.read()
-  return r
-
-
 def files_from_list(*paths):
   """
   Return a list of all file paths from a list of files or directories.
@@ -607,9 +583,111 @@ def TemporaryWorkingDir(prefix: str = 'phd_') -> pathlib.Path:
     os.chdir(old_directory)
 
 
+def Read(filename: typing.Union[str, pathlib.Path]) -> str:
+  """Read entire contents of file with name 'filename'."""
+  with open(filename) as fp:
+    return fp.read()
+
+
+def Write(filename: typing.Union[str, pathlib.Path],
+          contents: bytes,
+          overwrite_existing: bool = True,
+          mode: int = 0o0666,
+          gid: int = None) -> None:
+  """Create a file 'filename' with 'contents', with the mode given in 'mode'.
+
+  The 'mode' is modified by the umask, as in open(2).  If
+  'overwrite_existing' is False, the file will be opened in O_EXCL mode.
+  An optional gid can be specified.
+
+  Args:
+    filename: the name of the file
+    contents: the data to write to the file
+    overwrite_existing: whether or not to allow the write if the file
+      already exists
+    mode: permissions with which to create the file (default is 0666 octal)
+    gid: group id with which to create the file
+  """
+  # Adapted from <https://github.com/google/google-apputils>.
+  # Copyright 2007 Google Inc. All Rights Reserved.
+  #
+  # Licensed under the Apache License, Version 2.0 (the "License");
+  # you may not use this file except in compliance with the License.
+  # You may obtain a copy of the License at
+  #
+  #      http://www.apache.org/licenses/LICENSE-2.0
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS-IS" BASIS,
+  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  # See the License for the specific language governing permissions and
+  # limitations under the License.
+  flags = os.O_WRONLY | os.O_TRUNC | os.O_CREAT
+  if not overwrite_existing:
+    flags |= os.O_EXCL
+  fd = os.open(filename, flags, mode)
+  try:
+    os.write(fd, contents)
+  finally:
+    os.close(fd)
+  if gid is not None:
+    os.chown(filename, -1, gid)
+
+
+def AtomicWrite(filename: typing.Union[str, pathlib.Path],
+                contents: bytes,
+                mode: int = 0o0666,
+                gid: int = None) -> None:
+  """Create a file 'filename' with 'contents' atomically.
+
+  As in Write, 'mode' is modified by the umask.  This creates and moves
+  a temporary file, and errors doing the above will be propagated normally,
+  though it will try to clean up the temporary file in that case.
+  This is very similar to the prodlib function with the same name.
+  An optional gid can be specified.
+
+  Args:
+    filename: the name of the file
+    contents: the data to write to the file
+    mode: permissions with which to create the file (default is 0666 octal)
+    gid: group id with which to create the file
+  """
+  # Adapted from <https://github.com/google/google-apputils>.
+  # Copyright 2007 Google Inc. All Rights Reserved.
+  #
+  # Licensed under the Apache License, Version 2.0 (the "License");
+  # you may not use this file except in compliance with the License.
+  # You may obtain a copy of the License at
+  #
+  #      http://www.apache.org/licenses/LICENSE-2.0
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS-IS" BASIS,
+  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  # See the License for the specific language governing permissions and
+  # limitations under the License.
+  fd, tmp_filename = tempfile.mkstemp(dir=os.path.dirname(filename))
+  try:
+    os.write(fd, contents)
+  finally:
+    os.close(fd)
+  try:
+    os.chmod(tmp_filename, mode)
+    if gid is not None:
+      os.chown(tmp_filename, -1, gid)
+    os.rename(tmp_filename, filename)
+  except OSError as exc:
+    try:
+      os.remove(tmp_filename)
+    except OSError as e:
+      exc = OSError('%s. Additional errors cleaning up: %s' % (exc, e))
+    raise exc
+
+
 @contextlib.contextmanager
-def TemporaryFileWithContents(contents, **kwargs):
+def TemporaryFileWithContents(contents: bytes, **kwargs):
   """A contextmanager that writes out a string to a file on disk.
+
   This is useful whenever you need to call a function or command that expects a
   file on disk with some contents that you have in memory. The context manager
   abstracts the writing, flushing, and deletion of the temporary file. This is a
@@ -640,7 +718,7 @@ def TemporaryFileWithContents(contents, **kwargs):
   # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   # See the License for the specific language governing permissions and
   # limitations under the License.
-  if not kwargs['prefix']:
+  if not kwargs.get('prefix'):
     kwargs['prefix'] = 'phd_tempfile_with_contents_'
   temporary_file = tempfile.NamedTemporaryFile(**kwargs)
   temporary_file.write(contents)

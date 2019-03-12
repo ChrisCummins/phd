@@ -1,6 +1,7 @@
 """Unit tests for //labm8:fs."""
 import os
 import pathlib
+import stat
 import tempfile
 
 import pytest
@@ -512,9 +513,50 @@ def test_chdir_file_argument():
 
 def test_TemporaryFileWithContents_contents():
   """Test that temporary file has expected contents."""
-  with fs.TemporaryFileWithContents("Hello, world!") as f:
-    with open(f.name) as f2:
-      assert f2.read() == "Hello, world!"
+  contents = "Hello, world!"
+  with fs.TemporaryFileWithContents(contents.encode("utf-8")) as f:
+    filename = f.name
+    contents_read = open(filename).read()
+    assert contents_read == contents
+
+  assert not os.path.exists(filename)
+
+
+def test_Write_overwrite(tempdir: pathlib.Path):
+  fs.Write(tempdir / 'file.txt', 'original contents'.encode('utf-8'))
+  fs.Write(tempdir / 'file.txt', 'Hello, world!'.encode('utf-8'))
+  with open(tempdir / 'file.txt') as fp:
+    assert fp.read() == 'Hello, world!'
+
+
+def test_Write_exclusive(tempdir: pathlib.Path):
+  fs.Write(tempdir / 'file.txt', 'original contents'.encode('utf-8'))
+  with pytest.raises(OSError):
+    fs.Write(
+        tempdir / 'file.txt',
+        'Hello, world!'.encode('utf-8'),
+        overwrite_existing=False)
+
+
+def test_Write_mode(tempdir: pathlib.Path):
+  mode = 0o0744
+  fs.Write(tempdir / 'file.txt', 'Hello, world!'.encode('utf-8'), mode=mode)
+  s = os.stat(str(tempdir / 'file.txt'))
+  assert stat.S_IMODE(s.st_mode) == mode
+
+
+def test_Atomic_write_successful(tempdir: pathlib.Path):
+  fs.AtomicWrite(tempdir / 'file.txt', 'Hello, world!'.encode('utf-8'))
+  with open(tempdir / 'file.txt') as fp:
+    assert fp.read() == 'Hello, world!'
+
+
+def test_Atomic_write_mode(tempdir: pathlib.Path):
+  mode = 0o0745
+  fs.AtomicWrite(
+      tempdir / 'file.txt', 'Hello, world!'.encode('utf-8'), mode=mode)
+  s = os.stat(str(tempdir / 'file.txt'))
+  assert stat.S_IMODE(s.st_mode) == mode
 
 
 if __name__ == '__main__':

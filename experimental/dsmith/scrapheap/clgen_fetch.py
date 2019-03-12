@@ -19,7 +19,7 @@ def import_clgen_sample(session: session_t,
                         cl_launchable: bool = False,
                         harnesses: List[cldriveParams] = [],
                         delete: bool = False) -> None:
-  src = fs.read_file(path)
+  src = fs.Read(path)
   hash_ = crypto.sha1_str(src)
 
   dupe = s.query(CLgenProgram).filter(CLgenProgram.hash == hash_).first()
