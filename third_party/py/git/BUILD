@@ -12,5 +12,6 @@ py_library(
     deps = [
         requirement("GitPython"),
         requirement("gitdb2"),
+        requirement("smmap2"),
     ],
 )
