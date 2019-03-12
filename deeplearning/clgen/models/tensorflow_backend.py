@@ -426,7 +426,7 @@ class TensorFlowBackend(backends.BackendBase):
     length = self.inference_indices.shape[1] - 1
     if length == 0:
       return
-    last_indices = self.inference_indices[:, -1]
+    last_indices = self.inference_indices[:, -1:]
     self.inference_indices = self.inference_indices[:,:-1]
 
     expanded_indices = np.zeros((sampler.batch_size, sampler.sequence_length))
