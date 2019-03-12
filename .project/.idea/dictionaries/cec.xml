@@ -9,6 +9,7 @@
       <w>bazel</w>
       <w>bazelutil</w>
       <w>bitcode</w>
+      <w>buildbot</w>
       <w>capsys</w>
       <w>cerr</w>
       <w>cflags</w>
