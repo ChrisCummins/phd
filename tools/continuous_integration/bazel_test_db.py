@@ -87,7 +87,8 @@ def GetTestDelta(session,
     .filter(TestTargetResult.invocation_datetime == invocation_datetime) \
     .filter(TestTargetResult.failed_count == 0)
 
-  host, git_branch = session.query(TestTargetResult.host, TestTargetResult.git_branch)\
+  host, git_branch = session.query(
+      TestTargetResult.host, TestTargetResult.git_branch)\
     .filter(TestTargetResult.invocation_datetime == invocation_datetime).first()
 
   # Get the last run.
