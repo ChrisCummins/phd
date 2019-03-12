@@ -94,7 +94,8 @@ def index(host: str):
     with database.Session() as session:
       invocation, = session.query(sql.func.max_(db.TestTargetResult.invocation_datetime))\
         .filter(db.TestTargetResult.host == host).one()
-      return RenderInvocation(host, session, invocation)
+      template = RenderInvocation(host, session, invocation)
+  return template
 
 
 def main():
