@@ -510,5 +510,12 @@ def test_chdir_file_argument():
     assert f.name in str(e_info)
 
 
+def test_TemporaryFileWithContents_contents():
+  """Test that temporary file has expected contents."""
+  with fs.TemporaryFileWithContents("Hello, world!") as f:
+    with open(f.name) as f2:
+      assert f2.read() == "Hello, world!"
+
+
 if __name__ == '__main__':
   test.Main()

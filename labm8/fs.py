@@ -602,6 +602,46 @@ def TemporaryWorkingDir(prefix: str = 'phd_') -> pathlib.Path:
   with tempfile.TemporaryDirectory(prefix=prefix) as d:
     os.chdir(d)
     yield pathlib.Path(d)
-  # Rever to previous working directory, if there was one.
+  # Return to previous working directory, if there was one.
   if old_directory:
     os.chdir(old_directory)
+
+
+@contextlib.contextmanager
+def TemporaryFileWithContents(contents, **kwargs):
+  """A contextmanager that writes out a string to a file on disk.
+  This is useful whenever you need to call a function or command that expects a
+  file on disk with some contents that you have in memory. The context manager
+  abstracts the writing, flushing, and deletion of the temporary file. This is a
+  common idiom that boils down to a single with statement.
+  Note:  if you need a temporary file-like object for calling an internal
+  function, you should use a StringIO as a file-like object and not this.
+  Temporary files should be avoided unless you need a file name or contents in a
+  file on disk to be read by some other function or program.
+
+  Args:
+    contents: a string with the contents to write to the file.
+    **kwargs: Optional arguments passed on to tempfile.NamedTemporaryFile.
+
+  Yields:
+    The temporary file object, opened in 'w' mode.
+  """
+  # From <https://github.com/google/google-apputils>
+  # Copyright 2007 Google Inc. All Rights Reserved.
+  #
+  # Licensed under the Apache License, Version 2.0 (the "License");
+  # you may not use this file except in compliance with the License.
+  # You may obtain a copy of the License at
+  #
+  #      http://www.apache.org/licenses/LICENSE-2.0
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS-IS" BASIS,
+  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  # See the License for the specific language governing permissions and
+  # limitations under the License.
+  temporary_file = tempfile.NamedTemporaryFile(**kwargs)
+  temporary_file.write(contents)
+  temporary_file.flush()
+  yield temporary_file
+  temporary_file.close()
