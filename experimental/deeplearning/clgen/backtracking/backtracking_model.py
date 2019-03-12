@@ -350,11 +350,10 @@ class BacktrackingModel(models.Model):
     """
     self.backend.InitSampleBatch(sampler, batch_size=1)
     candidate_statement = []
-    backtrack_attempt_count = 0
 
     # Set sampler state to the last good state.
-    for i in range(FLAGS.experimental_clgen_backtracking_max_attempts):
-      app.Log(3, 'Beginning backtracking attempt %d', i + 1)
+    for i in range(1, FLAGS.experimental_clgen_backtracking_max_attempts + 1):
+      app.Log(3, 'Beginning backtracking attempt %d', i)
       self.backend.InitSampleBatch(sampler, batch_size=1)
       sampled_indices = self.backend.SampleNextIndices(
           sampler, batch_size=1, done=np.array([False]))[0]
@@ -365,7 +364,6 @@ class BacktrackingModel(models.Model):
 
         if backtracker.ShouldCheckpoint(token):
           app.Log(3, 'Reached checkpoint after %d tokens', j + 1)
-          backtrack_attempt_count += 1
           # There are two possible outcomes:
           #   1. Sampling should proceed.
           #   3. Sampling should backtrack.
@@ -376,6 +374,7 @@ class BacktrackingModel(models.Model):
                 statement=candidate_statement,
                 feature_distance=backtracker.feature_distance)
           else:
+            candidate_statement = []
             # Backtrack. Reset the backend state to the last good state.
             app.Log(4, 'Rejecting candidate statement: `%s`',
                     ''.join(candidate_statement))
