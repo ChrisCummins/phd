@@ -12,7 +12,6 @@ from scipy import stats
 
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 
@@ -219,7 +218,7 @@ def Distplot(x=None,
 
 def SummarizeFloats(floats: typing.Iterable[float], nplaces: int = 2) -> str:
   """Summarize a sequence of floats."""
-  arr = np.array(floats, dtype=np.float32)
+  arr = np.array(list(floats), dtype=np.float32)
   percs = " ".join([
       f'{p}%={np.percentile(arr, p):.{nplaces}f}' for p in [0, 50, 95, 99, 100]
   ])
@@ -230,7 +229,7 @@ def SummarizeFloats(floats: typing.Iterable[float], nplaces: int = 2) -> str:
 
 def SummarizeInts(ints: typing.Iterable[int]) -> str:
   """Summarize a sequence of ints."""
-  arr = np.array(ints, dtype=np.int32)
+  arr = np.array(list(ints), dtype=np.int32)
   percs = " ".join(
       [f'{p}%={np.percentile(arr, p):.0f}' for p in [0, 50, 95, 99, 100]])
   return (f"n={len(arr)}, mean={arr.mean():.2f}, stdev={arr.std():.2f}, "
