@@ -11,7 +11,6 @@ from absl import app as absl_app
 from absl import flags as absl_flags
 from absl import logging as absl_logging
 
-
 FLAGS = absl_flags.FLAGS
 
 absl_flags.DEFINE_list(
@@ -21,6 +20,7 @@ absl_flags.DEFINE_list(
     "gfs* for all modules whose name starts with \"gfs\"), matched against the "
     "filename base (that is, name ignoring .py). <log level> overrides any "
     "value given by --v.")
+
 
 class UsageError(absl_app.UsageError):
   """Exception raised when the arguments supplied by the user are invalid.
@@ -79,7 +79,7 @@ def Run(main: Callable[[], None]):
     main()
 
   try:
-    absl_app.run(main)
+    absl_app.run(RunWithoutArgs)
   except KeyboardInterrupt:
     FlushLogs()
     sys.stdout.flush()
@@ -89,7 +89,6 @@ def Run(main: Callable[[], None]):
 
 
 # Logging functions.
-
 
 # This is a set of module ids for the modules that disclaim key flags.
 # This module is explicitly added to this set so that we never consider it to
@@ -175,8 +174,7 @@ def LogIf(level: int, condition, msg, *args, **kwargs):
 
 def Fatal(msg, *args, **kwargs):
   """Logs a fatal message."""
-  absl_logging.fatal(
-      msg, *args, **kwargs)
+  absl_logging.fatal(msg, *args, **kwargs)
 
 
 def Error(msg, *args, **kwargs):
@@ -187,6 +185,7 @@ def Error(msg, *args, **kwargs):
 def Warning(msg, *args, **kwargs):
   """Logs a warning message."""
   absl_logging.warning(msg, *args, **kwargs)
+
 
 def FlushLogs():
   """Flushes all log files."""
