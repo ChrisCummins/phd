@@ -498,7 +498,6 @@ py_test(
     deps = [
         ":app",
         ":prof",
-        ":system",
         ":test",
     ],
 )

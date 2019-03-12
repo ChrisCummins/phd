@@ -6,15 +6,10 @@ import pytest
 
 from labm8 import app
 from labm8 import prof
-from labm8 import system
 from labm8 import test
+from io import StringIO
 
 FLAGS = app.FLAGS
-
-if system.is_python3():
-  from io import StringIO
-else:
-  from StringIO import StringIO
 
 
 @pytest.fixture
