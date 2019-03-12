@@ -15,6 +15,7 @@ py_binary(
     deps = [
         "//labm8:app",
         "//labm8:bazelutil",
+        "//labm8:fs",
     ],
 )
 

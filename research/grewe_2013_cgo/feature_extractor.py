@@ -11,10 +11,14 @@ import pathlib
 import subprocess
 import typing
 
+from labm8 import app
 from labm8 import bazelutil
+from labm8 import fs
 
-FEATURE_EXTRACTOR_BINARY = bazelutil.DataPath('phd/research/grewe_2013_cgo/'
-                                              'feature_extractor_binary')
+FLAGS = app.FLAGS
+
+FEATURE_EXTRACTOR_BINARY = bazelutil.DataPath(
+    'phd/research/grewe_2013_cgo/feature_extractor_binary')
 
 INLINED_OPENCL_HEADER = bazelutil.DataPath(
     'phd/third_party/opencl/inlined/cl.h')
@@ -26,9 +30,6 @@ _LIBCLANG_SO = bazelutil.DataPath(
 _LIBLTO_SO = bazelutil.DataPath('llvm_linux/lib/libLTO.so', must_exist=False)
 if _LIBCLANG_SO.is_file() and _LIBLTO_SO.is_file():
   FEATURE_EXTRACTOR_ENV['LD_PRELOAD'] = f'{_LIBCLANG_SO}:{_LIBLTO_SO}'
-
-from labm8 import app
-FLAGS = app.FLAGS
 
 app.DEFINE_string('feature_extractor_opencl_src_path', None,
                   'Path of OpenCL file to extract features of.')
@@ -78,18 +79,20 @@ def ExtractFeaturesFromPath(
     path: pathlib.Path,
     extra_args: typing.Optional[typing.List[str]] = None,
     timeout_seconds: int = 60) -> typing.Iterator[GreweEtAlFeatures]:
-  """Print CSV format features of file.
+  """Extract features from OpenCL source file.
 
   Args:
     path: Path of OpenCL kernel file.
     extra_args: Additional args to pass to the compiler.
+    timeout_seconds: The maximum number of seconds to run the feature extractor
+      for.
 
   Returns:
     An iterator of GreweEtAlFeatures tuples.
 
   Raises:
     FileNotFoundError: If path does not exist.
-    FeatureExtractionError: If feature extraction fails.
+    FeatureExtractionError: If feature extraction fails or times out.
   """
   extra_args = extra_args or []
 
@@ -124,6 +127,34 @@ def ExtractFeaturesFromPath(
         f"Failed to extract features from {path}: {stderr}")
 
   return (GreweEtAlFeatures._from_binary_output(*line) for line in lines[:-1])
+
+
+def ExtractFeatures(
+    opencl_src: str,
+    extra_args: typing.Optional[typing.List[str]] = None,
+    timeout_seconds: int = 60) -> typing.Iterator[GreweEtAlFeatures]:
+  """Extract features from OpenCL source.
+
+  This is a convenience function that creates a temporary file and calls
+  ExtractFeaturesFromPath(). Use this if you can't be arsed to manage your
+  own temporary files.
+
+  Args:
+    opencl_src: Path of OpenCL kernel file.
+    extra_args: Additional args to pass to the compiler.
+    timeout_seconds: The maximum number of seconds to run the feature extractor
+      for.
+
+  Returns:
+    An iterator of GreweEtAlFeatures tuples.
+
+  Raises:
+    FeatureExtractionError: If feature extraction fails or times out.
+  """
+  contents = opencl_src.encode('utf-8')
+  prefix = 'phd_research_grewe_2013_cgo_feature_extractor_'
+  with fs.TemporaryFileWithContents(contents, prefix=prefix) as f:
+    return ExtractFeaturesFromPath(f.name, extra_args, timeout_seconds)
 
 
 def main(argv):
