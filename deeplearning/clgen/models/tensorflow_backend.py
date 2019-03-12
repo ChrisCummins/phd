@@ -17,6 +17,7 @@ import os
 import pathlib
 import time
 import typing
+import copy
 
 import numpy as np
 import progressbar

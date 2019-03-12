@@ -432,8 +432,8 @@ class BacktrackingModel(models.Model):
 
       # Generate a batch of candidates and select the best.
       candidate_statements = []
-      while len(candidate_statements) <
-          FLAGS.experimental_clgen_backtracking_candidates_per_step:
+      while len(candidate_statements) < \
+              FLAGS.experimental_clgen_backtracking_candidates_per_step:
         candidate_statements.append(
           self.GenerateCandidateStatements(sample_in_progress,
               rollback_state, rollback_index,
