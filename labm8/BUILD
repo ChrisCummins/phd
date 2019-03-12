@@ -486,8 +486,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":app",
+        ":humanize",
+        ":labdate",
         ":labtypes",
-        "//labm8:humanize",
+        ":system",
     ],
 )
 
@@ -508,6 +510,15 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":app",
+    ],
+)
+
+py_test(
+    name = "shell_test",
+    srcs = ["shell_test.py"],
+    deps = [
+        ":shell",
+        ":test",
     ],
 )
 
