@@ -111,7 +111,9 @@ class OpenClBacktrackingHelper(object):
     """
     return sampled_token[-1] == self.END_OF_STATEMENT_TOKEN
 
-  def ShouldProceed(self, sample_in_progress: typing.List[str]) -> bool:
+  def ShouldProceed(self,
+                    sample_in_progress: typing.List[str],
+                    force: bool = False) -> bool:
     """Determine if a partial sample should be used as the new rollback state.
 
     Args:
@@ -152,16 +154,17 @@ class OpenClBacktrackingHelper(object):
     if self._target_features is not None:
       new_feature_distance = scipy.spatial.distance.euclidean(
           features, self._target_features)
-      app.Log(1, 'Features: %s, distance=%f, norm=%f, delta=%f', features,
+      app.Log(2, 'Features: %s, distance=%f, norm=%f, delta=%f', features,
               new_feature_distance,
               new_feature_distance / self._init_feature_distance,
               new_feature_distance - self._previous_feature_distance)
-      if new_feature_distance > self._previous_feature_distance:
+      if not force and new_feature_distance > self._previous_feature_distance:
         # This will only happen once feature values are great than target
         # feature values.
         app.Log(1, "Rejecting candidate because of positive feature delta")
         return False
-      if (new_feature_distance == self._previous_feature_distance and
+      if (not force and
+          new_feature_distance == self._previous_feature_distance and
           random.random() >
           FLAGS.experimental_clgen_backtracking_reject_no_progress_probability):
         app.Log(1, "Randomly rejecting candidate with no progress")
@@ -218,11 +221,12 @@ class OpenClBacktrackingHelper(object):
       else:
         return text + '}' * bracket_depth
 
-  def IsDone(self):
+  def IsDone(self, sample_in_progress: typing.List[str]):
     """Return whether sampling is done."""
     if self._target_features is None:
       return True
     else:
+      assert self.ShouldProceed(sample_in_progress)
       return ((self._previous_feature_distance <=
                FLAGS.experimental_clgen_backtracking_max_feature_distance) or
               (self._previous_feature_distance / self._init_feature_distance <=
@@ -429,12 +433,13 @@ class BacktrackingModel(models.Model):
           2, 'Selecting best feature distance (%f) from candidates: %s',
           best_candidate.feature_distance,
           SummarizeFloats(c.feature_distance for c in candidates_statements))
-      app.Log(4, 'Selected best statement: %s', best_candidate.statement)
+      app.Log(4, 'Selected best statement: %s',
+              ''.join(best_candidate.statement))
 
       # Set the sampler's seed text to be the new backtrack state so that
       # when InitSampleBatch() is called during backtracking, the model is
       # re-seeded with the entire sample up to this point.
-      sample_in_progress += best_candidate
+      sample_in_progress += best_candidate.statement
       sampler.encoded_start_text = atomizer.AtomizeString(
           ''.join(sample_in_progress))[-(sampler.sequence_length - 1):]
 
