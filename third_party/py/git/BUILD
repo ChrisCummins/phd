@@ -11,5 +11,6 @@ py_library(
     srcs = ["git.py"],
     deps = [
         requirement("GitPython"),
+        requirement("gitdb2"),
     ],
 )
