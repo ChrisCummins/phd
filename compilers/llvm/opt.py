@@ -10,6 +10,7 @@ Usage:
 
   bazel run //compilers/llvm:opt [-- <script_args> [-- <opt_args>]]
 """
+import functools
 import pathlib
 import subprocess
 import sys
@@ -603,10 +604,11 @@ def GetAllOptimizationsAvailable() -> typing.List[str]:
   return optimizations
 
 
-OPTIMIZATION_PASSES = set(GetAllOptimizationsAvailable())
-
-ALL_PASSES = TRANSFORM_PASSES.union(OPTIMIZATION_LEVELS).union(
-    OPTIMIZATION_PASSES)
+@functools.lru_cache(maxsize=1)
+def GetAllOptPasses() -> typing.Set[str]:
+  """Return all opt passes."""
+  return TRANSFORM_PASSES.union(OPTIMIZATION_LEVELS).union(
+      set(GetAllOptimizationsAvailable()))
 
 
 def main(argv):
