@@ -64,40 +64,43 @@ def DeltaToTargets(delta: db.TestDelta) -> List[Dict[str, Any]]:
       } for result in delta.still_pass]
 
 
-@flask_app.route("/host/<host>")
+def RenderInvocation(host, session, invocation):
+  app.Log(1, 'Fetching for invocation %s', invocation)
+  delta = db.GetTestDelta(session, invocation, to_return=[db.TestTargetResult])
+
+  urls = {
+      "cache_tag": 1,
+      "styles_css": flask.url_for('static', filename='bootstrap.css'),
+      "site_js": flask.url_for('static', filename='site.js'),
+  }
+
+  return flask.render_template(
+      "index.html",
+      host=host,
+      targets=DeltaToTargets(delta),
+      delta=db.TestDelta(
+          broken=len(delta.broken),
+          fixed=len(delta.fixed),
+          still_broken=len(delta.still_broken),
+          still_pass=len(delta.still_pass)),
+      invocation_datetime=invocation,
+      urls=urls)
+
+
+@flask_app.route("/<host>")
 def index(host: str):
   with prof.Profile(f'Render /{host}'):
     database = db.Database(FLAGS.db)
     with database.Session() as session:
       invocation, = session.query(sql.func.max_(db.TestTargetResult.invocation_datetime))\
         .filter(db.TestTargetResult.host == host).one()
-      app.Log(1, 'Fetching for invocation %s', invocation)
-      delta = db.GetTestDelta(
-          session, invocation, to_return=[db.TestTargetResult])
-
-      urls = {
-          "cache_tag": 1,
-          "styles_css": flask.url_for('static', filename='bootstrap.css'),
-          "site_js": flask.url_for('static', filename='site.js'),
-      }
-
-      return flask.render_template(
-          "index.html",
-          host=host,
-          targets=DeltaToTargets(delta),
-          delta=db.TestDelta(
-              broken=len(delta.broken),
-              fixed=len(delta.fixed),
-              still_broken=len(delta.still_broken),
-              still_pass=len(delta.still_pass)),
-          invocation_datetime=invocation,
-          urls=urls)
+      return RenderInvocation(host, session, invocation)
 
 
 def main():
   """Main entry point."""
   # TODO: Implement!
-  flask_app.run(port=FLAGS.port, debug=FLAGS.debug_flask_server)
+  flask_app.run(port=FLAGS.port, debug=FLAGS.debug_flask_server, host='0.0.0.0')
 
 
 if __name__ == '__main__':

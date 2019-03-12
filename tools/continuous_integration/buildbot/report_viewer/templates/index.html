@@ -16,6 +16,7 @@
     #test_results button.btn-link {
       width: 100%;
       text-align: left;
+      padding: 8px 16px;
     }
 
     #test_results button code {
@@ -28,7 +29,7 @@
 
 <body>
 
-  <div class="container-fluid">
+  <div class="container">
     <div class="row">
       <div class="col">
         <h1>{{ host }} at {{ invocation_datetime }}</h1>
@@ -41,8 +42,6 @@
       </div>
     </div>
 
-
-
     <div class="row">
       <div class="col">
         <div class="accordion" id="test_results">
@@ -52,9 +51,9 @@
               <h2 class="mb-0">
                 <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#t{{ loop.index }}" aria-expanded="true" aria-controls="t{{ loop.index }}">
                   {% if result.fail %}
-                  <span class="badge badge-danger">FAIL</span>
+                  <span class="badge badge-danger">Fail</span>
                   {% else %}
-                  <span class="badge badge-success">PASS</span>
+                  <span class="badge badge-success">Pass</span>
                   {% endif %}
                   <code>{{ result.bazel_target }}</code> ({{ result.test_count}} tests) in {{ result.runtime }}
                   {% if result.changed %}<span class="badge badge-secondary">Change</span>{% endif %}
