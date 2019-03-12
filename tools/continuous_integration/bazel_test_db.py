@@ -1,4 +1,6 @@
 """A database for storing bazel test results."""
+import collections
+import datetime
 import typing
 from xml import etree
 
@@ -68,6 +70,63 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
         'failed_count': failed_count,
         'runtime_ms': runtime_ms,
     }
+
+
+TestDelta = collections.namedtuple(
+    'TestDelta', ['broken', 'fixed', 'still_broken', 'still_pass'])
+
+
+def GetTestDelta(session,
+                 invocation_datetime: datetime.datetime,
+                 to_return=[TestTargetResult.bazel_target]) -> TestDelta:
+  """Get the test delta."""
+  failed = session.query(*to_return) \
+    .filter(TestTargetResult.invocation_datetime == invocation_datetime) \
+    .filter(TestTargetResult.failed_count > 0)
+  passed = session.query(*to_return) \
+    .filter(TestTargetResult.invocation_datetime == invocation_datetime) \
+    .filter(TestTargetResult.failed_count == 0)
+
+  host, git_branch = session.query(TestTargetResult.host, TestTargetResult.git_branch)\
+    .filter(TestTargetResult.invocation_datetime == invocation_datetime).first()
+
+  # Get the last run.
+  previous_invocation = session.query(
+      sql.func.max_(TestTargetResult.invocation_datetime)) \
+    .filter(TestTargetResult.host == host) \
+    .filter(TestTargetResult.git_branch == git_branch) \
+    .filter(TestTargetResult.invocation_datetime < invocation_datetime).first()
+
+  if previous_invocation:
+    previous_invocation = previous_invocation[0]
+    return TestDelta(
+        broken=failed.filter(~TestTargetResult.bazel_target.in_(
+            session.query(TestTargetResult.bazel_target) \
+              .filter(TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(TestTargetResult.failed_count > 0)
+        )).all(),
+        fixed=passed.filter(~TestTargetResult.bazel_target.in_(
+            session.query(TestTargetResult.bazel_target) \
+              .filter(TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(TestTargetResult.failed_count == 0)
+        )).all(),
+        still_broken=failed.filter(TestTargetResult.bazel_target.in_(
+            session.query(TestTargetResult.bazel_target) \
+              .filter(TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(TestTargetResult.failed_count > 0)
+        )).all(),
+        still_pass=passed.filter(TestTargetResult.bazel_target.in_(
+            session.query(TestTargetResult.bazel_target) \
+              .filter(TestTargetResult.invocation_datetime == previous_invocation) \
+              .filter(TestTargetResult.failed_count == 0)
+        )).all(),
+    )
+  else:
+    return TestDelta(
+        broken=passed.all(),
+        fixed=failed.all(),
+        still_broken=[],
+        still_passing=[])
 
 
 class Database(sqlutil.Database):

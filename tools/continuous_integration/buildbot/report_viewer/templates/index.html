@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <meta http-equiv="refresh" content="60">
+
+  <link href="{{ urls.styles_css }}?v={{ urls.cache_tag }}" rel="stylesheet"/>
+  <style>
+    #test_results .card-header {
+      padding: 0;
+      /* font-size: 1.5em; */
+    }
+
+    #test_results button.btn-link {
+      width: 100%;
+      text-align: left;
+    }
+
+    #test_results button code {
+      color: #fff;
+    }
+  </style>
+
+  <title>{{ host }}</title>
+</head>
+
+<body>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <h1>{{ host }} at {{ invocation_datetime }}</h1>
+        <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
+          {% if delta.broken %}{{ delta.broken }} broken.{% endif %}
+          {% if delta.still_broken %}{{ delta.still_broken }} still broken.{% endif %}
+          {% if delta.fixed %}{{ delta.fixed }} fixed.{% endif %}
+          {% if delta.still_pass %}{{ delta.still_pass }} still pass.{% endif %}
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="row">
+      <div class="col">
+        <div class="accordion" id="test_results">
+          {% for result in targets %}
+          <div class="card">
+            <div class="card-header" id="h{{ loop.index }}">
+              <h2 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#t{{ loop.index }}" aria-expanded="true" aria-controls="t{{ loop.index }}">
+                  {% if result.fail %}
+                  <span class="badge badge-danger">FAIL</span>
+                  {% else %}
+                  <span class="badge badge-success">PASS</span>
+                  {% endif %}
+                  <code>{{ result.bazel_target }}</code> ({{ result.test_count}} tests) in {{ result.runtime }}
+                  {% if result.changed %}<span class="badge badge-secondary">Change</span>{% endif %}
+                </button>
+              </h2>
+            </div>
+            <div id="t{{ loop.index }}" class="collapse" aria-labelledby="h{{ loop.index }}">
+              <div class="card-body">
+                <pre>
+{{ result.log | e }}
+                </pre>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {#<ul>
+          {% for result in delta.broken %}
+          <li><code>{{ result.bazel_target }}</code> ({{ result.test_count}} tests) in {{ result.runtime_ms }}ms <span class="badge badge-danger">Broken</span> <span class="badge badge-danger">Changed</span></li>
+          {% endfor %}
+          {% for result in delta.still_broken %}
+          <li><code>{{ result.bazel_target }}</code> ({{ result.test_count}} tests) in {{ result.runtime_ms }}ms</li>
+          {% endfor %}
+          {% for result in delta.fixed %}
+          <li><code>{{ result.bazel_target }}</code> ({{ result.test_count}} tests) in {{ result.runtime_ms }}ms <span class="badge badge-success">Changed</span></li>
+          {% endfor %}
+          {% for result in delta.still_pass %}
+          <li><code>{{ result.bazel_target }}</code> ({{ result.test_count}} tests) in {{ result.runtime_ms }}ms</li>
+          {% endfor %}
+        </ul>#}
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    var GetUrlComponents = function() {
+      if (location.hash == null || location.hash == "") {
+        return [];
+      }
+
+      var components = location.hash.substr(1).split(",");
+      components.forEach(function(_, i) {
+        components[i] = parseInt(components[i].substr(1));
+      });
+
+      components = components.filter(function(x) {
+        return !isNaN(x);
+      });
+      return components;
+    }
+
+    var SetUrlComponents = function(components) {
+      components.sort();
+      components.forEach(function(_, i) {
+        components[i] = 't' + components[i];
+      });
+      return components.join(",");
+    }
+
+    $(document).ready(function () {
+      // Show collapsible element selected in URL.
+      if (location.hash != null && location.hash != "") {
+        var components = location.hash.substr(1).split(",");
+        components.forEach(function (component) {
+          // Show the collapsible element.
+          $('#' + component + '.collapse').collapse('show');
+        });
+      }
+
+      // Set URL to current collapsible element.
+      $('#test_results button').click(function() {
+        var target_id = $(this).attr('data-target');
+        var target_num = parseInt(target_id.substr(2));
+        var classes = $(target_id).attr("class");
+        if (classes.indexOf("show") == -1) {
+          // We are clicking on a target to show it.
+          var components = GetUrlComponents();
+          components.push(target_num);
+          location.hash = SetUrlComponents(components);
+        } else {
+          // We are clicking on a target to hide it.
+          var components = GetUrlComponents();
+          components.splice(components.indexOf(target_num), 1);
+          location.hash = SetUrlComponents(components);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

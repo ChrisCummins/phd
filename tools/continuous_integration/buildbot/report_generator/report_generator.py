@@ -1,5 +1,4 @@
 """Import bazel test results and report delta in passes and failures."""
-import collections
 import datetime
 import os
 import pathlib
@@ -23,9 +22,6 @@ app.DEFINE_string(
     "db", "sqlite:////tmp/phd/tools/continuous_integration/buildbot.db",
     "Path to testlogs summary database.")
 
-TestDelta = collections.namedtuple(
-    'TestDelta', ['broken', 'fixed', 'still_broken', 'still_pass'])
-
 
 def GetBazelTarget(testlogs_root: pathlib.Path, xml_path: pathlib.Path):
   xml_path = xml_path.parent
@@ -45,59 +41,6 @@ def GetGitBranchOrDie():
       return line[2:]
   print("fatal: Unable to determine git branch", file=sys.stderr)
   sys.exit(1)
-
-
-def GetTestDelta(session, invocation_datetime: datetime.datetime, host: str,
-                 git_branch: str) -> TestDelta:
-  """Get the test delta."""
-  failed = session.query(db.TestTargetResult.bazel_target) \
-    .filter(db.TestTargetResult.invocation_datetime == invocation_datetime) \
-    .filter(db.TestTargetResult.failed_count > 0)
-  passed = session.query(db.TestTargetResult.bazel_target) \
-    .filter(db.TestTargetResult.invocation_datetime == invocation_datetime) \
-    .filter(db.TestTargetResult.failed_count == 0)
-
-  # Get the last run.
-  previous_invocation = session.query(
-      sql.func.max_(db.TestTargetResult.invocation_datetime)) \
-    .filter(db.TestTargetResult.host == host) \
-    .filter(db.TestTargetResult.git_branch == git_branch) \
-    .filter(db.TestTargetResult.invocation_datetime < invocation_datetime).first()
-
-  def Read(query):
-    """Read rows of a query."""
-    return [r[0] for r in query]
-
-  if previous_invocation:
-    previous_invocation = previous_invocation[0]
-    return TestDelta(
-        broken=Read(failed.filter(~db.TestTargetResult.bazel_target.in_(
-            session.query(db.TestTargetResult.bazel_target) \
-              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
-              .filter(db.TestTargetResult.failed_count > 0)
-        ))),
-        fixed=Read(passed.filter(~db.TestTargetResult.bazel_target.in_(
-            session.query(db.TestTargetResult.bazel_target) \
-              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
-              .filter(db.TestTargetResult.failed_count == 0)
-        ))),
-        still_broken=Read(passed.filter(db.TestTargetResult.bazel_target.in_(
-            session.query(db.TestTargetResult.bazel_target) \
-              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
-              .filter(db.TestTargetResult.failed_count > 0)
-        ))),
-        still_pass=Read(passed.filter(db.TestTargetResult.bazel_target.in_(
-            session.query(db.TestTargetResult.bazel_target) \
-              .filter(db.TestTargetResult.invocation_datetime == previous_invocation) \
-              .filter(db.TestTargetResult.failed_count == 0)
-        ))),
-    )
-  else:
-    return TestDelta(
-        broken=Read(passed),
-        fixed=Read(failed),
-        still_broken=[],
-        still_passing=[])
 
 
 def main():
@@ -139,10 +82,10 @@ def main():
         result.host = host
         result.target = GetBazelTarget(testlogs, xml_path)
         result.git_commit = git_commit
-        if result.failed_count:
-          log_path = dir_ / 'test.log'
-          assert log_path.is_file()
-          result.log = fs.Read(log_path).rstrip()
+        # if result.failed_count:
+        log_path = dir_ / 'test.log'
+        assert log_path.is_file()
+        result.log = fs.Read(log_path).rstrip()
 
         # Add result to database.
         session.add(result)
@@ -162,7 +105,7 @@ def main():
           f'{humanize.Commas(num_tests)} tests in '
           f'{humanize.Duration(total_runtime_ms/1000)}), {num_failed} failed')
 
-    delta = GetTestDelta(session, invocation_datetime, host, git_branch)
+    delta = db.GetTestDelta(session, invocation_datetime)
 
     print(f'{humanize.Commas(len(delta.fixed))} fixed, '
           f'{humanize.Commas(len(delta.broken))} broken.')
