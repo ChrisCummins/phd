@@ -14,8 +14,7 @@ from labm8 import app
 from labm8 import fs
 from labm8 import humanize
 from labm8 import prof
-from tools.continuous_integration.buildbot.report_generator import \
-  bazel_test_db as db
+from tools.continuous_integration import bazel_test_db as db
 
 FLAGS = app.FLAGS
 app.DEFINE_string("testlogs", None, "Path to bazel testlogs directory.")
