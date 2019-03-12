@@ -21,7 +21,6 @@ from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import app
 from labm8 import labdate
-from labm8 import viz
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = app.FLAGS
@@ -55,6 +54,16 @@ app.DEFINE_float(
     '1.0 is the starting difference and 0.0 is an exact match.')
 
 
+def SummarizeFloats(floats: typing.Iterable[float], nplaces: int = 2) -> str:
+  """Summarize a sequence of floats."""
+  arr = np.array(floats, dtype=np.float32)
+  percs = " ".join([
+      f'{p}%={np.percentile(arr, p):.{nplaces}f}' for p in [0, 50, 95, 99, 100]
+  ])
+  return (f"n={len(arr)}, mean={arr.mean():.{nplaces}f}, "
+          f"stdev={arr.std():.{nplaces}f}, percentiles=[{percs}]")
+
+
 class OpenClBacktrackingHelper(object):
   """A backtracking helper for OpenCL kernels."""
   # We want to checkpoint at the end of every logicial statement. An easy way
@@ -85,7 +94,7 @@ class OpenClBacktrackingHelper(object):
     self._previous_features = np.array([0, 0, 0, 0], dtype=np.int)
     self._init_feature_distance = scipy.spatial.distance.euclidean(
         self._previous_features, self._target_features)
-    self._previous_src = None
+    self._previous_src = ''
     self._previous_feature_distance = self._init_feature_distance
 
   def __del__(self):
@@ -414,8 +423,7 @@ class BacktrackingModel(models.Model):
       app.Log(
           2, 'Selecting best feature distance (%f) from candidates: %s',
           best_candidate.feature_distance,
-          viz.SummarizeFloats(
-              c.feature_distance for c in candidates_statements))
+          SummarizeFloats(c.feature_distance for c in candidates_statements))
       app.Log(4, 'Selected best statement: %s', best_candidate.statement)
 
       # Set the sampler's seed text to be the new backtrack state so that

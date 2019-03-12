@@ -47,7 +47,6 @@ py_binary(
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//labm8:app",
         "//labm8:labdate",
-        "//labm8:viz",
         "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/numpy",
         "//third_party/py/scipy",
