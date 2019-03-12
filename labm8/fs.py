@@ -626,7 +626,7 @@ def TemporaryFileWithContents(contents, **kwargs):
   Yields:
     The temporary file object, opened in 'w' mode.
   """
-  # From <https://github.com/google/google-apputils>
+  # Adapted from <https://github.com/google/google-apputils>.
   # Copyright 2007 Google Inc. All Rights Reserved.
   #
   # Licensed under the Apache License, Version 2.0 (the "License");
@@ -640,6 +640,8 @@ def TemporaryFileWithContents(contents, **kwargs):
   # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   # See the License for the specific language governing permissions and
   # limitations under the License.
+  if not kwargs['prefix']:
+    kwargs['prefix'] = 'phd_tempfile_with_contents_'
   temporary_file = tempfile.NamedTemporaryFile(**kwargs)
   temporary_file.write(contents)
   temporary_file.flush()
