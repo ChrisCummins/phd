@@ -19,6 +19,7 @@ app.DEFINE_string(
     "Path to testlogs summary database.")
 app.DEFINE_string("buildbot_url", "http://localhost:8010/#/builders",
                   "URL of buildbot server.")
+app.DEFINE_string("hostname", "localhost", "Hostname of this server.")
 app.DEFINE_integer('port', portpicker.pick_unused_port(),
                    'The port to launch the server on.')
 app.DEFINE_boolean('debug_flask_server', True,
@@ -87,6 +88,8 @@ def RenderInvocation(host, session, invocation):
   urls = {
       "cache_tag":
       1,
+      "self":
+      f"http://{FLAGS.hostname}:{FLAGS.port}",
       "styles_css":
       flask.url_for('static', filename='bootstrap.css'),
       "site_js":
@@ -97,9 +100,23 @@ def RenderInvocation(host, session, invocation):
                         f'{targets[0]["git_commit"]}'),
   }
 
+  hosts = [
+      x[0] for x in session.query(sql.func.distinct(
+          db.TestTargetResult.host)).order_by(db.TestTargetResult.host)
+  ]
+  invocations = [
+      x[0] for x in session.query(
+          sql.func.distinct(db.TestTargetResult.invocation_datetime)).filter(
+              db.TestTargetResult.host == host).order_by(
+                  db.TestTargetResult.invocation_datetime.desc())
+  ]
+  invocations = zip(range(len(invocations), 0, -1), invocations)
+
   return flask.render_template(
       "test_view.html",
       host=host,
+      hosts=hosts,
+      invocations=invocations,
       targets=targets,
       test_count=humanize.Commas(sum(t['test_count'] for t in targets)),
       test_duration=humanize.Duration(
@@ -117,12 +134,25 @@ def RenderInvocation(host, session, invocation):
 
 
 @flask_app.route("/<host>")
-def index(host: str):
+def test(host: str):
   with prof.Profile(f'Render /{host}'):
     database = db.Database(FLAGS.db)
     with database.Session() as session:
       invocation, = session.query(sql.func.max_(db.TestTargetResult.invocation_datetime))\
         .filter(db.TestTargetResult.host == host).one()
+      template = RenderInvocation(host, session, invocation)
+  return template
+
+
+@flask_app.route("/<host>/<int:invocation_num>")
+def index_invocation(host: str, invocation_num: int):
+  with prof.Profile(f'Render /{host}/{invocation_num}'):
+    database = db.Database(FLAGS.db)
+    with database.Session() as session:
+      invocation, = session.query(sql.func.distinct(db.TestTargetResult.invocation_datetime)) \
+        .filter(db.TestTargetResult.host == host)\
+        .order_by(db.TestTargetResult.invocation_datetime)\
+        .offset(invocation_num - 1).limit(1).one()
       template = RenderInvocation(host, session, invocation)
   return template
 

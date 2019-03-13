@@ -24,12 +24,43 @@
 {% endblock %}
 
 {% block body %}
+<nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="#">Bazel CI</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="nabar_host_selector" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {{ host }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
+          {% for host_ in hosts %}
+            <a class="dropdown-item{% if host_ == host %} active{% endif %}" href="{{ urls.self }}/{{ host_ }}">{{ host_ }}</a>
+          {% endfor %}
+        </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="nabar_host_selector" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {{ invocation_datetime.strftime('%Y-%m-%d %H:%M') }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
+          {% for ivd in invocations %}
+          <a class="dropdown-item{% if ivd[1] == invocation_datetime %} active{% endif %}" href="{{ urls.self }}/{{ host }}/{{ ivd[0] }}">{{ ivd[1].strftime('%Y-%m-%d %H:%M') }}{% if ivd[1] == invocation_datetime %} (current){% endif %}</a>
+          {% endfor %}
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+
 <div class="container">
   <div class="row">
     <div class="col">
-      <h1><a href="{{ urls.buildbot }}">{{ host }}</a></h1>
       <p class="lead">
-        <a href="{{ urls.github_commit }}">{{ git_branch }}</a> at {{ invocation_datetime }}.<br/>
+        <a href="{{ urls.github_commit }}">{{ git_branch }}</a> on <a href="{{ urls.buildbot }}">{{ host }}</a> at {{ invocation_datetime.strftime('%Y-%m-%d %H:%M') }}.<br/>
         {{ test_count }} tests in {{ test_duration }}.
       </p>
       <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
