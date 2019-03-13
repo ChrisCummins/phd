@@ -456,8 +456,11 @@ class BacktrackingModel(models.Model):
         break
 
       # Select the best candidate.
-      best_candidate = min(
-          candidate_statements, key=lambda x: x.feature_distance)
+      if _target_features is not None:
+        best_candidate = min(
+            candidate_statements, key=lambda x: x.feature_distance)
+      else:
+        best_candidate = random.choice(candidate_statements)
       app.Log(
           2,
           'Selected best feature distance (%f) at step %d from candidates: %s',
