@@ -97,7 +97,7 @@ def Drive(opencl_kernel: str,
   """
 
   cldrive_pb2.CldriveInstance(
-      device=_env.OclgrindOpenCLEnvironment().proto,
+      device=cldrive_env.OclgrindOpenCLEnvironment().proto,
       opencl_src="""
 kernel void A(global int* a, global float* b, const int c) {
 if (get_global_id(0) < c) {
