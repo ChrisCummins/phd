@@ -32,6 +32,7 @@ py_library(
         "//labm8:decorators",
         "//third_party/py/pandas",
         "//third_party/py/progressbar",
+        "//third_party/py/pyparsing",
     ],
 )
 

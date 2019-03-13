@@ -86,6 +86,7 @@ py_library(
         "//labm8:app",
         "//third_party/py/networkx",
         "//third_party/py/pydot",
+        "//third_party/py/pyparsing",
     ],
 )
 
