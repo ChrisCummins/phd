@@ -11,5 +11,6 @@ py_library(
     srcs = ["gym.py"],
     deps = [
         requirement("gym"),
+        "//third_party/py/scipy",
     ],
 )
