@@ -13,6 +13,7 @@ mirrored_directory {
   name: "photos"
   local_path: "/Volumes/Orange"
   remote_path: "/home/cec/img/photos"
+  timestamp_relpath: ".sync_timestamp.txt"
   rsync_exclude: "*.lrcat-journal"
   rsync_exclude: "*.lrcat.lock"
   rsync_exclude: "._.DS_Store"

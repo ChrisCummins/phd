@@ -38,6 +38,7 @@ py_library(
     visibility = ["//system/machines:__subpackages__"],
     deps = [
         "//labm8:app",
+        "//labm8:fs",
         "//labm8:labtypes",
         "//system/machines/proto:machine_spec_pb2_py",
     ],
