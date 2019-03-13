@@ -93,27 +93,27 @@ class PreTrainedModel(object):
     sample_count = 1
     atomizer = self.atomizer
     sampler.Specialize(atomizer)
-    batch_size = self.backend.InitSampling(sampler, seed)
+    self.backend.InitSampling(sampler, seed)
     sample_start_time = labdate.MillisecondsTimestamp()
     # Per-sample batch outer loop. Continues until we have as many samples
     # as we want.
     while True:
       samples_in_progress = [
-          sampler.tokenized_start_text.copy() for _ in range(batch_size)
+          sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
       ]
-      done = np.zeros(batch_size, dtype=np.bool)
+      done = np.zeros(sampler.batch_size, dtype=np.bool)
       start_time = labdate.MillisecondsTimestamp()
       wall_time_start = start_time
 
-      self.backend.InitSampleBatch(sampler, batch_size)
+      self.backend.InitSampleBatch(sampler)
 
       # Sampling loop. Continues until all samples in the batch are done.
       while True:
-        indices = self.backend.SampleNextIndices(sampler, batch_size)
+        indices = self.backend.SampleNextIndices(sampler)
 
         # Iterate over all samples in batch to determine whether they're
         # done.
-        for i in range(batch_size):
+        for i in range(sampler.batch_size):
           if done[i]:
             continue
 

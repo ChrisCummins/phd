@@ -350,7 +350,7 @@ class TensorFlowBackend(backends.BackendBase):
 
   def InitSampling(self,
                    sampler: samplers.Sampler,
-                   seed: typing.Optional[int] = None) -> int:
+                   seed: typing.Optional[int] = None) -> None:
     """Initialize model for sampling."""
     import tensorflow as tf
     # Delete any previous sampling session.
@@ -388,8 +388,6 @@ class TensorFlowBackend(backends.BackendBase):
 
     saver.restore(self.inference_sess, checkpoint_state.model_checkpoint_path)
     self.inference_sess.run(tf.assign(self.temperature, sampler.temperature))
-
-    return sampler.batch_size
 
   def InitSampleBatch(self, sampler: samplers.Sampler) -> None:
     if FLAGS.clgen_tf_backend_reset_inference_state_between_batches:

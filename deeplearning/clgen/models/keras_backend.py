@@ -167,10 +167,10 @@ class KerasBackend(backends.BackendBase):
           epochs=target_num_epochs)
     return model
 
-  def GetInferenceModel(self) -> typing.Tuple['keras.models.Sequential', int]:
-    """Like training model, but with batch size 1."""
+  def GetInferenceModel(self) -> 'keras.models.Sequential':
+    """Like training model, but with different batch size."""
     if self._inference_model:
-      return self._inference_model, self._inference_batch_size
+      return self._inference_model
 
     # Deferred importing of Keras so that we don't have to activate the
     # TensorFlow backend every time we import this module.
@@ -179,46 +179,39 @@ class KerasBackend(backends.BackendBase):
     app.Log(1, 'Building inference model.')
     model = self.GetTrainingModel()
     config = model.get_config()
-    # TODO(cec): Decide on whether this should be on by default, or in the
-    # sampler.proto.
-    if FLAGS.experimental_batched_sampling:
-      # Read the embedding output size.
-      batch_size = min(config[0]['config']['output_dim'], 32)
-    else:
-      batch_size = 1
-    app.Log(1, 'Sampling with batch size %d', batch_size)
-    config[0]['config']['batch_input_shape'] = (batch_size, 1)
+    app.Log(1, 'Sampling with batch size %d', sampler.batch_size)
+    config[0]['config']['batch_input_shape'] = (sampler.batch_size, 1)
     inference_model = keras.models.Sequential.from_config(config)
     inference_model.trainable = False
     inference_model.set_weights(model.get_weights())
     self._inference_model = inference_model
-    self._inference_batch_size = batch_size
-    return inference_model, batch_size
+    self._inference_batch_size = sampler.batch_size
+    return inference_model
 
   def InitSampling(self,
                    sampler: samplers.Sampler,
-                   seed: typing.Optional[int] = None) -> int:
-    self.inference_model, batch_size = self.GetInferenceModel()
+                   seed: typing.Optional[int] = None) -> None:
+    self.inference_model = self.GetInferenceModel()
     if seed is not None:
       np.random.seed(seed)
-    return batch_size
 
-  def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
+  def InitSampleBatch(self, sampler: samplers.Sampler) -> None:
     self.inference_model.reset_states()
     # Set internal states from seed text.
     for index in sampler.encoded_start_text[:-1]:
-      x = np.array([[index]] * batch_size)
+      x = np.array([[index]] * sampler.batch_size)
       # input shape: (batch_size, 1)
       self.inference_model.predict(x)
 
-    self.inference_indices = [sampler.encoded_start_text[-1]] * batch_size
+    self.inference_indices = (
+        [sampler.encoded_start_text[-1]] * sampler.batch_size)
 
-  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int,
-                        done: np.ndarray):
-    result = np.zeros((batch_size, 1024))
+  def SampleNextIndices(self, sampler: samplers.Sampler, done: np.ndarray):
+    del done
+    result = np.zeros((sampler.batch_size, 1024))
     for idx in range(1024):
       # Predict the next index for the entire batch.
-      x = np.reshape(self.inference_indices, [batch_size, 1])
+      x = np.reshape(self.inference_indices, [sampler.batch_size, 1])
       # Input shape: (batch_size, 1).
       probabilities = self.inference_model.predict(x)
       # Output shape: (batch_size, 1, vocab_size).

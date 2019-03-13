@@ -44,15 +44,15 @@ class BackendBase(object):
 
   def InitSampling(self,
                    sampler: samplers.Sampler,
-                   seed: typing.Optional[int] = None) -> int:
+                   seed: typing.Optional[int] = None) -> None:
     """Initialize backend for sampling."""
     raise NotImplementedError
 
-  def InitSampleBatch(self, sampler: samplers.Sampler, batch_size: int) -> None:
+  def InitSampleBatch(self, sampler: samplers.Sampler) -> None:
     """Begin a new sampling batch. Only called after InitSampling()."""
     raise NotImplementedError
 
-  def SampleNextIndices(self, sampler: samplers.Sampler, batch_size: int,
+  def SampleNextIndices(self, sampler: samplers.Sampler,
                         done: np.ndarray) -> np.ndarray:
     """Sample the next indices for the current sample batch.
 

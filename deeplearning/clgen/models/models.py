@@ -41,11 +41,6 @@ from labm8 import pbutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_boolean(
-    'experimental_batched_sampling', False,
-    'Enable an experimental batched sampling feature. THIS FEATURE IS STILL '
-    'EXPERIMENTAL AND HAS NOT BEEN THOROUGHLY REVIEWED OR UNDERSTOOD.')
-
 
 class Model(object):
   """A CLgen language model.
@@ -218,7 +213,7 @@ class Model(object):
 
       atomizer = self.corpus.atomizer
       sampler.Specialize(atomizer)
-      batch_size = self.backend.InitSampling(sampler, seed)
+      self.backend.InitSampling(sampler, seed)
 
       samples = []
       sample_dir = self.SamplerCache(sampler)
@@ -226,8 +221,7 @@ class Model(object):
       # Per-sample batch outer loop. Continues until we have as many samples
       # as we want.
       while min_num_samples == 0 or len(samples) < min_num_samples:
-        sample_batch = self._SampleBatch(
-            sampler, atomizer, batch_size, print_samples=True)
+        sample_batch = self._SampleBatch(sampler, atomizer, print_samples=True)
 
         # Only keep the samples in memory if we are going to return them.
         if min_num_samples > 0:
@@ -288,13 +282,13 @@ class Model(object):
       sample_start_time = labdate.MillisecondsTimestamp()
       atomizer = self.corpus.atomizer
       sampler.Specialize(atomizer)
-      batch_size = self.backend.InitSampling(sampler, seed)
+      self.backend.InitSampling(sampler, seed)
       samples = []
 
       # Per-sample batch outer loop. Continues until we have as many samples
       # as we want.
       while len(samples) < min_num_samples:
-        samples += self._SampleBatch(sampler, atomizer, batch_size)
+        samples += self._SampleBatch(sampler, atomizer)
 
       now = labdate.MillisecondsTimestamp()
       app.Log(1, 'Produced %s samples at a rate of %s ms / sample.',
@@ -306,27 +300,26 @@ class Model(object):
   def _SampleBatch(self,
                    sampler: samplers.Sampler,
                    atomizer: atomizers.AtomizerBase,
-                   batch_size: int,
                    print_samples: typing.Optional[bool] = False
                   ) -> typing.List[model_pb2.Sample]:
     """Run a single iteration of the batched sample inner-loop."""
     samples = []
     samples_in_progress = [
-        sampler.tokenized_start_text.copy() for _ in range(batch_size)
+        sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
     ]
-    done = np.zeros(batch_size, dtype=np.bool)
+    done = np.zeros(sampler.batch_size, dtype=np.bool)
     start_time = labdate.MillisecondsTimestamp()
     wall_time_start = start_time
 
-    self.backend.InitSampleBatch(sampler, batch_size)
+    self.backend.InitSampleBatch(sampler)
 
     # Sampling loop. Continues until all samples in the batch are done.
     while not done.all():
-      indices = self.backend.SampleNextIndices(sampler, batch_size, done)
+      indices = self.backend.SampleNextIndices(sampler, done)
 
       # Iterate over all samples in batch to determine whether they're
       # done.
-      for i in range(batch_size):
+      for i in range(sampler.batch_size):
         if done[i]:
           continue
 
