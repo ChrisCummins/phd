@@ -46,6 +46,7 @@ py_binary(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//labm8:app",
+        "//labm8:fs",
         "//labm8:labdate",
         "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/numpy",
