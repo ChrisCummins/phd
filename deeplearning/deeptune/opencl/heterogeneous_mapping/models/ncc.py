@@ -13,6 +13,7 @@ from deeplearning.clgen.preprocessors import opencl
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import deeptune
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
+from labm8 import app
 from labm8 import bazelutil
 
 # The pre-trained embeddings used by default by DeepTuneInst2Vec models.
