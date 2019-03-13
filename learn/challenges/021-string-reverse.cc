@@ -1,5 +1,5 @@
-#include <iostream>
 #include <cassert>
+#include <iostream>
 #include <string>
 
 void inplace_reverse_string(std::string& str) {
@@ -9,19 +9,17 @@ void inplace_reverse_string(std::string& str) {
   }
 }
 
-
 std::string reverse_string(const std::string& str) {
   return std::string(str.rbegin(), str.rend());
 }
 
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   std::string a = "abc";
   inplace_reverse_string(a);
   assert(a == "cba");
   std::cout << a << std::endl;
 
-  assert(reverse_string("abca") == "cba");
+  assert(reverse_string("abc") == "cba");
   std::cout << reverse_string("abc") << std::endl;
 
   return 0;
