@@ -10,8 +10,8 @@ FLAGS = app.FLAGS
 
 def test_log_to_file(tempdir: pathlib.Path):
   """Benchmark instantiation of a one layer LSTM network without compiling."""
-  app.SetLogLevel(app.DEBUG)
-  logutil.StartTeeLogsToFile('foo', logdir)
+  app.SetLogLevel(1)
+  logutil.StartTeeLogsToFile('foo', tempdir)
   app.Log(1, 'Hello, info!')
   app.Log(2, 'Hello, debug!')
   app.Warning('Hello, warning!')
@@ -19,9 +19,9 @@ def test_log_to_file(tempdir: pathlib.Path):
   app.Log(1, 'Hello, ...\nmultiline!')
   app.FlushLogs()
 
-  assert (logdir / 'foo.INFO').is_file()
+  assert (tempdir / 'foo.INFO').is_file()
 
-  with open(logdir / 'foo.INFO') as f:
+  with open(tempdir / 'foo.INFO') as f:
     c = f.read()
   lines = c.split('\n')
   assert len(lines) == 7
