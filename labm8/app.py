@@ -202,6 +202,18 @@ def DebugLogging() -> bool:
   return absl_logging.level_debug()
 
 
+def SetLogLevel(level: int) -> None:
+  """Sets the logging verbosity.
+
+  Causes all messages of level <= v to be logged, and all messages of level > v
+  to be silently discarded.
+
+  Args:
+    level: the verbosity level as an integer.
+  """
+  absl_logging.set_verbosity(level)
+
+
 # Flags functions.
 
 # TODO(cec): Implement DEFINE_path.
