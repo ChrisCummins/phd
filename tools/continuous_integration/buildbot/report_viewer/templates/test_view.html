@@ -23,7 +23,7 @@
 
 {% block body %}
 <nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="#">Bazel CI</a>
+  <a class="navbar-brand" href="/ci/">Bazel CI</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -36,7 +36,7 @@
         </a>
         <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
           {% for host_ in hosts %}
-            <a class="dropdown-item{% if host_ == host %} active{% endif %}" href="{{ urls.self }}/{{ host_ }}">{{ host_ }}</a>
+            <a class="dropdown-item{% if host_ == host %} active{% endif %}" href="/ci/{{ host_ }}">{{ host_ }}</a>
           {% endfor %}
         </div>
       </li>
@@ -46,7 +46,7 @@
         </a>
         <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
           {% for ivd in invocations %}
-          <a class="dropdown-item{% if ivd[1] == invocation_datetime %} active{% endif %}" href="{{ urls.self }}/{{ host }}/{{ ivd[0] }}">{{ ivd[1].strftime('%Y-%m-%d %H:%M') }}{% if ivd[1] == invocation_datetime %} (current){% endif %}</a>
+          <a class="dropdown-item{% if ivd[1] == invocation_datetime %} active{% endif %}" href="/ci/{{ host }}/{{ ivd[0] }}">{{ ivd[1].strftime('%Y-%m-%d %H:%M') }}{% if ivd[1] == invocation_datetime %} (current){% endif %}</a>
           {% endfor %}
         </div>
       </li>

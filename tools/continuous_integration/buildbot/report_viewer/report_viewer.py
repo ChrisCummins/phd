@@ -85,12 +85,12 @@ def RenderInvocation(host, session, invocation):
   app.Log(1, 'Fetching for invocation %s', invocation)
   delta = db.GetTestDelta(session, invocation, to_return=[db.TestTargetResult])
   targets = DeltaToTargets(delta)
+  if not targets:
+    return "<h1>500</h1>"
 
   urls = {
       "cache_tag":
       1,
-      "self":
-      f"http://{FLAGS.hostname}:{FLAGS.port}",
       "styles_css":
       flask.url_for('static', filename='bootstrap.css'),
       "site_js":
@@ -135,19 +135,35 @@ def RenderInvocation(host, session, invocation):
       build_info=build_info.GetBuildInfo())
 
 
-@flask_app.route("/<host>")
-def test(host: str):
-  with prof.Profile(f'Render /{host}'):
+@flask_app.route("/ci")
+def index():
+  database = db.Database(FLAGS.db)
+  with database.Session() as session:
+    host, = session.query(db.TestTargetResult.host)\
+      .order_by(db.TestTargetResult.invocation_datetime.desc())\
+      .limit(1).one()
+
+  return flask.redirect(flask.url_for('host_latest', host=host))
+
+
+@flask_app.route("/ci/<host>")
+def host(host: str):
+  return flask.redirect(flask.url_for('host_latest', host=host))
+
+
+@flask_app.route("/ci/<host>/latest")
+def host_latest(host: str):
+  with prof.Profile(f'Render /{host}/latest'):
     database = db.Database(FLAGS.db)
     with database.Session() as session:
-      invocation, = session.query(sql.func.max_(db.TestTargetResult.invocation_datetime))\
+      invocation, = session.query(sql.func.max_(db.TestTargetResult.invocation_datetime)) \
         .filter(db.TestTargetResult.host == host).one()
       template = RenderInvocation(host, session, invocation)
   return template
 
 
-@flask_app.route("/<host>/<int:invocation_num>")
-def index_invocation(host: str, invocation_num: int):
+@flask_app.route("/ci/<host>/<int:invocation_num>")
+def host_invocation(host: str, invocation_num: int):
   with prof.Profile(f'Render /{host}/{invocation_num}'):
     database = db.Database(FLAGS.db)
     with database.Session() as session:
