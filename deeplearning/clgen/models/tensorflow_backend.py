@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """CLgen models using a Keras backend."""
+import copy
 import os
 import pathlib
 import time
 import typing
-import copy
 
 import numpy as np
 import progressbar
@@ -338,8 +338,8 @@ class TensorFlowBackend(backends.BackendBase):
         start_time = time.time()
         global_step = epoch_num
         checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
-        saver.save(sess, checkpoint_prefix, global_step=global_step)
-        checkpoint_path = f'{checkpoint_prefix}-{global_step}'
+        checkpoint_path = saver.save(
+            sess, checkpoint_prefix, global_step=global_step)
         app.Log(1, 'Saved checkpoint %s in %s ms.', checkpoint_path,
                 humanize.Commas(int((time.time() - start_time) * 1000)))
         assert pathlib.Path(
@@ -396,7 +396,7 @@ class TensorFlowBackend(backends.BackendBase):
       self.inference_state = self.inference_sess.run(
           self.cell.zero_state(sampler.batch_size, self.inference_tf.float32))
     self.inference_indices = np.tile(sampler.encoded_start_text,
-        [sampler.batch_size, 1])
+                                     [sampler.batch_size, 1])
 
   def SampleNextIndices(self, sampler: samplers.Sampler, done: np.ndarray):
     length = self.inference_indices.shape[1]
@@ -416,7 +416,7 @@ class TensorFlowBackend(backends.BackendBase):
         [self.generated, self.final_state], feed)
     self.inference_indices = generated[:, -1].reshape((sampler.batch_size, 1))
     if length > 1:
-      generated = generated[:, length-1:]
+      generated = generated[:, length - 1:]
     return generated
 
   def ResetSampleState(self, sampler: samplers.Sampler, state, seed) -> None:
@@ -428,7 +428,7 @@ class TensorFlowBackend(backends.BackendBase):
     if length == 0:
       return
     last_indices = self.inference_indices[:, -1:]
-    self.inference_indices = self.inference_indices[:,:-1]
+    self.inference_indices = self.inference_indices[:, :-1]
 
     expanded_indices = np.zeros((sampler.batch_size, sampler.sequence_length))
     expanded_indices[:, :length] = self.inference_indices
