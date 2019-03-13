@@ -140,8 +140,8 @@ TEST(StringPiece, STLComparator) {
 }
 
 TEST(StringPiece, ComparisonOperators) {
-#define COMPARE(result, op, x, y)                                              \
-  EXPECT_EQ(result, StringPiece((x)) op StringPiece((y)));                     \
+#define COMPARE(result, op, x, y)                          \
+  EXPECT_EQ(result, StringPiece((x)) op StringPiece((y))); \
   EXPECT_EQ(result, StringPiece((x)).compare(StringPiece((y))) op 0)
 
   COMPARE(true, ==, "", "");
@@ -211,16 +211,16 @@ TEST(StringPiece, ComparisonOperators) {
     COMPARE(true, ==, x, y);
     for (int j = 0; j < i; j++) {
       string z = x;
-      z[j] = 'b'; // Differs in position 'j'
+      z[j] = 'b';  // Differs in position 'j'
       COMPARE(false, ==, x, z);
       COMPARE(true, <, x, z);
       COMPARE(true, >, z, x);
       if (j + 1 < i) {
-        z[j + 1] = 'A'; // Differs in position 'j+1' as well
+        z[j + 1] = 'A';  // Differs in position 'j+1' as well
         COMPARE(false, ==, x, z);
         COMPARE(true, <, x, z);
         COMPARE(true, >, z, x);
-        z[j + 1] = 'z'; // Differs in position 'j+1' as well
+        z[j + 1] = 'z';  // Differs in position 'j+1' as well
         COMPARE(false, ==, x, z);
         COMPARE(true, <, x, z);
         COMPARE(true, >, z, x);
@@ -304,10 +304,11 @@ TEST(StringPiece, STL2) {
   const StringPiece c("xyz");
   StringPiece d("foobar");
   const StringPiece e;
-  const StringPiece f("123"
-                      "\0"
-                      "456",
-                      7);
+  const StringPiece f(
+      "123"
+      "\0"
+      "456",
+      7);
 
   d.clear();
   EXPECT_EQ(d.size(), 0);
@@ -549,12 +550,6 @@ TEST(StringPiece, STL2) {
   EXPECT_EQ(d.substr(99), e);
   EXPECT_EQ(d.substr(0, 99), e);
   EXPECT_EQ(d.substr(99, 99), e);
-  // use of npos
-  EXPECT_EQ(a.substr(0, StringPiece::npos), a);
-  EXPECT_EQ(a.substr(23, StringPiece::npos), c);
-  EXPECT_EQ(a.substr(StringPiece::npos, 0), e);
-  EXPECT_EQ(a.substr(StringPiece::npos, 1), e);
-  EXPECT_EQ(a.substr(StringPiece::npos, StringPiece::npos), e);
 
   // Substring constructors.
   EXPECT_EQ(StringPiece(a, 0, 3), b);
@@ -783,7 +778,7 @@ TEST(FindOneCharTest, EdgeCases) {
   EXPECT_EQ(StringPiece::npos, a.rfind('x'));
 }
 
-} // namespace
-} // namespace phd
+}  // namespace
+}  // namespace phd
 
 TEST_MAIN();
