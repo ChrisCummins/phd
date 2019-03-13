@@ -5,7 +5,7 @@ See: <https://github.com/abseil/abseil-py>
 import fnmatch
 import functools
 import sys
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 
 from absl import app as absl_app
 from absl import flags as absl_flags
@@ -247,3 +247,31 @@ def DEFINE_list(name, default, help):
   """Registers a flag whose value must be a list."""
   absl_flags.DEFINE_list(
       name, default, help, module_name=_GetCallingModuleName())
+
+
+def RegisterFlagValidator(flag_name: str,
+                          checker: Callable[[Any], bool],
+                          message: str = 'Flag validation failed'):
+  """Adds a constraint, which will be enforced during program execution.
+
+  The constraint is validated when flags are initially parsed, and after each
+  change of the corresponding flag's value.
+  
+  Args:
+    flag_name: str, name of the flag to be checked.
+    checker: callable, a function to validate the flag.
+        input - A single positional argument: The value of the corresponding
+            flag (string, boolean, etc.  This value will be passed to checker
+            by the library).
+        output - bool, True if validator constraint is satisfied.
+            If constraint is not satisfied, it should either return False or
+            raise flags.ValidationError(desired_error_message).
+    message: str, error text to be shown to the user if checker returns False.
+        If checker raises flags.ValidationError, message from the raised
+        error will be shown.
+
+  Raises:
+    AttributeError: Raised when flag_name is not registered as a valid flag
+        name.
+  """
+  absl_flags.register_validator(flag_name, checker, message)

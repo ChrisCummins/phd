@@ -45,7 +45,7 @@ def _IsPackage(path: pathlib.Path) -> bool:
 
 
 # The --package argument points to either a directory or an archive file.
-flags.register_validator(
+app.RegisterFlagValidator(
     'package',
     # Flags validation occurs whenever this file is imported. During unit
     # testing we have no value for this flag, so the validator should only
