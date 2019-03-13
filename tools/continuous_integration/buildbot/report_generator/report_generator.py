@@ -33,9 +33,10 @@ def GetBazelTarget(testlogs_root: pathlib.Path, xml_path: pathlib.Path):
   return '/' + xml_path[len(str(testlogs_root)):]
 
 
-def GetGitBranchOrDie():
+def GetGitBranchOrDie(repo_dir: str):
   """Get the name of the current git branch."""
-  branches = subprocess.check_output(['git', 'branch'], universal_newlines=True)
+  branches = subprocess.check_output(['git', '-C', repo_dir, 'branch'],
+                                     universal_newlines=True)
   for line in branches.split('\n'):
     if line.startswith('* '):
       return line[2:]
@@ -61,7 +62,7 @@ def main():
   host = FLAGS.host
 
   phd_root = getconfig.GetGlobalConfig().paths.repo_root
-  git_branch = GetGitBranchOrDie()
+  git_branch = GetGitBranchOrDie(phd_root)
   git_commit = subprocess.check_output(
       ['git', '-C', phd_root, 'rev-parse', 'HEAD'],
       universal_newlines=True).rstrip()
