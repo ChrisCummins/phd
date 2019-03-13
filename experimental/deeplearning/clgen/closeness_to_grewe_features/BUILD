@@ -6,9 +6,11 @@ py_library(
     visibility = ["//experimental/deeplearning/clgen:__subpackages__"],
     deps = [
         "//labm8:app",
+        "//labm8:humanize",
         "//labm8:sqlutil",
         "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/pandas",
+        "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
 )
