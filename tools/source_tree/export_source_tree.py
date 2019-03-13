@@ -29,7 +29,6 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
-
 FLAGS = app.FLAGS
 
 app.DEFINE_list('target', [], 'The bazel target(s) to export.')
@@ -66,6 +65,15 @@ EXCLUDED_FILES = [
 ]
 
 
+def BazelQuery(args: typing.List[str], timeout_seconds: int = 360, **kwargs):
+  """Run bazel query with the specified args."""
+  return subprocess.Popen([
+      'timeout', '-s9',
+      str(timeout_seconds), 'bazel', 'query',
+      '--incompatible_remove_native_http_archive=false'
+  ] + args, **kwargs)
+
+
 def MaybeTargetToPath(fully_qualified_target: str, source_root: pathlib.Path
                      ) -> typing.Optional[pathlib.Path]:
   """Determine if a bazel target refers to a file, and if so return the path."""
@@ -88,8 +96,7 @@ def GetDependentFilesOrDie(
     target: str, source_root: pathlib.Path) -> typing.List[pathlib.Path]:
   """Get the file dependencies of the target or die."""
   with fs.chdir(source_root):
-    bazel = subprocess.Popen(['bazel', 'query', f'deps({target})'],
-                             stdout=subprocess.PIPE)
+    bazel = BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
     grep = subprocess.Popen(['grep', '^/'],
                             stdout=subprocess.PIPE,
                             stdin=bazel.stdout,
@@ -108,8 +115,7 @@ def GetBuildFilesOrDie(target: str,
                        repo_root: pathlib.Path) -> typing.List[pathlib.Path]:
   """Get the BUILD files required for the given target."""
   with fs.chdir(repo_root):
-    bazel = subprocess.Popen(['bazel', 'query', f'buildfiles(deps({target}))'],
-                             stdout=subprocess.PIPE)
+    bazel = BazelQuery([f'buildfiles(deps({target}))'], stdout=subprocess.PIPE)
     cut = subprocess.Popen(['cut', '-f1', '-d:'],
                            stdout=subprocess.PIPE,
                            stdin=bazel.stdout)
@@ -181,8 +187,7 @@ def GetPythonRequirementsForTargetOrDie(
     target: str, source_root: pathlib.Path) -> typing.List[str]:
   """Get the subset of requirements.txt which is needed for a target."""
   with fs.chdir(source_root):
-    bazel = subprocess.Popen(['bazel', 'query', f'deps({target})'],
-                             stdout=subprocess.PIPE)
+    bazel = BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
     grep = subprocess.Popen(['grep', '^@pypi__'],
                             stdout=subprocess.PIPE,
                             stdin=bazel.stdout,
