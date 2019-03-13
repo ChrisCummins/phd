@@ -430,8 +430,9 @@ def Duration(duration, separator=' '):
       else:
         return '<1ns'
     elif duration > 1:
-      # Append sub-second component to string.
-      delta_str += f' {int(value)}{unit}'
+      if unit != 's':
+        # Append sub-second component to string.
+        delta_str += f' {int(value)}{unit}'
     else:
       return f'{int(value)}{unit}'
   return delta_str

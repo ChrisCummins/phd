@@ -185,6 +185,7 @@ def test_Duration():
 
 
 def test_FloatDuration():
+  assert '18s' == humanize.Duration(18.0)
   assert '530ms' == humanize.Duration(.53)
   assert '1ms' == humanize.Duration(.001)
   assert '1s 10ms' == humanize.Duration(1.01)
