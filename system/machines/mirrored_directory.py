@@ -2,11 +2,15 @@
 
 This library depends on 'rsync' and 'ssh' being on the system path.
 """
+import datetime
+import os
 import pathlib
 import subprocess
+import time
 import typing
 
 from labm8 import app
+from labm8 import fs
 from labm8 import labtypes
 from system.machines.proto import machine_spec_pb2
 
@@ -50,14 +54,52 @@ class MirroredDirectory(object):
     else:
       return self.spec.remote_path + '/'
 
+  @property
+  def timestamp_relpath(self) -> str:
+    """Get the relpath of a timestamp file."""
+    return self.spec.timestamp_relpath or None
+
+  @property
+  def local_timestamp(self) -> datetime.datetime:
+    """Return the local timestamp."""
+    if not self.timestamp_relpath:
+      return datetime.datetime.fromtimestamp(0)
+    timestamp_path = os.path.join(self.local_path, self.timestamp_relpath)
+    if os.path.isfile(timestamp_path):
+      return datetime.datetime.fromtimestamp(int(fs.Read(timestamp_path)) / 1e6)
+    else:
+      return datetime.datetime.fromtimestamp(0)
+
+  @local_timestamp.setter
+  def local_timestamp(self, timestamp: int) -> None:
+    """Set the local timestamp."""
+    timestamp_path = os.path.join(self.local_path, self.timestamp_relpath)
+    fs.AtomicWrite(timestamp_path, str(timestamp).encode('utf-8'))
+
+  @property
+  def remote_timestamp(self) -> datetime.datetime:
+    """Return the remote timestamp."""
+    if not self.timestamp_relpath:
+      return datetime.datetime.fromtimestamp(0)
+    try:
+      return datetime.datetime.fromtimestamp(
+          int(
+              self._Ssh(
+                  f'cat "{os.path.join(self.remote_path, self.timestamp_relpath)}"'
+              )) / 1e6)
+    except subprocess.CalledProcessError:
+      return datetime.datetime.fromtimestamp(0)
+
+  @remote_timestamp.setter
+  def remote_timestamp(self, timestamp: int) -> None:
+    """Set the remote timestamp."""
+    self._Ssh(f'echo {timestamp} > '
+              f'"{os.path.join(self.remote_path, self.timestamp_relpath)}"')
+
   def RemoteExists(self) -> bool:
     """Test if remote directory exists."""
     try:
-      subprocess.check_output([
-          'ssh', '-p',
-          str(self.host.port), self.host.host, '-t',
-          f'test -d "{self.remote_path}"'
-      ])
+      self._Ssh(f'test -d "{self.remote_path}"')
       return True
     except subprocess.SubprocessError:
       return False
@@ -74,6 +116,13 @@ class MirroredDirectory(object):
     """Push from local to remote paths."""
     if self.spec.pull_only:
       raise InvalidOperation("Mirrored directory has been marked 'pull_only'")
+    if self.timestamp_relpath:
+      if self.local_timestamp < self.remote_timestamp:
+        raise InvalidOperation(
+            "Refusing to push to local directory with out-of-date timestamp")
+      new_timestamp = int(time.time() * 1e6)
+      self.local_timestamp = new_timestamp
+      self.remote_timestamp = new_timestamp
     self.Rsync(self.local_path, self.rsync_remote_path, self.host.port,
                self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
@@ -85,6 +134,13 @@ class MirroredDirectory(object):
     """Pull from remote to local paths."""
     if self.spec.push_only:
       raise InvalidOperation("Mirrored directory has been marked 'push_only'")
+    if self.timestamp_relpath:
+      if self.local_timestamp > self.remote_timestamp:
+        raise InvalidOperation(
+            "Refusing to pull from remote directory with out-of-date timestamp")
+      new_timestamp = int(time.time() * 1e6)
+      self.local_timestamp = new_timestamp
+      self.remote_timestamp = new_timestamp
     self.Rsync(self.rsync_remote_path, self.local_path, self.host.port,
                self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
@@ -92,6 +148,13 @@ class MirroredDirectory(object):
     return (f"MirroredDirectory(name={self.name}, "
             f"local_path='{self.local_path}', "
             f"remote_path='{self.rsync_remote_path}')")
+
+  def _Ssh(self, cmd: str) -> str:
+    """Run command on remote machine and return its output."""
+    return subprocess.check_output(
+        ['ssh', '-p',
+         str(self.host.port), self.host.host, '-t', cmd],
+        universal_newlines=True)
 
   # TODO(cec): Put this in it's own module, with a class RsyncOptions to
   # replace the enormous argument list.

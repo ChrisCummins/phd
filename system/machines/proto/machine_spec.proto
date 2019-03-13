@@ -31,4 +31,7 @@ message MirroredDirectory {
   // or push when pull_only will error.
   optional bool push_only = 5;
   optional bool pull_only = 6;
+
+  // Set this to the relative file of a path to use as a timestamp file.
+  optional string timestamp_relpath = 7;
 }
