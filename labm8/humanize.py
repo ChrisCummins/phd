@@ -38,6 +38,8 @@ import math
 import re
 from typing import Optional
 
+import humanize as humanize_lib
+
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -557,3 +559,11 @@ def AddOrdinalSuffix(value):
       suffix = 'th'
 
   return str(value) + suffix
+
+
+def Delta(delta):
+  return humanize_lib.naturaldelta(delta)
+
+
+def Time(delta):
+  return humanize_lib.naturaltime(delta)

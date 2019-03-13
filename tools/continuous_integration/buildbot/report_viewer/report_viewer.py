@@ -1,6 +1,7 @@
 """A flask server which renders test results."""
 from typing import Any, Dict, List
 
+import datetime
 import flask
 import portpicker
 import sqlalchemy as sql
@@ -129,6 +130,7 @@ def RenderInvocation(host, session, invocation):
           still_broken=len(delta.still_broken),
           still_pass=len(delta.still_pass)),
       invocation_datetime=invocation,
+      invocation_delta=humanize.Time(datetime.datetime.now() - invocation),
       urls=urls,
       build_info=build_info.GetBuildInfo())
 

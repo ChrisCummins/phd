@@ -60,7 +60,9 @@
   <div class="row">
     <div class="col">
       <p class="lead">
-        <a href="{{ urls.github_commit }}">{{ git_branch }}</a> on <a href="{{ urls.buildbot }}">{{ host }}</a> at {{ invocation_datetime.strftime('%Y-%m-%d %H:%M') }}.<br/>
+        <a href="{{ urls.github_commit }}">{{ git_branch }}</a>
+        on <a href="{{ urls.buildbot }}">{{ host }}</a>
+        {{ invocation_delta }}.<br/>
         {{ test_count }} tests in {{ test_duration }}.
       </p>
       <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
