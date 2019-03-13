@@ -46,8 +46,11 @@ def CreateTempFileFromSample(tempdir: pathlib.Path, sample: model_pb2.Sample,
 def Sample(instance: clgen.Instance, db: grewe_features_db.Database,
            profiler: prof.AutoCsvProfiler, pool: multiprocessing.Pool):
   with profiler.Profile(f'Create {FLAGS.batch_size} samples'):
-    samples = instance.model.SampleFast(
-        instance.sampler, min_num_samples=FLAGS.batch_size)
+    samples = instance.model.Sample(
+        instance.sampler,
+        min_num_samples=FLAGS.batch_size,
+        cache_samples=False,
+        print_samples=False)
   prefix = 'phd_experimental_deeplearning_'
   with tempfile.TemporaryDirectory(prefix=prefix) as d:
     d = pathlib.Path(d)

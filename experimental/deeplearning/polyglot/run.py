@@ -56,14 +56,17 @@ def SampleModel(instance: clgen.Instance) -> None:
   sample_dir.mkdir(exist_ok=True)
   num_samples = len(list(sample_dir.iterdir()))
   app.Log(1, 'Need to generate %d samples in %s',
-           max(target_samples - num_samples, 0), sample_dir)
+          max(target_samples - num_samples, 0), sample_dir)
   if num_samples < target_samples:
     sample_lock = lockfile.LockFile(sample_dir / 'LOCK')
     with sample_lock.acquire(replace_stale=True, block=True):
       num_samples = len(list(sample_dir.iterdir()))
       while num_samples < target_samples:
-        samples = instance.model.SampleFast(instance.sampler,
-                                            target_samples - num_samples)
+        samples = instance.model.Sample(
+            instance.sampler,
+            target_samples - num_samples,
+            cache_samples=False,
+            print_samples=False)
         for sample in samples:
           sample_id = crypto.sha256_str(sample.text)
           pbutil.ToFile(sample, sample_dir / f'{sample_id}.pbtxt')
@@ -116,7 +119,7 @@ def main(argv):
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)
   app.Log(1, 'Loaded %d instances in %s ms', len(candidate_instances),
-           humanize.Commas(int((time.time() - start_time) * 1000)))
+          humanize.Commas(int((time.time() - start_time) * 1000)))
 
   while candidate_instances:
     instance = candidate_instances.popleft()

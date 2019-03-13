@@ -171,7 +171,9 @@ class Model(object):
   def Sample(self,
              sampler: samplers.Sampler,
              min_num_samples: int,
-             seed: int = None) -> typing.List[model_pb2.Sample]:
+             seed: int = None,
+             print_samples: bool = True,
+             cache_samples: bool = True) -> typing.List[model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -188,6 +190,9 @@ class Model(object):
         batch size is 10, 10 samples will be returned.
       seed: A numeric value to seed the RNG with. If not present, the RNG is
         seeded randomly.
+      print_samples: Sets whether to print each sample as it is produced.
+      cache_samples: Sets whether to cache each sample as a file in the sampler
+        cache.
 
     Returns:
       A list of Sample protos.
@@ -201,12 +206,13 @@ class Model(object):
     """
     self.Train()
 
-    sample_count = 1
-    self.SamplerCache(sampler).mkdir(exist_ok=True)
+    if cache_samples:
+      self.SamplerCache(sampler).mkdir(exist_ok=True)
+
     with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
                                self.cache.path / 'logs'):
       app.Log(1, "Sampling: '%s'", sampler.start_text)
-      if min_num_samples < 0:
+      if min_num_samples <= 0:
         app.Warning(
             'Entering an infinite sample loop, this process will never end!')
       sample_start_time = labdate.MillisecondsTimestamp()
@@ -221,79 +227,26 @@ class Model(object):
       # Per-sample batch outer loop. Continues until we have as many samples
       # as we want.
       while min_num_samples == 0 or len(samples) < min_num_samples:
-        sample_batch = self._SampleBatch(sampler, atomizer, print_samples=True)
+        sample_batch = self._SampleBatch(
+            sampler, atomizer, print_samples=print_samples)
 
         # Only keep the samples in memory if we are going to return them.
         if min_num_samples > 0:
           samples += sample_batch
 
         # Dump the samples in the sampler cache.
-        for sample in sample_batch:
-          sample_id = crypto.sha256_str(sample.text)
-          sample_path = sample_dir / f'{sample_id}.pbtxt'
-          pbutil.ToFile(sample, sample_path)
+        if cache_samples:
+          for sample in sample_batch:
+            sample_id = crypto.sha256_str(sample.text)
+            sample_path = sample_dir / f'{sample_id}.pbtxt'
+            pbutil.ToFile(sample, sample_path)
 
-      now = labdate.MillisecondsTimestamp()
+      time_now = labdate.MillisecondsTimestamp()
       app.Log(
           1, 'Produced %s samples at a rate of %s ms / sample.',
           humanize.Commas(len(samples)),
           humanize.Commas(
-              int((now - sample_start_time) / max(len(samples), 1))))
-
-    return samples
-
-  def SampleFast(self,
-                 sampler: samplers.Sampler,
-                 min_num_samples: int,
-                 seed: int = None) -> typing.List[model_pb2.Sample]:
-    """Sample a model.
-
-    Same as Sample(), but without printing or caching samples. Because samples
-    are not cached, infinite sampling loops are not supported, since we must
-    return the sample protos at some point.
-
-    Args:
-      sampler: The sampler to sample using.
-      min_num_samples: The minimum number of samples to return. Note that the
-        true number of samples returned may be higher than this value, as
-        sampling occurs in batches. The model will continue producing samples
-        until the lowest mulitple of the sampler batch size property that is
-        larger than this value. E.g. if min_num_samples is 7 and the Sampler
-        batch size is 10, 10 samples will be returned.
-      seed: A numeric value to seed the RNG with. If not present, the RNG is
-        seeded randomly.
-
-    Returns:
-      A list of Sample protos.
-
-    Raises:
-      UnableToAcquireLockError: If the model is locked (i.e. there is another
-        process currently modifying the model).
-      InvalidStartText: If the sampler start text cannot be encoded.
-      InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
-        encoded.
-    """
-    self.Train()
-
-    sample_count = 1
-    with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
-                               self.cache.path / 'logs'):
-      app.Log(1, "Sampling: '%s'", sampler.start_text)
-      sample_start_time = labdate.MillisecondsTimestamp()
-      atomizer = self.corpus.atomizer
-      sampler.Specialize(atomizer)
-      self.backend.InitSampling(sampler, seed)
-      samples = []
-
-      # Per-sample batch outer loop. Continues until we have as many samples
-      # as we want.
-      while len(samples) < min_num_samples:
-        samples += self._SampleBatch(sampler, atomizer)
-
-      now = labdate.MillisecondsTimestamp()
-      app.Log(1, 'Produced %s samples at a rate of %s ms / sample.',
-              humanize.Commas(len(samples)),
-              humanize.Commas(int((now - sample_start_time) / len(samples))))
+              int((time_now - sample_start_time) / max(len(samples), 1))))
 
     return samples
 
