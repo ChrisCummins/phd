@@ -48,6 +48,7 @@ py_library(
         "//labm8:app",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
+        "//third_party/py/scipy",
         "//third_party/py/scipy:scikit_learn",
     ],
 )
