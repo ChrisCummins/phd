@@ -15,6 +15,7 @@ py_library(
         requirement("Click"),
         requirement("itsdangerous"),
         requirement("requests"),
+        requirement("urllib3"),
         "//third_party/py/flask",
     ],
 )

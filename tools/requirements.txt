@@ -156,7 +156,7 @@ tornado==5.0
 traitlets==4.3.2
 trash-cli==0.17.1.14
 umap==0.1.1
-urllib3==1.24.1
+urllib3==1.24.1  # Implicit dependency of requests.
 virtualenv==15.1.0
 wcwidth==0.1.7
 webencodings==0.5.1
