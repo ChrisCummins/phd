@@ -13,6 +13,7 @@ py_library(
         requirement("dash"),
         requirement("plotly"),
         requirement("Click"),
+        requirement("itsdangerous"),
         "//third_party/py/flask",
     ],
 )

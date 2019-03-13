@@ -54,6 +54,7 @@ ipython-genutils==0.2.0
 ipython==5.7.0
 ipywidgets==7.1.2
 isort==4.3.4
+itsdangerous==1.1.0  # Dependency of dash.
 jedi==0.11.1
 jinja2==2.10
 jsonschema==2.6.0
