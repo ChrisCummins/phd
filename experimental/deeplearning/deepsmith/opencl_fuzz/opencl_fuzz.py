@@ -12,8 +12,6 @@ import sys
 import time
 import typing
 
-import gpu.cldrive.env
-
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.difftests import opencl as opencl_filters
 from deeplearning.deepsmith.generators import clgen_pretrained
@@ -127,11 +125,11 @@ def RunBatch(generator: base_generator.GeneratorServiceBase,
   ]
   if len(res.testcases) - len(testcases):
     app.Log(1, 'Discarded %d testcases prior to execution.',
-             len(res.testcases) - len(testcases))
+            len(res.testcases) - len(testcases))
 
   # Evaluate testcases.
   app.Log(1, 'Evaluating %d testcases on %s ...', len(testcases),
-           dut_harness.testbeds[0].opts['platform'][:12])
+          dut_harness.testbeds[0].opts['platform'][:12])
   unfiltered_results = RunTestcases(dut_harness, testcases)
   results = [
       result for result in unfiltered_results if filters.PostExec(result)
@@ -206,7 +204,7 @@ def ResultIsInteresting(
   dt_outcomes = gs_difftester([gs_result, result])
   dt_outcome = dt_outcomes[1]
   app.Log(1, 'Differential test outcome: %s.',
-           deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
+          deepsmith_pb2.DifferentialTest.Outcome.Name(dt_outcome))
 
   # Determine whether we can use the difftest result.
   dt = filters.PostDifftest(
@@ -290,8 +288,8 @@ def TestingLoop(min_interesting_results: int,
           result, interesting_results_dir /
           (str(labdate.MillisecondsTimestamp()) + '.pbtxt'))
 
-  app.Log(1, 
-      'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
+  app.Log(
+      1, 'Stopping after %.2f seconds and %s batches (%.0fms / testcase).\n'
       'Found %s interesting results.',
       time.time() - start_time, humanize.Commas(batch_num),
       (((time.time() - start_time) / (batch_num * batch_size)) * 1000),
@@ -384,7 +382,7 @@ def GetGoldStandardTestHarness() -> base_harness.HarnessBase:
         f"Unrecognized value for --generator: '{FLAGS.generator}'")
   app.Log(1, 'Preparing gold standard testbed.')
   config = GetBaseHarnessConfig(config_class)
-  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
+  config.opencl_env.extend([env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
   gs_harness = harness_class(config)
   assert len(gs_harness.testbeds) >= 1
