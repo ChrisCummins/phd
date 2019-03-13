@@ -226,7 +226,7 @@ class OpenClBacktrackingHelper(object):
     if self._target_features is None:
       return True
     else:
-      assert self.ShouldProceed(sample_in_progress)
+      assert self.ShouldProceed(sample_in_progress, force=True)
       return ((self._previous_feature_distance <=
                FLAGS.experimental_clgen_backtracking_max_feature_distance) or
               (self._previous_feature_distance / self._init_feature_distance <=
