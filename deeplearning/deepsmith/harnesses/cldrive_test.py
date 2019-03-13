@@ -3,7 +3,7 @@ import pathlib
 import subprocess
 import tempfile
 
-import gpu.cldrive.env
+import gpu.cldrive.legacy import env
 import pytest
 
 from deeplearning.deepsmith.harnesses import cldrive
@@ -36,7 +36,7 @@ def abc_testcase() -> deepsmith_pb2.Testcase():
 def abc_harness_config() -> harness_pb2.CldriveHarness:
   """A test fixture which returns an oclgrind harness config."""
   config = harness_pb2.CldriveHarness()
-  config.opencl_env.extend([gpu.cldrive.env.OclgrindOpenCLEnvironment().name])
+  config.opencl_env.extend([env.OclgrindOpenCLEnvironment().name])
   config.opencl_opt.extend([True])
   return config
 
@@ -282,7 +282,7 @@ def test_MakeDriver_optimizations_off():
 
 def test_CldriveHarness_oclgrind_testbed_uneven_name_and_opt():
   """Error is raised if number of opt_opt != number of opencl_env."""
-  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+  oclgrind_env_name = env.OclgrindOpenCLEnvironment().name
 
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
@@ -296,7 +296,7 @@ def test_CldriveHarness_oclgrind_testbed_uneven_name_and_opt():
 
 def test_CldriveHarness_oclgrind_testbed_count_one():
   """Test that correct number of testbeds are instantiated."""
-  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+  oclgrind_env_name = env.OclgrindOpenCLEnvironment().name
 
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind_env_name])
@@ -308,7 +308,7 @@ def test_CldriveHarness_oclgrind_testbed_count_one():
 
 def test_CldriveHarness_oclgrind_testbed_count_two():
   """Test that correct number of testbeds are instantiated."""
-  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+  oclgrind_env_name = env.OclgrindOpenCLEnvironment().name
 
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
@@ -320,7 +320,7 @@ def test_CldriveHarness_oclgrind_testbed_count_two():
 
 def test_CldriveHarness_oclgrind_testbed_names():
   """Test that correct names set on testbeds."""
-  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+  oclgrind_env_name = env.OclgrindOpenCLEnvironment().name
 
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
@@ -333,7 +333,7 @@ def test_CldriveHarness_oclgrind_testbed_names():
 
 def test_CldriveHarness_oclgrind_testbed_opts():
   """Test that opencl_opt option set on testbeds."""
-  oclgrind_env_name = gpu.cldrive.env.OclgrindOpenCLEnvironment().name
+  oclgrind_env_name = env.OclgrindOpenCLEnvironment().name
 
   config = harness_pb2.CldriveHarness()
   config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])

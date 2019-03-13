@@ -46,6 +46,7 @@ py_test(
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//gpu/cldrive/legacy:env",
         "//gpu/oclgrind",
         "//labm8:app",
         "//labm8:test",
