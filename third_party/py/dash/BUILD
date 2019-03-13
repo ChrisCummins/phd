@@ -14,6 +14,7 @@ py_library(
         requirement("plotly"),
         requirement("Click"),
         requirement("itsdangerous"),
+        requirement("requests"),
         "//third_party/py/flask",
     ],
 )
