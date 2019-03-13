@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block header %}
-<title>{{ host }}</title>
+<title>{{ delta.broken + delta.still_broken }} failing - {{ host }}</title>
 
 <style>
   #test_results .card-header {
