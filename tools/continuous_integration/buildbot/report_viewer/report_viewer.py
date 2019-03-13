@@ -1,7 +1,7 @@
 """A flask server which renders test results."""
+import datetime
 from typing import Any, Dict, List
 
-import datetime
 import flask
 import portpicker
 import sqlalchemy as sql
@@ -161,7 +161,6 @@ def index_invocation(host: str, invocation_num: int):
 
 def main():
   """Main entry point."""
-  # TODO: Implement!
   flask_app.run(port=FLAGS.port, debug=FLAGS.debug_flask_server, host='0.0.0.0')
 
 

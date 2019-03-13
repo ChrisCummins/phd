@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block header %}
+<title>CLgen RT</title>
+
+<style>
+  #console {
+    font-size: 1em;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <h1>Real Time CLgen</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <pre id="console"></pre>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript">
+  var targetContainer = $('#console');
+  var eventSource = new EventSource("/append_state");
+  eventSource.onmessage = function(e) {
+    var data = JSON.parse(e.data)
+    targetContainer.text(targetContainer.text() + data['text']);
+  };
+</script>
+{% endblock %}

@@ -477,3 +477,87 @@ class BacktrackingModel(models.Model):
       app.Log(2, 'Backtracking failed to complete after %d steps', step_count)
 
     return self.MakeProgram(sample_in_progress, backtracker, atomizer)
+
+  # TODO(cec): Just-playing-around hack code. Do not use!
+  def SampleOneWithBacktrackingToTextStream(
+      self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
+      backtracker: OpenClBacktrackingHelper) -> typing.List[str]:
+    """Produce a single sample using backtracking.
+
+    Args:
+      sampler: A Sampler instance, used to determine the start text, and when to
+        terminate sampling.
+      atomizer: The corpus vocabulary atomizer.
+      backtracker: An instance of the backtracking helper class.
+
+    Returns:
+      A sample, as a sequence of strings.
+    """
+
+    def Data(data: Dict[str, Any]):
+      return f"retry: 100\ndata: {json.dumps(data)}\n\n"
+
+    # During sampling, 'sample_in_progress' contains the sequence of tokens that
+    # is restored when backtracking.
+    sample_in_progress = sampler.tokenized_start_text.copy()
+    rollback_state, rollback_index = self.backend.EvaluateSampleState(sampler)
+    yield {'text': ''.join(sample_in_progress)}
+
+    # Generate a batch of candidates.
+    for step_count in range(
+        1, FLAGS.experimental_clgen_backtracking_max_steps + 1):
+      self._logger.OnSampleStep(backtracker, 0, len(sample_in_progress))
+      app.Log(4, 'Current sample in progress: `%s`',
+              ''.join(sample_in_progress))
+
+      yield {'text': 'TODO'}
+      # Generate a batch of candidates statements to choose from.
+      candidate_statements = []
+      for _ in range(FLAGS.experimental_clgen_backtracking_max_attempts):
+        candidate_statements.extend(
+            self.TryToGenerateCandidateStatements(
+                sample_in_progress, rollback_state, rollback_index, backtracker,
+                sampler, atomizer))
+        if (len(candidate_statements) >=
+            FLAGS.experimental_clgen_backtracking_candidates_per_step):
+          break
+
+      if not candidate_statements:
+        app.Log(2,
+                "Failed to produce any candidate statement after %d attempts",
+                FLAGS.experimental_clgen_backtracking_max_attempts)
+        break
+
+      # Select the best candidate.
+      best_candidate = min(
+          candidate_statements, key=lambda x: x.feature_distance)
+      app.Log(
+          2,
+          'Selected best feature distance (%f) at step %d from candidates: %s',
+          best_candidate.feature_distance, step_count,
+          SummarizeFloats(c.feature_distance for c in candidate_statements))
+      app.Log(4, 'Selected best statement: %s',
+              ''.join(best_candidate.statement))
+
+      # Set the sampler's rollback state to be the state produced by feeding
+      # the best candidate in the input, so that future samples start from
+      # the right state
+      if len(best_candidate.statement) > 0:
+        sample_in_progress += best_candidate.statement
+        encoded_best_candidate = atomizer.AtomizeString(''.join(
+            best_candidate.statement))
+        arr = np.concatenate([rollback_index, encoded_best_candidate])
+        self.backend.ResetSampleState(sampler, state=rollback_state, seed=arr)
+        rollback_state, rollback_index = self.backend.EvaluateSampleState(
+            sampler)
+
+      app.Log(5, 'Current sample at step %d: %s', step_count,
+              ''.join(sample_in_progress))
+
+      if backtracker.IsDone(sample_in_progress):
+        app.Log(2, 'Backtracking complete after %d steps', step_count)
+        break
+    else:
+      app.Log(2, 'Backtracking failed to complete after %d steps', step_count)
+
+    yield {'text': self.MakeProgram(sample_in_progress, backtracker, atomizer)}

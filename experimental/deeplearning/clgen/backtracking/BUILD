@@ -72,3 +72,25 @@ py_library(
         "//labm8:humanize",
     ],
 )
+
+py_binary(
+    name = "server",
+    srcs = ["server.py"],
+    data = [
+        "//experimental/deeplearning/clgen/backtracking/static",
+        "//experimental/deeplearning/clgen/backtracking/templates",
+    ],
+    deps = [
+        ":backtracking",
+        ":backtracking_model",
+        ":logger",
+        "//config:build_info",
+        "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:humanize",
+        "//labm8:prof",
+        "//third_party/py/flask",
+        "//third_party/py/portpicker",
+        "//third_party/py/sqlalchemy",
+    ],
+)

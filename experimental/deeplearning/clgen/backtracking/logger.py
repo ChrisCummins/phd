@@ -9,7 +9,23 @@ from labm8 import humanize
 FLAGS = app.FLAGS
 
 
-class BacktrackingDatabaseLogger(object):
+class BacktrackingLogger(object):
+
+  def OnSampleStart(self,
+                    backtracker: backtracking_model.OpenClBacktrackingHelper):
+    pass
+
+  def OnSampleStep(self,
+                   backtracker: backtracking_model.OpenClBacktrackingHelper,
+                   attempt_count: int, token_count: int):
+    pass
+
+  def OnSampleEnd(self,
+                  backtracker: backtracking_model.OpenClBacktrackingHelper):
+    pass
+
+
+class BacktrackingDatabaseLogger(BacktrackingLogger):
 
   def __init__(self, db: backtracking_db.Database):
     self._db = db
@@ -39,8 +55,9 @@ class BacktrackingDatabaseLogger(object):
 
     runtime_ms = int((time.time() - self._start_time) * 1000)
     app.Log(1, 'Reached step %d after %d attempts, %d tokens', self._step_count,
-             attempt_count, token_count)
-    app.Log(1, 'Job %d started %s', job_id, humanize.Duration(runtime_ms / 1000))
+            attempt_count, token_count)
+    app.Log(1, 'Job %d started %s', job_id,
+            humanize.Duration(runtime_ms / 1000))
 
     with self._db.Session(commit=True) as session:
       features = session.GetOrAdd(
