@@ -297,7 +297,6 @@ class BacktrackingModel(models.Model):
   def _SampleBatch(self,
                    sampler: samplers.Sampler,
                    atomizer: atomizers.AtomizerBase,
-                   batch_size: int,
                    print_samples: typing.Optional[bool] = False
                   ) -> typing.List[model_pb2.Sample]:
     """Run a single iteration of the batched sample inner-loop."""
