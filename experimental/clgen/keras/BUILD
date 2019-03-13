@@ -36,6 +36,7 @@ py_test(
     srcs = ["log_to_file_test.py"],
     deps = [
         "//labm8:app",
+        "//labm8:logutil",
         "//labm8:test",
     ],
 )
