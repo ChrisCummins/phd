@@ -81,7 +81,7 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
 
 def Main():
   """Main entry point."""
-  app.FLAGS(['argv[0]', '-v=1'])
+  app.FLAGS(['argv[0]', '--vmodule=*=5'])
 
   # Get the file path of the calling function. This is used to identify the
   # script to run the tests of.
