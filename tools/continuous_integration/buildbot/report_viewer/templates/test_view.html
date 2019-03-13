@@ -1,7 +1,9 @@
-{% extends "layout.html" %}
+{% extends "base.html" %}
 
 {% block header %}
 <title>{{ host }}</title>
+
+<meta http-equiv="refresh" content="60">
 
 <style>
   #test_results .card-header {
@@ -25,7 +27,11 @@
 <div class="container">
   <div class="row">
     <div class="col">
-      <h1>{{ host }} at {{ invocation_datetime }}</h1>
+      <h1><a href="{{ urls.buildbot }}">{{ host }}</a></h1>
+      <p class="lead">
+        <a href="{{ urls.github_commit }}">{{ git_branch }}</a> at {{ invocation_datetime }}.<br/>
+        {{ test_count }} tests in {{ test_duration }}.
+      </p>
       <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
         {% if delta.broken %}{{ delta.broken }} broken.{% endif %}
         {% if delta.still_broken %}{{ delta.still_broken }} still broken.{% endif %}
