@@ -639,5 +639,6 @@ py_test(
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/pytest",
+        "//third_party/py/seaborn",
     ],
 )
