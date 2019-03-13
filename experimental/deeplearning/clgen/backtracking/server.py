@@ -59,11 +59,17 @@ def SampleStream():
   logger = MyLogger()
 
   model = backtracking_model.BacktrackingModel(config.model, logger=logger)
+  model.corpus.Create()
   sampler = samplers.Sampler(config.sampler)
-
-  model.Sample(sampler, FLAGS.clgen_min_sample_count, FLAGS.sample_seed)
-
-  yield Data({'text': f'time now: {int(time.time())}\n'})
+  atomizer = model.corpus.atomizer
+  sampler.Specialize(atomizer)
+  batch_size = model.backend.InitSampling(sampler, 0)
+  backtracker = backtracking_model.OpenClBacktrackingHelper(
+      atomizer, model._target_features)
+  model.backend.InitSampleBatch(sampler)
+  logger.OnSampleStart(backtracker)
+  yield from model.SampleOneWithBacktrackingToTextStream(
+      sampler, atomizer, backtracker)
 
 
 @flask_app.route("/append_state")

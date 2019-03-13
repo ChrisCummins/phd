@@ -3,13 +3,18 @@ import collections
 import pathlib
 import random
 import re
+import html
 import shutil
+import json
 import tempfile
+import time
 import typing
+from typing import Dict, Any
 
 import numpy as np
 import scipy
 
+from labm8 import humanize
 from deeplearning.clgen import errors as clgen_errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
@@ -390,6 +395,9 @@ class BacktrackingModel(models.Model):
           else:
             app.Log(4, 'Rejecting candidate statement: `%s`',
                     ''.join(candidate_statement))
+            candidate_statements.append(
+                CandidateStatement(
+                    statement=candidate_statement, feature_distance=None))
           break
 
     return candidate_statements
@@ -494,30 +502,46 @@ class BacktrackingModel(models.Model):
       A sample, as a sequence of strings.
     """
 
+    data = {'text': '', 'status': 'running', 'elapsed': 0}
+
     def Data(data: Dict[str, Any]):
+      data['elapsed'] = humanize.Duration(time.time() - start_time)
       return f"retry: 100\ndata: {json.dumps(data)}\n\n"
+
+    start_time = time.time()
 
     # During sampling, 'sample_in_progress' contains the sequence of tokens that
     # is restored when backtracking.
     sample_in_progress = sampler.tokenized_start_text.copy()
     rollback_state, rollback_index = self.backend.EvaluateSampleState(sampler)
-    yield {'text': ''.join(sample_in_progress)}
+    data['text'] = ''.join(sample_in_progress)
+    yield Data(data)
 
     # Generate a batch of candidates.
     for step_count in range(
         1, FLAGS.experimental_clgen_backtracking_max_steps + 1):
       self._logger.OnSampleStep(backtracker, 0, len(sample_in_progress))
+      data['text'] = ''.join(sample_in_progress)
+      data['status'] = f'step {step_count}'
       app.Log(4, 'Current sample in progress: `%s`',
               ''.join(sample_in_progress))
-
-      yield {'text': 'TODO'}
+      yield Data(data)
       # Generate a batch of candidates statements to choose from.
       candidate_statements = []
       for _ in range(FLAGS.experimental_clgen_backtracking_max_attempts):
+        yield Data(data)
         candidate_statements.extend(
             self.TryToGenerateCandidateStatements(
                 sample_in_progress, rollback_state, rollback_index, backtracker,
                 sampler, atomizer))
+        if candidate_statements:
+          data['text'] = html.escape(''.join(
+              sample_in_progress)) + '<span class="text-danger">' + html.escape(
+                  ''.join(candidate_statements[-1].statement)) + '</span>'
+        yield Data(data)
+        candidate_statements = [
+            c for c in candidate_statements if c.feature_distance is not None
+        ]
         if (len(candidate_statements) >=
             FLAGS.experimental_clgen_backtracking_candidates_per_step):
           break
