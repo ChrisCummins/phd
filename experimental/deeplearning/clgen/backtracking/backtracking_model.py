@@ -337,23 +337,23 @@ class BacktrackingModel(models.Model):
 
     return [sample]
 
-  def GenerateCandidateStatements(
-      self, initial_text, initial_state, initial_index,
+  def TryToGenerateCandidateStatements(
+      self, initial_text: typing.List[str], initial_state, initial_index,
       backtracker: OpenClBacktrackingHelper, sampler: samplers.Sampler,
-      atomizer: atomizers.AtomizerBase) -> CandidateStatement:
-    """Generate a candidate statement for the current sample in progress.
+      atomizer: atomizers.AtomizerBase) -> typing.List[CandidateStatement]:
+    """Try to generate valid candidate statements.
 
     Args:
-      initial_text: The previously generated and accepted src
-      initial_state: The initial state of the sampler 
-      initial_index: The index fed to the sampler
+      initial_text: The previously generated and accepted src.
+      initial_state: The initial state of the sampler.
+      initial_index: The index fed to the sampler.
       backtracker: A backtracking helper instance.
       sampler: A sampler.
       atomizer: An atomizer.
 
     Returns:
-      A tuple candidate sequence of sampled tokens, and the feature distance of
-      this candidate.
+      A list of tuples, where each tuple contains a candidate sequence of
+      sampled tokens and the feature distance of this candidate.
     """
     init_feature_distance = backtracker.feature_distance
     self.backend.ResetSampleState(
@@ -387,19 +387,12 @@ class BacktrackingModel(models.Model):
                 CandidateStatement(
                     statement=candidate_statement,
                     feature_distance=new_feature_distance))
-            break
           else:
             app.Log(4, 'Rejecting candidate statement: `%s`',
                     ''.join(candidate_statement))
-            break
+          break
 
-    if len(candidate_statements) == 0:
-      # Reached the end of the sample batch without generating a valid statement.
-      app.Log(3, "Didn't reach checkpoint after %d tokens",
-              len(sampled_indices[0]))
-      return [CandidateStatement(statement=[], feature_distance=np.inf)]
-    else:
-      return candidate_statements
+    return candidate_statements
 
   def MakeProgram(self, sampled_tokens: typing.List[str],
                   backtracker: OpenClBacktrackingHelper,
@@ -427,21 +420,31 @@ class BacktrackingModel(models.Model):
     sample_in_progress = sampler.tokenized_start_text.copy()
     rollback_state, rollback_index = self.backend.EvaluateSampleState(sampler)
 
+    # Generate a batch of candidates.
     for step_count in range(
         1, FLAGS.experimental_clgen_backtracking_max_steps + 1):
       self._logger.OnSampleStep(backtracker, 0, len(sample_in_progress))
       app.Log(4, 'Current sample in progress: `%s`',
               ''.join(sample_in_progress))
 
-      # Generate a batch of candidates and select the best.
+      # Generate a batch of candidates statements to choose from.
       candidate_statements = []
-      while len(candidate_statements) < \
-              FLAGS.experimental_clgen_backtracking_candidates_per_step:
+      for _ in range(FLAGS.experimental_clgen_backtracking_max_attempts):
         candidate_statements.extend(
-            self.GenerateCandidateStatements(sample_in_progress, rollback_state,
-                                             rollback_index, backtracker,
-                                             sampler, atomizer))
+            self.TryToGenerateCandidateStatements(
+                sample_in_progress, rollback_state, rollback_index, backtracker,
+                sampler, atomizer))
+        if (len(candidate_statements) >=
+            FLAGS.experimental_clgen_backtracking_candidates_per_step):
+          break
 
+      if not candidate_statements:
+        app.Log(2,
+                "Failed to produce any candidate statement after %d attempts",
+                FLAGS.experimental_clgen_backtracking_max_attempts)
+        break
+
+      # Select the best candidate.
       best_candidate = min(
           candidate_statements, key=lambda x: x.feature_distance)
       app.Log(
