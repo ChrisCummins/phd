@@ -8,7 +8,6 @@ from labm8 import app
 from labm8 import test
 from tools.code_style.linters import linters_lib
 
-
 FLAGS = app.FLAGS
 
 
@@ -22,7 +21,6 @@ def test_WhichOrDie_file_exists(tempdir: pathlib.Path):
 def test_WhichOrDie_file_doesnt_exist(tempdir: pathlib.Path):
   """Test that error raised when file not in PATH."""
   os.environ['PATH'] = str(tempdir)
-  (tempdir / 'a').touch()
   with pytest.raises(SystemExit):
     linters_lib.WhichOrDie('a')
 
