@@ -7,13 +7,14 @@ from labm8 import app
 from labm8 import fs
 from system.dpack import dpack
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string('musiclib', None, 'The path of the music library.')
 app.DEFINE_boolean('update_musiclib_manifests', False, '')
 
 # The --package argument points to either a directory or an archive file.
-flags.register_validator(
+app.RegisterFlagValidator(
     'musiclib',
     # Flags validation occurs whenever this file is imported. During unit
     # testing we have no value for this flag, so the validator should only

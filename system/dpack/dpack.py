@@ -18,6 +18,7 @@ from labm8 import labdate
 from labm8 import pbutil
 from system.dpack.proto import dpack_pb2
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string('package', None, 'The path of the target package.')
@@ -60,7 +61,7 @@ def _IsManifest(path: pathlib.Path) -> bool:
 
 
 # The --sidecar argument optionally points to a DataPackage message.
-flags.register_validator(
+app.RegisterFlagValidator(
     'sidecar',
     lambda path: _IsManifest(path) if path else True,
     message='--sidecar path not found.')

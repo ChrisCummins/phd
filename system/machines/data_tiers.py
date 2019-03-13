@@ -15,12 +15,13 @@ from labm8 import humanize
 from labm8 import pbutil
 from system.machines.proto import data_tiers_pb2
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_string('data_tiers', None, 'The path of the directory to package.')
 app.DEFINE_boolean('summary', False, 'TODO')
 
-flags.register_validator(
+app.RegisterFlagValidator(
     'data_tiers',
     lambda path: pbutil.ProtoIsReadable(path, data_tiers_pb2.DataTiers()),
     message='--data_tiers must be a DataTiers message.')
