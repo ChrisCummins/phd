@@ -64,10 +64,10 @@ def test_OpenClBacktrackingHelper_TryToCloseProgram_depth2(
     backtracker: backtracking_model.OpenClBacktrackingHelper):
   assert backtracker.TryToCloseProgram("""kernel void A() {
   int a = 0;
-  if (global_global(0) < 10) {
+  if (get_global_id(0) < 10) {
     int a = 2;""") == """kernel void A() {
   int a = 0;
-  if (global_global(0) < 10) {
+  if (get_global_id(0) < 10) {
     int a = 2;}}"""
 
 
@@ -101,33 +101,33 @@ def test_OpenClBacktrackingHelper_TryToCloseProgram_not_end_of_statement(
 
 def test_OpenClBacktrackingHelper_ShouldProceed_depth1(
     backtracker: backtracking_model.OpenClBacktrackingHelper):
-  assert backtracker.ShouldProceed("""kernel void A() {
-  int a = 0;""")
+  assert backtracker.ShouldProceed("""kernel void A(global int* a) {
+  int b = 0;""")
 
 
 def test_OpenClBacktrackingHelper_ShouldProceed_depth2(
     backtracker: backtracking_model.OpenClBacktrackingHelper):
-  assert backtracker.ShouldProceed("""kernel void A() {
-  int a = 0;
-  if (global_global(0) < 10) {
-    int a = 2;""")
+  assert backtracker.ShouldProceed("""kernel void A(global int* a) {
+  int b = 0;
+  if (get_global_id(0) < 10) {
+    int c = 2;""")
 
 
 def test_OpenClBacktrackingHelper_ShouldProceed_loop1(
     backtracker: backtracking_model.OpenClBacktrackingHelper):
-  assert backtracker.ShouldProceed("""kernel void A() {
+  assert backtracker.ShouldProceed("""kernel void A(global int* a) {
   for (int i = 0;""")
 
 
 def test_OpenClBacktrackingHelper_ShouldProceed_loop2(
     backtracker: backtracking_model.OpenClBacktrackingHelper):
-  assert backtracker.ShouldProceed("""kernel void A() {
+  assert backtracker.ShouldProceed("""kernel void A(global int* a) {
   for (int i = 0; i < 10;""")
 
 
 def test_OpenClBacktrackingHelper_ShouldProceed_loop3(
     backtracker: backtracking_model.OpenClBacktrackingHelper):
-  assert backtracker.ShouldProceed("""kernel void A() {
+  assert backtracker.ShouldProceed("""kernel void A(global int* a) {
   for (int i = 0; i < 10; ++i) { int x = 10;""")
 
 

@@ -1,20 +1,19 @@
 """A CLgen model with backtracking inference."""
 import collections
+import html
+import json
 import pathlib
 import random
 import re
-import html
 import shutil
-import json
 import tempfile
 import time
 import typing
-from typing import Dict, Any
+from typing import Any, Dict
 
 import numpy as np
 import scipy
 
-from labm8 import humanize
 from deeplearning.clgen import errors as clgen_errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
@@ -25,6 +24,8 @@ from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import app
+from labm8 import fs
+from labm8 import humanize
 from labm8 import labdate
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
@@ -95,12 +96,13 @@ class OpenClBacktrackingHelper(object):
     self.symtok.Specialize(atomizer)
 
     # Feature hill climbing state.
-    self._target_features = target_features
-    self._previous_features = np.array([0, 0, 0, 0], dtype=np.int)
-    self._init_feature_distance = scipy.spatial.distance.euclidean(
-        self._previous_features, self._target_features)
     self._previous_src = ''
-    self._previous_feature_distance = self._init_feature_distance
+    self._target_features = target_features
+    if self._target_features is not None:
+      self._previous_features = np.array([0, 0, 0, 0], dtype=np.int)
+      self._init_feature_distance = scipy.spatial.distance.euclidean(
+          self._previous_features, self._target_features)
+      self._previous_feature_distance = self._init_feature_distance
 
   def __del__(self):
     shutil.rmtree(self.working_dir)
@@ -131,26 +133,28 @@ class OpenClBacktrackingHelper(object):
     """
     candidate_src = self.TryToCloseProgram(sample_in_progress)
     if not candidate_src:
-      # Was unable to create a syntactically valid program from the partial
-      # sample.
+      app.Log(
+          4,
+          "Failed to produce syntactically valid program from partial sample")
       return False
 
     # Feature extractor reads from files.
     path = self.working_dir / 'kernel.cl'
-    with open(path, 'w') as f:
-      f.write(candidate_src)
+    fs.Write(path, candidate_src.encode('utf-8'))
 
     features = self.TryToExtractFeatures(path)
     if features is None:
-      # Was unable to extract features from the partial sample.
+      app.Log(4, "Failed to extract features from partial sample")
       return False
 
     # Grewe feature extractor is robust to code that doesn't compile (i.e. code
     # containing implicit declarations). Run the code through clang to check
-    # if it actually compiles, else reject it.
+    # if it actually compiles, else reject it. This is more expensive than the
+    # feature extractor, so run it after.
     try:
       opencl.Compile(candidate_src)
     except clgen_errors.ClangException:
+      app.Log(4, "Failed to compile partial sample")
       return False
 
     # Implement pure hill climbing approach to match a target feature vector.
@@ -196,7 +200,7 @@ class OpenClBacktrackingHelper(object):
           features[0].coalesced_memory_access_count,
       ],
                       dtype=int)
-    except grewe_features.FeatureExtractionError as e:
+    except grewe_features.FeatureExtractionError:
       pass
 
   def TryToCloseProgram(
