@@ -3,18 +3,18 @@
 import pathlib
 
 import matplotlib
-import pandas as pd
 
 matplotlib.use('Agg')
 
 import numpy as np
+import pandas as pd
 import pytest
 from matplotlib import pyplot as plt
 
 from labm8 import test
 from labm8 import viz
-
 from labm8 import app
+
 FLAGS = app.FLAGS
 
 
