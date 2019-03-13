@@ -158,6 +158,7 @@ urllib3==1.24.1
 virtualenv==15.1.0
 wcwidth==0.1.7
 webencodings==0.5.1
+Werkzeug==0.14.1  # Implicit dependency of Flask.
 wget==3.2
 widgetsnbextension==3.1.4
 wrapt==1.10.11

@@ -12,5 +12,6 @@ py_library(
     deps = [
         requirement("Flask"),
         requirement("flask-cors"),
+        requirement("Werkzeug"),
     ],
 )
