@@ -10,7 +10,6 @@ import subprocess
 import sys
 import threading
 
-
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
 # WARNING: Moving this file may require updating this path!
@@ -38,9 +37,12 @@ BUILDIFIER = WhichOrDie('buildifier')
 CLANG_FORMAT = WhichOrDie('clang-format')
 YAPF = WhichOrDie('yapf')
 SQLFORMAT = WhichOrDie('sqlformat')
+JSBEAUTIFY = WhichOrDie('js-beautify')
 
 YAPF_RC = os.path.join(_PHD_ROOT, 'tools/code_style/yapf.yml')
 assert os.path.isfile(YAPF_RC)
+JSBEAUTIFY_RC = os.path.join(_PHD_ROOT, 'tools/code_style/jsbeautifyrc.json')
+assert os.path.isfile(JSBEAUTIFY_RC)
 
 
 def Print(*args, **kwargs):
@@ -159,6 +161,12 @@ class SqlFormatThread(LinterThread):
       ])
 
 
+class JsBeautifyThread(LinterThread):
+
+  def run(self):
+    ExecOrDie([JSBEAUTIFY, '--config', JSBEAUTIFY_RC] + self._paths)
+
+
 class LinterActions(object):
 
   def __init__(self, paths):
@@ -167,6 +175,7 @@ class LinterActions(object):
     self._clang_format = []
     self._yapf = []
     self._sqlformat = []
+    self._jsbeautify = []
     self._modified_paths = []
 
     for path in paths:
@@ -182,6 +191,9 @@ class LinterActions(object):
         self._yapf.append(path)
       elif extension == '.sql':
         self._sqlformat.append(path)
+      elif (extension == '.html' or extension == '.css' or
+            extension == '.scss' or extension == '.js'):
+        self._jsbeautify.append(path)
 
   @property
   def paths(self):
@@ -189,7 +201,8 @@ class LinterActions(object):
 
   @property
   def paths_with_actions(self):
-    return self._buildifier + self._clang_format + self._yapf + self._sqlformat
+    return (self._buildifier + self._clang_format + self._yapf + self._sqlformat
+            + self._jsbeautify)
 
   @property
   def modified_paths(self):
@@ -206,6 +219,8 @@ class LinterActions(object):
       linter_threads.append(YapfThread(self._yapf))
     if self._sqlformat:
       linter_threads.append(SqlFormatThread(self._sqlformat))
+    if self._jsbeautify:
+      linter_threads.append(JsBeautifyThread(self._jsbeautify))
 
     for thread in linter_threads:
       thread.start()
