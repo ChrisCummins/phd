@@ -11,6 +11,7 @@ py_library(
     srcs = ["flask.py"],
     deps = [
         requirement("Flask"),
+        requirement("Flask-Compress"),
         requirement("flask-cors"),
         requirement("Werkzeug"),
     ],
