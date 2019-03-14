@@ -449,6 +449,9 @@ class BacktrackingModel(models.Model):
             FLAGS.experimental_clgen_backtracking_candidates_per_step):
           break
 
+      candidate_statements = [
+          c for c in candidate_statements if c.feature_distance is not None
+      ]
       if not candidate_statements:
         app.Log(2,
                 "Failed to produce any candidate statement after %d attempts",
