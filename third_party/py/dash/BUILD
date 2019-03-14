@@ -17,6 +17,7 @@ py_library(
         requirement("requests"),
         requirement("urllib3"),
         requirement("chardet"),
+        requirement("certifi"),
         "//third_party/py/flask",
     ],
 )
