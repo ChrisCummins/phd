@@ -11,9 +11,9 @@ FLAGS = app.FLAGS
 
 
 @decorators.timeout_without_exception(seconds=5)
-def _RunDashApp(app: dash.Dash) -> None:
+def _RunDashApp(dash_app: dash.Dash) -> None:
   """Run dash app server for 10 seconds."""
-  app.RunWithArgs_server(debug=True, port=portpicker.pick_unused_port())
+  dash_app.run_server(debug=True, port=portpicker.pick_unused_port())
 
 
 def test_CreateApp_server_smoke_test():
