@@ -8,7 +8,8 @@
 //
 // Extracts static features from OpenCL source files.
 //
-//     Usage: ./features [-header-only] [-extra-arg=<arg> ...] <file> [files ...]
+//     Usage: ./features [-header-only] [-extra-arg=<arg> ...] <file> [files
+//     ...]
 //
 // Output is comma separated values in the following format:
 //
@@ -23,9 +24,24 @@
 //     F2:coalesced/mem  derived feature
 //     F4:comp/mem       derived feature
 //
-// Written by Zheng Wang <z.wang@lancaster.ac.uk>.
-// Modified by Chris Cummins <chrisc.101@gmail.com>.
+// Originally written by Zheng Wang <z.wang@lancaster.ac.uk>.
 //
+// Copyright 2016, 2017, 2018, 2019 Chris Cummins <chrisc.101@gmail.com>.
+//
+// This file is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+#include <stdio.h>
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -33,7 +49,6 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include <stdio.h>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -64,7 +79,6 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "clang/Rewrite/Frontend/Rewriters.h"
 
-
 class ParameterInfo {
  public:
   enum VarType { GLOBAL, LOCAL, OTHER };
@@ -83,7 +97,6 @@ class ParameterInfo {
   VarType getType() { return type; }
 };
 
-
 class FuncInfo {
   std::string kernelName;
   std::vector<ParameterInfo> vp;
@@ -97,15 +110,26 @@ class FuncInfo {
   bool isOCLKernel;
 
  public:
-  FuncInfo() :
-    global_mem_ls(0), comp_inst_count(0),
-    rational_inst_count(0), barrier_count(0), cols_mem_access_count(0),
-    local_mem_ls_count(0), atomic_op_count(0), isOCLKernel(false) {}
+  FuncInfo()
+      : global_mem_ls(0),
+        comp_inst_count(0),
+        rational_inst_count(0),
+        barrier_count(0),
+        cols_mem_access_count(0),
+        local_mem_ls_count(0),
+        atomic_op_count(0),
+        isOCLKernel(false) {}
 
-  explicit FuncInfo(std::string _kernelName) :
-   kernelName(_kernelName), global_mem_ls(0), comp_inst_count(0),
-   rational_inst_count(0), barrier_count(0), cols_mem_access_count(0),
-   local_mem_ls_count(0), atomic_op_count(0), isOCLKernel(false) {}
+  explicit FuncInfo(std::string _kernelName)
+      : kernelName(_kernelName),
+        global_mem_ls(0),
+        comp_inst_count(0),
+        rational_inst_count(0),
+        barrier_count(0),
+        cols_mem_access_count(0),
+        local_mem_ls_count(0),
+        atomic_op_count(0),
+        isOCLKernel(false) {}
 
   void setAsOclKernel() { isOCLKernel = true; }
 
@@ -173,14 +197,12 @@ class FuncInfo {
 
   bool isGlobalVar(std::string var) {
     for (unsigned i = 0; i < vp.size(); i++) {
-      if (vp[i].getVarName() == var)
-        return true;
+      if (vp[i].getVarName() == var) return true;
     }
 
     return false;
   }
 };
-
 
 //
 // RecursiveASTVisitor --- the big-kahuna visitor that traverses
@@ -189,9 +211,8 @@ class FuncInfo {
 class RecursiveASTVisitor
     : public clang::RecursiveASTVisitor<RecursiveASTVisitor> {
  private:
-  std::vector<FuncInfo*> FuncInfoVec;
+  std::vector<FuncInfo *> FuncInfoVec;
   FuncInfo *pCurKI;
-
 
   // Return a boolean value to indicate if the array access is coalescaed.
   bool processArrayIndices(clang::ArraySubscriptExpr *Node) {
@@ -223,8 +244,7 @@ class RecursiveASTVisitor
     }
 
     clang::IntegerLiteral *IntV = clang::dyn_cast<clang::IntegerLiteral>(tExpr);
-    if (IntV)
-      return true;
+    if (IntV) return true;
 
     clang::ArraySubscriptExpr *aExpr =
         clang::dyn_cast<clang::ArraySubscriptExpr>(tExpr);
@@ -235,10 +255,8 @@ class RecursiveASTVisitor
     return true;
   }
 
-
   bool processArrayIdxBinaryOperator(clang::BinaryOperator *bo) {
-    if (!(bo->isMultiplicativeOp() || bo->isAdditiveOp()))
-      return false;
+    if (!(bo->isMultiplicativeOp() || bo->isAdditiveOp())) return false;
 
     clang::Expr *lhs = bo->getLHS();
     clang::Expr *rhs = bo->getRHS();
@@ -272,26 +290,23 @@ class RecursiveASTVisitor
     return false;
   }
 
-
   FuncInfo *findFunctionInfo(std::string funcName) {
     for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
-      if (FuncInfoVec[i]->getFuncName() == funcName)
-        return FuncInfoVec[i];
+      if (FuncInfoVec[i]->getFuncName() == funcName) return FuncInfoVec[i];
     }
 
     return NULL;
   }
 
-
   void InitializeOCLRoutines() {
     // Utility macros.
 #define DEFAULT_OCL_ROUTINE_COUNT 15
-#define ADD_OCL_ROUTINE_INFO(__p__, __name__)                   \
-    {                                                           \
-      FuncInfo* __p__ = new FuncInfo(__name__);                 \
-      __p__->addComputationCount(DEFAULT_OCL_ROUTINE_COUNT);    \
-      FuncInfoVec.push_back(__p__);                             \
-    }
+#define ADD_OCL_ROUTINE_INFO(__p__, __name__)              \
+  {                                                        \
+    FuncInfo *__p__ = new FuncInfo(__name__);              \
+    __p__->addComputationCount(DEFAULT_OCL_ROUTINE_COUNT); \
+    FuncInfoVec.push_back(__p__);                          \
+  }
 
     // The 'stuff'.
     ADD_OCL_ROUTINE_INFO(p, "exp");
@@ -303,48 +318,29 @@ class RecursiveASTVisitor
 #undef ADD_OCL_ROUTINE_INFO
   }
 
-
   bool isBuiltInAtomicFunc(std::string func) {
-    if (func == "atomic_add" ||
-        func == "atomic_and" ||
-        func == "atomic_cmpxchg" ||
-        func == "atomic_compare_exchange_strong" ||
+    if (func == "atomic_add" || func == "atomic_and" ||
+        func == "atomic_cmpxchg" || func == "atomic_compare_exchange_strong" ||
         func == "atomic_compare_exchange_strong_explicit" ||
         func == "atomic_compare_exchange_weak" ||
         func == "atomic_compare_exchange_weak_explicit" ||
-        func == "atomic_dec" ||
-        func == "atomic_exchange" ||
-        func == "atomic_exchange_explicit" ||
-        func == "atomic_fetch_add" ||
-        func == "atomic_fetch_add_explicit" ||
-        func == "atomic_fetch_and" ||
-        func == "atomic_fetch_and_explicit" ||
-        func == "atomic_fetch_max" ||
-        func == "atomic_fetch_max_explicit" ||
-        func == "atomic_fetch_min" ||
-        func == "atomic_fetch_min_explicit" ||
-        func == "atomic_fetch_or" ||
-        func == "atomic_fetch_or_explicit" ||
-        func == "atomic_fetch_sub" ||
-        func == "atomic_fetch_sub_explicit" ||
-        func == "atomic_fetch_xor" ||
-        func == "atomic_fetch_xor_explicit" ||
-        func == "atomic_flag_clear" ||
+        func == "atomic_dec" || func == "atomic_exchange" ||
+        func == "atomic_exchange_explicit" || func == "atomic_fetch_add" ||
+        func == "atomic_fetch_add_explicit" || func == "atomic_fetch_and" ||
+        func == "atomic_fetch_and_explicit" || func == "atomic_fetch_max" ||
+        func == "atomic_fetch_max_explicit" || func == "atomic_fetch_min" ||
+        func == "atomic_fetch_min_explicit" || func == "atomic_fetch_or" ||
+        func == "atomic_fetch_or_explicit" || func == "atomic_fetch_sub" ||
+        func == "atomic_fetch_sub_explicit" || func == "atomic_fetch_xor" ||
+        func == "atomic_fetch_xor_explicit" || func == "atomic_flag_clear" ||
         func == "atomic_flag_clear_explicit" ||
         func == "atomic_flag_test_and_set" ||
-        func == "atomic_flag_test_and_set_explicit" ||
-        func == "atomic_inc" ||
-        func == "atomic_init" ||
-        func == "atomic_load" ||
-        func == "atomic_load_explicit" ||
-        func == "atomic_max" ||
-        func == "atomic_min" ||
-        func == "atomic_or" ||
-        func == "atomic_store" ||
-        func == "atomic_store_explicit" ||
-        func == "atomic_sub" ||
-        func == "atomic_work_item_fence" ||
-        func == "atomic_xchg" ||
+        func == "atomic_flag_test_and_set_explicit" || func == "atomic_inc" ||
+        func == "atomic_init" || func == "atomic_load" ||
+        func == "atomic_load_explicit" || func == "atomic_max" ||
+        func == "atomic_min" || func == "atomic_or" || func == "atomic_store" ||
+        func == "atomic_store_explicit" || func == "atomic_sub" ||
+        func == "atomic_work_item_fence" || func == "atomic_xchg" ||
         func == "atomic_xor") {
       return true;
     }
@@ -352,19 +348,16 @@ class RecursiveASTVisitor
     return false;
   }
 
-
  public:
   RecursiveASTVisitor() {
     pCurKI = NULL;
     InitializeOCLRoutines();
   }
 
-
   // Override Statements which includes expressions and more
   bool VisitStmt(clang::Stmt *s) {
     return true;  // returning false aborts the traversal
   }
-
 
   bool VisitFunctionDecl(clang::FunctionDecl *f) {
     std::string Proto = f->getNameInfo().getAsString();
@@ -376,8 +369,9 @@ class RecursiveASTVisitor
       clang::ParmVarDecl *pD = f->getParamDecl(i);
       clang::QualType T =
           pD->getTypeSourceInfo()
-          ? pD->getTypeSourceInfo()->getType()
-          : pD->getASTContext().getUnqualifiedObjCPointerType(pD->getType());
+              ? pD->getTypeSourceInfo()->getType()
+              : pD->getASTContext().getUnqualifiedObjCPointerType(
+                    pD->getType());
 
       std::string varName = pD->getIdentifier()->getName();
       std::string tStr = T.getAsString();
@@ -408,25 +402,19 @@ class RecursiveASTVisitor
     return true;
   }
 
-
   // Override Binary Operator expressions
-  clang::Expr* VisitBinaryOperator(
-      clang::BinaryOperator *E) {
+  clang::Expr *VisitBinaryOperator(clang::BinaryOperator *E) {
     if (pCurKI) {
       if (E->isComparisonOp()) {
         pCurKI->incrRationalInstCount();
-      } else if (E->isMultiplicativeOp() ||
-                 E->isAdditiveOp() ||
-                 E->isShiftOp() ||
-                 E->isBitwiseOp() ||
-                 E->isShiftAssignOp()) {
+      } else if (E->isMultiplicativeOp() || E->isAdditiveOp() ||
+                 E->isShiftOp() || E->isBitwiseOp() || E->isShiftAssignOp()) {
         pCurKI->incrCompInstCount();
       }
     }
 
     return E;
   }
-
 
   // VISIT Declare Exprs to record load and store to global memory variables
   bool VisitDeclRefExpr(clang::DeclRefExpr *Node) {
@@ -439,12 +427,11 @@ class RecursiveASTVisitor
     return true;
   }
 
-
   bool VisitVarDecl(clang::VarDecl *D) {
     clang::QualType T =
         D->getTypeSourceInfo()
-        ? D->getTypeSourceInfo()->getType()
-        : D->getASTContext().getUnqualifiedObjCPointerType(D->getType());
+            ? D->getTypeSourceInfo()->getType()
+            : D->getASTContext().getUnqualifiedObjCPointerType(D->getType());
 
     std::string varName = D->getIdentifier()->getName();
     std::string tStr = T.getAsString();
@@ -459,11 +446,9 @@ class RecursiveASTVisitor
     return true;
   }
 
-
   bool VisitCallExpr(clang::CallExpr *E) {
     clang::FunctionDecl *D = E->getDirectCallee();
-    if (!D)
-      return true;
+    if (!D) return true;
 
     std::string varName = D->getNameInfo().getAsString();
 
@@ -482,12 +467,10 @@ class RecursiveASTVisitor
     return true;
   }
 
-
   // This is use to count coalesced memory accesses
   // This is the most complex function
   bool VisitArraySubscriptExpr(clang::ArraySubscriptExpr *Node) {
-    if (!pCurKI)
-      return true;
+    if (!pCurKI) return true;
 
     ParameterInfo::VarType vT = ParameterInfo::OTHER;
 
@@ -496,8 +479,7 @@ class RecursiveASTVisitor
     if (tExpr) {
       clang::ImplicitCastExpr *iExpr =
           clang::dyn_cast<clang::ImplicitCastExpr>(tExpr);
-      if (!iExpr)
-        return true;
+      if (!iExpr) return true;
 
       clang::DeclRefExpr *DRE =
           clang::dyn_cast<clang::DeclRefExpr>(iExpr->getSubExpr());
@@ -529,15 +511,13 @@ class RecursiveASTVisitor
     return true;
   }
 
-
-  std::vector<FuncInfo *>& getFuncInfo() { return FuncInfoVec; }
+  std::vector<FuncInfo *> &getFuncInfo() { return FuncInfoVec; }
   ~RecursiveASTVisitor() {
     for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
       delete FuncInfoVec[i];
     }
   }
 };
-
 
 //
 // AST Consumer.
@@ -558,20 +538,18 @@ class ASTConsumer : public clang::ASTConsumer {
 
   RecursiveASTVisitor rv;
 
-  void dumpKernelFeatures(std::string fileName, std::ostream& fout) {
+  void dumpKernelFeatures(std::string fileName, std::ostream &fout) {
     std::vector<FuncInfo *> &FuncInfoVec = rv.getFuncInfo();
 
     for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
       if (FuncInfoVec[i]->isOclKernel()) {
         // Derived features:
-        const auto F2 =
-            FuncInfoVec[i]->getColMemAccessCount() /
-            static_cast<float>(std::max(
-                FuncInfoVec[i]->getGlobalMemLSCount(), 1u));
-        const auto F4 =
-            FuncInfoVec[i]->getCompInstCount() /
-            static_cast<float>(std::max(
-                FuncInfoVec[i]->getGlobalMemLSCount(), 1u));
+        const auto F2 = FuncInfoVec[i]->getColMemAccessCount() /
+                        static_cast<float>(std::max(
+                            FuncInfoVec[i]->getGlobalMemLSCount(), 1u));
+        const auto F4 = FuncInfoVec[i]->getCompInstCount() /
+                        static_cast<float>(std::max(
+                            FuncInfoVec[i]->getGlobalMemLSCount(), 1u));
 
         fout << fileName << "," << FuncInfoVec[i]->getFuncName() << ","
              << FuncInfoVec[i]->getCompInstCount() << ","
@@ -586,32 +564,27 @@ class ASTConsumer : public clang::ASTConsumer {
   }
 };
 
-
-std::string basename(const std::string& path) {
+std::string basename(const std::string &path) {
   size_t i = path.length() - 1u;
 
   while (i) {
-    if (path[i] == '/')
-      break;
+    if (path[i] == '/') break;
     --i;
   }
 
   return path[i] == '/' ? path.substr(i + 1, path.length()) : path;
 }
 
-
-std::string dirname(const std::string& path) {
+std::string dirname(const std::string &path) {
   size_t i = path.length() - 1u;
 
   while (i) {
-    if (path[i] == '/')
-      break;
+    if (path[i] == '/') break;
     --i;
   }
 
   return path.substr(0, static_cast<size_t>(i));
 }
-
 
 // Platform specific code. Provide Mac and Linux implementations.
 #ifdef __APPLE__  // Mac OS X
@@ -628,10 +601,9 @@ std::string getexepath() {
   return count > 0 ? result : "BAD";
 }
 #else
-# error "Unsupported platform!"
+#error "Unsupported platform!"
 #endif
 // End platform specific code.
-
 
 //
 // Extract features from kernels in an OpenCL program.
@@ -639,26 +611,22 @@ std::string getexepath() {
 // @param path Path to OpenCL program.
 // @param out Stream to print features to.
 //
-void extract_features(std::string path, std::string cl_header_path,
-                      std::ostream &out,
-                      const std::vector<std::string>& extra_args
-                        = std::vector<std::string>{}) {
+void extract_features(
+    std::string path, std::string cl_header_path, std::ostream &out,
+    const std::vector<std::string> &extra_args = std::vector<std::string>{}) {
   clang::CompilerInstance compiler;
   clang::DiagnosticOptions diagnosticOptions;
   compiler.createDiagnostics();
 
   std::vector<std::string> args{{"-x", "cl", "-include", cl_header_path}};
-  for (auto& arg : extra_args)
-    args.push_back(arg);
-  std::vector<const char*> argv;
-  for (auto& arg : args)
-    argv.push_back(arg.c_str());
+  for (auto &arg : extra_args) args.push_back(arg);
+  std::vector<const char *> argv;
+  for (auto &arg : args) argv.push_back(arg.c_str());
 
   // Create an invocation that passes any flags to preprocessor
   auto Invocation = std::make_shared<clang::CompilerInvocation>();
-  clang::CompilerInvocation::CreateFromArgs(*Invocation,
-                                            &(*argv.begin()), &(*argv.end()),
-                                            compiler.getDiagnostics());
+  clang::CompilerInvocation::CreateFromArgs(
+      *Invocation, &(*argv.begin()), &(*argv.end()), compiler.getDiagnostics());
 
   compiler.setInvocation(Invocation);
 
@@ -680,8 +648,8 @@ void extract_features(std::string path, std::string cl_header_path,
   llvm::Triple *triple = new llvm::Triple(llvm::sys::getDefaultTargetTriple());
   clang::PreprocessorOptions pproc;
 
-  Invocation->setLangDefaults(
-    langOpts, clang::InputKind::OpenCL, *triple, pproc);
+  Invocation->setLangDefaults(langOpts, clang::InputKind::OpenCL, *triple,
+                              pproc);
 
   compiler.createPreprocessor(clang::TU_Complete);
   compiler.getPreprocessorOpts().UsePredefines = false;
@@ -705,16 +673,14 @@ void extract_features(std::string path, std::string cl_header_path,
   astConsumer.dumpKernelFeatures(base_path, out);
 }
 
-
-bool file_exists(const std::string& path) {
+bool file_exists(const std::string &path) {
   struct stat buffer;
   return (stat(path.c_str(), &buffer) == 0);
 }
 
-
 // Check if argument is of the form '-extra-arg=xxx', and if so,
 // return 'xxx'. If not, return an empty string.
-std::string get_compiler_arg(const std::string& arg) {
+std::string get_compiler_arg(const std::string &arg) {
   std::string prefix("-extra-arg=");
   if (!arg.compare(0, prefix.size(), prefix))
     return arg.substr(prefix.size());
@@ -722,21 +688,18 @@ std::string get_compiler_arg(const std::string& arg) {
     return {};
 }
 
-
-void usage(const std::string& progname, std::ostream& out = std::cout) {
-  out << "Usage: " << progname
-      << " [-header-only] [-extra-arg=<arg> ...] "
+void usage(const std::string &progname, std::ostream &out = std::cout) {
+  out << "Usage: " << progname << " [-header-only] [-extra-arg=<arg> ...] "
       << "<file> [files ...]\n\n"
       << "Extracts static features from OpenCL source files.";
 }
 
-
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   auto cl_header_path = std::string(argv[1]);
   const std::vector<std::string> args{argv + 2, argv + argc};
   std::vector<std::string> paths, compiler_args;
 
-  for (const auto& arg : args) {
+  for (const auto &arg : args) {
     std::string carg = get_compiler_arg(arg);
 
     if (carg.size())
@@ -751,7 +714,7 @@ int main(int argc, char** argv) {
   }
 
   int ret = 0;
-  for (const std::string& path : paths) {
+  for (const std::string &path : paths) {
     if (file_exists(path)) {
       extract_features(path, cl_header_path, std::cout, compiler_args);
     } else {
