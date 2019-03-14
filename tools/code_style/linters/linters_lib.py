@@ -179,8 +179,7 @@ class LinterActions(object):
         self._yapf.append(path)
       elif extension == '.sql':
         self._sqlformat.append(path)
-      elif (extension == '.html' or extension == '.css' or
-            extension == '.scss' or extension == '.js'):
+      elif extension == '.html' or extension == '.css' or extension == '.js':
         self._jsbeautify.append(path)
 
   @property
