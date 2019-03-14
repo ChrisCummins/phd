@@ -170,6 +170,17 @@ def test_PullFromRemoteToLocal_timestamp_files_created(
   assert (pathlib.Path(m.remote_path) / 'TIME.txt').is_file()
 
 
+def test_PullFromRemoteToLocal_timestamp_files_no_created_in_dry_run(
+    test_host: machine_spec_pb2.Host,
+    test_mirrored_directory: machine_spec_pb2.MirroredDirectory):
+  """Test that timestamp files are created."""
+  test_mirrored_directory.timestamp_relpath = 'TIME.txt'
+  m = LocalMirroredDirectory(test_host, test_mirrored_directory)
+  m.PullFromRemoteToLocal(dry_run=True)
+  assert not (pathlib.Path(m.local_path) / 'TIME.txt').is_file()
+  assert not (pathlib.Path(m.remote_path) / 'TIME.txt').is_file()
+
+
 def test_PushLocalToRemote_timestamp_in_past_cannot_be_pushed(
     test_host: machine_spec_pb2.Host,
     test_mirrored_directory: machine_spec_pb2.MirroredDirectory):

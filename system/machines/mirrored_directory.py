@@ -120,9 +120,10 @@ class MirroredDirectory(object):
       if self.local_timestamp < self.remote_timestamp:
         raise InvalidOperation(
             "Refusing to push to local directory with out-of-date timestamp")
-      new_timestamp = int(time.time() * 1e6)
-      self.local_timestamp = new_timestamp
-      self.remote_timestamp = new_timestamp
+      if not dry_drun:
+        new_timestamp = int(time.time() * 1e6)
+        self.local_timestamp = new_timestamp
+        self.remote_timestamp = new_timestamp
     self.Rsync(self.local_path, self.rsync_remote_path, self.host.port,
                self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
@@ -138,9 +139,10 @@ class MirroredDirectory(object):
       if self.local_timestamp > self.remote_timestamp:
         raise InvalidOperation(
             "Refusing to pull from remote directory with out-of-date timestamp")
-      new_timestamp = int(time.time() * 1e6)
-      self.local_timestamp = new_timestamp
-      self.remote_timestamp = new_timestamp
+      if not dry_run:
+        new_timestamp = int(time.time() * 1e6)
+        self.local_timestamp = new_timestamp
+        self.remote_timestamp = new_timestamp
     self.Rsync(self.rsync_remote_path, self.local_path, self.host.port,
                self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
