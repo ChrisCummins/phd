@@ -19,5 +19,6 @@ py_test(
         "//labm8:decorators",
         "//labm8:test",
         "//third_party/py/dash",
+        "//third_party/py/portpicker",
     ],
 )
