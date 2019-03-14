@@ -456,7 +456,7 @@ class BacktrackingModel(models.Model):
         break
 
       # Select the best candidate.
-      if _target_features is not None:
+      if self._target_features is not None:
         best_candidate = min(
             candidate_statements, key=lambda x: x.feature_distance)
       else:
