@@ -37,8 +37,9 @@ flask_app = flask.Flask(
 def DeltaToTargets(delta: db.TestDelta) -> List[Dict[str, Any]]:
 
   def _ResultToTarget(result, changed: bool, fail: bool):
-    test_count_str = (f'{humanize.Commas(result.test_count)} '
-                      f'{humanize.Plural(result.test_count), "test", "tests"}')
+    test_count_str = (
+        f'{humanize.Commas(result.test_count)} '
+        f'{humanize.PluralWord(result.test_count, "test", "tests")}')
     return {
         'bazel_target': result.bazel_target,
         'runtime_ms': result.runtime_ms,
@@ -48,8 +49,8 @@ def DeltaToTargets(delta: db.TestDelta) -> List[Dict[str, Any]]:
         'git_branch': result.git_branch,
         'git_commit': result.git_commit,
         'log': result.log,
-        'changed': True,
-        'fail': True,
+        'changed': changed,
+        'fail': fail,
     }
 
   return [
