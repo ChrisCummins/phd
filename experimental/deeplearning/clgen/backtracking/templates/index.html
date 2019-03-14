@@ -4,8 +4,8 @@
 <title>CLgen RT</title>
 
 <style>
-  #output {
-    font-size: 1.2em;
+  .console {
+    font-size: 1.3em;
     white-space: pre;
     font-family: monospace;
   }
@@ -24,7 +24,7 @@
   </div>
   <div class="row">
     <div class="col">
-      <p id="output">Loading ...</p>
+      <p class="console"><span id="output">Loading ...</span><span id="candidate" class="text-danger"></span></p>
     </div>
   </div>
 </div>
@@ -33,13 +33,15 @@
 {% block footer %}
 <script type="text/javascript">
   var outputText = $('#output');
+  var candidateText = $('#candidate');
   var statusSpan = $('#status');
   var runtimeText = $('#runtime');
   var eventSource = new EventSource("/append_state");
   eventSource.onmessage = function(e) {
     var data = JSON.parse(e.data)
     console.log(data);
-    outputText.html(data['text']);
+    outputText.html(data['sample_in_progress']);
+    candidateText.html(data['candidate']);
     statusSpan.text(data['status']);
     runtimeText.text(data['elapsed']);
   };

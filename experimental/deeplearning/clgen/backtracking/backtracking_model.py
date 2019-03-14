@@ -508,7 +508,12 @@ class BacktrackingModel(models.Model):
       A sample, as a sequence of strings.
     """
 
-    data = {'text': '', 'status': 'running', 'elapsed': 0}
+    data = {
+        'sample_in_progress': '',
+        'candidate': '',
+        'status': 'running',
+        'elapsed': 0
+    }
 
     def Data(data: Dict[str, Any]):
       data['elapsed'] = humanize.Duration(time.time() - start_time)
@@ -520,14 +525,15 @@ class BacktrackingModel(models.Model):
     # is restored when backtracking.
     sample_in_progress = sampler.tokenized_start_text.copy()
     rollback_state, rollback_index = self.backend.EvaluateSampleState(sampler)
-    data['text'] = ''.join(sample_in_progress)
+    data['sample_in_progress'] = ''.join(sample_in_progress)
     yield Data(data)
 
     # Generate a batch of candidates.
     for step_count in range(
         1, FLAGS.experimental_clgen_backtracking_max_steps + 1):
       self._logger.OnSampleStep(backtracker, 0, len(sample_in_progress))
-      data['text'] = ''.join(sample_in_progress)
+      data['sample_in_progress'] = ''.join(sample_in_progress)
+      data['candidate'] = ''
       data['status'] = f'step {step_count}'
       app.Log(4, 'Current sample in progress: `%s`',
               ''.join(sample_in_progress))
@@ -541,9 +547,8 @@ class BacktrackingModel(models.Model):
                 sample_in_progress, rollback_state, rollback_index, backtracker,
                 sampler, atomizer))
         if candidate_statements:
-          data['text'] = html.escape(''.join(
-              sample_in_progress)) + '<span class="text-danger">' + html.escape(
-                  ''.join(candidate_statements[-1].statement)) + '</span>'
+          data['candidate'] = html.escape(''.join(
+              candidate_statements[-1].statement))
         yield Data(data)
         candidate_statements = [
             c for c in candidate_statements if c.feature_distance is not None
@@ -590,4 +595,4 @@ class BacktrackingModel(models.Model):
     else:
       app.Log(2, 'Backtracking failed to complete after %d steps', step_count)
 
-    yield {'text': self.MakeProgram(sample_in_progress, backtracker, atomizer)}
+    yield Data(data)
