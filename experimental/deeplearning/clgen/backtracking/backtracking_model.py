@@ -318,7 +318,7 @@ class BacktrackingModel(models.Model):
     end_time = labdate.MillisecondsTimestamp()
 
     # Format text.
-    if sampled_tokens:
+    if len(sampled_tokens):
       text = preprocessors.Preprocess(''.join(sampled_tokens), [
           'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
           'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
