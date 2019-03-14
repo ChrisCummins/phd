@@ -1,3 +1,16 @@
+# Copyright 2014-2019 Chris Cummins <chrisc.101@gmail.com>.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Utility code for working with sqlalchemy."""
 import collections
 import contextlib
@@ -14,7 +27,6 @@ from labm8 import app
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
-
 
 FLAGS = app.FLAGS
 
@@ -81,7 +93,7 @@ def GetOrAdd(session: sql.orm.session.Session,
     session.add(instance)
     if app.DebugLogging():
       app.Log(2, 'New record: %s(%s)', model.__name__,
-                ', '.join([f'{k}={v}' for k, v in params.items()]))
+              ', '.join([f'{k}={v}' for k, v in params.items()]))
   return instance
 
 

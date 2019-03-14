@@ -2,7 +2,7 @@
 #
 # Each module within labm8 contains a set of related functions.
 
-licenses(["restricted"])  # GPL v3
+licenses(["notice"])  # Apache 2.0
 
 exports_files([
     "LICENSE",

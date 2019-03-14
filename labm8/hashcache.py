@@ -1,3 +1,16 @@
+# Copyright 2014-2019 Chris Cummins <chrisc.101@gmail.com>.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """A hash cache for the filesystem.
 
 Checksums files and directories and cache results. If a file or directory has
@@ -21,7 +34,6 @@ from labm8 import crypto
 from labm8 import fs
 from labm8 import humanize
 from labm8 import sqlutil
-
 
 FLAGS = app.FLAGS
 
@@ -191,7 +203,7 @@ class HashCache(sqlutil.Database):
       start_time = time.time()
       checksum = hash_fn(absolute_path)
       app.Log(2, "New cache entry '%s' in %s ms.", absolute_path,
-                humanize.Commas(int((time.time() - start_time) * 1000)))
+              humanize.Commas(int((time.time() - start_time) * 1000)))
       new_entry = HashCacheRecord(
           absolute_path=str(absolute_path),
           last_modified=last_modified,
