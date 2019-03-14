@@ -1,8 +1,27 @@
 // Library for processing HealthKit export.xml files.
 //
-// See //datasets/me_db/providers/health_kit:README.md for an overview of the schema that
-// is processed, and the measurements produced.
+// See //datasets/me_db/providers/health_kit:README.md for an overview of the
+// schema that is processed, and the measurements produced.
 //
+// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 #pragma once
 
 #include "datasets/me_db/me.pb.h"
@@ -11,14 +30,14 @@
 
 #include "absl/container/flat_hash_map.h"
 
-#include "boost/tokenizer.hpp"
-#include "boost/filesystem.hpp"
 #include <boost/filesystem/fstream.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include "boost/filesystem.hpp"
+#include "boost/tokenizer.hpp"
 
 namespace me {
 
-template<typename K, typename V>
+template <typename K, typename V>
 V FindOrAdd(absl::flat_hash_map<K, V>* map, const K& key,
             std::function<V(const K&)> add_callback) {
   auto it = map->find(key);
@@ -71,11 +90,15 @@ class HealthKitRecordImporter {
 
   // Constructor that explicitly sets all fields that would otherwise be set by
   // InitFromRecordOrDie(). Used for testing.
-  HealthKitRecordImporter(
-      const string& type, const string& unit, const string& value,
-      const string& sourceName, const string& startDate, const string& endDate)
-      : type_(type), unit_(unit), value_(value), sourceName_(sourceName),
-        startDate_(startDate), endDate_(endDate) {}
+  HealthKitRecordImporter(const string& type, const string& unit,
+                          const string& value, const string& sourceName,
+                          const string& startDate, const string& endDate)
+      : type_(type),
+        unit_(unit),
+        value_(value),
+        sourceName_(sourceName),
+        startDate_(startDate),
+        endDate_(endDate) {}
 
   // Initialize the member variables by parsing the XML Record attributes.
   // Instances of this class can be reused by calling this method with different
@@ -162,9 +185,9 @@ class HealthKitRecordImporter {
   void ConsumeCountableEventOrDie(const string& family, const string& name,
                                   const string& group = "default");
 
-  Measurement CreateMeasurement(
-      const string& family, const string& name, const string& group,
-      const string& unit, const int64_t value);
+  Measurement CreateMeasurement(const string& family, const string& name,
+                                const string& group, const string& unit,
+                                const int64_t value);
 
   // The string values parsed from the XML Record. Set by InitFromRecordOrDie().
   string type_;

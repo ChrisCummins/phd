@@ -1,3 +1,22 @@
+// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 #include "datasets/me_db/providers/health_kit/health_kit_lib.h"
 
 #include "datasets/me_db/me.pb.h"
@@ -20,25 +39,25 @@ TEST(ParseHealthKitDatetimeOrDie, InvalidDate) {
 TEST(ParseHealthKitDatetimeOrDie, DateOnly) {
   // Testing with a known date.
   EXPECT_EQ(ParseHealthKitDatetimeOrDie("2017-01-01 00:00:00 +0000"),
-                                        1483228800000);
+            1483228800000);
 }
 
 TEST(ParseHealthKitDatetimeOrDie, DateAndHour) {
   // Testing with a known date.
   EXPECT_EQ(ParseHealthKitDatetimeOrDie("2017-01-01 01:00:00 +0000"),
-                                        1483232400000);
+            1483232400000);
 }
 
 TEST(ParseHealthKitDatetimeOrDie, DateAndHourAndMinute) {
   // Testing with a known date.
   EXPECT_EQ(ParseHealthKitDatetimeOrDie("2017-01-01 01:01:00 +0000"),
-                                        1483232460000);
+            1483232460000);
 }
 
 TEST(ParseHealthKitDatetimeOrDie, DateAndHourAndMinuteAndSecond) {
   // Testing with a known date.
   EXPECT_EQ(ParseHealthKitDatetimeOrDie("2017-01-01 01:01:01 +0000"),
-                                        1483232461000);
+            1483232461000);
 }
 
 TEST(ParseHealthKitDatetimeOrDie, TimeZone) {
@@ -52,17 +71,12 @@ TEST(ParseIntOrDie, EmptyString) {
                "Failed to parse integer 'This will crash'");
 }
 
-TEST(ParseIntOrDie, One) {
-  EXPECT_EQ(ParseIntOrDie("1"), 1);
-}
+TEST(ParseIntOrDie, One) { EXPECT_EQ(ParseIntOrDie("1"), 1); }
 
-TEST(ParseIntOrDie, Negative) {
-  EXPECT_EQ(ParseIntOrDie("-123"), -123);
-}
+TEST(ParseIntOrDie, Negative) { EXPECT_EQ(ParseIntOrDie("-123"), -123); }
 
 TEST(ParseIntOrDie, Float) {
-  ASSERT_DEATH(ParseIntOrDie("1.53"),
-               "Failed to parse integer '1.53'");
+  ASSERT_DEATH(ParseIntOrDie("1.53"), "Failed to parse integer '1.53'");
 }
 
 TEST(ParseDoubleOrDie, EmptyString) {
@@ -70,17 +84,11 @@ TEST(ParseDoubleOrDie, EmptyString) {
                "Failed to parse double 'This will crash'");
 }
 
-TEST(ParseDoubleOrDie, One) {
-  EXPECT_EQ(ParseDoubleOrDie("1"), 1);
-}
+TEST(ParseDoubleOrDie, One) { EXPECT_EQ(ParseDoubleOrDie("1"), 1); }
 
-TEST(ParseDoubleOrDie, Negative) {
-  EXPECT_EQ(ParseDoubleOrDie("-123"), -123);
-}
+TEST(ParseDoubleOrDie, Negative) { EXPECT_EQ(ParseDoubleOrDie("-123"), -123); }
 
-TEST(ParseDoubleOrDie, Double) {
-  EXPECT_EQ(ParseDoubleOrDie("1.53"), 1.53);
-}
+TEST(ParseDoubleOrDie, Double) { EXPECT_EQ(ParseDoubleOrDie("1.53"), 1.53); }
 
 TEST(SetAttributeIfMatch, NoMatch) {
   boost::property_tree::ptree ptree;
@@ -101,8 +109,8 @@ TEST(SetAttributeIfMatch, Match) {
 }
 
 TEST(HealthKitRecordImporter, DebugString) {
-  HealthKitRecordImporter importer(
-      "type", "unit", "value", "source", "start_date", "end_date");
+  HealthKitRecordImporter importer("type", "unit", "value", "source",
+                                   "start_date", "end_date");
   EXPECT_EQ(importer.DebugString(),
             "type=type\nvalue=value\nunit=unit\nsource=source\n"
             "start_date=start_date\nend_date=end_date");
@@ -111,8 +119,8 @@ TEST(HealthKitRecordImporter, DebugString) {
 TEST(AddMeasurementsOrDie, InvalidValues) {
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> type_to_series_map;
-  HealthKitRecordImporter importer(
-      "type", "unit", "value", "source", "start_date", "end_date");
+  HealthKitRecordImporter importer("type", "unit", "value", "source",
+                                   "start_date", "end_date");
   ASSERT_DEATH(
       importer.AddMeasurementsOrDie(&series_collection, &type_to_series_map),
       "Unhandled type 'type' for HealthKit record");
@@ -122,9 +130,9 @@ TEST(AddMeasurementsOrDie, SeriesIsAddedToTypeMap) {
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> type_to_series_map;
 
-  HealthKitRecordImporter importer(
-      "HKQuantityTypeIdentifierDietaryWater",
-      "mL", "125", "source", "1970-01-01 00:00:01 +0000", "end_date");
+  HealthKitRecordImporter importer("HKQuantityTypeIdentifierDietaryWater", "mL",
+                                   "125", "source", "1970-01-01 00:00:01 +0000",
+                                   "end_date");
   importer.AddMeasurementsOrDie(&series_collection, &type_to_series_map);
 
   ASSERT_EQ(type_to_series_map.size(), 1);
@@ -138,9 +146,9 @@ TEST(AddMeasurementsOrDie, HKQuantityTypeIdentifierDietaryWater) {
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> type_to_series_map;
 
-  HealthKitRecordImporter importer(
-      "HKQuantityTypeIdentifierDietaryWater",
-      "mL", "125", "source", "1970-01-01 00:00:01 +0000", "end_date");
+  HealthKitRecordImporter importer("HKQuantityTypeIdentifierDietaryWater", "mL",
+                                   "125", "source", "1970-01-01 00:00:01 +0000",
+                                   "end_date");
   importer.AddMeasurementsOrDie(&series_collection, &type_to_series_map);
 
   ASSERT_EQ(series_collection.series_size(), 1);
@@ -161,9 +169,9 @@ TEST(AddMeasurementsOrDie, HKQuantityTypeIdentifierBodyMassIndex) {
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> type_to_series_map;
 
-  HealthKitRecordImporter importer(
-      "HKQuantityTypeIdentifierBodyMassIndex",
-      "count", "23.5", "foo", "1970-01-01 00:00:01 +0000", "end_date");
+  HealthKitRecordImporter importer("HKQuantityTypeIdentifierBodyMassIndex",
+                                   "count", "23.5", "foo",
+                                   "1970-01-01 00:00:01 +0000", "end_date");
   importer.AddMeasurementsOrDie(&series_collection, &type_to_series_map);
 
   ASSERT_EQ(series_collection.series_size(), 1);

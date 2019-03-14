@@ -1,26 +1,47 @@
 // Protocol buffer processing binary for extracting me.Series protos from a
 // YNAB JSON file.
+//
+// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #include "phd/logging.h"
 #include "phd/pbutil.h"
 #include "phd/string.h"
 
 #include "datasets/me_db/me.pb.h"
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/time/time.h"
-#include "absl/container/flat_hash_map.h"
 
-#include <boost/tokenizer.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/tokenizer.hpp>
 
 namespace me {
 
-template<typename K, typename V>
+template <typename K, typename V>
 void InsertOrDie(absl::flat_hash_map<K, V>* map, const K& key, const V& value) {
   auto it = map->find(key);
 
@@ -31,7 +52,7 @@ void InsertOrDie(absl::flat_hash_map<K, V>* map, const K& key, const V& value) {
   }
 }
 
-template<typename K, typename V>
+template <typename K, typename V>
 V FindOrDie(const absl::flat_hash_map<K, V>& map, const K& key) {
   auto it = map.find(key);
 
@@ -74,16 +95,16 @@ string GetBudgetNameFromPathOrDie(const boost::filesystem::path& path) {
   // Path has the format: .../<budget-dir>/<stuff>/<stuff>/Budget.yfull.
   // Begin by isolating <budget-dir> from the full path.
   CHECK(path.filename() == "Budget.yfull");
-  const auto directory_name = (
-      path.parent_path().parent_path().parent_path().filename().string());
+  const auto directory_name =
+      (path.parent_path().parent_path().parent_path().filename().string());
 
   LOG(DEBUG) << "Directory: " << directory_name;
   CHECK(phd::EndsWith(directory_name, ".ynab4"));
 
   // <budget-dir> has the format '$NAME~<stuff>.ynab4'. Split at the ~ and
   // return the first component.
-  std::vector<absl::string_view> components = absl::StrSplit(
-      directory_name, '~');
+  std::vector<absl::string_view> components =
+      absl::StrSplit(directory_name, '~');
   CHECK(components.size() == 2);
 
   const string unformatted_budget_name = string(components[0]);
@@ -132,19 +153,19 @@ Series CreateTransactionsSeries(
        root.get_child("transactions")) {
     auto transaction = transaction_elem.second;
 
-    const int64_t date = ParseDateOrDie(
-        transaction.get<string>("date", "__no_date__"));
+    const int64_t date =
+        ParseDateOrDie(transaction.get<string>("date", "__no_date__"));
 
     const string category_id = transaction.get<string>("categoryId", "");
 
     if (category_id == "Category/__Split__") {
-       for (const boost::property_tree::ptree::value_type& subtransaction_elem :
-            transaction.get_child("subTransactions")) {
-         auto subtransaction = subtransaction_elem.second;
+      for (const boost::property_tree::ptree::value_type& subtransaction_elem :
+           transaction.get_child("subTransactions")) {
+        auto subtransaction = subtransaction_elem.second;
 
-         TryAddTransactionMeasurementToSeries(
+        TryAddTransactionMeasurementToSeries(
             subtransaction, date, category_id_to_name, &series, &category);
-       }
+      }
     } else {
       TryAddTransactionMeasurementToSeries(
           transaction, date, category_id_to_name, &series, &category);
@@ -168,8 +189,8 @@ Series CreateBudgetSeries(
        root.get_child("monthlyBudgets")) {
     auto month = month_elem.second;
 
-    const int64_t date = ParseDateOrDie(
-        month.get<string>("month", "__no_date__"));
+    const int64_t date =
+        ParseDateOrDie(month.get<string>("month", "__no_date__"));
 
     for (const boost::property_tree::ptree::value_type& budget_elem :
          month.get_child("monthlySubCategoryBudgets")) {
@@ -179,8 +200,7 @@ Series CreateBudgetSeries(
       CHECK(!category_id.empty());
 
       if (!TryGetCategory(category_id, category_id_to_name, &category)) {
-        LOG(WARNING) << "Failed to get category for id `"
-                     << category_id << "`";
+        LOG(WARNING) << "Failed to get category for id `" << category_id << "`";
         continue;
       }
 
@@ -234,9 +254,9 @@ void ProcessJsonBudgetFile(SeriesCollection* proto) {
 
       // The category name is a concatenation of the master and subcategory
       // names.
-      const string category_name = absl::StrFormat(
-          "%s:%s", phd::ToCamelCase(master_category_name),
-          phd::ToCamelCase(subcategory_name));
+      const string category_name =
+          absl::StrFormat("%s:%s", phd::ToCamelCase(master_category_name),
+                          phd::ToCamelCase(subcategory_name));
 
       const string subcategory_id = subcategory.get<string>("entityId", "");
       CHECK(!subcategory_id.empty());
@@ -245,8 +265,10 @@ void ProcessJsonBudgetFile(SeriesCollection* proto) {
     }
   }
 
-  *proto->add_series() = CreateTransactionsSeries(budget_name, category_id_to_name, root);
-  *proto->add_series() = CreateBudgetSeries(budget_name, category_id_to_name, root);
+  *proto->add_series() =
+      CreateTransactionsSeries(budget_name, category_id_to_name, root);
+  *proto->add_series() =
+      CreateBudgetSeries(budget_name, category_id_to_name, root);
 }
 
 }  // namespace me

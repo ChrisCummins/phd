@@ -1,3 +1,22 @@
+// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 #include "datasets/me_db/providers/life_cycle/life_cycle_lib.h"
 
 #include "datasets/me_db/me.pb.h"
@@ -5,10 +24,10 @@
 #include "phd/logging.h"
 #include "phd/string.h"
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/time/time.h"
-#include "absl/container/flat_hash_map.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -18,7 +37,6 @@ namespace me {
 // The number of milliseconds in a day.
 constexpr int64_t MILLISECONDS_IN_DAY =
     /*second=*/1000 * /*hour=*/3600 * /*day=*/24;
-
 
 int64_t RoundToStartOfNextDay(const int64_t ms_since_unix_epoch) {
   // Divide by milliseconds in day to produce the number of days elapsed since
@@ -30,7 +48,6 @@ int64_t RoundToStartOfNextDay(const int64_t ms_since_unix_epoch) {
   return (days_since_epoch_utc + 1) * MILLISECONDS_IN_DAY;
 }
 
-
 absl::Time ParseLifeCycleDatetimeOrDie(const string& date) {
   absl::Time time;
   std::string err;
@@ -41,12 +58,10 @@ absl::Time ParseLifeCycleDatetimeOrDie(const string& date) {
   return time;
 }
 
-
 int64_t ToMillisecondsSinceUnixEpoch(const absl::Time& time) {
   absl::Duration d = time - absl::UnixEpoch();
   return d / absl::Milliseconds(1);
 }
-
 
 void AddMeasurementsFromDurationOrDie(int64_t start_time, int64_t end_time,
                                       const string& location, Series* series) {
@@ -54,8 +69,8 @@ void AddMeasurementsFromDurationOrDie(int64_t start_time, int64_t end_time,
   int64_t end_of_day = RoundToStartOfNextDay(start_time);
 
   while (remaining_time_to_allocate > 0) {
-    int64_t duration = std::min(
-        remaining_time_to_allocate, end_of_day - start_time);
+    int64_t duration =
+        std::min(remaining_time_to_allocate, end_of_day - start_time);
 
     // Create the new measurement.
     Measurement* measurement = series->add_measurement();
@@ -70,7 +85,6 @@ void AddMeasurementsFromDurationOrDie(int64_t start_time, int64_t end_time,
   }
 }
 
-
 string LocationToGroup(const string& location) {
   const string location_stripped = phd::CopyAndTrimLeft(location);
   if (location_stripped == "") {
@@ -79,7 +93,6 @@ string LocationToGroup(const string& location) {
     return phd::ToCamelCase(location_stripped);
   }
 }
-
 
 void ProcessLineOrDie(
     const std::string& line, const int64_t line_num,
@@ -113,15 +126,14 @@ void ProcessLineOrDie(
   // does not exist, create it.
   Series* series = FindOrAdd<string, Series*>(
       name_to_series_map, name,
-      [name_to_series_map,proto](const string& name) -> Series* {
-    Series* series = proto->add_series();
-    series->set_name(absl::StrCat(phd::ToCamelCase(name), "Time"));
-    series->set_family("TimeTracking");
-    series->set_unit("milliseconds");
-    name_to_series_map->insert(
-        std::make_pair(name, series));
-    return series;
-  });
+      [name_to_series_map, proto](const string& name) -> Series* {
+        Series* series = proto->add_series();
+        series->set_name(absl::StrCat(phd::ToCamelCase(name), "Time"));
+        series->set_family("TimeTracking");
+        series->set_unit("milliseconds");
+        name_to_series_map->insert(std::make_pair(name, series));
+        return series;
+      });
 
   AddMeasurementsFromDurationOrDie(start_date, end_date, location, series);
 }
@@ -141,8 +153,7 @@ void ProcessSeriesCollectionOrDie(SeriesCollection* proto) {
   if (line != ("START DATE(UTC), END DATE(UTC), START TIME(LOCAL), "
                "END TIME(LOCAL), DURATION, NAME, LOCATION, NOTE")) {
     LOG(FATAL) << "Expected first line of `" << csv_path.string()
-               << "` to contain column names. Actual value: `"
-               << line << "`.";
+               << "` to contain column names. Actual value: `" << line << "`.";
   }
 
   // Process the second line of the header.

@@ -1,3 +1,22 @@
+// Copyright 2018, 2019 Chris Cummins <chrisc.101@gmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 #include "datasets/me_db/providers/life_cycle/life_cycle_lib.h"
 
 #include "datasets/me_db/me.pb.h"
@@ -14,7 +33,7 @@ constexpr int64_t MILLISECONDS_IN_DAY =
 
 TEST(ParseLifeCycleDatetimeOrDie, UnixEpoch) {
   EXPECT_EQ(ParseLifeCycleDatetimeOrDie("1970-01-01 00:00:00"),
-               absl::UnixEpoch());
+            absl::UnixEpoch());
 }
 
 TEST(ParseLifeCycleDatetimeOrDie, InvalidDate) {
@@ -28,31 +47,36 @@ TEST(ToMillisecondsSinceUnixEpoch, UnixEpoch) {
 
 TEST(ParseDateToMilliseconds, UnixEpoch) {
   EXPECT_EQ(ToMillisecondsSinceUnixEpoch(
-      ParseLifeCycleDatetimeOrDie("1970-01-01 00:00:00")), 0);
+                ParseLifeCycleDatetimeOrDie("1970-01-01 00:00:00")),
+            0);
 }
 
 TEST(ParseDateToMilliseconds, DateOnly) {
   // Testing with a known date.
   EXPECT_EQ(ToMillisecondsSinceUnixEpoch(
-      ParseLifeCycleDatetimeOrDie("2017-01-01 00:00:00")), 1483228800000);
+                ParseLifeCycleDatetimeOrDie("2017-01-01 00:00:00")),
+            1483228800000);
 }
 
 TEST(ParseDateToMilliseconds, DateAndHour) {
   // Testing with a known date.
   EXPECT_EQ(ToMillisecondsSinceUnixEpoch(
-      ParseLifeCycleDatetimeOrDie("2017-01-01 01:00:00")), 1483232400000);
+                ParseLifeCycleDatetimeOrDie("2017-01-01 01:00:00")),
+            1483232400000);
 }
 
 TEST(ParseDateToMilliseconds, DateAndHourAndMinute) {
   // Testing with a known date.
   EXPECT_EQ(ToMillisecondsSinceUnixEpoch(
-      ParseLifeCycleDatetimeOrDie("2017-01-01 01:01:00")), 1483232460000);
+                ParseLifeCycleDatetimeOrDie("2017-01-01 01:01:00")),
+            1483232460000);
 }
 
 TEST(ParseDateToMilliseconds, DateAndHourAndMinuteAndSecond) {
   // Testing with a known date.
   EXPECT_EQ(ToMillisecondsSinceUnixEpoch(
-      ParseLifeCycleDatetimeOrDie("2017-01-01 01:01:01")), 1483232461000);
+                ParseLifeCycleDatetimeOrDie("2017-01-01 01:01:01")),
+            1483232461000);
 }
 
 TEST(AddMeasurementsFromDurationOrDie, NegativeTime) {
@@ -84,24 +108,23 @@ TEST(AddMeasurementsFromDurationOrDie, ValueField) {
 
 TEST(AddMeasurementsFromDurationOrDie, MillisecondsInDayMinusOne) {
   Series series;
-  AddMeasurementsFromDurationOrDie(
-      0, MILLISECONDS_IN_DAY - 1, "location", &series);
+  AddMeasurementsFromDurationOrDie(0, MILLISECONDS_IN_DAY - 1, "location",
+                                   &series);
   ASSERT_EQ(series.measurement_size(), 1);
   EXPECT_EQ(series.measurement(0).value(), MILLISECONDS_IN_DAY - 1);
 }
 
 TEST(AddMeasurementsFromDurationOrDie, MillisecondsInDay) {
   Series series;
-  AddMeasurementsFromDurationOrDie(
-      0, MILLISECONDS_IN_DAY, "location", &series);
+  AddMeasurementsFromDurationOrDie(0, MILLISECONDS_IN_DAY, "location", &series);
   ASSERT_EQ(series.measurement_size(), 1);
   EXPECT_EQ(series.measurement(0).value(), MILLISECONDS_IN_DAY);
 }
 
 TEST(AddMeasurementsFromDurationOrDie, MillisecondsInDayPlusOne) {
   Series series;
-  AddMeasurementsFromDurationOrDie(
-      0, MILLISECONDS_IN_DAY + 1, "location", &series);
+  AddMeasurementsFromDurationOrDie(0, MILLISECONDS_IN_DAY + 1, "location",
+                                   &series);
   ASSERT_EQ(series.measurement_size(), 2);
   EXPECT_EQ(series.measurement(0).value(), MILLISECONDS_IN_DAY);
   EXPECT_EQ(series.measurement(1).value(), 1);
@@ -136,9 +159,10 @@ TEST(LocationToGroup, DefaultValueWhitespace) {
 }
 
 TEST(ProcessLineOrDie, MapSize) {
-  string line = "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
-                "unused_start_time, unused_end_time, unused_duration, "
-                "series, location, unused_note";
+  string line =
+      "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
+      "unused_start_time, unused_end_time, unused_duration, "
+      "series, location, unused_note";
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> name_to_series_map;
   ProcessLineOrDie(line, /*line_num=*/0, boost::filesystem::path("."),
@@ -148,9 +172,10 @@ TEST(ProcessLineOrDie, MapSize) {
 }
 
 TEST(ProcessLineOrDie, SeriesCollectionSize) {
-  string line = "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
-                "unused_start_time, unused_end_time, unused_duration, "
-                "series, location, unused_note";
+  string line =
+      "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
+      "unused_start_time, unused_end_time, unused_duration, "
+      "series, location, unused_note";
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> name_to_series_map;
   ProcessLineOrDie(line, /*line_num=*/0, boost::filesystem::path("."),
@@ -160,9 +185,10 @@ TEST(ProcessLineOrDie, SeriesCollectionSize) {
 }
 
 TEST(ProcessLineOrDie, SeriesField) {
-  string line = "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
-                "unused_start_time, unused_end_time, unused_duration, "
-                "series, location, unused_note";
+  string line =
+      "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
+      "unused_start_time, unused_end_time, unused_duration, "
+      "series, location, unused_note";
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> name_to_series_map;
   ProcessLineOrDie(line, /*line_num=*/0, boost::filesystem::path("."),
@@ -173,9 +199,10 @@ TEST(ProcessLineOrDie, SeriesField) {
 }
 
 TEST(ProcessLineOrDie, UnitName) {
-  string line = "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
-                "unused_start_time, unused_end_time, unused_duration, "
-                "series, location, unused_note";
+  string line =
+      "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
+      "unused_start_time, unused_end_time, unused_duration, "
+      "series, location, unused_note";
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> name_to_series_map;
   ProcessLineOrDie(line, /*line_num=*/0, boost::filesystem::path("."),
@@ -186,9 +213,10 @@ TEST(ProcessLineOrDie, UnitName) {
 }
 
 TEST(ProcessLineOrDie, MeasurementsCount) {
-  string line = "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
-                "unused_start_time, unused_end_time, unused_duration, "
-                "series, location, unused_note";
+  string line =
+      "1970-01-01 00:00:00, 1970-01-01 00:00:01, "
+      "unused_start_time, unused_end_time, unused_duration, "
+      "series, location, unused_note";
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> name_to_series_map;
   ProcessLineOrDie(line, /*line_num=*/0, boost::filesystem::path("."),
@@ -200,9 +228,10 @@ TEST(ProcessLineOrDie, MeasurementsCount) {
 
 TEST(RegressionTest, TroublesomeA) {
   // This line was found to have an incorrectly parsed start date.
-  string line = "2017-01-20 01:55:01, 2017-01-22 12:00:45, "
-                "2017-01-20 01:55:39 GMT, 2017-01-22 12:00:45 GMT,"
-                "209106, Alpha, ,";
+  string line =
+      "2017-01-20 01:55:01, 2017-01-22 12:00:45, "
+      "2017-01-20 01:55:39 GMT, 2017-01-22 12:00:45 GMT,"
+      "209106, Alpha, ,";
   SeriesCollection series_collection;
   absl::flat_hash_map<string, Series*> name_to_series_map;
   ProcessLineOrDie(line, /*line_num=*/0, boost::filesystem::path("."),
