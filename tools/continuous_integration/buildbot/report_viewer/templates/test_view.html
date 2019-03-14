@@ -8,6 +8,11 @@
     padding: 0;
   }
 
+  #test_results pre,.code {
+    font-family: 'Inconsolata', monospace;
+    font-size: 1.1em;
+  }
+
   #test_results button.btn-link {
     width: 100%;
     text-align: left;
@@ -60,7 +65,8 @@
       <p class="lead">
         {{ git_branch }} at <a href="{{ urls.github_commit }}">{{ git_commit[:7] }}</a>
         on <a href="{{ urls.buildbot }}">{{ host }}</a>.<br/>
-        Started {{ invocation_delta }}. Ran {{ test_count }} tests in {{ test_duration }}.
+        Ran {{ test_count }} tests in {{ test_duration }}.<br/>
+        Completed {{ invocation_delta }}.
       </p>
       <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
         {% if delta.broken %}{{ delta.broken }} broken.{% endif %}
@@ -78,7 +84,7 @@
         <div class="card">
           <div class="card-header" id="h{{ loop.index }}">
             <h2 class="mb-0">
-              <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#t{{ loop.index }}" aria-expanded="true" aria-controls="t{{ loop.index }}">
+              <button class="btn btn-link test-target" type="button" data-toggle="collapse" data-target="#t{{ loop.index }}" data-bazel-target="{{ result.bazel_target }}" aria-expanded="true" aria-controls="t{{ loop.index }}">
                 {% if result.fail %}
                 <span class="badge badge-danger">Fail</span>
                 {% else %}
@@ -92,7 +98,6 @@
           <div id="t{{ loop.index }}" class="collapse" aria-labelledby="h{{ loop.index }}">
             <div class="card-body">
               <pre>
-bazel test {{ result.bazel_target }}
 {{ result.log | e }}
               </pre>
             </div>
@@ -141,8 +146,21 @@ bazel test {{ result.bazel_target }}
       });
     }
 
+    const copyToClipboard = str => {
+      const el = document.createElement('textarea');
+      el.value = str;
+      el.setAttribute('readonly', '');
+      el.style.position = 'absolute';
+      el.style.left = '-9999px';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    };
+
     // Set URL to current collapsible element.
-    $('#test_results button').click(function() {
+    $('#test_results button.test-target').click(function() {
+      copyToClipboard("bazel test " + $(this).attr('data-bazel-target'));
       var target_id = $(this).attr('data-target');
       var target_num = parseInt(target_id.substr(2));
       var classes = $(target_id).attr("class");
