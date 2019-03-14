@@ -410,7 +410,7 @@ class BacktrackingModel(models.Model):
                   atomizer: atomizers.AtomizerBase) -> typing.List[str]:
     """Produce a kernel from a sample."""
     src = backtracker.TryToCloseProgram(sampled_tokens) or ''
-    return atomizer.AtomizeString(src)
+    return atomizer.TokenizeString(src)
 
   def SampleOneWithBacktracking(
       self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
