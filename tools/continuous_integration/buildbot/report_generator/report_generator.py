@@ -2,6 +2,7 @@
 import datetime
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -83,10 +84,18 @@ def main():
         result.host = host
         result.target = GetBazelTarget(testlogs, xml_path)
         result.git_commit = git_commit
-        # if result.failed_count:
+
         log_path = dir_ / 'test.log'
         assert log_path.is_file()
         result.log = fs.Read(log_path).rstrip()
+
+        # Bazel test runner reports a single test for pytest files, no matter
+        # how many tests are actually in the file. Let's report a more account
+        # test count by checking for pytest's collector output in the log.
+        match = re.search('^collecting ... collected (\d+) items$', result.log,
+                          re.MULTILINE)
+        if match:
+          result.test_count = int(match.group(1))
 
         # Add result to database.
         session.add(result)
