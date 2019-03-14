@@ -90,7 +90,7 @@
                 {% else %}
                 <span class="badge badge-success">Pass</span>
                 {% endif %}
-                <code>{{ result.bazel_target }}</code> in {{ result.runtime }}
+                <code>{{ result.bazel_target }}</code> ({{ result.test_count_natural }} in {{ result.runtime_natural }})
                 {% if result.changed %}<span class="badge badge-secondary">Change</span>{% endif %}
               </button>
             </h2>

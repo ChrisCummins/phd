@@ -35,50 +35,36 @@ flask_app = flask.Flask(
 
 
 def DeltaToTargets(delta: db.TestDelta) -> List[Dict[str, Any]]:
-  return [{
-      'bazel_target': result.bazel_target,
-      'runtime': humanize.Duration(result.runtime_ms / 1000),
-      'test_count': result.test_count,
-      'git_branch': result.git_branch,
-      'git_commit': result.git_commit,
-      'log': result.log,
-      'changed': True,
-      'fail': True,
-      'runtime_ms': result.runtime_ms,
-  } for result in delta.broken] + [
-      {
-          'bazel_target': result.bazel_target,
-          'runtime': humanize.Duration(result.runtime_ms / 1000),
-          'test_count': result.test_count,
-          'git_branch': result.git_branch,
-          'git_commit': result.git_commit,
-          'log': result.log,
-          'changed': False,
-          'fail': True,
-          'runtime_ms': result.runtime_ms,
-      } for result in delta.still_broken
-  ] + [{
-      'bazel_target': result.bazel_target,
-      'runtime': humanize.Duration(result.runtime_ms / 1000),
-      'test_count': result.test_count,
-      'git_branch': result.git_branch,
-      'git_commit': result.git_commit,
-      'log': result.log,
-      'changed': True,
-      'fail': False,
-      'runtime_ms': result.runtime_ms,
-  } for result in delta.fixed
-      ] + [{
-          'bazel_target': result.bazel_target,
-          'runtime': humanize.Duration(result.runtime_ms / 1000),
-          'test_count': result.test_count,
-          'git_branch': result.git_branch,
-          'git_commit': result.git_commit,
-          'log': result.log,
-          'changed': False,
-          'fail': False,
-          'runtime_ms': result.runtime_ms,
-      } for result in delta.still_pass]
+
+  def _ResultToTarget(result, changed: bool, fail: bool):
+    test_count_str = (f'{humanize.Commas(result.test_count)} '
+                      f'{humanize.Plural(result.test_count), "test", "tests"}')
+    return {
+        'bazel_target': result.bazel_target,
+        'runtime_ms': result.runtime_ms,
+        'runtime_natural': humanize.Duration(result.runtime_ms / 1000),
+        'test_count': result.test_count,
+        'test_count_natural': test_count_str,
+        'git_branch': result.git_branch,
+        'git_commit': result.git_commit,
+        'log': result.log,
+        'changed': True,
+        'fail': True,
+    }
+
+  return [
+      _ResultToTarget(result, changed=True, fail=True)
+      for result in delta.broken
+  ] + [
+      _ResultToTarget(result, changed=False, fail=True)
+      for result in delta.still_broken
+  ] + [
+      _ResultToTarget(result, changed=True, fail=False)
+      for result in delta.fixed
+  ] + [
+      _ResultToTarget(result, changed=False, fail=False)
+      for result in delta.still_pass
+  ]
 
 
 def RenderInvocation(host, session, invocation):
