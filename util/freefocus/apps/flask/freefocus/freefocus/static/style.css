@@ -3,11 +3,14 @@ body {
   background: #eee;
 }
 
-a, h1, h2 {
+a,
+h1,
+h2 {
   color: #377BA8;
 }
 
-h1, h2 {
+h1,
+h2 {
   font-family: 'Georgia', serif;
   margin: 0;
 }

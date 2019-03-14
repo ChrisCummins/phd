@@ -2,18 +2,17 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8"/>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>FreeFocus</title>
-  <meta name="description" content="FreeFocus"/>
-  <meta name="author" property="author" content="Chris Cummins"/>
+  <meta name="description" content="FreeFocus" />
+  <meta name="author" property="author" content="Chris Cummins" />
 
-  <link href="{{ assets.bootstrap_css }}" rel="stylesheet"/>
-  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-        rel="stylesheet"/>
-  <link href="{{ assets.styles_css }}?v={{ assets.cache_tag }}" rel="stylesheet"/>
+  <link href="{{ assets.bootstrap_css }}" rel="stylesheet" />
+  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+  <link href="{{ assets.styles_css }}?v={{ assets.cache_tag }}" rel="stylesheet" />
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -23,88 +22,85 @@
 </head>
 
 <body>
-<div class="navbar navbar-default">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
-              data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#">FreeFocus</a>
-    </div>
+  <div class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">FreeFocus</a>
+      </div>
 
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav">
-        <li class="active"><a href="#"><i class="fa fa-list" aria-hidden="true"></i> <span
-            class="sr-only">(current)</span></a></li>
-        <li><a href="#"><i class="fa fa-calendar-o" aria-hidden="true"></i></a></li>
-        <li><a href="#"><i class="fa fa-address-book-o" aria-hidden="true"></i></a></li>
-        <li><a href="#"><i class="fa fa-cog" aria-hidden="true"></i></a></li>
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="#"><i class="fa fa-plus" aria-hidden="true"></i></a></li>
-      </ul>
-      <form class="nav navbar-nav navbar-form navbar-right" role="search">
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Search">
-        </div>
-      </form>
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#"><i class="fa fa-list" aria-hidden="true"></i> <span class="sr-only">(current)</span></a></li>
+          <li><a href="#"><i class="fa fa-calendar-o" aria-hidden="true"></i></a></li>
+          <li><a href="#"><i class="fa fa-address-book-o" aria-hidden="true"></i></a></li>
+          <li><a href="#"><i class="fa fa-cog" aria-hidden="true"></i></a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#"><i class="fa fa-plus" aria-hidden="true"></i></a></li>
+        </ul>
+        <form class="nav navbar-nav navbar-form navbar-right" role="search">
+          <div class="form-group">
+            <input type="text" class="form-control" placeholder="Search">
+          </div>
+        </form>
+      </div>
+    </div> <!-- /.container-fluid -->
+  </div> <!-- /.navbar -->
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="tasks">
+          {% for task in tasks recursive %}
+          <ul>
+            <li {% if task.completed %}class="complete" {% endif %}>
+              {% if task.completed %}
+              <i class="fa fa-check-circle status status-complete" aria-hidden="true"></i>
+              {% else %}
+              <i class="fa fa-circle-thin status status-active" aria-hidden="true"></i>
+              {% endif %}
+              {{ task.body }}
+              <hr />
+              {% if task.children %}
+              <ul>
+                {{ loop(task.children) }}
+              </ul>
+              {% endif %}
+            </li>
+          </ul>
+          {% endfor %}
+        </div> <!-- /.tasks -->
+      </div>
+      <div class="col-lg-4 right-menu">
+        {% set task = tasks[0].children[0].children[1].children[4] %}
+        <h1>{{ task.body }}</h1>
+      </div>
     </div>
   </div> <!-- /.container-fluid -->
-</div> <!-- /.navbar -->
 
-<div class="container-fluid">
+  </div class="container-fluid">
   <div class="row">
-    <div class="col-lg-8">
-      <div class="tasks">
-        {% for task in tasks recursive %}
-        <ul>
-          <li {% if task.completed %}class="complete" {% endif %}>
-            {% if task.completed %}
-            <i class="fa fa-check-circle status status-complete" aria-hidden="true"></i>
-            {% else %}
-            <i class="fa fa-circle-thin status status-active" aria-hidden="true"></i>
-            {% endif %}
-            {{ task.body }}
-            <hr/>
-            {% if task.children %}
-            <ul>
-              {{ loop(task.children) }}
-            </ul>
-            {% endif %}
-          </li>
-        </ul>
-        {% endfor %}
-      </div> <!-- /.tasks -->
-    </div>
-    <div class="col-lg-4 right-menu">
-      {% set task = tasks[0].children[0].children[1].children[4] %}
-      <h1>{{ task.body }}</h1>
-    </div>
-  </div>
-</div> <!-- /.container-fluid -->
+    <div class="col-lg-12">
+      <hr>
+      <p class="text-center">
+        <a href="https://github.com/ChrisCummins/freefocus">freefocus {{ freefocus.version }}</a>
+        made with <i class="fa fa-heart"></i> by
+        <a href="https://chriscummins.cc">Chris Cummins</a>
+      </p>
+    </div> <!-- /.col-lg-12 -->
 
-</div class="container-fluid">
-<div class="row">
-  <div class="col-lg-12">
-    <hr>
-    <p class="text-center">
-      <a href="https://github.com/ChrisCummins/freefocus">freefocus {{ freefocus.version }}</a>
-      made with <i class="fa fa-heart"></i> by
-      <a href="https://chriscummins.cc">Chris Cummins</a>
-    </p>
-  </div> <!-- /.col-lg-12 -->
+  </div> <!-- /.row -->
+  </div> <!-- /.container-fluid -->
 
-</div> <!-- /.row -->
-</div> <!-- /.container-fluid -->
-
-<script type="text/javascript"
-        src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script type="text/javascript"
-        src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="{{ assets.site_js }}?v={{ assets.cache_tag }}"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="{{ assets.site_js }}?v={{ assets.cache_tag }}"></script>
 </body>
+
 </html>

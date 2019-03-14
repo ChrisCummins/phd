@@ -11,9 +11,8 @@
   <meta name="author" content="">
 
   <title>{{ page.title }}</title>
-  <link href="{{ '/css/styles.css' | relative_url }}?v={{ site.cache_tag }}" rel="stylesheet"/>
-  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-        rel="stylesheet"/>
+  <link href="{{ '/css/styles.css' | relative_url }}?v={{ site.cache_tag }}" rel="stylesheet" />
+  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -21,18 +20,18 @@
   <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
   <![endif]-->
 </head>
-<body>
-{{ content }}
 
-<script type="text/javascript"
-        src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script type="text/javascript"
-        src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="{{ '/js/site.js' | relative_url }}?v={{ site.cache_tag }}"></script>
-{% if page.js %}
-{% for js in page.js %}
-<script src="{{ js | relative_url }}?v={{ site.cache_tag }}"></script>
-{% endfor %}
-{% endif %}
+<body>
+  {{ content }}
+
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="{{ '/js/site.js' | relative_url }}?v={{ site.cache_tag }}"></script>
+  {% if page.js %}
+  {% for js in page.js %}
+  <script src="{{ js | relative_url }}?v={{ site.cache_tag }}"></script>
+  {% endfor %}
+  {% endif %}
 </body>
+
 </html>

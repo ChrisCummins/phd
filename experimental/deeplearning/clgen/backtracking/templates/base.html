@@ -1,25 +1,29 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link href="{{ urls.styles_css }}?v={{ urls.cache_tag }}" rel="stylesheet"/>
-    <style>
-      footer .footer-copyright a {
-        text-decoration: underline;
-      }
-      footer .footer-copyright a.me {
-        text-decoration: none;
-        color: #d82b56;
-      }
-      footer .footer-copyright a.me:hover {
-        color: #e60000;
-      }
-    </style>
-    {% block header %}{% endblock %}
-  </head>
-  <body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link href="{{ urls.styles_css }}?v={{ urls.cache_tag }}" rel="stylesheet" />
+  <style>
+    footer .footer-copyright a {
+      text-decoration: underline;
+    }
+
+    footer .footer-copyright a.me {
+      text-decoration: none;
+      color: #d82b56;
+    }
+
+    footer .footer-copyright a.me:hover {
+      color: #e60000;
+    }
+  </style>
+  {% block header %}{% endblock %}
+</head>
+
+<body>
 
   {% block body %}{% endblock %}
 
@@ -29,12 +33,12 @@
 
   <footer class="pt-4 fixed-bottom">
     <div class="footer-copyright text-center py-3 text-muted">
-      © 2019 <a class="me", href="https://chriscummins.cc">Chris Cummins</a><br/>
+      © 2019 <a class="me" , href="https://chriscummins.cc">Chris Cummins</a><br />
       build <a href="{{ build_info.commit_url }}">{{ build_info.short_hash }}{% if build_info.dirty %}*{% endif %}</a> on {{ build_info.date.strftime('%Y-%m-%d') }}
     </div>
   </footer>
 
   {% block footer %}{% endblock %}
-  </body>
+</body>
 
 </html>

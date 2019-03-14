@@ -1,14 +1,18 @@
 {% extends "base.html" %}
 
 {% block header %}
-<title>{{ delta.broken + delta.still_broken }} failing - {{ host }}</title>
+<title>
+  {{ delta.broken + delta.still_broken }} failing -
+  {{ host }}
+</title>
 
 <style>
   #test_results .card-header {
     padding: 0;
   }
 
-  #test_results pre,.code {
+  #test_results pre,
+  .code {
     font-family: 'Inconsolata', monospace;
     font-size: 1.1em;
   }
@@ -41,7 +45,9 @@
         </a>
         <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
           {% for host_ in hosts %}
-            <a class="dropdown-item{% if host_ == host %} active{% endif %}" href="/ci/{{ host_ }}">{{ host_ }}</a>
+          <a class="dropdown-item{% if host_ == host %} active{% endif %}" href="/ci/{{ host_ }}">
+            {{ host_ }}
+          </a>
           {% endfor %}
         </div>
       </li>
@@ -51,7 +57,11 @@
         </a>
         <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
           {% for ivd in invocations %}
-          <a class="dropdown-item{% if ivd[1] == invocation_datetime %} active{% endif %}" href="/ci/{{ host }}/{{ ivd[0] }}">{{ ivd[1].strftime('%Y-%m-%d %H:%M') }}{% if ivd[1] == invocation_datetime %} (current){% endif %}</a>
+          <a class="dropdown-item{% if ivd[1] == invocation_datetime %} active{% endif %}" href="/ci/{{ host }}/{{ ivd[0] }}">
+            {{ ivd[1].strftime('%Y-%m-%d %H:%M') }}
+            {% if ivd[1] == invocation_datetime %} (current)
+            {% endif %}
+          </a>
           {% endfor %}
         </div>
       </li>
@@ -63,16 +73,31 @@
   <div class="row">
     <div class="col">
       <p class="lead">
-        {{ git_branch }} at <a href="{{ urls.github_commit }}">{{ git_commit[:7] }}</a>
-        on <a href="{{ urls.buildbot }}">{{ host }}</a>.<br/>
-        Ran {{ test_count }} tests in {{ test_duration }}.<br/>
-        Completed {{ invocation_delta }}.
+        {{ git_branch }} at
+        <a href="{{ urls.github_commit }}">
+          {{ git_commit[:7] }}
+        </a>
+        on
+        <a href="{{ urls.buildbot }}">
+          {{ host }}
+        </a>.<br /> Ran
+        {{ test_count }} tests in
+        {{ test_duration }}.<br /> Completed
+        {{ invocation_delta }}.
       </p>
       <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
-        {% if delta.broken %}{{ delta.broken }} broken.{% endif %}
-        {% if delta.still_broken %}{{ delta.still_broken }} still broken.{% endif %}
-        {% if delta.fixed %}{{ delta.fixed }} fixed.{% endif %}
-        {% if delta.still_pass %}{{ delta.still_pass }} pass.{% endif %}
+        {% if delta.broken %}
+        {{ delta.broken }} broken.
+        {% endif %}
+        {% if delta.still_broken %}
+        {{ delta.still_broken }} still broken.
+        {% endif %}
+        {% if delta.fixed %}
+        {{ delta.fixed }} fixed.
+        {% endif %}
+        {% if delta.still_pass %}
+        {{ delta.still_pass }} pass.
+        {% endif %}
       </div>
     </div>
   </div>
@@ -97,9 +122,7 @@
           </div>
           <div id="t{{ loop.index }}" class="collapse" aria-labelledby="h{{ loop.index }}">
             <div class="card-body">
-              <pre>
-{{ result.log | e }}
-              </pre>
+              <pre>{{ result.log | e }}</pre>
             </div>
           </div>
         </div>
@@ -136,11 +159,11 @@
     return components.join(",");
   }
 
-  $(document).ready(function () {
+  $(document).ready(function() {
     // Show collapsible element selected in URL.
     if (location.hash != null && location.hash != "") {
       var components = location.hash.substr(1).split(",");
-      components.forEach(function (component) {
+      components.forEach(function(component) {
         // Show the collapsible element.
         $('#' + component + '.collapse').collapse('show');
       });

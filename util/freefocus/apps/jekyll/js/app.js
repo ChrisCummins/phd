@@ -4,17 +4,17 @@ API_ENDPOINT = SERVER + '/api/v1.0'
 $tasks = $('#app .tasks');
 $details = $('#app .details');
 
-var generate_task_list = function (tasks) {
+var generate_task_list = function(tasks) {
 
-  var walker = function (task, html) {
+  var walker = function(task, html) {
     html += '<li>';
 
     if (task.children.length) {
       html += '<i class="fa fa-caret-down see-more down" aria-hidden="true"></i>';
     }
 
-    html += '<img src="/img/task.svg" /><span>' + task.body.data.split('\n')[0]
-        + '</span><hr/>';
+    html += '<img src="/img/task.svg" /><span>' + task.body.data.split('\n')[0] +
+      '</span><hr/>';
 
     if (task.children.length) {
       html += '<ul>';
@@ -37,22 +37,20 @@ var generate_task_list = function (tasks) {
 
 console.log("GET /tasks");
 $.get(
-    API_ENDPOINT + '/tasks',
-    {},
-    function (data) {
-      console.log('/tasks');
-      $tasks.html(generate_task_list(data));
-    }
+  API_ENDPOINT + '/tasks', {},
+  function(data) {
+    console.log('/tasks');
+    $tasks.html(generate_task_list(data));
+  }
 );
 
 console.log("GET /tasks/17");
 $.get(
-    API_ENDPOINT + '/tasks/17',
-    {},
-    function (data) {
-      console.log('/tasks/17');
+  API_ENDPOINT + '/tasks/17', {},
+  function(data) {
+    console.log('/tasks/17');
 
-      $('.details .task-header').html(markdown.toHTML(data.body.split('\n')[0]))
-      $('.details .task-body').html(markdown.toHTML(data.body))
-    }
+    $('.details .task-header').html(markdown.toHTML(data.body.split('\n')[0]))
+    $('.details .task-body').html(markdown.toHTML(data.body))
+  }
 );
