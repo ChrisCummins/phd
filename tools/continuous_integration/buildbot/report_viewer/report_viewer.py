@@ -120,7 +120,7 @@ def RenderInvocation(host, session, invocation):
       invocations=invocations,
       targets=targets,
       test_count=humanize.Commas(sum(t['test_count'] for t in targets)),
-      test_duration=humanize.Duration(
+      test_duration=humanize.Delta(
           sum(t['runtime_ms'] for t in targets) / 1000),
       git_commit=targets[0]['git_commit'],
       git_branch=targets[0]['git_branch'],
@@ -135,7 +135,7 @@ def RenderInvocation(host, session, invocation):
       build_info=build_info.GetBuildInfo())
 
 
-@flask_app.route("/ci")
+@flask_app.route("/ci/")
 def index():
   database = db.Database(FLAGS.db)
   with database.Session() as session:
