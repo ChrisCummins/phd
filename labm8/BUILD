@@ -363,6 +363,7 @@ py_library(
     deps = [
         ":app",
         ":fs",
+        ":humanize",
         ":labdate",
         ":pbutil",
         ":system",

@@ -13,6 +13,7 @@ import time
 import typing
 
 from labm8 import app
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import system
@@ -200,8 +201,8 @@ class LockFile:
         elif not block:
           raise UnableToAcquireLockError(self)
         # Block and try again later.
-        app.Log(1, 'Blocking on lockfile %s for %f seconds', self.path,
-                 FLAGS.lockfile_block_seconds)
+        app.Log(1, 'Blocking on lockfile %s for %s seconds', self.path,
+                humanize.Duration(FLAGS.lockfile_block_seconds))
         time.sleep(FLAGS.lockfile_block_seconds)
       else:  # new lock
         _create_lock()
