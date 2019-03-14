@@ -122,17 +122,11 @@ class LinterThread(threading.Thread):
 
 class BuildiferThread(LinterThread):
 
-  def __init__(self, paths):
-    super(BuildiferThread, self).__init__(paths)
-
   def run(self):
     ExecOrDie([BUILDIFIER] + self._paths)
 
 
 class ClangFormatThread(LinterThread):
-
-  def __init__(self, paths):
-    super(ClangFormatThread, self).__init__(paths)
 
   def run(self):
     # TODO(cec): Use project-local clang-format style file.
@@ -141,17 +135,11 @@ class ClangFormatThread(LinterThread):
 
 class YapfThread(LinterThread):
 
-  def __init__(self, paths):
-    super(YapfThread, self).__init__(paths)
-
   def run(self):
     ExecOrDie([YAPF, '--style', YAPF_RC, '-i'] + self._paths)
 
 
 class SqlFormatThread(LinterThread):
-
-  def __init__(self, paths):
-    super(SqlFormatThread, self).__init__(paths)
 
   def run(self):
     for path in self.paths:
