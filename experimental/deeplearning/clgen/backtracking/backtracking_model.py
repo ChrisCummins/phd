@@ -440,7 +440,8 @@ class BacktrackingModel(models.Model):
 
       # Generate a batch of candidates statements to choose from.
       candidate_statements = []
-      for _ in range(FLAGS.experimental_clgen_backtracking_max_attempts):
+      for _ in range(FLAGS.experimental_clgen_backtracking_max_attempts *
+                     FLAGS.experimental_clgen_backtracking_candidates_per_step):
         candidate_statements.extend(
             self.TryToGenerateCandidateStatements(
                 sample_in_progress, rollback_state, rollback_index, backtracker,
