@@ -181,16 +181,14 @@ class Corpus(object):
     app.Log(1, 'Content ID: %s', self.content_id)
     preprocessed_lock_path = pathlib.Path(
         self.preprocessed.url[len('sqlite:///'):]).parent / 'LOCK'
-    with lockfile.LockFile(preprocessed_lock_path).acquire(
-        replace_stale=True, block=True):
+    with lockfile.LockFile(preprocessed_lock_path):
       self.preprocessed.Create(self.config)
     if not self.preprocessed.size:
       raise errors.EmptyCorpusException(
           f"Pre-processed corpus contains no files: '{self.preprocessed.url}'")
     encoded_lock_path = pathlib.Path(
         self.encoded.url[len('sqlite:///'):]).parent / 'LOCK'
-    with lockfile.LockFile(encoded_lock_path).acquire(
-        replace_stale=True, block=True):
+    with lockfile.LockFile(encoded_lock_path):
       start_time = time.time()
       atomizer = self.atomizer
       app.Log(1, '%s: %s tokens in %s ms',

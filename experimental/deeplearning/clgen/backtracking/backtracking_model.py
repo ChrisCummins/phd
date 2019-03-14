@@ -10,6 +10,7 @@ import tempfile
 import time
 import typing
 from typing import Any, Dict
+import copy
 
 import numpy as np
 import scipy
@@ -371,7 +372,7 @@ class BacktrackingModel(models.Model):
     # Set sampler state to the last good state.
     app.Log(3, 'Beginning Statement Generation attempt')
     sampled_indices = self.backend.SampleNextIndices(
-        sampler, done=np.array([False]))
+        sampler, done=np.array([False]*sampler.batch_size))
 
     for i, sample in enumerate(sampled_indices):
       app.Log(3, 'Parsing Batch Item %d', i)
@@ -393,7 +394,7 @@ class BacktrackingModel(models.Model):
             backtracker.feature_distance = init_feature_distance
             candidate_statements.append(
                 CandidateStatement(
-                    statement=candidate_statement,
+                    statement=list(candidate_statement),
                     feature_distance=new_feature_distance))
           else:
             app.Log(4, 'Rejecting candidate statement: `%s`',
@@ -401,7 +402,7 @@ class BacktrackingModel(models.Model):
             candidate_statements.append(
                 CandidateStatement(
                     statement=candidate_statement, feature_distance=None))
-          break
+            break
 
     return candidate_statements
 
@@ -429,7 +430,13 @@ class BacktrackingModel(models.Model):
     # During sampling, 'sample_in_progress' contains the sequence of tokens that
     # is restored when backtracking.
     sample_in_progress = sampler.tokenized_start_text.copy()
+    self.backend.RandomizeSampleState()
     rollback_state, rollback_index = self.backend.EvaluateSampleState(sampler)
+    rollback_history = [(
+        copy.deepcopy(backtracker),
+        list(sample_in_progress),
+        rollback_state, rollback_index)]
+    stagnation = 0
 
     # Generate a batch of candidates.
     for step_count in range(
@@ -570,22 +577,47 @@ class BacktrackingModel(models.Model):
       # Select the best candidate.
       best_candidate = min(
           candidate_statements, key=lambda x: x.feature_distance)
+
+      # Select a candidate using stochastic hill climbing
+      old = backtracker.feature_distance
+      deltas = [(old - c.feature_distance) for c in candidate_statements]
+      deltas = np.array(deltas) + 0.5
+      deltas[deltas < 0.5] = 0.1
+      deltas = deltas / np.sum(deltas)
+      sel_candidate_idx = np.random.choice(len(candidate_statements), p=deltas)
+      sel_candidate = candidate_statements[sel_candidate_idx]
+
       app.Log(
           2,
           'Selected best feature distance (%f) at step %d from candidates: %s',
-          best_candidate.feature_distance, step_count,
+          sel_candidate.feature_distance, step_count,
           SummarizeFloats(c.feature_distance for c in candidate_statements))
       app.Log(4, 'Selected best statement: %s',
-              ''.join(best_candidate.statement))
+              ''.join(sel_candidate.statement))
+
+      if backtracker.feature_distance - sel_candidate.feature_distance <= 0:
+        stagnation += 1
+        if stagnation > 10:
+          backtracker, sample_in_progress, rollback_state, rollback_index = rollback_history.pop()
+          stagnation = 0
+          app.Log(4, 'Got Stuck. Backtracking')
+          continue
+      else:
+        stagnation = 0
+        if step_count % 10 == 0:
+          rollback_history.append((
+              copy.deepcopy(backtracker),
+              list(sample_in_progress),
+              rollback_state, rollback_index))
 
       # Set the sampler's rollback state to be the state produced by feeding
       # the best candidate in the input, so that future samples start from
       # the right state
-      if len(best_candidate.statement) > 0:
-        sample_in_progress += best_candidate.statement
-        encoded_best_candidate = atomizer.AtomizeString(''.join(
-            best_candidate.statement))
-        arr = np.concatenate([rollback_index, encoded_best_candidate])
+      if len(sel_candidate.statement) > 0:
+        sample_in_progress += sel_candidate.statement
+        encoded_sel_candidate = atomizer.AtomizeString(''.join(
+            sel_candidate.statement))
+        arr = np.concatenate([rollback_index, encoded_sel_candidate])
         self.backend.ResetSampleState(sampler, state=rollback_state, seed=arr)
         rollback_state, rollback_index = self.backend.EvaluateSampleState(
             sampler)

@@ -1,48 +1,48 @@
 [submodule "docs/2016_01_adapt"]
 	path = docs/2016_01_adapt
-	url = git@github.com:ChrisCummins/paper-autotuning-opencl-wgsize.git
+	url = https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize.git
 [submodule "docs/2016_01_hlpgpu"]
 	path = docs/2016_01_hlpgpu
-	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git
+	url = https://github.com/ChrisCummins/paper-towards-collaborative-performance-tuning.git
 [submodule "docs/2017_02_cgo"]
 	path = docs/2017_02_cgo
-	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
+	url = https://github.com/ChrisCummins/paper-synthesizing-benchmarks.git
 [submodule "docs/2017_09_pact"]
 	path = docs/2017_09_pact
 	url = https://github.com/ChrisCummins/paper-end2end-dl
 [submodule "experimental/eevee"]
 	path = experimental/eevee
-	url = git@github.com:ChrisCummins/eevee.git
+	url = https://github.com/ChrisCummins/eevee.git
 [submodule "experimental/euclid"]
 	path = experimental/euclid
-	url = git@github.com:ChrisCummins/euclid.git
+	url = https://github.com/ChrisCummins/euclid.git
 [submodule "http/cgo.org/cgo2018"]
 	path = http/cgo.org/cgo2018
-	url = git@github.com:ChrisCummins/cgo2018.git
+	url = https://github.com/ChrisCummins/cgo2018.git
 [submodule "http/chriscummins.cc"]
 	path = http/chriscummins.cc
-	url = git@github.com:ChrisCummins/chriscummins.github.io.git
+	url = https://github.com/ChrisCummins/chriscummins.github.io.git
 [submodule "http/humanorrobot.uk"]
 	path = http/humanorrobot.uk
-	url = git@github.com:ChrisCummins/humanorrobot.uk.git
+	url = https://github.com/ChrisCummins/humanorrobot.uk.git
 [submodule "http/warhaniye.com"]
 	path = http/warhaniye.com
-	url = git@github.com:ChrisCummins/warhaniye.com.git
+	url = https://github.com/ChrisCummins/warhaniye.com.git
 [submodule "learn/interactive-coding-challenges"]
 	path = learn/interactive-coding-challenges
-	url = git@github.com:ChrisCummins/interactive-coding-challenges.git
+	url = https://github.com/ChrisCummins/interactive-coding-challenges.git
 [submodule "system/emu"]
 	path = system/emu
-	url = git@github.com:ChrisCummins/emu.git
+	url = https://github.com/ChrisCummins/emu.git
 [submodule "third_party/torch-rnn"]
 	path = third_party/torch-rnn
-	url = git@github.com:jcjohnson/torch-rnn.git
+	url = https://github.com/jcjohnson/torch-rnn.git
 [submodule "third_party/visioncpp"]
 	path = third_party/visioncpp
-	url = git@github.com:codeplaysoftware/visioncpp.git
+	url = https://github.com/codeplaysoftware/visioncpp.git
 [submodule "util/gh-archiver"]
 	path = util/gh-archiver
-	url = git@github.com:ChrisCummins/gh-archiver.git
+	url = https://github.com/ChrisCummins/gh-archiver.git
 [submodule "util/srtime"]
 	path = util/srtime
-	url = git@github.com:ChrisCummins/srtime.git
+	url = https://github.com/ChrisCummins/srtime.git

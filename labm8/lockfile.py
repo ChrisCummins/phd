@@ -247,7 +247,7 @@ class LockFile:
     return str(self.path)
 
   def __enter__(self):
-    return self.acquire()
+    return self.acquire(replace_stale=True, block=True)
 
   def __exit__(self, type, value, tb):
     self.release()

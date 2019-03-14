@@ -417,8 +417,16 @@ class TensorFlowBackend(backends.BackendBase):
       generated = generated[:, length - 1:]
     return generated
 
+  def RandomizeSampleState(self) -> None:
+    import tensorflow as tf
+    self.inference_state = [
+        tf.nn.rnn_cell.LSTMStateTuple(
+           st1 + np.random.normal(scale=0.2, size=np.shape(st1)),
+           st2 + np.random.normal(scale=0.2, size=np.shape(st2)))
+        for st1,st2 in self.inference_state]
+
   def ResetSampleState(self, sampler: samplers.Sampler, state, seed) -> None:
-    self.inference_state = [state] * sampler.batch_size
+    self.inference_state = copy.deepcopy(state)
     self.inference_indices = np.tile(seed, [sampler.batch_size, 1])
 
   def EvaluateSampleState(self, sampler: samplers.Sampler):
@@ -442,7 +450,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.inference_state = self.inference_sess.run([self.final_state], feed)
     self.inference_indices = last_indices
 
-    state_copy = copy.deepcopy(self.inference_state[0])
+    state_copy = copy.deepcopy(self.inference_state)
     input_carry_copy = self.inference_indices[0]
     return state_copy, input_carry_copy
 
