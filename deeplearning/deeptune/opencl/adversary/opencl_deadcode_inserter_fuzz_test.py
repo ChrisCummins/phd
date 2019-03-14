@@ -1,3 +1,17 @@
+# Copyright (c) 2017, 2018, 2019 Chris Cummins.
+#
+# DeepTune is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DeepTune is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """Fuzz test for :opencl_deadcode_inserter."""
 import pathlib
 import random
@@ -22,8 +36,8 @@ FUZZ_TEST_COUNT = 10
 
 KERNELS = np.array([
     """\
-kernel void A(const int a) { 
-  int b = a; 
+kernel void A(const int a) {
+  int b = a;
 }""", """\
 kernel void A(global int * a) {
 }""", """\
@@ -39,9 +53,9 @@ kernel void A(const int a, global int * b) {
 kernel void A(int a, const __global float4* b, __global float4* c, __global float4* d, __global float4* e) {
   unsigned int f = get_local_id(0);
   unsigned int g = get_group_id(0);
-  
+
   float4 h = b[g];
-  
+
   float4 i = (1.0f - h) * 5.0f + h * 30.f;
   float4 j = (1.0f - h) * 1.0f + h * 100.f;
   float4 k = (1.0f - h) * 0.25f + h * 10.f;
@@ -56,27 +70,27 @@ kernel void A(int a, const __global float4* b, __global float4* c, __global floa
   float4 t = 1.0f - s;
   float4 u = s * p;
   float4 v = t * p;
-  
+
   float4 w = i * exp(m * (2.0f * f - (float)a)) - j;
   d[f].x = w.x > 0 ? w.x : 0.0f;
   d[f].y = w.y > 0 ? w.y : 0.0f;
   d[f].z = w.z > 0 ? w.z : 0.0f;
   d[f].w = w.w > 0 ? w.w : 0.0f;
-  
+
   barrier(1);
-  
+
   for (int x = a; x > 0; x -= 2) {
     if (f < x) {
       e[f] = u * d[f] + v * d[f + 1];
     }
     barrier(1);
-  
+
     if (f < x - 1) {
       d[f] = u * e[f] + v * e[f + 1];
     }
     barrier(1);
   }
-  
+
   if (f == 0)
     c[g] = d[0];
 }""", """\
