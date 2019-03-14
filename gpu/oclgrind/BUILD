@@ -20,9 +20,11 @@ py_binary(
 py_test(
     name = "oclgrind_test",
     srcs = ["oclgrind_test.py"],
+    data = ["//gpu/oclgrind/test/data:oclgrind_working"],
     deps = [
         ":oclgrind",
         "//labm8:app",
+        "//labm8:bazelutil",
         "//labm8:test",
     ],
 )
