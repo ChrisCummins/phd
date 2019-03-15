@@ -21,8 +21,6 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
-load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
-
 licenses(["restricted"])  # GPL v3
 
 exports_files([
@@ -46,24 +44,6 @@ py_binary(
     srcs = ["clgen.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":errors",
-        ":samplers",
-        "//deeplearning/clgen/models",
-        "//deeplearning/clgen/models:pretrained",
-        "//deeplearning/clgen/proto:clgen_py_pb2",
-        "//labm8:app",
-        "//labm8:pbutil",
-        "//labm8:prof",
-    ],
-)
-
-py3_image(
-    name = "clgen_image",
-    srcs = ["clgen.py"],
-    base = "@base//image",
-    main = "clgen.py",
-    deps = [
-        # This list must be kept in sync with :clgen deps.
         ":errors",
         ":samplers",
         "//deeplearning/clgen/models",
