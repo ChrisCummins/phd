@@ -74,7 +74,7 @@ class PreTrainedModel(object):
       min_num_samples: The minimum number of samples to return. Note that the
         true number of samples returned may be higher than this value, as
         sampling occurs in batches. The model will continue producing samples
-        until the lowest mulitple of the sampler batch size property that is
+        until the lowest multiple of the sampler batch size property that is
         larger than this value. E.g. if min_num_samples is 7 and the Sampler
         batch size is 10, 10 samples will be returned.
       seed: A numeric value to seed the RNG with. If not present, the RNG is
@@ -137,7 +137,7 @@ class PreTrainedModel(object):
           break
 
       # Complete sampling. Note that sample_count starts at 1.
-      if sample_count > min_num_samples:
+      if min_num_samples > 0 and sample_count > min_num_samples:
         now = labdate.MillisecondsTimestamp()
         app.Log(
             1, 'Produced %s samples at a rate of %s ms / sample.',

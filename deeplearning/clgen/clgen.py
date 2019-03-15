@@ -51,7 +51,7 @@ from labm8 import prof
 FLAGS = app.FLAGS
 
 app.DEFINE_string('config', None, 'Path to a clgen.Instance proto file.')
-app.DEFINE_integer('min_samples', -1, 'The minimum number of samples to make.')
+app.DEFINE_integer('min_samples', 0, 'The minimum number of samples to make.')
 app.DEFINE_string('stop_after', None,
                   'Stop CLgen early. Valid options are: "corpus", or "train".')
 app.DEFINE_string(

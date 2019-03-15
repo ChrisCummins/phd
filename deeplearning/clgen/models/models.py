@@ -226,7 +226,7 @@ class Model(object):
 
       # Per-sample batch outer loop. Continues until we have as many samples
       # as we want.
-      while min_num_samples == 0 or len(samples) < min_num_samples:
+      while min_num_samples <= 0 or len(samples) < min_num_samples:
         sample_batch = self._SampleBatch(
             sampler, atomizer, print_samples=print_samples)
 
