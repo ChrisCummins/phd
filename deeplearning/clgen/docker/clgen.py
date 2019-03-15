@@ -25,7 +25,13 @@ https://chriscummins.cc/clgen
 """.strip())
     return
 
-  clgen.RunWithErrorHandling(clgen.DoFlagsAction)
+  config = clgen.ConfigFromFlags()
+  instance = clgen.Instance(config)
+  with instance.Session():
+    instance.Sample(
+        min_num_samples=FLAGS.min_samples,
+        print_samples=True,
+        cache_samples=False)
 
 
 if __name__ == '__main__':

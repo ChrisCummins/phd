@@ -27,6 +27,7 @@ from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from labm8 import app
+from labm8 import crypto
 from labm8 import cache
 from labm8 import humanize
 from labm8 import labdate
@@ -59,10 +60,61 @@ class PreTrainedModel(object):
     """Get the training telemetry data."""
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
 
+  def _SampleBatch(self,
+                   sampler: samplers.Sampler,
+                   atomizer: atomizers.AtomizerBase,
+                   print_samples: typing.Optional[bool] = False
+                  ) -> typing.List[model_pb2.Sample]:
+    """Run a single iteration of the batched sample inner-loop."""
+    samples = []
+    samples_in_progress = [
+        sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
+    ]
+    done = np.zeros(sampler.batch_size, dtype=np.bool)
+    start_time = labdate.MillisecondsTimestamp()
+    wall_time_start = start_time
+
+    self.backend.InitSampleBatch(sampler)
+
+    # Sampling loop. Continues until all samples in the batch are done.
+    while not done.all():
+      indices = self.backend.SampleNextIndices(sampler, done)
+
+      # Iterate over all samples in batch to determine whether they're
+      # done.
+      for i in range(sampler.batch_size):
+        if done[i]:
+          continue
+
+        for index in indices[i]:
+          samples_in_progress[i].append(atomizer.decoder[index])
+          if sampler.SampleIsComplete(samples_in_progress[i]):
+            end_time = labdate.MillisecondsTimestamp()
+            done[i] = 1
+            sample = model_pb2.Sample(
+                text=''.join(samples_in_progress[i]),
+                sample_start_epoch_ms_utc=start_time,
+                sample_time_ms=end_time - start_time,
+                wall_time_ms=end_time - wall_time_start,
+                num_tokens=len(samples_in_progress[i]))
+            samples.append(sample)
+
+            if print_samples:
+              print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
+
+            # Wall sample time is the difference between the end of the previous
+            # sample and the end of the current sample.
+            wall_time_start = labdate.MillisecondsTimestamp()
+            break
+
+    return samples
+
   def Sample(self,
              sampler: samplers.Sampler,
              min_num_samples: int,
-             seed: int = None) -> typing.Iterable[model_pb2.Sample]:
+             seed: int = None,
+             print_samples: bool = True,
+             cache_samples: bool = True) -> typing.Iterable[model_pb2.Sample]:
     """Sample a model.
 
     If the model is not already trained, calling Sample() first trains the
@@ -90,61 +142,57 @@ class PreTrainedModel(object):
       InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
         encoded.
     """
-    sample_count = 1
+    app.Log(1, "Sampling: '%s'", sampler.start_text)
+    if min_num_samples <= 0:
+      app.Warning(
+          'Entering an infinite sample loop, this process will never end!')
+    sample_start_time = labdate.MillisecondsTimestamp()
+
     atomizer = self.atomizer
     sampler.Specialize(atomizer)
     self.backend.InitSampling(sampler, seed)
-    sample_start_time = labdate.MillisecondsTimestamp()
+
+    samples = []
+    sample_dir = self.SamplerCache(sampler)
+    sample_dir.mkdir(parents=True, exist_ok=True)
+
     # Per-sample batch outer loop. Continues until we have as many samples
     # as we want.
-    while True:
-      samples_in_progress = [
-          sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
-      ]
-      done = np.zeros(sampler.batch_size, dtype=np.bool)
-      start_time = labdate.MillisecondsTimestamp()
-      wall_time_start = start_time
+    while min_num_samples <= 0 or len(samples) < min_num_samples:
+      sample_batch = self._SampleBatch(
+          sampler, atomizer, print_samples=print_samples)
 
-      self.backend.InitSampleBatch(sampler)
+      # Only keep the samples in memory if we are going to return them.
+      if min_num_samples > 0:
+        samples += sample_batch
 
-      # Sampling loop. Continues until all samples in the batch are done.
-      while True:
-        indices = self.backend.SampleNextIndices(sampler)
+      # Dump the samples in the sampler cache.
+      if cache_samples:
+        for sample in sample_batch:
+          sample_id = crypto.sha256_str(sample.text)
+          sample_path = sample_dir / f'{sample_id}.pbtxt'
+          pbutil.ToFile(sample, sample_path)
 
-        # Iterate over all samples in batch to determine whether they're
-        # done.
-        for i in range(sampler.batch_size):
-          if done[i]:
-            continue
+    time_now = labdate.MillisecondsTimestamp()
+    app.Log(
+        1, 'Produced %s samples at a rate of %s ms / sample.',
+        humanize.Commas(len(samples)),
+        humanize.Commas(
+            int((time_now - sample_start_time) / max(len(samples), 1))))
 
-          token = atomizer.decoder[indices[i]]
-          samples_in_progress[i].append(token)
-          if sampler.SampleIsComplete(samples_in_progress[i]):
-            end_time = labdate.MillisecondsTimestamp()
-            done[i] = 1
-            sample = model_pb2.Sample(
-                text=''.join(samples_in_progress[i]),
-                sample_start_epoch_ms_utc=start_time,
-                sample_time_ms=end_time - start_time,
-                wall_time_ms=end_time - wall_time_start,
-                num_tokens=len(samples_in_progress[i]))
-            sample_count += 1
-            yield sample
-            wall_time_start = labdate.MillisecondsTimestamp()
+    return samples
 
-        # Complete the batch.
-        if done.all():
-          break
+  def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
+    """Get the path to a sampler cache.
 
-      # Complete sampling. Note that sample_count starts at 1.
-      if min_num_samples > 0 and sample_count > min_num_samples:
-        now = labdate.MillisecondsTimestamp()
-        app.Log(
-            1, 'Produced %s samples at a rate of %s ms / sample.',
-            humanize.Commas(sample_count - 1),
-            humanize.Commas(
-                int((now - sample_start_time) / max(sample_count - 1, 1))))
-        break
+    Args:
+      sampler: A Sampler instance.
+
+    Returns:
+      A path to a directory. Note that this directory may not exist - it is
+      created only after a call to Sample().
+    """
+    return self.cache.path / 'samples' / sampler.hash
 
 
 class NullCorpus(object):
