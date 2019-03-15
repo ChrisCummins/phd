@@ -11,3 +11,14 @@ py3_image(
         "//labm8:app",
     ],
 )
+
+py_binary(
+    name = "export_pretrained_model",
+    srcs = ["export_pretrained_model.py"],
+    deps = [
+        "//deeplearning/clgen",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:pbutil",
+    ],
+)

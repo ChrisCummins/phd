@@ -124,6 +124,17 @@ class Instance(object):
     with self.Session():
       return self.model.Sample(self.sampler, *args, **kwargs)
 
+  def ExportPretrainedModel(self, export_dir: pathlib.Path) -> None:
+    """Export a trained model."""
+    if isinstance(self.model, pretrained.PreTrainedModel):
+      shutil.copytree(self.config.pretrained_model, export_dir / 'model')
+    else:
+      self.Train()
+      for path in self.model.InferenceManifest():
+        relpath = pathlib.Path(os.path.relpath(path, self.model.cache.path))
+        (export_dir / relpath.parent).mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, export_dir / relpath)
+
   def ToProto(self) -> clgen_pb2.Instance:
     """Get the proto config for the instance."""
     config = clgen_pb2.Instance()
@@ -236,8 +247,7 @@ def RunWithErrorHandling(function_to_run: typing.Callable, *args,
     sys.exit(1)
 
 
-def DoFlagsAction():
-  """Do the action requested by the command line flags."""
+def ConfigFromFlags() -> clgen_pb2.Instance:
   if not FLAGS.config:
     raise app.UsageError("Missing required argument: '--config'")
   config_path = pathlib.Path(FLAGS.config)
@@ -245,6 +255,12 @@ def DoFlagsAction():
     raise app.UsageError(f"File not found: '{config_path}'")
   config = pbutil.FromFile(config_path, clgen_pb2.Instance())
   os.environ['PWD'] = str(config_path.parent)
+  return config
+
+
+def DoFlagsAction():
+  """Do the action requested by the command line flags."""
+  config = ConfigFromFlags()
 
   if FLAGS.clgen_profiling:
     prof.enable()
@@ -278,13 +294,7 @@ def DoFlagsAction():
       raise app.UsageError(
           f"Invalid --stop_after argument: '{FLAGS.stop_after}'")
     elif FLAGS.export_model:
-      instance.model.Train()
-      export_dir = pathlib.Path(FLAGS.export_model)
-      for path in instance.model.InferenceManifest():
-        relpath = pathlib.Path(os.path.relpath(path, instance.model.cache.path))
-        (export_dir / relpath.parent).mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(path, export_dir / relpath)
-        print(export_dir / relpath)
+      instance.ExportPretrainedModel(pathlib.Path(FLAGS.export_model))
     else:
       instance.model.Sample(instance.sampler, FLAGS.min_samples)
 
