@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:latex."""
+import inspect
 import pathlib
 import tempfile
 
@@ -159,15 +160,16 @@ def test_LockFile_force_replace_stale():
 @pytest.mark.parametrize('granularity', ('line', 'function', 'module'))
 def test_AutoLockFile_path(granularity: str):
   """Test the path of an automatic lock file."""
-  # FRAGILE TEST: Moving this line of code requires updating the path tested!
+  # Get the line number directly before the lock is instantiated. These two
+  # lines must be kept together.
+  lineno = inspect.getframeinfo(inspect.currentframe()).lineno
   lock = lockfile.AutoLockFile(granularity=granularity)
 
-  # This is a fragile test: if the position of the line above changes, this test
-  # will fail. To fix it, change the number at the end of the path below to the
-  # line number of the lockfile declaration:
+  # This is a fragile test: if the name of this file or function changes, these
+  # tests will break:
   if granularity == 'line':
     path = ('/tmp/phd/labm8/autolockfiles/'
-            'lockfile_test_test_AutoLockFile_path_150.pbtxt')
+            f'lockfile_test_test_AutoLockFile_path_{lineno+1}.pbtxt')
   elif granularity == 'function':
     path = ('/tmp/phd/labm8/autolockfiles/'
             'lockfile_test_test_AutoLockFile_path.pbtxt')
