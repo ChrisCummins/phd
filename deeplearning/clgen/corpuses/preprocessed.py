@@ -163,9 +163,10 @@ class PreprocessedContentFiles(sqlutil.Database):
     app.Log(1, 'Content files: %s chars, %s lines, %s files.',
             humanize.Commas(input_chars), humanize.Commas(input_lines),
             humanize.Commas(num_input_files))
-    app.Log(1, 'Pre-processed %s files in %s ms (%.2fx speedup).',
-            num_input_files, humanize.Commas(total_walltime),
-            (total_time or 0) / (total_walltime or 1))
+    app.Log(1, 'Pre-processed %s files in %s (%.2fx speedup).',
+            humanize.Commas(num_input_files),
+            humanize.Duration(total_walltime / 1000),
+            (total_time or 1) / (total_walltime or 1))
     app.Log(1, 'Pre-processing discard rate: %.1f%% (%s files).',
             (1 - (num_files / max(num_input_files, 1))) * 100,
             humanize.Commas(num_input_files - num_files))
