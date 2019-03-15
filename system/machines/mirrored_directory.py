@@ -120,7 +120,7 @@ class MirroredDirectory(object):
       if self.local_timestamp < self.remote_timestamp:
         raise InvalidOperation(
             "Refusing to push to local directory with out-of-date timestamp")
-      if not dry_drun:
+      if not dry_run:
         new_timestamp = int(time.time() * 1e6)
         self.local_timestamp = new_timestamp
         self.remote_timestamp = new_timestamp
