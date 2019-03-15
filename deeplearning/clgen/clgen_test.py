@@ -130,7 +130,8 @@ def test_main_no_config_flag():
   """Test that UsageError is raised if --config flag not set."""
   with pytest.raises(app.UsageError) as e_info:
     clgen.main(['argv[0]'])
-  assert "Missing required argument: '--config'" == str(e_info.value)
+  assert "CLgen --config file not found: '/clgen/config.pbtxt'" == str(
+      e_info.value)
 
 
 def test_main_config_file_not_found():
