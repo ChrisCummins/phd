@@ -49,7 +49,7 @@ HumanReadableInt in strings/human_readable.h.
 import datetime
 import math
 import re
-from typing import Optional
+from typing import Optional, Union
 
 import humanize as humanize_lib
 
@@ -453,6 +453,22 @@ def Duration(duration, separator=' '):
   return delta_str
 
 
+def LowPrecisionDuration(duration: Union[datetime.timedelta, int, float]):
+  """Given a timedelta or a number of seconds, return a low precision, natural
+  representation of the amount of time elapsed.
+
+  This is similar to Duration(), but with a lower precision in the generated
+  string, e.g. "a moment" rather than "530 ms".
+
+  Args:
+    duration: The duration to convert to a natural string.
+
+  Returns:
+    A natural representation of the duration.
+  """
+  return humanize_lib.naturaldelta(duration)
+
+
 def TimeDelta(delta, separator=' '):
   """Format a datetime.timedelta into a human-readable string.
 
@@ -477,6 +493,10 @@ def TimeDelta(delta, separator=' '):
   if seconds or not parts:
     parts.append('%gs' % seconds)
   return separator.join(parts)
+
+
+def Time(delta):
+  return humanize_lib.naturaltime(delta)
 
 
 def NaturalSortKey(data):
@@ -572,11 +592,3 @@ def AddOrdinalSuffix(value):
       suffix = 'th'
 
   return str(value) + suffix
-
-
-def Delta(delta):
-  return humanize_lib.naturaldelta(delta)
-
-
-def Time(delta):
-  return humanize_lib.naturaltime(delta)
