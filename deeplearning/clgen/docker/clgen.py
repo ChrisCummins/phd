@@ -5,7 +5,6 @@ set some default arg values.
 """
 import sys
 
-from config import build_info
 from config import getconfig
 from deeplearning.clgen import clgen
 from labm8 import app
@@ -19,13 +18,8 @@ app.DEFINE_boolean("version", False,
 def main():
   if FLAGS.version:
     config = getconfig.GetGlobalConfig()
-    info = build_info.GetBuildInfo()
-    if info:
-      version = '{info.short_hash}{"*" if info.dirty else ""}'
-    else:
-      version = 'standalone'
     print(f"""
-CLgen {version} ({config.uname}-{"gpu" if config.with_cuda else "cpu"}).
+CLgen docker ({config.uname}-{"gpu" if config.with_cuda else "cpu"}).
 
 Made with \033[1;31m♥\033[0;0m by Chris Cummins <chrisc.101@gmail.com>.
 https://chriscummins.cc/clgen
