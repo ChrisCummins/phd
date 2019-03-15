@@ -50,7 +50,8 @@ from labm8 import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('config', None, 'Path to a clgen.Instance proto file.')
+app.DEFINE_string('config', '/clgen/config.pbtxt',
+                  'Path to a clgen.Instance proto file.')
 app.DEFINE_integer('min_samples', 0, 'The minimum number of samples to make.')
 app.DEFINE_string('stop_after', None,
                   'Stop CLgen early. Valid options are: "corpus", or "train".')
@@ -248,11 +249,9 @@ def RunWithErrorHandling(function_to_run: typing.Callable, *args,
 
 
 def ConfigFromFlags() -> clgen_pb2.Instance:
-  if not FLAGS.config:
-    raise app.UsageError("Missing required argument: '--config'")
   config_path = pathlib.Path(FLAGS.config)
   if not config_path.is_file():
-    raise app.UsageError(f"File not found: '{config_path}'")
+    raise app.UsageError(f"CLgen --config file not found: '{config_path}'")
   config = pbutil.FromFile(config_path, clgen_pb2.Instance())
   os.environ['PWD'] = str(config_path.parent)
   return config
