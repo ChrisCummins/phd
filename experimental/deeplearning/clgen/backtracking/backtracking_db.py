@@ -1,4 +1,4 @@
-"""A database of static and dynamic Grewe et al features."""
+"""A database for incremental-synthesis experimental results."""
 import datetime
 import typing
 
