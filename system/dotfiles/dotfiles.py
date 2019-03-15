@@ -954,6 +954,7 @@ class Vim(Task):
 
   def install_linux(self):
     Apt().install_package('vim')
+    self.install_common()
 
   def install_common(self):
     symlink(usr_share("Vim/vimrc"), "~/.vimrc")
@@ -962,9 +963,13 @@ class Vim(Task):
     clone_git_repo(
         github_repo("VundleVim", "Vundle.vim"), "~/.vim/bundle/Vundle.vim",
         self.__versions__["vundle"])
-    # Note we use the absolute path to vim since on first run we won't
-    # necessarily have the homebrew bin directory in out $PATH.
-    shell("{vim} +PluginInstall +qall".format(vim=Homebrew.bin('vim')))
+    if os.path.isfile(Homebrew.bin('vim')):
+      # We use the absolute path to vim since on first run we won't
+      # necessarily have the homebrew bin directory in out $PATH.
+      vim = Homebrew.bin('vim')
+    else:
+      vim = 'vim'
+    shell("{vim} +PluginInstall +qall".format(vim=vim))
 
   def upgrade_osx(self):
     Homebrew().upgrade_package("vim")
