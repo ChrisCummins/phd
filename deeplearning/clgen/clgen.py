@@ -74,7 +74,7 @@ app.DEFINE_boolean('clgen_profiling', False,
 
 
 class Instance(object):
-  """A CLgen instance."""
+  """A CLgen instance encapsulates a model, sampler, and working directory."""
 
   def __init__(self, config: clgen_pb2.Instance):
     """Instantiate an instance.
