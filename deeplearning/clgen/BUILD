@@ -63,9 +63,11 @@ py3_image(
     base = "@base//image",
     main = "clgen.py",
     deps = [
+        # This list must be kept in sync with :clgen deps.
         ":errors",
         ":samplers",
         "//deeplearning/clgen/models",
+        "//deeplearning/clgen/models:pretrained",
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//labm8:app",
         "//labm8:pbutil",
