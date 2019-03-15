@@ -1,5 +1,6 @@
-"""A CLgen model with backtracking inference."""
+"""A CLgen model for incremental inference."""
 import collections
+import copy
 import html
 import json
 import pathlib
@@ -10,7 +11,6 @@ import tempfile
 import time
 import typing
 from typing import Any, Dict
-import copy
 
 import numpy as np
 import scipy
@@ -372,7 +372,7 @@ class BacktrackingModel(models.Model):
     # Set sampler state to the last good state.
     app.Log(3, 'Beginning Statement Generation attempt')
     sampled_indices = self.backend.SampleNextIndices(
-        sampler, done=np.array([False]*sampler.batch_size))
+        sampler, done=np.array([False] * sampler.batch_size))
 
     for i, sample in enumerate(sampled_indices):
       app.Log(3, 'Parsing Batch Item %d', i)
@@ -389,7 +389,7 @@ class BacktrackingModel(models.Model):
           if backtracker.ShouldProceed(initial_text + candidate_statement):
             app.Log(4, 'Produced candidate statement: `%s`',
                     ''.join(candidate_statement))
-            # Reset feature distance.
+            # Reset feature distance in the backtracking helper.
             new_feature_distance = backtracker.feature_distance
             backtracker.feature_distance = init_feature_distance
             candidate_statements.append(
@@ -432,10 +432,8 @@ class BacktrackingModel(models.Model):
     sample_in_progress = sampler.tokenized_start_text.copy()
     self.backend.RandomizeSampleState()
     rollback_state, rollback_index = self.backend.EvaluateSampleState(sampler)
-    rollback_history = [(
-        copy.deepcopy(backtracker),
-        list(sample_in_progress),
-        rollback_state, rollback_index)]
+    rollback_history = [(copy.deepcopy(backtracker), list(sample_in_progress),
+                         rollback_state, rollback_index)]
     stagnation = 0
 
     # Generate a batch of candidates.
@@ -449,17 +447,15 @@ class BacktrackingModel(models.Model):
       candidate_statements = []
       for _ in range(FLAGS.experimental_clgen_backtracking_max_attempts *
                      FLAGS.experimental_clgen_backtracking_candidates_per_step):
-        candidate_statements.extend(
-            self.TryToGenerateCandidateStatements(
+        candidate_statements.extend([
+            c for c in self.TryToGenerateCandidateStatements(
                 sample_in_progress, rollback_state, rollback_index, backtracker,
-                sampler, atomizer))
+                sampler, atomizer) if c.feature_distance is not None
+        ])
         if (len(candidate_statements) >=
             FLAGS.experimental_clgen_backtracking_candidates_per_step):
           break
 
-      candidate_statements = [
-          c for c in candidate_statements if c.feature_distance is not None
-      ]
       if not candidate_statements:
         app.Log(2,
                 "Failed to produce any candidate statement after %d attempts",
@@ -598,17 +594,17 @@ class BacktrackingModel(models.Model):
       if backtracker.feature_distance - sel_candidate.feature_distance <= 0:
         stagnation += 1
         if stagnation > 10:
-          backtracker, sample_in_progress, rollback_state, rollback_index = rollback_history.pop()
+          backtracker, sample_in_progress, rollback_state, rollback_index = rollback_history.pop(
+          )
           stagnation = 0
           app.Log(4, 'Got Stuck. Backtracking')
           continue
       else:
         stagnation = 0
         if step_count % 10 == 0:
-          rollback_history.append((
-              copy.deepcopy(backtracker),
-              list(sample_in_progress),
-              rollback_state, rollback_index))
+          rollback_history.append((copy.deepcopy(backtracker),
+                                   list(sample_in_progress), rollback_state,
+                                   rollback_index))
 
       # Set the sampler's rollback state to be the state produced by feeding
       # the best candidate in the input, so that future samples start from
