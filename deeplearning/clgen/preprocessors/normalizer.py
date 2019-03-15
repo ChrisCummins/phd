@@ -28,7 +28,7 @@ CLGEN_REWRITER = bazelutil.DataPath(
     'phd/deeplearning/clgen/preprocessors/clang_rewriter')
 assert CLGEN_REWRITER.is_file()
 
-# On Linux we must preload the LLVM sharded libraries.
+# On Linux we must preload the LLVM libraries.
 CLGEN_REWRITER_ENV = os.environ.copy()
 if bazelutil.DataPath('llvm_linux', must_exist=False).is_dir():
   libclang = bazelutil.DataPath('llvm_linux/lib/libclang.so')
