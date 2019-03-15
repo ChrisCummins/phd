@@ -16,7 +16,8 @@ def mkepisodal(show_name: str,
                season_num: int,
                directory: Path,
                start_at: int = 1):
-  files = sorted(list(directory.iterdir()), key=lambda s: s.name.lower())
+  files = [f for f in sorted(directory.iterdir(), key=lambda s: s.name.lower())
+           if f.is_file()]
 
   # Consider each file extension seperately. This is because in most cases,
   # the file types for a set of videos is homogeneous, but there may be
