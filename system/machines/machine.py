@@ -108,10 +108,8 @@ class Machine(object):
     return cls.FromProto(pbutil.FromFile(path, machine_spec_pb2.MachineSpec()))
 
 
-def main(argv):
-  if len(argv) > 1:
-    raise app.UsageError('Unknown arguments')
-
+def main():
+  """Main entry point."""
   machine_proto_path = pathlib.Path(FLAGS.machine)
   if not machine_proto_path.is_file():
     raise app.UsageError(f"Cannot find --machine proto '{machine_proto_path}'")
@@ -135,4 +133,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.RunWithArgs(main)
+  app.Run(main)
