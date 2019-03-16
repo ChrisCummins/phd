@@ -141,7 +141,8 @@ def test_main_config_file_not_found():
     app.FLAGS(['argv[0]', '--config', f'{d}/config.pbtxt'])
     with pytest.raises(app.UsageError) as e_info:
       clgen.main(['argv[0]'])
-    assert f"File not found: '{d}/config.pbtxt'" == str(e_info.value)
+    assert f"CLgen --config file not found: '{d}/config.pbtxt'" == str(
+        e_info.value)
 
 
 def test_main_print_cache_path_corpus(abc_instance_file, capsys):
