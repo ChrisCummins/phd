@@ -124,8 +124,23 @@ def Preprocess(src):
   return lib_module.PreprocessImplementation(src)
 """.encode('utf-8'))
 
-  with pytest.raises(ImportError):
+  with pytest.raises(errors.UserError):
     preprocessors.GetPreprocessorFunction(f'{path}:Preprocess')
+
+
+def test_GetPreprocessorFunction_absolute_path_not_found(tempdir: pathlib.Path):
+  """Test loading module when file not found."""
+  path = tempdir / 'foo.py'
+  fs.Write(path, "".encode('utf-8'))
+  with pytest.raises(errors.UserError):
+    preprocessors.GetPreprocessorFunction(f'{path}:NotFound')
+
+
+def test_GetPreprocessorFunction_absolute_function_not_found(
+    tempdir: pathlib.Path):
+  """Test loading module when file not found."""
+  with pytest.raises(errors.UserError):
+    preprocessors.GetPreprocessorFunction(f'{tempdir}/foo.py:Preprocess')
 
 
 # Preprocess() tests.
