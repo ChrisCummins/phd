@@ -16,7 +16,7 @@ cp deeplearning/clgen/tests/data/tiny/config.pbtxt "$workdir"
 # Set working directory in config file.
 sed -i 's,working_dir: ".*",working_dir: "/clgen",' "$workdir"/config.pbtxt
 
-sed -i 's/num_epochs: .+/num_epochs: 2/' "$workdir"/config.pbtxt
+sed -i 's/num_epochs: 32/num_epochs: 2/' "$workdir"/config.pbtxt
 
 # FIXME(cec): Presently the clang_rewriter doesn't work when testing
 # a host-compiled docker image. For this to work, you must build the docker
