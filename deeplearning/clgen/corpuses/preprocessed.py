@@ -104,7 +104,10 @@ class PreprocessedContentFile(Base):
       preprocessing_succeeded = True
     except UnicodeDecodeError as e:
       text = 'Unicode error'
-    except errors.BadCodeException as e:
+    except ValueError as e:
+      # BadCodeException subclasses ValueError. Catch the more general
+      # ValueError so that custom preprocessors can raise ValueError and don't
+      # have to depend on CLgen sources.
       text = str(e)
     end_time = time.time()
     preprocess_time_ms = int((end_time - start_time) * 1000)

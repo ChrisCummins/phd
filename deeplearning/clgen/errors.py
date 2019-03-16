@@ -58,7 +58,7 @@ class OptException(LlvmException):
   pass
 
 
-class BadCodeException(CLgenError):
+class BadCodeException(ValueError):
   """Code is bad."""
   pass
 
