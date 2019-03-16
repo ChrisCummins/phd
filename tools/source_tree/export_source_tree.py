@@ -1,12 +1,12 @@
 """A script which exports the subset of this repository required for target(s).
 
-This mono-repo is getting large. This has two major downsides:
-  * Fresh checkouts take longer and consume more space.
-  * The large number of packages is confusing for new people.
+This project is getting large. This has two major downsides:
+  * Fresh checkouts of the git repository take longer and consume more space.
+  * The large number of packages is confusing to newcomers.
 
 I feel like there's a 90-10 rule that applies to this repo: 90% of people who
 checkout this repo only need 10% of the code contained within it.
-This script provides a way to export the 10%.
+This script provides a way to export that 10%.
 """
 import contextlib
 import datetime
