@@ -6,6 +6,7 @@ py3_image(
     name = "clgen",
     srcs = ["clgen.py"],
     base = "@base//image",
+    visibility = ["//deeplearning/clgen/docker:__subpackages__"],
     deps = [
         "//deeplearning/clgen",
         "//labm8:app",
