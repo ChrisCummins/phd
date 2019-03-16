@@ -185,21 +185,25 @@ def Log(level: int, msg, *args, **kwargs):
     absl_logging.info(msg, *args, **kwargs)
 
 
+@absl_logging.skip_log_prefix
 def LogIf(level: int, condition, msg, *args, **kwargs):
   if condition:
     Log(level, msg, *args, **kwargs)
 
 
+@absl_logging.skip_log_prefix
 def Fatal(msg, *args, **kwargs):
   """Logs a fatal message."""
   absl_logging.fatal(msg, *args, **kwargs)
 
 
+@absl_logging.skip_log_prefix
 def Error(msg, *args, **kwargs):
   """Logs an error message."""
   absl_logging.error(msg, *args, **kwargs)
 
 
+@absl_logging.skip_log_prefix
 def Warning(msg, *args, **kwargs):
   """Logs a warning message."""
   absl_logging.warning(msg, *args, **kwargs)
