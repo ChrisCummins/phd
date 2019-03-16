@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/clgen/preprocessors/preprocessors.py."""
+import pathlib
 
 import pytest
 
@@ -20,6 +21,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.preprocessors import public
 from labm8 import app
+from labm8 import fs
 from labm8 import test
 
 FLAGS = app.FLAGS
@@ -90,6 +92,40 @@ def test_GetPreprocessFunction_mock_preprocessor():
   f = preprocessors.GetPreprocessorFunction(
       'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor')
   assert f == MockPreprocessor
+
+
+def test_GetPreprocessorFunction_absolute_path(tempdir: pathlib.Path):
+  """Test loading module from absolute path to file."""
+  path = tempdir / 'preprocessor.py'
+  fs.Write(
+      path, """
+def Preprocess(src: str) -> str:
+  return src.replace('a', 'b')
+""".encode('utf-8'))
+
+  f = preprocessors.GetPreprocessorFunction(f'{path}:Preprocess')
+  assert f('abc') == 'bbc'
+
+
+def test_GetPreprocessorFunction_absolute_path_with_dep(tempdir: pathlib.Path):
+  """Test loading module from file which has a dependency."""
+  lib_module = tempdir / 'lib_module.py'
+  fs.Write(
+      lib_module, """
+def PreprocessImplementation(src):
+  return src.replace('b', 'c')
+""".encode('utf-8'))
+
+  path = tempdir / 'lib_module.py'
+  fs.Write(
+      path, """
+from . import lib_module
+def Preprocess(src):
+  return lib_module.PreprocessImplementation(src)
+""".encode('utf-8'))
+
+  with pytest.raises(ImportError):
+    preprocessors.GetPreprocessorFunction(f'{path}:Preprocess')
 
 
 # Preprocess() tests.

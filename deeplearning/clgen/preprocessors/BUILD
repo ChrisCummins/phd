@@ -458,6 +458,7 @@ py_test(
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
         "//labm8:app",
+        "//labm8:fs",
         "//labm8:test",
     ],
 )

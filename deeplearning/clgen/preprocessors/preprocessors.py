@@ -15,6 +15,7 @@
 """Preprocess OpenCL files for machine learning."""
 import importlib
 import typing
+from importlib import util as importlib_util
 from io import open
 
 from deeplearning.clgen import errors
@@ -28,10 +29,13 @@ def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
   """Lookup a preprocess function by name.
 
   A preprocessor is a function which takes a single argument 'text' of type str,
-  and returns a str. The name is the fully qualified name of the python
-  function which implements it, in the form <module>:<name>. For example,
-  the name 'deeplearning.clgen.preprocessors.cxx:Compile' will return the
-  function 'Compile' in the module 'deeplearning.clgen.preprocessors.cxx'.
+  and returns a str. The name is in the form <module>:<name>, where <name> is
+  the name of a python function, and <module> is either a fully qualified module
+  name, or an absolute path to the module file. For example, the name
+  'deeplearning.clgen.preprocessors.cxx:Compile' will return the function
+  'Compile' in the module 'deeplearning.clgen.preprocessors.cxx'. The name
+  '/tmp/my_preprocessors.py:Transform' will return the function Transform() in
+  the module defined at '/tmp/my_preprocessors.py'.
 
   Args:
     name: The name of the preprocessor to get.
@@ -48,13 +52,21 @@ def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
     raise errors.UserError(f'Invalid preprocessor name {name}')
   module_name, function_name = components
   try:
-    module = importlib.import_module(module_name)
-    function_ = getattr(module, function_name)
-  except (ModuleNotFoundError, AttributeError):
+    if module_name[0] == '/':
+      # Import module as absolute path to file, e.g. '/foo/bar.py'.
+      spec = importlib_util.spec_from_file_location("module", module_name)
+      module = importlib_util.module_from_spec(spec)
+      spec.loader.exec_module(module)
+      function_ = getattr(module, function_name)
+    else:
+      # Import module a fully qualified module name, e.g. 'foo.bar'.
+      module = importlib.import_module(module_name)
+      function_ = getattr(module, function_name)
+      if not function_.__dict__.get('is_clgen_preprocessor'):
+        raise errors.UserError(
+            f'Preprocessor {name} not decorated with @clgen_preprocessor')
+  except (ModuleNotFoundError, AttributeError) as e:
     raise errors.UserError(f'Preprocessor {name} not found.')
-  if not function_.__dict__.get('is_clgen_preprocessor'):
-    raise errors.UserError(
-        f'Preprocessor {name} not decorated with @clgen_preprocessor')
   return function_
 
 
