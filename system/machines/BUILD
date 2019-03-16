@@ -1,5 +1,7 @@
 # Tools for managing machines.
 
+load("@subpar//:subpar.bzl", "par_binary")
+
 py_binary(
     name = "data_tiers",
     srcs = ["data_tiers.py"],
@@ -9,7 +11,7 @@ py_binary(
     ],
 )
 
-py_binary(
+par_binary(
     name = "machine",
     srcs = ["machine.py"],
     visibility = ["//system/machines:__subpackages__"],
