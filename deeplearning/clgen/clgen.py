@@ -280,7 +280,7 @@ def SampleObserversFromFlags():
   if FLAGS.print_samples:
     sample_observers.append(sample_observers_lib.PrintSampleObserver())
   if FLAGS.cache_samples:
-    sample_observers.append(sample_observers_lib.ProtobufCacheSampleObserver())
+    sample_observers.append(sample_observers_lib.LegacySampleCacheObserver())
   if FLAGS.sampledir:
     sample_observers.append(
         sample_observers_lib.SaveSampleTextObserver(

@@ -262,7 +262,7 @@ def SampleObserversFromFlags() -> typing.List[sample_observers.SampleObserver]:
     observers.append(
         sample_observers.MaxSampleCountObserver(FLAGS.clgen_min_sample_count))
   if FLAGS.clgen_cache_sample_protos:
-    observers.append(sample_observers.ProtobufCacheSampleObserver())
+    observers.append(sample_observers.LegacySampleCacheObserver())
   if FLAGS.clgen_print_samples:
     observers.append(sample_observers.PrintSampleObserver())
   return observers
