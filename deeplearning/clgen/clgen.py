@@ -66,6 +66,9 @@ app.DEFINE_string(
     'Path to export a trained TensorFlow model to. This exports all of the '
     'files required for sampling to specified directory. The directory can '
     'then be used as the pretrained_model field of an Instance proto config.')
+
+# TODO(cec): Remove these in favor of standard labm8.app methods for enabling
+# extra debugging or profiling information.
 app.DEFINE_boolean(
     'clgen_debug', False,
     'Enable a debugging mode of CLgen python runtime. When enabled, errors '
