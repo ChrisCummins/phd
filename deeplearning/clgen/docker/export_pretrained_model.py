@@ -13,9 +13,7 @@ FLAGS = app.FLAGS
 
 app.DEFINE_string('export_instance_config', None,
                   'Path of CLgen instance proto to export.')
-# TODO(cec): Change default value to 'chriscummins/clg1n:latest' once latest
-# tag has been pushed.
-app.DEFINE_string('docker_base_image', 'chriscummins/clgen:190315',
+app.DEFINE_string('docker_base_image', 'chriscummins/clgen:latest',
                   'The name of the base docker image to build using.')
 
 
