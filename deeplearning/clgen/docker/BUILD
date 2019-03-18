@@ -21,6 +21,19 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "export_pretrained_model_test",
+    srcs = ["export_pretrained_model_test.py"],
+    deps = [
+        ":export_pretrained_model",
+        "//deeplearning/clgen",
+        "//deeplearning/clgen/proto:clgen_py_pb2",
+        "//labm8:app",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
 py3_image(
     name = "export_pretrained_model_image",
     srcs = ["export_pretrained_model.py"],
