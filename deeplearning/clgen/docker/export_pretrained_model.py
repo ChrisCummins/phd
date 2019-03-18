@@ -53,7 +53,7 @@ def main():
   instance = clgen.Instance(config)
 
   with tempfile.TemporaryDirectory(prefix='deeplearning_clgen_docker_') as d:
-    ExportInstance(instance, FLAGS.docker_base_image)
+    ExportInstance(instance, pathlib.Path(d), FLAGS.docker_base_image)
     subprocess.check_call(['docker', 'build', d])
 
 

@@ -1,4 +1,5 @@
 """Unit tests for //deeplearning/clgen/docker:export_pretrained_model."""
+import pathlib
 
 import pytest
 
@@ -17,11 +18,12 @@ def abc_instance(abc_instance_config: clgen_pb2.Instance):
   return clgen.Instance(abc_instance_config)
 
 
-def test_TODO(abc_instance: clgen.Instance):
-  """TODO: Short summary of test."""
-  export_pretrained_model.ExportInstance(abc_instance,
+def test_ExportInstance(abc_instance: clgen.Instance, tempdir: pathlib.Path):
+  export_pretrained_model.ExportInstance(abc_instance, tempdir,
                                          'chriscummins/clgen:latest')
-  assert True
+  assert (tempdir / 'Dockerfile').is_file()
+  assert (tempdir / 'config.pbtxt').is_file()
+  assert (tempdir / 'model').is_dir()
 
 
 if __name__ == '__main__':
