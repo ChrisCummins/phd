@@ -6,6 +6,7 @@ import pathlib
 import typing
 
 from deeplearning.clgen import clgen
+from deeplearning.clgen import sample_observers
 from deeplearning.clgen.proto import clgen_pb2
 from labm8 import app
 from labm8 import pbutil
@@ -192,7 +193,9 @@ def main(argv: typing.List[str]):
     with prof.ProfileToFile(f, 'training'):
       instance.Train()
     with prof.ProfileToFile(f, f'{NUM_SAMPLES} samples'):
-      instance.Sample(min_num_samples=NUM_SAMPLES)
+      instance.Sample(sample_observers=[
+          sample_observers.MaxSampleCountObserver(NUM_SAMPLES)
+      ])
 
 
 if __name__ == '__main__':

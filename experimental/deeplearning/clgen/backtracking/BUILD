@@ -39,6 +39,7 @@ py_binary(
     deps = [
         ":logger",
         "//compilers/llvm:clang",
+        "//deeplearning/clgen:sample_observers",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/models",

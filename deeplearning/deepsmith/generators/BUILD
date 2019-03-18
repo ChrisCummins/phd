@@ -41,6 +41,7 @@ py_binary(
     deps = [
         ":generator",
         "//deeplearning/clgen:sample",
+        "//deeplearning/clgen:sample_observers",
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
         "//deeplearning/deepsmith/proto:generator_py_pb2",

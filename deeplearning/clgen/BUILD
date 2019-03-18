@@ -45,6 +45,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":errors",
+        ":sample_observers",
         ":samplers",
         "//deeplearning/clgen/models",
         "//deeplearning/clgen/models:pretrained",
@@ -121,6 +122,30 @@ py_library(
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//labm8:app",
         "//labm8:pbutil",
+    ],
+)
+
+py_library(
+    name = "sample_observers",
+    srcs = ["sample_observers.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:app",
+        "//labm8:crypto",
+        "//labm8:fs",
+        "//labm8:pbutil",
+    ],
+)
+
+py_test(
+    name = "sample_observers_test",
+    srcs = ["sample_observers_test.py"],
+    deps = [
+        ":sample_observers",
+        "//deeplearning/clgen/proto:model_py_pb2",
+        "//labm8:app",
+        "//labm8:test",
     ],
 )
 

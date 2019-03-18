@@ -39,6 +39,7 @@ import traceback
 import typing
 
 from deeplearning.clgen import errors
+from deeplearning.clgen import sample_observers as sample_observers_lib
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import models
 from deeplearning.clgen.models import pretrained
@@ -52,15 +53,24 @@ FLAGS = app.FLAGS
 
 app.DEFINE_string('config', '/clgen/config.pbtxt',
                   'Path to a clgen.Instance proto file.')
-app.DEFINE_integer('min_samples', 0, 'The minimum number of samples to make.')
+app.DEFINE_integer(
+    'min_samples', 0,
+    'The minimum number of samples to make. If <= 0, sampling continues '
+    'indefinitely and never terminates.')
+app.DEFINE_boolean('print_samples', False,
+                   'If set, print the generated samples.')
+app.DEFINE_boolean('print_preprocessed', False,
+                   'Print the pre-processed corpus to stdout and exit.')
+app.DEFINE_boolean('cache_samples', False,
+                   'If set, cache the generated sample protobufs.')
+app.DEFINE_string('sampledir', None,
+                  'A directory to write plain text samples to.')
 app.DEFINE_string('stop_after', None,
                   'Stop CLgen early. Valid options are: "corpus", or "train".')
 app.DEFINE_string(
     'print_cache_path', None,
     'Print the directory of a cache and exit. Valid options are: "corpus", '
     '"model", or "sampler".')
-app.DEFINE_boolean('print_preprocessed', False,
-                   'Print the pre-processed corpus to stdout and exit.')
 app.DEFINE_string(
     'export_model', None,
     'Path to export a trained TensorFlow model to. This exports all of the '
@@ -260,6 +270,26 @@ def ConfigFromFlags() -> clgen_pb2.Instance:
   return config
 
 
+def SampleObserversFromFlags():
+  """Instantiate sample observers from flag values."""
+  sample_observers = []
+  if FLAGS.min_samples <= 0:
+    app.Warning(
+        'Entering an infinite sample loop, this process will never end!')
+  else:
+    sample_observers.append(
+        sample_observers_lib.MaxSampleCountObserver(FLAGS.min_samples))
+  if FLAGS.print_samples:
+    sample_observers.append(sample_observers_lib.PrintSampleObserver())
+  if FLAGS.cache_samples:
+    sample_observers.append(sample_observers_lib.ProtobufCacheSampleObserver())
+  if FLAGS.sampledir:
+    sample_observers.append(
+        sample_observers_lib.SaveSampleTextObserver(
+            pathlib.Path(FLAGS.sampledir)))
+  return sample_observers
+
+
 def DoFlagsAction():
   """Do the action requested by the command line flags."""
   config = ConfigFromFlags()
@@ -298,7 +328,8 @@ def DoFlagsAction():
     elif FLAGS.export_model:
       instance.ExportPretrainedModel(pathlib.Path(FLAGS.export_model))
     else:
-      instance.model.Sample(instance.sampler, FLAGS.min_samples)
+      sample_observers = SampleObserversFromFlags()
+      instance.model.Sample(instance.sampler, sample_observers)
 
 
 def main(argv):

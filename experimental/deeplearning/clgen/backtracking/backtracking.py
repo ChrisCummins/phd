@@ -42,8 +42,9 @@ def main(argv: typing.List[str]):
 
   model = backtracking_model.BacktrackingModel(config.model, logger=logger)
   sampler = samplers.Sampler(config.sampler)
+  sample_observers = generative_model.SampleObserversFromFlags()
 
-  model.Sample(sampler, FLAGS.clgen_min_sample_count, FLAGS.sample_seed)
+  model.Sample(sampler, sample_observers, seed=FLAGS.sample_seed)
 
 
 if __name__ == '__main__':

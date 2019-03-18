@@ -18,8 +18,8 @@ import checksumdir
 import numpy as np
 import pytest
 
+from deeplearning.clgen import sample_observers
 from deeplearning.clgen.models import models
-from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from labm8 import app
@@ -161,7 +161,7 @@ def test_TensorFlowBackend_Sample_implicit_train(clgen_cache_dir,
   del clgen_cache_dir
   m = models.Model(abc_tensorflow_model_config)
   assert not m.is_trained
-  m.Sample(MockSampler(), 1)
+  m.Sample(MockSampler(), [sample_observers.MaxSampleCountObserver(1)])
   assert m.is_trained
 
 
@@ -171,7 +171,11 @@ def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
   del clgen_cache_dir
   abc_tensorflow_model_config.training.batch_size = 1
   m = models.Model(abc_tensorflow_model_config)
-  samples = m.Sample(MockSampler(hash='hash'), 1)
+  sample_observer = sample_observers.InMemorySampleSaver()
+  m.Sample(
+      MockSampler(hash='hash'),
+      [sample_observers.MaxSampleCountObserver(1), sample_observer])
+  samples = sample_observer.samples
   # Samples are produced in batches of sampler.batch_size elements.
   assert len(samples) == 1
   assert len(list((m.cache.path / 'samples' / 'hash').iterdir())) == 1
@@ -192,9 +196,15 @@ def test_TensorFlowBackend_Sample_exact_multiple_of_batch_size(
   m = models.Model(abc_tensorflow_model_config)
   sampler = MockSampler()
   sampler.batch_size = 2
-  assert len(m.Sample(sampler, 2)) == 2
+  sample_observer = sample_observers.InMemorySampleSaver()
+  m.Sample(sampler,
+           [sample_observers.MaxSampleCountObserver(2), sample_observer])
+  assert len(sample_observer.samples) == 2
   sampler.batch_size = 4
-  assert len(m.Sample(sampler, 4)) == 4
+  sample_observer = sample_observers.InMemorySampleSaver()
+  m.Sample(sampler,
+           [sample_observers.MaxSampleCountObserver(4), sample_observer])
+  assert len(sample_observer.samples) == 4
 
 
 def test_TensorFlowBackend_Sample_inexact_multiple_of_batch_size(
@@ -205,19 +215,11 @@ def test_TensorFlowBackend_Sample_inexact_multiple_of_batch_size(
   sampler = MockSampler()
   sampler.batch_size = 3
   # 3 = 1 * sizeof(batch).
-  assert len(m.Sample(sampler, 2)) == 3
+  assert len(m.Sample(sampler,
+                      [sample_observers.MaxSampleCountObserver(2)])) == 3
   # 6 = 2 * sizeof(batch).
-  assert len(m.Sample(sampler, 4)) == 6
-
-
-# WeightedPick() tests.
-
-
-@pytest.mark.skip(reason='TODO(cec): Update for new WeightedPick().')
-def test_WeightedPick_output_range():
-  """Test that WeightedPick() returns an integer index into array"""
-  a = [1, 2, 3, 4]
-  assert 0 <= tensorflow_backend.WeightedPick(np.array(a), 1.0) <= len(a)
+  assert len(m.Sample(sampler,
+                      [sample_observers.MaxSampleCountObserver(4)])) == 6
 
 
 # Benchmarks.

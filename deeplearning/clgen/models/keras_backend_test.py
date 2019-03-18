@@ -18,6 +18,7 @@ import checksumdir
 import numpy as np
 import pytest
 
+from deeplearning.clgen import sample_observers
 from deeplearning.clgen.models import keras_backend
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import model_pb2
@@ -162,7 +163,7 @@ def test_KerasBackend_Sample_implicit_train(clgen_cache_dir,
   del clgen_cache_dir
   m = models.Model(abc_keras_model_config)
   assert not m.is_trained
-  m.Sample(MockSampler(), 1)
+  m.Sample(MockSampler(), [sample_observers.MaxSampleCountObserver(1)])
   assert m.is_trained
 
 
@@ -172,7 +173,11 @@ def test_KerasBackend_Sample_return_value_matches_cached_sample(
   """Test that Sample() returns Sample protos."""
   del clgen_cache_dir
   m = models.Model(abc_keras_model_config)
-  samples = m.Sample(MockSampler(hash='hash'), 1)
+  sample_observer = sample_observers.InMemorySampleSaver()
+  m.Sample(
+      MockSampler(hash='hash'),
+      [sample_observers.MaxSampleCountObserver(1), sample_observer])
+  samples = sample_observer.samples
   assert len(samples) == 1
   assert len(list((m.cache.path / 'samples' / 'hash').iterdir())) == 1
   cached_sample_path = (m.cache.path / 'samples' / 'hash' / list(
@@ -191,8 +196,16 @@ def test_KerasBackend_Sample_exact_multiple_of_batch_size(
   """Test that min_num_samples are returned when a multiple of batch_size."""
   del clgen_cache_dir
   m = models.Model(abc_keras_model_config)
-  assert len(m.Sample(MockSampler(batch_size=2), 2)) == 2
-  assert len(m.Sample(MockSampler(batch_size=2), 4)) == 4
+  sample_observer = sample_observers.InMemorySampleSaver()
+  m.Sample(
+      MockSampler(batch_size=2),
+      [sample_observers.MaxSampleCountObserver(2), sample_observer])
+  assert len(sample_observer.samples) == 2
+  sample_observer = sample_observers.InMemorySampleSaver()
+  m.Sample(
+      MockSampler(batch_size=2),
+      [sample_observers.MaxSampleCountObserver(4), sample_observer])
+  assert len(sample_observer.samples) == 4
 
 
 @pytest.mark.xfail(reason='Need to refactor Keras model to new API')

@@ -16,6 +16,7 @@ import numpy as np
 import scipy
 
 from deeplearning.clgen import errors as clgen_errors
+from deeplearning.clgen import sample_observers as sample_observers_lib
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.models import models
@@ -295,11 +296,10 @@ class BacktrackingModel(models.Model):
     """Custom override to prevent cache conflicts with base samplers."""
     return self.cache.path / 'samples' / f'backtracking_{s.hash}'
 
-  def _SampleBatch(self,
-                   sampler: samplers.Sampler,
-                   atomizer: atomizers.AtomizerBase,
-                   print_samples: typing.Optional[bool] = False
-                  ) -> typing.List[model_pb2.Sample]:
+  def _SampleBatch(
+      self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
+      sample_observers: typing.List[sample_observers_lib.SampleObserver]
+  ) -> bool:
     """Run a single iteration of the batched sample inner-loop."""
     start_time = labdate.MillisecondsTimestamp()
 
@@ -331,20 +331,17 @@ class BacktrackingModel(models.Model):
     else:
       text = ''
 
+    # Restore the sampler's start text.
+    sampler.encoded_start_text = original_sampler_encoded_start_text
+
+    # Notify sample observers.
     sample = model_pb2.Sample(
         text=text,
         sample_start_epoch_ms_utc=start_time,
         sample_time_ms=end_time - start_time,
         wall_time_ms=end_time - start_time,
         num_tokens=len(sampled_tokens))
-
-    if print_samples:
-      print(f'=== CLGEN SAMPLE ===\n\n{text}\n')
-
-    # Restore the sampler's start text.
-    sampler.encoded_start_text = original_sampler_encoded_start_text
-
-    return [sample]
+    return all([not obs.OnSample(sample) for obs in sample_observers])
 
   def TryToGenerateCandidateStatements(
       self, initial_text: typing.List[str], initial_state, initial_index,

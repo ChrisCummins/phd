@@ -50,6 +50,7 @@ py_binary(
     ],
     deps = [
         "//deeplearning/clgen",
+        "//deeplearning/clgen:sample_observers",
         "//labm8:app",
         "//labm8:bazelutil",
     ],

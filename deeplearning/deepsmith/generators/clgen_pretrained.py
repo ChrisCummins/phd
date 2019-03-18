@@ -23,6 +23,7 @@ import sys
 import typing
 
 from deeplearning.clgen import sample
+from deeplearning.clgen import sample_observers
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.generators import generator
@@ -84,8 +85,11 @@ class ClgenGenerator(generator.GeneratorServiceBase,
     with self.instance.Session():
       num_programs = math.ceil(
           request.num_testcases / len(self.config.testcase_skeleton))
-      for i, sample_ in enumerate(
-          self.instance.model.Sample(self.instance.sampler, num_programs)):
+      samples = samples_observers.InMemorySampleSaver()
+      for i, sample_ in enumerate(samples.samples)
+          self.instance.model.Sample(
+              self.instance.sampler,
+              [sample_observers.MaxSampleCountObserver(num_programs)])):
         app.Log(1, 'Generated sample %d.', i + 1)
         response.testcases.extend(self.SampleToTestcases(sample_))
 

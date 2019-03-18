@@ -25,6 +25,7 @@ import pathlib
 import typing
 
 from deeplearning.clgen import clgen
+from deeplearning.clgen import sample_observers
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
@@ -63,8 +64,14 @@ app.DEFINE_float("clgen_sample_temperature", 1.0, "CLgen sampling temperature.")
 app.DEFINE_integer("clgen_sample_sequence_length", 1024,
                    "CLgen sampling sequence length.")
 app.DEFINE_integer("clgen_sample_batch_size", 64, "CLgen sampling batch size.")
+
+# Sample observer options.
 app.DEFINE_integer("clgen_min_sample_count", 0,
                    "If not zero, set the maximum number of samples.")
+app.DEFINE_boolean("clgen_cache_sample_protos", False,
+                   "If set, save generated sample protos in the CLgen cache.")
+app.DEFINE_boolean("clgen_print_samples", True,
+                   "If set, print CLgen sample outputs.")
 
 
 def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
@@ -244,6 +251,21 @@ def CreateInstanceProtoFromFlags() -> clgen_pb2.Instance:
 
 def CreateInstanceFromFlags() -> clgen.Instance:
   return clgen.Instance(CreateInstanceProtoFromFlags())
+
+
+def SampleObserversFromFlags() -> typing.List[sample_observers.SampleObserver]:
+  """Create sample observers for use with model.Sample() from flags values."""
+  observers = []
+  if FLAGS.clgen_min_sample_count >= 0:
+    app.Warning('--clgen_min_sample_count <= 0 means that sampling (and this '
+                'process) will never terminate!')
+    observers.append(
+        sample_observers.MaxSampleCountObserver(FLAGS.clgen_min_sample_count))
+  if FLAGS.clgen_cache_sample_protos:
+    observers.append(sample_observers.ProtobufCacheSampleObserver())
+  if FLAGS.clgen_print_samples:
+    observers.append(sample_observers.PrintSampleObserver())
+  return observers
 
 
 def main(argv: typing.List[str]):

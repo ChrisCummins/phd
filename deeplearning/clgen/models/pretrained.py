@@ -18,6 +18,8 @@ import typing
 
 import numpy as np
 
+from deeplearning.clgen import errors
+from deeplearning.clgen import sample_observers as sample_observers_lib
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
@@ -27,7 +29,6 @@ from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
 from labm8 import app
-from labm8 import crypto
 from labm8 import cache
 from labm8 import humanize
 from labm8 import labdate
@@ -60,13 +61,11 @@ class PreTrainedModel(object):
     """Get the training telemetry data."""
     return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
 
-  def _SampleBatch(self,
-                   sampler: samplers.Sampler,
-                   atomizer: atomizers.AtomizerBase,
-                   print_samples: typing.Optional[bool] = False
-                  ) -> typing.List[model_pb2.Sample]:
+  def _SampleBatch(
+      self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
+      sample_observers: typing.List[sample_observers_lib.SampleObserver]
+  ) -> typing.List[model_pb2.Sample]:
     """Run a single iteration of the batched sample inner-loop."""
-    samples = []
     samples_in_progress = [
         sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
     ]
@@ -75,6 +74,10 @@ class PreTrainedModel(object):
     wall_time_start = start_time
 
     self.backend.InitSampleBatch(sampler)
+
+    # The return value of this method. If any of the sample_observers return
+    # False, this value is set to False.
+    continue_sampling = True
 
     # Sampling loop. Continues until all samples in the batch are done.
     while not done.all():
@@ -97,25 +100,27 @@ class PreTrainedModel(object):
                 sample_time_ms=end_time - start_time,
                 wall_time_ms=end_time - wall_time_start,
                 num_tokens=len(samples_in_progress[i]))
-            samples.append(sample)
-
-            if print_samples:
-              print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
+            # Notify sample observers.
+            continue_sampling &= all(
+                [not obs.OnSample(sample) for obs in sample_observers])
 
             # Wall sample time is the difference between the end of the previous
             # sample and the end of the current sample.
             wall_time_start = labdate.MillisecondsTimestamp()
             break
 
-    return samples
+    return continue_sampling
 
   def Sample(self,
              sampler: samplers.Sampler,
-             min_num_samples: int,
-             seed: int = None,
-             print_samples: bool = True,
-             cache_samples: bool = True) -> typing.Iterable[model_pb2.Sample]:
+             sample_observers: typing.List[sample_observers_lib.SampleObserver],
+             seed: int = None) -> None:
     """Sample a model.
+
+    This method uses the observer model, returning nothing. To access the
+    samples produced, implement a SampleObserver and pass it in as an argument.
+    Sampling continues indefinitely until one of the sample observers returns
+    False when notified of a new sample.
 
     If the model is not already trained, calling Sample() first trains the
     model. Thus a call to Sample() is equivalent to calling Train() then
@@ -123,64 +128,40 @@ class PreTrainedModel(object):
 
     Args:
       sampler: The sampler to sample using.
-      min_num_samples: The minimum number of samples to return. Note that the
-        true number of samples returned may be higher than this value, as
-        sampling occurs in batches. The model will continue producing samples
-        until the lowest multiple of the sampler batch size property that is
-        larger than this value. E.g. if min_num_samples is 7 and the Sampler
-        batch size is 10, 10 samples will be returned.
+      sample_observers: A list of SampleObserver objects that are notified of
+        new generated samples.
       seed: A numeric value to seed the RNG with. If not present, the RNG is
         seeded randomly.
 
-    Returns:
-      A iterator over samples.
-
     Raises:
+      UserError: If called with no sample observers.
       UnableToAcquireLockError: If the model is locked (i.e. there is another
         process currently modifying the model).
       InvalidStartText: If the sampler start text cannot be encoded.
       InvalidSymtokTokens: If the sampler symmetrical depth tokens cannot be
         encoded.
     """
-    app.Log(1, "Sampling: '%s'", sampler.start_text)
-    if min_num_samples <= 0:
-      app.Warning(
-          'Entering an infinite sample loop, this process will never end!')
+    if not sample_observers:
+      raise errors.UserError("Cannot sample without any observers")
+
     sample_start_time = labdate.MillisecondsTimestamp()
+    app.Log(1, "Sampling: '%s'", sampler.start_text)
 
     atomizer = self.atomizer
     sampler.Specialize(atomizer)
     self.backend.InitSampling(sampler, seed)
+    [obs.Specialize(self, sampler) for obs in sample_observers]
 
-    samples = []
-    sample_dir = self.SamplerCache(sampler)
-    sample_dir.mkdir(parents=True, exist_ok=True)
-
-    # Per-sample batch outer loop. Continues until we have as many samples
-    # as we want.
-    while min_num_samples <= 0 or len(samples) < min_num_samples:
-      sample_batch = self._SampleBatch(
-          sampler, atomizer, print_samples=print_samples)
-
-      # Only keep the samples in memory if we are going to return them.
-      if min_num_samples > 0:
-        samples += sample_batch
-
-      # Dump the samples in the sampler cache.
-      if cache_samples:
-        for sample in sample_batch:
-          sample_id = crypto.sha256_str(sample.text)
-          sample_path = sample_dir / f'{sample_id}.pbtxt'
-          pbutil.ToFile(sample, sample_path)
+    batch_count = 0
+    while self._SampleBatch(sampler, atomizer, sample_observers):
+      batch_count += 1
 
     time_now = labdate.MillisecondsTimestamp()
     app.Log(
-        1, 'Produced %s samples at a rate of %s ms / sample.',
-        humanize.Commas(len(samples)),
+        1, 'Produced %s sample batches at a rate of %s ms / batch.',
+        humanize.Commas(batch_count),
         humanize.Commas(
-            int((time_now - sample_start_time) / max(len(samples), 1))))
-
-    return samples
+            int((time_now - sample_start_time) / max(batch_count, 1))))
 
   def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
     """Get the path to a sampler cache.
