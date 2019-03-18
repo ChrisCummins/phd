@@ -66,7 +66,7 @@ class MaxSampleCountObserver(SampleObserver):
   """An observer that terminates sampling after a finite number of samples."""
 
   def __init__(self, min_sample_count: int):
-    if self._min_sample_count <= 0:
+    if min_sample_count <= 0:
       raise ValueError(
           f"min_sample_count must be >= 1. Received: {min_sample_count}")
 
