@@ -27,6 +27,7 @@ py_test(
     deps = [
         ":export_pretrained_model",
         "//deeplearning/clgen",
+        "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_py_pb2",
         "//labm8:app",
         "//labm8:test",
