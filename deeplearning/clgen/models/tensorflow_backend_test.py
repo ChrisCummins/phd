@@ -217,11 +217,13 @@ def test_TensorFlowBackend_Sample_inexact_multiple_of_batch_size(
   sampler = MockSampler()
   sampler.batch_size = 3
   # 3 = 1 * sizeof(batch).
-  assert len(m.Sample(sampler,
-                      [sample_observers.MaxSampleCountObserver(2)])) == 3
+  saver = sample_observers.InMemorySampleSaver()
+  m.Sample(sampler, [sample_observers.MaxSampleCountObserver(2), saver])
+  assert len(saver.samples) == 3
   # 6 = 2 * sizeof(batch).
-  assert len(m.Sample(sampler,
-                      [sample_observers.MaxSampleCountObserver(4)])) == 6
+  saver = sample_observers.InMemorySampleSaver()
+  m.Sample(sampler, [sample_observers.MaxSampleCountObserver(4), saver])
+  assert len(saver.samples) == 6
 
 
 # Benchmarks.
