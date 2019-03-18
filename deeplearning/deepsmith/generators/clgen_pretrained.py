@@ -115,7 +115,7 @@ class ClgenGenerator(generator.GeneratorServiceBase,
     response = services.BuildDefaultResponse(
         generator_pb2.GenerateTestcasesResponse)
     with self.instance.Session():
-      sample_observer = SampleObserver(self.config, response.testcases,
+      sample_observer = SampleObserver(self.config, response,
                                        request.num_testcases)
       self.instance.model.Sample(self.instance.sampler, [sample_observer])
 
