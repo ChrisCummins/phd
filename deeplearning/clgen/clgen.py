@@ -59,8 +59,6 @@ app.DEFINE_integer(
     'indefinitely and never terminates.')
 app.DEFINE_boolean('print_samples', False,
                    'If set, print the generated samples.')
-app.DEFINE_boolean('print_preprocessed', False,
-                   'Print the pre-processed corpus to stdout and exit.')
 app.DEFINE_boolean('cache_samples', False,
                    'If set, cache the generated sample protobufs.')
 app.DEFINE_string('sampledir', None,
@@ -311,10 +309,6 @@ def DoFlagsAction():
     elif FLAGS.print_cache_path:
       raise app.UsageError(
           f"Invalid --print_cache_path argument: '{FLAGS.print_cache_path}'")
-
-    if FLAGS.print_preprocessed:
-      print(instance.model.corpus.GetTextCorpus(shuffle=False))
-      return
 
     # The default action is to sample the model.
     if FLAGS.stop_after == 'corpus':
