@@ -145,6 +145,8 @@ py_test(
         ":sample_observers",
         "//deeplearning/clgen/proto:model_py_pb2",
         "//labm8:app",
+        "//labm8:crypto",
+        "//labm8:fs",
         "//labm8:test",
     ],
 )
