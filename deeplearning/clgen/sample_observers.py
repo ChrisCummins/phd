@@ -76,7 +76,7 @@ class MaxSampleCountObserver(SampleObserver):
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback. Returns True if sampling should continue."""
     self._sample_count += 1
-    return self._sample_count >= self._min_sample_count
+    return self._sample_count < self._min_sample_count
 
 
 class SaveSampleTextObserver(SampleObserver):
@@ -89,27 +89,8 @@ class SaveSampleTextObserver(SampleObserver):
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback. Returns True if sampling should continue."""
     sample_id = crypto.sha256_str(sample.text)
-    path = self.path / f'{sample_id}.pbtxt'
+    path = self.path / f'{sample_id}.txt'
     fs.Write(path, sample.text.encode('utf-8'))
-    return True
-
-
-class ProtobufCacheSampleObserver(SampleObserver):
-  """An observer that creates a sample protobuf for each sample."""
-
-  def __init__(self):
-    self.cache_path = None
-
-  def Specialize(self, model, sampler) -> None:
-    """Specialize observer to a model and sampler combination."""
-    self.cache_path = model.SamplerCache(sampler)
-    self.cache_path.mkdir(exist_ok=True)
-
-  def OnSample(self, sample: model_pb2.Sample) -> bool:
-    """Sample receive callback. Returns True if sampling should continue."""
-    sample_id = crypto.sha256_str(sample.text)
-    sample_path = self.cache_path / f'{sample_id}.pbtxt'
-    pbutil.ToFile(sample, sample_path)
     return True
 
 
@@ -131,4 +112,31 @@ class InMemorySampleSaver(SampleObserver):
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback. Returns True if sampling should continue."""
     self.samples.append(sample)
+    return True
+
+
+class LegacySampleCacheObserver(SampleObserver):
+  """Backwards compatability implementation of the old sample caching behavior.
+
+  In previous versions of CLgen, model sampling would silently (and always)
+  create sample protobufs in the sampler cache, located at:
+
+    CLGEN_CACHE/models/MODEL/samples/SAMPLER
+
+  This sample observer provides equivalent behavior.
+  """
+
+  def __init__(self):
+    self.cache_path = None
+
+  def Specialize(self, model, sampler) -> None:
+    """Specialize observer to a model and sampler combination."""
+    self.cache_path = model.SamplerCache(sampler)
+    self.cache_path.mkdir(exist_ok=True)
+
+  def OnSample(self, sample: model_pb2.Sample) -> bool:
+    """Sample receive callback. Returns True if sampling should continue."""
+    sample_id = crypto.sha256_str(sample.text)
+    sample_path = self.cache_path / f'{sample_id}.pbtxt'
+    pbutil.ToFile(sample, sample_path)
     return True
