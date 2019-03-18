@@ -7,9 +7,7 @@ workdir="$(mktemp -d)"
 
 # Tidy up.
 cleanup() {
-  # FIXME(cec): The docker container runs as root, so the generated files in
-  # the mapped directory are owned by root. I should fix this.
-  sudo rm -rvf "$workdir"
+  rm -rvf "$workdir"
 }
 trap cleanup EXIT
 
@@ -26,5 +24,7 @@ sed -i 's/num_epochs: 32/num_epochs: 2/' "$workdir"/config.pbtxt
 sed -i '/preprocessor: "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers"/d' "$workdir"/config.pbtxt
 
 docker load -i deeplearning/clgen/docker/clgen.tar
-docker run -v"$workdir":/clgen bazel/deeplearning/clgen/docker:clgen \
-  --min_samples=10
+# Force a user namespace so that generated cache files aren't owned by root.
+# See: https://github.com/moby/moby/issues/3206#issuecomment-152682860
+docker run -v"$workdir":/clgen -u $(id -u):$(id -g) \
+  bazel/deeplearning/clgen/docker:clgen --min_samples=10
