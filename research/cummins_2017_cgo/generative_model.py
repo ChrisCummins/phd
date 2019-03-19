@@ -31,8 +31,14 @@ from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import app
+from labm8 import pbutil
 
 FLAGS = app.FLAGS
+
+app.DEFINE_string(
+    'clgen_instance', None,
+    'Path to a clgen.Instance proto file containing a full '
+    'CLgen configuration.')
 
 app.DEFINE_string('clgen_working_dir',
                   str(pathlib.Path('~/.cache/clgen').expanduser()),
@@ -242,11 +248,15 @@ def CreateSamplerProtoFromFlags() -> sampler_pb2.Sampler:
 
 
 def CreateInstanceProtoFromFlags() -> clgen_pb2.Instance:
-  return clgen_pb2.Instance(
-      working_dir=FLAGS.clgen_working_dir,
-      model=CreateModelProtoFromFlags(),
-      sampler=CreateSamplerProtoFromFlags(),
-  )
+  if FLAGS.clgen_instance:
+    return pbutil.FromFile(
+        pathlib.Path(FLAGS.clgen_instance), clgen_pb2.Instance())
+  else:
+    return clgen_pb2.Instance(
+        working_dir=FLAGS.clgen_working_dir,
+        model=CreateModelProtoFromFlags(),
+        sampler=CreateSamplerProtoFromFlags(),
+    )
 
 
 def CreateInstanceFromFlags() -> clgen.Instance:

@@ -1,4 +1,4 @@
-# This is an implementation of the OpenCL benchmark driver from:
+# This is an implementation of the OpenCL benchmark generator from:
 #
 #     ﻿Cummins, C., Petoumenos, P., Zang, W., & Leather, H. (2017). Synthesizing
 #     Benchmarks for Predictive Modeling. In CGO. IEEE.
@@ -29,6 +29,7 @@ py_binary(
         "//deeplearning/clgen/proto:model_py_pb2",
         "//deeplearning/clgen/proto:sampler_py_pb2",
         "//labm8:app",
+        "//labm8:pbutil",
     ],
 )
 
