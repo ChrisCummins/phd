@@ -18,6 +18,7 @@ Use the Main() function as the entry point to your test files to run pytest
 with the proper arguments.
 """
 import inspect
+import re
 import sys
 import typing
 
@@ -44,6 +45,7 @@ app.DEFINE_integer(
     'test_durations', 1,
     'The number of slowest tests to print the durations of after execution. '
     'If --test_durations=0, the duration of all tests is printed.')
+app.DEFINE_boolean('test_coverage', True, 'Record test coverage.')
 
 
 def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
@@ -87,6 +89,21 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   # Capture stdout and stderr by default.
   if not FLAGS.test_capture_output:
     pytest_args.append('-s')
+
+  # Record coverage of module under test.
+  if FLAGS.test_coverage:
+    # Strip everything up to the root of this project from the path.
+    match = re.match(r'.+\.runfiles/phd/(.+)', file_path)
+    if match:
+      module = match.group(1)
+      # Strip the _test.py suffix.
+      module = module[:-len('_test.py')]
+      # Convert path to fully qualified module.
+      module = module.replace('/', '.')
+      pytest_args.append(f'--cov={module}')
+    else:
+      app.Warning(
+          'Not recording coverage - failed to determine module under test')
 
   app.Log(1, 'Running pytest with arguments: %s', pytest_args)
   sys.exit(pytest.main(pytest_args))
