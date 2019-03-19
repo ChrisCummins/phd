@@ -22,3 +22,12 @@ py_test(
         "//system/machines:mirrored_directory",
     ],
 )
+
+sh_binary(
+    name = "install",
+    srcs = ["install.sh"],
+    data = [
+        ":ryangosling_proto",
+        "//system/machines:machine",
+    ],
+)
