@@ -7,7 +7,6 @@ py_binary(
     srcs = ["report_generator.py"],
     visibility = ["//tools/continuous_integration/buildbot/report_generator:__subpackages__"],
     deps = [
-        "//config:getconfig",
         "//labm8:app",
         "//labm8:fs",
         "//labm8:humanize",

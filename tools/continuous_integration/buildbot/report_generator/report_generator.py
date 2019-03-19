@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 
 import sqlalchemy as sql
 
-from config import getconfig
 from labm8 import app
 from labm8 import fs
 from labm8 import humanize
@@ -17,6 +16,7 @@ from labm8 import prof
 from tools.continuous_integration import bazel_test_db as db
 
 FLAGS = app.FLAGS
+app.DEFINE_string("repo", None, "Path to repo directory.")
 app.DEFINE_string("testlogs", None, "Path to bazel testlogs directory.")
 app.DEFINE_string("host", None, "The name of the build host.")
 app.DEFINE_string(
@@ -52,8 +52,7 @@ def main():
 
   testlogs = pathlib.Path(FLAGS.testlogs)
   if not testlogs.is_dir():
-    raise FileNotFoundError("--testlogs not a directory: {}".format(
-        FLAGS.testlogs))
+    raise FileNotFoundError("--testlogs not a directory: {FLAGS.testlogs}")
 
   database = db.Database(FLAGS.db)
 
@@ -62,11 +61,15 @@ def main():
     raise app.UsageError("--host must be set")
   host = FLAGS.host
 
-  phd_root = getconfig.GetGlobalConfig().paths.repo_root
-  git_branch = GetGitBranchOrDie(phd_root)
-  git_commit = subprocess.check_output(
-      ['git', '-C', phd_root, 'rev-parse', 'HEAD'],
-      universal_newlines=True).rstrip()
+  if not FLAGS.repo:
+    raise app.UsageError("--repo must be set")
+  repo = pathlib.Path(FLAGS.repo)
+  if not repo.is_dir():
+    raise FileNotFoundError("--repo not a directory: {FLAGS.repo}")
+
+  git_branch = GetGitBranchOrDie(repo)
+  git_commit = subprocess.check_output(['git', '-C', repo, 'rev-parse', 'HEAD'],
+                                       universal_newlines=True).rstrip()
 
   with prof.Profile('Import testlogs'), database.Session(
       commit=True) as session:
