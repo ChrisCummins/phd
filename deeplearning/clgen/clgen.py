@@ -57,7 +57,7 @@ app.DEFINE_integer(
     'min_samples', 0,
     'The minimum number of samples to make. If <= 0, sampling continues '
     'indefinitely and never terminates.')
-app.DEFINE_boolean('print_samples', False,
+app.DEFINE_boolean('print_samples', True,
                    'If set, print the generated samples.')
 app.DEFINE_boolean('cache_samples', False,
                    'If set, cache the generated sample protobufs.')
