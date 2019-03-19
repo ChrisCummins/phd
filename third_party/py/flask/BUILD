@@ -14,5 +14,13 @@ py_library(
         requirement("Flask-Compress"),
         requirement("flask-cors"),
         requirement("Werkzeug"),
+        requirement("jinja2"),
+        requirement("Click"),
+        requirement("itsdangerous"),
+        requirement("requests"),
+        requirement("urllib3"),
+        requirement("chardet"),
+        requirement("certifi"),
+        requirement("retrying"),
     ],
 )

@@ -12,13 +12,6 @@ py_library(
     deps = [
         requirement("dash"),
         requirement("plotly"),
-        requirement("Click"),
-        requirement("itsdangerous"),
-        requirement("requests"),
-        requirement("urllib3"),
-        requirement("chardet"),
-        requirement("certifi"),
-        requirement("retrying"),
         "//third_party/py/flask",
     ],
 )
