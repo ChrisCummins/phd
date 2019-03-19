@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import typing
 
+from research.cummins_2017_cgo import generative_model
 from deeplearning.clgen import clgen
 from labm8 import app
 from labm8 import fs
@@ -47,8 +48,7 @@ ADD . /clgen
 
 def main():
   """Main entry point."""
-  config = clgen.ConfigFromFlags()
-  instance = clgen.Instance(config)
+  instance = generative_model.CreateInstanceFromFlags()
 
   with tempfile.TemporaryDirectory(prefix='deeplearning_clgen_docker_') as d:
     ExportInstance(instance, pathlib.Path(d), FLAGS.docker_base_image)

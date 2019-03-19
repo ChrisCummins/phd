@@ -18,6 +18,7 @@ py_binary(
         "//labm8:app",
         "//labm8:fs",
         "//labm8:pbutil",
+        "//research/cummins_2017_cgo:generative_model",
     ],
 )
 
@@ -37,13 +38,10 @@ py_test(
 
 py3_image(
     name = "export_pretrained_model_image",
-    srcs = ["export_pretrained_model.py"],
+    srcs = [":export_pretrained_model"],
     base = "@base//image",
     main = "export_pretrained_model.py",
     deps = [
-        "//deeplearning/clgen",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:pbutil",
+        ":export_pretrained_model",
     ],
 )
