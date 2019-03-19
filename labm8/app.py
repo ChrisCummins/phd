@@ -76,7 +76,7 @@ def RunWithArgs(main: Callable[[List[str]], None],
     if FLAGS.version:
       print(build_info.FormatShortBuildDescription())
       print(f"<{build_info.GetGithubCommitUrl()}>")
-      sys.exit(1)
+      sys.exit(0)
     main(argv)
 
   try:
