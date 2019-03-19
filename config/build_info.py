@@ -42,7 +42,7 @@ def GetGithubCommitUrl(remote_url: typing.Optional[str] = None,
   m = re.match(f'git@github\.com:([^/]+)/(.+)\.git', remote_url)
   if not m:
     return None
-  return (f'https://github.com/{m.group(1)}/{m.group(2)}/commit/{commit_hash}')
+  return f'https://github.com/{m.group(1)}/{m.group(2)}/commit/{commit_hash}'
 
 
 def FormatShortRevision(html: bool = False) -> str:
