@@ -24,6 +24,8 @@ from absl import app as absl_app
 from absl import flags as absl_flags
 from absl import logging as absl_logging
 
+from config import build_info
+
 FLAGS = absl_flags.FLAGS
 
 absl_flags.DEFINE_list(
@@ -33,6 +35,8 @@ absl_flags.DEFINE_list(
     "gfs* for all modules whose name starts with \"gfs\"), matched against the "
     "filename base (that is, name ignoring .py). <log level> overrides any "
     "value given by --v.")
+absl_flags.DEFINE_boolean('version', False,
+                          'Print version information and exit.')
 
 
 class UsageError(absl_app.UsageError):
@@ -66,8 +70,17 @@ def RunWithArgs(main: Callable[[List[str]], None],
     argv: A non-empty list of the command line arguments including program name,
       sys.argv is used if None.
   """
+
+  def DoMain(argv):
+    """Run the user-provided main method, with app-level arg handling."""
+    if FLAGS.version:
+      print(build_info.FormatShortBuildDescription())
+      print(f"<{build_info.GetGithubCommitUrl()}>")
+      sys.exit(1)
+    main(argv)
+
   try:
-    absl_app.run(main, argv=argv)
+    absl_app.run(DoMain, argv=argv)
   except KeyboardInterrupt:
     FlushLogs()
     sys.stdout.flush()
@@ -91,14 +104,7 @@ def Run(main: Callable[[], None]):
       raise UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
     main()
 
-  try:
-    absl_app.run(RunWithoutArgs)
-  except KeyboardInterrupt:
-    FlushLogs()
-    sys.stdout.flush()
-    sys.stderr.flush()
-    print('keyboard interrupt')
-    sys.exit(1)
+  RunWithArgs(RunWithoutArgs)
 
 
 # Logging functions.

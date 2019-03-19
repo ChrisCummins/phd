@@ -53,10 +53,6 @@ from typing import Optional, Union
 
 import humanize as humanize_lib
 
-from labm8 import app
-
-FLAGS = app.FLAGS
-
 SIBILANT_ENDINGS = frozenset(['sh', 'ss', 'tch', 'ax', 'ix', 'ex'])
 DIGIT_SPLITTER = re.compile(r'\d+|\D+').findall
 
