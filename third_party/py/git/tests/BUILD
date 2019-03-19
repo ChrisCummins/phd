@@ -6,6 +6,7 @@ py_test(
     deps = [
         "//labm8:app",
         "//labm8:test",
+        "//third_party/py/git",
         "//third_party/py/pytest",
     ],
 )
