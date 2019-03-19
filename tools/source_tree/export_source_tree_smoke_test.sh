@@ -16,7 +16,7 @@ tools/source_tree/export_source_tree \
     --target=//tools/source_tree:export_source_tree \
     --destination="$TMPDIR"
 
-ls "$TMPDIR"
+find "$TMPDIR" -type f
 
 test -f "$TMPDIR/tools/source_tree/export_source_tree.py"
 
