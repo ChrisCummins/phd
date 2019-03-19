@@ -14,6 +14,7 @@ py_library(
     srcs = ["app.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//config:build_info",
         "//third_party/py/absl",
     ],
 )
@@ -22,9 +23,6 @@ py_library(
     name = "archive",
     srcs = ["archive.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":app",
-    ],
 )
 
 py_test(

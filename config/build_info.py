@@ -11,65 +11,66 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Access to the current repo build."""
+"""Access to the build information."""
 
 import datetime
-import pathlib
+import functools
 import re
-from typing import Optional
+import typing
 
-import git
+from config.proto import config_pb2
+from labm8 import bazelutil
+from labm8 import pbutil
 
-from config import getconfig
-from labm8 import app
-
-FLAGS = app.FLAGS
-
-
-class BuildInfo(object):
-  """A class which encapsulates state about the current repo build."""
-
-  def __init__(self, repo: git.Repo):
-    head = repo.head.object
-    branch = repo.active_branch
-    self.id: str = head.hexsha
-    self.date: datetime.datetime = datetime.datetime.fromtimestamp(
-        head.authored_date)
-    self.author: str = f"{head.author.name} <{head.author.email}>"
-    self.dirty: bool = repo.is_dirty()
-    self.branch: str = branch.name
-
-    tracking = branch.tracking_branch()
-    if tracking:
-      remote = tracking.remote_name
-      self.remote: Optional[str] = remote
-      self.commit_url: Optional[str] = _GetGitHubCommitUrl(
-          repo.remote(remote), self.id)
-    else:
-      self.remote: Optional[str] = None
-      self.commit_url: Optional[str] = None
-
-  @property
-  def short_hash(self) -> str:
-    return self.id[:7]
+_BUILD_INFO = bazelutil.DataPath("phd/config/build_info.pbtxt")
 
 
-def GetBuildInfo() -> BuildInfo:
-  """Return the current repo build state."""
-  return BuildInfo(GetGitRepo())
+@functools.lru_cache()
+def GetBuildInfo() -> config_pb2.BuildInfo:
+  """Return the build state."""
+  return pbutil.FromFile(
+      _BUILD_INFO, config_pb2.BuildInfo(), uninitialized_okay=False)
 
 
-def GetGitRepo(
-    config_path: pathlib.Path = getconfig.GLOBAL_CONFIG_PATH) -> git.Repo:
-  """Get the git repo for this project."""
-  config = getconfig.GetGlobalConfig(path=config_path)
-  assert config.paths.repo_root
-  return git.Repo(path=config.paths.repo_root)
-
-
-def _GetGitHubCommitUrl(remote: git.Remote, hexsha: str):
+def GetGithubCommitUrl(remote_url: typing.Optional[str] = None,
+                       commit_hash: typing.Optional[str] = None):
   """Calculate the GitHub URL for a commit."""
-  m = re.match(f'git@github\.com:([^/]+)/(.+)\.git', remote.url)
+  build_info = GetBuildInfo()
+  remote_url = remote_url or build_info.git_remote_url
+  commit_hash = commit_hash or build_info.git_hash
+
+  m = re.match(f'git@github\.com:([^/]+)/(.+)\.git', remote_url)
   if not m:
     return None
-  return f'https://github.com/{m.group(1)}/{m.group(2)}/commit/{hexsha}'
+  return (f'https://github.com/{m.group(1)}/{m.group(2)}/commit/{commit_hash}')
+
+
+def FormatShortRevision(html: bool = False) -> str:
+  """Get a shortened revision string."""
+  build_info = GetBuildInfo()
+  dirty_suffix = "*" if build_info.repo_dirty else ""
+  short_hash = f"{build_info.git_hash[:7]}{dirty_suffix}"
+  if html:
+    return f'<a href="{GetGithubCommitUrl()}">{short_hash}</a>'
+  else:
+    return short_hash
+
+
+def FormatShortBuildDescription(html: bool = False) -> str:
+  """Get build string in the form: 'build SHORT_HASH on DATE by USER@HOST'."""
+  build_info = GetBuildInfo()
+  natural_date = datetime.datetime.fromtimestamp(
+      build_info.seconds_since_epoch).strftime("%Y-%m-%d")
+  revision = FormatShortRevision(html)
+  return (f"build {revision} on {natural_date} by "
+          f"{build_info.user}@{build_info.host}")
+
+
+def FormatLongBuildDescription(html: bool = False) -> str:
+  """Get long multi-line build string."""
+  build_info = GetBuildInfo()
+  natural_datetime = datetime.datetime.fromtimestamp(
+      build_info.seconds_since_epoch).strftime("%Y-%m-%d %H:%M:%S")
+  return (f"""\
+Built by {build_info.user}@{build_info.host} at {natural_datetime}.
+Revision: {FullRevision(html=html)}.""")

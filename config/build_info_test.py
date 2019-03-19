@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //config:build_info."""
+
 import re
 
 from config import build_info
@@ -21,19 +22,21 @@ from labm8 import test
 FLAGS = app.FLAGS
 
 
-def test_GetGitRepo():
-  assert build_info.GetGitRepo()
+def test_FormatShortRevision():
+  revision = build_info.FormatShortRevision()
+  assert re.match(r'[0-9a-f]{7}\*?', revision)
 
 
-def test_GetBuildInfo():
-  info = build_info.GetBuildInfo()
-  assert re.match(r'[0-9a-f]{40}', info.id)
-  assert info.date
-  assert re.match(r'.+ <.+@.+>', info.author)
-  assert info.branch
-  assert info.remote
-  assert re.match(r'https://github.com/.+/.+/commit/[0-9a-f]{40}',
-                  info.commit_url)
+def test_FormatShortRevision_html():
+  revision = build_info.FormatShortRevision(html=True)
+  assert re.match(r'<a href=".+">[0-9a-f]{7}\*?</a>', revision)
+
+
+def test_FormatShortBuildDescription():
+  description = build_info.FormatShortBuildDescription()
+  assert re.match(
+      r'build [0-9a-f]{7}\*? on [0-9]{4}-[0-9]{2}-[0-9]{2} by .+@.+',
+      description)
 
 
 if __name__ == '__main__':

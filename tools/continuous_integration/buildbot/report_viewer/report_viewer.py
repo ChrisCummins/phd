@@ -119,7 +119,7 @@ def RenderInvocation(host, session, invocation):
       invocation_datetime=invocation,
       invocation_delta=humanize.Time(datetime.datetime.now() - invocation),
       urls=urls,
-      build_info=build_info.GetBuildInfo())
+      build_info=build_info.FormatShortBuildDescription(html=True))
 
 
 @flask_app.route("/ci/")

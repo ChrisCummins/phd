@@ -6,10 +6,6 @@ import tempfile
 import typing
 import zipfile
 
-from labm8 import app
-
-FLAGS = app.FLAGS
-
 
 class UnsupportedArchiveFormat(ValueError):
   """Raised in case an archive has an unsupported file format."""

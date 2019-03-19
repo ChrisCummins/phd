@@ -64,9 +64,8 @@ message BuildInfo {
   // respectively.
   optional string git_branch = 6;
   optional string git_remote = 7;
-  // The URL of a repo viewer, e.g. a GitHub repository page set to the current
-  // commit.
-  optional string repo_url = 8;
-  // The URL of the commit, e.g. a GitHub commit view page.
-  optional string git_commut_url = 9;
+  optional string git_remote_url = 8;
+
+  optional string git_commit_author = 10;
+  optional int64 git_commit_seconds_since_epoch = 11;
 }

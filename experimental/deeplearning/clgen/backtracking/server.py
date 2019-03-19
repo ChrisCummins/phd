@@ -37,7 +37,7 @@ flask_app = flask.Flask(
 def index():
   with prof.Profile('Render /'):
     template_args = {
-        'build_info': build_info.GetBuildInfo(),
+        'build_info': build_info.FormatShortBuildDescription(html=True),
         'urls': {
             "cache_tag": 1,
             "styles_css": flask.url_for('static', filename='bootstrap.css'),

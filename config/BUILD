@@ -19,11 +19,12 @@ licenses(["notice"])  # Apache 2.0
 py_library(
     name = "build_info",
     srcs = ["build_info.py"],
+    data = [":build_info_proto"],
     visibility = ["//visibility:public"],
     deps = [
-        ":getconfig",
-        "//labm8:app",
-        "//third_party/py/git",
+        "//config/proto:config",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
     ],
 )
 
@@ -55,4 +56,17 @@ py_test(
         "//labm8:app",
         "//labm8:test",
     ],
+)
+
+genrule(
+    name = "build_info_proto",
+    outs = ["build_info.pbtxt"],
+    cmd = "$(location :make_build_info_proto) > $@",
+    stamp = 1,
+    tools = [":make_build_info_proto"],
+)
+
+sh_binary(
+    name = "make_build_info_proto",
+    srcs = ["make_build_info_proto.sh"],
 )
