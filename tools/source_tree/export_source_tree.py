@@ -54,6 +54,7 @@ ALWAYS_INCLUDED_FILES = [
     'tools/bzl/*',  # Implicit dependency of WORKSPACE file.
     'third_party/*.BUILD',  # Implicit dependencies of WORKSPACE file.
     'third_party/py/tensorflow/BUILD.in',  # Needed by ./configure
+    'tools/workspace_status.sh',  # Needed by .bazelrc
     # tools/requirements.txt is always needed, but is handled separately.
 ]
 
