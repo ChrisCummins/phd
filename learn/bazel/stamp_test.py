@@ -15,7 +15,7 @@ STAMP_FILE = bazelutil.DataPath('phd/learn/bazel/stamp_file.txt')
 def test_StampFile():
   stamp_file = fs.Read(STAMP_FILE)
   print(stamp_file)
-  assert 'STABLE_BUILD_GIT_HASH' in stamp_file
+  assert 'BUILD_TIMESTAMP' in stamp_file
 
 
 if __name__ == '__main__':
