@@ -52,7 +52,7 @@ def main():
 
   testlogs = pathlib.Path(FLAGS.testlogs)
   if not testlogs.is_dir():
-    raise FileNotFoundError("--testlogs not a directory: {FLAGS.testlogs}")
+    raise FileNotFoundError(f"--testlogs not a directory: {FLAGS.testlogs}")
 
   database = db.Database(FLAGS.db)
 
@@ -65,7 +65,7 @@ def main():
     raise app.UsageError("--repo must be set")
   repo = pathlib.Path(FLAGS.repo)
   if not repo.is_dir():
-    raise FileNotFoundError("--repo not a directory: {FLAGS.repo}")
+    raise FileNotFoundError(f"--repo not a directory: {FLAGS.repo}")
 
   git_branch = GetGitBranchOrDie(repo)
   git_commit = subprocess.check_output(['git', '-C', repo, 'rev-parse', 'HEAD'],
