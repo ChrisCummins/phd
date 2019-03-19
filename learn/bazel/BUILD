@@ -24,6 +24,32 @@ cc_binary(
 )
 
 py_test(
+    name = "stamp_test",
+    srcs = ["stamp_test.py"],
+    data = [":stamp_file"],
+    deps = [
+        "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:test",
+    ],
+)
+
+genrule(
+    name = "stamp_file",
+    outs = ["stamp_file.txt"],
+    cmd = """
+(
+    echo 'Volatile status:';
+    cat bazel-out/volatile-status.txt;
+    echo
+    echo 'Stable status:';
+    cat bazel-out/stable-status.txt;
+) > $@
+""",
+    stamp = 1,
+)
+
+py_test(
     name = "tensorflow_test",
     srcs = ["tensorflow_test.py"],
     deps = [
