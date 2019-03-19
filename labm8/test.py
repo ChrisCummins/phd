@@ -19,9 +19,9 @@ with the proper arguments.
 """
 import contextlib
 import inspect
+import pathlib
 import re
 import sys
-import pathlib
 import tempfile
 import typing
 
@@ -90,6 +90,7 @@ def CoverageContext(file_path: str,
 [run]
 data_file = {datadir}/.coverage.{module}
 parallel = true
+disable_warnings = no-data-collected
 """.encode('utf-8'))
 
       pytest_args += [
