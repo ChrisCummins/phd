@@ -123,10 +123,10 @@ def main():
     print(f'{humanize.Commas(len(delta.fixed))} fixed, '
           f'{humanize.Commas(len(delta.broken))} broken.')
     for target in delta.broken:
-      print("BROKEN", target)
+      print("BROKEN", target[0])
 
     for target in delta.fixed:
-      print("FIXED", target)
+      print("FIXED", target[0])
 
     if delta.broken:
       sys.exit(1)
