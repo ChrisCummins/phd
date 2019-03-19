@@ -581,6 +581,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":app",
+        ":fs",
         "//:conftest",
         "//third_party/py/pytest",
     ],

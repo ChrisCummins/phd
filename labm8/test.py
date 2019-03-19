@@ -17,14 +17,18 @@ This project uses pytest runner, with a handful of custom configuration options.
 Use the Main() function as the entry point to your test files to run pytest
 with the proper arguments.
 """
+import contextlib
 import inspect
 import re
 import sys
+import pathlib
+import tempfile
 import typing
 
 import pytest
 
 from labm8 import app
+from labm8 import fs
 
 FLAGS = app.FLAGS
 
@@ -42,10 +46,60 @@ app.DEFINE_boolean(
     'Print the duration of the slowest tests at the end of execution. Use '
     '--test_durations to set the number of tests to print the durations of.')
 app.DEFINE_integer(
-    'test_durations', 1,
+    'test_durations', 3,
     'The number of slowest tests to print the durations of after execution. '
     'If --test_durations=0, the duration of all tests is printed.')
-app.DEFINE_boolean('test_coverage', True, 'Record test coverage.')
+app.DEFINE_string(
+    'test_coverage_data_dir', None,
+    'Run tests with statement coverage and write coverage.py data files to '
+    'this directory. The directory is created. Existing files are untouched.')
+
+
+def GuessModuleUnderTest(file_path: str) -> typing.Optional[str]:
+  # Strip everything up to the root of the project from the path.
+  match = re.match(r'.+\.runfiles/phd/(.+)', file_path)
+  if match:
+    module = match.group(1)
+    # Strip the _test.py suffix.
+    module = module[:-len('_test.py')]
+    # Convert path to fully qualified module.
+    module = module.replace('/', '.')
+    return module
+
+
+@contextlib.contextmanager
+def CoverageContext(file_path: str,
+                    pytest_args: typing.List[str]) -> typing.List[str]:
+  # Record coverage of module under test.
+  if FLAGS.test_coverage_data_dir:
+    module = GuessModuleUnderTest(file_path)
+    if not module:
+      app.Warning(
+          'Not recording coverage - failed to determine module under test')
+      yield pytest_args
+      return
+
+    with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+      # Create a coverage.py config file.
+      # See: https://coverage.readthedocs.io/en/coverage-4.3.4/config.html
+      datadir = pathlib.Path(FLAGS.test_coverage_data_dir)
+      datadir.mkdir(parents=True, exist_ok=True)
+      config_path = f"{d}/converagerc"
+      fs.Write(
+          config_path, f"""
+[run]
+data_file = {datadir}/.coverage.{module}
+parallel = true
+""".encode('utf-8'))
+
+      pytest_args += [
+          f'--cov={module}',
+          '--cov-config',
+          config_path,
+      ]
+      yield pytest_args
+  else:
+    yield pytest_args
 
 
 def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
@@ -90,23 +144,10 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   if not FLAGS.test_capture_output:
     pytest_args.append('-s')
 
-  # Record coverage of module under test.
-  if FLAGS.test_coverage:
-    # Strip everything up to the root of this project from the path.
-    match = re.match(r'.+\.runfiles/phd/(.+)', file_path)
-    if match:
-      module = match.group(1)
-      # Strip the _test.py suffix.
-      module = module[:-len('_test.py')]
-      # Convert path to fully qualified module.
-      module = module.replace('/', '.')
-      pytest_args.append(f'--cov={module}')
-    else:
-      app.Warning(
-          'Not recording coverage - failed to determine module under test')
-
-  app.Log(1, 'Running pytest with arguments: %s', pytest_args)
-  sys.exit(pytest.main(pytest_args))
+  with CoverageContext(file_path, pytest_args) as pytest_args:
+    app.Log(1, 'Running pytest with arguments: %s', pytest_args)
+    ret = pytest.main(pytest_args)
+  sys.exit(ret)
 
 
 def Main():
