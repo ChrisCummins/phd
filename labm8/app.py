@@ -75,6 +75,7 @@ def RunWithArgs(main: Callable[[List[str]], None],
     """Run the user-provided main method, with app-level arg handling."""
     if FLAGS.version:
       print(build_info.FormatShortBuildDescription())
+      print("Copyright (C) 2014-2019 Chris Cummins <chrisc.101@gmail.com>")
       print(f"<{build_info.GetGithubCommitUrl()}>")
       sys.exit(0)
     main(argv)
