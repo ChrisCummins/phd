@@ -46,6 +46,7 @@ def test_Exec_version():
 def test_Exec_opencl_working_app():
   """Run a binary which checks for oclgrind device availability."""
   proc = oclgrind.Exec([str(OCLGRIND_WORKING_BIN)])
+  print(proc.stderr)
   assert 'done' in proc.stderr
   assert proc.returncode == 0
 
