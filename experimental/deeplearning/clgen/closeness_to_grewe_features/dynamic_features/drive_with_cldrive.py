@@ -102,7 +102,7 @@ def DriveBatchAndRecordResults(session: sqlutil.Session,
   # Irrespective of batch size we still run each program in the batch as
   # separate cldrive instance.
   for static_features_id, src in batch:
-    with prof.Profile('Runs statif features ID {static_features_id}}'):
+    with prof.Profile('Run static features ID {static_features_id}}'):
       DriveKernelAndRecordResults(session, static_features_id, src, env,
                                   FLAGS.num_runs)
 
