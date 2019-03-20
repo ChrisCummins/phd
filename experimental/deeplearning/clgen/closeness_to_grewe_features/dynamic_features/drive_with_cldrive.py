@@ -2,6 +2,7 @@
 import collections
 import typing
 import subprocess
+import sqlalchemy as sql
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db as db
@@ -29,8 +30,13 @@ app.DEFINE_string(
 app.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
 app.DEFINE_integer('cldrive_timeout_seconds', 60,
                    'The number of seconds to allow cldrive to run for.')
-app.DEFINE_integer('batch_size', 16,
+app.DEFINE_integer('batch_size', 1024,
                    'The number of kernels to process at a time.')
+app.DEFINE_boolean(
+    'random_order', False,
+    'Select kernels to run in a random order. Randomizing the order can be '
+    'slow for large databases, but is useful when you have multiple '
+    'concurrent workers to prevent races.')
 
 KernelToDrive = collections.namedtuple('KernelToDrive', ['id', 'src'])
 
@@ -50,6 +56,7 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
   q = session.query(
       db.StaticFeatures.id, db.StaticFeatures.src) \
     .filter(~db.StaticFeatures.id.in_(already_done)) \
+    .order_by(sql.func.random()) \
     .limit(batch_size)
   return [KernelToDrive(*row) for row in q]
 
@@ -122,7 +129,8 @@ def main(argv: typing.List[str]):
   while True:
     batch_num += 1
     with database.Session() as session, prof.Profile(f'Batch {batch_num}'):
-      batch = GetBatchOfKernelsToDrive(session, env, FLAGS.batch_size)
+      with prof.Profile(f'Get batch of {FLAGS.batch_size} kernels'):
+        batch = GetBatchOfKernelsToDrive(session, env, FLAGS.batch_size)
       if not batch:
         app.Log(1, 'Done. Nothing more to run!')
         return
