@@ -82,6 +82,7 @@ def DriveToDataFrame(instances: cldrive_pb2.CldriveInstances,
 
   # Pandas will interpret empty string as NaN. Replace NaN with empty strings.
   df['build_opts'].fillna('', inplace=True)
+  df['kernel'].fillna('', inplace=True)
 
   # These columns may never contain null values.
   assert not pd.isna(df['instance']).any()
