@@ -3,9 +3,11 @@ import pathlib
 import socket
 import sys
 import tempfile
+import typing
 
 import pytest
 
+from config import build_info
 from labm8 import app
 
 # *WARNING* Flags used in this file are not defined here! They are declared in
@@ -110,3 +112,11 @@ def pytest_collection_modifyitems(config, items):
       app.Log(1, 'Skipping `%s` because it is slow', item.name)
       item.add_marker(slow_skip_marker)
       continue
+
+
+def pytest_report_header(config) -> typing.Union[str, typing.List[str]]:
+  """A pytest hook which returns an additional string (or list of strings) to
+  print in the header of the test report. See:
+  https://docs.pytest.org/en/latest/example/simple.html#adding-info-to-test-report-header
+  """
+  return f"phd: {build_info.FormatShortBuildDescription()}"
