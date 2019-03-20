@@ -27,6 +27,8 @@ app.DEFINE_string(
     'The OpenCL environment to execute benchmark suites on. To list the '
     'available environments, run `bazel run //gpu/clinfo`.')
 app.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
+app.DEFINE_integer('cldrive_timeout_seconds', 60,
+                   'The number of seconds to allow cldrive to run for.')
 app.DEFINE_integer('batch_size', 16,
                    'The number of kernels to process at a time.')
 
@@ -65,7 +67,8 @@ def DriveKernelAndRecordResults(
                 dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
                 min_runs_per_kernel=num_runs,
             )
-        ]))
+        ]),
+        timeout_seconds=FLAGS.cldrive_timeout_seconds)
     dynamic_features = [
         db.DynamicFeatures.FromCldriveDataFrameRecord(df.iloc[i],
                                                       static_features_id)
@@ -102,7 +105,7 @@ def DriveBatchAndRecordResults(session: sqlutil.Session,
   # Irrespective of batch size we still run each program in the batch as
   # separate cldrive instance.
   for static_features_id, src in batch:
-    with prof.Profile('Run static features ID {static_features_id}}'):
+    with prof.Profile(f'Run static features ID {static_features_id}'):
       DriveKernelAndRecordResults(session, static_features_id, src, env,
                                   FLAGS.num_runs)
 
