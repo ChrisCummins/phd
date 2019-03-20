@@ -211,13 +211,11 @@ std::string GetOpenClDeviceType(const cl::Device& device) {
 }
 
 std::vector<std::pair<string, string>> kSubstitutions = {
-    {"Intel(R)", "Intel"},
-    {"Xeon(R)", "Xeon"},
+    {"Intel(R)", "Intel"}, {"Xeon(R)", "Xeon"},
 };
 
 std::vector<string> kSuffixes = {
-    " CUDA",
-    " OpenCL",
+    " CUDA", " OpenCL",
 };
 
 string FormatOpenClString(const std::string& str) {
@@ -348,7 +346,7 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
   cl::Platform::get(&platforms);
   for (const auto& platform : platforms) {
     platform.getInfo(CL_PLATFORM_NAME, &platform_name);
-    if (!platform_name.compare(device_proto.platform_name())) {
+    if (platform_name.compare(device_proto.platform_name())) {
       LOG(DEBUG) << "Platform " << platform_name
                  << " != " << device_proto.platform_name();
       continue;
@@ -358,7 +356,7 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
     platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
     for (const auto& device : devices) {
       device.getInfo(CL_DEVICE_NAME, &device_name);
-      if (!device_name.compare(device_proto.device_name())) {
+      if (device_name.compare(device_proto.device_name())) {
         LOG(DEBUG) << "Device " << device_name
                    << " != " << device_proto.device_name();
         continue;
