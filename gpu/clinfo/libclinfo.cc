@@ -339,6 +339,19 @@ StatusOr<::gpu::clinfo::OpenClDevice> GetOpenClDeviceProto(const string& name) {
                      "OpenCL device not found");
 }
 
+namespace {
+
+// Workaround for a defect in which getInfo<>() methods return strings
+// including terminating '\0' character. See discussion at:
+// https://github.com/KhronosGroup/OpenCL-CLHPP/issues/8
+void StripTrailingNullCharacter(string* str) {
+  if (!str->empty() && str->back() == '\0') {
+    str->resize(str->size() - 1);
+  }
+}
+
+}  // anonymous namespace
+
 cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
   string platform_name, device_name, driver_version, opencl_version;
 
@@ -346,6 +359,7 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
   cl::Platform::get(&platforms);
   for (const auto& platform : platforms) {
     platform.getInfo(CL_PLATFORM_NAME, &platform_name);
+    StripTrailingNullCharacter(&platform_name);
     if (platform_name.compare(device_proto.platform_name())) {
       LOG(DEBUG) << "Platform " << platform_name
                  << " != " << device_proto.platform_name();
@@ -356,6 +370,7 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
     platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
     for (const auto& device : devices) {
       device.getInfo(CL_DEVICE_NAME, &device_name);
+      StripTrailingNullCharacter(&device_name);
       if (device_name.compare(device_proto.device_name())) {
         LOG(DEBUG) << "Device " << device_name
                    << " != " << device_proto.device_name();
@@ -363,7 +378,8 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
       }
 
       device.getInfo(CL_DRIVER_VERSION, &driver_version);
-      if (!driver_version.compare(device_proto.driver_version())) {
+      StripTrailingNullCharacter(&driver_version);
+      if (driver_version.compare(device_proto.driver_version())) {
         LOG(DEBUG) << "Driver " << driver_version
                    << " != " << device_proto.driver_version();
         continue;
