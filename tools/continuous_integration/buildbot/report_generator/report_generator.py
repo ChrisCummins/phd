@@ -90,7 +90,10 @@ def main():
 
         log_path = dir_ / 'test.log'
         assert log_path.is_file()
-        result.log = fs.Read(log_path).rstrip()
+        log = fs.Read(log_path).rstrip()
+        # Strip non-ASCII characters.
+        log = log.encode('ascii', 'ignore').decode('ascii')
+        result.log = log
 
         # Bazel test runner reports a single test for pytest files, no matter
         # how many tests are actually in the file. Let's report a more account
