@@ -56,16 +56,27 @@ std::ostream& operator<<(std::ostream& stream, const CsvLogHeader& header) {
   return stream;
 }
 
+CsvLog::CsvLog(int instance_id)
+    : instance_id_(instance_id),
+      work_item_local_mem_size_(-1),
+      work_item_private_mem_size_(-1),
+      global_size_(-1),
+      local_size_(-1),
+      transferred_bytes_(-1),
+      runtime_ms_(-1) {
+  CHECK(instance_id >= 0) << "Negative instance ID not allowed";
+}
+
 std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
   stream << log.instance_id_ << "," << log.device_ << "," << log.build_opts_
          << ",";
   NullIfEmpty(stream, log.kernel_) << ",";
   NullIfNegative(stream, log.work_item_local_mem_size_) << ",";
   NullIfNegative(stream, log.work_item_private_mem_size_) << ",";
-  NullIfZero(stream, log.global_size_) << ",";
-  NullIfZero(stream, log.local_size_) << "," << log.outcome_ << ",";
-  NullIfZero(stream, log.transferred_bytes_) << ",";
-  NullIfZero(stream, log.runtime_ms_) << std::endl;
+  NullIfNegative(stream, log.global_size_) << ",";
+  NullIfNegative(stream, log.local_size_) << "," << log.outcome_ << ",";
+  NullIfNegative(stream, log.transferred_bytes_) << ",";
+  NullIfNegative(stream, log.runtime_ms_) << std::endl;
   return stream;
 }
 
@@ -74,14 +85,11 @@ std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
     const CldriveKernelInstance* const kernel_instance,
     const CldriveKernelRun* const run,
     const gpu::libcecl::OpenClKernelInvocation* const log) {
-  CsvLog csv;
-  csv.instance_id_ = instance_id;
+  CsvLog csv(instance_id);
 
   CHECK(instance) << "CldriveInstance pointer cannot be null";
   csv.device_ = instance->device().name();
   csv.build_opts_ = instance->build_opts();
-  csv.work_item_local_mem_size_ = -1;
-  csv.work_item_private_mem_size_ = -1;
 
   csv.outcome_ = CldriveInstance::InstanceOutcome_Name(instance->outcome());
   if (kernel_instance) {

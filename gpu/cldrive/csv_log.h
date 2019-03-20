@@ -41,7 +41,7 @@ class CsvLogHeader {
 //    std::cout << log;
 class CsvLog {
  public:
-  CsvLog() = default;
+  CsvLog(int instance_id);
 
   // Create a log from proto messages.
   static CsvLog FromProtos(
