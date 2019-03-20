@@ -61,7 +61,7 @@ app.DEFINE_boolean('print_samples', True,
                    'If set, print the generated samples.')
 app.DEFINE_boolean('cache_samples', False,
                    'If set, cache the generated sample protobufs.')
-app.DEFINE_string('sampledir', None,
+app.DEFINE_string('sample_text_dir', None,
                   'A directory to write plain text samples to.')
 app.DEFINE_string('stop_after', None,
                   'Stop CLgen early. Valid options are: "corpus", or "train".')
@@ -281,10 +281,10 @@ def SampleObserversFromFlags():
     sample_observers.append(sample_observers_lib.PrintSampleObserver())
   if FLAGS.cache_samples:
     sample_observers.append(sample_observers_lib.LegacySampleCacheObserver())
-  if FLAGS.sampledir:
+  if FLAGS.sample_text_dir:
     sample_observers.append(
         sample_observers_lib.SaveSampleTextObserver(
-            pathlib.Path(FLAGS.sampledir)))
+            pathlib.Path(FLAGS.sample_text_dir)))
   return sample_observers
 
 
