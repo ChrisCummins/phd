@@ -125,10 +125,10 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
 
   KernelArgValuesSet output_a, output_b;
 
-  *run->add_log() =
-      RunOnceOrDie(dynamic_params, inputs, &output_a, run, logger);
-  *run->add_log() =
-      RunOnceOrDie(dynamic_params, inputs, &output_b, run, logger);
+  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, run, logger,
+                                 /*flush=*/false);
+  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, run, logger,
+                                 /*flush=*/false);
 
   if (output_a != output_b) {
     run->clear_log();  // Remove performance logs.
@@ -142,14 +142,14 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
 
   CHECK(args_set_.SetRandom(context_, dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
-  *run->add_log() =
-      RunOnceOrDie(dynamic_params, inputs, &output_b, run, logger);
+  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, run, logger,
+                                 /*flush=*/false);
 
   if (output_a == output_b) {
     run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping input insensitive kernel: '" << name_ << "'";
     run->set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
-    logger.RecordLog(&instance_, kernel_instance_, run, nullptr);
+    logger.RecordLog(&instance_, kernel_instance_, run, /*log=*/nullptr);
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "Input insensitive");
   }
 
@@ -161,6 +161,10 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     logger.RecordLog(&instance_, kernel_instance_, run, /*log=*/nullptr);
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "No argument");
   }
+
+  // We've passed the point of rejecting the kernel. Flush the buffered logs
+  // from the preliminary runs.
+  logger.FlushLogs();
 
   for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
     *run->add_log() =
@@ -174,7 +178,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
     const DynamicParams& dynamic_params, KernelArgValuesSet& inputs,
     KernelArgValuesSet* outputs, const CldriveKernelRun* const run,
-    Logger& logger) {
+    Logger& logger, bool flush) {
   gpu::libcecl::OpenClKernelInvocation log;
   ProfilingData profiling;
   cl::Event event;
@@ -201,7 +205,7 @@ gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
   log.set_runtime_ms(profiling.elapsed_nanoseconds / 1000000.0);
   log.set_transferred_bytes(profiling.transferred_bytes);
 
-  logger.RecordLog(&instance_, kernel_instance_, run, &log);
+  logger.RecordLog(&instance_, kernel_instance_, run, &log, flush);
 
   return log;
 }

@@ -36,10 +36,14 @@ class KernelDriver {
   phd::StatusOr<CldriveKernelRun> RunDynamicParams(
       const DynamicParams& dynamic_params, Logger& logger);
 
+  // Run the kernel with the given dynamic parameters. Any error here will
+  // result in the programming terminating. If flush is true, the result is
+  // logged immediately. Else, the result is buffered, to be logged at a
+  // later call to logger.FlushLogs().
   gpu::libcecl::OpenClKernelInvocation RunOnceOrDie(
       const DynamicParams& dynamic_params, KernelArgValuesSet& inputs,
       KernelArgValuesSet* outputs, const CldriveKernelRun* const run,
-      Logger& logger);
+      Logger& logger, bool flush = true);
 
  private:
   // Private helper to public RunDynamicParams() method that doesn't catch

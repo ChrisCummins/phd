@@ -31,14 +31,25 @@ Logger::Logger(std::ostream& ostream, const CldriveInstances* const instances)
     const CldriveInstance* const instance,
     const CldriveKernelInstance* const kernel_instance,
     const CldriveKernelRun* const run,
-    const gpu::libcecl::OpenClKernelInvocation* const log) {
+    const gpu::libcecl::OpenClKernelInvocation* const log, bool flush) {
   CHECK(instance_num() >= 0);
   return phd::Status::OK;
 }
 
+void Logger::FlushLogs() {
+  ostream_ << buffer_.str();
+  buffer_.clear();
+}
+
 const CldriveInstances* Logger::instances() { return instances_; }
 
-std::ostream& Logger::ostream() { return ostream_; }
+std::ostream& Logger::ostream(bool flush) {
+  if (flush) {
+    return ostream_;
+  } else {
+    return buffer_;
+  }
+}
 
 int Logger::instance_num() const { return instance_num_; }
 
@@ -49,27 +60,27 @@ ProtocolBufferLogger::ProtocolBufferLogger(
 
 /*virtual*/ ProtocolBufferLogger::~ProtocolBufferLogger() {
   if (text_format_) {
-    ostream() << "# File: //gpu/cldrive/proto/cldrive.proto\n"
-              << "# Proto: gpu.cldrive.CldriveInstances\n"
-              << instances()->DebugString();
+    ostream(/*flush=*/true) << "# File: //gpu/cldrive/proto/cldrive.proto\n"
+                            << "# Proto: gpu.cldrive.CldriveInstances\n"
+                            << instances()->DebugString();
   } else {
-    instances()->SerializeToOstream(&ostream());
+    instances()->SerializeToOstream(&ostream(/*flush=*/true));
   }
 }
 
 CsvLogger::CsvLogger(std::ostream& ostream,
                      const CldriveInstances* const instances)
     : Logger(ostream, instances) {
-  this->ostream() << CsvLogHeader();
+  this->ostream(/*flush=*/true) << CsvLogHeader();
 }
 
 /*virtual*/ phd::Status CsvLogger::RecordLog(
     const CldriveInstance* const instance,
     const CldriveKernelInstance* const kernel_instance,
     const CldriveKernelRun* const run,
-    const gpu::libcecl::OpenClKernelInvocation* const log) {
-  ostream() << CsvLog::FromProtos(instance_num(), instance, kernel_instance,
-                                  run, log);
+    const gpu::libcecl::OpenClKernelInvocation* const log, bool flush) {
+  ostream(flush) << CsvLog::FromProtos(instance_num(), instance,
+                                       kernel_instance, run, log);
   return phd::Status::OK;
 }
 

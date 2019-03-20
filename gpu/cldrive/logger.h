@@ -21,6 +21,7 @@
 #include "phd/status.h"
 
 #include <iostream>
+#include <sstream>
 
 namespace gpu {
 namespace cldrive {
@@ -38,15 +39,18 @@ class Logger {
       const CldriveInstance* const instance,
       const CldriveKernelInstance* const kernel_instance,
       const CldriveKernelRun* const run,
-      const gpu::libcecl::OpenClKernelInvocation* const log);
+      const gpu::libcecl::OpenClKernelInvocation* const log, bool flush = true);
+
+  void FlushLogs();
 
  protected:
   const CldriveInstances* instances();
-  std::ostream& ostream();
+  std::ostream& ostream(bool flush);
   int instance_num() const;
 
  private:
   std::ostream& ostream_;
+  std::stringstream buffer_;
   const CldriveInstances* const instances_;
   int instance_num_;
 };
@@ -72,7 +76,8 @@ class CsvLogger : public Logger {
       const CldriveInstance* const instance,
       const CldriveKernelInstance* const kernel_instance,
       const CldriveKernelRun* const run,
-      const gpu::libcecl::OpenClKernelInvocation* const log) override;
+      const gpu::libcecl::OpenClKernelInvocation* const log,
+      bool flush) override;
 };
 
 }  // namespace cldrive
