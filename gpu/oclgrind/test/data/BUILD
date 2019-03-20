@@ -15,14 +15,12 @@
 # limitations under the License.
 
 # A small program which checks that it is running inside an Oclgrind
-# environment. Use this as a template for other targets
+# environment. Use this as a template for other OpenCL targets.
 cc_binary(
     name = "oclgrind_working",
     testonly = 1,
     srcs = ["oclgrind_working.cc"],
     linkstatic = False,  # Needed for oclgrind support.
-    # You MUST disable static linking for oclgrind to work.
-    linkstatic = False,
     visibility = ["//gpu/oclgrind:__subpackages__"],
     deps = [
         "//phd:logging",
