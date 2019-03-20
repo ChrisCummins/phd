@@ -361,8 +361,6 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
     platform.getInfo(CL_PLATFORM_NAME, &platform_name);
     StripTrailingNullCharacter(&platform_name);
     if (platform_name.compare(device_proto.platform_name())) {
-      LOG(DEBUG) << "Platform " << platform_name
-                 << " != " << device_proto.platform_name();
       continue;
     }
 
@@ -372,16 +370,12 @@ cl::Device GetOpenClDevice(const ::gpu::clinfo::OpenClDevice& device_proto) {
       device.getInfo(CL_DEVICE_NAME, &device_name);
       StripTrailingNullCharacter(&device_name);
       if (device_name.compare(device_proto.device_name())) {
-        LOG(DEBUG) << "Device " << device_name
-                   << " != " << device_proto.device_name();
         continue;
       }
 
       device.getInfo(CL_DRIVER_VERSION, &driver_version);
       StripTrailingNullCharacter(&driver_version);
       if (driver_version.compare(device_proto.driver_version())) {
-        LOG(DEBUG) << "Driver " << driver_version
-                   << " != " << device_proto.driver_version();
         continue;
       }
 
