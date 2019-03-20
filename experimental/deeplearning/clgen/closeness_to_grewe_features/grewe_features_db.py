@@ -7,6 +7,7 @@ import random
 import typing
 
 import pandas as pd
+import numpy as np
 import progressbar
 import sqlalchemy as sql
 from sqlalchemy.ext import declarative
@@ -14,6 +15,7 @@ from sqlalchemy.ext import declarative
 from labm8 import app
 from labm8 import humanize
 from labm8 import sqlutil
+from labm8 import system
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = app.FLAGS
@@ -69,6 +71,13 @@ class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
     )
 
 
+def NoneIfNaN(value):
+  """Covert NaN numeric value to None."""
+  if np.isnan(value):
+    return None
+  return value
+
+
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
   static_features_id: int = sql.Column(
@@ -76,19 +85,33 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   # The OpenClEnvironment.name of the device.
   opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
-  gsize: int = sql.Column(sql.Integer, nullable=False)
-  wgsize: int = sql.Column(sql.Integer, nullable=False)
   outcome: str = sql.Column(sql.String(32), nullable=False)
 
-  # Dynamic features that may not be set if outcome != "pass".
+  # Dynamic params that may not be set if outcome != "PASS".
+  gsize: int = sql.Column(sql.Integer, nullable=True)
+  wgsize: int = sql.Column(sql.Integer, nullable=True)
+
+  # Dynamic features that may not be set if outcome != "PASS".
   work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=True)
   work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=True)
   transferred_bytes: int = sql.Column(sql.Integer, nullable=True)
   runtime_ms: float = sql.Column(sql.Float, nullable=True)
 
   @classmethod
-  def FromDataFrame(cls, df: pd.DataFrame):
-    return [cls(**row) for _, row in df.iterrows()]
+  def FromCldriveDataFrameRecord(cls, record, static_features_id: int):
+    features = cls(
+        static_features_id=static_features_id,
+        opencl_env=record.device,
+        hostname=system.HOSTNAME,
+        outcome=record.outcome,
+        gsize=NoneIfNaN(record.global_size),
+        wgsize=NoneIfNaN(record.local_size),
+        work_item_local_mem_size=NoneIfNaN(record.work_item_local_mem_size),
+        work_item_private_mem_size=NoneIfNaN(record.work_item_private_mem_size),
+        transferred_bytes=NoneIfNaN(record.transferred_bytes),
+        runtime_ms=NoneIfNaN(record.runtime_ms),
+    )
+    return features
 
 
 def _DatabaseImporterWorker(

@@ -1,6 +1,7 @@
 """Run kernels in features database using CGO'17 driver and settings."""
 import collections
 import typing
+import subprocess
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db as db
@@ -11,6 +12,7 @@ from labm8 import app
 from labm8 import pbutil
 from labm8 import sqlutil
 from labm8 import system
+from labm8 import prof
 from research.cummins_2017_cgo import opencl_kernel_driver
 
 FLAGS = app.FLAGS
@@ -50,77 +52,59 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
   return [KernelToDrive(*row) for row in q]
 
 
-def DriveBatchAndRecordResults(session: sqlutil.Session,
-                               batch: typing.List[KernelToDrive],
-                               env: cldrive_env.OpenCLEnvironment) -> None:
-  """Drive a batch of kernels and record dynamic features."""
+def DriveKernelAndRecordResults(
+    session: sqlutil.Session, static_features_id: int, src: str,
+    env: cldrive_env.OpenCLEnvironment, num_runs: int) -> None:
+  """Drive a single kernel and record results."""
   try:
-    instances = cldrive.DriveToDataFrame(
+    df = cldrive.DriveToDataFrame(
         cldrive_pb2.CldriveInstances(instance=[
             cldrive_pb2.CldriveInstance(
-                opencl_env=env.proto,
+                device=env.proto,
                 opencl_src=src,
-                min_runs_per_kernel=FLAGS.num_runs,
                 dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
-            ) for _, src in batch
+                min_runs_per_kernel=num_runs,
+            )
         ]))
-    print(instances)
-    import sys
-    sys.exit(0)
-    if len(instances.instance) != len(batch):
-      raise OSError(f"Number of instances ({len(instances.instance)}) != "
-                    f"batch size ({len(batch)})")
-
-    for (static_features_id, _), instance in zip(batch, instances.instance):
-      if len(instance.kernel) < 1:
-        session.add(
-            db.DynamicFeatures(
-                static_features_id=static_features_id,
-                opencl_env=env.name,
-                hostname=system.HOSTNAME,
-                result=cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
-                    instance.outcome),
-            ))
-      else:
-        if len(instance.kernel) != 1:
-          raise OSError(f"{instance.kernel} kernels found!")
-
-        result = cldrive_pb2.CldriveInstance.InstanceOutcome.Name(
-            instance.outcome)
-        if result == 'PASS':
-          result = cldrive_pb2.CldriveKernelInstance.KernelInstanceOutcome.Name(
-              instance.kernel[0].outcome)
-
-        session.add(
-            db.DynamicFeatures(
-                static_features_id=static_features_id,
-                opencl_env=env.name,
-                hostname=system.HOSTNAME,
-                result=result,
-            ))
-
-        for run in instance.kernel[0].run:
-          session.add_all([
-              db.DynamicFeatures(
-                  static_features_id=static_features_id,
-                  opencl_env=env.name,
-                  hostname=system.HOSTNAME,
-                  dataset=f'{log.global_size},{log.local_size}',
-                  gsize=log.global_size,
-                  wgsize=log.local_size,
-                  transferred_bytes=log.transferred_bytes,
-                  runtime_ms=log.runtime_ms,
-              ) for log in run.log
-          ])
-  except pbutil.ProtoWorkerTimeoutError:
-    session.add_all([
+    dynamic_features = [
+        db.DynamicFeatures.FromCldriveDataFrameRecord(df.iloc[i],
+                                                      static_features_id)
+        for i in range(len(df))
+    ]
+    session.add_all(dynamic_features)
+    app.Log(1, 'Imported %d dynamic features', len(dynamic_features))
+  except subprocess.CalledProcessError:
+    session.add(
         db.DynamicFeatures(
             static_features_id=static_features_id,
             opencl_env=env.name,
             hostname=system.HOSTNAME,
-            result='DRIVER_TIMEOUT',
-        ) for (static_features_id, _) in batch
-    ])
+            outcome='DRIVER_CRASH',
+        ))
+    app.Log(1, 'Driver crashed')
+  except pbutil.ProtoWorkerTimeoutError:
+    session.add(
+        db.DynamicFeatures(
+            static_features_id=static_features_id,
+            opencl_env=env.name,
+            hostname=system.HOSTNAME,
+            outcome='DRIVER_TIMEOUT',
+        ))
+    app.Log(1, 'Driver timed out')
+  finally:
+    session.commit()
+
+
+def DriveBatchAndRecordResults(session: sqlutil.Session,
+                               batch: typing.List[KernelToDrive],
+                               env: cldrive_env.OpenCLEnvironment) -> None:
+  """Drive a batch of kernels and record dynamic features."""
+  # Irrespective of batch size we still run each program in the batch as
+  # separate cldrive instance.
+  for static_features_id, src in batch:
+    with prof.Profile('Runs statif features ID {static_features_id}}'):
+      DriveKernelAndRecordResults(session, static_features_id, src, env,
+                                  FLAGS.num_runs)
 
 
 def main(argv: typing.List[str]):
@@ -134,8 +118,7 @@ def main(argv: typing.List[str]):
   batch_num = 0
   while True:
     batch_num += 1
-    app.Log(1, 'Batch %d', batch_num)
-    with database.Session(commit=True) as session:
+    with database.Session() as session, prof.Profile(f'Batch {batch_num}'):
       batch = GetBatchOfKernelsToDrive(session, env, FLAGS.batch_size)
       if not batch:
         app.Log(1, 'Done. Nothing more to run!')
