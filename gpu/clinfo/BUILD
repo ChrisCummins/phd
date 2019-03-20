@@ -17,6 +17,7 @@
 cc_binary(
     name = "clinfo",
     srcs = ["clinfo.cc"],
+    linkstatic = False,  # Needed for oclgrind support.
     visibility = ["//visibility:public"],
     deps = [":libclinfo"],
 )
@@ -48,6 +49,7 @@ cc_library(
 cc_test(
     name = "libclinfo_test",
     srcs = ["libclinfo_test.cc"],
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":libclinfo",
         "//phd:test",

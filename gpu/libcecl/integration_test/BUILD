@@ -29,6 +29,7 @@ cc_binary(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         "//third_party/opencl",
     ] + select({

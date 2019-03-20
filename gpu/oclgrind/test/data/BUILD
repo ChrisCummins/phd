@@ -22,6 +22,7 @@ cc_binary(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     visibility = ["//gpu/oclgrind:__subpackages__"],
     deps = [
         "//phd:logging",

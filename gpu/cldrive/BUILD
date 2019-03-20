@@ -149,6 +149,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":global_memory_arg_value",
         ":kernel_arg",
@@ -185,6 +186,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_arg_set",
         "//phd:test",
@@ -217,6 +219,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_arg_value",
         "//phd:port",
@@ -247,6 +250,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_arg_values_set",
         "//phd:test",
@@ -281,6 +285,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_driver",
         "//phd:test",
@@ -320,6 +325,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":libcldrive",
         "//phd:test",
@@ -438,6 +444,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":profiling_data",
         "//phd:test",
@@ -466,6 +473,7 @@ cc_test(
         "//:darwin": ["-framework OpenCL"],
         "//conditions:default": [],
     }),
+    linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":scalar_kernel_arg_value",
         "//phd:test",
