@@ -16,7 +16,6 @@ from labm8 import humanize
 from labm8 import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
-
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -74,17 +73,18 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
   static_features_id: int = sql.Column(
       sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
-  device: str = sql.Column(sql.String(256), nullable=False)
+  # The OpenClEnvironment.name of the device.
+  opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
-  outcome: str = sql.Column(sql.String(32), nullable=False)
-  build_opts: str = sql.Column(sql.String(128), nullable=False)
-  kernel: str = sql.Column(sql.String(128), nullable=False)
-  work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=False)
-  work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=False)
   gsize: int = sql.Column(sql.Integer, nullable=False)
   wgsize: int = sql.Column(sql.Integer, nullable=False)
-  transferred_bytes: int = sql.Column(sql.Integer, nullable=False)
-  runtime_ms: float = sql.Column(sql.Float, nullable=False)
+  outcome: str = sql.Column(sql.String(32), nullable=False)
+
+  # Dynamic features that may not be set if outcome != "pass".
+  work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=True)
+  work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=True)
+  transferred_bytes: int = sql.Column(sql.Integer, nullable=True)
+  runtime_ms: float = sql.Column(sql.Float, nullable=True)
 
   @classmethod
   def FromDataFrame(cls, df: pd.DataFrame):

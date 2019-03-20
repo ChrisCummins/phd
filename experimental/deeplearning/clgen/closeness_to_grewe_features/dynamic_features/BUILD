@@ -1,3 +1,5 @@
+# Drive programs to get dynamic features.
+
 py_binary(
     name = "drive_with_cldrive",
     srcs = ["drive_with_cldrive.py"],
@@ -10,5 +12,16 @@ py_binary(
         "//labm8:system",
         "//labm8:text",
         "//research/cummins_2017_cgo:opencl_kernel_driver",
+    ],
+)
+
+py_test(
+    name = "drive_with_cldrive_test",
+    srcs = ["drive_with_cldrive_test.py"],
+    deps = [
+        ":drive_with_cldrive",
+        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
+        "//gpu/cldrive/legacy:env",
+        "//labm8:test",
     ],
 )
