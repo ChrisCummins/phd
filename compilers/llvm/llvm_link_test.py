@@ -15,13 +15,14 @@
 
 from labm8 import app
 from labm8 import test
+from compilers.llvm import llvm_link
 
 FLAGS = app.FLAGS
 
 
 def test_TODO():
-  """Short summary of test."""
-  assert True
+  """TODO: Short summary of test."""
+  _ = llvm_link
 
 
 if __name__ == '__main__':
