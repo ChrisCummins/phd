@@ -216,7 +216,7 @@ py_library(
 
 py_test(
     name = "tensorflow_backend_test",
-    size = "enormous",
+    timeout = "long",
     srcs = ["tensorflow_backend_test.py"],
     deps = [
         ":models",
