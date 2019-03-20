@@ -5,6 +5,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = None  # Disable coverage.
+
 
 def test_TODO():
   """TODO: Short summary of test."""

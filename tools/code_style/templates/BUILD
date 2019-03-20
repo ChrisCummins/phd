@@ -8,18 +8,26 @@ py_proto_library(
     deps = ["//third_party/py/protobuf"],
 )
 
+py_binary(
+    name = "py_binary",
+    srcs = ["py_binary.py"],
+    deps = [
+        "//labm8:app",
+    ],
+)
+
 py_library(
-    name = "python",
-    srcs = ["python.py"],
+    name = "py_library",
+    srcs = ["py_library.py"],
     deps = [
         "//labm8:app",
     ],
 )
 
 py_test(
-    name = "python_test",
+    name = "py_test",
     size = "small",
-    srcs = ["python_test.py"],
+    srcs = ["py_test.py"],
     deps = [
         "//labm8:app",
         "//labm8:test",
