@@ -43,7 +43,7 @@ def _DynamicFeatures(
 @pytest.fixture(scope='function')
 def db() -> grewe_features_db.Database:
   """A test fixture that yields a database with three static features in it."""
-  db_ = grewe_features_db.Database('sqlite:///')
+  db_ = grewe_features_db.Database('sqlite://')
   with db_.Session(commit=True) as s:
     s.add_all([
         _StaticFeatures(
@@ -59,14 +59,16 @@ def db() -> grewe_features_db.Database:
   yield db_
 
 
-@pytest.fixture(scope='env')
+@pytest.fixture(scope='function')
 def env() -> cldrive_env.OpenCLEnvironment:
+  """Test fixture which yields a functional OpenCL environment."""
   return cldrive_env.OclgrindOpenCLEnvironment()
 
 
 def test_GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
                                   env: cldrive_env.OpenCLEnvironment):
-  batch = drive_with_cldrive.GetBatchOfKernelsToDrive(db, env, 16)
+  with db.Session() as s:
+    batch = drive_with_cldrive.GetBatchOfKernelsToDrive(s, env, 16)
   assert len(batch) == 3
   assert len(set(b.src for b in batch)) == 3
 
@@ -74,11 +76,11 @@ def test_GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
 def test_GetBatchOfKernelsToDrive_overlap(db: grewe_features_db.Database,
                                           env: cldrive_env.OpenCLEnvironment):
   # Add a dynamic features to the database.
-  with db.Session(commit=True) as s:
+  with db.Session() as s:
     features = s.query(grewe_features_db.StaticFeatures).first()
     s.add(_DynamicFeatures(features, env))
-
-  batch = drive_with_cldrive.GetBatchOfKernelsToDrive(db, env, 16)
+    s.flush()
+    batch = drive_with_cldrive.GetBatchOfKernelsToDrive(s, env, 16)
   assert len(batch) == 2
   assert len(set(b.src for b in batch)) == 2
 
