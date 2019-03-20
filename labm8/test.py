@@ -18,6 +18,7 @@ Use the Main() function as the entry point to your test files to run pytest
 with the proper arguments.
 """
 import contextlib
+from importlib import util as importutil
 import inspect
 import pathlib
 import re
@@ -55,51 +56,92 @@ app.DEFINE_string(
     'this directory. The directory is created. Existing files are untouched.')
 
 
-def GuessModuleUnderTest(file_path: str) -> typing.Optional[str]:
-  # Strip everything up to the root of the project from the path.
+def AbsolutePathToModule(file_path: str) -> str:
+  """Determine module name from an absolute path."""
   match = re.match(r'.+\.runfiles/phd/(.+)', file_path)
   if match:
+    # Strip everything up to the root of the project from the path.
     module = match.group(1)
-    # Strip the _test.py suffix.
-    module = module[:-len('_test.py')]
-    # Convert path to fully qualified module.
+    # Strip the .py suffix.
+    module = module[:-len('.py')]
+    # Replace path sep with module sep.
     module = module.replace('/', '.')
     return module
+  else:
+    raise OSError(f"Could not determine runfiles directory: {file_path}")
+
+
+def GuessModuleUnderTest(file_path: str) -> typing.Optional[str]:
+  """Determine the module under test. Returns None if no module under test."""
+  # Load the test module and check for a MODULE_UNDER_TEST attribute. If
+  # present, this is the name of the module under test. Valid values for
+  # MODULE_UNDER_TEST are a string, e.g. 'labm8.app', or None.
+  spec = importutil.spec_from_file_location('module', file_path)
+  test_module = importutil.module_from_spec(spec)
+  spec.loader.exec_module(test_module)
+  if hasattr(test_module, 'MODULE_UNDER_TEST'):
+    return test_module.MODULE_UNDER_TEST
+
+  # If the module under test was not specified, Guess the module name by
+  # stripping the '_test' suffix from the name of the test module.
+  return AbsolutePathToModule(file_path)[:-len('_test')]
 
 
 @contextlib.contextmanager
 def CoverageContext(file_path: str,
                     pytest_args: typing.List[str]) -> typing.List[str]:
-  # Record coverage of module under test.
-  if FLAGS.test_coverage_data_dir:
-    module = GuessModuleUnderTest(file_path)
-    if not module:
-      app.Warning(
-          'Not recording coverage - failed to determine module under test')
-      yield pytest_args
-      return
 
-    with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
-      # Create a coverage.py config file.
-      # See: https://coverage.readthedocs.io/en/coverage-4.3.4/config.html
+  # Record coverage of module under test.
+  module = GuessModuleUnderTest(file_path)
+  if not module:
+    app.Log(1, 'Coverage disabled - no module under test')
+    yield pytest_args
+    return
+
+  with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+    # If we
+    if FLAGS.test_coverage_data_dir:
       datadir = pathlib.Path(FLAGS.test_coverage_data_dir)
       datadir.mkdir(parents=True, exist_ok=True)
-      config_path = f"{d}/converagerc"
-      fs.Write(
-          config_path, f"""
+    else:
+      datadir = pathlib.Path(d)
+    # Create a coverage.py config file.
+    # See: https://coverage.readthedocs.io/en/coverage-4.3.4/config.html
+    config_path = f"{d}/converagerc"
+    fs.Write(
+        config_path, f"""
 [run]
-data_file = {datadir}/.coverage.{module}
-parallel = true
-disable_warnings = no-data-collected
+data_file = {datadir}/.coverage
+parallel = True
+# disable_warnings =
+#   module-not-imported
+#   no-data-collected
+#   module-not-measured
+
+[report]
+ignore_errors = True
+# Regexes for lines to exclude from consideration
+exclude_lines =
+  # Have to re-enable the standard pragma
+  pragma: no cover
+
+  # Don't complain about missing debug-only code:
+  def __repr__
+  if self\.debug
+
+  # Don't complain if tests don't hit defensive assertion code:
+  raise AssertionError
+  raise NotImplementedError
+
+  # Don't complain if non-runnable code isn't run:
+  if 0:
+  if __name__ == .__main__.:
 """.encode('utf-8'))
 
-      pytest_args += [
-          f'--cov={module}',
-          '--cov-config',
-          config_path,
-      ]
-      yield pytest_args
-  else:
+    pytest_args += [
+        f'--cov={module}',
+        f'--cov-config={config_path}',
+    ]
     yield pytest_args
 
 
@@ -129,6 +171,8 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
       file_path,
       # Run pytest verbosely.
       '-vv',
+      '-p',
+      'no:cacheprovider',
   ]
 
   if FLAGS.test_color:
