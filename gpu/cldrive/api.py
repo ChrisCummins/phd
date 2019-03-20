@@ -43,7 +43,7 @@ def _GetCommand(driver, instances):
 
 
 def Drive(instances: cldrive_pb2.CldriveInstances,
-          timeout_seconds: int = 360) -> cldrive_pb2.CldriveInstances:
+          timeout_seconds: int = 300) -> cldrive_pb2.CldriveInstances:
   """Run cldrive with the given instances proto."""
   pbutil.RunProcessMessageInPlace(
       _GetCommand(_NATIVE_DRIVER, instances),
@@ -53,7 +53,7 @@ def Drive(instances: cldrive_pb2.CldriveInstances,
 
 
 def DriveToDataFrame(instances: cldrive_pb2.CldriveInstances,
-                     timeout_seconds: int = 360) -> pd.DataFrame:
+                     timeout_seconds: int = 300) -> pd.DataFrame:
   """Run cldrive with the given instances and read results to dataframe."""
   stdout = pbutil.RunProcessMessage(
       _GetCommand(_NATIVE_CSV_DRIVER, instances),
