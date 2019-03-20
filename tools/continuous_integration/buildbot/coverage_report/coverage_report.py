@@ -5,12 +5,13 @@ from coverage import cmdline as coverage_cli
 
 from labm8 import app
 from labm8 import fs
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
 app.DEFINE_string('coverage_data_dir', '/coverage/data',
                   'Path to directory containing coverage.py data files.')
-app.DEFINE_string('coverage_html_dir', '/coverage/htl',
+app.DEFINE_string('coverage_html_dir', '/coverage/html',
                   'Path to directory to put HTML report in.')
 
 
@@ -24,8 +25,10 @@ def main():
   coverage_html_dir.mkdir(parents=True, exist_ok=True)
 
   with fs.chdir(coverage_data_dir):
-    coverage_cli.main(['combine'])
-    coverage_cli.main(['html', '-d', str(coverage_html_dir)])
+    with prof.Profile('Combine coverage.py data files'):
+      coverage_cli.main(['combine'])
+    with prof.Profile('Generate HTML report'):
+      coverage_cli.main(['html', '-d', str(coverage_html_dir)])
 
 
 if __name__ == '__main__':

@@ -7,6 +7,9 @@ py_binary(
     srcs = ["coverage_report.py"],
     deps = [
         "//labm8:app",
+        "//labm8:fs",
+        "//labm8:prof",
+        "//third_party/py/coverage",
     ],
 )
 
