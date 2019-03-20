@@ -412,7 +412,10 @@ def RunProcessMessage(cmd: typing.List[str],
                       input_proto: ProtocolBuffer,
                       timeout_seconds: int = 360) -> str:
   # Run the C++ worker process, capturing it's output.
-  process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+  process = subprocess.Popen(
+      ['timeout', '-s9', str(timeout_seconds)] + cmd,
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE)
   # Send the input proto to the C++ worker process.
   # TODO: Add timeout.
   stdout, _ = process.communicate(input_proto.SerializeToString())
