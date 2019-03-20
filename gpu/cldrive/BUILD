@@ -52,6 +52,7 @@ py_test(
         ":api",
         "//labm8:app",
         "//labm8:test",
+        "//third_party/py/numpy",
         "//third_party/py/pytest",
     ],
 )
@@ -59,6 +60,7 @@ py_test(
 cc_binary(
     name = "cldrive",
     srcs = ["cldrive.cc"],
+    linkstatic = False,  # Needed for Oclgrind support.
     deps = [
         ":csv_log",
         ":libcldrive",
@@ -361,6 +363,7 @@ cc_library(
 cc_binary(
     name = "native_driver",
     srcs = ["native_driver.cc"],
+    linkstatic = False,  # Needed for Oclgrind support.
     deps = [
         ":libcldrive",
         "//gpu/cldrive/proto:cldrive_cc_pb2",
@@ -371,6 +374,7 @@ cc_binary(
 cc_binary(
     name = "native_csv_driver",
     srcs = ["native_csv_driver.cc"],
+    linkstatic = False,  # Needed for Oclgrind support.
     deps = [
         ":libcldrive",
         "//gpu/cldrive/proto:cldrive_cc_pb2",

@@ -15,6 +15,8 @@
 # along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //gpu/cldrive:api."""
 import pytest
+import numpy as np
+import subprocess
 
 from gpu.cldrive import api
 from gpu.cldrive.legacy import env
@@ -48,24 +50,8 @@ def device() -> env.OpenCLEnvironment:
   return env.OclgrindOpenCLEnvironment().proto
 
 
-@pytest.fixture(scope='function')
-def input1(device: clinfo_pb2.OpenClDevice) -> cldrive_pb2.CldriveInstances:
-  """Test fixture that returns a very simple kernel."""
-  return _MakeInstance(
-      device, """
-kernel void A(global int* a) {
-  a[get_global_id(0)] = a[get_global_id(0)] * 2;
-}
-""")
-
-
-def test_Drive_smoke_test(input1: cldrive_pb2.CldriveInstances):
-  """Test that Drive doesn't blow up."""
-  api.Drive(input1)
-
-
-def test_DriveToDataFrame_columns(input1: cldrive_pb2.CldriveInstances):
-  df = api.DriveToDataFrame(input1)
+def test_DriveToDataFrame_columns(device: clinfo_pb2.OpenClDevice):
+  df = api.DriveToDataFrame(_MakeInstance(device, ""))
   assert list(df.columns.values) == [
       'instance',
       'device',
@@ -81,36 +67,94 @@ def test_DriveToDataFrame_columns(input1: cldrive_pb2.CldriveInstances):
   ]
 
 
-def test_DriveToDataFrame_num_rows(input1: cldrive_pb2.CldriveInstances):
-  df = api.DriveToDataFrame(input1)
+def test_DriveToDataFrame_single_program(device: clinfo_pb2.OpenClDevice):
+  df = api.DriveToDataFrame(
+      _MakeInstance(
+          device, """
+kernel void A(global int* a) {
+  a[get_global_id(0)] = a[get_global_id(0)] * 2;
+}
+"""))
   assert len(df) == 3  # 3 runs to validate behaviour
+  for i in range(3):
+    row = df.iloc[i]
+    assert row.instance == 0
+    assert row.device == device.name
+    assert row.build_opts == ""
+    assert row.kernel == "A"
+    assert row.work_item_local_mem_size == 0
+    assert row.work_item_private_mem_size == 0
+    assert row.global_size == 1
+    assert row.local_size == 1
+    assert row.outcome == 'PASS'
+    assert row.transferred_bytes == 8
+    assert row.runtime_ms > 0
 
 
-def test_DriveToDataFrame_instance(input1: cldrive_pb2.CldriveInstances):
-  df = api.DriveToDataFrame(input1)
-  assert set(df['instance'].values) == {0}
-
-
-def test_DriveToDataFrame_instance(input1: cldrive_pb2.CldriveInstances):
-  df = api.DriveToDataFrame(input1)
-  assert set(df['build_opts'].values) == {''}
-
-
-def test_DriveToDataFrame_kernel(input1: cldrive_pb2.CldriveInstances):
-  df = api.DriveToDataFrame(input1)
-  assert set(df['kernel'].values) == {"A"}
-
-
-@pytest.fixture(scope='function')
-def input2(device: clinfo_pb2.OpenClDevice) -> cldrive_pb2.CldriveInstances:
-  """Test fixture that returns a very simple kernel."""
-  return _MakeInstance(device, "Invalid OpenCL program source")
-
-
-def test_DriveToDataFrame_num_rows_on_error(
-    input2: cldrive_pb2.CldriveInstances):
-  df = api.DriveToDataFrame(input2)
+def test_DriveToDataFrame_invalid_program(device: env.OpenCLEnvironment):
+  df = api.DriveToDataFrame(_MakeInstance(device, "Invalid program source"))
   assert len(df) == 1
+  row = df.iloc[0]
+  assert row.instance == 0
+  assert row.device == device.name
+  assert row.build_opts == ""
+  assert row.kernel == ""
+  assert np.isnan(row.work_item_local_mem_size)
+  assert np.isnan(row.work_item_private_mem_size)
+  assert np.isnan(row.global_size)
+  assert np.isnan(row.local_size)
+  assert row.outcome == 'PROGRAM_COMPILATION_FAILURE'
+  assert np.isnan(row.transferred_bytes)
+  assert np.isnan(row.runtime_ms)
+
+
+def test_DriveToDataFrame_no_outputs(device: env.OpenCLEnvironment):
+  df = api.DriveToDataFrame(
+      _MakeInstance(device, "kernel void A(global int* a) {}"))
+  assert len(df) == 1
+  row = df.iloc[0]
+  assert row.instance == 0
+  assert row.device == device.name
+  assert row.build_opts == ""
+  assert row.kernel == "A"
+  assert row.work_item_local_mem_size == 0
+  assert row.work_item_private_mem_size == 0
+  assert row.global_size == 1
+  assert row.local_size == 1
+  assert row.outcome == 'NO_OUTPUT'
+  assert np.isnan(row.transferred_bytes)
+  assert np.isnan(row.runtime_ms)
+
+
+def test_DriveToDataFrame_input_insensitive(device: env.OpenCLEnvironment):
+  df = api.DriveToDataFrame(
+      _MakeInstance(
+          device,
+          "kernel void Foo(global int* a) { a[get_global_id(0)] = 0; }"))
+  assert len(df) == 1
+  row = df.iloc[0]
+  assert row.instance == 0
+  assert row.device == device.name
+  assert row.build_opts == ""
+  assert row.kernel == "Foo"
+  assert row.work_item_local_mem_size == 0
+  assert row.work_item_private_mem_size == 0
+  assert row.global_size == 1
+  assert row.local_size == 1
+  assert row.outcome == 'INPUT_INSENSITIVE'
+  assert np.isnan(row.transferred_bytes)
+  assert np.isnan(row.runtime_ms)
+
+
+def test_DriveToDataFrame_device_not_found(device: env.OpenCLEnvironment):
+  device.name = "nope"
+  device.platform_name = "not a real platform"
+  device.device_name = "not a real device"
+  with pytest.raises(subprocess.CalledProcessError):
+    api.DriveToDataFrame(
+        _MakeInstance(
+            device,
+            "kernel void A(global int* a) { a[get_global_id(0)] *= 2; }"))
 
 
 if __name__ == '__main__':
