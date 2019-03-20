@@ -85,9 +85,28 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
   return run;
 }
 
+namespace {
+
+gpu::libcecl::OpenClKernelInvocation DynamicParamsToLog(
+    const DynamicParams& dynamic_params) {
+  gpu::libcecl::OpenClKernelInvocation invocation;
+  invocation.set_global_size(dynamic_params.global_size_x());
+  invocation.set_local_size(dynamic_params.local_size_x());
+  // Negative values indicate null.
+  invocation.set_runtime_ms(-1);
+  invocation.set_transferred_bytes(-1);
+  return invocation;
+}
+
+}  // anonymous namespace
+
 phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
                                            Logger& logger,
                                            CldriveKernelRun* run) {
+  // Create a log message with just the dynamic params so that we can log the
+  // global and local sizes on error.
+  gpu::libcecl::OpenClKernelInvocation log = DynamicParamsToLog(dynamic_params);
+
   // Check that the dynamic params are within legal range.
   auto max_work_group_size = device_.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
   if (static_cast<int>(max_work_group_size) < dynamic_params.local_size_x()) {
@@ -96,7 +115,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
                  << "' (local size " << dynamic_params.local_size_x()
                  << " exceeds maximum device work group size "
                  << max_work_group_size << ")";
-    logger.RecordLog(&instance_, kernel_instance_, run, /*log=*/nullptr);
+    logger.RecordLog(&instance_, kernel_instance_, run, &log);
     return phd::Status(phd::error::Code::INVALID_ARGUMENT,
                        "Unsupported dynamic params");
   }
@@ -105,7 +124,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
   auto args_status = args_set_.SetOnes(context_, dynamic_params, &inputs);
   if (!args_status.ok()) {
     LOG(WARNING) << "Unsupported params for kernel: '" << name_ << "'";
-    logger.RecordLog(&instance_, kernel_instance_, run, /*log=*/nullptr);
+    logger.RecordLog(&instance_, kernel_instance_, run, &log);
     return args_status;
   }
 
@@ -134,7 +153,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping non-deterministic kernel: '" << name_ << "'";
     run->set_outcome(CldriveKernelRun::NONDETERMINISTIC);
-    logger.RecordLog(&instance_, kernel_instance_, run, /*log=*/nullptr);
+    logger.RecordLog(&instance_, kernel_instance_, run, &log);
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "non-deterministic");
   }
 
@@ -149,7 +168,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     run->clear_log();  // Remove performance logs.
     LOG(WARNING) << "Skipping input insensitive kernel: '" << name_ << "'";
     run->set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
-    logger.RecordLog(&instance_, kernel_instance_, run, /*log=*/nullptr);
+    logger.RecordLog(&instance_, kernel_instance_, run, &log);
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "Input insensitive");
   }
 
@@ -158,7 +177,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     LOG(WARNING) << "Skipping kernel that produces no output: '" << name_
                  << "'";
     run->set_outcome(CldriveKernelRun::NO_OUTPUT);
-    logger.RecordLog(&instance_, kernel_instance_, run, /*log=*/nullptr);
+    logger.RecordLog(&instance_, kernel_instance_, run, &log);
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "No argument");
   }
 

@@ -104,11 +104,13 @@ std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
     if (run) {
       csv.outcome_ = CldriveKernelRun::KernelRunOutcome_Name(run->outcome());
       if (log) {
-        csv.outcome_ = "PASS";
         csv.global_size_ = log->global_size();
         csv.local_size_ = log->local_size();
-        csv.runtime_ms_ = log->runtime_ms();
-        csv.transferred_bytes_ = log->transferred_bytes();
+        if (log->transferred_bytes() >= 0) {
+          csv.outcome_ = "PASS";
+          csv.runtime_ms_ = log->runtime_ms();
+          csv.transferred_bytes_ = log->transferred_bytes();
+        }
       }
     }
   }
