@@ -11,6 +11,7 @@ from labm8 import app
 from labm8 import pbutil
 from labm8 import sqlutil
 from labm8 import system
+from research.cummins_2017_cgo import opencl_kernel_driver
 
 FLAGS = app.FLAGS
 
@@ -29,32 +30,10 @@ app.DEFINE_integer('batch_size', 16,
 
 KernelToDrive = collections.namedtuple('KernelToDrive', ['id', 'src'])
 
-# All the combinations of local and global sizes used for synthetic kernels in
-# the CGO'17 experiments. These are the first dimension values, the other two
-# dimensions are ones. E.g. the tuple (64, 128) means a local (workgroup) size
-# of (64, 1, 1), and a global size of (128, 1, 1).
-LSIZE_GSIZE_PAIRS = [
-    (64, 64),
-    (128, 128),
-    (256, 256),
-    (256, 512),
-    (256, 1024),
-    (256, 2048),
-    (256, 4096),
-    (256, 8192),
-    (256, 16384),
-    (256, 65536),
-    (256, 131072),
-    (256, 262144),
-    (256, 524288),
-    (256, 1048576),
-    (256, 2097152),
-    (256, 4194304),
-]
-
+# Use the same combinations of local and global sizes as in the CGO'17 paper.
 LSIZE_GSIZE_PROTO_PAIRS = [
     cldrive_pb2.DynamicParams(global_size_x=y, local_size_x=x)
-    for x, y in LSIZE_GSIZE_PAIRS
+    for x, y in opencl_kernel_driver.LSIZE_GSIZE_PAIRS
 ]
 
 
