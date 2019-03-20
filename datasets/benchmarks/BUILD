@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-licenses(["notce"])  # Apache 2.0
+licenses(["notice"])  # Apache 2.0
 
 py_binary(
     name = "bzip2",
