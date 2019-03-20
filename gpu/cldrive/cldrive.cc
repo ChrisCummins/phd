@@ -136,6 +136,7 @@ std::unique_ptr<Logger> MakeLoggerFromFlags(
     return std::make_unique<CsvLogger>(std::cout, instances);
   } else {
     CHECK(false) << "unreachable!";
+    return nullptr;
   }
 }
 
