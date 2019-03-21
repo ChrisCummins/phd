@@ -16,6 +16,7 @@
 """Public API for cldrive."""
 import csv
 import io
+import subprocess
 
 import numpy as np
 import pandas as pd
