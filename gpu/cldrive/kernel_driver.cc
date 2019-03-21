@@ -25,12 +25,9 @@
 namespace gpu {
 namespace cldrive {
 
-KernelDriver::KernelDriver(const cl::Context& context,
-                           const cl::CommandQueue& queue,
-                           const cl::Kernel& kernel, CldriveInstance* instance,
-                           int instance_num)
+KernelDriver::KernelDriver(const cl::Context& context, const cl::Kernel& kernel,
+                           CldriveInstance* instance, int instance_num)
     : context_(context),
-      queue_(queue),
       device_(context.getInfo<CL_CONTEXT_DEVICES>()[0]),
       kernel_(kernel),
       instance_(*instance),
@@ -103,6 +100,10 @@ gpu::libcecl::OpenClKernelInvocation DynamicParamsToLog(
 phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
                                            Logger& logger,
                                            CldriveKernelRun* run) {
+  cl::CommandQueue queue(context_,
+                         /*devices=*/context_.getInfo<CL_CONTEXT_DEVICES>()[0],
+                         /*properties=*/CL_QUEUE_PROFILING_ENABLE);
+
   // Create a log message with just the dynamic params so that we can log the
   // global and local sizes on error.
   gpu::libcecl::OpenClKernelInvocation log = DynamicParamsToLog(dynamic_params);
@@ -144,10 +145,12 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
 
   KernelArgValuesSet output_a, output_b;
 
-  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_a, run, logger,
-                                 /*flush=*/false);
-  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, run, logger,
-                                 /*flush=*/false);
+  *run->add_log() =
+      RunOnceOrDie(queue, dynamic_params, inputs, &output_a, run, logger,
+                   /*flush=*/false);
+  *run->add_log() =
+      RunOnceOrDie(queue, dynamic_params, inputs, &output_b, run, logger,
+                   /*flush=*/false);
 
   if (output_a != output_b) {
     run->clear_log();  // Remove performance logs.
@@ -161,8 +164,9 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
 
   CHECK(args_set_.SetRandom(context_, dynamic_params, &inputs).ok());
   inputs.SetAsArgs(&kernel_);
-  *run->add_log() = RunOnceOrDie(dynamic_params, inputs, &output_b, run, logger,
-                                 /*flush=*/false);
+  *run->add_log() =
+      RunOnceOrDie(queue, dynamic_params, inputs, &output_b, run, logger,
+                   /*flush=*/false);
 
   if (output_a == output_b) {
     run->clear_log();  // Remove performance logs.
@@ -187,7 +191,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
 
   for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
     *run->add_log() =
-        RunOnceOrDie(dynamic_params, inputs, &output_a, run, logger);
+        RunOnceOrDie(queue, dynamic_params, inputs, &output_a, run, logger);
   }
 
   run->set_outcome(CldriveKernelRun::PASS);
@@ -195,9 +199,9 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
 }
 
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
-    const DynamicParams& dynamic_params, KernelArgValuesSet& inputs,
-    KernelArgValuesSet* outputs, const CldriveKernelRun* const run,
-    Logger& logger, bool flush) {
+    cl::CommandQueue& queue, const DynamicParams& dynamic_params,
+    KernelArgValuesSet& inputs, KernelArgValuesSet* outputs,
+    const CldriveKernelRun* const run, Logger& logger, bool flush) {
   gpu::libcecl::OpenClKernelInvocation log;
   ProfilingData profiling;
   cl::Event event;
@@ -209,22 +213,24 @@ gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
   log.set_local_size(local_size);
   log.set_kernel_name(name_);
 
-  inputs.CopyToDevice(queue_, &profiling);
+  inputs.CopyToDevice(queue, &profiling);
   inputs.SetAsArgs(&kernel_);
 
-  queue_.enqueueNDRangeKernel(kernel_, /*offset=*/cl::NullRange,
-                              /*global=*/cl::NDRange(global_size),
-                              /*local=*/cl::NDRange(local_size),
-                              /*events=*/nullptr, /*event=*/&event);
+  queue.enqueueNDRangeKernel(kernel_, /*offset=*/cl::NullRange,
+                             /*global=*/cl::NDRange(global_size),
+                             /*local=*/cl::NDRange(local_size),
+                             /*events=*/nullptr, /*event=*/&event);
   profiling.elapsed_nanoseconds += GetElapsedNanoseconds(event);
 
-  inputs.CopyFromDeviceToNewValueSet(queue_, outputs, &profiling);
+  inputs.CopyFromDeviceToNewValueSet(queue, outputs, &profiling);
 
   // Set run proto fields.
   log.set_runtime_ms(profiling.elapsed_nanoseconds / 1000000.0);
   log.set_transferred_bytes(profiling.transferred_bytes);
 
   logger.RecordLog(&instance_, kernel_instance_, run, &log, flush);
+
+  queue.finish();
 
   return log;
 }
