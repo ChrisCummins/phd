@@ -29,13 +29,23 @@ FLAGS = app.FLAGS
 
 
 def KernelInvocationsFromCeclLog(
-    cecl_log: typing.List[str], env: cldrive_env.OclgrindOpenCLEnvironment
+    cecl_log: typing.List[str], env: cldrive_env.OpenCLEnvironment
 ) -> typing.List[libcecl_pb2.OpenClKernelInvocation]:
   """Interpret and parse the output of a libcecl instrumented application.
 
   This is an updated and adapted implementation of
   kernel_invocations_from_cecl_log() from:
     //docs/2017_02_cgo/code/benchmarks:cecl2features
+
+  Args:
+    cecl_log: The lines of output printed by libcecl, with the '[CECL] ' prefix
+      stripped. As a list of lines.
+    env: The OpenCL environment used to generate the cecl_log. This is used for
+      validating the contents of cecl_log.
+
+  Raises:
+    ValueError: If the device type or name reported in the cecl_log does not
+      match that of the OpenCL environment.
   """
   # Per-benchmark data transfer size and time.
   total_transferred_bytes = 0
