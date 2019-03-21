@@ -83,7 +83,7 @@ def DriveKernelAndRecordResults(
     ]
     session.add_all(dynamic_features)
     app.Log(1, 'Imported %d dynamic features', len(dynamic_features))
-  except subprocess.CalledProcessError:
+  except cldrive.CldriveCrash:
     session.add(
         db.DynamicFeatures(
             static_features_id=static_features_id,

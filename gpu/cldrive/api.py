@@ -33,6 +33,11 @@ _NATIVE_DRIVER = bazelutil.DataPath('phd/gpu/cldrive/native_driver')
 _NATIVE_CSV_DRIVER = bazelutil.DataPath('phd/gpu/cldrive/native_csv_driver')
 
 
+class CldriveCrash(OSError):
+  """Exception raised if native cldrive binary fails."""
+  pass
+
+
 def _GetCommand(driver, instances):
   if (len(instances.instance) and
       instances.instance[0].device.name == _env.OclgrindOpenCLEnvironment().name
@@ -55,12 +60,17 @@ def Drive(instances: cldrive_pb2.CldriveInstances,
 def DriveToDataFrame(instances: cldrive_pb2.CldriveInstances,
                      timeout_seconds: int = 300) -> pd.DataFrame:
   """Run cldrive with the given instances and read results to dataframe."""
-  stdout = pbutil.RunProcessMessage(
-      _GetCommand(_NATIVE_CSV_DRIVER, instances),
-      instances,
-      timeout_seconds=timeout_seconds)
+  try:
+    stdout = pbutil.RunProcessMessage(
+        _GetCommand(_NATIVE_CSV_DRIVER, instances),
+        instances,
+        timeout_seconds=timeout_seconds).decode('utf-8')
+  except subprocess.CalledProcessError as e:
+    raise CldriveCrash(e)
+  except UnicodeDecodeError:
+    raise CldriveCrash("Failed to decode output")
   df = pd.read_csv(
-      io.StringIO(stdout.decode('utf-8')),
+      io.StringIO(stdout),
       sep=',',
       quoting=csv.QUOTE_NONE,
       dtype={
