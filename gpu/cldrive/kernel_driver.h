@@ -27,8 +27,9 @@ namespace cldrive {
 
 class KernelDriver {
  public:
-  KernelDriver(const cl::Context& context, const cl::Kernel& kernel,
-               CldriveInstance* instance, int instance_num);
+  KernelDriver(const cl::Context& context, const cl::CommandQueue& queue,
+               const cl::Kernel& kernel, CldriveInstance* instance,
+               int instance_num);
 
   void RunOrDie(Logger& logger);
 
@@ -40,9 +41,9 @@ class KernelDriver {
   // logged immediately. Else, the result is buffered, to be logged at a
   // later call to logger.FlushLogs().
   gpu::libcecl::OpenClKernelInvocation RunOnceOrDie(
-      cl::CommandQueue& queue, const DynamicParams& dynamic_params,
-      KernelArgValuesSet& inputs, KernelArgValuesSet* outputs,
-      const CldriveKernelRun* const run, Logger& logger, bool flush = true);
+      const DynamicParams& dynamic_params, KernelArgValuesSet& inputs,
+      KernelArgValuesSet* outputs, const CldriveKernelRun* const run,
+      Logger& logger, bool flush = true);
 
  private:
   // Private helper to public RunDynamicParams() method that doesn't catch
@@ -51,6 +52,7 @@ class KernelDriver {
                                Logger& logger, CldriveKernelRun* run);
 
   cl::Context context_;
+  cl::CommandQueue queue_;
   cl::Device device_;
   cl::Kernel kernel_;
   const CldriveInstance& instance_;
