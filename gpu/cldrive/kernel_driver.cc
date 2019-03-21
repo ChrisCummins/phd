@@ -155,6 +155,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     LOG(WARNING) << "Skipping non-deterministic kernel: '" << name_ << "'";
     run->set_outcome(CldriveKernelRun::NONDETERMINISTIC);
     logger.RecordLog(&instance_, kernel_instance_, run, &log);
+    logger.ClearBuffer();
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "non-deterministic");
   }
 
@@ -170,6 +171,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     LOG(WARNING) << "Skipping input insensitive kernel: '" << name_ << "'";
     run->set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
     logger.RecordLog(&instance_, kernel_instance_, run, &log);
+    logger.ClearBuffer();
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "Input insensitive");
   }
 
@@ -179,12 +181,13 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
                  << "'";
     run->set_outcome(CldriveKernelRun::NO_OUTPUT);
     logger.RecordLog(&instance_, kernel_instance_, run, &log);
+    logger.ClearBuffer();
     return phd::Status(phd::error::Code::INVALID_ARGUMENT, "No argument");
   }
 
   // We've passed the point of rejecting the kernel. Flush the buffered logs
   // from the preliminary runs.
-  logger.FlushLogs();
+  logger.PrintAndClearBuffer();
 
   for (int i = 3; i < instance_.min_runs_per_kernel(); ++i) {
     *run->add_log() =

@@ -35,13 +35,16 @@ class Logger {
 
   virtual phd::Status StartNewInstance();
 
+  // If flush is false, don't emit the log immediately, but instead store the
+  // log in a buffer that is emmitted only on a call to PrintAndClearBuffer().
   virtual phd::Status RecordLog(
       const CldriveInstance* const instance,
       const CldriveKernelInstance* const kernel_instance,
       const CldriveKernelRun* const run,
       const gpu::libcecl::OpenClKernelInvocation* const log, bool flush = true);
 
-  void FlushLogs();
+  void PrintAndClearBuffer();
+  void ClearBuffer();
 
  protected:
   const CldriveInstances* instances();

@@ -36,9 +36,14 @@ Logger::Logger(std::ostream& ostream, const CldriveInstances* const instances)
   return phd::Status::OK;
 }
 
-void Logger::FlushLogs() {
+void Logger : PrintAndClearBuffer() {
   ostream_ << buffer_.str();
+  ClearBuffer();
+}
+
+void Logger::ClearBuffer() {
   buffer_.clear();
+  buffer_.str(string());
 }
 
 const CldriveInstances* Logger::instances() { return instances_; }
