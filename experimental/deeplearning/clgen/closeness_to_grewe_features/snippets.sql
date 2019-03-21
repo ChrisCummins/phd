@@ -24,7 +24,27 @@ LEFT JOIN static_features AS sf ON sf.id=df.static_features_id
 GROUP BY origin,
          outcome;
 
-# Dynamic features summary: Grouped by device and outcome.
+
+SELECT origin,
+       outcome,
+       count(*) AS n,
+       count(*) /
+  (SELECT count(*)
+   FROM
+     (SELECT distinct(static_features_id)
+      FROM dynamic_features) AS t) AS ratio
+FROM
+  (SELECT origin,
+          outcome,
+          static_features_id
+   FROM dynamic_features AS df
+   LEFT JOIN static_features ON df.static_features_id = static_features.id
+   GROUP BY origin,
+            outcome,
+            static_features_id) AS t
+GROUP BY origin,
+         outcome; # Dynamic features summary: Grouped by device and outcome.
+
 
 SELECT opencl_env,
        outcome,
