@@ -131,9 +131,6 @@ def main():
     for target in delta.fixed:
       print("FIXED", target[0])
 
-    if delta.broken:
-      sys.exit(1)
-
 
 if __name__ == '__main__':
   app.Run(main)
