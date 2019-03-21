@@ -506,8 +506,11 @@ cl_command_queue CECL_CREATE_COMMAND_QUEUE(cl_context context,
   cl_int local_err;
 
   cl_device_id device_id = cecGetForcedDeviceIdOrDie();
+#pragma GCC diagnostic push /* clCreateCommandQueue is depracated */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   cl_command_queue q = clCreateCommandQueue(
       context, device_id, props | CL_QUEUE_PROFILING_ENABLE, &local_err);
+#pragma GCC diagnostic pop
   if (local_err == CL_SUCCESS) {
     cl_device_type devtype;
     char devname[100];
