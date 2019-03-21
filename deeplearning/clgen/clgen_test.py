@@ -217,5 +217,13 @@ def test_main_stop_after_train(abc_instance_file):
   assert instance.model.is_trained
 
 
+def test_main_stop_after_uncrecognized(abc_instance_file):
+  """Test that --stop_after raises an error on unknown."""
+  app.FLAGS.unparse_flags()
+  app.FLAGS(['argv[0]', '--config', abc_instance_file, '--stop_after', 'foo'])
+  with pytest.raises(app.UsageError):
+    clgen.main([])
+
+
 if __name__ == '__main__':
   test.Main()
