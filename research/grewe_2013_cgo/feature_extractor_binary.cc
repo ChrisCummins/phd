@@ -59,6 +59,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ParentMap.h"
@@ -78,6 +81,7 @@
 #include "clang/Parse/ParseAST.h"
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "clang/Rewrite/Frontend/Rewriters.h"
+#pragma GCC diagnostic pop
 
 class ParameterInfo {
  public:
@@ -299,7 +303,7 @@ class RecursiveASTVisitor
   }
 
   void InitializeOCLRoutines() {
-    // Utility macros.
+// Utility macros.
 #define DEFAULT_OCL_ROUTINE_COUNT 15
 #define ADD_OCL_ROUTINE_INFO(__p__, __name__)              \
   {                                                        \
@@ -313,7 +317,7 @@ class RecursiveASTVisitor
     ADD_OCL_ROUTINE_INFO(p, "log");
     ADD_OCL_ROUTINE_INFO(p, "sqrt");
 
-    // Clean up.
+// Clean up.
 #undef DEFAULT_OCL_ROUTINE_COUNT
 #undef ADD_OCL_ROUTINE_INFO
   }
