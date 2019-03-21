@@ -36,7 +36,7 @@ Logger::Logger(std::ostream& ostream, const CldriveInstances* const instances)
   return phd::Status::OK;
 }
 
-void Logger : PrintAndClearBuffer() {
+void Logger::PrintAndClearBuffer() {
   ostream_ << buffer_.str();
   ClearBuffer();
 }
