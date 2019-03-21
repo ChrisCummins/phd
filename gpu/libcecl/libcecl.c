@@ -198,7 +198,7 @@ cl_int CECL_ND_RANGE_KERNEL(cl_command_queue command_queue, cl_kernel kernel,
                          kernel_name, NULL);
     cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueNDRangeKernel ; %s ; %zu ; %zu ; %llu\n",
+    fprintf(stderr, "\n[CECL] clEnqueueNDRangeKernel ; %s ; %zu ; %zu ; %lu\n",
             kernel_name, gsize, wgsize, elapsed_ns);
     return err;
   }
@@ -305,7 +305,7 @@ cl_int CECL_TASK(cl_command_queue command_queue, cl_kernel kernel,
                          kernel_name, NULL);
     cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueTask ; %s ; %llu\n", kernel_name,
+    fprintf(stderr, "\n[CECL] clEnqueueTask ; %s ; %lu\n", kernel_name,
             elapsed_ns);
     return err;
   }
@@ -767,7 +767,7 @@ cl_int cecl_write_buffer(cl_command_queue command_queue, cl_mem buffer,
   if (err == CL_SUCCESS) {
     cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueWriteBuffer ; %s ; %zu ; %llu\n",
+    fprintf(stderr, "\n[CECL] clEnqueueWriteBuffer ; %s ; %zu ; %lu\n",
             buffer_name, cb, elapsed_ns);
     return err;
   }
@@ -922,7 +922,7 @@ cl_int cecl_read_buffer(cl_command_queue command_queue, cl_mem buffer,
   if (err == CL_SUCCESS) {
     cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueReadBuffer ; %s ; %zu ; %llu\n",
+    fprintf(stderr, "\n[CECL] clEnqueueReadBuffer ; %s ; %zu ; %lu\n",
             buffer_name, cb, elapsed_ns);
     return err;
   }
@@ -1004,7 +1004,7 @@ void* cecl_map_buffer(cl_command_queue command_queue, cl_mem buffer,
   if (*errcode_ret == CL_SUCCESS) {
     cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueMapBuffer ; %s ; %zu ; %llu\n",
+    fprintf(stderr, "\n[CECL] clEnqueueMapBuffer ; %s ; %zu ; %lu\n",
             buffer_name, cb, elapsed_ns);
 
     return ret;
