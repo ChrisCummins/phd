@@ -24,6 +24,10 @@ py_test(
         ":drive_with_cldrive",
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//gpu/cldrive/legacy:env",
+        "//gpu/cldrive/proto:cldrive_py_pb2",
+        "//labm8:system",
         "//labm8:test",
+        "//third_party/py/numpy",
+        "//third_party/py/pytest",
     ],
 )

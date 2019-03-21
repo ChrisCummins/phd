@@ -63,7 +63,9 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
 
 def DriveKernelAndRecordResults(
     session: sqlutil.Session, static_features_id: int, src: str,
-    env: cldrive_env.OpenCLEnvironment, num_runs: int) -> None:
+    env: cldrive_env.OpenCLEnvironment,
+    dynamic_params: typing.List[cldrive_pb2.DynamicParams],
+    num_runs: int) -> None:
   """Drive a single kernel and record results."""
   try:
     df = cldrive.DriveToDataFrame(
@@ -71,7 +73,7 @@ def DriveKernelAndRecordResults(
             cldrive_pb2.CldriveInstance(
                 device=env.proto,
                 opencl_src=src,
-                dynamic_params=LSIZE_GSIZE_PROTO_PAIRS,
+                dynamic_params=dynamic_params,
                 min_runs_per_kernel=num_runs,
             )
         ]),
@@ -114,7 +116,7 @@ def DriveBatchAndRecordResults(session: sqlutil.Session,
   for static_features_id, src in batch:
     with prof.Profile(f'Run static features ID {static_features_id}'):
       DriveKernelAndRecordResults(session, static_features_id, src, env,
-                                  FLAGS.num_runs)
+                                  LSIZE_GSIZE_PROTO_PAIRS, FLAGS.num_runs)
 
 
 def main(argv: typing.List[str]):

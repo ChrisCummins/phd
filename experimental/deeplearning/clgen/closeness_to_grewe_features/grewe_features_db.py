@@ -78,6 +78,7 @@ def NoneIfNaN(value):
 
 
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  """A table of dynamic features."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   static_features_id: int = sql.Column(
       sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
