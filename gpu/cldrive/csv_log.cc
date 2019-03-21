@@ -63,7 +63,8 @@ CsvLog::CsvLog(int instance_id)
       global_size_(-1),
       local_size_(-1),
       transferred_bytes_(-1),
-      transfer_time_ns_(-1) kernel_time_ns_(-1) {
+      transfer_time_ns_(-1),
+      kernel_time_ns_(-1) {
   CHECK(instance_id >= 0) << "Negative instance ID not allowed";
 }
 
@@ -76,8 +77,8 @@ std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
   NullIfNegative(stream, log.global_size_) << ",";
   NullIfNegative(stream, log.local_size_) << "," << log.outcome_ << ",";
   NullIfNegative(stream, log.transferred_bytes_) << ",";
-  NullIfNegative(stream, log.transfer_time_ns)
-      << "," NullIfNegative(stream, log.kernel_time_ns) << std::endl;
+  NullIfNegative(stream, log.transfer_time_ns_) << ",";
+  NullIfNegative(stream, log.kernel_time_ns_) << std::endl;
   return stream;
 }
 

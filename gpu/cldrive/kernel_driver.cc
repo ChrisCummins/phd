@@ -94,7 +94,7 @@ gpu::libcecl::OpenClKernelInvocation DynamicParamsToLog(
   invocation.set_local_size(dynamic_params.local_size_x());
   // Negative values indicate null.
   invocation.set_kernel_time_ns(-1);
-  invocation.set_transfer_ns(-1);
+  invocation.set_transfer_time_ns(-1);
   invocation.set_transferred_bytes(-1);
   return invocation;
 }

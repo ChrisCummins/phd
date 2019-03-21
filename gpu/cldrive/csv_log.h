@@ -92,8 +92,8 @@ class CsvLog {
 
   // From CldriveKernelRun.log. If outcome != PASS, these will be empty.
   phd::int64 transferred_bytes_;
-  phd::int64 kernel_time_ns_;
   phd::int64 transfer_time_ns_;
+  phd::int64 kernel_time_ns_;
 
   // End CSV columns (in order) -----------------------------------
 };
