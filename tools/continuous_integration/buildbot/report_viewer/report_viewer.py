@@ -25,6 +25,8 @@ app.DEFINE_integer('port', portpicker.pick_unused_port(),
                    'The port to launch the server on.')
 app.DEFINE_boolean('debug_flask_server', True,
                    'Launch flask app with debugging enabled.')
+app.DEFINE_string("coverage_dir", "/coverage",
+                  "Path of coverage files to server statically.")
 
 flask_app = flask.Flask(
     __name__,
@@ -160,6 +162,18 @@ def host_invocation(host: str, invocation_num: int):
         .offset(invocation_num - 1).limit(1).one()
       template = RenderInvocation(host, session, invocation)
   return template
+
+
+@flask_app.route('/coverage')
+def serve_coverage_index():
+  """Redirect to coverage index."""
+  return flask.redirect("/coverage/index.html")
+
+
+@flask_app.route('/coverage/<path:path>')
+def serve_coverage(path: str):
+  """Statically server coverage files."""
+  return flask.send_from_directory(FLAGS.coverage_dir, path)
 
 
 def main():
