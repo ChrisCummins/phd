@@ -35,9 +35,15 @@ def test_tensorflow_session():
 @pytest.mark.skipif(not getconfig.GetGlobalConfig().with_cuda, reason='No GPU')
 def test_tensorflow_on_gpu():
   import tensorflow as tf
-  with tf.device('/cpu:0'):
-    a = tf.constant([1, 2, 3, 4, 5, 6], shape=[2, 3], name='a')
-    b = tf.constant([1, 2, 3, 4, 5, 6], shape=[3, 2], name='b')
+  with tf.device('/gpu:0'):
+    a = tf.constant([1, 2, 3, 4, 5, 6],
+                    shape=[2, 3],
+                    name='a',
+                    dtype=tf.float32)
+    b = tf.constant([1, 2, 3, 4, 5, 6],
+                    shape=[3, 2],
+                    name='b',
+                    dtype=tf.float32)
     c = tf.matmul(a, b)
   with tf.Session() as sess:
     np.testing.assert_array_almost_equal(
