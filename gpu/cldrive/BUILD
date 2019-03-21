@@ -61,6 +61,7 @@ cc_binary(
     name = "cldrive",
     srcs = ["cldrive.cc"],
     linkstatic = False,  # Needed for Oclgrind support.
+    visibility = ["//visibility:public"],
     deps = [
         ":csv_log",
         ":libcldrive",
