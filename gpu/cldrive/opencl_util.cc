@@ -19,6 +19,32 @@ namespace gpu {
 namespace cldrive {
 namespace util {
 
+void CopyHostToDevice(const cl::CommandQueue& queue, void* host_pointer,
+                      const cl::Buffer& buffer, size_t buffer_size,
+                      ProfilingData* profiling) {
+  cl::Event event;
+  queue.enqueueWriteBuffer(
+      buffer, /*blocking=*/true, /*offset=*/0, /*size=*/buffer_size,
+      /*ptr=*/host_pointer, /*events=*/nullptr, /*event=*/&event);
+
+  // Set profiling data.
+  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
+  profiling->transferred_bytes += buffer_size;
+}
+
+void CopyDeviceToHost(const cl::CommandQueue& queue, const cl::Buffer& buffer,
+                      void* host_pointer, size_t buffer_size,
+                      ProfilingData* profiling) {
+  cl::Event event;
+  queue.enqueueReadBuffer(
+      buffer, /*blocking=*/true, /*offset=*/0, /*size=*/buffer_size,
+      /*ptr=*/host_pointer, /*events=*/nullptr, /*event=*/&event);
+
+  // Set profiling data.
+  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
+  profiling->transferred_bytes += buffer_size;
+}
+
 string GetOpenClKernelName(const cl::Kernel& kernel) {
   // Rather than determine the size of the character array needed to store the
   // string, allocate a buffer that *should be* large enough. This is a

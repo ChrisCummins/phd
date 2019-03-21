@@ -21,65 +21,19 @@
 
 namespace gpu {
 namespace cldrive {
-
-// Blocking host to device copy operation between iterators and a buffer.
-// Returns the elapsed nanoseconds.
-// TODO(cldrive): Move into util namespace.
-template <typename IteratorType>
-void CopyHostToDevice(const cl::CommandQueue &queue, IteratorType startIterator,
-                      IteratorType endIterator, const cl::Buffer &buffer,
-                      ProfilingData *profiling) {
-  using ValueType = typename std::iterator_traits<IteratorType>::value_type;
-  size_t length = endIterator - startIterator;
-  size_t buffer_size = length * sizeof(ValueType);
-
-  cl::Event event;
-  ValueType *pointer = static_cast<ValueType *>(queue.enqueueMapBuffer(
-      buffer, /*blocking=*/true, /*flags=*/CL_MAP_WRITE, /*offset=*/0,
-      /*size=*/buffer_size, /*events=*/nullptr, /*event=*/&event,
-      /*error=*/nullptr));
-  DCHECK(pointer);
-
-  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
-  std::copy(startIterator, endIterator, pointer);
-
-  queue.enqueueUnmapMemObject(buffer, pointer, /*events=*/nullptr, &event);
-
-  // Set profiling data.
-  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
-  profiling->transferred_bytes += buffer_size;
-}
-
-// Blocking host to device copy operation between iterators and a buffer.
-// Returns the elapsed nanoseconds.
-// TODO(cldrive): Move into util namespace.
-template <typename IteratorType>
-void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
-                      IteratorType startIterator,
-                      const IteratorType endIterator,
-                      ProfilingData *profiling) {
-  using ValueType = typename std::iterator_traits<IteratorType>::value_type;
-  size_t length = endIterator - startIterator;
-  size_t buffer_size = length * sizeof(ValueType);
-
-  cl::Event event;
-  ValueType *pointer = static_cast<ValueType *>(queue.enqueueMapBuffer(
-      buffer, /*blocking=*/true, /*flags=*/CL_MAP_READ, /*offset=*/0,
-      /*size=*/buffer_size, /*events=*/nullptr, /*event=*/&event,
-      /*error=*/nullptr));
-  DCHECK(pointer);
-
-  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
-  std::copy(pointer, pointer + length, startIterator);
-
-  queue.enqueueUnmapMemObject(buffer, pointer, /*events=*/nullptr, &event);
-
-  // Set profiling data.
-  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
-  profiling->transferred_bytes += buffer_size;
-}
-
 namespace util {
+
+// Blocking host to device copy operation between iterators and a buffer.
+// Returns the elapsed nanoseconds.
+void CopyHostToDevice(const cl::CommandQueue &queue, void *host_pointer,
+                      const cl::Buffer &buffer, size_t buffer_size,
+                      ProfilingData *profiling);
+
+// Blocking host to device copy operation between iterators and a buffer.
+// Returns the elapsed nanoseconds.
+void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
+                      void *host_pointer, size_t buffer_size,
+                      ProfilingData *profiling);
 
 // Get the name of a kernel.
 string GetOpenClKernelName(const cl::Kernel &kernel);
