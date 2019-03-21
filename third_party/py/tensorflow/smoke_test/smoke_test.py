@@ -2,6 +2,8 @@
 import pytest
 import sys
 
+import numpy as np
+
 from config import getconfig
 from labm8 import app
 from labm8 import test
@@ -34,11 +36,12 @@ def test_tensorflow_session():
 def test_tensorflow_on_gpu():
   import tensorflow as tf
   with tf.device('/cpu:0'):
-    a = tf.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], shape=[2, 3], name='a')
-    b = tf.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], shape=[3, 2], name='b')
+    a = tf.constant([1, 2, 3, 4, 5, 6], shape=[2, 3], name='a')
+    b = tf.constant([1, 2, 3, 4, 5, 6], shape=[3, 2], name='b')
     c = tf.matmul(a, b)
   with tf.Session() as sess:
-    sess.run(c)
+    np.testing.assert_array_almost_equal(
+        sess.run(c), np.array([[22, 28], [49, 64]]))
 
 
 if __name__ == '__main__':

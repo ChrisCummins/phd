@@ -7,6 +7,7 @@ py_test(
         "//config:getconfig",
         "//labm8:app",
         "//labm8:test",
+        "//third_party/py/numpy",
         "//third_party/py/pytest",
         "//third_party/py/tensorflow",
     ],
