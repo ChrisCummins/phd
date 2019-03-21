@@ -53,8 +53,10 @@ std::unique_ptr<KernelArgValue> CreateGlobalMemoryArgValue(
   DCHECK(size) << "Cannot create array with 0 elements";
   switch (type) {
     case OpenClType::BOOL: {
-      return CreateGlobalMemoryArgValue<bool>(context, size, value,
-                                              rand_values);
+      // Use cl_bool here because std::vector<bool> has a funny bitmask
+      // specialization in some STL implementations.
+      return CreateGlobalMemoryArgValue<cl_bool>(context, size, value,
+                                                 rand_values);
     }
     case OpenClType::CHAR: {
       return CreateGlobalMemoryArgValue<cl_char>(context, size, value,
@@ -335,7 +337,7 @@ std::unique_ptr<KernelArgValue> CreateLocalMemoryArgValue(
   DCHECK(size) << "Cannot create array with 0 elements";
   switch (type) {
     case OpenClType::BOOL: {
-      return std::make_unique<LocalMemoryArgValue<bool>>(size);
+      return std::make_unique<LocalMemoryArgValue<cl_bool>>(size);
     }
     case OpenClType::CHAR: {
       return std::make_unique<LocalMemoryArgValue<cl_char>>(size);
@@ -549,7 +551,7 @@ std::unique_ptr<KernelArgValue> CreateScalarArgValue(const OpenClType& type,
                                                      const int& value) {
   switch (type) {
     case OpenClType::BOOL: {
-      return CreateScalarArgValue<bool>(value);
+      return CreateScalarArgValue<cl_bool>(value);
     }
     case OpenClType::CHAR: {
       return CreateScalarArgValue<cl_char>(value);
