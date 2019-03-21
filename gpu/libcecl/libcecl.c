@@ -295,8 +295,12 @@ cl_int CECL_TASK(cl_command_queue command_queue, cl_kernel kernel,
     event = &local_event;
   }
 
+/* clEnqueueTask is depracated */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   cl_int err = clEnqueueTask(command_queue, kernel, num_events_in_wait_list,
                              event_wait_list, event);
+#pragma GCC diagnostic pop
 
   if (err == CL_SUCCESS) {
     char kernel_name[255];
