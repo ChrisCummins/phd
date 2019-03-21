@@ -88,7 +88,8 @@ def DriveToDataFrame(instances: cldrive_pb2.CldriveInstances,
           'local_size': 'Int32',
           'outcome': str,
           'transferred_bytes': 'Int64',
-          'runtime_ms': np.float64,
+          'transfer_time_ns': np.float64,
+          'kernel_time_ns': np.float64,
       })
 
   # Pandas will interpret empty string as NaN. Replace NaN with empty strings.

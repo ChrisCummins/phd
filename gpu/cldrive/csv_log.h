@@ -90,13 +90,10 @@ class CsvLog {
   // CldriveKernelInstance.outcome != PASS, else CldriveKernelRun.outcome.
   string outcome_;
 
-  // From CldriveKernelRun.log.transferred_bytes. If outcome != PASS, this will
-  // be empty.
+  // From CldriveKernelRun.log. If outcome != PASS, these will be empty.
   phd::int64 transferred_bytes_;
-
-  // From CldriveKernelRun.log.runtime_ms. If outcome != PASS, this will be
-  // empty.
-  double runtime_ms_;
+  phd::int64 kernel_time_ns_;
+  phd::int64 transfer_time_ns_;
 
   // End CSV columns (in order) -----------------------------------
 };

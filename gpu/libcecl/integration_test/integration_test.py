@@ -77,7 +77,6 @@ def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   assert log.returncode == 0
   assert log.device == cldrive_env.OclgrindOpenCLEnvironment().proto
   assert len(log.kernel_invocation) == 1
-  assert log.elapsed_time_ms
   assert len(log.opencl_program_source) == 1
   assert log.opencl_program_source[0] == """\
 kernel void square(
@@ -92,8 +91,15 @@ kernel void square(
   assert log.kernel_invocation[0].kernel_name == 'square'
   assert log.kernel_invocation[0].global_size == 1024
   assert log.kernel_invocation[0].local_size == 1024
-  assert log.kernel_invocation[0].runtime_ms
   assert log.kernel_invocation[0].transferred_bytes == 8192
+  assert log.kernel_invocation[
+      0].transfer_time_ns > 1000  # Flaky, but probably true.
+  assert log.kernel_invocation[
+      0].kernel_time_ns > 1000  # Flaky, but probably true.
+
+  profile_time = (log.kernel_invocation[0].transfer_time_ns +
+                  log.kernel_invocation[0].kernel_time_ns)
+  assert 1000 < log.elapsed_time_ns < profile_time
 
 
 if __name__ == '__main__':

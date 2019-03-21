@@ -52,7 +52,7 @@ std::ostream& NullIfNegative(std::ostream& stream, const T& value) {
 std::ostream& operator<<(std::ostream& stream, const CsvLogHeader& header) {
   stream << "instance,device,build_opts,kernel,work_item_local_mem_size,"
          << "work_item_private_mem_size,global_size,local_size,outcome,"
-         << "transferred_bytes,runtime_ms\n";
+         << "transferred_bytes,transfer_time_ns,kernel_time_ns\n";
   return stream;
 }
 
@@ -63,7 +63,7 @@ CsvLog::CsvLog(int instance_id)
       global_size_(-1),
       local_size_(-1),
       transferred_bytes_(-1),
-      runtime_ms_(-1) {
+      transfer_time_ns_(-1) kernel_time_ns_(-1) {
   CHECK(instance_id >= 0) << "Negative instance ID not allowed";
 }
 
@@ -76,7 +76,8 @@ std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
   NullIfNegative(stream, log.global_size_) << ",";
   NullIfNegative(stream, log.local_size_) << "," << log.outcome_ << ",";
   NullIfNegative(stream, log.transferred_bytes_) << ",";
-  NullIfNegative(stream, log.runtime_ms_) << std::endl;
+  NullIfNegative(stream, log.transfer_time_ns)
+      << "," NullIfNegative(stream, log.kernel_time_ns) << std::endl;
   return stream;
 }
 
@@ -108,7 +109,8 @@ std::ostream& operator<<(std::ostream& stream, const CsvLog& log) {
         csv.local_size_ = log->local_size();
         if (log->transferred_bytes() >= 0) {
           csv.outcome_ = "PASS";
-          csv.runtime_ms_ = log->runtime_ms();
+          csv.kernel_time_ns_ = log->kernel_time_ns();
+          csv.transfer_time_ns_ = log->transfer_time_ns();
           csv.transferred_bytes_ = log->transferred_bytes();
         }
       }

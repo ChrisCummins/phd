@@ -29,15 +29,22 @@ message LibceclExecutableRun {
   required string stderr = 8;
   required gpu.clinfo.OpenClDevice device = 9;
   repeated OpenClKernelInvocation kernel_invocation = 11;
-  required int64 elapsed_time_ms = 12;
+  required int64 elapsed_time_ns = 12;
   repeated string opencl_program_source = 13;
 }
 
 // A single kernel invocation event.
 message OpenClKernelInvocation {
+  reserved 4;
+  reserved "runtime_ms";
+
   required string kernel_name = 1;
   required int64 global_size = 2;
   required int64 local_size = 3;
-  required double runtime_ms = 4;
   required int64 transferred_bytes = 5;
+
+  // The runtime of kernel invocation, separated into kernel execution and
+  // data transfer times, respectively.
+  required int64 kernel_time_ns = 6;
+  required int64 transfer_time_ns = 7;
 }

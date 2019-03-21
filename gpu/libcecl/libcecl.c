@@ -148,7 +148,7 @@ static void cec_wait_for_event(cl_event* event) {
  *
  * No return if fails.
  */
-static double cecl_get_elapsed_ms(cl_event event) {
+static cl_ulong cecl_get_elapsed_ns(cl_event event) {
   cl_ulong start_time, end_time;
 
   cec_wait_for_event(&event);
@@ -158,7 +158,7 @@ static double cecl_get_elapsed_ms(cl_event event) {
   cecl_get_event_profiling_info(event, CL_PROFILING_COMMAND_END,
                                 sizeof(end_time), &end_time, NULL);
 
-  return (double)(end_time - start_time) / 1000000.0;
+  return end_time - start_time;
 }
 
 /* External: see cecl.h for documentation. */
@@ -196,11 +196,10 @@ cl_int CECL_ND_RANGE_KERNEL(cl_command_queue command_queue, cl_kernel kernel,
 
     cecl_get_kernel_info(kernel, CL_KERNEL_FUNCTION_NAME, sizeof(kernel_name),
                          kernel_name, NULL);
-    double elapsed_ms = cecl_get_elapsed_ms(*event);
+    cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueNDRangeKernel ; %s ; %lu ; %lu ; %.6f\n",
-            kernel_name, (unsigned long)gsize, (unsigned long)wgsize,
-            elapsed_ms);
+    fprintf(stderr, "\n[CECL] clEnqueueNDRangeKernel ; %s ; %zu ; %zu ; %llu\n",
+            kernel_name, gsize, wgsize, elapsed_ns);
     return err;
   }
   /* error: fatal */
@@ -304,10 +303,10 @@ cl_int CECL_TASK(cl_command_queue command_queue, cl_kernel kernel,
 
     cecl_get_kernel_info(kernel, CL_KERNEL_FUNCTION_NAME, sizeof(kernel_name),
                          kernel_name, NULL);
-    double elapsed_ms = cecl_get_elapsed_ms(*event);
+    cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueTask ; %s ; %.6f\n", kernel_name,
-            elapsed_ms);
+    fprintf(stderr, "\n[CECL] clEnqueueTask ; %s ; %llu\n", kernel_name,
+            elapsed_ns);
     return err;
   }
   /* error: fatal */
@@ -766,10 +765,10 @@ cl_int cecl_write_buffer(cl_command_queue command_queue, cl_mem buffer,
       command_queue, buffer, true, /* blocking write */
       offset, cb, ptr, num_events_in_wait_list, event_wait_list, event);
   if (err == CL_SUCCESS) {
-    double elapsed_ms = cecl_get_elapsed_ms(*event);
+    cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueWriteBuffer ; %s ; %lu ; %.6f\n",
-            buffer_name, (unsigned long)cb, elapsed_ms);
+    fprintf(stderr, "\n[CECL] clEnqueueWriteBuffer ; %s ; %zu ; %llu\n",
+            buffer_name, cb, elapsed_ns);
     return err;
   }
   /* error: fatal */
@@ -921,10 +920,10 @@ cl_int cecl_read_buffer(cl_command_queue command_queue, cl_mem buffer,
       offset, cb, ptr, num_events_in_wait_list, event_wait_list, event);
 
   if (err == CL_SUCCESS) {
-    double elapsed_ms = cecl_get_elapsed_ms(*event);
+    cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueReadBuffer ; %s ; %lu ; %.6f\n",
-            buffer_name, (unsigned long)cb, elapsed_ms);
+    fprintf(stderr, "\n[CECL] clEnqueueReadBuffer ; %s ; %zu ; %llu\n",
+            buffer_name, cb, elapsed_ns);
     return err;
   }
   /* error: fatal */
@@ -1003,10 +1002,10 @@ void* cecl_map_buffer(cl_command_queue command_queue, cl_mem buffer,
                                  event_wait_list, event, errcode_ret);
 
   if (*errcode_ret == CL_SUCCESS) {
-    double elapsed_ms = cecl_get_elapsed_ms(*event);
+    cl_ulong elapsed_ns = cecl_get_elapsed_ns(*event);
 
-    fprintf(stderr, "\n[CECL] clEnqueueMapBuffer ; %s ; %lu ; %.6f\n",
-            buffer_name, (unsigned long)cb, elapsed_ms);
+    fprintf(stderr, "\n[CECL] clEnqueueMapBuffer ; %s ; %zu ; %llu\n",
+            buffer_name, cb, elapsed_ns);
 
     return ret;
   }

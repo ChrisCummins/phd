@@ -40,13 +40,13 @@ void CopyHostToDevice(const cl::CommandQueue &queue, IteratorType startIterator,
       /*error=*/nullptr));
   DCHECK(pointer);
 
-  profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
+  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
   std::copy(startIterator, endIterator, pointer);
 
   queue.enqueueUnmapMemObject(buffer, pointer, /*events=*/nullptr, &event);
 
   // Set profiling data.
-  profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
+  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
   profiling->transferred_bytes += buffer_size;
 }
 
@@ -69,13 +69,13 @@ void CopyDeviceToHost(const cl::CommandQueue &queue, const cl::Buffer &buffer,
       /*error=*/nullptr));
   DCHECK(pointer);
 
-  profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
+  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
   std::copy(pointer, pointer + length, startIterator);
 
   queue.enqueueUnmapMemObject(buffer, pointer, /*events=*/nullptr, &event);
 
   // Set profiling data.
-  profiling->elapsed_nanoseconds += GetElapsedNanoseconds(event);
+  profiling->transfer_nanoseconds += GetElapsedNanoseconds(event);
   profiling->transferred_bytes += buffer_size;
 }
 

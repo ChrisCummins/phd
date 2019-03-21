@@ -25,7 +25,6 @@ from gpu.libcecl.proto import libcecl_pb2
 from labm8 import app
 from labm8 import labdate
 
-
 FLAGS = app.FLAGS
 
 
@@ -78,25 +77,21 @@ def KernelInvocationsFromCeclLog(
             f"device type {devtype}")
     elif opcode == "clEnqueueNDRangeKernel":
       kernel_name, global_size, local_size, elapsed = operands
-      global_size = int(global_size)
-      local_size = int(local_size)
-      elapsed = float(elapsed)
       kernel_invocations.append(
           libcecl_pb2.OpenClKernelInvocation(
               kernel_name=kernel_name,
-              global_size=global_size,
-              local_size=local_size,
-              runtime_ms=elapsed))
+              global_size=int(global_size),
+              local_size=int(local_size),
+              kernel_time_ns=int(elapsed)))
       app.Log(2, 'Extracted clEnqueueNDRangeKernel from log')
     elif opcode == "clEnqueueTask":
       kernel_name, elapsed = operands
-      elapsed = float(elapsed)
       kernel_invocations.append(
           libcecl_pb2.OpenClKernelInvocation(
               kernel_name=kernel_name,
               global_size=1,
               local_size=1,
-              runtime_ms=elapsed))
+              kernel_time_ns=int(elapsed)))
       app.Log(2, 'Extracted clEnqueueTask from log')
     elif opcode == "clCreateBuffer":
       size, _, flags = operands
@@ -112,8 +107,7 @@ def KernelInvocationsFromCeclLog(
     elif (opcode == "clEnqueueReadBuffer" or opcode == "clEnqueueWriteBuffer" or
           opcode == "clEnqueueMapBuffer"):
       _, size, elapsed = operands
-      elapsed = float(elapsed)
-      total_transfer_time += elapsed
+      total_transfer_time += int(elapsed)
     else:
       # Not a line that we're interested in.
       pass
@@ -121,7 +115,7 @@ def KernelInvocationsFromCeclLog(
   # Defer transfer overhead until we have computed it.
   for ki in kernel_invocations:
     ki.transferred_bytes = total_transferred_bytes
-    ki.runtime_ms += total_transfer_time
+    ki.transfer_time_ns = total_transfer_time
 
   return kernel_invocations
 
@@ -187,5 +181,5 @@ def RunLibceclExecutable(
       cecl_log='\n'.join(cecl_lines) if record_outputs else '',
       device=env.proto,
       kernel_invocation=KernelInvocationsFromCeclLog(cecl_lines, env),
-      elapsed_time_ms=int(elapsed * 1000),
+      elapsed_time_ns=int(elapsed * 1e9),
       opencl_program_source=program_sources)

@@ -93,7 +93,8 @@ gpu::libcecl::OpenClKernelInvocation DynamicParamsToLog(
   invocation.set_global_size(dynamic_params.global_size_x());
   invocation.set_local_size(dynamic_params.local_size_x());
   // Negative values indicate null.
-  invocation.set_runtime_ms(-1);
+  invocation.set_kernel_time_ns(-1);
+  invocation.set_transfer_ns(-1);
   invocation.set_transferred_bytes(-1);
   return invocation;
 }
@@ -216,12 +217,13 @@ gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(
                               /*global=*/cl::NDRange(global_size),
                               /*local=*/cl::NDRange(local_size),
                               /*events=*/nullptr, /*event=*/&event);
-  profiling.elapsed_nanoseconds += GetElapsedNanoseconds(event);
+  profiling.kernel_nanoseconds += GetElapsedNanoseconds(event);
 
   inputs.CopyFromDeviceToNewValueSet(queue_, outputs, &profiling);
 
   // Set run proto fields.
-  log.set_runtime_ms(profiling.elapsed_nanoseconds / 1000000.0);
+  log.set_kernel_time_ns(profiling.kernel_nanoseconds);
+  log.set_transfer_time_ns(profiling.kernel_nanoseconds);
   log.set_transferred_bytes(profiling.transferred_bytes);
 
   logger.RecordLog(&instance_, kernel_instance_, run, &log, flush);

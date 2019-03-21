@@ -6,7 +6,6 @@ import pathlib
 import random
 import typing
 
-import pandas as pd
 import numpy as np
 import progressbar
 import sqlalchemy as sql
@@ -95,7 +94,8 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=True)
   work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=True)
   transferred_bytes: int = sql.Column(sql.Integer, nullable=True)
-  runtime_ms: float = sql.Column(sql.Float, nullable=True)
+  kernel_time_ns: int = sql.Column(sql.Integer, nullable=True)
+  transfer_time_ns: int = sql.Column(sql.Integer, nullable=True)
 
   @classmethod
   def FromCldriveDataFrameRecord(cls, record, static_features_id: int):
@@ -109,7 +109,8 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
         work_item_local_mem_size=NoneIfNaN(record.work_item_local_mem_size),
         work_item_private_mem_size=NoneIfNaN(record.work_item_private_mem_size),
         transferred_bytes=NoneIfNaN(record.transferred_bytes),
-        runtime_ms=NoneIfNaN(record.runtime_ms),
+        kernel_time_ns=NoneIfNaN(record.kernel_time_ns),
+        transfer_time_ns=NoneIfNaN(record.transfer_time_ns),
     )
     return features
 

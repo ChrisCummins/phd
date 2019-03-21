@@ -26,8 +26,10 @@ phd::int64 GetElapsedNanoseconds(const cl::Event& event);
 
 class ProfilingData {
  public:
-  ProfilingData() : elapsed_nanoseconds(0), transferred_bytes(0) {}
-  phd::int64 elapsed_nanoseconds;
+  ProfilingData()
+      : kernel_nanoseconds(0), transfer_nanoseconds(0), transferred_bytes(0) {}
+  phd::int64 kernel_nanoseconds;
+  phd::int64 transfer_nanoseconds;
   phd::int64 transferred_bytes;
 };
 

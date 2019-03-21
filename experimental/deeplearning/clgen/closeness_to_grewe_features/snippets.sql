@@ -72,9 +72,11 @@ SELECT sf.origin,
        df.wgsize,
        df.transferred_bytes,
        df.opencl_env,
-       count(df.runtime_ms) AS runtime_count,
-       avg(df.runtime_ms) AS avg_runtime,
-       (max(df.runtime_ms) - min(df.runtime_ms)) / avg(df.runtime_ms) AS norm_range
+       count(df.kernel_time_ns) AS runtime_count,
+       avg(df.kernel_time_ns) AS avg_kernel_time,
+       avg(df.transfer_time_ns) AS avg_transfer_time,
+       avg(df.kernel_time_ns + df.transfer_time_ns) AS avg_runtime,
+       (max(df.kernel_time_ns + df.transfer_time_ns) - min(df.kernel_time_ns + df.transfer_time_ns)) / avg(df.kernel_time_ns + df.transfer_time_ns) AS norm_range
 FROM dynamic_features AS df
 WHERE df.outcome = 'PASS'
   LEFT JOIN static_features AS sf ON sf.id=df.static_features_id
