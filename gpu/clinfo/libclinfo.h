@@ -17,8 +17,6 @@
 #ifndef PHD_GPU_LIBCLINFO_H
 #define PHD_GPU_LIBCLINFO_H
 
-#include <vector>
-
 #include "third_party/opencl/cl.hpp"
 
 #include "gpu/clinfo/proto/clinfo.pb.h"
