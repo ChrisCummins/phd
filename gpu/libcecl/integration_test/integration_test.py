@@ -30,6 +30,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'gpu'
+
 _HELLO = bazelutil.DataPath('phd/gpu/libcecl/integration_test/hello.cc')
 
 
