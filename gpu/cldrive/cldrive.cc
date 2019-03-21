@@ -81,7 +81,8 @@ DEFINE_validator(srcs, &ValidateSrcs);
 
 DEFINE_string(envs, "",
               "A comma separated list of OpenCL devices to use. Use "
-              "'--clinfo' argument to print a list of available devices.");
+              "'--clinfo' argument to print a list of available devices. If "
+              "not provided, all available OpenCL devices will be used.");
 static bool ValidateEnvs(const char* flagname, const string& value) {
   for (auto env : SplitCommaSeparated(value)) {
     try {
@@ -143,6 +144,31 @@ std::unique_ptr<Logger> MakeLoggerFromFlags(
 }  // namespace cldrive
 }  // namespace gpu
 
+namespace {
+
+// Look up OpenCL devices from a comma separated list of names. If the string
+// is empty, all available devices are returned.
+std::vector<::gpu::clinfo::OpenClDevice> GetDevicesFromCommaSeparatedString(
+    const string& str) {
+  std::vector<::gpu::clinfo::OpenClDevice> devices;
+
+  if (FLAGS_envs.empty()) {
+    auto devices_proto = phd::gpu::clinfo::GetOpenClDevices();
+    for (int i = 0; i < devices_proto.device_size(); ++i) {
+      devices.push_back(devices_proto.device(i));
+    }
+  } else {
+    for (auto device_name : SplitCommaSeparated(FLAGS_envs)) {
+      devices.push_back(
+          phd::gpu::clinfo::GetOpenClDeviceProto(device_name).ValueOrDie());
+    }
+  }
+
+  return devices;
+}
+
+}  // namespace anonymous
+
 int main(int argc, char** argv) {
   phd::InitApp(&argc, &argv, "Drive arbitrary OpenCL kernels.");
 
@@ -159,19 +185,11 @@ int main(int argc, char** argv) {
   // Check that required flags are set. We can't check this in the flag
   // validator functions as they are only required if the early-exit flags
   // above are not set.
-  if (FLAGS_envs.empty()) {
-    LOG(FATAL) << "Flag --envs must be set";
-  }
-
   if (FLAGS_srcs.empty()) {
     LOG(FATAL) << "Flag --srcs must be set";
   }
 
-  std::vector<::gpu::clinfo::OpenClDevice> devices;
-  for (auto device_name : SplitCommaSeparated(FLAGS_envs)) {
-    devices.push_back(
-        phd::gpu::clinfo::GetOpenClDeviceProto(device_name).ValueOrDie());
-  }
+  auto devices = GetDevicesFromCommaSeparatedString(FLAGS_envs);
 
   // Create instances proto.
   gpu::cldrive::CldriveInstances instances;
