@@ -32,7 +32,7 @@ void ProcessCldriveInstancesOrDie(CldriveInstances* instances) {
 }  // namespace gpu
 
 int main(int argc, char** argv) {
-  CHECK(argc == 1) << "No command line arguments allowed";
+  DCHECK(argc == 1) << "No command line arguments allowed";
 
   gpu::cldrive::CldriveInstances instances;
   CHECK(instances.ParseFromIstream(&std::cin));
