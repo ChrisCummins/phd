@@ -111,6 +111,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "libcecl_runtime_test",
+    srcs = ["libcecl_runtime_test.py"],
+    deps = [
+        ":libcecl_runtime",
+        "//gpu/cldrive/legacy:env",
+        "//gpu/libcecl/proto:libcecl_py_pb2",
+        "//labm8:test",
+    ],
+)
+
 sh_binary(
     name = "mkcecl",
     srcs = ["mkcecl.sh"],
