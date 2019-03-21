@@ -11,7 +11,7 @@ def test_KernelInvocationsFromCeclLog():
   device = cldrive_env.OpenCLEnvironment(
       clinfo_pb2.OpenClDevice(
           device_type='CPU',
-          name='OpenCL Device',
+          device_name='OpenCL Device',
       ))
   invocations = libcecl_runtime.KernelInvocationsFromCeclLog([
       'clCreateProgramWithSource',

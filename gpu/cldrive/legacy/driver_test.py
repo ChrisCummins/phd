@@ -27,6 +27,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'gpu.cldrive'
+
 
 @pytest.mark.skip(reason="FIXME(cec)")
 def test_empty_kernel():

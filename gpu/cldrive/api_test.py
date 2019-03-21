@@ -63,7 +63,8 @@ def test_DriveToDataFrame_columns(device: clinfo_pb2.OpenClDevice):
       'local_size',
       'outcome',
       'transferred_bytes',
-      'runtime_ms',
+      'transfer_time_ns',
+      'kernel_time_ns',
   ]
 
 
@@ -88,7 +89,8 @@ kernel void A(global int* a) {
     assert row.local_size == 1
     assert row.outcome == 'PASS'
     assert row.transferred_bytes == 8
-    assert row.runtime_ms > 0
+    assert row.transfer_time_ns > 1000  # Flaky but probably okay.
+    assert row.kernel_time_ns > 1000  # Flaky but probably okay.
 
 
 def test_DriveToDataFrame_invalid_program(device: env.OpenCLEnvironment):
@@ -105,7 +107,8 @@ def test_DriveToDataFrame_invalid_program(device: env.OpenCLEnvironment):
   assert np.isnan(row.local_size)
   assert row.outcome == 'PROGRAM_COMPILATION_FAILURE'
   assert np.isnan(row.transferred_bytes)
-  assert np.isnan(row.runtime_ms)
+  assert np.isnan(row.transfer_time_ns)
+  assert np.isnan(row.kernel_time_ns)
 
 
 def test_DriveToDataFrame_no_outputs(device: env.OpenCLEnvironment):
@@ -123,7 +126,8 @@ def test_DriveToDataFrame_no_outputs(device: env.OpenCLEnvironment):
   assert row.local_size == 1
   assert row.outcome == 'NO_OUTPUT'
   assert np.isnan(row.transferred_bytes)
-  assert np.isnan(row.runtime_ms)
+  assert np.isnan(row.transfer_time_ns)
+  assert np.isnan(row.kernel_time_ns)
 
 
 def test_DriveToDataFrame_input_insensitive(device: env.OpenCLEnvironment):
@@ -143,14 +147,15 @@ def test_DriveToDataFrame_input_insensitive(device: env.OpenCLEnvironment):
   assert row.local_size == 1
   assert row.outcome == 'INPUT_INSENSITIVE'
   assert np.isnan(row.transferred_bytes)
-  assert np.isnan(row.runtime_ms)
+  assert np.isnan(row.transfer_time_ns)
+  assert np.isnan(row.kernel_time_ns)
 
 
 def test_DriveToDataFrame_device_not_found(device: env.OpenCLEnvironment):
   device.name = "nope"
   device.platform_name = "not a real platform"
   device.device_name = "not a real device"
-  with pytest.raises(subprocess.CalledProcessError):
+  with pytest.raises(api.CldriveCrash):
     api.DriveToDataFrame(
         _MakeInstance(
             device,
