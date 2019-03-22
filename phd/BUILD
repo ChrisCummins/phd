@@ -330,6 +330,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":app",
+        "@com_github_gflags_gflags//:gflags",
         "@com_github_google_benchmark//:benchmark",
         "@gtest",
     ],

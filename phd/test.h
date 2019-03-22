@@ -7,11 +7,16 @@
 #include "phd/app.h"
 
 #include "benchmark/benchmark.h"
+#include "gflags/gflags.h"
 #include "gtest/gtest.h"
 
 #ifdef TEST_MAIN
 #error "TEST_MAIN already defined!"
 #endif
+
+DEFINE_string(test_coverage_data_dir, "",
+              "TODO(cec): An unused flag added to provide usage compatbility "
+              "with python tests that use this flag.");
 
 // Inserts a main() function which runs google benchmarks and gtest suite.
 #define TEST_MAIN()                                    \
