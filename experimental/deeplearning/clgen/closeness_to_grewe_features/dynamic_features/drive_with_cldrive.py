@@ -55,9 +55,12 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
     .filter(db.DynamicFeatures.opencl_env == env.name)
   q = session.query(
       db.StaticFeatures.id, db.StaticFeatures.src) \
-    .filter(~db.StaticFeatures.id.in_(already_done)) \
-    .order_by(sql.func.random()) \
-    .limit(batch_size)
+    .filter(~db.StaticFeatures.id.in_(already_done))
+
+  if FLAGS.random_order:
+    q = q.order_by(sql.func.random()) \
+
+  q = q.limit(batch_size)
   return [KernelToDrive(*row) for row in q]
 
 
