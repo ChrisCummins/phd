@@ -28,13 +28,14 @@ def GetBenchmarkSuiteToRun(
     env: cldrive_env.OpenCLEnvironment) -> typing.Optional[str]:
   """Get the name of a benchmark suite to run."""
   already_done = session.query(db.DynamicFeatures.static_features_id) \
-    .filter(db.DynamicFeatures.opencl_env == env.name)
+    .filter(db.DynamicFeatures.opencl_env == env.name,
+            db.DynamicFeatures.driver == db.DynamicFeaturesDriver.LIBCECL)
   origin = session.query(db.StaticFeatures.origin) \
-    .filter(db.StaticFeatures.origin.like('benchamrks_%'))\
+    .filter(db.StaticFeatures.origin.like('benchmarks_%'))\
     .filter(~db.StaticFeatures.id.in_(already_done)).first()
 
   if origin:
-    return origin[0][len('benchmarks_')].split(':')[0]
+    return origin[0][len('benchmarks_'):].split(':')[0]
 
 
 class DatabaseObserver(gpgpu.BenchmarkRunObserver):

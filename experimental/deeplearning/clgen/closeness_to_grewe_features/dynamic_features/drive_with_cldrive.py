@@ -52,7 +52,8 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
                              batch_size: int):
   """Get a batch of kernels to run."""
   already_done = session.query(db.DynamicFeatures.static_features_id) \
-    .filter(db.DynamicFeatures.opencl_env == env.name)
+    .filter(db.DynamicFeatures.opencl_env == env.name,
+            db.DynamicFeatures.driver == db.DynamicFeaturesDriver.CLDRIVE)
   q = session.query(
       db.StaticFeatures.id, db.StaticFeatures.src) \
     .filter(~db.StaticFeatures.id.in_(already_done))
