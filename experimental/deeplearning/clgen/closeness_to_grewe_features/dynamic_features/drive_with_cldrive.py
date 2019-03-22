@@ -33,7 +33,7 @@ app.DEFINE_integer('cldrive_timeout_seconds', 60,
 app.DEFINE_integer('batch_size', 1024,
                    'The number of kernels to process at a time.')
 app.DEFINE_boolean(
-    'random_order', False,
+    'random_order', True,
     'Select kernels to run in a random order. Randomizing the order can be '
     'slow for large databases, but is useful when you have multiple '
     'concurrent workers to prevent races.')
@@ -58,7 +58,7 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
     .filter(~db.StaticFeatures.id.in_(already_done))
 
   if FLAGS.random_order:
-    q = q.order_by(sql.func.random()) \
+    q = q.order_by(sql.func.random())
 
   q = q.limit(batch_size)
   return [KernelToDrive(*row) for row in q]
