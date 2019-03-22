@@ -17,6 +17,8 @@
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
 from labm8 import test
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_num_models():
   """Test that the number of models. This will change"""

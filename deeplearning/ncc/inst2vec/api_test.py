@@ -81,6 +81,9 @@ def vocab() -> vocabulary.VocabularyZipFile:
     yield v
 
 
+MODULE_UNDER_TEST = None  # TODO(cec): Remove once a test is added.
+
+
 def test_TODO():
   """Short summary of test."""
   assert True

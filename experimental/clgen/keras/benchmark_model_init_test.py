@@ -16,6 +16,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_1layer_LSTM_no_compile(benchmark):
   """Benchmark instantiation of a one layer LSTM network without compiling."""

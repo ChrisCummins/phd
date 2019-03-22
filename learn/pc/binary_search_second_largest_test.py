@@ -5,6 +5,8 @@ import pytest
 
 from labm8 import test
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 class Node(object):
   """Node in a binary search tree."""

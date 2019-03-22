@@ -28,6 +28,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 @pytest.mark.parametrize("iterations", [50, 100, 500, 1000, 5000])
 def test_string_concat(benchmark, iterations):

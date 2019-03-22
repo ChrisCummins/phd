@@ -9,6 +9,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_Numpy_import(benchmark):
   """Benchmark numpy module import."""
