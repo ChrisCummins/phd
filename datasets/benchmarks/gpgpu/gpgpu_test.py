@@ -18,6 +18,7 @@ import typing
 import pytest
 
 from datasets.benchmarks.gpgpu import gpgpu
+from datasets.benchmarks.gpgpu import gpgpu_pb2
 from gpu.cldrive.legacy import env as cldrive_env
 from labm8 import app
 from labm8 import test
@@ -54,19 +55,36 @@ def test_BenchmarkSuite_invalid_path_access(benchmark_suite: typing.Callable):
     _ = bs.path
 
 
+class TestBenchmarkObserver(gpgpu.BenchmarkRunObserver):
+
+  def __init__(self, stop_after: int = 0):
+    self.logs = []
+    self.stop_after = stop_after
+
+  def OnBenchmarkRun(self, log: gpgpu_pb2.GpgpuBenchmarkRun) -> bool:
+    self.logs.append(log)
+    return not (self.stop_after > 0 and len(self.logs) >= self.stop_after)
+
+
+def test_TestBenchmarkObserver():
+  observer = TestBenchmarkObserver(3)
+  assert observer.OnBenchmarkRun('a')
+  assert observer.OnBenchmarkRun('b')
+  assert not observer.OnBenchmarkRun('c')
+  assert observer.log == ['a', 'b', 'c']
+
+
 @pytest.mark.parametrize('benchmark_suite', BENCHMARK_SUITES_TO_TEST)
 def test_BenchmarkSuite_integration_test(benchmark_suite: typing.Callable,
                                          tempdir: pathlib.Path):
   """Test compilation and execution of benchmark suite using oclgrind."""
   with benchmark_suite() as bs:
     bs.ForceOpenCLEnvironment(cldrive_env.OclgrindOpenCLEnvironment())
-    bs.Run(tempdir)
+    observer = TestBenchmarkObserver(stop_after=1)
+    bs.Run([observer])
 
-    logs = list(bs.logs)
-    for benchmark in bs.benchmarks:
-      assert any(log.benchmark_name == benchmark for log in logs)
-
-    assert len(logs) == len(bs.benchmarks)
+    assert len(observer.logs) == 1
+    assert observer.logs[0].benchmark_name in bs.benchmarks
 
 
 if __name__ == '__main__':

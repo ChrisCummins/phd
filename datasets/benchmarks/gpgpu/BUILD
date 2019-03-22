@@ -112,6 +112,7 @@ py_test(
     srcs = ["gpgpu_test.py"],
     deps = [
         ":gpgpu",
+        ":gpgpu_py_pb2",
         "//labm8:app",
         "//labm8:test",
     ],
