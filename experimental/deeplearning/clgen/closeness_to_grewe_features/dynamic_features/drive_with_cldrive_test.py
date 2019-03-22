@@ -100,11 +100,11 @@ def test_GetBatchOfKernelsToDrive_overlap(db: grewe_features_db.Database,
 def test_DriveKernelAndRecordResults(db: grewe_features_db.Database,
                                      env: cldrive_env.OpenCLEnvironment,
                                      dynamic_params, num_runs: int):
-  with db.Session(commit=True) as s:
-    drive_with_cldrive.DriveKernelAndRecordResults(
-        s, 0, "kernel void A(global int* a) { a[get_global_id(0)] *= 2; }", env,
-        dynamic_params, num_runs)
+  drive_with_cldrive.DriveKernelAndRecordResults(
+      db, 0, "kernel void A(global int* a) { a[get_global_id(0)] *= 2; }", env,
+      dynamic_params, num_runs)
 
+  with db.Session() as s:
     assert s.query(grewe_features_db.DynamicFeatures).count() == (
         len(dynamic_params) * num_runs)
     records = s.query(grewe_features_db.DynamicFeatures).all()
@@ -139,11 +139,9 @@ def test_DriveKernelAndRecordResults(db: grewe_features_db.Database,
 def test_DriveKernelAndRecordResults_broken_kernel(
     db: grewe_features_db.Database, env: cldrive_env.OpenCLEnvironment,
     dynamic_params, num_runs: int):
+  drive_with_cldrive.DriveKernelAndRecordResults(db, 10, "invalid kernel", env,
+                                                 dynamic_params, num_runs)
   with db.Session() as s:
-    drive_with_cldrive.DriveKernelAndRecordResults(s, 10, "invalid kernel", env,
-                                                   dynamic_params, num_runs)
-    s.commit()
-
     assert s.query(grewe_features_db.DynamicFeatures).count() == 1
 
     record = s.query(grewe_features_db.DynamicFeatures).first()
@@ -175,10 +173,8 @@ def test_DriveKernelAndRecordResults_broken_kernel(
 def test_DriveKernelAndRecordResults_no_output(
     db: grewe_features_db.Database, env: cldrive_env.OpenCLEnvironment,
     dynamic_params, num_runs: int):
-  with db.Session(commit=True) as s:
-    drive_with_cldrive.DriveKernelAndRecordResults(
-        s, 10, "kernel void A(global int* a) {}", env, dynamic_params, num_runs)
-
+  drive_with_cldrive.DriveKernelAndRecordResults(
+      db, 10, "kernel void A(global int* a) {}", env, dynamic_params, num_runs)
   with db.Session() as s:
     assert s.query(
         grewe_features_db.DynamicFeatures).count() == (len(dynamic_params))
@@ -213,12 +209,10 @@ def test_DriveKernelAndRecordResults_no_output(
 def test_DriveKernelAndRecordResults_input_insensitive(
     db: grewe_features_db.Database, env: cldrive_env.OpenCLEnvironment,
     dynamic_params, num_runs: int):
+  drive_with_cldrive.DriveKernelAndRecordResults(
+      db, 10, "kernel void A(global int* a) { a[get_global_id(0)] = 0; }", env,
+      dynamic_params, num_runs)
   with db.Session() as s:
-    drive_with_cldrive.DriveKernelAndRecordResults(
-        s, 10, "kernel void A(global int* a) { a[get_global_id(0)] = 0; }", env,
-        dynamic_params, num_runs)
-    s.commit()
-
     assert s.query(
         grewe_features_db.DynamicFeatures).count() == (len(dynamic_params))
     records = s.query(grewe_features_db.DynamicFeatures).all()

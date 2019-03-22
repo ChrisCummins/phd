@@ -65,7 +65,7 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
 
 
 def DriveKernelAndRecordResults(
-    session: sqlutil.Session, static_features_id: int, src: str,
+    database: db.Database, static_features_id: int, src: str,
     env: cldrive_env.OpenCLEnvironment,
     dynamic_params: typing.List[cldrive_pb2.DynamicParams],
     num_runs: int) -> None:
@@ -81,36 +81,52 @@ def DriveKernelAndRecordResults(
             )
         ]),
         timeout_seconds=FLAGS.cldrive_timeout_seconds)
-    dynamic_features = [
-        db.DynamicFeatures.FromCldriveDataFrameRecord(df.iloc[i],
-                                                      static_features_id)
-        for i in range(len(df))
-    ]
-    session.add_all(dynamic_features)
-    app.Log(1, 'Imported %d dynamic features', len(dynamic_features))
+    # Remove the columns which are not exported to the database:
+    # 'instance' is not used since we only drive a single instance at a time.
+    # 'build_opts' is never changed. 'kernel' is not needed because each static
+    # features entry is a single kernel.
+    df.drop(columns=['instance', 'build_opts', 'kernel'], inplace=True)
+    # Fix the naming differences between cldrive and the database.
+    df.rename(
+        columns={
+            'device': 'opencl_env',
+            'global_size': 'gsize',
+            'local_size': 'wgsize'
+        },
+        inplace=True)
+    # Add missing columns.
+    df['static_features_id'] = static_features_id
+    df['hostname'] = system.HOSTNAME
+    # Import the dataframe into the SQL table.
+    df.to_sql(
+        db.DynamicFeatures.__tablename__,
+        con=database.engine,
+        if_exists='append',
+        index=False)
+    app.Log(1, 'Imported %d dynamic features', len(df))
   except cldrive.CldriveCrash:
-    session.add(
-        db.DynamicFeatures(
-            static_features_id=static_features_id,
-            opencl_env=env.name,
-            hostname=system.HOSTNAME,
-            outcome='DRIVER_CRASH',
-        ))
+    with database.Session(commit=True) as session:
+      session.add(
+          db.DynamicFeatures(
+              static_features_id=static_features_id,
+              opencl_env=env.name,
+              hostname=system.HOSTNAME,
+              outcome='DRIVER_CRASH',
+          ))
     app.Log(1, 'Driver crashed')
   except pbutil.ProtoWorkerTimeoutError:
-    session.add(
-        db.DynamicFeatures(
-            static_features_id=static_features_id,
-            opencl_env=env.name,
-            hostname=system.HOSTNAME,
-            outcome='DRIVER_TIMEOUT',
-        ))
+    with database.Session(commit=True) as session:
+      session.add(
+          db.DynamicFeatures(
+              static_features_id=static_features_id,
+              opencl_env=env.name,
+              hostname=system.HOSTNAME,
+              outcome='DRIVER_TIMEOUT',
+          ))
     app.Log(1, 'Driver timed out')
-  finally:
-    session.commit()
 
 
-def DriveBatchAndRecordResults(session: sqlutil.Session,
+def DriveBatchAndRecordResults(database: db.Database,
                                batch: typing.List[KernelToDrive],
                                env: cldrive_env.OpenCLEnvironment) -> None:
   """Drive a batch of kernels and record dynamic features."""
@@ -118,7 +134,7 @@ def DriveBatchAndRecordResults(session: sqlutil.Session,
   # separate cldrive instance.
   for static_features_id, src in batch:
     with prof.Profile(f'Run static features ID {static_features_id}'):
-      DriveKernelAndRecordResults(session, static_features_id, src, env,
+      DriveKernelAndRecordResults(database, static_features_id, src, env,
                                   LSIZE_GSIZE_PROTO_PAIRS, FLAGS.num_runs)
 
 
@@ -136,11 +152,11 @@ def main(argv: typing.List[str]):
     with database.Session() as session, prof.Profile(f'Batch {batch_num}'):
       with prof.Profile(f'Get batch of {FLAGS.batch_size} kernels'):
         batch = GetBatchOfKernelsToDrive(session, env, FLAGS.batch_size)
-      if not batch:
-        app.Log(1, 'Done. Nothing more to run!')
-        return
+    if not batch:
+      app.Log(1, 'Done. Nothing more to run!')
+      return
 
-      DriveBatchAndRecordResults(session, batch, env)
+    DriveBatchAndRecordResults(database, batch, env)
 
 
 if __name__ == '__main__':
