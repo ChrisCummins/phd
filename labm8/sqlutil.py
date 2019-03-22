@@ -340,7 +340,7 @@ class Database(object):
     # Bind the Engine to a session maker, which instantiates our own Session
     # class, which is a subclass of the default SQLAlchemy Session with added
     # functionality.
-    self.make_session = orm.sessionmaker(bind=self.engine, class_=Session)
+    self.MakeSession = orm.sessionmaker(bind=self.engine, class_=Session)
 
   def Drop(self, are_you_sure_about_this_flag: bool = False):
     """Drop the database, irreverisbly destroying it.
@@ -385,7 +385,7 @@ class Database(object):
     Returns:
       A database session.
     """
-    session = self.make_session()
+    session = self.MakeSession()
     try:
       yield session
       if commit:
