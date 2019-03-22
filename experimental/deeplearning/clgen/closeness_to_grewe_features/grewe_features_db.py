@@ -94,9 +94,9 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   # Dynamic features that may not be set if outcome != "PASS".
   work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=True)
   work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=True)
-  transferred_bytes: int = sql.Column(sql.Integer, nullable=True)
-  transfer_time_ns: int = sql.Column(sql.Integer, nullable=True)
-  kernel_time_ns: int = sql.Column(sql.Integer, nullable=True)
+  transferred_bytes: int = sql.Column(sql.BigInteger, nullable=True)
+  transfer_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
+  kernel_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
 
   @classmethod
   def FromCldriveDataFrameRecord(cls, record, static_features_id: int):
