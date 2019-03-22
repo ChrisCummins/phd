@@ -16,7 +16,6 @@ from labm8 import humanize
 from labm8 import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
-
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -88,7 +87,7 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   static_features_id: int = sql.Column(
       sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
   driver: DynamicFeaturesDriver = sql.Column(
-    sql.Enum(DynamicFeaturesDriver), nullable=False)
+      sql.Enum(DynamicFeaturesDriver), nullable=False)
 
   # The OpenClEnvironment.name of the device.
   opencl_env: str = sql.Column(sql.String(256), nullable=False)
