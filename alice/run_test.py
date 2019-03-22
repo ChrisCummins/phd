@@ -16,6 +16,8 @@
 from alice import run
 from labm8 import test
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_TODO():
   """Short summary of test."""
