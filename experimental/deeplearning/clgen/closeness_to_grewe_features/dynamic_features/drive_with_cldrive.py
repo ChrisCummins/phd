@@ -81,6 +81,20 @@ def DriveKernelAndRecordResults(
             )
         ]),
         timeout_seconds=FLAGS.cldrive_timeout_seconds)
+
+    # Record programs which contain no kernels.
+    if not len(df):
+      with database.Session(commit=True) as session:
+        session.add(
+            db.DynamicFeatures(
+                static_features_id=static_features_id,
+                driver=db.DynamicFeaturesDriver.CLDRIVE,
+                opencl_env=env.name,
+                hostname=system.HOSTNAME,
+                outcome='NO_KERNELS',
+            ))
+      return
+
     # Remove the columns which are not exported to the database:
     # 'instance' is not used since we only drive a single instance at a time.
     # 'build_opts' is never changed. 'kernel' is not needed because each static
