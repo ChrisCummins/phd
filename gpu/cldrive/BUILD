@@ -77,7 +77,6 @@ cc_binary(
 cc_image(
     name = "cldrive_image",
     srcs = ["cldrive.cc"],
-    base = "@base//image",
     deps = [
         # TODO(cec): This is a duplicate of the dependencies of :cldrive.
         ":csv_log",
