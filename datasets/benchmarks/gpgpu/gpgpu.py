@@ -868,12 +868,6 @@ def main(argv: typing.List[str]):
           app.Log(1, 'Starting run %d of %s', i + 1, benchmark_suite.name)
           benchmark_suite.Run(observers)
 
-      kernel_invocation_count = sum(
-          len(log.run.kernel_invocation) for log in benchmark_suite.logs)
-      app.Log(1, 'Extracted %s kernel invocations from %s logs',
-              humanize.Commas(kernel_invocation_count),
-              humanize.Commas(benchmark_suite.log_count))
-
 
 if __name__ == '__main__':
   app.RunWithArgs(main)

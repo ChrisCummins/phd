@@ -71,7 +71,7 @@ def test_TestBenchmarkObserver():
   assert observer.OnBenchmarkRun('a')
   assert observer.OnBenchmarkRun('b')
   assert not observer.OnBenchmarkRun('c')
-  assert observer.log == ['a', 'b', 'c']
+  assert observer.logs == ['a', 'b', 'c']
 
 
 @pytest.mark.parametrize('benchmark_suite', BENCHMARK_SUITES_TO_TEST)
