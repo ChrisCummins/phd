@@ -66,31 +66,35 @@ def DriveToDataFrame(instances: cldrive_pb2.CldriveInstances,
         _GetCommand(_NATIVE_CSV_DRIVER, instances),
         instances,
         timeout_seconds=timeout_seconds).decode('utf-8')
+    df = pd.read_csv(
+        io.StringIO(stdout),
+        sep=',',
+        quoting=csv.QUOTE_NONE,
+        dtype={
+            # Specify the data types explicitly for consistency.
+            # Support for NaN values in integer arrays is new in pandas. See:
+            # https://pandas.pydata.org/pandas-docs/stable/whatsnew/v0.24.0.html#optional-integer-na-support
+            'instance': np.int32,
+            'device': str,
+            'build_opts': str,
+            'kernel': str,
+            'work_item_local_mem_size': 'Int64',
+            'work_item_private_mem_size': 'Int64',
+            'global_size': 'Int32',
+            'local_size': 'Int32',
+            'outcome': str,
+            'transferred_bytes': 'Int64',
+            'transfer_time_ns': 'Int64',
+            'kernel_time_ns': 'Int64',
+        })
   except subprocess.CalledProcessError as e:
     raise CldriveCrash(e)
+  except ValueError as e:
+    # A value error could be raised by pd.read_csv() if the columns do not
+    # conform to the started dtypes.
+    raise CldriveCrash(str(e))
   except UnicodeDecodeError:
     raise CldriveCrash("Failed to decode output")
-  df = pd.read_csv(
-      io.StringIO(stdout),
-      sep=',',
-      quoting=csv.QUOTE_NONE,
-      dtype={
-          # Specify the data types explicitly for consistency.
-          # Support for NaN values in integer arrays is new in pandas. See:
-          # https://pandas.pydata.org/pandas-docs/stable/whatsnew/v0.24.0.html#optional-integer-na-support
-          'instance': np.int32,
-          'device': str,
-          'build_opts': str,
-          'kernel': str,
-          'work_item_local_mem_size': 'Int64',
-          'work_item_private_mem_size': 'Int64',
-          'global_size': 'Int32',
-          'local_size': 'Int32',
-          'outcome': str,
-          'transferred_bytes': 'Int64',
-          'transfer_time_ns': 'Int64',
-          'kernel_time_ns': 'Int64',
-      })
 
   # Pandas will interpret empty string as NaN. Replace NaN with empty strings.
   df['build_opts'].fillna('', inplace=True)
