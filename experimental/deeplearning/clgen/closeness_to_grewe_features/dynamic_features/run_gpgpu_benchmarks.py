@@ -98,7 +98,8 @@ def DriveBenchmarkSuiteAndRecordResults(
     app.Log(1, 'Building and running %s', benchmark_suite.name)
     benchmark_suite.ForceOpenCLEnvironment(env)
     for i in range(num_runs):
-      app.Log(1, 'Starting run %d of %s', i + 1, benchmark_suite.name)
+      app.Log(1, 'Starting run %d / %d of %s', i + 1, num_runs,
+              benchmark_suite.name)
       benchmark_suite.Run([observer])
   observer.CommitRecords()
 
