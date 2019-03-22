@@ -117,13 +117,15 @@ def DriveKernelAndRecordResults(
         db.DynamicFeatures.__tablename__,
         con=database.engine,
         if_exists='append',
-        index=False)
+        index=False,
+        dtype={'driver': sql.Enum(db.DynamicFeaturesDriver)})
     app.Log(1, 'Imported %d dynamic features', len(df))
   except cldrive.CldriveCrash:
     with database.Session(commit=True) as session:
       session.add(
           db.DynamicFeatures(
               static_features_id=static_features_id,
+              driver=db.DynamicFeaturesDriver.CLDRIVE,
               opencl_env=env.name,
               hostname=system.HOSTNAME,
               outcome='DRIVER_CRASH',
@@ -134,6 +136,7 @@ def DriveKernelAndRecordResults(
       session.add(
           db.DynamicFeatures(
               static_features_id=static_features_id,
+              driver=db.DynamicFeaturesDriver.CLDRIVE,
               opencl_env=env.name,
               hostname=system.HOSTNAME,
               outcome='DRIVER_TIMEOUT',

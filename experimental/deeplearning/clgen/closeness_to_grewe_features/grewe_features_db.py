@@ -105,23 +105,6 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   transfer_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
   kernel_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
 
-  @classmethod
-  def FromCldriveDataFrameRecord(cls, record, static_features_id: int):
-    features = cls(
-        static_features_id=static_features_id,
-        opencl_env=record.device,
-        hostname=system.HOSTNAME,
-        outcome=record.outcome,
-        gsize=NoneIfNaN(record.global_size),
-        wgsize=NoneIfNaN(record.local_size),
-        work_item_local_mem_size=NoneIfNaN(record.work_item_local_mem_size),
-        work_item_private_mem_size=NoneIfNaN(record.work_item_private_mem_size),
-        transferred_bytes=NoneIfNaN(record.transferred_bytes),
-        transfer_time_ns=NoneIfNaN(record.transfer_time_ns),
-        kernel_time_ns=NoneIfNaN(record.kernel_time_ns),
-    )
-    return features
-
 
 def _DatabaseImporterWorker(
     path: pathlib.Path
