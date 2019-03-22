@@ -1,6 +1,6 @@
 """Run kernels in features database using CGO'17 driver and settings."""
 import typing
-
+import sys
 from datasets.benchmarks.gpgpu import gpgpu
 from datasets.benchmarks.gpgpu import gpgpu_pb2
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
@@ -21,6 +21,8 @@ app.DEFINE_string(
     'The OpenCL environment to execute benchmark suites on. To list the '
     'available environments, run `bazel run //gpu/clinfo`.')
 app.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
+app.DEFINE_boolean('fatal_errors', True, 'Terminate benchmarking on error.')
+app.DEFINE_string('gpgpu_suite', None, 'Run only this GPGPU suite.')
 
 
 def GetBenchmarkSuiteToRun(
@@ -30,9 +32,13 @@ def GetBenchmarkSuiteToRun(
   already_done = session.query(db.DynamicFeatures.static_features_id) \
     .filter(db.DynamicFeatures.opencl_env == env.name,
             db.DynamicFeatures.driver == db.DynamicFeaturesDriver.LIBCECL)
-  origin = session.query(db.StaticFeatures.origin) \
+  q = session.query(db.StaticFeatures.origin) \
     .filter(db.StaticFeatures.origin.like('benchmarks_%'))\
-    .filter(~db.StaticFeatures.id.in_(already_done)).first()
+    .filter(~db.StaticFeatures.id.in_(already_done))
+  if FLAGS.gpgpu_suite:
+    q = q.filter(db.StaticFeatures.origin.like(f'%{FLAGS.gpgpu_suite}%'))
+
+  origin = q.first()
 
   if origin:
     benchmark_suite = origin[0][len('benchmarks_'):].split(':')[0]
@@ -76,6 +82,12 @@ class DatabaseObserver(gpgpu.BenchmarkRunObserver):
               transfer_time_ns=kernel_invocation.transfer_time_ns,
               kernel_time_ns=kernel_invocation.kernel_time_ns,
           ))
+    app.Log(1, 'Processed %d kernel invocations',
+            len(log.run.kernel_invocation))
+
+    if FLAGS.fatal_errors and log.run.returncode:
+      app.Error('Failed: %s', log)
+      return False
 
     return True
 
@@ -115,8 +127,11 @@ def main():
     if not benchmark_suite:
       app.Log(1, 'Done. Nothing more to run!')
       return
-    DriveBenchmarkSuiteAndRecordResults(database, benchmark_suite, env,
-                                        FLAGS.num_runs)
+    try:
+      DriveBenchmarkSuiteAndRecordResults(database, benchmark_suite, env,
+                                          FLAGS.num_runs)
+    except gpgpu.BenchmarkInterrupt:
+      sys.exit(1)
 
 
 if __name__ == '__main__':

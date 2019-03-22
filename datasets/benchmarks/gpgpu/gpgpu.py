@@ -96,6 +96,11 @@ _RODINIA_DATA_ROOT = bazelutil.DataPath('rodinia_data')
 _MKCECL = bazelutil.DataPath('phd/gpu/libcecl/mkcecl')
 
 
+class BenchmarkInterrupt(OSError):
+  """Early exit from benchmarking signal."""
+  pass
+
+
 def CheckCall(command: typing.Union[str, typing.List[str]],
               shell: bool = False,
               env: typing.Dict[str, str] = None):
@@ -363,7 +368,7 @@ class _BenchmarkSuite(object):
 
     if not should_continue:
       app.Log(1, 'Stopping benchmarking on request of observer(s)')
-      return
+      raise BenchmarkInterrupt
 
   # Abstract attributes that must be provided by subclasses.
 
