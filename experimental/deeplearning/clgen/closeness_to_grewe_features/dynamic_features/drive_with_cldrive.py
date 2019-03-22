@@ -96,6 +96,7 @@ def DriveKernelAndRecordResults(
         inplace=True)
     # Add missing columns.
     df['static_features_id'] = static_features_id
+    df['driver'] = db.DynamicFeaturesDriver.CLDRIVE
     df['hostname'] = system.HOSTNAME
     # Import the dataframe into the SQL table.
     df.to_sql(

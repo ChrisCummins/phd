@@ -1,5 +1,5 @@
 """A database of static and dynamic Grewe et al features."""
-
+import enum
 import hashlib
 import multiprocessing
 import pathlib
@@ -14,8 +14,8 @@ from sqlalchemy.ext import declarative
 from labm8 import app
 from labm8 import humanize
 from labm8 import sqlutil
-from labm8 import system
 from research.grewe_2013_cgo import feature_extractor as grewe_features
+
 
 FLAGS = app.FLAGS
 
@@ -77,11 +77,19 @@ def NoneIfNaN(value):
   return value
 
 
+class DynamicFeaturesDriver(enum.Enum):
+  CLDRIVE = 0  # //gpu/cldrive
+  LIBCECL = 1  # //gpu/libcecl
+
+
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of dynamic features."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   static_features_id: int = sql.Column(
       sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
+  driver: DynamicFeaturesDriver = sql.Column(
+    sql.Enum(DynamicFeaturesDriver), nullable=False)
+
   # The OpenClEnvironment.name of the device.
   opencl_env: str = sql.Column(sql.String(256), nullable=False)
   hostname: str = sql.Column(sql.String(32), nullable=False)
