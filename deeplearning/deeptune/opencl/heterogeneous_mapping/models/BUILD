@@ -41,6 +41,7 @@ py_library(
 
 py_test(
     name = "deeptune_test",
+    timeout = "long",
     srcs = ["deeptune_test.py"],
     deps = [
         ":deeptune",
@@ -94,6 +95,7 @@ py_library(
 
 py_test(
     name = "lda_test",
+    timeout = "long",
     srcs = ["lda_test.py"],
     deps = [
         ":models",
@@ -126,6 +128,7 @@ py_library(
 
 py_test(
     name = "models_test",
+    timeout = "long",
     timeout = "long",
     srcs = ["models_test.py"],
     deps = [
@@ -160,6 +163,7 @@ py_library(
 
 py_test(
     name = "ncc_test",
+    timeout = "long",
     srcs = ["ncc_test.py"],
     deps = [
         ":ncc",

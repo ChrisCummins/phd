@@ -39,6 +39,7 @@ py_library(
 
 py_test(
     name = "control_flow_graph_generator_test",
+    timeout = "long",
     srcs = ["control_flow_graph_generator_test.py"],
     deps = [
         ":control_flow_graph_generator",
