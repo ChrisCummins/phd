@@ -1,32 +1,14 @@
 """Unit tests for //experimental/deeplearning/clgen/closeness_to_grewe_features/dynamic_features:drive_with_cldrive."""
-import hashlib
 import pytest
-import numpy as np
-import sqlalchemy as sql
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from experimental.deeplearning.clgen.closeness_to_grewe_features.dynamic_features import \
   drive_with_cldrive
 from gpu.cldrive.legacy import env as cldrive_env
-from labm8 import test
 from gpu.cldrive.proto import cldrive_pb2
 from labm8 import system
-
-
-def _StaticFeatures(origin: str, src: str) -> grewe_features_db.StaticFeatures:
-  """Create static features instance."""
-  return grewe_features_db.StaticFeatures(
-      src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
-      origin=origin,
-      grewe_compute_operation_count=0,
-      grewe_rational_operation_count=0,
-      grewe_global_memory_access_count=0,
-      grewe_local_memory_access_count=0,
-      grewe_coalesced_memory_access_count=0,
-      grewe_atomic_operation_count=0,
-      src=src,
-  )
+from labm8 import test
 
 
 def _DynamicFeatures(
@@ -41,31 +23,6 @@ def _DynamicFeatures(
       gsize=1,
       wgsize=1,
   )
-
-
-@pytest.fixture(scope='function')
-def db() -> grewe_features_db.Database:
-  """A test fixture that yields a database with three static features in it."""
-  db_ = grewe_features_db.Database('sqlite://')
-  with db_.Session(commit=True) as s:
-    s.add_all([
-        _StaticFeatures(
-            'origin',
-            'kernel void A(global int* a) { a[get_global_id(0)] *= 2; }'),
-        _StaticFeatures(
-            'github',
-            'kernel void B(global int* a) { a[get_global_id(0)] *= 3; }'),
-        _StaticFeatures(
-            'clgen',
-            'kernel void C(global int* a) { a[get_global_id(0)] *= 4; }'),
-    ])
-  yield db_
-
-
-@pytest.fixture(scope='function')
-def env() -> cldrive_env.OpenCLEnvironment:
-  """Test fixture which yields a functional OpenCL environment."""
-  return cldrive_env.OclgrindOpenCLEnvironment()
 
 
 def test_GetBatchOfKernelsToDrive(db: grewe_features_db.Database,
