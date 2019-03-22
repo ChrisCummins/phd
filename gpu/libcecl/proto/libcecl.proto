@@ -43,8 +43,8 @@ message OpenClKernelInvocation {
   required int64 local_size = 3;
   required int64 transferred_bytes = 5;
 
-  // The runtime of kernel invocation, separated into kernel execution and
-  // data transfer times, respectively.
-  required int64 kernel_time_ns = 6;
+  // The runtime of kernel invocation, separated into data transfer and kernel
+  // execution times, respectively.
   required int64 transfer_time_ns = 7;
+  required int64 kernel_time_ns = 6;
 }
