@@ -23,5 +23,6 @@ py_binary(
         "//labm8:app",
         "//labm8:prof",
         "//labm8:sqlutil",
+        "//third_party/py/sqlalchemy",
     ],
 )

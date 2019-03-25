@@ -108,7 +108,7 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
 class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A labelled CPU/GPU dataset of dynamic and static feature aggregates.
-  
+
   The information in this table can be derived solely from StaticFeatures and
   DynamicFeatures tables. It is purely a convenience to cache the results of the
   (expensive) aggregation queries in this table.
@@ -149,7 +149,7 @@ class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   gpu_runtime_ns: int = sql.Column(sql.BigInteger, nullable=False)
 
   # One of: {CPU, GPU}
-  oracle: sql.Column(sql.String(3), nullable=False)
+  oracle: str = sql.Column(sql.String(3), nullable=False)
   oracle_runtime_ns: int = sql.Column(sql.BigInteger, nullable=False)
   max_speedup: float = sql.Column(sql.Float, nullable=False)
 
@@ -326,6 +326,7 @@ class Database(sqlutil.Database):
 
     return session.query(
         subquery.c.static_features_id,
+        subquery.c.driver,
         subquery.c.gsize,
         subquery.c.wgsize,
         subquery.c.transferred_bytes,
@@ -363,6 +364,7 @@ class Database(sqlutil.Database):
 
     return session.query(
         cpu_q.c.static_features_id,
+        cpu_q.c.driver,
         cpu_q.c.gsize,
         cpu_q.c.wgsize,
         cpu_q.c.transferred_bytes,
@@ -382,6 +384,7 @@ class Database(sqlutil.Database):
         gpu_q,
         sql.sql.and_(
             cpu_q.c.static_features_id == gpu_q.c.static_features_id,
+            cpu_q.c.driver == gpu_q.c.driver,
             cpu_q.c.gsize == gpu_q.c.gsize,
             cpu_q.c.wgsize == gpu_q.c.wgsize,
             cpu_q.c.transferred_bytes == gpu_q.c.transferred_bytes,
@@ -392,20 +395,21 @@ class Database(sqlutil.Database):
                           cpu: str, gpu: str,
                           min_run_count: int) -> sqlutil.Query:
     """Create a labelled CPU/GPU dataset.
-    
+
     Args:
       session: A database session.
       dataset_name: A unique name for the generated dataset.
       cpu: The name of the opencl_env for the CPU.
-      gpu: The name of the opencl_env for the GPU. 
+      gpu: The name of the opencl_env for the GPU.
       min_run_count: The minimum number of runs to include an aggregate in the
         dataset.
-    
+
     Raises:
       ValueError: If dataset_name already exists in the mapping table.
     """
-    if session.query(
-        CpuGpuMappingSet.cpu_gpu_mapping_set_name).filter(dataset_name).first():
+    if session.query(CpuGpuMappingSet.cpu_gpu_mapping_set_name)\
+        .filter(CpuGpuMappingSet.cpu_gpu_mapping_set_name == dataset_name)\
+        .first():
       raise ValueError("Dataset name {dataset_name} already exists")
 
     devmap = cls.CpuGpuOracleMapping(session, cpu, gpu,
@@ -423,14 +427,13 @@ class Database(sqlutil.Database):
               StaticFeatures.grewe_global_memory_access_count)
 
     return session.query(
-        # demap column must appear first to anchor the FROM object in the join.
-        devmap.c.static_features_id,
-        sql.sql.literal(dataset_name).label('cpu_gpu_mapping_set_name'),
-        StaticFeatures.origin,
-        sql.func.min(DynamicFeatures.driver
-                    ),  # Not really "min" since all values the same.
         devmap.c.gsize,
         devmap.c.wgsize,
+        # demap column must appear first to anchor the FROM object in the join.
+        sql.sql.literal(dataset_name).label('cpu_gpu_mapping_set_name'),
+        StaticFeatures.id,
+        StaticFeatures.origin,
+        devmap.c.driver,
         devmap.c.transferred_bytes,
         grewe1.label('grewe1'),
         grewe2.label('grewe2'),

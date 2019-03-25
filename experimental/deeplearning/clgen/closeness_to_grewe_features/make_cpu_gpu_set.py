@@ -4,6 +4,7 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from labm8 import app
 from labm8 import prof
+import sqlalchemy as sql
 
 FLAGS = app.FLAGS
 
@@ -41,9 +42,13 @@ def main():
     # The query that constructs the labelled dataset.
     query = db.CreateCpuGpuDataset(session, dataset_name, cpu, gpu,
                                    min_run_count)
+
     # Insert the results of the query into a table.
-    grewe_features_db.CpuGpuMappingSet.insert().from_select(
-        [column['name'] for column in query.column_descriptions()], query)
+    insert = sql.insert(grewe_features_db.CpuGpuMappingSet).from_select(
+        [column['name'] for column in query.column_descriptions], query)
+
+    # Run the query.
+    session.execute(insert)
 
 
 if __name__ == '__main__':
