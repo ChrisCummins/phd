@@ -14,3 +14,14 @@ py_library(
         "//third_party/py/sqlalchemy",
     ],
 )
+
+py_binary(
+    name = "make_cpu_gpu_set",
+    srcs = ["make_cpu_gpu_set.py"],
+    deps = [
+        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
+        "//labm8:app",
+        "//labm8:prof",
+        "//labm8:sqlutil",
+    ],
+)

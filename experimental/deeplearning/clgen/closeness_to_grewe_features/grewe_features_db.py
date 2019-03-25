@@ -90,13 +90,13 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
       sql.Enum(DynamicFeaturesDriver), nullable=False)
 
   # The OpenClEnvironment.name of the device.
-  opencl_env: str = sql.Column(sql.String(256), nullable=False)
+  opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
   hostname: str = sql.Column(sql.String(32), nullable=False)
-  outcome: str = sql.Column(sql.String(32), nullable=False)
+  outcome: str = sql.Column(sql.String(32), nullable=False, index=True)
 
   # Dynamic params that may not be set if outcome != "PASS".
-  gsize: int = sql.Column(sql.Integer, nullable=True)
-  wgsize: int = sql.Column(sql.Integer, nullable=True)
+  gsize: int = sql.Column(sql.Integer, nullable=True, index=True)
+  wgsize: int = sql.Column(sql.Integer, nullable=True, index=True)
 
   # Dynamic features that may not be set if outcome != "PASS".
   work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=True)
@@ -104,6 +104,85 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   transferred_bytes: int = sql.Column(sql.BigInteger, nullable=True)
   transfer_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
   kernel_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
+
+
+class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  """A labelled CPU/GPU dataset of dynamic and static feature aggregates.
+  
+  The information in this table can be derived solely from StaticFeatures and
+  DynamicFeatures tables. It is purely a convenience to cache the results of the
+  (expensive) aggregation queries in this table.
+  """
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # A grouping value.
+  cpu_gpu_mapping_set_name: str = sql.Column(
+      sql.String(128), nullable=False, index=True)
+
+  static_features_id = sql.Column(
+      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
+
+  # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
+  # benchmark.
+  origin: str = sql.Column(sql.String(128), nullable=False)
+
+  # Dynamic Features values.
+  driver: DynamicFeaturesDriver = sql.Column(
+      sql.Enum(DynamicFeaturesDriver), nullable=False, index=True)
+  gsize: int = sql.Column(sql.Integer, nullable=False, index=True)
+  wgsize: int = sql.Column(sql.Integer, nullable=False, index=True)
+  transferred_bytes: int = sql.Column(sql.BigInteger, nullable=False)
+
+  # Grewe feature values.
+  grewe1: float = sql.Column(sql.Float, nullable=False)
+  grewe2: float = sql.Column(sql.Float, nullable=False)
+  grewe3: float = sql.Column(sql.Float, nullable=False)
+  grewe4: float = sql.Column(sql.Float, nullable=False)
+
+  # Dynamic Features aggregates.
+
+  cpu_opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
+  gpu_opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
+
+  # runtime = transfer + kernel time.
+  cpu_runtime_ns: int = sql.Column(sql.BigInteger, nullable=False)
+  gpu_runtime_ns: int = sql.Column(sql.BigInteger, nullable=False)
+
+  # One of: {CPU, GPU}
+  oracle: sql.Column(sql.String(3), nullable=False)
+  oracle_runtime_ns: int = sql.Column(sql.BigInteger, nullable=False)
+  max_speedup: float = sql.Column(sql.Float, nullable=False)
+
+
+# TODO(cec): Implement!
+# class CpuGpuClassificationResult(
+#     Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+#   id: int = sql.Column(sql.Integer, primary_key=True)
+#   cpu_gpu_mapping_set_name: str = sql.Column(
+#      sql.String(128),
+#      sql.ForeignKey(CpuGpuMappingSet.cpu_gpu_mapping_set_name),
+#      nullable=False)
+#   # A stringifed JSON blob.
+#   dataset_params: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+#                                    nullable=False)
+#
+#   num_training_examples: int = sql.Column(sql.Integer, nullable=False)
+#   num_validation_examples: int = sql.Column(sql.Integer, nullable=False)
+#   num_test_examples: int = sql.Column(sql.Integer, nullable=False)
+#
+#   # The ratio of examples that belong to 'GPU' class.
+#   training_gpu_ratio: float = sql.Column(sql.Float, nullable=False)
+#   training_gpu_ratio: float = sql.Column(sql.Float, nullable=False)
+#
+#   model_name: str = sql.Column(sql.String(128), nullable=False)
+#   # A stringifed JSON blob.
+#   model_params: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+#                                  nullable=False)
+#
+#   # The elapsed time for training and inference.
+#   training_time_ms: int = sql.Column(sql.Integer, nullable=False)
+#   validation_time_ms: int = sql.Column(sql.Integer, nullable=False)
+#   test_time_ms: int = sql.Column(sql.Integer, nullable=False)
 
 
 def _DatabaseImporterWorker(
@@ -189,3 +268,179 @@ class Database(sqlutil.Database):
               app.Warning('Failed to commit database entry: %s', e)
 
     return success_count, new_row_count
+
+  @staticmethod
+  def AggregateRuntimes(session: sqlutil.Session,
+                        opencl_env: typing.Optional[str] = None,
+                        min_run_count: int = 30) -> sqlutil.Query:
+    """Produce a query which generates a table of runtime aggregates.
+
+    Args:
+      session: A database session.
+      opencl_env: An optional environment to mask results from. If not provided,
+        data is aggregated across all devices.
+
+    Returns:
+      A query.
+    """
+    subquery = session.query(
+        # Group-by columns.
+        DynamicFeatures.static_features_id,
+        DynamicFeatures.driver,
+        DynamicFeatures.gsize,
+        DynamicFeatures.wgsize,
+        DynamicFeatures.transferred_bytes,
+        # Aggregated columns.
+        sql.func.count(DynamicFeatures.transfer_time_ns).label("run_count"),
+        sql.func.min(DynamicFeatures.transfer_time_ns).label("min_transfer_ns"),
+        sql.sql.cast(
+            sql.func.round(sql.func.avg(DynamicFeatures.transfer_time_ns)),
+            sql.BigInteger).label("avg_transfer_ns"),
+        sql.func.max(DynamicFeatures.transfer_time_ns).label("max_transfer_ns"),
+        sql.func.min(DynamicFeatures.kernel_time_ns).label("min_kernel_ns"),
+        sql.sql.cast(
+            sql.func.round(sql.func.avg(DynamicFeatures.kernel_time_ns)),
+            sql.BigInteger).label("avg_kernel_ns"),
+        sql.func.max(DynamicFeatures.kernel_time_ns).label("max_kernel_ns"),
+        sql.func.min(DynamicFeatures.transfer_time_ns +
+                     DynamicFeatures.kernel_time_ns).label("min_runtime_ns"),
+        sql.sql.cast(
+            sql.func.round(
+                sql.func.avg(DynamicFeatures.transfer_time_ns +
+                             DynamicFeatures.kernel_time_ns)),
+            sql.BigInteger).label("avg_runtime_ns"),
+        sql.func.max(DynamicFeatures.transfer_time_ns +
+                     DynamicFeatures.kernel_time_ns).label("max_runtime_ns"),
+    ).filter(DynamicFeatures.outcome == 'PASS')
+
+    if opencl_env:
+      subquery = subquery.filter(DynamicFeatures.opencl_env == opencl_env)
+
+    subquery = subquery.group_by(
+        DynamicFeatures.static_features_id,
+        DynamicFeatures.driver,
+        DynamicFeatures.gsize,
+        DynamicFeatures.wgsize,
+        DynamicFeatures.transferred_bytes,
+    ).subquery()
+
+    return session.query(
+        subquery.c.static_features_id,
+        subquery.c.gsize,
+        subquery.c.wgsize,
+        subquery.c.transferred_bytes,
+        subquery.c.run_count,
+        subquery.c.min_transfer_ns,
+        subquery.c.avg_transfer_ns,
+        subquery.c.max_transfer_ns,
+        subquery.c.min_kernel_ns,
+        subquery.c.avg_kernel_ns,
+        subquery.c.max_kernel_ns,
+        subquery.c.min_runtime_ns,
+        subquery.c.avg_runtime_ns,
+        subquery.c.max_runtime_ns,
+    ).filter(subquery.c.run_count >= min_run_count)
+
+  @classmethod
+  def CpuGpuOracleMapping(cls,
+                          session: sqlutil.Session,
+                          cpu: str,
+                          gpu: str,
+                          min_run_count: int = 30) -> sqlutil.Query:
+    """Produce a query that returns a CPU/GPU oracle mapping table.
+
+    Args:
+      session: A session instance.
+      cpu: The name of the CPU device.
+      gpu: The name of the GPU device.
+      min_run_count: The minimum number of runs required on each device.
+
+    Returns:
+      A query.
+    """
+    cpu_q = cls.AggregateRuntimes(session, cpu, min_run_count).subquery()
+    gpu_q = cls.AggregateRuntimes(session, gpu, min_run_count).subquery()
+
+    return session.query(
+        cpu_q.c.static_features_id,
+        cpu_q.c.gsize,
+        cpu_q.c.wgsize,
+        cpu_q.c.transferred_bytes,
+        cpu_q.c.avg_runtime_ns.label('cpu_runtime_ns'),
+        gpu_q.c.avg_runtime_ns.label('gpu_runtime_ns'),
+        sql.func.if_(cpu_q.c.avg_runtime_ns < gpu_q.c.avg_runtime_ns,
+                     sql.sql.literal('CPU'),
+                     sql.sql.literal('GPU')).label("oracle"),
+        sql.func.if_(cpu_q.c.avg_runtime_ns < gpu_q.c.avg_runtime_ns,
+                     cpu_q.c.avg_runtime_ns,
+                     gpu_q.c.avg_runtime_ns).label("oracle_runtime_ns"),
+        sql.func.if_(cpu_q.c.avg_runtime_ns < gpu_q.c.avg_runtime_ns,
+                     gpu_q.c.avg_runtime_ns / cpu_q.c.avg_runtime_ns,
+                     cpu_q.c.avg_runtime_ns /
+                     gpu_q.c.avg_runtime_ns).label("max_speedup"),
+    ).join(
+        gpu_q,
+        sql.sql.and_(
+            cpu_q.c.static_features_id == gpu_q.c.static_features_id,
+            cpu_q.c.gsize == gpu_q.c.gsize,
+            cpu_q.c.wgsize == gpu_q.c.wgsize,
+            cpu_q.c.transferred_bytes == gpu_q.c.transferred_bytes,
+        ))
+
+  @classmethod
+  def CreateCpuGpuDataset(cls, session: sqlutil.Session, dataset_name: str,
+                          cpu: str, gpu: str,
+                          min_run_count: int) -> sqlutil.Query:
+    """Create a labelled CPU/GPU dataset.
+    
+    Args:
+      session: A database session.
+      dataset_name: A unique name for the generated dataset.
+      cpu: The name of the opencl_env for the CPU.
+      gpu: The name of the opencl_env for the GPU. 
+      min_run_count: The minimum number of runs to include an aggregate in the
+        dataset.
+    
+    Raises:
+      ValueError: If dataset_name already exists in the mapping table.
+    """
+    if session.query(
+        CpuGpuMappingSet.cpu_gpu_mapping_set_name).filter(dataset_name).first():
+      raise ValueError("Dataset name {dataset_name} already exists")
+
+    devmap = cls.CpuGpuOracleMapping(session, cpu, gpu,
+                                     min_run_count).subquery()
+
+    grewe1 = (devmap.c.transferred_bytes /
+              (StaticFeatures.grewe_compute_operation_count +
+               StaticFeatures.grewe_global_memory_access_count))
+    grewe2 = (StaticFeatures.grewe_coalesced_memory_access_count /
+              StaticFeatures.grewe_global_memory_access_count)
+    grewe3 = (
+        devmap.c.wgsize * (StaticFeatures.grewe_local_memory_access_count /
+                           StaticFeatures.grewe_global_memory_access_count))
+    grewe4 = (StaticFeatures.grewe_compute_operation_count /
+              StaticFeatures.grewe_global_memory_access_count)
+
+    return session.query(
+        # demap column must appear first to anchor the FROM object in the join.
+        devmap.c.static_features_id,
+        sql.sql.literal(dataset_name).label('cpu_gpu_mapping_set_name'),
+        StaticFeatures.origin,
+        sql.func.min(DynamicFeatures.driver
+                    ),  # Not really "min" since all values the same.
+        devmap.c.gsize,
+        devmap.c.wgsize,
+        devmap.c.transferred_bytes,
+        grewe1.label('grewe1'),
+        grewe2.label('grewe2'),
+        grewe3.label('grewe3'),
+        grewe4.label('grewe4'),
+        sql.sql.literal(cpu).label('cpu_opencl_env'),
+        sql.sql.literal(gpu).label('gpu_opencl_env'),
+        devmap.c.cpu_runtime_ns,
+        devmap.c.gpu_runtime_ns,
+        devmap.c.oracle_runtime_ns,
+        devmap.c.oracle,
+        devmap.c.max_speedup,
+    ).join(StaticFeatures)
