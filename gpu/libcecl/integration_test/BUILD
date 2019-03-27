@@ -44,6 +44,7 @@ py_test(
     data = [
         ":hello_sources",
         "//gpu/libcecl:libcecl.so",
+        "//third_party/clinfo:clinfo_c_src",
     ],
     deps = [
         "//compilers/llvm:clang",

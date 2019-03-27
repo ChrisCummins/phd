@@ -15,12 +15,14 @@
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Integration test for //gpu/libcecl."""
 import pathlib
+import re
 
 import pytest
 
 from compilers.llvm import clang
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
+from gpu.libcecl.proto import libcecl_pb2
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
@@ -32,6 +34,7 @@ FLAGS = app.FLAGS
 
 MODULE_UNDER_TEST = 'gpu'
 
+_CLINFO = bazelutil.DataPath('phd/third_party/clinfo/clinfo.c')
 _HELLO = bazelutil.DataPath('phd/gpu/libcecl/integration_test/hello.cc')
 
 
@@ -42,17 +45,29 @@ def hello_src() -> str:
     return f.read()
 
 
-def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
-  """Test end-to-end libcecl pipeline."""
+@pytest.fixture(scope='function')
+def clinfo_src() -> str:
+  """Test fixture which returns the C source code for a clinfo program."""
+  with open(_CLINFO, 'rb') as f:
+    return f.read().decode('utf-8').encode('ascii', 'ignore').decode('ascii')
+
+
+def _RewriteCompileLinkExecute(
+    outdir: pathlib.Path,
+    src: str,
+    lang: str = 'c++',
+    extra_ldflags=None,
+    extra_exec_args=None) -> libcecl_pb2.LibceclExecutableRun:
+  """Compile, link, and execute a program using libcecl."""
   # Re-write OpenCL source to use libcecl.
-  libcecl_src = libcecl_rewriter.RewriteOpenClSource(hello_src)
+  libcecl_src = libcecl_rewriter.RewriteOpenClSource(src)
 
   # Compile libcecl source to bytecode.
-  bytecode_path = tempdir / 'a.ll'
+  bytecode_path = outdir / 'a.ll'
   cflags, ldflags = libcecl_compile.LibCeclCompileAndLinkFlags()
 
   proc = clang.Exec(
-      ['-x', 'c++', '-', '-S', '-emit-llvm', '-o',
+      ['-x', 'c', '-', '-S', '-emit-llvm', '-o',
        str(bytecode_path)] + cflags,
       stdin=libcecl_src,
       stdout=None,
@@ -60,19 +75,58 @@ def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   assert not proc.returncode
   assert bytecode_path.is_file()
 
-  # Compile bytecode to executable annd link.
-  bin_path = tempdir / 'a.out'
+  # Compile bytecode to executable and link.
+  bin_path = outdir / 'a.out'
+  extra_ldflags = extra_ldflags or []
   proc = clang.Exec(
-      ['-o', str(bin_path), str(bytecode_path)] + ldflags,
+      ['-o', str(bin_path), str(bytecode_path)] + ldflags + extra_ldflags,
       stdout=None,
       stderr=None)
   assert not proc.returncode
   assert bin_path.is_file()
 
   # Run executable on oclgrind.
-  log = libcecl_runtime.RunLibceclExecutable(
-      [oclgrind.OCLGRIND_PATH, bin_path],
+  extra_exec_args = extra_exec_args or []
+  return libcecl_runtime.RunLibceclExecutable(
+      [oclgrind.OCLGRIND_PATH, bin_path] + extra_exec_args,
       cldrive_env.OclgrindOpenCLEnvironment())
+
+
+def test_rewrite_compile_link_execute_clinfo(tempdir: pathlib.Path,
+                                             clinfo_src: str):
+  log = _RewriteCompileLinkExecute(
+      tempdir,
+      clinfo_src,
+      lang='c',
+      extra_ldflags=['-lm'],
+      extra_exec_args=['--raw'])
+
+  assert log.ms_since_unix_epoch
+  assert log.returncode == 0
+  assert log.device == cldrive_env.OclgrindOpenCLEnvironment().proto
+  assert len(log.kernel_invocation) == 0
+  assert len(log.opencl_program_source) == 0
+
+  assert not log.stderr
+  assert re.match(
+      r"0 CL_PLATFORM_NAME Oclgrind\n"
+      r"0 CL_PLATFORM_VERSION OpenCL \d+\.\d+ \(Oclgrind [\d\.]+\)\n"
+      r"0:0 CL_DEVICE_NAME Oclgrind Simulator\n"
+      r"0:0 CL_DEVICE_TYPE [a-zA-Z |]+\n"
+      r"0:0 CL_DEVICE_VERSION OpenCL \d+\.\d+ \(Oclgrind [\d\.]+\)\n"
+      r"0:0 CL_DEVICE_GLOBAL_MEM_SIZE \d+\n"
+      r"0:0 CL_DEVICE_LOCAL_MEM_SIZE \d+\n"
+      r"0:0 CL_DEVICE_MAX_WORK_GROUP_SIZE \d+\n"
+      r"0:0 CL_DEVICE_MAX_WORK_ITEM_SIZES \(\d+, \d+, \d+\)\n", log.stdout,
+      re.MULTILINE)
+
+
+def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
+  """Test end-to-end libcecl pipeline."""
+  log = _RewriteCompileLinkExecute(tempdir, hello_src)
+
+  print(log.stdout)
+  print(log.stderr)
 
   # Check values in log.
   assert log.ms_since_unix_epoch
