@@ -39,7 +39,7 @@ app.DEFINE_integer(
     'orders, a larger batch_size increases the chances of workers performing '
     'redundant work.')
 app.DEFINE_boolean(
-    'random_order', True,
+    'random_order', False,
     'Select kernels to run in a random order. Randomizing the order can be '
     'slow for large databases, but is useful when you have multiple '
     'concurrent workers to prevent races.')
@@ -72,7 +72,7 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
   if FLAGS.random_order:
     q = q.order_by(sql.func.random())
   elif FLAGS.reverse_order:
-    q = q.order_by(db.DynamicFeatures.static_features_id.desc())
+    q = q.order_by(db.StaticFeatures.id.desc())
 
   q = q.limit(batch_size)
   return [KernelToDrive(*row) for row in q]
