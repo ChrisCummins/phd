@@ -129,7 +129,6 @@ py_library(
 py_test(
     name = "models_test",
     timeout = "long",
-    timeout = "long",
     srcs = ["models_test.py"],
     deps = [
         ":models",
