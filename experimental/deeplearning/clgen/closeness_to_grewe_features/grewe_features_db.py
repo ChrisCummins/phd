@@ -81,13 +81,8 @@ class DynamicFeaturesDriver(enum.Enum):
   LIBCECL = 1  # //gpu/libcecl
 
 
-# TODO(100M_migration): Inherit from
-# sqlutil.TablenameFromCamelCapsClassNameMixin and remove __tablename__ once
-# migration is complete.
-class DynamicFeatures(Base):
+class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of dynamic features."""
-  __tablename__ = 'new_dynamic_features'
-
   id: int = sql.Column(sql.Integer, primary_key=True)
   # Many-to-one mapping of dynamic features per static features.
   static_features_id: int = sql.Column(
