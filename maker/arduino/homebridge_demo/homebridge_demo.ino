@@ -1,5 +1,6 @@
-// This sketch connects to a network over WiFi, creates a server with a static
-// IP, and exposes GET requests to control an LED using PWM:
+// The program in this sketch attempts to establish a connection to a network
+// over WiFi, creates a server with a static IP, then expose GET requests to
+// control an LED using PWM:
 //
 //     http://<server>/led/on
 //     http://<server>/led/off
