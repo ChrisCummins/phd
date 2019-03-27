@@ -31,8 +31,13 @@ app.DEFINE_string(
 app.DEFINE_integer('num_runs', 30, 'The number of runs for each benchmark.')
 app.DEFINE_integer('cldrive_timeout_seconds', 60,
                    'The number of seconds to allow cldrive to run for.')
-app.DEFINE_integer('batch_size', 1024,
-                   'The number of kernels to process at a time.')
+app.DEFINE_integer(
+    'batch_size', 2048,
+    'The number of kernels to process at a time. A larger batch_size reduces '
+    'the frequency of full table queries, which can be expensive for large '
+    'datasets. However, if running multiple concurrent workers with random '
+    'orders, a larger batch_size increases the chances of workers performing '
+    'redundant work.')
 app.DEFINE_boolean(
     'random_order', True,
     'Select kernels to run in a random order. Randomizing the order can be '
