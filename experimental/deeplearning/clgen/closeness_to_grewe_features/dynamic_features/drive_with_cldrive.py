@@ -43,6 +43,11 @@ app.DEFINE_boolean(
     'Select kernels to run in a random order. Randomizing the order can be '
     'slow for large databases, but is useful when you have multiple '
     'concurrent workers to prevent races.')
+app.DEFINE_boolean(
+    'reverse_order', False,
+    'Select kernels to run in reverse order of their static features ID. If '
+    '--norandom_order, results are ordered by their static features ID in '
+    'ascending values. This flag reverses that order.')
 
 KernelToDrive = collections.namedtuple('KernelToDrive', ['id', 'src'])
 
@@ -66,6 +71,8 @@ def GetBatchOfKernelsToDrive(session: sqlutil.Session,
 
   if FLAGS.random_order:
     q = q.order_by(sql.func.random())
+  elif FLAGS.reverse_order:
+    q = q.order_by(db.DynamicFeatures.static_features_id.desc())
 
   q = q.limit(batch_size)
   return [KernelToDrive(*row) for row in q]
