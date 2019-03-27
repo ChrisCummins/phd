@@ -1,7 +1,7 @@
 """Run kernels in features database using CGO'17 driver and settings."""
 import collections
 import typing
-import subprocess
+
 import sqlalchemy as sql
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
@@ -11,9 +11,9 @@ from gpu.cldrive.legacy import env as cldrive_env
 from gpu.cldrive.proto import cldrive_pb2
 from labm8 import app
 from labm8 import pbutil
+from labm8 import prof
 from labm8 import sqlutil
 from labm8 import system
-from labm8 import prof
 from research.cummins_2017_cgo import opencl_kernel_driver
 
 FLAGS = app.FLAGS
@@ -93,6 +93,7 @@ def DriveKernelAndRecordResults(
                 opencl_env=env.name,
                 hostname=system.HOSTNAME,
                 outcome='NO_KERNELS',
+                run_count=0,
             ))
       return
 
@@ -101,6 +102,7 @@ def DriveKernelAndRecordResults(
     # 'build_opts' is never changed. 'kernel' is not needed because each static
     # features entry is a single kernel.
     df.drop(columns=['instance', 'build_opts', 'kernel'], inplace=True)
+
     # Fix the naming differences between cldrive and the database.
     df.rename(
         columns={
@@ -109,6 +111,13 @@ def DriveKernelAndRecordResults(
             'local_size': 'wgsize'
         },
         inplace=True)
+
+    # Aggregate runtimes and append run_count.
+    group_by_columns = ['opencl_env', 'gsize', 'wgsize']
+    run_counts = df.group_by(group_by_columns).count()['kernel_time_ns']
+    df = df.group_by(group_by_columns).mean()
+    df['run_count'] = run_counts
+
     # Add missing columns.
     df['static_features_id'] = static_features_id
     df['driver'] = db.DynamicFeaturesDriver.CLDRIVE

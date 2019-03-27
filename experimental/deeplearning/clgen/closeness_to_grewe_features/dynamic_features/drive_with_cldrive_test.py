@@ -14,7 +14,7 @@ from labm8 import test
 def _DynamicFeatures(
     static_features: grewe_features_db.StaticFeatures,
     env: cldrive_env.OpenCLEnvironment,
-    outcome: str = 'pass') -> grewe_features_db.DynamicFeatures:
+    outcome: str = 'PASS') -> grewe_features_db.DynamicFeatures:
   return grewe_features_db.DynamicFeatures(
       static_features_id=static_features.id,
       opencl_env=env.name,
@@ -22,6 +22,7 @@ def _DynamicFeatures(
       outcome=outcome,
       gsize=1,
       wgsize=1,
+      run_count=30 if outcome == 'PASS' else 0,
   )
 
 
@@ -62,8 +63,8 @@ def test_DriveKernelAndRecordResults(db: grewe_features_db.Database,
       dynamic_params, num_runs)
 
   with db.Session() as s:
-    assert s.query(grewe_features_db.DynamicFeatures).count() == (
-        len(dynamic_params) * num_runs)
+    assert s.query(
+        grewe_features_db.DynamicFeatures).count() == (len(dynamic_params))
     records = s.query(grewe_features_db.DynamicFeatures).all()
 
     for i, record in enumerate(records):
@@ -71,6 +72,7 @@ def test_DriveKernelAndRecordResults(db: grewe_features_db.Database,
       assert record.opencl_env == env.name
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'PASS'
+      assert record.run_count == num_runs
 
       # FIXME(cec): BYTES !?
       # assert record.gsize == dynamic_params[i // 3].global_size_x
@@ -106,6 +108,7 @@ def test_DriveKernelAndRecordResults_broken_kernel(
     assert record.opencl_env == env.name
     assert record.hostname == system.HOSTNAME
     assert record.outcome == 'PROGRAM_COMPILATION_FAILURE'
+    assert record.run_count == 0
 
     # FIXME(cec): BYTES !?
     # assert record.gsize is None
@@ -142,6 +145,7 @@ def test_DriveKernelAndRecordResults_no_output(
       assert record.opencl_env == env.name
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'NO_OUTPUT'
+      assert record.run_count == 0
 
       # FIXME(cec): BYTES !?
       # assert record.gsize is None
@@ -178,6 +182,7 @@ def test_DriveKernelAndRecordResults_input_insensitive(
       assert record.opencl_env == env.name
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'INPUT_INSENSITIVE'
+      assert record.run_count == 0
 
       # FIXME(cec): BYTES !?
       # assert record.gsize is None

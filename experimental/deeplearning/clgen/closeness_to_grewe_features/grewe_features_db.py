@@ -81,35 +81,13 @@ class DynamicFeaturesDriver(enum.Enum):
   LIBCECL = 1  # //gpu/libcecl
 
 
-# TODO(100M_migration): Remove once 'NewDynamicFeatures' is populated.
-class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+# TODO(100M_migration): Inherit from
+# sqlutil.TablenameFromCamelCapsClassNameMixin and remove __tablename__ once
+# migration is complete.
+class DynamicFeatures(Base):
   """A table of dynamic features."""
-  id: int = sql.Column(sql.Integer, primary_key=True)
-  static_features_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
-  driver: DynamicFeaturesDriver = sql.Column(
-      sql.Enum(DynamicFeaturesDriver), nullable=False)
+  __tablename__ == 'new_dynamic_features'
 
-  # The OpenClEnvironment.name of the device.
-  opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
-  hostname: str = sql.Column(sql.String(32), nullable=False)
-  outcome: str = sql.Column(sql.String(32), nullable=False, index=True)
-
-  # Dynamic params that may not be set if outcome != "PASS".
-  gsize: int = sql.Column(sql.Integer, nullable=True, index=True)
-  wgsize: int = sql.Column(sql.Integer, nullable=True, index=True)
-
-  # Dynamic features that may not be set if outcome != "PASS".
-  work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=True)
-  work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=True)
-  transferred_bytes: int = sql.Column(sql.BigInteger, nullable=True)
-  transfer_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
-  kernel_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
-
-
-# TODO(100M_migration): Rename to 'DynamicFeatures'.
-class NewDynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-  """A table of dynamic features."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   # Many-to-one mapping of dynamic features per static features.
   static_features_id: int = sql.Column(
@@ -330,64 +308,26 @@ class Database(sqlutil.Database):
     Returns:
       A query.
     """
-    subquery = session.query(
-        # Group-by columns.
+    query = session.query(
         DynamicFeatures.static_features_id,
         DynamicFeatures.driver,
         DynamicFeatures.gsize,
         DynamicFeatures.wgsize,
         DynamicFeatures.transferred_bytes,
-        # Aggregated columns.
-        sql.func.count(DynamicFeatures.transfer_time_ns).label("run_count"),
-        sql.func.min(DynamicFeatures.transfer_time_ns).label("min_transfer_ns"),
-        sql.sql.cast(
-            sql.func.round(sql.func.avg(DynamicFeatures.transfer_time_ns)),
-            sql.BigInteger).label("avg_transfer_ns"),
-        sql.func.max(DynamicFeatures.transfer_time_ns).label("max_transfer_ns"),
-        sql.func.min(DynamicFeatures.kernel_time_ns).label("min_kernel_ns"),
-        sql.sql.cast(
-            sql.func.round(sql.func.avg(DynamicFeatures.kernel_time_ns)),
-            sql.BigInteger).label("avg_kernel_ns"),
-        sql.func.max(DynamicFeatures.kernel_time_ns).label("max_kernel_ns"),
-        sql.func.min(DynamicFeatures.transfer_time_ns +
-                     DynamicFeatures.kernel_time_ns).label("min_runtime_ns"),
-        sql.sql.cast(
-            sql.func.round(
-                sql.func.avg(DynamicFeatures.transfer_time_ns +
-                             DynamicFeatures.kernel_time_ns)),
-            sql.BigInteger).label("avg_runtime_ns"),
-        sql.func.max(DynamicFeatures.transfer_time_ns +
-                     DynamicFeatures.kernel_time_ns).label("max_runtime_ns"),
-    ).filter(DynamicFeatures.outcome == 'PASS')
+        DynamicFeatures.transfer_time_ns,
+        DynamicFeatures.kernel_time_ns,
+        # Runtime is the summation of average transfer and kernel execution
+        # times.
+        (DynamicFeatures.transfer_time_ns + DynamicFeatures.kernel_time_ns
+        ).label('runtime_ns'),
+        DynamicFeatures.run_count,
+    ).filter(DynamicFeatures.outcome == 'PASS',
+             DynamicFeatures.run_count >= min_run_count)
 
     if opencl_env:
-      subquery = subquery.filter(DynamicFeatures.opencl_env == opencl_env)
+      query = query.filter(DynamicFeatures.opencl_env == opencl_env)
 
-    subquery = subquery.group_by(
-        DynamicFeatures.static_features_id,
-        DynamicFeatures.driver,
-        DynamicFeatures.gsize,
-        DynamicFeatures.wgsize,
-        DynamicFeatures.transferred_bytes,
-    ).subquery(name='features_aggregate')
-
-    return session.query(
-        subquery.c.static_features_id,
-        subquery.c.driver,
-        subquery.c.gsize,
-        subquery.c.wgsize,
-        subquery.c.transferred_bytes,
-        subquery.c.run_count,
-        subquery.c.min_transfer_ns,
-        subquery.c.avg_transfer_ns,
-        subquery.c.max_transfer_ns,
-        subquery.c.min_kernel_ns,
-        subquery.c.avg_kernel_ns,
-        subquery.c.max_kernel_ns,
-        subquery.c.min_runtime_ns,
-        subquery.c.avg_runtime_ns,
-        subquery.c.max_runtime_ns,
-    ).filter(subquery.c.run_count >= min_run_count)
+    return query
 
   @classmethod
   def CpuGpuOracleMapping(cls,
@@ -417,18 +357,18 @@ class Database(sqlutil.Database):
         cpu_q.c.gsize,
         cpu_q.c.wgsize,
         cpu_q.c.transferred_bytes,
-        cpu_q.c.avg_runtime_ns.label('cpu_runtime_ns'),
-        gpu_q.c.avg_runtime_ns.label('gpu_runtime_ns'),
-        sql.func.if_(cpu_q.c.avg_runtime_ns < gpu_q.c.avg_runtime_ns,
+        cpu_q.c.runtime_ns.label('cpu_runtime_ns'),
+        gpu_q.c.runtime_ns.label('gpu_runtime_ns'),
+        sql.func.if_(cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
                      sql.sql.literal('CPU'),
                      sql.sql.literal('GPU')).label("oracle"),
-        sql.func.if_(cpu_q.c.avg_runtime_ns < gpu_q.c.avg_runtime_ns,
-                     cpu_q.c.avg_runtime_ns,
-                     gpu_q.c.avg_runtime_ns).label("oracle_runtime_ns"),
-        sql.func.if_(cpu_q.c.avg_runtime_ns < gpu_q.c.avg_runtime_ns,
-                     gpu_q.c.avg_runtime_ns / cpu_q.c.avg_runtime_ns,
-                     cpu_q.c.avg_runtime_ns /
-                     gpu_q.c.avg_runtime_ns).label("max_speedup"),
+        sql.func.if_(cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
+                     cpu_q.c.runtime_ns,
+                     gpu_q.c.runtime_ns).label("oracle_runtime_ns"),
+        sql.func.if_(
+            cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
+            gpu_q.c.runtime_ns / cpu_q.c.runtime_ns,
+            cpu_q.c.runtime_ns / gpu_q.c.runtime_ns).label("max_speedup"),
     ).join(
         gpu_q,
         sql.sql.and_(
@@ -478,7 +418,7 @@ class Database(sqlutil.Database):
     return session.query(
         devmap.c.gsize,
         devmap.c.wgsize,
-        # demap column must appear first to anchor the FROM object in the join.
+        # devmap column must appear first to anchor the FROM object in the join.
         sql.sql.literal(dataset_name).label('cpu_gpu_mapping_set_name'),
         StaticFeatures.id.label('static_features_id'),
         StaticFeatures.origin,
