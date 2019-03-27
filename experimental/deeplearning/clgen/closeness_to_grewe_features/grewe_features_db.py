@@ -115,7 +115,7 @@ class NewDynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   static_features_id: int = sql.Column(
       sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
   driver: DynamicFeaturesDriver = sql.Column(
-      sql.Enum(DynamicFeaturesDriver), nullable=False)
+      sql.Enum(DynamicFeaturesDriver), nullable=False, index=True)
 
   # The OpenClEnvironment.name of the device.
   opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
