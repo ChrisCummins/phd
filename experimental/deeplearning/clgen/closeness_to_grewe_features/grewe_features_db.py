@@ -433,7 +433,7 @@ class Database(sqlutil.Database):
         devmap.c.wgsize,
         # demap column must appear first to anchor the FROM object in the join.
         sql.sql.literal(dataset_name).label('cpu_gpu_mapping_set_name'),
-        StaticFeatures.id,
+        StaticFeatures.id.label('static_features_id'),
         StaticFeatures.origin,
         devmap.c.driver,
         devmap.c.transferred_bytes,
