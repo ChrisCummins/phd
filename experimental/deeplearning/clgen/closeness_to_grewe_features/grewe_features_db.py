@@ -81,6 +81,7 @@ class DynamicFeaturesDriver(enum.Enum):
   LIBCECL = 1  # //gpu/libcecl
 
 
+# TODO(100M_migration): Remove once 'NewDynamicFeatures' is populated.
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of dynamic features."""
   id: int = sql.Column(sql.Integer, primary_key=True)
@@ -104,6 +105,35 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   transferred_bytes: int = sql.Column(sql.BigInteger, nullable=True)
   transfer_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
   kernel_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
+
+
+# TODO(100M_migration): Rename to 'DynamicFeatures'.
+class NewDynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  """A table of dynamic features."""
+  id: int = sql.Column(sql.Integer, primary_key=True)
+  # Many-to-one mapping of dynamic features per static features.
+  static_features_id: int = sql.Column(
+      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
+  driver: DynamicFeaturesDriver = sql.Column(
+      sql.Enum(DynamicFeaturesDriver), nullable=False)
+
+  # The OpenClEnvironment.name of the device.
+  opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
+  hostname: str = sql.Column(sql.String(32), nullable=False)
+  outcome: str = sql.Column(sql.String(32), nullable=False, index=True)
+
+  # Dynamic params that may not be set if outcome != "PASS".
+  gsize: int = sql.Column(sql.Integer, nullable=True, index=True)
+  wgsize: int = sql.Column(sql.Integer, nullable=True, index=True)
+
+  # Dynamic features that may not be set if outcome != "PASS".
+  work_item_local_mem_size: int = sql.Column(sql.Integer, nullable=True)
+  work_item_private_mem_size: int = sql.Column(sql.Integer, nullable=True)
+  transferred_bytes: int = sql.Column(sql.BigInteger, nullable=True)
+  # Averages over 'run_count' runs.
+  transfer_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
+  kernel_time_ns: int = sql.Column(sql.BigInteger, nullable=True)
+  run_count: int = sql.Column(sql.Integer, nullable=False)
 
 
 class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
@@ -154,35 +184,52 @@ class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   max_speedup: float = sql.Column(sql.Float, nullable=False)
 
 
-# TODO(cec): Implement!
-# class CpuGpuClassificationResult(
-#     Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-#   id: int = sql.Column(sql.Integer, primary_key=True)
-#   cpu_gpu_mapping_set_name: str = sql.Column(
-#      sql.String(128),
-#      sql.ForeignKey(CpuGpuMappingSet.cpu_gpu_mapping_set_name),
-#      nullable=False)
-#   # A stringifed JSON blob.
-#   dataset_params: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-#                                    nullable=False)
-#
-#   num_training_examples: int = sql.Column(sql.Integer, nullable=False)
-#   num_validation_examples: int = sql.Column(sql.Integer, nullable=False)
-#   num_test_examples: int = sql.Column(sql.Integer, nullable=False)
-#
-#   # The ratio of examples that belong to 'GPU' class.
-#   training_gpu_ratio: float = sql.Column(sql.Float, nullable=False)
-#   training_gpu_ratio: float = sql.Column(sql.Float, nullable=False)
-#
-#   model_name: str = sql.Column(sql.String(128), nullable=False)
-#   # A stringifed JSON blob.
-#   model_params: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-#                                  nullable=False)
-#
-#   # The elapsed time for training and inference.
-#   training_time_ms: int = sql.Column(sql.Integer, nullable=False)
-#   validation_time_ms: int = sql.Column(sql.Integer, nullable=False)
-#   test_time_ms: int = sql.Column(sql.Integer, nullable=False)
+class CpuGpuClassificationResult(Base,
+                                 sqlutil.TablenameFromCamelCapsClassNameMixin):
+  id: int = sql.Column(sql.Integer, primary_key=True)
+  cpu_gpu_mapping_set_name: str = sql.Column(
+      sql.String(128),
+      sql.ForeignKey(CpuGpuMappingSet.cpu_gpu_mapping_set_name),
+      nullable=False)
+
+  # A stringified JSON blob.
+  dataset_stable_params: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  dataset_stable_params_hexmd5: str = sql.Column(
+      sql.String(32), nullable=False)  # MD5(dataset_stable_params) hex.
+  # "Volatile" params are parameters that are assumed to change without
+  # fundamentally affecting the behavior of the algorithm, e.g. a random seed
+  # number.
+  # A stringified JSON blob.
+  dataset_volatile_params: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+
+  num_training_examples: int = sql.Column(sql.Integer, nullable=False)
+  num_validation_examples: int = sql.Column(sql.Integer, nullable=False)
+  num_test_examples: int = sql.Column(sql.Integer, nullable=False)
+
+  # The ratio of examples that belong to 'GPU' class.
+  training_gpu_ratio: float = sql.Column(sql.Float, nullable=False)
+  training_gpu_ratio: float = sql.Column(sql.Float, nullable=False)
+
+  model_name: str = sql.Column(sql.String(128), nullable=False)
+
+  # A stringified JSON blob.
+  model_stable_params: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  model_stable_params_hexmd5: str = sql.Column(
+      sql.String(32), nullable=False)  # MD5(model_stable_params) hex.
+  # "Volatile" params are parameters that are assumed to change without
+  # fundamentally affecting the behavior of the algorithm, e.g. a random seed
+  # number.
+  # A stringified JSON blob.
+  model_volatile_params: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+
+  # The elapsed time for training and inference.
+  training_time_ms: int = sql.Column(sql.Integer, nullable=False)
+  validation_time_ms: int = sql.Column(sql.Integer, nullable=False)
+  test_time_ms: int = sql.Column(sql.Integer, nullable=False)
 
 
 def _DatabaseImporterWorker(
