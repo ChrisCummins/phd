@@ -3,7 +3,7 @@
 py_library(
     name = "conftest",
     testonly = 1,
-    srcs = ["conftest"],
+    srcs = ["conftest.py"],
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//gpu/cldrive/legacy:env",
