@@ -322,7 +322,7 @@ class Database(sqlutil.Database):
         DynamicFeatures.gsize,
         DynamicFeatures.wgsize,
         DynamicFeatures.transferred_bytes,
-    ).subquery()
+    ).subquery(name='features_aggregate')
 
     return session.query(
         subquery.c.static_features_id,
@@ -359,8 +359,10 @@ class Database(sqlutil.Database):
     Returns:
       A query.
     """
-    cpu_q = cls.AggregateRuntimes(session, cpu, min_run_count).subquery()
-    gpu_q = cls.AggregateRuntimes(session, gpu, min_run_count).subquery()
+    cpu_q = cls.AggregateRuntimes(session, cpu,
+                                  min_run_count).subquery(name='cpu')
+    gpu_q = cls.AggregateRuntimes(session, gpu,
+                                  min_run_count).subquery(name='gpu')
 
     return session.query(
         cpu_q.c.static_features_id,
@@ -413,7 +415,7 @@ class Database(sqlutil.Database):
       raise ValueError("Dataset name {dataset_name} already exists")
 
     devmap = cls.CpuGpuOracleMapping(session, cpu, gpu,
-                                     min_run_count).subquery()
+                                     min_run_count).subquery(name='devmap')
 
     grewe1 = (devmap.c.transferred_bytes /
               (StaticFeatures.grewe_compute_operation_count +
