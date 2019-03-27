@@ -69,22 +69,22 @@ def test_DriveKernelAndRecordResults(db: grewe_features_db.Database,
     records = s.query(grewe_features_db.DynamicFeatures).all()
 
     for i, record in enumerate(records):
+      print("Testing record", i, record)
       assert record.static_features_id == 0
       assert record.opencl_env == env.name
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'PASS'
       assert record.run_count == num_runs
 
-      # FIXME(cec): BYTES !?
-      # assert record.gsize == dynamic_params[i // 3].global_size_x
-      # assert record.wgsize == dynamic_params[i // 3].local_size_x
+      assert record.gsize == dynamic_params[i].global_size_x
+      assert record.wgsize == dynamic_params[i].local_size_x
 
-      # assert record.work_item_local_mem_size == 0
-      # assert record.work_item_private_mem_size == 0
-      # assert record.transferred_bytes == (
-      #     4 * dynamic_params[i // 3].global_size_x)
-      # assert record.transfer_time_ns >= 1000
-      # assert record.kernel_time_ns >= 1000
+      assert record.work_item_local_mem_size == 0
+      assert record.work_item_private_mem_size == 0
+      assert record.transferred_bytes == (
+          2 * 4 * dynamic_params[i].global_size_x)
+      assert record.transfer_time_ns >= 100  # Flaky but likely.
+      assert record.kernel_time_ns >= 100  # Flaky but likely.
 
 
 @pytest.mark.parametrize('num_runs', [3, 5, 10])
@@ -110,15 +110,14 @@ def test_DriveKernelAndRecordResults_broken_kernel(
     assert record.hostname == system.HOSTNAME
     assert record.outcome == 'PROGRAM_COMPILATION_FAILURE'
 
-    # FIXME(cec): BYTES !?
-    # assert record.gsize is None
-    # assert record.wgsize is None
+    assert record.gsize is None
+    assert record.wgsize is None
 
-    # assert record.work_item_local_mem_size is None
-    # assert record.work_item_private_mem_size is None
-    # assert record.transferred_bytes is None
-    # assert record.transfer_time_ns is None
-    # assert record.kernel_time_ns is None
+    assert record.work_item_local_mem_size is None
+    assert record.work_item_private_mem_size is None
+    assert record.transferred_bytes is None
+    assert record.transfer_time_ns is None
+    assert record.kernel_time_ns is None
 
 
 @pytest.mark.parametrize('num_runs', [3, 5, 10])
@@ -146,15 +145,14 @@ def test_DriveKernelAndRecordResults_no_output(
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'NO_OUTPUT'
 
-      # FIXME(cec): BYTES !?
-      # assert record.gsize is None
-      # assert record.wgsize is None
+      assert record.gsize == dynamic_params[i].global_size_x
+      assert record.wgsize == dynamic_params[i].local_size_x
 
-      # assert record.work_item_local_mem_size is None
-      # assert record.work_item_private_mem_size is None
-      # assert record.transferred_bytes is None
-      # assert record.transfer_time_ns is None
-      # assert record.kernel_time_ns is None
+      assert record.work_item_local_mem_size == 0
+      assert record.work_item_private_mem_size == 0
+      assert record.transferred_bytes is None
+      assert record.transfer_time_ns is None
+      assert record.kernel_time_ns is None
 
 
 @pytest.mark.parametrize('num_runs', [3, 5, 10])
@@ -182,15 +180,14 @@ def test_DriveKernelAndRecordResults_input_insensitive(
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'INPUT_INSENSITIVE'
 
-      # FIXME(cec): BYTES !?
-      # assert record.gsize is None
-      # assert record.wgsize is None
+      assert record.gsize == dynamic_params[i].global_size_x
+      assert record.wgsize == dynamic_params[i].local_size_x
 
-      # assert record.work_item_local_mem_size is None
-      # assert record.work_item_private_mem_size is None
-      # assert record.transferred_bytes is None
-      # assert record.transfer_time_ns is None
-      # assert record.kernel_time_ns is None
+      assert record.work_item_local_mem_size == 0
+      assert record.work_item_private_mem_size == 0
+      assert record.transferred_bytes is None
+      assert record.transfer_time_ns is None
+      assert record.kernel_time_ns is None
 
 
 if __name__ == '__main__':

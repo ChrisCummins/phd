@@ -133,7 +133,7 @@ def DriveKernelAndRecordResults(
     # integer column values are >= 0, so this value will never occur normally.
     # See: https://github.com/pandas-dev/pandas/issues/3729
     nan_placeholder = -1
-    df.fillna(nan_placeholder, inplace=True)
+    df[['gsize', 'wgsize']] = df[['gsize', 'wgsize']].fillna(nan_placeholder)
 
     # Aggregate runtimes and append run_count.
     groupby_columns = ['opencl_env', 'gsize', 'wgsize', 'outcome']
@@ -144,7 +144,8 @@ def DriveKernelAndRecordResults(
 
     # Now that we have done the groupby, replace the NaN placeholder values
     # with true NaN.
-    df.replace(nan_placeholder, np.nan)
+    df[['gsize', 'wgsize']] = df[['gsize', 'wgsize']].replace(
+        nan_placeholder, np.nan)
 
     # Add missing columns.
     df['static_features_id'] = static_features_id
