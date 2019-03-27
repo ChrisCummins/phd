@@ -135,8 +135,7 @@ def RunEnv(cldrive_environment: cldrive_env.OpenCLEnvironment,
           ) -> typing.Dict[str, str]:
   """Return an execution environment for a libcecl benchmark."""
   env = (os_env or os.environ).copy()
-  env['LD_LIBRARY_PATH'] = str(libcecl_compile.LIBCECL_SO.parent)
-  env['DYLD_LIBRARY_PATH'] = str(libcecl_compile.LIBCECL_SO.parent)
+  env.update(libcecl_compile.LibCeclExecutableEnvironmentVariables())
   env['LIBCECL_DEVICE'] = cldrive_environment.device_name
   env['LIBCECL_PLATFORM'] = cldrive_environment.platform_name
   return env

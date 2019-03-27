@@ -98,6 +98,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "libcecl_compile_test",
+    srcs = ["libcecl_compile_test.py"],
+    deps = [
+        ":libcecl_compile",
+        "//compilers/llvm:clang",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_library(
     name = "libcecl_runtime",
     srcs = ["libcecl_runtime.py"],

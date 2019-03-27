@@ -58,7 +58,22 @@ def OpenClCompileAndLinkFlags(
 def LibCeclCompileAndLinkFlags(
     opencl_headers: bool = True
 ) -> typing.Tuple[typing.List[str], typing.List[str]]:
-  """Get device-specific LibCecl compile and link flags."""
+  """Get device-specific LibCecl compile and link flags.
+
+  WARNING: Executable compiled with these flags must be executed with the
+  environment variables from LibCeclExecutableEnvironmentVariables() to set a
+  correct LD_LIBRARY_PATH!
+  """
   cflags, ldflags = OpenClCompileAndLinkFlags(opencl_headers=opencl_headers)
   return (cflags + ['-isystem', str(LIBCECL_HEADER.parent)],
           ldflags + ['-lcecl', f'-L{LIBCECL_SO.parent}'])
+
+
+def LibCeclExecutableEnvironmentVariables() -> typing.Dict[str, str]:
+  """Return environemnt variables which must be used when executing libcecl
+  binaries.
+  """
+  return {
+      'LD_LIBRARY_PATH': str(LIBCECL_SO.parent),
+      'DYLD_LIBRARY_PATH': str(LIBCECL_SO.parent),
+  }
