@@ -55,7 +55,7 @@ def test_BenchmarkSuite_invalid_path_access(benchmark_suite: typing.Callable):
     _ = bs.path
 
 
-class TestBenchmarkObserver(gpgpu.BenchmarkRunObserver):
+class MockBenchmarkObserver(gpgpu.BenchmarkRunObserver):
 
   def __init__(self, stop_after: int = 0):
     self.logs = []
@@ -66,8 +66,8 @@ class TestBenchmarkObserver(gpgpu.BenchmarkRunObserver):
     return not (self.stop_after > 0 and len(self.logs) >= self.stop_after)
 
 
-def test_TestBenchmarkObserver():
-  observer = TestBenchmarkObserver(3)
+def test_MockBenchmarkObserver():
+  observer = MockBenchmarkObserver(3)
   assert observer.OnBenchmarkRun('a')
   assert observer.OnBenchmarkRun('b')
   assert not observer.OnBenchmarkRun('c')
@@ -80,7 +80,7 @@ def test_BenchmarkSuite_integration_test(benchmark_suite: typing.Callable,
   """Test compilation and execution of benchmark suite using oclgrind."""
   with benchmark_suite() as bs:
     bs.ForceOpenCLEnvironment(cldrive_env.OclgrindOpenCLEnvironment())
-    observer = TestBenchmarkObserver(stop_after=1)
+    observer = MockBenchmarkObserver(stop_after=1)
     bs.Run([observer])
 
     assert len(observer.logs) == 1
