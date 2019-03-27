@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <cl.h>
+#include "third_party/opencl/cl.h"
 
 //
 //  define VERBOSE if you want to print info about work groups sizes
@@ -25,11 +25,11 @@ extern int err_code(cl_int);
 #endif
 
 int output_device_info(cl_device_id device_id) {
-  int err; // error code returned from OpenCL calls
-  cl_device_type device_type; // The type of the compute device
-  cl_uint comp_units; // the max number of compute units on a device
-  cl_char vendor_name[1024] = {0}; // vendor name for compute device
-  cl_char device_name[1024] = {0}; // name of compute device
+  int err;                     // error code returned from OpenCL calls
+  cl_device_type device_type;  // The type of the compute device
+  cl_uint comp_units;          // the max number of compute units on a device
+  cl_char vendor_name[1024] = {0};  // vendor name for compute device
+  cl_char device_name[1024] = {0};  // name of compute device
 #ifdef VERBOSE
   cl_uint max_work_itm_dims;
   size_t max_wrkgrp_size;
@@ -52,7 +52,7 @@ int output_device_info(cl_device_id device_id) {
     return EXIT_FAILURE;
   }
 
-  if(device_type  == CL_DEVICE_TYPE_GPU)
+  if (device_type == CL_DEVICE_TYPE_GPU)
     printf(" GPU from ");
   else if (device_type == CL_DEVICE_TYPE_CPU)
     printf("\n CPU from ");
@@ -67,7 +67,7 @@ int output_device_info(cl_device_id device_id) {
     return EXIT_FAILURE;
   }
 
-  printf(" %s ",vendor_name);
+  printf(" %s ", vendor_name);
   err = clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint),
                         &comp_units, NULL);
 
@@ -76,47 +76,52 @@ int output_device_info(cl_device_id device_id) {
     return EXIT_FAILURE;
   }
 
-  printf(" with a max of %d compute units \n",comp_units);
+  printf(" with a max of %d compute units \n", comp_units);
 
 #ifdef VERBOSE
   //
   // Optionally print information about work group sizes
   //
-  err = clGetDeviceInfo( device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
-                         sizeof(cl_uint), &max_work_itm_dims, NULL);
+  err = clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
+                        sizeof(cl_uint), &max_work_itm_dims, NULL);
   if (err != CL_SUCCESS) {
-    printf("Error: Failed to get device Info "
-           "(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS)!\n", err_code(err));
+    printf(
+        "Error: Failed to get device Info "
+        "(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS)!\n",
+        err_code(err));
     return EXIT_FAILURE;
   }
 
-  max_loc_size = (size_t*)malloc(max_work_itm_dims * sizeof(size_t));
-  if(max_loc_size == NULL) {
+  max_loc_size = (size_t *)malloc(max_work_itm_dims * sizeof(size_t));
+  if (max_loc_size == NULL) {
     printf(" malloc failed\n");
     return EXIT_FAILURE;
   }
 
   err = clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES,
-                        max_work_itm_dims * sizeof(size_t), max_loc_size,
-                        NULL);
+                        max_work_itm_dims * sizeof(size_t), max_loc_size, NULL);
   if (err != CL_SUCCESS) {
-    printf("Error: Failed to get device Info "
-           "(CL_DEVICE_MAX_WORK_ITEM_SIZES)!\n", err_code(err));
+    printf(
+        "Error: Failed to get device Info "
+        "(CL_DEVICE_MAX_WORK_ITEM_SIZES)!\n",
+        err_code(err));
     return EXIT_FAILURE;
   }
   err = clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE,
                         sizeof(size_t), &max_wrkgrp_size, NULL);
   if (err != CL_SUCCESS) {
-    printf("Error: Failed to get device Info "
-           "(CL_DEVICE_MAX_WORK_GROUP_SIZE)!\n", err_code(err));
+    printf(
+        "Error: Failed to get device Info "
+        "(CL_DEVICE_MAX_WORK_GROUP_SIZE)!\n",
+        err_code(err));
     return EXIT_FAILURE;
   }
   printf("work group, work item information");
   printf("\n max loc dim ");
-  for(int i = 0; i < max_work_itm_dims; i++)
-    printf(" %d ", (int)(*(max_loc_size+i)));
+  for (int i = 0; i < max_work_itm_dims; i++)
+    printf(" %d ", (int)(*(max_loc_size + i)));
   printf("\n");
-  printf(" Max work group size = %d\n",(int)max_wrkgrp_size);
+  printf(" Max work group size = %d\n", (int)max_wrkgrp_size);
 #endif
 
   return CL_SUCCESS;

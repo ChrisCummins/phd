@@ -32,14 +32,14 @@
 #pragma GCC diagnostic ignored "-Wreserved-id-macro"
 #define __CL_ENABLE_EXCEPTIONS
 #pragma GCC diagnostic pop
-#include <cl.hpp>
+#include "third_party/opencl/cl.hpp"
 #endif  // use_opencl
 
 // output image dimensions:
 static const size_t scale = 5000;
 static const auto width = static_cast<size_t>(1.5 * scale),
-  height = static_cast<size_t>(1.3 * scale),
-  size = width * height;
+                  height = static_cast<size_t>(1.3 * scale),
+                  size = width * height;
 
 // mandelbrot parameters:
 static const float start_x = -2.0f, end_x = .75f;
@@ -86,9 +86,8 @@ __kernel void mandelbrot(__global unsigned char* out,
 })";
 #endif  // use_opencl
 
-template<typename T,
-         typename Y = int,
-         typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+template <typename T, typename Y = int,
+          typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 auto ndigits(T number) {
   Y digits = 0;
   while (number) {
@@ -115,28 +114,25 @@ int main() {
     const auto filesize = headerlen + size * 3 * sizeof(char);
     fd = open("011-big-mandelbrot.ppm", O_RDWR | O_CREAT | O_TRUNC,
               static_cast<mode_t>(0600));
-    if (fd == -1)
-      throw std::runtime_error{"couldn't open file"};
+    if (fd == -1) throw std::runtime_error{"couldn't open file"};
     if (lseek(fd, static_cast<off_t>(filesize - 1u), SEEK_SET) == -1)
       throw std::runtime_error{"couldn't stretch file file"};
     if (write(fd, "", 1) == -1)
       throw std::runtime_error{"couldn't write last byte of file"};
-    char *map = static_cast<char*>(
+    char* map = static_cast<char*>(
         mmap(0, filesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
-    if (map == MAP_FAILED)
-      throw std::runtime_error{"couldn't map file"};
+    if (map == MAP_FAILED) throw std::runtime_error{"couldn't map file"};
     char* f = map;
 
     // print stuff
     std::cout << "image size " << width << " x " << height << " px, "
-              << "file size: " << filesize / 1024.0 / 1024 << " Mb"
-              << std::endl << std::endl;
+              << "file size: " << filesize / 1024.0 / 1024 << " Mb" << std::endl
+              << std::endl;
 
     // Write file header
     const char* h = header.str().c_str();
-    while (*h)
-      *f++ = *h++;
-#else  // ndef use_mmap
+    while (*h) *f++ = *h++;
+#else   // ndef use_mmap
     std::ofstream file;
     file.open("011-big-mandelbrot.ppm");
     file << header.str();
@@ -150,10 +146,9 @@ int main() {
     cl::Context context{CL_DEVICE_TYPE_DEFAULT};
     cl::Program program(context, mandelbrot_kernel, true);
     cl::CommandQueue queue(context);
-    auto kern = cl::make_kernel<cl::Buffer,
-                                float, float, float, float,
-                                size_t, size_t, size_t,
-                                unsigned int>(program, "mandelbrot");
+    auto kern =
+        cl::make_kernel<cl::Buffer, float, float, float, float, size_t, size_t,
+                        size_t, unsigned int>(program, "mandelbrot");
     auto out = cl::Buffer(context, std::begin(buf), std::end(buf), true);
 #endif  // use_opencl
 
@@ -168,22 +163,20 @@ int main() {
       // print
       const auto blocknum = i / bsize + 1;
       std::cout << "\r[" << std::setw(3)
-                << static_cast<int>((blocknum / static_cast<double>(nblocks))
-                                    * 100) << "%] block "
-                << std::setw(ndig) << blocknum
-                << " of " << nblocks << ", "
-                << std::min(bsize, size - i) << " pixels"
+                << static_cast<int>((blocknum / static_cast<double>(nblocks)) *
+                                    100)
+                << "%] block " << std::setw(ndig) << blocknum << " of "
+                << nblocks << ", " << std::min(bsize, size - i) << " pixels"
                 << std::flush;
-
 
 #ifdef use_opencl
       // OpenCL:
-      kern(cl::EnqueueArgs(queue, cl::NDRange(bsize)),
-           out, start_x, start_y, dx, dy, width, i, size, nmax);
+      kern(cl::EnqueueArgs(queue, cl::NDRange(bsize)), out, start_x, start_y,
+           dx, dy, width, i, size, nmax);
 
       queue.finish();
       cl::copy(queue, out, std::begin(buf), std::end(buf));
-#else  // ndef use_opencl
+#else   // ndef use_opencl
       for (size_t j = 0; j < bsize; j++) {
         const size_t global_id = j + i;
 
@@ -205,7 +198,7 @@ int main() {
           const float scaled = std::max(n / static_cast<float>(nmax), 0.1f);
 
           if (scaled < 1.0) {
-            buf[j * 3    ] = static_cast<unsigned char>(scaled * scaled * 255u);
+            buf[j * 3] = static_cast<unsigned char>(scaled * scaled * 255u);
             buf[j * 3 + 1] = static_cast<unsigned char>(scaled * 128u);
             buf[j * 3 + 2] = static_cast<unsigned char>(scaled * 255u);
           } else {
@@ -217,7 +210,7 @@ int main() {
 
       // Write block to file
       const auto io_begin = std::clock();
-      unsigned char *it = buf;
+      unsigned char* it = buf;
 
       while (it != buf + std::min(bsize, size - i) * 3) {
 #ifdef use_mmap
@@ -227,19 +220,18 @@ int main() {
 #endif
       }
 
-      io_time += (std::clock() - io_begin)
-                 / static_cast<double>(CLOCKS_PER_SEC);
+      io_time +=
+          (std::clock() - io_begin) / static_cast<double>(CLOCKS_PER_SEC);
     }
 
-    auto duration = (std::clock() - timer)
-                    / static_cast<double>(CLOCKS_PER_SEC);
+    auto duration =
+        (std::clock() - timer) / static_cast<double>(CLOCKS_PER_SEC);
     auto px_per_sec = size / (duration - io_time);
 
     std::cout << "\r[100%] processed " << std::ceil(size / bsize) + 1
               << " blocks in " << duration << 's' << std::endl
               << "render rate = " << px_per_sec / 1e6 << " million pixels / s, "
-              << int(std::floor(1 / duration)) << " fps"
-              << std::endl;
+              << int(std::floor(1 / duration)) << " fps" << std::endl;
 
 #ifdef use_mmap
     // write output to disk
@@ -252,13 +244,13 @@ int main() {
     file.close();
 #endif  // use_mmap
   } catch (std::exception& err) {
-    std::cerr << "fatal: " << err.what() << std::endl << std::endl
+    std::cerr << "fatal: " << err.what() << std::endl
+              << std::endl
               << "aborting." << std::endl;
     ret = 1;
   }
 
-  if (fd != -1)
-    close(fd);
+  if (fd != -1) close(fd);
 
   return ret;
 }
