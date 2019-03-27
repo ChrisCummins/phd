@@ -86,7 +86,7 @@ class DynamicFeaturesDriver(enum.Enum):
 # migration is complete.
 class DynamicFeatures(Base):
   """A table of dynamic features."""
-  __tablename__ == 'new_dynamic_features'
+  __tablename__ = 'new_dynamic_features'
 
   id: int = sql.Column(sql.Integer, primary_key=True)
   # Many-to-one mapping of dynamic features per static features.
