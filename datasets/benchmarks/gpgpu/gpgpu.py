@@ -90,6 +90,8 @@ app.DEFINE_boolean(
     "Record each benchmark's stdout and stderr. This "
     "information is not needed to get performance data, and "
     "can be quite large.")
+app.DEFINE_boolean('gpgpu_fail_on_error', False,
+                   'If a benchmark exits with a nonzero return code, fail.')
 
 _RODINIA_DATA_ROOT = bazelutil.DataPath('rodinia_data')
 
@@ -184,6 +186,17 @@ class DumpLogProtoToFileObserver(BenchmarkRunObserver):
   @property
   def log_count(self) -> int:
     return len(self._log_paths)
+
+
+class FailOnErrorObserver(BenchmarkRunObserver):
+  """A benchmark observer that exits on error."""
+
+  def OnBenchmarkRun(self, log: gpgpu_pb2.GpgpuBenchmarkRun) -> bool:
+    """New log callback."""
+    if log.run.returncode:
+      app.Error('Benchmark failed with stderr:\n%s', log.run.stderr)
+      return False
+    return True
 
 
 @contextlib.contextmanager
@@ -861,6 +874,9 @@ def main(argv: typing.List[str]):
       DumpLogProtoToFileObserver(
           pathlib.Path(FLAGS.gpgpu_logdir), FLAGS.gpgpu_log_extension)
   ]
+
+  if FLAGS.gpgpu_fail_on_error:
+    observers.append(FailOnErrorObserver())
 
   for benchmark_suite_class in ResolveBenchmarkSuiteClassesFromNames(
       FLAGS.gpgpu_benchmark_suites):
