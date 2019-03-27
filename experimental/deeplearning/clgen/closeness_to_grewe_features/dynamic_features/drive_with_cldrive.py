@@ -2,6 +2,7 @@
 import collections
 import typing
 
+import numpy as np
 import sqlalchemy as sql
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
@@ -71,6 +72,17 @@ def DriveKernelAndRecordResults(
     dynamic_params: typing.List[cldrive_pb2.DynamicParams],
     num_runs: int) -> None:
   """Drive a single kernel and record results."""
+
+  def ErrorFeatures(outcome: str) -> db.DynamicFeatures:
+    return db.DynamicFeatures(
+        static_features_id=static_features_id,
+        driver=db.DynamicFeaturesDriver.CLDRIVE,
+        opencl_env=env.name,
+        hostname=system.HOSTNAME,
+        outcome=outcome,
+        run_count=0,
+    )
+
   try:
     df = cldrive.DriveToDataFrame(
         cldrive_pb2.CldriveInstances(instance=[
@@ -86,15 +98,7 @@ def DriveKernelAndRecordResults(
     # Record programs which contain no kernels.
     if not len(df):
       with database.Session(commit=True) as session:
-        session.add(
-            db.DynamicFeatures(
-                static_features_id=static_features_id,
-                driver=db.DynamicFeaturesDriver.CLDRIVE,
-                opencl_env=env.name,
-                hostname=system.HOSTNAME,
-                outcome='NO_KERNELS',
-                run_count=0,
-            ))
+        session.add(ErrorFeatures('NO_KERNELS'))
       return
 
     # Remove the columns which are not exported to the database:
@@ -112,16 +116,29 @@ def DriveKernelAndRecordResults(
         },
         inplace=True)
 
+    # NaN values are excluded in groupby statements, and we need to groupby
+    # columns that may be NaN (gsize and wgsize). Replace NaN with -1 since all
+    # integer column values are >= 0, so this value will never occur normally.
+    # See: https://github.com/pandas-dev/pandas/issues/3729
+    nan_placeholder = -1
+    df.fillna(nan_placeholder, inplace=True)
+
     # Aggregate runtimes and append run_count.
-    group_by_columns = ['opencl_env', 'gsize', 'wgsize']
-    run_counts = df.group_by(group_by_columns).count()['kernel_time_ns']
-    df = df.group_by(group_by_columns).mean()
+    groupby_columns = ['opencl_env', 'gsize', 'wgsize', 'outcome']
+    run_counts = df.groupby(groupby_columns).count()['kernel_time_ns']
+    df = df.groupby(groupby_columns).mean()
     df['run_count'] = run_counts
+    df.reset_index(inplace=True)
+
+    # Now that we have done the groupby, replace the NaN placeholder values
+    # with true NaN.
+    df.replace(nan_placeholder, np.nan)
 
     # Add missing columns.
     df['static_features_id'] = static_features_id
     df['driver'] = db.DynamicFeaturesDriver.CLDRIVE
     df['hostname'] = system.HOSTNAME
+
     # Import the dataframe into the SQL table.
     df.to_sql(
         db.DynamicFeatures.__tablename__,
@@ -132,25 +149,11 @@ def DriveKernelAndRecordResults(
     app.Log(1, 'Imported %d dynamic features', len(df))
   except cldrive.CldriveCrash:
     with database.Session(commit=True) as session:
-      session.add(
-          db.DynamicFeatures(
-              static_features_id=static_features_id,
-              driver=db.DynamicFeaturesDriver.CLDRIVE,
-              opencl_env=env.name,
-              hostname=system.HOSTNAME,
-              outcome='DRIVER_CRASH',
-          ))
+      session.add(ErrorFeatures('DRIVER_CRASH'))
     app.Log(1, 'Driver crashed')
   except pbutil.ProtoWorkerTimeoutError:
     with database.Session(commit=True) as session:
-      session.add(
-          db.DynamicFeatures(
-              static_features_id=static_features_id,
-              driver=db.DynamicFeaturesDriver.CLDRIVE,
-              opencl_env=env.name,
-              hostname=system.HOSTNAME,
-              outcome='DRIVER_TIMEOUT',
-          ))
+      session.add(ErrorFeatures('DRIVER_TIMEOUT'))
     app.Log(1, 'Driver timed out')
 
 

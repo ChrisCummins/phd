@@ -26,14 +26,16 @@ def _StaticFeatures(origin: str, src: str) -> grewe_features_db.StaticFeatures:
 def _DynamicFeatures(
     static_features: grewe_features_db.StaticFeatures,
     env: cldrive_env.OpenCLEnvironment,
-    outcome: str = 'pass') -> grewe_features_db.DynamicFeatures:
+    outcome: str = "PASS") -> grewe_features_db.DynamicFeatures:
   return grewe_features_db.DynamicFeatures(
       static_features_id=static_features.id,
       opencl_env=env.name,
       hostname='foo',
+      driver=grewe_features_db.DynamicFeaturesDriver.CLDRIVE,
       outcome=outcome,
       gsize=1,
       wgsize=1,
+      run_count=30 if outcome == "PASS" else 0,
   )
 
 

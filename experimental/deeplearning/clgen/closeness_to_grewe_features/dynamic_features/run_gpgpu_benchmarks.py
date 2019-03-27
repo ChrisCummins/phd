@@ -65,7 +65,7 @@ class DatabaseObserver(gpgpu.BenchmarkRunObserver):
       if origin in self.origin_to_features_id_map:
         static_features_id - self.origin_to_features_id_map[origin]
       else:
-        static_features_id = self.session.query(db.StaticFeatures.static_features_id) \
+        static_features_id = self.session.query(db.StaticFeatures.id) \
           .filter(db.StaticFeatures.origin == origin).one()
         origin_to_features_id_map[origin] = static_features_id
 

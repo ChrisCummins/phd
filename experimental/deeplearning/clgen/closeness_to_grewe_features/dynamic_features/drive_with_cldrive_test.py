@@ -17,6 +17,7 @@ def _DynamicFeatures(
     outcome: str = 'PASS') -> grewe_features_db.DynamicFeatures:
   return grewe_features_db.DynamicFeatures(
       static_features_id=static_features.id,
+      driver=grewe_features_db.DynamicFeaturesDriver.CLDRIVE,
       opencl_env=env.name,
       hostname='foo',
       outcome=outcome,
@@ -108,7 +109,6 @@ def test_DriveKernelAndRecordResults_broken_kernel(
     assert record.opencl_env == env.name
     assert record.hostname == system.HOSTNAME
     assert record.outcome == 'PROGRAM_COMPILATION_FAILURE'
-    assert record.run_count == 0
 
     # FIXME(cec): BYTES !?
     # assert record.gsize is None
@@ -145,7 +145,6 @@ def test_DriveKernelAndRecordResults_no_output(
       assert record.opencl_env == env.name
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'NO_OUTPUT'
-      assert record.run_count == 0
 
       # FIXME(cec): BYTES !?
       # assert record.gsize is None
@@ -182,7 +181,6 @@ def test_DriveKernelAndRecordResults_input_insensitive(
       assert record.opencl_env == env.name
       assert record.hostname == system.HOSTNAME
       assert record.outcome == 'INPUT_INSENSITIVE'
-      assert record.run_count == 0
 
       # FIXME(cec): BYTES !?
       # assert record.gsize is None
