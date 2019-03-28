@@ -1,6 +1,9 @@
 """Unit tests for //labm8/app."""
 
 import pathlib
+import pytest
+
+from absl import flags as absl_flags
 
 from labm8 import app_test_flags
 from labm8 import test
@@ -20,6 +23,13 @@ def test_output_path_flag(tempdir: pathlib.Path):
   FLAGS.unparse_flags()
   FLAGS(['argv[0]', '--output_path_flag', str(tempdir / 'file')])
   assert FLAGS.output_path_flag == pathlib.Path(tempdir / 'file')
+
+
+def test_int_flag_validator():
+  FLAGS.unparse_flags()
+  FLAGS(['argv[0]', '--int_flag_with_validator', '2'])
+  with pytest.raises(absl_flags.IllegalFlagValueError):
+    FLAGS(['argv[0]', '--int_flag_with_validator', '-1'])
 
 
 def test_database_flag(tempdir: pathlib.Path):

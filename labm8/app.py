@@ -186,12 +186,15 @@ def SetLogLevel(level: int) -> None:
 def DEFINE_string(name: str,
                   default: Optional[str],
                   help: str,
-                  required: bool = False):
+                  required: bool = False,
+                  validator: Callable[[str], bool] = None):
   """Registers a flag whose value can be any string."""
   absl_flags.DEFINE_string(
       name, default, help, module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 def DEFINE_integer(name: str,
@@ -199,7 +202,8 @@ def DEFINE_integer(name: str,
                    help: str,
                    required: bool = False,
                    lower_bound: Optional[int] = None,
-                   upper_bound: Optional[int] = None):
+                   upper_bound: Optional[int] = None,
+                   validator: Callable[[int], bool] = None):
   """Registers a flag whose value must be an integer."""
   absl_flags.DEFINE_integer(
       name,
@@ -210,6 +214,8 @@ def DEFINE_integer(name: str,
       upper_bound=upper_bound)
   if required:
     absl_flags.mark_flag_as_required(name)
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 def DEFINE_float(name: str,
@@ -217,7 +223,8 @@ def DEFINE_float(name: str,
                  help: str,
                  required: bool = False,
                  lower_bound: Optional[float] = None,
-                 upper_bound: Optional[float] = None):
+                 upper_bound: Optional[float] = None,
+                 validator: Callable[[float], bool] = None):
   """Registers a flag whose value must be a float."""
   absl_flags.DEFINE_float(
       name,
@@ -228,28 +235,36 @@ def DEFINE_float(name: str,
       upper_bound=upper_bound)
   if required:
     absl_flags.mark_flag_as_required(name)
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 def DEFINE_boolean(name: str,
                    default: Optional[bool],
                    help: str,
-                   required: bool = False):
+                   required: bool = False,
+                   validator: Callable[[bool], bool] = None):
   """Registers a flag whose value must be a boolean."""
   absl_flags.DEFINE_boolean(
       name, default, help, module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 def DEFINE_list(name: str,
                 default: Optional[List[Any]],
                 help: str,
-                required: bool = False):
+                required: bool = False,
+                validator: Callable[[List[Any]], bool] = None):
   """Registers a flag whose value must be a list."""
   absl_flags.DEFINE_list(
       name, default, help, module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 # My custom flag types.
@@ -258,7 +273,8 @@ def DEFINE_list(name: str,
 def DEFINE_input_path(name: str,
                       default: Union[None, str, pathlib.Path],
                       help: str,
-                      is_dir: bool = False):
+                      is_dir: bool = False,
+                      validator: Callable[[pathlib.Path], bool] = None):
   """Registers a flag whose value is an input path.
 
   An "input path" is a path to a file or directory that exists. The parsed value
@@ -283,6 +299,8 @@ def DEFINE_input_path(name: str,
       absl_flags.FLAGS,
       serializer,
       module_name=logging.GetCallingModuleName())
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 def DEFINE_output_path(name: str,
@@ -290,7 +308,8 @@ def DEFINE_output_path(name: str,
                        help: str,
                        is_dir: bool = False,
                        exist_ok: bool = True,
-                       must_exist: bool = False):
+                       must_exist: bool = False,
+                       validator: Callable[[pathlib.Path], bool] = None):
   """Registers a flag whose value is an output path.
 
   An "output path" is a path to a file or directory that may or may not already
@@ -321,13 +340,16 @@ def DEFINE_output_path(name: str,
       absl_flags.FLAGS,
       serializer,
       module_name=logging.GetCallingModuleName())
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 def DEFINE_database(name: str,
                     database_class,
                     default: Optional[str],
                     help: str,
-                    must_exist: bool = False):
+                    must_exist: bool = False,
+                    validator: Callable[[Any], bool] = None):
   """Registers a flag whose value is a sqlutil.Database class.
 
   Unlike other DEFINE_* functions, the value produced by this flag is not an
@@ -354,6 +376,8 @@ def DEFINE_database(name: str,
       absl_flags.FLAGS,
       serializer,
       module_name=logging.GetCallingModuleName())
+  if validator:
+    RegisterFlagValidator(name, validator)
 
 
 def RegisterFlagValidator(flag_name: str,
