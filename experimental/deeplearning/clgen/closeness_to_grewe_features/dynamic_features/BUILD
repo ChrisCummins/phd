@@ -45,6 +45,32 @@ py_test(
 )
 
 py_binary(
+    name = "import_from_legacy_gpgpu",
+    srcs = ["import_from_legacy_gpgpu.py"],
+    deps = [
+        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
+        "//gpu/libcecl:libcecl_runtime",
+        "//gpu/libcecl/proto:libcecl_py_pb2",
+        "//labm8:app",
+        "//labm8:fs",
+    ],
+)
+
+py_test(
+    name = "import_from_legacy_gpgpu_test",
+    srcs = ["import_from_legacy_gpgpu_test.py"],
+    data = ["//experimental/deeplearning/clgen/closeness_to_grewe_features/dynamic_features/tests/data:legacy_gpgpu_logs"],
+    deps = [
+        ":import_from_legacy_gpgpu",
+        "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
+        "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_binary(
     name = "run_gpgpu_benchmarks",
     srcs = ["run_gpgpu_benchmarks.py"],
     deps = [

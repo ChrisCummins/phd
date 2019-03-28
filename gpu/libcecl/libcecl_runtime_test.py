@@ -23,7 +23,7 @@ def test_KernelInvocationsFromCeclLog():
       'clEnqueueMapBuffer ; Buffer ; 1024 ; 2000',
       'clEnqueueNDRangeKernel ; Kernel ; 128 ; 64 ; 3000',
       'clEnqueueTask ; Kernel ; 4000',
-  ], device)
+  ], expected_device_name=device.device_name, expected_devtype=device.device_type)
   assert len(invocations) == 2
 
 
@@ -31,24 +31,14 @@ def test_KernelInvocationsFromCeclLog_different_device_type():
   with pytest.raises(ValueError):
     libcecl_runtime.KernelInvocationsFromCeclLog([
         'clCreateCommandQueue ; GPU ; OpenCL Device',
-    ],
-                                                 cldrive_env.OpenCLEnvironment(
-                                                     clinfo_pb2.OpenClDevice(
-                                                         device_type='CPU',
-                                                         name='OpenCL Device',
-                                                     )))
+    ], expected_devtype='CPU', expected_device_name='OpenCL Device')
 
 
 def test_KernelInvocationsFromCeclLog_different_device_name():
   with pytest.raises(ValueError):
     libcecl_runtime.KernelInvocationsFromCeclLog([
         'clCreateCommandQueue ; CPU ; Different OpenCL Device',
-    ],
-                                                 cldrive_env.OpenCLEnvironment(
-                                                     clinfo_pb2.OpenClDevice(
-                                                         device_type='CPU',
-                                                         name='OpenCL Device',
-                                                     )))
+    ], expected_devtype='CPU', expected_device_name='OpenCL Device')
 
 
 if __name__ == '__main__':

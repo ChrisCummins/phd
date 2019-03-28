@@ -16,6 +16,7 @@ from labm8 import humanize
 from labm8 import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
+
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -233,8 +234,8 @@ def _DatabaseImporterWorker(
 class Database(sqlutil.Database):
   """Database of kernels."""
 
-  def __init__(self, url: str):
-    super(Database, self).__init__(url, Base)
+  def __init__(self, url: str, *args, **kwargs):
+    super(Database, self).__init__(url, Base, *args, **kwargs)
 
   def ImportStaticFeaturesFromPaths(
       self,

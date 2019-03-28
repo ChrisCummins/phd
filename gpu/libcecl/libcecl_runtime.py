@@ -25,11 +25,15 @@ from gpu.libcecl.proto import libcecl_pb2
 from labm8 import app
 from labm8 import labdate
 
+
 FLAGS = app.FLAGS
 
 
 def KernelInvocationsFromCeclLog(
-    cecl_log: typing.List[str], env: cldrive_env.OpenCLEnvironment
+    cecl_log: typing.List[str],
+    expected_devtype: typing.Optional[str] = None,
+    expected_device_name: typing.Optional[str] = None,
+    nanosecond_identity: typing.Callable[[str], int] = int
 ) -> typing.List[libcecl_pb2.OpenClKernelInvocation]:
   """Interpret and parse the output of a libcecl instrumented application.
 
@@ -40,21 +44,20 @@ def KernelInvocationsFromCeclLog(
   Args:
     cecl_log: The lines of output printed by libcecl, with the '[CECL] ' prefix
       stripped. As a list of lines.
-    env: The OpenCL environment used to generate the cecl_log. This is used for
-      validating the contents of cecl_log.
+    expected_devtype: The expected device type, e.g. "GPU" or "CPU".
+    expected_device_name: The expected OpenCL device name.
+    nanosecond_identity: A callable which is invoked for every string runtime
+      in the log.
 
   Raises:
     ValueError: If the device type or name reported in the cecl_log does not
-      match that of the OpenCL environment.
+      match the expected value.
   """
   # Per-benchmark data transfer size and time.
   total_transferred_bytes = 0
   total_transfer_time = 0
 
   kernel_invocations = []
-
-  expected_devtype = 'GPU' if env.device_type.lower() == 'gpu' else 'CPU'
-  expected_device_name = env.device_name
 
   # Iterate over each line in the cec log.
   app.Log(2, 'Processing %d lines of libcecl logs', len(cecl_log))
@@ -70,21 +73,22 @@ def KernelInvocationsFromCeclLog(
     if opcode == "clCreateCommandQueue":
       devtype, devname = operands
 
-      if devname != expected_device_name:
+      # If we don't know the device type, don't check it. This isn't a problem -
+      # not all drivers report device type correctly, e.g. POCL returns a
+      # non-standard device type value.
+      if (expected_device_type and devtype != 'UNKNOWN' and
+          devtype != expected_devtype):
+        raise ValueError(
+            f"Expected device type {expected_devtype} does not match actual "
+            f"device type {devtype}")
+
+      if expected_device_name and devname != expected_device_name:
         raise ValueError(
             f"Expected device name '{expected_device_name}' does not match "
             f"actual device name '{devname}'")
 
-      # If we don't know the device type, don't check it. This isn't a problem -
-      # not all drivers report device type correctly, e.g. POCL returns a
-      # non-standard device type value.
-      if devtype == 'UNKNOWN':
-        devtype = expected_devtype
 
-      if devtype != expected_devtype:
-        raise ValueError(
-            f"Expected device type {expected_devtype} does not match actual "
-            f"device type {devtype}")
+      
     elif opcode == "clEnqueueNDRangeKernel":
       kernel_name, global_size, local_size, elapsed = operands
       kernel_invocations.append(
@@ -92,7 +96,7 @@ def KernelInvocationsFromCeclLog(
               kernel_name=kernel_name,
               global_size=int(global_size),
               local_size=int(local_size),
-              kernel_time_ns=int(elapsed)))
+              kernel_time_ns=nanosecond_identity(elapsed)))
       app.Log(2, 'Extracted clEnqueueNDRangeKernel from log')
     elif opcode == "clEnqueueTask":
       kernel_name, elapsed = operands
@@ -101,7 +105,7 @@ def KernelInvocationsFromCeclLog(
               kernel_name=kernel_name,
               global_size=1,
               local_size=1,
-              kernel_time_ns=int(elapsed)))
+              kernel_time_ns=nanosecond_identity(elapsed)))
       app.Log(2, 'Extracted clEnqueueTask from log')
     elif opcode == "clCreateBuffer":
       size, _, flags = operands
@@ -117,7 +121,7 @@ def KernelInvocationsFromCeclLog(
     elif (opcode == "clEnqueueReadBuffer" or opcode == "clEnqueueWriteBuffer" or
           opcode == "clEnqueueMapBuffer"):
       _, size, elapsed = operands
-      total_transfer_time += int(elapsed)
+      total_transfer_time += nanosecond_identity(elapsed)
     else:
       # Not a line that we're interested in.
       pass
@@ -189,6 +193,7 @@ def RunLibceclExecutable(
       stderr='\n'.join(stderr_lines) if record_outputs else '',
       cecl_log='\n'.join(cecl_lines) if record_outputs else '',
       device=env.proto,
-      kernel_invocation=KernelInvocationsFromCeclLog(cecl_lines, env),
+      kernel_invocation=KernelInvocationsFromCeclLog(
+          cecl_lines, expected_device_name=env.device_type, expected_device_name=env.device_name),
       elapsed_time_ns=int(elapsed * 1e9),
       opencl_program_source=program_sources)
