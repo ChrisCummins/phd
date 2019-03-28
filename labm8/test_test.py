@@ -24,6 +24,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 # The //:conftest is included implicitly when you depend on //labm8:test.
 def test_tempdir_fixture_directory_exists(tempdir: pathlib.Path):
