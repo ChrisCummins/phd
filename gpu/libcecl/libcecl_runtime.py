@@ -25,7 +25,6 @@ from gpu.libcecl.proto import libcecl_pb2
 from labm8 import app
 from labm8 import labdate
 
-
 FLAGS = app.FLAGS
 
 
@@ -76,7 +75,7 @@ def KernelInvocationsFromCeclLog(
       # If we don't know the device type, don't check it. This isn't a problem -
       # not all drivers report device type correctly, e.g. POCL returns a
       # non-standard device type value.
-      if (expected_device_type and devtype != 'UNKNOWN' and
+      if (expected_devtype and devtype != 'UNKNOWN' and
           devtype != expected_devtype):
         raise ValueError(
             f"Expected device type {expected_devtype} does not match actual "
@@ -87,8 +86,6 @@ def KernelInvocationsFromCeclLog(
             f"Expected device name '{expected_device_name}' does not match "
             f"actual device name '{devname}'")
 
-
-      
     elif opcode == "clEnqueueNDRangeKernel":
       kernel_name, global_size, local_size, elapsed = operands
       kernel_invocations.append(
@@ -194,6 +191,8 @@ def RunLibceclExecutable(
       cecl_log='\n'.join(cecl_lines) if record_outputs else '',
       device=env.proto,
       kernel_invocation=KernelInvocationsFromCeclLog(
-          cecl_lines, expected_device_name=env.device_type, expected_device_name=env.device_name),
+          cecl_lines,
+          expected_devtype=env.device_type,
+          expected_device_name=env.device_name),
       elapsed_time_ns=int(elapsed * 1e9),
       opencl_program_source=program_sources)

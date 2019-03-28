@@ -24,6 +24,8 @@ py_binary(
         "//labm8:system",
         "//labm8:text",
         "//research/cummins_2017_cgo:opencl_kernel_driver",
+        "//third_party/py/numpy",
+        "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
     ],
 )
