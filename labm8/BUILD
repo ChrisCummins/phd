@@ -15,7 +15,25 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//config:build_info",
+        "//labm8/internal:flags_parsers",
+        "//labm8/internal:logging",
         "//third_party/py/absl",
+    ],
+)
+
+py_library(
+    name = "app_test_flags",
+    srcs = ["app_test_flags.py"],
+    deps = [":app"],
+)
+
+py_test(
+    name = "app_test",
+    srcs = ["app_test.py"],
+    deps = [
+        ":app",
+        ":app_test_flags",
+        ":test",
     ],
 )
 
@@ -526,10 +544,10 @@ py_library(
     srcs = ["sqlutil.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":app",
         ":labdate",
         ":pbutil",
         ":text",
+        "//third_party/py/absl",
         "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
     ],

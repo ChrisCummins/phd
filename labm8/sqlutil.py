@@ -19,18 +19,19 @@ import typing
 
 import pandas as pd
 import sqlalchemy as sql
+from absl import flags as absl_flags
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-from labm8 import app
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
+from labm8.internal import logging
 
-FLAGS = app.FLAGS
+FLAGS = absl_flags.FLAGS
 
-app.DEFINE_boolean(
+absl_flags.DEFINE_boolean(
     'sqlutil_echo', False,
     'If True, the Engine will log all statements as well as a repr() of their '
     'parameter lists to the engines logger, which defaults to sys.stdout.')
@@ -91,9 +92,8 @@ def GetOrAdd(session: sql.orm.session.Session,
     params.update(defaults or {})
     instance = model(**params)
     session.add(instance)
-    if app.DebugLogging():
-      app.Log(2, 'New record: %s(%s)', model.__name__,
-              ', '.join([f'{k}={v}' for k, v in params.items()]))
+    logging.Log(logging.GetCallingModuleName(), 5, 'New record: %s(%s)',
+                model.__name__, params)
   return instance
 
 
