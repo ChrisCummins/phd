@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Runtime utility code for libcecl binaries."""
+import collections
 import os
 import time
 import typing
@@ -131,6 +132,42 @@ def KernelInvocationsFromCeclLog(
   return kernel_invocations
 
 
+StderrComponents = collections.namedtuple(
+    'StderrComponents', ['stderr', 'cecl_log', 'program_sources'])
+
+
+def SplitStderrComponents(stderr: str) -> StderrComponents:
+  """Split stderr output into components."""
+  program_sources = []
+  current_program_source: typing.Optional[typing.List[str]] = None
+
+  # Split libcecl logs out from stderr.
+  cecl_lines, stderr_lines = [], []
+  in_program_source = False
+  for line in stderr.split('\n'):
+    if line == '[CECL] BEGIN PROGRAM SOURCE':
+      assert not in_program_source
+      in_program_source = True
+      current_program_source = []
+    elif line == '[CECL] END PROGRAM SOURCE':
+      assert in_program_source
+      in_program_source = False
+      program_sources.append('\n'.join(current_program_source).strip())
+      current_program_source = None
+    elif line.startswith('[CECL] '):
+      stripped_line = line[len('[CECL] '):].strip()
+      if in_program_source:
+        # Right strip program sources only, don't left strip since that would
+        # lose indentation.
+        current_program_source.append(line[len('[CECL] '):].rstrip())
+      elif stripped_line:
+        cecl_lines.append(stripped_line)
+    elif line.strip():
+      stderr_lines.append(line.strip())
+
+  return StderrComponents(stderr_lines, cecl_lines, program_sources)
+
+
 def RunEnv(cldrive_environment: cldrive_env.OpenCLEnvironment,
            os_env: typing.Optional[typing.Dict[str, str]] = None
           ) -> typing.Dict[str, str]:
@@ -155,33 +192,8 @@ def RunLibceclExecutable(
   process = env.Exec(command, env=os_env)
   elapsed = time.time() - start_time
 
-  # Record OpenCL kernel sources.
-  program_sources = []
-  current_program_source: typing.Optional[typing.List[str]] = None
-
-  # Split libcecl logs out from stderr.
-  cecl_lines, stderr_lines = [], []
-  in_program_source = False
-  for line in process.stderr.split('\n'):
-    if line == '[CECL] BEGIN PROGRAM SOURCE':
-      assert not in_program_source
-      in_program_source = True
-      current_program_source = []
-    elif line == '[CECL] END PROGRAM SOURCE':
-      assert in_program_source
-      in_program_source = False
-      program_sources.append('\n'.join(current_program_source).strip())
-      current_program_source = None
-    elif line.startswith('[CECL] '):
-      stripped_line = line[len('[CECL] '):].strip()
-      if in_program_source:
-        # Right strip program sources only, don't left strip since that would
-        # lose indentation.
-        current_program_source.append(line[len('[CECL] '):].rstrip())
-      elif stripped_line:
-        cecl_lines.append(stripped_line)
-    elif line.strip():
-      stderr_lines.append(line.strip())
+  stderr_lines, cecl_lines, program_sources = SplitStderrComponents(
+      process.stderr)
 
   return libcecl_pb2.LibceclExecutableRun(
       ms_since_unix_epoch=timestamp,

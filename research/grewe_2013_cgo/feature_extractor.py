@@ -168,7 +168,8 @@ def ExtractFeatures(
   contents = opencl_src.encode('utf-8')
   prefix = 'phd_research_grewe_2013_cgo_feature_extractor_'
   with fs.TemporaryFileWithContents(contents, prefix=prefix) as f:
-    return ExtractFeaturesFromPath(f.name, extra_args, timeout_seconds)
+    return ExtractFeaturesFromPath(
+        pathlib.Path(f.name), extra_args, timeout_seconds)
 
 
 def main(argv):

@@ -55,6 +55,7 @@ py_binary(
         "//gpu/libcecl/proto:libcecl_py_pb2",
         "//labm8:app",
         "//labm8:fs",
+        "//labm8:prof",
     ],
 )
 

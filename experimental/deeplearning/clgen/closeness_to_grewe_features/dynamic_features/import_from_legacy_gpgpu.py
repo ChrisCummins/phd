@@ -2,6 +2,7 @@
 
 import pathlib
 import tempfile
+import typing
 import zipfile
 
 import sqlalchemy as sql
@@ -10,10 +11,12 @@ import numpy as np
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db as db
+from research.grewe_2013_cgo import feature_extractor
 from gpu.libcecl import libcecl_runtime
 from gpu.libcecl.proto import libcecl_pb2
 from labm8 import app
 from labm8 import fs
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -45,9 +48,61 @@ def DynamicFeaturesFromKernelInvocation(
   }
 
 
+def GetFeatureVectors(
+    source
+) -> typing.Dict[str, typing.Tuple[str, feature_extractor.GreweEtAlFeatures]]:
+  """Get a map from kernel name to <source, features> tuples. If feature
+  extraction fails, the returned map is empty.
+  """
+  try:
+    return {
+        features.kernel_name: (source, features)
+        for features in feature_extractor.ExtractFeatures(
+            source, timeout_seconds=5)
+    }
+  except feature_extractor.FeatureExtractionError:
+    return {}
+
+
+def GetFeatureVectorsMap(
+    lines
+) -> typing.Dict[str, typing.Tuple[str, feature_extractor.GreweEtAlFeatures]]:
+  """Get a map from kernel name to <source, features> tuples. If feature
+  extraction fails, the retured map is empty.
+  """
+  program_sources = []
+  current_program_source: typing.Optional[typing.List[str]] = None
+
+  # Split libcecl logs out from stderr.
+  cecl_lines, stderr_lines = [], []
+  in_program_source = False
+  for line in lines:
+    if line == 'BEGIN PROGRAM SOURCE':
+      assert not in_program_source
+      in_program_source = True
+      current_program_source = []
+    elif line == 'END PROGRAM SOURCE':
+      assert in_program_source
+      in_program_source = False
+      program_sources.append('\n'.join(current_program_source).strip())
+      current_program_source = None
+    elif in_program_source:
+      # Right strip program sources only, don't left strip since that would
+      # lose indentation.
+      current_program_source.append(line.rstrip())
+
+  feature_vectors = {}
+  for source in program_sources:
+    feature_vectors.update(GetFeatureVectors(source))
+
+  return feature_vectors
+
+
 def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
                           expected_devtype: str, expected_device_name: str,
                           opencl_env: str, hostname: str) -> None:
+  """Import legacy GPGPU logs to database."""
+  failures = []
   with database.Session() as session:
     origin_to_features_id_map = {}
     rows = []
@@ -73,6 +128,10 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
             else:
               benchmark_name = log_filename_components[-1]
 
+            if benchmark_suite == 'nvidia-4.2' and benchmark_name.startswith(
+                'ocl'):
+              benchmark_name = benchmark_name[len('ocl'):]
+
             log_lines = fs.Read(benchmark_log).split('\n')
             kernel_invocations = libcecl_runtime.KernelInvocationsFromCeclLog(
                 log_lines,
@@ -86,13 +145,37 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
             for kernel_invocation in kernel_invocations:
               origin = (f'benchmarks_{benchmark_suite}:{benchmark_name}:'
                         f'{kernel_invocation.kernel_name}')
-              app.Log(1, 'Looking up static features id for origin `%s`',
-                      origin)
               if origin in origin_to_features_id_map:
                 static_features_id = origin_to_features_id_map[origin]
               else:
-                static_features_id = session.query(db.StaticFeatures.id) \
-                    .filter(db.StaticFeatures.origin == origin).one()[0]
+                ids = session.query(db.StaticFeatures.id) \
+                    .filter(db.StaticFeatures.origin == origin).all()
+                if not ids:
+                  if not origin in failures:
+                    app.Error('Failed to find origin `%s`', origin)
+
+                    failures.append(origin)
+                    # Try and find a matching feature vector by looking in the
+                    # program sources.
+                    with prof.Profile('check static features'):
+                      app.Log(1, 'checking features')
+                      feature_vectors = GetFeatureVectorsMap(log_lines)
+                    if kernel_invocation.kernel_name in feature_vectors:
+                      src, features = feature_vectors[
+                          kernel_invocation.kernel_name]
+                      static_features = db.StaticFeatures.FromSrcOriginAndFeatures(
+                          src, origin, features)
+                      session.add(static_features)
+                      session.commit()
+                      static_features_id = static_features.id
+                      app.Log(
+                          1,
+                          'Found new static feature vector for %s with id %d',
+                          kernel_invocation.kernel_name, static_features_id)
+                    else:
+                      continue
+                else:
+                  static_features_id = ids[0][0]
                 origin_to_features_id_map[origin] = static_features_id
 
               rows.append(
@@ -121,6 +204,10 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
         if_exists='append',
         index=False,
         dtype={'driver': sql.Enum(db.DynamicFeaturesDriver)})
+
+    app.Log(1, "Failed to find features for %d kernels", len(failures))
+    app.Log(1, 'Imported %d records from %d kernels', len(df),
+            len(origin_to_features_id_map))
 
 
 def main():
