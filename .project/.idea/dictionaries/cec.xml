@@ -113,6 +113,7 @@
       <w>stderrs</w>
       <w>stdin</w>
       <w>strcat</w>
+      <w>stringified</w>
       <w>subdirs</w>
       <w>subsamples</w>
       <w>tensorboard</w>
