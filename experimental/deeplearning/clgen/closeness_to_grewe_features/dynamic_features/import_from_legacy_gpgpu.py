@@ -45,6 +45,7 @@ def DynamicFeaturesFromKernelInvocation(
       'transferred_bytes': kernel_invocation.transferred_bytes,
       'transfer_time_ns': kernel_invocation.transfer_time_ns,
       'kernel_time_ns': kernel_invocation.kernel_time_ns,
+      'run_count': 1,
   }
 
 
@@ -186,7 +187,8 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
 
     # Aggregate runtimes and append run_count.
     groupby_columns = ['static_features_id', 'gsize', 'wgsize']
-    run_counts = df.groupby(groupby_columns).count()['kernel_time_ns']
+    run_counts = df[groupby_columns +
+                    ['run_count']].groupby(groupby_columns).sum()['run_count']
     df = df.groupby(groupby_columns).mean()
     df['run_count'] = run_counts
     df.reset_index(inplace=True)
