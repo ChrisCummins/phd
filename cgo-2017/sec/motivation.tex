@@ -9,8 +9,7 @@
   \label{fig:benchmark-suite-distribution}
 \end{figure}
 
-\begin{table*}
-  \scriptsize%
+\begin{table}
   \centering%
   \begin{tabular}{ R{1.5cm} C{1.5cm} C{1.5cm} C{1.5cm} C{1.5cm} C{1.5cm} C{1.5cm} C{1.5cm} }
     \toprule
@@ -25,8 +24,8 @@
   \textbf{SHOC} & 42.9\% & 71.5\% & 74.1\% & 41.4\% & 35.7\% & 81.0\% & -\\
   \end{tabular}
   \caption{Performance relative to the optimal of the \emph{Grewe et al.\ }predictive model across different benchmark suites on an AMD GPU. The columns show the suite used for training; the rows show the suite used for testing.}%
-  \label{tab:benchmark-xval}
-\end{table*}
+  \label{tab:cpu-gpu-benchmarks-crossvalidate}
+\end{table}
 
 In this section we make the argument for synthetic benchmarks. We identified frequently used benchmark suites in a survey of 25 research papers in the field of GPGPU performance tuning from four top tier conferences between 2013--2016: CGO, HiPC, PACT, and PPoPP. We found the average number of benchmarks used in each paper to be 17, and that a small pool of benchmarks suites account for the majority of results, shown in Figure~\ref{fig:benchmark-suite-distribution}. We selected the 7 most frequently used benchmark suites (accounting for 92\% of results), and evaluated the performance of the state of the art \emph{Grewe et   al.}~\cite{Grewe2013} predictive model across each. The model predicts whether running a given OpenCL kernel on the GPU gives better performance than on the CPU. We describe the full experimental methodology in Section~\ref{sec:methodology}.
 

@@ -1,7 +1,6 @@
 \section{Experimental Methodology}\label{sec:methodology}
 
 \begin{table}% tab:features-cgo13
-  \scriptsize%
   \centering%
   \subfloat[Individual code features]{%
     \begin{tabular}{l c l}
@@ -43,7 +42,6 @@
 \paragraph{Benchmarks} As in~\cite{Grewe2013}, we test our model on the NAS Parallel Benchmarks (NPB)~\cite{Bailey1991a}. We use the hand-optimized OpenCL implementation of \citeauthor{Seo2011}~\cite{Seo2011}. In~\cite{Grewe2013} the authors augment the training set of the predictive model with 47 additional kernels taken from 4 GPGPU benchmark suites.  To more fully sample the program space, we use a much larger collection of 142 programs, summarized in Table~\ref{tab:benchmarks}. These additional programs are taken from all 7 of the most frequently used benchmark suites identified in Section~\ref{subsec:motivation}. None of these programs were used to train CLgen. We synthesized 1,000 kernels with CLgen to use as additional benchmarks.
 
 \begin{table}% tab:benchmarks
-  \scriptsize%
   \centering%
   \begin{tabular}{l r r r}
     \toprule
@@ -65,7 +63,6 @@
 \paragraph{Platforms} We evaluate our approach on two 64-bit CPU-GPU systems, detailed in Table~\ref{tab:platforms}. One system has an AMD GPU and uses OpenSUSE 12.3; the other is equipped with an NVIDIA GPU and uses Ubuntu 16.04. Both platforms were unloaded.
 
 \begin{table}% tab:platforms
-  \scriptsize %
   \centering %
   \begin{tabular}{l l l l}
     \toprule

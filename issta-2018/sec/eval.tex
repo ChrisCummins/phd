@@ -4,24 +4,20 @@
 \begin{figure}
 	\centering %
 	\includegraphics[width=.85\columnwidth]{img/clang-crashes}%
-	\vspace{-2em}
 	\caption{%
 		Crash rate of the Clang front-end of every LLVM release in the past 24
 		months compiling 75k DeepSmith kernels.%
 	}%
-	\vspace{-1em}
 	\label{fig:clangs}
 	%
 \end{figure}
 
 \begin{table}
-	\footnotesize %
 	\centering %
 	\caption{%
 		The number of DeepSmith programs which trigger distinct Clang front-end
 		assertions, and the number of programs which trigger unreachables.%
 	}
-	\vspace{-1.5em}
 	\input{tab/clang-assert-counts}
 	\label{tab:clangs}
 \end{table}
@@ -50,8 +46,7 @@
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
   \label{lst:almost-everything-crash}
   }\\%
-  \caption{Example kernels which crash compilers.}%
-  \vspace{-1.1em}
+  \caption{Example OpenCL kernels which crash compilers.}%
 \end{figure}
 
 \noindent
@@ -102,7 +97,6 @@ compiler crashes.
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailThree}}}%
   }\\%
   \caption{Example codes which crash parsers.}%
-  \vspace{-1.1em}
   \label{lst:parser-crashes}
   %
 \end{figure}
@@ -176,7 +170,6 @@ parsing.
   \label{lst:xeon-phi-spin}
   }\\%
   \caption{Example kernels which hang compilers.}%
-  \vspace{-1.3em}
   \label{lst:compiler-hangs}
   %
 \end{figure}
@@ -229,7 +222,6 @@ as ambiguous.
   \label{lst:pocl-undefined-symbols}
   }\\%
   \caption{Example kernels which are miscompiled.}%
-  \vspace{-1.3em}
 \end{figure}
 
 Prior work on compiler test case generation has focused on extensive stress-
@@ -289,7 +281,6 @@ capabilities of DeepSmith and CLSmith.
 \paragraph{Results Overview}
 
 \begin{table*}
-  \scriptsize %
   \centering %
   \caption{%
   Results from 48 hours of testing using CLSmith and DeepSmith. System \#. as
@@ -297,17 +288,14 @@ capabilities of DeepSmith and CLSmith.
   ($+$). The remaining columns denote the number of build crash (\bc), build
   timeout (\bto), anomalous build failure (\abf), anomalous runtime crash
   (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
-  \vspace{-1.1em}
   }
   \input{tab/megatable}
-  \vspace{-1.1em}
   \label{tab:megatable}
 \end{table*}
 
 \begin{figure}
   \centering %
   \includegraphics[width=\columnwidth]{img/vs-clsmith}%
-  \vspace{-1em}
   \caption{%
   Comparison of runtimes (a) and test case sizes (b). DeepSmith test cases
   are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$,
@@ -316,7 +304,6 @@ capabilities of DeepSmith and CLSmith.
   which would increase the performance gains of DeepSmith by nearly a factor
   of two.
   }%
-  \vspace{-1.3em}
   \label{fig:vs-clsmith}
   %
 \end{figure}
@@ -438,7 +425,6 @@ underlying problem.
   \label{lst:beig-iter-assertion}
   }\\%
   \caption{Example kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
-  \vspace{-1.5em}
   \label{lst:beig-assertions}
 \end{figure}
 
