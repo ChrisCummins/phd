@@ -280,22 +280,35 @@ capabilities of DeepSmith and CLSmith.
 
 \subsubsection{Results Overview}
 
-\begin{table*}
+\begin{table}
   \centering %
   \caption{%
-  Results from 48 hours of testing using CLSmith and DeepSmith. System \#. as
+  Results from 48 hours of testing using CLSmith. System \#. as
   per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on
   ($+$). The remaining columns denote the number of build crash (\bc), build
   timeout (\bto), anomalous build failure (\abf), anomalous runtime crash
   (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
   }
-  \input{tab/megatable}
+  \input{tab/megatable-clsmith}
   \label{tab:megatable}
-\end{table*}
+\end{table}
+
+\begin{table}
+	\centering %
+	\caption{%
+		Results from 48 hours of testing using DeepSmith. System \#. as
+		per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on
+		($+$). The remaining columns denote the number of build crash (\bc), build
+		timeout (\bto), anomalous build failure (\abf), anomalous runtime crash
+		(\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
+	}
+	\input{tab/megatable-deepsmith}
+	\label{tab:megatable}
+\end{table}
 
 \begin{figure}
   \centering %
-  \includegraphics[width=\columnwidth]{img/vs-clsmith}%
+  \includegraphics[width=.75\columnwidth]{img/vs-clsmith}%
   \caption{%
   Comparison of runtimes (a) and test case sizes (b). DeepSmith test cases
   are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$,
