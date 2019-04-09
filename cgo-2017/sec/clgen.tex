@@ -1,20 +1,18 @@
 \section{CLgen: Benchmark Synthesis}%
-\label{sec:lang-corpus}
+% \label{sec:TODO}
 
-% TODO: \section{Overview of Our Approach}\label{sec:overview}
-
-This section introduces CLgen, a tool for synthesizing OpenCL benchmarks, and an accompanying host driver for executing synthetic benchmarks for gathering performance data for predictive modeling. While we demonstrate our approach using OpenCL, it is language agnostic. Our tool CLgen learns the semantics and structure from over a million lines of hand-written code from GitHub, and synthesizes programs through a process of iterative model sampling. We use a host driver to execute the synthesized programs to gather performance data for use in predictive modeling. Figure~\ref{fig:pipeline} provides an overview of the program synthesis and execution pipeline. Our approach extends the state of the art by providing a general-purpose solution for benchmark synthesis, leading to better and more accurate predictive models.
+This section introduces CLgen, a tool for synthesizing OpenCL benchmarks, and an accompanying host driver for executing synthetic benchmarks for gathering performance data for predictive modeling. While we demonstrate our approach using OpenCL, it is language agnostic. Our tool CLgen learns the semantics and structure from over a million lines of hand-written code from GitHub, and synthesizes programs through a process of iterative model sampling. We use a host driver to execute the synthesized programs to gather performance data for use in predictive modeling. Figure~\ref{fig:clgen-pipeline} provides an overview of the program synthesis and execution pipeline. Our approach extends the state of the art by providing a general-purpose solution for benchmark synthesis, leading to better and more accurate predictive models.
 
 In the course of evaluating our technique against prior work we discovered that it is also useful for evaluating the quality of features. Since we are able to cover the space so much more finely than the prior work, which only used standard benchmark suites, we are able to find multiple programs with identical feature values but different best heuristic values. This indicates that the features are not sufficiently discriminative and should be extended with more information to allow those programs to be separated. We go on to show that doing this significantly increases the performance of the learned heuristics. We expect that our technique will be valuable for feature designers.
 
 \begin{figure}
 	\centering%
-	\includegraphics[width=.75\columnwidth]{img/pipeline}%
+	\includegraphics[width=.77\columnwidth]{img/pipeline}%
 	\caption{Benchmark synthesis and execution pipeline.}%
-	\label{fig:pipeline}
+	\label{fig:clgen-pipeline}
 \end{figure}
 
-% TODO: End of inlined overview section.
+\todo[inline]{End of inlined overview section}
 
 CLgen is an undirected, general-purpose program synthesizer for OpenCL. It adopts and augments recent advanced techniques from deep learning to learn over massive codebases. In contrast to existing grammar and template based approaches, CLgen is entirely probabilistic. The system \emph{learns} to program using neural networks which model the semantics and usage of a huge corpus of code fragments in the target programming language. This section describes the assembly of an OpenCL language corpus, the application of deep learning over this corpus, and the process of synthesizing programs.
 
@@ -26,13 +24,13 @@ This is itself a challenging task since OpenCL is an embedded language, meaning 
 
 We prune the raw dataset extracted from GitHub using a custom toolchain we developed for rejection filtering and code rewriting, built on LLVM.
 
-\paragraph{Rejection Filter}\label{sec:rejection-filter} The rejection filter accepts as input a content file and returns whether or not it contains compilable, executable OpenCL code. To do this we attempt to compile the input to NVIDIA PTX bytecode and perform static analysis to ensure a minimum static instruction count of three. We discard any inputs which do not compile or contain fewer than three instructions.
+\subsubsection{Rejection Filter}\label{sec:rejection-filter} The rejection filter accepts as input a content file and returns whether or not it contains compilable, executable OpenCL code. To do this we attempt to compile the input to NVIDIA PTX bytecode and perform static analysis to ensure a minimum static instruction count of three. We discard any inputs which do not compile or contain fewer than three instructions.
 
 During initial development it became apparent that isolating the OpenCL device code leads to a higher-than-expected discard rate (that is, seemingly valid OpenCL files being rejected). Through analyzing 148k lines of compilation errors, we discovered a large number of failures caused by undeclared identifiers --- a result of isolating device code --- 50\% of undeclared identifier errors in the GitHub dataset were caused by only 60 unique identifiers. To address this, we developed a \emph{shim header} which contains inferred values for common type definitions (e.g. \texttt{FLOAT\_T}), and common constants (e.g. \texttt{WGSIZE}), shown in Listing~\ref{lst:shim}.
 
 Injecting the shim decreases the discard rate from 40\% to 32\%, responsible for an additional 88k lines of code in the final language corpus. The resulting dataset is 2.0 million lines of compilable OpenCL source code.
 
-\paragraph{Code Rewriter} Programming languages have few of the issues of semantic interpretation present in natural language, though there remains many sources of variance at the syntactic level. For example, the presence and content of comments in code, and the choice of identifying names given to variables. We consider these  ambiguities to be \emph{non-functional variance}, and developed a tool to normalize code of these variances so as to make the code more amenable to machine learning. This is a three step process: %
+\subsubsection{Code Rewriter} Programming languages have few of the issues of semantic interpretation present in natural language, though there remains many sources of variance at the syntactic level. For example, the presence and content of comments in code, and the choice of identifying names given to variables. We consider these  ambiguities to be \emph{non-functional variance}, and developed a tool to normalize code of these variances so as to make the code more amenable to machine learning. This is a three step process: %
 %
 \begin{enumerate}
   \item The source is pre-processed to remove macros, conditional compilation, and source comments. %
@@ -64,30 +62,53 @@ typedef unsigned int INDEX_TYPE;
 \end{lstlisting}
 
 \noindent %
-An example of the code rewriting process is shown in Figure~\ref{lst:norm}. A side effect of this process is a reduction in code size, largely due to the removal of comments and excess white space. The final language corpus contains 1.3 million lines of transformed OpenCL, consisting of 9487 kernel functions. Identifier rewriting reduces the bag-of-words vocabulary size by 84\%.
+An example of the code rewriting process is shown in Listings~\ref{lst:code-rewriting-before} and~\ref{lst:code-rewriting-after}. A side effect of this process is a reduction in code size, largely due to the removal of comments and excess white space. The final language corpus contains 1.3 million lines of transformed OpenCL, consisting of 9487 kernel functions. Identifier rewriting reduces the bag-of-words vocabulary size by 84\%.
 
 \subsection{Learning OpenCL}\label{sec:ml}
 
 Generating valid, executable program code is an ambitious and challenging goal for unsupervised machine learning. We employ state of the art deep language modeling techniques to achieve this task.
 
-\begin{figure}
-  \centering%
-  \subfloat[Example content file]{%
-    \noindent\mbox{\parbox{\columnwidth}{%
-        \lstinputlisting{lst/pre-norm}%
-      }}%
-    }\\%
-    \subfloat[Content file after code rewriting]{%
-      \noindent\mbox{\parbox{\columnwidth}{%
-        \lstinputlisting{lst/post-norm}%
-      }%
-    }%
-  }%
-  \caption{The code rewriting process, which transforms code to make it more amenable to language modeling.}%
-  \label{lst:norm}%
-\end{figure}
+\lstset{language=[OpenCL]C}
+\begin{lstlisting}[%
+label={lst:code-rewriting-before},%
+float,%
+caption={An example content file downloaded from GitHub prior to code rewriting.}%
+]
+#define DTYPE float
+#define ALPHA(a) 3.5f * a
+inline DTYPE ax(DTYPE x) { return ALPHA(x); }
 
-We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network~\cite{Sundermeyer2012,Mikolov2015} to learn a character-level language model over the corpus of OpenCL compute kernels. The LSTM network architecture comprises recurrent layers of \emph{memory cells}, each consisting of an input, output, and forget gate, and an output layer providing normalized probability values from a 1-of-K coded vocabulary~\cite{Graves}.
+__kernel void saxpy( /* SAXPY kernel */
+    __global DTYPE *input1,
+    __global DTYPE *input2,
+    const int nelem)
+{
+     unsigned int idx = get_global_id(0);
+     // = ax + y
+     if (idx < nelem) {
+         input2[idx] += ax(input1[idx]); }}
+\end{lstlisting}
+
+\lstset{language=[OpenCL]C}
+\begin{lstlisting}[%
+label={lst:code-rewriting-after},%
+float,%
+caption={The code listing from~\ref{lst:code-rewriting-before} after code rewriting.}%
+]
+inline float A(float a) {
+  return 3.5f * a;
+}
+
+__kernel void B(__global float* b, __global float* c, const int d) {
+  unsigned int e = get_global_id(0);
+
+  if (e < d) {
+    c[e] += A(b[e]);
+  }
+}
+\end{lstlisting}
+
+The Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network~\cite{Sundermeyer2012,Mikolov2015} is used to learn a character-level language model over the corpus of OpenCL compute kernels. The LSTM network architecture comprises recurrent layers of \emph{memory cells}, each consisting of an input, output, and forget gate, and an output layer providing normalized probability values from a 1-of-K coded vocabulary~\cite{Graves}.
 
 We use a 3-layer LSTM network with 2048 nodes per layer, implemented in Torch. We train this 17-million parameter model using \textit{Stochastic Gradient Descent} for 50 epochs, using an initial learning rate of 0.002, decaying by a factor of one half every 5 epochs. Training took three weeks on a single machine using an NVIDIA GTX Titan, with a final model size of 648MB. Training the network is a one-off cost, and can be parallelized across devices. The trained network can be deployed to lower-compute machines for use.
 

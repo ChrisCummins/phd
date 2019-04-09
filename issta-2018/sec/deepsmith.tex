@@ -29,7 +29,7 @@ unsupervised learning~\cite{Raghu2016,Radford2016b,Bowman2015}. Contrary to
 existing tools, our approach does not require expert knowledge of the target
 language and is only a few hundred lines of code.
 
-\paragraph{Handwritten Programs}
+\subsubsection{Handwritten Programs}
 
 The generative model needs to be trained on a \emph{seed corpus} of example
 programs. We automated the assembly of this corpus by mining 10k OpenCL kernels
@@ -44,7 +44,7 @@ errors in that compiler (Section~\ref{subsec:clangs}).
 This corpus, exceeding one million lines of code, is used as a representative
 sample of OpenCL code from which a generative model can be derived.
 
-\paragraph{Encoder}
+\subsubsection{Encoder}
 
 The textual representation of program codes must be encoded as numeric sequences
 for feeding as input to the machine learning model. Prior machine learning works
@@ -72,7 +72,7 @@ longer be discoverable. We reason that this is an acceptable trade-off. For
 languages where the corpus can be many orders of magnitude larger, for example,
 C or Java, models may be generated without these modifications.
 
-\paragraph{Neural Network}
+\subsubsection{Neural Network}
 
 We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural
 Network to model program code~\cite{Hochreiter1997}. In the LSTM architecture
@@ -94,7 +94,7 @@ model on the OpenCL corpus took 12 hours using a single NVIDIA Tesla P40. We
 provided the model with no prior knowledge of the structure or syntax of a
 programming language.
 
-\paragraph{Program Generation}
+\subsubsection{Program Generation}
 
 The trained network is sampled to generate new programs. The model is seeded
 with the start of a kernel (identified in OpenCL using the keywords
@@ -147,7 +147,7 @@ Unlike the generative model, this test harness is language-specific and the
 design stems from domain knowledge. Still, it is a relatively simple procedure,
 consisting of a few hundred lines of Python.
 
-\paragraph*{Test Harness Output Classes}
+\subsubsection{Test Harness Output Classes}
 \begin{figure}
   \centering %
   \includegraphics[width=.7\columnwidth]{img/testprocess-long}
@@ -198,7 +198,7 @@ wrong-output results are indicative of \emph{miscompilations}, a particularly
 hard to detect class of bug in which the compiler silently emits wrong code.
 CSmith is designed specifically to target this class of bug.
 
-\paragraph{False Positives for Anomalous Runtime Behavior}%
+\subsubsection{False Positives for Anomalous Runtime Behavior}%
 \label{subsec:discussions}
 
 Generated programs may contain undefined or non-deterministic behavior which

@@ -1,14 +1,5 @@
 \chapter{Related Work}
 
-% \subsection{Automating Parallelism}
-
-It is widely accepted that parallel programming is difficult, and the
-continued repetition of this claim has become something of a trite
-mantra for the parallelism research community. An interesting
-digression is to discuss some of the ways in which researchers have
-attempted to tackle this difficult problem, and why, despite years of
-research, it remains an ongoing challenge.
-
 The most ambitious and perhaps daring field of parallelism research is
 that of automatic parallelisation, where the goal is to develop
 methods and systems to transform arbitrary sequential code into
@@ -122,17 +113,17 @@ greatest generalisation benefits~\cite{Burke2013}.
 % % Structures. In Proceedings of the 8th ACM International Conference
 % % on Autonomic Computing (pp. 11–20). New York, NY, USA:
 % % ACM. doi:10.1145/1998582.1998587
-% \TODO{Online reinforcement learning for optimising data structures
+% \todo{Online reinforcement learning for optimising data structures
 %   online, \cite{Tesauro2005}}
 
 % % Tesauro, G. (2005). Online Resource Allocation Using Decompositional
 % % Reinforcement Learning. In AAAI (pp. 886–891).
-% \TODO{Reinforcement learning for resource allocation~\cite{Eastep2011}}
+% \todo{Reinforcement learning for resource allocation~\cite{Eastep2011}}
 
 % % W. F. Ogilvie, P. Petoumenos, Z. Wang, and H. Leather, “Intelligent
 % % Heuristic Construction with Active Learning,” in 18th International
 % % Workshop on Compilers for Parallel Computing, 2015.
-% \TODO{Using Active Learning to speed up the learning of compiler
+% \todo{Using Active Learning to speed up the learning of compiler
 %   heuristics~\cite{Ogilvie2015}. Towards online autotuning, albeit
 %   only with binary optimisation parameter.}
 
@@ -144,14 +135,14 @@ greatest generalisation benefits~\cite{Burke2013}.
 % % Multiple Interacting Resources in Chip Multiprocessors: A Machine
 % % Learning Approach,” in 2008 41st IEEE/ACM International Symposium on
 % % Microarchitecture, 2008, pp. 318–329.
-% \TODO{Artificial Neural Networks for resource allocation of CMPS:
+% \todo{Artificial Neural Networks for resource allocation of CMPS:
 % \cite{Bitirgen2008}}
 
 % % Z. Wang and M. F. P. O. Boyle, “Partitioning Streaming Parallelism
 % % for Multi-cores: A Machine Learning Based Approach,” in Proceedings
 % % of the 19th international conference on Parallel architectures and
 % % compilation techniques, 2010, pp. 307–318.
-% \TODO{Offline ML for partitioning streaming applications:
+% \todo{Offline ML for partitioning streaming applications:
 % \cite{Wang2010}}
 
 In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014}
@@ -378,11 +369,6 @@ impractical for the needs of general purpose stencil computing. The
 autotuner presented in this thesis overcomes this drawback by learning
 parameter values which transfer to unseen stencils, without the need
 for an expensive tuning phase for each program and architecture.
-% TODO: Depending on results of cross-architecture validation, this
-% last claim may not hold up.
-%
-% The majority of applications tested are memory bound. Does this
-% transfer to computer bound?
 
 In~\cite{Christen2011}, \citeauthor{Christen2011} presentf a DSL for
 expressing stencil codes, a C code generator, and an autotuner for
@@ -617,7 +603,7 @@ Machine learning has been applied to source code to aid software engineering. Na
 %%
 %%
 %%\subsubsection{Library level parallelism} Optimising MapReduce for multi-core processors~\cite{Kaashoek2010}.
-%%TODO: OpenMP, MPI
+%%\todo{OpenMP, MPI}
 %
 %
 %\subsubsection{Automatic parallelisation} The goal of automatic parallelisation is to transform arbitrary sequential code into parallelised code. This is a well studied subject, with the typical approach being to perform these code transformations at the compilation stage. In \citeauthor{Banerjee1993}'s thorough review~\cite{Banerjee1993} of the subject, they outline the key challenges of automatic parallelisation: determining whether sequential code can be legally transformed for parallel execution; and identifying the transformation which will provide the highest performance improvement for a given piece of code. Both challenges are hard to tackle. For the former, the difficulties lie in performing accurate analysis of code behaviour. Obtaining accurate dynamic dependency analysis at compile time is an unsolved problem, as is resolving pointers and points-to analysis~\cite{Atkin-granville2013, Hind2001,Ghiya2001}.
@@ -688,8 +674,7 @@ Machine learning has been applied to source code to aid software engineering. Na
 
 
 
-% TODO(cec): CGO'17 related wrok section:
-
+\todo[inline]{Integrate CGO'17 related work section}
 
 Our work lies at the intersections of a number of areas: program generation, benchmark characterization, and language modeling and learning from source code. There is no existing work which is similar to ours, in respect to learning from large corpuses of source code for benchmark generation.
 
@@ -702,7 +687,7 @@ Machine learning has been applied to source code to aid software engineering. Na
 There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, code summarization~\cite{Allamanis2016}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for benchmark generation. This work is the first to do so.
 
 
-% TODO(cec):  ISSTA'18 related work section:
+\todo[inline]{Integrate ISSTA'18 related work section}
 
 The random generation of test cases is a well established approach to the
 compiler validation problem. Prior approaches are surveyed
@@ -713,7 +698,7 @@ generate codes which trigger bugs. There are two main approaches: \emph{program
 	mutation}, where existing codes are modified so as to identify anomalous
 behavior.
 
-\paragraph{Program Generation}
+\subsubsection{Program Generation}
 
 In the foundational work on differential testing for compilers, McKeeman
 \emph{et al.\ }present generators capable of enumerating programs of a range of
@@ -733,7 +718,7 @@ example programs. The derived grammar is enumerated to produce new programs,
 though unlike our approach, no distribution is learned over the grammar; program
 enumeration is uniformly random.
 
-\paragraph{Program Mutation}
+\subsubsection{Program Mutation}
 
 Equivalence Modulo Inputs (EMI) testing~\cite{Le2013a,Sun2016a} follows a
 different approach to test case generation. Starting with existing code, it
@@ -752,7 +737,7 @@ approach is low cost, easy to develop, portable, capable of detecting a wide
 range of errors, and focusing by design on bugs that are more likely to be
 encountered in a production scenario.
 
-\paragraph{Machine Learning}
+\subsubsection{Machine Learning}
 
 There is an increasing interest in applying machine learning to software
 testing. Most similar to our work is Learn\&fuzz~\cite{Godefroid2017}, in which
@@ -773,28 +758,7 @@ syntax of mined source code for test case generation. Ours is the first to do
 so.
 
 
-\begin{table}
-	\centering %
-	\caption{%
-		The number of DeepSmith programs that trigger Solidity compiler crashes from
-		12 hours of testing.%
-	}
-	\begin{tabular}{rc|ccc}
-		\toprule
-		\textbf{Compiler} & $\pm$ & \textbf{Silent Crashes} & \textbf{Assertion 1} & \textbf{Assertion 2}\\
-		\midrule
-		\multirow{ 2}{*}{solc}    & $-$ & 204 & 1 & \\
-		& $+$ & 204 & 1 & \\
-		\hline
-		\multirow{ 2}{*}{solc-js} & $-$ & 3628 & 1 & 1\\
-		& $+$ & 908 & 1 & 1\\
-		\bottomrule
-	\end{tabular}
-	\label{tab:solidity}
-\end{table}
-
-
-% TODO(cec): PACT'17 Related work section:
+\todo[inline]{Integrate PACT'17 Related work section}
 
 
 Machine learning has emerged as a viable means in automatically constructing heuristics for code optimization~\cite{Wang2010,Kulkarni2012,Muralidharan2016,Ogilvie2017,Ren,Cummins2016}. Its great advantage is that it can adapt to changing hardware platforms as it has no a priori assumptions about their behavior. The success of machine learning based code optimization has required having a set of high-quality features that can capture the important characteristics of the target program. Given that there is an infinite number of these potential features, finding the right set of features is a non-trivial, time-consuming task.

@@ -34,6 +34,13 @@
 %% MSc by Research, which also needs an institute
 \documentclass[phd,icsa,logo,twoside,openright]{infthesis}
 
+% Set these values to control the nesting level of the table of contents.
+% A level of 0 means chapter level.
+%\setcounter{secnumdepth}{0}
+%\setcounter{tocdepth}{0}
+
+\usepackage{todonotes}
+
 \usepackage[utf8]{inputenc}
 
 \usepackage[%
@@ -74,7 +81,7 @@ natbib=true,         % natbib compatability
 % Source code listings.
 \usepackage{listings,lstautogobble}
 \lstset{%
-  basicstyle=\footnotesize,%
+  % basicstyle=\footnotesize,%
   numbers=left,%
   xleftmargin=1em,
   framexleftmargin=2.5em,
@@ -134,11 +141,6 @@ natbib=true,         % natbib compatability
 \usepackage{amsmath}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
-
-\usepackage{color}
-\newcommand{\todo}[1]{{\color{red}{#1}}}
-\newcommand{\cc}[1]{{\color{orange}{#1}}}
-\newcommand{\factcheck}[1]{{\color{orange}{#1}}}
 
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}

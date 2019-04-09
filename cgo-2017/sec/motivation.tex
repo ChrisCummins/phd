@@ -1,10 +1,10 @@
-% \section{Motivation}\label{subsec:motivation}
+\section{The Case for Benchmark Generators}%
+\label{subsec:the-case-for-benchmark-generators}
 
 \begin{figure}[t]
   \includegraphics[width=\columnwidth]{img/motivation-c} %
   \caption{%
-    The average number of benchmarks used in GPGPU research papers, organized by
-    origin. In this work we use the seven most popular benchmark suites.%
+    The average number of benchmarks used in GPGPU research papers published between 2013-2016 in CGO, HiPC, PACT, and PPoPP.%
   }%
   \label{fig:benchmark-suite-distribution}
 \end{figure}
@@ -29,7 +29,7 @@
 
 In this section we make the argument for synthetic benchmarks. We identified frequently used benchmark suites in a survey of 25 research papers in the field of GPGPU performance tuning from four top tier conferences between 2013--2016: CGO, HiPC, PACT, and PPoPP. We found the average number of benchmarks used in each paper to be 17, and that a small pool of benchmarks suites account for the majority of results, shown in Figure~\ref{fig:benchmark-suite-distribution}. We selected the 7 most frequently used benchmark suites (accounting for 92\% of results), and evaluated the performance of the state of the art \emph{Grewe et   al.}~\cite{Grewe2013} predictive model across each. The model predicts whether running a given OpenCL kernel on the GPU gives better performance than on the CPU. We describe the full experimental methodology in Section~\ref{sec:methodology}.
 
-Table~\ref{tab:benchmark-xval} summarizes our results. The performance of a model trained on one benchmark suite and used to predict the mapping for another suite is generally very poor. The benchmark suite which provides the best results, NVIDIA SDK, achieves on average only 49\% of the optimal performance. The worst case is when training with Parboil to predict the optimal mappings for Polybench, where the model achieves only 11.5\% of the optimal performance. From this it is clear that heuristics learned on one benchmark suite fail to generalize across other suites.
+Table~\ref{cpu-gpu-benchmarks-crossvalidate} summarizes the results. The performance of a model trained on one benchmark suite and used to predict the mapping for another suite is generally very poor. The benchmark suite which provides the best results, NVIDIA SDK, achieves on average only 49\% of the optimal performance. The worst case is when training with Parboil to predict the optimal mappings for Polybench, where the model achieves only 11.5\% of the optimal performance. From this it is clear that heuristics learned on one benchmark suite fail to generalize across other suites.
 
 This problem is caused both by the limited number of benchmarks contained in each suite, and the distribution of benchmarks within the feature space. Figure~\ref{fig:pca-benchmarks} shows the feature space of the Parboil benchmark suite, showing whether, for each benchmark, the model was able to correctly predict the appropriate optimization.  We used Principle Component Analysis to reduce the multi-dimensional feature space to aid visualization.
 
@@ -44,7 +44,7 @@ As we see in Figure~\ref{fig:pca-benchmarks-a}, there is a dense cluster of neig
     \includegraphics[width=.45\columnwidth]{img/motivation-b}%
     \label{fig:pca-benchmarks-b}%
   }%
-  \caption{A two dimensional projection of the \emph{Grewe et al.\ } feature space, showing predictive model results over Parboil benchmarks on an NVIDIA GPU. Two outliers in~\protect\subref{fig:pca-benchmarks-a} are incorrectly predicted due to the lack of nearby observations. The addition of neighboring observations in~\protect\subref{fig:pca-benchmarks-b} corrects this.}%
+  \caption{A two dimensional projection of the \emph{Grewe et al.\ }feature space, showing predictive model results over Parboil benchmarks on an NVIDIA GPU. Two outliers in~\protect\subref{fig:pca-benchmarks-a} are incorrectly predicted due to the lack of nearby observations. The addition of neighboring observations in~\protect\subref{fig:pca-benchmarks-b} corrects this.}%
   \label{fig:pca-benchmarks}
 \end{figure}
 

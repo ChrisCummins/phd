@@ -101,7 +101,7 @@ compiler crashes.
   %
 \end{figure}
 
-\paragraph{Semantic Analysis Failures}
+\subsubsection{Semantic Analysis Failures}
 
 Compilers should produce meaningful diagnostics when inputs are invalid, yet we
 discovered dozens of compiler defects attributable to improper or missing error
@@ -140,7 +140,7 @@ Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers,
 which, to the best of our knowledge, makes DeepSmith the first random program
 generator to induce a defect through exploiting compiler-specific functionality.
 
-\paragraph{Parser Failures}
+\subsubsection{Parser Failures}
 
 Parser development is a mature and well understood practice. We uncovered parser
 errors in several compilers. Each of the code samples in
@@ -174,7 +174,7 @@ parsing.
   %
 \end{figure}
 
-\paragraph{Compiler Hangs}
+\subsubsection{Compiler Hangs}
 
 As expected, some compile-time defects are optimization sensitive. Testbed $1+$
 hangs on large loop bounds, shown in Figure~\ref{lst:nvidia-opt-loop-hang}. All
@@ -184,7 +184,7 @@ loops (Figure~\ref{lst:intel-inf-loop}).
 Testbeds $7\pm$ loop indefinitely during compilation of the simple kernel in
 Figure~\ref{lst:xeon-phi-spin}.
 
-\paragraph{Other errors}
+\subsubsection{Other errors}
 
 Some compilers are more permissive than others. Testbeds~$4\pm$, $6\pm$, $9\pm$
 reject out-of-range literal values e.g. \texttt{int i =
@@ -231,7 +231,7 @@ Grammar based enumeration is highly effective at this task, yet is bounded by
 the expressiveness of the grammar. Here we provide examples of bugs which cannot
 currently be discovered by CLSmith.
 
-\paragraph{Thread-dependent Flow Control}
+\subsubsection{Thread-dependent Flow Control}
 
 A common pattern in OpenCL is to obtain the thread identity, often as an
 \texttt{int}, and to compare this against some fixed value to determine whether
@@ -252,7 +252,7 @@ Upon reporting to the developers, the underlying cause was quickly diagnosed as
 a race condition in \texttt{switch} statement evaluation, and fixed within a
 week.
 
-\paragraph{Kernel Inputs}
+\subsubsection{Kernel Inputs}
 
 CLSmith kernels accept a single buffer parameter into which each thread computes
 its result. This fixed prototype limits the ability to detect bugs which depend
@@ -261,7 +261,7 @@ type. Testbeds $3\pm$ will silently miscompile ternary operators when the
 ternary operands consist of values stored in multiple different global buffers.
 CLSmith, with its fixed single input prototype, is unable to discover this bug.
 
-\paragraph{Latent Compile-time Defects}
+\subsubsection{Latent Compile-time Defects}
 
 Sometimes, invalid compiler inputs may go undetected, leading to runtime defects
 only upon program execution. Since CLSmith enumerates only well-formed programs,
@@ -278,7 +278,7 @@ issue has been reported to the developers and fixed.
 In this section, we provide a quantitative comparison of the bug-finding
 capabilities of DeepSmith and CLSmith.
 
-\paragraph{Results Overview}
+\subsubsection{Results Overview}
 
 \begin{table*}
   \centering %
@@ -334,7 +334,7 @@ handwritten OpenCL is comparatively rare --- only 7.1\% of kernels on GitHub use
 them.
 
 
-\paragraph{Comparison of Test Cases} %
+\subsubsection{Comparison of Test Cases} %
 
 The average CLSmith program is 1189 lines long (excluding headers). CLSmith test
 cases require reduction in order to expose the underlying bug. An automated
@@ -348,7 +348,7 @@ not typically write such large kernel functions. The average DeepSmith kernel is
 automatic.
 
 
-\paragraph{Comparison of Results} %
+\subsubsection{Comparison of Results} %
 
 Both testing systems found anomalous results of all types. In 48 hours of
 testing, CLSmith discovered compile-time crashes (\bc) in 8 of the 20 testbeds,
@@ -413,26 +413,13 @@ very long runtimes. DeepSmith produced \bto results across 11 Testbeds and with
 an average kernel size of 9 lines, allowing for rapid identification of the
 underlying problem.
 
-
-\begin{figure}
-  \centering %
-  \subfloat[Assertion \emph{storing/loading pointers only support private array}.]{%
-  \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigPtrAssertion}}}%
-  \label{lst:beig-ptr-assertion}
-  }\\%
-  \subfloat[Assertion \emph{iter != pointerOrigMap.end()}.]{%
-  \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeigIterAssertion}}}%
-  \label{lst:beig-iter-assertion}
-  }\\%
-  \caption{Example kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
-  \label{lst:beig-assertions}
-\end{figure}
+\input{fig/common-compiler-assertions}
 
 The integrated GPU Testbeds ($3\pm$) frequently failed to compile CLSmith
 kernels, resulting in over 10k \bc and \bto results. Of the build crashes, 68\%
 failed silently, and the remainder were caused by the same two compiler
 assertions for which DeepSmith generated 4 line test cases, shown in
-Figure~\ref{lst:beig-assertions}. DeepSmith also triggered silent build crashes
+Figure~\ref{lst:common-compiler-assertions}. DeepSmith also triggered silent build crashes
 in Testbeds $3\pm$, and a further 8 distinct compiler assertions.
 
 The 4719 \abf results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result
@@ -488,6 +475,8 @@ fuzzers, at a fraction of the cost of existing techniques.
 
 \subsection{Extensibility of Language Model}
 
+\input{tab/preliminary-solidity-results}
+
 A large portion of the DeepSmith architecture is language-agnostic, requiring
 only a corpus, encoder, and harness for each new language. This potentially
 significantly lowers the barrier-to-entry compared with prior grammar-based
@@ -498,7 +487,7 @@ of the tooling of more established programming languages. Yet, it is an
 important candidate for rigorous testing, as exploitable bugs may undermine the
 integrity of the blockchain and lead to fraudulent transactions.
 
-\paragraph{Testing Methodology}
+\subsubsection{Testing Methodology}
 
 We applied the same methodology to train the program generator as for OpenCL. We
 assembled a corpus of Solidity contracts from GitHub, recursively inlining
@@ -509,12 +498,12 @@ modification to either the language model or generator code was required. We
 created a simple compile-only test harness to drive the generated Solidity
 contracts.
 
-\paragraph{Initial Results}
+\subsubsection{Initial Results}
 
 We ran the generator and harness loop for 12 hours on four testbeds: the
 Solidity reference compiler \texttt{solc} with optimizations on or off, and
 \texttt{solc-js}, which is an Emscripten compiled version of the \texttt{solc}
-compiler. Our results are summarized in Table~\ref{tab:solidity}. We found
+compiler. Our results are summarized in Table~\ref{tab:preliminary-solidity-results}. We found
 numerous cases where the compiler silently crashes, and two distinct compiler
 assertions. The first is caused by missing error handling of language features
 (this issue is known to the developers). The source of the second assertion is
