@@ -9,6 +9,7 @@ from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
+from deeplearning.clgen import sample_observers as sample_observers_lib
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from labm8 import app
@@ -43,21 +44,28 @@ def CreateTempFileFromSample(tempdir: pathlib.Path, sample: model_pb2.Sample,
   return path
 
 
+class SampleObserver(sample_observers_lib.SampleObserver):
+
+  def __init__(self):
+    self.samples = []
+
+  def OnSample(self, sample):
+    self.samples.append(sample)
+    return len(self.samples) < FLAGS.batch_size
+
+
 def Sample(instance: clgen.Instance, db: grewe_features_db.Database,
            profiler: prof.AutoCsvProfiler, pool: multiprocessing.Pool):
+  observer = SampleObserver()
   with profiler.Profile(f'Create {FLAGS.batch_size} samples'):
-    samples = instance.model.Sample(
-        instance.sampler,
-        min_num_samples=FLAGS.batch_size,
-        cache_samples=False,
-        print_samples=False)
+    samples = instance.model.Sample(instance.sampler, [observer])
   prefix = 'phd_experimental_deeplearning_'
   with tempfile.TemporaryDirectory(prefix=prefix) as d:
     d = pathlib.Path(d)
     with profiler.Profile(f'Create {FLAGS.batch_size} tempfiles'):
       paths_to_import = [
           CreateTempFileFromSample(d, sample, i)
-          for i, sample in enumerate(samples)
+          for i, sample in enumerate(observer.samples)
       ]
     with profiler.Profile() as p:
       num_successes = db.ImportStaticFeaturesFromPaths(paths_to_import,
@@ -115,6 +123,7 @@ def main(argv: typing.List[str]):
           sampler=sampler_pb2.Sampler(
               start_text="kernel void ",
               batch_size=64,
+              sequence_length=1024,
               temperature_micros=1000000,  # = 1.0 real value
               termination_criteria=[
                   sampler_pb2.SampleTerminationCriterion(
