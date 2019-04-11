@@ -67,7 +67,7 @@ def Exec(argv: typing.List[str],
     A Popen instance, with string stdout and stderr attributes set.
   """
   cmd = [str(OCLGRIND_PATH)] + argv
-  # app.Log(2, '$ %s', ' '.join(cmd))
+  app.Log(3, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,
