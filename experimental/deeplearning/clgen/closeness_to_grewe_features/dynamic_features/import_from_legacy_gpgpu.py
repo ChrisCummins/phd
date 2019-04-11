@@ -5,18 +5,17 @@ import tempfile
 import typing
 import zipfile
 
-import sqlalchemy as sql
 import pandas as pd
-import numpy as np
+import sqlalchemy as sql
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db as db
-from research.grewe_2013_cgo import feature_extractor
 from gpu.libcecl import libcecl_runtime
 from gpu.libcecl.proto import libcecl_pb2
 from labm8 import app
 from labm8 import fs
 from labm8 import prof
+from research.grewe_2013_cgo import feature_extractor
 
 FLAGS = app.FLAGS
 
@@ -33,6 +32,7 @@ app.DEFINE_string(
     validator=lambda val: val in {"CPU", "GPU"} if val else True)
 app.DEFINE_string('opencl_env', None, 'The name of the OpenCL environment.')
 app.DEFINE_string('hostname', None, 'The name of the hostname')
+app.DEFINE_boolean('extract_static_features', True, 'Extract')
 
 
 def DynamicFeaturesFromKernelInvocation(
@@ -99,11 +99,41 @@ def GetFeatureVectorsMap(
   return feature_vectors
 
 
+def GetStaticFeaturesId(session, origin, kernel_name, log_lines):
+  ids = session.query(db.StaticFeatures.id) \
+    .filter(db.StaticFeatures.origin == origin).all()
+  if ids:
+    return ids[0][0]
+
+  if not FLAGS.extract_static_features:
+    return None
+
+  app.Warning('Failed to find origin `%s`', origin)
+
+  # Try and find a matching feature vector by looking in the
+  # program sources.
+  with prof.Profile('check static features'):
+    app.Log(1, 'checking features')
+    feature_vectors = GetFeatureVectorsMap(log_lines)
+  if kernel_name in feature_vectors:
+    src, features = feature_vectors[kernel_name]
+    static_features = db.StaticFeatures.FromSrcOriginAndFeatures(
+        src, origin, features)
+    session.add(static_features)
+    session.commit()
+    app.Log(1, 'Found new static feature vector for %s with id %d', kernel_name,
+            static_features.id)
+    return static_features.id
+
+  return None
+
+
 def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
                           expected_devtype: str, expected_device_name: str,
                           opencl_env: str, hostname: str) -> None:
   """Import legacy GPGPU logs to database."""
   failures = []
+
   with database.Session() as session:
     origin_to_features_id_map = {}
     rows = []
@@ -149,39 +179,14 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
               if origin in origin_to_features_id_map:
                 static_features_id = origin_to_features_id_map[origin]
               else:
-                ids = session.query(db.StaticFeatures.id) \
-                    .filter(db.StaticFeatures.origin == origin).all()
-                if not ids:
-                  if not origin in failures:
-                    app.Error('Failed to find origin `%s`', origin)
+                static_features_id = GetStaticFeaturesId(
+                    session, origin, kernel_invocation.kernel_name, log_lines)
 
-                    failures.append(origin)
-                    # Try and find a matching feature vector by looking in the
-                    # program sources.
-                    with prof.Profile('check static features'):
-                      app.Log(1, 'checking features')
-                      feature_vectors = GetFeatureVectorsMap(log_lines)
-                    if kernel_invocation.kernel_name in feature_vectors:
-                      src, features = feature_vectors[
-                          kernel_invocation.kernel_name]
-                      static_features = db.StaticFeatures.FromSrcOriginAndFeatures(
-                          src, origin, features)
-                      session.add(static_features)
-                      session.commit()
-                      static_features_id = static_features.id
-                      app.Log(
-                          1,
-                          'Found new static feature vector for %s with id %d',
-                          kernel_invocation.kernel_name, static_features_id)
-                    else:
-                      continue
-                else:
-                  static_features_id = ids[0][0]
-                origin_to_features_id_map[origin] = static_features_id
-
-              rows.append(
-                  DynamicFeaturesFromKernelInvocation(kernel_invocation,
-                                                      static_features_id))
+              origin_to_features_id_map[origin] = static_features_id
+              if static_features_id:
+                rows.append(
+                    DynamicFeaturesFromKernelInvocation(kernel_invocation,
+                                                        static_features_id))
 
     df = pd.DataFrame(rows)
 
@@ -194,7 +199,6 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
     df.reset_index(inplace=True)
 
     # Add missing columns.
-    df['static_features_id'] = static_features_id
     df['driver'] = db.DynamicFeaturesDriver.LIBCECL
     df['outcome'] = 'PASS'
     df['opencl_env'] = opencl_env
@@ -208,8 +212,10 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
         dtype={'driver': sql.Enum(db.DynamicFeaturesDriver)})
 
     app.Log(1, "Failed to find features for %d kernels", len(failures))
-    app.Log(1, 'Imported %d records from %d kernels', len(df),
-            len(origin_to_features_id_map))
+    app.Log(
+        1, 'Imported %d records from %d kernels (%d distinct feature vectors)',
+        len(df), len(origin_to_features_id_map),
+        len(set(origin_to_features_id_map.values())))
 
 
 def main():
