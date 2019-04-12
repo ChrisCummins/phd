@@ -1,5 +1,7 @@
 from labm8 import app
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 # Univariate linear regression using iterative batch gradient descent.
 #
@@ -56,18 +58,12 @@ def regression(data):
   return lambda x: h[0] + h[1] * x
 
 
-def validate_hypothesis(h, data):
-  for x, y in data:
+def test_validate_hypothesis():
+  training_data = [(i, target_func(i)) for i in range(10)]
+  h = regression(training_data)
+  for x, y in training_data:
     assert (abs(h(x) == y) < 0.0001)
 
 
-def main(argv):
-  del argv
-
-  training_data1a = [(i, target_func(i)) for i in range(10)]
-  h = regression(training_data1a)
-  validate_hypothesis(h, training_data1a)
-
-
 if __name__ == "__main__":
-  app.RunWithArgs(main)
+  app.Run(main)
