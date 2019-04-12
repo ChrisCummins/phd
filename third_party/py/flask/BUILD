@@ -10,6 +10,7 @@ py_library(
     name = "flask",
     srcs = ["flask.py"],
     deps = [
+        "//third_party/py/requests",
         requirement("Flask"),
         requirement("Flask-Compress"),
         requirement("flask-cors"),
@@ -17,7 +18,6 @@ py_library(
         requirement("jinja2"),
         requirement("Click"),
         requirement("itsdangerous"),
-        requirement("requests"),
         requirement("urllib3"),
         requirement("chardet"),
         requirement("certifi"),

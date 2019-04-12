@@ -7,12 +7,10 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # BSD
 
 py_library(
-    name = "dash",
-    srcs = ["dash.py"],
+    name = "requests",
+    srcs = ["requests.py"],
     deps = [
-        requirement("dash"),
-        requirement("plotly"),
-        "//third_party/py/flask",
-        "//third_party/py/requests",
+        requirement("requests"),
+        requirement("idna"),
     ],
 )
