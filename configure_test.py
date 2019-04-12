@@ -15,6 +15,8 @@ FLAGS = app.FLAGS
 # The path of the configure script.
 CONFIG_SCRIPT = bazelutil.DataPath('phd/configure')
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 @pytest.fixture(scope='module')
 def configure():
