@@ -6,8 +6,9 @@ from labm8 import app
 from labm8 import test
 from util.photolib import workspace
 
-
 FLAGS = app.FLAGS
+
+MODULE_UNDER_TEST = 'util.photolib.workspace'
 
 
 def test_find_workspace_rootpath():
