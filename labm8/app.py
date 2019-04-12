@@ -273,6 +273,7 @@ def DEFINE_list(name: str,
 def DEFINE_input_path(name: str,
                       default: Union[None, str, pathlib.Path],
                       help: str,
+                      required: bool = False,
                       is_dir: bool = False,
                       validator: Callable[[pathlib.Path], bool] = None):
   """Registers a flag whose value is an input path.
@@ -299,6 +300,8 @@ def DEFINE_input_path(name: str,
       absl_flags.FLAGS,
       serializer,
       module_name=logging.GetCallingModuleName())
+  if required:
+    absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
@@ -306,6 +309,7 @@ def DEFINE_input_path(name: str,
 def DEFINE_output_path(name: str,
                        default: Union[None, str, pathlib.Path],
                        help: str,
+                       required: bool = False,
                        is_dir: bool = False,
                        exist_ok: bool = True,
                        must_exist: bool = False,
@@ -340,6 +344,8 @@ def DEFINE_output_path(name: str,
       absl_flags.FLAGS,
       serializer,
       module_name=logging.GetCallingModuleName())
+  if required:
+    absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
