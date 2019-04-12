@@ -31,13 +31,3 @@ py_library(
         "//third_party/py/tensorflow",
     ],
 )
-
-py_test(
-    name = "model_test",
-    srcs = ["model_test.py"],
-    deps = [
-        ":model",
-        "//labm8:app",
-        "//labm8:test",
-    ],
-)
