@@ -1,5 +1,7 @@
 from labm8 import test
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 # This problem was asked by Jane Street.
 #
 # cons(a, b) constructs a pair, and car(pair) and cdr(pair) returns the first
