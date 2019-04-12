@@ -13,9 +13,7 @@ class DigitalValue {
   static DigitalValue Low();
 
   // Explicit conversion to type used in Arduino API.
-  explicit operator uint8_t() const noexcept {
-    return value_;
-  }
+  explicit operator uint8_t() const noexcept { return value_; }
 
  private:
   explicit DigitalValue(uint8_t value) : value_(value) {}

@@ -13,9 +13,7 @@ class PinMode {
   static PinMode InputPullup();
 
   // Explicit conversion to the value expected by Arduino's pinMode() function.
-  explicit operator uint8_t() const noexcept {
-    return mode_;
-  }
+  explicit operator uint8_t() const noexcept { return mode_; }
 
  private:
   explicit PinMode(uint8_t mode) : mode_(mode) {}

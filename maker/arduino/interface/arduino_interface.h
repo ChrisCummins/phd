@@ -28,13 +28,15 @@
 // If compiling for hardware, use the generated library header. For C++
 // compilation, use the bazel header path.
 #ifdef ARDUINO
+#include <Arduino_interface_analog_value.h>
 #include <Arduino_interface_digital_value.h>
-#include <Arduino_interface_pin_mode.h>
 #include <Arduino_interface_pin.h>
+#include <Arduino_interface_pin_mode.h>
 #else
+#include "maker/arduino/interface/analog_value.h"
 #include "maker/arduino/interface/digital_value.h"
-#include "maker/arduino/interface/pin_mode.h"
 #include "maker/arduino/interface/pin.h"
+#include "maker/arduino/interface/pin_mode.h"
 #endif
 
 #include <stdint.h>
@@ -43,7 +45,7 @@ namespace arduino {
 
 // Defines a C++ interface for accessing the Arduino hardware layer.
 class ArduinoInterface {
-public:
+ public:
   virtual ~ArduinoInterface() {}
 
   // Reads the value from a specified digital pin.
@@ -52,8 +54,8 @@ public:
 
   // Write a value to a digital pin.
   // https://www.arduino.cc/en/Reference/DigitalWrite
-  virtual void DigitalWrite(
-      const Pin& pin, const DigitalValue& value) const = 0;
+  virtual void DigitalWrite(const Pin& pin,
+                            const DigitalValue& value) const = 0;
 
   // Returns the number of milliseconds since the Arduino board began running
   // the current program. This number will overflow (go back to zero), after
@@ -61,7 +63,7 @@ public:
   // https://www.arduino.cc/en/Reference/Millis
   virtual unsigned long Millis() const = 0;
 
-  // Pauses the program for the amount of time (in miliseconds) specified as
+  // Pauses the program for the amount of time (in milliseconds) specified as
   // parameter. (There are 1000 milliseconds in a second.)
   // https://www.arduino.cc/en/Reference/Delay
   virtual void Delay(unsigned long ms) const = 0;
@@ -70,8 +72,22 @@ public:
   // https://www.arduino.cc/en/Reference/PinMode
   virtual void SetPinMode(const Pin& pin, const PinMode& mode) const = 0;
 
+  // Sets the data rate in bits per second (baud) for serial data transmission.
+  // https://www.arduino.cc/en/serial/begin
+  virtual void InitSerial(unsigned long baud) const = 0;
+
+  template <typename T>
+  void SerialPrint(const T& value) const;
+
+  // Set PWM range. Value must be in range [0,1023]. Wraps analogWriteRange().
+  virtual void SetPwmRange(const int range) const = 0;
+
+  // Writes an analog value (PWM wave) to a pin.
+  // https://www.arduino.cc/reference/en/language/functions/analog-io/analogwrite/
+  virtual void AnalogWrite(const Pin& pin, const AnalogValue& value) const = 0;
+
   // The pin number of the built in LED.
   static const Pin kBuiltInLedPin;
 };
 
-} // namespace arduino
+}  // namespace arduino

@@ -1,5 +1,5 @@
-#include <Arduino_interface_digital_value.h>
 #include <Arduino.h>
+#include <Arduino_interface_digital_value.h>
 
 namespace arduino {
 

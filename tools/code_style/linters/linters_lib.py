@@ -173,7 +173,7 @@ class LinterActions(object):
 
       _, extension = os.path.splitext(path)
 
-      if extension == '.cc' or extension == '.c' or extension == '.h':
+      if extension == '.cc' or extension == '.c' or extension == '.h' or extension == '.ino':
         self._clang_format.append(path)
       elif extension == '.py':
         self._yapf.append(path)

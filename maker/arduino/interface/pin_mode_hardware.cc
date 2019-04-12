@@ -1,5 +1,5 @@
-#include <Arduino_interface_pin_mode.h>
 #include <Arduino.h>
+#include <Arduino_interface_pin_mode.h>
 
 namespace arduino {
 

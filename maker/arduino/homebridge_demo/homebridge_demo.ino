@@ -15,11 +15,13 @@
 // To save defining the SSID and password of the router to connect to in this
 // file, I have #defined MY_ROUTER_SSID and MY_ROUTER_PASSWORD macros, and
 // appended them to the flags of all ESP8266 builds. To do this, I modified the
-// file: ~/Library/Arduino15/packages/esp8266/hardware/esp8266/2.4.2/platform.txt
-// and appended the arguments to the C compiler and preprocessor flags:
+// file:
+// ~/Library/Arduino15/packages/esp8266/hardware/esp8266/2.4.2/platform.txt and
+// appended the arguments to the C compiler and preprocessor flags:
 //
-//     compiler.cpreprocessor.flags=<snip> -DMY_ROUTER_SSID="foo" -DMY_ROUTER_PASSWORD="bar"
-//     compiler.c.flags=<snip> -DMY_ROUTER_SSID="foo" -DMY_ROUTER_PASSWORD="bar"
+//     compiler.cpreprocessor.flags=<snip> -DMY_ROUTER_SSID="foo"
+//     -DMY_ROUTER_PASSWORD="bar" compiler.c.flags=<snip> -DMY_ROUTER_SSID="foo"
+//     -DMY_ROUTER_PASSWORD="bar"
 //
 // Configure Arduino IDE to build this sketch using:
 //
@@ -40,11 +42,11 @@
 // handled by this sketch:
 //
 //     {
-//       "bridge":{
-//         "name":"Homebridge",
-//         "username":"CC:22:3D:E3:CE:30",
-//         "port":51826,
-//         "pin":"031-45-154"
+//       "bridge": {
+//         "name": "Demo",
+//         "username": "AA:BB:CC:DD:EE:FF",
+//         "port": 51826,
+//         "pin": "123-45-678"
 //       },
 //       "platforms":[
 //       ],
@@ -141,24 +143,22 @@ void setup() {
 // Handle a HTTP request line and return a response.
 HttpJsonResponse HandleRequest(const String& request_line) {
   HttpJsonResponse response_not_found = {
-    "404 Not Found",
-    "{ \"message\": \"Invalid request!\" }"
-  };
+      "404 Not Found", "{ \"message\": \"Invalid request!\" }"};
 
   if (request_line.startsWith("GET /led/off ")) {
     target_brightness = 0;
-    return HttpJsonResponse {"200 OK", "{ \"message\": \"LED off\" }"};
+    return HttpJsonResponse{"200 OK", "{ \"message\": \"LED off\" }"};
   } else if (request_line.startsWith("GET /led/on ")) {
     target_brightness = 255;
-    return HttpJsonResponse {"200 OK", "{ \"message\": \"LED on\" }"};
+    return HttpJsonResponse{"200 OK", "{ \"message\": \"LED on\" }"};
   } else if (request_line.startsWith("GET /led/brightness/")) {
     // Strip the start of the request.
     String tail = request_line.substring(sizeof("GET /led/brightness/") - 1);
 
     // Filter invalid request lines:
-    if (!tail.length() ||  // Empty string
+    if (!tail.length() ||            // Empty string
         !isDigit(tail.charAt(0)) ||  // Non-numeric digit.
-        tail.indexOf(' ') == -1) {  // Request has no suffix.
+        tail.indexOf(' ') == -1) {   // Request has no suffix.
       return response_not_found;
     }
 
@@ -168,10 +168,8 @@ HttpJsonResponse HandleRequest(const String& request_line) {
       // If requested brightness is in range, set it.
       target_brightness = new_brightness;
       return HttpJsonResponse{
-          "200 OK",
-          (String("{ \"message \": \"Setting LED brightness to ") +
-           new_brightness + "\" }")
-      };
+          "200 OK", (String("{ \"message \": \"Setting LED brightness to ") +
+                     new_brightness + "\" }")};
     } else {
       // Else brightness is invalid.
       return response_not_found;
@@ -189,7 +187,7 @@ void loop() {
   }
 
   // Wait until the client sends some data
-  while(!client.available()) {
+  while (!client.available()) {
     delay(1);
   }
 

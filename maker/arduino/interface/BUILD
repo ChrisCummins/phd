@@ -3,10 +3,23 @@
 load("@platformio_rules//platformio:platformio.bzl", "platformio_library")
 
 cc_library(
+    name = "analog_value",
+    srcs = ["analog_value.cc"],
+    hdrs = ["analog_value.h"],
+)
+
+platformio_library(
+    name = "Arduino_interface_analog_value",
+    src = "analog_value.cc",
+    hdr = "analog_value.h",
+)
+
+cc_library(
     name = "arduino_interface",
     hdrs = ["arduino_interface.h"],
     visibility = ["//maker/arduino:__subpackages__"],
     deps = [
+        ":analog_value",
         ":digital_value",
         ":pin",
         ":pin_mode",
@@ -18,6 +31,7 @@ platformio_library(
     hdr = "arduino_interface.h",
     visibility = ["//maker/arduino:__subpackages__"],
     deps = [
+        ":Arduino_interface_analog_value",
         ":Arduino_interface_digital_value",
         ":Arduino_interface_pin",
         ":Arduino_interface_pin_mode",
@@ -68,6 +82,18 @@ platformio_library(
     hdr = "digital_value.h",
 )
 
+# IP address.
+
+cc_library(
+    name = "ip_address",
+    hdrs = ["ip_address.h"],
+)
+
+platformio_library(
+    name = "Arduino_interface_ip_address",
+    hdr = "ip_address.h",
+)
+
 # Pin.
 
 cc_library(
@@ -92,4 +118,29 @@ platformio_library(
     name = "Arduino_interface_pin_mode",
     src = "pin_mode_hardware.cc",
     hdr = "pin_mode.h",
+)
+
+# WiFi server.
+
+cc_library(
+    name = "wifi_server",
+    srcs = ["wifi_server_mock.cc"],
+    hdrs = ["wifi_server.h"],
+    visibility = ["//maker/arduino:__subpackages__"],
+    deps = [
+        ":arduino_interface",
+        ":ip_address",
+        "@gtest",
+    ],
+)
+
+platformio_library(
+    name = "Arduino_interface_wifi_server",
+    src = "wifi_server_hardware.cc",
+    hdr = "wifi_server.h",
+    visibility = ["//maker/arduino:__subpackages__"],
+    deps = [
+        ":Arduino_interface",
+        ":Arduino_interface_ip_address",
+    ],
 )

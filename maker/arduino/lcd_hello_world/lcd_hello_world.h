@@ -31,7 +31,7 @@ namespace arduino {
 const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
 
 // The program to execute.
-template<typename ArduinoInterface>
+template <typename ArduinoInterface>
 class LcdHelloWorld {
  public:
   explicit LcdHelloWorld() : interface_(), lcd_(rs, en, d4, d5, d6, d7) {}
