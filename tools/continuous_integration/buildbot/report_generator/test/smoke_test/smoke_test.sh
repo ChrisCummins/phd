@@ -15,6 +15,8 @@ trap cleanup EXIT
 # Main entry point.
 main() {
   mkdir "$workdir"/repo
+  git -C "$workdir"/repo config user.email "example@name.com"
+  git -C "$workdir"/repo config user.name "Example Name"
   git -C "$workdir"/repo init
   git -C "$workdir"/repo commit --allow-empty -m "Hello, world"
 
