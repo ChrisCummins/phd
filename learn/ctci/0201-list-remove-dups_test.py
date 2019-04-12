@@ -1,4 +1,7 @@
 from labm8 import app
+from labm8 import test
+
+FLAGS = app.FLAGS
 
 
 ## Linked Lists:
@@ -62,9 +65,7 @@ def remove_duplicates(head):
     prev, x = x, x.next
 
 
-def main(argv):
-  del argv
-
+def test_main():
   # Exercise 2.1
   a, b, c, d, e = Node(1), Node(2), Node(3), Node(2), Node(4)
   a.next = b
@@ -82,5 +83,5 @@ def main(argv):
   assert str(a) == "1 2 3 4"
 
 
-if __name__ == "__main__":
-  app.RunWithArgs(main)
+if __name__ == '__main__':
+  test.Main()

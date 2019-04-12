@@ -1,4 +1,7 @@
 from labm8 import app
+from labm8 import test
+
+FLAGS = app.FLAGS
 
 
 # Exercise 1.4:
@@ -50,8 +53,7 @@ def escape_spaces(string, strlen):
   return string
 
 
-def main(argv):
-  del argv
+def test_main():
   assert escape_spaces_regexp("Hello, the World!",
                               17) == "Hello,%20the%20World!"
   assert (''.join(escape_spaces(list("Hello, the World!        "),
@@ -59,4 +61,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-  app.RunWithArgs(main)
+  test.Main()

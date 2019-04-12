@@ -59,12 +59,13 @@ cc_test(
 )
 
 py_test(
-    name = "0104-escape-string-py",
+    name = "0104-escape-string-py_test",
     size = "small",
-    srcs = ["0104-escape-string.py"],
-    main = "0104-escape-string.py",
+    srcs = ["0104-escape-string_test.py"],
+    main = "0104-escape-string_test.py",
     deps = [
         "//labm8:app",
+        "//labm8:test",
     ],
 )
 
@@ -97,12 +98,13 @@ cc_test(
 )
 
 py_test(
-    name = "0201-list-remove-dups-py",
+    name = "0201-list-remove-dups-py_test",
     size = "small",
-    srcs = ["0201-list-remove-dups.py"],
-    main = "0201-list-remove-dups.py",
+    srcs = ["0201-list-remove-dups_test.py"],
+    main = "0201-list-remove-dups_test.py",
     deps = [
         "//labm8:app",
+        "//labm8:test",
     ],
 )
 
