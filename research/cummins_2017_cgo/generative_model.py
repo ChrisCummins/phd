@@ -278,11 +278,8 @@ def SampleObserversFromFlags() -> typing.List[sample_observers.SampleObserver]:
   return observers
 
 
-def main(argv: typing.List[str]):
+def main():
   """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-
   instance = CreateInstanceFromFlags()
   sample_count = 0
   with instance.Session():
@@ -294,4 +291,4 @@ def main(argv: typing.List[str]):
 
 
 if __name__ == '__main__':
-  app.RunWithArgs(main)
+  app.Run(main)
