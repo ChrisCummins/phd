@@ -22,6 +22,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'compilers.llvm'
+
 
 def test_LlvmPipeline(tempdir: pathlib.Path):
   """End-to-end test."""
