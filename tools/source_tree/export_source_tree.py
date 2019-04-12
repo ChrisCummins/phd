@@ -40,6 +40,14 @@ app.DEFINE_string('destination', '/tmp/phd/tools/source_tree/export',
 app.DEFINE_string('github_repo', None, 'Name of a GitHub repo to export to.')
 app.DEFINE_boolean('github_repo_create_private', True,
                    'Whether to create new GitHub repos as private.')
+app.DEFINE_input_path(
+    'master_readme', None,
+    'The relative path to a README file that will be exported to the root'
+    'of the subtree, replacing the existing README.')
+app.DEFINE_input_path(
+    'master_license', None,
+    'The relative path to a README file that will be exported to the root'
+    'of the subtree.')
 
 BAZEL_WRAPPER = bazelutil.DataPath(
     'phd/tools/source_tree/data/bazel_wrapper.py')
@@ -342,6 +350,12 @@ def ExportToDirectoryOrDie(destination: pathlib.Path,
 
   CreateBazelWrapperForExports(destination, exported_targets)
   UpdateReadme(destination, exported_targets)
+
+  if FLAGS.master_readme:
+    (destination / 'README.md').unlink()
+    shutil.copy(FLAGS.master_readme, destination / FLAGS.master_readme.name)
+  if FLAGS.master_license:
+    shutil.copy(FLAGS.master_license, destination / FLAGS.master_license.name)
 
 
 def CloneRepoToDestinationOrDie(repo: github_lib.Repository,
