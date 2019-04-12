@@ -38,6 +38,7 @@ py_test(
     srcs = ["generative_model_test.py"],
     deps = [
         ":generative_model",
+        "//labm8:app",
         "//labm8:test",
     ],
 )

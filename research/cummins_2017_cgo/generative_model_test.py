@@ -13,18 +13,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //research/cummins_2017_cgo:generative_model."""
+import pathlib
+
 from labm8 import test
+from labm8 import app
 
 from research.cummins_2017_cgo import generative_model
 
+FLAGS = app.FLAGS
 
-def test_CreateInstanceProtoFromFlags_smoke_test():
+
+def test_CreateInstanceProtoFromFlags_smoke_test(tempdir: pathlib.Path):
   """Test that instance proto can be constructed."""
+  # Set temporary working directory as defaults to ~/.cache/clgen.
+  FLAGS.unparse_flags()
+  FLAGS(['argv0', '--clgen_working_dir', str(tempdir)])
   assert generative_model.CreateInstanceProtoFromFlags()
 
 
-def test_CreateInstanceFromFlags_smoke_test():
+def test_CreateInstanceFromFlags_smoke_test(tempdir: pathlib.Path):
   """Test that instance can be constructed."""
+  # Set temporary working directory as defaults to ~/.cache/clgen.
+  FLAGS.unparse_flags()
+  FLAGS(['argv0', '--clgen_working_dir', str(tempdir)])
   assert generative_model.CreateInstanceFromFlags()
 
 
