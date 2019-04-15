@@ -39,6 +39,7 @@ py_test(
     deps = [
         ":generative_model",
         "//labm8:app",
+        "//labm8:fs",
         "//labm8:test",
     ],
 )

@@ -15,27 +15,39 @@
 """Unit tests for //research/cummins_2017_cgo:generative_model."""
 import pathlib
 
-from labm8 import test
 from labm8 import app
-
+from labm8 import fs
+from labm8 import test
 from research.cummins_2017_cgo import generative_model
 
 FLAGS = app.FLAGS
 
 
-def test_CreateInstanceProtoFromFlags_smoke_test(tempdir: pathlib.Path):
+def test_CreateInstanceProtoFromFlags_smoke_test(tempdir: pathlib.Path,
+                                                 tempdir2: pathlib.Path):
   """Test that instance proto can be constructed."""
   # Set temporary working directory as defaults to ~/.cache/clgen.
+  fs.Write(tempdir2 / 'file.cl', 'kernel void A() {}'.encode('utf-8'))
   FLAGS.unparse_flags()
-  FLAGS(['argv0', '--clgen_working_dir', str(tempdir)])
+  FLAGS([
+      'argv0', '--clgen_working_dir',
+      str(tempdir), '--clgen_corpus_dir',
+      str(tempdir2)
+  ])
   assert generative_model.CreateInstanceProtoFromFlags()
 
 
-def test_CreateInstanceFromFlags_smoke_test(tempdir: pathlib.Path):
+def test_CreateInstanceFromFlags_smoke_test(tempdir: pathlib.Path,
+                                            tempdir2: pathlib.Path):
   """Test that instance can be constructed."""
   # Set temporary working directory as defaults to ~/.cache/clgen.
+  fs.Write(tempdir2 / 'file.cl', 'kernel void A() {}'.encode('utf-8'))
   FLAGS.unparse_flags()
-  FLAGS(['argv0', '--clgen_working_dir', str(tempdir)])
+  FLAGS([
+      'argv0', '--clgen_working_dir',
+      str(tempdir), '--clgen_corpus_dir',
+      str(tempdir2)
+  ])
   assert generative_model.CreateInstanceFromFlags()
 
 
