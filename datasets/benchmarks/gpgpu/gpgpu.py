@@ -355,7 +355,7 @@ class _BenchmarkSuite(object):
     assert self._observers
 
     # Assemble the command to run.
-    command = command or [executable]
+    command = command or [str(executable)]
     if self.env.name == oclgrind.CLINFO_DESCRIPTION.name:
       command = [str(oclgrind.OCLGRIND_PATH)] + command
 
