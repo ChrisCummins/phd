@@ -5,6 +5,7 @@ import sys
 
 from labm8 import app
 from labm8 import bazelutil
+from labm8 import test
 
 FLAGS = app.FLAGS
 
@@ -14,10 +15,8 @@ DATA_BINARY = bazelutil.DataPath('phd/learn/bazel/data_binary')
 MODULE_UNDER_TEST = None  # No coverage.
 
 
-def main(argv):
+def test_main():
   """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
   print('Hello from python', sys.executable)
   print('Sanboxed?', bazelutil.IsBazelSandbox())
   print('File location:', __file__)
@@ -32,4 +31,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  app.RunWithArgs(main)
+  test.Main()

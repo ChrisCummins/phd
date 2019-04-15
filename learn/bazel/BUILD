@@ -10,6 +10,7 @@ py_test(
     deps = [
         "//labm8:app",
         "//labm8:bazelutil",
+        "//labm8:test",
     ],
 )
 
