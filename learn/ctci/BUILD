@@ -44,10 +44,11 @@ cc_test(
 py_test(
     name = "0103-permutations-py",
     size = "small",
-    srcs = ["0103-permutations.py"],
-    main = "0103-permutations.py",
+    srcs = ["0103-permutations_test.py"],
+    main = "0103-permutations_test.py",
     deps = [
         "//labm8:app",
+        "//labm8:test",
     ],
 )
 
@@ -59,7 +60,7 @@ cc_test(
 )
 
 py_test(
-    name = "0104-escape-string-py_test",
+    name = "0104-escape-string-py",
     size = "small",
     srcs = ["0104-escape-string_test.py"],
     main = "0104-escape-string_test.py",
@@ -98,7 +99,7 @@ cc_test(
 )
 
 py_test(
-    name = "0201-list-remove-dups-py_test",
+    name = "0201-list-remove-dups-py",
     size = "small",
     srcs = ["0201-list-remove-dups_test.py"],
     main = "0201-list-remove-dups_test.py",

@@ -1,4 +1,7 @@
 from labm8 import app
+from labm8 import test
+
+FLAGS = app.FLAGS
 
 
 # Exercise 1.3:
@@ -29,12 +32,11 @@ def is_permutation(a, b):
   return sorted(list(a)) == sorted(list(b))
 
 
-def main(argv):
-  del argv
+def test_main():
   assert is_permutation("abc", "abc") == True
   assert is_permutation("abc", "abcd") == False
   assert is_permutation("abc", "cab") == True
 
 
 if __name__ == "__main__":
-  app.RunWithArgs(main)
+  test.Main()
