@@ -1,5 +1,11 @@
-#!/usr/bin/env python3
-#
+from labm8 import app
+from labm8 import test
+
+FLAGS = app.FLAGS
+
+MODULE_UNDER_TEST = None  # No coverage.
+
+
 # Write a method to count the number of 2s that appear in all the numbers
 # between 0 and n (inclusive).
 #
@@ -18,11 +24,9 @@ def count_2s(n):
   return count
 
 
-if __name__ == "__main__":
-  examples = [
-      (25, 9),
-  ]
+def test_main():
+  assert 9 == count_2s(25)
 
-  for ins, outs in examples:
-    if count_2s(ins) != outs:
-      print(ins, outs, count_2s(ins))
+
+if __name__ == '__main__':
+  test.Main()

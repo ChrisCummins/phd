@@ -1,4 +1,9 @@
 from labm8 import app
+from labm8 import test
+
+FLAGS = app.FLAGS
+
+MODULE_UNDER_TEST = None  # No coverage.
 
 
 # Exercise 1.1:
@@ -40,11 +45,10 @@ def characters_are_unique(string):
   return True
 
 
-def main(argv):
-  del argv
+def test_main():
   assert characters_are_unique("abcdefg") == True
   assert characters_are_unique("abcdefga") == False
 
 
 if __name__ == "__main__":
-  app.RunWithArgs(main)
+  test.Main()

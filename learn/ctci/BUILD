@@ -20,10 +20,11 @@ cc_test(
 py_test(
     name = "0101-unique-chars-in-string-py",
     size = "small",
-    srcs = ["0101-unique-chars-in-string.py"],
-    main = "0101-unique-chars-in-string.py",
+    srcs = ["0101-unique-chars-in-string_test.py"],
+    main = "0101-unique-chars-in-string_test.py",
     deps = [
         "//labm8:app",
+        "//labm8:test",
     ],
 )
 
@@ -227,4 +228,15 @@ cc_test(
     size = "small",
     srcs = ["1702-tic-tac-toe.cc"],
     deps = [":ctci"],
+)
+
+py_test(
+    name = "1804-number-of-2s-py",
+    size = "small",
+    srcs = ["1804-number-of-2s_test.py"],
+    main = "1804-number-of-2s_test.py",
+    deps = [
+        "//labm8:app",
+        "//labm8:test",
+    ],
 )
