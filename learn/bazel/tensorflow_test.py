@@ -7,6 +7,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_Tensorflow_hello_world():
   """The "hello world" of TensorFlow tests."""

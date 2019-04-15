@@ -16,6 +16,8 @@ CPP_INTEROP_BIN = bazelutil.DataPath('phd/learn/python/cpp_interop_bin')
 CPP_INTEROP_IN_PLACE_BIN = bazelutil.DataPath(
     'phd/learn/python/cpp_interop_inplace_bin')
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_AddXandY():
   """Test running a native binary with proto input and output."""

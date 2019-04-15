@@ -11,6 +11,8 @@ from labm8 import bazelutil
 from labm8 import pbutil
 from labm8 import test
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def DirContainsProtos(data_path: str, proto_class) -> None:
   """Assert that contains protos of the given class."""

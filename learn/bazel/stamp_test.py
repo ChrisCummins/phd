@@ -11,6 +11,8 @@ from labm8 import test
 
 STAMP_FILE = bazelutil.DataPath('phd/learn/bazel/stamp_file.txt')
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_StampFile():
   stamp_file = fs.Read(STAMP_FILE)

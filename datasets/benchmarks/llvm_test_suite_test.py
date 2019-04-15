@@ -25,6 +25,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'datasets.benchmarks'
+
 
 @pytest.mark.parametrize('benchmark', llvm_test_suite.BENCHMARKS)
 def test_benchmarks(benchmark: benchmarks_pb2.Benchmark):
