@@ -1,8 +1,8 @@
 # Learning to use Bazel.
 
 py_test(
-    name = "python_binary",
-    srcs = ["python_binary.py"],
+    name = "python_binary_test",
+    srcs = ["python_binary_test.py"],
     data = [
         ":data_binary",
         ":data_file",

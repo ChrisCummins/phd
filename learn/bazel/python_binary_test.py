@@ -11,6 +11,8 @@ FLAGS = app.FLAGS
 DATA_FILE = bazelutil.DataPath('phd/learn/bazel/data_file.txt')
 DATA_BINARY = bazelutil.DataPath('phd/learn/bazel/data_binary')
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def main(argv):
   """Main entry point."""
