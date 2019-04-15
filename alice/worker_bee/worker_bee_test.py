@@ -16,6 +16,8 @@
 from alice.worker_bee import worker_bee
 from labm8 import test
 
+MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_TODO():
   """Short summary of test."""
