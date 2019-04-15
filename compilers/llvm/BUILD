@@ -125,6 +125,7 @@ py_test(
         ":llvm",
         ":llvm_link",
         "//labm8:app",
+        "//labm8:fs",
         "//labm8:test",
     ],
 )

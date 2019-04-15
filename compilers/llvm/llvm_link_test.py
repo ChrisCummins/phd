@@ -12,17 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //compilers/llvm/llvm_link.py."""
+import pathlib
 
-from labm8 import app
-from labm8 import test
 from compilers.llvm import llvm_link
+from labm8 import app
+from labm8 import fs
+from labm8 import test
+
 
 FLAGS = app.FLAGS
 
+def test_LinkBitcodeFilesToBytecode_empty_file(tempdir: pathlib.Path):
+    """llvm-link with an empty file."""
+  input_path = tempdir / 'empty.ll'
+  output_path = tempdir / 'linked.ll'
+  fs.Write(input_path, ''.encode('utf-8'))
+  llvm_link.LinkBitcodeFilesToBytecode([input_path], output_path, timeout_seconds=5)
+  assert output_path.is_file()
 
-def test_TODO():
-  """TODO: Short summary of test."""
-  _ = llvm_link
+
+def test_LinkBitcodeFilesToBytecode_syntax_error(tempdir: pathlib.Path):
+  """llvm-link fails when a file contains invalid syntax."""
+  input_path = tempdir / 'empty.ll'
+  output_path = tempdir / 'linked.ll'
+  fs.Write(input_path, 'syntax error!'.encode('utf-8'))
+  with pytest.raises(ValueError) as e_ctx:
+    llvm_link.LinkBitcodeFilesToBytecode([input_path], output_path, timeout_seconds=5)
+  assert str(e_ctx.value).startswith('Failed to link bytecode: ')
 
 
 if __name__ == '__main__':
