@@ -86,7 +86,6 @@ py_binary(
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:fs",
-        "//labm8:humanize",
         "//labm8:labdate",
         "//labm8:pbutil",
         "//labm8:system",

@@ -44,7 +44,6 @@ from gpu.oclgrind import oclgrind
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
-from labm8 import humanize
 from labm8 import labdate
 from labm8 import labtypes
 from labm8 import pbutil
