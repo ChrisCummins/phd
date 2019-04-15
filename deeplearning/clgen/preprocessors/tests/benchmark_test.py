@@ -24,6 +24,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'deeplearning.clgen'
+
 # A full preprocessing pipeline for the C++ programming language.
 CXX_PREPROCESSORS = [
     'deeplearning.clgen.preprocessors.cxx:ClangPreprocess',
