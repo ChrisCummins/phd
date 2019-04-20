@@ -14,6 +14,8 @@
 """Unit tests for //compilers/llvm/llvm_link.py."""
 import pathlib
 
+import pytest
+
 from compilers.llvm import llvm_link
 from labm8 import app
 from labm8 import fs
