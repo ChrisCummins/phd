@@ -1,7 +1,7 @@
 \section{CLgen: Benchmark Synthesis}%
 % \label{sec:TODO}
 
-This section introduces CLgen, a tool for synthesizing OpenCL benchmarks, and an accompanying host driver for executing synthetic benchmarks for gathering performance data for predictive modeling. While we demonstrate our approach using OpenCL, it is language agnostic. Our tool CLgen learns the semantics and structure from over a million lines of hand-written code from GitHub, and synthesizes programs through a process of iterative model sampling. We use a host driver to execute the synthesized programs to gather performance data for use in predictive modeling. Figure~\ref{fig:clgen-pipeline} provides an overview of the program synthesis and execution pipeline. Our approach extends the state of the art by providing a general-purpose solution for benchmark synthesis, leading to better and more accurate predictive models.
+This section introduces CLgen, a tool for synthesizing OpenCL benchmarks, and an accompanying host driver for executing synthetic benchmarks for gathering performance data for predictive modelling. While we demonstrate our approach using OpenCL, it is language agnostic. Our tool CLgen learns the semantics and structure from over a million lines of hand-written code from GitHub, and synthesizes programs through a process of iterative model sampling. We use a host driver to execute the synthesized programs to gather performance data for use in predictive modelling. Figure~\ref{fig:clgen-pipeline} provides an overview of the program synthesis and execution pipeline. Our approach extends the state of the art by providing a general-purpose solution for benchmark synthesis, leading to better and more accurate predictive models.
 
 In the course of evaluating our technique against prior work we discovered that it is also useful for evaluating the quality of features. Since we are able to cover the space so much more finely than the prior work, which only used standard benchmark suites, we are able to find multiple programs with identical feature values but different best heuristic values. This indicates that the features are not sufficiently discriminative and should be extended with more information to allow those programs to be separated. We go on to show that doing this significantly increases the performance of the learned heuristics. We expect that our technique will be valuable for feature designers.
 
@@ -18,7 +18,7 @@ CLgen is an undirected, general-purpose program synthesizer for OpenCL. It adopt
 
 \subsection{An OpenCL Language Corpus}
 
-Deep learning requires large datasets~\cite{LeCun2015}. For the purpose of modeling a programming language, this means assembling a very large collection of real, hand-written source codes. We assembled OpenCL codes by mining public repositories on the popular code hosting site GitHub.
+Deep learning requires large datasets~\cite{LeCun2015}. For the purpose of modelling a programming language, this means assembling a very large collection of real, hand-written source codes. We assembled OpenCL codes by mining public repositories on the popular code hosting site GitHub.
 
 This is itself a challenging task since OpenCL is an embedded language, meaning device code is often difficult to untangle since GitHub does not presently recognize it as a searchable programming language. We developed a search engine which attempts to identify and download standalone OpenCL files through a process of file scraping and recursive header inlining. The result is a 2.8 million line dataset of 8078 ``content files'' which potentially contain OpenCL code, originating from 793 GitHub repositories.
 
@@ -66,7 +66,7 @@ An example of the code rewriting process is shown in Listings~\ref{lst:code-rewr
 
 \subsection{Learning OpenCL}\label{sec:ml}
 
-Generating valid, executable program code is an ambitious and challenging goal for unsupervised machine learning. We employ state of the art deep language modeling techniques to achieve this task.
+Generating valid, executable program code is an ambitious and challenging goal for unsupervised machine learning. We employ state of the art deep language modelling techniques to achieve this task.
 
 \lstset{language=[OpenCL]C}
 \begin{lstlisting}[%

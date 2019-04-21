@@ -24,7 +24,7 @@ and a significant engineering effort, which has to be repeated from scratch for
 each new language. Instead, we treat the problem as an unsupervised machine
 learning task, employing state-of-the-art deep learning techniques to build
 models for how humans write programs. Our approach is inspired by breakthrough
-results in modeling challenging and high dimensional datasets through
+results in modelling challenging and high dimensional datasets through
 unsupervised learning~\cite{Raghu2016,Radford2016b,Bowman2015}. Contrary to
 existing tools, our approach does not require expert knowledge of the target
 language and is only a few hundred lines of code.
@@ -77,13 +77,13 @@ C or Java, models may be generated without these modifications.
 We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural
 Network to model program code~\cite{Hochreiter1997}. In the LSTM architecture
 activations are learned with respect not just to their current inputs but to
-previous inputs in a sequence. In our case, this allows modeling the probability
+previous inputs in a sequence. In our case, this allows modelling the probability
 of a token appearing in the text given a history of previously seen tokens.
 Unlike previous recurrent networks, LSTMs employ a \emph{forget gate} with a
 linear activation function, allowing them to avoid the \emph{vanishing
 gradients} problem~\cite{Pacanu2013}. This makes them effective at learning
 complex relationships over long sequences~\cite{Lipton2015} which is important
-for modeling program code. Our LSTM networks model the vocabulary distribution
+for modelling program code. Our LSTM networks model the vocabulary distribution
 over the encoded corpus. After initial experiments using different model
 parameters, we found that a two layer LSTM network of 512 nodes per layer
 provided a good trade-off between the fidelity of the learned distribution and
