@@ -1,23 +1,25 @@
 \begin{table}
   \centering
-  \begin{tabular}{l r r | r r}
-    \toprule
+  \rowcolors{2}{white}{gray!25}
+  \begin{tabular}{| l r r | r r |}
+    \hline
+    \rowcolor{gray!50}
     & \multicolumn{2}{c}{\textbf{\#.\ neurons}} & \multicolumn{2}{c}{\textbf{\#.\ parameters}} \\
-    \rowcolor{white}
+    \rowcolor{gray!50}
     & \textbf{HM} & \textbf{CF} & \textbf{HM} & \textbf{CF} \\
-    \midrule
+    \hline
     \textbf{Embedding} & 64 & 64 & ,256 & 8,256 \\
     \textbf{LSTM\_1} & 64 & 64 & 33,024 & 33,024 \\
     \textbf{LSTM\_2} & 64 & 64 & 33,024 & 33,024 \\
     \textbf{Concatenate} & 64 + 2 & - & - & - \\
-    \textbf{Batch Norm .} & 66 & 64 & 264 & 256 \\
+    \textbf{Batch Normalisation} & 66 & 64 & 264 & 256 \\
     \textbf{DNN\_1} & 32 & 32 & 2,144 & 2,080 \\
     \textbf{DNN\_2} & 2 & 6 & 66 & 198 \\
-    \midrule
+    \hline
     \textbf{Total} & & & 76,778 & 76,838 \\
-    \bottomrule
+    \hline
   \end{tabular}
-  \caption{%
+  \caption[DeepTune model parameters]{%
     The size and number of parameters of the DeepTune components of
     Figure~\ref{fig:nn}, configured for heterogeneous mapping (HM) and
     coarsening factor (CF).%

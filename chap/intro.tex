@@ -14,27 +14,39 @@ The major contributions of this thesis are as follows:
 
 \textbf{benchmark generator}.
 
-A novel methodology for the \textbf{construction of optimization heuristics} without the use of explicit code features.
+A novel methodology for the \textbf{construction of optimisation heuristics} without the use of explicit code features.
 
 An application to \textbf{fuzz testing}.
 
+\begin{itemize}
+  \item \todo{CGO'17 contribution} We are the first to apply deep learning over source codes to synthesise compilable, executable benchmarks.%
+  \item \todo{CGO'17 contribution} A novel tool CLgen\footnote{\url{https://github.com/ChrisCummins/clgen}} for general-purpose benchmark synthesis using deep learning. CLgen automatically and rapidly generates thousands of human like programs for use in predictive modelling.%
+  \item \todo{CGO'17 contribution} We use CLgen to automatically improve the performance of a state-of-the-art predictive model by $1.27\times$, and expose limitations in the feature design of the model which, after correcting, further increases performance by $4.30\times$.%
+  \item \todo{PACT'17 contribution} a novel, automatic, and fast approach for the generation of expressive random programs for compiler fuzzing. We \emph{infer} programming language syntax, structure, and use from real-world examples, not through an expert-defined grammar. Our system needs two orders of magnitude less code than the state-of–the-art, and takes less than a day to train;
+  \item \todo{PACT'17 contribution} we discover a similar number of bugs as the state-of–the-art, but also find bugs which prior work cannot, covering more components of the compiler;
+  \item \todo{PACT'17 contribution} in modelling real handwritten code, our test cases are more interpretable than other approaches. Average test case size is two orders of magnitude smaller than state-of-the-art, without any expensive reduction process.
+	\item \todo{ISSTA'18 contribution} We present a methodology for building compiler heuristics without any need for feature engineering.
+	\item \todo{ISSTA'18 contribution} A novel tool DeepTune for automatically constructing optimisation heuristics without features. DeepTune outperforms existing state-of-the-art predictive models by 14\% and 12\% in two challenging optimisation domains.
+	\item \todo{ISSTA'18 contribution} We apply, for the first time, \emph{transfer learning} on compile-time and optimisations, improving the heuristics by reusing training information across different optimisation problems, even if they are unrelated.
+\end{itemize}
+
 \section{Structure}
 
-This thesis is organized as follows:
+This thesis is organised as follows:
 
 \textbf{Chapter~\ref{chap:background}} defines terminology and describes the  methodologies and techniques used in this thesis.
 
-\textbf{Chapter~\ref{chap:related-work}} provides an overview of previous work on machine learning for compilers, with an emphasis on performance optimization.
+\textbf{Chapter~\ref{chap:related-work}} provides an overview of previous work on machine learning for compilers, with an emphasis on performance optimisation.
 
 \textbf{Chapter~\ref{chap:clgen}} describes a machine learning generator for source codes. The generator is evaluated for its ability to produce OpenCL benchmarks.
 
 \textbf{Chapter~\ref{chap:clgen}} introduces a novel machine learning generator for source codes. The generator is evaluated for its ability to produce OpenCL benchmarks.
 
-\textbf{Chapter~\ref{chap:deepsmith}} presents an application of the machine learning generator for synthesizing compiler test cases. The chapter contains an extensive evaluation of OpenCL compilers using the synthesized test cases.
+\textbf{Chapter~\ref{chap:deepsmith}} presents an application of the machine learning generator for synthesising compiler test cases. The chapter contains an extensive evaluation of OpenCL compilers using the synthesised test cases.
 
-\textbf{Chapter~\ref{chap:deeptune}} introduces a novel methodology for constructing optimizing compiler heuristics without the need for code features.
+\textbf{Chapter~\ref{chap:deeptune}} introduces a novel methodology for constructing optimising compiler heuristics without the need for code features.
 
-\textbf{Chapter~\ref{chap:conclusions}} summarizes the findings and describes potential avenues for future research.
+\textbf{Chapter~\ref{chap:conclusions}} summarises the findings and describes potential avenues for future research.
 
 
 \section{Summary}

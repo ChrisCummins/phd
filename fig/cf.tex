@@ -1,17 +1,17 @@
 \begin{figure}
   \centering %
   \subfloat[Magni \emph{et al.\ }cascading binary model.]{%
-    \includegraphics[width=.85\columnwidth]{img/cf-magni}%
+    \includegraphics[width=.95\columnwidth]{img/cf-magni}%
     \label{fig:cf-magni}
   }\\*%
   \subfloat[Our approach.]{%
-      \includegraphics[width=.65\columnwidth]{img/cf-deeptune}%
+      \includegraphics[width=.75\columnwidth]{img/cf-deeptune}%
       \label{fig:cf-deeptune}
   }%
-  \caption{%
+  \caption[Predicting OpenCL thread coarsening factors.]{%
       Two approaches for predicting coarsening factor (CF) of OpenCL kernels.
       Magni \emph{et al.\ }reduce the multi-label classification problem to a
-      series of binary decisions, by iteratively applying the optimization and
+      series of binary decisions, by iteratively applying the optimisation and
       computing new feature vectors. Our approach simply predicts the coarsening
       factor directly from the source code.%
   }

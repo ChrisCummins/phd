@@ -5,15 +5,15 @@
     An example, short OpenCL kernel, taken from Nvidia's \emph{streamcluster}.%
   ]{%
     \noindent\mbox{\parbox{\columnwidth}{%
-      \lstinputlisting[label=subfig:source_in]{lst/source_in}%
+      \lstinputlisting[nolol,label=subfig:source_in]{lst/source_in}%
     }}%
   }\\%
   \subfloat[%
     The \emph{streamcluster} kernel after source rewriting. Variable and
-    function names are normalized, comments removed, and code style enforced.%
+    function names are normalised, comments removed, and code style enforced.%
   ]{%
     \noindent\mbox{\parbox{\columnwidth}{%
-      \lstinputlisting[label=subfig:source_out]{lst/source_out}%
+      \lstinputlisting[nolol,label=subfig:source_out]{lst/source_out}%
     }}%
   }\\%
   \subfloat[%
@@ -31,8 +31,8 @@
     \input{tab/encoded}%
     \label{subfig:source_enc}%
   }%
-  \caption{%
-    Deriving a tokenized $1$-of-$k$ vocabulary encoding from an OpenCL source
+  \caption[Deriving a vocabulary encoding from an OpenCL source code]{%
+    Deriving a tokenised $1$-of-$k$ vocabulary encoding from an OpenCL source
     code.%
   }%
   \label{fig:encoding}%

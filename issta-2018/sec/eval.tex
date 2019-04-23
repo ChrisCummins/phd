@@ -4,7 +4,7 @@
 \begin{figure}
 	\centering %
 	\includegraphics[width=.85\columnwidth]{img/clang-crashes}%
-	\caption{%
+	\caption[Crash rate of the Clang front-end]{%
 		Crash rate of the Clang front-end of every LLVM release in the past 24
 		months compiling 75k DeepSmith kernels.%
 	}%
@@ -14,7 +14,7 @@
 
 \begin{table}
 	\centering %
-	\caption{%
+	\caption[Number of DeepSmith programs which trigger errors]{%
 		The number of DeepSmith programs which trigger distinct Clang front-end
 		assertions, and the number of programs which trigger unreachables.%
 	}
@@ -46,44 +46,21 @@
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
   \label{lst:almost-everything-crash}
   }\\%
-  \caption{Example OpenCL kernels which crash compilers.}%
+  \caption[Example OpenCL kernels which crash compilers]{%
+    Example OpenCL kernels which crash compilers.%
+  }%
 \end{figure}
 
-\noindent
-We report on the results of DeepSmith testing of the 10 OpenCL systems from
-Table~\ref{tab:platforms}, in which each ran for 48 hours. We found bugs in all
-the compilers we tested --- every compiler crashed, and every compiler generated
-programs which either crash or silently compute the wrong result. To date, we
-have submitted 67 bug reports to compiler vendors. We first provide a
-qualitative analysis of compile-time and runtime defects found, followed by a
-quantitative comparison of our approach against the state-of-the-art in OpenCL
-compiler fuzzing --- CLSmith~\cite{Lidbury2015a}. DeepSmith is able to identify
-a broad range of defects, many of which CLSmith cannot, for only a fraction of
-the engineering effort. Finally, we provide a quantitative analysis of compiler
-robustness over time, using the compiler crash rate of every LLVM release in the
-past two years as a metric of compiler robustness. We find that progress is
-good, compilers are becoming more robust, yet the introduction of new features
-and regressions ensures that compiler validation remains a moving target.
+We report on the results of DeepSmith testing of the 10 OpenCL systems from Table~\ref{tab:deepsmith-platforms}, in which each ran for 48 hours. We found bugs in all the compilers we tested --- every compiler crashed, and every compiler generated programs which either crash or silently compute the wrong result. To date, we have submitted 67 bug reports to compiler vendors. We first provide a qualitative analysis of compile-time and runtime defects found, followed by a quantitative comparison of our approach against the state-of-the-art in OpenCL compiler fuzzing --- CLSmith~\cite{Lidbury2015a}. DeepSmith is able to identify a broad range of defects, many of which CLSmith cannot, for only a fraction of the engineering effort. Finally, we provide a quantitative analysis of compiler robustness over time, using the compiler crash rate of every LLVM release in the past two years as a metric of compiler robustness. We find that progress is good, compilers are becoming more robust, yet the introduction of new features and regressions ensures that compiler validation remains a moving target.
 
-Unless stated otherwise, DeepSmith code listings are presented verbatim, with
-only minor formatting changes applied to save space. No test case reduction,
-either manual or automatic, was needed.
+Unless stated otherwise, DeepSmith code listings are presented verbatim, with only minor formatting changes applied to save space. No test case reduction, either manual or automatic, was needed.
 
-For the remainder of the paper we identify testbeds using the OpenCL system
-number from Table~\ref{tab:platforms}, suffixed with $+$, $-$, or $\pm$ to
-denote optimizations on, off, or either, respectively.
+For the remainder of the paper we identify testbeds using the OpenCL system number from Table~\ref{tab:deepsmith-platforms}, suffixed with $+$, $-$, or $\pm$ to denote optimisations on, off, or either, respectively.
 
 \subsection{Compile-time Defects}%
 \label{subsec:compile-time-defects}
 
-OpenCL is typically compiled online, which amplifies the significance of
-detecting compile-time defects, as they may not be discovered until code has
-been shipped to customers. We found numerous cases where DeepSmith kernels
-trigger a crash in the compiler (and as a result, the host process), or cause
-the compiler to loop indefinitely. In the testing time allotted we have
-identified 199 test cases which trigger unreachable code failures, triggered 31
-different compiler assertions, and produced 114 distinct stack traces from other
-compiler crashes.
+OpenCL is typically compiled online, which amplifies the significance of detecting compile-time defects, as they may not be discovered until code has been shipped to customers. We found numerous cases where DeepSmith kernels trigger a crash in the compiler (and as a result, the host process), or cause the compiler to loop indefinitely. In the testing time allotted we have identified 199 test cases which trigger unreachable code failures, triggered 31 different compiler assertions, and produced 114 distinct stack traces from other compiler crashes.
 
 \begin{figure}
   \centering %
@@ -96,49 +73,24 @@ compiler crashes.
   \subfloat[Reduced from 68 line kernel.]{%
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\ParserFailThree}}}%
   }\\%
-  \caption{Example codes which crash parsers.}%
+  \caption[Example codes which crash parsers]{%
+    Example codes which crash parsers.%
+  }%
   \label{lst:parser-crashes}
   %
 \end{figure}
 
 \subsubsection{Semantic Analysis Failures}
 
-Compilers should produce meaningful diagnostics when inputs are invalid, yet we
-discovered dozens of compiler defects attributable to improper or missing error
-handling. Many generation and mutation based approaches to compiler validation
-have focused solely on testing under \emph{valid inputs}. As such, this class of
-bugs may go undiscovered. We believe that our approach contributes a significant
-improvement to generating plausibly-erroneous code over prior random-enumeration
-approaches.
+Compilers should produce meaningful diagnostics when inputs are invalid, yet we discovered dozens of compiler defects attributable to improper or missing error handling. Many generation and mutation based approaches to compiler validation have focused solely on testing under \emph{valid inputs}. As such, this class of bugs may go undiscovered. We believe that our approach contributes a significant improvement to generating plausibly-erroneous code over prior random-enumeration approaches.
 
-The use of undeclared identifiers is a core error diagnostic which one would
-expect to be robust in a mature compiler. DeepSmith discovered cases in which
-the presence of undeclared identifiers causes the Testbeds $10\pm$ compiler to
-crash. For example, the undeclared identifier \texttt{c} in
-Figure~\ref{lst:oclgrind-uncorrected-typos} raises an assertion during semantic
-analysis of the AST when used as an array index.
+The use of undeclared identifiers is a core error diagnostic which one would expect to be robust in a mature compiler. DeepSmith discovered cases in which the presence of undeclared identifiers causes the Testbeds $10\pm$ compiler to crash. For example, the undeclared identifier \texttt{c} in Figure~\ref{lst:oclgrind-uncorrected-typos} raises an assertion during semantic analysis of the AST when used as an array index.
 
-Type errors were an occasional cause of compile-time defect.
-Figure~\ref{lst:nvidia-recursion-segfault} induces a crash in NVIDIA compilers
-due to an implicit conversion between global to constant address qualifiers.
-Worse, we found that Testbeds $3\pm$ would loop indefinitely on some kernels
-containing implicit conversions from a pointer to an integer, as shown in
-Figure~\ref{lst:beignet-ptr-int-spin}. While spinning, the compiler would
-utilize 100\% of the CPU and consume an increasing amount of host memory until
-the entire system memory is depleted and the process crashes.
+Type errors were an occasional cause of compile-time defect. Figure~\ref{lst:nvidia-recursion-segfault} induces a crash in NVIDIA compilers due to an implicit conversion between global to constant address qualifiers. Worse, we found that Testbeds $3\pm$ would loop indefinitely on some kernels containing implicit conversions from a pointer to an integer, as shown in Figure~\ref{lst:beignet-ptr-int-spin}. While spinning, the compiler would utilise 100\% of the CPU and consume an increasing amount of host memory until the entire system memory is depleted and the process crashes.
 
-Occasionally, incorrect program semantics will remain undetected until late in
-the compilation process. Both Figures~\ref{lst:intel-gt2-double-assertion}
-and~\ref{lst:beignet-scalarize-insert} pass the type checker and semantic
-analysis, but trigger compiler assertions during code generation.
+Occasionally, incorrect program semantics will remain undetected until late in the compilation process. Both Figures~\ref{lst:intel-gt2-double-assertion} and~\ref{lst:beignet-scalarize-insert} pass the type checker and semantic analysis, but trigger compiler assertions during code generation.
 
-An interesting yet unintended byproduct of having trained DeepSmith on thousands
-of real world examples is that the model learned to occasionally generate
-compiler-specific code, such as invoking compiler builtins. We found the quality
-of error handling on these builtins to vary wildly. For example,
-Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers,
-which, to the best of our knowledge, makes DeepSmith the first random program
-generator to induce a defect through exploiting compiler-specific functionality.
+An interesting yet unintended byproduct of having trained DeepSmith on thousands of real world examples is that the model learned to occasionally generate compiler-specific code, such as invoking compiler intrinsics. We found the quality of error handling on these builtins to vary wildly. For example, Figure~\ref{lst:almost-everything-crash} silently crashes 6 of the 10 compilers, which, to the best of our knowledge, makes DeepSmith the first random program generator to induce a defect through exploiting compiler-specific functionality.
 
 \subsubsection{Parser Failures}
 
@@ -157,28 +109,28 @@ parsing.
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetPtrIntSpin}}}%
   \label{lst:beignet-ptr-int-spin}
   }\\%
-  \subfloat[Testbed $1+$ hangs during optimization of kernels with large loop bounds. Testbeds $1-$ and $2\pm$ compile in under 1 second.]{%
+  \subfloat[Testbed $1+$ hangs during optimisation of kernels with large loop bounds. Testbeds $1-$ and $2\pm$ compile in under 1 second.]{%
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaOptLoopHang}}}%
   \label{lst:nvidia-opt-loop-hang}
   }\\%
-  \subfloat[Testbeds $4+$, $5+$, $6+$, $7+$ hang during optimization of kernels with non-terminating loops.]{%
+  \subfloat[Testbeds $7\pm$ loops indefinitely, consuming 100\% CPU usage.]{%
+	\noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
+	\label{lst:xeon-phi-spin}
+  }\\%
+  \subfloat[Testbeds $4+$, $5+$, $6+$, $7+$ hang during optimisation of kernels with non-terminating loops.]{%
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
   \label{lst:intel-inf-loop}
   }\\%
-  \subfloat[Testbeds $7\pm$ loops indefinitely, consuming 100\% CPU usage.]{%
-  \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
-  \label{lst:xeon-phi-spin}
-  }\\%
-  \caption{Example kernels which hang compilers.}%
+  \caption[Example kernels which hang compilers]{Example kernels which hang compilers.}%
   \label{lst:compiler-hangs}
   %
 \end{figure}
 
 \subsubsection{Compiler Hangs}
 
-As expected, some compile-time defects are optimization sensitive. Testbed $1+$
+As expected, some compile-time defects are optimisation sensitive. Testbed $1+$
 hangs on large loop bounds, shown in Figure~\ref{lst:nvidia-opt-loop-hang}. All
-commercial Intel compilers we tested hang during optimization of non-terminating
+commercial Intel compilers we tested hang during optimisation of non-terminating
 loops (Figure~\ref{lst:intel-inf-loop}).
 
 Testbeds $7\pm$ loop indefinitely during compilation of the simple kernel in
@@ -197,7 +149,7 @@ Testbeds~$1\pm$, $2\pm$, $3\pm$ rejected address space qualifiers on automatic
 variables, where all other testbeds successfully compiled and executed.
 
 On Testbeds~$3\pm$, the statement \texttt{int n = mad24(a, (32),
-get\_global\_size(0));} (a call to a math builtin with mixed types) is rejected
+get\_global\_size(0));} (a call to a maths builtin with mixed types) is rejected
 as ambiguous.
 
 \subsection{Runtime Defects}%
@@ -205,7 +157,7 @@ as ambiguous.
 
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $4+$, $6+$ incorrectly optimize the \texttt{if} statement, causing the conditional branch to execute (it shouldn't). This pattern of integer comparison to thread ID is widely used.]{%
+  \subfloat[Testbeds $4+$, $6+$ incorrectly optimise the \texttt{if} statement, causing the conditional branch to execute (it shouldn't). This pattern of integer comparison to thread ID is widely used.]{%
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntUnreduced}}}%
   \label{lst:intel-size_t-int-unreduced}
   }\\%
@@ -221,7 +173,7 @@ as ambiguous.
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
   \label{lst:pocl-undefined-symbols}
   }\\%
-  \caption{Example kernels which are miscompiled.}%
+  \caption[Example kernels which are miscompiled]{Example kernels which are miscompiled.}%
 \end{figure}
 
 Prior work on compiler test case generation has focused on extensive stress-
@@ -237,11 +189,11 @@ A common pattern in OpenCL is to obtain the thread identity, often as an
 \texttt{int}, and to compare this against some fixed value to determine whether
 or not to complete a unit of work (46\% of OpenCL kernels on GitHub use this
 ($tid \rightarrow$ int, \texttt{if (tid < \ldots) \{\ldots\}}) pattern).
-DeepSmith, having modeled the frequency with which this pattern occurs in real
+DeepSmith, having modelled the frequency with which this pattern occurs in real
 handwritten code, generates many permutations of this pattern. And in doing so,
-exposed a bug in the optimizer of Testbeds $4+$ and $6+$ which causes the
+exposed a bug in the optimiser of Testbeds $4+$ and $6+$ which causes the
 \texttt{if} branch in Figure~\ref{lst:intel-size_t-int-unreduced} to be
-erroneously executed when the kernel is compiled with optimizations enabled. We
+erroneously executed when the kernel is compiled with optimisations enabled. We
 have reported this issue to Intel. CLSmith does not permit the thread identity
 to modify control flow, rendering such productions impossible.
 
@@ -282,9 +234,9 @@ capabilities of DeepSmith and CLSmith.
 
 \begin{table}
   \centering %
-  \caption{%
+  \caption[Results from 48 hours of testing using CLSmith]{%
   Results from 48 hours of testing using CLSmith. System \#. as
-  per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on
+  per Table~\ref{tab:deepsmith-platforms}. $\pm$ denotes optimisations off ($-$) vs on
   ($+$). The remaining columns denote the number of build crash (\bc), build
   timeout (\bto), anomalous build failure (\abf), anomalous runtime crash
   (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
@@ -295,9 +247,9 @@ capabilities of DeepSmith and CLSmith.
 
 \begin{table}
 	\centering %
-	\caption{%
+	\caption[Results from 48 hours of testing using DeepSmith]{%
 		Results from 48 hours of testing using DeepSmith. System \#. as
-		per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on
+		per Table~\ref{tab:deepsmith-platforms}. $\pm$ denotes optimisations off ($-$) vs on
 		($+$). The remaining columns denote the number of build crash (\bc), build
 		timeout (\bto), anomalous build failure (\abf), anomalous runtime crash
 		(\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
@@ -309,7 +261,7 @@ capabilities of DeepSmith and CLSmith.
 \begin{figure}
   \centering %
   \includegraphics[width=.75\columnwidth]{img/vs-clsmith}%
-  \caption{%
+  \caption[Comparison of DeepSmith and CLSmith runtimes]{%
   Comparison of runtimes (a) and test case sizes (b). DeepSmith test cases
   are on average evaluated $3.03\times$ faster than CLSmith ($2.45\times$,
   and $4.46\times$ for generation and execution, respectively), and are two
@@ -338,8 +290,8 @@ DeepSmith generation time grows linearly with program length, and is on average
 $2.45\times$ faster than CLSmith. Test case execution is on average $4.46\times$
 faster than CLSmith.
 
-The optimization level generally does not affect testing throughput
-significantly, with the exception of Testbed $7+$. Optimization of large structs
+The optimisation level generally does not affect testing throughput
+significantly, with the exception of Testbed $7+$. Optimisation of large structs
 is expensive on Testbed $7+$, and CLSmith test cases use global structs
 extensively. This is a known issue --- in~\cite{Lidbury2015a} the authors omit
 large-scale testing on this device for this reason. The use of structs in
@@ -353,7 +305,7 @@ The average CLSmith program is 1189 lines long (excluding headers). CLSmith test
 cases require reduction in order to expose the underlying bug. An automated
 approach to OpenCL test case reduction is presented in~\cite{Pflanzer2016},
 though it requires on average 100 minutes for each test case using a
-parallelized implementation (and over 6 hours if this parallelization is not
+parallelised implementation (and over 6 hours if this parallelisation is not
 available); the authors also suggest a final manual pass after automated
 reduction. In contrast, DeepSmith learned to program from humans, and humans do
 not typically write such large kernel functions. The average DeepSmith kernel is
@@ -363,24 +315,9 @@ automatic.
 
 \subsubsection{Comparison of Results} %
 
-Both testing systems found anomalous results of all types. In 48 hours of
-testing, CLSmith discovered compile-time crashes (\bc) in 8 of the 20 testbeds,
-DeepSmith crashed all of them. DeepSmith triggered 31 distinct compiler
-assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also
-triggered by DeepSmith. DeepSmith also triggered 3 distinct \emph{unreachable!}
-compile-time crashes, CLSmith triggered 0. The ratio of build failures is higher
-in the token-level generation of DeepSmith (51\%) than the grammar-based
-generation of CLSmith (26\%).
+Both testing systems found anomalous results of all types. In 48 hours of testing, CLSmith discovered compile-time crashes (\bc) in 8 of the 20 testbeds, DeepSmith crashed all of them. DeepSmith triggered 31 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by DeepSmith. DeepSmith also triggered 3 distinct \emph{unreachable!} compile-time crashes, CLSmith triggered 0. The ratio of build failures is higher in the token-level generation of DeepSmith (51\%) than the grammar-based generation of CLSmith (26\%).
 
-The Intel CPU Testbeds ($4\pm$, $5\pm$, $6\pm$, and $7\pm$) would occasionally
-emit a stack trace upon crashing, identifying the failure point in a specific
-compiler pass. CLSmith triggered such crashes in 4 distinct passes. DeepSmith
-triggered crashes in 10 distinct passes, including 3 of the 4 in which CLSmith
-did. Figure~\ref{lst:intel-passes} provides examples. Many of these crashes are
-optimization sensitive, and are more likely to occur when optimizations are
-enabled. CLSmith was able to induce a crash in only one of the Intel testbeds
-with optimizations disabled. DeepSmith crashed all of the compilers with both
-optimizations enabled and disabled.
+The Intel CPU Testbeds ($4\pm$, $5\pm$, $6\pm$, and $7\pm$) would occasionally emit a stack trace upon crashing, identifying the failure point in a specific compiler pass. CLSmith triggered such crashes in 4 distinct passes. DeepSmith triggered crashes in 10 distinct passes, including 3 of the 4 in which CLSmith did. Figures~\ref{lst:intel-passes} and~\ref{lst:further-intel-passes} provides examples. Many of these crashes are optimisation sensitive, and are more likely to occur when optimisations are enabled. CLSmith was able to induce a crash in only one of the Intel testbeds with optimisations disabled. DeepSmith crashed all of the compilers with both optimisations enabled and disabled.
 
 \begin{figure}
   \centering
@@ -402,132 +339,66 @@ optimizations enabled and disabled.
   \subfloat[\emph{PrepareKernelArgs} pass.]{%
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPrepareKernelArgs}}}%
   }\\%
-  % Program id: 37443
-  \subfloat[\emph{Add SPIR related module scope metadata} pass.]{%
-  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSPIRMetadata}}}%
-  }\\%
-  % Program id: 44105
-  \subfloat[\emph{Intel OpenCL RemoveDuplicationBarrier} pass.]{%
-  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelRemoveDupeBarrier}}}%
-  }\\%
-  \subfloat[\emph{X86 DAG->DAG Instruction Selection} pass.]{%
-  \noindent\mbox{\parbox{\columnwidth}{\usebox{\DagPass}}}%
-  }\\%
-  \caption{Example kernels which crash Intel compiler passes.}%
+  \caption[Example kernels which crash Intel compiler passes]{%
+    Example kernels which crash Intel compiler passes.%
+  }%
   \label{lst:intel-passes}
 \end{figure}
 
-CLSmith produced many \bto results across 13 Testbeds. Given the large kernel
-size, it is unclear how many of those are infinite loops or simply a result of
-slow compilation of large kernels. The average size of CLSmith \bto kernels is
-1558 lines. Automated test case reduction --- in which thousands of permutations
-of a program are executed --- may be prohibitively expensive for test cases with
-very long runtimes. DeepSmith produced \bto results across 11 Testbeds and with
-an average kernel size of 9 lines, allowing for rapid identification of the
-underlying problem.
+\begin{figure}
+	\centering
+	% Program id: 37443
+	\subfloat[\emph{Add SPIR related module scope metadata} pass.]{%
+		\noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSPIRMetadata}}}%
+	}\\%
+	% Program id: 44105
+	\subfloat[\emph{Intel OpenCL RemoveDuplicationBarrier} pass.]{%
+		\noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelRemoveDupeBarrier}}}%
+	}\\%
+	\subfloat[\emph{X86 DAG->DAG Instruction Selection} pass.]{%
+		\noindent\mbox{\parbox{\columnwidth}{\usebox{\DagPass}}}%
+	}\\%
+	\caption[Further example kernels which crash Intel compiler passes]{%
+		Further example kernels which crash Intel compiler passes.%
+	}%
+	\label{lst:further-intel-passes}
+\end{figure}
+
+CLSmith produced many \bto results across 13 Testbeds. Given the large kernel size, it is unclear how many of those are infinite loops or simply a result of slow compilation of large kernels. The average size of CLSmith \bto kernels is 1558 lines. Automated test case reduction --- in which thousands of permutations of a program are executed --- may be prohibitively expensive for test cases with very long runtimes. DeepSmith produced \bto results across 11 Testbeds and with an average kernel size of 9 lines, allowing for rapid identification of the underlying problem.
 
 \input{fig/common-compiler-assertions}
 
-The integrated GPU Testbeds ($3\pm$) frequently failed to compile CLSmith
-kernels, resulting in over 10k \bc and \bto results. Of the build crashes, 68\%
-failed silently, and the remainder were caused by the same two compiler
-assertions for which DeepSmith generated 4 line test cases, shown in
-Figure~\ref{lst:common-compiler-assertions}. DeepSmith also triggered silent build crashes
-in Testbeds $3\pm$, and a further 8 distinct compiler assertions.
+The integrated GPU Testbeds ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10k \bc and \bto results. Of the build crashes, 68\% failed silently, and the remainder were caused by the same two compiler assertions for which DeepSmith generated 4 line test cases, shown in Figure~\ref{lst:common-compiler-assertions}. DeepSmith also triggered silent build crashes in Testbeds $3\pm$, and a further 8 distinct compiler assertions.
 
-The 4719 \abf results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result
-of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith
-occasionally emits. DeepSmith also generated these statements, but with a much
-lower probability, given that it is an unusual construct (0.6\% of test cases,
-versus 7.0\% of CLSmith test cases).
+The 4719 \abf results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. DeepSmith also generated these statements, but with a much lower probability, given that it is an unusual construct (0.6\% of test cases, versus 7.0\% of CLSmith test cases).
 
-ComputeAorta (Testbeds $9\pm$) defers kernel compilation so that it can perform
-optimizations dependent on runtime parameters. This may contribute to the
-relatively large number of \arc results and few \bc results of Testbeds $9\pm$.
-Only DeepSmith was able to expose compile-time defects in this compiler.
+ComputeAorta (Testbeds $9\pm$) defers kernel compilation so that it can perform optimisations dependent on runtime parameters. This may contribute to the relatively large number of \arc results and few \bc results of Testbeds $9\pm$. Only DeepSmith was able to expose compile-time defects in this compiler.
 
-Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code
-was evaluated, compared to $3.8 \times 10^6$ lines of DeepSmith code. This
-provides CLSmith a greater potential to trigger miscompilations. CLSmith
-generated 33 programs with anomalous wrong-outputs. DeepSmith generated 30.
+Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code was evaluated, compared to $3.8 \times 10^6$ lines of DeepSmith code. This provides CLSmith a greater potential to trigger miscompilations. CLSmith generated 33 programs with anomalous wrong-outputs. DeepSmith generated 30.
 
 
 \subsection{Compiler Stability Over Time}%
 \label{subsec:clangs}
 
-The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL
-drivers. This in turn causes Clang-related defects to potentially affect
-multiple compilers, for example the one in
-Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, we
-used debug+assert builds of every LLVM release in the past 24 months and
-processed 75,000 DeepSmith kernels through the Clang front-end (this includes
-the lexer, parser, and type checker, but not code generation).
+The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL drivers. This in turn causes Clang-related defects to potentially affect multiple compilers, for example the one in Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, we used debug+assert builds of every LLVM release in the past 24 months and processed 75,000 DeepSmith kernels through the Clang front-end (this includes the lexer, parser, and type checker, but not code generation).
 
-Figure~\ref{fig:clangs} shows that the crash rate of the Clang front-end is, for
-the most part, steadily decreasing over time. The number of failing compiler
-crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clangs} shows
-the 7 distinct assertions triggered during this experiment. Assertion 1
-(\emph{Uncorrected typos!}) is raised on all compiler versions --- see
-Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at
-which the assertion is triggered has decreased markedly, although there are
-slight increases between some releases. Notably, the current development trunk
-has the second lowest crash rate, but is joint first in terms of the number of
-unique assertions. Assertions 3 (\emph{Addr == 0 ||
-hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered
-by some kernels in the development trunk but not under any prior release. We
-have submitted bug reports for each of the three assertions triggered in the
-development trunk, as well as for two distinct unreachables.
+Figure~\ref{fig:clangs} shows that the crash rate of the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clangs} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (\emph{Uncorrected typos!}) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between some releases. Notably, the current development trunk has the second lowest crash rate, but is joint first in terms of the number of unique assertions. Assertions 3 (\emph{Addr == 0 || hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered by some kernels in the development trunk but not under any prior release. We have submitted bug reports for each of the three assertions triggered in the development trunk, as well as for two distinct unreachables.
 
-The results emphasize that compiler validation is a moving target. Every change
-and feature addition has the potential to introduce regressions or new failure
-cases. Since LLVM will not release unless their compiler passes their own
-extensive test suites, this also reinforces the case for compiler fuzzing. We
-believe our approach provides an effective means for the generation of such
-fuzzers, at a fraction of the cost of existing techniques.
+The results emphasise that compiler validation is a moving target. Every change and feature addition has the potential to introduce regressions or new failure cases. Since LLVM will not release unless their compiler passes their own extensive test suites, this also reinforces the case for compiler fuzzing. We believe our approach provides an effective means for the generation of such fuzzers, at a fraction of the cost of existing techniques.
 
 
 \subsection{Extensibility of Language Model}
 
 \input{tab/preliminary-solidity-results}
 
-A large portion of the DeepSmith architecture is language-agnostic, requiring
-only a corpus, encoder, and harness for each new language. This potentially
-significantly lowers the barrier-to-entry compared with prior grammar-based
-fuzzers. To explore this, we report on initial results in extending DeepSmith to
-the Solidity programming language. Solidity is the smart contract programming
-language of the Ethereum blockchain. At less than four years old, it lacks much
-of the tooling of more established programming languages. Yet, it is an
-important candidate for rigorous testing, as exploitable bugs may undermine the
-integrity of the blockchain and lead to fraudulent transactions.
+A large portion of the DeepSmith architecture is language-agnostic, requiring only a corpus, encoder, and harness for each new language. This potentially significantly lowers the barrier-to-entry compared with prior grammar-based fuzzers. To explore this, we report on initial results in extending DeepSmith to the Solidity programming language. Solidity is the smart contract programming language of the Ethereum blockchain. At less than four years old, it lacks much of the tooling of more established programming languages. Yet, it is an important candidate for rigorous testing, as exploitable bugs may undermine the integrity of the blockchain and lead to fraudulent transactions.
 
 \subsubsection{Testing Methodology}
 
-We applied the same methodology to train the program generator as for OpenCL. We
-assembled a corpus of Solidity contracts from GitHub, recursively inlining
-imported modules where possible. We used the same tokenizer as for OpenCL, only
-changing the list of language keywords and builtins. Code style was enforced
-using clang-format. We trained the model in the same manner as OpenCL. No
-modification to either the language model or generator code was required. We
-created a simple compile-only test harness to drive the generated Solidity
-contracts.
+We applied the same methodology to train the program generator as for OpenCL. We assembled a corpus of Solidity contracts from GitHub, recursively inlining imported modules where possible. We used the same tokeniser as for OpenCL, only changing the list of language keywords and builtins. Code style was enforced using clang-format. We trained the model in the same manner as OpenCL. No modification to either the language model or generator code was required. We created a simple compile-only test harness to drive the generated Solidity contracts.
 
 \subsubsection{Initial Results}
 
-We ran the generator and harness loop for 12 hours on four testbeds: the
-Solidity reference compiler \texttt{solc} with optimizations on or off, and
-\texttt{solc-js}, which is an Emscripten compiled version of the \texttt{solc}
-compiler. Our results are summarized in Table~\ref{tab:preliminary-solidity-results}. We found
-numerous cases where the compiler silently crashes, and two distinct compiler
-assertions. The first is caused by missing error handling of language features
-(this issue is known to the developers). The source of the second assertion is
-the JavaScript runtime and is triggered only in the Emscripten version,
-suggesting an error in the automatic translation from LLVM to JavaScript.
+We ran the generator and harness loop for 12 hours on four testbeds: the Solidity reference compiler \texttt{solc} with optimisations on or off, and \texttt{solc-js}, which is an Emscripten compiled version of the \texttt{solc} compiler. Our results are summarised in Table~\ref{tab:preliminary-solidity-results}. We found numerous cases where the compiler silently crashes, and two distinct compiler assertions. The first is caused by missing error handling of language features (this issue is known to the developers). The source of the second assertion is the JavaScript runtime and is triggered only in the Emscripten version, suggesting an error in the automatic translation from LLVM to JavaScript.
 
-Extending DeepSmith to a second programming required an additional 150 lines of
-code (18 lines for the generator and encoder, the remainder for the test
-harness) and took about a day. Given the re-usability of the core DeepSmith
-components, there is a diminishing cost with the addition of each new language.
-For example, the OpenCL encoder and re-writer, implemented using LLVM, could be
-adapted to C with minimal changes. Given the low cost of extensibility, we
-believe these preliminary results indicate the utility of our approach for
-simplifying test case generation.
+Extending DeepSmith to a second programming required an additional 150 lines of code (18 lines for the generator and encoder, the remainder for the test harness) and took about a day. Given the re-usability of the core DeepSmith components, there is a diminishing cost with the addition of each new language. For example, the OpenCL encoder and re-writer, implemented using LLVM, could be adapted to C with minimal changes. Given the low cost of extensibility, we believe these preliminary results indicate the utility of our approach for simplifying test case generation.

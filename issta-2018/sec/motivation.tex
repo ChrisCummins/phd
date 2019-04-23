@@ -45,11 +45,11 @@
 
 \begin{figure}
   \centering %
-  \subfloat[This widely used pattern of integer comparison to thread ID is miscompiled on two compilers when optimizations are enabled and the integer literal is negative, causing the \texttt{if} statement to be executed (hand-reduced version of Figure~\ref{lst:intel-size_t-int-unreduced}).]{%
+  \subfloat[This widely used pattern of integer comparison to thread ID is miscompiled on two compilers when optimisations are enabled and the integer literal is negative, causing the \texttt{if} statement to be executed (hand-reduced version of Figure~\ref{lst:intel-size_t-int-unreduced}).]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntReduced}}}%
     \label{lst:intel-size_t-int-reduced}
   }\\%
-  \subfloat[A race condition in \texttt{switch} statement evaluation causes Oclgrind to sporadically crash when executed with a global size $> 1$, irrespective of optimization level.]{%
+  \subfloat[A race condition in \texttt{switch} statement evaluation causes Oclgrind to sporadically crash when executed with a global size $> 1$, irrespective of optimisation level.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
     \label{lst:oclgrind-race-switch}
   }\\%

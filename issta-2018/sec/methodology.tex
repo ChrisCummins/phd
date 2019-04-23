@@ -4,18 +4,28 @@ In this section we describe the experimental parameters used.
 
 \subsection{OpenCL Systems}
 
-We conducted testing of 10 OpenCL systems, summarized in
-Table~\ref{tab:platforms}. We covered a broad range of hardware: 3 GPUs, 4
+We conducted testing of 10 OpenCL systems, summarised in
+Table~\ref{tab:deepsmith-platforms}. We covered a broad range of hardware: 3 GPUs, 4
 CPUs, a co-processor, and an emulator. 7 of the compilers tested are commercial
 products, 3 of them are open source. Our suite of systems includes both
 combinations of different drivers for the same device, and different devices
 using the same driver.
 
+\begin{table}
+	\centering %
+	\subfloat{\input{tab/deepsmith-platforms-a}}\\ %
+  \subfloat{\input{tab/deepsmith-platforms-b}} %
+	\caption[OpenCL systems and the number of bug reports submitted to date]{%
+		OpenCL systems and the number of bug reports submitted to date (22\% of which have been fixed, the remainder are pending). For each system, two testbeds are created, one with compiler optimisations, the other without.%
+	}
+	\label{tab:deepsmith-platforms}
+\end{table}
+
 \subsection{Testbeds}
 
 For each OpenCL system, we create two testbeds. In the first, the compiler is
-run with optimizations disabled. In the second, optimizations are enabled. Each
-testbed is then a triple, consisting of \emph{<device, driver, is\_optimized>}
+run with optimisations disabled. In the second, optimisations are enabled. Each
+testbed is then a triple, consisting of \emph{<device, driver, is\_optimised>}
 settings. This mechanism gives 20 testbeds to evaluate.
 
 
