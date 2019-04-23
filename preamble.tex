@@ -187,3 +187,8 @@ natbib=true,         % natbib compatability
 
 % Use \lispum for placeholder text.
 \usepackage{lipsum}
+
+
+\newenvironment{laysummary}
+  {\renewcommand{\abstractname}{Lay Summary}\begin{mainabs}}
+  {\end{mainabs}\renewcommand{\abstractname}{Abstract}}

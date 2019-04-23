@@ -2,7 +2,7 @@
 
 % \title{Deep Learning over Programs}
 % \title{Program Generation and Optimization through Deep Learning}
-\title{Program Generation and Optimisation through Recurrent Neural Networks}
+\title{Program Generation and Optimization through Recurrent Neural Networks}
 \author{Chris Cummins}
 
 \abstract{\input{abstract}}
@@ -19,8 +19,8 @@
   \input{preliminary}
   \input{chap/intro}
   \input{chap/background}
-  \input{chap/related-work}
-  \input{chap/synthesizing-benchmarks}
+  \input{chap/litreview}
+  \input{chap/synthesizing_benchmarks}
   \input{chap/compiler_fuzzing}
   \input{chap/end2end_dl}
   \input{chap/conclusions}

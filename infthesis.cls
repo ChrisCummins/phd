@@ -1,14 +1,14 @@
 %%
 %%    File : infthesis.cls    (LaTeX2e class file)
 %%  Author : Version 3.7 updated by Jennifer Oxley <joxley@inf.ed.ac.uk>
-%%           Version 3.6 by Charles Sutton <csutton@inf.ed.ac.uk>  
+%%           Version 3.6 by Charles Sutton <csutton@inf.ed.ac.uk>
 %%           Version 3.5 by Vasilis Vasaitis <v.vasaitis@sms.ed.ac.uk>
 %%           Version 3.4.1 updated by Tiejun Ma (t.j.ma@ed.ac.uk)
 %%           Version 3.0 by Mary Ellen Foster <mef@cogsci.ed.ac.uk>
-%%           Original version by Martin Reddy (mxr@dcs.ed.ac.uk) 
+%%           Original version by Martin Reddy (mxr@dcs.ed.ac.uk)
 %% Version : 3.7
 %% Updates : 1.0 [9/11/95] - initial release.
-%%           1.1 [24/4/96] - fixed bibliography bug caused by new report.cls 
+%%           1.1 [24/4/96] - fixed bibliography bug caused by new report.cls
 %%           1.2 [13/5/96] - \dedication & \thesiscaption[]
 %%           1.3 [28/5/96] - abbrevs, parskip, minitoc fix, \headfootstyle
 %%           1.4 [12/7/96] - appendices okay now, \cleardoublepage's added
@@ -55,7 +55,7 @@
 %% - graphics for including the (scaled) logo on the front page
 %% - xspace if abbreviations are used
 \usepackage[paper=a4paper]{geometry}
-\RequirePackage{ifthen,%  
+\RequirePackage{ifthen,%
     graphics,%
     xspace,
     eushield}
@@ -146,7 +146,7 @@ Computer Science}}
 
 % Degree
 \def\@researchdegree#1{%
-    \renewcommand{\@degreetext}{#1 \\ 
+    \renewcommand{\@degreetext}{#1 \\
     \ifx\@empty\@institute
         \PackageWarning{infthesis}{No institute specified for research
         degree}
@@ -161,7 +161,7 @@ Computer Science}}
 \DeclareOption{mscres}{\@researchdegree{Master of Science by Research}}
 
 \def\@taughtdegree#1#2{%
-    \renewcommand{\@degreetext}{#1 \\ 
+    \renewcommand{\@degreetext}{#1 \\
     \ifx\@empty#2
         % \PackageWarning{infthesis}{No course/school specified for taught
         % degree}
@@ -187,7 +187,7 @@ Computer Science}}
     \setboolean{sansheadings}{false}}
 
 %% Sidedness, openright-ness, and font size (so that the draft option can
-%% override them as needed. 
+%% override them as needed.
 \DeclareOption{twoside}{\renewcommand{\@thesisside}{twoside}}
 \DeclareOption{oneside}{\renewcommand{\@thesisside}{oneside}}
 \DeclareOption{openany}{\renewcommand{\@thesisopen}{openany}}
@@ -240,7 +240,7 @@ Computer Science}}
 
 %% Set default options and process the ones we were given.
 \ExecuteOptions{phd,centerchapter,romanprepages,%
-    sansheadings,openright,oneside,12pt,timesfonts} 
+    sansheadings,openright,oneside,12pt,timesfonts}
 \ProcessOptions
 
 %%
@@ -551,16 +551,16 @@ Computer Science}}
 
 \newenvironment{acknowledgements}
    {\renewcommand{\abstractname}{Acknowledgements}\begin{mainabs}}
-   {\end{mainabs}\renewcommand{\abstractname}{Abstract}}   
+   {\end{mainabs}\renewcommand{\abstractname}{Abstract}}
 
 \newenvironment{declaration}
    {\renewcommand{\abstractname}{Declaration}\begin{mainabs}}
-   {\end{mainabs}\renewcommand{\abstractname}{Abstract}}   
+   {\end{mainabs}\renewcommand{\abstractname}{Abstract}}
 
 \newcommand{\standarddeclaration}{
    \begin{declaration}
    I declare that this thesis was composed by myself,
-   that the work contained herein is my own 
+   that the work contained herein is my own
    except where explicitly stated otherwise in the text,
    and that this work has not been submitted for any other degree or
    professional qualification except as specified.\par
@@ -618,7 +618,7 @@ Computer Science}}
         }\vspace{3cm}
         {\Large\itshape \@author \par}\vspace{3cm}
         {\large \@degreetext \par \@submityear \par}
-        \vskip 1cm 
+        \vskip 1cm
         \ifthenelse{\equal{\@graduationdate}{}}{}
            {{\large \ttfamily (Graduation date: \@graduationdate)}}
         \end{center}
@@ -636,7 +636,7 @@ Computer Science}}
             {\resizebox{30mm}{!}{\includeshield}\\\vfill}
             {}
         {\large \@degreetext \par \@submityear \par}
-        \vskip 1cm 
+        \vskip 1cm
         \ifthenelse{\equal{\@graduationdate}{}}{}
            {{\large \ttfamily (Graduation date: \@graduationdate)}}
         \end{center}

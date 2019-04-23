@@ -1,0 +1,352 @@
+\section{Iterative Compilation \& Machine Learning}\label{sec:iterative-compilation}
+
+\todo[inline]{The motivation for iterative compilation is that optimization heuristics are imperfect.}
+
+% Georgiou, K., Blackmore, C., Xavier-de-Souza, S., & Eder, K. (2018). Less is More: Exploiting the Standard Compiler Optimization Levels for Better Performance and Energy Consumption. In SCOPES.
+\todo[inline]{Using \emph{less} flags that -O2 can improve performance~\cite{Georgiou2018}.}
+
+Iterative compilation is a method of performance tuning in which a
+program is compiled and profiled using multiple different
+configurations of optimisations in order to find the configuration
+which maximises performance. One of the first formalised
+publications of the technique appeared in \citeyear{Bodin1998} by
+\citeauthor{Bodin1998}~\cite{Bodin1998}.  Iterative compilation has
+since been demonstrated to be a highly effective form of empirical
+performance tuning for selecting compiler optimisations.
+
+% Kraska, T., Beutel, A., Chi, E. H., Dean, J., & Polyzotis, N. (2017). The Case for Learned Index Structures. ArXiv:1712.01208.
+\todo[inline]{The Case for Learned Index Structures~\cite{Kraska2017}.}
+
+Given the huge number of possible compiler optimisations (there are
+207 flags and parameters to control optimisations in GCC v4.9), it is
+often unfeasible to perform an exhaustive search of the entire
+optimisation space, leading to the development of methods for reducing
+the cost of evaluating configurations. These methods reduce evaluation
+costs either by shrinking the dimensionality or size of the
+optimisation space, or by guiding a directed search to traverse a
+subset of the space.
+
+Machine learning has been successful applied to this problem,
+in~\cite{Stephenson2003}, using ``meta optimisation'' to tune compiler
+heuristics through an evolutionary algorithm to automate the search of
+the optimisation space. \citeauthor{Fursin2011} continued this with
+Milepost GCC, the first machine learning-enabled self-tuning
+compiler~\cite{Fursin2011}. A recent survey of the use of machine
+learning to improve heuristics quality by \citeauthor{Burke2013}
+concludes that the automatic \emph{generation} of these self-tuning
+heuristics but is an ongoing research challenge that offers the
+greatest generalisation benefits~\cite{Burke2013}.
+
+% Ashouri, A. H., Killian, W., Cavazos, J., Palermo, G., & Silvano, C. (2018). A Survey on Compiler Autotuning using Machine Learning. CSUR, 51(5). https://doi.org/10.1145/3197978
+\todo[inline]{Autotuning through ML survey~\cite{Ashouri2018}.}
+
+An approach to online tuning of parallel programs is presented in~\cite{Ansel2012} which partitions the available parallel resources of a device in to two partitions and then executes two different configurations simultaneously using each partition. The configuration used for one of the configuration is guaranteed to be ``safe'', and the performance
+
+ % Eastep, J., Wingate, D., & Agarwal, A. (2011). Smart Data
+ % Structures: An Online Machine Learning Approach to Multicore Data
+ % Structures. In Proceedings of the 8th ACM International Conference
+ % on Autonomic Computing (pp. 11–20). New York, NY, USA:
+ % ACM. doi:10.1145/1998582.1998587
+Online reinforcement learning for optimising data structures online, \cite{Tesauro2005}.
+
+ % Tesauro, G. (2005). Online Resource Allocation Using Decompositional
+ % Reinforcement Learning. In AAAI (pp. 886–891).
+Reinforcement learning for resource allocation~\cite{Eastep2011}.
+
+% W. F. Ogilvie, P. Petoumenos, Z. Wang, and H. Leather, “Intelligent
+% Heuristic Construction with Active Learning,” in 18th International
+% Workshop on Compilers for Parallel Computing, 2015.
+Using Active Learning to speed up the learning of compiler heuristics~\cite{Ogilvie2015}. Towards online autotuning, albeit only with binary optimisation parameter.
+
+%
+% SOME EXAMPLES OF ML IN THE WILD:
+%
+
+In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014}
+advocate a collaborative and ``big data'' driven approach to
+autotuning, arguing that the challenges facing the widespread adoption
+of autotuning and machine learning methodologies can be attributed to:
+a lack of common, diverse benchmarks and data sets; a lack of common
+experimental methodology; problems with continuously changing hardware
+and software stacks; and the difficulty to validate techniques due to
+a lack of sharing in publications. They propose a system for
+addressing these concerns, the Collective Mind knowledge system,
+which, while in early stages of ongoing development, is intended to
+provide a modular infrastructure for sharing autotuning performance
+data and related artefacts across the internet. In addition to sharing
+performance data, the approach taken in this thesis emphasises the
+collective \emph{exploitation} of such performance data, so that data
+gathered from one device may be used to inform the autotuning
+decisions of another. This requires each device to maintain local
+caches of shared data to remove the network overhead that would be
+present from querying a single centralised data store during execution
+of a hot path. The current implementation of Collective Mind uses a
+NoSQL JSON format for storing performance data. The relational schema
+used in this thesis offers greater scaling performance and lower
+storage overhead as the amount of performance data grows.
+
+Whereas iterative compilation requires an expensive offline training
+phase to search an optimisation space, dynamic optimisers perform this
+optimisation space exploration at runtime, allowing programs to
+respond to dynamic features ``online''. This is a challenging task, as
+a random search of an optimisation space may result in configurations
+with vastly sub-optimal performance. In a real world system, evaluating
+many sub-optimal configurations will cause a significant slowdown of
+the program. Thus a requirement of dynamic optimisers is that
+convergence time towards optimal parameters is minimised.
+
+Existing dynamic optimisation research has typically taken a low level
+approach to performing optimisations. Dynamo is a dynamic optimiser
+which performs binary level transformations of programs using
+information gathered from runtime profiling and
+tracing~\cite{Bala2000}. While this provides the ability to respond to
+dynamic features, it restricts the range of optimisations that can be
+applied to binary transformations. These low level transformations
+cannot match the performance gains that higher level parameter tuning
+produces.
+
+An interesting related tangent to iterative compilation is the
+development of so-called ``super-optimisers''. In~\cite{Massalin1987},
+the smallest possible program which performs a specific function is
+found through a brute force enumeration of the entire instruction
+set. Starting with a program of a single instruction, the
+super-optimiser tests to see if any possible instruction passes a set
+of conformity tests. If not, the program length is increased by a
+single instruction and the process repeats. The exponential growth in
+the size of the search space is far too expensive for all but the
+smallest of hot paths, typically less than 13 instructions. The
+optimiser is limited to register to register memory transfers, with no
+support for pointers, a limitation which is addressed
+in~\cite{Joshi2002}. Denali is a super-optimiser which uses constraint
+satisfaction and rewrite rules to generate programs which are
+\emph{provably} optimal, instead of searching for the optimal
+configuration through empirical testing. Denali first translates a low
+level machine code into guarded multi-assignment form, then uses a
+matching algorithm to build a graph of all of a set of logical axioms
+which match parts of the graph, before using boolean satisfiability to
+disprove the conjecture that a program cannot be written in $n$
+instructions. If the conjecture cannot be disproved, the size of $n$
+is increased and the process repeats.
+
+
+% \section{Performance Tuning for Heterogeneous Parallelism}
+
+As briefly discussed in Section~\ref{sec:gpgpu}, the complex
+interactions between optimisations and heterogeneous hardware makes
+performance tuning for heterogeneous parallelism a difficult
+task. Performant GPGPU programs require careful attention from the
+developer to properly manage data layout in DRAM, caching, diverging
+control flow, and thread communication. The performance of programs
+depends heavily on fully utilising zero-overhead thread scheduling,
+memory bandwidth, and thread grouping. \citeauthor{Ryoo2008a}
+illustrate the importance of these factors by demonstrating speedups
+of up to $432\times$ for matrix multiplication in CUDA by appropriate
+use of tiling and loop unrolling~\cite{Ryoo2008a}. The importance of
+proper exploitation of local shared memory and synchronisation costs
+is explored in~\cite{Lee2010}.
+
+In~\cite{Chen2014}, data locality optimisations are automated using a
+description of the hardware and a memory-placement-agnostic
+compiler. The authors demonstrate impressive speedups of up to
+$2.08\times$, although at the cost of requiring accurate memory
+hierarchy descriptor files for all targeted hardware. The descriptor
+files must be hand generated, requiring expert knowledge of the
+underlying hardware in order to properly exploit memory locality.
+
+Data locality for nested parallel patterns is explored in~\cite{Lee}.
+The authors use an automatic mapping strategy for nested parallel
+skeletons on GPUs, which uses a custom intermediate representation and
+a CUDA code generator, achieving $1.24\times$ speedup over hand
+optimised code on 7 of 8 Rodinia benchmarks.
+
+Reduction of the GPGPU optimisation space is demonstrated
+in~\cite{Ryoo2008}, using the common subset of optimal configurations
+across a set of training examples. This technique reduces the search
+space by 98\%, although it does not guarantee that for a new program,
+the reduced search space will include the optimal configuration.
+
+\citeauthor{Magni2014} demonstrated that thread coarsening of OpenCL
+kernels can lead to speedups in program performance between
+$1.11\times$ and $1.33\times$ in~\cite{Magni2014}. The authors achieve
+this using a machine learning model to predict optimal thread
+coarsening factors based on the static features of kernels, and an
+LLVM function pass to perform the required code transformations.
+
+A framework for the automatic generation of OpenCL kernels from
+high-level programming concepts is described in~\cite{Steuwer2015}. A
+set of rewrite rules is used to transform high-level expressions to
+OpenCL code, creating a space of possible implementations. This
+approach is ideologically similar to that of PetaBricks, in that
+optimisations are made through algorithmic choice, although in this
+case the transformations are performed automatically at the compiler
+level. The authors report performance on a par with that of hand
+written OpenCL kernels.
+
+
+% \section{Autotuning Algorithmic Skeletons}
+
+An enumeration of the optimisation space of Intel Thread Building
+Blocks in~\cite{Contreras2008} shows that runtime knowledge of the
+available parallel hardware can have a significant impact on program
+performance. \citeauthor{Collins2012} exploit this
+in~\cite{Collins2012}, first using Principle Components Analysis to
+reduce the dimensionality of the space of possible optimisation
+parameters, followed by a search of parameter values to optimise
+program performance by a factor of $1.6\times$ over values chosen by a
+human expert. In~\cite{Collins2013}, they extend this using static
+feature extraction and nearest neighbour classification to further
+prune the search space, achieving an average 89\% of the oracle
+performance after evaluating 45 parameters.
+
+\citeauthor{Dastgeer2011} developed a machine learning based auto-tuner
+for the SkePU skeleton library in~\cite{Dastgeer2011}. Training data
+is used to predict the optimal execution device (i.e.\ CPU, GPU) for a
+given program by predicting execution time and memory copy overhead
+based on problem size. The auto-tuner only supports vector operations,
+and there is limited cross-architecture
+evaluation. In~\cite{Dastgeer2015a}, the authors extend SkePU to
+improve the data consistency and transfer overhead of container types,
+reporting up to a $33.4\times$ speedup over the previous
+implementation.
+
+
+% \section{Code Generation and Autotuning for Stencils}
+
+Stencil codes have a variety of computationally expensive uses from
+fluid dynamics to quantum mechanics. Efficient, tuned stencil kernels
+are highly sought after, with early work in \citeyear{Bolz2003} by
+\citeauthor{Bolz2003} demonstrating the capability of GPUs for
+massively parallel stencil operations~\cite{Bolz2003}. In the
+resulting years, stencil codes have received much attention from the
+performance tuning research community.
+
+\citeauthor{Ganapathi2009} demonstrated early attempts at autotuning
+multi-core stencil codes in~\cite{Ganapathi2009}, drawing upon the
+successes of statistical machine learning techniques in the compiler
+community, as discussed in
+Section~\ref{sec:iterative-compilation}. They present an auto-tuner
+which can achieve performance up to 18\% better than that of a human
+expert. From a space of 10 million configurations, they evaluate the
+performance of a randomly selected 1500 combinations, using Kernel
+Canonical Correlation Analysis to build correlations between tunable
+parameter values and measured performance targets. Performance targets
+are L1 cache misses, TLB misses, cycles per thread, and power
+consumption. The use of KCAA restricts the scalability of their system
+as the complexity of model building grows exponentially with the
+number of features. In their evaluation, the system requires two hours
+of compute time to build the KCAA model for only 400 seconds of
+benchmark data. They present a compelling argument for the use of
+energy efficiency as an optimisation target in addition to runtime,
+citing that it was the power wall that lead to the multi-core
+revolution in the first place. Their choice of only 2 benchmarks and 2
+platforms makes the evaluation of their auto-tuner somewhat limited.
+
+\citeauthor{Berkeley2009} targeted 3D stencils code performance
+in~\cite{Berkeley2009}. Stencils are decomposed into core blocks,
+sufficiently small to avoid last level cache capacity misses. These
+are then further decomposed to thread blocks, designed to exploit
+common locality threads may have within a shared cache or local
+memory. Thread blocks are divided into register blocks in order to
+take advantage of data level parallelism provided by the available
+registers. Data allocation is optimised on NUMA systems. The
+performance evaluation considers speedups of various optimisations
+with and without consideration for host/device transfer overhead.
+
+\citeauthor{Kamil2010} present an autotuning framework
+in~\cite{Kamil2010} which accepts as input a Fortran 95 stencil
+expression and generates tuned shared-memory parallel implementations
+in Fortan, C, or CUDA. The system uses an IR to explore autotuning
+transformations, enumerating a subset of the optimisation space and
+recording only a single execution time for each configuration,
+reporting the fastest. They demonstrate their system on 4
+architectures using 3 benchmarks, with speedups of up to $22\times$
+compared to serial implementations. The CUDA code generator does not
+optimise for the GPU memory hierarchy, using only global memory. As
+demonstrated in this thesis, improper utilisation of local memory can
+hinder program performance by two orders of magnitude. There is no
+directed search or cross-program learning.
+
+In~\cite{Zhang2013a}, \citeauthor{Zhang2013a} present a code generator
+and auto-tuner for 3D Jacobi stencil codes. Using a DSL to express
+kernel functions, the code generator performs substitution from one of
+two CUDA templates to create programs for execution on GPUs. GPU
+programs are parameterised and tuned for block size, block dimensions,
+and whether input data is stored in read only texture memory. This
+creates an optimisation space of up to 200 configurations. In an
+evaluation of 4 benchmarks, the authors report impressive performance
+that is comparable with previous implementations of iterative Jacobi
+stencils on GPUs~\cite{Holewinski2012, Phillips2010}. The dominating
+parameter is shown to be block dimensions, followed by block size,
+then read only memory. The DSL presented in the paper is limited to
+expressing only Jacobi Stencils applications. Critically, their
+auto-tuner requires a full enumeration of the parameter space for each
+program. Since there is no indication of the compute time required to
+gather this data, it gives the impression that the system would be
+impractical for the needs of general purpose stencil computing. The
+auto-tuner presented in this thesis overcomes this drawback by learning
+parameter values which transfer to unseen stencils, without the need
+for an expensive tuning phase for each program and architecture.
+
+In~\cite{Christen2011}, \citeauthor{Christen2011} present a DSL for
+expressing stencil codes, a C code generator, and an auto-tuner for
+exploring the optimisation space of blocking and vectorisation
+strategies. The DSL supports stencil operations on arbitrarily
+high-dimensional grids. The auto-tuner performs either an exhaustive,
+multi-run Powell search, Nelder Mead, or evolutionary search to find
+optimal parameter values. They evaluate their system on two CPUS and
+one GPU using 6 benchmarks. A comparison of tuning results between
+different GPU architectures would have been welcome, as the results
+presented in this thesis show that devices have different responses to
+optimisation parameters. The authors do not present a ratio of the
+available performance that their system achieves, or how the
+performance of optimisations vary across benchmarks or devices.
+
+A stencil grid can be decomposed into smaller subsections so that
+multiple GPUs can operate on each subsection independently. This
+requires a small overlapping region where each subsection meets ---
+the halo region --- to be shared between devices. For iterative
+stencils, values in the halo region must be synchronised between
+devices after each iteration, leading to costly communication
+overheads. One possible optimisation is to deliberately increase the
+size of the halo region, allowing each device to compute updated
+values for the halo region, instead of requiring a synchronisation of
+shared state. This reduces the communication costs between GPUs, at
+the expense of introducing redundant computation. Tuning the size of
+this halo region is the goal of PARTANS~\cite{Lutz2013}, an autotuning
+framework for multi-GPU stencil computations. \citeauthor{Lutz2013}
+explore the effect of varying the size of the halo regions using six
+benchmark applications, finding that the optimal halo size depends on
+the size of the grid, the number of partitions, and the connection
+mechanism (i.e.\ PCI express). The authors present an auto-tuner which
+determines problem decomposition and swapping strategy offline, and
+performs an online search for the optimal halo size. The selection of
+overlapping halo region size compliments the selection of work-group
+size which is the subject of this thesis. However, PARTANS uses a
+custom DSL rather than the generic interface provided by SkelCL, and
+PARTANS does not learn the results of tuning across programs, or
+across multiple runs of the same program.
+
+% \section{Compilers}
+
+Using active learning to minimise the cost of iterative compilation~\cite{Ogilvie2017}.
+Continuous learning of compiler heuristics~\cite{Tartara2013,Fursin2011}.
+
+Section~\ref{subsec:training-with-synthetic-benchmarks} describes training with synthetic benchmarks.
+
+\subsection{Feature Selection}
+
+\todo[inline]{Automatic feature \emph{selection} has been done before. The technique proposed in this thesis is for feature \emph{generation}, i.e. extracting a novel representation from text.}
+
+Machine learning has emerged as a viable means in automatically constructing heuristics for code optimisation~\cite{Stephenson2005,Agakov,Wang2010,Kulkarni2012,Ding2015,Muralidharan2016}. Its great advantage is that it can adapt to changing hardware platforms as it has no a priori assumptions about their behaviour. The success of machine learning based code optimisation has required having a set of high-quality features that can capture the important characteristics of the target program. Given that there is an infinite number of these potential features, finding the right set of features is a non-trivial, time-consuming task.
+
+Various forms of program features have been used in compiler-based machine learning. These include static code structures~\cite{Jiang2010} and runtime information such as system load~\cite{Wen2015} and performance counters~\cite{Dubach2009}. In compiler research, the feature sets used for predictive models are often provided without explanation and rarely is the quality of those features evaluated. More commonly, an initial large, high dimensional candidate feature space is pruned via feature selection~\cite{Stephenson2005}, or projected into a lower dimensional space~\cite{Collins2013,Dubach2007}. FEAST employs a range of existing feature selection methods to select useful candidate features~\cite{Ting2016}. Unlike these approaches, DeepTune extracts features and reduces the dimensionality of the feature space completely internally and without expert guidance.
+
+Park \emph{et al.} present a unique graph-based approach for feature representations~\cite{Park2012}. They use a Support Vector Machine where the kernel is based on graph similarity metric. Their technique still requires hand coded features at the basic block level, but thereafter, graph similarity against each of the training programs takes the place of global features. Being a kernel method, it requires that training data graphs be shipped with the compiler, which may not scale as the size of the training data grows with the number of instances, and some training programs may be very large. Finally, their graph matching metric is expensive, requiring $O(n^3)$ to compare against each training example. By contrast, our method does not need any hand built static code features, and the deployment memory footprint is constant and prediction time is linear in the length of the program, regardless of the size of the training set.
+
+A few methods have been proposed to automatically generate features from the compiler's intermediate representation~\cite{Namolaru2010a,Leather2014}. These approaches closely tie the implementation of the predictive model to the compiler IR, which means changes to the IR will require modifications to the model. The work of \cite{Leather2014} uses genetic programming to search for features, and required a huge grammar to be written, some 160kB in length. Although much of this can be created from templates, selecting the right range of capabilities and search space bias is non trivial and up to the expert. The work of \cite{Namolaru2010a} expresses the space of features via logic programming over relations that represent information from the IRs. It greedily searches for expressions that represent good features. However, their approach relies on expert selected relations, combinators and constraints to work. For both approaches, the search time may be significant.
+
+Cavazos \emph{et al.\ }present a reaction-based predictive model for software-hardware co-design~\cite{Cavazos2006}. Their approach profiles the target program using several carefully selected compiler options to see how program runtime changes under these options for a given micro-architecture setting. They then use the program ``reactions'' to predict the best available application speedup. While their approach does not use static code features, developers must carefully select a few settings from a large number of candidate options for profiling, because poorly chosen options can significantly affect the quality of the model. Moreover, the program must be run several times before optimisation, while our technique does not require the program to be profiled.
+
+
+% Moren, K., & Gohringer, D. (2018). Automatic Mapping for OpenCL-Programs on CPU/GPU Heterogeneous Platforms. In ICCS. https://doi.org/10.1007/978-3-319-93701-4
+\todo[inline]{CPU/GPU mapping~\cite{Shi2018}.}

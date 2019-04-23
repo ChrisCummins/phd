@@ -1,4 +1,4 @@
-personal_ws-1.1 en 309 
+personal_ws-1.1 en 314 
 structs
 clc
 AST
@@ -108,11 +108,14 @@ idx
 README
 Zhang
 Caffe
+unoptimised
 Theano
+SIMD
 MapReduce
 Codeplay
 Fortan
 hasDoubleType
+divering
 DeepTune's
 DHCP
 performant
@@ -282,6 +285,7 @@ combinators
 SIGSOFT
 Sutskever
 pre
+shaders
 memset
 AddToHook
 CFG
@@ -289,6 +293,7 @@ JSNice
 DivRegionInstsRatio
 scp
 SDK
+PCIe
 miscompiled
 arg
 clgen
