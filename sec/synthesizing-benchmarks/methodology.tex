@@ -1,91 +1,50 @@
 \section{Experimental Methodology}
 \label{sec:clgen-eval-methodology}
 
-\begin{table}% tab:features-cgo13
-  \centering%
-  \subfloat[Individual code features]{%
-    \begin{tabular}{l c l}
-      \toprule
-      \multicolumn{3}{c}{\textbf{Raw Code Features}} \\
-      \midrule
-      \texttt{comp} & static & \#. compute operations \\
-      \texttt{mem} & static & \#. accesses to global memory \\
-      \texttt{localmem} & static & \#. accesses to local memory \\
-      \texttt{coalesced} & static & \#. coalesced memory accesses \\
-      \texttt{transfer} & dynamic & size of data transfers \\
-      \texttt{wgsize} & dynamic & \#. work-items per kernel \\
-    \end{tabular}%
-    \label{tab:features-raw}%
-  }\\*
-  \subfloat[Combinations of raw features]{%
-    \begin{tabular}{l L{4.5cm}}
-      \toprule
-      \multicolumn{2}{c}{\textbf{Combined Code Features}} \\
-      \midrule
-      \texttt{F1: transfer/(comp+mem)} & commun.-computation ratio \\
-      \texttt{F2: coalesced/mem} & \% coalesced memory accesses \\
-      \texttt{F3: (localmem/mem)$\times$wgsize} & ratio local to global mem
-                                                  accesses \\ & $\times$ \#.\ work-items \\
-      \texttt{F4: comp/mem} & computation-mem ratio\\
-    \end{tabular}%
-    \label{tab:features-cgo13}%
-  } %
-  \caption[\emph{Grewe et al.\ }model features]{%
-    \emph{Grewe et al.\ }model features. %
-  } %
-  \label{tab:features} %
-\end{table}
-
 \subsection{Experimental Setup}\label{subsec:experimental-setup}
 
-\subsubsection{Predictive Model} We reproduce the predictive model from \citeauthor{Grewe2013}~\cite{Grewe2013}. The predictive model is used to determine the optimal mapping of a given OpenCL kernel to either a GPU or CPU. It uses supervised learning to construct a decision tree with a combination of static and dynamic kernel features extracted from source code and the OpenCL runtime, detailed in Table~\ref{tab:features-cgo13}.
+\subsubsection{Predictive Model}
 
-\subsubsection{Benchmarks} As in~\cite{Grewe2013}, we test our model on the NAS Parallel Benchmarks (NPB)~\cite{Bailey1991a}. We use the hand-optimised OpenCL implementation of \citeauthor{Seo2011}~\cite{Seo2011}. In~\cite{Grewe2013} the authors augment the training set of the predictive model with 47 additional kernels taken from 4 GPGPU benchmark suites.  To more fully sample the program space, we use a much larger collection of 142 programs, summarised in Table~\ref{tab:benchmarks}. These additional programs are taken from all 7 of the most frequently used benchmark suites identified in Section~\ref{subsec:motivation}. None of these programs were used to train CLgen. We synthesised 1,000 kernels with CLgen to use as additional benchmarks.
+To evaluate the efficacy of synthetic benchmarks for training, the predictive model of \citeauthor{Grewe2013} is used~\cite{Grewe2013}. The predictive model is used to determine the optimal mapping of a given OpenCL kernel to either a GPU or CPU. It uses supervised learning to construct a decision tree with a combination of static and dynamic kernel features extracted from source code and the OpenCL runtime, detailed in Table~\ref{tab:clgen-cgo13-features}.
+
+\begin{table}
+	\centering%
+	\input{tab/clgen-cgo13-features}%
+	\caption[\emph{Grewe et al.\ }model features]{%
+		Features used by \emph{Grewe et al.\ }to predict CPU/GPU mapping of OpenCL kernels. The features are extracted using a custom analysis pass based using LLVM.
+	}%
+	\label{tab:clgen-cgo13-features} %
+\end{table}
+
+\subsubsection{Benchmarks}
+
+As in~\cite{Grewe2013}, the model is tested on the NAS Parallel Benchmarks (NPB)~\cite{Bailey1991a}. The hand-optimised OpenCL implementation of \citeauthor{Seo2011}~\cite{Seo2011} is used. In~\cite{Grewe2013} the authors augment the training set of the predictive model with 47 additional kernels taken from 4 GPGPU benchmark suites. To more fully sample the program space, a much larger collection of 142 programs is used, summarised in Table~\ref{tab:cgo17-benchmarks}. These additional programs are taken from all 7 of the most frequently used benchmark suites identified in Section~\ref{subsec:motivation}. None of these programs were used to train CLgen. 1,000 kernels were synthesized with CLgen to use as additional benchmarks.
 
 \begin{table}% tab:benchmarks
   \centering%
-  \begin{tabular}{l r r r}
-    \toprule
-    & \textbf{Version} & \textbf{\#. benchmarks} & \textbf{\#. kernels}\\
-    \midrule
-    \textbf{NPB (SNU~\cite{Seo2011})} & 1.0.3 & 7 & 114 \\
-    \textbf{Rodinia~\cite{Che2009}} & 3.1 & 14 & 31 \\
-    \textbf{NVIDIA SDK} & 4.2 & 6 & 12 \\
-    \textbf{AMD SDK} & 3.0 & 12 & 16 \\
-    \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 6 & 8 \\
-    \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 14 & 27 \\
-    \textbf{SHOC~\cite{Danalis2010}} & 1.1.5 & 12 & 48 \\
-    \textbf{Total} & - & 71 & 256 \\
-  \end{tabular}
+  \input{tab/cgo17-benchmarks}
   \caption[List of benchmarks]{List of benchmarks} %
-  \label{tab:benchmarks} %
+  \label{tab:cgo17-benchmarks} %
 \end{table}
 
-\subsubsection{Platforms} We evaluate our approach on two 64-bit CPU-GPU systems, detailed in Table~\ref{tab:platforms}. One system has an AMD GPU and uses OpenSUSE 12.3; the other is equipped with an NVIDIA GPU and uses Ubuntu 16.04. Both platforms were unloaded.
+\subsubsection{Platforms} 
+
+Two 64-bit CPU-GPU systems are used to evaluate the approach, detailed in Table~\ref{tab:cgo17-platforms}. One system has an AMD GPU and uses OpenSUSE 12.3; the other is equipped with an NVIDIA GPU and uses Ubuntu 16.04. Both platforms were unloaded.
 
 \begin{table}% tab:platforms
   \centering %
-  \begin{tabular}{l l l l}
-    \toprule
-    & \textbf{Intel CPU} & \textbf{AMD GPU} & \textbf{NVIDIA GPU} \\
-    \midrule
-    \textbf{Model} & Core i7-3820 & Tahiti 7970 & GTX 970 \\
-    \textbf{Frequency} & 3.6 GHz & 1000 MHz & 1050 MHz \\
-    \textbf{\#. Cores} & 4 & 2048 & 1664 \\
-    \textbf{Memory} & 8 GB & 3 GB & 4 GB \\
-    \textbf{Throughput} & 105 GFLOPS & 3.79 TFLOPS & 3.90 TFLOPS \\
-    \textbf{Driver} & AMD 1526.3 & AMD 1526.3 & NVIDIA 361.42 \\
-    \textbf{Compiler} & GCC 4.7.2 & GCC 4.7.2 & GCC 5.4.0 \\
-  \end{tabular}
+	\input{tab/cgo17-platforms}
   \caption[Experimental platforms]{Experimental platforms.}
-  \label{tab:platforms}
+  \label{tab:cgo17-platforms}
 \end{table}
 
-\subsubsection{Data sets} The NPB and Parboil benchmark suites are packaged with multiple data sets. We use all of the packaged data sets (5 per program in NPB, 1-4 per program in Parboil). For all other benchmarks, the default data sets are used. We configured the CLgen host driver to synthesise payloads between 128B-130MB, approximating that of the dataset sizes found in the benchmark programs.
+\subsubsection{Data sets}
+
+The NPB and Parboil benchmark suites are packaged with multiple data sets. We use all of the packaged data sets (5 per program in NPB, 1-4 per program in Parboil). For all other benchmarks, the default data sets are used. The CLgen host driver was configured to synthesise payloads between 128B-130MB, approximating that of the dataset sizes found in the benchmark programs.
 
 
 \subsection{Methodology}
 
-We replicated the methodology of~\cite{Grewe2013}. Each experiment is repeated five times and the average execution time is recorded. The execution time includes both device compute time and the data transfer overheads.
+The same methodology is used as in~\cite{Grewe2013}. Each experiment is repeated five times and the average execution time is recorded. The execution time includes both device compute time and the data transfer overheads.
 
-We use \emph{leave-one-out cross-validation} to evaluate predictive models. For each benchmark, a model is trained on data from all other benchmarks and used to predict the mapping for each kernel and dataset in the excluded program. We repeat this process with and without the addition of synthetic benchmarks in the training data. We do not test model predictions on synthetic benchmarks.
+Models are evaluated using \emph{leave-one-out cross-validation}. For each benchmark, a model is trained on data from all other benchmarks and used to predict the mapping for each kernel and dataset in the excluded program. The process is repeated with and without the addition of synthetic benchmarks in the training data. Only the real handwritten benchmarks are used to test model predictions, the synthetic benchmarks are not used.

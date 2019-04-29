@@ -23,10 +23,16 @@ Generating multi-function programs.
 
 Our new approach enables the synthesis of more human-like programs than current state-of-the-art program generators, and without the expert guidance required by template based generators, but it has limitations. Our method of seeding the language models with the start of a function means that we cannot support user defined types, or calls to user-defined functions. This means that we only consider scalars and arrays as inputs; while 6 (2.3\%) of the benchmark kernels from Table~\ref{tab:benchmarks} use irregular data types as inputs. We will address this limitation through recursive program synthesis, whereby a call to a user-defined function or unrecognised type will trigger candidate functions and type definitions to be synthesised. Currently we only run single-kernel benchmarks. We will extend the host driver to explore multi-kernel schedules and interleaving of kernel executions. Our host driver generates data sets from uniform random distributions, as do many of the benchmark suites. For cases where non-uniform inputs are required (e.g. profile-directed feedback), an alternate methodology for generating inputs must be adopted.
 
+\todo[inline]{Contents of GitHub corpus was only very lightly vetted. I could have used the dynamic checker to ensure that programs work. Inspecting the corpus reveals some spurious programs, e.g. test cases for an OpenCL static analysis tool which deliberately contain runtime defects.}
+
+\todo[inline]{Turing test of~\ref{sec:clgen-qualitative-evaluation} could be used to pit competing generative models against one another, given sufficient volunteers.}
+
 
 \subsection{Limitations of Sequential Classification}
 
 \section{Future Work}
+
+\todo{CGO'17 conclusions section} Our hope for this work is to demonstrate a proof of concept for an exciting new avenue of program generation, and that the full release of CLgen will expedite discovery in other domains. In future work we will extend the approach to multiple programming languages, and investigate methods for performing an automatic directed search of feature spaces.
 
 \todo[inline]{Graph-level representations with RNNS~\cite{Jin2018}. Graph surveys~\cite{Li2018a,Wu2018}.}
 

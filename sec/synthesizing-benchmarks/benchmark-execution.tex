@@ -1,7 +1,7 @@
 \section{Benchmark Execution}
 \label{sec:cldrive}
 
-We developed a host driver to gather performance data from synthesised CLgen code. The driver accepts as input an OpenCL kernel, generates \emph{payloads} of user-configurable sizes, and executes the kernel using the generated payloads, providing dynamic checking of kernel behaviour.
+A host driver is used to gather performance data from synthesised CLgen code. The driver accepts as input an OpenCL kernel, generates \emph{payloads} of user-configurable sizes, and executes the kernel using the generated payloads, providing dynamic checking of kernel behaviour.
 
 \subsection{Generating Payloads}
 
@@ -9,8 +9,8 @@ A \emph{payload} encapsulates all of the arguments of an OpenCL compute kernel. 
 
 \subsection{Dynamic Checker}
 
-For the purpose of performance benchmarking we are not interested in the correctness of computed values, but we define a class of programs as performing \emph{useful work} if they predictably compute some result. We devised a low-overhead runtime behaviour check to validate that a synthesised program does useful work based on the outcome of four executions of a tested program:%
-%
+For the purpose of performance benchmarking the correctness of computed values is of little interest, but I define a class of programs as performing \emph{useful work} if they predictably compute some result. A low-overhead runtime behaviour check is used to validate that a synthesised program does useful work based on the outcome of four executions of a tested program:
+
 \begin{enumerate}
 \item Create 4 equal size payloads $A_{1in}$, $B_{1in}$, $A_{2in}$,
   $B_{2in}$, subject to restrictions: $A_{1in}=A_{2in}$,
@@ -19,7 +19,7 @@ For the purpose of performance benchmarking we are not interested in the correct
   $k(B_{1in}) \rightarrow B_{1out}$,
   $k(A_{2in}) \rightarrow A_{2out}$,
   $k(B_{2in}) \rightarrow B_{2out}$.
-\item Assert:
+\item Assert that:
   \begin{itemize}
   \item $A_{1out} \ne A_{1in}$ and $B_{1out} \ne B_{1in}$, else $k$ has no
   output (for these inputs).%
@@ -28,6 +28,5 @@ For the purpose of performance benchmarking we are not interested in the correct
   non-deterministic.
   \end{itemize}
 \end{enumerate}
-%
-\noindent%
-Equality checks for floating point values are performed with an appropriate epsilon to accommodate rounding errors, and a timeout threshold is also used to catch kernels which are non-terminating. Our method is based on random differential testing~\cite{McKeeman1998}, though we emphasise that this is not a general purpose approach and is tailored specifically for our use case. For example, we anticipate a false positive rate for kernels with subtle sources of non-determinism which more thorough methods may expose~\cite{Betts2012,Price2015,Sorensen2016}, however we deemed such methods unnecessary for our purpose of performance modelling.
+
+Equality checks for floating point values are performed with an appropriate epsilon to accommodate rounding errors, and a timeout threshold is also used to catch kernels which are non-terminating. The method is based on random differential testing~\cite{McKeeman1998}, though I emphasise that this is not a general purpose approach and is tailored specifically for this use case. For example, I anticipate a false positive rate for kernels with subtle sources of non-determinism which more thorough methods may expose~\cite{Betts2012,Price2015,Sorensen2016}, however I deemed such methods unnecessary for the purpose of performance modelling.

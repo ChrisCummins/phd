@@ -56,34 +56,16 @@ Reinforcement learning for resource allocation~\cite{Eastep2011}.
 % W. F. Ogilvie, P. Petoumenos, Z. Wang, and H. Leather, “Intelligent
 % Heuristic Construction with Active Learning,” in 18th International
 % Workshop on Compilers for Parallel Computing, 2015.
-Using Active Learning to speed up the learning of compiler heuristics~\cite{Ogilvie2015}. Towards online autotuning, albeit only with binary optimisation parameter.
+\todo[inline]{Using Active Learning to speed up the learning of compiler heuristics~\cite{Ogilvie2015}. Towards online autotuning, albeit only with binary optimisation parameter.}
+
+% Ashouri, A. H., Milano, G., Palermo, G., Park, E., Cavazos, J., & Silvano, C. (2016). COBAYN: Compiler Autotuning Framework Using Bayesian Networks. TACO, 13(2).
+\todo[inline]{Amir's ML autotuning framework~\cite{Ashouri2016}.}
 
 %
 % SOME EXAMPLES OF ML IN THE WILD:
 %
 
-In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014}
-advocate a collaborative and ``big data'' driven approach to
-autotuning, arguing that the challenges facing the widespread adoption
-of autotuning and machine learning methodologies can be attributed to:
-a lack of common, diverse benchmarks and data sets; a lack of common
-experimental methodology; problems with continuously changing hardware
-and software stacks; and the difficulty to validate techniques due to
-a lack of sharing in publications. They propose a system for
-addressing these concerns, the Collective Mind knowledge system,
-which, while in early stages of ongoing development, is intended to
-provide a modular infrastructure for sharing autotuning performance
-data and related artefacts across the internet. In addition to sharing
-performance data, the approach taken in this thesis emphasises the
-collective \emph{exploitation} of such performance data, so that data
-gathered from one device may be used to inform the autotuning
-decisions of another. This requires each device to maintain local
-caches of shared data to remove the network overhead that would be
-present from querying a single centralised data store during execution
-of a hot path. The current implementation of Collective Mind uses a
-NoSQL JSON format for storing performance data. The relational schema
-used in this thesis offers greater scaling performance and lower
-storage overhead as the amount of performance data grows.
+In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014} advocate a collaborative and ``big data'' driven approach to autotuning, arguing that the challenges facing the widespread adoption of autotuning and machine learning methodologies can be attributed to: a lack of common, diverse benchmarks and data sets; a lack of common experimental methodology; problems with continuously changing hardware and software stacks; and the difficulty to validate techniques due to a lack of sharing in publications. They propose a system for addressing these concerns, the Collective Mind knowledge system, which, while in early stages of ongoing development, is intended to provide a modular infrastructure for sharing autotuning performance data and related artefacts across the internet. In addition to sharing performance data, the approach taken in this thesis emphasises the collective \emph{exploitation} of such performance data, so that data gathered from one device may be used to inform the autotuning decisions of another. This requires each device to maintain local caches of shared data to remove the network overhead that would be present from querying a single centralised data store during execution of a hot path. The current implementation of Collective Mind uses a NoSQL JSON format for storing performance data. The relational schema used in this thesis offers greater scaling performance and lower storage overhead as the amount of performance data grows.
 
 Whereas iterative compilation requires an expensive offline training
 phase to search an optimisation space, dynamic optimisers perform this
