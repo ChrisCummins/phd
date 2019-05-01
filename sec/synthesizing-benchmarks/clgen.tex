@@ -47,6 +47,7 @@ During initial development it became apparent that isolating the OpenCL device c
 Injecting the shim decreases the discard rate from 40\% to 32\%, responsible for an additional 88k lines of code in the final language corpus. The resulting data set is 2.0 million lines of compilable OpenCL source code.
 
 \subsubsection{Code Rewriter}
+\label{subsubsec:clgen-rewriter}
 
 Programming languages have few of the issues of semantic interpretation present in natural language, though there remains many sources of variance at the syntactic level. For example, the presence and content of comments in code, and the choice of identifying names given to variables. For the purposes of generative modelling, these ambiguities are considered to be \emph{non-functional variance}. The \emph{code rewriter} is a tool developed to normalise code of these variances so as to make code more amenable to machine learning. This is a three step process:
 
