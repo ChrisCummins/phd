@@ -3,19 +3,32 @@
 
 \section{Introduction}
 
-This chapter provides a detailed though non-exhaustive description of the theory and techniques used in this thesis. First is an overview of the machine learning techniques used in this thesis, followed by a description of the statistical tools and methodologies used in the evaluation.
+This chapter provides a short and non-exhaustive overview of the theory and techniques used in this thesis.
 
-% \subsection{Notation}
-%
-% Notation: $\odot$ point-wise multiplication of tensors.
+First Section~\ref{subsec:background-terminology} defines the terminology. Then Section~\ref{subsec:background-machine-learning} provides an overview of the machine learning techniques used in this thesis. Section~\ref{subsec:background-gpgpu} provides an overview of GPGPU programming. This is followed by a description of the statistical tools and methodologies used in the evaluation in Section~\ref{subsec:background-evaluation-techniques}. Finally Section~\ref{subsec:background-summary} concludes.
+
+\section{Terminology}
+\label{subsec:background-terminology}
+
+\emph{machine learning}
+
+\emph{deep learning}
+
+\emph{feature space}
+
+\emph{supervised learning}
+
+\emph{unsupervised learning}
+
 
 \section{Machine Learning}
+\label{subsec:background-machine-learning}
 
 \subsection{Principal Component Analysis}
 
 \subsection{Decision Trees}
 
-\section{Deep Learning}
+\subsection{Deep Learning}
 
 \subsection{Recurrent Neural Networks}
 
@@ -63,6 +76,7 @@ Challenge: there may not be sufficient gradient for $G$ to learn well. Early in 
 
 
 \section{GPGPU Programming}
+\label{subsec:background-gpgpu}
 
 General purpose programming with graphics hardware is a nascent field, but has shown to enable massive data parallel throughput by re-purposing the hardware traditionally dedicated to the rendering of 3D graphics for generic computation. This was enabled by hardware support for programmable shaders replacing the fixed function graphics pipeline, and support for floating point operations in 2001. \citeauthor{Owens2006} provide a review of the first five years of general purpose computation on graphics hardware in~\cite{Owens2006}.
 
@@ -98,5 +112,7 @@ The overhead introduced by memory transfers between host and compute devices fur
 Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
 
 \section{Evaluation Techniques}
+\label{subsec:background-evaluation-techniques}
 
 \section{Summary}
+\label{subsec:background-summary}

@@ -1,4 +1,9 @@
-\section{Iterative Compilation \& Machine Learning}\label{sec:iterative-compilation}
+\section{Iterative Compilation \& Machine Learning}
+\label{sec:related-work-iterative-compilation}
+
+Modern compilers are complex, containing dozens or hundreds of optimization passes. Determining which optimisation passes should be applied, and in what order, is nontrivial, and depends on many factors from the properties of the program being compiled to the the target hardware. Current state-of-practise is for compilers to use a fixed ordering of optimisations, and for each optimization to contain a heuristic to determine when it should be used, and with what parameters. Such a heuristic is typically developed by hand at the expense of compiler expertise and manhours.
+
+The result is that performance
 
 \todo[inline]{The motivation for iterative compilation is that optimization heuristics are imperfect.}
 
