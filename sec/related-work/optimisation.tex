@@ -68,6 +68,9 @@ In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014} advocate a co
 % Kraska, T., Beutel, A., Chi, E. H., Dean, J., & Polyzotis, N. (2017). The Case for Learned Index Structures. ArXiv:1712.01208.
 \todo[inline]{The Case for Learned Index Structures~\cite{Kraska2017}.}
 
+% Ashouri, A. H., Bignoli, A., Palermo, G., Silvano, C., Kulkarni, S., & Cavazos, J. (2017). MiCOMP: Mitigating the Compiler Phase-ordering Problem Using Optimization Sub-sequences and Machine Learning. TACO.
+\todo[inline]{Compiler phase ordering~\cite{Ashouri2017}}
+
 Whereas iterative compilation requires an expensive offline training phase to search an optimisation space, dynamic optimisers perform this optimisation space exploration at runtime, allowing programs to respond to dynamic features ``online''. This is a challenging task, as a random search of an optimisation space may result in configurations with vastly sub-optimal performance. In a real world system, evaluating many sub-optimal configurations will cause a significant slowdown of the program. Thus a requirement of dynamic optimisers is that convergence time towards optimal parameters is minimised.
 
 Existing dynamic optimisation research has typically taken a low level approach to performing optimisations. Dynamo is a dynamic optimiser which performs binary level transformations of programs using information gathered from runtime profiling and tracing~\cite{Bala2000}. While this provides the ability to respond to dynamic features, it restricts the range of optimisations that can be applied to binary transformations. These low level transformations cannot match the performance gains that higher level parameter tuning produces.
@@ -178,6 +181,8 @@ Section~\ref{subsec:training-with-synthetic-benchmarks} describes training with 
 \subsection{Program Representations: Features and Embeddings}
 
 \todo[inline]{Automatic feature \emph{selection} has been done before. The technique proposed in this thesis is for feature \emph{generation}, i.e. extracting a novel representation from text.}
+
+\todo[inline]{Learning using an unbounded vocabulary~\cite{Cvitkovic2018a}.}
 
 Machine learning has emerged as a viable means in automatically constructing heuristics for code optimisation~\cite{Stephenson2005,Agakov,Wang2010,Kulkarni2012,Ding2015,Muralidharan2016}. Its great advantage is that it can adapt to changing hardware platforms as it has no a priori assumptions about their behaviour. The success of machine learning based code optimisation has required having a set of high-quality features that can capture the important characteristics of the target program. Given that there is an infinite number of these potential features, finding the right set of features is a non-trivial, time-consuming task.
 
@@ -328,7 +333,16 @@ Recently, deep neural networks have been shown to be a powerful tool for feature
 \section{Other Machine Learning}
 \label{sec:related-work-other}
 
-There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyse software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, code summarisation~\cite{Allamanis2016}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for benchmark generation. This work is the first to do so.
+Neural code comprehension:
+
+Code summarisation~\cite{Allamanis2016}.
+
+Comment generation~\cite{Wong2013}.
+
+% David, Y., Alon, U., & Yahav, E. (2019). Neural Reverse Engineering of Stripped Binaries. ArXiv:1902.09122. Retrieved from https://arxiv.org/pdf/1902.09122.pdf
+Procedure names~\cite{David}.
+
+There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyse software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for benchmark generation. This work is the first to do so.
 
 In recent years, machine learning techniques have been employed to model and learn from program source code on various tasks. These include mining coding conventions~\cite{Allamanis2014a} and idioms~\cite{Allamanis2014}, API example code~\cite{Zhang2015a} and pseudo-code generation~\cite{Oda2015}. Our work is the first attempt to extend the already challenging task of modelling distributions over source code to learning distributions over source code with respect to code optimisations.
 

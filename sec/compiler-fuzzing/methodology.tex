@@ -13,13 +13,14 @@ combinations of different drivers for the same device, and different devices
 using the same driver.
 
 \begin{table}
-	\centering %
-	\subfloat{\input{tab/deepsmith-platforms-a}}\\ %
-  \subfloat{\input{tab/deepsmith-platforms-b}} %
-	\caption[OpenCL systems and the number of bug reports submitted to date]{%
-		OpenCL systems and the number of bug reports submitted to date (22\% of which have been fixed, the remainder are pending). For each system, two testbeds are created, one with compiler optimisations, the other without.%
-	}
-	\label{tab:deepsmith-platforms}
+  \centering %
+  \subfloat[][]{\input{tab/deepsmith-platforms-a}}%
+  \\%
+  \subfloat[][]{\input{tab/deepsmith-platforms-b}} %
+  \caption[OpenCL systems and the number of bug reports submitted to date]{%
+    OpenCL systems and the number of bug reports submitted to date (22\% of which have been fixed, the remainder are pending). For each system, two testbeds are created, one with compiler optimisations, the other without.%
+  }
+  \label{tab:deepsmith-platforms}
 \end{table}
 
 \subsection{Testbeds}
@@ -40,6 +41,6 @@ inputs, threads>} settings.
 
 \subsection{Bug Search Time Allowance}
 
-We compare both our fuzzer and CLSmith. We allow both to run for 48 hours on
+DeepSmith and CLsmith are compared by allowing both to run for 48 hours on
 each of the 20 testbeds. CLSmith used its default configuration. The total
 runtime for a test case consists of the generation and execution time.

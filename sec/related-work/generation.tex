@@ -6,43 +6,26 @@ The generation of artificial programs is a broad field with a wide range of appl
 \subsection{Performance Characterisation}
 \label{subsec:training-with-synthetic-benchmarks}
 
-% Toffola, L. D., Pradel, M., & Gross, T. R. (2018). Synthesizing programs that expose performance bottlenecks. In CGO.
-\todo[inline]{Synthesis to expose performance bottlenecks~\cite{Toffola2018}.}
+Parameterised synthetic benchmark generation. Allows fine-grained exploration of program space
 
-\emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. The essence of the approach is to construct a probabilistic grammar with embedded semantic actions that defines a language of possible programs. New programs may be created by sampling the grammar and, through setting probabilities on the grammar productions, the sampling is biased towards producing programs from one part of the space or another. This technique is potentially completely general, since a grammar can theoretically be constructed to match any desired program domain. However, despite being theoretically possible, it is not easy to construct grammars which are both suitably general and also produce programs that are in any way similar to human written programs. It has been shown to be successful over a highly restricted space of stencil benchmarks with little control flow or program variability~\cite{Garvey2015b,Falch2015,Cummins2015}. But, it is not clear how much effort it will take, or even if it is possible for human experts to define grammars capable of producing human like programs in more complex domains. By contrast, learning from a corpus provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from real world code.
+% Bell, R. H., & John, L. K. (2005). Improved automatic testcase synthesis for performance model validation. In SC. https://doi.org/10.1145/1088149.1088164
+\todo[inline]{Synthetic benchmarks~\cite{Bell2005}}
 
 % Joshi, A. M., Eeckhout, L., & John, L. K. (2008). The Return of Synthetic Benchmarks. In SPEC Benchmark Workshop.
 \todo[inline]{Synthetic benchmarks~\cite{Joshi}.}
 
-% Brockschmidt, M., Allamanis, M., Gaunt, A. L., & Polozov, O. (2018). Generative Code Modeling with Graphs. Retrieved from http://arxiv.org/abs/1805.08490
-\todo[inline]{Generative code modelling with graphs~\cite{Brockschmidt2018}.}
+% Joshi, A. M., Eeckhout, L., Johnz, L. K., & Isen, C. (2008). Automated microprocessor stressmark generation. In HPCA. https://doi.org/10.1109/HPCA.2008.4658642
+\todo[inline]{Early benchmark generation~\cite{Joshi2008}.}
 
-The use of synthetic benchmarks for providing empirical performance
-evaluations dates back to as early as 1974~\cite{Curnow1976}. The
-\emph{automatic generation} of such synthetic benchmarks is a more
-recent innovation, serving the purpose initially of stress-testing
-increasingly complex software systems for behaviour validation and
-automatic bug detection~\cite{Verplaetse2000,Godefroid2008}. A range
-of techniques have been developed for these purposes, ranging from
-applying random mutations to a known dataset to generate test stimuli,
-to so-called ``white-box fuzz testing'' which analyses program traces
-to explore the space of a program's control flow. CSmith is one such
-tool which generates randomised C source programs for the purpose of
-automatically detecting compiler bugs~\cite{Yang2012}.
+% Bertran, R., Buyuktosunoglu, A., Gupta, M. S., Gonzalez, M., & Bose, P. (n.d.). Systematic Energy Characterization of CMP/SMT Processor Systems via Automated Micro-Benchmarks.
+\todo[inline]{Auto micro-benchmarks~\cite{Bertran}.}
 
-A method for the automatic generation of synthetic benchmarks for the
-purpose of \emph{performance} tuning is presented
-in~\cite{Chiu2015}. \citeauthor{Chiu2015} use template substitution
-over a user-defined range of values to generate training programs with
-a statistically controlled range of features. A Perl preprocessor
-generates output source codes from an input description using a custom
-input language Genesis. Genesis is more flexible than the system
-presented in this thesis, supporting substitution of arbitrary
-sources. The authors describe an application of their tool for
-generating OpenCL stencil kernels, but do not report any performance
-results.
+\todo{rewrite} The use of synthetic benchmarks for providing empirical performance evaluations dates back to as early as 1974~\cite{Curnow1976}. The \emph{automatic generation} of such synthetic benchmarks is a more recent innovation, serving the purpose initially of stress-testing increasingly complex software systems for behaviour validation and automatic bug detection~\cite{Verplaetse2000,Godefroid2008}.
 
-\emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. Users annotate template programs with statistical distributions over features, which are instantiated to generate statistically controlled permutations of templates. Template based approaches provide domain-specific solutions for a constrained feature and program space, for example, generating permutations of Stencil codes~\cite{Garvey2015b,Cummins2015a}. Our approach provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from real world code.
+\emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. The essence of the approach is to construct a probabilistic grammar with embedded semantic actions that defines a language of possible programs. New programs may be created by sampling the grammar and, through setting probabilities on the grammar productions, the sampling is biased towards producing programs from one part of the space or another. This technique is potentially completely general, since a grammar can theoretically be constructed to match any desired program domain. However, despite being theoretically possible, it is not easy to construct grammars which are both suitably general and also produce programs that are in any way similar to human written programs. It has been shown to be successful over a highly restricted space of stencil benchmarks with little control flow or program variability~\cite{Garvey2015b,Falch2015,Cummins2015}. But, it is not clear how much effort it will take, or even if it is possible for human experts to define grammars capable of producing human like programs in more complex domains. In contrast, the approach proposed in this thesis of learning from a corpus provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from real world code.
+
+% Toffola, L. D., Pradel, M., & Gross, T. R. (2018). Synthesizing programs that expose performance bottlenecks. In CGO.
+\todo[inline]{Synthesis to expose performance bottlenecks~\cite{Toffola2018}.}
 
 Random program generation is an effective method for software testing. Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2012} and OpenCL~\cite{Lidbury2015a}. A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}. Goal-directed program generators have been used for a variety of domains, including generating linear transforms~\cite{Voronenko2009}, MapReduce programs~\cite{Smith}, and data structure implementations~\cite{Loncaric2016}. Program synthesis from input/output examples is used for simple algorithms in~\cite{Zaremba2015a}, string manipulation in~\cite{Gulwani2011}, and geometry constructions in~\cite{Gulwani2012}.
 
@@ -172,6 +155,8 @@ The random generation of programs to test compilers is a well established approa
 
 Prior approaches are surveyed in~\cite{Kossatchev2005,Boujarwah1997} and empirically contrasted in~\cite{Chen2014a}. The main question of interest is in how to efficiently generate codes which trigger bugs. There are two main approaches: \emph{program generation}, where inputs are synthesised from scratch; and \emph{program mutation}, where existing codes are modified so as to identify anomalous behaviour.
 
+\todo{rewrite} A range of techniques have been developed for these purposes, ranging from applying random mutations to a known dataset to generate test stimuli, to so-called ``white-box fuzz testing'' which analyses program traces to explore the space of a program's control flow. CSmith is one such tool which generates randomised C source programs for the purpose of automatically detecting compiler bugs~\cite{Yang2012}.
+
 \begin{figure}
 	\centering
 	\subfloat[][Expected outcome-based test case generation and evaluation]{%
@@ -241,3 +226,11 @@ XSLT and XML engines, though the seeds are not directly used as test cases.
 Equivalence Modulo Inputs (EMI) testing~\cite{Le2013a,Sun2016a} follows a different approach to test case generation. Starting with existing code, it inserts or deletes statements that will not be executed, so functionality should remain the same. If it is affected, it is due to a compiler bug. While a powerful technique able to find hard to detect bugs, it relies on having a very large number of programs to mutate. As such, it still requires an external code generator. Similarly to CSmith, EMI favours very long test programs. LangFuzz~\cite{Holler2012} also uses mutation but does this by inserting code segments which have previously exposed bugs. This increases the chances of discovering vulnerabilities in scripting language engines. Skeletal program enumeration~\cite{Zhang2017a} again works by transforming existing code. It identifies algorithmic patterns in short pieces of code and enumerates all the possible permutations of variable usage. Compared to all these, our fuzzing approach is low cost, easy to develop, portable, capable of detecting a wide range of errors, and focusing by design on bugs that are more likely to be encountered in a production scenario.
 
 A mutation-based approach for differential testing the Java Virtual Machine is demonstrated in~\cite{Chena}.
+
+
+\subsection{Neural code generation}
+
+% Brockschmidt, M., Allamanis, M., Gaunt, A. L., & Polozov, O. (2018). Generative Code Modeling with Graphs. Retrieved from http://arxiv.org/abs/1805.08490
+\citeauthor{Brockschmidt2018} present a novel methodology for program generation in which a graph is used as the intermediate representation~\cite{Brockschmidt2018}. While the generated 
+
+\todo[inline]{General\cite{Yin2017}.}
