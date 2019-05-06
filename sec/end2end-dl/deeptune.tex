@@ -35,7 +35,15 @@ A source code is encoded as a sequence of integers for interpretation by neural 
 
 A hybrid, partially tokenised vocabulary approach is used. This allows common multi-character sequences such as \texttt{float} and \texttt{if} to be represented as unique vocabulary items, while literals and other infrequently used words are encoded at the character level.
 
-First, a candidate vocabulary $V_c$ is assembled for the OpenCL programming language containing the 208 data types, keywords, and language builtins of the OpenCL programming language. From this, the subset of the candidate vocabulary $V \in V_c$ which is required to encode a corpus of 45k lines of GPGPU benchmark suite kernels is derived. Beginning with the first character in the corpus, the algorithm consumes the longest matching sequence from the candidate vocabulary.\todo[inline]{insert maximal munch algorithm} This process continues until every character in the corpus has been consumed. The resulting derived vocabulary consists of 128 symbols which we use to encode new program sources. Figure~\ref{subfig:source_vocab} shows the vocabulary derived for a single input source code Figure~\ref{subfig:source_out}.
+First, a candidate vocabulary $V_c$ is assembled for the OpenCL programming language containing the 208 data types, keywords, and language builtins of the OpenCL programming language. From this, the subset of the candidate vocabulary $V \in V_c$ which is required to encode a corpus of 45k lines of GPGPU benchmark suite kernels is derived. Beginning with the first character in the corpus, the algorithm consumes the longest matching sequence from the candidate vocabulary.\todo[inline]{insert maximal munch algorithm, Algorithm~\ref{maxmunch-tokenization}} This process continues until every character in the corpus has been consumed. The resulting derived vocabulary consists of 128 symbols which we use to encode new program sources. Figure~\ref{subfig:source_vocab} shows the vocabulary derived for a single input source code Figure~\ref{subfig:source_out}.
+
+\begin{algorithm}
+  \input{alg/maxmunch-tokenization}
+  \caption[Deriving a vocabulary from a string]{%
+    Deriving a vocabulary from a string.%
+  }
+  \label{alg:maxmunch-tokenization}
+\end{algorithm}
 
 \input{fig/encoding}
 

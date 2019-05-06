@@ -1,0 +1,15 @@
+\begin{algorithmic}[1]
+\Require Candidate vocabulary $V_c$, string $S$.
+\Ensure Vocabulary $V$.
+\State $i \gets 1$
+\While{$S \ne \phi$}
+  \State $i \gets i + 1$
+  \State $c \gets substr(S, 0, i)$
+  \If{$c \not\in V_c$}
+    \State $c \gets substr(S, 0, i - 1)$
+    \State $S \gets substr(S, i - 1, |S|)$
+    \State $V \gets V \cup \{ c \}$
+    \State $i \gets 1$
+  \EndIf
+\EndWhile
+\end{algorithmic}

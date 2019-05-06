@@ -1,26 +1,52 @@
 \chapter{Introduction}
 
+There has been an unprecedented increase in the scale and quantity of data intensive workloads. To meet the demands of the transition to \emph{big data}, there have been fundamental shifts in both hardware and software. In hardware, the demand for performance has long outstripped what can be provided by single processors, leading to a broad spectrum of heterogeneous architectures being developed. These range from re-purposing existing Graphics Processor Units (GPUs) to offload numeric computations, to adapting Field-programmable Gate Arrays (FPGAs), and even developing highly  specialised ASICs to perform numeric tasks~\cite{Jouppi2017}). While much of the compiler logic can be reused across architectures, the optimisations that are required to extract the best performance from specific hardware cannot. Each architecture requires extensive hand tuning by experts to extract good performance.
+
+In software, the shift towards parallelism and heterogeneity has created a \emph{programmability challenge}. Parallel programming is significantly more challenging than traditional single threaded development; there are many more opportunities to introduce bugs in software, and Amdahl's law can make extracting performance much more challenging. One of the most popular approaches to mitigating the programmability challenge is through the development and widespread adoption of high level abstractions. High level abstractions and libraries can greatly simplify parallel programming by providing the complex parallel communication and coordination logic, allowing users to plug-in only the business logic required to solve a problem. Still, there is a wide range of approaches to implementing such libraries. One example is high level libraries for performing data intensive numeric workloads, two of the most popular examples of which --- TensorFlow~\cite{Abadi} and PyTorch~\cite{Paszke2017} --- use opposing dataflow and imperative programming styles, respectively. Optimising such libraries provides new challenges to the compiler --- the challenge of code analyses in the face of highly parallel abstract code can defeat many optimisations.
+
+The combined burden of increased hardware and software diversity has resulted in compilers that are too complex for the expert to fully reason about, and too large to keep up with the pace of change. This results in low performance, wasted energy, and buggy software. For the trend towards larger workloads and heterogeneous devices to continue, new techniques are required to reduce the cost of compiler construction.
+
+
 \section{Machine Learning for Compilers}
+
+Machine learning has been successfully applied across a broad range of fields and disciplines. In recent years this has been accelerated by the development of deep learning techniques. The appeal of machine learning is that it provides techniques to automatically understand the structure of data and how that structure relates to a specific goal, enabling predictions to be made on unseen data; all without the need for expert domain knowledge. In essence, machine learning can negate the need for domain expertise in cases where there is a ready supply of empirical observations. 
+
+Within compilers, there are many tasks which require domain expertise that are eligible candidates for machine learning. Examples of which include learning models to control optimisation heuristics, and generating representative inputs to differential test the compiler. As such, the use of machine learning to aid in compiler construction is an established research pursuit. In many studies machine learning has been shown to simplify the construction of compiler optimisations, often leading to higher quality heuristics that outperform those constructed by human experts. With the increasing demand for aggressively optimising compilers across a range of heterogeneous hardware, it would appear that machine learning could provide a much needed relief on the burden of compiler developers.
+
+Yet, the integration of machine learning to compilers has remained a largely academic pursuit, with little progress being made of adoption within industry. The following section speculates as to the cause by summarising some of the outstanding problems in applying machine learning to compilers. The remainder of this chapter then details the contributions of this thesis, followed by the overall structure of the document.
+
 
 \section{The Problem}
 
-\todo[inline]{Applying machine learning to compilers is slow and cumbersome. Features require expertise and time to develop.}
+Machine learning techniques can offer reduced costs and improved performance compared to expert approaches, yet there are challenges preventing widespread adoption. There are two significant problems that must be overcome:
+
+\paragraph*{Scarcity of data} In machine learning techniques, a model is trained based on past observations to predict the values for unseen data points. In order to be able to generalise well to unseen points, plentiful training data should be provided, with a fine-grained overview of the feature space. Typical machine learning experiments outside of the compilation field train over thousands or millions of observations. In machine learning for compilers, however, there are typically only a few dozen common benchmarks available.
+
+The small number of common benchmarks limits the quality of learned models as they have very sparse training data. The problem is worsened exponentially with the dimensionality of the feature space. Complex heuristics often have high-dimensional feature spaces, and each additional dimension worsens the sparsity of training examples.
+
+To address the issue, there must be a sizeable increase in the set of common benchmarks, or programs to perform machine learning over. Previously, researchers have sought to provide these through the use of random grammar based generation of programs, but this is a challenging task --- the generated programs must be similar to that of real programs so as to be useful to the learning algorithm, and biasing the generation towards these types of programs is hard to do in the general case.
+
+\paragraph*{Feature design} Machine learning algorithms learn to correlate a set of \emph{explanatory variables} with a target value. These explanatory variables, known as features, must be chosen so as to be discriminative for the target value.
+
+Choosing the features to summarise a program so as to be discriminative for machine learning is a challenging task that depends on the thing being learned, and the environment from which training data was collected, e.g. the hardware and machine setup.
+
+Many problems in compilers do not map directly to numeric attributes, requiring the extraction of a numeric representation from a non-numeric input. For example, extracting instruction counts from source code. Knowing which attributes to extract to represent a program is not easy, and developers are typically faced with the challenge of having to laborious select the right combination features from a large candidate set.
+
+If machine learning is to be widely adopted in compilers, it must be made significantly easier and cheaper. The aim of this thesis is to reduce the cost of compiler construction through developing \emph{low cost} machine learning techniques to build and maintain compilers.
+
 
 \section{Contributions}
 
-This thesis presents machine learning methodologies for simplifying compiler construction. The key contributions of this thesis are as follows:
+This thesis presents machine learning-based techniques to simplify and accelerate compiler construction. The key contributions of this thesis are:
 
 \begin{itemize}
-  \item \todo{CGO'17 contribution} We are the first to apply deep learning over source codes to synthesise compilable, executable benchmarks.%
-  \item \todo{CGO'17 contribution} A novel tool CLgen\footnote{\url{https://github.com/ChrisCummins/clgen}} for general-purpose benchmark synthesis using deep learning. CLgen automatically and rapidly generates thousands of human like programs for use in predictive modelling.%
-  \item \todo{CGO'17 contribution} We use CLgen to automatically improve the performance of a state-of-the-art predictive model by $1.27\times$, and expose limitations in the feature design of the model which, after correcting, further increases performance by $4.30\times$.%
-  \item \todo{PACT'17 contribution} a novel, automatic, and fast approach for the generation of expressive random programs for compiler fuzzing. We \emph{infer} programming language syntax, structure, and use from real-world examples, not through an expert-defined grammar. Our system needs two orders of magnitude less code than the state-of–the-art, and takes less than a day to train;
-  \item \todo{PACT'17 contribution} we discover a similar number of bugs as the state-of–the-art, but also find bugs which prior work cannot, covering more components of the compiler;
-  \item \todo{PACT'17 contribution} in modelling real handwritten code, our test cases are more interpretable than other approaches. Average test case size is two orders of magnitude smaller than state-of-the-art, without any expensive reduction process.
-	\item \todo{ISSTA'18 contribution} We present a methodology for building compiler heuristics without any need for feature engineering.
-	\item \todo{ISSTA'18 contribution} A novel tool DeepTune for automatically constructing optimisation heuristics without features. DeepTune outperforms existing state-of-the-art predictive models by 14\% and 12\% in two challenging optimisation domains.
-	\item \todo{ISSTA'18 contribution} We apply, for the first time, \emph{transfer learning} on compile-time and optimisations, improving the heuristics by reusing training information across different optimisation problems, even if they are unrelated.
+  \item the first application of deep learning over source codes to synthesise compilable, executable benchmarks. The approach automatically improve the performance of a state-of-the-art predictive model by $1.27\times$, and expose limitations in the feature design of the model which, after correcting, further increases performance by $4.30\times$.
+  \item a novel, automatic, and fast approach for the generation of expressive random programs for compiler fuzzing. The system \emph{infers} programming language syntax, structure, and use from real-world examples, not through an expert-defined grammar. The system needs two orders of magnitude less code than the state-of–the-art, and takes less than a day to train. In modelling real handwritten code, the test cases are more interpretable than other approaches. Average test case size is two orders of magnitude smaller than state-of-the-art, without any expensive reduction process;
+  \item an extensive evaluation campaign of the compiler fuzzing approach using 10 OpenCL compilers and 1000 hours of automated testing. The campaign uncovers a similar number of bugs as the state-of–the-art, but also finds bugs which prior work cannot, covering more components of the compiler;
+	\item a methodology for building compiler heuristics without any need for feature engineering. In an evaluation of the technique, it is found to outperform existing state-of-the-art predictive models by 14\% and 12\% in two challenging GPGPU compiler optimisation domains;
+	\item the first application of \emph{transfer learning} to compiler optimisations, improving heuristics by reusing training information across different optimisation problems, even if they are unrelated.
 \end{itemize}
+
 
 \section{Structure}
 
@@ -43,4 +69,4 @@ This thesis is organised as follows:
 
 \section{Summary}
 
-This chapter outlines problems encountered
+This introductory chapter has outlined the use of machine learning for compilers and two main issues preventing its widespread uptake: the scarcity of data, and the challenge of designing features. Subsequent chapters describe novel approaches to address both issues.

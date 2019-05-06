@@ -1,0 +1,54 @@
+\chapter{Introduction}
+
+\section{Machine Learning for Compilers}
+
+Compilers are a fundamental trusted technology, but they are becoming increasingly complex. With the cost of both construction and maintenance ever increasing, there is a need for lower cost methods for compiler construction to best utilize the scarce resource of compiler expertise.
+
+\todo[inline]{Factors contributing to increasing demand for compiler expertise} Compilers are becoming increasingly diverse. Compiler targets are becoming increasingly diverse. Software being compiled is diversifying (e.g. data-flow vs imperative programming models of TensorFlow vs PyTorch); hardware is diversifying (e.g. GPUs, FPGAs, crazy ASICs like GraphCore and TPUs~\cite{Jouppi2017}).
+
+\section{The Problem}
+
+Unfortunately, while offering reduced costs or improved performance compared to an expert approach, many machine learning techniques remain cumbersome and difficult to apply.
+
+For example, features require expertise and time to develop.
+
+Many problems in compilers do not map cleanly to machine learning problems.
+
+If ML is to be widely adopted, it must be made significantly easier and cheaper.
+
+The aim of this thesis is to reduce the cost of compiler construction through developing \emph{low cost} machine learning techniques to build or tune compilers.
+
+\section{Contributions}
+
+This thesis presents machine learning methodologies for simplifying and accelerating compiler construction. The key contributions of this thesis are as follows:
+
+\begin{itemize}
+  \item the first application of deep learning over source codes to synthesise compilable, executable benchmarks. The approach automatically improve the performance of a state-of-the-art predictive model by $1.27\times$, and expose limitations in the feature design of the model which, after correcting, further increases performance by $4.30\times$.
+  \item a novel, automatic, and fast approach for the generation of expressive random programs for compiler fuzzing. The system \emph{infers} programming language syntax, structure, and use from real-world examples, not through an expert-defined grammar. The system needs two orders of magnitude less code than the state-of–the-art, and takes less than a day to train. In modelling real handwritten code, the test cases are more interpretable than other approaches. Average test case size is two orders of magnitude smaller than state-of-the-art, without any expensive reduction process;
+  \item an extensive evaluation campaign of the compiler fuzzing approach using 10 OpenCL compilers and 1000 hours of automated testing. The campaign uncovers a similar number of bugs as the state-of–the-art, but also finds bugs which prior work cannot, covering more components of the compiler;
+	\item a methodology for building compiler heuristics without any need for feature engineering. In an evaluation of the technique, it is found to outperform existing state-of-the-art predictive models by 14\% and 12\% in two challenging GPGPU compiler optimisation domains;
+	\item the first application of \emph{transfer learning} to compiler optimisations, improving heuristics by reusing training information across different optimisation problems, even if they are unrelated.
+\end{itemize}
+
+\section{Structure}
+
+This thesis is organised as follows:
+
+\textbf{Chapter~\ref{chap:background}} defines terminology and describes the  methodologies and techniques used in this thesis.
+
+\textbf{Chapter~\ref{chap:related-work}} provides an overview of previous work on machine learning for compilers, with an emphasis on performance optimisation.
+
+\textbf{Chapter~\ref{chap:clgen}} describes a machine learning generator for source codes. The generator is evaluated for its ability to produce OpenCL benchmarks.
+
+\textbf{Chapter~\ref{chap:clgen}} introduces a novel machine learning generator for source codes. The generator is evaluated for its ability to produce OpenCL benchmarks.
+
+\textbf{Chapter~\ref{chap:deepsmith}} presents an application of the machine learning generator for synthesising compiler test cases. The chapter contains an extensive evaluation of OpenCL compilers using the synthesised test cases.
+
+\textbf{Chapter~\ref{chap:deeptune}} introduces a novel methodology for constructing optimising compiler heuristics without the need for code features.
+
+\textbf{Chapter~\ref{chap:conclusions}} summarises the findings and describes potential avenues for future research.
+
+
+\section{Summary}
+
+This chapter outlines problems encountered

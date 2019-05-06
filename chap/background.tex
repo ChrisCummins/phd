@@ -5,7 +5,9 @@
 
 This chapter provides a short and non-exhaustive overview of the theory and techniques used in this thesis.
 
-First Section~\ref{subsec:background-terminology} defines the terminology. Then Section~\ref{subsec:background-machine-learning} provides an overview of the machine learning techniques used in this thesis. Section~\ref{subsec:background-gpgpu} provides an overview of GPGPU programming. This is followed by a description of the statistical tools and methodologies used in the evaluation in Section~\ref{subsec:background-evaluation-techniques}. Finally Section~\ref{subsec:background-summary} concludes.
+First Section~\ref{subsec:background-terminology} defines the terminology. Then Section~\ref{subsec:background-statistics} describes the statistical tools and methodologies used in this thesis. This is followed by Section~\ref{subsec:background-machine-learning} providing an overview of the machine learning techniques used in this thesis. Section~\ref{subsec:background-gpgpu} provides an overview of GPGPU programming. Finally Section~\ref{subsec:background-summary} concludes.
+
+\todo{This entire chapter has yet to be written. All current text is placeholder.}
 
 \section{Terminology}
 \label{subsec:background-terminology}
@@ -21,10 +23,14 @@ First Section~\ref{subsec:background-terminology} defines the terminology. Then 
 \emph{unsupervised learning}
 
 
-\section{Machine Learning}
-\label{subsec:background-machine-learning}
+\section{Evaluation Techniques}
+\label{subsec:background-statistics}
 
 \subsection{Principal Component Analysis}
+
+
+\section{Machine Learning}
+\label{subsec:background-machine-learning}
 
 \subsection{Decision Trees}
 
@@ -110,9 +116,6 @@ The wide range of supported execution devices and differing standards-compliant 
 The overhead introduced by memory transfers between host and compute devices further complicates comparisons of OpenCL performance on different devices. The conclusion of~\cite{Gregg2011} is that this overhead can account for a $2\times$ to $50\times$ difference of GPU program runtime. In~\cite{Lee2010}, \citeauthor{Lee2010} present a performance analysis of optimised throughput computing applications for GPUs and CPUs. Of the 14 applications tested, they found GPU performance to be $0.7\times$ to $14.9\times$ that of multi-threaded CPU code, with an average of only 2.5$\times$. This is much lower than the $100\times$ to $1000\times$ values reported by other studies, a fact that they attribute to uneven comparison of optimised GPU code to unoptimised CPU code, or vice versa. \citeauthor{Lee2010} found that multi-threading, cache blocking, reordering of memory accesses and use of SIMD instructions to contribute most to CPU performance. For GPUs, the most effective optimisations are reducing synchronisation costs, and exploiting local shared memory. In all cases, the programs were optimised and hand-tuned by programmers with expert knowledge of the target architectures. It is unclear whether their performance results still hold for subsequent generations of devices.
 
 Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
-
-\section{Evaluation Techniques}
-\label{subsec:background-evaluation-techniques}
 
 \section{Summary}
 \label{subsec:background-summary}

@@ -1,4 +1,4 @@
-personal_ws-1.1 en 314 
+personal_ws-1.1 en 324 
 structs
 clc
 AST
@@ -20,6 +20,7 @@ parameterised
 DeepSmith
 sudo
 Fursin
+rewriter
 Fortran
 nolol
 awo
@@ -85,14 +86,17 @@ superoptimiser
 vectorised
 localmem
 breaklines
+GraphCore
 TensorFlow
 Keras
 KCAA
 Alastair
 DivInsts
 Hadamard
+TPUs
 blockchain
 undirected
+XFG
 CLTune
 VirtualBox's
 escapeinside
@@ -148,6 +152,8 @@ autogobble
 commun
 dataset
 subfig
+PLDI
+substr
 aa
 ulong
 discriminative
@@ -208,6 +214,7 @@ miscompilations
 accuracies
 foundational
 OnNewLine
+PyTorch
 parallelising
 cutcp
 Nelder
@@ -216,6 +223,7 @@ dimensionality
 MLP
 parallelisation
 papersize
+formatter
 Bunel
 MathFunctions
 preprocessor
@@ -230,6 +238,7 @@ sA
 sB
 solc
 OpenCL
+opencl
 sC
 sD
 sE
@@ -286,6 +295,7 @@ SIGSOFT
 Sutskever
 pre
 shaders
+DeepFuzz
 memset
 AddToHook
 CFG

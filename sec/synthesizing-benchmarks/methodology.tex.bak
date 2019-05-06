@@ -18,7 +18,7 @@ To evaluate the efficacy of synthetic benchmarks for training, the predictive mo
 
 \subsubsection{Benchmarks}
 
-As in~\cite{Grewe2013}, the model is tested on the NAS Parallel Benchmarks (NPB)~\cite{Bailey1991a}. The hand-optimised OpenCL implementation of \citeauthor{Seo2011}~\cite{Seo2011} is used. In~\cite{Grewe2013} the authors augment the training set of the predictive model with 47 additional kernels taken from 4 GPGPU benchmark suites. To more fully sample the program space, a much larger collection of 142 programs is used, summarised in Table~\ref{tab:cgo17-benchmarks}. These additional programs are taken from all 7 of the most frequently used benchmark suites identified in Section~\ref{subsec:motivation}. None of these programs were used to train CLgen. 1,000 kernels were synthesised with CLgen to use as additional benchmarks.
+As in~\cite{Grewe2013}, the model is tested on the NAS Parallel Benchmarks (NPB)~\cite{Bailey1991a}. The hand-optimised OpenCL implementation of \citeauthor{Seo2011}~\cite{Seo2011} is used. In~\cite{Grewe2013} the authors augment the training set of the predictive model with 47 additional kernels taken from 4 GPGPU benchmark suites. To more fully sample the program space, a much larger collection of 142 programs is used, summarised in Table~\ref{tab:cgo17-benchmarks}. These additional programs are taken from all 7 of the most frequently used benchmark suites identified in Section~\ref{subsec:motivation}. None of these programs were used to train CLgen. 1,000 kernels were synthesized with CLgen to use as additional benchmarks.
 
 \begin{table}% tab:benchmarks
   \centering%

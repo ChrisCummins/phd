@@ -1,7 +1,7 @@
 \section{DeepSmith: Compiler Fuzzing through Deep Learning}
 \label{sec:deepsmith}
 
-DeepSmith\footnote{DeepSmith available at: https://chriscummins.cc/deepsmith} is an open source framework for compiler fuzzing. Figure~\ref{fig:deepsmith} provides a high-level overview. In this work OpenCL is targeted, though the approach is language agnostic. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
+DeepSmith\footnote{DeepSmith available at: https://chriscummins.cc/deepsmith} is an open source framework for compiler fuzzing. Figure~\ref{fig:deeptune} provides a high-level overview. In this work OpenCL is targetted, though the approach is language agnostic. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
 
 \begin{figure}
   \centering
@@ -9,7 +9,7 @@ DeepSmith\footnote{DeepSmith available at: https://chriscummins.cc/deepsmith} is
   \caption[DeepSmith system overview]{%
     DeepSmith system overview.
   }%
-  \label{fig:deepsmith}
+  \label{fig:deeptune}
 \end{figure}
 
 \subsection{Generative Model}
