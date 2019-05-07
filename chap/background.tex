@@ -38,6 +38,12 @@ First Section~\ref{subsec:background-terminology} defines the terminology. Then 
 
 \subsection{Recurrent Neural Networks}
 
+A recurrent neural network (RNN) consists of hidden states \textbf{h} an an optional output \textbf{y}. It operates on a variable-length sequence, $\bm{x} = \left( x_1, x_2, \ldots, x_T \right)$. At each step $t \in T$, the hideen state $h_{<t>}$ of the RNN is updated by:
+
+\[ h_{<t>} = f\left( h_{<t-1>}, x_t \right) \]
+
+where $f$ is a non-linear activation function. An RNN can learn a probabilty distribution over a sequence of tokens to predict the next token. Therefore, at each timestep $t$, the output from the RNN is a conditional distribution $p\left( x_t | x_1, \ldots, x_{t-1} \right)$.
+
 % De Boom, C., Dhoedt, B., & Demeester, T. (2018). Character-level Recurrent Neural Networks in Practice: Comparing Training and Sampling Schemes. ArXiv:1801.00632.
 \todo[inline]{RNN evaluation~\cite{DeBoom2018}.}
 
@@ -72,7 +78,7 @@ Number of params = \todo[inline]{\ldots}
 
 The Generative Adversarial Network (GAN) is a means to estimate a generative model~\cite{Goodfellow2014}. It uses an adversarial process in which two models are simultaneously trained: a generator model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximise the probability of $D$ making a mistake.
 
-If both models are neural networks: learn a generator's distribution $p_g$ over data $\bm{x}$. Define a prior on input noise variables $p_z(\bm{z})$. Generator $G(\bm{z}; \Theta_g)$, using parameters $\Theta_g$. Discriminator $D(\bm{x}; \Theta_d)$ outputs a scalar, the probability that $\bm{x}$ came from the data rather than $p_g$. 
+If both models are neural networks: learn a generator's distribution $p_g$ over data $\bm{x}$. Define a prior on input noise variables $p_z(\bm{z})$. Generator $G(\bm{z}; \Theta_g)$, using parameters $\Theta_g$. Discriminator $D(\bm{x}; \Theta_d)$ outputs a scalar, the probability that $\bm{x}$ came from the data rather than $p_g$.
 
 Simultaneously train $D$ to maximise the probability of assigning the correct label to both training examples and samples from $G$, and train $G$ to minimise $\log (1 - D(G(\bm{z})))$. $D$ and $G$ play the two-player minimax game with value function $V(G, D)$:
 

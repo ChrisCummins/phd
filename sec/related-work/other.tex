@@ -1,0 +1,96 @@
+\section{Other Machine Learning}
+\label{sec:related-work-other}
+
+% Wang, H., Raj, B., & Xing, E. P. (2017). On the Origin of Deep Learning, 1–81. Retrieved from http://arxiv.org/abs/1702.07800
+Deep learning is a nascent branch of machine learning in which deep or multi-level graphs of processing layers are used to detect patterns in natural data~\cite{LeCun2015,Wang2017}.
+
+It is proving especially successful for its ability to ability to process natural data in its raw form. This overcomes the traditionally laborious and time-consuming practise of engineering feature extractors to process raw data into an internal representation or feature vector. Deep learning has successfully discovered structures in high-dimensional data, and is responsible for many breakthrough achievements in machine learning, including human parity in conversational speech recognition~\cite{Xiong2016}; professional level performance in video games~\cite{Mnih2015}; and autonomous vehicle control~\cite{Lozano-Perez2012}.
+
+
+Learning to summarise / name code:
+
+Naturalize employs techniques developed in the natural language processing domain to model coding conventions~\cite{Allamanis2014a}.
+
+JSNice leverages probabilistic graphical models to predict program properties such as identifier names for JavaScript~\cite{Raychev}.
+
+\citeauthor{Allamanis2016} use attentional neural networks to generate summaries of source code~\cite{Allamanis2016}.
+
+\citeauthor{Wong2013} mines Q\&A site StackOverflow to automatically generate code comments~\cite{Wong2013}.
+
+% David, Y., Alon, U., & Yahav, E. (2019). Neural Reverse Engineering of Stripped Binaries. ArXiv:1902.09122. Retrieved from https://arxiv.org/pdf/1902.09122.pdf
+Procedure names~\cite{David}.
+
+In recent years, machine learning techniques have been employed to model and learn from program source code on various tasks. These include mining coding  idioms~\cite{Allamanis2014}
+
+There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyse software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}.
+
+% Allamanis, M. (2018). The Adverse Effects of Code Duplication in Machine Learning Models of Code. ArXiv:1812.06469. Retrieved from https://github.com/Microsoft/dpu-utils.
+\todo[inline]{Concern about code duplicates in corpora of open-source programs are raised in~\cite{Allamanis}. This impacts cases where the open-source corpus is divided into training/test set. The high percentage of near-duplicate code means that often the divide is muddied. The work in this thesis does not use open source corpus as a test set.}
+
+
+Bug detection:
+
+Machine learning has also been applied to other areas such as improving bug finding static analysers~\cite{Heo2017,Koc2017}.
+
+Identifying buffer overruns~\cite{Choi2016}
+
+Processing bug reports~\cite{Lam2016,Huo2016}.
+
+% Pradel, M., & Sen, K. (2018). DeepBugs: A Learning Approach to Name-based Bug Detection. In OOPSLA.
+\todo[inline]{\emph{DeepBugs} combines binary classification of correct and incorrect code with semantic processing to name bugs~\cite{Pradel2018}.}
+
+% Si, X., Dai, H., Raghothaman, M., Naik, M., & Song, L. (2018). Learning Loop Invariants for Program Verification. In NeurIPS.
+\todo[inline]{\emph{Code2Inv} uses reinforcement learning to learn loop invariants for program verification~\cite{Si2018}.}
+
+% Yin, P., Neubig, G., Allamanis, M., Brockschmidt, M., & Gaunt, A. L. (2018). Learning to Represent Edits. ArXiv:1810.13337. https://doi.org/10.1080/02688697.2016.1244252
+\todo[inline]{Learning to represent edits and diffs~\cite{Yin2018}~\cite{Tufano2019}.}
+
+
+
+Bug prioritisation:
+
+Prioritising test programs~\cite{Chen2017}
+
+Example code generation / API usage / code completion:
+
+Code generation~\cite{Zhang2015a}.
+
+\citeauthor{Raychev2014} use statistical models to provide contextual code completion~\cite{Raychev2014}.
+
+\citeauthor{Zhang2015a} use deep learning to generate example code for APIs as responses to natural language queries~\cite{Zhang2015a}.
+
+Pseudo-code generation~\cite{Oda2015}.
+
+In a recent work~\cite{Bunel2017a}, Bunel \emph{et al.\ }formulate code super-optimisation as a stochastic search problem to learn the distribution of different code transformations and expected performance improvement. As acknowledged by the authors, their approach can be improved by having temporal information of the code structures.
+
+
+Learning to fix bugs:
+
+% Monperrus, M. (2018). Automatic Software Repair: a Bibliography. CSUR, 51(1).
+\todo[inline]{Survey of automatic software repair~\cite{Monperrus2018}.}
+
+% Koukoutos, M., Raghothaman, M., Kneuss, E., & Kuncak, V. (2017). On Repair with Probabilistic Attribute Grammars. ArXiv:1707.04148.
+Repairing programs~\cite{Koukoutos2017a}
+
+% White, M., Tufano, M., Martínez, M., Monperrus, M., & Poshyvanyk, D. (n.d.). Sorting and Transforming Program Repair Ingredients via Deep Learning Code Similarities. ArXiv:1707.04742.
+\todo[inline]{\emph{DeepRepair} sorts code fragments according to similarity of suspsicious elements~\cite{White}.}
+
+A slew of neural program repair tools:
+
+% Vasic, M., Kanade, A., Maniatis, P., Bieber, D., & Singh, R. (2019). Neural Program Repair by Jointly Learning to Localize and Repair. In ICLR.
+\todo[inline]{\citeauthor{Vasic2019} train a model to jointly loalize and repair variable-misuse bugs, uses multi-headed pointer networks~\cite{Vasic2019}}.
+%
+% Chen, Z., Kommrusch, S., Tufano, M., Pouchet, L., Poshyvanyk, D., & Monperrus, M. (2018). SequenceR: Sequence-to-Sequence Learning for End-to-End Program Repair. ArXiv:1901.01808. Retrieved from http://arxiv.org/abs/1901.01808
+\todo[inline]{Program repair~\cite{Chen2018}.}
+%
+% Hata, H., Shihab, E., & Neubig, G. (n.d.). Learning to Generate Corrective Patches using Neural Machine Translation. ArXiv:1812.07170.
+\todo[inline]{Corrective patches~\cite{Hata}.}
+%
+% Bader, J., Scott, A., Pradel, M., & Chandra, S. (2019). Getafix: Learning to Fix Bugs Automatically. ArXiv:1902.06111.
+\todo[inline]{\emph{Getafix} uses a hierarchical clustering algorithm that summarizes fix patterns into a hierarchy ranging from general to specific patterns~\cite{Bader2019}.}
+
+% Henkel, J., Lahiri, S. K., Liblit, B., & Reps, T. (2018). Code Vectors: Understanding Programs Through Embedded Abstracted Symbolic Traces. In FSE. https://doi.org/10.1145/3236024.3236085
+\todo[inline]{Embeddings from AST~\cite{Henkel2018}.}
+
+% Terence, P., & Vinju, J. (2016). Towards a Universal Code Formatter through Machine Learning. In SLE.
+\todo[inline]{Another instance of learning from a corpus of programs: \emph{CodeBuff} uses a carefully designed set of features to learn abstract code formatting rules from a representative corpus of programs~\cite{Terence2016}.}
