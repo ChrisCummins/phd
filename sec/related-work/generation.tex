@@ -1,47 +1,44 @@
 \section{Program Generation}
 \label{sec:related-work-generation}
 
-The generation of artificial programs is a broad field with a wide range of applications. This section categorises the literature the use cases that are relevant to this thesis: program generation for performance characterisation, and program generation for compiler validation.
+The generation of artificial programs is a broad field with a wide range of applications. This section categorises the literature of two use cases that are relevant to this thesis: program generation for performance characterisation, and program generation for compiler validation.
 
 \subsection{Performance Characterisation}
 \label{subsec:training-with-synthetic-benchmarks}
 
-Benchmarks do not cover the whole space / are not representative:
-
+The challenge of creating a benchmark suite is to create a divers set of workloads that is both representative of real world use while providing an adequate coverage of the program space. Achieving either of these two goals is a challenging task, and efforts towards one goal can damage the other. It is often the case that benchmark suites are flawed.
 % Ryoo, J. H., Quirem, S. J., Lebeane, M., Panda, R., Song, S., & John, L. K. (2015). GPGPU Benchmark Suites: How Well Do They Sample the Performance Spectrum? ICPP.
-\todo[inline]{Evaluating GPGPU benchmarks. There are parts of the space left untested~\cite{Ryoo2015}.}
-
+An evaluation of GPGPU benchmark suites reveals there are important parts of the space left untested~\cite{Ryoo2015}.
 % Goswami, N., Shankar, R., Joshi, M., & Li, T. (2010). Exploring GPGPU workloads: Characterization methodology, analysis and microarchitecture evaluation implications. In IISWC. https://doi.org/10.1109/IISWC.2010.5649549
-\todo[inline]{Evaluation of many benchmark suites. \emph{Similarity Score}, \emph{Scan of Large Arrays}, and \emph{Parallel Reduction} workloads show significantly different behavior due to their large number of diverse kernels, whereas the rest of the workloads provide similar characteristics~\cite{Goswami2010}.}
+\citeauthor{Goswami2010} evaluate 38 benchmark workloads. They find that \emph{Similarity Score}, \emph{Scan of Large Arrays}, and \emph{Parallel Reduction} workloads show significantly different behavior due to their large number of diverse kernels, but the remaining 35 workloads provide similar characteristics~\cite{Goswami2010}.
+% Xiong, W., Yu, Z., Bei, Z., Zhao, J., Zhang, F., Zou, Y., ... Xu, C. (2013). A Characterization of Big Data Benchmarks. In Big Data. IEEE. https://doi.org/10.1109/BigData.2013.6691707
+\citeauthor{Xiong2013} demonstrate that workload behaviour is highly input dependent, and argue that benchmarks created for academic research cannot represent the cases of real world applications~\cite{Xiong2013}.
+% Ferdman, M., Adileh, A., Kocberber, O., Volos, S., Alisafaee, M., Jevdjic, D., ... Falsafi, B. (2012). Clearing the Clouds: A Study of Emerging Scale-out Workloads on Modern Hardware. In ASPLOS. ACM.
+A review of big data benchmarks found many to be unpresentative, and that current hardware designs, while optimized for existing benchmark suites, are inefficient for true worklaods~\cite{Ferdman2012}.
 
-% Xiong, W., Yu, Z., Bei, Z., Zhao, J., Zhang, F., Zou, Y., … Xu, C. (2013). A Characterization of Big Data Benchmarks. In Big Data. IEEE. https://doi.org/10.1109/BigData.2013.6691707
-\todo[inline]{Workload behaviour is highly input dependent, the benchmarks created for academic research cannot represent the cases of real world applications~\cite{Xiong2013}.}
-
-% Ferdman, M., Adileh, A., Kocberber, O., Volos, S., Alisafaee, M., Jevdjic, D., … Falsafi, B. (2012). Clearing the Clouds: A Study of Emerging Scale-out Workloads on Modern Hardware. In ASPLOS. ACM.
-\todo[inline]{Big data benchmarks are unpresentative, and this has led to inefficient hardware designs~\cite{Ferdman2012}.}
-
-Benchmarks contain redundant workloads:
-
+As well as covering the program space, benchmarks within suites should be diverse.
+% Ould-Ahmed-Vall, E., Doshi, K. A., Yount, C., & Woodlee, J. (2008). Characterization of SPEC CPU2006 and SPEC OMP2001: Regression models and their transferability. In ISPASS. IEEE. https://doi.org/10.1109/ISPASS.2008.4510750
+\citeauthor{Ould-Ahmed-Vall2008} show that statistical models trained on 10\% of SPEC CPU 2006 data is transferrable to the remaining data~\cite{Ould-Ahmed-Vall2008}.
+% Phansalkar, A., Joshi, A., & John, L. K. (2007). Analysis of redundancy and application balance in the SPEC CPU2006 benchmark suite. ACM SIGARCH Computer Architecture News, 35(2).
+\citeauthor{Phansalkar2007} show that a subset of 14 SPEC CPU 2006 programs can yield most of the information of the entire suite~\cite{Phansalkar2007}, and
 % Panda, R., Song, S., Dean, J., & John, L. K. (2018). Wait of a Decade: Did SPEC CPU 2017 Broaden the Performance Horizon? In HPCA. IEEE.
-\todo[inline]{SPEC CPU 2017 contains redundant workloads~\cite{Draft2018}.}
+\citeauthor{Draft2018} find that SPEC CPU 2017 contains workloads that can be safely removed without degrading coverage of the program space~\cite{Draft2018}.
 
-\todo[inline]{A subset of 14 SPEC CPU 2006 programs can yield most of the information of the entire suite~\cite{Phansalkar2007}.}
-% related:
-\todo[inline]{Models trained on 10\% of SPEC CPU 2006 data is transferrable to the remaining data.~\cite{Ould-Ahmed-Vall2008}.}
-
-Parameterised synthetic benchmark generation. Allows fine-grained exploration of program space ...
-
+To cope with the coverage and diversity challenges of benchmarking, researchers have turned to \emph{synthetic} benchmark generation.
 % Curnow, H. J., & Wichmann, B. A. (1976). A Syntetic Benchmark. Computer, 19(1).
-\todo[inline]{The use of synthetic benchmarks for providing empirical performance evaluations dates back to as early as 1974~\cite{Curnow1976}.}
+The use of synthetic benchmarks for providing empirical performance evaluations dates back to as early as \citeyear{Curnow1976}~\cite{Curnow1976}.
 
-% Verplaetse, P., Campenhout, J. Van, & Stroobandt, D. (2000). On synthetic benchmark generation methods. In ISCAS.
-\todo[inline]{Synthetic benchmark generation techniques to aid microprocessor design~\cite{Verplaetse2000}.}
+
+
+\todo{Pick up from here!}
 
 % Bell, R. H., & John, L. K. (2005). Improved automatic testcase synthesis for performance model validation. In SC. https://doi.org/10.1145/1088149.1088164
 \todo[inline]{Synthetic benchmarks~\cite{Bell2005}}
 
 % Joshi, A. M., Eeckhout, L., & John, L. K. (2008). The Return of Synthetic Benchmarks. In SPEC Benchmark Workshop.
 \todo[inline]{Synthetic benchmarks~\cite{Joshi}.}
+
+A popular use of synthetic benchmark generation techniques is to aid microprocessor design.
 
 % Joshi, A. M., Eeckhout, L., Johnz, L. K., & Isen, C. (2008). Automated microprocessor stressmark generation. In HPCA.
 \todo[inline]{Early benchmark generation~\cite{Joshi2008}.}
