@@ -82,11 +82,14 @@ The \emph{Lift} framework then uses a set of semantic-preserving rewrite rules t
 A logical conclusion of iterative compilation is \emph{super-optimisation}. Like with algorithmic choice, the process performs higher-level algorithmic rewrites than compiler transformations. However, the process begins with no description of the algorithm, not even a high-level representation. Super-optimisation strives to find the \emph{globally} optimal implementation of an algorithm, typically only from a handful of input output examples. The term super-optimisation is a reference to the misnaming of compiler \emph{optimisation}, where finding the true \emph{optimal} is considered an unrealistic goal given the time and resource constraints of a compiler.
 
 Pioneered by \citeauthor{Massalin1987}, the smallest possible program which performs a specific function is found through a brute force enumeration of the entire instruction set. Starting with a program of a single instruction, the super-optimiser tests to see if any possible instruction passes a set of conformity tests. If not, the program length is increased by a single instruction and the process repeats. The optimiser is limited to register to register memory transfers, with no support for pointers, a limitation which is addressed in~\cite{Joshi2002}. \emph{Denali} is a super-optimiser which uses constraint satisfaction and rewrite rules to generate programs which are \emph{provably} optimal, instead of searching for the optimal configuration through empirical testing. Denali first translates a low level machine code into guarded multi-assignment form, then uses a matching algorithm to build a graph of all of a set of logical axioms which match parts of the graph before using boolean satisfiability to disprove the conjecture that a program cannot be written in $n$ instructions. If the conjecture cannot be disproved, the size of $n$ is increased and the process repeats.
+% Bunel, R., Desmaison, A., Kumar, M. P., & Torr, P. H. S. (2017). Learning to Superoptimize Programs. In ICLR.
+\citeauthor{Bunel2017a} formulate code super-optimisation as a stochastic search problem to learn the distribution of different code transformations and expected performance improvement~\cite{Bunel2017a}. As acknowledged by the authors, their approach can be improved by having temporal information of the code structures.
 
-In practise, \citeauthor{Massalin1987} found their system to scale only to subroutines typically less than 13 instructions~\cite{Massalin1987}. As with iterative compilation, the main problem is in pruning and efficiently navigating the search space. Researchers have turned to machine learning techniques as a means to alleviate the cost of empirical evaluation.
+As with iterative compilation, the main problem is in pruning and efficiently navigating the search space. In practise, \citeauthor{Massalin1987} found their system to scale only to subroutines typically less than 13 instructions~\cite{Massalin1987}. As such, researchers have turned to machine learning techniques as a means to alleviate the cost of empirical evaluation.
 
 
 \subsection{Machine Learning for Compiler Optimisations}
+\label{subsec:related-work-machine-learning-optimisation}
 
 Machine learning has emerged as a viable means in automatically constructing heuristics for code optimisation. Its great advantage is that it can adapt to changes in the compiler and hardware environment as it has no a priori assumptions about their behaviour.
 % Ashouri, A. H., Killian, W., Cavazos, J., Palermo, G., & Silvano, C. (2018). A Survey on Compiler Autotuning using Machine Learning. CSUR, 51(5). https://doi.org/10.1145/3197978
@@ -171,7 +174,7 @@ A few methods have been proposed to automatically generate features from the com
 \citeauthor{Namolaru2010a} express the space of features via logic programming over relations that represent information from the IRs. They greedily search for expressions that represent good features. However, this approach relies on expert selected relations, combinators and constraints to work. For both approaches, the search time may be significant.
 
 % Cavazos, J., Dubach, C., Agakov, F., Bonilla, E., O’Boyle, M., Fursin, G., & Temam, O. (2006). Automatic Performance Model Construction for the Fast Software Exploration of New Hardware Designs. In CASES.
-\citeauthor{Cavazos2006} present a reaction-based predictive model for software-hardware co-design~\cite{Cavazos2006}. Their approach profiles the target program using several carefully selected compiler options to see how program runtime changes under these options for a given micro-architecture setting. They then use the program ``reactions'' to predict the best available application speedup. While their approach does not use static code features, developers must carefully select a few settings from a large number of candidate options for profiling, because poorly chosen options can significantly affect the quality of the model. Moreover, the program must be run several times before optimisation, while our technique does not require the program to be profiled.
+\citeauthor{Cavazos2006} present a reaction-based predictive model for software-hardware co-design~\cite{Cavazos2006}. Their approach profiles the target program using several carefully selected compiler options to see how program runtime changes under these options for a given micro-architecture setting. They then use the program ``reactions'' to predict the best available application speedup. While their approach does not use static code features, developers must carefully select a few settings from a large number of candidate options for profiling, because poorly chosen options can significantly affect the quality of the model. Moreover, the program must be run several times before optimisation, while the technique presented in this thesis does not require the program to be profiled.
 
 Compared to these approaches, the techniques presented in this thesis are entirely automatic and require no expert involvement. In the field of compiler optimisations, no work so far has applied deep neural networks for program feature generation and selection. This work is the first to do so.
 
@@ -180,7 +183,7 @@ Compared to these approaches, the techniques presented in this thesis are entire
 
 This thesis presents deep learning methodologies for learning over programs, inspired by natural language processing. With these techniques, program source code is tokenized into a vocabulary of words, and the words mapped into a real-valued \emph{embedding} space.
 % Allamanis, M., Barr, E. T., Devanbu, P., & Sutton, C. (2017). A Survey of Machine Learning for Big Code and Naturalness. ArXiv:1709.06182.
-There are many choices in how to construct the vocabulary and embedding. \citeauthor{Allamanis2017a} review some of the proposed techniques in~\cite{Allamanis2017a}
+There are many choices in how to construct the vocabulary and embedding. \citeauthor{Chen2019} review some of the proposed techniques~\cite{Chen2019}
 % Babii, H., Janes, A., & Robbes, R. (2019). Modeling Vocabulary for Big Code Machine Learning. ArXiv:1904.01873.
 \citeauthor{Babii} explore the impact that choices in vocabulary have on time to convergence of software language models~\cite{Babii}.
 
@@ -191,6 +194,12 @@ The techniques in this thesis use a hybrid character/token-level vocabulary to t
 \citeauthor{Mou2016} derive an embedding space from the tokens in the source code of a program~\cite{Mou2016}.
 % Wang, K., Singh, R., & Su, Z. (2017). Dynamic Neural Program Embeddings for Program Repair. ArXiv:1711.07163.
 \citeauthor{Wang2017d} propose an embedding space extracted from program traces, rather than the syntactic structure of the program~\cite{Wang2017d}.
+% Henkel, J., Lahiri, S. K., Liblit, B., & Reps, T. (2018). Code Vectors: Understanding Programs Through Embedded Abstracted Symbolic Traces. In FSE.
+\citeauthor{Henkel2018} use symbolic execution to abstract the program traces. Embeddings are then learned from these abstracted symbolic traces~\cite{Henkel2018}.
+% Yin, P., Neubig, G., Allamanis, M., Brockschmidt, M., & Gaunt, A. L. (2018). Learning to Represent Edits. ArXiv:1810.13337.
+%
+% Tufano, M., Pantiuchina, J., Watson, C., Bavota, G., & Poshyvanyk, D. (2019). On Learning Meaningful Code Changes via Neural Machine Translation. ArXiv:1901.09102.
+\todo{This feels out of place} \citeauthor{Yin2018} and \citeauthor{Tufano2019} present techniques for learning representations of code edits~\cite{Yin2018,Tufano2019}.
 
 % Ben-nun, T., Jakobovits, A. S., & Hoefler, T. (2018). Neural Code Comprehension: A Learnable Representation of Code Semantics. In NeurIPS.
 Neural Code Comprehension builds on the experiments in Chapter~\ref{chap:deeptune} of this thesis, using embeddings derived from a novel \emph{Contextual Flow Graph} (XFG) representation which combines both data and control flow. The embeddings are assembled from LLVM byte-code, enabling support for any language for which there exists a front-end to LLVM~\cite{Ben-nun2018}.
