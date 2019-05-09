@@ -3,8 +3,8 @@ BIBER ?= biber
 SED ?= sed
 MV ?= mv
 
-# First build the 'stapled' version of the thesis, then the normal version.
-all: stapled longform
+# Build the longform of the thesis by default.
+all: longform
 
 longform:
 	$(SED) 's/^\\stapledtrue/% \\stapledtrue/' -i thesis.tex
