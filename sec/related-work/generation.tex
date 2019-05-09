@@ -41,16 +41,22 @@ A popular use of synthetic benchmark generation techniques is to aid microproces
 Interesting recent developments in synthetic benchmarking have combined elements from feedback-directed test case synthesis (reviewed in the next section) with synthetic benchmarking for the purpose of generating \emph{adversarial} benchmarks that expose performance issues in systems.
 % Dhok, M., & Ramanathan, M. K. (2016). Directed Test Generation to Detect Loop Inefficiencies. In FSE. ACM.
 \citeauthor{Dhok2016} apply mutation techniques to an initial set of coverage-driven inputs to expose inefficiencies in loops~\cite{Dhok2016}.
+
 % Petsios, T., Zhao, J., Keromytis, A. D., & Jana, S. (2017). SlowFuzz: Automated Domain-Independent Detection of Algorithmic Complexity Vulnerabilities. In CCS. ACM.
 \emph{SlowFuzz} uses a resource-usage-guided evolutionary search to find inputs that expose poor algorithmic complexity that could be exploited by attackers to produce Denial-of-Service attacks~\cite{Petsios2017}. It considers the input to a program as a byte sequence and performs mutations to find the byte sequence within a fixed input size that maximizes slowdown.
+
 % Wei, J., Chen, J., Feng, Y., Ferles, K., & Dillig, I. (2018). Singularity: Pattern Fuzzing for Worst Case Complexity. In ESEC/FSE. ACM.
 \emph{Singularity} uses an evolutionary search over the space of input \emph{patterns} to find the input with worst case performance~\cite{Wei2018}.
+
 % Toffola, L. D., Pradel, M., & Gross, T. R. (2018). Synthesizing programs that expose performance bottlenecks. In CGO.
 \emph{PerfSyn} tackles the related problem of exposing performance bottlenecks from API usage. For a method under test, it starts with a minimal example input and applies a sequence of mutations that modify the original code~\cite{Toffola2018}.
+
 % Lemieux, C., Padhye, R., Sen, K., & Song, D. (2018). PerfFuzz: Automatically Generating Pathological inputs. In ISSTA. ACM. https://doi.org/10.1145/3213846.3213874
 \emph{PerfFuzz} uses feedback-directed program mutation to generate programs which maximise execution counts at program locations~\cite{Lemieux2018}.
+
 % Pedrosa, L., Iyer, R., Zaostrovnykh, A., Fietz, J., & Argyraki, K. (2018). Automated Synthesis of Adversarial Workloads for Network Functions. In SIGCOMM. ACM. https://doi.org/10.1145/3230543.3230573
 \citeauthor{Pedrosa2018} applies the adversarial benchmark approach to network functions. Their tool, \emph{CASTAN}, takes as input the code for a network function and outputs packet sequences that trigger slow execution paths~\cite{Pedrosa2018}.
+
 
 In contrast to prior works, the benchmark generation technique proposed in this thesis provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from a corpus of real world code. To the best of my knowledge, no prior work has tackled the problem of undirected benchmark generation from example code, as presented in this thesis.
 

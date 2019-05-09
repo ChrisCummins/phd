@@ -3,38 +3,71 @@
 
 \section{Introduction}
 
-This chapter provides a short and non-exhaustive overview of the theory and techniques used in this thesis.
+This chapter provides a brief and non-exhaustive overview of the theory and techniques used in this thesis.
 
-First Section~\ref{subsec:background-terminology} defines the terminology. Then Section~\ref{subsec:background-statistics} describes the statistical tools and methodologies used in this thesis. This is followed by Section~\ref{subsec:background-machine-learning} providing an overview of the machine learning techniques used in this thesis. Section~\ref{subsec:background-gpgpu} provides an overview of GPGPU programming. Finally Section~\ref{subsec:background-summary} concludes.
+First Section~\ref{subsec:background-terminology} defines terminology. Then Section~\ref{subsec:background-machine-learning} provides an overview of the machine learning techniques used in this thesis. Section~\ref{subsec:background-gpgpu} provides an overview of GPGPU programming. % Section~\ref{subsec:background-statistics} describes the statistical tools and methodologies used in this thesis.
+Lastly Section~\ref{subsec:background-summary} concludes.
 
-\todo{This entire chapter has yet to be written. All current text is placeholder.}
 
 \section{Terminology}
 \label{subsec:background-terminology}
 
-\emph{machine learning}
+\emph{Machine learning} refers to a family of statistical models and algorithms used to \emph{infer} a function for future values given past example values.
 
-\emph{deep learning}
+\emph{Deep learning} is a loosely defined class of machine learning methods built on artificial neural networks. It is not to be confused with \emph{deep neural networks}, which are simply artificial neural networks with one or more hidden layers. In this thesis, it is used to describe Recurrent Neural Networks.
 
-\emph{feature space}
+% \emph{feature space}
 
-\emph{supervised learning}
+% \emph{supervised learning}
 
-\emph{unsupervised learning}
-
-
-\section{Evaluation Techniques}
-\label{subsec:background-statistics}
-
-\subsection{Principal Component Analysis}
+% \emph{unsupervised learning}
 
 
 \section{Machine Learning}
 \label{subsec:background-machine-learning}
 
+Multiple machine learning methods are used in this thesis to perform classification and sequential modelling. Classification is the task of predicting the correct category --- or class --- for a new instance, based on ``labelled'' training data, i.e.\ instances whose categories are known. The properties describing instances are called \emph{features}. Sequence modelling is the task of capturing the underling probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
+
+
+\subsection{ZeroR}
+
+A ``ZeroR'' classifier is a model whose output is always the mode of the training data classes, irrespective of the input features. For example, given training data with the labels $\left( A B B C \right)$, the model will predict $B$ for all future values. A ZeroR model represents the simplest approach to classification, and is useful for providing a baseline to evaluate the performance of more complex classifiers, since a ZeroR classifier has no power of prediction.
+
+
 \subsection{Decision Trees}
 
-\subsection{Deep Learning}
+Decision trees are an intuitive form of classifier in which a tree structure of decision nodes are used to predict the class for a given set of features. Decision trees are built using binary recursive partitioning: by creating a decision node for the feature which provides the highest gain, creating new child nodes for each possible outcome, splitting dividing the data amongst these child nodes, and continuing recursively. To find the gain of an feature, we first compute the entropy of the data set. Given a set of data points $D$, and $p_{(+)}$ and $p_{(-)}$ are the number of positive and negative examples in $D$:
+
+\begin{equation}
+  H(D) = - p_{(+)}\log_2p_{(+)} - p_{(-)}\log_2p_{(-)}
+\end{equation}
+
+The gain of a feature $x$ is found using:
+
+\begin{equation}
+  \gain(D, x) = H(D) - \sum_{V \in \text{Values}(x)}\frac{|D_V|}{|D|}H(D_V)
+\end{equation}
+
+Decision trees are popular and low overhead form of classification, as implementations can be as simple and efficient as a nested set of \texttt{if}/\texttt{else} statements. However, care must be taken to avoid over-fitting to training data.
+
+
+\subsection{Artificial Neural Networks}
+
+Artificial Neural Networks can be used when non-linearity is desired. They use a network of neurons to map the input variables to a response or prediction. Each neuron in the network is connected by weighted edges, as can be seen in Figure~\ref{fig:} which represents a typical feed-forward multi-layered neural networks.
+
+Feed-forward
+
+In common ANN implementations, the signal at a connection between artificial neurons is a real number, and the output of each artificial neuron is computed by some non-linear function of the sum of its inputs. The connections between artificial neurons are called 'edges'. Artificial neurons and edges typically have a weight that adjusts as learning proceeds.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.45\columnwidth]{img/artificial-neural-network}%
+  \caption[Structure of an artificial neural network]{%
+    The anatomy of an artificial neural network. This graph representation uses nodes to represent artificial neurons, and edges to represent the output of one neuron into the input of another.%
+  }%
+  \label{fig:artificial-neural-network}
+\end{figure}
+
 
 \subsection{Recurrent Neural Networks}
 
@@ -47,7 +80,9 @@ where $f$ is a non-linear activation function. An RNN can learn a probabilty dis
 % De Boom, C., Dhoedt, B., & Demeester, T. (2018). Character-level Recurrent Neural Networks in Practice: Comparing Training and Sampling Schemes. ArXiv:1801.00632.
 \todo[inline]{RNN evaluation~\cite{DeBoom2018}.}
 
-\subsubsection{Long Short-Term Memory}
+\subsection{Long Short-Term Memory}
+
+The long short-term memory (LSTM) is an RNN architecture.
 
 LSTM variants review~\cite{Greff2015}.
 
@@ -94,7 +129,6 @@ General purpose programming with graphics hardware is a nascent field, but has s
 
 In the ensuing progress towards increasingly programmable graphics hardware, two dominant programming models have emerged: CUDA and OpenCL, which both abstract the graphics primitives of GPU hardware and provide a platform for GPGPU programming. CUDA is a language developed by NVIDIA for programming their GPUs using a proprietary SDK and API~\cite{Nvidia2007}, while OpenCL is a vendor-independent open standard based on a subset of the ISO C99 programming language, with implementations for devices from most major GPU manufactures~\cite{Stone2010}. Quantitative evaluations of the performance of CUDA and OpenCL programs suggest that performance is comparable between the two systems, although the wider range of target architectures for OpenCL means that appropriate optimisations must be made by hand or by the compiler~\cite{Komatsu2010,Karimi2010}.
 
-
 \subsection{The OpenCL Programming Model}
 
 OpenCL is a parallel programming framework which targets CPUs, GPUs, and other parallel processors such as Field-Programmable Gate Arrays. It provides a set of APIs and a language (based on an extended subset of C) for controlling heterogeneous \emph{compute devices} from a central host. Programs written for these devices are called \emph{kernels}, and are compiled by platform-specific tool chains. At runtime, an OpenCL \emph{platform} is selected and a \emph{context} object is created which exposes access to each supported compute device through \emph{command queues}. When a kernel is executed, each unit of computation is referred to as a \emph{work-item}, and these work-items are grouped into \emph{work-groups}. The sum of all work-group dimensions defines the \emph{global size}. For GPUs, work-groups execute on the Single Instruction Multiple Data (SIMD) processing units in lockstep. This is very different from the behaviour of traditional CPUs, and can cause severe performance penalties in the presence of flow control, as work-items must be stalled across divering flow paths.
@@ -123,5 +157,104 @@ The overhead introduced by memory transfers between host and compute devices fur
 
 Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
 
+
+% \subsection{Evaluation Techniques}
+% \label{subsec:background-statistics}
+
+% This section describes a number of the statistical tools and evaluation techniques used throughout this thesis.
+
+
+% \subsubsection{Interquartile Range}
+
+% Quartiles are the three points that divide an ordered set of data values into four groups of equal size. The first quartile $Q_1$ is the point which divides the data equally between the lowest value and the median, $Q_2$. The third quartile $Q_3$ is the point which divides the data between the median and the highest value. The interquartile range (IQR) measures the dispersion of a data set, and is the difference between the third and first quartiles, $Q_3 - Q_1$.
+
+
+% \subsubsection{Confidence Intervals}
+
+% Confidence intervals estimate the interval for the true range of a population parameter. Given a set of samples of a population with estimates of a parameter value for each, the confidence interval $(c_1,c_2)$ estimates the frequency that the true parameter value will fall between the per-sample confidence interval. Given a sample $x$ with sample size $n$, the confidence interval for a confidence $\alpha$ is found using:
+
+% \begin{align}
+%   \bar{x} &= \frac{1}{n}\sum_{i=1}^{n} x_i\\
+%   \sigma &= \sqrt{\frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n - 1}}\\
+%   c_1 &= \bar{x} - z_{1-\alpha/2}\frac{\sigma}{\sqrt{n}}\\
+%   c_2 &= \bar{x} + z_{1-\alpha/2}\frac{\sigma}{\sqrt{n}}
+% \end{align}
+
+% Where the value $z_{1-\alpha/2}$ assumes a Gaussian distribution of
+% the underlying data, and the values for popular $\alpha$ values are
+% typically found using pre-computed ``Z-tables''. To calculate
+% confidence intervals for the ratio of two means, $\bar{x}_1$ and
+% $\bar{x}_2$ with sample sizes $n_1$ and $n_2$, and respective standard
+% deviations $\sigma_1$ and $\sigma_2$:
+
+% \begin{align}
+%   \sigma_x &= \sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}\\
+%   c_1 &= \bar{x}_1 - \bar{x}_2 - z_{1-\alpha/2}\sigma_x\\
+%   c_2 &= \bar{x}_1 - \bar{x}_2 + z_{1-\alpha/2}\sigma_x
+% \end{align}
+
+% The above calculations assumes that the sample variance ($\sigma^2$)
+% is an accurate estimation of the true population variance. This relies
+% on the assumption of an underlying Gaussian distribution, which,
+% according to the central limit theorem, is true of large sample sizes
+% (typically $n \ge 30$). In cases of smaller sample sizes, the sample
+% and population variances can differ significantly, so one must instead
+% use a Student's $t$-distribution, $t_{1-\alpha/2}$, in place of
+% $z_{1-\alpha/2}$.
+
+
+% \subsubsection{Histogram}
+
+% Histograms show the distribution of numerical data. The data is first divided into a set of discrete, equally sized sub-intervals, or \emph{bins}. The number of data points in each bin is used to show visualise the density distribution. The shortcoming of histograms is that their appearance is heavily influenced by three user-selected parameters: the number of bins, the width of bins, and the endpoints chosen. As such, they may provide a misleading representation of the data if inappropriate values for any of these parameters are chosen. Kernel Density estimation is a technique for showing the distribution of data which circumvents some of these issues.
+
+% \subsubsection{Kernel Density Estimation}
+
+% A Kernel Density Estimate (KDE) is an approximation of the probability
+% density function of a random variable. Given a random variable $x$,
+% and bandwidth $h$ and a kernel $K$, the Kernel Density Estimate
+% $\hat{f}_h(x)$ can be found using:
+% %
+% \begin{equation}
+%   \hat{f}_h(x) = \frac{1}{nh} \sum^{n}_{i=1} K\left( \frac{x - x_i}{h} \right)
+% \end{equation}
+% %
+% Using a smooth kernel such as a Gaussian distribution for the kernel
+% produces a smooth density estimated, unlike histograms. However, like
+% histograms, the appearance of a Kernel Density Estimate plot is
+% dependent on the value of the bandwidth parameter $h$ (equivalent to
+% binwidth in histograms), so care must be taken to select a value to
+% minimise over or under smoothing. Grouped data can be shown by
+% plotting multiple KDEs on the same axes, although if the number of
+% groups is large, a box plot or violin plot may be more appropriate.
+
+
+% \subsubsection{Box plot}
+
+% Box plots are used to show the distribution of quartile ranges for
+% grouped data. The contain the following features:
+% %
+% \begin{itemize}
+%   \item Horizontal lines at the lower quartile, median and upper
+%   quartile.
+%   \item Vertical lines above and below the upper and lower quartiles to
+%   the most extreme data point within 1.5 IQR of the upper/lower
+%   quartile, with horizontal whiskers at the end of the vertical lines.
+%   \item Dots beyond the ends of the vertical lines to show outliers.
+% \end{itemize}
+% %
+% A variation of box plots used in this thesis is the violin plot, which
+% extends the box plot with a fitted Kernel Density Estimate plot to
+% show the probability \emph{density} of data at different values. To
+% construct a violin plot, KDEs for each group are rotated and mirrored
+% to generate a smoothed visualisation of the distribution.
+
+
+\section{Differential Testing}
+
+\todo[inline]{Difftesting overview, including the figure from the litreview.}
+
+
 \section{Summary}
 \label{subsec:background-summary}
+
+This chapter details the machine learning techniques used in this thesis, and describes the domain for which they are applied, GPGPU programming. The following chapter surveys the research literature relevant to this work.
