@@ -3,8 +3,7 @@
 
 The generation of artificial programs is a broad field with a wide range of applications. This section categorises the literature of two use cases that are relevant to this thesis: program generation for performance characterisation, and program generation for compiler validation.
 
-\subsection{Performance Characterisation}
-\label{subsec:training-with-synthetic-benchmarks}
+\subsection{Benchmark Generation for Performance Characterisation}
 
 Benchmark suites serve a wide variety of uses from compiler optimisations to hardware design. The challenge in creating a benchmark suite is to create a diverse set of workloads that is both representative of the target real world use while providing an adequate coverage of the program space. Achieving either of these two goals is a challenging task, and efforts towards one goal can hamper the other. As a result there is no ``one size fits all'' benchmark suite.
 
@@ -15,7 +14,7 @@ An evaluation of GPGPU benchmark suites reveals there are important parts of the
 % Xiong, W., Yu, Z., Bei, Z., Zhao, J., Zhang, F., Zou, Y., ... Xu, C. (2013). A Characterization of Big Data Benchmarks. In Big Data. IEEE. https://doi.org/10.1109/BigData.2013.6691707
 \citeauthor{Xiong2013} demonstrate that workload behaviour is highly input dependent, and argue that benchmarks created for academic research cannot represent the cases of real world applications~\cite{Xiong2013}.
 % Ferdman, M., Adileh, A., Kocberber, O., Volos, S., Alisafaee, M., Jevdjic, D., ... Falsafi, B. (2012). Clearing the Clouds: A Study of Emerging Scale-out Workloads on Modern Hardware. In ASPLOS. ACM.
-A review of big data benchmarks found many to be unrepresentative, and that current hardware designs, while optimized for existing benchmark suites, are inefficient for true workloads~\cite{Ferdman2012}.
+A review of big data benchmarks found many to be unrepresentative, and that current hardware designs, while optimised for existing benchmark suites, are inefficient for true workloads~\cite{Ferdman2012}.
 
 As well as covering the program space, benchmarks within suites should be diverse.
 % Ould-Ahmed-Vall, E., Doshi, K. A., Yount, C., & Woodlee, J. (2008). Characterization of SPEC CPU2006 and SPEC OMP2001: Regression models and their transferability. In ISPASS. IEEE. https://doi.org/10.1109/ISPASS.2008.4510750
@@ -29,10 +28,10 @@ Researchers have turned to \emph{synthetic} benchmarks to address the coverage a
 % Curnow, H. J., & Wichmann, B. A. (1976). A Syntetic Benchmark. Computer, 19(1).
 The use of synthetic benchmarks is not new, with an early example from \citeyear{Curnow1976} being used to evaluate the compute power of processors for scientific workloads~\cite{Curnow1976}.
 % Bell, R. H., & John, L. K. (2005). Improved automatic testcase synthesis for performance model validation. In SC. https://doi.org/10.1145/1088149.1088164
-\citeauthor{Bell2005} pose the \emph{synthesis} of synthetic benchmarks as a test case generation problem, using hardware counters to validate the similarity of synthesized benchmarks to a target workload~\cite{Bell2005}.
+\citeauthor{Bell2005} pose the \emph{synthesis} of synthetic benchmarks as a test case generation problem, using hardware counters to validate the similarity of synthesised benchmarks to a target workload~\cite{Bell2005}.
 
 % Joshi, A. M., Eeckhout, L., Johnz, L. K., & Isen, C. (2008). Automated microprocessor stressmark generation. In HPCA.
-A popular use of synthetic benchmark generation techniques is to aid microprocessor design. \citeauthor{Joshi2008} use micro-architecture-independent characteristics such as basic block sizes and data footprint to summarize workloads. Their benchmark generator, \emph{BenchMaker}, then generates a linear sequence of basic blocks and randomly populates them with assembly instructions to match the desired workload characteristics~\cite{Joshi2008}.
+A popular use of synthetic benchmark generation techniques is to aid microprocessor design. \citeauthor{Joshi2008} use micro-architecture-independent characteristics such as basic block sizes and data footprint to summarise workloads. Their benchmark generator, \emph{BenchMaker}, then generates a linear sequence of basic blocks and randomly populates them with assembly instructions to match the desired workload characteristics~\cite{Joshi2008}.
 % Bertran, R., Buyuktosunoglu, A., Gupta, M. S., Gonzalez, M., & Bose, P. (2012). Systematic Energy Characterization of CMP/SMT Processor Systems via Automated Micro-Benchmarks. In MICRO. IEEE.
 \emph{MicroProbe} uses feedback-directed micro-benchmark generation to perform a systematic energy characterisation of an processor~\cite{Bertran2012}.
 
@@ -43,7 +42,7 @@ Interesting recent developments in synthetic benchmarking have combined elements
 \citeauthor{Dhok2016} apply mutation techniques to an initial set of coverage-driven inputs to expose inefficiencies in loops~\cite{Dhok2016}.
 
 % Petsios, T., Zhao, J., Keromytis, A. D., & Jana, S. (2017). SlowFuzz: Automated Domain-Independent Detection of Algorithmic Complexity Vulnerabilities. In CCS. ACM.
-\emph{SlowFuzz} uses a resource-usage-guided evolutionary search to find inputs that expose poor algorithmic complexity that could be exploited by attackers to produce Denial-of-Service attacks~\cite{Petsios2017}. It considers the input to a program as a byte sequence and performs mutations to find the byte sequence within a fixed input size that maximizes slowdown.
+\emph{SlowFuzz} uses a resource-usage-guided evolutionary search to find inputs that expose poor algorithmic complexity that could be exploited by attackers to produce Denial-of-Service attacks~\cite{Petsios2017}. It considers the input to a program as a byte sequence and performs mutations to find the byte sequence within a fixed input size that maximises slowdown.
 
 % Wei, J., Chen, J., Feng, Y., Ferles, K., & Dillig, I. (2018). Singularity: Pattern Fuzzing for Worst Case Complexity. In ESEC/FSE. ACM.
 \emph{Singularity} uses an evolutionary search over the space of input \emph{patterns} to find the input with worst case performance~\cite{Wei2018}.
@@ -61,11 +60,11 @@ Interesting recent developments in synthetic benchmarking have combined elements
 In contrast to prior works, the benchmark generation technique proposed in this thesis provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from a corpus of real world code. To the best of my knowledge, no prior work has tackled the problem of undirected benchmark generation from example code, as presented in this thesis.
 
 
-\subsection{Compiler Validation}
+\subsection{Generating Test Cases for Compiler Validation}
 
 Compilers are a fundamental trusted technology, and their correctness is critical. Errors in compilers can introduce security vulnerabilities and catastrophic runtime failures. Therefore, verifying the behaviour of a compiler is of utmost importance.
 
-The complexity of optimizing compilers and programming languages renders formal verification of the entire compiler prohibitively expensive. Efforts have been made in this direction, for example CompCert~\cite{Leroy2013}, a formally verified compiler for the C programming language, but this comes at the cost of supporting only a subset of the language features and with lower performance compared to GCC. Still, even CompCert is not fully verified, and errors have been discovered in the unverified components of it~\cite{Yang2011}.
+The complexity of optimising compilers and programming languages renders formal verification of the entire compiler prohibitively expensive. Efforts have been made in this direction, for example CompCert~\cite{Leroy2013}, a formally verified compiler for the C programming language, but this comes at the cost of supporting only a subset of the language features and with lower performance compared to GCC. Still, even CompCert is not fully verified, and errors have been discovered in the unverified components of it~\cite{Yang2011}.
 
 Because of the difficulties of \emph{verification}, compilers developers turn to \emph{validation}, in which the behaviour of a compiler is validated using a set of input programs, or \emph{test cases}. For each test case, the expected outcome (determined by the specification of the compiler) is compared against the observed outcome to verify that the compiler conforms to the specification, for those inputs. However, the absence of errors for does not prove that the compiler is free from errors unless all possible inputs are tested exhaustively, and the input space for compilers is huge. As such, hand designed suites of test programs, while important, are inadequate for covering such a large space and will not touch all parts of the compiler.
 
@@ -97,7 +96,7 @@ Deeper testing of compiler components is enabled by generating both a syntactica
   \label{fig:test-case-generators}
 \end{figure}
 
-Differential testing, illustrated in Figure~\ref{fig:test-case-generators-difftest}, accelerates testing by enabling many compilers to be tested at once. The advantage of differential testing over prior approaches is that it does not require a gold standard for the expected behaviour of a conformant compiler. As such, any well formed program may be used as a test. Even malformed inputs may be used to identify anomalies in the error handling logic of compilers. Lacking a gold standard for behaviour makes differential testing less sound than an oracle approach, though in practise the likelihood of the majority consensus being incorrect is extremely unlikely, and no work in the literature has reported such issues. Differential testing can be done across compilers, or using the same compiler with optimizations on or off (or a combination of the two). \citeauthor{Chen2014a} empirically contrasts the two methodologies in~\cite{Chen2014a}, along with a comparison to Equivalence Module Inputs (described in the next subsection).
+Differential testing, illustrated in Figure~\ref{fig:test-case-generators-difftest}, accelerates testing by enabling many compilers to be tested at once. The advantage of differential testing over prior approaches is that it does not require a gold standard for the expected behaviour of a conformant compiler. As such, any well formed program may be used as a test. Even malformed inputs may be used to identify anomalies in the error handling logic of compilers. Lacking a gold standard for behaviour makes differential testing less sound than an oracle approach, though in practise the likelihood of the majority consensus being incorrect is extremely unlikely, and no work in the literature has reported such issues. Differential testing can be done across compilers, or using the same compiler with optimisations on or off (or a combination of the two). \citeauthor{Chen2014a} empirically contrasts the two methodologies in~\cite{Chen2014a}, along with a comparison to Equivalence Module Inputs (described in the next subsection).
 
 % McKeeman, W. M. (1998). Differential Testing for Software. DTJ, 10(1).
 In the foundational work on differential testing for compilers, McKeeman \emph{et al.\ }present generators capable of enumerating programs of a range of qualities, from random ASCII sequences to C model conforming programs~\cite{McKeeman1998}. Subsequent works have presented increasingly complex generators which improve in some metric of interest, generally expressiveness or probability of correctness.
@@ -155,8 +154,10 @@ The proficiency of RNNs for sequence modelling is demonstrated in~\cite{Sutskeve
 Although nascent, the use of neural networks to generate programs is evolving rapidly. \emph{Neural Programmer} was an early example at program generation through the latent representation of a neural network~\cite{Neelakantan2016}.
 % Godefroid, P., Peleg, H., & Singh, R. (2017). Learn&Fuzz: Machine Learning for Input Fuzzing. In ASE.
 Most similar to the work presented in this thesis is \emph{Learn\&fuzz}, in which an LSTM network is trained over a corpus of PDF files to generate test inputs for the Microsoft Edge renderer, yielding one bug~\cite{Godefroid2017}. Unlike compiler testing, PDF test cases require no inputs and no pre-processing of the training corpus.
+
 % Liu, X., Li, X., Prajapati, R., & Wu, D. (2019). DeepFuzz: Automatic Generation of Syntax Valid C Programs for Fuzz Testing. In AAAI.
-\emph{DeepFuzz} uses a sequence-to-sequence model to generate C programs, uncovering 8 bugs in GCC. Unlike the technique presented in this work, sampling occurs only occurs on white-space so as to maximise the probability of a generated program being syntactically correct, though this does not address the issue of semantic correctness~\cite{Liu2019}.
+\emph{DeepFuzz}~\cite{Liu2019} uses a sequence-to-sequence model to generate fragments of C programs that are inserted into GCC unit tests. The mutated unit tests are then used for differential testing. They propose a character-level model with three sampling methodologies: one where a sample is made for every character, one where no sampling is made (so the generated samples are determined entirely by the prefix), and a hybrid approach in which sampling occurs only on white-space. In their evaluation they uncover 8 new bugs in GCC, and that up to 82.63\% of samples are syntactically valid.
+
 % Nasrabadi, M. Z., Parsa, S., & Kalaee, A. (2018). Neural Fuzzing: A Neural Approach to Generate Test Data for File Format Fuzzing. ArXiv:1812.09961.
 \emph{IUST DeepFuzz} is a neural file generator for file format fuzzing, trained and evaluated on a corpus of PDF files~\cite{Nasrabadi2018}.
 % Brockschmidt, M., Allamanis, M., Gaunt, A. L., & Polozov, O. (2018). Generative Code Modeling with Graphs.

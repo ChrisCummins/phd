@@ -13,7 +13,7 @@ The effectiveness of synthetic benchmarks is evaluated on two heterogeneous syst
   \subfloat[][NVIDIA GTX 970]{%
     \includegraphics[width=\textwidth]{img/ex1-B}%
     \label{fig:npb-nvidia}}%
-  \caption[Speedup of programs with and without synthetic benchmarks]{%
+  \caption[Speedup of predictions with and without synthetic benchmarks]{%
     Speedup of programs using \emph{Grewe et al.\ }predictive model with and without synthetic benchmarks. The predictive model outperforms the best static device mapping by a factor of $1.26\times$ on AMD and $2.50\times$ on NVIDIA. The addition of synthetic benchmarks improves the performance to $1.57\times$ on AMD and $3.26\times$ on NVIDIA.%
   }%
   \label{fig:npb} %
@@ -36,7 +36,7 @@ The second case is that some of CLgen-generated programs had identical feature v
   label=lst:zero-b,%
   float,%
   caption={%
-	  [CLgen program with same features as an AMD benchmark]%
+	  [Synthesised program with same features as an AMD benchmark]%
   	In the \emph{Grewe et al.\ }feature space this CLgen program is indistinguishable from AMD's Fast Walsh–Hadamard transform benchmark, but has very different runtime behaviour and optimal device mapping. The addition of a branching feature fixes this.%
   },%
   language={[OpenCL]C}
@@ -47,7 +47,7 @@ Figure~\ref{fig:ex2} shows speedups of the extended model across all seven of th
 \begin{figure}
   \centering%
   \includegraphics[width=1\textwidth]{img/ex2}%
-  \caption[Speedups of predictions using extended model over \emph{Grewe et al.}]{%
+  \caption[Speedups of predictions using extended model over state-of-the-art]{%
     Speedups of predictions using an extended model over \emph{Grewe et al.\ }on both experimental platforms. Synthetic benchmarks and the additional program features outperform the original predictive model by a factor $3.56\times$ on AMD and $5.04\times$ on NVIDIA.%
   }%
   \label{fig:ex2}%

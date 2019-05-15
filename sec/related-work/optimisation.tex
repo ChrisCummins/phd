@@ -27,7 +27,7 @@ The greatest challenge of iterative compilation is the exponential blow up of op
 \subsubsection{Pruning the Iterative Compilation Search Space}
 
 % Triantafyllis, S., & August, D. I. (2003). Compiler Optimization-Space Exploration. In CGO. IEEE.
-\citeauthor{Triantafyllis2003} proposes using feedback during the evaluation of configurations to prune the optimisation space~\cite{Triantafyllis2003}. This is combined with a fast static performance estimator to obviate the need to run each configuration of a program. \citeauthor{Pan2006} formalise the iterative compilation problem as: given a set of compiler optimization options $\left\{ F_1, F_2, \ldots, F_n \right\}$, find the combination that minimizes the program execution time efficiently, without \emph{a priori} knowledge of the optimisations and their interactions. Their technique, \emph{Combined Elimination}, iteratively prunes the search space, reducing the tuning time to 57\% of the closest alternative~\cite{Pan2006}. Posing the problem as a subset search negates the challenge of optimisation \emph{ordering}, though this challenge has been the focus of other work~\cite{Kulkarni2012,Purini2013}.
+\citeauthor{Triantafyllis2003} proposes using feedback during the evaluation of configurations to prune the optimisation space~\cite{Triantafyllis2003}. This is combined with a fast static performance estimator to obviate the need to run each configuration of a program. \citeauthor{Pan2006} formalise the iterative compilation problem as: given a set of compiler optimisation options $\left\{ F_1, F_2, \ldots, F_n \right\}$, find the combination that minimises the program execution time efficiently, without \emph{a priori} knowledge of the optimisations and their interactions. Their technique, \emph{Combined Elimination}, iteratively prunes the search space, reducing the tuning time to 57\% of the closest alternative~\cite{Pan2006}. Posing the problem as a subset search negates the challenge of optimisation \emph{ordering}, though this challenge has been the focus of other work~\cite{Kulkarni2012,Purini2013}.
 
 % Ryoo, S., Rodrigues, C. I., Stone, S. S., Baghsorkhi, S. S., Ueng, S., Stratton, J. A., & Hwu, W. W. (2008). Program optimization space pruning for a multithreaded GPU. In CGO. IEEE. https://doi.org/10.1145/1356058.1356084
 \citeauthor{Ryoo2008} prune the optimisation space for GPGPU workloads using the common subset of optimal configurations across a set of training examples. This technique reduces the search space by 98\%~\cite{Ryoo2008}. There is no guarantee that for a new program, the reduced search space will include the optimal configuration.
@@ -60,7 +60,7 @@ The expensive optimisation space exploration required by iterative compilation h
 \citeauthor{Ansel2012} present an adversarial approach to online evolutionary performance tuning. At runtime, the available parallel resources of a device are divided in to two partitions. A different configuration of the application is then executed simultaneously on each partition. The configuration used for one of the configuration is chosen to be ``safe'', the other, experimental. The configuration which yields the best performance is retained as the ``safe'' choice for future iterations, and the process repeats.
 
 % Mpeis, P., Petoumenos, P., & Leather, H. (2016). Iterative compilation on mobile devices. In ADAPT.
-\citeauthor{Mpeis2015} present a technique for online iterative compilation on mobile devices. They capture slices of user behaviour on a device during use, which are then replayed offline for iterative compilation~\cite{Mpeis2015}. This has the advantage of specializing the performance tuning of software to the behaviour of the individual user.
+\citeauthor{Mpeis2015} present a technique for online iterative compilation on mobile devices. They capture slices of user behaviour on a device during use, which are then replayed offline for iterative compilation~\cite{Mpeis2015}. This has the advantage of specialising the performance tuning of software to the behaviour of the individual user.
 
 Related to online iterative compilation is dynamic optimisation. \emph{Dynamo} is a dynamic optimiser which performs binary level transformations of programs using information gathered from runtime profiling and tracing~\cite{Bala2000}. This provides the ability for the program to respond to changes in dynamic features at runtime using low-level binary transformations.
 
@@ -102,7 +102,7 @@ Pioneered by \citeauthor{Agakov}, the idea is to iteratively evaluate a collecti
 % Stephenson, M., Martin, M., & Reilly, U. O. (2003). Meta Optimization: Improving Compiler Heuristics with Machine Learning. In PLDI.
 In~\cite{Stephenson2003}, ``meta optimisation'' is used to tune compiler heuristics through an evolutionary algorithm to automate the search of the optimisation space.
 % Stephenson, M., Martin, M., & Reilly, U. O. (2003). Meta Optimization: Improving Compiler Heuristics with Machine Learning. In PLDI.
-The phase-ordering problem is formulated as a Markov process in~\cite{Kulkarni2012} and tackled using neuro-evolution to construct a neural network that predicts beneficial optimization orderings given a characterization of the state of code being optimized.
+The phase-ordering problem is formulated as a Markov process in~\cite{Kulkarni2012} and tackled using neuro-evolution to construct a neural network that predicts beneficial optimisation orderings given a characterisation of the state of code being optimised.
 % Ashouri, A. H., Bignoli, A., Palermo, G., Silvano, C., Kulkarni, S., & Cavazos, J. (2017). MiCOMP: Mitigating the Compiler Phase-ordering Problem Using Optimization Sub-sequences and Machine Learning. TACO.
 A later approach to the phase-ordering problem clusters optimisations and uses machine learning to predict the speedup of a sequence of all optimisation clusters~\cite{Ashouri2017}.
 
@@ -181,14 +181,14 @@ Compared to these approaches, the techniques presented in this thesis are entire
 
 \subsubsection{Representing programs with embeddings}
 
-This thesis presents deep learning methodologies for learning over programs, inspired by natural language processing. With these techniques, program source code is tokenized into a vocabulary of words, and the words mapped into a real-valued \emph{embedding} space.
+This thesis presents deep learning methodologies for learning over programs, inspired by natural language processing. With these techniques, program source code is tokenised into a vocabulary of words, and the words mapped into a real-valued \emph{embedding} space.
 % Allamanis, M., Barr, E. T., Devanbu, P., & Sutton, C. (2017). A Survey of Machine Learning for Big Code and Naturalness. ArXiv:1709.06182.
 There are many choices in how to construct the vocabulary and embedding. \citeauthor{Chen2019} review some of the proposed techniques~\cite{Chen2019}
 % Babii, H., Janes, A., & Robbes, R. (2019). Modeling Vocabulary for Big Code Machine Learning. ArXiv:1904.01873.
 \citeauthor{Babii} explore the impact that choices in vocabulary have on time to convergence of software language models~\cite{Babii}.
 
 % Cvitkovic, M., Singh, B., & Anandkumar, A. (2018). Deep Learning On Code with an Unbounded Vocabulary. Machine Learning, 4.
-The techniques in this thesis use a hybrid character/token-level vocabulary to tokenize source code. This is to prevent the blow-up in vocabulary size that occurs from using a purely token-based vocabulary. \citeauthor{Cvitkovic2018a} propose modelling vocabulary elements as nodes in a graph and then processing the graph using Graph Neural Networks; this enables learning over an unbounded vocabulary~\cite{Cvitkovic2018a}.
+The techniques in this thesis use a hybrid character/token-level vocabulary to tokeniser source code. This is to prevent the blow-up in vocabulary size that occurs from using a purely token-based vocabulary. \citeauthor{Cvitkovic2018a} propose modelling vocabulary elements as nodes in a graph and then processing the graph using Graph Neural Networks; this enables learning over an unbounded vocabulary~\cite{Cvitkovic2018a}.
 
 % Mou, L., Li, G., Zhang, L., Wang, T., & Jin, Z. (2016). Convolutional Neural Networks over Tree Structures for Programming Language Processing. In AAAI.
 \citeauthor{Mou2016} derive an embedding space from the tokens in the source code of a program~\cite{Mou2016}.

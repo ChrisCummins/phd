@@ -10,7 +10,7 @@ To evaluate the efficacy of synthetic benchmarks for training, the predictive mo
 \begin{table}
 	\centering%
 	\input{tab/clgen-cgo13-features}%
-	\caption[\emph{Grewe et al.\ }model features]{%
+	\caption[\emph{Grewe et al.\ }features for heterogeneous device mapping]{%
 		Features used by \emph{Grewe et al.\ }to predict CPU/GPU mapping of OpenCL kernels. The features are extracted using a custom analysis pass based using LLVM.
 	}%
 	\label{tab:clgen-cgo13-features} %
@@ -23,7 +23,7 @@ As in~\cite{Grewe2013}, the model is tested on the NAS Parallel Benchmarks (NPB)
 \begin{table}% tab:benchmarks
   \centering%
   \input{tab/cgo17-benchmarks}
-  \caption[List of benchmarks]{List of benchmarks} %
+  \caption[Benchmarks used in evaluation]{List of benchmarks} %
   \label{tab:cgo17-benchmarks} %
 \end{table}
 
@@ -34,7 +34,7 @@ Two 64-bit CPU-GPU systems are used to evaluate the approach, detailed in Table~
 \begin{table}% tab:platforms
   \centering %
 	\input{tab/cgo17-platforms}
-  \caption[Experimental platforms]{Experimental platforms.}
+  \caption[Experimental platforms used in evaluation]{Experimental platforms.}
   \label{tab:cgo17-platforms}
 \end{table}
 

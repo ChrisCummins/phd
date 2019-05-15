@@ -1,9 +1,9 @@
-\section{Benchmark Execution}
+\section{Cldrive: A Driver for Arbitrary OpenCL Kernels}
 \label{sec:cldrive}
 
 A host driver is used to gather performance data from synthesised CLgen code. The driver accepts as input an OpenCL kernel, generates \emph{payloads} of user-configurable sizes, and executes the kernel using the generated payloads, providing dynamic checking of kernel behaviour.
 
-\subsection{Generating Payloads}
+\subsection{Generating Data Payloads}
 
 A \emph{payload} encapsulates all of the arguments of an OpenCL compute kernel. After parsing the input kernel to derive argument types, a rule-based approach is used to generate synthetic payloads. For a given global size $S_g$: host buffers of $S_g$ elements are allocated and populated with random values for global pointer arguments, device-only buffers of $S_g$ elements are allocated for local pointer arguments, integral arguments are given the value $S_g$, and all other scalar arguments are given random values. Host to device data transfers are enqueued for all non-write-only global buffers, and all non-read-only global buffers are transferred back to the host after kernel execution.
 

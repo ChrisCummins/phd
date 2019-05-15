@@ -1,8 +1,10 @@
 \chapter{Introduction}
 
-There has been an unprecedented increase in the scale and quantity of data intensive workloads. To meet the demands of the transition to \emph{big data}, there have been fundamental shifts in both hardware and software. In hardware, the demand for performance has long outstripped what can be provided by single processors, leading to a broad spectrum of heterogeneous architectures being developed. These range from re-purposing existing Graphics Processor Units (GPUs) to offload numeric computations, to adapting Field-programmable Gate Arrays (FPGAs), and even developing highly specialised ASICs to perform numeric tasks~\cite{Misra2010,Jouppi2017}). While much of the compiler logic can be reused across architectures, the optimisations that are required to extract the best performance from specific hardware cannot. Each architecture requires extensive hand tuning by experts to extract good performance.
+There has been an unprecedented increase in the scale and quantity of data intensive workloads. Fundamental shifts in both hardware and software are required to meet the demands of the transition to \emph{big data}.
 
-In software, the shift towards parallelism and heterogeneity has created a \emph{programmability challenge}. Parallel programming is significantly more challenging than traditional single threaded development; there are many more opportunities to introduce bugs in software, and Amdahl's law can make extracting performance much more challenging. One of the most popular approaches to mitigating the programmability challenge is through the development and widespread adoption of high level abstractions. High level abstractions and libraries can greatly simplify parallel programming by providing the complex parallel communication and coordination logic, allowing users to plug-in only the business logic required to solve a problem. Still, there is a wide range of approaches to implementing such libraries. One example is high level libraries for performing data intensive numeric workloads, two of the most popular examples of which --- TensorFlow~\cite{Abadi} and PyTorch~\cite{Paszke2017} --- use opposing dataflow and imperative programming styles, respectively. Optimising such libraries provides new challenges to the compiler --- the challenge of code analyses in the face of highly parallel abstract code can defeat many optimisations.
+In hardware, performance needs have long outstripped what can be provided by single processors, leading to a broad spectrum of heterogeneous architectures. These range from re-purposing existing Graphics Processor Units (GPUs) to offload numeric computations, to adapting Field-programmable Gate Arrays (FPGAs), and even developing highly specialised ASICs to perform numeric tasks~\cite{Misra2010,Jouppi2017}). While much of the compiler logic can be reused across architectures, the optimisations that are required to extract the best performance from specific hardware cannot. Each architecture requires extensive hand tuning by experts to extract good performance.
+
+In software, the shift towards parallelism and heterogeneity has created a \emph{programmability challenge}. Parallel programming is significantly more challenging than traditional single threaded development; there are many more opportunities to introduce bugs in software, and Amdahl's law can make extracting performance much more challenging. One of the most popular approaches to mitigating the programmability challenge is through the development and widespread adoption of high level abstractions. High level abstractions and libraries can greatly simplify parallel programming by providing the complex parallel communication and coordination logic, allowing users to plug-in only the business logic required to solve a problem. Still, there is a wide range of approaches to implementing such libraries. One example is high level libraries for performing data intensive numeric workloads, two of the most popular examples of which --- TensorFlow~\cite{Abadi} and PyTorch~\cite{Paszke2017} --- use opposing data-flow and imperative programming styles, respectively. Optimising such libraries provides new challenges to the compiler --- the challenge of code analyses in the face of highly parallel abstract code can defeat many optimisations.
 
 The combined burden of increased hardware and software diversity has resulted in compilers that are too complex for the expert to fully reason about, and too large to keep up with the pace of change. This results in low performance, wasted energy, and buggy software. For the trend towards larger workloads and heterogeneous devices to continue, new techniques are required to reduce the cost of compiler construction.
 
@@ -26,9 +28,9 @@ The small number of common benchmarks limits the quality of learned models as th
 
 To address the issue, there must be a sizeable increase in the set of common benchmarks, or programs to perform machine learning over. Previously, researchers have sought to provide these through the use of random grammar based generation of programs, but this is a challenging task --- the generated programs must be similar to that of real programs so as to be useful to the learning algorithm, and biasing the generation towards these types of programs is hard to do in the general case.
 
-\paragraph*{Feature design} Machine learning algorithms learn to correlate a set of \emph{explanatory variables} with a target value. These explanatory variables, known as features, must be chosen so as to be discriminative for the target value.
+\paragraph*{Model and Feature design} Machine learning algorithms learn to correlate a set of \emph{explanatory variables} with a target value. These explanatory variables, known as features, must be chosen so as to be discriminative for the target value.
 
-Choosing the features to summarise a program so as to be discriminative for machine learning is a challenging task that depends on the thing being learned, and the environment from which training data was collected, e.g. the hardware and machine setup.
+Choosing the features to summarise a program so as to be discriminative for machine learning is a challenging task that depends on the thing being learned, and the environment from which training data was collected, e.g. the hardware and machine configuration.
 
 Many problems in compilers do not map directly to numeric attributes, requiring the extraction of a numeric representation from a non-numeric input. For example, extracting instruction counts from source code. Knowing which attributes to extract to represent a program is not easy, and developers are typically faced with the challenge of having to laborious select the right combination features from a large candidate set.
 
@@ -52,21 +54,19 @@ This thesis presents machine learning-based techniques to simplify and accelerat
 
 This thesis is organised as follows:
 
-\textbf{Chapter~\ref{chap:background}} defines terminology and describes the  methodologies and techniques used in this thesis.
+\textbf{Chapter~\ref{chap:background}} provides background. It defines terminology and describes the machine learning and evaluation methodologies used in this work, along with an overview of heterogeneous programming.
 
-\textbf{Chapter~\ref{chap:related-work}} provides an overview of previous work on machine learning for compilers, with an emphasis on performance optimisation.
+\textbf{Chapter~\ref{chap:related-work}} surveys the relevant literature, divided into three categories: first program generation, then program optimisation, finally deep learning for programming languages.
 
-\textbf{Chapter~\ref{chap:clgen}} describes a machine learning generator for source codes. The generator is evaluated for its ability to produce OpenCL benchmarks.
+\textbf{Chapter~\ref{chap:clgen}} describes a novel technique for generating an unbounded number of executable benchmarks to augment the training data of a predictive model. A qualitative evaluation of the generated programs is presented, followed by an quantitative evaluation using a state-of-the-art OpenCL optimisation heuristic.
 
-\textbf{Chapter~\ref{chap:clgen}} introduces a novel machine learning generator for source codes. The generator is evaluated for its ability to produce OpenCL benchmarks.
+\textbf{Chapter~\ref{chap:deepsmith}} extends the generator presented in Chapter~\ref{chap:clgen} to the domain of compiler validation, presenting a low cost technique for the inference of compiler fuzzers. It describes an extensive testing campaign of OpenCL compilers, resulting in 67 bug reports.
 
-\textbf{Chapter~\ref{chap:deepsmith}} presents an application of the machine learning generator for synthesising compiler test cases. The chapter contains an extensive evaluation of OpenCL compilers using the synthesised test cases.
+\textbf{Chapter~\ref{chap:deeptune}} introduces a novel methodology for constructing optimising compiler heuristics without the need for code features. It describes two case studies of the technique: the first for learning a heterogeneous device mapping heuristic, the second for learning OpenCL thread coarsening.
 
-\textbf{Chapter~\ref{chap:deeptune}} introduces a novel methodology for constructing optimising compiler heuristics without the need for code features.
-
-\textbf{Chapter~\ref{chap:conclusions}} summarises the findings and describes potential avenues for future research.
+\textbf{Chapter~\ref{chap:conclusions}} summarises the overall findings, provides a critical review, and outlines potential avenues for future research.
 
 
 \section{Summary}
 
-This introductory chapter has outlined the use of machine learning for compilers and two main issues preventing its widespread uptake: the scarcity of data, and the challenge of designing features. Subsequent chapters describe novel approaches to address both issues.
+This introductory chapter has outlined the use of machine learning for compilers and two significant issues preventing its widespread adoption: the scarcity of data, and the challenge of designing features. Subsequent chapters describe novel approaches to address both issues.

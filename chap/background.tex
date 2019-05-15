@@ -3,18 +3,15 @@
 
 \section{Introduction}
 
-This chapter provides a brief and non-exhaustive overview of the theory and techniques used in this thesis.
-
-First Section~\ref{subsec:background-terminology} defines terminology. Then Section~\ref{subsec:background-machine-learning} provides an overview of the machine learning techniques used in this thesis. Section~\ref{subsec:background-gpgpu} provides an overview of GPGPU programming. % Section~\ref{subsec:background-statistics} describes the statistical tools and methodologies used in this thesis.
-Lastly Section~\ref{subsec:background-summary} concludes.
+This chapter provides a brief and non-exhaustive overview of the techniques and theory used in this thesis. First Section~\ref{sec:background-terminology} defines terminology. Then Section~\ref{sec:background-machine-learning} describes the machine learning techniques used in this thesis. Section~\ref{sec:programming-heterogeneous-systems} provides an overview of heterogeneous programming. Section~\ref{sec:evaluation-techniques} describes the statistical tools and methodologies used in this thesis. Lastly Section~\ref{sec:background-summary} concludes.
 
 
 \section{Terminology}
-\label{subsec:background-terminology}
+\label{sec:background-terminology}
 
 \emph{Machine learning} refers to a family of statistical models and algorithms used to \emph{infer} a function for future values given past example values.
 
-\emph{Deep learning} is a loosely defined class of machine learning methods built on artificial neural networks. It is often confused with \emph{deep neural networks}, which are simply artificial neural networks with one or more hidden layers. In this thesis, \emph{deep learning} is used to describe Recurrent Neural Networks.
+\emph{Deep learning} is a loosely defined class of machine learning methods built on artificial neural networks. It is easily confused with \emph{deep neural networks}, which is a specific deep learning technique employing artificial neural networks with one or more hidden layers. In this thesis, \emph{deep learning} refers to the use of Recurrent Neural Networks.
 
 % \emph{feature space}
 
@@ -24,19 +21,194 @@ Lastly Section~\ref{subsec:background-summary} concludes.
 
 
 \section{Machine Learning}
-\label{subsec:background-machine-learning}
+\label{sec:background-machine-learning}
 
-Machine learning techniques are used in this thesis for classification and sequential modelling. Classification is the task of predicting the correct category --- or class --- for a new instance, based on ``labelled'' training data, i.e.\ instances whose categories are known. The properties describing instances are called \emph{features}. Sequence modelling is the task of capturing the underling probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
+Machine learning techniques are used in this thesis for classification and sequence-to-sequence modelling. Classification is the task of predicting the correct category --- or class --- for a new instance, based on ``labelled'' training data, i.e.\ instances whose categories are known. The properties describing instances are called \emph{features}. Sequence modelling is the task of capturing the underling probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
+
+% \subsection{Supervised Learning}
+
+% Learning by example
+
+% Observed input $x_i$ is fed into learning system
+% which produces output $\hat{f}(x_i)$.
+% The learning algorithm has the property that it can modify its input/output relationship $\hat{f}$ in response to differences $y_i - \hat{f}(x_i)$ between the original and produced output.
+% % Hastie, T., Tibshirani, R., & Friedman, J. (2009). The Elements of Statistical Learning (Second Edi). Springer.
+% \cite{Hastie2009}
 
 
-\subsection{ZeroR}
+\subsection{Feed-forward Neural Networks}
 
-A ``ZeroR'' classifier is a model whose output is always the mode of the training data classes, irrespective of the input features. For example, given training data with the labels $\left( A B B C \right)$, the model will predict $B$ for all future values. A ZeroR model represents the simplest approach to classification, and is useful for providing a baseline to evaluate the performance of more complex classifiers, since a ZeroR classifier has no power of prediction.
+Artificial Neural Networks comprise a network of artificial neurons and weighted connections between them to map input variables to a response. Figure~\ref{fig:artificial-neural-network} shows the architecture of a feed-forward artificial neural network. Each node represents an artificial neuron. The neurons are grouped into layers. The signal of an artificial neuron at a given layer is connected to the input of each artificial neuron in the next layer. For a training pair $(x_i, y_i)$, the first layer of artificial neurons receive $x_i$, and the final layer values are compared against expected values $y_i$. Intermediate layers for which there are no ground truth values are known as \emph{hidden} layers. Figure~\ref{fig:artificial-neural-network} depicts a three layered network with three input values, a single hidden layer with four artificial neurons, and two outputs. This type of feed-forward multi-layered artificial neural networks are known as \emph{Multilayer Perceptrons} (MLPs). MLPs are powerful \emph{universal function approximators}, capable of learning any bounded continuous function to arbitrary precision~\cite{Hornik1991,Lu2017,Yarotsky2017}.
 
+\begin{figure}
+  \centering
+  \includegraphics[width=.45\columnwidth]{img/artificial-neural-network}%
+  \caption[Structure of an artificial neural network]{%
+    A feed-forward artificial neural network with a single hidden layer. Each node in the graph depicts an artificial neuron, and each edge represents the output of one neuron connected to the input of another.%
+  }%
+  \label{fig:artificial-neural-network}
+\end{figure}
+
+The signal of an artificial neuron is the \emph{activation}. For a given layer $\ell$, the activations $\bm{a}^{[\ell]}$ are a function of the activations of the previous layer $\bm{a}^{[\ell - 1]}$, an activation function $\phi(z)$, the connection weights $\bm{W}$, and biases $\bm{b}$:
+
+\begin{equation}
+  \bm{a}^{[\ell]} = \phi \left( \bm{W}^{[\ell]^T} \bm{a}^{[\ell-1]} + \bm{b}^{[\ell]} \right)
+\end{equation}
+
+
+\paragraph*{Activation function}
+
+The activation function $\phi(z)$ is a non-linear differentiable function used to calculate the activation of an artificial neuron given a value $z \in \mathbb{R}$. A non-linear function is required to enable the ``stacking'' of artificial neuron layers to approximate non-linear functions. Common activation functions are the \emph{logistic function} (Sigmoid) and \emph{Rectified Linear Unit} (ReLU), and their variants \emph{Hyperbolic Tangent} (tanh) and \emph{Leaky ReLU}:\todo{Consider plots of activation functions for input range [-5,5]}
+
+\begin{align}
+  \text{Sigmoid} \hspace{1em} & \phi(z) = \frac{1}{1 + e^{-z}} \\
+  \text{ReLU} \hspace{1em} & \phi(z) = max(z, 0) \\
+  \text{Tanh} \hspace{1em} & \phi(z) = \frac{e^{z} - e^{-z}}{e^z + e^{-z}}\\
+  \text{Leaky ReLU} \hspace{1em} & \phi(z) =
+    \begin{cases}
+      0.01z, & \text{if } z < 0\\
+      z, & \text{otherwise}
+    \end{cases}
+\end{align}
+
+Sigmoid activations are bounded in the range $(0,1)$.
+% , which prevents blowing up of activations. Negative: gives rise to ``vanishing gradients'' because of the squishing behaviour for large positive or negative values - sigmoids saturate and kill gradients.
+% It's output isn't zero centred, which makes gradient updates go too far in different directions.
+For hidden layers, a disadvantage of sigmoid activation is that the output isn't zero centred. To address this, the hyperbolic tangent (tanh) activation may be used, which is a scaled sigmoid function with values in the range $(-1,1)$.
+
+Logistic function-based activations suffer from a squashing effect with large positive and negative values, and they are \emph{dense} activations in which every artificial neuron contributes to the output value. The ReLU activation function addresses both issues, with an unbounded range $[0,\infty)$. If initialised with random weights in the range $[-1,1]$, 50\% of the network will not fire, so that activations are sparse.
+% Problem is ``dying'' neurons. When activations dip below 0, gradients will be 0, so the neuron becomes unresponsive to variations in input / error.
+The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, becoming ``dead''. Leaky ReLU prevents artificial neurons becoming unresponsive to variations in input by introducing a small slope for negative values.
+
+Typically a separate activation function is used for the output layer of an artificial neural network. For multi-class classification, \emph{softmax} may be used, which, for $K$ classes produces a vector:
+
+\begin{equation}
+  \phi(\bm{z})^{(i)} = \frac{e^{\bm{z}^{(i)}}}{\sum_{j=1}^{K} e^{\bm{z}^{(i)}}}, i = 1, \ldots, K
+\end{equation}
+
+Where $\sum_{i=1}^{K} \phi (\bm{z})^{(i)} = 1$.
+
+
+\paragraph*{Backpropagation and Gradient Descent}
+
+The most widely used technique to train artificial neural networks is backpropagation~\cite{Rumelhart1986}. Typically, the artificial neuron parameters are initialised with small random values. During training, a \emph{mini-batch} of $B$ observations is propagated through the network in a \emph{feed forward} stage. The final outputs of the network $\bm{\hat{y}}$ are then compared against the true values $\bm{y}$ and used to compute an error $\mathcal{L}(\bm{\hat{y}}, \bm{y})$. The appropriate error function depends on the task. For a classification task with $K$ classes, \emph{categorical cross-entropy} may be used:
+
+\begin{equation}
+  \mathcal{L}(\bm{\hat{y}}, \bm{y}) = - \sum_{i=1}^K \bm{y}^{(i)} log (\bm{\hat{y}}^{(i)})
+\end{equation}
+
+For each layer $\ell$, the average error of the mini-batch $J$ is backpropagated through the network to update the connection weight and bias parameters based on a learning rate $\alpha$:
+
+\begin{align}
+J &= \frac{1}{B} \sum_{i=1}^B \mathcal{L}^{(i)}(\bm{\hat{y}^{(i)}}, \bm{y}^{(i)})\\
+\bm{W}^{[\ell]} &= \bm{W}^{[\ell]} - \alpha \frac{\partial J}{\partial \bm{W}^{[\ell]}}\\
+\bm{b}^{[\ell]} &= \bm{b}^{[\ell]} - \alpha \frac{\partial J}{\partial \bm{b}^{[\ell]}}
+\end{align}
+
+\todo[inline]{Calculating derivatives through chain rule}
+
+% Where the derivative of the error function with respect to the network weights
+%  derivative of sigmoid function $\phi(x)$:
+
+% \begin{equation}
+% \begin{aligned}
+%   \phi(x) &= \frac{1}{1+e^{-x}}\\
+%   \frac{\partial}{\partial x}\phi(x) &= \phi(x)(1 - \phi(x))
+% \end{aligned}
+% \end{equation}
+
+\paragraph*{Regularisation Techniques}
+
+Neural networks are vulnerable to \emph{over-fitting}, whereby the parameters of the model become too specialised on the training values and fail to generalise to unseen data. Many \emph{regularisation} techniques have been adopted to mitigate the risk of over-fitting.
+
+% Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT PRess.
+\emph{Dropout} is a regularisation technique in which a parameter in the range $[0,1]$ is used to determine a proportion of artificial neurons that are removed. Randomly removing neurons helps training by preventing complex co-adaptations on training values~\cite{Goodfellow2016}.
+
+
+% \paragraph*{Normalization}
+
+% Batch normalization
+
+
+\subsection{Recurrent Neural Networks}
+
+A recurrent neural network (RNN)~\cite{Graves2012} is an artificial neural network in which the connections between artificial neurons form a cycle, enabling the processing of arbitrary size sequences by updating its \emph{hidden state}. Figure~\ref{fig:rnn} depicts an RNN, where $\bm{x}^{(t)} \in \mathbb{R}^d$ represents point $t \in \tau$ in a sequence of inputs $\bm{x} = \left( \bm{x}^{(1)}, \ldots, \bm{x}^{(\tau)} \right)$. The hidden states $\bm{h}^{(t)} \in \mathbb{R}^h$ and predicted output $\bm{\hat{y}}^{(t)} \in \mathbb{R}^y$ are updated at each step using:
+
+\begin{figure}
+  \centering
+  % The empty square brackets are required to keep the (a) and (b) subfloat labels.
+  \subfloat[][]{%
+    \includegraphics[height=5cm]{img/rnn-recurrence}%
+    \label{fig:rnn-recurrence}%
+  }%
+  \hspace{1cm}
+  \subfloat[][]{%
+    \includegraphics[height=5cm]{img/rnn-unrolled}%
+    \label{fig:rnn-unrolled}%
+  }%
+  \caption[Recurrent Neural Network architecture]{%
+    The computational graph of a Recurrent Neural Network, shown in~\protect\subref{fig:rnn-recurrence} as a recurrence relation, and unfolded in~\protect\subref{fig:rnn-unrolled}. $\bm{x}^{(t)}$ is the input, $\bm{h}^{(t)}$ is the hidden state, and $\bm{\hat{y}}^{(t)}$ is the output. The network is parameterised through three weight matrices: inputs-to-hidden weights $\bm{U}$, hidden-to-hidden weights $\bm{W}$, and hidden-to-output weights $\bm{V}$. As can be seen, the parameters are shared across all points in the time series.%
+  }%
+  \label{fig:rnn}
+\end{figure}
+
+\begin{align}
+  \bm{h}^{(t)} &= \phi \left( \bm{U} \bm{x}^{(t)} + \bm{W} \bm{h}^{(t-1)} + \bm{b}_h \right) \\
+  \bm{\hat{y}}^{(t)} &= \sigma \left( \bm{V} \bm{h}^{(t)} + \bm{b}_{\hat{y}} \right)
+\end{align}
+
+Where $\phi(\bm{z})$ and $\sigma(\bm{z})$ are non-linear activation functions, $\bm{b}_h$ and $\bm{b}_{\hat{y}}$ are bias vectors, and $\bm{W} \in \mathbb{R}^{h \times d}$, $\bm{U} \in \mathbb{R}^{h \times h}$, and $\bm{V} \in \mathbb{R}^{y \times h}$ are matrices representing the hidden-to-hidden, input-to-hidden, and hidden-to-output weights respectively.
+
+The recurrent structure of RNNs enables the modelling of patterns in data with a temporal domain, such as text or numerical time series. Whereas a feed-forward ANN estimates a conditional distribution based on an instantaneous input $p(y | x)$, an RNN estimates a distribution conditioned on prior observations $p\left(y^{(t)} | \{ x^{(0)}, \ldots, x^{(t)} \} \right)$.
+
+Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, such in Figure~\subref{fig:rnn-unfolded}. By enables the propagation of errors through time in the same manner as through layers, known as \emph{Backpropagation Through Time} (BPTT)~\cite{Werbos1990a}.
+
+% Siegelmann, H. T., & Sontag, E. D. (1991). Turing Computability with Neural Nets. Applied Mathematics Letters, 4(6).
+RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of a finite size~\cite{Sontag1991}. In practise, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through the recurrence relation. This issue is known as the
+% Bengio, Y., Simard, P., & Frasconi, P. (1994). Learning Long-Term Dependencies with Gradient Descent is Difficult. IEEE Transactions on Neural Networks, 5(2).
+\emph{vanishing gradients} problem~\cite{Bengio1994}.
+
+% An RNN can learn a probability distribution over a sequence of tokens to predict the next token. Therefore, at each time step $t$, the output from the RNN is a conditional distribution $p\left( x_t | x_1, \ldots, x_{t-1} \right)$.
+
+% De Boom, C., Dhoedt, B., & Demeester, T. (2018). Character-level Recurrent Neural Networks in Practice: Comparing Training and Sampling Schemes. ArXiv:1801.00632.
+% \todo[inline]{RNN evaluation~\cite{DeBoom2018}.}
+
+
+\paragraph*{Long Short-Term Memory}
+
+The long short-term memory (LSTM)~\cite{Hochreiter1997} is an RNN architecture designed to overcome the vanishing gradients problem. The LSTM augments the design of an RNN with the addition of a \emph{cell} which stores information, and three gates which control the flow of information into and out of the cell.
+
+Figure~\ref{fig:lstm-block} depicts the structure of a single LSTM cell. I addition to the recurrent connections for hidden states, an additional cell state $\bm{c}^{(t)} \in \mathbb{R}^h$ vector is used. The flow of signal through the cell is controlled by three sigmoid activated gates: the forget gate $\bm{f}^{(t)} \in \mathbb{R}^h$, input gate $\bm{i}^{(t)} \in \mathbb{R}^h$, and output gate $\bm{o}^{(t)} \in \mathbb{R}^h$. At each time step, the values of the gate vectors are updated using:
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\columnwidth]{img/lstm-block}%
+  \caption[Long Short-Term Memory cell architecture]{%
+    A Long Short-Term Memory cell block. Input $\bm{x}^{(t)}$ is concatenated with prior hidden state $\bm{h}^{(t-1)}$ and used along with prior cell state $\bm{c}^{(t-1)}$ to compute a new hidden state $\bm{h}^{(t)}$ and cell state $\bm{c}^{(t)}$. Symbols $\otimes$ denotes element-wise product, $\oplus$ element-wise addition, and $\odot$ concatenation.%
+  }%
+  \label{fig:lstm-block}
+\end{figure}
+
+\begin{align}
+  \bm{f}^{(t)} &= \sigma \left( \bm{W}_f \bm{x}^{(t)} + \bm{U}_f \bm{h}^{(t-1)} + \bm{b}_f \right) \\
+  \bm{i}^{(t)} &= \sigma \left( \bm{W}_i \bm{x}^{(t)} + \bm{U}_i \bm{h}^{(t-1)} + \bm{b}_i \right) \\
+  \bm{o}^{(t)} &= \sigma \left( \bm{W}_o \bm{x}^{(t)} + \bm{U}_o \bm{h}^{(t-1)} + \bm{b}_o \right) \\
+\end{align}
+
+Where $\otimes$ denotes element-wise product, and weight matrices $\bm{W} \in \mathbb{R}^{h\times d}$ and $\bm{U} \in \mathbb{R}^{h\times h}$, and bias vectors $\bm{b} \in \mathbb{R}^h$ are sub-scripted for the activation being calculated: $i$ input gate, $o$ output gate, $f$ forget gate, or $c$ cell state. The cell state and hidden state are then updated using:
+
+\begin{align}
+  \bm{c}^{(t)} &= \bm{f}^{(t)} \otimes \bm{c}^{(t-1)} + i^{(t)} \otimes tanh \left( \bm{W}_c \bm{x}^{(t)} + \bm{U}_c \bm{h}^{(t-1)} + \bm{b}_c \right) \\
+  \bm{h}^{(t)} &= \bm{o}^{(t)} \otimes tanh ( \bm{c} ^{(t)} )
+\end{align}
+
+The gated cell enables LSTMs to build connections over very long sequences in data. The LSTMs architecture (and its many variants~\cite{Greff2015}) have been responsible breakthrough results in a number of areas, for example machine translation~\cite{Sutskever2014}, speech recognition~\cite{Graves2005}, and weather prediction \cite{Shi2015a}.
+
+% \subsection{Embedding}
 
 \subsection{Decision Trees}
 
-Decision trees are an intuitive form of classifier in which a tree structure of decision nodes are used to predict the class for a given set of features. Decision trees are built using binary recursive partitioning: by creating a decision node for the feature which provides the highest gain, creating new child nodes for each possible outcome, splitting dividing the data amongst these child nodes, and continuing recursively. To find the gain of an feature, we first compute the entropy of the data set. Given a set of data points $D$, and $p_{(+)}$ and $p_{(-)}$ are the number of positive and negative examples in $D$:
+Decision trees are an intuitive classifier whereby a tree structure of decision nodes are used to predict the class for a given set of features. Decision trees are built using binary recursive partitioning: by creating a decision node for the feature which provides the highest gain, creating new child nodes for each possible outcome, splitting dividing the data amongst these child nodes, and continuing recursively. To find the gain of an feature, we first compute the entropy of the data set. Given a set of data points $D$, and $p_{(+)}$ and $p_{(-)}$ are the number of positive and negative examples in $D$:
 
 \begin{equation}
   H(D) = - p_{(+)}\log_2p_{(+)} - p_{(-)}\log_2p_{(-)}
@@ -48,114 +220,97 @@ The gain of a feature $x$ is found using:
   \gain(D, x) = H(D) - \sum_{V \in \text{Values}(x)}\frac{|D_V|}{|D|}H(D_V)
 \end{equation}
 
-Decision trees are popular and low overhead form of classification, as implementations can be as simple and efficient as a nested set of \texttt{if}/\texttt{else} statements. However, care must be taken to avoid over-fitting to training data.
+Decision trees are popular and low overhead form of classification. Implementations can be as simple and efficient as a set of nested \texttt{if}/\texttt{else} statements. However, care must be taken to avoid over-fitting to training data.
 
 
-\subsection{Artificial Neural Networks}
+\subsection{ZeroR}
 
-Artificial Neural Networks can be used when non-linearity is desired. They use a network of neurons to map the input variables to a response or prediction. Each neuron in the network is connected by weighted edges, as can be seen in Figure~\ref{fig:} which represents a typical feed-forward multi-layered neural networks.
-
-Feed-forward
-
-In common ANN implementations, the signal at a connection between artificial neurons is a real number, and the output of each artificial neuron is computed by some non-linear function of the sum of its inputs. The connections between artificial neurons are called 'edges'. Artificial neurons and edges typically have a weight that adjusts as learning proceeds.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=.45\columnwidth]{img/artificial-neural-network}%
-  \caption[Structure of an artificial neural network]{%
-    The anatomy of an artificial neural network. This graph representation uses nodes to represent artificial neurons, and edges to represent the output of one neuron into the input of another.%
-  }%
-  \label{fig:artificial-neural-network}
-\end{figure}
-
-
-\subsection{Recurrent Neural Networks}
-
-A recurrent neural network (RNN) consists of hidden states \textbf{h} an an optional output \textbf{y}. It operates on a variable-length sequence, $\bm{x} = \left( x_1, x_2, \ldots, x_T \right)$. At each step $t \in T$, the hideen state $h_{<t>}$ of the RNN is updated by:
-
-\[ h_{<t>} = f\left( h_{<t-1>}, x_t \right) \]
-
-where $f$ is a non-linear activation function. An RNN can learn a probabilty distribution over a sequence of tokens to predict the next token. Therefore, at each timestep $t$, the output from the RNN is a conditional distribution $p\left( x_t | x_1, \ldots, x_{t-1} \right)$.
-
-% De Boom, C., Dhoedt, B., & Demeester, T. (2018). Character-level Recurrent Neural Networks in Practice: Comparing Training and Sampling Schemes. ArXiv:1801.00632.
-\todo[inline]{RNN evaluation~\cite{DeBoom2018}.}
-
-\subsection{Long Short-Term Memory}
-
-The long short-term memory (LSTM) is an RNN architecture.
-
-LSTM variants review~\cite{Greff2015}.
-
-$\bm{x}^t$ is the input vector at time $t$; $\bm{W}$ are input weight matrices; $\bm{R}$ are recurrent weight matrices; $\bm{p}$ are peephole weight vectors; $\bm{b}$ are bias vectors; functions $g$, $h$, and $\sigma$ are point-wise nonlinear activation functions.
-
-block input:
-\[ \bm{z}^{t} = g \left( \bm{W}_z \bm{x}^t + \bm{R}_z \bm{y}^{t - 1} + \bm{b}_z \right) \]
-
-input gate:
-\[ \bm{i}^{t} = \sigma \left( \bm{W}_i \bm{x}^t + \bm{R}_i \bm{y}^{t-1} + \bm{p}_i \odot c^{t-1} + \bm{b}_i \right) \]
-
-forget gate:
-\[ \bm{f}^{t} = \sigma \left( \bm{W}_f \bm{x}^t + \bm{R}_f \bm{y}^{t-1} + \bm{p}_f \odot c^{t-1} + \bm{b}_f \right) \]
-
-cell state:
-\[ \bm{c}^t = \bm{i}^t \odot \bm{z}^t + \bm{f}^t \odot \bm{c}^{t-1} \]
-
-output gate:
-\[ \bm{o}^{t} = \sigma \left( \bm{W}_i \bm{x}^t + \bm{R}_o \bm{y}^{t - 1} + \bm{p}_o \odot c^{t-1} + \bm{b}_o \right) \]
-
-block output:
-\[ \bm{y}^t = \bm{o}^t \odot h(\bm{c}^t) \]
-
-Number of params = \todo[inline]{\ldots}
-
+A ``ZeroR'' classifier is a model whose output is always the mode of the training data classes, irrespective of the input features. For example, given training data with the labels $\left( A B B C \right)$, the model will predict $B$ for all future values. A ZeroR model represents the simplest approach to classification, and is useful for providing a baseline to evaluate the performance of more complex classifiers, since a ZeroR classifier has no power of prediction.
 
 % TODO: \subsection{Generative Adversarial Networks}
 
-The Generative Adversarial Network (GAN) is a means to estimate a generative model~\cite{Goodfellow2014}. It uses an adversarial process in which two models are simultaneously trained: a generator model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximise the probability of $D$ making a mistake.
+% The Generative Adversarial Network (GAN) is a means to estimate a generative model~\cite{Goodfellow2014}. It uses an adversarial process in which two models are simultaneously trained: a generator model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximise the probability of $D$ making a mistake.
 
-If both models are neural networks: learn a generator's distribution $p_g$ over data $\bm{x}$. Define a prior on input noise variables $p_z(\bm{z})$. Generator $G(\bm{z}; \Theta_g)$, using parameters $\Theta_g$. Discriminator $D(\bm{x}; \Theta_d)$ outputs a scalar, the probability that $\bm{x}$ came from the data rather than $p_g$.
+% If both models are neural networks: learn a generator's distribution $p_g$ over data $\bm{x}$. Define a prior on input noise variables $p_z(\bm{z})$. Generator $G(\bm{z}; \Theta_g)$, using parameters $\Theta_g$. Discriminator $D(\bm{x}; \Theta_d)$ outputs a scalar, the probability that $\bm{x}$ came from the data rather than $p_g$.
 
-Simultaneously train $D$ to maximise the probability of assigning the correct label to both training examples and samples from $G$, and train $G$ to minimise $\log (1 - D(G(\bm{z})))$. $D$ and $G$ play the two-player minimax game with value function $V(G, D)$:
+% Simultaneously train $D$ to maximise the probability of assigning the correct label to both training examples and samples from $G$, and train $G$ to minimise $\log (1 - D(G(\bm{z})))$. $D$ and $G$ play the two-player minimax game with value function $V(G, D)$:
 
-\[ \min_G \max_D V(D, G) = \mathbb{E}_{\bm{x} \sim  p_{data}(\bm{x})} [ \log D(\bm{x}) ] + \mathbb{E}_{\bm{z} \sim p_z(\bm{z})} [ \log (1 - D(G(\bm{z}))) ] \]
+% \[ \min_G \max_D V(D, G) = \mathbb{E}_{\bm{x} \sim  p_{data}(\bm{x})} [ \log D(\bm{x}) ] + \mathbb{E}_{\bm{z} \sim p_z(\bm{z})} [ \log (1 - D(G(\bm{z}))) ] \]
 
-Challenge: there may not be sufficient gradient for $G$ to learn well. Early in learning, when $G$ is poor, $D$ can reject samples with high confidence because they are clearly different from the training data.
-
-
-\section{GPGPU Programming}
-\label{subsec:background-gpgpu}
-
-General purpose programming with graphics hardware is a nascent field, but has shown to enable massive data parallel throughput by re-purposing the hardware traditionally dedicated to the rendering of 3D graphics for generic computation. This was enabled by hardware support for programmable shaders replacing the fixed function graphics pipeline, and support for floating point operations in 2001. \citeauthor{Owens2006} provide a review of the first five years of general purpose computation on graphics hardware in~\cite{Owens2006}.
-
-In the ensuing progress towards increasingly programmable graphics hardware, two dominant programming models have emerged: CUDA and OpenCL, which both abstract the graphics primitives of GPU hardware and provide a platform for GPGPU programming. CUDA is a language developed by NVIDIA for programming their GPUs using a proprietary SDK and API~\cite{Nvidia2007}, while OpenCL is a vendor-independent open standard based on a subset of the ISO C99 programming language, with implementations for devices from most major GPU manufactures~\cite{Stone2010}. Quantitative evaluations of the performance of CUDA and OpenCL programs suggest that performance is comparable between the two systems, although the wider range of target architectures for OpenCL means that appropriate optimisations must be made by hand or by the compiler~\cite{Komatsu2010,Karimi2010}.
-
-\subsection{The OpenCL Programming Model}
-
-OpenCL is a parallel programming framework which targets CPUs, GPUs, and other parallel processors such as Field-Programmable Gate Arrays. It provides a set of APIs and a language (based on an extended subset of C) for controlling heterogeneous \emph{compute devices} from a central host. Programs written for these devices are called \emph{kernels}, and are compiled by platform-specific tool chains. At runtime, an OpenCL \emph{platform} is selected and a \emph{context} object is created which exposes access to each supported compute device through \emph{command queues}. When a kernel is executed, each unit of computation is referred to as a \emph{work-item}, and these work-items are grouped into \emph{work-groups}. The sum of all work-group dimensions defines the \emph{global size}. For GPUs, work-groups execute on the Single Instruction Multiple Data (SIMD) processing units in lockstep. This is very different from the behaviour of traditional CPUs, and can cause severe performance penalties in the presence of flow control, as work-items must be stalled across divering flow paths.
+% Challenge: there may not be sufficient gradient for $G$ to learn well. Early in learning, when $G$ is poor, $D$ can reject samples with high confidence because they are clearly different from the training data.
 
 
-\subsubsection{Memory Model}
 
-Unlike the flat model of CPUs, OpenCL uses a hierarchical memory model, shown in Figure~\ref{fig:opencl-memory}. The host and each OpenCL device has a single global memory address space. Each work-group has a local memory space, and each work-item has a region of private memory.
+\section{Evaluation Techniques}
+\label{sec:evaluation-techniques}
+
+
+\subsection{Training, validation, test data}
+
+To evaluate a machine learning model, data should be divided into disjoint \emph{training} and \emph{testing} partitions. For a set of $N$ pairs of input and output observations $D = (x_i, y_i), i = 1, \ldots, N$, let $k : {1,\ldots,N} \rightarrow {1,\ldots,K}$ be an indexing function that indicates the partition to which the observation $i \in N$ is allocated by the randomisation. The model is then trained with the $k$th part of the data removed, yielding fitted function $\hat{f}_{-k}(x)$. The quality of the model $V(\hat{f}^{-k})$ is then evaluated using the loss between the expected values and predicted values in the unseen test set:
+
+\begin{equation}
+  V(\hat{f}^{-k}) = \mathcal{L}(\bm{y}_k, \hat{f}^{-k}(\bm{x}_k))
+\end{equation}
+
+Employing a second indexing function $u$ to divide the data not set aside for testing into disjoint \emph{training} and \emph{validation} sets enables the automatic tuning of model parameters. Given a model $f^p$ parameterised by $p$, the quality of the model evaluating using the parameters $p*$ that provide the smallest loss on the validation set can be found from a set of parameters $P$ using:
+
+\begin{align}
+  p* &= \argmin_p \mathcal{L}(\bm{y}_u, \hat{f}_p^{-(k \cup u)}(\bm{x}_u)), \hspace{.5em} p \forall P\\
+  V(\hat{f}_{p*}^{-k}) &= \mathcal{L}(\bm{y}_k, \hat{f}_{p*}^{-(k \cup u)}(\bm{x}_k))
+\end{align}
+
+\subsection{$K$-Fold Cross-validation}
+
+Dividing the dataset into a fixed training set and a fixed test set can be problematic if it results in the test set being small. A small test set implies statistical uncertainty around the estimated average test error, making it difficult to compare models.
+
+Ideally, sufficient data would exist to be set aside for testing. When not practically possible, cross-validation may be used. Cross-validations enables the use of all observations in a data set in the estimation of the mean test error, at the expense of increased computational cost through repeated evaluations.
+
+K-Fold sets aside part of the available data to fit the model, and a different part to test it. Data is split into $K$ roughly equal-sized parts.
+
+\begin{equation}
+  CV(\hat{f}) = \frac{1}{N}\sum_{i=1}^N L(\bm{y}^(i), \hat{f}^{-K^{(i)}}(\bm{x}^{(i)}))
+\end{equation}
+
+When $K=N$, this is known as \emph{leave-one-out} cross-validation.
+
+For a classification task, if observations are distributed amongst the $K$ partitions such that the distribution of observation classes in all partitions is equal, this is called \emph{stratified} $K$-fold cross-validation.
+
+
+\section{Heterogeneous Systems}
+\label{sec:programming-heterogeneous-systems}
+
+Heterogeneous systems are ones that contain multiple types of processor. Programming for heterogeneous systems is especially challenging. Typical approaches divide the system processors into a \emph{host processor} and one or more additional \emph{accelerator} processors. The host processor is responsible for coordinating and synchronising work on the accelerator processors. This approach has been successfully used for General-purpose computing on graphics processing units (GPGPU), where the system CPU is the host and the GPUs are used accelerators~\cite{Owens2006}. Much of the work in this thesis is evaluated using OpenCL, a popular language and framework for programming heterogeneous systems.
+
+
+\subsection{OpenCL Programming Model}
+
+OpenCL is a vendor-independent open standard for programming heterogeneous systems, supporting CPUs, GPUs, and other parallel processors such as Field-Programmable Gate Arrays~\cite{Stone2010}. It comprises a compute language based on a subset of the ISO C99 programming, and a set of APIs for controlling heterogeneous \emph{compute devices} from a central host. Programs written for these devices are called \emph{kernels}, and are compiled by platform-specific tool chains. At runtime, an OpenCL \emph{platform} is selected and a \emph{context} object is created which exposes access to each supported compute device through \emph{command queues}. When a kernel is executed, each unit of computation is referred to as a \emph{work-item}, and these work-items are grouped into \emph{work-groups}. The sum of all work-group dimensions defines the \emph{global size}. For GPUs, work-groups execute on the Single Instruction Multiple Data (SIMD) processing units in lock-step. This is very different from the behaviour of traditional CPUs, and can cause severe performance penalties in the presence of flow control, as work-items must be stalled across diverging flow paths.
+
+
+% \paragraph*{Memory Model}
+
+OpenCL uses a hierarchical memory model, shown in Figure~\ref{fig:opencl-memory-hierarchy}. The host and each OpenCL device has a single global memory address space. Each work-group has a local memory space, and each work-item has a region of private memory.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{img/opencl-memory}
+  \caption[OpenCL memory model]{%
+    The OpenCL memory model. The host communicates with each device through transfers between global memory spaces. The capacity of each type of memory is dependent on the device hardware. In general, private memory is the fastest and smallest, and global memory is the largest and slowest.%
+  }
+  \label{fig:opencl-memory-hierarchy}
+\end{figure}
 
 Work-groups cannot access the memory of neighbouring work-groups, nor can work-items access the private memory of other work-items. OpenCL provides synchronisation barriers to allow for communication between work-items within a single work-group via the local memory, but not global barriers. Memory transfers between the host and devices occurs between global memory regions. In the case of programming heterogeneous devices, these transfers must occur over the connection bus between the CPU and device (e.g.\ PCIe for discrete GPUs), which typically creates a performance bottleneck by introducing a performance overhead to transfer data to the device for processing, then back to the device afterwards. Direct transfers of data between devices is not supported, requiring an intermediate transfer to the host memory.
 
-\begin{figure}
-	\centering
-	\includegraphics[width=0.8\textwidth]{img/opencl-memory}
-	\caption[The OpenCL memory model]{%
-		The OpenCL memory model. The host communicates with each device through transfers between global memory spaces. The capacity of each type of memory is dependent on the device hardware. In general, private memory is the fastest and smallest, and global memory is the largest and slowest.%
-	}
-	\label{fig:opencl-memory}
-\end{figure}
 
-\subsubsection{Performance Optimisations}
+% \subsubsection{Performance Optimisations}
 
-The wide range of supported execution devices and differing standards-compliant implementations makes portable performance tuning of OpenCL programs a difficult task~\cite{Rul2010}, and the interactions between optimisations and the hardware are complex and sometimes counter-intuitive~\cite{Ryoo2008}.
+% Optimising OpenCL is challenging because of the wide range of supported execution devices. Performance portability is challenging because each standards-compliant implementation differs~\cite{Rul2010}, and the interactions between optimisations and the hardware are complex and sometimes counter-intuitive~\cite{Ryoo2008}.
 
-The overhead introduced by memory transfers between host and compute devices further complicates comparisons of OpenCL performance on different devices. The conclusion of~\cite{Gregg2011} is that this overhead can account for a $2\times$ to $50\times$ difference of GPU program runtime. In~\cite{Lee2010}, \citeauthor{Lee2010} present a performance analysis of optimised throughput computing applications for GPUs and CPUs. Of the 14 applications tested, they found GPU performance to be $0.7\times$ to $14.9\times$ that of multi-threaded CPU code, with an average of only 2.5$\times$. This is much lower than the $100\times$ to $1000\times$ values reported by other studies, a fact that they attribute to uneven comparison of optimised GPU code to unoptimised CPU code, or vice versa. \citeauthor{Lee2010} found that multi-threading, cache blocking, reordering of memory accesses and use of SIMD instructions to contribute most to CPU performance. For GPUs, the most effective optimisations are reducing synchronisation costs, and exploiting local shared memory. In all cases, the programs were optimised and hand-tuned by programmers with expert knowledge of the target architectures. It is unclear whether their performance results still hold for subsequent generations of devices.
+% The overhead introduced by memory transfers between host and compute devices further complicates comparisons of OpenCL performance on different devices. The conclusion of~\cite{Gregg2011} is that this overhead can account for a $2\times$ to $50\times$ difference of accelerator program runtime. In~\cite{Lee2010}, \citeauthor{Lee2010} present a performance analysis of optimised throughput computing applications for GPUs and CPUs. Of the 14 applications tested, they found GPU performance to be $0.7\times$ to $14.9\times$ that of multi-threaded CPU code, with an average of only 2.5$\times$. This is much lower than the $100\times$ to $1000\times$ values reported by other studies, a fact that they attribute to uneven comparison of optimised GPU code to unoptimised CPU code, or vice versa. \citeauthor{Lee2010} found that multi-threading, cache blocking, reordering of memory accesses and use of SIMD instructions to contribute most to CPU performance. For GPUs, the most effective optimisations are reducing synchronisation costs, and exploiting local shared memory. In all cases, the programs were optimised and hand-tuned by programmers with expert knowledge of the target architectures. It is unclear whether their performance results still hold for subsequent generations of devices.
 
-Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
+% Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
 
 
 % \subsection{Evaluation Techniques}
@@ -249,12 +404,13 @@ Despite the concerns of over-represented speedups, the potential for high perfor
 % to generate a smoothed visualisation of the distribution.
 
 
-\section{Differential Testing}
 
-\todo[inline]{Difftesting overview, including the figure from the litreview.}
+% \section{Differential Testing}
+
+% \todo[inline]{Difftesting overview, including the figure from the litreview.}
 
 
 \section{Summary}
-\label{subsec:background-summary}
+\label{sec:background-summary}
 
-This chapter details the machine learning techniques used in this thesis, and describes the domain for which they are applied, GPGPU programming. The following chapter surveys the research literature relevant to this work.
+This chapter details the machine learning techniques used in this thesis, and describes the domain for which they are applied, heterogeneous programming with OpenCL. The following chapter surveys the research literature relevant to this work.
