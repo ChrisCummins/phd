@@ -15,7 +15,7 @@ Thread coarsening is an optimisation for parallel programs in which the operatio
 
 \subsection{Experimental Setup}
 
-The experimental setup of \citeauthor{Magni2014}~\cite{Magni2014} is replicated. The thread coarsening optimisation is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
+The experimental setup of \citeauthor{Magni2014}~\cite{Magni2014} is replicated for this case study. The thread coarsening optimisation is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
 
 \begin{table}
   \centering%
@@ -66,7 +66,7 @@ Figure~\ref{fig:nn}b shows the neural network configuration. The OpenCL kernel i
 
 Compared to Case Study A, the size of the evaluation is small. We use \emph{leave-one-out cross-validation} to evaluate the models. For each program, a model is trained on data from all other programs and used to predict the coarsening factor of the excluded program.
 
-The parameters of the neural network is not described in~\cite{Magni2014}, so an additional, \emph{nested} cross-validation process is used to find the optimal model parameters. For every program in the training set, 48 combinations of network parameters are evaluated. The best performing configuration is selected from these 768 results to train a model for prediction on the excluded program. This nested cross-validation is repeated for each of the training sets. No such tuning of hyper-parameters is performed for DeepTune.
+The parameters of the neural network are not described in~\cite{Magni2014}, so an additional, \emph{nested} cross-validation process is used to find the optimal model parameters. For every program in the training set, a grid search of 48 combinations of network parameters is performed. The best performing parameter configuration is selected from these 768 results to train a model for prediction on the excluded program. This nested cross-validation is repeated for each of the training sets. No such tuning of hyper-parameters is performed for DeepTune.
 
 
 \subsection{Comparison to Case Study A}
@@ -86,4 +86,4 @@ Figure~\ref{fig:pact-speedup} shows speedups achieved by the \citeauthor{Magni20
 
 Some programs --- especially those with large divergent regions or indirect memory accesses --- respond very poorly to coarsening. No performance improvement is possible on the \texttt{mvCoal} and \texttt{spmv} programs. Both models fail to achieve positive average speedups on the NVIDIA Tesla K20c, because thread coarsening does not give performance gains for the majority of the programs on this platform.
 
-The disappointing results for both predictive models may be attributed to the small training program set used by \citeauthor{Magni2014}(only 17 programs in total). As a result, the models suffer from sparse training data. Chapter~\ref{chap:clgen} presents a methodology for overcoming data sparsity using additional programs; the following subsection describes and tests a novel strategy for training optimisation heuristics on a small number of programs by exploiting knowledge learned from other optimisation domains.
+The disappointing results for both predictive models may be attributed to the small training program set (only 17 programs in total). As a result, the models suffer from sparse training data. In Chapter~\ref{chap:clgen} of this thesis, a methodology for overcoming data sparsity using additional programs is presented. In this instance, the shared structure of the DeepTune models between the two case studies enables an alternate strategy to overcoming data scarcity. The following subsection describes and tests a novel strategy for training optimisation heuristics on a small number of programs by exploiting knowledge learned from other optimisation domains.
