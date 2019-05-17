@@ -1,16 +1,16 @@
 \begin{algorithmic}[1]
 \Require LSTM model $M$, maximum kernel length $n$.
 \Ensure Completed sample string $S$.
-\State $S \gets$``\texttt{\_\_kernel void A(const int a) \{}''\algorithmiccomment{Seed text}
+\State $S \gets$``\texttt{\_\_kernel void A(const int a) \{}''\algorithmiccomment{Seed text from argument specification}
 \State $d \gets 1$\algorithmiccomment{Initial code block depth}
 \For{$i \gets |S|$ \textbf{to} $n$}
-  \State $c \gets predictcharacter(M, S)$\algorithmiccomment{Generate new character}
+  \State $c \gets PredictCharacter(M, S)$\algorithmiccomment{Generate new character}
   \If{$c = $``\texttt{\{}''}
     \State $d \gets d+1$\algorithmiccomment{Entered code block, increase depth}
   \ElsIf{$c = $``\texttt{\}}''}
     \State $d \gets d-1$\algorithmiccomment{Exited code block, decrease depth}
   \EndIf
-  \State $S \gets S + c$\algorithmiccomment{Append new character}
+  \State $S \gets S + c$\algorithmiccomment{Append new character to sample}
   \If{$depth = 0$}
     \State \textbf{break}\algorithmiccomment{Exited function block, stop sampling}
   \EndIf

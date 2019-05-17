@@ -1,15 +1,15 @@
 \begin{algorithmic}[1]
 \Require Candidate vocabulary $V_c$, string $S$.
 \Ensure Vocabulary $V$.
-\State $V \gets \phi$
+\State $V \gets \varnothing$\algorithmiccomment{Initialize empty derived vocabulary}
 \State $i \gets 1$
-\While{$S \ne \phi$}
-  \State $i \gets i + 1$
-  \State $c \gets substr(S, 0, i)$
-  \If{$c \not\in V_c$}
-    \State $c \gets substr(S, 0, i - 1)$
-    \State $S \gets substr(S, i - 1, |S|)$
-    \State $V \gets V \cup \{ c \}$
+\While{$S \ne ``''$}\algorithmiccomment{While input not fully processed}
+  \State $i \gets i + 1$\algorithmiccomment{Advance to next character}
+  \State $c \gets [S^{(0)}, \ldots, S^{(i)}]$\algorithmiccomment{Read token from input}
+  \If{$c \not\in V_c$}\algorithmiccomment{If token is not legal}
+    \State $c \gets [S^{(0)}, \ldots, S^{(i-1)}]$\algorithmiccomment{Revert to last legal token}
+    \State $S \gets [S^{(i-1)}, \ldots, S^{(|S|)}]$\algorithmiccomment{Pop token from input}
+    \State $V \gets V \cup \{ c \}$\algorithmiccomment{Add token to vocabulary}
     \State $i \gets 1$
   \EndIf
 \EndWhile

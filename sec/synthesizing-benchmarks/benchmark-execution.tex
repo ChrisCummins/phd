@@ -1,7 +1,7 @@
 \section{Cldrive: A Driver for Arbitrary OpenCL Kernels}
 \label{sec:cldrive}
 
-A host driver is used to gather performance data from synthesised CLgen code. The driver accepts as input an OpenCL kernel, generates \emph{payloads} of user-configurable sizes, and executes the kernel using the generated payloads, providing dynamic checking of kernel behaviour.
+This section presents \emph{Cldrive}, a host driver developed to gather performance data from synthesised CLgen code. The driver accepts as input an OpenCL kernel, generates \emph{payloads} of user-configurable sizes, and executes the kernel using the generated payloads so as to collect kernel runtimes, and to provide dynamic checking of kernel behaviour.
 
 \subsection{Generating Data Payloads}
 
@@ -9,7 +9,7 @@ A \emph{payload} encapsulates all of the arguments of an OpenCL compute kernel. 
 
 \subsection{Dynamic Checker}
 
-For the purpose of performance benchmarking the correctness of computed values is of little interest, but I define a class of programs as performing \emph{useful work} if they predictably compute some result. A low-overhead runtime behaviour check is used to validate that a synthesised program does useful work based on the outcome of four executions of a tested program:
+For the purpose of performance benchmarking the correctness of computed values is of little interest, a class of programs are defined as performing \emph{useful work} if they predictably compute some result. A low-overhead runtime behaviour check is used to validate that a synthesised program does useful work based on the outcome of four executions of a tested program:
 
 \begin{enumerate}
 \item Create 4 equal size payloads $A_{1in}$, $B_{1in}$, $A_{2in}$,
@@ -29,4 +29,4 @@ For the purpose of performance benchmarking the correctness of computed values i
   \end{itemize}
 \end{enumerate}
 
-Equality checks for floating point values are performed with an appropriate epsilon to accommodate rounding errors, and a timeout threshold is also used to catch kernels which are non-terminating. The method is based on random differential testing~\cite{McKeeman1998}, though I emphasise that this is not a general purpose approach and is tailored specifically for this use case. For example, I anticipate a false positive rate for kernels with subtle sources of non-determinism which more thorough methods may expose~\cite{Betts2012,Price2015,Sorensen2016}, however I deemed such methods unnecessary for the purpose of performance modelling.
+Equality checks for floating point values are performed with an appropriate epsilon to accommodate rounding errors, and a timeout threshold is also used to catch kernels which are non-terminating. The method is based on random differential testing~\cite{McKeeman1998}, though I emphasise that this is not a general purpose approach and is tailored specifically for benchmarking for performance characterisation. For example, one would anticipate a false positive rate for kernels with subtle sources of non-determinism which more thorough methods may expose~\cite{Betts2012,Price2015,Sorensen2016}, however for the purpose of performance modelling, such methods were deemed unnecessary.

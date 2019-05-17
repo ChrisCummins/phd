@@ -5,7 +5,7 @@ OpenCL provides a platform-agnostic framework for heterogeneous parallelism. Thi
 
 \subsection{State-of-the-art}
 
-We return to the \emph{Grewe et al.\ }~\cite{Grewe2013} predictive model of Chapter~\ref{chap:clgen} for mapping OpenCL kernels to the optimal device in CPU/GPU heterogeneous systems. They use supervised learning to construct decision trees, using a combination of static and dynamic kernel features. The static program features are extracted using a custom LLVM pass; the dynamic features are taken from the OpenCL runtime.
+We return to the \citeauthor{Grewe2013} ~\cite{Grewe2013} predictive model of Chapter~\ref{chap:clgen} for mapping OpenCL kernels to the optimal device in CPU/GPU heterogeneous systems. They use supervised learning to construct decision trees, using a combination of static and dynamic kernel features. The static program features are extracted using a custom LLVM pass; the dynamic features are taken from the OpenCL runtime.
 
 \paragraph*{Expert Chosen Features}
 
@@ -15,7 +15,7 @@ Table~\ref{tab:grewe-features-final} shows the features used in their work. Each
 
 \subsection{Experimental Setup}
 
-The predictive model of \emph{Grewe et al.\ }~\cite{Grewe2013} is replicated. The same experimental setup is used as in Chapter~\ref{chap:clgen} in which the experiments are extended to a larger set of 71 programs, summarised in Table~\ref{tab:cgo-benchmarks}. The programs were evaluated on two CPU-GPU platforms, detailed in Table~\ref{tab:cgo-platforms}.
+The predictive model of \citeauthor{Grewe2013} ~\cite{Grewe2013} is replicated. The same experimental setup is used as in Chapter~\ref{chap:clgen} in which the experiments are extended to a larger set of 71 programs, summarised in Table~\ref{tab:cgo-benchmarks}. The programs were evaluated on two CPU-GPU platforms, detailed in Table~\ref{tab:cgo-platforms}.
 
 \begin{table}
 	\centering%
@@ -61,11 +61,11 @@ The predictive model of \emph{Grewe et al.\ }~\cite{Grewe2013} is replicated. Th
 \end{table}
 
 
-\paragraph*{DeepTune Configuration} 
+\paragraph*{DeepTune Configuration}
 
 Figure~\ref{fig:nn}a shows the neural network configuration of DeepTune for the task of predicting optimal device mapping. The OpenCL kernel source code is used as input, along with the two dynamic values \emph{work-group size} and \emph{data size} available to the OpenCL runtime.
 
-\paragraph*{Model Evaluation} 
+\paragraph*{Model Evaluation}
 
 \emph{Stratified 10-fold cross-validation} is used to evaluate the quality of the predictive models~\cite{Han2011}. Each program is randomly allocated into one of 10 equally-sized sets; the sets are balanced to maintain a distribution of instances from each class consistent with the full set. A model is trained on the programs from all but one of the sets, then tested on the programs of the unseen set. This process is repeated for each of the 10 sets, to construct a complete prediction over the whole data set.
 
@@ -74,26 +74,26 @@ Figure~\ref{fig:nn}a shows the neural network configuration of DeepTune for the 
 
 \subsection{Experimental Results}
 
-Selecting the optimal execution device for OpenCL kernels is essential for maximising performance. For a CPU/GPU heterogeneous system, this presents a binary choice. In this experiment, the approach is compared against a static single-device approach and the \emph{Grewe et al.\ }predictive model. The \emph{static mapping} selects the device which gave the best average case performance over all the programs. On the AMD platform, the best-performing device is the CPU; on the NVIDIA platform, it is the GPU.
+Selecting the optimal execution device for OpenCL kernels is essential for maximising performance. For a CPU/GPU heterogeneous system, this presents a binary choice. In this experiment, the approach is compared against a static single-device approach and the \citeauthor{Grewe2013} predictive model. The \emph{static mapping} selects the device which gave the best average case performance over all the programs. On the AMD platform, the best-performing device is the CPU; on the NVIDIA platform, it is the GPU.
 
-Figure~\ref{fig:cgo-accuracy} shows the accuracy of both predictive models and the static mapping approach for each of the benchmark suites. The static approach is accurate for only 58.8\% of cases on AMD and 56.9\% on NVIDIA. This suggests the need for choosing the execution device on a per program basis. The \emph{Grewe et al.\ }model achieves an average accuracy of 73\%, a significant improvement over the static mapping. By automatically extracting useful feature representations from the source code, DeepTune gives an average accuracy of 82\%, an improvement over both schemes.
+Figure~\ref{fig:cgo-accuracy} shows the accuracy of both predictive models and the static mapping approach for each of the benchmark suites. The static approach is accurate for only 58.8\% of cases on AMD and 56.9\% on NVIDIA. This suggests the need for choosing the execution device on a per program basis. The \citeauthor{Grewe2013} model achieves an average accuracy of 73\%, a significant improvement over the static mapping. By automatically extracting useful feature representations from the source code, DeepTune gives an average accuracy of 82\%, an improvement over both schemes.
 
 \begin{figure}
 	\centering %
 	\includegraphics[width=.85\columnwidth]{img/cgo-acc}%
 	\caption[Accuracy of optimisation heuristics for heterogeneous device mapping]{%
-		Accuracy of optimisation heuristics for heterogeneous device mapping, aggregated by benchmark suite. The optimal static mapping achieves 58\% accuracy. The \emph{Grewe et al. }and DeepTune predictive models achieve accuracies of 73\% and 84\%, respectively.%
+		Accuracy of optimisation heuristics for heterogeneous device mapping, aggregated by benchmark suite. The optimal static mapping achieves 58\% accuracy. The \citeauthor{Grewe2013} and DeepTune predictive models achieve accuracies of 73\% and 84\%, respectively.%
 	}
 	\label{fig:cgo-accuracy}
 \end{figure}
 
-Using the static mapping as a baseline, the relative performance of each program is computed using the device selected by the \emph{Grewe et al.\ }and DeepTune models. Figure~\ref{fig:cgo-speedup} shows these speedups. Both predictive models significantly outperform the static mapping; the Grewe \emph{et al.\ }model achieves an average speedup of $2.91\times$ on AMD and $1.26\times$ on NVIDIA (geometric mean $1.18\times$). In 90\% of cases, DeepTune matches or outperforms the predictions of the Grewe \emph{et al.\ }model, achieving an average speedup of $3.34\times$ on AMD and $1.41\times$ on NVIDIA (geometric mean $1.31\times$). This 14\% improvement in performance comes at a greatly reduced cost, requiring no intervention by humans.
+Using the static mapping as a baseline, the relative performance of each program is computed using the device selected by the \citeauthor{Grewe2013} and DeepTune models. Figure~\ref{fig:cgo-speedup} shows these speedups. Both predictive models significantly outperform the static mapping; the Grewe \emph{et al.\ }model achieves an average speedup of $2.91\times$ on AMD and $1.26\times$ on NVIDIA (geometric mean $1.18\times$). In 90\% of cases, DeepTune matches or outperforms the predictions of the Grewe \emph{et al.\ }model, achieving an average speedup of $3.34\times$ on AMD and $1.41\times$ on NVIDIA (geometric mean $1.31\times$). This 14\% improvement in performance comes at a greatly reduced cost, requiring no intervention by humans.
 
 \begin{figure}
 	\centering %
 	\includegraphics[width=\textwidth]{img/cgo-speedup}%
 	\caption[Speedup of predicted heterogeneous mappings]{%
-		Speedup of predicted heterogeneous mappings over the best static mapping for both platforms. In (a) DeepTune achieves an average speedup of 3.43x over static mapping and 18\% over \emph{Grewe et al}. In (b) the speedup is 1.42x and 13\% respectively.%
+		Speedup of predicted heterogeneous mappings over the best static mapping for both platforms. In (a) DeepTune achieves an average speedup of 3.43x over static mapping and 18\% over \citeauthor{Grewe2013}. In (b) the speedup is 1.42x and 13\% respectively.%
 	}
 	\label{fig:cgo-speedup}
 \end{figure}
@@ -101,10 +101,11 @@ Using the static mapping as a baseline, the relative performance of each program
 
 
 \section{Case Study B: OpenCL Thread Coarsening Factor}
+\label{sec:deeptune-case-study-b}
 
 Thread coarsening is an optimisation for parallel programs in which the operations of two or more threads are fused together. This optimisation can prove beneficial on certain combinations of programs and architectures, for example programs with a large potential for Instruction Level Parallelism on Very Long Instruction Word architectures.
 
-\subsection{State-of-the-art} \emph{Magni et al.\ }present a predictive model for OpenCL thread coarsening in~\cite{Magni2014}. They implement an iterative heuristic which determines whether a given program would benefit from coarsening. If yes, then the program is coarsened, and the process repeats, allowing further coarsening. In this manner, the problem is reduced from a multi-label classification problem into a series of binary decisions, shown in Figure~\ref{fig:cf-magni}. They select from one of six possible coarsening factors: $(1, 2, 4, 8, 16, 32)$, divided into 5 binary choices.
+\subsection{State-of-the-art} \citeauthor{Magni2014}present a predictive model for OpenCL thread coarsening in~\cite{Magni2014}. They implement an iterative heuristic which determines whether a given program would benefit from coarsening. If yes, then the program is coarsened, and the process repeats, allowing further coarsening. In this manner, the problem is reduced from a multi-label classification problem into a series of binary decisions, shown in Figure~\ref{fig:cf-magni}. They select from one of six possible coarsening factors: $(1, 2, 4, 8, 16, 32)$, divided into 5 binary choices.
 
 \input{fig/cf}
 
@@ -112,11 +113,11 @@ Thread coarsening is an optimisation for parallel programs in which the operatio
 
 \paragraph*{Expert Chosen Features}
 
-\emph{Magni et al.\ }followed a very comprehensive feature engineering process. 17 candidate features were assembled from previous studies of performance counters and computed theoretical values~\cite{Magni2,Sim2012}. For each candidate feature they compute its coarsening \emph{delta}, reflecting the change in each feature value caused by coarsening: $f_{\Delta} = (f_{after} - f_{before}) / f_{before}$, adding it to the feature set. Then they use Principle Component Analysis (PCA) on the 34 candidates and selected the first 7 principle components, accounting for 95\% of variance in the space.
+\citeauthor{Magni2014}followed a very comprehensive feature engineering process. 17 candidate features were assembled from previous studies of performance counters and computed theoretical values~\cite{Magni2,Sim2012}. For each candidate feature they compute its coarsening \emph{delta}, reflecting the change in each feature value caused by coarsening: $f_{\Delta} = (f_{after} - f_{before}) / f_{before}$, adding it to the feature set. Then they use Principle Component Analysis (PCA) on the 34 candidates and selected the first 7 principle components, accounting for 95\% of variance in the space.
 
 \subsection{Experimental Setup}
 
-The experimental setup of \emph{Magni et al.}~\cite{Magni2014} is replicated. The thread coarsening optimisation is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
+The experimental setup of \citeauthor{Magni2014}~\cite{Magni2014} is replicated. The thread coarsening optimisation is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
 
 \begin{table}
 	\centering%
@@ -183,27 +184,27 @@ Table~\ref{tab:nn-size} shows the similarity of the models. The only difference 
 
 Exploiting thread coarsening for OpenCL kernels is a difficult task. On average, coarsening slows programs down. The speedup attainable by a perfect heuristic is only $1.36\times$.
 
-Figure~\ref{fig:pact-speedup} shows speedups achieved by the \emph{Magni et al.\ }and DeepTune models for all programs and platforms. The performance of programs without coarsening is used as baseline. On the four experimental platforms (AMD HD 5900, Tahiti 7970, NVIDIA GTX 480, and Tesla K20c), the \emph{Magni et al.\ }model achieves average speedups of $1.21\times$, $1.01\times$, $0.86\times$, and $0.94\times$, respectively. DeepTune outperforms this, achieving speedups of $1.10\times$, $1.05\times$, $1.10\times$, and $0.99\times$.
+Figure~\ref{fig:pact-speedup} shows speedups achieved by the \citeauthor{Magni2014}and DeepTune models for all programs and platforms. The performance of programs without coarsening is used as baseline. On the four experimental platforms (AMD HD 5900, Tahiti 7970, NVIDIA GTX 480, and Tesla K20c), the \citeauthor{Magni2014}model achieves average speedups of $1.21\times$, $1.01\times$, $0.86\times$, and $0.94\times$, respectively. DeepTune outperforms this, achieving speedups of $1.10\times$, $1.05\times$, $1.10\times$, and $0.99\times$.
 
 Some programs --- especially those with large divergent regions or indirect memory accesses --- respond very poorly to coarsening. No performance improvement is possible on the \texttt{mvCoal} and \texttt{spmv} programs. Both models fail to achieve positive average speedups on the NVIDIA Tesla K20c, because thread coarsening does not give performance gains for the majority of the programs on this platform.
 
-The disappointing results for both predictive models may be attributed to the small training program set used by \emph{Magni et al.\ }(only 17 programs in total). As a result, the models suffer from sparse training data. Chapter~\ref{chap:clgen} presents a methodology for overcoming data sparsity using additional programs; the following subsection describes and tests a novel strategy for training optimisation heuristics on a small number of programs by exploiting knowledge learned from other optimisation domains.
+The disappointing results for both predictive models may be attributed to the small training program set used by \citeauthor{Magni2014}(only 17 programs in total). As a result, the models suffer from sparse training data. Chapter~\ref{chap:clgen} presents a methodology for overcoming data sparsity using additional programs; the following subsection describes and tests a novel strategy for training optimisation heuristics on a small number of programs by exploiting knowledge learned from other optimisation domains.
 
 
-\subsection{Transfer Learning Across Problem Domains}
-\label{subsec:deeptune-transfer-learning}
+\section{Transfer Learning Across Problem Domains}
+\label{sec:deeptune-transfer-learning}
 
-There are inherent differences between the tasks of building heuristics for heterogeneous mapping and thread coarsening, evidenced by the contrasting choices of features and models in \emph{Grewe et al.\ }and \emph{Magni et al.} However, in both cases, the first role of DeepTune is to extract meaningful abstractions and representations of OpenCL code. Prior research in deep learning has shown that models trained on similar inputs for different tasks often share useful commonalities. The idea is that in neural network classification, information learned at the early layers of neural networks (i.e. closer to the input layer) will be useful for multiple tasks. The later the network layers are (i.e. closer to the output layer), the more specialised the layers become~\cite{Zeiler2014}.
+There are inherent differences between the tasks of building heuristics for heterogeneous mapping and thread coarsening, evidenced by the contrasting choices of features and models in \citeauthor{Grewe2013} and \citeauthor{Magni2014} However, in both cases, the first role of DeepTune is to extract meaningful abstractions and representations of OpenCL code. Prior research in deep learning has shown that models trained on similar inputs for different tasks often share useful commonalities. The idea is that in neural network classification, information learned at the early layers of neural networks (i.e. closer to the input layer) will be useful for multiple tasks. The later the network layers are (i.e. closer to the output layer), the more specialised the layers become~\cite{Zeiler2014}.
 
 Hypothesising that this would be the case for DeepTune would enable the novel transfer of information \emph{across different optimisation domains}. To test this, the language model --- the \texttt{Embedding}, and \texttt{LSTM\_\{1,2\}} layers --- trained for the heterogeneous mapping task was extracted and \emph{transferred} over to the new task of thread coarsening. Since DeepTune keeps the same design for both optimisation problems, this is as simple as copying the learned weights of the three layers. The model is then trained as normal.
 
-As shown in Figure~\ref{fig:pact-speedup}, the newly trained model, DeepTune-TL has improved performance for 3 of the 4 platforms: $1.17\times$, $1.23\times$, $1.14\times$, $0.93\times$, providing an average 12\% performance improvement over \emph{Magni et al.}  In 81\% of cases, the use of transfer learning matched or improved the optimisation decisions of DeepTune, providing up to a 16\% improvement in per platform performance.
+As shown in Figure~\ref{fig:pact-speedup}, the newly trained model, DeepTune-TL has improved performance for 3 of the 4 platforms: $1.17\times$, $1.23\times$, $1.14\times$, $0.93\times$, providing an average 12\% performance improvement over \citeauthor{Magni2014}  In 81\% of cases, the use of transfer learning matched or improved the optimisation decisions of DeepTune, providing up to a 16\% improvement in per platform performance.
 
 \begin{figure}
 	\centering %
 	\includegraphics[width=\textwidth]{img/pact-speedup}%
 	\caption[Speedups of predicted thread coarsening factors]{%
-		Speedups of predicted coarsening factors for each platform. DeepTune outperforms \emph{Magni et al.\ }on three of the four platforms. Transfer learning improves DeepTune speedups further, by 16\% on average.%
+		Speedups of predicted coarsening factors for each platform. DeepTune outperforms \citeauthor{Magni2014}on three of the four platforms. Transfer learning improves DeepTune speedups further, by 16\% on average.%
 	}%
 	\label{fig:pact-speedup}
 \end{figure}
@@ -212,7 +213,7 @@ On the NVIDIA Tesla K20c, the platform for which no predictive model achieves po
 
 
 \section{DeepTune Internal Activation States}
-\label{subsec:deeptune-internal-states}
+\label{sec:deeptune-internal-states}
 
 In previous sections DeepTune is shown to automatically outperform state-of-the-art predictive models for which experts have invested a great amount of time in engineering features. This section attempts to illuminate the inner workings, using a single example from Case Study B: predicting the thread coarsening factor for Parboil's \texttt{mriQ} benchmark on four different platforms.
 
@@ -245,7 +246,7 @@ As information flows through the network, the layers become progressively more s
 %
 %\subsubsection{State-of-the-art}
 %
-%In~\cite{Grewe2013}, \emph{Grewe et al.\ }develop a predictive model for mapping OpenCL kernels to the optimal device in CPU/GPU heterogeneous systems. They use supervised learning to construct decision trees, using a combination of static and dynamic kernel features. The static program features are extracted using a custom LLVM pass; the dynamic features are taken from the OpenCL runtime.
+%In~\cite{Grewe2013}, \citeauthor{Grewe2013} develop a predictive model for mapping OpenCL kernels to the optimal device in CPU/GPU heterogeneous systems. They use supervised learning to construct decision trees, using a combination of static and dynamic kernel features. The static program features are extracted using a custom LLVM pass; the dynamic features are taken from the OpenCL runtime.
 %
 %\subsubsection{Expert Chosen Features}
 %
@@ -255,16 +256,16 @@ As information flows through the network, the layers become progressively more s
 %
 %\subsubsection{Experimental Setup}
 %
-%The predictive model of \emph{Grewe et al.\ }~\cite{Grewe2013} is replicated. The same experimental setup is used as in Section~\ref{sec:clgen-eval-methodology} in which the experiments are extended to a larger set of 71 programs, summarised in Table~\ref{tab:cgo-benchmarks}. The programs were evaluated on two CPU-GPU platforms, detailed in Table~\ref{tab:cgo-platforms}.
+%The predictive model of \citeauthor{Grewe2013} ~\cite{Grewe2013} is replicated. The same experimental setup is used as in Section~\ref{sec:clgen-eval-methodology} in which the experiments are extended to a larger set of 71 programs, summarised in Table~\ref{tab:cgo-benchmarks}. The programs were evaluated on two CPU-GPU platforms, detailed in Table~\ref{tab:cgo-platforms}.
 %
 %\input{tab/benchmarks}
 %\input{tab/deeptune-platforms}
 %
-%\subsubsection{DeepTune Configuration} 
+%\subsubsection{DeepTune Configuration}
 %
 %Figure~\ref{fig:nn}a shows the neural network configuration of DeepTune for the task of predicting optimal device mapping. The OpenCL kernel source code is used as input, along with the two dynamic values \emph{work-group size} and \emph{data size} available to the OpenCL runtime.
 %
-%\subsubsection{Model Evaluation} 
+%\subsubsection{Model Evaluation}
 %
 %\emph{Stratified 10-fold cross-validation} is used to evaluate the quality of the predictive models~\cite{Han2011}. Each program is randomly allocated into one of 10 equally-sized sets; the sets are balanced to maintain a distribution of instances from each class consistent with the full set. A model is trained on the programs from all but one of the sets, then tested on the programs of the unseen set. This process is repeated for each of the 10 sets, to construct a complete prediction over the whole data set.
 %
@@ -275,7 +276,7 @@ As information flows through the network, the layers become progressively more s
 %
 %Thread coarsening is an optimisation for parallel programs in which the operations of two or more threads are fused together. This optimisation can prove beneficial on certain combinations of programs and architectures, for example programs with a large potential for Instruction Level Parallelism on Very Long Instruction Word architectures.
 %
-%\subsubsection{State-of-the-art} \emph{Magni et al.\ }present a predictive model for OpenCL thread coarsening in~\cite{Magni2014}. They implement an iterative heuristic which determines whether a given program would benefit from coarsening. If yes, then the program is coarsened, and the process repeats, allowing further coarsening. In this manner, the problem is reduced from a multi-label classification problem into a series of binary decisions, shown in Figure~\ref{fig:cf-magni}. They select from one of six possible coarsening factors: $(1, 2, 4, 8, 16, 32)$, divided into 5 binary choices.
+%\subsubsection{State-of-the-art} \citeauthor{Magni2014}present a predictive model for OpenCL thread coarsening in~\cite{Magni2014}. They implement an iterative heuristic which determines whether a given program would benefit from coarsening. If yes, then the program is coarsened, and the process repeats, allowing further coarsening. In this manner, the problem is reduced from a multi-label classification problem into a series of binary decisions, shown in Figure~\ref{fig:cf-magni}. They select from one of six possible coarsening factors: $(1, 2, 4, 8, 16, 32)$, divided into 5 binary choices.
 %
 %\input{fig/cf}
 %
@@ -283,11 +284,11 @@ As information flows through the network, the layers become progressively more s
 %
 %\subsubsection{Expert Chosen Features}
 %
-%\emph{Magni et al.\ }followed a very comprehensive feature engineering process. 17 candidate features were assembled from previous studies of performance counters and computed theoretical values~\cite{Magni2,Sim2012}. For each candidate feature they compute its coarsening \emph{delta}, reflecting the change in each feature value caused by coarsening: $f_{\Delta} = (f_{after} - f_{before}) / f_{before}$, adding it to the feature set. Then they use Principle Component Analysis (PCA) on the 34 candidates and selected the first 7 principle components, accounting for 95\% of variance in the space.
+%\citeauthor{Magni2014}followed a very comprehensive feature engineering process. 17 candidate features were assembled from previous studies of performance counters and computed theoretical values~\cite{Magni2,Sim2012}. For each candidate feature they compute its coarsening \emph{delta}, reflecting the change in each feature value caused by coarsening: $f_{\Delta} = (f_{after} - f_{before}) / f_{before}$, adding it to the feature set. Then they use Principle Component Analysis (PCA) on the 34 candidates and selected the first 7 principle components, accounting for 95\% of variance in the space.
 %
 %\subsubsection{Experimental Setup}
 %
-%The experimental setup of \emph{Magni et al.}~\cite{Magni2014} is replicated. The thread coarsening optimisation is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
+%The experimental setup of \citeauthor{Magni2014}~\cite{Magni2014} is replicated. The thread coarsening optimisation is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
 %
 %\subsubsection{DeepTune Configuration}
 %

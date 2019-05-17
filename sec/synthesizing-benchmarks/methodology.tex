@@ -1,24 +1,28 @@
 \section{Experimental Methodology}
 \label{sec:clgen-eval-methodology}
 
+This section describes the methodology for a quantitative evaluation of CLgen-generated benchmarks.
+
 \subsection{Experimental Setup}
 
-\subsubsection{Predictive Model}
+\paragraph*{Predictive Model}
 
 To evaluate the efficacy of synthetic benchmarks for training, the predictive model of \citeauthor{Grewe2013} is used~\cite{Grewe2013}. The predictive model is used to determine the optimal mapping of a given OpenCL kernel to either a GPU or CPU. It uses supervised learning to construct a decision tree with a combination of static and dynamic kernel features extracted from source code and the OpenCL runtime, detailed in Table~\ref{tab:clgen-cgo13-features}.
 
 \begin{table}
 	\centering%
 	\input{tab/clgen-cgo13-features}%
-	\caption[\emph{Grewe et al.\ }features for heterogeneous device mapping]{%
-		Features used by \emph{Grewe et al.\ }to predict CPU/GPU mapping of OpenCL kernels. The features are extracted using a custom analysis pass based using LLVM.
+	\caption[\citeauthor{Grewe2013} features for heterogeneous device mapping]{%
+		Features used by \citeauthor{Grewe2013} to predict CPU/GPU mapping of OpenCL kernels. The features are extracted using a custom analysis pass based using LLVM.
 	}%
 	\label{tab:clgen-cgo13-features} %
 \end{table}
 
-\subsubsection{Benchmarks}
+\paragraph*{Benchmarks}
 
-As in~\cite{Grewe2013}, the model is tested on the NAS Parallel Benchmarks (NPB)~\cite{Bailey1991a}. The hand-optimised OpenCL implementation of \citeauthor{Seo2011}~\cite{Seo2011} is used. In~\cite{Grewe2013} the authors augment the training set of the predictive model with 47 additional kernels taken from 4 GPGPU benchmark suites. To more fully sample the program space, a much larger collection of 142 programs is used, summarised in Table~\ref{tab:cgo17-benchmarks}. These additional programs are taken from all 7 of the most frequently used benchmark suites identified in Section~\ref{subsec:motivation}. None of these programs were used to train CLgen. 1,000 kernels were synthesised with CLgen to use as additional benchmarks.
+As in~\cite{Grewe2013}, the model is tested on the NAS Parallel Benchmarks (NPB)~\cite{Bailey1991a}. The hand-optimised OpenCL implementation of \citeauthor{Seo2011}~\cite{Seo2011} is used. In~\cite{Grewe2013} the authors augment the training set of the predictive model with 47 additional kernels taken from 4 GPGPU benchmark suites. To more fully sample the program space, a much larger collection of 142 kernels is used, summarised in Table~\ref{tab:cgo17-benchmarks}. These additional programs are taken from all 7 of the most frequently used benchmark suites identified in Section~\ref{sec:the-case-for-benchmark-generators}. None of these programs were used to train CLgen. This brings the total number of OpenCL benchmark kernels used in the evaluation to 256.
+
+1,000 kernels were synthesised with CLgen to use as additional benchmarks.
 
 \begin{table}% tab:benchmarks
   \centering%
@@ -27,7 +31,7 @@ As in~\cite{Grewe2013}, the model is tested on the NAS Parallel Benchmarks (NPB)
   \label{tab:cgo17-benchmarks} %
 \end{table}
 
-\subsubsection{Platforms} 
+\paragraph*{Experimental Platforms}
 
 Two 64-bit CPU-GPU systems are used to evaluate the approach, detailed in Table~\ref{tab:cgo17-platforms}. One system has an AMD GPU and uses OpenSUSE 12.3; the other is equipped with an NVIDIA GPU and uses Ubuntu 16.04. Both platforms were unloaded.
 
@@ -38,7 +42,7 @@ Two 64-bit CPU-GPU systems are used to evaluate the approach, detailed in Table~
   \label{tab:cgo17-platforms}
 \end{table}
 
-\subsubsection{Data sets}
+\paragraph*{Data sets}
 
 The NPB and Parboil benchmark suites are packaged with multiple data sets. We use all of the packaged data sets (5 per program in NPB, 1-4 per program in Parboil). For all other benchmarks, the default data sets are used. The CLgen host driver was configured to synthesise payloads between 128B-130MB, approximating that of the dataset sizes found in the benchmark programs.
 

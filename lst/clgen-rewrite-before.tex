@@ -1,3 +1,4 @@
+// saxpy.cl - Compute kerenl for SAXPY
 #define DTYPE float
 #define ALPHA(a) 3.5f * a
 inline DTYPE ax(DTYPE x) { return ALPHA(x); }
@@ -10,4 +11,5 @@ __kernel void saxpy( /* SAXPY kernel */
      unsigned int idx = get_global_id(0);
      // = ax + y
      if (idx < nelem) {
-         input2[idx] += ax(input1[idx]); }}
+         input2[idx] += ax(input1[idx]); }
+}
