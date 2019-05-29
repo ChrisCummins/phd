@@ -3,23 +3,23 @@
 
 \section{Introduction}
 
-This chapter provides a brief and non-exhaustive overview of the techniques and theory used in this thesis. First Section~\ref{sec:background-terminology} defines terminology. Then Section~\ref{sec:background-machine-learning} describes the machine learning techniques used in this thesis. Section~\ref{sec:evaluation-techniques} describes the statistical tools and methodologies used in this thesis. Section~\ref{sec:programming-heterogeneous-systems} provides an overview of heterogeneous programming. Lastly Section~\ref{sec:background-summary} concludes.
+This chapter provides a brief and non-exhaustive overview of the techniques and theory used in this thesis. First Section~\ref{sec:background-terminology} defines terminology. Then Sections~\ref{sec:background-machine-learning} and~\ref{sec:evaluation-techniques} describe the machine learning and evaluation techniques used in this thesis, respectively. Section~\ref{sec:programming-heterogeneous-systems} provides an overview of heterogeneous programming. Finally Section~\ref{sec:background-summary} concludes.
 
 
 \section{Terminology}
 \label{sec:background-terminology}
 
-\emph{Machine learning} refers to a family of statistical models and algorithms used to infer functions to estimate future values given past example values and their \emph{features}.
+\emph{Machine learning} refers to a family of statistical models and algorithms used to infer functions to estimate future values given past observations and their \emph{features}.
 
 \emph{Features}, or explanatory variables, are a set of observable attributes used by machine learning algorithms to build the correlations required to predict unseen values. % A \emph{feature space} is the
 
-\emph{Deep learning} is a loosely defined class of machine learning methods built on artificial neural networks. It is easily confused with \emph{deep neural networks}, which is a specific deep learning technique employing artificial neural networks with one or more hidden layers. Recurrent Neural Networks, as used in this thesis, are a deep learning architecture.
+\emph{Deep learning} is a loosely defined class of machine learning methods built on artificial neural networks. It is easily confused with \emph{deep neural networks}, which is a specific deep learning architecture employing artificial neural networks with one or more hidden layers. Recurrent Neural Networks, used in this thesis, are a deep learning architecture.
 
 
 \section{Machine Learning}
 \label{sec:background-machine-learning}
 
-Machine learning techniques are used in this thesis for classification and sequence-to-sequence modelling. Classification is the task of predicting the correct category --- or class --- for a set of features, based on ``labelled'' training data, i.e.\ instances whose categories are known. Sequence modelling is the task of capturing the underling probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
+Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the correct category --- or class --- for a set of features, based on ``labelled'' training data, i.e.\ instances whose categories are known. Sequence modelling is the task of capturing the underling probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
 
 % \subsection{Supervised Learning}
 
@@ -34,7 +34,9 @@ Machine learning techniques are used in this thesis for classification and seque
 
 \subsection{Feed-forward Neural Networks}
 
-Artificial Neural Networks comprise a network of artificial neurons and weighted connections between them to map input variables to a response. Figure~\ref{fig:artificial-neural-network} shows the architecture of a feed-forward artificial neural network. Each node represents an artificial neuron. The neurons are grouped into layers. The signal of an artificial neuron at a given layer is connected to the input of each artificial neuron in the next layer. For a training pair $(x, y)$ where $x$ is a vector of features and $y$ is the observed label, the first layer of artificial neurons receive $x$, and the final layer values are compared against $y$. Intermediate layers for which there are no ground truth values are known as \emph{hidden} layers. Figure~\ref{fig:artificial-neural-network} depicts a three layered network with three input values, a single hidden layer with four artificial neurons, and two outputs. This type of feed-forward multi-layered artificial neural networks are known as \emph{Multilayer Perceptrons} (MLPs). MLPs are powerful \emph{universal function approximators}, capable of learning any bounded continuous function to arbitrary precision~\cite{Hornik1991,Lu2017,Yarotsky2017}.
+Artificial Neural Networks comprise a network of artificial neurons and weighted connections between them to map input variables to a response. Figure~\ref{fig:artificial-neural-network} shows the architecture of a feed-forward artificial neural network. Each node represents an artificial neuron. The neurons are grouped into layers. The signal of an artificial neuron at a given layer is connected to the input of each artificial neuron in the next layer.
+
+Intermediate layers for which there are no ground truth values are known as \emph{hidden} layers. Figure~\ref{fig:artificial-neural-network} depicts a three layered network with three input values, a single hidden layer with four artificial neurons, and two outputs. Feed-forward multi-layered artificial neural networks are powerful \emph{universal function approximators}, capable of learning any bounded continuous function to arbitrary precision~\cite{Hornik1991,Lu2017,Yarotsky2017}.
 
 \begin{figure}
   \centering
@@ -50,6 +52,8 @@ The signal of an artificial neuron is the \emph{activation}. For a given layer $
 \begin{equation}
   \bm{a}^{[\ell]} = \phi \left( \bm{W}^{[\ell]^T} \bm{a}^{[\ell-1]} + \bm{b}^{[\ell]} \right)
 \end{equation}
+
+The connections and biases of an artificial neural network are adjusted during training such that, for a pair $(\bm{x}, y)$ where $\bm{x}$ is an input vector of features and $y$ is an observed label, the difference between the final layer activations and $y$ is minimised.
 
 
 \paragraph*{Activation function}
@@ -166,9 +170,9 @@ A Recurrent Neural Network (RNN)~\cite{Graves2012} is an artificial neural netwo
 
 Where $\phi(\bm{z})$ and $\sigma(\bm{z})$ are non-linear activation functions, $\bm{b}_h$ and $\bm{b}_{\hat{y}}$ are bias vectors, and $\bm{W} \in \mathbb{R}^{h \times d}$, $\bm{U} \in \mathbb{R}^{h \times h}$, and $\bm{V} \in \mathbb{R}^{y \times h}$ are matrices representing the hidden-to-hidden, input-to-hidden, and hidden-to-output weights respectively.
 
-The recurrent structure of RNNs enables the modelling of patterns in data with a temporal domain, such as text or numerical time series. Whereas a feed-forward ANN estimates a conditional distribution based on an instantaneous input $p(y | x)$, an RNN estimates a distribution conditioned on prior observations $p\left(y^{(t)} | \{ x^{(0)}, \ldots, x^{(t)} \} \right)$.
+The recurrent structure of RNNs enables the modelling of patterns in data with a temporal domain, such as text or numerical time series. Whereas a feed-forward artificial neural network estimates a conditional distribution based on an instantaneous input $p(y | \bm{x})$, an RNN estimates a distribution conditioned on $t$ prior observations $p\left(y^{(t)} | \{ \bm{x}^{(1)}, \ldots, \bm{x}^{(t)} \} \right)$.
 
-Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, shown in Figure~\subref{fig:rnn-unrolled}. This \emph{Backpropagation Through Time} (BPTT)~\cite{Werbos1990a} enables the propagation of errors through time in the same manner as through layers.
+Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, shown in Figure~\subref{fig:rnn-unrolled}. This \emph{Backpropagation Through Time} (BPTT)~\cite{Werbos1990a} enables the propagation of errors in the temporal domain in the same manner as through layers.
 
 % Siegelmann, H. T., & Sontag, E. D. (1991). Turing Computability with Neural Nets. Applied Mathematics Letters, 4(6).
 RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of a finite size~\cite{Sontag1991}. In practise, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through the recurrence relation. This issue is known as the
@@ -191,7 +195,7 @@ Figure~\ref{fig:lstm-block} depicts the structure of an LSTM cell. In addition t
   \centering
   \includegraphics[width=.8\columnwidth]{img/lstm-block}%
   \caption[Long Short-Term Memory cell architecture]{%
-    A Long Short-Term Memory cell block. Input $\bm{x}^{(t)}$ is concatenated with prior hidden state $\bm{h}^{(t-1)}$ and used along with prior cell state $\bm{c}^{(t-1)}$ to compute a new hidden state $\bm{h}^{(t)}$ and cell state $\bm{c}^{(t)}$. Symbols $\otimes$ denotes element-wise product, $\oplus$ element-wise addition, and $\odot$ concatenation.%
+    A Long Short-Term Memory cell block. Input $\bm{x}^{(t)}$ is concatenated with prior hidden state $\bm{h}^{(t-1)}$ and used along with prior cell state $\bm{c}^{(t-1)}$ to compute a new hidden state $\bm{h}^{(t)}$ and cell state $\bm{c}^{(t)}$. Symbols $\otimes$ denotes element-wise vector product, $\oplus$ element-wise vector addition, and $\odot$ vector concatenation.%
   }%
   \label{fig:lstm-block}
 \end{figure}
@@ -202,14 +206,14 @@ Figure~\ref{fig:lstm-block} depicts the structure of an LSTM cell. In addition t
   \bm{o}^{(t)} &= \sigma \left( \bm{W}_o \bm{x}^{(t)} + \bm{U}_o \bm{h}^{(t-1)} + \bm{b}_o \right) \\
 \end{align}
 
-Where weight matrices $\bm{W} \in \mathbb{R}^{h\times d}$ and $\bm{U} \in \mathbb{R}^{h\times h}$, and bias vectors $\bm{b} \in \mathbb{R}^h$ are sub-scripted for the activation being calculated: $i$ input gate, $o$ output gate, $f$ forget gate, or $c$ cell state. The cell state and hidden state are then updated using:
+Where weight matrices $\bm{W} \in \mathbb{R}^{h\times d}$ and $\bm{U} \in \mathbb{R}^{h\times h}$, and bias vectors $\bm{b} \in \mathbb{R}^h$ are sub-scripted for the activation being calculated: $f$ forget gate, $i$ input gate, or $o$ output gate. The cell state and hidden state are then updated using:
 
 \begin{align}
   \bm{c}^{(t)} &= \bm{f}^{(t)} \otimes \bm{c}^{(t-1)} + i^{(t)} \otimes tanh \left( \bm{W}_c \bm{x}^{(t)} + \bm{U}_c \bm{h}^{(t-1)} + \bm{b}_c \right) \\
   \bm{h}^{(t)} &= \bm{o}^{(t)} \otimes tanh ( \bm{c} ^{(t)} )
 \end{align}
 
-Where $\otimes$ denotes element-wise product. The gated cell enables LSTMs to build connections over very long sequences in data. The LSTMs architecture (and its many variants~\cite{Greff2015}) have been responsible breakthrough results in a number of areas, for example machine translation~\cite{Sutskever2014}, speech recognition~\cite{Graves2005}, and weather prediction \cite{Shi2015a}.
+Where $\otimes$ denotes element-wise vector product, and subscript $c$ denotes cell state weight matrices and bias vectors. The gated cell enables LSTMs to build connections over very long sequences in data. The LSTMs architecture (and its many variants~\cite{Greff2015}) have been responsible breakthrough results in a number of areas, for example machine translation~\cite{Sutskever2014}, speech recognition~\cite{Graves2005}, and weather prediction \cite{Shi2015a}.
 
 % \subsection{Embedding}
 
@@ -227,12 +231,7 @@ The gain of a feature $x$ is found using:
   \gain(D, x) = H(D) - \sum_{V \in \text{Values}(x)}\frac{|D_V|}{|D|}H(D_V)
 \end{equation}
 
-Decision trees are popular and low overhead form of classification. Implementations can be as simple and efficient as a set of nested \texttt{if}/\texttt{else} statements.
-
-
-\subsection{ZeroR}
-
-A ``ZeroR'' classifier is a model whose output is always the mode of the training data classes, irrespective of the input features. For example, given training data with the labels $\bm{y} = { A, B, B, C, }$, the model will predict $\bm{\hat{y}} = B$ for all future values. This requires no feature values $x$ since a ZeroR classifier has no power of prediction. A ZeroR model represents the simplest approach to classification, and is useful for providing a baseline to evaluate the performance of more complex classifiers.
+Decision trees are popular and low overhead form of classification. Implementations can be as simple and efficient as a set of nested conditional statements.
 
 % TODO: \subsection{Generative Adversarial Networks}
 
@@ -252,16 +251,21 @@ A ``ZeroR'' classifier is a model whose output is always the mode of the trainin
 \label{sec:evaluation-techniques}
 
 
+\subsection{ZeroR}
+
+A \emph{ZeroR} model is used in classification tasks to provide a baseline to evaluate the performance of classifiers. A ZeroR model represents the simplest approach to classification, its output is the mode of the training data labels, irrespective of the input. For example, given training data with the labels $\bm{y} = { A, B, B, C, }$, a ZeroR model will produce output $\bm{\hat{y}} = B$ for all future inputs. A ZeroR model has no power of prediction since its output is not conditioned on input features.
+
+
 \subsection{Training, validation, test data}
 
-To evaluate a machine learning model, data should be divided into disjoint \emph{training} and \emph{testing} partitions. For a set of $N$ pairs of input and output observations $\bm{D} = (\bm{x}^{(i)}, \bm{y}^{(i)}), i = 1, \ldots, N$, let $k : {1,\ldots,N} \rightarrow {1,\ldots,K}$ be an indexing function that indicates the partition to which the observation $i \in N$ is allocated by the randomisation. The model is then trained with the $k$th part of the data removed, yielding fitted function $\hat{f}^{-k}(\bm{x})$. The quality of the model $V(\hat{f}^{-k})$ is then evaluated using the loss between the expected values and predicted values in the unseen test set:
+To evaluate a machine learning model, data must be divided into disjoint \emph{training} and \emph{testing} partitions. For a set of $N$ pairs of input and output observations $\bm{D} = (\bm{x}^{(i)}, \bm{y}^{(i)}), i = 1, \ldots, N$, let $k : {1,\ldots,N} \rightarrow {1,\ldots,K}$ be an indexing function that indicates the partition to which the observation $i \in N$ is allocated by the randomisation. The model is then trained with the $k$th part of the data removed, yielding fitted function $\hat{f}^{-k}(\bm{x})$. The quality of the model $V(\hat{f}^{-k})$ is then evaluated using the loss between the expected values and predicted values in the unseen test set:
 
 \begin{align}
   \bm{y}_k &= \{ \bm{y}^{(i)} \in \bm{y} | i \in k(\bm{y}) \} \\
   V(\hat{f}^{-k}) &= \mathcal{L}(\bm{y}_k, \hat{f}^{-k}(\bm{x}_k))
 \end{align}
 
-Employing a second indexing function $u$ to divide the data not set aside for testing into disjoint \emph{training} and \emph{test} sets creates a \emph{validation} set. A validation set can be used to automatically tune model parameters. Given a model $f^p$ parameterised by $p$, the quality of the model evaluating using the parameters $\bar{p}$ that provide the smallest loss on the validation set can be found from a set of parameters $P$ using:
+Employing a second indexing function $u$ to divide the data not set aside for testing into disjoint \emph{training} and \emph{test} sets creates a \emph{validation} set. A validation set can be used to automatically tune model parameters. Given a model $f_p$ parameterised by $p$, the quality of the model evaluating using the parameters $\bar{p}$ that provide the smallest loss on the validation set can be found from a set of parameters $P$ using:
 
 \begin{align}
   \bar{p} &= \argmin_p \mathcal{L}(\bm{y}_u, \hat{f}_p^{-(k \cup u)}(\bm{x}_u)), \hspace{.5em} p \forall P\\
@@ -277,17 +281,19 @@ Ideally, sufficient data would exist to be set aside for testing. When not pract
 K-Fold sets aside part of the available data to fit the model, and a different part to test it. Data is split into $K$ roughly equal-sized parts.
 
 \begin{equation}
-  CV(\hat{f}) = \frac{1}{N}\sum_{i=1}^N L(\bm{y}^(i), \hat{f}^{-K^{(i)}}(\bm{x}^{(i)}))
+  CV(\hat{f}) = \frac{1}{K}\sum_{i=1}^K \mathcal{L}(\bm{y}^{(i)}, \hat{f}^{-K^{(i)}}(\bm{x}^{(i)}))
 \end{equation}
 
-When $K=N$, this is known as \emph{leave-one-out} cross-validation. For a classification task, if observations are distributed amongst the $K$ partitions such that the distribution of observation classes in all partitions is equal, this is called \emph{stratified} $K$-fold cross-validation.
+Where for a set of $n$ observations, $K \le n$. If $K=n$ this is known as \emph{leave-one-out} cross-validation.
+
+For a classification task, if observations are distributed amongst the $K$ partitions such that the distribution of observation classes in all partitions is equal, this is called \emph{stratified} $K$-fold cross-validation.
 
 
 \subsection{Principle Component Analysis}
 
 Principal Components Analysis PCA~\cite{Jolliffe2011} is a statistical procedure for identifying the underlying components responsible for variance in data. Given $n$ dimensions of observations, PCA produces a $k$-dimensional subspace through a linear transformation, where $k < n$. Each component is ordered by decreasing variance, $Var(k^{(i)}) \le Var(k^{(i-1)})$. This dimensionality-reduction is useful for exposing underlying correlations in machine learning feature design, and to aid in visually inspecting high-dimensional spaces where $n \ge 3$.
 
-To compute the principle components, one begins with a normalized matrix of observations $\bm{X} \in \mathbb{R}^{m \times n}$ of $m$ rows and $n$ columns (components). The data is normalised to the range $[-1,1]$ by subtracting the mean and scaling each component by its variance. The matrix of $k$ principle components $\bm{\hat{X}} \in \mathbb{R}^{m \times k}$ can then be computed from eigenvectors $\bm{v}^{(1)}, \ldots \bm{v}^{(m)}$ using:
+To compute the principle components, one begins with a normalized matrix of observations $\bm{X} \in \mathbb{R}^{m \times n}$ of $m$ rows and $n$ columns (components). The data is normalised to the range $[-1,1]$ by subtracting the mean and scaling each component by its variance. Given eigenvectors $\bm{v}^{(1)}, \ldots \bm{v}^{(m)}$, the matrix of $k$ principle components $\bm{\hat{X}} \in \mathbb{R}^{m \times k}$ can be computed using:
 
 \begin{equation}
 \bm{\hat{X}} = [ \bm{v}^{(1)}, \ldots, \bm{v}^{(k)}]^T \cdot \bm{X}\\
@@ -296,7 +302,7 @@ To compute the principle components, one begins with a normalized matrix of obse
 \section{Heterogeneous Systems}
 \label{sec:programming-heterogeneous-systems}
 
-Heterogeneous systems are ones that contain multiple types of processor. Programming for heterogeneous systems is especially challenging. Typical approaches divide the system processors into a \emph{host processor} and one or more additional \emph{accelerator} processors. The host processor is responsible for coordinating and synchronising work on the accelerator processors. This approach has been successfully used for General-purpose computing on graphics processing units (GPGPU), where the system CPU is the host and the GPUs are used accelerators~\cite{Owens2006}. Many of the techniques in this thesis are evaluated using OpenCL, a popular language and framework for programming heterogeneous systems.
+A heterogeneous system contains multiple types of processor. Compared to systems with a single processor, programming for heterogeneous systems is especially challenging. Typical approaches divide the system processors into a \emph{host processor} and one or more additional \emph{accelerator} processors, where the host processor is responsible for coordinating and synchronising work on the accelerator processors. This approach has been successfully used for General-purpose computing on graphics processing units (GPGPU), where the system CPU is the host and the GPUs are used as accelerators~\cite{Owens2006}. Many of the techniques in this thesis are evaluated using OpenCL, a popular language and framework for programming heterogeneous systems.
 
 
 \subsection{OpenCL Programming Model}
