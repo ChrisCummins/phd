@@ -27,7 +27,6 @@ import build_info
 from labm8.internal import flags_parsers
 from labm8.internal import logging
 
-
 FLAGS = absl_flags.FLAGS
 
 absl_flags.DEFINE_boolean('version', False,
@@ -190,8 +189,10 @@ def DEFINE_string(name: str,
                   required: bool = False,
                   validator: Callable[[str], bool] = None):
   """Registers a flag whose value can be any string."""
-  absl_flags.DEFINE_string(
-      name, default, help, module_name=logging.GetCallingModuleName())
+  absl_flags.DEFINE_string(name,
+                           default,
+                           help,
+                           module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -206,13 +207,12 @@ def DEFINE_integer(name: str,
                    upper_bound: Optional[int] = None,
                    validator: Callable[[int], bool] = None):
   """Registers a flag whose value must be an integer."""
-  absl_flags.DEFINE_integer(
-      name,
-      default,
-      help,
-      module_name=logging.GetCallingModuleName(),
-      lower_bound=lower_bound,
-      upper_bound=upper_bound)
+  absl_flags.DEFINE_integer(name,
+                            default,
+                            help,
+                            module_name=logging.GetCallingModuleName(),
+                            lower_bound=lower_bound,
+                            upper_bound=upper_bound)
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -227,13 +227,12 @@ def DEFINE_float(name: str,
                  upper_bound: Optional[float] = None,
                  validator: Callable[[float], bool] = None):
   """Registers a flag whose value must be a float."""
-  absl_flags.DEFINE_float(
-      name,
-      default,
-      help,
-      module_name=logging.GetCallingModuleName(),
-      lower_bound=lower_bound,
-      upper_bound=upper_bound)
+  absl_flags.DEFINE_float(name,
+                          default,
+                          help,
+                          module_name=logging.GetCallingModuleName(),
+                          lower_bound=lower_bound,
+                          upper_bound=upper_bound)
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -246,8 +245,10 @@ def DEFINE_boolean(name: str,
                    required: bool = False,
                    validator: Callable[[bool], bool] = None):
   """Registers a flag whose value must be a boolean."""
-  absl_flags.DEFINE_boolean(
-      name, default, help, module_name=logging.GetCallingModuleName())
+  absl_flags.DEFINE_boolean(name,
+                            default,
+                            help,
+                            module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -260,8 +261,10 @@ def DEFINE_list(name: str,
                 required: bool = False,
                 validator: Callable[[List[Any]], bool] = None):
   """Registers a flag whose value must be a list."""
-  absl_flags.DEFINE_list(
-      name, default, help, module_name=logging.GetCallingModuleName())
+  absl_flags.DEFINE_list(name,
+                         default,
+                         help,
+                         module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -293,14 +296,13 @@ def DEFINE_input_path(name: str,
   """
   parser = flags_parsers.PathParser(must_exist=True, is_dir=is_dir)
   serializer = absl_flags.ArgumentSerializer()
-  absl_flags.DEFINE(
-      parser,
-      name,
-      default,
-      help,
-      absl_flags.FLAGS,
-      serializer,
-      module_name=logging.GetCallingModuleName())
+  absl_flags.DEFINE(parser,
+                    name,
+                    default,
+                    help,
+                    absl_flags.FLAGS,
+                    serializer,
+                    module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -334,17 +336,17 @@ def DEFINE_output_path(name: str,
     exist_ok: If False, require that the path not exist, else parsing will fail.
     must_exist: If True, require that the path exists, else parsing will fail.
   """
-  parser = flags_parsers.PathParser(
-      must_exist=must_exist, exist_ok=exist_ok, is_dir=is_dir)
+  parser = flags_parsers.PathParser(must_exist=must_exist,
+                                    exist_ok=exist_ok,
+                                    is_dir=is_dir)
   serializer = absl_flags.ArgumentSerializer()
-  absl_flags.DEFINE(
-      parser,
-      name,
-      default,
-      help,
-      absl_flags.FLAGS,
-      serializer,
-      module_name=logging.GetCallingModuleName())
+  absl_flags.DEFINE(parser,
+                    name,
+                    default,
+                    help,
+                    absl_flags.FLAGS,
+                    serializer,
+                    module_name=logging.GetCallingModuleName())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -375,14 +377,13 @@ def DEFINE_database(name: str,
   """
   parser = flags_parsers.DatabaseParser(database_class, must_exist=must_exist)
   serializer = absl_flags.ArgumentSerializer()
-  absl_flags.DEFINE(
-      parser,
-      name,
-      default,
-      help,
-      absl_flags.FLAGS,
-      serializer,
-      module_name=logging.GetCallingModuleName())
+  absl_flags.DEFINE(parser,
+                    name,
+                    default,
+                    help,
+                    absl_flags.FLAGS,
+                    serializer,
+                    module_name=logging.GetCallingModuleName())
   if validator:
     RegisterFlagValidator(name, validator)
 

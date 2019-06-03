@@ -17,19 +17,18 @@ This project uses pytest runner, with a handful of custom configuration options.
 Use the Main() function as the entry point to your test files to run pytest
 with the proper arguments.
 """
+import sys
+
 import contextlib
-from importlib import util as importutil
 import inspect
 import pathlib
+import pytest
 import re
-import sys
 import tempfile
 import typing
-
-import pytest
+from importlib import util as importutil
 
 from labm8 import app
-from labm8 import fs
 
 FLAGS = app.FLAGS
 
@@ -108,8 +107,8 @@ def CoverageContext(file_path: str,
     # Create a coverage.py config file.
     # See: https://coverage.readthedocs.io/en/coverage-4.3.4/config.html
     config_path = f"{d}/converagerc"
-    fs.Write(
-        config_path, f"""
+    with open(config_path, "w") as f:
+      f.write(f"""\
 [run]
 data_file = {datadir}/.coverage
 parallel = True
@@ -136,7 +135,7 @@ exclude_lines =
   # Don't complain if non-runnable code isn't run:
   if 0:
   if __name__ == .__main__.:
-""".encode('utf-8'))
+""")
 
     pytest_args += [
         f'--cov={module}',

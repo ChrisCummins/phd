@@ -1,10 +1,7 @@
 """Implementations of custom flag types for absl.flags."""
 import pathlib
-from typing import Callable
-
 from absl import flags as absl_flags
-
-from labm8 import sqlutil
+from typing import Callable
 
 
 class PathParser(absl_flags.ArgumentParser):
@@ -57,15 +54,15 @@ class DatabaseParser(absl_flags.ArgumentParser):
       must_exist: If true, the database must exist. Else, it is created.
     """
     # TODO(cec): Raise TypeError if database_class is not a subclass of
-    # sqlutil.Database.
+    # 'sqlutil.Database'.
     self.database_class = database_class
     self.must_exist = must_exist
 
-  def parse(self, argument) -> sqlutil.Database:
+  def parse(self, argument) -> 'sqlutil.Database':
     """See base class."""
     return self.convert(argument)
 
-  def convert(self, argument: str) -> Callable[[], sqlutil.Database]:
+  def convert(self, argument: str) -> Callable[[], 'sqlutil.Database']:
     """Returns the value of this argument."""
     if not argument:
       raise TypeError('Path flag must be set')

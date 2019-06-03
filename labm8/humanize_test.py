@@ -108,8 +108,10 @@ def test_DecimalPrefix():
   assert '3 km' == humanize.DecimalPrefix(3000, 'm', min_scale=None)
   assert '5000 TB' == humanize.DecimalPrefix(5e15, 'B', max_scale=4)
   assert '5 mSWE' == humanize.DecimalPrefix(0.005, 'SWE', min_scale=None)
-  assert '0.0005 ms' == humanize.DecimalPrefix(
-      5e-7, 's', min_scale=-1, precision=2)
+  assert '0.0005 ms' == humanize.DecimalPrefix(5e-7,
+                                               's',
+                                               min_scale=-1,
+                                               precision=2)
 
 
 def test_BinaryPrefix():
@@ -131,18 +133,25 @@ def test_DecimalScale():
   assert (12.1, 'km') == humanize.DecimalScale(12100, 'm')
   assert (12.1, 'k') == humanize.DecimalScale(12100, '')
   assert (0, '') == humanize.DecimalScale(0, '')
-  assert (12.1, 'km') == humanize.DecimalScale(
-      12100, 'm', min_scale=0, max_scale=None)
-  assert (12100, 'm') == humanize.DecimalScale(
-      12100, 'm', min_scale=0, max_scale=0)
+  assert (12.1, 'km') == humanize.DecimalScale(12100,
+                                               'm',
+                                               min_scale=0,
+                                               max_scale=None)
+  assert (12100, 'm') == humanize.DecimalScale(12100,
+                                               'm',
+                                               min_scale=0,
+                                               max_scale=0)
   assert (1.15, 'Mm') == humanize.DecimalScale(1150000, 'm')
   assert (1, 'm') == humanize.DecimalScale(1, 'm', min_scale=None)
   assert (450, 'mSWE') == humanize.DecimalScale(0.45, 'SWE', min_scale=None)
-  assert (250, u'µm') == humanize.DecimalScale(
-      1.0 / (4 * 1000), 'm', min_scale=None)
+  assert (250, u'µm') == humanize.DecimalScale(1.0 / (4 * 1000),
+                                               'm',
+                                               min_scale=None)
   assert (0.250, 'km') == humanize.DecimalScale(250, 'm', min_scale=1)
-  assert (12000, 'mm') == humanize.DecimalScale(
-      12, 'm', min_scale=None, max_scale=-1)
+  assert (12000, 'mm') == humanize.DecimalScale(12,
+                                                'm',
+                                                min_scale=None,
+                                                max_scale=-1)
 
 
 def test_BinaryScale():
@@ -234,8 +243,11 @@ def test_TimeDelta():
       datetime.timedelta(seconds=1, microseconds=250000))
   assert '1.5s' == humanize.TimeDelta(datetime.timedelta(seconds=1.5))
   assert '4d 10h 5m 12.25s' == humanize.TimeDelta(
-      datetime.timedelta(
-          days=4, hours=10, minutes=5, seconds=12, microseconds=250000))
+      datetime.timedelta(days=4,
+                         hours=10,
+                         minutes=5,
+                         seconds=12,
+                         microseconds=250000))
 
 
 def test_UnixTimestamp():

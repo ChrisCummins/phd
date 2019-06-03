@@ -204,10 +204,9 @@ class HashCache(sqlutil.Database):
       checksum = hash_fn(absolute_path)
       app.Log(2, "New cache entry '%s' in %s ms.", absolute_path,
               humanize.Commas(int((time.time() - start_time) * 1000)))
-      new_entry = HashCacheRecord(
-          absolute_path=str(absolute_path),
-          last_modified=last_modified,
-          hash=checksum)
+      new_entry = HashCacheRecord(absolute_path=str(absolute_path),
+                                  last_modified=last_modified,
+                                  hash=checksum)
       session.add(new_entry)
       session.commit()
       return new_entry.hash

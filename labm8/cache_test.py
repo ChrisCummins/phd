@@ -93,7 +93,7 @@ def test_TransientCache():
 def test_JsonCache():
   with tempfile.NamedTemporaryFile(prefix='labm8_') as f:
     # Load test-set
-    fs.cp('labm8/data/test/jsoncache.json', f.name)
+    fs.cp('labm8/test_data/jsoncache.json', f.name)
     _cache = cache.JsonCache(f.name)
 
     assert "foo" in _cache

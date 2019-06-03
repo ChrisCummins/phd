@@ -3,12 +3,11 @@
 //
 // If the input AddXandY.x == 10, the program crashes.
 
-#include "labm8/data/test/ppar/protos.pb.h"
+#include "labm8/test_data/ppar/protos.pb.h"
 #include "phd/logging.h"
 #include "phd/pbutil.h"
 
-void ProcessProtobuf(const AddXandY& input_proto,
-                     AddXandY* output_proto) {
+void ProcessProtobuf(const AddXandY& input_proto, AddXandY* output_proto) {
   int x = input_proto.x();
   int y = input_proto.y();
 

@@ -14,26 +14,21 @@
 """Unit tests for //labm8:sqlutil."""
 
 import pathlib
-import typing
-
 import pytest
 import sqlalchemy as sql
+import typing
 from sqlalchemy.ext import declarative
 
-from labm8 import app
-from labm8 import pbutil
 from labm8 import sqlutil
 from labm8 import test
-from labm8.proto import test_protos_pb2
-
-FLAGS = app.FLAGS
+from labm8.test_data import test_protos_pb2
 
 
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
   """Test DatabaseNotFound for non-existent SQLite database."""
   with pytest.raises(sqlutil.DatabaseNotFound) as e_ctx:
-    sqlutil.CreateEngine(
-        f'sqlite:///{tempdir.absolute()}/db.db', must_exist=True)
+    sqlutil.CreateEngine(f'sqlite:///{tempdir.absolute()}/db.db',
+                         must_exist=True)
   assert e_ctx.value.url == f'sqlite:///{tempdir.absolute()}/db.db'
   assert str(e_ctx.value) == (f"Database not found: "
                               f"'sqlite:///{tempdir.absolute()}/db.db'")
@@ -261,13 +256,11 @@ def test_ProtoBackedMixin_FromFile(tempdir: pathlib.Path):
   class TestMessage(AbstractTestMessage, base):
     pass
 
-  pbutil.ToFile(
-      test_protos_pb2.TestMessage(string="Hello, world!", number=42),
-      tempdir / 'proto.pb')
+  with open(tempdir / 'proto.pbtxt', 'w') as f:
+    f.write('string: "Hello, world!"')
 
-  row = TestMessage(**TestMessage.FromFile(tempdir / 'proto.pb'))
+  row = TestMessage(**TestMessage.FromFile(tempdir / 'proto.pbtxt'))
   assert row.string == "Hello, world!"
-  assert row.number == 42
 
 
 def test_ColumnTypes_BinaryArray():

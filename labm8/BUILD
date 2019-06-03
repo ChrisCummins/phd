@@ -1,6 +1,18 @@
 # Labm8 is a Python library for manipulating quantitative experimental data.
 #
-# Each module within labm8 contains a set of related functions.
+# Copyright 2014-2019 Chris Cummins <chrisc.101@gmail.com>.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 licenses(["notice"])  # Apache 2.0
 
@@ -24,7 +36,10 @@ py_library(
 py_library(
     name = "app_test_flags",
     srcs = ["app_test_flags.py"],
-    deps = [":app"],
+    deps = [
+        ":app",
+        ":sqlutil",
+    ],
 )
 
 py_test(
@@ -66,7 +81,7 @@ py_test(
     name = "bazelutil_test",
     size = "small",
     srcs = ["bazelutil_test.py"],
-    data = ["data/test/hello_world"],
+    data = ["//labm8/test_data:hello_world_file"],
     deps = [
         ":app",
         ":bazelutil",
@@ -90,7 +105,7 @@ py_test(
     name = "cache_test",
     size = "small",
     srcs = ["cache_test.py"],
-    data = ["data/test/jsoncache.json"],
+    data = ["//labm8/test_data:jsoncache_file"],
     deps = [
         ":app",
         ":cache",
@@ -110,8 +125,8 @@ py_test(
     size = "small",
     srcs = ["crypto_test.py"],
     data = [
-        "data/test/empty_file",
-        "data/test/hello_world",
+        "//labm8/test_data:empty_file_file",
+        "//labm8/test_data:hello_world_file",
     ],
     deps = [
         ":app",
@@ -213,12 +228,12 @@ py_test(
     name = "fs_test",
     size = "small",
     srcs = ["fs_test.py"],
-    data = glob([
-        "data/test/empty_file",
-        "data/test/data1",
-        "data/test/hello_world",
-        "data/test/testdir/**",
-    ]),
+    data = [
+        "//labm8/test_data:data1_file",
+        "//labm8/test_data:empty_file_file",
+        "//labm8/test_data:hello_world_file",
+        "//labm8/test_data:testdir_files",
+    ],
     deps = [
         ":app",
         ":fs",
@@ -377,12 +392,11 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":app",
-        ":fs",
         ":humanize",
         ":labdate",
         ":pbutil",
         ":system",
-        "//labm8/proto:lockfile_py_pb2",
+        "//labm8/internal:lockfile_pb_py",
     ],
 )
 
@@ -391,11 +405,11 @@ py_test(
     size = "small",
     srcs = ["lockfile_test.py"],
     deps = [
-        ":app",
         ":lockfile",
+        #        ":fs",
         ":pbutil",
         ":test",
-        "//labm8/proto:lockfile_py_pb2",
+        # "//labm8/internal:lockfile_pb_py",
     ],
 )
 
@@ -406,7 +420,7 @@ py_library(
     deps = [
         ":app",
         ":labdate",
-        "//labm8/proto:logging_py_pb2",
+        "//labm8/internal:logging_pb_py",
         "//third_party/py/absl",
     ],
 )
@@ -436,7 +450,7 @@ py_test(
     name = "make_test",
     size = "small",
     srcs = ["make_test.py"],
-    data = glob(["data/test/makeproj/**"]),
+    data = ["//labm8/test_data:makeproj_files"],
     deps = [
         ":app",
         ":fs",
@@ -450,7 +464,6 @@ py_library(
     srcs = ["pbutil.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":jsonutil",
         "//third_party/py/protobuf",
     ],
 )
@@ -459,10 +472,10 @@ py_test(
     name = "pbutil_test",
     srcs = ["pbutil_test.py"],
     deps = [
-        ":app",
         ":pbutil",
         ":test",
-        "//labm8/proto:test_protos",
+        "//:config_pb_py",
+        "//labm8/test_data:test_protos_pb_py",
     ],
 )
 
@@ -483,15 +496,14 @@ py_test(
     name = "ppar_test",
     srcs = ["ppar_test.py"],
     data = [
-        "//labm8/data/test/ppar:proto_worker",
-        "//labm8/data/test/ppar:proto_worker_requires_args",
-        "//labm8/data/test/ppar:unexpected_output_proto_worker",
+        "//labm8/test_data/ppar:proto_worker",
+        "//labm8/test_data/ppar:proto_worker_requires_args",
+        "//labm8/test_data/ppar:unexpected_output_proto_worker",
     ],
     deps = [
-        ":app",
         ":ppar",
         ":test",
-        "//labm8/data/test/ppar:protos_py_pb2",
+        "//labm8/test_data/ppar:protos_pb_py",
         "//third_party/py/progressbar",
     ],
 )
@@ -557,10 +569,9 @@ py_test(
     size = "small",
     srcs = ["sqlutil_test.py"],
     deps = [
-        ":app",
         ":sqlutil",
         ":test",
-        "//labm8/proto:test_protos",
+        "//labm8/test_data:test_protos_pb_py",
     ],
 )
 
@@ -575,7 +586,6 @@ py_test(
     name = "system_test",
     size = "small",
     srcs = ["system_test.py"],
-    data = ["data/test/bin/scp"],
     deps = [
         ":app",
         ":fs",
@@ -598,7 +608,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":app",
-        ":fs",
         "//:conftest",
         "//third_party/py/pytest",
     ],

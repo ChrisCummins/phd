@@ -212,18 +212,21 @@ def Distplot(x=None,
     ax = plt.gca()
 
   if hue is None:
-    sns.distplot(
-        values_to_plot, kde=kde, bins=bins, label=x, norm_hist=norm_hist, ax=ax)
+    sns.distplot(values_to_plot,
+                 kde=kde,
+                 bins=bins,
+                 label=x,
+                 norm_hist=norm_hist,
+                 ax=ax)
   else:
     hue_order = hue_order or sorted(set(data[hue]))
     for h in hue_order:
-      sns.distplot(
-          values_to_plot[data[hue] == h],
-          kde=kde,
-          bins=bins,
-          label=h,
-          norm_hist=norm_hist,
-          ax=ax)
+      sns.distplot(values_to_plot[data[hue] == h],
+                   kde=kde,
+                   bins=bins,
+                   label=h,
+                   norm_hist=norm_hist,
+                   ax=ax)
     plt.legend()
 
   return ax

@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for converting between absl logging output and log protos."""
+import sys
+
 import contextlib
 import datetime
 import pathlib
 import re
-import sys
 import typing
-
 from absl import logging
 
 from labm8 import app
 from labm8 import labdate
-from labm8.proto import logging_pb2
+from labm8.internal import logging_pb2
 
 FLAGS = app.FLAGS
 
@@ -92,8 +92,8 @@ def ConertAbslLogToProtos(logs: str,
           logging_pb2.LogRecord(
               level=ABSL_LEVEL_TO_LOG_RECORD_LEVEL[starting_match.group('lvl')],
               date_utc_epoch_ms=labdate.MillisecondsTimestamp(
-                  DatetimeFromAbslTimestamp(
-                      starting_match.group('timestamp'), year=year)),
+                  DatetimeFromAbslTimestamp(starting_match.group('timestamp'),
+                                            year=year)),
               thread_id=int(starting_match.group('thread_id')),
               file_name=starting_match.group('filename'),
               line_number=int(starting_match.group('lineno')),

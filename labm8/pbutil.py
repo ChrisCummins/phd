@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for working with Protocol Buffers."""
-import collections
-import gzip
 import json
-import pathlib
-import subprocess
-import typing
 
+import collections
 import google.protobuf.json_format
 import google.protobuf.message
 import google.protobuf.text_format
-
-from labm8 import jsonutil
+import gzip
+import pathlib
+import subprocess
+import typing
 
 # A type alias for annotating methods which take or return protocol buffers.
 ProtocolBuffer = typing.Any
@@ -237,7 +235,7 @@ def ToFile(
   return message
 
 
-def ToJson(message: ProtocolBuffer) -> jsonutil.JSON:
+def ToJson(message: ProtocolBuffer) -> 'jsonutil.JSON':
   """Return a JSON encoded representation of a protocol buffer.
 
   Args:
@@ -266,8 +264,8 @@ def _TruncatedString(string: str, n: int = 80) -> str:
     return string
 
 
-def _TruncateDictionaryStringValues(data: jsonutil.JSON,
-                                    n: int = 62) -> jsonutil.JSON:
+def _TruncateDictionaryStringValues(data: 'jsonutil.JSON',
+                                    n: int = 62) -> 'jsonutil.JSON':
   """Truncate all string values in a nested dictionary.
 
   Args:
@@ -298,10 +296,9 @@ def PrettyPrintJson(message: ProtocolBuffer, truncate: int = 52) -> str:
     JSON string.
   """
   data = ToJson(message)
-  return json.dumps(
-      _TruncateDictionaryStringValues(data) if truncate else data,
-      indent=2,
-      sort_keys=True)
+  return json.dumps(_TruncateDictionaryStringValues(data) if truncate else data,
+                    indent=2,
+                    sort_keys=True)
 
 
 def RaiseIfNotSet(proto: ProtocolBuffer, field: str,

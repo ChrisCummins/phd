@@ -1,4 +1,4 @@
-# Internal implementation libraries for labm8.
+# Data for testing labm8.
 #
 # Copyright 2014-2019 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -16,42 +16,47 @@
 
 load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-py_library(
-    name = "flags_parsers",
-    srcs = ["flags_parsers.py"],
-    visibility = ["//labm8:__subpackages__"],
-    deps = [
-        "//third_party/py/absl",
-    ],
+package(
+    default_testonly = 1,
+    default_visibility = ["//labm8:__subpackages__"],
 )
 
 proto_library(
-    name = "lockfile_pb",
-    srcs = ["lockfile.proto"],
+    name = "test_protos_pb",
+    srcs = ["test_protos.proto"],
 )
 
 python_proto_library(
-    name = "lockfile_pb_py",
-    visibility = ["//labm8:__subpackages__"],
-    deps = [":lockfile_pb"],
+    name = "test_protos_pb_py",
+    deps = [":test_protos_pb"],
 )
 
-py_library(
-    name = "logging",
-    srcs = ["logging.py"],
-    visibility = ["//labm8:__subpackages__"],
-    deps = [
-        "//third_party/py/absl",
-    ],
+filegroup(
+    name = "data1_file",
+    srcs = ["data1"],
 )
 
-proto_library(
-    name = "logging_pb",
-    srcs = ["logging.proto"],
+filegroup(
+    name = "testdir_files",
+    srcs = glob(["testdir/**"]),
 )
 
-python_proto_library(
-    name = "logging_pb_py",
-    visibility = ["//labm8:__subpackages__"],
-    deps = [":logging_pb"],
+filegroup(
+    name = "makeproj_files",
+    srcs = glob(["makeproj/**"]),
+)
+
+filegroup(
+    name = "empty_file_file",
+    srcs = ["empty_file"],
+)
+
+filegroup(
+    name = "hello_world_file",
+    srcs = ["hello_world"],
+)
+
+filegroup(
+    name = "jsoncache_file",
+    srcs = ["jsoncache.json"],
 )

@@ -43,8 +43,8 @@ def test_Indent_two():
 
 
 def test_table():
-  assert (["foo", "1", "bar", "2"] == fmt.table((("foo", 1), ("bar",
-                                                              2))).split())
+  assert (["foo", "1", "bar", "2"] == fmt.table(
+      (("foo", 1), ("bar", 2))).split())
 
 
 def test_table_columns():

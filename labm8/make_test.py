@@ -25,33 +25,33 @@ FLAGS = app.FLAGS
 
 # make()
 def test_make():
-  ret, out, err = make.make(dir="labm8/data/test/makeproj")
+  ret, out, err = make.make(dir="labm8/test_data/makeproj")
   assert not ret
   assert out
-  assert fs.isfile("labm8/data/test/makeproj/foo")
-  assert fs.isfile("labm8/data/test/makeproj/foo.o")
+  assert fs.isfile("labm8/test_data/makeproj/foo")
+  assert fs.isfile("labm8/test_data/makeproj/foo.o")
 
 
 def test_make_bad_target():
   with pytest.raises(make.NoTargetError):
-    make.make(target="bad-target", dir="labm8/data/test/makeproj")
+    make.make(target="bad-target", dir="labm8/test_data/makeproj")
 
 
 def test_make_bad_target():
   with pytest.raises(make.NoMakefileError):
     make.make(dir="/bad/path")
   with pytest.raises(make.NoMakefileError):
-    make.make(target="foo", dir="labm8/data/test")
+    make.make(target="foo", dir="labm8/test_data")
 
 
 def test_make_fail():
   with pytest.raises(make.MakeError):
-    make.make(target="fail", dir="labm8/data/test/makeproj")
+    make.make(target="fail", dir="labm8/test_data/makeproj")
 
 
 # clean()
 def test_make_clean():
-  fs.cd("labm8/data/test/makeproj")
+  fs.cd("labm8/test_data/makeproj")
   make.make()
   assert fs.isfile("foo")
   assert fs.isfile("foo.o")

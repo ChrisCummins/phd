@@ -11,21 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //labm8:latex."""
+"""Unit tests for //labm8:lockfile."""
 import inspect
 import pathlib
+import pytest
 import tempfile
 
-import pytest
-
-from labm8 import app
-from labm8 import fs
 from labm8 import lockfile
 from labm8 import pbutil
 from labm8 import test
-from labm8.proto import lockfile_pb2
+from labm8.internal import lockfile_pb2
 
-FLAGS = app.FLAGS
+_ = test, pbutil  # , lockfile
 
 
 @pytest.fixture(scope='function')
@@ -154,7 +151,7 @@ def test_LockFile_force_replace_stale():
     assert lock.islocked
     assert lock.owned_by_self
     lock.release()
-    assert not fs.exists(lock.path)
+    assert not lock.path.is_file()
 
 
 @pytest.mark.parametrize('granularity', ('line', 'function', 'module'))

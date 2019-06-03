@@ -21,15 +21,16 @@ Variables:
 """
 from __future__ import print_function
 
-import getpass
 import os
+import sys
+from sys import platform
+
+import getpass
 import socket
 import subprocess
-import sys
 import tempfile
 import threading
 import typing
-from sys import platform
 
 from labm8 import fs
 
@@ -126,11 +127,10 @@ class Subprocess(object):
     """
 
     def target():
-      self.process = subprocess.Popen(
-          self.cmd,
-          stdout=self.stdout_dest,
-          stderr=self.stderr_dest,
-          shell=self.shell)
+      self.process = subprocess.Popen(self.cmd,
+                                      stdout=self.stdout_dest,
+                                      stderr=self.stderr_dest,
+                                      shell=self.shell)
       stdout, stderr = self.process.communicate()
 
       # Decode output if the user wants, and if there is any.
@@ -284,52 +284,6 @@ def which(program, path=None):
   return None
 
 
-def scp(host, src, dst, user=None, path=None):
-  """
-  Copy a file or directory from a remote location.
-
-  A thin wrapper around the scp (1) system command.
-
-  If the destination already exists, this will attempt to overwrite
-  it.
-
-  Arguments:
-
-      host (str): name of the host
-      src (str): path to the source file or directory.
-      dst (str): path to the destination file or directory.
-      user (str, optional): Alternative username for remote access.
-        If not provided, the default scp behaviour is used.
-      path (str, optional): Directory containing scp command. If not
-        provided, attempt to locate scp using which().
-
-  Raises:
-
-      CommandNotFoundError: If scp binary not found.
-      IOError: if transfer fails.
-  """
-  # Create the first argument.
-  if user is None:
-    arg = "{host}:{path}".format(host=host, path=src)
-  else:
-    arg = "{user}@{host}:{path}".format(user=user, host=host, path=src)
-
-  # Get path to scp binary.
-  scp_bin = which("scp", path=(path,))
-  if scp_bin is None:
-    raise CommandNotFoundError("Could not find scp in '{0}'".format(path))
-
-  # Run system "scp" command.
-  ret, out, err = run([
-      scp_bin, "-o", "StrictHostKeyChecking=no", "-o",
-      "UserKnownHostsFile=/dev/null", arg, dst
-  ])
-
-  # Check return code for error.
-  if ret:
-    raise ScpError(out, err)
-
-
 def isprocess(pid, error=False):
   """
   Check that a process is running.
@@ -381,8 +335,9 @@ def ProcessFileAndReplace(
     tempfile_prefix: An optional name prefix for the temporary file.
     tempfile_suffix: An optional name suffix for the temporary file.
   """
-  with tempfile.NamedTemporaryFile(
-      prefix=tempfile_prefix, suffix=tempfile_suffix, delete=False) as f:
+  with tempfile.NamedTemporaryFile(prefix=tempfile_prefix,
+                                   suffix=tempfile_suffix,
+                                   delete=False) as f:
     tmp_path = f.name
     try:
       process_file_callback(path, tmp_path)

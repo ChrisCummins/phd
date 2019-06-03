@@ -135,36 +135,36 @@ def test_isdir():
 
 # read()
 def test_read():
-  assert ['Hello, world!'] == fs.read("labm8/data/test/hello_world")
+  assert ['Hello, world!'] == fs.read("labm8/test_data/hello_world")
   assert ([
       '# data1 - test file', 'This', 'is a test file', 'With',
       'trailing  # comment', '', '', '', 'whitespace', '0.344'
-  ] == fs.read("labm8/data/test/data1"))
+  ] == fs.read("labm8/test_data/data1"))
 
 
 def test_read_no_rstrip():
   assert ([
       '# data1 - test file\n', 'This\n', 'is a test file\n', 'With\n',
       'trailing  # comment  \n', '\n', '\n', '\n', 'whitespace\n', '0.344\n'
-  ] == fs.read("labm8/data/test/data1", rstrip=False))
+  ] == fs.read("labm8/test_data/data1", rstrip=False))
 
 
 def test_read_ignore_comments():
   assert ([
       'This', 'is a test file', 'With', 'trailing', '', '', '', 'whitespace',
       '0.344'
-  ] == fs.read("labm8/data/test/data1", comment_char="#"))
+  ] == fs.read("labm8/test_data/data1", comment_char="#"))
 
 
 def test_read_ignore_comments_no_rstrip():
   assert ([
       'This\n', 'is a test file\n', 'With\n', 'trailing  ', '\n', '\n', '\n',
       'whitespace\n', '0.344\n'
-  ] == fs.read("labm8/data/test/data1", rstrip=False, comment_char="#"))
+  ] == fs.read("labm8/test_data/data1", rstrip=False, comment_char="#"))
 
 
 def test_read_empty_file():
-  assert fs.read("labm8/data/test/empty_file") == []
+  assert fs.read("labm8/test_data/empty_file") == []
 
 
 # mkdir()
@@ -343,47 +343,44 @@ def test_mv_no_dst():
 
 # ls()
 def test_ls():
-  assert ["a", "b", "c", "d"] == fs.ls("labm8/data/test/testdir")
+  assert ["a", "b", "c", "d"] == fs.ls("labm8/test_data/testdir")
 
 
 def test_ls_recursive():
-  assert fs.ls(
-      "labm8/data/test/testdir", recursive=True) == [
-          "a",
-          "b",
-          "c",
-          "c/e",
-          "c/f",
-          "c/f/f",
-          "c/f/f/i",
-          "c/f/h",
-          "c/g",
-          "d",
-      ]
+  assert fs.ls("labm8/test_data/testdir", recursive=True) == [
+      "a",
+      "b",
+      "c",
+      "c/e",
+      "c/f",
+      "c/f/f",
+      "c/f/f/i",
+      "c/f/h",
+      "c/g",
+      "d",
+  ]
 
 
 def test_ls_abspaths():
-  fs.cp("labm8/data/test/testdir", "/tmp/testdir")
-  assert fs.ls(
-      "/tmp/testdir", abspaths=True) == [
-          "/tmp/testdir/a",
-          "/tmp/testdir/b",
-          "/tmp/testdir/c",
-          "/tmp/testdir/d",
-      ]
-  assert fs.ls(
-      "/tmp/testdir", recursive=True, abspaths=True) == [
-          "/tmp/testdir/a",
-          "/tmp/testdir/b",
-          "/tmp/testdir/c",
-          "/tmp/testdir/c/e",
-          "/tmp/testdir/c/f",
-          "/tmp/testdir/c/f/f",
-          "/tmp/testdir/c/f/f/i",
-          "/tmp/testdir/c/f/h",
-          "/tmp/testdir/c/g",
-          "/tmp/testdir/d",
-      ]
+  fs.cp("labm8/test_data/testdir", "/tmp/testdir")
+  assert fs.ls("/tmp/testdir", abspaths=True) == [
+      "/tmp/testdir/a",
+      "/tmp/testdir/b",
+      "/tmp/testdir/c",
+      "/tmp/testdir/d",
+  ]
+  assert fs.ls("/tmp/testdir", recursive=True, abspaths=True) == [
+      "/tmp/testdir/a",
+      "/tmp/testdir/b",
+      "/tmp/testdir/c",
+      "/tmp/testdir/c/e",
+      "/tmp/testdir/c/f",
+      "/tmp/testdir/c/f/f",
+      "/tmp/testdir/c/f/f/i",
+      "/tmp/testdir/c/f/h",
+      "/tmp/testdir/c/g",
+      "/tmp/testdir/d",
+  ]
   fs.rm("/tmp/testdir")
 
 
@@ -399,21 +396,20 @@ def test_ls_bad_path():
 
 
 def test_ls_single_file():
-  assert ["a"] == fs.ls("labm8/data/test/testdir/a")
+  assert ["a"] == fs.ls("labm8/test_data/testdir/a")
 
 
 # lsdirs()
 def test_lsdirs():
-  assert ["c"] == fs.lsdirs("labm8/data/test/testdir")
+  assert ["c"] == fs.lsdirs("labm8/test_data/testdir")
 
 
 def test_lsdirs_recursive():
-  assert fs.lsdirs(
-      "labm8/data/test/testdir", recursive=True) == [
-          "c",
-          "c/f",
-          "c/f/f",
-      ]
+  assert fs.lsdirs("labm8/test_data/testdir", recursive=True) == [
+      "c",
+      "c/f",
+      "c/f/f",
+  ]
 
 
 def test_lsdirs_bad_path():
@@ -422,25 +418,24 @@ def test_lsdirs_bad_path():
 
 
 def test_lsdirs_single_file():
-  assert not fs.lsdirs("labm8/data/test/testdir/a")
+  assert not fs.lsdirs("labm8/test_data/testdir/a")
 
 
 # lsdirs()
 def test_lsfiles():
-  assert fs.lsfiles("labm8/data/test/testdir") == ["a", "b", "d"]
+  assert fs.lsfiles("labm8/test_data/testdir") == ["a", "b", "d"]
 
 
 def test_lsfiles_recursive():
-  assert fs.lsfiles(
-      "labm8/data/test/testdir", recursive=True) == [
-          "a",
-          "b",
-          "c/e",
-          "c/f/f/i",
-          "c/f/h",
-          "c/g",
-          "d",
-      ]
+  assert fs.lsfiles("labm8/test_data/testdir", recursive=True) == [
+      "a",
+      "b",
+      "c/e",
+      "c/f/f/i",
+      "c/f/h",
+      "c/g",
+      "d",
+  ]
 
 
 def test_lsfiles_bad_path():
@@ -449,7 +444,7 @@ def test_lsfiles_bad_path():
 
 
 def test_lsfiles_single_file():
-  assert fs.lsfiles("labm8/data/test/testdir/a") == ["a"]
+  assert fs.lsfiles("labm8/test_data/testdir/a") == ["a"]
 
 
 def test_directory_is_empty_empty_dir():
@@ -545,10 +540,9 @@ def test_Write_overwrite(tempdir: pathlib.Path):
 def test_Write_exclusive(tempdir: pathlib.Path):
   fs.Write(tempdir / 'file.txt', 'original contents'.encode('utf-8'))
   with pytest.raises(OSError):
-    fs.Write(
-        tempdir / 'file.txt',
-        'Hello, world!'.encode('utf-8'),
-        overwrite_existing=False)
+    fs.Write(tempdir / 'file.txt',
+             'Hello, world!'.encode('utf-8'),
+             overwrite_existing=False)
 
 
 def test_Write_mode(tempdir: pathlib.Path):
@@ -566,8 +560,9 @@ def test_Atomic_write_successful(tempdir: pathlib.Path):
 
 def test_Atomic_write_mode(tempdir: pathlib.Path):
   mode = 0o0745
-  fs.AtomicWrite(
-      tempdir / 'file.txt', 'Hello, world!'.encode('utf-8'), mode=mode)
+  fs.AtomicWrite(tempdir / 'file.txt',
+                 'Hello, world!'.encode('utf-8'),
+                 mode=mode)
   s = os.stat(str(tempdir / 'file.txt'))
   assert stat.S_IMODE(s.st_mode) == mode
 

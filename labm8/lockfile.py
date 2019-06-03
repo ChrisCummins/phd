@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Lock file mechanism."""
-# Use absolute paths for imports so as to prevent a conflict with the
-# system "time" module.
-from __future__ import absolute_import
-from __future__ import print_function
-
-import datetime
-import inspect
 import os
-import pathlib
 import sys
 import time
+
+# Use absolute paths for imports so as to prevent a conflict with the
+# system "time" module.
+import datetime
+import inspect
+import pathlib
 import typing
 
 from labm8 import app
@@ -30,7 +28,7 @@ from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import system
-from labm8.proto import lockfile_pb2
+from labm8.internal import lockfile_pb2
 
 FLAGS = app.FLAGS
 
@@ -265,8 +263,9 @@ class LockFile:
     path = pathlib.Path(path)
     if path.is_file():
       try:
-        return pbutil.FromFile(
-            path, lockfile_pb2.LockFile(), assume_filename='LOCK.pbtxt')
+        return pbutil.FromFile(path,
+                               lockfile_pb2.LockFile(),
+                               assume_filename='LOCK.pbtxt')
       except pbutil.DecodeError:
         raise MalformedLockfileError(path)
     else:
