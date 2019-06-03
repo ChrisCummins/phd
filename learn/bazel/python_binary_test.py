@@ -1,11 +1,13 @@
 """A test python binary which reads a data file and runs a data binary."""
 import os
-import subprocess
 import sys
+
+import subprocess
 
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
+
 
 FLAGS = app.FLAGS
 
@@ -18,7 +20,6 @@ MODULE_UNDER_TEST = None  # No coverage.
 def test_main():
   """Main entry point."""
   print('Hello from python', sys.executable)
-  print('Sanboxed?', bazelutil.IsBazelSandbox())
   print('File location:', __file__)
   print('Current working directory:', os.getcwd())
   with open(DATA_FILE) as f:

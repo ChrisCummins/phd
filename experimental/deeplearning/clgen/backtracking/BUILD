@@ -86,7 +86,7 @@ py_binary(
         ":backtracking",
         ":backtracking_model",
         ":logger",
-        "//config:build_info",
+        "//:build_info",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:humanize",

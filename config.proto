@@ -57,13 +57,13 @@ message BuildInfo {
   required string host = 2;
   required string user = 3;
 
-  required string git_hash = 4;
   required bool repo_dirty = 5;
 
   // Git branch and remote are only available if on and tracking a git branch,
   // respectively.
+  required string git_commit = 4;
   optional string git_branch = 6;
-  optional string git_remote = 7;
+  optional string git_tracking = 7;
   optional string git_remote_url = 8;
 
   optional string git_commit_author = 10;

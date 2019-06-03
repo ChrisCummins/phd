@@ -8,10 +8,13 @@ I feel like there's a 90-10 rule that applies to this repo: 90% of people who
 checkout this repo only need 10% of the code contained within it.
 This script provides a way to export that 10%.
 """
+import os
+
 import contextlib
 import datetime
+import git
+import github as github_lib
 import glob
-import os
 import pathlib
 import re
 import shutil
@@ -20,14 +23,12 @@ import subprocess
 import tempfile
 import typing
 
-import git
-import github as github_lib
-
-from config import getconfig
+import getconfig
 from datasets.github import api
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
+
 
 FLAGS = app.FLAGS
 

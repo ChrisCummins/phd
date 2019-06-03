@@ -16,22 +16,23 @@
 
 TODO: Detailed explanation of the file.
 """
-import datetime
-import random
 import time
+
+import config_pb2
+import datetime
+import grpc
+import random
+import sqlalchemy as sql
 import typing
 from concurrent import futures
-
-import grpc
-import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
 from alice import alice_pb2
 from alice import alice_pb2_grpc
-from config.proto import config_pb2
 from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
+
 
 FLAGS = app.FLAGS
 

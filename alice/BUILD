@@ -27,7 +27,7 @@ exports_files([
 py_proto_library(
     name = "alice_py_pb2",
     proto_deps = [
-        "//config/proto:config",
+        "//:config_pb_py",
     ],
     protos = ["alice.proto"],
     visibility = ["//visibility:public"],
@@ -75,7 +75,7 @@ py_test(
     srcs = ["git_repo_test.py"],
     deps = [
         ":git_repo",
-        "//config:getconfig",
+        "//:getconfig",
         "//labm8:pbutil",
         "//labm8:test",
         "//third_party/py/git",

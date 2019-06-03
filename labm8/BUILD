@@ -14,7 +14,7 @@ py_library(
     srcs = ["app.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//config:build_info",
+        "//:build_info",
         "//labm8/internal:flags_parsers",
         "//labm8/internal:logging",
         "//third_party/py/absl",
@@ -59,7 +59,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":archive",
-        "//config:getconfig",
     ],
 )
 

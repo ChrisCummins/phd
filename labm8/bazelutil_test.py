@@ -1,29 +1,15 @@
 """Unit tests for //labm8/bazelutil.py."""
 import pathlib
-import tempfile
-
 import pytest
+import tempfile
 
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import test
 
+
 FLAGS = app.FLAGS
-
-# IsBazelSandbox() tests.
-
-
-def test_IsBazelSandbox_different_working_directories():
-  """Test IsBazelSandboxed() returns the same result from different dirs."""
-  sandbox = bazelutil.IsBazelSandbox()
-  # We can't test the expected value of this since we don't know it.
-  assert sandbox or True
-  with tempfile.TemporaryDirectory() as d:
-    with fs.chdir(d):
-      assert bazelutil.IsBazelSandbox() == sandbox
-  with fs.chdir('/tmp'):
-    assert bazelutil.IsBazelSandbox() == sandbox
 
 
 # DataPath() tests.

@@ -5,7 +5,7 @@ py_binary(
     srcs = ["export_source_tree.py"],
     data = ["//tools/source_tree/data:bazel_wrapper"],
     deps = [
-        "//config:getconfig",
+        "//:getconfig",
         "//datasets/github:api",
         "//labm8:app",
         "//labm8:bazelutil",

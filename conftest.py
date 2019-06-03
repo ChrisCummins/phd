@@ -1,14 +1,15 @@
 """Repo-wide pytest configuration and test fixtures."""
-import pathlib
-import socket
 import sys
+
+import pathlib
+import pytest
+import socket
 import tempfile
 import typing
 
-import pytest
-
-from config import build_info
+import build_info
 from labm8 import app
+
 
 # *WARNING* Flags used in this file are not defined here! They are declared in
 # //labm8:test.

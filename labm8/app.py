@@ -15,17 +15,18 @@
 
 See: <https://github.com/abseil/abseil-py>
 """
-import pathlib
 import sys
-from typing import Any, Callable, List, Optional, Union
 
+import pathlib
 from absl import app as absl_app
 from absl import flags as absl_flags
 from absl import logging as absl_logging
+from typing import Any, Callable, List, Optional, Union
 
-from config import build_info
+import build_info
 from labm8.internal import flags_parsers
 from labm8.internal import logging
+
 
 FLAGS = absl_flags.FLAGS
 
