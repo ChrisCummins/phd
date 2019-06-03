@@ -13,6 +13,6 @@ TEST(InitApp, DoesNotCrash) {
 }
 
 }  // anonymous namespace
-}  // phd namespace
+}  // namespace phd
 
 TEST_MAIN();
