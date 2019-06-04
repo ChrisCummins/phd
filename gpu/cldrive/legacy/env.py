@@ -24,7 +24,6 @@ from gpu.oclgrind import oclgrind
 from labm8 import bazelutil
 from labm8 import pbutil
 
-
 CLINFO = bazelutil.DataPath('phd/gpu/clinfo/clinfo')
 
 
@@ -108,13 +107,12 @@ class OpenCLEnvironment(object):
       A Popen instance, with string stdout and stderr attributes set.
     """
     # app.Log(2, '$ %s', ' '.join(argv))
-    process = subprocess.Popen(
-        argv,
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE if stdin else None,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        env=env)
+    process = subprocess.Popen(argv,
+                               stdout=subprocess.PIPE,
+                               stdin=subprocess.PIPE if stdin else None,
+                               stderr=subprocess.PIPE,
+                               universal_newlines=True,
+                               env=env)
     if stdin:
       stdout, stderr = process.communicate(stdin)
     else:
@@ -156,13 +154,12 @@ class OclgrindOpenCLEnvironment(OpenCLEnvironment):
            stdin: typing.Optional[str] = None,
            env: typing.Dict[str, str] = None) -> subprocess.Popen:
     """Execute a command in the device environment."""
-    return oclgrind.Exec(
-        [
-            '--max-errors', '1', '--uninitialized', '--data-races',
-            '--uniform-writes', '--uniform-writes'
-        ] + argv,
-        stdin=stdin,
-        env=env)
+    return oclgrind.Exec([
+        '--max-errors', '1', '--uninitialized', '--data-races',
+        '--uniform-writes', '--uniform-writes'
+    ] + argv,
+                         stdin=stdin,
+                         env=env)
 
 
 def host_os() -> str:
@@ -239,8 +236,8 @@ def GetOpenClEnvironments() -> typing.List[OpenCLEnvironment]:
   Returns:
     A list of OpenCLEnvironment instances.
   """
-  return sorted(
-      list(all_envs()) + [OclgrindOpenCLEnvironment()], key=lambda x: x.name)
+  return sorted(list(all_envs()) + [OclgrindOpenCLEnvironment()],
+                key=lambda x: x.name)
 
 
 def GetTestbedNames() -> typing.List[str]:

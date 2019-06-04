@@ -29,7 +29,6 @@ from gpu.cldrive.legacy import args as _args
 from gpu.cldrive.legacy import env as _env
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 ArgTuple = collections.namedtuple('ArgTuple', ['hostdata', 'devdata'])
@@ -176,11 +175,9 @@ def DriveKernel(env: _env.OpenCLEnvironment,
       print(*args, **kwargs, file=sys.stderr)
 
   # Assert input types.
-  app.AssertOrRaise(
-      isinstance(env, _env.OpenCLEnvironment), ValueError,
-      "env argument is of incorrect type")
-  app.AssertOrRaise(
-      isinstance(src, str), ValueError, "source is not a string")
+  app.AssertOrRaise(isinstance(env, _env.OpenCLEnvironment), ValueError,
+                    "env argument is of incorrect type")
+  app.AssertOrRaise(isinstance(src, str), ValueError, "source is not a string")
 
   # Validate global and local sizes.
   app.AssertOrRaise(len(gsize) == 3, TypeError)
@@ -188,9 +185,9 @@ def DriveKernel(env: _env.OpenCLEnvironment,
   gsize, lsize = NDRange(*gsize), NDRange(*lsize)
 
   app.AssertOrRaise(gsize.product >= 1, ValueError,
-                          f"Scalar global size {gsize.product} must be >= 1")
+                    f"Scalar global size {gsize.product} must be >= 1")
   app.AssertOrRaise(lsize.product >= 1, ValueError,
-                          f"Scalar local size {lsize.product} must be >= 1")
+                    f"Scalar local size {lsize.product} must be >= 1")
   app.AssertOrRaise(
       gsize >= lsize, ValueError,
       f"Global size {gsize} must be larger than local size {lsize}")

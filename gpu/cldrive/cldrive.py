@@ -55,14 +55,14 @@ def main(argv):
   with open(src_path) as f:
     opencl_kernel = f.read()
 
-  instance = cldrive_pb2.CldriveInstance(
-      device=opencl_environment.proto,
-      opencl_src=opencl_kernel,
-      min_runs_per_kernel=FLAGS.num_runs,
-      dynamic_params=[
-          cldrive_pb2.DynamicParams(
-              global_size_x=FLAGS.gsize, local_size_x=FLAGS.lsize)
-      ])
+  instance = cldrive_pb2.CldriveInstance(device=opencl_environment.proto,
+                                         opencl_src=opencl_kernel,
+                                         min_runs_per_kernel=FLAGS.num_runs,
+                                         dynamic_params=[
+                                             cldrive_pb2.DynamicParams(
+                                                 global_size_x=FLAGS.gsize,
+                                                 local_size_x=FLAGS.lsize)
+                                         ])
 
   print(api.Drive(instance))
 

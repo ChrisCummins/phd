@@ -21,24 +21,28 @@ class TestLLVM(TestCase):
   def test_bitcode_cl(self):
     self._test(
         self.stencil_gaussian_kernel_bc,
-        llvm.bitcode(
-            self.stencil_gaussian_kernel, language="cl", path=self.LLVM_PATH))
+        llvm.bitcode(self.stencil_gaussian_kernel,
+                     language="cl",
+                     path=self.LLVM_PATH))
 
   def test_bitcode_error_bad_src(self):
-    self.assertRaises(
-        llvm.ClangError, llvm.bitcode, "<NOT REAL CODE>", path=self.LLVM_PATH)
+    self.assertRaises(llvm.ClangError,
+                      llvm.bitcode,
+                      "<NOT REAL CODE>",
+                      path=self.LLVM_PATH)
 
   def test_bitcode_error_bad_lang(self):
-    self.assertRaises(
-        llvm.ClangError,
-        llvm.bitcode,
-        self.stencil_gaussian_kernel,
-        language="foobar",
-        path=self.LLVM_PATH)
+    self.assertRaises(llvm.ClangError,
+                      llvm.bitcode,
+                      self.stencil_gaussian_kernel,
+                      language="foobar",
+                      path=self.LLVM_PATH)
 
   def test_bitcode_missing_clang(self):
-    self.assertRaises(
-        llvm.ProgramNotFoundError, llvm.bitcode, "", path="/not a real path")
+    self.assertRaises(llvm.ProgramNotFoundError,
+                      llvm.bitcode,
+                      "",
+                      path="/not a real path")
 
   # parse_instcounts()
   def test_parse_isntcounts(self):
@@ -55,8 +59,10 @@ class TestLLVM(TestCase):
         llvm.instcounts(self.stencil_gaussian_kernel_bc, path=self.LLVM_PATH))
 
   def test_instcounds_missing_opt(self):
-    self.assertRaises(
-        llvm.ProgramNotFoundError, llvm.instcounts, "", path="/not a real path")
+    self.assertRaises(llvm.ProgramNotFoundError,
+                      llvm.instcounts,
+                      "",
+                      path="/not a real path")
 
   # instcounts2ratios()
   def test_instcounts2ratios(self):

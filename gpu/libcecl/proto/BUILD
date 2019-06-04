@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 
-load("@build_stack_rules_proto//cpp:cpp_proto_library.bzl", "cpp_proto_library")
 load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -25,7 +24,7 @@ proto_library(
     deps = ["//gpu/clinfo/proto:clinfo_pb"],
 )
 
-cpp_proto_library(
+cc_proto_library(
     name = "libcecl_pb_cc",
     deps = [
         ":libcecl_pb",

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@build_stack_rules_proto//cpp:cpp_proto_library.bzl", "cpp_proto_library")
 load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -24,7 +23,7 @@ proto_library(
     srcs = ["clinfo.proto"],
 )
 
-cpp_proto_library(
+cc_proto_library(
     name = "clinfo_pb_cc",
     deps = [":clinfo_pb"],
 )

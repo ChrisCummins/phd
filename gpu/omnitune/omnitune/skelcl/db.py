@@ -686,8 +686,8 @@ class Database(db.Database):
 
     # Add entry to lookup table.
     row = lookup_vals + (id,)
-    insert = ("INSERT INTO " + lookup_table + " VALUES " + placeholders(
-        "", *lookup_columns))
+    insert = ("INSERT INTO " + lookup_table + " VALUES " +
+              placeholders("", *lookup_columns))
     self.execute(insert, row)
 
     self.commit()
@@ -1085,8 +1085,10 @@ class Database(db.Database):
       if not i % n:
         self.commit()
         io.info("Populating {table} ... {perc:.2f}% ({i} / {total} "
-                "rows).".format(
-                    table=table_name, perc=(i / total) * 100, i=i, total=total))
+                "rows).".format(table=table_name,
+                                perc=(i / total) * 100,
+                                i=i,
+                                total=total))
 
   def populate_kernel_names_table(self):
     """
@@ -1237,8 +1239,9 @@ class Database(db.Database):
         for mean, runtimes in zip(means, sample_runtimes):
           random.shuffle(runtimes)
           subsample = runtimes[:num_samples]
-          confinterval = labmath.confinterval(
-              subsample, error_only=True, conf=conf)
+          confinterval = labmath.confinterval(subsample,
+                                              error_only=True,
+                                              conf=conf)
 
           confintervals.append(confinterval / mean)
 
@@ -1836,8 +1839,8 @@ class Database(db.Database):
         return default
       else:
         raise MissingDataError("No runtime information for "
-                               "{scenario} {params}".format(
-                                   scenario=scenario, params=param))
+                               "{scenario} {params}".format(scenario=scenario,
+                                                            params=param))
 
   def speedup(self, scenario, left, right):
     """
@@ -1883,8 +1886,8 @@ class Database(db.Database):
     """
     Return the ratio of the given param size to the max legal.
     """
-    return self.execute(
-        sql_command("select_ratio_max_wgsize"), (param, scenario)).fetchone()[0]
+    return self.execute(sql_command("select_ratio_max_wgsize"),
+                        (param, scenario)).fetchone()[0]
 
   def max_speedup(self, scenario):
     """

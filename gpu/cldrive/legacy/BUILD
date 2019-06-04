@@ -87,9 +87,9 @@ py_binary(
     deps = [
         ":args",
         ":env",
-        "//gpu/cldrive/proto:cldrive_py_pb2",
-        "//labm8:bazelutil",
+        "//gpu/cldrive/proto:cldrive_pb_py",
         "//labm8:app",
+        "//labm8:bazelutil",
         "//third_party/py/numpy",
     ],
 )
@@ -114,7 +114,7 @@ py_library(
     data = ["//gpu/clinfo"],
     visibility = ["//visibility:public"],
     deps = [
-        "//gpu/clinfo/proto:clinfo_py_pb2",
+        "//gpu/clinfo/proto:clinfo_pb_py",
         "//gpu/oclgrind",
         "//labm8:app",
         "//labm8:bazelutil",

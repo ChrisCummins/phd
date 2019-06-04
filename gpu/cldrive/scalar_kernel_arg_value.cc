@@ -23,7 +23,5 @@
 #include "phd/string.h"
 
 namespace gpu {
-namespace cldrive {
-
-}  // namespace cldrive
+namespace cldrive {}  // namespace cldrive
 }  // namespace gpu

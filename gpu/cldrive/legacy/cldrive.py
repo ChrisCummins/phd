@@ -85,17 +85,17 @@ def main(argv):
   gsize = driver.NDRange.FromString(FLAGS.gsize)
   lsize = driver.NDRange.FromString(FLAGS.lsize)
   data_generator = data.Generator.FromString(FLAGS.generator)
-  env_ = env.make_env(
-      devtype=FLAGS.devtype, platform=FLAGS.platform, device=FLAGS.device)
+  env_ = env.make_env(devtype=FLAGS.devtype,
+                      platform=FLAGS.platform,
+                      device=FLAGS.device)
 
   if FLAGS.compile_only:
     inputs = []
   else:
-    inputs = data.MakeData(
-        src=src,
-        size=FLAGS.size,
-        data_generator=data_generator,
-        scalar_val=FLAGS.scalar_val)
+    inputs = data.MakeData(src=src,
+                           size=FLAGS.size,
+                           data_generator=data_generator,
+                           scalar_val=FLAGS.scalar_val)
 
   drive_args = {
       "src": src,

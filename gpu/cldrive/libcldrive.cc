@@ -118,6 +118,12 @@ void Cldrive::DoRunOrDie(Logger& logger) {
   }
 
   instance_->set_outcome(CldriveInstance::PASS);
+
+  // TODO: explain
+  for (auto kernel : kernels) {
+    cl_kernel k = *(cl_kernel*)&kernel;
+    ::clReleaseKernel(k);
+  }
 }
 
 }  // namespace cldrive
