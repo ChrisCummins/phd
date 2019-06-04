@@ -17,7 +17,7 @@ py_binary(
     name = "worker_bee",
     srcs = ["worker_bee.py"],
     deps = [
-        "//alice:alice_py_pb2",
+        "//alice:alice_pb_py_grpc",
         "//alice:bazel",
         "//alice:git_repo",
         "//labm8:app",
