@@ -1,11 +1,15 @@
 # TODO: One line summary of package.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-py_proto_library(
-    name = "proto_py_pb2",
-    protos = ["proto.proto"],
-    deps = ["//third_party/py/protobuf"],
+proto_library(
+    name = "proto_pb",
+    srcs = ["proto.proto"],
+)
+
+python_proto_library(
+    name = "proto_pb_py",
+    deps = [":proto_pb"],
 )
 
 py_binary(
