@@ -1,7 +1,7 @@
 # Learning Python.
 
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//cpp:cpp_proto_library.bzl", "cpp_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 py_test(
     name = "ascii_chart_test",
@@ -13,14 +13,19 @@ py_test(
     ],
 )
 
-cc_proto_library(
-    name = "cpp_interop_proto_cc",
-    protos = ["cpp_interop.proto"],
+proto_library(
+    name = "cpp_interop_pb",
+    srcs = ["cpp_interop.proto"],
 )
 
-py_proto_library(
-    name = "cpp_interop_proto_py_pb2",
-    protos = ["cpp_interop.proto"],
+cpp_proto_library(
+    name = "cpp_interop_pb_cc",
+    deps = [":cpp_interop_pb"],
+)
+
+python_proto_library(
+    name = "cpp_interop_proto_pb_py",
+    deps = [":cpp_interop_pb"],
 )
 
 cc_binary(
@@ -29,7 +34,7 @@ cc_binary(
         "cpp_interop_bin.cc",
     ],
     deps = [
-        ":cpp_interop_proto_cc",
+        ":cpp_interop_pb_cc",
         "//phd:logging",
         "//phd:pbutil",
     ],
@@ -41,7 +46,7 @@ cc_binary(
         "cpp_interop_inplace_bin.cc",
     ],
     deps = [
-        ":cpp_interop_proto_cc",
+        ":cpp_interop_pb_cc",
         "//phd:logging",
         "//phd:pbutil",
     ],
@@ -55,7 +60,7 @@ py_test(
         ":cpp_interop_inplace_bin",
     ],
     deps = [
-        ":cpp_interop_proto_py_pb2",
+        ":cpp_interop_proto_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:test",

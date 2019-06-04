@@ -29,8 +29,8 @@ py_test(
     srcs = ["stamp_test.py"],
     data = [":stamp_file"],
     deps = [
-        "//labm8:app",
         "//labm8:bazelutil",
+        "//labm8:fs",
         "//labm8:test",
     ],
 )

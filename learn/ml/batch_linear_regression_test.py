@@ -1,4 +1,4 @@
-from labm8 import app
+from labm8 import test
 
 MODULE_UNDER_TEST = None  # No coverage.
 
@@ -66,4 +66,4 @@ def test_validate_hypothesis():
 
 
 if __name__ == "__main__":
-  app.Run(main)
+  test.Main()
