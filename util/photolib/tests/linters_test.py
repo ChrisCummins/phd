@@ -6,8 +6,9 @@ from labm8 import app
 from labm8 import test
 from util.photolib import linters
 
-
 FLAGS = app.FLAGS
+
+MODULE_UNDER_TEST = 'util.photolib.linters'
 
 
 def test_error():

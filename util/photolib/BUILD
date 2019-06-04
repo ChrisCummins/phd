@@ -66,7 +66,7 @@ py_library(
     srcs = ["common.py"],
     deps = [
         "//labm8:app",
-        "//util/photolib/proto:photolint_py_pb2",
+        "//util/photolib/proto:photolint_pb_py",
     ],
 )
 
