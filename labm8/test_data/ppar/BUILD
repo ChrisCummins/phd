@@ -1,7 +1,6 @@
 # Test data for //labm8:ppar_test.
 
 load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
-load("@build_stack_rules_proto//cpp:cpp_proto_library.bzl", "cpp_proto_library")
 
 package(default_visibility = ["//labm8:__subpackages__"])
 
@@ -10,7 +9,7 @@ proto_library(
     srcs = ["protos.proto"],
 )
 
-cpp_proto_library(
+cc_proto_library(
     name = "protos_pb_cc",
     deps = [":protos"],
 )
