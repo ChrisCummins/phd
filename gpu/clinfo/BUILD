@@ -34,7 +34,7 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        "//gpu/clinfo/proto:clinfo_cc_pb2",
+        "//gpu/clinfo/proto:clinfo_pb_cc",
         "//third_party/opencl",
         "//phd:string",
         "//phd:logging",
