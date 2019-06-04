@@ -15,7 +15,11 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#ifdef __APPLE__
+#include <OpenCL/cl.h>
+#else
 #include <CL/cl.h>
+#endif
 
 const char *err_code(cl_int err_in) {
   switch (err_in) {
@@ -140,9 +144,6 @@ void check_error(cl_int err, const char *operation, const char *filename,
 #define DEVICE CL_DEVICE_TYPE_DEFAULT
 #endif
 
-extern double wtime();                        // wtime.c
-extern int output_device_info(cl_device_id);  // device_info.c
-
 #define TOL (0.001f)
 #define LENGTH ((size_t)1024)
 
@@ -215,9 +216,6 @@ int main(int argc, char **argv) {
 
   if (device_id == NULL) checkError(err, "Finding a device");
 
-  err = output_device_info(device_id);
-  checkError(err, "Printing device output");
-
   // Create a compute context
   context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
   checkError(err, "Creating context");
@@ -278,8 +276,6 @@ int main(int argc, char **argv) {
   err |= clSetKernelArg(ko_vadd, 3, sizeof(unsigned int), &count);
   checkError(err, "Setting kernel arguments");
 
-  double rtime = wtime();
-
   // Execute the kernel over the entire range of our 1d input data set
   // letting the OpenCL runtime choose the work-group size
   global = LENGTH;
@@ -290,9 +286,6 @@ int main(int argc, char **argv) {
   // Wait for the commands to complete before stopping the timer
   err = clFinish(commands);
   checkError(err, "Waiting for kernel to finish");
-
-  rtime = wtime() - rtime;
-  printf("\nThe kernel ran in %lf seconds\n", rtime);
 
   // Read back the results from the compute device
   err = clEnqueueReadBuffer(commands, d_c, CL_TRUE, 0, sizeof(float) * LENGTH,
