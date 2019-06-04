@@ -29,7 +29,6 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
-
 FLAGS = app.FLAGS
 
 app.DEFINE_list('target', [], 'The bazel target(s) to export.')
@@ -77,11 +76,9 @@ EXCLUDED_FILES = [
 
 def BazelQuery(args: typing.List[str], timeout_seconds: int = 360, **kwargs):
   """Run bazel query with the specified args."""
-  return subprocess.Popen([
-      'timeout', '-s9',
-      str(timeout_seconds), 'bazel', 'query',
-      '--incompatible_remove_native_http_archive=false'
-  ] + args, **kwargs)
+  return subprocess.Popen(
+      ['timeout', '-s9',
+       str(timeout_seconds), 'bazel', 'query'] + args, **kwargs)
 
 
 def MaybeTargetToPath(fully_qualified_target: str, source_root: pathlib.Path
