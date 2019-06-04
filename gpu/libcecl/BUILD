@@ -114,7 +114,7 @@ py_library(
     deps = [
         ":libcecl_compile",
         "//gpu/cldrive/legacy:env",
-        "//gpu/libcecl/proto:libcecl_py_pb2",
+        "//gpu/libcecl/proto:libcecl_pb_py",
         "//labm8:app",
         "//labm8:labdate",
     ],
@@ -126,7 +126,7 @@ py_test(
     deps = [
         ":libcecl_runtime",
         "//gpu/cldrive/legacy:env",
-        "//gpu/libcecl/proto:libcecl_py_pb2",
+        "//gpu/libcecl/proto:libcecl_pb_py",
         "//labm8:test",
     ],
 )

@@ -37,10 +37,14 @@ def _OpenClCompileAndLinkFlags(
 ) -> typing.Tuple[typing.List[str], typing.List[str]]:
   """Private helper method to get device-specific OpenCL flags."""
   if system.is_linux():
-    return (['-isystem', str(OPENCL_HEADERS_DIR)],
-            [f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}', '-lOpenCL'])
+    return (['-isystem', str(OPENCL_HEADERS_DIR)], [
+        f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}', '-lOpenCL',
+        '-DCL_SILENCE_DEPRECATION'
+    ])
   else:  # macOS
-    return ['-isystem', str(OPENCL_HEADERS_DIR)], ['-framework', 'OpenCL']
+    return ['-isystem', str(OPENCL_HEADERS_DIR)], [
+        '-framework', 'OpenCL', '-DCL_SILENCE_DEPRECATION'
+    ]
 
 
 @functools.lru_cache(maxsize=2)
