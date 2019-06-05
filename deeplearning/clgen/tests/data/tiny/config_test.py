@@ -21,6 +21,8 @@ from labm8 import bazelutil
 from labm8 import pbutil
 from labm8 import test
 
+MODULE_UNDER_TEST = 'deeplearning.clgen'
+
 
 def test_config_is_valid():
   """Test that config proto is valid."""
