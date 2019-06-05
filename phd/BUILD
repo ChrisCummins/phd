@@ -173,7 +173,7 @@ cc_test(
     deps = [
         ":pbutil",
         ":test",
-        "//phd/test:protos_cc",
+        "//phd/test:protos_pb_cc",
     ],
 )
 

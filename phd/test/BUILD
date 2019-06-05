@@ -14,18 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@build_stack_rules_proto//cpp:cpp_proto_library.bzl", "cpp_proto_library")
-
 package(default_visibility = ["//phd:__subpackages__"])
 
 proto_library(
-    name = "protos",
+    name = "protos_pb",
     srcs = ["protos.proto"],
 )
 
-cpp_proto_library(
-    name = "protos_cc",
-    deps = [":protos"],
+cc_proto_library(
+    name = "protos_pb_cc",
+    deps = [":protos_pb"],
 )
 
 filegroup(
