@@ -570,6 +570,7 @@ ld_library_path_dirs=( \
     /usr/lib32 \
     /usr/local/lib \
     /usr/local/cuda/lib64 \
+    /usr/local/opt/openssl/lib \
 )
 export LD_LIBRARY_PATH=$(build_path "${ld_library_path_dirs[@]}")
 
@@ -606,6 +607,7 @@ path_dirs=( \
     /usr/sbin \
     /usr/texbin \
     /sbin \
+    /usr/local/opt/openssl/bin \
 )
 export PATH=$(build_path "${path_dirs[@]}")
 
