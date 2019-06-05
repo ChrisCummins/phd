@@ -1134,6 +1134,7 @@ class LaTeX(Task):
   __osx_genfiles__ = [
       '/Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin/pdflatex',
       '/Applications/texstudio.app',
+      '/Applications/texstudio.app/Contents/Resources/en_GB.ign'
   ]
 
   def install_osx(self):
@@ -1143,6 +1144,8 @@ class LaTeX(Task):
     # fonts.
     Homebrew().install_package('poppler')
     self.install()
+    symlink(os.path.join(PRIVATE, 'texstudio', 'en_GB.ign'),
+            '/Applications/texstudio.app/Contents/Resources/en_GB.ign')
 
   def install_linux(self):
     Apt().install_package('texlive-full')
