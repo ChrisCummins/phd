@@ -29,11 +29,10 @@ Usage:
         --test_flag=--me_db_acceptance_tests_inbox=/path/to/inbox
 """
 import datetime
-import pathlib
-import tempfile
-
 import pandas as pd
+import pathlib
 import pytest
+import tempfile
 from sqlalchemy.sql.expression import func
 
 from datasets.me_db import me_db
@@ -42,6 +41,8 @@ from labm8 import bazelutil
 from labm8 import test
 
 FLAGS = flags.FLAGS
+
+MODULE_UNDER_TEST = 'datasets.me_db'
 
 TEST_INBOX_PATH = bazelutil.DataPath('phd/datasets/me_db/tests/test_inbox')
 

@@ -32,7 +32,7 @@ py_library(
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
         ":public",
-        "//datasets/github/scrape_repos/proto:scrape_repos_py_pb2",
+        "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
@@ -88,7 +88,7 @@ java_binary(
     srcs = ["JavaMethodsExtractor.java"],
     main_class = "datasets.github.scrape_repos.preprocessors.JavaMethodsExtractor",
     deps = [
-        "//datasets/github/scrape_repos/proto:scrape_repos_java",
+        "//datasets/github/scrape_repos/proto:scrape_repos_pb_java",
         "@com_google_guava//jar",
         "@com_google_protobuf_java//jar",
         "@org_eclipse_core_contenttype//jar",

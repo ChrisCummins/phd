@@ -14,23 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
-load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
+load("@build_stack_rules_proto//java:java_proto_compile.bzl", "java_proto_compile")
 
-py_proto_library(
-    name = "scrape_repos_py_pb2",
-    protos = ["scrape_repos.proto"],
+proto_library(
+    name = "scrape_repos_pb",
+    srcs = ["scrape_repos.proto"],
+)
+
+python_proto_library(
+    name = "scrape_repos_pb_py",
     visibility = [
         "//datasets/github/scrape_repos:__subpackages__",
         "//experimental:__subpackages__",
     ],
+    deps = ["scrape_repos_pb"],
 )
 
 java_proto_library(
-    name = "scrape_repos_java",
-    protos = ["scrape_repos.proto"],
+    name = "scrape_repos_pb_java",
     visibility = [
         "//datasets/github/scrape_repos:__subpackages__",
         "//experimental:__subpackages__",
     ],
+    deps = [":scrape_repos_pb"],
 )

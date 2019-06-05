@@ -19,8 +19,7 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 licenses(["restricted"])  # MIT
 
@@ -31,7 +30,7 @@ py_library(
     srcs = ["importers.py"],
     visibility = ["//datasets/me_db:__subpackages__"],
     deps = [
-        ":me_proto_pb2",
+        ":me_pb_py",
         "//labm8:app",
         "//labm8:ppar",
     ],
@@ -54,18 +53,21 @@ py_binary(
     ],
 )
 
-py_proto_library(
-    name = "me_proto_pb2",
-    protos = ["me.proto"],
+proto_library(
+    name = "me_pb",
+    srcs = ["me.proto"],
+)
+
+python_proto_library(
+    name = "me_pb_py",
     visibility = ["//datasets/me_db:__subpackages__"],
-    with_grpc = False,
+    deps = [":me_pb"],
 )
 
 cc_proto_library(
-    name = "me_proto_cc",
-    protos = ["me.proto"],
+    name = "me_pb_cc",
     visibility = ["//datasets/me_db:__subpackages__"],
-    with_grpc = False,
+    deps = [":me_pb"],
 )
 
 py_library(

@@ -25,7 +25,7 @@ py_binary(
     visibility = ["//datasets/me_db:__pkg__"],
     deps = [
         "//datasets/me_db:importers",
-        "//datasets/me_db:me_proto_pb2",
+        "//datasets/me_db:me_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:humanize",

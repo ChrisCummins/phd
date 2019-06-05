@@ -13,9 +13,8 @@
 # limitations under the License.
 """Unit tests for //datasets/benchmarks/gpgpu:gpgpu.py."""
 import pathlib
-import typing
-
 import pytest
+import typing
 
 from datasets.benchmarks.gpgpu import gpgpu
 from datasets.benchmarks.gpgpu import gpgpu_pb2
@@ -81,7 +80,13 @@ def test_BenchmarkSuite_integration_test(benchmark_suite: typing.Callable,
   with benchmark_suite() as bs:
     bs.ForceOpenCLEnvironment(cldrive_env.OclgrindOpenCLEnvironment())
     observer = MockBenchmarkObserver(stop_after=1)
-    bs.Run([observer])
+
+    # `stop_after` raises BenchmarkInterrupt.
+    try:
+      bs.Run([observer])
+      assert False
+    except gpgpu.BenchmarkInterrupt:
+      pass
 
     assert len(observer.logs) == 1
     assert observer.logs[0].benchmark_name in bs.benchmarks

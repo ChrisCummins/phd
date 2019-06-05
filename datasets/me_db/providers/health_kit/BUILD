@@ -26,7 +26,7 @@ py_binary(
     visibility = ["//datasets/me_db:__pkg__"],
     deps = [
         "//datasets/me_db:importers",
-        "//datasets/me_db:me_proto_pb2",
+        "//datasets/me_db:me_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
@@ -38,10 +38,12 @@ cc_library(
     srcs = ["health_kit_lib.cc"],
     hdrs = ["health_kit_lib.h"],
     deps = [
-        "//datasets/me_db:me_proto_cc",
+        "//datasets/me_db:me_pb_cc",
         "//phd:logging",
         "//phd:string",
         "@boost//:filesystem",
+        "@boost//:property_tree",
+        "@boost//:tokenizer",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -54,7 +56,7 @@ cc_test(
     srcs = ["health_kit_lib_test.cc"],
     deps = [
         ":health_kit_lib",
-        "//datasets/me_db:me_proto_cc",
+        "//datasets/me_db:me_pb_cc",
         "//phd:test",
     ],
 )

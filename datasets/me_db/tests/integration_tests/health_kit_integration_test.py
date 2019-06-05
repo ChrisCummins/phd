@@ -24,6 +24,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'datasets.me_db'
+
 # These tests have been hardcoded to the values in the test_inbox dataset.
 
 

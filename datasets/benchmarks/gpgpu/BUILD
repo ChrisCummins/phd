@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 filegroup(
     name = "amd-app-sdk-3.0_files",
@@ -53,14 +53,18 @@ filegroup(
     srcs = glob(["shoc-1.1.5/**"]),
 )
 
-py_proto_library(
-    name = "gpgpu_py_pb2",
-    proto_deps = [
-        "//gpu/libcecl/proto:libcecl_py_pb2",
+proto_library(
+    name = "gpgpu_pb",
+    srcs = ["gpgpu.proto"],
+    deps = [
+        "//gpu/libcecl/proto:libcecl_pb",
     ],
-    protos = ["gpgpu.proto"],
+)
+
+python_proto_library(
+    name = "gpgpu_pb_py",
     visibility = ["//visibility:public"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":gpgpu_pb"],
 )
 
 py_binary(
@@ -79,7 +83,7 @@ py_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":gpgpu_py_pb2",
+        ":gpgpu_pb_py",
         "//gpu/cldrive/legacy:env",
         "//gpu/libcecl:libcecl_runtime",
         "//gpu/oclgrind",
@@ -98,7 +102,7 @@ py_binary(
     srcs = ["gpgpu_verify.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":gpgpu_py_pb2",
+        ":gpgpu_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:fs",
@@ -111,7 +115,7 @@ py_test(
     srcs = ["gpgpu_test.py"],
     deps = [
         ":gpgpu",
-        ":gpgpu_py_pb2",
+        ":gpgpu_pb_py",
         "//labm8:app",
         "//labm8:test",
     ],
