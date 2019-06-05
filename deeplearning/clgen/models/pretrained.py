@@ -94,12 +94,11 @@ class PreTrainedModel(object):
           if sampler.SampleIsComplete(samples_in_progress[i]):
             end_time = labdate.MillisecondsTimestamp()
             done[i] = 1
-            sample = model_pb2.Sample(
-                text=''.join(samples_in_progress[i]),
-                sample_start_epoch_ms_utc=start_time,
-                sample_time_ms=end_time - start_time,
-                wall_time_ms=end_time - wall_time_start,
-                num_tokens=len(samples_in_progress[i]))
+            sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
+                                      sample_start_epoch_ms_utc=start_time,
+                                      sample_time_ms=end_time - start_time,
+                                      wall_time_ms=end_time - wall_time_start,
+                                      num_tokens=len(samples_in_progress[i]))
             # Notify sample observers.
             continue_sampling &= all(
                 [not obs.OnSample(sample) for obs in sample_observers])

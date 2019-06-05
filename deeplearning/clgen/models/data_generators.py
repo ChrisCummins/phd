@@ -184,8 +184,8 @@ def GetTrainingCorpus(corpus: 'corpuses.Corpus',
   encoded_corpus = corpus.GetTrainingData(
       shuffle=training_opts.shuffle_corpus_contentfiles_between_epochs)
   corpus_length = len(encoded_corpus)
-  steps_per_epoch = (corpus_length - 1) // (
-      training_opts.batch_size * training_opts.sequence_length)
+  steps_per_epoch = (corpus_length - 1) // (training_opts.batch_size *
+                                            training_opts.sequence_length)
   if not steps_per_epoch:
     raise errors.UserError(
         f'Requested batch size ({training_opts.batch_size}) and '

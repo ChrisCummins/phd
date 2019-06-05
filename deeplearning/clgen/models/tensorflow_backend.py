@@ -144,8 +144,9 @@ class TensorFlowBackend(backends.BackendBase):
       decode_helper = helper.CustomInferenceHelper(
           inputs, self.lengths, self.seed_length, embedding, self.temperature)
     else:
-      decode_helper = seq2seq.TrainingHelper(
-          inputs, self.lengths, time_major=False)
+      decode_helper = seq2seq.TrainingHelper(inputs,
+                                             self.lengths,
+                                             time_major=False)
 
     decoder = seq2seq.BasicDecoder(cell, decode_helper, self.initial_state,
                                    tf.layers.Dense(vocab_size))
@@ -292,8 +293,9 @@ class TensorFlowBackend(backends.BackendBase):
       tf.global_variables_initializer().run()
 
       # Keep all checkpoints.
-      saver = tf.train.Saver(
-          tf.global_variables(), max_to_keep=100, save_relative_paths=True)
+      saver = tf.train.Saver(tf.global_variables(),
+                             max_to_keep=100,
+                             save_relative_paths=True)
 
       # restore model from closest checkpoint.
       if ckpt_path:
@@ -338,8 +340,9 @@ class TensorFlowBackend(backends.BackendBase):
         start_time = time.time()
         global_step = epoch_num
         checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
-        checkpoint_path = saver.save(
-            sess, checkpoint_prefix, global_step=global_step)
+        checkpoint_path = saver.save(sess,
+                                     checkpoint_prefix,
+                                     global_step=global_step)
         app.Log(1, 'Saved checkpoint %s in %s ms.', checkpoint_path,
                 humanize.Commas(int((time.time() - start_time) * 1000)))
         assert pathlib.Path(
@@ -421,9 +424,10 @@ class TensorFlowBackend(backends.BackendBase):
     import tensorflow as tf
     self.inference_state = [
         tf.nn.rnn_cell.LSTMStateTuple(
-           st1 + np.random.normal(scale=0.2, size=np.shape(st1)),
-           st2 + np.random.normal(scale=0.2, size=np.shape(st2)))
-        for st1,st2 in self.inference_state]
+            st1 + np.random.normal(scale=0.2, size=np.shape(st1)),
+            st2 + np.random.normal(scale=0.2, size=np.shape(st2)))
+        for st1, st2 in self.inference_state
+    ]
 
   def ResetSampleState(self, sampler: samplers.Sampler, state, seed) -> None:
     self.inference_state = copy.deepcopy(state)

@@ -162,8 +162,8 @@ def test_SymmetricalTokenDepthCriterion_depth_increase_token():
 
 def test_SymmetricalTokenDepthCriterion_same_tokens():
   """test that error is raised if depth tokens are the same."""
-  config = sampler_pb2.SymmetricalTokenDepth(
-      depth_increase_token='a', depth_decrease_token='a')
+  config = sampler_pb2.SymmetricalTokenDepth(depth_increase_token='a',
+                                             depth_decrease_token='a')
   with pytest.raises(errors.UserError) as e_info:
     samplers.SymmetricalTokenDepthCriterion(config)
   assert 'SymmetricalTokenDepth tokens must be different' == str(e_info.value)
@@ -172,8 +172,8 @@ def test_SymmetricalTokenDepthCriterion_same_tokens():
 def test_SymmetricalTokenDepthCriterion_SampleIsComplete():
   """Test SampleIsComplete() returns expected values."""
   t = samplers.SymmetricalTokenDepthCriterion(
-      sampler_pb2.SymmetricalTokenDepth(
-          depth_increase_token='+', depth_decrease_token='-'))
+      sampler_pb2.SymmetricalTokenDepth(depth_increase_token='+',
+                                        depth_decrease_token='-'))
   # Depth 0, incomplete.
   assert not t.SampleIsComplete([])
   # Depth 1, incomplete.
@@ -193,8 +193,8 @@ def test_SymmetricalTokenDepthCriterion_SampleIsComplete():
 def test_SymmetrcalTokenDepthCriterion_SampleIsComplete_reverse_order():
   """Test that sample is not complete if right token appears before left."""
   t = samplers.SymmetricalTokenDepthCriterion(
-      sampler_pb2.SymmetricalTokenDepth(
-          depth_increase_token='+', depth_decrease_token='-'))
+      sampler_pb2.SymmetricalTokenDepth(depth_increase_token='+',
+                                        depth_decrease_token='-'))
   assert not t.SampleIsComplete(['-', '+'])
   assert not t.SampleIsComplete(['-', 'a', 'b', 'c', '+'])
   assert t.SampleIsComplete(['-', 'a', 'b', 'c', '+', '+', '-'])

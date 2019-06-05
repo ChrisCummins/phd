@@ -310,10 +310,9 @@ def test_Corpus_GetTextCorpus_separator(clgen_cache_dir, abc_corpus):
   """Test the concatenation of the abc corpus with a custom separator."""
   del clgen_cache_dir
   c = corpuses.Corpus(
-      corpus_pb2.Corpus(
-          local_directory=abc_corpus,
-          ascii_character_atomizer=True,
-          contentfile_separator='\n!!\n'))
+      corpus_pb2.Corpus(local_directory=abc_corpus,
+                        ascii_character_atomizer=True,
+                        contentfile_separator='\n!!\n'))
   c.Create()
   # We don't know the ordering of the text corpus.
   assert 'The cat sat on the mat.' in c.GetTextCorpus(shuffle=False)
@@ -343,10 +342,9 @@ def test_Corpus_GetTrainingData_decode(clgen_cache_dir, abc_corpus):
   """Test the decoded output of GetTrainingData()."""
   del clgen_cache_dir
   c = corpuses.Corpus(
-      corpus_pb2.Corpus(
-          local_directory=abc_corpus,
-          ascii_character_atomizer=True,
-          contentfile_separator='\n!!\n'))
+      corpus_pb2.Corpus(local_directory=abc_corpus,
+                        ascii_character_atomizer=True,
+                        contentfile_separator='\n!!\n'))
   c.Create()
   decoded = c.atomizer.DeatomizeIndices(c.GetTrainingData(shuffle=False))
   # Test that each content file (plus contentfile separator) is in corpus.

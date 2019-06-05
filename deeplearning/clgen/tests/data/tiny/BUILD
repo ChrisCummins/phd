@@ -30,7 +30,7 @@ py_test(
     data = [":tiny"],
     deps = [
         "//deeplearning/clgen",
-        "//deeplearning/clgen/proto:clgen_py_pb2",
+        "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",

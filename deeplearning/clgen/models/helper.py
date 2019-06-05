@@ -10,8 +10,9 @@ class CustomInferenceHelper(seq2seq.TrainingHelper):
 
   def __init__(self, input_seed, sequence_length, seed_length, embedding,
                temperature):
-    super(CustomInferenceHelper, self).__init__(
-        inputs=input_seed, sequence_length=sequence_length, time_major=False)
+    super(CustomInferenceHelper, self).__init__(inputs=input_seed,
+                                                sequence_length=sequence_length,
+                                                time_major=False)
 
     self._xlate = embedding
     self._seed_length = seed_length

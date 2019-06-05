@@ -174,9 +174,8 @@ def test_KerasBackend_Sample_return_value_matches_cached_sample(
   del clgen_cache_dir
   m = models.Model(abc_keras_model_config)
   sample_observer = sample_observers.InMemorySampleSaver()
-  m.Sample(
-      MockSampler(hash='hash'),
-      [sample_observers.MaxSampleCountObserver(1), sample_observer])
+  m.Sample(MockSampler(hash='hash'),
+           [sample_observers.MaxSampleCountObserver(1), sample_observer])
   samples = sample_observer.samples
   assert len(samples) == 1
   assert len(list((m.cache.path / 'samples' / 'hash').iterdir())) == 1
@@ -197,14 +196,12 @@ def test_KerasBackend_Sample_exact_multiple_of_batch_size(
   del clgen_cache_dir
   m = models.Model(abc_keras_model_config)
   sample_observer = sample_observers.InMemorySampleSaver()
-  m.Sample(
-      MockSampler(batch_size=2),
-      [sample_observers.MaxSampleCountObserver(2), sample_observer])
+  m.Sample(MockSampler(batch_size=2),
+           [sample_observers.MaxSampleCountObserver(2), sample_observer])
   assert len(sample_observer.samples) == 2
   sample_observer = sample_observers.InMemorySampleSaver()
-  m.Sample(
-      MockSampler(batch_size=2),
-      [sample_observers.MaxSampleCountObserver(4), sample_observer])
+  m.Sample(MockSampler(batch_size=2),
+           [sample_observers.MaxSampleCountObserver(4), sample_observer])
   assert len(sample_observer.samples) == 4
 
 

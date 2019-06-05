@@ -179,10 +179,9 @@ def BuildKerasModel(config: model_pb2.Model,
   # The recurrent network layers.
   for _ in range(config.architecture.num_layers):
     model.add(
-        layer(
-            config.architecture.neurons_per_layer,
-            return_sequences=True,
-            stateful=True))
+        layer(config.architecture.neurons_per_layer,
+              return_sequences=True,
+              stateful=True))
     model.add(keras.layers.Dropout(dropout))
   # The output layer.
   model.add(

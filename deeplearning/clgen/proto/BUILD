@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
-load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
+load("@build_stack_rules_proto//java:java_proto_compile.bzl", "java_proto_compile")
 
 # Default to public visibility so that X_proto_library targets in other packages
 # may depend on these protos using proto_deps. Specifying individual targets as
@@ -24,59 +24,80 @@ load("@org_pubref_rules_protobuf//java:rules.bzl", "java_proto_library")
 # which must also be public.
 package(default_visibility = ["//visibility:public"])
 
-py_proto_library(
-    name = "clgen_py_pb2",
-    proto_deps = [
-        ":corpus_py_pb2",
-        ":model_py_pb2",
-        ":sampler_py_pb2",
+proto_library(
+    name = "clgen_pb",
+    srcs = [
+        "clgen.proto",
     ],
-    protos = ["clgen.proto"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [
+        ":model_pb",
+        ":sampler_pb",
+    ],
 )
 
-py_proto_library(
-    name = "corpus_py_pb2",
-    protos = ["corpus.proto"],
-    deps = ["//third_party/py/protobuf"],
+proto_library(
+    name = "corpus_pb",
+    srcs = [
+        "corpus.proto",
+    ],
 )
 
-py_proto_library(
-    name = "internal_py_pb2",
-    proto_deps = [
-        ":corpus_py_pb2",
-        ":model_py_pb2",
-        ":sampler_py_pb2",
+proto_library(
+    name = "internal_pb",
+    srcs = [
+        "internal.proto",
     ],
-    protos = ["internal.proto"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [
+        ":corpus_pb",
+        ":model_pb",
+        ":sampler_pb",
+    ],
+)
+
+proto_library(
+    name = "model_pb",
+    srcs = [
+        "model.proto",
+    ],
+    deps = [
+        ":corpus_pb",
+    ],
+)
+
+proto_library(
+    name = "sampler_pb",
+    srcs = [
+        "sampler.proto",
+    ],
+)
+
+proto_library(
+    name = "telemetry_pb",
+    srcs = [
+        "telemetry.proto",
+    ],
+)
+
+python_proto_library(
+    name = "clgen_pb_py",
+    deps = [
+        ":clgen_pb",
+        ":corpus_pb",
+        ":internal_pb",
+        ":model_pb",
+        ":sampler_pb",
+        ":telemetry_pb",
+    ],
 )
 
 java_proto_library(
-    name = "internal_java",
-    proto_deps = [
-        ":corpus_py_pb2",
-        ":model_py_pb2",
-        ":sampler_py_pb2",
+    name = "clgen_pb_java",
+    deps = [
+        ":clgen_pb",
+        ":corpus_pb",
+        ":internal_pb",
+        ":model_pb",
+        ":sampler_pb",
+        ":telemetry_pb",
     ],
-    protos = ["internal.proto"],
-)
-
-py_proto_library(
-    name = "model_py_pb2",
-    proto_deps = [":corpus_py_pb2"],
-    protos = ["model.proto"],
-    deps = ["//third_party/py/protobuf"],
-)
-
-py_proto_library(
-    name = "sampler_py_pb2",
-    protos = ["sampler.proto"],
-    deps = ["//third_party/py/protobuf"],
-)
-
-py_proto_library(
-    name = "telemetry_py_pb2",
-    protos = ["telemetry.proto"],
-    deps = ["//third_party/py/protobuf"],
 )

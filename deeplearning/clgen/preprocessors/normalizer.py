@@ -73,13 +73,12 @@ def NormalizeIdentifiers(text: str,
     app.Log(
         2, '$ %s%s', f'LD_PRELOAD={CLGEN_REWRITER_ENV["LD_PRELOAD"]} '
         if 'LD_PRELOAD' in CLGEN_REWRITER_ENV else '', ' '.join(cmd))
-    process = subprocess.Popen(
-        cmd,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        env=CLGEN_REWRITER_ENV)
+    process = subprocess.Popen(cmd,
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               universal_newlines=True,
+                               env=CLGEN_REWRITER_ENV)
     stdout, stderr = process.communicate()
     app.Log(2, stderr)
   # If there was nothing to rewrite, rewriter exits with error code:
