@@ -1,6 +1,5 @@
 # Learning Python.
 
-load("@build_stack_rules_proto//cpp:cpp_proto_library.bzl", "cpp_proto_library")
 load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 py_test(
@@ -18,7 +17,7 @@ proto_library(
     srcs = ["cpp_interop.proto"],
 )
 
-cpp_proto_library(
+cc_proto_library(
     name = "cpp_interop_pb_cc",
     deps = [":cpp_interop_pb"],
 )

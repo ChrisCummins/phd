@@ -1,7 +1,5 @@
 # Learning to use Google's abseil libraries.
 
-load("@build_stack_rules_proto//cpp:cpp_proto_library.bzl", "cpp_proto_library")
-
 cc_binary(
     name = "hello_absl",
     srcs = ["hello_absl.cc"],
@@ -17,7 +15,7 @@ proto_library(
     srcs = ["message.proto"],
 )
 
-cpp_proto_library(
+cc_proto_library(
     name = "message_pb_cc",
     deps = [":message_pb"],
 )
