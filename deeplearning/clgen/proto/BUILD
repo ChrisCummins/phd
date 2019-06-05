@@ -15,20 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
-load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
+load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 load("@build_stack_rules_proto//java:java_proto_compile.bzl", "java_proto_compile")
-
-# Default to public visibility so that X_proto_library targets in other packages
-# may depend on these protos using proto_deps. Specifying individual targets as
-# public does not work since X_proto_library macros uses intermediate targets
-# which must also be public.
-package(default_visibility = ["//visibility:public"])
 
 proto_library(
     name = "clgen_pb",
     srcs = [
         "clgen.proto",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         ":model_pb",
         ":sampler_pb",
@@ -78,8 +73,9 @@ proto_library(
     ],
 )
 
-python_proto_library(
+python_grpc_library(
     name = "clgen_pb_py",
+    visibility = ["//visibility:public"],
     deps = [
         ":clgen_pb",
         ":corpus_pb",
@@ -92,6 +88,7 @@ python_proto_library(
 
 java_proto_library(
     name = "clgen_pb_java",
+    visibility = ["//visibility:public"],
     deps = [
         ":clgen_pb",
         ":corpus_pb",
