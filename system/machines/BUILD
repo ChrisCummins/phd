@@ -7,7 +7,7 @@ py_binary(
     srcs = ["data_tiers.py"],
     deps = [
         "//labm8:pbutil",
-        "//system/machines/proto:data_tiers_pb2_py",
+        "//system/machines/proto:data_tiers_pb_py",
     ],
 )
 
@@ -19,7 +19,7 @@ par_binary(
         ":mirrored_directory",
         "//labm8:app",
         "//labm8:pbutil",
-        "//system/machines/proto:machine_spec_pb2_py",
+        "//system/machines/proto:machine_spec_pb_py",
     ],
 )
 
@@ -30,7 +30,7 @@ py_test(
         ":machine",
         "//labm8:app",
         "//labm8:test",
-        "//system/machines/proto:machine_spec_pb2_py",
+        "//system/machines/proto:machine_spec_pb_py",
     ],
 )
 
@@ -42,7 +42,7 @@ py_library(
         "//labm8:app",
         "//labm8:fs",
         "//labm8:labtypes",
-        "//system/machines/proto:machine_spec_pb2_py",
+        "//system/machines/proto:machine_spec_pb_py",
     ],
 )
 
