@@ -14,19 +14,26 @@
 #include <Adafruit_NeoPixel.h>
 
 // The pin that the LED
-const int kDataPin = 6
-    // The number of LEDs in the strip. This is
-    const int kLedCount = 83
+const int kDataPin = 15;
+// const int kDataPin = 13;
+// The number of LEDs in the strip. This is
+const int kLedCount = 83;
 
-    // The LED strip.
-    Adafruit_NeoPixel strip =
-        Adafruit_NeoPixel(kLedCount, kDataPin, NEO_GRB + NEO_KHZ800);
+// The LED strip.
+Adafruit_NeoPixel strip =
+    Adafruit_NeoPixel(kLedCount, kDataPin, NEO_GRB + NEO_KHZ800);
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   strip.begin();
   strip.fill(strip.Color(255, 255, 255));
   strip.setBrightness(5);
   strip.show();
 }
 
-void loop() {}
+void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
+}
