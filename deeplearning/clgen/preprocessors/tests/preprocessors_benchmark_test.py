@@ -13,9 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Benchmarks for the preprocessing pipeline."""
-import typing
-
 import pytest
+import typing
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
@@ -70,8 +69,6 @@ def _PreprocessBenchmarkInnerLoopBadCode(preprocessors_: typing.List[str],
 def test_benchmark_cxx_small_program(benchmark):
   """Benchmark preprocessing a C++ program using a full pipeline."""
   code_in = """
-#include <iostream>
-
 int do_something(int a) { return a * 2; }
 
 
