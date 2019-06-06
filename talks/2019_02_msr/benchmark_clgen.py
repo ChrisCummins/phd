@@ -152,8 +152,6 @@ model {
   }
 }
 sampler {
-  # File: //deeplearning/clgen/proto/sampler.proto
-  # Proto: clgen.Sampler
   start_text: "kernel void "
   batch_size: 64
   temperature_micros: 1000000  # = 1.0 real value
