@@ -8,7 +8,7 @@ py_library(
         "//compilers/llvm:clang",
         "//compilers/llvm:llvm_link",
         "//compilers/llvm:opt",
-        "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//experimental/compilers/random_opt/proto:random_opt_pb_py",
         "//labm8:app",
         "//labm8:crypto",
         "//labm8:jsonutil",
@@ -43,7 +43,7 @@ py_library(
         "//labm8:app",
         "//datasets/benchmarks:bzip2",
         "//datasets/benchmarks:llvm_test_suite",
-        "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//experimental/compilers/random_opt/proto:random_opt_pb_py",
     ],
 )
 
@@ -62,7 +62,7 @@ py_binary(
     name = "results_to_dot",
     srcs = ["results_to_dot.py"],
     deps = [
-        "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//experimental/compilers/random_opt/proto:random_opt_pb_py",
         "//labm8:app",
         "//labm8:graph",
         "//labm8:pbutil",
@@ -75,7 +75,7 @@ py_binary(
     deps = [
         ":environments",
         ":implementation",
-        "//experimental/compilers/random_opt/proto:random_opt_py_pb2",
+        "//experimental/compilers/random_opt/proto:random_opt_pb_py",
         "//labm8:app",
         "//labm8:pbutil",
         "//third_party/py/gym",

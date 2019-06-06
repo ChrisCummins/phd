@@ -4,7 +4,7 @@ py_binary(
     name = "export_clang_opencl_dataset",
     srcs = ["export_clang_opencl_dataset.py"],
     deps = [
-        "//experimental/deeplearning/fish/proto:fish_py_pb2",
+        "//experimental/deeplearning/fish/proto:fish_pb_py",
         "//labm8:app",
         "//labm8:fs",
         "//labm8:humanize",
@@ -29,7 +29,7 @@ py_binary(
     name = "prepare_discriminator_dataset",
     srcs = ["prepare_discriminator_dataset.py"],
     deps = [
-        "//experimental/deeplearning/fish/proto:fish_py_pb2",
+        "//experimental/deeplearning/fish/proto:fish_pb_py",
         "//labm8:app",
         "//labm8:fs",
         "//labm8:humanize",
@@ -44,7 +44,7 @@ py_binary(
     srcs = ["train_discriminator.py"],
     deps = [
         "//deeplearning/clgen",
-        "//experimental/deeplearning/fish/proto:fish_py_pb2",
+        "//experimental/deeplearning/fish/proto:fish_pb_py",
         "//labm8:app",
         "//labm8:humanize",
         "//third_party/py/keras",

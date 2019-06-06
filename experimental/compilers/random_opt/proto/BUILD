@@ -1,10 +1,14 @@
 # Protocol buffers for random optimization.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-py_proto_library(
-    name = "random_opt_py_pb2",
-    protos = ["random_opt.proto"],
+proto_library(
+    name = "random_opt_pb",
+    srcs = ["random_opt.proto"],
+)
+
+python_proto_library(
+    name = "random_opt_pb_py",
     visibility = ["//visibility:public"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":random_opt_pb"],
 )

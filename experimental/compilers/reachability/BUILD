@@ -1,13 +1,13 @@
 # Experiments in learning reachability analysis.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 py_library(
     name = "control_flow_graph",
     srcs = ["control_flow_graph.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":reachability_py_pb2",
+        ":random_opt_pb_py",
         "//labm8:app",
         "//labm8:pbutil",
         "//third_party/py/networkx",
@@ -54,7 +54,7 @@ py_library(
     srcs = ["database.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":reachability_py_pb2",
+        ":random_opt_pb_py",
         "//labm8:pbutil",
         "//labm8:sqlutil",
         "//third_party/py/sqlalchemy",
@@ -66,7 +66,7 @@ py_binary(
     name = "eval_model",
     srcs = ["eval_model.py"],
     deps = [
-        ":reachability_py_pb2",
+        ":random_opt_pb_py",
         "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/corpuses:atomizers",
         "//labm8:app",
@@ -102,9 +102,13 @@ py_test(
     ],
 )
 
-py_proto_library(
-    name = "reachability_py_pb2",
-    protos = ["reachability.proto"],
+proto_library(
+    name = "reachability_pb",
+    srcs = ["reachability.proto"],
+)
+
+python_proto_library(
+    name = "random_opt_pb_py",
     visibility = ["//visibility:public"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":reachability_pb"],
 )

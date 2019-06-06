@@ -16,7 +16,7 @@ py_binary(
     ],
     deps = [
         "//deeplearning/deepsmith/generators:clgen",
-        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:crypto",
@@ -30,8 +30,8 @@ py_test(
     deps = [
         ":01_evaluate_generator",
         "//deeplearning/clgen:conftest",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
+        "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
         "//labm8:app",
         "//labm8:pbutil",
         "//labm8:test",
@@ -44,7 +44,7 @@ py_binary(
     data = glob(["data/testcases/*.pbtxt"]),
     deps = [
         "//deeplearning/deepsmith/harnesses:cldrive",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//gpu/cldrive/legacy:env",
         "//labm8:app",

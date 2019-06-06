@@ -27,10 +27,7 @@ py_binary(
     srcs = ["import_from_clgen.py"],
     deps = [
         "//deeplearning/clgen",
-        "//deeplearning/clgen/proto:clgen_py_pb2",
-        "//deeplearning/clgen/proto:corpus_py_pb2",
-        "//deeplearning/clgen/proto:model_py_pb2",
-        "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//deeplearning/clgen/proto:clgen_pb_py",
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//labm8:app",
         "//labm8:prof",
@@ -57,7 +54,7 @@ py_binary(
     srcs = ["import_from_fish.py"],
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//experimental/deeplearning/fish/proto:fish_py_pb2",
+        "//experimental/deeplearning/fish/proto:fish_pb_py",
         "//labm8:app",
         "//labm8:pbutil",
     ],
