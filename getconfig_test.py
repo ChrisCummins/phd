@@ -11,14 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //config/config.py."""
+"""Unit tests for //getconfig.py."""
 import os
+
 import pathlib
 import subprocess
 
-from config import getconfig
+import getconfig
 from labm8 import app
 from labm8 import test
+
 
 FLAGS = app.FLAGS
 

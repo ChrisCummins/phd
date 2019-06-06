@@ -177,11 +177,10 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     # database exists.
     engine = sql.create_engine('/'.join(url.split('/')[:-1]))
     database = url.split('/')[-1].split('?')[0]
-    query = engine.execute(
-        sql.text('SELECT SCHEMA_NAME FROM '
-                 'INFORMATION_SCHEMA.SCHEMATA WHERE '
-                 'SCHEMA_NAME = :database'),
-        database=database)
+    query = engine.execute(sql.text('SELECT SCHEMA_NAME FROM '
+                                    'INFORMATION_SCHEMA.SCHEMATA WHERE '
+                                    'SCHEMA_NAME = :database'),
+                           database=database)
     if not query.first():
       if must_exist:
         raise DatabaseNotFound(url)
@@ -360,8 +359,8 @@ class Database(object):
     if self.url.startswith('mysql://'):
       engine = sql.create_engine('/'.join(self.url.split('/')[:-1]))
       database = self.url.split('/')[-1].split('?')[0]
-      engine.execute(
-          sql.text('DROP DATABASE IF EXISTS :database'), database=database)
+      engine.execute(sql.text('DROP DATABASE IF EXISTS :database'),
+                     database=database)
     elif self.url.startswith('sqlite://'):
       path = pathlib.Path(self.url[len('sqlite:///'):])
       assert path.is_file()
@@ -579,12 +578,11 @@ def OffsetLimitBatchedQuery(query: Query,
     batch_num += 1
     batch = query.offset(i).limit(batch_size).all()
     if batch:
-      yield OffsetLimitQueryResultsBatch(
-          batch_num=batch_num,
-          offset=i,
-          limit=i + batch_size,
-          max_rows=max_rows,
-          rows=batch)
+      yield OffsetLimitQueryResultsBatch(batch_num=batch_num,
+                                         offset=i,
+                                         limit=i + batch_size,
+                                         max_rows=max_rows,
+                                         rows=batch)
       i += len(batch)
     else:
       break
@@ -640,7 +638,7 @@ class ColumnFactory(object):
     Returns:
       A column which defaults to UTC now.
     """
-    return sql.Column(
-        sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-        nullable=nullable,
-        default=default)
+    return sql.Column(sql.DateTime().with_variant(mysql.DATETIME(fsp=3),
+                                                  'mysql'),
+                      nullable=nullable,
+                      default=default)

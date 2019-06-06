@@ -15,12 +15,11 @@
 """Unit tests for //alice:git_repo."""
 import collections
 import pathlib
+import pytest
 import subprocess
 
-import pytest
-
+import getconfig
 from alice import git_repo
-from config import getconfig
 from labm8 import pbutil
 from labm8 import test
 

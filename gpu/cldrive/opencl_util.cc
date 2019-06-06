@@ -56,8 +56,8 @@ string GetOpenClKernelName(const cl::Kernel& kernel) {
   CHECK(clGetKernelInfo(kernel(), CL_KERNEL_FUNCTION_NAME, buffer_size, chars,
                         /*param_value_size_ret=*/&actual_size) == CL_SUCCESS);
 
-  CHECK(actual_size <= buffer_size) << "OpenCL kernel name exceeds "
-                                    << buffer_size << " characters";
+  CHECK(actual_size <= buffer_size)
+      << "OpenCL kernel name exceeds " << buffer_size << " characters";
 
   // Construct a string from the buffer.
   string name(chars);
@@ -80,8 +80,8 @@ string GetKernelArgTypeName(const cl::Kernel& kernel, size_t arg_index) {
             kernel(), arg_index, CL_KERNEL_ARG_TYPE_NAME, buffer_size, chars,
             /*param_value_size_ret=*/&actual_size) == CL_SUCCESS);
 
-  CHECK(actual_size <= buffer_size) << "OpenCL kernel name exceeds "
-                                    << buffer_size << " characters";
+  CHECK(actual_size <= buffer_size)
+      << "OpenCL kernel name exceeds " << buffer_size << " characters";
 
   // Construct a string from the buffer.
   string name(chars);

@@ -1,12 +1,13 @@
 """Test that tensorflow can be imported."""
-import pytest
 import sys
 
 import numpy as np
+import pytest
 
-from config import getconfig
+import getconfig
 from labm8 import app
 from labm8 import test
+
 
 FLAGS = app.FLAGS
 

@@ -1,14 +1,13 @@
 # Protobufs for project fish.
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-# Default to public visibility so that X_proto_library targets in other packages
-# may depend on these protos using proto_deps. Specifying individual targets as
-# public does not work since X_proto_library macros uses intermediate targets
-# which must also be public.
-package(default_visibility = ["//visibility:public"])
+proto_library(
+    name = "fish_pb",
+    srcs = ["fish.proto"],
+)
 
-py_proto_library(
-    name = "fish_py_pb2",
-    protos = ["fish.proto"],
-    deps = ["//third_party/py/protobuf"],
+python_proto_library(
+    name = "fish_pb_py",
+    visibility = ["//visibility:public"],
+    deps = [":fish_pb"],
 )

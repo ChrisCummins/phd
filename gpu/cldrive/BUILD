@@ -35,7 +35,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/cldrive/legacy:env",
-        "//gpu/cldrive/proto:cldrive_py_pb2",
+        "//gpu/cldrive/proto:cldrive_pb_py",
         "//gpu/oclgrind",
         "//labm8:app",
         "//labm8:bazelutil",
@@ -95,7 +95,7 @@ cc_library(
     srcs = ["csv_log.cc"],
     hdrs = ["csv_log.h"],
     deps = [
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//phd:logging",
         "//phd:port",
         "//phd:string",
@@ -136,7 +136,7 @@ cc_library(
         ":opencl_type_util",
         ":opencl_util",
         ":scalar_kernel_arg_value",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//phd:status",
         "//phd:status_macros",
         "//phd:statusor",
@@ -156,7 +156,7 @@ cc_test(
         ":global_memory_arg_value",
         ":kernel_arg",
         ":testutil",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//phd:test",
         "//third_party/opencl",
     ] + select({
@@ -173,7 +173,7 @@ cc_library(
         ":kernel_arg",
         ":kernel_arg_values_set",
         ":opencl_util",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//phd:logging",
         "//phd:status",
         "//phd:status_macros",
@@ -270,7 +270,7 @@ cc_library(
         ":kernel_arg_set",
         ":logger",
         ":opencl_util",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//gpu/clinfo:libclinfo",
         "//phd:logging",
         "//phd:status_macros",
@@ -307,7 +307,7 @@ cc_library(
         ":kernel_arg_values_set",
         ":kernel_driver",
         ":logger",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//gpu/clinfo:libclinfo",
         "//phd:common",
         "//phd:logging",
@@ -354,7 +354,7 @@ cc_library(
     hdrs = ["logger.h"],
     deps = [
         ":csv_log",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//phd:logging",
         "//phd:status",
     ],
@@ -366,7 +366,7 @@ cc_binary(
     linkstatic = False,  # Needed for Oclgrind support.
     deps = [
         ":libcldrive",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//phd:pbutil",
     ],
 )
@@ -377,7 +377,7 @@ cc_binary(
     linkstatic = False,  # Needed for Oclgrind support.
     deps = [
         ":libcldrive",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
     ],
 )
 
@@ -500,7 +500,7 @@ cc_library(
         ":global_memory_arg_value",
         ":kernel_arg_value",
         ":scalar_kernel_arg_value",
-        "//gpu/cldrive/proto:cldrive_cc_pb2",
+        "//gpu/cldrive/proto:cldrive_py_cc",
         "//third_party/opencl",
     ] + select({
         "//:darwin": [],

@@ -13,7 +13,6 @@
 # limitations under the License.
 """Unit tests for //compilers/llvm/clang.py."""
 import pathlib
-
 import pytest
 
 from compilers.llvm import clang
@@ -21,6 +20,12 @@ from labm8 import app
 from labm8 import test
 
 FLAGS = app.FLAGS
+
+_BASIC_CPP_PROGRAM = """
+int main() {
+  return 0;
+}
+"""
 
 
 def _StripPreprocessorLines(out: str):
@@ -33,21 +38,14 @@ def _StripPreprocessorLines(out: str):
 def test_Exec_compile_bytecode(tempdir: pathlib.Path):
   """Test bytecode generation."""
   with open(tempdir / 'foo.cc', 'w') as f:
-    f.write("""
-#include <iostream>
-
-int main() {
-  std::cout << "Hello, world!" << std::endl;
-  return 0;
-}
-""")
+    f.write(_BASIC_CPP_PROGRAM)
   p = clang.Exec([
       str(tempdir / 'foo.cc'), '-xc++', '-S', '-emit-llvm', '-c', '-o',
       str(tempdir / 'foo.ll')
   ])
-  assert not p.returncode
   assert not p.stderr
   assert not p.stdout
+  assert not p.returncode
   assert (tempdir / 'foo.ll').is_file()
 
 
@@ -56,18 +54,11 @@ def test_Exec_compile_bytecode_stdin(tempdir: pathlib.Path):
   p = clang.Exec(
       ['-xc++', '-S', '-emit-llvm', '-c', '-o',
        str(tempdir / 'foo.ll'), '-'],
-      stdin="""
-#include <iostream>
-
-int main() {
-  std::cout << "Hello, world!" << std::endl;
-  return 0;
-}
-""")
+      stdin=_BASIC_CPP_PROGRAM)
   print(p.stderr)
-  assert not p.returncode
   assert not p.stderr
   assert not p.stdout
+  assert not p.returncode
   assert (tempdir / 'foo.ll').is_file()
 
 
@@ -101,15 +92,14 @@ def test_Preprocess_empty_input():
 
 def test_Preprocess_small_cxx_program():
   """Test pre-processing a small C++ program."""
-  assert clang.Preprocess(
-      """
+  assert clang.Preprocess("""
 #define FOO T
 template<typename FOO>
 FOO foobar(const T& a) {return a;}
 
 int foo() { return foobar<int>(10); }
 """,
-      copts=['-xc++']).endswith("""
+                          copts=['-xc++']).endswith("""
 
 template<typename T>
 T foobar(const T& a) {return a;}

@@ -29,13 +29,10 @@ def test_LlvmPipeline(tempdir: pathlib.Path):
   """End-to-end test."""
   with open(tempdir / 'foo.c', 'w') as f:
     f.write("""
-#include <stdio.h>
-
 int main() {
   int x = 0;
   if (x != 0)
     x = 5; // dead code
-  printf("Hello, world!\\n");
   return x;
 }
 """)
@@ -66,8 +63,7 @@ int main() {
   assert not p.returncode
   assert (tempdir / 'foo').is_file()
 
-  out = subprocess.check_output([str(tempdir / 'foo')], universal_newlines=True)
-  assert out == 'Hello, world!\n'
+  subprocess.check_call([str(tempdir / 'foo')])
 
 
 if __name__ == '__main__':

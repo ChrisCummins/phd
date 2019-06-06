@@ -17,7 +17,7 @@
 
 syntax = "proto2";
 
-import "config/proto/config.proto";
+import "config.proto";
 
 package phd;
 

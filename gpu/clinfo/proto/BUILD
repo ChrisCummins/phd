@@ -14,17 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
-cc_proto_library(
-    name = "clinfo_cc_pb2",
-    protos = ["clinfo.proto"],
+proto_library(
+    name = "clinfo_pb",
+    srcs = ["clinfo.proto"],
 )
 
-py_proto_library(
-    name = "clinfo_py_pb2",
-    protos = ["clinfo.proto"],
+cc_proto_library(
+    name = "clinfo_pb_cc",
+    deps = [":clinfo_pb"],
+)
+
+python_proto_library(
+    name = "clinfo_pb_py",
+    deps = [":clinfo_pb"],
 )

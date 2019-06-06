@@ -15,55 +15,72 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 
-py_proto_library(
-    name = "datastore_py_pb2",
-    proto_deps = [
-        ":deepsmith_py_pb2",
-        ":service_py_pb2",
+proto_library(
+    name = "datastore_pb",
+    srcs = ["datastore.proto"],
+    deps = [
+        ":deepsmith_pb",
+        ":service_pb",
     ],
-    protos = ["datastore.proto"],
-    visibility = ["//visibility:public"],
-    with_grpc = True,
-    deps = ["//third_party/py/protobuf"],
 )
 
-py_proto_library(
-    name = "deepsmith_py_pb2",
-    protos = ["deepsmith.proto"],
+python_grpc_library(
+    name = "datastore_pb_py",
     visibility = ["//visibility:public"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":datastore_pb"],
 )
 
-py_proto_library(
-    name = "generator_py_pb2",
-    proto_deps = [
-        ":deepsmith_py_pb2",
-        ":service_py_pb2",
-        "//deeplearning/clgen/proto:clgen_py_pb2",
+proto_library(
+    name = "deepsmith_pb",
+    srcs = ["deepsmith.proto"],
+)
+
+python_grpc_library(
+    name = "deepsmith_pb_py_grpc",
+    visibility = ["//visibility:public"],
+    deps = [":deepsmith_pb"],
+)
+
+proto_library(
+    name = "generator_pb",
+    srcs = ["generator.proto"],
+    deps = [
+        ":deepsmith_pb",
+        ":service_pb",
+        "//deeplearning/clgen/proto:clgen_pb",
     ],
-    protos = ["generator.proto"],
-    visibility = ["//visibility:public"],
-    with_grpc = True,
-    deps = ["//third_party/py/protobuf"],
 )
 
-py_proto_library(
+python_grpc_library(
+    name = "generator_pb_py_grpc",
+    visibility = ["//visibility:public"],
+    deps = [":generator_pb"],
+)
+
+proto_library(
+    name = "harness_pb",
+    srcs = ["harness.proto"],
+    deps = [
+        ":deepsmith_pb",
+        ":service_pb",
+    ],
+)
+
+python_grpc_library(
     name = "harness_py_pb2",
-    proto_deps = [
-        ":deepsmith_py_pb2",
-        ":service_py_pb2",
-    ],
-    protos = ["harness.proto"],
     visibility = ["//visibility:public"],
-    with_grpc = True,
-    deps = ["//third_party/py/protobuf"],
+    deps = [":harness_pb"],
 )
 
-py_proto_library(
-    name = "service_py_pb2",
-    protos = ["service.proto"],
+proto_library(
+    name = "service_pb",
+    srcs = ["service.proto"],
+)
+
+python_grpc_library(
+    name = "service_pb_py",
     visibility = ["//visibility:public"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":service_pb"],
 )

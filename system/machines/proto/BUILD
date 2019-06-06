@@ -1,17 +1,25 @@
 # Protos for managing machines.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-py_proto_library(
-    name = "data_tiers_pb2_py",
-    protos = ["data_tiers.proto"],
-    visibility = ["//system/machines:__subpackages__"],
-    deps = ["//third_party/py/protobuf"],
+proto_library(
+    name = "data_tiers",
+    srcs = ["data_tiers.proto"],
 )
 
-py_proto_library(
-    name = "machine_spec_pb2_py",
-    protos = ["machine_spec.proto"],
+python_proto_library(
+    name = "data_tiers_pb_py",
     visibility = ["//system/machines:__subpackages__"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":data_tiers"],
+)
+
+proto_library(
+    name = "machine_spec_pb",
+    srcs = ["machine_spec.proto"],
+)
+
+python_proto_library(
+    name = "machine_spec_pb_py",
+    visibility = ["//system/machines:__subpackages__"],
+    deps = [":machine_spec_pb"],
 )

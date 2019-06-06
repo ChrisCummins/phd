@@ -51,10 +51,9 @@ def _GetCommand(driver, instances):
 def Drive(instances: cldrive_pb2.CldriveInstances,
           timeout_seconds: int = 300) -> cldrive_pb2.CldriveInstances:
   """Run cldrive with the given instances proto."""
-  pbutil.RunProcessMessageInPlace(
-      _GetCommand(_NATIVE_DRIVER, instances),
-      instances,
-      timeout_seconds=timeout_seconds)
+  pbutil.RunProcessMessageInPlace(_GetCommand(_NATIVE_DRIVER, instances),
+                                  instances,
+                                  timeout_seconds=timeout_seconds)
   return instances
 
 

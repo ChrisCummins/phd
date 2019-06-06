@@ -14,13 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-py_proto_library(
-    name = "github_py_pb2",
-    protos = ["github.proto"],
+proto_library(
+    name = "github_pb",
+    srcs = ["github.proto"],
+)
+
+python_proto_library(
+    name = "github_pb_py",
     deps = [
-        "//third_party/py/protobuf",
+        ":github_pb",
     ],
 )
 
@@ -29,7 +33,7 @@ py_library(
     srcs = ["api.py"],
     visibility = ["//visibility:public"],
     deps = [
-        ":github_py_pb2",
+        ":github_pb_py",
         "//labm8:app",
         "//third_party/py/github",
     ],

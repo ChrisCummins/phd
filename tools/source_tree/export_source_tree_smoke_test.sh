@@ -24,9 +24,7 @@ cd "$TMPDIR"
 # Build the exported source tree.
 ./configure --noninteractive
 test -f bootstrap.sh
-./bazel_wrapper.py build --incompatible_remove_native_http_archive=false \
-  //tools/source_tree:export_source_tree
+./bazel_wrapper.py build //tools/source_tree:export_source_tree
 
 # Tidy up.
-./bazel_wrapper.py clean --incompatible_remove_native_http_archive=false \
-  --expunge
+./bazel_wrapper.py clean --expunge

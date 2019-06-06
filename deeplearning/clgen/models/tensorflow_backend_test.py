@@ -172,11 +172,10 @@ def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
   abc_tensorflow_model_config.training.batch_size = 1
   m = models.Model(abc_tensorflow_model_config)
   sample_observer = sample_observers.InMemorySampleSaver()
-  m.Sample(
-      MockSampler(hash='hash'), [
-          sample_observers.MaxSampleCountObserver(1), sample_observer,
-          sample_observers.LegacySampleCacheObserver()
-      ])
+  m.Sample(MockSampler(hash='hash'), [
+      sample_observers.MaxSampleCountObserver(1), sample_observer,
+      sample_observers.LegacySampleCacheObserver()
+  ])
   samples = sample_observer.samples
   # Samples are produced in batches of sampler.batch_size elements.
   assert len(samples) == 1

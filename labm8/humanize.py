@@ -211,13 +211,12 @@ def DecimalPrefix(quantity, unit, precision=1, min_scale=0, max_scale=None):
     required precision, possibly followed by a space, the appropriate multiplier
     and the unit.
   """
-  return _Prefix(
-      quantity,
-      unit,
-      precision,
-      DecimalScale,
-      min_scale=min_scale,
-      max_scale=max_scale)
+  return _Prefix(quantity,
+                 unit,
+                 precision,
+                 DecimalScale,
+                 min_scale=min_scale,
+                 max_scale=max_scale)
 
 
 def BinaryPrefix(quantity, unit, precision=1):

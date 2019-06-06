@@ -14,20 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Integration test for //gpu/libcecl."""
-import io
 import pathlib
-import subprocess
-import re
-
 import pytest
+import re
+import subprocess
 
-from compilers.llvm import clang
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
-from gpu.libcecl.proto import libcecl_pb2
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
-from gpu.oclgrind import oclgrind
+from gpu.libcecl.proto import libcecl_pb2
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import test
@@ -63,8 +59,7 @@ def _RewriteCompileLinkExecute(
     extra_exec_args=None) -> libcecl_pb2.LibceclExecutableRun:
   """Compile, link, and execute a program using libcecl."""
   # Re-write OpenCL source to use libcecl.
-  # libcecl_src = libcecl_rewriter.RewriteOpenClSource(src)
-  libcecl_src = src
+  libcecl_src = libcecl_rewriter.RewriteOpenClSource(src)
 
   # Compile libcecl source to bytecode.
   src_path = outdir / f'a.txt'
@@ -97,12 +92,11 @@ def _RewriteCompileLinkExecute(
 
 def test_rewrite_compile_link_execute_clinfo(tempdir: pathlib.Path,
                                              clinfo_src: str):
-  log = _RewriteCompileLinkExecute(
-      tempdir,
-      clinfo_src,
-      lang='c',
-      extra_ldflags=['-lm', '-lstdc++'],
-      extra_exec_args=['--raw'])
+  log = _RewriteCompileLinkExecute(tempdir,
+                                   clinfo_src,
+                                   lang='c',
+                                   extra_ldflags=['-lm', '-lstdc++'],
+                                   extra_exec_args=['--raw'])
 
   assert log.ms_since_unix_epoch
   assert log.returncode == 0
@@ -126,8 +120,10 @@ def test_rewrite_compile_link_execute_clinfo(tempdir: pathlib.Path,
 
 def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   """Test end-to-end libcecl pipeline."""
-  log = _RewriteCompileLinkExecute(
-      tempdir, hello_src, lang='c++', extra_cflags=['-std=c++11'])
+  log = _RewriteCompileLinkExecute(tempdir,
+                                   hello_src,
+                                   lang='c++',
+                                   extra_cflags=['-std=c++11'])
 
   print(log.stdout)
   print(log.stderr)
@@ -139,19 +135,21 @@ def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   assert len(log.kernel_invocation) == 1
   assert len(log.opencl_program_source) == 1
   assert log.opencl_program_source[0] == """\
-kernel void square(
-    global float* input,
-    global float* output,
-    const unsigned int count) {
-  int i = get_global_id(0);
-  if(i < count)
-    output[i] = input[i] * input[i];
+__kernel void vadd(
+   __global float* a,
+   __global float* b,
+   __global float* c,
+   const unsigned int count)
+{
+   int i = get_global_id(0);
+   if(i < count)
+       c[i] = a[i] + b[i];
 }"""
 
-  assert log.kernel_invocation[0].kernel_name == 'square'
+  assert log.kernel_invocation[0].kernel_name == 'vadd'
   assert log.kernel_invocation[0].global_size == 1024
-  assert log.kernel_invocation[0].local_size == 1024
-  assert log.kernel_invocation[0].transferred_bytes == 8192
+  assert log.kernel_invocation[0].local_size == 0
+  assert log.kernel_invocation[0].transferred_bytes == 12288
   assert log.kernel_invocation[
       0].transfer_time_ns > 1000  # Flaky, but probably true.
   assert log.kernel_invocation[
@@ -159,7 +157,7 @@ kernel void square(
 
   profile_time = (log.kernel_invocation[0].transfer_time_ns +
                   log.kernel_invocation[0].kernel_time_ns)
-  assert 1000 < log.elapsed_time_ns < profile_time
+  assert 1000 < profile_time < log.elapsed_time_ns
 
 
 if __name__ == '__main__':

@@ -14,6 +14,8 @@ from system.machines import mirrored_directory
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'system.machines'
+
 _MACHINE_SPEC_PATH = bazelutil.DataPath(
     'phd/system/machines/ryangosling/ryangosling.pbtxt')
 
@@ -32,8 +34,8 @@ def test_Ryangosling_mirrored_directories(ryangosling: machine.Machine):
 
 @pytest.mark.diana
 @pytest.mark.florence
-@pytest.mark.skipif(
-    not os.path.isdir('/Volumes/Orange'), reason='Orange drive not found')
+@pytest.mark.skipif(not os.path.isdir('/Volumes/Orange'),
+                    reason='Orange drive not found')
 def test_Ryangosling_photos(ryangosling: machine.Machine):
   """Test that mirrored directory exists."""
   d = ryangosling.MirroredDirectory('photos')

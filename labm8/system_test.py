@@ -13,13 +13,13 @@
 # limitations under the License.
 """Unit tests for //labm8:system."""
 
-import getpass
 import os
-import socket
-import sys
-import tempfile
 
+import getpass
+import pathlib
 import pytest
+import socket
+import tempfile
 
 from labm8 import app
 from labm8 import fs
@@ -112,38 +112,42 @@ def test_run_timeout():
 
 
 # echo()
-def test_echo():
-  system.echo("foo", "/tmp/labm8.tmp")
-  assert fs.read("/tmp/labm8.tmp") == ["foo"]
-  system.echo("", "/tmp/labm8.tmp")
-  assert fs.read("/tmp/labm8.tmp") == [""]
+def test_echo(tempdir: pathlib.Path):
+  file_path = tempdir / 'file.txt'
+  system.echo("foo", file_path)
+  assert fs.read(file_path) == ["foo"]
+  system.echo("", file_path)
+  assert fs.read(file_path) == [""]
 
 
-def test_echo_append():
-  system.echo("foo", "/tmp/labm8.tmp")
-  system.echo("bar", "/tmp/labm8.tmp", append=True)
-  assert fs.read("/tmp/labm8.tmp") == ["foo", "bar"]
+def test_echo_append(tempdir: pathlib.Path):
+  file_path = tempdir / 'file.txt'
+  system.echo("foo", file_path)
+  system.echo("bar", file_path, append=True)
+  assert fs.read(file_path) == ["foo", "bar"]
 
 
-def test_echo_kwargs():
-  system.echo("foo", "/tmp/labm8.tmp", end="_")
-  assert fs.read("/tmp/labm8.tmp") == ["foo_"]
+def test_echo_kwargs(tempdir: pathlib.Path):
+  file_path = tempdir / 'file.txt'
+  system.echo("foo", file_path, end="_")
+  assert fs.read(file_path) == ["foo_"]
 
 
 # sed()
-def test_sed():
-  system.echo("Hello, world!", "/tmp/labm8.tmp")
-  system.sed("Hello", "Goodbye", "/tmp/labm8.tmp")
-  assert ["Goodbye, world!"] == fs.read("/tmp/labm8.tmp")
-  system.sed("o", "_", "/tmp/labm8.tmp")
-  assert ["G_odbye, world!"] == fs.read("/tmp/labm8.tmp")
-  system.sed("o", "_", "/tmp/labm8.tmp", "g")
-  assert ["G__dbye, w_rld!"] == fs.read("/tmp/labm8.tmp")
+def test_sed(tempdir: pathlib.Path):
+  file_path = tempdir / 'file.txt'
+  system.echo("Hello, world!", file_path)
+  system.sed("Hello", "Goodbye", file_path)
+  assert ["Goodbye, world!"] == fs.read(file_path)
+  system.sed("o", "_", file_path)
+  assert ["G_odbye, world!"] == fs.read(file_path)
+  system.sed("o", "_", file_path, "g")
+  assert ["G__dbye, w_rld!"] == fs.read(file_path)
 
 
-def test_sed_fail_no_file():
+def test_sed_fail_no_file(tempdir: pathlib.Path):
   with pytest.raises(system.SubprocessError):
-    system.sed("Hello", "Goodbye", "/not/a/real/file")
+    system.sed("Hello", "Goodbye", tempdir / "not_a_file.txt")
 
 
 # which()
@@ -157,99 +161,6 @@ def test_which_path():
   assert not system.which("sh", path=("/dev",))
   assert not system.which("sh", path=("/not-a-real-path",))
   assert not system.which("not-a-real-command", path=("/bin",))
-
-
-# scp()
-def test_scp():
-  system.echo("Hello, world!", "/tmp/labm8.tmp")
-  assert ["Hello, world!"] == fs.read("/tmp/labm8.tmp")
-  # Cleanup any existing file.
-  fs.rm("/tmp/labm8.tmp.copy")
-  assert not fs.exists("/tmp/labm8.tmp.copy")
-  # Perform scp.
-  system.scp(
-      "localhost",
-      "/tmp/labm8.tmp",
-      "/tmp/labm8.tmp.copy",
-      path="labm8/data/test/bin")
-  assert fs.read("/tmp/labm8.tmp") == fs.read("/tmp/labm8.tmp.copy")
-
-
-def test_scp_user():
-  system.echo("Hello, world!", "/tmp/labm8.tmp")
-  assert ["Hello, world!"] == fs.read("/tmp/labm8.tmp")
-  # Cleanup any existing file.
-  fs.rm("/tmp/labm8.tmp.copy")
-  assert not fs.exists("/tmp/labm8.tmp.copy")
-  # Perform scp.
-  system.scp(
-      "localhost",
-      "/tmp/labm8.tmp",
-      "/tmp/labm8.tmp.copy",
-      path="labm8/data/test/bin",
-      user="test")
-  assert fs.read("/tmp/labm8.tmp") == fs.read("/tmp/labm8.tmp.copy")
-
-
-def test_scp_bad_path():
-  # Error is raised if scp binary cannot be found.
-  with pytest.raises(system.CommandNotFoundError):
-    system.scp(
-        "localhost",
-        "/not/a/real/path",
-        "/tmp/labm8.tmp.copy",
-        path="not/a/real/path")
-
-
-def test_scp_no_scp():
-  # Error is raised if scp binary cannot be found.
-  with pytest.raises(system.CommandNotFoundError):
-    system.scp(
-        "localhost",
-        "/not/a/real/path",
-        "/tmp/labm8.tmp.copy",
-        path="labm8/data/test")
-
-
-def test_scp_bad_src():
-  # Error is raised if source file cannot be found.
-  with pytest.raises(system.ScpError):
-    system.scp(
-        "localhost",
-        "/not/a/real/path",
-        "/tmp/labm8.tmp.copy",
-        path="labm8/data/test/bin")
-
-
-def test_scp_bad_dst():
-  system.echo("Hello, world!", "/tmp/labm8.tmp")
-  assert ["Hello, world!"] == fs.read("/tmp/labm8.tmp")
-  # Error is raised if destination file cannot be written.
-  with pytest.raises(system.ScpError):
-    system.scp(
-        "localhost",
-        "/tmp/labm8.tmp",
-        "/not/a/valid/path",
-        path="labm8/data/test/bin")
-
-
-def test_scp_bad_dst_permission():
-  system.echo("Hello, world!", "/tmp/labm8.tmp")
-  assert ["Hello, world!"] == fs.read("/tmp/labm8.tmp")
-  # Error is raised if no write permission for destination.
-  with pytest.raises(system.ScpError):
-    system.scp(
-        "localhost", "/tmp/labm8.tmp", "/dev", path="labm8/data/test/bin")
-
-
-def test_scp_bad_host():
-  # Error is raised if host cannot be found.
-  with pytest.raises(system.ScpError):
-    system.scp(
-        "not-a-real-host",
-        "/not/a/real/path",
-        "/tmp/labm8.tmp.copy",
-        path="labm8/data/test/bin")
 
 
 def test_isprocess():

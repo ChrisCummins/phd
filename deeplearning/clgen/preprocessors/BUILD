@@ -419,7 +419,7 @@ py_test(
     deps = [
         ":clang",
         ":opencl",
-        "//deeplearning/clgen/proto:corpus_py_pb2",
+        "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:test",
@@ -444,7 +444,7 @@ py_library(
         ":opencl",
         ":public",
         "//deeplearning/clgen:errors",
-        "//deeplearning/clgen/proto:internal_py_pb2",
+        "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",
     ],
 )

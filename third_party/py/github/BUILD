@@ -11,5 +11,6 @@ py_library(
     srcs = ["github.py"],
     deps = [
         requirement("PyGithub"),
+        requirement("jwt"),
     ],
 )

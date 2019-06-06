@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
+load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 
 licenses(["restricted"])  # GPL v3
 
@@ -24,15 +25,16 @@ exports_files([
     "README.md",
 ])
 
-py_proto_library(
-    name = "alice_py_pb2",
-    proto_deps = [
-        "//config/proto:config",
-    ],
-    protos = ["alice.proto"],
+proto_library(
+    name = "alice_pb",
+    srcs = [":alice.proto"],
+    deps = ["//:config_pb"],
+)
+
+python_grpc_library(
+    name = "alice_pb_py_grpc",
     visibility = ["//visibility:public"],
-    with_grpc = True,
-    deps = ["//third_party/py/protobuf"],
+    deps = [":alice_pb"],
 )
 
 py_library(
@@ -40,7 +42,7 @@ py_library(
     srcs = ["bazel.py"],
     visibility = ["//alice:__subpackages__"],
     deps = [
-        ":alice_py_pb2",
+        ":alice_pb_py_grpc",
         "//labm8:app",
         "//labm8:fs",
         "//labm8:system",
@@ -52,7 +54,7 @@ py_test(
     srcs = ["bazel_test.py"],
     data = ["//alice/test:dummy_target"],
     deps = [
-        ":alice_py_pb2",
+        ":alice_pb_py_grpc",
         ":bazel",
         "//labm8:test",
         "//third_party/py/pytest",
@@ -64,7 +66,7 @@ py_library(
     srcs = ["git_repo.py"],
     visibility = ["//alice:__subpackages__"],
     deps = [
-        ":alice_py_pb2",
+        ":alice_pb_py_grpc",
         "//labm8:app",
         "//third_party/py/git",
     ],
@@ -75,7 +77,7 @@ py_test(
     srcs = ["git_repo_test.py"],
     deps = [
         ":git_repo",
-        "//config:getconfig",
+        "//:getconfig",
         "//labm8:pbutil",
         "//labm8:test",
         "//third_party/py/git",
@@ -87,7 +89,7 @@ py_binary(
     name = "run",
     srcs = ["run.py"],
     deps = [
-        ":alice_py_pb2",
+        ":alice_pb_py_grpc",
         ":git_repo",
         "//labm8:app",
         "//third_party/py/grpcio",

@@ -9,7 +9,7 @@ load("@requirements//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])
+licenses(["notice"])  # Apache 2.0.
 
 exports_files(["LICENSE"])
 

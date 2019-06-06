@@ -8,10 +8,13 @@ I feel like there's a 90-10 rule that applies to this repo: 90% of people who
 checkout this repo only need 10% of the code contained within it.
 This script provides a way to export that 10%.
 """
+import os
+
 import contextlib
 import datetime
+import git
+import github as github_lib
 import glob
-import os
 import pathlib
 import re
 import shutil
@@ -20,10 +23,7 @@ import subprocess
 import tempfile
 import typing
 
-import git
-import github as github_lib
-
-from config import getconfig
+import getconfig
 from datasets.github import api
 from labm8 import app
 from labm8 import bazelutil
@@ -76,11 +76,9 @@ EXCLUDED_FILES = [
 
 def BazelQuery(args: typing.List[str], timeout_seconds: int = 360, **kwargs):
   """Run bazel query with the specified args."""
-  return subprocess.Popen([
-      'timeout', '-s9',
-      str(timeout_seconds), 'bazel', 'query',
-      '--incompatible_remove_native_http_archive=false'
-  ] + args, **kwargs)
+  return subprocess.Popen(
+      ['timeout', '-s9',
+       str(timeout_seconds), 'bazel', 'query'] + args, **kwargs)
 
 
 def MaybeTargetToPath(fully_qualified_target: str, source_root: pathlib.Path

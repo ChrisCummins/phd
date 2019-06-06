@@ -1,6 +1,6 @@
 // A program which reads an AddXandY message from stdin, and writes an
 // UnexpectedOutputProto message to stdout.
-#include "labm8/data/test/ppar/protos.pb.h"
+#include "labm8/test_data/ppar/protos.pb.h"
 #include "phd/logging.h"
 
 #include <iostream>

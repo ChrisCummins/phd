@@ -524,8 +524,10 @@ unsetopt nullglob
 
 
 # Expand '...' into '../..'
-autoload -Uz manydots-magic
-manydots-magic
+# TODO(2019-06-05): Temporarily disabling this feature because it has the
+# annoying habit of breaking my bazel '/...' paths.
+# autoload -Uz manydots-magic
+# manydots-magic
 
 
 # --------------------------------------------------------------------------
@@ -566,6 +568,7 @@ pkg_config_path_dirs=( \
 export PKG_CONFIG_PATH=$(build_path "${pkg_config_path_dirs[@]}")
 
 ld_library_path_dirs=( \
+    /usr/local/opt/openssl/lib \
     /usr/lib \
     /usr/lib32 \
     /usr/local/lib \
@@ -574,6 +577,7 @@ ld_library_path_dirs=( \
 export LD_LIBRARY_PATH=$(build_path "${ld_library_path_dirs[@]}")
 
 path_dirs=( \
+    /usr/local/opt/openssl/bin \
     ~/bin \
     ~/.rbenv/shims \
     ~/.local/bin \

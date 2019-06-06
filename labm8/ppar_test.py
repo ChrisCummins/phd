@@ -17,19 +17,16 @@ import multiprocessing
 import progressbar
 import pytest
 
-from labm8 import app
 from labm8 import ppar
 from labm8 import test
-from labm8.data.test.ppar import protos_pb2
-
-FLAGS = app.FLAGS
+from labm8.test_data.ppar import protos_pb2
 
 
 def test_MapWorker_okay():
   inputs = [protos_pb2.AddXandY(x=2, y=2), protos_pb2.AddXandY(x=0, y=1)]
   ret = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker',
+          'phd/labm8/test_data/ppar/proto_worker',
           input_protos=inputs,
           output_proto_class=protos_pb2.AddXandY))
 
@@ -75,7 +72,7 @@ def test_MapWorker_one_failure():
   inputs = [protos_pb2.AddXandY(x=2, y=2), protos_pb2.AddXandY(x=10, y=1)]
   workers = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker',
+          'phd/labm8/test_data/ppar/proto_worker',
           input_protos=inputs,
           output_proto_class=protos_pb2.AddXandY))
 
@@ -106,7 +103,7 @@ def test_MapWorker_wrap_progressbar():
   bar = progressbar.ProgressBar(max_value=len(inputs))
 
   worker_generator = ppar.MapNativeProtoProcessingBinary(
-      'phd/labm8/data/test/ppar/proto_worker',
+      'phd/labm8/test_data/ppar/proto_worker',
       input_protos=inputs,
       output_proto_class=protos_pb2.AddXandY)
 
@@ -124,7 +121,7 @@ def test_MapWorker_output_decode_error_silently_ignore():
 
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/unexpected_output_proto_worker', inputs,
+          'phd/labm8/test_data/ppar/unexpected_output_proto_worker', inputs,
           protos_pb2.AddXandY))
 
   assert len(results) == 1
@@ -140,7 +137,7 @@ def test_MapWorker_binary_not_found():
   # generator and is evaluated lazily. The error is raised when we attempt to
   # read the results.
   generator = ppar.MapNativeProtoProcessingBinary(
-      'phd/labm8/data/test/ppar/not/a/real/binary', [protos_pb2.AddXandY()],
+      'phd/labm8/test_data/ppar/not/a/real/binary', [protos_pb2.AddXandY()],
       protos_pb2.AddXandY)
   with pytest.raises(FileNotFoundError):
     next(generator)
@@ -150,7 +147,7 @@ def test_MapWorker_no_inputs():
   """Test that no output is produced when run with no inputs."""
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker', [], protos_pb2.AddXandY))
+          'phd/labm8/test_data/ppar/proto_worker', [], protos_pb2.AddXandY))
   assert not results
 
 
@@ -166,7 +163,7 @@ def test_MapWorker_generator_inputs():
 
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker', InputGenerator(),
+          'phd/labm8/test_data/ppar/proto_worker', InputGenerator(),
           protos_pb2.AddXandY))
 
   assert len(results) == 2
@@ -177,7 +174,7 @@ def test_MapWorker_pool():
   pool = multiprocessing.Pool(processes=1)
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker',
+          'phd/labm8/test_data/ppar/proto_worker',
           [protos_pb2.AddXandY(x=2, y=2)],
           protos_pb2.AddXandY,
           pool=pool))
@@ -191,7 +188,7 @@ def test_MapWorker_num_processes():
   """Test running with explicit number of processes."""
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker',
+          'phd/labm8/test_data/ppar/proto_worker',
           [protos_pb2.AddXandY(x=2, y=2)],
           protos_pb2.AddXandY,
           num_processes=1))
@@ -205,7 +202,7 @@ def test_MapWorker_binary_args():
   """Test that args are passed to the binary."""
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker_requires_args',
+          'phd/labm8/test_data/ppar/proto_worker_requires_args',
           [protos_pb2.AddXandY(x=2, y=2)],
           protos_pb2.AddXandY,
           binary_args=['-required_arg']))
@@ -215,7 +212,7 @@ def test_MapWorker_binary_args():
   # Run again without the required arg, causing the binary to crash.
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/data/test/ppar/proto_worker_requires_args',
+          'phd/labm8/test_data/ppar/proto_worker_requires_args',
           [protos_pb2.AddXandY(x=2, y=2)], protos_pb2.AddXandY))
   assert len(results) == 1
   assert not results[0].ok()

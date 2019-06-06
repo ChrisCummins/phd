@@ -33,11 +33,10 @@ MODULE_UNDER_TEST = 'gpu.cldrive'
 @pytest.mark.skip(reason="FIXME(cec)")
 def test_empty_kernel():
   src = " kernel void A() {} "
-  outputs = driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src, [],
-      gsize=(1, 1, 1),
-      lsize=(1, 1, 1))
+  outputs = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                               src, [],
+                               gsize=(1, 1, 1),
+                               lsize=(1, 1, 1))
   assert len(outputs) == 0
 
 
@@ -55,12 +54,11 @@ def test_simple():
     }
     """
 
-  outputs = driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src,
-      inputs,
-      gsize=(8, 1, 1),
-      lsize=(1, 1, 1))
+  outputs = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                               src,
+                               inputs,
+                               gsize=(8, 1, 1),
+                               lsize=(1, 1, 1))
 
   testlib.Assert2DArraysAlmostEqual(inputs, inputs_orig)
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
@@ -85,23 +83,21 @@ def test_vector_input():
     }
     """
 
-  outputs = driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src,
-      inputs,
-      gsize=(4, 2, 1),
-      lsize=(1, 1, 1))
+  outputs = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                               src,
+                               inputs,
+                               gsize=(4, 2, 1),
+                               lsize=(1, 1, 1))
 
   testlib.Assert2DArraysAlmostEqual(inputs, inputs_orig)
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
 
   # run kernel a second time with the previous outputs
-  outputs2 = driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src,
-      outputs,
-      gsize=(4, 2, 1),
-      lsize=(1, 1, 1))
+  outputs2 = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                                src,
+                                outputs,
+                                gsize=(4, 2, 1),
+                                lsize=(1, 1, 1))
   outputs2_gs = [[0, 4, 8, 12, 0, 16, 32, 48], [2, 4]]
   testlib.Assert2DArraysAlmostEqual(outputs2, outputs2_gs)
 
@@ -111,11 +107,10 @@ def test_syntax_error():
   src = "kernel void A(gl ob a l  i nt* a) {}"
   with testlib.DevNullRedirect():
     with pytest.raises(driver.OpenCLValueError):
-      driver.DriveKernel(
-          env.OclgrindOpenCLEnvironment(),
-          src, [[]],
-          gsize=(1, 1, 1),
-          lsize=(1, 1, 1))
+      driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                         src, [[]],
+                         gsize=(1, 1, 1),
+                         lsize=(1, 1, 1))
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -123,27 +118,24 @@ def test_incorrect_num_of_args():
   src = "kernel void A(const int a) {}"
   # too many inputs
   with pytest.raises(ValueError):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [[1], [2], [3]],
-        gsize=(1, 1, 1),
-        lsize=(1, 1, 1))
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [[1], [2], [3]],
+                       gsize=(1, 1, 1),
+                       lsize=(1, 1, 1))
 
   # too few inputs
   with pytest.raises(ValueError):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [],
-        gsize=(1, 1, 1),
-        lsize=(1, 1, 1))
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [],
+                       gsize=(1, 1, 1),
+                       lsize=(1, 1, 1))
 
   # incorrect input width (3 ints instead of one)
   with pytest.raises(ValueError):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [[1, 2, 3]],
-        gsize=(1, 1, 1),
-        lsize=(1, 1, 1))
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [[1, 2, 3]],
+                       gsize=(1, 1, 1),
+                       lsize=(1, 1, 1))
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -151,12 +143,11 @@ def test_timeout():
   # non-terminating kernel
   src = "kernel void A() { while (true) ; }"
   with pytest.raises(driver.Timeout):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [],
-        gsize=(1, 1, 1),
-        lsize=(1, 1, 1),
-        timeout=1)
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [],
+                       gsize=(1, 1, 1),
+                       lsize=(1, 1, 1),
+                       timeout=1)
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -165,30 +156,27 @@ def test_invalid_sizes():
 
   # invalid global size
   with pytest.raises(ValueError):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [],
-        gsize=(0, -4, 1),
-        lsize=(1, 1, 1))
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [],
+                       gsize=(0, -4, 1),
+                       lsize=(1, 1, 1))
 
   # invalid local size
   with pytest.raises(ValueError):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [],
-        gsize=(1, 1, 1),
-        lsize=(-1, 1, 1))
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [],
+                       gsize=(1, 1, 1),
+                       lsize=(-1, 1, 1))
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
 def test_gsize_smaller_than_lsize():
   src = "kernel void A() {}"
   with pytest.raises(ValueError):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [],
-        gsize=(4, 1, 1),
-        lsize=(8, 1, 1))
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [],
+                       gsize=(4, 1, 1),
+                       lsize=(8, 1, 1))
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -198,12 +186,11 @@ def test_iterative_increment():
   d_cl, d_host = [np.arange(16)], np.arange(16)
   for _ in range(8):
     d_host += 1  # perform computation on host
-    d_cl = driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src,
-        d_cl,
-        gsize=(16, 1, 1),
-        lsize=(16, 1, 1))
+    d_cl = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                              src,
+                              d_cl,
+                              gsize=(16, 1, 1),
+                              lsize=(16, 1, 1))
     testlib.Assert2DArraysAlmostEqual(d_cl, [d_host])
 
 
@@ -214,12 +201,11 @@ def test_gsize_smaller_than_data():
   inputs = [[5, 5, 5, 5, 5, 5, 5, 5]]
   outputs_gs = [[0, 0, 0, 0, 5, 5, 5, 5]]
 
-  outputs = driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src,
-      inputs,
-      gsize=(4, 1, 1),
-      lsize=(4, 1, 1))
+  outputs = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                               src,
+                               inputs,
+                               gsize=(4, 1, 1),
+                               lsize=(4, 1, 1))
 
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
 
@@ -228,11 +214,10 @@ def test_gsize_smaller_than_data():
 def test_zero_size_input():
   src = "kernel void A(global int* a) {}"
   with pytest.raises(ValueError):
-    driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src, [[]],
-        gsize=(1, 1, 1),
-        lsize=(1, 1, 1))
+    driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                       src, [[]],
+                       gsize=(1, 1, 1),
+                       lsize=(1, 1, 1))
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -244,11 +229,10 @@ def test_comparison_against_pointer_warning():
     }
     """
 
-  driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src, [[0]],
-      gsize=(1, 1, 1),
-      lsize=(1, 1, 1))
+  driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                     src, [[0]],
+                     gsize=(1, 1, 1),
+                     lsize=(1, 1, 1))
 
 
 @pytest.mark.skip(reason="FIXME(cec)")
@@ -264,13 +248,12 @@ def test_profiling():
   outputs_gs = [np.arange(16)**2, np.arange(16)]
 
   with testlib.DevNullRedirect():
-    outputs = driver.DriveKernel(
-        env.OclgrindOpenCLEnvironment(),
-        src,
-        inputs,
-        gsize=(16, 1, 1),
-        lsize=(16, 1, 1),
-        profiling=True)
+    outputs = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                                 src,
+                                 inputs,
+                                 gsize=(16, 1, 1),
+                                 lsize=(16, 1, 1),
+                                 profiling=True)
 
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
 
@@ -283,12 +266,11 @@ def test_data_unchanged():
   src = "kernel void A(global int* a, global int* b, const int c) {}"
 
   inputs = data.MakeRand(src, 16)
-  outputs = driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src,
-      inputs,
-      gsize=(16, 1, 1),
-      lsize=(1, 1, 1))
+  outputs = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                               src,
+                               inputs,
+                               gsize=(16, 1, 1),
+                               lsize=(1, 1, 1))
 
   testlib.Assert2DArraysAlmostEqual(outputs, inputs)
 
@@ -299,12 +281,11 @@ def test_data_zerod():
   src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
 
   inputs = data.MakeRand(src, 16)
-  outputs = driver.DriveKernel(
-      env.OclgrindOpenCLEnvironment(),
-      src,
-      inputs,
-      gsize=(16, 1, 1),
-      lsize=(4, 1, 1))
+  outputs = driver.DriveKernel(env.OclgrindOpenCLEnvironment(),
+                               src,
+                               inputs,
+                               gsize=(16, 1, 1),
+                               lsize=(4, 1, 1))
 
   testlib.Assert2DArraysAlmostEqual(outputs, [np.zeros(16)])
 
@@ -324,8 +305,11 @@ def test_vector_input_switch():
   inputs = data.MakeArange(src, 4)
   outputs_gs = [[1, 0, 3, 2, 5, 4, 7, 6]]
 
-  outputs = driver.DriveKernel(
-      env.make_env(), src, inputs, gsize=(4, 1, 1), lsize=(4, 1, 1))
+  outputs = driver.DriveKernel(env.make_env(),
+                               src,
+                               inputs,
+                               gsize=(4, 1, 1),
+                               lsize=(4, 1, 1))
 
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
 

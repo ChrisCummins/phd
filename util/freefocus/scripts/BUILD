@@ -3,7 +3,7 @@
 py_binary(
     name = "github_to_proto",
     srcs = ["github_to_proto.py"],
-    deps = ["//util/freefocus:freefocus_py_pb2"],
+    deps = ["//util/freefocus:freefocus_pb_py"],
 )
 
 py_binary(
@@ -21,7 +21,7 @@ py_binary(
 py_binary(
     name = "proto_to_dot",
     srcs = ["proto_to_dot.py"],
-    deps = ["//util/freefocus:freefocus_py_pb2"],
+    deps = ["//util/freefocus:freefocus_pb_py"],
 )
 
 py_binary(

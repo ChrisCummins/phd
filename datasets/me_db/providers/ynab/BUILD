@@ -23,11 +23,13 @@ cc_binary(
     name = "json_budget_worker",
     srcs = ["json_budget_worker.cc"],
     deps = [
-        "//datasets/me_db:me_proto_cc",
+        "//datasets/me_db:me_pb_cc",
         "//phd:logging",
         "//phd:pbutil",
         "//phd:string",
         "@boost//:filesystem",
+        "@boost//:property_tree",
+        "@boost//:tokenizer",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -52,7 +54,7 @@ py_binary(
     visibility = ["//datasets/me_db:__pkg__"],
     deps = [
         "//datasets/me_db:importers",
-        "//datasets/me_db:me_proto_pb2",
+        "//datasets/me_db:me_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
@@ -65,7 +67,7 @@ py_test(
     deps = [
         ":make_dataset",
         ":ynab",
-        "//datasets/me_db:me_proto_pb2",
+        "//datasets/me_db:me_pb_py",
         "//labm8:app",
         "//labm8:test",
     ],

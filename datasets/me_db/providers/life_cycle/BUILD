@@ -35,7 +35,7 @@ cc_library(
     srcs = ["life_cycle_lib.cc"],
     hdrs = ["life_cycle_lib.h"],
     deps = [
-        "//datasets/me_db:me_proto_cc",
+        "//datasets/me_db:me_pb_cc",
         "//phd:logging",
         "//phd:string",
         "@boost//:filesystem",
@@ -50,7 +50,7 @@ cc_test(
     srcs = ["life_cycle_lib_test.cc"],
     deps = [
         ":life_cycle_lib",
-        "//datasets/me_db:me_proto_cc",
+        "//datasets/me_db:me_pb_cc",
         "//phd:test",
     ],
 )
@@ -62,7 +62,7 @@ py_binary(
     visibility = ["//datasets/me_db:__pkg__"],
     deps = [
         "//datasets/me_db:importers",
-        "//datasets/me_db:me_proto_pb2",
+        "//datasets/me_db:me_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
@@ -75,7 +75,7 @@ py_test(
     deps = [
         ":life_cycle",
         ":make_dataset",
-        "//datasets/me_db:me_proto_pb2",
+        "//datasets/me_db:me_pb_py",
         "//labm8:app",
         "//labm8:test",
     ],

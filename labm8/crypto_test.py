@@ -44,12 +44,12 @@ def test_sha1_list():
 # sha1_file()
 def test_sha1_file_empty():
   assert ("da39a3ee5e6b4b0d3255bfef95601890afd80709" == crypto.sha1_file(
-      "labm8/data/test/empty_file"))
+      "labm8/test_data/empty_file"))
 
 
 def test_sha1_file_hello_world():
   assert ("09fac8dbfd27bd9b4d23a00eb648aa751789536d" == crypto.sha1_file(
-      "labm8/data/test/hello_world"))
+      "labm8/test_data/hello_world"))
 
 
 # md5()
@@ -75,12 +75,12 @@ def test_md5_list():
 # md5_file()
 def test_md5_file_empty():
   assert ("d41d8cd98f00b204e9800998ecf8427e" == crypto.md5_file(
-      "labm8/data/test/empty_file"))
+      "labm8/test_data/empty_file"))
 
 
 def test_md5_file_hello_world():
   assert ("746308829575e17c3331bbcb00c0898b" == crypto.md5_file(
-      "labm8/data/test/hello_world"))
+      "labm8/test_data/hello_world"))
 
 
 # sha256()
@@ -110,12 +110,12 @@ def test_sha256_list():
 # sha256_file()
 def test_sha256_file_empty():
   assert ("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ==
-          crypto.sha256_file("labm8/data/test/empty_file"))
+          crypto.sha256_file("labm8/test_data/empty_file"))
 
 
 def test_sha256_file_hello_world():
   assert ("d9014c4624844aa5bac314773d6b689ad467fa4e1d1a50a1b8a99d5a95f72ff5" ==
-          crypto.sha256_file("labm8/data/test/hello_world"))
+          crypto.sha256_file("labm8/test_data/hello_world"))
 
 
 if __name__ == '__main__':

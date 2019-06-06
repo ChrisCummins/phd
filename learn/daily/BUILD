@@ -11,6 +11,7 @@ cc_library(
     deps = [
         "//phd:logging",
         "@boost//:numeric",
+        "@boost//:serialization",
         "@boost//:thread",
     ],
 )
@@ -30,6 +31,7 @@ cc_library(
     hdrs = ["d181213_kruskal_spanning_tree.h"],
     deps = [
         "//phd:logging",
+        "@boost//:graph",
         "@boost//:numeric",
         "@com_google_absl//absl/container:flat_hash_map",
     ],

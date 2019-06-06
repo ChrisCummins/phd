@@ -87,9 +87,8 @@ def MakeData(src: str,
   """
   # check the input types
   app.AssertOrRaise(isinstance(src, str), TypeError)
-  app.AssertOrRaise(
-      isinstance(data_generator, Generator), TypeError,
-      "invalid argument type for enum data_generator")
+  app.AssertOrRaise(isinstance(data_generator, Generator), TypeError,
+                    "invalid argument type for enum data_generator")
 
   if scalar_val is None:
     scalar_val = size

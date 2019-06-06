@@ -1,7 +1,7 @@
 // An implementation of minimum spanning trees using Kruskal's algorithm.
 #pragma once
 
-#include <boost/graph/adjacency_list.hpp>
+#include "boost/graph/adjacency_list.hpp"
 
 namespace phd {
 namespace learn {
@@ -41,7 +41,6 @@ std::pair<bool, boost::graph_traits<Graph>::edge_descriptor> FindEdge(
 // the least cost among all available options and does not violate MST
 // properties.
 Graph KruskalMinimumSpanningTree(Graph* graph);
-
 
 }  // namespace learn
 }  // namespace phd

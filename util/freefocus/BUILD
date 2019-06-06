@@ -1,6 +1,6 @@
 # The FreeFous task manager.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 py_binary(
     name = "freefocus",
@@ -12,11 +12,15 @@ py_binary(
     ],
 )
 
-py_proto_library(
-    name = "freefocus_py_pb2",
-    protos = ["freefocus.proto"],
+proto_library(
+    name = "freefocus_pb",
+    srcs = ["freefocus.proto"],
+)
+
+python_proto_library(
+    name = "freefocus_pb_py",
     visibility = ["//visibility:public"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":freefocus_pb"],
 )
 
 py_library(
@@ -24,7 +28,7 @@ py_library(
     srcs = ["sql.py"],
     visibility = ["//util/freefocus:__subpackages__"],
     deps = [
-        ":freefocus_py_pb2",
+        ":freefocus_pb_py",
         "//labm8:app",
         "//labm8:labdate",
         "//labm8:sqlutil",
@@ -35,7 +39,7 @@ py_test(
     name = "sql_test",
     srcs = ["sql_test.py"],
     deps = [
-        ":freefocus_py_pb2",
+        ":freefocus_pb_py",
         ":sql",
         "//labm8:app",
         "//labm8:test",

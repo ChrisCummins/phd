@@ -24,10 +24,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen",
-        "//deeplearning/clgen/proto:clgen_py_pb2",
-        "//deeplearning/clgen/proto:corpus_py_pb2",
-        "//deeplearning/clgen/proto:model_py_pb2",
-        "//deeplearning/clgen/proto:sampler_py_pb2",
+        "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",
         "//labm8:pbutil",
     ],
@@ -57,12 +54,12 @@ py_library(
     deps = [
         "//compilers/llvm:clang",
         "//deeplearning/deepsmith/harnesses:cldrive",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//gpu/cldrive/legacy:env",
         "//gpu/libcecl:libcecl_compile",
         "//gpu/libcecl:libcecl_rewriter",
         "//gpu/libcecl:libcecl_runtime",
-        "//gpu/libcecl/proto:libcecl_py_pb2",
+        "//gpu/libcecl/proto:libcecl_pb_py",
         "//labm8:app",
     ],
 )

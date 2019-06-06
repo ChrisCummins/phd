@@ -12,14 +12,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
-"""Neural Code Comprehenesion."""
+"""Neural Code Comprehension.
+
+An implementation of the inst2vec embeddings + RNN classifier described in:
+
+  ﻿Ben-nun, T., Jakobovits, A. S., & Hoefler, T. (2018). Neural Code
+  Comprehension: A Learnable Representation of Code Semantics. In NeurIPS.
+"""
 import multiprocessing
-import pathlib
-import typing
 
 import numpy as np
 import pandas as pd
+import pathlib
 import tensorflow as tf
+import typing
 from keras.preprocessing import sequence as keras_sequence
 
 from compilers.llvm import clang
@@ -134,8 +140,9 @@ def EncodeAndPadSourcesWithInst2Vec(
           min(sequence_lengths), np.mean(sequence_lengths), max_sequence_len)
 
   encoded = np.array(
-      keras_sequence.pad_sequences(
-          sequences, maxlen=max_sequence_len, value=vocab.unknown_token_index))
+      keras_sequence.pad_sequences(sequences,
+                                   maxlen=max_sequence_len,
+                                   value=vocab.unknown_token_index))
   encoded = np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
   return encoded, max_sequence_len
@@ -207,15 +214,15 @@ class DeepTuneInst2Vec(deeptune.DeepTune):
 
     # Translate encoded sequences into sequences of normalized embeddings.
     sequence_ph = tf.placeholder(dtype=tf.int32)
-    normalized_embedding_matrix = tf.nn.l2_normalize(
-        self.embedding_matrix, axis=1)
+    normalized_embedding_matrix = tf.nn.l2_normalize(self.embedding_matrix,
+                                                     axis=1)
     embedding_input_op = tf.nn.embedding_lookup(normalized_embedding_matrix,
                                                 sequence_ph)
 
     with tf.Session() as sess:
       # Tensor of shape (len(df), sequence length, embedding dimension).
-      embedding_input = sess.run(
-          embedding_input_op, feed_dict={sequence_ph: sequences})
+      embedding_input = sess.run(embedding_input_op,
+                                 feed_dict={sequence_ph: sequences})
 
     # Get the auxiliary inputs.
     aux_in = np.array([
@@ -242,8 +249,9 @@ def DataFrameRowToKernelSrcPath(row: typing.Dict[str, typing.Any],
 
   # Some of the benchmark sources are dataset dependent. This is reflected by
   # the dataset name being concatenated to the path.
-  opencl_src_path = (datafolder / 'kernels_cl' / (
-      file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
+  opencl_src_path = (
+      datafolder / 'kernels_cl' /
+      (file_name_stub + '_' + str(row['data:dataset_name']) + '.cl'))
   if opencl_src_path.is_file():
     return opencl_src_path
 

@@ -93,11 +93,10 @@ def bitcode(source, language="cl", path=DEFAULT_LLVM_PATH):
       "-"  # Output to stdout
   ]
 
-  clang = subprocess.Popen(
-      clang_args,
-      stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE)
+  clang = subprocess.Popen(clang_args,
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
   bitcode, err = clang.communicate(source)
   if clang.returncode != 0:
     raise ClangError(err)
@@ -140,11 +139,10 @@ def instcounts(bitcode, path=DEFAULT_LLVM_PATH):
 
   # LLVM pass output pritns to stderr, so we'll pipe stderr to
   # stdout.
-  opt = subprocess.Popen(
-      opt_args,
-      stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.STDOUT)
+  opt = subprocess.Popen(opt_args,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
   out, _ = opt.communicate(bitcode)
   if opt.returncode != 0:
     raise OptError(out)

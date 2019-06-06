@@ -24,7 +24,7 @@ py_binary(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        "//gpu/clinfo/proto:clinfo_py_pb2",
+        "//gpu/clinfo/proto:clinfo_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:system",

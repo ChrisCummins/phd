@@ -77,8 +77,9 @@ class PreprocessedContentFile(Base):
   # is that summing this column provides an accurate total of the actual time
   # spent pre-processing an entire corpus. Will be <= preprocess_time_ms.
   wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
-  date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = sql.Column(sql.DateTime,
+                                             nullable=False,
+                                             default=datetime.datetime.utcnow)
 
   @property
   def input_sha256_hex(self) -> str:

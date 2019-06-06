@@ -156,10 +156,9 @@ class Dataset(ml.Dataset):
 
     # Create string->nominal type attribute filter, ignoring the first
     # attribute (scenario ID), since we're not classifying with it.
-    string_to_nominal = WekaFilter(
-        classname=("weka.filters.unsupervised."
-                   "attribute.StringToNominal"),
-        options=["-R", "2-last"])
+    string_to_nominal = WekaFilter(classname=("weka.filters.unsupervised."
+                                              "attribute.StringToNominal"),
+                                   options=["-R", "2-last"])
     string_to_nominal.inputformat(dataset.instances)
 
     # Create filtered dataset, and swap data around.
@@ -193,10 +192,9 @@ class RegressionDataset(Dataset):
 
     # Create string->nominal type attribute filter, ignoring the first
     # attribute (scenario ID), since we're not classifying with it.
-    string_to_nominal = WekaFilter(
-        classname=("weka.filters.unsupervised."
-                   "attribute.StringToNominal"),
-        options=["-R", "2-last"])
+    string_to_nominal = WekaFilter(classname=("weka.filters.unsupervised."
+                                              "attribute.StringToNominal"),
+                                   options=["-R", "2-last"])
     string_to_nominal.inputformat(dataset.instances)
 
     # Create filtered dataset, and swap data around.

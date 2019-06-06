@@ -10,7 +10,7 @@ py_binary(
         "//labm8:fs",
         "//labm8:labdate",
         "//labm8:pbutil",
-        "//system/dpack/proto:dpack_pb2_py",
+        "//system/dpack/proto:dpack_pb_py",
     ],
 )
 

@@ -42,8 +42,9 @@ class Server(omnitune.Server):
     # Create an in-memory sample strategy cache.
     self.strategies = cache.TransientCache()
 
-  @dbus.service.method(
-      INTERFACE_NAME, in_signature='siiiiiiiisss', out_signature='(nn)')
+  @dbus.service.method(INTERFACE_NAME,
+                       in_signature='siiiiiiiisss',
+                       out_signature='(nn)')
   def RequestTrainingStencilParams(self, device_name, device_count, north,
                                    south, east, west, data_width, data_height,
                                    type_in, type_out, source, max_wg_size):
@@ -92,8 +93,9 @@ class Server(omnitune.Server):
 
     return wg
 
-  @dbus.service.method(
-      INTERFACE_NAME, in_signature='siiiiiiiisss', out_signature='(nn)')
+  @dbus.service.method(INTERFACE_NAME,
+                       in_signature='siiiiiiiisss',
+                       out_signature='(nn)')
   def RequestStencilParams(self, device_name, device_count, north, south, east,
                            west, data_width, data_height, type_in, type_out,
                            source, max_wg_size):
@@ -146,13 +148,15 @@ class Server(omnitune.Server):
     end_time = time.time()
 
     io.debug(("RequestStencilParams() -> "
-              "({c}, {r}) [{t:.3f}s]".format(
-                  c=wg[0], r=wg[1], t=end_time - start_time)))
+              "({c}, {r}) [{t:.3f}s]".format(c=wg[0],
+                                             r=wg[1],
+                                             t=end_time - start_time)))
 
     return wg
 
-  @dbus.service.method(
-      INTERFACE_NAME, in_signature='siiiiiiisssiiid', out_signature='')
+  @dbus.service.method(INTERFACE_NAME,
+                       in_signature='siiiiiiisssiiid',
+                       out_signature='')
   def AddStencilRuntime(self, device_name, device_count, north, south, east,
                         west, data_width, data_height, type_in, type_out,
                         source, max_wg_size, wg_c, wg_r, runtime):
@@ -209,8 +213,9 @@ class Server(omnitune.Server):
     io.debug(("AddStencilRuntime({scenario}, {params}, {runtime})".format(
         scenario=scenario[:8], params=params, runtime=runtime)))
 
-  @dbus.service.method(
-      INTERFACE_NAME, in_signature='siiiiiiisssiii', out_signature='')
+  @dbus.service.method(INTERFACE_NAME,
+                       in_signature='siiiiiiisssiii',
+                       out_signature='')
   def RefuseStencilParams(self, device_name, device_count, north, south, east,
                           west, data_width, data_height, type_in, type_out,
                           source, max_wg_size, wg_c, wg_r):

@@ -61,7 +61,7 @@ py_test(
     deps = [
         ":opencl_deadcode_inserter",
         "//deeplearning/deepsmith/harnesses:cldrive",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//gpu/oclgrind",
         "//labm8:app",
         "//labm8:test",

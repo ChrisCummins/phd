@@ -174,8 +174,8 @@ def test_confinterval_single_item_array():
 
 
 def test_confinterval_123_array():
-  assert labmath.confinterval([1, 2, 3]) == (-0.48413771184375287,
-                                             4.4841377118437524)
+  assert labmath.confinterval([1, 2,
+                               3]) == (-0.48413771184375287, 4.4841377118437524)
 
 
 def test_confinterval_all_same():
@@ -183,23 +183,20 @@ def test_confinterval_all_same():
 
 
 def test_confinterval_c50():
-  assert ((1.528595479208968,
-           2.4714045207910322) == labmath.confinterval([1, 2, 3], conf=0.5))
+  assert ((1.528595479208968, 2.4714045207910322) == labmath.confinterval(
+      [1, 2, 3], conf=0.5))
 
 
 def test_confinterval_normal_dist():
-  assert ((0.86841426592382809,
-           3.1315857340761717) == labmath.confinterval([1, 2, 3],
-                                                       normal_threshold=1))
+  assert ((0.86841426592382809, 3.1315857340761717) == labmath.confinterval(
+      [1, 2, 3], normal_threshold=1))
 
 
 def test_confinterval_array_mean():
-  assert pytest.approx(
-      labmath.confinterval([1, 2, 3], conf=0.5, array_mean=2),
-      (1.528595479208968, 2.4714045207910322))
-  assert pytest.approx(
-      labmath.confinterval([1, 2, 3], conf=0.5, array_mean=1),
-      (0.528595479209, 1.47140452079))
+  assert pytest.approx(labmath.confinterval([1, 2, 3], conf=0.5, array_mean=2),
+                       (1.528595479208968, 2.4714045207910322))
+  assert pytest.approx(labmath.confinterval([1, 2, 3], conf=0.5, array_mean=1),
+                       (0.528595479209, 1.47140452079))
 
 
 def test_confinterval_error_only():

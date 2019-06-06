@@ -58,9 +58,9 @@ py_test(
     srcs = ["cldrive_test.py"],
     deps = [
         ":cldrive",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//deeplearning/deepsmith/proto:service_pb_py",
         "//gpu/cldrive/legacy:env",
         "//gpu/oclgrind",
         "//labm8:app",
@@ -113,9 +113,9 @@ py_test(
     srcs = ["cl_launcher_test.py"],
     deps = [
         ":cl_launcher",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        "//deeplearning/deepsmith/proto:service_py_pb2",
+        "//deeplearning/deepsmith/proto:service_pb_py",
         "//gpu/cldrive/legacy:env",
         "//labm8:app",
         "//labm8:test",

@@ -4,27 +4,17 @@ The design goals of Bazel has led it to have a lot of quirks. This module
 contains utility code designed to help live with these quirks.
 """
 import os
+
 import pathlib
 import re
 import typing
 
-from config import getconfig
 from labm8 import archive
 
 # Regular expression to everything in a path up until the '*.runfiles'
 # directory, e.g. for the path '/private/var/bazel/foo/bar.runfiles/a/b/c',
 # this regex will match '/private/var/bazel/foo/bar.runfiles'
 RUNFILES_PATTERN = re.compile(r'^(.*\.runfiles)/')
-
-
-def IsBazelSandbox() -> bool:
-  """Determine if the current process is running in a bazel sandbox.
-
-  Returns:
-    True if the current process is running inside a bazel sandbox, else false.
-  """
-  config = getconfig.GetGlobalConfig()
-  return not __file__.startswith(config.paths.repo_root)
 
 
 def FindRunfilesDirectory() -> typing.Optional[pathlib.Path]:

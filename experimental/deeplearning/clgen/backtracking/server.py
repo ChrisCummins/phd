@@ -8,7 +8,7 @@ from typing import Any, Dict
 import flask
 import portpicker
 
-from config import build_info
+import build_info
 from deeplearning.clgen import samplers
 from experimental.deeplearning.clgen.backtracking import backtracking_model
 from experimental.deeplearning.clgen.backtracking import logger

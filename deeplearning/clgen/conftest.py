@@ -84,10 +84,9 @@ def abc_corpus_archive(abc_corpus) -> str:
 @pytest.fixture(scope='function')
 def abc_corpus_config(abc_corpus):
   """The proto config for a simple Corpus."""
-  return corpus_pb2.Corpus(
-      local_directory=abc_corpus,
-      ascii_character_atomizer=True,
-      contentfile_separator='\n\n')
+  return corpus_pb2.Corpus(local_directory=abc_corpus,
+                           ascii_character_atomizer=True,
+                           contentfile_separator='\n\n')
 
 
 @pytest.fixture(scope='function')
@@ -100,20 +99,20 @@ def abc_model_config(abc_corpus_config):
       neurons_per_layer=4,
       num_layers=1,
       post_layer_dropout_micros=2000)
-  optimizer = model_pb2.AdamOptimizer(
-      initial_learning_rate_micros=2000,
-      learning_rate_decay_per_epoch_micros=5000,
-      beta_1_micros=900000,
-      beta_2_micros=999000,
-      normalized_gradient_clip_micros=5000000)
+  optimizer = model_pb2.AdamOptimizer(initial_learning_rate_micros=2000,
+                                      learning_rate_decay_per_epoch_micros=5000,
+                                      beta_1_micros=900000,
+                                      beta_2_micros=999000,
+                                      normalized_gradient_clip_micros=5000000)
   training = model_pb2.TrainingOptions(
       num_epochs=1,
       sequence_length=10,
       batch_size=5,
       shuffle_corpus_contentfiles_between_epochs=False,
       adam_optimizer=optimizer)
-  return model_pb2.Model(
-      corpus=abc_corpus_config, architecture=architecture, training=training)
+  return model_pb2.Model(corpus=abc_corpus_config,
+                         architecture=architecture,
+                         training=training)
 
 
 @pytest.fixture(scope='function')
@@ -121,22 +120,20 @@ def abc_sampler_config():
   """The sampler config for a simple Sampler."""
   maxlen = sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=5)
   sample_stop = [sampler_pb2.SampleTerminationCriterion(maxlen=maxlen)]
-  return sampler_pb2.Sampler(
-      start_text='a',
-      batch_size=5,
-      sequence_length=10,
-      termination_criteria=sample_stop,
-      temperature_micros=1000000)
+  return sampler_pb2.Sampler(start_text='a',
+                             batch_size=5,
+                             sequence_length=10,
+                             termination_criteria=sample_stop,
+                             temperature_micros=1000000)
 
 
 @pytest.fixture(scope='function')
 def abc_instance_config(clgen_cache_dir, abc_model_config,
                         abc_sampler_config) -> clgen_pb2.Instance:
   """A test fixture that returns an Instance config proto."""
-  return clgen_pb2.Instance(
-      working_dir=clgen_cache_dir,
-      model=abc_model_config,
-      sampler=abc_sampler_config)
+  return clgen_pb2.Instance(working_dir=clgen_cache_dir,
+                            model=abc_model_config,
+                            sampler=abc_sampler_config)
 
 
 @pytest.fixture(scope='function')

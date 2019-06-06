@@ -1,9 +1,14 @@
 # Protos for describing 'dpack' data packages.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-py_proto_library(
-    name = "dpack_pb2_py",
-    protos = ["dpack.proto"],
+proto_library(
+    name = "dpack_pb",
+    srcs = ["dpack.proto"],
+)
+
+python_proto_library(
+    name = "dpack_pb_py",
     visibility = ["//system/dpack:__subpackages__"],
+    deps = [":dpack_pb"],
 )

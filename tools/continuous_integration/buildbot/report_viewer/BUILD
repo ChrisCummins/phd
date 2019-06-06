@@ -10,7 +10,7 @@ py_binary(
         "//tools/continuous_integration/buildbot/report_viewer/templates",
     ],
     deps = [
-        "//config:build_info",
+        "//:build_info",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:humanize",

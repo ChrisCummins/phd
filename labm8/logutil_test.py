@@ -14,15 +14,14 @@
 """Unit tests for //labm8/logutil.py."""
 import datetime
 import pathlib
-import tempfile
-
 import pytest
+import tempfile
 
 from labm8 import app
 from labm8 import labdate
 from labm8 import logutil
 from labm8 import test
-from labm8.proto import logging_pb2
+from labm8.internal import logging_pb2
 
 FLAGS = app.FLAGS
 

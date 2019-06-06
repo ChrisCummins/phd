@@ -103,10 +103,11 @@ def migrate_0_to_1(old):
   tmp.execute("INSERT INTO version VALUES (1)")
 
   # Create table: kernels
-  tmp.create_table("kernels", (("id", "text primary key"), ("north", "integer"),
-                               ("south", "integer"), ("east", "integer"),
-                               ("west", "integer"), ("max_wg_size", "integer"),
-                               ("source", "text")))
+  tmp.create_table(
+      "kernels",
+      (("id", "text primary key"), ("north", "integer"), ("south", "integer"),
+       ("east", "integer"), ("west", "integer"), ("max_wg_size", "integer"),
+       ("source", "text")))
 
   # Create table: devices
   tmp.create_table(
@@ -224,9 +225,10 @@ def migrate_1_to_2(old):
 
   # Rename column "scenarios.data" to "scenarios.dataset"
   tmp.execute("ALTER TABLE scenarios RENAME TO old_scenarios")
-  tmp.create_table("scenarios", (("id", "text primary key"), ("host", "text"),
-                                 ("device", "text"), ("kernel", "text"),
-                                 ("dataset", "text")))
+  tmp.create_table(
+      "scenarios",
+      (("id", "text primary key"), ("host", "text"), ("device", "text"),
+       ("kernel", "text"), ("dataset", "text")))
   tmp.execute("INSERT INTO scenarios SELECT * FROM old_scenarios")
   tmp.drop_table("old_scenarios")
 

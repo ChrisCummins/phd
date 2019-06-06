@@ -33,14 +33,14 @@ def _MakeInstance(device, src, num_runs: int = 1, dynamic_params=[
 ]):
   """Utility function to generate an instances proto."""
   return cldrive_pb2.CldriveInstances(instance=[
-      cldrive_pb2.CldriveInstance(
-          device=device,
-          opencl_src=src,
-          min_runs_per_kernel=num_runs,
-          dynamic_params=[
-              cldrive_pb2.DynamicParams(global_size_x=g, local_size_x=l)
-              for g, l in dynamic_params
-          ]),
+      cldrive_pb2.CldriveInstance(device=device,
+                                  opencl_src=src,
+                                  min_runs_per_kernel=num_runs,
+                                  dynamic_params=[
+                                      cldrive_pb2.DynamicParams(global_size_x=g,
+                                                                local_size_x=l)
+                                      for g, l in dynamic_params
+                                  ]),
   ])
 
 

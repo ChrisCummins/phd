@@ -125,8 +125,8 @@ class Corpus(object):
     self.content_id = ResolveContentId(self.config, hc)
     # Database of pre-processed files.
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
-        exist_ok=True, parents=True)
+    cache.cachepath('corpus', 'preprocessed',
+                    preprocessed_id).mkdir(exist_ok=True, parents=True)
     preprocessed_db_path = cache.cachepath('corpus', 'preprocessed',
                                            preprocessed_id, 'preprocessed.db')
     if (self.config.HasField('content_id') and
@@ -141,19 +141,19 @@ class Corpus(object):
       if config.HasField('local_directory'):
         os.symlink(
             str(
-                ExpandConfigPath(
-                    config.local_directory,
-                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
+                ExpandConfigPath(config.local_directory,
+                                 path_prefix=FLAGS.clgen_local_path_prefix)),
+            symlink)
       elif config.HasField('local_tar_archive'):
         os.symlink(
             str(
-                ExpandConfigPath(
-                    config.local_tar_archive,
-                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
+                ExpandConfigPath(config.local_tar_archive,
+                                 path_prefix=FLAGS.clgen_local_path_prefix)),
+            symlink)
     # Data of encoded pre-preprocessed files.
     encoded_id = ResolveEncodedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
-        exist_ok=True, parents=True)
+    cache.cachepath('corpus', 'encoded', encoded_id).mkdir(exist_ok=True,
+                                                           parents=True)
     self.encoded = encoded.EncodedContentFiles(
         cache.cachepath('corpus', 'encoded', encoded_id, 'encoded.db'))
     self.atomizer_path = cache.cachepath('corpus', 'encoded', encoded_id,
@@ -373,9 +373,8 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
     # to maintain a cache which maps the mtime of tarballs to their content ID,
     # similart to how local_directory is implemented.
     content_id = GetHashOfArchiveContents(
-        ExpandConfigPath(
-            config.local_tar_archive,
-            path_prefix=FLAGS.clgen_local_path_prefix))
+        ExpandConfigPath(config.local_tar_archive,
+                         path_prefix=FLAGS.clgen_local_path_prefix))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
   app.Log(2, 'Resolved Content ID %s in %s ms.', content_id,

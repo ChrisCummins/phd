@@ -183,11 +183,10 @@ int main(int argc, char** argv) { return 0; }
 
 def test_Preprocess_no_strip_processor_lines():
   """Test that stdin marker is preserved if no strip_preprocessor_lines."""
-  assert '# 1 "<stdin>" 2' in clang.Preprocess(
-      """
+  assert '# 1 "<stdin>" 2' in clang.Preprocess("""
 int main(int argc, char** argv) { return 0; }
 """, [],
-      strip_preprocessor_lines=False)
+                                               strip_preprocessor_lines=False)
 
 
 def test_Preprocess_include_stdio_strip():

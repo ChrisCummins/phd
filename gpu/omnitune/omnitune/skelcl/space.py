@@ -84,12 +84,11 @@ class ParamSpace(object):
       yticklabels = ylabels
 
     _, ax = plt.subplots(figsize=figsize)
-    sns.heatmap(
-        data,
-        xticklabels=xticklabels,
-        yticklabels=yticklabels,
-        cbar=cbar,
-        **kwargs)
+    sns.heatmap(data,
+                xticklabels=xticklabels,
+                yticklabels=yticklabels,
+                cbar=cbar,
+                **kwargs)
 
     # Set labels.
     ax.set_ylabel("Rows")
@@ -123,8 +122,8 @@ class ParamSpace(object):
     Z = np.zeros((num_vals,))
 
     # Iterate over every point in space.
-    for j, i in product(
-        range(self.matrix.shape[0]), range(self.matrix.shape[1])):
+    for j, i in product(range(self.matrix.shape[0]),
+                        range(self.matrix.shape[1])):
       # Convert point to list index.
       index = j * self.matrix.shape[1] + i
       X[index] = i
@@ -185,8 +184,8 @@ class ParamSpace(object):
     X, Y, dZ = [], [], []
 
     # Iterate over every point in space.
-    for j, i in product(
-        range(self.matrix.shape[0]), range(self.matrix.shape[1])):
+    for j, i in product(range(self.matrix.shape[0]),
+                        range(self.matrix.shape[1])):
       if self.matrix[j][i] > 0:
         X.append(i)
         Y.append(j)
@@ -300,7 +299,7 @@ class ParamSpace(object):
 def enumerate_wlegal_params(maxwgsize):
   return [
       hash_params(j, i)
-      for j, i in product(
-          range(2, maxwgsize / 2 + 1, 2), range(2, maxwgsize / 2 + 1, 2))
+      for j, i in product(range(2, maxwgsize / 2 +
+                                1, 2), range(2, maxwgsize / 2 + 1, 2))
       if j * i < maxwgsize
   ]

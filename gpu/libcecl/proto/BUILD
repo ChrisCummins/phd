@@ -14,24 +14,26 @@
 # You should have received a copy of the GNU General Public License
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 
-load("@org_pubref_rules_protobuf//cpp:rules.bzl", "cc_proto_library")
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
-cc_proto_library(
-    name = "libcecl_cc_pb2",
-    proto_deps = [
-        "//gpu/clinfo/proto:clinfo_cc_pb2",
-    ],
-    protos = ["libcecl.proto"],
+proto_library(
+    name = "libcecl_pb",
+    srcs = ["libcecl.proto"],
+    deps = ["//gpu/clinfo/proto:clinfo_pb"],
 )
 
-py_proto_library(
-    name = "libcecl_py_pb2",
-    proto_deps = [
-        "//gpu/clinfo/proto:clinfo_py_pb2",
+cc_proto_library(
+    name = "libcecl_pb_cc",
+    deps = [
+        ":libcecl_pb",
     ],
-    protos = ["libcecl.proto"],
-    deps = ["//third_party/py/protobuf"],
+)
+
+python_proto_library(
+    name = "libcecl_pb_py",
+    deps = [
+        ":libcecl_pb",
+    ],
 )

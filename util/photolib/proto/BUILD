@@ -1,10 +1,14 @@
 # Protocol buffers used by //util/photolib.
 
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
 
-py_proto_library(
-    name = "photolint_py_pb2",
-    protos = ["photolint.proto"],
+proto_library(
+    name = "photolint_pb",
+    srcs = ["photolint.proto"],
+)
+
+python_proto_library(
+    name = "photolint_pb_py",
     visibility = ["//util/photolib:__subpackages__"],
-    deps = ["//third_party/py/protobuf"],
+    deps = [":photolint_pb"],
 )

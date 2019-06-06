@@ -108,12 +108,11 @@ def Preprocess(src: str,
       str(CLANG), '-E', '-c', '-', '-o', '-'
   ] + cflags
   app.Log(2, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      universal_newlines=True)
+  process = subprocess.Popen(cmd,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True)
   stdout, stderr = process.communicate(src)
   if process.returncode == 9:
     raise errors.ClangTimeout(
@@ -156,11 +155,10 @@ def CompileLlvmBytecode(src: str,
            str(timeout_seconds),
            str(CLANG), f.name] + builtin_cflags + cflags
     app.Log(2, '$ %s', ' '.join(cmd))
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True)
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               universal_newlines=True)
     stdout, stderr = process.communicate()
   if process.returncode == 9:
     raise errors.ClangTimeout(f'Clang timed out after {timeout_seconds}s')

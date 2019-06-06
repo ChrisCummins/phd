@@ -225,8 +225,10 @@ def oracle_wgsizes(db, output=None, trisurf=False, clip=100, **kwargs):
   space.clip(clip, clip)
   space.log()
   if trisurf:
-    space.trisurf(
-        output=output, zlabel="Oracle frequency (log)", vmax=1.5, **kwargs)
+    space.trisurf(output=output,
+                  zlabel="Oracle frequency (log)",
+                  vmax=1.5,
+                  **kwargs)
   else:
     space.heatmap(output=output, **kwargs)
 
@@ -278,8 +280,8 @@ def oracle_speedups(db, output=None, **kwargs):
 
 
 def num_params_vs_accuracy(db, output=None, where=None, **kwargs):
-  freqs = sorted(
-      db.oracle_param_frequencies(normalise=True).values(), reverse=True)
+  freqs = sorted(db.oracle_param_frequencies(normalise=True).values(),
+                 reverse=True)
   acc = 0
   Data = [0] * len(freqs)
   for i, freq in enumerate(freqs):
@@ -356,13 +358,12 @@ def kernel_performance(db, output=None, **kwargs):
   ]
 
   title = kwargs.pop("title", "Workgroup size performance across kernels")
-  _performance_plot(
-      output,
-      labels,
-      values,
-      title,
-      color=sns.color_palette("Greens"),
-      **kwargs)
+  _performance_plot(output,
+                    labels,
+                    values,
+                    title,
+                    color=sns.color_palette("Greens"),
+                    **kwargs)
 
 
 def device_performance(db, output=None, **kwargs):
@@ -370,16 +371,24 @@ def device_performance(db, output=None, **kwargs):
   labels = [fmtdevid(id) for id in ids]
   values = [db.performance_of_device(id) for id in ids]
   title = kwargs.pop("title", "Workgroup size performance across devices")
-  _performance_plot(
-      output, labels, values, title, color=sns.color_palette("Blues"), **kwargs)
+  _performance_plot(output,
+                    labels,
+                    values,
+                    title,
+                    color=sns.color_palette("Blues"),
+                    **kwargs)
 
 
 def dataset_performance(db, output=None, **kwargs):
   labels = db.datasets
   values = [db.performance_of_dataset(label) for label in labels]
   title = kwargs.pop("title", "Workgroup size performance across datasets")
-  _performance_plot(
-      output, labels, values, title, color=sns.color_palette("Reds"), **kwargs)
+  _performance_plot(output,
+                    labels,
+                    values,
+                    title,
+                    color=sns.color_palette("Reds"),
+                    **kwargs)
 
 
 def runtimes_range(db,
@@ -507,35 +516,36 @@ def err_fn_performance(db, output=None, job="xval", **kwargs):
   # Bar width.
   width = (.8 / (len(results[0]) - 1))
 
-  plt.bar(
-      X,
-      perfs,
-      width=width,
-      color=sns.color_palette("Reds", 1),
-      label="Performance")
+  plt.bar(X,
+          perfs,
+          width=width,
+          color=sns.color_palette("Reds", 1),
+          label="Performance")
   # Plot confidence intervals separately so that we can have
   # full control over formatting.
-  _, caps, _ = plt.errorbar(
-      X + .5 * width, perfs, fmt="none", yerr=perfErrors, capsize=3, ecolor="k")
+  _, caps, _ = plt.errorbar(X + .5 * width,
+                            perfs,
+                            fmt="none",
+                            yerr=perfErrors,
+                            capsize=3,
+                            ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)
 
-  plt.bar(
-      X + width,
-      speedups,
-      width=width,
-      color=sns.color_palette("Greens", 1),
-      label="Speedup")
+  plt.bar(X + width,
+          speedups,
+          width=width,
+          color=sns.color_palette("Greens", 1),
+          label="Speedup")
   # Plot confidence intervals separately so that we can have
   # full control over formatting.
-  _, caps, _ = plt.errorbar(
-      X + 1.5 * width,
-      speedups,
-      fmt="none",
-      yerr=speedupErrors,
-      capsize=3,
-      ecolor="k")
+  _, caps, _ = plt.errorbar(X + 1.5 * width,
+                            speedups,
+                            fmt="none",
+                            yerr=speedupErrors,
+                            capsize=3,
+                            ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)
@@ -659,8 +669,12 @@ def classification(db, output=None, job="xval", **kwargs):
   # art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
   # Plot confidence intervals separately so that we can have
   # full control over formatting.
-  _, caps, _ = ax.errorbar(
-      X + .5, time, fmt="none", yerr=terr, capsize=3, ecolor="k")
+  _, caps, _ = ax.errorbar(X + .5,
+                           time,
+                           fmt="none",
+                           yerr=terr,
+                           capsize=3,
+                           ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)
@@ -668,24 +682,21 @@ def classification(db, output=None, job="xval", **kwargs):
   # RATIOS
   width = (.8 / 3)
   ax = plt.subplot(4, 1, 2)
-  ax.bar(
-      X + .1,
-      illegal,
-      width=width,
-      color=sns.color_palette("Reds", 1),
-      label="Illegal")
-  ax.bar(
-      X + .1 + width,
-      refused,
-      width=width,
-      color=sns.color_palette("Oranges", 1),
-      label="Refused")
-  ax.bar(
-      X + .1 + 2 * width,
-      correct,
-      width=width,
-      color=sns.color_palette("Blues", 1),
-      label="Accurate")
+  ax.bar(X + .1,
+         illegal,
+         width=width,
+         color=sns.color_palette("Reds", 1),
+         label="Illegal")
+  ax.bar(X + .1 + width,
+         refused,
+         width=width,
+         color=sns.color_palette("Oranges", 1),
+         label="Refused")
+  ax.bar(X + .1 + 2 * width,
+         correct,
+         width=width,
+         color=sns.color_palette("Blues", 1),
+         label="Accurate")
   ax.set_xticks(X + .4)
   ax.set_ylabel("Ratio")
   ax.set_ylim(0, 35)
@@ -700,22 +711,20 @@ def classification(db, output=None, job="xval", **kwargs):
   for i, err_fn in enumerate(db.err_fns):
     pairs = [result[6 + i] for result in results]
     speedups, yerrs = zip(*pairs)
-    ax.bar(
-        X + .1 + (i * width),
-        speedups,
-        width=width,
-        label=errfn2label(err_fn),
-        color=colors[i])
+    ax.bar(X + .1 + (i * width),
+           speedups,
+           width=width,
+           label=errfn2label(err_fn),
+           color=colors[i])
 
     # Plot confidence intervals separately so that we can have
     # full control over formatting.
-    _, caps, _ = ax.errorbar(
-        X + .1 + (i + .5) * width,
-        speedups,
-        fmt="none",
-        yerr=yerrs,
-        capsize=3,
-        ecolor="k")
+    _, caps, _ = ax.errorbar(X + .1 + (i + .5) * width,
+                             speedups,
+                             fmt="none",
+                             yerr=yerrs,
+                             capsize=3,
+                             ecolor="k")
     for cap in caps:
       cap.set_color('k')
       cap.set_markeredgewidth(1)
@@ -733,22 +742,20 @@ def classification(db, output=None, job="xval", **kwargs):
   for i, err_fn in enumerate(db.err_fns):
     pairs = [result[9 + i] for result in results]
     perfs, yerrs = zip(*pairs)
-    ax.bar(
-        X + .1 + (i * width),
-        perfs,
-        width=width,
-        label=errfn2label(err_fn),
-        color=colors[i])
+    ax.bar(X + .1 + (i * width),
+           perfs,
+           width=width,
+           label=errfn2label(err_fn),
+           color=colors[i])
 
     # Plot confidence intervals separately so that we can have
     # full control over formatting.
-    _, caps, _ = ax.errorbar(
-        X + .1 + (i + .5) * width,
-        perfs,
-        fmt="none",
-        yerr=yerrs,
-        capsize=3,
-        ecolor="k")
+    _, caps, _ = ax.errorbar(X + .1 + (i + .5) * width,
+                             perfs,
+                             fmt="none",
+                             yerr=yerrs,
+                             capsize=3,
+                             ecolor="k")
     for cap in caps:
       cap.set_color('k')
       cap.set_markeredgewidth(1)
@@ -862,8 +869,11 @@ def refused_params_by_vendor(db, output=None, **kwargs):
 
 def refused_param_space(db, output=None, **kwargs):
   space = db.refused_param_space()
-  space.heatmap(
-      xlabels=False, ylabels=False, cbar=False, output=output, **kwargs)
+  space.heatmap(xlabels=False,
+                ylabels=False,
+                cbar=False,
+                output=output,
+                **kwargs)
 
 
 def runtime_regression(db, output=None, job="xval", **kwargs):
@@ -892,11 +902,10 @@ def runtime_regression(db, output=None, job="xval", **kwargs):
     if basename == "ZeroR":
       ax.plot(predicted, label=basename, color=colors[i - 1])
     else:
-      ax.scatter(
-          np.arange(len(predicted)),
-          predicted,
-          label=basename,
-          color=colors[i - 1])
+      ax.scatter(np.arange(len(predicted)),
+                 predicted,
+                 label=basename,
+                 color=colors[i - 1])
 
   ax.plot(actual, label="Actual", color=colors[i])
   ax.set_yscale("log")
@@ -963,8 +972,12 @@ def regression_classification(db,
   ax.set_ylabel("Classification time (ms)")
   # Plot confidence intervals separately so that we can have
   # full control over formatting.
-  _, caps, _ = ax.errorbar(
-      X + .5, time, fmt="none", yerr=terr, capsize=3, ecolor="k")
+  _, caps, _ = ax.errorbar(X + .5,
+                           time,
+                           fmt="none",
+                           yerr=terr,
+                           capsize=3,
+                           ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)
@@ -978,8 +991,12 @@ def regression_classification(db,
   ax.set_ylabel("Speedup")
   # Plot confidence intervals separately so that we can have
   # full control over formatting.
-  _, caps, _ = ax.errorbar(
-      X + .5, speedup, fmt="none", yerr=serr, capsize=3, ecolor="k")
+  _, caps, _ = ax.errorbar(X + .5,
+                           speedup,
+                           fmt="none",
+                           yerr=serr,
+                           capsize=3,
+                           ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)
@@ -994,8 +1011,12 @@ def regression_classification(db,
   ax.set_ylim(0, 100)
   # Plot confidence intervals separately so that we can have
   # full control over formatting.
-  _, caps, _ = ax.errorbar(
-      X + .5, perf, fmt="none", yerr=perr, capsize=3, ecolor="k")
+  _, caps, _ = ax.errorbar(X + .5,
+                           perf,
+                           fmt="none",
+                           yerr=perr,
+                           capsize=3,
+                           ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)
@@ -1036,11 +1057,10 @@ def speedup_regression(db, output=None, job="xval", **kwargs):
     if basename == "ZeroR":
       ax.plot(predicted, label=basename, color=colors[i - 1])
     else:
-      ax.scatter(
-          np.arange(len(predicted)),
-          predicted,
-          label=basename,
-          color=colors[i - 1])
+      ax.scatter(np.arange(len(predicted)),
+                 predicted,
+                 label=basename,
+                 color=colors[i - 1])
 
   ax.plot(actual, label="Actual", color=colors[i])
   # ax.set_yscale("log")
@@ -1091,38 +1111,38 @@ def speedup_classification(db, output=None, job="xval", **kwargs):
   # Bar width.
   width = (.8 / (len(results[0]) - 1))
 
-  plt.bar(
-      X + width,
-      correct,
-      width=width,
-      color=sns.color_palette("Blues", 1),
-      label="Accuracy")
-  plt.bar(
-      X + 2 * width,
-      speedups,
-      width=width,
-      color=sns.color_palette("Greens", 1),
-      label="Speedup")
-  plt.bar(
-      X + 3 * width,
-      perfs,
-      width=width,
-      color=sns.color_palette("Oranges", 1),
-      label="Performance")
+  plt.bar(X + width,
+          correct,
+          width=width,
+          color=sns.color_palette("Blues", 1),
+          label="Accuracy")
+  plt.bar(X + 2 * width,
+          speedups,
+          width=width,
+          color=sns.color_palette("Greens", 1),
+          label="Speedup")
+  plt.bar(X + 3 * width,
+          perfs,
+          width=width,
+          color=sns.color_palette("Oranges", 1),
+          label="Performance")
   # Plot confidence intervals separately so that we can have
   # full control over formatting.
-  _, caps, _ = plt.errorbar(
-      X + 2.5 * width, speedups, fmt="none", yerr=yerrs, capsize=3, ecolor="k")
+  _, caps, _ = plt.errorbar(X + 2.5 * width,
+                            speedups,
+                            fmt="none",
+                            yerr=yerrs,
+                            capsize=3,
+                            ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)
-  _, caps, _ = plt.errorbar(
-      X + 3.5 * width,
-      perfs,
-      fmt="none",
-      yerr=perf_yerrs,
-      capsize=3,
-      ecolor="k")
+  _, caps, _ = plt.errorbar(X + 3.5 * width,
+                            perfs,
+                            fmt="none",
+                            yerr=perf_yerrs,
+                            capsize=3,
+                            ecolor="k")
   for cap in caps:
     cap.set_color('k')
     cap.set_markeredgewidth(1)

@@ -25,6 +25,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = 'datasets.me_db'
+
 
 def test_measurements_count(db: me_db.Database):
   """Test the number of measurements."""

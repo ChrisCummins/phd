@@ -28,6 +28,7 @@ mirrored_directory {
   rsync_exclude: "/.VolumeIcon.icns"
   rsync_exclude: "/.VolumeIcon.ico"
   rsync_exclude: "/autorun.inf"
+  rsync_exclude: "/inbox"
   rsync_exclude: "/outbox"
 }
 mirrored_directory {

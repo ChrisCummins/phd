@@ -11,15 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for //config:build_info."""
+"""Unit tests for //:build_info."""
 
+import build_info
 import re
-
-from config import build_info
 from labm8 import app
 from labm8 import test
 
+
 FLAGS = app.FLAGS
+
 
 
 def test_FormatShortRevision():
@@ -37,6 +38,7 @@ def test_FormatShortBuildDescription():
   assert re.match(
       r'build [0-9a-f]{7}\*? on [0-9]{4}-[0-9]{2}-[0-9]{2} by .+@.+',
       description)
+
 
 
 if __name__ == '__main__':

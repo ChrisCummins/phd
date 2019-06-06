@@ -30,9 +30,9 @@ py_binary(
     srcs = ["generate_testcases.py"],
     deps = [
         "//deeplearning/deepsmith:services",
-        "//deeplearning/deepsmith/proto:datastore_py_pb2",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
-        "//deeplearning/deepsmith/proto:generator_py_pb2",
+        "//deeplearning/deepsmith/proto:datastore_pb_py",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
+        "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
         "//labm8:app",
     ],
 )
@@ -56,8 +56,8 @@ py_binary(
     srcs = ["run_testcases.py"],
     deps = [
         "//deeplearning/deepsmith:services",
-        "//deeplearning/deepsmith/proto:datastore_py_pb2",
-        "//deeplearning/deepsmith/proto:deepsmith_py_pb2",
+        "//deeplearning/deepsmith/proto:datastore_pb_py",
+        "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//labm8:app",
     ],

@@ -6,7 +6,7 @@ import flask
 import portpicker
 import sqlalchemy as sql
 
-from config import build_info
+import build_info
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize

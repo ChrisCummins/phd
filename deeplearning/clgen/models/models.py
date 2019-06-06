@@ -91,13 +91,13 @@ class Model(object):
     # Create symlink to the atomizer.
     symlink = self.cache.path / 'atomizer'
     if not symlink.is_symlink():
-      os.symlink(
-          os.path.relpath(self.corpus.atomizer_path, self.cache.path), symlink)
+      os.symlink(os.path.relpath(self.corpus.atomizer_path, self.cache.path),
+                 symlink)
 
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):
-      cached_meta = pbutil.FromFile(
-          pathlib.Path(self.cache['META.pbtxt']), internal_pb2.ModelMeta())
+      cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
+                                    internal_pb2.ModelMeta())
       # Exclude num_epochs and corpus location from metadata comparison.
       config_to_compare = model_pb2.Model()
       config_to_compare.CopyFrom(self.config)
@@ -259,12 +259,11 @@ class Model(object):
           if sampler.SampleIsComplete(samples_in_progress[i]):
             end_time = labdate.MillisecondsTimestamp()
             done[i] = 1
-            sample = model_pb2.Sample(
-                text=''.join(samples_in_progress[i]),
-                sample_start_epoch_ms_utc=start_time,
-                sample_time_ms=end_time - start_time,
-                wall_time_ms=end_time - wall_time_start,
-                num_tokens=len(samples_in_progress[i]))
+            sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
+                                      sample_start_epoch_ms_utc=start_time,
+                                      sample_time_ms=end_time - start_time,
+                                      wall_time_ms=end_time - wall_time_start,
+                                      num_tokens=len(samples_in_progress[i]))
             # Notify sample observers.
             continue_sampling &= all(
                 [not obs.OnSample(sample) for obs in sample_observers])

@@ -90,8 +90,9 @@ class _MapWorker(object):
     assert not self._done
 
     # Run the C++ worker process, capturing it's output.
-    process = subprocess.Popen(
-        self._cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    process = subprocess.Popen(self._cmd,
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
     # Send the input proto to the C++ worker process.
     # TODO: Add timeout.
     stdout, _ = process.communicate(self._input_proto_string)

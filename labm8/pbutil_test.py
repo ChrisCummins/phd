@@ -13,16 +13,12 @@
 # limitations under the License.
 """Unit tests for //labm8:pbutil."""
 import pathlib
+import pytest
 import tempfile
 
-import pytest
-
-from labm8 import app
 from labm8 import pbutil
 from labm8 import test
-from labm8.proto import test_protos_pb2
-
-FLAGS = app.FLAGS
+from labm8.test_data import test_protos_pb2
 
 # A list of all of the filename suffixes to test each function with.
 SUFFIXES_TO_TEST = [
@@ -78,8 +74,9 @@ def test_FromString_empty_string_required_fields():
 
 def test_FromString_empty_string_required_fields_uninitialized_okay():
   """Test that an empty string raises DecodeError if uninitialized fields."""
-  proto = pbutil.FromString(
-      '', test_protos_pb2.TestMessage(), uninitialized_okay=True)
+  proto = pbutil.FromString('',
+                            test_protos_pb2.TestMessage(),
+                            uninitialized_okay=True)
   assert not proto.string
 
 
@@ -122,8 +119,8 @@ def test_FromFile_IsADirectoryError(suffix):
 def test_FromFile_required_fields_not_set(suffix):
   """Test that DecodeError raised if required fields not set."""
   with tempfile.NamedTemporaryFile(prefix='labm8_proto_', suffix=suffix) as f:
-    pbutil.ToFile(
-        test_protos_pb2.AnotherTestMessage(number=1), pathlib.Path(f.name))
+    pbutil.ToFile(test_protos_pb2.AnotherTestMessage(number=1),
+                  pathlib.Path(f.name))
     with pytest.raises(pbutil.DecodeError) as e_info:
       pbutil.FromFile(pathlib.Path(f.name), test_protos_pb2.TestMessage())
     assert f"Required fields not set: '{f.name}'" == str(e_info.value)
@@ -134,12 +131,11 @@ def test_FromFile_required_fields_not_set_uninitialized_okay(suffix):
   """Test that DecodeError not raised if required fields not set."""
   with tempfile.NamedTemporaryFile(prefix='labm8_proto_', suffix=suffix) as f:
     proto_in = test_protos_pb2.AnotherTestMessage(number=1)
-    pbutil.ToFile(
-        test_protos_pb2.AnotherTestMessage(number=1), pathlib.Path(f.name))
-    pbutil.FromFile(
-        pathlib.Path(f.name),
-        test_protos_pb2.TestMessage(),
-        uninitialized_okay=True)
+    pbutil.ToFile(test_protos_pb2.AnotherTestMessage(number=1),
+                  pathlib.Path(f.name))
+    pbutil.FromFile(pathlib.Path(f.name),
+                    test_protos_pb2.TestMessage(),
+                    uninitialized_okay=True)
 
 
 @pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
@@ -342,9 +338,8 @@ def test_ProtoBackedMixin_ToProto():
 def test_ProtoBackedMixin_FromProtoFile(suffix: str, tempdir: pathlib.Path):
   """Test FromProtoFile constructor for proto backed class."""
   proto_path = tempdir / f'proto{suffix}'
-  pbutil.ToFile(
-      test_protos_pb2.TestMessage(string="Hello, world!", number=42),
-      proto_path)
+  pbutil.ToFile(test_protos_pb2.TestMessage(string="Hello, world!", number=42),
+                proto_path)
 
   instance = TestMessage.FromProtoFile(proto_path)
   assert instance.string == "Hello, world!"

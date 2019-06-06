@@ -209,8 +209,8 @@ class AutoCsvProfiler(object):
     self._path = self._directory / log_name
 
     with self._writer() as writer:
-      writer.writerow(('Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)',
-                       'Event'))
+      writer.writerow(
+          ('Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)', 'Event'))
 
   @contextlib.contextmanager
   def Profile(self, event_name: str = ''):

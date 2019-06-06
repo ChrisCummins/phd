@@ -68,13 +68,12 @@ def Exec(argv: typing.List[str],
   """
   cmd = [str(OCLGRIND_PATH)] + argv
   app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdout=subprocess.PIPE,
-      stdin=subprocess.PIPE if stdin else None,
-      stderr=subprocess.PIPE,
-      universal_newlines=True,
-      env=env)
+  process = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE if stdin else None,
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True,
+                             env=env)
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:
