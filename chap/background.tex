@@ -3,7 +3,7 @@
 
 \section{Introduction}
 
-This chapter provides a brief and non-exhaustive overview of the techniques and theory used in this thesis. First Section~\ref{sec:background-terminology} defines terminology. Then Sections~\ref{sec:background-machine-learning} and~\ref{sec:evaluation-techniques} describe the machine learning and evaluation techniques used in this thesis, respectively. Section~\ref{sec:programming-heterogeneous-systems} provides an overview of heterogeneous programming. Finally Section~\ref{sec:background-summary} concludes.
+This chapter provides a brief and non-exhaustive overview of the techniques and theory used in this thesis. First, Section~\ref{sec:background-terminology} defines terminology. Then Section~\ref{sec:background-machine-learning} describes the machine learning techniques used in this thesis, and Section~\ref{sec:evaluation-techniques} describes and evaluation techniques used in this thesis. Finally, Section~\ref{sec:background-summary} concludes.
 
 
 \section{Terminology}
@@ -19,7 +19,7 @@ This chapter provides a brief and non-exhaustive overview of the techniques and 
 \section{Machine Learning}
 \label{sec:background-machine-learning}
 
-Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the correct category --- or class --- for a set of features, based on ``labelled'' training data, i.e.\ instances whose categories are known. Sequence modelling is the task of capturing the underling probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
+Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the correct category --- or class --- for a set of features, based on ``labelled'' training data, i.e.\ instances whose categories are known. Sequence modelling is the task of capturing the underlying probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
 
 % \subsection{Supervised Learning}
 
@@ -36,7 +36,7 @@ Machine learning techniques are used in this thesis for classification and seque
 
 Artificial Neural Networks comprise a network of artificial neurons and weighted connections between them to map input variables to a response. Figure~\ref{fig:artificial-neural-network} shows the architecture of a feed-forward artificial neural network. Each node represents an artificial neuron. The neurons are grouped into layers. The signal of an artificial neuron at a given layer is connected to the input of each artificial neuron in the next layer.
 
-Intermediate layers for which there are no ground truth values are known as \emph{hidden} layers. Figure~\ref{fig:artificial-neural-network} depicts a three layered network with three input values, a single hidden layer with four artificial neurons, and two outputs. Feed-forward multi-layered artificial neural networks are powerful \emph{universal function approximators}, capable of learning any bounded continuous function to arbitrary precision~\cite{Hornik1991,Lu2017,Yarotsky2017}.
+Intermediate layers for which there are no ground truth values are known as \emph{hidden} layers. Figure~\ref{fig:artificial-neural-network} depicts a three-layered network with three input values, a single hidden layer with four artificial neurons, and two outputs. Feed-forward multi-layered artificial neural networks are powerful \emph{universal function approximators}, capable of learning any bounded continuous function to arbitrary precision~\cite{Hornik1991,Lu2017,Yarotsky2017}.
 
 \begin{figure}
   \centering
@@ -81,7 +81,7 @@ Logistic function-based activations suffer from a squashing effect with large po
 
 If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons in the network will not fire, so that activations are sparse.
 % Problem is ``dying'' neurons. When activations dip below 0, gradients will be 0, so the neuron becomes unresponsive to variations in input / error.
-The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, effectively ``dying''. Leaky ReLU prevents artificial neurons becoming unresponsive to variations in input by introducing a small slope for negative values:
+The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, effectively ``dying''. Leaky ReLU prevents artificial neurons from becoming unresponsive to variations in input by introducing a small slope for negative values:
 
 \begin{align}
   \phi(z) =
@@ -102,7 +102,7 @@ Where $\sum_{i=1}^{K} \phi (\bm{z})^{(i)} = 1$.
 
 \paragraph*{Backpropagation and Gradient Descent}
 
-The most widely used technique to train artificial neural networks is backpropagation~\cite{Rumelhart1986}. Typically, the artificial neuron parameters are initialised with small random values. During training, a \emph{mini-batch} of $B$ observations is propagated through the network in a \emph{feed forward} stage. The final outputs of the network $\bm{\hat{y}}$ are then compared against the true values $\bm{y}$ and used to compute an error $\mathcal{L}(\bm{\hat{y}}, \bm{y})$. The appropriate error function depends on the task. For a classification task with $K$ classes, \emph{categorical cross-entropy} may be used:
+The most widely used technique to train artificial neural networks is backpropagation~\cite{Rumelhart1986}. Typically, the artificial neuron parameters are initialised with small random values. During training, a \emph{mini-batch} of $B$ observations is propagated through the network in a \emph{feed-forward} stage. The final outputs of the network $\bm{\hat{y}}$ are then compared against the true values $\bm{y}$ and used to compute an error $\mathcal{L}(\bm{\hat{y}}, \bm{y})$. The appropriate error function depends on the task. For a classification task with $K$ classes, \emph{categorical cross-entropy} may be used:
 
 \begin{equation}
   \mathcal{L}(\bm{\hat{y}}, \bm{y}) = - \sum_{i=1}^K \bm{y}^{(i)} log (\bm{\hat{y}}^{(i)})
@@ -175,7 +175,7 @@ The recurrent structure of RNNs enables the modelling of patterns in data with a
 Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, shown in Figure~\subref{fig:rnn-unrolled}. This \emph{Backpropagation Through Time} (BPTT)~\cite{Werbos1990a} enables the propagation of errors in the temporal domain in the same manner as through layers.
 
 % Siegelmann, H. T., & Sontag, E. D. (1991). Turing Computability with Neural Nets. Applied Mathematics Letters, 4(6).
-RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of a finite size~\cite{Sontag1991}. In practise, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through the recurrence relation. This issue is known as the
+RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of finite size~\cite{Sontag1991}. In practice, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through the recurrence relation. This issue is known as the
 % Bengio, Y., Simard, P., & Frasconi, P. (1994). Learning Long-Term Dependencies with Gradient Descent is Difficult. IEEE Transactions on Neural Networks, 5(2).
 \emph{vanishing gradients} problem~\cite{Bengio1994}.
 
@@ -231,7 +231,7 @@ The gain of a feature $x$ is found using:
   \gain(D, x) = H(D) - \sum_{V \in \text{Values}(x)}\frac{|D_V|}{|D|}H(D_V)
 \end{equation}
 
-Decision trees are popular and low overhead form of classification. Implementations can be as simple and efficient as a set of nested conditional statements.
+Decision trees are a popular and low overhead form of classification. Implementations can be as simple and efficient as a set of nested conditional statements.
 
 % TODO: \subsection{Generative Adversarial Networks}
 
@@ -289,41 +289,41 @@ Where for a set of $n$ observations, $K \le n$. If $K=n$ this is known as \emph{
 For a classification task, if observations are distributed amongst the $K$ partitions such that the distribution of observation classes in all partitions is equal, this is called \emph{stratified} $K$-fold cross-validation.
 
 
-\subsection{Principle Component Analysis}
+\subsection{Principal Component Analysis}
 
 Principal Components Analysis PCA~\cite{Jolliffe2011} is a statistical procedure for identifying the underlying components responsible for variance in data. Given $n$ dimensions of observations, PCA produces a $k$-dimensional subspace through a linear transformation, where $k < n$. Each component is ordered by decreasing variance, $Var(k^{(i)}) \le Var(k^{(i-1)})$. This dimensionality-reduction is useful for exposing underlying correlations in machine learning feature design, and to aid in visually inspecting high-dimensional spaces where $n \ge 3$.
 
-To compute the principle components, one begins with a normalized matrix of observations $\bm{X} \in \mathbb{R}^{m \times n}$ of $m$ rows and $n$ columns (components). The data is normalised to the range $[-1,1]$ by subtracting the mean and scaling each component by its variance. Given eigenvectors $\bm{v}^{(1)}, \ldots \bm{v}^{(m)}$, the matrix of $k$ principle components $\bm{\hat{X}} \in \mathbb{R}^{m \times k}$ can be computed using:
+To compute the principal components, one begins with a normalized matrix of observations $\bm{X} \in \mathbb{R}^{m \times n}$ of $m$ rows and $n$ columns (components). The data is normalised to the range $[-1,1]$ by subtracting the mean and scaling each component by its variance. Given eigenvectors $\bm{v}^{(1)}, \ldots \bm{v}^{(m)}$, the matrix of $k$ principal components $\bm{\hat{X}} \in \mathbb{R}^{m \times k}$ can be computed using:
 
 \begin{equation}
 \bm{\hat{X}} = [ \bm{v}^{(1)}, \ldots, \bm{v}^{(k)}]^T \cdot \bm{X}\\
 \end{equation}
 
-\section{Heterogeneous Systems}
-\label{sec:programming-heterogeneous-systems}
+% \section{Heterogeneous Systems}
+% \label{sec:programming-heterogeneous-systems}
 
-A heterogeneous system contains multiple types of processor. Compared to systems with a single processor, programming for heterogeneous systems is especially challenging. Typical approaches divide the system processors into a \emph{host processor} and one or more additional \emph{accelerator} processors, where the host processor is responsible for coordinating and synchronising work on the accelerator processors. This approach has been successfully used for General-purpose computing on graphics processing units (GPGPU), where the system CPU is the host and the GPUs are used as accelerators~\cite{Owens2006}. Many of the techniques in this thesis are evaluated using OpenCL, a popular language and framework for programming heterogeneous systems.
-
-
-\subsection{OpenCL Programming Model}
-
-OpenCL is a vendor-independent open standard for programming heterogeneous systems, supporting CPUs, GPUs, and other parallel processors such as Field-Programmable Gate Arrays~\cite{Stone2010}. It comprises a compute language based on a subset of the ISO C99 programming, and a set of APIs for controlling heterogeneous compute devices from a central host. Programs written for these devices are called kernels, and are compiled by platform-specific tool chains. At runtime, an OpenCL platform is selected and a context object is created which exposes access to each supported compute device through command queues. When a kernel is executed, each unit of computation is referred to as a work-item, and these work-items are grouped into work-groups. The sum of all work-group dimensions defines the global size. For GPUs, work-groups execute on the Single Instruction Multiple Data (SIMD) processing units in lock-step. This is different from the behaviour of traditional CPUs, and can cause severe performance penalties in the presence of flow control, as work-items must be stalled across diverging flow paths.
+% A heterogeneous system contains multiple types of processor. Compared to systems with a single processor, programming for heterogeneous systems is especially challenging. Typical approaches divide the system processors into a \emph{host processor} and one or more additional \emph{accelerator} processors, where the host processor is responsible for coordinating and synchronising work on the accelerator processors. This approach has been successfully used for General-purpose computing on Graphics Processing Units (GPGPU), where the system CPU is the host and the GPUs are used as accelerators~\cite{Owens2006}. Many of the techniques in this thesis are evaluated using OpenCL, a popular language and framework for programming heterogeneous systems.
 
 
-% \paragraph*{Memory Model}
+% \subsection{OpenCL Programming Model}
 
-OpenCL uses a hierarchical memory model, shown in Figure~\ref{fig:opencl-memory-hierarchy}. The host and each OpenCL device has a single global memory address space. Each work-group has a local memory space, and each work-item has a region of private memory.
+% OpenCL is a vendor-independent open standard for programming heterogeneous systems, supporting CPUs, GPUs, and other parallel processors such as Field-Programmable Gate Arrays~\cite{Stone2010}. It comprises a compute language based on a subset of the ISO C99 programming language, and a suite of APIs for controlling heterogeneous compute devices from a central host. Programs written for these devices are called kernels, and are compiled by platform-specific toolchains. At runtime, an OpenCL platform is selected and a context object is created which exposes access to each supported compute device through command queues. When a kernel is executed, each unit of computation is referred to as a work-item, and these work-items are grouped into work-groups. The sum of all work-group dimensions defines the global size. For GPUs, work-groups execute on the Single Instruction Multiple Data (SIMD) processing units in lock-step. This is different from the behaviour of traditional CPUs, and can cause severe performance penalties in the presence of flow control, as work-items must be stalled across diverging flow paths.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.8\textwidth]{img/opencl-memory}
-  \caption[OpenCL memory model]{%
-    The OpenCL memory model. The host communicates with each device through transfers between global memory spaces. The capacity of each type of memory is dependent on the device hardware. In general, private memory is the fastest and smallest, and global memory is the largest and slowest.%
-  }
-  \label{fig:opencl-memory-hierarchy}
-\end{figure}
 
-Work-groups cannot access the memory of neighbouring work-groups, nor can work-items access the private memory of other work-items. OpenCL provides synchronisation barriers to allow for communication between work-items within a single work-group via the local memory, but not global barriers. Memory transfers between the host and devices occurs between global memory regions. In the case of programming heterogeneous devices, these transfers must occur over the connection bus between the CPU and device (e.g.\ PCIe for discrete GPUs), which typically creates a performance bottleneck by introducing a performance overhead to transfer data to the device for processing, then back to the device afterwards.
+% % \paragraph*{Memory Model}
+
+% OpenCL uses a hierarchical memory model, shown in Figure~\ref{fig:opencl-memory-hierarchy}. The host and each OpenCL device has a single global memory address space. Each work-group has a local memory space, and each work-item has a region of private memory.
+
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=0.8\textwidth]{img/opencl-memory}
+%   \caption[OpenCL memory model]{%
+%     The OpenCL memory model. The host communicates with each device through transfers between global memory spaces. The capacity of each type of memory is dependent on the device hardware. In general, private memory is the fastest and smallest, and global memory is the largest and slowest.%
+%   }
+%   \label{fig:opencl-memory-hierarchy}
+% \end{figure}
+
+% Work-groups cannot access the memory of neighbouring work-groups, nor can work-items access the private memory of other work-items. OpenCL provides synchronisation barriers to allow for communication between work-items within a single work-group via the local memory, but not global barriers. Memory transfers between the host and devices occurs between global memory regions. In the case of programming heterogeneous devices, these transfers must occur over the connection bus between the CPU and device (e.g.\ PCIe for discrete GPUs), which typically creates a performance bottleneck by introducing a performance overhead to transfer data to the device for processing, then back to the device afterwards.
 
 
 % \subsubsection{Performance Optimisations}
@@ -332,7 +332,7 @@ Work-groups cannot access the memory of neighbouring work-groups, nor can work-i
 
 % The overhead introduced by memory transfers between host and compute devices further complicates comparisons of OpenCL performance on different devices. The conclusion of~\cite{Gregg2011} is that this overhead can account for a $2\times$ to $50\times$ difference of accelerator program runtime. In~\cite{Lee2010}, \citeauthor{Lee2010} present a performance analysis of optimised throughput computing applications for GPUs and CPUs. Of the 14 applications tested, they found GPU performance to be $0.7\times$ to $14.9\times$ that of multi-threaded CPU code, with an average of only 2.5$\times$. This is much lower than the $100\times$ to $1000\times$ values reported by other studies, a fact that they attribute to uneven comparison of optimised GPU code to unoptimised CPU code, or vice versa. \citeauthor{Lee2010} found that multi-threading, cache blocking, reordering of memory accesses and use of SIMD instructions to contribute most to CPU performance. For GPUs, the most effective optimisations are reducing synchronisation costs, and exploiting local shared memory. In all cases, the programs were optimised and hand-tuned by programmers with expert knowledge of the target architectures. It is unclear whether their performance results still hold for subsequent generations of devices.
 
-% Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
+% Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low-levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
 
 
 % \subsection{Evaluation Techniques}
@@ -435,4 +435,4 @@ Work-groups cannot access the memory of neighbouring work-groups, nor can work-i
 \section{Summary}
 \label{sec:background-summary}
 
-This chapter has detailed the machine learning techniques used in this thesis, the techniques used in evaluation, and the domain in which they are evaluated, heterogeneous programming with OpenCL. The following chapter surveys the research literature relevant to this work.
+This chapter has provided background on the machine learning techniques used in this thesis and the techniques used in evaluating them. The following chapter surveys research literature relevant to this work.

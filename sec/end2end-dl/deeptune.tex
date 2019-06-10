@@ -6,7 +6,7 @@ DeepTune is an end-to-end machine learning pipeline for optimisation heuristics.
 
 \subsection{Overview}
 
-Figure~\ref{fig:deeptune} provides an overview of the system. A source re-writer removes semantically irrelevant information (such as comments) from the source code of the target program and passes it to a language model. The language model converts the arbitrary length stream of code into a fixed length vector of real values which fully capture the properties and structure of the source, replacing the role of hand designed features. This vector can then optionally be concatenated with auxiliary inputs, which allow passing additional data about runtime or architectural parameters to the model for heuristics which need more than just compile-time information. Finally, a standard feed-forward network is used to predict the best heuristic parameters to optimise the program.
+Figure~\ref{fig:deeptune} provides an overview of the system. A source re-writer removes semantically irrelevant information (such as comments) from the source code of the target program and passes it to a language model. The language model converts the arbitrary length stream of code into a fixed length vector of real values which fully capture the properties and structure of the source, replacing the role of hand-designed features. This vector can then optionally be concatenated with auxiliary inputs, which allow passing additional data about runtime or architectural parameters to the model for heuristics which need more than just compile-time information. Finally, a standard feed-forward network is used to predict the best heuristic parameters to optimise the program.
 
 \input{fig/deeptune}
 
@@ -23,7 +23,7 @@ Learning effective representations of source code is a difficult task. A success
   \item discriminate performance characteristics arising from potentially subtle differences in similar codes.
 \end{itemize}
 
-To achieve this task, state-of-the-art language modelling techniques are employed, coupled with a series of generic, language agnostic code transformations.
+To achieve this task, state-of-the-art language modelling techniques are employed, coupled with a series of generic, language-agnostic code transformations.
 
 \subsubsection{Source Re-writer}
 
@@ -37,7 +37,7 @@ The textual representation of program codes must be encoded as numeric sequences
 
 During encoding, tokens in the vocabulary are mapped to unique integer values, e.g. \texttt{float} $\rightarrow 0$, \texttt{int} $\rightarrow$ 1. The integer values chosen are arbitrary, and offer a \emph{sparse} data representation, meaning that a language model cannot infer the relationships between tokens based on their mappings. This is in contrast to the \emph{dense} representations of other domains, such as pixels in images, which can be interpolated between to derive the differences in colours.
 
-To mitigate this, an \emph{embedding} is used, which translates tokens in a sparse, integer encoded vocabulary into a lower dimensional vector space, allowing semantically related tokens like \texttt{float} and \texttt{int} to be mapped to nearby points~\cite{Mikolov2013a,Baroni2014}. An embedding layer maps each token in the integer encoded vocabulary to a vector of real values. Given a vocabulary size $|V|$ and embedding dimensionality $D$, an embedding matrix $\bm{W_{E}} \in \mathbb{R}^{|V| \times D}$ is learned during training, so that an integer encoded sequences of tokens $\bm{t} \in \mathbb{N}^{L}$ is mapped to the matrix $\bm{T} \in \mathbb{R}^{L \times D}$. In this work, an embedding dimensionality $D = 64$ is used.
+To mitigate this, an \emph{embedding} is used, which translates tokens in a sparse, integer-encoded vocabulary into a lower dimensional vector space, allowing semantically related tokens like \texttt{float} and \texttt{int} to be mapped to nearby points~\cite{Mikolov2013a,Baroni2014}. An embedding layer maps each token in the integer-encoded vocabulary to a vector of real values. Given a vocabulary size $|V|$ and embedding dimensionality $D$, an embedding matrix $\bm{W_{E}} \in \mathbb{R}^{|V| \times D}$ is learned during training, so that an integer-encoded sequences of tokens $\bm{t} \in \mathbb{N}^{L}$ is mapped to the matrix $\bm{T} \in \mathbb{R}^{L \times D}$. In this work, an embedding dimensionality $D = 64$ is used.
 
 \input{fig/encoding}
 
@@ -52,14 +52,14 @@ The LSTM network has two layers of cells. The network receives a sequence of emb
 
 \subsection{Auxiliary Inputs}
 
-An arbitrary number of additional real valued \emph{auxiliary inputs} may be optionally used to augment the source code input. These inputs are provided as a means of increasing the flexibility of the system, for example, to support applications in which the optimisation heuristic depends on dynamic values which cannot be statically determined from the program code~\cite{Ding2015,Stephenson2005}. When present, the values of auxiliary inputs are concatenated with the output of the language model, and fed into a heuristic model.
+An arbitrary number of additional real-valued \emph{auxiliary inputs} may be optionally used to augment the source code input. These inputs are provided as a means of increasing the flexibility of the system, for example, to support applications in which the optimisation heuristic depends on dynamic values which cannot be statically determined from the program code~\cite{Ding2015,Stephenson2005}. When present, the values of auxiliary inputs are concatenated with the output of the language model and fed into a heuristic model.
 
 
 \subsection{Heuristic Model}
 
-The heuristic model takes the learned representations of the source code and auxiliary inputs (if present), and uses these values to make the final optimisation prediction.
+The heuristic model takes the learned representations of the source code and auxiliary inputs (if present) and uses these values to make the final optimisation prediction.
 
-First the values are normalised. Normalisation is necessary because the auxiliary inputs can have any values, whereas the language model activations are in the range [0,1]. If we did not normalise, then scaling the auxiliary inputs could affect the training of the heuristic model. Normalisation occurs in batches. The batch normalisation method of~\cite{Ioffe2015a} is used, in which each scalar of the heuristic model's $n$ inputs $\bm{x}^{(1)}, \ldots, \bm{x}^{(n)}$ is independently normalised to a mean 0 and standard deviation of 1:
+First, the values are normalised. Normalisation is necessary because the auxiliary inputs can have any values, whereas the language model activations are in the range [0,1]. If we did not normalise, then scaling the auxiliary inputs could affect the training of the heuristic model. Normalisation occurs in batches. The batch normalisation method of~\cite{Ioffe2015a} is used, in which each scalar of the heuristic model's $n$ inputs $\bm{x}^{(1)}, \ldots, \bm{x}^{(n)}$ is independently normalised to a mean 0 and standard deviation of 1:
 
 \begin{equation}
 \bm{\hat{x}}^{(i)} = \bm{\upgamma}^{(i)} \frac{\bm{x}^{(i)} - E(\bm{x}^{(i)})}{\sqrt{Var(\bm{x}^{(i)})}} + \bm{\beta}^{(i)}
@@ -67,7 +67,7 @@ First the values are normalised. Normalisation is necessary because the auxiliar
 
 Where $\bm{\upgamma}$ and $\bm{\beta}$ are scale and shift parameters, learned during training.
 
-The final component of DeepTune is comprised of two fully connected neural network layers. The first layer consists of 32 neurons. The second layer consists of a single neuron for each possible heuristic decision. Each neuron applies an activation function $f(x)$ over its inputs. Rectifier activation functions $f(x) = \max(0, x)$ are used in the first layer due to their improved performance during training of deep networks~\cite{Nair2010}. For the output layer, sigmoid activation functions $f(x) = \frac{1}{1+e^{-x}}$ are used which provide activations in the range $[0,1]$.
+The final component of DeepTune is comprised of two fully connected neural network layers. The first layer consists of 32 neurons. The second layer consists of a single neuron for each possible heuristic decision. Each neuron applies an activation function $f(x)$ over its inputs. Rectifier activation functions $f(x) = \max(0, x)$ are used in the first layer due to their improved performance during the training of deep networks~\cite{Nair2010}. For the output layer, sigmoid activation functions $f(x) = \frac{1}{1+e^{-x}}$ are used which provide activations in the range $[0,1]$.
 
 The activation of each neuron in the output layer represents the model's confidence that the corresponding decision is the correct one. Taking the $\argmax$ of the output layer produces the decision with the largest activation. For example, for a binary optimisation heuristic the final layer will consist of two neurons, and the predicted optimisation is the neuron with the largest activation.
 

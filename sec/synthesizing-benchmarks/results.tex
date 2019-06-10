@@ -1,7 +1,7 @@
 \section{Experimental Results}
 \label{sec:clgen-eval-results}
 
-The effectiveness of synthetic benchmarks is evaluated on two heterogeneous systems. First the performance of a state-of-the-art predictive model~\cite{Grewe2013} is compared with and without the addition of synthetic benchmarks, then synthetic benchmarks are shown to expose weaknesses in the feature design and how these can be addressed to develop a better model. Finally the ability of CLgen to explore the program feature space is compared against a state-of-the-art program generator.
+The effectiveness of synthetic benchmarks is evaluated on two heterogeneous systems. First, the performance of a state-of-the-art predictive model~\cite{Grewe2013} is compared with and without the addition of synthetic benchmarks, then synthetic benchmarks are shown to expose weaknesses in the feature design and how these can be addressed to develop a better model. Finally, the ability of CLgen to explore the program feature space is compared against a state-of-the-art program generator.
 
 \subsection{Performance Evaluation}
 
@@ -19,7 +19,7 @@ The effectiveness of synthetic benchmarks is evaluated on two heterogeneous syst
   \label{fig:npb} %
 \end{figure}
 
-Figure~\ref{fig:npb} shows speedups of the \citeauthor{Grewe2013} predictive model over the NAS Parallel Benchmark suite with and without the addition of synthesised benchmarks for training. Speedups are calculated relative to the best single-device mapping for each experimental platform, which is CPU-only for AMD and GPU-only for NVIDIA. The fine grained coverage of the feature space which synthetic benchmarks provide improves performance dramatically for the NAS benchmarks. Across both systems, an average speedup of $2.42\times$ is achieved with the addition of synthetic benchmarks, with prediction improvements over the baseline for 62.5\% of benchmarks on AMD and 53.1\% on NVIDIA.
+Figure~\ref{fig:npb} shows speedups of the \citeauthor{Grewe2013} predictive model over the NAS Parallel Benchmark suite with and without the addition of synthesised benchmarks for training. Speedups are calculated relative to the best single-device mapping for each experimental platform, which is CPU-only for AMD and GPU-only for NVIDIA. The fine-grained coverage of the feature space which synthetic benchmarks provide improves performance dramatically for the NAS benchmarks. Across both systems, an average speedup of $2.42\times$ is achieved with the addition of synthetic benchmarks, with prediction improvements over the baseline for 62.5\% of benchmarks on AMD and 53.1\% on NVIDIA.
 
 The strongest performance improvements are on NVIDIA with the \texttt{FT} benchmark which suffers greatly under a single-device mapping. However, the performance on AMD for the same benchmark slightly degrades after adding the synthetic benchmarks. This issue is addressed in the next section.
 
@@ -30,7 +30,7 @@ Feature designers are bound to select as features only properties which are sign
 
 The first case is that the feature \texttt{F3} of Table~\ref{tab:clgen-cgo13-features} is sparse on many programs. This is a result of the NPB implementation's heavy exploitation of local memory buffers and the method by which they combined features (speculatively, this may have been a necessary dimensionality reduction in the presence of sparse training programs). A simple countermeasure is taken to address this by extending the model to use the raw feature values in addition to the combined features.
 
-The second case is that some of CLgen-generated programs had identical feature values as in the benchmark set, but had different \emph{behaviour} (i.e. optimal mappings). Listing~\ref{lst:zero-b} shows one example of a CLgen benchmark which is indistinguishable in the feature space to one the of existing benchmarks --- AMD's Fast Walsh-Hadamard transform, Listing~\ref{lst:amd-fast-walsh-transform} --- but with different behaviour. We found this to be caused by the lack of discriminatory features for branching, since the NPB programs are implemented in a manner which aggressively minimised branching. To counter this the predictive model was extended with an additional feature containing a static count of branching operations in a kernel.
+The second case is that some CLgen-generated programs had identical feature values as in the benchmark set, but had different \emph{behaviour} (i.e. optimal mappings). Listing~\ref{lst:zero-b} shows one example of a CLgen benchmark which is indistinguishable in the feature space to one the of existing benchmarks --- AMD's Fast Walsh-Hadamard transform, Listing~\ref{lst:amd-fast-walsh-transform} --- but with different behaviour. We found this to be caused by the lack of discriminatory features for branching, since the NPB programs are implemented in a manner which aggressively minimised branching. To counter this the predictive model was extended with an additional feature containing a static count of branching operations in a kernel.
 
 \lstinputlisting[%
   label=lst:amd-fast-walsh-transform,%
@@ -47,12 +47,12 @@ The second case is that some of CLgen-generated programs had identical feature v
   float,%
   caption={%
     [Synthesised program with same features as an AMD benchmark]%
-    In the \citeauthor{Grewe2013} feature space this CLgen program is indistinguishable from the AMD Fast Walsh–Hadamard transform benchmark kernel of Listing~\ref{lst:amd-fast-walsh-transform}, but has very different runtime behaviour and optimal device mapping. The addition of a branching feature fixes this.%
+    In the \citeauthor{Grewe2013} feature space, this CLgen program is indistinguishable from the AMD Fast Walsh–Hadamard transform benchmark kernel of Listing~\ref{lst:amd-fast-walsh-transform}, but has very different runtime behaviour and optimal device mapping. The addition of a branching feature fixes this.%
   },%
   language={[OpenCL]C}
 ]{lst/zero-b}
 
-Figure~\ref{fig:ex2} shows speedups of the extended model across all seven of the benchmark suites used in Section~\ref{sec:the-case-for-benchmark-generators}. Model performance, even on this tenfold increase of benchmarks, is good. There are three benchmarks on which the model performs poorly: \texttt{MatrixMul}, \texttt{cutcp}, and \texttt{pathfinder}. Each of those programs make heavy use of loops, which it is believed the static code features of the model fail to capture. This could be addressed by extracting dynamic instruction counts using profiling, but this is beyond the scope of this work. It is not the aim of this work to perfect the predictive model, but to show the performance improvements associated with training on synthetic programs. To this extent, the goal is succeeded, achieving average speedups of $3.56\times$ on AMD and $5.04\times$ on NVIDIA across a very large test set.
+Figure~\ref{fig:ex2} shows speedups of the extended model across all seven of the benchmark suites used in Section~\ref{sec:the-case-for-benchmark-generators}. Model performance, even on this tenfold increase of benchmarks, is good. There are three benchmarks on which the model performs poorly: \texttt{MatrixMul}, \texttt{cutcp}, and \texttt{pathfinder}. Each of those programs makes heavy use of loops, which it is believed the static code features of the model fail to capture. This could be addressed by extracting dynamic instruction counts using profiling, but this is beyond the scope of this work. It is not the aim of this work to perfect the predictive model but to show the performance improvements associated with training on synthetic programs. To this extent, the goal is succeeded, achieving average speedups of $3.56\times$ on AMD and $5.04\times$ on NVIDIA across a very large test set.
 
 \begin{figure}
   \centering%
