@@ -4,9 +4,9 @@ namespace arduino {
 
 class WiFiServerClient {};
 
-void WiFiServer::Init(bool serial_print) {}
+void ESP8266WiFiServer::Init(bool serial_print) {}
 
-WiFiServerClient WiFiServer::BlockUntilClientConnected() const {
+WiFiServerClient ESP8266WiFiServer::BlockUntilClientConnected() const {
   return WiFiServerClient();
 }
 
