@@ -8,3 +8,12 @@ py_binary(
         "//third_party/py/bibtexparser",
     ],
 )
+
+py_test(
+    name = "minimize_bibtex_test",
+    srcs = ["minimize_bibtex_test.py"],
+    deps = [
+        ":minimize_bibtex",
+        "//labm8:test",
+    ],
+)
