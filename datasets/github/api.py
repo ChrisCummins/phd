@@ -28,6 +28,13 @@ from labm8 import app
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
+    'github_access_token', None,
+    'Github access token. See <https://github.com/settings/tokens> to '
+    'generate an access token.')
+app.DEFINE_string('github_access_token_path',
+                  '/var/phd/github_access_token.txt',
+                  'Path to a file containing a github access token.')
+app.DEFINE_string(
     'github_credentials_path', '~/.githubrc',
     'The path to a file containing GitHub login credentials. See '
     '//datasets/github/scrape_repos/README.md for details.')
@@ -50,12 +57,26 @@ def ReadGitHubCredentials(path: pathlib.Path) -> github_pb2.GitHubCredentials:
 def GetGithubConectionFromFlagsOrDie() -> github.Github:
   """Get a GitHub API connection or die.
 
+  First, it attempts to connect using the --github_access_token flag. If that
+  flag is not set, then the contents of --github_access_token_path are used.
+  If that file does not exist, --github_credentials_path is read.
+
   Returns:
     A PyGithub Github instance.
   """
   try:
-    credentials = ReadGitHubCredentials(
-        pathlib.Path(FLAGS.github_credentials_path).expanduser())
-    return github.Github(credentials.username, credentials.password)
+    if FLAGS.github_access_token:
+      return github.Github(FLAGS.github_access_token)
+    elif pathlib.Path(FLAGS.github_access_token_path).is_file():
+      with open(FLAGS.github_access_token_path) as f:
+        access_token = f.read().strip()
+      return github.Github(access_token)
+    else:
+      github_credentials_path = pathlib.Path(FLAGS.github_credentials_path)
+      if not github_credentials_path.is_file():
+        app.FatalWithoutStackTrace('Github credentials file not found: %s',
+                                   github_credentials_path)
+      credentials = ReadGitHubCredentials(github_credentials_path.expanduser())
+      return github.Github(credentials.username, credentials.password)
   except Exception as e:  # Deliberately broad catch-all.
-    app.Fatal('Failed to create GitHub API connection: %s', e)
+    app.FatalWithoutStackTrace('Failed to create GitHub API connection: %s', e)
