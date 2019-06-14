@@ -58,6 +58,7 @@ class QueryScraper(threading.Thread):
     self.repo_query = query
     self.destination_directory = pathlib.Path(language.destination_directory)
     self.i = 0
+    self.stop_request = threading.Event()
     # Any access to the query properties can cause the rate limit to be
     # exceeded.
     while True:
@@ -71,6 +72,15 @@ class QueryScraper(threading.Thread):
         time.sleep(3)
     self.next_page_num = 0
     super(QueryScraper, self).__init__()
+
+  @property
+  def is_stopped(self) -> bool:
+    """Return whether a stop has been requested."""
+    return self.stop_request.is_set()
+
+  def Stop(self) -> None:
+    """Signal for the scraper to stop."""
+    self.stop_request.set()
 
   def GetNumberOfResultsProcessed(self) -> int:
     """Get the number of results which have been processed."""
@@ -111,7 +121,7 @@ class QueryScraper(threading.Thread):
       # An empty list indicates that we've run out of query results.
       return True
     else:
-      return self.i >= self.repo_query.max_results
+      return self.is_stopped or self.i >= self.repo_query.max_results
 
   def run(self) -> None:
     """Execute the worker thread."""
@@ -132,6 +142,8 @@ class QueryScraper(threading.Thread):
     """
     app.Log(2, 'Scraping %s repositories', humanize.Commas(len(repos)))
     for repo in repos:
+      if self.is_stopped:
+        return
       self.i += 1
       self.ProcessRepo(repo)
 
