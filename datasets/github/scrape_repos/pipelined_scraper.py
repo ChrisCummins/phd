@@ -75,12 +75,10 @@ class PipelinedScraper(scraper.QueryScraper):
       return
 
     meta_path = self.GetRepoMetaPath(repo)
-    if not meta_path:
+    if not meta_path or not meta_path.is_file():
       return
 
     clone_dir = cloner.GetCloneDir(meta_path)
+    meta_path.unlink()  # Must be done *after* resolving the clone dir.
     if clone_dir and clone_dir.is_dir():
       fs.rm(clone_dir)
-
-    if meta_path.is_file():
-      meta_path.unlink()
