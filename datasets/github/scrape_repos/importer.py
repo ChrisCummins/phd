@@ -64,18 +64,22 @@ def ImportWorker(job: scrape_repos_pb2.ImportWorker
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   outputs: typing.List[contentfiles.ContentFile] = []
   try:
-    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
-                                     job.all_files_relpaths, job.preprocessors)
+    texts = preprocessors.Preprocess(
+        pathlib.Path(job.clone_dir), relpath, job.all_files_relpaths,
+        job.preprocessors)
     for i, text in enumerate(texts):
-      sha256 = hashlib.sha256(text.encode('utf-8'))
+      encoded_text = text.encode('ascii', 'ignore')
+      sha256 = hashlib.sha256(encoded_text).hexdigest()
+      text = encoded_text.decode('ascii')
       outputs.append(
-          contentfiles.ContentFile(clone_from_url=job.clone_from_url,
-                                   relpath=relpath,
-                                   artifact_index=i,
-                                   sha256=sha256.digest(),
-                                   charcount=len(text),
-                                   linecount=len(text.split('\n')),
-                                   text=text))
+          contentfiles.ContentFile(
+              clone_from_url=job.clone_from_url,
+              relpath=relpath,
+              artifact_index=i,
+              sha256=sha256,
+              charcount=len(text),
+              linecount=len(text.split('\n')),
+              text=text))
   except UnicodeDecodeError:
     app.Warning('Failed to decode %s', relpath)
   return outputs
@@ -96,6 +100,7 @@ def ImportRepo(session: orm.session.Session,
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
   repo = contentfiles.GitHubRepository.GetOrAdd(session, meta)
   repo.language = language.language
+  session.flush()
 
   for importer in language.importer:
     if not importer.source_code_pattern:
@@ -119,7 +124,7 @@ def ImportRepo(session: orm.session.Session,
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
     jobs = [
         scrape_repos_pb2.ImportWorker(
-            clone_from_url=meta.clone_from_url,
+            clone_from_url=repo.clone_from_url,
             clone_dir=str(clone_dir),
             abspath=p,
             all_files_relpaths=all_files_relpaths,

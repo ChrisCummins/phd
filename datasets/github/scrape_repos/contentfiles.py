@@ -43,7 +43,8 @@ class GitHubRepository(Base):
 
   owner: str = sql.Column(sql.String(512), nullable=False)
   name: str = sql.Column(sql.String(512), nullable=False)
-  clone_from_url: str = sql.Column(sql.String(1024), primary_key=True)
+  clone_from_url: str = sql.Column(
+      sqlutil.ColumnTypes.IndexableString(), primary_key=True)
   num_stars: int = sql.Column(sql.Integer, nullable=False)
   num_forks: int = sql.Column(sql.Integer, nullable=False)
   num_watchers: int = sql.Column(sql.Integer, nullable=False)
@@ -98,28 +99,22 @@ class ContentFile(Base):
 
   id: int = sql.Column(sql.Integer, primary_key=True)
   clone_from_url: str = sql.Column(
-      sql.String(1024), sql.ForeignKey('repositories.clone_from_url'))
+      sqlutil.ColumnTypes.IndexableString(),
+      sql.ForeignKey('repositories.clone_from_url'))
   # Relative path within the repository. This can be a duplicate.
   relpath: str = sql.Column(sql.String(1024), nullable=False)
   # Index into the content file. Use this to differentiate multiple content
   # files which come from the same source file.
   artifact_index: int = sql.Column(sql.Integer, nullable=False, default=0)
-  sha256: str = sql.Column(sql.Binary(32), nullable=False)
+  sha256: str = sql.Column(sql.String(64), nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  text: str = sql.Column(sql.UnicodeText(), nullable=False)
-  date_added: datetime.datetime = sql.Column(sql.DateTime,
-                                             nullable=False,
-                                             default=datetime.datetime.utcnow)
-  __table_args__ = (sql.UniqueConstraint('clone_from_url',
-                                         'relpath',
-                                         'artifact_index',
-                                         name='uniq_contentfile'),)
-
-  @property
-  def sha256_hex(self) -> str:
-    """Return the 64 character hexadecimal representation of binary sha256."""
-    return binascii.hexlify(self.sha256).decode('utf-8')
+  text: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  __table_args__ = (sql.UniqueConstraint(
+      'clone_from_url', 'relpath', 'artifact_index', name='uniq_contentfile'),)
 
   @staticmethod
   def _GetArgsFromProto(

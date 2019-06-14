@@ -65,6 +65,8 @@ class MockRepository(object):
     self.watchers_count = 1
     self.forks_count = 0
     self.stargazers_count = 0
+    self.html_url = (
+        'https://github.com/ChrisCummins/empty_repository_for_testing')
     self.clone_url = (
         'https://github.com/ChrisCummins/empty_repository_for_testing.git')
 
