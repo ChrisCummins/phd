@@ -2,6 +2,7 @@
 later processing into a corpus."""
 
 import time
+import pathlib
 
 import github
 import random
@@ -25,7 +26,7 @@ app.DEFINE_database(
 
 WORD_LIST_URLS = [
     # The 1,000 most commonly used words.
-    "https://gist.github.com/deekayen/4148741/raw/01c6252ccc5b5fb307c1bb899c95989a8a284616/1-1000.txt",
+    "https://gist.githubusercontent.com/deekayen/4148741/raw/01c6252ccc5b5fb307c1bb899c95989a8a284616/1-1000.txt",
 ]
 
 # A list of GitHub repos to ignore.
@@ -73,6 +74,7 @@ class FuzzyGitHubJavaScraper(object):
   def DoRun(self, tempdir: str, n: int):
     i = 0
     random.shuffle(self.word_list)
+    start_time = time.time()
 
     for word in self.word_list:
       language = GetLanguageToClone(word, tempdir)
@@ -95,9 +97,10 @@ class FuzzyGitHubJavaScraper(object):
         current_time = time.time()
         if current_time - self.last_time_check > 15:
           self.last_time_check = current_time
-          app.Log(1, "Processing repo %s of %s (%.2f %%)",
+          app.Log(1, "Processed %s of %s repos (%.2f %%) in %s",
                   humanize.Commas(i + query_i), humanize.Commas(n),
-                  ((i + query_i) / n) * 100)
+                  ((i + query_i) / n) * 100,
+                  humanize.Duration(time.time() - start_time))
 
       i += query_i
       if i >= n:
@@ -110,9 +113,18 @@ class FuzzyGitHubJavaScraper(object):
       self.DoRun(tempdir, n)
 
 
+def GetCertificateBundle() -> typing.Optional[str]:
+  bundles = [
+      '/etc/ssl/certs/ca-certificates.crt', '/usr/local/etc/openssl/cert.pem'
+  ]
+  for bundle in bundles:
+    if pathlib.Path(bundle).is_file():
+      return bundle
+
+
 def main():
   """Main entry point."""
-  http = urllib3.PoolManager()
+  http = urllib3.PoolManager(ca_certs=GetCertificateBundle())
 
   for url in WORD_LIST_URLS:
     app.Log(1, 'Downloading word list ...')
