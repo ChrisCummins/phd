@@ -134,19 +134,17 @@ def IndexContentFiles(job: scrape_repos_pb2.ImportWorker) -> None:
   """Index content files."""
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   try:
-    texts = preprocessors.Preprocess(
-        pathlib.Path(job.clone_dir), relpath, job.all_files_relpaths,
-        job.preprocessors)
+    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
+                                     job.all_files_relpaths, job.preprocessors)
     for i, text in enumerate(texts):
       sha256 = hashlib.sha256(text.encode('utf-8'))
-      proto = scrape_repos_pb2.ContentFile(
-          clone_from_url=job.clone_from_url,
-          relpath=relpath,
-          artifact_index=i,
-          sha256=sha256.digest(),
-          charcount=len(text),
-          linecount=len(text.split('\n')),
-          text=text)
+      proto = scrape_repos_pb2.ContentFile(clone_from_url=job.clone_from_url,
+                                           relpath=relpath,
+                                           artifact_index=i,
+                                           sha256=sha256.digest(),
+                                           charcount=len(text),
+                                           linecount=len(text.split('\n')),
+                                           text=text)
       path = pathlib.Path(job.index_dir) / (
           binascii.hexlify(proto.sha256).decode('utf-8') + '.pbtxt')
       pbutil.ToFile(proto, path)

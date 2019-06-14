@@ -202,19 +202,20 @@ def InlineHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
       continue
 
     for include in includes:
-      already_inlined_match = FindCandidateInclude(
-          include,
-          file_relpath,
-          already_inlined_relpaths,
-          exact_matches_only=True)
+      already_inlined_match = FindCandidateInclude(include,
+                                                   file_relpath,
+                                                   already_inlined_relpaths,
+                                                   exact_matches_only=True)
       if already_inlined_match.confidence == 100:
         output.append(
             format_line_comment(
                 f"Skipping already inlined file: '{already_inlined_match}'."))
         continue
 
-      blacklist_match = FindCandidateInclude(
-          include, file_relpath, blacklist, exact_matches_only=True)
+      blacklist_match = FindCandidateInclude(include,
+                                             file_relpath,
+                                             blacklist,
+                                             exact_matches_only=True)
       if blacklist_match.confidence == 100:
         output.append(
             format_line_comment(
@@ -282,9 +283,9 @@ def FindCandidateInclude(include_match: str,
   ]
   if candidate_matches and not exact_matches_only:
     # Fuzzy match to find the most likely include.
-    choices = (
-        process.extract(include_match, candidate_matches) + process.extract(
-            pathlib.Path(current_file_relpath).name, candidate_matches))
+    choices = (process.extract(include_match, candidate_matches) +
+               process.extract(
+                   pathlib.Path(current_file_relpath).name, candidate_matches))
     return FuzzyIncludeMatch(*max(choices, key=lambda x: x[1]))
   else:
     return FuzzyIncludeMatch('', 0)

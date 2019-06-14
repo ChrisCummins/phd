@@ -35,9 +35,8 @@ def _CreateTestRepo(root_dir: pathlib.Path, owner: str,
   owner_name = f'{owner}_{name}'
   (root_dir / owner_name / '.git').mkdir(parents=True)
   (root_dir / owner_name / 'src').mkdir(parents=True)
-  pbutil.ToFile(
-      scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
-      root_dir / f'{owner_name}.pbtxt')
+  pbutil.ToFile(scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
+                root_dir / f'{owner_name}.pbtxt')
   return github_repo.GitHubRepo(root_dir / f'{owner_name}.pbtxt')
 
 

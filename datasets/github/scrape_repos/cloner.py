@@ -16,14 +16,13 @@
 This looks for repo meta files and clones any which have not been cloned.
 """
 import multiprocessing
+
 import pathlib
+import progressbar
 import random
 import subprocess
 import threading
 import typing
-
-import progressbar
-
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import app
 from labm8 import fs
@@ -43,12 +42,19 @@ app.DEFINE_integer('num_cloner_threads', 4,
                    'The number of cloner threads to spawn.')
 
 
-def CloneFromMetafile(metafile: pathlib.Path) -> None:
+def GetCloneDir(metafile: pathlib.Path) -> pathlib.Path:
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   if not meta.owner and meta.name:
     app.Error('Metafile missing owner and name fields %s', metafile)
     return
-  clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
+  return metafile.parent / f'{meta.owner}_{meta.name}'
+
+
+def CloneFromMetafile(metafile: pathlib.Path) -> None:
+  meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
+  clone_dir = GetCloneDir(metafile)
+  if not clone_dir:
+    app.Error('Failed to determine clone directory')
   app.Log(2, '%s', meta)
   if (clone_dir / '.git').is_dir():
     return
@@ -64,21 +70,19 @@ def CloneFromMetafile(metafile: pathlib.Path) -> None:
   app.Log(2, '$ %s', ' '.join(cmd))
 
   # Try to checkout the repository and submodules.
-  p = subprocess.Popen(
-      cmd + ['--recursive'],
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      universal_newlines=True)
+  p = subprocess.Popen(cmd + ['--recursive'],
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                       universal_newlines=True)
   _, stderr = p.communicate()
   if p.returncode and 'submodule' in stderr:
     # Remove anything left over from a previous attempt.
     subprocess.check_call(['rm', '-rf', str(clone_dir)])
     # Try again, but this time without cloning submodules.
-    p = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True)
+    p = subprocess.Popen(cmd,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         universal_newlines=True)
     _, stderr = p.communicate()
 
   if p.returncode:

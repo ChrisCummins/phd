@@ -141,6 +141,34 @@ py_test(
 )
 
 py_binary(
+    name = "pipelined_scraper",
+    srcs = ["pipelined_scraper.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cloner",
+        ":contentfiles",
+        ":importer",
+        ":scraper",
+        "//datasets/github:api",
+        "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
+        "//labm8:app",
+        "//labm8:humanize",
+        "//labm8:pbutil",
+        "//third_party/py/github",
+    ],
+)
+
+py_test(
+    name = "pipelined_scraper_test",
+    srcs = ["pipelined_scraper_test.py"],
+    deps = [
+        ":pipelined_scraper",
+        "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
+        "//labm8:test",
+    ],
+)
+
+py_binary(
     name = "scraper",
     srcs = ["scraper.py"],
     visibility = ["//visibility:public"],

@@ -51,9 +51,8 @@ def test_ImportFromLanguage_Java_repo(test_db: contentfiles.ContentFiles,
   (tempdir / 'Owner_Name' / 'src').mkdir(parents=True)
 
   # A repo will only be imported if there is a repo meta file.
-  pbutil.ToFile(
-      scrape_repos_pb2.GitHubRepoMetadata(owner='Owner', name='Name'),
-      tempdir / 'Owner_Name.pbtxt')
+  pbutil.ToFile(scrape_repos_pb2.GitHubRepoMetadata(owner='Owner', name='Name'),
+                tempdir / 'Owner_Name.pbtxt')
 
   # Create some files in our test repo.
   with open(tempdir / 'Owner_Name' / 'src' / 'A.java', 'w') as f:

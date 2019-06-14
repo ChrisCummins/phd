@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Import files into a ContentFiles database."""
-import hashlib
 import multiprocessing
 import os
+from sqlalchemy import orm
+
+import hashlib
 import pathlib
+import progressbar
 import random
 import subprocess
 import typing
-
-import progressbar
-from sqlalchemy import orm
-
 from datasets.github.scrape_repos import contentfiles
-from datasets.github.scrape_repos.preprocessors import preprocessors
-from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
+
+from datasets.github.scrape_repos.preprocessors import preprocessors
+from datasets.github.scrape_repos.preprocessors import public
 
 FLAGS = app.FLAGS
 app.DEFINE_integer('processes', os.cpu_count(),
@@ -64,20 +64,18 @@ def ImportWorker(job: scrape_repos_pb2.ImportWorker
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   outputs: typing.List[contentfiles.ContentFile] = []
   try:
-    texts = preprocessors.Preprocess(
-        pathlib.Path(job.clone_dir), relpath, job.all_files_relpaths,
-        job.preprocessors)
+    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
+                                     job.all_files_relpaths, job.preprocessors)
     for i, text in enumerate(texts):
       sha256 = hashlib.sha256(text.encode('utf-8'))
       outputs.append(
-          contentfiles.ContentFile(
-              clone_from_url=job.clone_from_url,
-              relpath=relpath,
-              artifact_index=i,
-              sha256=sha256.digest(),
-              charcount=len(text),
-              linecount=len(text.split('\n')),
-              text=text))
+          contentfiles.ContentFile(clone_from_url=job.clone_from_url,
+                                   relpath=relpath,
+                                   artifact_index=i,
+                                   sha256=sha256.digest(),
+                                   charcount=len(text),
+                                   linecount=len(text.split('\n')),
+                                   text=text))
   except UnicodeDecodeError:
     app.Warning('Failed to decode %s', relpath)
   return outputs
@@ -165,6 +163,18 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
       ImportRepo(session, language, metafile, pool)
 
 
+def GetContentfilesDatabase(
+    language: scrape_repos_pb2.LanguageToClone) -> contentfiles.ContentFiles:
+  """Return a connection to the language database from clone list."""
+  d = pathlib.Path(language.destination_directory)
+  d = d.parent / (str(d.name) + '.db')
+  return contentfiles.ContentFiles(f'sqlite:///{d}')
+
+
+def GetImportMultiprocessingPool() -> multiprocessing.Pool:
+  return multiprocessing.Pool(FLAGS.processes)
+
+
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
@@ -181,11 +191,9 @@ def main(argv):
     for importer in language.importer:
       [preprocessors.GetPreprocessorFunction(p) for p in importer.preprocessor]
 
-  pool = multiprocessing.Pool(FLAGS.processes)
+  pool = GetImportMultiprocessingPool()
   for language in clone_list.language:
-    d = pathlib.Path(language.destination_directory)
-    d = d.parent / (str(d.name) + '.db')
-    db = contentfiles.ContentFiles(f'sqlite:///{d}')
+    db = GetContentfilesDatabase(language)
     if pathlib.Path(language.destination_directory).is_dir():
       ImportFromLanguage(db, language, pool)
 

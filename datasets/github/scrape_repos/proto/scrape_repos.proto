@@ -60,7 +60,13 @@ message ContentFilesImporterConfig {
   // match characters '^' and '$' are permitted but redundant.
   optional string source_code_pattern = 1;
   // A list of preprocessor passes to run on each imported source code, in the
-  // order in which they should be executed.
+  // order in which they should be executed. A preprocesor is a Python function,
+  // decorated with the
+  // @datasets.github.scrape_repos.preprocessors.public.dataset_preprocessor
+  // decorator. THe name of the decorator is the fully qualified python module,
+  // followed by ':' and the name of the Python function, e.g.
+  //    datasets.github.scrape_repos.preprocessors.extractors:JavaMethods
+  // See //datasets/github/scrape_repos/preprocessors/... for definitions.
   repeated string preprocessor = 2;
 }
 

@@ -59,9 +59,8 @@ def ImportFromLanguage(language: scrape_repos_pb2.LanguageToClone,
   app.Log(1, 'Importing %s of %s %s repos ...', humanize.Commas(num_todo),
           humanize.Commas(num_repos), language.language.capitalize())
   for i, repo in enumerate(repos_to_import):
-    repo.Index(
-        list(language.importer), pool,
-        github_repo.IndexProgress(num_pruned + i, num_repos))
+    repo.Index(list(language.importer), pool,
+               github_repo.IndexProgress(num_pruned + i, num_repos))
 
 
 def main(argv):

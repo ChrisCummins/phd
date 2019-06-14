@@ -13,17 +13,16 @@
 # limitations under the License.
 """This file defines a database for importing cloned GitHub repos."""
 import binascii
-import datetime
-import typing
-
-import sqlalchemy as sql
 from sqlalchemy import orm
-from sqlalchemy.ext import declarative
 
+import datetime
+import sqlalchemy as sql
+import typing
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
+from sqlalchemy.ext import declarative
 
 FLAGS = app.FLAGS
 
@@ -81,8 +80,15 @@ class GitHubRepository(Base):
   @classmethod
   def IsInDatabase(cls, session: orm.session.Session,
                    proto: scrape_repos_pb2.GitHubRepoMetadata) -> bool:
-    instance = session.query(cls).filter_by(
-        **cls._GetArgsFromProto(proto)).first()
+    filter_by = cls._GetArgsFromProto(proto)
+    # Exclude scraped date from filter because otherwise a repository that is
+    # scraped twice will be indexed twice.
+    # TODO(cec): At some point it would be nice to have an expiration date for
+    # scraped repos, after which the contents are considered "stale" and the
+    # repo is re-scraped. This would require extending the behaviour of
+    # ShouldImportRepo() to check the expiry date.
+    del filter_by['date_scraped']
+    instance = session.query(cls).filter_by(**filter_by).first()
     return True if instance else False
 
 
@@ -102,10 +108,13 @@ class ContentFile(Base):
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   text: str = sql.Column(sql.UnicodeText(), nullable=False)
-  date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
-  __table_args__ = (sql.UniqueConstraint(
-      'clone_from_url', 'relpath', 'artifact_index', name='uniq_contentfile'),)
+  date_added: datetime.datetime = sql.Column(sql.DateTime,
+                                             nullable=False,
+                                             default=datetime.datetime.utcnow)
+  __table_args__ = (sql.UniqueConstraint('clone_from_url',
+                                         'relpath',
+                                         'artifact_index',
+                                         name='uniq_contentfile'),)
 
   @property
   def sha256_hex(self) -> str:

@@ -34,9 +34,8 @@ def _CreateTestRepo(root_dir: pathlib.Path, owner: str, name: str) -> None:
   owner_name = f'{owner}_{name}'
   (root_dir / owner_name / '.git').mkdir(parents=True)
   (root_dir / owner_name / 'src').mkdir(parents=True)
-  pbutil.ToFile(
-      scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
-      root_dir / f'{owner_name}.pbtxt')
+  pbutil.ToFile(scrape_repos_pb2.GitHubRepoMetadata(owner=owner, name=name),
+                root_dir / f'{owner_name}.pbtxt')
 
 
 # ShouldIndexRepo() tests.
@@ -60,9 +59,8 @@ def test_ImportFromLanguage_Java_repo(tempdir: pathlib.Path):
   (tempdir / 'src' / 'Owner_Name' / 'src').mkdir(parents=True)
 
   # A repo will only be imported if there is a repo meta file.
-  pbutil.ToFile(
-      scrape_repos_pb2.GitHubRepoMetadata(owner='Owner', name='Name'),
-      tempdir / 'src' / 'Owner_Name.pbtxt')
+  pbutil.ToFile(scrape_repos_pb2.GitHubRepoMetadata(owner='Owner', name='Name'),
+                tempdir / 'src' / 'Owner_Name.pbtxt')
 
   # Create some files in our test repo.
   with open(tempdir / 'src' / 'Owner_Name' / 'src' / 'A.java', 'w') as f:

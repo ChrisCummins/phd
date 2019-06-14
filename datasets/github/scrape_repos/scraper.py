@@ -17,18 +17,17 @@ This program reads a LanguageCloneList input, where each LanguageToClone entry
 in the LanguageCloneList specifies a programming language on GitHub and a number
 of repositories of this language to clone.
 """
-import pathlib
 import sys
-import threading
 import time
-import typing
 
 import github
+import pathlib
 import progressbar
-from github import Repository
-
+import threading
+import typing
 from datasets.github import api as github_api
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from github import Repository
 from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
@@ -121,11 +120,11 @@ class QueryScraper(threading.Thread):
     while not self.IsDone(repos):
       num_remaining = (self.repo_query.max_results - self.i)
       repos = repos[:num_remaining]
-      self.MakeRepositoryMetas(repos)
+      self.ProcessReposBatch(repos)
       repos = self.GetNextBatchOfResults()
 
-  def MakeRepositoryMetas(self,
-                          repos: typing.List[Repository.Repository]) -> None:
+  def ProcessReposBatch(self,
+                        repos: typing.List[Repository.Repository]) -> None:
     """Make meta files for a list of repositories.
 
     Args:
@@ -134,14 +133,23 @@ class QueryScraper(threading.Thread):
     app.Log(2, 'Scraping %s repositories', humanize.Commas(len(repos)))
     for repo in repos:
       self.i += 1
-      concat_name = '_'.join([repo.owner.login, repo.name])
-      clone_dir = self.destination_directory / concat_name
-      meta_path = pathlib.Path(str(clone_dir) + '.pbtxt')
-      if not pbutil.ProtoIsReadable(meta_path,
-                                    scrape_repos_pb2.GitHubRepoMetadata()):
-        meta = GetRepositoryMetadata(repo)
-        app.Log(2, '%s', meta)
-        pbutil.ToFile(meta, meta_path)
+      self.ProcessRepo(repo)
+
+  def ProcessRepo(self, repo: Repository.Repository) -> None:
+    """Make metafile for a single repo."""
+    meta_path = self.GetRepoMetaPath(repo)
+    if not pbutil.ProtoIsReadable(meta_path,
+                                  scrape_repos_pb2.GitHubRepoMetadata()):
+      meta = GetRepositoryMetadata(repo)
+      app.Log(2, '%s', meta)
+      pbutil.ToFile(meta, meta_path)
+
+  def GetRepoMetaPath(self, repo: Repository.Repository) -> pathlib.Path:
+    """Get the path of the metafile for a repo."""
+    repo_name = '_'.join([repo.owner.login, repo.name])
+    clone_dir = self.destination_directory / repo_name
+    meta_path = pathlib.Path(str(clone_dir) + '.pbtxt')
+    return meta_path
 
 
 def RunQuery(worker: QueryScraper) -> None:
@@ -154,8 +162,8 @@ def RunQuery(worker: QueryScraper) -> None:
   app.Log(1, "Query '%s' returned %s results. Processing first %s ...",
           worker.repo_query.string, humanize.Commas(worker.total_result_count),
           humanize.Commas(worker.repo_query.max_results))
-  bar = progressbar.ProgressBar(
-      max_value=worker.repo_query.max_results, redirect_stderr=True)
+  bar = progressbar.ProgressBar(max_value=worker.repo_query.max_results,
+                                redirect_stderr=True)
   worker.start()
   while worker.is_alive():
     bar.update(worker.GetNumberOfResultsProcessed())
