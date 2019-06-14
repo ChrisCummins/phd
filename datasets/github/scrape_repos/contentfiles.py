@@ -175,5 +175,5 @@ class ContentFile(Base):
 class ContentFiles(sqlutil.Database):
   """A database consisting of a table of ContentFiles and GitHub repos."""
 
-  def __init__(self, url: str):
-    super(ContentFiles, self).__init__(url, Base)
+  def __init__(self, url: str, must_exist: bool = False):
+    super(ContentFiles, self).__init__(url, Base, must_exist)
