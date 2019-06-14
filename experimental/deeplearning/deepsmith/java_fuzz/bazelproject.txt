@@ -1,0 +1,26 @@
+# IntelliJ bazel workspace settings for the Java DeepSmith project.
+
+directories:
+  # Add the directories you want added as source here
+  # By default, we've added your entire workspace ('.')
+  experimental/deeplearning/deepsmith/java_fuzz
+  datasets/github/
+  deeplearning/deepsmith
+  deeplearning/clgen
+  labm8
+  third_party/py
+
+targets:
+  # Add targets that reach the source code that you want to resolve here
+  # By default, we've added all targets in your workspace
+  //...
+
+additional_languages:
+  # Uncomment any additional languages you want supported
+  # android
+  # dart
+  # go
+  # javascript
+  # kotlin
+  # scala
+  # typescript
