@@ -140,7 +140,7 @@ py_test(
     ],
 )
 
-py_binary(
+py_library(
     name = "pipelined_scraper",
     srcs = ["pipelined_scraper.py"],
     visibility = ["//visibility:public"],

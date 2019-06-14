@@ -84,23 +84,3 @@ class PipelinedScraper(scraper.QueryScraper):
 
     if meta_path.is_file():
       meta_path.unlink()
-
-
-def main():
-  """Main entry point."""
-
-  connection = github_api.GetGithubConectionFromFlagsOrDie()
-  if not FLAGS.clone_list.is_file():
-    raise app.UsageError('--clone_list is not a file.')
-  clone_list = pbutil.FromFile(clone_list_path,
-                               scrape_repos_pb2.LanguageCloneList())
-
-  for language in clone_list.language:
-    app.Log(1, 'Scraping %s repos using %s queries ...', language.language,
-            humanize.Commas(len(language.query)))
-    for query in language.query:
-      scraper.RunQuery(QueryScraper(language, query, connection))
-
-
-if __name__ == '__main__':
-  app.Run(main)
