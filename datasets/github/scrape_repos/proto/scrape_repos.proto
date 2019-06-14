@@ -38,6 +38,11 @@ message LanguageToClone {
   // The configuration for the program which imports source code from cloned
   // repositories into contentfile databases.
   repeated ContentFilesImporterConfig importer = 6;
+  // An optional list of HTTPS repo URLs to ignore, e.g.
+  // "https://github.com/ChrisCummins/phd.git". Before a repo is scraped, the
+  // URL is checked against this list, and ignored if it matches. Black listing
+  // is case sentive - only lower case letters should be used.
+  repeated string clone_from_url_blacklist = 7;
 }
 
 // A GitHub query to search for repositories.

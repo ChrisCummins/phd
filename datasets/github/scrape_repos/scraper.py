@@ -142,6 +142,11 @@ class QueryScraper(threading.Thread):
                                   scrape_repos_pb2.GitHubRepoMetadata()):
       meta = GetRepositoryMetadata(repo)
       app.Log(2, '%s', meta)
+
+      # Ignore URLs in the blacklist.
+      if meta.clone_from_url.lower() in self.language.clone_from_url_blacklist:
+        return
+
       pbutil.ToFile(meta, meta_path)
 
   def GetRepoMetaPath(self, repo: Repository.Repository) -> pathlib.Path:
