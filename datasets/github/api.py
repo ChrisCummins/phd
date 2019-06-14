@@ -72,6 +72,9 @@ def GetGithubConectionFromFlagsOrDie() -> github.Github:
         access_token = f.read().strip()
       return github.Github(access_token)
     else:
+      app.Warning("Using insecure --github_credentials_path to read GitHub "
+                  "credentials. Please use token based credentials flags "
+                  "--github_access_token or --github_access_token_path.")
       github_credentials_path = pathlib.Path(FLAGS.github_credentials_path)
       if not github_credentials_path.is_file():
         app.FatalWithoutStackTrace('Github credentials file not found: %s',
