@@ -18,7 +18,6 @@ py_library(
         requirement("jinja2"),
         requirement("Click"),
         requirement("itsdangerous"),
-        requirement("urllib3"),
         requirement("chardet"),
         requirement("certifi"),
         requirement("retrying"),
