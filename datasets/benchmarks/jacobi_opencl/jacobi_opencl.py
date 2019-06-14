@@ -31,473 +31,245 @@
 import json
 import math
 import time
+import threading
+import typing
 
 import argparse
 import collections
-import numpy
+import numpy as np
 import pyopencl as CL
 import signal
 
 from labm8 import app
 
+FLAGS = app.FLAGS
+
+app.DEFINE_input_path('config', None, 'Path to config file')
+app.DEFINE_integer('device_id', 0, 'The device ID to use.')
+app.DEFINE_boolean('list_devices', False, 'Print devices and exit.')
+
 JacobiBenchmarkRun = collections.namedtuple(
-    'JacobiBenchmarkRun', ['runtime', 'error', 'iteration_count'])
-
-h_A = None
-h_b = None
+    'JacobiBenchmarkRun', ['runtime', 'error', 'iteration_count', 'throughput'])
 
 
-class timeout:
-
-  def __init__(self, seconds=1):
-    self.seconds = seconds
-
-  def handle_timeout(self, signum, frame):
-    raise Exception('timeout')
-
-  def __enter__(self):
-    signal.signal(signal.SIGALRM, self.handle_timeout)
-    signal.alarm(self.seconds)
-
-  def __exit__(self, type, value, traceback):
-    signal.alarm(0)
-
-
-class Tuner:
-
-  def __init__(self, config, norder, datatype, context, max_error, max_runtime):
-    self.norder = norder
-    self.datatype = datatype
-    self.context = context
-    self.max_error = max_error
-    self.max_runtime = max_runtime
-
-    device = context.devices[0]
-    self.max_wgsize = device.max_work_group_size
-
-    config['use_wgsize_x'] = config['wgsize'][0] > 1
-    config['use_wgsize_y'] = config['wgsize'][1] > 1
-    self.config = config
-
-    self.best = None
-    self.results = dict()
-
-  # Evaluate a configuration and return the runtime
-  def evaluate(self, wgsize_config, iterations):
-    self.config['wgsize'] = wgsize_config[:]
-    try:
-      if wgsize_config in self.results:
-        result = self.results[wgsize_config]
-        if result:
-          print('%-16s : %.4gs [cached]' % (wgsize_config, result))
-        else:
-          print('%-16s : failed [cached]' % (wgsize_config,))
-        return result
-
-      max_runtime = self.max_runtime
-      if self.best:
-        max_runtime = int(self.best[1]) + 2
-
-      result = RunJacobiBenchmarkConfig(self.config, self.norder, iterations,
-                                        self.datatype, self.context,
-                                        max_runtime, 0, 0)
-
-      if self.max_error > 0 and not result[1] < self.max_error:
-        raise Exception('verification failed')
-
-      print('%-16s : %.4gs' % (wgsize_config, result[0]))
-
-      if not self.best or result[0] < self.best[1]:
-        self.best = (wgsize_config, result[0], result[1], result[2])
-
-      self.results[wgsize_config] = result[0]
-      return result[0]
-    except Exception as e:
-      print('%-16s : %s' % (wgsize_config, str(e)))
-      self.results[wgsize_config] = None
-      return None
-
-  # Run a steepest ascent hill climber starting at seed
-  def local_search(self, seed, iterations):
-    print('Performing local search starting at %s' % (seed,))
-
-    current = seed
-    current_runtime = self.evaluate(seed, iterations)
-
-    itr = 0
-    tuning = True
-    while tuning:
-      # Generate neighbour list
-      neighbours = []
-
-      if self.config['use_wgsize_x']:
-        tc = (current[0] / 2, current[1])
-        if self.valid(tc): neighbours.append(tc)
-        tc = (current[0] * 2, current[1])
-        if self.valid(tc): neighbours.append(tc)
-      if self.config['use_wgsize_y']:
-        tc = (current[0], current[1] / 2)
-        if self.valid(tc): neighbours.append(tc)
-        tc = (current[0], current[1] * 2)
-        if self.valid(tc): neighbours.append(tc)
-
-      tuning = False
-
-      # Evaluate neighbours
-      for cfg in neighbours:
-        runtime = self.evaluate(cfg, iterations)
-        if not runtime:
-          continue
-        if not current_runtime or runtime < current_runtime:
-          # Move to improved neighbour
-          current = cfg
-          current_runtime = runtime
-          tuning = True
-
-      if current_runtime:
-        print('Iteration %d: %.4gs %s' % (itr, current_runtime, current))
-      else:
-        print('Iteration %d: -' % itr)
-      itr += 1
-
-  # Reset the record of results tried and best so far
-  def reset(self):
-    self.best = None
-    self.results = dict()
-
-  # Select k evenly spaced elements from l
-  def select_uniform(self, l, k):
-    n = len(l)
-    indices = (int(round(i * (n / float(k)))) for i in range(k))
-    return [l[i] for i in indices]
-
-  # Check if a wgsize configuration is sensible for the target device
-  def sensible(self, wgsize_config):
-    device = self.context.devices[0]
-    wgsize = wgsize_config[0] * wgsize_config[1]
-    groups = (self.norder * self.norder) / wgsize
-
-    if device.type == CL.device_type.GPU:
-      # Ensure work-groups are not too small
-      if wgsize < 16:
-        return False
-
-    # Make sure there are enough groups to fill at least half of the device
-    if groups < device.max_compute_units / 2:
-      return False
-
-    return True
-
-  # Evaluate num_tests uniformly generated wgsize configurations
-  def uniform_search(self, num_tests, iterations):
-    print('Performing uniform search with %d configurations' % num_tests)
-
-    # Generate list of all valid and sensible wgsize configurations
-    wgsize_configs = []
-    for wgx in [2**i for i in range(11)]:
-      for wgy in [2**i for i in range(11)]:
-        cfg = (wgx, wgy)
-        if self.valid(cfg) and self.sensible(cfg):
-          wgsize_configs.append(cfg)
-    print('(%s configurations available)' % len(wgsize_configs))
-
-    # Select num_tests evenly spaced wgsize configurations
-    if len(wgsize_configs) > num_tests:
-      wgsize_configs = self.select_uniform(wgsize_configs, num_tests)
-
-    # Evaluate wgsize configurations
-    for cfg in wgsize_configs:
-      self.evaluate(cfg, iterations)
-
-  # Check whether a wgsize configuration is valid or not
-  def valid(self, wgsize_config):
-    if 0 in wgsize_config:
-      return False
-    if (wgsize_config[0] * wgsize_config[1]) > self.max_wgsize:
-      return False
-    if self.norder % wgsize_config[0]:
-      return False
-    if self.norder % wgsize_config[1]:
-      return False
-    if (self.norder / wgsize_config[0]) % self.config['unroll']:
-      return False
-    if not self.config['use_wgsize_x'] and wgsize_config[0] > 1:
-      return False
-    if not self.config['use_wgsize_y'] and wgsize_config[1] > 1:
-      return False
-
-    return True
-
-
-def RunJacobiBenchmark(config,
-                       norder,
-                       iterations,
-                       datatype,
-                       device,
-                       convergence_frequency=0,
-                       convergence_tolerance=0.001,
-                       tune_wgsize=False,
-                       max_error=0.0,
-                       max_runtime=0.0):
-  global h_A
-  global h_b
-
-  # Print configuration
-  SEPARATOR = '--------------------------------'
-  print(SEPARATOR)
-  print('MATRIX     = %dx%d ' % (norder, norder))
-  print('ITERATIONS = %d' % iterations)
-  print('DATATYPE   = %s' % datatype)
-  if convergence_frequency:
-    print('Check convergence every %d iterations (tolerance=%g)' %
-          (convergence_frequency, convergence_tolerance))
-  else:
-    print('Convergence checking disabled')
-  print(SEPARATOR)
-  print('Work-group size    = ' + str(config['wgsize']))
-  print('Unroll factor      = ' + str(config['unroll']))
-  print('Data layout        = ' + config['layout'])
-  print('Conditional        = ' + config['conditional'])
-  print('fmad               = ' + config['fmad'])
-  print('Divide by A        = ' + config['divide_A'])
-  print('b address space    = ' + config['addrspace_b'])
-  print('xold address space = ' + config['addrspace_xold'])
-  print('Integer type       = ' + config['integer'])
-  print('Relaxed math       = ' + str(config['relaxed_math']))
-  print('Use restrict       = ' + str(config['use_restrict']))
-  print('Use const pointers = ' + str(config['use_const']))
-  print('Use mad24          = ' + str(config['use_mad24']))
-  print('Constant norder    = ' + str(config['const_norder']))
-  print('Constant wgsize    = ' + str(config['const_wgsize']))
-  print('Coalesce columns   = ' + str(config['coalesce_cols']))
-  print(SEPARATOR)
-
-  if datatype == 'float':
-    dtype = numpy.dtype(numpy.float32)
-  elif datatype == 'double':
-    dtype = numpy.dtype(numpy.float64)
-  else:
-    print('Invalid data-type')
-    exit(1)
-
-  # Initialize input data
-  numpy.random.seed(0)
-  h_A = numpy.random.rand(norder, norder).astype(dtype)
-  for row in range(norder):
-    h_A[row][row] += numpy.sum(h_A[row])
-  h_b = numpy.random.rand(norder).astype(dtype)
-
-  # Initialize OpenCL context
-  if device:
-    context = CL.Context([device])
-  else:
-    context = CL.create_some_context()
-  print('Using \'' + context.devices[0].name + '\'')
-
-  if tune_wgsize:
-    tuner = Tuner(config, norder, datatype, context, max_error, max_runtime)
-
-    # Run uniform search with small number of iterations
-    tuner.max_error = 0
-    short_iterations = max(iterations / 100, 1)
-    tuner.uniform_search(100, short_iterations)
-    best = tuner.best
-    if not best:
-      print('No valid configuration found')
-      exit(1)
-    print('Best work-group size = %s' % (best[0],))
-    print('Best runtime = %.4gs (%d iterations)' % (best[1], best[3]))
-    print(SEPARATOR)
-
-    # Run local search around best result, at full iteration count
-    tuner.reset()
-    tuner.max_error = max_error
-    tuner.local_search(best[0], iterations)
-    print(SEPARATOR)
-    best = tuner.best
-    if not best:
-      print('No valid configuration found')
-      exit(1)
-    print('Best work-group size = %s' % (best[0],))
-    print('Runtime = %.4gs (%d iterations)' % (best[1], best[3]))
-    print('Error   = %f' % best[2])
-  else:
-    try:
-      result = RunJacobiBenchmarkConfig(
-          config, norder, iterations, datatype, context, max_runtime,
-          convergence_frequency, convergence_tolerance)
-      print('Runtime = %.4gs (%d iterations)' % (result[0], result[2]))
-      print('Error   = %f' % result[1])
-      if max_error > 0 and not result[1] < max_error:
-        raise 'error too high'
-    except Exception as e:
-      print('Error: %s' % str(e))
-      exit(1)
-
-
-def RunJacobiBenchmarkConfig(config, norder, iterations, datatype, context,
-                             max_runtime, convergence_frequency,
-                             convergence_tolerance):
-  global h_A
-  global h_b
-
-  # Ensure work-group size is valid
-  if config['wgsize'][0] & (config['wgsize'][0] - 1):
-    raise ValueError('Invalid wgsize[0] value (must be power of two)')
-  if norder % config['wgsize'][1]:
-    raise ValueError('Invalid wgsize[1] value (must divide matrix order)')
-
-  queue = CL.CommandQueue(context)
-
-  # Create and build program
+def GetBuildOptions(config) -> str:
   build_options = ''
   build_options += ' -cl-fast-relaxed-math' if config['relaxed_math'] else ''
   if config['const_norder']:
-    build_options += ' -Dnorder=' + str(norder)
+    build_options += ' -Dnorder=' + str(config['norder'])
     if config['integer'] == 'uint':
       build_options += 'u'
-  kernel_source = GenerateJacobiOpenClKernelSource(config, norder, datatype)
-  program = CL.Program(context, kernel_source).build(build_options)
+  return build_options
 
-  if datatype == 'float':
-    dtype = numpy.dtype(numpy.float32)
-  elif datatype == 'double':
-    dtype = numpy.dtype(numpy.float64)
-  else:
-    print('Invalid data-type')
-    exit(1)
 
-  # Create buffers
-  typesize = dtype.itemsize
-  vectorsize = norder * typesize
-  matrixsize = norder * norder * typesize
-  d_A = CL.Buffer(context, CL.mem_flags.READ_ONLY, size=matrixsize)
-  d_b = CL.Buffer(context, CL.mem_flags.READ_ONLY, size=vectorsize)
-  d_x0 = CL.Buffer(context, CL.mem_flags.READ_WRITE, size=vectorsize)
-  d_x1 = CL.Buffer(context, CL.mem_flags.READ_WRITE, size=vectorsize)
-  d_xold = d_x0
-  d_xnew = d_x1
+def RunJacobiBenchmark(config, device):
+  thread = JacobiBenchmarkThread(config, device)
+  thread.start()
+  thread.join()
+  return thread.GetResult()
 
-  # Initialize data
-  h_x = numpy.zeros(norder, dtype)
-  CL.enqueue_copy(queue, d_A, h_A)
-  CL.enqueue_copy(queue, d_b, h_b)
-  CL.enqueue_copy(queue, d_xold, h_x)
 
-  # Create kernels
-  jacobi = program.jacobi
-  transpose = program.transpose
-  precompute_inv_A = program.precompute_inv_A
-  convergence = program.convergence
+class JacobiBenchmarkThread(threading.Thread):
 
-  # Calculate argument indices
-  arg_index = 0
-  if not config['const_norder']:
-    jacobi.set_arg(arg_index, numpy.uint32(norder))
+  def __init__(self, config, device):
+    super(JacobiBenchmarkThread, self).__init__()
+
+    self._device = device
+    self._config = config
+    self._runtime = 0
+    self._iteration_count = 0
+    self._stop_event = threading.Event()
+    if self._config['datatype'] == 'float':
+      self._dtype = np.dtype(np.float32)
+    elif self._config['datatype'] == 'double':
+      self._dtype = np.dtype(np.float64)
+    else:
+      raise LookupError
+
+    # Initialize input data
+    np.random.seed(0)
+    self._h_A = np.random.rand(self._config['norder'],
+                               self._config['norder']).astype(self._dtype)
+    for row in range(self._config['norder']):
+      self._h_A[row][row] += np.sum(self._h_A[row])
+    self._h_b = np.random.rand(self._config['norder']).astype(self._dtype)
+
+    # Initialize OpenCL context
+    self._context = CL.Context([self._device])
+
+    # Ensure work-group size is valid
+    if config['wgsize'][0] & (config['wgsize'][0] - 1):
+      raise ValueError('Invalid wgsize[0] value (must be power of two)')
+    if config['norder'] % config['wgsize'][1]:
+      raise ValueError('Invalid wgsize[1] value (must divide matrix order)')
+
+    self._queue = CL.CommandQueue(self._context)
+
+    # Create and build program
+    build_options = GetBuildOptions(config)
+    kernel_source = GenerateJacobiOpenClKernelSource(config)
+    program = CL.Program(self._context, kernel_source).build(build_options)
+
+    # Create buffers
+    typesize = self._dtype.itemsize
+    self._vectorsize = config['norder'] * typesize
+    self._matrixsize = config['norder'] * config['norder'] * typesize
+    self._d_A = CL.Buffer(
+        self._context, CL.mem_flags.READ_ONLY, size=self._matrixsize)
+    self._d_b = CL.Buffer(
+        self._context, CL.mem_flags.READ_ONLY, size=self._vectorsize)
+    self._d_x0 = CL.Buffer(
+        self._context, CL.mem_flags.READ_WRITE, size=self._vectorsize)
+    self._d_x1 = CL.Buffer(
+        self._context, CL.mem_flags.READ_WRITE, size=self._vectorsize)
+    self._d_xold = self._d_x0
+    self._d_xnew = self._d_x1
+
+    # Initialize data
+    self._h_x = np.zeros(config['norder'], self._dtype)
+    CL.enqueue_copy(self._queue, self._d_A, self._h_A)
+    CL.enqueue_copy(self._queue, self._d_b, self._h_b)
+    CL.enqueue_copy(self._queue, self._d_xold, self._h_x)
+
+    # Create kernels
+    self._jacobi = program.jacobi
+    self._transpose = program.transpose
+    self._precompute_inv_A = program.precompute_inv_A
+    self._convergence = program.convergence
+
+    # Calculate argument indices
+    arg_index = 0
+    if not config['const_norder']:
+      self._jacobi.set_arg(arg_index, np.uint32(config['norder']))
+      arg_index += 1
+    self._arg_xold = arg_index
     arg_index += 1
-  arg_xold = arg_index
-  arg_index += 1
-  arg_xnew = arg_index
-  arg_index += 1
-  arg_A = arg_index
-  arg_index += 1
-  arg_b = arg_index
-  arg_index += 1
-
-  # Compute global size
-  local_size = (config['wgsize'][0], config['wgsize'][1])
-  global_size = (local_size[0], norder)
-  if config['wgsize'][0] > 1:
-    jacobi.set_arg(arg_index,
-                   CL.LocalMemory(local_size[0] * local_size[1] * typesize))
+    self._arg_xnew = arg_index
+    arg_index += 1
+    self._arg_A = arg_index
+    arg_index += 1
+    self._arg_b = arg_index
     arg_index += 1
 
-  # Prepare convergence checking kernel
-  conv_wgsize = 64  # TODO: Pick something else? (e.g wgsize[0]*wgsize[1])
-  num_groups = norder // conv_wgsize
-  h_err = numpy.zeros(num_groups)
-  d_err = CL.Buffer(context,
-                    CL.mem_flags.WRITE_ONLY,
-                    size=num_groups * typesize)
-  convergence.set_arg(0, d_x0)
-  convergence.set_arg(1, d_x1)
-  convergence.set_arg(2, d_err)
-  convergence.set_arg(3, CL.LocalMemory(conv_wgsize * typesize))
+    # Compute global size
+    self._local_size = (config['wgsize'][0], config['wgsize'][1])
+    self._global_size = (self._local_size[0], config['norder'])
+    if config['wgsize'][0] > 1:
+      self._jacobi.set_arg(
+          arg_index,
+          CL.LocalMemory(self._local_size[0] * self._local_size[1] * typesize))
+      arg_index += 1
 
-  with timeout(max_runtime):
+    # Prepare convergence checking kernel
+    conv_wgsize = 64  # TODO: Pick something else? (e.g wgsize[0]*wgsize[1])
+    num_groups = config['norder'] // conv_wgsize
+    h_err = np.zeros(num_groups)
+    self._d_err = CL.Buffer(
+        self._context, CL.mem_flags.WRITE_ONLY, size=num_groups * typesize)
+    self._convergence.set_arg(0, self._d_x0)
+    self._convergence.set_arg(1, self._d_x1)
+    self._convergence.set_arg(2, self._d_err)
+    self._convergence.set_arg(3, CL.LocalMemory(conv_wgsize * typesize))
+
+  def run(self):
+    config = self._config
+
     # Start timing
-    queue.finish()
+    self._queue.finish()
     start = time.time()
 
     if config['layout'] == 'col-major':
-      # Run kernel to transpose data on device
-      d_A_colmaj = CL.Buffer(context, CL.mem_flags.READ_WRITE, size=matrixsize)
-      transpose.set_arg(0, d_A)
-      transpose.set_arg(1, d_A_colmaj)
-      CL.enqueue_nd_range_kernel(queue, transpose, (norder, norder), None)
-      d_A = d_A_colmaj
+      # Run kernel to self._transpose data on device
+      self._d_A_colmaj = CL.Buffer(
+          self._context, CL.mem_flags.READ_WRITE, size=self._matrixsize)
+      self._transpose.set_arg(0, self._d_A)
+      self._transpose.set_arg(1, self._d_A_colmaj)
+      CL.enqueue_nd_range_kernel(self._queue, self._transpose,
+                                 (config['norder'], config['norder']), None)
+      self._d_A = self._d_A_colmaj
 
     if config['divide_A'] in ['precompute-global', 'precompute-constant']:
       # Run kernel to precompute 1/A for diagonal
-      d_inv_A = CL.Buffer(context, CL.mem_flags.READ_WRITE, size=vectorsize)
-      precompute_inv_A.set_arg(0, d_A)
-      precompute_inv_A.set_arg(1, d_inv_A)
-      CL.enqueue_nd_range_kernel(queue, precompute_inv_A, (norder,), None)
-      jacobi.set_arg(arg_index, d_inv_A)
+      self._d_inv_A = CL.Buffer(
+          self._context, CL.mem_flags.READ_WRITE, size=self._vectorsize)
+      self._precompute_inv_A.set_arg(0, self._d_A)
+      self._precompute_inv_A.set_arg(1, self._d_inv_A)
+      CL.enqueue_nd_range_kernel(self._queue, self._precompute_inv_A,
+                                 (config['norder'],), None)
+      self._jacobi.set_arg(arg_index, self._d_inv_A)
       arg_index += 1
 
-    jacobi.set_arg(arg_A, d_A)
-    jacobi.set_arg(arg_b, d_b)
+    self._jacobi.set_arg(self._arg_A, self._d_A)
+    self._jacobi.set_arg(self._arg_b, self._d_b)
 
     # Run Jacobi solver
-    for i in range(iterations):
-      jacobi.set_arg(arg_xold, d_xold)
-      jacobi.set_arg(arg_xnew, d_xnew)
-      CL.enqueue_nd_range_kernel(queue, jacobi, global_size, local_size)
+    i = self._iteration_count
+    while not self._stop_event.is_set():
+      runtime = self._runtime + time.time() - start
+      if ((i > config['iteration_count'] and runtime > config['min_runtime']) or
+          (config['max_runtime'] and runtime > config['max_runtime'])):
+        break
+      self._jacobi.set_arg(self._arg_xold, self._d_xold)
+      self._jacobi.set_arg(self._arg_xnew, self._d_xnew)
+      CL.enqueue_nd_range_kernel(self._queue, self._jacobi, self._global_size,
+                                 self._local_size)
 
       # Convergence check
-      if convergence_frequency and (i + 1) % convergence_frequency == 0:
-        CL.enqueue_nd_range_kernel(queue, convergence, (norder,),
-                                   (conv_wgsize,))
-        CL.enqueue_copy(queue, h_err, d_err)
+      if config['convergence_frequency'] and (
+          i + 1) % config['convergence_frequency'] == 0:
+        CL.enqueue_nd_range_kernel(self._queue, self._convergence,
+                                   (config['norder'],), (conv_wgsize,))
+        CL.enqueue_copy(self._queue, h_err, self._d_err)
         queue.finish()
-        if math.sqrt(numpy.sum(h_err)) < convergence_tolerance:
+        if math.sqrt(np.sum(h_err)) < config['convergence_tolerance']:
           break
 
-      d_xold, d_xnew = d_xnew, d_xold
-
-      # TODO(cec): This is the stable point.
+      self._d_xold, self._d_xnew = self._d_xnew, self._d_xold
+      i += 1
 
     # Stop timing
-    queue.finish()
+    self._queue.finish()
     end = time.time()
 
-  # Read results
-  CL.enqueue_copy(queue, h_x, d_xold)
+    # Read results
+    CL.enqueue_copy(self._queue, self._h_x, self._d_xold)
 
-  # Print runtime and final error
-  runtime = (end - start)
-  error = math.sqrt(sum([e * e for e in (h_b - numpy.dot(h_A, h_x))]))
-  return JacobiBenchmarkRun(runtime=runtime, error=error, iteration_count=i + 1)
+    # Print runtime and final error
+    runtime = (end - start)
+    error = math.sqrt(
+        sum([e * e for e in (self._h_b - np.dot(self._h_A, self._h_x))]))
+
+    self._runtime += runtime
+    self._iteration_count = i
+    self._stop_event.clear()
+
+  def Interrupt(self) -> None:
+    self._stop_event.set()
+
+  def GetResult(self) -> JacobiBenchmarkRun:
+    return JacobiBenchmarkRun(
+        runtime=self._runtime,
+        error=-1,
+        iteration_count=self._iteration_count,
+        throughput=self._iteration_count / self._runtime)
 
 
-def GenerateJacobiOpenClKernelSource(config, norder, datatype: str) -> str:
+def GenerateJacobiOpenClKernelSource(config) -> str:
   """Produce the OpenCL kernel source.
 
   Args:
     config: The configuration dictionary.
-    norder: The matrix size as an integer.
-    datatype: The name of the dataype, either double or float.
 
   Returns:
     A string.
   """
+  datatype = config['datatype']
 
   def gen_ptrarg(config, addrspace, name, readonly=True):
     const = 'const' if readonly and config['use_const'] else ''
     restrict = 'restrict' if config['use_restrict'] else ''
     ptrarg = '%-8s %-5s %s *%s %s'
-    return ptrarg % (addrspace, const, datatype, restrict, name)
+    return ptrarg % (addrspace, const, config['datatype'], restrict, name)
 
   def gen_index(config, col, row, N):
     if config['layout'] == 'row-major':
@@ -561,7 +333,7 @@ def GenerateJacobiOpenClKernelSource(config, norder, datatype: str) -> str:
   inttype = str(config['integer'])
 
   # Ensure unroll factor is valid
-  cols_per_wi = norder / config['wgsize'][0]
+  cols_per_wi = config['norder'] / config['wgsize'][0]
   if cols_per_wi % config['unroll']:
     print('Invalid unroll factor (must exactly divide %d)' % cols_per_wi)
     exit(1)
@@ -583,7 +355,7 @@ def GenerateJacobiOpenClKernelSource(config, norder, datatype: str) -> str:
   result = ''
 
   # Enable FP64 extension for OpenCL 1.1 devices
-  if datatype == 'double':
+  if config['datatype'] == 'double':
     result += '\n#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n'
 
   result += '\n kernel void jacobi('
@@ -705,7 +477,7 @@ kernel void convergence(global %(datatype)s *x0,
   return str(result)
 
 
-def get_device_list():
+def GetDeviceList() -> typing.List[CL.Device]:
   platforms = CL.get_platforms()
   devices = []
   for p in platforms:
@@ -714,31 +486,9 @@ def get_device_list():
 
 
 def main():
-  # Command-line arguments
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-n', '--norder', type=int, default=256)
-  parser.add_argument('-i', '--iterations', type=int, default=1000)
-  parser.add_argument('-f',
-                      '--datatype',
-                      choices=['float', 'double'],
-                      default='double')
-  parser.add_argument('-c', '--config', default='')
-  parser.add_argument('-k', '--convergence-frequency', type=int, default=0)
-  parser.add_argument('-t',
-                      '--convergence-tolerance',
-                      type=float,
-                      default=0.001)
-  parser.add_argument('-p', '--print-kernel', action='store_true')
-  parser.add_argument('-l', '--list', action='store_true')
-  parser.add_argument('-d', '--device', type=int, default=0)
-  parser.add_argument('--tune-wgsize', action='store_true')
-  parser.add_argument('--max-error', type=float, default=0)
-  parser.add_argument('--max-runtime', type=int, default=3600)
-  args = parser.parse_args()
-
   # Print device list
-  if args.list:
-    devices = get_device_list()
+  if FLAGS.list_devices:
+    devices = GetDeviceList()
     if devices:
       print
       print('OpenCL devices:')
@@ -769,20 +519,12 @@ def main():
   config['coalesce_cols'] = True
 
   # Load config from JSON file
-  if args.config:
-    with open(args.config) as config_file:
-      config.update(json.load(config_file))
-
-  if args.print_kernel:
-    print(GenerateJacobiOpenClKernelSource(config, args.norder, args.datatype))
-    exit(0)
+  with open(FLAGS.config) as config_file:
+    config.update(json.load(config_file))
 
   # Run Jacobi solver
-  device = get_device_list()[args.device]
-  RunJacobiBenchmark(config, args.norder, args.iterations, args.datatype,
-                     device, args.convergence_frequency,
-                     args.convergence_tolerance, args.tune_wgsize,
-                     args.max_error, args.max_runtime)
+  device = GetDeviceList()[FLAGS.device_id]
+  RunJacobiBenchmark(config, device)
 
 
 if __name__ == '__main__':
