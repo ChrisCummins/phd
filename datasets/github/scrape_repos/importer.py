@@ -115,7 +115,7 @@ def ImportRepo(session: orm.session.Session,
       app.Log(2, 'No files to import from %s', clone_dir)
       return
     app.Log(1, "Importing %s '%s' files from %s ...", humanize.Commas(
-        len(paths)), importer.source_code_pattern, clone_dir)
+        len(paths)), importer.source_code_pattern, clone_dir.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
     jobs = [
         scrape_repos_pb2.ImportWorker(
