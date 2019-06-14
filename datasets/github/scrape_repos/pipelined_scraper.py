@@ -48,8 +48,9 @@ class PipelinedScraper(scraper.QueryScraper):
       raise PipelinedScraperError('Failed to scrape repo')
 
     # Clone the repo, producing directory <dir>/<repo>
-    cloner.CloneFromMetafile(meta_path)
     clone_dir = cloner.GetCloneDir(meta_path)
+    app.Log(1, 'Cloning repo %s', repo.html_url)
+    cloner.CloneFromMetafile(meta_path)
     if not clone_dir or not clone_dir.is_dir():
       raise PipelinedScraperError('Failed to clone repo')
 
