@@ -33,7 +33,7 @@ class Meta(Base):
   """The meta table."""
   __tablename__ = 'meta'
 
-  key: str = sql.Column(sql.String(1024), primary_key=True)
+  key: str = sql.Column(sql.String(512), primary_key=True)
   value: str = sql.Column(sql.String(1024), nullable=False)
 
 
