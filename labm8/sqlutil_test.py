@@ -44,7 +44,7 @@ def test_CreateEngine_sqlite_invalid_relpath():
 def test_CreateEngine_error_if_sqlite_in_memory_must_exist():
   """Error is raised if in-memory "must exist" database requested."""
   with pytest.raises(ValueError) as e_ctx:
-    sqlutil.CreateEngine(f'sqlite://', must_exist=True)
+    sqlutil.CreateEngine('sqlite://', must_exist=True)
   assert str(e_ctx.value) == ("must_exist=True not valid for in-memory "
                               "SQLite database")
 
@@ -107,7 +107,7 @@ def test_QueryToDataFrame_column_names():
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
-  db = sqlutil.Database(f'sqlite://', base)
+  db = sqlutil.Database('sqlite://', base)
   with db.Session() as s:
     df = sqlutil.QueryToDataFrame(s, s.query(Table.col_a, Table.col_b))
 
@@ -123,7 +123,7 @@ def test_ModelToDataFrame_column_names():
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
-  db = sqlutil.Database(f'sqlite://', base)
+  db = sqlutil.Database('sqlite://', base)
   with db.Session() as s:
     df = sqlutil.ModelToDataFrame(s, Table)
 
@@ -139,7 +139,7 @@ def test_QueryToDataFrame_explicit_column_names():
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
-  db = sqlutil.Database(f'sqlite://', base)
+  db = sqlutil.Database('sqlite://', base)
   with db.Session() as s:
     df = sqlutil.ModelToDataFrame(s, Table, ['col_b'])
 
@@ -165,7 +165,7 @@ def test_Session_GetOrAdd():
     value = sql.Column(sql.Integer, primary_key=True)
 
   # Create the database.
-  db = sqlutil.Database(f'sqlite://', base)
+  db = sqlutil.Database('sqlite://', base)
 
   # Create an entry in the database.
   with db.Session(commit=True) as s:
@@ -272,7 +272,7 @@ def test_ColumnTypes_BinaryArray():
     primary_key = sql.Column(sql.Integer, primary_key=True)
     col = sql.Column(sqlutil.ColumnTypes.BinaryArray(16))
 
-  db = sqlutil.Database(f'sqlite://', base)
+  db = sqlutil.Database('sqlite://', base)
   with db.Session(commit=True) as s:
     s.add(Table(col='abc'.encode('utf-8')))
 
@@ -286,9 +286,28 @@ def test_ColumnTypes_UnboundedUnicodeText():
     primary_key = sql.Column(sql.Integer, primary_key=True)
     col = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText())
 
-  db = sqlutil.Database(f'sqlite://', base)
+  db = sqlutil.Database('sqlite://', base)
   with db.Session(commit=True) as s:
     s.add(Table(col='abc'))
+
+
+def test_Random_order_by():
+
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = 'test'
+    col = sql.Column(sql.Integer, primary_key=1)
+
+  db = sqlutil.Database('sqlite://', base)
+  with db.Session() as s:
+    s.add(Table(col=1))
+    s.add(Table(col=2))
+    s.add(Table(col=3))
+    s.flush()
+
+    random_row = s.query(Table).order_by(db.Random()).first()
+    assert random_row.col in {1, 2, 3}
 
 
 if __name__ == '__main__':
