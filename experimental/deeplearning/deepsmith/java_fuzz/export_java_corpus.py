@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Run preprocessors on content files."""
+"""Export the content files from a database."""
 import hashlib
 import pathlib
 import tempfile
@@ -26,7 +26,7 @@ from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
-    'input', contentfiles.ContentFiles,
+    'db', contentfiles.ContentFiles,
     'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/java.db',
     'URL of the database to preprocess content files from.')
 app.DEFINE_output_path(
@@ -134,7 +134,7 @@ def main():
       preprocessors.GetPreprocessorFunction(p) for p in FLAGS.preprocessors
   ]
 
-  PreprocessDb(FLAGS.input(), FLAGS.outdir, preprocessor_functions)
+  PreprocessDb(FLAGS.db(), FLAGS.outdir, preprocessor_functions)
 
 
 if __name__ == '__main__':

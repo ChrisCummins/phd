@@ -24,13 +24,26 @@ Alternatively, SQLite or PostgreSQL can be used in place of MySQL, see [here](ht
 ### Exporting a subset of scraped files
 
 It can be useful for development and debugging to work with a small database of
-scraped files. The `export_random_contentfiles_subset` script will duplicate
+scraped files. The `java_fuzz_split_contentfiles` image will duplicate
 content files from a random subset of scraped repositories. E.g. to duplicate 
 the content files from 10 random repos in a MySQL database to an SQLite 
-database:
+database `/tmp/fuzz/java_subset.db`:
 
 ```sh
-$ bazel run //experimental/deeplearning/deepsmith/java_fuzz:export_random_contentfiles_subset \
+$ docker run --memory=4g -v/tmp/fuzz:/tmp/fuzz \
+    chriscummins/java_fuzz_split_contentfiles:latest \
     --input='mysql://<user>:<pass>@<host>/<database_name>?charset=utf8' \
-    --output='sqlite:////tmp/java_subset.db' --n=10
+    --output='sqlite:////tmp/fuzz/java_subset.db' --n=10
+```
+
+### Exporting a corpus of scraped Java files
+
+The `export_java_corpus` image is used to run preprocessing functions on the
+scraped Java files and export them to a directory:
+
+```sh
+$ docker run --memory=12g chriscummins/export_java_corpus:latest \
+    --db='mysql://<user>:<pass>@<host>/<database_name>?charset=utf8' \
+    --outdir=/tmp/fuzz/corpus \
+    --preprocessors="datasets.github.scrape_repos.preprocessors.extractors:JavaStaticMethods"
 ```

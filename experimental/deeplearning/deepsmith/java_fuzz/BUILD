@@ -1,8 +1,21 @@
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 py_binary(
-    name = "export_random_contentfiles_subset",
-    srcs = ["export_random_contentfiles_subset.py"],
+    name = "export_java_corpus",
+    srcs = ["export_java_corpus.py"],
+    deps = [
+        "//datasets/github/scrape_repos:contentfiles",
+        "//datasets/github/scrape_repos/preprocessors",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:humanize",
+        "//labm8:sqlutil",
+    ],
+)
+
+py_binary(
+    name = "split_contentfiles",
+    srcs = ["split_contentfiles.py"],
     deps = [
         "//datasets/github/scrape_repos:contentfiles",
         "//labm8:app",
@@ -14,22 +27,9 @@ sh_test(
     name = "integration_test",
     srcs = ["integration_test.sh"],
     data = [
-        ":export_random_contentfiles_subset",
-        ":preprocess_java_corpus",
+        ":export_java_corpus",
         ":scrape_java_files",
-    ],
-)
-
-py_binary(
-    name = "preprocess_java_corpus",
-    srcs = ["preprocess_java_corpus.py"],
-    deps = [
-        "//datasets/github/scrape_repos:contentfiles",
-        "//datasets/github/scrape_repos/preprocessors",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:humanize",
-        "//labm8:sqlutil",
+        ":split_contentfiles",
     ],
 )
 
