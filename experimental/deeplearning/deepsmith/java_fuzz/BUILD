@@ -13,6 +13,14 @@ py_binary(
     ],
 )
 
+py3_image(
+    name = "export_java_corpus_image",
+    srcs = ["export_java_corpus.py"],
+    base = "@base//image",
+    main = "export_java_corpus.py",
+    deps = [":export_java_corpus"],
+)
+
 py_binary(
     name = "split_contentfiles",
     srcs = ["split_contentfiles.py"],
@@ -21,6 +29,14 @@ py_binary(
         "//labm8:app",
         "//labm8:humanize",
     ],
+)
+
+py3_image(
+    name = "split_contentfiles_image",
+    srcs = ["split_contentfiles.py"],
+    base = "@base//image",
+    main = "split_contentfiles.py",
+    deps = [":split_contentfiles"],
 )
 
 sh_test(

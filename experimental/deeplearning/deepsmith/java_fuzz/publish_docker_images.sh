@@ -13,6 +13,7 @@ publish_docker_image() {
   local image_name="$2"
 
   echo "Building bazel target $bazel_target"
+  ./tools/docker/phd_build/run.sh bazel build "$bazel_target"
   set +e
   ./tools/docker/phd_build/run.sh bazel run "$bazel_target"
   set -e
@@ -28,11 +29,11 @@ main() {
       "java_fuzz_scraper"
 
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz:split_contentfiles" \
+      "experimental/deeplearning/deepsmith/java_fuzz:split_contentfiles_image" \
       "java_fuzz_split_contentfiles"
 
   publish_docker_image \
-      "experimental/deeplearning/deepsmith/java_fuzz:export_java_corpus" \
+      "experimental/deeplearning/deepsmith/java_fuzz:export_java_corpus_image" \
       "java_fuzz_export_corpus"
 }
 main $@
