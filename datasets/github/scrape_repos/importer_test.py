@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //datasets/github/scrape_repos/importer.py."""
-import multiprocessing
 import pathlib
-
-import pytest
-
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import importer
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+
+import pytest
 from labm8 import app
 from labm8 import pbutil
 from labm8 import test
@@ -41,7 +39,7 @@ def test_ImportFromLanguage_no_importer(test_db: contentfiles.ContentFiles,
       destination_directory=str(tempdir),
       importer=[])
   with pytest.raises(ValueError):
-    importer.ImportFromLanguage(test_db, language, multiprocessing.Pool(1))
+    importer.ImportFromLanguage(test_db, language)
 
 
 def test_ImportFromLanguage_Java_repo(test_db: contentfiles.ContentFiles,
@@ -84,7 +82,7 @@ public class B {
                   "extractors:JavaMethods"
               ]),
       ])
-  importer.ImportFromLanguage(test_db, language, multiprocessing.Pool(1))
+  importer.ImportFromLanguage(test_db, language)
   with test_db.Session() as session:
     query = session.query(contentfiles.ContentFile)
     assert query.count() == 2

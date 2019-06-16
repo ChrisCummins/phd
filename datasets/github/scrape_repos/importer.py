@@ -12,29 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Import files into a ContentFiles database."""
-import multiprocessing
-import os
 from sqlalchemy import orm
 
 import hashlib
 import pathlib
-import progressbar
 import random
 import subprocess
 import typing
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+
+import progressbar
+from datasets.github.scrape_repos.preprocessors import preprocessors
+from datasets.github.scrape_repos.preprocessors import public
 from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
 
-from datasets.github.scrape_repos.preprocessors import preprocessors
-from datasets.github.scrape_repos.preprocessors import public
-
 FLAGS = app.FLAGS
-app.DEFINE_integer('processes', os.cpu_count(),
-                   'The number of simultaneous processes.')
-
 app.DEFINE_string('importer_clone_list', None,
                   'The path to a LanguageCloneList file.')
 
@@ -64,22 +59,20 @@ def ImportWorker(job: scrape_repos_pb2.ImportWorker
   relpath = job.abspath[len(str(job.clone_dir)) + 1:]
   outputs: typing.List[contentfiles.ContentFile] = []
   try:
-    texts = preprocessors.Preprocess(
-        pathlib.Path(job.clone_dir), relpath, job.all_files_relpaths,
-        job.preprocessors)
+    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
+                                     job.all_files_relpaths, job.preprocessors)
     for i, text in enumerate(texts):
       encoded_text = text.encode('ascii', 'ignore')
       sha256 = hashlib.sha256(encoded_text).hexdigest()
       text = encoded_text.decode('ascii')
       outputs.append(
-          contentfiles.ContentFile(
-              clone_from_url=job.clone_from_url,
-              relpath=relpath,
-              artifact_index=i,
-              sha256=sha256,
-              charcount=len(text),
-              linecount=len(text.split('\n')),
-              text=text))
+          contentfiles.ContentFile(clone_from_url=job.clone_from_url,
+                                   relpath=relpath,
+                                   artifact_index=i,
+                                   sha256=sha256,
+                                   charcount=len(text),
+                                   linecount=len(text.split('\n')),
+                                   text=text))
   except UnicodeDecodeError:
     app.Warning('Failed to decode %s', relpath)
   return outputs
@@ -87,14 +80,13 @@ def ImportWorker(job: scrape_repos_pb2.ImportWorker
 
 def ImportRepo(session: orm.session.Session,
                language: scrape_repos_pb2.LanguageToClone,
-               metafile: pathlib.Path, pool: multiprocessing.Pool) -> None:
+               metafile: pathlib.Path) -> None:
   """Import contentfiles from repository.
 
   Args:
     session: A database session to import to.
     language: The language specification for the repo.
     metafile: The repo metafile.
-    pool: A multiprocessing pool.
   """
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
@@ -122,30 +114,32 @@ def ImportRepo(session: orm.session.Session,
     app.Log(1, "Importing %s '%s' files from %s ...", humanize.Commas(
         len(paths)), importer.source_code_pattern, clone_dir.name)
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
-    jobs = [
-        scrape_repos_pb2.ImportWorker(
-            clone_from_url=repo.clone_from_url,
-            clone_dir=str(clone_dir),
-            abspath=p,
-            all_files_relpaths=all_files_relpaths,
-            preprocessors=importer.preprocessor,
-        ) for p in paths
-    ]
-    bar = progressbar.ProgressBar(max_value=len(jobs))
-    for outputs in bar(pool.imap_unordered(ImportWorker, jobs)):
-      for output in outputs:
+
+    # Use progress bar if there's a lot of files to process.
+    if len(paths) > 1000:
+      bar = progressbar.ProgressBar(max_value=len(paths))
+    else:
+      bar = lambda x: x
+
+    for path in bar(paths):
+      job = scrape_repos_pb2.ImportWorker(
+          clone_from_url=repo.clone_from_url,
+          clone_dir=str(clone_dir),
+          abspath=path,
+          all_files_relpaths=all_files_relpaths,
+          preprocessors=importer.preprocessor,
+      )
+      for output in ImportWorker(job):
         session.add(output)
 
 
 def ImportFromLanguage(db: contentfiles.ContentFiles,
-                       language: scrape_repos_pb2.LanguageToClone,
-                       pool: multiprocessing.Pool) -> None:
+                       language: scrape_repos_pb2.LanguageToClone) -> None:
   """Import contentfiles from a language specification.
 
   Args:
     db: The database to import to.
     language: The language to import.
-    pool: A multiprocessing pool.
 
   Raises:
     ValueError: If importer field not set.
@@ -165,7 +159,7 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
           language.language.capitalize())
   for metafile in repos_to_import:
     with db.Session(commit=True) as session:
-      ImportRepo(session, language, metafile, pool)
+      ImportRepo(session, language, metafile)
 
 
 def GetContentfilesDatabase(
@@ -174,10 +168,6 @@ def GetContentfilesDatabase(
   d = pathlib.Path(language.destination_directory)
   d = d.parent / (str(d.name) + '.db')
   return contentfiles.ContentFiles(f'sqlite:///{d}')
-
-
-def GetImportMultiprocessingPool() -> multiprocessing.Pool:
-  return multiprocessing.Pool(FLAGS.processes)
 
 
 def main(argv):
@@ -196,11 +186,10 @@ def main(argv):
     for importer in language.importer:
       [preprocessors.GetPreprocessorFunction(p) for p in importer.preprocessor]
 
-  pool = GetImportMultiprocessingPool()
   for language in clone_list.language:
     db = GetContentfilesDatabase(language)
     if pathlib.Path(language.destination_directory).is_dir():
-      ImportFromLanguage(db, language, pool)
+      ImportFromLanguage(db, language)
 
 
 if __name__ == '__main__':

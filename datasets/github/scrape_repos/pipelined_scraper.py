@@ -5,18 +5,16 @@ importing stages of the GitHub repo scraper. Instead of first scraping all
 repos, then cloning them, then indexing them, this script performs all 3 stages
 for each repository in turn. This reduces the required storage overhead.
 """
-import github
-from datasets.github import api as github_api
 from datasets.github.scrape_repos import cloner
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import importer
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+
+import github
 from github import Repository
 from labm8 import app
 from labm8 import fs
-from labm8 import humanize
-from labm8 import pbutil
 
 FLAGS = app.FLAGS
 app.DEFINE_boolean(
@@ -38,7 +36,6 @@ class PipelinedScraper(scraper.QueryScraper):
     if not db:
       raise ValueError('contentfiles database not provided')
     self.contentfiles = db
-    self.multiprocessing_pool = importer.GetImportMultiprocessingPool()
 
   def DoProcessRepo(self, repo: Repository.Repository) -> None:
     # Scrape the repo, producing <dir>/<repo>.pbtxt
@@ -57,8 +54,7 @@ class PipelinedScraper(scraper.QueryScraper):
     # Import to database.
     with self.contentfiles.Session() as session:
       if importer.ShouldImportRepo(session, meta_path):
-        importer.ImportRepo(session, self.language, meta_path,
-                            self.multiprocessing_pool)
+        importer.ImportRepo(session, self.language, meta_path)
         session.commit()
 
   def ProcessRepo(self, repo: Repository.Repository) -> None:
