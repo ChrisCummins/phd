@@ -2,17 +2,18 @@
 later processing into a corpus."""
 
 import time
-import pathlib
 
-import github
+import pathlib
 import random
 import tempfile
 import typing
-import urllib3
 from datasets.github import api as github_api
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import pipelined_scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+
+import github
+import urllib3
 from labm8 import app
 from labm8 import humanize
 
@@ -97,7 +98,7 @@ class FuzzyGitHubJavaScraper(object):
         current_time = time.time()
         if current_time - self.last_time_check > 15:
           self.last_time_check = current_time
-          app.Log(1, "Processed %s of %s repos (%.2f %%) in %s",
+          app.Log(1, "Scraped %s of %s repos (%.2f %%) in %s",
                   humanize.Commas(i + query_i), humanize.Commas(n),
                   ((i + query_i) / n) * 100,
                   humanize.Duration(time.time() - start_time))
