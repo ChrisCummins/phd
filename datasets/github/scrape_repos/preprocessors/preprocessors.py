@@ -13,6 +13,7 @@
 # limitations under the License.
 """Preprocess files within a dataset."""
 import importlib
+
 import pathlib
 import typing
 
@@ -20,6 +21,9 @@ from datasets.github.scrape_repos.preprocessors import public
 from labm8 import app
 
 FLAGS = app.FLAGS
+
+# Import type alias so that users don't have to import public.
+PreprocessorFunction = public.PreprocessorFunction
 
 
 def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
