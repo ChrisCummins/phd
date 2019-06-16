@@ -19,10 +19,9 @@ your own credentials handling code.
 """
 import configparser
 import pathlib
+from datasets.github import github_pb2
 
 import github
-
-from datasets.github import github_pb2
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -75,7 +74,8 @@ def GetGithubConectionFromFlagsOrDie() -> github.Github:
       app.Warning("Using insecure --github_credentials_path to read GitHub "
                   "credentials. Please use token based credentials flags "
                   "--github_access_token or --github_access_token_path.")
-      github_credentials_path = pathlib.Path(FLAGS.github_credentials_path)
+      github_credentials_path = pathlib.Path(
+          FLAGS.github_credentials_path).expanduser()
       if not github_credentials_path.is_file():
         app.FatalWithoutStackTrace('Github credentials file not found: %s',
                                    github_credentials_path)
