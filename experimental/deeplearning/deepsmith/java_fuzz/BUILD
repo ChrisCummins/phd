@@ -1,6 +1,16 @@
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 py_binary(
+    name = "export_random_contentfiles_subset",
+    srcs = ["export_random_contentfiles_subset.py"],
+    deps = [
+        "//datasets/github/scrape_repos:contentfiles",
+        "//labm8:app",
+        "//labm8:humanize",
+    ],
+)
+
+py_binary(
     name = "scrape_java_files",
     srcs = ["scrape_java_files.py"],
     deps = [
