@@ -10,6 +10,29 @@ py_binary(
     ],
 )
 
+sh_test(
+    name = "integration_test",
+    srcs = ["integration_test.sh"],
+    data = [
+        ":export_random_contentfiles_subset",
+        ":preprocess_java_corpus",
+        ":scrape_java_files",
+    ],
+)
+
+py_binary(
+    name = "preprocess_java_corpus",
+    srcs = ["preprocess_java_corpus.py"],
+    deps = [
+        "//datasets/github/scrape_repos:contentfiles",
+        "//datasets/github/scrape_repos/preprocessors",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:humanize",
+        "//labm8:sqlutil",
+    ],
+)
+
 py_binary(
     name = "scrape_java_files",
     srcs = ["scrape_java_files.py"],
@@ -31,10 +54,4 @@ py3_image(
     base = "@base//image",
     main = "scrape_java_files.py",
     deps = [":scrape_java_files"],
-)
-
-sh_test(
-    name = "scrape_java_files_smoke_test",
-    srcs = ["scrape_java_files_smoke_test.sh"],
-    data = [":scrape_java_files"],
 )
