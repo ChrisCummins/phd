@@ -32,5 +32,5 @@ database:
 ```sh
 $ bazel run //experimental/deeplearning/deepsmith/java_fuzz:export_random_contentfiles_subset \
     --input='mysql://<user>:<pass>@<host>/<database_name>?charset=utf8' \
-    --output='sqlite:////tmp/java_subset.db'
+    --output='sqlite:////tmp/java_subset.db' --n=10
 ```
