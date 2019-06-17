@@ -15,7 +15,14 @@ MODULE_UNDER_TEST = None
 @pytest.fixture(scope='function')
 def contentfiles(tempdir: pathlib.Path) -> pathlib.Path:
   fs.Write(tempdir / 'a.cc', "int main() /* comment */ {}".encode('utf-8'))
-  fs.Write(tempdir / 'b.java', "invalid syntax".encode('utf-8'))
+  fs.Write(
+      tempdir / 'b.java', """
+public class HelloWorld {
+  public static void main(String[] args) {
+    System.out.println("Hello, world!");
+  }
+}
+""".encode('utf-8'))
   yield tempdir
 
 
@@ -57,6 +64,29 @@ def test_cxx_preprocess(contentfiles: pathlib.Path, tempdir2: pathlib.Path,
   assert not (tempdir2 / 'b.java').is_file()
 
   with open(tempdir2 / 'a.cc') as f:
+    assert f.read() == """int A() {
+}"""
+
+
+def test_java_preprocess(contentfiles: pathlib.Path, tempdir2: pathlib.Path,
+                         preprocess: dockerutil.BazelPy3Image):
+  """Test pre-processing Java contentfiles"""
+  with preprocess.RunContext() as ctx:
+    ctx.CheckCall(
+        [], {
+            'contentfiles': '/contentfiles',
+            'outdir': '/preprocessed',
+            'preprocessors': "deeplearning.clgen.preprocessors.java:Compile"
+        },
+        volumes={
+            contentfiles: '/contentfiles',
+            tempdir2: '/preprocessed'
+        })
+
+  assert not (tempdir2 / 'a.cc').is_file()
+  assert (tempdir2 / 'b.java').is_file()
+
+  with open(tempdir2 / 'b.java') as f:
     assert f.read() == """int A() {
 }"""
 
