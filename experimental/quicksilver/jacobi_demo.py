@@ -1,8 +1,10 @@
 """Demonstration of heterogeneous device pre-empting to maximise performance.
 
 This script simulates two heterogeneous workloads, app A and app B, where:
- * App A has a modest performance improvement on GPU.
- * App B has a significant performance improvement on GPU.
+ * App A is a small, long-running job that earns a modest performance
+   improvement on GPU over the CPU.
+ * App B is a large, short-running job that has a significant performance
+   improvement on GPU over the CPU.
  * App B launches 2 seconds after App A.
 
 Both apps are iterative Jacobi stencil patterns.
@@ -29,31 +31,34 @@ Reference run:
     Using GPU: GeForce GTX 1080
     Using CPU: Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz
 
-    Speedup of App A on GPU: 1.827975009040212
-    Speedup of App B on GPU: 8.04094950510637
+    Speedup of App A on GPU: 1.4958583971925479
+    Speedup of App B on GPU: 9.966833963065307
 
     Approach A: Immediately launch app on best available device
-    Approach A in 1m 2s 241ms
-    Approach A: App A: runtime=34.825s, iterations=1,000,001, throughput=28.7k iterations / second
-    Approach A: App B: runtime=60.199s, iterations=100,001, throughput=1.7k iterations / second
+    Approach A in 4m 57s 962ms
+    Approach A: App A: runtime=42.857s, iterations=1,000,001, throughput=23.3k iterations / second
+    Approach A: App B: runtime=295.834s, iterations=400,001, throughput=1.4k iterations / second
 
     Approach B: Wait for best-available device
-    section 1 in 15s 263ms
-    section 2 in 7s 306ms
-    Approach B in 22s 570ms
-    Approach B: App A: runtime=15.262s, iterations=1,000,001, throughput=65.5k iterations / second
-    Approach B: App B: runtime=7.289s, iterations=100,001, throughput=13.7k iterations / second
+    section 1 in 16s 156ms
+    section 2 in 29s 327ms
+    Approach B in 45s 483ms
+    Approach B: App A: runtime=16.156s, iterations=1,000,001, throughput=61.9k iterations / second
+    Approach B: App B: runtime=29.326s, iterations=400,001, throughput=13.6k iterations / second
 
     Approach C: Pre-empt lower speedup job
-    section 1 in 2s 27ms
-    section 2 in 7s 285ms
-    section 3 in 10s 640ms
-    Approach C in 19s 956ms
-    Approach C: App A1: runtime=2.007s, iterations=132,142, throughput=65.8k iterations / second
-    Approach C: App A2: runtime=7.294s, iterations=174,987, throughput=24.0k iterations / second
-    Approach C: App A3: runtime=10.640s, iterations=692,872, throughput=65.1k iterations / second
+    section 1 in 2s 33ms
+    section 2 in 29s 514ms
+    section 3 in 3s 637ms
+    Approach C in 35s 199ms
+    Approach C: App A1: runtime=2.007s, iterations=126,555, throughput=63.1k iterations / second
+    Approach C: App A2: runtime=29.539s, iterations=648,200, throughput=21.9k iterations / second
+    Approach C: App A3: runtime=3.637s, iterations=225,246, throughput=61.9k iterations / second
     Approach C total iterations: 1000001
-    Approach C: App B: runtime=7.296s, iterations=100,001, throughput=13.7k iterations / second
+    Approach C: App B: runtime=29.523s, iterations=400,001, throughput=13.5k iterations / second
+
+    Speedup of approach C over approach B: 1.292x
+    bazel run experimental/quicksilver:jacobi_demo  6136.79s user 166.72s system 1115% cpu 9:25.27 total
 """
 
 import json
@@ -65,15 +70,63 @@ from datasets.benchmarks.jacobi_opencl import jacobi_opencl as jacobi
 from labm8 import app
 from labm8 import jsonutil
 from labm8 import humanize
-from labm8 import bazelutil
 from labm8 import prof
 
 FLAGS = app.FLAGS
 
-APP_A_CONFIG = bazelutil.DataPath(
-    'phd/experimental/quicksilver/app_a_jacobi_config.json')
-APP_B_CONFIG = bazelutil.DataPath(
-    'phd/experimental/quicksilver/app_b_jacobi_config.json')
+# App A is a small, long running job which has a modest speedup on GPU.
+APP_A_CONFIG = {
+    "norder": 64,
+    "iteration_count": 1000000,
+    "datatype": "double",
+    "convergence_frequency": 0,
+    "convergence_tolerance": 0.001,
+    "wgsize": [64, 1],
+    "unroll": 1,
+    "layout": "row-major",
+    "conditional": "branch",
+    "fmad": "op",
+    "divide_A": "normal",
+    "addrspace_b": "global",
+    "addrspace_xold": "global",
+    "integer": "uint",
+    "relaxed_math": False,
+    "use_const": False,
+    "use_restrict": False,
+    "use_mad24": False,
+    "const_norder": False,
+    "const_wgsize": False,
+    "coalesce_cols": True,
+    "min_runtime": 0,
+    "max_runtime": 0
+}
+
+# App B is a large, short running job which has a high speedup on GPU.
+APP_B_CONFIG = {
+    "norder": 1024,
+    "iteration_count": 400000,
+    "datatype": "float",
+    "convergence_frequency": 0,
+    "convergence_tolerance": 0.001,
+    "wgsize": [32, 1],
+    "unroll": 1,
+    "layout": "col-major",
+    "conditional": "branch",
+    "fmad": "op",
+    "divide_A": "normal",
+    "addrspace_b": "global",
+    "addrspace_xold": "global",
+    "integer": "int",
+    "relaxed_math": False,
+    "use_const": False,
+    "use_restrict": False,
+    "use_mad24": False,
+    "const_norder": False,
+    "const_wgsize": False,
+    "coalesce_cols": True,
+    "min_runtime": 0,
+    "max_runtime": 0
+}
 
 
 def GetGpuDevice() -> CL.Device:
@@ -112,6 +165,7 @@ def ApproachA(app_a_config, app_b_config, gpu, cpu, app_b_delay):
   a = jacobi.JacobiBenchmarkThread(app_a_config, gpu)
   b = jacobi.JacobiBenchmarkThread(app_b_config, cpu)
   with prof.ProfileToStdout('Approach A'):
+    start = time.time()
     # Run App A on GPU.
     a.start()
     time.sleep(app_b_delay)
@@ -122,6 +176,7 @@ def ApproachA(app_a_config, app_b_config, gpu, cpu, app_b_delay):
   print(f'Approach A: App A: {Stringify(a.GetResult())}')
   print(f'Approach A: App B: {Stringify(b.GetResult())}')
   print()
+  return time.time() - start
 
 
 def ApproachB(app_a_config, app_b_config, gpu, cpu, app_b_delay):
@@ -129,6 +184,8 @@ def ApproachB(app_a_config, app_b_config, gpu, cpu, app_b_delay):
   a = jacobi.JacobiBenchmarkThread(app_a_config, gpu)
   b = jacobi.JacobiBenchmarkThread(app_b_config, gpu)
   with prof.ProfileToStdout('Approach B'):
+    start = time.time()
+
     # Run App A on GPU.
     with prof.ProfileToStdout('section 1'):
       a.start()
@@ -142,6 +199,7 @@ def ApproachB(app_a_config, app_b_config, gpu, cpu, app_b_delay):
   print(f'Approach B: App A: {Stringify(a.GetResult())}')
   print(f'Approach B: App B: {Stringify(b.GetResult())}')
   print()
+  return time.time() - start
 
 
 def ApproachC(app_a_config, app_b_config, gpu, cpu, app_b_delay):
@@ -151,6 +209,8 @@ def ApproachC(app_a_config, app_b_config, gpu, cpu, app_b_delay):
   a3 = jacobi.JacobiBenchmarkThread(app_a_config, gpu)
   b = jacobi.JacobiBenchmarkThread(app_b_config, gpu)
   with prof.ProfileToStdout('Approach C'):
+    start = time.time()
+
     # Start App A on GPU.
     a1.start()
 
@@ -187,26 +247,27 @@ def ApproachC(app_a_config, app_b_config, gpu, cpu, app_b_delay):
           a3.GetResult().iteration_count))
   print(f'Approach C: App B: {Stringify(b.GetResult())}')
   print()
+  return time.time() - start
 
 
 def main():
   """Main entry point."""
-  app_a_config = jsonutil.read_file(APP_A_CONFIG)
-  app_b_config = jsonutil.read_file(APP_B_CONFIG)
-
   gpu, cpu = GetGpuDevice(), GetCpuDevice()
+  # The number of seconds after the start of App A before launching App B.
   app_b_delay = 2
 
-  app_a_speedup = GetGpuSpeedup(app_a_config, gpu, cpu)
-  app_b_speedup = GetGpuSpeedup(app_b_config, gpu, cpu)
+  app_a_speedup = GetGpuSpeedup(APP_A_CONFIG, gpu, cpu)
+  app_b_speedup = GetGpuSpeedup(APP_B_CONFIG, gpu, cpu)
 
   print(f'Speedup of App A on GPU: {app_a_speedup}')
   print(f'Speedup of App B on GPU: {app_b_speedup}')
 
   print()
-  ApproachA(app_a_config, app_b_config, gpu, cpu, app_b_delay)
-  ApproachB(app_a_config, app_b_config, gpu, cpu, app_b_delay)
-  ApproachC(app_a_config, app_b_config, gpu, cpu, app_b_delay)
+  a = ApproachA(APP_A_CONFIG, APP_B_CONFIG, gpu, cpu, app_b_delay)
+  b = ApproachB(APP_A_CONFIG, APP_B_CONFIG, gpu, cpu, app_b_delay)
+  c = ApproachC(APP_A_CONFIG, APP_B_CONFIG, gpu, cpu, app_b_delay)
+
+  print(f"Speedup of approach C over approach B: {b / c:.3f}x")
 
 
 if __name__ == '__main__':
