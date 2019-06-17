@@ -43,9 +43,9 @@ sh_test(
     name = "integration_test",
     srcs = ["integration_test.sh"],
     data = [
-        ":export_java_corpus",
-        ":scrape_java_files",
-        ":split_contentfiles",
+        ":export_java_corpus_image.tar",
+        ":scrape_java_files_image.tar",
+        ":split_contentfiles_image.tar",
     ],
 )
 
