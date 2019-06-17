@@ -31,7 +31,7 @@ class PathParser(absl_flags.ArgumentParser):
         raise ValueError('not found')
       if self.is_dir and not val.is_dir():
         raise ValueError('not a directory')
-      elif not val.is_file():
+      elif not self.is_dir and not val.is_file():
         raise ValueError('not a file')
     elif not self.exist_ok and val.exists():
       raise ValueError('already exists')
