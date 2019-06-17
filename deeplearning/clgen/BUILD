@@ -108,6 +108,30 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "preprocess",
+    srcs = ["preprocess.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deeplearning/clgen/corpuses:preprocessed",
+        "//deeplearning/clgen/preprocessors",
+        "//deeplearning/clgen/proto:clgen_pb_py",
+        "//labm8:app",
+        "//labm8:humanize",
+        "//third_party/py/progressbar",
+    ],
+)
+
+py_test(
+    name = "preprocess_test",
+    srcs = ["preprocess_test.py"],
+    deps = [
+        ":preprocess",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_library(
     name = "sample",
     srcs = ["sample.py"],
