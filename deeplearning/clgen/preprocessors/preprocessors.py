@@ -12,18 +12,22 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
-"""Preprocess OpenCL files for machine learning."""
+"""Preprocess source code files for machine learning."""
 import importlib
+
 import pathlib
 import typing
 from importlib import util as importlib_util
-from io import open
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
+from io import open
 from labm8 import app
 
 FLAGS = app.FLAGS
+
+# Import type alias to public module.
+PreprocessorFunction = public.PreprocessorFunction
 
 
 def _ImportPreprocessorFromFile(module_path: pathlib.Path, function_name: str):
