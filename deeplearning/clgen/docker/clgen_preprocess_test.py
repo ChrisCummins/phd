@@ -27,7 +27,7 @@ def preprocess() -> dockerutil.BazelPy3Image:
 def test_preprocess_image_smoke_test(preprocess: dockerutil.BazelPy3Image):
   """Check that image doesn't blow up."""
   with preprocess.RunContext() as ctx:
-    ctx.CheckCall(['--version'], timeout=10)
+    ctx.CheckCall(['--version'], timeout=30)
 
 
 def test_cxx_preprocess(contentfiles: pathlib.Path, tempdir2: pathlib.Path,

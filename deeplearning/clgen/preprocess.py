@@ -25,6 +25,7 @@ import time
 import pathlib
 import typing
 from deeplearning.clgen.proto import internal_pb2
+from deeplearning.clgen.preprocessors import preprocessors
 
 import progressbar
 from deeplearning.clgen.corpuses import preprocessed
@@ -32,21 +33,23 @@ from labm8 import app
 from labm8 import humanize
 
 FLAGS = app.FLAGS
-app.DEFINE_input_path('contentfiles',
-                      None,
-                      'The directory containing content files.',
-                      is_dir=True)
-app.DEFINE_output_path('outdir',
-                       None,
-                       'Directory to export preprocessed content files to.',
-                       is_dir=True)
+app.DEFINE_input_path(
+    'contentfiles',
+    None,
+    'The directory containing content files.',
+    is_dir=True)
+app.DEFINE_output_path(
+    'outdir',
+    None,
+    'Directory to export preprocessed content files to.',
+    is_dir=True)
 app.DEFINE_list('preprocessors', [], 'The preprocessors to run, in order.')
 
 
 def Preprocess(contentfiles: pathlib.Path, outdir: pathlib.Path,
-               preprocessors: typing.List[str]):
+               preprocessor_names):
   # Error early if preprocessors are bad.
-  [preprocessors.GetPreprocessorFunction(f) for f in FLAGS.preprocessors]
+  [preprocessors.GetPreprocessorFunction(f) for f in preprocessor_names]
 
   # This is basically the same code as:
   # deeplearning.clgen.corpuses.preprocessed.PreprocessedContentFiles:Import()
@@ -58,9 +61,10 @@ def Preprocess(contentfiles: pathlib.Path, outdir: pathlib.Path,
   app.Log(1, 'Preprocessing %s of %s content files', humanize.Commas(len(todo)),
           humanize.Commas(len(relpaths)))
   jobs = [
-      internal_pb2.PreprocessorWorker(contentfile_root=str(contentfiles),
-                                      relpath=t,
-                                      preprocessors=preprocessors) for t in todo
+      internal_pb2.PreprocessorWorker(
+          contentfile_root=str(contentfiles),
+          relpath=t,
+          preprocessors=preprocessor_names) for t in todo
   ]
   pool = multiprocessing.Pool()
   bar = progressbar.ProgressBar(max_value=len(jobs))
