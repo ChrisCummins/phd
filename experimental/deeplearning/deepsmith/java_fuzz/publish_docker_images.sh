@@ -29,7 +29,7 @@ publish_docker_image() {
 
   docker tag "$load_image_name" "$export_image_name"
   docker rmi "$load_image_name"
-  # docker push "$export_image_name"
+  docker push "$export_image_name"
 }
 
 
