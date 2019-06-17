@@ -5,7 +5,7 @@ load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 py3_image(
     name = "clgen",
     srcs = ["//deeplearning/clgen"],
-    base = "@base//image",
+    base = "@base_java//image",
     visibility = ["//deeplearning/clgen/docker:__subpackages__"],
     deps = ["//deeplearning/clgen"],
 )
