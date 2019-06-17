@@ -18,6 +18,7 @@ py3_image(
     srcs = ["export_java_corpus.py"],
     base = "@base//image",
     main = "export_java_corpus.py",
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":export_java_corpus"],
 )
 
@@ -36,17 +37,8 @@ py3_image(
     srcs = ["split_contentfiles.py"],
     base = "@base//image",
     main = "split_contentfiles.py",
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":split_contentfiles"],
-)
-
-sh_test(
-    name = "integration_test",
-    srcs = ["integration_test.sh"],
-    data = [
-        ":export_java_corpus_image.tar",
-        ":scrape_java_files_image.tar",
-        ":split_contentfiles_image.tar",
-    ],
 )
 
 py_binary(
@@ -69,5 +61,6 @@ py3_image(
     srcs = ["scrape_java_files.py"],
     base = "@base//image",
     main = "scrape_java_files.py",
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":scrape_java_files"],
 )
