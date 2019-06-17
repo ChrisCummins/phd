@@ -29,7 +29,7 @@ py_library(
     data = [
         ":JavaMethodsExtractor",
     ],
-    visibility = ["//datasets/github/scrape_repos:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":public",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
@@ -62,7 +62,7 @@ py_library(
             "@libcxx_linux//:headers",
         ],
     }),
-    visibility = ["//datasets/github/scrape_repos:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":public",
         "//labm8:app",
