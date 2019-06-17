@@ -20,6 +20,7 @@ import subprocess
 import tempfile
 import typing
 
+from datasets.github.scrape_repos.preprocessors import extractors
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import public
@@ -114,9 +115,29 @@ def WrapMethodInClass(text: str) -> str:
   """
   return f"""\
 public class A {{
-  {text}
+{text}
 }}
 """
+
+
+@public.clgen_preprocessor
+def UnwrapMethodInClass(text: str) -> str:
+  """A preprocessor which unwraps a method from a class definition.
+
+  This is the inverse of WrapMethodInClass().
+
+  Args:
+    text: Class to strip a single method from. If the class contains more than
+      one method, this function will error.
+
+  Returns:
+    A method definition.
+  """
+  methods = extractors.ExtractJavaMethods(text, static_only=False)
+  if len(methods) != 1:
+    raise errors.BadCodeException(f"Expected 1 method, found {len(methods)}")
+
+  return methods[0]
 
 
 @public.clgen_preprocessor

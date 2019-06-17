@@ -330,6 +330,7 @@ py_library(
     deps = [
         ":clang",
         ":public",
+        "//datasets/github/scrape_repos/preprocessors:extractors",
         "//deeplearning/clgen:errors",
         "//labm8:app",
         "//labm8:bazelutil",

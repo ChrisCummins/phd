@@ -110,7 +110,7 @@ private static void Hello() {
   System.out.println("Hello, world!");
 }""")) == """\
 public class A {
-  private static void Hello() {
+private static void Hello() {
   System.out.println("Hello, world!");
 }
 }
@@ -132,6 +132,41 @@ private static void Hello() {
   UndefinedMethod(5);
 }
 """))
+
+
+# UnwrapMethodInClass() tests.
+
+
+def test_UnwrapMethodInClass_hello_world():
+  """Test that method is extracted from a class."""
+  assert java.UnwrapMethodInClass("""
+public class HelloWorld {
+  private static void Hello() {
+    System.out.println("Hello, world!");
+  }
+}""") == """\
+private static void Hello(){
+  System.out.println("Hello, world!");
+}
+"""
+
+
+def test_UnwrapMethodInClass_no_methods():
+  """Test that error is raised if class doesn't contain a method."""
+  with pytest.raises(errors.BadCodeException) as e_ctx:
+    java.UnwrapMethodInClass("public class HelloWorld {}")
+  assert str(e_ctx.value) == "Expected 1 method, found 0"
+
+
+def test_UnwrapMethodInClass_multiple_methods():
+  """Test that error is raised if class contains multiple methods."""
+  with pytest.raises(errors.BadCodeException) as e_ctx:
+    java.UnwrapMethodInClass("""
+public class HelloWorld {
+  public static void Hello() {}
+  public static void Goodbye() {}
+}""")
+  assert str(e_ctx.value) == "Expected 1 method, found 2"
 
 
 # InsertShimImports() tests.
