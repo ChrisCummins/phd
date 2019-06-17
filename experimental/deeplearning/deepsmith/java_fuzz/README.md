@@ -26,14 +26,15 @@ Alternatively, SQLite or PostgreSQL can be used in place of MySQL, see [here](ht
 It can be useful for development and debugging to work with a small database of
 scraped files. The `java_fuzz_split_contentfiles` image will duplicate
 content files from a random subset of scraped repositories. E.g. to duplicate 
-the content files from 10 random repos in a MySQL database to an SQLite 
-database `/tmp/fuzz/java_subset.db`:
+the content files from 10 random repos with a minimum Github star count of 5 
+in a MySQL database to an SQLite database `/tmp/fuzz/java_subset.db`:
 
 ```sh
 $ docker run --memory=4g -v/tmp/fuzz:/tmp/fuzz \
     chriscummins/java_fuzz_split_contentfiles:latest \
     --input='mysql://<user>:<pass>@<host>/<database_name>?charset=utf8' \
-    --output='sqlite:////tmp/fuzz/java_subset.db' --n=10
+    --output='sqlite:////tmp/fuzz/java_subset.db' --max_repo_count=10 \
+    --min_star_count=5
 ```
 
 ### Exporting a corpus of scraped Java files
