@@ -10,6 +10,28 @@ py3_image(
     deps = ["//deeplearning/clgen"],
 )
 
+py3_image(
+    name = "clgen_preprocess",
+    srcs = ["//deeplearning/clgen:preprocess"],
+    base = "@base//image",
+    main = "preprocess.py",
+    visibility = ["//deeplearning/clgen/docker:__subpackages__"],
+    deps = ["//deeplearning/clgen:preprocess"],
+)
+
+py_test(
+    name = "clgen_preprocess_test",
+    srcs = ["clgen_preprocess_test.py"],
+    data = [
+        ":clgen_preprocess.tar",
+    ],
+    deps = [
+        "//labm8:dockerutil",
+        "//labm8:fs",
+        "//labm8:test",
+    ],
+)
+
 py_binary(
     name = "export_pretrained_model",
     srcs = ["export_pretrained_model.py"],
