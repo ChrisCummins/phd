@@ -13,7 +13,7 @@ py3_image(
 py3_image(
     name = "clgen_preprocess",
     srcs = ["//deeplearning/clgen:preprocess"],
-    base = "@base//image",
+    base = "@base_java//image",
     main = "preprocess.py",
     visibility = ["//deeplearning/clgen/docker:__subpackages__"],
     deps = ["//deeplearning/clgen:preprocess"],

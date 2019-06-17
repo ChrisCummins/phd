@@ -87,8 +87,13 @@ def test_java_preprocess(contentfiles: pathlib.Path, tempdir2: pathlib.Path,
   assert (tempdir2 / 'b.java').is_file()
 
   with open(tempdir2 / 'b.java') as f:
-    assert f.read() == """int A() {
-}"""
+    assert f.read() == """
+public class HelloWorld {
+  public static void main(String[] args) {
+    System.out.println("Hello, world!");
+  }
+}
+"""
 
 
 if __name__ == '__main__':
