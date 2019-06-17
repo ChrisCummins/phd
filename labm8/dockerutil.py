@@ -6,6 +6,7 @@ import subprocess
 import typing
 
 from labm8 import app
+from labm8 import labtypes
 from labm8 import bazelutil
 
 
@@ -22,10 +23,10 @@ class DockerImageRunContext(object):
 
   def _CommandLineInvocation(
       self, args: typing.List[str], flags: typing.Dict[str, str],
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str],
-      timeout: int):
+      volumes: typing.Dict[typing.Union[str, pathlib.Path], str], timeout: int):
     volume_args = [f'-v{src}:{dst}' for src, dst in (volumes or {}).items()]
-    flags_args = [f'--{k}={v}' for k, v in (flags or {}).items()]
+    flags_args = labtypes.flatten(
+        [[f'--{k}', str(v)] for k, v in (flags or {}).items()])
     return (['timeout', '-s9', str(timeout), 'docker', 'run'] + volume_args +
             [self.image_name] + args + flags_args)
 

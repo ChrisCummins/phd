@@ -220,6 +220,7 @@ py_library(
     deps = [
         ":app",
         ":bazelutil",
+        ":labtypes",
     ],
 )
 
