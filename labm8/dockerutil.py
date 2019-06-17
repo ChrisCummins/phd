@@ -22,19 +22,21 @@ class DockerImageRunContext(object):
 
   def _CommandLineInvocation(
       self, args: typing.List[str], flags: typing.Dict[str, str],
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str]):
+      volumes: typing.Dict[typing.Union[str, pathlib.Path], str],
+      timeout: int):
     volume_args = [f'-v{src}:{dst}' for src, dst in (volumes or {}).items()]
     flags_args = [f'--{k}={v}' for k, v in (flags or {}).items()]
-    return (['docker', 'run'] + volume_args + [self.image_name] + args +
-            flags_args)
+    return (['timeout', '-s9', str(timeout), 'docker', 'run'] + volume_args +
+            [self.image_name] + args + flags_args)
 
   def CheckCall(
       self,
       args: typing.List[str],
       flags: typing.Dict[str, str] = None,
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None):
+      volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
+      timeout: int = 60):
     """Run docker image."""
-    cmd = self._CommandLineInvocation(args, flags, volumes)
+    cmd = self._CommandLineInvocation(args, flags, volumes, timeout)
     app.Log(2, "$ %s", " ".join(cmd))
     subprocess.check_call(cmd)
 
@@ -42,8 +44,9 @@ class DockerImageRunContext(object):
       self,
       args: typing.List[str],
       flags: typing.Dict[str, str] = None,
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None) -> str:
-    cmd = self._CommandLineInvocation(args, flags, volumes)
+      volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
+      timeout: int = 60) -> str:
+    cmd = self._CommandLineInvocation(args, flags, volumes, timeout)
     app.Log(2, "$ %s", " ".join(cmd))
     return subprocess.check_output(cmd, universal_newlines=True)
 
