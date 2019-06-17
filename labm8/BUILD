@@ -214,6 +214,29 @@ py_test(
 )
 
 py_library(
+    name = "dockerutil",
+    srcs = ["dockerutil.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":app",
+        ":bazelutil",
+    ],
+)
+
+py_test(
+    name = "dockerutil_test",
+    srcs = ["dockerutil_test.py"],
+    data = [
+        "//labm8/test_data:basic_app.tar",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":dockerutil",
+        ":test",
+    ],
+)
+
+py_library(
     name = "fs",
     srcs = ["fs.py"],
     visibility = ["//visibility:public"],

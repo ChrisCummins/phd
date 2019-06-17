@@ -15,10 +15,18 @@
 # limitations under the License.
 
 load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
+load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 package(
     default_testonly = 1,
     default_visibility = ["//labm8:__subpackages__"],
+)
+
+py3_image(
+    name = "basic_app",
+    srcs = ["basic_app.py"],
+    base = "@base//image",
+    deps = ["//labm8:app"],
 )
 
 proto_library(
