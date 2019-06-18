@@ -47,8 +47,8 @@ class GitHubRepository(Base):
 
   owner: str = sql.Column(sql.String(512), nullable=False)
   name: str = sql.Column(sql.String(512), nullable=False)
-  clone_from_url: str = sql.Column(
-      sqlutil.ColumnTypes.IndexableString(), primary_key=True)
+  clone_from_url: str = sql.Column(sqlutil.ColumnTypes.IndexableString(),
+                                   primary_key=True)
   num_stars: int = sql.Column(sql.Integer, nullable=False)
   num_forks: int = sql.Column(sql.Integer, nullable=False)
   num_watchers: int = sql.Column(sql.Integer, nullable=False)
@@ -118,18 +118,27 @@ class ContentFile(Base):
   # Index into the content file. Use this to differentiate multiple content
   # files which come from the same source file.
   artifact_index: int = sql.Column(sql.Integer, nullable=False, default=0)
+
+  # The "active" flag can be used to quickly mark files that should or
+  # should not be used / exported / processed. Setting a flag is more
+  # lightweight than modifying the contents of a table.
+  active: bool = sql.Column(sql.Boolean, nullable=False, default=True)
+
   sha256: str = sql.Column(sql.String(64), nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  text: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
-  date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
-  __table_args__ = (sql.UniqueConstraint(
-      'clone_from_url', 'relpath', 'artifact_index', name='uniq_contentfile'),)
+  text: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                         nullable=False)
+  date_added: datetime.datetime = sql.Column(sql.DateTime,
+                                             nullable=False,
+                                             default=datetime.datetime.utcnow)
+  __table_args__ = (sql.UniqueConstraint('clone_from_url',
+                                         'relpath',
+                                         'artifact_index',
+                                         name='uniq_contentfile'),)
 
-  repo: GitHubRepository = orm.relationship(
-      'GitHubRepository', back_populates='contentfiles')
+  repo: GitHubRepository = orm.relationship('GitHubRepository',
+                                            back_populates='contentfiles')
 
   @staticmethod
   def _GetArgsFromProto(
