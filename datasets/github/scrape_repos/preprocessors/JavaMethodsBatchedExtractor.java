@@ -62,7 +62,7 @@ public class JavaMethodsBatchedExtractor {
       ListOfStrings input = ListOfStrings.parseFrom(
           ByteStreams.toByteArray(System.in));
       ListOfListOfStrings output = extractor.ProcessMessage(input);
-      System.out.println(output.toString());
+      output.writeTo(System.out);
     } catch (IOException e) {
       System.err.println("fatal: I/O error");
       System.exit(1);
