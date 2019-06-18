@@ -17,7 +17,6 @@ import urllib3
 from labm8 import app
 from labm8 import humanize
 
-
 FLAGS = app.FLAGS
 app.DEFINE_integer('n', int(1e6),
                    'The number of repos to scrape before terminating.')
@@ -54,10 +53,10 @@ def GetJavaQuery(prefix: str):
 
 def GetLanguageToClone(query_prefix: str, destination_dir: str
                       ) -> scrape_repos_pb2.LanguageToClone:
+  # See: https://help.github.com/en/articles/sorting-search-results
+  sort_by = random.choice(['stars', 'forks', 'updated'])
   return scrape_repos_pb2.LanguageToClone(
       language="java",
-      # See: https://help.github.com/en/articles/sorting-search-results
-      sort_by = random.choice(['stars', 'forks', 'updated'])
       query=[
           scrape_repos_pb2.GitHubRepositoryQuery(
               string=f"{query_prefix} language:java sort:{sort_by} fork:false")
