@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Export the content files from a database."""
-import hashlib
-import time
-from concurrent import futures
-import pathlib
-import threading
-import tempfile
 import multiprocessing
+import time
+
+import hashlib
+import pathlib
+import tempfile
+import threading
 import typing
+from concurrent import futures
 from datasets.github.scrape_repos import contentfiles
 
 from datasets.github.scrape_repos.preprocessors import preprocessors
@@ -30,19 +31,26 @@ from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
-    'db', contentfiles.ContentFiles,
+    'input', contentfiles.ContentFiles,
     'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/java.db',
     'URL of the database to preprocess content files from.')
-app.DEFINE_output_path(
-    'outdir',
-    '/tmp/phd/experimental/deeplearning/deepsmith/java_fuzz/corpus',
-    'Directory to export preprocessed content files to.',
-    is_dir=True)
+app.DEFINE_database(
+    'output', contentfiles.ContentFiles,
+    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/export.db',
+    'URL of the database to export content files to.')
 app.DEFINE_list('preprocessors', [], 'The preprocessors to run, in order.')
 app.DEFINE_integer('min_line_count', 0,
                    'The minimum number of lines in a contentfile to export.')
 app.DEFINE_integer('min_char_count', 0,
                    'The minimum number of chars in a contentfile to export.')
+
+
+def ImportQueryResults(query, session):
+  """Copy results of a query from one session into a new session."""
+  # You can't simply use session.add_all() when the objects are already attached
+  # to a different session.
+  for row in query:
+    session.merge(row)
 
 
 def Preprocess(
@@ -82,20 +90,19 @@ def Preprocess(
   next_texts = []
   for preprocessor in preprocessor_functions:
     for text in texts:
-      next_texts += preprocessor(
-          import_root=import_root,
-          file_relpath=file_relpath,
-          text=text,
-          all_file_relpaths=all_file_relpaths)
+      next_texts += preprocessor(import_root=import_root,
+                                 file_relpath=file_relpath,
+                                 text=text,
+                                 all_file_relpaths=all_file_relpaths)
     texts = next_texts
   return texts
 
 
 def DoProcessRepo(
-    input_session: sqlutil.Session, outdir: pathlib.Path, clone_from_url: str,
-    workding_dir: pathlib.Path,
+    input_session: sqlutil.Session, output_session: sqlutil.Session,
+    clone_from_url: str, workding_dir: pathlib.Path,
     preprocessor_functions: typing.List[preprocessors.PreprocessorFunction]
-) -> int:
+) -> None:
   """Preprocess all content files from a single scraped repo."""
   candidate_contentfiles = input_session.query(
         contentfiles.ContentFile.relpath, contentfiles.ContentFile.text)\
@@ -115,8 +122,6 @@ def DoProcessRepo(
 
   all_files_relpaths = {relpath for relpath, _ in contentfiles_to_export}
 
-  exported_count = 0
-
   # Run the preprocessors.
   for relpath, text in contentfiles_to_export:
     texts = Preprocess(workding_dir, relpath, all_files_relpaths,
@@ -124,43 +129,56 @@ def DoProcessRepo(
     for i, text in enumerate(texts):
       if (len(text) >= FLAGS.min_char_count and
           len(text.split('\n')) >= FLAGS.min_line_count):
-        exported_count += 1
+
         encoded_text = text.encode('ascii', 'ignore')
         sha256 = hashlib.sha256(encoded_text).hexdigest()
         text = encoded_text.decode('ascii')
-        fs.Write(outdir / (sha256 + '.txt'), text.encode('utf-8'))
+        # Add new contentfile.
+        output_session.add(
+            contentfiles.ContentFile(
+                clone_from_url=clone_from_url,
+                relpath=relpath,
+                artifact_index=i,
+                sha256=sha256,
+                charcount=len(text),
+                linecount=len(text.split('\n')),
+                text=text,
+            ))
 
-  input_session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url)\
-      .update({"exported": True})
-
-  return exported_count
+  # Copy repo to output.
+  repo = input_session.query(contentfiles.GitHubRepository) \
+      .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url)
+  ImportQueryResults(repo, output_session)
+  # Mark repo as exported.
+  repo.update({"exported": True})
 
 
 def ProcessRepo(
-    input_db: contentfiles.ContentFiles, outdir: pathlib.Path,
+    input_db: contentfiles.ContentFiles, output_db: contentfiles.ContentFiles,
     clone_from_url: str,
     preprocessor_functions: typing.List[preprocessors.PreprocessorFunction]):
   """Preprocess all content files from a single scraped repo."""
   with input_db.Session(commit=True) as input_session:
-    with tempfile.TemporaryDirectory(prefix='phd_') as d:
-      return DoProcessRepo(input_session, outdir, clone_from_url,
-                           pathlib.Path(d), preprocessor_functions)
+    with output_db.Session(commit=True) as output_session:
+      with tempfile.TemporaryDirectory(prefix='phd_') as d:
+        DoProcessRepo(input_session, output_session, clone_from_url,
+                      pathlib.Path(d), preprocessor_functions)
 
 
 class Exporter(threading.Thread):
 
-  def __init__(self, input_db: contentfiles.ContentFiles, outdir: pathlib.Path,
-               preprocessor_functions: typing.List[str]):
+  def __init__(self, input_db: contentfiles.ContentFiles,
+               output_db: contentfiles.ContentFiles,
+               preprocessor_names: typing.List[str]):
     super(Exporter, self).__init__()
     self.input_db = input_db
-    self.outdir = outdir
-    self.preprocessor_functions = preprocessor_functions
+    self.output_db = output_db
+    self.preprocessor_functions = [
+        preprocessors.GetPreprocessorFunction(p) for p in preprocessor_names
+    ]
 
   def run(self):
     """Preprocess the content files directory and export to outdir."""
-    self.outdir.mkdir(parents=True, exist_ok=True)
-
     with self.input_db.Session() as input_session:
       active_repos = input_session.query(
           contentfiles.GitHubRepository.clone_from_url)\
@@ -172,7 +190,7 @@ class Exporter(threading.Thread):
     app.Log(1, "Exporting contentfiles from %s repos in %s worker threads",
             humanize.Commas(len(clone_from_urls)), max_workers)
     with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-      f = lambda x: ProcessRepo(self.input_db, self.outdir, x, self.
+      f = lambda x: ProcessRepo(self.input_db, self.output_db, x, self.
                                 preprocessor_functions)
       for _ in executor.map(f, clone_from_urls):
         pass
@@ -180,15 +198,11 @@ class Exporter(threading.Thread):
 
 def main():
   """Main entry point."""
-  preprocessor_functions = [
-      preprocessors.GetPreprocessorFunction(p) for p in FLAGS.preprocessors
-  ]
-
   start_time = time.time()
-  exporter = Exporter(FLAGS.db(), FLAGS.outdir, preprocessor_functions)
+  exporter = Exporter(FLAGS.input(), FLAGS.output(), FLAGS.preprocessors)
   exporter.start()
 
-  with FLAGS.db().Session() as s:
+  with FLAGS.input().Session() as s:
     repo_count = s.query(contentfiles.GitHubRepository)\
       .filter(contentfiles.GitHubRepository.active == True).count()
 
@@ -196,11 +210,9 @@ def main():
     time.sleep(15)
 
     runtime = time.time() - start_time
-    exported_contentfile_count = len(list(FLAGS.outdir.iterdir()))
-    with FLAGS.db().Session() as s:
-      exported_repo_count = s.query(contentfiles.GitHubRepository)\
-        .filter(contentfiles.GitHubRepository.active == True)\
-        .filter(contentfiles.GitHubRepository.exported == True).count()
+    with FLAGS.output().Session() as s:
+      exported_repo_count = s.query(contentfiles.ContentFile).count()
+      exported_contentfile_count = s.query(contentfiles.ContentFile).count()
     print(
         f"Runtime: {humanize.Duration(runtime)}. "
         f"Exported repos: {humanize.Commas(exported_repo_count)} "

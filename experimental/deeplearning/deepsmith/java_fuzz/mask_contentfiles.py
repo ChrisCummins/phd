@@ -1,8 +1,7 @@
 """Export a subset of a content files database."""
 import sqlalchemy as sql
-import progressbar
-
 from datasets.github.scrape_repos import contentfiles
+
 from labm8 import app
 from labm8 import humanize
 
@@ -22,15 +21,6 @@ app.DEFINE_integer('min_repo_file_count', 0,
                    'Mask by the minimum number of contentfiles in a repo.')
 app.DEFINE_integer('max_repo_file_count', 0,
                    'Mask by the maxmium number of contentfiles in a repo.')
-
-
-def ImportQueryResults(query, session):
-  """Copy results of a query from one session into a new session."""
-  # You can't simply use session.add_all() when the objects are already attached
-  # to a different session.
-  bar = progressbar.ProgressBar(max_value=query.count())
-  for row in bar(query):
-    session.merge(row)
 
 
 def Reset(db: contentfiles.ContentFiles) -> None:

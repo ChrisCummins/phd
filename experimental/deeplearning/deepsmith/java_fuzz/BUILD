@@ -22,6 +22,17 @@ py3_image(
     deps = [":export_java_corpus"],
 )
 
+py_test(
+    name = "export_java_corpus_test",
+    srcs = ["export_java_corpus_test.py"],
+    deps = [
+        ":export_java_corpus",
+        "//datasets/github/scrape_repos:contentfiles",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_binary(
     name = "mask_contentfiles",
     srcs = ["mask_contentfiles.py"],
@@ -29,7 +40,6 @@ py_binary(
         "//datasets/github/scrape_repos:contentfiles",
         "//labm8:app",
         "//labm8:humanize",
-        "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
 )
