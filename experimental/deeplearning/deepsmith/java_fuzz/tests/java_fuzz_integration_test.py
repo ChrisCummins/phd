@@ -47,18 +47,14 @@ def test_end_to_end_pipeline(tempdir: pathlib.Path):
   with export_java_corpus_image.RunContext() as ctx:
     ctx.CheckCall(
         [], {
-            "db":
-            'sqlite:////workdir/java.db',
-            "outdir":
-            "/workdir/corpus",
-            "preprocessors":
-            "datasets.github.scrape_repos.preprocessors.extractors:JavaStaticMethods",
+            "input": 'sqlite:////workdir/java.db',
+            "output": 'sqlite:////workdir/export.db',
         },
         volumes={tempdir: '/workdir'})
 
   # Check that corpus is exported.
   assert (tempdir / "java.db").is_file()
-  assert (tempdir / "corpus").is_dir()
+  assert (tempdir / "export.db").is_file()
 
 
 if __name__ == '__main__':

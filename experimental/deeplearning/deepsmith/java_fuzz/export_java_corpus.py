@@ -42,6 +42,12 @@ app.DEFINE_integer('min_line_count', 0,
                    'The minimum number of lines in a contentfile to export.')
 app.DEFINE_integer('min_char_count', 0,
                    'The minimum number of chars in a contentfile to export.')
+app.DEFINE_boolean('multithreaded_export', True,
+                   'Use multiple threads for export.')
+# nproc * 5 is the same as the default used by the standard library.
+app.DEFINE_integer('export_worker_threads',
+                   multiprocessing.cpu_count() * 5,
+                   "The number of export worker threads.")
 
 
 def ImportQueryResults(query, session):
@@ -130,15 +136,19 @@ class Exporter(threading.Thread):
           .filter(contentfiles.GitHubRepository.active == True)
       clone_from_urls = [x[0] for x in active_repos]
 
-    # nproc * 5 is the same as the default used by the standard library.
-    max_workers = multiprocessing.cpu_count() * 5
+    max_workers = FLAGS.export_worker_threads
     app.Log(1, "Exporting contentfiles from %s repos in %s worker threads",
             humanize.Commas(len(clone_from_urls)), max_workers)
-    with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-      f = lambda x: ProcessRepo(self.input_db, self.output_db, x, self.
-                                static_only)
-      for _ in executor.map(f, clone_from_urls):
-        pass
+    if FLAGS.multithreaded_export:
+      with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        f = lambda x: ProcessRepo(self.input_db, self.output_db, x, self.
+                                  static_only)
+        for _ in executor.map(f, clone_from_urls):
+          pass
+    else:
+      for clone_from_url in clone_from_urls:
+        ProcessRepo(self.input_db, self.output_db, clone_from_url,
+                    self.preprocessor_functions)
 
 
 def main():
@@ -152,11 +162,9 @@ def main():
       .filter(contentfiles.GitHubRepository.active == True).count()
 
   while True:
-    time.sleep(15)
-
     runtime = time.time() - start_time
     with FLAGS.output().Session() as s:
-      exported_repo_count = s.query(contentfiles.ContentFile).count()
+      exported_repo_count = s.query(contentfiles.GitHubRepository).count()
       exported_contentfile_count = s.query(contentfiles.ContentFile).count()
     print(
         f"Runtime: {humanize.Duration(runtime)}. "
@@ -167,6 +175,7 @@ def main():
 
     if not exporter.is_alive():
       break
+    time.sleep(15)
   exporter.join()
 
 
