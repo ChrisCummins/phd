@@ -142,6 +142,7 @@ py_library(
         ":extractors",
         ":inliners",
         ":public",
+        ":secrets",
         "//labm8:app",
     ],
 )
@@ -177,6 +178,26 @@ py_test(
         ":conftest",
         ":public",
         "//labm8:app",
+        "//labm8:test",
+    ],
+)
+
+py_library(
+    name = "secrets",
+    srcs = ["secrets.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":public",
+        "//labm8:app",
+        "//third_party/py/detect_secrets",
+    ],
+)
+
+py_test(
+    name = "secrets_test",
+    srcs = ["secrets_test.py"],
+    deps = [
+        ":secrets",
         "//labm8:test",
     ],
 )
