@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file defines a database for importing cloned GitHub repos."""
-import binascii
 from sqlalchemy import orm
 
 import datetime
 import sqlalchemy as sql
 import typing
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from sqlalchemy.ext import declarative
+
 from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
-from sqlalchemy.ext import declarative
 
 FLAGS = app.FLAGS
 
@@ -43,8 +43,8 @@ class GitHubRepository(Base):
 
   owner: str = sql.Column(sql.String(512), nullable=False)
   name: str = sql.Column(sql.String(512), nullable=False)
-  clone_from_url: str = sql.Column(
-      sqlutil.ColumnTypes.IndexableString(), primary_key=True)
+  clone_from_url: str = sql.Column(sqlutil.ColumnTypes.IndexableString(),
+                                   primary_key=True)
   num_stars: int = sql.Column(sql.Integer, nullable=False)
   num_forks: int = sql.Column(sql.Integer, nullable=False)
   num_watchers: int = sql.Column(sql.Integer, nullable=False)
@@ -55,6 +55,9 @@ class GitHubRepository(Base):
   # should not be used / exported / processed. Setting a flag is more
   # lightweight than modifying the contents of a table.
   active: bool = sql.Column(sql.Boolean, nullable=False, default=True)
+
+  contentfiles: typing.List['ContentFile'] = orm.relationship(
+      'ContentFile', back_populates='repo')
 
   @staticmethod
   def _GetArgsFromProto(proto: scrape_repos_pb2.GitHubRepoMetadata
@@ -114,12 +117,18 @@ class ContentFile(Base):
   sha256: str = sql.Column(sql.String(64), nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  text: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
-  date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
-  __table_args__ = (sql.UniqueConstraint(
-      'clone_from_url', 'relpath', 'artifact_index', name='uniq_contentfile'),)
+  text: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                         nullable=False)
+  date_added: datetime.datetime = sql.Column(sql.DateTime,
+                                             nullable=False,
+                                             default=datetime.datetime.utcnow)
+  __table_args__ = (sql.UniqueConstraint('clone_from_url',
+                                         'relpath',
+                                         'artifact_index',
+                                         name='uniq_contentfile'),)
+
+  repo: GitHubRepository = orm.relationship('GitHubRepository',
+                                            back_populates='contentfiles')
 
   @staticmethod
   def _GetArgsFromProto(
