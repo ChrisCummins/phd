@@ -12,6 +12,8 @@ app.DEFINE_database(
     'URL of the database to modify.')
 app.DEFINE_boolean('dry_run', False, 'Whether to save changes.')
 app.DEFINE_boolean('reset', False, 'Mark all repositories as active.')
+app.DEFINE_boolean('reset_exported', False,
+                   'Unmark all repositories as exported.')
 app.DEFINE_integer('max_repo_count', None,
                    'Mask by the maximum number of repositories.')
 app.DEFINE_integer(
@@ -40,6 +42,25 @@ def Reset(db: contentfiles.ContentFiles) -> None:
             humanize.Commas(inactive_repos_count), humanize.Commas(repos_count),
             (inactive_repos_count / repos_count) * 100)
     inactive_repos.update({"active": True})
+
+
+def ResetExported(db: contentfiles.ContentFiles) -> None:
+  """Restore exported status to database.
+
+  Args:
+    db: The database to modify.
+  """
+  with db.Session(commit=not FLAGS.dry_run) as session:
+    exported_repos = session.query(contentfiles.GitHubRepository)\
+      .filter(contentfiles.GitHubRepository.exported == True)
+    exported_repos_count = exported_repos.count()
+
+    repos_count = session.query(contentfiles.GitHubRepository).count()
+
+    app.Log(1, 'Marking %s of %s repos as not exported (%.2f %%)',
+            humanize.Commas(exported_repos_count), humanize.Commas(repos_count),
+            (exported_repos_count / repos_count) * 100)
+    exported_repos.update({"exported": False})
 
 
 def MaskOnMaxRepoCount(db: contentfiles.ContentFiles,
@@ -173,8 +194,13 @@ def main():
   """Main entry point."""
 
   db = FLAGS.db()
-  if FLAGS.reset:
+  if FLAGS.reset and FLAGS.reset_exported:
     Reset(db)
+    ResetExported(db)
+  elif FLAGS.reset:
+    Reset(db)
+  elif FLAGS.reset_exported:
+    ResetExported(db)
   elif FLAGS.max_repo_count:
     MaskOnMaxRepoCount(db, FLAGS.max_repo_count)
   elif FLAGS.min_star_count:

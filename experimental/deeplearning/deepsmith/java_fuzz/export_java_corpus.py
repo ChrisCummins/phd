@@ -90,10 +90,11 @@ def Preprocess(
   next_texts = []
   for preprocessor in preprocessor_functions:
     for text in texts:
-      next_texts += preprocessor(import_root=import_root,
-                                 file_relpath=file_relpath,
-                                 text=text,
-                                 all_file_relpaths=all_file_relpaths)
+      next_texts += preprocessor(
+          import_root=import_root,
+          file_relpath=file_relpath,
+          text=text,
+          all_file_relpaths=all_file_relpaths)
     texts = next_texts
   return texts
 
