@@ -407,12 +407,14 @@ def AssertFieldConstraint(
 
 def RunProcessMessage(cmd: typing.List[str],
                       input_proto: ProtocolBuffer,
-                      timeout_seconds: int = 360) -> str:
+                      timeout_seconds: int = 360,
+                      env: typing.Dict[str, str] = None) -> str:
   # Run the C++ worker process, capturing it's output.
   process = subprocess.Popen(
       ['timeout', '-s9', str(timeout_seconds)] + cmd,
       stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE)
+      stdout=subprocess.PIPE,
+      env=env)
   # Send the input proto to the C++ worker process.
   # TODO: Add timeout.
   stdout, _ = process.communicate(input_proto.SerializeToString())
@@ -429,17 +431,25 @@ def RunProcessMessage(cmd: typing.List[str],
 def RunProcessMessageToProto(cmd: typing.List[str],
                              input_proto: ProtocolBuffer,
                              output_proto: ProtocolBuffer,
-                             timeout_seconds: int = 360):
-  output_proto.ParseFromString(
-      RunProcessMessage(cmd, input_proto, timeout_seconds=timeout_seconds))
+                             timeout_seconds: int = 360,
+                             env: typing.Dict[str, str] = None):
+  stdout = RunProcessMessage(cmd,
+                             input_proto,
+                             timeout_seconds=timeout_seconds,
+                             env=env)
+  output_proto.ParseFromString(stdout)
   return output_proto
 
 
 def RunProcessMessageInPlace(cmd: typing.List[str],
                              input_proto: ProtocolBuffer,
-                             timeout_seconds: int = 360):
+                             timeout_seconds: int = 360,
+                             env: typing.Dict[str, str] = None):
   input_proto.ParseFromString(
-      RunProcessMessage(cmd, input_proto, timeout_seconds=timeout_seconds))
+      RunProcessMessage(cmd,
+                        input_proto,
+                        timeout_seconds=timeout_seconds,
+                        env=env))
   return input_proto
 
 
