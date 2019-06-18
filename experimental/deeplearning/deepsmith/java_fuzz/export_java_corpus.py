@@ -13,9 +13,10 @@
 # limitations under the License.
 """Export the content files from a database."""
 import multiprocessing
-import time
 import sys
+import time
 
+import collections
 import hashlib
 import pathlib
 import tempfile
@@ -87,6 +88,9 @@ def DoProcessRepo(input_session: sqlutil.Session,
   # Run the preprocessors.
   methods_lists = extractors.BatchedMethodExtractor(
       [text for _, text in contentfiles_to_export])
+
+  relpath_counters = collections.defaultdict(int)
+
   for (relpath, _), methods in zip(contentfiles_to_export, methods_lists):
     for i, method_text in enumerate(methods):
       if (len(method_text) >= FLAGS.min_char_count and
@@ -99,12 +103,13 @@ def DoProcessRepo(input_session: sqlutil.Session,
             contentfiles.ContentFile(
                 clone_from_url=clone_from_url,
                 relpath=relpath,
-                artifact_index=i,
+                artifact_index=relpath_counters[relpath],
                 sha256=sha256,
                 charcount=len(method_text),
                 linecount=len(method_text.split('\n')),
                 text=method_text,
             ))
+        relpath_counters[relpath] += 1
 
   # Mark repo as exported.
   repo.update({"exported": True})

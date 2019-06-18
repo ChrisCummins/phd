@@ -5,7 +5,7 @@ py_binary(
     srcs = ["export_java_corpus.py"],
     deps = [
         "//datasets/github/scrape_repos:contentfiles",
-        "//datasets/github/scrape_repos/preprocessors",
+        "//datasets/github/scrape_repos/preprocessors:extractors",
         "//labm8:app",
         "//labm8:fs",
         "//labm8:humanize",
