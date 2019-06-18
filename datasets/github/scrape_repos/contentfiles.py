@@ -59,6 +59,8 @@ class GitHubRepository(Base):
   # should not be used / exported / processed. Setting a flag is more
   # lightweight than modifying the contents of a table.
   active: bool = sql.Column(sql.Boolean, nullable=False, default=True)
+  # A flag to signal that a repo has been processed / exported.
+  exported: bool = sql.Column(sql.Boolean, nullable=False, default=False)
 
   contentfiles: typing.List['ContentFile'] = orm.relationship(
       'ContentFile', back_populates='repo')

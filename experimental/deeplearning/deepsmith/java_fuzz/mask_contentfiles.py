@@ -31,6 +31,25 @@ def ImportQueryResults(query, session):
     session.merge(row)
 
 
+def Reset(db: contentfiles.ContentFiles) -> None:
+  """Restore active status to database.
+
+  Args:
+    db: The database to modify.
+  """
+  with db.Session(commit=not FLAGS.dry_run) as session:
+    inactive_repos = session.query(contentfiles.GitHubRepository)\
+      .filter(contentfiles.GitHubRepository.active == False)
+    inactive_repos_count = inactive_repos.count()
+
+    repos_count = session.query(contentfiles.GitHubRepository).count()
+
+    app.Log(1, 'Restoring active status to %s of %s repos (%.2f %%)',
+            humanize.Commas(inactive_repos_count), humanize.Commas(repos_count),
+            (inactive_repos_count / repos_count) * 100)
+    inactive_repos.update({"active": True})
+
+
 def MaskOnMaxRepoCount(db: contentfiles.ContentFiles,
                        max_repo_count: int) -> None:
   """Mask by the maximum number of repos.
@@ -39,7 +58,6 @@ def MaskOnMaxRepoCount(db: contentfiles.ContentFiles,
     db: The database to modify.
     max_repo_count: The maximum number of active repos.
   """
-  app.Log(1, 'Using maximum repo count to split contentfiles')
   with db.Session(commit=not FLAGS.dry_run) as session:
     active_repos = session.query(contentfiles.GitHubRepository.clone_from_url)\
       .filter(contentfiles.GitHubRepository.active == True)
@@ -71,13 +89,12 @@ def MaskOnMinStarCount(db: contentfiles.ContentFiles,
     db: The database to modify.
     min_star_count: The minimum number of stars for a repo to be active.
   """
-  app.Log(1, 'Using min star count to split contentfiles')
   with db.Session(commit=not FLAGS.dry_run) as session:
     active_repo_count = session.query(contentfiles.GitHubRepository)\
       .filter(contentfiles.GitHubRepository.active).count()
 
     repos_to_mark_inactive = session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active)\
+      .filter(contentfiles.GitHubRepository.active == True)\
       .filter(contentfiles.GitHubRepository.num_stars < min_star_count)
     repos_to_mark_inactive_count = repos_to_mark_inactive.count()
 
@@ -97,7 +114,6 @@ def MaskOnMinRepoFileCount(db: contentfiles.ContentFiles,
     min_repo_file_count: The minimum number of contentfiles in a repo for it to
         be active.
   """
-  app.Log(1, 'Using min repo file count to split contentfiles')
   with db.Session(commit=not FLAGS.dry_run) as session:
     active_repo_count = session.query(contentfiles.GitHubRepository)\
       .filter(contentfiles.GitHubRepository.active).count()
@@ -129,7 +145,9 @@ def main():
   """Main entry point."""
 
   db = FLAGS.db()
-  if FLAGS.max_repo_count:
+  if FLAGS.reset:
+    Reset(db)
+  elif FLAGS.max_repo_count:
     MaskOnMaxRepoCount(db, FLAGS.max_repo_count)
   elif FLAGS.min_star_count:
     MaskOnMinStarCount(db, FLAGS.min_star_count)

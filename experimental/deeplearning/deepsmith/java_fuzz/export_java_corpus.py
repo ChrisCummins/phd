@@ -13,8 +13,12 @@
 # limitations under the License.
 """Export the content files from a database."""
 import hashlib
+import time
+from concurrent import futures
 import pathlib
+import threading
 import tempfile
+import multiprocessing
 import typing
 from datasets.github.scrape_repos import contentfiles
 
@@ -35,6 +39,10 @@ app.DEFINE_output_path(
     'Directory to export preprocessed content files to.',
     is_dir=True)
 app.DEFINE_list('preprocessors', [], 'The preprocessors to run, in order.')
+app.DEFINE_integer('min_line_count', 0,
+                   'The minimum number of lines in a contentfile to export.')
+app.DEFINE_integer('min_char_count', 0,
+                   'The minimum number of chars in a contentfile to export.')
 
 
 def Preprocess(
@@ -83,16 +91,21 @@ def Preprocess(
   return texts
 
 
-def ProcessRepo(
+def DoProcessRepo(
     input_session: sqlutil.Session, outdir: pathlib.Path, clone_from_url: str,
     workding_dir: pathlib.Path,
-    preprocessor_functions: typing.List[preprocessors.PreprocessorFunction]):
+    preprocessor_functions: typing.List[preprocessors.PreprocessorFunction]
+) -> int:
   """Preprocess all content files from a single scraped repo."""
-  contentfiles_to_export = input_session.query(
+  candidate_contentfiles = input_session.query(
         contentfiles.ContentFile.relpath, contentfiles.ContentFile.text)\
       .filter(contentfiles.ContentFile.clone_from_url == clone_from_url)
-  app.Log(1, 'Exporting %s content files from %s',
-          humanize.Commas(contentfiles_to_export.count()), clone_from_url)
+  contentfiles_to_export = candidate_contentfiles\
+      .filter(contentfiles.ContentFile.linecount >= FLAGS.min_line_count)\
+      .filter(contentfiles.ContentFile.charcount >= FLAGS.min_char_count).all()
+  app.Log(2, 'Exporting %s of %s content files from %s',
+          humanize.Commas(len(contentfiles_to_export)),
+          humanize.Commas(candidate_contentfiles.count()), clone_from_url)
 
   # Create the directory tree first.
   for relpath, text in contentfiles_to_export:
@@ -102,31 +115,67 @@ def ProcessRepo(
 
   all_files_relpaths = {relpath for relpath, _ in contentfiles_to_export}
 
+  exported_count = 0
+
   # Run the preprocessors.
   for relpath, text in contentfiles_to_export:
     texts = Preprocess(workding_dir, relpath, all_files_relpaths,
                        preprocessor_functions)
     for i, text in enumerate(texts):
-      encoded_text = text.encode('ascii', 'ignore')
-      sha256 = hashlib.sha256(encoded_text).hexdigest()
-      text = encoded_text.decode('ascii')
-      fs.Write(outdir / (sha256 + '.txt'), text.encode('utf-8'))
+      if (len(text) >= FLAGS.min_char_count and
+          len(text.split('\n')) >= FLAGS.min_line_count):
+        exported_count += 1
+        encoded_text = text.encode('ascii', 'ignore')
+        sha256 = hashlib.sha256(encoded_text).hexdigest()
+        text = encoded_text.decode('ascii')
+        fs.Write(outdir / (sha256 + '.txt'), text.encode('utf-8'))
+
+  input_session.query(contentfiles.GitHubRepository)\
+      .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url)\
+      .update({"exported": True})
+
+  return exported_count
 
 
-def PreprocessDb(input_db: contentfiles.ContentFiles, outdir: pathlib.Path,
-                 preprocessor_functions: typing.List[str]):
-  """Preprocess the content files directory and export to outdir."""
-  outdir.mkdir(parents=True, exist_ok=True)
+def ProcessRepo(
+    input_db: contentfiles.ContentFiles, outdir: pathlib.Path,
+    clone_from_url: str,
+    preprocessor_functions: typing.List[preprocessors.PreprocessorFunction]):
+  """Preprocess all content files from a single scraped repo."""
+  with input_db.Session(commit=True) as input_session:
+    with tempfile.TemporaryDirectory(prefix='phd_') as d:
+      return DoProcessRepo(input_session, outdir, clone_from_url,
+                           pathlib.Path(d), preprocessor_functions)
 
-  with input_db.Session() as input_session:
-    active_repos = input_session.query(
-        contentfiles.GitHubRepository.clone_from_url)\
-        .filter(contentfiles.GitHubRepository.active == True)
-    clone_from_urls = [x[0] for x in active_repos]
-    for clone_from_url in clone_from_urls:
-      with tempfile.TemporaryDirectory(prefix='phd_') as d:
-        ProcessRepo(input_session, outdir, clone_from_url, pathlib.Path(d),
-                    preprocessor_functions)
+
+class Exporter(threading.Thread):
+
+  def __init__(self, input_db: contentfiles.ContentFiles, outdir: pathlib.Path,
+               preprocessor_functions: typing.List[str]):
+    super(Exporter, self).__init__()
+    self.input_db = input_db
+    self.outdir = outdir
+    self.preprocessor_functions = preprocessor_functions
+
+  def run(self):
+    """Preprocess the content files directory and export to outdir."""
+    self.outdir.mkdir(parents=True, exist_ok=True)
+
+    with self.input_db.Session() as input_session:
+      active_repos = input_session.query(
+          contentfiles.GitHubRepository.clone_from_url)\
+          .filter(contentfiles.GitHubRepository.active == True)
+      clone_from_urls = [x[0] for x in active_repos]
+
+    # nproc * 5 is the same as the default used by the standard library.
+    max_workers = multiprocessing.cpu_count() * 5
+    app.Log(1, "Exporting contentfiles from %s repos in %s worker threads",
+            humanize.Commas(len(clone_from_urls)), max_workers)
+    with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+      f = lambda x: ProcessRepo(self.input_db, self.outdir, x, self.
+                                preprocessor_functions)
+      for _ in executor.map(f, clone_from_urls):
+        pass
 
 
 def main():
@@ -135,7 +184,33 @@ def main():
       preprocessors.GetPreprocessorFunction(p) for p in FLAGS.preprocessors
   ]
 
-  PreprocessDb(FLAGS.db(), FLAGS.outdir, preprocessor_functions)
+  start_time = time.time()
+  exporter = Exporter(FLAGS.db(), FLAGS.outdir, preprocessor_functions)
+  exporter.start()
+
+  with FLAGS.db().Session() as s:
+    repo_count = s.query(contentfiles.GitHubRepository)\
+      .filter(contentfiles.GitHubRepository.active == True).count()
+
+  while True:
+    time.sleep(15)
+
+    runtime = time.time() - start_time
+    exported_contentfile_count = len(list(FLAGS.outdir.iterdir()))
+    with FLAGS.db().Session() as s:
+      exported_repo_count = s.query(contentfiles.GitHubRepository)\
+        .filter(contentfiles.GitHubRepository.active == True)\
+        .filter(contentfiles.GitHubRepository.exported == True).count()
+    print(
+        f"Runtime: {humanize.Duration(runtime)}. "
+        f"Exported repos: {humanize.Commas(exported_repo_count)} "
+        f"of {humanize.Commas(repo_count)} "
+        f"({exported_repo_count / repo_count:.2%}), "
+        f"exported contentfiles: {humanize.Commas(exported_contentfile_count)}")
+
+    if not exporter.is_alive():
+      break
+  exporter.join()
 
 
 if __name__ == '__main__':
