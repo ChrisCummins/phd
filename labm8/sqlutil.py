@@ -36,6 +36,15 @@ absl_flags.DEFINE_boolean(
     'sqlutil_echo', False,
     'If True, the Engine will log all statements as well as a repr() of their '
     'parameter lists to the engines logger, which defaults to sys.stdout.')
+absl_flags.DEFINE_integer(
+    'sqlutil_engine_pool_size', 5,
+    'The number of connections to keep open inside the connection pool. A '
+    '--sqlutil_engine_pool_size of 0 indicates no limit')
+absl_flags.DEFINE_integer(
+    'sqlutil_engine_max_overflow', 10,
+    'The number of connections to allow in connection pool “overflow”, that '
+    'is connections that can be opened above and beyond the '
+    '--sqlutil_engine_pool_size setting')
 
 # The Query type is returned by Session.query(). This is a convenience for type
 # annotations.
@@ -176,7 +185,9 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
 
     # We create a throwaway engine that we use to check if the requested
     # database exists.
-    engine = sql.create_engine('/'.join(url.split('/')[:-1]))
+    engine = sql.create_engine('/'.join(url.split('/')[:-1]),
+                               pool_size=FLAGS.sqlutil_engine_pool_size,
+                               max_overflow=FLAGS.sqlutil_engine_max_overflow)
     database = url.split('/')[-1].split('?')[0]
     query = engine.execute(sql.text('SELECT SCHEMA_NAME FROM '
                                     'INFORMATION_SCHEMA.SCHEMATA WHERE '
