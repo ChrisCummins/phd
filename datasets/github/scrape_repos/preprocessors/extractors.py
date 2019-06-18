@@ -13,12 +13,13 @@
 # limitations under the License.
 """Preprocessors to extract from source code."""
 import os
+
 import pathlib
 import subprocess
 import typing
+from datasets.github.scrape_repos.proto import scrape_repos_pb2
 
 from datasets.github.scrape_repos.preprocessors import public
-from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
@@ -28,6 +29,9 @@ FLAGS = app.FLAGS
 # The path to the methods extractor binary.
 JAVA_METHODS_EXTRACTOR = bazelutil.DataPath(
     'phd/datasets/github/scrape_repos/preprocessors/JavaMethodsExtractor')
+JAVA_METHODS_BATCHED_EXTRACTOR = bazelutil.DataPath(
+    'phd/datasets/github/scrape_repos/preprocessors/JavaMethodsBatchedExtractor'
+)
 
 # The environments to run the method extractor under.
 STATIC_ONLY_ENV = os.environ.copy()
@@ -60,6 +64,18 @@ def ExtractJavaMethods(text: str, static_only: bool = True) -> typing.List[str]:
                      f"status {process.returncode}")
   methods_list = pbutil.FromString(stdout, scrape_repos_pb2.MethodsList())
   return list(methods_list.method)
+
+
+def BatchedMethodExtractor(
+    texts: str, static_only: bool = True) -> typing.List[typing.List[str]]:
+  input_message = scrape_repos_pb2.ListOfStrings(string=texts)
+  output_message = scrape_repos_pb2.ListOfListOfStrings()
+  pbutil.RunProcessMessageToProto([JAVA_METHODS_BATCHED_EXTRACTOR],
+                                  input_message,
+                                  output_message,
+                                  timeout_seconds=60,
+                                  env=STATIC_ONLY_ENV if static_only else None)
+  return [list(los.string) for los in output_message.list_of_strings]
 
 
 @public.dataset_preprocessor

@@ -65,6 +65,37 @@ public class A {
 """, None) == ["public static void main(String[] args){\n}\n"]
 
 
+# BatchedMethodExtractor() tests.
+
+
+def test_BatchedMethodExtractor_valid_input():
+  extractors.BatchedMethodExtractor([
+      """
+public class A {
+  public static void main(String[] args) {
+    System.out.println("Hello, world!");
+  }
+}
+    """, """
+public class A {
+  public static void main(String[] args) {
+    System.out.println("Hi, world!");
+  }
+}
+    """
+  ]) == [
+      """\
+public static void main(String[] args) {
+  System.out.println("Hello, world!");
+}
+""", """\
+public static void main(String[] args) {
+  System.out.println("Hi, world!");
+}
+"""
+  ]
+
+
 # JavaStaticMethods() tests.
 
 

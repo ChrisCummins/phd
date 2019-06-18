@@ -119,3 +119,11 @@ message ContentFile {
 message MethodsList {
   repeated string method = 1;
 }
+
+message ListOfStrings {
+  repeated string string = 1;
+}
+
+message ListOfListOfStrings {
+  repeated ListOfStrings list_of_strings = 1;
+}

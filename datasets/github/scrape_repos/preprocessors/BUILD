@@ -27,6 +27,7 @@ py_library(
     name = "extractors",
     srcs = ["extractors.py"],
     data = [
+        ":JavaMethodsBatchedExtractor",
         ":JavaMethodsExtractor",
     ],
     visibility = ["//visibility:public"],
@@ -87,6 +88,30 @@ java_binary(
     name = "JavaMethodsExtractor",
     srcs = ["JavaMethodsExtractor.java"],
     main_class = "datasets.github.scrape_repos.preprocessors.JavaMethodsExtractor",
+    deps = [
+        "//datasets/github/scrape_repos/proto:scrape_repos_pb_java",
+        "@com_google_guava//jar",
+        "@com_google_protobuf_java//jar",
+        "@org_eclipse_core_contenttype//jar",
+        "@org_eclipse_core_runtime//jar",
+        "@org_eclipse_equinox_common//jar",
+        "@org_eclipse_equinox_preferences//jar",
+        "@org_eclipse_jdt_core//jar",
+        "@org_eclipse_jface//jar",
+        "@org_eclipse_jobs//jar",
+        "@org_eclipse_osgi//jar",
+        "@org_eclipse_osgi_util//jar",
+        "@org_eclipse_resources//jar",
+        "@org_eclipse_text//jar",
+        "@org_osgi_framework//jar",
+        "@org_osgi_service_prefs//jar",
+    ],
+)
+
+java_binary(
+    name = "JavaMethodsBatchedExtractor",
+    srcs = ["JavaMethodsBatchedExtractor.java"],
+    main_class = "datasets.github.scrape_repos.preprocessors.JavaMethodsBatchedExtractor",
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_java",
         "@com_google_guava//jar",
