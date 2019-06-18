@@ -73,7 +73,7 @@ def BatchedMethodExtractor(
   pbutil.RunProcessMessageToProto([JAVA_METHODS_BATCHED_EXTRACTOR],
                                   input_message,
                                   output_message,
-                                  timeout_seconds=60,
+                                  timeout_seconds=3600,
                                   env=STATIC_ONLY_ENV if static_only else None)
   return [list(los.string) for los in output_message.list_of_strings]
 
