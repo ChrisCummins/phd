@@ -83,7 +83,11 @@ def GetAllFilesRelativePaths(root_dir: pathlib.Path,
     if follow_symlinks:
       cmd.append('-L')
     cmd += ['.', '-type', 'f']
-    find_output = subprocess.check_output(cmd).decode('utf-8').strip()
+    try:
+      find_output = subprocess.check_output(cmd).decode('utf-8').strip()
+    except UnicodeDecodeError:
+      # Unicode error could happen with special characters in paths.
+      return []
   if find_output:
     # Strip the leading './' from paths.
     return [x[2:] for x in find_output.split('\n')]
