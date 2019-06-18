@@ -14,6 +14,7 @@
 """Export the content files from a database."""
 import multiprocessing
 import time
+import sys
 
 import hashlib
 import pathlib
@@ -78,6 +79,11 @@ def DoProcessRepo(input_session: sqlutil.Session,
     path.parent.mkdir(parents=True, exist_ok=True)
     fs.Write(path, method_text.encode("utf-8"), overwrite_existing=False)
 
+  # Copy repo to output.
+  repo = input_session.query(contentfiles.GitHubRepository) \
+      .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url)
+  ImportQueryResults(repo, output_session)
+
   # Run the preprocessors.
   methods_lists = extractors.BatchedMethodExtractor(
       [text for _, text in contentfiles_to_export])
@@ -100,10 +106,6 @@ def DoProcessRepo(input_session: sqlutil.Session,
                 text=method_text,
             ))
 
-  # Copy repo to output.
-  repo = input_session.query(contentfiles.GitHubRepository) \
-      .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url)
-  ImportQueryResults(repo, output_session)
   # Mark repo as exported.
   repo.update({"exported": True})
 
@@ -133,7 +135,8 @@ class Exporter(threading.Thread):
     with self.input_db.Session() as input_session:
       active_repos = input_session.query(
           contentfiles.GitHubRepository.clone_from_url)\
-          .filter(contentfiles.GitHubRepository.active == True)
+          .filter(contentfiles.GitHubRepository.active == True)\
+          .filter(contentfiles.GitHubRepository.exported == False)
       clone_from_urls = [x[0] for x in active_repos]
 
     max_workers = FLAGS.export_worker_threads
@@ -166,16 +169,17 @@ def main():
     with FLAGS.output().Session() as s:
       exported_repo_count = s.query(contentfiles.GitHubRepository).count()
       exported_contentfile_count = s.query(contentfiles.ContentFile).count()
-    print(
-        f"Runtime: {humanize.Duration(runtime)}. "
+    sys.stdout.write(
+        f"\rRuntime: {humanize.Duration(runtime)}. "
         f"Exported repos: {humanize.Commas(exported_repo_count)} "
         f"of {humanize.Commas(repo_count)} "
         f"({exported_repo_count / repo_count:.2%}), "
         f"exported contentfiles: {humanize.Commas(exported_contentfile_count)}")
+    sys.stdout.flush()
 
     if not exporter.is_alive():
       break
-    time.sleep(15)
+    time.sleep(1)
   exporter.join()
 
 
