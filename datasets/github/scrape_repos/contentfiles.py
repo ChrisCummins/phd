@@ -81,23 +81,20 @@ class GitHubRepository(Base):
     return cls(**cls._GetArgsFromProto(proto))
 
   @classmethod
-  def GetOrAdd(cls, session: orm.session.Session,
-               proto: scrape_repos_pb2.GitHubRepoMetadata) -> \
-      'GitHubRepository':
+  def GetOrAdd(
+      cls, session: orm.session.Session,
+      proto: scrape_repos_pb2.GitHubRepoMetadata) -> 'GitHubRepository':
     return sqlutil.GetOrAdd(session, cls, **cls._GetArgsFromProto(proto))
 
   @classmethod
   def IsInDatabase(cls, session: orm.session.Session,
                    proto: scrape_repos_pb2.GitHubRepoMetadata) -> bool:
-    filter_by = cls._GetArgsFromProto(proto)
-    # Exclude scraped date from filter because otherwise a repository that is
-    # scraped twice will be indexed twice.
     # TODO(cec): At some point it would be nice to have an expiration date for
     # scraped repos, after which the contents are considered "stale" and the
     # repo is re-scraped. This would require extending the behaviour of
     # ShouldImportRepo() to check the expiry date.
-    del filter_by['date_scraped']
-    instance = session.query(cls).filter_by(**filter_by).first()
+    instance = session.query(cls.clone_from_url)\
+        .filter(cls.clone_from_url == proto.clone_from_url).first()
     return True if instance else False
 
 
