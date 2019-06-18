@@ -1,5 +1,11 @@
 # MySQL snippets for working with java_fuzz contentfiles database.
- # Top 10 most popular repos scraped.
+ # How many active repos?
+
+SELECT count(*)
+FROM repositories
+WHERE active = 1;
+
+# Top 10 most popular repos scraped.
 
 SELECT name AS repo,
        OWNER AS USER,
@@ -22,3 +28,4 @@ FROM
    LEFT JOIN repositories ON contentfiles.clone_from_url=repositories.clone_from_url
    WHERE num_stars >= 10
    GROUP BY contentfiles.clone_from_url) t;
+
