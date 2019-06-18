@@ -47,6 +47,7 @@ app.DEFINE_integer('min_char_count', 0,
 app.DEFINE_boolean('multithreaded_export', True,
                    'Use multiple threads for export.')
 # nproc * 5 is the same as the default used by the standard library.
+# You may want to increase --sqlutil_engine_max_overflow to match this value.
 app.DEFINE_integer('export_worker_threads',
                    multiprocessing.cpu_count() * 5,
                    "The number of export worker threads.")
