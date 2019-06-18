@@ -41,8 +41,8 @@ main() {
 
   publish_docker_image \
       "experimental/deeplearning/deepsmith/java_fuzz" \
-      "split_contentfiles_image" \
-      "java_fuzz_split_contentfiles"
+      "mask_contentfiles_image" \
+      "java_fuzz_mask_contentfiles"
 
   publish_docker_image \
       "experimental/deeplearning/deepsmith/java_fuzz" \

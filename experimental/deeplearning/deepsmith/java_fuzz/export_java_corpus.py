@@ -74,10 +74,11 @@ def Preprocess(
   next_texts = []
   for preprocessor in preprocessor_functions:
     for text in texts:
-      next_texts += preprocessor(import_root=import_root,
-                                 file_relpath=file_relpath,
-                                 text=text,
-                                 all_file_relpaths=all_file_relpaths)
+      next_texts += preprocessor(
+          import_root=import_root,
+          file_relpath=file_relpath,
+          text=text,
+          all_file_relpaths=all_file_relpaths)
     texts = next_texts
   return texts
 
@@ -118,10 +119,10 @@ def PreprocessDb(input_db: contentfiles.ContentFiles, outdir: pathlib.Path,
   outdir.mkdir(parents=True, exist_ok=True)
 
   with input_db.Session() as input_session:
-    clone_from_urls = [
-        x[0] for x in input_session.query(
-            contentfiles.ContentFile.clone_from_url).distinct()
-    ]
+    active_repos = input_session.query(
+        contentfiles.GitHubRepository.clone_from_url)\
+        .filter(contentfiles.GitHubRepository.active == True)
+    clone_from_urls = [x[0] for x in active_repos]
     for clone_from_url in clone_from_urls:
       with tempfile.TemporaryDirectory(prefix='phd_') as d:
         ProcessRepo(input_session, outdir, clone_from_url, pathlib.Path(d),

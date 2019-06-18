@@ -23,22 +23,24 @@ py3_image(
 )
 
 py_binary(
-    name = "split_contentfiles",
-    srcs = ["split_contentfiles.py"],
+    name = "mask_contentfiles",
+    srcs = ["mask_contentfiles.py"],
     deps = [
         "//datasets/github/scrape_repos:contentfiles",
         "//labm8:app",
         "//labm8:humanize",
+        "//third_party/py/progressbar",
+        "//third_party/py/sqlalchemy",
     ],
 )
 
 py3_image(
-    name = "split_contentfiles_image",
-    srcs = ["split_contentfiles.py"],
+    name = "mask_contentfiles_image",
+    srcs = ["mask_contentfiles.py"],
     base = "@base//image",
-    main = "split_contentfiles.py",
+    main = "mask_contentfiles.py",
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
-    deps = [":split_contentfiles"],
+    deps = [":mask_contentfiles"],
 )
 
 py_binary(

@@ -51,6 +51,11 @@ class GitHubRepository(Base):
   date_scraped: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
   language: str = sql.Column(sql.String(16), nullable=False)
 
+  # The "active" flag can be used to quickly mark repositories that should or
+  # should not be used / exported / processed. Setting a flag is more
+  # lightweight than modifying the contents of a table.
+  active: bool = sql.Column(sql.Boolean, nullable=False, default=True)
+
   @staticmethod
   def _GetArgsFromProto(proto: scrape_repos_pb2.GitHubRepoMetadata
                        ) -> typing.Dict[str, typing.Any]:
