@@ -17,6 +17,7 @@ import urllib3
 from labm8 import app
 from labm8 import humanize
 
+
 FLAGS = app.FLAGS
 app.DEFINE_integer('n', int(1e6),
                    'The number of repos to scrape before terminating.')
@@ -28,6 +29,12 @@ app.DEFINE_database(
 WORD_LIST_URLS = [
     # The 1,000 most commonly used words.
     "https://gist.githubusercontent.com/deekayen/4148741/raw/01c6252ccc5b5fb307c1bb899c95989a8a284616/1-1000.txt",
+    # 479k English words
+    "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt",
+    # Unofficial Jargon File Word Lists
+    "https://raw.githubusercontent.com/en-wl/wordlist/master/jargon-wl/word.lst",
+    # List of Dirty, Naughty, Obscene, and Otherwise Bad Words
+    "https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/raw/master/en",
 ]
 
 # A list of GitHub repos to ignore.
@@ -49,9 +56,11 @@ def GetLanguageToClone(query_prefix: str, destination_dir: str
                       ) -> scrape_repos_pb2.LanguageToClone:
   return scrape_repos_pb2.LanguageToClone(
       language="java",
+      # See: https://help.github.com/en/articles/sorting-search-results
+      sort_by = random.choice(['stars', 'forks', 'updated'])
       query=[
           scrape_repos_pb2.GitHubRepositoryQuery(
-              string=f"{query_prefix} language:java sort:stars fork:false")
+              string=f"{query_prefix} language:java sort:{sort_by} fork:false")
       ],
       destination_directory=destination_dir,
       importer=[
@@ -127,18 +136,17 @@ def main():
   """Main entry point."""
   http = urllib3.PoolManager(ca_certs=GetCertificateBundle())
 
-  for url in WORD_LIST_URLS:
-    app.Log(1, 'Downloading word list ...')
-    response = http.request('GET', url)
-    words = response.data.decode('utf-8').strip().split('\n')
-    app.Log(
-        1,
-        f'Beginning fuzzy GitHub scraping using {humanize.Commas(len(words))} words ...'
-    )
+  url = random.choice(WORD_LIST_URLS)
 
-    connection = github_api.GetGithubConectionFromFlagsOrDie()
-    scraper = FuzzyGitHubJavaScraper(connection, FLAGS.db(), words)
-    scraper.Run(FLAGS.n)
+  app.Log(1, 'Downloading word list from %s', url)
+  response = http.request('GET', url)
+  words = response.data.decode('utf-8').strip().split('\n')
+  app.Log(1, 'Beginning fuzzy GitHub scraping using %s words ...',
+          humanize.Commas(len(words)))
+
+  connection = github_api.GetGithubConectionFromFlagsOrDie()
+  scraper = FuzzyGitHubJavaScraper(connection, FLAGS.db(), words)
+  scraper.Run(FLAGS.n)
 
 
 if __name__ == '__main__':
