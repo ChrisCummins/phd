@@ -20,6 +20,8 @@ app.DEFINE_integer(
     'Mask by the minimum number of Github stars a repository has.')
 app.DEFINE_integer('min_repo_file_count', 0,
                    'Mask by the minimum number of contentfiles in a repo.')
+app.DEFINE_integer('max_repo_file_count', 0,
+                   'Mask by the maxmium number of contentfiles in a repo.')
 
 
 def ImportQueryResults(query, session):
@@ -141,6 +143,42 @@ def MaskOnMinRepoFileCount(db: contentfiles.ContentFiles,
         .update({"active": False}, synchronize_session='fetch')
 
 
+def MaskOnMaxRepoFileCount(db: contentfiles.ContentFiles,
+                           max_repo_file_count: int) -> None:
+  """Mask by the maximum repo file count.
+
+  Args:
+    db: The database to modify.
+    max_repo_file_count: The maxmium number of contentfiles in a repo for it to
+        be active.
+  """
+  with db.Session(commit=not FLAGS.dry_run) as session:
+    active_repo_count = session.query(contentfiles.GitHubRepository)\
+      .filter(contentfiles.GitHubRepository.active).count()
+
+    repos_to_mark_inactive = session.query(
+          contentfiles.ContentFile.clone_from_url,
+          sql.func.count(contentfiles.ContentFile.clone_from_url))\
+      .join(contentfiles.GitHubRepository)\
+      .filter(contentfiles.GitHubRepository.active == True)\
+      .group_by(contentfiles.ContentFile.clone_from_url) \
+      .having(sql.func.count(contentfiles.ContentFile.clone_from_url) >
+              max_repo_file_count)
+    repos_to_mark_inactive_count = repos_to_mark_inactive.count()
+
+    app.Log(1, 'Marking %s of %s active repos inactive (%.2f %%)',
+            humanize.Commas(repos_to_mark_inactive_count),
+            humanize.Commas(active_repo_count),
+            (repos_to_mark_inactive_count / active_repo_count) * 100)
+
+    # Can't call Query.update() or Query.delete() when limit() has been called,
+    # hence the subquery.
+    clone_from_urls = {r.clone_from_url for r in repos_to_mark_inactive}
+    session.query(contentfiles.GitHubRepository)\
+        .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
+        .update({"active": False}, synchronize_session='fetch')
+
+
 def main():
   """Main entry point."""
 
@@ -153,6 +191,8 @@ def main():
     MaskOnMinStarCount(db, FLAGS.min_star_count)
   elif FLAGS.min_repo_file_count:
     MaskOnMinRepoFileCount(db, FLAGS.min_repo_file_count)
+  elif FLAGS.max_repo_file_count:
+    MaskOnMaxRepoFileCount(db, FLAGS.max_repo_file_count)
   if FLAGS.dry_run:
     app.Log(1, 'Dry run, rolling back ...')
 
