@@ -84,24 +84,28 @@ public class JavaMethodsBatchedExtractor {
     for (int i = 0; i < message.getStringCount(); ++i) {
       final String src = message.getString(i);
       Document document = new Document(src);
-      CompilationUnit compilationUnit = GetCompilationUnit(document);
+      try {
+        CompilationUnit compilationUnit = GetCompilationUnit(document);
 
-      if (staticOnly) {
-        compilationUnit.accept(new ASTVisitor() {
-          public boolean visit(MethodDeclaration node) {
-            if ((node.getModifiers() & Modifier.STATIC) != 0) {
-              inner_message.addString(node.toString());
+        if (staticOnly) {
+          compilationUnit.accept(new ASTVisitor() {
+            public boolean visit(MethodDeclaration node) {
+              if ((node.getModifiers() & Modifier.STATIC) != 0) {
+                inner_message.addString(node.toString());
+              }
+              return true;
             }
-            return true;
-          }
-        });
-      } else {
-        compilationUnit.accept(new ASTVisitor() {
-          public boolean visit(MethodDeclaration node) {
-            inner_message.addString(node.toString());
-            return true;
-          }
-        });
+          });
+        } else {
+          compilationUnit.accept(new ASTVisitor() {
+            public boolean visit(MethodDeclaration node) {
+              inner_message.addString(node.toString());
+              return true;
+            }
+          });
+        }
+      } catch (IllegalArgumentException e) {
+        System.err.println("error: Failed to parse unit.");
       }
 
       outer_message.addListOfStrings(inner_message);
