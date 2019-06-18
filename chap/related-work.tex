@@ -3,7 +3,7 @@
 
 \section{Introduction}
 
-This chapter surveys the literature in areas relevant to this thesis. Section~\ref{sec:related-work-generation} reviews research in program generation, focusing first on benchmarking for performance characterisation, then compiler test case generation. Section~\ref{sec:related-work-optimisation} reviews the literature of program optimisation, starting with empirical techniques, iterative compilation, and machine learning. Section~\ref{sec:related-work-other} surveys the literature of relevant works in deep learning over programs. Finally, Section~\ref{sec:related-work-summary} concludes.
+This chapter surveys the literature in areas relevant to this thesis. Section~\ref{sec:related-work-generation} reviews research in program generation, focusing first on benchmarking for performance characterisation, then compiler test case generation. Section~\ref{sec:related-work-optimisation} reviews the literature of empirical program optimisation, covering iterative compilation and machine learning. Section~\ref{sec:related-work-other} surveys the literature of related works in deep learning over programs. Finally, Section~\ref{sec:related-work-summary} concludes.
 
 
 \section{Program Generation}
@@ -61,7 +61,9 @@ Similarly, \emph{Singularity}~\cite{Wei2018} uses an evolutionary search over th
 % Pedrosa, L., Iyer, R., Zaostrovnykh, A., Fietz, J., & Argyraki, K. (2018). Automated Synthesis of Adversarial Workloads for Network Functions. In SIGCOMM. ACM. https://doi.org/10.1145/3230543.3230573
 \citeauthor{Pedrosa2018}~\cite{Pedrosa2018} applies the adversarial benchmark approach to network functions. Their tool, \emph{CASTAN}, takes as input the code for a network function and outputs packet sequences that trigger slow execution paths.
 
-In contrast to prior works, the benchmark generation technique proposed in this thesis provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from a corpus of real-world code. To the best of my knowledge, no prior work has tackled the problem of undirected benchmark generation from example code, as presented in this thesis.
+\citeauthor{Ding2019}~\cite{Ding2019} propose an alternate approach to addressing data scarcity in machine learning. Instead of generating benchmarks whose features must be evaluated and labelled to derive training data, they instead generate new feature values and labels based on the distributions in the training set. In contrast to the methods proposed in this work, their dataset generator --- based on a Gaussian Mixture Model --- is explicitly designed to amplify unusual behaviour within the training set. The generative model proposed in this work is intended to produce new data that is representative of the training set.
+
+In contrast to prior works, the benchmark generation technique proposed in this thesis provides \emph{general-purpose} program generation over unknown domains, in which the statistical distribution of generated programs is automatically inferred from a corpus of real-world code. To the best of my knowledge, no prior work has tackled the problem of undirected benchmark generation from example code.
 
 
 \subsection{Test Case Generation for Compiler Validation}
@@ -164,10 +166,17 @@ Although nascent, the use of neural networks to generate programs is evolving ra
 % Godefroid, P., Peleg, H., & Singh, R. (2017). Learn&Fuzz: Machine Learning for Input Fuzzing. In ASE.
 %
 % % Nasrabadi, M. Z., Parsa, S., & Kalaee, A. (2018). Neural Fuzzing: A Neural Approach to Generate Test Data for File Format Fuzzing. ArXiv:1812.09961.
-\emph{Learn\&Fuzz}~\cite{Godefroid2017} and \emph{IUST DeepFuzz}~\cite{Nasrabadi2018} use LSTM networks, trained on a corpus of PDF files, to generate test inputs for PDF renderers. In the case of \emph{Learn\&Fuzz}, one bug was discovered in the Microsoft Edge renderer. Unlike compiler testing, PDF test cases require no inputs and no pre-processing of the training corpus.
+\emph{Learn\&Fuzz}~\cite{Godefroid2017} and \emph{IUST DeepFuzz}~\cite{Nasrabadi2018} use LSTM networks, trained on a corpus of PDF files, to generate test inputs for PDF renderers. In the case of \emph{Learn\&Fuzz}, they uncover a bug in the Microsoft Edge renderer. Unlike compiler testing, PDF test cases require no inputs and no pre-processing of the training corpus.
+
+\citeauthor{Jitsunari2019}~\cite{Jitsunari2019} incorporate coverage directed feedback during the training of generative models for PDFs. They train a model on an initial corpus, then sample it. They then evaluate the samples using code coverage and select those that provide the best coverage to be used as additional training data to fine-tune the model. Doing so improves the code coverage of the final generative model.
 
 % Liu, X., Li, X., Prajapati, R., & Wu, D. (2019). DeepFuzz: Automatic Generation of Syntax Valid C Programs for Fuzz Testing. In AAAI.
 Most similar to the work presented in this thesis is \emph{DeepFuzz}~\cite{Liu2019}, in which an LSTM network is used to generate fragments of C programs that are inserted into GCC unit tests. The mutated unit tests are then used for differential testing. They propose a character-level model with three sampling methodologies: one where a sample is made for every character, one where no sampling is made (so the generated fragment is conditioned solely on the sample prefix), and a hybrid approach in which sampling occurs only on white-space. In their evaluation, they uncover 8 bugs in GCC, and achieve up to an 82.63\% rate of syntactically valid samples. The work presented in this thesis differs in several ways. The key difference is the use of a recurrent neural network to generate only \emph{fragments} of a program, derived from an existing GCC unit test. In contrast, the approach presented in this thesis generates entire programs. Further, it is trained on a wide range of handwritten programs with the intent of emulating \emph{natural} programming styles.
+
+% Kosta, L., Seaman, L., & Xi, H. (2019). Program Synthesis and Vulnerability Injection Using a Grammar VAE. Journal of Software, 14(6).
+\citeauthor{Kosta2019}~\cite{Kosta2019} generate C functions to augment the training dataset of machine learning for static analysis, using vulnerability injection to produce positive examples. They generate programs using a Grammar Variational Autoencoder, a neural network architecture which decomposes a program to a sequence of grammar production rules. Unlike the syntactic-level approach presented in this work, this grammar-based approach guarantees the generation of syntactically correct code by masking production rules that would lead to invalid programs. The authors combine this with semantic repair to further reduce the chance of a sample being invalid.
+
+A drawback of this approach is the explosion in vocabulary size arising from the contextual grammar. To mitigate this, the authors must limit the expressiveness of the generator by using only a small subset of the grammar. They achieve this by selecting a handful of C functions to derive a grammar from, followed by further manual pruning of the derived grammar based on what the authors felt would be used most often by programmers. It is unclear whether such an approach could be extended to match the expressiveness of the method presented in this work.
 
 Neural program generation has been used for purposes other than program generation, reviewed in Section~\ref{sec:related-work-other}.
 
