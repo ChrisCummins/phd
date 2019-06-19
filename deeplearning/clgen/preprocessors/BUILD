@@ -352,6 +352,7 @@ java_binary(
     name = "JavaRewriter",
     srcs = ["JavaRewriter.java"],
     main_class = "deeplearning.clgen.preprocessors.JavaRewriter",
+    visibility = ["//visibility:public"],
     deps = [
         "@com_google_guava//jar",
         "@org_eclipse_core_contenttype//jar",
