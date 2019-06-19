@@ -14,26 +14,26 @@
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """This file defines a database for pre-preprocessed content files."""
 import binascii
+import multiprocessing
+import os
+import time
+
 import contextlib
 import datetime
 import hashlib
-import multiprocessing
-import os
 import pathlib
+import sqlalchemy as sql
 import subprocess
 import tempfile
-import time
 import typing
-
-import progressbar
-import sqlalchemy as sql
+from deeplearning.clgen.proto import corpus_pb2
+from deeplearning.clgen.proto import internal_pb2
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
+import progressbar
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
-from deeplearning.clgen.proto import corpus_pb2
-from deeplearning.clgen.proto import internal_pb2
 from labm8 import app
 from labm8 import fs
 from labm8 import humanize
@@ -65,8 +65,8 @@ class PreprocessedContentFile(Base):
   sha256: str = sql.Column(sql.String(64), nullable=False, index=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  text: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  text: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                         nullable=False)
   # True if pre-processing succeeded, else False.
   preprocessing_succeeded: bool = sql.Column(sql.Boolean, nullable=False)
   # The number of milliseconds pre-preprocessing took.
@@ -78,8 +78,9 @@ class PreprocessedContentFile(Base):
   # is that summing this column provides an accurate total of the actual time
   # spent pre-processing an entire corpus. Will be <= preprocess_time_ms.
   wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
-  date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = sql.Column(sql.DateTime,
+                                             nullable=False,
+                                             default=datetime.datetime.utcnow)
 
   @property
   def input_sha256_hex(self) -> str:
@@ -118,7 +119,7 @@ class PreprocessedContentFile(Base):
         input_sha256=GetFileSha256(contentfile_root / relpath),
         input_charcount=len(input_text_stripped),
         input_linecount=len(input_text_stripped.split('\n')),
-        sha256=hashlib.sha256(text.encode('utf-8')).digest(),
+        sha256=hashlib.sha256(text.encode('utf-8')).hexdigest(),
         charcount=len(text),
         linecount=len(text.split('\n')),
         text=text,
@@ -140,8 +141,9 @@ class PreprocessedContentFiles(sqlutil.Database):
   """A database of pre-processed contentfiles."""
 
   def __init__(self, url: str, must_exist: bool = False):
-    super(PreprocessedContentFiles, self).__init__(
-        url, Base, must_exist=must_exist)
+    super(PreprocessedContentFiles, self).__init__(url,
+                                                   Base,
+                                                   must_exist=must_exist)
 
   def Create(self, config: corpus_pb2.Corpus):
     with self.Session() as session:
@@ -325,6 +327,6 @@ def ExpandConfigPath(path: str) -> pathlib.Path:
   return pathlib.Path(os.path.expandvars(path)).expanduser().absolute()
 
 
-def GetFileSha256(path: pathlib.Path):
+def GetFileSha256(path: pathlib.Path) -> str:
   with open(path, 'rb') as f:
-    return hashlib.sha256(f.read()).digest()
+    return hashlib.sha256(f.read()).hexdigest()
