@@ -17,6 +17,12 @@ def test_end_to_end_pipeline(tempdir: pathlib.Path):
       'experimental/deeplearning/deepsmith/java_fuzz/mask_contentfiles_image')
   export_java_corpus_image = dockerutil.BazelPy3Image(
       'experimental/deeplearning/deepsmith/java_fuzz/export_java_corpus_image')
+  preprocess_java_corpus_image = dockerutil.BazelPy3Image(
+      'experimental/deeplearning/deepsmith/java_fuzz/preprocess_java_corpus_image'
+  )
+  re_preprocess_java_methods_image = dockerutil.BazelPy3Image(
+      'experimental/deeplearning/deepsmith/java_fuzz/re_preprocess_java_methods_image'
+  )
 
   # Step 1: Scrape a single repo from GitHub.
   with scrape_java_files_image.RunContext() as ctx:
@@ -55,6 +61,32 @@ def test_end_to_end_pipeline(tempdir: pathlib.Path):
   # Check that corpus is exported.
   assert (tempdir / "java.db").is_file()
   assert (tempdir / "export.db").is_file()
+
+  # Step 4: Preprocess Java corpus.
+  with preprocess_java_corpus_image.RunContext() as ctx:
+    ctx.CheckCall(
+        [], {
+            "input": "sqlite:////workdir/export.db",
+            "output": "sqlite:////workdir/preprocessed.db",
+        },
+        volumes={tempdir: '/workdir'})
+
+  # Check that corpus is exported.
+  assert (tempdir / "export.db").is_file()
+  assert (tempdir / "preprocessed.db").is_file()
+
+  # Step 5: Re-Preprocess Java methods.
+  with re_preprocess_java_methods_image.RunContext() as ctx:
+    ctx.CheckCall(
+        [], {
+            "input": "sqlite:////workdir/preprocessed.db",
+            "output": "sqlite:////workdir/re_preprocessed.db",
+        },
+        volumes={tempdir: '/workdir'})
+
+  # Check that corpus is exported.
+  assert (tempdir / "preprocessed.db").is_file()
+  assert (tempdir / "re_preprocessed.db").is_file()
 
 
 if __name__ == '__main__':

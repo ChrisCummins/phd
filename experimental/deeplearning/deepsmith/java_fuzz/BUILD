@@ -125,6 +125,15 @@ py_binary(
     ],
 )
 
+py3_image(
+    name = "preprocess_java_corpus_image",
+    srcs = ["preprocess_java_corpus.py"],
+    base = "@base_java//image",
+    main = "preprocess_java_corpus.py",
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
+    deps = [":preprocess_java_corpus"],
+)
+
 py_test(
     name = "preprocess_java_corpus_test",
     srcs = ["preprocess_java_corpus_test.py"],
@@ -134,4 +143,29 @@ py_test(
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:test",
     ],
+)
+
+py_binary(
+    name = "re_preprocess_java_methods",
+    srcs = ["re_preprocess_java_methods.py"],
+    deps = [
+        ":preprocess_java_corpus",
+        "//datasets/github/scrape_repos:contentfiles",
+        "//datasets/github/scrape_repos/preprocessors:secrets",
+        "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
+        "//deeplearning/clgen/corpuses:preprocessed",
+        "//deeplearning/clgen/proto:clgen_pb_py",
+        "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
+    ],
+)
+
+py3_image(
+    name = "re_preprocess_java_methods_image",
+    srcs = ["re_preprocess_java_methods.py"],
+    base = "@base_java//image",
+    main = "re_preprocess_java_methods.py",
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
+    deps = [":re_preprocess_java_methods"],
 )

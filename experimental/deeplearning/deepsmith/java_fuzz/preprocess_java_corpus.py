@@ -1,9 +1,9 @@
 """Preprocess an exported database of Java methods."""
+import multiprocessing
 import sys
 import time
-import binascii
+
 import hashlib
-import multiprocessing
 import threading
 import typing
 from concurrent import futures
@@ -36,15 +36,22 @@ JAVA_PREPROCESSOR = bazelutil.DataPath(
     'phd/experimental/deeplearning/deepsmith/java_fuzz/JavaPreprocessor')
 
 
-def PreprocessList(cfs: typing.List[contentfiles.ContentFile]
-                  ) -> typing.List[preprocessed.PreprocessedContentFile]:
-  start_time = time.time()
-  input_message = scrape_repos_pb2.ListOfStrings(string=[cf.text for cf in cfs])
+def PreprocessStringList(
+    srcs: typing.List[str]) -> internal_pb2.PreprocessorWorkerJobOutcomes:
+  input_message = scrape_repos_pb2.ListOfStrings(string=srcs)
   output_message = internal_pb2.PreprocessorWorkerJobOutcomes()
   pbutil.RunProcessMessageToProto([JAVA_PREPROCESSOR],
                                   input_message,
                                   output_message,
                                   timeout_seconds=3600)
+  return output_message
+
+
+def PreprocessContentFiles(
+    cfs: typing.List[contentfiles.ContentFile]
+) -> typing.List[preprocessed.PreprocessedContentFile]:
+  start_time = time.time()
+  output_message = PreprocessStringList([cf.text for cf in cfs])
   wall_time_ms = int((time.time() - start_time) * 1000)
 
   assert (len(cfs) == len(output_message.outcome) == len(
@@ -90,7 +97,7 @@ def ProcessRepo(input_db: contentfiles.ContentFiles,
       app.Log(2, 'Processing %s content files from %s',
               humanize.Commas(contentfiles_to_process.count()), clone_from_url)
 
-      processed = PreprocessList(contentfiles_to_process.all())
+      processed = PreprocessContentFiles(contentfiles_to_process.all())
       output_session.add_all(processed)
 
     input_session.query(contentfiles.GitHubRepository)\
