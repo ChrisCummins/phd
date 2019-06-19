@@ -160,6 +160,7 @@ public final class JavaPreprocessor {
 
     if (!CompilesWithoutError(WrapMethodInClass(contents))) {
       message.setStatus(PreprocessorWorkerJobOutcome.Status.DOES_NOT_COMPILE);
+      message.setContents("Failed to compile");
       return message.build();
     }
 

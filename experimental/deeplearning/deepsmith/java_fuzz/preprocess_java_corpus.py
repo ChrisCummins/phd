@@ -1,8 +1,9 @@
 """Preprocess an exported database of Java methods."""
 import sys
 import time
-
+import binascii
 import hashlib
+import multiprocessing
 import threading
 import typing
 from concurrent import futures
@@ -18,7 +19,17 @@ from labm8 import humanize
 from labm8 import pbutil
 
 FLAGS = app.FLAGS
-app.DEFINE_integer('preprocess_worker_threads', 4,
+app.DEFINE_database(
+    'input', contentfiles.ContentFiles,
+    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/export.db',
+    'URL of the database of exported Java methods.')
+app.DEFINE_database(
+    'output', preprocessed.PreprocessedContentFiles,
+    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/preprocessed.db',
+    'URL of the database to add preprocessed files to.')
+app.DEFINE_boolean('multithreaded_preprocess', True,
+                   'Use multiple threads during preprocessing.')
+app.DEFINE_integer('preprocess_worker_threads', multiprocessing.cpu_count(),
                    "The number of preprocessor threads.")
 
 JAVA_PREPROCESSOR = bazelutil.DataPath(
@@ -26,7 +37,7 @@ JAVA_PREPROCESSOR = bazelutil.DataPath(
 
 
 def PreprocessList(cfs: typing.List[contentfiles.ContentFile]
-                  ) -> typing.List[preprocessed.PreprocessedContentFiles]:
+                  ) -> typing.List[preprocessed.PreprocessedContentFile]:
   start_time = time.time()
   input_message = scrape_repos_pb2.ListOfStrings(string=[cf.text for cf in cfs])
   output_message = internal_pb2.PreprocessorWorkerJobOutcomes()
@@ -82,7 +93,9 @@ def ProcessRepo(input_db: contentfiles.ContentFiles,
       processed = PreprocessList(contentfiles_to_process.all())
       output_session.add_all(processed)
 
-    contentfiles_to_process.update({'exported': True})
+    input_session.query(contentfiles.GitHubRepository)\
+        .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url) \
+        .update({'exported': True})
 
 
 class Preprocessor(threading.Thread):
@@ -105,15 +118,14 @@ class Preprocessor(threading.Thread):
     max_workers = FLAGS.preprocess_worker_threads
     app.Log(1, "Preprocessing Java methods from %s repos in %s worker threads",
             humanize.Commas(len(clone_from_urls)), max_workers)
-    if FLAGS.multithreaded_export:
+    if FLAGS.multithreaded_preprocess:
       with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         f = lambda x: ProcessRepo(self.input_db, self.output_db, x)
         for _ in executor.map(f, clone_from_urls):
           pass
     else:
       for clone_from_url in clone_from_urls:
-        ProcessRepo(self.input_db, self.output_db, clone_from_url,
-                    self.preprocessor_functions)
+        ProcessRepo(self.input_db, self.output_db, clone_from_url)
 
 
 def main():
@@ -128,9 +140,12 @@ def main():
 
   while True:
     runtime = time.time() - start_time
+    with FLAGS.input().Session() as s:
+      exported_repo_count = s.query(contentfiles.GitHubRepository)\
+        .filter(contentfiles.GitHubRepository.exported == True).count()
     with FLAGS.output().Session() as s:
-      exported_repo_count = s.query(contentfiles.GitHubRepository).count()
-      exported_contentfile_count = s.query(contentfiles.ContentFile).count()
+      exported_contentfile_count = s.query(
+          preprocessed.PreprocessedContentFile).count()
     sys.stdout.write(
         f"\rRuntime: {humanize.Duration(runtime)}. "
         f"Exported repos: {humanize.Commas(exported_repo_count)} "
