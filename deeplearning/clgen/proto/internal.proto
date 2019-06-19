@@ -57,6 +57,10 @@ message PreprocessorWorkerJobOutcome {
   enum Status {
     OK = 0;
     FAIL = 1;
+    // More verbose failure causes:
+    DOES_NOT_COMPILE = 2;
+    TOO_FEW_CHARACTERS = 3;
+    TOO_FEW_LINES = 4;
   }
 
   optional string contentfile_id = 1;
@@ -64,6 +68,11 @@ message PreprocessorWorkerJobOutcome {
   optional Status status = 3;
 }
 
+message PreprocessorWorkerJobOutcomes {
+  repeated PreprocessorWorkerJobOutcome outcome = 1;
+  // The elapsed time of each preprocessing job.
+  repeated int64 preprocess_time_ms = 2;
+}
 
 message PreprocessorWorker {
   optional string contentfile_root = 1;
