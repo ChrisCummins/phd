@@ -43,6 +43,17 @@ def Reset(db: contentfiles.ContentFiles) -> None:
             (inactive_repos_count / repos_count) * 100)
     inactive_repos.update({"active": True})
 
+    inactive_cf = session.query(contentfiles.ContentFile) \
+      .filter(contentfiles.ContentFile.active == False)
+    inactive_cf_count = inactive_cf.count()
+
+    cf_count = session.query(contentfiles.ContentFile).count()
+
+    app.Log(1, 'Restoring active status to %s of %s content files (%.2f %%)',
+            humanize.Commas(inactive_cf_count), humanize.Commas(cf_count),
+            (inactive_cf_count / cf_count) * 100)
+    inactive_cf.update({"active": True})
+
 
 def ResetExported(db: contentfiles.ContentFiles) -> None:
   """Restore exported status to database.
