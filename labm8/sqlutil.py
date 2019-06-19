@@ -37,11 +37,11 @@ absl_flags.DEFINE_boolean(
     'If True, the Engine will log all statements as well as a repr() of their '
     'parameter lists to the engines logger, which defaults to sys.stdout.')
 absl_flags.DEFINE_integer(
-    'mysql_engine_pool_size', None,
+    'mysql_engine_pool_size', 5,
     'The number of connections to keep open inside the connection pool. A '
     '--mysql_engine_pool_size of 0 indicates no limit')
 absl_flags.DEFINE_integer(
-    'mysql_engine_max_overflow', None,
+    'mysql_engine_max_overflow', 10,
     'The number of connections to allow in connection pool “overflow”, that '
     'is connections that can be opened above and beyond the '
     '--mysql_engine_pool_size setting')
