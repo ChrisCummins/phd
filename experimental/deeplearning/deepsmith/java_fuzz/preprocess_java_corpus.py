@@ -52,7 +52,7 @@ def PreprocessList(cfs: typing.List[contentfiles.ContentFile]
 
   pp_cfs = [
       preprocessed.PreprocessedContentFile(
-          input_relpath=f"{cf.relpath}:{cf.artifact_index}",
+          input_relpath=f"{cf.clone_from_url}:{cf.relpath}:{cf.artifact_index}",
           input_sha256=cf.sha256,
           input_charcount=cf.charcount,
           input_linecount=cf.linecount,
