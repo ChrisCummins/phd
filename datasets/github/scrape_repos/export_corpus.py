@@ -14,12 +14,12 @@
 """Export ContentFiles to a directory."""
 import binascii
 import os
-import pathlib
-
 from sqlalchemy import orm
 
+import pathlib
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
+
 from labm8 import app
 from labm8 import humanize
 from labm8 import pbutil
@@ -37,7 +37,7 @@ def ExportDatabase(session: orm.session.Session,
   app.Log(1, 'Exporting %s files to %s ...', humanize.Commas(query.count()),
           export_path)
   for contentfile in query:
-    path = export_path / (contentfile.sha256_hex + '.txt')
+    path = export_path / (contentfile.sha256 + '.txt')
     app.Log(2, path)
     with open(path, 'w') as f:
       f.write(contentfile.text)

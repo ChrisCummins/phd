@@ -13,24 +13,23 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """This file defines a database for pre-preprocessed content files."""
-import binascii
-import datetime
 import multiprocessing
+import time
+
+import datetime
+import numpy as np
 import pathlib
 import pickle
-import time
-import typing
-
-import numpy as np
-import progressbar
 import sqlalchemy as sql
+import typing
+from deeplearning.clgen.proto import internal_pb2
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
+import progressbar
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
-from deeplearning.clgen.proto import internal_pb2
 from labm8 import app
 from labm8 import humanize
 from labm8 import sqlutil
@@ -71,11 +70,6 @@ class EncodedContentFile(Base):
   def indices_array(self) -> np.ndarray:
     """The numpy array of the encoded data."""
     return np.frombuffer(self.data, dtype=np.int32)
-
-  @property
-  def sha256_hex(self) -> str:
-    """Return the 64 character hexadecimal representation of sha256."""
-    return binascii.hexlify(self.sha256).decode('utf-8')
 
   @classmethod
   def FromPreprocessed(

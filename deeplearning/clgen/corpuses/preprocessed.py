@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """This file defines a database for pre-preprocessed content files."""
-import binascii
 import multiprocessing
 import os
 import time
@@ -81,16 +80,6 @@ class PreprocessedContentFile(Base):
   date_added: datetime.datetime = sql.Column(sql.DateTime,
                                              nullable=False,
                                              default=datetime.datetime.utcnow)
-
-  @property
-  def input_sha256_hex(self) -> str:
-    """Return the 64 character hexadecimal representation of input_sha256."""
-    return binascii.hexlify(self.input_sha256).decode('utf-8')
-
-  @property
-  def sha256_hex(self) -> str:
-    """Return the 64 character hexadecimal representation of sha256."""
-    return binascii.hexlify(self.sha256).decode('utf-8')
 
   @classmethod
   def FromContentFile(
