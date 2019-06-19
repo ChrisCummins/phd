@@ -56,13 +56,13 @@ class PreprocessedContentFile(Base):
 
   id: int = sql.Column(sql.Integer, primary_key=True)
   # Relative path of the input file within the content files.
-  input_relpath: str = sql.Column(sql.String(4096), nullable=False, unique=True)
+  input_relpath: str = sql.Column(sql.String(3072), nullable=False, unique=True)
   # Checksum of the input file.
-  input_sha256: str = sql.Column(sql.Binary(32), nullable=False)
+  input_sha256: str = sql.Column(sql.String(64), nullable=False)
   input_charcount = sql.Column(sql.Integer, nullable=False)
   input_linecount = sql.Column(sql.Integer, nullable=False)
   # Checksum of the preprocessed file.
-  sha256: str = sql.Column(sql.Binary(32), nullable=False, index=True)
+  sha256: str = sql.Column(sql.String(64), nullable=False, index=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   text: str = sql.Column(sql.UnicodeText(), nullable=False)
@@ -77,9 +77,8 @@ class PreprocessedContentFile(Base):
   # is that summing this column provides an accurate total of the actual time
   # spent pre-processing an entire corpus. Will be <= preprocess_time_ms.
   wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
-  date_added: datetime.datetime = sql.Column(sql.DateTime,
-                                             nullable=False,
-                                             default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
   @property
   def input_sha256_hex(self) -> str:
@@ -139,9 +138,9 @@ def PreprocessorWorker(
 class PreprocessedContentFiles(sqlutil.Database):
   """A database of pre-processed contentfiles."""
 
-  def __init__(self, path: pathlib.Path):
+  def __init__(self, url: str, must_exist: bool = False):
     super(PreprocessedContentFiles, self).__init__(
-        f'sqlite:///{path.absolute()}', Base)
+        url, Base, must_exist=must_exist)
 
   def Create(self, config: corpus_pb2.Corpus):
     with self.Session() as session:
