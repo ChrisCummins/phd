@@ -27,8 +27,8 @@ import org.eclipse.jface.text.Document;
 public final class JavaPreprocessor {
 
   // Configuration options.
-  private static final int MIN_CHAR_COUNT = 80;
-  private static final int MIN_LINE_COUNT = 6;
+  private static final int MIN_CHAR_COUNT = 50;
+  private static final int MIN_LINE_COUNT = 3;
   // End of configuration options.
 
   /**
