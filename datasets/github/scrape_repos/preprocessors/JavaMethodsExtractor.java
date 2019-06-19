@@ -1,4 +1,4 @@
-/* Extract methods from Java source file and return a MethodsList proto.
+/* Extract methods from Java source file and return a ListOfStrings proto.
  *
  * Usage:
  *     bazel run \
@@ -24,7 +24,7 @@
 package datasets.github.scrape_repos.preprocessors;
 
 import com.google.common.io.ByteStreams;
-import datasets.github.scrape_repos.ScrapeReposProtos.MethodsList;
+import datasets.github.scrape_repos.ScrapeReposProtos.ListOfStrings;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import org.eclipse.jdt.core.dom.AST;
@@ -39,7 +39,7 @@ import org.eclipse.jface.text.Document;
  */
 public class JavaMethodsExtractor {
 
-  private MethodsList.Builder message;
+  private ListOfStrings.Builder message;
 
   /**
    * Get the compilation unit for a document.
@@ -66,14 +66,28 @@ public class JavaMethodsExtractor {
   }
 
   /**
+   * Return the string representation of a method declaration.
+   *
+   * By default, a MethodDeclaration includes the JavaDoc comment. This strips
+   * that.
+   *
+   * @param method The method to stringify.
+   * @returns The string source code of the method.
+   */
+  private String MethodDeclarationToString(MethodDeclaration method) {
+    method.setJavadoc(null);
+    return method.toString();
+  }
+
+  /**
    * Extract all methods from a Java source.
    *
    * @param source A Java source string.
-   * @return A MethodsList proto instance.
+   * @return A ListOfStrings proto instance.
    */
-  private MethodsList ExtractMethods(String source) {
+  private ListOfStrings ExtractMethods(String source) {
     Document document = new Document(source);
-    message = MethodsList.newBuilder();
+    message = ListOfStrings.newBuilder();
 
     final boolean staticOnly = !(
         System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY") == null ||
@@ -86,7 +100,7 @@ public class JavaMethodsExtractor {
         compilationUnit.accept(new ASTVisitor() {
           public boolean visit(MethodDeclaration node) {
             if ((node.getModifiers() & Modifier.STATIC) != 0) {
-              message.addMethod(node.toString());
+              message.addString(MethodDeclarationToString(node));
             }
             return true;
           }
@@ -94,7 +108,7 @@ public class JavaMethodsExtractor {
       } else {
         compilationUnit.accept(new ASTVisitor() {
           public boolean visit(MethodDeclaration node) {
-            message.addMethod(node.toString());
+            message.addString(MethodDeclarationToString(node));
             return true;
           }
         });

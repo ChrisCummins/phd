@@ -62,8 +62,8 @@ def ExtractJavaMethods(text: str, static_only: bool = True) -> typing.List[str]:
   if process.returncode:
     raise ValueError("JavaMethodsExtractor exited with non-zero "
                      f"status {process.returncode}")
-  methods_list = pbutil.FromString(stdout, scrape_repos_pb2.MethodsList())
-  return list(methods_list.method)
+  methods_list = pbutil.FromString(stdout, scrape_repos_pb2.ListOfStrings())
+  return list(methods_list.string)
 
 
 def BatchedMethodExtractor(

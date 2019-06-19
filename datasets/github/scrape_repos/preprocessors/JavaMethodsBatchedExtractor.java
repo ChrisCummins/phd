@@ -1,9 +1,8 @@
-/* Extract methods from Java source file and return a MethodsList proto.
+/* Extract methods from Java source file and return a ListOfStrings proto where
+ * each string is the text source for a method.
  *
- * Usage:
- *     bazel run \
- *         //datasets/github/scrape_repos/preprocessors:JavaMethodsBatchedExtractor \
- *         < /path/to/proto.pb
+ * This process parses and rebuilds the AST. Formatting and comments (including
+ * Javadoc) are lost.
  *
  * If environment variable $JAVA_METHOD_EXTRACTOR_STATIC_ONLY is set, only
  * static methods are returned.
@@ -70,6 +69,20 @@ public class JavaMethodsBatchedExtractor {
   }
 
   /**
+   * Return the string representation of a method declaration.
+   *
+   * By default, a MethodDeclaration includes the JavaDoc comment. This strips
+   * that.
+   *
+   * @param method The method to stringify.
+   * @returns The string source code of the method.
+   */
+  private String MethodDeclarationToString(MethodDeclaration method) {
+    method.setJavadoc(null);
+    return method.toString();
+  }
+
+  /**
    *
    * @param message
    */
@@ -91,7 +104,7 @@ public class JavaMethodsBatchedExtractor {
           compilationUnit.accept(new ASTVisitor() {
             public boolean visit(MethodDeclaration node) {
               if ((node.getModifiers() & Modifier.STATIC) != 0) {
-                inner_message.addString(node.toString());
+                inner_message.addString(MethodDeclarationToString(node));
               }
               return true;
             }
@@ -99,7 +112,7 @@ public class JavaMethodsBatchedExtractor {
         } else {
           compilationUnit.accept(new ASTVisitor() {
             public boolean visit(MethodDeclaration node) {
-              inner_message.addString(node.toString());
+              inner_message.addString(MethodDeclarationToString(node));
               return true;
             }
           });

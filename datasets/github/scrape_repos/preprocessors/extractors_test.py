@@ -120,5 +120,28 @@ public static void main(String[] args){
       ]
 
 
+def test_JavaStaticMethods_docstring_is_stripped():
+  """Test that dosctring is not exported."""
+  assert extractors.JavaStaticMethods(
+      None, None, """
+public class A {
+
+  /**
+   * This is a docstring
+   * @param args   Arguments
+   */
+  public static void main(String[] args) {
+    System.out.println("Hello, world!");
+  }
+}
+""", None) == [
+          """\
+public static void main(String[] args){
+  System.out.println("Hello, world!");
+}
+"""
+      ]
+
+
 if __name__ == '__main__':
   test.Main()
