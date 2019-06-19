@@ -19,6 +19,7 @@ import pathlib
 import typing
 from importlib import util as importlib_util
 
+from datasets.github.scrape_repos.preprocessors import secrets
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
 from io import open
@@ -148,3 +149,23 @@ def PreprocessFile(path: str, preprocessors: typing.List[str],
     with open(path, 'w') as outfile:
       outfile.write(preprocessed)
   return preprocessed
+
+
+@public.clgen_preprocessor
+def RejectSecrets(text: str) -> str:
+  """Test for secrets such as private keys in a text.
+
+  Args:
+    text: The text to check.
+
+  Returns:
+    The unmodified text.
+
+  Raises:
+    BadCodeException: In case the text contains secrets.
+  """
+  try:
+    secrets.ScanForSecrets(text)
+    return text
+  except secrets.TextContainsSecret as e:
+    raise errors.BadCodeException(str(e))

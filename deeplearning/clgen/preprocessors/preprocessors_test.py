@@ -16,7 +16,6 @@
 import pathlib
 
 import pytest
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.preprocessors import public
@@ -174,6 +173,26 @@ def test_Preprocess_mock_preprocessor_internal_error():
         'deeplearning.clgen.preprocessors.preprocessors_test'
         ':MockPreprocessorInternalError'
     ])
+
+
+# RejectSecrets() tests.
+
+
+def test_Preprocess_RejectSecrets():
+  """Test that InternalError is propagated."""
+  assert preprocessors.Preprocess(
+      'Hello, world!',
+      ['deeplearning.clgen.preprocessors.preprocessors'
+       ':RejectSecrets']) == 'Hello, world!'
+
+
+def test_Preprocess_RejectSecrets():
+  """Test that InternalError is propagated."""
+  with pytest.raises(errors.BadCodeException):
+    preprocessors.Preprocess(
+        '-----BEGIN RSA PRIVATE KEY-----',
+        ['deeplearning.clgen.preprocessors.preprocessors'
+         ':RejectSecrets'])
 
 
 # Benchmarks.
