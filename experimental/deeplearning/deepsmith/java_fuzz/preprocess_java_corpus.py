@@ -155,10 +155,10 @@ def main():
           preprocessed.PreprocessedContentFile).count()
     sys.stdout.write(
         f"\rRuntime: {humanize.Duration(runtime)}. "
-        f"Exported repos: {humanize.Commas(exported_repo_count)} "
+        f"Processed repos: {humanize.Commas(exported_repo_count)} "
         f"of {humanize.Commas(repo_count)} "
         f"({exported_repo_count / repo_count:.2%}), "
-        f"exported contentfiles: {humanize.Commas(exported_contentfile_count)}"
+        f"preprocessed methods: {humanize.Commas(exported_contentfile_count)}"
         "    ")
     sys.stdout.flush()
 
