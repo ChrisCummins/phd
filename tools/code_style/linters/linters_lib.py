@@ -13,8 +13,8 @@ import threading
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
 # WARNING: Moving this file may require updating this path!
-_PHD_ROOT = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), '../../..')
+_PHD_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                         '../../..')
 
 
 def WhichOrDie(name):
@@ -38,6 +38,7 @@ CLANG_FORMAT = WhichOrDie('clang-format')
 YAPF = WhichOrDie('yapf')
 SQLFORMAT = WhichOrDie('sqlformat')
 JSBEAUTIFY = WhichOrDie('js-beautify')
+GO = WhichOrDie('go')
 
 YAPF_RC = os.path.join(_PHD_ROOT, 'tools/code_style/yapf.yml')
 assert os.path.isfile(YAPF_RC)
@@ -63,11 +64,10 @@ def ExecOrDie(cmd):
   Returns:
      The process stdout as a string.
   """
-  process = subprocess.Popen(
-      cmd,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      universal_newlines=True)
+  process = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True)
   stdout, stderr = process.communicate()
   if process.returncode:
     Print('error')
@@ -155,6 +155,12 @@ class JsBeautifyThread(LinterThread):
     ExecOrDie([JSBEAUTIFY, '--config', JSBEAUTIFY_RC] + self._paths)
 
 
+class GoFmtThread(LinterThread):
+
+  def run(self):
+    ExecOrDie([GO, 'fmt'] + self._paths)
+
+
 class LinterActions(object):
 
   def __init__(self, paths):
@@ -164,6 +170,7 @@ class LinterActions(object):
     self._yapf = []
     self._sqlformat = []
     self._jsbeautify = []
+    self._gofmt = []
     self._modified_paths = []
 
     for path in paths:
@@ -181,6 +188,8 @@ class LinterActions(object):
         self._sqlformat.append(path)
       elif extension == '.html' or extension == '.css' or extension == '.js':
         self._jsbeautify.append(path)
+      elif extension == '.go':
+        self._gofmt.append(path)
 
   @property
   def paths(self):
@@ -188,8 +197,8 @@ class LinterActions(object):
 
   @property
   def paths_with_actions(self):
-    return (self._buildifier + self._clang_format + self._yapf + self._sqlformat
-            + self._jsbeautify)
+    return (self._buildifier + self._clang_format + self._yapf +
+            self._sqlformat + self._jsbeautify + self._gofmt)
 
   @property
   def modified_paths(self):
@@ -208,6 +217,8 @@ class LinterActions(object):
       linter_threads.append(SqlFormatThread(self._sqlformat))
     if self._jsbeautify:
       linter_threads.append(JsBeautifyThread(self._jsbeautify))
+    if self._gofmt:
+      linter_threads.append(GoFmtThread(self._gofmt))
 
     for thread in linter_threads:
       thread.start()
