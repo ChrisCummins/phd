@@ -68,6 +68,21 @@ def ExtractJavaMethods(text: str, static_only: bool = True) -> typing.List[str]:
 
 def BatchedMethodExtractor(
     texts: str, static_only: bool = True) -> typing.List[typing.List[str]]:
+  """Extract Java methods from a sequence of Java sources.
+
+  This is more efficient than using ExtractJavaMethods() for a sequence of texts
+  because of the overhead in starting the JVM.
+
+  Args:
+    texts: The texts of the Java sources.
+    static_only: If true, only static methods are returned.
+
+  Returns:
+    A list of method lists, in the order of texts.
+
+  Raises:
+    ValueError: In case method extraction fails.
+  """
   input_message = scrape_repos_pb2.ListOfStrings(string=texts)
   output_message = scrape_repos_pb2.ListOfListOfStrings()
   pbutil.RunProcessMessageToProto([JAVA_METHODS_BATCHED_EXTRACTOR],
