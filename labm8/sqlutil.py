@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for working with sqlalchemy."""
+from sqlalchemy import func
+from sqlalchemy import orm
+
 import collections
 import contextlib
-import pathlib
-import typing
-
 import pandas as pd
+import pathlib
 import sqlalchemy as sql
-from absl import flags as absl_flags
-from sqlalchemy import orm
+import typing
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
-from sqlalchemy import func
 
+from absl import flags as absl_flags
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
@@ -37,14 +37,14 @@ absl_flags.DEFINE_boolean(
     'If True, the Engine will log all statements as well as a repr() of their '
     'parameter lists to the engines logger, which defaults to sys.stdout.')
 absl_flags.DEFINE_integer(
-    'sqlutil_engine_pool_size', 5,
+    'mysql_engine_pool_size', None,
     'The number of connections to keep open inside the connection pool. A '
-    '--sqlutil_engine_pool_size of 0 indicates no limit')
+    '--mysql_engine_pool_size of 0 indicates no limit')
 absl_flags.DEFINE_integer(
-    'sqlutil_engine_max_overflow', 10,
+    'mysql_engine_max_overflow', None,
     'The number of connections to allow in connection pool “overflow”, that '
     'is connections that can be opened above and beyond the '
-    '--sqlutil_engine_pool_size setting')
+    '--mysql_engine_pool_size setting')
 
 # The Query type is returned by Session.query(). This is a convenience for type
 # annotations.
@@ -180,6 +180,8 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     DatabaseNotFound: If the database does not exist and must_exist is set.
     ValueError: If the datastore backend is not supported.
   """
+  engine_args = {}
+
   if url.startswith('mysql://'):
     # Support for MySQL dialect.
 
@@ -187,11 +189,15 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     # database exists.
     engine = sql.create_engine('/'.join(url.split('/')[:-1]))
     database = url.split('/')[-1].split('?')[0]
-    query = engine.execute(
-        sql.text('SELECT SCHEMA_NAME FROM '
-                 'INFORMATION_SCHEMA.SCHEMATA WHERE '
-                 'SCHEMA_NAME = :database'),
-        database=database)
+    query = engine.execute(sql.text('SELECT SCHEMA_NAME FROM '
+                                    'INFORMATION_SCHEMA.SCHEMATA WHERE '
+                                    'SCHEMA_NAME = :database'),
+                           database=database)
+
+    # Engine-specific options.
+    engine_args['pool_size'] = FLAGS.mysql_engine_pool_size
+    engine_args['max_overflow'] = FLAGS.mysql_engine_max_overflow
+
     if not query.first():
       if must_exist:
         raise DatabaseNotFound(url)
@@ -272,12 +278,10 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     raise ValueError(f"Unsupported database URL='{url}'")
 
   # Create the engine.
-  engine = sql.create_engine(
-      url,
-      encoding='utf-8',
-      echo=FLAGS.sqlutil_echo,
-      pool_size=FLAGS.sqlutil_engine_pool_size,
-      max_overflow=FLAGS.sqlutil_engine_max_overflow)
+  engine = sql.create_engine(url,
+                             encoding='utf-8',
+                             echo=FLAGS.sqlutil_echo,
+                             **engine_args)
 
   # Create and immediately close a connection. This is because SQLAlchemy engine
   # is lazily instantiated, so for connections such as SQLite, this line
@@ -375,8 +379,8 @@ class Database(object):
     if self.url.startswith('mysql://'):
       engine = sql.create_engine('/'.join(self.url.split('/')[:-1]))
       database = self.url.split('/')[-1].split('?')[0]
-      engine.execute(
-          sql.text('DROP DATABASE IF EXISTS :database'), database=database)
+      engine.execute(sql.text('DROP DATABASE IF EXISTS :database'),
+                     database=database)
     elif self.url.startswith('sqlite://'):
       path = pathlib.Path(self.url[len('sqlite:///'):])
       assert path.is_file()
@@ -606,12 +610,11 @@ def OffsetLimitBatchedQuery(query: Query,
     batch_num += 1
     batch = query.offset(i).limit(batch_size).all()
     if batch:
-      yield OffsetLimitQueryResultsBatch(
-          batch_num=batch_num,
-          offset=i,
-          limit=i + batch_size,
-          max_rows=max_rows,
-          rows=batch)
+      yield OffsetLimitQueryResultsBatch(batch_num=batch_num,
+                                         offset=i,
+                                         limit=i + batch_size,
+                                         max_rows=max_rows,
+                                         rows=batch)
       i += len(batch)
     else:
       break
@@ -682,7 +685,7 @@ class ColumnFactory(object):
     Returns:
       A column which defaults to UTC now.
     """
-    return sql.Column(
-        sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-        nullable=nullable,
-        default=default)
+    return sql.Column(sql.DateTime().with_variant(mysql.DATETIME(fsp=3),
+                                                  'mysql'),
+                      nullable=nullable,
+                      default=default)
