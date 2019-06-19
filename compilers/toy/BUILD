@@ -8,5 +8,21 @@ go_binary(
         "compiler.go",
     ],
     importpath = "github.com/ChrisCummins/phd/compilers/toy",
-    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "lexer",
+    srcs = [
+        "lexer.go",
+    ],
+    importpath = "github.com/ChrisCummins/phd/compilers/toy",
+)
+
+go_test(
+    name = "lexer_test",
+    srcs = [
+        "lexer.go",
+        "lexer_test.go",
+    ],
+    importpath = "github.com/ChrisCummins/phd/compilers/toy",
 )
