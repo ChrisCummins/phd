@@ -65,7 +65,8 @@ class PreprocessedContentFile(Base):
   sha256: str = sql.Column(sql.String(64), nullable=False, index=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  text: str = sql.Column(sql.UnicodeText(), nullable=False)
+  text: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
   # True if pre-processing succeeded, else False.
   preprocessing_succeeded: bool = sql.Column(sql.Boolean, nullable=False)
   # The number of milliseconds pre-preprocessing took.
