@@ -18,22 +18,22 @@ A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
 import os
+import time
+
+import numpy as np
 import pathlib
 import subprocess
 import tempfile
-import time
-
-import checksumdir
-import numpy as np
+from deeplearning.clgen.proto import corpus_pb2
 from sqlalchemy.sql.expression import func
 
+import checksumdir
 from deeplearning.clgen import cache
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
-from deeplearning.clgen.proto import corpus_pb2
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import crypto
@@ -133,7 +133,7 @@ class Corpus(object):
         not preprocessed_db_path.is_file()):
       raise errors.UserError(f"Content ID not found: '{self.content_id}'")
     self.preprocessed = preprocessed.PreprocessedContentFiles(
-        preprocessed_db_path)
+        f'sqlite:///{preprocessed_db_path}')
     # Create symlink to contentfiles.
     symlink = pathlib.Path(
         self.preprocessed.url[len('sqlite:///'):]).parent / 'contentfiles'

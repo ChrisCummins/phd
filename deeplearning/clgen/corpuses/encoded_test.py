@@ -13,12 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/clgen/corpuses:encoded.py."""
+import numpy as np
 import pathlib
 import tempfile
 
-import numpy as np
 import pytest
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
@@ -146,7 +145,7 @@ def test_EncodedContentFiles_empty_preprocessed_db(
   """Test that EmptyCorpusException raised if preprocessed db is empty."""
   with tempfile.TemporaryDirectory() as d:
     p = preprocessed.PreprocessedContentFiles(
-        pathlib.Path(d) / 'preprocessed.db')
+        f'sqlite:///{pathlib.Path(d)}/preprocessed.db')
     with pytest.raises(errors.EmptyCorpusException):
       temp_db.Create(p, abc_atomizer, '\n\n')
 
