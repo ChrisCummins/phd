@@ -89,10 +89,12 @@ class FuzzyGitHubJavaScraper(object):
       language = GetLanguageToClone(word, tempdir)
       scraper = pipelined_scraper.PipelinedScraper(language, language.query[0],
                                                    self.connection, self.db)
-      app.Log(1, "Query '%s' returned %s results. Processing first %s ...",
-              scraper.repo_query.string,
-              humanize.Commas(scraper.total_result_count),
-              humanize.Commas(scraper.repo_query.max_results))
+      app.Log(
+          1, "Query '%s' returned %s results. Processing first %s ...",
+          scraper.repo_query.string, humanize.Commas(
+              scraper.total_result_count),
+          humanize.Commas(
+              min(scraper.total_result_count, scraper.repo_query.max_results)))
       scraper.start()
       while scraper.is_alive():
         query_i = scraper.GetNumberOfResultsProcessed()

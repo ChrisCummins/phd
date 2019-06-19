@@ -40,9 +40,9 @@ app.DEFINE_database(
     'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/export.db',
     'URL of the database to export content files to.')
 app.DEFINE_boolean('static_only', True, 'Only export static methods.')
-app.DEFINE_integer('min_line_count', 0,
+app.DEFINE_integer('min_line_count', 3,
                    'The minimum number of lines in a contentfile to export.')
-app.DEFINE_integer('min_char_count', 0,
+app.DEFINE_integer('min_char_count', 80,
                    'The minimum number of chars in a contentfile to export.')
 app.DEFINE_boolean('multithreaded_export', True,
                    'Use multiple threads for export.')
@@ -94,23 +94,21 @@ def DoProcessRepo(input_session: sqlutil.Session,
 
   for (relpath, _), methods in zip(contentfiles_to_export, methods_lists):
     for i, method_text in enumerate(methods):
-      if (len(method_text) >= FLAGS.min_char_count and
-          len(method_text.split('\n')) >= FLAGS.min_line_count):
-        encoded_text = method_text.encode('ascii', 'ignore')
-        sha256 = hashlib.sha256(encoded_text).hexdigest()
-        method_text = encoded_text.decode('ascii')
-        # Add new contentfile.
-        output_session.add(
-            contentfiles.ContentFile(
-                clone_from_url=clone_from_url,
-                relpath=relpath,
-                artifact_index=relpath_counters[relpath],
-                sha256=sha256,
-                charcount=len(method_text),
-                linecount=len(method_text.split('\n')),
-                text=method_text,
-            ))
-        relpath_counters[relpath] += 1
+      encoded_text = method_text.encode('ascii', 'ignore')
+      sha256 = hashlib.sha256(encoded_text).hexdigest()
+      method_text = encoded_text.decode('ascii')
+      # Add new contentfile.
+      output_session.add(
+          contentfiles.ContentFile(
+              clone_from_url=clone_from_url,
+              relpath=relpath,
+              artifact_index=relpath_counters[relpath],
+              sha256=sha256,
+              charcount=len(method_text),
+              linecount=len(method_text.split('\n')),
+              text=method_text,
+          ))
+      relpath_counters[relpath] += 1
 
   # Mark repo as exported.
   repo.update({"exported": True})
@@ -139,11 +137,11 @@ class Exporter(threading.Thread):
   def run(self):
     """Preprocess the content files directory and export to outdir."""
     with self.input_db.Session() as input_session:
-      active_repos = input_session.query(
+      repos_to_export = input_session.query(
           contentfiles.GitHubRepository.clone_from_url)\
           .filter(contentfiles.GitHubRepository.active == True)\
           .filter(contentfiles.GitHubRepository.exported == False)
-      clone_from_urls = [x[0] for x in active_repos]
+      clone_from_urls = [x[0] for x in repos_to_export]
 
     max_workers = FLAGS.export_worker_threads
     app.Log(1, "Exporting contentfiles from %s repos in %s worker threads",
@@ -180,13 +178,18 @@ def main():
         f"Exported repos: {humanize.Commas(exported_repo_count)} "
         f"of {humanize.Commas(repo_count)} "
         f"({exported_repo_count / repo_count:.2%}), "
-        f"exported contentfiles: {humanize.Commas(exported_contentfile_count)}")
+        f"exported contentfiles: {humanize.Commas(exported_contentfile_count)}"
+        "    ")
     sys.stdout.flush()
 
     if not exporter.is_alive():
       break
     time.sleep(1)
   exporter.join()
+
+  sys.stdout.flush()
+  sys.stderr.flush()
+  print('Done!')
 
 
 if __name__ == '__main__':
