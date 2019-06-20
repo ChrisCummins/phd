@@ -167,6 +167,11 @@ def main(argv):
   # Files that are both staged and unstaged are partially staged.
   partially_staged_files = list(
       set(staged_files).intersection(set(unstaged_files)))
+  # We're only interest in files that exist.
+  partially_staged_files = [
+      f for f in partially_staged_files if os.path.isfile(f)
+  ]
+
   partially_staged_checksums = GetMd5sumOutputAsString(partially_staged_files)
 
   # Run gazelle before linters.
