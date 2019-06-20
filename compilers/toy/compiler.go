@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ChrisCummins/phd/compilers/toy/lexer"
+	"github.com/ChrisCummins/phd/compilers/toy/token"
 	"io/ioutil"
 	"os"
 )
@@ -42,16 +43,16 @@ func main() {
 		if stop == true {
 			break
 		}
-		token := l.NextToken()
-		switch token.Type {
-		case lexer.ErrorToken:
-			fmt.Fprintf(os.Stderr, "error in lexer!: %v\n", token.Value)
+		t := l.NextToken()
+		switch t.Type {
+		case token.ErrorToken:
+			fmt.Fprintf(os.Stderr, "error in lexer!: %v\n", t.Value)
 			stop = true
-		case lexer.EofToken:
+		case token.EofToken:
 			stop = true
 		default:
-			fmt.Println("Lexed:", token)
-			output.WriteString(token.Value)
+			fmt.Println("Lexed:", t)
+			output.WriteString(t.Value)
 			output.WriteRune('\n')
 		}
 	}

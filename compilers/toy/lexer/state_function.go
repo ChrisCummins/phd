@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"github.com/ChrisCummins/phd/compilers/toy/token"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -83,43 +84,43 @@ func lexStartState(lexer *Lexer) stateFunction {
 
 func lexOpenBrace(lexer *Lexer) stateFunction {
 	lexer.position += len("{")
-	lexer.emit(OpenBraceToken)
+	lexer.emit(token.OpenBraceToken)
 	return lexStartState
 }
 
 func lexCloseBrace(lexer *Lexer) stateFunction {
 	lexer.position += len("}")
-	lexer.emit(CloseBraceToken)
+	lexer.emit(token.CloseBraceToken)
 	return lexStartState
 }
 
 func lexOpenParenthesis(lexer *Lexer) stateFunction {
 	lexer.position += len("(")
-	lexer.emit(OpenParanethesisToken)
+	lexer.emit(token.OpenParanethesisToken)
 	return lexStartState
 }
 
 func lexCloseParenthesis(lexer *Lexer) stateFunction {
 	lexer.position += len(")")
-	lexer.emit(CloseParenthesisToken)
+	lexer.emit(token.CloseParenthesisToken)
 	return lexStartState
 }
 
 func lexSemicolon(lexer *Lexer) stateFunction {
 	lexer.position += len(";")
-	lexer.emit(SemicolonToken)
+	lexer.emit(token.SemicolonToken)
 	return lexStartState
 }
 
 func lexIntKeyword(lexer *Lexer) stateFunction {
 	lexer.position += len("int")
-	lexer.emit(IntKeywordToken)
+	lexer.emit(token.IntKeywordToken)
 	return lexStartState
 }
 
 func lexReturnKeyword(lexer *Lexer) stateFunction {
 	lexer.position += len("return")
-	lexer.emit(ReturnKeywordToken)
+	lexer.emit(token.ReturnKeywordToken)
 	return lexStartState
 }
 
@@ -146,7 +147,7 @@ func lexNumber(lexer *Lexer) stateFunction {
 			lexer.input[lexer.startPosition:lexer.position])
 	}
 
-	lexer.emit(NumberToken)
+	lexer.emit(token.NumberToken)
 	return lexStartState
 }
 
@@ -170,6 +171,6 @@ func lexIdentifier(lexer *Lexer) stateFunction {
 			lexer.input[lexer.startPosition:lexer.position])
 	}
 
-	lexer.emit(IdentifierToken)
+	lexer.emit(token.IdentifierToken)
 	return lexStartState
 }
