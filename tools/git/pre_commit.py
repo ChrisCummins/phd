@@ -12,6 +12,7 @@ from __future__ import print_function
 import os
 import subprocess
 import sys
+import time
 
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
@@ -128,6 +129,8 @@ class Gazelle(object):
 def main(argv):
   assert not argv
 
+  start_time = time.time()
+
   os.chdir(_PHD_ROOT)
 
   branch_name = linters_lib.GetGitBranchOrDie()
@@ -221,7 +224,8 @@ def main(argv):
       linters_lib.Print()
       sys.exit(1)
 
-    linters_lib.Print('Pre-commit checks passed')
+    linters_lib.Print(
+        'Pre-commit checks passed in {:.3f}s'.format(time.time() - start_time))
 
 
 if __name__ == '__main__':
