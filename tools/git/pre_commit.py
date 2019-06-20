@@ -10,9 +10,10 @@ This script performs a handful of actions:
 from __future__ import print_function
 
 import os
-import subprocess
 import sys
 import time
+
+import subprocess
 
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
@@ -70,7 +71,10 @@ def GitAddOrDie(paths):
 
 def GetMd5sumOutputAsString(paths):
   """Return the output of md5sum on a list of paths as a string."""
-  return subprocess.check_output(['md5sum'] + paths, universal_newlines=True)
+  if not paths:
+    return ''
+  return subprocess.check_output(['timeout', '-s9', '60', 'md5sum'] + paths,
+                                 universal_newlines=True)
 
 
 class Gazelle(object):
