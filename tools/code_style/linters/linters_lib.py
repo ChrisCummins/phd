@@ -39,11 +39,15 @@ YAPF = WhichOrDie('yapf')
 SQLFORMAT = WhichOrDie('sqlformat')
 JSBEAUTIFY = WhichOrDie('js-beautify')
 GO = WhichOrDie('go')
+JAVA = WhichOrDie('java')
 
 YAPF_RC = os.path.join(_PHD_ROOT, 'tools/code_style/yapf.yml')
 assert os.path.isfile(YAPF_RC)
 JSBEAUTIFY_RC = os.path.join(_PHD_ROOT, 'tools/code_style/jsbeautifyrc.json')
 assert os.path.isfile(JSBEAUTIFY_RC)
+GOOGLE_JAVA_FORMAT = os.path.join(
+    _PHD_ROOT, 'tools/code_style/linters/google-java-format-1.7-all-deps.jar')
+assert os.path.isfile(GOOGLE_JAVA_FORMAT)
 
 
 def Print(*args, **kwargs):
@@ -158,7 +162,17 @@ class JsBeautifyThread(LinterThread):
 class GoFmtThread(LinterThread):
 
   def run(self):
-    ExecOrDie([GO, 'fmt'] + self._paths)
+    # Run linter on each file individually because:
+    #   1. An error in one file prevents linting in all other files.
+    #   2. All files in a single invocation must be in the same directory.
+    for path in self._paths:
+      ExecOrDie([GO, 'fmt', path])
+
+
+class GoogleJavaFormatThread(LinterThread):
+
+  def run(self):
+    ExecOrDie([JAVA, '-jar', GOOGLE_JAVA_FORMAT, '-i'] + self._paths)
 
 
 class LinterActions(object):
@@ -171,6 +185,7 @@ class LinterActions(object):
     self._sqlformat = []
     self._jsbeautify = []
     self._gofmt = []
+    self._java = []
     self._modified_paths = []
 
     for path in paths:
@@ -190,6 +205,8 @@ class LinterActions(object):
         self._jsbeautify.append(path)
       elif extension == '.go':
         self._gofmt.append(path)
+      elif extension == '.java':
+        self._java.append(path)
 
   @property
   def paths(self):
@@ -198,7 +215,7 @@ class LinterActions(object):
   @property
   def paths_with_actions(self):
     return (self._buildifier + self._clang_format + self._yapf +
-            self._sqlformat + self._jsbeautify + self._gofmt)
+            self._sqlformat + self._jsbeautify + self._gofmt + self._java)
 
   @property
   def modified_paths(self):
@@ -219,6 +236,8 @@ class LinterActions(object):
       linter_threads.append(JsBeautifyThread(self._jsbeautify))
     if self._gofmt:
       linter_threads.append(GoFmtThread(self._gofmt))
+    if self._java:
+      linter_threads.append(GoogleJavaFormatThread(self._java))
 
     for thread in linter_threads:
       thread.start()
