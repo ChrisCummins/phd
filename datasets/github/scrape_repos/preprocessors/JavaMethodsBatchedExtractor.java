@@ -34,9 +34,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jface.text.Document;
 
-/**
- * Extract methods from Java source code.
- */
+/** Extract methods from Java source code. */
 public class JavaMethodsBatchedExtractor {
 
   private ListOfListOfStrings.Builder outer_message;
@@ -58,8 +56,7 @@ public class JavaMethodsBatchedExtractor {
     JavaMethodsBatchedExtractor extractor = new JavaMethodsBatchedExtractor();
 
     try {
-      ListOfStrings input = ListOfStrings.parseFrom(
-          ByteStreams.toByteArray(System.in));
+      ListOfStrings input = ListOfStrings.parseFrom(ByteStreams.toByteArray(System.in));
       ListOfListOfStrings output = extractor.ProcessMessage(input);
       output.writeTo(System.out);
     } catch (IOException e) {
@@ -71,8 +68,7 @@ public class JavaMethodsBatchedExtractor {
   /**
    * Return the string representation of a method declaration.
    *
-   * By default, a MethodDeclaration includes the JavaDoc comment. This strips
-   * that.
+   * <p>By default, a MethodDeclaration includes the JavaDoc comment. This strips that.
    *
    * @param method The method to stringify.
    * @returns The string source code of the method.
@@ -82,14 +78,11 @@ public class JavaMethodsBatchedExtractor {
     return method.toString();
   }
 
-  /**
-   *
-   * @param message
-   */
+  /** @param message */
   private ListOfListOfStrings ProcessMessage(ListOfStrings message) {
-    final boolean staticOnly = !(
-        System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY") == null ||
-            System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY").equals(""));
+    final boolean staticOnly =
+        !(System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY") == null
+            || System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY").equals(""));
 
     outer_message = ListOfListOfStrings.newBuilder();
     inner_message = ListOfStrings.newBuilder();
@@ -101,21 +94,23 @@ public class JavaMethodsBatchedExtractor {
         CompilationUnit compilationUnit = GetCompilationUnit(document);
 
         if (staticOnly) {
-          compilationUnit.accept(new ASTVisitor() {
-            public boolean visit(MethodDeclaration node) {
-              if ((node.getModifiers() & Modifier.STATIC) != 0) {
-                inner_message.addString(MethodDeclarationToString(node));
-              }
-              return true;
-            }
-          });
+          compilationUnit.accept(
+              new ASTVisitor() {
+                public boolean visit(MethodDeclaration node) {
+                  if ((node.getModifiers() & Modifier.STATIC) != 0) {
+                    inner_message.addString(MethodDeclarationToString(node));
+                  }
+                  return true;
+                }
+              });
         } else {
-          compilationUnit.accept(new ASTVisitor() {
-            public boolean visit(MethodDeclaration node) {
-              inner_message.addString(MethodDeclarationToString(node));
-              return true;
-            }
-          });
+          compilationUnit.accept(
+              new ASTVisitor() {
+                public boolean visit(MethodDeclaration node) {
+                  inner_message.addString(MethodDeclarationToString(node));
+                  return true;
+                }
+              });
         }
       } catch (IllegalArgumentException e) {
         System.err.println("error: Failed to parse unit.");
@@ -127,5 +122,4 @@ public class JavaMethodsBatchedExtractor {
 
     return outer_message.build();
   }
-
 }

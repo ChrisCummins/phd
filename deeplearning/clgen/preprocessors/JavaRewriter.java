@@ -56,23 +56,66 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
-/**
- * A rewriter for Java source code.
- */
+/** A rewriter for Java source code. */
 public class JavaRewriter {
 
-  private static final String[] RESERVED_WORDS_ = new String[]{
-      "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
-      "class", "const", "continue", "default", "do", "double", "else", "enum",
-      "extends", "false", "final", "finally", "float", "for", "goto", "if",
-      "implements", "import", "instanceof", "int", "interface", "long",
-      "native", "new", "null", "package", "private", "protected", "public",
-      "return", "short", "static", "strictfp", "super", "switch",
-      "synchronized", "this", "throw", "throws", "transient", "true", "try",
-      "void", "volatile", "while"
-  };
-  private static final Set<String> RESERVED_WORDS = new HashSet<>(
-      Arrays.asList(RESERVED_WORDS_));
+  private static final String[] RESERVED_WORDS_ =
+      new String[] {
+        "abstract",
+        "assert",
+        "boolean",
+        "break",
+        "byte",
+        "case",
+        "catch",
+        "char",
+        "class",
+        "const",
+        "continue",
+        "default",
+        "do",
+        "double",
+        "else",
+        "enum",
+        "extends",
+        "false",
+        "final",
+        "finally",
+        "float",
+        "for",
+        "goto",
+        "if",
+        "implements",
+        "import",
+        "instanceof",
+        "int",
+        "interface",
+        "long",
+        "native",
+        "new",
+        "null",
+        "package",
+        "private",
+        "protected",
+        "public",
+        "return",
+        "short",
+        "static",
+        "strictfp",
+        "super",
+        "switch",
+        "synchronized",
+        "this",
+        "throw",
+        "throws",
+        "transient",
+        "true",
+        "try",
+        "void",
+        "volatile",
+        "while"
+      };
+  private static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(RESERVED_WORDS_));
   private ASTRewrite traversalRewrite;
   private AST traversalAST; // Abstract Syntax Tree
   private HashMap<String, String> methodRewrites = new HashMap<>();
@@ -85,16 +128,15 @@ public class JavaRewriter {
   /**
    * Strip the comments from a compilation unit.
    *
-   * This iterates *backwards* over the comments, creating a DeleteEdit instance
-   * for each comment. These edits must be applied in the order they are
-   * returned, since we use simple indexing into the string source to determine
-   * where to snip the code.
+   * <p>This iterates *backwards* over the comments, creating a DeleteEdit instance for each
+   * comment. These edits must be applied in the order they are returned, since we use simple
+   * indexing into the string source to determine where to snip the code.
    *
    * @param edits The edit list to append comment-removing edits to.
    * @param compilationUnit The compilation unit to remove comments from.
    */
-  private static void StripComments(ArrayList<TextEdit> edits,
-      final CompilationUnit compilationUnit) {
+  private static void StripComments(
+      ArrayList<TextEdit> edits, final CompilationUnit compilationUnit) {
 
     final List<Comment> comments = compilationUnit.getCommentList();
     ListIterator li = comments.listIterator(comments.size());
@@ -118,22 +160,18 @@ public class JavaRewriter {
     Document document = new Document(source);
     ArrayList<TextEdit> edits = new ArrayList<>();
     Properties codeFormatterProperties = new Properties();
-    codeFormatterProperties.setProperty(
-        JavaCore.COMPILER_SOURCE, CompilerOptions.VERSION_1_8);
-    codeFormatterProperties.setProperty(
-        JavaCore.COMPILER_COMPLIANCE, CompilerOptions.VERSION_1_8);
+    codeFormatterProperties.setProperty(JavaCore.COMPILER_SOURCE, CompilerOptions.VERSION_1_8);
+    codeFormatterProperties.setProperty(JavaCore.COMPILER_COMPLIANCE, CompilerOptions.VERSION_1_8);
     codeFormatterProperties.setProperty(
         JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, CompilerOptions.VERSION_1_8);
     // Allow really, really long lines.
-    codeFormatterProperties.setProperty(
-        "org.eclipse.jdt.core.formatter.lineSplit", "9999");
+    codeFormatterProperties.setProperty("org.eclipse.jdt.core.formatter.lineSplit", "9999");
     codeFormatterProperties.setProperty(
         "org.eclipse.jdt.core.formatter.comment.line_length", "9999");
-    CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(
-        codeFormatterProperties);
-    edits.add(codeFormatter.format(
-        CodeFormatter.K_COMPILATION_UNIT, source, 0, source.length(),
-        0, null));
+    CodeFormatter codeFormatter = ToolFactory.createCodeFormatter(codeFormatterProperties);
+    edits.add(
+        codeFormatter.format(
+            CodeFormatter.K_COMPILATION_UNIT, source, 0, source.length(), 0, null));
     ApplyEdits(edits, document);
     return document.get();
   }
@@ -156,13 +194,12 @@ public class JavaRewriter {
    * @param edits The edits to apply.
    * @param document The document to apply the edits to.
    */
-  private static void ApplyEdits(final List<TextEdit> edits,
-      Document document) {
+  private static void ApplyEdits(final List<TextEdit> edits, Document document) {
     for (TextEdit edit : edits) {
       // System.err.println("Applying edit: " + edit.toString());
       try {
         UndoEdit undo = edit.apply(document); // Do something if it fails. Fall back?
-      } catch(MalformedTreeException e) {
+      } catch (MalformedTreeException e) {
         e.printStackTrace();
         assert false;
       } catch (BadLocationException e) {
@@ -180,8 +217,7 @@ public class JavaRewriter {
    * @return A string of the file contents.
    * @throws IOException In case of IO error.
    */
-  private static String ReadFile(String path, Charset encoding)
-      throws IOException {
+  private static String ReadFile(String path, Charset encoding) throws IOException {
     byte[] encoded = Files.readAllBytes(Paths.get(path));
     return new String(encoded, encoding);
   }
@@ -198,12 +234,12 @@ public class JavaRewriter {
   private static boolean WriteFile(String path, Charset encoding, String corpus)
       throws IOException {
     byte[] bytes = corpus.getBytes();
-    Files.write(Paths.get(path), bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    Files.write(
+        Paths.get(path), bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     return true;
   }
 
   /**
-   *
    * @param input file name
    * @param command line arguments
    * @return True if input parsing is successful, False otherwise
@@ -239,45 +275,47 @@ public class JavaRewriter {
     System.out.println("Class name: " + className);
     String newClassName = this.typeRewrites.get(className);
 
-    assert(newClassName != null);
+    assert (newClassName != null);
     System.out.println("\nClass to be saved: " + newClassName + ".java");
 
     return WriteFile(newClassName + ".java", Charset.defaultCharset(), source);
   }
 
-	/*
-	public static void main(final String[] args) {
-		System.out.println("Calling main from JavaRewriter");
-		JavaRewriter rewriter = new JavaRewriter();
+  /*
+  public static void main(final String[] args) {
+  	System.out.println("Calling main from JavaRewriter");
+  	JavaRewriter rewriter = new JavaRewriter();
 
-		try {
-			// final String input =ReadFile(args[1], Charset.defaultCharset()); // File as CMD argument
-			final String input = new String(ByteStreams.toByteArray(System.in)); // File as user input
-			final String source = rewriter.RewriteSource(input);
-			if (source == null) {
-				System.out.println("fatal: RewriteSource() returned null.");
-				System.exit(1);
-			}
-			System.out.println(source);
-		} catch (IOException e) {
-			System.err.println("fatal: I/O error");
-			System.exit(1);
-		}
-	}
-	*/
+  	try {
+  		// final String input =ReadFile(args[1], Charset.defaultCharset()); // File as CMD argument
+  		final String input = new String(ByteStreams.toByteArray(System.in)); // File as user input
+  		final String source = rewriter.RewriteSource(input);
+  		if (source == null) {
+  			System.out.println("fatal: RewriteSource() returned null.");
+  			System.exit(1);
+  		}
+  		System.out.println(source);
+  	} catch (IOException e) {
+  		System.err.println("fatal: I/O error");
+  		System.exit(1);
+  	}
+  }
+  */
 
   /**
    * Generate a new rewrite name.
    *
    * @param rewrites The rewrite table. The new name is added to this table.
    * @param name The current name.
-   * @param base_char The base character to use for generating new names, e.g.
-   * 'A' to produce the sequence 'A', 'B', 'C'...
+   * @param base_char The base character to use for generating new names, e.g. 'A' to produce the
+   *     sequence 'A', 'B', 'C'...
    * @param name_prefix An optional prefix to prepend to generated names.
    * @return The replacement name.
    */
-  private String GetNextName(HashMap<String, String> rewrites,
-      final String name, final char base_char,
+  private String GetNextName(
+      HashMap<String, String> rewrites,
+      final String name,
+      final char base_char,
       final String name_prefix) {
     int i = rewrites.size();
     StringBuilder s = new StringBuilder();
@@ -322,14 +360,14 @@ public class JavaRewriter {
     Document document = new Document(source);
     CompilationUnit compilationUnit = GetCompilationUnit(document);
     ArrayList<TextEdit> edits = new ArrayList<>();
-//    // First strip the comments.
-//    StripComments(edits, compilationUnit);
-//    ApplyEdits(edits, document);
-//    source = document.get(); // Updates source (no comments)
-//    edits.clear();
+    //    // First strip the comments.
+    //    StripComments(edits, compilationUnit);
+    //    ApplyEdits(edits, document);
+    //    source = document.get(); // Updates source (no comments)
+    //    edits.clear();
 
-//    document = new Document(source);
-//    compilationUnit = GetCompilationUnit(document);
+    //    document = new Document(source);
+    //    compilationUnit = GetCompilationUnit(document);
     // Rewrite identifiers.
     RewriteIdentifiers(edits, compilationUnit, document);
     ApplyEdits(edits, document);
@@ -337,211 +375,208 @@ public class JavaRewriter {
     return FormatSource(document.get());
   }
 
-  private void RewriteIdentifiers(ArrayList<TextEdit> edits,
-      final CompilationUnit compilationUnit,
-      final Document document) {
+  private void RewriteIdentifiers(
+      ArrayList<TextEdit> edits, final CompilationUnit compilationUnit, final Document document) {
     this.traversalRewrite = ASTRewrite.create(compilationUnit.getAST());
     this.traversalAST = compilationUnit.getAST();
 
     // Rewrite declarations.
 
-    compilationUnit.accept(new ASTVisitor() {
-      /* Private helper method for renaming declarations. */
-      private boolean Rename(final String type_name,
-          final HashMap<String, String> rewriteTable,
-          final ASTNode node, final char base_char, final String name_prefix) {
-        final String oldName = node.toString();
-        final String newName = GetNextName(rewriteTable, oldName, base_char,
-            name_prefix);
-        traversalRewrite.replace(
-            node, traversalAST.newSimpleName(newName), null);
-//        System.err.println(
-//            "=> " + type_name + ": " + oldName + " -> " + newName);
-        return true;
-      }
+    compilationUnit.accept(
+        new ASTVisitor() {
+          /* Private helper method for renaming declarations. */
+          private boolean Rename(
+              final String type_name,
+              final HashMap<String, String> rewriteTable,
+              final ASTNode node,
+              final char base_char,
+              final String name_prefix) {
+            final String oldName = node.toString();
+            final String newName = GetNextName(rewriteTable, oldName, base_char, name_prefix);
+            traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
+            //        System.err.println(
+            //            "=> " + type_name + ": " + oldName + " -> " + newName);
+            return true;
+          }
 
-      @Override
-      public boolean visit(NormalAnnotation node) {
-        traversalRewrite.remove(node, null);
-        return super.visit(node);
-      }
+          @Override
+          public boolean visit(NormalAnnotation node) {
+            traversalRewrite.remove(node, null);
+            return super.visit(node);
+          }
 
-      // Annotations such as @Override
-      @Override
-      public boolean visit(MarkerAnnotation node) {
-        traversalRewrite.remove(node, null);
-        return super.visit(node);
-      }
+          // Annotations such as @Override
+          @Override
+          public boolean visit(MarkerAnnotation node) {
+            traversalRewrite.remove(node, null);
+            return super.visit(node);
+          }
 
-      @Override
-      public boolean visit(TypeDeclaration node) {
-        return Rename("TypeDeclaration", typeRewrites, node.getName(), 'A', "");
-      }
+          @Override
+          public boolean visit(TypeDeclaration node) {
+            return Rename("TypeDeclaration", typeRewrites, node.getName(), 'A', "");
+          }
 
-      @Override
-      public boolean visit(MethodDeclaration node) {
-        if (!node.getName().toString().equals("main") &&
-            !node.getName().toString().equals("run") &&
-            !node.isConstructor()) {
-          Rename("MethodDeclaration", methodRewrites, node.getName(), 'A',
-              "fn_");
-        } else if (node.isConstructor()) {
-          Rename("MethodDeclaration", typeRewrites, node.getName(), 'A',
-              "");
-        }
-        return true;
-      }
+          @Override
+          public boolean visit(MethodDeclaration node) {
+            if (!node.getName().toString().equals("main")
+                && !node.getName().toString().equals("run")
+                && !node.isConstructor()) {
+              Rename("MethodDeclaration", methodRewrites, node.getName(), 'A', "fn_");
+            } else if (node.isConstructor()) {
+              Rename("MethodDeclaration", typeRewrites, node.getName(), 'A', "");
+            }
+            return true;
+          }
 
-      @Override
-      public boolean visit(SingleVariableDeclaration node) {
-        return Rename("SingleVariableDeclaration", variableRewrites,
-            node.getName(), 'a', "");
-      }
+          @Override
+          public boolean visit(SingleVariableDeclaration node) {
+            return Rename("SingleVariableDeclaration", variableRewrites, node.getName(), 'a', "");
+          }
 
-      @Override
-      public boolean visit(VariableDeclarationFragment node) {
-        return Rename("VariableDeclarationFragment", variableRewrites,
-            node.getName(), 'a', "");
-      }
+          @Override
+          public boolean visit(VariableDeclarationFragment node) {
+            return Rename("VariableDeclarationFragment", variableRewrites, node.getName(), 'a', "");
+          }
 
-      @Override
-      public boolean visit(EnumDeclaration node) {
-        return Rename("EnumDeclaration", variableRewrites,
-            node.getName(), 'A', "");
-      }
+          @Override
+          public boolean visit(EnumDeclaration node) {
+            return Rename("EnumDeclaration", variableRewrites, node.getName(), 'A', "");
+          }
 
-      @Override
-      public boolean visit(EnumConstantDeclaration node) {
-        return Rename("EnumConstantDeclaration", variableRewrites,
-            node.getName(), 'A', "");
-      }
+          @Override
+          public boolean visit(EnumConstantDeclaration node) {
+            return Rename("EnumConstantDeclaration", variableRewrites, node.getName(), 'A', "");
+          }
 
-      @Override
-      public boolean visit(SimpleName node) {
-        final ASTNode parent = node.getParent();
+          @Override
+          public boolean visit(SimpleName node) {
+            final ASTNode parent = node.getParent();
 
-        switch (parent.getNodeType()) {
-          case ASTNode.CONTINUE_STATEMENT:
-            return Rename("ContinueStatement", labelRewrites, node, 'a', "");
-          case ASTNode.LABELED_STATEMENT:
-            return Rename("LabeledStatement", labelRewrites, node, 'a', "");
-          case ASTNode.BREAK_STATEMENT:
-            return Rename("BreakStatement", labelRewrites, node, 'a', "");
-          case ASTNode.MARKER_ANNOTATION:
-          default:
-						/*
-						System.err.println(
-								"######### Unknown name " + parent.getClass().getName() + " for name "
-										+ node.toString());
-						*/
-            break;
-        }
-        return super.visit(node);
-      }
-
-    });
+            switch (parent.getNodeType()) {
+              case ASTNode.CONTINUE_STATEMENT:
+                return Rename("ContinueStatement", labelRewrites, node, 'a', "");
+              case ASTNode.LABELED_STATEMENT:
+                return Rename("LabeledStatement", labelRewrites, node, 'a', "");
+              case ASTNode.BREAK_STATEMENT:
+                return Rename("BreakStatement", labelRewrites, node, 'a', "");
+              case ASTNode.MARKER_ANNOTATION:
+              default:
+                /*
+                System.err.println(
+                		"######### Unknown name " + parent.getClass().getName() + " for name "
+                				+ node.toString());
+                */
+                break;
+            }
+            return super.visit(node);
+          }
+        });
 
     // Rewrite usages.
-    compilationUnit.accept(new ASTVisitor() {
+    compilationUnit.accept(
+        new ASTVisitor() {
 
-      /* Private helper method to rename usages. */
-      private boolean Rename(final String type_name,
-          final HashMap<String, String> rewriteTable,
-          final ASTNode node) {
-        final String oldName = node.toString();
-        if (rewriteTable.containsKey(oldName)) {
-          final String newName = rewriteTable.get(oldName);
-          traversalRewrite.replace(
-              node, traversalAST.newSimpleName(newName), null);
-//          System.err.println(
-//              "=> " + type_name + ": " + oldName + " -> " + newName);
-        } else {
-//          System.err.println("!! " + type_name + ": miss for " + oldName);
-          return false;
-        }
-        return true;
-      }
+          /* Private helper method to rename usages. */
+          private boolean Rename(
+              final String type_name,
+              final HashMap<String, String> rewriteTable,
+              final ASTNode node) {
+            final String oldName = node.toString();
+            if (rewriteTable.containsKey(oldName)) {
+              final String newName = rewriteTable.get(oldName);
+              traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
+              //          System.err.println(
+              //              "=> " + type_name + ": " + oldName + " -> " + newName);
+            } else {
+              //          System.err.println("!! " + type_name + ": miss for " + oldName);
+              return false;
+            }
+            return true;
+          }
 
-      @Override
-      public boolean visit(SimpleName node) {
-        final ASTNode parent = node.getParent();
-        boolean success = false;
+          @Override
+          public boolean visit(SimpleName node) {
+            final ASTNode parent = node.getParent();
+            boolean success = false;
 
-        switch (parent.getNodeType()) {
-          case ASTNode.METHOD_INVOCATION:
-            success = Rename("MethodInvocation", typeRewrites, node);
-            if (!success)
-              success = Rename("MethodInvocation", methodRewrites, node); // TODO: Should we keep both or just one?
-            if (!success)
-              Rename("MethodInvocation", variableRewrites, node);
-            break;
-          case ASTNode.SIMPLE_TYPE:
-            Rename("SimpleType", typeRewrites, node);
-            break;
-          case ASTNode.INFIX_EXPRESSION:
-            Rename("InfixExpression", variableRewrites, node);
-            break;
-          case ASTNode.POSTFIX_EXPRESSION:
-            Rename("PostfixExpression", variableRewrites, node);
-            break;
-          case ASTNode.PREFIX_EXPRESSION:
-            Rename("PrefixExpression", variableRewrites, node);
-            break;
-          case ASTNode.RETURN_STATEMENT:
-            Rename("ReturnStatement", variableRewrites, node);
-            break;
-          case ASTNode.ARRAY_ACCESS:
-            Rename("ArrayAccess", variableRewrites, node);
-            break;
-          case ASTNode.QUALIFIED_NAME:
-            Rename("QualifiedName", variableRewrites, node);
-            break;
-          case ASTNode.IF_STATEMENT:
-            Rename("IfStatement", variableRewrites, node);
-            break;
-          case ASTNode.ARRAY_CREATION:
-            Rename("ArrayCreation", variableRewrites, node);
-            break;
-          case ASTNode.ASSIGNMENT:
-            Rename("Assignment", variableRewrites, node);
-            break;
-          case ASTNode.MARKER_ANNOTATION:
-            Rename("MarkerAnnotation", annotationRewrites, node);
-            break;
-          case ASTNode.CLASS_INSTANCE_CREATION:
-            Rename("ClassInstanceCreation", variableRewrites, node);
-            break;
-          case ASTNode.FIELD_ACCESS:
-            Rename("FieldAccess", variableRewrites, node);
-            break;
-          case ASTNode.CONTINUE_STATEMENT:
-            Rename("ContinueStatement", labelRewrites, node);
-            break;
-          case ASTNode.LABELED_STATEMENT:
-            Rename("LabeledStatement", labelRewrites, node);
-            break;
-          case ASTNode.BREAK_STATEMENT:
-            Rename("BreakStatement", labelRewrites, node);
-            break;
-          case ASTNode.METHOD_DECLARATION:
-          case ASTNode.VARIABLE_DECLARATION_FRAGMENT:
-          case ASTNode.SINGLE_VARIABLE_DECLARATION:
-          case ASTNode.TYPE_DECLARATION:
-            // These have already been re-written.
-            break;
+            switch (parent.getNodeType()) {
+              case ASTNode.METHOD_INVOCATION:
+                success = Rename("MethodInvocation", typeRewrites, node);
+                if (!success)
+                  success =
+                      Rename(
+                          "MethodInvocation",
+                          methodRewrites,
+                          node); // TODO: Should we keep both or just one?
+                if (!success) Rename("MethodInvocation", variableRewrites, node);
+                break;
+              case ASTNode.SIMPLE_TYPE:
+                Rename("SimpleType", typeRewrites, node);
+                break;
+              case ASTNode.INFIX_EXPRESSION:
+                Rename("InfixExpression", variableRewrites, node);
+                break;
+              case ASTNode.POSTFIX_EXPRESSION:
+                Rename("PostfixExpression", variableRewrites, node);
+                break;
+              case ASTNode.PREFIX_EXPRESSION:
+                Rename("PrefixExpression", variableRewrites, node);
+                break;
+              case ASTNode.RETURN_STATEMENT:
+                Rename("ReturnStatement", variableRewrites, node);
+                break;
+              case ASTNode.ARRAY_ACCESS:
+                Rename("ArrayAccess", variableRewrites, node);
+                break;
+              case ASTNode.QUALIFIED_NAME:
+                Rename("QualifiedName", variableRewrites, node);
+                break;
+              case ASTNode.IF_STATEMENT:
+                Rename("IfStatement", variableRewrites, node);
+                break;
+              case ASTNode.ARRAY_CREATION:
+                Rename("ArrayCreation", variableRewrites, node);
+                break;
+              case ASTNode.ASSIGNMENT:
+                Rename("Assignment", variableRewrites, node);
+                break;
+              case ASTNode.MARKER_ANNOTATION:
+                Rename("MarkerAnnotation", annotationRewrites, node);
+                break;
+              case ASTNode.CLASS_INSTANCE_CREATION:
+                Rename("ClassInstanceCreation", variableRewrites, node);
+                break;
+              case ASTNode.FIELD_ACCESS:
+                Rename("FieldAccess", variableRewrites, node);
+                break;
+              case ASTNode.CONTINUE_STATEMENT:
+                Rename("ContinueStatement", labelRewrites, node);
+                break;
+              case ASTNode.LABELED_STATEMENT:
+                Rename("LabeledStatement", labelRewrites, node);
+                break;
+              case ASTNode.BREAK_STATEMENT:
+                Rename("BreakStatement", labelRewrites, node);
+                break;
+              case ASTNode.METHOD_DECLARATION:
+              case ASTNode.VARIABLE_DECLARATION_FRAGMENT:
+              case ASTNode.SINGLE_VARIABLE_DECLARATION:
+              case ASTNode.TYPE_DECLARATION:
+                // These have already been re-written.
+                break;
 
-          default:
-//            System.err.println(
-//                "Unknown type " + parent.getClass().getName() + " for name "
-//                    + node.toString());
-            break;
-        }
+              default:
+                //            System.err.println(
+                //                "Unknown type " + parent.getClass().getName() + " for name "
+                //                    + node.toString());
+                break;
+            }
 
-        return true;
-      }
-    });
+            return true;
+          }
+        });
 
     edits.add(this.traversalRewrite.rewriteAST(document, null));
   }
 }
-

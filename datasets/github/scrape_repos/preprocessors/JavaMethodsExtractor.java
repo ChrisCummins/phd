@@ -34,9 +34,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jface.text.Document;
 
-/**
- * Extract methods from Java source code.
- */
+/** Extract methods from Java source code. */
 public class JavaMethodsExtractor {
 
   private ListOfStrings.Builder message;
@@ -68,8 +66,7 @@ public class JavaMethodsExtractor {
   /**
    * Return the string representation of a method declaration.
    *
-   * By default, a MethodDeclaration includes the JavaDoc comment. This strips
-   * that.
+   * <p>By default, a MethodDeclaration includes the JavaDoc comment. This strips that.
    *
    * @param method The method to stringify.
    * @returns The string source code of the method.
@@ -89,29 +86,31 @@ public class JavaMethodsExtractor {
     Document document = new Document(source);
     message = ListOfStrings.newBuilder();
 
-    final boolean staticOnly = !(
-        System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY") == null ||
-            System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY").equals(""));
+    final boolean staticOnly =
+        !(System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY") == null
+            || System.getenv("JAVA_METHOD_EXTRACTOR_STATIC_ONLY").equals(""));
 
     try {
       CompilationUnit compilationUnit = GetCompilationUnit(document);
 
       if (staticOnly) {
-        compilationUnit.accept(new ASTVisitor() {
-          public boolean visit(MethodDeclaration node) {
-            if ((node.getModifiers() & Modifier.STATIC) != 0) {
-              message.addString(MethodDeclarationToString(node));
-            }
-            return true;
-          }
-        });
+        compilationUnit.accept(
+            new ASTVisitor() {
+              public boolean visit(MethodDeclaration node) {
+                if ((node.getModifiers() & Modifier.STATIC) != 0) {
+                  message.addString(MethodDeclarationToString(node));
+                }
+                return true;
+              }
+            });
       } else {
-        compilationUnit.accept(new ASTVisitor() {
-          public boolean visit(MethodDeclaration node) {
-            message.addString(MethodDeclarationToString(node));
-            return true;
-          }
-        });
+        compilationUnit.accept(
+            new ASTVisitor() {
+              public boolean visit(MethodDeclaration node) {
+                message.addString(MethodDeclarationToString(node));
+                return true;
+              }
+            });
       }
     } catch (IllegalArgumentException e) {
       System.err.println("error: Failed to parse unit.");
