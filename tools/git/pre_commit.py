@@ -13,7 +13,6 @@ import os
 import subprocess
 import sys
 
-
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
 # WARNING: Moving this file may require updating this path!
@@ -68,6 +67,64 @@ def GitAddOrDie(paths):
   linters_lib.ExecOrDie(['git', 'add'] + paths)
 
 
+def GetMd5sumOutputAsString(paths):
+  """Return the output of md5sum on a list of paths as a string."""
+  return subprocess.check_output(['md5sum'] + paths, universal_newlines=True)
+
+
+class Gazelle(object):
+  """Utilities for running gazelle.
+
+  Gazelle is a bazel build file generator for go.
+
+  See: https://github.com/bazelbuild/bazel-gazelle
+  """
+
+  @classmethod
+  def RunGazelle(cls):
+    """Run gazelle, a tool"""
+    subprocess.check_call(['bazel', 'run', '//:gazelle'])
+    cls._RenameBuildFiles()
+
+  @classmethod
+  def MaybeRunGazelle(cls, paths):
+    """Determine if gazelle should be run, and run it if so.
+
+    Args:
+      paths: A list of paths modified in this commit.
+    """
+    if cls._ListContainsFilesModifiedByGazelle(paths):
+      cls.RunGazelle()
+
+  @staticmethod
+  def _ListContainsFilesModifiedByGazelle(paths):
+    """Determine if any of the files in the list are interesting to Gazelle.
+
+    Gazelle should only care about golang files, proto libraries (because it
+    generates proto rules for them), and BUILD files (because they may contain
+    go rules).
+
+    Args:
+      paths: A list of paths.
+    """
+    for path in paths:
+      if path.endswith('.go') or path.endswith('.proto'):
+        return True
+    return False
+
+  @staticmethod
+  def _RenameBuildFiles():
+    find_output = subprocess.check_output(['find', '.', '-name', 'BUILD.bazel'],
+                                          universal_newlines=True).rstrip()
+    if not find_output:
+      return
+    files_to_rename = find_output.split('\n')
+    for path in files_to_rename:
+      new_path = path[:-len(".bazel")]
+      print("Renaming {} -> {}".format(path, new_path))
+      os.rename(path, new_path)
+
+
 def main(argv):
   assert not argv
 
@@ -78,13 +135,12 @@ def main(argv):
   staged_files = linters_lib.GetGitDiffFilesOrDie(staged=True)
   unstaged_files = linters_lib.GetGitDiffFilesOrDie(staged=False)
 
-  linters_lib.Print(
-      'Checking if',
-      branch_name,
-      'is up to date with',
-      remote_name,
-      '...',
-      end=' ')
+  linters_lib.Print('Checking if',
+                    branch_name,
+                    'is up to date with',
+                    remote_name,
+                    '...',
+                    end=' ')
   commits_behind_upstream = GetCommitsBehindUpstreamOrDie(
       remote_name, branch_name)
   if commits_behind_upstream:
@@ -94,6 +150,33 @@ def main(argv):
     linters_lib.Print('ok')
 
   files_that_exist = [f for f in staged_files if os.path.isfile(f)]
+
+  # A list of files that will be automatically staged for commit.
+  files_to_stage = []
+  # A list of files that were partially staged and have been modified by this
+  # script. These must be hand-inspected and will cause the commit to abort.
+  partially_staged_modified_files = []
+
+  # Files that are both staged and unstaged are partially staged.
+  partially_staged_files = list(
+      set(staged_files).intersection(set(unstaged_files)))
+  partially_staged_checksums = GetMd5sumOutputAsString(partially_staged_files)
+
+  # Run gazelle before linters.
+  linters_lib.Print('Running gazelle ...', end=' ')
+  Gazelle.MaybeRunGazelle(files_that_exist)
+
+  # Check to see if gazelle modified any partially-staged files.
+  new_partially_staged_checksums = GetMd5sumOutputAsString(
+      partially_staged_files)
+  if new_partially_staged_checksums != partially_staged_checksums:
+    # Go line by line through the md5sum outputs to find the differing files.
+    for left, right in zip(partially_staged_checksums.split('\n'),
+                           new_partially_staged_checksums.split('\n')):
+      if left != right:
+        partially_staged_modified_files.append(' '.join(left.split()[1:]))
+  linters_lib.Print('ok')
+
   linters = linters_lib.LinterActions(files_that_exist)
   num_actions = len(linters.paths_with_actions)
 
@@ -105,31 +188,36 @@ def main(argv):
     # Get a list of partially-staged files that were modified by the linters.
     partially_staged_files = set(
         f for f in linters.modified_paths if f in unstaged_files)
+    partially_staged_modified_files += list(partially_staged_files)
 
     # For every file in the git index where the entire diff was indexed,
     # re-index it.
-    fully_staged_modified_files = [
+    files_to_stage += [
         f for f in linters.modified_paths if f not in partially_staged_files
     ]
 
-    if fully_staged_modified_files:
+    if files_to_stage:
+      files_to_stage = list(set(files_to_stage))
       linters_lib.Print('Modified files that will be automatically committed:')
-      for path in sorted(fully_staged_modified_files):
+      for path in sorted(files_to_stage):
         linters_lib.Print('   ', path)
-      GitAddOrDie(fully_staged_modified_files)
+      GitAddOrDie(files_to_stage)
 
     # Partially-staged files (i.e. the result of running `git add -p` cannot
     # be simply re-indexed and committed since we don't know what was modified
     # by the linter and what was deliberately left unstaged.
-    if partially_staged_files:
+    if partially_staged_modified_files:
+      partially_staged_modified_files = list(
+          sorted(set(partially_staged_modified_files)))
       linters_lib.Print(
           'Partially staged modified files that must be inspected:')
-      for path in sorted(list(partially_staged_files)):
+      for path in partially_staged_modified_files:
         linters_lib.Print('   ', path)
       linters_lib.Print()
       linters_lib.Print('[action] Selectively add unstaged changes using:')
       linters_lib.Print()
-      linters_lib.Print('    git add --patch --', *partially_staged_files)
+      linters_lib.Print('    git add --patch --',
+                        *partially_staged_modified_files)
       linters_lib.Print()
       sys.exit(1)
 
