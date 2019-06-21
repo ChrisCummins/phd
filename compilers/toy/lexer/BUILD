@@ -9,15 +9,21 @@ go_library(
     srcs = [
         "lexer.go",
         "state_function.go",
+        "token_stream.go",
     ],
     importpath = "github.com/ChrisCummins/phd/compilers/toy/lexer",
     visibility = ["//visibility:public"],
-    deps = ["//compilers/toy/token:go_default_library"],
+    deps = [
+        "//compilers/toy/token:go_default_library",
+    ],
 )
 
 go_test(
     name = "go_default_test",
-    srcs = ["lexer_test.go"],
+    srcs = [
+        "lexer_test.go",
+        "token_stream_test.go",
+    ],
     embed = [":go_default_library"],
     deps = [
         "//compilers/toy/token:go_default_library",

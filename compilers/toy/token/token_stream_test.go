@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestTokenStream(t *testing.T) {
+func TestSliceTokenStream(t *testing.T) {
 	assert := assert.New(t)
 
 	tokens := []Token{
@@ -20,7 +20,7 @@ func TestTokenStream(t *testing.T) {
 		Token{CloseBraceToken, "}"},
 	}
 
-	ts := NewTokenStream(tokens)
+	ts := NewSliceTokenStream(tokens)
 	assert.True(ts.Next())
 	assert.Equal(Token{IntKeywordToken, "int"}, ts.Value())
 	assert.True(ts.Next())

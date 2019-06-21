@@ -13,7 +13,7 @@ import (
 //     <statement> ::= "return" <exp> ";"
 //     <exp> ::= <int>
 
-func Parse(ts *token.TokenStream) (*ast.Program, error) {
+func Parse(ts token.TokenStream) (*ast.Program, error) {
 	function, err := ParseFunction(ts)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func Parse(ts *token.TokenStream) (*ast.Program, error) {
 	return &ast.Program{Function: function}, nil
 }
 
-func ParseFunction(ts *token.TokenStream) (*ast.Function, error) {
+func ParseFunction(ts token.TokenStream) (*ast.Function, error) {
 	if !ts.Next() || ts.Value().Type != token.IntKeywordToken {
 		return nil, errors.New("expected `int` keyword")
 	}
@@ -54,7 +54,7 @@ func ParseFunction(ts *token.TokenStream) (*ast.Function, error) {
 	return &ast.Function{Identifier: identifier, Statement: statement}, nil
 }
 
-func ParseStatement(ts *token.TokenStream) (*ast.ReturnStatement, error) {
+func ParseStatement(ts token.TokenStream) (*ast.ReturnStatement, error) {
 	if !ts.Next() || ts.Value().Type != token.ReturnKeywordToken {
 		return nil, errors.New("expected `return` keyword")
 	}
@@ -72,7 +72,7 @@ func ParseStatement(ts *token.TokenStream) (*ast.ReturnStatement, error) {
 	return &statement, nil
 }
 
-func ParseExpression(ts *token.TokenStream) (*ast.Int32Literal, error) {
+func ParseExpression(ts token.TokenStream) (*ast.Int32Literal, error) {
 	if !ts.Next() || ts.Value().Type != token.NumberToken {
 		return nil, errors.New("expected numeric literal")
 	}

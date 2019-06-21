@@ -31,7 +31,7 @@ func (f *Function) GenerateAssembly() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf(".globl _%v\n_%v:\n%v", f.Identifier,
+	return fmt.Sprintf(".globl _%v\n_%v:\n%v\n", f.Identifier,
 		f.Identifier, s), nil
 }
 

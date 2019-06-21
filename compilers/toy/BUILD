@@ -7,7 +7,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//compilers/toy/lexer:go_default_library",
-        "//compilers/toy/token:go_default_library",
+        "//compilers/toy/parser:go_default_library",
     ],
 )
 

@@ -16,7 +16,8 @@ func TestGenerateAssemblyMultiDigit(t *testing.T) {
 	assert.Equal(`.globl _main
 _main:
  movl    $100, %eax
- ret`, as)
+ ret
+`, as)
 }
 
 func TestGenerateAssemblyReturn0(t *testing.T) {
@@ -28,7 +29,8 @@ func TestGenerateAssemblyReturn0(t *testing.T) {
 	assert.Equal(`.globl _main
 _main:
  movl    $0, %eax
- ret`, as)
+ ret
+`, as)
 }
 
 func TestGenerateAssemblyReturn2(t *testing.T) {
@@ -40,5 +42,6 @@ func TestGenerateAssemblyReturn2(t *testing.T) {
 	assert.Equal(`.globl _main
 _main:
  movl    $2, %eax
- ret`, as)
+ ret
+`, as)
 }

@@ -1,20 +1,25 @@
 package token
 
-type TokenStream struct {
+type TokenStream interface {
+	Next() bool
+	Value() Token
+}
+
+type SliceTokenStream struct {
 	tokens   []Token
 	position int
 }
 
-func NewTokenStream(tokens []Token) *TokenStream {
-	return &TokenStream{tokens: tokens}
+func NewSliceTokenStream(tokens []Token) *SliceTokenStream {
+	return &SliceTokenStream{tokens: tokens}
 }
 
-func (i *TokenStream) Next() bool {
+func (i *SliceTokenStream) Next() bool {
 	i.position++
 	return i.position <= len(i.tokens)
 }
 
-func (i *TokenStream) Value() Token {
+func (i *SliceTokenStream) Value() Token {
 	if i.position > len(i.tokens) {
 		panic("iterator ended")
 	}

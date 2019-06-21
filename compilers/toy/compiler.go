@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"github.com/ChrisCummins/phd/compilers/toy/lexer"
-	"github.com/ChrisCummins/phd/compilers/toy/token"
+	"github.com/ChrisCummins/phd/compilers/toy/parser"
 	"io/ioutil"
 	"os"
 )
@@ -25,38 +24,26 @@ func main() {
 	outputPath := FLAGS_o
 
 	if *inputPath == "" {
+		// TODO: Check for `.c` suffix.
 		fmt.Fprintf(os.Stderr, "Input -i not provided")
 		os.Exit(1)
 	}
 	if *outputPath == "" {
+		// TODO: Get basename of source file and append suffix.
 		*outputPath = *inputPath + `.s`
 	}
 
 	data, err := ioutil.ReadFile(*inputPath)
 	check(err)
 
-	output := bytes.Buffer{}
-	l := lexer.Lex(string(data))
+	ts := lexer.NewLexerTokenStream(lexer.Lex(string(data)))
 
-	stop := false
-	for {
-		if stop == true {
-			break
-		}
-		t := l.NextToken()
-		switch t.Type {
-		case token.ErrorToken:
-			fmt.Fprintf(os.Stderr, "error in lexer!: %v\n", t.Value)
-			stop = true
-		case token.EofToken:
-			stop = true
-		default:
-			fmt.Println("Lexed:", t)
-			output.WriteString(t.Value)
-			output.WriteRune('\n')
-		}
-	}
+	ast, err := parser.Parse(ts)
+	check(err)
 
-	err = ioutil.WriteFile(*outputPath, []byte(output.String()), 0644)
+	as, err := ast.GenerateAssembly()
+	check(err)
+
+	err = ioutil.WriteFile(*outputPath, []byte(as), 0644)
 	check(err)
 }

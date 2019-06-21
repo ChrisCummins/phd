@@ -10,7 +10,7 @@ import (
 
 func TestParseMultiDigit(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -33,7 +33,7 @@ func TestParseMultiDigit(t *testing.T) {
 
 func TestParseNewlines(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -56,7 +56,7 @@ func TestParseNewlines(t *testing.T) {
 
 func TestParseNoNewlines(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -79,7 +79,7 @@ func TestParseNoNewlines(t *testing.T) {
 
 func TestParseReturn0(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -102,7 +102,7 @@ func TestParseReturn0(t *testing.T) {
 
 func TestParseReturn2(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -125,7 +125,7 @@ func TestParseReturn2(t *testing.T) {
 
 func TestParseSpaces(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -150,7 +150,7 @@ func TestParseSpaces(t *testing.T) {
 
 func TestParseMissingParen(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -167,7 +167,7 @@ func TestParseMissingParen(t *testing.T) {
 
 func TestParseMissingRetval(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -184,7 +184,7 @@ func TestParseMissingRetval(t *testing.T) {
 
 func TestParseNoBrace(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenBraceToken, "{"},
@@ -199,7 +199,7 @@ func TestParseNoBrace(t *testing.T) {
 
 func TestParseNoSemicolon(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenBraceToken, "{"},
@@ -214,7 +214,7 @@ func TestParseNoSemicolon(t *testing.T) {
 
 func TestParseNoSpace(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
@@ -231,7 +231,7 @@ func TestParseNoSpace(t *testing.T) {
 
 func TestParseWrongCase(t *testing.T) {
 	assert := assert.New(t)
-	ts := token.NewTokenStream([]token.Token{
+	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
 		token.Token{token.IdentifierToken, "main"},
 		token.Token{token.OpenParenthesisToken, "("},
