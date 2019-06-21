@@ -7,6 +7,10 @@ type Program struct {
 	Function *Function
 }
 
+func (p Program) String() string {
+	return p.Function.String()
+}
+
 func (p *Program) GenerateAssembly() (string, error) {
 	return p.Function.GenerateAssembly()
 }
@@ -15,6 +19,11 @@ type Function struct {
 	Identifier string
 	// This will later be extended to multiple statements and types.
 	Statement *ReturnStatement
+}
+
+func (f Function) String() string {
+	return fmt.Sprintf("FUN INT %v:\n  params: ()\n  body:\n    %v",
+		f.Identifier, f.Statement.String())
 }
 
 func (f *Function) GenerateAssembly() (string, error) {
@@ -31,6 +40,10 @@ type ReturnStatement struct {
 	Expression *Int32Literal
 }
 
+func (s ReturnStatement) String() string {
+	return fmt.Sprintf("RETURN %v", s.Expression.String())
+}
+
 func (s *ReturnStatement) GenerateAssembly() (string, error) {
 	expression, err := s.Expression.GenerateAssembly()
 	if err != nil {
@@ -41,6 +54,10 @@ func (s *ReturnStatement) GenerateAssembly() (string, error) {
 
 type Int32Literal struct {
 	Value int32
+}
+
+func (i Int32Literal) String() string {
+	return fmt.Sprintf("Int<%v>", i.Value)
 }
 
 func (i *Int32Literal) GenerateAssembly() (string, error) {
