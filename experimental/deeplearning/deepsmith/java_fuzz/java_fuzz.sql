@@ -1,9 +1,60 @@
 # MySQL snippets for working with java_fuzz contentfiles database.
  # How many active repos?
+ # Reset preprocessor.
+
+DROP DATABASE `github_java_methods_pp`;
+
+
+UPDATE github_java_methods.repositories
+SET exported = 0;
+
+# Count repos.
 
 SELECT count(*)
 FROM repositories
+WHERE active = 0;
+
+
+SELECT count(*)
+FROM repositories
+WHERE exported = 1;
+
+
+SELECT count(*)
+FROM github_java_methods.contentfiles
 WHERE active = 1;
+
+
+SELECT count(*)
+FROM repositories
+WHERE exported = 0;
+
+
+UPDATE repositories
+SET exported = 0;
+
+
+SELECT *
+FROM github_java.contentfiles
+WHERE clone_from_url = 'https://github.com/kerstin/fhtw-hamster.git';
+
+
+SELECT count(*)
+FROM github_java_methods.contentfiles
+WHERE active = 1;
+
+
+SELECT *
+FROM github_java.contentfiles
+WHERE text LIKE '%-----BEGIN RSA PRIVATE KEY-----%'
+LIMIT 1;
+
+
+ALTER TABLE github_java_methods.contentfiles ADD active bool NOT NULL DEFAULT 1 AFTER artifact_index;
+
+
+UPDATE repositories
+SET active = 0;
 
 # Top 10 most popular repos scraped.
 
