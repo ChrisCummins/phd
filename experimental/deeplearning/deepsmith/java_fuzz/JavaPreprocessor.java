@@ -31,33 +31,42 @@ public final class JavaPreprocessor {
   private static final int MIN_LINE_COUNT = 3;
   // End of configuration options.
 
-  /**
-   * Construct a preprocessor.
-   */
+  /** Construct a preprocessor. */
   public JavaPreprocessor() {
     compiler = new EclipseJavaCompiler();
-    settings =  compiler.createDefaultSettings();
+    settings = compiler.createDefaultSettings();
     classloader = JavaPreprocessor.class.getClassLoader();
 
-    compiler.setCompilationProblemHandler(new CompilationProblemHandler() {
-      @Override
-      public boolean handle(final CompilationProblem problem) {
-        if (problem.isError()) {
-          // Stop on first error.
-          return false;
-        }
-        // Ignore warnings.
-        return true;
-      }
-    });
+    compiler.setCompilationProblemHandler(
+        new CompilationProblemHandler() {
+          @Override
+          public boolean handle(final CompilationProblem problem) {
+            if (problem.isError()) {
+              // Stop on first error.
+              return false;
+            }
+            // Ignore warnings.
+            return true;
+          }
+        });
   }
 
   /**
    * Wrap the method in a class definition.
+   *
    * @param methodSrc The method to wrap.
    * @return The method, embedded in a class "A".
    */
   protected String WrapMethodInClass(final String methodSrc) {
+    // TODO: Determine whether to keep shim imports.
+    //    return ("import java.io.*;\n"
+    //        + "import java.nio.charset.*;\n"
+    //        + "import java.nio.file.*;\n"
+    //        + "import java.util.*;\n"
+    //        + "import java.time.format.*;\n"
+    //        + "public class A{"
+    //        + methodSrc
+    //        + "}");
     return "public class A{" + methodSrc + "}";
   }
 
@@ -80,12 +89,13 @@ public final class JavaPreprocessor {
     // Assign to array because variable must be final.
     final String[] method = new String[1];
 
-    compilationUnit.accept(new ASTVisitor() {
-      public boolean visit(MethodDeclaration node) {
-        method[0] = node.toString();
-        return false; // Stop iteration at the first method.
-      }
-    });
+    compilationUnit.accept(
+        new ASTVisitor() {
+          public boolean visit(MethodDeclaration node) {
+            method[0] = node.toString();
+            return false; // Stop iteration at the first method.
+          }
+        });
     if (method[0] == null) {
       System.err.println("fatal: Could not unwrap method in class: " + src);
       System.exit(1);
@@ -102,8 +112,7 @@ public final class JavaPreprocessor {
   /**
    * Determine if the given source string compiles without error.
    *
-   * WARNING: The source string must define a class "A"! As produced by
-   * WrapMethodInClass().
+   * <p>WARNING: The source string must define a class "A"! As produced by WrapMethodInClass().
    *
    * @param src The source string for a java class.
    * @return True if compiles, false if errors.
@@ -119,19 +128,18 @@ public final class JavaPreprocessor {
 
     // Assumes that class is named "A".
     final String[] resources = {"A.java"};
-    final CompilationResult result = compiler.compile(
-        resources, input, unusedOutput, classloader);
+    final CompilationResult result = compiler.compile(resources, input, unusedOutput, classloader);
     return result.getErrors().length == 0;
   }
 
   /**
    * Check that string contains a minimum number of lines.
+   *
    * @param text The text to check.
    * @param minLineCount The minimum nuber of lines.
    * @return True if text has >= minimum number of lines.
    */
-  protected boolean TextHasMinimumLineCount(
-      final String text, final int minLineCount) {
+  protected boolean TextHasMinimumLineCount(final String text, final int minLineCount) {
     BufferedReader bufReader = new BufferedReader(new StringReader(text));
     try {
       int lineCount = 0;
@@ -150,9 +158,9 @@ public final class JavaPreprocessor {
 
   /**
    * Preprocess a single Java source text.
+   *
    * @param src The source to preprocess.
-   * @return A PreprocessorWorkerJobOutcome message with the results of
-   *    preprocessing.
+   * @return A PreprocessorWorkerJobOutcome message with the results of preprocessing.
    */
   private PreprocessorWorkerJobOutcome PreprocessSourceOrDie(final String src) {
     PreprocessorWorkerJobOutcome.Builder message = PreprocessorWorkerJobOutcome.newBuilder();
@@ -168,8 +176,8 @@ public final class JavaPreprocessor {
 
     if (contents.length() < MIN_CHAR_COUNT) {
       message.setStatus(PreprocessorWorkerJobOutcome.Status.TOO_FEW_CHARACTERS);
-      message.setContents("Character count is too short: " +
-                          contents.length() + " < " + MIN_CHAR_COUNT);
+      message.setContents(
+          "Character count is too short: " + contents.length() + " < " + MIN_CHAR_COUNT);
       return message.build();
     }
 
@@ -186,12 +194,11 @@ public final class JavaPreprocessor {
 
   /**
    * Preprocess a list of Java source texts.
+   *
    * @param srcs The sources to preprocess.
-   * @return A PreprocessorWorkerJobOutcomes message with the results of
-   *    preprocessing.
+   * @return A PreprocessorWorkerJobOutcomes message with the results of preprocessing.
    */
-  public PreprocessorWorkerJobOutcomes PreprocessInputsOrDie(
-      final ListOfStrings srcs) {
+  public PreprocessorWorkerJobOutcomes PreprocessInputsOrDie(final ListOfStrings srcs) {
     PreprocessorWorkerJobOutcomes.Builder message = PreprocessorWorkerJobOutcomes.newBuilder();
 
     for (int i = 0; i < srcs.getStringCount(); ++i) {
