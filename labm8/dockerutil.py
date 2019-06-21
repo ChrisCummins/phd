@@ -30,21 +30,24 @@ class DockerImageRunContext(object):
 
   def _CommandLineInvocation(
       self, args: typing.List[str], flags: typing.Dict[str, str],
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str], timeout: int):
+      volumes: typing.Dict[typing.Union[str, pathlib.Path], str], timeout: int,
+      entrypoint: str) -> typing.List[str]:
+    entrypoint_args = ['--entrypoint', entrypoint] if entrypoint else []
     volume_args = [f'-v{src}:{dst}' for src, dst in (volumes or {}).items()]
     flags_args = labtypes.flatten(
         [[f'--{k}', str(v)] for k, v in (flags or {}).items()])
-    return _Docker(
-        ['run'] + volume_args + [self.image_name] + args + flags_args, timeout)
+    return _Docker(['run'] + entrypoint_args + volume_args + [self.image_name] +
+                   args + flags_args, timeout)
 
   def CheckCall(
       self,
       args: typing.List[str],
       flags: typing.Dict[str, str] = None,
       volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
-      timeout: int = 60):
+      timeout: int = 60,
+      entrypoint: str = None):
     """Run docker image."""
-    cmd = self._CommandLineInvocation(args, flags, volumes, timeout)
+    cmd = self._CommandLineInvocation(args, flags, volumes, timeout, entrypoint)
     subprocess.check_call(cmd)
 
   def CheckOutput(
@@ -52,8 +55,9 @@ class DockerImageRunContext(object):
       args: typing.List[str],
       flags: typing.Dict[str, str] = None,
       volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
-      timeout: int = 60) -> str:
-    cmd = self._CommandLineInvocation(args, flags, volumes, timeout)
+      timeout: int = 60,
+      entrypoint: str = None) -> str:
+    cmd = self._CommandLineInvocation(args, flags, volumes, timeout, entrypoint)
     return subprocess.check_output(cmd, universal_newlines=True)
 
 
@@ -107,7 +111,8 @@ class BazelPy3Image(object):
 
   @contextlib.contextmanager
   def RunContext(self) -> DockerImageRunContext:
-    subprocess.check_call(_Docker(['load', '-i', str(self.tar_path)]))
+    subprocess.check_call(
+        _Docker(['load', '-i', str(self.tar_path)], timeout=180))
     tmp_name = self._TemporaryImageName()
     subprocess.check_call(_Docker(['tag', self.image_name, tmp_name]))
     subprocess.check_call(_Docker(['rmi', self.image_name]))
