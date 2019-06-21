@@ -96,7 +96,7 @@ func lexCloseBrace(lexer *Lexer) stateFunction {
 
 func lexOpenParenthesis(lexer *Lexer) stateFunction {
 	lexer.position += len("(")
-	lexer.emit(token.OpenParanethesisToken)
+	lexer.emit(token.OpenParenthesisToken)
 	return lexStartState
 }
 

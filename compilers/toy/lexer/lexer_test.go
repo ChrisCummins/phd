@@ -16,7 +16,7 @@ func TestLexMultiDigit(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
@@ -41,7 +41,7 @@ return
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
@@ -57,7 +57,7 @@ func TestLexNoNewlines(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
@@ -75,7 +75,7 @@ func TestLexReturn0(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
@@ -93,7 +93,7 @@ func TestLexReturn2(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
@@ -109,7 +109,7 @@ func TestLexSpaces(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
@@ -129,7 +129,7 @@ func TestLexMissingParen(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
 	assert.Equal(token.Token{token.NumberToken, "0"}, next())
@@ -146,7 +146,7 @@ func TestLexMissingRetval(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
@@ -193,7 +193,7 @@ func TestLexNoSpace(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "return0"}, next())
@@ -210,7 +210,7 @@ func TestLexWrongCase(t *testing.T) {
 	next := Lex(input).NextToken
 	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
-	assert.Equal(token.Token{token.OpenParanethesisToken, "("}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
 	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
 	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
 	assert.Equal(token.Token{token.IdentifierToken, "RETURN"}, next())

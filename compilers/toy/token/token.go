@@ -20,7 +20,7 @@ const (
 	// Punctuation.
 	OpenBraceToken        // {
 	CloseBraceToken       // }
-	OpenParanethesisToken // (
+	OpenParenthesisToken  // (
 	CloseParenthesisToken // )
 	SemicolonToken        // ;
 	// Keywords.
