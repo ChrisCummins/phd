@@ -64,6 +64,12 @@ func lexStartState(lexer *Lexer) stateFunction {
 			return lexCloseParenthesis
 		case r == ';':
 			return lexSemicolon
+		case r == '!':
+			return lexLogicalNegation
+		case r == '~':
+			return lexBitwiseComplement
+		case r == '-':
+			return lexNegation
 		}
 
 		switch r := lexer.next(); {
@@ -109,6 +115,24 @@ func lexCloseParenthesis(lexer *Lexer) stateFunction {
 func lexSemicolon(lexer *Lexer) stateFunction {
 	lexer.position += len(";")
 	lexer.emit(token.SemicolonToken)
+	return lexStartState
+}
+
+func lexLogicalNegation(lexer *Lexer) stateFunction {
+	lexer.position += len("!")
+	lexer.emit(token.LogicalNegationToken)
+	return lexStartState
+}
+
+func lexBitwiseComplement(lexer *Lexer) stateFunction {
+	lexer.position += len("~")
+	lexer.emit(token.BitwiseComplementToken)
+	return lexStartState
+}
+
+func lexNegation(lexer *Lexer) stateFunction {
+	lexer.position += len("-")
+	lexer.emit(token.NegationToken)
 	return lexStartState
 }
 

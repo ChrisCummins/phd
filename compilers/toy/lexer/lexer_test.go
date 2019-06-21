@@ -219,3 +219,216 @@ func TestLexWrongCase(t *testing.T) {
 	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
 	assert.Equal(token.EofToken, next().Type)
 }
+
+// Test inputs from github.com/nlsandler/write_a_c_compiler/stage_2/valid
+
+func TestLexBitwise(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return !12;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.LogicalNegationToken, "!"}, next())
+	assert.Equal(token.Token{token.NumberToken, "12"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexBitwiseZero(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return ~0;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.BitwiseComplementToken, "~"}, next())
+	assert.Equal(token.Token{token.NumberToken, "0"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexNeg(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return -5;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.NegationToken, "-"}, next())
+	assert.Equal(token.Token{token.NumberToken, "5"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexNestedOps(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return !-3;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.LogicalNegationToken, "!"}, next())
+	assert.Equal(token.Token{token.NegationToken, "-"}, next())
+	assert.Equal(token.Token{token.NumberToken, "3"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexNestedOps2(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return -~0;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.NegationToken, "-"}, next())
+	assert.Equal(token.Token{token.BitwiseComplementToken, "~"}, next())
+	assert.Equal(token.Token{token.NumberToken, "0"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexNotFive(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return !5;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.LogicalNegationToken, "!"}, next())
+	assert.Equal(token.Token{token.NumberToken, "5"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexNotZero(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return !0;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.LogicalNegationToken, "!"}, next())
+	assert.Equal(token.Token{token.NumberToken, "0"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+// Test inputs from github.com/nlsandler/write_a_c_compiler/stage_2/invalid
+
+func TestLexMissingConst(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return !;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.LogicalNegationToken, "!"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexMissingSemicolon(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return !5
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.LogicalNegationToken, "!"}, next())
+	assert.Equal(token.Token{token.NumberToken, "5"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexNestedMissingConst(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return !~;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.LogicalNegationToken, "!"}, next())
+	assert.Equal(token.Token{token.BitwiseComplementToken, "~"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexWrongOrder(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() {
+    return 4-;
+}`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.NumberToken, "4"}, next())
+	assert.Equal(token.Token{token.NegationToken, "-"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}

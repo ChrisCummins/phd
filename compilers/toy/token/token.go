@@ -18,11 +18,14 @@ const (
 	IdentifierToken
 	NumberToken
 	// Punctuation.
-	OpenBraceToken        // {
-	CloseBraceToken       // }
-	OpenParenthesisToken  // (
-	CloseParenthesisToken // )
-	SemicolonToken        // ;
+	OpenBraceToken         // {
+	CloseBraceToken        // }
+	OpenParenthesisToken   // (
+	CloseParenthesisToken  // )
+	SemicolonToken         // ;
+	LogicalNegationToken   // !
+	BitwiseComplementToken // ~
+	NegationToken          // -
 	// Keywords.
 	IntKeywordToken    // int
 	ReturnKeywordToken // return
