@@ -1,72 +1,93 @@
 """Re-run Java methods pre-processing.
 
 This is a debugging script for checking that the JavaPreprocessor behaves
-as expected. We expect the contents of the re-preprocessed db to match the oroginal 
+as expected. We expect the contents of the re-preprocessed db to match the oroginal
 """
 import sys
 import time
 
 import hashlib
+import pathlib
 import threading
 import typing
 from concurrent import futures
-from deeplearning.clgen.proto import internal_pb2
+import sqlalchemy.orm.exc
 
+from datasets.github.scrape_repos import contentfiles
 from deeplearning.clgen.corpuses import preprocessed
+from deeplearning.clgen.proto import internal_pb2
 from experimental.deeplearning.deepsmith.java_fuzz import preprocess_java_corpus
 from labm8 import app
+from labm8 import fs
 from labm8 import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
-    'input', preprocessed.PreprocessedContentFile,
+    'input_pp', preprocessed.PreprocessedContentFiles,
     'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/preprocessed.db',
     'URL of the database of exported Java methods.')
-app.DEFINE_database(
-    'output', preprocessed.PreprocessedContentFiles,
-    'sqlite:////tmp/phd/experimental/deeplearning/deepsmith/java_fuzz/repreprocessed.db',
-    'URL of the database to add preprocessed files to.')
-app.DEFINE_boolean('multithreaded_preprocess', True,
-                   'Use multiple threads during preprocessing.')
+app.DEFINE_output_path(
+    'outdir',
+    '/tmp/phd/experimental/deeplearning/deepsmith/java_fuzz/repreprocess_errors',
+    'Directory to write re-preprocess failures to.',
+    is_dir=True)
 app.DEFINE_integer('preprocess_worker_chunk_size', 128,
                    'The number of methods to batch to the preprocessors.')
 
 
-def PreprocessList(cfs: typing.List[preprocessed.PreprocessedContentFile]
-                  ) -> typing.List[preprocessed.PreprocessedContentFile]:
-  output_message = preprocess_java_corpus.PreprocessStringList(
-      [cf.text for cf in cfs])
-
-  assert (len(cfs) == len(output_message.outcome))
-  pp_cfs = [
-      preprocessed.PreprocessedContentFile(
-          input_relpath=cf.input_relpath,
-          input_sha256=cf.sha256,
-          input_charcount=cf.charcount,
-          input_linecount=cf.linecount,
-          sha256=hashlib.sha256(outcome.contents.encode('utf-8')).hexdigest(),
-          charcount=len(outcome.contents),
-          linecount=len(outcome.contents.split('\n')),
-          text=outcome.contents,
-          preprocessing_succeeded=(
-              outcome.status == internal_pb2.PreprocessorWorkerJobOutcome.OK),
-          preprocess_time_ms=0,
-          wall_time_ms=0,
-      ) for cf, outcome in zip(cfs, output_message.outcome)
-  ]
-
-  return pp_cfs
+def GetOriginalContentFile(
+    input_session,
+    pp_cf: preprocessed.PreprocessedContentFile) -> contentfiles.ContentFile:
+  components = pp_cf.input_relpath.split(':')
+  clone_from_url = ':'.join(components[:-2])
+  relpath = components[-2]
+  artifact_index = int(components[-1])
+  try:
+    return input_session.query(contentfiles.ContentFile)\
+      .filter(contentfiles.ContentFile.clone_from_url == clone_from_url) \
+      .filter(contentfiles.ContentFile.relpath == relpath) \
+      .filter(contentfiles.ContentFile.artifact_index == artifact_index).one()
+  except sqlalchemy.orm.exc.NoResultFound:
+    return None
 
 
-def ProcessBatch(input_db: preprocessed.PreprocessedContentFile,
-                 output_db: preprocessed.PreprocessedContentFiles,
-                 ids: typing.List[int]):
-  with input_db.Session(commit=True) as input_session:
-    with output_db.Session(commit=True) as output_session:
-      to_preprocess = input_session.query(preprocessed.PreprocessedContentFile) \
+def PreprocessList(input_session,
+                   cfs: typing.List[preprocessed.PreprocessedContentFile],
+                   outdir: pathlib.Path):
+  strings = [cf.text for cf in cfs]
+  output_message = preprocess_java_corpus.PreprocessStringList(strings)
+
+  assert (len(strings) == len(output_message.outcome))
+  for pp_cf, outcome in zip(cfs, output_message.outcome):
+    cf = GetOriginalContentFile(input_session, pp_cf)
+    if not cf:
+      continue
+    contents = f"""\
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORIGINAL
+
+{cf.text.rstrip()}
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RE-WRITTEN
+
+{pp_cf.text.rstrip()}
+""".encode('utf-8')
+    if outcome.status != internal_pb2.PreprocessorWorkerJobOutcome.OK:
+      fs.Write(outdir / 'fail' / f'{pp_cf.sha256}.txt', contents)
+    elif hashlib.sha256(
+        outcome.contents.encode('utf-8')).hexdigest() != pp_cf.sha256:
+      fs.Write(outdir / 'unstable' / f'{pp_cf.sha256}.txt', contents)
+    else:
+      fs.Write(outdir / 'pass' / f'{pp_cf.sha256}.txt', contents)
+
+
+def ProcessBatch(input_db: contentfiles.ContentFiles,
+                 pp_db: preprocessed.PreprocessedContentFile,
+                 outdir: pathlib.Path, ids: typing.List[int]):
+  with pp_db.Session(commit=True) as pp_session:
+    with input_db.Session() as input_session:
+      to_preprocess = pp_session.query(preprocessed.PreprocessedContentFile) \
         .filter(preprocessed.PreprocessedContentFile.id.in_(ids))
-      processed = PreprocessList(to_preprocess)
-      output_session.add_all(processed)
+      PreprocessList(input_session, to_preprocess, outdir)
 
 
 def Chunk(l, n):
@@ -77,54 +98,60 @@ def Chunk(l, n):
 
 class RePreprocessor(threading.Thread):
 
-  def __init__(self, input_db: preprocessed.PreprocessedContentFiles,
-               output_db: preprocessed.PreprocessedContentFiles):
+  def __init__(self, input_db: contentfiles.ContentFiles,
+               pp_db: preprocessed.PreprocessedContentFiles,
+               outdir: pathlib.Path):
     super(RePreprocessor, self).__init__()
     self.input_db = input_db
-    self.output_db = output_db
+    self.pp_db = pp_db
+    self.outdir = outdir
 
   def run(self):
     """Preprocess the contents of a database."""
-    with self.input_db.Session() as input_session:
-      with self.output_db.Session() as output_session:
-        already_preprocessed = output_session.query(
-            preprocessed.PreprocessedContentFile.id)
-
-        to_preprocess = input_session.query(
-            preprocessed.PreprocessedContentFile.id) \
-            .filter(preprocessed.PreprocessedContentFile.preprocessing_succeeded == True)\
-            .filter(preprocessed.PreprocessedContentFile.id.in_(
-                already_preprocessed))
-        ids_to_preprocess = [x[0] for x in to_preprocess]
+    with self.pp_db.Session() as pp_session:
+      to_preprocess = pp_session.query(
+          preprocessed.PreprocessedContentFile.id) \
+        .filter(preprocessed.PreprocessedContentFile.preprocessing_succeeded == True)
+      ids_to_preprocess = [x[0] for x in to_preprocess]
 
     max_workers = FLAGS.preprocess_worker_threads
     app.Log(1, "Preprocessing %s Java methods in %s worker threads",
             humanize.Commas(len(ids_to_preprocess)), max_workers)
     if FLAGS.multithreaded_preprocess:
       with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        f = lambda x: ProcessBatch(self.input_db, self.output_db, x)
+        f = lambda x: ProcessBatch(self.input_db, self.pp_db, self.outdir, x)
         for _ in executor.map(
             f, Chunk(ids_to_preprocess, FLAGS.preprocess_worker_chunk_size)):
           pass
     else:
       for id_ in ids_to_preprocess:
-        ProcessBatch(self.input_db, self.output_db, [id_])
+        ProcessBatch(self.input_db, self.pp_db, self.outdir, [id_])
 
 
-def Repreprocess(input_db, output_db):
+def GetPreprocessedCount(outdir: pathlib.Path) -> int:
+  return (len(list(
+      (outdir / 'pass').iterdir())) + len(list(
+          (outdir / 'fail').iterdir())) + len(
+              list((outdir / 'unstable').iterdir())))
+
+
+def Repreprocess(input_db, pp_db, outdir: pathlib.Path):
+  (outdir / 'pass').mkdir(parents=True, exist_ok=True)
+  (outdir / 'fail').mkdir(parents=True, exist_ok=True)
+  (outdir / 'unstable').mkdir(parents=True, exist_ok=True)
+
   start_time = time.time()
-  thread = RePreprocessor(input_db, output_db)
+  thread = RePreprocessor(input_db, pp_db, outdir)
   thread.start()
 
-  with input_db.Session() as s:
+  with pp_db.Session() as s:
     cf_count = s.query(preprocessed.PreprocessedContentFile) \
       .filter(preprocessed.PreprocessedContentFile.preprocessing_succeeded == True) \
       .count()
 
   while True:
     runtime = time.time() - start_time
-    with output_db.Session() as s:
-      exported_count = s.query(preprocessed.PreprocessedContentFile).count()
+    exported_count = GetPreprocessedCount(outdir)
     sys.stdout.write(
         f"\rRuntime: {humanize.Duration(runtime)}. "
         f"Exported contentfiles: {humanize.Commas(exported_count)} "
@@ -144,7 +171,7 @@ def Repreprocess(input_db, output_db):
 
 def main():
   """Main entry point."""
-  Repreprocess(FLAGS.input(), FLAGS.output())
+  Repreprocess(FLAGS.input(), FLAGS.input_pp(), FLAGS.outdir)
 
 
 if __name__ == '__main__':
