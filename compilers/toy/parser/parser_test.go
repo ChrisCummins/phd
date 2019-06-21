@@ -8,7 +8,7 @@ import (
 
 // Test inputs from github.com/nlsandler/write_a_c_compiler/stage_1/valid
 
-func TestLexMultiDigit(t *testing.T) {
+func TestParseMultiDigit(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -31,7 +31,7 @@ func TestLexMultiDigit(t *testing.T) {
 	assert.Equal(int32(100), p.Function.Statement.Expression.Value)
 }
 
-func TestLexNewlines(t *testing.T) {
+func TestParseNewlines(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -54,7 +54,7 @@ func TestLexNewlines(t *testing.T) {
 	assert.Equal(int32(0), p.Function.Statement.Expression.Value)
 }
 
-func TestLexNoNewlines(t *testing.T) {
+func TestParseNoNewlines(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -77,7 +77,7 @@ func TestLexNoNewlines(t *testing.T) {
 	assert.Equal(int32(0), p.Function.Statement.Expression.Value)
 }
 
-func TestLexReturn0(t *testing.T) {
+func TestParseReturn0(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -100,7 +100,7 @@ func TestLexReturn0(t *testing.T) {
 	assert.Equal(int32(0), p.Function.Statement.Expression.Value)
 }
 
-func TestLexReturn2(t *testing.T) {
+func TestParseReturn2(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -123,7 +123,7 @@ func TestLexReturn2(t *testing.T) {
 	assert.Equal(int32(2), p.Function.Statement.Expression.Value)
 }
 
-func TestLexSpaces(t *testing.T) {
+func TestParseSpaces(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -148,7 +148,7 @@ func TestLexSpaces(t *testing.T) {
 
 // Test inputs from github.com/nlsandler/write_a_c_compiler/stage_1/invalid
 
-func TestLexMissingParen(t *testing.T) {
+func TestParseMissingParen(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -165,7 +165,7 @@ func TestLexMissingParen(t *testing.T) {
 	assert.Nil(p)
 }
 
-func TestLexMissingRetval(t *testing.T) {
+func TestParseMissingRetval(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -182,7 +182,7 @@ func TestLexMissingRetval(t *testing.T) {
 	assert.Nil(p)
 }
 
-func TestLexNoBrace(t *testing.T) {
+func TestParseNoBrace(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -197,7 +197,7 @@ func TestLexNoBrace(t *testing.T) {
 	assert.Nil(p)
 }
 
-func TestLexNoSemicolon(t *testing.T) {
+func TestParseNoSemicolon(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -212,7 +212,7 @@ func TestLexNoSemicolon(t *testing.T) {
 	assert.Nil(p)
 }
 
-func TestLexNoSpace(t *testing.T) {
+func TestParseNoSpace(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
@@ -229,7 +229,7 @@ func TestLexNoSpace(t *testing.T) {
 	assert.Nil(p)
 }
 
-func TestLexWrongCase(t *testing.T) {
+func TestParseWrongCase(t *testing.T) {
 	assert := assert.New(t)
 	ts := token.NewTokenStream([]token.Token{
 		token.Token{token.IntKeywordToken, "int"},
