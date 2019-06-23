@@ -7,10 +7,8 @@ import (
 	"github.com/ChrisCummins/phd/compilers/toy/parser"
 	"io/ioutil"
 	"os"
+	"strings"
 )
-
-var FLAGS_i = flag.String("i", "", "Path to input file.")
-var FLAGS_o = flag.String("o", "", "Path to output file.")
 
 func check(e error) {
 	if e != nil {
@@ -20,20 +18,23 @@ func check(e error) {
 
 func main() {
 	flag.Parse()
-	inputPath := FLAGS_i
-	outputPath := FLAGS_o
-
-	if *inputPath == "" {
-		// TODO: Check for `.c` suffix.
-		fmt.Fprintf(os.Stderr, "Input -i not provided")
+	if flag.NArg() < 1 {
+		fmt.Fprintf(os.Stderr, "No input file provided.\n")
+		os.Exit(1)
+	} else if flag.NArg() > 1 {
+		fmt.Fprintf(os.Stderr, "No support for multiple input files.\n")
 		os.Exit(1)
 	}
-	if *outputPath == "" {
-		// TODO: Get basename of source file and append suffix.
-		*outputPath = *inputPath + `.s`
+	inputPath := flag.Arg(0)
+
+	if !strings.HasSuffix(inputPath, ".c") {
+		fmt.Fprintf(os.Stderr, "Unrecognised file type\n")
+		os.Exit(1)
 	}
 
-	data, err := ioutil.ReadFile(*inputPath)
+	outputPath := strings.TrimSuffix(inputPath, ".c") + ".s"
+
+	data, err := ioutil.ReadFile(inputPath)
 	check(err)
 
 	ts := lexer.NewLexerTokenStream(lexer.Lex(string(data)))
@@ -44,6 +45,6 @@ func main() {
 	as, err := ast.GenerateAssembly()
 	check(err)
 
-	err = ioutil.WriteFile(*outputPath, []byte(as), 0644)
+	err = ioutil.WriteFile(outputPath, []byte(as), 0644)
 	check(err)
 }
