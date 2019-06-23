@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"github.com/ChrisCummins/phd/compilers/toy/ast"
 	"github.com/ChrisCummins/phd/compilers/toy/token"
 	"strconv"
@@ -11,7 +12,8 @@ import (
 //     <program> ::= <function>
 //     <function> ::= "int" <id> "(" ")" "{" <statement> "}"
 //     <statement> ::= "return" <exp> ";"
-//     <exp> ::= <int>
+//     <exp> ::= <unary_op> <exp> | <int>
+//     <unary_op> ::= "!" | "~" | "-"
 
 func Parse(ts token.TokenStream) (*ast.Program, error) {
 	function, err := ParseFunction(ts)
@@ -72,15 +74,46 @@ func ParseStatement(ts token.TokenStream) (*ast.ReturnStatement, error) {
 	return &statement, nil
 }
 
-func ParseExpression(ts token.TokenStream) (*ast.Int32Literal, error) {
-	if !ts.Next() || ts.Value().Type != token.NumberToken {
-		return nil, errors.New("expected numeric literal")
+func ParseExpression(ts token.TokenStream) (ast.Expression, error) {
+	if !ts.Next() {
+		return nil, errors.New("ran out of tokens")
 	}
 
-	i, err := strconv.Atoi(ts.Value().Value)
+	if ts.Value().Type == token.NumberToken {
+		return ConsumeIntegerLiteral(ts.Value())
+	}
+
+	op, err := ConsumeUnaryOp(ts.Value())
 	if err != nil {
 		return nil, err
 	}
 
+	exp, err := ParseExpression(ts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.UnaryOp{Operator: op, Expression: exp}, nil
+}
+
+func ConsumeIntegerLiteral(t token.Token) (*ast.Int32Literal, error) {
+	i, err := strconv.Atoi(t.Value)
+	if err != nil {
+		return nil, err
+	}
 	return &ast.Int32Literal{Value: int32(i)}, nil
+}
+
+func ConsumeUnaryOp(t token.Token) (*ast.UnaryOpOperator, error) {
+	switch t.Type {
+	case token.LogicalNegationToken:
+		return &ast.UnaryOpOperator{Type: t.Type}, nil
+	case token.BitwiseComplementToken:
+		return &ast.UnaryOpOperator{Type: t.Type}, nil
+	case token.NegationToken:
+		return &ast.UnaryOpOperator{Type: t.Type}, nil
+	default:
+		return nil, errors.New(
+			fmt.Sprintf("invalid unary operator `%v`", t.Value))
+	}
 }

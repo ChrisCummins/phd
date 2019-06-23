@@ -28,7 +28,7 @@ func TestParseMultiDigit(t *testing.T) {
 	assert.Equal("main", p.Function.Identifier)
 	assert.NotEqual(nil, p.Function.Statement)
 	assert.NotEqual(nil, p.Function.Statement.Expression)
-	assert.Equal(int32(100), p.Function.Statement.Expression.Value)
+	assert.Equal("Int<100>", p.Function.Statement.Expression.String())
 }
 
 func TestParseNewlines(t *testing.T) {
@@ -51,7 +51,7 @@ func TestParseNewlines(t *testing.T) {
 	assert.Equal("main", p.Function.Identifier)
 	assert.NotEqual(nil, p.Function.Statement)
 	assert.NotEqual(nil, p.Function.Statement.Expression)
-	assert.Equal(int32(0), p.Function.Statement.Expression.Value)
+	assert.Equal("Int<0>", p.Function.Statement.Expression.String())
 }
 
 func TestParseNoNewlines(t *testing.T) {
@@ -74,7 +74,7 @@ func TestParseNoNewlines(t *testing.T) {
 	assert.Equal("main", p.Function.Identifier)
 	assert.NotEqual(nil, p.Function.Statement)
 	assert.NotEqual(nil, p.Function.Statement.Expression)
-	assert.Equal(int32(0), p.Function.Statement.Expression.Value)
+	assert.Equal("Int<0>", p.Function.Statement.Expression.String())
 }
 
 func TestParseReturn0(t *testing.T) {
@@ -97,7 +97,7 @@ func TestParseReturn0(t *testing.T) {
 	assert.Equal("main", p.Function.Identifier)
 	assert.NotEqual(nil, p.Function.Statement)
 	assert.NotEqual(nil, p.Function.Statement.Expression)
-	assert.Equal(int32(0), p.Function.Statement.Expression.Value)
+	assert.Equal("Int<0>", p.Function.Statement.Expression.String())
 }
 
 func TestParseReturn2(t *testing.T) {
@@ -120,7 +120,7 @@ func TestParseReturn2(t *testing.T) {
 	assert.Equal("main", p.Function.Identifier)
 	assert.NotEqual(nil, p.Function.Statement)
 	assert.NotEqual(nil, p.Function.Statement.Expression)
-	assert.Equal(int32(2), p.Function.Statement.Expression.Value)
+	assert.Equal("Int<2>", p.Function.Statement.Expression.String())
 }
 
 func TestParseSpaces(t *testing.T) {
@@ -143,7 +143,7 @@ func TestParseSpaces(t *testing.T) {
 	assert.Equal("main", p.Function.Identifier)
 	assert.NotEqual(nil, p.Function.Statement)
 	assert.NotEqual(nil, p.Function.Statement.Expression)
-	assert.Equal(int32(0), p.Function.Statement.Expression.Value)
+	assert.Equal("Int<0>", p.Function.Statement.Expression.String())
 }
 
 // Test inputs from github.com/nlsandler/write_a_c_compiler/stage_1/invalid
@@ -239,6 +239,254 @@ func TestParseWrongCase(t *testing.T) {
 		token.Token{token.OpenBraceToken, "{"},
 		token.Token{token.IdentifierToken, "RETURN"},
 		token.Token{token.NumberToken, "0"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+	assert.NotNil(err)
+	assert.Nil(p)
+}
+
+// Test inputs from github.com/nlsandler/write_a_c_compiler/stage_2/valid
+
+func TestParseBitwise(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.LogicalNegationToken, "!"},
+		token.Token{token.NumberToken, "12"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("! Int<12>", p.Function.Statement.Expression.String())
+}
+
+func TestParseBitwiseZero(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.BitwiseComplementToken, "~"},
+		token.Token{token.NumberToken, "0"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("~ Int<0>", p.Function.Statement.Expression.String())
+}
+
+func TestParseNeg(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.NegationToken, "-"},
+		token.Token{token.NumberToken, "5"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("- Int<5>", p.Function.Statement.Expression.String())
+}
+
+func TestParseNestedOps(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.LogicalNegationToken, "!"},
+		token.Token{token.NegationToken, "-"},
+		token.Token{token.NumberToken, "3"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("! - Int<3>", p.Function.Statement.Expression.String())
+}
+
+func TestParseNestedOps2(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.NegationToken, "-"},
+		token.Token{token.BitwiseComplementToken, "~"},
+		token.Token{token.NumberToken, "0"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("- ~ Int<0>", p.Function.Statement.Expression.String())
+}
+
+func TestParseNotFive(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.LogicalNegationToken, "!"},
+		token.Token{token.NumberToken, "5"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("! Int<5>", p.Function.Statement.Expression.String())
+}
+
+func TestParseNotZero(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.LogicalNegationToken, "!"},
+		token.Token{token.NumberToken, "0"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("! Int<0>", p.Function.Statement.Expression.String())
+}
+
+// Test inputs from github.com/nlsandler/write_a_c_compiler/stage_2/invalid
+
+func TestParseMissingConst(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.LogicalNegationToken, "!"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+	assert.NotNil(err)
+	assert.Nil(p)
+}
+
+func TestParseMissingSemicolon(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.LogicalNegationToken, "!"},
+		token.Token{token.NumberToken, "5"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+	assert.NotNil(err)
+	assert.Nil(p)
+}
+
+func TestParseNestedMissingConst(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.LogicalNegationToken, "!"},
+		token.Token{token.BitwiseComplementToken, "~"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+	assert.NotNil(err)
+	assert.Nil(p)
+}
+
+func TestParseWrongOrder(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.NumberToken, "4"},
+		token.Token{token.NegationToken, "-"},
 		token.Token{token.SemicolonToken, ";"},
 		token.Token{token.CloseBraceToken, "}"},
 	})

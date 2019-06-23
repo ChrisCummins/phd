@@ -1,6 +1,9 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/ChrisCummins/phd/compilers/toy/token"
+)
 
 type Program struct {
 	// This will later be extended to multiple functions.
@@ -37,7 +40,7 @@ func (f *Function) GenerateAssembly() (string, error) {
 
 type ReturnStatement struct {
 	// This will later be extended to different return types.
-	Expression *Int32Literal
+	Expression Expression
 }
 
 func (s ReturnStatement) String() string {
@@ -52,6 +55,11 @@ func (s *ReturnStatement) GenerateAssembly() (string, error) {
 	return fmt.Sprintf(" movl    %v, %%eax\n ret", expression), nil
 }
 
+type Expression interface {
+	GenerateAssembly() (string, error)
+	String() string
+}
+
 type Int32Literal struct {
 	Value int32
 }
@@ -62,4 +70,53 @@ func (i Int32Literal) String() string {
 
 func (i *Int32Literal) GenerateAssembly() (string, error) {
 	return fmt.Sprintf("$%v", i.Value), nil
+}
+
+type UnaryOp struct {
+	Operator   *UnaryOpOperator
+	Expression Expression
+}
+
+func (u UnaryOp) String() string {
+	return fmt.Sprintf("%v %v", u.Operator, u.Expression)
+}
+
+func (u *UnaryOp) GenerateAssembly() (string, error) {
+	op, err := u.Operator.GenerateAssembly()
+	if err != nil {
+		return "", err
+	}
+	exp, err := u.Expression.GenerateAssembly()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%v\n %v", exp, op), nil
+}
+
+type UnaryOpOperator struct {
+	Type token.TokenType
+}
+
+func (u UnaryOpOperator) String() string {
+	switch u.Type {
+	case token.LogicalNegationToken:
+		return "!"
+	case token.BitwiseComplementToken:
+		return "~"
+	case token.NegationToken:
+		return "-"
+	}
+	panic("unreachable!")
+}
+
+func (u *UnaryOpOperator) GenerateAssembly() (string, error) {
+	switch u.Type {
+	case token.LogicalNegationToken:
+		return "cmpl   $0, %eax\n movl   $0, %eax\n sete   %al", nil
+	case token.BitwiseComplementToken:
+		return "not     %eax", nil
+	case token.NegationToken:
+		return "neg     %eax", nil
+	}
+	panic("unreachable!")
 }
