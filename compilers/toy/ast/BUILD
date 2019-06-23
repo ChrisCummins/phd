@@ -5,6 +5,7 @@ go_library(
     srcs = ["ast.go"],
     importpath = "github.com/ChrisCummins/phd/compilers/toy/ast",
     visibility = ["//visibility:public"],
+    deps = ["//compilers/toy/token:go_default_library"],
 )
 
 go_test(
