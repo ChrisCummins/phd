@@ -63,8 +63,8 @@ std::vector<int> TokenizeInput(
 void ProcessLexerJob(LexerJob* input,
                      const absl::flat_hash_set<string>& candidate_vocabulary,
                      absl::flat_hash_map<string, int>* vocabulary) {
-  auto tokenized = TokenizeInput(
-      input->string(), candidate_vocabulary, vocabulary);
+  auto tokenized =
+      TokenizeInput(input->string(), candidate_vocabulary, vocabulary);
   for (int j = 0; j < tokenized.size(); ++j) {
     input->add_token(tokenized[j]);
   }
@@ -74,8 +74,8 @@ void ProcessLexerJob(LexerJob* input,
 void ProcessLexerBatchJobOrDie(LexerBatchJob* proto) {
   // Initialize vocabulary.
   absl::flat_hash_map<string, int> vocabulary;
-  for (auto it = proto->vocabulary().begin();
-       it != proto->vocabulary().end(); ++it) {
+  for (auto it = proto->vocabulary().begin(); it != proto->vocabulary().end();
+       ++it) {
     vocabulary.insert({it->first, it->second});
   }
 

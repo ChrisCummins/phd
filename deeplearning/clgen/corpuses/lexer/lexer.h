@@ -18,8 +18,8 @@
 
 #include "deeplearning/clgen/proto/internal.pb.h"
 
-#include "absl/container/flat_hash_set.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 
 #include "phd/string.h"
 

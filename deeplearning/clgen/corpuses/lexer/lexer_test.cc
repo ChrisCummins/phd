@@ -16,8 +16,8 @@
 
 #include "deeplearning/clgen/proto/internal.pb.h"
 
-#include "absl/container/flat_hash_set.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 
 #include "phd/string.h"
 #include "phd/test.h"
@@ -151,8 +151,8 @@ TEST(TokenizeInput, SmallCProgram) {
   candidate_vocab.insert("float");  // unused
   candidate_vocab.insert("return");
   absl::flat_hash_map<string, int> vocab;
-  auto tokenized = TokenizeInput("int void main() { return 0; }",
-                                 candidate_vocab, &vocab);
+  auto tokenized =
+      TokenizeInput("int void main() { return 0; }", candidate_vocab, &vocab);
   auto rvocab = GetReverseVocab(vocab);
 
   ASSERT_EQ(11, vocab.size());

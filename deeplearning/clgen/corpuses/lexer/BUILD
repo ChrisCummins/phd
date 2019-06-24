@@ -7,9 +7,9 @@ cc_library(
     deps = [
         "//deeplearning/clgen/proto:internal_pb_cc",
         "//phd:string",
-        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/container:flat_hash_map",
-    ]
+        "@com_google_absl//absl/container:flat_hash_set",
+    ],
 )
 
 cc_test(
@@ -19,7 +19,7 @@ cc_test(
         ":lexer",
         "//phd:string",
         "//phd:test",
-    ]
+    ],
 )
 
 cc_binary(
@@ -27,7 +27,7 @@ cc_binary(
     srcs = ["lexer_worker.cc"],
     visibility = ["//visibility:public"],
     deps = [
-        "//phd:pbutil",
         ":lexer",
-    ]
+        "//phd:pbutil",
+    ],
 )
