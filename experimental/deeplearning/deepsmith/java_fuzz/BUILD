@@ -1,6 +1,33 @@
 load("@io_bazel_rules_docker//python3:image.bzl", "py3_image")
 
 py_binary(
+    name = "encode_java_corpus",
+    srcs = ["encode_java_corpus.py"],
+    data = ["//deeplearning/clgen/corpuses/lexer:lexer_worker"],
+    deps = [
+        "//deeplearning/clgen/corpuses:encoded",
+        "//deeplearning/clgen/corpuses:preprocessed",
+        "//deeplearning/clgen/proto:clgen_pb_py",
+        "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:pbutil",
+        "//labm8:sqlutil",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_test(
+    name = "encode_java_corpus_test",
+    srcs = ["encode_java_corpus_test.py"],
+    deps = [
+        ":encode_java_corpus",
+        "//deeplearning/clgen/corpuses:encoded",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_binary(
     name = "export_java_corpus",
     srcs = ["export_java_corpus.py"],
     deps = [
