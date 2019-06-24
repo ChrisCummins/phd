@@ -26,7 +26,7 @@ test_not_implemented () {
 }
 
 run_our_program () {
-    test -f "$1" || { echo "$1 not found!"; }
+    test -f "$1"
     actual_out=`./$1 2>/dev/null`
     actual_exit_code=$?
     rm $1 2>/dev/null
