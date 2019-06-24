@@ -54,8 +54,7 @@ test_stage () {
     echo "===================================================="
     echo "STAGE $1"
     echo "===================Valid Programs==================="
-    for prog in `find . -type f -name "*.c" -path "./stage_$1/valid/*" -not -path "*/valid_multifile/*" 2>/dev/null`; do
-
+    for prog in `ls stage_$1/valid/{,**/}*.c 2>/dev/null`; do
         gcc -w $prog
         run_correct_program
 
