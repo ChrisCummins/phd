@@ -84,6 +84,7 @@ py_library(
     srcs = ["encoded.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":atomizers",
         ":preprocessed",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors",
