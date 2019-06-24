@@ -3,6 +3,10 @@
   <component name="RunConfigurationProducerService">
     <option name="ignoredProducers">
       <set>
+        <option value="com.goide.execution.application.GoApplicationRunConfigurationProducer" />
+        <option value="com.goide.execution.testing.frameworks.gobench.GobenchRunConfigurationProducer" />
+        <option value="com.goide.execution.testing.frameworks.gocheck.GocheckRunConfigurationProducer" />
+        <option value="com.goide.execution.testing.frameworks.gotest.GotestRunConfigurationProducer" />
         <option value="com.intellij.execution.application.ApplicationConfigurationProducer" />
         <option value="com.intellij.execution.junit.AllInDirectoryConfigurationProducer" />
         <option value="com.intellij.execution.junit.AllInPackageConfigurationProducer" />

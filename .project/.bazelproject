@@ -1,7 +1,15 @@
 directories:
   # Add the directories you want added as source here
-  # By default, we've added your entire workspace ('.')
   .
+  # experimental/deeplearning/deepsmith/java_fuzz
+  # datasets/github
+  # compilers/toy
+  # deeplearning/deepsmith
+  # tools/docker
+  # deeplearning/clgen
+  # labm8
+  # learn/go
+  # third_party/py
 
 targets:
   # Add targets that reach the source code that you want to resolve here
@@ -12,9 +20,9 @@ additional_languages:
   # Uncomment any additional languages you want supported
   # android
   # dart
-  # go
   # javascript
   # kotlin
-  python
   # scala
   # typescript
+  go
+  python
