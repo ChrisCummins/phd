@@ -18,18 +18,17 @@ import time
 
 import datetime
 import numpy as np
-import pathlib
 import pickle
+import progressbar
 import sqlalchemy as sql
 import typing
-from deeplearning.clgen.proto import internal_pb2
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
-import progressbar
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
+from deeplearning.clgen.proto import internal_pb2
 from labm8 import app
 from labm8 import humanize
 from labm8 import sqlutil
@@ -119,9 +118,8 @@ def EncoderWorker(
 class EncodedContentFiles(sqlutil.Database):
   """A database of encoded pre-processed contentfiles."""
 
-  def __init__(self, path: pathlib.Path):
-    super(EncodedContentFiles, self).__init__(f'sqlite:///{path.absolute()}',
-                                              Base)
+  def __init__(self, url: str, must_exist: bool = False):
+    super(EncodedContentFiles, self).__init__(url, Base, must_exist=must_exist)
 
   def Create(self, p: preprocessed.PreprocessedContentFiles,
              atomizer: atomizers.AtomizerBase,

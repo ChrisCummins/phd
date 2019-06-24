@@ -15,9 +15,9 @@
 """Unit tests for //deeplearning/clgen/corpuses:encoded.py."""
 import numpy as np
 import pathlib
+import pytest
 import tempfile
 
-import pytest
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
@@ -44,7 +44,7 @@ def abc_preprocessed() -> preprocessed.PreprocessedContentFile:
 def temp_db() -> encoded.EncodedContentFiles:
   """A test fixture which returns an empty EncodedContentFiles db."""
   with tempfile.TemporaryDirectory() as d:
-    yield encoded.EncodedContentFiles(pathlib.Path(d) / 'test.db')
+    yield encoded.EncodedContentFiles(f'sqlite:///{d}/test.db')
 
 
 # EncodedContentFile.FromPreprocessed() tests.

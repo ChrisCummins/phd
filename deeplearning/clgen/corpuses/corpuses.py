@@ -20,20 +20,20 @@ is a file containing text to train over.
 import os
 import time
 
+import checksumdir
 import numpy as np
 import pathlib
 import subprocess
 import tempfile
-from deeplearning.clgen.proto import corpus_pb2
 from sqlalchemy.sql.expression import func
 
-import checksumdir
 from deeplearning.clgen import cache
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.proto import corpus_pb2
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import crypto
@@ -154,8 +154,8 @@ class Corpus(object):
     encoded_id = ResolveEncodedId(self.content_id, self.config)
     cache.cachepath('corpus', 'encoded', encoded_id).mkdir(exist_ok=True,
                                                            parents=True)
-    self.encoded = encoded.EncodedContentFiles(
-        cache.cachepath('corpus', 'encoded', encoded_id, 'encoded.db'))
+    db_path = cache.cachepath('corpus', 'encoded', encoded_id, 'encoded.db')
+    self.encoded = encoded.EncodedContentFiles(f'sqlite:///{db_path}')
     self.atomizer_path = cache.cachepath('corpus', 'encoded', encoded_id,
                                          'atomizer.pkl')
     # Create symlink to preprocessed files.
