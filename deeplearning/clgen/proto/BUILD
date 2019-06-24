@@ -98,3 +98,11 @@ java_proto_library(
         ":telemetry_pb",
     ],
 )
+
+cc_proto_library(
+    name = "internal_pb_cc",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":internal_pb",
+    ],
+)

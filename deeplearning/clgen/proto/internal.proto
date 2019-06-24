@@ -103,3 +103,20 @@ message JavaRewriterJob {
   // A string description of the status. Only set if status != OK.
   optional string status_msg = 4;
 }
+
+
+message LexerJob {
+  // The string to tokenize.
+  optional string string = 1;
+  // The tokenized string.
+  repeated int32 token = 2;
+}
+
+message LexerBatchJob {
+  repeated LexerJob input = 1;
+  // The candidate vocabulary. This is the list of multicharacter tokens,
+  // including all those already in the vocabulary map below.
+  repeated string candidate_token = 2;
+  // The derived vocabulary and its numerical mapping.
+  map<string, int32> vocabulary = 3;
+}
