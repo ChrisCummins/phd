@@ -27,8 +27,8 @@ import org.eclipse.jface.text.Document;
 public final class JavaPreprocessor {
 
   // Configuration options.
-  private static final int MIN_CHAR_COUNT = 50;
-  private static final int MIN_LINE_COUNT = 3;
+  private static final int MIN_CHAR_COUNT = 100;
+  private static final int MIN_LINE_COUNT = 4;
   // End of configuration options.
 
   /** Construct a preprocessor. */
@@ -176,8 +176,7 @@ public final class JavaPreprocessor {
 
     if (contents.length() < MIN_CHAR_COUNT) {
       message.setStatus(PreprocessorWorkerJobOutcome.Status.TOO_FEW_CHARACTERS);
-      message.setContents(
-          "Character count is too short: " + contents.length() + " < " + MIN_CHAR_COUNT);
+      message.setContents("Fewer than " + MIN_CHAR_COUNT + " chars");
       return message.build();
     }
 
