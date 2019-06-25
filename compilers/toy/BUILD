@@ -120,3 +120,13 @@ sh_test(
 #        ":test_data",
 #    ],
 #)
+#
+#sh_test(
+#    name = "stage10_test",
+#    srcs = ["run_tests.sh"],
+#    args = ["10"],
+#    data = [
+#        ":compile",
+#        ":test_data",
+#    ],
+#)
