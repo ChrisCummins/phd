@@ -390,7 +390,7 @@ public class JavaRewriter {
             final String oldName = node.toString();
             final String newName = GetNextName(rewriteTable, oldName, base_char, name_prefix);
             traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
-            System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
+            // System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
             return true;
           }
 
@@ -481,10 +481,10 @@ public class JavaRewriter {
             if (rewriteTable.containsKey(oldName)) {
               final String newName = rewriteTable.get(oldName);
               traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
-              System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
+              // System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
             }
             // Lookup failed for name re-writer.
-            System.err.println("!! " + type_name + ": miss for " + oldName);
+            // System.err.println("!! " + type_name + ": miss for " + oldName);
             return false;
           }
 
