@@ -154,19 +154,19 @@ class Preprocessor(threading.Thread):
 def main():
   """Main entry point."""
   start_time = time.time()
-  exporter = Preprocessor(FLAGS.input(), FLAGS.output())
+  input_db = FLAGS.input()
+  output_db = FLAGS.output()
+  exporter = Preprocessor(input_db, output_db)
   exporter.start()
-
-  with FLAGS.input().Session() as s:
-    repo_count = s.query(contentfiles.GitHubRepository) \
-      .filter(contentfiles.GitHubRepository.active == True).count()
 
   while True:
     runtime = time.time() - start_time
-    with FLAGS.input().Session() as s:
+    with input_db.Session() as s:
+      repo_count = s.query(contentfiles.GitHubRepository) \
+        .filter(contentfiles.GitHubRepository.active == True).count()
       exported_repo_count = s.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.exported == True).count()
-    with FLAGS.output().Session() as s:
+    with output_db.Session() as s:
       exported_contentfile_count = s.query(
           preprocessed.PreprocessedContentFile).count()
     sys.stdout.write(
