@@ -197,17 +197,21 @@ def test_JavaRewrite_hello_world():
   assert java.JavaRewrite("hello, world") == "hello, world\n"
 
 
-def test_JavaRewrite_delete_comment():
-  """Comment(s) are deleted."""
-  assert java.JavaRewrite('/* This is a comment */') == '\n'
-  assert java.JavaRewrite('//Line comment') == '\n'
+def test_JavaRewrite_comments_are_unchanged():
+  """Comment(s) are not deleted."""
   assert java.JavaRewrite("""
 /**
  * Docstring format comment.
  */
 // And a line comment.
 /* And a C syntax style comment. */
-""") == '\n'
+""") == """\
+/**
+ * Docstring format comment.
+ */
+// And a line comment.
+/* And a C syntax style comment. */
+"""
 
 
 def test_JavaRewrite_whitespace():
@@ -264,11 +268,26 @@ public class A {
 \t}
 }
 """
-  """
-private static boolean slowEquals(byte[] a,byte[] b){
-  int diff=a.length ^ b.length;
-  for (int i=0; i < a.length && i < b.length; i++)   diff|=a[i] ^ b[i];
-  return diff == 0;
+
+
+def test_JavaRewrite_conflicting_variable_and_method_names():
+  assert java.JavaRewrite("""
+public class A {
+  public static double[] createEntry(final double[] position){
+    int length=position.length;
+    int sqrt=(int)Math.sqrt(9);
+
+    return 0.0;
+  }
+}
+""") == """\
+public class A {
+\tpublic static double[] fn_A(final double[] a) {
+\t\tint b = a.length;
+\t\tint c = (int) Math.sqrt(9);
+
+\t\treturn 0.0;
+\t}
 }
 """
 

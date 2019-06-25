@@ -1,4 +1,4 @@
-// Work in progress on Java AST rewriter.
+// A Java AST rewriter.
 //
 // Copyright (c) 2016, 2017, 2018, 2019 Chris Cummins.
 //
@@ -16,6 +16,7 @@
 // along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 package deeplearning.clgen.preprocessors;
 
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -115,6 +116,10 @@ public class JavaRewriter {
         "volatile",
         "while"
       };
+
+  String[] OTHER_WORDS =
+      new String[] {"length", "sqrt", "pow", "random", "max", "int", "cos", "sin", "ceiling"};
+
   private static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(RESERVED_WORDS_));
   private ASTRewrite traversalRewrite;
   private AST traversalAST; // Abstract Syntax Tree
@@ -134,6 +139,9 @@ public class JavaRewriter {
    *
    * @param edits The edit list to append comment-removing edits to.
    * @param compilationUnit The compilation unit to remove comments from.
+   * @deprecated StripComments() is no longer required, because the pre-processing pipeline has been
+   *     modified so as to delte comments. See:
+   *     //datasets/github/scrape_repos/preprocessors:extractors.
    */
   private static void StripComments(
       ArrayList<TextEdit> edits, final CompilationUnit compilationUnit) {
@@ -201,10 +209,10 @@ public class JavaRewriter {
         UndoEdit undo = edit.apply(document); // Do something if it fails. Fall back?
       } catch (MalformedTreeException e) {
         e.printStackTrace();
-        assert false;
+        // System.out.println("Failed to apply text edit!");
       } catch (BadLocationException e) {
         e.printStackTrace();
-        assert false;
+        // System.out.println("Failed to apply text edit!");
       }
     }
   }
@@ -247,7 +255,7 @@ public class JavaRewriter {
    */
   public boolean processInput(final String fileName, final String[] args) throws IOException {
 
-    System.out.println("Processing input...");
+    // System.out.println("Processing input...");
 
     /*
      * There's a big problem where if the code contains integers in the form of 123_456_789
@@ -262,13 +270,13 @@ public class JavaRewriter {
 
     final String javaCode = ReadFile(fileName, Charset.defaultCharset());
 
-    System.out.println("About to call RewriteSource()");
+    // System.out.println("About to call RewriteSource()");
     final String source = RewriteSource(javaCode);
     if (source == null) {
       System.out.println("fatal: RewriteSource() returned null.");
       System.exit(1);
     }
-    System.out.println(source);
+    // System.out.println(source);
 
     String className = fileName.substring(0, fileName.lastIndexOf("."));
 
@@ -281,26 +289,22 @@ public class JavaRewriter {
     return WriteFile(newClassName + ".java", Charset.defaultCharset(), source);
   }
 
-  /*
   public static void main(final String[] args) {
-  	System.out.println("Calling main from JavaRewriter");
-  	JavaRewriter rewriter = new JavaRewriter();
+    JavaRewriter rewriter = new JavaRewriter();
 
-  	try {
-  		// final String input =ReadFile(args[1], Charset.defaultCharset()); // File as CMD argument
-  		final String input = new String(ByteStreams.toByteArray(System.in)); // File as user input
-  		final String source = rewriter.RewriteSource(input);
-  		if (source == null) {
-  			System.out.println("fatal: RewriteSource() returned null.");
-  			System.exit(1);
-  		}
-  		System.out.println(source);
-  	} catch (IOException e) {
-  		System.err.println("fatal: I/O error");
-  		System.exit(1);
-  	}
+    try {
+      final String input = new String(ByteStreams.toByteArray(System.in));
+      final String source = rewriter.RewriteSource(input);
+      if (source == null) {
+        System.err.println("fatal: RewriteSource() returned null.");
+        System.exit(1);
+      }
+      System.out.println(source);
+    } catch (IOException e) {
+      System.err.println("fatal: I/O error");
+      System.exit(1);
+    }
   }
-  */
 
   /**
    * Generate a new rewrite name.
@@ -360,14 +364,6 @@ public class JavaRewriter {
     Document document = new Document(source);
     CompilationUnit compilationUnit = GetCompilationUnit(document);
     ArrayList<TextEdit> edits = new ArrayList<>();
-    //    // First strip the comments.
-    //    StripComments(edits, compilationUnit);
-    //    ApplyEdits(edits, document);
-    //    source = document.get(); // Updates source (no comments)
-    //    edits.clear();
-
-    //    document = new Document(source);
-    //    compilationUnit = GetCompilationUnit(document);
     // Rewrite identifiers.
     RewriteIdentifiers(edits, compilationUnit, document);
     ApplyEdits(edits, document);
@@ -394,8 +390,7 @@ public class JavaRewriter {
             final String oldName = node.toString();
             final String newName = GetNextName(rewriteTable, oldName, base_char, name_prefix);
             traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
-            //        System.err.println(
-            //            "=> " + type_name + ": " + oldName + " -> " + newName);
+            System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
             return true;
           }
 
@@ -486,13 +481,11 @@ public class JavaRewriter {
             if (rewriteTable.containsKey(oldName)) {
               final String newName = rewriteTable.get(oldName);
               traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
-              //          System.err.println(
-              //              "=> " + type_name + ": " + oldName + " -> " + newName);
-            } else {
-              //          System.err.println("!! " + type_name + ": miss for " + oldName);
-              return false;
+              System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
             }
-            return true;
+            // Lookup failed for name re-writer.
+            System.err.println("!! " + type_name + ": miss for " + oldName);
+            return false;
           }
 
           @Override
@@ -502,14 +495,10 @@ public class JavaRewriter {
 
             switch (parent.getNodeType()) {
               case ASTNode.METHOD_INVOCATION:
-                success = Rename("MethodInvocation", typeRewrites, node);
-                if (!success)
-                  success =
-                      Rename(
-                          "MethodInvocation",
-                          methodRewrites,
-                          node); // TODO: Should we keep both or just one?
-                if (!success) Rename("MethodInvocation", variableRewrites, node);
+                // We ignore method invocations because we only process a single
+                // method at a time, so a method invocation is going to be
+                // for a builtin method.
+                // FIXME: This assumption does not hold for recursive methods.
                 break;
               case ASTNode.SIMPLE_TYPE:
                 Rename("SimpleType", typeRewrites, node);
@@ -530,7 +519,9 @@ public class JavaRewriter {
                 Rename("ArrayAccess", variableRewrites, node);
                 break;
               case ASTNode.QUALIFIED_NAME:
-                Rename("QualifiedName", variableRewrites, node);
+                if (!node.toString().matches("length")) {
+                  Rename("QualifiedName", variableRewrites, node);
+                }
                 break;
               case ASTNode.IF_STATEMENT:
                 Rename("IfStatement", variableRewrites, node);
@@ -559,17 +550,43 @@ public class JavaRewriter {
               case ASTNode.BREAK_STATEMENT:
                 Rename("BreakStatement", labelRewrites, node);
                 break;
-              case ASTNode.METHOD_DECLARATION:
-              case ASTNode.VARIABLE_DECLARATION_FRAGMENT:
-              case ASTNode.SINGLE_VARIABLE_DECLARATION:
-              case ASTNode.TYPE_DECLARATION:
-                // These have already been re-written.
+              case ASTNode.CONDITIONAL_EXPRESSION:
+                Rename("ConditionalExpression", variableRewrites, node);
                 break;
-
+              case ASTNode.VARIABLE_DECLARATION_FRAGMENT:
+                Rename("VariableDeclarationFragment", variableRewrites, node);
+                break;
+              case ASTNode.SINGLE_VARIABLE_DECLARATION:
+                Rename("SingleVariableDeclaration", variableRewrites, node);
+                break;
+              case ASTNode.CAST_EXPRESSION:
+                Rename("CastExpression", variableRewrites, node);
+                break;
+              case ASTNode.ARRAY_INITIALIZER:
+                Rename("ArrayInitializer", variableRewrites, node);
+                break;
+              case ASTNode.PARENTHESIZED_EXPRESSION:
+                Rename("ParenthesizedExpression", variableRewrites, node);
+                break;
+              case ASTNode.INSTANCEOF_EXPRESSION:
+                Rename("InstanceOfExpression", variableRewrites, node);
+                break;
+              case ASTNode.SWITCH_STATEMENT:
+                Rename("SwitchStatement", variableRewrites, node);
+                break;
+              case ASTNode.SWITCH_CASE:
+                Rename("SwitchCase", variableRewrites, node);
+                break;
+              case ASTNode.SYNCHRONIZED_STATEMENT:
+                Rename("SynchronizedStatement", variableRewrites, node);
+                break;
+                // case ASTNode.METHOD_DECLARATION:
+                // case ASTNode.VARIABLE_DECLARATION_FRAGMENT:
+                // case ASTNode.SINGLE_VARIABLE_DECLARATION:
+                // case ASTNode.TYPE_DECLARATION:
+                //   // These have already been re-written.
+                //   break;
               default:
-                //            System.err.println(
-                //                "Unknown type " + parent.getClass().getName() + " for name "
-                //                    + node.toString());
                 break;
             }
 
