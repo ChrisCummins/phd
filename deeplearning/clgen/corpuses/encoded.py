@@ -52,7 +52,8 @@ class EncodedContentFile(Base):
 
   # The ID of the PreprocessedContentFile.
   id: int = sql.Column(sql.Integer, primary_key=True)
-  data: bytes = sql.Column(sql.Binary(), nullable=False)
+  data: bytes = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
   tokencount: int = sql.Column(sql.Integer, nullable=False)
   # The number of milliseconds encoding took.
   encoding_time_ms: int = sql.Column(sql.Integer, nullable=False)
