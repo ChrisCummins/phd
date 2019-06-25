@@ -270,7 +270,8 @@ public class A {
 """
 
 
-def test_JavaRewrite_conflicting_variable_and_method_names():
+def test_JavaRewrite_conflicting_length_name():
+  """Test that rewriter gracefully handles 'length' used as variable."""
   assert java.JavaRewrite("""
 public class A {
   public static double[] createEntry(final double[] position){
