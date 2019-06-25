@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
-"""This file defines a database for pre-preprocessed content files."""
+"""This file defines a database for encoded content files."""
 import multiprocessing
 import time
 
@@ -52,8 +52,11 @@ class EncodedContentFile(Base):
 
   # The ID of the PreprocessedContentFile.
   id: int = sql.Column(sql.Integer, primary_key=True)
-  data: bytes = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  # We store the vocabulary indices array as a string of period-separated
+  # integers, e.g. '0.1.2.0.1'. To access the values as an array of integers,
+  # use EncodedContentFile.indices_array.
+  data: bytes = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                           nullable=False)
   tokencount: int = sql.Column(sql.Integer, nullable=False)
   # The number of milliseconds encoding took.
   encoding_time_ms: int = sql.Column(sql.Integer, nullable=False)
@@ -66,10 +69,20 @@ class EncodedContentFile(Base):
   wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
   date_added: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
 
+  @staticmethod
+  def DataStringToNumpyArray(data: str) -> np.ndarray:
+    """Convert the 'data' string to a numpy array."""
+    return np.array([int(x) for x in data.split('.')], dtype=np.int32)
+
+  @staticmethod
+  def NumpyArrayToDataString(array: np.ndarray) -> str:
+    """Convert the 'data' string to a numpy array."""
+    return '.'.join(str(x) for x in array)
+
   @property
   def indices_array(self) -> np.ndarray:
     """The numpy array of the encoded data."""
-    return np.frombuffer(self.data, dtype=np.int32)
+    return self.DataStringToNumpyArray(self.data)
 
   @classmethod
   def FromPreprocessed(
@@ -94,7 +107,8 @@ class EncodedContentFile(Base):
         # the correct token. For example if the vocabulary contains 'a', 'b',
         # and 'ab', then a content file 'a' with EOF marker 'b' would be encoded
         # as 'ab', instead of 'a'+'b'.
-        data=np.concatenate((data, atomizer.AtomizeString(eof))).tostring(),
+        data=cls.NumpyArrayToDataString(
+            np.concatenate((data, atomizer.AtomizeString(eof)))),
         tokencount=len(data),
         encoding_time_ms=encoding_time_ms,
         wall_time_ms=encoding_time_ms,  # The outer-loop may change this.

@@ -235,13 +235,11 @@ class Corpus(object):
     Returns:
       The encoded corpus.
     """
-    # TODO: Can binary numpy strings be concatenated and decoded as one?
     with self.encoded.Session() as session:
-      query = session.query(encoded.EncodedContentFile.data)
+      query = session.query(encoded.EncodedContentFile)
       if shuffle:
         query = query.order_by(func.random())
-      return np.concatenate(
-          [np.frombuffer(x[0], dtype=np.int32) for x in query])
+      return np.concatenate([x.indices_array for x in query])
 
   def GetNumContentFiles(self) -> int:
     """Get the number of contentfiles which were pre-processed."""

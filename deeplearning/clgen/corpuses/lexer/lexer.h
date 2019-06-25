@@ -30,7 +30,9 @@ namespace clgen {
 bool HasPrefix(const absl::flat_hash_set<string>& strings,
                const std::string& prefix);
 
-// Tokenize a string into a list of tokens.
+// Tokenize a string into a list of tokens, where candidate_vocabulary is the
+// set of multi-character tokens, and vocabulary is a dictionary of mappings
+// from token to indices array.
 std::vector<int> TokenizeInput(
     const std::string& input,
     const absl::flat_hash_set<string>& candidate_vocabulary,
