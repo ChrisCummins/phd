@@ -55,13 +55,13 @@ func (lexer *Lexer) ignore() {
 	lexer.startPosition = lexer.position
 }
 
-func (lexer *Lexer) backup() {
+func (lexer *Lexer) Backup() {
 	lexer.position -= lexer.width
 }
 
 func (lexer *Lexer) peek() rune {
 	rune := lexer.next()
-	lexer.backup()
+	lexer.Backup()
 	return rune
 }
 
@@ -70,7 +70,7 @@ func (lexer *Lexer) accept(valid string) bool {
 	if strings.IndexRune(valid, lexer.next()) >= 0 {
 		return true
 	}
-	lexer.backup()
+	lexer.Backup()
 	return false
 }
 
@@ -79,7 +79,7 @@ func (lexer *Lexer) acceptRun(valid string) {
 	for strings.IndexRune(valid, lexer.next()) >= 0 {
 
 	}
-	lexer.backup()
+	lexer.Backup()
 }
 
 func (lexer *Lexer) NextToken() token.Token {

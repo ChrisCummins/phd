@@ -1,10 +1,90 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/ChrisCummins/phd/compilers/toy/token"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func TestParseFactorNumber(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.NumberToken, "100"},
+	})
+	p, err := ParseFactor(ts)
+
+	assert.Nil(err)
+	assert.NotNil(p)
+	assert.Equal("Int<100>", p.String())
+}
+
+func TestParseFactorUnaryOp(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.NegationToken, "-"},
+		token.Token{token.NumberToken, "100"},
+	})
+	p, err := ParseFactor(ts)
+
+	assert.Nil(err)
+	assert.NotNil(p)
+	assert.Equal("- Int<100>", p.String())
+}
+
+func TestParseTermNumberMultiplication(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.NumberToken, "1"},
+		token.Token{token.MultiplicationToken, "*"},
+		token.Token{token.NumberToken, "2"},
+	})
+
+	p, err := ParseTerm(ts)
+
+	assert.Nil(err)
+	assert.NotNil(p)
+	assert.Equal("Int<1> * Int<2>", p.String())
+}
+
+func TestParseExpressionNumericalAddition(t *testing.T) {
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.NumberToken, "1"},
+		token.Token{token.AdditionToken, "+"},
+		token.Token{token.NumberToken, "2"},
+	})
+
+	p, err := ParseExpression(ts)
+
+	assert.Nil(err)
+	assert.NotNil(p)
+	assert.Equal("Int<1> + Int<2>", p.String())
+}
+
+func TestParseStatementWithParenthesis(t *testing.T) {
+	fmt.Println(">>>>>>>>>>>>>>>>>>>>>> TEST")
+	assert := assert.New(t)
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.NumberToken, "1"},
+		token.Token{token.AdditionToken, "+"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.NumberToken, "2"},
+		token.Token{token.MultiplicationToken, "*"},
+		token.Token{token.NumberToken, "3"},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.SemicolonToken, ";"},
+	})
+
+	p, err := ParseStatement(ts)
+
+	assert.Nil(err)
+	assert.NotNil(p)
+	assert.Equal("RETURN Int<1> + Int<2> * Int<3>", p.String())
+}
 
 // Test inputs from github.com/nlsandler/write_a_c_compiler/stage_1/valid
 

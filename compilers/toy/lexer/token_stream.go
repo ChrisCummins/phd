@@ -28,3 +28,10 @@ func (ts *LexerTokenStream) Next() bool {
 func (ts *LexerTokenStream) Value() token.Token {
 	return ts.value
 }
+
+func (ts *LexerTokenStream) Peek() token.Token {
+	ts.Next()
+	t := ts.Value()
+	ts.lex.Backup()
+	return t
+}

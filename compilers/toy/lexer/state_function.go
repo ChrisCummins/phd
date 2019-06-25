@@ -70,16 +70,22 @@ func lexStartState(lexer *Lexer) stateFunction {
 			return lexBitwiseComplement
 		case r == '-':
 			return lexNegation
+		case r == '+':
+			return lexAddition
+		case r == '*':
+			return lexMultiplication
+		case r == '/':
+			return lexDivision
 		}
 
 		switch r := lexer.next(); {
 		case unicode.IsSpace(r) || r == '\n':
 			lexer.ignore()
 		case unicode.IsDigit(r):
-			lexer.backup()
+			lexer.Backup()
 			return lexNumber
 		case unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_':
-			lexer.backup()
+			lexer.Backup()
 			return lexIdentifier
 		default:
 			return lexer.errorf("illegal character: `%v`", string(r))
@@ -133,6 +139,24 @@ func lexBitwiseComplement(lexer *Lexer) stateFunction {
 func lexNegation(lexer *Lexer) stateFunction {
 	lexer.position += len("-")
 	lexer.emit(token.NegationToken)
+	return lexStartState
+}
+
+func lexAddition(lexer *Lexer) stateFunction {
+	lexer.position += len("+")
+	lexer.emit(token.AdditionToken)
+	return lexStartState
+}
+
+func lexMultiplication(lexer *Lexer) stateFunction {
+	lexer.position += len("*")
+	lexer.emit(token.MultiplicationToken)
+	return lexStartState
+}
+
+func lexDivision(lexer *Lexer) stateFunction {
+	lexer.position += len("-")
+	lexer.emit(token.DivisionToken)
 	return lexStartState
 }
 

@@ -26,6 +26,9 @@ const (
 	LogicalNegationToken   // !
 	BitwiseComplementToken // ~
 	NegationToken          // -
+	AdditionToken          // +
+	MultiplicationToken    // *
+	DivisionToken          // /
 	// Keywords.
 	IntKeywordToken    // int
 	ReturnKeywordToken // return

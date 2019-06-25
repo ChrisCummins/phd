@@ -432,3 +432,25 @@ func TestLexWrongOrder(t *testing.T) {
 	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
 	assert.Equal(token.EofToken, next().Type)
 }
+
+// Test inputs from github.com/nlsandler/write_a_c_compiler/stage_3/valid
+
+func TestLexAssociativity(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() { return 1 - 2 - 3; }`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.NumberToken, "1"}, next())
+	assert.Equal(token.Token{token.NegationToken, "-"}, next())
+	assert.Equal(token.Token{token.NumberToken, "2"}, next())
+	assert.Equal(token.Token{token.NegationToken, "-"}, next())
+	assert.Equal(token.Token{token.NumberToken, "3"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
