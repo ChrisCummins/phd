@@ -2,7 +2,14 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["ast.go"],
+    srcs = [
+        "expression.go",
+        "function.go",
+        "literal.go",
+        "program.go",
+        "return.go",
+        "unary_op.go",
+    ],
     importpath = "github.com/ChrisCummins/phd/compilers/toy/ast",
     visibility = ["//visibility:public"],
     deps = ["//compilers/toy/token:go_default_library"],

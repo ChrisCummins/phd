@@ -11,37 +11,34 @@ func TestGenerateAssemblyMultiDigit(t *testing.T) {
 	assert := assert.New(t)
 	p := Program{Function: &Function{Identifier: "main", Statement: &ReturnStatement{&Int32Literal{Value: 100}}}}
 
-	as, err := p.GenerateAssembly()
-	assert.Nil(err)
+	asm := p.GenerateAssembly()
 	assert.Equal(`.globl _main
 _main:
  movl    $100, %eax
  ret
-`, as)
+`, asm)
 }
 
 func TestGenerateAssemblyReturn0(t *testing.T) {
 	assert := assert.New(t)
 	p := Program{Function: &Function{Identifier: "main", Statement: &ReturnStatement{&Int32Literal{Value: 0}}}}
 
-	as, err := p.GenerateAssembly()
-	assert.Nil(err)
+	asm := p.GenerateAssembly()
 	assert.Equal(`.globl _main
 _main:
  movl    $0, %eax
  ret
-`, as)
+`, asm)
 }
 
 func TestGenerateAssemblyReturn2(t *testing.T) {
 	assert := assert.New(t)
 	p := Program{Function: &Function{Identifier: "main", Statement: &ReturnStatement{&Int32Literal{Value: 2}}}}
 
-	as, err := p.GenerateAssembly()
-	assert.Nil(err)
+	asm := p.GenerateAssembly()
 	assert.Equal(`.globl _main
 _main:
  movl    $2, %eax
  ret
-`, as)
+`, asm)
 }

@@ -12,7 +12,8 @@ import (
 
 func check(e error) {
 	if e != nil {
-		panic(e)
+		fmt.Fprintf(os.Stderr, "fatal: %s", e)
+		os.Exit(1)
 	}
 }
 
@@ -42,9 +43,9 @@ func main() {
 	ast, err := parser.Parse(ts)
 	check(err)
 
-	as, err := ast.GenerateAssembly()
+	asm := ast.GenerateAssembly()
 	check(err)
 
-	err = ioutil.WriteFile(outputPath, []byte(as), 0644)
+	err = ioutil.WriteFile(outputPath, []byte(asm), 0644)
 	check(err)
 }
