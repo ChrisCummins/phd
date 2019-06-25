@@ -7,12 +7,12 @@ import hashlib
 import threading
 import typing
 from concurrent import futures
-from datasets.github.scrape_repos import contentfiles
-from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from deeplearning.clgen.proto import internal_pb2
 
+from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import secrets
+from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from deeplearning.clgen.corpuses import preprocessed
+from deeplearning.clgen.proto import internal_pb2
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
@@ -112,27 +112,43 @@ class Preprocessor(threading.Thread):
     super(Preprocessor, self).__init__()
     self.input_db = input_db
     self.output_db = output_db
+    self.max_workers = FLAGS.preprocess_worker_threads
 
-  def run(self):
-    """Preprocess the contents of a database."""
+  def ProcessABatchOfRepos(self, batch_size: int) -> bool:
+    """Process a batch of repos."""
     with self.input_db.Session() as input_session:
-      repos_to_export = input_session.query(
+      # Get a batch of repos that haven't yet been exported.
+      unexported_repos = input_session.query(
           contentfiles.GitHubRepository.clone_from_url) \
         .filter(contentfiles.GitHubRepository.active == True) \
-        .filter(contentfiles.GitHubRepository.exported == False)
-      clone_from_urls = [x[0] for x in repos_to_export]
+        .filter(contentfiles.GitHubRepository.exported == False) \
+        .limit(batch_size)
+      clone_from_urls = [x[0] for x in unexported_repos]
 
-    max_workers = FLAGS.preprocess_worker_threads
-    app.Log(1, "Preprocessing Java methods from %s repos in %s worker threads",
-            humanize.Commas(len(clone_from_urls)), max_workers)
+    # Check if there are any repos left to export.
+    if not len(clone_from_urls):
+      return False
+
+    app.Log(
+        1, "Preprocessing Java methods from batch of %s repos in "
+        "%s worker threads", humanize.Commas(len(clone_from_urls)),
+        self.max_workers)
     if FLAGS.multithreaded_preprocess:
-      with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+      with futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
         f = lambda x: ProcessRepo(self.input_db, self.output_db, x)
         for _ in executor.map(f, clone_from_urls):
           pass
     else:
       for clone_from_url in clone_from_urls:
         ProcessRepo(self.input_db, self.output_db, clone_from_url)
+
+    return True
+
+  def run(self):
+    """Preprocess the contents of a database."""
+    while self.ProcessABatchOfRepos(batch_size=1000):
+      pass
+    app.Log(1, "Done!")
 
 
 def main():
