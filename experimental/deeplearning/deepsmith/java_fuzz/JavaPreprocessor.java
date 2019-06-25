@@ -186,6 +186,15 @@ public final class JavaPreprocessor {
       return message.build();
     }
 
+    // Re-run compilation. We already checked if the code compiles prior to
+    // re-writing. Checking that the code compiles again is a safeguard against
+    // shortcomings in the re-writer where code can "break" after re-writing.
+    if (!CompilesWithoutError(WrapMethodInClass(contents))) {
+      message.setStatus(PreprocessorWorkerJobOutcome.Status.DOES_NOT_COMPILE);
+      message.setContents("Failed to compile after re-writing");
+      return message.build();
+    }
+
     message.setStatus(PreprocessorWorkerJobOutcome.Status.OK);
     message.setContents(contents);
     return message.build();
