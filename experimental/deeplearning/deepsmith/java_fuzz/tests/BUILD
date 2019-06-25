@@ -4,6 +4,7 @@ py_test(
     name = "java_fuzz_integration_test",
     srcs = ["java_fuzz_integration_test.py"],
     data = [
+        "//experimental/deeplearning/deepsmith/java_fuzz:encode_java_corpus_image.tar",
         "//experimental/deeplearning/deepsmith/java_fuzz:export_java_corpus_image.tar",
         "//experimental/deeplearning/deepsmith/java_fuzz:mask_contentfiles_image.tar",
         "//experimental/deeplearning/deepsmith/java_fuzz:preprocess_java_corpus_image.tar",

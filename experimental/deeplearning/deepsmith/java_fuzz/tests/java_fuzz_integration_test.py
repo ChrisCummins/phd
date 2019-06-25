@@ -23,6 +23,8 @@ def test_end_to_end_pipeline(tempdir: pathlib.Path):
   re_preprocess_java_methods_image = dockerutil.BazelPy3Image(
       'experimental/deeplearning/deepsmith/java_fuzz/re_preprocess_java_methods_image'
   )
+  encode_java_corpus_image = dockerutil.BazelPy3Image(
+      'experimental/deeplearning/deepsmith/java_fuzz/encode_java_corpus_image')
 
   # Step 1: Scrape a single repo from GitHub.
   with scrape_java_files_image.RunContext() as ctx:
@@ -87,6 +89,19 @@ def test_end_to_end_pipeline(tempdir: pathlib.Path):
   # Check that corpus is exported.
   assert (tempdir / "preprocessed.db").is_file()
   assert (tempdir / "re_preprocessed.db").is_file()
+
+  # Step 6: Encode Java methods.
+  with encode_java_corpus_image.RunContext() as ctx:
+    ctx.CheckCall(
+        [], {
+            "input": "sqlite:////workdir/preprocessed.db",
+            "output": "sqlite:////workdir/encoded.db",
+        },
+        volumes={tempdir: '/workdir'})
+
+  # Check that corpus is encoded.
+  assert (tempdir / "preprocessed.db").is_file()
+  assert (tempdir / "encoded.db").is_file()
 
 
 if __name__ == '__main__':

@@ -27,6 +27,15 @@ py_test(
     ],
 )
 
+py3_image(
+    name = "encode_java_corpus_image",
+    srcs = ["encode_java_corpus.py"],
+    base = "@base_java//image",
+    main = "encode_java_corpus.py",
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
+    deps = [":encode_java_corpus"],
+)
+
 py_binary(
     name = "export_java_corpus",
     srcs = ["export_java_corpus.py"],

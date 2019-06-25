@@ -48,5 +48,15 @@ main() {
       "experimental/deeplearning/deepsmith/java_fuzz" \
       "export_java_corpus_image" \
       "java_fuzz_export_corpus"
+
+  publish_docker_image \
+      "experimental/deeplearning/deepsmith/java_fuzz" \
+      "preprocess_java_corpus_image" \
+      "java_fuzz_preprocess"
+
+  publish_docker_image \
+      "experimental/deeplearning/deepsmith/java_fuzz" \
+      "encode_java_corpus_image" \
+      "java_fuzz_encode"
 }
 main $@
