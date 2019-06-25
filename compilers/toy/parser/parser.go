@@ -81,18 +81,14 @@ func ParseStatement(ts token.TokenStream) (*ast.ReturnStatement, error) {
 
 // <exp> ::= <term> { ("+" | "-") <term> }
 func ParseExpression(ts token.TokenStream) (ast.Expression, error) {
-	fmt.Println(">>> ParseExpression")
-
 	term, err := ParseTerm(ts)
 	if err != nil {
 		return nil, err
 	}
 
 	for {
-		fmt.Println(">>> START EXP LOOP")
 		if ts.Peek().Type != token.AdditionToken &&
 			ts.Peek().Type != token.NegationToken {
-			fmt.Println("<<< END LOOP")
 			break
 		}
 		if !ts.Next() {
@@ -117,18 +113,14 @@ func ParseExpression(ts token.TokenStream) (ast.Expression, error) {
 
 // <term> ::= <factor> { ("*" | "/") <factor> }
 func ParseTerm(ts token.TokenStream) (ast.Expression, error) {
-	fmt.Println(">>> ParseTerm")
-
 	factor, err := ParseFactor(ts)
 	if err != nil {
 		return nil, err
 	}
 
 	for {
-		fmt.Println(">>> TERM LOOP")
 		if ts.Peek().Type != token.MultiplicationToken &&
 			ts.Peek().Type != token.DivisionToken {
-			fmt.Println("<<< END TERM LOOP")
 			break
 		}
 		if !ts.Next() {
@@ -153,8 +145,6 @@ func ParseTerm(ts token.TokenStream) (ast.Expression, error) {
 
 // <factor> ::= "(" <exp> ")" | <unary_op> <factor> | <int>
 func ParseFactor(ts token.TokenStream) (ast.Expression, error) {
-	fmt.Println(">>> ParseFactor")
-
 	if !ts.Next() {
 		return nil, errors.New("ran out of tokens")
 	}

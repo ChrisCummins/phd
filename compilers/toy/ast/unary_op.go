@@ -39,11 +39,11 @@ func (u UnaryOpOperator) String() string {
 func (u *UnaryOpOperator) GenerateAssembly() string {
 	switch u.Type {
 	case token.LogicalNegationToken:
-		return "cmpl    $0, %eax\n movl    $0, %eax\n sete    %al"
+		return "cmpl   $0, %eax\n movl   $0, %eax\n sete   %al"
 	case token.BitwiseComplementToken:
-		return "not      %eax"
+		return "not     %eax"
 	case token.NegationToken:
-		return "neg      %eax"
+		return "neg     %eax"
 	}
 	panic("unreachable!")
 }

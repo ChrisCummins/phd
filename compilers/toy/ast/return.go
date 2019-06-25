@@ -13,5 +13,5 @@ func (s ReturnStatement) String() string {
 
 func (s *ReturnStatement) GenerateAssembly() string {
 	expression := s.Expression.GenerateAssembly()
-	return fmt.Sprintf("%v\n ret", expression)
+	return fmt.Sprintf("%v\n\tret", expression)
 }

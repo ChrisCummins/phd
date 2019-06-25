@@ -12,12 +12,13 @@ type BinaryOp struct {
 }
 
 func (u BinaryOp) String() string {
-	return fmt.Sprintf("%v %v %v", u.Term, u.Operator, u.NextTerm)
+	return fmt.Sprintf("(%v %v %v)", u.Term, u.Operator, u.NextTerm)
 }
 
 func (u *BinaryOp) GenerateAssembly() string {
-	// TODO:
-	panic("TODO")
+	return fmt.Sprintf("%v\n\tpush    %%rax\n\t%v\n\tpop     %%rcx\n\t%v",
+		u.NextTerm.GenerateAssembly(), u.Term.GenerateAssembly(),
+		u.Operator.GenerateAssembly())
 }
 
 type BinaryOpOperator struct {
@@ -39,6 +40,16 @@ func (u BinaryOpOperator) String() string {
 }
 
 func (u *BinaryOpOperator) GenerateAssembly() string {
-	// TODO:
+	switch u.Type {
+	case token.NegationToken:
+		return "subl    %ecx, %eax"
+	case token.AdditionToken:
+		return "addl    %ecx, %eax"
+	case token.MultiplicationToken:
+		return "imul    %ecx, %eax"
+	case token.DivisionToken:
+		return ("movl    %edx $0\n\tidivl   %ecx\n\t" +
+			"movl    %ecx %eax")
+	}
 	panic("unreachable!")
 }

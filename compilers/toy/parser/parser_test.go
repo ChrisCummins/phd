@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/ChrisCummins/phd/compilers/toy/token"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -44,7 +43,7 @@ func TestParseTermNumberMultiplication(t *testing.T) {
 
 	assert.Nil(err)
 	assert.NotNil(p)
-	assert.Equal("Int<1> * Int<2>", p.String())
+	assert.Equal("(Int<1> * Int<2>)", p.String())
 }
 
 func TestParseExpressionNumericalAddition(t *testing.T) {
@@ -59,11 +58,10 @@ func TestParseExpressionNumericalAddition(t *testing.T) {
 
 	assert.Nil(err)
 	assert.NotNil(p)
-	assert.Equal("Int<1> + Int<2>", p.String())
+	assert.Equal("(Int<1> + Int<2>)", p.String())
 }
 
 func TestParseStatementWithParenthesis(t *testing.T) {
-	fmt.Println(">>>>>>>>>>>>>>>>>>>>>> TEST")
 	assert := assert.New(t)
 	ts := token.NewSliceTokenStream([]token.Token{
 		token.Token{token.ReturnKeywordToken, "return"},
@@ -83,7 +81,7 @@ func TestParseStatementWithParenthesis(t *testing.T) {
 
 	assert.Nil(err)
 	assert.NotNil(p)
-	assert.Equal("RETURN Int<1> + Int<2> * Int<3>", p.String())
+	assert.Equal("RETURN (Int<1> + (Int<2> * Int<3>))", p.String())
 }
 
 // Test inputs from github.com/nlsandler/write_a_c_compiler/stage_1/valid
@@ -573,4 +571,35 @@ func TestParseWrongOrder(t *testing.T) {
 	p, err := Parse(ts)
 	assert.NotNil(err)
 	assert.Nil(p)
+}
+
+// Test inputs from github.com/nlsandler/write_a_c_compiler/stage_3/valid
+
+func TestParseAssociativity(t *testing.T) {
+	assert := assert.New(t)
+	// int main() { return 1 - 2 - 3; }
+	ts := token.NewSliceTokenStream([]token.Token{
+		token.Token{token.IntKeywordToken, "int"},
+		token.Token{token.IdentifierToken, "main"},
+		token.Token{token.OpenParenthesisToken, "("},
+		token.Token{token.CloseParenthesisToken, ")"},
+		token.Token{token.OpenBraceToken, "{"},
+		token.Token{token.ReturnKeywordToken, "return"},
+		token.Token{token.NumberToken, "1"},
+		token.Token{token.NegationToken, "-"},
+		token.Token{token.NumberToken, "2"},
+		token.Token{token.NegationToken, "-"},
+		token.Token{token.NumberToken, "3"},
+		token.Token{token.SemicolonToken, ";"},
+		token.Token{token.CloseBraceToken, "}"},
+	})
+	p, err := Parse(ts)
+
+	assert.Equal(nil, err)
+	assert.NotEqual(nil, p.Function)
+	assert.Equal("main", p.Function.Identifier)
+	assert.NotEqual(nil, p.Function.Statement)
+	assert.NotEqual(nil, p.Function.Statement.Expression)
+	assert.Equal("((Int<1> - Int<2>) - Int<3>)",
+		p.Function.Statement.Expression.String())
 }

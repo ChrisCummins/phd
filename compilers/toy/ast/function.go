@@ -15,6 +15,6 @@ func (f Function) String() string {
 
 func (f *Function) GenerateAssembly() string {
 	stmt := f.Statement.GenerateAssembly()
-	return fmt.Sprintf(".globl _%v\n_%v:\n %v\n", f.Identifier,
+	return fmt.Sprintf(".globl _%v\n_%v:\n\t%v\n", f.Identifier,
 		f.Identifier, stmt)
 }
