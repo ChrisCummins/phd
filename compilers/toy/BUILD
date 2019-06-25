@@ -61,62 +61,62 @@ sh_test(
     ],
 )
 
-sh_test(
-    name = "stage4_test",
-    srcs = ["run_tests.sh"],
-    args = ["4"],
-    data = [
-        ":compile",
-        ":test_data",
-    ],
-)
-
-sh_test(
-    name = "stage5_test",
-    srcs = ["run_tests.sh"],
-    args = ["5"],
-    data = [
-        ":compile",
-        ":test_data",
-    ],
-)
-
-sh_test(
-    name = "stage6_test",
-    srcs = ["run_tests.sh"],
-    args = ["6"],
-    data = [
-        ":compile",
-        ":test_data",
-    ],
-)
-
-sh_test(
-    name = "stage7_test",
-    srcs = ["run_tests.sh"],
-    args = ["7"],
-    data = [
-        ":compile",
-        ":test_data",
-    ],
-)
-
-sh_test(
-    name = "stage8_test",
-    srcs = ["run_tests.sh"],
-    args = ["8"],
-    data = [
-        ":compile",
-        ":test_data",
-    ],
-)
-
-sh_test(
-    name = "stage9_test",
-    srcs = ["run_tests.sh"],
-    args = ["9"],
-    data = [
-        ":compile",
-        ":test_data",
-    ],
-)
+#sh_test(
+#    name = "stage4_test",
+#    srcs = ["run_tests.sh"],
+#    args = ["4"],
+#    data = [
+#        ":compile",
+#        ":test_data",
+#    ],
+#)
+#
+#sh_test(
+#    name = "stage5_test",
+#    srcs = ["run_tests.sh"],
+#    args = ["5"],
+#    data = [
+#        ":compile",
+#        ":test_data",
+#    ],
+#)
+#
+#sh_test(
+#    name = "stage6_test",
+#    srcs = ["run_tests.sh"],
+#    args = ["6"],
+#    data = [
+#        ":compile",
+#        ":test_data",
+#    ],
+#)
+#
+#sh_test(
+#    name = "stage7_test",
+#    srcs = ["run_tests.sh"],
+#    args = ["7"],
+#    data = [
+#        ":compile",
+#        ":test_data",
+#    ],
+#)
+#
+#sh_test(
+#    name = "stage8_test",
+#    srcs = ["run_tests.sh"],
+#    args = ["8"],
+#    data = [
+#        ":compile",
+#        ":test_data",
+#    ],
+#)
+#
+#sh_test(
+#    name = "stage9_test",
+#    srcs = ["run_tests.sh"],
+#    args = ["9"],
+#    data = [
+#        ":compile",
+#        ":test_data",
+#    ],
+#)
