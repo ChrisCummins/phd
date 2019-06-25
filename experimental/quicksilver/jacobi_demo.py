@@ -61,14 +61,12 @@ Reference run:
     bazel run experimental/quicksilver:jacobi_demo  6136.79s user 166.72s system 1115% cpu 9:25.27 total
 """
 
-import json
 import time
 
 import pyopencl as CL
 
 from datasets.benchmarks.jacobi_opencl import jacobi_opencl as jacobi
 from labm8 import app
-from labm8 import jsonutil
 from labm8 import humanize
 from labm8 import prof
 
@@ -157,7 +155,9 @@ def GetGpuSpeedup(config, gpu, cpu) -> float:
 
 
 def Stringify(a):
-  return f"runtime={a.runtime:.3f}s, iterations={humanize.Commas(a.iteration_count)}, throughput={a.throughput / 1000:.1f}k iterations / second"
+  return (f"runtime={a.runtime:.3f}s, "
+          f"iterations={humanize.Commas(a.iteration_count)}, "
+          f"throughput={a.throughput / 1000:.1f}k iterations / second")
 
 
 def ApproachA(app_a_config, app_b_config, gpu, cpu, app_b_delay):
