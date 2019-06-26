@@ -156,7 +156,7 @@ def Repreprocess(input_db, pp_db, outdir: pathlib.Path):
         f"\rRuntime: {humanize.Duration(runtime)}. "
         f"Exported contentfiles: {humanize.Commas(exported_count)} "
         f"of {humanize.Commas(cf_count)} "
-        f"({exported_count / cf_count:.2%})    ")
+        f"({exported_count / max(cf_count, 1):.2%})    ")
     sys.stdout.flush()
 
     if not thread.is_alive():

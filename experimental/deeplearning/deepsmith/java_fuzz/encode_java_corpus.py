@@ -160,7 +160,7 @@ def EncodeFiles(input_session: sqlutil.Session, output_session: sqlutil.Session,
 
   app.Log(1, 'Encoding %s of %s content files (%.2f%%)',
           humanize.Commas(to_encode_count), humanize.Commas(all_files_count),
-          (done_count / all_files_count) * 100)
+          (done_count / max(all_files_count, 1)) * 100)
 
   vocab = GetVocabFromMetaTable(output_session)
   enc, vocab = EncodePreprocessedFiles(to_encode, vocab)
