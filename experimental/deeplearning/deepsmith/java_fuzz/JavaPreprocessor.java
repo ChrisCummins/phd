@@ -58,16 +58,24 @@ public final class JavaPreprocessor {
    * @return The method, embedded in a class "A".
    */
   protected String WrapMethodInClass(final String methodSrc) {
-    // TODO: Determine whether to keep shim imports.
-    //    return ("import java.io.*;\n"
-    //        + "import java.nio.charset.*;\n"
-    //        + "import java.nio.file.*;\n"
-    //        + "import java.util.*;\n"
-    //        + "import java.time.format.*;\n"
-    //        + "public class A{"
-    //        + methodSrc
-    //        + "}");
     return "public class A{" + methodSrc + "}";
+  }
+
+  /**
+   * Wrap the method in a class definition.
+   *
+   * @param methodSrc The method to wrap.
+   * @return The method, embedded in a class "A".
+   */
+  protected String WrapMethodInClassWithShim(final String methodSrc) {
+    return ("import java.io.*;\n"
+        + "import java.nio.charset.*;\n"
+        + "import java.nio.file.*;\n"
+        + "import java.util.*;\n"
+        + "import java.time.format.*;\n"
+        + "public class A{"
+        + methodSrc
+        + "}");
   }
 
   /**
@@ -166,7 +174,7 @@ public final class JavaPreprocessor {
     PreprocessorWorkerJobOutcome.Builder message = PreprocessorWorkerJobOutcome.newBuilder();
     String contents = src;
 
-    if (!CompilesWithoutError(WrapMethodInClass(contents))) {
+    if (!CompilesWithoutError(WrapMethodInClassWithShim(contents))) {
       message.setStatus(PreprocessorWorkerJobOutcome.Status.DOES_NOT_COMPILE);
       message.setContents("Failed to compile");
       return message.build();
@@ -195,7 +203,7 @@ public final class JavaPreprocessor {
     // Re-run compilation. We already checked if the code compiles prior to
     // re-writing. Checking that the code compiles again is a safeguard against
     // shortcomings in the re-writer where code can "break" after re-writing.
-    if (!CompilesWithoutError(WrapMethodInClass(contents))) {
+    if (!CompilesWithoutError(WrapMethodInClassWithShim(contents))) {
       message.setStatus(PreprocessorWorkerJobOutcome.Status.DOES_NOT_COMPILE);
       message.setContents("Failed to compile after re-writing");
       return message.build();
