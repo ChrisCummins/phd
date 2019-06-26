@@ -62,6 +62,41 @@ TEST(HasPrefix, StringPrefixDoesNotMatchMultiElementSet) {
   ASSERT_FALSE(HasPrefix(vocab, "c"));
 }
 
+TEST(HasMatch, EmptyVocabDoesNotMatchString) {
+  absl::flat_hash_set<string> vocab;
+  ASSERT_FALSE(HasMatch(vocab, "a"));
+}
+
+TEST(HasMatch, SingleCharInputAndVocab) {
+  absl::flat_hash_set<string> vocab;
+  vocab.insert("a");
+  ASSERT_TRUE(HasMatch(vocab, "a"));
+}
+
+TEST(HasMatch, SingleCharInputAndMultiElementSet) {
+  absl::flat_hash_set<string> vocab;
+  vocab.insert("a");
+  vocab.insert("b");
+  vocab.insert("c");
+  ASSERT_TRUE(HasMatch(vocab, "a"));
+}
+
+TEST(HasMatch, SubstringInputAndMultiElementSet) {
+  absl::flat_hash_set<string> vocab;
+  vocab.insert("abc");
+  vocab.insert("bcd");
+  vocab.insert("def");
+  ASSERT_FALSE(HasMatch(vocab, "ab"));
+}
+
+TEST(HasMatch, MultiCharInputAndMultiElementSet) {
+  absl::flat_hash_set<string> vocab;
+  vocab.insert("abc");
+  vocab.insert("bcd");
+  vocab.insert("def");
+  ASSERT_TRUE(HasMatch(vocab, "bcd"));
+}
+
 absl::flat_hash_map<int, string> GetReverseVocab(
     const absl::flat_hash_map<string, int>& vocab) {
   absl::flat_hash_map<int, string> rvocab;
@@ -97,9 +132,9 @@ TEST(TokenizeInput, SingleCharInputAndVocab) {
   auto tokenized = TokenizeInput("aaba", candidate_vocab, &vocab);
   auto rvocab = GetReverseVocab(vocab);
 
-  ASSERT_EQ(2, vocab.size());
   ASSERT_NE(vocab.end(), vocab.find("ab"));
   ASSERT_NE(vocab.end(), vocab.find("a"));
+  ASSERT_EQ(2, vocab.size());
 
   ASSERT_EQ(3, tokenized.size());
   ASSERT_EQ("a", rvocab.find(tokenized[0])->second);
@@ -153,11 +188,11 @@ TEST(TokenizeInput, BackupOnVocabMiss) {
   auto tokenized = TokenizeInput("abcf", candidate_vocab, &vocab);
   auto rvocab = GetReverseVocab(vocab);
 
-  ASSERT_EQ(4, vocab.size());
   ASSERT_NE(vocab.end(), vocab.find("a"));
   ASSERT_NE(vocab.end(), vocab.find("b"));
   ASSERT_NE(vocab.end(), vocab.find("c"));
   ASSERT_NE(vocab.end(), vocab.find("f"));
+  ASSERT_EQ(4, vocab.size());
 
   ASSERT_EQ(4, tokenized.size());
   ASSERT_EQ("a", rvocab.find(tokenized[0])->second);
