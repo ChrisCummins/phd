@@ -143,6 +143,29 @@ TEST(TokenizeInput, GreedyVocabMatches) {
   ASSERT_EQ("f", rvocab.find(tokenized[3])->second);
 }
 
+TEST(TokenizeInput, BackupOnVocabMiss) {
+  // Test to show that lexer "backs up" when it no longer matches a prefix in
+  // the candidate vocabulary.
+  absl::flat_hash_set<string> candidate_vocab;
+  candidate_vocab.insert("abcd");
+  candidate_vocab.insert("abce");
+  absl::flat_hash_map<string, int> vocab;
+  auto tokenized = TokenizeInput("abcf", candidate_vocab, &vocab);
+  auto rvocab = GetReverseVocab(vocab);
+
+  ASSERT_EQ(4, vocab.size());
+  ASSERT_NE(vocab.end(), vocab.find("a"));
+  ASSERT_NE(vocab.end(), vocab.find("b"));
+  ASSERT_NE(vocab.end(), vocab.find("c"));
+  ASSERT_NE(vocab.end(), vocab.find("f"));
+
+  ASSERT_EQ(4, tokenized.size());
+  ASSERT_EQ("a", rvocab.find(tokenized[0])->second);
+  ASSERT_EQ("b", rvocab.find(tokenized[1])->second);
+  ASSERT_EQ("c", rvocab.find(tokenized[2])->second);
+  ASSERT_EQ("f", rvocab.find(tokenized[3])->second);
+}
+
 TEST(TokenizeInput, SmallCProgram) {
   absl::flat_hash_set<string> candidate_vocab;
   candidate_vocab.insert("int");
