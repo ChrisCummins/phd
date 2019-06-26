@@ -15,22 +15,27 @@ def db(tempdir: pathlib.Path) -> contentfiles.ContentFiles:
   db_ = contentfiles.ContentFiles(f'sqlite:///{tempdir}/a')
   with db_.Session(commit=True) as session:
     session.add(
-        contentfiles.GitHubRepository(owner='foo',
-                                      name='bar',
-                                      clone_from_url='abc',
-                                      num_stars=0,
-                                      num_forks=0,
-                                      num_watchers=0,
-                                      date_scraped=datetime.datetime.utcnow(),
-                                      language='java'))
+        contentfiles.GitHubRepository(
+            owner='foo',
+            name='bar',
+            clone_from_url='abc',
+            num_stars=0,
+            num_forks=0,
+            num_watchers=0,
+            active=1,
+            exported=0,
+            date_scraped=datetime.datetime.utcnow(),
+            language='java'))
     session.add(
-        contentfiles.ContentFile(clone_from_url='abc',
-                                 relpath='foo',
-                                 artifact_index=0,
-                                 sha256='000',
-                                 charcount='0',
-                                 linecount='0',
-                                 text="""
+        contentfiles.ContentFile(
+            clone_from_url='abc',
+            relpath='foo',
+            artifact_index=0,
+            sha256='000',
+            charcount=100,
+            linecount=4,
+            active=1,
+            text="""
 public class HelloWorld {
   private int foo() {
     return 5;
@@ -86,22 +91,23 @@ def test_Exporter_overloaded_method_extraction(
 
   with db.Session(commit=True) as s:
     s.add(
-        contentfiles.ContentFile(clone_from_url='abc',
-                                 relpath='a/file.txt',
-                                 artifact_index=0,
-                                 sha256='000',
-                                 charcount='0',
-                                 linecount='0',
-                                 text="""
+        contentfiles.ContentFile(
+            clone_from_url='abc',
+            relpath='a/file.txt',
+            artifact_index=0,
+            sha256='000',
+            charcount=200,
+            linecount=10,
+            text="""
 public class HelloWorld {
   private static int foo(int a) {
     return 5;
   }
-  
+
   private static int foo(float a) {
     return 5;
   }
-  
+
   private static int foo(double a) {
     return 5;
   }
