@@ -61,6 +61,7 @@ message PreprocessorWorkerJobOutcome {
     DOES_NOT_COMPILE = 2;
     TOO_FEW_CHARACTERS = 3;
     TOO_FEW_LINES = 4;
+    REWRITER_FAIL = 5;
   }
 
   optional string contentfile_id = 1;
