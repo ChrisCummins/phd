@@ -8,9 +8,9 @@ from labm8 import test
 FLAGS = test.FLAGS
 
 
-def test_PreprocessList():
+def test_PreprocessContentFiles():
   """Test preprocessing a basic input."""
-  pp_cfs = preprocess_java_corpus.PreprocessList([
+  pp_cfs = preprocess_java_corpus.PreprocessContentFiles([
       contentfiles.ContentFile(text="""
 private static int Foobar(int foo) {
           int bar = 10    + 1; foo += bar;
