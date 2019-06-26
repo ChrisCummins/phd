@@ -44,7 +44,7 @@ class DockerImageRunContext(object):
       args: typing.List[str],
       flags: typing.Dict[str, str] = None,
       volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
-      timeout: int = 60,
+      timeout: int = 600,
       entrypoint: str = None):
     """Run docker image."""
     cmd = self._CommandLineInvocation(args, flags, volumes, timeout, entrypoint)
@@ -55,7 +55,7 @@ class DockerImageRunContext(object):
       args: typing.List[str],
       flags: typing.Dict[str, str] = None,
       volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
-      timeout: int = 60,
+      timeout: int = 600,
       entrypoint: str = None) -> str:
     cmd = self._CommandLineInvocation(args, flags, volumes, timeout, entrypoint)
     return subprocess.check_output(cmd, universal_newlines=True)
@@ -112,10 +112,11 @@ class BazelPy3Image(object):
   @contextlib.contextmanager
   def RunContext(self) -> DockerImageRunContext:
     subprocess.check_call(
-        _Docker(['load', '-i', str(self.tar_path)], timeout=180))
+        _Docker(['load', '-i', str(self.tar_path)], timeout=600))
     tmp_name = self._TemporaryImageName()
-    subprocess.check_call(_Docker(['tag', self.image_name, tmp_name]))
-    subprocess.check_call(_Docker(['rmi', self.image_name]))
+    subprocess.check_call(
+        _Docker(['tag', self.image_name, tmp_name], timeout=60))
+    subprocess.check_call(_Docker(['rmi', self.image_name], timeout=60))
     yield DockerImageRunContext(tmp_name)
     # FIXME(cec): Using the --force flag here is almost certainly the wrong
     # thing, but I'm getting strange errors when trying to untag the image
@@ -123,4 +124,4 @@ class BazelPy3Image(object):
     #   Error response from daemon: conflict: unable to remove repository
     #   reference "phd_..." (must force) - container ... is using its
     #   referenced image ...
-    subprocess.check_call(_Docker(['rmi', '--force', tmp_name]))
+    subprocess.check_call(_Docker(['rmi', '--force', tmp_name], timeout=60))
