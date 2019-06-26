@@ -172,7 +172,13 @@ public final class JavaPreprocessor {
       return message.build();
     }
 
-    contents = RewriteSource(contents);
+    try {
+      contents = RewriteSource(contents);
+    } catch (Exception e) {
+      message.setStatus(PreprocessorWorkerJobOutcome.Status.REWRITER_FAIL);
+      message.setContents("Failed to rewrite");
+      return message.build();
+    }
 
     if (contents.length() < MIN_CHAR_COUNT) {
       message.setStatus(PreprocessorWorkerJobOutcome.Status.TOO_FEW_CHARACTERS);
