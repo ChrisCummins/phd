@@ -66,6 +66,12 @@ def _PreprocessedContentFile(
   )
 
 
+def Decode(array, rvocab):
+  """Decode an array using the given reverse-lookup vocabulary dictionary."""
+  # Dot-separated tokens.
+  return '.'.join([rvocab[x] for x in array])
+
+
 def test_EncodeFiles(preprocessed_db, encoded_db):
   with preprocessed_db.Session() as pps:
     pps.add_all([
@@ -78,12 +84,13 @@ def test_EncodeFiles(preprocessed_db, encoded_db):
       assert encode_java_corpus.EncodeFiles(pps, es, 10) == 2
 
   with encoded_db.Session() as s:
-    vocab_size = s.query(
-        encoded.Meta.value).filter(encoded.Meta.key == 'vocab_size')
-    assert vocab_size.one()[0] == '5'
+    vocab = encode_java_corpus.GetVocabFromMetaTable(s)
+    rvocab = {v: k for k, v in vocab.items()}
 
     encodeds = [x.indices_array for x in s.query(encoded.EncodedContentFile)]
-  assert [3, 6] == sorted(len(x) for x in encodeds)
+    decoded = set(Decode(x, rvocab) for x in encodeds)
+
+  assert decoded == {'a.b.c', 'a.b.c.g.h.i'}
 
 
 if __name__ == '__main__':
