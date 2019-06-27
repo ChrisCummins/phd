@@ -94,3 +94,14 @@ py_test(
         "//labm8:test",
     ],
 )
+
+filegroup(
+    name = "nqueens_src",
+    srcs = ["nqueens.cc"],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "nqueens",
+    srcs = [":nqueens_src"],
+)
