@@ -93,12 +93,11 @@ def Exec(args: typing.List[str],
   cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG)] + args
   if log:
     app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdout=stdout,
-      stderr=stderr,
-      stdin=subprocess.PIPE if stdin else None,
-      universal_newlines=True)
+  process = subprocess.Popen(cmd,
+                             stdout=stdout,
+                             stderr=stderr,
+                             stdin=subprocess.PIPE if stdin else None,
+                             universal_newlines=True)
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:
@@ -142,9 +141,8 @@ def Compile(srcs: typing.List[pathlib.Path],
   # Ensure the output directory exists.
   out.parent.mkdir(parents=True, exist_ok=True)
 
-  proc = Exec(
-      [str(x) for x in srcs] + ['-o', str(out)] + copts,
-      timeout_seconds=timeout_seconds)
+  proc = Exec([str(x) for x in srcs] + ['-o', str(out)] + copts,
+              timeout_seconds=timeout_seconds)
   if proc.returncode == 9:
     raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds} seconds')
   elif proc.returncode:
@@ -200,7 +198,8 @@ def GetOptPasses(
       cflags + ['-mllvm', '-opt-bisect-limit=-1', f'-x{language}', '-'],
       stdin=stubfile)
   if process.returncode:
-    raise ClangException(process.stderr)
+    raise ClangException(f'clang exited with returncode {process.returncode} '
+                         f'and stderr: {process.stderr}')
   lines = process.stderr.rstrip().split('\n')
   for line in lines:
     if not line.startswith('BISECT:'):
