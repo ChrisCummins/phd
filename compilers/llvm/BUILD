@@ -39,10 +39,13 @@ py_binary(
 py_test(
     name = "clang_test",
     srcs = ["clang_test.py"],
+    data = ["//datasets/benchmarks:nqueens_src"],
     deps = [
         ":clang",
         ":llvm",
         "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:fs",
         "//labm8:test",
     ],
 )

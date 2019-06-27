@@ -17,6 +17,8 @@ import pytest
 
 from compilers.llvm import clang
 from labm8 import app
+from labm8 import bazelutil
+from labm8 import fs
 from labm8 import test
 
 FLAGS = app.FLAGS
@@ -26,6 +28,9 @@ int main() {
   return 0;
 }
 """
+
+# The C source code for an "n queens" puzzle.
+_NQUEENS_SRC = fs.Read(bazelutil.DataPath('phd/datasets/benchmarks/nqueens.cc'))
 
 
 def _StripPreprocessorLines(out: str):
@@ -115,10 +120,10 @@ def test_Preprocess_missing_include():
   assert "'my-missing-file.h' file not found" in str(e_info.value.stderr)
 
 
-def test_GetOptPasses_O0():
+def test_GetOptPasses_O3_nqueens():
   """Black box opt passes test for -O0."""
-  args = clang.GetOptPasses(['-O0'])
-  assert args
+  args = clang.GetOptPasses(['-O3'], stubfile=_NQUEENS_SRC, language='c++')
+  assert args == []
 
 
 if __name__ == '__main__':
