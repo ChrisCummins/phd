@@ -136,6 +136,323 @@ def test_ClangBisectMessageToInvocation_valid():
   assert invocation.target == '_Z16show_short_boardP7NQueensPi'
 
 
+@pytest.mark.parametrize("optimization_level",
+                         ("-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"))
+@pytest.mark.linux
+def test_GetOptPasses_O3_language_equivalence(optimization_level: str):
+  """Test that passes run are the same C/C++ at all optimisation levels."""
+  c_args = clang.GetOptPasses([opt], language='c')
+  cxx_args = clang.GetOptPasses([opt], language='c++')
+  assert c_args == cxx_args
+
+
+@pytest.mark.linux
+def test_GetOptPasses_O3_cxx():
+  """Test optimisations ran at -O3 for an empty C++ file."""
+  args = clang.GetOptPasses(['-O3'], language='c++')
+  assert args == [
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='SROA', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Early CSE', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Infer set function attributes',
+          target='-',
+          target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Call-site splitting', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Interprocedural Sparse Conditional Constant Propagation',
+          target='-',
+          target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Called Value Propagation', target='-', target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Global Variable Optimizer', target='-', target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Promote Memory to Register',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Dead Argument Elimination', target='-', target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Remove unused exception handling info',
+          target='main',
+          target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name='Function Integration/Inlining',
+          target='main',
+          target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name='Deduce function attributes', target='main', target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name="Promote 'by reference' arguments to scalars",
+          target='main',
+          target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name='SROA', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Early CSE w/ MemorySSA', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name=
+          'Speculatively execute instructions if target has divergent branches',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Jump Threading', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Value Propagation', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Tail Call Elimination', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Reassociate expressions', target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='MergedLoadStoreMotion', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Global Value Numbering', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='MemCpy Optimization', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Sparse Conditional Constant Propagation',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Bit-Tracking Dead Code Elimination',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Jump Threading', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Value Propagation', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Dead Store Elimination', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Aggressive Dead Code Elimination',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Remove unused exception handling info',
+          target='<<null function>>',
+          target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name='Function Integration/Inlining',
+          target='<<null function>>',
+          target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name='Deduce function attributes',
+          target='<<null function>>',
+          target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name="Promote 'by reference' arguments to scalars",
+          target='<<null function>>',
+          target_type='SCC'),
+      clang.OptPassRunInvocation(
+          name='Eliminate Available Externally Globals',
+          target='-',
+          target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Deduce function attributes in RPO',
+          target='-',
+          target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Global Variable Optimizer', target='-', target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Dead Global Elimination', target='-', target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Float to int', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Loop Distribution', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Loop Vectorization', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Loop Load Elimination', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='SLP Vectorizer', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Combine redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Alignment from assumptions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Strip Unused Function Prototypes',
+          target='-',
+          target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Dead Global Elimination', target='-', target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Merge Duplicate Global Constants',
+          target='-',
+          target_type='module'),
+      clang.OptPassRunInvocation(
+          name='Remove redundant instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Hoist/decompose integer division and remainder',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Simplify the CFG', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Expand memcmp() to load/stores',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Constant Hoisting', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Partially inline calls to library functions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Scalarize Masked Memory Intrinsics',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='CodeGen Prepare', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 DAG->DAG Instruction Selection',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Local Dynamic TLS Access Clean-up',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 Domain Reassignment Pass',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Tail Duplication', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Optimize machine instruction PHIs',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Remove dead machine instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Early If-Conversion', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 cmov Conversion', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Machine Loop Invariant Code Motion',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Machine Common Subexpression Elimination',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Machine code sinking', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Peephole Optimizations', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Remove dead machine instructions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Live Range Shrink', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 LEA Optimize', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 Optimize Call Frame', target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Two-Address instruction pass',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Machine Instruction Scheduler',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Machine Loop Invariant Code Motion',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Shrink Wrapping analysis',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Control Flow Optimizer', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Tail Duplication', target='main', target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Machine Copy Propagation Pass',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Post RA top-down list latency scheduler',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='Branch Probability Basic Block Placement',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 Execution Dependency Fix',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 Byte/Word Instruction Fixup',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 Atom pad short functions',
+          target='main',
+          target_type='function'),
+      clang.OptPassRunInvocation(
+          name='X86 LEA Fixup', target='main', target_type='function'),
+  ]
+
+
 @pytest.mark.linux
 def test_GetOptPasses_O3_nqueens():
   """Black box opt passes test for -O0."""
