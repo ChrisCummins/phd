@@ -32,7 +32,7 @@ class LlvmError(EnvironmentError):
     self.command = command
 
   def __repr__(self):
-    return str(self.msg or type(self).__name__)
+    return str(self.msg) if self.msg else type(self).__name__
 
 
 class LlvmTimeout(LlvmError):
