@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eux
 
-# The ULR to grab a source tarball from.
+# The URL to grab a source tarball from.
 export URL="https://github.com/enthought/bzip2-1.0.6/archive/master.tar.gz"
 # The list of basenames for all sources.
 export SOURCES="blocksort.c bzlib.c compress.c crctable.c decompress.c huffman.c randtable.c bzip2.c"
