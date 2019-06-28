@@ -47,7 +47,7 @@ void LexAndPrintTokens(const string& input_path) {
   compiler_instance.createSourceManager(file_manager);
   clang::SourceManager& source_manager = compiler_instance.getSourceManager();
 
-  // Prreprocessor runs within a single source file
+  // Preprocessor runs within a single source file
   compiler_instance.createPreprocessor(clang::TU_Complete);
 
   // ASTContext holds long‐lived AST nodes (such as types and decls) .
