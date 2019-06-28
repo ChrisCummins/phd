@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.compilers.EclipseJavaCompiler;
-import org.apache.commons.jci.compilers.JavaCompiler;
+import org.apache.commons.jci.compilers.EclipseJavaCompilerSettings;
 import org.apache.commons.jci.compilers.JavaCompilerSettings;
 import org.apache.commons.jci.problems.CompilationProblem;
 import org.apache.commons.jci.problems.CompilationProblemHandler;
@@ -33,8 +33,11 @@ public final class JavaPreprocessor {
 
   /** Construct a preprocessor. */
   public JavaPreprocessor() {
-    compiler = new EclipseJavaCompiler();
-    settings = compiler.createDefaultSettings();
+    settings = new EclipseJavaCompilerSettings();
+    // Bump Java source version. Version >= 1.5 is required for generics.
+    settings.setSourceVersion("1.7");
+
+    compiler = new EclipseJavaCompiler(settings);
     classloader = JavaPreprocessor.class.getClassLoader();
 
     compiler.setCompilationProblemHandler(
@@ -137,6 +140,9 @@ public final class JavaPreprocessor {
 
     // Assumes that class is named "A".
     final String[] resources = {"A.java"};
+    JavaCompilerSettings settings = compiler.createDefaultSettings();
+    System.err.println("Settings: " + settings.toString());
+
     final CompilationResult result = compiler.compile(resources, input, unusedOutput, classloader);
     return result.getErrors().length == 0;
   }
@@ -233,8 +239,8 @@ public final class JavaPreprocessor {
     return message.build();
   }
 
-  private final JavaCompiler compiler;
-  private final JavaCompilerSettings settings;
+  private final EclipseJavaCompiler compiler;
+  private final EclipseJavaCompilerSettings settings;
   private ClassLoader classloader;
 
   private static ListOfStrings GetInputOrDie() {
