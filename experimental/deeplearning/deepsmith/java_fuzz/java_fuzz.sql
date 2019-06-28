@@ -87,33 +87,28 @@ GROUP BY cf.clone_from_url
 ORDER BY file_count DESC
 LIMIT 10;
 
-# What are the cuases of failures?
+# Table of pre-processing results.
 
+SELECT "Pass",
+       count(*) AS COUNT,
+       (count(*) /
+          (SELECT count(*)
+           FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles)) * 100 AS "% of total"
+FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles
+WHERE preprocessing_succeeded=1
+UNION
 SELECT text, count(*) AS COUNT,
              (count(*) /
                 (SELECT count(*)
-                 FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles)) * 100 AS "% of total"
-FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles
+                 FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles)) * 100 AS "% of total"
+FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles
 WHERE preprocessing_succeeded = 0
 GROUP BY text;
-
-# How many successfully preprocessed methods are there?
-
-SELECT count(*)
-FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles
-WHERE preprocessing_succeeded = 1;
-
-
-SELECT count(*) /
-  (SELECT count(*)
-   FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles) * 100 AS "% of total"
-FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles
-WHERE preprocessing_succeeded = 1;
 
 # Select some preprocessed files for inspection.
 
 SELECT *
-FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles
+FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles
 WHERE preprocessing_succeeded = 1;
 
 # Reset encoded.
