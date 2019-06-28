@@ -69,10 +69,11 @@ public final class JavaPreprocessor {
    */
   protected String WrapMethodInClassWithShim(final String methodSrc) {
     return ("import java.io.*;\n"
+        + "import java.math.*;\n"
         + "import java.nio.charset.*;\n"
         + "import java.nio.file.*;\n"
-        + "import java.util.*;\n"
         + "import java.time.format.*;\n"
+        + "import java.util.*;\n"
         + "public class A{"
         + methodSrc
         + "}");
