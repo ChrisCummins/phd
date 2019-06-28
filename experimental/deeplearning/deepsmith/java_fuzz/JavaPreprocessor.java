@@ -141,7 +141,6 @@ public final class JavaPreprocessor {
     // Assumes that class is named "A".
     final String[] resources = {"A.java"};
     JavaCompilerSettings settings = compiler.createDefaultSettings();
-    System.err.println("Settings: " + settings.toString());
 
     final CompilationResult result = compiler.compile(resources, input, unusedOutput, classloader);
     return result.getErrors().length == 0;
