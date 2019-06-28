@@ -150,10 +150,10 @@ def DoProcessRepo(input_session: sqlutil.Session,
     # Attempt to extract all imports for this content file.
     imports = GetJavaImports(text)
 
-    for i, method_text in enumerate(methods):
+    for i, original_method_text in enumerate(methods):
       # Insert "//import ..." comments before each method so that we know which
       # packages must be imported.
-      method_text = InsertImportCommentHeader(method_text, imports)
+      method_text = InsertImportCommentHeader(original_method_text, imports)
 
       encoded_text = method_text.encode('ascii', 'ignore')
       sha256 = hashlib.sha256(encoded_text).hexdigest()
@@ -165,8 +165,8 @@ def DoProcessRepo(input_session: sqlutil.Session,
               relpath=relpath,
               artifact_index=relpath_counters[relpath],
               sha256=sha256,
-              charcount=len(method_text),
-              linecount=len(method_text.split('\n')),
+              charcount=len(original_method_text),
+              linecount=len(original_method_text.split('\n')),
               text=method_text,
           ))
       relpath_counters[relpath] += 1
