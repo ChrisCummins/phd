@@ -12,6 +12,11 @@ FROM github_java.contentfiles
 ORDER BY id DESC
 LIMIT 1;
 
+# Select a handful of scraped files for inspection.
+
+SELECT *
+FROM github_java.contentfiles;
+
 # How many repos did we scrape?
 
 SELECT count(*)
@@ -35,7 +40,7 @@ FROM github_java.contentfiles;
 SELECT count(*)
 FROM github_java.contentfiles;
 
-# Reset repositories masks.alter
+# Reset repositories masks.
 
 UPDATE github_java.repositories
 SET active = 1,
@@ -95,6 +100,13 @@ GROUP BY text;
 # How many successfully preprocessed methods are there?
 
 SELECT count(*)
+FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles
+WHERE preprocessing_succeeded = 1;
+
+
+SELECT count(*) /
+  (SELECT count(*)
+   FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles) * 100 AS "% of total"
 FROM `github_java_methods_pp_2019.06.25`.preprocessed_contentfiles
 WHERE preprocessing_succeeded = 1;
 
