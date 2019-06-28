@@ -2,6 +2,7 @@
 
 py_test(
     name = "java_fuzz_integration_test",
+    timeout = "eternal",
     srcs = ["java_fuzz_integration_test.py"],
     data = [
         "//experimental/deeplearning/deepsmith/java_fuzz:encode_java_corpus_image.tar",
