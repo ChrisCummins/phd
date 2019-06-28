@@ -178,6 +178,7 @@ def main():
     with output_db.Session(commit=True) as output_session:
       while EncodeFiles(input_session, output_session, 10000):
         output_session.commit()
+  app.Log(1, "Done!")
 
 
 if __name__ == '__main__':
