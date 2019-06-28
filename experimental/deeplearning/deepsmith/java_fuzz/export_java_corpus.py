@@ -19,11 +19,13 @@ import time
 import collections
 import hashlib
 import pathlib
+import re
 import tempfile
 import threading
+import typing
 from concurrent import futures
-from datasets.github.scrape_repos import contentfiles
 
+from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import extractors
 from labm8 import app
 from labm8 import fs
@@ -52,6 +54,10 @@ app.DEFINE_integer('export_worker_threads',
                    multiprocessing.cpu_count() * 5,
                    "The number of export worker threads.")
 
+# Regex to match a java import.
+_JAVA_IMPORT_RE = re.compile(
+    r'\s*import\s+(?P<package>[\w\.]+)\.(?P<classname>\w+)\s*;.*')
+
 
 def ImportQueryResults(query, session):
   """Copy results of a query from one session into a new session."""
@@ -59,6 +65,54 @@ def ImportQueryResults(query, session):
   # to a different session.
   for row in query:
     session.merge(row)
+
+
+def MaybeExtractJavaImport(
+    line: str) -> typing.Optional[typing.Tuple[str, str]]:
+  """Try and extract a java import basename from a given line of Java code.
+
+  E.g. "import java.util.ArrayList;" -> "ArrayList"
+
+  This assumes a fairly sane code style and won't work for some cases such as:
+    * multiple imports per line.
+    * '.*' globbed imports.
+
+  Args:
+    line: A line of Java code.
+
+  Returns:
+    A tuple consisting of the full import statement (without trailing ;), and
+    the final component of a Java import, e.g. 'ArrayList'. If line does not
+    contain an import, returns None.
+  """
+  match = _JAVA_IMPORT_RE.match(line)
+  if match:
+    return match.group('package'), match.group('classname')
+
+
+def GetJavaImports(src: str) -> typing.Set[typing.Tuple[str, str]]:
+  """Return the set of import basenames in a Java source.
+
+  Args:
+    src: A Java source.
+
+  Returns:
+    A (possibly empty) set.
+  """
+  matches = []
+  for line in src.split('\n'):
+    match = MaybeExtractJavaImport(line)
+    if match:
+      matches.append(match)
+  return {classname: package for package, classname in set(matches)}
+
+
+def InsertImportCommentHeader(method: str, imports: typing.Dict[str, str]):
+  import_statements = []
+  for basename, package in imports.items():
+    if basename in method:
+      import_statements.append(f'//import {package}.{basename}\n')
+  return ''.join(import_statements) + method
 
 
 def DoProcessRepo(input_session: sqlutil.Session,
@@ -92,8 +146,15 @@ def DoProcessRepo(input_session: sqlutil.Session,
 
   relpath_counters = collections.defaultdict(int)
 
-  for (relpath, _), methods in zip(contentfiles_to_export, methods_lists):
+  for (relpath, text), methods in zip(contentfiles_to_export, methods_lists):
+    # Attempt to extract all imports for this content file.
+    imports = GetJavaImports(text)
+
     for i, method_text in enumerate(methods):
+      # Insert "//import ..." comments before each method so that we know which
+      # packages must be imported.
+      method_text = InsertImportCommentHeader(method_text, imports)
+
       encoded_text = method_text.encode('ascii', 'ignore')
       sha256 = hashlib.sha256(encoded_text).hexdigest()
       method_text = encoded_text.decode('ascii')
