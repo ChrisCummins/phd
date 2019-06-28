@@ -148,12 +148,17 @@ def DoProcessRepo(input_session: sqlutil.Session,
 
   for (relpath, text), methods in zip(contentfiles_to_export, methods_lists):
     # Attempt to extract all imports for this content file.
-    imports = GetJavaImports(text)
+    # NOTE(2019-06-28): Disabled import inlining to simplify the synthesis
+    # pipeline. We may wish to revisit this at a later date.
+    # imports = GetJavaImports(text)
 
     for i, original_method_text in enumerate(methods):
       # Insert "//import ..." comments before each method so that we know which
       # packages must be imported.
-      method_text = InsertImportCommentHeader(original_method_text, imports)
+      # NOTE(2019-06-28): Disabled import inlining to simplify the synthesis
+      # pipeline. We may wish to revisit this at a later date.
+      # method_text = InsertImportCommentHeader(original_method_text, imports)
+      method_text = original_method_text
 
       encoded_text = method_text.encode('ascii', 'ignore')
       sha256 = hashlib.sha256(encoded_text).hexdigest()
