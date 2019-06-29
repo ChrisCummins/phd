@@ -203,3 +203,7 @@ natbib=true,         % natbib compatability
 % Clickable cross-references.
 \usepackage{hyperref}
 % \usepackage[hidelinks]{hyperref}
+
+% Add a \review{Text goes here} command that highlights changes to the original text.
+\newcommand{\diff}[1]{}
+\renewcommand{\diff}[1]{{\color{blue}{#1}}}
