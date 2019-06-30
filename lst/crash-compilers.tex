@@ -1,0 +1,60 @@
+\newsavebox{\OclgrindUncorrectedTypos}
+\begin{lrbox}{\OclgrindUncorrectedTypos}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global float* a, global float* b) {
+  a[0] = max(a[c], b[2]);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\NvidiaRecursionSegfault}
+\begin{lrbox}{\NvidiaRecursionSegfault}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(float4 a, global float4* b,
+              global float4* c, unsigned int d,
+              global double* e, global int2* f,
+              global int4* g, constant int* h,
+              constant int* i) {
+  A(a, b, c, d, d, e, f, g, h);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\IntelGtDoubleAssertion}
+\begin{lrbox}{\IntelGtDoubleAssertion}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(read_only image2d_t a,
+              global double2* b) {
+  b[0] = get_global_id(0);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\BeignetScalarizeInsert}
+\begin{lrbox}{\BeignetScalarizeInsert}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global float4* a) {
+  a[get_local_id(0) / 8][get_local_id(0)] =
+      get_local_id(0);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\AlmostEverythingCrash}
+\begin{lrbox}{\AlmostEverythingCrash}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A() {
+  __builtin_astype(d, uint4);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}

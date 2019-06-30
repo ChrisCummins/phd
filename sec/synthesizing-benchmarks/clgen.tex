@@ -36,7 +36,7 @@ The rejection filter accepts as input a content file and returns whether or not 
 During initial development, it became apparent that isolating the OpenCL device code leads to a higher-than-expected discard rate (that is, seemingly valid OpenCL files being rejected). Through analysing 148k lines of compilation errors, a large number of failures were discovered to be caused by undeclared identifiers, a result of isolating device code. 50\% of undeclared identifier errors in the GitHub dataset were caused by only 60 unique identifiers. To address this, a \emph{shim header} was developed which contains inferred values for common type definitions (e.g. \texttt{FLOAT\_T}), and common constants (e.g. \texttt{WGSIZE}), shown in Listing~\ref{lst:opencl-shim-header}.
 
 \begin{listing}
-\inputminted[frame=lines,linenos]{c}{lst/opencl-shim-header.h}
+\inputminted{c}{lst/opencl-shim-header.h}
 \caption[The \emph{shim} header file for compiling OpenCL from GitHub]{An overview of the \emph{shim} header file, providing commonly used type aliases and constants for compiling OpenCL files taken on GitHub.}
 \label{lst:opencl-shim-header}
 \end{listing}
@@ -56,19 +56,18 @@ Programming languages have few of the issues of semantic interpretation present 
 
 An example of the code rewriting process is shown in Listings~\ref{lst:code-rewriting-before} and~\ref{lst:code-rewriting-after}. A side effect of this process is a reduction in code size, largely due to the removal of comments and excess white space. The final language corpus contains 1.3 million lines of transformed OpenCL, consisting of 9487 kernel functions. Identifier renaming reduces the \emph{bag-of-words} vocabulary size --- the number of unique entries in the tokenised corpus --- by 84\%.
 
-\lstinputlisting[%
-  language={[OpenCL]C},%
-  label={lst:code-rewriting-before},%
-  float,%
-  caption={[Example OpenCL content file from GitHub]An example OpenCL content file downloaded from GitHub prior to code rewriting.}%
-]{lst/clgen-rewrite-before}
+\begin{listing}
+  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-rewrite-before.cl}
+  \caption[Example OpenCL content file from GitHub]{An example OpenCL content file downloaded from GitHub prior to code rewriting.}
+  \label{lst:code-rewriting-before}
+\end{listing}
 
-\lstinputlisting[%
-  language={[OpenCL]C},%
-  label={lst:code-rewriting-after},%
-  float,%
-  caption={[OpenCL content file after rewriting]The example OpenCL content file of Listing~\ref{lst:code-rewriting-before} after code rewriting. Conditional compilation has been removed, the variables and functions renamed, and a code style enforced.}%
-]{lst/clgen-rewrite-after}
+\begin{listing}
+  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-rewrite-after.cl}
+  \caption[OpenCL content file after rewriting]{The example OpenCL content file of Listing~\ref{lst:code-rewriting-before} after code rewriting. Conditional compilation has been removed, the variables and functions renamed, and a code style enforced.}
+  \label{lst:code-rewriting-after}
+\end{listing}
+
 
 \subsection{Learning OpenCL}
 \label{sec:learning-opencl}
@@ -92,32 +91,20 @@ In either mode, a \emph{seed} text is generated and the model sampled, character
 \label{alg:clgen-synthesis}
 \end{algorithm}
 
-\lstinputlisting[%
-  float,%
-  label={lst:clgen-sample-a},%
-  caption={%
-    [Synthesised vector operation with branching and synchronisation]%
-    CLgen-synthesised vector operation with branching and synchronisation.%
-  },%
-	language={[OpenCL]C}%
-]{lst/clgen-sample-a}
+\begin{listing}
+  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-a.cl}
+  \caption[Synthesised vector operation with branching and synchronisation]{CLgen-synthesised vector operation with branching and synchronisation.}
+  \label{lst:clgen-sample-a}
+\end{listing}
 
-\lstinputlisting[%
-  float,%
-  label={lst:clgen-sample-b},%
-  caption={%
-    [Synthesised zip operation]%
-    CLgen-synthesised zip operation which computes $c_i = 3a_i + 2b_i + 4$.%
-  },%
-  language={[OpenCL]C}%
-]{lst/clgen-sample-b}
+\begin{listing}
+  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-b.cl}
+  \caption[Synthesised zip operation]{CLgen-synthesised zip operation which computes $c_i = 3a_i + 2b_i + 4$.}
+  \label{lst:clgen-sample-b}
+\end{listing}
 
-\lstinputlisting[%
-  float,%
-  label={lst:clgen-sample-c},%
-  caption={%
-    [Synthesised partial reduction operation]%
-    CLgen-synthesised partial reduction over reinterpreted vector type.%
-  },%
-  language={[OpenCL]C}%
-]{lst/clgen-sample-c}
+\begin{listing}
+  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-c.cl}
+  \caption[Synthesised partial reduction operation]{CLgen-synthesised partial reduction over reinterpreted vector type.}
+  \label{lst:clgen-sample-c}
+\end{listing}

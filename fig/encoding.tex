@@ -1,21 +1,37 @@
-\lstset{language=[OpenCL]C}
+\newsavebox{\NvidiaStreamClusterInput}
+\begin{lrbox}{\NvidiaStreamClusterInput}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+//#define Elements
+kernel void memset_kernel(global char * mem_d, short val, int number_bytes){
+    const int thread_id = get_global_id(0);
+    mem_d[thread_id] = val;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\NvidiaStreamClusterOutput}
+\begin{lrbox}{\NvidiaStreamClusterOutput}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global char* a, short b, int c) {
+  const int d = get_global_id(0);
+  a[d] = b;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
 \begin{figure}
   \centering %
   \subfloat[%
     An example, short OpenCL kernel, taken from Nvidia's \emph{streamcluster}.%
-  ]{%
-    \noindent\mbox{\parbox{\columnwidth}{%
-      \lstinputlisting[nolol,label=subfig:source_in]{lst/source_in}%
-    }}%
-  }\\%
+  ]{\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterInput}}}}\\%
   \subfloat[%
     The \emph{streamcluster} kernel after source rewriting. Variable and
     function names are normalised, comments removed, and code style enforced.%
-  ]{%
-    \noindent\mbox{\parbox{\columnwidth}{%
-      \lstinputlisting[nolol,label=subfig:source_out]{lst/source_out}%
-    }}%
-  }\\%
+  ]{\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterOutput}}}}\\%
   \subfloat[%
     Derived vocabulary, ordered by their appearance in the
     input~\protect\subref{subfig:source_out}. The vocabulary maps tokens to

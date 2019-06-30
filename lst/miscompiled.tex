@@ -1,0 +1,50 @@
+\newsavebox{\IntelSizetIntUnreduced}
+\begin{lrbox}{\IntelSizetIntUnreduced}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global double* a, global double* b,
+              global double* c, int d, int e) {
+  double f;
+  int g = get_global_id(0);
+  if (g < e - d - 1)
+    c[g] = (((e) / d) % 5) % (e + d);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\OclgrindRaceSwitch}
+\begin{lrbox}{\OclgrindRaceSwitch}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global int* a, global int* b) {
+  switch (get_global_id(0)) {
+  case 0:
+    a[get_global_id(0)]=b[get_global_id(0)+13];
+    break;
+  case 2:
+    a[get_global_id(0)]=b[get_global_id(0)+11];
+    break;
+  case 6:
+    a[get_global_id(0)]=b[get_global_id(0)+128];
+  }
+  barrier(2);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\BeignetTernary}
+\begin{lrbox}{\BeignetTernary}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global int* a, global int* b,
+              global int* c) {
+  c[0] = (a[0] > b[0]) ? a[0] : 0;
+  c[2] = (a[3] <= b[3]) ? a[4] : b[5];
+  c[4] = (a[4] <= b[5]) ? a[7] : b[7];
+  c[7] = (a[7] < b[0]) ? a[0] : (a[0] > b[1]);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}

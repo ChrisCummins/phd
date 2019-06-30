@@ -1,0 +1,88 @@
+\newsavebox{\IntelPostDominanceFrontier}
+\begin{lrbox}{\IntelPostDominanceFrontier}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A() {
+  while (true)
+    barrier(1);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+% Another:
+% kernel void A(local int* a) {
+%   while (1) {
+%   }
+% }
+%
+% And another:
+%    kernel void A(global int* a) {
+%      bool b;
+%      int c;
+%      for (b = 0; b < 100; b++)
+%        a[c] += a[c];
+%    }
+%
+% One more:
+%   kernel void A(global int* a, global int* b) {
+%     int c = get_global_id(0);
+%     int d = 0;
+%     while (d < 1024)
+%       a[c] = d;
+%   }
+
+\newsavebox{\SimplifyTheCFGPass}
+\begin{lrbox}{\SimplifyTheCFGPass}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global float* a, global float* b,
+              const int c) {
+  for (int d = 0; d < c; d++)
+    for (d = 0; d < a; d += 32)
+      b[d] = 0;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\IntelPredicator}
+\begin{lrbox}{\IntelPredicator}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global int* a) {
+  int b = get_global_id(0);
+  while (b < *a)
+    if (a[0] < 0)
+      a[1] = b / b * get_local_id(0);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\IntelCombineRedundant}
+\begin{lrbox}{\IntelCombineRedundant}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global float* a, global float* b,
+              global float* c, const int d) {
+  for (unsigned int e = get_global_id(0);
+       e < d; e += get_global_size(0))
+    for (unsigned f = 0; f < d; ++f)
+      e += a[f];
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\IntelPrepareKernelArgs}
+\begin{lrbox}{\IntelPrepareKernelArgs}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(int a, global int* b) {
+  int c = get_global_id(0);
+  int d = work_group_scan_inclusive_max(c);
+  b[c] = c;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}

@@ -1,0 +1,23 @@
+\newsavebox{\BeigPtrAssertion}
+\begin{lrbox}{\BeigPtrAssertion}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global int* a, global int* b,
+              global int* c) {
+  a[get_global_id(0)] = a[get_global_id(0)] > b;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\BeigIterAssertion}
+\begin{lrbox}{\BeigIterAssertion}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global int* a) {
+  global int* b = ((void*)0);
+  b[0] = a;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}

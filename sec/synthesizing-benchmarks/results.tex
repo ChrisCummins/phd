@@ -32,25 +32,17 @@ The first case is that the feature \texttt{F3} of Table~\ref{tab:clgen-cgo13-fea
 
 The second case is that some CLgen-generated programs had identical feature values as in the benchmark set, but had different \emph{behaviour} (i.e. optimal mappings). Listing~\ref{lst:zero-b} shows one example of a CLgen benchmark which is indistinguishable in the feature space to one the of existing benchmarks --- AMD's Fast Walsh-Hadamard transform, Listing~\ref{lst:amd-fast-walsh-transform} --- but with different behaviour. We found this to be caused by the lack of discriminatory features for branching, since the NPB programs are implemented in a manner which aggressively minimised branching. To counter this the predictive model was extended with an additional feature containing a static count of branching operations in a kernel.
 
-\lstinputlisting[%
-  label=lst:amd-fast-walsh-transform,%
-  float,%
-  caption={%
-    [AMD's Fast Walsh Transform kernel]%
-    AMD's Fast Walsh Transform benchmark kernel. In the \citeauthor{Grewe2013} feature space this is indistinguishable from the CLgen program of Listing~\ref{lst:zero-b}, but has very different runtime behaviour and optimal device mapping. The addition of a branching feature fixes this.%
-  },%
-  language={[OpenCL]C}
-]{lst/amd-fast-walsh-transform}
+\begin{listing}
+  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/amd-fast-walsh-transform.cl}
+  \caption[AMD's Fast Walsh Transform kernel]{AMD's Fast Walsh Transform benchmark kernel. In the \citeauthor{Grewe2013} feature space this is indistinguishable from the CLgen program of Listing~\ref{lst:zero-b}, but has very different runtime behaviour and optimal device mapping. The addition of a branching feature fixes this.}
+  \label{lst:amd-fast-walsh-transform}
+\end{listing}
 
-\lstinputlisting[%
-  label=lst:zero-b,%
-  float,%
-  caption={%
-    [Synthesised program with same features as an AMD benchmark]%
-    In the \citeauthor{Grewe2013} feature space, this CLgen program is indistinguishable from the AMD Fast Walsh–Hadamard transform benchmark kernel of Listing~\ref{lst:amd-fast-walsh-transform}, but has very different runtime behaviour and optimal device mapping. The addition of a branching feature fixes this.%
-  },%
-  language={[OpenCL]C}
-]{lst/zero-b}
+\begin{listing}
+  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/amd-fast-walsh-transform-equivalent.cl}
+  \caption[Synthesised program with same features as an AMD benchmark]{In the \citeauthor{Grewe2013} feature space, this CLgen program is indistinguishable from the AMD Fast Walsh–Hadamard transform benchmark kernel of Listing~\ref{lst:amd-fast-walsh-transform}, but has very different runtime behaviour and optimal device mapping. The addition of a branching feature fixes this.}
+  \label{lst:zero-b}
+\end{listing}
 
 Figure~\ref{fig:ex2} shows speedups of the extended model across all seven of the benchmark suites used in Section~\ref{sec:the-case-for-benchmark-generators}. Model performance, even on this tenfold increase of benchmarks, is good. There are three benchmarks on which the model performs poorly: \texttt{MatrixMul}, \texttt{cutcp}, and \texttt{pathfinder}. Each of those programs makes heavy use of loops, which it is believed the static code features of the model fail to capture. This could be addressed by extracting dynamic instruction counts using profiling, but this is beyond the scope of this work. It is not the aim of this work to perfect the predictive model but to show the performance improvements associated with training on synthetic programs. To this extent, the goal is succeeded, achieving average speedups of $3.56\times$ on AMD and $5.04\times$ on NVIDIA across a very large test set.
 
