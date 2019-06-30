@@ -4,7 +4,7 @@ There has been an unprecedented increase in the scale and quantity of data-inten
 
 In hardware, performance needs have long outstripped what can be provided by single processors, leading to a broad spectrum of heterogeneous architectures. These range from re-purposing existing hardware such as Graphics Processor Units (GPUs) to developing entirely application-specific chips~\cite{Misra2010,Jouppi2017}. While some of the compiler logic can be shared across architectures, the optimisation decisions to extract the best performance from specific hardware cannot. Each architecture requires extensive hand tuning by experts to extract good performance.
 
-In software, the shift towards parallelism and heterogeneity has created a \emph{programmability challenge}. Parallel programming poses significantly more challenges than traditional single-threaded development; it is often not clear how best to partition work across the available parallel resources and doing so can easily introduce bugs. One of the most popular approaches to mitigating the programmability challenge is through the development and widespread adoption of high-level abstractions. High-level abstractions and libraries can greatly simplify parallel programming by providing complex parallel communication and coordination logic, allowing users to plug-in only the business logic required to solve a problem. Still, there is a wide range of approaches to implementing such libraries. One example is high-level libraries for performing data-intensive numeric workloads, two of the most popular examples of which --- TensorFlow~\cite{Abadi} and PyTorch~\cite{Paszke2017} --- use opposing data-flow and imperative programming styles, respectively. Optimising such libraries provides new challenges to the compiler --- the challenge of code analyses in the face of parallelised higher-order functions can defeat many optimisations.
+In software, the shift towards parallelism and heterogeneity has created a \emph{programmability challenge}. Parallel programming poses \diff{far greater} challenges than traditional single-threaded development; it is often not clear how best to partition work across the available parallel resources and doing so can easily introduce bugs. One of the most popular approaches to mitigating the programmability challenge is through the development and widespread adoption of high-level abstractions. High-level abstractions and libraries can greatly simplify parallel programming by providing complex parallel communication and coordination logic, allowing users to plug-in only the business logic required to solve a problem. Still, there is a wide range of approaches to implementing such libraries. \diff{For example, two of the most popular high-level libraries for parallelising deep learning workloads} --- TensorFlow~\cite{Abadi} and PyTorch~\cite{Paszke2017} --- use opposing data-flow and imperative programming styles, respectively. Optimising such libraries provides new challenges to the compiler --- there challenge of code analyses in the face of parallelised higher-order functions can defeat many optimisations.
 
 The combined burden of increased hardware and software diversity has resulted in compilers that are too complex to be fully understood by a single developer, and too cumbersome to keep up with the pace of change. This results in slow performance, wasted energy, and buggy software. For the trend towards data-intensive workloads and heterogeneous devices to continue, new techniques are required to reduce the cost of compiler construction. The remainder of this chapter describes the application of machine learning to this issue, followed by the problems with this approach. Then the contributions of this thesis are detailed, followed by a description of the overall structure of the document.
 
@@ -34,13 +34,15 @@ The small number of available benchmarks limits the quality of learned models as
 
 To address the issue, there must be a sizeable increase in the availability of benchmarks for machine learning. Previously, researchers sought to provide this through the use of randomly instantiating from hand-crafted benchmark templates, but this is a challenging approach --- the generator must be biased in such a way that the generated programs draw from a similar distribution to \emph{real} programs so as to be useful for learning. It is not clear if such an approach could ever achieve parity with real programs.
 
-\paragraph*{Model and Feature design} Machine learning algorithms learn to correlate a set of \emph{explanatory variables} with a target value. These explanatory variables, known as features, must be chosen so as to be discriminative for the target value.
+\paragraph*{Model and feature design} Machine learning algorithms learn to correlate a set of \emph{explanatory variables} with a target value. These explanatory variables, known as features, must be chosen so as to be discriminative for the target value.
 
 Choosing the features to summarise a program so as to be discriminative for machine learning is a challenging task that depends on the thing being learned, and the environment from which training data was collected, e.g. the hardware and machine configuration.
 
 Many problems in compilers do not map directly to numeric attributes, so systems for extracting numeric representations from non-numeric inputs must be developed. For example, instruction counts can be extracted from the input source code. Knowing which attributes to extract to represent a program is not easy, there is no one-size-fits-all approach that works for all cases. Feature design is often an incremental process of trial and experimentation, and there are few clear signals when the iterative process is ``done''.
 
 If machine learning is to be widely adopted in compilers, it must be made significantly easier and cheaper. The aim of this thesis is to develop machine learning techniques that simplify and lower the cost of compiler construction.
+
+% TODO: Can we squeeze in a paragraph about testing?
 
 
 \section{Contributions}
@@ -55,7 +57,7 @@ This thesis presents machine learning-based techniques to simplify and accelerat
 	\item The first application of \emph{transfer learning} to compiler optimisations, improving heuristics by reusing training information across different optimisation problems, even if they are unrelated.
 \end{itemize}
 
-
+\newpage
 \section{Structure}
 
 This thesis is organised as follows:
