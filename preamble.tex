@@ -80,6 +80,7 @@ natbib=true,         % natbib compatability
 
 
 % Source code listings.
+% TODO: Replace listings package with minted.
 \usepackage{listings,lstautogobble}
 \lstset{%
   basicstyle=\small,%
@@ -94,6 +95,9 @@ natbib=true,         % natbib compatability
   captionpos=b,
   autogobble=true % indent listing based on first line
 }
+
+% Source code listings.
+\usepackage{minted}
 
 % Commands to supress and reset line numbers.
 \let\origthelstnumber\thelstnumber

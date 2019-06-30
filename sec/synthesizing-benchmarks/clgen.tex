@@ -35,14 +35,11 @@ The rejection filter accepts as input a content file and returns whether or not 
 
 During initial development, it became apparent that isolating the OpenCL device code leads to a higher-than-expected discard rate (that is, seemingly valid OpenCL files being rejected). Through analysing 148k lines of compilation errors, a large number of failures were discovered to be caused by undeclared identifiers, a result of isolating device code. 50\% of undeclared identifier errors in the GitHub dataset were caused by only 60 unique identifiers. To address this, a \emph{shim header} was developed which contains inferred values for common type definitions (e.g. \texttt{FLOAT\_T}), and common constants (e.g. \texttt{WGSIZE}), shown in Listing~\ref{lst:opencl-shim-header}.
 
-\lstinputlisting[%
-  label={lst:opencl-shim-header},%
-  float,%
-  language={C},%
-  caption={%
-    [The \emph{shim} header file for compiling OpenCL from GitHub]An overview of the \emph{shim} header file, providing commonly used type aliases and constants for compiling OpenCL files taken on GitHub.%
-  }%
-]{lst/opencl-shim-header}
+\begin{listing}
+\inputminted[frame=lines,linenos]{c}{lst/opencl-shim-header.h}
+\caption[The \emph{shim} header file for compiling OpenCL from GitHub]{An overview of the \emph{shim} header file, providing commonly used type aliases and constants for compiling OpenCL files taken on GitHub.}
+\label{lst:opencl-shim-header}
+\end{listing}
 
 Injecting the shim decreases the discard rate from 40\% to 32\%, responsible for an additional 88k lines of code in the final language corpus. The resulting data set is 2.0 million lines of compilable OpenCL source code.
 
