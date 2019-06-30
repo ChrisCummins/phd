@@ -333,7 +333,7 @@ For a classification task, if observations are distributed amongst the $K$ parti
 
 Principal Components Analysis PCA~\cite{Jolliffe2011} is a statistical procedure for identifying the underlying components responsible for variance in data. Given $n$ dimensions of observations, PCA produces a $k$-dimensional subspace through a linear transformation, where $k < n$. Each component is ordered by decreasing variance, $Var(k^{(i)}) \le Var(k^{(i-1)})$. This dimensionality-reduction is useful for exposing underlying correlations in machine learning feature design, and to aid in visually inspecting high-dimensional spaces where $n \ge 3$.
 
-To compute the principal components, one begins with a normalized matrix of observations $\bm{X} \in \mathbb{R}^{m \times n}$ of $m$ rows and $n$ columns (components). The data is normalised to the range $[-1,1]$ by subtracting the mean and scaling each component by its variance. Given eigenvectors $\bm{v}^{(1)}, \ldots \bm{v}^{(m)}$, the matrix of $k$ principal components $\bm{\hat{X}} \in \mathbb{R}^{m \times k}$ can be computed using:
+To compute the principal components, one begins with a normalised matrix of observations $\bm{X} \in \mathbb{R}^{m \times n}$ of $m$ rows and $n$ columns (components). The data is normalised to the range $[-1,1]$ by subtracting the mean and scaling each component by its variance. Given eigenvectors $\bm{v}^{(1)}, \ldots \bm{v}^{(m)}$, the matrix of $k$ principal components $\bm{\hat{X}} \in \mathbb{R}^{m \times k}$ can be computed using:
 
 \begin{equation}
 \bm{\hat{X}} = [ \bm{v}^{(1)}, \ldots, \bm{v}^{(k)}]^T \cdot \bm{X}\\
