@@ -41,10 +41,6 @@
 
 \usepackage{todonotes}
 
-% Enable floating algorithm environments. To float an algorithm use:
-%   \begin{algorithm}{t}{lop}
-\usepackage{float}
-
 \usepackage[utf8]{inputenc}
 
 \usepackage[%
@@ -199,6 +195,10 @@ natbib=true,         % natbib compatability
   {\end{mainabs}\renewcommand{\abstractname}{Abstract}}
 
 \captionsetup[subfigure]{labelformat=parens}
+
+% Enable floating algorithm environments.
+\usepackage{float}
+\newfloat{algorithm}{t}{lop}
 
 % Clickable cross-references.
 \usepackage{hyperref}

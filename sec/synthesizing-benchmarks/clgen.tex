@@ -11,9 +11,9 @@ Section~\ref{subsec:opencl-lang-corpus} describes the assembly of a language cor
 
 \begin{figure}
 	\centering%
-	\includegraphics[width=\columnwidth]{img/pipeline}%
+	\includegraphics[width=\columnwidth]{img/clgen-pipeline}%
 	\caption[Benchmark synthesis and execution pipeline]{%
-    The benchmark synthesis and execution pipeline. Software is mined from GitHub; this is used to construct a language model from which new programs may be synthesised; a host driver is used to produce performance results.%
+    The benchmark synthesis and execution pipeline. Software is mined from GitHub; this is used to construct a language model from which new programs may be synthesised; a benchmark driver is used to produce performance results.%
   }%
 	\label{fig:clgen-pipeline}
 \end{figure}
@@ -68,7 +68,7 @@ An example of the code rewriting process is shown in Listings~\ref{lst:code-rewr
 
 \lstinputlisting[%
   language={[OpenCL]C},%
-  label={lst:code-rewrite-after},%
+  label={lst:code-rewriting-after},%
   float,%
   caption={[OpenCL content file after rewriting]The example OpenCL content file of Listing~\ref{lst:code-rewriting-before} after code rewriting. Conditional compilation has been removed, the variables and functions renamed, and a code style enforced.}%
 ]{lst/clgen-rewrite-after}
@@ -78,7 +78,7 @@ An example of the code rewriting process is shown in Listings~\ref{lst:code-rewr
 
 Generating valid, executable program code is an ambitious and challenging goal for unsupervised machine learning. CLgen employs state-of-the-art deep language modelling techniques to achieve this task.
 
-The Long Short-Term Memory (LSTM)~\cite{Hochreiter1997} architecture of Recurrent Neural Network~\cite{Sundermeyer2012,Mikolov2015} is used to learn a character-level language model over the corpus of OpenCL compute kernels. The LSTM network architecture comprises recurrent layers of \emph{memory cells}, each consisting of input, output, and forget gates, and an output layer providing normalised probability values from a 1-of-K coded vocabulary~\cite{Graves}.
+The Long Short-Term Memory (LSTM)~\cite{Hochreiter1997} architecture of Recurrent Neural Network~\cite{Sundermeyer2012,Mikolov2015} is used to learn a character-level language model over the corpus of OpenCL compute kernels. The LSTM network architecture comprises recurrent layers of \emph{memory cells}, each consisting of input, output, and forget gates, and an output layer providing normalised probability values from a 1-of-K coded vocabulary~\cite{Graves2005}.
 
 A 3-layer LSTM network is used with 2048 nodes per layer, implemented in Torch. This 17-million parameter model is trained using \textit{Stochastic Gradient Descent} for 50 epochs, using an initial learning rate of 0.002, decaying by a factor of one half every 5 epochs. Training took three weeks on a single machine using an NVIDIA GTX Titan, with a final model size of 648MB. Training the network is a one-off cost, and can be parallelised across devices. The trained network can be deployed to lower-compute machines for use.
 
@@ -89,9 +89,9 @@ OpenCL compute kernels are synthesised by iteratively sampling the learned langu
 
 In either mode, a \emph{seed} text is generated and the model sampled, character by character, until the end of the compute kernel is reached, or until a predetermined maximum number of characters is reached. Algorithm~\ref{alg:clgen-synthesis} illustrates this process. The same rejection filter as is used during corpus assembled then either accepts or rejects the sample as a candidate synthetic benchmark. Listings~\ref{lst:clgen-sample-a},~\ref{lst:clgen-sample-b}, and~\ref{lst:clgen-sample-c} show three examples of unique compute kernels generated in this manner from an argument specification of three single-precision floating-point arrays and a read-only signed integer. The quality of synthesised code is evaluated in Section~\ref{sec:clgen-qualitative-evaluation}.
 
-\begin{algorithm}{t}{lop}
+\begin{algorithm}
 \input{alg/clgen-synthesis}
-\caption[Sampling a candidate kernel from a seed text]{Sampling a candidate kernel from a seed text.}
+\caption[Sampling a candidate kernel from a seed text]{\diff{Using an LSTM model to sample a candidate OpenCL kernel from a seed text.}}
 \label{alg:clgen-synthesis}
 \end{algorithm}
 
