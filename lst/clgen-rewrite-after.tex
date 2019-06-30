@@ -2,7 +2,7 @@ inline float A(float a) {
   return 3.5f * a;
 }
 
-__kernel void B(__global float* b, __global float* c, const int d) {
+kernel void B(global float* b, global float* c, const int d) {
   unsigned int e = get_global_id(0);
 
   if (e < d) {

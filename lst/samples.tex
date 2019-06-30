@@ -51,7 +51,7 @@
   \end{lstlisting}
 \end{lrbox}
 % This has been forwarded to the LLVM folks https://bugs.llvm.org/show_bug.cgi?id=33897
-% __kernel void A(__global float* b) {
+% kernel void A(global float* b) {
 %	(float4)(b);
 % }
 
@@ -71,7 +71,7 @@
 % }
 
 % Another 3± hang:
-% __kernel void A(global int* a) {
+% kernel void A(global int* a) {
 %   local int b[4][3][4][5];
 %   b[1][2][3][3] = b[3];
 % }

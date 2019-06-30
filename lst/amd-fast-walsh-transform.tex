@@ -1,6 +1,6 @@
-__kernel
-void fastWalshTransform(__global float * tArray,
-                        __const  int   step
+kernel
+void fastWalshTransform(global float * tArray,
+                        const  int   step
                        )
 {
     unsigned int tid = get_global_id(0);
