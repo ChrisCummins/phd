@@ -3,23 +3,40 @@
 
 \section{Introduction}
 
-This chapter provides a brief and non-exhaustive overview of the techniques and theory used in this thesis. First, Section~\ref{sec:background-terminology} defines terminology. Then Section~\ref{sec:background-machine-learning} describes the machine learning techniques used in this thesis, and Section~\ref{sec:evaluation-techniques} describes and evaluation techniques used in this thesis. Finally, Section~\ref{sec:background-summary} concludes.
-
-
-\section{Terminology}
-\label{sec:background-terminology}
-
-\emph{Machine learning} refers to a family of statistical models and algorithms used to infer functions to estimate future values given past observations and their \emph{features}.
-
-\emph{Features}, or explanatory variables, are a set of observable attributes used by machine learning algorithms to build the correlations required to predict unseen values. % A \emph{feature space} is the
-
-\emph{Deep learning} is a loosely defined class of machine learning methods built on artificial neural networks. It is easily confused with \emph{deep neural networks}, which is a specific deep learning architecture employing artificial neural networks with one or more hidden layers. Recurrent Neural Networks, used in this thesis, are a deep learning architecture.
+This chapter provides an overview of the techniques and theory used in this thesis. Section~\ref{sec:background-machine-learning} describes the machine learning techniques used in this thesis, and Section~\ref{sec:evaluation-techniques} describes and evaluation techniques used in this thesis. Finally, Section~\ref{sec:background-summary} concludes.
 
 
 \section{Machine Learning}
 \label{sec:background-machine-learning}
 
-Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the correct category --- or class --- for a set of features, based on ``labelled'' training data, i.e.\ instances whose categories are known. Sequence modelling is the task of capturing the underlying probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
+Machine learning is a family of statistical models and algorithms used to infer functions to estimate future values given past observations and their \emph{features}. Features, or explanatory variables, are a set of observable attributes used by machine learning algorithms to build the correlations required to predict unseen values, \diff{or \emph{labels}. Figure~\ref{fig:classification} illustrates the process by which a model is fitted to past observations observations and used to infer the label of unseen features. The $n$-dimensional space described by $n$ features is known as a feature space. A \emph{feature vector} is then the set of values describing a single point in this space.}
+
+Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the correct category, or \emph{class}, for a set of features, based on labelled training data, i.e.\ instances whose categories are known.
+
+\begin{figure}
+  \centering
+  % The empty square brackets are required to keep the (a), (b), and (c) subfloat labels.
+  \subfloat[][Training observations]{%
+    \includegraphics[width=.32\columnwidth]{img/classification-a}%
+    \label{fig:classification-a}%
+  }%
+  \subfloat[][Fitted model]{%
+    \includegraphics[width=.32\columnwidth]{img/classification-b}%
+    \label{fig:classification-b}%
+  }%
+  \subfloat[][Model inference]{%
+    \includegraphics[width=.32\columnwidth]{img/classification-c}%
+    \label{fig:classification-c}%
+  }%
+  \caption[Training and inference in machine learning]{%
+    \diff{%
+    	An illustration of the training and inference of a machine learning model. The $x$- and $y$-axes depict features and labels, which may be continuous or discrete multi-dimensional spaces. In~\subref{fig:classification-a}, training observations have been collected, consisting of features and their corresponding labels. A model is then fitted to these observations, shown as the green curve in~\subref{fig:classification-b}. The model can be used to infer the label of unseen feature values, shown in~\subref{fig:classification-c}.%
+		}%
+  }%
+  \label{fig:classification}
+\end{figure}
+
+Sequence modelling is the task of capturing the underlying probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
 
 % \subsection{Supervised Learning}
 
@@ -64,22 +81,22 @@ The activation function $\phi(z)$ is a non-linear differentiable function used t
   \phi(z) = \frac{1}{1 + e^{-z}}
 \end{equation}
 
-Sigmoid activations are bounded in the range $(0,1)$.
+Sigmoid activations are bounded in the range $(0,1)$, \diff{depicted in Figure~\ref{fig:activation-functions-sigmoid}}.
 % , which prevents blowing up of activations. Negative: gives rise to ``vanishing gradients'' because of the squishing behaviour for large positive or negative values - sigmoids saturate and kill gradients.
-% It's output isn't zero centred, which makes gradient updates go too far in different directions.
-For hidden layers, a disadvantage of sigmoid activation is that the output isn't zero centred. To address this, the \emph{Hyperbolic Tangent} (tanh) activation may be used, which is a scaled sigmoid function with values in the range $(-1,1)$:
+% It's output is not zero-centred, which makes gradient updates go too far in different directions.
+For hidden layers, a disadvantage of sigmoid activation is that the output is not zero-centred. To address this, the \emph{Hyperbolic Tangent} (tanh) activation may be used, which is a scaled sigmoid function with values in the range $(-1,1)$:
 
 \begin{equation}
   \phi(z) = \frac{e^{z} - e^{-z}}{e^z + e^{-z}}
 \end{equation}
 
-Logistic function-based activations suffer from a squashing effect with large positive and negative values, and they are \emph{dense} activations in which every artificial neuron contributes to the output value. The \emph{Rectified Linear Unit} (ReLU) activation function addresses both issues, with an unbounded range $[0,\infty)$:
+\diff{Figure~\ref{fig:activation-functions-tanh} illustrates the hyperbolic tangent activation.} Logistic function-based activations suffer from a squashing effect with large positive and negative values, and they are \emph{dense} activations in which every artificial neuron contributes to the output value. The \emph{Rectified Linear Unit} (ReLU) activation function addresses both issues, with an unbounded range $[0,\infty)$:
 
 \begin{equation}
   \phi(z) = max(z, 0)
 \end{equation}
 
-If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons in the network will not fire, so that activations are sparse.
+\diff{The ReLU activation is shown in Figure~\ref{fig:activation-functions-relu}.} If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons in the network will not fire, so that activations are sparse.
 % Problem is ``dying'' neurons. When activations dip below 0, gradients will be 0, so the neuron becomes unresponsive to variations in input / error.
 The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, effectively ``dying''. Leaky ReLU prevents artificial neurons from becoming unresponsive to variations in input by introducing a small slope for negative values:
 
@@ -99,6 +116,28 @@ Typically a separate activation function is used for the output layer of an arti
 
 Where $\sum_{i=1}^{K} \phi (\bm{z})^{(i)} = 1$.
 
+\begin{figure}
+	\centering
+	% The empty square brackets are required to keep the (a), (b), and (c) subfloat labels.
+	\subfloat[][Sigmoid]{%
+		\includegraphics[width=.32\columnwidth]{img/activation-sigmoid}%
+		\label{fig:activation-functions-sigmoid}%
+	}%
+	\subfloat[][Hyperbolic Tangent]{%
+		\includegraphics[width=.32\columnwidth]{img/activation-tanh}%
+		\label{fig:activation-functions-tanh}%
+	}%
+	\subfloat[][Rectified Linear Unit]{%
+		\includegraphics[width=.32\columnwidth]{img/activation-relu}%
+		\label{fig:activation-functions-relu}%
+	}%
+	\caption[Activation functions for artificial neural networks]{%
+		\diff{%
+			Three non-linear functions commonly used to determine the activation of artificial neurons in an artificial neural network.%
+		}%
+	}%
+	\label{fig:activation-functions}
+\end{figure}
 
 \paragraph*{Backpropagation and Gradient Descent}
 
@@ -136,6 +175,7 @@ Neural networks are vulnerable to \emph{over-fitting}, whereby the parameters of
 \emph{Dropout} is a regularisation technique in which a parameter in the range $[0,1]$ is used to determine a proportion of artificial neurons to be removed. This helps training by preventing complex co-adaptations on training values~\cite{Goodfellow2016}.
 
 
+
 % \paragraph*{Normalization}
 
 % Batch normalization
@@ -143,7 +183,7 @@ Neural networks are vulnerable to \emph{over-fitting}, whereby the parameters of
 
 \subsection{Recurrent Neural Networks}
 
-A Recurrent Neural Network (RNN)~\cite{Graves2012} is an artificial neural network in which the connections between artificial neurons form a cycle, enabling the processing of arbitrary size sequences by maintaining and updating a \emph{hidden state}. Figure~\ref{fig:rnn} depicts an RNN, where $\bm{x}^{(t)} \in \mathbb{R}^d$ represents point $t \in \tau$ in a sequence of inputs $\bm{x} = \left( \bm{x}^{(1)}, \ldots, \bm{x}^{(\tau)} \right)$. The hidden states $\bm{h}^{(t)} \in \mathbb{R}^h$ and predicted output $\bm{\hat{y}}^{(t)} \in \mathbb{R}^y$ are updated at each step using:
+A Recurrent Neural Network (RNN)~\cite{Graves2012} is an artificial neural network in which the connections between artificial neurons form a cycle, enabling the processing of arbitrary size sequences by maintaining and updating a \emph{hidden state}.  RNNs are a \emph{deep learning} architecture, where deep learning is a loosely defined class of machine learning methods built on artificial neural networks\footnote{Deep learning is easily confused with \emph{deep neural networks}, which are a specific deep learning architecture employing artificial neural networks with one or more hidden layers.}. Figure~\ref{fig:rnn} depicts an RNN, where $\bm{x}^{(t)} \in \mathbb{R}^d$ represents point $t \in \tau$ in a sequence of inputs $\bm{x} = \left( \bm{x}^{(1)}, \ldots, \bm{x}^{(\tau)} \right)$. The hidden states $\bm{h}^{(t)} \in \mathbb{R}^h$ and predicted output $\bm{\hat{y}}^{(t)} \in \mathbb{R}^y$ are updated at each step using:
 
 \begin{figure}
   \centering
@@ -179,7 +219,7 @@ RNNs are universal, in that any function computable by a Turing machine can be c
 % Bengio, Y., Simard, P., & Frasconi, P. (1994). Learning Long-Term Dependencies with Gradient Descent is Difficult. IEEE Transactions on Neural Networks, 5(2).
 \emph{vanishing gradients} problem~\cite{Bengio1994}.
 
-% An RNN can learn a probability distribution over a sequence of tokens to predict the next token. Therefore, at each time step $t$, the output from the RNN is a conditional distribution $p\left( x_t | x_1, \ldots, x_{t-1} \right)$.
+% An RNN can learn a probability distribution over a sequence of tokens to predict the next token. Therefore, at each time step $t$, the output from the RNN conditional distribution $p\left( x_t | x_1, \ldots, x_{t-1} \right)$.
 
 % De Boom, C., Dhoedt, B., & Demeester, T. (2018). Character-level Recurrent Neural Networks in Practice: Comparing Training and Sampling Schemes. ArXiv:1801.00632.
 % \todo[inline]{RNN evaluation~\cite{DeBoom2018}.}
@@ -253,7 +293,7 @@ Decision trees are a popular and low overhead form of classification. Implementa
 
 \subsection{ZeroR}
 
-A \emph{ZeroR} model is used in classification tasks to provide a baseline to evaluate the performance of classifiers. A ZeroR model represents the simplest approach to classification, its output is the mode of the training data labels, irrespective of the input. For example, given training data with the labels $\bm{y} = { A, B, B, C, }$, a ZeroR model will produce output $\bm{\hat{y}} = B$ for all future inputs. A ZeroR model has no power of prediction since its output is not conditioned on input features.
+A \emph{ZeroR} model is used in classification tasks to provide a baseline to evaluate the performance of classifiers. A ZeroR model represents the simplest approach to classification, its output is the mode of the training data labels, irrespective of the input. For example, given training data with the labels $\bm{y} = \{ A, B, B, C\}$, a ZeroR model will produce output $\bm{\hat{y}} = B$ for all future inputs. A ZeroR model has no power of prediction since its output is not conditioned on input features.
 
 
 \subsection{Training, validation, test data}
@@ -435,4 +475,4 @@ To compute the principal components, one begins with a normalized matrix of obse
 \section{Summary}
 \label{sec:background-summary}
 
-This chapter has provided background on the machine learning techniques used in this thesis and the techniques used in evaluating them. The following chapter surveys research literature relevant to this work.
+This chapter provides background on the machine learning techniques used in this thesis and the techniques used in evaluating them. The following chapter surveys research literature relevant to this work.
