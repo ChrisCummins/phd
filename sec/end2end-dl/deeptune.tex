@@ -8,7 +8,16 @@ DeepTune is an end-to-end machine learning pipeline for optimisation heuristics.
 
 Figure~\ref{fig:deeptune} provides an overview of the system. A source re-writer removes semantically irrelevant information (such as comments) from the source code of the target program and passes it to a language model. The language model converts the arbitrary length stream of code into a fixed length vector of real values which fully capture the properties and structure of the source, replacing the role of hand-designed features. This vector can then optionally be concatenated with auxiliary inputs, which allow passing additional data about runtime or architectural parameters to the model for heuristics which need more than just compile-time information. Finally, a standard feed-forward network is used to predict the best heuristic parameters to optimise the program.
 
-\input{fig/deeptune}
+\begin{figure}
+  \centering
+  \includegraphics[width=.85\columnwidth]{img/deeptune} %
+  \caption[DeepTune system overview]{%
+    DeepTune system overview. Code properties are extracted from source code by the
+    language model. They are fed, together with optional auxiliary inputs, to
+    the heuristic model to produce the final prediction.%
+  }%
+  \label{fig:deeptune}
+\end{figure}
 
 DeepTune is open source. The model is implemented in Keras, with TensorFlow~\cite{Abadi} and Theano~\cite{Bergstra2011} back-ends.
 
@@ -39,7 +48,62 @@ During encoding, tokens in the vocabulary are mapped to unique integer values, e
 
 To mitigate this, an \emph{embedding} is used, which translates tokens in a sparse, integer-encoded vocabulary into a lower dimensional vector space, allowing semantically related tokens like \texttt{float} and \texttt{int} to be mapped to nearby points~\cite{Mikolov2013a,Baroni2014}. An embedding layer maps each token in the integer-encoded vocabulary to a vector of real values. Given a vocabulary size $|V|$ and embedding dimensionality $D$, an embedding matrix $\bm{W_{E}} \in \mathbb{R}^{|V| \times D}$ is learned during training, so that an integer-encoded sequences of tokens $\bm{t} \in \mathbb{N}^{L}$ is mapped to the matrix $\bm{T} \in \mathbb{R}^{L \times D}$. In this work, an embedding dimensionality $D = 64$ is used.
 
-\input{fig/encoding}
+\newsavebox{\NvidiaStreamClusterInput}
+\begin{lrbox}{\NvidiaStreamClusterInput}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+//#define Elements
+kernel void memset_kernel(global char * mem_d, short val, int number_bytes){
+    const int thread_id = get_global_id(0);
+    mem_d[thread_id] = val;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\NvidiaStreamClusterOutput}
+\begin{lrbox}{\NvidiaStreamClusterOutput}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global char* a, short b, int c) {
+  const int d = get_global_id(0);
+  a[d] = b;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\begin{figure}
+  \centering %
+  \subfloat[%
+    An example, short OpenCL kernel, taken from Nvidia's \emph{streamcluster}.%
+  ]{\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterInput}}}}\\%
+  \subfloat[%
+    The \emph{streamcluster} kernel after source rewriting. Variable and
+    function names are normalised, comments removed, and code style enforced.%
+  ]{\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterOutput}}}}\\%
+  \subfloat[%
+    Derived vocabulary, ordered by their appearance in the
+    input~\protect\subref{subfig:source_out}. The vocabulary maps tokens to
+    integer indices.%
+  ]{%
+    \input{tab/vocabulary}%
+    \label{subfig:source_vocab}%
+  }\\%
+  \subfloat[%
+    Indices encoded kernel sequence. Sequences may be padded to a fixed length
+    by repeating an out-of-vocabulary integer (e.g. -1).%
+  ]{%
+    \input{tab/encoded}%
+    \label{subfig:source_enc}%
+  }%
+  \caption[Deriving a vocabulary encoding from an OpenCL source code]{%
+    Deriving a tokenised $1$-of-$k$ vocabulary encoding from an OpenCL source
+    code.%
+  }%
+  \label{fig:encoding}%
+\end{figure}
+
 
 \subsubsection{Sequence Characterisation}
 

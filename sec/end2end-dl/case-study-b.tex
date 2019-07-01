@@ -5,7 +5,25 @@ Thread coarsening is an optimisation for parallel programs in which the operatio
 
 \subsection{State-of-the-art} \citeauthor{Magni2014} present a predictive model for OpenCL thread coarsening in~\cite{Magni2014}. They implement an iterative heuristic which determines whether a given program would benefit from coarsening. If yes, then the program is coarsened, and the process repeats, allowing further coarsening. In this manner, the problem is reduced from a multi-label classification problem into a series of binary decisions, shown in Figure~\ref{fig:cf-magni}. They select from one of six possible coarsening factors: $(1, 2, 4, 8, 16, 32)$, divided into 5 binary choices.
 
-\input{fig/cf}
+\begin{figure}
+  \centering %
+  \subfloat[\citeauthor{Magni2014} cascading binary model.]{%
+    \includegraphics[width=.95\columnwidth]{img/cf-magni}%
+    \label{fig:cf-magni}
+  }\\*%
+  \subfloat[Proposed approach.]{%
+      \includegraphics[width=.75\columnwidth]{img/cf-deeptune}%
+      \label{fig:cf-deeptune}
+  }%
+  \caption[Predicting OpenCL thread coarsening factors.]{%
+      Two approaches for predicting coarsening factor (CF) of OpenCL kernels.
+      \citeauthor{Magni2014} reduce the multi-label classification problem to a
+      series of binary decisions, by iteratively applying the optimisation and
+      computing new feature vectors. Our approach simply predicts the coarsening
+      factor directly from the source code.%
+  }
+  \label{fig:cascading-nn}
+\end{figure}
 
 \input{tab/magni-features}
 
@@ -18,7 +36,7 @@ Thread coarsening is an optimisation for parallel programs in which the operatio
 The experimental setup of \citeauthor{Magni2014}~\cite{Magni2014} is replicated for this case study. The thread coarsening optimisation is evaluated on 17 programs, listed in Table~\ref{tab:pact-benchmarks}. Four different GPU architectures are used, listed in Table~\ref{tab:pact-platforms}.
 
 \begin{table}
-  \centering%
+  \centering %
   \rowcolors{2}{gray!25}{white}
   \begin{tabular}{| l r r r |}
     \hline
@@ -31,30 +49,30 @@ The experimental setup of \citeauthor{Magni2014}~\cite{Magni2014} is replicated 
     \textbf{Total} & - & 17 & 17 \\
     \hline
   \end{tabular}
-  \label{tab:pact-benchmarks}
   \caption[Benchmarks used in Case Study B]{%
     Benchmarks used in Case Study B.%
   }
+  \label{tab:pact-benchmarks}
 \end{table}
 
 \begin{table}[t!]
   \centering %
-    \rowcolors{2}{gray!25}{white}
-    \begin{tabular}{| l l l l |}
-      \hline
-      \rowcolor{gray!50}
-      & \textbf{Frequency} & \textbf{Memory} & \textbf{Driver} \\
-      \hline
-      \textbf{AMD HD 5900} & 725 MHz & 2GB & AMD 1124.2 \\
-      \textbf{AMD Tahiti 7970} & 1000 MHz & 3GB & AMD 1084.4 \\
-      \textbf{NVIDIA GTX 480} & 700 MHz & 1536 MB & NVIDIA 304.54 \\
-      \textbf{NVIDIA K20c} & 706 MHz & 5GB & NVIDIA 331.20 \\
-      \hline
-    \end{tabular}
-    \caption[Experimental platforms used in Case Study B]{%
+  \rowcolors{2}{gray!25}{white}
+  \begin{tabular}{| l l l l |}
+    \hline
+    \rowcolor{gray!50}
+    & \textbf{Frequency} & \textbf{Memory} & \textbf{Driver} \\
+    \hline
+    \textbf{AMD HD 5900} & 725 MHz & 2GB & AMD 1124.2 \\
+    \textbf{AMD Tahiti 7970} & 1000 MHz & 3GB & AMD 1084.4 \\
+    \textbf{NVIDIA GTX 480} & 700 MHz & 1536 MB & NVIDIA 304.54 \\
+    \textbf{NVIDIA K20c} & 706 MHz & 5GB & NVIDIA 331.20 \\
+    \hline
+  \end{tabular}
+  \caption[Experimental platforms used in Case Study B]{%
     Experimental platforms used in Case Study B.%
   }
-    \label{tab:pact-platforms}
+  \label{tab:pact-platforms}
 \end{table}
 
 
@@ -82,7 +100,7 @@ Table~\ref{tab:nn-size} shows the similarity of the models. The only difference 
 
 Exploiting thread coarsening for OpenCL kernels is a difficult task. On average, coarsening slows programs down. The speedup attainable by a perfect heuristic is only $1.36\times$.
 
-Figure~\ref{fig:pact-speedup} shows speedups achieved by the \citeauthor{Magni2014} and DeepTune models for all programs and platforms. The performance of programs without coarsening is used as a baseline. On the four experimental platforms (AMD HD 5900, Tahiti 7970, NVIDIA GTX 480, and Tesla K20c), the \citeauthor{Magni2014}model achieves average speedups of $1.21\times$, $1.01\times$, $0.86\times$, and $0.94\times$, respectively. DeepTune outperforms this, achieving speedups of $1.10\times$, $1.05\times$, $1.10\times$, and $0.99\times$.
+Figure~\ref{fig:pact-speedup} shows speedups achieved by the \citeauthor{Magni2014} and DeepTune models for all programs and platforms. The performance of programs without coarsening is used as a baseline. On the four experimental platforms (AMD HD 5900, Tahiti 7970, NVIDIA GTX 480, and Tesla K20c), the \citeauthor{Magni2014} model achieves average speedups of $1.21\times$, $1.01\times$, $0.86\times$, and $0.94\times$, respectively. DeepTune outperforms this, achieving speedups of $1.10\times$, $1.05\times$, $1.10\times$, and $0.99\times$.
 
 Some programs --- especially those with large divergent regions or indirect memory accesses --- respond very poorly to coarsening. No performance improvement is possible on the \texttt{mvCoal} and \texttt{spmv} programs. Both models fail to achieve positive average speedups on the NVIDIA Tesla K20c, because thread coarsening does not give performance gains for the majority of the programs on this platform.
 

@@ -69,7 +69,14 @@ Figure~\ref{fig:nn}a shows the neural network configuration of DeepTune for the 
 
 \emph{Stratified 10-fold cross-validation} is used to evaluate the quality of the predictive models~\cite{Han2011}. Each program is randomly allocated into one of 10 equally-sized sets; the sets are balanced to maintain a distribution of instances from each class consistent with the full set. A model is trained on the programs from all but one of the sets, then tested on the programs of the unseen set. This process is repeated for each of the 10 sets, to construct a complete prediction over the whole data set.
 
-\input{fig/nn}
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=\columnwidth]{img/nn} %
+  \caption[DeepTune artificial neural networks]{%
+    DeepTune artificial neural networks, configured for (a) heterogeneous mapping, and (b) thread coarsening factor. The design stays almost the same regardless of the optimisation problem. The only changes are the extra input for (a) and size of the output layers. To aid in visualisation, the number of neurons in each layer is reduced. For the true neuron counts, see Table~\ref{tab:nn-size}%
+  }%
+  \label{fig:nn}
+\end{figure}
 
 
 \subsection{Experimental Results}
@@ -91,7 +98,7 @@ Using the static mapping as a baseline, the relative performance of each program
 
 \begin{figure}
   \centering %
-  \includegraphics[width=\textwidth]{img/cgo-speedup}%
+  \includegraphics[width=1.25\textwidth,angle=90]{img/cgo-speedup}%
   \caption[Speedup of predicted heterogeneous mappings]{%
     Speedup of predicted heterogeneous mappings over the best static mapping for both platforms. In (a) DeepTune achieves an average speedup of 3.43x over static mapping and 18\% over \citeauthor{Grewe2013}. In (b) the speedup is 1.42x and 13\% respectively.%
   }
