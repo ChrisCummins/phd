@@ -115,6 +115,8 @@ expansions = {
         'SLE':
         'ACM SIGPLAN International Conference on Software Language Engineering (SLE)',
         'SP': 'Symposium on Security and Privacy (SP)',
+        'VEE':
+        'ACM SIGPLAN/SIGOPS International Conference on Virtual Execution Environments (VEE)',
         '{\\{}USENIX{\\}} Security':
         '{\\{}USENIX{\\}} Security Security Symposium',
     },
