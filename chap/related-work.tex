@@ -142,7 +142,7 @@ Coverage-directed mutation techniques have been used for differential testing th
 
 Machine learning has been used to guide test case mutation.
 % Cheng, L., Zhang, Y., Zhang, Y., Wu, C., Li, Z., Fu, Y., & Li, H. (2019). Optimizing seed inputs in fuzzing with machine learning. ArXiv:1902.02538.
-\citeauthor{Cheng2019}~\cite{Cheng2019} construct neural networks to discover correlations between PDF test cases and their execution in the target program. The correlations are then leveraged to generate new paths in the target program.
+\citeauthor{Cheng2019}~\cite{Cheng2019} construct artificial neural networks to discover correlations between PDF test cases and their execution in the target program. The correlations are then leveraged to generate new paths in the target program.
 % She, D., Pei, K., Epstein, D., Yang, J., Ray, B., & Jana, S. (2018). NEUZZ: Efficient Fuzzing with Neural Program Learning. ArXiv:1807.05620.
 \emph{NEUZZ}~\cite{She2018} learns a differentiable neural approximation of target program logic, then uses Stochastic Gradient Descent to guide program mutation.
 % Wang, J., Chen, B., Wei, L., & Liu, Y. (2017). Skyfire: Data-Driven Seed Generation for Fuzzing. In S&P. https://doi.org/10.1109/SP.2017.23
@@ -162,7 +162,7 @@ Methods have been proposed based on the success of Recurrent Neural Networks at 
 The proficiency of RNNs for sequence modelling is well demonstrated~\cite{Sutskever2014}. \citeauthor{Sutskever2014} apply two RNN networks to translate first a sequence into a fixed length vector, then to decode the vector into an output sequence. This architecture achieves state-of-the-art performance in machine translation. The authors find that reversing the order of the input sequences markedly improves translation performance by introducing new short term dependencies between input and output sequences.
 
 % Neelakantan, A., Le, Q. V., & Sutskever, I. (2016). Neural Programmer: Inducing Latent Programs with Gradient Descent. In ICLR.
-Although nascent, the use of neural networks to generate programs is evolving rapidly. \emph{Neural Programmer}~\cite{Neelakantan2016} is an early example of program generation through the latent representation of a neural network.
+Although nascent, the use of artificial neural networks to generate programs is evolving rapidly. \emph{Neural Programmer}~\cite{Neelakantan2016} is an early example of program generation through the latent representation of an artificial neural network.
 
 % Godefroid, P., Peleg, H., & Singh, R. (2017). Learn&Fuzz: Machine Learning for Input Fuzzing. In ASE.
 %
@@ -175,7 +175,7 @@ Although nascent, the use of neural networks to generate programs is evolving ra
 Most similar to the work presented in this thesis is \emph{DeepFuzz}~\cite{Liu2019}, in which an LSTM network is used to generate fragments of C programs that are inserted into GCC unit tests. The mutated unit tests are then used for differential testing. They propose a character-level model with three sampling methodologies: one where a sample is made for every character, one where no sampling is made (so the generated fragment is conditioned solely on the sample prefix), and a hybrid approach in which sampling occurs only on white-space. In their evaluation, they uncover 8 bugs in GCC, and achieve up to an 82.63\% rate of syntactically valid samples. The work presented in this thesis differs in several ways. The key difference is the use of a recurrent neural network to generate only \emph{fragments} of a program, derived from an existing GCC unit test. In contrast, the approach presented in this thesis generates entire programs. Further, it is trained on a wide range of handwritten programs with the intent of emulating \emph{natural} programming styles.
 
 % Kosta, L., Seaman, L., & Xi, H. (2019). Program Synthesis and Vulnerability Injection Using a Grammar VAE. Journal of Software, 14(6).
-\citeauthor{Kosta2019}~\cite{Kosta2019} generate C functions to augment the training dataset of machine learning for static analysis, using vulnerability injection to produce positive examples. They generate programs using a Grammar Variational Autoencoder, a neural network architecture which decomposes a program to a sequence of context free grammar production rules. Unlike the syntactic-level approach presented in this work, this grammar-based approach guarantees the generation of syntactically correct code by masking production rules that would lead to invalid programs. The authors combine this with semantic repair to further reduce the chance of a sample being invalid.
+\citeauthor{Kosta2019}~\cite{Kosta2019} generate C functions to augment the training dataset of machine learning for static analysis, using vulnerability injection to produce positive examples. They generate programs using a Grammar Variational Autoencoder, an artificial neural network architecture which decomposes a program to a sequence of context free grammar production rules. Unlike the syntactic-level approach presented in this work, this grammar-based approach guarantees the generation of syntactically correct code by masking production rules that would lead to invalid programs. The authors combine this with semantic repair to further reduce the chance of a sample being invalid.
 
 A drawback of this approach is the explosion in vocabulary size arising from the contextual grammar. To mitigate this, the authors must limit the expressiveness of the generator by using only a small subset of the grammar. They achieve this by selecting a handful of C functions to derive a grammar from, followed by further manual pruning of the derived grammar based on what the authors felt would be used most often by programmers. It is unclear whether such an approach could be extended to match the expressiveness of the method presented in this work.
 
@@ -286,7 +286,7 @@ Pioneered by \citeauthor{Agakov}, the idea is to use iterative compilation to ev
 % Stephenson, M., Martin, M., & Reilly, U. O. (2003). Meta Optimization: Improving Compiler Heuristics with Machine Learning. In PLDI.
 \citeauthor{Stephenson2003}~\cite{Stephenson2003} used ``meta optimisation'' to tune compiler heuristics through an evolutionary algorithm to automate the search of the optimisation space.
 % Stephenson, M., Martin, M., & Reilly, U. O. (2003). Meta Optimization: Improving Compiler Heuristics with Machine Learning. In PLDI.
-\citeauthor{Kulkarni2012}~\cite{Kulkarni2012} formulate the phase-ordering problem as a Markov process and construct neural networks to predict beneficial optimisation orderings given a characterisation of the state of code being optimised.
+\citeauthor{Kulkarni2012}~\cite{Kulkarni2012} formulate the phase-ordering problem as a Markov process and construct artificial neural networks to predict beneficial optimisation orderings given a characterisation of the state of code being optimised.
 % Ashouri, A. H., Bignoli, A., Palermo, G., Silvano, C., Kulkarni, S., & Cavazos, J. (2017). MiCOMP: Mitigating the Compiler Phase-ordering Problem Using Optimization Sub-sequences and Machine Learning. TACO.
 \citeauthor{Ashouri2017}~\cite{Ashouri2017} approach the phase-ordering problem by clustering optimisations and using machine learning to predict the speedup of sequences of optimisation clusters.
 
@@ -423,7 +423,7 @@ Machine learning has also been applied to other areas such as bug detection and 
 % Koc, U., Saadatpanah, P., Foster, J. S., & Porter, A. A. (2017). Learning a Classifier for False Positive Error Reports Emitted by Static Code Analysis Tools. In MAPL.
 \citeauthor{Koc2017}~\cite{Koc2017} present a classifier that attempts to predict whether a static analysis tool's error report is a false positive based on the program structures of previous reports that produced false error reports.
 % Lam, A. N., Nguyen, A. T., Nguyen, H. A., & Nguyen, T. N. (2015). Combining Deep Learning with Information Retrieval to Localize Buggy Files for Bug Reports. In ASE.
-\citeauthor{Lam2016}~\cite{Lam2016} employ neural networks to relate keywords in bug reports to code tokens and terms in source files and documentation to accelerate bug localisation.
+\citeauthor{Lam2016}~\cite{Lam2016} employ artificial neural networks to relate keywords in bug reports to code tokens and terms in source files and documentation to accelerate bug localisation.
 % Wang, S., Liu, T., & Tan, L. (2016). Automatically Learning Semantic Features for Defect Prediction. In ICSE. ACM.
 \citeauthor{Wang2016c}~\cite{Wang2016c} employ a deep belief network~\cite{Hinton2006a} to automatically learn semantic features from token vectors extracted from programs' abstract syntax trees. The features are then used for automatic defect detection.
 % Chen, J., Bai, Y., Hao, D., Xiong, Y., Zhang, H., & Xie, B. (2017). Learning to Prioritize Test Programs for Compiler Testing. In ICSE.

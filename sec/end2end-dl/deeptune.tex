@@ -1,7 +1,7 @@
 \section{DeepTune: Learning On Raw Program Code}%
 \label{sec:deeptune}
 
-DeepTune is an end-to-end machine learning pipeline for optimisation heuristics. Its primary input is the source code of a program to be optimised, and through a series of neural networks, it directly predicts the optimisation which should be applied. By learning on source code, the approach is not tied to a specific compiler, platform, or optimisation problem. The same design can be reused to build multiple heuristics. The most important innovation of DeepTune is that it forgoes the need for human experts to select and tune appropriate features.
+DeepTune is an end-to-end machine learning pipeline for optimisation heuristics. Its primary input is the source code of a program to be optimised, and through a series of artificial neural networks, it directly predicts the optimisation which should be applied. By learning on source code, the approach is not tied to a specific compiler, platform, or optimisation problem. The same design can be reused to build multiple heuristics. The most important innovation of DeepTune is that it forgoes the need for human experts to select and tune appropriate features.
 
 
 \subsection{Overview}
@@ -107,7 +107,7 @@ kernel void A(global char* a, short b, int c) {
 
 \subsubsection{Sequence Characterisation}
 
-Once source codes have been encoded into sequences of embedding vectors, neural networks are used to extract a fixed size vector which characterises the entire sequence. This is comparable to the hand engineered feature extractors used in prior works, but is a \emph{learned} process that occurs entirely --- and automatically --- within the hidden layers of the network.
+Once source codes have been encoded into sequences of embedding vectors, artificial neural networks are used to extract a fixed size vector which characterises the entire sequence. This is comparable to the hand engineered feature extractors used in prior works, but is a \emph{learned} process that occurs entirely --- and automatically --- within the hidden layers of the network.
 
 The Long Short-Term Memory (LSTM) architecture is used for sequence characterisation~\cite{Hochreiter1997}. LSTMs implements a Recurrent Neural Network in which the activations of neurons are learned with respect not just to their current inputs, but to previous inputs in a sequence. Unlike regular recurrent networks in which the strength of learning decreases over time (a symptom of the \emph{vanishing gradients} problem~\cite{Pacanu2013}), LSTMs employ a \emph{forget gate} with a linear activation function, allowing them to retain activations for arbitrary durations. This makes them effective at learning complex relationships over long sequences~\cite{Lipton2015}, an especially important capability for modelling program code, as dependencies in sequences frequently occur over long ranges (for example, a variable may be declared as an argument to a function and used throughout).
 
@@ -131,7 +131,7 @@ First, the values are normalised. Normalisation is necessary because the auxilia
 
 Where $\bm{\upgamma}$ and $\bm{\beta}$ are scale and shift parameters, learned during training.
 
-The final component of DeepTune is comprised of two fully connected neural network layers. The first layer consists of 32 neurons. The second layer consists of a single neuron for each possible heuristic decision. Each neuron applies an activation function $f(x)$ over its inputs. Rectifier activation functions $f(x) = \max(0, x)$ are used in the first layer due to their improved performance during the training of deep networks~\cite{Nair2010}. For the output layer, sigmoid activation functions $f(x) = \frac{1}{1+e^{-x}}$ are used which provide activations in the range $[0,1]$.
+The final component of DeepTune is comprised of two fully connected artificial neural network layers. The first layer consists of 32 neurons. The second layer consists of a single neuron for each possible heuristic decision. Each neuron applies an activation function $f(x)$ over its inputs. Rectifier activation functions $f(x) = \max(0, x)$ are used in the first layer due to their improved performance during the training of deep networks~\cite{Nair2010}. For the output layer, sigmoid activation functions $f(x) = \frac{1}{1+e^{-x}}$ are used which provide activations in the range $[0,1]$.
 
 The activation of each neuron in the output layer represents the model's confidence that the corresponding decision is the correct one. Taking the $\argmax$ of the output layer produces the decision with the largest activation. For example, for a binary optimisation heuristic the final layer will consist of two neurons, and the predicted optimisation is the neuron with the largest activation.
 
@@ -148,4 +148,4 @@ The model is trained with Stochastic Gradient Descent (SGD), using the Adam opti
 
 where loss function $\mathcal{L} \left(x, \Theta \right)$ computes the logarithmic difference between the predicted and expected values given a model constructed using parameters $\Theta$.
 
-To reduce training time, multiple inputs are \emph{batched} together and fed into the neural network simultaneously, reducing the frequency of costly weight updates during back-propagation. This requires that the inputs to the language model be the same length. Sequences are padded up to a fixed length of 1024 tokens using a special out-of-vocabulary padding token $\tau \not\in V$, allowing matrices of \texttt{batch\_size} $\times$ \texttt{max\_seq\_len} tokens to be processed simultaneously. Batching and padding sequences to a maximum length is only to improve training time. In production use, sequences do not need to be padded, allowing classification of arbitrary length codes in linear time.
+To reduce training time, multiple inputs are \emph{batched} together and fed into the artificial neural network simultaneously, reducing the frequency of costly weight updates during back-propagation. This requires that the inputs to the language model be the same length. Sequences are padded up to a fixed length of 1024 tokens using a special out-of-vocabulary padding token $\tau \not\in V$, allowing matrices of \texttt{batch\_size} $\times$ \texttt{max\_seq\_len} tokens to be processed simultaneously. Batching and padding sequences to a maximum length is only to improve training time. In production use, sequences do not need to be padded, allowing classification of arbitrary length codes in linear time.

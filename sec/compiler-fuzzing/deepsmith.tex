@@ -27,7 +27,7 @@ As in Chapter~\ref{chap:clgen}, semantic-preserving transformations are employed
 
 \paragraph*{Encoder}
 
-Source code is encoded as a sequence of integers for interpretation by neural networks, where each integer is an index into a predetermined vocabulary. In~\cite{Jozefowicz2016a}, a character based vocabulary is used. This minimises the size of the vocabulary but leads to long sequences which are harder to extract structure from. In~\cite{Allamanis2013a}, a token based vocabulary is used. This leads to shorter sequences, but causes an explosion in the vocabulary size, as every identifier and literal must be represented uniquely.
+Source code is encoded as a sequence of integers for interpretation by artificial neural networks, where each integer is an index into a predetermined vocabulary. In~\cite{Jozefowicz2016a}, a character based vocabulary is used. This minimises the size of the vocabulary but leads to long sequences which are harder to extract structure from. In~\cite{Allamanis2013a}, a token based vocabulary is used. This leads to shorter sequences, but causes an explosion in the vocabulary size, as every identifier and literal must be represented uniquely.
 
 A hybrid, partially tokenised vocabulary approach is used. This allows common multi-character sequences such as \texttt{float} and \texttt{if} to be represented as unique vocabulary items, while literals and other infrequently used words are encoded at the character level.
 

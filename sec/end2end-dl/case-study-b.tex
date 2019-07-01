@@ -78,13 +78,13 @@ The experimental setup of \citeauthor{Magni2014}~\cite{Magni2014} is replicated 
 
 \paragraph*{DeepTune Configuration}
 
-Figure~\ref{fig:nn}b shows the neural network configuration. The OpenCL kernel is the sole input the coarsening factor is the predicted output.
+Figure~\ref{fig:nn}b shows the artificial neural network configuration. The OpenCL kernel is the sole input the coarsening factor is the predicted output.
 
 \paragraph*{Model Evaluation}
 
 Compared to Case Study A, the size of the evaluation is small. We use \emph{leave-one-out cross-validation} to evaluate the models. For each program, a model is trained on data from all other programs and used to predict the coarsening factor of the excluded program.
 
-The parameters of the neural network are not described in~\cite{Magni2014}, so an additional, \emph{nested} cross-validation process is used to find the optimal model parameters. For every program in the training set, a grid search of 48 combinations of network parameters is performed. The best performing parameter configuration is selected from these 768 results to train a model for prediction on the excluded program. This nested cross-validation is repeated for each of the training sets. No such tuning of hyper-parameters is performed for DeepTune.
+The parameters of the artificial neural network are not described in~\cite{Magni2014}, so an additional, \emph{nested} cross-validation process is used to find the optimal model parameters. For every program in the training set, a grid search of 48 combinations of network parameters is performed. The best performing parameter configuration is selected from these 768 results to train a model for prediction on the excluded program. This nested cross-validation is repeated for each of the training sets. No such tuning of hyper-parameters is performed for DeepTune.
 
 
 \subsection{Comparison to Case Study A}
