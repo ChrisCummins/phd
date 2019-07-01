@@ -1,5 +1,7 @@
 """Preprocess an exported database of Java methods."""
 import multiprocessing
+import pathlib
+import subprocess
 import sys
 import time
 
