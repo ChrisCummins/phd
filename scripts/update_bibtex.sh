@@ -11,5 +11,6 @@ main() {
   cp "$BIBTEX_FILE_TO_IMPORT" refs.bib
   cwd="$(pwd)"
   cd "$PHD_REPO" && bazel run //docs:minimize_bibtex -- --bibtex_path="$cwd/refs.bib"
+  cd "$PHD_REPO" && bazel run //docs:deacronym_bibtex -- --bibtex_path="$cwd/refs.bib"
 }
 main $@
