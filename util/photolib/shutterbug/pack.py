@@ -4,7 +4,6 @@ import pathlib
 from labm8 import app
 from util.photolib.shutterbug import shutterbug
 
-
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
@@ -49,8 +48,7 @@ def main(argv):
     raise app.UsageError('--src_dir not found')
 
   chunks_dir = pathlib.Path(FLAGS.chunks_dir)
-  if not chunks_dir.is_dir():
-    raise app.UsageError('--chunks_dir not found')
+  chunks_dir.mkdir(parents=True, exist_ok=True)
 
   size_in_bytes = FLAGS.size_mb * 1000**2
   if FLAGS.size_mb < 1:
