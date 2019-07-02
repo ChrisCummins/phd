@@ -6,7 +6,7 @@ This section makes the argument for synthetic benchmarks. Frequently used benchm
 \begin{figure}
 	\includegraphics[width=\columnwidth]{img/motivation-c} %
 	\caption[Benchmark counts in GPGPU research papers]{%
-		The average number of benchmarks used in GPGPU research papers published between 2013-2016 in CGO, HiPC, PACT, and PPoPP conferences.%
+		The average number of benchmarks used in GPGPU research papers published between 2013-2016 in CGO, HiPC, PACT, and PPoPP conferences. \diff{The average GPGPU research paper uses 17 benchmarks, with the seven most popular benchmark suites accounting for 92\% of results.}%
 	}%
 	\label{fig:benchmark-suite-distribution}
 \end{figure}
@@ -17,7 +17,7 @@ Table~\ref{tab:cpu-gpu-benchmarks-crossvalidate} summarises the results. The per
 	\centering
 	\input{tab/cpu-gpu-benchmarks-crossvalidate}
   \caption[Cross-validation of benchmark suites on a predictive model]{%
-    Performance relative to the optimal of the \citeauthor{Grewe2013} predictive model across different benchmark suites on an AMD GPU. The columns show the suite used for training; the rows show the suite used for testing.%
+    Performance relative to the optimal of the \citeauthor{Grewe2013} predictive model across different benchmark suites on an AMD GPU. The columns show the suite used for training; the rows show the suite used for testing. \diff{On average, a predictive model trained on one benchmark suite and tested on another achieves only 49\% of the optimal performance.}%
   }
   \label{tab:cpu-gpu-benchmarks-crossvalidate}
 \end{table}

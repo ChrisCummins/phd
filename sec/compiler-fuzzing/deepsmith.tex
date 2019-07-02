@@ -33,10 +33,10 @@ A hybrid, partially tokenised vocabulary approach is used. This allows common mu
 
 First, a candidate vocabulary $V_c$ is assembled for the OpenCL programming language containing the 208 data types, keywords, and language builtins of the OpenCL programming language. From this, the subset of the candidate vocabulary $V \in V_c$ which is required to encode a corpus of 45k lines of GPGPU benchmark suite kernels is derived. Beginning with the first character in the corpus, the algorithm consumes the longest matching sequence from the candidate vocabulary. This process continues until every character in the corpus has been consumed, illustrated in Algorithm~\ref{alg:maxmunch-tokenization}. The resulting derived vocabulary consists of 128 symbols which we use to encode new program sources.
 
-\begin{algorithm}{t}{lop}
+\begin{algorithm}
   \input{alg/maxmunch-tokenization}
   \caption[Deriving a vocabulary from a string]{%
-    Deriving a vocabulary from a string.%
+    \diff{Deriving a hybrid token- and character-level vocabulary from a string.}%
   }
   \label{alg:maxmunch-tokenization}
 \end{algorithm}

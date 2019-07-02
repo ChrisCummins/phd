@@ -179,24 +179,6 @@ This section provides a quantitative comparison of the bug-finding capabilities 
 
 Tables~\ref{tab:megatable-clsmith} and~\ref{tab:megatable-deepsmith} shows the results of 48 hours of consecutive testing for all Testbeds using CLSmith and DeepSmith, respectively. An average of 15k CLSmith and 91k DeepSmith test cases were evaluated on each Testbed, taking 12.1s and 1.90s per test case respectively. There are three significant factors providing the sixfold increase in testing throughput achieved by DeepSmith over CLSmith: test cases are faster to generate, test cases are less likely to timeout (execute for 60 seconds without termination), and the test cases which do not timeout execute faster.
 
-\begin{table}
-	\centering %
-	\caption[Results from 48 hours of testing using CLSmith]{%
-		Results from 48 hours of testing using CLSmith. System \#. as per Table~\ref{tab:deepsmith-platforms}. $\pm$ denotes optimisations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\bc), build timeout (\bto), anomalous build failure (\abf), anomalous runtime crash (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
-	}
-	\input{tab/megatable-clsmith}
-	\label{tab:megatable-clsmith}
-\end{table}
-
-\begin{table}
-  \centering %
-  \caption[Results from 48 hours of testing using DeepSmith]{%
-    Results from 48 hours of testing using DeepSmith. System \#. as per Table~\ref{tab:deepsmith-platforms}. $\pm$ denotes optimisations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\bc), build timeout (\bto), anomalous build failure (\abf), anomalous runtime crash (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
-  }
-  \input{tab/megatable-deepsmith}
-  \label{tab:megatable-deepsmith}
-\end{table}
-
 Figure~\ref{fig:deepsmith-vs-clsmith}a shows the generation and execution times of DeepSmith and CLSmith test cases, excluding timeouts\footnote{If timeouts are included then the performance improvement of DeepSmith is $6.5\times$ with the execution times being $11\times$ faster. However, this number grows as the arbitrary timeout threshold is changed, so for fairness timeouts have been excluded.}. DeepSmith generation time grows linearly with program length and is on average $2.45\times$ faster than CLSmith. Test case execution is on average $4.46\times$ faster than CLSmith.
 
 \begin{figure}
@@ -209,6 +191,24 @@ Figure~\ref{fig:deepsmith-vs-clsmith}a shows the generation and execution times 
 \end{figure}
 
 The optimisation level generally does not affect testing throughput significantly, with the exception of Testbed~$7+$. Optimisation of large structs is expensive on Testbed~$7+$, and CLSmith test cases use global structs extensively. This is a known issue --- in~\cite{Lidbury2015a} the authors omit large-scale testing on this device for this reason. The use of structs in handwritten OpenCL is comparatively rare --- only 7.1\% of kernels on GitHub use them.
+
+\begin{table}
+  \centering %
+  \input{tab/megatable-clsmith}
+  \caption[Results from 48 hours of testing using CLSmith]{%
+    Results from 48 hours of testing using CLSmith. System \#. as per Table~\ref{tab:deepsmith-platforms}. $\pm$ denotes optimisations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\bc), build timeout (\bto), anomalous build failure (\abf), anomalous runtime crash (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
+  }
+  \label{tab:megatable-clsmith}
+\end{table}
+
+\begin{table}
+  \centering %
+  \input{tab/megatable-deepsmith}
+  \caption[Results from 48 hours of testing using DeepSmith]{%
+    Results from 48 hours of testing using DeepSmith. System \#. as per Table~\ref{tab:deepsmith-platforms}. $\pm$ denotes optimisations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\bc), build timeout (\bto), anomalous build failure (\abf), anomalous runtime crash (\arc), anomalous wrong-output (\awo), and pass (\textbf{\cmark}) results.
+  }
+  \label{tab:megatable-deepsmith}
+\end{table}
 
 
 \subsubsection{Comparison of Test Cases}

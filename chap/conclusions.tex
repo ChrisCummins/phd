@@ -32,7 +32,7 @@ The portability of the approach is demonstrated by extending the generator from 
 Despite its simplicity, the proposed technique is effective. To date, 67 new bugs have been identified and reported in OpenCL compilers. Many of the bugs identified could not be exposed by state-of-the-art approaches due to the limitations in the expressiveness of grammar-based approaches. The expressiveness of the generated test cases is limited only by the code that has been uploaded to GitHub; this led to unintentional outcomes such as exploiting compiler-specific features to expose bugs in the error handling of compiler intrinsics.
 
 
-\subsection{Simplifying the Construction of Compiler Optimisations}
+\subsection{Automatic Compiler Optimisation Tuning}
 
 Constructing program features for machine learning is time-consuming and error-prone. Additionally, the choice of features typically couples the learning system tightly with the compiler implementation. This means that new features must be computed and the model retrained with every change to the compiler. Chapter~\ref{chap:deeptune} proposes a technique to address both issues. Instead of extracting numerical representations of programs, the source code of the entire program is fed directly into the learning system. This is a simpler approach that decouples the learning system from the compiler's internal representation.
 

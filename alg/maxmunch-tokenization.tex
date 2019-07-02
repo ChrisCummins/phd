@@ -5,11 +5,11 @@
 \State $i \gets 1$
 \While{$S \ne ``''$}\algorithmiccomment{While input not fully processed}
   \State $i \gets i + 1$\algorithmiccomment{Advance to next character}
-  \State $c \gets [S^{(0)}, \ldots, S^{(i)}]$\algorithmiccomment{Read token from input}
-  \If{$c \not\in V_c$}\algorithmiccomment{If token is not legal}
-    \State $c \gets [S^{(0)}, \ldots, S^{(i-1)}]$\algorithmiccomment{Revert to last legal token}
-    \State $S \gets [S^{(i-1)}, \ldots, S^{(|S|)}]$\algorithmiccomment{Pop token from input}
-    \State $V \gets V \cup \{ c \}$\algorithmiccomment{Add token to vocabulary}
+  \State $c \gets [S^{(1)}, \ldots, S^{(i)}]$\algorithmiccomment{Read token from input}
+    \If{$! IsValidPrefix(c, V_c)$}\algorithmiccomment{If token is not legal}
+      \State $c \gets FindLongestSubstring(c, V_c)$\algorithmiccomment{Revert to last legal token}
+      \State $S \gets [S^{(|c|)}, \ldots, S^{(|S|)}]$\algorithmiccomment{Pop token from input}
+      \State $V \gets V \cup \{ c \}$\algorithmiccomment{Add token to vocabulary}
     \State $i \gets 1$
   \EndIf
 \EndWhile
