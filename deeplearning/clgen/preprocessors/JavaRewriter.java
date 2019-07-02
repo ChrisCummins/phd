@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
@@ -40,6 +41,7 @@ import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
@@ -117,18 +119,13 @@ public class JavaRewriter {
         "while"
       };
 
-  String[] OTHER_WORDS =
-      new String[] {"length", "sqrt", "pow", "random", "max", "int", "cos", "sin", "ceiling"};
-
   private static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(RESERVED_WORDS_));
   private ASTRewrite traversalRewrite;
   private AST traversalAST; // Abstract Syntax Tree
-  private HashMap<String, String> methodRewrites = new HashMap<>();
   private HashMap<String, String> typeRewrites = new HashMap<>();
-  private HashMap<String, String> fieldRewrites = new HashMap<>();
   private HashMap<String, String> variableRewrites = new HashMap<>();
   private HashMap<String, String> labelRewrites = new HashMap<>();
-  private HashMap<String, String> annotationRewrites = new HashMap<>();
+  private HashMap<IBinding, String> bindingsRewrites = new HashMap<>();
 
   /**
    * Strip the comments from a compilation unit.
@@ -188,11 +185,26 @@ public class JavaRewriter {
    * Get the compilation unit for a document.
    *
    * @param document The document to get the compilation unit for.
+   * @param filename The name of the file.
    * @return The compilation unit.
    */
-  private static CompilationUnit GetCompilationUnit(final Document document) {
+  private static CompilationUnit GetCompilationUnit(
+      final Document document, final String filename) {
     ASTParser parser = ASTParser.newParser(AST.JLS8);
     parser.setSource(document.get().toCharArray());
+    parser.setResolveBindings(true);
+    parser.setKind(ASTParser.K_COMPILATION_UNIT);
+    parser.setBindingsRecovery(true);
+
+    parser.setCompilerOptions(JavaCore.getOptions());
+    parser.setUnitName(filename);
+
+    parser.setEnvironment(
+        /*classpathEntries=*/ null,
+        /*sourcepathEntries=*/ null,
+        /*encodings=*/ null,
+        /*includeRunningVMBootclasspath=*/ true);
+
     return (CompilationUnit) parser.createAST(null);
   }
 
@@ -204,15 +216,12 @@ public class JavaRewriter {
    */
   private static void ApplyEdits(final List<TextEdit> edits, Document document) {
     for (TextEdit edit : edits) {
-      // System.err.println("Applying edit: " + edit.toString());
       try {
         UndoEdit undo = edit.apply(document); // Do something if it fails. Fall back?
       } catch (MalformedTreeException e) {
         e.printStackTrace();
-        // System.out.println("Failed to apply text edit!");
       } catch (BadLocationException e) {
         e.printStackTrace();
-        // System.out.println("Failed to apply text edit!");
       }
     }
   }
@@ -255,8 +264,6 @@ public class JavaRewriter {
    */
   public boolean processInput(final String fileName, final String[] args) throws IOException {
 
-    // System.out.println("Processing input...");
-
     /*
      * There's a big problem where if the code contains integers in the form of 123_456_789
      * Compilation Unit won't be able to produce an AST. This is only one case I found, there
@@ -270,22 +277,16 @@ public class JavaRewriter {
 
     final String javaCode = ReadFile(fileName, Charset.defaultCharset());
 
-    // System.out.println("About to call RewriteSource()");
-    final String source = RewriteSource(javaCode);
+    final String source = RewriteSource(javaCode, fileName);
     if (source == null) {
-      System.out.println("fatal: RewriteSource() returned null.");
+      System.err.println("fatal: RewriteSource() returned null.");
       System.exit(1);
     }
-    // System.out.println(source);
+    System.out.println(source);
 
     String className = fileName.substring(0, fileName.lastIndexOf("."));
-
-    System.out.println("Class name: " + className);
     String newClassName = this.typeRewrites.get(className);
-
     assert (newClassName != null);
-    System.out.println("\nClass to be saved: " + newClassName + ".java");
-
     return WriteFile(newClassName + ".java", Charset.defaultCharset(), source);
   }
 
@@ -294,11 +295,7 @@ public class JavaRewriter {
 
     try {
       final String input = new String(ByteStreams.toByteArray(System.in));
-      final String source = rewriter.RewriteSource(input);
-      if (source == null) {
-        System.err.println("fatal: RewriteSource() returned null.");
-        System.exit(1);
-      }
+      final String source = rewriter.RewriteSource(input, "A.java");
       System.out.println(source);
     } catch (IOException e) {
       System.err.println("fatal: I/O error");
@@ -310,6 +307,7 @@ public class JavaRewriter {
    * Generate a new rewrite name.
    *
    * @param rewrites The rewrite table. The new name is added to this table.
+   * @param binding The binding of the thing to be rewritten.
    * @param name The current name.
    * @param base_char The base character to use for generating new names, e.g. 'A' to produce the
    *     sequence 'A', 'B', 'C'...
@@ -318,11 +316,14 @@ public class JavaRewriter {
    */
   private String GetNextName(
       HashMap<String, String> rewrites,
+      IBinding binding,
       final String name,
       final char base_char,
       final String name_prefix) {
-    int i = rewrites.size();
     StringBuilder s = new StringBuilder();
+    int i = rewrites.size();
+
+    assert (i == bindingsRewrites.size());
 
     s.append(name_prefix);
     // Build the new name character by character
@@ -339,17 +340,26 @@ public class JavaRewriter {
     if (RESERVED_WORDS.contains(newName)) {
       // Insert a "dummy" value using an illegal identifier name.
       s.append("\t!@invalid@!\t");
-      s.append(rewrites.size());
+      s.append(bindingsRewrites.size());
       final String invalidIdentifier = s.toString();
       rewrites.put(invalidIdentifier, invalidIdentifier);
-      return GetNextName(rewrites, name, base_char, name_prefix);
+      return GetNextName(rewrites, binding, name, base_char, name_prefix);
     }
 
-    if (!rewrites.containsKey(name)) {
-      // insert the re-write name
-      rewrites.put(name, newName);
-    } else {
-      newName = rewrites.get(name);
+    if (bindingsRewrites.containsKey(binding)) {
+      newName = bindingsRewrites.get(binding);
+    } else if (binding != null) {
+      bindingsRewrites.put(binding, newName);
+      if (rewrites.containsKey(name)) {
+        Random rand = new Random();
+        String randName = "";
+        while (rewrites.containsKey(randName)) {
+          randName = name + rand.nextInt(100_000);
+        }
+        rewrites.put(randName, newName);
+      } else {
+        rewrites.put(name, newName);
+      }
     }
     return newName;
   }
@@ -358,13 +368,14 @@ public class JavaRewriter {
    * Rewrite a Java source file to make it more amenable to machine learning.
    *
    * @param source The source code to rewrite.
+   * @param filename The name of the file to rewrite.
    * @return The rewritten source code.
    */
-  public String RewriteSource(String source) {
+  public String RewriteSource(String source, final String filename) {
     Document document = new Document(source);
-    CompilationUnit compilationUnit = GetCompilationUnit(document);
+    CompilationUnit compilationUnit = GetCompilationUnit(document, filename);
+
     ArrayList<TextEdit> edits = new ArrayList<>();
-    // Rewrite identifiers.
     RewriteIdentifiers(edits, compilationUnit, document);
     ApplyEdits(edits, document);
     // Format the source code.
@@ -384,13 +395,14 @@ public class JavaRewriter {
           private boolean Rename(
               final String type_name,
               final HashMap<String, String> rewriteTable,
+              IBinding binding,
               final ASTNode node,
               final char base_char,
               final String name_prefix) {
             final String oldName = node.toString();
-            final String newName = GetNextName(rewriteTable, oldName, base_char, name_prefix);
+            final String newName =
+                GetNextName(rewriteTable, binding, oldName, base_char, name_prefix);
             traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
-            // System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
             return true;
           }
 
@@ -409,7 +421,8 @@ public class JavaRewriter {
 
           @Override
           public boolean visit(TypeDeclaration node) {
-            return Rename("TypeDeclaration", typeRewrites, node.getName(), 'A', "");
+            return Rename(
+                "TypeDeclaration", typeRewrites, node.resolveBinding(), node.getName(), 'A', "");
           }
 
           @Override
@@ -417,31 +430,67 @@ public class JavaRewriter {
             if (!node.getName().toString().equals("main")
                 && !node.getName().toString().equals("run")
                 && !node.isConstructor()) {
-              Rename("MethodDeclaration", methodRewrites, node.getName(), 'A', "fn_");
+              Rename(
+                  "MethodDeclaration",
+                  typeRewrites,
+                  node.resolveBinding(),
+                  node.getName(),
+                  'A',
+                  "fn_");
             } else if (node.isConstructor()) {
-              Rename("MethodDeclaration", typeRewrites, node.getName(), 'A', "");
+              Rename(
+                  "MethodDeclaration",
+                  typeRewrites,
+                  node.resolveBinding(),
+                  node.getName(),
+                  'A',
+                  "");
             }
             return true;
           }
 
           @Override
           public boolean visit(SingleVariableDeclaration node) {
-            return Rename("SingleVariableDeclaration", variableRewrites, node.getName(), 'a', "");
+            return Rename(
+                "SingleVariableDeclaration",
+                variableRewrites,
+                node.resolveBinding(),
+                node.getName(),
+                'a',
+                "");
           }
 
           @Override
           public boolean visit(VariableDeclarationFragment node) {
-            return Rename("VariableDeclarationFragment", variableRewrites, node.getName(), 'a', "");
+            return Rename(
+                "VariableDeclarationFragment",
+                variableRewrites,
+                node.resolveBinding(),
+                node.getName(),
+                'a',
+                "");
           }
 
           @Override
           public boolean visit(EnumDeclaration node) {
-            return Rename("EnumDeclaration", variableRewrites, node.getName(), 'A', "");
+            return Rename(
+                "EnumDeclaration",
+                variableRewrites,
+                node.resolveBinding(),
+                node.getName(),
+                'A',
+                "");
           }
 
           @Override
           public boolean visit(EnumConstantDeclaration node) {
-            return Rename("EnumConstantDeclaration", variableRewrites, node.getName(), 'A', "");
+            return Rename(
+                "EnumConstantDeclaration",
+                variableRewrites,
+                node.resolveConstructorBinding(),
+                node.getName(),
+                'A',
+                "");
           }
 
           @Override
@@ -450,18 +499,16 @@ public class JavaRewriter {
 
             switch (parent.getNodeType()) {
               case ASTNode.CONTINUE_STATEMENT:
-                return Rename("ContinueStatement", labelRewrites, node, 'a', "");
+                return Rename(
+                    "ContinueStatement", labelRewrites, node.resolveBinding(), node, 'a', "");
               case ASTNode.LABELED_STATEMENT:
-                return Rename("LabeledStatement", labelRewrites, node, 'a', "");
+                return Rename(
+                    "LabeledStatement", labelRewrites, node.resolveBinding(), node, 'a', "");
               case ASTNode.BREAK_STATEMENT:
-                return Rename("BreakStatement", labelRewrites, node, 'a', "");
+                return Rename(
+                    "BreakStatement", labelRewrites, node.resolveBinding(), node, 'a', "");
               case ASTNode.MARKER_ANNOTATION:
               default:
-                /*
-                System.err.println(
-                		"######### Unknown name " + parent.getClass().getName() + " for name "
-                				+ node.toString());
-                */
                 break;
             }
             return super.visit(node);
@@ -473,119 +520,129 @@ public class JavaRewriter {
         new ASTVisitor() {
 
           /* Private helper method to rename usages. */
-          private boolean Rename(
-              final String type_name,
-              final HashMap<String, String> rewriteTable,
-              final ASTNode node) {
-            final String oldName = node.toString();
-            if (rewriteTable.containsKey(oldName)) {
-              final String newName = rewriteTable.get(oldName);
-              traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
-              // System.err.println("=> " + type_name + ": " + oldName + " -> " + newName);
+          private boolean Rename(final String type_name, final ASTNode node, IBinding binding) {
+            if (!bindingsRewrites.containsKey(binding)) {
+              return false;
             }
-            // Lookup failed for name re-writer.
-            // System.err.println("!! " + type_name + ": miss for " + oldName);
-            return false;
+
+            final String newName = bindingsRewrites.get(binding);
+            traversalRewrite.replace(node, traversalAST.newSimpleName(newName), null);
+            return true;
           }
 
           @Override
           public boolean visit(SimpleName node) {
             final ASTNode parent = node.getParent();
             boolean success = false;
+            IBinding binding = node.resolveBinding();
 
             switch (parent.getNodeType()) {
               case ASTNode.METHOD_INVOCATION:
-                // We ignore method invocations because we only process a single
-                // method at a time, so a method invocation is going to be
-                // for a builtin method.
-                // FIXME: This assumption does not hold for recursive methods.
+                success = Rename("MethodInvocation", node, binding);
+                if (!success) Rename("MethodInvocation", node, binding);
                 break;
               case ASTNode.SIMPLE_TYPE:
-                Rename("SimpleType", typeRewrites, node);
+                Rename("SimpleType", node, binding);
                 break;
               case ASTNode.INFIX_EXPRESSION:
-                Rename("InfixExpression", variableRewrites, node);
+                Rename("InfixExpression", node, binding);
                 break;
               case ASTNode.POSTFIX_EXPRESSION:
-                Rename("PostfixExpression", variableRewrites, node);
+                Rename("PostfixExpression", node, binding);
                 break;
               case ASTNode.PREFIX_EXPRESSION:
-                Rename("PrefixExpression", variableRewrites, node);
+                Rename("PrefixExpression", node, binding);
                 break;
               case ASTNode.RETURN_STATEMENT:
-                Rename("ReturnStatement", variableRewrites, node);
+                Rename("ReturnStatement", node, binding);
                 break;
               case ASTNode.ARRAY_ACCESS:
-                Rename("ArrayAccess", variableRewrites, node);
+                Rename("ArrayAccess", node, binding);
                 break;
               case ASTNode.QUALIFIED_NAME:
                 if (!node.toString().matches("length")) {
-                  Rename("QualifiedName", variableRewrites, node);
+                  Rename("QualifiedName", node, binding);
                 }
                 break;
               case ASTNode.IF_STATEMENT:
-                Rename("IfStatement", variableRewrites, node);
+                Rename("IfStatement", node, binding);
                 break;
               case ASTNode.ARRAY_CREATION:
-                Rename("ArrayCreation", variableRewrites, node);
+                Rename("ArrayCreation", node, binding);
                 break;
               case ASTNode.ASSIGNMENT:
-                Rename("Assignment", variableRewrites, node);
+                Rename("Assignment", node, binding);
                 break;
               case ASTNode.MARKER_ANNOTATION:
-                Rename("MarkerAnnotation", annotationRewrites, node);
+                Rename("MarkerAnnotation", node, binding);
                 break;
               case ASTNode.CLASS_INSTANCE_CREATION:
-                Rename("ClassInstanceCreation", variableRewrites, node);
+                Rename("ClassInstanceCreation", node, binding);
                 break;
               case ASTNode.FIELD_ACCESS:
-                Rename("FieldAccess", variableRewrites, node);
+                Rename("FieldAccess", node, binding);
                 break;
               case ASTNode.CONTINUE_STATEMENT:
-                Rename("ContinueStatement", labelRewrites, node);
+                Rename("ContinueStatement", node, binding);
                 break;
               case ASTNode.LABELED_STATEMENT:
-                Rename("LabeledStatement", labelRewrites, node);
+                Rename("LabeledStatement", node, binding);
                 break;
               case ASTNode.BREAK_STATEMENT:
-                Rename("BreakStatement", labelRewrites, node);
+                Rename("BreakStatement", node, binding);
                 break;
               case ASTNode.CONDITIONAL_EXPRESSION:
-                Rename("ConditionalExpression", variableRewrites, node);
+                Rename("ConditionalExpression", node, binding);
                 break;
               case ASTNode.VARIABLE_DECLARATION_FRAGMENT:
-                Rename("VariableDeclarationFragment", variableRewrites, node);
+                Rename("VariableDeclarationFragment", node, binding);
                 break;
               case ASTNode.SINGLE_VARIABLE_DECLARATION:
-                Rename("SingleVariableDeclaration", variableRewrites, node);
+                Rename("SingleVariableDeclaration", node, binding);
                 break;
               case ASTNode.CAST_EXPRESSION:
-                Rename("CastExpression", variableRewrites, node);
+                Rename("CastExpression", node, binding);
                 break;
               case ASTNode.ARRAY_INITIALIZER:
-                Rename("ArrayInitializer", variableRewrites, node);
+                Rename("ArrayInitializer", node, binding);
                 break;
               case ASTNode.PARENTHESIZED_EXPRESSION:
-                Rename("ParenthesizedExpression", variableRewrites, node);
+                Rename("ParenthesizedExpression", node, binding);
                 break;
               case ASTNode.INSTANCEOF_EXPRESSION:
-                Rename("InstanceOfExpression", variableRewrites, node);
+                Rename("InstanceOfExpression", node, binding);
                 break;
               case ASTNode.SWITCH_STATEMENT:
-                Rename("SwitchStatement", variableRewrites, node);
+                Rename("SwitchStatement", node, binding);
                 break;
               case ASTNode.SWITCH_CASE:
-                Rename("SwitchCase", variableRewrites, node);
+                Rename("SwitchCase", node, binding);
                 break;
               case ASTNode.SYNCHRONIZED_STATEMENT:
-                Rename("SynchronizedStatement", variableRewrites, node);
+                Rename("SynchronizedStatement", node, binding);
+                break;
+              case ASTNode.THROW_STATEMENT:
+                Rename("ThrowStatement", node, binding);
+                break;
+              case ASTNode.WHILE_STATEMENT:
+                Rename("WhileStatement", node, binding);
+                break;
+              case ASTNode.DO_STATEMENT:
+                Rename("DoStatement", node, binding);
+                break;
+              case ASTNode.ASSERT_STATEMENT:
+                Rename("AssertStatement", node, binding);
+                break;
+              case ASTNode.ENHANCED_FOR_STATEMENT:
+                Rename("EnhancedForStatement", node, binding);
+                break;
+              case ASTNode.TRY_STATEMENT:
+                Rename("TryStatement", node, binding);
                 break;
                 // case ASTNode.METHOD_DECLARATION:
                 // case ASTNode.VARIABLE_DECLARATION_FRAGMENT:
                 // case ASTNode.SINGLE_VARIABLE_DECLARATION:
                 // case ASTNode.TYPE_DECLARATION:
-                //   // These have already been re-written.
-                //   break;
               default:
                 break;
             }

@@ -253,6 +253,7 @@ public class A {
 
 def test_JavaRewrite_rewrite_static_method_argument_names():
   """Test that arguments are renamed."""
+  # TODO: fn_B should really by fn_A.
   assert java.JavaRewrite("""
 public class A {
   public static int myMethod(final int foo, int bar) {
@@ -262,7 +263,7 @@ public class A {
 }
 """) == """\
 public class A {
-\tpublic static int fn_A(final int a, int b) {
+\tpublic static int fn_B(final int a, int b) {
 \t\tSystem.out.println("Hello world! " + b);
 \t\treturn a + b;
 \t}
@@ -272,6 +273,7 @@ public class A {
 
 def test_JavaRewrite_conflicting_length_name():
   """Test that rewriter gracefully handles 'length' used as variable."""
+  # TODO: fn_B should really by fn_A.
   assert java.JavaRewrite("""
 public class A {
   public static double[] createEntry(final double[] position){
@@ -283,7 +285,7 @@ public class A {
 }
 """) == """\
 public class A {
-\tpublic static double[] fn_A(final double[] a) {
+\tpublic static double[] fn_B(final double[] a) {
 \t\tint b = a.length;
 \t\tint c = (int) Math.sqrt(9);
 
