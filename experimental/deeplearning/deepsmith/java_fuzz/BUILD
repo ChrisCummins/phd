@@ -252,3 +252,25 @@ py3_image(
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":re_preprocess_java_methods"],
 )
+
+py_binary(
+    name = "sample_java_model",
+    srcs = ["sample_java_model.py"],
+    deps = [
+        "//deeplearning/clgen",
+        "//deeplearning/clgen/corpuses:encoded",
+        "//deeplearning/clgen/proto:clgen_pb_py",
+        "//labm8:app",
+        "//labm8:crypto",
+        "//labm8:pbutil",
+    ],
+)
+
+py3_image(
+    name = "sample_java_model_image",
+    srcs = ["sample_java_model.py"],
+    base = "@base_java//image",
+    main = "sample_java_model.py",
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
+    deps = [":sample_java_model"],
+)
