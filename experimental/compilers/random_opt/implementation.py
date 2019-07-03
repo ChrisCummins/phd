@@ -341,13 +341,13 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     if status == random_opt_pb2.Step.PASS:
       return speedup - 1
     elif status == random_opt_pb2.Step.OPT_FAILED:
-      return -5
+      return 0
     elif status == random_opt_pb2.Step.COMPILE_FAILED:
-      return -5
+      return 0
     elif status == random_opt_pb2.Step.EXEC_FAILED:
-      return -5
+      return 0
     elif status == random_opt_pb2.Step.EVAL_FAILED:
-      return -5
+      return 0
     else:
       raise ValueError(f"Unrecognized Step.status value: '{status}'.")
 
