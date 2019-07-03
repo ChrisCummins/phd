@@ -122,6 +122,7 @@ public class JavaRewriter {
   private static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(RESERVED_WORDS_));
   private ASTRewrite traversalRewrite;
   private AST traversalAST; // Abstract Syntax Tree
+  private HashMap<String, String> methodRewrites = new HashMap<>();
   private HashMap<String, String> typeRewrites = new HashMap<>();
   private HashMap<String, String> variableRewrites = new HashMap<>();
   private HashMap<String, String> labelRewrites = new HashMap<>();
@@ -432,7 +433,7 @@ public class JavaRewriter {
                 && !node.isConstructor()) {
               Rename(
                   "MethodDeclaration",
-                  typeRewrites,
+                  methodRewrites,
                   node.resolveBinding(),
                   node.getName(),
                   'A',
