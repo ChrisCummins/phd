@@ -98,9 +98,15 @@ Using the static mapping as a baseline, the relative performance of each program
 
 \begin{figure}
   \centering %
-  \includegraphics[width=1.25\textwidth,angle=90]{img/cgo-speedup}%
+  \subfloat[][AMD Tahiti 7970]{%
+  	\includegraphics[width=1.25\textwidth,angle=270]{img/cgo-speedup-amd}%
+  	\label{fig:cgo-speedup-amd}}%
+  \subfloat[][NVIDIA GTX 970]{%
+  	\includegraphics[width=1.25\textwidth,angle=270]{img/cgo-speedup-nvidia}%
+  	\label{fig:cgo-speedup-nvidia}}%
+  % \includegraphics[width=1.25\textwidth,angle=270]{img/cgo-speedup}%
   \caption[Speedup of predicted heterogeneous mappings]{%
-    Speedup of predicted heterogeneous mappings over the best static mapping for both platforms. In (a) DeepTune achieves an average speedup of 3.43x over static mapping and 18\% over \citeauthor{Grewe2013}. In (b) the speedup is 1.42x and 13\% respectively.%
+    Speedup of predicted heterogeneous mappings over the best static mapping for both platforms. In~\subref{fig:cgo-speedup-amd}, DeepTune achieves an average speedup of 3.43x over static mapping and 18\% over \citeauthor{Grewe2013}. In~\subref{fig:cgo-speedup-nvidia}, the speedup is 1.42x and 13\% respectively.%
   }
   \label{fig:cgo-speedup}
 \end{figure}
