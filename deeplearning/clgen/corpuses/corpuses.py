@@ -25,6 +25,7 @@ import numpy as np
 import pathlib
 import subprocess
 import tempfile
+import typing
 from sqlalchemy.sql.expression import func
 
 from deeplearning.clgen import cache
@@ -67,6 +68,13 @@ def AssertConfigIsValid(config: corpus_pb2.Corpus) -> corpus_pb2.Corpus:
     UserError: If the config is invalid.
   """
   try:
+    # Early-exit to support corpuses derived from databases of pre-encoded
+    # content files.
+    # TODO(github.com/ChrisCummins/phd/issues/46): Refactor after splitting
+    # Corpus class.
+    if config.HasField('pre_encoded_corpus_url'):
+      return config
+
     pbutil.AssertFieldIsSet(config, 'contentfiles')
     pbutil.AssertFieldIsSet(config, 'atomizer')
     pbutil.AssertFieldIsSet(config, 'contentfile_separator')
@@ -155,7 +163,13 @@ class Corpus(object):
     cache.cachepath('corpus', 'encoded', encoded_id).mkdir(exist_ok=True,
                                                            parents=True)
     db_path = cache.cachepath('corpus', 'encoded', encoded_id, 'encoded.db')
-    self.encoded = encoded.EncodedContentFiles(f'sqlite:///{db_path}')
+    # TODO(github.com/ChrisCummins/phd/issues/46): Refactor this conditional
+    # logic by making Corpus an abstract class and creating concrete subclasses
+    # for the different types of corpus.
+    if self.config.HasField('pre_encoded_corpus_url'):
+      self.encoded = encoded.EncodedContentFiles(config.pre_encoded_corpus_url)
+    else:
+      self.encoded = encoded.EncodedContentFiles(f'sqlite:///{db_path}')
     self.atomizer_path = cache.cachepath('corpus', 'encoded', encoded_id,
                                          'atomizer.pkl')
     # Create symlink to preprocessed files.
@@ -179,6 +193,13 @@ class Corpus(object):
     """
     self._created = True
     app.Log(1, 'Content ID: %s', self.content_id)
+
+    # Nothing to do for already-encoded databases.
+    # TODO(github.com/ChrisCummins/phd/issues/46): Refactor this after splitting
+    # out Corpus class.
+    if self.config.HasField('pre_encoded_corpus_url'):
+      return
+
     preprocessed_lock_path = pathlib.Path(
         self.preprocessed.url[len('sqlite:///'):]).parent / 'LOCK'
     with lockfile.LockFile(preprocessed_lock_path):
@@ -321,14 +342,16 @@ def ExpandConfigPath(path: str, path_prefix: str = None) -> pathlib.Path:
       os.path.expandvars((path_prefix or '') + path)).expanduser().absolute()
 
 
-def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
+def ResolveContentId(config: corpus_pb2.Corpus,
+                     hc: typing.Optional[hashcache.HashCache] = None) -> str:
   """Compute the hash of the input contentfiles.
 
   This function resolves the unique sha1 checksum of a set of content files.
 
   Args:
     config: The corpus config proto.
-    hc: A hashcache database instance, used for resolving directory hashes.
+    hc: A hashcache database instance, used for resolving directory hashes. If
+      the corpus has pre_encoded_corpus_url field set, this may be omitted.
 
   Returns:
     A hex encoded sha1 string.
@@ -336,7 +359,13 @@ def ResolveContentId(config: corpus_pb2.Corpus, hc: hashcache.HashCache) -> str:
   # We can take a massive shortcut if the content ID is already set in the
   # config proto.
   if config.HasField('content_id'):
+    # TODO(github.com/ChrisCummins/phd/issues/46): Refactor this after splitting
+    # out Corpus class.
     return config.content_id
+  elif config.HasField('pre_encoded_corpus_url'):
+    # TODO(github.com/ChrisCummins/phd/issues/46): Refactor this after splitting
+    # out Corpus class.
+    return crypto.sha1_str(config.pre_encoded_corpus_url)
 
   start_time = time.time()
   if config.HasField('local_directory'):
@@ -386,6 +415,10 @@ def ResolvePreprocessedId(content_id: str, config: corpus_pb2.Corpus) -> str:
   The hash is computed from the ID of the input files and the serialized
   representation of the preprocessor pipeline.
   """
+  # TODO(github.com/ChrisCummins/phd/issues/46): Refactor this after splitting
+  # out Corpus class.
+  if config.pre_encoded_corpus_url:
+    return 'null'
   return crypto.sha1_list(content_id, *config.preprocessor)
 
 

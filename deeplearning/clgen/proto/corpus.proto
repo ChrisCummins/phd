@@ -37,6 +37,8 @@ message Corpus {
     string local_directory = 2;
     // The path to a tarball archive file containing content files.
     string local_tar_archive = 3;
+    // The path to a database of encoded files.
+    string pre_encoded_corpus_url = 4;
   }
 
   // The atomizer to use to encode the corpus.

@@ -14,13 +14,15 @@
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/clgen/corpus.py."""
 import os
-import pathlib
-import tempfile
 
+import datetime
+import pathlib
 import pytest
+import tempfile
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import corpuses
+from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import corpus_pb2
 from labm8 import app
@@ -51,6 +53,27 @@ def test_ExpandConfigPath_tilde_expansion():
 def test_ExpandConfigPath_path_prefix():
   assert (corpuses.ExpandConfigPath(
       'foo/bar', path_prefix='/tmp/') == pathlib.Path('/tmp/foo/bar'))
+
+
+# ResolveContentId() tests.
+
+
+def test_ResolveContentId_pre_encoded_corpus_url():
+  """Test that pre_encoded_corpus_url field returns checksum of URL."""
+  config = corpus_pb2.Corpus(
+      pre_encoded_corpus_url='mysql://user:pass@foo:3306/clgen?charset=utf-8')
+  assert corpuses.ResolveContentId(config) == (
+      '1fb56a3a74a939ee5be79172b3510a498abe7f3c')
+
+
+def test_ResolveContentId_pre_encoded_corpus_url_mismatch():
+  """Test that corpuses with different pre-trained URLs have different IDs."""
+  config_1 = corpus_pb2.Corpus(
+      pre_encoded_corpus_url='mysql://user:pass@foo:3306/clgen?charset=utf-8')
+  config_2 = corpus_pb2.Corpus(
+      pre_encoded_corpus_url='sqlite:////tmp/encoded.db')
+  assert (corpuses.ResolveContentId(config_1) !=
+          corpuses.ResolveContentId(config_2))
 
 
 # Corpus() tests.
@@ -368,6 +391,41 @@ def test_Corpus_preprocessed_symlink(clgen_cache_dir, abc_corpus_config):
   # We can't do a literal comparison because of bazel sandboxing.
   assert str(path).endswith(
       str(pathlib.Path(c.preprocessed.url[len('sqlite:///'):]).parent))
+
+
+@pytest.fixture(scope='function')
+def abc_pre_encoded() -> str:
+  """Test fixture that returns a database of a single encoded content file."""
+  with tempfile.TemporaryDirectory(
+      prefix='phd_deeplearning_clgen_corpuses_') as d:
+    url = f'sqlite:///{d}/encoded.db'
+    db = encoded.EncodedContentFiles(url)
+    with db.Session(commit=True) as s:
+      s.add(
+          encoded.EncodedContentFile(
+              data='0.1.2.0.1',
+              tokencount=5,
+              encoding_time_ms=10,
+              wall_time_ms=10,
+              date_added=datetime.datetime.utcnow(),
+          ))
+      s.add(
+          encoded.EncodedContentFile(
+              data='2.2.2',
+              tokencount=3,
+              encoding_time_ms=10,
+              wall_time_ms=10,
+              date_added=datetime.datetime.utcnow(),
+          ))
+    yield db.url
+
+
+def test_Corpus_pre_encoded_corpus_url_GetTrainingData(abc_pre_encoded):
+  """Test the training data accessor of a pre-encoded corpus."""
+  c = corpuses.Corpus(corpus_pb2.Corpus(pre_encoded_corpus_url=abc_pre_encoded))
+  c.Create()
+  # abc_pre_encoded contains two contentfiles, totalling with 8 tokens.
+  assert len(c.GetTrainingData(shuffle=True)) == 8
 
 
 if __name__ == '__main__':

@@ -67,6 +67,8 @@ py_test(
     srcs = ["corpuses_test.py"],
     deps = [
         ":corpuses",
+        ":encoded",
+        ":preprocessed",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/preprocessors:common",
