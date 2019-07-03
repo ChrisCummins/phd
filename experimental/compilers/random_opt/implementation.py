@@ -43,6 +43,11 @@ class Environment(gym.Env):
     """
     super(Environment, self).__init__()
 
+    # A working directory that an inheriting class can use as a scratch space
+    # for reading and writing files. Destroyed during __del__ operator.
+    self.working_dir = pathlib.Path(
+        tempfile.mkdtemp(prefix='phd_llvm_opt_env_'))
+
     self.config = config
 
     # Validate the requested candidate passes and set as the action space.
@@ -54,11 +59,6 @@ class Environment(gym.Env):
     # observation spaces.
     self.action_space = None
     self.observation_space = None
-
-    # A working directory that an inheriting class can use as a scratch space
-    # for reading and writing files. Destroyed during __del__ operator.
-    self.working_dir = pathlib.Path(
-        tempfile.mkdtemp(prefix='phd_llvm_opt_env_'))
 
     # A list of episode protocol buffers, ordered from first to most recent.
     self.episodes: typing.List[pbutil.ProtocolBuffer] = []
