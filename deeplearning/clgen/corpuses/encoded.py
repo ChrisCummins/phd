@@ -55,8 +55,8 @@ class EncodedContentFile(Base):
   # We store the vocabulary indices array as a string of period-separated
   # integers, e.g. '0.1.2.0.1'. To access the values as an array of integers,
   # use EncodedContentFile.indices_array.
-  data: bytes = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                           nullable=False)
+  data: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                         nullable=False)
   tokencount: int = sql.Column(sql.Integer, nullable=False)
   # The number of milliseconds encoding took.
   encoding_time_ms: int = sql.Column(sql.Integer, nullable=False)
