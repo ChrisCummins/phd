@@ -9,6 +9,8 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
+MODULE_UNDER_TEST = None
+
 
 @pytest.mark.parametrize('environment', environments.ENVIRONMENTS)
 def test_environments(environment: str):
