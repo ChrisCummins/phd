@@ -20,9 +20,13 @@ from labm8 import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
+    'input', contentfiles.ContentFiles,
+    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/exported.db',
+    'URL of the database of exported Java methods.')
+app.DEFINE_database(
     'input_pp', preprocessed.PreprocessedContentFiles,
     'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/preprocessed.db',
-    'URL of the database of exported Java methods.')
+    'URL of the database of preprocessed Java methods.')
 app.DEFINE_output_path(
     'outdir',
     '/tmp/phd/experimental/deeplearning/deepsmith/java_fuzz/rewriter_failures',
@@ -30,6 +34,8 @@ app.DEFINE_output_path(
     is_dir=True)
 app.DEFINE_integer('preprocess_worker_chunk_size', 128,
                    'The number of methods to batch to the preprocessors.')
+app.DEFINE_integer('preprocess_worker_threads', 16, 'Number of worker threads.')
+app.DEFINE_boolean('multithreaded_preprocess', True, 'Use multiple threads.')
 
 
 def GetOriginalContentFile(
@@ -45,28 +51,31 @@ def GetOriginalContentFile(
       .filter(contentfiles.ContentFile.relpath == relpath) \
       .filter(contentfiles.ContentFile.artifact_index == artifact_index).one()
   except sqlalchemy.orm.exc.NoResultFound:
+    app.FatalWithoutStackTrace(
+        f"could not resolve {clone_from_url} {relpath} {artifact_index}")
     return None
 
 
-def PreprocessList(input_session,
-                   cfs: typing.List[preprocessed.PreprocessedContentFile],
-                   outdir: pathlib.Path):
-  rewrittens = [java.JavaRewrite(cf.text) for cf in cfs]
-
-  for pp_cf, rewritten in zip(cfs, rewrittens):
+def ProcessList(input_session,
+                cfs: typing.List[preprocessed.PreprocessedContentFile],
+                outdir: pathlib.Path):
+  for pp_cf in cfs:
     cf = GetOriginalContentFile(input_session, pp_cf)
     if not cf:
-      app.FatalWithoutStackTrace(f"Could not resolve contentfile: {pp_cf}")
-    contents = f"""\
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORIGINAL
+      continue
+    # rewritten = java.JavaRewrite(cf.text)
 
-{cf.text.rstrip()}
 
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RE-WRITTEN
+#     contents = f"""\
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORIGINAL
 
-{rewritten.rstrip()}
-""".encode('utf-8')
-    fs.Write(outdir / f'{cf.sha256}.txt', contents)
+# {cf.text.rstrip()}
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RE-WRITTEN
+
+# {rewritten.rstrip()}
+# """
+    fs.Write(outdir / f'{cf.sha256}.txt', cf.text.encode('utf-8'))
 
 
 def ProcessBatch(input_db: contentfiles.ContentFiles,
@@ -76,7 +85,7 @@ def ProcessBatch(input_db: contentfiles.ContentFiles,
     with input_db.Session() as input_session:
       to_preprocess = pp_session.query(preprocessed.PreprocessedContentFile) \
         .filter(preprocessed.PreprocessedContentFile.id.in_(ids))
-      PreprocessList(input_session, to_preprocess, outdir)
+      ProcessList(input_session, to_preprocess, outdir)
 
 
 def Chunk(l, n):
