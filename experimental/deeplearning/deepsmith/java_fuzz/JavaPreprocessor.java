@@ -117,7 +117,7 @@ public final class JavaPreprocessor {
 
   protected String RewriteSource(final String methodSrc) {
     final String wrappedSrc = WrapMethodInClass(methodSrc);
-    final String rewrittenSrc = new JavaRewriter().RewriteSource(wrappedSrc);
+    final String rewrittenSrc = new JavaRewriter().RewriteSource(wrappedSrc, "A.java");
     return UnwrapMethodInClassOrDie(rewrittenSrc);
   }
 
