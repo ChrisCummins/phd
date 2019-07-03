@@ -42,6 +42,7 @@ from labm8 import hashcache
 from labm8 import humanize
 from labm8 import lockfile
 from labm8 import pbutil
+from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 
@@ -133,8 +134,8 @@ class Corpus(object):
     self.content_id = ResolveContentId(self.config, hc)
     # Database of pre-processed files.
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'preprocessed',
-                    preprocessed_id).mkdir(exist_ok=True, parents=True)
+    cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
+        exist_ok=True, parents=True)
     preprocessed_db_path = cache.cachepath('corpus', 'preprocessed',
                                            preprocessed_id, 'preprocessed.db')
     if (self.config.HasField('content_id') and
@@ -149,19 +150,19 @@ class Corpus(object):
       if config.HasField('local_directory'):
         os.symlink(
             str(
-                ExpandConfigPath(config.local_directory,
-                                 path_prefix=FLAGS.clgen_local_path_prefix)),
-            symlink)
+                ExpandConfigPath(
+                    config.local_directory,
+                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
       elif config.HasField('local_tar_archive'):
         os.symlink(
             str(
-                ExpandConfigPath(config.local_tar_archive,
-                                 path_prefix=FLAGS.clgen_local_path_prefix)),
-            symlink)
+                ExpandConfigPath(
+                    config.local_tar_archive,
+                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
     # Data of encoded pre-preprocessed files.
     encoded_id = ResolveEncodedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'encoded', encoded_id).mkdir(exist_ok=True,
-                                                           parents=True)
+    cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
+        exist_ok=True, parents=True)
     db_path = cache.cachepath('corpus', 'encoded', encoded_id, 'encoded.db')
     # TODO(github.com/ChrisCummins/phd/issues/46): Refactor this conditional
     # logic by making Corpus an abstract class and creating concrete subclasses
@@ -173,14 +174,17 @@ class Corpus(object):
     self.atomizer_path = cache.cachepath('corpus', 'encoded', encoded_id,
                                          'atomizer.pkl')
     # Create symlink to preprocessed files.
-    symlink = pathlib.Path(
-        self.encoded.url[len('sqlite:///'):]).parent / 'preprocessed'
-    if not symlink.is_symlink():
-      os.symlink(
-          os.path.relpath(
-              pathlib.Path(self.preprocessed.url[len('sqlite:///'):]).parent,
-              pathlib.Path(self.encoded.url[len('sqlite:///'):]).parent),
-          symlink)
+    # TODO(github.com/ChrisCummins/phd/issues/46): Refactor this conditional
+    # logic after splitting Corpus class.
+    if not self.config.HasField('pre_encoded_corpus_url'):
+      symlink = pathlib.Path(
+          self.encoded.url[len('sqlite:///'):]).parent / 'preprocessed'
+      if not symlink.is_symlink():
+        os.symlink(
+            os.path.relpath(
+                pathlib.Path(self.preprocessed.url[len('sqlite:///'):]).parent,
+                pathlib.Path(self.encoded.url[len('sqlite:///'):]).parent),
+            symlink)
     self.hash = encoded_id
     self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 
@@ -296,6 +300,10 @@ class Corpus(object):
     elif self.config.HasField('greedy_multichar_atomizer'):
       atoms = set(self.config.greedy_multichar_atomizer.tokens)
       atomizer = atomizers.GreedyAtomizer.FromText(corpus_txt, atoms)
+    elif self.config.HasField('pre_encoded_corpus_url'):
+      encoded_db = encoded.EncodedContentFiles(
+          self.config.pre_encoded_corpus_url)
+      atomizer = GreedyAtomizerFromEncodedDb(encoded_db)
     else:
       raise NotImplementedError
 
@@ -319,6 +327,30 @@ class Corpus(object):
 
   def __ne__(self, rhs) -> bool:
     return not self.__eq__(rhs)
+
+
+def GetVocabFromMetaTable(session: sqlutil.Session) -> typing.Dict[str, int]:
+  """Read a vocabulary dictionary from the 'Meta' table of a database."""
+  q = session.query(encoded.Meta.value).filter(encoded.Meta.key == 'vocab_size')
+  if not q.first():
+    return {}
+
+  vocab_size = int(q.one()[0])
+  q = session.query(encoded.Meta.value)
+  return {
+      q.filter(encoded.Meta.key == f'vocab_{i}').one()[0]: i
+      for i in range(vocab_size)
+  }
+
+
+def GreedyAtomizerFromEncodedDb(encoded_db: encoded.EncodedContentFiles):
+  """Create a greedy atomizer for the vocabulary of a given encoded_db."""
+  # TODO: This depends on the embeded "meta" table vocabulary from:
+  # //experimental/deeplearning/deepsmith/java_fuzz/encode_java_corpus.py
+  with encoded_db.Session() as s:
+    vocab = GetVocabFromMetaTable(s)
+  app.Log(1, 'Loaded vocabulary of %s tokens from meta table', len(vocab))
+  return atomizers.GreedyAtomizer(vocab)
 
 
 def ExpandConfigPath(path: str, path_prefix: str = None) -> pathlib.Path:
@@ -400,8 +432,9 @@ def ResolveContentId(config: corpus_pb2.Corpus,
     # to maintain a cache which maps the mtime of tarballs to their content ID,
     # similart to how local_directory is implemented.
     content_id = GetHashOfArchiveContents(
-        ExpandConfigPath(config.local_tar_archive,
-                         path_prefix=FLAGS.clgen_local_path_prefix))
+        ExpandConfigPath(
+            config.local_tar_archive,
+            path_prefix=FLAGS.clgen_local_path_prefix))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
   app.Log(2, 'Resolved Content ID %s in %s ms.', content_id,
