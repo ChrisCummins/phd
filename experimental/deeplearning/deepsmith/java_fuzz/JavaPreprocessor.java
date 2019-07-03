@@ -71,6 +71,16 @@ public final class JavaPreprocessor {
    * @return The method, embedded in a class "A".
    */
   protected String WrapMethodInClassWithShim(final String methodSrc) {
+    // Template:
+    //     import java.io.*;
+    //     import java.math.*;
+    //     import java.nio.charset.*;
+    //     import java.nio.file.*;
+    //     import java.time.format.*;
+    //     import java.util.*;
+    //     public class A {
+    //       /* METHOD GOES HERE */
+    //     }
     return ("import java.io.*;\n"
         + "import java.math.*;\n"
         + "import java.nio.charset.*;\n"
