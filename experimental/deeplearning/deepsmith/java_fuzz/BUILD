@@ -70,6 +70,22 @@ py_test(
 )
 
 py_binary(
+    name = "export_rewriter_failures",
+    srcs = ["export_rewriter_failures.py"],
+    deps = [
+        ":preprocess_java_corpus",
+        "//datasets/github/scrape_repos:contentfiles",
+        "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
+        "//deeplearning/clgen/corpuses:preprocessed",
+        "//deeplearning/clgen/preprocessors:java",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:humanize",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_binary(
     name = "mask_contentfiles",
     srcs = ["mask_contentfiles.py"],
     deps = [
