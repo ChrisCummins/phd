@@ -24,6 +24,7 @@ ENVIRONMENTS = [
     'LLVM-bzip2-512K-v0',
     'LLVM-bzip2-1M-v0',
     'LLVM-queens-8x8-v0',
+    'LLVM-queens-12x12-v0',
     'LLVM-queens-14x14-v0',
     'LLVM-delayed-reward-bzip2-512K-v0',
     'LLVM-delayed-reward-bzip2-1M-v0',
