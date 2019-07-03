@@ -350,6 +350,11 @@ for_the_love_of_god() {
     done
 }
 
+# A command which is intended to be shoved onto the tail end of some
+# long-running task to email me when done, e.g.
+#     $ ./some_big_task ; here
+alias here='echo here | lmk -'
+
 # Set CUDA_VISIBLE_DEVICES.
 unalias gpu
 gpu() {
