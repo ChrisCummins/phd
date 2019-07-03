@@ -120,7 +120,7 @@ Section~\ref{sec:clgen-qualitative-evaluation} employs \emph{Turing tests} to ev
 
 \subsection{Learning Representations for Dynamic Program Inputs}
 
-Chapter~\ref{chap:deeptune} presents an approach for learning optimisation heuristics from the raw representation of a program, but in the presence of dynamic properties, traditional feature extraction must be used. For example, feeding in the size of input data sets. In future work, this approach could be extended to also account for dynamic properties. Unlike with program source code, it is not clear what the raw representation of program inputs may be as there is no equivalent human-interpretable representation of program data. One approach could be to model the sequence of bytes that the program reads and writes, though this would introduce a high overhead for runtime instrumentation.
+Chapter~\ref{chap:deeptune} presents an approach for learning optimisation heuristics from the raw representation of a program, but in the presence of dynamic properties, traditional feature extraction must be used. For example, feeding in the size of input data sets. In future work, this approach could be extended to also account for dynamic properties. Unlike with program source code, it is not clear what the raw representation of program inputs may be as there is no equivalent human-interpretable representation of program data. One approach could be to model the sequence of bytes that the program reads and writes, though this may introduce a high overhead for runtime instrumentation~\cite{Gad2014}.
 
 
 \subsection{Towards General-Purpose Program Comprehension}
