@@ -30,8 +30,6 @@ app.DEFINE_integer('java_training_epochs', 50,
                    'The number of epochs to train for.')
 app.DEFINE_string('java_seed_text', 'public ',
                   'The text to initialize sampling with.')
-app.DEFINE_integer('java_sample_batch_size', 128,
-                   'The number of samples to produce per-batch.')
 
 
 def MakeClgenInstance(
