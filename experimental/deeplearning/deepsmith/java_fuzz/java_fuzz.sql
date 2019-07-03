@@ -93,15 +93,15 @@ SELECT "Pass",
        count(*) AS COUNT,
        (count(*) /
           (SELECT count(*)
-           FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles)) * 100 AS "% of total"
-FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles
+           FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles)) * 100 AS "% of total"
+FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles
 WHERE preprocessing_succeeded=1
 UNION
 SELECT text, count(*) AS COUNT,
              (count(*) /
                 (SELECT count(*)
-                 FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles)) * 100 AS "% of total"
-FROM `github_java_methods_pp_2019.06.28`.preprocessed_contentfiles
+                 FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles)) * 100 AS "% of total"
+FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles
 WHERE preprocessing_succeeded = 0
 GROUP BY text;
 
@@ -115,3 +115,4 @@ WHERE preprocessing_succeeded = 1;
 
 DELETE
 FROM `github_java_methods_enc_2019.06.25`.encoded_contentfiles;
+
