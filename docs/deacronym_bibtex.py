@@ -64,6 +64,8 @@ expansions = {
         'ICSE': 'International Conference on Software Engineering (ICSE)',
         'ICSTW':
         'International Conference on Software Testing, Verification and Validation Workshops (ICSTW)',
+        'IDCS':
+        'International Conference on Distributed Computing Systems (IDCS)',
         'IISWC': 'International Symposium on Workload Characterization (IISWC)',
         'InPar': 'Innovative Parallel Computing (InPar)',
         'Interspeech':
