@@ -1,4 +1,4 @@
-PDFLATEX ?= pdflatex
+PDFLATEX ?= pdflatex --shell-escape
 BIBER ?= biber
 SED ?= sed
 MV ?= mv
