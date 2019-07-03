@@ -46,9 +46,9 @@ class Environment(gym.Env):
     self.config = config
 
     # Validate the requested candidate passes and set as the action space.
-    for pass_name in self.config.candidate_pass:
-      if pass_name not in opt.GetAllOptPasses():
-        raise ValueError(f"Unrecognized opt pass: '{pass_name}'")
+    # for pass_name in self.config.candidate_pass:
+    #   if pass_name not in opt.GetAllOptPasses():
+    #     raise ValueError(f"Unrecognized opt pass: '{pass_name}'")
 
     # Inheriting classes are required to provide their own action and
     # observation spaces.
