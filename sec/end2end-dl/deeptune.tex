@@ -77,11 +77,17 @@ kernel void A(global char* a, short b, int c) {
   \centering %
   \subfloat[%
     An example, short OpenCL kernel, taken from Nvidia's \emph{streamcluster}.%
-  ]{\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterInput}}}}\\%
+  ]{%
+  	\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterInput}}}%
+    \label{subfig:source_in}%
+  }\\%
   \subfloat[%
     The \emph{streamcluster} kernel after source rewriting. Variable and
     function names are normalised, comments removed, and code style enforced.%
-  ]{\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterOutput}}}}\\%
+  ]{%
+  	\noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaStreamClusterOutput}}}%
+	  \label{subfig:source_out}%
+	}\\%
   \subfloat[%
     Derived vocabulary, ordered by their appearance in the
     input~\protect\subref{subfig:source_out}. The vocabulary maps tokens to
