@@ -18,17 +18,25 @@ const (
 	IdentifierToken
 	NumberToken
 	// Punctuation.
-	OpenBraceToken         // {
-	CloseBraceToken        // }
-	OpenParenthesisToken   // (
-	CloseParenthesisToken  // )
-	SemicolonToken         // ;
-	LogicalNegationToken   // !
-	BitwiseComplementToken // ~
-	NegationToken          // -
-	AdditionToken          // +
-	MultiplicationToken    // *
-	DivisionToken          // /
+	OpenBraceToken          // {
+	CloseBraceToken         // }
+	OpenParenthesisToken    // (
+	CloseParenthesisToken   // )
+	SemicolonToken          // ;
+	LogicalNegationToken    // !
+	BitwiseComplementToken  // ~
+	NegationToken           // -
+	AdditionToken           // +
+	MultiplicationToken     // *
+	DivisionToken           // /
+	AndToken                // &&
+	OrToken                 // ||
+	EqualToken              // ==
+	NotEqualToken           // !=
+	LessThanToken           // <
+	LessThanOrEqualToken    // <=
+	GreaterThanToken        // >
+	GreaterThanOrEqualToken // >=
 	// Keywords.
 	IntKeywordToken    // int
 	ReturnKeywordToken // return

@@ -34,17 +34,29 @@ func identifierLookAhead(lexer *Lexer, prefix string) bool {
 // The initial state function.
 func lexStartState(lexer *Lexer) stateFunction {
 	for {
+		candidateToken := lexer.input[lexer.position:]
+
 		// FIXME: This lookahead logic for int and return is overly convoluted.
-		if strings.HasPrefix(lexer.input[lexer.position:], "int") {
+		if strings.HasPrefix(candidateToken, "int") {
 			if identifierLookAhead(lexer, "int") {
 				return lexIdentifier
 			}
 			return lexIntKeyword
-		} else if strings.HasPrefix(lexer.input[lexer.position:], "return") {
+		} else if strings.HasPrefix(candidateToken, "return") {
 			if identifierLookAhead(lexer, "return") {
 				return lexIdentifier
 			}
 			return lexReturnKeyword
+		} else if strings.HasPrefix(candidateToken, "&&") {
+			return lexAnd
+		} else if strings.HasPrefix(candidateToken, "||") {
+			return lexOr
+		} else if strings.HasPrefix(candidateToken, "!=") {
+			return lexNotEqual
+		} else if strings.HasPrefix(candidateToken, "<=") {
+			return lexLessThanOrEqual
+		} else if strings.HasPrefix(candidateToken, ">=") {
+			return lexGreaterThanOrEqual
 		}
 
 		if lexer.peek() == eofRune {
@@ -76,6 +88,10 @@ func lexStartState(lexer *Lexer) stateFunction {
 			return lexMultiplication
 		case r == '/':
 			return lexDivision
+		case r == '<':
+			return lexLessThan
+		case r == '>':
+			return lexGreaterThan
 		}
 
 		switch r := lexer.next(); {
@@ -163,6 +179,54 @@ func lexDivision(lexer *Lexer) stateFunction {
 func lexIntKeyword(lexer *Lexer) stateFunction {
 	lexer.position += len("int")
 	lexer.emit(token.IntKeywordToken)
+	return lexStartState
+}
+
+func lexAnd(lexer *Lexer) stateFunction {
+	lexer.position += len("&&")
+	lexer.emit(token.AndToken)
+	return lexStartState
+}
+
+func lexOr(lexer *Lexer) stateFunction {
+	lexer.position += len("||")
+	lexer.emit(token.OrToken)
+	return lexStartState
+}
+
+func lexEqual(lexer *Lexer) stateFunction {
+	lexer.position += len("==")
+	lexer.emit(token.EqualToken)
+	return lexStartState
+}
+
+func lexNotEqual(lexer *Lexer) stateFunction {
+	lexer.position += len("!=")
+	lexer.emit(token.NotEqualToken)
+	return lexStartState
+}
+
+func lexLessThan(lexer *Lexer) stateFunction {
+	lexer.position += len("<")
+	lexer.emit(token.LessThanToken)
+	return lexStartState
+}
+
+func lexLessThanOrEqual(lexer *Lexer) stateFunction {
+	lexer.position += len("<=")
+	lexer.emit(token.LessThanOrEqualToken)
+	return lexStartState
+}
+
+func lexGreaterThan(lexer *Lexer) stateFunction {
+	lexer.position += len("<")
+	lexer.emit(token.GreaterThanToken)
+	return lexStartState
+}
+
+func lexGreaterThanOrEqual(lexer *Lexer) stateFunction {
+	lexer.position += len("<=")
+	lexer.emit(token.GreaterThanOrEqualToken)
 	return lexStartState
 }
 

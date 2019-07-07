@@ -454,3 +454,62 @@ func TestLexAssociativity(t *testing.T) {
 	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
 	assert.Equal(token.EofToken, next().Type)
 }
+
+// Test inputs from github.com/nlsandler/write_a_c_compiler/stage_4/valid
+
+func TestLexAndFalse(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() { return 1 && 0; }`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.NumberToken, "1"}, next())
+	assert.Equal(token.Token{token.AndToken, "&&"}, next())
+	assert.Equal(token.Token{token.NumberToken, "0"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexAndTrue(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() { return 1 && -1; }`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.NumberToken, "1"}, next())
+	assert.Equal(token.Token{token.AndToken, "&&"}, next())
+	assert.Equal(token.Token{token.NegationTOken, "-"}, next())
+	assert.Equal(token.Token{token.NumberToken, "1"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
+
+func TestLexPrecedence(t *testing.T) {
+	assert := assert.New(t)
+	input := `int main() { return 1 || 0 && 2; }`
+	next := Lex(input).NextToken
+	assert.Equal(token.Token{token.IntKeywordToken, "int"}, next())
+	assert.Equal(token.Token{token.IdentifierToken, "main"}, next())
+	assert.Equal(token.Token{token.OpenParenthesisToken, "("}, next())
+	assert.Equal(token.Token{token.CloseParenthesisToken, ")"}, next())
+	assert.Equal(token.Token{token.OpenBraceToken, "{"}, next())
+	assert.Equal(token.Token{token.ReturnKeywordToken, "return"}, next())
+	assert.Equal(token.Token{token.NumberToken, "1"}, next())
+	assert.Equal(token.Token{token.OrToken, "||"}, next())
+	assert.Equal(token.Token{token.NumberToken, "0"}, next())
+	assert.Equal(token.Token{token.AndToken, "&&"}, next())
+	assert.Equal(token.Token{token.NumberToken, "2"}, next())
+	assert.Equal(token.Token{token.SemicolonToken, ";"}, next())
+	assert.Equal(token.Token{token.CloseBraceToken, "}"}, next())
+	assert.Equal(token.EofToken, next().Type)
+}
