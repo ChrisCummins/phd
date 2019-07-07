@@ -61,16 +61,16 @@ sh_test(
     ],
 )
 
-#sh_test(
-#    name = "stage4_test",
-#    srcs = ["run_tests.sh"],
-#    args = ["4"],
-#    data = [
-#        ":compile",
-#        ":test_data",
-#    ],
-#)
-#
+sh_test(
+    name = "stage4_test",
+    srcs = ["run_tests.sh"],
+    args = ["4"],
+    data = [
+        ":compile",
+        ":test_data",
+    ],
+)
+
 #sh_test(
 #    name = "stage5_test",
 #    srcs = ["run_tests.sh"],
