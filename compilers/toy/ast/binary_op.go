@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+
 	"github.com/ChrisCummins/phd/compilers/toy/token"
 )
 
@@ -48,8 +49,8 @@ func (u *BinaryOpOperator) GenerateAssembly() string {
 	case token.MultiplicationToken:
 		return "imul    %ecx, %eax"
 	case token.DivisionToken:
-		return ("movl    %edx $0\n\tidivl   %ecx\n\t" +
-			"movl    %ecx %eax")
+		return ("movl    $0, %edx\n\tidivl   %ecx\n\t" +
+			"movl    %ecx, %eax")
 	}
 	panic("unreachable!")
 }
