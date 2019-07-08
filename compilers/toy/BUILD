@@ -23,6 +23,7 @@ filegroup(
     srcs = glob([
         "test_data/**/*.c",
     ]) + ["test_data/test_compiler.sh"],
+    visibility = ["//compilers/toy:__subpackages__"],
 )
 
 sh_binary(
