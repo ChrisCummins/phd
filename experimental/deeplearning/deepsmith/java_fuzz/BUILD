@@ -70,6 +70,17 @@ py_test(
 )
 
 py_binary(
+    name = "export_preprocessed_methods",
+    srcs = ["export_preprocessed_methods.py"],
+    deps = [
+        "//deeplearning/clgen/corpuses:preprocessed",
+        "//labm8:app",
+        "//labm8:fs",
+        "//third_party/py/progressbar",
+    ],
+)
+
+py_binary(
     name = "export_rewriter_failures",
     srcs = ["export_rewriter_failures.py"],
     deps = [
