@@ -28,13 +28,16 @@ app.DEFINE_database(
     'URL of the database of encoded Java methods.')
 app.DEFINE_integer('java_training_epochs', 50,
                    'The number of epochs to train for.')
+app.DEFINE_integer('neurons_per_layer', 1024,
+                   'The number of neurons in a layer.')
 app.DEFINE_string('java_seed_text', 'public ',
                   'The text to initialize sampling with.')
 
 
-def MakeClgenInstance(
-    working_dir: pathlib.Path, encoded_db: encoded.EncodedContentFiles,
-    num_training_epochs: int, seed_text: str) -> clgen.Instance:
+def MakeClgenInstance(working_dir: pathlib.Path,
+                      encoded_db: encoded.EncodedContentFiles,
+                      num_training_epochs: int, seed_text: str,
+                      neurons_per_layer: int) -> clgen.Instance:
   """Construct a CLgen instance.
 
   Args:
@@ -42,6 +45,7 @@ def MakeClgenInstance(
     encoded_db: The directory of encoded content files.
     num_training_epochs: The number of epochs to train for.
     seed_text: The text to initiate sampling with.
+    neurons_per_layer: Number of neurons in a layer.
   """
   return clgen.Instance(
       clgen_pb2.Instance(
@@ -51,7 +55,7 @@ def MakeClgenInstance(
               architecture=model_pb2.NetworkArchitecture(
                   backend=model_pb2.NetworkArchitecture.TENSORFLOW,
                   neuron_type=model_pb2.NetworkArchitecture.LSTM,
-                  neurons_per_layer=1024,
+                  neurons_per_layer=neurons_per_layer,
                   num_layers=2,
                   post_layer_dropout_micros=0,
               ),
@@ -105,7 +109,8 @@ def main():
   """Main entry point."""
   instance = MakeClgenInstance(FLAGS.java_clgen_working_dir,
                                FLAGS.java_encoded_contentfiles(),
-                               FLAGS.java_training_epochs, FLAGS.java_seed_text)
+                               FLAGS.java_training_epochs, FLAGS.java_seed_text,
+                               FLAGS.neurons_per_layer)
   observer = JavaSampleObserver(FLAGS.java_sample_dir)
 
   with instance.Session():
