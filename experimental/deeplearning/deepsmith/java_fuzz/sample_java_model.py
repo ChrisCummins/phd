@@ -98,7 +98,7 @@ class JavaSampleObserver(sample_observers_lib.SampleObserver):
   def OnSample(self, sample: model_pb2.Sample):
     checksum = crypto.sha1_str(sample.text)
     outpath = self.outdir / f'{checksum}.txt'
-    pbutil.ToFile(outpath)
+    pbutil.ToFile(sample, outpath)
 
 
 def main():
@@ -106,13 +106,14 @@ def main():
   instance = MakeClgenInstance(FLAGS.java_clgen_working_dir,
                                FLAGS.java_encoded_contentfiles(),
                                FLAGS.java_training_epochs, FLAGS.java_seed_text)
+  observer = JavaSampleObserver(FLAGS.java_sample_dir)
 
   with instance.Session():
     app.Log(1, 'Beginning model training')
     instance.model.Train()
 
     app.Log(1, 'Beginning infinite sampling loop.')
-    instance.model.Sample(instance.sampler, [JavaSampleObserver(sample_dir)])
+    instance.model.Sample(instance.sampler, [observer])
 
 
 if __name__ == '__main__':
