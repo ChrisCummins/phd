@@ -35,11 +35,12 @@ def WhichOrDie(name):
 
 BUILDIFIER = WhichOrDie('buildifier')
 CLANG_FORMAT = WhichOrDie('clang-format')
-YAPF = WhichOrDie('yapf')
-SQLFORMAT = WhichOrDie('sqlformat')
-JSBEAUTIFY = WhichOrDie('js-beautify')
 GO = WhichOrDie('go')
 JAVA = WhichOrDie('java')
+JSBEAUTIFY = WhichOrDie('js-beautify')
+JSON_LINT = WhichOrDie('jsonlint')
+SQLFORMAT = WhichOrDie('sqlformat')
+YAPF = WhichOrDie('yapf')
 
 YAPF_RC = os.path.join(_PHD_ROOT, 'tools/code_style/yapf.yml')
 assert os.path.isfile(YAPF_RC)
@@ -175,6 +176,13 @@ class GoogleJavaFormatThread(LinterThread):
     ExecOrDie([JAVA, '-jar', GOOGLE_JAVA_FORMAT, '-i'] + self._paths)
 
 
+class JsonlintThread(LinterThread):
+
+  def run(self):
+    for path in self._paths:
+      ExecOrDie([JSON_LINT, '-i', path])
+
+
 class LinterActions(object):
 
   def __init__(self, paths):
@@ -186,6 +194,7 @@ class LinterActions(object):
     self._jsbeautify = []
     self._gofmt = []
     self._java = []
+    self._json = []
     self._modified_paths = []
 
     for path in paths:
@@ -207,6 +216,8 @@ class LinterActions(object):
         self._gofmt.append(path)
       elif extension == '.java':
         self._java.append(path)
+      elif extension == '.json':
+        self._json.append(path)
 
   @property
   def paths(self):
@@ -215,7 +226,8 @@ class LinterActions(object):
   @property
   def paths_with_actions(self):
     return (self._buildifier + self._clang_format + self._yapf +
-            self._sqlformat + self._jsbeautify + self._gofmt + self._java)
+            self._sqlformat + self._jsbeautify + self._gofmt + self._java +
+            self._json)
 
   @property
   def modified_paths(self):
@@ -238,6 +250,8 @@ class LinterActions(object):
       linter_threads.append(GoFmtThread(self._gofmt))
     if self._java:
       linter_threads.append(GoogleJavaFormatThread(self._java))
+    if self._json:
+      linter_threads.append(JsonlintThread(self._json))
 
     for thread in linter_threads:
       thread.start()
