@@ -1,14 +1,23 @@
 // This file defines utility macros for working with C++.
 #pragma once
 
+// An assertion macro
+#undef assert
+#define STRINGIFY(x) #x
+#define assert(expr)                                                \
+  do {                                                              \
+    if (!(expr)) die(#expr " failed at line " STRINGIFY(__LINE__)); \
+  } while (0)
+
 namespace test {
 namespace debug {
 
 // Debug type:
-template <typename T> struct debug_t {};
+template <typename T>
+struct debug_t {};
 
-} // debug namespace
-} // test namespace
+}  // namespace debug
+}  // namespace test
 
 // Macros for debugging types:
 //
@@ -18,7 +27,7 @@ template <typename T> struct debug_t {};
 //
 // Fatally crash the compiler by attempting to cast 'variable' to an
 // unknown type.
-#define PRINT_TYPE(variable)                                                   \
+#define PRINT_TYPE(variable) \
   static_cast<test::debug::debug_t<decltype(variable)>>(variable);
 
 // Protocol Buffers - Google's data interchange format
@@ -56,14 +65,14 @@ template <typename T> struct debug_t {};
 namespace phd {
 
 #undef DISALLOW_EVIL_CONSTRUCTORS
-#define DISALLOW_EVIL_CONSTRUCTORS(TypeName)                                   \
-  TypeName(const TypeName &);                                                  \
+#define DISALLOW_EVIL_CONSTRUCTORS(TypeName) \
+  TypeName(const TypeName &);                \
   void operator=(const TypeName &)
 
 #undef DISALLOW_IMPLICIT_CONSTRUCTORS
-#define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName)                               \
-  TypeName();                                                                  \
-  TypeName(const TypeName &);                                                  \
+#define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
+  TypeName();                                    \
+  TypeName(const TypeName &);                    \
   void operator=(const TypeName &)
 
 // ===================================================================
@@ -104,8 +113,8 @@ namespace phd {
 // Kudos to Jorg Brown for this simple and elegant implementation.
 
 #undef GOOGLE_ARRAYSIZE
-#define GOOGLE_ARRAYSIZE(a)                                                    \
-  ((sizeof(a) / sizeof(*(a))) /                                                \
+#define GOOGLE_ARRAYSIZE(a)     \
+  ((sizeof(a) / sizeof(*(a))) / \
    static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 
 // The COMPILE_ASSERT macro can be used to verify that a compile time
@@ -125,16 +134,17 @@ namespace phd {
 
 namespace internal {
 
-template <bool> struct CompileAssert {};
+template <bool>
+struct CompileAssert {};
 
-} // namespace internal
+}  // namespace internal
 
 #undef COMPILE_ASSERT
 #if __cplusplus >= 201103L
 #define COMPILE_ASSERT(expr, msg) static_assert(expr, #msg)
 #else
-#define COMPILE_ASSERT(expr, msg)                                              \
-  ::phd::internal::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1];       \
+#define COMPILE_ASSERT(expr, msg)                                        \
+  ::phd::internal::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]; \
   (void)msg
 // Implementation details of COMPILE_ASSERT:
 //
@@ -176,6 +186,6 @@ template <bool> struct CompileAssert {};
 //
 //   This is to avoid running into a bug in MS VC 7.1, which
 //   causes ((0.0) ? 1 : -1) to incorrectly evaluate to 1.
-#endif // __cplusplus >= 201103L
+#endif  // __cplusplus >= 201103L
 
-} // phd
+}  // namespace phd
