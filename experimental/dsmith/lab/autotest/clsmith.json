@@ -1,9 +1,7 @@
 {
   "tester": "opencl",
-  "generator": {
-  },
-  "preflight_checks": [
-  ],
+  "generator": {},
+  "preflight_checks": [],
   "duts": [
     {
       "platform": "Intel(R) OpenCL",
@@ -30,10 +28,7 @@
       ]
     }
   ],
-  "comparator": {
-  },
-  "postflight_checks": [
-  ],
-  "reducer": {
-  }
+  "comparator": {},
+  "postflight_checks": [],
+  "reducer": {}
 }
