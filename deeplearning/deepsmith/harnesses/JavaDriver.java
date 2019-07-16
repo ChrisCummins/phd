@@ -364,7 +364,6 @@ public class JavaDriver {
     preprocessor_ = new JavaPreprocessor();
     compiler_ = ToolProvider.getSystemJavaCompiler();
     config_ = config;
-    rng_ = new Random();
   }
 
   /**
@@ -544,7 +543,6 @@ public class JavaDriver {
   private JavaPreprocessor preprocessor_;
   private JavaCompiler compiler_;
   private final JavaDriverConfiguration config_;
-  private Random rng_;
 
   public static void main(String[] args) throws Throwable {
     Mode mode = Mode.DEFAULT;
