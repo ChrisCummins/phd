@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+
 	"github.com/ChrisCummins/phd/compilers/toy/token"
 )
 
@@ -17,7 +18,7 @@ func (u UnaryOp) String() string {
 func (u *UnaryOp) GenerateAssembly() string {
 	op := u.Operator.GenerateAssembly()
 	exp := u.Expression.GenerateAssembly()
-	return fmt.Sprintf("%v\n %v", exp, op)
+	return fmt.Sprintf("%v\n\t%v", exp, op)
 }
 
 type UnaryOpOperator struct {
@@ -39,11 +40,13 @@ func (u UnaryOpOperator) String() string {
 func (u *UnaryOpOperator) GenerateAssembly() string {
 	switch u.Type {
 	case token.LogicalNegationToken:
-		return "cmpl   $0, %eax\n movl   $0, %eax\n sete   %al"
+		return ("cmpl    $0, %eax  # logical negation\n\t" +
+			"movl    $0, %eax\n\t" +
+			"sete    %al")
 	case token.BitwiseComplementToken:
-		return "not     %eax"
+		return "not     %eax  # bitwise complement"
 	case token.NegationToken:
-		return "neg     %eax"
+		return "neg     %eax  # unary negation"
 	}
 	panic("unreachable!")
 }
