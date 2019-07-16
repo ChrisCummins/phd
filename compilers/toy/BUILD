@@ -1,3 +1,7 @@
+# A toy C compiler written as a learning exerfise in go.
+#
+# Based on Nora Sandler's excellenet blog posts on compiler construction. See:
+# https://norasandler.com/2017/11/29/Write-a-Compiler.html
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_library(
