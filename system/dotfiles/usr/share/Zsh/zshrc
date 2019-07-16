@@ -276,7 +276,7 @@ catmd() {
 
 # Recursively change file extensions
 # Extended from: https://github.com/thoughtbot/dotfiles
-function change-extension() {
+change-extension() {
   test -n "$1" || { echo "Usage: change-extension <current-extension> <new-extension>" >&2; return 1; }
 
   setopt nullglob
