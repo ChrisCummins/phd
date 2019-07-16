@@ -3,22 +3,30 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/ChrisCummins/phd/compilers/toy/ast"
 	"github.com/ChrisCummins/phd/compilers/toy/token"
-	"strconv"
+	"github.com/golang/glog"
 )
 
 // Parser grammar (in Backus-Naur Form):
 //     <program> ::= <function>
 //     <function> ::= "int" <id> "(" ")" "{" <statement> "}"
 //     <statement> ::= "return" <exp> ";"
-//     <exp> ::= <term> { ("+" | "-") <term> }
+//     <exp> ::= <logical-and-exp> { "||" <logical-and-exp> }
+//     <logical-and-exp> ::= <equality-exp> { "&&" <equality-exp> }
+//     <equality-exp> ::= <relational-exp> { ("!=" | "==") <relational-exp> }
+//     <relational-exp> ::= <additive-exp> { ("<" | ">" | "<=" | ">=") <additive-exp> }
+//     <additive-exp> ::= <term> { ("+" | "-") <term> }
 //     <term> ::= <factor> { ("*" | "/") <factor> }
 //     <factor> ::= "(" <exp> ")" | <unary_op> <factor> | <int>
 //     <unary_op> ::= "!" | "~" | "-"
 
 // <program> ::= <function>
 func Parse(ts token.TokenStream) (*ast.Program, error) {
+	glog.V(2).Infof("Parse() <- %s", ts.Peek())
+
 	function, err := ParseFunction(ts)
 	if err != nil {
 		return nil, err
@@ -31,6 +39,7 @@ func Parse(ts token.TokenStream) (*ast.Program, error) {
 
 // <function> ::= "int" <id> "(" ")" "{" <statement> "}"
 func ParseFunction(ts token.TokenStream) (*ast.Function, error) {
+	glog.V(2).Infof("ParseFunction() <- %s", ts.Peek())
 	if !ts.Next() || ts.Value().Type != token.IntKeywordToken {
 		return nil, errors.New("expected `int` keyword")
 	}
@@ -62,6 +71,7 @@ func ParseFunction(ts token.TokenStream) (*ast.Function, error) {
 
 // <statement> ::= "return" <exp> ";"
 func ParseStatement(ts token.TokenStream) (*ast.ReturnStatement, error) {
+	glog.V(2).Infof("ParseStatement() <- %s", ts.Peek())
 	if !ts.Next() || ts.Value().Type != token.ReturnKeywordToken {
 		return nil, errors.New("expected `return` keyword")
 	}
@@ -113,6 +123,8 @@ func ParseExpression(ts token.TokenStream) (ast.Expression, error) {
 
 // <term> ::= <factor> { ("*" | "/") <factor> }
 func ParseTerm(ts token.TokenStream) (ast.Expression, error) {
+	glog.V(2).Infof("ParseTerm() <- %s", ts.Peek())
+
 	factor, err := ParseFactor(ts)
 	if err != nil {
 		return nil, err
@@ -145,6 +157,8 @@ func ParseTerm(ts token.TokenStream) (ast.Expression, error) {
 
 // <factor> ::= "(" <exp> ")" | <unary_op> <factor> | <int>
 func ParseFactor(ts token.TokenStream) (ast.Expression, error) {
+glog.V(2).Infof("ParseFactor() <- %s", ts.Peek())
+
 	if !ts.Next() {
 		return nil, errors.New("ran out of tokens")
 	}
