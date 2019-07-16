@@ -89,8 +89,134 @@ func ParseStatement(ts token.TokenStream) (*ast.ReturnStatement, error) {
 	return &statement, nil
 }
 
-// <exp> ::= <term> { ("+" | "-") <term> }
+// <exp> ::= <logical-and-exp> { "||" <logical-and-exp> }
 func ParseExpression(ts token.TokenStream) (ast.Expression, error) {
+	glog.V(2).Infof("ParseExpression() <- %s", ts.Peek())
+
+	term, err := ParseLogicalAndExpression(ts)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if ts.Peek().Type != token.OrToken {
+			break
+		}
+		if !ts.Next() {
+			panic("unreachable!")
+		}
+		op, err := consumeBinaryOp(ts.Value())
+		if err != nil {
+			return nil, err
+		}
+		next_term, err := ParseLogicalAndExpression(ts)
+		if err != nil {
+			return nil, err
+		}
+		term = &ast.BinaryOp{Operator: op, Term: term, NextTerm: next_term}
+	}
+
+	return term, nil
+}
+
+// <logical-and-exp> ::= <equality-exp> { "&&" <equality-exp> }
+func ParseLogicalAndExpression(ts token.TokenStream) (ast.Expression, error) {
+	glog.V(2).Infof("ParseLogicalAndExpression() <- %s", ts.Peek())
+
+	term, err := ParseEqualityExpression(ts)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if ts.Peek().Type != token.AndToken {
+			break
+		}
+		if !ts.Next() {
+			panic("unreachable!")
+		}
+		op, err := consumeBinaryOp(ts.Value())
+		if err != nil {
+			return nil, err
+		}
+		next_term, err := ParseEqualityExpression(ts)
+		if err != nil {
+			return nil, err
+		}
+		term = &ast.BinaryOp{Operator: op, Term: term, NextTerm: next_term}
+	}
+
+	return term, nil
+}
+
+// <equality-exp> ::= <relational-exp> { ("!=" | "==") <relational-exp> }
+func ParseEqualityExpression(ts token.TokenStream) (ast.Expression, error) {
+	glog.V(2).Infof("ParseEqualityExpression() <- %s", ts.Peek())
+
+	term, err := ParseRelationalExpression(ts)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if ts.Peek().Type != token.EqualToken ||
+			ts.Peek().Type != token.NotEqualToken {
+			break
+		}
+		if !ts.Next() {
+			panic("unreachable!")
+		}
+		op, err := consumeBinaryOp(ts.Value())
+		if err != nil {
+			return nil, err
+		}
+		next_term, err := ParseRelationalExpression(ts)
+		if err != nil {
+			return nil, err
+		}
+		term = &ast.BinaryOp{Operator: op, Term: term, NextTerm: next_term}
+	}
+
+	return term, nil
+}
+
+// <relational-exp> ::= <additive-exp> { ("<" | ">" | "<=" | ">=") <additive-exp> }
+func ParseRelationalExpression(ts token.TokenStream) (ast.Expression, error) {
+	glog.V(2).Infof("ParseRelationalExpression() <- %s", ts.Peek())
+
+	term, err := ParseAdditiveExpression(ts)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if ts.Peek().Type != token.LessThanToken ||
+			ts.Peek().Type != token.GreaterThanToken ||
+			ts.Peek().Type != token.LessThanOrEqualToken ||
+			ts.Peek().Type != token.GreaterThanOrEqualToken {
+			break
+		}
+		if !ts.Next() {
+			panic("unreachable!")
+		}
+		op, err := consumeBinaryOp(ts.Value())
+		if err != nil {
+			return nil, err
+		}
+		next_term, err := ParseAdditiveExpression(ts)
+		if err != nil {
+			return nil, err
+		}
+		term = &ast.BinaryOp{Operator: op, Term: term, NextTerm: next_term}
+	}
+
+	return term, nil
+}
+
+// <additive-exp> ::= <term> { ("+" | "-") <term> }
+func ParseAdditiveExpression(ts token.TokenStream) (ast.Expression, error) {
+	glog.V(2).Infof("ParseAdditiveExpression() <- %s", ts.Peek())
+
 	term, err := ParseTerm(ts)
 	if err != nil {
 		return nil, err
@@ -108,9 +234,6 @@ func ParseExpression(ts token.TokenStream) (ast.Expression, error) {
 		if err != nil {
 			return nil, err
 		}
-		//if !ts.Next() {
-		//	return nil, errors.New("ran out of tokens")
-		//}
 		next_term, err := ParseTerm(ts)
 		if err != nil {
 			return nil, err
@@ -157,7 +280,7 @@ func ParseTerm(ts token.TokenStream) (ast.Expression, error) {
 
 // <factor> ::= "(" <exp> ")" | <unary_op> <factor> | <int>
 func ParseFactor(ts token.TokenStream) (ast.Expression, error) {
-glog.V(2).Infof("ParseFactor() <- %s", ts.Peek())
+	glog.V(2).Infof("ParseFactor() <- %s", ts.Peek())
 
 	if !ts.Next() {
 		return nil, errors.New("ran out of tokens")
@@ -235,6 +358,18 @@ func isBinaryOp(t token.Token) bool {
 	case token.MultiplicationToken:
 		return true
 	case token.DivisionToken:
+		return true
+	case token.AndToken:
+		return true
+	case token.OrToken:
+		return true
+	case token.GreaterThanToken:
+		return true
+	case token.GreaterThanOrEqualToken:
+		return true
+	case token.LessThanToken:
+		return true
+	case token.LessThanOrEqualToken:
 		return true
 	default:
 		return false

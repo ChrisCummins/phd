@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//compilers/toy/ast:go_default_library",
         "//compilers/toy/token:go_default_library",
+        "@com_github_golang_glog//:go_default_library",
     ],
 )
 
