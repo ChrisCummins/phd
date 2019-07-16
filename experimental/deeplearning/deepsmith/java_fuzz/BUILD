@@ -226,5 +226,13 @@ py3_image(
 sh_binary(
     name = "export_shared_code",
     srcs = ["export_shared_code.sh"],
-    data = ["//tools/source_tree:export_source_tree"],
+    data = [
+        ":shared_code_README",
+        "//tools/source_tree:export_source_tree",
+    ],
+)
+
+filegroup(
+    name = "shared_code_README",
+    srcs = ["shared_code_README.md"],
 )

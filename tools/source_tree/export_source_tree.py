@@ -8,13 +8,10 @@ I feel like there's a 90-10 rule that applies to this repo: 90% of people who
 checkout this repo only need 10% of the code contained within it.
 This script provides a way to export that 10%.
 """
-import os
-
 import contextlib
 import datetime
-import git
-import github as github_lib
 import glob
+import os
 import pathlib
 import re
 import shutil
@@ -23,17 +20,25 @@ import subprocess
 import tempfile
 import typing
 
+import git
+import github as github_lib
+
 import getconfig
 from datasets.github import api
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_list('target', [], 'The bazel target(s) to export.')
 app.DEFINE_list('extra_file', [],
-                'A list of relative paths to extra files to export.')
+                'A list of additional files to export. Each element in the '
+                'list is either a relative path to export, or a mapping of '
+                'relative paths in the form <src>:<dst>. E.g. '
+                '`foo.py:bar/baz.txt` will export file `foo.py` to '
+                'destination `bar/baz.txt`.')
 app.DEFINE_string(
     'targets_list', None, 'Path to a file containing a list of bazel targets. '
     'Supersedes --target flag.')
@@ -313,11 +318,21 @@ Begin original README:
 def CopyFilesToDestinationOrDie(source: pathlib.Path, destination: pathlib.Path,
                                 files_to_copy: typing.List[str]) -> None:
   for file_to_copy in files_to_copy:
-    src_path = source / file_to_copy
-    dst_path = destination / file_to_copy
+    # File paths can be mappings from source to destination, using the form:
+    #   <src>:<dst>.
+    if len(file_to_copy.split(':')) == 2:
+      src_relpath, dst_relpath = file_to_copy.split(':')
+    else:
+      src_relpath, dst_relpath = file_to_copy, file_to_copy
+
+    src_path = source / src_relpath
+    dst_path = destination / dst_relpath
+
     if not src_path.is_file():
       app.FatalWithoutStackTrace("File `%s` not found", file_to_copy)
-    print(file_to_copy)
+
+    dst_path.parent.mkdir(exist_ok=True, parents=True)
+    print(dst_relpath)
     shutil.copy(src_path, dst_path)
 
 
