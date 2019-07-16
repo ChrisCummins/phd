@@ -140,73 +140,10 @@ py3_image(
     deps = [":scrape_java_files"],
 )
 
-java_binary(
-    name = "JavaPreprocessor",
-    srcs = ["JavaPreprocessor.java"],
-    main_class = "experimental.deeplearning.deepsmith.java_fuzz.JavaPreprocessor",
-    deps = [
-        "//datasets/github/scrape_repos/proto:scrape_repos_pb_java",
-        "//deeplearning/clgen/preprocessors:JavaRewriter",
-        "//deeplearning/clgen/proto:clgen_pb_java",
-        "@asm//jar",
-        "@com_google_guava//jar",
-        "@org_apache_commons_cli//jar",
-        "@org_apache_commons_io//jar",
-        "@org_apache_commons_jci_core//jar",
-        "@org_apache_commons_jci_eclipse//jar",
-        "@org_apache_commons_jci_examples//jar",
-        "@org_apache_commons_logging_api//jar",
-        "@org_eclipse_core_contenttype//jar",
-        "@org_eclipse_core_runtime//jar",
-        "@org_eclipse_equinox_common//jar",
-        "@org_eclipse_equinox_preferences//jar",
-        "@org_eclipse_jdt_core//jar",
-        "@org_eclipse_jface//jar",
-        "@org_eclipse_jobs//jar",
-        "@org_eclipse_osgi//jar",
-        "@org_eclipse_osgi_util//jar",
-        "@org_eclipse_resources//jar",
-        "@org_eclipse_text//jar",
-        "@org_osgi_framework//jar",
-        "@org_osgi_service_prefs//jar",
-    ],
-)
-
-java_test(
-    name = "JavaPreprocessorTest",
-    srcs = [
-        "JavaPreprocessorTest.java",
-    ],
-    test_class = "experimental.deeplearning.deepsmith.java_fuzz.JavaPreprocessorTest",
-    runtime_deps = [
-        "@org_apache_commons_cli//jar",
-        "@org_apache_commons_io//jar",
-        "@org_apache_commons_jci_core//jar",
-        "@org_apache_commons_jci_eclipse//jar",
-        "@org_apache_commons_jci_examples//jar",
-        "@org_apache_commons_logging_api//jar",
-        "@org_eclipse_core_contenttype//jar",
-        "@org_eclipse_core_runtime//jar",
-        "@org_eclipse_equinox_common//jar",
-        "@org_eclipse_equinox_preferences//jar",
-        "@org_eclipse_jdt_core//jar",
-        "@org_eclipse_jface//jar",
-        "@org_eclipse_jobs//jar",
-        "@org_eclipse_osgi//jar",
-        "@org_eclipse_osgi_util//jar",
-        "@org_eclipse_resources//jar",
-        "@org_eclipse_text//jar",
-    ],
-    deps = [
-        ":JavaPreprocessor",
-        "@org_junit//jar",
-    ],
-)
-
 py_binary(
     name = "preprocess_java_corpus",
     srcs = ["preprocess_java_corpus.py"],
-    data = [":JavaPreprocessor"],
+    data = ["//deeplearning/clgen/preprocessors:JavaPreprocessor"],
     deps = [
         "//datasets/github/scrape_repos:contentfiles",
         "//datasets/github/scrape_repos/preprocessors:secrets",

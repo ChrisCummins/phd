@@ -1,10 +1,10 @@
-package experimental.deeplearning.deepsmith.java_fuzz;
+// Pre-process java files.
+package deeplearning.clgen.preprocessors;
 
 import com.google.common.io.ByteStreams;
 import datasets.github.scrape_repos.ScrapeReposProtos.ListOfStrings;
 import deeplearning.clgen.InternalProtos.PreprocessorWorkerJobOutcome;
 import deeplearning.clgen.InternalProtos.PreprocessorWorkerJobOutcomes;
-import deeplearning.clgen.preprocessors.JavaRewriter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -70,7 +70,7 @@ public final class JavaPreprocessor {
    * @param methodSrc The method to wrap.
    * @return The method, embedded in a class "A".
    */
-  protected String WrapMethodInClassWithShim(final String methodSrc) {
+  public String WrapMethodInClassWithShim(final String methodSrc) {
     // Template:
     //     import java.io.*;
     //     import java.math.*;

@@ -1,4 +1,4 @@
-package experimental.deeplearning.deepsmith.java_fuzz;
+package deeplearning.clgen.preprocessors;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
