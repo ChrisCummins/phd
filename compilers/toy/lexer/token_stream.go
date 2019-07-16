@@ -5,33 +5,42 @@ import (
 )
 
 type LexerTokenStream struct {
-	lex   *Lexer
-	value token.Token
+	lex     *Lexer
+	prev    token.Token
+	current token.Token
+	next    token.Token
 }
 
 func NewLexerTokenStream(lex *Lexer) *LexerTokenStream {
-	return &LexerTokenStream{lex: lex}
+	ts := &LexerTokenStream{lex: lex, current: token.Token{Type: token.EofToken}}
+	ts.next = ts.lex.NextToken()
+	return ts
 }
 
 func (ts *LexerTokenStream) Next() bool {
-	ts.value = ts.lex.NextToken()
-	switch ts.value.Type {
+	ts.prev = ts.current
+	ts.current = ts.next
+
+	switch ts.current.Type {
 	case token.ErrorToken:
 		return false
 	case token.EofToken:
 		return false
 	}
 
+	ts.next = ts.lex.NextToken()
 	return true
 }
 
 func (ts *LexerTokenStream) Value() token.Token {
-	return ts.value
+	return ts.current
+}
+
+func (ts *LexerTokenStream) backup() {
+	ts.next = ts.current
+	ts.current = ts.prev
 }
 
 func (ts *LexerTokenStream) Peek() token.Token {
-	ts.Next()
-	t := ts.Value()
-	ts.lex.Backup()
-	return t
+	return ts.next
 }
