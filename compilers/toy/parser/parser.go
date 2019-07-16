@@ -349,41 +349,10 @@ func consumeUnaryOp(t token.Token) (*ast.UnaryOpOperator, error) {
 	return &ast.UnaryOpOperator{Type: t.Type}, nil
 }
 
-func isBinaryOp(t token.Token) bool {
-	switch t.Type {
-	case token.NegationToken:
-		return true
-	case token.AdditionToken:
-		return true
-	case token.MultiplicationToken:
-		return true
-	case token.DivisionToken:
-		return true
-	case token.AndToken:
-		return true
-	case token.OrToken:
-		return true
-	case token.GreaterThanToken:
-		return true
-	case token.GreaterThanOrEqualToken:
-		return true
-	case token.LessThanToken:
-		return true
-	case token.LessThanOrEqualToken:
-		return true
-	case token.EqualToken:
-		return true
-	case token.NotEqualToken:
-		return true
-	default:
-		return false
-	}
-}
-
 func consumeBinaryOp(t token.Token) (*ast.BinaryOpOperator, error) {
-	if !isBinaryOp(t) {
+	if !ast.IsBinaryOp(t.Type) {
 		return nil, errors.New(
 			fmt.Sprintf("invalid binary operator `%v`", t.Value))
 	}
-	return &ast.BinaryOpOperator{Type: t.Type}, nil
+	return &ast.BinaryOpOperator{Token: t}, nil
 }

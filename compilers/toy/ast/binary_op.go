@@ -23,25 +23,18 @@ func (u *BinaryOp) GenerateAssembly() string {
 }
 
 type BinaryOpOperator struct {
-	Type token.TokenType
+	Token token.Token
 }
 
-func (u BinaryOpOperator) String() string {
-	switch u.Type {
-	case token.AdditionToken:
-		return "+"
-	case token.NegationToken:
-		return "-"
-	case token.MultiplicationToken:
-		return "*"
-	case token.DivisionToken:
-		return "/"
+func (op BinaryOpOperator) String() string {
+	if !IsBinaryOp(op.Token.Type) {
+		panic("unreachable!")
 	}
-	panic("unreachable!")
+	return op.Token.Value
 }
 
 func (u *BinaryOpOperator) GenerateAssembly() string {
-	switch u.Type {
+	switch u.Token.Type {
 	case token.NegationToken:
 		return "subl    %ecx, %eax"
 	case token.AdditionToken:
@@ -53,4 +46,35 @@ func (u *BinaryOpOperator) GenerateAssembly() string {
 			"movl    %ecx, %eax")
 	}
 	panic("unreachable!")
+}
+
+func IsBinaryOp(t token.TokenType) bool {
+	switch t {
+	case token.NegationToken:
+		return true
+	case token.AdditionToken:
+		return true
+	case token.MultiplicationToken:
+		return true
+	case token.DivisionToken:
+		return true
+	case token.AndToken:
+		return true
+	case token.OrToken:
+		return true
+	case token.GreaterThanToken:
+		return true
+	case token.GreaterThanOrEqualToken:
+		return true
+	case token.LessThanToken:
+		return true
+	case token.LessThanOrEqualToken:
+		return true
+	case token.EqualToken:
+		return true
+	case token.NotEqualToken:
+		return true
+	default:
+		return false
+	}
 }
