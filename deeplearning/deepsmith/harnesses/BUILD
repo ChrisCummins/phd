@@ -132,3 +132,10 @@ py_library(
         "//labm8:pbutil",
     ],
 )
+
+java_binary(
+    name = "JavaDriver",
+    srcs = ["JavaDriver.java"],
+    main_class = "deeplearning.deepsmith.harnesses.JavaDriver",
+    visibility = ["//visibility:public"],
+)
