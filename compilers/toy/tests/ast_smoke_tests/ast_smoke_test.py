@@ -12,6 +12,7 @@ from labm8 import bazelutil
 from labm8 import fs
 from labm8 import test
 
+
 FLAGS = smoke_test_flags.FLAGS
 
 _TEST_DATA_ROOT = bazelutil.DataPath('phd/compilers/toy/test_data')
@@ -28,7 +29,7 @@ MODULE_UNDER_TEST = None  # Disable coverage.
 def PrintAST(path: pathlib.Path):
   """Run lexer on path. Raises an exception is the lexer fails."""
   app.Log(1, 'Printing AST of %s:\n%s', path, fs.read(path))
-  subprocess.check_call([str(_PRINT_AST), str(path)])
+  subprocess.check_call([str(_PRINT_AST), '-logtostderr', '-v=2', str(path)])
 
 
 def TestStage(stage: int):
