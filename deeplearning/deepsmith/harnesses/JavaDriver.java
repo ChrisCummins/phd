@@ -1,342 +1,567 @@
+// Driver for Java methods.
+//
+// Authors: Tingda Du, Chris Cummins.
+//
+// Copyright (c) 2019 Chris Cummins.
+//
+// DeepSmith is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// DeepSmith is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
 package deeplearning.deepsmith.harnesses;
 
-import java.io.*;
-import java.lang.reflect.*;
+import com.google.common.io.ByteStreams;
+import deeplearning.clgen.preprocessors.JavaPreprocessor;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.*;
+import java.util.List;
+import java.util.Random;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
+import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 public class JavaDriver {
+
+  // The mode used to create argument values.
   enum Mode {
     DEFAULT,
-    RANDOM;
+    RANDOM
   }
 
-  /**
-   * Given a parameter type, generates an array of default values, where "default" is determined in
-   * the sense of {@link #generate(Class<?>, Mode) generatePrimitiveDefault}
-   *
-   * @param arrayType The type of the array
-   * @param arrayLength The length of the array
-   * @param m The generation mode. Either DEFAULT or RANDOM
-   */
-  private static Object generateArrayDefault(Class<?> arrayType, int arrayLength, Mode m) {
-    Object arrayDefaults = Array.newInstance(arrayType, arrayLength);
-    for (int i = 0; i < arrayLength; ++i) Array.set(arrayDefaults, i, generate(arrayType, m));
-
-    return arrayDefaults;
-  }
-
-  /**
-   * Given a parameter type, generates an array of random values, where "random" is determined in
-   * the sense of {@link #generate(Class<?>, Mode, long) generatePrimitiveRandom}
-   *
-   * @param arrayType The type of the array
-   * @param arrayLength The length of the array
-   * @param m The generation mode. Either DEFAULT or RANDOM
-   * @param seed The seed for random number generation
-   */
-  private static Object generateArrayRandom(
-      Class<?> arrayType, int arrayLength, Mode m, long seed) {
-    Object arrayDefaults = Array.newInstance(arrayType, arrayLength);
-    for (int i = 0; i < arrayLength; ++i) Array.set(arrayDefaults, i, generate(arrayType, m, seed));
-    return arrayDefaults;
-  }
-
-  /**
-   * Given a parameter type that is a primitive value, generates a default value that matches the
-   * given type. That is, if the type is a boolean , generates true a character, generates 'A' any
-   * number , generates 0 otherwise , generates null when under DEFAULT mode. Otherwise, randomly
-   * generates values for each primitive type
-   *
-   * @param parameterType The supplied type, should be one of Boolean.TYPE, Character.TYPE,
-   *     Byte.TYPE , Short.TYPE, Integer.TYPE, Long.TYPE, Float.TYPE , Double.TYPE
-   */
-  private static Object generatePrimitiveDefault(Class<?> parameterType) {
-    if (parameterType == Boolean.TYPE) {
-      System.out.printf("  Instantiating boolean to default true\n");
-      return true;
-    } else if (parameterType == Character.TYPE) {
-      System.out.printf("  Instantiating char to default 'A'\n");
-      return 'A';
-    } else if (parameterType == Byte.TYPE
-        || parameterType == Short.TYPE
-        || parameterType == Integer.TYPE
-        || parameterType == Long.TYPE
-        || parameterType == Float.TYPE
-        || parameterType == Double.TYPE) {
-      System.out.printf("  Instantiating number to default 0\n");
-      return 0;
+  /** The driver configuration. Specifies the rules used to produce inputs, and their size. */
+  public static class JavaDriverConfiguration {
+    public JavaDriverConfiguration(final Mode mode, final int arrayLength, final long seed) {
+      this.mode = mode;
+      this.arrayLength = arrayLength;
+      this.seed = seed;
     }
-    return null;
+
+    public final Mode mode;
+    public int arrayLength;
+    public long seed;
   }
 
-  private static Object generatePrimitiveRandom(Class<?> parameterType, long seed) {
-    Random randomno = new Random();
-    randomno.setSeed(seed);
-    if (parameterType == Boolean.TYPE) {
-      System.out.printf(" Instantiating boolean to a random value\n");
-      return randomno.nextBoolean();
-    } else if (parameterType == Character.TYPE) {
-      System.out.printf(" Instantiating char to a random value\n");
-      return (char) (randomno.nextInt(95) + 32);
-    } else if (parameterType == Byte.TYPE) {
-      System.out.printf(" Instantiating byte to a random value\n");
-      byte[] value = new byte[1];
-      randomno.nextBytes(value);
-      return value[0];
-    } else if (parameterType == Short.TYPE) {
-      System.out.printf(" Instantiating short to a random value\n");
-      return (short) (randomno.nextInt(65536) - 32768);
-    } else if (parameterType == Integer.TYPE) {
-      System.out.printf(" Instantiating int to a random value\n");
-      return randomno.nextInt();
-    } else if (parameterType == Long.TYPE) {
-      System.out.printf(" Instantiating long to a random value\n");
-      return randomno.nextLong();
-    } else if (parameterType == Float.TYPE) {
-      System.out.printf(" Instantiating float to a random value\n");
-      return Float.MIN_VALUE + (Float.MAX_VALUE - Float.MIN_VALUE) * randomno.nextFloat();
-    } else if (parameterType == Double.TYPE) {
-      System.out.printf(" Instantiating double to a random value\n");
-      return Double.MIN_VALUE + (Double.MAX_VALUE - Double.MIN_VALUE) * randomno.nextDouble();
+  /** The result of driving a Java Method. */
+  public static class JavaDriverResult {
+    public JavaDriverResult() {
+      succeeded_ = false;
+      failed_ = false;
+      mutableParameterValues_ = new ArrayList<Object>();
     }
-    return null;
+
+    public int getMutableParameterCount() {
+      return mutableParameterValues_.size();
+    }
+
+    public String getMutableParameterValue(int i) {
+      return String.format("%s", mutableParameterValues_.get(i));
+    }
+
+    public String getReturnValue() {
+      return String.format("%s", returnValue_);
+    }
+
+    public String toString() {
+      if (!succeeded_ && !failed_) {
+        return "Unknown driver result";
+      } else if (!succeeded_) {
+        assert failed_;
+        return errorMessage_;
+      }
+
+      StringBuilder builder = new StringBuilder();
+      for (int i = 0; i < getMutableParameterCount(); ++i) {
+        builder.append(String.format("Par[%d]: %s\n", i, getMutableParameterValue(i)));
+      }
+      builder.append(String.format("Return: %s", getReturnValue()));
+      return builder.toString();
+    }
+
+    public void SetSuccess() {
+      assert !failed_;
+      assert !succeeded_;
+      succeeded_ = true;
+    }
+
+    /** Don't call this directly, use SetInvalidDriverInput() or SetValidDriverFailure() instead. */
+    private void SetFailed() {
+      assert !failed_;
+      assert !succeeded_;
+      failed_ = true;
+    }
+
+    public void SetValidDriverFailure(final String message) {
+      errorMessage_ = message;
+      SetFailed();
+    }
+
+    public void SetReturnValue(final Object object) {
+      returnValue_ = object;
+    }
+
+    public void AddMutableParameterValue(final Object object) {
+      mutableParameterValues_.add(object);
+    }
+
+    public void SetInvalidDriverInput(final String message) {
+      errorMessage_ = message;
+      SetFailed();
+    }
+
+    public void SetInternalDriverFailure(final String message) {
+      errorMessage_ = message;
+      SetFailed();
+    }
+
+    public boolean IsFailure() {
+      return failed_;
+    }
+
+    public boolean IsSuccess() {
+      return succeeded_;
+    }
+
+    // We need to track both success and failure as there is a third state,
+    // uninitialised.
+    private boolean succeeded_;
+    private boolean failed_;
+    private String errorMessage_;
+    private Object returnValue_;
+    private ArrayList<Object> mutableParameterValues_;
+  }
+
+  /** Abstract base class for errors during driving. */
+  public abstract static class DriverException extends Exception {
+    public DriverException(String message) {
+      super(message);
+    }
   }
 
   /**
-   * Given a parameter type, generates a default value. That is, if parameterType is a primitive,
-   * generate a primitive value using {@link #generatePrimitiveDefault(Class<?>)
-   * generatePrimitiveDefault}. Otherwise, try to use the default constructor to generate a default.
-   * If this fails, then return null.
+   * A "something went wrong" error with the driver. This should not occur in normal use and
+   * indicate a bug in the driver.
    */
-  private static Object generate(Class<?> parameterType, Mode m) {
-    if (parameterType.isPrimitive()) return generatePrimitiveDefault(parameterType);
-    else if (parameterType.isArray())
-      return generateArrayDefault(parameterType.getComponentType(), 1, m);
-    else {
-      // For non-primitive and non-arrays, try using the default constructor.
-      try {
-        return parameterType.getConstructor().newInstance();
-      } catch (NoSuchMethodException e) {
-        System.err.printf("Cannot find constructor for class %s\n", parameterType.getName());
-        e.printStackTrace();
-        return null;
-      } catch (InvocationTargetException e) {
-        System.err.printf("Invocation of constructor failed because it threw an exception\n");
-        e.printStackTrace();
-        return null;
-      } catch (InstantiationException e) {
-        System.err.printf(
-            "Class %s is abstract/interface/primitive/void or has no empty constructor\n",
-            parameterType.getName());
-        e.printStackTrace();
-        return null;
-      } catch (IllegalAccessException e) {
-        System.err.printf(
-            "Cannot access the empty constructor of class %s\n", parameterType.getName());
-        e.printStackTrace();
-        return null;
+  public static class InternalDriverException extends DriverException {
+    public InternalDriverException(String message) {
+      super(message);
+    }
+  }
+
+  /**
+   * Exception raised when an invalid input is passed to the driver. E.g. a string which does not
+   * compile, or an unsupported parameter type.
+   */
+  public static class InvalidDriverInputException extends DriverException {
+    public InvalidDriverInputException(String message) {
+      super(message);
+    }
+  }
+
+  /** A "valid" error during method execution. I.e. the called method raises an exception. */
+  public static class ValidDriverInputException extends DriverException {
+    public ValidDriverInputException(String message) {
+      super(message);
+    }
+  }
+
+  /** An in-memory java source file. */
+  public class JavaSourceFromString extends SimpleJavaFileObject {
+    final String code_;
+
+    public JavaSourceFromString(String name, String code) {
+      // Replace package qualifiers with directory separators when building the
+      // name.
+      super(URI.create("string:///" + name.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
+      code_ = code;
+    }
+
+    @Override
+    public CharSequence getCharContent(boolean unusedIgnoreEncodingErrors) {
+      return code_;
+    }
+  }
+
+  /** The factory class for producing values of given types. */
+  public static class ValueGenerator {
+    public ValueGenerator(final JavaDriverConfiguration config) {
+      config_ = config;
+      rng_ = new Random();
+      rng_.setSeed(config_.seed);
+    }
+
+    /**
+     * Generate a value of the given type.
+     *
+     * @param parameterType The type of value to produce.
+     * @return A value of the given type. The value is determined by the JavaDriverConfiguration
+     *     settings.
+     * @throws InvalidDriverInputException If a value of the given type cannot be produced.
+     */
+    public Object Generate(Class<?> type) throws InvalidDriverInputException {
+      if (type.isPrimitive()) {
+        return GeneratePrimitive(type);
+      } else if (type.isArray()) {
+        return GenerateArray(type.getComponentType());
+      } else {
+        // For non-primitive and non-arrays, try using the default constructor.
+        try {
+          return type.getConstructor().newInstance();
+        } catch (NoSuchMethodException e) {
+          throw new InvalidDriverInputException(
+              String.format("Unable to construct parameter of type `%s`", type.getSimpleName()));
+        } catch (InvocationTargetException e) {
+          throw new InvalidDriverInputException(
+              String.format(
+                  "Constructor for type `%s` raised exception `%s`", type.getSimpleName(), e));
+        } catch (InstantiationException e) {
+          throw new InvalidDriverInputException(
+              String.format(
+                  "Constructor for type `%s` raised exception `%s`", type.getSimpleName(), e));
+        } catch (IllegalAccessException e) {
+          throw new InvalidDriverInputException(
+              String.format("Constructor for type `%s` cannot be accessed", type.getSimpleName()));
+        }
       }
     }
-  }
 
-  // Random generation with overload of previous function, seed is provided.
-  private static Object generate(Class<?> parameterType, Mode m, long seed) {
-    if (parameterType.isPrimitive()) return generatePrimitiveRandom(parameterType, seed);
-    else if (parameterType.isArray()) return generateArrayRandom(parameterType, 1, m, seed);
-    else {
-      // For non-primitive and non-arrays, try using the default constructor.
-      try {
-        return parameterType.getConstructor().newInstance();
-      } catch (NoSuchMethodException e) {
-        System.err.printf("Cannot find constructor for class %s\n", parameterType.getName());
-        e.printStackTrace();
-        return null;
-      } catch (InvocationTargetException e) {
-        System.err.printf("Invocation of constructor failed because it threw an exception\n");
-        e.printStackTrace();
-        return null;
-      } catch (InstantiationException e) {
-        System.err.printf(
-            "Class %s is abstract/interface/primitive/void or has no empty constructor\n",
-            parameterType.getName());
-        e.printStackTrace();
-        return null;
-      } catch (IllegalAccessException e) {
-        System.err.printf(
-            "Cannot access the empty constructor of class %s\n", parameterType.getName());
-        e.printStackTrace();
-        return null;
+    // Private generator methods.
+
+    /**
+     * Generate an array of values of the given type.
+     *
+     * @param elementType The type of the element to produce.
+     */
+    private Object GenerateArray(Class<?> elementType) throws InvalidDriverInputException {
+      final int arrayLength = config_.arrayLength;
+      Object arrayDefaults = Array.newInstance(elementType, arrayLength);
+      for (int i = 0; i < arrayLength; ++i) {
+        Array.set(arrayDefaults, i, Generate(elementType));
+      }
+      return arrayDefaults;
+    }
+
+    /**
+     * Produce a primitive of the given type.
+     *
+     * @param type The type to generate.
+     * @return An object of the given type.
+     * @throws InvalidDriverInputException If the type is not supported.
+     */
+    private Object GeneratePrimitive(Class<?> type) throws InvalidDriverInputException {
+      if (type == Boolean.TYPE) {
+        return GenerateBoolean();
+      } else if (type == Character.TYPE) {
+        return GenerateCharacter();
+      } else if (type == Byte.TYPE) {
+        return GenerateByte();
+      } else if (type == Short.TYPE) {
+        return GenerateShort();
+      } else if (type == Integer.TYPE) {
+        return GenerateInteger();
+      } else if (type == Long.TYPE) {
+        return GenerateLong();
+      } else if (type == Float.TYPE) {
+        return GenerateFloat();
+      } else if (type == Double.TYPE) {
+        return GenerateDouble();
+      }
+      throw new InvalidDriverInputException("Unsupport primitive type");
+    }
+
+    private Object GenerateBoolean() {
+      if (config_.mode == Mode.DEFAULT) {
+        return true;
+      } else {
+        return rng_.nextBoolean();
       }
     }
+
+    private Object GenerateCharacter() {
+      if (config_.mode == Mode.DEFAULT) {
+        return 'A';
+      } else {
+        return (char) (rng_.nextInt(95) + 32);
+      }
+    }
+
+    private Object GenerateByte() {
+      if (config_.mode == Mode.DEFAULT) {
+        return 0;
+      } else {
+        byte[] value = new byte[1];
+        rng_.nextBytes(value);
+        return value[0];
+      }
+    }
+
+    private Object GenerateShort() {
+      if (config_.mode == Mode.DEFAULT) {
+        return config_.arrayLength;
+      } else {
+        return (short) (rng_.nextInt(65536) - 32768);
+      }
+    }
+
+    private Object GenerateInteger() {
+      if (config_.mode == Mode.DEFAULT) {
+        return config_.arrayLength;
+      } else {
+        return rng_.nextInt();
+      }
+    }
+
+    private Object GenerateLong() {
+      if (config_.mode == Mode.DEFAULT) {
+        return config_.arrayLength;
+      } else {
+        return rng_.nextLong();
+      }
+    }
+
+    private Object GenerateFloat() {
+      if (config_.mode == Mode.DEFAULT) {
+        return 0;
+      } else {
+        return Float.MIN_VALUE + (Float.MAX_VALUE - Float.MIN_VALUE) * rng_.nextFloat();
+      }
+    }
+
+    private Object GenerateDouble() {
+      if (config_.mode == Mode.DEFAULT) {
+        return 0;
+      } else {
+        return Double.MIN_VALUE + (Double.MAX_VALUE - Double.MIN_VALUE) * rng_.nextDouble();
+      }
+    }
+
+    private final JavaDriverConfiguration config_;
+    private Random rng_;
   }
+
+  public JavaDriver(final JavaDriverConfiguration config) {
+    preprocessor_ = new JavaPreprocessor();
+    compiler_ = ToolProvider.getSystemJavaCompiler();
+    config_ = config;
+    rng_ = new Random();
+  }
+
+  /**
+   * Create a temporary directory with an informative prefix. Crashes on error.
+   *
+   * <p>It is the responsibility of the calling code to delete this directory once finished. Call
+   * JavaDriver.DeleteTree().
+   *
+   * @return The path of the temporary directory.
+   */
+  public static Path CreateTemporaryDirectoryOrDie() {
+    try {
+      return Files.createTempDirectory("phd_deeplearning_deepsmith_harnesses_JavaDriver_");
+    } catch (IOException e) {
+      System.err.println("[driver error] Failed to create temporary directory");
+      System.exit(1);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a directory containing zero or more files.
+   *
+   * <p>This is not recursive, only files are allowed.
+   *
+   * @param path The directory to delete.
+   */
+  public static void DeleteTree(final File path) {
+    String[] entries = path.list();
+    for (String s : entries) {
+      File currentFile = new File(path.getPath(), s);
+      currentFile.delete();
+    }
+    // Now delete the empty directory.
+    path.delete();
+  }
+
+  private static Class<?> LoadClassFromFile(final File classDirectory, final String className)
+      throws InternalDriverException {
+    try {
+      URL url = classDirectory.toURI().toURL();
+      URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] {url});
+      return classLoader.loadClass(className);
+    } catch (MalformedURLException e) {
+      throw new InternalDriverException("Failed to create URL");
+    } catch (ClassNotFoundException e) {
+      throw new InternalDriverException("Failed to load compiled class");
+    }
+  }
+
+  public Object[] CreateValuesForParameters(Class<?>[] parameterTypes)
+      throws InvalidDriverInputException {
+    ValueGenerator generator = new ValueGenerator(config_);
+
+    Object[] parameters = new Object[parameterTypes.length];
+    for (int i = 0; i < parameterTypes.length; ++i) {
+      Class<?> parameterType = parameterTypes[i];
+      Object value = generator.Generate(parameterType);
+
+      // Array types must be cast, but scalar types cannot.
+      if (parameterType.isArray()) {
+        parameters[i] = parameterType.cast(value);
+      } else {
+        parameters[i] = value;
+      }
+    }
+    return parameters;
+  }
+
+  public static Method GetMethodFromClass(Class<?> parentClass) throws InvalidDriverInputException {
+    Method[] methods = parentClass.getDeclaredMethods();
+    if (methods.length == 0) {
+      throw new InvalidDriverInputException("Class contains no methods, need one");
+    } else if (methods.length >= 1) {
+      throw new InvalidDriverInputException(
+          String.format("Class contains %d methods, need one", methods.length));
+    }
+    return methods[0];
+  }
+
+  // Driver methods.
+
+  public JavaDriverResult Drive(final Path workingDirectory, final String methodSrc) {
+    final String classSrc = preprocessor_.WrapMethodInClassWithShim(methodSrc);
+    final JavaSourceFromString javaSrc = new JavaSourceFromString("A", classSrc);
+    return Drive(workingDirectory, javaSrc);
+  }
+
+  public JavaDriverResult Drive(final Path workingDirectory, final JavaFileObject javaSrc) {
+    Iterable<? extends JavaFileObject> fileObjects = Arrays.asList(javaSrc);
+
+    List<String> options = new ArrayList<String>();
+    options.add("-d");
+    options.add(workingDirectory.toString());
+
+    StringWriter output = new StringWriter();
+    boolean success =
+        compiler_
+            .getTask(
+                /*out=*/ output,
+                /*fileManager=*/ null,
+                /*diagnosticListener=*/ null,
+                /*options=*/ options,
+                /*classes=*/ null,
+                /*compilationUnits=*/ fileObjects)
+            .call();
+
+    if (!success) {
+      JavaDriverResult result = new JavaDriverResult();
+      result.SetInvalidDriverInput("Failed to compile class: " + output);
+      return result;
+    }
+
+    String className = javaSrc.getName();
+    // Strip trailing extension.
+    className = className.replaceFirst("[.][^.]+$", "");
+    // Strip leading path.
+    className = className.replaceFirst("^.*/", "");
+
+    try {
+      Class<?> parentClass = LoadClassFromFile(workingDirectory.toFile(), className);
+      Method method = GetMethodFromClass(parentClass);
+      return Drive(method);
+    } catch (InternalDriverException e) {
+      JavaDriverResult result = new JavaDriverResult();
+      result.SetInternalDriverFailure(e.getMessage());
+      return result;
+    } catch (InvalidDriverInputException e) {
+      JavaDriverResult result = new JavaDriverResult();
+      result.SetInvalidDriverInput(e.getMessage());
+      return result;
+    }
+  }
+
+  /**
+   * Drive the given Java method.
+   *
+   * <p>This method will attempt to catch all errors and return a JavaDriverResult, but I haven't
+   * done an exhaustive check, and there may still remain room for things to break.
+   *
+   * @param method The method to drive.
+   * @return A JavaDriverResult instance.
+   */
+  public JavaDriverResult Drive(final Method method) {
+    JavaDriverResult result = new JavaDriverResult();
+    Class<?>[] parameterTypes = method.getParameterTypes();
+
+    try {
+      Object[] parameters = CreateValuesForParameters(parameterTypes);
+      Class<?> parentClass = method.getDeclaringClass();
+      Object instance = parentClass.newInstance();
+      result.SetSuccess();
+      result.SetReturnValue(method.invoke(instance, parameters));
+
+      for (int i = 0; i < parameters.length; ++i) {
+        Class<?> parameterType = parameterTypes[i];
+        Object parameter = parameters[i];
+        boolean isFinal = ((parameterType.getModifiers() & Modifier.FINAL) == Modifier.FINAL);
+
+        if (!isFinal) {
+          result.AddMutableParameterValue(parameter);
+        }
+      }
+    } catch (InvalidDriverInputException e) {
+      result.SetInvalidDriverInput(e.getMessage());
+    } catch (InstantiationException e) {
+      result.SetInvalidDriverInput("Class cannot be instantiated");
+    } catch (IllegalAccessException e) {
+      result.SetInvalidDriverInput("Method is inaccessible");
+    } catch (InvocationTargetException e) {
+      result.SetValidDriverFailure("Method threw exception: " + e);
+    }
+
+    return result;
+  }
+
+  private JavaPreprocessor preprocessor_;
+  private JavaCompiler compiler_;
+  private final JavaDriverConfiguration config_;
+  private Random rng_;
 
   public static void main(String[] args) throws Throwable {
-
     Mode mode = Mode.DEFAULT;
-    long seed;
-    Scanner in = new Scanner(System.in);
-    System.out.print("Use random input value (y/n): ");
-    while (true) {
-      if (in.hasNextLine()) {
-        String result = in.nextLine();
-        if (result.equalsIgnoreCase("y")) {
-          mode = Mode.RANDOM;
-          System.out.print("Will fill in random input value, please provide the seed: ");
-          Scanner sc = new Scanner(System.in);
-          do {
-            try {
-              seed = sc.nextLong();
-              break;
+    int arrayLength = 10;
+    long seed = 0;
+    JavaDriverConfiguration config = new JavaDriverConfiguration(mode, arrayLength, seed);
 
-            } catch (InputMismatchException e) {
-            } finally {
-              sc.nextLine(); // always advances (even after the break)
-            }
-            System.out.println("Input must be a number!");
-            System.out.print("please provide the seed: ");
-          } while (true);
-          sc.close();
-        } else if (result.equalsIgnoreCase("n")) {
-          System.out.println("Will fill in default input value");
-        } else {
-          System.out.println("Invalid input, please enter again!");
-          System.out.print("Use random input value (y/n): ");
-          continue;
-        }
-        break;
-      }
+    JavaDriver javaDriver = new JavaDriver(config);
+
+    final String input = new String(ByteStreams.toByteArray(System.in));
+    final Path tmpDir = JavaDriver.CreateTemporaryDirectoryOrDie();
+
+    try {
+      JavaDriverResult result = javaDriver.Drive(tmpDir, input);
+      System.out.println(result.toString());
+    } finally {
+      JavaDriver.DeleteTree(tmpDir.toFile());
     }
-
-    in.close();
-
-    // create an empty source file
-    File sourceFile = File.createTempFile("Dummy", ".java");
-    sourceFile.deleteOnExit();
-
-    // generate the source code, using the source filename as the class name
-    String classname = sourceFile.getName().split("\\.")[0];
-    System.out.println(classname);
-    String sourceCode = "public class " + classname + " {";
-    File dir = new File("src/test");
-    File[] directoryListing = dir.listFiles();
-    for (File child : directoryListing) {
-      System.out.println(child);
-      try {
-        BufferedReader bf = new BufferedReader(new FileReader(child));
-        String temp = "";
-        boolean flag = false;
-        while ((temp = bf.readLine()) != null) {
-          if (!temp.contains("RE-WRITTEN")) {
-            if (flag) {
-              sourceCode += temp;
-            } else {
-              continue;
-            }
-          } else {
-            flag = true;
-          }
-        }
-        bf.close();
-      } catch (Exception e) {
-        System.out.println(child);
-        e.printStackTrace();
-      }
-    }
-    sourceCode += "}";
-
-    /*
-     * try (PrintWriter pw = new PrintWriter(new FileWriter(sourceFile))) {
-     * pw.println(sourceCode); }
-     */
-    // compile the source file
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    // The default file manager the compiler uses
-    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-    File parentDirectory = sourceFile.getParentFile();
-    // convert the provided source file into a JavaFileObjects that serve as the
-    // compilation units
-    fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(parentDirectory));
-    Iterable<? extends JavaFileObject> compilationUnits =
-        fileManager.getJavaFileObjectsFromFiles(Arrays.asList(sourceFile));
-    // Now, create and invoke the compilation task
-    compiler
-        .getTask(
-            // The Writer for any compiler output. null means use System.err
-            null,
-            // Use the standard file manager provided by the compiler
-            fileManager,
-            // Use the compiler's default method for reporting compilation diagonistics
-            null,
-            null,
-            // No annotations are to be processed
-            null,
-            compilationUnits)
-        .call();
-    fileManager.close();
-
-    // load the compiled class
-    URLClassLoader classLoader =
-        URLClassLoader.newInstance(new URL[] {parentDirectory.toURI().toURL()});
-    Class<?> testClass = classLoader.loadClass(classname);
-    List<Object> invocationResults =
-        Arrays.stream(testClass.getDeclaredMethods())
-            .map(
-                (Method m) -> {
-                  System.out.printf("Method name:     %s\n", m.getName());
-                  System.out.printf(
-                      "Parameter types: %s\n",
-                      Arrays.stream(m.getParameterTypes())
-                          .map(Class::getName)
-                          .collect(Collectors.joining(", ")));
-                  System.out.printf("Return type:     %s\n", m.getReturnType().getName());
-
-                  List<Object> actualArguments = new ArrayList<>();
-                  for (Class<?> parameterType : m.getParameterTypes()) {
-                    System.out.printf("- Creating instance of %s\n", parameterType.getName());
-                    System.out.printf("  Primitive: %s\n", parameterType.isPrimitive());
-                    System.out.printf("  Array: %s\n", parameterType.isArray());
-                    if (parameterType.isArray()) {
-                      System.out.printf(
-                          "  Array type: %s\n", parameterType.getComponentType().getName());
-                      actualArguments.add(
-                          parameterType.cast(generate(parameterType, Mode.DEFAULT)));
-                    } else actualArguments.add(generate(parameterType, Mode.DEFAULT));
-                  }
-
-                  System.out.printf("Arguments: %s\n", actualArguments);
-                  System.out.printf("Invoking method...\n");
-                  Object result = null;
-                  try {
-                    // In invoke, first argument should be an instance of the class the method
-                    // belongs to,
-                    // but because the methods right now are just static, the first argument is
-                    // ignored so
-                    // making the first argument null.
-                    result = m.invoke(null, actualArguments.toArray());
-                  } catch (IllegalAccessException e) {
-                    System.out.printf("Method %s is unaccessible\n", m.getName());
-                    e.printStackTrace();
-                  } catch (InvocationTargetException e) {
-                    System.out.printf(
-                        "Invocation of method %s failed because it threw an exception\n",
-                        m.getName());
-                    e.printStackTrace();
-                  }
-                  System.out.printf("Invocation result succeeded with = %s\n", result);
-
-                  System.out.println();
-
-                  return result;
-                })
-            .collect(Collectors.toList());
   }
 }
