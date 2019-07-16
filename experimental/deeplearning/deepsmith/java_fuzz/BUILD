@@ -285,3 +285,9 @@ py3_image(
     visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [":sample_java_model"],
 )
+
+sh_binary(
+    name = "export_shared_code",
+    srcs = ["export_shared_code.sh"],
+    data = ["//tools/source_tree:export_source_tree"],
+)
