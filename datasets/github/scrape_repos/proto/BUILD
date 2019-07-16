@@ -24,18 +24,12 @@ proto_library(
 
 python_proto_library(
     name = "scrape_repos_pb_py",
-    visibility = [
-        "//datasets/github/scrape_repos:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     deps = ["scrape_repos_pb"],
 )
 
 java_proto_library(
     name = "scrape_repos_pb_java",
-    visibility = [
-        "//datasets/github/scrape_repos:__subpackages__",
-        "//experimental:__subpackages__",
-    ],
+    visibility = ["//visibility:public"],
     deps = [":scrape_repos_pb"],
 )
