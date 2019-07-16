@@ -57,6 +57,18 @@ public class JavaDriverTest extends TestCase {
   }
 
   @Test
+  public void testDriveSumArguments() throws Exception {
+    JavaDriver driver = new JavaDriver(defaultConfig_);
+
+    JavaDriver.JavaDriverResult result =
+        driver.Drive(workingDir_, "public int a(int x, int y) {return x + y;}");
+    assertTrue(result.IsSuccess());
+    assertEquals(0, result.getMutableParameterCount());
+    // x = 10, y = 10, x + y = 20.
+    assertEquals("20", result.getReturnValue());
+  }
+
+  @Test
   public void testDriveMultipleMethods() throws Exception {
     JavaDriver driver = new JavaDriver(defaultConfig_);
 
