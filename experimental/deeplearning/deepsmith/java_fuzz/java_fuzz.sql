@@ -1,16 +1,22 @@
 # MySQL snippets for working with java_fuzz contentfiles database.
- # What timestamp have files been scraped over?
+ # What is the oldest scraped file?
 
 SELECT *
 FROM github_java.contentfiles
 ORDER BY id
 LIMIT 1;
 
+# What is the most recently scraped file?
 
 SELECT *
 FROM github_java.contentfiles
 ORDER BY id DESC
 LIMIT 1;
+
+# How many files have been scraped?
+
+SELECT count(*)
+FROM github_java.contentfiles;
 
 # Select a handful of scraped files for inspection.
 
@@ -35,7 +41,8 @@ SELECT sum(linecount),
        sum(charcount)
 FROM github_java.contentfiles;
 
-# How many .java files did we scrape?
+# How many `.java` files did we scrape?
+# NOTE: This is an expensive query (full table scan).
 
 SELECT count(*)
 FROM github_java.contentfiles;
