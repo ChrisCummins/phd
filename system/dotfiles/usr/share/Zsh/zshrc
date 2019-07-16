@@ -355,6 +355,16 @@ for_the_love_of_god() {
 #     $ ./some_big_task ; here
 alias here='echo here | lmk -'
 
+# Concatenate a list of PDF files.
+#     $ pdf_concat output.pdf in1.pdf in2.pdf ...
+pdf_concat() {
+    local outfile="$1"
+    shift
+    set -x
+    gs -dBATCH -dNOPAUSE -q -SDEVICE=pdfwrite -sOutputFile="$outfile" $@
+    set +x
+}
+
 # Set CUDA_VISIBLE_DEVICES.
 unalias gpu
 gpu() {
