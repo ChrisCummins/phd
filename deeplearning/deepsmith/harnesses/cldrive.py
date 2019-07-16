@@ -259,36 +259,35 @@ def MakeDriver(testcase: deepsmith_pb2.Testcase, optimizations: bool) -> str:
 
   try:
     # Generate a compile-and-execute test harness.
-    inputs = data.MakeData(
-        src=src, size=size, data_generator=data_generator, scalar_val=size)
-    src = cgen.emit_c(
-        src=src,
-        inputs=inputs,
-        gsize=gsize,
-        lsize=lsize,
-        optimizations=optimizations)
+    inputs = data.MakeData(src=src,
+                           size=size,
+                           data_generator=data_generator,
+                           scalar_val=size)
+    src = cgen.emit_c(src=src,
+                      inputs=inputs,
+                      gsize=gsize,
+                      lsize=lsize,
+                      optimizations=optimizations)
     testcase.invariant_opts['driver_type'] = 'compile_and_run'
   except Exception:
     # Create a compile-only stub if not possible.
     try:
-      src = cgen.emit_c(
-          src=src,
-          inputs=None,
-          gsize=None,
-          lsize=None,
-          compile_only=True,
-          optimizations=optimizations)
+      src = cgen.emit_c(src=src,
+                        inputs=None,
+                        gsize=None,
+                        lsize=None,
+                        compile_only=True,
+                        optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_and_create_kernel'
     except Exception:
       # Create a compiler-only stub without creating kernel.
-      src = cgen.emit_c(
-          src=src,
-          inputs=None,
-          gsize=None,
-          lsize=None,
-          compile_only=True,
-          create_kernel=False,
-          optimizations=optimizations)
+      src = cgen.emit_c(src=src,
+                        inputs=None,
+                        gsize=None,
+                        lsize=None,
+                        compile_only=True,
+                        create_kernel=False,
+                        optimizations=optimizations)
       testcase.invariant_opts['driver_type'] = 'compile_only'
   return src
 
@@ -360,12 +359,11 @@ def CompileDriver(src: str,
     cmd += cflags
 
   # app.Log(2, '$ %s', ' '.join(cmd))
-  proc = subprocess.Popen(
-      cmd,
-      stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      universal_newlines=True)
+  proc = subprocess.Popen(cmd,
+                          stdin=subprocess.PIPE,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE,
+                          universal_newlines=True)
   stdout, stderr = proc.communicate(src)
   if not proc.returncode == 0:
     argv = ' '.join(cmd)

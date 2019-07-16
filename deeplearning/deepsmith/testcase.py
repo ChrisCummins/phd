@@ -67,13 +67,12 @@ class Testcase(db.Table):
       deeplearning.deepsmith.generator.Generator.id_t,
       sql.ForeignKey('generators.id'),
       nullable=False)
-  harness_id: int = sql.Column(
-      deeplearning.deepsmith.harness.Harness.id_t,
-      sql.ForeignKey('harnesses.id'),
-      nullable=False)
+  harness_id: int = sql.Column(deeplearning.deepsmith.harness.Harness.id_t,
+                               sql.ForeignKey('harnesses.id'),
+                               nullable=False)
   inputset_id: bytes = sql.Column(_TestcaseInputSetId, nullable=False)
-  invariant_optset_id: bytes = sql.Column(
-      _TestcaseInvariantOptSetId, nullable=False)
+  invariant_optset_id: bytes = sql.Column(_TestcaseInvariantOptSetId,
+                                          nullable=False)
 
   # Relationships.
   toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
@@ -95,8 +94,8 @@ class Testcase(db.Table):
       'TestcaseInvariantOpt.id')
   profiling_events: typing.List['TestcaseProfilingEvent'] = orm.relationship(
       'TestcaseProfilingEvent', back_populates='testcase')
-  results: typing.List['Result'] = orm.relationship(
-      'Result', back_populates='testcase')
+  results: typing.List['Result'] = orm.relationship('Result',
+                                                    back_populates='testcase')
   pending_results: typing.List['PendingResult'] = orm.relationship(
       'PendingResult', back_populates='testcase')
 
@@ -179,16 +178,18 @@ class Testcase(db.Table):
     # Create invariant optset table entries.
     inputset_id = md5.digest()
     for input in inputs:
-      labm8.sqlutil.GetOrAdd(
-          session, TestcaseInputSet, id=inputset_id, input=input)
+      labm8.sqlutil.GetOrAdd(session,
+                             TestcaseInputSet,
+                             id=inputset_id,
+                             input=input)
 
     # Build the list of invariant options, and md5sum the key value strings.
     invariant_opts = []
     md5 = hashlib.md5()
     for proto_invariant_opt_name in sorted(proto.invariant_opts):
       proto_invariant_opt_value = proto.invariant_opts[proto_invariant_opt_name]
-      md5.update((
-          proto_invariant_opt_name + proto_invariant_opt_value).encode('utf-8'))
+      md5.update((proto_invariant_opt_name +
+                  proto_invariant_opt_value).encode('utf-8'))
       invariant_opt = TestcaseInvariantOpt.GetOrAdd(
           session, proto_invariant_opt_name, proto_invariant_opt_value)
       invariant_opts.append(invariant_opt)
@@ -196,30 +197,27 @@ class Testcase(db.Table):
     # Create invariant optset table entries.
     invariant_optset_id = md5.digest()
     for invariant_opt in invariant_opts:
-      labm8.sqlutil.GetOrAdd(
-          session,
-          TestcaseInvariantOptSet,
-          id=invariant_optset_id,
-          invariant_opt=invariant_opt)
+      labm8.sqlutil.GetOrAdd(session,
+                             TestcaseInvariantOptSet,
+                             id=invariant_optset_id,
+                             invariant_opt=invariant_opt)
 
     # Create a new testcase only if everything *except* the profiling events
     # are unique. This means that if a generator produced the same testcase
     # twice (on separate occasions), only the first is added to the datastore.
-    testcase = labm8.sqlutil.Get(
-        session,
-        cls,
-        toolchain=toolchain,
-        generator=generator,
-        harness=harness,
-        inputset_id=inputset_id,
-        invariant_optset_id=invariant_optset_id)
+    testcase = labm8.sqlutil.Get(session,
+                                 cls,
+                                 toolchain=toolchain,
+                                 generator=generator,
+                                 harness=harness,
+                                 inputset_id=inputset_id,
+                                 invariant_optset_id=invariant_optset_id)
     if not testcase:
-      testcase = cls(
-          toolchain=toolchain,
-          generator=generator,
-          harness=harness,
-          inputset_id=inputset_id,
-          invariant_optset_id=invariant_optset_id)
+      testcase = cls(toolchain=toolchain,
+                     generator=generator,
+                     harness=harness,
+                     inputset_id=inputset_id,
+                     invariant_optset_id=invariant_optset_id)
       session.add(testcase)
       # Add profiling events.
       for event in proto.profiling_events:
@@ -264,8 +262,9 @@ class TestcaseInputSet(db.Table):
 
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
-  input_id: int = sql.Column(
-      _TestcaseInputId, sql.ForeignKey('testcase_inputs.id'), nullable=False)
+  input_id: int = sql.Column(_TestcaseInputId,
+                             sql.ForeignKey('testcase_inputs.id'),
+                             nullable=False)
 
   # Relationships.
   testcases: typing.List[Testcase] = orm.relationship(
@@ -273,8 +272,9 @@ class TestcaseInputSet(db.Table):
   input: 'TestcaseInput' = orm.relationship('TestcaseInput')
 
   # Constraints.
-  __table_args__ = (sql.PrimaryKeyConstraint(
-      'id', 'input_id', name='unique_testcase_inputset'),)
+  __table_args__ = (sql.PrimaryKeyConstraint('id',
+                                             'input_id',
+                                             name='unique_testcase_inputset'),)
 
   def __repr__(self):
     hex_id = binascii.hexlify(self.id).decode('utf-8')
@@ -302,14 +302,15 @@ class TestcaseInput(db.Table):
       nullable=False)
 
   # Relationships.
-  name: 'TestcaseInputName' = orm.relationship(
-      'TestcaseInputName', back_populates='inputs')
-  value: 'TestcaseInputValue' = orm.relationship(
-      'TestcaseInputValue', back_populates='inputs')
+  name: 'TestcaseInputName' = orm.relationship('TestcaseInputName',
+                                               back_populates='inputs')
+  value: 'TestcaseInputValue' = orm.relationship('TestcaseInputValue',
+                                                 back_populates='inputs')
 
   # Constraints.
-  __table_args__ = (sql.UniqueConstraint(
-      'name_id', 'value_id', name='unique_testcase_input'),)
+  __table_args__ = (sql.UniqueConstraint('name_id',
+                                         'value_id',
+                                         name='unique_testcase_input'),)
 
   def __repr__(self):
     return f'{self.name}: {self.value}'
@@ -347,8 +348,8 @@ class TestcaseInputName(db.StringTable):
   __tablename__ = 'testcase_input_names'
 
   # Relationships.
-  inputs: typing.List[TestcaseInput] = orm.relationship(
-      TestcaseInput, back_populates='name')
+  inputs: typing.List[TestcaseInput] = orm.relationship(TestcaseInput,
+                                                        back_populates='name')
 
 
 class TestcaseInputValue(db.Table):
@@ -361,20 +362,20 @@ class TestcaseInputValue(db.Table):
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
       nullable=False,
       default=labdate.GetUtcMillisecondsNow)
-  md5: bytes = sql.Column(
-      sql.Binary(16).with_variant(mysql.BINARY(16), 'mysql'),
-      nullable=False,
-      index=True,
-      unique=True)
+  md5: bytes = sql.Column(sql.Binary(16).with_variant(mysql.BINARY(16),
+                                                      'mysql'),
+                          nullable=False,
+                          index=True,
+                          unique=True)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  string: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
-      nullable=False)
+  string: str = sql.Column(sql.UnicodeText().with_variant(
+      sql.UnicodeText(2**31), 'mysql'),
+                           nullable=False)
 
   # Relationships.
-  inputs: typing.List[TestcaseInput] = orm.relationship(
-      TestcaseInput, back_populates='value')
+  inputs: typing.List[TestcaseInput] = orm.relationship(TestcaseInput,
+                                                        back_populates='value')
 
   @classmethod
   def GetOrAdd(cls, session: db.session_t, string: str) -> 'TestcaseInputValue':
@@ -460,8 +461,9 @@ class TestcaseInvariantOpt(db.Table):
       'TestcaseInvariantOptValue', back_populates='invariant_opts')
 
   # Constraints.
-  __table_args__ = (sql.UniqueConstraint(
-      'name_id', 'value_id', name='unique_testcase_invariant_opt'),)
+  __table_args__ = (sql.UniqueConstraint('name_id',
+                                         'value_id',
+                                         name='unique_testcase_invariant_opt'),)
 
   def __repr__(self):
     return f'{self.name}: {self.value}'

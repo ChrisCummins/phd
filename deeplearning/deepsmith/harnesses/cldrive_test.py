@@ -65,8 +65,8 @@ def abc_harness(abc_harness_config) -> cldrive.CldriveHarness:
 def abc_run_testcases_request(abc_testcase,
                               abc_harness) -> harness_pb2.RunTestcasesRequest:
   """A test fixture which returns a RunTestcasesRequest for the abc_testcase."""
-  return harness_pb2.RunTestcasesRequest(
-      testbed=abc_harness.testbeds[0], testcases=[abc_testcase])
+  return harness_pb2.RunTestcasesRequest(testbed=abc_harness.testbeds[0],
+                                         testcases=[abc_testcase])
 
 
 # Unit tests.
@@ -77,28 +77,29 @@ def abc_run_testcases_request(abc_testcase,
 def test_CompileDriver_returned_path():
   """Test that output path is returned."""
   with tempfile.TemporaryDirectory() as d:
-    p = cldrive.CompileDriver(
-        "int main() {}", pathlib.Path(d) / 'exe', 0, 0, timeout_seconds=60)
+    p = cldrive.CompileDriver("int main() {}",
+                              pathlib.Path(d) / 'exe',
+                              0,
+                              0,
+                              timeout_seconds=60)
     assert p == pathlib.Path(d) / 'exe'
 
 
 def test_CompileDriver_null_c():
   """Test compile a C program which does nothing."""
   with tempfile.TemporaryDirectory() as d:
-    p = cldrive.CompileDriver(
-        "int main() {return 0;}",
-        pathlib.Path(d) / 'exe',
-        0,
-        0,
-        timeout_seconds=60)
+    p = cldrive.CompileDriver("int main() {return 0;}",
+                              pathlib.Path(d) / 'exe',
+                              0,
+                              0,
+                              timeout_seconds=60)
     assert p.is_file()
 
 
 def test_CompileDriver_hello_world_c():
   """Test compile a C program which prints "Hello, world!"."""
   with tempfile.TemporaryDirectory() as d:
-    p = cldrive.CompileDriver(
-        """
+    p = cldrive.CompileDriver("""
 #include <stdio.h>
 
 int main() {
@@ -106,10 +107,10 @@ int main() {
   return 0;
 }
 """,
-        pathlib.Path(d) / 'exe',
-        0,
-        0,
-        timeout_seconds=60)
+                              pathlib.Path(d) / 'exe',
+                              0,
+                              0,
+                              timeout_seconds=60)
     assert p.is_file()
     output = subprocess.check_output([p], universal_newlines=True)
     assert output == "Hello, world!\n"
@@ -118,8 +119,7 @@ int main() {
 def test_CompileDriver_opencl_header():
   """Test compile a C program which includes the OpenCL headers."""
   with tempfile.TemporaryDirectory() as d:
-    p = cldrive.CompileDriver(
-        """
+    p = cldrive.CompileDriver("""
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
@@ -127,10 +127,10 @@ def test_CompileDriver_opencl_header():
 #endif
 int main() {}
 """,
-        pathlib.Path(d) / 'exe',
-        0,
-        0,
-        timeout_seconds=60)
+                              pathlib.Path(d) / 'exe',
+                              0,
+                              0,
+                              timeout_seconds=60)
     assert p.is_file()
 
 
@@ -138,12 +138,11 @@ def test_CompileDriver_DriverCompilationError_syntax_error():
   """Test that DriverCompilationError is raised if code does not compile."""
   with tempfile.TemporaryDirectory() as d:
     with pytest.raises(cldrive.DriverCompilationError):
-      cldrive.CompileDriver(
-          "ina39lid s#yntax!",
-          pathlib.Path(d) / 'exe',
-          0,
-          0,
-          timeout_seconds=60)
+      cldrive.CompileDriver("ina39lid s#yntax!",
+                            pathlib.Path(d) / 'exe',
+                            0,
+                            0,
+                            timeout_seconds=60)
     assert not (pathlib.Path(d) / 'exe').is_file()
 
 
@@ -151,23 +150,21 @@ def test_CompileDriver_invalid_cflags():
   """Test that DriverCompilationError is raised if cflags are invalid."""
   with tempfile.TemporaryDirectory() as d:
     with pytest.raises(cldrive.DriverCompilationError):
-      cldrive.CompileDriver(
-          'int main() {}',
-          pathlib.Path(d) / 'exe',
-          0,
-          0,
-          cflags=['--not_a_real_flag'])
+      cldrive.CompileDriver('int main() {}',
+                            pathlib.Path(d) / 'exe',
+                            0,
+                            0,
+                            cflags=['--not_a_real_flag'])
 
 
 def test_CompileDriver_valid_cflags():
   """Test that additional cflags are passed to build."""
   with tempfile.TemporaryDirectory() as d:
-    cldrive.CompileDriver(
-        'MY_TYPE main() {}',
-        pathlib.Path(d) / 'exe',
-        0,
-        0,
-        cflags=['-DMY_TYPE=int'])
+    cldrive.CompileDriver('MY_TYPE main() {}',
+                          pathlib.Path(d) / 'exe',
+                          0,
+                          0,
+                          cflags=['-DMY_TYPE=int'])
     assert (pathlib.Path(d) / 'exe').is_file()
 
 
@@ -241,8 +238,11 @@ def test_MakeDriver_CompileDriver_hello_world():
       })
   driver = cldrive.MakeDriver(testcase, True)
   with tempfile.TemporaryDirectory() as d:
-    binary = cldrive.CompileDriver(
-        driver, pathlib.Path(d) / 'exe', 0, 0, timeout_seconds=60)
+    binary = cldrive.CompileDriver(driver,
+                                   pathlib.Path(d) / 'exe',
+                                   0,
+                                   0,
+                                   timeout_seconds=60)
     proc = oclgrind.Exec([str(binary)])
   assert '[cldrive] Platform:' in proc.stderr
   assert '[cldrive] Device:' in proc.stderr
@@ -374,8 +374,8 @@ def test_CldriveHarness_RunTestcases_no_testcases():
   config = harness_pb2.CldriveHarness()
   harness = cldrive.CldriveHarness(config)
   assert len(harness.testbeds)
-  req = harness_pb2.RunTestcasesRequest(
-      testbed=harness.testbeds[0], testcases=[])
+  req = harness_pb2.RunTestcasesRequest(testbed=harness.testbeds[0],
+                                        testcases=[])
   res = harness.RunTestcases(req, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
   assert not res.results

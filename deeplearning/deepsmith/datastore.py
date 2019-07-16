@@ -180,12 +180,11 @@ class DataStore(object):
           session,
           deeplearning.deepsmith.toolchain.Toolchain,
           name=request.testbed)
-      testbed = labm8.sqlutil.GetOrAdd(
-          session,
-          deeplearning.deepsmith.testbed.Testbed,
-          toolchain=toolchain,
-          name=request.testbed.toolchain,
-          version=request.testbed.version)
+      testbed = labm8.sqlutil.GetOrAdd(session,
+                                       deeplearning.deepsmith.testbed.Testbed,
+                                       toolchain=toolchain,
+                                       name=request.testbed.toolchain,
+                                       version=request.testbed.version)
       testbed_id = testbed.id
 
     if testbed_id and not request.include_testcases_with_results:

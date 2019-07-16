@@ -57,16 +57,16 @@ class Testbed(db.Table):
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the optset_id in the unique constraint and 4 bytes
   # for the toolchain_id.
-  name: str = sql.Column(
-      sql.String(4096).with_variant(sql.String((3072 - 16 - 6) // 3), 'mysql'),
-      nullable=False)
+  name: str = sql.Column(sql.String(4096).with_variant(
+      sql.String((3072 - 16 - 6) // 3), 'mysql'),
+                         nullable=False)
   optset_id: bytes = sql.Column(_TestbedOptSetId, nullable=False)
 
   # Relationships.
   toolchain: deeplearning.deepsmith.toolchain.Toolchain = orm.relationship(
       'Toolchain')
-  results: typing.List['Result'] = orm.relationship(
-      'Result', back_populates='testbed')
+  results: typing.List['Result'] = orm.relationship('Result',
+                                                    back_populates='testbed')
   pending_results: typing.List['PendingResult'] = orm.relationship(
       'PendingResult', back_populates='testbed')
   optset: typing.List['TestbedOpt'] = orm.relationship(
@@ -76,8 +76,10 @@ class Testbed(db.Table):
       secondaryjoin='TestbedOptSet.opt_id == TestbedOpt.id')
 
   # Constraints.
-  __table_args__ = (sql.UniqueConstraint(
-      'toolchain_id', 'name', 'optset_id', name='unique_testbed'),)
+  __table_args__ = (sql.UniqueConstraint('toolchain_id',
+                                         'name',
+                                         'optset_id',
+                                         name='unique_testbed'),)
 
   @property
   def opts(self) -> typing.Dict[str, str]:
@@ -169,8 +171,9 @@ class TestbedOptSet(db.Table):
 
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
-  opt_id: int = sql.Column(
-      _TestbedOptId, sql.ForeignKey('testbed_opts.id'), nullable=False)
+  opt_id: int = sql.Column(_TestbedOptId,
+                           sql.ForeignKey('testbed_opts.id'),
+                           nullable=False)
 
   # Relationships.
   testbeds: typing.List[Testbed] = orm.relationship(
@@ -178,8 +181,9 @@ class TestbedOptSet(db.Table):
   opt: 'TestbedOpt' = orm.relationship('TestbedOpt')
 
   # Constraints.
-  __table_args__ = (sql.PrimaryKeyConstraint(
-      'id', 'opt_id', name='unique_testbed_optset'),)
+  __table_args__ = (sql.PrimaryKeyConstraint('id',
+                                             'opt_id',
+                                             name='unique_testbed_optset'),)
 
   def __repr__(self):
     hex_id = binascii.hexlify(self.id).decode('utf-8')
@@ -205,14 +209,15 @@ class TestbedOpt(db.Table):
       nullable=False)
 
   # Relationships.
-  name: 'TestbedOptName' = orm.relationship(
-      'TestbedOptName', back_populates='opts')
-  value: 'TestbedOptValue' = orm.relationship(
-      'TestbedOptValue', back_populates='opts')
+  name: 'TestbedOptName' = orm.relationship('TestbedOptName',
+                                            back_populates='opts')
+  value: 'TestbedOptValue' = orm.relationship('TestbedOptValue',
+                                              back_populates='opts')
 
   # Constraints.
-  __table_args__ = (sql.UniqueConstraint(
-      'name_id', 'value_id', name='unique_testbed_opt'),)
+  __table_args__ = (sql.UniqueConstraint('name_id',
+                                         'value_id',
+                                         name='unique_testbed_opt'),)
 
   def __repr__(self):
     return f'{self.name}: {self.value}'
@@ -224,8 +229,8 @@ class TestbedOptName(db.StringTable):
   __tablename__ = 'testbed_opt_names'
 
   # Relationships.
-  opts: typing.List[TestbedOpt] = orm.relationship(
-      TestbedOpt, back_populates='name')
+  opts: typing.List[TestbedOpt] = orm.relationship(TestbedOpt,
+                                                   back_populates='name')
 
 
 class TestbedOptValue(db.StringTable):
@@ -234,5 +239,5 @@ class TestbedOptValue(db.StringTable):
   __tablename__ = 'testbed_opt_values'
 
   # Relationships.
-  opts: typing.List[TestbedOpt] = orm.relationship(
-      TestbedOpt, back_populates='value')
+  opts: typing.List[TestbedOpt] = orm.relationship(TestbedOpt,
+                                                   back_populates='value')

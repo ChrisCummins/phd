@@ -121,8 +121,8 @@ def abc_harness(abc_harness_config) -> cl_launcher.ClLauncherHarness:
 def abc_run_testcases_request(abc_testcase,
                               abc_harness) -> harness_pb2.RunTestcasesRequest:
   """A test fixture which returns a RunTestcasesRequest for the abc_testcase."""
-  return harness_pb2.RunTestcasesRequest(
-      testbed=abc_harness.testbeds[0], testcases=[abc_testcase])
+  return harness_pb2.RunTestcasesRequest(testbed=abc_harness.testbeds[0],
+                                         testcases=[abc_testcase])
 
 
 # Unit tests.
@@ -162,8 +162,8 @@ def test_ClLauncherHarness_RunTestcases_no_testcases():
   config = harness_pb2.ClLauncherHarness()
   harness = cl_launcher.ClLauncherHarness(config)
   assert len(harness.testbeds)
-  req = harness_pb2.RunTestcasesRequest(
-      testbed=harness.testbeds[0], testcases=[])
+  req = harness_pb2.RunTestcasesRequest(testbed=harness.testbeds[0],
+                                        testcases=[])
   res = harness.RunTestcases(req, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
   assert not res.results

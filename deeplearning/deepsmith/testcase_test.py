@@ -91,29 +91,29 @@ def test_Testcase_ToProto():
 
 
 def test_Testcase_GetOrAdd(session):
-  proto = deepsmith_pb2.Testcase(
-      toolchain='cpp',
-      generator=deepsmith_pb2.Generator(name='generator',),
-      harness=deepsmith_pb2.Harness(name='harness',),
-      inputs={
-          'src': 'void main() {}',
-          'data': '[1,2]'
-      },
-      invariant_opts={'config': 'opt'},
-      profiling_events=[
-          deepsmith_pb2.ProfilingEvent(
-              client='localhost',
-              type='generate',
-              duration_ms=100,
-              event_start_epoch_ms=1021312312,
-          ),
-          deepsmith_pb2.ProfilingEvent(
-              client='localhost',
-              type='foo',
-              duration_ms=100,
-              event_start_epoch_ms=1230812312,
-          ),
-      ])
+  proto = deepsmith_pb2.Testcase(toolchain='cpp',
+                                 generator=deepsmith_pb2.Generator(
+                                     name='generator',),
+                                 harness=deepsmith_pb2.Harness(name='harness',),
+                                 inputs={
+                                     'src': 'void main() {}',
+                                     'data': '[1,2]'
+                                 },
+                                 invariant_opts={'config': 'opt'},
+                                 profiling_events=[
+                                     deepsmith_pb2.ProfilingEvent(
+                                         client='localhost',
+                                         type='generate',
+                                         duration_ms=100,
+                                         event_start_epoch_ms=1021312312,
+                                     ),
+                                     deepsmith_pb2.ProfilingEvent(
+                                         client='localhost',
+                                         type='foo',
+                                         duration_ms=100,
+                                         event_start_epoch_ms=1230812312,
+                                     ),
+                                 ])
   testcase = deeplearning.deepsmith.testcase.Testcase.GetOrAdd(session, proto)
 
   # NOTE: We have to flush so that SQLAlchemy resolves all of the object IDs.
@@ -220,42 +220,42 @@ def test_duplicate_testcases_ignored(session):
 def _AddRandomNewTestcase(session):
   deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
       session,
-      deepsmith_pb2.Testcase(
-          toolchain=str(random.random()),
-          generator=deepsmith_pb2.Generator(
-              name=str(random.random()),
-              opts={
-                  str(random.random()): str(random.random()),
-                  str(random.random()): str(random.random()),
-                  str(random.random()): str(random.random()),
-              },
-          ),
-          harness=deepsmith_pb2.Harness(
-              name=str(random.random()),
-              opts={
-                  str(random.random()): str(random.random()),
-                  str(random.random()): str(random.random()),
-                  str(random.random()): str(random.random()),
-              },
-          ),
-          inputs={
-              str(random.random()): str(random.random()),
-              str(random.random()): str(random.random()),
-              str(random.random()): str(random.random()),
-          },
-          invariant_opts={
-              str(random.random()): str(random.random()),
-              str(random.random()): str(random.random()),
-              str(random.random()): str(random.random()),
-          },
-          profiling_events=[
-              deepsmith_pb2.ProfilingEvent(
-                  client=str(random.random()),
-                  type=str(random.random()),
-                  duration_ms=int(random.random() * 1000),
-                  event_start_epoch_ms=int(random.random() * 1000000),
-              ),
-          ]))
+      deepsmith_pb2.Testcase(toolchain=str(random.random()),
+                             generator=deepsmith_pb2.Generator(
+                                 name=str(random.random()),
+                                 opts={
+                                     str(random.random()): str(random.random()),
+                                     str(random.random()): str(random.random()),
+                                     str(random.random()): str(random.random()),
+                                 },
+                             ),
+                             harness=deepsmith_pb2.Harness(
+                                 name=str(random.random()),
+                                 opts={
+                                     str(random.random()): str(random.random()),
+                                     str(random.random()): str(random.random()),
+                                     str(random.random()): str(random.random()),
+                                 },
+                             ),
+                             inputs={
+                                 str(random.random()): str(random.random()),
+                                 str(random.random()): str(random.random()),
+                                 str(random.random()): str(random.random()),
+                             },
+                             invariant_opts={
+                                 str(random.random()): str(random.random()),
+                                 str(random.random()): str(random.random()),
+                                 str(random.random()): str(random.random()),
+                             },
+                             profiling_events=[
+                                 deepsmith_pb2.ProfilingEvent(
+                                     client=str(random.random()),
+                                     type=str(random.random()),
+                                     duration_ms=int(random.random() * 1000),
+                                     event_start_epoch_ms=int(
+                                         random.random() * 1000000),
+                                 ),
+                             ]))
   session.flush()
 
 
@@ -266,42 +266,41 @@ def test_benchmark_Testcase_GetOrAdd_new(session, benchmark):
 def _AddExistingTestcase(session):
   deeplearning.deepsmith.testcase.Testcase.GetOrAdd(
       session,
-      deepsmith_pb2.Testcase(
-          toolchain='cpp',
-          generator=deepsmith_pb2.Generator(
-              name='name',
-              opts={
-                  'a': 'a',
-                  'b': 'b',
-                  'c': 'c',
-              },
-          ),
-          harness=deepsmith_pb2.Harness(
-              name='name',
-              opts={
-                  'a': 'a',
-                  'b': 'b',
-                  'c': 'c',
-              },
-          ),
-          inputs={
-              'src': 'void main() {}',
-              'data': '[1,2]',
-              'copt': '-DNDEBUG',
-          },
-          invariant_opts={
-              'config': 'opt',
-              'working_dir': '/tmp',
-              'units': 'nanoseconds',
-          },
-          profiling_events=[
-              deepsmith_pb2.ProfilingEvent(
-                  client='localhost',
-                  type='generate',
-                  duration_ms=100,
-                  event_start_epoch_ms=101231231,
-              ),
-          ]))
+      deepsmith_pb2.Testcase(toolchain='cpp',
+                             generator=deepsmith_pb2.Generator(
+                                 name='name',
+                                 opts={
+                                     'a': 'a',
+                                     'b': 'b',
+                                     'c': 'c',
+                                 },
+                             ),
+                             harness=deepsmith_pb2.Harness(
+                                 name='name',
+                                 opts={
+                                     'a': 'a',
+                                     'b': 'b',
+                                     'c': 'c',
+                                 },
+                             ),
+                             inputs={
+                                 'src': 'void main() {}',
+                                 'data': '[1,2]',
+                                 'copt': '-DNDEBUG',
+                             },
+                             invariant_opts={
+                                 'config': 'opt',
+                                 'working_dir': '/tmp',
+                                 'units': 'nanoseconds',
+                             },
+                             profiling_events=[
+                                 deepsmith_pb2.ProfilingEvent(
+                                     client='localhost',
+                                     type='generate',
+                                     duration_ms=100,
+                                     event_start_epoch_ms=101231231,
+                                 ),
+                             ]))
   session.flush()
 
 

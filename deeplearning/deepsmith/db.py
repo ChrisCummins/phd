@@ -193,10 +193,10 @@ class StringTable(Table):
       nullable=False,
       default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072 bytes, with 3 bytes per character.
-  string: str = sql.Column(
-      sql.String(4096).with_variant(sql.String(3072 // 3), 'mysql'),
-      nullable=False,
-      unique=True)
+  string: str = sql.Column(sql.String(4096).with_variant(
+      sql.String(3072 // 3), 'mysql'),
+                           nullable=False,
+                           unique=True)
 
   # The maximum number of characters in the string column.
   maxlen = string.type.length
@@ -284,10 +284,10 @@ def MakeEngine(config: datastore_pb2.DataStore) -> sql.engine.Engine:
     if '`' in database:
       raise InvalidDatabaseConfig('MySQL database cannot have backtick in name')
     engine = sql.create_engine(url_base)
-    query = engine.execute(
-        sql.text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
-                 'SCHEMA_NAME = :database'),
-        database=database)
+    query = engine.execute(sql.text(
+        'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
+        'SCHEMA_NAME = :database'),
+                           database=database)
     if not query.first():
       if config.create_database_if_not_exist:
         # We can't use sql.text() escaping here becuase it uses singlequotes

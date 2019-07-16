@@ -30,20 +30,18 @@ FLAGS = app.FLAGS
 @pytest.fixture(scope='function')
 def abc_config() -> generator_pb2.ClsmithGenerator:
   return generator_pb2.ClsmithGenerator(testcase_skeleton=[
-      deepsmith_pb2.Testcase(
-          toolchain='opencl',
-          inputs={
-              'gsize': '1,1,1',
-              'lsize': '1,1,1',
-          },
-          harness=deepsmith_pb2.Harness(name='cl_launcher')),
-      deepsmith_pb2.Testcase(
-          toolchain='opencl',
-          inputs={
-              'gsize': '128,16,1',
-              'lsize': '8,4,1',
-          },
-          harness=deepsmith_pb2.Harness(name='cl_launcher')),
+      deepsmith_pb2.Testcase(toolchain='opencl',
+                             inputs={
+                                 'gsize': '1,1,1',
+                                 'lsize': '1,1,1',
+                             },
+                             harness=deepsmith_pb2.Harness(name='cl_launcher')),
+      deepsmith_pb2.Testcase(toolchain='opencl',
+                             inputs={
+                                 'gsize': '128,16,1',
+                                 'lsize': '8,4,1',
+                             },
+                             harness=deepsmith_pb2.Harness(name='cl_launcher')),
   ])
 
 

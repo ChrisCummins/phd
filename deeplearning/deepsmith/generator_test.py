@@ -50,11 +50,11 @@ def test_Generator_ToProto():
 
 
 def test_Generator_GetOrAdd(session):
-  proto = deepsmith_pb2.Generator(
-      name='name', opts={
-          'version': '1.0.0',
-          'build': 'debug+assert',
-      })
+  proto = deepsmith_pb2.Generator(name='name',
+                                  opts={
+                                      'version': '1.0.0',
+                                      'build': 'debug+assert',
+                                  })
   generator = deeplearning.deepsmith.generator.Generator.GetOrAdd(
       session, proto)
 

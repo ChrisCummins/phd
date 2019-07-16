@@ -50,11 +50,11 @@ def test_Harness_ToProto():
 
 
 def test_Harness_GetOrAdd(session):
-  proto = deepsmith_pb2.Harness(
-      name='name', opts={
-          'version': '1.0.0',
-          'build': 'debug+assert',
-      })
+  proto = deepsmith_pb2.Harness(name='name',
+                                opts={
+                                    'version': '1.0.0',
+                                    'build': 'debug+assert',
+                                })
   harness = deeplearning.deepsmith.harness.Harness.GetOrAdd(session, proto)
 
   assert session.query(

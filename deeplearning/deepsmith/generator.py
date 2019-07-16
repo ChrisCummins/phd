@@ -47,9 +47,9 @@ class Generator(db.Table):
       default=labdate.GetUtcMillisecondsNow)
   # MySQL maximum key length is 3072, with 3 bytes per character. We must
   # preserve 16 bytes for the unique constraint.
-  name: str = sql.Column(
-      sql.String(4096).with_variant(sql.String((3072 - 16) // 3), 'mysql'),
-      nullable=False)
+  name: str = sql.Column(sql.String(4096).with_variant(
+      sql.String((3072 - 16) // 3), 'mysql'),
+                         nullable=False)
   optset_id: bytes = sql.Column(_GeneratorOptSetId, nullable=False)
 
   # Relationships.
@@ -62,8 +62,9 @@ class Generator(db.Table):
       secondaryjoin='GeneratorOptSet.opt_id == GeneratorOpt.id')
 
   # Constraints.
-  __table_args__ = (sql.UniqueConstraint(
-      'name', 'optset_id', name='unique_generator'),)
+  __table_args__ = (sql.UniqueConstraint('name',
+                                         'optset_id',
+                                         name='unique_generator'),)
 
   @property
   def opts(self) -> typing.Dict[str, str]:
@@ -138,8 +139,9 @@ class GeneratorOptSet(db.Table):
 
   # Columns.
   id: bytes = sql.Column(id_t, nullable=False)
-  opt_id: int = sql.Column(
-      _GeneratorOptId, sql.ForeignKey('generator_opts.id'), nullable=False)
+  opt_id: int = sql.Column(_GeneratorOptId,
+                           sql.ForeignKey('generator_opts.id'),
+                           nullable=False)
 
   # Relationships.
   generators: typing.List[Generator] = orm.relationship(
@@ -147,8 +149,9 @@ class GeneratorOptSet(db.Table):
   opt: 'GeneratorOpt' = orm.relationship('GeneratorOpt')
 
   # Constraints.
-  __table_args__ = (sql.PrimaryKeyConstraint(
-      'id', 'opt_id', name='unique_generator_optset'),)
+  __table_args__ = (sql.PrimaryKeyConstraint('id',
+                                             'opt_id',
+                                             name='unique_generator_optset'),)
 
   def __repr__(self):
     hex_id = binascii.hexlify(self.id).decode('utf-8')
@@ -176,14 +179,15 @@ class GeneratorOpt(db.Table):
       nullable=False)
 
   # Relationships.
-  name: 'GeneratorOptName' = orm.relationship(
-      'GeneratorOptName', back_populates='opts')
-  value: 'GeneratorOptValue' = orm.relationship(
-      'GeneratorOptValue', back_populates='opts')
+  name: 'GeneratorOptName' = orm.relationship('GeneratorOptName',
+                                              back_populates='opts')
+  value: 'GeneratorOptValue' = orm.relationship('GeneratorOptValue',
+                                                back_populates='opts')
 
   # Constraints.
-  __table_args__ = (sql.UniqueConstraint(
-      'name_id', 'value_id', name='unique_generator_opt'),)
+  __table_args__ = (sql.UniqueConstraint('name_id',
+                                         'value_id',
+                                         name='unique_generator_opt'),)
 
   def __repr__(self):
     return f'{self.name}: {self.value}'
@@ -195,8 +199,8 @@ class GeneratorOptName(db.StringTable):
   __tablename__ = 'generator_opt_names'
 
   # Relationships.
-  opts: typing.List[GeneratorOpt] = orm.relationship(
-      GeneratorOpt, back_populates='name')
+  opts: typing.List[GeneratorOpt] = orm.relationship(GeneratorOpt,
+                                                     back_populates='name')
 
 
 class GeneratorOptValue(db.StringTable):
@@ -205,5 +209,5 @@ class GeneratorOptValue(db.StringTable):
   __tablename__ = 'generator_opt_values'
 
   # Relationships.
-  opts: typing.List[GeneratorOpt] = orm.relationship(
-      GeneratorOpt, back_populates='value')
+  opts: typing.List[GeneratorOpt] = orm.relationship(GeneratorOpt,
+                                                     back_populates='value')
