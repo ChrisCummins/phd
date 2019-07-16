@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/ChrisCummins/phd/compilers/toy/lexer"
+	"github.com/golang/glog"
 )
 
 func check(e error) {
@@ -43,4 +44,6 @@ func main() {
 	for ts.Next() {
 		fmt.Println(ts.Value())
 	}
+
+	glog.Flush()
 }

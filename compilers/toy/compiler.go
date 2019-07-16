@@ -8,10 +8,13 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
 func check(e error) {
 	if e != nil {
+		glog.Flush()
 		fmt.Fprintf(os.Stderr, "fatal: %s", e)
 		os.Exit(1)
 	}
@@ -48,4 +51,6 @@ func main() {
 
 	err = ioutil.WriteFile(outputPath, []byte(asm), 0644)
 	check(err)
+
+	glog.Flush()
 }

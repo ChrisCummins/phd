@@ -5,7 +5,10 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/ChrisCummins/phd/compilers/toy/util/lex",
     visibility = ["//visibility:private"],
-    deps = ["//compilers/toy/lexer:go_default_library"],
+    deps = [
+        "//compilers/toy/lexer:go_default_library",
+        "@com_github_golang_glog//:go_default_library",
+    ],
 )
 
 go_binary(

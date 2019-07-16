@@ -11,6 +11,7 @@ import (
 
 	"github.com/ChrisCummins/phd/compilers/toy/lexer"
 	"github.com/ChrisCummins/phd/compilers/toy/parser"
+	"github.com/golang/glog"
 )
 
 func check(e error) {
@@ -45,4 +46,6 @@ func main() {
 	check(err)
 
 	fmt.Println(ast)
+
+	glog.Flush()
 }

@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//compilers/toy/lexer:go_default_library",
         "//compilers/toy/parser:go_default_library",
+        "@com_github_golang_glog//:go_default_library",
     ],
 )
 
