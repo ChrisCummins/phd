@@ -41,22 +41,22 @@ func lexStartState(lexer *Lexer) stateFunction {
 			if identifierLookAhead(lexer, "int") {
 				return lexIdentifier
 			}
-			return lexIntKeyword
+			return emit(3, token.IntKeywordToken, lexStartState, lexer)
 		} else if strings.HasPrefix(candidateToken, "return") {
 			if identifierLookAhead(lexer, "return") {
 				return lexIdentifier
 			}
-			return lexReturnKeyword
+			return emit(len("return"), token.ReturnKeywordToken, lexStartState, lexer)
 		} else if strings.HasPrefix(candidateToken, "&&") {
-			return lexAnd
+			return emit(2, token.AndToken, lexStartState, lexer)
 		} else if strings.HasPrefix(candidateToken, "||") {
-			return lexOr
+			return emit(2, token.OrToken, lexStartState, lexer)
 		} else if strings.HasPrefix(candidateToken, "!=") {
-			return lexNotEqual
+			return emit(2, token.NotEqualToken, lexStartState, lexer)
 		} else if strings.HasPrefix(candidateToken, "<=") {
-			return lexLessThanOrEqual
+			return emit(2, token.LessThanOrEqualToken, lexStartState, lexer)
 		} else if strings.HasPrefix(candidateToken, ">=") {
-			return lexGreaterThanOrEqual
+			return emit(2, token.GreaterThanOrEqualToken, lexStartState, lexer)
 		}
 
 		if lexer.peek() == eofRune {
@@ -67,31 +67,31 @@ func lexStartState(lexer *Lexer) stateFunction {
 		// current character, the other looks at next(). Remove one of these.
 		switch r, _ := utf8.DecodeRuneInString(lexer.input[lexer.position:]); {
 		case r == '{':
-			return lexOpenBrace
+			return emit(1, token.OpenBraceToken, lexStartState, lexer)
 		case r == '}':
-			return lexCloseBrace
+			return emit(1, token.CloseBraceToken, lexStartState, lexer)
 		case r == '(':
-			return lexOpenParenthesis
+			return emit(1, token.OpenParenthesisToken, lexStartState, lexer)
 		case r == ')':
-			return lexCloseParenthesis
+			return emit(1, token.CloseParenthesisToken, lexStartState, lexer)
 		case r == ';':
-			return lexSemicolon
+			return emit(1, token.SemicolonToken, lexStartState, lexer)
 		case r == '!':
-			return lexLogicalNegation
+			return emit(1, token.LogicalNegationToken, lexStartState, lexer)
 		case r == '~':
-			return lexBitwiseComplement
+			return emit(1, token.BitwiseComplementToken, lexStartState, lexer)
 		case r == '-':
-			return lexNegation
+			return emit(1, token.NegationToken, lexStartState, lexer)
 		case r == '+':
-			return lexAddition
+			return emit(1, token.AdditionToken, lexStartState, lexer)
 		case r == '*':
-			return lexMultiplication
+			return emit(1, token.MultiplicationToken, lexStartState, lexer)
 		case r == '/':
-			return lexDivision
+			return emit(1, token.DivisionToken, lexStartState, lexer)
 		case r == '<':
-			return lexLessThan
+			return emit(1, token.LessThanToken, lexStartState, lexer)
 		case r == '>':
-			return lexGreaterThan
+			return emit(1, token.GreaterThanToken, lexStartState, lexer)
 		}
 
 		switch r := lexer.next(); {
@@ -108,132 +108,6 @@ func lexStartState(lexer *Lexer) stateFunction {
 		}
 	}
 	panic("unreachable!")
-}
-
-func lexOpenBrace(lexer *Lexer) stateFunction {
-	lexer.position += len("{")
-	lexer.emit(token.OpenBraceToken)
-	return lexStartState
-}
-
-func lexCloseBrace(lexer *Lexer) stateFunction {
-	lexer.position += len("}")
-	lexer.emit(token.CloseBraceToken)
-	return lexStartState
-}
-
-func lexOpenParenthesis(lexer *Lexer) stateFunction {
-	lexer.position += len("(")
-	lexer.emit(token.OpenParenthesisToken)
-	return lexStartState
-}
-
-func lexCloseParenthesis(lexer *Lexer) stateFunction {
-	lexer.position += len(")")
-	lexer.emit(token.CloseParenthesisToken)
-	return lexStartState
-}
-
-func lexSemicolon(lexer *Lexer) stateFunction {
-	lexer.position += len(";")
-	lexer.emit(token.SemicolonToken)
-	return lexStartState
-}
-
-func lexLogicalNegation(lexer *Lexer) stateFunction {
-	lexer.position += len("!")
-	lexer.emit(token.LogicalNegationToken)
-	return lexStartState
-}
-
-func lexBitwiseComplement(lexer *Lexer) stateFunction {
-	lexer.position += len("~")
-	lexer.emit(token.BitwiseComplementToken)
-	return lexStartState
-}
-
-func lexNegation(lexer *Lexer) stateFunction {
-	lexer.position += len("-")
-	lexer.emit(token.NegationToken)
-	return lexStartState
-}
-
-func lexAddition(lexer *Lexer) stateFunction {
-	lexer.position += len("+")
-	lexer.emit(token.AdditionToken)
-	return lexStartState
-}
-
-func lexMultiplication(lexer *Lexer) stateFunction {
-	lexer.position += len("*")
-	lexer.emit(token.MultiplicationToken)
-	return lexStartState
-}
-
-func lexDivision(lexer *Lexer) stateFunction {
-	lexer.position += len("-")
-	lexer.emit(token.DivisionToken)
-	return lexStartState
-}
-
-func lexIntKeyword(lexer *Lexer) stateFunction {
-	lexer.position += len("int")
-	lexer.emit(token.IntKeywordToken)
-	return lexStartState
-}
-
-func lexAnd(lexer *Lexer) stateFunction {
-	lexer.position += len("&&")
-	lexer.emit(token.AndToken)
-	return lexStartState
-}
-
-func lexOr(lexer *Lexer) stateFunction {
-	lexer.position += len("||")
-	lexer.emit(token.OrToken)
-	return lexStartState
-}
-
-func lexEqual(lexer *Lexer) stateFunction {
-	lexer.position += len("==")
-	lexer.emit(token.EqualToken)
-	return lexStartState
-}
-
-func lexNotEqual(lexer *Lexer) stateFunction {
-	lexer.position += len("!=")
-	lexer.emit(token.NotEqualToken)
-	return lexStartState
-}
-
-func lexLessThan(lexer *Lexer) stateFunction {
-	lexer.position += len("<")
-	lexer.emit(token.LessThanToken)
-	return lexStartState
-}
-
-func lexLessThanOrEqual(lexer *Lexer) stateFunction {
-	lexer.position += len("<=")
-	lexer.emit(token.LessThanOrEqualToken)
-	return lexStartState
-}
-
-func lexGreaterThan(lexer *Lexer) stateFunction {
-	lexer.position += len("<")
-	lexer.emit(token.GreaterThanToken)
-	return lexStartState
-}
-
-func lexGreaterThanOrEqual(lexer *Lexer) stateFunction {
-	lexer.position += len("<=")
-	lexer.emit(token.GreaterThanOrEqualToken)
-	return lexStartState
-}
-
-func lexReturnKeyword(lexer *Lexer) stateFunction {
-	lexer.position += len("return")
-	lexer.emit(token.ReturnKeywordToken)
-	return lexStartState
 }
 
 func lexNumber(lexer *Lexer) stateFunction {
@@ -285,4 +159,13 @@ func lexIdentifier(lexer *Lexer) stateFunction {
 
 	lexer.emit(token.IdentifierToken)
 	return lexStartState
+}
+
+func emit(len int, t token.TokenType, nextState stateFunction,
+	lexer *Lexer) func(lexer *Lexer) stateFunction {
+	return func(lexer *Lexer) stateFunction {
+		lexer.position += len
+		lexer.emit(t)
+		return nextState
+	}
 }
