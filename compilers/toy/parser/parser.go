@@ -159,7 +159,7 @@ func ParseEqualityExpression(ts token.TokenStream) (ast.Expression, error) {
 	}
 
 	for {
-		if ts.Peek().Type != token.EqualToken ||
+		if ts.Peek().Type != token.EqualToken &&
 			ts.Peek().Type != token.NotEqualToken {
 			break
 		}
@@ -190,9 +190,9 @@ func ParseRelationalExpression(ts token.TokenStream) (ast.Expression, error) {
 	}
 
 	for {
-		if ts.Peek().Type != token.LessThanToken ||
-			ts.Peek().Type != token.GreaterThanToken ||
-			ts.Peek().Type != token.LessThanOrEqualToken ||
+		if ts.Peek().Type != token.LessThanToken &&
+			ts.Peek().Type != token.GreaterThanToken &&
+			ts.Peek().Type != token.LessThanOrEqualToken &&
 			ts.Peek().Type != token.GreaterThanOrEqualToken {
 			break
 		}
@@ -370,6 +370,10 @@ func isBinaryOp(t token.Token) bool {
 	case token.LessThanToken:
 		return true
 	case token.LessThanOrEqualToken:
+		return true
+	case token.EqualToken:
+		return true
+	case token.NotEqualToken:
 		return true
 	default:
 		return false

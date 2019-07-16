@@ -57,6 +57,10 @@ func lexStartState(lexer *Lexer) stateFunction {
 			return emit(2, token.LessThanOrEqualToken, lexStartState, lexer)
 		} else if strings.HasPrefix(candidateToken, ">=") {
 			return emit(2, token.GreaterThanOrEqualToken, lexStartState, lexer)
+		} else if strings.HasPrefix(candidateToken, "==") {
+			return emit(2, token.EqualToken, lexStartState, lexer)
+		} else if strings.HasPrefix(candidateToken, "!=") {
+			return emit(2, token.NotEqualToken, lexStartState, lexer)
 		}
 
 		if lexer.peek() == eofRune {
