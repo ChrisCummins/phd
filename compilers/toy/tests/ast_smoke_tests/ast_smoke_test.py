@@ -12,7 +12,6 @@ from labm8 import bazelutil
 from labm8 import fs
 from labm8 import test
 
-
 FLAGS = smoke_test_flags.FLAGS
 
 _TEST_DATA_ROOT = bazelutil.DataPath('phd/compilers/toy/test_data')
@@ -42,6 +41,8 @@ def TestStage(stage: int):
                              abspaths=True)
 
   for test_file in valid_files:
+    if pathlib.Path(test_file).name.startswith('skip_on_failure'):
+      continue
     PrintAST(test_file)
 
   for test_file in invalid_files:
