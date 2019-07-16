@@ -32,6 +32,8 @@ from labm8 import fs
 FLAGS = app.FLAGS
 
 app.DEFINE_list('target', [], 'The bazel target(s) to export.')
+app.DEFINE_list('extra_file', [],
+                'A list of relative paths to extra files to export.')
 app.DEFINE_string(
     'targets_list', None, 'Path to a file containing a list of bazel targets. '
     'Supersedes --target flag.')
@@ -40,14 +42,6 @@ app.DEFINE_string('destination', '/tmp/phd/tools/source_tree/export',
 app.DEFINE_string('github_repo', None, 'Name of a GitHub repo to export to.')
 app.DEFINE_boolean('github_repo_create_private', True,
                    'Whether to create new GitHub repos as private.')
-app.DEFINE_input_path(
-    'master_readme', None,
-    'The relative path to a README file that will be exported to the root'
-    'of the subtree, replacing the existing README.')
-app.DEFINE_input_path(
-    'master_license', None,
-    'The relative path to a README file that will be exported to the root'
-    'of the subtree.')
 
 BAZEL_WRAPPER = bazelutil.DataPath(
     'phd/tools/source_tree/data/bazel_wrapper.py')
@@ -57,9 +51,13 @@ BAZEL_WRAPPER = bazelutil.DataPath(
 ALWAYS_INCLUDED_FILES = [
     '.bazelrc',  # Not strictly required, but provides consistency.
     'configure',  # Needed to generate config proto.
+    'BUILD',  # Top-level BUILD file is always needed.
     'WORKSPACE',
     'README.md',
     'tools/bzl/*',  # Implicit dependency of WORKSPACE file.
+    'tools/BUILD',  # Needed by //tools/bzl:maven_jar.bzl.
+    'tools/download_file.py',  # Needed by //tools/bzl:maven_jar.bzl.
+    'tools/util.py',  # Needed by //tools:download_file.py.
     'third_party/*.BUILD',  # Implicit dependencies of WORKSPACE file.
     'third_party/py/tensorflow/BUILD.in',  # Needed by ./configure
     'tools/workspace_status.sh',  # Needed by .bazelrc
@@ -224,14 +222,14 @@ def GetPythonRequirementsForTargetOrDie(
   return list(sorted(set(needed)))
 
 
-def ExportTargetOrDie(target: str, destination: pathlib.Path):
+def ExportTargetOrDie(source: pathlib.Path, destination: pathlib.Path,
+                      target: str):
   """Export the source tree of the given target to the destination directory."""
-  repo_root = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
   destination.mkdir(parents=True, exist_ok=True)
 
   # Copy each source tree file to its relative location in the destination tree.
-  for path in GetAllSourceTreeFilesOrDie(target, repo_root):
-    relpath = os.path.relpath(path, repo_root)
+  for path in GetAllSourceTreeFilesOrDie(target, source):
+    relpath = os.path.relpath(path, source)
     dst = destination / relpath
     dst.parent.mkdir(parents=True, exist_ok=True)
     print(relpath)
@@ -247,7 +245,7 @@ def ExportTargetOrDie(target: str, destination: pathlib.Path):
   else:
     requirements = []
 
-  requirements += GetPythonRequirementsForTargetOrDie(target, repo_root)
+  requirements += GetPythonRequirementsForTargetOrDie(target, source)
   requirements = sorted(set(requirements))
   with open(destination / 'tools/requirements.txt', 'w') as f:
     for r in requirements:
@@ -312,6 +310,17 @@ Begin original README:
     f.write(readme)
 
 
+def CopyFilesToDestinationOrDie(source: pathlib.Path, destination: pathlib.Path,
+                                files_to_copy: typing.List[str]) -> None:
+  for file_to_copy in files_to_copy:
+    src_path = source / file_to_copy
+    dst_path = destination / file_to_copy
+    if not src_path.is_file():
+      app.FatalWithoutStackTrace("File `%s` not found", file_to_copy)
+    print(file_to_copy)
+    shutil.copy(src_path, dst_path)
+
+
 @contextlib.contextmanager
 def DestinationDirectoryFromFlags() -> pathlib.Path:
   """Get the export destination."""
@@ -343,17 +352,15 @@ def GetOrCreateRepoOrDie(github: github_lib.Github) -> github_lib.Repository:
 def ExportToDirectoryOrDie(destination: pathlib.Path,
                            exported_targets: typing.List[str]) -> None:
   """Export the requested targets to the destination directory."""
+  source = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
+
   for target in FLAGS.target:
-    ExportTargetOrDie(target, destination)
+    ExportTargetOrDie(source, destination, target)
 
   CreateBazelWrapperForExports(destination, exported_targets)
   UpdateReadme(destination, exported_targets)
 
-  if FLAGS.master_readme:
-    (destination / 'README.md').unlink()
-    shutil.copy(FLAGS.master_readme, destination / FLAGS.master_readme.name)
-  if FLAGS.master_license:
-    shutil.copy(FLAGS.master_license, destination / FLAGS.master_license.name)
+  CopyFilesToDestinationOrDie(source, destination, FLAGS.extra_file)
 
 
 def CloneRepoToDestinationOrDie(repo: github_lib.Repository,

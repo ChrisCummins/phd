@@ -4,6 +4,7 @@ py_binary(
     name = "export_source_tree",
     srcs = ["export_source_tree.py"],
     data = ["//tools/source_tree/data:bazel_wrapper"],
+    visibility = ["//visibility:public"],
     deps = [
         "//:getconfig",
         "//datasets/github:api",
