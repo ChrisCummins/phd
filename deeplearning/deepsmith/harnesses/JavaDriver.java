@@ -437,7 +437,7 @@ public class JavaDriver {
     Method[] methods = parentClass.getDeclaredMethods();
     if (methods.length == 0) {
       throw new InvalidDriverInputException("Class contains no methods, need one");
-    } else if (methods.length >= 1) {
+    } else if (methods.length > 1) {
       throw new InvalidDriverInputException(
           String.format("Class contains %d methods, need one", methods.length));
     }
