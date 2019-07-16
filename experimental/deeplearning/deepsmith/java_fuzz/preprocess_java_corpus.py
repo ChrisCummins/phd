@@ -1,12 +1,11 @@
 """Preprocess an exported database of Java methods."""
+import hashlib
 import multiprocessing
 import pathlib
 import subprocess
 import sys
-import time
-
-import hashlib
 import threading
+import time
 import typing
 from concurrent import futures
 
@@ -19,6 +18,7 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
 from labm8 import pbutil
+
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
@@ -35,7 +35,7 @@ app.DEFINE_integer('preprocess_worker_threads', multiprocessing.cpu_count(),
                    "The number of preprocessor threads.")
 
 JAVA_PREPROCESSOR = bazelutil.DataPath(
-    'phd/experimental/deeplearning/deepsmith/java_fuzz/JavaPreprocessor')
+    'phd/deeplearning/clgen/preprocessors/JavaPreprocessor')
 
 
 def PreprocessStringList(
