@@ -7,7 +7,7 @@ targets=/tmp/targets.txt
 bazel query '//deeplearning/clgen/...' > "$targets"
 
 bazel run //tools/source_tree:export_source_tree -- \
-    --target=$(tr '\n' ',' < $targets | sed 's/,$//') \
+    --targets=$(tr '\n' ',' < $targets | sed 's/,$//') \
     --destination=$destination
 
 # cd $destination

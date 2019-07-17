@@ -13,7 +13,7 @@ cleanup() {
 trap cleanup EXIT
 
 tools/source_tree/export_source_tree \
-    --target=//tools/source_tree:export_source_tree \
+    --targets=//tools/source_tree:export_source_tree \
     --destination="$TMPDIR"
 
 find "$TMPDIR" -type f

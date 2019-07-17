@@ -8,10 +8,13 @@ I feel like there's a 90-10 rule that applies to this repo: 90% of people who
 checkout this repo only need 10% of the code contained within it.
 This script provides a way to export that 10%.
 """
+import os
+
 import contextlib
 import datetime
+import git
+import github as github_lib
 import glob
-import os
 import pathlib
 import re
 import shutil
@@ -20,28 +23,22 @@ import subprocess
 import tempfile
 import typing
 
-import git
-import github as github_lib
-
 import getconfig
 from datasets.github import api
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 
-
 FLAGS = app.FLAGS
 
-app.DEFINE_list('target', [], 'The bazel target(s) to export.')
-app.DEFINE_list('extra_file', [],
-                'A list of additional files to export. Each element in the '
-                'list is either a relative path to export, or a mapping of '
-                'relative paths in the form <src>:<dst>. E.g. '
-                '`foo.py:bar/baz.txt` will export file `foo.py` to '
-                'destination `bar/baz.txt`.')
-app.DEFINE_string(
-    'targets_list', None, 'Path to a file containing a list of bazel targets. '
-    'Supersedes --target flag.')
+app.DEFINE_list('targets', [], 'The bazel target(s) to export.')
+app.DEFINE_list(
+    'extra_files', [],
+    'A list of additional files to export. Each element in the '
+    'list is either a relative path to export, or a mapping of '
+    'relative paths in the form <src>:<dst>. E.g. '
+    '`foo.py:bar/baz.txt` will export file `foo.py` to '
+    'destination `bar/baz.txt`.')
 app.DEFINE_string('destination', '/tmp/phd/tools/source_tree/export',
                   'The destination directory to export to.')
 app.DEFINE_string('github_repo', None, 'Name of a GitHub repo to export to.')
@@ -194,63 +191,62 @@ def GetAllSourceTreeFilesOrDie(
 
 
 def GetPythonRequirementsForTargetOrDie(
-    target: str, source_root: pathlib.Path) -> typing.List[str]:
+    targets: typing.List[str], source_root: pathlib.Path) -> typing.List[str]:
   """Get the subset of requirements.txt which is needed for a target."""
+  # The set of bazel dependencies for all targets.
+  dependencies = set()
   with fs.chdir(source_root):
-    bazel = BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
-    grep = subprocess.Popen(['grep', '^@pypi__'],
-                            stdout=subprocess.PIPE,
-                            stdin=bazel.stdout,
-                            universal_newlines=True)
+    for target in targets:
+      bazel = BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
+      grep = subprocess.Popen(['grep', '^@pypi__'],
+                              stdout=subprocess.PIPE,
+                              stdin=bazel.stdout,
+                              universal_newlines=True)
 
-  stdout, _ = grep.communicate()
-  assert not bazel.returncode
+    stdout, _ = grep.communicate()
+    assert not bazel.returncode
+    output = stdout.rstrip()
+    if output:
+      dependencies = dependencies.union(set(output.split('\n')))
 
   with open(source_root / 'tools/requirements.txt') as f:
-    requirements = set(f.readlines())
-
-  output = stdout.rstrip()
-  if not output:
-    return []
+    all_requirements = set(f.readlines())
 
   needed = []
-  for line in output.split('\n'):
+  for dependency in dependencies:
     # This is a pretty hacky approach that tries to match the package component
     # of the generated @pypi__<package>_<vesion> package to the name as it
     # appears in tools/requirements.txt.
-    m = re.match(r'^@pypi__([^_]+)_', line)
+    m = re.match(r'^@pypi__([^_]+)_', dependency)
     assert m.group(1)
-    for r in requirements:
+    for r in all_requirements:
       if r.lower().startswith(m.group(1).lower()):
         needed.append(r)
 
   return list(sorted(set(needed)))
 
 
-def ExportTargetOrDie(source: pathlib.Path, destination: pathlib.Path,
-                      target: str):
+def ExportTargetsOrDie(source: pathlib.Path, destination: pathlib.Path,
+                       targets: typing.List[str]):
   """Export the source tree of the given target to the destination directory."""
   destination.mkdir(parents=True, exist_ok=True)
 
+  # Accumulate the set of all files for all targets.
+  src_files = set()
+  for target in targets:
+    src_files = src_files.union(set(GetAllSourceTreeFilesOrDie(target, source)))
+
   # Copy each source tree file to its relative location in the destination tree.
-  for path in GetAllSourceTreeFilesOrDie(target, source):
+  for path in sorted(src_files):
     relpath = os.path.relpath(path, source)
     dst = destination / relpath
     dst.parent.mkdir(parents=True, exist_ok=True)
     print(relpath)
     shutil.copy(path, dst)
 
-  # Export the subset of python requirements requirements that are needed.
+  # Export the subset of python requirements that are needed.
   print('tools/requirements.txt')
-  # If there is already a requirements.txt (i.e. from a previous export) then
-  # read that and append to it.
-  if (destination / 'tools/requirements.txt').is_file():
-    with open(destination / 'tools/requirements.txt') as f:
-      requirements = f.readlines()
-  else:
-    requirements = []
-
-  requirements += GetPythonRequirementsForTargetOrDie(target, source)
+  requirements = GetPythonRequirementsForTargetOrDie(targets, source)
   requirements = sorted(set(requirements))
   with open(destination / 'tools/requirements.txt', 'w') as f:
     for r in requirements:
@@ -365,24 +361,34 @@ def GetOrCreateRepoOrDie(github: github_lib.Github) -> github_lib.Repository:
 
 
 def ExportToDirectoryOrDie(destination: pathlib.Path,
-                           exported_targets: typing.List[str]) -> None:
+                           exported_targets: typing.List[str],
+                           extra_files: typing.List[str]) -> None:
   """Export the requested targets to the destination directory."""
   source = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
 
-  for target in FLAGS.target:
-    ExportTargetOrDie(source, destination, target)
+  ExportTargetsOrDie(source, destination, FLAGS.targets)
 
   CreateBazelWrapperForExports(destination, exported_targets)
   UpdateReadme(destination, exported_targets)
+  # Copy the extra files last so that we can trample over the generated README
+  # file if required.
+  CopyFilesToDestinationOrDie(source, destination, extra_files)
 
-  CopyFilesToDestinationOrDie(source, destination, FLAGS.extra_file)
+
+def CheckCallOrDie(cmd: typing.List[str]) -> None:
+  """Run the given command and exit fatally on error."""
+  try:
+    subprocess.check_call(['git', 'add', '.'])
+  except subprocess.CalledProcessError as e:
+    app.FatalWithoutStackTrace("Command: `%s` failed with error: %s",
+                               ' '.join(cmd), e)
 
 
 def CloneRepoToDestinationOrDie(repo: github_lib.Repository,
                                 destination: pathlib.Path):
   """Clone repo from github."""
   app.Log(1, 'Cloning from %s', repo.ssh_url)
-  subprocess.check_call(['git', 'clone', repo.ssh_url, str(destination)])
+  CheckCallOrDie(['git', 'clone', repo.ssh_url, str(destination)])
   # Delete everything except the .git directory. This is to enable files to be
   # removed between commits, as otherwise incremental commits would only ever
   # be additive.
@@ -400,14 +406,14 @@ def CommitAndPushOrDie(local: pathlib.Path, remote: github_lib.Repository):
   tag_name = datetime.datetime.now().strftime("%y%m%dT%H%M%S")
   app.Log(1, "Creating tag %s", tag_name)
   with fs.chdir(local):
-    subprocess.check_call(['git', 'add', '.'])
-    subprocess.check_call(
+    CheckCallOrDie(['git', 'add', '.'])
+    CheckCallOrDie(
         ['git', 'commit', '-m', f'Subtree export from {parent_hash}'])
-    subprocess.check_call([
+    CheckCallOrDie([
         'git', 'tag', '-a', tag_name, '-m', f'Subtree export from {parent_hash}'
     ])
-    subprocess.check_call(['git', 'push', 'origin', 'master'])
-    subprocess.check_call(['git', 'push', 'origin', tag_name])
+    CheckCallOrDie(['git', 'push', 'origin', 'master'])
+    CheckCallOrDie(['git', 'push', 'origin', tag_name])
   app.Log(1, 'Exported to %s', remote.html_url)
 
 
@@ -417,18 +423,14 @@ def main(argv: typing.List[str]):
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   # Get the list of targets to export.
-  if not FLAGS.target and not FLAGS.targets_list:
+  if not FLAGS.targets:
     raise app.UsageError('--target must be a bazel target(s)')
-  elif FLAGS.targets_list:
-    with open(FLAGS.targets_list) as f:
-      targets = f.read().rstrip().split('\n')
-  else:
-    targets = FLAGS.target
+  targets = list(sorted(set(FLAGS.targets)))
 
   if not FLAGS.destination:
     raise app.UsageError('--destination must be a directory to create')
 
-  targets = list(sorted(targets))
+  extra_files = list(sorted(set(FLAGS.extra_files)))
 
   with DestinationDirectoryFromFlags() as destination:
 
@@ -436,10 +438,10 @@ def main(argv: typing.List[str]):
       github = api.GetGithubConectionFromFlagsOrDie()
       repo = GetOrCreateRepoOrDie(github)
       CloneRepoToDestinationOrDie(repo, destination)
-      ExportToDirectoryOrDie(destination, targets)
+      ExportToDirectoryOrDie(destination, targets, extra_files)
       CommitAndPushOrDie(destination, repo)
     else:
-      ExportToDirectoryOrDie(destination, targets)
+      ExportToDirectoryOrDie(destination, targets, extra_files)
       app.Log(1, 'Exported subtree to %s', destination)
 
 
