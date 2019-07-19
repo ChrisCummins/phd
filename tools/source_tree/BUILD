@@ -1,5 +1,30 @@
 # Tools for working with the source tree.
 
+py_library(
+    name = "conftest",
+    testonly = 1,
+    srcs = ["conftest.py"],
+    deps = [
+        "//labm8:fs",
+        "//labm8:test",
+        "//third_party/py/git",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_test(
+    name = "conftest_test",
+    srcs = ["conftest_test.py"],
+    deps = [
+        ":conftest",
+        "//labm8:test",
+        "//third_party/py/git",
+    ],
+)
+        ":conftest",
+        "//third_party/py/git",
+    ]
+)
 py_binary(
     name = "export_source_tree",
     srcs = ["export_source_tree.py"],
