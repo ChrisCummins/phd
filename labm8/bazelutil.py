@@ -116,3 +116,133 @@ class DataArchive(archive.Archive):
       FileNotFoundError: If path is not a file.
     """
     super(DataArchive, self).__init__(DataPath(path))
+
+
+class Workspace(object):
+  """Class representing a bazel workspace."""
+
+  def __init__(self, root: pathlib.Path):
+    """Create a bazel workspace object.
+
+    The workspace must already exist, this object does not modify files.
+
+    Args:
+       root: The root of the workspace.
+
+    Raises:
+      OSError: If the root is not a workspace.
+    """
+    self._root = root
+    if not (self._root / 'WORKSPACE').is_file():
+      raise OSError(f"`{self._root}/WORKSPACE` not found")
+
+  @property
+  def workspace_root(self) -> pathlib.Path:
+    return self._root
+
+
+  def BazelQuery(self, args: typing.List[str], timeout_seconds: int = 360,
+                 **subprocess_kwargs):
+    """Run bazel query with the specified args in the workspace.
+
+    Args:
+      args: The list of arguments to pass to bazel query.
+      timeout_seconds: The number of seconds before failing.
+      subprocess_kwargs: Additional arguments to pass to Popen().
+    """
+    with fs.chdir(self.workspace_root):
+      return subprocess.Popen(
+          ['timeout', '-s9', str(timeout_seconds), 'bazel', 'query'] + args,
+          **subprocess_kwargs)
+
+
+  def MaybeTargetToPath(
+        self, fully_qualified_target: str) -> typing.Optional[pathlib.Path]:
+    """Determine if a bazel target refers to a file, and if so return the path.
+
+    Args:
+      fully_qualified_target: The bazel target, beginning with '//'.
+
+    Returns:
+      A path, relative to the root of the workspace, else NOne.
+
+    Raises:
+      ValueError: If the given target is not fully qualified.
+    """
+
+    def RelpathIfExists(path: str) -> typing.Optional[pathlib.Path]:
+      """Return if given relative path is a file."""
+      abspath = self.workspace_root / path
+      return path if abspath.is_file() else None
+
+    if fully_qualified_target.startswith('//:'):
+      return RelpathIfExists(fully_qualified_target[3:])
+    elif fully_qualified_target.startswith('//'):
+      return RelpathIfExists(fully_qualified_target[2:].replace(':', '/'))
+    else:
+      raise ValueError(
+          'Target is not fully qualified (does not begin with `//`): '
+          f'{fully_qualified_target}')
+
+
+  def GetDependentFiles(self, target: str) -> typing.List[pathlib.Path]:
+    """Get the file dependencies of the target.
+
+    Args:
+      target: The target to get the dependencies of.
+
+    Returns:
+      A list of paths, relative to the root of the workspace.
+
+    Raises:
+      OSError: If bazel query fails.
+    """
+    bazel = self.BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
+    grep = subprocess.Popen(['grep', '^/'],
+                            stdout=subprocess.PIPE,
+                            stdin=bazel.stdout,
+                            universal_newlines=True)
+
+    stdout, _ = grep.communicate()
+    if bazel.returncode:
+      raise OSError("bazel query failed")
+    if grep.returncode:
+      raise OSError("grep of bazel query output failed")
+
+    targets = stdout.rstrip().split('\n')
+    paths = [self.MaybeTargetToPath(target) for target in targets]
+    return [path for path in paths if path]
+
+  def GetBuildFiles(self, target: str) -> typing.List[pathlib.Path]:
+    """Get the BUILD files required for the given target.
+
+    Raises:
+      OSError: If bazel query fails.
+    """
+    bazel = self.BazelQuery([f'buildfiles(deps({target}))'],
+                            stdout=subprocess.PIPE)
+    cut = subprocess.Popen(['cut', '-f1', '-d:'],
+                           stdout=subprocess.PIPE,
+                           stdin=bazel.stdout)
+    grep = subprocess.Popen(['grep', '^/'],
+                            stdout=subprocess.PIPE,
+                            stdin=cut.stdout,
+                            universal_newlines=True)
+
+    stdout, _ = grep.communicate()
+    if bazel.returncode:
+      raise OSError("bazel query failed")
+    if cut.returncode:
+      raise OSError("bazel query output cut failed")
+    if grep.returncode:
+      raise OSError("bazel query output search failed")
+
+    for line in stdout.rstrip().split('\n'):
+      if line == '//external':
+        # Files in //external are virtual.
+        continue
+      path = os.path.join(line[2:], 'BUILD')
+      abspath = self.workspace_root / path
+      if not abspath.is_file():
+        raise OSError(f'BUILD file not found: {path}')
+      yield path
