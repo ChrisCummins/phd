@@ -22,7 +22,7 @@ before_install:
   - ARCH=x86_64
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then OS=darwin; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then yes | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade python; fi
   - GH_BASE="https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION"
   - GH_ARTIFACT="bazel-$BAZEL_VERSION-installer-$OS-$ARCH.sh"
   - CI_BASE="http://ci.bazel.io/job/Bazel/JAVA_VERSION=1.8,PLATFORM_NAME=$OS-$ARCH/lastSuccessfulBuild/artifact/output/ci"
