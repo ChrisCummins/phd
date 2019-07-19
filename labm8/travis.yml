@@ -1,13 +1,15 @@
 dist: trusty
 sudo: required
 osx_image: xcode8
-language: python
-
-# At the time of writing (2019-07-19), python 3.7 is not yet supported on
-# Travis CI using trusty distro. See:
+# Although this is a python project, use java image since at the time of
+# writing (2019-07-19) macOS does not support python. See:
 # https://docs.travis-ci.com/user/languages/python/
-python:
-  - "3.6"
+language: java
+
+addons:
+  homebrew:
+    packages:
+    - python
 
 os:
   - linux
