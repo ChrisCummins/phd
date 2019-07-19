@@ -1,10 +1,10 @@
 """Shared test fixtures for //tools/source_tree."""
 
-import pathlib
-from labm8 import app
-import pytest
 import git
-from labm8 import test
+import pathlib
+import pytest
+
+from labm8 import app
 from labm8 import fs
 
 FLAGS = app.FLAGS
