@@ -29,7 +29,7 @@ before_install:
 
 script:
   - ./configure --noninteractive
-  - bazel --local_resources=400,1,1 test //labm8/...
+  - bazel test --local_resources=400,1,1 //labm8/...
 
 notifications:
   email: false
