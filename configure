@@ -149,11 +149,15 @@ def GetGitRemote():
 
 def RewriteGitSubmodulesToHttps():
   """Rewrite git@ prefixed submodules to https://."""
-  with open(os.path.join(os.path.dirname(__file__), '.gitmodules')) as f:
+  gitmodules = os.path.join(os.path.dirname(__file__), '.gitmodules')
+  # Do nothing if the git modules file doesn't exist.
+  if not os.path.is_file(gitmodules)
+    return
+  with open(gitmodules) as f:
     modules = f.read()
   new_modules = re.sub(r'(url\s*=\s*)git@([^:]+):', r'\1https://\2/', modules)
   assert 'git@' not in new_modules
-  with open(os.path.join(os.path.dirname(__file__), '.gitmodules'), 'w') as f:
+  with open(gitmodules, 'w') as f:
     f.write(new_modules)
 
 
