@@ -6,10 +6,9 @@ osx_image: xcode8
 # https://docs.travis-ci.com/user/languages/python/
 language: java
 
-addons:
-  homebrew:
-    packages:
-    - python
+cache:
+    directories:
+     - /home/travis/.cache/bazel/_bazel_travis
 
 os:
   - linux

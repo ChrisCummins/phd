@@ -7,9 +7,9 @@ export_source_tree.EXPORT(
         '//deeplearning/deepsmith/harnesses:JavaDriverTest',
         '//deeplearning/clgen/preprocessors:java_test',
     ],
-    copy_file_mapping={
-        '.gitignore': '.gitignore',
-    },
+    extra_files=[
+        '.gitignore',
+    ],
     move_file_mapping={
         'experimental/deeplearning/deepsmith/java_fuzz/shared_code_README.md':
         'README.md',
