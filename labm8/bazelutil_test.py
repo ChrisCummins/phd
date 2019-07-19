@@ -8,6 +8,7 @@ from labm8 import bazelutil
 from labm8 import fs
 from labm8 import test
 
+
 FLAGS = app.FLAGS
 
 # DataPath() tests.
@@ -46,6 +47,20 @@ def test_DataPath_read_file():
   """Test that DataPath is correct for a known data file."""
   with open(bazelutil.DataPath('phd/labm8/test_data/hello_world')) as f:
     assert f.read() == 'Hello, world!\n'
+
+
+def test_DataString_missing_data_dep():
+  """FileNotFoundError is raised if the file exists is not in target data."""
+  # The file //labm8/test_data/diabetes.csv exists, but is not a data
+  # dependency of this test target, so is not found.
+  with pytest.raises(FileNotFoundError) as e_info:
+    bazelutil.DataString('phd/labm8/test_data/diabetes.csv')
+
+
+def test_DataString_contents():
+  """Test that DataString is correct for a known data file."""
+  assert (bazelutil.DataString('phd/labm8/test_data/hello_world') ==
+          'Hello, world!\n')
 
 
 def test_DataPath_directory():

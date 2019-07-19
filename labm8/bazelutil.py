@@ -7,9 +7,12 @@ import os
 
 import pathlib
 import re
+import subprocess
 import typing
 
 from labm8 import archive
+from labm8 import fs
+
 
 # Regular expression to everything in a path up until the '*.runfiles'
 # directory, e.g. for the path '/private/var/bazel/foo/bar.runfiles/a/b/c',
@@ -65,6 +68,28 @@ def DataPath(path: typing.Union[str, pathlib.Path],
   if must_exist and not (real_path.is_file() or real_path.is_dir()):
     raise FileNotFoundError(f"No such file or directory: '{path}'")
   return real_path
+
+
+def DataString(path: typing.Union[str, pathlib.Path]) -> str:
+  """Return the contents of a data file.
+
+  This allows you to access files from the 'data' attribute of a Python
+  target in Bazel. This is needed because the path to the file changes depending
+  on whether the current process is executing with a 'bazel run' environment, or
+  as a 'bazel-bin' script.
+
+  Args:
+    path: The path to the data, including the name of the workspace.
+
+  Returns:
+    The contents of the file
+
+  Raises:
+    FileNotFoundError: If the requested path is not found.
+  """
+  with open(DataPath(path)) as f:
+    contents = f.read()
+  return contents
 
 
 class DataArchive(archive.Archive):
