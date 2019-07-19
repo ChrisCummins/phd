@@ -151,7 +151,7 @@ def RewriteGitSubmodulesToHttps():
   """Rewrite git@ prefixed submodules to https://."""
   gitmodules = os.path.join(os.path.dirname(__file__), '.gitmodules')
   # Do nothing if the git modules file doesn't exist.
-  if not os.path.is_file(gitmodules)
+  if not os.path.is_file(gitmodules):
     return
   with open(gitmodules) as f:
     modules = f.read()
