@@ -32,6 +32,13 @@ def tempdir2() -> pathlib.Path:
     yield pathlib.Path(d)
 
 
+@pytest.fixture(scope='function')
+def tempdir3() -> pathlib.Path:
+  """For when a two temporary directories just aren't enough!"""
+  with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+    yield pathlib.Path(d)
+
+
 @pytest.fixture(scope='module')
 def module_tempdir() -> pathlib.Path:
   """A test fixture which yields a temporary directory.
