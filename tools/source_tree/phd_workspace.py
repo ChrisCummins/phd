@@ -6,11 +6,9 @@ import pathlib
 import shutil
 import subprocess
 import re
-import stat
 import os
 import glob
 
-import getconfig
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
@@ -89,16 +87,13 @@ class PhdWorkspace(bazelutil.Workspace):
 
   def GetAllSourceTreeFiles(
       self, targets: typing.List[str], excluded_targets: typing.Iterable[str],
-      file_copy_mapping: typing.Dict[str, str]) -> typing.List[pathlib.Path]:
+      file_copy_mapping: typing.Dict[str, str],
+      file_move_mapping: typing.Dict[str, str]) -> typing.List[pathlib.Path]:
     """Get the full list of source files to export for targets."""
     excluded_targets = set(excluded_targets)
-    # The script that produces this export is an implicit dependency of all
-    # exports. But, we don't want to include in a default export, unless we
-    # have made the dependency explicit.
-    if '//tools/source_tree:export_source_tree' not in targets:
-      excluded_targets.add('//tools/source_tree:export_source_tree')
 
     file_set = set(file_copy_mapping.values())
+    file_set = file_set.union(set(file_move_mapping.values()))
     for target in targets:
       file_set = file_set.union(
           set(self.GetDependentFiles(target, excluded_targets)))
@@ -111,6 +106,7 @@ class PhdWorkspace(bazelutil.Workspace):
     file_set = file_set.union(set(self.GetAlwaysExportedFiles()))
     file_set = file_set.union(set(self.GetAuxiliaryExportFiles(file_set)))
     filtered_files = self.FilterExcludedPaths(file_set)
+
     return list(sorted(filtered_files))
 
   def GetPythonRequirementsForTarget(
@@ -215,26 +211,19 @@ class PhdWorkspace(bazelutil.Workspace):
         if dst_src_path.is_file():
           subprocess.check_call(['git', 'rm', src_relpath])
 
-  def ExportToRepo(self,
-                   repo: git.Repo,
-                   targets: typing.Iterable[str],
-                   excluded_targets: typing.Iterable[str],
-                   file_copy_mapping: typing.Dict[str, str] = None,
-                   file_move_mapping: typing.Dict[str, str] = None) -> None:
+  def ExportToRepo(self, repo: git.Repo, src_files: typing.List[str],
+                   file_copy_mapping: typing.Dict[str, str],
+                   file_move_mapping: typing.Dict[str, str]) -> None:
     """Export the requested targets to the destination directory."""
     # The timestamp for the export.
     timestamp = datetime.datetime.utcnow()
 
-    file_copy_mapping = file_copy_mapping or {}
-    file_move_mapping = file_move_mapping or {}
-
     # Export the git history.
-    src_files = self.GetAllSourceTreeFiles(targets, excluded_targets,
-                                           file_copy_mapping)
     app.Log(1, 'Exporting git history for %s files',
             humanize.Commas(len(src_files)))
     for file in src_files:
       print(file)
+
     source_tree.ExportGitHistoryForFiles(self.git_repo, repo, src_files)
 
     # Make manual adjustments.
