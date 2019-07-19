@@ -20,6 +20,7 @@ your own credentials handling code.
 import configparser
 import github
 import pathlib
+import socket
 import subprocess
 
 from datasets.github import github_pb2
@@ -100,6 +101,8 @@ def GetUserRepo(connection: github.Github, repo_name: str) -> github.Repository:
   """
   try:
     return connection.get_user().get_repo(repo_name)
+  except socket.gaierror as e:
+    raise OSError(f"Connection failed with error: {e}")
   except github.UnknownObjectException as e:
     if e.status != 404:
       raise OSError(f"Github API raised error: {e}")
