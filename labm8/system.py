@@ -32,6 +32,7 @@ import tempfile
 import threading
 import typing
 
+from labm8 import app
 from labm8 import fs
 
 HOSTNAME = socket.gethostname()
@@ -345,3 +346,13 @@ def ProcessFileAndReplace(
     finally:
       if os.path.isfile(tmp_path):
         os.unlink(tmp_path)
+
+
+def CheckCallOrDie(cmd: typing.List[str]) -> None:
+  """Run the given command and exit fatally on error."""
+  try:
+    app.Log(2, '$ %s', ' '.join(cmd))
+    subprocess.check_call(cmd)
+  except subprocess.CalledProcessError as e:
+    app.FatalWithoutStackTrace(
+        "Command: `%s` failed with error: %s", ' '.join(cmd), e)
