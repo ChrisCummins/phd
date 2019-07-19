@@ -606,7 +606,7 @@ def Write(filename: typing.Union[str, pathlib.Path],
           contents: bytes,
           overwrite_existing: bool = True,
           mode: int = 0o0666,
-          gid: int = None) -> None:
+          gid: int = None) -> pathlib.Path:
   """Create a file 'filename' with 'contents', with the mode given in 'mode'.
 
   The 'mode' is modified by the umask, as in open(2).  If
@@ -645,6 +645,7 @@ def Write(filename: typing.Union[str, pathlib.Path],
     os.close(fd)
   if gid is not None:
     os.chown(filename, -1, gid)
+  return pathlib.Path(filename)
 
 
 def AtomicWrite(filename: typing.Union[str, pathlib.Path],
