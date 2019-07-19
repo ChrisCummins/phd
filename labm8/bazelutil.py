@@ -210,11 +210,8 @@ class Workspace(object):
       raise OSError("grep of bazel query output failed")
 
     targets = stdout.rstrip().split('\n')
-    paths = [
-        self.MaybeTargetToPath(target)
-        for target in targets
-        if target not in excluded_targets
-    ]
+    targets = [target for target in targets if target not in excluded_targets]
+    paths = [self.MaybeTargetToPath(target) for target in targets]
     return [path for path in paths if path]
 
   def GetBuildFiles(self, target: str) -> typing.List[pathlib.Path]:
