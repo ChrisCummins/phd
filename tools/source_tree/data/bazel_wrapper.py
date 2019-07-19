@@ -7,7 +7,6 @@ import os
 import subprocess
 import sys
 
-
 # The subset of bazel targets that are supported in this WORKSPACE.
 EXPORTED_TARGETS = [
     # @EXPORTED_TARGETS@ #
@@ -28,11 +27,12 @@ def main():
     if arg[0] != '-' and ('/' in arg or ':' in arg):
       if not arg.startswith('//'):
         arg = '//' + arg
-      if arg not in EXPORTED_TARGETS:
-        print(
-            "Target {} not available. Available targets:\n  {}".format(
-                arg, '\n  '.join(EXPORTED_TARGETS)),
-            file=sys.stderr)
+      if arg.endswith(':all') or arg.endswith('/...'):
+        continue
+      elif arg not in EXPORTED_TARGETS:
+        print("Target {} not available. Available targets:\n  {}".format(
+            arg, '\n  '.join(EXPORTED_TARGETS)),
+              file=sys.stderr)
         sys.exit(1)
   print('[bazel_wrapper.py] Args are safe', file=sys.stderr)
 
