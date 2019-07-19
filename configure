@@ -237,7 +237,7 @@ def GetConfigurationOptions(argv):
   parser.add_argument(
       '--noupdate_git_submodules', dest='update_git_submodules',
       action='store_false', help='Do not checkout and update git submodules.')
-  parser.set_defaults(update_git_submodules=is_git_repo)
+  parser.set_defaults(update_git_submodules=False)
   if is_git_repo:
     yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
 
