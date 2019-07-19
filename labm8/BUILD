@@ -696,3 +696,9 @@ py_test(
         "//third_party/py/seaborn",
     ],
 )
+
+py_binary(
+    name = "EXPORT",
+    srcs = ["EXPORT.py"],
+    deps = ["//tools/source_tree:export_source_tree"],
+)
