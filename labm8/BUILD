@@ -604,7 +604,10 @@ py_library(
     name = "system",
     srcs = ["system.py"],
     visibility = ["//visibility:public"],
-    deps = [":fs", ":app"],
+    deps = [
+        ":app",
+        ":fs",
+    ],
 )
 
 py_test(

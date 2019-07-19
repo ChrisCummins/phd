@@ -10,7 +10,6 @@ import typing
 import build_info
 from labm8 import app
 
-
 # *WARNING* Flags used in this file are not defined here! They are declared in
 # //labm8:test.
 FLAGS = app.FLAGS

@@ -8,7 +8,6 @@ from labm8 import bazelutil
 from labm8 import fs
 from labm8 import test
 
-
 FLAGS = app.FLAGS
 
 # DataPath() tests.

@@ -354,5 +354,5 @@ def CheckCallOrDie(cmd: typing.List[str]) -> None:
     app.Log(2, '$ %s', ' '.join(cmd))
     subprocess.check_call(cmd)
   except subprocess.CalledProcessError as e:
-    app.FatalWithoutStackTrace(
-        "Command: `%s` failed with error: %s", ' '.join(cmd), e)
+    app.FatalWithoutStackTrace("Command: `%s` failed with error: %s",
+                               ' '.join(cmd), e)

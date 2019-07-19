@@ -25,7 +25,6 @@ import subprocess
 from datasets.github import github_pb2
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
@@ -107,10 +106,13 @@ def GetUserRepo(connection: github.Github, repo_name: str) -> github.Repository:
     raise RepoNotFoundError(f"Github repo `{repo_name}` not found")
 
 
-def GetOrCreateUserRepo(connection: github.Github, repo_name: str,
-                        description: str=None, homepage: str=None,
-                        has_wiki: bool=True, has_issues: bool=True,
-                        private: bool=True) -> github.Repository:
+def GetOrCreateUserRepo(connection: github.Github,
+                        repo_name: str,
+                        description: str = None,
+                        homepage: str = None,
+                        has_wiki: bool = True,
+                        has_issues: bool = True,
+                        private: bool = True) -> github.Repository:
   """Get and return a github repository owned by the user.
 
   Create it if it doesn't exist.
@@ -128,13 +130,12 @@ def GetOrCreateUserRepo(connection: github.Github, repo_name: str,
     return GetUserRepo(connection, repo_name)
   except RepoNotFoundError:
     app.Log(1, "Creating repo %s", repo_name)
-    connection.get_user().create_repo(
-        repo_name,
-        description=description,
-        homepage=homepage,
-        has_wiki=has_wiki,
-        has_issues=has_issues,
-        private=private)
+    connection.get_user().create_repo(repo_name,
+                                      description=description,
+                                      homepage=homepage,
+                                      has_wiki=has_wiki,
+                                      has_issues=has_issues,
+                                      private=private)
     return GetUserRepo(connection, repo_name)
 
 

@@ -13,7 +13,6 @@ import typing
 from labm8 import archive
 from labm8 import fs
 
-
 # Regular expression to everything in a path up until the '*.runfiles'
 # directory, e.g. for the path '/private/var/bazel/foo/bar.runfiles/a/b/c',
 # this regex will match '/private/var/bazel/foo/bar.runfiles'
@@ -140,8 +139,9 @@ class Workspace(object):
   def workspace_root(self) -> pathlib.Path:
     return self._root
 
-
-  def BazelQuery(self, args: typing.List[str], timeout_seconds: int = 360,
+  def BazelQuery(self,
+                 args: typing.List[str],
+                 timeout_seconds: int = 360,
                  **subprocess_kwargs):
     """Run bazel query with the specified args in the workspace.
 
@@ -152,12 +152,11 @@ class Workspace(object):
     """
     with fs.chdir(self.workspace_root):
       return subprocess.Popen(
-          ['timeout', '-s9', str(timeout_seconds), 'bazel', 'query'] + args,
-          **subprocess_kwargs)
-
+          ['timeout', '-s9',
+           str(timeout_seconds), 'bazel', 'query'] + args, **subprocess_kwargs)
 
   def MaybeTargetToPath(
-        self, fully_qualified_target: str) -> typing.Optional[pathlib.Path]:
+      self, fully_qualified_target: str) -> typing.Optional[pathlib.Path]:
     """Determine if a bazel target refers to a file, and if so return the path.
 
     Args:
@@ -183,7 +182,6 @@ class Workspace(object):
       raise ValueError(
           'Target is not fully qualified (does not begin with `//`): '
           f'{fully_qualified_target}')
-
 
   def GetDependentFiles(self, target: str) -> typing.List[pathlib.Path]:
     """Get the file dependencies of the target.
