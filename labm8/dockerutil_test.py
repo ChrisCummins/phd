@@ -1,5 +1,6 @@
 """Unit tests for //labm8:dockerutil."""
 import pathlib
+import tempfile
 
 from labm8 import dockerutil
 from labm8 import test
@@ -23,12 +24,18 @@ def test_BazelPy3Image_CheckOutput_flags():
     assert output == 'Hello to Jason Isaacs!\n'
 
 
-def test_BazelPy3Image_CheckCall_shared_volume(tempdir: pathlib.Path):
+def test_BazelPy3Image_CheckCall_shared_volume():
   """Test shared volume."""
-  app_image = dockerutil.BazelPy3Image('labm8/test_data/basic_app')
-  with app_image.RunContext() as ctx:
-    ctx.CheckCall(['--create_file'], volumes={tempdir: '/tmp'})
-  assert (tempdir / 'hello.txt').is_file()
+  # Force a temporary directory inside /tmp, since on macOS,
+  # tempfile.TemporaryDirectory() can generate a directory outside of those
+  # available to docker. See:
+  # https://docs.docker.com/docker-for-mac/osxfs/#namespaces
+  with tempfile.TemporaryDirectory(prefix='phd_dockerutil_', dir='/tmp') as d:
+    tmpdir = pathlib.Path(d)
+    app_image = dockerutil.BazelPy3Image('labm8/test_data/basic_app')
+    with app_image.RunContext() as ctx:
+      ctx.CheckCall(['--create_file'], volumes={tmpdir: '/tmp'})
+    assert (tmpdir / 'hello.txt').is_file()
 
 
 if __name__ == '__main__':
