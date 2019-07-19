@@ -4,4 +4,5 @@ export_source_tree.EXPORT(github_repo='labm8',
                           move_file_mapping={
                               'labm8/README.md': 'README.md',
                               'labm8/LICENSE': 'LICENSE',
+                              'labm8/travis.yml': '.travis.yml',
                           })
