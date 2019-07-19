@@ -36,6 +36,7 @@ before_install:
   - rm -f install.sh
 
 script:
+  - python --version
   - ./configure --noninteractive
   - bazel test --local_resources=3072,1,1 //labm8/...
 
