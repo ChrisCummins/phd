@@ -183,7 +183,9 @@ class Workspace(object):
           'Target is not fully qualified (does not begin with `//`): '
           f'{fully_qualified_target}')
 
-  def GetDependentFiles(self, target: str) -> typing.List[pathlib.Path]:
+  def GetDependentFiles(
+      self, target: str,
+      excluded_targets: typing.Iterable[str]) -> typing.List[pathlib.Path]:
     """Get the file dependencies of the target.
 
     Args:
@@ -208,7 +210,11 @@ class Workspace(object):
       raise OSError("grep of bazel query output failed")
 
     targets = stdout.rstrip().split('\n')
-    paths = [self.MaybeTargetToPath(target) for target in targets]
+    paths = [
+        self.MaybeTargetToPath(target)
+        for target in targets
+        if target not in excluded_targets
+    ]
     return [path for path in paths if path]
 
   def GetBuildFiles(self, target: str) -> typing.List[pathlib.Path]:

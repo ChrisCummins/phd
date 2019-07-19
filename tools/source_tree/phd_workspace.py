@@ -88,15 +88,25 @@ class PhdWorkspace(bazelutil.Workspace):
     return [path for path in paths if path not in _NEVER_EXPORTED_FILES]
 
   def GetAllSourceTreeFiles(
-      self, targets: typing.List[str],
+      self, targets: typing.List[str], excluded_targets: typing.Iterable[str],
       file_copy_mapping: typing.Dict[str, str]) -> typing.List[pathlib.Path]:
     """Get the full list of source files to export for targets."""
+    excluded_targets = set(excluded_targets)
+    # The script that produces this export is an implicit dependency of all
+    # exports. But, we don't want to include in a default export, unless we
+    # have made the dependency explicit.
+    if '//tools/source_tree:export_source_tree' not in targets:
+      excluded_targets.add('//tools/source_tree:export_source_tree')
+
     file_set = set(file_copy_mapping.values())
     for target in targets:
-      file_set = file_set.union(set(self.GetDependentFiles(target)))
+      file_set = file_set.union(
+          set(self.GetDependentFiles(target, excluded_targets)))
       file_set = file_set.union(set(self.GetBuildFiles(target)))
-      file_set = file_set.union(set(self.GetDependentFiles(target)))
-      file_set = file_set.union(set(self.GetDependentFiles(target)))
+      file_set = file_set.union(
+          set(self.GetDependentFiles(target, excluded_targets)))
+      file_set = file_set.union(
+          set(self.GetDependentFiles(target, excluded_targets)))
 
     file_set = file_set.union(set(self.GetAlwaysExportedFiles()))
     file_set = file_set.union(set(self.GetAuxiliaryExportFiles(file_set)))
@@ -207,7 +217,8 @@ class PhdWorkspace(bazelutil.Workspace):
 
   def ExportToRepo(self,
                    repo: git.Repo,
-                   targets: typing.List[str],
+                   targets: typing.Iterable[str],
+                   excluded_targets: typing.Iterable[str],
                    file_copy_mapping: typing.Dict[str, str] = None,
                    file_move_mapping: typing.Dict[str, str] = None) -> None:
     """Export the requested targets to the destination directory."""
@@ -218,7 +229,8 @@ class PhdWorkspace(bazelutil.Workspace):
     file_move_mapping = file_move_mapping or {}
 
     # Export the git history.
-    src_files = self.GetAllSourceTreeFiles(targets, file_copy_mapping)
+    src_files = self.GetAllSourceTreeFiles(targets, excluded_targets,
+                                           file_copy_mapping)
     app.Log(1, 'Exporting git history for %s files',
             humanize.Commas(len(src_files)))
     for file in src_files:

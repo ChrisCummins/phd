@@ -24,6 +24,8 @@ from tools.source_tree import phd_workspace
 FLAGS = app.FLAGS
 
 app.DEFINE_list('targets', [], 'The bazel target(s) to export.')
+app.DEFINE_list('excluded_targets', [],
+                'A list of bazel targets to exclude from export.')
 app.DEFINE_list(
     'cp_files', [], 'A list of additional files to export. Each element in the '
     'list is either a relative path to export, or a mapping of '
@@ -57,7 +59,7 @@ def GetOrCreateRepoOrDie(github: github_lib.Github,
           private=FLAGS.github_repo_create_private)
     else:
       return api.GetUserRepo(github, repo_name)
-  except api.RepoNotFoundError as e:
+  except (api.RepoNotFoundError, OSError) as e:
     app.FatalWithoutStackTrace(str(e))
 
 
@@ -73,8 +75,28 @@ def DestinationDirectoryFromFlags() -> pathlib.Path:
 
 def EXPORT(github_repo: str,
            targets: typing.List[str],
+           excluded_targets: typing.List[str] = None,
            copy_file_mapping: typing.Dict[str, str] = None,
-           move_file_mapping: typing.Dict[str, str] = None):
+           move_file_mapping: typing.Dict[str, str] = None) -> None:
+  """Custom entry-point to export source-tree.
+
+  This should be called from a bare python script, before flags parsing.
+
+  Args:
+    github_repo: The name of the GitHub repo to export to.
+    targets: A list of bazel targets to export. These targets, and their
+      dependencies, will be exported. These arguments are passed unmodified to
+      bazel query, so `/...` and `:all` labels are expanded, e.g.
+      `//some/package/to/export/...`. All targets should be absolute, and
+      prefixed with '//'.
+    copy_file_mapping: A dictionary of <src,dst> relative files which are
+      copied.
+    move_file_mapping: A dictionary of <src,dst> relative paths listing files
+      which should be moved from their respective source location to the
+      destination. This is the same as `copy_file_mapping`, but the <src> files
+      are deleted.
+  """
+  excluded_targets = excluded_targets or []
 
   def _DoExport():
     source_path = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
@@ -89,7 +111,8 @@ def EXPORT(github_repo: str,
       api.CloneRepoToDestination(repo, destination)
       destination_repo = git.Repo(destination)
       source_workspace.ExportToRepo(destination_repo, targets,
-                                    copy_file_mapping, move_file_mapping)
+                                    set(excluded_targets), copy_file_mapping,
+                                    move_file_mapping)
       app.Log(1, 'Pushing changes to remote')
       destination_repo.git.push('origin')
 
@@ -104,6 +127,8 @@ def main(argv: typing.List[str]):
   if not FLAGS.targets:
     raise app.UsageError('--targets must be one-or-more bazel targets')
   targets = list(sorted(set(FLAGS.targets)))
+
+  excluded_targets = set(FLAGS.excluded_targets)
 
   def _GetFileMapping(f: str):
     if len(f.split(':')) == 2:
@@ -126,8 +151,8 @@ def main(argv: typing.List[str]):
     repo = GetOrCreateRepoOrDie(connection, FLAGS.github_repo)
     api.CloneRepoToDestination(repo, destination)
     destination_repo = git.Repo(destination)
-    source_workspace.ExportToRepo(destination_repo, targets, copy_file_mapping,
-                                  move_file_mapping)
+    source_workspace.ExportToRepo(destination_repo, targets, excluded_targets,
+                                  copy_file_mapping, move_file_mapping)
     destination_repo.git.push('origin')
 
 
