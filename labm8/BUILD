@@ -74,6 +74,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":archive",
+        ":fs",
     ],
 )
 
@@ -603,7 +604,7 @@ py_library(
     name = "system",
     srcs = ["system.py"],
     visibility = ["//visibility:public"],
-    deps = [":fs"],
+    deps = [":fs", ":app"],
 )
 
 py_test(
