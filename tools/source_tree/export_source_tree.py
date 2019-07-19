@@ -14,6 +14,7 @@ import git
 import github as github_lib
 import pathlib
 import tempfile
+import sys
 import typing
 
 import getconfig
@@ -42,6 +43,8 @@ app.DEFINE_boolean('github_create_repo', False,
                    'Whether to create the repo if it does not exist.')
 app.DEFINE_boolean('github_repo_create_private', True,
                    'Whether to create new GitHub repos as private.')
+app.DEFINE_boolean('export_source_tree_print_files', False,
+                   'Print the files that will be exported and terminate.')
 
 
 def GetOrCreateRepoOrDie(github: github_lib.Github,
@@ -97,6 +100,8 @@ def EXPORT(github_repo: str,
       are deleted.
   """
   excluded_targets = excluded_targets or []
+  copy_file_mapping = copy_file_mapping or {}
+  move_file_mapping = move_file_mapping or {}
 
   def _DoExport():
     source_path = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
@@ -110,9 +115,15 @@ def EXPORT(github_repo: str,
       repo = GetOrCreateRepoOrDie(connection, github_repo)
       api.CloneRepoToDestination(repo, destination)
       destination_repo = git.Repo(destination)
-      source_workspace.ExportToRepo(destination_repo, targets,
-                                    set(excluded_targets), copy_file_mapping,
-                                    move_file_mapping)
+
+      src_files = source_workspace.GetAllSourceTreeFiles(
+          targets, excluded_targets, copy_file_mapping, move_file_mapping)
+      if FLAGS.export_source_tree_print_files:
+        print('\n'.join(src_files))
+        sys.exit(0)
+
+      source_workspace.ExportToRepo(destination_repo, src_files,
+                                    copy_file_mapping, move_file_mapping)
       app.Log(1, 'Pushing changes to remote')
       destination_repo.git.push('origin')
 
