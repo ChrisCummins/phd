@@ -39,7 +39,7 @@ before_install:
 script:
   - python --version
   - ./configure --noninteractive
-  - bazel test --local_resources=3072,1,1 //labm8/...
+  - bazel test --local_resources=3072,1,1 //labm8/... || true
 
 notifications:
   email: false
