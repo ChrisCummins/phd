@@ -87,13 +87,12 @@ class PhdWorkspace(bazelutil.Workspace):
 
   def GetAllSourceTreeFiles(
       self, targets: typing.List[str], excluded_targets: typing.Iterable[str],
-      file_copy_mapping: typing.Dict[str, str],
+      extra_files: typing.List[str],
       file_move_mapping: typing.Dict[str, str]) -> typing.List[pathlib.Path]:
     """Get the full list of source files to export for targets."""
     excluded_targets = set(excluded_targets)
 
-    file_set = set(file_copy_mapping.values())
-    file_set = file_set.union(set(file_move_mapping.values()))
+    file_set = set(extra_files).union(set(file_move_mapping.values()))
     for target in targets:
       file_set = file_set.union(
           set(self.GetDependentFiles(target, excluded_targets)))
@@ -177,15 +176,15 @@ class PhdWorkspace(bazelutil.Workspace):
       print(''.join(requirements), file=f)
 
   def CopyFilesToDestination(self, workspace: bazelutil.Workspace,
-                             file_copy_mapping: typing.Dict[str, str]) -> None:
-    for src_relpath, dst_relpath in file_copy_mapping.items():
-      print(dst_relpath)
+                             files: typing.List[str]) -> None:
+    for relpath in files:
+      print(relpath)
 
-      src_path = self.workspace_root / src_relpath
-      dst_path = workspace.workspace_root / dst_relpath
+      src_path = self.workspace_root / relpath
+      dst_path = workspace.workspace_root / relpath
 
       if not src_path.is_file():
-        raise OSError(f"File `{src_relpath}` not found")
+        raise OSError(f"File `{relpath}` not found")
 
       dst_path.parent.mkdir(exist_ok=True, parents=True)
       shutil.copy(src_path, dst_path)
@@ -211,8 +210,8 @@ class PhdWorkspace(bazelutil.Workspace):
         if dst_src_path.is_file():
           subprocess.check_call(['git', 'rm', src_relpath])
 
-  def ExportToRepo(self, repo: git.Repo, src_files: typing.List[str],
-                   file_copy_mapping: typing.Dict[str, str],
+  def ExportToRepo(self, repo: git.Repo, targets: typing.List[str],
+                   src_files: typing.List[str], extra_files: typing.List[str],
                    file_move_mapping: typing.Dict[str, str]) -> None:
     """Export the requested targets to the destination directory."""
     # The timestamp for the export.
@@ -230,7 +229,7 @@ class PhdWorkspace(bazelutil.Workspace):
     exported_workspace = bazelutil.Workspace(pathlib.Path(
         repo.working_tree_dir))
     self.CreatePythonRequirementsFileForTargets(exported_workspace, targets)
-    self.CopyFilesToDestination(exported_workspace, file_copy_mapping)
+    self.CopyFilesToDestination(exported_workspace, extra_files)
     self.MoveFilesToDestination(exported_workspace, file_move_mapping)
 
     if not repo.is_dirty(untracked_files=True):

@@ -28,11 +28,8 @@ app.DEFINE_list('targets', [], 'The bazel target(s) to export.')
 app.DEFINE_list('excluded_targets', [],
                 'A list of bazel targets to exclude from export.')
 app.DEFINE_list(
-    'cp_files', [], 'A list of additional files to export. Each element in the '
-    'list is either a relative path to export, or a mapping of '
-    'relative paths in the form <src>:<dst>. E.g. '
-    '`foo.py:bar/baz.txt` will export file `foo.py` to '
-    'destination `bar/baz.txt`.')
+    'extra_files', [], 'A list of additional files to export. Each element in '
+    'the list is a relative path to export. E.g. `bar/baz.txt`.')
 app.DEFINE_list(
     'mv_files', [],
     'Each element in the list is a mapping of relative paths in the form '
@@ -79,7 +76,7 @@ def DestinationDirectoryFromFlags() -> pathlib.Path:
 def EXPORT(github_repo: str,
            targets: typing.List[str],
            excluded_targets: typing.List[str] = None,
-           copy_file_mapping: typing.Dict[str, str] = None,
+           extra_files: typing.List[str] = None,
            move_file_mapping: typing.Dict[str, str] = None) -> None:
   """Custom entry-point to export source-tree.
 
@@ -92,15 +89,13 @@ def EXPORT(github_repo: str,
       bazel query, so `/...` and `:all` labels are expanded, e.g.
       `//some/package/to/export/...`. All targets should be absolute, and
       prefixed with '//'.
-    copy_file_mapping: A dictionary of <src,dst> relative files which are
-      copied.
+    extra_files: A list of additional files to export.
     move_file_mapping: A dictionary of <src,dst> relative paths listing files
       which should be moved from their respective source location to the
-      destination. This is the same as `copy_file_mapping`, but the <src> files
-      are deleted.
+      destination.
   """
   excluded_targets = excluded_targets or []
-  copy_file_mapping = copy_file_mapping or {}
+  extra_files = extra_files or []
   move_file_mapping = move_file_mapping or {}
 
   def _DoExport():
@@ -117,13 +112,13 @@ def EXPORT(github_repo: str,
       destination_repo = git.Repo(destination)
 
       src_files = source_workspace.GetAllSourceTreeFiles(
-          targets, excluded_targets, copy_file_mapping, move_file_mapping)
+          targets, excluded_targets, extra_files, move_file_mapping)
       if FLAGS.export_source_tree_print_files:
         print('\n'.join(src_files))
         sys.exit(0)
 
-      source_workspace.ExportToRepo(destination_repo, src_files,
-                                    copy_file_mapping, move_file_mapping)
+      source_workspace.ExportToRepo(destination_repo, targets, src_files,
+                                    extra_files, move_file_mapping)
       app.Log(1, 'Pushing changes to remote')
       destination_repo.git.push('origin')
 
@@ -147,10 +142,7 @@ def main(argv: typing.List[str]):
     else:
       return f, f
 
-  copy_file_tuples = [
-      _GetFileMapping(f) for f in list(sorted(set(FLAGS.cp_files)))
-  ]
-  copy_file_mapping = {x[0]: x[1] for x in copy_file_tuples}
+  extra_files = list(sorted(set(FLAGS.extra_files)))
 
   move_file_tuples = [
       _GetFileMapping(f) for f in list(sorted(set(FLAGS.mv_files)))
@@ -163,7 +155,7 @@ def main(argv: typing.List[str]):
     api.CloneRepoToDestination(repo, destination)
     destination_repo = git.Repo(destination)
     source_workspace.ExportToRepo(destination_repo, targets, excluded_targets,
-                                  copy_file_mapping, move_file_mapping)
+                                  extra_files, move_file_mapping)
     destination_repo.git.push('origin')
 
 
