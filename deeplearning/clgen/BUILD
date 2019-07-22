@@ -200,6 +200,31 @@ py_test(
 )
 
 py_library(
+    name = "samples_database",
+    srcs = ["samples_database.py"],
+    deps = [
+        ":sample_observers",
+        "//deeplearning/clgen/proto:clgen_pb_py",
+        "//labm8:crypto",
+        "//labm8:labdate",
+        "//labm8:pbutil",
+        "//labm8:sqlutil",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "samples_database_test",
+    srcs = ["samples_database_test.py"],
+    deps = [
+        ":samples_database",
+        "//deeplearning/clgen/proto:clgen_pb_py",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_library(
     name = "telemetry",
     srcs = ["telemetry.py"],
     visibility = ["//visibility:public"],
