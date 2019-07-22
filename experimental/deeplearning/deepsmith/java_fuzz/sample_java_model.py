@@ -2,15 +2,13 @@
 import pathlib
 
 from deeplearning.clgen import clgen
-from deeplearning.clgen import sample_observers as sample_observers_lib
+from deeplearning.clgen import samples_database
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
 from labm8 import app
-from labm8 import crypto
-from labm8 import pbutil
 
 FLAGS = app.FLAGS
 
@@ -18,10 +16,10 @@ app.DEFINE_output_path(
     'java_clgen_working_dir',
     '/var/phd/experimental/deeplearning/deepsmith/java_fuzz/clgen_cache',
     'Path to store CLgen cache files.')
-app.DEFINE_output_path(
-    'java_sample_dir',
-    '/var/phd/experimental/deeplearning/deepsmith/java_fuzz/samples',
-    'Path to store CLgen samples.')
+app.DEFINE_database(
+    'samples_db', samples_database.SamplesDatabase,
+    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/samples.db',
+    'Database to store CLgen samples.')
 app.DEFINE_database(
     'java_encoded_contentfiles', encoded.EncodedContentFiles,
     'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/encoded.db',
@@ -92,28 +90,15 @@ def MakeClgenInstance(working_dir: pathlib.Path,
       ))
 
 
-class JavaSampleObserver(sample_observers_lib.SampleObserver):
-  """Sample observer that writes samples to the given directory."""
-
-  def __init__(self, outdir: pathlib.Path):
-    self.outdir = outdir
-    self.outdir.mkdir(parents=True, exist_ok=True)
-
-  def OnSample(self, sample: model_pb2.Sample):
-    checksum = crypto.sha1_str(sample.text)
-    outpath = self.outdir / f'{checksum}.txt'
-    pbutil.ToFile(sample, outpath)
-
-
 def main():
   """Main entry point."""
   instance = MakeClgenInstance(FLAGS.java_clgen_working_dir,
                                FLAGS.java_encoded_contentfiles(),
                                FLAGS.java_training_epochs, FLAGS.java_seed_text,
                                FLAGS.neurons_per_layer)
-  observer = JavaSampleObserver(FLAGS.java_sample_dir)
+  samples_db = FLAGS.samples_db()
 
-  with instance.Session():
+  with instance.Session(), samples_db.Observer() as observer:
     app.Log(1, 'Beginning model training')
     instance.model.Train()
 

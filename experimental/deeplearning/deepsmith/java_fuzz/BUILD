@@ -206,6 +206,7 @@ py_binary(
     srcs = ["sample_java_model.py"],
     deps = [
         "//deeplearning/clgen",
+        "//deeplearning/clgen:samples_database",
         "//deeplearning/clgen/corpuses:encoded",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",
