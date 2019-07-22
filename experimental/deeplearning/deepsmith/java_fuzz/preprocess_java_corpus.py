@@ -1,11 +1,21 @@
-"""Preprocess an exported database of Java methods."""
-import hashlib
+"""Preprocess an exported database of Java methods.
+
+From the input database, it exports contentfiles from repositories where
+  repositories.active = 1
+and
+  repositories.exported = 0
+it then sets this column to 1.
+
+In the output database, it adds new contentfiles.
+"""
 import multiprocessing
+import sys
+import time
+
+import hashlib
 import pathlib
 import subprocess
-import sys
 import threading
-import time
 import typing
 from concurrent import futures
 
@@ -18,7 +28,6 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
 from labm8 import pbutil
-
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
@@ -171,19 +180,19 @@ def main():
   while True:
     runtime = time.time() - start_time
     with input_db.Session() as s:
-      repo_count = s.query(contentfiles.GitHubRepository) \
+      all_repo_count = s.query(contentfiles.GitHubRepository) \
         .filter(contentfiles.GitHubRepository.active == True).count()
-      exported_repo_count = s.query(contentfiles.GitHubRepository)\
+      processed_repo_count = s.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.exported == True).count()
     with output_db.Session() as s:
-      exported_contentfile_count = s.query(
+      preprocessed_file_count = s.query(
           preprocessed.PreprocessedContentFile).count()
     sys.stdout.write(
         f"\rRuntime: {humanize.Duration(runtime)}. "
-        f"Processed repos: {humanize.Commas(exported_repo_count)} "
-        f"of {humanize.Commas(repo_count)} "
-        f"({exported_repo_count / repo_count:.2%}), "
-        f"preprocessed methods: {humanize.Commas(exported_contentfile_count)}"
+        f"Processed repos: {humanize.Commas(processed_repo_count)} "
+        f"of {humanize.Commas(all_repo_count)} "
+        f"({processed_repo_count / all_repo_count:.2%}), "
+        f"preprocessed methods: {humanize.Commas(preprocessed_file_count)}"
         "    ")
     sys.stdout.flush()
 
