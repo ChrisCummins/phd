@@ -374,5 +374,42 @@ public class A {
 """
 
 
+def test_JavaRewrite_github_testcase_1():
+  """Regression test found from scraping GitHub.
+
+  This is an interesting file because it flexes the rewriter's ability to insert
+  blocks around one-liner `for` and `if` constructs.
+
+  Original source:
+      github.com/0001077192/discord-spicybot
+      src/main/java/com/nsa/spicybot/commands/SpicyPointsCommand.java
+  """
+  assert java.JavaRewrite("""
+public class A {
+public static String format(int num){
+  String original="" + num;
+  String dummy=original.length() % 3 != 0 ? original.substring(0,original.length() % 3) + "," : "";
+  for (int i=original.length() % 3; i < original.length(); i+=3)   dummy+=original.substring(i,i + 3) + ",";
+  if (dummy.endsWith(","))   dummy=dummy.substring(0,dummy.length() - 1);
+  return dummy;
+}
+}
+""") == """\
+public class A {
+\tpublic static String fn_A(int a) {
+\t\tString b = "" + a;
+\t\tString c = b.length() % 3 != 0 ? b.substring(0,b.length() % 3) + "," : "";
+\t\tfor (int d = b.length() % 3; d < b.length(); d += 3) {
+\t\t\tc += b.substring(d, d + 3) + ",";
+\t\t}
+\t\tif (c.endsWith(",")) {
+\t\t\tc = c.substring(0, c.length() - 1);
+\t\t}
+\t\treturn c;
+\t}
+}
+"""
+
+
 if __name__ == '__main__':
   test.Main()
