@@ -204,6 +204,7 @@ py3_image(
 py_binary(
     name = "sample_java_model",
     srcs = ["sample_java_model.py"],
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen:samples_database",
