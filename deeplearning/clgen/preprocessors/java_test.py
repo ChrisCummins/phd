@@ -244,7 +244,6 @@ public class MyJavaClass {
 public class A {
 \tprivate class B {
 \t}
-
 \tprivate class C {
 \t}
 }
@@ -277,7 +276,7 @@ public class A {
   public static double[] createEntry(final double[] position){
     int length=position.length;
     int sqrt=(int)Math.sqrt(9);
-
+    
     return 0.0;
   }
 }
@@ -286,8 +285,90 @@ public class A {
 \tpublic static double[] fn_A(final double[] a) {
 \t\tint b = a.length;
 \t\tint c = (int) Math.sqrt(9);
-
 \t\treturn 0.0;
+\t}
+}
+"""
+
+
+def test_JavaRewrite_formats_source():
+  """Test that source is formatted."""
+  assert java.JavaRewrite("""
+public class A { public      static
+                             void Foo(int a) { return
+a;}
+}
+""") == """\
+public class A {
+\tpublic static void fn_A(int a) {
+\t\treturn a;
+\t}
+}
+"""
+
+
+def test_JavaRewrite_assertion_arg_rename_FAILS():
+  """This test highlights a failure of the JavaRewriter.
+
+  Instead of correctly renaming 'x' -> 'a' in the assertion, the assertion is
+  treated as the declaration of a new variable (of type 'assert'), and named
+  'b'.
+  """
+  assert java.JavaRewrite("""
+public class A {
+\tpublic static void fn_A(int x) {
+\t\tassert x;
+\t}
+}
+""") == """\
+public class A {
+\tpublic static void fn_A(int a) {
+\t\tassert b;
+\t}
+}
+"""
+
+
+def test_JavaRewrite_optional_if_else_braces():
+  """Test that if/else braces are inserted."""
+  assert java.JavaRewrite("""
+public class A {
+\tpublic static int fn_A(int x) {
+\t\tif (x)
+\t\t\treturn 1;
+\t\telse
+\t\t\treturn 0;
+\t}
+}
+""") == """\
+public class A {
+\tpublic static int fn_A(int a) {
+\t\tif (a) {
+\t\t\treturn 1;
+\t\t} else {
+\t\t\treturn 0;
+\t\t}
+\t}
+}
+"""
+
+
+def test_JavaRewrite_optional_if_else_braces_on_one_line():
+  """Test that if/else braces are inserted when declaration is on one line."""
+  assert java.JavaRewrite("""
+public class A {
+\tpublic static int fn_A(int x) {
+\t\tif (x) return 1; else return 0;
+\t}
+}
+""") == """\
+public class A {
+\tpublic static int fn_A(int a) {
+\t\tif (a) {
+\t\t\treturn 1;
+\t\t} else {
+\t\t\treturn 0;
+\t\t}
 \t}
 }
 """
