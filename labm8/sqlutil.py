@@ -21,10 +21,10 @@ import pandas as pd
 import pathlib
 import sqlalchemy as sql
 import typing
+from absl import flags as absl_flags
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-from absl import flags as absl_flags
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
@@ -182,6 +182,9 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
   """
   engine_args = {}
 
+  # Read and expand a `file://` prefixed URL.
+  url = ExpandFileUrl(url)
+
   if url.startswith('mysql://'):
     # Support for MySQL dialect.
 
@@ -248,32 +251,6 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
         conn.execute(f'CREATE DATABASE {database}')
     conn.close()
     engine.dispose()
-  elif url.startswith('file://'):
-    # Read URL from a file.
-
-    # Split the URL into the file path, and the optional suffix.
-    components = url.split('?')
-    path, suffix = components[0], '?'.join(components[1:])
-
-    # Strip the file:// prefix from the path.
-    path = pathlib.Path(path[len('file://'):])
-
-    if not path.is_absolute():
-      raise ValueError('Relative path to file:// is not allowed')
-
-    if not path.is_file():
-      raise FileNotFoundError(f"File '{path}' not found")
-
-    # Read the contents of the file, ignoring lines starting with '#'.
-    with open(path) as f:
-      file_url = '\n'.join(x for x in f.read().split('\n')
-                           if not x.lstrip().startswith('#')).strip()
-
-    # Append the suffix.
-    file_url += suffix
-
-    # Recurse so that we can build the engine from the URL in the file.
-    return CreateEngine(file_url, must_exist=must_exist)
   else:
     raise ValueError(f"Unsupported database URL='{url}'")
 
@@ -289,6 +266,48 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
   engine.connect().close()
 
   return engine
+
+
+def ExpandFileUrl(url: str):
+  """Expand URLs which begin with 'file://' by reading the file contents.
+
+  If the URL does not begin with `file://`, it is returned unmodified.
+
+  Args:
+    url: The URL to expand, e.g. `file://path/to/file.txt?arg'
+
+  Returns:
+    The URL as interpreted by reading any URL file.
+
+  Raises:
+    ValueError: If the file path is invalid.
+    FileNotFoundError: IF the file path does not exist.
+  """
+  if not url.startswith('file://'):
+    return url
+
+  # Split the URL into the file path, and the optional suffix.
+  components = url.split('?')
+  path, suffix = components[0], '?'.join(components[1:])
+
+  # Strip the file:// prefix from the path.
+  path = pathlib.Path(path[len('file://'):])
+
+  if not path.is_absolute():
+    raise ValueError('Relative path to file:// is not allowed')
+
+  if not path.is_file():
+    raise FileNotFoundError(f"File '{path}' not found")
+
+  # Read the contents of the file, ignoring lines starting with '#'.
+  with open(path) as f:
+    file_url = '\n'.join(x for x in f.read().split('\n')
+                         if not x.lstrip().startswith('#')).strip()
+
+  # Append the suffix.
+  file_url += suffix
+
+  return file_url
 
 
 def ColumnNames(model) -> typing.List[str]:

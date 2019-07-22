@@ -73,6 +73,20 @@ def test_CreateEngine_sqlite_from_file_with_suffix(tempdir: pathlib.Path):
   assert db_path.is_file()
 
 
+def test_ExpandFileUrl_unmodified():
+  assert sqlutil.ExpandFileUrl('sqlite:///tmp/foo.db') == 'sqlite:///tmp/foo.db'
+
+
+def test_ExpandFileUrl_path_not_found(tempdir: pathlib.Path):
+  with pytest.raises(FileNotFoundError):
+    sqlutil.ExpandFileUrl(f'file:///{tempdir}/file.txt')
+
+
+def test_ExpandFileUrl_path_is_directory(tempdir: pathlib.Path):
+  with pytest.raises(FileNotFoundError):
+    sqlutil.ExpandFileUrl(f'file:///{tempdir}')
+
+
 def test_AllColumnNames_two_fields():
   """Test that column names are returned."""
   base = declarative.declarative_base()
