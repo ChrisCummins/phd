@@ -202,6 +202,7 @@ py_test(
 py_library(
     name = "samples_database",
     srcs = ["samples_database.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":sample_observers",
         "//deeplearning/clgen/proto:clgen_pb_py",
