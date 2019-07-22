@@ -131,6 +131,8 @@ class Preprocessor(threading.Thread):
     self.input_db = input_db
     self.output_db = output_db
     self.max_workers = FLAGS.preprocess_worker_threads
+    # Default to error, set to 0 upon completion.
+    self.returncode = 1
 
   def ProcessABatchOfRepos(self, batch_size: int) -> bool:
     """Process a batch of repos."""
@@ -166,6 +168,7 @@ class Preprocessor(threading.Thread):
     """Preprocess the contents of a database."""
     while self.ProcessABatchOfRepos(batch_size=1000):
       pass
+    self.returncode = 0
     app.Log(1, "Done!")
 
 
@@ -204,6 +207,7 @@ def main():
   sys.stdout.flush()
   sys.stderr.flush()
   print('Done!')
+  sys.exit(exporter.returncode)
 
 
 if __name__ == '__main__':
