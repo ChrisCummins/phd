@@ -42,6 +42,11 @@ app.DEFINE_boolean('multithreaded_preprocess', True,
                    'Use multiple threads during preprocessing.')
 app.DEFINE_integer('preprocess_worker_threads', multiprocessing.cpu_count(),
                    "The number of preprocessor threads.")
+app.DEFINE_boolean(
+    'reverse_order', False,
+    'If set, pre-process repositories in a reverse order. Use '
+    'this flag to have two instances of this process running '
+    'concurrently - one in-order, the other in reverse-order.')
 
 JAVA_PREPROCESSOR = bazelutil.DataPath(
     'phd/deeplearning/clgen/preprocessors/JavaPreprocessor')
@@ -134,16 +139,29 @@ class Preprocessor(threading.Thread):
     # Default to error, set to 0 upon completion.
     self.returncode = 1
 
-  def ProcessABatchOfRepos(self, batch_size: int) -> bool:
-    """Process a batch of repos."""
+  def GetABatchOfRepos(self, batch_size: int) -> bool:
+    """Get a batch of repos that haven't yet been exported."""
     with self.input_db.Session() as input_session:
-      # Get a batch of repos that haven't yet been exported.
-      unexported_repos = input_session.query(
+      query = input_session.query(
           contentfiles.GitHubRepository.clone_from_url) \
         .filter(contentfiles.GitHubRepository.active == True) \
-        .filter(contentfiles.GitHubRepository.exported == False) \
-        .limit(batch_size)
-      clone_from_urls = [x[0] for x in unexported_repos]
+        .filter(contentfiles.GitHubRepository.exported == False)
+
+      if FLAGS.reverse_order:
+        query = query.order_by(contentfiles.GitHubRepository.date_scraped)
+      else:
+        query = query.order_by(
+            contentfiles.GitHubRepository.date_scraped.desc())
+
+      query = query.limit(batch_size)
+
+      clone_from_urls = [x[0] for x in query]
+
+    return clone_from_urls
+
+  def ProcessABatchOfRepos(self, batch_size: int) -> bool:
+    """Process a batch of repos. Return True if one-or-more repos processed."""
+    clone_from_urls = self.GetABatchOfRepos(batch_size)
 
     # Check if there are any repos left to export.
     if not len(clone_from_urls):
