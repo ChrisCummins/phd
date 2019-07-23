@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bats
 #
 # Test that `gpgpu` runs the dummy benchmark suite without catching fire.
 #
@@ -15,19 +15,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -eux
+source labm8/sh/test.sh
 
-TMPDIR="$(mktemp -d)"
+tempdir="$(MakeTemporaryDirectory)"
 
-# Tidy up.
-cleanup() {
-  rm -rf "$TMPDIR"
+setup() {
+  mkdir -p "$tempdir"
 }
-trap cleanup EXIT
 
-datasets/benchmarks/gpgpu/gpgpu \
+teardown() {
+  rm -rfv "$tempdir"
+}
+
+@test "run gpgpu" {
+  run datasets/benchmarks/gpgpu/gpgpu \
     --gpgpu_benchmark_suites=dummy_just_for_testing \
     --gpgpu_envs='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2' \
-    --gpgpu_logdir="$TMPDIR"
-
-ls "$TMPDIR"
+    --gpgpu_logdir="$tempdir"
+  [ "$status" -eq 0 ]
+}
