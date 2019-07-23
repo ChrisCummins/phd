@@ -889,7 +889,7 @@ def let_me_know(output,
 
   server = get_smtp_server(cfg)
   for recipient in cfg['messages']['to'].split(','):
-    msg['To'] = cfg['messages']['to']
+    msg['To'] = recipient
     send_email_smtp(cfg, server, msg)
   server.quit()
 
