@@ -848,6 +848,17 @@ def let_me_know(output,
                 cfg=None,
                 date_started=None,
                 date_ended=None):
+  """Let me know: send an email to user.
+
+  Args:
+    output: The output of the command.
+    command: The command that was executed.
+    returncode: The returncode of the command.
+    cfg: The configuration to use. If not provided, the default configuration
+      is used.
+    date_started: A datetime object representing the start of execution.
+    date_ended: A datetime object representing the end of execution.
+  """
   if cfg is None:
     cfg = load_cfg()
 
