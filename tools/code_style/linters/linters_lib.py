@@ -211,7 +211,7 @@ class LinterActions(object):
 
       if extension == '.cc' or extension == '.c' or extension == '.h' or extension == '.ino':
         self._clang_format.append(path)
-      elif extension == '.py':
+      elif extension == '.py' or extension == '.bzl':
         self._yapf.append(path)
       elif extension == '.sql':
         self._sqlformat.append(path)
