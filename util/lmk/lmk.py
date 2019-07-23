@@ -50,7 +50,6 @@ from datetime import datetime
 from datetime import timedelta
 from email.mime.application import MIMEApplication
 
-
 # Python 2 and 3 have different email module layouts:
 if sys.version_info >= (3, 0):
   from email.mime.multipart import MIMEMultipart
@@ -84,8 +83,7 @@ the smtp and message settings to suit.
 
 Made with \033[1;31m♥\033[0;0m by Chris Cummins.
 <https://github.com/ChrisCummins/phd>\
-""".format(
-    bin=sys.argv[0], cfg=DEFAULT_CFG_PATH)
+""".format(bin=sys.argv[0], cfg=DEFAULT_CFG_PATH)
 
 DEFAULT_CFG = """\
 ; lkm config <https://github.com/ChrisCummins/phd>
@@ -133,14 +131,12 @@ class ArgumentParser(argparse.ArgumentParser):
     See python argparse.ArgumentParser.__init__().
     """
     super(ArgumentParser, self).__init__(*args, **kwargs)
-    self.add_argument(
-        '--version',
-        action='store_true',
-        help='show version information and exit')
-    self.add_argument(
-        '--create-config',
-        action='store_true',
-        help='create configuration file and exit')
+    self.add_argument('--version',
+                      action='store_true',
+                      help='show version information and exit')
+    self.add_argument('--create-config',
+                      action='store_true',
+                      help='create configuration file and exit')
 
   def parse_args(self, args=sys.argv[1:], namespace=None):
     """
@@ -326,18 +322,15 @@ def parse_args(args):
   str
       Command to execute.
   """
-  parser = ArgumentParser(
-      description=__description__,
-      formatter_class=argparse.RawDescriptionHelpFormatter)
-  parser.add_argument(
-      '-e',
-      '--only-errors',
-      action='store_true',
-      help='only notify if command fails')
-  parser.add_argument(
-      'command',
-      metavar='<command>',
-      help='command to execute, or "-" to read from stdin')
+  parser = ArgumentParser(description=__description__,
+                          formatter_class=argparse.RawDescriptionHelpFormatter)
+  parser.add_argument('-e',
+                      '--only-errors',
+                      action='store_true',
+                      help='only notify if command fails')
+  parser.add_argument('command',
+                      metavar='<command>',
+                      help='command to execute, or "-" to read from stdin')
   return parser.parse_args(args)
 
 
@@ -449,10 +442,9 @@ def load_cfg(path=None):
   def _verify(stmt, *msg, **kwargs):
     sep = kwargs.get('sep', ' ')
     if not stmt:
-      print(
-          '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(
-              c=colors, msg=sep.join(msg)),
-          file=sys.stderr)
+      print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(c=colors,
+                                                         msg=sep.join(msg)),
+            file=sys.stderr)
       sys.exit(E_CFG)
 
   if sys.version_info >= (3, 0):
@@ -526,10 +518,9 @@ def get_smtp_server(cfg):
 
   def _error(*msg, **kwargs):
     sep = kwargs.get('sep', ' ')
-    print(
-        '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(
-            c=colors, msg=sep.join(msg)),
-        file=sys.stderr)
+    print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(c=colors,
+                                                       msg=sep.join(msg)),
+          file=sys.stderr)
     sys.exit(E_SMTP)
 
   try:
@@ -551,8 +542,8 @@ def get_smtp_server(cfg):
             cfg_path=cfg['/run']['path']),
         file=sys.stderr)
   except smtplib.SMTPException:
-    _error('unknown error from {host}:{port}'.format(
-        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
+    _error('unknown error from {host}:{port}'.format(host=cfg['smtp']['host'],
+                                                     port=cfg['smtp']['port']))
 
 
 def send_email_smtp(cfg, server, msg):
@@ -574,10 +565,9 @@ def send_email_smtp(cfg, server, msg):
 
   def _error(*msg, **kwargs):
     sep = kwargs.get('sep', ' ')
-    print(
-        '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(
-            c=colors, msg=sep.join(msg)),
-        file=sys.stderr)
+    print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(c=colors,
+                                                       msg=sep.join(msg)),
+          file=sys.stderr)
     return False
 
   recipient = msg['To'].strip()
@@ -586,10 +576,9 @@ def send_email_smtp(cfg, server, msg):
 
   try:
     server.sendmail(msg['From'], msg['To'], msg.as_string())
-    print(
-        '{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'.format(
-            c=colors, recipient=recipient),
-        file=sys.stderr)
+    print('{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'.format(
+        c=colors, recipient=recipient),
+          file=sys.stderr)
     return True
   except smtplib.SMTPHeloError:
     return _error('connection to {host}:{port} failed'.format(
@@ -682,8 +671,8 @@ def build_html_message_body(output,
                  style=style, date_started=date_started, delta=delta))
   if date_ended:
     html += (u'  <tr><td style="{style}">Completed</td>'
-             u'<td>{date_ended}</td></tr>\n'.format(
-                 style=style, date_ended=date_ended))
+             u'<td>{date_ended}</td></tr>\n'.format(style=style,
+                                                    date_ended=date_ended))
   if returncode is not None:
     html += (u'  <tr><td style="{style}">Return code</td>'
              u'<td style="font-weight:700;">{returncode}</td></tr>\n'.format(
@@ -703,10 +692,9 @@ def build_html_message_body(output,
     <td style="{prompt_css}">$</td>
     <td style="{command_css}">{command_html}</td>
   </tr>
-""".format(
-        prompt_css=prompt_css,
-        command_css=command_css,
-        command_html=command_html)
+""".format(prompt_css=prompt_css,
+           command_css=command_css,
+           command_html=command_html)
 
   # command output
   lines = output.split('\n')
@@ -723,11 +711,10 @@ def build_html_message_body(output,
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(
-          lineno_css=lineno_css,
-          lineno=lineno,
-          line_css=line_css,
-          line_html=line_html)
+""".format(lineno_css=lineno_css,
+           lineno=lineno,
+           line_css=line_css,
+           line_html=line_html)
     num_omitted = len(lines) - 200
     html += "</table>"
     html += "... ({num_omitted} lines snipped)".format(num_omitted=num_omitted)
@@ -740,11 +727,10 @@ def build_html_message_body(output,
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(
-          lineno_css=lineno_css,
-          lineno=lineno,
-          line_css=line_css,
-          line_html=line_html)
+""".format(lineno_css=lineno_css,
+           lineno=lineno,
+           line_css=line_css,
+           line_html=line_html)
   else:
     # full length report
     for line, lineno in zip(lines, range(1, len(lines) + 1)):
@@ -758,11 +744,10 @@ def build_html_message_body(output,
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(
-          lineno_css=lineno_css,
-          lineno=lineno,
-          line_css=line_css,
-          line_html=line_html)
+""".format(lineno_css=lineno_css,
+           lineno=lineno,
+           line_css=line_css,
+           line_html=line_html)
 
   html += u'</table>\n'
 
@@ -774,8 +759,7 @@ def build_html_message_body(output,
 <center style="color:#626262;">
   {lmk} made with ♥ by {me}
 </center>
-""".format(
-      lmk=lmk, me=me)
+""".format(lmk=lmk, me=me)
 
   return html, truncated
 
@@ -795,10 +779,9 @@ def get_cfg_path():
   if not os.path.exists(cfg_path) and cfg_path == DEFAULT_CFG_PATH:
     create_default_cfg(cfg_path)
   elif not os.path.exists(cfg_path):
-    print(
-        '{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}'.format(
-            c=colors, cfg_path=cfg_path),
-        file=sys.stderr)
+    print('{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}'.format(
+        c=colors, cfg_path=cfg_path),
+          file=sys.stderr)
     sys.exit(E_CFG)
   return cfg_path
 
@@ -808,6 +791,28 @@ def check_connection(cfg=None):
     cfg = load_cfg()
 
   get_smtp_server(cfg).quit()
+
+
+def truncate(string, maxchar):
+  """
+  Truncate a string to a maximum number of characters.
+
+  If the string is longer than maxchar, then remove excess
+  characters and append an ellipses.
+
+  Arguments:
+
+      string (str): String to truncate.
+      maxchar (int): Maximum length of string in characters. Must be >= 4.
+
+  Returns:
+
+      str: Of length <= maxchar.
+  """
+  if len(string) <= maxchar:
+    return string
+  else:
+    return string[:maxchar - 3] + "..."
 
 
 def build_message_subject(output,
@@ -827,17 +832,25 @@ def build_message_subject(output,
   user = os.environ['USER']
   host = socket.gethostname()
 
+  # Strip newlines and truncate.
+  if command is not None:
+    command = truncate(' '.join([x.strip() for x in command.split('\n')]), 50)
+
   if command is not None and returncode is not None:
     happy_sad = u'🙈' if returncode else u'✔'
-    return u'{user}@{host} {happy_sad} $ {command}'.format(
-        user=user, host=host, happy_sad=happy_sad, command=command)
+    return u'{user}@{host} {happy_sad} $ {command}'.format(user=user,
+                                                           host=host,
+                                                           happy_sad=happy_sad,
+                                                           command=command)
   elif command is not None:
-    return u'{user}@{host} $ {command}'.format(
-        user=user, host=host, command=command)
+    return u'{user}@{host} $ {command}'.format(user=user,
+                                               host=host,
+                                               command=command)
   elif date_started is not None:
     delta = naturaltime(datetime.now() - date_started)
-    return u'{user}@{host} finished job started {delta}'.format(
-        user=user, host=host, delta=delta)
+    return u'{user}@{host} finished job started {delta}'.format(user=user,
+                                                                host=host,
+                                                                delta=delta)
   else:
     return u'{user}@{host} finished job'.format(user=user, host=host)
 
@@ -862,18 +875,16 @@ def let_me_know(output,
   if cfg is None:
     cfg = load_cfg()
 
-  subject = build_message_subject(
-      output=output,
-      command=command,
-      returncode=returncode,
-      date_started=date_started,
-      date_ended=date_ended)
-  html, truncated = build_html_message_body(
-      output=output,
-      command=command,
-      returncode=returncode,
-      date_started=date_started,
-      date_ended=date_ended)
+  subject = build_message_subject(output=output,
+                                  command=command,
+                                  returncode=returncode,
+                                  date_started=date_started,
+                                  date_ended=date_ended)
+  html, truncated = build_html_message_body(output=output,
+                                            command=command,
+                                            returncode=returncode,
+                                            date_started=date_started,
+                                            date_ended=date_ended)
   if sys.version_info < (3, 0):
     html = html.encode('utf-8')
 
@@ -908,8 +919,10 @@ def read_from_stdin():
   date_ended = datetime.now()
   output = ''.join(out).rstrip()
 
-  let_me_know(
-      output=output, cfg=cfg, date_started=date_started, date_ended=date_ended)
+  let_me_know(output=output,
+              cfg=cfg,
+              date_started=date_started,
+              date_ended=date_ended)
 
 
 def run_subprocess(command, only_errors=False):
@@ -919,14 +932,13 @@ def run_subprocess(command, only_errors=False):
   date_started = datetime.now()
 
   out = []
-  process = subprocess.Popen(
-      command,
-      shell=True,
-      executable=cfg['exec']['shell'],
-      universal_newlines=True,
-      bufsize=1,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.STDOUT)
+  process = subprocess.Popen(command,
+                             shell=True,
+                             executable=cfg['exec']['shell'],
+                             universal_newlines=True,
+                             bufsize=1,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
 
   if sys.version_info >= (3, 0):
     output_iter = process.stdout
@@ -945,13 +957,12 @@ def run_subprocess(command, only_errors=False):
   returncode = process.returncode
 
   if returncode or not only_errors:
-    let_me_know(
-        output=output,
-        command=command,
-        returncode=returncode,
-        cfg=cfg,
-        date_started=date_started,
-        date_ended=date_ended)
+    let_me_know(output=output,
+                command=command,
+                returncode=returncode,
+                cfg=cfg,
+                date_started=date_started,
+                date_ended=date_ended)
 
   return returncode
 
