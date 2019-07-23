@@ -70,14 +70,14 @@ def PreprocessStringList(
   return output_message
 
 
-def PreprocessContentFiles(
-    cfs: typing.List[contentfiles.ContentFile]
+def PreprocessContentfiles(
+    texts: typing.List[str]
 ) -> typing.List[preprocessed.PreprocessedContentFile]:
   start_time = time.time()
-  output_message = PreprocessStringList([cf.text for cf in cfs])
+  output_message = PreprocessStringList(texts)
   wall_time_ms = int((time.time() - start_time) * 1000)
 
-  assert (len(cfs) == len(output_message.outcome) == len(
+  assert (len(texts) == len(output_message.outcome) == len(
       output_message.preprocess_time_ms))
 
   pp_cfs = [
@@ -108,24 +108,6 @@ def PreprocessContentFiles(
         pp_cf.text = f"Text contains secrets: {e}"
 
   return pp_cfs
-
-
-def ProcessRepo(input_db: contentfiles.ContentFiles,
-                output_db: preprocessed.PreprocessedContentFiles,
-                clone_from_url: str):
-  with input_db.Session(commit=True) as input_session:
-    with output_db.Session(commit=True) as output_session:
-      contentfiles_to_process = input_session.query(contentfiles.ContentFile) \
-        .filter(contentfiles.ContentFile.clone_from_url == clone_from_url)
-      app.Log(2, 'Processing %s content files from %s',
-              humanize.Commas(contentfiles_to_process.count()), clone_from_url)
-
-      processed = PreprocessContentFiles(contentfiles_to_process.all())
-      output_session.add_all(processed)
-
-    input_session.query(contentfiles.GitHubRepository)\
-        .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url) \
-        .update({'exported': True})
 
 
 class Preprocessor(threading.Thread):
@@ -167,25 +149,32 @@ class Preprocessor(threading.Thread):
     if not len(clone_from_urls):
       return False
 
-    app.Log(
-        1, "Preprocessing Java methods from batch of %s repos in "
-        "%s worker threads", humanize.Commas(len(clone_from_urls)),
-        self.max_workers)
-    if FLAGS.multithreaded_preprocess:
-      with futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-        f = lambda x: ProcessRepo(self.input_db, self.output_db, x)
-        for _ in executor.map(f, clone_from_urls):
-          pass
-    else:
-      for clone_from_url in clone_from_urls:
-        ProcessRepo(self.input_db, self.output_db, clone_from_url)
+    with self.input_db.Session() as input_session:
+      to_preprocess = input_session.query(contentfiles.ContentFile) \
+        .filter(contentfiles.ContentFile.clone_from_url.in_(clone_from_urls))
+
+    app.Log(1, "Preprocessing Java methods from a batch of %s files",
+            humanize.Commas(len(to_preprocess)))
+
+    preprocessed_contentfiles = PreprocessContentfiles(to_preprocess)
+
+    with self.output_db.Session(commit=True) as output_session:
+      output_session.add_all(preprocessed_contentfiles)
 
     return True
 
   def run(self):
     """Preprocess the contents of a database."""
-    while self.ProcessABatchOfRepos(batch_size=1000):
-      pass
+
+    if FLAGS.multithreaded_preprocess:
+      with futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+        f = lambda x: ProcessABatchOfRepos(batch_size=32)
+        while executor.map(f, iter(int, 1)):
+          pass
+    else:
+      while self.ProcessABatchOfRepos(batch_size=32):
+        pass
+
     self.returncode = 0
     app.Log(1, "Done!")
 
