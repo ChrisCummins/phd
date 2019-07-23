@@ -4,6 +4,7 @@
 py_library(
     name = "linters_lib",
     srcs = ["linters_lib.py"],
+    visibility = ["//visibility:public"],
 )
 
 py_test(
