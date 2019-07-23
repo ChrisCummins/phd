@@ -4,37 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.devtools.build.runfiles.Runfiles;
 import deeplearning.clgen.InternalProtos.PreprocessorWorkerJobOutcome;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import labm8.java.bazelutil.BazelRunfiles;
 import org.junit.Test;
 
 public class JavaPreprocessorTest {
-
-  private static String ReadRunfileOrDie(final String path) {
-    try {
-      Runfiles runfiles = Runfiles.create();
-      String runfiles_path = runfiles.rlocation(path);
-      InputStream is = new FileInputStream(runfiles_path);
-      BufferedReader buf = new BufferedReader(new InputStreamReader(is));
-
-      String line = buf.readLine();
-      StringBuilder sb = new StringBuilder();
-      while (line != null) {
-        sb.append(line).append("\n");
-        line = buf.readLine();
-      }
-
-      return sb.toString();
-    } catch (Exception e) {
-      System.err.println("Failed to read: `" + path + "`");
-      System.exit(1);
-      return null;
-    }
-  }
 
   @Test
   public void testCompilesWithoutErrorEmptyClass() throws Exception {
@@ -92,7 +66,7 @@ public class JavaPreprocessorTest {
     //    https://github.com/calphool/romannumeralskata
     //    RomanNumerals/src/com/rounceville/RomanNumeralList.java
     final String src =
-        ReadRunfileOrDie(
+        BazelRunfiles.getDataString(
             "phd/deeplearning/clgen/tests/data/java_preprocessor_regression_test_1.java");
     PreprocessorWorkerJobOutcome outcome = pp.PreprocessSourceOrDie(src);
     assertEquals(outcome.getStatus(), PreprocessorWorkerJobOutcome.Status.REWRITER_FAIL);

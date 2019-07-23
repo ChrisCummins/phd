@@ -457,7 +457,7 @@ java_test(
         ":JavaRewriter",
         "//deeplearning/clgen/preprocessors:JavaPreprocessor",
         "//deeplearning/clgen/proto:clgen_pb_java",
-        "@bazel_tools//tools/java/runfiles",
+        "//labm8/java/bazelutil:BazelRunfiles",
         "@org_junit//jar",
     ],
 )
