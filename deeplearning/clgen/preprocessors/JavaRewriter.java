@@ -34,6 +34,13 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.jdt.core.JavaCore;
@@ -603,6 +610,33 @@ public class JavaRewriter {
     } else {
       return source;
     }
+  }
+
+  /**
+   * Same as RewriteSource(), but this method times-out after the specified number of seconds.
+   *
+   * <p>The source rewriter runtime scales linearly with the size of the program being re-written,
+   * so use this method to prevent enormous inputs from stalling progress.
+   *
+   * @param source The source code to rewrite.
+   * @param filename The name of the file to rewrite.
+   * @return The rewritten source code.
+   * @throws TimeoutException If rewriting fails within the allocated time.
+   * @throws ExecutionException If rewriting fails within the allocated time.
+   * @throws InterruptedException If rewriting fails within the allocated time.
+   */
+  public String RewriteSource(final String source, final String filename, final int timeoutSeconds)
+      throws TimeoutException, ExecutionException, InterruptedException {
+    ExecutorService executor = Executors.newCachedThreadPool();
+    Callable<String> task =
+        new Callable<String>() {
+          public String call() {
+            return RewriteSource(source, filename);
+          }
+        };
+
+    Future<String> future = executor.submit(task);
+    return future.get(timeoutSeconds, TimeUnit.SECONDS);
   }
 
   private void RewriteIdentifiers(

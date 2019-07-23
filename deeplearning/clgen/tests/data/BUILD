@@ -49,3 +49,11 @@ filegroup(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "java_preprocessor_regression_tests",
+    srcs = [
+        "java_preprocessor_regression_test_1.java",
+    ],
+    visibility = ["//deeplearning/clgen:__subpackages__"],
+)

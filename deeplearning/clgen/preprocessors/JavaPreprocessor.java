@@ -8,6 +8,8 @@ import deeplearning.clgen.InternalProtos.PreprocessorWorkerJobOutcomes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.compilers.EclipseJavaCompiler;
 import org.apache.commons.jci.compilers.EclipseJavaCompilerSettings;
@@ -29,6 +31,7 @@ public final class JavaPreprocessor {
   // Configuration options.
   private static final int MIN_CHAR_COUNT = 50;
   private static final int MIN_LINE_COUNT = 4;
+  private static final int REWRITER_TIMEOUT_SECONDS = 60;
   // End of configuration options.
 
   /** Construct a preprocessor. */
@@ -104,7 +107,7 @@ public final class JavaPreprocessor {
     return (CompilationUnit) parser.createAST(null);
   }
 
-  protected String UnwrapMethodInClassOrDie(final String src) {
+  protected String UnwrapMethodInClassOr(final String src) {
     Document document = new Document(src);
     CompilationUnit compilationUnit = GetCompilationUnit(document);
 
@@ -119,16 +122,26 @@ public final class JavaPreprocessor {
           }
         });
     if (method[0] == null) {
-      System.err.println("fatal: Could not unwrap method in class: " + src);
-      System.exit(1);
+      throw new IllegalArgumentException("Could not unwrap method in class: " + src);
     }
     return method[0];
   }
 
-  protected String RewriteSource(final String methodSrc) {
+  /**
+   * Rewrite a Java method.
+   *
+   * @param methodSrc The method source string.
+   * @return The rewritten method.
+   * @throws TimeoutException
+   * @throws ExecutionException
+   * @throws InterruptedException
+   */
+  protected String RewriteSource(final String methodSrc)
+      throws TimeoutException, ExecutionException, InterruptedException {
     final String wrappedSrc = WrapMethodInClass(methodSrc);
-    final String rewrittenSrc = new JavaRewriter().RewriteSource(wrappedSrc, "A.java");
-    return UnwrapMethodInClassOrDie(rewrittenSrc);
+    final String rewrittenSrc =
+        new JavaRewriter().RewriteSource(wrappedSrc, "A.java", REWRITER_TIMEOUT_SECONDS);
+    return UnwrapMethodInClassOr(rewrittenSrc);
   }
 
   /**
@@ -207,7 +220,7 @@ public final class JavaPreprocessor {
    * @param src The source to preprocess.
    * @return A PreprocessorWorkerJobOutcome message with the results of preprocessing.
    */
-  private PreprocessorWorkerJobOutcome PreprocessSourceOrDie(final String src) {
+  public PreprocessorWorkerJobOutcome PreprocessSourceOrDie(final String src) {
     PreprocessorWorkerJobOutcome.Builder message = PreprocessorWorkerJobOutcome.newBuilder();
     String contents = src;
 

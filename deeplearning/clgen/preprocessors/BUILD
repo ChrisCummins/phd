@@ -432,6 +432,7 @@ java_test(
     srcs = [
         "JavaPreprocessorTest.java",
     ],
+    data = ["//deeplearning/clgen/tests/data:java_preprocessor_regression_tests"],
     test_class = "deeplearning.clgen.preprocessors.JavaPreprocessorTest",
     runtime_deps = [
         "@org_apache_commons_cli//jar",
@@ -453,7 +454,10 @@ java_test(
         "@org_eclipse_text//jar",
     ],
     deps = [
+        ":JavaRewriter",
         "//deeplearning/clgen/preprocessors:JavaPreprocessor",
+        "//deeplearning/clgen/proto:clgen_pb_java",
+        "@bazel_tools//tools/java/runfiles",
         "@org_junit//jar",
     ],
 )
