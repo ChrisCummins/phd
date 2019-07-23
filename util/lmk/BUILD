@@ -11,4 +11,5 @@ exports_files([
 py_binary(
     name = "lmk",
     srcs = ["lmk.py"],
+    visibility = ["//visibility:public"],
 )
