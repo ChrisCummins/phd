@@ -6,8 +6,9 @@ through bazel.
 from __future__ import print_function
 
 import os
-import subprocess
 import sys
+
+import subprocess
 import threading
 
 # The path to the root of the PhD repository, i.e. the directory which this file
@@ -144,14 +145,18 @@ class YapfThread(LinterThread):
     ExecOrDie([YAPF, '--style', YAPF_RC, '-i'] + self._paths)
 
 
-class SqlFormatThread(LinterThread):
+class SqlFormat(LinterThread):
 
   def run(self):
     for path in self.paths:
-      ExecOrDie([
-          SQLFORMAT, '--reindent', '--keywords', 'upper', '--identifiers',
-          'lower', path, '--outfile', path
-      ])
+      self.Lint(path)
+
+  @staticmethod
+  def Lint(path):
+    ExecOrDie([
+        SQLFORMAT, '--reindent', '--keywords', 'upper', '--identifiers',
+        'lower', path, '--outfile', path
+    ])
 
 
 class JsBeautifyThread(LinterThread):
@@ -243,7 +248,7 @@ class LinterActions(object):
     if self._yapf:
       linter_threads.append(YapfThread(self._yapf))
     if self._sqlformat:
-      linter_threads.append(SqlFormatThread(self._sqlformat))
+      linter_threads.append(SqlFormat(self._sqlformat))
     if self._jsbeautify:
       linter_threads.append(JsBeautifyThread(self._jsbeautify))
     if self._gofmt:
