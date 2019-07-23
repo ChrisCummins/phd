@@ -118,5 +118,39 @@ def test_AutoCompletePrefix_not_wound():
     text.AutoCompletePrefix('d', trie)
 
 
+def test_StripSingleLineComments_empty_string():
+  assert text.StripSingleLineComments("") == ""
+
+
+def test_StripSingleLineComments_no_comments():
+  assert text.StripSingleLineComments("Hello, world") == "Hello, world"
+
+
+def test_StripSingleLineComments_one_line_string_with_bash_comment():
+  assert (text.StripSingleLineComments("Hello, world  # This is a comment") ==
+          "Hello, world  ")
+
+
+def test_StripSingleLineComments_one_line_string_with_c_comment():
+  assert (text.StripSingleLineComments("Hello, world  // This is a comment") ==
+          "Hello, world  ")
+
+
+def test_StripSingleLineComments_multiline_string_with_comments():
+  assert (text.StripSingleLineComments("""
+This
+is#a comment  // 
+a  // multiline.
+""") == """
+This
+is
+a  \n""")
+
+
+def test_StripSingleLineComments_custom_start_comment_re():
+  assert (text.StripSingleLineComments("This has an -- SQL comment",
+                                       start_comment_re='--') == "This has an ")
+
+
 if __name__ == '__main__':
   test.Main()
