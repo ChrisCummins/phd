@@ -64,17 +64,17 @@ message Result {
   // of differential testing.
   enum Outcome {
     UNKNOWN = 0;
-    // The tescase failed to compile.
+    // The testcase failed to compile.
     BUILD_FAILURE = 1;
-    // The tescase crashed during compilation.
+    // The testcase crashed during compilation.
     BUILD_CRASH = 2;
-    // The tescase timed out during compilation.
+    // The testcase timed out during compilation.
     BUILD_TIMEOUT = 3;
-    // The tescase crashed after compilation, during execution of the binary.
+    // The testcase crashed after compilation, during execution of the binary.
     RUNTIME_CRASH = 4;
-    // The tescase timed out after compilation, during execution of the binary.
+    // The testcase timed out after compilation, during execution of the binary.
     RUNTIME_TIMEOUT = 5;
-    // The tescase compiled, and the binary terminated gracefully.
+    // The testcase compiled, and the binary terminated gracefully.
     PASS = 6;
   }
 
