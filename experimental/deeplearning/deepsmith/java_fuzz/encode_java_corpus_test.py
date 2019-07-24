@@ -66,7 +66,7 @@ def _PreprocessedContentFile(
   )
 
 
-def Decode(array, rvocab):
+def _Decode(array, rvocab):
   """Decode an array using the given reverse-lookup vocabulary dictionary."""
   # Dot-separated tokens.
   return '.'.join([rvocab[x] for x in array])
@@ -88,7 +88,7 @@ def test_EncodeFiles(preprocessed_db, encoded_db):
     rvocab = {v: k for k, v in vocab.items()}
 
     encodeds = [x.indices_array for x in s.query(encoded.EncodedContentFile)]
-    decoded = set(Decode(x, rvocab) for x in encodeds)
+    decoded = set(_Decode(x, rvocab) for x in encodeds)
 
   assert decoded == {'a.b.c', 'a.b.c.g.h.i'}
 
