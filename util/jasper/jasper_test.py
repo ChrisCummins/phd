@@ -29,7 +29,7 @@ def test_getQueryFromUserOrDie_with_change():
   # Note that getQueryFromUserOrDie() runs sqlformat on the query, hence the
   # change in formatting and capitalisation.
   assert jasper.getQueryFromUserOrDie(_mock_edit_callback_with_query) == """\
-SELECT count(*)
+SELECT COUNT(*)
 FROM database.table\
 """
 
