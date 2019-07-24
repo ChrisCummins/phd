@@ -50,6 +50,11 @@ app.DEFINE_boolean(
     'If set, pre-process repositories in a reverse order. Use '
     'this flag to have two instances of this process running '
     'concurrently - one in-order, the other in reverse-order.')
+app.DEFINE_integer('preprocessor_input_query_size', 1024,
+                   'The number of repo URLs to fetch per query.')
+app.DEFINE_integer(
+    'preprocessor_worker_repo_count', 16,
+    'The number of repos to process sequentially in each worker.')
 
 JAVA_PREPROCESSOR = bazelutil.DataPath(
     'phd/deeplearning/clgen/preprocessors/JavaPreprocessor')
@@ -210,7 +215,10 @@ class Preprocessor(threading.Thread):
 
   def run(self):
     """Preprocess the contents of a database."""
-    repos = Chunkify(BatchedReposIterator(self.input_db, 1024), 8)
+    repos = Chunkify(
+        BatchedReposIterator(self.input_db,
+                             FLAGS.preprocessor_input_query_size),
+        FLAGS.preprocessor_worker_repo_count)
 
     if FLAGS.multithreaded_preprocess:
       with futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
