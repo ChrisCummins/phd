@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for working with sqlalchemy."""
+import time
 from sqlalchemy import func
 from sqlalchemy import orm
 
@@ -753,3 +754,84 @@ def ResilientAddManyAndCommit(db: Database, mapped: typing.Iterable[Base]):
       failures += ResilientAddManyAndCommit(db, right)
 
   return failures
+
+
+class BufferedDatabaseWriter(object):
+  """A buffer for adding objects to a session with frequent commits.
+
+  Use this class for cases when you are producing lots of mapped objects that
+  you would like to commit to a database, but don't require them to be committed
+  immediately. By buffering objects and committing them in batches, this class
+  minimises the number of SQL statements that are executed, and is faster than
+  creating and committing a session for every object.
+
+  The Flush() method commits the contents of the buffer. The user is responsible
+  for calling Flush() once the object reaches the end of its use. Alternatively,
+  the Session() method creates a context which automatically calls Flush() at
+  the end of its scope.
+
+  Example usage:
+
+    with BufferedDatabaseWriter(db).Session() as writer:
+      for chunk in chunks_to_process:
+        objs = ProcessChunk(chunk)
+        writer.AddMany(objs)
+  """
+
+  def __init__(self,
+               db: Database,
+               commit_seconds_frequency: int = 30,
+               commit_object_frequency: int = 1024):
+    """Create a BufferedDatabaseWriter.
+
+    Args:
+      db: The Database instance that this writer will add to.
+      commit_seconds_frequency: The number of seconds between commits.
+      commit_object_frequency: The maximum size of the buffer between commits.
+    """
+    self._db = db
+    self._last_commit = time.time()
+    self._to_commit = []
+    self._commit_seconds_frequency = commit_seconds_frequency
+    self._commit_object_frequency = commit_object_frequency
+
+  def __del__(self):
+    self.Flush()
+
+  @contextlib.contextmanager
+  def Session(self) -> 'BufferedDatabaseWriter':
+    """Yields a context manager which calls Flush() at the end of the scope.
+
+    Returns:
+      The `self` instance.
+    """
+    try:
+      yield self
+    finally:
+      self.Flush()
+
+  def AddOne(self, mapped: Base) -> None:
+    """Record a mapped object."""
+    self._to_commit.append(mapped)
+    self.MaybeFlush()
+
+  def AddMany(self, objects: typing.List[Base]) -> None:
+    """Record multiple mapped objects."""
+    self._to_commit += objects
+    self.MaybeFlush()
+
+  def MaybeFlush(self) -> None:
+    """Determine if the buffer should be flushed, and if so, flush it."""
+    if (len(self._to_commit) > self._commit_object_frequency or
+        (time.time() - self._last_commit) > self._commit_seconds_frequency):
+      self.Flush()
+
+  def Flush(self) -> None:
+    """Commit all buffered mapped objects to database."""
+    failures = ResilientAddManyAndCommit(self._db, self._to_commit)
+    if len(failures):
+      logging.Log(logging.GetCallingModuleName(), 1,
+                  'BufferedDatabaseWriter failed to commit %d objects',
+                  len(failures))
+    self._to_commit = []
+    self._last_commit = time.time()

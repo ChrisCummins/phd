@@ -370,5 +370,37 @@ def test_ResilientAddManyAndCommit_conflicting_primary_key():
   assert failures[3].col == 1
 
 
+def test_BufferedDatabaseWriter_add_one():
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = 'test'
+    col = sql.Column(sql.Integer, primary_key=1)
+
+  db = sqlutil.Database('sqlite://', base)
+  with sqlutil.BufferedDatabaseWriter(db).Session() as writer:
+    writer.AddOne(Table(col=1))
+    writer.AddOne(Table(col=2))
+    writer.AddOne(Table(col=3))
+
+  with db.Session() as s:
+    assert s.query(Table).count() == 3
+
+
+def test_BufferedDatabaseWriter_add_many():
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = 'test'
+    col = sql.Column(sql.Integer, primary_key=1)
+
+  db = sqlutil.Database('sqlite://', base)
+  with sqlutil.BufferedDatabaseWriter(db).Session() as writer:
+    writer.AddMany([Table(col=1), Table(col=2), Table(col=3)])
+
+  with db.Session() as s:
+    assert s.query(Table).count() == 3
+
+
 if __name__ == '__main__':
   test.Main()
