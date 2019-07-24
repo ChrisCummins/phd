@@ -3,7 +3,7 @@
 
 \section{Introduction}
 
-This chapter provides an overview of the techniques and theory used in this thesis. Section~\ref{sec:background-machine-learning} describes the machine learning techniques used in this thesis, and Section~\ref{sec:evaluation-techniques} describes and evaluation techniques used in this thesis. Finally, Section~\ref{sec:background-summary} concludes.
+This chapter provides an overview of the techniques and theory used in this thesis. Sections~\ref{sec:background-machine-learning} and~\ref{sec:evaluation-techniques} describe the machine learning and evaluation techniques used in this thesis, respectively.  Section~\ref{sec:background-summary} concludes.
 
 
 \section{Machine Learning}
@@ -259,7 +259,7 @@ Where $\otimes$ denotes element-wise vector product, and subscript $c$ denotes c
 
 \subsection{Decision Trees}
 
-Decision trees are an intuitive form of classifier whereby a tree structure of decision nodes are used to predict the class for a given set of features. Decision trees are built using binary recursive partitioning: by creating a decision node for the feature which provides the highest gain, creating new child nodes for each possible outcome, splitting dividing the data amongst these child nodes, and continuing recursively. The gain of a feature is found by first computing the entropy of the data set. Given a set of data points $D$, and $p_{(+)}$ and $p_{(-)}$ are the number of positive and negative examples in $D$:
+Decision trees are an intuitive form of classifier whereby a tree structure of decision nodes are used to predict the class for a given set of features. Decision trees are built using binary recursive partitioning: by creating a decision node for the feature which provides the highest gain, creating new child nodes for each possible outcome, splitting the data amongst these child nodes, and continuing recursively. The gain of a feature is found by first computing the entropy of the data set. Given a set of data points $D$, and $p_{(+)}$ and $p_{(-)}$ are the number of positive and negative examples in $D$:
 
 \begin{equation}
   H(D) = - p_{(+)}\log_2p_{(+)} - p_{(-)}\log_2p_{(-)}
