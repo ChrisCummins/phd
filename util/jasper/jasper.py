@@ -82,7 +82,7 @@ def getQueryFromUserOrDie(
     query = fs.Read(query_file)
 
   if not query:
-    print("fatal: No query to execute", file=sys.stderr)
+    print("No query to execute, aborting.", file=sys.stderr)
     sys.exit(1)
   return query
 
