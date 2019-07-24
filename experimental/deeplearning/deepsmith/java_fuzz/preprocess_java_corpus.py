@@ -19,12 +19,15 @@ import threading
 import typing
 from concurrent import futures
 
+import sqlalchemy as sql
+
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import secrets
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
 from labm8 import app
+from labm8 import fs
 from labm8 import bazelutil
 from labm8 import humanize
 from labm8 import pbutil
@@ -52,32 +55,92 @@ JAVA_PREPROCESSOR = bazelutil.DataPath(
     'phd/deeplearning/clgen/preprocessors/JavaPreprocessor')
 
 
+def BatchedReposIterator(input_db, batch_size):
+  with input_db.Session() as input_session:
+    if FLAGS.reverse_order:
+      last_date = input_session.query(
+          sql.func.max(contentfiles.GitHubRepository.date_scraped)).one()
+    else:
+      last_date = input_session.query(
+          sql.func.min(contentfiles.GitHubRepository.date_scraped)).one()
+
+  while True:
+    with input_db.Session() as input_session:
+      query = input_session.query(
+          contentfiles.GitHubRepository.clone_from_url,
+          contentfiles.GitHubRepository.date_scraped) \
+        .filter(contentfiles.GitHubRepository.active == True) \
+        .filter(contentfiles.GitHubRepository.exported == False)
+
+      if FLAGS.reverse_order:
+        query = query.filter(contentfiles.GitHubRepository.date_scraped <= last_date)\
+            .order_by(contentfiles.GitHubRepository.date_scraped.desc())
+      else:
+        query = query.filter(contentfiles.GitHubRepository.date_scraped >= last_date)\
+            .order_by(contentfiles.GitHubRepository.date_scraped)
+
+      query = query.limit(batch_size)
+
+      if FLAGS.reverse_order:
+        last_date = min([x[1] for x in query])
+      else:
+        last_date = max([x[1] for x in query])
+
+      clone_from_urls = [x[0] for x in query]
+
+    if not clone_from_urls:
+      break
+
+    yield clone_from_urls
+
+
+def Chunkify(iterator, chunk_size):
+  for items in iterator:
+    for i in range(0, len(items), chunk_size):
+      yield items[i:i + chunk_size]
+
+
 def PreprocessStringList(
     srcs: typing.List[str]) -> internal_pb2.PreprocessorWorkerJobOutcomes:
   input_message = scrape_repos_pb2.ListOfStrings(string=srcs)
   output_message = internal_pb2.PreprocessorWorkerJobOutcomes()
   try:
-    pbutil.RunProcessMessageToProto([JAVA_PREPROCESSOR],
+    pbutil.RunProcessMessageToProto([str(JAVA_PREPROCESSOR)],
                                     input_message,
                                     output_message,
-                                    timeout_seconds=3600)
-  except subprocess.CalledProcessError:
-    # In case of preprocessor failure, dump the proto that it was working on.
-    path = pathlib.Path('/tmp/preprocess_java_corpus_failed_job.pbtxt')
-    pbutil.ToFile(input_message, path)
-    app.FatalWithoutStackTrace(
-        f'JavaPreprocessor failed processing message written to {path}')
+                                    timeout_seconds=len(srcs) * 100)
+  except subprocess.CalledProcessError as e:
+    if len(srcs) > 1:
+      app.Error('JavaPreprocessor failed processing message, '
+                'running each input sequentially')
+      # Try and process each file individually so that
+      for string in input_message.string:
+        outcome = output_message.outcome.add()
+        new_outcomes = PreprocessStringList([string])
+        outcome.CopyFrom(new_outcomes.outcome[0])
+        output_message.preprocess_time_ms.add(
+            new_outcomes.preprocess_time_ms[0])
+    else:
+      # In case of preprocessor failure, dump the proto that it was working on.
+      src = srcs[0]
+      path = pathlib.Path('/tmp/preprocess_java_corpus_failed_job.java')
+      fs.Write(path, src.encode('utf-8'))
+      app.Error('JavaPreprocessor failed processing message written to %s',
+                path)
+      outcome = output_message.outcome.add()
+      outcome.status = internal_pb2.PreprocessorWorkerJobOutcome.FAIL
+      outcome.contents = 'internal error'
+      output_message.preprocess_time_ms.append(0)
   return output_message
 
 
 def PreprocessContentfiles(
-    texts: typing.List[str]
-) -> typing.List[preprocessed.PreprocessedContentFile]:
+    cfs: typing.List[str]) -> typing.List[preprocessed.PreprocessedContentFile]:
   start_time = time.time()
-  output_message = PreprocessStringList(texts)
+  output_message = PreprocessStringList([cf.text for cf in cfs])
   wall_time_ms = int((time.time() - start_time) * 1000)
 
-  assert (len(texts) == len(output_message.outcome) == len(
+  assert (len(cfs) == len(output_message.outcome) == len(
       output_message.preprocess_time_ms))
 
   pp_cfs = [
@@ -121,59 +184,41 @@ class Preprocessor(threading.Thread):
     # Default to error, set to 0 upon completion.
     self.returncode = 1
 
-  def GetABatchOfRepos(self, batch_size: int) -> bool:
-    """Get a batch of repos that haven't yet been exported."""
-    with self.input_db.Session() as input_session:
-      query = input_session.query(
-          contentfiles.GitHubRepository.clone_from_url) \
-        .filter(contentfiles.GitHubRepository.active == True) \
-        .filter(contentfiles.GitHubRepository.exported == False)
-
-      if FLAGS.reverse_order:
-        query = query.order_by(contentfiles.GitHubRepository.date_scraped)
-      else:
-        query = query.order_by(
-            contentfiles.GitHubRepository.date_scraped.desc())
-
-      query = query.limit(batch_size)
-
-      clone_from_urls = [x[0] for x in query]
-
-    return clone_from_urls
-
-  def ProcessABatchOfRepos(self, batch_size: int) -> bool:
+  def ProcessABatchOfRepos(self, clone_from_urls: typing.List[str]) -> bool:
     """Process a batch of repos. Return True if one-or-more repos processed."""
-    clone_from_urls = self.GetABatchOfRepos(batch_size)
-
     # Check if there are any repos left to export.
     if not len(clone_from_urls):
       return False
 
     with self.input_db.Session() as input_session:
       to_preprocess = input_session.query(contentfiles.ContentFile) \
-        .filter(contentfiles.ContentFile.clone_from_url.in_(clone_from_urls))
+        .filter(contentfiles.ContentFile.clone_from_url.in_(clone_from_urls)).all()
 
-    app.Log(1, "Preprocessing Java methods from a batch of %s files",
+    app.Log(1, "Preprocessing %s Java methods",
             humanize.Commas(len(to_preprocess)))
 
     preprocessed_contentfiles = PreprocessContentfiles(to_preprocess)
 
     with self.output_db.Session(commit=True) as output_session:
-      output_session.add_all(preprocessed_contentfiles)
+      with self.input_db.Session(commit=True) as input_session:
+        input_session.query(contentfiles.GitHubRepository)\
+            .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls)) \
+            .update({'exported': True}, synchronize_session=False)
+        output_session.add_all(preprocessed_contentfiles)
 
     return True
 
   def run(self):
     """Preprocess the contents of a database."""
+    repos = Chunkify(BatchedReposIterator(self.input_db, 1024), 8)
 
     if FLAGS.multithreaded_preprocess:
       with futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-        f = lambda x: ProcessABatchOfRepos(batch_size=32)
-        while executor.map(f, iter(int, 1)):
+        while executor.map(self.ProcessABatchOfRepos, repos):
           pass
     else:
-      while self.ProcessABatchOfRepos(batch_size=32):
-        pass
+      for clone_from_urls in repos:
+        self.ProcessABatchOfRepos(clone_from_urls)
 
     self.returncode = 0
     app.Log(1, "Done!")

@@ -152,7 +152,9 @@ py_binary(
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",
         "//labm8:bazelutil",
+        "//labm8:fs",
         "//labm8:pbutil",
+        "//third_party/py/sqlalchemy",
     ],
 )
 
