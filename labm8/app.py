@@ -243,7 +243,6 @@ def get_calling_module_name():
     # way to walk up the call stack.
     globals_for_frame = sys._getframe(depth).f_globals  # pylint: disable=protected-access
     module, module_name = get_module_object_and_name(globals_for_frame)
-    print('module ', module_name)
     if id(module) not in disclaim_module_ids and module_name is not None:
       return module_name
   raise AssertionError('No module was found')
