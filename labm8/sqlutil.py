@@ -708,3 +708,48 @@ class ColumnFactory(object):
                                                   'mysql'),
                       nullable=nullable,
                       default=default)
+
+
+def ResilientAddManyAndCommit(db: Database, mapped: typing.Iterable[Base]):
+  """Attempt to commit all mapped objects and return those that fail.
+
+  This method creates a session and commits the given mapped objects.
+  In case of error, this method will recurse up to O(log(n)) times, committing
+  as many objects that can be as possible.
+
+  Args:
+    db: The database to add the objects to.
+    mapped: A sequence of objects to commit.
+
+  Returns:
+    Any items in `mapped` which could not be committed, if any. Relative order
+    of items is preserved.
+  """
+  failures = []
+
+  if not mapped:
+    return failures
+
+  mapped = list(mapped)
+  try:
+    with db.Session(commit=True) as session:
+      session.add_all(mapped)
+  except sql.exc.SQLAlchemyError as e:
+    logging.Log(logging.GetCallingModuleName(), 1,
+                'Caught error while committing %d mapped objects: %s',
+                len(mapped), e)
+
+    # Divide and conquer. If we're committing only a single object, then a
+    # failure to commit it means that we can do nothing other than return it.
+    # Else, divide the mapped objects in half and attempt to commit as many of
+    # them as possible.
+    if len(mapped) == 1:
+      return mapped
+    else:
+      mid = int(len(mapped) / 2)
+      left = mapped[:mid]
+      right = mapped[mid:]
+      failures += ResilientAddManyAndCommit(db, left)
+      failures += ResilientAddManyAndCommit(db, right)
+
+  return failures

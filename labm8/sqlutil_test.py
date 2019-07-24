@@ -324,5 +324,51 @@ def test_Random_order_by():
     assert random_row.col in {1, 2, 3}
 
 
+def test_ResilientAddManyAndCommit_no_conflicts():
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = 'test'
+    col = sql.Column(sql.Integer, primary_key=1)
+
+  db = sqlutil.Database('sqlite://', base)
+  mapped = [Table(col=1), Table(col=2), Table(col=3)]
+  assert not sqlutil.ResilientAddManyAndCommit(db, mapped)
+
+  with db.Session() as s:
+    assert s.query(Table).count() == 3
+
+
+def test_ResilientAddManyAndCommit_conflicting_primary_key():
+  base = declarative.declarative_base()
+
+  class Table(base):
+    __tablename__ = 'test'
+    col = sql.Column(sql.Integer, primary_key=1)
+
+  db = sqlutil.Database('sqlite://', base)
+
+  # Adding objects with conflicting primary keys will raise an error.
+  # In which case, one will be committed succesfully. The other will be
+  # returned.
+  mapped = [
+      Table(col=1),
+      Table(col=1),
+      Table(col=1),
+      Table(col=1),
+      Table(col=1)
+  ]
+  failures = sqlutil.ResilientAddManyAndCommit(db, mapped)
+
+  with db.Session() as s:
+    assert s.query(Table).count() == 1
+
+  assert len(failures) == 4
+  assert failures[0].col == 1
+  assert failures[1].col == 1
+  assert failures[2].col == 1
+  assert failures[3].col == 1
+
+
 if __name__ == '__main__':
   test.Main()
