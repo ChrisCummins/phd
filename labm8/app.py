@@ -17,13 +17,15 @@ See: <https://github.com/abseil/abseil-py>
 """
 import sys
 
-import build_info
+import functools
 import pathlib
-from typing import Any, Callable, List, Optional, Union
-
+import re
 from absl import app as absl_app
 from absl import flags as absl_flags
 from absl import logging as absl_logging
+from typing import Any, Callable, List, Optional, Union
+
+import build_info
 from labm8.internal import flags_parsers
 from labm8.internal import logging
 
@@ -193,6 +195,60 @@ def SetLogLevel(level: int) -> None:
 
 # Flags functions.
 
+# This is a set of module ids for the modules that disclaim key flags.
+# This module is explicitly added to this set so that we never consider it to
+# define key flag.
+disclaim_module_ids = set([id(sys.modules[__name__])])
+
+
+@functools.lru_cache(maxsize=1)
+def get_main_module_name(abspath) -> str:
+  # Strip everything until the runfiles directory.
+  name = re.sub(r'.*\.runfiles/[^/]+/', '', abspath)
+  # Strip file extension.
+  name = '.'.join(name.split('.')[:-1])
+  # Change path separator to python module separator.
+  name = '.'.join(name.split('/'))
+  # Prefix name with a space so that it come first in the list of modules.
+  return f' {name}'
+
+
+def get_module_object_and_name(globals_dict):
+  """Returns the module that defines a global environment, and its name.
+  Args:
+    globals_dict: A dictionary that should correspond to an environment
+      providing the values of the globals.
+  Returns:
+    _ModuleObjectAndName - pair of module object & module name.
+    Returns (None, None) if the module could not be identified.
+  """
+  name = globals_dict.get('__name__', None)
+  module = sys.modules.get(name, None)
+  # Pick a more informative name for the main module.
+  return module, (get_main_module_name(sys.argv[0])
+                  if name == '__main__' else name)
+
+
+def get_calling_module_name():
+  """Returns the module that's calling into this module.
+  We generally use this function to get the name of the module calling a
+  DEFINE_foo... function.
+  Returns:
+    The module name that called into this one.
+  Raises:
+    AssertionError: Raised when no calling module could be identified.
+  """
+  for depth in range(1, sys.getrecursionlimit()):
+    # sys._getframe is the right thing to use here, as it's the best
+    # way to walk up the call stack.
+    globals_for_frame = sys._getframe(depth).f_globals  # pylint: disable=protected-access
+    module, module_name = get_module_object_and_name(globals_for_frame)
+    print('module ', module_name)
+    if id(module) not in disclaim_module_ids and module_name is not None:
+      return module_name
+  raise AssertionError('No module was found')
+
+
 # TODO(cec): Add flag_values argument to enable better testing.
 # TODO(cec): Add validator callbacks.
 
@@ -206,7 +262,7 @@ def DEFINE_string(name: str,
   absl_flags.DEFINE_string(name,
                            default,
                            help,
-                           module_name=logging.GetCallingModuleName())
+                           module_name=get_calling_module_name())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -224,7 +280,7 @@ def DEFINE_integer(name: str,
   absl_flags.DEFINE_integer(name,
                             default,
                             help,
-                            module_name=logging.GetCallingModuleName(),
+                            module_name=get_calling_module_name(),
                             lower_bound=lower_bound,
                             upper_bound=upper_bound)
   if required:
@@ -244,7 +300,7 @@ def DEFINE_float(name: str,
   absl_flags.DEFINE_float(name,
                           default,
                           help,
-                          module_name=logging.GetCallingModuleName(),
+                          module_name=get_calling_module_name(),
                           lower_bound=lower_bound,
                           upper_bound=upper_bound)
   if required:
@@ -262,7 +318,7 @@ def DEFINE_boolean(name: str,
   absl_flags.DEFINE_boolean(name,
                             default,
                             help,
-                            module_name=logging.GetCallingModuleName())
+                            module_name=get_calling_module_name())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -278,7 +334,7 @@ def DEFINE_list(name: str,
   absl_flags.DEFINE_list(name,
                          default,
                          help,
-                         module_name=logging.GetCallingModuleName())
+                         module_name=get_calling_module_name())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -316,7 +372,7 @@ def DEFINE_input_path(name: str,
                     help,
                     absl_flags.FLAGS,
                     serializer,
-                    module_name=logging.GetCallingModuleName())
+                    module_name=get_calling_module_name())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -360,7 +416,7 @@ def DEFINE_output_path(name: str,
                     help,
                     absl_flags.FLAGS,
                     serializer,
-                    module_name=logging.GetCallingModuleName())
+                    module_name=get_calling_module_name())
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -397,7 +453,7 @@ def DEFINE_database(name: str,
                     help,
                     absl_flags.FLAGS,
                     serializer,
-                    module_name=logging.GetCallingModuleName())
+                    module_name=get_calling_module_name())
   if validator:
     RegisterFlagValidator(name, validator)
 
