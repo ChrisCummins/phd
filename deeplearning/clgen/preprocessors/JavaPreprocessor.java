@@ -8,7 +8,12 @@ import deeplearning.clgen.InternalProtos.PreprocessorWorkerJobOutcomes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.jci.compilers.CompilationResult;
 import org.apache.commons.jci.compilers.EclipseJavaCompiler;
@@ -31,7 +36,7 @@ public final class JavaPreprocessor {
   // Configuration options.
   private static final int MIN_CHAR_COUNT = 50;
   private static final int MIN_LINE_COUNT = 4;
-  private static final int REWRITER_TIMEOUT_SECONDS = 60;
+  private static final int PREPROCESS_TIMEOUT_SECONDS = 60;
   // End of configuration options.
 
   /** Construct a preprocessor. */
@@ -140,7 +145,7 @@ public final class JavaPreprocessor {
       throws TimeoutException, ExecutionException, InterruptedException {
     final String wrappedSrc = WrapMethodInClass(methodSrc);
     final String rewrittenSrc =
-        new JavaRewriter().RewriteSource(wrappedSrc, "A.java", REWRITER_TIMEOUT_SECONDS);
+        new JavaRewriter().RewriteSource(wrappedSrc, "A.java", PREPROCESS_TIMEOUT_SECONDS);
     return UnwrapMethodInClassOr(rewrittenSrc);
   }
 
@@ -214,6 +219,27 @@ public final class JavaPreprocessor {
     return false;
   }
 
+  public PreprocessorWorkerJobOutcome PreprocessSourceOrDie(
+      final String src, final int timeoutSeconds) {
+    try {
+      ExecutorService executor = Executors.newCachedThreadPool();
+      Callable<PreprocessorWorkerJobOutcome> task =
+          new Callable<PreprocessorWorkerJobOutcome>() {
+            public PreprocessorWorkerJobOutcome call() {
+              return PreprocessSourceOrDie(src);
+            }
+          };
+
+      Future<PreprocessorWorkerJobOutcome> future = executor.submit(task);
+      return future.get(timeoutSeconds, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      PreprocessorWorkerJobOutcome.Builder message = PreprocessorWorkerJobOutcome.newBuilder();
+      message.setStatus(PreprocessorWorkerJobOutcome.Status.DOES_NOT_COMPILE);
+      message.setContents("Preprocess timeout");
+      return message.build();
+    }
+  }
+
   /**
    * Preprocess a single Java source text.
    *
@@ -275,7 +301,9 @@ public final class JavaPreprocessor {
 
     for (int i = 0; i < srcs.getStringCount(); ++i) {
       final long startTime = System.currentTimeMillis();
-      message.addOutcome(PreprocessSourceOrDie(srcs.getString(i)));
+      PreprocessorWorkerJobOutcome outcome =
+          PreprocessSourceOrDie(srcs.getString(i), PREPROCESS_TIMEOUT_SECONDS);
+      message.addOutcome(outcome);
       message.addPreprocessTimeMs(System.currentTimeMillis() - startTime);
     }
 
