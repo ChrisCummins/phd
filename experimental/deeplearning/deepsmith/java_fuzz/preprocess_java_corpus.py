@@ -105,6 +105,14 @@ def Chunkify(iterator, chunk_size):
       yield items[i:i + chunk_size]
 
 
+def MergePreprocessorWorkerJobOutcomes(
+    left: internal_pb2.PreprocessorWorkerJobOutcomes,
+    right: internal_pb2.PreprocessorWorkerJobOutcomes):
+  left.outcome.extend(right.outcome)
+  left.preprocess_time_ms.extend(right.preprocess_time_ms)
+  return left
+
+
 def PreprocessStringList(
     srcs: typing.List[str]) -> internal_pb2.PreprocessorWorkerJobOutcomes:
   input_message = scrape_repos_pb2.ListOfStrings(string=srcs)
@@ -115,18 +123,19 @@ def PreprocessStringList(
                                     output_message,
                                     timeout_seconds=len(srcs) * 100)
   except subprocess.CalledProcessError as e:
+    # When pre-processing fails, we use a dividie-and-conquer strategy to
+    # isolate the one-or-more methods which cause pre-processing to fail.
     if len(srcs) > 1:
-      app.Error('JavaPreprocessor failed processing message, '
-                'running each input sequentially')
-      # Try and process each file individually so that
-      for string in input_message.string:
-        outcome = output_message.outcome.add()
-        new_outcomes = PreprocessStringList([string])
-        outcome.CopyFrom(new_outcomes.outcome[0])
-        output_message.preprocess_time_ms.add(
-            new_outcomes.preprocess_time_ms[0])
+      # Divide and conquer.
+      app.Log(1, 'JavaPreprocessor failed processing %d srcs, dividing',
+              len(srcs))
+      mid = int(len(srcs) / 2)
+      left, right = srcs[:mid], srcs[mid:]
+
+      left, right = PreprocessStringList(left), PreprocessStringList(right)
+      output_message = MergePreprocessorWorkerJobOutcomes(left, right)
     else:
-      # In case of preprocessor failure, dump the proto that it was working on.
+      # Base case: Log the error, dump the input, and move on.
       src = srcs[0]
       path = pathlib.Path('/tmp/preprocess_java_corpus_failed_job.java')
       fs.Write(path, src.encode('utf-8'))
