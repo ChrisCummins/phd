@@ -9,7 +9,7 @@ A \emph{payload} encapsulates all of the arguments of an OpenCL compute kernel. 
 
 \subsection{Dynamic Checker}
 
-For the purpose of performance benchmarking the correctness of computed values is of little interest, a class of programs are defined as performing \emph{useful work} if they predictably compute some result. A low-overhead runtime behaviour check is used to validate that a synthesised program does useful work based on the outcome of four executions of a tested program:
+A class of programs are defined as performing \emph{useful work} if they predictably compute some result. For the purpose of performance benchmarking the values computed by a program are of little interest, so a low-overhead runtime behaviour check is used to validate that a synthesised program does useful work based on the outcome of four executions of a tested program:
 
 \begin{enumerate}
 \item Create 4 equal size payloads $A_{1in}$, $B_{1in}$, $A_{2in}$,
