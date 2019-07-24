@@ -204,12 +204,11 @@ class Preprocessor(threading.Thread):
     if not len(clone_from_urls):
       return False
 
+    start_time = time.time()
+
     with self.input_db.Session() as input_session:
       to_preprocess = input_session.query(contentfiles.ContentFile) \
         .filter(contentfiles.ContentFile.clone_from_url.in_(clone_from_urls)).all()
-
-    app.Log(1, "Preprocessing %s Java methods",
-            humanize.Commas(len(to_preprocess)))
 
     preprocessed_contentfiles = PreprocessContentfiles(to_preprocess)
 
@@ -219,6 +218,11 @@ class Preprocessor(threading.Thread):
             .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls)) \
             .update({'exported': True}, synchronize_session=False)
         output_session.add_all(preprocessed_contentfiles)
+
+    duration = time.time() - start_time
+    app.Log(1, "Preprocessed %s Java methods at a rate of %d ms per method",
+            humanize.Commas(len(preprocessed_contentfiles)),
+            (duration / len(preprocessed_contentfiles)) * 1000)
 
     return True
 
@@ -256,15 +260,11 @@ def main():
         .filter(contentfiles.GitHubRepository.active == True).count()
       processed_repo_count = s.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.exported == True).count()
-    with output_db.Session() as s:
-      preprocessed_file_count = s.query(
-          preprocessed.PreprocessedContentFile).count()
     sys.stdout.write(
         f"\rRuntime: {humanize.Duration(runtime)}. "
         f"Processed repos: {humanize.Commas(processed_repo_count)} "
         f"of {humanize.Commas(all_repo_count)} "
-        f"({processed_repo_count / all_repo_count:.2%}), "
-        f"preprocessed methods: {humanize.Commas(preprocessed_file_count)}"
+        f"({processed_repo_count / all_repo_count:.2%})"
         "    ")
     sys.stdout.flush()
 
