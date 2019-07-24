@@ -48,9 +48,12 @@ class DecodeError(ProtoValueError):
 class ProtoWorkerTimeoutError(subprocess.CalledProcessError):
   """Raised is a protobuf worker binary times out."""
 
-  def __init__(self, cmd: typing.List[str], timeout_seconds: int):
+  def __init__(self, cmd: typing.List[str], timeout_seconds: int,
+               returncode: int):
     self.cmd = cmd
     self.timeout_seconds = timeout_seconds
+    # subprocess.CalledProcessError.str() requires a returncode attribute.
+    self.returncode = returncode
 
   def __repr__(self) -> str:
     return (f"Proto worker timeout after {self.timeout_seconds} "
@@ -296,9 +299,10 @@ def PrettyPrintJson(message: ProtocolBuffer, truncate: int = 52) -> str:
     JSON string.
   """
   data = ToJson(message)
-  return json.dumps(_TruncateDictionaryStringValues(data) if truncate else data,
-                    indent=2,
-                    sort_keys=True)
+  return json.dumps(
+      _TruncateDictionaryStringValues(data) if truncate else data,
+      indent=2,
+      sort_keys=True)
 
 
 def RaiseIfNotSet(proto: ProtocolBuffer, field: str,
@@ -421,7 +425,8 @@ def RunProcessMessage(cmd: typing.List[str],
 
   # TODO: Check signal value, not hardcoded int.
   if process.returncode == -9 or process.returncode == 9:
-    raise ProtoWorkerTimeoutError(cmd=cmd, timeout_seconds=timeout_seconds)
+    raise ProtoWorkerTimeoutError(
+        cmd=cmd, timeout_seconds=timeout_seconds, returncode=process.returncode)
   elif process.returncode:
     raise subprocess.CalledProcessError(process.returncode, cmd)
 
@@ -433,10 +438,8 @@ def RunProcessMessageToProto(cmd: typing.List[str],
                              output_proto: ProtocolBuffer,
                              timeout_seconds: int = 360,
                              env: typing.Dict[str, str] = None):
-  stdout = RunProcessMessage(cmd,
-                             input_proto,
-                             timeout_seconds=timeout_seconds,
-                             env=env)
+  stdout = RunProcessMessage(
+      cmd, input_proto, timeout_seconds=timeout_seconds, env=env)
   output_proto.ParseFromString(stdout)
   return output_proto
 
@@ -446,10 +449,8 @@ def RunProcessMessageInPlace(cmd: typing.List[str],
                              timeout_seconds: int = 360,
                              env: typing.Dict[str, str] = None):
   input_proto.ParseFromString(
-      RunProcessMessage(cmd,
-                        input_proto,
-                        timeout_seconds=timeout_seconds,
-                        env=env))
+      RunProcessMessage(
+          cmd, input_proto, timeout_seconds=timeout_seconds, env=env))
   return input_proto
 
 
