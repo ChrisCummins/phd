@@ -128,13 +128,14 @@ def EncodePreprocessedFiles(
 
   per_item_wall_time_ms = int(wall_time_ms / max(len(encodeds), 1))
   pp_cfs = [
-      encoded.EncodedContentFile(
-          id=cf.id,
-          data='.'.join(str(x) for x in enc),
-          tokencount=len(enc),
-          encoding_time_ms=per_item_wall_time_ms,
-          wall_time_ms=per_item_wall_time_ms,
-          date_added=datetime.datetime.now()) for cf, enc in zip(cfs, encodeds)
+      encoded.EncodedContentFile(id=cf.id,
+                                 data='.'.join(str(x)
+                                               for x in enc),
+                                 tokencount=len(enc),
+                                 encoding_time_ms=per_item_wall_time_ms,
+                                 wall_time_ms=per_item_wall_time_ms,
+                                 date_added=datetime.datetime.now())
+      for cf, enc in zip(cfs, encodeds)
   ]
   return pp_cfs, vocab
 
@@ -142,10 +143,12 @@ def EncodePreprocessedFiles(
 def EncodeFiles(input_session: sqlutil.Session, output_session: sqlutil.Session,
                 batch_size: int):
   """Encode a batch of preprocessed contentfiles."""
+  start_time = time.time()
+
   # Process files in order of their numerical ID.
   max_done = output_session.query(encoded.EncodedContentFile.id)\
-    .order_by(encoded.EncodedContentFile.id.desc())\
-    .limit(1).first()
+      .order_by(encoded.EncodedContentFile.id.desc())\
+      .limit(1).first()
   max_done = max_done[0] if max_done else -1
 
   # Only encode files that were pre-processed successfully.
@@ -158,14 +161,17 @@ def EncodeFiles(input_session: sqlutil.Session, output_session: sqlutil.Session,
   to_encode_count, all_files_count = to_encode.count(), all_files.count()
   done_count = output_session.query(encoded.EncodedContentFile).count()
 
-  app.Log(1, 'Encoding %s of %s content files (%.2f%%)',
-          humanize.Commas(to_encode_count), humanize.Commas(all_files_count),
-          (done_count / max(all_files_count, 1)) * 100)
-
   vocab = GetVocabFromMetaTable(output_session)
   enc, vocab = EncodePreprocessedFiles(to_encode, vocab)
   output_session.add_all(enc)
   EmbedVocabInMetaTable(output_session, vocab)
+
+  duration = time.time() - start_time
+  app.Log(1, 'Encoded %s of %s files (%.2f%%) at a rate of %d ms per file',
+          humanize.Commas(to_encode_count), humanize.Commas(all_files_count),
+          (done_count / max(all_files_count, 1)) * 100,
+          (duration / to_encode_count) * 1000)
+
   return len(enc)
 
 
