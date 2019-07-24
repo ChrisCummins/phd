@@ -97,20 +97,21 @@ LIMIT 10;
 # Table of pre-processing results.
 
 SELECT "Pass",
-       count(*) AS COUNT,
+       count(*) AS num_methods,
        (count(*) /
           (SELECT count(*)
-           FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles)) * 100 AS "% of total"
-FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles
+           FROM `github_java_methods_pp_2019.07.16`.preprocessed_contentfiles)) * 100 AS "% of total"
+FROM `github_java_methods_pp_2019.07.16`.preprocessed_contentfiles
 WHERE preprocessing_succeeded=1
 UNION
-SELECT text, count(*) AS COUNT,
+SELECT text, count(*) AS num_methods,
              (count(*) /
                 (SELECT count(*)
-                 FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles)) * 100 AS "% of total"
-FROM `github_java_methods_pp_2019.07.02`.preprocessed_contentfiles
+                 FROM `github_java_methods_pp_2019.07.16`.preprocessed_contentfiles)) * 100 AS "% of total"
+FROM `github_java_methods_pp_2019.07.16`.preprocessed_contentfiles
 WHERE preprocessing_succeeded = 0
-GROUP BY text;
+GROUP BY text
+ORDER BY num_methods DESC;
 
 # Select some preprocessed files for inspection.
 
