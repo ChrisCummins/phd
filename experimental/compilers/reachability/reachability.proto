@@ -13,7 +13,9 @@ message ControlFlowGraphSet {
 // A control flow graph is a collection of basic blocks and edges between them.
 message ControlFlowGraph {
   optional string name = 1;
+  // The nodes in the CFG.
   repeated BasicBlock block = 2;
+  // The connections between nodes of the CFG.
   repeated ControlFlowGraphEdge edge = 3;
   optional int64 entry_block_index = 4;
   optional int64 exit_block_index = 5;
