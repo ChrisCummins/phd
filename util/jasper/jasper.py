@@ -19,7 +19,7 @@ import typing
 from labm8 import app
 from labm8 import fs
 from labm8 import text
-from tools.code_style.linters import linters_lib
+from tools.code_style.formatters import sql_formatter
 from util.lmk import lmk
 
 FLAGS = app.FLAGS
@@ -76,10 +76,7 @@ def getQueryFromUserOrDie(
     query = '\n'.join(
         [x.rstrip() for x in query.split('\n') if x.strip()]).strip()
 
-    # Format the SQL.
-    fs.Write(query_file, query.encode('utf-8'))
-    linters_lib.SqlFormat.Lint(query_file)
-    query = fs.Read(query_file)
+    query = sql_formatter.FormatSql(query)
 
   if not query:
     print("No query to execute, aborting.", file=sys.stderr)

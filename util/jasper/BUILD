@@ -9,7 +9,7 @@ py_binary(
         "//labm8:app",
         "//labm8:fs",
         "//labm8:text",
-        "//tools/code_style/linters:linters_lib",
+        "//tools/code_style/formatters:sql_formatter",
         "//util/lmk",
     ],
 )
