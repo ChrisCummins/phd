@@ -105,7 +105,8 @@ public class JavaDriver {
       succeeded_ = true;
     }
 
-    /** Don't call this directly, use SetInvalidDriverInput() or SetValidDriverFailure() instead. */
+    // Don't call this directly, use SetInvalidDriverInput() or
+    // SetValidDriverFailure() instead.
     private void SetFailed() {
       assert !failed_;
       assert !succeeded_;
