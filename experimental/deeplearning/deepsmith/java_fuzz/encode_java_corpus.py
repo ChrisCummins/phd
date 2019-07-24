@@ -106,7 +106,7 @@ def GetVocabFromMetaTable(session: sqlutil.Session) -> typing.Dict[str, int]:
 
 def EncodePreprocessedContentFiles(
     srcs: typing.List[str], vocabulary: typing.Dict[str, int]
-) -> typing.Union[typing.List[np.array], typing.Dict[str, int]]:
+) -> typing.Tuple[typing.List[np.array], typing.Dict[str, int]]:
   message = internal_pb2.LexerBatchJob(
       input=[internal_pb2.LexerJob(string=s) for s in srcs],
       candidate_token=JAVA_TOKENS,
