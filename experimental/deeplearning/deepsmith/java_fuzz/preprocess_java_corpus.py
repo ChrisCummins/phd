@@ -86,15 +86,15 @@ def BatchedReposIterator(input_db, batch_size):
 
       query = query.limit(batch_size)
 
-      if FLAGS.reverse_order:
-        last_date = min([x[1] for x in query])
-      else:
-        last_date = max([x[1] for x in query])
+      # Check that there is something in the query else min() will raise an
+      # error.
+      if query.first():
+        if FLAGS.reverse_order:
+          last_date = min([x[1] for x in query])
+        else:
+          last_date = max([x[1] for x in query])
 
       clone_from_urls = [x[0] for x in query]
-
-    if not clone_from_urls:
-      break
 
     yield clone_from_urls
 
