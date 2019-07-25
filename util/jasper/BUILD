@@ -1,6 +1,8 @@
 # Jasper is a small command line utility to run long-running MySQL queries.
 
-py_binary(
+load("@subpar//:subpar.bzl", "par_binary")
+
+par_binary(
     name = "jasper",
     srcs = ["jasper.py"],
     deps = [
