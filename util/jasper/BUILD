@@ -23,3 +23,9 @@ py_test(
         "//third_party/py/pytest",
     ],
 )
+
+sh_binary(
+    name = "install",
+    srcs = ["install.sh"],
+    data = [":jasper.par"],
+)
