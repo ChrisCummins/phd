@@ -658,14 +658,5 @@ if $(which dircolors &>/dev/null); then
     alias vdir='vdir --color=auto'
 fi
 
-jasper() {
-    local jasper_args="--host=cc1.inf.ed.ac.uk"
-    if [[ -f ~/phd/bazel-bin/util/jasper/jasper ]]; then
-        ~/phd/bazel-bin/util/jasper/jasper $jasper_args
-    else
-        cd ~/phd && bazel run //util/jasper $jasper_args
-    fi
-}
-
 # Add Travis CI completion, if available.
 [ -f /home/cec/.travis/travis.sh ] && source /home/cec/.travis/travis.sh
