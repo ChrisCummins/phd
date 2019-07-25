@@ -128,43 +128,49 @@ def EncodePreprocessedFiles(
 
   per_item_wall_time_ms = int(wall_time_ms / max(len(encodeds), 1))
   pp_cfs = [
-      encoded.EncodedContentFile(id=cf.id,
-                                 data='.'.join(str(x)
-                                               for x in enc),
-                                 tokencount=len(enc),
-                                 encoding_time_ms=per_item_wall_time_ms,
-                                 wall_time_ms=per_item_wall_time_ms,
-                                 date_added=datetime.datetime.now())
-      for cf, enc in zip(cfs, encodeds)
+      encoded.EncodedContentFile(
+          id=cf.id,
+          data='.'.join(str(x) for x in enc),
+          tokencount=len(enc),
+          encoding_time_ms=per_item_wall_time_ms,
+          wall_time_ms=per_item_wall_time_ms,
+          date_added=datetime.datetime.now()) for cf, enc in zip(cfs, encodeds)
   ]
   return pp_cfs, vocab
 
 
-def EncodeFiles(input_session: sqlutil.Session, output_session: sqlutil.Session,
-                batch_size: int):
+def EncodeFiles(input_db: preprocessed.PreprocessedContentFiles,
+                output_db: encoded.EncodedContentFiles, batch_size: int):
   """Encode a batch of preprocessed contentfiles."""
   start_time = time.time()
 
-  # Process files in order of their numerical ID.
-  max_done = output_session.query(encoded.EncodedContentFile.id)\
-      .order_by(encoded.EncodedContentFile.id.desc())\
-      .limit(1).first()
-  max_done = max_done[0] if max_done else -1
+  with input_db.Session() as input_session, output_db.Session(
+      commit=True) as output_session:
+    # Process files in order of their numerical ID.
+    max_done = output_session.query(encoded.EncodedContentFile.id)\
+        .order_by(encoded.EncodedContentFile.id.desc())\
+        .limit(1).first()
+    max_done = max_done[0] if max_done else -1
 
-  # Only encode files that were pre-processed successfully.
-  all_files = input_session.query(preprocessed.PreprocessedContentFile)\
-      .filter(preprocessed.PreprocessedContentFile.preprocessing_succeeded == True)
-  to_encode = all_files\
-      .filter(preprocessed.PreprocessedContentFile.id > max_done) \
-      .order_by(preprocessed.PreprocessedContentFile.id)\
-      .limit(batch_size)
-  to_encode_count, all_files_count = to_encode.count(), all_files.count()
-  done_count = output_session.query(encoded.EncodedContentFile).count()
+    # Only encode files that were pre-processed successfully.
+    all_files = input_session.query(preprocessed.PreprocessedContentFile)\
+        .filter(preprocessed.PreprocessedContentFile.preprocessing_succeeded == True)
+    to_encode = all_files\
+        .filter(preprocessed.PreprocessedContentFile.id > max_done) \
+        .order_by(preprocessed.PreprocessedContentFile.id)\
+        .limit(batch_size)
+    to_encode_count, all_files_count = to_encode.count(), all_files.count()
+    done_count = output_session.query(encoded.EncodedContentFile).count()
 
-  vocab = GetVocabFromMetaTable(output_session)
+    vocab = GetVocabFromMetaTable(output_session)
+
+  # This method can take a while to complete, so discard the database sesssions
+  # and re-open them later to avoid "MySQL server has gone away" errors.
   enc, vocab = EncodePreprocessedFiles(to_encode, vocab)
-  output_session.add_all(enc)
-  EmbedVocabInMetaTable(output_session, vocab)
+
+  with output_db.Session(commit=True) as output_session:
+    output_session.add_all(enc)
+    EmbedVocabInMetaTable(output_session, vocab)
 
   duration = time.time() - start_time
   app.Log(1, 'Encoded %s of %s files (%.2f%%) at a rate of %d ms per file',
@@ -180,10 +186,8 @@ def main():
   input_db = FLAGS.input()
   output_db = FLAGS.output()
 
-  with input_db.Session() as input_session:
-    with output_db.Session(commit=True) as output_session:
-      while EncodeFiles(input_session, output_session, 10000):
-        output_session.commit()
+  while EncodeFiles(input_db, output_db, 10000):
+    pass
   app.Log(1, "Done!")
 
 
