@@ -29,3 +29,9 @@ sh_binary(
     srcs = ["install.sh"],
     data = [":jasper.par"],
 )
+
+py_binary(
+    name = "EXPORT",
+    srcs = ["EXPORT.py"],
+    deps = ["//tools/source_tree:export_source_tree"],
+)
