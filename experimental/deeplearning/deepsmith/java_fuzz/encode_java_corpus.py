@@ -168,8 +168,8 @@ def EncodeFiles(input_db: preprocessed.PreprocessedContentFiles,
   # and re-open them later to avoid "MySQL server has gone away" errors.
   enc, vocab = EncodePreprocessedFiles(to_encode, vocab)
 
+  sqlutil.ResilientAddManyAndCommit(output_db, enc)
   with output_db.Session(commit=True) as output_session:
-    output_session.add_all(enc)
     EmbedVocabInMetaTable(output_session, vocab)
 
   duration = time.time() - start_time
