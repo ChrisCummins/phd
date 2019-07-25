@@ -131,11 +131,11 @@ Entirely machine learning-based approaches to test case generation have recently
 
 An alternate method to generating test cases is to mutate a seed input.
 % Le, V., Afshari, M., & Su, Z. (2014). Compiler Validation via Equivalence Modulo Inputs. In PLDI. https://doi.org/10.1145/2594291.2594334
-Equivalence Modulo Inputs (EMI) testing, introduced by~\citeauthor{Le2013a}~\cite{Le2013a} follows a different approach to test case generation. Starting with existing code, it inserts or deletes statements that will not be executed so that the functionality of the code is unchanged. If it is affected, it is due to a compiler bug. \diff{In the original work~\cite{Le2013a}, code from dead regions is randomly deleted.}
+Equivalence Modulo Inputs (EMI) testing, introduced by~\citeauthor{Le2013a}~\cite{Le2013a} follows a different approach to test case generation. Starting with existing code, it inserts or deletes statements that will not be executed so that the functionality of the code is unchanged. If the functionality is affected, it is due to a compiler bug. In the original work~\cite{Le2013a}, code from dead regions is randomly deleted.
 % V. Le, C. Sun, and Z. Su, “Finding Deep Compiler Bugs via Guided Stochastic Program Mutation,” in OOPSLA, 2015.
-\diff{\emph{Athena}~\cite{Le2015} guides the approach using a Markov Chain Monte Carlo method, and supports dead code insertion as well as removal.}
+\emph{Athena}~\cite{Le2015} guides the approach using a Markov Chain Monte Carlo method, and supports dead code insertion as well as removal.
 % V. Le, C. Sun, and Z. Su, “Randomized Stress-testing of Link-Time Optimizers,” in ISSTA, 2015.
-\diff{\emph{Proteus}~\cite{Le2015a} applies the EMI technique to test link-time optimizers.}
+\emph{Proteus}~\cite{Le2015a} applies the EMI technique to test link-time optimizers.
 % C. Sun, V. Le, and Z. Su, “Finding Compiler Bugs via Live Code Mutation,” in OOPSLA, 2016.
 \emph{Hermes}~\cite{Sun2016a} extends EMI to permit the mutation of \emph{live code} regions, not just dead code. This greatly increases the expressiveness of the generated programs.
 
@@ -267,7 +267,7 @@ Complementary to iterative compilation is \emph{algorithmic choice}. Like iterat
 % Ragan-Kelley, J., Barnes, C., Adams, A., Paris, S., Durand, F., & Amarasinghe, S. (2013). Halide: A Language and Compiler for Optimizing Parallelism, Locality, and Recomputation in Image Processing Pipelines. In PLDI. https://doi.org/10.1016/0024-3205(81)90116-8
 \emph{Halide}~\cite{Ragan-Kelley2013} alleviates the burden of algorithmic rewriting by providing a high-level domain-specific language that allows users to express pipelines of stencil computations succinctly.
 % Steuwer, M., & Dubach, C. (2017). Lift: A Functional Data-Parallel IR for High-Performance GPU Code Generation. In CGO. IEEE.
-The \emph{Lift} framework~\cite{Steuwer2017} uses a set of semantic-preserving rewrite rules to transform high-level Halide expressions to candidate low-level implementations, creating a space of possible implementations.
+The \emph{Lift} framework~\cite{Steuwer2017} uses a set of semantic-preserving rewrite rules to transform high-level Halide-like expressions to candidate low-level implementations, creating a space of possible implementations.
 
 
 %\subsubsection{Super-optimisation}
