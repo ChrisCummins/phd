@@ -181,9 +181,9 @@ class TensorFlowBackend(backends.BackendBase):
 
     if not sampler:
       # Create tensorboard summary writers for training progress.
-      tf.scalar.summary('loss', self.loss)
-      tf.scalar.summary('learning_rate', self.learning_rate)
-      tf.scalar.summary('epoch_num', self.epoch)
+      tf.summary.scalar('loss', self.loss)
+      tf.summary.scalar('learning_rate', self.learning_rate)
+      tf.summary.scalar('epoch_num', self.epoch)
 
     num_trainable_params = int(
         np.sum([np.prod(v.shape) for v in tf.trainable_variables()]))
