@@ -147,9 +147,8 @@ class TensorFlowBackend(backends.BackendBase):
       decode_helper = helper.CustomInferenceHelper(
           inputs, self.lengths, self.seed_length, embedding, self.temperature)
     else:
-      decode_helper = seq2seq.TrainingHelper(inputs,
-                                             self.lengths,
-                                             time_major=False)
+      decode_helper = seq2seq.TrainingHelper(
+          inputs, self.lengths, time_major=False)
 
     decoder = seq2seq.BasicDecoder(cell, decode_helper, self.initial_state,
                                    tf.layers.Dense(vocab_size))
@@ -302,15 +301,14 @@ class TensorFlowBackend(backends.BackendBase):
       ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
     with tf.Session() as sess:
-      summary_writer = tf.summary.FileWriter(
-          f'{self.cache.path}/tensorboard', sess.graph)
+      summary_writer = tf.summary.FileWriter(f'{self.cache.path}/tensorboard',
+                                             sess.graph)
 
       tf.global_variables_initializer().run()
 
       # Keep all checkpoints.
-      saver = tf.train.Saver(tf.global_variables(),
-                             max_to_keep=100,
-                             save_relative_paths=True)
+      saver = tf.train.Saver(
+          tf.global_variables(), max_to_keep=100, save_relative_paths=True)
 
       # restore model from closest checkpoint.
       if ckpt_path:
@@ -362,9 +360,8 @@ class TensorFlowBackend(backends.BackendBase):
         start_time = time.time()
         global_step = epoch_num
         checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
-        checkpoint_path = saver.save(sess,
-                                     checkpoint_prefix,
-                                     global_step=global_step)
+        checkpoint_path = saver.save(
+            sess, checkpoint_prefix, global_step=global_step)
         app.Log(1, 'Saved checkpoint %s in %s ms.', checkpoint_path,
                 humanize.Commas(int((time.time() - start_time) * 1000)))
         assert pathlib.Path(
