@@ -70,13 +70,14 @@ def test_Instance_Session_clgen_dir(abc_instance_config):
     assert os.environ['CLGEN_CACHE'] == abc_instance_config.working_dir
 
 
-def test_Instance_Session_no_working_dir(abc_instance_config):
-  """Test that $CLEN_CACHE is not set when there's no working_dir."""
+def test_Instance_Session_no_working_dir(abc_instance_config,
+                                         tempdir2: pathlib.Path):
+  """Test that $CLEN_CACHE is not modified config doesn't set working_dir."""
   abc_instance_config.ClearField('working_dir')
-  os.environ['CLGEN_CACHE'] = 'foo'
+  os.environ['CLGEN_CACHE'] = str(tempdir2)
   instance = clgen.Instance(abc_instance_config)
   with instance.Session():
-    assert os.environ['CLGEN_CACHE'] == 'foo'
+    assert os.environ['CLGEN_CACHE'] == str(tempdir2)
 
 
 def test_Instance_Session_yield_value(abc_instance_config):
