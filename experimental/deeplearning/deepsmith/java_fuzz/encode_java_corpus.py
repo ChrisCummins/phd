@@ -176,7 +176,7 @@ def EncodeFiles(input_db: preprocessed.PreprocessedContentFiles,
   app.Log(1, 'Encoded %s of %s files (%.2f%%) at a rate of %d ms per file',
           humanize.Commas(to_encode_count), humanize.Commas(all_files_count),
           (done_count / max(all_files_count, 1)) * 100,
-          (duration / to_encode_count) * 1000)
+          (duration / max(to_encode_count, 1)) * 1000)
 
   return len(enc)
 
