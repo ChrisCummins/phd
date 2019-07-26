@@ -36,6 +36,7 @@ class OpenCLLexer(CLexer):
         'long2', 'long3', 'long4', 'long8', 'long16',
         'ulong2', 'ulong3', 'ulong4', 'ulong8', 'ulong16',
         'float2', 'float3', 'float4', 'float8', 'float16',
+        'double2', 'double3', 'double4', 'double8', 'double16',
         'image2d_t', 'image3d_t', 'sampler_t', 'event_t', 'size_t',
         'bool2', 'bool3', 'bool4', 'bool8', 'bool16',
         'half2', 'half3', 'half4', 'half8', 'half16',
