@@ -37,6 +37,8 @@ enum34==1.1.6
 Flask==1.0.2
 Flask-Compress==1.4.0
 flask-cors==3.0.6
+fs==2.4.8
+fs.sshfs==0.11.1
 funcsigs==1.0.2
 futures==3.1.1
 fuzzywuzzy==0.16.0
