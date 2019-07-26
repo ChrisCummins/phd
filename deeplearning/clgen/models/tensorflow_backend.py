@@ -345,8 +345,8 @@ class TensorFlowBackend(backends.BackendBase):
         for i in bar(range(data_generator.num_batches)):
           x, y = data_generator.NextBatch()
           feed = {self.input_data: x, self.targets: y}
-          [feed[c], feed[h] = state[j].c, state[i].h for j, (c, h)
-           in enumerate(self.initial_state)]
+          for j, (c, h) in enumerate(self.initial_state):
+            feed[c], feed[h] = state[j].c, state[j].h
           summary, loss, state, _ = sess.run(
               [merged, self.loss, self.final_state, self.train_op], feed)
 
