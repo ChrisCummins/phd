@@ -91,29 +91,19 @@ class SamplesDatabaseObserver(sample_observers.SampleObserver):
                db: SamplesDatabase,
                commit_seconds_frequency: int = 30,
                commit_sample_frequency: int = 1024):
-    self._db = db
-    self._last_commit = time.time()
-    self._to_commit = []
-    self._commit_seconds_frequency = commit_seconds_frequency
-    self._commit_sample_frequency = commit_sample_frequency
+    self._writer = sqlutil.BufferedDatabaseWriter(
+        db,
+        commit_seconds_frequency=commit_seconds_frequency,
+        commit_object_frequency=commit_sample_frequency)
 
   def __del__(self):
     self.Flush()
 
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback."""
-    self._to_commit.append(Sample(**Sample.FromProto(sample)))
-
-    # Commit records if required.
-    if (len(self._to_commit) > self._commit_sample_frequency or
-        (time.time() - self._last_commit) > self._commit_seconds_frequency):
-      self.Flush()
-
+    self._writer.AddOne(Sample(**Sample.FromProto(sample)))
     return True
 
   def Flush(self) -> None:
     """Commit all pending records to database."""
-    with self._db.Session(commit=True) as session:
-      session.add_all(self._to_commit)
-    self._to_commit = []
-    self._last_commit = time.time()
+    self._writer.Flush()
