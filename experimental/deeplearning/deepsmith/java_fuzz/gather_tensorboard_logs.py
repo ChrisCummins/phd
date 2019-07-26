@@ -2,6 +2,11 @@
 import pathlib
 import tempfile
 import typing
+import time
+import threading
+import shutil
+from tensorboard import default
+from tensorboard import program
 
 import fs
 
@@ -11,7 +16,7 @@ from labm8 import system
 FLAGS = app.FLAGS
 
 app.DEFINE_input_path(
-    'logdir', None, 'Path to store CLgen cache files.', is_dir=True)
+    'src_logdir', None, 'Path to store CLgen cache files.', is_dir=True)
 app.DEFINE_list('hosts', list(
     sorted({'cc1', 'cc2', 'cc3'} - {system.HOSTNAME})),
                 'List of hosts to gather data from')
@@ -19,14 +24,6 @@ app.DEFINE_list('hosts', list(
 
 def OpenFsFromPaths(paths: typing.List[str]):
   return [fs.open_fs(path) for path in paths]
-
-
-def GatherFromPaths(paths: typing.List[str], dst: pathlib.Path):
-  logdirs = OpenFsFromPaths(paths)
-  dst_fs = fs.open_fs(str(dst))
-  for path, logdir in zip(paths, logdirs):
-    app.Log(1, "Gathering tensorboard events from: %s", path)
-    fs.copy.copy_fs(logdir, dst_fs)
 
 
 def ParseTensorBoardPath(path: pathlib.Path) -> typing.Tuple[str, str]:
@@ -38,7 +35,25 @@ def ParseTensorBoardPath(path: pathlib.Path) -> typing.Tuple[str, str]:
   return host, timestamp
 
 
-def ArrangeFiles(indir: pathlib.Path, outdir: pathlib.Path):
+def GatherAndArrangeLogs(paths, workdir: pathlib.Path) -> pathlib.Path:
+  """Gather """
+  indir = workdir / 'in'
+  outdir = workdir / 'out'
+  indir.mkdir(exist_ok=True)
+
+  logdirs = OpenFsFromPaths(paths)
+
+  # Gather files.
+  if outdir.is_dir():
+    shutil.rmtree(outdir)
+  outdir.mkdir()
+
+  dst_fs = fs.open_fs(str(indir))
+  for path, logdir in zip(paths, logdirs):
+    app.Log(1, "Gathering tensorboard events from: %s", path)
+    fs.copy.copy_fs(logdir, dst_fs)
+
+  # Arrange files.
   for path in indir.iterdir():
     host, timestamp = ParseTensorBoardPath(path)
     run_name = f'{host}_{timestamp}'
@@ -46,6 +61,9 @@ def ArrangeFiles(indir: pathlib.Path, outdir: pathlib.Path):
     dst.parent.mkdir()
     app.Log(1, "mv '%s' '%s'", path, dst)
     path.rename(dst)
+  shutil.rmtree(indir)
+
+  return outdir
 
 
 def GatherAndServe(logdir: pathlib.Path, hosts: typing.List[str]):
@@ -53,18 +71,24 @@ def GatherAndServe(logdir: pathlib.Path, hosts: typing.List[str]):
 
   with tempfile.TemporaryDirectory(prefix='phd_java_fuzz_') as d:
     working_dir = pathlib.Path(d)
-    (working_dir / 'in').mkdir()
-    (working_dir / 'out').mkdir()
+    outdir = GatherAndArrangeLogs(paths, working_dir)
 
-    GatherFromPaths(paths, working_dir / 'in')
-    ArrangeFiles(working_dir / 'in', working_dir / 'out')
-    raise NotImplementedError("TODO: Server tensorboard from working dir and "
-                              "perioridcally update files")
+    # Launch tensorboard
+    tensorboard = program.TensorBoard(
+        default.get_plugins() + default.get_dynamic_plugins(),
+        program.get_default_assets_zip_provider())
+    tensorboard.configure(['unused_arg0', '--logdir', str(outdir)])
+    tensorboard_url = tensorboard.launch()
+    app.Log(1, 'Serving tensorboard at %s', tensorboard_url)
+
+    while True:
+      GatherAndArrangeLogs(paths, working_dir)
+      time.sleep(10)
 
 
 def main():
   """Main entry point."""
-  GatherAndServe(FLAGS.logdir, FLAGS.hosts)
+  GatherAndServe(FLAGS.src_logdir, FLAGS.hosts)
 
 
 if __name__ == '__main__':

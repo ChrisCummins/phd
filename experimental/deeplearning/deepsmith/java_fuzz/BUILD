@@ -185,6 +185,7 @@ py_binary(
         "//labm8:app",
         "//labm8:system",
         "//third_party/py/fs",
+        "//third_party/py/tensorflow",
     ],
 )
 
