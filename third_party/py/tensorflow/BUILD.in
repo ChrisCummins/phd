@@ -22,13 +22,3 @@ py_library(
         "//third_party/py/protobuf",
     ],
 )
-
-py_test(
-    name = "tensorflow_smoke_test",
-    srcs = ["tensorflow_smoke_test.py"],
-    deps = [
-        ":tensorflow",
-        "//labm8:app",
-        "//labm8:test",
-    ],
-)
