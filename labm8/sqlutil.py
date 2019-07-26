@@ -780,20 +780,20 @@ class BufferedDatabaseWriter(object):
 
   def __init__(self,
                db: Database,
-               commit_seconds_frequency: int = 30,
-               commit_object_frequency: int = 1024):
+               flush_secs: int = 30,
+               max_queue: int = 1024):
     """Create a BufferedDatabaseWriter.
 
     Args:
       db: The Database instance that this writer will add to.
-      commit_seconds_frequency: The number of seconds between commits.
-      commit_object_frequency: The maximum size of the buffer between commits.
+      flush_secs: The number of seconds between commits.
+      max_queue: The maximum size of the buffer between commits.
     """
     self._db = db
     self._last_commit = time.time()
     self._to_commit = []
-    self._commit_seconds_frequency = commit_seconds_frequency
-    self._commit_object_frequency = commit_object_frequency
+    self._flush_secs = flush_secs
+    self._max_queue = max_queue
 
   def __del__(self):
     self.Flush()
@@ -822,8 +822,8 @@ class BufferedDatabaseWriter(object):
 
   def MaybeFlush(self) -> None:
     """Determine if the buffer should be flushed, and if so, flush it."""
-    if (len(self._to_commit) > self._commit_object_frequency or
-        (time.time() - self._last_commit) > self._commit_seconds_frequency):
+    if (len(self._to_commit) > self._max_queue or
+        (time.time() - self._last_commit) > self._flush_secs):
       self.Flush()
 
   def Flush(self) -> None:

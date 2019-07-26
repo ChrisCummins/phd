@@ -89,12 +89,12 @@ class SamplesDatabaseObserver(sample_observers.SampleObserver):
 
   def __init__(self,
                db: SamplesDatabase,
-               commit_seconds_frequency: int = 30,
+               flush_secs: int = 30,
                commit_sample_frequency: int = 1024):
     self._writer = sqlutil.BufferedDatabaseWriter(
         db,
-        commit_seconds_frequency=commit_seconds_frequency,
-        commit_object_frequency=commit_sample_frequency)
+        flush_secs=flush_secs,
+        max_queue=commit_sample_frequency)
 
   def __del__(self):
     self.Flush()
