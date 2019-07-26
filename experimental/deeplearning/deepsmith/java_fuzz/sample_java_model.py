@@ -99,7 +99,7 @@ def main():
   samples_db = FLAGS.samples_db()
 
   with instance.Session(), samples_db.Observer() as observer:
-    app.Log(1, 'Beginning model training')
+    app.Log(1, 'Training %s', instance.model)
     instance.model.Train()
 
     app.Log(1, 'Beginning infinite sampling loop.')
