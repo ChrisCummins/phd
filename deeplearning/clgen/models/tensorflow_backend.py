@@ -350,8 +350,8 @@ class TensorFlowBackend(backends.BackendBase):
           summary, loss, state, _ = sess.run(
               [merged, self.loss, self.final_state, self.train_op], feed)
 
-          # Maybe write progress to tensorboard.
-          if j % FLAGS.clgen_tf_backend_tensorboard_summary_step_count == 0:
+          # Periodically write progress to tensorboard.
+          if i % FLAGS.clgen_tf_backend_tensorboard_summary_step_count == 0:
             step = (epoch_num - 1) * data_generator.num_batches + i
             summary_writer.add_summary(summary, step)
 
