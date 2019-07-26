@@ -266,7 +266,7 @@ class Model(object):
                                       num_tokens=len(samples_in_progress[i]))
             # Notify sample observers.
             continue_sampling &= all(
-                [not obs.OnSample(sample) for obs in sample_observers])
+                [obs.OnSample(sample) for obs in sample_observers])
 
             # Wall sample time is the difference between the end of the previous
             # sample and the end of the current sample.
