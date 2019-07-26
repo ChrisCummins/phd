@@ -15,10 +15,23 @@ exports_files(["LICENSE"])
 
 py_library(
     name = "tensorflow",
-    srcs = ["tensorflow.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("tensorflow"),
         "//third_party/py/numpy",
         "//third_party/py/protobuf",
+    ],
+)
+
+py_test(
+    name = "smoke_test",
+    srcs = ["smoke_test.py"],
+    deps = [
+        ":tensorflow",
+        "//labm8:app",
+        "//:getconfig",
+        "//third_party/py/numpy",
+        "//third_party/py/pytest",
+        "//labm8:test",
     ],
 )
