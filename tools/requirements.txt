@@ -158,6 +158,10 @@ sqlparse==0.3.0
 statistics==1.0.3.5
 subprocess32==3.5.0
 # If ./configure detects CUDA, tensorflow-gpu is used.
+# Maintenance note: If changing the version of tensorflow, you must check the
+# TensorFlow release notes for the required version of CUDA, and if necessary
+# update the hardcoded $CUDA_HOME default in GetCudaHome() of the configure
+# script.
 tensorflow==1.14.0
 terminado==0.8.1
 testpath==0.3.1
