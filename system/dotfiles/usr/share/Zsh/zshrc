@@ -192,6 +192,8 @@ alias m='make'
 alias M='mkdir'
 alias p='ipython'
 alias q='which'
+# Since `q` alias conflicts with package of the same name.
+alias sql='/usr/bin/q'
 alias T='tail'
 alias t='timer'
 alias v='vim'
