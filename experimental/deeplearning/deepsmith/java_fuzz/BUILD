@@ -179,6 +179,16 @@ py_test(
 )
 
 py_binary(
+    name = "gather_tensorboard_logs",
+    srcs = ["gather_tensorboard_logs.py"],
+    deps = [
+        "//labm8:app",
+        "//labm8:system",
+        "//third_party/py/fs",
+    ],
+)
+
+py_binary(
     name = "re_preprocess_java_methods",
     srcs = ["re_preprocess_java_methods.py"],
     deps = [
