@@ -36,6 +36,9 @@ app.DEFINE_boolean(
     'clgen_tf_backend_reset_inference_state_between_batches', False,
     'If set, reset the network state between sample batches. Else, the model '
     'state is unaffected.')
+app.DEFINE_integer(
+    'clgen_tf_backend_tensorboard_summary_step_count', 10,
+    'The number of steps between writing tensorboard summaries.')
 
 
 class TensorFlowBackend(backends.BackendBase):
@@ -176,6 +179,12 @@ class TensorFlowBackend(backends.BackendBase):
     optimizer = tf.train.AdamOptimizer(self.learning_rate)
     self.train_op = optimizer.apply_gradients(zip(grads, trainable_variables))
 
+    if not sampler:
+      # Create tensorboard summary writers for training progress.
+      tf.scalar.summary('loss', self.loss)
+      tf.scalar.summary('learning_rate', self.learning_rate)
+      tf.scalar.summary('epoch_num', self.epoch)
+
     num_trainable_params = int(
         np.sum([np.prod(v.shape) for v in tf.trainable_variables()]))
     app.Log(
@@ -272,6 +281,9 @@ class TensorFlowBackend(backends.BackendBase):
 
     logger = telemetry.TrainingLogger(self.cache.path / 'logs')
 
+    # Create and merge the tensorboard summary ops.
+    merged = tf.summary.merge_all()
+
     # training options
     # TODO(cec): Enable support for multiple optimizers:
     initial_learning_rate = (
@@ -290,6 +302,9 @@ class TensorFlowBackend(backends.BackendBase):
       ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
     with tf.Session() as sess:
+      summary_writer = tf.summary.FileWriter(
+          f'{self.cache.path}/tensorboard', sess.graph)
+
       tf.global_variables_initializer().run()
 
       # Keep all checkpoints.
@@ -306,9 +321,12 @@ class TensorFlowBackend(backends.BackendBase):
       if ckpt_paths:
         saver.recover_last_checkpoints(ckpt_paths)
 
+      # Offset epoch counts by 1 so that they are in the range [1..n]
+      current_epoch = sess.run(self.epoch) + 1
+      max_epoch = self.config.training.num_epochs + 1
+
       # Per-epoch training loop.
-      for epoch_num in range(
-          sess.run(self.epoch) + 1, self.config.training.num_epochs + 1):
+      for epoch_num in range(current_epoch, max_epoch):
         logger.EpochBeginCallback()
 
         # decay and set learning rate
@@ -324,14 +342,18 @@ class TensorFlowBackend(backends.BackendBase):
         state = sess.run(self.initial_state)
         # Per-batch inner loop.
         bar = progressbar.ProgressBar(max_value=data_generator.num_batches)
-        for _ in bar(range(data_generator.num_batches)):
+        for i in bar(range(data_generator.num_batches)):
           x, y = data_generator.NextBatch()
           feed = {self.input_data: x, self.targets: y}
-          for i, (c, h) in enumerate(self.initial_state):
-            feed[c] = state[i].c
-            feed[h] = state[i].h
-          loss, state, _ = sess.run(
-              [self.loss, self.final_state, self.train_op], feed)
+          [feed[c], feed[h] = state[j].c, state[i].h for j, (c, h)
+           in enumerate(self.initial_state)]
+          summary, loss, state, _ = sess.run(
+              [merged, self.loss, self.final_state, self.train_op], feed)
+
+          # Maybe write progress to tensorboard.
+          if j % FLAGS.clgen_tf_backend_tensorboard_summary_step_count == 0:
+            step = (epoch_num - 1) * data_generator.num_batches + i
+            summary_writer.add_summary(summary, step)
 
         # Log the loss and delta.
         app.Log(1, 'Loss: %.6f.', loss)
