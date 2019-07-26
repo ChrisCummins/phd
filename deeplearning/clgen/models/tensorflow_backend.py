@@ -301,8 +301,11 @@ class TensorFlowBackend(backends.BackendBase):
       ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
     with tf.Session() as sess:
-      summary_writer = tf.summary.FileWriter(f'{self.cache.path}/tensorboard',
-                                             sess.graph)
+      tensorboard_dir = f'{self.cache.path}/tensorboard'
+      app.Log(
+          1, 'Writing tensorboard training log files. View them using:\n'
+          f"    $ tensorboard --logdir='{tensorboard_dir}'")
+      summary_writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
 
       tf.global_variables_initializer().run()
 
