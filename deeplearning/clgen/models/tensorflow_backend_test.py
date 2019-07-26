@@ -148,6 +148,17 @@ def test_TensorFlowBackend_Train_is_trained(clgen_cache_dir,
   assert m.is_trained
 
 
+def test_TensorFlowBackend_Train_with_sample_callback(
+    clgen_cache_dir, abc_tensorflow_model_config):
+  """Test that sampling during training does not blow up."""
+  del clgen_cache_dir
+  abc_tensorflow_model_config.training.num_epochs = 2
+  sampler = MockSampler()
+  m = models.Model(abc_tensorflow_model_config)
+  m.Train(test_sampler=sampler)
+  assert m.is_trained
+
+
 # TODO(cec): Add test for InferenceManifest() contents of a simple model.
 
 # TODO(cec): Add tests on incrementally trained model predictions and losses.
@@ -172,10 +183,11 @@ def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
   abc_tensorflow_model_config.training.batch_size = 1
   m = models.Model(abc_tensorflow_model_config)
   sample_observer = sample_observers.InMemorySampleSaver()
-  m.Sample(MockSampler(hash='hash'), [
-      sample_observers.MaxSampleCountObserver(1), sample_observer,
-      sample_observers.LegacySampleCacheObserver()
-  ])
+  m.Sample(
+      MockSampler(hash='hash'), [
+          sample_observers.MaxSampleCountObserver(1), sample_observer,
+          sample_observers.LegacySampleCacheObserver()
+      ])
   samples = sample_observer.samples
   # Samples are produced in batches of sampler.batch_size elements.
   assert len(samples) == 1

@@ -189,6 +189,7 @@ py_library(
         ":backends",
         ":builders",
         ":data_generators",
+        "//deeplearning/clgen:sample_observers",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/proto:clgen_pb_py",

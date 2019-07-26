@@ -74,6 +74,15 @@ class TensorFlowBackend(backends.BackendBase):
     self.inference_indices = None
     self.inference_state = None
 
+    # Create the summary writer, shared between Train() and
+    # _EndOfEpochTestSample().
+    import tensorflow as tf
+    tensorboard_dir = f'{self.cache.path}/tensorboard'
+    app.Log(
+        1, 'Using tensorboard to log training progress. View progress using:\n'
+        f"    $ tensorboard --logdir='{tensorboard_dir}'")
+    self.summary_writer = tf.summary.FileWriter(tensorboard_dir, graph=None)
+
   def InitTfGraph(self,
                   sampler: typing.Optional[samplers.Sampler] = None) -> 'tf':
     """Instantiate a TensorFlow graph for training or inference.
@@ -260,7 +269,10 @@ class TensorFlowBackend(backends.BackendBase):
     ]
     return sorted(paths)
 
-  def Train(self, corpus) -> None:
+  def Train(self,
+            corpus,
+            test_sampler: typing.Optional[samplers.Sampler] = None,
+            **unused_kwargs) -> None:
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -271,6 +283,8 @@ class TensorFlowBackend(backends.BackendBase):
 
     This method must only be called when the model is locked.
     """
+    del unused_kwargs
+
     if self.is_trained:
       return
 
@@ -301,12 +315,6 @@ class TensorFlowBackend(backends.BackendBase):
       ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
     with tf.Session() as sess:
-      tensorboard_dir = f'{self.cache.path}/tensorboard'
-      app.Log(
-          1, 'Writing tensorboard training log files. View them using:\n'
-          f"    $ tensorboard --logdir='{tensorboard_dir}'")
-      summary_writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
-
       tf.global_variables_initializer().run()
 
       # Keep all checkpoints.
@@ -354,7 +362,7 @@ class TensorFlowBackend(backends.BackendBase):
           # Periodically write progress to tensorboard.
           if i % FLAGS.clgen_tf_backend_tensorboard_summary_step_count == 0:
             step = (epoch_num - 1) * data_generator.num_batches + i
-            summary_writer.add_summary(summary, step)
+            self.summary_writer.add_summary(summary, step)
 
         # Log the loss and delta.
         app.Log(1, 'Loss: %.6f.', loss)
@@ -372,6 +380,54 @@ class TensorFlowBackend(backends.BackendBase):
         assert pathlib.Path(f'{checkpoint_prefix}-{global_step}.meta').is_file()
 
         logger.EpochEndCallback(epoch_num, loss)
+        # If we have a sampler that we can use at the end of epochs, then
+        # This is confusing logic! Consider a refactor to simplify things.
+        if test_sampler:
+          break
+      else:
+        return
+
+    if test_sampler:
+      self._EndOfEpochTestSample(corpus, test_sampler, step)
+      self.Train(corpus, test_sampler)
+
+  def _EndOfEpochTestSample(self, corpus, sampler: samplers.Sampler, step: int):
+    """Run sampler"""
+    import tensorflow as tf
+    atomizer = corpus.atomizer
+    sampler.Specialize(atomizer)
+    sampler.batch_size = 1
+    seed = 0
+
+    self.InitSampling(sampler, seed)
+    self.InitSampleBatch(sampler)
+
+    samples = []
+    for i in range(12):
+      done = np.zeros(1, dtype=np.bool)
+      while not done[0]:
+        sample_in_progress = sampler.tokenized_start_text.copy()
+        indices = self.SampleNextIndices(sampler, done)
+
+        # Iterate over all samples in batch to determine whether they're
+        # done.
+        for index in indices[0]:
+          sample_in_progress.append(atomizer.decoder[index])
+          if not sampler.SampleIsComplete(sample_in_progress):
+            continue
+
+          sample = ''.join(sample_in_progress)
+          samples.append(sample)
+          app.Log(1, 'End-of-epoch sample %d:\n%s', i + 1, sample)
+          done[0] = True
+          break
+
+    # Write samples to file.
+    samples_as_markdown = [f'```\n{sample.strip()}\n```' for sample in samples]
+    samples_tensor = tf.convert_to_tensor(samples_as_markdown, dtype=tf.string)
+    summary_op = tf.summary.text('samples', samples_tensor)
+    summary = self.inference_sess.run(summary_op)
+    self.summary_writer.add_summary(summary, step)
 
   def InitSampling(self,
                    sampler: samplers.Sampler,

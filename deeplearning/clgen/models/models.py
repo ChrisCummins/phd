@@ -148,7 +148,7 @@ class Model(object):
     config_to_hash.training.ClearField('num_epochs')
     return crypto.sha1_list(corpus_.hash, config_to_hash.SerializeToString())
 
-  def Train(self) -> 'Model':
+  def Train(self, **kwargs) -> 'Model':
     """Train the model.
 
     Returns:
@@ -160,7 +160,7 @@ class Model(object):
     """
     self.corpus.Create()
     with self.training_lock.acquire():
-      self.backend.Train(self.corpus)
+      self.backend.Train(self.corpus, **kwargs)
     telemetry_logs = self.TrainingTelemetry()[:self.config.training.num_epochs]
     final_loss = telemetry_logs[-1].loss
     total_time_ms = sum(t.epoch_wall_time_ms for t in telemetry_logs)

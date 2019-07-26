@@ -38,7 +38,7 @@ class BackendBase(object):
     self.cache = fs_cache
     self.atomizer = atomizer
 
-  def Train(self, corpus: 'Corpus') -> None:
+  def Train(self, corpus: 'Corpus', **extra_kwargs) -> None:
     """Train the backend."""
     raise NotImplementedError
 

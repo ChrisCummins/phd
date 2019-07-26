@@ -130,9 +130,11 @@ class Instance(object):
 
   def Train(self, *args, **kwargs) -> None:
     with self.Session():
-      self.model.Train(*args, **kwargs)
+      # We inject the `test_sampler` argument so that we can create sample.
+      self.model.Train(*args, test_sampler=self.sampler, **kwargs)
 
   def Sample(self, *args, **kwargs) -> typing.List[model_pb2.Sample]:
+    self.Train()
     with self.Session():
       return self.model.Sample(self.sampler, *args, **kwargs)
 
@@ -314,7 +316,7 @@ def DoFlagsAction():
     if FLAGS.stop_after == 'corpus':
       instance.model.corpus.Create()
     elif FLAGS.stop_after == 'train':
-      instance.model.Train()
+      instance.m.Train()
       app.Log(1, 'Model: %s', instance.model.cache.path)
     elif FLAGS.stop_after:
       raise app.UsageError(
@@ -323,7 +325,7 @@ def DoFlagsAction():
       instance.ExportPretrainedModel(pathlib.Path(FLAGS.export_model))
     else:
       sample_observers = SampleObserversFromFlags()
-      instance.model.Sample(instance.sampler, sample_observers)
+      instance.Sample(sample_observers)
 
 
 def main(argv):
