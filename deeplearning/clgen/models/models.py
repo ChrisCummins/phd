@@ -91,13 +91,13 @@ class Model(object):
     # Create symlink to the atomizer.
     symlink = self.cache.path / 'atomizer'
     if not symlink.is_symlink():
-      os.symlink(os.path.relpath(self.corpus.atomizer_path, self.cache.path),
-                 symlink)
+      os.symlink(
+          os.path.relpath(self.corpus.atomizer_path, self.cache.path), symlink)
 
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):
-      cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
-                                    internal_pb2.ModelMeta())
+      cached_meta = pbutil.FromFile(
+          pathlib.Path(self.cache['META.pbtxt']), internal_pb2.ModelMeta())
       # Exclude num_epochs and corpus location from metadata comparison.
       config_to_compare = model_pb2.Model()
       config_to_compare.CopyFrom(self.config)
@@ -161,12 +161,13 @@ class Model(object):
     self.corpus.Create()
     with self.training_lock.acquire():
       self.backend.Train(self.corpus)
-    total_time_ms = sum(
-        t.epoch_wall_time_ms
-        for t in self.TrainingTelemetry()[:self.config.training.num_epochs])
-    app.Log(1, 'Trained model for %d epochs in %s ms (%s).',
-            self.config.training.num_epochs, humanize.Commas(total_time_ms),
-            humanize.Duration(total_time_ms / 1000))
+    telemetry_logs = self.TrainingTelemetry()[:self.config.training.num_epochs]
+    final_loss = telemetry_logs[-1].loss
+    total_time_ms = sum(t.epoch_wall_time_ms for t in telemetry_logs)
+    app.Log(1, 'Trained model for %d epochs in %s ms (%s). '
+            'Training loss: %f.', self.config.training.num_epochs,
+            humanize.Commas(total_time_ms),
+            humanize.Duration(total_time_ms / 1000), final_loss)
     return self
 
   def Sample(self,
@@ -259,11 +260,12 @@ class Model(object):
           if sampler.SampleIsComplete(samples_in_progress[i]):
             end_time = labdate.MillisecondsTimestamp()
             done[i] = 1
-            sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
-                                      sample_start_epoch_ms_utc=start_time,
-                                      sample_time_ms=end_time - start_time,
-                                      wall_time_ms=end_time - wall_time_start,
-                                      num_tokens=len(samples_in_progress[i]))
+            sample = model_pb2.Sample(
+                text=''.join(samples_in_progress[i]),
+                sample_start_epoch_ms_utc=start_time,
+                sample_time_ms=end_time - start_time,
+                wall_time_ms=end_time - wall_time_start,
+                num_tokens=len(samples_in_progress[i]))
             # Notify sample observers.
             continue_sampling &= all(
                 [obs.OnSample(sample) for obs in sample_observers])
