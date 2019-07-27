@@ -56,6 +56,7 @@ py_library(
         "//labm8:humanize",
         "//labm8:lockfile",
         "//labm8:pbutil",
+        "//labm8:prof",
         "//third_party/py/checksumdir",
         "//third_party/py/numpy",
         "//third_party/py/sqlalchemy",
