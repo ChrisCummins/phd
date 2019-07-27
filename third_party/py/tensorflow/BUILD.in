@@ -35,3 +35,9 @@ py_test(
         "//labm8:test",
     ],
 )
+
+py_test(
+    name = "overview",
+    srcs = ["overview.py"],
+    deps = [":tensorflow"],
+)
