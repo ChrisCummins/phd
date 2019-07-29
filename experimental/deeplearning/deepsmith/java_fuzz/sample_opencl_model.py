@@ -18,6 +18,11 @@ from labm8 import app
 
 FLAGS = app.FLAGS
 
+app.DEFINE_boolean(
+    'use_encoded_contentfiles_db', False,
+    'If set, use the --java_encoded_contentfiles flag to as the training '
+    'corpus.')
+
 
 def main():
   """Main entry point."""
@@ -27,8 +32,9 @@ def main():
       FLAGS.java_training_epochs,
       'kernel void A(',  # OpenCL-specific seed text.
       FLAGS.neurons_per_layer)
-  # Replace the Java corpus with an OpenCL one.
-  config.model.corpus.CopyFrom(opencl.CreateCorpusProtoFromFlags())
+  if not FLAGS.use_encoded_contentfiles_db:
+    # Replace the Java corpus with an OpenCL one.
+    config.model.corpus.CopyFrom(opencl.CreateCorpusProtoFromFlags())
   samples_db = FLAGS.samples_db()
   java.TrainAndSampleInstance(clgen.Instance(config), samples_db)
 
