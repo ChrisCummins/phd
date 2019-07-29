@@ -423,11 +423,17 @@ class TensorFlowBackend(backends.BackendBase):
           break
 
     # Write samples to file.
-    samples_as_markdown = [f'```\n{sample.strip()}\n```' for sample in samples]
+    samples_as_markdown = [
+        self.FormatCodeAsMarkdown(sample) for sample in samples
+    ]
     samples_tensor = tf.convert_to_tensor(samples_as_markdown, dtype=tf.string)
     summary_op = tf.summary.text('samples', samples_tensor)
     summary = self.inference_sess.run(summary_op)
     self.summary_writer.add_summary(summary, step)
+
+  @staticmethod
+  def FormatCodeAsMarkdown(text: str) -> str:
+    return f'<pre>{text.strip()}</pre>'
 
   def InitSampling(self,
                    sampler: samplers.Sampler,
