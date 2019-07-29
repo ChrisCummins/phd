@@ -28,6 +28,12 @@ exports_files([
     "README.md",
 ])
 
+py_binary(
+    name = "EXPORT",
+    srcs = ["EXPORT.py"],
+    deps = ["//tools/source_tree:export_source_tree"],
+)
+
 py_library(
     name = "cache",
     srcs = ["cache.py"],
