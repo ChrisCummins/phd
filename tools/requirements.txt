@@ -49,7 +49,7 @@ grpcio-tools==1.18.0
 grpcio==1.18.0
 gspread==3.0.1
 gym==0.10.5
-h5py==2.7.1
+h5py==2.9.0
 html5lib==0.9999999
 humanize==0.5.1
 idna==2.6  # Dependency of requests.
