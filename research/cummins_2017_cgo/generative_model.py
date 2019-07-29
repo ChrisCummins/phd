@@ -99,8 +99,8 @@ def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
       contentfile_separator='\n\n',
   )
   if FLAGS.clgen_multichar_tokenizer:
-    corpus.greedy_multichar_atomizer = corpus_pb2.GreedyMulticharAtomizer(
-        tokens=[
+    corpus.greedy_multichar_atomizer.CopyFrom(
+        corpus_pb2.GreedyMulticharAtomizer(tokens=[
             "  ",
             "__assert",
             "__attribute",
@@ -193,7 +193,7 @@ def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
             "while",
             "wide",
             "write_only",
-        ])
+        ]))
   else:
     corpus.ascii_character_atomizer = True
 
