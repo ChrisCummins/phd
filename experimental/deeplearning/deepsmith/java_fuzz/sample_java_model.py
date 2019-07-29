@@ -94,7 +94,7 @@ def TrainAndSampleInstance(
     samples_db: samples_database.SamplesDatabase) -> None:
   with instance.Session(), samples_db.Observer() as observer:
     app.Log(1, 'Training %s', instance.model)
-    instance.model.Train()
+    instance.Train()
 
     app.Log(1, 'Beginning infinite sampling loop.')
     instance.model.Sample(instance.sampler, [observer])
