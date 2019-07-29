@@ -362,6 +362,17 @@ def GetVocabFromMetaTable(session: sqlutil.Session) -> typing.Dict[str, int]:
   }
 
 
+def StoreVocabInMetaTable(session: sqlutil.Session,
+                          vocabulary: typing.Dict[str, int]):
+  """Store a vocabulary dictionary in the 'Meta' table of a database."""
+  q = session.query(encoded.Meta).filter(encoded.Meta.key.like('vocab_%'))
+  q.delete(synchronize_session=False)
+
+  session.add(encoded.Meta(key='vocab_size', value=str(len(vocabulary))))
+  session.add_all(
+      [encoded.Meta(key=f'vocab_{v}', value=k) for k, v in vocabulary.items()])
+
+
 def GreedyAtomizerFromEncodedDb(encoded_db: encoded.EncodedContentFiles):
   """Create a greedy atomizer for the vocabulary of a given encoded_db."""
   # TODO: This depends on the embeded "meta" table vocabulary from:
