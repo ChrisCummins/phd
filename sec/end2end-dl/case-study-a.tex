@@ -96,6 +96,8 @@ Figure~\ref{fig:cgo-accuracy} shows the accuracy of both predictive models and t
 
 Using the static mapping as a baseline, the relative performance of each program is computed using the device selected by the \citeauthor{Grewe2013} and DeepTune models. Figure~\ref{fig:cgo-speedup} shows these speedups. Both predictive models significantly outperform the static mapping; the Grewe \emph{et al.\ }model achieves an average speedup of $2.91\times$ on AMD and $1.26\times$ on NVIDIA (geometric mean $1.18\times$). In 90\% of cases, DeepTune matches or outperforms the predictions of the Grewe \emph{et al.\ }model, achieving an average speedup of $3.34\times$ on AMD and $1.41\times$ on NVIDIA (geometric mean $1.31\times$). This 14\% improvement in performance comes at a greatly reduced cost, requiring no intervention by humans.
 
+% TODO: 10\% of cases where DeepTune degrades performance.
+
 \begin{figure}
   \centering %
   \subfloat[][AMD Tahiti 7970]{%
