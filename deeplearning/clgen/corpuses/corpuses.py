@@ -18,6 +18,7 @@ A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
 import os
+import random
 import time
 
 import checksumdir
@@ -129,6 +130,10 @@ class Corpus(object):
     self.config.CopyFrom(AssertConfigIsValid(config))
     self._atomizer = None
     self._created = False
+
+    # An in-memory cache of the encoded contentfiles indices arrays.
+    # Set and used in GetTrainingData().
+    self._indices_arrays: typing.Optional[typing.List[np.array]] = None
 
     cache.cachepath('corpus').mkdir(parents=True, exist_ok=True)
     hc = hashcache.HashCache(cache.cachepath('hashcache.db'), 'sha1')
@@ -262,11 +267,23 @@ class Corpus(object):
       The encoded corpus.
     """
     with prof.Profile('GetTrainingData()'):
-      with self.encoded.Session() as session:
-        query = session.query(encoded.EncodedContentFile)
-        if shuffle:
-          query = query.order_by(func.random())
-        return np.concatenate([x.indices_array for x in query])
+      # Load all indices from the database into memory, and keep them there.
+      # This is to remove the latency from reading the contents from a
+      # database.
+      #
+      # TODO(https://github.com/ChrisCummins/clgen/issues/128): Storing the
+      # entire corpus in memory like this prevents training on corpuses larger
+      # than system memory. Replace this method with an interface for streaming
+      # data from the encoded database.
+      if not self._indices_arrays:
+        with self.encoded.Session() as session:
+          query = session.query(encoded.EncodedContentFile)
+          self._indices_arrays = [x.indices_array for x in query]
+
+      if shuffle:
+        random.shuffle(self._indices_arrays)
+
+      return np.concatenate(self._indices_arrays)
 
   def GetNumContentFiles(self) -> int:
     """Get the number of contentfiles which were pre-processed."""
