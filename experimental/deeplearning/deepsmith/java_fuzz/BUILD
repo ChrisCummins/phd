@@ -229,6 +229,18 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "sample_opencl_model",
+    srcs = ["sample_opencl_model.py"],
+    deps = [
+        ":sample_java_model",
+        "//deeplearning/clgen",
+        "//deeplearning/clgen/proto:clgen_pb_py",
+        "//labm8:app",
+        "//research/cummins_2017_cgo:generative_model",
+    ],
+)
+
 py3_image(
     name = "sample_java_model_image",
     srcs = ["sample_java_model.py"],
