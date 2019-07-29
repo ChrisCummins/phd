@@ -375,8 +375,8 @@ def StoreVocabInMetaTable(session: sqlutil.Session,
 
 def GreedyAtomizerFromEncodedDb(encoded_db: encoded.EncodedContentFiles):
   """Create a greedy atomizer for the vocabulary of a given encoded_db."""
-  # TODO: This depends on the embeded "meta" table vocabulary from:
-  # //experimental/deeplearning/deepsmith/java_fuzz/encode_java_corpus.py
+  # TODO(github.com/ChrisCummins/clgen/issues/130): This should be a method of
+  # a concrete `DatabaseCorpus` class.
   with encoded_db.Session() as s:
     vocab = GetVocabFromMetaTable(s)
   app.Log(1, 'Loaded vocabulary of %s tokens from meta table', len(vocab))

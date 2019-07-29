@@ -75,8 +75,9 @@ app.DEFINE_string(
     'files required for sampling to specified directory. The directory can '
     'then be used as the pretrained_model field of an Instance proto config.')
 
-# TODO(cec): Remove these in favor of standard labm8.app methods for enabling
-# extra debugging or profiling information.
+# TODO(github.com/ChrisCummins/clgen/issues/131): Remove these in favor of
+# standard labm8.app methods for enabling extra debugging or profiling
+# information.
 app.DEFINE_boolean(
     'clgen_debug', False,
     'Enable a debugging mode of CLgen python runtime. When enabled, errors '
@@ -189,7 +190,8 @@ def LogExceptionWithStackTrace(exception: Exception):
   def _msg(i, x):
     n = i + 1
     filename, lineno, fnname, _ = x
-    # TODO(cec): Report filename relative to PhD root.
+    # TODO(github.com/ChrisCummins/clgen/issues/131): Report filename relative
+    # to PhD root.
     loc = f'{filename}:{lineno}'
     return f'      #{n}  {loc: <18} {fnname}()'
 

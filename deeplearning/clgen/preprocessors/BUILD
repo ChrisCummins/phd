@@ -75,7 +75,6 @@ cc_binary(
             "-L$(location @llvm_linux//:libdir)/",
         ],
     }) + [
-        # TODO(cec): I expect that this list can be pruned somewhat.
         "-pthread",
         "-ldl",
         "-lz",
