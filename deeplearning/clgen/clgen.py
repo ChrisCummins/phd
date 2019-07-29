@@ -104,6 +104,7 @@ class Instance(object):
     except pbutil.ProtoValueError as e:
       raise errors.UserError(e)
 
+    self.config = config
     self.working_dir = None
     if config.HasField('working_dir'):
       self.working_dir: pathlib.Path = pathlib.Path(
