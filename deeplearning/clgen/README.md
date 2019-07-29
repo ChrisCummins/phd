@@ -23,11 +23,37 @@ programs it learns from.
 
 ## Getting Started
 
-After following the [install instructions](/README.md) for this project, I'd
-recommend running the test suite to ensure that everything is set up correctly:
+Configure the build and answer the yes/no questions. The default answers should
+be fine:
 
 ```sh
-$ bazel test //deeplearning/clgen/...
+$ ./configure
+```
+
+Note that CUDA support requires CUDA to have been installed separately,
+see the [TensorFlow build docs](https://www.tensorflow.org/install/) for
+instructions. CUDA support has only been tested for Linux builds, not macOS or
+Docker containers.
+
+```sh
+$ bazel build //deeplearning/clgen
+```
+
+The configure process generates a `bootstrap.sh` script which will install the
+required dependent packages. Since installing these packages will affect the
+global state of your system, and may requires root access, inspect this script
+carefully. Once you're happy to proceed, run it using:
+
+```sh
+$ bash ./bootstrap.sh
+```
+
+Finally, we must set up the shell environment for running bazel. The file `.env`
+is created by the configure process and must be sourced for every shell we want
+to use bazel with:
+
+```sh
+$ source $PWD/.env
 ```
 
 Use our tiny example dataset to train and sample your first CLgen model:
