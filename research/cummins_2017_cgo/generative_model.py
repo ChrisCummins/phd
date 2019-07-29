@@ -93,6 +93,7 @@ def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
           "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace",
           "deeplearning.clgen.preprocessors.opencl:ClangFormat",
           "deeplearning.clgen.preprocessors.common:MinimumLineCount3",
+          "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
           "deeplearning.clgen.preprocessors.opencl:Compile",
       ],
       contentfile_separator='\n\n',
