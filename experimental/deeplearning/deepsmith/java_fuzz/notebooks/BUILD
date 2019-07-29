@@ -11,6 +11,8 @@ py_binary(
         "//deeplearning/clgen/corpuses:preprocessed",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//experimental/deeplearning/deepsmith/java_fuzz:sample_java_model",
+        "//experimental/deeplearning/deepsmith/java_fuzz:sample_opencl_model",
+        "//research/cummins_2017_cgo:generative_model",
     ],
 )
 

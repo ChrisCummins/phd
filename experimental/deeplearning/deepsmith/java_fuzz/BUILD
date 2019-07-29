@@ -232,6 +232,7 @@ py_binary(
 py_binary(
     name = "sample_opencl_model",
     srcs = ["sample_opencl_model.py"],
+    visibility = ["//experimental/deeplearning/deepsmith/java_fuzz:__subpackages__"],
     deps = [
         ":sample_java_model",
         "//deeplearning/clgen",
