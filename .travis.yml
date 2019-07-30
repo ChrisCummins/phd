@@ -1,49 +1,29 @@
-dist: trusty
-sudo: required
-osx_image: xcode8
-# Although this is a python project, use java image since at the time of
-# writing (2019-07-19) macOS does not support python. See:
-# https://docs.travis-ci.com/user/languages/python/
-language: java
-
-cache:
-    directories:
-     - /home/travis/.cache/bazel/_bazel_travis
-
 os:
   - linux
   - osx
 
+dist: trusty
+
+language:
+  - generic
+
+addons:
+  homebrew:
+    brewfile: tools/Brewfile.travis
+  apt:
+    sources:
+      - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
+        key_url: 'https://storage.googleapis.com/bazel-apt/doc/apt-key.pub.gpg'
+    packages:
+      - openjdk-8-jdk
+      - bazel
+
 services:
   - mysql
 
-env:
-  - BAZEL_VERSION=0.26.1
-
-before_install:
-  - OS=linux
-  - ARCH=x86_64
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then OS=darwin; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then yes | /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade python; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install freetype pkg-config; fi
-  - GH_BASE="https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION"
-  - GH_ARTIFACT="bazel-$BAZEL_VERSION-installer-$OS-$ARCH.sh"
-  - CI_BASE="http://ci.bazel.io/job/Bazel/JAVA_VERSION=1.8,PLATFORM_NAME=$OS-$ARCH/lastSuccessfulBuild/artifact/output/ci"
-  - CI_ARTIFACT="bazel--installer.sh"
-  - URL="$GH_BASE/$GH_ARTIFACT"
-  - if [[ "$BAZEL_VERSION" == "HEAD" ]]; then CI_ARTIFACT="`wget -qO- $CI_BASE | grep -o 'bazel-[-_a-zA-Z0-9\.]*-installer.sh' | uniq`"; fi
-  - if [[ "$BAZEL_VERSION" == "HEAD" ]]; then URL="$CI_BASE/$CI_ARTIFACT"; fi
-  - echo $URL
-  - wget -O install.sh $URL
-  - chmod +x install.sh
-  - ./install.sh --user
-  - rm -f install.sh
+install:
+  - pyenv install --skip-existing 3.6.3
 
 script:
-  - python --version
   - ./configure --noninteractive
-  - bazel test --http_timeout_scaling=10.0 --local_resources=3072,1,1 //labm8/... || true
-
-notifications:
-  email: false
+  - bazel test --config=travis //labm8/...
