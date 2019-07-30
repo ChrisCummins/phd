@@ -30,4 +30,4 @@ install:
 
 script:
   - ./configure --noninteractive
-  - bazel test --incompatible_use_python_toolchains=false --config=travis //labm8:all
+  - bazel test --incompatible_string_join_requires_strings --incompatible_use_python_toolchains=false --config=travis //labm8:all
