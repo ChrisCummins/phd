@@ -200,9 +200,9 @@ def CreateCorpusProtoFromFlags() -> corpus_pb2.Corpus:
   return corpus
 
 
-def CreateModelProtoFromFlags() -> model_pb2.Model:
+def CreateModelProtoFromFlags(corpus: corpus_pb2.Corpus) -> model_pb2.Model:
   return model_pb2.Model(
-      corpus=CreateCorpusProtoFromFlags(),
+      corpus=corpus,
       architecture=model_pb2.NetworkArchitecture(
           backend=model_pb2.NetworkArchitecture.TENSORFLOW,
           neuron_type=model_pb2.NetworkArchitecture.LSTM,
@@ -255,7 +255,7 @@ def CreateInstanceProtoFromFlags() -> clgen_pb2.Instance:
   else:
     return clgen_pb2.Instance(
         working_dir=FLAGS.clgen_working_dir,
-        model=CreateModelProtoFromFlags(),
+        model=CreateModelProtoFromFlags(CreateCorpusProtoFromFlags()),
         sampler=CreateSamplerProtoFromFlags(),
     )
 
