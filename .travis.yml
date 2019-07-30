@@ -23,6 +23,8 @@ services:
 
 install:
   - pyenv install --skip-existing 3.6.3
+  - python --version
+  - bazel version
 
 script:
   - ./configure --noninteractive
