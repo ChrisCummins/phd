@@ -19,7 +19,6 @@
 package deeplearning.deepsmith.harnesses;
 
 import com.google.common.io.ByteStreams;
-import deeplearning.clgen.preprocessors.JavaPreprocessor;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -362,7 +361,6 @@ public class JavaDriver {
   }
 
   public JavaDriver(final JavaDriverConfiguration config) {
-    preprocessor_ = new JavaPreprocessor();
     compiler_ = ToolProvider.getSystemJavaCompiler();
     config_ = config;
   }
@@ -445,10 +443,42 @@ public class JavaDriver {
     return methods[0];
   }
 
+  /**
+   * Wrap the method in a class definition.
+   *
+   * <p>TODO: This is duplicated from: //deeplearning/clgen/preprocessors:JavaPreprocessor. It is
+   * duplicated so that this file can be compiled standalone. Before a public release of this code,
+   * this duplication should be reconciled.
+   *
+   * @param methodSrc The method to wrap.
+   * @return The method, embedded in a class "A".
+   */
+  public String WrapMethodInClassWithShim(final String methodSrc) {
+    // Template:
+    //     import java.io.*;
+    //     import java.math.*;
+    //     import java.nio.charset.*;
+    //     import java.nio.file.*;
+    //     import java.time.format.*;
+    //     import java.util.*;
+    //     public class A {
+    //       /* METHOD GOES HERE */
+    //     }
+    return ("import java.io.*;\n"
+        + "import java.math.*;\n"
+        + "import java.nio.charset.*;\n"
+        + "import java.nio.file.*;\n"
+        + "import java.time.format.*;\n"
+        + "import java.util.*;\n"
+        + "public class A{"
+        + methodSrc
+        + "}");
+  }
+
   // Driver methods.
 
   public JavaDriverResult Drive(final Path workingDirectory, final String methodSrc) {
-    final String classSrc = preprocessor_.WrapMethodInClassWithShim(methodSrc);
+    final String classSrc = WrapMethodInClassWithShim(methodSrc);
     final JavaSourceFromString javaSrc = new JavaSourceFromString("A", classSrc);
     return Drive(workingDirectory, javaSrc);
   }
@@ -541,7 +571,6 @@ public class JavaDriver {
     return result;
   }
 
-  private JavaPreprocessor preprocessor_;
   private JavaCompiler compiler_;
   private final JavaDriverConfiguration config_;
 
