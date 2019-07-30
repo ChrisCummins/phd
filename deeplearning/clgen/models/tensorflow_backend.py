@@ -342,8 +342,8 @@ class TensorFlowBackend(backends.BackendBase):
         # decay and set learning rate
         new_learning_rate = initial_learning_rate * (
             (float(100 - decay_rate) / 100.0)**(epoch_num - 1))
-        sess.run(tf.assign(self.learning_rate, new_learning_rate))
-        sess.run(tf.assign(self.epoch, epoch_num))
+        sess.run(tf.compat.v1.assign(self.learning_rate, new_learning_rate))
+        sess.run(tf.compat.v1.assign(self.epoch, epoch_num))
 
         # TODO(cec): refactor data generator to a Python generator.
         data_generator.CreateBatches()
@@ -475,7 +475,8 @@ class TensorFlowBackend(backends.BackendBase):
     assert checkpoint_state.model_checkpoint_path
 
     saver.restore(self.inference_sess, checkpoint_state.model_checkpoint_path)
-    self.inference_sess.run(tf.assign(self.temperature, sampler.temperature))
+    self.inference_sess.run(
+        tf.compat.v1.assign(self.temperature, sampler.temperature))
 
   def InitSampleBatch(self, sampler: samplers.Sampler) -> None:
     if FLAGS.clgen_tf_backend_reset_inference_state_between_batches:
