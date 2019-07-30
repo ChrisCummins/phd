@@ -6,6 +6,9 @@ Creates the //:config.pbtxt proto.
 Unlike the other files in this repository, this is not intended to be executed
 under a bazel environment, so must be compatible with whatever system python
 interpreter the user has, be it version 2 or 3.
+
+Additionally, this file must have no dependencies, except for those supplied by
+python. This is because the configuration 'state' is a function of this script.
 """
 from __future__ import print_function
 
