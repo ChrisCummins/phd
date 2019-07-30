@@ -28,4 +28,4 @@ install:
 
 script:
   - ./configure --noninteractive
-  - bazel test --config=travis //labm8:all
+  - bazel test --incompatible_use_python_toolchains=false --config=travis //labm8:all
