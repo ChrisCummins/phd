@@ -81,7 +81,8 @@ class TensorFlowBackend(backends.BackendBase):
     app.Log(
         1, 'Using tensorboard to log training progress. View progress using:\n'
         f"    $ tensorboard --logdir='{tensorboard_dir}'")
-    self.summary_writer = tf.summary.FileWriter(tensorboard_dir, graph=None)
+    self.summary_writer = tf.compat.v1.summary.FileWriter(
+        tensorboard_dir, graph=None)
 
   def InitTfGraph(self,
                   sampler: typing.Optional[samplers.Sampler] = None) -> 'tf':
@@ -118,7 +119,7 @@ class TensorFlowBackend(backends.BackendBase):
       raise NotImplementedError
 
     # Reset the graph when switching between training and inference.
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
 
     if sampler:
       sequence_length = sampler.sequence_length
@@ -147,7 +148,7 @@ class TensorFlowBackend(backends.BackendBase):
     scope_name = 'rnnlm'
     with tf.variable_scope(scope_name):
       with tf.device('/cpu:0'):
-        embedding = tf.get_variable(
+        embedding = tf.compat.v1.get_variable(
             'embedding',
             [vocab_size, self.config.architecture.neurons_per_layer])
         inputs = tf.nn.embedding_lookup(embedding, self.input_data)
@@ -160,7 +161,7 @@ class TensorFlowBackend(backends.BackendBase):
           inputs, self.lengths, time_major=False)
 
     decoder = seq2seq.BasicDecoder(cell, decode_helper, self.initial_state,
-                                   tf.layers.Dense(vocab_size))
+                                   tf.compat.v1.layers.Dense(vocab_size))
     outputs, self.final_state, _ = seq2seq.dynamic_decode(
         decoder,
         output_time_major=False,
@@ -177,24 +178,24 @@ class TensorFlowBackend(backends.BackendBase):
 
     self.learning_rate = tf.Variable(0.0, trainable=False)
     self.epoch = tf.Variable(0, trainable=False)
-    trainable_variables = tf.trainable_variables()
+    trainable_variables = tf.compat.v1.trainable_variables()
 
     # TODO(cec): Support non-adam optimizers.
     grads, _ = tf.clip_by_global_norm(
         tf.gradients(self.loss, trainable_variables, aggregation_method=2),
         self.config.training.adam_optimizer.normalized_gradient_clip_micros /
         1e6)
-    optimizer = tf.train.AdamOptimizer(self.learning_rate)
+    optimizer = tf.compat.v1.train.AdamOptimizer(self.learning_rate)
     self.train_op = optimizer.apply_gradients(zip(grads, trainable_variables))
 
     if not sampler:
       # Create tensorboard summary writers for training progress.
-      tf.summary.scalar('loss', self.loss)
-      tf.summary.scalar('learning_rate', self.learning_rate)
-      tf.summary.scalar('epoch_num', self.epoch)
+      tf.compat.v1.summary.scalar('loss', self.loss)
+      tf.compat.v1.summary.scalar('learning_rate', self.learning_rate)
+      tf.compat.v1.summary.scalar('epoch_num', self.epoch)
 
     num_trainable_params = int(
-        np.sum([np.prod(v.shape) for v in tf.trainable_variables()]))
+        np.sum([np.prod(v.shape) for v in tf.compat.v1.trainable_variables]))
     app.Log(
         1, 'Instantiated TensorFlow graph with %s trainable parameters '
         'in %s ms.', humanize.Commas(num_trainable_params),
@@ -295,7 +296,7 @@ class TensorFlowBackend(backends.BackendBase):
     logger = telemetry.TrainingLogger(self.cache.path / 'logs')
 
     # Create and merge the tensorboard summary ops.
-    merged = tf.summary.merge_all()
+    merged = tf.compat.v1.summary.merge_all()
 
     # training options
     # TODO(cec): Enable support for multiple optimizers:
@@ -314,11 +315,11 @@ class TensorFlowBackend(backends.BackendBase):
       assert checkpoint_state.model_checkpoint_path
       ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
-    with tf.Session() as sess:
-      tf.global_variables_initializer().run()
+    with tf.compat.v1.Session() as sess:
+      tf.compat.v1.global_variables_initializer().run()
 
       # Keep all checkpoints.
-      saver = tf.train.Saver(
+      saver = tf.compat.v1.train.Saver(
           tf.global_variables(), max_to_keep=100, save_relative_paths=True)
 
       # restore model from closest checkpoint.
@@ -447,7 +448,7 @@ class TensorFlowBackend(backends.BackendBase):
       del self.inference_sess
 
     self.inference_tf = self.InitTfGraph(sampler=sampler)
-    self.inference_sess = self.inference_tf.Session()
+    self.inference_sess = self.inference_tf.compat.v1.Session()
 
     # Seed the RNG.
     if seed is not None:
