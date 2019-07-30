@@ -135,11 +135,6 @@ def GuessIfCudaIsAvailable():
   return is_available
 
 
-def IsGitRepo():
-  """Determine if it is a git repo."""
-  return os.path.isdir(os.path.join(os.path.dirname(__file__), '.git'))
-
-
 def GetGitRemote():
   """Get the git remote for this repo."""
   remotes = subprocess.check_output(
@@ -356,11 +351,15 @@ def main(argv):
   uname = subprocess.check_output(
       [uname_path], universal_newlines=True).rstrip().lower()
 
-  if IsGitRepo():
+  # Git submodules are checked in using SSH protocol URLs, but if the user
+  # cloned this repo using the HTTP protocol then there's a good chance they
+  # will want to use that for the submodules too. To support this, we
+  # optionally rewrite git@ to https:// URLs in submodules.
+  if os.path.isdir(os.path.join(PHD_ROOT, '.git')):
     git_remote = GetGitRemote()
     logging.info('Git remote: %s', git_remote)
-    # Rewrite git@ to https:// if required.
-    if git_remote.startswith('https://'):
+    gitmodules_file = os.path.join(PHD_ROOT, '.gitmodules')
+    if os.path.isfile(gitmodules_file) and git_remote.startswith('https://'):
       logging.info('Rewriting .gitmodules to use https://')
       RewriteGitSubmodulesToHttps()
 
