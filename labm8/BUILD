@@ -21,6 +21,19 @@ exports_files([
     "README.md",
 ])
 
+# TODO(github.com/ChrisCummins/bazel_subtree_github_export/issues/1): Add
+# support for this:
+#
+# exports_repo(
+#     name='labm8',
+#     targets=['//labm8:all'],
+#     move_file_mapping={
+#         'labm8/README.md': 'README.md',
+#         'labm8/LICENSE': 'LICENSE',
+#         'labm8/travis.yml': '.travis.yml',
+#     }
+# )
+
 py_library(
     name = "app",
     srcs = ["app.py"],
