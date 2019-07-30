@@ -273,7 +273,8 @@ def ConfigFromFlags() -> clgen_pb2.Instance:
   return config
 
 
-def SampleObserversFromFlags():
+def SampleObserversFromFlags(
+) -> typing.List[sample_observers_lib.SampleObserver]:
   """Instantiate sample observers from flag values."""
   sample_observers = []
   if FLAGS.min_samples <= 0:
@@ -293,14 +294,26 @@ def SampleObserversFromFlags():
   return sample_observers
 
 
-def DoFlagsAction():
-  """Do the action requested by the command line flags."""
-  config = ConfigFromFlags()
+def DoFlagsAction(
+    instance: Instance,
+    sample_observers: typing.List[sample_observers_lib.SampleObserver]) -> None:
+  """Do the action requested by the command line flags.
 
+  By default, this method trains and samples the instance using the given
+  sample observers. Flags which affect this behaviour are:
+
+    --print_cache_path={corpus,model,sampler}: Prints the path and returns.
+    --stop_after={corpus,train}: Stops after corpus creation or training,
+        respectively
+    --export_model=<path>: Train the model and export it to the requested path.
+
+  Args:
+    config: The CLgen instance to act on.
+    sample_observer: A list of sample observers. Unused if no sampling occurs.
+  """
   if FLAGS.clgen_profiling:
     prof.enable()
 
-  instance = Instance(config)
   with instance.Session():
     if FLAGS.print_cache_path == 'corpus':
       print(instance.model.corpus.cache.path)
@@ -319,7 +332,7 @@ def DoFlagsAction():
     if FLAGS.stop_after == 'corpus':
       instance.model.corpus.Create()
     elif FLAGS.stop_after == 'train':
-      instance.m.Train()
+      instance.Train()
       app.Log(1, 'Model: %s', instance.model.cache.path)
     elif FLAGS.stop_after:
       raise app.UsageError(
@@ -327,18 +340,15 @@ def DoFlagsAction():
     elif FLAGS.export_model:
       instance.ExportPretrainedModel(pathlib.Path(FLAGS.export_model))
     else:
-      sample_observers = SampleObserversFromFlags()
       instance.Sample(sample_observers)
 
 
-def main(argv):
+def main():
   """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unrecognized command line options: '{}'".format(
-        ' '.join(argv[1:])))
-
-  RunWithErrorHandling(DoFlagsAction)
+  instance = Instance(ConfigFromFlags())
+  sample_observers = SampleObserversFromFlags()
+  DoFlagsAction(instance, sample_observers)
 
 
 if __name__ == '__main__':
-  app.RunWithArgs(main)
+  app.Run(lambda: RunWithErrorHandling(main))
