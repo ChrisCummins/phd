@@ -141,16 +141,13 @@ def GuessIfCudaIsAvailable():
 def GetGitRemote():
   """Get the git remote for this repo."""
   remotes = subprocess.check_output(
-      ['git', '-C', os.path.dirname(__file__), 'remote', '-v']).decode('utf-8')
+      ['git', '-C', PHD_ROOT, 'remote', '-v']).decode('utf-8')
   return remotes.split('\n')[0].split()[1]
 
 
 def RewriteGitSubmodulesToHttps():
   """Rewrite git@ prefixed submodules to https://."""
-  gitmodules = os.path.join(os.path.dirname(__file__), '.gitmodules')
-  # Do nothing if the git modules file doesn't exist.
-  if not os.path.isfile(gitmodules):
-    return
+  gitmodules = os.path.join(PHD_ROOT, '.gitmodules')
   with open(gitmodules) as f:
     modules = f.read()
   new_modules = re.sub(r'(url\s*=\s*)git@([^:]+):', r'\1https://\2/', modules)
@@ -191,7 +188,7 @@ def GetConfigurationOptions(argv):
   Returns:
      The arguments namespace.
   """
-  is_git_repo = os.path.isdir('.git')
+  is_git_repo = os.path.isdir(os.path.join(PHD_ROOT, '.git'))
 
   yes_no_prompts = []
   parser = argparse.ArgumentParser(
@@ -240,7 +237,7 @@ def GetConfigurationOptions(argv):
       '--noupdate_git_submodules', dest='update_git_submodules',
       action='store_false', help='Do not checkout and update git submodules.')
   parser.set_defaults(update_git_submodules=False)
-  if is_git_repo:
+  if is_git_repo and os.path.isfile('.gitmodules'):
     yes_no_prompts.append(('update_git_submodules', 'Update git submodules?'))
 
   # --[no]install_git_hooks.
@@ -334,8 +331,8 @@ your first time building this code, inspect and then run the script:
 def main(argv):
   logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
-  args = GetConfigurationOptions(argv)
   os.chdir(PHD_ROOT)
+  args = GetConfigurationOptions(argv)
 
   # Calculate config ID and compare against cached ID (if it exists).
   config_id = GetConfigId(args)
