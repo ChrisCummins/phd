@@ -195,7 +195,7 @@ class TensorFlowBackend(backends.BackendBase):
       tf.compat.v1.summary.scalar('epoch_num', self.epoch)
 
     num_trainable_params = int(
-        np.sum([np.prod(v.shape) for v in tf.compat.v1.trainable_variables]))
+        np.sum([np.prod(v.shape) for v in tf.compat.v1.trainable_variables()]))
     app.Log(
         1, 'Instantiated TensorFlow graph with %s trainable parameters '
         'in %s ms.', humanize.Commas(num_trainable_params),
