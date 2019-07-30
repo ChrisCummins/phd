@@ -31,7 +31,8 @@ def main():
       FLAGS.java_encoded_contentfiles(),
       FLAGS.java_training_epochs,
       'kernel void A(',  # OpenCL-specific seed text.
-      FLAGS.neurons_per_layer)
+      FLAGS.neurons_per_layer,
+      FLAGS.num_layers)
   if not FLAGS.use_encoded_contentfiles_db:
     # Replace the Java corpus with an OpenCL one.
     config.model.corpus.CopyFrom(opencl.CreateCorpusProtoFromFlags())

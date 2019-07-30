@@ -28,14 +28,15 @@ app.DEFINE_integer('java_training_epochs', 50,
                    'The number of epochs to train for.')
 app.DEFINE_integer('neurons_per_layer', 1024,
                    'The number of neurons in a layer.')
+app.DEFINE_integer('num_layers', 2, 'The number of layers.')
 app.DEFINE_string('java_seed_text', 'public ',
                   'The text to initialize sampling with.')
 
 
-def MakeClgenInstanceConfig(working_dir: pathlib.Path,
-                            encoded_db: encoded.EncodedContentFiles,
-                            num_training_epochs: int, seed_text: str,
-                            neurons_per_layer: int) -> clgen_pb2.Instance:
+def MakeClgenInstanceConfig(
+    working_dir: pathlib.Path, encoded_db: encoded.EncodedContentFiles,
+    num_training_epochs: int, seed_text: str, neurons_per_layer: int,
+    num_layers: int) -> clgen_pb2.Instance:
   """Construct a CLgen instance.
 
   Args:
@@ -53,7 +54,7 @@ def MakeClgenInstanceConfig(working_dir: pathlib.Path,
               backend=model_pb2.NetworkArchitecture.TENSORFLOW,
               neuron_type=model_pb2.NetworkArchitecture.LSTM,
               neurons_per_layer=neurons_per_layer,
-              num_layers=2,
+              num_layers=num_layers,
               post_layer_dropout_micros=0,
           ),
           training=model_pb2.TrainingOptions(
@@ -92,19 +93,17 @@ def MakeClgenInstanceConfig(working_dir: pathlib.Path,
 def TrainAndSampleInstance(
     instance: clgen.Instance,
     samples_db: samples_database.SamplesDatabase) -> None:
-  with instance.Session(), samples_db.Observer() as observer:
-    app.Log(1, 'Training %s', instance.model)
-    instance.Train()
-
-    app.Log(1, 'Beginning infinite sampling loop.')
-    instance.model.Sample(instance.sampler, [observer])
+  with samples_db.Observer() as observer:
+    clgen.DoFlagsAction(instance, [observer])
 
 
 def main():
   """Main entry point."""
-  config = MakeClgenInstanceConfig(
-      FLAGS.java_clgen_working_dir, FLAGS.java_encoded_contentfiles(),
-      FLAGS.java_training_epochs, FLAGS.java_seed_text, FLAGS.neurons_per_layer)
+  config = MakeClgenInstanceConfig(FLAGS.java_clgen_working_dir,
+                                   FLAGS.java_encoded_contentfiles(),
+                                   FLAGS.java_training_epochs,
+                                   FLAGS.java_seed_text,
+                                   FLAGS.neurons_per_layer, FLAGS.num_layers)
   samples_db = FLAGS.samples_db()
   TrainAndSampleInstance(clgen.Instance(config), samples_db)
 
