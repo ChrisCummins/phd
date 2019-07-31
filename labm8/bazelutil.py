@@ -151,9 +151,10 @@ class Workspace(object):
       subprocess_kwargs: Additional arguments to pass to Popen().
     """
     with fs.chdir(self.workspace_root):
-      return subprocess.Popen(
-          ['timeout', '-s9',
-           str(timeout_seconds), 'bazel', 'query'] + args, **subprocess_kwargs)
+      return subprocess.Popen([
+          'timeout', '-s9',
+          str(timeout_seconds), 'bazel', 'query', '--noshow_progress'
+      ] + args, **subprocess_kwargs)
 
   def MaybeTargetToPath(
       self, fully_qualified_target: str) -> typing.Optional[pathlib.Path]:
