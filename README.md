@@ -1,5 +1,18 @@
 # My PhD
 
+<!-- repo size -->
+<a href="https://github.com/ChrisCummins/phd">
+  <img src="https://img.shields.io/github/repo-size/ChrisCummins/phd.svg">
+</a>
+<!-- commit counter -->
+<a href="https://github.com/ChrisCummins/phd">
+  <img src="https://img.shields.io/github/commit-activity/y/ChrisCummins/phd.svg?color=yellow">
+</a>
+<!-- Travis CI -->
+<a href="https://github.com/ChrisCummins/phd">
+  <img src="https://img.shields.io/travis/ChrisCummins/phd/master.svg">
+</a>
+
 A monolothic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
 
 
@@ -166,9 +179,6 @@ A monolothic repository for (almost) everything I have done while at the Univers
 
 <h2>
    Building the code
-   <a href="https://travis-ci.org/ChrisCummins/phd" target="_blank">
-    <img src="https://img.shields.io/travis/ChrisCummins/phd/master.svg?style=flat">
-  </a>
 </h2>
 
 I use [Bazel](https://bazel.build) as my build system of choice, with a
