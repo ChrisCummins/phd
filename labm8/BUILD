@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//tools/bzl:exports.bzl", "exports_repo", "exports_pip")
+
 licenses(["notice"])  # Apache 2.0
 
 exports_files([
@@ -22,18 +24,40 @@ exports_files([
     "CNAME",
 ])
 
-# TODO(github.com/ChrisCummins/bazel_subtree_github_export/issues/1): Add
-# support for this:
-#
-# exports_repo(
-#     name='labm8',
-#     targets=['//labm8:all'],
-#     move_file_mapping={
-#         'labm8/README.md': 'README.md',
-#         'labm8/LICENSE': 'LICENSE',
-#         'labm8/travis.yml': '.travis.yml',
-#     }
-# )
+exports_repo(
+    name = "export",
+    github_repo = "labm8",
+    move_file_mapping = {
+        "labm8/README.md": "README.md",
+        "labm8/LICENSE": "LICENSE",
+        "labm8/travis.yml": ".travis.yml",
+    },
+    targets = ["//labm8:all"],
+)
+
+exports_pip(
+    name = "deploy",
+    package_name = "labm8",
+    classifiers = [
+        "Development Status :: 4 - Beta",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+    ],
+    description = "Utility libraries for doing science",
+    keywords = [
+        "utility",
+        "library",
+        "bazel",
+        "protobuf",
+    ],
+    license = "Apache License, Version 2.0",
+    long_description_file = "//labm8:README.md",
+    package_root = "//labm8",
+)
 
 py_library(
     name = "app",
@@ -709,16 +733,4 @@ py_test(
         "//third_party/py/pytest",
         "//third_party/py/seaborn",
     ],
-)
-
-py_binary(
-    name = "EXPORT",
-    srcs = ["EXPORT.py"],
-    deps = ["//tools/source_tree:export_source_tree"],
-)
-
-py_binary(
-    name = "DEPLOY",
-    srcs = ["DEPLOY.py"],
-    deps = ["//tools/source_tree:deploy"],
 )
