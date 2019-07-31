@@ -50,7 +50,9 @@ sh_test(
 py_library(
     name = "phd_workspace",
     srcs = ["phd_workspace.py"],
+    visibility = ["//visibility:public"],
     deps = [
+        ":source_tree",
         "//labm8:bazelutil",
         "//labm8:fs",
         "//labm8:humanize",
