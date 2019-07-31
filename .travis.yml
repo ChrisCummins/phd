@@ -27,6 +27,7 @@ services:
   - mysql
 
 install:
+  - pyenv install --list
   - pyenv install --skip-existing 2.7.12
   - pyenv install --skip-existing 3.7.3
   - python --version
