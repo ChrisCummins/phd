@@ -24,7 +24,7 @@ services:
   - mysql
 
 install:
-  - pyenv install --skip-existing 3.6.3
+  - pyenv install --skip-existing 3.7.3
   - python --version
   - bazel version
 
