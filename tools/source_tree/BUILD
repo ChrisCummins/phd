@@ -22,6 +22,18 @@ py_test(
     ],
 )
 
+py_library(
+    name = "deploy",
+    srcs = ["deploy.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":phd_workspace",
+        "//:getconfig",
+        "//labm8:app",
+        "//labm8:fs",
+    ],
+)
+
 py_binary(
     name = "export_source_tree",
     srcs = ["export_source_tree.py"],
