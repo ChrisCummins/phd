@@ -1,0 +1,85 @@
+def _deploy_pip_impl(ctx):
+  deployment_script = ctx.actions.declare_file("{}.py".format(ctx.attr.name))
+
+  ctx.actions.write(
+      output=deployment_script,
+      is_executable=True,
+      content="""\
+#!/usr/bin/env python
+from tools.source_tree.deploy import DEPLOY_PIP
+
+DEPLOY_PIP(
+    package_name="{package_name}",
+    package_root="{package_root}",
+    description="{description}",
+    classifiers={classifiers},
+    keywords={keywords},
+    license="{license}",
+    long_description_file="{long_description_file}",
+)
+""".format(
+          package_name=ctx.attr.package_name,
+          package_root=ctx.attr.package_root,
+          description=ctx.attr.description,
+          classifiers=ctx.attr.classifiers,
+          keywords=ctx.attr.keywords,
+          license=ctx.attr.license,
+          long_description_file=ctx.attr.long_description_file,
+      ))
+
+  runfiles = ctx.runfiles(
+      files=[deployment_script] + ctx.files._deploy,
+      collect_default=True,
+      collect_data=True,
+  )
+
+  return DefaultInfo(executable=deployment_script, runfiles=runfiles)
+
+
+deploy_pip = rule(
+    attrs={
+        "package_name":
+        attr.string(
+            mandatory=True,
+            doc="Name of the PyPi package to deploy",
+        ),
+        "package_root":
+        attr.string(
+            mandatory=True,
+            doc="Root package to deploy",
+        ),
+        "description":
+        attr.string(
+            mandatory=True,
+            doc="Project description",
+        ),
+        "classifiers":
+        attr.string_list(
+            default=[],
+            doc="PyPi classifiers",
+        ),
+        "keywords":
+        attr.string_list(
+            default=[],
+            doc="Keywords",
+        ),
+        "license":
+        attr.string(
+            mandatory=True,
+            doc="License",
+        ),
+        "long_description_file":
+        attr.string(
+            mandatory=True,
+            doc="Label of README",
+        ),
+        "_deploy":
+        attr.label(
+            executable=False,
+            cfg="host",
+            allow_files=True,
+            default=Label("//tools/source_tree:deploy"),
+        ),
+    },
+    executable=True,
+    implementation=_deploy_pip_impl)
