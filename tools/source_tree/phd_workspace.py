@@ -149,7 +149,7 @@ class PhdWorkspace(bazelutil.Workspace):
         if not requirement_to_match:
           continue
         if dependency.startswith(requirement_to_match):
-          requirements.append(requirement)
+          requirements.append(requirement.rstrip())
       return requirements
 
     for dependency in all_dependencies:
@@ -170,8 +170,8 @@ class PhdWorkspace(bazelutil.Workspace):
     # Export the subset of python requirements that are needed.
     print('tools/requirements.txt')
     requirements = self.GetPythonRequirementsForTarget(targets)
-    requirements_path = (workspace.workspace_root / 'tools' /
-                         'requirements.txt')
+    requirements_path = (
+        workspace.workspace_root / 'tools' / 'requirements.txt')
     with open(requirements_path, 'w') as f:
       print(''.join(requirements), file=f)
 
@@ -226,8 +226,8 @@ class PhdWorkspace(bazelutil.Workspace):
     source_tree.ExportGitHistoryForFiles(self.git_repo, repo, src_files)
 
     # Make manual adjustments.
-    exported_workspace = bazelutil.Workspace(pathlib.Path(
-        repo.working_tree_dir))
+    exported_workspace = bazelutil.Workspace(
+        pathlib.Path(repo.working_tree_dir))
     self.CreatePythonRequirementsFileForTargets(exported_workspace, targets)
     self.CopyFilesToDestination(exported_workspace, extra_files)
     self.MoveFilesToDestination(exported_workspace, file_move_mapping)
@@ -238,7 +238,8 @@ class PhdWorkspace(bazelutil.Workspace):
     app.Log(1, 'Creating automated subtree export commit')
     repo.git.add('.')
     author = git.Actor(name='[Git export bot]', email='/dev/null')
-    repo.index.commit(f'Automated subtree export at {timestamp.isoformat()}',
-                      author=author,
-                      committer=author,
-                      skip_hooks=True)
+    repo.index.commit(
+        f'Automated subtree export at {timestamp.isoformat()}',
+        author=author,
+        committer=author,
+        skip_hooks=True)
