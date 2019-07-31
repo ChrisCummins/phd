@@ -1,4 +1,4 @@
-from tools.source_treeexport_source_tree import EXPORT
+from tools.source_tree.export_source_tree import EXPORT
 EXPORT(
     github_repo='labm8',
     targets=['//labm8:all'],
