@@ -150,10 +150,18 @@ class Workspace(object):
       timeout_seconds: The number of seconds before failing.
       subprocess_kwargs: Additional arguments to pass to Popen().
     """
+    return self.Bazel(
+        'query', args, timeout_seconds=timeout_seconds, **subprocess_kwargs)
+
+  def Bazel(self,
+            command: str,
+            args: typing.List[str],
+            timeout_seconds: int = 360,
+            **subprocess_kwargs):
     with fs.chdir(self.workspace_root):
       return subprocess.Popen([
           'timeout', '-s9',
-          str(timeout_seconds), 'bazel', 'query', '--noshow_progress'
+          str(timeout_seconds), 'bazel', command, '--noshow_progress'
       ] + args, **subprocess_kwargs)
 
   def MaybeTargetToPath(
