@@ -19,6 +19,7 @@ licenses(["notice"])  # Apache 2.0
 exports_files([
     "LICENSE",
     "README.md",
+    "CNAME",
 ])
 
 # TODO(github.com/ChrisCummins/bazel_subtree_github_export/issues/1): Add
