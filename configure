@@ -474,6 +474,15 @@ if [[ -f "$PHD/tools/venv/phd/bin/activate" ]]; then
   . "$PHD/tools/venv/phd/bin/activate"
 fi
 
+# Ensure that default python is the symlinked one.
+# TODO(github.com/ChrisCummins/phd/issues/49): This shouldn't be required once
+# python toolchains is implemented.
+echo $PATH | grep $HOME/.local/bin >/dev/null || export PATH="$HOME/.local/bin:$PATH"
+
+# TODO(github.com/ChrisCummins/phd/issues/49): This shouldn't be required once
+# python toolchains is implemented.
+export PYTHON="{python_path}"
+
 export PYTHONPATH={phd_root}:{phd_root}/lib:{phd_root}/bazel-genfiles
 
 # TODO(cec): Remove whatever is setting $CC to clang, rather than unset here.
