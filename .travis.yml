@@ -49,6 +49,9 @@ install:
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then pyenv install --skip-existing 2.7; fi
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then pyenv install --skip-existing 3.6.3; fi
   - ./configure --noninteractive
+
+before_script:
+  # Print version numbers for debugging.
   - python2 --version
   - python3 --version
   - python --version
