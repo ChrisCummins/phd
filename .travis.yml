@@ -10,11 +10,12 @@ language:
   - generic
 
 env:
-  # Environment variables needed for zlib.
-  # See: https://github.com/pyenv/pyenv/issues/530
-  - PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/zlib/lib/pkgconfig"
-  - LDFLAGS="$LDFLAGS -L/usr/local/opt/zlib/lib"
-  - CPPFLAGS="$CPPFLAGS -I/usr/local/opt/zlib/include"
+  global:
+    # Environment variables needed for zlib.
+    # See: https://github.com/pyenv/pyenv/issues/530
+    - PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/zlib/lib/pkgconfig"
+    - LDFLAGS="$LDFLAGS -L/usr/local/opt/zlib/lib"
+    - CPPFLAGS="$CPPFLAGS -I/usr/local/opt/zlib/include"
 
 addons:
   homebrew:
