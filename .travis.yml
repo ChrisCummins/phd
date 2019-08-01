@@ -28,6 +28,7 @@ addons:
     packages:
       - openjdk-8-jdk
       - bazel
+      - python2.7
       - gcc-5
       - g++-5
 
@@ -35,8 +36,9 @@ services:
   - mysql
 
 install:
-  - pyenv install --skip-existing 2.7.12
   - pyenv install --skip-existing 3.6.3
+  - python2 --version
+  - python3 --version
   - python --version
   - bazel version
   - gcc --version
