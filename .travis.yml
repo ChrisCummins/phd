@@ -46,6 +46,8 @@ install:
   # See: https://gist.github.com/cotsog/3ce84675af0d74438d91
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc; fi
   - ./configure --noninteractive
+  # Symlink the system python2 in place so that we bypass the pyenv shim.
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then ln -s /usr/bin/python2 $HOME/.local/bin; fi
 
 before_script:
   # Print version numbers for debugging.
