@@ -473,26 +473,21 @@ if [[ -d "$HOME/venv/phd/bin" ]]; then
   . "$HOME/venv/phd/bin/activate"
 else
   # Export a dummy virtualenv.
-  # TODO(cec): Add a better way of signalling that we're in the phd env from
-  # the command line.
+  # TODO(github.com/ChrisCummins/phd/issues/49): Add a better way of signalling
+  # that we're in the phd env from the command line.
   export VIRTUAL_ENV=phd
 fi
 
-# Export a dummy virtualenv.
-# TODO(cec): Add a better way of signalling that we're in the phd env from
-# the command line.
-export VIRTUAL_ENV=phd
-
 # Ensure that default python is 3.6.
+# TODO(github.com/ChrisCummins/phd/issues/49): This shouldn't be required once
+# python toolchains is implemented.
 echo $PATH | grep $HOME/.local/bin >/dev/null || export PATH="$HOME/.local/bin:$PATH"
 
+# TODO(github.com/ChrisCummins/phd/issues/49): This shouldn't be required once
+# python toolchains is implemented.
 export PYTHON="{python_path}"
 
 export PYTHONPATH={phd_root}:{phd_root}/lib:{phd_root}/bazel-genfiles
-
-# TODO(cec): Remove this workaround once the underlying issue is fixed.
-# See: https://github.com/bazelbuild/rules_docker/issues/293
-export BAZEL_PYTHON=$PHD/tools/py3_wrapper.sh
 
 # TODO(cec): Remove whatever is setting $CC to clang, rather than unset here.
 unset CC
