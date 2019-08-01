@@ -427,10 +427,7 @@ def main(argv):
   # Symlink python to ~/.local/bin/python.
   if args.symlink_python:
     Mkdir(os.path.expanduser('~/.local/bin'))
-    if not os.path.islink(os.path.expanduser('~/.local/bin/python')):
-      print('Created ~/.local/bin/python')
-      subprocess.check_call(
-          ['ln', '-s', python_path, os.path.expanduser('~/.local/bin/python')])
+    Symlink(python_path, os.path.expanduser("~/.local/bin/python"))
 
   # Create //config.pbtxt.
   options_to_exclude = {'print_id', 'noninteractive', 'cache_result'}
