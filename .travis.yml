@@ -32,7 +32,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - openjdk-8-jdk
-      - python2
+      - python
       - python3
       - bazel
       - gcc-5
