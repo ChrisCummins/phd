@@ -45,9 +45,6 @@ install:
   # Swap out GCC for GCC-5 on linux to enable support for --std=c++14.
   # See: https://gist.github.com/cotsog/3ce84675af0d74438d91
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc; fi
-  # Use pyenv only on macos.
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then pyenv install --skip-existing 2.7.16; fi
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then pyenv install --skip-existing 3.6.3; fi
   - ./configure --noninteractive
 
 before_script:
