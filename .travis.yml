@@ -2,6 +2,8 @@ os:
   - linux
   - osx
 
+sudo: required
+
 osx_image: xcode10.2
 
 dist: trusty
@@ -36,6 +38,7 @@ services:
   - mysql
 
 install:
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc; fi
   - pyenv install --skip-existing 3.6.3
   - python2 --version
   - python3 --version
