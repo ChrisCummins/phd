@@ -30,7 +30,10 @@ def WhichOrDie(name):
   for path in os.environ["PATH"].split(os.pathsep):
     if os.path.exists(os.path.join(path, name)):
       return os.path.join(path, name)
-  print('fatal: Could not find required binary:', name, file=sys.stderr)
+  print(sys.argv[0], 'error: Could not find required binary:', name,
+        file=sys.stderr)
+  print("You probably haven't installed the development dependencies. "
+        "See INSTALL.md.", file=sys.stderr)
   sys.exit(1)
 
 
