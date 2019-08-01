@@ -466,26 +466,13 @@ paths {{
 
 export PHD="{phd_root}"
 
-if [[ -d "$HOME/venv/phd/bin" ]]; then
+# TODO(github.com/ChrisCummins/phd/issues/49): Work in progress.
+if [[ -f "$PHD/tools/venv/phd/bin/activate" ]]; then
   # If there is a virtualenv, use it. Note that even if it does exist, bazel
   # will go ahead and ignore it, so we still need to rely on the system python
   # being the required version.
-  . "$HOME/venv/phd/bin/activate"
-else
-  # Export a dummy virtualenv.
-  # TODO(github.com/ChrisCummins/phd/issues/49): Add a better way of signalling
-  # that we're in the phd env from the command line.
-  export VIRTUAL_ENV=phd
+  . "$PHD/tools/venv/phd/bin/activate"
 fi
-
-# Ensure that default python is 3.6.
-# TODO(github.com/ChrisCummins/phd/issues/49): This shouldn't be required once
-# python toolchains is implemented.
-echo $PATH | grep $HOME/.local/bin >/dev/null || export PATH="$HOME/.local/bin:$PATH"
-
-# TODO(github.com/ChrisCummins/phd/issues/49): This shouldn't be required once
-# python toolchains is implemented.
-export PYTHON="{python_path}"
 
 export PYTHONPATH={phd_root}:{phd_root}/lib:{phd_root}/bazel-genfiles
 
