@@ -30,7 +30,6 @@ addons:
     packages:
       - openjdk-8-jdk
       - bazel
-      - python2.7
       - gcc-5
       - g++-5
 
@@ -39,6 +38,7 @@ services:
 
 install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc; fi
+  - pyenv install --skip-existing 2.7
   - pyenv install --skip-existing 3.6.3
   - python2 --version
   - python3 --version
