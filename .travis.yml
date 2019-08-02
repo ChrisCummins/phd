@@ -24,17 +24,7 @@ env:
 
 addons:
   homebrew:
-    taps:
-      - homebrew/cask-versions
-      - bazelbuild/tap
-    packages:
-      - python
-      - mysql
-      - pybind11
-      - findutils
-      - zlib
-      - bazel
-    casks: java8
+    brewfile: tools/Brewfile.travis
   apt:
     sources:
       - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
