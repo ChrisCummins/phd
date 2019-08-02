@@ -10,6 +10,10 @@ from labm8 import test
 
 FLAGS = test.FLAGS
 
+if not system.which('docker'):
+  # No tests will run if we don't have docker.
+  MODULE_UNDER_TEST = None
+
 # Annotation for tests that require 'docker' in the system PATH.
 requires_docker = pytest.mark.skipif(
     not system.which('docker'),
