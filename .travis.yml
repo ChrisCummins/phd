@@ -14,8 +14,9 @@ language:
 
 env:
   global:
-    # ./configure script symlinks python3 to ~/.local/bin/python.
-    - PATH="$HOME/.local/bin:/usr/local/opt/findutils/libexec/gnubin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+    # ./configure script symlinks python3 to ~/.local/bin/python, and macos
+    # image needs GNU tools in PATH, rather than BSD versions.
+    - PATH="$HOME/.local/bin:/usr/local/opt/coreutils/libexec/gnubin/stat:/usr/local/opt/findutils/libexec/gnubin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
     # Environment variables needed for zlib.
     # See: https://github.com/pyenv/pyenv/issues/530
     - PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/zlib/lib/pkgconfig"

@@ -76,11 +76,14 @@ def GetDirectoryMTime(path: pathlib.Path) -> int:
   # return int(max(
   #     max(os.path.getmtime(os.path.join(root, file)) for file in files) for
   #     root, _, files in os.walk(path)))
-  # Faster implementation using UNIX tools. Requires GNU xargs, which supports
-  # the '-d' argument, which is needed to support file names with spaces. On
-  # macOS, this means having the homebrew findutils package installed, and
-  # the following directory in your PATH:
+  # Faster implementation using UNIX tools. Requires GNU tools. On macOS, this
+  # means having some homebrew package installed:
+  #
+  #    $ brew install findutils coreutils
+  #
+  # and the following directory in your PATH:
   #    /usr/local/opt/findutils/libexec/gnubin
+  #    /usr/local/opt/coreutils/libexec/gnubin
   output = subprocess.check_output(
       f"find '{path}' -type f | xargs -d'\n' stat -c '%Y:%n' | sort -t: -n | "
       "tail -1 | cut -d: -f1",
