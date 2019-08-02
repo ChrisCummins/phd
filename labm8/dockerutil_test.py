@@ -2,12 +2,22 @@
 import pathlib
 import tempfile
 
+import pytest
+
 from labm8 import dockerutil
+from labm8 import system
 from labm8 import test
 
 FLAGS = test.FLAGS
 
+# Annotation for tests that require 'docker' in the system PATH.
+requires_docker = pytest.mark.skipif(
+    not system.which('docker'),
+    reason='docker binary not found in $PATH',
+)
 
+
+@requires_docker
 def test_BazelPy3Image_CheckOutput():
   """Test output of image."""
   app_image = dockerutil.BazelPy3Image('labm8/test_data/basic_app')
@@ -16,6 +26,7 @@ def test_BazelPy3Image_CheckOutput():
     assert output == 'Hello, world!\n'
 
 
+@requires_docker
 def test_BazelPy3Image_CheckOutput_flags():
   """Test output of image with flags values."""
   app_image = dockerutil.BazelPy3Image('labm8/test_data/basic_app')
@@ -24,6 +35,7 @@ def test_BazelPy3Image_CheckOutput_flags():
     assert output == 'Hello to Jason Isaacs!\n'
 
 
+@requires_docker
 def test_BazelPy3Image_CheckCall_shared_volume():
   """Test shared volume."""
   # Force a temporary directory inside /tmp, since on macOS,
