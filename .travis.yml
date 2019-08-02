@@ -42,6 +42,8 @@ services:
   - mysql
 
 install:
+  # Remove pyenv, since we use the system package managers to install python.
+  - rm -rf $(pyenv root)
   # Swap out GCC for GCC-5 on linux to enable support for --std=c++14.
   # See: https://gist.github.com/cotsog/3ce84675af0d74438d91
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc; fi
