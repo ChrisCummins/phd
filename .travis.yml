@@ -27,13 +27,14 @@ addons:
     brewfile: tools/Brewfile.travis
   apt:
     sources:
+      - sourceline: 'ppa:jonathonf/python-3.6'
       - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
         key_url: 'https://storage.googleapis.com/bazel-apt/doc/apt-key.pub.gpg'
       - ubuntu-toolchain-r-test
     packages:
       - openjdk-8-jdk
       - python
-      - python3
+      - python3.6
       - bazel
       - gcc-5
       - g++-5
