@@ -12,10 +12,12 @@ from labm8 import pbutil
 from system.machines.mirrored_directory import MirroredDirectory
 from system.machines.proto import machine_spec_pb2
 
-
 FLAGS = app.FLAGS
 
-app.DEFINE_string('machine', None, 'Path to MachineSpec proto.')
+app.DEFINE_input_path('machine',
+                      None,
+                      'Path to MachineSpec proto.',
+                      required=True)
 app.DEFINE_list('push', [], 'Mirrored directories to push.')
 app.DEFINE_list('pull', [], 'Mirrored directories to push.')
 app.DEFINE_boolean('dry_run', True,
@@ -110,26 +112,24 @@ class Machine(object):
 
 def main():
   """Main entry point."""
-  machine_proto_path = pathlib.Path(FLAGS.machine)
+  machine_proto_path = FLAGS.machine
   if not machine_proto_path.is_file():
     raise app.UsageError(f"Cannot find --machine proto '{machine_proto_path}'")
   machine = Machine.FromFile(machine_proto_path)
 
   for mirrored_dir_name in FLAGS.pull:
     mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-    mirrored_dir.PullFromRemoteToLocal(
-        dry_run=FLAGS.dry_run,
-        verbose=True,
-        delete=FLAGS.delete,
-        progress=FLAGS.progress)
+    mirrored_dir.PullFromRemoteToLocal(dry_run=FLAGS.dry_run,
+                                       verbose=True,
+                                       delete=FLAGS.delete,
+                                       progress=FLAGS.progress)
 
   for mirrored_dir_name in FLAGS.push:
     mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-    mirrored_dir.PushFromLocalToRemote(
-        dry_run=FLAGS.dry_run,
-        verbose=True,
-        delete=FLAGS.delete,
-        progress=FLAGS.progress)
+    mirrored_dir.PushFromLocalToRemote(dry_run=FLAGS.dry_run,
+                                       verbose=True,
+                                       delete=FLAGS.delete,
+                                       progress=FLAGS.progress)
 
 
 if __name__ == '__main__':

@@ -28,6 +28,6 @@ sh_binary(
     srcs = ["install.sh"],
     data = [
         ":ryangosling_proto",
-        "//system/machines:machine",
+        "//system/machines:machine.par",
     ],
 )

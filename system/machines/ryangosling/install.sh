@@ -10,9 +10,9 @@ PREFIX=$HOME/.local
 
 # Main entry point.
 main() {
-  mkdir -pv $PREFIX/libexec $PREFIX/var/machines
-  rm -f $PREFIX/libexec/machines
-  cp system/machines/machine $PREFIX/libexec/machines
+  mkdir -pv $PREFIX/bin $PREFIX/var/machines
+  rm -f $PREFIX/bin/machines
+  cp system/machines/machine.par $PREFIX/bin/machines
   cp system/machines/ryangosling/ryangosling.pbtxt \
     $PREFIX/var/machines/ryangosling.pbtxt
 }
