@@ -35,6 +35,7 @@ addons:
       - openjdk-8-jdk
       - python
       - python3.6
+      - python3.6-dev
       - bazel
       - gcc-5
       - g++-5
