@@ -204,8 +204,15 @@ def run(command, num_retries=1, timeout=-1, **kwargs):
 
 
 def sed(match, replacement, path, modifiers=""):
-  """
-  Perform sed text substitution.
+  """Perform sed text substitution.
+
+  This requires GNU sed. On MacOS, install it using:
+
+      $ brew "gnu-sed"
+
+  And then ensure that it is in the PATH before the OS-shipped sed:
+
+      $ export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
   """
   cmd = "sed -r -i 's/%s/%s/%s' %s" % (match, replacement, modifiers, path)
 
