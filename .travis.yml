@@ -27,7 +27,6 @@ addons:
     taps:
       - homebrew/cask-versions
       - bazelbuild/tap
-    casks: java8
     packages:
       - python
       - mysql
@@ -35,6 +34,7 @@ addons:
       - findutils
       - zlib
       - bazel
+    casks: java8
   apt:
     sources:
       - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
