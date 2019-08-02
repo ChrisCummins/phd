@@ -1,4 +1,5 @@
 """Unit tests for //labm8:dockerutil."""
+import os
 import pathlib
 import tempfile
 
@@ -47,6 +48,9 @@ def test_BazelPy3Image_CheckCall_shared_volume():
   # available to docker. See:
   # https://docs.docker.com/docker-for-mac/osxfs/#namespaces
   with tempfile.TemporaryDirectory(prefix='phd_dockerutil_', dir='/tmp') as d:
+    # Make temporary directory writable by all users so that the user of the
+    # docker image can write to it.
+    os.chmod(d, 0o777)
     tmpdir = pathlib.Path(d)
     app_image = dockerutil.BazelPy3Image('labm8/test_data/basic_app')
     with app_image.RunContext() as ctx:
