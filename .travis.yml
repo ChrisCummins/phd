@@ -1,65 +1,10 @@
-os:
-  - linux
-  - osx
-
-# Sudo is required to swap out GCC for GCC-5 on linux.
-sudo: required
-
-osx_image: xcode10.2
-
-dist: trusty
-
-language:
-  - generic
-
-env:
-  global:
-    # ./configure script symlinks python3 to ~/.local/bin/python, and macos
-    # image needs GNU tools in PATH, rather than BSD versions.
-    - PATH="$HOME/.local/bin:/usr/local/opt/coreutils/libexec/gnubin/stat:/usr/local/opt/findutils/libexec/gnubin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
-    # Environment variables needed for zlib.
-    # See: https://github.com/pyenv/pyenv/issues/530
-    - PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/zlib/lib/pkgconfig"
-    - LDFLAGS="$LDFLAGS -L/usr/local/opt/zlib/lib"
-    - CPPFLAGS="$CPPFLAGS -I/usr/local/opt/zlib/include"
-
-addons:
-  homebrew:
-    brewfile: tools/Brewfile.travis
-  apt:
-    sources:
-      - sourceline: 'ppa:jonathonf/python-3.6'
-      - sourceline: 'deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8'
-        key_url: 'https://storage.googleapis.com/bazel-apt/doc/apt-key.pub.gpg'
-      - ubuntu-toolchain-r-test
-    packages:
-      - openjdk-8-jdk
-      - python
-      - python3.6
-      - python3.6-dev
-      - bazel
-      - gcc-5
-      - g++-5
+language: generic
 
 services:
-  - mysql
+  - docker
 
 install:
-  # Remove pyenv, since we use the system package managers to install python.
-  - rm -rf $(pyenv root)
-  # Swap out GCC for GCC-5 on linux to enable support for --std=c++14.
-  # See: https://gist.github.com/cotsog/3ce84675af0d74438d91
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc; fi
-  - ./configure --noninteractive
-  # Symlink the system python2 in place so that we bypass the pyenv shim.
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then ln -s /usr/bin/python2 $HOME/.local/bin; fi
-
-before_script:
-  # Print version numbers for debugging.
-  - python2 --version
-  - python3 --version
-  - bazel version
-  - gcc --version
+  - docker pull chriscummins/phd_build:latest
 
 script:
-  - bazel test --config=travis //labm8:all
+  - docker run -v$TRAVIS_BUILD_DIR:phd chriscummins/phd_build:latest -c "./configure --noninterative && bazel run //tools:whoami"
