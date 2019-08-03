@@ -7,4 +7,4 @@ install:
   - docker pull chriscummins/phd_build:latest
 
 script:
-  - docker run -v$TRAVIS_BUILD_DIR:phd chriscummins/phd_build:latest -c "./configure --noninterative && bazel run //tools:whoami"
+  - docker run -v$TRAVIS_BUILD_DIR:/phd chriscummins/phd_build:latest -c "./configure --noninterative && bazel run //tools:whoami"
