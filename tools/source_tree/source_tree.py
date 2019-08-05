@@ -203,7 +203,7 @@ def ExportGitHistoryForFiles(source: git.Repo,
     destination.remote(remote).fetch()
     tail = None
     if resume_export:
-      MaybeGetHexShaOfLastExportedCommit(destination)
+      tail = MaybeGetHexShaOfLastExportedCommit(destination)
     if tail:
       app.Log(1, 'Resuming export from commit `%s`', tail)
     commits_in_order = GetCommitsInOrder(source,
