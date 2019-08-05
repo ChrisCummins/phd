@@ -1,10 +1,18 @@
 # Documents and publications.
 
+filegroup(
+    name = "acronyms",
+    srcs = ["acronyms.json"],
+)
+
 py_binary(
     name = "deacronym_bibtex",
     srcs = ["deacronym_bibtex.py"],
+    data = [":acronyms"],
     deps = [
         "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:jsonutil",
         "//third_party/py/bibtexparser",
     ],
 )
