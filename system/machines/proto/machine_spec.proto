@@ -34,4 +34,7 @@ message MirroredDirectory {
 
   // Set this to the relative file of a path to use as a timestamp file.
   optional string timestamp_relpath = 7;
+
+  // If set, disable error if the local_path does not exist.
+  optional bool skip_if_not_present = 8 [default = false];
 }

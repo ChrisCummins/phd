@@ -96,6 +96,10 @@ class MirroredDirectory(object):
     self._Ssh(f'echo {timestamp} > '
               f'"{os.path.join(self.remote_path, self.timestamp_relpath)}"')
 
+  @property
+  def skip_if_not_present(self):
+    return self.spec.skip_if_not_present
+
   def RemoteExists(self) -> bool:
     """Test if remote directory exists."""
     try:
@@ -116,6 +120,10 @@ class MirroredDirectory(object):
     """Push from local to remote paths."""
     if self.spec.pull_only:
       raise InvalidOperation("Mirrored directory has been marked 'pull_only'")
+    if self.skip_if_not_present and not self.LocalExists():
+      app.Log(1, 'Skipping local path that does not exist: `%s`',
+              self.local_path)
+      return
     if self.timestamp_relpath:
       if self.local_timestamp < self.remote_timestamp:
         raise InvalidOperation(
@@ -135,6 +143,10 @@ class MirroredDirectory(object):
     """Pull from remote to local paths."""
     if self.spec.push_only:
       raise InvalidOperation("Mirrored directory has been marked 'push_only'")
+    if self.skip_if_not_present and not self.LocalExists():
+      app.Log(1, 'Skipping local path that does not exist: `%s`',
+              self.local_path)
+      return
     if self.timestamp_relpath:
       if self.local_timestamp > self.remote_timestamp:
         raise InvalidOperation(

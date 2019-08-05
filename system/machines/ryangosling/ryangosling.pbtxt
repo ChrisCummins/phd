@@ -28,6 +28,7 @@ mirrored_directory {
   rsync_exclude: "/.VolumeIcon.icns"
   rsync_exclude: "/.VolumeIcon.ico"
   rsync_exclude: "/autorun.inf"
+  skip_if_not_present: true
 }
 mirrored_directory {
   name: "photos"
@@ -46,6 +47,7 @@ mirrored_directory {
   rsync_exclude: "/.VolumeIcon.icns"
   rsync_exclude: "/.VolumeIcon.ico"
   rsync_exclude: "/autorun.inf"
+  skip_if_not_present: true
 }
 mirrored_directory {
   name: "photo_catalog"
@@ -69,6 +71,7 @@ mirrored_directory {
   rsync_exclude: "/inbox"
   rsync_exclude: "/outbox"
   rsync_exclude: "/photos"
+  skip_if_not_present: true
 }
 mirrored_directory {
   name: "music"
