@@ -1,5 +1,5 @@
 def _exports_repo_impl(ctx):
-  deployment_script = ctx.actions.declare_file("{}.py".format(ctx.attr.name))
+  deployment_script = ctx.actions.declare_file("{}.sh".format(ctx.attr.name))
   ctx.actions.write(output=deployment_script,
                     is_executable=True,
                     content="""\
@@ -11,10 +11,12 @@ set -e
     --move_file_mapping={move_file_mapping} $@
 """.format(
                         github_repo=ctx.attr.github_repo,
-                        targets=','.join(ctx.attr.targets),
+                        targets=','.join([
+                            "'{}'".format(t) for t in ctx.attr.targets
+                        ]),
                         extra_files=','.join(ctx.attr.extra_files),
                         move_file_mapping=','.join([
-                            '{}:{}'.format(k, v)
+                            "'{}':'{}'".format(k, v)
                             for k, v in ctx.attr.move_file_mapping.items()
                         ]),
                     ))
