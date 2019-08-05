@@ -6,6 +6,7 @@ from labm8 import app
 from labm8 import test
 from util.photolib import workspace
 
+
 FLAGS = app.FLAGS
 
 MODULE_UNDER_TEST = 'util.photolib.workspace'
@@ -20,7 +21,7 @@ def test_find_workspace_rootpath():
     os.mkdir(os.path.join(tmpdir, "photos"))
     os.mkdir(os.path.join(tmpdir, "photos", "2018"))
     os.mkdir(os.path.join(tmpdir, "photos", "2018", "2018-01"))
-    os.mkdir(os.path.join(tmpdir, "gallery"))
+    os.mkdir(os.path.join(tmpdir, "third_party"))
     os.mkdir(os.path.join(tmpdir, "lightroom"))
 
     assert workspace.find_workspace_rootpath(tmpdir) == tmpdir
@@ -29,7 +30,7 @@ def test_find_workspace_rootpath():
     assert workspace.find_workspace_rootpath(os.path.join(tmpdir,
                                                           "photos")) == tmpdir
     assert workspace.find_workspace_rootpath(os.path.join(tmpdir,
-                                                          "gallery")) == tmpdir
+                                                          "third_party")) == tmpdir
     assert workspace.find_workspace_rootpath(os.path.join(
         tmpdir, "lightroom")) == tmpdir
     assert workspace.find_workspace_rootpath(

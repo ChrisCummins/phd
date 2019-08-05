@@ -226,9 +226,8 @@ def GetLinterErrors(abspath: str, relpath: str) -> CacheLookupResult:
     ret.errors = SESSION \
       .query(CachedError) \
       .filter(CachedError.dir == ret.relpath_md5)
-    app.Log(2, "cache hit %s", relpath)
   elif directory:
-    app.Log(2, "removing stale directory cache %s", relpath)
+    app.Log(2, "Removing stale directory cache: `%s`", relpath)
 
     # Delete all existing cache entries.
     SESSION.delete(directory)

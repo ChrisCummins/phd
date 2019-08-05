@@ -144,8 +144,8 @@ class PhotolibFileLinter(FileLinter):  # pylint: disable=abstract-method
   pass
 
 
-class GalleryFileLinter(FileLinter):  # pylint: disable=abstract-method
-  """Lint a file in //gallery."""
+class ThirdPartyFileLinter(FileLinter):  # pylint: disable=abstract-method
+  """Lint a file in //third_party."""
   pass
 
 
@@ -165,7 +165,7 @@ class PhotolibFilename(PhotolibFileLinter):
     return [Error(workspace_relpath, "file/name", "invalid file name")]
 
 
-class GalleryFilename(GalleryFileLinter):
+class ThirdPartyFilename(ThirdPartyFileLinter):
   """Checks that file name matches the expected format."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
@@ -203,7 +203,7 @@ class GalleryFilename(GalleryFileLinter):
     return errors
 
 
-class FileExtension(PhotolibFileLinter, GalleryFileLinter):
+class FileExtension(PhotolibFileLinter, ThirdPartyFileLinter):
   """Checks file extensions."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
@@ -218,7 +218,7 @@ class FileExtension(PhotolibFileLinter, GalleryFileLinter):
               workspace_relpath,
               "extension/lowercase",
               "file extension should be lowercase",
-              fix_it=f"mv -v '{abspath}' '{labspath}'"))
+              fix_it=f"mv -v '{abspath}' '{abspath}.tmp' ; mv -v '{abspath}.tmp' '{labspath}'"))
 
     if lext not in common.KNOWN_FILE_EXTENSIONS:
       if lext == ".jpeg":
@@ -242,7 +242,7 @@ class FileExtension(PhotolibFileLinter, GalleryFileLinter):
     return errors
 
 
-class PanoramaKeyword(PhotolibFileLinter, GalleryFileLinter):
+class PanoramaKeyword(PhotolibFileLinter, ThirdPartyFileLinter):
   """Checks that panorama keywords are set on -Pano files."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
@@ -290,20 +290,20 @@ class ThirdPartyInPhotolib(PhotolibFileLinter):
     if "ATTR|third_party" in keywords:
       return [
           Error(workspace_relpath, "keywords/third_party",
-                "third_party file should be in //gallery")
+                "third_party file should be in //third_party")
       ]
     return []
 
 
-class ThirdPartyInGallery(GalleryFileLinter):
-  """Checks that 'third_party' keyword is set on files in //gallery."""
+class ThirdPartyKeywordIsSet(ThirdPartyFileLinter):
+  """Checks that 'third_party' keyword is set on files in //third_party."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
     keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|third_party" not in keywords:
       return [
           Error(workspace_relpath, "keywords/third_party",
-                "files in //gallery should have third_party keyword set")
+                "files in //third_party should have third_party keyword set")
       ]
     return []
 
@@ -353,12 +353,12 @@ class PhotolibDirLinter(DirLinter):  # pylint: disable=abstract-method
   pass
 
 
-class GalleryDirLinter(DirLinter):  # pylint: disable=abstract-method
-  """Lint a directory in //gallery."""
+class ThirdPartyDirLinter(DirLinter):  # pylint: disable=abstract-method
+  """Lint a directory in //third_party."""
   pass
 
 
-class DirEmpty(PhotolibDirLinter, GalleryDirLinter):
+class DirEmpty(PhotolibDirLinter, ThirdPartyDirLinter):
   """Checks whether a directory is empty."""
 
   def __call__(self, abspath: str, workspace_relpath: str,
@@ -374,7 +374,7 @@ class DirEmpty(PhotolibDirLinter, GalleryDirLinter):
     return []
 
 
-class GalleryDirname(GalleryDirLinter):
+class ThirdPartyDirname(ThirdPartyDirLinter):
   """Checks that directory name matches the expected format."""
 
   def __call__(self, abspath: str, workspace_relpath: str,

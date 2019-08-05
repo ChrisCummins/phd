@@ -8,7 +8,7 @@ from labm8 import app
 FLAGS = app.FLAGS
 
 # The top level photolib directories.
-TOP_LEVEL_DIRS = set(["photos", "gallery", "lightroom"])
+TOP_LEVEL_DIRS = set(["photos", "third_party", "lightroom"])
 
 # The set of all valid content file extensions.
 KNOWN_FILE_EXTENSIONS = set(
@@ -23,7 +23,7 @@ FILE_EXTENSION_SUGGESTIONS = {
 # Files which are not linted.
 IGNORED_FILES = set([
     "autorun.inf", ".DS_Store", ".VolumeIcon.icns", ".VolumeIcon.ico",
-    ".com.apple.timemachine.donotpresent", "README.md"
+    ".com.apple.timemachine.donotpresent", "README.md", ".sync_timestamp.txt",
 ])
 
 # Directories which are not linted. The contents of ignored

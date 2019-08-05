@@ -106,12 +106,12 @@ class WorkspaceLinter(linters.Linter):
     photolib_linter = ToplevelLinter(self.workspace, "photos",
                                      linters.PhotolibDirLinter,
                                      linters.PhotolibFileLinter)
-    gallery_linter = ToplevelLinter(self.workspace, "gallery",
-                                    linters.GalleryDirLinter,
-                                    linters.GalleryFileLinter)
+    third_party = ToplevelLinter(self.workspace, "third_party",
+                                 linters.ThirdPartyDirLinter,
+                                 linters.ThirdPartyFileLinter)
 
     photolib_linter()
-    gallery_linter()
+    third_party()
 
 
 def main(argv):  # pylint: disable=missing-docstring
