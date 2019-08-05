@@ -52,13 +52,6 @@ py_binary(
     ],
 )
 
-sh_test(
-    name = "export_source_tree_self_hosting_smoke_test",
-    timeout = "long",
-    srcs = ["export_source_tree_self_hosting_smoke_test.sh"],
-    data = [":export_source_tree"],
-)
-
 py_library(
     name = "phd_workspace",
     srcs = ["phd_workspace.py"],
