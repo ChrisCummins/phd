@@ -9,7 +9,7 @@ Section~\ref{sec:conclusions-contributions} summarises the main contributions of
 \section{Contributions}
 \label{sec:conclusions-contributions}
 
-The problems addressed in this thesis are well-established. This section summarises the main contributions of this thesis with respect to these problems.
+The problems addressed in this thesis are well-established. The main contributions of this thesis with respect to these problems are as follows.
 
 
 \subsection{A Solution for Benchmark Scarcity}
@@ -29,7 +29,7 @@ Chapter~\ref{chap:deepsmith} extends the application of recurrent neural network
 
 The portability of the approach is demonstrated by extending the generator from OpenCL to Solidity in only 12 lines of code. By contrast, extending a state-of-the-art generator from C to OpenCL required over 8000 lines of code~\cite{Lidbury2015a}.
 
-Despite its simplicity, the proposed technique is effective. To date, 67 new bugs have been identified and reported in OpenCL compilers. Many of the bugs identified could not be exposed by state-of-the-art approaches due to the limitations in the expressiveness of grammar-based approaches. The expressiveness of the generated test cases is limited only by the code that has been uploaded to GitHub; this led to unintentional outcomes such as exploiting compiler-specific features to expose bugs in the error handling of compiler intrinsics.
+Despite its simplicity, the proposed technique is effective. To date, 67 new bugs have been identified and reported in OpenCL compilers. Many of the bugs identified could not be exposed by state-of-the-art approaches due to the limitations in the expressiveness of grammar-based approaches. The expressiveness of the generated test cases is limited only by the code that has been uploaded to GitHub; this led to unintentional outcomes such as exploiting compiler-specific features to expose bugs in the error handling of compilers' intrinsics.
 
 
 \subsection{Automatic Compiler Optimisation Tuning}
@@ -60,7 +60,7 @@ By learning from a corpus of programs assembled from GitHub, the model induces t
 
 The techniques presented in this work sample recurrent neural networks on a per-token basis to generate programs. Once an entire sample has been generated, the sample can be checked to see if it is a valid program. If not, the entire sample is discarded. Although automatic, this \emph{rejection sampling} approach is wasteful. Grammar-based sampling approaches have been proposed that could increase the likelihood of generating a valid program through masked sampling~\cite{Dyer2016}. Of course, this would make the generator more complicated. Ultimately there is a trade-off between implementation complexity and sampling efficiency. This work emphasises simplicity.
 
-Moreover, rejection sampling results in a bias towards shorter programs. This is because the probability that a sample is a valid program is inversely proportional to its length. This may skew the distribution of generated programs away from the training programs. This issue, arising from rejection sampling, can coincidentally be alleviated through further rejection sampling. To correct the bias towards shorter programs, an additional filter could be placed on the output of the generative model that discards samples with a random probability inversely proportional to their length. By removing more short samples than long, the bias in the distribution can be corrected for.
+Moreover, rejection sampling results in a bias towards shorter programs. This is because, on average, the probability that a sample is a valid program decreases with each additional token. This skews the distribution of generated programs away from the training programs. This issue, arising from rejection sampling, can coincidentally be alleviated through further rejection sampling. To correct the bias towards shorter programs, an additional filter could be placed on the output of the generative model that discards samples with a random probability inversely proportional to their length. By removing more short samples than long, the bias in the distribution is corrected, albeit at the cost of fewer accepted samples.
 
 
 \subsection{Characterisation of OpenCL Compiler Bugs}
@@ -92,7 +92,7 @@ Chapter~\ref{chap:deeptune} feeds a sequence of program tokens into a recurrent 
 
 % Similarly, the sequential representation is vulnerable to dead code
 
-The higher-dimensional representation of source code text over numerical features means that larger data sets are required to combat sparsity in training data. For example, in Chapter~\ref{chap:deeptune}, one-hot vocabulary sequences are padded to 1024 tokens, providing a much more sparse space representation than the 4-dimension feature space used by the state-of-the-art approach for equivalent size data sets.
+% The higher-dimensional representation of source code text over numerical features means that larger data sets are required to combat sparsity in training data. For example, in Chapter~\ref{chap:deeptune}, one-hot vocabulary sequences are padded to 1024 tokens, providing a much more sparse representation than the 4-dimension feature space used by the state-of-the-art approach for equivalent size data sets.
 
 A common criticism of machine learning systems is that they are \emph{black boxes}. When the system fails to produce the desired result, there is no obvious method to correct the system so as to prevent similar errors. Still, in traditional machine learning, it may be possible to correct problems by adjusting the features. In an absence of features, there are fewer meaningful ways to improve a model based on analysis of failure cases.
 
@@ -108,7 +108,7 @@ This thesis presents a technique for the \emph{unguided} synthesis of compiler b
 
 One approach to direct program generation could be to employ a rejection filter that tests for the presence of a property of interest and rejects programs that do not satisfy this property. Another approach would be to train the generative model simultaneously for both the structure of programs (as is done in this work), along with a representation of the properties of interest (such as a feature vector). At sample time, the feature values of the desired program could be used as input to steer the program generation. A third approach would use the learned language model not to generate programs, but to guide an existing program generator by biasing the weights of grammar productions.
 
-If successful, such a technique would enable the exploration of larger feature spaces than is currently possible by efficiently navigating the generation of benchmarks to map out the decision surface.
+If successful, such a technique would enable the exploration of larger feature spaces than is currently possible by efficiently navigating the generation of benchmarks to map out the decision surface. \diff{Additional insight into the behaviour of a model and its failure cases would be enabled by steering synthesis towards the parts of the space where the model has the lowest confidence, or parts of the space where the model frequently makes wrong predictions.}
 
 
 \subsection{Neural Model Selection through Adversarial Games}
@@ -121,6 +121,8 @@ Section~\ref{sec:clgen-qualitative-evaluation} employs \emph{Turing tests} to ev
 \subsection{Learning Representations for Dynamic Program Inputs}
 
 Chapter~\ref{chap:deeptune} presents an approach for learning optimisation heuristics from the raw representation of a program, but in the presence of dynamic properties, traditional feature extraction must be used. For example, feeding in the size of input data sets. In future work, this approach could be extended to also account for dynamic properties. Unlike with program source code, it is not clear what the raw representation of program inputs may be as there is no equivalent human-interpretable representation of program data. One approach could be to model the sequence of bytes that the program reads and writes, though this may introduce a high overhead for runtime instrumentation~\cite{Gad2014}.
+
+\diff{A Generative Adversarial Network (GAN)~\cite{Goodfellow2014} uses a similar adversarial approach, but using a second artificial neural network as a discriminative adversary. The generator and discriminator networks are trained concurrently; the generator is trained to maximize the probability of failure in the discriminator, the discriminator is trained to minimize this probability. This approach is a good fit for the domain of program generation, but filtering of the generator outputs to check for program correctness may be required to prevent the generator training to a local maxima which is hard to distinguish from the test set, but rarely contains meaningful program semantics.}
 
 
 \subsection{Towards General-Purpose Program Comprehension}

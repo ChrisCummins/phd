@@ -1,8 +1,25 @@
-Compilers are a fundamental and trusted technology. Their role in translating software to machine code must be performed without error, while maximising the performance and efficiency of the generated code. The precedent for more rigorous validation and improved performance is well established, yet progress is challenging. Compilers comprise thousands of interacting components which must be expertly engineered and tuned, and much of the work of compiler construction has eluded automation. \diff{Furthermore, the rapid transition to heterogeneous parallelism has driven development of broad new range of accelerators which require aggressively-optimising compilers to obtain good performance. For the trend towards heterogeneity to continue, compiler construction must be made cheap.}
+\diff{Building an optimising compiler is hard. LLVM, a leading industrial-grade compiler, is the product of XXX commits over a XX year period, costing an estimated XXX.
+%
+There are more devices + heterogeneity. Each device requires a new compilers.
+%
+% LLVM 8.0.1 SLOCount: 
+% 1206 unique developers have contributed 307,817 commits, with
+% 35,497,808 line additions	and 20,909,608 line deletions. There
+% are 5,356,816 lines of code which 103035
+
+% sloccount . --personcost 103035
+% average US software developer salary from glassdor
+%  https://www.glassdoor.co.uk/Salaries/us-software-engineer-salary-SRCH_IL.0,2_IN1_KO3,20.htm?countryRedirect=true
+%
+Demand outstrips supply.
+%
+What is need is better tools to lower the cost of compiler construction.}
+
+% Compilers are a fundamental technology. Their role in translating software to machine code must be performed without error, while maximising the performance and efficiency of the generated code. The precedent for more rigorous validation and improved performance is well established, yet progress is challenging. Compilers comprise thousands of interacting components which must be expertly engineered and tuned, and much of the work of compiler construction has eluded automation. \diff{Furthermore, the rapid transition to heterogeneous parallelism has driven development of broad new range of accelerators which require aggressively-optimising compilers to obtain good performance. For the trend towards heterogeneity to continue, compiler construction must be made cheap.}
 
 % The cost of these shortcomings is wasted energy, poor performance, and buggy software. What is needed is ways to lower the cost of constructing compilers.
 
-This thesis presents new techniques that dramatically lower the cost of compiler construction, while improving robustness and performance. The enabling insight for this research is the leveraging of \emph{recurrent neural networks} to model the syntax and semantics of programming languages, enabling tasks which previously required enormous engineering effort to be automated. This is demonstrated in three challenging domains:
+This thesis presents new techniques that dramatically lower the cost of compiler construction, while improving robustness and performance. The enabling insight for this research is the leveraging of \emph{recurrent neural networks} to \diff{model the correlations between source code and program behaviour}, enabling tasks which previously required enormous engineering effort to be automated. This is demonstrated in three domains:
 
 % This thesis presents three techniques to simplify and accelerate compiler construction.
 % First, a tool for automatic performance characterisation through benchmark generation; second, a low-cost and effective fuzzer for validating correctness; third, a simple technique to address the labour intensive process of optimisation heuristic construction.
@@ -12,3 +29,5 @@ First, a generative model for compiler benchmarks is developed. This model is in
 Second, this thesis presents techniques that extend the prior approach to the domain of compiler validation. A compiler fuzzer is developed which is far simpler than the state-of-the-art, yet is effective. By learning a generative model rather than engineering a generator from scratch using a grammar, it is implemented in $100\times$ fewer lines of code than the state-of-the-art, and is capable of generating an expressive range of tests that expose bugs that prior techniques cannot. An extensive testing campaign of OpenCL compilers reveals 67 new bugs, many of which have now been fixed.
 
 Finally, this thesis addresses the challenges of machine learning for compiler optimisations, developing methodologies for learning compiler heuristics without the need for code features. Contrasting prior approaches that require features to be expertly engineered and selected, the proposed approach learns directly over the raw textual representation of program code. Doing so outperforms state-of-the-art heuristics in two challenging optimisation domains. Additionally, the methodology permits the novel transfer of information between optimisation problems, enabling a model trained for one task to be adapted to perform another, further improving performance.
+
+\diff{TODO: Conclusions}

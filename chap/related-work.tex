@@ -129,9 +129,9 @@ Entirely machine learning-based approaches to test case generation have recently
 
 \subsubsection{Mutation and Feedback-directed Testing}
 
-An alternate method to generating test cases is to mutate a seed input.
+An alternate method for generating programs to use as compiler test cases is to mutate a seed input.
 % Le, V., Afshari, M., & Su, Z. (2014). Compiler Validation via Equivalence Modulo Inputs. In PLDI. https://doi.org/10.1145/2594291.2594334
-Equivalence Modulo Inputs (EMI) testing, introduced by~\citeauthor{Le2013a}~\cite{Le2013a} follows a different approach to test case generation. Starting with existing code, it inserts or deletes statements that will not be executed so that the functionality of the code is unchanged. If the functionality is affected, it is due to a compiler bug. In the original work~\cite{Le2013a}, code from dead regions is randomly deleted.
+Equivalence Modulo Inputs (EMI) testing, introduced by~\citeauthor{Le2013a}~\cite{Le2013a}, starts with an existing program and inserts or deletes statements that will not be executed so that the functionality of the code is unchanged. If the functionality of the compiled code is affected, it is due to a bug in the compiler. In the original work~\cite{Le2013a}, code from dead regions is randomly deleted.
 % V. Le, C. Sun, and Z. Su, “Finding Deep Compiler Bugs via Guided Stochastic Program Mutation,” in OOPSLA, 2015.
 \emph{Athena}~\cite{Le2015} guides the approach using a Markov Chain Monte Carlo method, and supports dead code insertion as well as removal.
 % V. Le, C. Sun, and Z. Su, “Randomized Stress-testing of Link-Time Optimizers,” in ISSTA, 2015.
@@ -291,7 +291,7 @@ This section provides a brief overview of the field. Comprehensive reviews by \c
 \citeauthor{Zhang2018}~\cite{Zhang2018} provide further detail.
 
 % Agakov, F., Bonilla, E., Cavazos, J., Franke, B., Fursin, G., O’Boyle, M., … Williams, C. K. I. (2006). Using Machine Learning to Focus Iterative Optimization. In CGO. IEEE. https://doi.org/10.1109/CGO.2006.37
-Pioneered by \citeauthor{Agakov}, the idea is to use iterative compilation to evaluate a collection of training programs offline and gather explanatory variables describing the features of the programs. The program features and the optimisation decisions which yield the greatest performance are combined and a model is learned. This model can then be used to make predictions on unseen programs by extracting the features describing the program. \citeauthor{Agakov}~\cite{Agakov} use machine learning to guide the iterative compilation search.
+Pioneered by \citeauthor{Agakov}, the idea is to use iterative compilation to evaluate a collection of training programs offline and gather features describing the distinguishing properties of the programs. The program features and the optimisation decisions which yield the greatest performance are combined and a model is learned. This model can then be used to make predictions on unseen programs by extracting the features describing the program. \citeauthor{Agakov}~\cite{Agakov} use machine learning to guide the iterative compilation search.
 % Stephenson, M., Martin, M., & Reilly, U. O. (2003). Meta Optimization: Improving Compiler Heuristics with Machine Learning. In PLDI.
 \citeauthor{Stephenson2003}~\cite{Stephenson2003} used ``meta optimisation'' to tune compiler heuristics through an evolutionary algorithm to automate the search of the optimisation space.
 % Stephenson, M., Martin, M., & Reilly, U. O. (2003). Meta Optimization: Improving Compiler Heuristics with Machine Learning. In PLDI.
