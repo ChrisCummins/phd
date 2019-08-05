@@ -193,14 +193,17 @@ def ExportCommitsThatTouchFiles(commits_in_order: typing.List[git.Commit],
 def ExportGitHistoryForFiles(source: git.Repo,
                              destination: git.Repo,
                              files_of_interest: typing.Set[str],
-                             head_ref: str = 'HEAD') -> int:
+                             head_ref: str = 'HEAD',
+                             resume_export: bool = True) -> int:
   """Apply the parts of the git history from the given source repo """
   if destination.is_dirty():
     raise OSError("Repo `{destination.working_tree_dir}` is dirty")
 
   with TemporaryGitRemote(destination, source.working_tree_dir) as remote:
     destination.remote(remote).fetch()
-    tail = MaybeGetHexShaOfLastExportedCommit(destination)
+    tail = None
+    if resume_export:
+      MaybeGetHexShaOfLastExportedCommit(destination)
     if tail:
       app.Log(1, 'Resuming export from commit `%s`', tail)
     commits_in_order = GetCommitsInOrder(source,

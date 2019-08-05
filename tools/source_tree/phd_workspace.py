@@ -211,9 +211,13 @@ class PhdWorkspace(bazelutil.Workspace):
         if dst_src_path.is_file():
           subprocess.check_call(['git', 'rm', src_relpath])
 
-  def ExportToRepo(self, repo: git.Repo, targets: typing.List[str],
-                   src_files: typing.List[str], extra_files: typing.List[str],
-                   file_move_mapping: typing.Dict[str, str]) -> None:
+  def ExportToRepo(self,
+                   repo: git.Repo,
+                   targets: typing.List[str],
+                   src_files: typing.List[str],
+                   extra_files: typing.List[str],
+                   file_move_mapping: typing.Dict[str, str],
+                   resume_export: bool = True) -> None:
     """Export the requested targets to the destination directory."""
     # The timestamp for the export.
     timestamp = datetime.datetime.utcnow()
@@ -224,7 +228,8 @@ class PhdWorkspace(bazelutil.Workspace):
     for file in src_files:
       print(file)
 
-    source_tree.ExportGitHistoryForFiles(self.git_repo, repo, src_files)
+    source_tree.ExportGitHistoryForFiles(self.git_repo, repo, src_files,
+                                         resume_export)
 
     # Make manual adjustments.
     exported_workspace = bazelutil.Workspace(pathlib.Path(

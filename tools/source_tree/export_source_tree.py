@@ -42,6 +42,11 @@ app.DEFINE_boolean('github_repo_create_private', True,
                    'Whether to create new GitHub repos as private.')
 app.DEFINE_boolean('export_source_tree_print_files', False,
                    'Print the files that will be exported and terminate.')
+app.DEFINE_boolean(
+    'ignore_last_export', False,
+    'If true, run through the entire git history. Otherwise, '
+    'continue from the last commit exported. Use this flag if '
+    'the set of exported files changes.')
 
 
 def GetOrCreateRepoOrDie(github: github_lib.Github,
@@ -68,6 +73,7 @@ def EXPORT(github_repo: str,
            excluded_targets: typing.List[str] = None,
            extra_files: typing.List[str] = None,
            move_file_mapping: typing.Dict[str, str] = None,
+           resume_export: bool = True,
            run_handler=app.Run) -> None:
   """Custom entry-point to export source-tree.
 
@@ -109,7 +115,8 @@ def EXPORT(github_repo: str,
         sys.exit(0)
 
       source_workspace.ExportToRepo(destination_repo, targets, src_files,
-                                    extra_files, move_file_mapping)
+                                    extra_files, move_file_mapping,
+                                    resume_export)
       app.Log(1, 'Pushing changes to remote')
       destination_repo.git.push('origin')
 
@@ -141,6 +148,7 @@ def main():
          excluded_targets=excluded_targets,
          extra_files=extra_files,
          move_file_mapping=move_file_mapping,
+         resume_export=not FLAGS.ignore_last_export,
          run_handler=lambda x: x())
 
 
