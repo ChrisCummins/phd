@@ -86,11 +86,11 @@ void AddMeasurementsFromDurationOrDie(int64_t start_time, int64_t end_time,
 }
 
 string LocationToGroup(const string& location) {
-  const string location_stripped = phd::CopyAndTrimLeft(location);
+  const string location_stripped = labm8::CopyAndTrimLeft(location);
   if (location_stripped == "") {
     return "default";
   } else {
-    return phd::ToCamelCase(location_stripped);
+    return labm8::ToCamelCase(location_stripped);
   }
 }
 
@@ -117,7 +117,7 @@ void ProcessLineOrDie(
   // [unused] [3] END TIME(LOCAL)     Datetime.
   // [unused] [4] DURATION            (end-start) in seconds.
   // [5] NAME (optional)              Category name.
-  const string name = phd::CopyAndTrimLeft(string(components[5]));
+  const string name = labm8::CopyAndTrimLeft(string(components[5]));
   // [6] LOCATION (optional)          Location name.
   const string location = LocationToGroup(string(components[6]));
   // [unused] [7] NOTE (optional)     Notes field.
@@ -128,7 +128,7 @@ void ProcessLineOrDie(
       name_to_series_map, name,
       [name_to_series_map, proto](const string& name) -> Series* {
         Series* series = proto->add_series();
-        series->set_name(absl::StrCat(phd::ToCamelCase(name), "Time"));
+        series->set_name(absl::StrCat(labm8::ToCamelCase(name), "Time"));
         series->set_family("TimeTracking");
         series->set_unit("milliseconds");
         name_to_series_map->insert(std::make_pair(name, series));

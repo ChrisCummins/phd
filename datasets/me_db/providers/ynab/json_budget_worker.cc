@@ -99,7 +99,7 @@ string GetBudgetNameFromPathOrDie(const boost::filesystem::path& path) {
       (path.parent_path().parent_path().parent_path().filename().string());
 
   LOG(DEBUG) << "Directory: " << directory_name;
-  CHECK(phd::EndsWith(directory_name, ".ynab4"));
+  CHECK(labm8::EndsWith(directory_name, ".ynab4"));
 
   // <budget-dir> has the format '$NAME~<stuff>.ynab4'. Split at the ~ and
   // return the first component.
@@ -110,7 +110,7 @@ string GetBudgetNameFromPathOrDie(const boost::filesystem::path& path) {
   const string unformatted_budget_name = string(components[0]);
   CHECK(!unformatted_budget_name.empty());
 
-  return phd::ToCamelCase(unformatted_budget_name);
+  return labm8::ToCamelCase(unformatted_budget_name);
 }
 
 void TryAddTransactionMeasurementToSeries(
@@ -255,8 +255,8 @@ void ProcessJsonBudgetFile(SeriesCollection* proto) {
       // The category name is a concatenation of the master and subcategory
       // names.
       const string category_name =
-          absl::StrFormat("%s:%s", phd::ToCamelCase(master_category_name),
-                          phd::ToCamelCase(subcategory_name));
+          absl::StrFormat("%s:%s", labm8::ToCamelCase(master_category_name),
+                          labm8::ToCamelCase(subcategory_name));
 
       const string subcategory_id = subcategory.get<string>("entityId", "");
       CHECK(!subcategory_id.empty());

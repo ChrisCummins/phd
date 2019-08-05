@@ -30,7 +30,7 @@ class KernelArg {
  public:
   KernelArg() : type_(OpenClType::DEFAULT_UNKNOWN) {}
 
-  phd::Status Init(cl::Kernel *kernel, size_t arg_index);
+  labm8::Status Init(cl::Kernel *kernel, size_t arg_index);
 
   // Create a random value for this argument. If the argument is not supported,
   // returns nullptr.

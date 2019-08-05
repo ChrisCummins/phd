@@ -406,7 +406,7 @@ Measurement HealthKitRecordImporter::CreateMeasurement(const string& family,
   // Set the source as the device name.
   CHECK(!sourceName_.empty());
   measurement.set_source(
-      absl::StrFormat("HealthKit:%s", phd::ToCamelCase(sourceName_)));
+      absl::StrFormat("HealthKit:%s", labm8::ToCamelCase(sourceName_)));
 
   return measurement;
 }

@@ -40,46 +40,46 @@ namespace labm8 {
 namespace {
 
 TEST(Status, Empty) {
-  phd::Status status;
-  EXPECT_EQ(phd::error::OK, phd::Status::OK.error_code());
-  EXPECT_EQ(phd::error::OK, phd::Status::OK.code());
-  EXPECT_EQ("OK", phd::Status::OK.ToString());
+  labm8::Status status;
+  EXPECT_EQ(labm8::error::OK, labm8::Status::OK.error_code());
+  EXPECT_EQ(labm8::error::OK, labm8::Status::OK.code());
+  EXPECT_EQ("OK", labm8::Status::OK.ToString());
 }
 
 TEST(Status, GenericCodes) {
-  EXPECT_EQ(phd::error::OK, phd::Status::OK.error_code());
-  EXPECT_EQ(phd::error::OK, phd::Status::OK.code());
-  EXPECT_EQ(phd::error::CANCELLED, phd::Status::CANCELLED.error_code());
-  EXPECT_EQ(phd::error::CANCELLED, phd::Status::CANCELLED.code());
-  EXPECT_EQ(phd::error::UNKNOWN, phd::Status::UNKNOWN.error_code());
-  EXPECT_EQ(phd::error::UNKNOWN, phd::Status::UNKNOWN.code());
+  EXPECT_EQ(labm8::error::OK, labm8::Status::OK.error_code());
+  EXPECT_EQ(labm8::error::OK, labm8::Status::OK.code());
+  EXPECT_EQ(labm8::error::CANCELLED, labm8::Status::CANCELLED.error_code());
+  EXPECT_EQ(labm8::error::CANCELLED, labm8::Status::CANCELLED.code());
+  EXPECT_EQ(labm8::error::UNKNOWN, labm8::Status::UNKNOWN.error_code());
+  EXPECT_EQ(labm8::error::UNKNOWN, labm8::Status::UNKNOWN.code());
 }
 
 TEST(Status, ConstructorZero) {
-  phd::Status status(phd::error::OK, "msg");
+  labm8::Status status(labm8::error::OK, "msg");
   EXPECT_TRUE(status.ok());
   EXPECT_EQ("OK", status.ToString());
 }
 
 TEST(Status, CheckOK) {
-  phd::Status status;
+  labm8::Status status;
   CHECK_OK(status);
   CHECK_OK(status) << "Failed";
   DCHECK_OK(status) << "Failed";
 }
 
 TEST(Status, ErrorMessage) {
-  phd::Status status(phd::error::INVALID_ARGUMENT, "");
+  labm8::Status status(labm8::error::INVALID_ARGUMENT, "");
   EXPECT_FALSE(status.ok());
   EXPECT_EQ("", status.error_message().ToString());
   EXPECT_EQ("", status.message().ToString());
   EXPECT_EQ("INVALID_ARGUMENT", status.ToString());
-  status = phd::Status(phd::error::INVALID_ARGUMENT, "msg");
+  status = labm8::Status(labm8::error::INVALID_ARGUMENT, "msg");
   EXPECT_FALSE(status.ok());
   EXPECT_EQ("msg", status.error_message().ToString());
   EXPECT_EQ("msg", status.message().ToString());
   EXPECT_EQ("INVALID_ARGUMENT:msg", status.ToString());
-  status = phd::Status(phd::error::OK, "msg");
+  status = labm8::Status(labm8::error::OK, "msg");
   EXPECT_TRUE(status.ok());
   EXPECT_EQ("", status.error_message().ToString());
   EXPECT_EQ("", status.message().ToString());
@@ -87,50 +87,50 @@ TEST(Status, ErrorMessage) {
 }
 
 TEST(Status, Copy) {
-  phd::Status a(phd::error::UNKNOWN, "message");
-  phd::Status b(a);
+  labm8::Status a(labm8::error::UNKNOWN, "message");
+  labm8::Status b(a);
   ASSERT_EQ(a.ToString(), b.ToString());
 }
 
 TEST(Status, Assign) {
-  phd::Status a(phd::error::UNKNOWN, "message");
-  phd::Status b;
+  labm8::Status a(labm8::error::UNKNOWN, "message");
+  labm8::Status b;
   b = a;
   ASSERT_EQ(a.ToString(), b.ToString());
 }
 
 TEST(Status, AssignEmpty) {
-  phd::Status a(phd::error::UNKNOWN, "message");
-  phd::Status b;
+  labm8::Status a(labm8::error::UNKNOWN, "message");
+  labm8::Status b;
   a = b;
   ASSERT_EQ(string("OK"), a.ToString());
   ASSERT_TRUE(b.ok());
   ASSERT_TRUE(a.ok());
 }
 
-TEST(Status, EqualsOK) { ASSERT_EQ(phd::Status::OK, phd::Status()); }
+TEST(Status, EqualsOK) { ASSERT_EQ(labm8::Status::OK, labm8::Status()); }
 
 TEST(Status, EqualsSame) {
-  const phd::Status a = phd::Status(phd::error::CANCELLED, "message");
-  const phd::Status b = phd::Status(phd::error::CANCELLED, "message");
+  const labm8::Status a = labm8::Status(labm8::error::CANCELLED, "message");
+  const labm8::Status b = labm8::Status(labm8::error::CANCELLED, "message");
   ASSERT_EQ(a, b);
 }
 
 TEST(Status, EqualsCopy) {
-  const phd::Status a = phd::Status(phd::error::CANCELLED, "message");
-  const phd::Status b = a;
+  const labm8::Status a = labm8::Status(labm8::error::CANCELLED, "message");
+  const labm8::Status b = a;
   ASSERT_EQ(a, b);
 }
 
 TEST(Status, EqualsDifferentCode) {
-  const phd::Status a = phd::Status(phd::error::CANCELLED, "message");
-  const phd::Status b = phd::Status(phd::error::UNKNOWN, "message");
+  const labm8::Status a = labm8::Status(labm8::error::CANCELLED, "message");
+  const labm8::Status b = labm8::Status(labm8::error::UNKNOWN, "message");
   ASSERT_NE(a, b);
 }
 
 TEST(Status, EqualsDifferentMessage) {
-  const phd::Status a = phd::Status(phd::error::CANCELLED, "message");
-  const phd::Status b = phd::Status(phd::error::CANCELLED, "another");
+  const labm8::Status a = labm8::Status(labm8::error::CANCELLED, "message");
+  const labm8::Status b = labm8::Status(labm8::error::CANCELLED, "another");
   ASSERT_NE(a, b);
 }
 

@@ -32,7 +32,7 @@ char HelloModulePass::ID = 0;
 }  // namespace llvm
 
 int main(int argc, char** argv) {
-  phd::InitApp(&argc, &argv);
+  labm8::InitApp(&argc, &argv);
 
   llvm::legacy::PassManager pm;
   llvm::PassManagerBuilder pmb;

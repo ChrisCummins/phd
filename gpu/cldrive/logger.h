@@ -33,11 +33,11 @@ class Logger {
 
   virtual ~Logger() {}
 
-  virtual phd::Status StartNewInstance();
+  virtual labm8::Status StartNewInstance();
 
   // If flush is false, don't emit the log immediately, but instead store the
   // log in a buffer that is emmitted only on a call to PrintAndClearBuffer().
-  virtual phd::Status RecordLog(
+  virtual labm8::Status RecordLog(
       const CldriveInstance* const instance,
       const CldriveKernelInstance* const kernel_instance,
       const CldriveKernelRun* const run,
@@ -75,7 +75,7 @@ class CsvLogger : public Logger {
  public:
   CsvLogger(std::ostream& ostream, const CldriveInstances* const instances);
 
-  virtual phd::Status RecordLog(
+  virtual labm8::Status RecordLog(
       const CldriveInstance* const instance,
       const CldriveKernelInstance* const kernel_instance,
       const CldriveKernelRun* const run,
