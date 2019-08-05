@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//tools/bzl:exports.bzl", "exports_repo", "exports_pip")
+load("//tools/bzl:exports.bzl", "exports_pip", "exports_repo")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -26,6 +26,9 @@ exports_files([
 
 exports_repo(
     name = "export",
+    extra_files = [
+        "labm8/labm8.jpg",
+    ],
     github_repo = "labm8",
     move_file_mapping = {
         "labm8/README.md": "README.md",
