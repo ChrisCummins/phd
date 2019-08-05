@@ -25,6 +25,7 @@ _ALWAYS_EXPORTED_FILES = [
     'BUILD',  # Top-level BUILD file is always needed.
     'WORKSPACE',  # Implicit dependency of everything.
     'README.md',
+    'tools/Brewfile.travis',  # Needed by Travis CI.
     'tools/bzl/*',  # Implicit dependency of WORKSPACE file.
     'tools/BUILD',  # Needed by //tools/bzl:maven_jar.bzl.
     'tools/download_file.py',  # Needed by //tools/bzl:maven_jar.bzl.
