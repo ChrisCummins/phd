@@ -31,7 +31,7 @@ app.DEFINE_list(
     'extra_files', [], 'A list of additional files to export. Each element in '
     'the list is a relative path to export. E.g. `bar/baz.txt`.')
 app.DEFINE_list(
-    'mv_files', [],
+    'move_file_mapping', [],
     'Each element in the list is a mapping of relative paths in the form '
     '<src>:<dst>. E.g. `foo.py:bar/baz.txt` will move file `foo.py` to '
     'destination `bar/baz.txt`.')
@@ -63,21 +63,12 @@ def GetOrCreateRepoOrDie(github: github_lib.Github,
     app.FatalWithoutStackTrace(str(e))
 
 
-@contextlib.contextmanager
-def DestinationDirectoryFromFlags() -> pathlib.Path:
-  """Get the export destination."""
-  if FLAGS.github_repo:
-    with tempfile.TemporaryDirectory(prefix='phd_tools_source_tree_') as d:
-      yield pathlib.Path(d)
-  else:
-    yield pathlib.Path(FLAGS.destination)
-
-
 def EXPORT(github_repo: str,
            targets: typing.List[str],
            excluded_targets: typing.List[str] = None,
            extra_files: typing.List[str] = None,
-           move_file_mapping: typing.Dict[str, str] = None) -> None:
+           move_file_mapping: typing.Dict[str, str] = None,
+           run_handler=app.Run) -> None:
   """Custom entry-point to export source-tree.
 
   This should be called from a bare python script, before flags parsing.
@@ -102,7 +93,7 @@ def EXPORT(github_repo: str,
     source_path = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
     source_workspace = phd_workspace.PhdWorkspace(source_path)
 
-    with tempfile.TemporaryDirectory(prefix='phd_tools_source_tree_') as d:
+    with tempfile.TemporaryDirectory(prefix=f'phd_export_{github_repo}_') as d:
       destination = pathlib.Path(d)
       credentials = api.ReadGitHubCredentials(
           pathlib.Path('~/.githubrc').expanduser())
@@ -122,14 +113,10 @@ def EXPORT(github_repo: str,
       app.Log(1, 'Pushing changes to remote')
       destination_repo.git.push('origin')
 
-  app.Run(_DoExport)
+  run_handler(_DoExport)
 
 
-def main(argv: typing.List[str]):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
-
+def main():
   if not FLAGS.targets:
     raise app.UsageError('--targets must be one-or-more bazel targets')
   targets = list(sorted(set(FLAGS.targets)))
@@ -145,19 +132,17 @@ def main(argv: typing.List[str]):
   extra_files = list(sorted(set(FLAGS.extra_files)))
 
   move_file_tuples = [
-      _GetFileMapping(f) for f in list(sorted(set(FLAGS.mv_files)))
+      _GetFileMapping(f) for f in list(sorted(set(FLAGS.move_file_mapping)))
   ]
   move_file_mapping = {x[0]: x[1] for x in move_file_tuples}
 
-  with DestinationDirectoryFromFlags() as destination:
-    connection = api.GetGithubConectionFromFlagsOrDie()
-    repo = GetOrCreateRepoOrDie(connection, FLAGS.github_repo)
-    api.CloneRepoToDestination(repo, destination)
-    destination_repo = git.Repo(destination)
-    source_workspace.ExportToRepo(destination_repo, targets, excluded_targets,
-                                  extra_files, move_file_mapping)
-    destination_repo.git.push('origin')
+  EXPORT(github_repo=FLAGS.github_repo,
+         targets=targets,
+         excluded_targets=excluded_targets,
+         extra_files=extra_files,
+         move_file_mapping=move_file_mapping,
+         run_handler=lambda x: x())
 
 
 if __name__ == '__main__':
-  app.RunWithArgs(main)
+  app.Run(main)
