@@ -93,6 +93,9 @@ class PhdWorkspace(bazelutil.Workspace):
     """Get the full list of source files to export for targets."""
     excluded_targets = set(excluded_targets)
 
+    # Never export `exports_repo` targets.
+    excluded_targets = excluded_targets.union('kind("exports_repo", //...)')
+
     file_set = set(extra_files).union(set(file_move_mapping.values()))
     for target in targets:
       file_set = file_set.union(
