@@ -174,7 +174,7 @@ class PhdWorkspace(bazelutil.Workspace):
     requirements_path = (
         workspace.workspace_root / 'tools' / 'requirements.txt')
     with open(requirements_path, 'w') as f:
-      print(''.join(requirements), file=f)
+      print('\n'.join(requirements), file=f)
 
   def CopyFilesToDestination(self, workspace: bazelutil.Workspace,
                              files: typing.List[str]) -> None:
