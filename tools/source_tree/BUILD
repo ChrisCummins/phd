@@ -99,9 +99,3 @@ py_test(
         "//third_party/py/git",
     ],
 )
-
-py_binary(
-    name = "EXPORT",
-    srcs = ["EXPORT.py"],
-    deps = [":export_source_tree"],
-)
