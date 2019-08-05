@@ -6,7 +6,7 @@ namespace labm8 {
 namespace {
 
 TEST(DataPathOrDie, DataPathExists) {
-  BazelDataPathOrDie("phd/phd/test/data_file.txt");
+  BazelDataPathOrDie("phd/labm8/cpp/test/data_file.txt");
 }
 
 }  // anonymous namespace
