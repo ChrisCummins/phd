@@ -1,4 +1,4 @@
-# Test data for //phd.
+# Test data for //labm8/cpp.
 #
 # Copyright 2019 Chris Cummins <chrisc.101@gmail.com>.
 #
