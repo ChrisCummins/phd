@@ -4,13 +4,7 @@ ryan_gosling_give_me_photos() {
   (
     ~/.local/bin/machines \
        --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --pull staging --delete --nodry_run $@ && \
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --pull photos --delete --nodry_run $@ && \
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --pull photo_catalog --delete --nodry_run $@
+       --pull staging,photos,photo_catalog --delete --nodry_run $@
   )
 }
 
@@ -18,13 +12,7 @@ ryan_gosling_have_my_photos() {
   (
     ~/.local/bin/machines \
        --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --push staging --delete --nodry_run $@ && \
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --push photos --delete --nodry_run $@ && \
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --push photo_catalog --delete --nodry_run $@
+       --push staging,photos,photo_catalog --delete --nodry_run $@
   )
 }
 
