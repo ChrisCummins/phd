@@ -4,7 +4,7 @@ ryan_gosling_give_me_photos() {
   (
     ~/.local/bin/machines \
        --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --pull staging,photos,photo_catalog --delete --nodry_run $@
+       --pull staging,staging_catalog,photos,photo_catalog --delete --nodry_run $@
   )
 }
 
@@ -12,7 +12,7 @@ ryan_gosling_have_my_photos() {
   (
     ~/.local/bin/machines \
        --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --push staging,photos,photo_catalog --delete --nodry_run $@
+       --push staging,staging_catalog,photos,photo_catalog --delete --nodry_run $@
   )
 }
 

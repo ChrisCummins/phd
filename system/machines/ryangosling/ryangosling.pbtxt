@@ -11,6 +11,25 @@ host: {
 }
 mirrored_directory {
   name: "staging"
+  local_path: "/Users/cec/Pictures/staging/photos"
+  remote_path: "/home/cec/img/staging/photos"
+  timestamp_relpath: ".sync_timestamp.txt"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".com.apple.timemachine.supported"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".sync.ffs_db"
+  rsync_exclude: "/.DocumentRevisions-V100"
+  rsync_exclude: "/.fseventsd"
+  rsync_exclude: "/.Spotlight-V100"
+  rsync_exclude: "/.TemporaryItems"
+  rsync_exclude: "/.Trashes"
+  rsync_exclude: "/.VolumeIcon.icns"
+  rsync_exclude: "/.VolumeIcon.ico"
+  rsync_exclude: "/autorun.inf"
+  skip_if_not_present: true
+}
+mirrored_directory {
+  name: "staging_catalog"
   local_path: "/Users/cec/Pictures/staging"
   remote_path: "/home/cec/img/staging"
   timestamp_relpath: ".sync_timestamp.txt"
@@ -28,6 +47,7 @@ mirrored_directory {
   rsync_exclude: "/.VolumeIcon.icns"
   rsync_exclude: "/.VolumeIcon.ico"
   rsync_exclude: "/autorun.inf"
+  rsync_exclude: "/photos"
   skip_if_not_present: true
 }
 mirrored_directory {
