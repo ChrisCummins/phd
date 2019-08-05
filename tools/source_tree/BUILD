@@ -1,5 +1,18 @@
 # Tools for working with the source tree.
 
+load("//tools/bzl:exports.bzl", "exports_repo")
+
+exports_repo(
+    name = "export",
+    github_repo = "bazel_subtree_github_export",
+    move_file_mapping = {
+        "tools/source_tree/README.md": "README.md",
+        "tools/source_tree/LICENSE": "LICENSE",
+        "tools/source_tree/travis.yml": ".travis.yml",
+    },
+    targets = ["//tools/source_tree:export_source_tree"],
+)
+
 py_library(
     name = "conftest",
     testonly = 1,

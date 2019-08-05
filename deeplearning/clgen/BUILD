@@ -21,6 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 
+load("//tools/bzl:exports.bzl", "exports_repo")
+
 licenses(["restricted"])  # GPL v3
 
 exports_files([
@@ -28,10 +30,18 @@ exports_files([
     "README.md",
 ])
 
-py_binary(
-    name = "EXPORT",
-    srcs = ["EXPORT.py"],
-    deps = ["//tools/source_tree:export_source_tree"],
+exports_repo(
+    name = "export",
+    github_repo = "clgen",
+    move_file_mapping = {
+        "deeplearning/clgen/README.md": "README.md",
+        "deeplearning/clgen/LICENSE": "LICENSE",
+        "deeplearning/clgen/travis.yml": ".travis.yml",
+    },
+    targets = [
+        "//deeplearning/clgen",
+        "tests(//deeplearning/clgen/...)",
+    ],
 )
 
 py_library(

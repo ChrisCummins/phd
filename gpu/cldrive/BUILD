@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 
+load("//tools/bzl:exports.bzl", "exports_repo")
 load("@io_bazel_rules_docker//cc:image.bzl", "cc_image")
 
 licenses(["restricted"])  # GPL v3
@@ -24,6 +25,19 @@ exports_files([
     "README.md",
     "LICENSE",
 ])
+
+exports_repo(
+    name = "export",
+    github_repo = "cldrive",
+    move_file_mapping = {
+        "gpu/cldrive/README.md": "README.md",
+        "gpu/cldrive/LICENSE": "LICENSE",
+        "gpu/cldrive/travis.yml": ".travis.yml",
+    },
+    targets = [
+        "//gpu/cldrive/...",
+    ],
+)
 
 py_library(
     name = "api",
