@@ -117,19 +117,22 @@ def main():
     raise app.UsageError(f"Cannot find --machine proto '{machine_proto_path}'")
   machine = Machine.FromFile(machine_proto_path)
 
-  for mirrored_dir_name in FLAGS.pull:
-    mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-    mirrored_dir.PullFromRemoteToLocal(dry_run=FLAGS.dry_run,
-                                       verbose=True,
-                                       delete=FLAGS.delete,
-                                       progress=FLAGS.progress)
+  try:
+    for mirrored_dir_name in FLAGS.pull:
+      mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
+      mirrored_dir.PullFromRemoteToLocal(dry_run=FLAGS.dry_run,
+                                         verbose=True,
+                                         delete=FLAGS.delete,
+                                         progress=FLAGS.progress)
 
-  for mirrored_dir_name in FLAGS.push:
-    mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-    mirrored_dir.PushFromLocalToRemote(dry_run=FLAGS.dry_run,
-                                       verbose=True,
-                                       delete=FLAGS.delete,
-                                       progress=FLAGS.progress)
+    for mirrored_dir_name in FLAGS.push:
+      mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
+      mirrored_dir.PushFromLocalToRemote(dry_run=FLAGS.dry_run,
+                                         verbose=True,
+                                         delete=FLAGS.delete,
+                                         progress=FLAGS.progress)
+  except subprocess.SubprocessError as e:
+    app.FatalWithoutStackTrace(e)
 
 
 if __name__ == '__main__':
