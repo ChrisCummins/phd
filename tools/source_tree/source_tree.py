@@ -55,8 +55,10 @@ def GetCommitsInOrder(
       yield commit
 
   if tail_ref:
+    app.Log(1, 'Resuming export from commit `%s`', tail_ref)
     commit_iter = TailCommitIterator()
   else:
+    app.Log(1, 'Exporting entire git history')
     commit_iter = repo.iter_commits(head_ref)
 
   try:
@@ -188,6 +190,7 @@ def ExportCommitsThatTouchFiles(commits_in_order: typing.List[git.Commit],
             total_commit_count, ((i + 1) / len(commits_in_order)) * 100, commit)
     if MaybeExportCommitSubset(commit, destiantion, files_of_interest):
       exported_commit_count += 1
+  return exported_commit_count
 
 
 def ExportGitHistoryForFiles(source: git.Repo,
@@ -204,10 +207,13 @@ def ExportGitHistoryForFiles(source: git.Repo,
     tail = None
     if resume_export:
       tail = MaybeGetHexShaOfLastExportedCommit(destination)
-    if tail:
-      app.Log(1, 'Resuming export from commit `%s`', tail)
     commits_in_order = GetCommitsInOrder(source,
                                          head_ref=head_ref,
                                          tail_ref=tail)
+    if not commits_in_order:
+      app.Log(1, 'Nothing to export!')
+      return 0
+    app.Log(1, 'Exporting history from %s commits',
+            humanize.Commas(len(commits_in_order)))
     return ExportCommitsThatTouchFiles(commits_in_order, destination,
                                        files_of_interest)

@@ -228,8 +228,13 @@ class PhdWorkspace(bazelutil.Workspace):
     for file in src_files:
       print(file)
 
-    source_tree.ExportGitHistoryForFiles(self.git_repo, repo, src_files,
-                                         resume_export)
+    exported_commit_count = source_tree.ExportGitHistoryForFiles(
+        source=self.git_repo,
+        destination=repo,
+        files_of_interest=src_files,
+        resume_export=resume_export)
+    if not exported_commit_count:
+      return
 
     # Make manual adjustments.
     exported_workspace = bazelutil.Workspace(pathlib.Path(
@@ -239,7 +244,7 @@ class PhdWorkspace(bazelutil.Workspace):
     self.MoveFilesToDestination(exported_workspace, file_move_mapping)
 
     if not repo.is_dirty(untracked_files=True):
-      return
+      return exported_commit_count
 
     app.Log(1, 'Creating automated subtree export commit')
     repo.git.add('.')
@@ -248,3 +253,4 @@ class PhdWorkspace(bazelutil.Workspace):
                       author=author,
                       committer=author,
                       skip_hooks=True)
+    return exported_commit_count

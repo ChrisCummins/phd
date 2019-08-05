@@ -8,7 +8,7 @@ set -e
     --github_repo='{github_repo}' \\
     --targets={targets} \\
     --extra_files={extra_files} \\
-    --move_file_mapping={move_file_mapping}
+    --move_file_mapping={move_file_mapping} $@
 """.format(
                         github_repo=ctx.attr.github_repo,
                         targets=','.join(ctx.attr.targets),

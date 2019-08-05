@@ -114,9 +114,15 @@ def EXPORT(github_repo: str,
         print('\n'.join(src_files))
         sys.exit(0)
 
-      source_workspace.ExportToRepo(destination_repo, targets, src_files,
-                                    extra_files, move_file_mapping,
-                                    resume_export)
+      exported_commit_count = source_workspace.ExportToRepo(
+          repo=destination_repo,
+          targets=targets,
+          src_files=src_files,
+          extra_files=extra_files,
+          file_move_mapping=move_file_mapping,
+          resume_export=resume_export)
+      if not exported_commit_count:
+        return
       app.Log(1, 'Pushing changes to remote')
       destination_repo.git.push('origin')
 
