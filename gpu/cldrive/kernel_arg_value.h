@@ -23,8 +23,8 @@
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "labm8/cpp/string.h"
 #include "opencl_type.h"
-#include "phd/string.h"
 
 namespace gpu {
 namespace cldrive {

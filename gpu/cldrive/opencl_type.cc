@@ -15,15 +15,15 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/opencl_type.h"
 
-#include "phd/logging.h"
-#include "phd/status_macros.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/status_macros.h"
 
 #include "absl/strings/str_format.h"
 
 namespace gpu {
 namespace cldrive {
 
-phd::StatusOr<OpenClType> OpenClTypeFromString(const string& type_name) {
+labm8::StatusOr<OpenClType> OpenClTypeFromString(const string& type_name) {
   if (!type_name.compare("bool")) {
     return OpenClType::BOOL;
   } else if (!type_name.compare("char")) {
@@ -163,7 +163,7 @@ phd::StatusOr<OpenClType> OpenClTypeFromString(const string& type_name) {
   } else if (!type_name.compare("half16")) {
     return OpenClType::HALF16;
   } else {
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT, type_name);
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT, type_name);
   }
 }
 

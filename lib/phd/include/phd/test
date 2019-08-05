@@ -15,7 +15,7 @@
     return ret;                                 \
   }
 
-namespace phd {
+namespace labm8 {
 namespace debug {
 
 // Debug type:

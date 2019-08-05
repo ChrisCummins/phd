@@ -15,38 +15,38 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/global_memory_arg_value.h"
 
-#include "phd/port.h"
-#include "phd/test.h"
+#include "labm8/cpp/port.h"
+#include "labm8/cpp/test.h"
 
 namespace gpu {
 namespace cldrive {
 namespace {
 
 TEST(GlobalMemoryArgValue, IntValuesAreEqual) {
-  GlobalMemoryArgValue<phd::int32> a(5, 0);
-  GlobalMemoryArgValue<phd::int32> b(5, 0);
+  GlobalMemoryArgValue<labm8::int32> a(5, 0);
+  GlobalMemoryArgValue<labm8::int32> b(5, 0);
   EXPECT_EQ(a, &b);
 }
 
 TEST(GlobalMemoryArgValue, DifferentIntValuesAreNotEqual) {
-  GlobalMemoryArgValue<phd::int32> a(5, 0);
-  GlobalMemoryArgValue<phd::int32> b(5, -1);
+  GlobalMemoryArgValue<labm8::int32> a(5, 0);
+  GlobalMemoryArgValue<labm8::int32> b(5, -1);
   EXPECT_NE(a, &b);
 }
 
 TEST(GlobalMemoryArgValue, DifferentSizeArraysAreNotEqual) {
-  GlobalMemoryArgValue<phd::int32> a(5, 0);
-  GlobalMemoryArgValue<phd::int32> b(4, 0);
+  GlobalMemoryArgValue<labm8::int32> a(5, 0);
+  GlobalMemoryArgValue<labm8::int32> b(4, 0);
   EXPECT_NE(a, &b);
 }
 
 TEST(GlobalMemoryArgValue, VectorSizeFive) {
-  GlobalMemoryArgValue<phd::int32> a(5, 0);
+  GlobalMemoryArgValue<labm8::int32> a(5, 0);
   EXPECT_EQ(a.size(), 5);
 }
 
 TEST(GlobalMemoryArgValue, VectorSizeTen) {
-  GlobalMemoryArgValue<phd::int32> a(10, 0);
+  GlobalMemoryArgValue<labm8::int32> a(10, 0);
   EXPECT_EQ(a.size(), 10);
 }
 

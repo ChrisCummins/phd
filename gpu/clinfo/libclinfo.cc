@@ -23,12 +23,12 @@
 #include <vector>
 
 #include "gpu/clinfo/libclinfo.h"
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 
 #include "absl/strings/str_replace.h"
 #include "absl/strings/strip.h"
 
-namespace phd {
+namespace labm8 {
 
 namespace gpu {
 
@@ -281,7 +281,7 @@ void SetOpenClDevice(const cl::Platform& platform, const cl::Device& device,
     // to clGetPlatformIDs() will throw CL_PLATFORM_NOT_FOUND_KHR. We don't
     // want to treat that as an error, but instead as a lack of platforms.
     if (strcmp(err.what(), "clGetPlatformIDs") == 0 &&
-        strcmp(phd::gpu::clinfo::OpenClErrorString(err.err()),
+        strcmp(labm8::gpu::clinfo::OpenClErrorString(err.err()),
                "CL_PLATFORM_NOT_FOUND_KHR") == 0) {
       return message;
     }
@@ -294,8 +294,8 @@ void SetOpenClDevice(const cl::Platform& platform, const cl::Device& device,
     platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
     int device_id = 0;
     for (const auto& device : devices) {
-      phd::gpu::clinfo::SetOpenClDevice(platform, device, platform_id,
-                                        device_id, message.add_device());
+      labm8::gpu::clinfo::SetOpenClDevice(platform, device, platform_id,
+                                          device_id, message.add_device());
       ++device_id;
     }
     ++platform_id;
@@ -316,8 +316,8 @@ void SetOpenClDevice(const cl::Platform& platform, const cl::Device& device,
       int cur_device = 0;
       for (const auto& device : devices) {
         if (cur_device == device_id) {
-          phd::gpu::clinfo::SetOpenClDevice(platform, device, cur_platform,
-                                            cur_device, &message);
+          labm8::gpu::clinfo::SetOpenClDevice(platform, device, cur_platform,
+                                              cur_device, &message);
           return message;
         }
         ++cur_device;
@@ -337,8 +337,8 @@ StatusOr<::gpu::clinfo::OpenClDevice> GetOpenClDeviceProto(const string& name) {
     }
   }
 
-  return phd::Status(phd::error::Code::INVALID_ARGUMENT,
-                     "OpenCL device not found");
+  return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                       "OpenCL device not found");
 }
 
 namespace {
@@ -436,4 +436,4 @@ cl::Device GetOpenClDeviceOrDie(const string& name) {
 
 }  // namespace gpu
 
-}  // namespace phd
+}  // namespace labm8

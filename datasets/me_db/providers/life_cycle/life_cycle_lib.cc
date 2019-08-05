@@ -21,8 +21,8 @@
 
 #include "datasets/me_db/me.pb.h"
 
-#include "phd/logging.h"
-#include "phd/string.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/string.h"
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"

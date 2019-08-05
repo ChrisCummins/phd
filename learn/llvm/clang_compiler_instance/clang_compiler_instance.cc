@@ -11,9 +11,9 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Token.h"
 
-#include "phd/app.h"
-#include "phd/logging.h"
-#include "phd/string.h"
+#include "labm8/cpp/app.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/string.h"
 
 DEFINE_string(input_path, "", "Path of the file to lex.");
 
@@ -82,7 +82,7 @@ void LexAndPrintTokens(const string& input_path) {
 }  // namespace
 
 int main(int argc, char** argv) {
-  phd::InitApp(&argc, &argv);
+  labm8::InitApp(&argc, &argv);
 
   if (FLAGS_input_path.empty()) {
     LOG(FATAL) << "--input_path not specified";

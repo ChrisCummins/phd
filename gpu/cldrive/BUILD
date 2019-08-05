@@ -66,8 +66,8 @@ cc_binary(
         ":csv_log",
         ":libcldrive",
         "//gpu/clinfo:libclinfo",
-        "//phd:app",
-        "//phd:logging",
+        "//labm8/cpp:app",
+        "//labm8/cpp:logging",
         "@boost//:filesystem",
         "@com_github_gflags_gflags//:gflags",
         "@com_google_absl//absl/strings",
@@ -82,8 +82,8 @@ cc_image(
         ":csv_log",
         ":libcldrive",
         "//gpu/clinfo:libclinfo",
-        "//phd:app",
-        "//phd:logging",
+        "//labm8/cpp:app",
+        "//labm8/cpp:logging",
         "@boost//:filesystem",
         "@com_github_gflags_gflags//:gflags",
         "@com_google_absl//absl/strings",
@@ -96,9 +96,9 @@ cc_library(
     hdrs = ["csv_log.h"],
     deps = [
         "//gpu/cldrive/proto:cldrive_py_cc",
-        "//phd:logging",
-        "//phd:port",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:port",
+        "//labm8/cpp:string",
         "@com_google_absl//absl/strings",
     ],
 )
@@ -108,8 +108,8 @@ cc_library(
     hdrs = ["global_memory_arg_value.h"],
     deps = [
         ":kernel_arg_value",
-        "//phd:logging",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
         "//third_party/opencl",
     ],
 )
@@ -120,8 +120,8 @@ cc_test(
     deps = [
         ":global_memory_arg_value",
         ":testutil",
-        "//phd:port",
-        "//phd:test",
+        "//labm8/cpp:port",
+        "//labm8/cpp:test",
     ],
 )
 
@@ -137,9 +137,9 @@ cc_library(
         ":opencl_util",
         ":scalar_kernel_arg_value",
         "//gpu/cldrive/proto:cldrive_py_cc",
-        "//phd:status",
-        "//phd:status_macros",
-        "//phd:statusor",
+        "//labm8/cpp:status",
+        "//labm8/cpp:status_macros",
+        "//labm8/cpp:statusor",
         "//third_party/opencl",
     ],
 )
@@ -157,7 +157,7 @@ cc_test(
         ":kernel_arg",
         ":testutil",
         "//gpu/cldrive/proto:cldrive_py_cc",
-        "//phd:test",
+        "//labm8/cpp:test",
         "//third_party/opencl",
     ] + select({
         "//:darwin": [],
@@ -174,9 +174,9 @@ cc_library(
         ":kernel_arg_values_set",
         ":opencl_util",
         "//gpu/cldrive/proto:cldrive_py_cc",
-        "//phd:logging",
-        "//phd:status",
-        "//phd:status_macros",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
+        "//labm8/cpp:status_macros",
         "//third_party/opencl",
     ],
 )
@@ -191,7 +191,7 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_arg_set",
-        "//phd:test",
+        "//labm8/cpp:test",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],
@@ -206,8 +206,8 @@ cc_library(
         ":opencl_type",
         ":opencl_util",
         ":profiling_data",
-        "//phd:logging",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
         "//third_party/opencl",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -224,8 +224,8 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_arg_value",
-        "//phd:port",
-        "//phd:test",
+        "//labm8/cpp:port",
+        "//labm8/cpp:test",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],
@@ -238,7 +238,7 @@ cc_library(
     hdrs = ["kernel_arg_values_set.h"],
     deps = [
         ":kernel_arg_value",
-        "//phd:logging",
+        "//labm8/cpp:logging",
         "//third_party/opencl",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -255,7 +255,7 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_arg_values_set",
-        "//phd:test",
+        "//labm8/cpp:test",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],
@@ -272,10 +272,10 @@ cc_library(
         ":opencl_util",
         "//gpu/cldrive/proto:cldrive_py_cc",
         "//gpu/clinfo:libclinfo",
-        "//phd:logging",
-        "//phd:status_macros",
-        "//phd:statusor",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status_macros",
+        "//labm8/cpp:statusor",
+        "//labm8/cpp:string",
         "//third_party/opencl",
     ],
 )
@@ -290,7 +290,7 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":kernel_driver",
-        "//phd:test",
+        "//labm8/cpp:test",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],
@@ -309,10 +309,10 @@ cc_library(
         ":logger",
         "//gpu/cldrive/proto:cldrive_py_cc",
         "//gpu/clinfo:libclinfo",
-        "//phd:common",
-        "//phd:logging",
-        "//phd:macros",
-        "//phd:statusor",
+        "//labm8/cpp:common",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:macros",
+        "//labm8/cpp:statusor",
         "//third_party/opencl",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -330,7 +330,7 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":libcldrive",
-        "//phd:test",
+        "//labm8/cpp:test",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],
@@ -343,7 +343,7 @@ cc_library(
     deps = [
         ":kernel_arg_value",
         ":profiling_data",
-        "//phd:string",
+        "//labm8/cpp:string",
         "//third_party/opencl",
     ],
 )
@@ -355,8 +355,8 @@ cc_library(
     deps = [
         ":csv_log",
         "//gpu/cldrive/proto:cldrive_py_cc",
-        "//phd:logging",
-        "//phd:status",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status",
     ],
 )
 
@@ -367,7 +367,7 @@ cc_binary(
     deps = [
         ":libcldrive",
         "//gpu/cldrive/proto:cldrive_py_cc",
-        "//phd:pbutil",
+        "//labm8/cpp:pbutil",
     ],
 )
 
@@ -386,10 +386,10 @@ cc_library(
     srcs = ["opencl_type.cc"],
     hdrs = ["opencl_type.h"],
     deps = [
-        "//phd:logging",
-        "//phd:status_macros",
-        "//phd:statusor",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:status_macros",
+        "//labm8/cpp:statusor",
+        "//labm8/cpp:string",
         "//third_party/opencl",
         "@boost//:variant",
         "@com_google_absl//absl/strings",
@@ -416,7 +416,7 @@ cc_library(
     hdrs = ["opencl_util.h"],
     deps = [
         ":profiling_data",
-        "//phd:logging",
+        "//labm8/cpp:logging",
         "//third_party/opencl",
     ],
 )
@@ -427,7 +427,7 @@ cc_test(
     deps = [
         ":opencl_util",
         ":testutil",
-        "//phd:test",
+        "//labm8/cpp:test",
     ],
 )
 
@@ -436,7 +436,7 @@ cc_library(
     srcs = ["profiling_data.cc"],
     hdrs = ["profiling_data.h"],
     deps = [
-        "//phd:port",
+        "//labm8/cpp:port",
         "//third_party/opencl",
     ],
 )
@@ -451,7 +451,7 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":profiling_data",
-        "//phd:test",
+        "//labm8/cpp:test",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],
@@ -464,8 +464,8 @@ cc_library(
     hdrs = ["scalar_kernel_arg_value.h"],
     deps = [
         ":kernel_arg_value",
-        "//phd:logging",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
         "//third_party/opencl",
     ],
 )
@@ -480,7 +480,7 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":scalar_kernel_arg_value",
-        "//phd:test",
+        "//labm8/cpp:test",
     ] + select({
         "//:darwin": [],
         "//conditions:default": ["@libopencl//:libOpenCL"],

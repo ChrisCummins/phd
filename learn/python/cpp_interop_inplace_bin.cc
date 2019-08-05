@@ -1,6 +1,6 @@
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/pbutil.h"
 #include "learn/python/cpp_interop.pb.h"
-#include "phd/logging.h"
-#include "phd/pbutil.h"
 
 // The "work" function which processes an input message in place.
 void ProcessProtobufInPlace(AddXandY* proto) {

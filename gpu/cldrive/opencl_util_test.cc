@@ -17,7 +17,7 @@
 
 #include "gpu/cldrive/testutil.h"
 
-#include "phd/test.h"
+#include "labm8/cpp/test.h"
 
 namespace gpu {
 namespace cldrive {

@@ -1,6 +1,6 @@
 #include "learn/daily/d181213_kruskal_spanning_tree.h"
 
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 
 #include "absl/container/flat_hash_map.h"
 
@@ -8,7 +8,7 @@
 
 #include <set>
 
-namespace phd {
+namespace labm8 {
 namespace learn {
 
 size_t VertexCount(const Graph& graph) {
@@ -25,12 +25,12 @@ size_t EdgeCount(const Graph& graph) {
   return std::distance(i, end);
 }
 
-bool HasCycle(
-    const Graph& graph,
-    const boost::property_map<Graph, boost::vertex_index_t>::type& vertex_index_map,
-    boost::graph_traits<Graph>::vertex_descriptor vertex,
-    std::set<unsigned long>* visited,
-    std::set<unsigned long>* recursion_stack) {
+bool HasCycle(const Graph& graph,
+              const boost::property_map<Graph, boost::vertex_index_t>::type&
+                  vertex_index_map,
+              boost::graph_traits<Graph>::vertex_descriptor vertex,
+              std::set<unsigned long>* visited,
+              std::set<unsigned long>* recursion_stack) {
   boost::graph_traits<Graph>::adjacency_iterator i;
   boost::graph_traits<Graph>::adjacency_iterator end;
 
@@ -42,30 +42,36 @@ bool HasCycle(
     recursion_stack->insert(vertex_index);
 
     // Recur for all the vertices adjacent to this vertex.
-    for (boost::tie(i, end) = boost::adjacent_vertices(vertex, graph);
-         i != end; ++i) {
+    for (boost::tie(i, end) = boost::adjacent_vertices(vertex, graph); i != end;
+         ++i) {
       // FIXME(cec): It seems that the adjacency iterator cannot be converted
       // to a vertex index using this approach. I think the integer value is
       // an index into the ajacency list, not the vertex list. This causes test
       // failure:
       // [ RUN      ] HasCycle.CycleFreeGraph
-      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:39] Visiting new vertex 0
-      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:48] Visiting adjacent vertex 0 -> 1
-      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:39] Visiting new vertex 1
-      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:48] Visiting adjacent vertex 1 -> 0
-      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:56] Adjacent vertex 1 -> 0 in recursion stack
-      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:52] Adjacent vertex 0 -> 1 has cycle
+      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:39]
+      // Visiting new vertex 0 D 2018-12-14 17:46:08
+      // [learn/daily/d181213_kruskal_spanning_tree.cc:48] Visiting adjacent
+      // vertex 0 -> 1 D 2018-12-14 17:46:08
+      // [learn/daily/d181213_kruskal_spanning_tree.cc:39] Visiting new vertex 1
+      // D 2018-12-14 17:46:08 [learn/daily/d181213_kruskal_spanning_tree.cc:48]
+      // Visiting adjacent vertex 1 -> 0 D 2018-12-14 17:46:08
+      // [learn/daily/d181213_kruskal_spanning_tree.cc:56] Adjacent vertex 1 ->
+      // 0 in recursion stack D 2018-12-14 17:46:08
+      // [learn/daily/d181213_kruskal_spanning_tree.cc:52] Adjacent vertex 0 ->
+      // 1 has cycle
       unsigned long adjacent_index = vertex_index_map[*i];
-      LOG(DEBUG) << "Visiting adjacent vertex " << vertex_index
-                 << " -> " << adjacent_index;
+      LOG(DEBUG) << "Visiting adjacent vertex " << vertex_index << " -> "
+                 << adjacent_index;
       if (visited->find(adjacent_index) == visited->end() &&
           HasCycle(graph, vertex_index_map, *i, visited, recursion_stack)) {
-        LOG(DEBUG) << "Adjacent vertex " << vertex_index
-                   << " -> " << adjacent_index;
+        LOG(DEBUG) << "Adjacent vertex " << vertex_index << " -> "
+                   << adjacent_index;
         return true;
-      } else if (recursion_stack->find(adjacent_index) != recursion_stack->end()) {
-        LOG(DEBUG) << "Adjacent vertex " << vertex_index
-                   << " -> " << adjacent_index << " in recursion stack";
+      } else if (recursion_stack->find(adjacent_index) !=
+                 recursion_stack->end()) {
+        LOG(DEBUG) << "Adjacent vertex " << vertex_index << " -> "
+                   << adjacent_index << " in recursion stack";
         return true;
       }
     }
@@ -122,9 +128,8 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
   // compare the weight of the value in the map. If the visited weight is less
   // than the current edge weight, we remove the current edge. Else, we remove
   // the edge stored in the map, and replace the entry with the current edge.
-  absl::flat_hash_map<
-      std::pair<int, int>,
-      std::pair<int, boost::graph_traits<Graph>::edge_iterator>>
+  absl::flat_hash_map<std::pair<int, int>,
+                      std::pair<int, boost::graph_traits<Graph>::edge_iterator>>
       visited_edges_map;
 
   for (boost::tie(i, end) = boost::edges(*graph); i != end; ++i) {
@@ -133,8 +138,8 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
 
     // Remove self loop.
     if (source_index == target_index) {
-      LOG(DEBUG) << "Removing self loop " << source_index
-                 << " -> " << target_index;
+      LOG(DEBUG) << "Removing self loop " << source_index << " -> "
+                 << target_index;
       boost::remove_edge(*i, *graph);
       continue;
     }
@@ -186,9 +191,7 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
       // Sort the elements by ascending weights.
       [](const std::pair<int, boost::graph_traits<Graph>::edge_iterator>& a,
          const std::pair<int, boost::graph_traits<Graph>::edge_iterator>& b)
-          -> bool {
-        return a.first < b.first;
-      });
+          -> bool { return a.first < b.first; });
 
   // Step 3 - Add the edge which has the least weightage.
 
@@ -220,4 +223,4 @@ Graph KruskalMinimumSpanningTree(Graph* graph) {
 }
 
 }  // namespace learn
-}  // namespace phd
+}  // namespace labm8

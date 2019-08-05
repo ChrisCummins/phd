@@ -15,22 +15,22 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
-#include "phd/port.h"
+#include "labm8/cpp/port.h"
 
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {
 namespace cldrive {
 
-phd::int64 GetElapsedNanoseconds(const cl::Event& event);
+labm8::int64 GetElapsedNanoseconds(const cl::Event& event);
 
 class ProfilingData {
  public:
   ProfilingData()
       : kernel_nanoseconds(0), transfer_nanoseconds(0), transferred_bytes(0) {}
-  phd::int64 kernel_nanoseconds;
-  phd::int64 transfer_nanoseconds;
-  phd::int64 transferred_bytes;
+  labm8::int64 kernel_nanoseconds;
+  labm8::int64 transfer_nanoseconds;
+  labm8::int64 transferred_bytes;
 };
 
 }  // namespace cldrive

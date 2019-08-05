@@ -15,7 +15,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/libcldrive.h"
 
-#include "phd/test.h"
+#include "labm8/cpp/test.h"
 
 namespace gpu {
 namespace cldrive {

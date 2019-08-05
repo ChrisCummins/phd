@@ -24,9 +24,9 @@ cc_binary(
     srcs = ["json_budget_worker.cc"],
     deps = [
         "//datasets/me_db:me_pb_cc",
-        "//phd:logging",
-        "//phd:pbutil",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:pbutil",
+        "//labm8/cpp:string",
         "@boost//:filesystem",
         "@boost//:property_tree",
         "@boost//:tokenizer",

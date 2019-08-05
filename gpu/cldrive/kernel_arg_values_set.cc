@@ -16,7 +16,7 @@
 #include "gpu/cldrive/kernel_arg_values_set.h"
 
 #include "absl/strings/str_format.h"
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 
 namespace gpu {
 namespace cldrive {

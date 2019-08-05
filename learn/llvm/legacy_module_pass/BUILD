@@ -181,8 +181,8 @@ cc_binary(
         "//conditions:default": [],
     }),
     deps = [
-        "//phd:logging",
-        "//phd:app",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:app",
     ] + select({
         "//:darwin": [
             "@llvm_headers_mac//:headers",

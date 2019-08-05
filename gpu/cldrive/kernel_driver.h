@@ -18,8 +18,8 @@
 #include "gpu/cldrive/kernel_arg_set.h"
 #include "gpu/cldrive/logger.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
-#include "phd/statusor.h"
-#include "phd/string.h"
+#include "labm8/cpp/statusor.h"
+#include "labm8/cpp/string.h"
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {
@@ -33,7 +33,7 @@ class KernelDriver {
 
   void RunOrDie(Logger& logger);
 
-  phd::StatusOr<CldriveKernelRun> RunDynamicParams(
+  labm8::StatusOr<CldriveKernelRun> RunDynamicParams(
       const DynamicParams& dynamic_params, Logger& logger);
 
   // Run the kernel with the given dynamic parameters. Any error here will
@@ -48,8 +48,8 @@ class KernelDriver {
  private:
   // Private helper to public RunDynamicParams() method that doesn't catch
   // OpenCL exceptions.
-  phd::Status RunDynamicParams(const DynamicParams& dynamic_params,
-                               Logger& logger, CldriveKernelRun* run);
+  labm8::Status RunDynamicParams(const DynamicParams& dynamic_params,
+                                 Logger& logger, CldriveKernelRun* run);
 
   cl::Context context_;
   cl::CommandQueue queue_;

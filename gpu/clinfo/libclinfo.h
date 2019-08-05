@@ -20,11 +20,11 @@
 #include "third_party/opencl/cl.hpp"
 
 #include "gpu/clinfo/proto/clinfo.pb.h"
-#include "phd/statusor.h"
-#include "phd/string.h"
+#include "labm8/cpp/statusor.h"
+#include "labm8/cpp/string.h"
 
-// TODO(cec): Refactor to remove phd:: namespace.
-namespace phd {
+// TODO(cec): Refactor to remove labm8:: namespace.
+namespace labm8 {
 
 namespace gpu {
 
@@ -73,6 +73,6 @@ cl::Device GetOpenClDeviceOrDie(const string& name);
 
 }  // namespace gpu
 
-}  // namespace phd
+}  // namespace labm8
 
 #endif  // PHD_GPU_LIBCLINFO_H

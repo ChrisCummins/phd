@@ -3,7 +3,7 @@
 
 #include "boost/graph/adjacency_list.hpp"
 
-namespace phd {
+namespace labm8 {
 namespace learn {
 
 // Edges have integer weights.
@@ -43,4 +43,4 @@ std::pair<bool, boost::graph_traits<Graph>::edge_descriptor> FindEdge(
 Graph KruskalMinimumSpanningTree(Graph* graph);
 
 }  // namespace learn
-}  // namespace phd
+}  // namespace labm8

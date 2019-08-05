@@ -20,8 +20,8 @@
 
 #include "third_party/opencl/cl.hpp"
 
-#include "phd/logging.h"
-#include "phd/string.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/string.h"
 
 namespace gpu {
 namespace cldrive {

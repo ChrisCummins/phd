@@ -19,7 +19,7 @@
 
 #include "gpu/cldrive/profiling_data.h"
 
-#include "phd/string.h"
+#include "labm8/cpp/string.h"
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {

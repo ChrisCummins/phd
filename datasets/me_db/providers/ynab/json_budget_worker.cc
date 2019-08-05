@@ -21,9 +21,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "phd/logging.h"
-#include "phd/pbutil.h"
-#include "phd/string.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/pbutil.h"
+#include "labm8/cpp/string.h"
 
 #include "datasets/me_db/me.pb.h"
 

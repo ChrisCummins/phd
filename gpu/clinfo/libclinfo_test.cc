@@ -13,12 +13,12 @@
 // limitations under the License.
 #include "gpu/clinfo/libclinfo.h"
 
-#include "phd/test.h"
+#include "labm8/cpp/test.h"
 #include "third_party/opencl/cl.hpp"
 
 #include <vector>
 
-namespace phd {
+namespace labm8 {
 namespace gpu {
 namespace clinfo {
 namespace {
@@ -53,6 +53,6 @@ TEST(GetDefaultOpenClDeviceOrDie, CreateABufferUsingDefaultDevice) {
 }  // anonymous namespace
 }  // namespace clinfo
 }  // namespace gpu
-}  // namespace phd
+}  // namespace labm8
 
 TEST_MAIN();

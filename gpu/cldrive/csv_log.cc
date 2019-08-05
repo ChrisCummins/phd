@@ -15,7 +15,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/csv_log.h"
 
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 
 #include <iostream>
 

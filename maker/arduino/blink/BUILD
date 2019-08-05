@@ -19,8 +19,8 @@ cc_test(
     srcs = ["blink_test.cc"],
     deps = [
         ":blink",
+        "//labm8/cpp:test",
         "//maker/arduino/interface:mock_arduino_interface",
-        "//phd:test",
     ],
 )
 

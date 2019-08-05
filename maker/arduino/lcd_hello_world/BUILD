@@ -21,7 +21,7 @@ cc_library(
 #    deps = [
 #        ":lcd_hello_world",
 #        "//maker/arduino/interface:mock_arduino_interface",
-#        "//phd:test",
+#        "//labm8/cpp:test",
 #    ],
 #)
 

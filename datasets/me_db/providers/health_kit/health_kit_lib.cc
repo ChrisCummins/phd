@@ -19,7 +19,7 @@
 // SOFTWARE.
 #include "datasets/me_db/providers/health_kit/health_kit_lib.h"
 
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"

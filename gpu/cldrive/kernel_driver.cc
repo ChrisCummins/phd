@@ -19,8 +19,8 @@
 #include "gpu/cldrive/opencl_util.h"
 #include "gpu/clinfo/libclinfo.h"
 
-#include "phd/logging.h"
-#include "phd/status_macros.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/status_macros.h"
 
 namespace gpu {
 namespace cldrive {
@@ -67,7 +67,7 @@ void KernelDriver::RunOrDie(Logger& logger) {
   }
 }
 
-phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
+labm8::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
     const DynamicParams& dynamic_params, Logger& logger) {
   CldriveKernelRun run;
 
@@ -75,7 +75,7 @@ phd::StatusOr<CldriveKernelRun> KernelDriver::RunDynamicParams(
     RunDynamicParams(dynamic_params, logger, &run);
   } catch (cl::Error error) {
     LOG(WARNING) << "Error code " << error.err() << " ("
-                 << phd::gpu::clinfo::OpenClErrorString(error.err()) << ") "
+                 << labm8::gpu::clinfo::OpenClErrorString(error.err()) << ") "
                  << "raised by " << error.what() << "() while driving kernel: '"
                  << name_ << "'";
     run.set_outcome(CldriveKernelRun::CL_ERROR);
@@ -101,9 +101,9 @@ gpu::libcecl::OpenClKernelInvocation DynamicParamsToLog(
 
 }  // anonymous namespace
 
-phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
-                                           Logger& logger,
-                                           CldriveKernelRun* run) {
+labm8::Status KernelDriver::RunDynamicParams(
+    const DynamicParams& dynamic_params, Logger& logger,
+    CldriveKernelRun* run) {
   // Create a log message with just the dynamic params so that we can log the
   // global and local sizes on error.
   gpu::libcecl::OpenClKernelInvocation log = DynamicParamsToLog(dynamic_params);
@@ -117,8 +117,8 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
                  << " exceeds maximum device work group size "
                  << max_work_group_size << ")";
     logger.RecordLog(&instance_, kernel_instance_, run, &log);
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
-                       "Unsupported dynamic params");
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                         "Unsupported dynamic params");
   }
 
   KernelArgValuesSet inputs;
@@ -138,7 +138,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
   //     LOG(WARNING) << value->SizeInBytes() << " bytes argument exceeds "
   //                  << "device max parameter size (" << max_parameter_size
   //                  << " bytes)";
-  //     return phd::Status(phd::error::Code::INVALID_ARGUMENT,
+  //     return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
   //                        "Buffer too large for device");
   //   }
   // }
@@ -156,7 +156,8 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     run->set_outcome(CldriveKernelRun::NONDETERMINISTIC);
     logger.RecordLog(&instance_, kernel_instance_, run, &log);
     logger.ClearBuffer();
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT, "non-deterministic");
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                         "non-deterministic");
   }
 
   bool maybe_no_output = output_a == inputs;
@@ -172,7 +173,8 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     run->set_outcome(CldriveKernelRun::INPUT_INSENSITIVE);
     logger.RecordLog(&instance_, kernel_instance_, run, &log);
     logger.ClearBuffer();
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT, "Input insensitive");
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                         "Input insensitive");
   }
 
   if (maybe_no_output && output_b == inputs) {
@@ -182,7 +184,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
     run->set_outcome(CldriveKernelRun::NO_OUTPUT);
     logger.RecordLog(&instance_, kernel_instance_, run, &log);
     logger.ClearBuffer();
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT, "No argument");
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT, "No argument");
   }
 
   // We've passed the point of rejecting the kernel. Flush the buffered logs
@@ -195,7 +197,7 @@ phd::Status KernelDriver::RunDynamicParams(const DynamicParams& dynamic_params,
   }
 
   run->set_outcome(CldriveKernelRun::PASS);
-  return phd::Status::OK;
+  return labm8::Status::OK;
 }
 
 gpu::libcecl::OpenClKernelInvocation KernelDriver::RunOnceOrDie(

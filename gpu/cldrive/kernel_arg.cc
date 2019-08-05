@@ -21,14 +21,14 @@
 #include "gpu/cldrive/opencl_util.h"
 #include "gpu/cldrive/scalar_kernel_arg_value.h"
 
-#include "phd/status_macros.h"
+#include "labm8/cpp/status_macros.h"
 
 #include <cstdlib>
 
 namespace gpu {
 namespace cldrive {
 
-phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
+labm8::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
   address_ = kernel->getArgInfo<CL_KERNEL_ARG_ADDRESS_QUALIFIER>(arg_index);
   CHECK(IsGlobal() || IsLocal() || IsConstant() || IsPrivate());
 
@@ -45,8 +45,8 @@ phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
       kernel->getArgInfo<CL_KERNEL_ARG_ACCESS_QUALIFIER>(arg_index);
   if (access_qualifier != CL_KERNEL_ARG_ACCESS_NONE) {
     LOG(WARNING) << "Argument " << arg_index << " is an unsupported image type";
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
-                       "Unsupported argument");
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                         "Unsupported argument");
   }
 
   string type_name = util::GetKernelArgTypeName(*kernel, arg_index);
@@ -70,11 +70,11 @@ phd::Status KernelArg::Init(cl::Kernel* kernel, size_t arg_index) {
   // Check for invalid private pointer arguments.
   if (is_pointer_ && IsPrivate()) {
     LOG(WARNING) << "Pointer to private argument is not allowed";
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
-                       "Unsupported argument");
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                         "Unsupported argument");
   }
 
-  return phd::Status::OK;
+  return labm8::Status::OK;
 }
 
 const OpenClType& KernelArg::type() const { return type_; }

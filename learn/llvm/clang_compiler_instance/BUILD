@@ -181,9 +181,9 @@ cc_binary(
         "//conditions:default": [],
     }),
     deps = [
-        "//phd:logging",
-        "//phd:string",
-        "//phd:app",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
+        "//labm8/cpp:app",
         "@com_github_gflags_gflags//:gflags",
     ] + select({
         "//:darwin": [

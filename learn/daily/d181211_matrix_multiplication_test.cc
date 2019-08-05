@@ -1,8 +1,8 @@
 #include "learn/daily/d181211_matrix_multiplication.h"
 
-#include "phd/test.h"
+#include "labm8/cpp/test.h"
 
-namespace phd {
+namespace labm8 {
 namespace learn {
 namespace {
 
@@ -84,7 +84,7 @@ TEST(DotProduct, Values) {
   Vector b{3, 4, 5};
 
   EXPECT_EQ(DotProduct(a, b), 14);  // 0 * 3 + 1 * 4 + 2 * 5
-  EXPECT_EQ(DotProduct(a, a), 5);  // 0 * 0 + 1 * 1 + 2 * 2
+  EXPECT_EQ(DotProduct(a, a), 5);   // 0 * 0 + 1 * 1 + 2 * 2
   EXPECT_EQ(DotProduct(b, b), 50);  // 3 * 3 + 4 * 4 + 5 * 5
 }
 
@@ -122,14 +122,14 @@ TEST(MatrixMultiplication, OutputValues) {
   b(2, 1) = 12;
 
   Matrix c = Multiply(a, b);
-  EXPECT_EQ(c(0, 0), 58);  // 1 * 7 + 2 * 9 + 3 * 11
-  EXPECT_EQ(c(0, 1), 64);  // 1 * 8 + 2 * 10 + 3 * 12
+  EXPECT_EQ(c(0, 0), 58);   // 1 * 7 + 2 * 9 + 3 * 11
+  EXPECT_EQ(c(0, 1), 64);   // 1 * 8 + 2 * 10 + 3 * 12
   EXPECT_EQ(c(1, 0), 139);  // 4 * 7 + 5 * 9 + 6 * 11
   EXPECT_EQ(c(1, 1), 154);  // 4 * 8 + 5 * 10 + 6 * 12
 }
 
 }  // namespace
 }  // namespace learn
-}  // phd
+}  // namespace labm8
 
 TEST_MAIN();

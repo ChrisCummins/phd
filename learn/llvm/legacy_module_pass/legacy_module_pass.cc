@@ -8,8 +8,8 @@
 #include "llvm/Pass.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
-#include "phd/app.h"
-#include "phd/logging.h"
+#include "labm8/cpp/app.h"
+#include "labm8/cpp/logging.h"
 
 namespace llvm {
 namespace {

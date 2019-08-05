@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/logger.h"
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 
 namespace gpu {
 namespace cldrive {
@@ -22,18 +22,18 @@ namespace cldrive {
 Logger::Logger(std::ostream& ostream, const CldriveInstances* const instances)
     : ostream_(ostream), instances_(instances), instance_num_(-1) {}
 
-/*virtual*/ phd::Status Logger::StartNewInstance() {
+/*virtual*/ labm8::Status Logger::StartNewInstance() {
   ++instance_num_;
-  return phd::Status::OK;
+  return labm8::Status::OK;
 }
 
-/*virtual*/ phd::Status Logger::RecordLog(
+/*virtual*/ labm8::Status Logger::RecordLog(
     const CldriveInstance* const instance,
     const CldriveKernelInstance* const kernel_instance,
     const CldriveKernelRun* const run,
     const gpu::libcecl::OpenClKernelInvocation* const log, bool flush) {
   CHECK(instance_num() >= 0);
-  return phd::Status::OK;
+  return labm8::Status::OK;
 }
 
 void Logger::PrintAndClearBuffer() {
@@ -79,14 +79,14 @@ CsvLogger::CsvLogger(std::ostream& ostream,
   this->ostream(/*flush=*/true) << CsvLogHeader();
 }
 
-/*virtual*/ phd::Status CsvLogger::RecordLog(
+/*virtual*/ labm8::Status CsvLogger::RecordLog(
     const CldriveInstance* const instance,
     const CldriveKernelInstance* const kernel_instance,
     const CldriveKernelRun* const run,
     const gpu::libcecl::OpenClKernelInvocation* const log, bool flush) {
   ostream(flush) << CsvLog::FromProtos(instance_num(), instance,
                                        kernel_instance, run, log);
-  return phd::Status::OK;
+  return labm8::Status::OK;
 }
 
 }  // namespace cldrive

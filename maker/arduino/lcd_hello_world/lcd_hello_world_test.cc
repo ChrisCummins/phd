@@ -1,7 +1,7 @@
 #include "maker/arduino/lcd_hello_world/lcd_hello_world.h"
 #include "maker/arduino/interface/mock_arduino_interface.h"
 
-#include "phd/test.h"
+#include "labm8/cpp/test.h"
 
 namespace arduino {
 namespace {

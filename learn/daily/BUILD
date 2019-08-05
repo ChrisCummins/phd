@@ -9,7 +9,7 @@ cc_library(
     srcs = ["d181211_matrix_multiplication.cc"],
     hdrs = ["d181211_matrix_multiplication.h"],
     deps = [
-        "//phd:logging",
+        "//labm8/cpp:logging",
         "@boost//:numeric",
         "@boost//:serialization",
         "@boost//:thread",
@@ -21,7 +21,7 @@ cc_test(
     srcs = ["d181211_matrix_multiplication_test.cc"],
     deps = [
         ":d181211_matrix_multiplication",
-        "//phd:test",
+        "//labm8/cpp:test",
     ],
 )
 
@@ -30,7 +30,7 @@ cc_library(
     srcs = ["d181213_kruskal_spanning_tree.cc"],
     hdrs = ["d181213_kruskal_spanning_tree.h"],
     deps = [
-        "//phd:logging",
+        "//labm8/cpp:logging",
         "@boost//:graph",
         "@boost//:numeric",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -42,6 +42,6 @@ cc_test(
     srcs = ["d181213_kruskal_spanning_tree_test.cc"],
     deps = [
         ":d181213_kruskal_spanning_tree",
-        "//phd:test",
+        "//labm8/cpp:test",
     ],
 )

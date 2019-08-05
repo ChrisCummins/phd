@@ -24,8 +24,8 @@
 // SOFTWARE.
 #pragma once
 
-#include "phd/macros.h"
-#include "phd/string.h"
+#include "labm8/cpp/macros.h"
+#include "labm8/cpp/string.h"
 
 #include "datasets/me_db/me.pb.h"
 

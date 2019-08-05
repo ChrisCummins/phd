@@ -18,9 +18,9 @@
 #include "gpu/cldrive/kernel_arg_value.h"
 #include "gpu/cldrive/opencl_type.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
+#include "labm8/cpp/status.h"
+#include "labm8/cpp/statusor.h"
 #include "opencl_type.h"
-#include "phd/status.h"
-#include "phd/statusor.h"
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {

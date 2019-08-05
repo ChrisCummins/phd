@@ -27,8 +27,8 @@
 #include "gpu/cldrive/proto/cldrive.pb.h"
 #include "gpu/clinfo/libclinfo.h"
 
-#include "phd/app.h"
-#include "phd/logging.h"
+#include "labm8/cpp/app.h"
+#include "labm8/cpp/logging.h"
 
 #include "absl/strings/str_split.h"
 #include "boost/filesystem.hpp"
@@ -86,10 +86,10 @@ DEFINE_string(envs, "",
 static bool ValidateEnvs(const char* flagname, const string& value) {
   for (auto env : SplitCommaSeparated(value)) {
     try {
-      phd::gpu::clinfo::GetOpenClDevice(env);
+      labm8::gpu::clinfo::GetOpenClDevice(env);
     } catch (std::invalid_argument e) {
       LOG(ERROR) << "Available OpenCL environments:";
-      auto devices = phd::gpu::clinfo::GetOpenClDevices();
+      auto devices = labm8::gpu::clinfo::GetOpenClDevices();
       for (int i = 0; i < devices.device_size(); ++i) {
         LOG(ERROR) << "    " << devices.device(i).name();
       }
@@ -153,14 +153,14 @@ std::vector<::gpu::clinfo::OpenClDevice> GetDevicesFromCommaSeparatedString(
   std::vector<::gpu::clinfo::OpenClDevice> devices;
 
   if (FLAGS_envs.empty()) {
-    auto devices_proto = phd::gpu::clinfo::GetOpenClDevices();
+    auto devices_proto = labm8::gpu::clinfo::GetOpenClDevices();
     for (int i = 0; i < devices_proto.device_size(); ++i) {
       devices.push_back(devices_proto.device(i));
     }
   } else {
     for (auto device_name : SplitCommaSeparated(FLAGS_envs)) {
       devices.push_back(
-          phd::gpu::clinfo::GetOpenClDeviceProto(device_name).ValueOrDie());
+          labm8::gpu::clinfo::GetOpenClDeviceProto(device_name).ValueOrDie());
     }
   }
 
@@ -170,12 +170,12 @@ std::vector<::gpu::clinfo::OpenClDevice> GetDevicesFromCommaSeparatedString(
 }  // namespace
 
 int main(int argc, char** argv) {
-  phd::InitApp(&argc, &argv, "Drive arbitrary OpenCL kernels.");
+  labm8::InitApp(&argc, &argv, "Drive arbitrary OpenCL kernels.");
 
   // Special case handling for --clinfo argument which prints to stdout then
   // quits.
   if (FLAGS_clinfo) {
-    auto devices = phd::gpu::clinfo::GetOpenClDevices();
+    auto devices = labm8::gpu::clinfo::GetOpenClDevices();
     for (int i = 0; i < devices.device_size(); ++i) {
       std::cout << devices.device(i).name() << std::endl;
     }

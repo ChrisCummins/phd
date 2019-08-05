@@ -19,9 +19,9 @@
 #include "gpu/cldrive/kernel_driver.h"
 #include "gpu/clinfo/libclinfo.h"
 
-#include "phd/logging.h"
-#include "phd/status.h"
-#include "phd/statusor.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/status.h"
+#include "labm8/cpp/statusor.h"
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -31,7 +31,7 @@
 
 #define LOG_CL_ERROR(level, error)                                  \
   LOG(level) << "OpenCL exception: " << error.what() << ", error: " \
-             << phd::gpu::clinfo::OpenClErrorString(error.err());
+             << labm8::gpu::clinfo::OpenClErrorString(error.err());
 
 namespace gpu {
 namespace cldrive {
@@ -39,16 +39,16 @@ namespace cldrive {
 namespace {
 
 // Attempt to build OpenCL program.
-phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
-                                              const cl::Context& context,
-                                              const string& cl_build_opts) {
+labm8::StatusOr<cl::Program> BuildOpenClProgram(
+    const std::string& opencl_kernel, const cl::Context& context,
+    const string& cl_build_opts) {
   auto start_time = absl::Now();
   try {
     // Assemble the build options. We need -cl-kernel-arg-info so that we can
     // read the kernel signatures.
     string all_build_opts = "-cl-kernel-arg-info ";
     absl::StrAppend(&all_build_opts, cl_build_opts);
-    phd::TrimRight(all_build_opts);
+    labm8::TrimRight(all_build_opts);
 
     cl::Program program(context, opencl_kernel);
     program.build(context.getInfo<CL_CONTEXT_DEVICES>(),
@@ -60,8 +60,8 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
     return program;
   } catch (cl::Error e) {
     LOG_CL_ERROR(WARNING, e);
-    return phd::Status(phd::error::Code::INVALID_ARGUMENT,
-                       "clBuildProgram failed");
+    return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                         "clBuildProgram failed");
   }
 }
 
@@ -70,7 +70,7 @@ phd::StatusOr<cl::Program> BuildOpenClProgram(const std::string& opencl_kernel,
 Cldrive::Cldrive(CldriveInstance* instance, int instance_num)
     : instance_(instance),
       instance_num_(instance_num),
-      device_(phd::gpu::clinfo::GetOpenClDeviceOrDie(instance->device())) {}
+      device_(labm8::gpu::clinfo::GetOpenClDeviceOrDie(instance->device())) {}
 
 void Cldrive::RunOrDie(Logger& logger) {
   try {
@@ -79,7 +79,7 @@ void Cldrive::RunOrDie(Logger& logger) {
     LOG(FATAL) << "Unhandled OpenCL exception.\n"
                << "    Raised by:  " << error.what() << '\n'
                << "    Error code: " << error.err() << " ("
-               << phd::gpu::clinfo::OpenClErrorString(error.err()) << ")\n"
+               << labm8::gpu::clinfo::OpenClErrorString(error.err()) << ")\n"
                << "This is a bug! Please report to "
                << "<https://github.com/ChrisCummins/cldrive/issues>.";
   }
@@ -92,7 +92,7 @@ void Cldrive::DoRunOrDie(Logger& logger) {
                          /*properties=*/CL_QUEUE_PROFILING_ENABLE);
 
   // Compile program or fail.
-  phd::StatusOr<cl::Program> program_or = BuildOpenClProgram(
+  labm8::StatusOr<cl::Program> program_or = BuildOpenClProgram(
       string(instance_->opencl_src()), context, instance_->build_opts());
   if (!program_or.ok()) {
     LOG(ERROR) << "OpenCL program compilation failed!";

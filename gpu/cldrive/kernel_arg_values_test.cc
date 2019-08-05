@@ -15,8 +15,8 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/kernel_arg_value.h"
 
-#include "phd/port.h"
-#include "phd/test.h"
+#include "labm8/cpp/port.h"
+#include "labm8/cpp/test.h"
 
 namespace gpu {
 namespace cldrive {

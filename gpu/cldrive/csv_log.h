@@ -16,8 +16,8 @@
 #pragma once
 
 #include "gpu/cldrive/proto/cldrive.pb.h"
-#include "phd/port.h"
-#include "phd/string.h"
+#include "labm8/cpp/port.h"
+#include "labm8/cpp/string.h"
 
 #include <vector>
 
@@ -91,9 +91,9 @@ class CsvLog {
   string outcome_;
 
   // From CldriveKernelRun.log. If outcome != PASS, these will be empty.
-  phd::int64 transferred_bytes_;
-  phd::int64 transfer_time_ns_;
-  phd::int64 kernel_time_ns_;
+  labm8::int64 transferred_bytes_;
+  labm8::int64 transfer_time_ns_;
+  labm8::int64 kernel_time_ns_;
 
   // End CSV columns (in order) -----------------------------------
 };

@@ -34,8 +34,8 @@ cc_binary(
     ],
     deps = [
         ":cpp_interop_pb_cc",
-        "//phd:logging",
-        "//phd:pbutil",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:pbutil",
     ],
 )
 
@@ -46,8 +46,8 @@ cc_binary(
     ],
     deps = [
         ":cpp_interop_pb_cc",
-        "//phd:logging",
-        "//phd:pbutil",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:pbutil",
     ],
 )
 

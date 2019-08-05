@@ -42,16 +42,16 @@ int main(int argc, char **argv) {
   try {
     if (platform_id != -1 && device_id != -1) {
       ::gpu::clinfo::OpenClDevices message;
-      auto device = phd::gpu::clinfo::GetOpenClDevice(platform_id, device_id);
+      auto device = labm8::gpu::clinfo::GetOpenClDevice(platform_id, device_id);
       auto new_device = message.add_device();
       new_device->CopyFrom(device);
       std::cout << message.DebugString();
     } else {
-      std::cout << phd::gpu::clinfo::GetOpenClDevices().DebugString();
+      std::cout << labm8::gpu::clinfo::GetOpenClDevices().DebugString();
     }
   } catch (cl::Error err) {
     std::cerr << "OpenCL Error: " << err.what() << " returned "
-              << phd::gpu::clinfo::OpenClErrorString(err.err()) << std::endl;
+              << labm8::gpu::clinfo::OpenClErrorString(err.err()) << std::endl;
     return 1;
   }
 }

@@ -1,15 +1,14 @@
 #include "learn/daily/d181211_matrix_multiplication.h"
 
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 
 #include <boost/thread/thread.hpp>
 
-namespace phd {
+namespace labm8 {
 namespace learn {
 
-
 Vector ColumnVector(const Matrix& matrix, const int column) {
-  CHECK(column >=0 && column < matrix.size2());
+  CHECK(column >= 0 && column < matrix.size2());
 
   Vector result(matrix.size1());
   for (int i = 0; i < result.size(); ++i) {
@@ -45,13 +44,13 @@ Scalar DotProduct(const Vector& a, const Vector& b) {
 // This is the parallelized work unit.
 class MatrixMultiplicationWorkUnit {
  public:
-  MatrixMultiplicationWorkUnit(const Matrix& a, const Matrix& b,
-                               const int row, const int col, Matrix* output)
-      : a_(a), b_(b), row_(row), col_(col), output_(output) {};
+  MatrixMultiplicationWorkUnit(const Matrix& a, const Matrix& b, const int row,
+                               const int col, Matrix* output)
+      : a_(a), b_(b), row_(row), col_(col), output_(output){};
 
   void operator()() {
-    (*output_)(row_, col_) = DotProduct(
-        RowVector(a_, row_), ColumnVector(b_, col_));
+    (*output_)(row_, col_) =
+        DotProduct(RowVector(a_, row_), ColumnVector(b_, col_));
   }
 
  private:
@@ -59,10 +58,10 @@ class MatrixMultiplicationWorkUnit {
   const Matrix& b_;
   const int row_;
   const int col_;
-  Matrix*const output_;
+  Matrix* const output_;
 };
 
-Matrix Multiply(const Matrix& a, const Matrix&b) {
+Matrix Multiply(const Matrix& a, const Matrix& b) {
   CHECK(a.size2() == b.size1());
 
   Matrix result(a.size1(), b.size2());
@@ -75,8 +74,8 @@ Matrix Multiply(const Matrix& a, const Matrix&b) {
   // Create a thread to process each element in the matrix.
   for (int row = 0; row < result.size1(); ++row) {
     for (int col = 0; col < result.size2(); ++col) {
-      threads.push_back(boost::thread(
-          MatrixMultiplicationWorkUnit(a, b, row, col, &result)));
+      threads.push_back(
+          boost::thread(MatrixMultiplicationWorkUnit(a, b, row, col, &result)));
     }
   }
 
@@ -89,4 +88,4 @@ Matrix Multiply(const Matrix& a, const Matrix&b) {
 }
 
 }  // namespace learn
-}  // phd
+}  // namespace labm8

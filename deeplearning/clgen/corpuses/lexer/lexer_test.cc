@@ -19,8 +19,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 
-#include "phd/string.h"
-#include "phd/test.h"
+#include "labm8/cpp/string.h"
+#include "labm8/cpp/test.h"
 
 namespace clgen {
 namespace {

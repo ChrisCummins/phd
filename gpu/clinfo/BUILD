@@ -36,9 +36,9 @@ cc_library(
     deps = [
         "//gpu/clinfo/proto:clinfo_pb_cc",
         "//third_party/opencl",
-        "//phd:string",
-        "//phd:logging",
-        "//phd:statusor",
+        "//labm8/cpp:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:statusor",
         "@com_google_absl//absl/strings",
     ] + select({
         "//:darwin": [],
@@ -52,7 +52,7 @@ cc_test(
     linkstatic = False,  # Needed for oclgrind support.
     deps = [
         ":libclinfo",
-        "//phd:test",
+        "//labm8/cpp:test",
         "//third_party/opencl",
     ],
 )

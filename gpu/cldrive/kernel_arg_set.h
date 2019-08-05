@@ -18,7 +18,7 @@
 #include "gpu/cldrive/kernel_arg.h"
 #include "gpu/cldrive/kernel_arg_values_set.h"
 #include "gpu/cldrive/proto/cldrive.pb.h"
-#include "phd/status.h"
+#include "labm8/cpp/status.h"
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {
@@ -33,13 +33,13 @@ class KernelArgSet {
 
   CldriveKernelInstance::KernelInstanceOutcome Init();
 
-  phd::Status SetRandom(const cl::Context& context,
+  labm8::Status SetRandom(const cl::Context& context,
+                          const DynamicParams& dynamic_params,
+                          KernelArgValuesSet* values);
+
+  labm8::Status SetOnes(const cl::Context& context,
                         const DynamicParams& dynamic_params,
                         KernelArgValuesSet* values);
-
-  phd::Status SetOnes(const cl::Context& context,
-                      const DynamicParams& dynamic_params,
-                      KernelArgValuesSet* values);
 
  private:
   cl::Kernel* kernel_;

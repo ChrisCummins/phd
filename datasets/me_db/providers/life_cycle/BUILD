@@ -26,7 +26,7 @@ cc_binary(
     srcs = ["lc_export_csv_worker.cc"],
     deps = [
         ":life_cycle_lib",
-        "//phd:pbutil",
+        "//labm8/cpp:pbutil",
     ],
 )
 
@@ -36,8 +36,8 @@ cc_library(
     hdrs = ["life_cycle_lib.h"],
     deps = [
         "//datasets/me_db:me_pb_cc",
-        "//phd:logging",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
         "@boost//:filesystem",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
@@ -51,7 +51,7 @@ cc_test(
     deps = [
         ":life_cycle_lib",
         "//datasets/me_db:me_pb_cc",
-        "//phd:test",
+        "//labm8/cpp:test",
     ],
 )
 

@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
 #include "third_party/opencl/cl.hpp"
 
 int main(void) {

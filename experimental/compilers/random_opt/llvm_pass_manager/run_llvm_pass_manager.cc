@@ -11,8 +11,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
-#include "phd/app.h"
-#include "phd/logging.h"
+#include "labm8/cpp/app.h"
+#include "labm8/cpp/logging.h"
 
 DEFINE_string(input_bitcode, "", "Path of input LLVM bitcode file.");
 
@@ -30,7 +30,7 @@ std::unique_ptr<llvm::Module> ParseIRFileOrDie(const string& path,
 }
 
 int main(int argc, char** argv) {
-  phd::InitApp(&argc, &argv);
+  labm8::InitApp(&argc, &argv);
 
   LOG(INFO) << "reading";
 

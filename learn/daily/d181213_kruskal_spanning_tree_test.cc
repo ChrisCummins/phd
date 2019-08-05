@@ -1,9 +1,9 @@
 #include "learn/daily/d181213_kruskal_spanning_tree.h"
 
-#include "phd/test.h"
-#include "phd/logging.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/test.h"
 
-namespace phd {
+namespace labm8 {
 namespace learn {
 namespace {
 
@@ -191,6 +191,6 @@ TEST(KruskalMinimumSpanningTree, ExampleGraph) {
 
 }  // namespace
 }  // namespace learn
-}  // namespace phd
+}  // namespace labm8
 
 TEST_MAIN();

@@ -23,7 +23,7 @@ cc_binary(
     linkstatic = False,  # Needed for oclgrind support.
     visibility = ["//gpu/oclgrind:__subpackages__"],
     deps = [
-        "//phd:logging",
+        "//labm8/cpp:logging",
         "//third_party/opencl",
     ] + select({
         "//:darwin": [],

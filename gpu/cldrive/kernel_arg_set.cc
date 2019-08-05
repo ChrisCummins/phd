@@ -17,8 +17,8 @@
 
 #include "gpu/cldrive/opencl_util.h"
 
-#include "phd/logging.h"
-#include "phd/status_macros.h"
+#include "labm8/cpp/logging.h"
+#include "labm8/cpp/status_macros.h"
 
 namespace gpu {
 namespace cldrive {
@@ -57,9 +57,9 @@ CldriveKernelInstance::KernelInstanceOutcome KernelArgSet::Init() {
   return CldriveKernelInstance::PASS;
 }
 
-phd::Status KernelArgSet::SetRandom(const cl::Context& context,
-                                    const DynamicParams& dynamic_params,
-                                    KernelArgValuesSet* values) {
+labm8::Status KernelArgSet::SetRandom(const cl::Context& context,
+                                      const DynamicParams& dynamic_params,
+                                      KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
     auto value = arg.TryToCreateRandomValue(context, dynamic_params);
@@ -68,16 +68,16 @@ phd::Status KernelArgSet::SetRandom(const cl::Context& context,
     } else {
       // TryToCreateRandomValue() returns nullptr if the argument is not
       // supported.
-      return phd::Status(phd::error::Code::INVALID_ARGUMENT,
-                         "Unsupported argument type.");
+      return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                           "Unsupported argument type.");
     }
   }
-  return phd::Status::OK;
+  return labm8::Status::OK;
 }
 
-phd::Status KernelArgSet::SetOnes(const cl::Context& context,
-                                  const DynamicParams& dynamic_params,
-                                  KernelArgValuesSet* values) {
+labm8::Status KernelArgSet::SetOnes(const cl::Context& context,
+                                    const DynamicParams& dynamic_params,
+                                    KernelArgValuesSet* values) {
   values->Clear();
   for (auto& arg : args_) {
     auto value = arg.TryToCreateOnesValue(context, dynamic_params);
@@ -86,11 +86,11 @@ phd::Status KernelArgSet::SetOnes(const cl::Context& context,
     } else {
       // TryToCreateRandomValue() returns nullptr if the argument is not
       // supported.
-      return phd::Status(phd::error::Code::INVALID_ARGUMENT,
-                         "Unsupported argument type.");
+      return labm8::Status(labm8::error::Code::INVALID_ARGUMENT,
+                           "Unsupported argument type.");
     }
   }
-  return phd::Status::OK;
+  return labm8::Status::OK;
 }
 
 }  // namespace cldrive

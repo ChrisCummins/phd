@@ -15,7 +15,7 @@
 #include "deeplearning/clgen/corpuses/lexer/lexer.h"
 #include "deeplearning/clgen/proto/internal.pb.h"
 
-#include "phd/pbutil.h"
+#include "labm8/cpp/pbutil.h"
 
 PBUTIL_INPLACE_PROCESS_MAIN(clgen::ProcessLexerBatchJobOrDie,
                             clgen::LexerBatchJob);

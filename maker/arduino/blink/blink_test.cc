@@ -1,7 +1,7 @@
 #include "maker/arduino/blink/blink.h"
 #include "maker/arduino/interface/mock_arduino_interface.h"
 
-#include "phd/test.h"
+#include "labm8/cpp/test.h"
 
 namespace arduino {
 namespace blink {
@@ -13,7 +13,8 @@ using ::testing::AtLeast;
 TEST(Setup, PinModeIsCalled) {
   Blink<MockArduinoInterface> program;
   EXPECT_CALL(program.interface(),
-              SetPinMode(MockArduinoInterface::kBuiltInLedPin, _)).Times(1);
+              SetPinMode(MockArduinoInterface::kBuiltInLedPin, _))
+      .Times(1);
   program.Setup();
 }
 
@@ -21,7 +22,7 @@ TEST(Loop, DigitalWriteIsCalled) {
   Blink<MockArduinoInterface> program;
   EXPECT_CALL(program.interface(),
               DigitalWrite(MockArduinoInterface::kBuiltInLedPin, _))
-              .Times(AtLeast(2));
+      .Times(AtLeast(2));
   program.Loop();
 }
 

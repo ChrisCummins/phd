@@ -18,11 +18,11 @@
 namespace gpu {
 namespace cldrive {
 
-phd::int64 GetElapsedNanoseconds(const cl::Event& event) {
+labm8::int64 GetElapsedNanoseconds(const cl::Event& event) {
   event.wait();
   cl_ulong start = event.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
   cl_ulong end = event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
-  return static_cast<phd::int64>(end - start);
+  return static_cast<labm8::int64>(end - start);
 }
 
 }  // namespace cldrive

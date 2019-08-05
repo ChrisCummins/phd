@@ -39,8 +39,8 @@ cc_library(
     hdrs = ["health_kit_lib.h"],
     deps = [
         "//datasets/me_db:me_pb_cc",
-        "//phd:logging",
-        "//phd:string",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:string",
         "@boost//:filesystem",
         "@boost//:property_tree",
         "@boost//:tokenizer",
@@ -57,7 +57,7 @@ cc_test(
     deps = [
         ":health_kit_lib",
         "//datasets/me_db:me_pb_cc",
-        "//phd:test",
+        "//labm8/cpp:test",
     ],
 )
 
@@ -66,6 +66,6 @@ cc_binary(
     srcs = ["xml_export_worker.cc"],
     deps = [
         ":health_kit_lib",
-        "//phd:pbutil",
+        "//labm8/cpp:pbutil",
     ],
 )

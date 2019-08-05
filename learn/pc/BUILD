@@ -57,7 +57,7 @@ cc_binary(
 cc_test(
     name = "add_up_to_k",
     srcs = ["add_up_to_k.cc"],
-    deps = ["//phd:test"],
+    deps = ["//labm8/cpp:test"],
 )
 
 py_test(
@@ -85,5 +85,5 @@ py_test(
 cc_test(
     name = "vector_of_products",
     srcs = ["vector_of_products.cc"],
-    deps = ["//phd:test"],
+    deps = ["//labm8/cpp:test"],
 )

@@ -1,4 +1,4 @@
-#include "phd/test.h"
+#include "labm8/cpp/test.h"
 
 #include <vector>
 
@@ -24,24 +24,20 @@ std::vector<int> VectorOfProducts(const std::vector<int>& vec) {
   return out;
 }
 
-
 TEST(VectorOfProducts, EmptyListReturnsEmptyList) {
   std::vector<int> v;
   EXPECT_EQ(VectorOfProducts(v), std::vector<int>({}));
 }
-
 
 TEST(VectorOfProducts, SingleElementListReturnsTheSame) {
   std::vector<int> v{1};
   EXPECT_EQ(VectorOfProducts(v), std::vector<int>({1}));
 }
 
-
 TEST(VectorOfProducts, OneTwoThreeList) {
   std::vector<int> v{1, 2, 3};
   EXPECT_EQ(VectorOfProducts(v), std::vector<int>({6, 3, 2}));
 }
-
 
 // Follow-up: what if you can't use division?
 
@@ -77,23 +73,19 @@ std::vector<int> VectorOfProductsWithoutDivision(const std::vector<int>& vec) {
   return out;
 }
 
-
 TEST(VectorOfProductsWithoutDivision, EmptyListReturnsEmptyList) {
   std::vector<int> v;
   EXPECT_EQ(VectorOfProductsWithoutDivision(v), std::vector<int>({}));
 }
-
 
 TEST(VectorOfProductsWithoutDivision, SingleElementListReturnsTheSame) {
   std::vector<int> v{1};
   EXPECT_EQ(VectorOfProductsWithoutDivision(v), std::vector<int>({1}));
 }
 
-
 TEST(VectorOfProductsWithoutDivision, OneTwoThreeList) {
   std::vector<int> v{1, 2, 3};
   EXPECT_EQ(VectorOfProductsWithoutDivision(v), std::vector<int>({6, 3, 2}));
 }
-
 
 TEST_MAIN();

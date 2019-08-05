@@ -6,7 +6,7 @@ cc_library(
     hdrs = ["lexer.h"],
     deps = [
         "//deeplearning/clgen/proto:internal_pb_cc",
-        "//phd:string",
+        "//labm8/cpp:string",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
     ],
@@ -17,8 +17,8 @@ cc_test(
     srcs = ["lexer_test.cc"],
     deps = [
         ":lexer",
-        "//phd:string",
-        "//phd:test",
+        "//labm8/cpp:string",
+        "//labm8/cpp:test",
     ],
 )
 
@@ -28,6 +28,6 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":lexer",
-        "//phd:pbutil",
+        "//labm8/cpp:pbutil",
     ],
 )

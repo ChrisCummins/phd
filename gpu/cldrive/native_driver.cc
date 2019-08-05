@@ -15,7 +15,7 @@
 // along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 #include "gpu/cldrive/libcldrive.h"
 
-#include "phd/pbutil.h"
+#include "labm8/cpp/pbutil.h"
 
 namespace gpu {
 namespace cldrive {

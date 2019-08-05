@@ -16,8 +16,8 @@
 #pragma once
 
 #include "absl/strings/str_cat.h"
-#include "phd/statusor.h"
-#include "phd/string.h"
+#include "labm8/cpp/statusor.h"
+#include "labm8/cpp/string.h"
 #include "third_party/opencl/cl.hpp"
 
 namespace gpu {
@@ -99,7 +99,7 @@ enum OpenClType {
   HALF16
 };
 
-phd::StatusOr<OpenClType> OpenClTypeFromString(const string& type_name);
+labm8::StatusOr<OpenClType> OpenClTypeFromString(const string& type_name);
 
 namespace opencl_type {
 

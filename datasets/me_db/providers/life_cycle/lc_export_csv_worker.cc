@@ -19,7 +19,7 @@
 // SOFTWARE.
 #include "datasets/me_db/providers/life_cycle/life_cycle_lib.h"
 
-#include "phd/pbutil.h"
+#include "labm8/cpp/pbutil.h"
 
 PBUTIL_INPLACE_PROCESS_MAIN(me::ProcessSeriesCollectionOrDie,
                             me::SeriesCollection);

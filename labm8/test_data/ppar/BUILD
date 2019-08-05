@@ -24,8 +24,8 @@ cc_binary(
     srcs = ["proto_worker.cc"],
     deps = [
         ":protos_pb_cc",
-        "//phd:logging",
-        "//phd:pbutil",
+        "//labm8/cpp:logging",
+        "//labm8/cpp:pbutil",
     ],
 )
 
@@ -33,7 +33,7 @@ cc_binary(
     name = "proto_worker_requires_args",
     srcs = ["proto_worker_requires_args.cc"],
     deps = [
-        "//phd:logging",
+        "//labm8/cpp:logging",
     ],
 )
 
@@ -42,6 +42,6 @@ cc_binary(
     srcs = ["unexpected_output_proto_worker.cc"],
     deps = [
         ":protos_pb_cc",
-        "//phd:logging",
+        "//labm8/cpp:logging",
     ],
 )
