@@ -150,8 +150,10 @@ class Workspace(object):
       timeout_seconds: The number of seconds before failing.
       subprocess_kwargs: Additional arguments to pass to Popen().
     """
-    return self.Bazel(
-        'query', args, timeout_seconds=timeout_seconds, **subprocess_kwargs)
+    return self.Bazel('query',
+                      args,
+                      timeout_seconds=timeout_seconds,
+                      **subprocess_kwargs)
 
   def Bazel(self,
             command: str,
@@ -206,7 +208,8 @@ class Workspace(object):
     Raises:
       OSError: If bazel query fails.
     """
-    bazel = self.BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
+    # First run through bazel query to expand globs.
+    bazel = self.BazelQuery([target], stdout=subprocess.PIPE)
     grep = subprocess.Popen(['grep', '^/'],
                             stdout=subprocess.PIPE,
                             stdin=bazel.stdout,
@@ -217,9 +220,26 @@ class Workspace(object):
       raise OSError("bazel query failed")
     if grep.returncode:
       raise OSError("grep of bazel query output failed")
-
     targets = stdout.rstrip().split('\n')
+
+    # Now get the transitive dependencies of each target.
     targets = [target for target in targets if target not in excluded_targets]
+    for target in targets:
+      bazel = self.BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
+      grep = subprocess.Popen(['grep', '^/'],
+                              stdout=subprocess.PIPE,
+                              stdin=bazel.stdout,
+                              universal_newlines=True)
+
+      stdout, _ = grep.communicate()
+      if bazel.returncode:
+        raise OSError("bazel query failed")
+      if grep.returncode:
+        raise OSError("grep of bazel query output failed")
+
+      deps = stdout.rstrip().split('\n')
+      targets += [target for target in deps if target not in excluded_targets]
+
     paths = [self.MaybeTargetToPath(target) for target in targets]
     return [path for path in paths if path]
 
