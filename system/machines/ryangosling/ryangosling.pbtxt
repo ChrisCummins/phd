@@ -11,7 +11,7 @@ host: {
 }
 mirrored_directory {
   name: "staging"
-  local_path: "/Users/cec/Photos/staging"
+  local_path: "/Users/cec/Pictures/staging"
   remote_path: "/home/cec/img/staging"
   timestamp_relpath: ".sync_timestamp.txt"
   rsync_exclude: "*.lrcat-journal"
