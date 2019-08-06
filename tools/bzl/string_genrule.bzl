@@ -13,7 +13,8 @@ def _python_string_genrule_impl(ctx):
       progress_message="Creating %s" % out_file.short_path,
   )
   return [
-      DefaultInfo(files=depset([out_file])),
+      DefaultInfo(files=depset([out_file]),
+                  runfiles=ctx.runfiles(files=[out_file])),
       PyInfo(transitive_sources=depset([out_file]))
   ]
 
