@@ -30,7 +30,8 @@ class Archive(object):
   def __init__(
       self,
       path: typing.Union[str, pathlib.Path],
-      assume_filename: typing.Optional[typing.Union[str, pathlib.Path]] = None):
+      assume_filename: typing.Optional[typing.Union[str, pathlib.Path]] = None,
+  ):
     """Create an archive.
 
     Will determine the type of the archive from the suffix, e.g. if path is
@@ -56,17 +57,17 @@ class Archive(object):
 
     if not suffixes:
       raise UnsupportedArchiveFormat(
-          f"Archive '{path_to_determine_type.name}' has no extension")
+          f"Archive '{path_to_determine_type.name}' has no extension",)
 
     if suffixes[-1] == '.zip':
       self._open_function = zipfile.ZipFile
     elif suffixes[-2:] == ['.tar', '.bz2']:
-      self._open_function = lambda f: tarfile.open(f, "r:bz2")
+      self._open_function = lambda f: tarfile.open(f, 'r:bz2')
       # TODO(cec): Add support for .tar, and .tar.gz.
     else:
       raise UnsupportedArchiveFormat(
           f"Unsupported file extension '{suffixes[-1]}' for archive "
-          f"'{path_to_determine_type.name}'")
+          f"'{path_to_determine_type.name}'",)
 
     # Set in __enter__().
     self._uncompressed_path: typing.Optional[pathlib.Path] = None

@@ -205,12 +205,14 @@ class JsonCache(TransientCache):
     Write contents of cache to disk.
     """
     io.debug("Storing cache '{0}'".format(self.path))
-    with open(self.path, "w") as file:
-      json.dump(self._data,
-                file,
-                sort_keys=True,
-                indent=2,
-                separators=(',', ': '))
+    with open(self.path, 'w') as file:
+      json.dump(
+          self._data,
+          file,
+          sort_keys=True,
+          indent=2,
+          separators=(',', ': '),
+      )
 
 
 def hash_key(key):

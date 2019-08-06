@@ -16,13 +16,13 @@
 # Use absolute paths for imports so as to prevent a conflict with the
 # system "math" module.
 from __future__ import absolute_import
-# Use floating point division by default.
 from __future__ import division
 
 import math
 
 import numpy as np
 from scipy import stats
+# Use floating point division by default.
 
 
 def ceil(number):
@@ -196,11 +196,13 @@ def filter_iqr(array, lower, upper):
   return new
 
 
-def confinterval(array,
-                 conf=0.95,
-                 normal_threshold=30,
-                 error_only=False,
-                 array_mean=None):
+def confinterval(
+    array,
+    conf=0.95,
+    normal_threshold=30,
+    error_only=False,
+    array_mean=None,
+):
   """
   Return the confidence interval of a list for a given confidence.
 

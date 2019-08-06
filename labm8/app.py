@@ -15,15 +15,19 @@
 
 See: <https://github.com/abseil/abseil-py>
 """
-import sys
-
 import functools
 import pathlib
 import re
+import sys
+from typing import Any
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Union
+
 from absl import app as absl_app
 from absl import flags as absl_flags
 from absl import logging as absl_logging
-from typing import Any, Callable, List, Optional, Union
 
 import build_info
 from labm8.internal import flags_parsers
@@ -31,8 +35,11 @@ from labm8.internal import logging
 
 FLAGS = absl_flags.FLAGS
 
-absl_flags.DEFINE_boolean('version', False,
-                          'Print version information and exit.')
+absl_flags.DEFINE_boolean(
+    'version',
+    False,
+    'Print version information and exit.',
+)
 
 
 class UsageError(absl_app.UsageError):
@@ -59,13 +66,15 @@ def GetVersionInformationString() -> str:
   """Return a string of version information, as printed by --version flag."""
   return '\n'.join([
       build_info.FormatShortBuildDescription(),
-      "Copyright (C) 2014-2019 Chris Cummins <chrisc.101@gmail.com>",
-      f"<{build_info.GetGithubCommitUrl()}>"
+      'Copyright (C) 2014-2019 Chris Cummins <chrisc.101@gmail.com>',
+      f'<{build_info.GetGithubCommitUrl()}>',
   ])
 
 
-def RunWithArgs(main: Callable[[List[str]], None],
-                argv: Optional[List[str]] = None):
+def RunWithArgs(
+    main: Callable[[List[str]], None],
+    argv: Optional[List[str]] = None,
+):
   """Begin executing the program.
 
   Args:
@@ -251,88 +260,108 @@ def get_calling_module_name():
 # TODO(cec): Add validator callbacks.
 
 
-def DEFINE_string(name: str,
-                  default: Optional[str],
-                  help: str,
-                  required: bool = False,
-                  validator: Callable[[str], bool] = None):
+def DEFINE_string(
+    name: str,
+    default: Optional[str],
+    help: str,
+    required: bool = False,
+    validator: Callable[[str], bool] = None,
+):
   """Registers a flag whose value can be any string."""
-  absl_flags.DEFINE_string(name,
-                           default,
-                           help,
-                           module_name=get_calling_module_name())
+  absl_flags.DEFINE_string(
+      name,
+      default,
+      help,
+      module_name=get_calling_module_name(),
+  )
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
 
-def DEFINE_integer(name: str,
-                   default: Optional[int],
-                   help: str,
-                   required: bool = False,
-                   lower_bound: Optional[int] = None,
-                   upper_bound: Optional[int] = None,
-                   validator: Callable[[int], bool] = None):
+def DEFINE_integer(
+    name: str,
+    default: Optional[int],
+    help: str,
+    required: bool = False,
+    lower_bound: Optional[int] = None,
+    upper_bound: Optional[int] = None,
+    validator: Callable[[int], bool] = None,
+):
   """Registers a flag whose value must be an integer."""
-  absl_flags.DEFINE_integer(name,
-                            default,
-                            help,
-                            module_name=get_calling_module_name(),
-                            lower_bound=lower_bound,
-                            upper_bound=upper_bound)
+  absl_flags.DEFINE_integer(
+      name,
+      default,
+      help,
+      module_name=get_calling_module_name(),
+      lower_bound=lower_bound,
+      upper_bound=upper_bound,
+  )
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
 
-def DEFINE_float(name: str,
-                 default: Optional[float],
-                 help: str,
-                 required: bool = False,
-                 lower_bound: Optional[float] = None,
-                 upper_bound: Optional[float] = None,
-                 validator: Callable[[float], bool] = None):
+def DEFINE_float(
+    name: str,
+    default: Optional[float],
+    help: str,
+    required: bool = False,
+    lower_bound: Optional[float] = None,
+    upper_bound: Optional[float] = None,
+    validator: Callable[[float], bool] = None,
+):
   """Registers a flag whose value must be a float."""
-  absl_flags.DEFINE_float(name,
-                          default,
-                          help,
-                          module_name=get_calling_module_name(),
-                          lower_bound=lower_bound,
-                          upper_bound=upper_bound)
+  absl_flags.DEFINE_float(
+      name,
+      default,
+      help,
+      module_name=get_calling_module_name(),
+      lower_bound=lower_bound,
+      upper_bound=upper_bound,
+  )
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
 
-def DEFINE_boolean(name: str,
-                   default: Optional[bool],
-                   help: str,
-                   required: bool = False,
-                   validator: Callable[[bool], bool] = None):
+def DEFINE_boolean(
+    name: str,
+    default: Optional[bool],
+    help: str,
+    required: bool = False,
+    validator: Callable[[bool], bool] = None,
+):
   """Registers a flag whose value must be a boolean."""
-  absl_flags.DEFINE_boolean(name,
-                            default,
-                            help,
-                            module_name=get_calling_module_name())
+  absl_flags.DEFINE_boolean(
+      name,
+      default,
+      help,
+      module_name=get_calling_module_name(),
+  )
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
 
-def DEFINE_list(name: str,
-                default: Optional[List[Any]],
-                help: str,
-                required: bool = False,
-                validator: Callable[[List[Any]], bool] = None):
+def DEFINE_list(
+    name: str,
+    default: Optional[List[Any]],
+    help: str,
+    required: bool = False,
+    validator: Callable[[List[Any]], bool] = None,
+):
   """Registers a flag whose value must be a list."""
-  absl_flags.DEFINE_list(name,
-                         default,
-                         help,
-                         module_name=get_calling_module_name())
+  absl_flags.DEFINE_list(
+      name,
+      default,
+      help,
+      module_name=get_calling_module_name(),
+  )
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
@@ -342,12 +371,14 @@ def DEFINE_list(name: str,
 # My custom flag types.
 
 
-def DEFINE_input_path(name: str,
-                      default: Union[None, str, pathlib.Path],
-                      help: str,
-                      required: bool = False,
-                      is_dir: bool = False,
-                      validator: Callable[[pathlib.Path], bool] = None):
+def DEFINE_input_path(
+    name: str,
+    default: Union[None, str, pathlib.Path],
+    help: str,
+    required: bool = False,
+    is_dir: bool = False,
+    validator: Callable[[pathlib.Path], bool] = None,
+):
   """Registers a flag whose value is an input path.
 
   An "input path" is a path to a file or directory that exists. The parsed value
@@ -364,27 +395,31 @@ def DEFINE_input_path(name: str,
   """
   parser = flags_parsers.PathParser(must_exist=True, is_dir=is_dir)
   serializer = absl_flags.ArgumentSerializer()
-  absl_flags.DEFINE(parser,
-                    name,
-                    default,
-                    help,
-                    absl_flags.FLAGS,
-                    serializer,
-                    module_name=get_calling_module_name())
+  absl_flags.DEFINE(
+      parser,
+      name,
+      default,
+      help,
+      absl_flags.FLAGS,
+      serializer,
+      module_name=get_calling_module_name(),
+  )
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
 
-def DEFINE_output_path(name: str,
-                       default: Union[None, str, pathlib.Path],
-                       help: str,
-                       required: bool = False,
-                       is_dir: bool = False,
-                       exist_ok: bool = True,
-                       must_exist: bool = False,
-                       validator: Callable[[pathlib.Path], bool] = None):
+def DEFINE_output_path(
+    name: str,
+    default: Union[None, str, pathlib.Path],
+    help: str,
+    required: bool = False,
+    is_dir: bool = False,
+    exist_ok: bool = True,
+    must_exist: bool = False,
+    validator: Callable[[pathlib.Path], bool] = None,
+):
   """Registers a flag whose value is an output path.
 
   An "output path" is a path to a file or directory that may or may not already
@@ -404,29 +439,35 @@ def DEFINE_output_path(name: str,
     exist_ok: If False, require that the path not exist, else parsing will fail.
     must_exist: If True, require that the path exists, else parsing will fail.
   """
-  parser = flags_parsers.PathParser(must_exist=must_exist,
-                                    exist_ok=exist_ok,
-                                    is_dir=is_dir)
+  parser = flags_parsers.PathParser(
+      must_exist=must_exist,
+      exist_ok=exist_ok,
+      is_dir=is_dir,
+  )
   serializer = absl_flags.ArgumentSerializer()
-  absl_flags.DEFINE(parser,
-                    name,
-                    default,
-                    help,
-                    absl_flags.FLAGS,
-                    serializer,
-                    module_name=get_calling_module_name())
+  absl_flags.DEFINE(
+      parser,
+      name,
+      default,
+      help,
+      absl_flags.FLAGS,
+      serializer,
+      module_name=get_calling_module_name(),
+  )
   if required:
     absl_flags.mark_flag_as_required(name)
   if validator:
     RegisterFlagValidator(name, validator)
 
 
-def DEFINE_database(name: str,
-                    database_class,
-                    default: Optional[str],
-                    help: str,
-                    must_exist: bool = False,
-                    validator: Callable[[Any], bool] = None):
+def DEFINE_database(
+    name: str,
+    database_class,
+    default: Optional[str],
+    help: str,
+    must_exist: bool = False,
+    validator: Callable[[Any], bool] = None,
+):
   """Registers a flag whose value is a sqlutil.Database class.
 
   Unlike other DEFINE_* functions, the value produced by this flag is not an
@@ -445,20 +486,24 @@ def DEFINE_database(name: str,
   """
   parser = flags_parsers.DatabaseParser(database_class, must_exist=must_exist)
   serializer = absl_flags.ArgumentSerializer()
-  absl_flags.DEFINE(parser,
-                    name,
-                    default,
-                    help,
-                    absl_flags.FLAGS,
-                    serializer,
-                    module_name=get_calling_module_name())
+  absl_flags.DEFINE(
+      parser,
+      name,
+      default,
+      help,
+      absl_flags.FLAGS,
+      serializer,
+      module_name=get_calling_module_name(),
+  )
   if validator:
     RegisterFlagValidator(name, validator)
 
 
-def RegisterFlagValidator(flag_name: str,
-                          checker: Callable[[Any], bool],
-                          message: str = 'Flag validation failed'):
+def RegisterFlagValidator(
+    flag_name: str,
+    checker: Callable[[Any], bool],
+    message: str = 'Flag validation failed',
+):
   """Adds a constraint, which will be enforced during program execution.
 
   The constraint is validated when flags are initially parsed, and after each

@@ -41,8 +41,8 @@ def GetUtcMillisecondsNow() -> datetime.datetime:
   return d.replace(microsecond=int(d.microsecond / 1000) * 1000)
 
 
-def MillisecondsTimestamp(
-    date: typing.Optional[datetime.datetime] = None) -> int:
+def MillisecondsTimestamp(date: typing.Optional[datetime.datetime] = None,
+                         ) -> int:
   """Get the millisecond timestamp of a date.
 
   Args:
@@ -60,8 +60,8 @@ def MillisecondsTimestamp(
   return int(date.strftime('%s%f')[:-3])
 
 
-def DatetimeFromMillisecondsTimestamp(
-    timestamp: int = None) -> datetime.datetime:
+def DatetimeFromMillisecondsTimestamp(timestamp: int = None,
+                                     ) -> datetime.datetime:
   """Get the date of a millisecond timestamp.
 
   Args:

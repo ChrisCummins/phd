@@ -40,7 +40,7 @@ class MapWorkerError(EnvironmentError):
     self._returncode = returncode
 
   def __repr__(self) -> str:
-    return f"Command exited with code {self.returncode}"
+    return f'Command exited with code {self.returncode}'
 
   @property
   def returncode(self) -> int:
@@ -58,8 +58,12 @@ class _MapWorker(object):
   returned to the user. It is not to be used by user code.
   """
 
-  def __init__(self, id: int, cmd: typing.List[str],
-               input_proto: pbutil.ProtocolBuffer):
+  def __init__(
+      self,
+      id: int,
+      cmd: typing.List[str],
+      input_proto: pbutil.ProtocolBuffer,
+  ):
     """Create a map worker.
 
     Args:
@@ -90,9 +94,11 @@ class _MapWorker(object):
     assert not self._done
 
     # Run the C++ worker process, capturing it's output.
-    process = subprocess.Popen(self._cmd,
-                               stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE)
+    process = subprocess.Popen(
+        self._cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
     # Send the input proto to the C++ worker process.
     # TODO: Add timeout.
     stdout, _ = process.communicate(self._input_proto_string)
@@ -103,8 +109,11 @@ class _MapWorker(object):
       # Store the C++ binary output in wire format.
       self._output_proto_string = stdout
 
-  def SetProtos(self, input_proto: pbutil.ProtocolBuffer,
-                output_proto_class: typing.Type) -> None:
+  def SetProtos(
+      self,
+      input_proto: pbutil.ProtocolBuffer,
+      output_proto_class: typing.Type,
+  ) -> None:
     """Set the input protocol buffer, and decode the output protocol buffer.
 
     This is performed by the SetProtos() method (rather than during Run()) so
@@ -124,7 +133,7 @@ class _MapWorker(object):
       # unrecognized fields, conflicting field type/tags) are silently ignored
       # here.
       self._output_proto = output_proto_class.FromString(
-          self._output_proto_string)
+          self._output_proto_string,)
     # No need to hand onto the string message any more.
     del self._output_proto_string
 
@@ -175,7 +184,8 @@ def MapNativeProtoProcessingBinary(
     output_proto_class: typing.Type,
     binary_args: typing.Optional[typing.List[str]] = None,
     pool: typing.Optional[multiprocessing.Pool] = None,
-    num_processes: typing.Optional[int] = None) -> typing.Iterator[_MapWorker]:
+    num_processes: typing.Optional[int] = None,
+) -> typing.Iterator[_MapWorker]:
   """Run a protocol buffer processing binary over a set of inputs.
 
   Args:
@@ -204,8 +214,10 @@ def MapNativeProtoProcessingBinary(
   map_worker_iterator = (_MapWorker(i, cmd, input_proto)
                          for i, input_proto in enumerate(input_protos))
 
-  for map_worker in pool.imap_unordered(_RunNativeProtoProcessingWorker,
-                                        map_worker_iterator):
+  for map_worker in pool.imap_unordered(
+      _RunNativeProtoProcessingWorker,
+      map_worker_iterator,
+  ):
     map_worker.SetProtos(input_protos[map_worker.id], output_proto_class)
     yield map_worker
 
@@ -215,7 +227,8 @@ def MapNativeProcessingBinaries(
     input_protos: typing.List[pbutil.ProtocolBuffer],
     output_proto_classes: typing.List[typing.Type],
     pool: typing.Optional[multiprocessing.Pool] = None,
-    num_processes: typing.Optional[int] = None) -> typing.Iterator[_MapWorker]:
+    num_processes: typing.Optional[int] = None,
+) -> typing.Iterator[_MapWorker]:
   """Run a protocol buffer processing binary over a set of inputs.
 
   Args:
@@ -244,14 +257,22 @@ def MapNativeProcessingBinaries(
   pool = pool or multiprocessing.Pool(processes=num_processes)
 
   map_worker_iterator = (_MapWorker(
-      id, cmd,
-      input_proto) for id, (cmd,
-                            input_proto) in enumerate(zip(cmds, input_protos)))
+      id,
+      cmd,
+      input_proto,
+  ) for id, (
+      cmd,
+      input_proto,
+  ) in enumerate(zip(cmds, input_protos)))
 
-  for map_worker in pool.imap_unordered(_RunNativeProtoProcessingWorker,
-                                        map_worker_iterator):
-    map_worker.SetProtos(input_protos[map_worker.id],
-                         output_proto_classes[map_worker.id])
+  for map_worker in pool.imap_unordered(
+      _RunNativeProtoProcessingWorker,
+      map_worker_iterator,
+  ):
+    map_worker.SetProtos(
+        input_protos[map_worker.id],
+        output_proto_classes[map_worker.id],
+    )
     yield map_worker
 
 
@@ -272,7 +293,8 @@ def MapDatabaseRowBatchProcessor(
     batch_size: int = 256,
     rows_per_work_unit: int = 5,
     start_at: int = 0,
-    pool: typing.Optional[multiprocessing.Pool] = None) -> None:
+    pool: typing.Optional[multiprocessing.Pool] = None,
+) -> None:
   """Execute a database row-processesing function in parallel.
 
   Use this function to orchestrate the parallel execution of a function that

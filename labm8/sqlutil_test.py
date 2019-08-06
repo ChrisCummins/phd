@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:sqlutil."""
-
 import pathlib
+import typing
+
 import pytest
 import sqlalchemy as sql
-import typing
 from sqlalchemy.ext import declarative
 
 from labm8 import sqlutil
@@ -27,10 +27,12 @@ from labm8.test_data import test_protos_pb2
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
   """Test DatabaseNotFound for non-existent SQLite database."""
   with pytest.raises(sqlutil.DatabaseNotFound) as e_ctx:
-    sqlutil.CreateEngine(f'sqlite:///{tempdir.absolute()}/db.db',
-                         must_exist=True)
+    sqlutil.CreateEngine(
+        f'sqlite:///{tempdir.absolute()}/db.db',
+        must_exist=True,
+    )
   assert e_ctx.value.url == f'sqlite:///{tempdir.absolute()}/db.db'
-  assert str(e_ctx.value) == (f"Database not found: "
+  assert str(e_ctx.value) == (f'Database not found: '
                               f"'sqlite:///{tempdir.absolute()}/db.db'")
 
 
@@ -38,15 +40,15 @@ def test_CreateEngine_sqlite_invalid_relpath():
   """Test that relative paths are disabled."""
   with pytest.raises(ValueError) as e_ctx:
     sqlutil.CreateEngine(f'sqlite:///relative.db')
-  assert str(e_ctx.value) == "Relative path to SQLite database is not allowed"
+  assert str(e_ctx.value) == 'Relative path to SQLite database is not allowed'
 
 
 def test_CreateEngine_error_if_sqlite_in_memory_must_exist():
   """Error is raised if in-memory "must exist" database requested."""
   with pytest.raises(ValueError) as e_ctx:
     sqlutil.CreateEngine('sqlite://', must_exist=True)
-  assert str(e_ctx.value) == ("must_exist=True not valid for in-memory "
-                              "SQLite database")
+  assert str(e_ctx.value) == ('must_exist=True not valid for in-memory '
+                              'SQLite database')
 
 
 def test_CreateEngine_sqlite_created(tempdir: pathlib.Path):
@@ -201,8 +203,10 @@ def test_Session_GetOrAdd():
     assert s.query(Table).one().value == 42
 
 
-class AbstractTestMessage(sqlutil.ProtoBackedMixin,
-                          sqlutil.TablenameFromClassNameMixin):
+class AbstractTestMessage(
+    sqlutil.ProtoBackedMixin,
+    sqlutil.TablenameFromClassNameMixin,
+):
   """A table containing a single 'value' primary key."""
 
   proto_t = test_protos_pb2.TestMessage
@@ -219,8 +223,8 @@ class AbstractTestMessage(sqlutil.ProtoBackedMixin,
   def FromProto(proto) -> typing.Dict[str, typing.Any]:
     """Instantiate an object from protocol buffer message."""
     return {
-        "string": proto.string,
-        "number": proto.number,
+        'string': proto.string,
+        'number': proto.number,
     }
 
 
@@ -231,9 +235,9 @@ def test_ProtoBackedMixin_FromProto():
   class TestMessage(AbstractTestMessage, base):
     pass
 
-  proto = test_protos_pb2.TestMessage(string="Hello, world!", number=42)
+  proto = test_protos_pb2.TestMessage(string='Hello, world!', number=42)
   row = TestMessage(**TestMessage.FromProto(proto))
-  assert row.string == "Hello, world!"
+  assert row.string == 'Hello, world!'
   assert row.number == 42
 
 
@@ -245,8 +249,8 @@ def test_ProtoBackedMixin_SetProto():
     pass
 
   proto = test_protos_pb2.TestMessage()
-  TestMessage(string="Hello, world!", number=42).SetProto(proto)
-  assert proto.string == "Hello, world!"
+  TestMessage(string='Hello, world!', number=42).SetProto(proto)
+  assert proto.string == 'Hello, world!'
   assert proto.number == 42
 
 
@@ -257,9 +261,9 @@ def test_ProtoBackedMixin_ToProto():
   class TestMessage(AbstractTestMessage, base):
     pass
 
-  row = TestMessage(string="Hello, world!", number=42)
+  row = TestMessage(string='Hello, world!', number=42)
   proto = row.ToProto()
-  assert proto.string == "Hello, world!"
+  assert proto.string == 'Hello, world!'
   assert proto.number == 42
 
 
@@ -274,7 +278,7 @@ def test_ProtoBackedMixin_FromFile(tempdir: pathlib.Path):
     f.write('string: "Hello, world!"')
 
   row = TestMessage(**TestMessage.FromFile(tempdir / 'proto.pbtxt'))
-  assert row.string == "Hello, world!"
+  assert row.string == 'Hello, world!'
 
 
 def test_ColumnTypes_BinaryArray():
@@ -356,7 +360,7 @@ def test_ResilientAddManyAndCommit_conflicting_primary_key():
       Table(col=1),
       Table(col=1),
       Table(col=1),
-      Table(col=1)
+      Table(col=1),
   ]
   failures = sqlutil.ResilientAddManyAndCommit(db, mapped)
 

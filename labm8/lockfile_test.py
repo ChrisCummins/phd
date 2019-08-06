@@ -14,8 +14,9 @@
 """Unit tests for //labm8:lockfile."""
 import inspect
 import pathlib
-import pytest
 import tempfile
+
+import pytest
 
 from labm8 import lockfile
 from labm8 import pbutil
@@ -38,8 +39,8 @@ def dummy_lockfile_proto() -> lockfile_pb2.LockFile:
 
 
 @pytest.fixture(scope='function')
-def dummy_lockfile_path(
-    dummy_lockfile_proto: lockfile_pb2.LockFile) -> pathlib.Path:
+def dummy_lockfile_path(dummy_lockfile_proto: lockfile_pb2.LockFile,
+                       ) -> pathlib.Path:
   """Yield a path to a lockfile proto."""
   with tempfile.TemporaryDirectory() as d:
     pbutil.ToFile(dummy_lockfile_proto, pathlib.Path(d) / 'LOCK.pbtxt')

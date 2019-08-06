@@ -1,7 +1,8 @@
 """Implementations of custom flag types for absl.flags."""
 import pathlib
-from absl import flags as absl_flags
 from typing import Callable
+
+from absl import flags as absl_flags
 
 
 class PathParser(absl_flags.ArgumentParser):

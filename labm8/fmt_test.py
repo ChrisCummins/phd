@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:fmt."""
-
 import pytest
 
 from labm8 import app
@@ -43,24 +42,28 @@ def test_Indent_two():
 
 
 def test_table():
-  assert (["foo", "1", "bar", "2"] == fmt.table(
-      (("foo", 1), ("bar", 2))).split())
+  assert (['foo', '1', 'bar', '2'] == fmt.table(
+      (('foo', 1), ('bar', 2)),).split())
 
 
 def test_table_columns():
-  assert ((["type", "value", "foo", "1", "bar", "2"]) == fmt.table(
-      (("foo", 1), ("bar", 2)), columns=("type", "value")).split())
+  assert ((['type', 'value', 'foo', '1', 'bar', '2']) == fmt.table(
+      (('foo', 1), ('bar', 2)),
+      columns=('type', 'value'),
+  ).split())
 
 
 def test_table_bad_columns():
   with pytest.raises(fmt.Error):
-    fmt.table((("foo", 1), ("bar", 2)),
-              columns=("type", "value", "too", "many", "values"))
+    fmt.table(
+        (('foo', 1), ('bar', 2)),
+        columns=('type', 'value', 'too', 'many', 'values'),
+    )
 
 
 def test_table_bad_rows():
   with pytest.raises(fmt.Error):
-    fmt.table((("foo", 1), ("bar", 2), ("car",)))
+    fmt.table((('foo', 1), ('bar', 2), ('car',)))
 
 
 if __name__ == '__main__':

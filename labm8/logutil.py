@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for converting between absl logging output and log protos."""
-import sys
-
 import contextlib
 import datetime
 import pathlib
 import re
+import sys
 import typing
+
 from absl import logging
 
 from labm8 import app
@@ -32,7 +32,7 @@ FLAGS = app.FLAGS
 ABSL_LOGGING_LINE_RE = re.compile(
     r'(?P<lvl>[IWEF])(?P<timestamp>\d\d\d\d \d\d:\d\d:\d\d.\d\d\d\d\d\d) '
     r'(?P<thread_id>\d+) (?P<filename>[^:]+):(?P<lineno>\d+)] '
-    r'(?P<contents>.*)')
+    r'(?P<contents>.*)',)
 
 # Convert a single letter absl logging prefix to a LogRecord.LogLevel. Since
 # absl logging uses the same prefix for logging.DEBUG and logging.INFO, this
@@ -45,9 +45,10 @@ ABSL_LEVEL_TO_LOG_RECORD_LEVEL = {
 }
 
 
-def DatetimeFromAbslTimestamp(timestamp: str,
-                              year: int = datetime.datetime.utcnow().year
-                             ) -> datetime.datetime:
+def DatetimeFromAbslTimestamp(
+    timestamp: str,
+    year: int = datetime.datetime.utcnow().year,
+) -> datetime.datetime:
   """Convert absl logging timestamp to datetime.
 
   WARNING: Absl logs do not include the year, so if parsing logs from previous
@@ -65,9 +66,10 @@ def DatetimeFromAbslTimestamp(timestamp: str,
   return dt
 
 
-def ConertAbslLogToProtos(logs: str,
-                          year: int = datetime.datetime.utcnow().year
-                         ) -> typing.List[logging_pb2.LogRecord]:
+def ConertAbslLogToProtos(
+    logs: str,
+    year: int = datetime.datetime.utcnow().year,
+) -> typing.List[logging_pb2.LogRecord]:
   """Convert the output of logging with absl logging to LogRecord protos.
 
   WARNING: Absl logs do not include the year, so if parsing logs from previous
@@ -92,13 +94,16 @@ def ConertAbslLogToProtos(logs: str,
           logging_pb2.LogRecord(
               level=ABSL_LEVEL_TO_LOG_RECORD_LEVEL[starting_match.group('lvl')],
               date_utc_epoch_ms=labdate.MillisecondsTimestamp(
-                  DatetimeFromAbslTimestamp(starting_match.group('timestamp'),
-                                            year=year)),
+                  DatetimeFromAbslTimestamp(
+                      starting_match.group('timestamp'),
+                      year=year,
+                  ),),
               thread_id=int(starting_match.group('thread_id')),
               file_name=starting_match.group('filename'),
               line_number=int(starting_match.group('lineno')),
-              message='\n'.join([starting_match.group('contents')] +
-                                lines_buffer).rstrip()))
+              message='\n'.join(
+                  [starting_match.group('contents')] + lines_buffer,).rstrip(),
+          ),)
 
   for line in logs.split('\n'):
     m = ABSL_LOGGING_LINE_RE.match(line)
@@ -115,9 +120,11 @@ def ConertAbslLogToProtos(logs: str,
   return records
 
 
-def StartTeeLogsToFile(program_name: str = None,
-                       log_dir: str = None,
-                       file_log_level: int = logging.DEBUG) -> None:
+def StartTeeLogsToFile(
+    program_name: str = None,
+    log_dir: str = None,
+    file_log_level: int = logging.DEBUG,
+) -> None:
   """Log messages to file as well as stderr.
 
   Args:
@@ -147,9 +154,11 @@ def StopTeeLogsToFile():
 
 
 @contextlib.contextmanager
-def TeeLogsToFile(program_name: str = None,
-                  log_dir: str = None,
-                  file_log_level: int = logging.DEBUG):
+def TeeLogsToFile(
+    program_name: str = None,
+    log_dir: str = None,
+    file_log_level: int = logging.DEBUG,
+):
   """Temporarily enable logging to file.
 
   Args:

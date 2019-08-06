@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:test."""
-
 import pathlib
 import sys
 import tempfile
@@ -88,29 +87,31 @@ def test_that_runs_on_linux_or_darwin():
 
 def test_captured_stdout():
   """A test which prints to stdout."""
-  print("This message is captured, unless run with --notest_capture_output")
+  print('This message is captured, unless run with --notest_capture_output')
 
 
 def test_captured_stderr():
   """A test which prints to stderr."""
-  print("This message is captured, unless run with --notest_capture_output",
-        file=sys.stderr)
+  print(
+      'This message is captured, unless run with --notest_capture_output',
+      file=sys.stderr,
+  )
 
 
 def test_captured_logging_info():
   """A test which prints to app.Log"""
-  app.Log(1, "This message is captured unless run with --notest_capture_output")
+  app.Log(1, 'This message is captured unless run with --notest_capture_output')
 
 
 def test_captured_logging_debug():
   """A test which prints to app.Log"""
-  app.Log(2, "This message is captured unless run with --notest_capture_output")
+  app.Log(2, 'This message is captured unless run with --notest_capture_output')
 
 
 def test_captured_logging_warning():
   """A test which prints to app.Warning"""
   app.Warning(
-      "This message is captured unless run with --notest_capture_output")
+      'This message is captured unless run with --notest_capture_output',)
 
 
 if __name__ == '__main__':

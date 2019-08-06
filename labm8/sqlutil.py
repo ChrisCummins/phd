@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for working with sqlalchemy."""
-import time
-from sqlalchemy import func
-from sqlalchemy import orm
-
 import collections
 import contextlib
-import pandas as pd
 import pathlib
-import sqlalchemy as sql
+import time
 import typing
+
+import pandas as pd
+import sqlalchemy as sql
 from absl import flags as absl_flags
+from sqlalchemy import func
+from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
@@ -34,18 +34,24 @@ from labm8.internal import logging
 FLAGS = absl_flags.FLAGS
 
 absl_flags.DEFINE_boolean(
-    'sqlutil_echo', False,
+    'sqlutil_echo',
+    False,
     'If True, the Engine will log all statements as well as a repr() of their '
-    'parameter lists to the engines logger, which defaults to sys.stdout.')
+    'parameter lists to the engines logger, which defaults to sys.stdout.',
+)
 absl_flags.DEFINE_integer(
-    'mysql_engine_pool_size', 5,
+    'mysql_engine_pool_size',
+    5,
     'The number of connections to keep open inside the connection pool. A '
-    '--mysql_engine_pool_size of 0 indicates no limit')
+    '--mysql_engine_pool_size of 0 indicates no limit',
+)
 absl_flags.DEFINE_integer(
-    'mysql_engine_max_overflow', 10,
+    'mysql_engine_max_overflow',
+    10,
     'The number of connections to allow in connection pool “overflow”, that '
     'is connections that can be opened above and beyond the '
-    '--mysql_engine_pool_size setting')
+    '--mysql_engine_pool_size setting',
+)
 
 # The Query type is returned by Session.query(). This is a convenience for type
 # annotations.
@@ -103,8 +109,13 @@ def GetOrAdd(session: sql.orm.session.Session,
     params.update(defaults or {})
     instance = model(**params)
     session.add(instance)
-    logging.Log(logging.GetCallingModuleName(), 5, 'New record: %s(%s)',
-                model.__name__, params)
+    logging.Log(
+        logging.GetCallingModuleName(),
+        5,
+        'New record: %s(%s)',
+        model.__name__,
+        params,
+    )
   return instance
 
 
@@ -193,10 +204,13 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     # database exists.
     engine = sql.create_engine('/'.join(url.split('/')[:-1]))
     database = url.split('/')[-1].split('?')[0]
-    query = engine.execute(sql.text('SELECT SCHEMA_NAME FROM '
-                                    'INFORMATION_SCHEMA.SCHEMATA WHERE '
-                                    'SCHEMA_NAME = :database'),
-                           database=database)
+    query = engine.execute(
+        sql.text(
+            'SELECT SCHEMA_NAME FROM '
+            'INFORMATION_SCHEMA.SCHEMATA WHERE '
+            'SCHEMA_NAME = :database',),
+        database=database,
+    )
 
     # Engine-specific options.
     engine_args['pool_size'] = FLAGS.mysql_engine_pool_size
@@ -217,12 +231,12 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     # This project (phd) deliberately disallows relative paths due to Bazel
     # sandboxing.
     if url != 'sqlite://' and not url.startswith('sqlite:////'):
-      raise ValueError("Relative path to SQLite database is not allowed")
+      raise ValueError('Relative path to SQLite database is not allowed')
 
     if url == 'sqlite://':
       if must_exist:
         raise ValueError(
-            'must_exist=True not valid for in-memory SQLite database')
+            'must_exist=True not valid for in-memory SQLite database',)
     else:
       path = pathlib.Path(url[len('sqlite:///'):])
       if must_exist:
@@ -240,7 +254,8 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     database = url.split('/')[-1]
     query = conn.execute(
         sql.text('SELECT 1 FROM pg_database WHERE datname = :database'),
-        database=database)
+        database=database,
+    )
     if not query.first():
       if must_exist:
         raise DatabaseNotFound(url)
@@ -399,15 +414,17 @@ class Database(object):
     if self.url.startswith('mysql://'):
       engine = sql.create_engine('/'.join(self.url.split('/')[:-1]))
       database = self.url.split('/')[-1].split('?')[0]
-      engine.execute(sql.text('DROP DATABASE IF EXISTS :database'),
-                     database=database)
+      engine.execute(
+          sql.text('DROP DATABASE IF EXISTS :database'),
+          database=database,
+      )
     elif self.url.startswith('sqlite://'):
       path = pathlib.Path(self.url[len('sqlite:///'):])
       assert path.is_file()
       path.unlink()
     else:
       raise NotImplementedError(
-          "Unsupported operation DROP for database: '{self.url}'")
+          "Unsupported operation DROP for database: '{self.url}'",)
 
   @property
   def url(self) -> str:
@@ -464,10 +481,12 @@ def QueryToDataFrame(session: Session, query: Query) -> pd.DataFrame:
   return pd.read_sql(query.statement, session.bind)
 
 
-def ModelToDataFrame(session: Session,
-                     model,
-                     columns: typing.Optional[typing.List[str]] = None,
-                     query_identity=lambda q: q):
+def ModelToDataFrame(
+    session: Session,
+    model,
+    columns: typing.Optional[typing.List[str]] = None,
+    query_identity=lambda q: q,
+):
   """Construct and execute a query reads an object's fields to a dataframe.
 
   Args:
@@ -533,7 +552,7 @@ class ProtoBackedMixin(object):
       proto: A protocol buffer.
     """
     raise NotImplementedError(
-        f'{type(self).__name__}.SetProto() not implemented')
+        f'{type(self).__name__}.SetProto() not implemented',)
 
   def ToProto(self) -> pbutil.ProtocolBuffer:
     """Serialize the instance to protocol buffer.
@@ -546,8 +565,10 @@ class ProtoBackedMixin(object):
     return proto
 
   @classmethod
-  def FromProto(cls,
-                proto: pbutil.ProtocolBuffer) -> typing.Dict[str, typing.Any]:
+  def FromProto(
+      cls,
+      proto: pbutil.ProtocolBuffer,
+  ) -> typing.Dict[str, typing.Any]:
     """Return a dictionary of instance constructor args from proto.
 
     Examples:
@@ -564,7 +585,7 @@ class ProtoBackedMixin(object):
       A dictionary of constructor arguments.
     """
     raise NotImplementedError(
-        f'{type(self).__name__}.FromProto() not implemented')
+        f'{type(self).__name__}.FromProto() not implemented',)
 
   @classmethod
   def FromFile(cls, path: pathlib.Path) -> typing.Dict[str, typing.Any]:
@@ -592,14 +613,17 @@ class ProtoBackedMixin(object):
 # last row in the results set, max_rows is the total number of rows in the query
 # (only set if compute_max_rows, else None), and rows it the results.
 OffsetLimitQueryResultsBatch = collections.namedtuple(
-    'QueryResultsBatch', ['batch_num', 'offset', 'limit', 'max_rows', 'rows'])
+    'QueryResultsBatch',
+    ['batch_num', 'offset', 'limit', 'max_rows', 'rows'],
+)
 
 
-def OffsetLimitBatchedQuery(query: Query,
-                            batch_size: int = 1000,
-                            start_at: int = 0,
-                            compute_max_rows: bool = False
-                           ) -> typing.Iterator[OffsetLimitQueryResultsBatch]:
+def OffsetLimitBatchedQuery(
+    query: Query,
+    batch_size: int = 1000,
+    start_at: int = 0,
+    compute_max_rows: bool = False,
+) -> typing.Iterator[OffsetLimitQueryResultsBatch]:
   """Split and return the rows resulting from a query in to batches.
 
   This iteratively runs the query `SELECT * FROM * OFFSET i LIMIT batch_size;`
@@ -630,11 +654,13 @@ def OffsetLimitBatchedQuery(query: Query,
     batch_num += 1
     batch = query.offset(i).limit(batch_size).all()
     if batch:
-      yield OffsetLimitQueryResultsBatch(batch_num=batch_num,
-                                         offset=i,
-                                         limit=i + batch_size,
-                                         max_rows=max_rows,
-                                         rows=batch)
+      yield OffsetLimitQueryResultsBatch(
+          batch_num=batch_num,
+          offset=i,
+          limit=i + batch_size,
+          max_rows=max_rows,
+          rows=batch,
+      )
       i += len(batch)
     else:
       break
@@ -680,8 +706,9 @@ class ColumnTypes(object):
     # https://dev.mysql.com/doc/refman/5.6/en/innodb-restrictions.html
     MAX_LENGTH = 767
     if length and length > MAX_LENGTH:
-      raise ValueError(f"IndexableString requested length {length} is greater "
-                       f"than maximum allowed {MAX_LENGTH}")
+      raise ValueError(
+          f'IndexableString requested length {length} is greater '
+          f'than maximum allowed {MAX_LENGTH}',)
     return sql.String(MAX_LENGTH)
 
   @staticmethod
@@ -698,17 +725,23 @@ class ColumnFactory(object):
   """Abstract class containing methods for generating columns."""
 
   @staticmethod
-  def MillisecondDatetime(nullable: bool = False,
-                          default=labdate.GetUtcMillisecondsNow):
+  def MillisecondDatetime(
+      nullable: bool = False,
+      default=labdate.GetUtcMillisecondsNow,
+  ):
     """Return a datetime column with millisecond precision.
 
     Returns:
       A column which defaults to UTC now.
     """
-    return sql.Column(sql.DateTime().with_variant(mysql.DATETIME(fsp=3),
-                                                  'mysql'),
-                      nullable=nullable,
-                      default=default)
+    return sql.Column(
+        sql.DateTime().with_variant(
+            mysql.DATETIME(fsp=3),
+            'mysql',
+        ),
+        nullable=nullable,
+        default=default,
+    )
 
 
 def ResilientAddManyAndCommit(db: Database, mapped: typing.Iterable[Base]):
@@ -736,9 +769,13 @@ def ResilientAddManyAndCommit(db: Database, mapped: typing.Iterable[Base]):
     with db.Session(commit=True) as session:
       session.add_all(mapped)
   except sql.exc.SQLAlchemyError as e:
-    logging.Log(logging.GetCallingModuleName(), 1,
-                'Caught error while committing %d mapped objects: %s',
-                len(mapped), e)
+    logging.Log(
+        logging.GetCallingModuleName(),
+        1,
+        'Caught error while committing %d mapped objects: %s',
+        len(mapped),
+        e,
+    )
 
     # Divide and conquer. If we're committing only a single object, then a
     # failure to commit it means that we can do nothing other than return it.
@@ -778,10 +815,7 @@ class BufferedDatabaseWriter(object):
         writer.AddMany(objs)
   """
 
-  def __init__(self,
-               db: Database,
-               flush_secs: int = 30,
-               max_queue: int = 1024):
+  def __init__(self, db: Database, flush_secs: int = 30, max_queue: int = 1024):
     """Create a BufferedDatabaseWriter.
 
     Args:
@@ -830,8 +864,11 @@ class BufferedDatabaseWriter(object):
     """Commit all buffered mapped objects to database."""
     failures = ResilientAddManyAndCommit(self._db, self._to_commit)
     if len(failures):
-      logging.Log(logging.GetCallingModuleName(), 1,
-                  'BufferedDatabaseWriter failed to commit %d objects',
-                  len(failures))
+      logging.Log(
+          logging.GetCallingModuleName(),
+          1,
+          'BufferedDatabaseWriter failed to commit %d objects',
+          len(failures),
+      )
     self._to_commit = []
     self._last_commit = time.time()

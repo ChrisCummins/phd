@@ -13,8 +13,9 @@
 # limitations under the License.
 """Unit tests for //labm8:pbutil."""
 import pathlib
-import pytest
 import tempfile
+
+import pytest
 
 from labm8 import pbutil
 from labm8 import test
@@ -22,8 +23,16 @@ from labm8.test_data import test_protos_pb2
 
 # A list of all of the filename suffixes to test each function with.
 SUFFIXES_TO_TEST = [
-    '', '.gz', '.txt', '.txt.gz', '.pbtxt', '.pbtxt.gz', '.json', '.json.gz',
-    '.unknown-suffix', '.unknown-suffix.gz'
+    '',
+    '.gz',
+    '.txt',
+    '.txt.gz',
+    '.pbtxt',
+    '.pbtxt.gz',
+    '.json',
+    '.json.gz',
+    '.unknown-suffix',
+    '.unknown-suffix.gz',
 ]
 
 # ToFile() tests.
@@ -74,9 +83,11 @@ def test_FromString_empty_string_required_fields():
 
 def test_FromString_empty_string_required_fields_uninitialized_okay():
   """Test that an empty string raises DecodeError if uninitialized fields."""
-  proto = pbutil.FromString('',
-                            test_protos_pb2.TestMessage(),
-                            uninitialized_okay=True)
+  proto = pbutil.FromString(
+      '',
+      test_protos_pb2.TestMessage(),
+      uninitialized_okay=True,
+  )
   assert not proto.string
 
 
@@ -89,8 +100,10 @@ def test_FromString_valid_input():
 def test_FromString_DecodeError_unknown_field():
   """Test that DecodeError is raised if string contains unknown field."""
   with pytest.raises(pbutil.DecodeError) as e_info:
-    proto = pbutil.FromString('foo: "bar"',
-                              test_protos_pb2.AnotherTestMessage())
+    proto = pbutil.FromString(
+        'foo: "bar"',
+        test_protos_pb2.AnotherTestMessage(),
+    )
   assert ('1:1 : Message type "labm8.AnotherTestMessage" '
           'has no field named "foo".') == str(e_info.value)
 
@@ -104,7 +117,9 @@ def test_FromFile_FileNotFoundError(suffix):
   with tempfile.TemporaryDirectory(prefix='labm8_proto_') as d:
     with pytest.raises(FileNotFoundError):
       pbutil.FromFile(
-          pathlib.Path(d) / f'proto{suffix}', test_protos_pb2.TestMessage())
+          pathlib.Path(d) / f'proto{suffix}',
+          test_protos_pb2.TestMessage(),
+      )
 
 
 @pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
@@ -119,8 +134,10 @@ def test_FromFile_IsADirectoryError(suffix):
 def test_FromFile_required_fields_not_set(suffix):
   """Test that DecodeError raised if required fields not set."""
   with tempfile.NamedTemporaryFile(prefix='labm8_proto_', suffix=suffix) as f:
-    pbutil.ToFile(test_protos_pb2.AnotherTestMessage(number=1),
-                  pathlib.Path(f.name))
+    pbutil.ToFile(
+        test_protos_pb2.AnotherTestMessage(number=1),
+        pathlib.Path(f.name),
+    )
     with pytest.raises(pbutil.DecodeError) as e_info:
       pbutil.FromFile(pathlib.Path(f.name), test_protos_pb2.TestMessage())
     assert f"Required fields not set: '{f.name}'" == str(e_info.value)
@@ -131,11 +148,15 @@ def test_FromFile_required_fields_not_set_uninitialized_okay(suffix):
   """Test that DecodeError not raised if required fields not set."""
   with tempfile.NamedTemporaryFile(prefix='labm8_proto_', suffix=suffix) as f:
     proto_in = test_protos_pb2.AnotherTestMessage(number=1)
-    pbutil.ToFile(test_protos_pb2.AnotherTestMessage(number=1),
-                  pathlib.Path(f.name))
-    pbutil.FromFile(pathlib.Path(f.name),
-                    test_protos_pb2.TestMessage(),
-                    uninitialized_okay=True)
+    pbutil.ToFile(
+        test_protos_pb2.AnotherTestMessage(number=1),
+        pathlib.Path(f.name),
+    )
+    pbutil.FromFile(
+        pathlib.Path(f.name),
+        test_protos_pb2.TestMessage(),
+        uninitialized_okay=True,
+    )
 
 
 @pytest.mark.parametrize('suffix', SUFFIXES_TO_TEST)
@@ -237,8 +258,11 @@ def test_AssertFieldConstraint_user_callback_passes():
   t = test_protos_pb2.TestMessage()
   t.string = 'foo'
   t.number = 5
-  assert 'foo' == pbutil.AssertFieldConstraint(t,
-                                               'string', lambda x: x == 'foo')
+  assert 'foo' == pbutil.AssertFieldConstraint(
+      t,
+      'string',
+      lambda x: x == 'foo',
+  )
   assert 5 == pbutil.AssertFieldConstraint(t, 'number', lambda x: 1 < x < 10)
 
 
@@ -250,11 +274,11 @@ def test_AssertFieldConstraint_user_callback_fails():
   with pytest.raises(pbutil.ProtoValueError) as e_info:
     pbutil.AssertFieldConstraint(t, 'string', lambda x: x == 'bar')
   assert "Field fails constraint check: 'TestMessage.string'" == str(
-      e_info.value)
+      e_info.value,)
   with pytest.raises(pbutil.ProtoValueError) as e_info:
     pbutil.AssertFieldConstraint(t, 'number', lambda x: 10 < x < 100)
   assert "Field fails constraint check: 'TestMessage.number'" == str(
-      e_info.value)
+      e_info.value,)
 
 
 def test_AssertFieldConstraint_user_callback_raises_exception():
@@ -278,8 +302,12 @@ def test_AssertFieldConstraint_user_callback_custom_fail_message():
 
   # Constraint function fails.
   with pytest.raises(pbutil.ProtoValueError) as e_info:
-    pbutil.AssertFieldConstraint(t, 'string', lambda x: x == 'bar',
-                                 'Hello, world!')
+    pbutil.AssertFieldConstraint(
+        t,
+        'string',
+        lambda x: x == 'bar',
+        'Hello, world!',
+    )
   assert 'Hello, world!' == str(e_info.value)
 
   # Field not set.
@@ -312,25 +340,25 @@ class TestMessage(pbutil.ProtoBackedMixin):
 
 def test_ProtoBackedMixin_FromProto():
   """Test FromProto constructor for proto backed class."""
-  proto = test_protos_pb2.TestMessage(string="Hello, world!", number=42)
+  proto = test_protos_pb2.TestMessage(string='Hello, world!', number=42)
   instance = TestMessage.FromProto(proto)
-  assert instance.string == "Hello, world!"
+  assert instance.string == 'Hello, world!'
   assert instance.number == 42
 
 
 def test_ProtoBackedMixin_SetProto():
   """Test SetProto method for proto backed class."""
   proto = test_protos_pb2.TestMessage()
-  TestMessage(string="Hello, world!", number=42).SetProto(proto)
-  assert proto.string == "Hello, world!"
+  TestMessage(string='Hello, world!', number=42).SetProto(proto)
+  assert proto.string == 'Hello, world!'
   assert proto.number == 42
 
 
 def test_ProtoBackedMixin_ToProto():
   """Test FromProto constructor for proto backed class."""
-  instance = TestMessage(string="Hello, world!", number=42)
+  instance = TestMessage(string='Hello, world!', number=42)
   proto = instance.ToProto()
-  assert proto.string == "Hello, world!"
+  assert proto.string == 'Hello, world!'
   assert proto.number == 42
 
 
@@ -338,11 +366,13 @@ def test_ProtoBackedMixin_ToProto():
 def test_ProtoBackedMixin_FromProtoFile(suffix: str, tempdir: pathlib.Path):
   """Test FromProtoFile constructor for proto backed class."""
   proto_path = tempdir / f'proto{suffix}'
-  pbutil.ToFile(test_protos_pb2.TestMessage(string="Hello, world!", number=42),
-                proto_path)
+  pbutil.ToFile(
+      test_protos_pb2.TestMessage(string='Hello, world!', number=42),
+      proto_path,
+  )
 
   instance = TestMessage.FromProtoFile(proto_path)
-  assert instance.string == "Hello, world!"
+  assert instance.string == 'Hello, world!'
   assert instance.number == 42
 
 

@@ -1,5 +1,4 @@
 """A "hello world" app."""
-
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -12,9 +11,9 @@ def main():
   """Main entry point."""
   if FLAGS.create_file:
     with open('/tmp/hello.txt', 'w') as f:
-      f.write("Hello, world!\n")
+      f.write('Hello, world!\n')
   elif FLAGS.hello_to:
-    print(f"Hello to {FLAGS.hello_to}!")
+    print(f'Hello to {FLAGS.hello_to}!')
   else:
     print('Hello, world!')
 

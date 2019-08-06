@@ -22,13 +22,14 @@ FLAGS = app.FLAGS
         ('.tar.bz2', lambda f: tarfile.open(f, 'w:bz2'), lambda a: a.add),
     ],
     # Parameter tuple names.
-    ids=['zip', 'tar.bz2'])
+    ids=['zip', 'tar.bz2'],
+)
 def test_archive(request, tempdir: pathlib.Path) -> pathlib.Path:
   """Yield path to an archive containing a single 'a.txt' file."""
   extension, open_fn, write_fn = request.param
   path = tempdir / f'a{extension}'
   with open(tempdir / 'a.txt', 'w') as f:
-    f.write("Hello, world!")
+    f.write('Hello, world!')
   with open_fn(path) as a:
     write_fn(a)(tempdir / 'a.txt', arcname='a.txt')
   (tempdir / 'a.txt').unlink()
@@ -71,8 +72,10 @@ def test_Archive_unsupported_suffixes(tempdir: pathlib.Path, suffix: str):
 
   with pytest.raises(archive.UnsupportedArchiveFormat) as e_ctx:
     archive.Archive(path)
-  assert re.match(f"Unsupported file extension '(.+)' for archive 'a{suffix}'",
-                  str(e_ctx.value))
+  assert re.match(
+      f"Unsupported file extension '(.+)' for archive 'a{suffix}'",
+      str(e_ctx.value),
+  )
 
 
 def test_Archive_as_context_manager(test_archive: pathlib.Path):
@@ -82,7 +85,7 @@ def test_Archive_as_context_manager(test_archive: pathlib.Path):
     assert (d / 'a.txt').is_file()
     assert len(list(d.iterdir())) == 1
     with open(d / 'a.txt') as f:
-      assert f.read() == "Hello, world!"
+      assert f.read() == 'Hello, world!'
 
 
 def test_Archive_ExtractAll(test_archive: pathlib.Path, tempdir: pathlib.Path):
@@ -95,11 +98,13 @@ def test_Archive_ExtractAll(test_archive: pathlib.Path, tempdir: pathlib.Path):
   assert (tempdir / 'a.txt').is_file()
   assert len(list(tempdir.iterdir())) == 2  # the zip file and a.txt
   with open(tempdir / 'a.txt') as f:
-    assert f.read() == "Hello, world!"
+    assert f.read() == 'Hello, world!'
 
 
-def test_Archive_ExtractAll_parents(test_archive: pathlib.Path,
-                                    tempdir: pathlib.Path):
+def test_Archive_ExtractAll_parents(
+    test_archive: pathlib.Path,
+    tempdir: pathlib.Path,
+):
   """Test that ExtractAll creates necessary parent directories"""
   # Open the archive and check that it still exists.
   archive.Archive(test_archive).ExtractAll(tempdir / 'foo/bar/car')
@@ -109,7 +114,7 @@ def test_Archive_ExtractAll_parents(test_archive: pathlib.Path,
   assert (tempdir / 'foo/bar/car/a.txt').is_file()
   assert len(list(tempdir.iterdir())) == 2  # the zip file and 'foo/'
   with open(tempdir / 'foo/bar/car/a.txt') as f:
-    assert f.read() == "Hello, world!"
+    assert f.read() == 'Hello, world!'
 
 
 if __name__ == '__main__':

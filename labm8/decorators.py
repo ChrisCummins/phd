@@ -64,7 +64,7 @@ def timeout(seconds: int):
   """
 
   def _RaiseTimoutError(signum, frame):
-    raise TimeoutError(f"Function failed to complete within {seconds} seconds")
+    raise TimeoutError(f'Function failed to complete within {seconds} seconds')
 
   # Register a function to raise a TimeoutError on the signal.
   signal.signal(signal.SIGALRM, _RaiseTimoutError)

@@ -14,7 +14,6 @@
 """High level filesystem interface.
 """
 import contextlib
-import os
 import os.path
 import pathlib
 import re
@@ -195,9 +194,11 @@ def isdir(*components):
     return False
 
 
-def ls(root: typing.Union[str, pathlib.Path] = ".",
-       abspaths=False,
-       recursive=False):
+def ls(
+    root: typing.Union[str, pathlib.Path] = '.',
+    abspaths=False,
+    recursive=False,
+):
   """
   Return a list of files in directory.
 
@@ -232,8 +233,9 @@ def ls(root: typing.Union[str, pathlib.Path] = ".",
 
   def _expand_subdirs(file):
     if isdir(path(root, file)):
-      return [file
-             ] + [path(file, x) for x in ls(path(root, file), recursive=True)]
+      return [
+          file,
+      ] + [path(file, x) for x in ls(path(root, file), recursive=True)]
     else:
       return [file]
 
@@ -255,7 +257,7 @@ def ls(root: typing.Union[str, pathlib.Path] = ".",
     return list(sorted(os.listdir(root)))
 
 
-def lsdirs(root=".", **kwargs):
+def lsdirs(root='.', **kwargs):
   """
   Return only subdirectories from a directory listing.
 
@@ -278,7 +280,7 @@ def lsdirs(root=".", **kwargs):
   return [_path for _path in paths if isdir(path(root, _path))]
 
 
-def lsfiles(root: typing.Union[str, pathlib.Path] = ".", **kwargs):
+def lsfiles(root: typing.Union[str, pathlib.Path] = '.', **kwargs):
   """
   Return only files from a directory listing.
 
@@ -320,7 +322,7 @@ def rm(*components, **kwargs):
         paths (default: True).
   """
   _path = path(*components)
-  glob = kwargs.get("glob", True)
+  glob = kwargs.get('glob', True)
   paths = iglob(_path) if glob else [_path]
 
   for file in paths:
@@ -437,8 +439,8 @@ def read(*components, **kwargs):
 
       IOError: if reading path fails
   """
-  rstrip = kwargs.get("rstrip", True)
-  comment_char = kwargs.get("comment_char", None)
+  rstrip = kwargs.get('rstrip', True)
+  comment_char = kwargs.get('comment_char', None)
 
   ignore_comments = comment_char is not None
 
@@ -448,8 +450,8 @@ def read(*components, **kwargs):
 
   # Multiple definitions to handle all cases.
   if ignore_comments:
-    comment_line_re = re.compile("^\s*{char}".format(char=comment_char))
-    not_comment_re = re.compile("[^{char}]+".format(char=comment_char))
+    comment_line_re = re.compile('^\s*{char}'.format(char=comment_char))
+    not_comment_re = re.compile('[^{char}]+'.format(char=comment_char))
 
     if rstrip:
       # Ignore comments, and right strip results.
@@ -486,7 +488,7 @@ def du(*components, **kwargs):
   Returns:
       int or str: If "human_readble" kwarg is True, return str, else int.
   """
-  human_readable = kwargs.get("human_readable", True)
+  human_readable = kwargs.get('human_readable', True)
 
   _path = path(*components)
   if not exists(_path):
@@ -602,11 +604,13 @@ def Read(filename: typing.Union[str, pathlib.Path]) -> str:
     return fp.read()
 
 
-def Write(filename: typing.Union[str, pathlib.Path],
-          contents: bytes,
-          overwrite_existing: bool = True,
-          mode: int = 0o0666,
-          gid: int = None) -> pathlib.Path:
+def Write(
+    filename: typing.Union[str, pathlib.Path],
+    contents: bytes,
+    overwrite_existing: bool = True,
+    mode: int = 0o0666,
+    gid: int = None,
+) -> pathlib.Path:
   """Create a file 'filename' with 'contents', with the mode given in 'mode'.
 
   The 'mode' is modified by the umask, as in open(2).  If
@@ -648,10 +652,12 @@ def Write(filename: typing.Union[str, pathlib.Path],
   return pathlib.Path(filename)
 
 
-def AtomicWrite(filename: typing.Union[str, pathlib.Path],
-                contents: bytes,
-                mode: int = 0o0666,
-                gid: int = None) -> None:
+def AtomicWrite(
+    filename: typing.Union[str, pathlib.Path],
+    contents: bytes,
+    mode: int = 0o0666,
+    gid: int = None,
+) -> None:
   """Create a file 'filename' with 'contents' atomically.
 
   As in Write, 'mode' is modified by the umask.  This creates and moves

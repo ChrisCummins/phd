@@ -97,30 +97,37 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs) -> str:
   # Check that each row is the same length.
   for i, row in enumerate(rows[1:]):
     if len(row) != num_columns:
-      raise Error("Number of columns in row {i_row} ({c_row}) "
-                  "does not match number of columns in row 0 ({z_row})".format(
-                      i_row=i, c_row=len(row), z_row=num_columns))
+      raise Error(
+          'Number of columns in row {i_row} ({c_row}) '
+          'does not match number of columns in row 0 ({z_row})'.format(
+              i_row=i,
+              c_row=len(row),
+              z_row=num_columns,
+          ),)
 
   if columns is None:
     # Default parameters.
-    if "header" not in kwargs:
-      kwargs["header"] = False
+    if 'header' not in kwargs:
+      kwargs['header'] = False
   elif len(columns) != num_columns:
     # Check that number of columns matches number of columns in
     # rows.
-    raise Error("Number of columns in header ({c_header}) does not "
-                "match the number of columns in the data ({c_rows})".format(
-                    c_header=len(columns), c_rows=num_columns))
+    raise Error(
+        'Number of columns in header ({c_header}) does not '
+        'match the number of columns in the data ({c_rows})'.format(
+            c_header=len(columns),
+            c_rows=num_columns,
+        ),)
 
   # Default arguments.
-  if "index" not in kwargs:
-    kwargs["index"] = False
+  if 'index' not in kwargs:
+    kwargs['index'] = False
 
-  data_args["columns"] = columns
+  data_args['columns'] = columns
 
   string = pd.DataFrame(list(rows), **data_args).to_string(**kwargs)
   if output is None:
     return string
   else:
-    print(string, file=open(output, "w"))
-    print("Wrote", output)
+    print(string, file=open(output, 'w'))
+    print('Wrote', output)

@@ -17,7 +17,6 @@ Checksums files and directories and cache results. If a file or directory has
 not been modified, subsequent hashes are cache hits. Hashes are recomputed
 lazily, when a directory (or any of its subdirectories) have been modified.
 """
-
 import collections
 import os
 import pathlib
@@ -41,8 +40,10 @@ Base = declarative.declarative_base()
 
 # An in-memory cache which is optionally shared amongst all HashCache instances.
 # The in-memory cache omits timestamps from records.
-InMemoryCacheKey = collections.namedtuple('InMemoryCacheKey',
-                                          ['hash_fn', 'path'])
+InMemoryCacheKey = collections.namedtuple(
+    'InMemoryCacheKey',
+    ['hash_fn', 'path'],
+)
 IN_MEMORY_CACHE: typing.Dict[InMemoryCacheKey, str] = {}
 
 
@@ -86,18 +87,21 @@ def GetDirectoryMTime(path: pathlib.Path) -> int:
   #    /usr/local/opt/coreutils/libexec/gnubin
   output = subprocess.check_output(
       f"find '{path}' -type f | xargs -d'\n' stat -c '%Y:%n' | sort -t: -n | "
-      "tail -1 | cut -d: -f1",
+      'tail -1 | cut -d: -f1',
       universal_newlines=True,
-      shell=True)
+      shell=True,
+  )
   return int(output)
 
 
 class HashCache(sqlutil.Database):
 
-  def __init__(self,
-               path: pathlib.Path,
-               hash_fn: str,
-               keep_in_memory: bool = False):
+  def __init__(
+      self,
+      path: pathlib.Path,
+      hash_fn: str,
+      keep_in_memory: bool = False,
+  ):
     """Instantiate a hash cache.
 
     Args:
@@ -170,33 +174,47 @@ class HashCache(sqlutil.Database):
       last_modified_fn = lambda path: GetDirectoryMTime(path)
     return self._InMemoryWrapper(
         absolute_path,
-        last_modified_fn, lambda x: checksumdir.dirhash(x, self.hash_fn_name))
+        last_modified_fn,
+        lambda x: checksumdir.dirhash(x, self.hash_fn_name),
+    )
 
   def _HashFile(self, absolute_path: pathlib.Path) -> str:
     return self._InMemoryWrapper(
-        absolute_path, lambda path: int(os.path.getmtime(path)),
-        self.hash_fn_file)
+        absolute_path,
+        lambda path: int(os.path.getmtime(path)),
+        self.hash_fn_file,
+    )
 
-  def _InMemoryWrapper(self, absolute_path: pathlib.Path,
-                       last_modified_fn: typing.Callable[[pathlib.Path], int],
-                       hash_fn: typing.Callable[[pathlib.Path], str]) -> str:
+  def _InMemoryWrapper(
+      self,
+      absolute_path: pathlib.Path,
+      last_modified_fn: typing.Callable[[pathlib.Path], int],
+      hash_fn: typing.Callable[[pathlib.Path], str],
+  ) -> str:
     """A wrapper around the persistent hashing to support in-memory cache."""
     if self.keep_in_memory:
       in_memory_key = InMemoryCacheKey(self.hash_fn_name, absolute_path)
       if in_memory_key in IN_MEMORY_CACHE:
         app.Log(2, "In-memory cache hit: '%s'", absolute_path)
         return IN_MEMORY_CACHE[in_memory_key]
-    hash_ = self._DoHash(absolute_path, last_modified_fn(absolute_path),
-                         hash_fn)
+    hash_ = self._DoHash(
+        absolute_path,
+        last_modified_fn(absolute_path),
+        hash_fn,
+    )
     if self.keep_in_memory:
       IN_MEMORY_CACHE[in_memory_key] = hash_
     return hash_
 
-  def _DoHash(self, absolute_path: pathlib.Path, last_modified: int,
-              hash_fn: typing.Callable[[pathlib.Path], str]) -> str:
+  def _DoHash(
+      self,
+      absolute_path: pathlib.Path,
+      last_modified: int,
+      hash_fn: typing.Callable[[pathlib.Path], str],
+  ) -> str:
     with self.Session() as session:
       cached_entry = session.query(HashCacheRecord).filter(
-          HashCacheRecord.absolute_path == str(absolute_path)).first()
+          HashCacheRecord.absolute_path == str(absolute_path),).first()
       if cached_entry and cached_entry.last_modified == last_modified:
         app.Log(2, "Cache hit: '%s'", absolute_path)
         return cached_entry.hash
@@ -205,11 +223,17 @@ class HashCache(sqlutil.Database):
         session.delete(cached_entry)
       start_time = time.time()
       checksum = hash_fn(absolute_path)
-      app.Log(2, "New cache entry '%s' in %s ms.", absolute_path,
-              humanize.Commas(int((time.time() - start_time) * 1000)))
-      new_entry = HashCacheRecord(absolute_path=str(absolute_path),
-                                  last_modified=last_modified,
-                                  hash=checksum)
+      app.Log(
+          2,
+          "New cache entry '%s' in %s ms.",
+          absolute_path,
+          humanize.Commas(int((time.time() - start_time) * 1000)),
+      )
+      new_entry = HashCacheRecord(
+          absolute_path=str(absolute_path),
+          last_modified=last_modified,
+          hash=checksum,
+      )
       session.add(new_entry)
       session.commit()
       return new_entry.hash

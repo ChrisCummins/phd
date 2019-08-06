@@ -52,7 +52,7 @@ def read_file(*components, **kwargs):
       File404: If path does not exist, and must_exist is True.
       InvalidFile: If JSON is malformed.
   """
-  must_exist = kwargs.get("must_exist", True)
+  must_exist = kwargs.get('must_exist', True)
 
   if must_exist:
     path = fs.must_exist(*components)
@@ -65,7 +65,9 @@ def read_file(*components, **kwargs):
   except ValueError as e:
     raise ValueError(
         "malformed JSON file '{path}'. Message from parser: {err}".format(
-            path=fs.basename(path), err=str(e)))
+            path=fs.basename(path),
+            err=str(e),
+        ),)
   except IOError as e:
     if not must_exist:
       return {}
@@ -116,7 +118,7 @@ def loads(text, **kwargs):
   for index, line in enumerate(lines):
     if re.search(regex, line):
       if re.search(r'^' + regex, line, re.IGNORECASE):
-        lines[index] = ""
+        lines[index] = ''
       elif re.search(regex_inline, line):
         lines[index] = re.sub(regex_inline, r'\1', line)
 

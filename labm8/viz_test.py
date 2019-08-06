@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:viz."""
-
 import pathlib
 
 import matplotlib
@@ -40,8 +39,11 @@ def test_plot():
 
 
 @pytest.mark.parametrize('extension', ('.png', '.pdf'))
-def test_Finalize_produces_a_file(test_plot, tempdir: pathlib.Path,
-                                  extension: str):
+def test_Finalize_produces_a_file(
+    test_plot,
+    tempdir: pathlib.Path,
+    extension: str,
+):
   """That file is produced."""
   del test_plot
   viz.Finalize(tempdir / f'plot{extension}')

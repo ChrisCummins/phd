@@ -17,42 +17,56 @@ This project uses pytest runner, with a handful of custom configuration options.
 Use the Main() function as the entry point to your test files to run pytest
 with the proper arguments.
 """
-import sys
-
 import contextlib
 import inspect
 import pathlib
-import pytest
 import re
+import sys
 import tempfile
 import typing
 from importlib import util as importutil
+
+import pytest
 
 from labm8 import app
 
 FLAGS = app.FLAGS
 
 app.DEFINE_boolean('test_color', False, 'Colorize pytest output.')
-app.DEFINE_boolean('test_skip_slow', True,
-                   'Skip tests that have been marked slow.')
-app.DEFINE_integer(
-    'test_maxfail', 1,
-    'The maximum number of tests that can fail before execution terminates. '
-    'If --test_maxfail=0, all tests will execute.')
-app.DEFINE_boolean('test_capture_output', True,
-                   'Capture stdout and stderr during test execution.')
 app.DEFINE_boolean(
-    'test_print_durations', True,
-    'Print the duration of the slowest tests at the end of execution. Use '
-    '--test_durations to set the number of tests to print the durations of.')
+    'test_skip_slow',
+    True,
+    'Skip tests that have been marked slow.',
+)
 app.DEFINE_integer(
-    'test_durations', 3,
+    'test_maxfail',
+    1,
+    'The maximum number of tests that can fail before execution terminates. '
+    'If --test_maxfail=0, all tests will execute.',
+)
+app.DEFINE_boolean(
+    'test_capture_output',
+    True,
+    'Capture stdout and stderr during test execution.',
+)
+app.DEFINE_boolean(
+    'test_print_durations',
+    True,
+    'Print the duration of the slowest tests at the end of execution. Use '
+    '--test_durations to set the number of tests to print the durations of.',
+)
+app.DEFINE_integer(
+    'test_durations',
+    3,
     'The number of slowest tests to print the durations of after execution. '
-    'If --test_durations=0, the duration of all tests is printed.')
+    'If --test_durations=0, the duration of all tests is printed.',
+)
 app.DEFINE_string(
-    'test_coverage_data_dir', None,
+    'test_coverage_data_dir',
+    None,
     'Run tests with statement coverage and write coverage.py data files to '
-    'this directory. The directory is created. Existing files are untouched.')
+    'this directory. The directory is created. Existing files are untouched.',
+)
 
 
 def AbsolutePathToModule(file_path: str) -> str:
@@ -67,7 +81,7 @@ def AbsolutePathToModule(file_path: str) -> str:
     module = module.replace('/', '.')
     return module
   else:
-    raise OSError(f"Could not determine runfiles directory: {file_path}")
+    raise OSError(f'Could not determine runfiles directory: {file_path}')
 
 
 def GuessModuleUnderTest(file_path: str) -> typing.Optional[str]:
@@ -87,8 +101,10 @@ def GuessModuleUnderTest(file_path: str) -> typing.Optional[str]:
 
 
 @contextlib.contextmanager
-def CoverageContext(file_path: str,
-                    pytest_args: typing.List[str]) -> typing.List[str]:
+def CoverageContext(
+    file_path: str,
+    pytest_args: typing.List[str],
+) -> typing.List[str]:
 
   # Record coverage of module under test.
   module = GuessModuleUnderTest(file_path)
@@ -106,8 +122,8 @@ def CoverageContext(file_path: str,
       datadir = pathlib.Path(d)
     # Create a coverage.py config file.
     # See: https://coverage.readthedocs.io/en/coverage-4.3.4/config.html
-    config_path = f"{d}/converagerc"
-    with open(config_path, "w") as f:
+    config_path = f'{d}/converagerc'
+    with open(config_path, 'w') as f:
       f.write(f"""\
 [run]
 data_file = {datadir}/.coverage
@@ -162,7 +178,7 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   # Test files must end with _test.py suffix. This is a code style choice, not
   # a hard requirement.
   if not file_path.endswith('_test.py'):
-    app.Fatal("File `%s` does not end in suffix _test.py", file_path)
+    app.Fatal('File `%s` does not end in suffix _test.py', file_path)
 
   # Assemble the arguments to run pytest with. Note that the //:conftest file
   # performs some additional configuration not captured here.

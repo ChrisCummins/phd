@@ -49,7 +49,8 @@ HumanReadableInt in strings/human_readable.h.
 import datetime
 import math
 import re
-from typing import Optional, Union
+from typing import Optional
+from typing import Union
 
 import humanize as humanize_lib
 
@@ -211,12 +212,14 @@ def DecimalPrefix(quantity, unit, precision=1, min_scale=0, max_scale=None):
     required precision, possibly followed by a space, the appropriate multiplier
     and the unit.
   """
-  return _Prefix(quantity,
-                 unit,
-                 precision,
-                 DecimalScale,
-                 min_scale=min_scale,
-                 max_scale=max_scale)
+  return _Prefix(
+      quantity,
+      unit,
+      precision,
+      DecimalScale,
+      min_scale=min_scale,
+      max_scale=max_scale,
+  )
 
 
 def BinaryPrefix(quantity, unit, precision=1):
@@ -274,14 +277,33 @@ def _Prefix(quantity, unit, precision, scale_callable, **args):
     separator = ' '
 
   print_pattern = '%%.%df%%s%%s' % max(
-      0, (precision - int(math.log(abs(scaled_quantity), 10)) - 1))
+      0,
+      (precision - int(math.log(abs(scaled_quantity), 10)) - 1),
+  )
 
   return print_pattern % (scaled_quantity, separator, scaled_unit)
 
 
 # Prefixes and corresponding min_scale and max_scale for decimal formating.
-DECIMAL_PREFIXES = ('y', 'z', 'a', 'f', 'p', 'n', u'µ', 'm', '', 'k', 'M', 'G',
-                    'T', 'P', 'E', 'Z', 'Y')
+DECIMAL_PREFIXES = (
+    'y',
+    'z',
+    'a',
+    'f',
+    'p',
+    'n',
+    u'µ',
+    'm',
+    '',
+    'k',
+    'M',
+    'G',
+    'T',
+    'P',
+    'E',
+    'Z',
+    'Y',
+)
 DECIMAL_MIN_SCALE = -8
 DECIMAL_MAX_SCALE = 8
 
@@ -324,8 +346,12 @@ def BinaryScale(quantity, unit):
     A tuple of a scaled quantity (float) and BinaryPrefix for the
     units (string).
   """
-  return _Scale(quantity, unit, 1024,
-                ('Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'))
+  return _Scale(
+      quantity,
+      unit,
+      1024,
+      ('Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
+  )
 
 
 def _Scale(quantity, unit, multiplier, prefixes=None, min_scale=None):
@@ -540,7 +566,7 @@ def NaturalSortKey(data):
       segments[i] = _StrComparableInt(int(value))
     else:
       segments[i] = _StrComparableInt(value)
-  print("SEGMENTS", segments)
+  print('SEGMENTS', segments)
   return segments
 
 

@@ -10,11 +10,11 @@ FLAGS = absl_flags.FLAGS
 
 absl_flags.DEFINE_list(
     'vmodule', [],
-    "Per-module verbose level. The argument has to contain a comma-separated "
-    "list of <module name>=<log level>. <module name> is a glob pattern (e.g., "
+    'Per-module verbose level. The argument has to contain a comma-separated '
+    'list of <module name>=<log level>. <module name> is a glob pattern (e.g., '
     "gfs* for all modules whose name starts with \"gfs\"), matched against the "
-    "filename base (that is, name ignoring .py). <log level> overrides any "
-    "value given by --v.")
+    'filename base (that is, name ignoring .py). <log level> overrides any '
+    'value given by --v.')
 
 # Logging functions.
 

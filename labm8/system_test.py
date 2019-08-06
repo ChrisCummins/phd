@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:system."""
-
-import os
-
 import getpass
+import os
 import pathlib
-import pytest
 import socket
 import tempfile
+
+import pytest
 
 from labm8 import app
 from labm8 import fs
@@ -62,105 +61,105 @@ def test_pid():
 
 # ScpError
 def test_ScpError():
-  err = system.ScpError("out", "err")
-  assert "out" == err.out
-  assert "err" == err.err
-  assert "out\nerr" == err.__repr__()
-  assert "out\nerr" == str(err)
+  err = system.ScpError('out', 'err')
+  assert 'out' == err.out
+  assert 'err' == err.err
+  assert 'out\nerr' == err.__repr__()
+  assert 'out\nerr' == str(err)
 
 
 # Subprocess()
 def test_subprocess_stdout():
-  p = system.Subprocess(["echo Hello"], shell=True)
+  p = system.Subprocess(['echo Hello'], shell=True)
   ret, out, err = p.run()
   assert not ret
-  assert out == "Hello\n"
+  assert out == 'Hello\n'
   assert not err
 
 
 def test_subprocess_stderr():
-  p = system.Subprocess(["echo Hello >&2"], shell=True)
+  p = system.Subprocess(['echo Hello >&2'], shell=True)
   ret, out, err = p.run()
   assert not ret
-  assert err == "Hello\n"
+  assert err == 'Hello\n'
   assert not out
 
 
 def test_subprocess_timeout():
-  p = system.Subprocess(["sleep 10"], shell=True)
+  p = system.Subprocess(['sleep 10'], shell=True)
   with pytest.raises(system.SubprocessError):
     p.run(timeout=.1)
 
 
 def test_subprocess_timeout_pass():
-  p = system.Subprocess(["true"], shell=True)
+  p = system.Subprocess(['true'], shell=True)
   ret, out, err = p.run(timeout=.1)
   assert not ret
 
 
 # run()
 def test_run():
-  assert system.run(["true"]) == (0, None, None)
-  assert system.run(["false"]) == (1, None, None)
+  assert system.run(['true']) == (0, None, None)
+  assert system.run(['false']) == (1, None, None)
 
 
 def test_run_timeout():
   with pytest.raises(system.SubprocessError):
-    system.run(["sleep 10"], timeout=.1, shell=True)
+    system.run(['sleep 10'], timeout=.1, shell=True)
   with pytest.raises(system.SubprocessError):
-    system.run(["sleep 10"], timeout=.1, num_retries=2, shell=True)
+    system.run(['sleep 10'], timeout=.1, num_retries=2, shell=True)
 
 
 # echo()
 def test_echo(tempdir: pathlib.Path):
   file_path = tempdir / 'file.txt'
-  system.echo("foo", file_path)
-  assert fs.read(file_path) == ["foo"]
-  system.echo("", file_path)
-  assert fs.read(file_path) == [""]
+  system.echo('foo', file_path)
+  assert fs.read(file_path) == ['foo']
+  system.echo('', file_path)
+  assert fs.read(file_path) == ['']
 
 
 def test_echo_append(tempdir: pathlib.Path):
   file_path = tempdir / 'file.txt'
-  system.echo("foo", file_path)
-  system.echo("bar", file_path, append=True)
-  assert fs.read(file_path) == ["foo", "bar"]
+  system.echo('foo', file_path)
+  system.echo('bar', file_path, append=True)
+  assert fs.read(file_path) == ['foo', 'bar']
 
 
 def test_echo_kwargs(tempdir: pathlib.Path):
   file_path = tempdir / 'file.txt'
-  system.echo("foo", file_path, end="_")
-  assert fs.read(file_path) == ["foo_"]
+  system.echo('foo', file_path, end='_')
+  assert fs.read(file_path) == ['foo_']
 
 
 # sed()
 def test_sed(tempdir: pathlib.Path):
   file_path = tempdir / 'file.txt'
-  system.echo("Hello, world!", file_path)
-  system.sed("Hello", "Goodbye", file_path)
-  assert ["Goodbye, world!"] == fs.read(file_path)
-  system.sed("o", "_", file_path)
-  assert ["G_odbye, world!"] == fs.read(file_path)
-  system.sed("o", "_", file_path, "g")
-  assert ["G__dbye, w_rld!"] == fs.read(file_path)
+  system.echo('Hello, world!', file_path)
+  system.sed('Hello', 'Goodbye', file_path)
+  assert ['Goodbye, world!'] == fs.read(file_path)
+  system.sed('o', '_', file_path)
+  assert ['G_odbye, world!'] == fs.read(file_path)
+  system.sed('o', '_', file_path, 'g')
+  assert ['G__dbye, w_rld!'] == fs.read(file_path)
 
 
 def test_sed_fail_no_file(tempdir: pathlib.Path):
   with pytest.raises(system.SubprocessError):
-    system.sed("Hello", "Goodbye", tempdir / "not_a_file.txt")
+    system.sed('Hello', 'Goodbye', tempdir / 'not_a_file.txt')
 
 
 # which()
 def test_which():
-  assert "/bin/sh" == system.which("sh")
-  assert not system.which("not-a-real-command")
+  assert '/bin/sh' == system.which('sh')
+  assert not system.which('not-a-real-command')
 
 
 def test_which_path():
-  assert system.which("sh", path=("/usr", "/bin")) == "/bin/sh"
-  assert not system.which("sh", path=("/dev",))
-  assert not system.which("sh", path=("/not-a-real-path",))
-  assert not system.which("not-a-real-command", path=("/bin",))
+  assert system.which('sh', path=('/usr', '/bin')) == '/bin/sh'
+  assert not system.which('sh', path=('/dev',))
+  assert not system.which('sh', path=('/not-a-real-path',))
+  assert not system.which('not-a-real-command', path=('/bin',))
 
 
 def test_isprocess():

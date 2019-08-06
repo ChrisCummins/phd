@@ -59,8 +59,7 @@ class DockerImageRunContext(object):
     entrypoint_args = ['--entrypoint', entrypoint] if entrypoint else []
     volume_args = [f'-v{src}:{dst}' for src, dst in (volumes or {}).items()]
     flags_args = labtypes.flatten(
-        [[f'--{k}', str(v)] for k, v in (flags or {}).items()],
-    )
+        [[f'--{k}', str(v)] for k, v in (flags or {}).items()],)
     return _Docker(
         ['run'] + entrypoint_args + volume_args + [self.image_name] + args +
         flags_args,
@@ -149,19 +148,16 @@ class BazelPy3Image(object):
   def _TemporaryImageName(self) -> str:
     basename = self.data_path.split('/')[-1]
     random_suffix = ''.join(
-        random.choice('0123456789abcdef') for _ in range(32)
-    )
+        random.choice('0123456789abcdef') for _ in range(32))
     return f'phd_{basename}_tmp_{random_suffix}'
 
   @contextlib.contextmanager
   def RunContext(self) -> DockerImageRunContext:
     subprocess.check_call(
-        _Docker(['load', '-i', str(self.tar_path)], timeout=600),
-    )
+        _Docker(['load', '-i', str(self.tar_path)], timeout=600),)
     tmp_name = self._TemporaryImageName()
     subprocess.check_call(
-        _Docker(['tag', self.image_name, tmp_name], timeout=60),
-    )
+        _Docker(['tag', self.image_name, tmp_name], timeout=60),)
     subprocess.check_call(_Docker(['rmi', self.image_name], timeout=60))
     yield DockerImageRunContext(tmp_name)
     # FIXME(cec): Using the --force flag here is almost certainly the wrong

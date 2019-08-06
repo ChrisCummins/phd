@@ -1,7 +1,8 @@
 """Unit tests for //labm8/bazelutil.py."""
 import pathlib
-import pytest
 import tempfile
+
+import pytest
 
 from labm8 import app
 from labm8 import bazelutil
@@ -30,7 +31,7 @@ def test_DataPath_missing_data_dep():
   # dependency of this test target, so is not found.
   with pytest.raises(FileNotFoundError) as e_info:
     bazelutil.DataPath('phd/labm8/test_data/diabetes.csv')
-  assert ("No such file or directory: "
+  assert ('No such file or directory: '
           "'phd/labm8/test_data/diabetes.csv'") in str(e_info)
 
 
@@ -38,8 +39,10 @@ def test_DataPath_missing_data_dep_not_must_exist():
   """Path is returned if the file doesn't exist."""
   # The file //labm8/test_data/diabetes.csv exists, but is not a data
   # dependency of this test target, so is not found.
-  assert bazelutil.DataPath('phd/labm8/test_data/diabetes.csv',
-                            must_exist=False)
+  assert bazelutil.DataPath(
+      'phd/labm8/test_data/diabetes.csv',
+      must_exist=False,
+  )
 
 
 def test_DataPath_read_file():
@@ -64,8 +67,8 @@ def test_DataString_contents():
 
 def test_DataPath_directory():
   """Test that DataPath returns the path to a directory."""
-  assert str(
-      bazelutil.DataPath('phd/labm8/test_data')).endswith('phd/labm8/test_data')
+  assert str(bazelutil.DataPath('phd/labm8/test_data')).endswith(
+      'phd/labm8/test_data',)
 
 
 def test_DataPath_different_working_dir():

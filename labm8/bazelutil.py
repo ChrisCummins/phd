@@ -4,7 +4,6 @@ The design goals of Bazel has led it to have a lot of quirks. This module
 contains utility code designed to help live with these quirks.
 """
 import os
-
 import pathlib
 import re
 import subprocess
@@ -36,8 +35,10 @@ def FindRunfilesDirectory() -> typing.Optional[pathlib.Path]:
   return None
 
 
-def DataPath(path: typing.Union[str, pathlib.Path],
-             must_exist: bool = True) -> pathlib.Path:
+def DataPath(
+    path: typing.Union[str, pathlib.Path],
+    must_exist: bool = True,
+) -> pathlib.Path:
   """Return the absolute path to a data file.
 
   This allows you to access files from the 'data' attribute of a Python
@@ -133,7 +134,7 @@ class Workspace(object):
     """
     self._root = root
     if not (self._root / 'WORKSPACE').is_file():
-      raise OSError(f"`{self._root}/WORKSPACE` not found")
+      raise OSError(f'`{self._root}/WORKSPACE` not found')
 
   @property
   def workspace_root(self) -> pathlib.Path:
@@ -162,12 +163,18 @@ class Workspace(object):
             **subprocess_kwargs):
     with fs.chdir(self.workspace_root):
       return subprocess.Popen([
-          'timeout', '-s9',
-          str(timeout_seconds), 'bazel', command, '--noshow_progress'
+          'timeout',
+          '-s9',
+          str(timeout_seconds),
+          'bazel',
+          command,
+          '--noshow_progress',
       ] + args, **subprocess_kwargs)
 
   def MaybeTargetToPath(
-      self, fully_qualified_target: str) -> typing.Optional[pathlib.Path]:
+      self,
+      fully_qualified_target: str,
+  ) -> typing.Optional[pathlib.Path]:
     """Determine if a bazel target refers to a file, and if so return the path.
 
     Args:
@@ -192,11 +199,13 @@ class Workspace(object):
     else:
       raise ValueError(
           'Target is not fully qualified (does not begin with `//`): '
-          f'{fully_qualified_target}')
+          f'{fully_qualified_target}',)
 
   def GetDependentFiles(
-      self, target: str,
-      excluded_targets: typing.Iterable[str]) -> typing.List[pathlib.Path]:
+      self,
+      target: str,
+      excluded_targets: typing.Iterable[str],
+  ) -> typing.List[pathlib.Path]:
     """Get the file dependencies of the target.
 
     Args:
@@ -210,32 +219,36 @@ class Workspace(object):
     """
     # First run through bazel query to expand globs.
     bazel = self.BazelQuery([target], stdout=subprocess.PIPE)
-    grep = subprocess.Popen(['grep', '^/'],
-                            stdout=subprocess.PIPE,
-                            stdin=bazel.stdout,
-                            universal_newlines=True)
+    grep = subprocess.Popen(
+        ['grep', '^/'],
+        stdout=subprocess.PIPE,
+        stdin=bazel.stdout,
+        universal_newlines=True,
+    )
 
     stdout, _ = grep.communicate()
     if bazel.returncode:
-      raise OSError("bazel query failed")
+      raise OSError('bazel query failed')
     if grep.returncode:
-      raise OSError("grep of bazel query output failed")
+      raise OSError('grep of bazel query output failed')
     targets = stdout.rstrip().split('\n')
 
     # Now get the transitive dependencies of each target.
     targets = [target for target in targets if target not in excluded_targets]
     for target in targets:
       bazel = self.BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
-      grep = subprocess.Popen(['grep', '^/'],
-                              stdout=subprocess.PIPE,
-                              stdin=bazel.stdout,
-                              universal_newlines=True)
+      grep = subprocess.Popen(
+          ['grep', '^/'],
+          stdout=subprocess.PIPE,
+          stdin=bazel.stdout,
+          universal_newlines=True,
+      )
 
       stdout, _ = grep.communicate()
       if bazel.returncode:
-        raise OSError("bazel query failed")
+        raise OSError('bazel query failed')
       if grep.returncode:
-        raise OSError("grep of bazel query output failed")
+        raise OSError('grep of bazel query output failed')
 
       deps = stdout.rstrip().split('\n')
       targets += [target for target in deps if target not in excluded_targets]
@@ -249,23 +262,29 @@ class Workspace(object):
     Raises:
       OSError: If bazel query fails.
     """
-    bazel = self.BazelQuery([f'buildfiles(deps({target}))'],
-                            stdout=subprocess.PIPE)
-    cut = subprocess.Popen(['cut', '-f1', '-d:'],
-                           stdout=subprocess.PIPE,
-                           stdin=bazel.stdout)
-    grep = subprocess.Popen(['grep', '^/'],
-                            stdout=subprocess.PIPE,
-                            stdin=cut.stdout,
-                            universal_newlines=True)
+    bazel = self.BazelQuery(
+        [f'buildfiles(deps({target}))'],
+        stdout=subprocess.PIPE,
+    )
+    cut = subprocess.Popen(
+        ['cut', '-f1', '-d:'],
+        stdout=subprocess.PIPE,
+        stdin=bazel.stdout,
+    )
+    grep = subprocess.Popen(
+        ['grep', '^/'],
+        stdout=subprocess.PIPE,
+        stdin=cut.stdout,
+        universal_newlines=True,
+    )
 
     stdout, _ = grep.communicate()
     if bazel.returncode:
-      raise OSError("bazel query failed")
+      raise OSError('bazel query failed')
     if cut.returncode:
-      raise OSError("bazel query output cut failed")
+      raise OSError('bazel query output cut failed')
     if grep.returncode:
-      raise OSError("bazel query output search failed")
+      raise OSError('bazel query output search failed')
 
     for line in stdout.rstrip().split('\n'):
       if line == '//external':

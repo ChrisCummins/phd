@@ -27,7 +27,7 @@ def _checksum_str(hash_fn, string, encoding='utf-8'):
 
 
 def _checksum_list(hash_fn, *elems):
-  string = "".join(sorted(str(x) for x in elems))
+  string = ''.join(sorted(str(x) for x in elems))
   return _checksum_str(hash_fn, string)
 
 

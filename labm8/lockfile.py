@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Lock file mechanism."""
-import os
-import sys
-import time
-
-# Use absolute paths for imports so as to prevent a conflict with the
-# system "time" module.
 import datetime
 import inspect
+import os
 import pathlib
+import sys
+import time
 import typing
 
 from labm8 import app
@@ -29,13 +26,17 @@ from labm8 import labdate
 from labm8 import pbutil
 from labm8 import system
 from labm8.internal import lockfile_pb2
+# Use absolute paths for imports so as to prevent a conflict with the
+# system "time" module.
 
 FLAGS = app.FLAGS
 
 app.DEFINE_float(
-    'lockfile_block_seconds', 10.0,
+    'lockfile_block_seconds',
+    10.0,
     'The number of seconds to block for when waiting for a lock '
-    'files.')
+    'files.',
+)
 
 
 class Error(Exception):
@@ -67,7 +68,7 @@ class MalformedLockfileError(UnableToAcquireLockError):
     self.path = path
 
   def __str__(self):
-    return f"Lock file is malformed: {self.path}"
+    return f'Lock file is malformed: {self.path}'
 
 
 class UnableToReleaseLockError(Error):
@@ -119,7 +120,7 @@ class LockFile:
     lockfile = self.read(self.path)
     if lockfile.date_acquired_utc_epoch_ms:
       return labdate.DatetimeFromMillisecondsTimestamp(
-          lockfile.date_acquired_utc_epoch_ms)
+          lockfile.date_acquired_utc_epoch_ms,)
     else:
       return None
 
@@ -153,11 +154,13 @@ class LockFile:
     """
     return self.hostname == system.HOSTNAME and self.pid == os.getpid()
 
-  def acquire(self,
-              replace_stale: bool = False,
-              force: bool = False,
-              pid: int = None,
-              block: bool = False) -> 'LockFile':
+  def acquire(
+      self,
+      replace_stale: bool = False,
+      force: bool = False,
+      pid: int = None,
+      block: bool = False,
+  ) -> 'LockFile':
     """Acquire the lock.
 
     A lock can be claimed if any of these conditions are true:
@@ -191,9 +194,10 @@ class LockFile:
           owner_process_id=os.getpid() if pid is None else pid,
           owner_process_argv=' '.join(sys.argv),
           date_acquired_utc_epoch_ms=labdate.MillisecondsTimestamp(
-              labdate.GetUtcMillisecondsNow()),
+              labdate.GetUtcMillisecondsNow(),),
           owner_hostname=system.HOSTNAME,
-          owner_user=system.USERNAME)
+          owner_user=system.USERNAME,
+      )
       pbutil.ToFile(lockfile, self.path, assume_filename='LOCK.pbtxt')
 
     while True:
@@ -212,8 +216,12 @@ class LockFile:
         elif not block:
           raise UnableToAcquireLockError(self)
         # Block and try again later.
-        app.Log(1, 'Blocking on lockfile %s for %s seconds', self.path,
-                humanize.Duration(FLAGS.lockfile_block_seconds))
+        app.Log(
+            1,
+            'Blocking on lockfile %s for %s seconds',
+            self.path,
+            humanize.Duration(FLAGS.lockfile_block_seconds),
+        )
         time.sleep(FLAGS.lockfile_block_seconds)
       else:  # new lock
         _create_lock()
@@ -263,9 +271,11 @@ class LockFile:
     path = pathlib.Path(path)
     if path.is_file():
       try:
-        return pbutil.FromFile(path,
-                               lockfile_pb2.LockFile(),
-                               assume_filename='LOCK.pbtxt')
+        return pbutil.FromFile(
+            path,
+            lockfile_pb2.LockFile(),
+            assume_filename='LOCK.pbtxt',
+        )
       except pbutil.DecodeError:
         raise MalformedLockfileError(path)
     else:
@@ -299,7 +309,8 @@ class AutoLockFile(LockFile):
   def __init__(
       self,
       root: typing.Union[str, pathlib.Path] = '/tmp/phd/labm8/autolockfiles',
-      granularity: str = 'line'):
+      granularity: str = 'line',
+  ):
     """Constructor
 
     Args:
@@ -328,7 +339,8 @@ class AutoLockFile(LockFile):
     elif granularity == 'module':
       path = root / f'{module_name}.pbtxt'
     else:
-      raise TypeError(f"Invalid granularity '{granularity}'. Must be one of: "
-                      f"{{line,function,module}}")
+      raise TypeError(
+          f"Invalid granularity '{granularity}'. Must be one of: "
+          f'{{line,function,module}}',)
 
     super(AutoLockFile, self).__init__(path)

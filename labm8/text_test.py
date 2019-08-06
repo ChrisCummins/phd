@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:text."""
-
 import pytest
 
 from labm8 import app
@@ -30,37 +29,40 @@ def test_get_substring_idxs():
 
 # truncate()
 def test_truncate():
-  assert "foo" == text.truncate("foo", 100)
-  assert "1234567890" == text.truncate("1234567890", 10)
-  assert "12345..." == text.truncate("1234567890", 8)
+  assert 'foo' == text.truncate('foo', 100)
+  assert '1234567890' == text.truncate('1234567890', 10)
+  assert '12345...' == text.truncate('1234567890', 8)
   for i in range(10, 20):
     assert i == len(
-        text.truncate("The quick brown fox jumped "
-                      "over the slow lazy dog", i))
+        text.truncate(
+            'The quick brown fox jumped '
+            'over the slow lazy dog',
+            i,
+        ),)
 
 
 def test_truncate_bad_maxchar():
   with pytest.raises(text.TruncateError):
-    text.truncate("foo", -1)
-    text.truncate("foo", 3)
+    text.truncate('foo', -1)
+    text.truncate('foo', 3)
 
 
 # distance()
 def test_levenshtein():
-  assert 0 == text.levenshtein("foo", "foo")
-  assert 1 == text.levenshtein("foo", "fooo")
-  assert 3 == text.levenshtein("foo", "")
-  assert 1 == text.levenshtein("1234", "1 34")
-  assert 1 == text.levenshtein("123", "1 3")
+  assert 0 == text.levenshtein('foo', 'foo')
+  assert 1 == text.levenshtein('foo', 'fooo')
+  assert 3 == text.levenshtein('foo', '')
+  assert 1 == text.levenshtein('1234', '1 34')
+  assert 1 == text.levenshtein('123', '1 3')
 
 
 # diff()
 def test_diff():
-  assert 0 == text.diff("foo", "foo")
-  assert 0.25 == text.diff("foo", "fooo")
-  assert 1 == text.diff("foo", "")
-  assert 0.25 == text.diff("1234", "1 34")
-  assert (1 / 3) == text.diff("123", "1 3")
+  assert 0 == text.diff('foo', 'foo')
+  assert 0.25 == text.diff('foo', 'fooo')
+  assert 1 == text.diff('foo', '')
+  assert 0.25 == text.diff('1234', '1 34')
+  assert (1 / 3) == text.diff('123', '1 3')
 
 
 # Prefix tree operations.
@@ -119,27 +121,27 @@ def test_AutoCompletePrefix_not_wound():
 
 
 def test_StripSingleLineComments_empty_string():
-  assert text.StripSingleLineComments("") == ""
+  assert text.StripSingleLineComments('') == ''
 
 
 def test_StripSingleLineComments_no_comments():
-  assert text.StripSingleLineComments("Hello, world") == "Hello, world"
+  assert text.StripSingleLineComments('Hello, world') == 'Hello, world'
 
 
 def test_StripSingleLineComments_one_line_string_with_bash_comment():
-  assert (text.StripSingleLineComments("Hello, world  # This is a comment") ==
-          "Hello, world  ")
+  assert (text.StripSingleLineComments('Hello, world  # This is a comment') ==
+          'Hello, world  ')
 
 
 def test_StripSingleLineComments_one_line_string_with_c_comment():
-  assert (text.StripSingleLineComments("Hello, world  // This is a comment") ==
-          "Hello, world  ")
+  assert (text.StripSingleLineComments('Hello, world  // This is a comment') ==
+          'Hello, world  ')
 
 
 def test_StripSingleLineComments_multiline_string_with_comments():
   assert (text.StripSingleLineComments("""
 This
-is#a comment  // 
+is#a comment  //
 a  // multiline.
 """) == """
 This
@@ -148,8 +150,10 @@ a  \n""")
 
 
 def test_StripSingleLineComments_custom_start_comment_re():
-  assert (text.StripSingleLineComments("This has an -- SQL comment",
-                                       start_comment_re='--') == "This has an ")
+  assert (text.StripSingleLineComments(
+      'This has an -- SQL comment',
+      start_comment_re='--',
+  ) == 'This has an ')
 
 
 if __name__ == '__main__':

@@ -13,7 +13,6 @@
 # limitations under the License.
 """Tarball util.
 """
-
 import tarfile
 
 from labm8 import fs
@@ -33,11 +32,11 @@ def unpack_archive(*components, **kwargs) -> str:
       str: Path to directory.
   """
   path = fs.abspath(*components)
-  compression = kwargs.get("compression", "bz2")
-  dir = kwargs.get("dir", fs.dirname(path))
+  compression = kwargs.get('compression', 'bz2')
+  dir = kwargs.get('dir', fs.dirname(path))
 
   fs.cd(dir)
-  tar = tarfile.open(path, "r:" + compression)
+  tar = tarfile.open(path, 'r:' + compression)
   tar.extractall()
   tar.close()
   fs.cdpop()

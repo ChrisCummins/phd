@@ -32,15 +32,15 @@ _TIMERS = {}
 
 
 def is_enabled():
-  return os.environ.get("PROFILE") is not None
+  return os.environ.get('PROFILE') is not None
 
 
 def enable():
-  os.environ["PROFILE"] = "1"
+  os.environ['PROFILE'] = '1'
 
 
 def disable():
-  os.environ.pop("PROFILE", None)
+  os.environ.pop('PROFILE', None)
 
 
 def isrunning(name):
@@ -107,7 +107,7 @@ def stop(name, file=sys.stderr):
       elapsed_str = '{:.1f} ms'.format(elapsed * 1000)
 
     del _TIMERS[name]
-    print("[prof]", name, elapsed_str, file=file)
+    print('[prof]', name, elapsed_str, file=file)
   return is_enabled()
 
 
@@ -115,7 +115,7 @@ def profile(fun, *args, **kwargs):
   """
   Profile a function.
   """
-  timer_name = kwargs.pop("prof_name", None)
+  timer_name = kwargs.pop('prof_name', None)
 
   if not timer_name:
     module = inspect.getmodule(fun)
@@ -124,7 +124,7 @@ def profile(fun, *args, **kwargs):
     if parentclass:
       c.append(parentclass.__name__)
     c.append(fun.__name__)
-    timer_name = ".".join(c)
+    timer_name = '.'.join(c)
 
   start(timer_name)
   ret = fun(*args, **kwargs)
@@ -146,7 +146,8 @@ def timers():
 @contextlib.contextmanager
 def Profile(
     name: str = '',
-    print_to: typing.Callable[[str], None] = lambda msg: app.Log(1, msg)):
+    print_to: typing.Callable[[str], None] = lambda msg: app.Log(1, msg),
+):
   """A context manager which prints the elapsed time upon exit.
 
   Args:
@@ -157,7 +158,7 @@ def Profile(
   start_time = time.time()
   yield
   elapsed = time.time() - start_time
-  print_to(f"{name} in {humanize.Duration(elapsed)}")
+  print_to(f'{name} in {humanize.Duration(elapsed)}')
 
 
 @contextlib.contextmanager
@@ -199,7 +200,7 @@ class AutoCsvProfiler(object):
   def __init__(self, directory: pathlib.Path, name: str = 'profile'):
     self._directory = pathlib.Path(directory)
     if not self._directory.is_dir():
-      raise ValueError(f"Directory not found: {directory}")
+      raise ValueError(f'Directory not found: {directory}')
     self._name = name
 
     # Create the name of the logfile now, so that is timestamped to the start of
@@ -210,7 +211,7 @@ class AutoCsvProfiler(object):
 
     with self._writer() as writer:
       writer.writerow(
-          ('Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)', 'Event'))
+          ('Start Time (ms since UNIX epoch)', 'Elapsed Time (ms)', 'Event'),)
 
   @contextlib.contextmanager
   def Profile(self, event_name: str = ''):

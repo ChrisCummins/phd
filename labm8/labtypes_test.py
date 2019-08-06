@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //labm8:fmt."""
-
 import pytest
 
 from labm8 import app
@@ -24,10 +23,10 @@ FLAGS = app.FLAGS
 
 # is_str()
 def test_is_str():
-  assert labtypes.is_str("Hello, World!")
-  assert labtypes.is_str(str("Hello, World!"))
-  assert not labtypes.is_str("Hello, World!".encode("utf-8"))
-  assert not labtypes.is_str(bytes("Hello, World!".encode("utf-8")))
+  assert labtypes.is_str('Hello, World!')
+  assert labtypes.is_str(str('Hello, World!'))
+  assert not labtypes.is_str('Hello, World!'.encode('utf-8'))
+  assert not labtypes.is_str(bytes('Hello, World!'.encode('utf-8')))
   assert not labtypes.is_str(8)
   assert not labtypes.is_str(['a', 'b', 'c'])
   assert not labtypes.is_str({'a': 'b', 'c': 18})
@@ -46,20 +45,20 @@ def test_is_str_num():
 
 
 def test_is_str_dict():
-  assert not labtypes.is_str({"foo": 100})
-  assert not labtypes.is_str({10: ["a", "b", "c"]})
+  assert not labtypes.is_str({'foo': 100})
+  assert not labtypes.is_str({10: ['a', 'b', 'c']})
 
 
 # is_dict() tests
 def test_is_dict():
-  assert labtypes.is_dict({"foo": 100})
-  assert labtypes.is_dict({10: ["a", "b", "c"]})
+  assert labtypes.is_dict({'foo': 100})
+  assert labtypes.is_dict({10: ['a', 'b', 'c']})
 
 
 def test_is_dict_str():
-  assert not labtypes.is_dict("a")
-  assert not labtypes.is_dict("abc")
-  assert not labtypes.is_dict(["abc", "def"][0])
+  assert not labtypes.is_dict('a')
+  assert not labtypes.is_dict('abc')
+  assert not labtypes.is_dict(['abc', 'def'][0])
 
 
 def test_is_dict_seq():
@@ -83,9 +82,9 @@ def test_is_seq():
 
 
 def test_is_seq_str():
-  assert not labtypes.is_seq("a")
-  assert not labtypes.is_seq("abc")
-  assert not labtypes.is_seq(["abc", "def"][0])
+  assert not labtypes.is_seq('a')
+  assert not labtypes.is_seq('abc')
+  assert not labtypes.is_seq(['abc', 'def'][0])
 
 
 def test_is_seq_num():
@@ -94,8 +93,8 @@ def test_is_seq_num():
 
 
 def test_is_seq_dict():
-  assert not labtypes.is_seq({"foo": 100})
-  assert not labtypes.is_seq({10: ["a", "b", "c"]})
+  assert not labtypes.is_seq({'foo': 100})
+  assert not labtypes.is_seq({10: ['a', 'b', 'c']})
 
 
 # flatten()

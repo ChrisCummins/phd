@@ -49,7 +49,7 @@ def is_seq(obj):
   Check if an object is a sequence.
   """
   return (not is_str(obj) and not is_dict(obj) and
-          (hasattr(obj, "__getitem__") or hasattr(obj, "__iter__")))
+          (hasattr(obj, '__getitem__') or hasattr(obj, '__iter__')))
 
 
 def flatten(lists):
@@ -123,7 +123,8 @@ def get_class_that_defined_method(meth):
     if inspect.isfunction(meth):
       cls = getattr(
           inspect.getmodule(meth),
-          meth.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0])
+          meth.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0],
+      )
       if isinstance(cls, type):
         return cls
   else:
@@ -161,7 +162,7 @@ class ReprComparable(object):
     return str(self) >= str(other)
 
 
-def PairwiseIterator(iterable: typing.Iterator[typing.Any]
+def PairwiseIterator(iterable: typing.Iterator[typing.Any],
                     ) -> typing.Iterator[typing.Tuple[typing.Any, typing.Any]]:
   """Construct a pairwise iterator for a input generator.
 
@@ -183,8 +184,10 @@ def PairwiseIterator(iterable: typing.Iterator[typing.Any]
   return zip(a, b)
 
 
-def SetDiff(a: typing.Iterator[typing.Any],
-            b: typing.Iterator[typing.Any]) -> typing.List[typing.Any]:
+def SetDiff(
+    a: typing.Iterator[typing.Any],
+    b: typing.Iterator[typing.Any],
+) -> typing.List[typing.Any]:
   """Return the set difference between two sequences.
 
   Args:
@@ -218,4 +221,4 @@ def AllSubclassesOfClass(cls: typing.Type) -> typing.Set[typing.Type]:
     A set of class types.
   """
   return set(cls.__subclasses__()).union(
-      [s for c in cls.__subclasses__() for s in AllSubclassesOfClass(c)])
+      [s for c in cls.__subclasses__() for s in AllSubclassesOfClass(c)],)

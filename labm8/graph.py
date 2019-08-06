@@ -22,9 +22,11 @@ FLAGS = app.FLAGS
 
 class Graph(object):
 
-  def __init__(self,
-               name: str,
-               children: typing.Optional[typing.List['Graph']] = None):
+  def __init__(
+      self,
+      name: str,
+      children: typing.Optional[typing.List['Graph']] = None,
+  ):
     self.name = name
     if children:
       self.children = set(children)
@@ -45,10 +47,13 @@ class Graph(object):
     strings = []
     self._ToDot(strings, set())
     dot = '\n'.join(fmt.IndentList(2, strings))
-    return f"digraph graphname {{\n{dot}\n}}"
+    return f'digraph graphname {{\n{dot}\n}}'
 
-  def _PreOrderApply(self, callback: typing.Callable[['Graph'], None],
-                     visited: typing.Set['Graph']) -> None:
+  def _PreOrderApply(
+      self,
+      callback: typing.Callable[['Graph'], None],
+      visited: typing.Set['Graph'],
+  ) -> None:
     if self in visited:
       return
     visited.add(self)

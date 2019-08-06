@@ -28,7 +28,8 @@ def test_MapWorker_okay():
       ppar.MapNativeProtoProcessingBinary(
           'phd/labm8/test_data/ppar/proto_worker',
           input_protos=inputs,
-          output_proto_class=protos_pb2.AddXandY))
+          output_proto_class=protos_pb2.AddXandY,
+      ),)
 
   # Two inputs produce two outputs.
   assert len(ret) == 2
@@ -74,7 +75,8 @@ def test_MapWorker_one_failure():
       ppar.MapNativeProtoProcessingBinary(
           'phd/labm8/test_data/ppar/proto_worker',
           input_protos=inputs,
-          output_proto_class=protos_pb2.AddXandY))
+          output_proto_class=protos_pb2.AddXandY,
+      ),)
 
   # Two inputs produce two outputs.
   assert len(workers) == 2
@@ -105,7 +107,8 @@ def test_MapWorker_wrap_progressbar():
   worker_generator = ppar.MapNativeProtoProcessingBinary(
       'phd/labm8/test_data/ppar/proto_worker',
       input_protos=inputs,
-      output_proto_class=protos_pb2.AddXandY)
+      output_proto_class=protos_pb2.AddXandY,
+  )
 
   map_workers = []
   for map_worker in bar(worker_generator):
@@ -121,8 +124,10 @@ def test_MapWorker_output_decode_error_silently_ignore():
 
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/test_data/ppar/unexpected_output_proto_worker', inputs,
-          protos_pb2.AddXandY))
+          'phd/labm8/test_data/ppar/unexpected_output_proto_worker',
+          inputs,
+          protos_pb2.AddXandY,
+      ),)
 
   assert len(results) == 1
   assert results[0].ok()
@@ -137,8 +142,10 @@ def test_MapWorker_binary_not_found():
   # generator and is evaluated lazily. The error is raised when we attempt to
   # read the results.
   generator = ppar.MapNativeProtoProcessingBinary(
-      'phd/labm8/test_data/ppar/not/a/real/binary', [protos_pb2.AddXandY()],
-      protos_pb2.AddXandY)
+      'phd/labm8/test_data/ppar/not/a/real/binary',
+      [protos_pb2.AddXandY()],
+      protos_pb2.AddXandY,
+  )
   with pytest.raises(FileNotFoundError):
     next(generator)
 
@@ -147,7 +154,10 @@ def test_MapWorker_no_inputs():
   """Test that no output is produced when run with no inputs."""
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/test_data/ppar/proto_worker', [], protos_pb2.AddXandY))
+          'phd/labm8/test_data/ppar/proto_worker',
+          [],
+          protos_pb2.AddXandY,
+      ),)
   assert not results
 
 
@@ -163,8 +173,10 @@ def test_MapWorker_generator_inputs():
 
   results = list(
       ppar.MapNativeProtoProcessingBinary(
-          'phd/labm8/test_data/ppar/proto_worker', InputGenerator(),
-          protos_pb2.AddXandY))
+          'phd/labm8/test_data/ppar/proto_worker',
+          InputGenerator(),
+          protos_pb2.AddXandY,
+      ),)
 
   assert len(results) == 2
 
@@ -177,7 +189,8 @@ def test_MapWorker_pool():
           'phd/labm8/test_data/ppar/proto_worker',
           [protos_pb2.AddXandY(x=2, y=2)],
           protos_pb2.AddXandY,
-          pool=pool))
+          pool=pool,
+      ),)
 
   assert len(results) == 1
   assert results[0].ok()
@@ -191,7 +204,8 @@ def test_MapWorker_num_processes():
           'phd/labm8/test_data/ppar/proto_worker',
           [protos_pb2.AddXandY(x=2, y=2)],
           protos_pb2.AddXandY,
-          num_processes=1))
+          num_processes=1,
+      ),)
 
   assert len(results) == 1
   assert results[0].ok()
@@ -205,7 +219,8 @@ def test_MapWorker_binary_args():
           'phd/labm8/test_data/ppar/proto_worker_requires_args',
           [protos_pb2.AddXandY(x=2, y=2)],
           protos_pb2.AddXandY,
-          binary_args=['-required_arg']))
+          binary_args=['-required_arg'],
+      ),)
   assert len(results) == 1
   assert results[0].ok()
 
@@ -213,7 +228,9 @@ def test_MapWorker_binary_args():
   results = list(
       ppar.MapNativeProtoProcessingBinary(
           'phd/labm8/test_data/ppar/proto_worker_requires_args',
-          [protos_pb2.AddXandY(x=2, y=2)], protos_pb2.AddXandY))
+          [protos_pb2.AddXandY(x=2, y=2)],
+          protos_pb2.AddXandY,
+      ),)
   assert len(results) == 1
   assert not results[0].ok()
 

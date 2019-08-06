@@ -14,8 +14,9 @@
 """Unit tests for //labm8/logutil.py."""
 import datetime
 import pathlib
-import pytest
 import tempfile
+
+import pytest
 
 from labm8 import app
 from labm8 import labdate
@@ -29,7 +30,7 @@ FLAGS = app.FLAGS
 def test_ABSL_LOGGING_PREFIX_RE_match():
   """Test that absl logging regex matches a log line."""
   m = logutil.ABSL_LOGGING_LINE_RE.match(
-      'I0527 23:14:18.903151 140735784891328 log_to_file.py:31] Hello, info!')
+      'I0527 23:14:18.903151 140735784891328 log_to_file.py:31] Hello, info!',)
   assert m
   assert m.group('lvl') == 'I'
   assert m.group('timestamp') == '0527 23:14:18.903151'

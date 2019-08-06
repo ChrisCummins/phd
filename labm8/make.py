@@ -47,10 +47,10 @@ class NoTargetError(Error):
   pass
 
 
-_BAD_TARGET_RE = re.compile(r"No rule to make target " "'.+'.  Stop.")
+_BAD_TARGET_RE = re.compile(r'No rule to make target ' "'.+'.  Stop.")
 
 
-def make(target="all", dir=".", **kwargs):
+def make(target='all', dir='.', **kwargs):
   """
   Run make.
 
@@ -76,15 +76,15 @@ def make(target="all", dir=".", **kwargs):
         requested target.
       MakeError: In case the target rule fails.
   """
-  if not fs.isfile(fs.path(dir, "Makefile")):
+  if not fs.isfile(fs.path(dir, 'Makefile')):
     raise NoMakefileError("No makefile in '{}'".format(fs.abspath(dir)))
 
   fs.cd(dir)
 
   # Default parameters to system.run()
-  if "timeout" not in kwargs: kwargs["timeout"] = 300
+  if 'timeout' not in kwargs: kwargs['timeout'] = 300
 
-  ret, out, err = system.run(["make", target], **kwargs)
+  ret, out, err = system.run(['make', target], **kwargs)
   fs.cdpop()
 
   if ret > 0:
@@ -93,7 +93,7 @@ def make(target="all", dir=".", **kwargs):
     else:
       raise MakeError("Target '{}' failed".format(target))
 
-    raise MakeError("Failed")
+    raise MakeError('Failed')
 
   return ret, out, err
 
@@ -123,4 +123,4 @@ def clean(**kwargs):
         requested target.
       MakeError: In case the target rule fails.
   """
-  make(target="clean", **kwargs)
+  make(target='clean', **kwargs)

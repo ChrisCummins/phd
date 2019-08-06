@@ -94,9 +94,11 @@ def RotateYLabels(rotation: int = 90, ax: axes.Axes = None):
   plt.setp(ax.get_yticklabels(), rotation=rotation)
 
 
-def FormatXLabelsAsTimestamps(format='%H:%M:%S',
-                              convert_to_seconds=lambda t: t / 1000,
-                              ax: axes.Axes = None) -> None:
+def FormatXLabelsAsTimestamps(
+    format='%H:%M:%S',
+    convert_to_seconds=lambda t: t / 1000,
+    ax: axes.Axes = None,
+) -> None:
   """Format the X labels
 
   Args:
@@ -105,22 +107,25 @@ def FormatXLabelsAsTimestamps(format='%H:%M:%S',
     ax: The plot axis.
   """
   ax = ax or plt.gca()
-  formatter = matplotlib.ticker.FuncFormatter(lambda t, _: time.strftime(
-      format, time.gmtime(convert_to_seconds(t))))
+  formatter = matplotlib.ticker.FuncFormatter(
+      lambda t, _: time.strftime(format, time.gmtime(convert_to_seconds(t))),
+  )
   ax.xaxis.set_major_formatter(formatter)
 
 
-def Distplot(x=None,
-             hue=None,
-             data=None,
-             log_x: bool = False,
-             log1p_x: bool = False,
-             kde=False,
-             bins=None,
-             nbins: typing.Optional[int] = None,
-             norm_hist=False,
-             hue_order=None,
-             ax=None):
+def Distplot(
+    x=None,
+    hue=None,
+    data=None,
+    log_x: bool = False,
+    log1p_x: bool = False,
+    kde=False,
+    bins=None,
+    nbins: typing.Optional[int] = None,
+    norm_hist=False,
+    hue_order=None,
+    ax=None,
+):
   """An extension of seaborn distribution plots for grouped data.
 
   Args:
@@ -212,21 +217,25 @@ def Distplot(x=None,
     ax = plt.gca()
 
   if hue is None:
-    sns.distplot(values_to_plot,
-                 kde=kde,
-                 bins=bins,
-                 label=x,
-                 norm_hist=norm_hist,
-                 ax=ax)
+    sns.distplot(
+        values_to_plot,
+        kde=kde,
+        bins=bins,
+        label=x,
+        norm_hist=norm_hist,
+        ax=ax,
+    )
   else:
     hue_order = hue_order or sorted(set(data[hue]))
     for h in hue_order:
-      sns.distplot(values_to_plot[data[hue] == h],
-                   kde=kde,
-                   bins=bins,
-                   label=h,
-                   norm_hist=norm_hist,
-                   ax=ax)
+      sns.distplot(
+          values_to_plot[data[hue] == h],
+          kde=kde,
+          bins=bins,
+          label=h,
+          norm_hist=norm_hist,
+          ax=ax,
+      )
     plt.legend()
 
   return ax
@@ -235,18 +244,18 @@ def Distplot(x=None,
 def SummarizeFloats(floats: typing.Iterable[float], nplaces: int = 2) -> str:
   """Summarize a sequence of floats."""
   arr = np.array(list(floats), dtype=np.float32)
-  percs = " ".join([
+  percs = ' '.join([
       f'{p}%={np.percentile(arr, p):.{nplaces}f}' for p in [0, 50, 95, 99, 100]
   ])
   return (
-      f"n={len(arr)}, mean={arr.mean():.{nplaces}f}, stdev={arr.std():.{nplaces}f}, "
-      f"percentiles=[{percs}]")
+      f'n={len(arr)}, mean={arr.mean():.{nplaces}f}, stdev={arr.std():.{nplaces}f}, '
+      f'percentiles=[{percs}]')
 
 
 def SummarizeInts(ints: typing.Iterable[int]) -> str:
   """Summarize a sequence of ints."""
   arr = np.array(list(ints), dtype=np.int32)
-  percs = " ".join(
-      [f'{p}%={np.percentile(arr, p):.0f}' for p in [0, 50, 95, 99, 100]])
-  return (f"n={len(arr)}, mean={arr.mean():.2f}, stdev={arr.std():.2f}, "
-          f"percentiles=[{percs}]")
+  percs = ' '.join(
+      [f'{p}%={np.percentile(arr, p):.0f}' for p in [0, 50, 95, 99, 100]],)
+  return (f'n={len(arr)}, mean={arr.mean():.2f}, stdev={arr.std():.2f}, '
+          f'percentiles=[{percs}]')

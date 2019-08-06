@@ -1,8 +1,7 @@
 """Unit tests for //labm8/app."""
-
 import pathlib
-import pytest
 
+import pytest
 from absl import flags as absl_flags
 
 from labm8 import app_test_flags
