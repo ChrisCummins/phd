@@ -149,6 +149,14 @@ py_binary(
     ],
 )
 
+exports_repo(
+    name = "export_github_fuzz_scraper",
+    github_repo = "github_fuzz_scraper",
+    targets = [
+        "//experimental/deeplearning/deepsmith/java_fuzz:scrape_java_files",
+    ],
+)
+
 py3_image(
     name = "scrape_java_files_image",
     srcs = ["scrape_java_files.py"],
