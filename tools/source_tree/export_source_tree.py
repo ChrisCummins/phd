@@ -8,16 +8,15 @@ I feel like there's a 90-10 rule that applies to this repo: 90% of people who
 checkout this repo only need 10% of the code contained within it.
 This script provides a way to export that 10%.
 """
-
 import contextlib
-import git
-import github as github_lib
 import pathlib
-import tempfile
 import sys
+import tempfile
 import typing
 
-import getconfig
+import git
+import github as github_lib
+
 from datasets.github import api
 from labm8 import app
 from tools.source_tree import phd_workspace
@@ -47,6 +46,10 @@ app.DEFINE_boolean(
     'If true, run through the entire git history. Otherwise, '
     'continue from the last commit exported. Use this flag if '
     'the set of exported files changes.')
+app.DEFINE_input_path('workspace',
+                      None,
+                      'Path to the root of the bazel workspace.',
+                      is_dir=True)
 
 
 def GetOrCreateRepoOrDie(github: github_lib.Github,
@@ -68,7 +71,8 @@ def GetOrCreateRepoOrDie(github: github_lib.Github,
     app.FatalWithoutStackTrace(str(e))
 
 
-def EXPORT(github_repo: str,
+def Export(workspace_root: pathlib.Path,
+           github_repo: str,
            targets: typing.List[str],
            excluded_targets: typing.List[str] = None,
            extra_files: typing.List[str] = None,
@@ -80,6 +84,7 @@ def EXPORT(github_repo: str,
   This should be called from a bare python script, before flags parsing.
 
   Args:
+    workspace_root: The root path of the bazel workspace.
     github_repo: The name of the GitHub repo to export to.
     targets: A list of bazel targets to export. These targets, and their
       dependencies, will be exported. These arguments are passed unmodified to
@@ -96,8 +101,7 @@ def EXPORT(github_repo: str,
   move_file_mapping = move_file_mapping or {}
 
   def _DoExport():
-    source_path = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
-    source_workspace = phd_workspace.PhdWorkspace(source_path)
+    source_workspace = phd_workspace.PhdWorkspace(workspace_root)
 
     with tempfile.TemporaryDirectory(prefix=f'phd_export_{github_repo}_') as d:
       destination = pathlib.Path(d)
@@ -149,7 +153,8 @@ def main():
   ]
   move_file_mapping = {x[0]: x[1] for x in move_file_tuples}
 
-  EXPORT(github_repo=FLAGS.github_repo,
+  Export(workspace_root=FLAGS.workspace,
+         github_repo=FLAGS.github_repo,
          targets=targets,
          excluded_targets=excluded_targets,
          extra_files=extra_files,

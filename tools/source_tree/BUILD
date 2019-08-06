@@ -1,6 +1,7 @@
 # Tools for working with the source tree.
 
 load("//tools/bzl:exports.bzl", "exports_repo")
+load("@subpar//:subpar.bzl", "par_binary")
 
 exports_repo(
     name = "export",
@@ -47,7 +48,7 @@ py_library(
     ],
 )
 
-py_binary(
+par_binary(
     name = "export_source_tree",
     srcs = ["export_source_tree.py"],
     visibility = ["//visibility:public"],
