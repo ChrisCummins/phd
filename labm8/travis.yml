@@ -66,4 +66,4 @@ before_script:
 
 script:
   - if [ "$TO_TEST" = "pypi" ]; then pip install labm8 && python ./labm8/py/examples/basic_app.py; fi
-  - if [ "$TO_TEST" = "bazel" ]; then ./tools/flaky_bazel.sh test --config=travis //labm8:all; fi
+  - if [ "$TO_TEST" = "bazel" ]; then ./tools/flaky_bazel.sh test --config=travis //labm8/...; fi
