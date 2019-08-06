@@ -20,8 +20,18 @@ from tools.source_tree import phd_workspace
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
+    'package_name', None, 'The name of the package to export.')
+app.DEFINE_string('package_root', None, 'The root for finding python targets to export,')
+        e.g. "//labm8".
+app.DEFINE_string('description', None, 'A string with the short description of the package')
+app.DEFINE_string(
     'release_type', 'testing',
     'The type of release to upload to pypi. One of {testing,release}.')
+app.DEFINE_list('classifiers', None, 'A list of strings, containing Python package classifiers')
+app.DEFINE_list('keywords', None, 'A list of strings, containing keywords')
+app.DEFINE_string('license', None, 'The type of license to use')
+app.DEFINE_string('long_description_file', None, 'A label with the long description of the package, e.g. "//labm8:README.md"')
+app.DEFINE_string('url', None, 'A homepage for the project.')
 
 
 def FindPyLibraries(workspace: phd_workspace.PhdWorkspace,
@@ -202,3 +212,20 @@ def DEPLOY_PIP(package_name: str = None,
       license=license,
       long_description_file=long_description_file,
       url=url))
+
+
+def main():
+  _RunFunctionWithFatalOSError(
+      _DoDeployPip,
+      package_name=FLAGS.package_name,
+      package_root=FLAGS.package_root,
+      description=FLAGS.description,
+      classifiers=FLAGS.classifiers,
+      keywords=FLAGS.keywords,
+      license=FLAGS.license,
+      long_description_file=FLAGS.long_description_file,
+      url=FLAGS.url,
+  )
+
+if __name__ == '__main__':
+  app.Run(main)

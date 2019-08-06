@@ -11,9 +11,8 @@ set -e
     --move_file_mapping={move_file_mapping} $@
 """.format(
                         github_repo=ctx.attr.github_repo,
-                        targets=','.join([
-                            "'{}'".format(t) for t in ctx.attr.targets
-                        ]),
+                        targets=','.join(
+                            ["'{}'".format(t) for t in ctx.attr.targets]),
                         extra_files=','.join(ctx.attr.extra_files),
                         move_file_mapping=','.join([
                             "'{}':'{}'".format(k, v)
@@ -68,35 +67,39 @@ exports_repo = rule(attrs={
 
 
 def _exports_pip_impl(ctx):
-  deployment_script = ctx.actions.declare_file("{}.py".format(ctx.attr.name))
+  deployment_script = ctx.actions.declare_file("{}.sh".format(ctx.attr.name))
 
   ctx.actions.write(output=deployment_script,
                     is_executable=True,
                     content="""\
-#!/usr/bin/env python
-from tools.source_tree.deploy import DEPLOY_PIP
-
-DEPLOY_PIP(
-    package_name="{package_name}",
-    package_root="{package_root}",
-    description="{description}",
-    classifiers={classifiers},
-    keywords={keywords},
-    license="{license}",
-    long_description_file="{long_description_file}",
-)
+#!/usr/bin/env bash
+set -e
+./tools/source_tree/deploy_pip \\
+    --package_name="{package_name}" \\
+    --package_root="{package_root}" \\
+    --description="{description}" \\
+    --classifiers={classifiers} \\
+    --keywords={keywords} \\
+    --license="{license}" \\
+    --long_description_file="{long_description_file}" $@
 """.format(
                         package_name=ctx.attr.package_name,
                         package_root=ctx.attr.package_root,
                         description=ctx.attr.description,
-                        classifiers=ctx.attr.classifiers,
-                        keywords=ctx.attr.keywords,
+                        classifiers=','.join(
+                            ["'{}'".format(t) for t in ctx.attr.classifiers]),
+                        keywords=','.join(
+                            ["'{}'".format(t) for t in ctx.attr.keywords]),
                         license=ctx.attr.license,
                         long_description_file=ctx.attr.long_description_file,
                     ))
 
+  files = ([deployment_script] + ctx.files._deploy_pip +
+           ctx.attr._deploy_pip.data_runfiles.files.to_list() +
+           ctx.attr._deploy_pip.default_runfiles.files.to_list())
+
   runfiles = ctx.runfiles(
-      files=[deployment_script] + ctx.files._deploy,
+      files=files,
       collect_default=True,
       collect_data=True,
   )
@@ -140,12 +143,12 @@ exports_pip = rule(attrs={
         mandatory=True,
         doc="Label of README",
     ),
-    "_deploy":
+    "_deploy_pip":
     attr.label(
         executable=False,
         cfg="host",
         allow_files=True,
-        default=Label("//tools/source_tree:deploy"),
+        default=Label("//tools/source_tree:deploy_pip"),
     ),
 },
                    executable=True,
