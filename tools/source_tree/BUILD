@@ -37,8 +37,8 @@ py_test(
 )
 
 py_library(
-    name = "deploy",
-    srcs = ["deploy.py"],
+    name = "deploy_pip",
+    srcs = ["deploy_pip.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":phd_workspace",
