@@ -62,4 +62,4 @@ before_script:
   - gcc --version
 
 script:
-  - bazel test --config=travis //labm8:all
+  - ./tools/flaky_bazel.sh test --config=travis //labm8:all
