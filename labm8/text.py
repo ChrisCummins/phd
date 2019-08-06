@@ -269,8 +269,10 @@ def CamelCapsToUnderscoreSeparated(camel_caps_str: str):
   return '_'.join(x.lower() for x in components)
 
 
-def StripSingleLineComments(string: str,
-                            start_comment_re: str = '(#|//)') -> str:
+def StripSingleLineComments(
+    string: str,
+    start_comment_re: str = '(#|//)',
+) -> str:
   """Strip line comments from a string.
 
   Args:
