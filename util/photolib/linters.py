@@ -10,6 +10,7 @@ from labm8 import app
 from labm8 import shell
 from util.photolib import common
 from util.photolib import lightroom
+from util.photolib import lintercache
 from util.photolib.proto import photolint_pb2
 
 
@@ -97,11 +98,15 @@ class Linter(object):
   When called with some input, verify the input and return a list of errors.
   """
 
+  def __init__(self, workspace_root: str):
+    self.workspace = workspace_root
+    self.errors_cache = lintercache.LinterCache(self.workspace)
+
   def __call__(self, *args, **kwargs):
     raise NotImplementedError("abstract class")
 
 
-def GetLinters(base_linter: Linter) -> typing.List[Linter]:
+def GetLinters(base_linter: Linter, workspace_root_path: str) -> typing.List[Linter]:
   """Return a list of linters to run."""
 
   def _IsRunnableLinter(obj):
@@ -115,7 +120,7 @@ def GetLinters(base_linter: Linter) -> typing.List[Linter]:
     return True
 
   members = inspect.getmembers(sys.modules[__name__], _IsRunnableLinter)
-  return [member[1]() for member in members]
+  return [member[1](workspace_root_path) for member in members]
 
 
 # File linters.
@@ -360,6 +365,9 @@ class ThirdPartyDirLinter(DirLinter):  # pylint: disable=abstract-method
 
 class DirEmpty(PhotolibDirLinter, ThirdPartyDirLinter):
   """Checks whether a directory is empty."""
+
+  def __init__(self, *args, **kwargs):
+    PhotolibDirLinter.__init__(self, *args, **kwargs)
 
   def __call__(self, abspath: str, workspace_relpath: str,
                dirnames: typing.List[str], filenames: typing.List[str]):

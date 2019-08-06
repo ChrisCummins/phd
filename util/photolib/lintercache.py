@@ -19,6 +19,7 @@ from sqlalchemy.ext import declarative
 
 from labm8 import app
 from labm8 import shell
+from labm8 import sqlutil
 from util.photolib import common
 from util.photolib import linters
 
@@ -27,11 +28,43 @@ FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()  # pylint: disable=invalid-name
 
-# Global state for the keywords cache database is initialized by
-# a call to InitializeErrorsCache().
-ENGINE = None
-MAKE_SESSION = None
-SESSION = None
+class LinterCache(sqlutil.Database):
+  """A database consisting of linter cache entries."""
+
+  def __init__(self, workspace_root_path: str, must_exist: bool = False):
+    cache_dir = os.path.join(workspace_root_path, ".cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    path = os.path.join(cache_dir, "errors.db")
+    url = f"sqlite:///{path}"
+    app.Log(2, "Errors cache %s", url)
+
+    super(LinterCache, self).__init__(url, Base, must_exist)
+    self.RefreshLintersVersion()
+
+
+  def RefreshLintersVersion(self):
+    """Check that """
+    meta_key = "linters.py md5"
+
+    with self.Session() as session:
+      cached_linters_version = session.query(Meta) \
+        .filter(Meta.key == meta_key) \
+        .first()
+      cached_checksum = (cached_linters_version.value
+                         if cached_linters_version else "")
+
+      with open(linters.__file__) as f:
+        actual_linters_version = Meta(
+            key=meta_key, value=common.Md5String(f.read()).hexdigest())
+
+      if cached_checksum != actual_linters_version.value:
+        app.Log(2, "linters.py has changed, emptying cache ...")
+        session.query(Directory).delete()
+        session.query(CachedError).delete()
+        if cached_linters_version:
+          session.delete(cached_linters_version)
+        session.add(actual_linters_version)
+        session.commit()
 
 
 class Meta(Base):
@@ -78,58 +111,6 @@ class CachedError(Base):
     return (f'{self.relpath}:  '
             f'{shell.ShellEscapeCodes.YELLOW}{self.message}'
             f'{shell.ShellEscapeCodes.END}  [{self.category}]')
-
-
-def InitializeErrorsCache(workspace_abspath: str) -> None:
-  """
-  Initialize the keywords cache database.
-
-  Args:
-    workspace_abspath: The absolute path to the workspace root.
-  """
-  global ENGINE
-  global MAKE_SESSION
-  global SESSION
-
-  if ENGINE:
-    raise ValueError("InitializeErrorsCache() already called.")
-
-  cache_dir = os.path.join(workspace_abspath, ".cache")
-  os.makedirs(cache_dir, exist_ok=True)
-  path = os.path.join(cache_dir, "errors.db")
-  uri = f"sqlite:///{path}"
-  app.Log(2, "Errors cache %s", uri)
-
-  ENGINE = sql.create_engine(uri, encoding="utf-8")
-  Base.metadata.create_all(ENGINE)
-  Base.metadata.bind = ENGINE
-  MAKE_SESSION = orm.sessionmaker(bind=ENGINE)
-  SESSION = MAKE_SESSION()
-  RefreshLintersVersion()
-
-
-def RefreshLintersVersion():
-  """Check that """
-  meta_key = "linters.py md5"
-
-  cached_linters_version = SESSION.query(Meta) \
-    .filter(Meta.key == meta_key) \
-    .first()
-  cached_checksum = (cached_linters_version.value
-                     if cached_linters_version else "")
-
-  with open(linters.__file__) as f:
-    actual_linters_version = Meta(
-        key=meta_key, value=common.Md5String(f.read()).hexdigest())
-
-  if cached_checksum != actual_linters_version.value:
-    app.Log(2, "linters.py has changed, emptying cache ...")
-    SESSION.query(Directory).delete()
-    SESSION.query(CachedError).delete()
-    if cached_linters_version:
-      SESSION.delete(cached_linters_version)
-    SESSION.add(actual_linters_version)
-    SESSION.commit()
 
 
 class CacheLookupResult(object):

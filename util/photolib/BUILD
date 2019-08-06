@@ -34,6 +34,7 @@ py_library(
         ":linters",
         "//labm8:app",
         "//labm8:shell",
+        "//labm8:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )

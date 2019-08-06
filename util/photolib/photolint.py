@@ -37,8 +37,9 @@ class ToplevelLinter(linters.Linter):
     super(ToplevelLinter, self).__init__()
     self.workspace = workspace_abspath
     self.toplevel_dir = toplevel_dir
-    self.dirlinters = linters.GetLinters(dirlinters)
-    self.filelinters = linters.GetLinters(filelinters)
+    self.dirlinters = linters.GetLinters(dirlinters, self.workspace)
+    self.filelinters = linters.GetLinters(filelinters, self.workspace)
+    self.errors_cache = lintercache.LinterCache(self.workspace)
 
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
@@ -88,7 +89,7 @@ class ToplevelLinter(linters.Linter):
         TIMERS.cached_seconds += time.time() - _start
       else:
         errors = self._LintThisDirectory(abspath, relpath, dirnames, filenames)
-        lintercache.AddLinterErrors(cache_entry, errors)
+        self.errors_cache.AddLinterErrors(cache_entry, errors)
         TIMERS.linting_seconds += time.time() - _start
 
     TIMERS.total_seconds += time.time() - start_
@@ -97,10 +98,6 @@ class ToplevelLinter(linters.Linter):
 class WorkspaceLinter(linters.Linter):
   """The master linter for the photolib workspace."""
   __cost__ = 1
-
-  def __init__(self, abspath: str):
-    super(WorkspaceLinter, self).__init__()
-    self.workspace = abspath
 
   def __call__(self, *args, **kwargs):
     photolib_linter = ToplevelLinter(self.workspace, "photos",
@@ -123,7 +120,8 @@ def main(argv):  # pylint: disable=missing-docstring
     sys.exit(1)
 
   lightroom.InitializeKeywordsCache(abspath)
-  lintercache.InitializeErrorsCache(abspath)
+
+  cache = lintercache.LinterCache(abspath)
 
   WorkspaceLinter(abspath)()
 
