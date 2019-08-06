@@ -36,7 +36,7 @@ py_test(
     ],
 )
 
-py_library(
+par_binary(
     name = "deploy_pip",
     srcs = ["deploy_pip.py"],
     visibility = ["//visibility:public"],

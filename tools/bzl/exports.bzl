@@ -74,7 +74,7 @@ def _exports_pip_impl(ctx):
                     content="""\
 #!/usr/bin/env bash
 set -e
-./tools/source_tree/deploy_pip \\
+./tools/source_tree/deploy_pip.par \\
     --package_name="{package_name}" \\
     --package_root="{package_root}" \\
     --description="{description}" \\
@@ -148,7 +148,7 @@ exports_pip = rule(attrs={
         executable=False,
         cfg="host",
         allow_files=True,
-        default=Label("//tools/source_tree:deploy_pip"),
+        default=Label("//tools/source_tree:deploy_pip.par"),
     ),
 },
                    executable=True,

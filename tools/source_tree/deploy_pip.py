@@ -2,15 +2,15 @@
 
 Currently, pip package deployment is supported through the DEPLOY_PIP function.
 """
-import contextlib
-import pathlib
 import configparser
-import tempfile
-import sys
-import typing
+import contextlib
 import os
+import pathlib
 import shutil
 import subprocess
+import sys
+import tempfile
+import typing
 
 import getconfig
 from labm8 import app
@@ -19,18 +19,23 @@ from tools.source_tree import phd_workspace
 
 FLAGS = app.FLAGS
 
+app.DEFINE_string('package_name', None, 'The name of the package to export.')
 app.DEFINE_string(
-    'package_name', None, 'The name of the package to export.')
-app.DEFINE_string('package_root', None, 'The root for finding python targets to export,')
-        e.g. "//labm8".
-app.DEFINE_string('description', None, 'A string with the short description of the package')
+    'package_root', None,
+    'The root for finding python targets to export, e.g. "//labm8".')
+app.DEFINE_string('description', None,
+                  'A string with the short description of the package')
 app.DEFINE_string(
     'release_type', 'testing',
     'The type of release to upload to pypi. One of {testing,release}.')
-app.DEFINE_list('classifiers', None, 'A list of strings, containing Python package classifiers')
+app.DEFINE_list('classifiers', None,
+                'A list of strings, containing Python package classifiers')
 app.DEFINE_list('keywords', None, 'A list of strings, containing keywords')
 app.DEFINE_string('license', None, 'The type of license to use')
-app.DEFINE_string('long_description_file', None, 'A label with the long description of the package, e.g. "//labm8:README.md"')
+app.DEFINE_string(
+    'long_description_file', None,
+    'A label with the long description of the package, e.g. "//labm8:README.md"'
+)
 app.DEFINE_string('url', None, 'A homepage for the project.')
 
 
@@ -50,7 +55,7 @@ def FindPyLibraries(workspace: phd_workspace.PhdWorkspace,
                            stdout=subprocess.PIPE)
   stdout, _ = p.communicate()
   if p.returncode:
-    raise OSError("bazel query failed")
+    raise OSError('bazel query failed')
   targets = stdout.rstrip().split('\n')
   return targets
 
@@ -73,7 +78,7 @@ def GetPypiCredentials() -> typing.Tuple[str, str]:
   """Read PyPi username and password from ~/.pypirc."""
   pypirc = pathlib.Path('~/.pypirc').expanduser()
   if not pypirc.is_file():
-    raise OSError("~/.pypirc not found")
+    raise OSError('~/.pypirc not found')
 
   config = configparser.ConfigParser()
   config.read(pypirc)
@@ -84,7 +89,7 @@ def GetUrlFromCnameFile(workspace: phd_workspace.PhdWorkspace,
                         package_root: str):
   relpath = workspace.MaybeTargetToPath(f'{package_root}:CNAME')
   if not relpath:
-    raise OSError("`url` not set and could not find {package_root}:CNAME")
+    raise OSError('`url` not set and could not find {package_root}:CNAME')
   return fs.Read(workspace.workspace_root / relpath).strip()
 
 
@@ -95,7 +100,7 @@ def _DoDeployPip(package_name: str, package_root: str,
   """Private implementation function."""
   release_type = FLAGS.release_type
   if release_type not in {'release', 'testing'}:
-    raise OSError("--release_type must be one of: {testing,release}")
+    raise OSError('--release_type must be one of: {testing,release}')
 
   pypi_username, pypi_password = GetPypiCredentials()
 
@@ -156,7 +161,7 @@ deploy_pip(
     build = workspace.Bazel('build', [f'//{deployment_package}:package'])
     build.communicate()
     if build.returncode:
-      raise OSError("package build failed")
+      raise OSError('package build failed')
 
     app.Log(1, 'Deploying package ...')
     env = os.environ.copy()
@@ -167,7 +172,7 @@ deploy_pip(
         'run', [f'//{deployment_package}:deploy', '--', release_type], env=env)
     build.communicate()
     if build.returncode:
-      raise OSError("deployment failed")
+      raise OSError('deployment failed')
 
 
 def _RunFunctionWithFatalOSError(fn, **kwargs):
@@ -202,16 +207,16 @@ def DEPLOY_PIP(package_name: str = None,
       e.g. "//labm8:README.md".
     url: A homepage for the project.
   """
-  app.Run(lambda: _RunFunctionWithFatalOSError(
-      _DoDeployPip,
-      package_name=package_name,
-      package_root=package_root,
-      description=description,
-      classifiers=classifiers,
-      keywords=keywords,
-      license=license,
-      long_description_file=long_description_file,
-      url=url))
+  app.Run(lambda: _RunFunctionWithFatalOSError(_DoDeployPip,
+                                               package_name=package_name,
+                                               package_root=package_root,
+                                               description=description,
+                                               classifiers=classifiers,
+                                               keywords=keywords,
+                                               license=license,
+                                               long_description_file=
+                                               long_description_file,
+                                               url=url))
 
 
 def main():
@@ -226,6 +231,7 @@ def main():
       long_description_file=FLAGS.long_description_file,
       url=FLAGS.url,
   )
+
 
 if __name__ == '__main__':
   app.Run(main)
