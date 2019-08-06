@@ -337,7 +337,9 @@ class Corpus(object):
   @property
   def size(self) -> int:
     """Return the size of the atomized corpus."""
-    return len(self.GetTrainingData(shuffle=False))
+    with self.encoded.Session() as session:
+      return session.query(sql.func.sum(
+          encoded.EncodedContentFile.tokencount)).one()
 
   def __eq__(self, rhs) -> bool:
     if not isinstance(rhs, Corpus):
