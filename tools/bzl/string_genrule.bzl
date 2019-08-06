@@ -6,7 +6,7 @@ def _python_string_genrule_impl(ctx):
   out_file = ctx.actions.declare_file("{}.py".format(ctx.attr.name))
   ctx.actions.run_shell(
       command=
-      "echo 'STRING = \"\"\"' > {out_file}; cat '{in_file}' >> '{out_file}'; echo '\"\"\"' >> {out_file}"
+      "echo 'STRING = \"\"\"\\' > {out_file}; cat '{in_file}' >> '{out_file}'; echo '\"\"\"' >> {out_file}"
       .format(in_file=in_file.path, out_file=out_file.path),
       inputs=[in_file],
       outputs=[out_file],

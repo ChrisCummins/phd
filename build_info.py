@@ -13,13 +13,14 @@
 # limitations under the License.
 """Access to the build information."""
 
+import build_info_pbtxt_py
 import config_pb2
 import datetime
 import functools
 import re
 import typing
+import version_py
 
-import build_info_pbtxt_py
 from labm8 import pbutil
 
 
@@ -59,16 +60,17 @@ def FormatShortRevision(html: bool = False) -> str:
     return short_hash
 
 
+def FormatVersion() -> str:
+  return f'version: {version_py.STRING.strip()}'
+
+
 def FormatShortBuildDescription(html: bool = False) -> str:
   """Get build string in the form: 'build SHORT_HASH on DATE by USER@HOST'."""
-  try:
-    build_info = GetBuildInfo()
-  except OSError:
-    return "Unknown version (no build info)"
+  build_info = GetBuildInfo()
   natural_date = datetime.datetime.fromtimestamp(
       build_info.seconds_since_epoch).strftime("%Y-%m-%d")
   revision = FormatShortRevision(html)
-  return (f"build {revision} on {natural_date} by "
+  return (f"build: {revision} on {natural_date} by "
           f"{build_info.user}@{build_info.host}")
 
 
@@ -77,6 +79,7 @@ def FormatLongBuildDescription(html: bool = False) -> str:
   build_info = GetBuildInfo()
   natural_datetime = datetime.datetime.fromtimestamp(
       build_info.seconds_since_epoch).strftime("%Y-%m-%d %H:%M:%S")
+  revision = FormatShortRevision(html=html)
   return (f"""\
 Built by {build_info.user}@{build_info.host} at {natural_datetime}.
-Revision: {FullRevision(html=html)}.""")
+Revision: {revision}.""")

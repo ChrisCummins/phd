@@ -15,19 +15,19 @@
 
 See: <https://github.com/abseil/abseil-py>
 """
+import sys
+
 import functools
 import pathlib
 import re
-import sys
+from absl import app as absl_app
+from absl import flags as absl_flags
+from absl import logging as absl_logging
 from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
 from typing import Union
-
-from absl import app as absl_app
-from absl import flags as absl_flags
-from absl import logging as absl_logging
 
 import build_info
 from labm8.internal import flags_parsers
@@ -65,6 +65,7 @@ def AssertOrRaise(stmt: bool, exception: Exception, *exception_args,
 def GetVersionInformationString() -> str:
   """Return a string of version information, as printed by --version flag."""
   return '\n'.join([
+      build_info.FormatVersion(),
       build_info.FormatShortBuildDescription(),
       'Copyright (C) 2014-2019 Chris Cummins <chrisc.101@gmail.com>',
       f'<{build_info.GetGithubCommitUrl()}>',
