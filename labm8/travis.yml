@@ -13,6 +13,9 @@ language:
   - generic
 
 env:
+  matrix:
+    - TO_TEST=pypi
+    - TO_TEST=bazel
   global:
     # ./configure script symlinks python3 to ~/.local/bin/python, and macos
     # image needs GNU tools in PATH, rather than BSD versions.
@@ -62,4 +65,5 @@ before_script:
   - gcc --version
 
 script:
-  - ./tools/flaky_bazel.sh test --config=travis //labm8:all
+  - if [ "$TO_TEST" = "pypi" ]; then pip install labm8 && python ./labm8/py/examples/basic_app.py; fi
+  - if [ "$TO_TEST" = "bazel" ]; then ./tools/flaky_bazel.sh test --config=travis //labm8:all; fi
