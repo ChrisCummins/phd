@@ -4,7 +4,7 @@ def _exports_repo_impl(ctx):
                     is_executable=True,
                     content="""\
 set -e
-./tools/source_tree/export_source_tree \\
+./tools/source_tree/export_source_tree.par \\
     --github_repo='{github_repo}' \\
     --targets={targets} \\
     --extra_files={extra_files} \\
@@ -59,7 +59,7 @@ exports_repo = rule(attrs={
         executable=False,
         cfg="host",
         allow_files=True,
-        default=Label("//tools/source_tree:export_source_tree"),
+        default=Label("//tools/source_tree:export_source_tree.par"),
     ),
 },
                     executable=True,
