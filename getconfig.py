@@ -21,7 +21,7 @@ script.
 import os
 
 import config_pb2
-import config_pbtxt
+import config_pbtxt_py
 import pathlib
 
 from labm8 import pbutil
@@ -82,7 +82,8 @@ def GetGlobalConfig() -> config_pb2.GlobalConfig:
     CorruptConfig: In case the configuration file could not be parsed.
   """
   try:
-    config = pbutil.FromString(config_pbtxt.STRING, config_pb2.GlobalConfig())
+    config = pbutil.FromString(config_pbtxt_py.STRING,
+                               config_pb2.GlobalConfig())
   except pbutil.DecodeError as e:
-    raise CorruptConfig(config_pbtxt.STRING, e)
+    raise CorruptConfig(config_pbtxt_py.STRING, e)
   return config

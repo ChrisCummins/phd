@@ -19,14 +19,14 @@ import functools
 import re
 import typing
 
-import build_info_pbtxt
+import build_info_pbtxt_py
 from labm8 import pbutil
 
 
 @functools.lru_cache()
 def GetBuildInfo() -> config_pb2.BuildInfo:
   """Return the build state."""
-  return pbutil.FromString(build_info_pbtxt.STRING,
+  return pbutil.FromString(build_info_pbtxt_py.STRING,
                            config_pb2.BuildInfo(),
                            uninitialized_okay=False)
 

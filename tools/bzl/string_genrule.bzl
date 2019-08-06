@@ -3,7 +3,7 @@
 
 def _python_string_genrule_impl(ctx):
   in_file = ctx.file.src
-  out_file = ctx.actions.declare_file(ctx.file.out.path)
+  out_file = ctx.actions.declare_file("{}.py".format(ctx.attr.name))
   ctx.actions.run_shell(
       command=
       "echo 'STRING = \"\"\"' > {out_file}; cat '{in_file}' >> '{out_file}'; echo '\"\"\"' >> {out_file}"
@@ -21,9 +21,6 @@ def _python_string_genrule_impl(ctx):
 
 python_string_genrule = rule(implementation=_python_string_genrule_impl,
                              attrs={
-                                 "out":
-                                 attr.label(mandatory=True,
-                                            allow_single_file=True),
                                  "src":
                                  attr.label(mandatory=True,
                                             allow_single_file=True),
