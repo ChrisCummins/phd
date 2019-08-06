@@ -17,6 +17,7 @@ import typing
 import git
 import github as github_lib
 
+import getconfig
 from datasets.github import api
 from labm8 import app
 from tools.source_tree import phd_workspace
@@ -46,10 +47,6 @@ app.DEFINE_boolean(
     'If true, run through the entire git history. Otherwise, '
     'continue from the last commit exported. Use this flag if '
     'the set of exported files changes.')
-app.DEFINE_input_path('workspace',
-                      None,
-                      'Path to the root of the bazel workspace.',
-                      is_dir=True)
 
 
 def GetOrCreateRepoOrDie(github: github_lib.Github,
@@ -153,7 +150,9 @@ def main():
   ]
   move_file_mapping = {x[0]: x[1] for x in move_file_tuples}
 
-  Export(workspace_root=FLAGS.workspace,
+  workspace_root = pathlib.Path(getconfig.GetGlobalConfig().paths.repo_root)
+
+  Export(workspace_root=workspace_root,
          github_repo=FLAGS.github_repo,
          targets=targets,
          excluded_targets=excluded_targets,
