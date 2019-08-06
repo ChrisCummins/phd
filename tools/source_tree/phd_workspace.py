@@ -57,6 +57,14 @@ class PhdWorkspace(bazelutil.Workspace):
   def git_repo(self) -> git.Repo:
     return self._repo
 
+  @property
+  def version(self) -> typing.Optional[str]:
+    version_file = self.workspace_root / 'version.txt'
+    if version_file.is_file():
+      return fs.read(version_file).rstrip()
+    else:
+      return None
+
   def GetAlwaysExportedFiles(self) -> typing.Iterable[str]:
     """Get hardcoded additional files to export."""
     relpaths = []
