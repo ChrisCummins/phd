@@ -15,9 +15,10 @@
 """
 from __future__ import division
 
-import networkx as nx
 import re
 import typing
+
+import networkx as nx
 
 
 class Error(Exception):
