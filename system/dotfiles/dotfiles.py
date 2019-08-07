@@ -2101,3 +2101,74 @@ class PlatformIO(Task):
   def uninstall_linux(self):
     # Remove the symlink we created.
     os.unlink('/usr/local/bin/platformio')
+
+class FinderGo(Task):
+  __platforms__ = ['osx']
+  __versions__ = {'FinderGo': '1.4.0'}
+
+  def __init__(self):
+    self.installed = False
+
+  def install(self):
+    url = ('https://github.com/onmyway133/FinderGo/releases/download/'
+           '{version}/FinderGo.zip'.format(version=self.__versions__['FinderGo']))
+    if not os.path.isfile('/Applications/FinderGo.app'):
+      shell("wget '{url}' -O /Applications/FinderGo.zip".format(url=url))
+      shell("cd /Applications && unzip FinderGo.zip && rm FinderGo.zip")
+      self.installed = True
+
+  def teardown(self):
+    if self.installed:
+      logging.info("")
+      logging.info(
+          "NOTE: manual step required to complete FinderGo installation:")
+      logging.info(
+          "    " + Colors.BOLD + Colors.RED +
+          "Cmd+click and drag /Applications/FinderGo.app into Finder toolbar"
+          + Colors.END)
+
+
+class Bat(Task):
+  __platforms__ = ['osx']
+
+  def install(self):
+    Homebrew().install_package("bat")
+
+
+class Autojump(Task):
+  __platforms__ = ['osx']
+
+  def install(self):
+    Homebrew().install_package("autojump")
+
+
+class Fselect(Task):
+  # https://github.com/jhspetersson/fselect
+  __platforms__ = ['osx']
+
+  def install(self):
+    Homebrew().install_package("fselect")
+
+
+class Glances(Task):
+  # https://github.com/nicolargo/glances
+  __platforms__ = ['osx', 'linux']
+
+  def install(self):
+    shell("curl -L https://bit.ly/glances | /bin/bash")
+
+
+class Mycli(Task):
+  # https://github.com/nicolargo/glances
+  __platforms__ = ['osx', 'linux']
+
+  def install(self):
+    Python().pip_install('mycli', '1.19.0', sudo=True)
+
+
+class DbBrowser(Task):
+  # https://sqlitebrowser.org/
+  __platforms__ = ['osx']
+
+  def install(self):
+    Homebrew().install_cask("db-browser-for-sqlite")
