@@ -11,7 +11,7 @@ This section makes the argument for synthetic benchmarks. Frequently used benchm
 	\label{fig:benchmark-suite-distribution}
 \end{figure}
 
-Table~\ref{tab:cpu-gpu-benchmarks-crossvalidate} summarises the results. The performance of a model trained on one benchmark suite and used to predict the mapping for another suite is generally very poor. The benchmark suite which provides the best results, NVIDIA SDK, achieves on average only 49\% of the optimal performance. The worst case is when training with Parboil to predict the optimal mappings for Polybench, where the model achieves only 11.5\% of the optimal performance. From this, it is clear that heuristics learned on one benchmark suite fail to generalise across other suites.
+Table~\ref{tab:cpu-gpu-benchmarks-crossvalidate} summarises the results. The performance of a model trained on one benchmark suite and used to predict the mapping for another suite is generally poor. The benchmark suite which provides the best results, NVIDIA SDK, achieves on average only 49\% of the optimal performance. The worst case is when training with Parboil to predict the optimal mappings for Polybench, where the model achieves only 11.5\% of the optimal performance. From this, it is clear that heuristics learned on one benchmark suite fail to generalise across other suites.
 
 \begin{table}
 	\centering

@@ -21,7 +21,7 @@ Section~\ref{subsec:opencl-lang-corpus} describes the assembly of a language cor
 \subsection{An OpenCL Language Corpus}
 \label{subsec:opencl-lang-corpus}
 
-Deep learning requires large data sets~\cite{LeCun2015}. For the purpose of modelling a programming language, this means assembling a very large collection of real, handwritten source codes. OpenCL codes are assembled by mining public repositories on the popular code hosting site GitHub.
+Deep learning requires large data sets~\cite{LeCun2015}. For the purpose of modelling a programming language, this means assembling a large collection of real, handwritten source codes. OpenCL codes are assembled by mining public repositories on the popular code hosting site GitHub.
 
 This is itself a challenging task since OpenCL is an embedded language, meaning device code is often difficult to untangle since GitHub does not presently recognise it as a searchable programming language. A search engine was developed which attempts to identify and download standalone OpenCL files through a process of file scraping and recursive header inlining. The result is a 2.8 million line data set of 8078 ``content files'' which potentially contain OpenCL code, originating from 793 GitHub repositories.
 
