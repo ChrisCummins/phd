@@ -13,7 +13,7 @@ The generation of artificial programs is a broad field with a wide range of appl
 
 \subsection{Benchmark Generation for Performance Characterisation}
 
-Benchmark suites serve a wide variety of uses from compiler optimisations to hardware design. The challenge in creating a benchmark suite is to capture a diverse set of workloads that is both representative of real-world usage while providing adequate coverage of the program space. Achieving either of these two goals is a challenging task, and efforts towards one goal can hamper the other. As a result, there is no ``one size fits all'' benchmark suite.
+Benchmark suites serve a wide variety of uses from compiler optimisations to hardware design. The challenge in creating a benchmark suite is to capture a diverse set of workloads that is both representative of real-world usage while providing adequate coverage of the program space. Achieving either of these two goals is a challenging task, and efforts towards one goal might hamper the other. As a result, there is no ``one size fits all'' benchmark suite.
 
 % Ryoo, J. H., Quirem, S. J., Lebeane, M., Panda, R., Song, S., & John, L. K. (2015). GPGPU Benchmark Suites: How Well Do They Sample the Performance Spectrum? ICPP.
 Given its importance, benchmark suite characterisation has been the subject of much research. An evaluation of popular GPGPU benchmark suites~\cite{Ryoo2015} reveals there are important parts of the program space left untested.
@@ -29,9 +29,9 @@ A review of big data benchmarks~\cite{Ferdman2012} found many to be unrepresenta
 % Goswami, N., Shankar, R., Joshi, M., & Li, T. (2010). Exploring GPGPU workloads: Characterization methodology, analysis and microarchitecture evaluation implications. In IISWC. https://doi.org/10.1109/IISWC.2010.5649549
 \citeauthor{Goswami2010}~\cite{Goswami2010} evaluate the diversity of 38 GPGPU benchmark workloads, finding that \emph{Similarity Score}, \emph{Scan of Large Arrays}, and \emph{Parallel Reduction} benchmarks show significantly different behaviour due to their large number of diverse kernels, but the remaining 35 benchmarks provide similar characteristics.
 % Phansalkar, A., Joshi, A., & John, L. K. (2007). Analysis of redundancy and application balance in the SPEC CPU2006 benchmark suite. ACM SIGARCH Computer Architecture News, 35(2).
-\citeauthor{Phansalkar2007}~\cite{Phansalkar2007} show that a subset of 14 SPEC CPU 2006 programs can yield most of the information of the entire suite, and
+\citeauthor{Phansalkar2007}~\cite{Phansalkar2007} show that a subset of 14 SPEC CPU 2006 programs yields most of the information of the entire suite, and
 % Panda, R., Song, S., Dean, J., & John, L. K. (2018). Wait of a Decade: Did SPEC CPU 2017 Broaden the Performance Horizon? In HPCA. IEEE.
-\citeauthor{Draft2018}~\cite{Draft2018} find that SPEC CPU 2017 contains workloads that can be safely removed without degrading coverage of the program space.
+\citeauthor{Draft2018}~\cite{Draft2018} find that SPEC CPU 2017 contains workloads that, when removed, do not degrade the suite's coverage of the program space.
 
 Researchers have turned to \emph{synthetic} benchmarks to address the coverage and diversity challenges.
 % Curnow, H. J., & Wichmann, B. A. (1976). A Syntetic Benchmark. Computer, 19(1).
@@ -44,7 +44,7 @@ A popular use of synthetic benchmark generation techniques is to aid microproces
 % Bertran, R., Buyuktosunoglu, A., Gupta, M. S., Gonzalez, M., & Bose, P. (2012). Systematic Energy Characterization of CMP/SMT Processor Systems via Automated Micro-Benchmarks. In MICRO. IEEE.
 \emph{MicroProbe}~\cite{Bertran2012} uses feedback-directed micro-benchmark generation to perform a systematic energy characterisation of a processor.
 
-\emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. The essence of the approach is to construct a probabilistic grammar with embedded semantic actions that define a language of possible programs. New programs may be created by sampling the grammar and, through setting probabilities on the grammar productions, the sampling is biased towards producing programs from one part of the space or another. This technique is potentially completely general since a grammar can theoretically be constructed to match any desired program domain. However, despite being theoretically possible, it is not easy to construct grammars which are both suitably general and also produce programs that are in any way similar to what humans write. Such grammar-based benchmark generators have been shown to be successful over a highly restricted space of stencil benchmarks with little control flow or program variability~\cite{Garvey2015b,Falch2015,Cummins2016a}. But, it remains unclear how much effort it will take to define grammars capable of producing human-like programs in more complex domains.
+\emph{GENESIS}~\cite{Chiu2015} is a language for generating synthetic training programs. The essence of the approach is to construct a probabilistic grammar with embedded semantic actions that define a language of possible programs. New programs may be created by sampling the grammar and, through setting probabilities on the grammar productions, the sampling is biased towards producing programs from one part of the space or another. This technique is potentially completely general since a grammar might theoretically be constructed to match any desired program domain. However, despite being theoretically possible, it is not easy to construct grammars which are both suitably general and also produce programs that are in any way similar to what humans write. Such grammar-based benchmark generators have been shown to be successful over a highly restricted space of stencil benchmarks with little control flow or program variability~\cite{Garvey2015b,Falch2015,Cummins2016a}. But, it remains unclear how much effort it will take to define grammars capable of producing human-like programs in more complex domains.
 
 Interesting recent developments in synthetic benchmark generation have combined elements from feedback-directed test case synthesis (reviewed in the next section) with synthetic benchmarking for the purpose of generating \emph{adversarial} benchmarks that expose performance issues in systems.
 
@@ -69,7 +69,7 @@ In contrast to prior works, the benchmark generation technique proposed in this 
 
 \subsection{Test Case Generation for Compiler Validation}
 
-Compilers are a fundamental trusted technology, and their correctness is critical. Errors in compilers can introduce security vulnerabilities and catastrophic runtime failures. Therefore, testing that a compiler behaves as expected is of utmost importance.
+Compilers are a fundamental trusted technology, and their correctness is critical. Errors in compilers introduce security vulnerabilities and catastrophic runtime failures. Therefore, testing that a compiler behaves as expected is of utmost importance.
 
 Approaches to assuring compiler behaviour can be divided into \emph{verification} and \emph{validation}. The complexity of optimising compilers and programming languages renders formal verification of the entire compiler prohibitively expensive. Efforts have been made in this direction, for example, CompCert~\cite{Leroy2013}, a formally verified compiler for the C programming language, but this comes at the cost of supporting only a subset of the language features and with lower performance compared to GCC. Still, even CompCert is not fully verified, and errors have been discovered in the unverified components~\cite{Yang2011}.
 
@@ -84,7 +84,7 @@ The idea of generating test cases for compilers is well-established. The majorit
 % Hanford, K. V. (1970). Automatic Generation of Test Cases. IBM Systems Journal, 9(4).
 An early approach is presented by \citeauthor{Hanford1970a}~\cite{Hanford1970a}, which randomly enumerates a context-free grammar to produce an inexhaustible supply of new programs. While the generated programs are syntactically valid, they are meaningless, and cannot be executed. This limits their value only to testing the compiler front end.
 
-Deeper testing of compiler components is enabled by generating both a syntactically correct program and a \emph{gold standard output} that would be produced by a conformant compiler. The compiled program can then be executed and its output compared against this gold standard. Figure~\ref{fig:test-case-generators-oracle} shows the process. Gold standard-based approaches are surveyed by \citeauthor{Boujarwah1997}~\cite{Boujarwah1997} and \citeauthor{Kossatchev2005}~\cite{Kossatchev2005}. The challenge of the approach is in generating the gold standard output.
+Deeper testing of compiler components is enabled by generating both a syntactically correct program and a \emph{gold standard output} that would be produced by a conformant compiler. The compiled program is then executed and its output compared against this gold standard. Figure~\ref{fig:test-case-generators-oracle} shows the process. Gold standard-based approaches are surveyed by \citeauthor{Boujarwah1997}~\cite{Boujarwah1997} and \citeauthor{Kossatchev2005}~\cite{Kossatchev2005}. The challenge of the approach is in generating the gold standard output.
 
 \begin{figure}
   \centering

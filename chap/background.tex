@@ -30,7 +30,7 @@ Machine learning techniques are used in this thesis for classification and seque
   }%
   \caption[Training and inference in machine learning]{%
     \diff{%
-    	An illustration of the training and inference of a machine learning model. The $x$- and $y$-axes depict features and labels, which may be continuous or discrete multi-dimensional spaces. In~\subref{fig:classification-a}, training observations have been collected, consisting of features and their corresponding labels. A model is then fitted to these observations, shown as the green curve in~\subref{fig:classification-b}. The model can be used to infer the label of unseen feature values, shown in~\subref{fig:classification-c}.%
+    	An illustration of the training and inference of a machine learning model. The $x$- and $y$-axes depict features and labels, which may be continuous or discrete multi-dimensional spaces. In~\subref{fig:classification-a}, training observations have been collected, consisting of features and their corresponding labels. A model is then fitted to these observations, shown as the green curve in~\subref{fig:classification-b}. The model is then used to infer the label of unseen feature values, shown in~\subref{fig:classification-c}.%
 		}%
   }%
   \label{fig:classification}
@@ -271,7 +271,7 @@ The gain of a feature $x$ is found using:
   \gain(D, x) = H(D) - \sum_{V \in \text{Values}(x)}\frac{|D_V|}{|D|}H(D_V)
 \end{equation}
 
-Decision trees are a popular and low overhead form of classification. Implementations can be as simple and efficient as a set of nested conditional statements.
+Decision trees are a popular and low overhead form of classification. Implementations are as simple and efficient as a set of nested conditional statements.
 
 % TODO: \subsection{Generative Adversarial Networks}
 
@@ -314,7 +314,7 @@ Employing a second indexing function $u$ to divide the data not set aside for te
 
 \subsection{$K$-Fold Cross-validation}
 
-Dividing the dataset into a fixed training set and a fixed test set can be problematic if it results in the test set being small. A small test set implies statistical uncertainty around the estimated average test error, making it difficult to compare models.
+Dividing the dataset into fixed training and test sets is problematic if it results in the test set being small. A small test set implies statistical uncertainty around the estimated average test error, making it difficult to compare models.
 
 Ideally, sufficient data would exist to be set aside for testing. When not practically possible, cross-validation may be used. Cross-validations enables the use of all observations in a data set in the estimation of the mean test error, at the expense of increased computational cost through repeated evaluations.
 
