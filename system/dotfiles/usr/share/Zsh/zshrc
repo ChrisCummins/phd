@@ -387,13 +387,13 @@ fi
 unalias l
 l() {
     if [ -z "$1" ]; then
-        ls -l
+        ls -lh --color
     else
         for var in "$@"; do
             if [ -d "$var" ]; then
-                ls -l "$var"
+                ls -lh --color "$var"
             else
-                less "$var"
+                bat "$var"
             fi
         done
     fi
@@ -662,3 +662,5 @@ fi
 
 # Add Travis CI completion, if available.
 [ -f /home/cec/.travis/travis.sh ] && source /home/cec/.travis/travis.sh
+# Add autojump, if available. <https://github.com/wting/autojump>
+[ -f /usr/local/etc/profile.d/autojump.sh ] && . /usr/local/etc/profile.d/autojump.sh
