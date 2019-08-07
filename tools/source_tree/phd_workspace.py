@@ -31,7 +31,7 @@ _ALWAYS_EXPORTED_FILES = [
     'tools/download_file.py',  # Needed by //tools/bzl:maven_jar.bzl.
     'tools/util.py',  # Needed by //tools:download_file.py.
     'third_party/*.BUILD',  # Implicit dependencies of WORKSPACE file.
-    'tools/flaky_workspace.sh',  # Needed by Travis CI.
+    'tools/flaky_bazel.sh',  # Needed by Travis CI.
     'third_party/py/tensorflow/BUILD.in',  # Needed by ./configure
     'tools/workspace_status.sh',  # Needed by .bazelrc
     # tools/requirements.txt is always needed, but is handled separately.
