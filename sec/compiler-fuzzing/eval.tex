@@ -289,7 +289,7 @@ The integrated GPU Testbeds ($3\pm$) frequently failed to compile CLSmith kernel
 
 The 4719 \abf results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. DeepSmith also generated these statements, but with a much lower probability, given that it is an unusual construct (0.6\% of test cases, versus 7.0\% of CLSmith test cases).
 
-ComputeAorta (Testbeds $9\pm$) defers kernel compilation so that it can perform optimisations dependent on runtime parameters. This may contribute to the relatively large number of \arc results and few \bc results of Testbeds $9\pm$. Only DeepSmith was able to expose compile-time defects in this compiler.
+ComputeAorta (Testbeds $9\pm$) defers kernel compilation to enable optimisations dependent on runtime parameters. This may contribute to the relatively large number of \arc results and few \bc results of Testbeds $9\pm$. Only DeepSmith was able to expose compile-time defects in this compiler.
 
 Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code was evaluated, compared to $3.8 \times 10^6$ lines of DeepSmith code. This provides CLSmith with a greater potential to trigger miscompilations. CLSmith generated 33 programs with anomalous wrong-outputs. DeepSmith generated 30.
 

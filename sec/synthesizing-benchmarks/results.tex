@@ -26,7 +26,7 @@ The strongest performance improvements are on NVIDIA with the \texttt{FT} benchm
 \subsection{Extending the Predictive Model}
 \label{subsec:eval-extended}
 
-Feature designers are bound to select as features only properties which are significant for the handful of benchmarks they test on, which can limit a model's ability to generalise over a wider range of programs. This is found to be the case with the \citeauthor{Grewe2013} model. The addition of automatically generated programs exposed two distinct cases where the model failed to generalise as a result of overspecialising to the NPB suite.
+Feature designers are bound to select as features only properties which are significant for the handful of benchmarks they test on, which limits a model's ability to generalise over a wider range of programs. This is found to be the case with the \citeauthor{Grewe2013} model. The addition of automatically generated programs exposed two distinct cases where the model failed to generalise as a result of overspecialising to the NPB suite.
 
 The first case is that the feature \texttt{F3} of Table~\ref{tab:clgen-cgo13-features} is sparse on many programs. This is a result of the NPB implementation's heavy exploitation of local memory buffers and the method by which they combined features (speculatively, this may have been a necessary dimensionality reduction in the presence of sparse training programs). A simple countermeasure is taken to address this by extending the model to use the raw feature values in addition to the combined features.
 
@@ -67,7 +67,7 @@ Figure~\ref{fig:clgen-nearest-neighbour} plots the number of exact feature vecto
 \begin{figure}
   \includegraphics[width=\columnwidth]{img/closeness} %
   \caption[Number of kernels matching benchmark features]{%
-    The number of kernels from GitHub, CLSmith, and CLgen with static code features matching the benchmarks. CLgen generates kernels that are closer in the feature space than CLSmith, and can continue to do so long after we have exhausted the extent of the GitHub data set. Error bars show the standard deviation from 10 random samplings.%
+    The number of kernels from GitHub, CLSmith, and CLgen with static code features matching the benchmarks. CLgen generates kernels that are closer in the feature space than CLSmith, and continues to do so long after the extent of the GitHub data set is exhausted. Error bars show the standard deviation from 10 random samplings.%
   }%
   \label{fig:clgen-nearest-neighbour}
 \end{figure}
