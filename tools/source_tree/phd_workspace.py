@@ -1,13 +1,14 @@
 """Library that handles custom stuff for working with this project."""
 import datetime
-import git
-import typing
+import glob
+import os
 import pathlib
+import re
 import shutil
 import subprocess
-import re
-import os
-import glob
+import typing
+
+import git
 
 from labm8 import app
 from labm8 import bazelutil
@@ -51,7 +52,7 @@ class PhdWorkspace(bazelutil.Workspace):
     super(PhdWorkspace, self).__init__(*args, **kwargs)
     self._repo = git.Repo(self.workspace_root)
     if not (self.workspace_root / 'tools' / 'requirements.txt').is_file():
-      raise OSError("Expected file toos/requirements.txt not found")
+      raise OSError('Expected file toos/requirements.txt not found')
 
   @property
   def git_repo(self) -> git.Repo:
@@ -134,7 +135,7 @@ class PhdWorkspace(bazelutil.Workspace):
                               universal_newlines=True)
       stdout, _ = grep.communicate()
       if bazel.returncode:
-        raise OSError("bazel query failed")
+        raise OSError('bazel query failed')
       output = stdout.rstrip()
       if output:
         dependencies = dependencies.union(set(output.split('\n')))
@@ -197,7 +198,7 @@ class PhdWorkspace(bazelutil.Workspace):
       dst_path = workspace.workspace_root / relpath
 
       if not src_path.is_file():
-        raise OSError(f"File `{relpath}` not found")
+        raise OSError(f'File `{relpath}` not found')
 
       dst_path.parent.mkdir(exist_ok=True, parents=True)
       shutil.copy(src_path, dst_path)
@@ -211,7 +212,7 @@ class PhdWorkspace(bazelutil.Workspace):
         src_path = self.workspace_root / src_relpath
         dst_path = workspace.workspace_root / dst_relpath
         if not src_path.is_file():
-          raise OSError(f"File `{src_relpath}` not found")
+          raise OSError(f'File `{src_relpath}` not found')
 
         dst_path.parent.mkdir(exist_ok=True, parents=True)
         # We can't simply `git mv` because in incremental exports, this move
