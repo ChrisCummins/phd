@@ -1,6 +1,6 @@
 # Augment the standard base environment with Java.
-FROM chriscummins/phd_base:latest
-MAINTAINER Chris Cummins <chrisc.101@gmail.com>
+FROM chriscummins/phd_base:2019.08.06
+LABEL maintainer="Chris Cummins <chrisc.101@gmail.com>"
 
 # Switch back to root user to do the installation admin.
 USER root
@@ -10,8 +10,9 @@ USER root
 RUN mkdir -p /usr/share/man/man1
 
 # Install Java.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  openjdk-8-jdk
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openjdk-11-jdk \
+  && rm -rf /var/lib/apt/lists/*
 
 # Switch back to user account.
 USER docker
