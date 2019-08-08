@@ -9,7 +9,7 @@ This chapter provides an overview of the techniques and theory used in this thes
 \section{Machine Learning}
 \label{sec:background-machine-learning}
 
-Machine learning is a family of statistical models and algorithms used to infer functions to estimate future values given past observations and their \emph{features}. Features, or explanatory variables, are a set of observable attributes used by machine learning algorithms to build the correlations required to predict unseen values, \diff{or \emph{labels}. Figure~\ref{fig:classification} illustrates the process by which a model is fitted to past observations observations and used to infer the label of unseen data points. The $n$-dimensional space described by $n$ features is known as a feature space. A \emph{feature vector} is then the set of values describing a single point in this space.}
+Machine learning is a family of statistical models and algorithms used to infer functions to estimate future values given past observations and their \emph{features}. Features, or explanatory variables, are a set of observable attributes used by machine learning algorithms to build the correlations required to predict unseen values, or \emph{labels}. Figure~\ref{fig:classification} illustrates the process by which a model is fitted to past observations observations and used to infer the label of unseen data points. The $n$-dimensional space described by $n$ features is known as a feature space. A \emph{feature vector} is then the set of values describing a single point in this space.
 
 Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the correct category, or \emph{class}, for a set of features, based on labelled training data, i.e.\ instances whose categories are known.
 
@@ -29,9 +29,7 @@ Machine learning techniques are used in this thesis for classification and seque
     \label{fig:classification-c}%
   }%
   \caption[Training and inference in machine learning]{%
-    \diff{%
-    	An illustration of the training and inference of a machine learning model. The $x$- and $y$-axes depict features and labels, which may be continuous or discrete multi-dimensional spaces. In~\subref{fig:classification-a}, training observations have been collected, consisting of features and their corresponding labels. A model is then fitted to these observations, shown as the green curve in~\subref{fig:classification-b}. The model is then used to infer the label of unseen feature values, shown in~\subref{fig:classification-c}.%
-		}%
+    An illustration of the training and inference of a machine learning model. The $x$- and $y$-axes depict features and labels, which may be continuous or discrete multi-dimensional spaces. In~\subref{fig:classification-a}, training observations have been collected, consisting of features and their corresponding labels. A model is then fitted to these observations, shown as the green curve in~\subref{fig:classification-b}. The model can be used to infer the label of unseen feature values, shown in~\subref{fig:classification-c}.%
   }%
   \label{fig:classification}
 \end{figure}
@@ -81,7 +79,7 @@ The activation function $\phi(z)$ is a non-linear differentiable function used t
   \phi(z) = \frac{1}{1 + e^{-z}}
 \end{equation}
 
-Sigmoid activations are bounded in the range $(0,1)$, \diff{depicted in Figure~\ref{fig:activation-functions-sigmoid}}.
+Sigmoid activations are bounded in the range $(0,1)$, depicted in Figure~\ref{fig:activation-functions-sigmoid}.
 % , which prevents blowing up of activations. Negative: gives rise to ``vanishing gradients'' because of the squishing behaviour for large positive or negative values - sigmoids saturate and kill gradients.
 % It's output is not zero-centred, which makes gradient updates go too far in different directions.
 For hidden layers, a disadvantage of sigmoid activation is that the output is not zero-centred. To address this, the \emph{Hyperbolic Tangent} (tanh) activation may be used, which is a scaled sigmoid function with values in the range $(-1,1)$:
@@ -90,13 +88,13 @@ For hidden layers, a disadvantage of sigmoid activation is that the output is no
   \phi(z) = \frac{e^{z} - e^{-z}}{e^z + e^{-z}}
 \end{equation}
 
-\diff{Figure~\ref{fig:activation-functions-tanh} illustrates the hyperbolic tangent activation.} Logistic function-based activations suffer from a squashing effect with large positive and negative values, and they are \emph{dense} activations in which every artificial neuron contributes to the output value. The \emph{Rectified Linear Unit} (ReLU) activation function addresses both issues, with an unbounded range $[0,\infty)$:
+Figure~\ref{fig:activation-functions-tanh} illustrates the hyperbolic tangent activation. Logistic function-based activations suffer from a squashing effect with large positive and negative values, and they are \emph{dense} activations in which every artificial neuron contributes to the output value. The \emph{Rectified Linear Unit} (ReLU) activation function addresses both issues, with an unbounded range $[0,\infty)$:
 
 \begin{equation}
   \phi(z) = max(z, 0)
 \end{equation}
 
-\diff{The ReLU activation is shown in Figure~\ref{fig:activation-functions-relu}.} If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons in the network will not fire, so that activations are sparse.
+The ReLU activation is shown in Figure~\ref{fig:activation-functions-relu}. If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons in the network will not fire, so that activations are sparse.
 % Problem is ``dying'' neurons. When activations dip below 0, gradients will be 0, so the neuron becomes unresponsive to variations in input / error.
 The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, effectively ``dying''. Leaky ReLU prevents artificial neurons from becoming unresponsive to variations in input by introducing a small slope for negative values:
 
@@ -132,9 +130,7 @@ Where $\sum_{i=1}^{K} \phi (\bm{z})^{(i)} = 1$.
 		\label{fig:activation-functions-relu}%
 	}%
 	\caption[Activation functions for artificial neural networks]{%
-		\diff{%
-			Three non-linear functions commonly used to determine the activation of artificial neurons in an artificial neural network.%
-		}%
+      Three non-linear functions commonly used to determine the activation of artificial neurons in an artificial neural network.%
 	}%
 	\label{fig:activation-functions}
 \end{figure}

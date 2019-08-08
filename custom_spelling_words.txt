@@ -1,4 +1,4 @@
-personal_ws-1.1 en 433 
+personal_ws-1.1 en 435 
 LangFuzz
 SkelCL
 Lidbury
@@ -113,6 +113,7 @@ ComputeAorta
 Haswell
 Ansel
 mriQ
+todo
 perceptrons
 GTX
 miscompiled
@@ -242,8 +243,8 @@ vectorisation
 NUMA
 StackOverflow
 Hadamard
-scp
 SDK
+scp
 blockchain
 shaders
 xcolor
@@ -338,6 +339,7 @@ Oclgrind
 PrepareKernelArgs
 WTF
 aa
+GANs
 AE
 bc
 superset
@@ -375,8 +377,8 @@ Jitsunari
 parallelisation
 JSON
 miscompilations
-js
 md
+js
 MiBench
 embeddings
 BasicBlocks
@@ -392,8 +394,8 @@ sB
 sC
 Banerjee
 sD
-opencl
 OpenCL
+opencl
 walsh
 sE
 sF

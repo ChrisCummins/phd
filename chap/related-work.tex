@@ -23,7 +23,7 @@ Given its importance, benchmark suite characterisation has been the subject of m
 A review of big data benchmarks~\cite{Ferdman2012} found many to be unrepresentative, and that current hardware designs, while optimised for existing benchmark suites, are inefficient for true workloads.
 
 % As well as covering the program space, benchmarks within suites should be diverse.
-\diff{Benchmark suites should be \emph{diverse}, with each benchmark within a suite occupying a distinct point in the program space, else the benchmark may be redundant.}
+Benchmark suites should be \emph{diverse}, with each benchmark within a suite occupying a distinct point in the program space, else the benchmark may be redundant.
 % Ould-Ahmed-Vall, E., Doshi, K. A., Yount, C., & Woodlee, J. (2008). Characterization of SPEC CPU2006 and SPEC OMP2001: Regression models and their transferability. In ISPASS. IEEE. https://doi.org/10.1109/ISPASS.2008.4510750
 \citeauthor{Ould-Ahmed-Vall2008}~\cite{Ould-Ahmed-Vall2008} show that statistical models trained on 10\% of SPEC CPU 2006 data are transferable to the remaining data.
 % Goswami, N., Shankar, R., Joshi, M., & Li, T. (2010). Exploring GPGPU workloads: Characterization methodology, analysis and microarchitecture evaluation implications. In IISWC. https://doi.org/10.1109/IISWC.2010.5649549
@@ -73,7 +73,7 @@ Compilers are a fundamental trusted technology, and their correctness is critica
 
 Approaches to assuring compiler behaviour can be divided into \emph{verification} and \emph{validation}. The complexity of optimising compilers and programming languages renders formal verification of the entire compiler prohibitively expensive. Efforts have been made in this direction, for example, CompCert~\cite{Leroy2013}, a formally verified compiler for the C programming language, but this comes at the cost of supporting only a subset of the language features and with lower performance compared to GCC. Still, even CompCert is not fully verified, and errors have been discovered in the unverified components~\cite{Yang2011}.
 
-Because of the difficulties of \emph{verification}, compiler developers turn to \emph{validation}, in which the behaviour of a compiler is validated using a set of handcrafted input programs, or \emph{test cases}. For each test case, the expected outcome (determined by the specification of the compiler) is compared against the observed outcome to verify that the compiler conforms to the specification, for those inputs. However, the absence of errors does not prove that the compiler is free from errors unless all possible inputs are tested exhaustively, and the input space for compilers is huge\footnote{\diff{In theory, the input space of a compiler is infinite. In practice, however, constraints such as maximum input file size bound the space.}}. As such, hand-designed suites of test programs, while important, are inadequate for covering such a large space and will not touch all parts of the compiler.
+Because of the difficulties of \emph{verification}, compiler developers turn to \emph{validation}, in which the behaviour of a compiler is validated using a set of handcrafted input programs, or \emph{test cases}. For each test case, the expected outcome (determined by the specification of the compiler) is compared against the observed outcome to verify that the compiler conforms to the specification, for those inputs. However, the absence of errors does not prove that the compiler is free from errors unless all possible inputs are tested exhaustively, and the input space for compilers is huge\footnote{In theory, the input space of a compiler is infinite. In practice, however, constraints such as maximum input file size bound the space.}. As such, hand-designed suites of test programs, while important, are inadequate for covering such a large space and will not touch all parts of the compiler.
 
 The random generation of programs to test compilers is a well-established approach to the compiler validation problem. The main question of interest is in how to efficiently generate codes which trigger bugs. There are two main approaches: \emph{program generation}, where inputs are synthesised from scratch; and \emph{program mutation}, where existing codes are modified so as to identify anomalous behaviour.
 
@@ -118,7 +118,7 @@ CSmith~\cite{Yang2011} is a widely known and effective generator which enumerate
 Subsequent generators influenced by CSmith focus on compiler features and bug types beyond the scope of CSmith, such as Orange3~\cite{Nagai2013} which targets arithmetic bugs.
 
 % Bastani, O., Sharma, R., Aiken, A., & Liang, P. (2017). Synthesizing Program Input Grammars. In PLDI. https://doi.org/10.1145/3062341.3062349
-\diff{Similarly to program generation for test compilers, prior work has focused on input generation for testing programs~\cite{Godefroid2005,Claessen2015,Duregard2012,Fetscher1998,Runciman2008}. Glade~\cite{Bastani2017} derives a context-free grammar for structured program inputs from a corpus of examples. The derived grammar is enumerated to produce new inputs, though no distribution is learned over the grammar; enumeration is uniformly random.}
+Similarly to program generation for test compilers, prior work has focused on input generation for testing programs~\cite{Godefroid2005,Claessen2015,Duregard2012,Fetscher1998,Runciman2008}. Glade~\cite{Bastani2017} derives a context-free grammar for structured program inputs from a corpus of examples. The derived grammar is enumerated to produce new inputs, though no distribution is learned over the grammar; enumeration is uniformly random.
 
 % \diff{Functional programming languages often minimise the use of mutable state and side effects, making them particularly amenable to random testing. \emph{Quickcheck}~\cite{Claessen2000} leverages user-provided code properties to enumerate random test inputs.}
 
@@ -135,7 +135,7 @@ Equivalence Modulo Inputs (EMI) testing, introduced by~\citeauthor{Le2013a}~\cit
 % V. Le, C. Sun, and Z. Su, “Finding Deep Compiler Bugs via Guided Stochastic Program Mutation,” in OOPSLA, 2015.
 \emph{Athena}~\cite{Le2015} guides the approach using a Markov Chain Monte Carlo method, and supports dead code insertion as well as removal.
 % V. Le, C. Sun, and Z. Su, “Randomized Stress-testing of Link-Time Optimizers,” in ISSTA, 2015.
-\emph{Proteus}~\cite{Le2015a} applies the EMI technique to test link-time optimizers.
+\emph{Proteus}~\cite{Le2015a} applies the EMI technique to test link-time optimisers.
 % C. Sun, V. Le, and Z. Su, “Finding Compiler Bugs via Live Code Mutation,” in OOPSLA, 2016.
 \emph{Hermes}~\cite{Sun2016a} extends EMI to permit the mutation of \emph{live code} regions, not just dead code. This greatly increases the expressiveness of the generated programs.
 

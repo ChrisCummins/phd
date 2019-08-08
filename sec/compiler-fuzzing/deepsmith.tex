@@ -7,7 +7,7 @@ DeepSmith is an open source framework for compiler fuzzing. Figure~\ref{fig:deep
   \centering
   \includegraphics[width=.7\columnwidth]{img/deepsmith}
   \caption[DeepSmith system overview]{%
-    DeepSmith system overview. \diff{Handwritten programs are used to derive a generative model; from which code samples are produced and parameterised to make test cases. Test cases are broadcast to multiple testbeds, and voting heuristics used to determine the testbeds that deviate from the majority, exposing anomalous results.}
+    DeepSmith system overview. Handwritten programs are used to derive a generative model; from which code samples are produced and parameterised to make test cases. Test cases are broadcast to multiple testbeds, and voting heuristics used to determine the testbeds that deviate from the majority, exposing anomalous results.
   }%
   \label{fig:deepsmith}
 \end{figure}
@@ -36,7 +36,7 @@ First, a candidate vocabulary $V_c$ is assembled for the OpenCL programming lang
 \begin{algorithm}
   \input{alg/maxmunch-tokenization}
   \caption[Deriving a vocabulary from a string]{%
-    \diff{Deriving a hybrid token- and character-level vocabulary from a string.}%
+    Deriving a hybrid token- and character-level vocabulary from a string.%
   }
   \label{alg:maxmunch-tokenization}
 \end{algorithm}
@@ -70,7 +70,7 @@ Executing a test case on a testbed leads to one of seven possible outcomes, illu
   \centering %
   \includegraphics[width=\columnwidth]{img/testcase-flow-chart}
   \caption[Test case execution, and possible results]{%
-    Test case execution, and possible results. \diff{Generating and executing a test case leads to one of six possible outcomes. Of these, build crashes and build timeouts are considered errors. In the remaining four cases, differential testing may be used to determine if the outcome is anomalous.}%
+    Test case execution, and possible results. Generating and executing a test case leads to one of six possible outcomes. Of these, build crashes and build timeouts are considered errors. In the remaining four cases, differential testing may be used to determine if the outcome is anomalous.%
   }%
   \label{fig:test-process}
 \end{figure}
