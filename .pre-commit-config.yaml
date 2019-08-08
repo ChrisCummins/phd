@@ -1,0 +1,89 @@
+default_language_version:
+    python: python3.6
+
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.2.3
+    hooks:
+      - id: trailing-whitespace
+      - id: pretty-format-json
+        args: [--autofix --indent 2]
+      - id: double-quote-string-fixer
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: check-ast
+      - id: check-byte-order-marker
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-xml
+      - id: check-yaml
+      - id: debug-statements
+      - id: detect-private-key
+      - id: forbid-new-submodules
+      - id: name-tests-test
+  - repo: https://github.com/pre-commit/mirrors-yapf
+    rev: v0.28.0
+    hooks:
+      - id: yapf
+        args: ['--style', 'tools/code_style/yapf.yml', '-i']
+  - repo: https://github.com/pre-commit/mirrors-csslint
+    rev: v1.0.5
+    hooks:
+      - id: csslint
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.4.1
+    hooks:
+      - id: python-no-eval
+      - id: python-use-type-annotations
+      - id: rst-backticks
+  - repo: https://github.com/asottile/reorder_python_imports
+    rev: v1.6.1
+    hooks:
+      - id: reorder-python-imports
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 4a1e02a20e9609f5dea86cd6ad1b3072c8748cab
+    hooks:
+      - id: bundler-audit
+      - id: markdownlint
+      - id: shellcheck
+      - id: shfmt
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-java
+    rev: 11cd39481941a84710b3e301a00a23123b7b0301
+    hooks:
+      - id: validate-html
+  - repo: git://github.com/dnephin/pre-commit-golang
+    rev: v0.3.4
+    hooks:
+      - id: go-fmt
+      - id: go-vet
+  - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
+    rev: v0.1.0
+    hooks:
+      - id: dockerfilelint
+        stages: [commit]
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: d43e9c1bfae628e8a14ff66c9addc81309e2306f
+    hooks:
+      - id: clang-format
+        args: [--style=Google]
+      - id: clang-tidy
+        args: [-checks=*, -warnings-as-errors=*]
+      - id: oclint
+        args: [-enable-clang-static-analyzer, -enable-global-analysis]
+  - repo: https://gitlab.com/daverona-env/pre-commit-cpp
+    rev: 0.6.0
+    hooks:
+      - id: cpplint
+      - id: cppcheck
+  - repo: https://github.com/FelixSeptem/pre-commit-golang.git
+    rev: 9bbdb6e4f046af8a2d155ecd8c708e3dc135e34c
+    hooks:
+      - id: bazel-buildifier
