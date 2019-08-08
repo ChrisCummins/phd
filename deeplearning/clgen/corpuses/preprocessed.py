@@ -87,6 +87,7 @@ class PreprocessedContentFile(Base):
       preprocessors_: typing.List[str]) -> 'PreprocessedContentFile':
     """Instantiate a PreprocessedContentFile."""
     start_time = time.time()
+    input_text = ''
     preprocessing_succeeded = False
     try:
       with open(contentfile_root / relpath) as f:
