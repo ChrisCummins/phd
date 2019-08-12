@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 """Print the commands to rename files in directory to a sequential order.
 
 The format for renamed files is: "<show> S<season>E<episode>.<ext>" format.
@@ -49,34 +49,29 @@ def mkepisodal(show_name: str,
 
 def main():
   parser = ArgumentParser(description=__doc__)
-  parser.add_argument(
-      "show_name",
-      metavar="<show-name>",
-      help="Name of the show, e.g. 'The Simponsons'")
-  parser.add_argument(
-      "season_num",
-      metavar="<season number>",
-      type=int,
-      help="Season number, e.g. '1'")
-  parser.add_argument(
-      "directory",
-      metavar="[directory]",
-      nargs="?",
-      default=".",
-      help="Path to the directory containing the show's files")
-  parser.add_argument(
-      "--start-at",
-      metavar="<num>",
-      type=int,
-      default="1",
-      help="Episode start number (default: 1)")
+  parser.add_argument("show_name",
+                      metavar="<show-name>",
+                      help="Name of the show, e.g. 'The Simponsons'")
+  parser.add_argument("season_num",
+                      metavar="<season number>",
+                      type=int,
+                      help="Season number, e.g. '1'")
+  parser.add_argument("directory",
+                      metavar="[directory]",
+                      nargs="?",
+                      default=".",
+                      help="Path to the directory containing the show's files")
+  parser.add_argument("--start-at",
+                      metavar="<num>",
+                      type=int,
+                      default="1",
+                      help="Episode start number (default: 1)")
   args = parser.parse_args()
 
-  mkepisodal(
-      args.show_name,
-      args.season_num,
-      Path(args.directory),
-      start_at=args.start_at)
+  mkepisodal(args.show_name,
+             args.season_num,
+             Path(args.directory),
+             start_at=args.start_at)
 
 
 if __name__ == "__main__":
