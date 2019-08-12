@@ -170,3 +170,8 @@ cc_test(
     srcs = ["029-unique-substrings.cc"],
     deps = ["@gtest"],
 )
+
+cc_binary(
+    name = "030_reverse_words_in_sentence",
+    srcs = ["030_reverse_words_in_sentence.cc"],
+)
