@@ -8,4 +8,41 @@
 //
 // Follow-up: what if you can't use division?
 
-int main(int argc, char** argv) {}
+#include <iostream>
+#include <vector>
+
+// Time: O(n)
+// Space: O(n)
+template <typename T>
+std::vector<T> Solution(const std::vector<T>& a) {
+  T product = 1;
+  for (auto& x : a) {
+    product *= x;
+  }
+
+  std::vector<T> out;
+  out.reserve(a.size());
+
+  for (size_t i = 0; i < a.size(); ++i) {
+    out.push_back(product / a[i]);
+  }
+
+  return out;
+}
+
+template <typename T>
+void PrintArray(const std::vector<T>& a) {
+  for (auto& x : a) {
+    std::cout << x << ", ";
+  }
+  std::cout << std::endl;
+}
+
+int main(int argc, char** argv) {
+  PrintArray(Solution<int>({}));
+  PrintArray(Solution<int>({1}));
+  PrintArray(Solution<int>({1, 2}));
+  PrintArray(Solution<int>({1, 2, 3}));
+  PrintArray(Solution<int>({1, 2, 3, 4, 5}));
+  return 0;
+}
