@@ -5,17 +5,24 @@ There has been an unprecedented increase in the scale and quantity of data-inten
 }
 
 \diff{%
-Compilers, which play an essential role in extracting software  efficiency, have changed little in the last few decades. They comprise a front-end, back-end, and optimising "middle-end". While some of the logic can be shared across architectures, the optimisation decisions to extract the best performance from specific hardware cannot. Currently, each architecture requires extensive hand tuning by experts to extract good performance. Optimising a single component requires knowledge of the full compiler and the interaction of components, yet compilers comprise millions of lines of code and are too complex to be fully understood by a single developer. This makes them cumbersome and unable to adapt to the rapidly changing hardware landscape arising from the of GPGPU, FPGA~\cite{Misra2010}, ASICs~\cite{Misra2010,Jouppi2017}.
-%
+Compilers, which play an essential role in extracting software  efficiency, have changed little in the last few decades.
+% They comprise a front-end, back-end, and optimising "middle-end". While some of the logic can be shared across architectures, the optimisation decisions to extract the best performance from specific hardware cannot.
+Compilers comprise millions of lines of code and are too complex to be fully understood by a single developer, yet optimising a single component requires knowldge of the full compiler and the interaction of its components. Currently, each architecture requires extensive hand tuning by experts to extract good performance.%
 }
+
+\begin{table}
+\input{tab/compiler-costs}
+\end{table}
 
 % In hardware, performance needs have long outstripped what can be provided by single processors, leading to a broad spectrum of parallel and increasingly heterogeneous architectures. These range from re-purposing existing hardware such as Graphics Processor Units (GPUs) to developing entirely novel application-specific chips~\cite{Misra2010,Jouppi2017}. While some compiler logic can be shared across architectures, the optimisation decisions to extract the best performance from specific hardware cannot. Currently, each architecture requires extensive hand tuning by experts to extract good performance.
 
 % In software, the shift towards parallelism and heterogeneity has created a \emph{programmability challenge}. Parallel programming poses a far greater burdern on developers than traditional single-threaded development; it is often not clear how best to partition work across the available parallel resources and doing so easily introduces bugs. One of the most popular approaches to mitigating the programmability challenge is through the development and widespread adoption of libraries of high-level abstractions. High-level abstractions greatly simplify parallel programming by providing complex parallel communication and coordination logic, allowing users to plug-in only the business logic required to solve a problem. Still, there is a wide range of approaches to implementing such libraries. For example, two of the most popular high-level libraries for parallelising deep learning workloads --- TensorFlow~\cite{Abadi} and PyTorch~\cite{Paszke2017} --- use opposing data-flow and imperative programming styles, respectively. Optimising such libraries provides new challenges to the compiler --- the challenge of code analyses in the face of parallelised higher-order functions can defeat many optimisations.
 
-\diff{What will better tools for compilers provide?}
-The combined burden of increased hardware and software diversity has resulted in compilers that are too complex to be fully understood by a single developer \diff{TODO: yet optimising a single component requires full knowledge of the compiler and interactions between components}, and too cumbersome to keep up with the required pace of change. \diff{todo: what is THIS? This} results in slow performance, wasted energy, and buggy software. For the trend towards data-intensive workloads and heterogeneous devices to continue, new techniques are required to reduce the cost of compiler construction. The remainder of this chapter describes the application of machine learning to this issue, followed by the problems with this approach. Then the contributions of this thesis are detailed, followed by a description of the overall structure of the document.
-\diff{Do my techinques fix the above problem?}
+\diff{%
+This cumbersome development is unable to adapt to the rapidly changing hardware landscape arising from GPUs, FPGAs~\cite{Misra2010,Cong2016a}, and ASICs~\cite{Misra2010,Jouppi2017}. When compilers are unable to keep up with the pace of change, this leads to wasted energy, slow performance, and buggy software. For the trend towards data-intensive workloads and heterogeneous devices to continue, new techniques are required to reduce the cost of compiler construction.
+
+The remainder of this chapter describes the application of machine learning to compiler construction, followed by the problems with this approach. Then the contributions of this thesis are detailed, followed by a description of the overall structure of the document.%
+}
 
 
 \section{Machine Learning for Compilers}
@@ -35,9 +42,7 @@ Yet, the integration of machine learning and compilers has remained a largely ac
 
 \section{Challenges in Machine Learning for Compilers}
 
-\diff{TODO: s/problem/challenge/}
-
-Machine learning techniques offer reduced costs and improved performance compared to expert approaches, yet there are challenges preventing widespread adoption. There are two significant problems that must be overcome:
+Machine learning techniques offer reduced costs and improved performance compared to expert approaches, yet there are challenges preventing widespread adoption. There are three significant challenges that must be overcome:
 
 \paragraph*{Scarcity of data} In machine learning, a model is trained based on past observations to predict the values for future inputs. In order to be able to generalise well to unseen observations, plentiful training data should be provided, with a fine-grained overview of the feature space. In the case of compilers, training data is derived from benchmark programs, meaning that many benchmarks are needed to produce sufficient observations for training. Typical machine learning experiments outside of the compilation field train over thousands or millions of observations. However, there are typically only a few dozen common benchmarks available.
 
@@ -53,9 +58,11 @@ Many problems in compilers do not map directly to numeric attributes, so systems
 
 If machine learning is to be widely adopted in compilers, it must be made significantly easier and cheaper. The aim of this thesis is to develop machine learning techniques that simplify and lower the cost of compiler construction.
 
+\paragraph*{Adoption}
+
 % TODO: Can we squeeze in a paragraph about testing?
 
-
+\newpage
 \section{Contributions}
 
 This thesis presents machine learning-based techniques to simplify and accelerate compiler construction. The key contributions of this thesis are:
