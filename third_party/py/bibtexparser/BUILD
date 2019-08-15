@@ -11,5 +11,6 @@ py_library(
     srcs = ["bibtexparser.py"],
     deps = [
         requirement("bibtexparser"),
+        "//third_party/py/pyparsing",
     ],
 )
