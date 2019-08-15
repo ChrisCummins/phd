@@ -45,3 +45,8 @@ cc_test(
         "//labm8/cpp:test",
     ],
 )
+
+cc_binary(
+    name = "d190815_unique_int",
+    srcs = ["d190815_unique_int.cc"],
+)
