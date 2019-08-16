@@ -255,7 +255,7 @@ Where $\otimes$ denotes element-wise vector product, and subscript $c$ denotes c
 
 \subsection{Decision Trees}
 
-Decision trees are an intuitive form of classifier whereby a tree structure of decision nodes are used to predict the class for a given set of features. Decision trees are built using binary recursive partitioning: by creating a decision node for the feature which provides the highest gain, creating new child nodes for each possible outcome, splitting the data amongst these child nodes, and continuing recursively. The gain of a feature is found by first computing the entropy of the data set. Given a set of data points $D$, and $p_{(+)}$ and $p_{(-)}$ are the number of positive and negative examples in $D$:
+Decision trees are an intuitive form of classifier whereby a tree structure of decision nodes are used to predict the class for a given set of features. Decision trees are built using binary recursive partitioning: by creating an axis-parallel decision node for the feature which provides the highest gain, creating new child nodes for each possible outcome, splitting the data amongst these child nodes, and continuing recursively. The gain of a feature is found by first computing the entropy of the data set. Given a set of data points $D$ where $p_{(+)}$ is the number of positive examples in $D$ and $p_{(-)}$ is the number of negative examples in $D$:
 
 \begin{equation}
   H(D) = - p_{(+)}\log_2p_{(+)} - p_{(-)}\log_2p_{(-)}
@@ -267,7 +267,7 @@ The gain of a feature $x$ is found using:
   \gain(D, x) = H(D) - \sum_{V \in \text{Values}(x)}\frac{|D_V|}{|D|}H(D_V)
 \end{equation}
 
-Decision trees are a popular and low overhead form of classification. Implementations are as simple and efficient as a set of nested conditional statements.
+Decision trees are a popular and low overhead form of classification. Once trained, a decision tree can be implemented as a set of nested conditional statements. This makes the learned model easily interpretable, simplifying debugging.
 
 % TODO: \subsection{Generative Adversarial Networks}
 
@@ -283,9 +283,10 @@ Decision trees are a popular and low overhead form of classification. Implementa
 
 
 
-\section{Evaluation Techniques}
+\section{Model Evaluation Techniques}
 \label{sec:evaluation-techniques}
 
+This section describes the techniques used to evaluate the machine learning techniques described in the previous section.
 
 \subsection{ZeroR}
 
@@ -294,7 +295,7 @@ A \emph{ZeroR} model is used in classification tasks to provide a baseline to ev
 
 \subsection{Training, validation, test data}
 
-To evaluate a machine learning model, data must be divided into disjoint \emph{training} and \emph{testing} partitions. For a set of $N$ pairs of input and output observations $\bm{D} = (\bm{x}^{(i)}, \bm{y}^{(i)}), i = 1, \ldots, N$, let $k : {1,\ldots,N} \rightarrow {1,\ldots,K}$ be an indexing function that indicates the partition to which the observation $i \in N$ is allocated by the randomisation. The model is then trained with the $k$th part of the data removed, yielding fitted function $\hat{f}^{-k}(\bm{x})$. The quality of the model $V(\hat{f}^{-k})$ is then evaluated using the loss between the expected values and predicted values in the unseen test set:
+The data used to train a machine learning model must not be used to evaluate it. To evaluate a machine learning model, data must be divided into disjoint \emph{training} and \emph{testing} partitions. For a set of $N$ pairs of input and output observations $\bm{D} = (\bm{x}^{(i)}, \bm{y}^{(i)}), i = 1, \ldots, N$, let $k : {1,\ldots,N} \rightarrow {1,\ldots,K}$ be an indexing function that indicates the partition to which the observation $i \in N$ is allocated by the randomisation. The model is then trained with the $k$th part of the data removed, yielding fitted function $\hat{f}^{-k}(\bm{x})$. The quality of the model $V(\hat{f}^{-k})$ is then evaluated using the loss between the expected values and predicted values in the unseen test set:
 
 \begin{align}
   \bm{y}_k &= \{ \bm{y}^{(i)} \in \bm{y} | i \in k(\bm{y}) \} \\
@@ -471,4 +472,4 @@ To compute the principal components, one begins with a normalised matrix of obse
 \section{Summary}
 \label{sec:background-summary}
 
-This chapter provides background on the machine learning techniques used in this thesis and the techniques used in evaluating them. The following chapter surveys research literature relevant to this work.
+This chapter provides background on the machine learning techniques used in this thesis to develop low cost techniques for compiler construction, and the techniques used in evaluating their effectiveness. The following chapter surveys research literature relevant to this work.
