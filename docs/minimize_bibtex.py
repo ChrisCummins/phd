@@ -40,8 +40,10 @@ def MinimizeBibtexInPlace(bibtex) -> None:
         'mendeley-tags',
         'pmid',
         'primaryclass',
-        'url',
     ])
+    # Only delete the URL of non-"misc" entries. Misc entries include websites.
+    if entry['ENTRYTYPE'] != 'misc' and 'url' in entry:
+      del entry['url']
 
 
 def BibtexToString(bibtex) -> str:
