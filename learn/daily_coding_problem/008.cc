@@ -40,8 +40,6 @@ class Scheduler {
   std::vector<std::thread> threads_;
 };
 
-void Foo(int x, int y) { std::cout << "x + y = " << x + y << "\n"; }
-
 int main(int argc, char** argv) {
   Scheduler scheduler;
 
