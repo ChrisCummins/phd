@@ -3,8 +3,6 @@
 // Implement a job scheduler which takes in a function f and an integer n, and
 // calls f after n milliseconds.
 #include <unistd.h>
-#include <ctime>
-#include <functional>
 #include <iostream>
 #include <thread>
 #include <vector>
