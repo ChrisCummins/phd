@@ -30,10 +30,14 @@ def WhichOrDie(name):
   for path in os.environ["PATH"].split(os.pathsep):
     if os.path.exists(os.path.join(path, name)):
       return os.path.join(path, name)
-  print(sys.argv[0], 'error: Could not find required binary:', name,
+  print(sys.argv[0],
+        'error: Could not find required binary:',
+        name,
         file=sys.stderr)
-  print("You probably haven't installed the development dependencies. "
-        "See INSTALL.md.", file=sys.stderr)
+  print(
+      "You probably haven't installed the development dependencies. "
+      "See INSTALL.md.",
+      file=sys.stderr)
   sys.exit(1)
 
 
@@ -165,7 +169,8 @@ class SqlFormat(LinterThread):
 class JsBeautifyThread(LinterThread):
 
   def run(self):
-    ExecOrDie([JSBEAUTIFY, '--config', JSBEAUTIFY_RC] + self._paths)
+    ExecOrDie([JSBEAUTIFY, '--replace', '--config', JSBEAUTIFY_RC] +
+              self._paths)
 
 
 class GoFmtThread(LinterThread):
