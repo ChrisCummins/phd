@@ -17,11 +17,11 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
+import build_info
 from labm8 import app
 from labm8 import shell
 from labm8 import sqlutil
 from util.photolib import common
-from util.photolib import linters
 
 FLAGS = app.FLAGS
 
@@ -97,7 +97,7 @@ class LinterCache(sqlutil.Database):
   """A database consisting of linter cache entries."""
 
   def __init__(self, workspace_root_path: str, must_exist: bool = False):
-    cache_dir = os.path.join(workspace_root_path, ".cache")
+    cache_dir = os.path.join(workspace_root_path, ".photolib")
     os.makedirs(cache_dir, exist_ok=True)
     path = os.path.join(cache_dir, "errors.db")
     url = f"sqlite:///{path}"
@@ -108,27 +108,23 @@ class LinterCache(sqlutil.Database):
 
   def RefreshLintersVersion(self):
     """Check that """
-    meta_key = "linters.py md5"
+    meta_key = "version"
 
     with self.Session() as session:
-      cached_linters_version = session.query(Meta) \
+      cached_version = session.query(Meta) \
         .filter(Meta.key == meta_key) \
         .first()
-      cached_checksum = (cached_linters_version.value
-                         if cached_linters_version else "")
+      cached_version = (cached_version.value if cached_version else "")
 
-      with open(linters.__file__) as f:
-        actual_linters_version = Meta(key=meta_key,
-                                      value=common.Md5String(
-                                          f.read()).hexdigest())
+      actual_version = Meta(key=meta_key, value=build_info.Version())
 
-      if cached_checksum != actual_linters_version.value:
-        app.Log(2, "linters.py has changed, emptying cache ...")
+      if cached_version != actual_version.value:
+        app.Log(1, "Version has changed, emptying cache ...")
         session.query(Directory).delete()
         session.query(CachedError).delete()
-        if cached_linters_version:
-          session.delete(cached_linters_version)
-        session.add(actual_linters_version)
+        if cached_version:
+          session.delete(cached_version)
+        session.add(actual_version)
         session.commit()
 
   @staticmethod

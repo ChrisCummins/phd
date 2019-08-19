@@ -9,10 +9,9 @@ from collections import defaultdict
 from labm8 import app
 from labm8 import shell
 from util.photolib import common
-from util.photolib import lightroom
 from util.photolib import lintercache
+from util.photolib import xmp_cache
 from util.photolib.proto import photolint_pb2
-
 
 FLAGS = app.FLAGS
 app.DEFINE_boolean("counts", False, "Show only the counts of errors.")
@@ -101,12 +100,14 @@ class Linter(object):
   def __init__(self, workspace_root: str):
     self.workspace = workspace_root
     self.errors_cache = lintercache.LinterCache(self.workspace)
+    self.xmp_cache = xmp_cache.XmpCache(self.workspace)
 
   def __call__(self, *args, **kwargs):
     raise NotImplementedError("abstract class")
 
 
-def GetLinters(base_linter: Linter, workspace_root_path: str) -> typing.List[Linter]:
+def GetLinters(base_linter: Linter,
+               workspace_root_path: str) -> typing.List[Linter]:
   """Return a list of linters to run."""
 
   def _IsRunnableLinter(obj):
@@ -219,21 +220,20 @@ class FileExtension(PhotolibFileLinter, ThirdPartyFileLinter):
     if lext != ext:
       labspath = abspath[:-len(ext)] + lext
       errors.append(
-          Error(
-              workspace_relpath,
-              "extension/lowercase",
-              "file extension should be lowercase",
-              fix_it=f"mv -v '{abspath}' '{abspath}.tmp' ; mv -v '{abspath}.tmp' '{labspath}'"))
+          Error(workspace_relpath,
+                "extension/lowercase",
+                "file extension should be lowercase",
+                fix_it=(f"mv -v '{abspath}' '{abspath}.tmp' ; "
+                        f"mv -v '{abspath}.tmp' '{labspath}'")))
 
     if lext not in common.KNOWN_FILE_EXTENSIONS:
       if lext == ".jpeg":
         jabspath = abspath[:-len(ext)] + ".jpg"
         errors.append(
-            Error(
-                workspace_relpath,
-                "extension/bad",
-                f"convert {lext} file to .jpg",
-                fix_it=f"mv -v '{abspath}' '{jabspath}'"))
+            Error(workspace_relpath,
+                  "extension/bad",
+                  f"convert {lext} file to .jpg",
+                  fix_it=f"mv -v '{abspath}' '{jabspath}'"))
       if lext in common.FILE_EXTENSION_SUGGESTIONS:
         suggestion = common.FILE_EXTENSION_SUGGESTIONS[lext]
         errors.append(
@@ -256,7 +256,7 @@ class PanoramaKeyword(PhotolibFileLinter, ThirdPartyFileLinter):
 
     errors = []
 
-    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
+    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|PanoPart" not in keywords:
       errors.append(
           Error(workspace_relpath, "keywords/panorama",
@@ -278,7 +278,7 @@ class FilmFormat(PhotolibFileLinter):
     if not common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(filename_noext):
       return []
 
-    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
+    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
     if not any(k.startswith("ATTR|Film Format") for k in keywords):
       return [
           Error(workspace_relpath, "keywords/film_format",
@@ -291,7 +291,7 @@ class ThirdPartyInPhotolib(PhotolibFileLinter):
   """Checks that 'third_party' keyword is not set on files in //photos."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
+    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|third_party" in keywords:
       return [
           Error(workspace_relpath, "keywords/third_party",
@@ -304,7 +304,7 @@ class ThirdPartyKeywordIsSet(ThirdPartyFileLinter):
   """Checks that 'third_party' keyword is set on files in //third_party."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
+    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
     if "ATTR|third_party" not in keywords:
       return [
           Error(workspace_relpath, "keywords/third_party",
@@ -317,7 +317,7 @@ class SingularEvents(PhotolibFileLinter):
   """Checks that only a single 'EVENT' keyword is set."""
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = lightroom.GetLightroomKeywords(abspath, workspace_relpath)
+    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
     num_events = sum(1 if k.startswith("EVENT|") else 0 for k in keywords)
 
     if num_events > 1:
@@ -373,11 +373,10 @@ class DirEmpty(PhotolibDirLinter, ThirdPartyDirLinter):
                dirnames: typing.List[str], filenames: typing.List[str]):
     if not filenames and not dirnames:
       return [
-          Error(
-              workspace_relpath,
-              "dir/empty",
-              "directory is empty, remove it",
-              fix_it=f"rm -rv '{abspath}'")
+          Error(workspace_relpath,
+                "dir/empty",
+                "directory is empty, remove it",
+                fix_it=f"rm -rv '{abspath}'")
       ]
     return []
 
@@ -407,11 +406,10 @@ class DirShouldNotHaveFiles(PhotolibDirLinter):
 
     filelist = " ".join([f"'{abspath}{f}'" for f in filenames])
     return [
-        Error(
-            workspace_relpath,
-            "dir/not_empty",
-            "directory should be empty but contains files",
-            fix_it=f"rm -rv '{filelist}'")
+        Error(workspace_relpath,
+              "dir/not_empty",
+              "directory should be empty but contains files",
+              fix_it=f"rm -rv '{filelist}'")
     ]
 
 

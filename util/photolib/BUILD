@@ -32,6 +32,7 @@ py_library(
     deps = [
         ":common",
         ":linters",
+        "//:build_info",
         "//labm8:app",
         "//labm8:shell",
         "//labm8:sqlutil",
@@ -40,11 +41,12 @@ py_library(
 )
 
 py_library(
-    name = "lightroom",
-    srcs = ["lightroom.py"],
+    name = "xmp_cache",
+    srcs = ["xmp_cache.py"],
     deps = [
         ":common",
         "//labm8:app",
+        "//labm8:sqlutil",
         "//third_party/py/libxmp",
         "//third_party/py/sqlalchemy",
     ],
@@ -55,7 +57,7 @@ py_library(
     srcs = ["linters.py"],
     deps = [
         ":common",
-        ":lightroom",
+        ":xmp_cache",
         "//labm8:app",
         "//labm8:shell",
         "//third_party/py/protobuf",

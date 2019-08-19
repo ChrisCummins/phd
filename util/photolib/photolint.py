@@ -6,13 +6,13 @@ import typing
 
 from labm8 import app
 from util.photolib import common
-from util.photolib import lightroom
 from util.photolib import lintercache
 from util.photolib import linters
 from util.photolib import workspace
+from util.photolib import xmp_cache
 
 FLAGS = app.FLAGS
-app.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
+app.DEFINE_string("workspace", "/workspace", "Path to workspace root")
 app.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
 
 
@@ -122,9 +122,8 @@ def main(argv):  # pylint: disable=missing-docstring
     print(f"Cannot find workspace in '{FLAGS.workspace}'", file=sys.stderr)
     sys.exit(1)
 
-  lightroom.InitializeKeywordsCache(abspath)
-
-  cache = lintercache.LinterCache(abspath)
+  lintercache.LinterCache(abspath)
+  xmp_cache.XmpCache(abspath)
 
   WorkspaceLinter(abspath)()
 
