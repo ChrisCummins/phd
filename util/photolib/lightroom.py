@@ -47,8 +47,9 @@ class XmpCacheEntry(Base):
   aperture: str = Column(String(128), nullable=False)
   focal_length_35mm: str = Column(String(128), nullable=False)
   flash_fired: bool = Column(Boolean, nullable=False)
-  date_added: datetime.datetime = Column(
-      DateTime, nullable=False, default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = Column(DateTime,
+                                         nullable=False,
+                                         default=datetime.datetime.utcnow)
 
   keywords: 'Keywords' = orm.relationship("Keywords")
 
@@ -118,8 +119,11 @@ def GetOrAdd(session,
   return instance
 
 
-def _GetFromXmpDict(xmp: typing.Dict[str, typing.Tuple[str, str, typing.Dict[str, str]]],
-                    xmp_type: str, tag_name: str, default=''):
+def _GetFromXmpDict(
+    xmp: typing.Dict[str, typing.Tuple[str, str, typing.Dict[str, str]]],
+    xmp_type: str,
+    tag_name: str,
+    default=''):
   keywords = xmp.get(xmp_type, {})
   for tag_, val, _ in keywords:
     if tag_ == tag_name:
@@ -142,30 +146,42 @@ def _CreateXmpCacheEntry(abspath: str, relpath_md5: str, mtime: float) -> None:
 
     keywords = set([e[1] for e in lightroom_tags if e[1]])
 
-    iso = int(_GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/', 'exifEX:PhotographicSensitivity', 0))
+    iso = int(
+        _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/',
+                        'exifEX:PhotographicSensitivity', 0))
 
-    camera_make = _GetFromXmpDict(xmp, 'http://ns.adobe.com/tiff/1.0/', 'tiff:Make')
-    camera_model = _GetFromXmpDict(xmp, 'http://ns.adobe.com/tiff/1.0/', 'tiff:Model')
+    camera_make = _GetFromXmpDict(xmp, 'http://ns.adobe.com/tiff/1.0/',
+                                  'tiff:Make')
+    camera_model = _GetFromXmpDict(xmp, 'http://ns.adobe.com/tiff/1.0/',
+                                   'tiff:Model')
     if camera_make and camera_model:
       camera = f'{camera_make} {camera_model}'
     else:
       camera = ''
 
-    shutter_speed = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/', 'exif:ExposureTime')
-    aperture = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/', 'exif:FNumber')
-    focal_length_35mm = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/', 'exif:FocalLengthIn35mmFilm')
-    flash_fired = True if  _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/', 'exif:Flash/exif:Fired') == 'True' else False
+    shutter_speed = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/',
+                                    'exif:ExposureTime')
+    aperture = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/',
+                               'exif:FNumber')
+    focal_length_35mm = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/',
+                                        'exif:FocalLengthIn35mmFilm')
+    flash_fired = (True if _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/',
+                                           'exif:Flash/exif:Fired') == 'True'
+                   else False)
 
-    lens_make = _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/', 'exifEX:LensMake')
-    lens_model = _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/', 'exifEX:LensModel')
+    lens_make = _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/',
+                                'exifEX:LensMake')
+    lens_model = _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/',
+                                 'exifEX:LensModel')
     if lens_make and lens_model:
       lens = f'{lens_make} {lens_model}'
     else:
       lens = ''
+
   except KeyError:
     app.Log(2, 'Failed to read keywords of file: `%s`', abspath)
     keywords = []
-    iso=0
+    iso = 0
     camera = ''
     lens = ''
     shutter_speed = ''
