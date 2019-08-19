@@ -175,6 +175,10 @@ def _CreateXmpCacheEntry(abspath: str, relpath_md5: str, mtime: float) -> None:
                                  'exifEX:LensModel')
     if lens_make and lens_model:
       lens = f'{lens_make} {lens_model}'
+    elif lens_make:
+      lens = lens_make
+    elif lens_model:
+      lens = lens_model
     else:
       lens = ''
 
