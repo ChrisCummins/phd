@@ -1,5 +1,6 @@
 """Utilities for working with workspaces."""
 import os
+import pathlib
 import typing
 
 from util.photolib import common
@@ -28,16 +29,30 @@ def find_workspace_rootpath(start_path: str) -> typing.Optional[str]:
     return find_workspace_rootpath(up_one_dir)
 
 
-def get_workspace_relpath(workspace_root: str, abspath: str) -> str:
-  """
-  Convert an absolute path into a workspace-relative path.
+class Workspace(object):
+  """A photolib workspace."""
 
-  Args:
-    workspace_root: The absolute path to the workspace root.
-    abspath: An absolute path.
+  def __init__(self, root_path: str):
+    self.workspace_root = pathlib.Path(root_path)
 
-  Returns:
-    A workspace path, i.e. one in which the root of the workspace has been
-    replaced by '//'
-  """
-  return '/' + abspath[len(workspace_root):]
+  def GetRelpath(self, abspath: str) -> str:
+    """Convert an absolute path into a workspace-relative path.
+
+    Args:
+      abspath: An absolute path.
+
+    Returns:
+      A workspace path, i.e. one in which the root of the workspace has been
+      replaced by '//'
+    """
+    return '/' + abspath[len(str(self.workspace_root)):]
+
+  @classmethod
+  def Create(cls, root_path: pathlib.Path):
+    if not root_path.is_dir():
+      raise FileNotFoundError(f"Workspace root not found: `{root_path}`")
+
+    (root_path / '.photolib').mkdir()
+    (root_path / 'photos').mkdir()
+    (root_path / 'third_party').mkdir()
+    (root_path / 'lightroom').mkdir()

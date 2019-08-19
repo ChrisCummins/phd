@@ -14,9 +14,11 @@ from sqlalchemy import String
 from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
+import build_info
 from labm8 import app
 from labm8 import sqlutil
 from util.photolib import common
+from util.photolib import workspace
 
 FLAGS = app.FLAGS
 
@@ -31,6 +33,7 @@ class XmpCacheEntry(Base):
   __tablename__ = "files"
 
   relpath_md5: str = Column(Binary(16), primary_key=True)
+  relpath: str = Column(String(1024), nullable=False)
   mtime: int = Column(Integer, nullable=False)
   keywords_id: int = Column(Integer, ForeignKey("keywords.id"), nullable=False)
   iso: int = Column(Integer, nullable=False)
@@ -61,20 +64,46 @@ class Keywords(Base):
     return set(self.AsList())
 
 
+class Meta(Base):
+  __tablename__ = "meta"
+
+  key: str = Column(String(1024), primary_key=True)
+  value: str = Column(String(1024))
+
+
 class XmpCache(sqlutil.Database):
   """Database of keywords"""
 
-  def __init__(self, workspace_root_path: str, must_exist: bool = False):
-    cache_dir = os.path.join(workspace_root_path, ".photolib")
-    os.makedirs(cache_dir, exist_ok=True)
-    path = os.path.join(cache_dir, "xmp.db")
-    url = f"sqlite:///{path}"
-    app.Log(2, "Errors cache %s", url)
+  def __init__(self, workspace_: workspace.Workspace, must_exist: bool = False):
+    cache_dir = workspace_.workspace_root / ".photolib"
+    cache_dir.mkdir(exist_ok=True)
+    url = f"sqlite:///{cache_dir}/xmp.db"
 
     super(XmpCache, self).__init__(url, Base, must_exist)
     self.session = self.MakeSession()
+    self.RefreshVersion()
 
-  def _CreateXmpCacheEntry(self, abspath: str, relpath_md5: str,
+  def RefreshVersion(self):
+    """Refresh version."""
+    meta_key = "version"
+
+    cached_version = self.session.query(Meta) \
+      .filter(Meta.key == meta_key) \
+      .first()
+    cached_version_str = (cached_version.value if cached_version else "")
+
+    actual_version = Meta(key=meta_key, value=build_info.Version())
+
+    if cached_version_str != actual_version.value:
+      app.Log(1, "Version has changed, emptying cache ...")
+      self.session.query(XmpCacheEntry).delete()
+      self.session.query(Keywords).delete()
+      if cached_version:
+        self.session.delete(cached_version)
+      self.session.add(actual_version)
+      self.session.commit()
+
+  def _CreateXmpCacheEntry(self, abspath: str, relpath: str, relpath_md5: str,
                            mtime: float) -> None:
     """
     Add a new database entry for the given values.
@@ -141,6 +170,7 @@ class XmpCache(sqlutil.Database):
                                  keywords=",".join(keywords))
     entry = XmpCacheEntry(
         relpath_md5=relpath_md5,
+        relpath=relpath,
         mtime=int(mtime),
         keywords=keywords_,
         iso=iso,
@@ -179,11 +209,11 @@ class XmpCache(sqlutil.Database):
       keywords = set(entry.keywords.keywords.split(","))
     elif entry and entry.mtime != mtime and not abspath.endswith('.mov'):
       self.session.delete(entry)
-      entry = self._CreateXmpCacheEntry(abspath, relpath_md5, mtime)
+      entry = self._CreateXmpCacheEntry(abspath, relpath, relpath_md5, mtime)
       keywords = entry.keywords.AsSet()
       app.Log(2, "Refreshed keywords cache `%s`", relpath)
     else:
-      entry = self._CreateXmpCacheEntry(abspath, relpath_md5, mtime)
+      entry = self._CreateXmpCacheEntry(abspath, relpath, relpath_md5, mtime)
       keywords = entry.keywords.AsSet()
       app.Log(2, "Cached keywords `%s`", relpath)
 

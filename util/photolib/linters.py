@@ -10,6 +10,7 @@ from labm8 import app
 from labm8 import shell
 from util.photolib import common
 from util.photolib import lintercache
+from util.photolib import workspace
 from util.photolib import xmp_cache
 from util.photolib.proto import photolint_pb2
 
@@ -97,8 +98,8 @@ class Linter(object):
   When called with some input, verify the input and return a list of errors.
   """
 
-  def __init__(self, workspace_root: str):
-    self.workspace = workspace_root
+  def __init__(self, workspace_: workspace.Workspace):
+    self.workspace = workspace_
     self.errors_cache = lintercache.LinterCache(self.workspace)
     self.xmp_cache = xmp_cache.XmpCache(self.workspace)
 
@@ -305,7 +306,7 @@ class ThirdPartyKeywordIsSet(ThirdPartyFileLinter):
 
   def __call__(self, abspath: str, workspace_relpath: str, filename: str):
     keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
-    if "ATTR|third_party" not in keywords:
+    if "third_party" not in keywords:
       return [
           Error(workspace_relpath, "keywords/third_party",
                 "files in //third_party should have third_party keyword set")

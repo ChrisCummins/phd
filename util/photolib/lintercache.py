@@ -22,6 +22,7 @@ from labm8 import app
 from labm8 import shell
 from labm8 import sqlutil
 from util.photolib import common
+from util.photolib import workspace
 
 FLAGS = app.FLAGS
 
@@ -96,46 +97,43 @@ class CacheLookupResult(object):
 class LinterCache(sqlutil.Database):
   """A database consisting of linter cache entries."""
 
-  def __init__(self, workspace_root_path: str, must_exist: bool = False):
-    cache_dir = os.path.join(workspace_root_path, ".photolib")
-    os.makedirs(cache_dir, exist_ok=True)
-    path = os.path.join(cache_dir, "errors.db")
-    url = f"sqlite:///{path}"
-    app.Log(2, "Errors cache %s", url)
+  def __init__(self, workspace_: workspace.Workspace, must_exist: bool = False):
+    cache_dir = workspace_.workspace_root / ".photolib"
+    cache_dir.mkdir(exist_ok=True)
+    url = f"sqlite:///{cache_dir}/errors.db"
 
     super(LinterCache, self).__init__(url, Base, must_exist)
+    self.session = self.MakeSession()
     self.RefreshLintersVersion()
 
   def RefreshLintersVersion(self):
     """Check that """
     meta_key = "version"
 
-    with self.Session() as session:
-      cached_version = session.query(Meta) \
-        .filter(Meta.key == meta_key) \
-        .first()
-      cached_version = (cached_version.value if cached_version else "")
+    cached_version = self.session.query(Meta) \
+      .filter(Meta.key == meta_key) \
+      .first()
+    cached_version_str = (cached_version.value if cached_version else "")
 
-      actual_version = Meta(key=meta_key, value=build_info.Version())
+    actual_version = Meta(key=meta_key, value=build_info.Version())
 
-      if cached_version != actual_version.value:
-        app.Log(1, "Version has changed, emptying cache ...")
-        session.query(Directory).delete()
-        session.query(CachedError).delete()
-        if cached_version:
-          session.delete(cached_version)
-        session.add(actual_version)
-        session.commit()
+    if cached_version_str != actual_version.value:
+      app.Log(1, "Version has changed, emptying cache ...")
+      self.session.query(Directory).delete()
+      self.session.query(CachedError).delete()
+      if cached_version:
+        self.session.delete(cached_version)
+      self.session.add(actual_version)
+      self.session.commit()
 
-  @staticmethod
-  def AddLinterErrors(session: sqlutil.Session, entry: CacheLookupResult,
+  def AddLinterErrors(self, entry: CacheLookupResult,
                       errors: typing.List[str]) -> None:
     """Record linter errors in the cache."""
     # Create a directory cache entry.
     directory = Directory(relpath_md5=entry.relpath_md5,
                           checksum=entry.checksum)
 
-    session.add(directory)
+    self.session.add(directory)
 
     # Create entries for the errors.
     errors_ = [
@@ -146,13 +144,11 @@ class LinterCache(sqlutil.Database):
                     fix_it=e.fix_it or "") for e in errors
     ]
     if errors_:
-      session.bulk_save_objects(errors_)
-    session.commit()
+      self.session.bulk_save_objects(errors_)
+    self.session.commit()
     app.Log(2, "cached directory %s", entry.relpath)
 
-  @staticmethod
-  def GetLinterErrors(session: sqlutil.Session, abspath: str,
-                      relpath: str) -> CacheLookupResult:
+  def GetLinterErrors(self, abspath: str, relpath: str) -> CacheLookupResult:
     """Looks up the given directory and returns cached results (if any)."""
     relpath_md5 = common.Md5String(relpath).digest()
 
@@ -165,22 +161,22 @@ class LinterCache(sqlutil.Database):
                             relpath_md5=relpath_md5,
                             errors=[])
 
-    directory = session \
+    directory = self.session \
       .query(Directory) \
       .filter(Directory.relpath_md5 == ret.relpath_md5) \
       .first()
 
     if directory and directory.checksum == ret.checksum:
       ret.exists = True
-      ret.errors = session \
+      ret.errors = self.session \
         .query(CachedError) \
         .filter(CachedError.dir == ret.relpath_md5)
     elif directory:
       app.Log(2, "Removing stale directory cache: `%s`", relpath)
 
       # Delete all existing cache entries.
-      session.delete(directory)
-      session \
+      self.session.delete(directory)
+      self.session \
         .query(CachedError) \
         .filter(CachedError.dir == ret.relpath_md5) \
         .delete()

@@ -45,6 +45,7 @@ py_library(
     srcs = ["xmp_cache.py"],
     deps = [
         ":common",
+        "//:build_info",
         "//labm8:app",
         "//labm8:sqlutil",
         "//third_party/py/libxmp",

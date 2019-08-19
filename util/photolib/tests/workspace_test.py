@@ -1,11 +1,11 @@
 """Unit tests for workspace.py."""
 import os
+import pathlib
 from tempfile import TemporaryDirectory
 
 from labm8 import app
 from labm8 import test
 from util.photolib import workspace
-
 
 FLAGS = app.FLAGS
 
@@ -29,8 +29,8 @@ def test_find_workspace_rootpath():
     # It can find the workspace in subdirectories.
     assert workspace.find_workspace_rootpath(os.path.join(tmpdir,
                                                           "photos")) == tmpdir
-    assert workspace.find_workspace_rootpath(os.path.join(tmpdir,
-                                                          "third_party")) == tmpdir
+    assert workspace.find_workspace_rootpath(os.path.join(
+        tmpdir, "third_party")) == tmpdir
     assert workspace.find_workspace_rootpath(os.path.join(
         tmpdir, "lightroom")) == tmpdir
     assert workspace.find_workspace_rootpath(
@@ -43,13 +43,13 @@ def test_find_workspace_rootpath():
         os.path.join(tmpdir, "nondir", "nondir")) == tmpdir
 
 
-def test_get_workspace_relpath():
-  """workspace.get_workspace_relpath()"""
-  assert workspace.get_workspace_relpath("/a/b", "/a/b/c") == "//c"
-  assert workspace.get_workspace_relpath("/a/b", "/a/b/c/d") == "//c/d"
+def test_GetRelpath(tempdir: pathlib.Path):
+  w = workspace.Workspace.Create(tempdir)
+  assert w.GetRelpath(f"{tempdir}/b/c") == "//c"
+  assert w.GetRelpath(f"{tempdir}/b/c/d") == "//c/d"
 
   # This is a strange test.
-  assert workspace.get_workspace_relpath("/a/b", "/a") == "/"
+  assert w.GetRelpath(tempdir) == "/"
 
 
 if __name__ == "__main__":
