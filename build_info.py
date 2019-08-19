@@ -61,7 +61,11 @@ def FormatShortRevision(html: bool = False) -> str:
 
 
 def FormatVersion() -> str:
-  return f'version: {version_py.STRING.strip()}'
+  return f'version: {Version()}'
+
+
+def Version() -> str:
+  return version_py.STRING.strip()
 
 
 def FormatShortBuildDescription(html: bool = False) -> str:
