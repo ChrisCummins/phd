@@ -377,7 +377,7 @@ class DirEmpty(PhotolibDirLinter, ThirdPartyDirLinter):
           Error(workspace_relpath,
                 "dir/empty",
                 "directory is empty, remove it",
-                fix_it=f"rm -rv '{abspath}'")
+                fix_it=f"rmdir '{abspath}'")
       ]
     return []
 
