@@ -11,7 +11,6 @@ from util.photolib import lintercache
 from util.photolib import linters
 from util.photolib import workspace
 
-
 FLAGS = app.FLAGS
 app.DEFINE_string("workspace", os.getcwd(), "Path to workspace root")
 app.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
@@ -34,7 +33,7 @@ class ToplevelLinter(linters.Linter):
   def __init__(self, workspace_abspath: str, toplevel_dir: str,
                dirlinters: typing.List[linters.DirLinter],
                filelinters: typing.List[linters.FileLinter]):
-    super(ToplevelLinter, self).__init__()
+    super(ToplevelLinter, self).__init__(workspace_abspath)
     self.workspace = workspace_abspath
     self.toplevel_dir = toplevel_dir
     self.dirlinters = linters.GetLinters(dirlinters, self.workspace)
@@ -44,7 +43,7 @@ class ToplevelLinter(linters.Linter):
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
     app.Log(2, "Running //%s linters: %s", self.toplevel_dir,
-              ", ".join(linter_names))
+            ", ".join(linter_names))
 
   def _LintThisDirectory(
       self, abspath: str, relpath: str, dirnames: typing.List[str],
@@ -69,28 +68,32 @@ class ToplevelLinter(linters.Linter):
   def __call__(self, *args, **kwargs):
     start_ = time.time()
 
-    working_dir = os.path.join(self.workspace, self.toplevel_dir)
-    for abspath, dirnames, filenames in os.walk(working_dir):
-      _start = time.time()
-      relpath = workspace.get_workspace_relpath(self.workspace, abspath)
+    with self.errors_cache.Session(commit=True) as session:
+      working_dir = os.path.join(self.workspace, self.toplevel_dir)
+      for abspath, dirnames, filenames in os.walk(working_dir):
+        _start = time.time()
+        relpath = workspace.get_workspace_relpath(self.workspace, abspath)
 
-      cache_entry = lintercache.GetLinterErrors(abspath, relpath)
+        cache_entry = self.errors_cache.GetLinterErrors(session, abspath,
+                                                        relpath)
 
-      if cache_entry.exists:
-        for error in cache_entry.errors:
-          linters.ERROR_COUNTS[error.category] += 1
-          if not FLAGS.counts:
-            print(error, file=sys.stderr)
-        sys.stderr.flush()
+        if cache_entry.exists:
+          for error in cache_entry.errors:
+            linters.ERROR_COUNTS[error.category] += 1
+            if not FLAGS.counts:
+              print(error, file=sys.stderr)
+          sys.stderr.flush()
 
-        if FLAGS.counts:
-          linters.PrintErrorCounts()
+          if FLAGS.counts:
+            linters.PrintErrorCounts()
 
-        TIMERS.cached_seconds += time.time() - _start
-      else:
-        errors = self._LintThisDirectory(abspath, relpath, dirnames, filenames)
-        self.errors_cache.AddLinterErrors(cache_entry, errors)
-        TIMERS.linting_seconds += time.time() - _start
+          TIMERS.cached_seconds += time.time() - _start
+        else:
+          errors = self._LintThisDirectory(abspath, relpath, dirnames,
+                                           filenames)
+          self.errors_cache.AddLinterErrors(session, cache_entry, errors)
+          session.commit()
+          TIMERS.linting_seconds += time.time() - _start
 
     TIMERS.total_seconds += time.time() - start_
 
