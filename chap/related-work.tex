@@ -3,22 +3,25 @@
 
 \section{Introduction}
 
-This chapter surveys the literature in areas relevant to this thesis. First Section~\ref{sec:related-work-simplifying} provides a sample of non-machine learning-based approaches to lowering the cost of compiler construction. Subsequent sections provide a focused review of the specific topics of this thesis. Section~\ref{sec:related-work-generation} reviews research in program generation, focusing first on benchmarking for performance characterisation, then compiler test case generation. Section~\ref{sec:related-work-optimisation} reviews the literature of empirical program optimisation, covering iterative compilation and machine learning. Section~\ref{sec:related-work-other} surveys the literature of related works in deep learning over programs. Finally Section~\ref{sec:related-work-summary} concludes.
+This chapter surveys the literature in areas relevant to this thesis.
+% TODO: First Section~\ref{sec:related-work-simplifying} provides a sample of non-machine learning-based approaches to lowering the cost of compiler construction. Subsequent sections provide a focused review of the specific topics of this thesis.
+Section~\ref{sec:related-work-generation} reviews research in program generation, focusing first on benchmarking for performance characterisation, then compiler test case generation. Section~\ref{sec:related-work-optimisation} reviews the literature of empirical program optimisation, covering iterative compilation and machine learning. Section~\ref{sec:related-work-other} surveys the literature of related works in deep learning over programs. Finally Section~\ref{sec:related-work-summary} concludes.
 
 
-\section{\diff{Lowering the Cost of Compiler Construction}}
-\label{sec:related-work-simplifying}
-
-\diff{%
-Given the high cost of compiler construction (Table~\ref{tab:compiler-costs}), there has been much effort in reducing the complexity and engineering effort of constructing a compiler. One means for achieving this is through developing tooling for automatically generating compiler components from specifications. Popular examples include \emph{lex}~\cite{Lesk1975} for generating scanners, and \emph{yacc}~\cite{Johnson1975} for generating parsers. \citeauthor{Gray1992}~\cite{Gray1992} identify three chief limitations of this tooling approach: the steep curve for learning existing tools; tools which are developed independently and do not work smoothly together; and lower performance compared to hand-coded solutions to the same problems. They propose a system, \emph{Eli}, which decomposes the \emph{compilation problem} into discrete subproblems, provides reusable tools to solve each subproblem, and automatically combines the solutions into a working compiler. Compared to prior approaches, this system provides an end-to-end compiler generator from user-provided specifications. Delite~\cite{Sujeeth2014} and AnyDSL~\cite{Leißa2018} tackle the problem of lowering from high-level domain specific languages to performant low-level code such as CUDA, OpenCL, using .
-
-Does not address optimisation problems.
-
-The LLVM compilation framework~\cite{Lattner2004} takes a different approach. Rather than taking a user-specification and generating a compiler, it provides a common, low-level intermediate representation, an optimiser, and a set of re-usable components for lowering to machine code. LLVM has become one of the most widely used compilers in industry , 
-
-Frameworks such as these significantly reduce the engineering effort required to produce a compiler by simplifying the , however, they do not address the challenge of performance tuning.
-
-}
+% TODO:
+%\section{\diff{Lowering the Cost of Compiler Construction}}
+%\label{sec:related-work-simplifying}
+%
+%\diff{%
+%Given the high cost of compiler construction (Table~\ref{tab:compiler-costs}), there has been much effort in reducing the complexity and engineering effort of constructing a compiler. One means for achieving this is through developing tooling for automatically generating compiler components from specifications. Popular examples include \emph{lex}~\cite{Lesk1975} for generating scanners, and \emph{yacc}~\cite{Johnson1975} for generating parsers. \citeauthor{Gray1992}~\cite{Gray1992} identify three chief limitations of this tooling approach: the steep curve for learning existing tools; tools which are developed independently and do not work smoothly together; and lower performance compared to hand-coded solutions to the same problems. They propose a system, \emph{Eli}, which decomposes the \emph{compilation problem} into discrete subproblems, provides reusable tools to solve each subproblem, and automatically combines the solutions into a working compiler. Compared to prior approaches, this system provides an end-to-end compiler generator from user-provided specifications. Delite~\cite{Sujeeth2014} and AnyDSL~\cite{Leißa2018} tackle the problem of lowering from high-level domain specific languages to performant low-level code such as CUDA, OpenCL, using .
+%
+%Does not address optimisation problems.
+%
+%The LLVM compilation framework~\cite{Lattner2004} takes a different approach. Rather than taking a user-specification and generating a compiler, it provides a common, low-level intermediate representation, an optimiser, and a set of re-usable components for lowering to machine code. LLVM has become one of the most widely used compilers in industry , 
+%
+%Frameworks such as these significantly reduce the engineering effort required to produce a compiler by simplifying the , however, they do not address the challenge of performance tuning.
+%
+%}
 
 
 \section{Program Generation}

@@ -11,7 +11,7 @@ Compilers play an essential role in extracting software efficiency by transformi
   \input{tab/compiler-costs}
   \caption[Development history and costs of popular open-source compilers]{%
     \diff{%
-    Development history, logical lines of code (LOC), and estimated cost for 10 popular open-source compilers. Estimated costs are calculated using a COCOMO model~\cite{David2001} with average 2019 US software developer salaries~\cite{Glassdoor2019}.%
+    Development history, logical lines of code (LOC), and estimated cost for 10 popular open-source compiler projects. Estimated costs are calculated using a COCOMO model~\cite{David2001} with average 2019 US software developer salaries~\cite{Glassdoor2019}.%
     }
   }
   \label{tab:compiler-costs}
@@ -49,7 +49,7 @@ Yet, the integration of machine learning and compilers has remained a largely ac
 
 Machine learning techniques offer reduced compiler development costs and improved runtime performance compared to expert approaches, yet there are three significant challenges that must be overcome to realise these goals:
 
-\subsection{Scarcity of data}
+\subsection{Scarcity of Data}
 \label{subsec:challenge-scarcity}
 
 In machine learning, a model is trained based on past observations to predict the values for future inputs. In order to be able to generalise well to unseen observations, plentiful training data must be provided, with a fine-grained overview of the feature space. In the case of compilers, training data is derived from benchmark programs, meaning that many benchmarks are needed to produce sufficient observations for training. Typical machine learning experiments outside of the compilation field train over thousands or millions of observations. However, there are typically only a few dozen common benchmarks available.
@@ -58,7 +58,7 @@ The small number of available benchmarks limits the quality of learned models as
 
 To address this issue, there must be a sizeable increase in the availability of benchmarks for machine learning. Previously, researchers sought to provide this by randomly instantiating from hand-crafted benchmark templates~\cite{Chiu2015}, but this is a challenging approach --- the generator must be biased in such a way that the generated programs draw from a similar distribution to \emph{real} programs so as to be useful for learning. It is not clear if such an approach could ever achieve parity with handwritten programs.
 
-\subsection{Model and feature design}
+\subsection{Model and Feature Design}
 \label{subsec:challenge-features}
 
 Machine learning algorithms learn to correlate a set of explanatory variables, known as \emph{features}, with a target value. These features must be chosen so as to be discriminative for the target value.
@@ -66,18 +66,12 @@ Machine learning algorithms learn to correlate a set of explanatory variables, k
 Choosing the features to characterise a program so as to be discriminative for machine learning  depends on the desired task to be learned, the type of model, and the environment from which training data was collected, e.g. the hardware and machine configuration. Many problems in compilers do not map directly to numeric attributes, so systems for extracting numeric representations from non-numeric inputs must be developed. For example, one might extract instruction counts from the input source code. Knowing which attributes to extract to represent a program is a hard problem, there is no one-size-fits-all approach that works for all cases. Further, features may only be rendered suitable for learning by transforming the initial values such as through scaling or normalising. As a result, feature design is often an incremental process of trial and experimentation, and there are few clear signals when this iterative process is ``done''.
 
 \diff{%
-\subsection{Correctness}
+\subsection{Adoption of Machine Learning Practices}
 \label{subsec:challenge-adoption}
 
-Machine learning systems are fundamentally probabilistic. For conditional situations in which there is a categorically incorrect choice, a machine learning model will have a non-zero probability of making that choice. While some of the work within compilers can 
+Machine learning systems are fundamentally probabilistic. This stands at odds with established compiler construction practice, which uses formal algorithms and systems to minimise the risk of errors and provide correctness. Given the high cost of developing compilers (Table~\ref{tab:compiler-costs}), there is significant amount of effort and expertise invested in existing approaches. For the benefits of machine learning techniques for compilers to be realised, machine learning must provide significant benefits over existing approaches, without degrading the quality of the compiler.
 
-The final challenge which must be overcome is that machine learning practices must be widely adopted by the compiler community. For new techniques to be adopted they must provide clear advantages over existing approaches. XXX momentum
-
-Compiler construction typically uses formal systems to , whereas machine learning systems are fundamentally probabilistic. Techniques must be developed for these probabilistic systems to coexist with formal approaches, without sacrificing correctness. Compilers thousands of choices for which correctness is not a consideration, such as optimisation decisions. There are many cases for which probabilistic systems may be used used, such as in optimisation decisions.
-
-If machine learning simply changes the
-
-In other cases, such as compiler testing, heuristic methods may be combined with probabilistic methods to prevent errors.??
+Techniques must be developed for probabilistic machine learning systems to coexist with formal approaches. One approach is to limit machine learning only to use cases where correctness guarantees will not be violated, such as in replacing hand-crafted optimisation heuristics. This mitigates the risk of probabilistic systems introducing errors, but limits the applicability of the technique to only certain parts of the compiler. For other uses, such as compiler testing, methods must be developed that combine with the probabilistic methods to prevent errors.
 
 For machine learning techniques to be widely adopted in compilers, they must be made significantly easier and cheaper to develop. The aim of this thesis is to research and develop machine learning techniques that simplify and lower the cost of compiler construction.
 }
