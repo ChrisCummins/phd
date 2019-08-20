@@ -81,9 +81,10 @@ natbib=true,         % natbib compatability
 
 % Source code listings.
 \usepackage{minted}
+\definecolor{mintedbg}{rgb}{0.92,0.92,0.92}
 \setminted{%
-  frame=lines,%
   breaklines,%
+  bgcolor=mintedbg,%
   linenos%
 }
 
@@ -158,5 +159,5 @@ natbib=true,         % natbib compatability
 
 % Add a \review{Text goes here} command that highlights changes to the original text.
 \newcommand{\diff}[1]{}
-% \renewcommand{\diff}[1]{{\color{blue}{#1}}}
-\renewcommand{\diff}[1]{{#1}}
+\renewcommand{\diff}[1]{{\color{blue}{#1}}}
+% \renewcommand{\diff}[1]{{#1}}

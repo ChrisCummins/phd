@@ -237,9 +237,6 @@ The Intel CPU Testbeds ($4\pm$, $5\pm$, $6\pm$, and~$7\pm$) would occasionally e
   \subfloat[\emph{Combine redundant instructions} pass.]{%
   \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelCombineRedundant}}}%
   }\\%
-  \subfloat[\emph{PrepareKernelArgs} pass.]{%
-  \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPrepareKernelArgs}}}%
-  }\\%
   \caption[Example kernels which crash Intel compiler passes]{%
     Example OpenCL kernels which crash Intel compiler passes.%
   }%
@@ -249,11 +246,12 @@ The Intel CPU Testbeds ($4\pm$, $5\pm$, $6\pm$, and~$7\pm$) would occasionally e
 \input{lst/crash-intel-compiler-passes-2}
 \begin{figure}
 	\centering
-	% Program id: 37443
+  \subfloat[\emph{PrepareKernelArgs} pass.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPrepareKernelArgs}}}%
+  }\\%
 	\subfloat[\emph{Add SPIR related module scope metadata} pass.]{%
 		\noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSPIRMetadata}}}%
 	}\\%
-	% Program id: 44105
 	\subfloat[\emph{Intel OpenCL RemoveDuplicationBarrier} pass.]{%
 		\noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelRemoveDupeBarrier}}}%
 	}\\%
