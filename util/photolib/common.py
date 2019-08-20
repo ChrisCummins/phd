@@ -57,6 +57,8 @@ PHOTO_LIB_SCAN_PATH_COMPONENTS_RE = re.compile(
 PHOTOLIB_LEAF_DIR_RE = re.compile(
     r"//photos/\d\d\d\d/\d\d\d\d-\d\d/\d\d\d\d-\d\d-\d\d")
 
+COMPOSITE_FILE_NAME_SUFFIXES = {'HDR', 'Pano', 'Edit'}
+
 
 def Md5String(string: str) -> hashlib.md5:
   """

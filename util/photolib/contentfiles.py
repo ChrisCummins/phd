@@ -5,6 +5,7 @@ import typing
 
 from labm8 import app
 from labm8 import decorators
+from util.photolib import common
 from util.photolib import xmp_cache
 
 FLAGS = app.FLAGS
@@ -33,6 +34,49 @@ class Contentfile(object):
   @decorators.memoized_property
   def keywords(self) -> typing.Set[str]:
     return self.xmp_cache.GetLightroomKeywords(self.abspath, self.relpath)
+
+  @property
+  def is_composite_file(self) -> bool:
+    return (self.filename_noext.endswith('-HDR') or
+            self.filename_noext.endswith('-Pano') or
+            self.filename_noext.endswith('-Edit'))
+
+  @decorators.memoized_property
+  def composite_file_types(self) -> typing.Optional[typing.List[str]]:
+    if not self.is_composite_file:
+      return None
+    components = self.filename.split('-')
+    return [c for c in components if c in {'HDR', 'Pano', 'Edit'}]
+
+  @decorators.memoized_property
+  def composite_file_base(self) -> typing.Optional['Contentfile']:
+    """Guess the base file for a composite."""
+    if not self.is_composite_file:
+      return None
+
+    # Get the length of the shared prefix for all other file names in the
+    # directory.
+    names_and_prefixes = [(path.name,
+                           _GetLengthOfCommonPrefix(path.name, self.filename))
+                          for path in self.path.parent.iterdir()
+                          if path.name != self.filename and
+                          path.suffix in common.KNOWN_IMG_FILE_EXTENSIONS]
+    if not names_and_prefixes:
+      return None
+
+    # Select the file which has the longest shared file name prefix.
+    closest_match = list(sorted(names_and_prefixes, key=lambda x: x[1]))[-1][0]
+    return Contentfile(self.path.absolute().parent / closest_match,
+                       self.relpath[:-len(self.filename)] + closest_match,
+                       closest_match, self.xmp_cache)
+
+
+def _GetLengthOfCommonPrefix(a: str, b: str) -> int:
+  n = min(len(a), len(b))
+  for i in range(n):
+    if a[i] != b[i]:
+      return i + 1
+  return n
 
 
 def get_yyyy(

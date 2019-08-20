@@ -1,7 +1,6 @@
 """This file contains the linter implementations for photolint."""
 import inspect
 import os
-import pathlib
 import sys
 import typing
 from collections import defaultdict
@@ -374,11 +373,12 @@ class DescriptiveKeywords(PhotolibFileLinter):
     # Start with the more specific error before wining about no keywords.
     has_location = any(k.startswith("LOC|") for k in descriptive_keywords)
     is_screenshot = "ATTR|Screenshot" in contentfile.keywords
-    if not has_location and not is_screenshot:
+    is_document = "SUBJ|Document" in contentfile.keywords
+    if not has_location and not is_screenshot and not is_document:
       errors.append(
           Error(contentfile.relpath, "keywords/missing",
                 "has no LOC location keywords"))
-    elif not descriptive_keywords and not is_screenshot:
+    elif not descriptive_keywords and not is_screenshot and not is_document:
       errors.append(
           Error(contentfile.relpath, "keywords/missing",
                 "has no non-event keywords"))
@@ -386,38 +386,19 @@ class DescriptiveKeywords(PhotolibFileLinter):
     return errors
 
 
-def GetContentfileWithoutExtension(
-    directory: pathlib.Path, workspace_: workspace.Workspace,
-    xmp_cache_: xmp_cache.XmpCache, filename_without_extension: str):
-  for path in directory.iterdir():
-    if path.name.startswith(filename_without_extension):
-      abspath = str(path.absolute())
-      return contentfiles.Contentfile(abspath, workspace_.GetRelpath(abspath),
-                                      path.name, xmp_cache_)
-  return None
-
-
 class MatchingKeywordsOnModifiedFiles(PhotolibFileLinter):
   """Check that keywords are equal on -{HDR,Pano,Edit} files (except pano)."""
 
   def __call__(self, contentfile: contentfiles.Contentfile):
-    if (not contentfile.filename_noext.endswith('-HDR') and
-        not contentfile.filename_noext.endswith('-Pano') and
-        not contentfile.filename_noext.endswith('-Edit')):
+    if not contentfile.is_composite_file:
       return []
 
-    components = contentfile.filename_noext.split('-')
-    edit_type = components[-1]
-    basename_without_edit = '-'.join(components[:-1])
-
-    base_contentfile = GetContentfileWithoutExtension(
-        contentfile.path.parent, self.workspace, self.xmp_cache,
-        basename_without_edit)
+    base_contentfile = contentfile.composite_file_base
+    edit_type = '/'.join(contentfile.composite_file_types)
     if not base_contentfile:
       return [
-          Error(
-              contentfile.relpath, "file/missing",
-              f"could not find {edit_type} base file '{basename_without_edit}'")
+          Error(contentfile.relpath, "file/missing",
+                f"could not find {edit_type} base")
       ]
 
     base_keywords = {
@@ -436,18 +417,16 @@ class MatchingKeywordsOnModifiedFiles(PhotolibFileLinter):
     extra_keywords = keywords - base_keywords
     if extra_keywords:
       errors.append(
-          Error(
-              contentfile.relpath, "keywords/inconsistent",
-              f"{edit_type} file has extra keywords: {','.join(extra_keywords)}"
-          ))
+          Error(contentfile.relpath, "keywords/inconsistent",
+                (f"{edit_type} file has keywords not found in base "
+                 f"{base_contentfile.filename}: {','.join(extra_keywords)}")))
 
     missing_keywords = base_keywords - keywords
     if missing_keywords:
       errors.append(
-          Error(
-              contentfile.relpath, "keywords/inconsistent",
-              f"{edit_type} file has missing keywords: {','.join(missing_keywords)}"
-          ))
+          Error(contentfile.relpath, "keywords/inconsistent",
+                (f"{edit_type} file is missing keywords from base "
+                 f"{base_contentfile.filename}: {','.join(missing_keywords)}")))
 
     return errors
 
