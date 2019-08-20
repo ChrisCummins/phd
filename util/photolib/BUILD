@@ -7,14 +7,27 @@ exports_files([
     "README.md",
 ])
 
+py_library(
+    name = "contentfiles",
+    srcs = ["contentfiles.py"],
+    deps = [
+        ":xmp_cache",
+        "//labm8:app",
+        "//labm8:decorators",
+    ],
+)
+
 py_binary(
     name = "photolint",
     srcs = ["photolint.py"],
     deps = [
         ":common",
+        ":contentfiles",
         ":lintercache",
         ":linters",
         ":workspace",
+        "//labm8:app",
+        "//labm8:humanize",
     ],
 )
 
@@ -58,6 +71,7 @@ py_library(
     srcs = ["linters.py"],
     deps = [
         ":common",
+        ":contentfiles",
         ":xmp_cache",
         "//labm8:app",
         "//labm8:shell",

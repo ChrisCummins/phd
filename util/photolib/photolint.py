@@ -5,7 +5,9 @@ import time
 import typing
 
 from labm8 import app
+from labm8 import humanize
 from util.photolib import common
+from util.photolib import contentfiles
 from util.photolib import lintercache
 from util.photolib import linters
 from util.photolib import workspace
@@ -14,6 +16,8 @@ from util.photolib import xmp_cache
 FLAGS = app.FLAGS
 app.DEFINE_string("workspace", "/workspace", "Path to workspace root")
 app.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
+app.DEFINE_boolean("rm_errors_cache", False,
+                   "If true, empty the errors cache piror to running.")
 
 
 class Timers(object):
@@ -38,33 +42,56 @@ class ToplevelLinter(linters.Linter):
     self.dirlinters = linters.GetLinters(dirlinters, self.workspace)
     self.filelinters = linters.GetLinters(filelinters, self.workspace)
     self.errors_cache = lintercache.LinterCache(self.workspace)
+    self.xmp_cache = xmp_cache.XmpCache(self.workspace)
 
     linter_names = list(
         type(lin).__name__ for lin in self.dirlinters + self.filelinters)
     app.Log(2, "Running //%s linters: %s", self.toplevel_dir,
             ", ".join(linter_names))
 
+  def _GetIgnoredNames(self, abspath: str) -> typing.Set[str]:
+    """Get the set of file names within a directory to ignore."""
+    ignore_file_names = set()
+
+    ignore_file = os.path.join(abspath, common.IGNORE_FILE_NAME)
+    if os.path.isfile(ignore_file):
+      app.Log(2, 'Reading ignore file %s', ignore_file)
+      with open(ignore_file) as f:
+        for line in f:
+          line = line.split('#')[0].strip()
+          if line:
+            ignore_file_names.add(line)
+
+    return ignore_file_names
+
   def _LintThisDirectory(
       self, abspath: str, relpath: str, dirnames: typing.List[str],
-      filenames: typing.List[str]) -> typing.List[linters.Error]:
+      all_filenames: typing.List[str]) -> typing.List[linters.Error]:
     """Run linters in this directory."""
     errors = []
 
     # Strip files and directories which are not to be linted.
-    dirnames = [d for d in dirnames if d not in common.IGNORED_DIRS]
-    filenames = [f for f in filenames if f not in common.IGNORED_FILES]
+    ignored_names = self._GetIgnoredNames(abspath)
+    ignored_dirs = common.IGNORED_DIRS.union(ignored_names)
+    dirnames = [d for d in dirnames if d not in ignored_dirs]
+    ignored_files = common.IGNORED_FILES.union(ignored_names)
+    filenames = [f for f in all_filenames if f not in ignored_files]
+    files_ignored = len(filenames) != len(all_filenames)
 
     for linter in self.dirlinters:
-      errors += linter(abspath, relpath, dirnames, filenames)
+      errors += linter(abspath, relpath, dirnames, filenames, files_ignored)
 
     for filename in filenames:
+      contentfile = contentfiles.Contentfile(f"{abspath}/{filename}",
+                                             f"{relpath}/{filename}", filename,
+                                             self.xmp_cache)
       for linter in self.filelinters:
-        errors += linter(f"{abspath}/{filename}", f"{relpath}/{filename}",
-                         filename) or []
+        errors += linter(contentfile)
 
     return errors
 
   def __call__(self, *args, **kwargs):
+    """Run the linters."""
     start_ = time.time()
 
     working_dir = self.workspace.workspace_root / self.toplevel_dir
@@ -118,13 +145,18 @@ def main(argv):  # pylint: disable=missing-docstring
     sys.exit(1)
 
   workspace_ = workspace.Workspace(abspath)
-  lintercache.LinterCache(workspace_)
+  error_cache = lintercache.LinterCache(workspace_)
+  if FLAGS.rm_errors_cache:
+    error_cache.Empty()
   xmp_cache.XmpCache(workspace_)
   WorkspaceLinter(workspace_)()
 
   # Print the carriage return once we've done updating the counts line.
-  if FLAGS.counts and linters.ERROR_COUNTS:
-    print("", file=sys.stderr)
+  if FLAGS.counts:
+    if linters.ERROR_COUNTS:
+      print("", file=sys.stderr)
+  else:
+    linters.PrintErrorCounts(end="\n")
 
   # Print the profiling timers once we're done.
   if FLAGS.profile:
@@ -134,8 +166,13 @@ def main(argv):  # pylint: disable=missing-docstring
     overhead = total_time - linting_time - cached_time
 
     print(
-        f'linting={linting_time:.3f}s, cached={cached_time:.3f}s, '
-        f'overhead={overhead:.3f}s, total={total_time:.3f}s',
+        f'timings: linting={humanize.Duration(linting_time)} '
+        f'({linting_time / total_time:.1%}), '
+        f'cached={humanize.Duration(cached_time)} '
+        f'({cached_time / total_time:.1%}), '
+        f'overhead={humanize.Duration(overhead)} '
+        f'({overhead / total_time:.1%}), '
+        f'total={humanize.Duration(total_time)}.',
         file=sys.stderr)
 
 

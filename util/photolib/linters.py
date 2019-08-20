@@ -1,7 +1,7 @@
 """This file contains the linter implementations for photolint."""
 import inspect
 import os
-import re
+import pathlib
 import sys
 import typing
 from collections import defaultdict
@@ -9,6 +9,7 @@ from collections import defaultdict
 from labm8 import app
 from labm8 import shell
 from util.photolib import common
+from util.photolib import contentfiles
 from util.photolib import lintercache
 from util.photolib import workspace
 from util.photolib import xmp_cache
@@ -25,24 +26,29 @@ ERROR_CATEGORIES = set([
     "dir/not_empty",
     "dir/hierarchy",
     "file/name",
+    "file/missing",
     "extension/lowercase",
     "extension/bad",
     "extension/unknown",
     "keywords/third_party",
     "keywords/film_format",
     "keywords/panorama",
+    "keywords/inconsistent",
+    "keywords/missing",
     "keywords/events",
 ])
+
+app.DEFINE_list("ignore", [], "A list of categories to ignore.")
 
 # A map of error categories to error counts.
 ERROR_COUNTS: typing.Dict[str, int] = defaultdict(int)
 
 
-def PrintErrorCounts() -> None:
+def PrintErrorCounts(end: str = "") -> None:
   """Print the current error counters to stderr."""
-  counts = [f"{k} = {v}" for k, v in sorted(ERROR_COUNTS.items())]
+  counts = [f"{k}={v}" for k, v in sorted(ERROR_COUNTS.items())]
   counts_str = ", ".join(counts)
-  print(f"\r{counts_str}", end="", file=sys.stderr)
+  print(f"\rcounts: {counts_str}.", end=end, file=sys.stderr)
 
 
 class Error(object):
@@ -68,7 +74,7 @@ class Error(object):
 
     ERROR_COUNTS[category] += 1
 
-    if not FLAGS.counts:
+    if not FLAGS.counts and self.category not in FLAGS.ignore:
       print(
           f'{relpath}:  '
           f'{shell.ShellEscapeCodes.YELLOW}{message}'
@@ -131,17 +137,15 @@ def GetLinters(base_linter: Linter,
 class FileLinter(Linter):
   """Lint a file."""
 
-  def __call__(
-      self,
-      abspath: str,  # pylint: disable=arguments-differ
-      workspace_relpath: str,
-      filename: str) -> None:
-    """
+  def __call__(self,
+               contentfile: contentfiles.Contentfile) -> typing.List[Error]:
+    """Run the specified linter on the file.
 
     Args:
-        abspath: The absolute path of the file to lint.
-        workspace_relpath: The workspace-relative path of the file to lint.
-        filename: The basename of the file to lint.
+        contentfile: The file to lint.
+
+    Returns:
+      A list of zero or more errors.
     """
     raise NotImplementedError("abstract class")
 
@@ -159,33 +163,58 @@ class ThirdPartyFileLinter(FileLinter):  # pylint: disable=abstract-method
 class PhotolibFilename(PhotolibFileLinter):
   """Checks that file name matches one of expected formats."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    filename_noext = os.path.splitext(filename)[0]
-    if re.match(common.PHOTO_LIB_PATH_COMPONENTS_RE, filename_noext):
-      # TODO(cec): Compare YYYY-MM-DD against directory name.
+  def __call__(self, contentfile: contentfiles.Contentfile):
+
+    def _CompareMatchToParent(match, parent_directory_name: str):
+      (year, month,
+       day), err = contentfiles.get_yyyy_mm_dd(parent_directory_name)
+      if err:  # error will be caught by a directory linter
+        return []
+
+      # Compare YYYY-MM-DD against directory name.
+      file_year = match.group('year')
+      if len(file_year) == 2:
+        file_year = f'20{file_year}'
+
+      if (year != int(file_year) or month != int(match.group('month')) or
+          day != int(match.group('day'))):
+        return [
+            Error(
+                contentfile.relpath, "dir/hierarchy", "file date "
+                f"{file_year}-{match.group('month')}-{match.group('day')} "
+                "does not match directory date "
+                f"{year}-{month:02d}-{day:02d}")
+        ]
       return []
 
-    if re.match(common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE, filename_noext):
-      # TODO(cec): Compare YYYY-MM-DD against directory name.
-      return []
+    parent_directory_name = contentfile.path.parent.name
 
-    return [Error(workspace_relpath, "file/name", "invalid file name")]
+    match = common.PHOTO_LIB_PATH_COMPONENTS_RE.match(
+        contentfile.filename_noext)
+    if match:
+      return _CompareMatchToParent(match, parent_directory_name)
+
+    match = common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(
+        contentfile.filename_noext)
+    if match:
+      return _CompareMatchToParent(match, parent_directory_name)
+
+    return [Error(contentfile.relpath, "file/name", "invalid file name")]
 
 
 class ThirdPartyFilename(ThirdPartyFileLinter):
   """Checks that file name matches the expected format."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
+  def __call__(self, contentfile: contentfiles.Contentfile):
     errors = []
-    topdir = os.path.basename(os.path.dirname(abspath))
-    filename_noext, ext = os.path.splitext(filename)
+    topdir = contentfile.path.parent.name
 
-    components = filename_noext.split("-")
+    components = contentfile.filename_noext.split("-")
     if len(components) == 2:
       if components[0] != topdir:
         errors.append(
-            Error(workspace_relpath, "file/name",
-                  f"'{components[0]}' should be '{topdir}'"))
+            Error(contentfile.relpath, "file/name",
+                  f"'{components[0]}' should be named '{topdir}'"))
       try:
         seq = int(components[1])
         if seq > 1:
@@ -194,18 +223,19 @@ class ThirdPartyFilename(ThirdPartyFileLinter):
           prev = seq - 1
 
           # Construct the previous name in the sequence.
-          filename = f"{components[0]}-{prev:0{seq_len}d}{ext}"
-          prev_path = os.path.join(os.path.dirname(abspath), filename)
+          filename = f"{components[0]}-{prev:0{seq_len}d}{contentfile.extension}"
+          prev_path = contentfile.path.parent / filename
           if not os.path.isfile(prev_path):
             errors.append(
-                Error(workspace_relpath, "file/name",
+                Error(contentfile.relpath, "file/name",
                       f"filename is out-of-sequence"))
       except ValueError:
         errors.append(
-            Error(workspace_relpath, "file/name", f"'{seq}' not a number"))
+            Error(contentfile.relpath, "file/name", f"'{seq}' not a number"))
     else:
       errors.append(
-          Error(workspace_relpath, "file/name", f"should be '{topdir}-<num>'"))
+          Error(contentfile.relpath, "file/name",
+                f"should be named '{topdir}-<num>'"))
 
     return errors
 
@@ -213,36 +243,33 @@ class ThirdPartyFilename(ThirdPartyFileLinter):
 class FileExtension(PhotolibFileLinter, ThirdPartyFileLinter):
   """Checks file extensions."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    errors = []
-    ext = os.path.splitext(filename)[-1]
-    lext = ext.lower()
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    if contentfile.extension not in common.KNOWN_FILE_EXTENSIONS:
+      return []
 
-    if lext != ext:
-      labspath = abspath[:-len(ext)] + lext
+    errors = []
+    lext = contentfile.extension.lower()
+
+    if lext != contentfile.extension:
+      labspath = contentfile.abspath[:-len(lext)] + lext
       errors.append(
-          Error(workspace_relpath,
-                "extension/lowercase",
-                "file extension should be lowercase",
-                fix_it=(f"mv -v '{abspath}' '{abspath}.tmp' ; "
-                        f"mv -v '{abspath}.tmp' '{labspath}'")))
+          Error(
+              contentfile.relpath,
+              "extension/lowercase",
+              "file extension should be lowercase",
+              fix_it=(
+                  f"mv -v '{contentfile.abspath}' '{contentfile.abspath}.tmp' ; "
+                  f"mv -v '{contentfile.abspath}.tmp' '{labspath}'")))
 
     if lext not in common.KNOWN_FILE_EXTENSIONS:
-      if lext == ".jpeg":
-        jabspath = abspath[:-len(ext)] + ".jpg"
-        errors.append(
-            Error(workspace_relpath,
-                  "extension/bad",
-                  f"convert {lext} file to .jpg",
-                  fix_it=f"mv -v '{abspath}' '{jabspath}'"))
       if lext in common.FILE_EXTENSION_SUGGESTIONS:
         suggestion = common.FILE_EXTENSION_SUGGESTIONS[lext]
         errors.append(
-            Error(workspace_relpath, "extension/bad",
+            Error(contentfile.relpath, "extension/bad",
                   f"convert {lext} file to {suggestion}"))
       else:
         errors.append(
-            Error(workspace_relpath, "extension/unknown",
+            Error(contentfile.relpath, "extension/unknown",
                   "unknown file extension"))
 
     return errors
@@ -251,21 +278,20 @@ class FileExtension(PhotolibFileLinter, ThirdPartyFileLinter):
 class PanoramaKeyword(PhotolibFileLinter, ThirdPartyFileLinter):
   """Checks that panorama keywords are set on -Pano files."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    if "-Pano" not in filename:
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    if not contentfile.filename_noext.endswith("-Pano"):
       return []
 
     errors = []
 
-    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
-    if "ATTR|PanoPart" not in keywords:
+    if "ATTR|PanoPart" in contentfile.keywords:
       errors.append(
-          Error(workspace_relpath, "keywords/panorama",
-                "keyword 'ATTR >> PanoPart' not set on suspected panorama"))
+          Error(contentfile.relpath, "keywords/panorama",
+                "keyword 'ATTR >> PanoPart' is set on suspected panorama"))
 
-    if "ATTR|Panorama" not in keywords:
+    if "ATTR|Panorama" not in contentfile.keywords:
       errors.append(
-          Error(workspace_relpath, "keywords/panorama",
+          Error(contentfile.relpath, "keywords/panorama",
                 "keyword 'ATTR >> Panorama' not set on suspected panorama"))
 
     return errors
@@ -274,15 +300,14 @@ class PanoramaKeyword(PhotolibFileLinter, ThirdPartyFileLinter):
 class FilmFormat(PhotolibFileLinter):
   """Checks that 'Film Format' keyword is set on film scans."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    filename_noext = os.path.splitext(filename)[0]
-    if not common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(filename_noext):
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    if not common.PHOTO_LIB_SCAN_PATH_COMPONENTS_RE.match(
+        contentfile.filename_noext):
       return []
 
-    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
-    if not any(k.startswith("ATTR|Film Format") for k in keywords):
+    if not any(k.startswith("ATTR|Film Format") for k in contentfile.keywords):
       return [
-          Error(workspace_relpath, "keywords/film_format",
+          Error(contentfile.relpath, "keywords/film_format",
                 "keyword 'ATTR >> Film Format' not set on film scan")
       ]
     return []
@@ -291,11 +316,10 @@ class FilmFormat(PhotolibFileLinter):
 class ThirdPartyInPhotolib(PhotolibFileLinter):
   """Checks that 'third_party' keyword is not set on files in //photos."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
-    if "ATTR|third_party" in keywords:
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    if "ATTR|third_party" in contentfile.keywords:
       return [
-          Error(workspace_relpath, "keywords/third_party",
+          Error(contentfile.relpath, "keywords/third_party",
                 "third_party file should be in //third_party")
       ]
     return []
@@ -304,11 +328,10 @@ class ThirdPartyInPhotolib(PhotolibFileLinter):
 class ThirdPartyKeywordIsSet(ThirdPartyFileLinter):
   """Checks that 'third_party' keyword is set on files in //third_party."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
-    if "third_party" not in keywords:
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    if "third_party" not in contentfile.keywords:
       return [
-          Error(workspace_relpath, "keywords/third_party",
+          Error(contentfile.relpath, "keywords/third_party",
                 "files in //third_party should have third_party keyword set")
       ]
     return []
@@ -317,17 +340,116 @@ class ThirdPartyKeywordIsSet(ThirdPartyFileLinter):
 class SingularEvents(PhotolibFileLinter):
   """Checks that only a single 'EVENT' keyword is set."""
 
-  def __call__(self, abspath: str, workspace_relpath: str, filename: str):
-    keywords = self.xmp_cache.GetLightroomKeywords(abspath, workspace_relpath)
-    num_events = sum(1 if k.startswith("EVENT|") else 0 for k in keywords)
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    num_events = sum(
+        1 if k.startswith("EVENT|") else 0 for k in contentfile.keywords)
 
     if num_events > 1:
-      events = ", ".join([f"'{k}'" for k in keywords if k.startswith("EVENT|")])
+      events = ", ".join(
+          [f"'{k}'" for k in contentfile.keywords if k.startswith("EVENT|")])
       return [
-          Error(workspace_relpath, "keywords/events",
+          Error(contentfile.relpath, "keywords/events",
                 f"mutually exclusive keywords = {events}")
       ]
     return []
+
+
+class DescriptiveKeywords(PhotolibFileLinter):
+  """Checks that a file contains descriptive keywords."""
+
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    if contentfile.extension not in common.KNOWN_IMG_FILE_EXTENSIONS:
+      return []
+
+    errors = []
+
+    # Build a list of "descriptive" keywords, where a descriptive word is not:
+    #   * An EVENT keyword.
+    #   * The ONDVD attribute.
+    descriptive_keywords = [
+        k for k in contentfile.keywords if not k.startswith("EVENT|") and
+        not k.startswith("ATTR|") and not k.startswith("third_party")
+    ]
+
+    # Start with the more specific error before wining about no keywords.
+    has_location = any(k.startswith("LOC|") for k in descriptive_keywords)
+    is_screenshot = "ATTR|Screenshot" in contentfile.keywords
+    if not has_location and not is_screenshot:
+      errors.append(
+          Error(contentfile.relpath, "keywords/missing",
+                "has no LOC location keywords"))
+    elif not descriptive_keywords and not is_screenshot:
+      errors.append(
+          Error(contentfile.relpath, "keywords/missing",
+                "has no non-event keywords"))
+
+    return errors
+
+
+def GetContentfileWithoutExtension(
+    directory: pathlib.Path, workspace_: workspace.Workspace,
+    xmp_cache_: xmp_cache.XmpCache, filename_without_extension: str):
+  for path in directory.iterdir():
+    if path.name.startswith(filename_without_extension):
+      abspath = str(path.absolute())
+      return contentfiles.Contentfile(abspath, workspace_.GetRelpath(abspath),
+                                      path.name, xmp_cache_)
+  return None
+
+
+class MatchingKeywordsOnModifiedFiles(PhotolibFileLinter):
+  """Check that keywords are equal on -{HDR,Pano,Edit} files (except pano)."""
+
+  def __call__(self, contentfile: contentfiles.Contentfile):
+    if (not contentfile.filename_noext.endswith('-HDR') and
+        not contentfile.filename_noext.endswith('-Pano') and
+        not contentfile.filename_noext.endswith('-Edit')):
+      return []
+
+    components = contentfile.filename_noext.split('-')
+    edit_type = components[-1]
+    basename_without_edit = '-'.join(components[:-1])
+
+    base_contentfile = GetContentfileWithoutExtension(
+        contentfile.path.parent, self.workspace, self.xmp_cache,
+        basename_without_edit)
+    if not base_contentfile:
+      return [
+          Error(
+              contentfile.relpath, "file/missing",
+              f"could not find {edit_type} base file '{basename_without_edit}'")
+      ]
+
+    base_keywords = {
+        k for k in base_contentfile.keywords if k != 'ATTR|PanoPart' and
+        k != 'ATTR|ONDVD' and not k.startswith("PUB|")
+    }
+    keywords = {
+        k for k in contentfile.keywords if k != 'ATTR|Panorama' and
+        k != 'ATTR|ONDVD' and not k.startswith("PUB|")
+    }
+
+    if base_keywords == keywords:
+      return []
+
+    errors = []
+    extra_keywords = keywords - base_keywords
+    if extra_keywords:
+      errors.append(
+          Error(
+              contentfile.relpath, "keywords/inconsistent",
+              f"{edit_type} file has extra keywords: {','.join(extra_keywords)}"
+          ))
+
+    missing_keywords = base_keywords - keywords
+    if missing_keywords:
+      errors.append(
+          Error(
+              contentfile.relpath, "keywords/inconsistent",
+              f"{edit_type} file has missing keywords: {','.join(missing_keywords)}"
+          ))
+
+    return errors
 
 
 # Directory linters.
@@ -341,7 +463,8 @@ class DirLinter(Linter):
       abspath: str,  # pylint: disable=arguments-differ
       workspace_relpath: str,
       dirnames: typing.List[str],
-      filenames: typing.List[str]) -> None:
+      filenames: typing.List[str],
+      files_ignored: bool) -> None:
     """Lint a directory.
 
     Args:
@@ -350,6 +473,8 @@ class DirLinter(Linter):
         dirnames: A list of subdirectories, excluding those which are
             ignored.
         filenames: A list of filenames, excluding those which are ignored.
+        files_ignored: True if one or more file in the directory was excluded
+          from the list of filenames.
     """
     pass
 
@@ -371,8 +496,9 @@ class DirEmpty(PhotolibDirLinter, ThirdPartyDirLinter):
     PhotolibDirLinter.__init__(self, *args, **kwargs)
 
   def __call__(self, abspath: str, workspace_relpath: str,
-               dirnames: typing.List[str], filenames: typing.List[str]):
-    if not filenames and not dirnames:
+               dirnames: typing.List[str], filenames: typing.List[str],
+               files_ignored: bool):
+    if not files_ignored and not filenames and not dirnames:
       return [
           Error(workspace_relpath,
                 "dir/empty",
@@ -386,7 +512,9 @@ class ThirdPartyDirname(ThirdPartyDirLinter):
   """Checks that directory name matches the expected format."""
 
   def __call__(self, abspath: str, workspace_relpath: str,
-               dirnames: typing.List[str], filenames: typing.List[str]):
+               dirnames: typing.List[str], filenames: typing.List[str],
+               files_ignored: bool):
+    del files_ignored
     top_dir = os.path.basename(os.path.dirname(abspath))
     if " " in top_dir or "\t" in top_dir:
       return [Error(workspace_relpath, "dir/hierarchy", "whitespace in path")]
@@ -397,7 +525,10 @@ class DirShouldNotHaveFiles(PhotolibDirLinter):
   """Checks whether a non-leaf directory contains files."""
 
   def __call__(self, abspath: str, workspace_relpath: str,
-               dirnames: typing.List[str], filenames: typing.List[str]):
+               dirnames: typing.List[str], filenames: typing.List[str],
+               files_ignored: bool):
+    del files_ignored
+
     # Do nothing if we're in a leaf directory.
     if common.PHOTOLIB_LEAF_DIR_RE.match(workspace_relpath):
       return []
@@ -418,104 +549,30 @@ class DirHierachy(PhotolibDirLinter):
   """Check that directory hierarchy is correct."""
 
   def __call__(self, abspath: str, workspace_relpath: str, dirnames: str,
-               filenames: str):
+               filenames: str, files_ignored: bool):
+    del files_ignored
     errors = []
-
-    def get_yyyy(string: str) -> typing.Optional[int]:
-      """Parse string or show error. Returns None in case of error."""
-      try:
-        if 1900 <= int(string) <= 2100:
-          return int(string)
-        errors.append(
-            Error(workspace_relpath, "dir/hiearchy",
-                  f"year '{string}' out of range"))
-      except ValueError:
-        errors.append(
-            Error(workspace_relpath, "dir/hierarchy",
-                  "'{string}' should be a four digit year"))
-      return None
-
-    def get_mm(string: str) -> typing.Optional[int]:
-      """Parse string or show error. Returns None in case of error."""
-      try:
-        if 1 <= int(string) <= 12:
-          return int(string)
-        errors.append(
-            Error(workspace_relpath, "dir/hierarchy",
-                  f"month '{string}' out of range"))
-      except ValueError:
-        errors.append(
-            Error(workspace_relpath, "dir/hierarchy",
-                  f"'{string}' should be a two digit month"))
-      return None
-
-    def get_dd(string: str) -> typing.Optional[int]:
-      """Parse string or show error. Returns None in case of error."""
-      try:
-        if 1 <= int(string) <= 31:
-          return int(string)
-        errors.append(
-            Error(workspace_relpath, "dir/hierarchy",
-                  f"day '{string}' out of range"))
-      except ValueError:
-        errors.append(
-            Error(workspace_relpath, "dir/hierarchy",
-                  f"'{string}' should be a two digit day"))
-      return None
-
-    def get_yyyy_mm(
-        string: str
-    ) -> typing.Tuple[typing.Optional[int], typing.Optional[int]]:
-      """Parse string or show error. Returns None in case of error."""
-      string_components = string.split("-")
-      if len(string_components) == 2:
-        year = get_yyyy(string_components[0])
-        month = get_mm(string_components[1])
-        if year and month:
-          return year, month
-      else:
-        errors.append(
-            Error(workspace_relpath, "dir/hierarchy",
-                  f"'{string}' should be YYYY-MM"))
-      return None, None
-
-    def get_yyyy_mm_dd(
-        string: str) -> typing.Tuple[typing.Optional[int], typing.
-                                     Optional[int], typing.Optional[int]]:
-      """Parse string or show error. Returns None in case of error."""
-      string_components = string.split("-")
-      if len(string_components) == 3:
-        year = get_yyyy(string_components[0])
-        month = get_mm(string_components[1])
-        day = get_dd(string_components[2])
-        if year and month and day:
-          return year, month, day
-      else:
-        errors.append(
-            Error(workspace_relpath, "dir/hierarchy",
-                  f"'{string}' should be YYYY-MM-DD"))
-      return None, None
 
     components = os.path.normpath(workspace_relpath[2:]).split(os.sep)[1:]
 
     if len(components) >= 1:
-      year_1 = get_yyyy(components[0])
-      if not year_1:
-        return errors
+      year_1, err = contentfiles.get_yyyy(components[0])
+      if err:
+        return errors + [err]
 
     if len(components) >= 2:
-      year_2, month_1 = get_yyyy_mm(components[1])
-      if not year_2:
-        return errors
+      (year_2, month_1), err = contentfiles.get_yyyy_mm(components[1])
+      if err:
+        return errors + [err]
       if year_1 != year_2:
         errors.append(
             Error(workspace_relpath, "dir/hierarchy",
                   f"years {year_1} and {year_2} do not match"))
 
     if len(components) >= 3:
-      year_3, month_2, _ = get_yyyy_mm_dd(components[2])
-      if not year_3:
-        return errors
+      (year_3, month_2, _), err = contentfiles.get_yyyy_mm_dd(components[2])
+      if err:
+        return errors + [err]
       if year_2 != year_3:
         errors.append(
             Error(workspace_relpath, "dir/hierarchy",
@@ -526,12 +583,3 @@ class DirHierachy(PhotolibDirLinter):
                   f"years {month_1} and {month_2} do not match"))
 
     return errors
-
-
-class ModifiedKeywords(PhotolibDirLinter):
-  """Check that keywords are equal on -{HDR,Pano,Edit} files (except pano)."""
-
-  def __call__(self, abspath: str, workspace_relpath: str, dirnames: str,
-               filenames: str):
-    # TODO(cec): Check that keywords are equal on -{HDR,Pano,Editr} files.
-    return []

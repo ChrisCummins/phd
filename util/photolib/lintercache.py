@@ -106,6 +106,12 @@ class LinterCache(sqlutil.Database):
     self.session = self.MakeSession()
     self.RefreshLintersVersion()
 
+  def Empty(self, commit: bool = True):
+    self.session.query(Directory).delete()
+    self.session.query(CachedError).delete()
+    if commit:
+      self.session.commit()
+
   def RefreshLintersVersion(self):
     """Check that """
     meta_key = "version"
@@ -119,8 +125,7 @@ class LinterCache(sqlutil.Database):
 
     if cached_version_str != actual_version.value:
       app.Log(1, "Version has changed, emptying cache ...")
-      self.session.query(Directory).delete()
-      self.session.query(CachedError).delete()
+      self.Empty(commit=False)
       if cached_version:
         self.session.delete(cached_version)
       self.session.add(actual_version)
