@@ -56,11 +56,12 @@ class Contentfile(object):
 
     # Get the length of the shared prefix for all other file names in the
     # directory.
-    names_and_prefixes = [(path.name,
-                           _GetLengthOfCommonPrefix(path.name, self.filename))
-                          for path in self.path.parent.iterdir()
-                          if path.name != self.filename and
-                          path.suffix in common.KNOWN_IMG_FILE_EXTENSIONS]
+    names_and_prefixes = [
+        (path.name, _GetLengthOfCommonPrefix(path.name, self.filename))
+        for path in self.path.parent.iterdir()
+        if path.name != self.filename and path.suffix in
+        common.KNOWN_IMG_FILE_EXTENSIONS and len(path.name) < len(self.filename)
+    ]
     if not names_and_prefixes:
       return None
 
