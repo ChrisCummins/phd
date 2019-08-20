@@ -46,7 +46,7 @@ The textual representation of program codes must be encoded as numeric sequences
 
 During encoding, tokens in the vocabulary are mapped to unique integer values, e.g. \texttt{float} $\rightarrow 0$, \texttt{int} $\rightarrow$ 1. The integer values chosen are arbitrary, and offer a \emph{sparse} data representation, meaning that a language model cannot infer the relationships between tokens based on their mappings. This is in contrast to the \emph{dense} representations of other domains, such as pixels in images, which can be interpolated between to derive the differences in colours.
 
-To mitigate this, an \emph{embedding} is used, which translates tokens in a sparse, integer-encoded vocabulary into a lower dimensional vector space, allowing semantically related tokens like \texttt{float} and \texttt{int} to be mapped to nearby points~\cite{Mikolov2013a,Baroni2014}. An embedding layer maps each token in the integer-encoded vocabulary to a vector of real values. Given a vocabulary size $|V|$ and embedding dimensionality $D$, an embedding matrix $\bm{W_{E}} \in \mathbb{R}^{|V| \times D}$ is learned during training, so that an integer-encoded sequences of tokens $\bm{t} \in \mathbb{N}^{L}$ is mapped to the matrix $\bm{T} \in \mathbb{R}^{L \times D}$. \diff{In this work, a embedding dimensionality $D = 64$ is selected somewhat arbitrarily, with best-practises suggesting empirical an approach to determine good values. Research into analytical models for selecting embedding dimensionality is ongoing~\cite{Yin2018a,Naumov2019}.}
+To mitigate this, an \emph{embedding} is used, which translates tokens in a sparse, integer-encoded vocabulary into a lower dimensional vector space, allowing semantically related tokens like \texttt{float} and \texttt{int} to be mapped to nearby points~\cite{Mikolov2013a,Baroni2014}. An embedding layer maps each token in the integer-encoded vocabulary to a vector of real values. Given a vocabulary size $|V|$ and embedding dimensionality $D$, an embedding matrix $\bm{W_{E}} \in \mathbb{R}^{|V| \times D}$ is learned during training, so that an integer-encoded sequences of tokens $\bm{t} \in \mathbb{N}^{L}$ is mapped to the matrix $\bm{T} \in \mathbb{R}^{L \times D}$. \diff{In this work, a embedding dimensionality $D = 64$ is selected somewhat arbitrarily, with best-practices suggesting empirical an approach to determine good values. Research into analytical models for selecting embedding dimensionality is ongoing~\cite{Yin2018a,Naumov2019}.}
 
 \newsavebox{\NvidiaStreamClusterInput}
 \begin{lrbox}{\NvidiaStreamClusterInput}
@@ -142,7 +142,7 @@ The final component of DeepTune is comprised of two fully connected artificial n
 The activation of each neuron in the output layer represents the model's confidence that the corresponding decision is the correct one. Taking the $\argmax$ of the output layer produces the decision with the largest activation. For example, for a binary optimisation heuristic the final layer will consist of two neurons, and the predicted optimisation is the neuron with the largest activation.
 
 
-\subsection{Training the network}
+\subsection{Training the Network}
 
 DeepTune is trained in the same manner as prior supervised machine learning works, the key difference being that instead of having to manually create and extract features from programs, the raw program codes themselves are used.
 

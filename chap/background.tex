@@ -71,7 +71,7 @@ The signal of an artificial neuron is the \emph{activation}. For a given layer $
 The connections and biases of an artificial neural network are adjusted during training such that, for a pair $(\bm{x}, y)$ where $\bm{x}$ is an input vector of features and $y$ is an observed label, the difference between the final layer activations and $y$ is minimised.
 
 
-\paragraph*{Activation function}
+\paragraph*{Activation Function}
 
 The activation function $\phi(z)$ is a non-linear differentiable function used to calculate the activation of an artificial neuron given a value $z \in \mathbb{R}$. A non-linear function is required to enable the ``stacking'' of artificial neuron layers to approximate non-linear functions. Commonly the \emph{Sigmoid} logistic function is used:
 
@@ -293,7 +293,7 @@ This section describes the techniques used to evaluate the machine learning tech
 A \emph{ZeroR} model is used in classification tasks to provide a baseline to evaluate the performance of classifiers. A ZeroR model represents the simplest approach to classification, its output is the mode of the training data labels, irrespective of the input. For example, given training data with the labels $\bm{y} = \{ A, B, B, C\}$, a ZeroR model will produce output $\bm{\hat{y}} = B$ for all future inputs. A ZeroR model has no power of prediction since its output is not conditioned on input features.
 
 
-\subsection{Training, validation, test data}
+\subsection{Training, Validation, Test Data}
 
 The data used to train a machine learning model must not be used to evaluate it. To evaluate a machine learning model, data must be divided into disjoint \emph{training} and \emph{testing} partitions. For a set of $N$ pairs of input and output observations $\bm{D} = (\bm{x}^{(i)}, \bm{y}^{(i)}), i = 1, \ldots, N$, let $k : {1,\ldots,N} \rightarrow {1,\ldots,K}$ be an indexing function that indicates the partition to which the observation $i \in N$ is allocated by the randomisation. The model is then trained with the $k$th part of the data removed, yielding fitted function $\hat{f}^{-k}(\bm{x})$. The quality of the model $V(\hat{f}^{-k})$ is then evaluated using the loss between the expected values and predicted values in the unseen test set:
 
