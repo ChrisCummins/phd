@@ -7,6 +7,11 @@
 -------
 
 <div align="center">
+  <!-- Better code -->
+  <a href="https://bettercodehub.com/results/ChrisCummins/clgen">
+    <img src="https://bettercodehub.com/edge/badge/ChrisCummins/clgen?branch=master">
+  </a>
+  <!-- License -->
   <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
     <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
   </a>
@@ -69,19 +74,19 @@ $ bazel run //deeplearning/clgen -- \
 #### What next?
 
 CLgen is a tool for generating source code. How you use it will depend entirely
-on what you want to do with the generated code. As a first port of call I'd 
-recommend checking out how CLgen is configured. CLgen is configured through a 
-handful of 
+on what you want to do with the generated code. As a first port of call I'd
+recommend checking out how CLgen is configured. CLgen is configured through a
+handful of
 [protocol buffers](https://developers.google.com/protocol-buffers/) defined in
-[//deeplearning/clgen/proto](/deeplearning/clgen/proto). 
+[//deeplearning/clgen/proto](/deeplearning/clgen/proto).
 The [clgen.Instance](/deeplearning/clgen/proto/clgen.proto) message type
-combines a [clgen.Model](/deeplearning/clgen/proto/model.proto) and 
+combines a [clgen.Model](/deeplearning/clgen/proto/model.proto) and
 [clgen.Sampler](/deeplearning/clgen/proto/sampler.proto) which define the
-way in which models are trained, and how new programs are generated, 
-respectively. You will probably want to assemble a large corpus of source code 
-to train a new model on - I have [tools](/datasets/github/scrape_repos) which 
-may help with that. You may also want a means to execute arbitrary generated 
-code - as it happens I have [tools](/gpu/cldrive) for that too. :-) Thought of a 
+way in which models are trained, and how new programs are generated,
+respectively. You will probably want to assemble a large corpus of source code
+to train a new model on - I have [tools](/datasets/github/scrape_repos) which
+may help with that. You may also want a means to execute arbitrary generated
+code - as it happens I have [tools](/gpu/cldrive) for that too. :-) Thought of a
 new use case? I'd love to hear about it!
 
 
@@ -100,7 +105,7 @@ Publication
 [Jupyter notebook](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/blob/master/code/Paper.ipynb)
 containing experimental evaluation of an early version of CLgen.
 
-My documentation sucks. Don't be afraid to get stuck in and start 
+My documentation sucks. Don't be afraid to get stuck in and start
 [reading the code!](deeplearning/clgen/clgen.py)
 
 ## License

@@ -8,6 +8,10 @@
 <a href="https://github.com/ChrisCummins/phd">
   <img src="https://img.shields.io/github/commit-activity/y/ChrisCummins/phd.svg?color=yellow">
 </a>
+<!-- Better code -->
+<a href="https://bettercodehub.com/results/ChrisCummins/phd">
+  <img src="https://bettercodehub.com/edge/badge/ChrisCummins/phd?branch=master">
+</a>
 <!-- Travis CI -->
 <a href="https://github.com/ChrisCummins/phd">
   <img src="https://img.shields.io/travis/ChrisCummins/phd/master.svg">

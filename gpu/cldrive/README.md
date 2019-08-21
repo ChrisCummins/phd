@@ -1,5 +1,10 @@
 # cldrive - Run arbitrary OpenCL kernels
 
+<!-- Better code -->
+<a href="https://bettercodehub.com/results/ChrisCummins/cldrive">
+  <img src="https://bettercodehub.com/edge/badge/ChrisCummins/cldrive?branch=master">
+</a>
+<!-- License -->
 <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
   <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
 </a>
