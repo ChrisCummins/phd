@@ -1,0 +1,35 @@
+\begin{table}
+  \rowcolors{2}{gray!25}{white}
+  \centering%
+    \begin{tabular}{| l l |}
+      \hline
+      \rowcolor{gray!50}
+      \textbf{Name} & \textbf{Description} \\
+      \hline
+      \texttt{BasicBlocks} & \#.\ basic blocks \\
+      \texttt{Branches} & \#.\ branches \\
+      \texttt{DivInsts} & \#.\ divergent instructions \\
+      \texttt{DivRegionInsts} & \#.\ instructions in divergent regions \\
+      \texttt{DivRegionInstsRatio} & \#.\ instr. in divergent regions / total instructions \\
+      \texttt{DivRegions} & \#.\ divergent regions \\
+      \texttt{TotInsts} & \#.\ instructions \\
+      \texttt{FPInsts} & \#.\ floating point instructions \\
+      \texttt{ILP} & average ILP / basic block \\
+      \texttt{Int/FP Inst Ratio} & \#.\ branches \\
+      \texttt{IntInsts} & \#.\ integer instructions \\
+      \texttt{MathFunctions} & \#.\ match builtin functions \\
+      \texttt{MLP} & average MLP / basic block \\
+      \texttt{Loads} & \#.\ loads \\
+      \texttt{Stores} & \#.\ stores \\
+      \texttt{UniformLoads} & \#.\ loads unaffected by coarsening direction \\
+      \texttt{Barriers} & \#.\ barriers \\
+      \hline
+    \end{tabular}%
+    \label{tab:features-pact14-raw}%
+  \caption[\citeauthor{Magni2014} features for predicting thread coarsening]{%
+    Candidate features used by \citeauthor{Magni2014} for predicting thread
+    coarsening. From these values, they compute relative deltas for each
+    iteration of coarsening, then use PCA for selection.%
+  }%
+  \label{tab:magni-features} %
+\end{table}

@@ -1,0 +1,51 @@
+\newsavebox{\BeignetPtrIntSpin}
+\begin{lrbox}{\BeignetPtrIntSpin}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global int* a) {
+  int b = get_global_id(0);
+  a[b] = (6 * 32) + 4 * (32 / 32) + a;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\NvidiaOptLoopHang}
+\begin{lrbox}{\NvidiaOptLoopHang}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global float* a, global float* b,
+              global float* c) {
+  int d, e, f;
+  d = get_local_id(0);
+  for (int g = 0; g < 100000; g++)
+    barrier(1);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\XeonPhiSpin}
+\begin{lrbox}{\XeonPhiSpin}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global unsigned char* a,
+              unsigned b) {
+  a[get_global_id(0)] %= 42;
+  barrier(1);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\IntelOptLoopHang}
+\begin{lrbox}{\IntelOptLoopHang}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+    kernel void A(global int* a) {
+      int b = get_global_id(0);
+      while (b < 512) { }
+    }
+    \end{minted}
+  \end{minipage}
+\end{lrbox}

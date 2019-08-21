@@ -1,0 +1,90 @@
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[phd,icsa,logo,twoside,openright]{infthesis}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[
+  backend=biber,
+  style=alphabetic,
+  maxbibnames=99,
+  sortcites=true,
+  block=none,
+  indexing=false,
+  citereset=none,
+  isbn=false,
+  url=true,
+  doi=false,
+  natbib=true,
+]{biblatex}
+
+\addbibresource{bibliography.bib}
+
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hhline}
+\usepackage{xspace}
+\usepackage[table]{xcolor}
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\usepackage{upgreek}
+
+
+\usepackage{minted}
+\definecolor{mintedbg}{rgb}{0.92,0.92,0.92}
+\setminted{
+  breaklines,
+  bgcolor=mintedbg,
+  linenos,
+}
+
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{amsmath}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\gain}{Gain}
+
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+
+\usepackage{tikz}
+\def\checkmark{\tikz\fill[scale=0.2](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{multirow}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+\newcommand\bc{\textbf{bc}\xspace}
+\newcommand\bto{\textbf{bto}\xspace}
+\newcommand\abf{\textbf{abf}\xspace}
+\newcommand\arc{\textbf{arc}\xspace}
+\newcommand\awo{\textbf{awo}\xspace}
+
+\usepackage[caption=false]{subfig}
+\usepackage{gensymb}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{filecontents}
+\usepackage{pgfplots, pgfplotstable}
+\usepgfplotslibrary{statistics}
+
+\newenvironment{laysummary}
+  {\renewcommand{\abstractname}{Lay Summary}\begin{mainabs}}
+  {\end{mainabs}\renewcommand{\abstractname}{Abstract}}
+
+\captionsetup[subfigure]{labelformat=parens}
+
+\usepackage{float}
+\newfloat{algorithm}{t}{lop}
+
+\usepackage{hyperref}
+
+\pgfplotsset{compat=1.16}

@@ -1,0 +1,54 @@
+%% eushield.sty -- commands to manipulate the inclusion of the EU shield
+%% graphic.
+%% 
+%% Version 1.0 [2000/11/23] -- initial version
+%% Version 1.1 [2006/08/28] -- fixed PDF detection for teTeX 3
+%% 
+%% Mary Ellen Foster <M.E.Foster@ed.ac.uk>
+
+\def\filedate{2006/08/28}
+\def\fileversion{1.1}
+\ProvidesPackage{eushield}[\filedate\ v\fileversion\ 
+    Commands for including the EU shield graphic]
+
+\RequirePackage{graphics}
+\RequirePackage{ifpdf}
+
+%% Possible values for shieldtype:
+%% 0: regular monochrome
+%% 1: monochrome with no background lines
+%% 2: reverse monochrome
+%% 3: two colours: navy and red
+%% 4: full colour
+\newcommand{\eushield}{}
+\newcommand{\@endspecial}{}
+
+\newcommand{\shieldtype}[1]{%
+    \def\@shieldtype{#1}
+    \ifpdf
+        \ifnum\@shieldtype=0
+            \renewcommand{\eushield}{eushield-normal}
+        \else\ifnum\@shieldtype=1
+            \renewcommand{\eushield}{eushield-noback}
+        \else\ifnum\@shieldtype=2
+            \renewcommand{\eushield}{eushield-reversed}
+        \else\ifnum\@shieldtype=3
+            \renewcommand{\eushield}{eushield-twocolour}
+        \else\ifnum\@shieldtype=4
+            \renewcommand{\eushield}{eushield-fullcolour}
+        \fi\fi\fi\fi\fi
+    \else
+        \renewcommand{\eushield}{eushield}
+        \renewcommand{\@endspecial}{%
+            \special{!/crestversion #1 def}}
+    \fi
+}
+\shieldtype{0}
+
+\newcommand{\includeshield}{%
+    \includegraphics{\eushield}}
+
+\ifpdf
+\else
+    \AtBeginDocument{\@endspecial}
+\fi

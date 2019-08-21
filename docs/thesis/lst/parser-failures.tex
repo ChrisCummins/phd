@@ -1,0 +1,26 @@
+\newsavebox{\ParserFailOne}
+\begin{lrbox}{\ParserFailOne}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+void A(){(global a*)()
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\ParserFailTwo}
+\begin{lrbox}{\ParserFailTwo}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+void A(){void* a; uint4 b=0; b=(b>b)?a:a
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\ParserFailThree}
+\begin{lrbox}{\ParserFailThree}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+void A(){double2 k; return (float4)(k,k,k,k)
+    \end{minted}
+  \end{minipage}
+\end{lrbox}

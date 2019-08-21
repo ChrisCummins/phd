@@ -1,0 +1,37 @@
+\newsavebox{\IntelSPIRMetadata}
+\begin{lrbox}{\IntelSPIRMetadata}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A() {
+  local float a; A(a);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\IntelRemoveDupeBarrier}
+\begin{lrbox}{\IntelRemoveDupeBarrier}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A() {
+  local int a[10];
+  local int b[16][16];
+  a[1024 + (2 * get_local_id(1) +
+    get_local_id(0)) + get_local_id(0)] = 6;
+  barrier(b);
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}
+
+\newsavebox{\DagPass}
+\begin{lrbox}{\DagPass}
+  \begin{minipage}{\textwidth}
+    \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
+kernel void A(global half* a) {
+  int b = get_global_id(0);
+  a[b] = b * b;
+}
+    \end{minted}
+  \end{minipage}
+\end{lrbox}

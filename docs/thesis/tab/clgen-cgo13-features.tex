@@ -1,0 +1,32 @@
+\subfloat[Individual code features]{%
+  \rowcolors{2}{gray!25}{white}
+  \begin{tabular}{| l c l |}
+    \hline
+    \rowcolor{gray!50}
+    \textbf{Name} & \textbf{Type} & \textbf{Description} \\
+    \hline
+    \texttt{comp} & static & \#. compute operations \\
+    \texttt{mem} & static & \#. accesses to global memory \\
+    \texttt{localmem} & static & \#. accesses to local memory \\
+    \texttt{coalesced} & static & \#. coalesced memory accesses \\
+    \texttt{transfer} & dynamic & size of data transfers \\
+    \texttt{wgsize} & dynamic & \#. work-items per kernel \\
+    \hline
+  \end{tabular}%
+  \label{tab:clgen-cgo13-features-raw}%
+}\\*
+\subfloat[Combinations of raw features]{%
+  \rowcolors{2}{gray!25}{white}
+  \begin{tabular}{| l l l |}
+    \hline
+    \rowcolor{gray!50}
+    \textbf{Name} & \textbf{Formulation} & \textbf{Description} \\
+    \hline
+    \texttt{F1} & \texttt{transfer/(comp+mem)} & Communication-computation ratio \\
+    \texttt{F2} & \texttt{coalesced/mem} & \% Coalesced memory accesses \\
+    \texttt{F3} & \texttt{(localmem/mem)$\times$wgsize} & Memory access ratio $\times$ \#.\ work-items \\
+    \texttt{F4} & \texttt{comp/mem} & Computation-memory ratio\\
+    \hline
+  \end{tabular}%
+  \label{tab:clgen-cgo13-features-combined}%
+}

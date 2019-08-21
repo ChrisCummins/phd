@@ -1,0 +1,20 @@
+\begin{table}
+  \centering %
+  \begin{tabular}{| r c | c c c |}
+    \hline
+    \rowcolor{gray!50}
+    \textbf{Compiler} & $\pm$ & \textbf{Silent Crashes} & \textbf{Assertion 1} & \textbf{Assertion 2}\\
+    \hline
+    \multirow{ 2}{*}{solc}    & $-$ & 204 & 1 & \\
+    & $+$ & 204 & 1 & \\
+    \rowcolor{gray!25}
+    & $-$ & 3628 & 1 & 1\\
+    \rowcolor{gray!25}
+    \multirow{ -2}{*}{solc-js} & $+$ & 908 & 1 & 1\\
+    \hline
+  \end{tabular}
+  \caption[DeepSmith programs which trigger Solidity compiler errors]{%
+    The number of DeepSmith programs that trigger Solidity compiler crashes in 12 hours of testing.%
+  }
+  \label{tab:preliminary-solidity-results}
+\end{table}
