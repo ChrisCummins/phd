@@ -9,6 +9,7 @@ import re
 import subprocess
 import typing
 
+from labm8 import app
 from labm8 import archive
 from labm8 import fs
 
@@ -161,15 +162,17 @@ class Workspace(object):
             args: typing.List[str],
             timeout_seconds: int = 360,
             **subprocess_kwargs):
+    cmd = [
+        'timeout',
+        '-s9',
+        str(timeout_seconds),
+        'bazel',
+        command,
+        '--noshow_progress',
+    ] + args
+    app.Log(2, '$ %s', ' '.join(cmd))
     with fs.chdir(self.workspace_root):
-      return subprocess.Popen([
-          'timeout',
-          '-s9',
-          str(timeout_seconds),
-          'bazel',
-          command,
-          '--noshow_progress',
-      ] + args, **subprocess_kwargs)
+      return subprocess.Popen(cmd, **subprocess_kwargs)
 
   def MaybeTargetToPath(
       self,
@@ -235,7 +238,10 @@ class Workspace(object):
 
     # Now get the transitive dependencies of each target.
     targets = [target for target in targets if target not in excluded_targets]
-    for target in targets:
+    all_targets = targets.copy()
+    for i, target in enumerate(targets):
+      app.Log(1, 'Collecting transitive deps for target %d of %d: %s', i + 1,
+              len(targets), target)
       bazel = self.BazelQuery([f'deps({target})'], stdout=subprocess.PIPE)
       grep = subprocess.Popen(
           ['grep', '^/'],
@@ -251,9 +257,11 @@ class Workspace(object):
         raise OSError('grep of bazel query output failed')
 
       deps = stdout.rstrip().split('\n')
-      targets += [target for target in deps if target not in excluded_targets]
+      all_targets += [
+          target for target in deps if target not in excluded_targets
+      ]
 
-    paths = [self.MaybeTargetToPath(target) for target in targets]
+    paths = [self.MaybeTargetToPath(target) for target in all_targets]
     return [path for path in paths if path]
 
   def GetBuildFiles(self, target: str) -> typing.List[pathlib.Path]:
