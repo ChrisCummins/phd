@@ -13,10 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """This file defines telemetry data gathers."""
-import re
-
 import pathlib
-import sqlalchemy as sql
+import re
 import typing
 
 from deeplearning.clgen.proto import telemetry_pb2
@@ -24,11 +22,8 @@ from labm8 import app
 from labm8 import jsonutil
 from labm8 import labdate
 from labm8 import pbutil
-from labm8 import sqlutil
 
 FLAGS = app.FLAGS
-
-Base = sqlutil.Base()
 
 
 class TrainingLogger(object):
@@ -82,16 +77,3 @@ class TrainingLogger(object):
         for p in sorted(self.logdir.iterdir())
         if re.match(r'epoch_\d\d+_telemetry\.pbtxt', str(p.name))
     ]
-
-
-class ConfigProto(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
-
-  id: int = sql.Column(sql.Integer, primary_key=True)
-  name: str = sql.Column(sql.String())
-  a = sql.Column(sql.Integer, nullable=False)
-
-
-class Telemetry(sqlutil.Database):
-
-  def __init__(self, url: str):
-    super(Telemetry, self).__init__(url, Base)

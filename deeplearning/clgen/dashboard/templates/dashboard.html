@@ -2,11 +2,61 @@
 
 {% block header %}
 <title>
-  {{ delta.broken + delta.still_broken }} failing -
-  {{ host }}
+  CLgen
 </title>
 
 <style>
+  .container {
+    margin-top: 1em;
+  }
+
+  .clgen-instance-selector {
+    margin: 40px 0;
+  }
+
+  .section-header {
+    /* text-align: center; */
+    width: 100%;
+    color: #eee;
+  }
+
+  /* canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  div.chart-container {
+    padding: 1px;
+  } */
+
+  .card {
+    background-color: #fff;
+    color: #444;
+  }
+
+  .card-header, .card-footer {
+    background-color: #eee;
+    color: #000;
+  }
+
+  .card-footer .muted {
+    color: #000;
+  }
+
+  .card h5 {
+    text-shadow: none;
+  }
+
+  hr {
+    width: 100%;
+    border-top: 1px solid #fff;
+  }
+
+  .clgen-instance-selector button {
+    width: 100%;
+  }
+
   #test_results .card-header {
     padding: 0;
   }
@@ -38,101 +88,94 @@
 
 {% block body %}
 <nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="/ci/">Bazel CI</a>
+  <a class="navbar-brand" href="/">CLgen Dashboard</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
 
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="nabar_host_selector" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {{ host }}
-        </a>
-        <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
-          {% for host_ in hosts %}
-          <a class="dropdown-item{% if host_ == host %} active{% endif %}" href="/ci/{{ host_ }}">
-            {{ host_ }}
-          </a>
-          {% endfor %}
-        </div>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="nabar_host_selector" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {{ invocation_datetime.strftime('%Y-%m-%d %H:%M') }}
-        </a>
-        <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
-          {% for ivd in invocations %}
-          <a class="dropdown-item{% if ivd[1] == invocation_datetime %} active{% endif %}" href="/ci/{{ host }}/{{ ivd[0] }}">
-            {{ ivd[1].strftime('%Y-%m-%d %H:%M') }}
-            {% if ivd[1] == invocation_datetime %} (current)
-            {% endif %}
-          </a>
-          {% endfor %}
-        </div>
-      </li>
+      <!-- TODO: <li class="nav-item">
+        <a class="nav-link" href="">Link</a>
+      </li> -->
     </ul>
   </div>
 </nav>
 
 <div class="container">
-  <div class="row">
-    <div class="col">
-      <p class="lead">
-        {{ git_branch }} at
-        <a href="{{ urls.github_commit }}">
-          {{ git_commit[:7] }}
-        </a>
-        on
-        <a href="{{ urls.buildbot }}">
-          {{ host }}
-        </a>.<br /> Ran
-        {{ test_count }} tests in
-        {{ test_duration }}.<br /> Completed
-        {{ invocation_delta }}.
-      </p>
-      <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
-        {% if delta.broken %}
-        {{ delta.broken }} broken.
-        {% endif %}
-        {% if delta.still_broken %}
-        {{ delta.still_broken }} still broken.
-        {% endif %}
-        {% if delta.fixed %}
-        {{ delta.fixed }} fixed.
-        {% endif %}
-        {% if delta.still_pass %}
-        {{ delta.still_pass }} pass.
-        {% endif %}
+  <div class="clgen-instance-selector">
+    <div class="row">
+      <div class="col">
+        <div class="dropdown">
+          <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Select Corpus
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="#">Action</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <a class="dropdown-item" href="#">Something else here</a>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="dropdown">
+          <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Select Model
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="#">Action</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <a class="dropdown-item" href="#">Something else here</a>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="dropdown">
+          <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Select Sampler
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="#">Action</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <a class="dropdown-item" href="#">Something else here</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-
   <div class="row">
     <div class="col">
-      <div class="accordion" id="test_results">
-        {% for result in targets %}
-        <div class="card">
-          <div class="card-header" id="h{{ loop.index }}">
-            <h2 class="mb-0">
-              <button class="btn btn-link test-target" type="button" data-toggle="collapse" data-target="#t{{ loop.index }}" data-bazel-target="{{ result.bazel_target }}" aria-expanded="true" aria-controls="t{{ loop.index }}">
-                {% if result.fail %}
-                <span class="badge badge-danger">Fail</span>
-                {% else %}
-                <span class="badge badge-success">Pass</span>
-                {% endif %}
-                <code>{{ result.bazel_target }}</code> ({{ result.test_count_natural }} in {{ result.runtime_natural }})
-                {% if result.changed %}<span class="badge badge-secondary">Change</span>{% endif %}
-              </button>
-            </h2>
-          </div>
-          <div id="t{{ loop.index }}" class="collapse" aria-labelledby="h{{ loop.index }}">
-            <div class="card-body">
-              <pre>{{ result.log | e }}</pre>
-            </div>
-          </div>
+      <h2 class="section-header">Model</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <div class="card">
+        <div class="card-body">
+          <canvas id="myChart"></canvas>
         </div>
-        {% endfor %}
+        <div class="card-footer text-muted">
+          2 days ago
+        </div>
+      </div>
+    </div>
+    <div class="col-sm">
+      <div class="card">
+        <div class="card-body">
+          <canvas id="pie"></canvas>
+        </div>
+        <div class="card-footer text-muted">
+          2 days ago
+        </div>
+      </div>
+    </div>
+    <div class="col-sm">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Samples</h5>
+          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+          <a href="#" class="btn btn-primary">Go somewhere</a>
+        </div>
       </div>
     </div>
   </div>
@@ -140,71 +183,66 @@
 {% endblock %}
 
 {% block footer %}
-<script type="text/javascript">
-  var GetUrlComponents = function() {
-    if (location.hash == null || location.hash == "") {
-      return [];
+<script src="//cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script>
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    responsive: true,
+    data: {
+        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+        datasets: [{
+            label: '# of Votes',
+            data: [12, 19, 3, 5, 2, 3],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        /* responsive: true, */
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
     }
+});
 
-    var components = location.hash.substr(1).split(",");
-    components.forEach(function(_, i) {
-      components[i] = parseInt(components[i].substr(1));
-    });
+var ctx = document.getElementById('pie').getContext('2d');
+var myDoughnutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            data: [10, 20, 30]
+        }],
 
-    components = components.filter(function(x) {
-      return !isNaN(x);
-    });
-    return components;
-  }
-
-  var SetUrlComponents = function(components) {
-    components.sort();
-    components.forEach(function(_, i) {
-      components[i] = 't' + components[i];
-    });
-    return components.join(",");
-  }
-
-  $(document).ready(function() {
-    // Show collapsible element selected in URL.
-    if (location.hash != null && location.hash != "") {
-      var components = location.hash.substr(1).split(",");
-      components.forEach(function(component) {
-        // Show the collapsible element.
-        $('#' + component + '.collapse').collapse('show');
-      });
+        // These labels appear in the legend and in the tooltips when hovering different arcs
+        labels: [
+            'Red',
+            'Yellow',
+            'Blue'
+        ]
+    },
+    options: {
+      /* responsive: true */
     }
-
-    const copyToClipboard = str => {
-      const el = document.createElement('textarea');
-      el.value = str;
-      el.setAttribute('readonly', '');
-      el.style.position = 'absolute';
-      el.style.left = '-9999px';
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-    };
-
-    // Set URL to current collapsible element.
-    $('#test_results button.test-target').click(function() {
-      copyToClipboard("bazel test " + $(this).attr('data-bazel-target'));
-      var target_id = $(this).attr('data-target');
-      var target_num = parseInt(target_id.substr(2));
-      var classes = $(target_id).attr("class");
-      if (classes.indexOf("show") == -1) {
-        // We are clicking on a target to show it.
-        var components = GetUrlComponents();
-        components.push(target_num);
-        location.hash = SetUrlComponents(components);
-      } else {
-        // We are clicking on a target to hide it.
-        var components = GetUrlComponents();
-        components.splice(components.indexOf(target_num), 1);
-        location.hash = SetUrlComponents(components);
-      }
-    });
-  });
+});
 </script>
 {% endblock %}

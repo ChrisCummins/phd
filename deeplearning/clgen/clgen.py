@@ -29,13 +29,12 @@ any NVIDIA GPUs will be used to improve performance where possible.
 Made with \033[1;31m♥\033[0;0m by Chris Cummins <chrisc.101@gmail.com>.
 https://chriscummins.cc/clgen
 """
+import contextlib
+import cProfile
 import os
+import pathlib
 import shutil
 import sys
-
-import cProfile
-import contextlib
-import pathlib
 import traceback
 import typing
 
@@ -86,12 +85,14 @@ app.DEFINE_boolean(
     'which may otherwise be caught lead to program crashes and stack traces.')
 app.DEFINE_boolean('clgen_profiling', False,
                    'Enable CLgen self profiling. Profiling results be logged.')
+app.DEFINE_boolean('clgen_dashboard_only', False,
+                   'If true, launch dashboard only.')
 
 
 class Instance(object):
   """A CLgen instance encapsulates a model, sampler, and working directory."""
 
-  def __init__(self, config: clgen_pb2.Instance):
+  def __init__(self, config: clgen_pb2.Instance, dashboard_opts={}):
     """Instantiate an instance.
 
     Args:
@@ -122,7 +123,7 @@ class Instance(object):
             pathlib.Path(config.pretrained_model))
       self.sampler: samplers.Sampler = samplers.Sampler(config.sampler)
 
-    dashboard.Launch()
+    self.dashboard = dashboard.Launch(**dashboard_opts)
 
   @contextlib.contextmanager
   def Session(self) -> 'Instance':
@@ -202,7 +203,7 @@ def LogExceptionWithStackTrace(exception: Exception):
   _, _, tb = sys.exc_info()
   NUM_ROWS = 5  # number of rows in traceback
   trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS + 1)[1:])
-  message = "\n".join(_msg(*r) for r in enumerate(trace))
+  message = '\n'.join(_msg(*r) for r in enumerate(trace))
   app.Error(
       """\
 %s (%s)
@@ -252,11 +253,11 @@ def RunWithErrorHandling(function_to_run: typing.Callable, *args,
     # UsageError is handled by the call to app.RunWithArgs(), not here.
     raise err
   except errors.UserError as err:
-    app.Error("%s (%s)", err, type(err).__name__)
+    app.Error('%s (%s)', err, type(err).__name__)
     sys.exit(1)
   except KeyboardInterrupt:
     Flush()
-    print("\nReceived keyboard interrupt, terminating", file=sys.stderr)
+    print('\nReceived keyboard interrupt, terminating', file=sys.stderr)
     sys.exit(1)
   except errors.File404 as e:
     Flush()
@@ -315,6 +316,9 @@ def DoFlagsAction(
     config: The CLgen instance to act on.
     sample_observer: A list of sample observers. Unused if no sampling occurs.
   """
+  if FLAGS.clgen_dashboard_only:
+    return
+
   if FLAGS.clgen_profiling:
     prof.enable()
 
@@ -349,7 +353,10 @@ def DoFlagsAction(
 
 def main():
   """Main entry point."""
-  instance = Instance(ConfigFromFlags())
+  instance = Instance(ConfigFromFlags(),
+                      dashboard_opts={
+                          'debug': FLAGS.clgen_dashboard_only,
+                      })
   sample_observers = SampleObserversFromFlags()
   DoFlagsAction(instance, sample_observers)
 

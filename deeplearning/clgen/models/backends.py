@@ -13,12 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Neural network backends for CLgen models."""
-import numpy as np
 import typing
+
+import numpy as np
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
+from deeplearning.clgen.dashboard import dashboard
+from deeplearning.clgen.dashboard import dashboard_db
 from deeplearning.clgen.proto import model_pb2
 from labm8 import app
 from labm8 import cache
@@ -38,14 +41,14 @@ class BackendBase(object):
     self.cache = fs_cache
     self.atomizer = atomizer
 
-    self.telemetry = telemetry.Telemetry(
-        f'sqlite:///{self.cache.path}/telemetry.db')
+    self.dashboard_db = dashboard.GetDatabase()
     self._InitCorpusTelemetry()
 
   def _InitCorpusTelemetry(self):
-    with self.telemetry.Session(commit=True) as session:
-      session.GetOrAdd(
-          telemetry.ConfigProto(name='model', proto=str(self.config)))
+    with self.dashboard_db.Session(commit=True) as session:
+      session.GetOrAdd(dashboard_db.ConfigProto,
+                       name='model',
+                       proto=str(self.config))
 
   def Train(self, corpus: 'Corpus', **extra_kwargs) -> None:
     """Train the backend."""
