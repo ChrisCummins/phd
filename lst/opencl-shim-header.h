@@ -5,10 +5,18 @@
 
 /* Inferred types */
 typedef float FLOAT_T;
+typedef float FLOAT_TYPE;
+typedef float FPTYPE;
 typedef unsigned int INDEX_TYPE;
-... (36 more)
+... (34 more)
 
 /* Inferred constants */
 #define M_PI 3.14025
 #define WG_SIZE 128
-... (185 more)
+#define IMAGEH 512
+#define IMAGEW 1024
+#define INPUT_HEIGHT 512
+#define INPUT_WIDTH 1024
+#define ZERO 0
+#define ONE 1
+... (177 more)

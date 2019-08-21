@@ -134,10 +134,6 @@ A common pattern in OpenCL is to obtain the thread identity, often as an \texttt
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
     \label{lst:oclgrind-race-switch}
   }\\%
-  \subfloat[Testbeds $3\pm$ silently miscompile ternary assignments in which the operands are different global buffers.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
-    \label{lst:beig-ternary-ops}
-  }\\%
   \caption[Example kernels which are miscompiled]{%
     Example OpenCL kernels which are miscompiled.%
   }%
@@ -146,12 +142,16 @@ A common pattern in OpenCL is to obtain the thread identity, often as an \texttt
 \input{lst/miscompiled-2}
 \begin{figure}
   \centering %
+  \subfloat[Testbeds $3\pm$ silently miscompile ternary assignments in which the operands are different global buffers.]{%
+		\noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
+		\label{lst:beig-ternary-ops}
+	}\\%
   \subfloat[Compilation should fail due to call to undefined function \texttt{B()}; Testbeds $8\pm$ silently succeed then crash upon kernel execution.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
     \label{lst:pocl-undefined-symbols}
   }\\%
-  \caption[Further example kernel which is miscompiled]{%
-    Further example OpenCL kernel which is miscompiled.%
+  \caption[Further example kernels which are miscompiled]{%
+    Further example OpenCL kernels which are miscompiled.%
   }%
 \end{figure}
 
@@ -297,7 +297,10 @@ Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code w
 
 The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL drivers. This, in turn, causes Clang-related defects to potentially affect multiple compilers, for example, the one in Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, debug+assert builds of every LLVM release in the past 24 months were used to process 75,000 DeepSmith kernels through the Clang front-end (this includes the lexer, parser, and type checker, but not code generation).
 
-Figure~\ref{fig:clang-clash-rate} shows that the crash rate of the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clang-crash-rate} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (\emph{Uncorrected typos!}) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between some releases. Notably, the current development trunk has the second lowest crash rate but is joint first in terms of the number of unique assertions. Assertions 3 (\emph{Addr == 0 || hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered by some kernels in the development trunk but not under any prior release. Bug reports have been submitted for each of the three assertions triggered in the development trunk, as well as for two distinct unreachables.
+Figure~\ref{fig:clang-clash-rate} shows that the crash rate of the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clang-crash-rate} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (\emph{Uncorrected typos!}) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between some releases. Notably, the current development trunk has the second lowest crash rate but is joint first in terms of the number of unique assertions. Assertions 3 (\emph{Addr == 0 || hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered by some kernels in the development trunk but not under any prior release. 
+
+\newpage
+Bug reports have been submitted for each of the three assertions triggered in the development trunk, as well as for two distinct unreachables.
 
 \begin{figure}
   \centering %

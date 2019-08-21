@@ -9,7 +9,5 @@ kernel void saxpy( /* SAXPY kernel */
     const int nelem)
 {
      unsigned int idx = get_global_id(0);
-     // = ax + y
-     if (idx < nelem) {
-         input2[idx] += ax(input1[idx]); }
-}
+     if (idx < nelem) { // = ax + y
+         input2[idx] += ax(input1[idx]); } }

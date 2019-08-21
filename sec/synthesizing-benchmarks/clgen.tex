@@ -58,7 +58,7 @@ An example of the code rewriting process is shown in Listings~\ref{lst:code-rewr
 
 \begin{listing}
   \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-rewrite-before.cl}
-  \caption[Example OpenCL content file from GitHub]{An example OpenCL content file downloaded from GitHub prior to code rewriting.}
+  \caption[Example OpenCL content file from GitHub]{An example OpenCL content file prior to code rewriting.}
   \label{lst:code-rewriting-before}
 \end{listing}
 
@@ -81,30 +81,30 @@ A 3-layer LSTM network is used with 2048 nodes per layer, implemented in Torch. 
 \subsection{Synthesising Source Code}
 \label{subsec:synthesizing-opencl}
 
-OpenCL compute kernels are synthesised by iteratively sampling the learned language model. Two modes for model sampling are supported: the first involves providing an \emph{argument specification}, stating the data types and modifiers of all kernel arguments. When an argument specification is provided, the model synthesises kernels matching this signature. In the second sampling mode, this argument specification is omitted, allowing the model to synthesise compute kernels of arbitrary signatures, dictated by the distribution of argument types within the language corpus.
-
-In either mode, a \emph{seed} text is generated and the model sampled, character by character, until the end of the compute kernel is reached, or until a predetermined maximum number of characters is reached. Algorithm~\ref{alg:clgen-synthesis} illustrates this process. The same rejection filter as is used during corpus assembly that either accepts or rejects the sample as a candidate synthetic benchmark. Listings~\ref{lst:clgen-sample-a},~\ref{lst:clgen-sample-b}, and~\ref{lst:clgen-sample-c} show three examples of unique compute kernels generated in this manner from an argument specification of three single-precision floating-point arrays and a read-only signed integer. The quality of synthesised code is evaluated in Section~\ref{sec:clgen-qualitative-evaluation}.
-
 \begin{algorithm}
-\input{alg/clgen-synthesis}
-\caption[Sampling a candidate kernel from a seed text]{Using an LSTM model to sample a candidate OpenCL kernel.}
-\label{alg:clgen-synthesis}
+	\input{alg/clgen-synthesis}
+	\caption[Sampling a candidate kernel from a seed text]{Using an LSTM model to sample a candidate OpenCL kernel.}
+	\label{alg:clgen-synthesis}
 \end{algorithm}
 
+OpenCL compute kernels are synthesised by iteratively sampling the learned language model. Two modes for model sampling are supported: the first involves providing an \emph{argument specification}, stating the data types and modifiers of all kernel arguments. When an argument specification is provided, the model synthesises kernels matching this signature. In the second sampling mode, this argument specification is omitted, allowing the model to synthesise compute kernels of arbitrary signatures, dictated by the distribution of argument types within the language corpus.
+
 \begin{listing}
-  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-a.cl}
-  \caption[Synthesised vector operation with branching and synchronisation]{CLgen-synthesised vector operation with branching and synchronisation.}
-  \label{lst:clgen-sample-a}
+	\inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-a.cl}
+	\caption[Synthesised vector operation with branching and synchronisation]{CLgen-synthesised vector operation with branching and synchronisation.}
+	\label{lst:clgen-sample-a}
 \end{listing}
 
 \begin{listing}
-  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-b.cl}
-  \caption[Synthesised zip operation]{CLgen-synthesised zip operation which computes $c_i = 3a_i + 2b_i + 4$.}
-  \label{lst:clgen-sample-b}
+	\inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-b.cl}
+	\caption[Synthesised zip operation]{CLgen-synthesised zip operation which computes $c_i = 3a_i + 2b_i + 4$.}
+	\label{lst:clgen-sample-b}
 \end{listing}
 
 \begin{listing}
-  \inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-c.cl}
-  \caption[Synthesised partial reduction operation]{CLgen-synthesised partial reduction over reinterpreted vector type.}
-  \label{lst:clgen-sample-c}
+	\inputminted{opencl_lexer.py:OpenCLLexer -x}{lst/clgen-sample-c.cl}
+	\caption[Synthesised partial reduction operation]{CLgen-synthesised partial reduction over reinterpreted vector type.}
+	\label{lst:clgen-sample-c}
 \end{listing}
+
+In either mode, a \emph{seed} text is generated and the model sampled, character by character, until the end of the compute kernel is reached, or until a predetermined maximum number of characters is reached. Algorithm~\ref{alg:clgen-synthesis} illustrates this process. The same rejection filter as is used during corpus assembly that either accepts or rejects the sample as a candidate synthetic benchmark. Listings~\ref{lst:clgen-sample-a},~\ref{lst:clgen-sample-b}, and~\ref{lst:clgen-sample-c} show three examples of unique compute kernels generated in this manner from an argument specification of three single-precision floating-point arrays and a read-only signed integer. The quality of synthesised code is evaluated in Section~\ref{sec:clgen-qualitative-evaluation}.

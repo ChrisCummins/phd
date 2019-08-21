@@ -52,11 +52,9 @@ To mitigate this, an \emph{embedding} is used, which translates tokens in a spar
 \begin{lrbox}{\NvidiaStreamClusterInput}
   \begin{minipage}{\textwidth}
     \begin{minted}{opencl_lexer.py:OpenCLLexer -x}
-//#define Elements
 kernel void memset_kernel(global char * mem_d, short val, int number_bytes){
     const int thread_id = get_global_id(0);
-    mem_d[thread_id] = val;
-}
+    mem_d[thread_id] = val; }
     \end{minted}
   \end{minipage}
 \end{lrbox}
@@ -103,8 +101,8 @@ kernel void A(global char* a, short b, int c) {
     \input{tab/encoded}%
     \label{subfig:source_enc}%
   }%
-  \caption[Deriving a vocabulary encoding from an OpenCL source code]{%
-    Deriving a tokenised $1$-of-$k$ vocabulary encoding from an OpenCL source
+  \caption[Deriving a vocabulary encoding from source code]{%
+    Deriving a tokenised $1$-of-$k$ vocabulary encoding from source
     code.%
   }%
   \label{fig:encoding}%

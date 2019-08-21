@@ -7,7 +7,7 @@ This chapter introduces \emph{CLgen}, a generator for OpenCL benchmarks. Open so
 Predictive modelling is a well-researched method for building optimisation heuristics that often exceed human experts and reduces development time~\cite{Micolet2016,Wang2014c,Magni2014,Cummins2016,Wang2009,Wen2015,Wang2010,Falch2015,Collins2012,Leather2014,Ogilvie2014a}. Figure~\ref{fig:training-a-predictive-model} shows the process by which a predictive model is constructed. A set of training programs are identified that are expected to be representative of the application domain. The programs are compiled and executed with different parameter values for the target heuristic, to determine which are the best values for each training program. Each program is also summarised by a vector of features which describe the information that is expected to be important in predicting the best heuristic parameter values. These training examples of program features and desired heuristic values are used to create a machine learning model which, when given the features from a new, unseen program, can predict good heuristic values for it.
 
 \begin{figure}
-  \includegraphics[width=\columnwidth]{img/overview-a}%
+  \includegraphics[width=0.9\columnwidth]{img/overview-a}%
   \caption[Training a predictive model for compiler optimisations]{Training a predictive model for compiler optimisations. A model is constructed from training data, which comprises the features, performance measurements, and runtime parameters of training programs and their accompanying data sets.}%
   \label{fig:training-a-predictive-model}
 \end{figure}

@@ -17,7 +17,7 @@ Section~\ref{sec:related-work-generation} reviews research in program generation
 %
 %Does not address optimisation problems.
 %
-%The LLVM compilation framework~\cite{Lattner2004} takes a different approach. Rather than taking a user-specification and generating a compiler, it provides a common, low-level intermediate representation, an optimiser, and a set of re-usable components for lowering to machine code. LLVM has become one of the most widely used compilers in industry , 
+%The LLVM compilation framework~\cite{Lattner2004} takes a different approach. Rather than taking a user-specification and generating a compiler, it provides a common, low-level intermediate representation, an optimiser, and a set of re-usable components for lowering to machine code. LLVM has become one of the most widely used compilers in industry ,
 %
 %Frameworks such as these significantly reduce the engineering effort required to produce a compiler by simplifying the , however, they do not address the challenge of performance tuning.
 %
@@ -31,7 +31,7 @@ In this thesis, program generation is used as a mechanism to simplify the develo
 
 \subsection{Benchmark Generation for Performance Characterisation}
 
-Benchmark suites serve a wide variety of uses from compiler optimisations to hardware design. The challenge in creating a benchmark suite is to capture a diverse set of workloads that is both representative of real-world usage while providing adequate coverage of the program space. Achieving either of these two goals is a challenging task, and efforts towards one goal might hamper the other. As a result, there is no ``one size fits all'' benchmark suite.
+Benchmark suites serve a wide variety of uses from compiler optimisations to hardware design. The challenge in creating a benchmark suite is to capture a diverse set of workloads that is both representative of real-world usage while providing adequate coverage of the program space. Achieving either of these two goals is a challenging task, and efforts towards one goal may hamper the other. As such, there is no ``one size fits all'' approach to assembling benchmark suites.
 
 % Ryoo, J. H., Quirem, S. J., Lebeane, M., Panda, R., Song, S., & John, L. K. (2015). GPGPU Benchmark Suites: How Well Do They Sample the Performance Spectrum? ICPP.
 Given its importance, benchmark suite characterisation has been the subject of much research. An evaluation of popular GPGPU benchmark suites~\cite{Ryoo2015} reveals there are important parts of the program space left untested.
@@ -408,7 +408,7 @@ The techniques in this thesis use a hybrid character/token-level vocabulary to t
 % Wang, K., Singh, R., & Su, Z. (2017). Dynamic Neural Program Embeddings for Program Repair. ArXiv:1711.07163.
 \citeauthor{Wang2017d}~\cite{Wang2017d} propose an embedding space extracted from program traces, rather than the syntactic structure of the program.
 % Henkel, J., Lahiri, S. K., Liblit, B., & Reps, T. (2018). Code Vectors: Understanding Programs Through Embedded Abstracted Symbolic Traces. In FSE.
-\citeauthor{Henkel2018}~\cite{Henkel2018a} use symbolic execution to abstract the program traces. Embeddings are then learned from these abstracted symbolic traces.
+\citeauthor{Henkel2018a}~\cite{Henkel2018a} use symbolic execution to abstract the program traces. Embeddings are then learned from these abstracted symbolic traces.
 % Yin, P., Neubig, G., Allamanis, M., Brockschmidt, M., & Gaunt, A. L. (2018). Learning to Represent Edits. ArXiv:1810.13337.
 %
 % Tufano, M., Pantiuchina, J., Watson, C., Bavota, G., & Poshyvanyk, D. (2019). On Learning Meaningful Code Changes via Neural Machine Translation. ArXiv:1901.09102.

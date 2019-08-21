@@ -211,7 +211,7 @@ The recurrent structure of RNNs enables the modelling of patterns in data with a
 Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, shown in Figure~\subref{fig:rnn-unrolled}. This \emph{Backpropagation Through Time} (BPTT)~\cite{Werbos1990a} enables the propagation of errors in the temporal domain in the same manner as through layers.
 
 % Siegelmann, H. T., & Sontag, E. D. (1991). Turing Computability with Neural Nets. Applied Mathematics Letters, 4(6).
-RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of finite size~\cite{Sontag1991}. In practice, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through the recurrence relation. This issue is known as the
+RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of finite size~\cite{Sontag1991a}. In practice, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through the recurrence relation. This issue is known as the
 % Bengio, Y., Simard, P., & Frasconi, P. (1994). Learning Long-Term Dependencies with Gradient Descent is Difficult. IEEE Transactions on Neural Networks, 5(2).
 \emph{vanishing gradients} problem~\cite{Bengio1994}.
 

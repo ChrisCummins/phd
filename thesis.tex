@@ -10,7 +10,15 @@
 % \stapledtrue
 
 \begin{document}
-  \input{preliminary}
+  \begin{preliminary}
+    \maketitle
+    \begin{acknowledgements}\input{acks}\end{acknowledgements}
+    \begin{declaration}\input{declaration}\end{declaration}
+    \tableofcontents
+    \listoffigures
+    \listoftables
+    \listoflistings
+  \end{preliminary}
   \input{chap/intro}
   \input{chap/background}
   \input{chap/related-work}
