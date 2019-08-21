@@ -9,9 +9,9 @@ This chapter provides an overview of the techniques and theory used in this thes
 \section{Machine Learning}
 \label{sec:background-machine-learning}
 
-Machine learning is a family of statistical models and algorithms used to infer functions to estimate future values given past observations and their \emph{features}. Features, or explanatory variables, are a set of observable attributes used by machine learning algorithms to build the correlations required to predict unseen values, or \emph{labels}. Figure~\ref{fig:classification} illustrates the process by which a model is fitted to past observations observations and used to infer the label of unseen data points. The $n$-dimensional space described by $n$ features is known as a feature space. A \emph{feature vector} is then the set of values describing a single point in this space.
+Machine learning is a family of statistical models and algorithms used to infer functions to estimate future values given past observations and their \emph{features}. Features, or explanatory variables, are a set of observable attributes used by machine learning algorithms to build the correlations required to predict unseen values, or \emph{labels}. Figure~\ref{fig:classification} illustrates the process by which a model is fitted to past observations and used to infer the label of unseen data points. The $n$-dimensional space described by $n$ features is known as a \emph{feature space}. A \emph{feature vector} is then the set of values describing a single point in this space.
 
-Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the correct category, or \emph{class}, for a set of features, based on labelled training data, i.e.\ instances whose categories are known.
+Machine learning techniques are used in this thesis for classification and sequence modelling. Classification is the task of predicting the categorical label, or \emph{class}, for a set of features, based on labelled training data, i.e.\ instances whose categories are known.
 
 \begin{figure}
   \centering
@@ -29,22 +29,12 @@ Machine learning techniques are used in this thesis for classification and seque
     \label{fig:classification-c}%
   }%
   \caption[Training and inference in machine learning]{%
-    An illustration of the training and inference of a machine learning model. The $x$- and $y$-axes depict features and labels, which may be continuous or discrete multi-dimensional spaces. In~\subref{fig:classification-a}, training observations have been collected, consisting of features and their corresponding labels. A model is then fitted to these observations, shown as the green curve in~\subref{fig:classification-b}. The model can be used to infer the label of unseen feature values, shown in~\subref{fig:classification-c}.%
+    An illustration of the training and inference of a machine learning model. The $x$- and $y$-axes depict features and labels, which may be continuous or discrete multi-dimensional spaces. In~\subref{fig:classification-a}, training observations have been collected, consisting of features and their corresponding labels. A model is then fitted to these observations, shown as the green curve in~\subref{fig:classification-b}. The model can then be used to infer the label of unseen feature values, shown in~\subref{fig:classification-c}.%
   }%
   \label{fig:classification}
 \end{figure}
 
-Sequence modelling is the task of capturing the underlying probability distribution describing a sequence of values. This section briefly describes the classification and sequential modelling techniques used in this thesis.
-
-% \subsection{Supervised Learning}
-
-% Learning by example
-
-% Observed input $x_i$ is fed into learning system
-% which produces output $\hat{f}(x_i)$.
-% The learning algorithm has the property that it can modify its input/output relationship $\hat{f}$ in response to differences $y_i - \hat{f}(x_i)$ between the original and produced output.
-% % Hastie, T., Tibshirani, R., & Friedman, J. (2009). The Elements of Statistical Learning (Second Edi). Springer.
-% \cite{Hastie2009}
+Sequence modelling is the task of capturing the underlying probability distribution describing a sequence of values. This section describes the classification and sequential modelling techniques used in this thesis.
 
 
 \subsection{Feed-forward Neural Networks}
@@ -68,7 +58,7 @@ The signal of an artificial neuron is the \emph{activation}. For a given layer $
   \bm{a}^{[\ell]} = \phi \left( \bm{W}^{[\ell]^T} \bm{a}^{[\ell-1]} + \bm{b}^{[\ell]} \right)
 \end{equation}
 
-The connections and biases of an artificial neural network are adjusted during training such that, for a pair $(\bm{x}, y)$ where $\bm{x}$ is an input vector of features and $y$ is an observed label, the difference between the final layer activations and $y$ is minimised.
+The connection weights and biases of an artificial neural network are adjusted during training such that, for a pair $(\bm{x}, y)$ where $\bm{x}$ is an input vector of features and $y$ is an observed label, the difference between the final layer activations and $y$ is minimised.
 
 
 \paragraph*{Activation Function}
@@ -94,7 +84,7 @@ Figure~\ref{fig:activation-functions-tanh} illustrates the hyperbolic tangent ac
   \phi(z) = max(z, 0)
 \end{equation}
 
-The ReLU activation is shown in Figure~\ref{fig:activation-functions-relu}. If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons in the network will not fire, so that activations are sparse.
+The ReLU activation is shown in Figure~\ref{fig:activation-functions-relu}. If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons will not fire, so that activations are sparse.
 % Problem is ``dying'' neurons. When activations dip below 0, gradients will be 0, so the neuron becomes unresponsive to variations in input / error.
 The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, effectively ``dying''. Leaky ReLU prevents artificial neurons from becoming unresponsive to variations in input by introducing a small slope for negative values:
 
@@ -208,10 +198,10 @@ Where $\phi(\bm{z})$ and $\sigma(\bm{z})$ are non-linear activation functions, $
 
 The recurrent structure of RNNs enables the modelling of patterns in data with a temporal domain, such as text or numerical time series. Whereas a feed-forward artificial neural network estimates a conditional distribution based on an instantaneous input $p(y | \bm{x})$, an RNN estimates a distribution conditioned on $t$ prior observations $p\left(y^{(t)} | \{ \bm{x}^{(1)}, \ldots, \bm{x}^{(t)} \} \right)$.
 
-Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, shown in Figure~\subref{fig:rnn-unrolled}. This \emph{Backpropagation Through Time} (BPTT)~\cite{Werbos1990a} enables the propagation of errors in the temporal domain in the same manner as through layers.
+Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, shown in Figure~\ref{fig:rnn-unrolled}. This \emph{backpropagation through time}~\cite{Werbos1990a} enables the propagation of errors in the temporal domain in the same manner as through layers.
 
 % Siegelmann, H. T., & Sontag, E. D. (1991). Turing Computability with Neural Nets. Applied Mathematics Letters, 4(6).
-RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of finite size~\cite{Sontag1991a}. In practice, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through the recurrence relation. This issue is known as the
+RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of finite size~\cite{Sontag1991a}. In practice, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through non-linear activation functions by the recurrence relation. This issue is known as the
 % Bengio, Y., Simard, P., & Frasconi, P. (1994). Learning Long-Term Dependencies with Gradient Descent is Difficult. IEEE Transactions on Neural Networks, 5(2).
 \emph{vanishing gradients} problem~\cite{Bengio1994}.
 
@@ -223,7 +213,7 @@ RNNs are universal, in that any function computable by a Turing machine can be c
 
 \paragraph*{Long Short-Term Memory}
 
-The long short-term memory (LSTM)~\cite{Hochreiter1997} is an RNN architecture designed to overcome the vanishing gradients problem. The LSTM augments RNN design with the addition of a \emph{cell} for storing information, and three gates which control the flow of information into and out of the cell.
+Long short-term memory (LSTM)~\cite{Hochreiter1997} is an RNN architecture designed to overcome the vanishing gradients problem. The LSTM augments RNN design with the addition of a \emph{cell} for storing information, and three gates which control the flow of information into and out of the cell.
 
 Figure~\ref{fig:lstm-block} depicts the structure of an LSTM cell. In addition to the recurrent connections for hidden states, a cell state vector $\bm{c}^{(t)} \in \mathbb{R}^h$ is propagated through time. The signal flow through the cell is controlled by three sigmoid activated gates: the forget gate $\bm{f}^{(t)} \in \mathbb{R}^h$, input gate $\bm{i}^{(t)} \in \mathbb{R}^h$, and output gate $\bm{o}^{(t)} \in \mathbb{R}^h$. At each time step, the values of the gate vectors are updated using:
 
@@ -249,7 +239,7 @@ Where weight matrices $\bm{W} \in \mathbb{R}^{h\times d}$ and $\bm{U} \in \mathb
   \bm{h}^{(t)} &= \bm{o}^{(t)} \otimes tanh ( \bm{c} ^{(t)} )
 \end{align}
 
-Where $\otimes$ denotes element-wise vector product, and subscript $c$ denotes cell state weight matrices and bias vectors. The gated cell enables LSTMs to build connections over long sequences in data. The LSTMs architecture (and its many variants~\cite{Greff2015}) have been responsible for breakthrough results in a number of areas, for example machine translation~\cite{Sutskever2014}, speech recognition~\cite{Graves2005}, and weather prediction \cite{Shi2015a}.
+Where $\otimes$ denotes element-wise vector product, and subscript $c$ denotes cell state weight matrices and bias vectors. The gated cell enables LSTMs to build connections over long sequences in data. The LSTM architecture (and its many variants~\cite{Greff2015}) have been responsible for breakthrough results in a number of areas, for example machine translation~\cite{Sutskever2014}, speech recognition~\cite{Graves2005}, and weather prediction \cite{Shi2015a}.
 
 % \subsection{Embedding}
 
@@ -286,7 +276,7 @@ Decision trees are a popular and low overhead form of classification. Once train
 \section{Model Evaluation Techniques}
 \label{sec:evaluation-techniques}
 
-This section describes the techniques used to evaluate the machine learning techniques described in the previous section.
+This section describes the techniques used to evaluate the machine learning methods described in the previous section.
 
 \subsection{ZeroR}
 
@@ -315,7 +305,7 @@ Dividing the dataset into fixed training and test sets is problematic if it resu
 
 Ideally, sufficient data would exist to be set aside for testing. When not practically possible, cross-validation may be used. Cross-validations enables the use of all observations in a data set in the estimation of the mean test error, at the expense of increased computational cost through repeated evaluations.
 
-K-Fold sets aside part of the available data to fit the model, and a different part to test it. Data is split into $K$ roughly equal-sized parts.
+K-Fold cross-validation sets aside part of the available data to fit the model, and a different part to test it. Data is split into $K$ roughly equal-sized parts.
 
 \begin{equation}
   CV(\hat{f}) = \frac{1}{K}\sum_{i=1}^K \mathcal{L}(\bm{y}^{(i)}, \hat{f}^{-K^{(i)}}(\bm{x}^{(i)}))
@@ -323,7 +313,7 @@ K-Fold sets aside part of the available data to fit the model, and a different p
 
 Where for a set of $n$ observations, $K \le n$. If $K=n$ this is known as \emph{leave-one-out} cross-validation.
 
-For a classification task, if observations are distributed amongst the $K$ partitions such that the distribution of observation classes in all partitions is equal, this is called \emph{stratified} $K$-fold cross-validation.
+For a classification task, if observations are distributed amongst the $K$ partitions such that the distribution of observed classes in all partitions is equal, this is called \emph{stratified} $K$-fold cross-validation.
 
 
 \subsection{Principal Component Analysis}

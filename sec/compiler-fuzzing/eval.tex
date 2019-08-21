@@ -10,7 +10,7 @@ For the remainder of this chapter, testbeds are identified using the OpenCL syst
 \subsection{Compile-time Defects}%
 \label{subsec:compile-time-defects}
 
-OpenCL is typically compiled online, which amplifies the significance of detecting compile-time defects, as they may not be discovered until code has been shipped to customers. Numerous cases were found where DeepSmith kernels trigger a crash in the compiler (and as a result, the host process), or cause the compiler to loop indefinitely. In the testing time allotted 199 test cases were identified which trigger unreachable code failures, triggered 31 different compiler assertions, and produced 114 distinct stack traces from other compiler crashes.
+OpenCL is typically compiled online, which amplifies the significance of detecting compile-time defects, as they may not be discovered until code has been shipped to customers. Numerous cases were found where DeepSmith kernels trigger a crash in the compiler (and as a result, the host process), or cause the compiler to loop indefinitely. In the testing time allotted, DeepSmith uncovered 199 unique unreachable code failures, 31 different compiler assertions, and 114 distinct stack traces caused by other compiler crashes.
 
 \input{lst/parser-failures}
 \begin{figure}
@@ -55,7 +55,7 @@ The use of undeclared identifiers is a core error diagnostic which one would exp
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
     \label{lst:beignet-scalarize-insert}
   }\\%
-  \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this kernel.]{%
+  \subfloat[Of the 10 compilers tested, 6 crash with segfault when compiling this kernel.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
     \label{lst:almost-everything-crash}
   }\\%
@@ -297,7 +297,7 @@ Over the course of testing, a combined $3.4 \times 10^8$ lines of CLSmith code w
 
 The Clang front-end to LLVM supports OpenCL, and is commonly used in OpenCL drivers. This, in turn, causes Clang-related defects to potentially affect multiple compilers, for example, the one in Figure~\ref{lst:almost-everything-crash}. To evaluate the impact of Clang, debug+assert builds of every LLVM release in the past 24 months were used to process 75,000 DeepSmith kernels through the Clang front-end (this includes the lexer, parser, and type checker, but not code generation).
 
-Figure~\ref{fig:clang-clash-rate} shows that the crash rate of the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clang-crash-rate} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (\emph{Uncorrected typos!}) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between some releases. Notably, the current development trunk has the second lowest crash rate but is joint first in terms of the number of unique assertions. Assertions 3 (\emph{Addr == 0 || hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered by some kernels in the development trunk but not under any prior release. 
+Figure~\ref{fig:clang-clash-rate} shows that the crash rate of the Clang front-end is, for the most part, steadily decreasing over time. The number of failing compiler crashes decreased tenfold between 3.6.2 and 5.0.0. Table~\ref{tab:clang-crash-rate} shows the 7 distinct assertions triggered during this experiment. Assertion 1 (\emph{Uncorrected typos!}) is raised on all compiler versions --- see Figure~\ref{lst:oclgrind-uncorrected-typos} for an example. The overall rate at which the assertion is triggered has decreased markedly, although there are slight increases between some releases. Notably, the current development trunk has the second lowest crash rate but is joint first in terms of the number of unique assertions. Assertions 3 (\emph{Addr == 0 || hasTargetSpecificAddressSpace()}) and 4 (\emph{isScalarType()}) were triggered by some kernels in the development trunk but not under any prior release.
 
 \newpage
 Bug reports have been submitted for each of the three assertions triggered in the development trunk, as well as for two distinct unreachables.

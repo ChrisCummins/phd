@@ -20,12 +20,12 @@ Testing was conducted on 10 OpenCL systems, summarised in Table~\ref{tab:deepsmi
 
 \subsection{Testbeds}
 
-For each OpenCL system, two testbeds are created. In the first, the compiler is run with optimisations disabled. In the second, optimisations are enabled.Each testbed is then a triple, consisting of \emph{\textless device, driver, is\_optimised\textgreater} settings. This mechanism gives 20 testbeds to evaluate.
+For each OpenCL system, two testbeds are created. In the first, the compiler is run with optimisations disabled. In the second, optimisations are enabled. Each testbed is then a triple, consisting of \emph{\textless device, driver, is\_optimised\textgreater} settings. This mechanism gives 20 testbeds to evaluate.
 
 
 \subsection{Test Cases}
 
-Inputs are created for each generated program as described in Section~\ref{sec:test-harness}. The test harness is parameterised by a number of threads to use. Test cases are generated, one using one thread, the other using 2048 threads. A test case is then a triple, consisting of \emph{\textless program, inputs, threads\textgreater} settings.
+Inputs are created for each generated program as described in Section~\ref{sec:test-harness}. The test harness is parameterised by a number of threads to use. Two test cases are generated, one using one thread, the other using 2048 threads. A test case is then a triple, consisting of \emph{\textless program, inputs, threads\textgreater} settings.
 
 \subsection{Bug Search Time Allowance}
 
