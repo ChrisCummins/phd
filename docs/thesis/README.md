@@ -1,7 +1,5 @@
-# [Click for latest draft](https://github.com/ChrisCummins/thesis/raw/master/thesis.pdf)
+# LaTeX sources for "Deep Learning for Compilers"
 
 ```sh
-$ pdflatex thesis.tex
-$ biber thesis
-$ pdflatex thesis.tex
+$ bazel build //docs/thesis
 ```
