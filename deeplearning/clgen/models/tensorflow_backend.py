@@ -15,12 +15,12 @@
 """CLgen models using a Keras backend."""
 import copy
 import os
-import pathlib
 import time
-import typing
 
 import numpy as np
+import pathlib
 import progressbar
+import typing
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
@@ -81,8 +81,8 @@ class TensorFlowBackend(backends.BackendBase):
     app.Log(
         1, 'Using tensorboard to log training progress. View progress using:\n'
         f"    $ tensorboard --logdir='{tensorboard_dir}'")
-    self.summary_writer = tf.compat.v1.summary.FileWriter(
-        tensorboard_dir, graph=None)
+    self.summary_writer = tf.compat.v1.summary.FileWriter(tensorboard_dir,
+                                                          graph=None)
 
   def InitTfGraph(self,
                   sampler: typing.Optional[samplers.Sampler] = None) -> 'tf':
@@ -157,8 +157,9 @@ class TensorFlowBackend(backends.BackendBase):
       decode_helper = helper.CustomInferenceHelper(
           inputs, self.lengths, self.seed_length, embedding, self.temperature)
     else:
-      decode_helper = seq2seq.TrainingHelper(
-          inputs, self.lengths, time_major=False)
+      decode_helper = seq2seq.TrainingHelper(inputs,
+                                             self.lengths,
+                                             time_major=False)
 
     decoder = seq2seq.BasicDecoder(cell, decode_helper, self.initial_state,
                                    tf.compat.v1.layers.Dense(vocab_size))
@@ -319,8 +320,9 @@ class TensorFlowBackend(backends.BackendBase):
       tf.compat.v1.global_variables_initializer().run()
 
       # Keep all checkpoints.
-      saver = tf.compat.v1.train.Saver(
-          tf.global_variables(), max_to_keep=100, save_relative_paths=True)
+      saver = tf.compat.v1.train.Saver(tf.global_variables(),
+                                       max_to_keep=100,
+                                       save_relative_paths=True)
 
       # restore model from closest checkpoint.
       if ckpt_path:
@@ -372,8 +374,9 @@ class TensorFlowBackend(backends.BackendBase):
         start_time = time.time()
         global_step = epoch_num
         checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
-        checkpoint_path = saver.save(
-            sess, checkpoint_prefix, global_step=global_step)
+        checkpoint_path = saver.save(sess,
+                                     checkpoint_prefix,
+                                     global_step=global_step)
         app.Log(1, 'Saved checkpoint %s in %s ms.', checkpoint_path,
                 humanize.Commas(int((time.time() - start_time) * 1000)))
         assert pathlib.Path(

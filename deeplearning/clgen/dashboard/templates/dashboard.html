@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block header %}
+<title>
+  {{ delta.broken + delta.still_broken }} failing -
+  {{ host }}
+</title>
+
+<style>
+  #test_results .card-header {
+    padding: 0;
+  }
+
+  #test_results .card-body {
+    max-height: 500px;
+    overflow: scroll;
+  }
+
+  #test_results pre,
+  .code {
+    font-family: 'Inconsolata', monospace;
+    font-size: 1.1em;
+    overflow: visible;
+  }
+
+  #test_results button.btn-link {
+    width: 100%;
+    text-align: left;
+    padding: 8px 16px;
+  }
+
+  #test_results button code {
+    color: #fff;
+    font-size: 1em;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="/ci/">Bazel CI</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="nabar_host_selector" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {{ host }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
+          {% for host_ in hosts %}
+          <a class="dropdown-item{% if host_ == host %} active{% endif %}" href="/ci/{{ host_ }}">
+            {{ host_ }}
+          </a>
+          {% endfor %}
+        </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="nabar_host_selector" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {{ invocation_datetime.strftime('%Y-%m-%d %H:%M') }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="nabar_host_selector">
+          {% for ivd in invocations %}
+          <a class="dropdown-item{% if ivd[1] == invocation_datetime %} active{% endif %}" href="/ci/{{ host }}/{{ ivd[0] }}">
+            {{ ivd[1].strftime('%Y-%m-%d %H:%M') }}
+            {% if ivd[1] == invocation_datetime %} (current)
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <p class="lead">
+        {{ git_branch }} at
+        <a href="{{ urls.github_commit }}">
+          {{ git_commit[:7] }}
+        </a>
+        on
+        <a href="{{ urls.buildbot }}">
+          {{ host }}
+        </a>.<br /> Ran
+        {{ test_count }} tests in
+        {{ test_duration }}.<br /> Completed
+        {{ invocation_delta }}.
+      </p>
+      <div class="alert {% if delta.broken %}alert-danger{% elif delta.still_broken %}alert-warning{% else %}alert-success{% endif %}" role="alert">
+        {% if delta.broken %}
+        {{ delta.broken }} broken.
+        {% endif %}
+        {% if delta.still_broken %}
+        {{ delta.still_broken }} still broken.
+        {% endif %}
+        {% if delta.fixed %}
+        {{ delta.fixed }} fixed.
+        {% endif %}
+        {% if delta.still_pass %}
+        {{ delta.still_pass }} pass.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="accordion" id="test_results">
+        {% for result in targets %}
+        <div class="card">
+          <div class="card-header" id="h{{ loop.index }}">
+            <h2 class="mb-0">
+              <button class="btn btn-link test-target" type="button" data-toggle="collapse" data-target="#t{{ loop.index }}" data-bazel-target="{{ result.bazel_target }}" aria-expanded="true" aria-controls="t{{ loop.index }}">
+                {% if result.fail %}
+                <span class="badge badge-danger">Fail</span>
+                {% else %}
+                <span class="badge badge-success">Pass</span>
+                {% endif %}
+                <code>{{ result.bazel_target }}</code> ({{ result.test_count_natural }} in {{ result.runtime_natural }})
+                {% if result.changed %}<span class="badge badge-secondary">Change</span>{% endif %}
+              </button>
+            </h2>
+          </div>
+          <div id="t{{ loop.index }}" class="collapse" aria-labelledby="h{{ loop.index }}">
+            <div class="card-body">
+              <pre>{{ result.log | e }}</pre>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript">
+  var GetUrlComponents = function() {
+    if (location.hash == null || location.hash == "") {
+      return [];
+    }
+
+    var components = location.hash.substr(1).split(",");
+    components.forEach(function(_, i) {
+      components[i] = parseInt(components[i].substr(1));
+    });
+
+    components = components.filter(function(x) {
+      return !isNaN(x);
+    });
+    return components;
+  }
+
+  var SetUrlComponents = function(components) {
+    components.sort();
+    components.forEach(function(_, i) {
+      components[i] = 't' + components[i];
+    });
+    return components.join(",");
+  }
+
+  $(document).ready(function() {
+    // Show collapsible element selected in URL.
+    if (location.hash != null && location.hash != "") {
+      var components = location.hash.substr(1).split(",");
+      components.forEach(function(component) {
+        // Show the collapsible element.
+        $('#' + component + '.collapse').collapse('show');
+      });
+    }
+
+    const copyToClipboard = str => {
+      const el = document.createElement('textarea');
+      el.value = str;
+      el.setAttribute('readonly', '');
+      el.style.position = 'absolute';
+      el.style.left = '-9999px';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    };
+
+    // Set URL to current collapsible element.
+    $('#test_results button.test-target').click(function() {
+      copyToClipboard("bazel test " + $(this).attr('data-bazel-target'));
+      var target_id = $(this).attr('data-target');
+      var target_num = parseInt(target_id.substr(2));
+      var classes = $(target_id).attr("class");
+      if (classes.indexOf("show") == -1) {
+        // We are clicking on a target to show it.
+        var components = GetUrlComponents();
+        components.push(target_num);
+        location.hash = SetUrlComponents(components);
+      } else {
+        // We are clicking on a target to hide it.
+        var components = GetUrlComponents();
+        components.splice(components.indexOf(target_num), 1);
+        location.hash = SetUrlComponents(components);
+      }
+    });
+  });
+</script>
+{% endblock %}

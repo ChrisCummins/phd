@@ -29,18 +29,20 @@ any NVIDIA GPUs will be used to improve performance where possible.
 Made with \033[1;31m♥\033[0;0m by Chris Cummins <chrisc.101@gmail.com>.
 https://chriscummins.cc/clgen
 """
-import cProfile
-import contextlib
 import os
-import pathlib
 import shutil
 import sys
+
+import cProfile
+import contextlib
+import pathlib
 import traceback
 import typing
 
 from deeplearning.clgen import errors
 from deeplearning.clgen import sample_observers as sample_observers_lib
 from deeplearning.clgen import samplers
+from deeplearning.clgen.dashboard import dashboard
 from deeplearning.clgen.models import models
 from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
@@ -119,6 +121,8 @@ class Instance(object):
         self.model: pretrained.PreTrainedModel = pretrained.PreTrainedModel(
             pathlib.Path(config.pretrained_model))
       self.sampler: samplers.Sampler = samplers.Sampler(config.sampler)
+
+    dashboard.Launch()
 
   @contextlib.contextmanager
   def Session(self) -> 'Instance':

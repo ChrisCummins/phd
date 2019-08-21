@@ -20,6 +20,7 @@ py_library(
     srcs = ["backends.py"],
     deps = [
         "//deeplearning/clgen:samplers",
+        "//deeplearning/clgen:telemetry",
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",

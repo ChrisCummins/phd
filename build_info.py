@@ -13,11 +13,12 @@
 # limitations under the License.
 """Access to the build information."""
 
+import functools
+import re
+
 import build_info_pbtxt_py
 import config_pb2
 import datetime
-import functools
-import re
 import typing
 import version_py
 
@@ -66,6 +67,11 @@ def FormatVersion() -> str:
 
 def Version() -> str:
   return version_py.STRING.strip()
+
+
+def BuildTimestamp() -> int:
+  build_info = GetBuildInfo()
+  return build_info.seconds_since_epoch
 
 
 def FormatShortBuildDescription(html: bool = False) -> str:
