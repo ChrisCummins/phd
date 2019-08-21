@@ -44,3 +44,8 @@ cc_binary(
     name = "009",
     srcs = ["009.cc"],
 )
+
+cc_binary(
+    name = "010",
+    srcs = ["010.cc"],
+)
