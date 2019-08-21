@@ -14,6 +14,7 @@ py_library(
         "//:build_info",
         "//labm8:app",
         "//labm8:bazelutil",
+        "//labm8:decorators",
         "//labm8:humanize",
         "//third_party/py/flask",
         "//third_party/py/portpicker",

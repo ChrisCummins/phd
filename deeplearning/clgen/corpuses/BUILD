@@ -47,6 +47,7 @@ py_library(
         ":preprocessed",
         "//deeplearning/clgen:cache",
         "//deeplearning/clgen:errors",
+        "//deeplearning/clgen/dashboard:dashboard_db",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",

@@ -1,8 +1,8 @@
 """A flask server which renders test results."""
-import threading
 
 import flask
 import portpicker
+import threading
 
 import build_info
 from deeplearning.clgen.dashboard import dashboard_db
@@ -39,10 +39,6 @@ def index():
       'dashboard.html',
       urls=urls,
       build_info=build_info.FormatShortBuildDescription(html=True))
-
-
-def GetDatabase() -> dashboard_db.DashboardDatabase:
-  return FLAGS.clgen_dashboard_db()
 
 
 def Launch(debug: bool = False):

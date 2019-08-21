@@ -19,13 +19,13 @@ is a file containing text to train over.
 """
 import os
 import random
+import tempfile
 import time
 
 import checksumdir
 import numpy as np
 import pathlib
 import subprocess
-import tempfile
 import typing
 from sqlalchemy.sql.expression import func
 
@@ -34,6 +34,7 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
+from deeplearning.clgen.dashboard import dashboard_db
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
 from labm8 import app
@@ -130,6 +131,8 @@ class Corpus(object):
     self.config.CopyFrom(AssertConfigIsValid(config))
     self._atomizer = None
     self._created = False
+    self.dashboard_db = dashboard_db.GetDatabase()
+    self._dashboard_db_id: typing.Optional[int] = None  # Set in Create()
 
     # An in-memory cache of the encoded contentfiles indices arrays.
     # Set and used in GetTrainingData().
@@ -140,8 +143,8 @@ class Corpus(object):
     self.content_id = ResolveContentId(self.config, hc)
     # Database of pre-processed files.
     preprocessed_id = ResolvePreprocessedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'preprocessed', preprocessed_id).mkdir(
-        exist_ok=True, parents=True)
+    cache.cachepath('corpus', 'preprocessed',
+                    preprocessed_id).mkdir(exist_ok=True, parents=True)
     preprocessed_db_path = cache.cachepath('corpus', 'preprocessed',
                                            preprocessed_id, 'preprocessed.db')
     if (self.config.HasField('content_id') and
@@ -156,19 +159,19 @@ class Corpus(object):
       if config.HasField('local_directory'):
         os.symlink(
             str(
-                ExpandConfigPath(
-                    config.local_directory,
-                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
+                ExpandConfigPath(config.local_directory,
+                                 path_prefix=FLAGS.clgen_local_path_prefix)),
+            symlink)
       elif config.HasField('local_tar_archive'):
         os.symlink(
             str(
-                ExpandConfigPath(
-                    config.local_tar_archive,
-                    path_prefix=FLAGS.clgen_local_path_prefix)), symlink)
+                ExpandConfigPath(config.local_tar_archive,
+                                 path_prefix=FLAGS.clgen_local_path_prefix)),
+            symlink)
     # Data of encoded pre-preprocessed files.
     encoded_id = ResolveEncodedId(self.content_id, self.config)
-    cache.cachepath('corpus', 'encoded', encoded_id).mkdir(
-        exist_ok=True, parents=True)
+    cache.cachepath('corpus', 'encoded', encoded_id).mkdir(exist_ok=True,
+                                                           parents=True)
     db_path = cache.cachepath('corpus', 'encoded', encoded_id, 'encoded.db')
     # TODO(github.com/ChrisCummins/clgen/issues/130): Refactor this conditional
     # logic by making Corpus an abstract class and creating concrete subclasses
@@ -227,6 +230,31 @@ class Corpus(object):
               humanize.Commas(int((time.time() - start_time) * 1000)))
       self.encoded.Create(self.preprocessed, atomizer,
                           self.config.contentfile_separator)
+
+    # Add entry to dashboard database
+    with self.dashboard_db.Session(commit=True) as session:
+      config_to_store = corpus_pb2.Corpus()
+      config_to_store.CopyFrom(self.config)
+      # Clear the contentfiles field, since we use the content_id to uniquely
+      # identify the input files. This means that corpuses with the same content
+      # files delivered through different means (e.g. two separate but identical
+      # directories) have the same hash.
+      config_to_store.ClearField('contentfiles')
+      corpus = session.GetOrAdd(
+          dashboard_db.Corpus,
+          config_proto_sha1=crypto.sha1(config_to_store.SerializeToString()),
+          config_proto=str(config_to_store),
+          preprocessed_url=self.preprocessed.url,
+          encoded_url=self.encoded.url,
+      )
+      session.flush()
+      self._dashboard_db_id = corpus.id
+
+  @property
+  def dashboard_db_id(self) -> int:
+    if not self._created:
+      raise TypeError("Cannot access dashboard_db_id before Create() called")
+    return self._dashboard_db_id
 
   @property
   def is_locked(self) -> bool:
@@ -464,9 +492,8 @@ def ResolveContentId(config: corpus_pb2.Corpus,
     # to maintain a cache which maps the mtime of tarballs to their content ID,
     # similart to how local_directory is implemented.
     content_id = GetHashOfArchiveContents(
-        ExpandConfigPath(
-            config.local_tar_archive,
-            path_prefix=FLAGS.clgen_local_path_prefix))
+        ExpandConfigPath(config.local_tar_archive,
+                         path_prefix=FLAGS.clgen_local_path_prefix))
   else:
     raise NotImplementedError('Unsupported Corpus.contentfiles field value')
   app.Log(2, 'Resolved Content ID %s in %s ms.', content_id,

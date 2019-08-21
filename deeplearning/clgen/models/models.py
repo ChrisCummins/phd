@@ -14,10 +14,10 @@
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """The CLgen language model."""
 import os
-import pathlib
-import typing
 
 import numpy as np
+import pathlib
+import typing
 
 from deeplearning.clgen import cache
 from deeplearning.clgen import errors
@@ -26,6 +26,7 @@ from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import corpuses
+from deeplearning.clgen.dashboard import dashboard_db
 from deeplearning.clgen.models import builders
 from deeplearning.clgen.models import keras_backend
 from deeplearning.clgen.models import tensorflow_backend
@@ -80,6 +81,10 @@ class Model(object):
     (self.cache.path / 'samples').mkdir(exist_ok=True)
     (self.cache.path / 'logs').mkdir(exist_ok=True)
 
+    self._created = False
+    self.dashboard_db = dashboard_db.GetDatabase()
+    self._dashboard_db_id: typing.Optional[int] = None
+
     # Create symlink to encoded corpus.
     symlink = self.cache.path / 'corpus'
     if not symlink.is_symlink():
@@ -91,13 +96,13 @@ class Model(object):
     # Create symlink to the atomizer.
     symlink = self.cache.path / 'atomizer'
     if not symlink.is_symlink():
-      os.symlink(
-          os.path.relpath(self.corpus.atomizer_path, self.cache.path), symlink)
+      os.symlink(os.path.relpath(self.corpus.atomizer_path, self.cache.path),
+                 symlink)
 
     # Validate metadata against cache.
     if self.cache.get('META.pbtxt'):
-      cached_meta = pbutil.FromFile(
-          pathlib.Path(self.cache['META.pbtxt']), internal_pb2.ModelMeta())
+      cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
+                                    internal_pb2.ModelMeta())
       # Exclude num_epochs and corpus location from metadata comparison.
       config_to_compare = model_pb2.Model()
       config_to_compare.CopyFrom(self.config)
@@ -148,6 +153,33 @@ class Model(object):
     config_to_hash.training.ClearField('num_epochs')
     return crypto.sha1_list(corpus_.hash, config_to_hash.SerializeToString())
 
+  def Create(self) -> bool:
+    if self._created:
+      return False
+    self._created = True
+    self.corpus.Create()
+
+    # Add entry to dashboard database
+    with self.dashboard_db.Session(commit=True) as session:
+      config_to_store = model_pb2.Model()
+      config_to_store.CopyFrom(self.config)
+      config_to_store.ClearField('corpus')
+      config_to_store.training.ClearField('num_epochs')
+      corpus = session.GetOrAdd(
+          dashboard_db.Model,
+          config_proto_sha1=crypto.sha1(config_to_store.SerializeToString()),
+          config_proto=str(config_to_store),
+          cache_path=self.cache.path,
+      )
+      session.flush()
+      self._dashboard_db_id = corpus.id
+
+  @property
+  def dashboard_db_id(self) -> int:
+    if not self._created:
+      raise TypeError("Cannot access dashboard_db_id before Create() called")
+    return self._dashboard_db_id
+
   def Train(self, **kwargs) -> 'Model':
     """Train the model.
 
@@ -158,7 +190,7 @@ class Model(object):
       UnableToAcquireLockError: If the model is locked (i.e. there is another
         process currently modifying the model).
     """
-    self.corpus.Create()
+    self.Create()
     with self.training_lock.acquire():
       self.backend.Train(self.corpus, **kwargs)
     telemetry_logs = self.TrainingTelemetry()[:self.config.training.num_epochs]
@@ -260,12 +292,11 @@ class Model(object):
           if sampler.SampleIsComplete(samples_in_progress[i]):
             end_time = labdate.MillisecondsTimestamp()
             done[i] = 1
-            sample = model_pb2.Sample(
-                text=''.join(samples_in_progress[i]),
-                sample_start_epoch_ms_utc=start_time,
-                sample_time_ms=end_time - start_time,
-                wall_time_ms=end_time - wall_time_start,
-                num_tokens=len(samples_in_progress[i]))
+            sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
+                                      sample_start_epoch_ms_utc=start_time,
+                                      sample_time_ms=end_time - start_time,
+                                      wall_time_ms=end_time - wall_time_start,
+                                      num_tokens=len(samples_in_progress[i]))
             # Notify sample observers.
             continue_sampling &= all(
                 [obs.OnSample(sample) for obs in sample_observers])
