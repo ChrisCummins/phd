@@ -9,27 +9,6 @@ kernel void A() {
     \end{minted}
   \end{minipage}
 \end{lrbox}
-% Another:
-% kernel void A(local int* a) {
-%   while (1) {
-%   }
-% }
-%
-% And another:
-%    kernel void A(global int* a) {
-%      bool b;
-%      int c;
-%      for (b = 0; b < 100; b++)
-%        a[c] += a[c];
-%    }
-%
-% One more:
-%   kernel void A(global int* a, global int* b) {
-%     int c = get_global_id(0);
-%     int d = 0;
-%     while (d < 1024)
-%       a[c] = d;
-%   }
 
 \newsavebox{\SimplifyTheCFGPass}
 \begin{lrbox}{\SimplifyTheCFGPass}

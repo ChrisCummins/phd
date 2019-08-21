@@ -1,98 +1,49 @@
-% Support alternating row colours in tables. Normal usage is to
-% include the xcolor package with option `table', but the xcolor
-% package is already getting pulled in from somewhere else which
-% causes builds to fail with a package options conflict.
-%
-% See: http://tex.stackexchange.com/a/5375
-%
 \PassOptionsToPackage{table}{xcolor}
-
-%%%%
-%% Load the class. Put any options that you want here (see the documentation
-%% for the list of options). The following are samples for each type of
-%% thesis:
-%%
-%% Note: you can also specify any of the following options:
-%%  logo: put a University of Edinburgh logo onto the title page
-%%  frontabs: put the abstract onto the title page
-%%  deptreport: produce a title page that fits into a Computer Science
-%%      departmental cover [not sure if this actually works]
-%%  singlespacing, fullspacing, doublespacing: choose line spacing
-%%  oneside, twoside: specify a one-sided or two-sided thesis
-%%  10pt, 11pt, 12pt: choose a font size
-%%  centrechapter, leftchapter, rightchapter: alignment of chapter headings
-%%  sansheadings, normalheadings: headings and captions in sans-serif
-%%      (default) or in the same font as the rest of the thesis
-%%  [no]listsintoc: put list of figures/tables in table of contents (default:
-%%      not)
-%%  romanprepages, plainprepages: number the preliminary pages with Roman
-%%      numerals (default) or consecutively with the rest of the thesis
-%%  parskip: don't indent paragraphs, put a blank line between instead
-%%  abbrevs: define a list of useful abbreviations (see documentation)
-%%  draft: produce a single-spaced, double-sided thesis with narrow margins
-%%
-%% MSc by Research, which also needs an institute
 \documentclass[phd,icsa,logo,twoside,openright]{infthesis}
-
-% Set these values to control the nesting level of the table of contents.
-% A level of 0 means chapter level.
-%\setcounter{secnumdepth}{0}
-%\setcounter{tocdepth}{0}
-
-\usepackage{todonotes}
 
 \usepackage[utf8]{inputenc}
 
-\usepackage[%
-backend=biber,
-style=alphabetic,
-maxbibnames=99,  % no "et al." in the bibliography.
-% style=numeric-comp,  % numerical-compressed
-% sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
-sortcites=true,      % sort \cite{b a d c}: true,false
-block=none,          % space between blocks: none,space,par,nbpar,ragged
-indexing=false,      % indexing options: true,false,cite,bib
-citereset=none,      % don't reset cites
-isbn=false,          % print ISBN?
-url=true,            % print URL?
-doi=false,           % print DOI?
-natbib=true,         % natbib compatability
+\usepackage[
+  backend=biber,
+  style=alphabetic,
+  maxbibnames=99,
+  sortcites=true,
+  block=none,
+  indexing=false,
+  citereset=none,
+  isbn=false,
+  url=true,
+  doi=false,
+  natbib=true,
 ]{biblatex}
 
-\addbibresource{refs.bib}
+\addbibresource{bibliography.bib}
 
-
-% Tables.
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hhline}
 \usepackage{xspace}
 \usepackage[table]{xcolor}
 
-% Define column types L, C, R with known text justification and fixed widths:
 \usepackage{array}
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
-% needed for \upgammar
 \usepackage{upgreek}
 
 
-% Source code listings.
 \usepackage{minted}
 \definecolor{mintedbg}{rgb}{0.92,0.92,0.92}
-\setminted{%
-  breaklines,%
-  bgcolor=mintedbg,%
-  linenos%
+\setminted{
+  breaklines,
+  bgcolor=mintedbg,
+  linenos,
 }
 
-% Math symbols
 \usepackage{amssymb}
 \usepackage{bm}
 \usepackage{amsmath}
-% Extra operators to use in math environments:
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\gain}{Gain}
@@ -115,33 +66,15 @@ natbib=true,         % natbib compatability
 \newcommand\arc{\textbf{arc}\xspace}
 \newcommand\awo{\textbf{awo}\xspace}
 
-% Use either 'subfig' or 'subcaption', NOT BOTH!
 \usepackage[caption=false]{subfig}
-
-% Provide generic commands \degree, \celsius, \perthousand, \micro
-% and \ohm which work both in text and maths mode.
 \usepackage{gensymb}
-
-% Pseudo-code listings.
 \usepackage{algorithm}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
-
-%\algrenewcommand\ALG@beginalgorithmic{\footnotesize}
-%\algrenewcommand{\algorithmiccomment}[1]{\bgroup\hfill\footnotesize\it~#1\egroup}
-%\algnewcommand\algorithmicto{\textbf{to}}
-
 \usepackage{amsmath}
-
 \usepackage{filecontents}
 \usepackage{pgfplots, pgfplotstable}
 \usepgfplotslibrary{statistics}
-
-% Enable \includepdf{} command.
-\usepackage{pdfpages}
-
-% Use \lispum for placeholder text.
-\usepackage{lipsum}
 
 \newenvironment{laysummary}
   {\renewcommand{\abstractname}{Lay Summary}\begin{mainabs}}
@@ -149,18 +82,9 @@ natbib=true,         % natbib compatability
 
 \captionsetup[subfigure]{labelformat=parens}
 
-% Enable floating algorithm environments.
 \usepackage{float}
 \newfloat{algorithm}{t}{lop}
 
-% Clickable cross-references.
 \usepackage{hyperref}
-% \usepackage[hidelinks]{hyperref}
 
-% Pdflatex told me to add this...
 \pgfplotsset{compat=1.16}
-
-% Add a \review{Text goes here} command that highlights changes to the original text.
-\newcommand{\diff}[1]{}
-% \renewcommand{\diff}[1]{{\color{blue}{#1}}}
-\renewcommand{\diff}[1]{{#1}}

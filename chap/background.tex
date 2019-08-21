@@ -69,10 +69,7 @@ The activation function $\phi(z)$ is a non-linear differentiable function used t
   \phi(z) = \frac{1}{1 + e^{-z}}
 \end{equation}
 
-Sigmoid activations are bounded in the range $(0,1)$, depicted in Figure~\ref{fig:activation-functions-sigmoid}.
-% , which prevents blowing up of activations. Negative: gives rise to ``vanishing gradients'' because of the squishing behaviour for large positive or negative values - sigmoids saturate and kill gradients.
-% It's output is not zero-centred, which makes gradient updates go too far in different directions.
-For hidden layers, a disadvantage of sigmoid activation is that the output is not zero-centred. To address this, the \emph{Hyperbolic Tangent} (tanh) activation may be used, which is a scaled sigmoid function with values in the range $(-1,1)$:
+Sigmoid activations are bounded in the range $(0,1)$, depicted in Figure~\ref{fig:activation-functions-sigmoid}. For hidden layers, a disadvantage of sigmoid activation is that the output is not zero-centred. To address this, the \emph{Hyperbolic Tangent} (tanh) activation may be used, which is a scaled sigmoid function with values in the range $(-1,1)$:
 
 \begin{equation}
   \phi(z) = \frac{e^{z} - e^{-z}}{e^z + e^{-z}}
@@ -84,9 +81,7 @@ Figure~\ref{fig:activation-functions-tanh} illustrates the hyperbolic tangent ac
   \phi(z) = max(z, 0)
 \end{equation}
 
-The ReLU activation is shown in Figure~\ref{fig:activation-functions-relu}. If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons will not fire, so that activations are sparse.
-% Problem is ``dying'' neurons. When activations dip below 0, gradients will be 0, so the neuron becomes unresponsive to variations in input / error.
-The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, effectively ``dying''. Leaky ReLU prevents artificial neurons from becoming unresponsive to variations in input by introducing a small slope for negative values:
+The ReLU activation is shown in Figure~\ref{fig:activation-functions-relu}. If initialised with random weights in the range $[-1,1]$, an average of 50\% of ReLU activated neurons will not fire, so that activations are sparse. The \emph{Leaky ReLU} variation addresses the issue of large adjustments to parameters during training leading to neurons that are not activated for any input, effectively ``dying''. Leaky ReLU prevents artificial neurons from becoming unresponsive to variations in input by introducing a small slope for negative values:
 
 \begin{align}
   \phi(z) =
@@ -125,6 +120,7 @@ Where $\sum_{i=1}^{K} \phi (\bm{z})^{(i)} = 1$.
 	\label{fig:activation-functions}
 \end{figure}
 
+
 \paragraph*{Backpropagation and Gradient Descent}
 
 The most widely used technique to train artificial neural networks is backpropagation~\cite{Rumelhart1986}. Typically, the artificial neuron parameters are initialised with small random values. During training, a \emph{mini-batch} of $B$ observations is propagated through the network in a \emph{feed-forward} stage. The final outputs of the network $\bm{\hat{y}}$ are then compared against the true values $\bm{y}$ and used to compute an error $\mathcal{L}(\bm{\hat{y}}, \bm{y})$. The appropriate error function depends on the task. For a classification task with $K$ classes, \emph{categorical cross-entropy} may be used:
@@ -141,30 +137,12 @@ J &= \frac{1}{B} \sum_{i=1}^B \mathcal{L}^{(i)}(\bm{\hat{y}^{(i)}}, \bm{y}^{(i)}
 \bm{b}^{[\ell]} &= \bm{b}^{[\ell]} - \alpha \frac{\partial J}{\partial \bm{b}^{[\ell]}}
 \end{align}
 
-% TODO: Calculating derivatives through chain rule
-
-% Where the derivative of the error function with respect to the network weights
-%  derivative of sigmoid function $\phi(x)$:
-
-% \begin{equation}
-% \begin{aligned}
-%   \phi(x) &= \frac{1}{1+e^{-x}}\\
-%   \frac{\partial}{\partial x}\phi(x) &= \phi(x)(1 - \phi(x))
-% \end{aligned}
-% \end{equation}
 
 \paragraph*{Regularisation Techniques}
 
 Neural networks are vulnerable to \emph{over-fitting}, whereby the parameters of the model become specialised to the training observations, losing the ability to generalise to unseen data. Many \emph{regularisation} techniques have been adopted to mitigate the risk of over-fitting.
 
-% Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT PRess.
 \emph{Dropout} is a regularisation technique in which a parameter in the range $[0,1]$ is used to determine a proportion of artificial neurons to be removed. This helps training by preventing complex co-adaptations on training values~\cite{Goodfellow2016}.
-
-
-
-% \paragraph*{Normalization}
-
-% Batch normalization
 
 
 \subsection{Recurrent Neural Networks}
@@ -200,15 +178,7 @@ The recurrent structure of RNNs enables the modelling of patterns in data with a
 
 Ordinary backpropagation may be used on an RNN by unfolding the computation graph over time, shown in Figure~\ref{fig:rnn-unrolled}. This \emph{backpropagation through time}~\cite{Werbos1990a} enables the propagation of errors in the temporal domain in the same manner as through layers.
 
-% Siegelmann, H. T., & Sontag, E. D. (1991). Turing Computability with Neural Nets. Applied Mathematics Letters, 4(6).
-RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of finite size~\cite{Sontag1991a}. In practice, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through non-linear activation functions by the recurrence relation. This issue is known as the
-% Bengio, Y., Simard, P., & Frasconi, P. (1994). Learning Long-Term Dependencies with Gradient Descent is Difficult. IEEE Transactions on Neural Networks, 5(2).
-\emph{vanishing gradients} problem~\cite{Bengio1994}.
-
-% An RNN can learn a probability distribution over a sequence of tokens to predict the next token. Therefore, at each time step $t$, the output from the RNN conditional distribution $p\left( x_t | x_1, \ldots, x_{t-1} \right)$.
-
-% De Boom, C., Dhoedt, B., & Demeester, T. (2018). Character-level Recurrent Neural Networks in Practice: Comparing Training and Sampling Schemes. ArXiv:1801.00632.
-% \todo[inline]{RNN evaluation~\cite{DeBoom2018}.}
+RNNs are universal, in that any function computable by a Turing machine can be computed by an RNN of finite size~\cite{Sontag1991a}. In practice, a significant obstacle to the performance of RNNs is the diminishing ability to learn connections between values over long sequences. This is caused by the exponential diminishing and enlarging of gradients as they are propagated through non-linear activation functions by the recurrence relation. This issue is known as the \emph{vanishing gradients} problem~\cite{Bengio1994}.
 
 
 \paragraph*{Long Short-Term Memory}
@@ -241,7 +211,6 @@ Where weight matrices $\bm{W} \in \mathbb{R}^{h\times d}$ and $\bm{U} \in \mathb
 
 Where $\otimes$ denotes element-wise vector product, and subscript $c$ denotes cell state weight matrices and bias vectors. The gated cell enables LSTMs to build connections over long sequences in data. The LSTM architecture (and its many variants~\cite{Greff2015}) have been responsible for breakthrough results in a number of areas, for example machine translation~\cite{Sutskever2014}, speech recognition~\cite{Graves2005}, and weather prediction \cite{Shi2015a}.
 
-% \subsection{Embedding}
 
 \subsection{Decision Trees}
 
@@ -258,19 +227,6 @@ The gain of a feature $x$ is found using:
 \end{equation}
 
 Decision trees are a popular and low overhead form of classification. Once trained, a decision tree can be implemented as a set of nested conditional statements. This makes the learned model easily interpretable, simplifying debugging.
-
-% TODO: \subsection{Generative Adversarial Networks}
-
-% The Generative Adversarial Network (GAN) is a means to estimate a generative model~\cite{Goodfellow2014}. It uses an adversarial process in which two models are simultaneously trained: a generator model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximise the probability of $D$ making a mistake.
-
-% If both models are neural networks: learn a generator's distribution $p_g$ over data $\bm{x}$. Define a prior on input noise variables $p_z(\bm{z})$. Generator $G(\bm{z}; \Theta_g)$, using parameters $\Theta_g$. Discriminator $D(\bm{x}; \Theta_d)$ outputs a scalar, the probability that $\bm{x}$ came from the data rather than $p_g$.
-
-% Simultaneously train $D$ to maximise the probability of assigning the correct label to both training examples and samples from $G$, and train $G$ to minimise $\log (1 - D(G(\bm{z})))$. $D$ and $G$ play the two-player minimax game with value function $V(G, D)$:
-
-% \[ \min_G \max_D V(D, G) = \mathbb{E}_{\bm{x} \sim  p_{data}(\bm{x})} [ \log D(\bm{x}) ] + \mathbb{E}_{\bm{z} \sim p_z(\bm{z})} [ \log (1 - D(G(\bm{z}))) ] \]
-
-% Challenge: there may not be sufficient gradient for $G$ to learn well. Early in learning, when $G$ is poor, $D$ can reject samples with high confidence because they are clearly different from the training data.
-
 
 
 \section{Model Evaluation Techniques}
@@ -325,138 +281,6 @@ To compute the principal components, one begins with a normalised matrix of obse
 \begin{equation}
 \bm{\hat{X}} = [ \bm{v}^{(1)}, \ldots, \bm{v}^{(k)}]^T \cdot \bm{X}\\
 \end{equation}
-
-% \section{Heterogeneous Systems}
-% \label{sec:programming-heterogeneous-systems}
-
-% A heterogeneous system contains multiple types of processor. Compared to systems with a single processor, programming for heterogeneous systems is especially challenging. Typical approaches divide the system processors into a \emph{host processor} and one or more additional \emph{accelerator} processors, where the host processor is responsible for coordinating and synchronising work on the accelerator processors. This approach has been successfully used for General-purpose computing on Graphics Processing Units (GPGPU), where the system CPU is the host and the GPUs are used as accelerators~\cite{Owens2006}. Many of the techniques in this thesis are evaluated using OpenCL, a popular language and framework for programming heterogeneous systems.
-
-
-% \subsection{OpenCL Programming Model}
-
-% OpenCL is a vendor-independent open standard for programming heterogeneous systems, supporting CPUs, GPUs, and other parallel processors such as Field-Programmable Gate Arrays~\cite{Stone2010}. It comprises a compute language based on a subset of the ISO C99 programming language, and a suite of APIs for controlling heterogeneous compute devices from a central host. Programs written for these devices are called kernels, and are compiled by platform-specific toolchains. At runtime, an OpenCL platform is selected and a context object is created which exposes access to each supported compute device through command queues. When a kernel is executed, each unit of computation is referred to as a work-item, and these work-items are grouped into work-groups. The sum of all work-group dimensions defines the global size. For GPUs, work-groups execute on the Single Instruction Multiple Data (SIMD) processing units in lock-step. This is different from the behaviour of traditional CPUs, and can cause severe performance penalties in the presence of flow control, as work-items must be stalled across diverging flow paths.
-
-
-% % \paragraph*{Memory Model}
-
-% OpenCL uses a hierarchical memory model, shown in Figure~\ref{fig:opencl-memory-hierarchy}. The host and each OpenCL device has a single global memory address space. Each work-group has a local memory space, and each work-item has a region of private memory.
-
-% \begin{figure}
-%   \centering
-%   \includegraphics[width=0.8\textwidth]{img/opencl-memory}
-%   \caption[OpenCL memory model]{%
-%     The OpenCL memory model. The host communicates with each device through transfers between global memory spaces. The capacity of each type of memory is dependent on the device hardware. In general, private memory is the fastest and smallest, and global memory is the largest and slowest.%
-%   }
-%   \label{fig:opencl-memory-hierarchy}
-% \end{figure}
-
-% Work-groups cannot access the memory of neighbouring work-groups, nor can work-items access the private memory of other work-items. OpenCL provides synchronisation barriers to allow for communication between work-items within a single work-group via the local memory, but not global barriers. Memory transfers between the host and devices occurs between global memory regions. In the case of programming heterogeneous devices, these transfers must occur over the connection bus between the CPU and device (e.g.\ PCIe for discrete GPUs), which typically creates a performance bottleneck by introducing a performance overhead to transfer data to the device for processing, then back to the device afterwards.
-
-
-% \subsubsection{Performance Optimisations}
-
-% Optimising OpenCL is challenging because of the wide range of supported execution devices. Performance portability is challenging because each standards-compliant implementation differs~\cite{Rul2010}, and the interactions between optimisations and the hardware are complex and sometimes counter-intuitive~\cite{Ryoo2008}.
-
-% The overhead introduced by memory transfers between host and compute devices further complicates comparisons of OpenCL performance on different devices. The conclusion of~\cite{Gregg2011} is that this overhead can account for a $2\times$ to $50\times$ difference of accelerator program runtime. In~\cite{Lee2010}, \citeauthor{Lee2010} present a performance analysis of optimised throughput computing applications for GPUs and CPUs. Of the 14 applications tested, they found GPU performance to be $0.7\times$ to $14.9\times$ that of multi-threaded CPU code, with an average of only 2.5$\times$. This is much lower than the $100\times$ to $1000\times$ values reported by other studies, a fact that they attribute to uneven comparison of optimised GPU code to unoptimised CPU code, or vice versa. \citeauthor{Lee2010} found that multi-threading, cache blocking, reordering of memory accesses and use of SIMD instructions to contribute most to CPU performance. For GPUs, the most effective optimisations are reducing synchronisation costs, and exploiting local shared memory. In all cases, the programs were optimised and hand-tuned by programmers with expert knowledge of the target architectures. It is unclear whether their performance results still hold for subsequent generations of devices.
-
-% Despite the concerns of over-represented speedups, the potential for high performance coupled with the complexity and low-levels of abstraction provided by OpenCL make it an ideal target for skeletal abstractions. SkelCL and SkePU are two such examples which add a layer of abstraction above OpenCL and CUDA respectively in order to simplify GPGPU programming~\cite{Enmyren2010}.
-
-
-% \subsection{Evaluation Techniques}
-% \label{subsec:background-statistics}
-
-% This section describes a number of the statistical tools and evaluation techniques used throughout this thesis.
-
-
-% \subsubsection{Interquartile Range}
-
-% Quartiles are the three points that divide an ordered set of data values into four groups of equal size. The first quartile $Q_1$ is the point which divides the data equally between the lowest value and the median, $Q_2$. The third quartile $Q_3$ is the point which divides the data between the median and the highest value. The interquartile range (IQR) measures the dispersion of a data set, and is the difference between the third and first quartiles, $Q_3 - Q_1$.
-
-
-% \subsubsection{Confidence Intervals}
-
-% Confidence intervals estimate the interval for the true range of a population parameter. Given a set of samples of a population with estimates of a parameter value for each, the confidence interval $(c_1,c_2)$ estimates the frequency that the true parameter value will fall between the per-sample confidence interval. Given a sample $x$ with sample size $n$, the confidence interval for a confidence $\alpha$ is found using:
-
-% \begin{align}
-%   \bar{x} &= \frac{1}{n}\sum_{i=1}^{n} x_i\\
-%   \sigma &= \sqrt{\frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n - 1}}\\
-%   c_1 &= \bar{x} - z_{1-\alpha/2}\frac{\sigma}{\sqrt{n}}\\
-%   c_2 &= \bar{x} + z_{1-\alpha/2}\frac{\sigma}{\sqrt{n}}
-% \end{align}
-
-% Where the value $z_{1-\alpha/2}$ assumes a Gaussian distribution of
-% the underlying data, and the values for popular $\alpha$ values are
-% typically found using pre-computed ``Z-tables''. To calculate
-% confidence intervals for the ratio of two means, $\bar{x}_1$ and
-% $\bar{x}_2$ with sample sizes $n_1$ and $n_2$, and respective standard
-% deviations $\sigma_1$ and $\sigma_2$:
-
-% \begin{align}
-%   \sigma_x &= \sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}\\
-%   c_1 &= \bar{x}_1 - \bar{x}_2 - z_{1-\alpha/2}\sigma_x\\
-%   c_2 &= \bar{x}_1 - \bar{x}_2 + z_{1-\alpha/2}\sigma_x
-% \end{align}
-
-% The above calculations assumes that the sample variance ($\sigma^2$)
-% is an accurate estimation of the true population variance. This relies
-% on the assumption of an underlying Gaussian distribution, which,
-% according to the central limit theorem, is true of large sample sizes
-% (typically $n \ge 30$). In cases of smaller sample sizes, the sample
-% and population variances can differ significantly, so one must instead
-% use a Student's $t$-distribution, $t_{1-\alpha/2}$, in place of
-% $z_{1-\alpha/2}$.
-
-
-% \subsubsection{Histogram}
-
-% Histograms show the distribution of numerical data. The data is first divided into a set of discrete, equally sized sub-intervals, or \emph{bins}. The number of data points in each bin is used to show visualise the density distribution. The shortcoming of histograms is that their appearance is heavily influenced by three user-selected parameters: the number of bins, the width of bins, and the endpoints chosen. As such, they may provide a misleading representation of the data if inappropriate values for any of these parameters are chosen. Kernel Density estimation is a technique for showing the distribution of data which circumvents some of these issues.
-
-% \subsubsection{Kernel Density Estimation}
-
-% A Kernel Density Estimate (KDE) is an approximation of the probability
-% density function of a random variable. Given a random variable $x$,
-% and bandwidth $h$ and a kernel $K$, the Kernel Density Estimate
-% $\hat{f}_h(x)$ can be found using:
-% %
-% \begin{equation}
-%   \hat{f}_h(x) = \frac{1}{nh} \sum^{n}_{i=1} K\left( \frac{x - x_i}{h} \right)
-% \end{equation}
-% %
-% Using a smooth kernel such as a Gaussian distribution for the kernel
-% produces a smooth density estimated, unlike histograms. However, like
-% histograms, the appearance of a Kernel Density Estimate plot is
-% dependent on the value of the bandwidth parameter $h$ (equivalent to
-% binwidth in histograms), so care must be taken to select a value to
-% minimise over or under smoothing. Grouped data can be shown by
-% plotting multiple KDEs on the same axes, although if the number of
-% groups is large, a box plot or violin plot may be more appropriate.
-
-
-% \subsubsection{Box plot}
-
-% Box plots are used to show the distribution of quartile ranges for
-% grouped data. The contain the following features:
-% %
-% \begin{itemize}
-%   \item Horizontal lines at the lower quartile, median and upper
-%   quartile.
-%   \item Vertical lines above and below the upper and lower quartiles to
-%   the most extreme data point within 1.5 IQR of the upper/lower
-%   quartile, with horizontal whiskers at the end of the vertical lines.
-%   \item Dots beyond the ends of the vertical lines to show outliers.
-% \end{itemize}
-% %
-% A variation of box plots used in this thesis is the violin plot, which
-% extends the box plot with a fitted Kernel Density Estimate plot to
-% show the probability \emph{density} of data at different values. To
-% construct a violin plot, KDEs for each group are rotated and mirrored
-% to generate a smoothed visualisation of the distribution.
-
-
-
-% \section{Differential Testing}
-
-% \todo[inline]{Difftesting overview, including the figure from the litreview.}
 
 
 \section{Summary}

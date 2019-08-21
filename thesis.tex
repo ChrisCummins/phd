@@ -1,13 +1,9 @@
 \input{preamble}
 
-\title{\diff{Deep Learning for Compilers}}
+\title{Deep Learning for Compilers}
 \author{Chris Cummins}
 
 \abstract{\input{abstract}}
-
-\newif\ifstapled
-% Comment out the line below to use stapled PDFs:
-% \stapledtrue
 
 \begin{document}
   \begin{preliminary}
@@ -19,12 +15,12 @@
     \listoftables
     \listoflistings
   \end{preliminary}
-  \input{chap/intro}
+  \input{chap/introduction}
   \input{chap/background}
   \input{chap/related-work}
-  \input{chap/synthesizing-benchmarks}
-  \input{chap/compiler-fuzzing}
-  \input{chap/end2end-dl}
+  \input{chap/clgen}
+  \input{chap/deepsmith}
+  \input{chap/deeptune}
   \input{chap/conclusions}
   \input{bibliography}
 \end{document}
