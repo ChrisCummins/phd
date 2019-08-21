@@ -98,5 +98,24 @@ def test_timeout_timeout_raised():
     Func()
 
 
+def test_run_once_global():
+  """Test that decorated function doesn't run more than once."""
+
+  g = {'i': 0}
+
+  @decorators.run_once
+  def Func() -> int:
+    g['i'] += 1
+    return g['i']
+
+  x = Func()
+  assert g['i'] == 1
+  assert x == 1
+
+  x = Func()
+  assert g['i'] == 1
+  assert x == 1
+
+
 if __name__ == '__main__':
   test.Main()

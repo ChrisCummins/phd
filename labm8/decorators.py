@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Useful function decorators."""
-import contextlib
 import functools
+
+import contextlib
 import signal
 import typing
 
@@ -103,3 +104,23 @@ def timeout_without_exception(seconds: int):
     # Unregister the signal so it won't be triggered
     # if the timeout is not reached.
     signal.signal(signal.SIGALRM, signal.SIG_IGN)
+
+
+def run_once(f):
+  """Runs a function (successfully) only once.
+
+  The running can be reset by setting the `has_run` attribute to False
+
+  Author: Jason Grout.
+  From: https://gist.github.com/jasongrout/3804691
+  """
+
+  @functools.wraps(f)
+  def wrapper(*args, **kwargs):
+    if not wrapper.has_run:
+      wrapper.result = f(*args, **kwargs)
+      wrapper.has_run = True
+    return wrapper.result
+
+  wrapper.has_run = False
+  return wrapper
