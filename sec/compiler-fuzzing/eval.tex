@@ -114,15 +114,6 @@ Testbeds~$1\pm$, $2\pm$, $3\pm$ rejected address space qualifiers on automatic v
 On Testbeds~$3\pm$, the statement \texttt{int n = mad24(a, (32), get\_global\_size(0));} (a call to a maths builtin with mixed types) is rejected as ambiguous.
 
 
-\subsection{Runtime Defects}
-
-Prior work on compiler test case generation has focused on extensive stress-testing of compiler middle-ends to uncover miscompilations~\cite{Chen2014a}. CSmith, and by extension, CLSmith, specifically targets this class of bugs. Grammar-based enumeration is highly effective at this task, yet is bounded by the expressiveness of the grammar. Here, examples are provided of bugs which cannot currently be discovered by CLSmith.
-
-
-\subsubsection{Thread-dependent Flow Control}
-
-A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work (46\% of OpenCL kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if (tid < \ldots) \{\ldots\}}) pattern). DeepSmith, having modelled the frequency with which this pattern occurs in real handwritten code, generates many permutations of this pattern. And in doing so, exposed a bug in the optimiser of Testbeds $4+$ and $6+$ which causes the \texttt{if} branch in Figure~\ref{lst:intel-size_t-int-unreduced} to be erroneously executed when the kernel is compiled with optimisations enabled. This issue has been reported to Intel. CLSmith does not permit the thread identity to modify control flow, rendering such productions impossible.
-
 \input{lst/miscompiled}
 \begin{figure}
   \centering %
@@ -143,9 +134,9 @@ A common pattern in OpenCL is to obtain the thread identity, often as an \texttt
 \begin{figure}
   \centering %
   \subfloat[Testbeds $3\pm$ silently miscompile ternary assignments in which the operands are different global buffers.]{%
-		\noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
-		\label{lst:beig-ternary-ops}
-	}\\%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
+    \label{lst:beig-ternary-ops}
+  }\\%
   \subfloat[Compilation should fail due to call to undefined function \texttt{B()}; Testbeds $8\pm$ silently succeed then crash upon kernel execution.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
     \label{lst:pocl-undefined-symbols}
@@ -154,6 +145,15 @@ A common pattern in OpenCL is to obtain the thread identity, often as an \texttt
     Further example OpenCL kernels which are miscompiled.%
   }%
 \end{figure}
+
+\subsection{Runtime Defects}
+
+Prior work on compiler test case generation has focused on extensive stress-testing of compiler middle-ends to uncover miscompilations~\cite{Chen2014a}. CSmith, and by extension, CLSmith, specifically targets this class of bugs. Grammar-based enumeration is highly effective at this task, yet is bounded by the expressiveness of the grammar. Here, examples are provided of bugs which cannot currently be discovered by CLSmith.
+
+
+\subsubsection{Thread-dependent Flow Control}
+
+A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work (46\% of OpenCL kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if (tid < \ldots) \{\ldots\}}) pattern). DeepSmith, having modelled the frequency with which this pattern occurs in real handwritten code, generates many permutations of this pattern. And in doing so, exposed a bug in the optimiser of Testbeds $4+$ and $6+$ which causes the \texttt{if} branch in Figure~\ref{lst:intel-size_t-int-unreduced} to be erroneously executed when the kernel is compiled with optimisations enabled. This issue has been reported to Intel. CLSmith does not permit the thread identity to modify control flow, rendering such productions impossible.
 
 Figure~\ref{lst:oclgrind-race-switch} shows a simple program in which thread identity determines the program output. This test case was found to sporadically crash Testbeds~$10\pm$, an OpenCL device simulator and debugger. Upon reporting to the developers, the underlying cause was quickly diagnosed as a race condition in \texttt{switch} statement evaluation and fixed within a week.
 
