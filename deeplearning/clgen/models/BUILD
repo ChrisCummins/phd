@@ -139,6 +139,7 @@ py_library(
         "//labm8:humanize",
         "//labm8:lockfile",
         "//labm8:pbutil",
+        "//labm8:system",
         "//third_party/py/numpy",
     ],
 )
@@ -195,6 +196,7 @@ py_library(
         "//deeplearning/clgen:sample_observers",
         "//deeplearning/clgen:samplers",
         "//deeplearning/clgen:telemetry",
+        "//deeplearning/clgen/dashboard:dashboard_db",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//labm8:app",
         "//labm8:crypto",

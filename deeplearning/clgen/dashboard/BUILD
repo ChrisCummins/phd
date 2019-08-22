@@ -34,6 +34,7 @@ py_library(
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:humanize",
+        "//labm8:labdate",
         "//third_party/py/flask",
         "//third_party/py/portpicker",
     ],

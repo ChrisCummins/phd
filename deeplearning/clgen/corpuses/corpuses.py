@@ -18,15 +18,15 @@ A training corpus is a set of one or more "contentfiles", where each contentfile
 is a file containing text to train over.
 """
 import os
+import pathlib
 import random
+import subprocess
 import tempfile
 import time
+import typing
 
 import checksumdir
 import numpy as np
-import pathlib
-import subprocess
-import typing
 from sqlalchemy.sql.expression import func
 
 from deeplearning.clgen import cache
@@ -197,6 +197,12 @@ class Corpus(object):
     self.hash = encoded_id
     self.cache = cache.mkcache('corpus', 'encoded', encoded_id)
 
+  def GetShortSummary(self) -> str:
+    corpus_size = humanize.DecimalPrefix(self.encoded.token_count,
+                                         '',
+                                         separator='')
+    return f'{corpus_size} token corpus with {self.vocab_size}-element vocabulary'
+
   def Create(self) -> None:
     """Create the corpus files.
 
@@ -211,6 +217,24 @@ class Corpus(object):
     # TODO(github.com/ChrisCummins/clgen/issues/130): Refactor this after
     # splitting out Corpus class.
     if self.config.HasField('pre_encoded_corpus_url'):
+      with self.dashboard_db.Session(commit=True) as session:
+        config_to_store = corpus_pb2.Corpus()
+        config_to_store.CopyFrom(self.config)
+        # Clear the contentfiles field, since we use the content_id to uniquely
+        # identify the input files. This means that corpuses with the same content
+        # files delivered through different means (e.g. two separate but identical
+        # directories) have the same hash.
+        config_to_store.ClearField('contentfiles')
+        corpus = session.GetOrAdd(
+            dashboard_db.Corpus,
+            config_proto_sha1=crypto.sha1(config_to_store.SerializeToString()),
+            config_proto=str(config_to_store),
+            preprocessed_url='',
+            encoded_url=self.encoded.url,
+            summary=self.GetShortSummary(),
+        )
+        session.flush()
+        self._dashboard_db_id = corpus.id
       return
 
     preprocessed_lock_path = pathlib.Path(
@@ -246,6 +270,7 @@ class Corpus(object):
           config_proto=str(config_to_store),
           preprocessed_url=self.preprocessed.url,
           encoded_url=self.encoded.url,
+          summary=self.GetShortSummary(),
       )
       session.flush()
       self._dashboard_db_id = corpus.id
@@ -253,7 +278,7 @@ class Corpus(object):
   @property
   def dashboard_db_id(self) -> int:
     if not self._created:
-      raise TypeError("Cannot access dashboard_db_id before Create() called")
+      raise TypeError('Cannot access dashboard_db_id before Create() called')
     return self._dashboard_db_id
 
   @property

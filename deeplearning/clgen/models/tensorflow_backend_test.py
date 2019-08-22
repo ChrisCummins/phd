@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/clgen/models/tensorflow_backend.py."""
-
 import checksumdir
 import numpy as np
 import pytest
@@ -61,6 +60,28 @@ def abc_tensorflow_model_config(abc_model_config: model_pb2.Model):
   """A test fixture for a simple model with a TensorFlow backend."""
   abc_model_config.architecture.backend = model_pb2.NetworkArchitecture.TENSORFLOW
   return abc_model_config
+
+
+# TensorFlowBackend.GetShortSummary() tests.abc_tensorflow_model_config
+
+
+def test_TensorFlowBackend_Train_GetShortSummary_before_create(
+    clgen_cache_dir, abc_tensorflow_model_config):
+  """Test that model training produced telemetry files."""
+  del clgen_cache_dir
+  m = models.Model(abc_tensorflow_model_config)
+  with pytest.raises(ValueError):
+    m.GetShortSummary()
+
+
+def test_TensorFlowBackend_Train_GetShortSummary(clgen_cache_dir,
+                                                 abc_tensorflow_model_config):
+  """Test that model training produced telemetry files."""
+  del clgen_cache_dir
+  m = models.Model(abc_tensorflow_model_config)
+  m.Create()
+  assert m.GetShortSummary(
+  ) == '4×1 LSTM network, 59 token corpus with 25-element vocabulary'
 
 
 # TensorFlowBackend.Train() tests.
@@ -183,11 +204,10 @@ def test_TensorFlowBackend_Sample_return_value_matches_cached_sample(
   abc_tensorflow_model_config.training.batch_size = 1
   m = models.Model(abc_tensorflow_model_config)
   sample_observer = sample_observers.InMemorySampleSaver()
-  m.Sample(
-      MockSampler(hash='hash'), [
-          sample_observers.MaxSampleCountObserver(1), sample_observer,
-          sample_observers.LegacySampleCacheObserver()
-      ])
+  m.Sample(MockSampler(hash='hash'), [
+      sample_observers.MaxSampleCountObserver(1), sample_observer,
+      sample_observers.LegacySampleCacheObserver()
+  ])
   samples = sample_observer.samples
   # Samples are produced in batches of sampler.batch_size elements.
   assert len(samples) == 1

@@ -15,15 +15,16 @@
 """CLgen models using a Keras backend."""
 import copy
 import os
+import pathlib
 import time
+import typing
 
 import numpy as np
-import pathlib
 import progressbar
-import typing
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
+from deeplearning.clgen.dashboard import dashboard_db
 from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import model_pb2
@@ -37,7 +38,7 @@ app.DEFINE_boolean(
     'If set, reset the network state between sample batches. Else, the model '
     'state is unaffected.')
 app.DEFINE_integer(
-    'clgen_tf_backend_tensorboard_summary_step_count', 10,
+    'clgen_tf_backend_tensorboard_summary_step_count', 25,
     'The number of steps between writing tensorboard summaries.')
 
 
@@ -204,6 +205,13 @@ class TensorFlowBackend(backends.BackendBase):
 
     return tf
 
+  def GetShortSummary(self) -> str:
+    return (
+        f'{self.config.architecture.neurons_per_layer}×'
+        f'{self.config.architecture.num_layers} '
+        f'{model_pb2.NetworkArchitecture.NeuronType.Name(self.config.architecture.neuron_type)} '
+        'network')
+
   @property
   def epoch_checkpoints(self) -> typing.Set[int]:
     """Get the set of epoch numbers which we have trained models for.
@@ -316,7 +324,11 @@ class TensorFlowBackend(backends.BackendBase):
       assert checkpoint_state.model_checkpoint_path
       ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
-    with tf.compat.v1.Session() as sess:
+    with tf.compat.v1.Session() as sess, self.dashboard_db.Session() as dbs:
+      dbs.query(dashboard_db.TrainingTelemetry)\
+            .filter(dashboard_db.TrainingTelemetry.pending == True)\
+            .delete()
+
       tf.compat.v1.global_variables_initializer().run()
 
       # Keep all checkpoints.
@@ -326,7 +338,7 @@ class TensorFlowBackend(backends.BackendBase):
 
       # restore model from closest checkpoint.
       if ckpt_path:
-        app.Log(1, "Restoring checkpoint {}".format(ckpt_path))
+        app.Log(1, 'Restoring checkpoint {}'.format(ckpt_path))
         saver.restore(sess, ckpt_path)
 
       # make sure we don't lose track of other checkpoints
@@ -354,6 +366,7 @@ class TensorFlowBackend(backends.BackendBase):
         state = sess.run(self.initial_state)
         # Per-batch inner loop.
         bar = progressbar.ProgressBar(max_value=data_generator.num_batches)
+        last_log_time = time.time()
         for i in bar(range(data_generator.num_batches)):
           x, y = data_generator.NextBatch()
           feed = {self.input_data: x, self.targets: y}
@@ -366,6 +379,21 @@ class TensorFlowBackend(backends.BackendBase):
           if i % FLAGS.clgen_tf_backend_tensorboard_summary_step_count == 0:
             step = (epoch_num - 1) * data_generator.num_batches + i
             self.summary_writer.add_summary(summary, step)
+            # Add telemetry database entry. This isn't committed until the end
+            # of the epoch, when the checkpoint is created.
+            now = time.time()
+            duration_ns = int((now - last_log_time) * 1e6)
+            dbs.add(
+                dashboard_db.TrainingTelemetry(
+                    model_id=self.dashboard_model_id,
+                    epoch=epoch_num,
+                    step=step,
+                    training_loss=loss,
+                    learning_rate=new_learning_rate,
+                    ns_per_batch=int(duration_ns) /
+                    FLAGS.clgen_tf_backend_tensorboard_summary_step_count))
+            last_log_time = now
+            dbs.commit()
 
         # Log the loss and delta.
         app.Log(1, 'Loss: %.6f.', loss)
@@ -379,6 +407,10 @@ class TensorFlowBackend(backends.BackendBase):
                                      global_step=global_step)
         app.Log(1, 'Saved checkpoint %s in %s ms.', checkpoint_path,
                 humanize.Commas(int((time.time() - start_time) * 1000)))
+        dbs.query(dashboard_db.TrainingTelemetry)\
+            .filter(dashboard_db.TrainingTelemetry.pending == True)\
+            .update({'pending': False})
+        dbs.commit()
         assert pathlib.Path(
             f'{checkpoint_prefix}-{global_step}.index').is_file()
         assert pathlib.Path(f'{checkpoint_prefix}-{global_step}.meta').is_file()
@@ -392,10 +424,11 @@ class TensorFlowBackend(backends.BackendBase):
         return
 
     if test_sampler:
-      self._EndOfEpochTestSample(corpus, test_sampler, step)
+      self._EndOfEpochTestSample(corpus, test_sampler, step, epoch_num)
       self.Train(corpus, test_sampler)
 
-  def _EndOfEpochTestSample(self, corpus, sampler: samplers.Sampler, step: int):
+  def _EndOfEpochTestSample(self, corpus, sampler: samplers.Sampler, step: int,
+                            epoch_num: int):
     """Run sampler"""
     import tensorflow as tf
     atomizer = corpus.atomizer
@@ -406,10 +439,11 @@ class TensorFlowBackend(backends.BackendBase):
     self.InitSampling(sampler, seed)
     self.InitSampleBatch(sampler)
 
-    samples = []
+    samples, stats = [], []
     for i in range(12):
       done = np.zeros(1, dtype=np.bool)
       while not done[0]:
+        start_time = time.time()
         sample_in_progress = sampler.tokenized_start_text.copy()
         indices = self.SampleNextIndices(sampler, done)
 
@@ -420,6 +454,8 @@ class TensorFlowBackend(backends.BackendBase):
           if not sampler.SampleIsComplete(sample_in_progress):
             continue
 
+          stats.append(
+              (len(sample_in_progress), int((time.time() - start_time) * 1000)))
           sample = ''.join(sample_in_progress)
           samples.append(sample)
           app.Log(1, 'End-of-epoch sample %d:\n%s', i + 1, sample)
@@ -427,6 +463,17 @@ class TensorFlowBackend(backends.BackendBase):
           break
 
     # Write samples to file.
+    with self.dashboard_db.Session(commit=True) as dbs:
+      dbs.add_all([
+          dashboard_db.TrainingSample(
+              model_id=self.dashboard_model_id,
+              epoch=epoch_num,
+              step=step,
+              sample=sample,
+              token_count=stats[0],
+              sample_time=stats[1],
+          ) for sample, stats in zip(samples, stats)
+      ])
     samples_as_markdown = [
         self.FormatCodeAsMarkdown(sample) for sample in samples
     ]

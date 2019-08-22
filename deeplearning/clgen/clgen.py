@@ -135,6 +135,10 @@ class Instance(object):
     if self.working_dir:
       os.environ['CLGEN_CACHE'] = old_working_dir
 
+  def Create(self) -> None:
+    with self.Session():
+      self.model.Create()
+
   def Train(self, *args, **kwargs) -> None:
     with self.Session():
       # We inject the `test_sampler` argument so that we can create sample.
@@ -316,13 +320,13 @@ def DoFlagsAction(
     config: The CLgen instance to act on.
     sample_observer: A list of sample observers. Unused if no sampling occurs.
   """
-  if FLAGS.clgen_dashboard_only:
-    return
-
   if FLAGS.clgen_profiling:
     prof.enable()
 
   with instance.Session():
+    if FLAGS.clgen_dashboard_only:
+      instance.Create()
+      return
     if FLAGS.print_cache_path == 'corpus':
       print(instance.model.corpus.cache.path)
       return

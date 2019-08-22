@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block header %}
+<title>CLgen Samples</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class = "row">
+    <div class="col">
+      <p>
+        <a href="{{ urls.back }}">
+          <i class="fas fa-angle-double-left"></i> Back to report
+        </a>
+      </p>
+      {% for sample in data.samples %}
+      <h5>Sample {{ loop.index }} of {{ data.samples | length }}. <small class="text-muted">{{ sample.token_count }} tokens in {{ sample.sample_time}}ms</small></h5>
+      <pre><code>
+{{ sample.sample }}
+      </code></pre>
+      <hr>
+      {% endfor %}
+      <p>
+        <a href="{{ urls.back }}">
+          <i class="fas fa-angle-double-left"></i> Back to report
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

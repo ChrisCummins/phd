@@ -6,37 +6,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
   <link href="{{ urls.styles_css }}?v={{ urls.cache_tag }}" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
-  <style>
-    footer .footer-copyright a {
-      text-decoration: underline;
-    }
-
-    footer .footer-copyright a.me {
-      text-decoration: none;
-      color: #d82b56;
-    }
-
-    footer .footer-copyright a.me:hover {
-      color: #e60000;
-    }
-  </style>
+  <link href="//fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet" />
+  <link href="{{ urls.site_css }}?v={{ urls.cache_tag }}" rel="stylesheet" />
+  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css" rel="stylesheet" />
   {% block header %}{% endblock %}
 </head>
 
-<body>
+<body class="d-flex flex-column">
 
-  {% block body %}{% endblock %}
+  <main role="main" class="flex-shrink-0">
+    <div id="page-content">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/"><i class="fas fa-cube"></i> CLgen {{ build_info.version }}</a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <div class="navbar-nav mr-auto"></div>
+          <p class="my-2 my-lg-0">
+            <span class="navbar-text">
+              {{ dashboard_info.db }}
+            </span>
+          </p>
+        </div>
+      </nav>
+{% block body %}{% endblock %}
+    </div>
+  </main>
 
   <script src="//code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
   <script src="{{ urls.site_js }}"></script>
 
-  <footer class="pt-4">
-    <div class="footer-copyright text-center py-3 text-muted">
-      © 2019 <a class="me" href="https://chriscummins.cc">Chris Cummins</a><br />
-      {{ build_info | safe }}
+  <footer id="sticky-footer" class="footer py-3">
+    <hr>
+    <div class="container">
+      <div class="footer-copyright text-center text-muted">
+        © 2019 <a class="me" href="https://chriscummins.cc">Chris Cummins</a><br />
+        {{ build_info.html | safe }}
+      </div>
     </div>
   </footer>
 

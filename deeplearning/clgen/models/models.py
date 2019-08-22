@@ -14,10 +14,10 @@
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """The CLgen language model."""
 import os
-
-import numpy as np
 import pathlib
 import typing
+
+import numpy as np
 
 from deeplearning.clgen import cache
 from deeplearning.clgen import errors
@@ -40,6 +40,7 @@ from labm8 import labdate
 from labm8 import lockfile
 from labm8 import logutil
 from labm8 import pbutil
+from labm8 import system
 
 FLAGS = app.FLAGS
 
@@ -129,6 +130,9 @@ class Model(object):
         model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
     }[config.architecture.backend](self.config, self.cache, self.corpus)
 
+  def GetShortSummary(self) -> str:
+    return self.backend.GetShortSummary()
+
   @staticmethod
   def _ComputeHash(corpus_: corpuses.Corpus, config: model_pb2.Model) -> str:
     """Compute model hash.
@@ -167,17 +171,22 @@ class Model(object):
       config_to_store.training.ClearField('num_epochs')
       corpus = session.GetOrAdd(
           dashboard_db.Model,
+          corpus_id=self.corpus.dashboard_db_id,
           config_proto_sha1=crypto.sha1(config_to_store.SerializeToString()),
           config_proto=str(config_to_store),
-          cache_path=self.cache.path,
+          cache_path=(f'ssh://{system.USERNAME}@{system.HOSTNAME}'
+                      f'/{self.cache.path}'),
+          summary=self.GetShortSummary(),
       )
       session.flush()
       self._dashboard_db_id = corpus.id
+      self.backend.dashboard_model_id = self.dashboard_db_id
+      self.backend.dashboard_db = self.dashboard_db
 
   @property
   def dashboard_db_id(self) -> int:
     if not self._created:
-      raise TypeError("Cannot access dashboard_db_id before Create() called")
+      raise TypeError('Cannot access dashboard_db_id before Create() called')
     return self._dashboard_db_id
 
   def Train(self, **kwargs) -> 'Model':
@@ -233,7 +242,7 @@ class Model(object):
         encoded.
     """
     if not sample_observers:
-      raise errors.UserError("Cannot sample without any observers")
+      raise errors.UserError('Cannot sample without any observers')
 
     sample_start_time = labdate.MillisecondsTimestamp()
 
