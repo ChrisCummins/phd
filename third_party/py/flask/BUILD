@@ -14,6 +14,7 @@ py_library(
         requirement("Flask"),
         requirement("Flask-Compress"),
         requirement("flask-cors"),
+        requirement("Flask-SQLalchemy"),
         requirement("Werkzeug"),
         requirement("jinja2"),
         requirement("Click"),
