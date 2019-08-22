@@ -1,7 +1,7 @@
 """Export a subset of a content files database."""
 import sqlalchemy as sql
-from datasets.github.scrape_repos import contentfiles
 
+from datasets.github.scrape_repos import contentfiles
 from labm8 import app
 from labm8 import humanize
 
@@ -14,7 +14,7 @@ app.DEFINE_boolean('dry_run', False, 'Whether to save changes.')
 app.DEFINE_boolean('reset', False, 'Mark all repositories as active.')
 app.DEFINE_boolean('reset_exported', False,
                    'Unmark all repositories as exported.')
-app.DEFINE_integer('max_repo_count', None,
+app.DEFINE_integer('max_repo_count', 0,
                    'Mask by the maximum number of repositories.')
 app.DEFINE_integer(
     'min_star_count', 0,
@@ -22,6 +22,8 @@ app.DEFINE_integer(
 app.DEFINE_integer('min_repo_file_count', 0,
                    'Mask by the minimum number of contentfiles in a repo.')
 app.DEFINE_integer('max_repo_file_count', 0,
+                   'Mask by the maxmium number of contentfiles in a repo.')
+app.DEFINE_boolean('exclude_strings', False,
                    'Mask by the maxmium number of contentfiles in a repo.')
 
 
@@ -201,6 +203,32 @@ def MaskOnMaxRepoFileCount(db: contentfiles.ContentFiles,
         .update({"active": False}, synchronize_session='fetch')
 
 
+def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
+  """Mask content files which contain strings.
+
+  Args:
+    db: The database to modify.
+  """
+  with db.Session(commit=not FLAGS.dry_run) as session:
+    active_cf_count = session.query(
+        contentfiles.ContentFile.id) \
+      .join(contentfiles.GitHubRepository) \
+      .filter(contentfiles.GitHubRepository.active == True).count()
+
+    cfs_to_mark_inactive = session.query(
+        contentfiles.ContentFile.id) \
+      .join(contentfiles.GitHubRepository) \
+      .filter(contentfiles.GitHubRepository.active == True)\
+      .filter(contentfiles.ContentFile.text.like('%String%'))
+    cfs_to_mark_inactive_count = cfs_to_mark_inactive.count()
+
+    app.Log(1, 'Marking %s of %s active content files inactive (%.2f %%)',
+            humanize.Commas(cfs_to_mark_inactive_count),
+            humanize.Commas(active_cf_count))
+
+    cfs_to_mark_inactive.update({'active': False})
+
+
 def main():
   """Main entry point."""
 
@@ -220,6 +248,8 @@ def main():
     MaskOnMinRepoFileCount(db, FLAGS.min_repo_file_count)
   elif FLAGS.max_repo_file_count:
     MaskOnMaxRepoFileCount(db, FLAGS.max_repo_file_count)
+  elif FLAGS.exclude_strings:
+    MaskContentfilesWithStrings(db)
   if FLAGS.dry_run:
     app.Log(1, 'Dry run, rolling back ...')
 
