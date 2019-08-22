@@ -181,7 +181,12 @@ def AddIndefiniteArticle(noun):
     return 'a ' + noun
 
 
-def DecimalPrefix(quantity, unit, precision=1, min_scale=0, max_scale=None):
+def DecimalPrefix(quantity,
+                  unit,
+                  precision=1,
+                  min_scale=0,
+                  max_scale=None,
+                  separator=' '):
   """Formats an integer and a unit into a string, using decimal prefixes.
 
   The unit will be prefixed with an appropriate multiplier such that
@@ -216,13 +221,14 @@ def DecimalPrefix(quantity, unit, precision=1, min_scale=0, max_scale=None):
       quantity,
       unit,
       precision,
+      separator,
       DecimalScale,
       min_scale=min_scale,
       max_scale=max_scale,
   )
 
 
-def BinaryPrefix(quantity, unit, precision=1):
+def BinaryPrefix(quantity, unit, precision=1, separator=' '):
   """Formats an integer and a unit into a string, using binary prefixes.
 
   The unit will be prefixed with an appropriate multiplier such that
@@ -246,10 +252,10 @@ def BinaryPrefix(quantity, unit, precision=1):
     required precision, possibly followed by a space, the appropriate multiplier
     and the unit.
   """
-  return _Prefix(quantity, unit, precision, BinaryScale)
+  return _Prefix(quantity, unit, precision, separator, BinaryScale)
 
 
-def _Prefix(quantity, unit, precision, scale_callable, **args):
+def _Prefix(quantity, unit, precision, separator, scale_callable, **args):
   """Formats an integer and a unit into a string.
 
   Args:
@@ -257,14 +263,13 @@ def _Prefix(quantity, unit, precision, scale_callable, **args):
     unit: A string, the dimension for quantity, with no multipliers (e.g.
         "bps").  If quantity is dimensionless, the empty string.
     precision: An integer, the minimum number of digits to display.
+    separator: The separator between quantity and unit.
     scale_callable: A callable, scales the number and units.
     **args: named arguments passed to scale_callable.
 
   Returns:
     A string.
   """
-  separator = ' ' if unit else ''
-
   if not quantity:
     return '0%s%s' % (separator, unit)
 
