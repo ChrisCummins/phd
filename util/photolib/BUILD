@@ -2,6 +2,8 @@
 
 licenses(["notice"])  # Apache 2.0
 
+load("@subpar//:subpar.bzl", "par_binary")
+
 exports_files([
     "LICENSE",
     "README.md",
@@ -17,7 +19,7 @@ py_library(
     ],
 )
 
-py_binary(
+par_binary(
     name = "photolint",
     srcs = ["photolint.py"],
     deps = [
@@ -61,6 +63,14 @@ py_library(
         "//labm8:sqlutil",
         "//third_party/py/libxmp",
         "//third_party/py/sqlalchemy",
+    ],
+)
+
+sh_binary(
+    name = "install",
+    srcs = ["install.sh"],
+    data = [
+        "//:photolint.par",
     ],
 )
 
