@@ -116,7 +116,8 @@ class MirroredDirectory(object):
                             dry_run: bool = False,
                             verbose: bool = False,
                             delete: bool = True,
-                            progress: bool = False) -> None:
+                            progress: bool = False,
+                            force: bool = False) -> None:
     """Push from local to remote paths."""
     if self.spec.pull_only:
       raise InvalidOperation("Mirrored directory has been marked 'pull_only'")
@@ -125,7 +126,7 @@ class MirroredDirectory(object):
               self.local_path)
       return
     if self.timestamp_relpath:
-      if self.local_timestamp < self.remote_timestamp:
+      if not force and self.local_timestamp < self.remote_timestamp:
         raise InvalidOperation(
             "Refusing to push to local directory with out-of-date timestamp")
       if not dry_run:
@@ -139,7 +140,8 @@ class MirroredDirectory(object):
                             dry_run: bool = False,
                             verbose: bool = False,
                             delete: bool = True,
-                            progress: bool = False) -> None:
+                            progress: bool = False,
+                            force: bool = False) -> None:
     """Pull from remote to local paths."""
     if self.spec.push_only:
       raise InvalidOperation("Mirrored directory has been marked 'push_only'")
@@ -148,7 +150,7 @@ class MirroredDirectory(object):
               self.local_path)
       return
     if self.timestamp_relpath:
-      if self.local_timestamp > self.remote_timestamp:
+      if not force and self.local_timestamp > self.remote_timestamp:
         raise InvalidOperation(
             "Refusing to pull from remote directory with out-of-date timestamp")
       if not dry_run:

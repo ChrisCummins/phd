@@ -9,6 +9,7 @@ import typing
 
 from labm8 import app
 from labm8 import pbutil
+from system.machines import mirrored_directory
 from system.machines.mirrored_directory import MirroredDirectory
 from system.machines.proto import machine_spec_pb2
 
@@ -25,6 +26,7 @@ app.DEFINE_boolean('dry_run', True,
 app.DEFINE_boolean('delete', False, 'Whether to delete files during push/pull'
                    'mirroring.')
 app.DEFINE_boolean('progress', False, 'Show progress during file transfers.')
+app.DEFINE_boolean('force', False, 'Show progress during file transfers.')
 
 
 def RespondsToPing(host: str) -> typing.Optional[str]:
@@ -123,15 +125,17 @@ def main():
       mirrored_dir.PullFromRemoteToLocal(dry_run=FLAGS.dry_run,
                                          verbose=True,
                                          delete=FLAGS.delete,
-                                         progress=FLAGS.progress)
+                                         progress=FLAGS.progress,
+                                         force=FLAGS.force)
 
     for mirrored_dir_name in FLAGS.push:
       mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
       mirrored_dir.PushFromLocalToRemote(dry_run=FLAGS.dry_run,
                                          verbose=True,
                                          delete=FLAGS.delete,
-                                         progress=FLAGS.progress)
-  except subprocess.SubprocessError as e:
+                                         progress=FLAGS.progress,
+                                         force=FLAGS.force)
+  except (subprocess.SubprocessError, mirrored_directory.InvalidOperation) as e:
     app.FatalWithoutStackTrace(e)
 
 
