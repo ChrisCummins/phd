@@ -10,6 +10,6 @@ PREFIX=$HOME/.local
 main() {
   mkdir -pv $PREFIX/bin
   rm -fv $PREFIX/bin/photolint
-  cp -v util/photolib/photolib.par $PREFIX/bin/photolint
+  cp -v util/photolib/photolint.par $PREFIX/bin/photolint
 }
 main $@

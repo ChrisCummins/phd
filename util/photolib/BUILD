@@ -70,7 +70,7 @@ sh_binary(
     name = "install",
     srcs = ["install.sh"],
     data = [
-        "//:photolint.par",
+        ":photolint.par",
     ],
 )
 
