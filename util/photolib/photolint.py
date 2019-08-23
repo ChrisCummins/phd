@@ -9,7 +9,7 @@ from util.photolib import linters
 from util.photolib import workspace
 
 FLAGS = app.FLAGS
-app.DEFINE_boolean("profile", False, "Print profiling timers on completion.")
+app.DEFINE_boolean("profile", True, "Print profiling timers on completion.")
 app.DEFINE_boolean("rm_errors_cache", False,
                    "If true, empty the errors cache prior to running.")
 
