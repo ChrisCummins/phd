@@ -34,8 +34,16 @@ py_library(
 )
 
 par_binary(
-    name = "photolint",
-    srcs = ["photolint.py"],
+    name = "photolib",
+    srcs = ["photolib.py"],
+    deps = [
+        "//labm8:app",
+    ],
+)
+
+par_binary(
+    name = "photolib-lint",
+    srcs = ["photolib-lint.py"],
     deps = [
         ":linters",
         ":workspace",
@@ -84,7 +92,8 @@ sh_binary(
     name = "install",
     srcs = ["install.sh"],
     data = [
-        ":photolint.par",
+        ":photolib-lint.par",
+        ":photolib.par",
     ],
 )
 

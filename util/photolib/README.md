@@ -11,7 +11,7 @@ $ brew install exempi python
 ## Usage
 
 ```sh
-$ bazel run //util/photolib:photolint -- $HOME/Photos/Photo\ Library
+$ bazel run //util/photolib -- lint --working_dir=$HOME/Pictures/Photo\ Library
 ```
 
 ## License
