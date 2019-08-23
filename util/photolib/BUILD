@@ -3,11 +3,25 @@
 licenses(["notice"])  # Apache 2.0
 
 load("@subpar//:subpar.bzl", "par_binary")
+load("//tools/bzl:exports.bzl", "exports_repo")
 
 exports_files([
     "LICENSE",
     "README.md",
 ])
+
+exports_repo(
+    name = "export",
+    github_repo = "photolib",
+    move_file_mapping = {
+        "util/photolib/README.md": "README.md",
+        "util/photolib/LICENSE": "LICENSE",
+        "util/photolib/travis.yml": ".travis.yml",
+    },
+    targets = [
+        "//util/photolib/...",
+    ],
+)
 
 py_library(
     name = "contentfiles",
