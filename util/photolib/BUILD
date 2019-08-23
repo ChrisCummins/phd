@@ -21,9 +21,6 @@ py_binary(
     name = "photolint",
     srcs = ["photolint.py"],
     deps = [
-        ":common",
-        ":contentfiles",
-        ":lintercache",
         ":linters",
         ":workspace",
         "//labm8:app",
@@ -36,6 +33,7 @@ py_library(
     srcs = ["workspace.py"],
     deps = [
         ":common",
+        "//labm8:app",
     ],
 )
 
@@ -44,7 +42,7 @@ py_library(
     srcs = ["lintercache.py"],
     deps = [
         ":common",
-        ":linters",
+        ":workspace",
         "//:build_info",
         "//labm8:app",
         "//labm8:shell",
@@ -72,6 +70,7 @@ py_library(
     deps = [
         ":common",
         ":contentfiles",
+        ":lintercache",
         ":xmp_cache",
         "//labm8:app",
         "//labm8:shell",

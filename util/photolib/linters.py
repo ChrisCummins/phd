@@ -1,9 +1,12 @@
 """This file contains the linter implementations for photolint."""
-import inspect
 import os
 import sys
-import typing
+import time
 from collections import defaultdict
+
+import inspect
+import pathlib
+import typing
 
 from labm8 import app
 from labm8 import shell
@@ -216,6 +219,12 @@ class ThirdPartyFilename(ThirdPartyFileLinter):
                   f"'{components[0]}' should be named '{topdir}'"))
       try:
         seq = int(components[1])
+      except ValueError:
+        return [
+            Error(contentfile.relpath, "file/name",
+                  f"'{contentfile}' is not a numeric sequence"),
+        ]
+      try:
         if seq > 1:
           # The length of sequence numbers, including zero-padding.
           seq_len = len(components[1])
@@ -562,3 +571,145 @@ class DirHierachy(PhotolibDirLinter):
                   f"years {month_1} and {month_2} do not match"))
 
     return errors
+
+
+# Meta-linters.
+
+
+class Timers(object):
+  """Profiling timers."""
+  total_seconds: float = 0
+  linting_seconds: float = 0
+  cached_seconds: float = 0
+
+
+TIMERS = Timers()
+
+
+class ToplevelLinter(Linter):
+  """A linter for top level directories."""
+  __cost__ = 1
+
+  def __init__(self, workspace_: workspace.Workspace, toplevel_dir_relpath: str,
+               dirlinters: typing.List[DirLinter],
+               filelinters: typing.List[FileLinter], timers: Timers):
+    super(ToplevelLinter, self).__init__(workspace_)
+    self.toplevel_dir = self.workspace.workspace_root / toplevel_dir_relpath
+    self.dirlinters = GetLinters(dirlinters, self.workspace)
+    self.filelinters = GetLinters(filelinters, self.workspace)
+    self.errors_cache = lintercache.LinterCache(self.workspace)
+    self.xmp_cache = xmp_cache.XmpCache(self.workspace)
+    self.timers = timers
+
+    linter_names = list(
+        type(lin).__name__ for lin in self.dirlinters + self.filelinters)
+    app.Log(2, "Running //%s linters: %s", self.toplevel_dir,
+            ", ".join(linter_names))
+
+  def _GetIgnoredNames(self, abspath: str) -> typing.Set[str]:
+    """Get the set of file names within a directory to ignore."""
+    ignore_file_names = set()
+
+    ignore_file = os.path.join(abspath, common.IGNORE_FILE_NAME)
+    if os.path.isfile(ignore_file):
+      app.Log(2, 'Reading ignore file %s', ignore_file)
+      with open(ignore_file) as f:
+        for line in f:
+          line = line.split('#')[0].strip()
+          if line:
+            ignore_file_names.add(line)
+
+    return ignore_file_names
+
+  def _LintThisDirectory(self, abspath: str, relpath: str,
+                         dirnames: typing.List[str],
+                         all_filenames: typing.List[str]) -> typing.List[Error]:
+    """Run linters in this directory."""
+    errors = []
+
+    # Strip files and directories which are not to be linted.
+    ignored_names = self._GetIgnoredNames(abspath)
+    ignored_dirs = common.IGNORED_DIRS.union(ignored_names)
+    dirnames = [d for d in dirnames if d not in ignored_dirs]
+    ignored_files = common.IGNORED_FILES.union(ignored_names)
+    filenames = [f for f in all_filenames if f not in ignored_files]
+    files_ignored = len(filenames) != len(all_filenames)
+
+    for linter in self.dirlinters:
+      errors += linter(abspath, relpath, dirnames, filenames, files_ignored)
+
+    for filename in filenames:
+      contentfile = contentfiles.Contentfile(f"{abspath}/{filename}",
+                                             f"{relpath}/{filename}", filename,
+                                             self.xmp_cache)
+      for linter in self.filelinters:
+        errors += linter(contentfile)
+
+    return errors
+
+  def __call__(self, directory: pathlib.Path):
+    """Run the linters."""
+    start_ = time.time()
+
+    if directory == self.workspace.workspace_root:
+      directory = self.toplevel_dir
+
+    directory_str = str(directory.absolute())
+    toplevel_str = str(self.toplevel_dir.absolute())
+
+    # Start at the top level.
+    if not directory_str.startswith(toplevel_str):
+      return
+
+    for abspath, dirnames, filenames in os.walk(directory):
+      _start = time.time()
+      relpath = self.workspace.GetRelpath(abspath)
+
+      cache_entry = self.errors_cache.GetLinterErrors(abspath, relpath)
+
+      if cache_entry.exists:
+        for error in cache_entry.errors:
+          ERROR_COUNTS[error.category] += 1
+          if not FLAGS.counts:
+            print(error, file=sys.stderr)
+        sys.stderr.flush()
+
+        if FLAGS.counts:
+          PrintErrorCounts()
+
+        self.timers.cached_seconds += time.time() - _start
+      else:
+        errors = self._LintThisDirectory(abspath, relpath, dirnames, filenames)
+        self.errors_cache.AddLinterErrors(cache_entry, errors)
+        self.timers.linting_seconds += time.time() - _start
+
+    self.timers.total_seconds += time.time() - start_
+
+
+class WorkspaceLinter(Linter):
+  """The master linter for the photolib workspace."""
+  __cost__ = 1
+
+  def __init__(self, workspace_: workspace.Workspace):
+    self.workspace = workspace_
+    self.timers = Timers()
+
+  def __call__(self, directory: pathlib.Path):
+    photolib_linter = ToplevelLinter(
+        self.workspace, "photos", PhotolibDirLinter, PhotolibFileLinter, TIMERS)
+    third_party = ToplevelLinter(self.workspace, "third_party",
+                                 ThirdPartyDirLinter, ThirdPartyFileLinter,
+                                 TIMERS)
+
+    photolib_linter(directory)
+    third_party(directory)
+
+
+def Lint(workspace_: workspace.Workspace,
+         directory: typing.Optional[pathlib.Path]):
+  """Lint the specified directory and all subdirectories."""
+  error_cache = lintercache.LinterCache(workspace_)
+  if FLAGS.rm_errors_cache:
+    error_cache.Empty()
+  xmp_cache.XmpCache(workspace_)
+  WorkspaceLinter(workspace_)(directory)

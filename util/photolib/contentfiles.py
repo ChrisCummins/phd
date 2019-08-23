@@ -1,5 +1,6 @@
 """Representation of a file in the photo library."""
 import os
+
 import pathlib
 import typing
 
@@ -67,7 +68,7 @@ class Contentfile(object):
 
     # Select the file which has the longest shared file name prefix.
     closest_match = list(sorted(names_and_prefixes, key=lambda x: x[1]))[-1][0]
-    return Contentfile(self.path.absolute().parent / closest_match,
+    return Contentfile(str(self.path.absolute().parent / closest_match),
                        self.relpath[:-len(self.filename)] + closest_match,
                        closest_match, self.xmp_cache)
 

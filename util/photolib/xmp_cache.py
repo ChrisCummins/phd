@@ -1,8 +1,8 @@
 """Module for extracting and caching XMP data from image files."""
-import datetime
 import os
-import typing
 
+import datetime
+import typing
 from libxmp import utils as xmputils
 from sqlalchemy import Binary
 from sqlalchemy import Boolean

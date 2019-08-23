@@ -1,15 +1,21 @@
 """Utilities for working with workspaces."""
 import os
+
 import pathlib
 import typing
 
+from labm8 import app
 from util.photolib import common
+
+FLAGS = app.FLAGS
 
 
 def find_workspace_rootpath(start_path: str) -> typing.Optional[str]:
   """
   Starting at the given path, ascend up the directory tree until the
   workspace root is found.
+
+  TODO: Delete this, replace with Workspace.FindWorkspace().
 
   Args:
       start_path: The starting path.
@@ -34,6 +40,9 @@ class Workspace(object):
 
   def __init__(self, root_path: str):
     self.workspace_root = pathlib.Path(root_path)
+    if not (self.workspace_root / 'WORKSPACE').is_file():
+      raise FileNotFoundError(
+          f"File not found: '{self.workspace_root / 'WORKSPACE'}'")
 
   def GetRelpath(self, abspath: str) -> str:
     """Convert an absolute path into a workspace-relative path.
@@ -52,7 +61,27 @@ class Workspace(object):
     if not root_path.is_dir():
       raise FileNotFoundError(f"Workspace root not found: `{root_path}`")
 
+    (root_path / 'WORKSPACE').touch()
     (root_path / '.photolib').mkdir()
     (root_path / 'photos').mkdir()
     (root_path / 'third_party').mkdir()
     (root_path / 'lightroom').mkdir()
+
+  @classmethod
+  def FindWorkspace(cls, path: pathlib.Path) -> 'Workspace':
+    """Look for and return a workspace at or above the current path.
+
+    Args:
+      path: The path to a file or directory to start the search from.
+
+    Raises:
+      FileNotFoundError: If no workspace is found by the time the nearest mount
+        point is reached.
+    """
+    if (path / 'WORKSPACE').is_file():
+      app.Log(2, 'Found workspace: `%s`', path)
+      return Workspace(path)
+    elif path.is_mount():
+      raise FileNotFoundError("Workspace not found")
+    else:
+      return cls.FindWorkspace(path.parent)
