@@ -50,7 +50,8 @@ def PrintErrorCounts(end: str = "") -> None:
   """Print the current error counters to stderr."""
   counts = [f"{k}={v}" for k, v in sorted(ERROR_COUNTS.items())]
   counts_str = ", ".join(counts)
-  print(f"\rcounts: {counts_str}.", end=end, file=sys.stderr)
+  error_str = f"Error counts: {counts_str}." if counts_str else "No errors!"
+  print(f"\r\033[Kdone. {error_str}", end=end, file=sys.stderr)
 
 
 class Error(object):
@@ -78,7 +79,7 @@ class Error(object):
 
     if not FLAGS.counts and self.category not in FLAGS.ignore:
       print(
-          f'{relpath}:  '
+          f'\r\033[K{relpath}:  '
           f'{shell.ShellEscapeCodes.YELLOW}{message}'
           f'{shell.ShellEscapeCodes.END}  [{category}]',
           file=sys.stderr)
@@ -664,6 +665,8 @@ class ToplevelLinter(Linter):
     for abspath, dirnames, filenames in os.walk(directory):
       _start = time.time()
       relpath = self.workspace.GetRelpath(abspath)
+      print("\033[KScanning", relpath, end=" ...\r")
+      sys.stdout.flush()
 
       cache_entry = self.errors_cache.GetLinterErrors(abspath, relpath)
 
@@ -671,7 +674,7 @@ class ToplevelLinter(Linter):
         for error in cache_entry.errors:
           ERROR_COUNTS[error.category] += 1
           if not FLAGS.counts:
-            print(error, file=sys.stderr)
+            print('\r\033[K', error, sep='', file=sys.stderr)
         sys.stderr.flush()
 
         if FLAGS.counts:
