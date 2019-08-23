@@ -13,10 +13,9 @@
 # limitations under the License.
 """Unit tests for //labm8:sqlutil."""
 import pathlib
-import typing
-
 import pytest
 import sqlalchemy as sql
+import typing
 from sqlalchemy.ext import declarative
 
 from labm8 import sqlutil
@@ -112,54 +111,6 @@ def test_AllColumnNames_two_fields_model_instance():
 
   instance = Table(col_a=1, col_b=2)
   assert sqlutil.ColumnNames(instance) == ['col_a', 'col_b']
-
-
-def test_QueryToDataFrame_column_names():
-  """Test that expected column names are set."""
-  base = declarative.declarative_base()
-
-  class Table(base):
-    __tablename__ = 'test'
-    col_a = sql.Column(sql.Integer, primary_key=True)
-    col_b = sql.Column(sql.Integer)
-
-  db = sqlutil.Database('sqlite://', base)
-  with db.Session() as s:
-    df = sqlutil.QueryToDataFrame(s, s.query(Table.col_a, Table.col_b))
-
-  assert list(df.columns.values) == ['col_a', 'col_b']
-
-
-def test_ModelToDataFrame_column_names():
-  """Test that expected column names are set."""
-  base = declarative.declarative_base()
-
-  class Table(base):
-    __tablename__ = 'test'
-    col_a = sql.Column(sql.Integer, primary_key=True)
-    col_b = sql.Column(sql.Integer)
-
-  db = sqlutil.Database('sqlite://', base)
-  with db.Session() as s:
-    df = sqlutil.ModelToDataFrame(s, Table)
-
-  assert list(df.columns.values) == ['col_a', 'col_b']
-
-
-def test_QueryToDataFrame_explicit_column_names():
-  """Test that expected column names are set."""
-  base = declarative.declarative_base()
-
-  class Table(base):
-    __tablename__ = 'test'
-    col_a = sql.Column(sql.Integer, primary_key=True)
-    col_b = sql.Column(sql.Integer)
-
-  db = sqlutil.Database('sqlite://', base)
-  with db.Session() as s:
-    df = sqlutil.ModelToDataFrame(s, Table, ['col_b'])
-
-  assert list(df.columns.values) == ['col_b']
 
 
 def test_AllColumnNames_invalid_object():

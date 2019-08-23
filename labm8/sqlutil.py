@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for working with sqlalchemy."""
+import time
+
 import collections
 import contextlib
 import pathlib
-import time
-import typing
-
-import pandas as pd
 import sqlalchemy as sql
+import typing
 from absl import flags as absl_flags
 from sqlalchemy import func
 from sqlalchemy import orm
@@ -466,45 +465,6 @@ class Database(object):
 
   def __repr__(self) -> str:
     return self.url
-
-
-def QueryToDataFrame(session: Session, query: Query) -> pd.DataFrame:
-  """Read query results to a Pandas DataFrame.
-
-  Args:
-    session: A database session.
-    query: The query to run.
-
-  Returns:
-    A Pandas DataFrame.
-  """
-  return pd.read_sql(query.statement, session.bind)
-
-
-def ModelToDataFrame(
-    session: Session,
-    model,
-    columns: typing.Optional[typing.List[str]] = None,
-    query_identity=lambda q: q,
-):
-  """Construct and execute a query reads an object's fields to a dataframe.
-
-  Args:
-    session: A database session.
-    model: A database mapped object.
-    columns: A list of column names, where each element is a column mapped to
-      the model. If not provided, all column names are used.
-    query_identity: A function which takes the produced query and returns a
-      query. Use this to implement filtering of the query results.
-
-  Returns:
-    A Pandas DataFrame with one column for each field.
-  """
-  columns = columns or ColumnNames(model)
-  query = session.query(*[getattr(model, column) for column in columns])
-  df = QueryToDataFrame(session, query_identity(query))
-  df.columns = columns
-  return df
 
 
 class TablenameFromClassNameMixin(object):
