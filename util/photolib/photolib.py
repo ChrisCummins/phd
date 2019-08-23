@@ -21,3 +21,6 @@ if __name__ == '__main__':
   except FileNotFoundError:
     print(f"fatal: invalid command '{command}'")
     sys.exit(1)
+  except KeyboardInterrupt:
+    print(f"\r\033[Kkeyboard interrupt")
+    sys.exit(1)
