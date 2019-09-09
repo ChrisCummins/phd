@@ -4,6 +4,7 @@ import sys
 import time
 from collections import defaultdict
 
+import csv
 import inspect
 import pathlib
 import typing
@@ -592,8 +593,7 @@ class ToplevelLinter(Linter):
   __cost__ = 1
 
   def __init__(self, workspace_: workspace.Workspace, toplevel_dir_relpath: str,
-               dirlinters: typing.List[DirLinter],
-               filelinters: typing.List[FileLinter], timers: Timers):
+               dirlinters: DirLinter, filelinters: FileLinter, timers: Timers):
     super(ToplevelLinter, self).__init__(workspace_)
     self.toplevel_dir = self.workspace.workspace_root / toplevel_dir_relpath
     self.dirlinters = GetLinters(dirlinters, self.workspace)
@@ -716,3 +716,44 @@ def Lint(workspace_: workspace.Workspace,
     error_cache.Empty()
   xmp_cache.XmpCache(workspace_)
   WorkspaceLinter(workspace_)(directory)
+
+
+# CSV linters.
+
+
+class CsvFileLinter(FileLinter):
+  pass
+
+
+class CsvFileDumper(CsvFileLinter):
+  """Dump XMP data as CSV."""
+
+  def __init__(self, workspace_: workspace.Workspace, file=sys.stderr):
+    self.xmp_cache = xmp_cache.XmpCache(workspace_)
+    self.csv_writer = csv.DictWriter(file, [
+        "relpath",
+        "camera",
+        "lens",
+        "iso",
+        "shutter_speed",
+        "aperture",
+        "focal_length_35mm",
+        "flash_fired",
+        "keywords",
+    ])
+
+  def __call__(self,
+               contentfile: contentfiles.Contentfile) -> typing.List[Error]:
+    """Write the XMP metadata for a file as CSV.
+
+    Returns:
+      No errors.
+    """
+    entry = self.xmp_cache.GetOrCreateXmpCacheEntry(contentfile.abspath,
+                                                    contentfile.relpath)
+    self.csv_writer.writerow(entry.ToDict())
+    return []
+
+
+class CsvDirLinter(DirLinter):
+  pass

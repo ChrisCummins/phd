@@ -49,6 +49,19 @@ class XmpCacheEntry(Base):
 
   keywords: 'Keywords' = orm.relationship("Keywords")
 
+  def ToDict(self) -> typing.Dict[str, str]:
+    return {
+        "relpath": self.relpath,
+        "camera": self.camera,
+        "lens": self.lens,
+        "iso": self.iso,
+        "shutter_speed": self.shutter_speed,
+        "aperture": self.aperture,
+        "focal_length_35mm": self.focal_length_35mm,
+        "flash_fired": self.flash_fired,
+        "keywords": ",".join(self.keywords.AsList())
+    }
+
 
 class Keywords(Base):
   """A set of image keywords."""
@@ -104,7 +117,7 @@ class XmpCache(sqlutil.Database):
       self.session.commit()
 
   def _CreateXmpCacheEntry(self, abspath: str, relpath: str, relpath_md5: str,
-                           mtime: float) -> None:
+                           mtime: float) -> XmpCacheEntry:
     """
     Add a new database entry for the given values.
 
@@ -183,6 +196,26 @@ class XmpCache(sqlutil.Database):
     )
     self.session.add(entry)
     self.session.commit()
+    return entry
+
+  def GetOrCreateXmpCacheEntry(self, abspath: str,
+                               relpath: str) -> XmpCacheEntry:
+    relpath_md5 = common.Md5String(relpath).digest()
+    mtime = int(os.path.getmtime(abspath))
+    entry = self.session \
+      .query(XmpCacheEntry) \
+      .filter(XmpCacheEntry.relpath_md5 == relpath_md5) \
+      .first()
+
+    if entry and entry.mtime == mtime:
+      return entry
+    elif entry and entry.mtime != mtime and not abspath.endswith('.mov'):
+      self.session.delete(entry)
+      entry = self._CreateXmpCacheEntry(abspath, relpath, relpath_md5, mtime)
+      app.Log(2, "Refreshed cached XMP metadata `%s`", relpath)
+    else:
+      entry = self._CreateXmpCacheEntry(abspath, relpath, relpath_md5, mtime)
+      app.Log(2, "Cached XMP metadata `%s`", relpath)
 
     return entry
 
@@ -198,26 +231,8 @@ class XmpCache(sqlutil.Database):
     Returns:
       A set of lightroom keywords. An empty set is returned on failure.
     """
-    relpath_md5 = common.Md5String(relpath).digest()
-    mtime = int(os.path.getmtime(abspath))
-    entry = self.session \
-      .query(XmpCacheEntry) \
-      .filter(XmpCacheEntry.relpath_md5 == relpath_md5) \
-      .first()
-
-    if entry and entry.mtime == mtime:
-      keywords = set(entry.keywords.keywords.split(","))
-    elif entry and entry.mtime != mtime and not abspath.endswith('.mov'):
-      self.session.delete(entry)
-      entry = self._CreateXmpCacheEntry(abspath, relpath, relpath_md5, mtime)
-      keywords = entry.keywords.AsSet()
-      app.Log(2, "Refreshed keywords cache `%s`", relpath)
-    else:
-      entry = self._CreateXmpCacheEntry(abspath, relpath, relpath_md5, mtime)
-      keywords = entry.keywords.AsSet()
-      app.Log(2, "Cached keywords `%s`", relpath)
-
-    return keywords
+    entry = self.GetOrCreateXmpCacheEntry(abspath, relpath)
+    return entry.keywords.AsSet()
 
 
 def _GetFromXmpDict(

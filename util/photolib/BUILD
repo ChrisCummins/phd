@@ -38,7 +38,7 @@ py_library(
     srcs = ["dashcam.py"],
     deps = [
         "//labm8:app",
-    ]
+    ],
 )
 
 par_binary(
@@ -50,13 +50,25 @@ par_binary(
 )
 
 par_binary(
+    name = "photolib-csv",
+    srcs = ["photolib-csv.py"],
+    deps = [
+        ":contentfiles",
+        ":linters",
+        ":workspace",
+        ":xmp_cache",
+        "//labm8:app",
+    ],
+)
+
+par_binary(
     name = "photolib-dashcat",
     srcs = ["photolib-dashcat.py"],
     deps = [
         ":dashcam",
         "//labm8:app",
-        "//labm8:labtypes",
         "//labm8:humanize",
+        "//labm8:labtypes",
     ],
 )
 
@@ -111,9 +123,10 @@ sh_binary(
     name = "install",
     srcs = ["install.sh"],
     data = [
-        ":photolib-lint.par",
-        ":photolib-dashcat.par",
         ":photolib.par",
+        ":photolib-csv.par",
+        ":photolib-dashcat.par",
+        ":photolib-lint.par",
     ],
 )
 
