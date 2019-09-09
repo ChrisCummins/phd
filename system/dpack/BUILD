@@ -1,6 +1,8 @@
 # A tool for creating structured packages of data files.
 
-py_binary(
+load("@subpar//:subpar.bzl", "par_binary")
+
+par_binary(
     name = "dpack",
     srcs = ["dpack.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
@@ -23,4 +25,10 @@ py_test(
         "//labm8:app",
         "//labm8:test",
     ],
+)
+
+sh_binary(
+    name = "install",
+    srcs = ["install.sh"],
+    data = [":dpack.par"],
 )
