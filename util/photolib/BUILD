@@ -33,11 +33,30 @@ py_library(
     ],
 )
 
+py_library(
+    name = "dashcam",
+    srcs = ["dashcam.py"],
+    deps = [
+        "//labm8:app",
+    ]
+)
+
 par_binary(
     name = "photolib",
     srcs = ["photolib.py"],
     deps = [
         "//labm8:app",
+    ],
+)
+
+par_binary(
+    name = "photolib-dashcat",
+    srcs = ["photolib-dashcat.py"],
+    deps = [
+        ":dashcam",
+        "//labm8:app",
+        "//labm8:labtypes",
+        "//labm8:humanize",
     ],
 )
 
@@ -93,6 +112,7 @@ sh_binary(
     srcs = ["install.sh"],
     data = [
         ":photolib-lint.par",
+        ":photolib-dashcat.par",
         ":photolib.par",
     ],
 )
