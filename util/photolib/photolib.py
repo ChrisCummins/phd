@@ -15,7 +15,7 @@ if __name__ == '__main__':
     sys.exit(0)
 
   try:
-    process = subprocess.Popen([f'photolib-{command}'])
+    process = subprocess.Popen([f'photolib-{command}'] + sys.argv[2:])
     process.communicate()
     sys.exit(process.returncode)
   except FileNotFoundError:
