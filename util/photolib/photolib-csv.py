@@ -11,6 +11,8 @@ from util.photolib import workspace
 
 FLAGS = app.FLAGS
 
+app.DEFINE_boolean("write_header", True, "Write the CSV header row.")
+
 
 class CsvDump(linters.ToplevelLinter):
   """A linter which dumps the XMP metadata of files as a CSV."""
@@ -54,7 +56,7 @@ def DumpCsvForDirsOrDie(paths: typing.List[pathlib.Path]) -> None:
     linter = CsvDump(workspace_, "photos", linters.CsvDirLinter,
                      linters.CsvFileLinter, linters.TIMERS)
 
-    if not i:
+    if FLAGS.write_header and not i:
       csv_dump = linters.CsvFileDumper(workspace_)
       csv_dump.csv_writer.writeheader()
     linter(directory)
