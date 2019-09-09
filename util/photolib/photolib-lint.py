@@ -11,7 +11,6 @@ from util.photolib import linters
 from util.photolib import workspace
 
 FLAGS = app.FLAGS
-app.DEFINE_string("working_dir", os.getcwd(), "Directory to lint.")
 app.DEFINE_boolean("profile", True, "Print profiling timers on completion.")
 app.DEFINE_boolean("rm_errors_cache", False,
                    "If true, empty the errors cache prior to running.")
@@ -61,10 +60,11 @@ def LintPathsOrDie(paths: typing.List[pathlib.Path]) -> None:
         file=sys.stderr)
 
 
-def main():
+def main(argv):
   """Main entry point."""
-  LintPathsOrDie([pathlib.Path(FLAGS.working_dir)])
+  dirs = [pathlib.Path(d) for d in (argv[1:] or [os.getcwd()])]
+  LintPathsOrDie(dirs)
 
 
 if __name__ == "__main__":
-  app.Run(main)
+  app.RunWithArgs(main)
