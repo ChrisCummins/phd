@@ -21,7 +21,7 @@ from system.dpack.proto import dpack_pb2
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('package', None, 'The path of the target package.')
+app.DEFINE_string('package', os.getcwd(), 'The path of the target package.')
 app.DEFINE_string('sidecar', None, 'The path of the archive sidecar.')
 app.DEFINE_list(
     'exclude', [], 'A list of patterns to exclude from the package. Supports '
