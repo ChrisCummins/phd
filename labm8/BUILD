@@ -67,6 +67,7 @@ py_library(
     srcs = ["app.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":shell",
         "//:build_info",
         "//labm8/internal:flags_parsers",
         "//labm8/internal:logging",
@@ -626,9 +627,6 @@ py_library(
     name = "shell",
     srcs = ["shell.py"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":app",
-    ],
 )
 
 py_test(

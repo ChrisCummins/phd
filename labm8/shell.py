@@ -14,9 +14,6 @@
 """Utility code for working with shells."""
 import os
 
-from labm8 import app
-
-FLAGS = app.FLAGS
 
 
 class ShellEscapeCodes(object):
