@@ -30,6 +30,7 @@ from typing import Optional
 from typing import Union
 
 import build_info
+from labm8 import shell
 from labm8.internal import flags_parsers
 from labm8.internal import logging
 
@@ -40,6 +41,7 @@ absl_flags.DEFINE_boolean(
     False,
     'Print version information and exit.',
 )
+absl_flags.DEFINE_boolean('log_colors', True, 'Whether to colorize logging output.')
 
 
 class UsageError(absl_app.UsageError):
@@ -132,6 +134,15 @@ def GetVerbosity() -> int:
   return logging.GetVerbosity(logging.GetCallingModuleName())
 
 
+def _MaybeColorizeLog(color: str, msg: str, *args) -> str:
+  """Conditionally apply shell colorization to the given format string."""
+  string = msg % args
+  if FLAGS.log_colors:
+    return f"{shell.ShellEscapeCodes.BOLD}{color}{string}{shell.ShellEscapeCodes.END}"
+  else:
+    return string
+
+
 # Skip this function when determining the calling module and line number for
 # logging.
 @absl_logging.skip_log_prefix
@@ -145,39 +156,41 @@ def Log(level: int, msg, *args, **kwargs):
     "value given by --v."
   """
   calling_module = logging.GetCallingModuleName()
-  logging.Log(calling_module, level, msg, *args, **kwargs)
+  logging.Log(calling_module, level, _MaybeColorizeLog(
+      shell.ShellEscapeCodes.YELLOW if level > 1 else shell.ShellEscapeCodes.CYAN,
+      msg, *args), **kwargs)
 
 
 @absl_logging.skip_log_prefix
 def LogIf(level: int, condition, msg, *args, **kwargs):
   if condition:
     calling_module = logging.GetCallingModuleName()
-    logging.Log(calling_module, level, msg, *args, **kwargs)
+    Log(level, msg, *args, **kwargs)
 
 
 @absl_logging.skip_log_prefix
 def Fatal(msg, *args, **kwargs):
   """Logs a fatal message."""
-  logging.Fatal(msg, *args, **kwargs)
+  logging.Fatal(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
 
 
 @absl_logging.skip_log_prefix
 def FatalWithoutStackTrace(msg, *args, **kwargs):
   """Logs a fatal message without stacktrace."""
-  logging.Error(msg, *args, **kwargs)
+  Error(msg, *args, **kwargs)
   sys.exit(1)
 
 
 @absl_logging.skip_log_prefix
 def Error(msg, *args, **kwargs):
   """Logs an error message."""
-  logging.Error(msg, *args, **kwargs)
+  logging.Error(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
 
 
 @absl_logging.skip_log_prefix
 def Warning(msg, *args, **kwargs):
   """Logs a warning message."""
-  logging.Warning(msg, *args, **kwargs)
+  logging.Warning(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
 
 
 def FlushLogs():
