@@ -1,7 +1,7 @@
 """A linter for ensuring that a Photo Library is organized correctly."""
+import os
 import sys
 
-import os
 import pathlib
 import typing
 
@@ -17,9 +17,6 @@ app.DEFINE_boolean("rm_errors_cache", False,
 
 
 def LintPathsOrDie(paths: typing.List[pathlib.Path]) -> None:
-  if not paths:
-    raise app.UsageError("Usage: photolint <directory...>")
-
   for path in paths:
     if not path.exists():
       app.FatalWithoutStackTrace(f"File or directory not found: '{path}'")
