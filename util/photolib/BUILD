@@ -62,6 +62,17 @@ par_binary(
 )
 
 par_binary(
+    name = "photolib-dashcam-tzoffset",
+    srcs = ["photolib-dashcam-tzoffset.py"],
+    deps = [
+        ":dashcam",
+        "//labm8:app",
+        "//labm8:humanize",
+        "//labm8:labtypes",
+    ],
+)
+
+par_binary(
     name = "photolib-dashcat",
     srcs = ["photolib-dashcat.py"],
     deps = [
@@ -125,6 +136,7 @@ sh_binary(
     data = [
         ":photolib.par",
         ":photolib-csv.par",
+        ":photolib-dashcam-tzoffset.par",
         ":photolib-dashcat.par",
         ":photolib-lint.par",
     ],

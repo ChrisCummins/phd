@@ -20,6 +20,7 @@ main() {
   mkdir -pv $PREFIX/bin
   install_binary photolib
   install_binary photolib-csv
+  install_binary photolib-dashcam-tzoffset
   install_binary photolib-dashcat
   install_binary photolib-lint
 }
