@@ -7,7 +7,7 @@ from labm8 import app
 FLAGS = app.FLAGS
 
 
-def ParseDatetimeFromFilenameOrDire(name: str):
+def ParseDatetimeFromFilenameOrDie(name: str):
   """Decode a YYMMDD_HHMMSS_SEQ.MOV format file name produced by the dash cam
   into a python datetime object."""
   datestring = re.sub(r"_\d\d\d\.MOV$", "", name)

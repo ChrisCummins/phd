@@ -20,8 +20,12 @@ from labm8 import humanize
 from util.photolib import dashcam
 
 FLAGS = app.FLAGS
-app.DEFINE_input_path("working_dir", os.getcwd(), "Working directory.", is_dir=True)
-app.DEFINE_integer("minutes", 0, "The number of minutes to offset timestamps by.")
+app.DEFINE_input_path("working_dir",
+                      os.getcwd(),
+                      "Working directory.",
+                      is_dir=True)
+app.DEFINE_integer("minutes", 0,
+                   "The number of minutes to offset timestamps by.")
 
 
 def main():
@@ -40,9 +44,8 @@ def main():
     order = lambda x: reversed(x)
 
   for file in order(list(sorted(files))):
-    date = dashcam.ParseDatetimeFromFilenameOrDire(file.name)
-    date += offset
-    new_name = dashcam.DatetimeToFilename(file.name)
+    date = dashcam.ParseDatetimeFromFilenameOrDie(file.name)
+    new_name = dashcam.DatetimeToFilename(date + offset)
 
     new_path = file.parent / new_name
 
