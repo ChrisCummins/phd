@@ -326,6 +326,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     with tf.compat.v1.Session() as sess, self.dashboard_db.Session() as dbs:
       dbs.query(dashboard_db.TrainingTelemetry)\
+            .filter(dashboard_db.TrainingTelemetry.model_id == self.dashboard_model_id)\
             .filter(dashboard_db.TrainingTelemetry.pending == True)\
             .delete()
 
