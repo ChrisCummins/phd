@@ -43,7 +43,7 @@ def Reset(db: contentfiles.ContentFiles) -> None:
     app.Log(1, 'Restoring active status to %s of %s repos (%.2f %%)',
             humanize.Commas(inactive_repos_count), humanize.Commas(repos_count),
             (inactive_repos_count / repos_count) * 100)
-    inactive_repos.update({"active": True})
+    inactive_repos.update({'active': True})
 
     inactive_cf = session.query(contentfiles.ContentFile) \
       .filter(contentfiles.ContentFile.active == False)
@@ -54,7 +54,7 @@ def Reset(db: contentfiles.ContentFiles) -> None:
     app.Log(1, 'Restoring active status to %s of %s content files (%.2f %%)',
             humanize.Commas(inactive_cf_count), humanize.Commas(cf_count),
             (inactive_cf_count / cf_count) * 100)
-    inactive_cf.update({"active": True})
+    inactive_cf.update({'active': True})
 
 
 def ResetExported(db: contentfiles.ContentFiles) -> None:
@@ -73,7 +73,7 @@ def ResetExported(db: contentfiles.ContentFiles) -> None:
     app.Log(1, 'Marking %s of %s repos as not exported (%.2f %%)',
             humanize.Commas(exported_repos_count), humanize.Commas(repos_count),
             (exported_repos_count / repos_count) * 100)
-    exported_repos.update({"exported": False})
+    exported_repos.update({'exported': False})
 
 
 def MaskOnMaxRepoCount(db: contentfiles.ContentFiles,
@@ -104,7 +104,7 @@ def MaskOnMaxRepoCount(db: contentfiles.ContentFiles,
     clone_from_urls = {r[0] for r in repos_to_mark_inactive}
     session.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
-        .update({"active": False}, synchronize_session='fetch')
+        .update({'active': False}, synchronize_session='fetch')
 
 
 def MaskOnMinStarCount(db: contentfiles.ContentFiles,
@@ -128,7 +128,7 @@ def MaskOnMinStarCount(db: contentfiles.ContentFiles,
             humanize.Commas(repos_to_mark_inactive_count),
             humanize.Commas(active_repo_count),
             (repos_to_mark_inactive_count / active_repo_count) * 100)
-    repos_to_mark_inactive.update({"active": False})
+    repos_to_mark_inactive.update({'active': False})
 
 
 def MaskOnMinRepoFileCount(db: contentfiles.ContentFiles,
@@ -164,7 +164,7 @@ def MaskOnMinRepoFileCount(db: contentfiles.ContentFiles,
     clone_from_urls = {r.clone_from_url for r in repos_to_mark_inactive}
     session.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
-        .update({"active": False}, synchronize_session='fetch')
+        .update({'active': False}, synchronize_session='fetch')
 
 
 def MaskOnMaxRepoFileCount(db: contentfiles.ContentFiles,
@@ -200,7 +200,7 @@ def MaskOnMaxRepoFileCount(db: contentfiles.ContentFiles,
     clone_from_urls = {r.clone_from_url for r in repos_to_mark_inactive}
     session.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
-        .update({"active": False}, synchronize_session='fetch')
+        .update({'active': False}, synchronize_session='fetch')
 
 
 def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
@@ -226,7 +226,11 @@ def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
             humanize.Commas(cfs_to_mark_inactive_count),
             humanize.Commas(active_cf_count))
 
-    cfs_to_mark_inactive.update({'active': False})
+    # Cannot call update directly on query with join.
+    cfs_to_mark_inactive = cfs_to_mark_inactive.all()
+    session.query(contentfiles.ContentFile.id) \
+      .filter(contentfiles.ContentFile.id.in_(cfs_to_mark_inactive)) \
+      .update({'active': False})
 
 
 def main():
