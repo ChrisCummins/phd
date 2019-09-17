@@ -46,6 +46,7 @@ from deeplearning.clgen.models import models
 from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
+from deeplearning.clgen.proto import sampler_pb2
 from labm8 import app
 from labm8 import pbutil
 from labm8 import prof
@@ -141,8 +142,16 @@ class Instance(object):
 
   def Train(self, *args, **kwargs) -> None:
     with self.Session():
-      # We inject the `test_sampler` argument so that we can create sample.
-      self.model.Train(*args, test_sampler=self.sampler, **kwargs)
+      test_sampler_config = sampler_pb2.Sampler()
+      test_sampler_config.termination_criteria[:] = [
+          sampler_pb2.SampleTerminationCriterion(
+              maxlen=sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=512)),
+      ]
+      test_sampler = samplers.Sampler(test_sampler_config)
+
+      # We inject the `test_sampler` argument so that we can create samples
+      # during training.
+      self.model.Train(*args, test_sampler=test_sampler_config, **kwargs)
 
   def Sample(self, *args, **kwargs) -> typing.List[model_pb2.Sample]:
     self.Train()
