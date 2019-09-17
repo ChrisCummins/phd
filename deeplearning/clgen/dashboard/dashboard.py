@@ -158,7 +158,7 @@ def samples(corpus_id: int, model_id: int, epoch: int):
 
 def Launch(debug: bool = False):
   """Launch dashboard in a separate thread."""
-  app.Log(1, 'Launching dashboard on http://127.0.0.1:%d',
+  app.Log(1, 'Launching CLgen dashboard on http://127.0.0.1:%d',
           FLAGS.clgen_dashboard_port)
   kwargs = {
       'port': FLAGS.clgen_dashboard_port,
