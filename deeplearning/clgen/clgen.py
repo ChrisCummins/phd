@@ -143,10 +143,12 @@ class Instance(object):
   def Train(self, *args, **kwargs) -> None:
     with self.Session():
       test_sampler_config = sampler_pb2.Sampler()
-      test_sampler_config.termination_criteria[:] = [
+      test_sampler_config.CopyFrom(self.sampler.config)
+      del test_sampler_config.termination_criteria[:]
+      test_sampler_config.termination_criteria.extend([
           sampler_pb2.SampleTerminationCriterion(
               maxlen=sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=512)),
-      ]
+      ])
       test_sampler = samplers.Sampler(test_sampler_config)
 
       # We inject the `test_sampler` argument so that we can create samples
