@@ -154,9 +154,7 @@ class MirroredDirectory(object):
         raise InvalidOperation(
             "Refusing to pull from remote directory with out-of-date timestamp")
       if not dry_run:
-        new_timestamp = int(time.time() * 1e6)
-        self.local_timestamp = new_timestamp
-        self.remote_timestamp = new_timestamp
+        self.local_timestamp = self.remote_timestamp
     self.Rsync(self.rsync_remote_path, self.local_path, self.host.port,
                self.spec.rsync_exclude, dry_run, verbose, delete, progress)
 
