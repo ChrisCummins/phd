@@ -414,11 +414,11 @@ class MatchingKeywordsOnModifiedFiles(PhotolibFileLinter):
 
     base_keywords = {
         k for k in base_contentfile.keywords if k != 'ATTR|PanoPart' and
-        k != 'ATTR|ONDVD' and not k.startswith("PUB|")
+        k != 'ATTR|Panorama' and k != 'ATTR|ONDVD' and not k.startswith("PUB|")
     }
     keywords = {
         k for k in contentfile.keywords if k != 'ATTR|Panorama' and
-        k != 'ATTR|ONDVD' and not k.startswith("PUB|")
+        k != 'ATTR|Panorama' and k != 'ATTR|ONDVD' and not k.startswith("PUB|")
     }
 
     if base_keywords == keywords:

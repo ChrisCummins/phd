@@ -59,7 +59,7 @@ def LintPathsOrDie(paths: typing.List[pathlib.Path]) -> None:
 
 def main(argv):
   """Main entry point."""
-  dirs = [pathlib.Path(d) for d in (argv[1:] or [os.getcwd()])]
+  dirs = [pathlib.Path(d).absolute() for d in (argv[1:] or [os.getcwd()])]
   LintPathsOrDie(dirs)
 
 
