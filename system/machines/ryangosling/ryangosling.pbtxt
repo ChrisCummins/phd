@@ -10,47 +10,6 @@ host: {
   port: 65335
 }
 mirrored_directory {
-  name: "staging"
-  local_path: "/Users/cec/Pictures/staging/photos"
-  remote_path: "/home/cec/img/staging/photos"
-  timestamp_relpath: ".sync_timestamp.txt"
-  rsync_exclude: "._.DS_Store"
-  rsync_exclude: ".com.apple.timemachine.supported"
-  rsync_exclude: ".DS_Store"
-  rsync_exclude: ".sync.ffs_db"
-  rsync_exclude: "/.DocumentRevisions-V100"
-  rsync_exclude: "/.fseventsd"
-  rsync_exclude: "/.Spotlight-V100"
-  rsync_exclude: "/.TemporaryItems"
-  rsync_exclude: "/.Trashes"
-  rsync_exclude: "/.VolumeIcon.icns"
-  rsync_exclude: "/.VolumeIcon.ico"
-  rsync_exclude: "/autorun.inf"
-  skip_if_not_present: true
-}
-mirrored_directory {
-  name: "staging_catalog"
-  local_path: "/Users/cec/Pictures/staging"
-  remote_path: "/home/cec/img/staging"
-  timestamp_relpath: ".sync_timestamp.txt"
-  rsync_exclude: "*.lrcat-journal"
-  rsync_exclude: "*.lrcat.lock"
-  rsync_exclude: "._.DS_Store"
-  rsync_exclude: ".com.apple.timemachine.supported"
-  rsync_exclude: ".DS_Store"
-  rsync_exclude: ".sync.ffs_db"
-  rsync_exclude: "/.DocumentRevisions-V100"
-  rsync_exclude: "/.fseventsd"
-  rsync_exclude: "/.Spotlight-V100"
-  rsync_exclude: "/.TemporaryItems"
-  rsync_exclude: "/.Trashes"
-  rsync_exclude: "/.VolumeIcon.icns"
-  rsync_exclude: "/.VolumeIcon.ico"
-  rsync_exclude: "/autorun.inf"
-  rsync_exclude: "/photos"
-  skip_if_not_present: true
-}
-mirrored_directory {
   name: "photos"
   local_path: "/Volumes/Orange/photos"
   remote_path: "/home/cec/img/photos/photos"
@@ -67,10 +26,50 @@ mirrored_directory {
   rsync_exclude: "/.VolumeIcon.icns"
   rsync_exclude: "/.VolumeIcon.ico"
   rsync_exclude: "/autorun.inf"
-  skip_if_not_present: true
+  skip_if_not_present: false
 }
 mirrored_directory {
-  name: "photo_catalog"
+  name: "catalogs_volume"
+  local_path: "/Volumes/Catalogs"
+  remote_path: "/home/cec/img/photos/catalogs"
+  timestamp_relpath: ".sync_timestamp.txt"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".com.apple.timemachine.supported"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".sync.ffs_db"
+  rsync_exclude: "/.DocumentRevisions-V100"
+  rsync_exclude: "/.fseventsd"
+  rsync_exclude: "/.Spotlight-V100"
+  rsync_exclude: "/.TemporaryItems"
+  rsync_exclude: "/.Trashes"
+  rsync_exclude: "/.VolumeIcon.icns"
+  rsync_exclude: "/.VolumeIcon.ico"
+  rsync_exclude: "/autorun.inf"
+  skip_if_not_present: false
+}
+mirrored_directory {
+  name: "catalogs_orange"
+  local_path: "/Volumes/Orange/catalogs"
+  remote_path: "/home/cec/img/photos/catalogs"
+  timestamp_relpath: ".sync_timestamp.txt"
+  rsync_exclude: "._.DS_Store"
+  rsync_exclude: ".com.apple.timemachine.supported"
+  rsync_exclude: ".DS_Store"
+  rsync_exclude: ".sync.ffs_db"
+  rsync_exclude: "/.DocumentRevisions-V100"
+  rsync_exclude: "/.fseventsd"
+  rsync_exclude: "/.Spotlight-V100"
+  rsync_exclude: "/.TemporaryItems"
+  rsync_exclude: "/.Trashes"
+  rsync_exclude: "/.VolumeIcon.icns"
+  rsync_exclude: "/.VolumeIcon.ico"
+  rsync_exclude: "/autorun.inf"
+  skip_if_not_present: false
+}
+# The photolib workspace. Note this excludes the photos and catalogs
+# subdirectories, which must be pushed separately.
+mirrored_directory {
+  name: "orange"
   local_path: "/Volumes/Orange"
   remote_path: "/home/cec/img/photos"
   timestamp_relpath: ".sync_timestamp.txt"
@@ -91,7 +90,8 @@ mirrored_directory {
   rsync_exclude: "/inbox"
   rsync_exclude: "/outbox"
   rsync_exclude: "/photos"
-  skip_if_not_present: true
+  rsync_exclude: "/catalogs"
+  skip_if_not_present: false
 }
 mirrored_directory {
   name: "music"
@@ -103,6 +103,7 @@ mirrored_directory {
   rsync_exclude: "Automatically Add to iTunes.localized"
   rsync_exclude: "Downloads"
   rsync_exclude: "Mobile Applications"
+  skip_if_not_present: false
 }
 mirrored_directory {
   name: "movies"
@@ -111,6 +112,7 @@ mirrored_directory {
   rsync_exclude: "._.DS_Store"
   rsync_exclude: ".DS_Store"
   rsync_exclude: ".localized"
+  skip_if_not_present: false
 }
 mirrored_directory {
   name: "tv"
@@ -119,6 +121,7 @@ mirrored_directory {
   rsync_exclude: "._.DS_Store"
   rsync_exclude: ".DS_Store"
   rsync_exclude: ".localized"
+  skip_if_not_present: false
 }
 # A system backup of macOS on florence.
 #

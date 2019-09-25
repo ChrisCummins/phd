@@ -1,21 +1,5 @@
 #!/usr/bin/env zsh
 
-ryan_gosling_give_me_photos() {
-  (
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --pull staging,staging_catalog,photos,photo_catalog --delete --nodry_run $@
-  )
-}
-
-ryan_gosling_have_my_photos() {
-  (
-    ~/.local/bin/machines \
-       --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
-       --push staging,staging_catalog,photos,photo_catalog --delete --nodry_run $@
-  )
-}
-
 ryan_gosling_have_my_music() {
   (~/.local/bin/machines \
      --machine=$HOME/.local/var/machines/ryangosling.pbtxt \
