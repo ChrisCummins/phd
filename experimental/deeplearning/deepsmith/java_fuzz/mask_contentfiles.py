@@ -228,7 +228,7 @@ def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
             (cfs_to_mark_inactive_count / active_cf_count) * 100)
 
     # Can't call Query.update() on query with join, hence the subquery.
-    cfs_to_mark_inactive = {r[0] for r in cfs_to_mark_inactive}
+    cfs_to_mark_inactive = list({r[0] for r in cfs_to_mark_inactive})
 
     # Process the contentfiles in batches, as the ID set lookup can take a very
     # long time and we want to make incremental progress.
