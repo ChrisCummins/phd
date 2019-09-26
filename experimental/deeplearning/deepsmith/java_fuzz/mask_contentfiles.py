@@ -164,7 +164,7 @@ def MaskOnMinRepoFileCount(db: contentfiles.ContentFiles,
     clone_from_urls = {r.clone_from_url for r in repos_to_mark_inactive}
     session.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
-        .update({'active': False}, synchronize_session='fetch')
+        .update({'active': False})
 
 
 def MaskOnMaxRepoFileCount(db: contentfiles.ContentFiles,
@@ -224,13 +224,27 @@ def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
 
     app.Log(1, 'Marking %s of %s active content files inactive (%.2f %%)',
             humanize.Commas(cfs_to_mark_inactive_count),
-            humanize.Commas(active_cf_count))
+            humanize.Commas(active_cf_count),
+            (cfs_to_mark_inactive_count / active_cf_count) * 100)
 
-    # Cannot call update directly on query with join.
-    cfs_to_mark_inactive = cfs_to_mark_inactive.all()
-    session.query(contentfiles.ContentFile.id) \
-      .filter(contentfiles.ContentFile.id.in_(cfs_to_mark_inactive)) \
-      .update({'active': False})
+    # Can't call Query.update() on query with join, hence the subquery.
+    cfs_to_mark_inactive = {r[0] for r in cfs_to_mark_inactive}
+
+    # Process the contentfiles in batches, as the ID set lookup can take a very
+    # long time and we want to make incremental progress.
+    for i in range(0, len(cfs_to_mark_inactive), 10000):
+      app.Log(
+          1,
+          'Marking %s of %s contentfiles containing String inactive (%.2f %%) ...',
+          humanize.Commas(i), humanize.Commas(len(cfs_to_mark_inactive)),
+          (i / len(cfs_to_mark_inactive) * 100))
+      session.query(contentfiles.ContentFile.id) \
+        .filter(contentfiles.ContentFile.active == True) \
+        .filter(contentfiles.ContentFile.id.in_(cfs_to_mark_inactive[i:i+10000])) \
+        .update({'active': False}, synchronize_session=False)
+      if not FLAGS.dry_run:
+        session.commit()
+    app.Log(1, 'Done')
 
 
 def main():
