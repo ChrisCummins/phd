@@ -79,9 +79,12 @@ def index():
 
 @flask_app.route('/corpus/<int:corpus_id>/model/<int:model_id>/')
 def report(corpus_id: int, model_id: int):
-  corpus = db.session.query(dashboard_db.Corpus.summary)\
+  corpus, corpus_config_proto, preprocessed_url, encoded_url = db.session.query(
+        dashboard_db.Corpus.summary, dashboard_db.Corpus.config_proto,
+        dashboard_db.Corpus.preprocessed_url, dashboard_db.Corpus.encoded_url)\
       .filter(dashboard_db.Corpus.id == corpus_id).one()
-  model = db.session.query(dashboard_db.Model.summary)\
+  model, model_config_proto = db.session.query(
+        dashboard_db.Model.summary, dashboard_db.Model.config_proto)\
       .filter(dashboard_db.Model.id == model_id).one()
 
   telemetry = db.session.query(dashboard_db.TrainingTelemetry.timestamp,
@@ -121,8 +124,12 @@ def report(corpus_id: int, model_id: int):
   } for r2, r3 in zip(q2, q3)]
 
   data = {
+      'corpus_config_proto': corpus_config_proto,
+      'model_config_proto': model_config_proto,
       'telemetry': telemetry,
       'epoch_telemetry': epoch_telemetry,
+      'preprocessed_url': preprocessed_url,
+      'encoded_url': encoded_url,
   }
 
   return flask.render_template('report.html',
