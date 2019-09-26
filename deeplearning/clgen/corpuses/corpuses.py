@@ -405,27 +405,13 @@ class Corpus(object):
 
 def GetVocabFromMetaTable(session: sqlutil.Session) -> typing.Dict[str, int]:
   """Read a vocabulary dictionary from the 'Meta' table of a database."""
-  q = session.query(encoded.Meta.value).filter(encoded.Meta.key == 'vocab_size')
-  if not q.first():
-    return {}
-
-  vocab_size = int(q.one()[0])
-  q = session.query(encoded.Meta.value)
-  return {
-      q.filter(encoded.Meta.key == f'vocab_{i}').one()[0]: i
-      for i in range(vocab_size)
-  }
+  return encoded.EncodedContentFiles.GetVocabFromMetaTable(session)
 
 
 def StoreVocabInMetaTable(session: sqlutil.Session,
-                          vocabulary: typing.Dict[str, int]):
+                          vocabulary: typing.Dict[str, int]) -> None:
   """Store a vocabulary dictionary in the 'Meta' table of a database."""
-  q = session.query(encoded.Meta).filter(encoded.Meta.key.like('vocab_%'))
-  q.delete(synchronize_session=False)
-
-  session.add(encoded.Meta(key='vocab_size', value=str(len(vocabulary))))
-  session.add_all(
-      [encoded.Meta(key=f'vocab_{v}', value=k) for k, v in vocabulary.items()])
+  return encoded.EncodedContentFiles.StoreVocabInMetaTable(session, vocabulary)
 
 
 def GreedyAtomizerFromEncodedDb(encoded_db: encoded.EncodedContentFiles):

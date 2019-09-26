@@ -8,6 +8,7 @@ import portpicker
 import sqlalchemy as sql
 
 import build_info
+from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.dashboard import dashboard_db
 from labm8 import app
 from labm8 import bazelutil
@@ -123,7 +124,12 @@ def report(corpus_id: int, model_id: int):
       'us_per_step': humanize.Duration(r3.us_per_step / 1e6),
   } for r2, r3 in zip(q2, q3)]
 
-  data = {
+  data = GetBaseTemplateArgs()
+  data['corpus_id'] = corpus_id
+  data['model_id'] = model_id
+  data['corpus'] = corpus
+  data['model'] = model
+  data['data'] = {
       'corpus_config_proto': corpus_config_proto,
       'model_config_proto': model_config_proto,
       'telemetry': telemetry,
@@ -131,14 +137,59 @@ def report(corpus_id: int, model_id: int):
       'preprocessed_url': preprocessed_url,
       'encoded_url': encoded_url,
   }
+  data['urls']['view_encoded_file'] = f'/corpus/{corpus_id}/encoded/random/'
 
-  return flask.render_template('report.html',
-                               data=data,
-                               corpus_id=corpus_id,
-                               model_id=model_id,
-                               corpus=corpus,
-                               model=model,
-                               **GetBaseTemplateArgs())
+  return flask.render_template('report.html', **data)
+
+
+@flask_app.route('/corpus/<int:corpus_id>/encoded/random/')
+def random_encoded_contentfile(corpus_id: int):
+  encoded_url, = db.session.query(dashboard_db.Corpus.encoded_url) \
+      .filter(dashboard_db.Corpus.id == corpus_id).one()
+
+  encoded_db = encoded.EncodedContentFiles(encoded_url, must_exist=True)
+
+  with encoded_db.Session() as session:
+    random_id, = session.query(encoded.EncodedContentFile.id) \
+          .order_by(encoded_db.Random()).limit(1).one()
+
+  return flask.redirect(f'/corpus/{corpus_id}/encoded/{random_id}/', code=302)
+
+
+@flask_app.route('/corpus/<int:corpus_id>/encoded/<int:encoded_id>/')
+def encoded_contentfile(corpus_id: int, encoded_id: int):
+  encoded_url, = db.session.query(dashboard_db.Corpus.encoded_url) \
+      .filter(dashboard_db.Corpus.id == corpus_id).one()
+
+  encoded_db = encoded.EncodedContentFiles(encoded_url, must_exist=True)
+
+  with encoded_db.Session() as session:
+    cf = session.query(encoded.EncodedContentFile)\
+          .filter(encoded.EncodedContentFile.id == encoded_id).limit(1).one()
+    indices = cf.indices_array
+    vocab = {
+        v: k for k, v in encoded.EncodedContentFiles.GetVocabFromMetaTable(
+            session).items()
+    }
+    tokens = [vocab[i] for i in indices]
+    text = ''.join(tokens)
+    encoded_cf = {
+        'id': cf.id,
+        'tokencount': humanize.Commas(cf.tokencount),
+        'indices': indices,
+        'text': text,
+        'tokens': tokens,
+    }
+    vocab = {
+        'table': [(k, v) for k, v in vocab.items()],
+        'size': len(vocab),
+    }
+
+  data = GetBaseTemplateArgs()
+  data['encoded'] = encoded_cf
+  data['vocab'] = vocab
+  data['urls']['view_encoded_file'] = f'/corpus/{corpus_id}/encoded/random/'
+  return flask.render_template('encoded_contentfile.html', **data)
 
 
 @flask_app.route(

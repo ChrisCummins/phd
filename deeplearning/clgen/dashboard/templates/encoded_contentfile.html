@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block header %}
+<title>CLgen Contentfile</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <div class="btn-group" role="group" aria-label="Navigation buttons">
+        <a class="btn btn-primary" href="{{ urls.view_encoded_file }}" role="button">Next File</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <h4>Text ({{ encoded.text | length }} characters)</code></h4>
+      <pre>{{ encoded.text[:1000] }}{% if encoded.text | length > 1000 %} ... ({{ encoded.text | length - 1000 }} characters truncated){% endif %}</pre>
+    </div>
+  </div>
+
+  <div class = "row">
+    <div class="col">
+      <h4>Indices ({{ encoded.tokencount }} indices)</h4>
+      <p class="lead">
+        <ol class="breadcrumb">
+          {% for idx in encoded.indices[:500] %}
+          <li class="breadcrumb-item">{{ idx }}</li>
+          {% endfor %}
+          {% if encoded.indices | length > 500 %}<li class="breadcrumb-item">... ({{ encoded.tokencount | int - 500 }} truncated)</li>{% endif %}
+        </ol>
+      </p>
+    </div>
+  </div>
+
+  <div class = "row">
+    <div class="col">
+      <h4>Decoded Tokens ({{ encoded.tokencount }} tokens)</h4>
+      <p class="lead">
+        <ol class="breadcrumb">
+          {% for token in encoded.tokens[:500] %}
+          <li class="breadcrumb-item"><code>{{ token.encode('utf8') }}</code></li>
+          {% endfor %}
+          {% if encoded.tokens | length > 500 %}<li class="breadcrumb-item">... ({{ encoded.tokens | length - 500 }} truncated)</li>{% endif %}
+        </ol>
+      </p>
+    </div>
+  </div>
+
+  <div class = "row">
+    <div class="col">
+      <h4>Vocabulary ({{ vocab.size }} elements)</h4>
+
+      <table class="table table-striped">
+        <thead>
+          <tr><th scope="col">#</th><th scope="col">Token</th></tr>
+        </thead>
+        <tbody>
+          {% for idx in vocab.table %}
+          <tr><th scope="row">{{ idx[0] }}</th><td><code>{{ idx[1].encode('utf8') }}</code></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="btn-group" role="group" aria-label="Navigation buttons">
+        <a class="btn btn-primary" href="{{ urls.view_encoded_file }}" role="button">Next File</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

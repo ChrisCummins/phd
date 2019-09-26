@@ -13,15 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """This file defines a database for encoded content files."""
-import multiprocessing
-import time
-
 import datetime
-import numpy as np
+import multiprocessing
 import pickle
+import time
+import typing
+
+import numpy as np
 import progressbar
 import sqlalchemy as sql
-import typing
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
@@ -214,7 +214,7 @@ class EncodedContentFiles(sqlutil.Database):
       ]
       if not jobs:
         raise errors.EmptyCorpusException(
-            "Pre-processed corpus contains no files: "
+            'Pre-processed corpus contains no files: '
             f"'{preprocessed_db.url}'")
 
       app.Log(
@@ -240,3 +240,29 @@ class EncodedContentFiles(sqlutil.Database):
         if wall_time_end - last_commit > 10:
           session.commit()
           last_commit = wall_time_end
+
+  @staticmethod
+  def GetVocabFromMetaTable(session) -> typing.Dict[str, int]:
+    """Read a vocabulary dictionary from the 'Meta' table of a database."""
+    q = session.query(Meta.value).filter(Meta.key == 'vocab_size')
+    if not q.first():
+      return {}
+
+    vocab_size = int(q.one()[0])
+    q = session.query(Meta.value)
+    return {
+        q.filter(Meta.key == f'vocab_{i}').one()[0]: i
+        for i in range(vocab_size)
+    }
+
+  @staticmethod
+  def StoreVocabInMetaTable(session: sqlutil.Session,
+                            vocabulary: typing.Dict[str, int]) -> None:
+    """Store a vocabulary dictionary in the 'Meta' table of a database."""
+    q = session.query(encoded.Meta).filter(encoded.Meta.key.like('vocab_%'))
+    q.delete(synchronize_session=False)
+
+    session.add(encoded.Meta(key='vocab_size', value=str(len(vocabulary))))
+    session.add_all([
+        encoded.Meta(key=f'vocab_{v}', value=k) for k, v in vocabulary.items()
+    ])
