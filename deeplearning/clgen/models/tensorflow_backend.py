@@ -40,6 +40,9 @@ app.DEFINE_boolean(
 app.DEFINE_integer(
     'clgen_tf_backend_tensorboard_summary_step_count', 25,
     'The number of steps between writing tensorboard summaries.')
+app.DEFINE_integer(
+    'clgen_per_epoch_test_samples', 12,
+    'The number of samples to make at the end of each training epoch.')
 
 
 class TensorFlowBackend(backends.BackendBase):
@@ -424,7 +427,7 @@ class TensorFlowBackend(backends.BackendBase):
       else:
         return
 
-    if test_sampler:
+    if test_sampler and FLAGS.clgen_per_epoch_test_samples > 0:
       self._EndOfEpochTestSample(corpus, test_sampler, step, epoch_num)
       self.Train(corpus, test_sampler)
 
@@ -441,7 +444,7 @@ class TensorFlowBackend(backends.BackendBase):
     self.InitSampleBatch(sampler)
 
     samples, stats = [], []
-    for i in range(12):
+    for i in range(FLAGS.clgen_per_epoch_test_samples):
       done = np.zeros(1, dtype=np.bool)
       while not done[0]:
         start_time = time.time()

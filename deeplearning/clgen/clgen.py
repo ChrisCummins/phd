@@ -144,6 +144,7 @@ class Instance(object):
     with self.Session():
       test_sampler_config = sampler_pb2.Sampler()
       test_sampler_config.CopyFrom(self.sampler.config)
+      # Make all test samples the same 512-token length.
       del test_sampler_config.termination_criteria[:]
       test_sampler_config.termination_criteria.extend([
           sampler_pb2.SampleTerminationCriterion(
@@ -153,7 +154,7 @@ class Instance(object):
 
       # We inject the `test_sampler` argument so that we can create samples
       # during training.
-      self.model.Train(*args, test_sampler=test_sampler_config, **kwargs)
+      self.model.Train(*args, test_sampler=test_sampler, **kwargs)
 
   def Sample(self, *args, **kwargs) -> typing.List[model_pb2.Sample]:
     self.Train()
