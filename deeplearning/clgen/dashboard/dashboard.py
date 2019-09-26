@@ -1,4 +1,5 @@
 """A flask server which renders test results."""
+import os
 import threading
 
 import flask
@@ -23,8 +24,8 @@ flask_app = flask.Flask(
         'phd/deeplearning/clgen/dashboard/templates'),
     static_folder=bazelutil.DataPath('phd/deeplearning/clgen/dashboard/static'),
 )
-flask_app.config[
-    'SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/phd/deeplearning/clgen/dashboard.db'
+flask_app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'CLGEN_DASHBOARD', 'sqlite:////tmp/phd/deeplearning/clgen/dashboard.db')
 db = flask_sqlalchemy.SQLAlchemy(flask_app)
 
 
