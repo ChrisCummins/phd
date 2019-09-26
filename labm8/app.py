@@ -41,7 +41,8 @@ absl_flags.DEFINE_boolean(
     False,
     'Print version information and exit.',
 )
-absl_flags.DEFINE_boolean('log_colors', True, 'Whether to colorize logging output.')
+absl_flags.DEFINE_boolean('log_colors', True,
+                          'Whether to colorize logging output.')
 
 
 class UsageError(absl_app.UsageError):
@@ -136,7 +137,7 @@ def GetVerbosity() -> int:
 
 def _MaybeColorizeLog(color: str, msg: str, *args) -> str:
   """Conditionally apply shell colorization to the given format string."""
-  string = msg % args
+  string = str(msg) % args
   if FLAGS.log_colors:
     return f"{shell.ShellEscapeCodes.BOLD}{color}{string}{shell.ShellEscapeCodes.END}"
   else:
@@ -156,9 +157,11 @@ def Log(level: int, msg, *args, **kwargs):
     "value given by --v."
   """
   calling_module = logging.GetCallingModuleName()
-  logging.Log(calling_module, level, _MaybeColorizeLog(
-      shell.ShellEscapeCodes.YELLOW if level > 1 else shell.ShellEscapeCodes.CYAN,
-      msg, *args), **kwargs)
+  logging.Log(
+      calling_module, level,
+      _MaybeColorizeLog(
+          shell.ShellEscapeCodes.YELLOW
+          if level > 1 else shell.ShellEscapeCodes.CYAN, msg, *args), **kwargs)
 
 
 @absl_logging.skip_log_prefix
@@ -171,7 +174,8 @@ def LogIf(level: int, condition, msg, *args, **kwargs):
 @absl_logging.skip_log_prefix
 def Fatal(msg, *args, **kwargs):
   """Logs a fatal message."""
-  logging.Fatal(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
+  logging.Fatal(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args),
+                **kwargs)
 
 
 @absl_logging.skip_log_prefix
@@ -184,13 +188,15 @@ def FatalWithoutStackTrace(msg, *args, **kwargs):
 @absl_logging.skip_log_prefix
 def Error(msg, *args, **kwargs):
   """Logs an error message."""
-  logging.Error(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
+  logging.Error(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args),
+                **kwargs)
 
 
 @absl_logging.skip_log_prefix
 def Warning(msg, *args, **kwargs):
   """Logs a warning message."""
-  logging.Warning(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
+  logging.Warning(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args),
+                  **kwargs)
 
 
 def FlushLogs():
