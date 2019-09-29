@@ -26,7 +26,7 @@ mirrored_directory {
   rsync_exclude: "/.VolumeIcon.icns"
   rsync_exclude: "/.VolumeIcon.ico"
   rsync_exclude: "/autorun.inf"
-  skip_if_not_present: false
+  skip_if_not_present: true
 }
 mirrored_directory {
   name: "catalogs_volume"
@@ -64,7 +64,7 @@ mirrored_directory {
   rsync_exclude: "/.VolumeIcon.icns"
   rsync_exclude: "/.VolumeIcon.ico"
   rsync_exclude: "/autorun.inf"
-  skip_if_not_present: false
+  skip_if_not_present: true
 }
 # The photolib workspace. Note this excludes the photos and catalogs
 # subdirectories, which must be pushed separately.
@@ -91,7 +91,7 @@ mirrored_directory {
   rsync_exclude: "/outbox"
   rsync_exclude: "/photos"
   rsync_exclude: "/catalogs"
-  skip_if_not_present: false
+  skip_if_not_present: true
 }
 mirrored_directory {
   name: "music"
