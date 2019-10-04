@@ -124,3 +124,19 @@ WHERE preprocessing_succeeded = 1;
 DELETE
 FROM `github_java_methods_enc_2019.06.25`.encoded_contentfiles;
 
+
+# Copy only the preprocessed methods which don't include "String" keyword.
+
+INSERT INTO `github_java_methods_no_strings_pp_2019.07.16`.preprocessed_contentfiles
+SELECT * FROM `github_java_methods_pp_2019.07.16`.preprocessed_contentfiles
+WHERE text NOT LIKE "%String%";
+
+# How many preprocessed methods include a string literal?
+
+SELECT COUNT(*) FROM `github_java_methods_pp_2019.07.16`.preprocessed_contentfiles
+WHERE preprocessing_succeeded = 1 AND text LIKE '%"%';
+
+# How many of these non-string methods include a string literal?
+
+SELECT COUNT(*) FROM `github_java_methods_no_strings_pp_2019.07.16`.preprocessed_contentfiles
+WHERE preprocessing_succeeded = 1 AND text LIKE '%"%';
