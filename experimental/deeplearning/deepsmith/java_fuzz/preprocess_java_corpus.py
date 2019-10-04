@@ -8,14 +8,13 @@ it then sets this column to 1.
 
 In the output database, it adds new contentfiles.
 """
-import multiprocessing
-import sys
-import time
-
 import hashlib
+import multiprocessing
 import pathlib
 import subprocess
+import sys
 import threading
+import time
 import typing
 from concurrent import futures
 
@@ -27,8 +26,8 @@ from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
 from labm8 import app
-from labm8 import fs
 from labm8 import bazelutil
+from labm8 import fs
 from labm8 import humanize
 from labm8 import pbutil
 
@@ -44,7 +43,7 @@ app.DEFINE_database(
 app.DEFINE_boolean('multithreaded_preprocess', True,
                    'Use multiple threads during preprocessing.')
 app.DEFINE_integer('preprocess_worker_threads', multiprocessing.cpu_count(),
-                   "The number of preprocessor threads.")
+                   'The number of preprocessor threads.')
 app.DEFINE_boolean(
     'reverse_order', False,
     'If set, pre-process repositories in a reverse order. Use '
@@ -149,7 +148,8 @@ def PreprocessStringList(
 
 
 def PreprocessContentfiles(
-    cfs: typing.List[str]) -> typing.List[preprocessed.PreprocessedContentFile]:
+    cfs: typing.List[contentfiles.ContentFile]
+) -> typing.List[preprocessed.PreprocessedContentFile]:
   start_time = time.time()
   output_message = PreprocessStringList([cf.text for cf in cfs])
   wall_time_ms = int((time.time() - start_time) * 1000)
@@ -159,7 +159,7 @@ def PreprocessContentfiles(
 
   pp_cfs = [
       preprocessed.PreprocessedContentFile(
-          input_relpath=f"{cf.clone_from_url}:{cf.relpath}:{cf.artifact_index}",
+          input_relpath=f'{cf.clone_from_url}:{cf.relpath}:{cf.artifact_index}',
           input_sha256=cf.sha256,
           input_charcount=cf.charcount,
           input_linecount=cf.linecount,
@@ -182,7 +182,7 @@ def PreprocessContentfiles(
         secrets.ScanForSecrets(pp_cf.text)
       except secrets.TextContainsSecret as e:
         pp_cf.preprocessing_succeeded = False
-        pp_cf.text = f"Text contains secrets: {e}"
+        pp_cf.text = f'Text contains secrets: {e}'
 
   return pp_cfs
 
@@ -207,8 +207,10 @@ class Preprocessor(threading.Thread):
     start_time = time.time()
 
     with self.input_db.Session() as input_session:
+      # Select all of the contentfiles from the repository which are active.
       to_preprocess = input_session.query(contentfiles.ContentFile) \
-        .filter(contentfiles.ContentFile.clone_from_url.in_(clone_from_urls)).all()
+        .filter(contentfiles.ContentFile.clone_from_url.in_(clone_from_urls)) \
+        .filter(contentfiles.ContentFile.active == True).all()
 
     preprocessed_contentfiles = PreprocessContentfiles(to_preprocess)
 
@@ -220,7 +222,7 @@ class Preprocessor(threading.Thread):
         output_session.add_all(preprocessed_contentfiles)
 
     duration = time.time() - start_time
-    app.Log(1, "Preprocessed %s Java methods at a rate of %d ms per method",
+    app.Log(1, 'Preprocessed %s Java methods at a rate of %d ms per method',
             humanize.Commas(len(preprocessed_contentfiles)),
             (duration / len(preprocessed_contentfiles)) * 1000)
 
@@ -242,7 +244,7 @@ class Preprocessor(threading.Thread):
         self.ProcessABatchOfRepos(clone_from_urls)
 
     self.returncode = 0
-    app.Log(1, "Done!")
+    app.Log(1, 'Done!')
 
 
 def main():
@@ -261,14 +263,14 @@ def main():
       processed_repo_count = s.query(contentfiles.GitHubRepository)\
         .filter(contentfiles.GitHubRepository.exported == True).count()
     sys.stdout.write(
-        f"\rRuntime: {humanize.Duration(runtime)}. "
-        f"Processed repos: {humanize.Commas(processed_repo_count)} "
-        f"of {humanize.Commas(all_repo_count)} "
-        f"({processed_repo_count / all_repo_count:.2%})"
-        "    ")
+        f'\rRuntime: {humanize.Duration(runtime)}. '
+        f'Processed repos: {humanize.Commas(processed_repo_count)} '
+        f'of {humanize.Commas(all_repo_count)} '
+        f'({processed_repo_count / all_repo_count:.2%})'
+        '    ')
     sys.stdout.flush()
 
-    if not exporter.is_alive():
+    if processed_repo_count == all_repo_count or not exporter.is_alive():
       break
     time.sleep(1)
   exporter.join()
