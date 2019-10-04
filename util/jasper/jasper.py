@@ -1,13 +1,25 @@
-"""Jasper is a small command line utility to run long-running MySQL queries.
+"""Jasper is a small command line utility to run MySQL queries.
 
 It combines a `git commit` style query prompt with `lmk` so that you receive
 an email when the query terminates.
 
-Usage:
+There are three ways for Jasper to obtain the query(s) to execute. The first
+is by interactively prompting the user with their chosen $EDITOR:
 
-  $ bazel run //util/jasper -- --host=my.server.com
+  $ jasper --host=my.server.com
+
+Alternatively, Jasper can read from standard input:
+
+  $ echo "show processlist" < jasper --host=my.server.com
+
+Finally, Jasper can read files provided as positional arguments:
+
+  $ jasper --host=my.server.com query1.sql query2.sql query3.sql
+
+In this final case, each query will be executed in turn.
 """
 import os
+import select
 import sys
 
 import datetime
@@ -108,11 +120,9 @@ def execMysqlQuery(query: str, host: str) -> None:
   return stdout
 
 
-def getQueryAndExecuteAndNotify(host: str):
-  """Main entrypoint: fetch a query and execute it on the given host."""
+def executeQueryAndNotify(query: str, host: str) -> bool:
+  """Execute the query, send a notification, and return True on error."""
   date_started = datetime.datetime.now()
-  query = getQueryFromUserOrDie(runEditorOnFileOrDie)
-
   message_to_print = f'{datetime.datetime.now()}\n\n{query}'
   print('\n'.join([f'-- {x}' for x in message_to_print.split('\n')]))
 
@@ -124,6 +134,7 @@ def getQueryAndExecuteAndNotify(host: str):
                     returncode=0,
                     date_started=date_started,
                     date_ended=datetime.datetime.now())
+    return False
   except OSError as e:
     print(e, file=sys.stderr)
     lmk.let_me_know(str(e),
@@ -131,13 +142,44 @@ def getQueryAndExecuteAndNotify(host: str):
                     returncode=1,
                     date_started=date_started,
                     date_ended=datetime.datetime.now())
+    return True
+
+
+def readFileOrDie(arg: str) -> str:
+  """Read contents of file to string or die."""
+  path = pathlib.Path(arg)
+  if not path.is_file():
+    print(f'fatal: file not found {arg}', file=sys.stderr)
     sys.exit(1)
+  with open(path) as f:
+    data = f.read()
+  return data
 
 
-def main():
+def main(argv: typing.List[str]):
   """Main entry point."""
-  getQueryAndExecuteAndNotify(FLAGS.host)
+  error = False
+  # There are three ways for jasper to get the query(s) to execute:
+  #
+  #  1. Positional arguments, which are interpreted as file paths. If there are
+  #     multiple arguments, they are executed sequentially.
+  #  2. Standard input, which, if present, will be read and executed as a
+  #     query, such as "echo 'select * from foo' | jasper".
+  #  3. (default) If neither standard input or positional arguments are
+  #     provided, the user is prompted for a query.
+  if len(argv) >= 2:
+    for arg in argv[1:]:
+      query = readFileOrDie(arg)
+      error |= executeQueryAndNotify(query, FLAGS.host)
+  elif select.select([sys.stdin,],[],[],0.0)[0]:
+    query = sys.stdin.read()
+    error = executeQueryAndNotify(query, FLAGS.host)
+  else:
+    query = getQueryFromUserOrDie(runEditorOnFileOrDie)
+    error = executeQueryAndNotify(query, FLAGS.host)
+
+  sys.exit(1 if error else 0)
 
 
 if __name__ == '__main__':
-  app.Run(main)
+  app.RunWithArgs(main)
