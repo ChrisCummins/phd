@@ -56,7 +56,7 @@ def runEditorOnFileOrDie(path: pathlib.Path) -> None:
   try:
     subprocess.check_call(cmd, shell=True)
   except subprocess.SubprocessError:
-    print('fatal: Editor `{cmd}` failed. Aborting', file=sys.stderr)
+    print(f'fatal: Editor `{cmd}` failed. Aborting', file=sys.stderr)
     sys.exit(1)
 
 
