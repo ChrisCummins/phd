@@ -18,13 +18,12 @@ Finally, Jasper can read files provided as positional arguments:
 
 In this final case, each query will be executed in turn.
 """
-import os
-import select
-import sys
-
 import datetime
+import os
 import pathlib
+import select
 import subprocess
+import sys
 import tempfile
 import typing
 
@@ -74,7 +73,7 @@ def getQueryFromUserOrDie(
     The query to execute.
   """
   query = """
-# Please enter the SQL query to execute. Comments beginning with 
+# Please enter the SQL query to execute. Comments beginning with
 # '//', '#', and '--' are ignored. An empty query executes nothing.
 """
   with tempfile.TemporaryDirectory(prefix='phd_jasper_') as d:
@@ -91,7 +90,7 @@ def getQueryFromUserOrDie(
     query = sql_formatter.FormatSql(query)
 
   if not query:
-    print("No query to execute, aborting.", file=sys.stderr)
+    print('No query to execute, aborting.', file=sys.stderr)
     sys.exit(1)
   return query
 
@@ -115,8 +114,8 @@ def execMysqlQuery(query: str, host: str) -> None:
                              universal_newlines=True)
   stdout, stderr = process.communicate(query)
   if process.returncode:
-    raise OSError(f"MySQL terminated with returncode {process.returncode} and "
-                  f"output:\n{stdout}\n{stderr}")
+    raise OSError(f'MySQL terminated with returncode {process.returncode} and '
+                  f'output:\n{stdout}\n{stderr}')
   return stdout
 
 
@@ -171,7 +170,9 @@ def main(argv: typing.List[str]):
     for arg in argv[1:]:
       query = readFileOrDie(arg)
       error |= executeQueryAndNotify(query, FLAGS.host)
-  elif select.select([sys.stdin,],[],[],0.0)[0]:
+  elif select.select([
+      sys.stdin,
+  ], [], [], 0.0)[0]:
     query = sys.stdin.read()
     error = executeQueryAndNotify(query, FLAGS.host)
   else:
