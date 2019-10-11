@@ -34,7 +34,6 @@ app.DEFINE_string(
     'vbcd',
     'sqlite:////tmp/phd/experimental/compilers/reachability/datasets/vbcd.db',
     'Path of database to populate.')
-
 app.DEFINE_integer(
     'vbcd_process_count', multiprocessing.cpu_count(),
     'The number of parallel processes to use when creating '
@@ -94,7 +93,8 @@ def CreateControlFlowGraphsFromLlvmBytecode(
   return protos
 
 
-def PopulateControlFlowGraphTable(db: database.Database):
+def PopulateControlFlowGraphTable(db: database.Database,
+                                  n: int = 10000) -> bool:
   """Populate the control flow graph table from LLVM bytecodes.
 
   For each row in the LlvmBytecode table, we ectract the CFGs and add them
@@ -107,10 +107,15 @@ def PopulateControlFlowGraphTable(db: database.Database):
     # successfully generated and have not been entered into the CFG table yet.
     todo = s.query(database.LlvmBytecode.id, database.LlvmBytecode.bytecode) \
       .filter(database.LlvmBytecode.clang_returncode == 0) \
-      .filter(~database.LlvmBytecode.id.in_(already_done_ids))
+      .filter(~database.LlvmBytecode.id.in_(already_done_ids)) \
+      .limit(n)
+
+    count = todo.count()
+    if not count:
+      return False
 
     bar = progressbar.ProgressBar()
-    bar.max_value = todo.count()
+    bar.max_value = count
 
     # Process bytecodes in parallel.
     pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
@@ -135,6 +140,8 @@ def PopulateControlFlowGraphTable(db: database.Database):
       if the_time - last_commit_time > 10:
         s.commit()
         last_commit_time = the_time
+
+    return True
 
 
 def CreateFullFlowGraphFromCfg(
@@ -172,7 +179,7 @@ def CreateFullFlowGraphFromCfg(
     )
 
 
-def PopulateFullFlowGraphTable(db: database.Database):
+def PopulateFullFlowGraphTable(db: database.Database, n: int = 10000) -> bool:
   """Populate the full flow graph table from CFGs."""
   with db.Session(commit=True) as s:
     # Query that returns (bytecode_id,cfg_id) tuples for all CFGs.
@@ -180,10 +187,15 @@ def PopulateFullFlowGraphTable(db: database.Database):
     todo = s.query(database.ControlFlowGraphProto.bytecode_id,
                    database.ControlFlowGraphProto.cfg_id,
                    database.ControlFlowGraphProto.proto) \
-      .filter(database.ControlFlowGraphProto.status == 0)
+      .filter(database.ControlFlowGraphProto.status == 0) \
+      .limit(n)
+
+    count = todo.count()
+    if not count:
+      return False
 
     bar = progressbar.ProgressBar()
-    bar.max_value = todo.count()
+    bar.max_value = count
 
     # Process CFGs in parallel.
     pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
@@ -283,42 +295,44 @@ def main(argv):
 
   db = database.Database(FLAGS.vbcd)
 
-  with db.Session() as session:
-    opencl_dataset_imported = session.query(database.Meta) \
-      .filter(database.Meta.key == 'opencl_dataset_imported').first()
-  if not opencl_dataset_imported:
-    app.Log(1, "Importing OpenCL dataset ...")
-    opencl.OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
-    with db.Session(commit=True) as session:
-      session.add(
-          database.Meta(key='opencl_dataset_imported', value=NowString()))
+  # with db.Session() as session:
+  #   opencl_dataset_imported = session.query(database.Meta) \
+  #     .filter(database.Meta.key == 'opencl_dataset_imported').first()
+  # if not opencl_dataset_imported:
+  #   app.Log(1, "Importing OpenCL dataset ...")
+  #   opencl.OpenClDeviceMappingsDataset().PopulateBytecodeTable(db)
+  #   with db.Session(commit=True) as session:
+  #     session.add(
+  #         database.Meta(key='opencl_dataset_imported', value=NowString()))
 
-  with db.Session() as session:
-    linux_sources_imported = session.query(database.Meta) \
-      .filter(database.Meta.key == 'linux_sources_imported').first()
-  if not linux_sources_imported:
-    app.Log(1, "Processing Linux dataset ...")
-    linux.LinuxSourcesDataset().PopulateBytecodeTable(db)
-    with db.Session(commit=True) as session:
-      session.add(
-          database.Meta(key='linux_sources_imported', value=NowString()))
+  # with db.Session() as session:
+  #   linux_sources_imported = session.query(database.Meta) \
+  #     .filter(database.Meta.key == 'linux_sources_imported').first()
+  # if not linux_sources_imported:
+  #   app.Log(1, "Processing Linux dataset ...")
+  #   linux.LinuxSourcesDataset().PopulateBytecodeTable(db)
+  #   with db.Session(commit=True) as session:
+  #     session.add(
+  #         database.Meta(key='linux_sources_imported', value=NowString()))
 
-  with db.Session() as session:
-    github_c_sources_imported = session.query(database.Meta) \
-      .filter(database.Meta.key == 'github_c_sources_imported').first()
-  if not github_c_sources_imported:
-    app.Log(1, 'Processing GitHub C sources ...')
-    with tempfile.TemporaryDirectory(prefix='phd_') as d:
-      PopulateBytecodeTableFromGithubCSources(db, pathlib.Path(d))
-    with db.Session(commit=True) as session:
-      session.add(
-          database.Meta(key='github_c_sources_imported', value=NowString()))
+  # with db.Session() as session:
+  #   github_c_sources_imported = session.query(database.Meta) \
+  #     .filter(database.Meta.key == 'github_c_sources_imported').first()
+  # if not github_c_sources_imported:
+  #   app.Log(1, 'Processing GitHub C sources ...')
+  #   with tempfile.TemporaryDirectory(prefix='phd_') as d:
+  #     PopulateBytecodeTableFromGithubCSources(db, pathlib.Path(d))
+  #   with db.Session(commit=True) as session:
+  #     session.add(
+  #         database.Meta(key='github_c_sources_imported', value=NowString()))
 
-  # app.Log(1, "Processing CFGs ...")
-  # PopulateControlFlowGraphTable(db)
-  #
-  # app.Log(1, "Processing full flow graphs ...")
-  # PopulateFullFlowGraphTable(db)
+  app.Log(1, "Processing CFGs ...")
+  while PopulateControlFlowGraphTable(db):
+    pass
+
+  app.Log(1, "Processing full flow graphs ...")
+  while PopulateFullFlowGraphTable(db):
+    pass
 
 
 if __name__ == '__main__':
