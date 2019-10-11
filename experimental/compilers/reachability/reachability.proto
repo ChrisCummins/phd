@@ -47,6 +47,8 @@ message LlvmBytecode {
 
 message ControlFlowGraphFromLlvmBytecode {
   required int64 bytecode_id = 1;
+  // Bytecodes can contain multiple control-flow graphs. This is the ID of the
+  // control flow graph, an integer series 0..n.
   required int64 cfg_id = 2;
   required ControlFlowGraph control_flow_graph = 3;
   required int32 status = 4;
