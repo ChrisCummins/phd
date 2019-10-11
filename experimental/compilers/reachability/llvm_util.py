@@ -347,6 +347,7 @@ class ExceptionBuffer(Exception):
 
 def ControlFlowGraphsFromBytecodes(
     bytecodes: typing.Iterator[str]) -> typing.Iterator[cfg.ControlFlowGraph]:
+  """A parallelised implementation of bytecode->CFG function."""
   dot_processes = []
   dot_queue = multiprocessing.Queue()
   for bytecode in bytecodes:
