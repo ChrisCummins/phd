@@ -222,3 +222,21 @@ def AllSubclassesOfClass(cls: typing.Type) -> typing.Set[typing.Type]:
   """
   return set(cls.__subclasses__()).union(
       [s for c in cls.__subclasses__() for s in AllSubclassesOfClass(c)],)
+
+
+def Chunkify(iterable: typing.Iterable[typing.Any],
+             chunk_size: int) -> typing.Iterable[typing.List[typing.Any]]:
+  """Split an iterable into chunks of a given size.
+
+  Args:
+    iterable: The iterable to split into chunks.
+    chunk_size: The size of the chunks to return.
+
+  Returns:
+    An iterator over chunks of the input iterable.
+  """
+  i = iter(iterable)
+  piece = list(itertools.islice(i, chunk_size))
+  while piece:
+    yield piece
+    piece = list(itertools.islice(i, chunk_size))

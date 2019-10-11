@@ -224,5 +224,20 @@ def test_AllSubclassesOfClass_direct_subclasses():
   assert labtypes.AllSubclassesOfClass(E) == {F, G}
 
 
+def test_Chunkify_empty_sequence():
+  """Test that chunkify of an empty sequence returns an empty list."""
+  assert list(labtypes.Chunkify([], 1)) == []
+
+
+def test_Chunkify_123():
+  """Test chunkify with single element returns."""
+  assert list(labtypes.Chunkify([1, 2, 3], 1)) == [[1], [2], [3]]
+
+
+def test_Chunkify_123_chunk_size_two():
+  """Test chunkify with single element returns."""
+  assert list(labtypes.Chunkify([1, 2, 3], 2)) == [[1, 2], [3]]
+
+
 if __name__ == '__main__':
   test.Main()
