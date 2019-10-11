@@ -126,6 +126,12 @@ proto_library(
     srcs = ["reachability.proto"],
 )
 
+proto_library(
+    name = "reachability_pb_py",
+    srcs = [":reachability_pb"],
+    visibility = ["//visibility:public"],
+)
+
 python_proto_library(
     name = "random_opt_pb_py",
     visibility = ["//visibility:public"],
