@@ -525,7 +525,7 @@ def Exec(args: typing.List[str],
     A Popen instance with stdout and stderr set to strings.
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(OPT)] + args
-  app.LogIf(log, 3, '$ %s', ' '.join(cmd))
+  app.Log(3, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,
       stdout=subprocess.PIPE,
