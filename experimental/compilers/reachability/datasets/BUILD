@@ -16,6 +16,17 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "import_from_poj104",
+    srcs = ["import_from_poj104.py"],
+    deps = [
+        "//experimental/compilers/reachability:database",
+        "//experimental/compilers/reachability:reachability_pb_py",
+        "//labm8:app",
+        "//labm8:fs",
+    ],
+)
+
 py_library(
     name = "linux",
     srcs = ["linux.py"],
