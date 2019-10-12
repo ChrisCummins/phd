@@ -36,22 +36,24 @@ from labm8 import ppar
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('db', None, 'Path of database to populate.')
-app.DEFINE_string('cf', None, 'Path of contentfiles database.')
-app.DEFINE_string('lang', None,
-                  'Name of the language to process. One of: {c,opencl}.')
-
 # A dictionary mapping language name to a list of language-specific arguments
 # to pass to clang.
 LANGUAGE_TO_CLANG_ARGS = {
-    'c': [
-        '-xc',
-        '-O0',
-        '-ferror-limit=1',
-        '-Wno-everything',  # No warnings please.
-    ],
-    'opencl': opencl.GetClangArgs(use_shim=True),
+  'c': [
+    '-xc',
+    '-O0',
+    '-ferror-limit=1',
+    '-Wno-everything',  # No warnings please.
+  ],
+  'opencl': opencl.GetClangArgs(use_shim=True),
+  'swift': []
 }
+
+app.DEFINE_string('db', None, 'Path of database to populate.')
+app.DEFINE_string('cf', None, 'Path of contentfiles database.')
+app.DEFINE_string('lang', None,
+                  'Name of the language to process. One of: '
+                  f'{set(LANGUAGE_TO_CLANG_ARGS.keys())}.')
 
 
 def GetSwiftBytecodesFromContentFiles(
