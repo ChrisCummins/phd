@@ -141,7 +141,7 @@ def PopulateControlFlowGraphTable(db: database.Database,
         s.commit()
         last_commit_time = the_time
 
-    return True
+  return True
 
 
 def CreateFullFlowGraphFromCfg(
@@ -213,6 +213,8 @@ def PopulateFullFlowGraphTable(db: database.Database, n: int = 10000) -> bool:
       if the_time - last_commit_time > 10:
         s.commit()
         last_commit_time = the_time
+
+  return True
 
 
 def PopulateBytecodeTableFromGithubCSources(db: database.Database,
@@ -328,11 +330,11 @@ def main(argv):
 
   app.Log(1, "Processing CFGs ...")
   while PopulateControlFlowGraphTable(db):
-    pass
+    print()
 
   app.Log(1, "Processing full flow graphs ...")
   while PopulateFullFlowGraphTable(db):
-    pass
+    print()
 
 
 if __name__ == '__main__':
