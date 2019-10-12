@@ -102,8 +102,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":control_flow_graph",
+        ":reachability_pb_py",
         "//compilers/llvm:opt",
         "//labm8:app",
+        "//labm8:pbutil",
         "//third_party/py/networkx",
         "//third_party/py/pydot",
         "//third_party/py/pyparsing",
