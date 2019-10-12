@@ -244,7 +244,7 @@ def ControlFlowGraphFromDotSource(dot_source: str) -> LlvmControlFlowGraph:
 
   dot = parsed_dots[0]
 
-  graph_re_match = re.match(r"\"CFG for '(\w+)' function\"", dot.get_name())
+  graph_re_match = re.match(r"\"CFG for '(.+)' function\"", dot.get_name())
   if not graph_re_match:
     raise ValueError(f"Could not interpret graph name '{dot.get_name()}'")
 
