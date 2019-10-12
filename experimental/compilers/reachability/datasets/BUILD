@@ -10,6 +10,7 @@ py_binary(
         "//experimental/compilers/reachability:database",
         "//experimental/compilers/reachability:random_opt_pb_py",
         "//labm8:app",
+        "//labm8:fs",
         "//labm8:lockfile",
         "//labm8:ppar",
         "//third_party/py/sqlalchemy",
