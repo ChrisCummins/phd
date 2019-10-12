@@ -619,6 +619,7 @@ path_dirs=( \
     /opt/bin \
     /opt/local/bin \
     /opt/local/sbin \
+    /opt/swift/bin \
     /bin \
     /usr/bin \
     /usr/bin/core_perl \
