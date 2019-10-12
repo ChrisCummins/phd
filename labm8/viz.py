@@ -12,18 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Plotting and visualization utilities."""
-import pathlib
 import time
-import typing
+from scipy import stats
 
 import matplotlib
 import numpy as np
+import pathlib
 import seaborn as sns
+import subprocess
+import tempfile
+import typing
+from IPython.core import display
 from matplotlib import axes
 from matplotlib import pyplot as plt
-from scipy import stats
 
 from labm8 import app
+from labm8 import fs
+
 
 FLAGS = app.FLAGS
 
@@ -259,3 +264,17 @@ def SummarizeInts(ints: typing.Iterable[int]) -> str:
       [f'{p}%={np.percentile(arr, p):.0f}' for p in [0, 50, 95, 99, 100]],)
   return (f'n={len(arr)}, mean={arr.mean():.2f}, stdev={arr.std():.2f}, '
           f'percentiles=[{percs}]')
+
+
+def PlotDot(dot: str) -> None:
+  """Compile and display the given dot plot."""
+  with tempfile.TemporaryDirectory() as d:
+    dot_path = pathlib.Path(d) / 'dot.dot'
+    png_path = pathlib.Path(d) / 'dot.png'
+
+    fs.Write(dot_path, dot.encode('utf-8'))
+    try:
+      subprocess.check_call(['dot', str(dot_path), '-Tpng', '-o', str(png_path)])
+    except subprocess.CalledProcessError as e:
+      raise ValueError(f"Failed to process dotgraph: {dot}")
+    display.display(display.Image(filename=f'{d}/dot.png'))
