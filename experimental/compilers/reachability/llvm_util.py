@@ -1,19 +1,22 @@
 """Utility code for working with LLVM."""
 
-import collections
 import multiprocessing
+
+import collections
 import pathlib
+import pydot
+import pyparsing
 import re
 import tempfile
 import typing
 
-import pydot
-import pyparsing
-
 from compilers.llvm import opt
 from experimental.compilers.reachability import control_flow_graph as cfg
+from experimental.compilers.reachability import reachability_pb2
 from labm8 import app
 from labm8 import fs
+from labm8 import pbutil
+
 
 FLAGS = app.FLAGS
 
@@ -214,6 +217,19 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
             f"Missing 'text' attribute from node '{data}'")
 
     return self
+
+  @classmethod
+  def FromDatabase(cls, row) -> 'LlvmControlFlowGraph':
+    proto = reachability_pb2.ControlFlowGraph()
+    # ControlFlowGraphProto and FullFlowGraphProto store the protos as plain
+    # text and encoded string, respectively.
+    try:
+      serialized_proto = row.proto
+      pbutil.FromString(serialized_proto, proto)
+    except AttributeError:
+      serialized_proto = row.serialized_proto
+      proto.ParseFromString(serialized_proto)
+    return cls.FromProto(proto)
 
 
 def ControlFlowGraphFromDotSource(dot_source: str) -> LlvmControlFlowGraph:
