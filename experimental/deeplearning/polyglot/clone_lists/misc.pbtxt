@@ -114,14 +114,6 @@ language {
   destination_directory: "/var/phd/datasets/github/repos_by_lang/rust"
 }
 language {
-  language: "swift"
-  query {
-    string: "language:swift sort:stars fork:false"
-    max_results: 1000
-  }
-  destination_directory: "/var/phd/datasets/github/repos_by_lang/swift"
-}
-language {
   language: "elixir"
   query {
     string: "language:elixir sort:stars fork:false"
