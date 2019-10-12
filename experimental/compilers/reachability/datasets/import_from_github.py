@@ -16,9 +16,11 @@ buffer and packet values:
   mysql> set global max_allowed_packet=1000000000;
 """
 import multiprocessing
-import typing
 
 import sqlalchemy as sql
+import subprocess
+import tempfile
+import typing
 
 from compilers.llvm import clang
 from datasets.github.scrape_repos import contentfiles
@@ -26,9 +28,11 @@ from deeplearning.clgen.preprocessors import opencl
 from experimental.compilers.reachability import database
 from experimental.compilers.reachability import reachability_pb2
 from labm8 import app
+from labm8 import fs
 from labm8 import humanize
 from labm8 import lockfile
 from labm8 import ppar
+
 
 FLAGS = app.FLAGS
 
@@ -50,6 +54,44 @@ LANGUAGE_TO_CLANG_ARGS = {
 }
 
 
+def GetSwiftBytecodesFromContentFiles(
+    source_name: str,
+    content_files: typing.List[typing.Tuple[int, str]]
+) -> typing.List[reachability_pb2.LlvmBytecode]:
+  """Extract LLVM bytecodes from swift contentfiles."""
+  protos = []
+
+  with tempfile.TemporaryDirectory(prefix='phd_import_') as d:
+    with fs.chdir(d) as d:
+      for content_file_id, text in content_files:
+        swift_file = 'file.swift'
+        bc_file = 'file.bc'
+        fs.Write(swift_file, text.encode('utf-8'))
+        swift = subprocess.Popen(['swift', '-Xfrontend', '-emit-bc'])
+        swift.communicate()
+        if swift.returncode:
+          continue
+        if not bc_file.is_file():
+          continue
+
+        process = clang.Exec(['-S', '-emit-llvm', str(bc_file), '-o', '-'])
+        if process.returncode:
+          continue
+
+        protos.append(
+            reachability_pb2.LlvmBytecode(
+                source_name=source_name,
+                relpath=str(content_file_id),
+                lang='swift',
+                cflags='',
+                bytecode=process.stdout,
+                clang_returncode=0,
+                error_message='',
+            ))
+
+  return protos
+
+
 def GetBytecodesFromContentFiles(
     source_name: str, language: str,
     content_files: typing.List[typing.Tuple[int, str]]
@@ -68,9 +110,12 @@ def GetBytecodesFromContentFiles(
     A list of zero LlvmBytecode protos, one for each contentfile which was
     successfully processed.
   """
+  if language == 'swift':
+    return GetSwiftBytecodesFromContentFiles(source_name, content_file_id)
+
   protos = []
   clang_args = LANGUAGE_TO_CLANG_ARGS[language] + [
-      '-S', '-emit-llvm', '-', '-o', '-'
+    '-S', '-emit-llvm', '-', '-o', '-'
   ]
 
   for content_file_id, text in content_files:
