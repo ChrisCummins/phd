@@ -194,15 +194,16 @@ def test_TeeLogsToFile(capsys):
     with open(pathlib.Path(d) / 'test.INFO') as f:
       lines = f.read().rstrip().split('\n')
       assert len(lines) == 1
-      assert lines[0].endswith('Hello, file!')
+      # There is the log formatting bumpf in the line.
+      assert 'Hello, file!' in lines[0]
     out, err = capsys.readouterr()
     assert not out
     # Test stderr contents.
     lines = err.rstrip().split('\n')
     assert len(lines) == 3
-    assert lines[0].endswith('This is not going in a file')
-    assert lines[1].endswith('Hello, file!')
-    assert lines[2].endswith('This is not going in a file')
+    assert 'This is not going in a file' in lines[0]
+    assert 'Hello, file!' in lines[1]
+    assert 'This is not going in a file' in lines[2]
 
 
 def test_TeeLogsToFile_contextmanager(capsys):
@@ -217,15 +218,15 @@ def test_TeeLogsToFile_contextmanager(capsys):
     with open(pathlib.Path(d) / 'test.INFO') as f:
       lines = f.read().rstrip().split('\n')
       assert len(lines) == 1
-      assert lines[0].endswith('Hello, file!')
+      assert 'Hello, file!' in lines[0]
     out, err = capsys.readouterr()
     assert not out
     # Test stderr contents.
     lines = err.rstrip().split('\n')
     assert len(lines) == 3
-    assert lines[0].endswith('This is not going in a file')
-    assert lines[1].endswith('Hello, file!')
-    assert lines[2].endswith('This is not going in a file')
+    assert 'This is not going in a file' in lines[0]
+    assert 'Hello, file!' in lines[1]
+    assert 'This is not going in a file' in lines[2]
 
 
 if __name__ == '__main__':
