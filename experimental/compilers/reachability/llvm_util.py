@@ -1,14 +1,13 @@
 """Utility code for working with LLVM."""
-
-import multiprocessing
-
 import collections
+import multiprocessing
 import pathlib
-import pydot
-import pyparsing
 import re
 import tempfile
 import typing
+
+import pydot
+import pyparsing
 
 from compilers.llvm import opt
 from experimental.compilers.reachability import control_flow_graph as cfg
@@ -16,7 +15,6 @@ from experimental.compilers.reachability import reachability_pb2
 from labm8 import app
 from labm8 import fs
 from labm8 import pbutil
-
 
 FLAGS = app.FLAGS
 
@@ -65,7 +63,7 @@ def DotCfgsFromBytecode(bytecode: str) -> typing.Iterator[str]:
         #     Writing 'cfg.main.dot'...
         if f"Writing '{file.name}'..." not in stderr:
           raise OSError(f"Could not find reference to file '{file.name}' in "
-                        f"opt stderr:\n{process.stderr}")
+                        f'opt stderr:\n{process.stderr}')
         with open(file) as f:
           yield f.read()
 
@@ -185,10 +183,9 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
           else:
             # TODO(cec): Do we want to preserve the "true" "false" information
             # for outgoing edges? We currently throw it away.
-            sig.add_node(
-                new_node_id,
-                name=new_node_name,
-                text=branch_instruction_components[0])
+            sig.add_node(new_node_id,
+                         name=new_node_name,
+                         text=branch_instruction_components[0])
         else:
           sig.add_node(new_node_id, name=new_node_name, text=instruction)
 
@@ -273,10 +270,10 @@ def ControlFlowGraphFromDotSource(dot_source: str) -> LlvmControlFlowGraph:
   try:
     parsed_dots = pydot.graph_from_dot_data(dot_source)
   except TypeError as e:
-    raise pyparsing.ParseException("Failed to parse dot source") from e
+    raise pyparsing.ParseException('Failed to parse dot source') from e
 
   if len(parsed_dots) != 1:
-    raise ValueError(f"Expected 1 Dot in source, found {len(parsed_dots)}")
+    raise ValueError(f'Expected 1 Dot in source, found {len(parsed_dots)}')
 
   dot = parsed_dots[0]
 
@@ -388,8 +385,8 @@ def ControlFlowGraphsFromBytecodes(
   dot_processes = []
   dot_queue = multiprocessing.Queue()
   for bytecode in bytecodes:
-    process = multiprocessing.Process(
-        target=_DotCfgsFromBytecodeToQueue, args=(bytecode, dot_queue))
+    process = multiprocessing.Process(target=_DotCfgsFromBytecodeToQueue,
+                                      args=(bytecode, dot_queue))
     process.start()
     dot_processes.append(process)
 

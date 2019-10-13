@@ -26,8 +26,8 @@ py_library(
     srcs = ["control_and_data_flow_graph.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         ":llvm_util",
+        "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         "//labm8:app",
         "//third_party/py/networkx",
     ],
@@ -40,8 +40,8 @@ py_test(
         ":control_and_data_flow_graph",
         "//labm8:app",
         "//labm8:test",
-        "//third_party/py/pytest",
         "//third_party/py/networkx",
+        "//third_party/py/pytest",
     ],
 )
 

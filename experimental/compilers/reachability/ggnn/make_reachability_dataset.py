@@ -1,16 +1,15 @@
 """This module prepares a dataset for learning reachability analysis from a
 database of control flow graph protocol buffers.
 """
-
-import multiprocessing
-
 import collections
-import networkx as nx
-import numpy as np
+import multiprocessing
 import pathlib
 import pickle
 import random
 import typing
+
+import networkx as nx
+import numpy as np
 
 from experimental.compilers.reachability import \
   control_and_data_flow_graph as cdfg
@@ -23,13 +22,11 @@ from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import prof
 
-
-app.DEFINE_database(
-    'db',
-    database.Database,
-    None,
-    'URL of database to read control flow graphs from.',
-    must_exist=True)
+app.DEFINE_database('db',
+                    database.Database,
+                    None,
+                    'URL of database to read control flow graphs from.',
+                    must_exist=True)
 app.DEFINE_output_path(
     'outdir',
     '/var/phd/experimental/compilers/reachability/ggnn/dataset',
@@ -61,7 +58,7 @@ app.DEFINE_integer(
 app.DEFINE_integer('reachability_dataset_bytecode_batch_size', 512,
                    'The number of bytecodes to process in a batch.')
 app.DEFINE_integer(
-    'reachability_dataset_file_fragment_size', 10000,
+    'reachability_dataset_file_fragment_size', 25000,
     'The minimum number of dictionaries to write to each file fragment.')
 
 FLAGS = app.FLAGS
@@ -75,7 +72,7 @@ def AnnotatedGraphToDictionary(
     g: nx.MultiDiGraph) -> typing.Dict[str, typing.Any]:
   # Translate arbitrary node labels into a zero-based index list.
   node_to_index = {node: i for i, node in enumerate(g.nodes)}
-  edge_type_to_int = {"control": 2, "data": 3}
+  edge_type_to_int = {'control': 2, 'data': 3}
 
   edge_list = []
   for src, dst, data in g.edges(data=True):
@@ -153,9 +150,9 @@ def BytecodeIdToCfgProtos(
   def GetConstantColumn(rows, column_idx, column_name):
     values = {r[column_idx] for r in rows}
     if len(values) != 1:
-      raise ValueError(f"Bytecode ID {bytecode_id} should have the same "
-                       f"{column_name} value across its {len(rows)} CFGs, "
-                       f"found these values: `{values}`")
+      raise ValueError(f'Bytecode ID {bytecode_id} should have the same '
+                       f'{column_name} value across its {len(rows)} CFGs, '
+                       f'found these values: `{values}`')
     return list(values)[0]
 
   q = s.query(database.ControlFlowGraphProto.proto,
@@ -167,7 +164,7 @@ def BytecodeIdToCfgProtos(
     .filter(database.ControlFlowGraphProto.status == 0).all()
   # A bytecode may have failed to produce any CFGs.
   if not q:
-    app.Error("Bytecode %s has no CFGs", bytecode_id)
+    app.Error('Bytecode %s has no CFGs', bytecode_id)
     return None, None, None, None, None
   proto_strings = [r[0] for r in q]
   source = GetConstantColumn(q, 1, 'source')
@@ -225,13 +222,15 @@ def ExportBytecodeIdsToFileFragments(
     db: database.Database,
     bytecode_ids: typing.List[int],
     outpath: pathlib.Path,
-    pool: typing.Optional[multiprocessing.Pool] = None) -> typing.List[pathlib.Path]:
+    pool: typing.Optional[multiprocessing.Pool] = None
+) -> typing.List[pathlib.Path]:
   pool = pool or multiprocessing.Pool()
   fragment_paths = []
   data = []
 
   with prof.Profile(lambda t: f'Processed {len(bytecode_ids)} bytecodes '
                     f'({len(bytecode_ids) / t:.2f} bytecode / s)'):
+    start_idx = 0
     for i, chunk in enumerate(
         labtypes.Chunkify(bytecode_ids,
                           FLAGS.reachability_dataset_bytecode_batch_size)):
@@ -254,8 +253,8 @@ def ExportBytecodeIdsToFileFragments(
         data += dicts
 
       if len(data) >= FLAGS.reachability_dataset_file_fragment_size:
-        start_idx = i * FLAGS.reachability_dataset_bytecode_batch_size
-        end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(chunk)
+        end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(
+            chunk)
         fragment_path = pathlib.Path(str(outpath) + f'.{start_idx}_{end_idx}')
         with prof.Profile(
             f'Wrote {humanize.Commas(len(data))} graphs to {fragment_path}'):
@@ -263,6 +262,7 @@ def ExportBytecodeIdsToFileFragments(
             pickle.dump(data, f)
         fragment_paths.append(fragment_path)
         data = []
+        start_idx = end_idx
 
   return fragment_paths
 
@@ -320,7 +320,7 @@ def main():
     if FLAGS.reachability_dataset_type == 'poj-104':
       train, test, val = GetPoj104BytecodeIds(db)
     else:
-      raise app.UsageError("Unknown value for --reachability_dataset_type")
+      raise app.UsageError('Unknown value for --reachability_dataset_type')
 
   with prof.Profile('Exported dataset files'):
     ExportDataset(db, train, test, val, outdir)

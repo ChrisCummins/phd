@@ -72,7 +72,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
   proto_t = reachability_pb2.ControlFlowGraph
 
-  def __init__(self, name: str = "cfg"):
+  def __init__(self, name: str = 'cfg'):
     super(ControlFlowGraph, self).__init__(name=name)
 
   def IsReachable(self, src, dst) -> bool:
@@ -123,7 +123,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
     # CFGs must contain one or more nodes.
     if number_of_nodes < 1:
-      raise NotEnoughNodes(f"Graph has no nodes")
+      raise NotEnoughNodes(f'Graph has no nodes')
 
     # Get the entry and exit blocks. These properties will raise exceptions
     # if they are not found / duplicates found.
@@ -135,7 +135,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
     if number_of_nodes > 1:
       if entry_node in exit_nodes:
-        raise InvalidSpecialBlock(f"Exit and entry nodes are the same: "
+        raise InvalidSpecialBlock(f'Exit and entry nodes are the same: '
                                   f"'{self.nodes[entry_node]['name']}'")
 
       for exit_node in exit_nodes:
@@ -149,7 +149,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     for node in self.nodes:
       # All nodes must have a name.
       if 'name' not in self.nodes[node]:
-        raise MissingNodeName(f"Node {node} has no name")
+        raise MissingNodeName(f'Node {node} has no name')
 
       # All node names must be unique.
       node_name = self.nodes[node]['name']
@@ -169,14 +169,14 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
       if out_degrees[exit_node]:
         raise InvalidNodeDegree(
             f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
-            f"{out_degrees[exit_node]}")
+            f'{out_degrees[exit_node]}')
 
     # Additional "strict" CFG tests.
     if strict:
       # Validate edge attributes.
       for src, dst in self.edges:
         if src == dst:
-          raise GraphContainsSelfLoops(f"Self loops: {src} -> {dst}")
+          raise GraphContainsSelfLoops(f'Self loops: {src} -> {dst}')
 
         # Each node in a CFG must have more than one output, or more than one
         # input. This is because nodes represent basic blocks: a node with only
