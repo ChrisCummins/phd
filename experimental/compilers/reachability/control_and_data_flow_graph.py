@@ -434,17 +434,17 @@ def ToDot(g: nx.Graph,
     data['style'] = 'filled'
 
   for node, data in StatementNodeIterator(g):
-    data['label'] = DataKeyOrCallback(data, statement_label)
+    data['label'] = f'"{DataKeyOrCallback(data, statement_label)}"'
     data['shape'] = StringOrCallback(data, statement_shape)
     data['fillcolor'] = StringOrCallback(data, statement_color)
 
   for node, data in IdentifierNodeIterator(g):
-    data['label'] = DataKeyOrCallback(data, identifier_label)
+    data['label'] = f'"{DataKeyOrCallback(data, identifier_label)}"'
     data['shape'] = StringOrCallback(data, identifier_shape)
     data['fillcolor'] = StringOrCallback(data, identifier_color)
 
   for node, data in MagicNodeIterator(g):
-    data['label'] = DataKeyOrCallback(data, magic_label)
+    data['label'] = f'"{DataKeyOrCallback(data, magic_label)}"'
     data['shape'] = StringOrCallback(data, magic_shape)
     data['fillcolor'] = StringOrCallback(data, magic_color)
 
