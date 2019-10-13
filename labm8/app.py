@@ -549,7 +549,7 @@ def RegisterFlagValidator(
   absl_flags.register_validator(flag_name, checker, message)
 
 
-def LogToDirectory(logdir: typing.Union[str, pathlib.Path],
+def LogToDirectory(logdir: Union[str, pathlib.Path],
                    name='info') -> pathlib.Path:
   """Write logs to a directory.
 
@@ -563,5 +563,5 @@ def LogToDirectory(logdir: typing.Union[str, pathlib.Path],
   """
   logdir = pathlib.Path(logdir)
   logdir.mkdir(exist_ok=True, parents=True)
-  absl_logging.get_absl_handler().use_absl_log_file(name, logdir)
+  absl_logging.get_absl_handler().use_absl_log_file(str(name), str(logdir))
   return logdir
