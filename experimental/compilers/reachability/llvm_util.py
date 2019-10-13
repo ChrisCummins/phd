@@ -93,6 +93,25 @@ def NodeAttributesToBasicBlock(
   }
 
 
+def SplitInstructionsInBasicBlock(text: str) -> typing.List[str]:
+  """Split the individual instructions from a basic block.
+
+  Args:
+    text: The text of the basic block.
+
+  Returns:
+    A list of lines.
+  """
+  lines = text.split('\n')
+  # LLVM will wrap long lines by inserting an ellipsis at the start of the line.
+  # Undo this.
+  for i in range(len(lines) - 1, 0, -1):
+    if lines[i].startswith('... '):
+      lines[i - 1] += lines[i][len('...'):]
+      lines[i] = None
+  return [line for line in lines if line]
+
+
 class LlvmControlFlowGraph(cfg.ControlFlowGraph):
   """A subclass of the generic control flow graph for LLVM CFGs.
 
@@ -136,7 +155,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
     # Iterate through all blocks in the source graph.
     for node, data in self.nodes(data=True):
-      instructions = data['text'].split('\n')
+      instructions = SplitInstructionsInBasicBlock(data['text'])
       last_instruction = len(instructions) - 1
 
       # Split a block into a list of instructions and create a new destination
