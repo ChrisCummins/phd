@@ -29,10 +29,10 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-import build_info
 from labm8 import shell
 from labm8.internal import flags_parsers
 from labm8.internal import logging
+
 
 FLAGS = absl_flags.FLAGS
 
@@ -67,11 +67,25 @@ def AssertOrRaise(stmt: bool, exception: Exception, *exception_args,
 
 def GetVersionInformationString() -> str:
   """Return a string of version information, as printed by --version flag."""
-  return '\n'.join([
+  # If this is a bazel environment, then the //:build_info package will be
+  # available. However, if this is a labm8 pip package install, then
+  # //:build_info will not be available, so use pkg_resources to get the
+  # version information.
+  try:
+    import build_info
+    version = '\n'.join([
       build_info.FormatVersion(),
       build_info.FormatShortBuildDescription(),
-      'Copyright (C) 2014-2019 Chris Cummins <chrisc.101@gmail.com>',
-      f'<{build_info.GetGithubCommitUrl()}>',
+    ])
+    url = build_info.GetGithubCommitUrl()
+  except ModuleNotFoundError:
+    import pkg_resources
+    version = f'version: {pkg_resources.get_distribution("labm8").version}'
+    url = 'https://github.com/ChrisCummins/phd'
+  return '\n'.join([
+    version,
+    'Copyright (C) 2014-2019 Chris Cummins <chrisc.101@gmail.com>',
+    f'<{url}>',
   ])
 
 
