@@ -174,8 +174,8 @@ def LogIf(level: int, condition, msg, *args, **kwargs):
 @absl_logging.skip_log_prefix
 def Fatal(msg, *args, **kwargs):
   """Logs a fatal message."""
-  logging.Fatal(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args),
-                **kwargs)
+  logging.Fatal(
+      _MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
 
 
 @absl_logging.skip_log_prefix
@@ -188,15 +188,15 @@ def FatalWithoutStackTrace(msg, *args, **kwargs):
 @absl_logging.skip_log_prefix
 def Error(msg, *args, **kwargs):
   """Logs an error message."""
-  logging.Error(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args),
-                **kwargs)
+  logging.Error(
+      _MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
 
 
 @absl_logging.skip_log_prefix
 def Warning(msg, *args, **kwargs):
   """Logs a warning message."""
-  logging.Warning(_MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args),
-                  **kwargs)
+  logging.Warning(
+      _MaybeColorizeLog(shell.ShellEscapeCodes.RED, msg, *args), **kwargs)
 
 
 def FlushLogs():
@@ -547,3 +547,21 @@ def RegisterFlagValidator(
         name.
   """
   absl_flags.register_validator(flag_name, checker, message)
+
+
+def LogToDirectory(logdir: typing.Union[str, pathlib.Path],
+                   name='info') -> pathlib.Path:
+  """Write logs to a directory.
+
+  This disables printing of logs to stderr, unless the --alsologtostderr flag
+  is provided.
+
+  Args:
+    logdir: The directory to write logs to. This is created if it does not
+      exist.
+    name: The name of the log file.
+  """
+  logdir = pathlib.Path(logdir)
+  logdir.mkdir(exist_ok=True, parents=True)
+  absl_logging.get_absl_handler().use_absl_log_file(name, logdir)
+  return logdir
