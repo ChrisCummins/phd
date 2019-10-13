@@ -18,7 +18,7 @@ message ControlFlowGraph {
   // The connections between nodes of the CFG.
   repeated ControlFlowGraphEdge edge = 3;
   optional int64 entry_block_index = 4;
-  optional int64 exit_block_index = 5;
+  repeated int64 exit_block_index = 5;
 }
 
 // A basic block.

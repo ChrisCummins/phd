@@ -56,10 +56,6 @@ class NoExitBlock(InvalidSpecialBlock):
   pass
 
 
-class MultipleExitBlocks(InvalidSpecialBlock):
-  pass
-
-
 class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   """A control flow graph.
 
@@ -132,20 +128,21 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     # Get the entry and exit blocks. These properties will raise exceptions
     # if they are not found / duplicates found.
     entry_node = self.entry_block
-    exit_node = self.exit_block
+    exit_nodes = self.exit_blocks
 
     out_degrees = [self.out_degree(n) for n in self.nodes]
     in_degrees = [self.in_degree(n) for n in self.nodes]
 
     if number_of_nodes > 1:
-      if entry_node == exit_node:
+      if entry_node in exit_nodes:
         raise InvalidSpecialBlock(f"Exit and entry nodes are the same: "
                                   f"'{self.nodes[entry_node]['name']}'")
 
-      if not nx.has_path(self, entry_node, exit_node):
-        raise MalformedControlFlowGraphError(
-            f"No path from entry node '{self.nodes[entry_node]['name']}' to "
-            f"exit node '{self.nodes[exit_node]['name']}'")
+      for exit_node in exit_nodes:
+        if not nx.has_path(self, entry_node, exit_node):
+          raise MalformedControlFlowGraphError(
+              f"No path from entry node '{self.nodes[entry_node]['name']}' to "
+              f"exit node '{self.nodes[exit_node]['name']}'")
 
     # Validate node attributes.
     node_names = set()
@@ -168,10 +165,11 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     in_degrees[entry_node] += 1
 
     # The exit block cannot have outputs.
-    if out_degrees[exit_node]:
-      raise InvalidNodeDegree(
-          f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
-          f"{out_degrees[exit_node]}")
+    for exit_node in exit_nodes:
+      if out_degrees[exit_node]:
+        raise InvalidNodeDegree(
+            f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
+            f"{out_degrees[exit_node]}")
 
     # Additional "strict" CFG tests.
     if strict:
@@ -221,13 +219,11 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     return entry_blocks[0]
 
   @property
-  def exit_block(self) -> int:
+  def exit_blocks(self) -> int:
     exit_blocks = [n for n in self.nodes if self.IsExitBlock(n)]
     if not exit_blocks:
       raise NoExitBlock()
-    elif len(exit_blocks) > 1:
-      raise MultipleExitBlocks()
-    return exit_blocks[0]
+    return exit_blocks
 
   @property
   def edge_density(self) -> float:
@@ -255,7 +251,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     # Set the graph-level properties.
     proto.name = self.graph['name']
     proto.entry_block_index = self.entry_block
-    proto.exit_block_index = self.exit_block
+    proto.exit_block_index[:] = self.exit_blocks
 
     # We translate node IDs to indexes into the node list.
     node_to_index: typing.Dict[int, int] = {}
@@ -285,7 +281,14 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
       instance.add_node(i, **data)
     # Set the special block attributes.
     instance.nodes[proto.entry_block_index]['entry'] = True
-    instance.nodes[proto.exit_block_index]['exit'] = True
+    try:
+      for index in proto.exit_block_index:
+        instance.nodes[index]['exit'] = True
+    except TypeError:
+      # I changed the exit_block_index field from singular to repeated, so
+      # attempting to iterate over it for old singular filed protos will yield
+      # a type error.
+      instance.nodes[proto.exit_block]['exit'] = True
     # Create the edges from protos.
     for edge in proto.edge:
       instance.add_edge(edge.src_index, edge.dst_index)
