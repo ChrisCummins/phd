@@ -145,19 +145,23 @@ def timers():
 
 @contextlib.contextmanager
 def Profile(
-    name: str = '',
+    name: typing.Union[str, typing.Callable[[int], str]] = '',
     print_to: typing.Callable[[str], None] = lambda msg: app.Log(1, msg),
 ):
   """A context manager which prints the elapsed time upon exit.
 
   Args:
-    name: The name of the task being profiled.
+    name: The name of the task being profiled. A callback may be provided which
+      is called at task completion with the elapsed duration in seconds as its
+      argument.
     print_to: The function to print the result to.
   """
   name = name or 'completed'
   start_time = time.time()
   yield
   elapsed = time.time() - start_time
+  if callable(name):
+    name = name(elapsed)
   print_to(f'{name} in {humanize.Duration(elapsed)}')
 
 
