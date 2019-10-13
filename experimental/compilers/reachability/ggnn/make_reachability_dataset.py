@@ -14,15 +14,15 @@ import typing
 
 from experimental.compilers.reachability import \
   control_and_data_flow_graph as cdfg
-from experimental.compilers.reachability import control_flow_graph
 from experimental.compilers.reachability import database
 from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
 from labm8 import app
+from labm8 import humanize
 from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import prof
-from labm8 import humanize
+
 
 app.DEFINE_database(
     'db',
@@ -60,6 +60,9 @@ app.DEFINE_integer(
     'selecting the root statement.')
 app.DEFINE_integer('reachability_dataset_bytecode_batch_size', 512,
                    'The number of bytecodes to process in a batch.')
+app.DEFINE_integer(
+    'reachability_dataset_file_fragment_size', 10000,
+    'The minimum number of dictionaries to write to each file fragment.')
 
 FLAGS = app.FLAGS
 
@@ -218,11 +221,13 @@ def CfgProtosToDictionaries(
     return []
 
 
-def ExportBytecodeIdsToFile(db: database.Database,
-                            bytecode_ids: typing.List[int],
-                            outpath: pathlib.Path,
-                            pool: typing.Optional[multiprocessing.Pool] = None):
+def ExportBytecodeIdsToFileFragments(
+    db: database.Database,
+    bytecode_ids: typing.List[int],
+    outpath: pathlib.Path,
+    pool: typing.Optional[multiprocessing.Pool] = None) -> typing.List[pathlib.Path]:
   pool = pool or multiprocessing.Pool()
+  fragment_paths = []
   data = []
 
   with prof.Profile(lambda t: f'Exported {len(bytecode_ids)} bytecodes '
@@ -248,9 +253,18 @@ def ExportBytecodeIdsToFile(db: database.Database,
                         1)):
         data += dicts
 
-  with prof.Profile(f'Wrote {humanize.Commas(len(data))} graphs to {outpath}'):
-    with open(outpath, 'wb') as f:
-      pickle.dump(data, f)
+      if len(data) >= FLAGS.reachability_dataset_file_fragment_size:
+        start_idx = i * FLAGS.reachability_dataset_bytecode_batch_size
+        end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(chunk)
+        fragment_path = pathlib.Path(str(outpath) + f'.{start_idx}_{end_idx}')
+        with prof.Profile(
+            f'Wrote {humanize.Commas(len(data))} graphs to {fragment_path}'):
+          with open(fragment_path, 'wb') as f:
+            pickle.dump(data, f)
+        fragment_paths.append(fragment_path)
+        data = []
+
+  return fragment_paths
 
 
 def GetPoj104BytecodeIds(
@@ -283,9 +297,9 @@ def GetPoj104BytecodeIds(
 def ExportDataset(db: database.Database, train_ids: typing.List[int],
                   val_ids: typing.List[int], test_ids: typing.List[int],
                   outdir: pathlib.Path):
-  ExportBytecodeIdsToFile(db, train_ids, outdir / 'train.pickle')
-  ExportBytecodeIdsToFile(db, val_ids, outdir / 'val.pickle')
-  ExportBytecodeIdsToFile(db, test_ids, outdir / 'test.pickle')
+  ExportBytecodeIdsToFileFragments(db, train_ids, outdir / 'train.pickle')
+  ExportBytecodeIdsToFileFragments(db, val_ids, outdir / 'val.pickle')
+  ExportBytecodeIdsToFileFragments(db, test_ids, outdir / 'test.pickle')
 
 
 def main():
@@ -295,7 +309,7 @@ def main():
   db = FLAGS.db()
   outdir = FLAGS.outdir
 
-  app.LogToDirectory('make_reachability_dataset', outdir / 'logs')
+  app.LogToDirectory(outdir / 'logs', 'make_reachability_dataset')
 
   app.Log(1, 'Seeding with %s', FLAGS.reachability_dataset_seed)
   random.seed(FLAGS.reachability_dataset_seed)
