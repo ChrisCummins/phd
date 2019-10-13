@@ -368,6 +368,8 @@ class Session(orm.session.Session):
 class Database(object):
   """A base class for implementing databases."""
 
+  SessionType = Session
+
   def __init__(self, url: str, declarative_base, must_exist: bool = False):
     """Instantiate a database object.
 
