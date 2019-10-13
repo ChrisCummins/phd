@@ -228,6 +228,15 @@ def ExportBytecodeIdsToFileFragments(
   fragment_paths = []
   data = []
 
+  def EmitFragment(start_idx, end_idx) -> str:
+    end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(chunk)
+    fragment_path = pathlib.Path(str(outpath) + f'.{start_idx}_{end_idx}')
+    with prof.Profile(
+        f'Wrote {humanize.Commas(len(data))} graphs to {fragment_path}'):
+      with open(fragment_path, 'wb') as f:
+        pickle.dump(data, f)
+    return fragment_path
+
   with prof.Profile(lambda t: f'Processed {len(bytecode_ids)} bytecodes '
                     f'({len(bytecode_ids) / t:.2f} bytecode / s)'):
     start_idx = 0
@@ -255,14 +264,13 @@ def ExportBytecodeIdsToFileFragments(
       if len(data) >= FLAGS.reachability_dataset_file_fragment_size:
         end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(
             chunk)
-        fragment_path = pathlib.Path(str(outpath) + f'.{start_idx}_{end_idx}')
-        with prof.Profile(
-            f'Wrote {humanize.Commas(len(data))} graphs to {fragment_path}'):
-          with open(fragment_path, 'wb') as f:
-            pickle.dump(data, f)
-        fragment_paths.append(fragment_path)
-        data = []
+        fragment_paths.append(EmitFragment(start_idx, end_idx))
         start_idx = end_idx
+        data = []
+
+    if data:
+      end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(chunk)
+      fragment_paths.append(EmitFragment(start_idx, end_idx))
 
   return fragment_paths
 
