@@ -219,8 +219,9 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
     new_entry_block = node_translation_map[self.entry_block].start
     sig.nodes[new_entry_block]['entry'] = True
 
-    new_exit_block = node_translation_map[self.exit_block].end
-    sig.nodes[new_exit_block]['exit'] = True
+    for block in self.exit_blocks:
+      new_exit_block = node_translation_map[block].end
+      sig.nodes[new_exit_block]['exit'] = True
 
     return sig.ValidateControlFlowGraph(strict=False)
 
@@ -324,7 +325,8 @@ def ControlFlowGraphFromDotSource(dot_source: str) -> LlvmControlFlowGraph:
   if len(exit_nodes) != 1:
     raise ValueError("Couldn't find an exit block")
 
-  graph.nodes[NodeIndex(exit_nodes[0])]['exit'] = True
+  for exit_node in exit_nodes:
+    graph.nodes[NodeIndex(exit_node)]['exit'] = True
 
   for edge in dot.get_edges():
     # In the dot file, an edge looks like this:
