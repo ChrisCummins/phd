@@ -9,6 +9,7 @@ py_binary(
         "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
         "//experimental/compilers/reachability:control_flow_graph",
+        "//experimental/compilers/reachability:control_and_data_flow_graph",
         "//experimental/compilers/reachability:control_flow_graph_generator",
         "//experimental/compilers/reachability:database",
         "//experimental/compilers/reachability:reachability_pb_py",

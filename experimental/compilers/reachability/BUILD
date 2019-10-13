@@ -22,6 +22,30 @@ exports_repo(
 )
 
 py_library(
+    name = "control_and_data_flow_graph",
+    srcs = ["control_and_data_flow_graph.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
+        ":llvm_util",
+        "//labm8:app",
+        "//third_party/py/networkx",
+    ],
+)
+
+py_test(
+    name = "control_and_data_flow_graph_test",
+    srcs = ["control_and_data_flow_graph_test.py"],
+    deps = [
+        ":control_and_data_flow_graph",
+        "//labm8:app",
+        "//labm8:test",
+        "//third_party/py/pytest",
+        "//third_party/py/networkx",
+    ],
+)
+
+py_library(
     name = "control_flow_graph",
     srcs = ["control_flow_graph.py"],
     visibility = ["//visibility:public"],
