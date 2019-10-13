@@ -13,6 +13,7 @@ py_binary(
         "//experimental/compilers/reachability:control_flow_graph_generator",
         "//experimental/compilers/reachability:database",
         "//experimental/compilers/reachability:reachability_pb_py",
+        "//experimental/compilers/reachability/ggnn:make_reachability_dataset",
         "//research/grewe_2013_cgo:feature_extractor",
     ],
 )
