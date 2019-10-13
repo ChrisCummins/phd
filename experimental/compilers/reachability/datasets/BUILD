@@ -12,7 +12,7 @@ py_binary(
         "//labm8:app",
         "//labm8:fs",
         "//labm8:lockfile",
-        "//labm8:ppar",
+        "//labm8:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )

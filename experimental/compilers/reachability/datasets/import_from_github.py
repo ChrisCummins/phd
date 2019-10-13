@@ -16,11 +16,11 @@ buffer and packet values:
   mysql> set global max_allowed_packet=1000000000;
 """
 import multiprocessing
-
-import sqlalchemy as sql
 import subprocess
 import tempfile
 import typing
+
+import sqlalchemy as sql
 
 from compilers.llvm import clang
 from datasets.github.scrape_repos import contentfiles
@@ -31,45 +31,51 @@ from labm8 import app
 from labm8 import fs
 from labm8 import humanize
 from labm8 import lockfile
-from labm8 import ppar
-
+from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 
 # A dictionary mapping language name to a list of language-specific arguments
 # to pass to clang.
 LANGUAGE_TO_CLANG_ARGS = {
-  'c': [
-    '-xc',
-    '-O0',
-    '-ferror-limit=1',
-    '-Wno-everything',  # No warnings please.
-  ],
-  'opencl': opencl.GetClangArgs(use_shim=True),
-  'swift': []
+    'c': [
+        '-xc',
+        '-O0',
+        '-ferror-limit=1',
+        '-Wno-everything',  # No warnings please.
+    ],
+    'opencl': opencl.GetClangArgs(use_shim=True),
+    'swift': []
 }
 
 app.DEFINE_string('db', None, 'Path of database to populate.')
 app.DEFINE_string('cf', None, 'Path of contentfiles database.')
-app.DEFINE_string('lang', None,
-                  'Name of the language to process. One of: '
-                  f'{set(LANGUAGE_TO_CLANG_ARGS.keys())}.')
+app.DEFINE_string(
+    'lang', None, 'Name of the language to process. One of: '
+    f'{set(LANGUAGE_TO_CLANG_ARGS.keys())}.')
+app.DEFINE_integer('batch_size', 32, 'The size of batches to process.')
 
 
 def GetSwiftBytecodesFromContentFiles(
-    source_name: str,
-    content_files: typing.List[typing.Tuple[int, str]]
+    source_name: str, content_files: typing.List[typing.Tuple[int, str]]
 ) -> typing.List[reachability_pb2.LlvmBytecode]:
-  """Extract LLVM bytecodes from swift contentfiles."""
+  """Extract LLVM bytecodes from swift contentfiles.
+
+  The process is swift -> LLVM bitcode, clang -> LLVM bytecode.
+
+  This requires that the `swift` binary is in the system path.
+  """
   protos = []
 
   with tempfile.TemporaryDirectory(prefix='phd_import_') as d:
     with fs.chdir(d) as d:
       for content_file_id, text in content_files:
-        swift_file = 'file.swift'
-        bc_file = 'file.bc'
+        swift_file = d / 'file.swift'
+        bc_file = d / 'file.bc'
         fs.Write(swift_file, text.encode('utf-8'))
-        swift = subprocess.Popen(['swift', '-Xfrontend', '-emit-bc'])
+        swift = subprocess.Popen(
+            ['swift', '-Xfrontend', '-emit-bc', swift_file.name],
+            stderr=subprocess.DEVNULL)
         swift.communicate()
         if swift.returncode:
           continue
@@ -113,11 +119,11 @@ def GetBytecodesFromContentFiles(
     successfully processed.
   """
   if language == 'swift':
-    return GetSwiftBytecodesFromContentFiles(source_name, content_file_id)
+    return GetSwiftBytecodesFromContentFiles(source_name, content_files)
 
   protos = []
   clang_args = LANGUAGE_TO_CLANG_ARGS[language] + [
-    '-S', '-emit-llvm', '-', '-o', '-'
+      '-S', '-emit-llvm', '-', '-o', '-'
   ]
 
   for content_file_id, text in content_files:
@@ -143,6 +149,8 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
                           language: str,
                           db: database.Database,
                           pool: typing.Optional[multiprocessing.Pool] = None):
+  writer = sqlutil.BufferedDatabaseWriter(db, max_queue=10)
+
   # Only one process at a time can run this method.
   mutex = lockfile.AutoLockFile(granularity='function')
 
@@ -164,7 +172,6 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
                            sql.Integer).desc()).limit(1).first() or (0,))[0])
 
   with mutex, cf.Session() as cf_s:
-
     # Get the ID of the last contentfile to process.
     n = (cf_s.query(contentfiles.ContentFile.id).join(
         contentfiles.GitHubRepository).filter(
@@ -181,34 +188,21 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
                  contentfiles.GitHubRepository.language == language).order_by(
                      contentfiles.ContentFile.id))
 
-    batch_size = 256
+    row_batches = sqlutil.OffsetLimitBatchedQuery(q,
+                                                  batch_size=FLAGS.batch_size)
 
-    def _AddProtosToDatabase(
-        protos: typing.List[reachability_pb2.LlvmBytecode]) -> None:
-      bytecodes = [
-          database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto))
-          for proto in protos
-      ]
-      with db.Session(commit=True) as s:
-        s.add_all(bytecodes)
-
-    def _StartBatch(i: int):
-      app.Log(
-          1,
-          'Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)',
-          batch_size, humanize.Commas((i + resume_from)), humanize.Commas(n),
-          ((i + resume_from) / n) * 100)
-
-    ppar.MapDatabaseRowBatchProcessor(
-        GetBytecodesFromContentFiles,
-        q,
-        generate_work_unit_args=lambda rows: (source_name, language, rows),
-        work_unit_result_callback=_AddProtosToDatabase,
-        start_of_batch_callback=_StartBatch,
-        batch_size=batch_size,
-        rows_per_work_unit=5,
-        pool=pool,
-    )
+    with writer.Session() as writer:
+      for i, batch in zip(range(resume_from, n + 1), row_batches):
+        app.Log(
+            1,
+            'Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)',
+            FLAGS.batch_size, humanize.Commas(i), humanize.Commas(n),
+            (i / n) * 100)
+        protos = GetBytecodesFromContentFiles(source_name, language, batch.rows)
+        writer.AddMany([
+            database.LlvmBytecode(**database.LlvmBytecode.FromProto(proto))
+            for proto in protos
+        ])
 
 
 def main(argv):
