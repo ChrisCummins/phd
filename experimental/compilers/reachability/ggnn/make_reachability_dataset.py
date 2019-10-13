@@ -230,7 +230,7 @@ def ExportBytecodeIdsToFileFragments(
   fragment_paths = []
   data = []
 
-  with prof.Profile(lambda t: f'Exported {len(bytecode_ids)} bytecodes '
+  with prof.Profile(lambda t: f'Processed {len(bytecode_ids)} bytecodes '
                     f'({len(bytecode_ids) / t:.2f} bytecode / s)'):
     for i, chunk in enumerate(
         labtypes.Chunkify(bytecode_ids,
