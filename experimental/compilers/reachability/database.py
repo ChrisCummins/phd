@@ -76,6 +76,10 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
   proto: str = sql.Column(
       sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
+  # TODO: Switch string proto for a more compact serialized proto.
+  # serialized_proto: str = sql.Column(
+  #     sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql'),
+  #     nullable=False)
   error_message: str = sql.Column(
       sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
