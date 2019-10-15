@@ -182,20 +182,21 @@ def CreateFullFlowGraphFromCfg(
 def PopulateFullFlowGraphTable(db: database.Database, n: int = 10000) -> bool:
   """Populate the full flow graph table from CFGs."""
   with db.Session(commit=True) as s:
+    already_done_ids = s.query(database.FullFlowGraphProto.bytecode_id,
+                               database.FullFlowGraphProto.cfg_id).all()
     # Query that returns (bytecode_id,cfg_id) tuples for all CFGs.
-    # TODO(cec): Exclude values already in the FFG table.
     todo = s.query(database.ControlFlowGraphProto.bytecode_id,
                    database.ControlFlowGraphProto.cfg_id,
                    database.ControlFlowGraphProto.proto) \
-      .filter(database.ControlFlowGraphProto.status == 0) \
-      .limit(n)
+      .filter(database.ControlFlowGraphProto.status == 0)
 
-    count = todo.count()
-    if not count:
+    # Filter out those that have already been done.
+    todo = [(b, c, p) for b, c, p in todo if (b, c) not in already_done_ids]
+    if not len(todo):
       return False
 
     bar = progressbar.ProgressBar()
-    bar.max_value = count
+    bar.max_value = len(todo)
 
     # Process CFGs in parallel.
     pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
@@ -332,9 +333,9 @@ def main(argv):
   while PopulateControlFlowGraphTable(db):
     print()
 
-  app.Log(1, "Processing full flow graphs ...")
-  while PopulateFullFlowGraphTable(db):
-    print()
+  # app.Log(1, "Processing full flow graphs ...")
+  # while PopulateFullFlowGraphTable(db):
+  #   print()
 
 
 if __name__ == '__main__':
