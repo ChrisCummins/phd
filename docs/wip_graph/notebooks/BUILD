@@ -6,6 +6,7 @@ py_binary(
     deps = [
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/deeptune/opencl/adversary:opencl_deadcode_inserter",
+        "//deeplearning/ncc/inst2vec:api",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
         "//experimental/compilers/reachability:control_and_data_flow_graph",

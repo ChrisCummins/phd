@@ -29,6 +29,7 @@ py_library(
         ":llvm_util",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         "//labm8:app",
+        "//labm8:humanize",
         "//third_party/py/networkx",
     ],
 )

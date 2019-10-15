@@ -7,6 +7,7 @@ LLVM module.
 import itertools
 
 import collections
+import copy
 import io
 import networkx as nx
 import typing
@@ -14,9 +15,20 @@ import typing
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
 from experimental.compilers.reachability import llvm_util
 from labm8 import app
+from labm8 import humanize
 
 
 FLAGS = app.FLAGS
+
+
+def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
+  for node, data in StatementNodeIterator(g):
+    if ' = alloca ' in data['text']:
+      allocated_identifier = data['text'].split(' =')[0]
+      if allocated_identifier == identifier:
+        return node
+  raise ValueError(
+      f"Unable to find `alloca` statement for identifier `{identifier}`")
 
 
 def GetLlvmStatementDestinationAndOperands(
@@ -37,14 +49,20 @@ def GetLlvmStatementDestinationAndOperands(
   # of its operands.
   if statement.startswith('store '):
     if len(operands) == 1:
-      destination = operands[0]
+      # store <immediate> <dst>
+      store_destination = operands[0]
       operands = []
     elif len(operands) == 2:
-      destination = operands[0]
+      # store <src> <dst>
+      store_destination = operands[0]
       operands = [operands[1]]
     else:
-      raise ValueError(
-          f'Unable to extract operands from store statement: `{statement}`')
+      raise ValueError(f'Unexpected number of operands ({len(operands)}) for '
+                       f'store statement: `{statement}`')
+    if store_destination_is_output:
+      destination = store_destination
+    if alloca_is_store_destination_input:
+      operands.append(GetAllocationStatementForIdentifier(graph, store_destination))
 
   # Strip whitespace from the strings.
   strip = lambda strings: (s.strip() for s in strings)
@@ -161,15 +179,103 @@ def StatementIsSuccessor(
   return False
 
 
+def InsertFunctionGraph(
+    graph, function_name, function_graphs
+) -> typing.Tuple[nx.MultiDiGraph, str, str]:
+  """Insert the named function graph to the graph."""
+  if function_name not in function_graphs:
+    raise ValueError(f"Cannot insert non-existent function `{function_name}`. "
+                     f"Available functions: {sorted(function_graphs.keys())}")
+
+  function_graph = copy.deepcopy(function_graphs[function_name])
+  graph = nx.compose(graph, function_graph)
+  return graph, function_graph.entry_block, function_graph.exit_block
+
+
+def GetCalledFunctionName(statement) -> typing.Optional[str]:
+  """Get the name of a function called in the statement."""
+  if 'call ' not in statement:
+    return None
+  # Try and resolve the call destination.
+  _, m_glob, _, _ = inst2vec_preprocess.get_identifiers_from_line(statement)
+  if not m_glob:
+    return None
+  return m_glob[0][1:]  # strip the leading '@' character
+
+
+def FindCallSites(graph, src, dst):
+  """Find the statements in `src` function that call `dst` function."""
+  call_sites = []
+  for node, data in StatementNodeIterator(graph):
+    if data['function'] != src:
+      continue
+    statement = data.get('original_text', data['text'])
+    called_function = GetCalledFunctionName(statement)
+    if not called_function:
+      continue
+    if called_function == dst:
+      call_sites.append(node)
+  if not call_sites:
+    raise ValueError("Unable to find any call statements from `{src}` to `{dst}`")
+  return call_sites
+
+
+def AddInterproceduralCallEdges(
+    graph: nx.MultiDiGraph, call_multigraph: nx.MultiDiGraph,
+    function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]],
+    get_call_site_successor: typing.Callable[[nx.MultiDiGraph, str], str]):
+  """Add edges of type "call" between statements to match the call graph."""
+
+  # Since we're not duplicating graphs, we can drop the parallel edges by
+  # converting the call graph back to a regular directed graph.
+  call_graph = nx.DiGraph(call_multigraph)
+
+  for src, dst in call_graph.edges:
+    # Ignore connections to the root node, we have already processed them.
+    if src == 'external node':
+      continue
+
+    call_sites = FindCallSites(graph, src, dst)
+
+    # Check that the number of call sounds we found matches the expected number
+    # from the call graph.
+    multigraph_call_count = call_multigraph.number_of_edges(src, dst)
+    if len(call_sites) != multigraph_call_count:
+      raise ValueError("Call graph contains "
+                       f"{humanize.Plural(multigraph_call_count, 'call')} from "
+                       f"function `{src}` to `{dst}`, but found "
+                       f"{len(call_sites)} call sites in the graph")
+
+    for call_site in call_sites:
+      # Lookup the nodes to connect.
+      call_entry, call_exit = function_entry_exit_nodes[dst]
+      call_site_successor = get_call_site_successor(graph, call_site)
+      # Connect the noes.
+      graph.add_edge(call_site, call_entry, flow='call')
+      graph.add_edge(call_exit, call_site_successor, flow='call')
+
+
+def GetCallStatementSuccessor(graph: nx.MultiDiGraph, call_site: str):
+  """Find the neighboring"""
+  call_site_successors = StatementNeighbors(graph, call_site)
+  if len(call_site_successors) != 1:
+    raise ValueError(
+        f"Call statement `{call_site}` should have exactly one successor "
+        "statement but found "
+        f"{humanize.Plural(len(call_size_successors), 'successor')}: "
+        f"`{call_site_successors}`")
+  return list(call_site_successors)[0]
+
+
+
 class ControlAndDataFlowGraphBuilder(object):
 
   def __init__(self,
                dataflow: str = 'edges_only',
                preprocess_text: bool = True,
                discard_unknown_statements: bool = False,
-               add_entry_block: bool = True,
-               add_exit_block: bool = True,
-               only_add_entry_and_exit_blocks_if_required: bool = True):
+               only_add_entry_and_exit_blocks_if_required: bool = True,
+               call_edge_returns_to_successor: bool = False):
     """Instantiate a Control and Data Flow Graph (CDFG) builder.
 
     Args:
@@ -186,22 +292,27 @@ class ControlAndDataFlowGraphBuilder(object):
         removed, or the node can be kept but with the text set to `UNK!`. If the
         node is removed, the control flow paths flowing through the node are
         preserved.
-      add_entry_block:
+      only_add_entry_and_exit_blocks_if_required: If True, insert magic entry
+        and exit blocks only if they are required. A magic entry/exit block is
+        required only if there exists multiple entrance/exit points in the
+        graph.
+      call_edge_returns_to_successor: If True, when inserting call edges between
+        functions, the edge returning from the called function points to the
+        statement after the call statement. If False, the outgoing and return
+        edges both point to the call statement.
     """
     self.dataflow = dataflow
     self.preprocess_text = preprocess_text
     self.discard_unknown_statements = discard_unknown_statements
-    self.add_entry_block = add_entry_block
-    self.add_exit_block = add_exit_block
     self.only_add_entry_and_exit_blocks_if_required = (
         only_add_entry_and_exit_blocks_if_required)
-
-    self.cfg_count = 0
+    self.call_edge_returns_to_successor = call_edge_returns_to_successor
 
   def MaybePreprocessStatementText(self, g: nx.Graph) -> None:
-    """Replace the 'text' attribute of statement nodes with inst2vec preprocessed.
+    """Replace 'text' statement attributes with inst2vec preprocessed.
 
-    The original text is added to an 'original_text' property of nodes.
+    An 'original_text' attribute is added to nodes which stores the unmodified
+    text.
 
     Args:
       g: The graph to pre-process the statement node texts of.
@@ -211,7 +322,8 @@ class ControlAndDataFlowGraphBuilder(object):
 
     for node, data in StatementNodeIterator(g):
       if 'text' not in data:
-        raise ValueError(f"No `text` attribute for node {node} {data}")
+        raise ValueError(
+            f"No `text` attribute for node `{node}` with attributes: {data}")
     lines = [[data['text']] for _, data in StatementNodeIterator(g)]
     preprocessed_lines, _ = inst2vec_preprocess.preprocess(lines)
     preprocessed_texts = [
@@ -263,11 +375,8 @@ class ControlAndDataFlowGraphBuilder(object):
     for edge in edges_to_add:
       g.add_edge(*edge)
 
-  def MaybeAddEntryBlock(self, g: nx.MultiDiGraph) -> None:
+  def MaybeAddSingleEntryBlock(self, g: nx.MultiDiGraph) -> None:
     """Add a magic entry block."""
-    if not self.add_entry_block:
-      return
-
     entry_blocks = list(EntryBlockIterator(g))
     if not entry_blocks:
       raise ValueError("No entry blocks found in graph!")
@@ -282,17 +391,12 @@ class ControlAndDataFlowGraphBuilder(object):
         g.add_edge(entry_block, node, flow='control')
     g.entry_block = entry_block
 
-  def MaybeAddExitBlock(self, g: nx.MultiDiGraph, only_if_required: bool=True) -> None:
+  def MaybeAddSingleExitBlock(self, g: nx.MultiDiGraph) -> None:
     """Add a magic exit block to unite the exit statements of a CFG.
 
     Args:
       g: The graph to add the exit block to.
-      only_if_required: Only insert the exit block if there is more than one
-        exit statement.
     """
-    if not self.add_exit_block:
-      return
-
     exit_blocks = list(ExitBlockIterator(g))
     if not exit_blocks:
       raise ValueError("No exit blocks found in graph!")
@@ -369,20 +473,23 @@ class ControlAndDataFlowGraphBuilder(object):
       # Remove multiple incoming DF edges from the same identifier by keeping
       # only the edge which is closest to the statement (i.e. the most-recent
       # write).
-      dedeuped_data_flow_edges = {}
+      # TODO(cec): This tramples the DF edge from '%1 = alloca ...' to
+      # 'store 1, %1', since both statements are considered writes, so the
+      # edge is discarded as a WAW.
+      deduped_data_flow_edges = {}
       for src, dst, identifier in data_flow_edges_to_add:
-        if (dst, identifier) in dedeuped_data_flow_edges:
-          other_src = dedeuped_data_flow_edges[(dst, identifier)]
+        if (dst, identifier) in deduped_data_flow_edges:
+          other_src = deduped_data_flow_edges[(dst, identifier)]
           if StatementIsSuccessor(g, other_src, src):
-            dedeuped_data_flow_edges[(dst, identifier)] = src
+            deduped_data_flow_edges[(dst, identifier)] = src
         else:
-          dedeuped_data_flow_edges[(dst, identifier)] = src
+          deduped_data_flow_edges[(dst, identifier)] = src
 
       [g.remove_edge(*edge) for edge in edges_to_remove]
       [g.remove_node(node) for node in nodes_to_remove]
       [
         g.add_edge(src, dst, identifier=identifier, flow='data')
-        for (dst, identifier), src in dedeuped_data_flow_edges.items()
+        for (dst, identifier), src in deduped_data_flow_edges.items()
       ]
 
 
@@ -417,70 +524,55 @@ class ControlAndDataFlowGraphBuilder(object):
 
     self.MaybeAddDataFlowElements(g)
     self.MaybePreprocessStatementText(g)
-    self.MaybeAddEntryBlock(g)
-    self.MaybeAddExitBlock(g)
+    self.MaybeAddSingleEntryBlock(g)
+    self.MaybeAddSingleExitBlock(g)
     return g
 
-  @staticmethod
-  def ComposeGraphs(graphs: typing.List[nx.MultiDiGraph]) -> nx.MultiDiGraph:
-    """Combine per-functions graphs into a single whole-module graph."""
-    graph_names = [g.name for g in graphs]
-    entry_blocks = {g.name: g.entry_block for g in graphs}
-    exit_blocks = {g.name: g.exit_block for g in graphs}
+  def ComposeGraphs(self, function_graphs: typing.List[nx.MultiDiGraph],
+                    call_graph: nx.MultiDiGraph) -> nx.MultiDiGraph:
+    """Combine function-level graphs into a single interprocedural graph.
 
-    # Compose the graphs into a single big one.
-    g = nx.MultiDiGraph()
-    for graph in graphs:
-      g = nx.compose(g, graph)
+    Args:
+      function_graphs: The function graphs to compose. These are unmodified.
+      call_graph: The call graph with which to combine the function graphs.
+    """
+    function_names = [g.name for g in function_graphs]
+    if len(set(function_names)) != len(function_names):
+      raise ValueError(
+          f"Duplicate function names found: {sorted(function_names)}")
 
-    # Connect the call statements.
-    edges_to_remove = set()
-    edges_to_add = set()
-    for call_node, data in StatementNodeIterator(g):
-      statement = data.get('original_text', data['text'])
-      if 'call ' not in statement:
-        continue
-      # Try and resolve the call destination.
-      _, m_glob, _, _ = inst2vec_preprocess.get_identifiers_from_line(
-          statement)
-      if not m_glob:
-        continue
-      destination = m_glob[0][1:]
-      if destination not in graph_names:
-        continue
+    # Add a function attribute to all nodes to track their originating function.
+    for function_graph in function_graphs:
+      for _, data in function_graph.nodes(data=True):
+        data['function'] = function_graph.name
 
-      # If the result of the call is assigned, then add DF edges from the
-      # "magic" exit block and its predecessors to the calling statement.
-      # TODO(cec): Investigate this. This breaks the relative ordering between
-      # control and data flow.
-      if '=' in statement:
-        edges_to_add.add((exit_blocks[destination], call_node, 'data'))
-        for src, dst in g.in_edges(exit_blocks[destination]):
-          # TODO(cec): Will this create parallel edges if there already is a
-          # data flow edge?
-          edges_to_add.add((src, dst, 'data'))
+    function_graph_map = {g.name: g for g in function_graphs}
 
-      edges_to_add.add((call_node, entry_blocks[destination], 'control'))
-      for edge in g.out_edges(call_node):
-        edges_to_remove.add(edge)
-        data = g.edges[(edge[0], edge[1], 0)]
-        edge = (exit_blocks[destination], edge[1], data['flow'])
-        edges_to_add.add(edge)
+    # Create the interprocedural graph with a magic root node.
+    interprocedural_graph = nx.MultiDiGraph()
+    interprocedural_graph.add_node('root', name='root', type='magic')
 
-    # Update the graph.
-    for edge in edges_to_remove:
-      g.remove_edge(*edge)
-    for src, dst, flow in edges_to_add:
-      assert src in g.nodes
-      assert dst in g.nodes
-      g.add_edge(src, dst, flow=flow)
+    # Add each function to the interprocedural graph.
+    function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]] = {}
 
-    g.add_node('root', name='root', type='magic')
-    for entry_block in entry_blocks.values():
-      if g.in_degree(entry_block) == 0:
-        g.add_edge('root', entry_block, flow='control')
+    for _, dst in call_graph.out_edges('external node'):
+      interprocedural_graph, function_entry, function_exit = InsertFunctionGraph(
+          interprocedural_graph, dst, function_graph_map)
+      function_entry_exit_nodes[dst] = (function_entry, function_exit)
 
-    return g
+      # Connect the newly inserted function to the root node.
+      interprocedural_graph.add_edge('root', function_entry, flow='call')
+
+    if self.call_edge_returns_to_successor:
+      get_call_site_successor = GetCallStatementSuccessor
+    else:
+      get_call_site_successor = lambda g, n: n
+
+    AddInterproceduralCallEdges(
+        interprocedural_graph, call_graph, function_entry_exit_nodes,
+        get_call_site_successor=get_call_site_successor)
+
+    return interprocedural_graph
 
   def BuildFromControlFlowGraphs(
       self, cfgs: typing.List[llvm_util.LlvmControlFlowGraph]) -> nx.DiGraph:
