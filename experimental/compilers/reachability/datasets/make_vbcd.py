@@ -144,80 +144,6 @@ def PopulateControlFlowGraphTable(db: database.Database,
   return True
 
 
-def CreateFullFlowGraphFromCfg(
-    cfg_tuple: typing.Tuple[int, int, str]
-) -> typing.List[reachability_pb2.ControlFlowGraphFromLlvmBytecode]:
-  """Parallel worker process for extracting CFGs from bytecode."""
-  # Expand the input tuple.
-  bytecode_id, cfg_id, proto_txt = cfg_tuple
-
-  proto = pbutil.FromString(proto_txt, reachability_pb2.ControlFlowGraph())
-  try:
-    original_graph = llvm_util.LlvmControlFlowGraph.FromProto(proto)
-
-    graph = original_graph.BuildFullFlowGraph()
-
-    return reachability_pb2.ControlFlowGraphFromLlvmBytecode(
-        bytecode_id=bytecode_id,
-        cfg_id=cfg_id,
-        control_flow_graph=graph.ToProto(),
-        status=0,
-        error_message='',
-        block_count=graph.number_of_nodes(),
-        edge_count=graph.number_of_edges(),
-        is_strict_valid=graph.IsValidControlFlowGraph(strict=True))
-  except Exception as e:
-    return reachability_pb2.ControlFlowGraphFromLlvmBytecode(
-        bytecode_id=bytecode_id,
-        cfg_id=cfg_id,
-        control_flow_graph=reachability_pb2.ControlFlowGraph(),
-        status=1,
-        error_message=str(e),
-        block_count=0,
-        edge_count=0,
-        is_strict_valid=False,
-    )
-
-
-def PopulateFullFlowGraphTable(db: database.Database, n: int = 10000) -> bool:
-  """Populate the full flow graph table from CFGs."""
-  with db.Session(commit=True) as s:
-    already_done_ids = s.query(database.FullFlowGraphProto.bytecode_id,
-                               database.FullFlowGraphProto.cfg_id).all()
-    # Query that returns (bytecode_id,cfg_id) tuples for all CFGs.
-    todo = s.query(database.ControlFlowGraphProto.bytecode_id,
-                   database.ControlFlowGraphProto.cfg_id,
-                   database.ControlFlowGraphProto.proto) \
-      .filter(database.ControlFlowGraphProto.status == 0)
-
-    # Filter out those that have already been done.
-    todo = [(b, c, p) for b, c, p in todo if (b, c) not in already_done_ids]
-    if not len(todo):
-      return False
-
-    bar = progressbar.ProgressBar()
-    bar.max_value = len(todo)
-
-    # Process CFGs in parallel.
-    pool = multiprocessing.Pool(FLAGS.vbcd_process_count)
-    last_commit_time = time.time()
-    for i, proto in enumerate(
-        pool.imap_unordered(CreateFullFlowGraphFromCfg, todo)):
-      the_time = time.time()
-      bar.update(i)
-
-      s.add(
-          database.FullFlowGraphProto(
-              **database.FullFlowGraphProto.FromProto(proto)))
-
-      # Commit every 10 seconds.
-      if the_time - last_commit_time > 10:
-        s.commit()
-        last_commit_time = the_time
-
-  return True
-
-
 def PopulateBytecodeTableFromGithubCSources(db: database.Database,
                                             tempdir: pathlib.Path):
   language_to_clone = scrape_repos_pb2.LanguageToClone(
@@ -332,10 +258,6 @@ def main(argv):
   app.Log(1, "Processing CFGs ...")
   while PopulateControlFlowGraphTable(db):
     print()
-
-  # app.Log(1, "Processing full flow graphs ...")
-  # while PopulateFullFlowGraphTable(db):
-  #   print()
 
 
 if __name__ == '__main__':

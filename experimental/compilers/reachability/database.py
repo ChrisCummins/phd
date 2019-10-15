@@ -7,6 +7,7 @@ from experimental.compilers.reachability import reachability_pb2
 from labm8 import app
 from labm8 import sqlutil
 
+
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -94,49 +95,6 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
         'bytecode_id': proto.bytecode_id,
         'cfg_id': proto.cfg_id,
         'proto': proto.control_flow_graph,
-        'status': proto.status,
-        'error_message': proto.error_message,
-        'block_count': proto.block_count,
-        'edge_count': proto.edge_count,
-        'is_strict_valid': proto.is_strict_valid,
-    }
-
-
-class FullFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
-                         sqlutil.TablenameFromCamelCapsClassNameMixin):
-  """Table of full flow graphs."""
-
-  proto_t = reachability_pb2.ControlFlowGraphFromLlvmBytecode
-
-  bytecode_id: int = sql.Column(sql.Integer, nullable=False)
-  cfg_id: int = sql.Column(sql.Integer, nullable=False)
-
-  # Composite primary key.
-  __table_args__ = (
-      sql.ForeignKeyConstraint(
-          ['bytecode_id', 'cfg_id'],
-          [ControlFlowGraphProto.bytecode_id, ControlFlowGraphProto.cfg_id]),
-      sql.PrimaryKeyConstraint('bytecode_id', 'cfg_id', name='unique_id'),
-  )
-
-  status: int = sql.Column(sql.Integer, nullable=False)
-  serialized_proto: str = sql.Column(
-      sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql'),
-      nullable=False)
-  error_message: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
-      nullable=False)
-  block_count: int = sql.Column(sql.Integer, nullable=False)
-  edge_count: int = sql.Column(sql.Integer, nullable=False)
-  is_strict_valid: bool = sql.Column(sql.Boolean, nullable=False)
-
-  @classmethod
-  def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
-    """Return a dictionary of instance constructor args from proto."""
-    return {
-        'bytecode_id': proto.bytecode_id,
-        'cfg_id': proto.cfg_id,
-        'serialized_proto': proto.control_flow_graph.SerializeToString(),
         'status': proto.status,
         'error_message': proto.error_message,
         'block_count': proto.block_count,
