@@ -1,26 +1,24 @@
 """This module prepares a dataset for learning reachability analysis from a
 database of control flow graph protocol buffers.
 """
-import collections
 import multiprocessing
+
+import collections
+import networkx as nx
+import numpy as np
 import pathlib
 import pickle
 import random
 import typing
 
-import networkx as nx
-import numpy as np
-
 from experimental.compilers.reachability import \
   control_and_data_flow_graph as cdfg
 from experimental.compilers.reachability import database
-from experimental.compilers.reachability import llvm_util
-from experimental.compilers.reachability import reachability_pb2
 from labm8 import app
 from labm8 import humanize
 from labm8 import labtypes
-from labm8 import pbutil
 from labm8 import prof
+
 
 app.DEFINE_database('db',
                     database.Database,
@@ -143,9 +141,9 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
     yield reachable
 
 
-def BytecodeIdToCfgProtos(
+def BytecodeIdToJob(
     s: database.Database.SessionType,
-    bytecode_id: id) -> typing.Tuple[typing.List[str], str, str, str, int]:
+    bytecode_id: id) -> typing.Tuple[str, str, str, str, int]:
 
   def GetConstantColumn(rows, column_idx, column_name):
     values = {r[column_idx] for r in rows}
@@ -155,25 +153,16 @@ def BytecodeIdToCfgProtos(
                        f'found these values: `{values}`')
     return list(values)[0]
 
-  q = s.query(database.ControlFlowGraphProto.proto,
+  q = s.query(database.LlvmBytecode.bytecode,
               database.LlvmBytecode.source_name,
               database.LlvmBytecode.relpath,
               database.LlvmBytecode.language) \
-    .join(database.LlvmBytecode) \
-    .filter(database.ControlFlowGraphProto.bytecode_id == bytecode_id) \
-    .filter(database.ControlFlowGraphProto.status == 0).all()
-  # A bytecode may have failed to produce any CFGs.
-  if not q:
-    app.Error('Bytecode %s has no CFGs', bytecode_id)
-    return None, None, None, None, None
-  proto_strings = [r[0] for r in q]
-  source = GetConstantColumn(q, 1, 'source')
-  relpath = GetConstantColumn(q, 2, 'relpath')
-  language = GetConstantColumn(q, 3, 'language')
-  return proto_strings, source, relpath, language, bytecode_id
+    .filter(database.LlvmBytecode.it == bytecode_id).one()
+  bytecode, source, relpath, language = q
+  return bytecode, source, relpath, language, bytecode_id
 
 
-def CfgProtosToDictionaries(
+def BytecodeJobToDictionaries(
     packed_args: typing.Tuple[typing.List[str], str, str, str, int]
 ) -> typing.List[typing.Dict[str, typing.Any]]:
   """
@@ -185,27 +174,15 @@ def CfgProtosToDictionaries(
   Returns:
     A list of reachability-annotated dictionaries.
   """
-  proto_strings, source_name, relpath, language, bytecode_id = packed_args
-  if not proto_strings:
-    return []
+  bytecode, source_name, relpath, language, bytecode_id = packed_args
   builder = cdfg.ControlAndDataFlowGraphBuilder(
       dataflow='edges_only',
       preprocess_text=True,
       discard_unknown_statements=False,
-      add_entry_block=False,
-      add_exit_block=True,
   )
 
   try:
-    # Create CFGs from the serialized protos.
-    cfgs = []
-    proto = reachability_pb2.ControlFlowGraph()
-    for proto_string in proto_strings:
-      proto.Clear()
-      pbutil.FromString(proto_string, proto)
-      cfgs.append(llvm_util.LlvmControlFlowGraph.FromProto(proto))
-
-    graph = builder.BuildFromControlFlowGraphs(cfgs)
+    graph = builder.Build(bytecode)
     graph.name = f'{source_name}:{relpath}'
     graph.bytecode_id = str(bytecode_id)
     graph.language = language
@@ -213,7 +190,7 @@ def CfgProtosToDictionaries(
         graph, FLAGS.reachability_dataset_max_instances_per_graph)
     return [AnnotatedGraphToDictionary(graph) for graph in annotated_graphs]
   except Exception as e:
-    app.Error('Failed to create CDFG for bytecode %d: %s (%s)', bytecode_id, e,
+    app.Error('Failed to create graph for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
     return []
 
@@ -251,11 +228,11 @@ def ExportBytecodeIdsToFileFragments(
                len(bytecode_ids)) * 100)
       # Run the database queries from the master thread.
       with db.Session() as s:
-        jobs = [BytecodeIdToCfgProtos(s, bytecode_id) for bytecode_id in chunk]
+        jobs = [BytecodeIdToJob(s, bytecode_id) for bytecode_id in chunk]
 
       # Process database query results in parallel.
       for dicts in pool.imap_unordered(
-          CfgProtosToDictionaries,
+          BytecodeJobToDictionaries,
           jobs,
           chunksize=max(FLAGS.reachability_dataset_bytecode_batch_size // 16,
                         1)):

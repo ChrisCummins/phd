@@ -26,6 +26,7 @@ py_library(
     srcs = ["control_and_data_flow_graph.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//compilers/llvm:opt_util",
         ":llvm_util",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         "//labm8:app",

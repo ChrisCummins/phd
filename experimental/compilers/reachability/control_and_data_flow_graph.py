@@ -12,6 +12,7 @@ import io
 import networkx as nx
 import typing
 
+from compilers.llvm import opt_util
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
 from experimental.compilers.reachability import llvm_util
 from labm8 import app
@@ -574,14 +575,14 @@ class ControlAndDataFlowGraphBuilder(object):
 
     return interprocedural_graph
 
-  def BuildFromControlFlowGraphs(
-      self, cfgs: typing.List[llvm_util.LlvmControlFlowGraph]) -> nx.DiGraph:
-    graphs = [self.BuildFromControlFlowGraph(cfg) for cfg in cfgs]
-    return self.ComposeGraphs(graphs)
-
   def Build(self, bytecode: str) -> nx.MultiDiGraph:
-    cfgs = list(llvm_util.ControlFlowGraphsFromBytecodes([bytecode]))
-    return self.BuildFromControlFlowGraphs(cfgs)
+    call_graph_dot, cfg_dots = (
+      opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(bytecode))
+    cfgs = [llvm_util.ControlFlowGraphFromDotSource(cfg_dot) for cfg_dot in cfg_dots]
+    call_graph = llvm_util.CallGraphFromDotSource(call_graph_dot)
+    graphs = [self.BuildFromControlFlowGraph(cfg) for cfg in cfgs]
+    return self.ComposeGraphs(graphs, call_graph)
+
 
 
 def ToControlFlowGraph(g: nx.MultiDiGraph):
