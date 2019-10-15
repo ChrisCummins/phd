@@ -49,7 +49,7 @@ def CreateControlFlowGraphsFromLlvmBytecode(
   protos = []
 
   # Extract the dot sources from the bytecode.
-  dot_generator = llvm_util.DotCfgsFromBytecode(bytecode)
+  dot_generator = llvm_util.DotControlFlowGraphsFromBytecode(bytecode)
   cfg_id = 0
   # We use a while loop here rather than iterating over the dot_generator
   # directly because the dot_generator can raise an exception, and we don't

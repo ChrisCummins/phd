@@ -163,30 +163,6 @@ digraph "CFG for 'DoSomething' function" {
   }
 """
 
-def test_DotCallGraphFromBytecode_simple_c_program():
-  """Test that simple C program produces two Dot CFGs."""
-  dot_cfgs = list(llvm_util.DotCfgsFromBytecode(SIMPLE_C_BYTECODE))
-  assert len(dot_cfgs) == 2
-  assert "CFG for 'DoSomething' function" in '\n'.join(dot_cfgs)
-  assert "CFG for 'main' function" in '\n'.join(dot_cfgs)
-
-
-def test_DotCfgsFromBytecode_simple_c_program():
-  """Test that simple C program produces two Dot CFGs."""
-  dot_cfgs = list(llvm_util.DotCfgsFromBytecode(SIMPLE_C_BYTECODE))
-  assert len(dot_cfgs) == 2
-  assert "CFG for 'DoSomething' function" in '\n'.join(dot_cfgs)
-  assert "CFG for 'main' function" in '\n'.join(dot_cfgs)
-
-
-def test_DotCfgsFromBytecode_invalid_bytecode():
-  """Test that exception is raised if bytecode is invalid."""
-  with pytest.raises(opt.OptException) as e_ctx:
-    next(llvm_util.DotCfgsFromBytecode("invalid bytecode!"))
-  assert e_ctx.value.returncode
-  assert e_ctx.value.stderr
-
-
 def test_NodeAttributesToBasicBlock_unrecognized_label():
   """Test that error is raised if label is not recognized."""
   with pytest.raises(ValueError):

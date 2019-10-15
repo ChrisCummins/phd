@@ -75,7 +75,7 @@ def CreateControlFlowGraphFromOpenClKernel(
   bytecode, _ = BytecodeFromOpenClString(opencl_kernel, '-O0')
 
   # Extract a single dot source from the bytecode.
-  dot_generator = llvm_util.DotCfgsFromBytecode(bytecode)
+  dot_generator = llvm_util.DotControlFlowGraphsFromBytecode(bytecode)
   dot = next(dot_generator)
   try:
     next(dot_generator)

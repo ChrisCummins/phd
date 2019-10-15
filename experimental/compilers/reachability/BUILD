@@ -127,7 +127,7 @@ py_library(
     deps = [
         ":control_flow_graph",
         ":reachability_pb_py",
-        "//compilers/llvm:opt",
+        "//compilers/llvm:opt_util",
         "//labm8:app",
         "//labm8:pbutil",
         "//third_party/py/networkx",

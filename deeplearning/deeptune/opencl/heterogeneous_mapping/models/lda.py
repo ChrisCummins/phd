@@ -129,7 +129,7 @@ def _ExtractGraphBatchOrDie(
   for src_file_path in src_file_paths:
     app.Log(1, 'Compiling %s', src_file_path.name)
     bytecode = ncc.ExtractLlvmByteCodeOrDie(src_file_path, headers_dir)
-    dot_strings = list(llvm_util.DotCfgsFromBytecode(bytecode))
+    dot_strings = list(llvm_util.DotControlFlowGraphsFromBytecode(bytecode))
     cfgs = [llvm_util.ControlFlowGraphFromDotSource(dot) for dot in dot_strings]
     if len(cfgs) != 1:
       app.Fatal('Found %d CFGs in %s: %s', len(dot_strings), src_file_path.name,

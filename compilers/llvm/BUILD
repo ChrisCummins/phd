@@ -174,23 +174,25 @@ py_test(
 )
 
 py_library(
-    name = "util",
-    srcs = ["util.py"],
+    name = "opt_util",
+    srcs = ["opt_util.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":llvm",
         ":llvm_as",
         ":opt",
         "//labm8:app",
+        "//labm8:humanize",
     ],
 )
 
 py_test(
-    name = "util_test",
-    srcs = ["util_test.py"],
+    name = "opt_util_test",
+    srcs = ["opt_util_test.py"],
     deps = [
         ":llvm",
-        ":util",
+        ":opt",
+        ":opt_util",
         "//labm8:app",
         "//labm8:test",
     ],

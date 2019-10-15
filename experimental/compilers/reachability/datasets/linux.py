@@ -128,7 +128,7 @@ def TryToCreateControlFlowGraphsFromLinuxSrc(
     return graphs
 
   # Extract a dot sources from the bytecode.
-  dot_generator = llvm_util.DotCfgsFromBytecode(bytecode)
+  dot_generator = llvm_util.DotControlFlowGraphsFromBytecode(bytecode)
   while True:
     try:
       dot = next(dot_generator)

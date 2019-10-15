@@ -38,7 +38,6 @@ py_library(
         # Note that :implementation is not directly imported, but required by
         # the gym registration process.
         ":implementation",
-        "//compilers/llvm:util",
         "//labm8:labtypes",
         "//labm8:app",
         "//datasets/benchmarks:bzip2",

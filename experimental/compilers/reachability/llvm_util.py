@@ -3,59 +3,19 @@ import multiprocessing
 
 import collections
 import networkx as nx
-import pathlib
 import pydot
 import pyparsing
 import re
-import tempfile
 import typing
 
-from compilers.llvm import opt
+from compilers.llvm import opt_util
 from experimental.compilers.reachability import control_flow_graph as cfg
 from experimental.compilers.reachability import reachability_pb2
 from labm8 import app
-from labm8 import fs
 from labm8 import pbutil
 
 
 FLAGS = app.FLAGS
-
-
-def DotCallGraphFromBytecode(bytecode: str) -> str:
-  """Create a call graph from an LLVM bytecode file.
-
-  Args:
-    bytecode: The LLVM bytecode to create call graphfrom.
-
-  Returns:
-    A dotfile string.
-
-  Raises:
-    OptException: In case the opt pass fails.
-    UnicodeDecodeError: If generated dotfile can't be read.
-  """
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    output_dir = pathlib.Path(d)
-    # Change into the output directory, because the -dot-callgraph pass writes
-    # to the current working directory.
-    with fs.chdir(output_dir):
-      # We run with universal_newlines=False because the stdout of opt is the
-      # binary bitcode, which we completely ignore (we're only interested in
-      # stderr). This means we must encode stdin and decode stderr ourselves.
-      process = opt.Exec(['-dot-callgraph'],
-                         stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False,
-                         log=False)
-      stderr = process.stderr.decode('utf-8')
-
-      # Propagate failures from opt as OptExceptions.
-      if process.returncode:
-        raise opt.OptException(returncode=process.returncode, stderr=stderr)
-
-      callgraph = output_dir / 'callgraph.dot'
-      if not callgraph.is_file():
-        raise OSError(f"Callgraph dotfile not produced")
-      return fs.Read(callgraph)
 
 
 def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
@@ -100,55 +60,6 @@ def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
 
   nx.relabel_nodes(graph, node_name_to_label, copy=False)
   return graph
-
-
-def DotCfgsFromBytecode(bytecode: str) -> typing.Iterator[str]:
-  """Create a control flow graph from an LLVM bytecode file.
-
-  Args:
-    bytecode: The LLVM bytecode to create CFG dots from.
-
-  Returns:
-    An iterator of dotfile strings.
-
-  Raises:
-    OptException: In case the opt pass fails.
-    UnicodeDecodeError: If generated dotfile can't be read.
-  """
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    output_dir = pathlib.Path(d)
-    # Change into the output directory, because the -dot-cfg pass writes files
-    # to the current working directory.
-    with fs.chdir(output_dir):
-      # We run with universal_newlines=False because the stdout of opt is the
-      # binary bitcode, which we completely ignore (we're only interested in
-      # stderr). This means we must encode stdin and decode stderr ourselves.
-      process = opt.Exec(['-dot-cfg'],
-                         stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False,
-                         log=False)
-      stderr = process.stderr.decode('utf-8')
-
-      # Propagate failures from opt as OptExceptions.
-      if process.returncode:
-        raise opt.OptException(returncode=process.returncode, stderr=stderr)
-
-      for file in output_dir.iterdir():
-        # Opt pass prints the name of the dot files it generates, e.g.:
-        #
-        #     $ opt -dot-cfg < foo.ll
-        #     WARNING: You're attempting to print out a bitcode file.
-        #     This is inadvisable as it may cause display problems. If
-        #     you REALLY want to taste LLVM bitcode first-hand, you
-        #     can force output with the `-f' option.
-        #
-        #     Writing 'cfg.DoSomething.dot'...
-        #     Writing 'cfg.main.dot'...
-        if f"Writing '{file.name}'..." not in stderr:
-          raise OSError(f"Could not find reference to file '{file.name}' in "
-                        f'opt stderr:\n{process.stderr}')
-        with open(file) as f:
-          yield f.read()
 
 
 def NodeAttributesToBasicBlock(
@@ -200,13 +111,17 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
   contains the LLVM instructions for the basic block as a string.
   """
 
-  def BuildFullFlowGraph(self) -> 'LlvmControlFlowGraph':
+  def BuildFullFlowGraph(
+      self,
+      remove_unconditional_branch_statements: bool = False,
+      remove_labels_in_branch_statements: bool = False,
+  ) -> 'LlvmControlFlowGraph':
     """Build a full program flow graph from the Control Flow Graph.
 
     This expands the control flow graph so that every node contains a single
-    LLVM instruction. The "text" attribute of nodes contains the instruction.
-
-    Unconditional branch instructions are ignored.
+    LLVM instruction. The "text" attribute of nodes contains the instruction,
+    and the "basic_block" attribute contains an integer ID for the basic block
+    that the statement came from.
 
     Node and edge indices cannot be compared between the original graph and
     the flow graph.
@@ -259,18 +174,29 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
           # Unconditional branches can be skipped - they contain no useful
           # information. Conditional branches can have the labels stripped.
           branch_instruction_components = instruction.split(', ')
+
+          if remove_labels_in_branch_statements:
+            branch_text = instruction
+          else:
+            branch_text = branch_instruction_components[0]
+
           if len(branch_instruction_components) == 1:
-            # Unconditional branches are ignored - they provide no meaningful
+            # Unconditional branches may ignored - they provide no meaningful
             # information beyond what the edge already includes.
-            block_instruction_count -= 1
+            if remove_unconditional_branch_statements:
+              block_instruction_count -= 1
+            else:
+              sig.add_node(new_node_id, name=new_node_name, text=branch_text,
+                           basic_block=node)
           else:
             # TODO(cec): Do we want to preserve the "true" "false" information
             # for outgoing edges? We currently throw it away.
-            sig.add_node(new_node_id,
-                         name=new_node_name,
-                         text=branch_instruction_components[0])
+            sig.add_node(new_node_id, name=new_node_name, text=branch_text,
+                         basic_block=node)
         else:
-          sig.add_node(new_node_id, name=new_node_name, text=instruction)
+          # Regular instruction to add.
+          sig.add_node(new_node_id, name=new_node_name, text=instruction,
+                       basic_block=node)
 
       # Add an entry to the node translation map for the start and end nodes
       # of this basic block.
@@ -421,7 +347,7 @@ def ControlFlowGraphFromDotSource(dot_source: str) -> LlvmControlFlowGraph:
   return graph
 
 
-class DotCfgsFromBytecodeError(ValueError):
+class DotControlFlowGraphsFromBytecodeError(ValueError):
   """An error raised processing a bytecode file."""
 
   def __init__(self, bytecode: str, error: Exception):
@@ -437,13 +363,13 @@ class ControlFlowGraphFromDotSourceError(ValueError):
     self.error = error
 
 
-def _DotCfgsFromBytecodeToQueue(bytecode: str,
+def _DotControlFlowGraphsFromBytecodeToQueue(bytecode: str,
                                 queue: multiprocessing.Queue) -> None:
   """Process a bytecode and submit the dot source or the exception."""
   try:
-    queue.put(list(DotCfgsFromBytecode(bytecode)))
+    queue.put(list(opt_util.DotControlFlowGraphsFromBytecode(bytecode)))
   except Exception as e:
-    queue.put(DotCfgsFromBytecodeError(bytecode, e))
+    queue.put(opt_util.DotControlFlowGraphsFromBytecodeError(bytecode, e))
 
 
 def _ControlFlowGraphFromDotSourceToQueue(dot: str,
@@ -468,7 +394,7 @@ def ControlFlowGraphsFromBytecodes(
   dot_processes = []
   dot_queue = multiprocessing.Queue()
   for bytecode in bytecodes:
-    process = multiprocessing.Process(target=_DotCfgsFromBytecodeToQueue,
+    process = multiprocessing.Process(target=_DotControlFlowGraphsFromBytecodeToQueue,
                                       args=(bytecode, dot_queue))
     process.start()
     dot_processes.append(process)
