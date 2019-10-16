@@ -40,16 +40,13 @@ app.DEFINE_integer('reachability_num_steps', 0,
                    'If > 0, the number of steps to resolve reachability for.')
 app.DEFINE_integer(
     'reachability_dataset_max_train_bytecodes', 0,
-    'If --reachability_dataset_max_bytecodes > 0, this limits the number of '
-    'bytecodes exported to this value.')
+    'If > 0, this limits the number of bytecodes exported to this value.')
 app.DEFINE_integer(
     'reachability_dataset_max_val_bytecodes', 0,
-    'If --reachability_dataset_max_bytecodes > 0, this limits the number of '
-    'bytecodes exported to this value.')
+    'If > 0, this limits the number of bytecodes exported to this value.')
 app.DEFINE_integer(
     'reachability_dataset_max_test_bytecodes', 0,
-    'If --reachability_dataset_max_bytecodes > 0, this limits the number of '
-    'bytecodes exported to this value.')
+    'If > 0, this limits the number of bytecodes exported to this value.')
 app.DEFINE_integer(
     'reachability_dataset_max_instances_per_graph', 3,
     'The maximum number of reachability graph instances to produce from a '
