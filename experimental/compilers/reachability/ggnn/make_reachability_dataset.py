@@ -36,6 +36,8 @@ app.DEFINE_output_path(
     is_dir=True)
 app.DEFINE_string('reachability_dataset_type', 'poj104_cfg_only',
                   'The type of dataset to export.')
+app.DEFINE_integer('reachability_num_steps', 0,
+                   'If > 0, the number of steps to resolve reachability for.')
 app.DEFINE_integer(
     'reachability_dataset_max_train_bytecodes', 0,
     'If --reachability_dataset_max_bytecodes > 0, this limits the number of '
@@ -121,6 +123,24 @@ def SetReachableNodes(g: nx.MultiDiGraph, root_node: str) -> None:
     g.nodes[next]['y'] = np_one
 
 
+def SetKStepReachableNodes(g: nx.MultiDiGraph, root_node: str, k: int) -> None:
+  g.nodes[root_node]['x'] = np_one
+
+  # Breadth-first traversal to mark all the nodes as reachable.
+  visited = set()
+  q = collections.deque([(root_node, 0)])
+  while q:
+    next, distance = q.popleft()
+    visited.add(next)
+    if distance + 1 <= k:
+      for neighbor in cdfg.StatementNeighbors(g, next):
+        if neighbor not in visited:
+          q.append((neighbor, distance + 1))
+
+    # Mark the node as reachable.
+    g.nodes[next]['y'] = np_one
+
+
 def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
                                     n: typing.Optional[int] = None
                                    ) -> typing.Iterable[nx.MultiDiGraph]:
@@ -141,7 +161,10 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
     reachable.bytecode_id = g.bytecode_id
     reachable.name = g.name
     reachable.language = g.language
-    SetReachableNodes(reachable, node)
+    if FLAGS.reachability_num_steps:
+      SetKStepReachableNodes(reachable, node, FLAGS.reachability_num_steps)
+    else:
+      SetReachableNodes(reachable, node)
     yield reachable
 
 
