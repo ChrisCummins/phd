@@ -106,7 +106,7 @@ py_binary(
         "//datasets/github/scrape_repos:contentfiles",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//deeplearning/clgen/corpuses:preprocessed",
-        "//deeplearning/clgen/preprocessors:java",
+        "//deeplearning/clgen/preprocessors",
         "//labm8:app",
         "//labm8:fs",
         "//labm8:humanize",
