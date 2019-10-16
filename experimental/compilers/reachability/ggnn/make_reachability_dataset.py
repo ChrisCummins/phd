@@ -441,7 +441,7 @@ def main():
   outdir.mkdir(exist_ok=True, parents=True)
 
   with prof.Profile('Read bytecode IDs from database'):
-    if FLAGS.reachability_dataset_type == 'poj104-cfg':
+    if FLAGS.reachability_dataset_type == 'poj104_cfg_only':
       train, test, val = GetPoj104BytecodeIds(db)
       make_job, process_job = MakePoj104CfgOnlyJob, ProcessPoj104CfgOnlyJob
     elif FLAGS.reachability_dataset_type == 'poj104':
