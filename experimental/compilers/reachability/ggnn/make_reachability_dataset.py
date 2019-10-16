@@ -23,12 +23,12 @@ from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import prof
 
-
-app.DEFINE_database('db',
-                    database.Database,
-                    None,
-                    'URL of database to read control flow graphs from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'db',
+    database.Database,
+    None,
+    'URL of database to read control flow graphs from.',
+    must_exist=True)
 app.DEFINE_output_path(
     'outdir',
     '/var/phd/experimental/compilers/reachability/ggnn/dataset',
@@ -147,7 +147,8 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
 
 def ExportBytecodeIdsToFileFragments(
     db: database.Database,
-    make_job_cb, process_job_cb,
+    make_job_cb,
+    process_job_cb,
     bytecode_ids: typing.List[int],
     outpath: pathlib.Path,
     pool: typing.Optional[multiprocessing.Pool] = None
@@ -224,7 +225,7 @@ def BuildAndRunJobsOnBytecodeIds(
     return fragment_path
 
   with prof.Profile(lambda t: f'Processed {len(bytecode_ids)} bytecodes '
-                              f'({len(bytecode_ids) / t:.2f} bytecode / s)'):
+                    f'({len(bytecode_ids) / t:.2f} bytecode / s)'):
     start_idx = 0
     for i, chunk in enumerate(
         labtypes.Chunkify(bytecode_ids,
@@ -288,19 +289,19 @@ def GetPoj104BytecodeIds(
   ]
 
 
-def ExportDataset(db: database.Database,
-                  make_job_cb, process_job_cb,
-                  train_ids: typing.List[int],
-                  val_ids: typing.List[int], test_ids: typing.List[int],
-                  outdir: pathlib.Path):
-  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, train_ids, outdir / 'train.pickle')
-  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, val_ids, outdir / 'val.pickle')
-  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, test_ids, outdir / 'test.pickle')
+def ExportDataset(db: database.Database, make_job_cb, process_job_cb,
+                  train_ids: typing.List[int], val_ids: typing.List[int],
+                  test_ids: typing.List[int], outdir: pathlib.Path):
+  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, train_ids,
+                                   outdir / 'train.pickle')
+  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, val_ids,
+                                   outdir / 'val.pickle')
+  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, test_ids,
+                                   outdir / 'test.pickle')
 
 
-def MakePoj104CfgOnlyJob(
-    s: database.Database.SessionType,
-    bytecode_id: id) -> typing.Tuple[typing.List[str], str, str, str, int]:
+def MakePoj104CfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
+                        ) -> typing.Tuple[typing.List[str], str, str, str, int]:
 
   def GetConstantColumn(rows, column_idx, column_name):
     values = {r[column_idx] for r in rows}
@@ -326,6 +327,7 @@ def MakePoj104CfgOnlyJob(
   relpath = GetConstantColumn(q, 2, 'relpath')
   language = GetConstantColumn(q, 3, 'language')
   return proto_strings, source, relpath, language, bytecode_id
+
 
 def ProcessPoj104CfgOnlyJob(
     packed_args: typing.Tuple[typing.List[str], str, str, str, int]
@@ -371,9 +373,9 @@ def ProcessPoj104CfgOnlyJob(
               type(e).__name__)
     return []
 
-def MakePoj104Job(
-    s: database.Database.SessionType,
-    bytecode_id: id) -> typing.Tuple[str, str, str, str, int]:
+
+def MakePoj104Job(s: database.Database.SessionType,
+                  bytecode_id: id) -> typing.Tuple[str, str, str, str, int]:
 
   def GetConstantColumn(rows, column_idx, column_name):
     values = {r[column_idx] for r in rows}
@@ -392,9 +394,8 @@ def MakePoj104Job(
   return bytecode, source, relpath, language, bytecode_id
 
 
-def ProcessPoj104Job(
-    packed_args: typing.Tuple[str, str, str, str, int]
-) -> typing.List[typing.Dict[str, typing.Any]]:
+def ProcessPoj104Job(packed_args: typing.Tuple[str, str, str, str, int]
+                    ) -> typing.List[typing.Dict[str, typing.Any]]:
   """
 
   Args:
