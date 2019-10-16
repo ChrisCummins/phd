@@ -96,6 +96,7 @@ def AnnotatedGraphToDictionary(
       'name': g.name,
       'bytecode_id': g.bytecode_id,
       'language': g.language,
+      'max_steps_required': g.max_steps_required,
       'graph': edge_list,
       'targets': label_list,
       'node_features': node_list,
@@ -103,39 +104,38 @@ def AnnotatedGraphToDictionary(
   }
 
 
-def SetReachableNodes(g: nx.MultiDiGraph, root_node: str) -> None:
+def SetReachableNodes(g: nx.MultiDiGraph, root_node: str,
+                      max_steps: int) -> None:
+  """Annotate nodes in the graph with x, y values for reachability.
+
+  Args:
+    g: The graph to annotate.
+    root_node: The source node for determining reachability.
+    max_steps: The maximum number of steps permitted when computing
+      reachability.
+
+  Returns:
+    The true maximum number of steps required to compute the annotations.
+    In the range 0 < n <= max_steps.
+  """
   g.nodes[root_node]['x'] = np_one
-
-  # Breadth-first traversal to mark all the nodes as reachable.
-  visited = set()
-  q = collections.deque([root_node])
-  while q:
-    next = q.popleft()
-    visited.add(next)
-    for neighbor in cdfg.StatementNeighbors(g, next):
-      if neighbor not in visited:
-        q.append(neighbor)
-
-    # Mark the node as reachable.
-    g.nodes[next]['y'] = np_one
-
-
-def SetKStepReachableNodes(g: nx.MultiDiGraph, root_node: str, k: int) -> None:
-  g.nodes[root_node]['x'] = np_one
+  steps = 0
 
   # Breadth-first traversal to mark all the nodes as reachable.
   visited = set()
   q = collections.deque([(root_node, 0)])
   while q:
-    next, distance = q.popleft()
+    next, steps = q.popleft()
     visited.add(next)
-    if distance + 1 <= k:
+    if max_steps and steps + 1 <= max_steps:
       for neighbor in cdfg.StatementNeighbors(g, next):
         if neighbor not in visited:
-          q.append((neighbor, distance + 1))
+          q.append((neighbor, steps + 1))
 
     # Mark the node as reachable.
     g.nodes[next]['y'] = np_one
+
+  return steps
 
 
 def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
@@ -158,10 +158,8 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
     reachable.bytecode_id = g.bytecode_id
     reachable.name = g.name
     reachable.language = g.language
-    if FLAGS.reachability_num_steps:
-      SetKStepReachableNodes(reachable, node, FLAGS.reachability_num_steps)
-    else:
-      SetReachableNodes(reachable, node)
+    reachable.max_steps_required = SetReachableNodes(
+        reachable, node, FLAGS.reachability_num_steps)
     yield reachable
 
 
