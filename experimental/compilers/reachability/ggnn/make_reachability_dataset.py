@@ -356,6 +356,8 @@ def ProcessPoj104CfgOnlyJob(
       cfgs.append(llvm_util.LlvmControlFlowGraph.FromProto(proto))
 
     graphs = [builder.BuildFromControlFlowGraph(cfg) for cfg in cfgs]
+    # Ignore "empty" graphs.
+    graphs = [g for g in graphs if g.number_of_nodes() and g.number_of_edges()]
     annotated_graphs = []
     for graph in graphs:
       graph.name = f'{source_name}:{relpath}'
