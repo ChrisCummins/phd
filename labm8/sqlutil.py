@@ -665,6 +665,15 @@ class ColumnTypes(object):
     return sql.Binary(length).with_variant(mysql.BINARY(length), 'mysql')
 
   @staticmethod
+  def LargeBinary():
+    """Return a fixed size binary array column type.
+
+    Returns:
+      A column type.
+    """
+    return sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql')
+
+  @staticmethod
   def UnboundedUnicodeText():
     """Return an unbounded unicode text column type.
 
