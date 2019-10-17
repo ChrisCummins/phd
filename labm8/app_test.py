@@ -1,9 +1,9 @@
 """Unit tests for //labm8/app."""
 import pathlib
-
 import pytest
 from absl import flags as absl_flags
 
+from labm8 import app
 from labm8 import app_test_flags
 from labm8 import test
 
@@ -39,6 +39,17 @@ def test_database_flag(tempdir: pathlib.Path):
   assert not (tempdir / 'db').is_file()
   assert FLAGS.database_flag().url == url
   assert (tempdir / 'db').is_file()
+
+
+def test_FlagsToDict():
+  flags_dict = app.FlagsToDict()
+  assert 'absl.logging.alsologtostderr' in flags_dict
+  assert flags_dict['absl.logging.alsologtostderr'] in {True, False}
+
+
+def test_FlagsToString():
+  flags_str = app.FlagsToString()
+  assert '--noalsologtostderr' in flags_str or '--alsologtostderr' in flags_str
 
 
 if __name__ == '__main__':
