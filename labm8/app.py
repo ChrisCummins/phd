@@ -25,6 +25,7 @@ from absl import flags as absl_flags
 from absl import logging as absl_logging
 from typing import Any
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
@@ -292,6 +293,34 @@ def get_calling_module_name():
 
 # TODO(cec): Add flag_values argument to enable better testing.
 # TODO(cec): Add validator callbacks.
+
+
+def FlagsToDict() -> Dict[str, Any]:
+  """Return a dictionary of flags and their values.
+
+  Keys are the names of flags, prefixed by their defining module, e.g.
+  "absl.flags.alsologtosterr" refers to flag "alsologtosterr" to module
+  "absl.flags". Values are the string values in their defined types.
+
+  Returns:
+    A <flag, value> dictionary.
+  """
+  flags_dict = FLAGS.flags_by_module_dict()
+  flattened_flags_dict = {}
+  for module in flags_dict:
+    for flag in flags_dict[module]:
+      flattened_flags_dict[f'{module}.{flag.name}'] = flag.value
+  return flattened_flags_dict
+
+def FlagsToString() -> str:
+  """Return the defined flags as a string.
+
+  The string returned by this method is suitable to be used as a flagfile.
+
+  Returns:
+    A string of newline-separated flag values, in the form "--someflag=val".
+  """
+  return FLAGS.flags_into_string()
 
 
 def DEFINE_string(
