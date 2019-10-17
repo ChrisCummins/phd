@@ -1,6 +1,7 @@
 """Database backend for GGNN graphs."""
 import datetime
 import sqlalchemy as sql
+import typing
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
@@ -89,16 +90,20 @@ class Database(sqlutil.Database):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
 
-def BufferedGraphReader(db: Database, filter_cb = None,
-                        order_by_random: bool = False,
-                        eager_graph_loading: bool = True,
-                        buffer_size: int=256):
+def BufferedGraphReader(
+    db: Database,
+    filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None,
+    order_by_random: bool = False,
+    eager_graph_loading: bool = True,
+    buffer_size: int=256,
+    limit: typing.Optional[int] = None
+):
   """An iterator over the graphs in a database.
 
   Args:
     db: The database to iterate over the graphs of.
-    filter_db: An optional callback which returns a filter condition on the
-      graph table.
+    filters: An optional list of callbacks, where each callback returns a
+      filter condition on the graph table.
     order_by_random: If true, return the graphs of the database in a random
       order.
     eager_graph_loading: If true, load the contents of the Graph table eagerly,
@@ -106,7 +111,10 @@ def BufferedGraphReader(db: Database, filter_cb = None,
     buffer_size: The number of graphs to query from the database at a time. A
       larger number reduces the number of queries, but increases the memory
       requirement.
+    limit: Limit the total number of rows returned to this value.
   """
+  filters = filters or []
+
   with db.Session() as s:
     # Load both the graph data and the graph eagerly.
     q = s.query(GraphMeta)
@@ -114,12 +122,16 @@ def BufferedGraphReader(db: Database, filter_cb = None,
     if eager_graph_loading:
       q = q.options(sql.orm.joinedload(GraphMeta.graph))
 
-    if filter_cb:
+    for filter_cb in filters:
       q = q.filter(filter_cb())
 
     if order_by_random:
       q = q.order_by(db.Random())
 
+    count = 0
     for batch in sqlutil.OffsetLimitBatchedQuery(q, batch_size=buffer_size):
       for row in batch.rows:
         yield row
+        count += 1
+        if limit and count >= limit:
+          return

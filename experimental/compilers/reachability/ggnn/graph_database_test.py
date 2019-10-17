@@ -97,17 +97,18 @@ def test_BufferedGraphDatabaseReader(db: graph_database.Database):
   graphs = []
   filter_cb = lambda: graph_database.GraphMeta.node_count % 2 == 0
   for graph in graph_database.BufferedGraphReader(
-      db, filter_cb=filter_cb, buffer_size=10):
+      db, filters=[filter_cb], buffer_size=10):
     graphs.append(graph)
   assert len(graphs) == 256
 
   # Test with a random ordering.
-  graphs = [
-    graph for graph in
-    graph_database.BufferedGraphReader(db, order_by_random=True)
-  ]
+  graphs = list(graph_database.BufferedGraphReader(db, order_by_random=True))
   node_counts = [g.node_count for g in graphs]
   assert sorted(node_counts) != node_counts
+
+  # Test with a limited number of rows.
+  graphs = list(graph_database.BufferedGraphReader(db, limit=5))
+  assert len(graphs) == 5
 
 
 def test_BufferedGraphDatabaseReader_next(db: graph_database.Database):
