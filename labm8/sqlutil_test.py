@@ -357,5 +357,14 @@ def test_BufferedDatabaseWriter_add_many():
     assert s.query(Table).count() == 3
 
 
+def test_PluralTablenameFromCamelCapsClassNameMixin():
+  base = declarative.declarative_base()
+
+  class FooBar(base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+    col = sql.Column(sql.Integer, primary_key=1)
+
+  assert FooBar.__tablename__ == 'foo_bars'
+
+
 if __name__ == '__main__':
   test.Main()

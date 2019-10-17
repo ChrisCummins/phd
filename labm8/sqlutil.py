@@ -25,6 +25,7 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
+from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
@@ -494,6 +495,23 @@ class TablenameFromCamelCapsClassNameMixin(object):
   @declarative.declared_attr
   def __tablename__(self):
     return text.CamelCapsToUnderscoreSeparated(self.__name__)
+
+
+class PluralTablenameFromCamelCapsClassNameMixin(object):
+  """A class mixin which derives __tablename__ from the class name.
+
+  Add this mixin to a mapped table class to automatically set the set the
+  __tablename__ property of a class to the pluralized name of the Python class
+  with camel caps converted to underscores, e.g.
+
+    class FooBar -> table "foo_bars".
+  """
+
+  @declarative.declared_attr
+  def __tablename__(self):
+    pluralised = humanize.Plural(2, self.__name__)
+    pluralised = ' '.join(pluralised.split()[1:])
+    return text.CamelCapsToUnderscoreSeparated(pluralised)
 
 
 class ProtoBackedMixin(object):
