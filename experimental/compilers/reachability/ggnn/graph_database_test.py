@@ -101,6 +101,13 @@ def test_BufferedGraphDatabaseReader(db: graph_database.Database):
     graphs.append(graph)
   assert len(graphs) == 256
 
+  # Test with a random ordering.
+  graphs = [
+    graph for graph in
+    graph_database.BufferedGraphReader(db, order_by_random=True)
+  ]
+  node_counts = [g.node_count for g in graphs]
+  assert sorted(node_counts) != node_counts
 
 
 

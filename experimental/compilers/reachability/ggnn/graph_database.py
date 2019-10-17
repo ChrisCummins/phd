@@ -90,7 +90,8 @@ class Database(sqlutil.Database):
 
 
 def BufferedGraphReader(db: Database, filter_cb = None,
-                        eager_graph_loading: bool=True,
+                        order_by_random: bool = False,
+                        eager_graph_loading: bool = True,
                         buffer_size: int=256):
   """An iterator over the graphs in a database.
 
@@ -98,6 +99,8 @@ def BufferedGraphReader(db: Database, filter_cb = None,
     db: The database to iterate over the graphs of.
     filter_db: An optional callback which returns a filter condition on the
       graph table.
+    order_by_random: If true, return the graphs of the database in a random
+      order.
     eager_graph_loading: If true, load the contents of the Graph table eagerly,
       preventing the need for subsequent SQL queries to access the graph data.
     buffer_size: The number of graphs to query from the database at a time. A
@@ -113,6 +116,9 @@ def BufferedGraphReader(db: Database, filter_cb = None,
 
     if filter_cb:
       q = q.filter(filter_cb())
+
+    if order_by_random:
+      q = q.order_by(db.Random())
 
     for batch in sqlutil.OffsetLimitBatchedQuery(q, batch_size=buffer_size):
       for row in batch.rows:
