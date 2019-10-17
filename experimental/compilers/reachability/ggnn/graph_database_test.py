@@ -24,6 +24,7 @@ def test_Graph_pickled_networkx_graph(db: graph_database.Database):
 
   with db.Session(commit=True) as s:
     s.add(graph_database.GraphMeta(
+        group="train",
         bytecode_id = 1,
         source_name = 'foo',
         relpath = 'bar',
@@ -33,6 +34,7 @@ def test_Graph_pickled_networkx_graph(db: graph_database.Database):
         graph=graph_database.Graph(data=pickle.dumps(g))))
   with db.Session() as s:
     gm = s.query(graph_database.GraphMeta).first()
+    assert gm.group == "train"
     assert gm.bytecode_id == 1
     assert gm.source_name == 'foo'
     assert gm.relpath == 'bar'
@@ -51,6 +53,7 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
   """Test saving and loading graph with a pickled dictionary of data."""
   with db.Session(commit=True) as s:
     s.add(graph_database.GraphMeta(
+        group = "train",
         bytecode_id = 1,
         source_name = 'foo',
         relpath = 'bar',

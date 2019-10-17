@@ -28,6 +28,10 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """
   id: int = sql.Column(sql.Integer, primary_key=True)
 
+  # A string name to group graphs into discrete buckets, e.g. "train", "test",
+  # or "1", "2", ... k for k-fold classification.
+  group: str = sql.Column(sql.String(32), nullable=False)
+
   # No foreign key relationship because they are separate databases.
   bytecode_id: int = sql.Column(sql.Integer, nullable=False)
 
