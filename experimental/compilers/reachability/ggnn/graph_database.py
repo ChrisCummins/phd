@@ -18,7 +18,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(sql.String(64), nullable=False)
+  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                          nullable=False)
 
 
 class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -78,9 +79,7 @@ class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """
   id: int = sql.Column(sql.Integer, sql.ForeignKey('graph_metas.id'),
                        primary_key=True)
-  data: bytes = sql.Column(
-      sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql'),
-      nullable=False)
+  data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(), nullable=False)
   meta: GraphMeta = sql.orm.relationship('GraphMeta', back_populates="graph")
 
 
