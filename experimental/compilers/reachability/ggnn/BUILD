@@ -33,6 +33,7 @@ py_binary(
         "//experimental/compilers/reachability:database",
         "//labm8:app",
         "//labm8:humanize",
+        "//labm8:decorators",
         "//labm8:prof",
         "//third_party/py/networkx",
         "//third_party/py/numpy",

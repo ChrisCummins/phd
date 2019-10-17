@@ -21,12 +21,14 @@ from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
 from experimental.compilers.reachability.ggnn import graph_database
 from labm8 import app
+from labm8 import decorators
 from labm8 import fs
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import prof
 from labm8 import sqlutil
+
 
 app.DEFINE_database(
     'bytecode_db',
@@ -72,6 +74,7 @@ np_zero = np.array([1, 0], dtype=np.float32)
 np_one = np.array([0, 1], dtype=np.float32)
 
 
+@decorators.timeout(seconds=60)
 def AnnotatedGraphToDatabase(g: nx.MultiDiGraph) -> graph_database.GraphMeta:
   # Translate arbitrary node labels into a zero-based index list.
   node_to_index = {node: i for i, node in enumerate(g.nodes)}
@@ -117,6 +120,7 @@ def AnnotatedGraphToDatabase(g: nx.MultiDiGraph) -> graph_database.GraphMeta:
       graph=graph_database.Graph(data=pickle.dumps(graph_dict)))
 
 
+@decorators.timeout(seconds=60)
 def SetReachableNodes(g: nx.MultiDiGraph, root_node: str,
                       max_steps: int) -> None:
   """Annotate nodes in the graph with x, y values for reachability.
@@ -173,9 +177,13 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
     reachable.source_name = g.source_name
     reachable.relpath = g.relpath
     reachable.language = g.language
-    reachable.max_steps_required = SetReachableNodes(
-        reachable, node, FLAGS.reachability_num_steps)
-    yield reachable
+    try:
+      reachable.max_steps_required = SetReachableNodes(
+          reachable, node, FLAGS.reachability_num_steps)
+      yield reachable
+    except TimeoutError:
+      app.Error("Timeout setting reachable nodes for %s", reachable.bytecode_id)
+      pass
 
 
 def ProcessGroupBytecodeIds(
