@@ -14,3 +14,14 @@ py_binary(
         "//third_party/py/numpy",
     ],
 )
+
+py_test(
+    name = "make_reachability_dataset_test",
+    srcs = ["make_reachability_dataset_test.py"],
+    deps = [
+        "//labm8:test",
+        "//labm8:app",
+        "//third_party/py/networkx",
+        ":make_reachability_dataset",
+    ]
+)

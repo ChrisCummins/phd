@@ -10,6 +10,7 @@ import numpy as np
 import pathlib
 import pickle
 import random
+import sqlalchemy as sql
 import typing
 
 from experimental.compilers.reachability import \
@@ -22,6 +23,7 @@ from labm8 import humanize
 from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import prof
+
 
 app.DEFINE_database(
     'db',
@@ -39,14 +41,16 @@ app.DEFINE_string('reachability_dataset_type', 'poj104_cfg_only',
 app.DEFINE_integer('reachability_num_steps', 0,
                    'If > 0, the number of steps to resolve reachability for.')
 app.DEFINE_integer(
-    'reachability_dataset_max_train_bytecodes', 0,
+    'max_bytecodes', 0,
     'If > 0, this limits the number of bytecodes exported to this value.')
-app.DEFINE_integer(
-    'reachability_dataset_max_val_bytecodes', 0,
-    'If > 0, this limits the number of bytecodes exported to this value.')
-app.DEFINE_integer(
-    'reachability_dataset_max_test_bytecodes', 0,
-    'If > 0, this limits the number of bytecodes exported to this value.')
+app.DEFINE_float(
+    'train_to_val_ratio', 1 / 3,
+    'The ratio between the size of the validation set relative to the size of '
+    'the training set.')
+app.DEFINE_float(
+    'train_to_test_ratio', 1 / 3,
+    'The ratio between the size of the test set relative to the size of the '
+    'training set.')
 app.DEFINE_integer(
     'reachability_dataset_max_instances_per_graph', 3,
     'The maximum number of reachability graph instances to produce from a '
@@ -127,7 +131,7 @@ def SetReachableNodes(g: nx.MultiDiGraph, root_node: str,
   while q:
     next, steps = q.popleft()
     visited.add(next)
-    if max_steps and steps + 1 <= max_steps:
+    if not max_steps or steps + 1 <= max_steps:
       for neighbor in cdfg.StatementNeighbors(g, next):
         if neighbor not in visited:
           q.append((neighbor, steps + 1))
@@ -170,10 +174,11 @@ def ExportBytecodeIdsToFileFragments(
     bytecode_ids: typing.List[int],
     outpath: pathlib.Path,
     pool: typing.Optional[multiprocessing.Pool] = None
-) -> typing.List[pathlib.Path]:
+) -> typing.Tuple[int, typing.List[pathlib.Path]]:
   pool = pool or multiprocessing.Pool()
   fragment_paths = []
   data = []
+  total_count = 0
 
   def EmitFragment(start_idx, end_idx) -> str:
     fragment_path = pathlib.Path(str(outpath) + f'.{start_idx}_{end_idx}')
@@ -210,15 +215,17 @@ def ExportBytecodeIdsToFileFragments(
       if len(data) >= FLAGS.reachability_dataset_file_fragment_size:
         end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(
             chunk)
+        total_count += len(data)
         fragment_paths.append(EmitFragment(start_idx, end_idx))
         start_idx = end_idx
         data = []
 
     if data:
+      total_count += len(data)
       end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(chunk)
       fragment_paths.append(EmitFragment(start_idx, end_idx))
 
-  return fragment_paths
+  return total_count, fragment_paths
 
 
 def BuildAndRunJobsOnBytecodeIds(
@@ -280,8 +287,38 @@ def BuildAndRunJobsOnBytecodeIds(
   return fragment_paths
 
 
+def GetAllBytecodeIds(
+    db: database.Database,
+    train_val_test_ratio: np.array,
+) -> typing.Tuple[typing.List[int], typing.List[int], typing.List[int]]:
+  """Get the bytecode IDs for the entire database."""
+  with db.Session() as s:
+    num_bytecodes = s.query(sql.func.count(database.LlvmBytecode.id)).one()[0]
+    app.Log(1, "%s total bytecodes in database", humanize.Commas(num_bytecodes))
+    # Limit the number of bytecodes if requested.
+    if FLAGS.max_bytecodes:
+      num_bytecodes = min(num_bytecodes, FLAGS.max_bytecodes)
+
+    ratios = np.floor(train_val_test_ratio * num_bytecodes).astype(np.int32)
+
+    total_count = ratios.sum()
+    app.Log(1, 'Loading %s bytecode IDs (%s train, %s val, %s test)',
+            humanize.Commas(total_count), humanize.Commas(ratios[0]),
+            humanize.Commas(ratios[1]), humanize.Commas(ratios[2]))
+
+    q = s.query(database.LlvmBytecode.id) \
+      .order_by(db.Random()) \
+      .limit(num_bytecodes)
+    ids = [r[0] for r in q]
+
+  train = ids[:ratios[0]]
+  val = ids[ratios[0]:ratios[0] + ratios[1]]
+  test = ids[ratios[0] + ratios[1]:]
+  return train, val, test
+
+
 def GetPoj104BytecodeIds(
-    db: database.Database
+    db: database.Database, train_val_test_ratio: typing.Tuple[float, float, float]
 ) -> typing.Tuple[typing.List[int], typing.List[int], typing.List[int]]:
   """Get the bytecode IDs for the POJ-104 app classification experiment."""
 
@@ -290,7 +327,7 @@ def GetPoj104BytecodeIds(
       q = s.query(database.LlvmBytecode.id) \
         .filter(filter_cb())
       if bytecode_max:
-        q = q.limit(bytecode_max)
+        q = q.order_by(db.Random()).limit(bytecode_max)
       return [r[0] for r in q]
 
   train = lambda: database.LlvmBytecode.source_name == 'poj-104:train'
@@ -300,9 +337,9 @@ def GetPoj104BytecodeIds(
   return [
       GetBytecodeIds(db, filter_cb, bytecode_max)
       for filter_cb, bytecode_max in [
-          (train, FLAGS.reachability_dataset_max_train_bytecodes),
-          (val, FLAGS.reachability_dataset_max_val_bytecodes),
-          (test, FLAGS.reachability_dataset_max_test_bytecodes),
+          (train, int(FLAGS.max_bytecodes * train_val_test_ratio[0])),
+          (val, int(FLAGS.max_bytecodes * train_val_test_ratio[1])),
+          (test, int(FLAGS.max_bytecodes * train_val_test_ratio[2])),
       ]
   ]
 
@@ -310,16 +347,20 @@ def GetPoj104BytecodeIds(
 def ExportDataset(db: database.Database, make_job_cb, process_job_cb,
                   train_ids: typing.List[int], val_ids: typing.List[int],
                   test_ids: typing.List[int], outdir: pathlib.Path):
-  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, train_ids,
-                                   outdir / 'train.pickle')
-  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, val_ids,
-                                   outdir / 'val.pickle')
-  ExportBytecodeIdsToFileFragments(db, make_job_cb, process_job_cb, test_ids,
-                                   outdir / 'test.pickle')
+  train_count, _ = ExportBytecodeIdsToFileFragments(
+      db, make_job_cb, process_job_cb, train_ids, outdir / 'train.pickle')
+  val_count, _ = ExportBytecodeIdsToFileFragments(
+      db, make_job_cb, process_job_cb, val_ids, outdir / 'val.pickle')
+  test_count, _ = ExportBytecodeIdsToFileFragments(
+      db, make_job_cb, process_job_cb, test_ids, outdir / 'test.pickle')
+  app.Log(1, 'Exported %s graphs (%s train, %s val, %s test)',
+          humanize.Commas(train_count + val_count + test_count),
+          humanize.Commas(train_count), humanize.Commas(val_count),
+          humanize.Commas(test_count))
 
 
-def MakePoj104CfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
-                        ) -> typing.Tuple[typing.List[str], str, str, str, int]:
+def MakeCfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
+                   ) -> typing.Tuple[typing.List[str], str, str, str, int]:
 
   def GetConstantColumn(rows, column_idx, column_name):
     values = {r[column_idx] for r in rows}
@@ -347,7 +388,7 @@ def MakePoj104CfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
   return proto_strings, source, relpath, language, bytecode_id
 
 
-def ProcessPoj104CfgOnlyJob(
+def ProcessCfgOnlyJob(
     packed_args: typing.Tuple[typing.List[str], str, str, str, int]
 ) -> typing.List[typing.Dict[str, typing.Any]]:
   """
@@ -392,27 +433,18 @@ def ProcessPoj104CfgOnlyJob(
     return []
 
 
-def MakePoj104Job(s: database.Database.SessionType,
+def MakeIcdfgJob(s: database.Database.SessionType,
                   bytecode_id: id) -> typing.Tuple[str, str, str, str, int]:
-
-  def GetConstantColumn(rows, column_idx, column_name):
-    values = {r[column_idx] for r in rows}
-    if len(values) != 1:
-      raise ValueError(f'Bytecode ID {bytecode_id} should have the same '
-                       f'{column_name} value across its {len(rows)} CFGs, '
-                       f'found these values: `{values}`')
-    return list(values)[0]
-
   q = s.query(database.LlvmBytecode.bytecode,
               database.LlvmBytecode.source_name,
               database.LlvmBytecode.relpath,
               database.LlvmBytecode.language) \
-    .filter(database.LlvmBytecode.it == bytecode_id).one()
+    .filter(database.LlvmBytecode.id == bytecode_id).one()
   bytecode, source, relpath, language = q
   return bytecode, source, relpath, language, bytecode_id
 
 
-def ProcessPoj104Job(packed_args: typing.Tuple[str, str, str, str, int]
+def ProcessIcdfgJob(packed_args: typing.Tuple[str, str, str, str, int]
                     ) -> typing.List[typing.Dict[str, typing.Any]]:
   """
 
@@ -458,13 +490,23 @@ def main():
 
   outdir.mkdir(exist_ok=True, parents=True)
 
+  train_val_test_ratio = np.array([
+    1,
+    FLAGS.train_to_val_ratio,
+    FLAGS.train_to_test_ratio
+  ])
+  train_val_test_ratio /= sum(train_val_test_ratio)
+
   with prof.Profile('Read bytecode IDs from database'):
-    if FLAGS.reachability_dataset_type == 'poj104_cfg_only':
-      train, test, val = GetPoj104BytecodeIds(db)
-      make_job, process_job = MakePoj104CfgOnlyJob, ProcessPoj104CfgOnlyJob
+    if FLAGS.reachability_dataset_type == 'all_cfg_only':
+      train, test, val = GetAllBytecodeIds(db, train_val_test_ratio)
+      make_job, process_job = MakeCfgOnlyJob, ProcessCfgOnlyJob
+    elif FLAGS.reachability_dataset_type == 'poj104_cfg_only':
+      train, test, val = GetPoj104BytecodeIds(db, train_val_test_ratio)
+      make_job, process_job = MakeCfgOnlyJob, ProcessCfgOnlyJob
     elif FLAGS.reachability_dataset_type == 'poj104':
-      train, test, val = GetPoj104BytecodeIds(db)
-      make_job, process_job = MakePoj104Job, ProcessPoj104Job
+      train, test, val = GetPoj104BytecodeIds(db, train_val_test_ratio)
+      make_job, process_job = MakeIcdfgJob, ProcessIcdfgJob
     else:
       raise app.UsageError('Unknown value for --reachability_dataset_type')
 
