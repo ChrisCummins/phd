@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A wrapper around absl's app module.
+"""A wrapper around absl's app and logging modules.
 
 See: <https://github.com/abseil/abseil-py>
 """
+import json
 import sys
 
 import functools
@@ -42,6 +43,14 @@ absl_flags.DEFINE_boolean(
     False,
     'Print version information and exit.',
 )
+absl_flags.DEFINE_boolean(
+    'dump_flags',
+    False,
+    'Print the defined flags and their values and exit.')
+absl_flags.DEFINE_boolean(
+    'dump_flags_to_json',
+    False,
+    'Print the defined flags and their values to JSON and exit.')
 absl_flags.DEFINE_boolean('log_colors', True,
                           'Whether to colorize logging output.')
 
@@ -108,6 +117,22 @@ def RunWithArgs(
     """Run the user-provided main method, with app-level arg handling."""
     if FLAGS.version:
       print(GetVersionInformationString())
+      sys.exit(0)
+    elif FLAGS.dump_flags:
+      print(FlagsToString())
+      sys.exit(0)
+    elif FLAGS.dump_flags_to_json:
+      flags_dict = FlagsToDict()
+      # Flags values can have non-serializable types, so try each one and
+      # stringify those that require it. An alternative would be to stringify
+      # all values, but this would lose type information on ints/floats/etc.
+      for flag in flags_dict:
+        try:
+          json.dumps(flags_dict[flag])
+        except TypeError:
+          flags_dict[flag] = str(flags_dict[flag])
+      print(json.dumps(flags_dict, sort_keys=True, indent=2,
+                       separators=(',', ': ')))
       sys.exit(0)
     main(argv)
 
