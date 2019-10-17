@@ -110,6 +110,25 @@ def test_BufferedGraphDatabaseReader(db: graph_database.Database):
   assert sorted(node_counts) != node_counts
 
 
+def test_BufferedGraphDatabaseReader_next(db: graph_database.Database):
+  """Test using next() to read from BufferedGraphReader()."""
+  with db.Session(commit=True) as s:
+    s.add(graph_database.GraphMeta(
+          group = "train",
+          bytecode_id = 1,
+          source_name = 'foo',
+          relpath = 'bar',
+          language = 'c',
+          node_count = 1,
+          edge_count = 2,
+          graph=graph_database.Graph(data=pickle.dumps({"a": 1}))))
+
+  db_reader = graph_database.BufferedGraphReader(db)
+  g = next(db_reader)
+  assert g.group == "train"
+  with pytest.raises(StopIteration):
+    g = next(db_reader)
+
 
 if __name__ == '__main__':
   test.Main()
