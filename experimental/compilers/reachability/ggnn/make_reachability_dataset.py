@@ -66,9 +66,6 @@ app.DEFINE_integer(
     'selecting the root statement.')
 app.DEFINE_integer('reachability_dataset_bytecode_batch_size', 512,
                    'The number of bytecodes to process in a batch.')
-app.DEFINE_integer(
-    'reachability_dataset_file_fragment_size', 25000,
-    'The minimum number of dictionaries to write to each file fragment.')
 
 FLAGS = app.FLAGS
 
@@ -109,6 +106,7 @@ def AnnotatedGraphToDatabase(
   }
 
   return graph_database.GraphMeta(
+      group=g.group,
       bytecode_id=g.bytecode_id,
       source_name=g.source_name,
       relpath=g.relpath,
@@ -174,6 +172,7 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
 
   for node in nodes[:n]:
     reachable = g.copy()
+    reachable.group = g.group
     reachable.bytecode_id = g.bytecode_id
     reachable.source_name = g.source_name
     reachable.relpath = g.relpath
@@ -183,22 +182,20 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
     yield reachable
 
 
-def ExportBytecodeIdsToFileFragments(
+def ProcessGroupBytecodeIds(
     db: database.Database,
+    group: str,
     make_job_cb,
     process_job_cb,
     bytecode_ids: typing.List[int],
     output_db: graph_database.Database,
     pool: typing.Optional[multiprocessing.Pool] = None
-) -> typing.Tuple[int, typing.List[pathlib.Path]]:
+) -> int:
   pool = pool or multiprocessing.Pool()
-  fragment_paths = []
-  graphs = []
   total_count = 0
 
   with prof.Profile(lambda t: f'Processed {len(bytecode_ids)} bytecodes '
                     f'({len(bytecode_ids) / t:.2f} bytecode / s)'):
-    start_idx = 0
     for i, chunk in enumerate(
         labtypes.Chunkify(bytecode_ids,
                           FLAGS.reachability_dataset_bytecode_batch_size)):
@@ -213,27 +210,25 @@ def ExportBytecodeIdsToFileFragments(
         jobs = [make_job_cb(s, bytecode_id) for bytecode_id in chunk]
 
       # Process database query results in parallel.
-      for dicts in pool.imap_unordered(
+      graphs = []
+      for graphs_chunk in pool.imap_unordered(
           process_job_cb,
           jobs,
           chunksize=max(FLAGS.reachability_dataset_bytecode_batch_size // 16,
                         1)):
-        graphs += dicts
+        graphs += graphs_chunk
 
-      if len(graphs) >= FLAGS.reachability_dataset_file_fragment_size:
-        end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(
-            chunk)
-        total_count += len(graphs)
-        sqlutil.ResilientAddManyAndCommit(output_db, graphs)
-        start_idx = end_idx
-        graphs = []
+      total_count += len(graphs)
+      for graph in graphs:
+        graph.group = group
+      sqlutil.ResilientAddManyAndCommit(output_db, graphs)
+      graphs = []
 
     if graphs:
       total_count += len(graphs)
-      end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(chunk)
       sqlutil.ResilientAddManyAndCommit(output_db, graphs)
 
-  return total_count, fragment_paths
+  return total_count
 
 
 def BuildAndRunJobsOnBytecodeIds(
@@ -356,20 +351,21 @@ def ExportDataset(db: database.Database, make_job_cb, process_job_cb,
                   train_ids: typing.List[int], val_ids: typing.List[int],
                   test_ids: typing.List[int],
                   output_db: graph_database.Database):
-  train_count, _ = ExportBytecodeIdsToFileFragments(
-      db, make_job_cb, process_job_cb, train_ids, output_db)
-  val_count, _ = ExportBytecodeIdsToFileFragments(
-      db, make_job_cb, process_job_cb, val_ids, output_db)
-  test_count, _ = ExportBytecodeIdsToFileFragments(
-      db, make_job_cb, process_job_cb, test_ids, output_db)
+  train_count = ProcessGroupBytecodeIds(
+      db, "train", make_job_cb, process_job_cb, train_ids, output_db)
+  val_count = ProcessGroupBytecodeIds(
+      db, "val", make_job_cb, process_job_cb, val_ids, output_db)
+  test_count = ProcessGroupBytecodeIds(
+      db, "test", make_job_cb, process_job_cb, test_ids, output_db)
   app.Log(1, 'Exported %s graphs (%s train, %s val, %s test)',
           humanize.Commas(train_count + val_count + test_count),
           humanize.Commas(train_count), humanize.Commas(val_count),
           humanize.Commas(test_count))
 
 
-def MakeCfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
-                   ) -> typing.Tuple[typing.List[str], str, str, str, int]:
+def MakeCfgOnlyJob(
+    s: database.Database.SessionType, bytecode_id: id
+) -> typing.Tuple[typing.List[str], str, str, str, int]:
 
   def GetConstantColumn(rows, column_idx, column_name):
     values = {r[column_idx] for r in rows}
