@@ -72,5 +72,37 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
     assert gm.id == gm.graph.id
 
 
+def test_BufferedGraphDatabaseReader(db: graph_database.Database):
+  def _MakeGraphMeta(i):
+    return graph_database.GraphMeta(
+        group = "train",
+        bytecode_id = 1,
+        source_name = 'foo',
+        relpath = 'bar',
+        language = 'c',
+        node_count = i,
+        edge_count = 2,
+        graph=graph_database.Graph(data=pickle.dumps({"a": 1})))
+
+  with db.Session(commit=True) as s:
+    s.add_all([_MakeGraphMeta(i) for i in range(512)])
+
+  graphs = []
+  for graph in graph_database.BufferedGraphReader(db, buffer_size=10):
+    graphs.append(graph)
+  assert len(graphs) == 512
+  assert all([g.bytecode_id == 1 for g in graphs])
+
+  # Test with a filter to retrieve only those with even numbers of nodes.
+  graphs = []
+  filter_cb = lambda: graph_database.GraphMeta.node_count % 2 == 0
+  for graph in graph_database.BufferedGraphReader(
+      db, filter_cb=filter_cb, buffer_size=10):
+    graphs.append(graph)
+  assert len(graphs) == 256
+
+
+
+
 if __name__ == '__main__':
   test.Main()
