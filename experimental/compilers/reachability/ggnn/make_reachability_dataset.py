@@ -11,6 +11,7 @@ import pathlib
 import pickle
 import random
 import sqlalchemy as sql
+import tempfile
 import typing
 
 from experimental.compilers.reachability import \
@@ -18,24 +19,27 @@ from experimental.compilers.reachability import \
 from experimental.compilers.reachability import database
 from experimental.compilers.reachability import llvm_util
 from experimental.compilers.reachability import reachability_pb2
+from experimental.compilers.reachability.ggnn import graph_database
 from labm8 import app
+from labm8 import fs
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import prof
+from labm8 import sqlutil
 
 
 app.DEFINE_database(
-    'db',
+    'bytecode_db',
     database.Database,
     None,
-    'URL of database to read control flow graphs from.',
+    'URL of database to read bytecodes from.',
     must_exist=True)
-app.DEFINE_output_path(
-    'outdir',
-    '/var/phd/experimental/compilers/reachability/ggnn/dataset',
-    'Path to generate GGNN dataset in.',
-    is_dir=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    'sqlite:////var/phd/experimental/compilers/reachability/ggnn/graphs.db',
+    'URL of the database to write graphs to.')
 app.DEFINE_string('reachability_dataset_type', 'poj104_cfg_only',
                   'The type of dataset to export.')
 app.DEFINE_integer('reachability_num_steps', 0,
@@ -73,17 +77,19 @@ np_zero = np.array([1, 0], dtype=np.float32)
 np_one = np.array([0, 1], dtype=np.float32)
 
 
-def AnnotatedGraphToDictionary(
-    g: nx.MultiDiGraph) -> typing.Dict[str, typing.Any]:
+def AnnotatedGraphToDatabase(
+    g: nx.MultiDiGraph) -> graph_database.GraphMeta:
   # Translate arbitrary node labels into a zero-based index list.
   node_to_index = {node: i for i, node in enumerate(g.nodes)}
-  edge_type_to_int = {'control': 2, 'data': 3}
+  edge_type_to_int = {'control': 0, 'data': 1}
+  edge_types = set()
 
   edge_list = []
   for src, dst, data in g.edges(data=True):
     src_idx = node_to_index[src]
     dst_idx = node_to_index[dst]
     edge_type = edge_type_to_int[data['flow']]
+    edge_types.add(edge_type)
     edge_list.append([src_idx, edge_type, dst_idx, -1])
 
   node_list = [None] * g.number_of_nodes()
@@ -96,16 +102,25 @@ def AnnotatedGraphToDictionary(
     node_idx = node_to_index[node]
     label_list[node_idx] = data['y']
 
-  return {
-      'name': g.name,
-      'bytecode_id': g.bytecode_id,
-      'language': g.language,
-      'max_steps_required': g.max_steps_required,
-      'graph': edge_list,
-      'targets': label_list,
-      'node_features': node_list,
-      'number_of_nodes': g.number_of_nodes(),
+  graph_dict = {
+    'edge_list': edge_list,
+    'node_features': node_list,
+    'targets': label_list,
   }
+
+  return graph_database.GraphMeta(
+      bytecode_id=g.bytecode_id,
+      source_name=g.source_name,
+      relpath=g.relpath,
+      language=g.language,
+      node_count = g.number_of_nodes(),
+      edge_count = g.number_of_edges(),
+      edge_type_count=len(edge_types),
+      node_features_dimensionality=2,
+      node_labels_dimensionality=2,
+      data_flow_max_steps_required=g.max_steps_required,
+      graph=graph_database.Graph(data=pickle.dumps(graph_dict))
+  )
 
 
 def SetReachableNodes(g: nx.MultiDiGraph, root_node: str,
@@ -160,7 +175,8 @@ def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
   for node in nodes[:n]:
     reachable = g.copy()
     reachable.bytecode_id = g.bytecode_id
-    reachable.name = g.name
+    reachable.source_name = g.source_name
+    reachable.relpath = g.relpath
     reachable.language = g.language
     reachable.max_steps_required = SetReachableNodes(
         reachable, node, FLAGS.reachability_num_steps)
@@ -172,21 +188,13 @@ def ExportBytecodeIdsToFileFragments(
     make_job_cb,
     process_job_cb,
     bytecode_ids: typing.List[int],
-    outpath: pathlib.Path,
+    output_db: graph_database.Database,
     pool: typing.Optional[multiprocessing.Pool] = None
 ) -> typing.Tuple[int, typing.List[pathlib.Path]]:
   pool = pool or multiprocessing.Pool()
   fragment_paths = []
-  data = []
+  graphs = []
   total_count = 0
-
-  def EmitFragment(start_idx, end_idx) -> str:
-    fragment_path = pathlib.Path(str(outpath) + f'.{start_idx}_{end_idx}')
-    with prof.Profile(
-        f'Wrote {humanize.Commas(len(data))} graphs to {fragment_path}'):
-      with open(fragment_path, 'wb') as f:
-        pickle.dump(data, f)
-    return fragment_path
 
   with prof.Profile(lambda t: f'Processed {len(bytecode_ids)} bytecodes '
                     f'({len(bytecode_ids) / t:.2f} bytecode / s)'):
@@ -210,20 +218,20 @@ def ExportBytecodeIdsToFileFragments(
           jobs,
           chunksize=max(FLAGS.reachability_dataset_bytecode_batch_size // 16,
                         1)):
-        data += dicts
+        graphs += dicts
 
-      if len(data) >= FLAGS.reachability_dataset_file_fragment_size:
+      if len(graphs) >= FLAGS.reachability_dataset_file_fragment_size:
         end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(
             chunk)
-        total_count += len(data)
-        fragment_paths.append(EmitFragment(start_idx, end_idx))
+        total_count += len(graphs)
+        sqlutil.ResilientAddManyAndCommit(output_db, graphs)
         start_idx = end_idx
-        data = []
+        graphs = []
 
-    if data:
-      total_count += len(data)
+    if graphs:
+      total_count += len(graphs)
       end_idx = i * FLAGS.reachability_dataset_bytecode_batch_size + len(chunk)
-      fragment_paths.append(EmitFragment(start_idx, end_idx))
+      sqlutil.ResilientAddManyAndCommit(output_db, graphs)
 
   return total_count, fragment_paths
 
@@ -346,13 +354,14 @@ def GetPoj104BytecodeIds(
 
 def ExportDataset(db: database.Database, make_job_cb, process_job_cb,
                   train_ids: typing.List[int], val_ids: typing.List[int],
-                  test_ids: typing.List[int], outdir: pathlib.Path):
+                  test_ids: typing.List[int],
+                  output_db: graph_database.Database):
   train_count, _ = ExportBytecodeIdsToFileFragments(
-      db, make_job_cb, process_job_cb, train_ids, outdir / 'train.pickle')
+      db, make_job_cb, process_job_cb, train_ids, output_db)
   val_count, _ = ExportBytecodeIdsToFileFragments(
-      db, make_job_cb, process_job_cb, val_ids, outdir / 'val.pickle')
+      db, make_job_cb, process_job_cb, val_ids, output_db)
   test_count, _ = ExportBytecodeIdsToFileFragments(
-      db, make_job_cb, process_job_cb, test_ids, outdir / 'test.pickle')
+      db, make_job_cb, process_job_cb, test_ids, output_db)
   app.Log(1, 'Exported %s graphs (%s train, %s val, %s test)',
           humanize.Commas(train_count + val_count + test_count),
           humanize.Commas(train_count), humanize.Commas(val_count),
@@ -379,7 +388,7 @@ def MakeCfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
     .filter(database.ControlFlowGraphProto.status == 0).all()
   # A bytecode may have failed to produce any CFGs.
   if not q:
-    app.Error('Bytecode %s has no CFGs', bytecode_id)
+    app.Warning('Bytecode %s has no CFGs', bytecode_id)
     return None, None, None, None, None
   proto_strings = [r[0] for r in q]
   source = GetConstantColumn(q, 1, 'source')
@@ -390,7 +399,7 @@ def MakeCfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
 
 def ProcessCfgOnlyJob(
     packed_args: typing.Tuple[typing.List[str], str, str, str, int]
-) -> typing.List[typing.Dict[str, typing.Any]]:
+) -> typing.List[graph_database.GraphMeta]:
   """
   Args:
     packed_args: A packed arguments tuple consisting of a list serialized,
@@ -421,12 +430,13 @@ def ProcessCfgOnlyJob(
     graphs = [g for g in graphs if g.number_of_nodes() and g.number_of_edges()]
     annotated_graphs = []
     for graph in graphs:
-      graph.name = f'{source_name}:{relpath}'
+      graph.source_name = source_name
+      graph.relpath = relpath
       graph.bytecode_id = str(bytecode_id)
       graph.language = language
       annotated_graphs += MakeReachabilityAnnotatedGraphs(
           graph, FLAGS.reachability_dataset_max_instances_per_graph)
-    return [AnnotatedGraphToDictionary(graph) for graph in annotated_graphs]
+    return [AnnotatedGraphToDatabase(graph) for graph in annotated_graphs]
   except Exception as e:
     app.Error('Failed to create CDFG for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
@@ -445,7 +455,7 @@ def MakeIcdfgJob(s: database.Database.SessionType,
 
 
 def ProcessIcdfgJob(packed_args: typing.Tuple[str, str, str, str, int]
-                    ) -> typing.List[typing.Dict[str, typing.Any]]:
+                    ) -> typing.List[graph_database.GraphMeta]:
   """
 
   Args:
@@ -464,12 +474,12 @@ def ProcessIcdfgJob(packed_args: typing.Tuple[str, str, str, str, int]
 
   try:
     graph = builder.Build(bytecode)
-    graph.name = f'{source_name}:{relpath}'
+    graph.source_name = source_name
     graph.bytecode_id = str(bytecode_id)
     graph.language = language
     annotated_graphs = MakeReachabilityAnnotatedGraphs(
         graph, FLAGS.reachability_dataset_max_instances_per_graph)
-    return [AnnotatedGraphToDictionary(graph) for graph in annotated_graphs]
+    return [AnnotatedGraphToDatabase(graph) for graph in annotated_graphs]
   except Exception as e:
     app.Error('Failed to create graph for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
@@ -478,40 +488,46 @@ def ProcessIcdfgJob(packed_args: typing.Tuple[str, str, str, str, int]
 
 def main():
   """Main entry point."""
-  if not FLAGS.db:
+  if not FLAGS.bytecode_db:
     raise app.UsageError('--db required')
-  db = FLAGS.db()
-  outdir = FLAGS.outdir
+  db = FLAGS.bytecode_db()
+  output_db = FLAGS.graph_db()
 
-  app.LogToDirectory(outdir / 'logs', 'make_reachability_dataset')
+  # Temporarily redirect logs to a file, which we will later import into the
+  # database's meta table.
+  with tempfile.TemporaryDirectory() as d:
+    app.LogToDirectory(d, 'log')
 
-  app.Log(1, 'Seeding with %s', FLAGS.reachability_dataset_seed)
-  random.seed(FLAGS.reachability_dataset_seed)
+    app.Log(1, 'Seeding with %s', FLAGS.reachability_dataset_seed)
+    random.seed(FLAGS.reachability_dataset_seed)
 
-  outdir.mkdir(exist_ok=True, parents=True)
+    train_val_test_ratio = np.array([
+      1,
+      FLAGS.train_to_val_ratio,
+      FLAGS.train_to_test_ratio
+    ])
+    train_val_test_ratio /= sum(train_val_test_ratio)
 
-  train_val_test_ratio = np.array([
-    1,
-    FLAGS.train_to_val_ratio,
-    FLAGS.train_to_test_ratio
-  ])
-  train_val_test_ratio /= sum(train_val_test_ratio)
+    with prof.Profile('Read bytecode IDs from database'):
+      if FLAGS.reachability_dataset_type == 'all_cfg_only':
+        train, test, val = GetAllBytecodeIds(db, train_val_test_ratio)
+        make_job, process_job = MakeCfgOnlyJob, ProcessCfgOnlyJob
+      elif FLAGS.reachability_dataset_type == 'poj104_cfg_only':
+        train, test, val = GetPoj104BytecodeIds(db, train_val_test_ratio)
+        make_job, process_job = MakeCfgOnlyJob, ProcessCfgOnlyJob
+      elif FLAGS.reachability_dataset_type == 'poj104':
+        train, test, val = GetPoj104BytecodeIds(db, train_val_test_ratio)
+        make_job, process_job = MakeIcdfgJob, ProcessIcdfgJob
+      else:
+        raise app.UsageError('Unknown value for --reachability_dataset_type')
 
-  with prof.Profile('Read bytecode IDs from database'):
-    if FLAGS.reachability_dataset_type == 'all_cfg_only':
-      train, test, val = GetAllBytecodeIds(db, train_val_test_ratio)
-      make_job, process_job = MakeCfgOnlyJob, ProcessCfgOnlyJob
-    elif FLAGS.reachability_dataset_type == 'poj104_cfg_only':
-      train, test, val = GetPoj104BytecodeIds(db, train_val_test_ratio)
-      make_job, process_job = MakeCfgOnlyJob, ProcessCfgOnlyJob
-    elif FLAGS.reachability_dataset_type == 'poj104':
-      train, test, val = GetPoj104BytecodeIds(db, train_val_test_ratio)
-      make_job, process_job = MakeIcdfgJob, ProcessIcdfgJob
-    else:
-      raise app.UsageError('Unknown value for --reachability_dataset_type')
+    with prof.Profile('Exported dataset files'):
+      ExportDataset(db, make_job, process_job, train, test, val, output_db)
 
-  with prof.Profile('Exported dataset files'):
-    ExportDataset(db, make_job, process_job, train, test, val, outdir)
+    log = fs.Read(pathlib.Path(d) / 'log.INFO')
+    with output_db.Session(commit=True) as s:
+      s.query(graph_database.Meta).filter(graph_database.Meta.key=='log').delete()
+      s.add(graph_database.Meta(key='log', value=log))
 
 
 if __name__ == '__main__':

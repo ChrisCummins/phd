@@ -28,6 +28,7 @@ py_binary(
     srcs = ["make_reachability_dataset.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":graph_database",
         "//experimental/compilers/reachability:control_and_data_flow_graph",
         "//experimental/compilers/reachability:database",
         "//labm8:app",
