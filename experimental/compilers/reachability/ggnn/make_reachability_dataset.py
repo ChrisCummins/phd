@@ -28,7 +28,6 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import sqlutil
 
-
 app.DEFINE_database(
     'bytecode_db',
     database.Database,
@@ -36,8 +35,7 @@ app.DEFINE_database(
     'URL of database to read bytecodes from.',
     must_exist=True)
 app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
+    'graph_db', graph_database.Database,
     'sqlite:////var/phd/experimental/compilers/reachability/ggnn/graphs.db',
     'URL of the database to write graphs to.')
 app.DEFINE_string('reachability_dataset_type', 'poj104_cfg_only',
@@ -74,8 +72,7 @@ np_zero = np.array([1, 0], dtype=np.float32)
 np_one = np.array([0, 1], dtype=np.float32)
 
 
-def AnnotatedGraphToDatabase(
-    g: nx.MultiDiGraph) -> graph_database.GraphMeta:
+def AnnotatedGraphToDatabase(g: nx.MultiDiGraph) -> graph_database.GraphMeta:
   # Translate arbitrary node labels into a zero-based index list.
   node_to_index = {node: i for i, node in enumerate(g.nodes)}
   edge_type_to_int = {'control': 0, 'data': 1}
@@ -100,9 +97,9 @@ def AnnotatedGraphToDatabase(
     label_list[node_idx] = data['y']
 
   graph_dict = {
-    'edge_list': edge_list,
-    'node_features': node_list,
-    'targets': label_list,
+      'edge_list': edge_list,
+      'node_features': node_list,
+      'targets': label_list,
   }
 
   return graph_database.GraphMeta(
@@ -111,14 +108,13 @@ def AnnotatedGraphToDatabase(
       source_name=g.source_name,
       relpath=g.relpath,
       language=g.language,
-      node_count = g.number_of_nodes(),
-      edge_count = g.number_of_edges(),
+      node_count=g.number_of_nodes(),
+      edge_count=g.number_of_edges(),
       edge_type_count=len(edge_types),
       node_features_dimensionality=2,
       node_labels_dimensionality=2,
       data_flow_max_steps_required=g.max_steps_required,
-      graph=graph_database.Graph(data=pickle.dumps(graph_dict))
-  )
+      graph=graph_database.Graph(data=pickle.dumps(graph_dict)))
 
 
 def SetReachableNodes(g: nx.MultiDiGraph, root_node: str,
@@ -189,8 +185,7 @@ def ProcessGroupBytecodeIds(
     process_job_cb,
     bytecode_ids: typing.List[int],
     output_db: graph_database.Database,
-    pool: typing.Optional[multiprocessing.Pool] = None
-) -> int:
+    pool: typing.Optional[multiprocessing.Pool] = None) -> int:
   pool = pool or multiprocessing.Pool()
   total_count = 0
 
@@ -321,7 +316,8 @@ def GetAllBytecodeIds(
 
 
 def GetPoj104BytecodeIds(
-    db: database.Database, train_val_test_ratio: typing.Tuple[float, float, float]
+    db: database.Database,
+    train_val_test_ratio: typing.Tuple[float, float, float]
 ) -> typing.Tuple[typing.List[int], typing.List[int], typing.List[int]]:
   """Get the bytecode IDs for the POJ-104 app classification experiment."""
 
@@ -351,21 +347,20 @@ def ExportDataset(db: database.Database, make_job_cb, process_job_cb,
                   train_ids: typing.List[int], val_ids: typing.List[int],
                   test_ids: typing.List[int],
                   output_db: graph_database.Database):
-  train_count = ProcessGroupBytecodeIds(
-      db, "train", make_job_cb, process_job_cb, train_ids, output_db)
-  val_count = ProcessGroupBytecodeIds(
-      db, "val", make_job_cb, process_job_cb, val_ids, output_db)
-  test_count = ProcessGroupBytecodeIds(
-      db, "test", make_job_cb, process_job_cb, test_ids, output_db)
+  train_count = ProcessGroupBytecodeIds(db, "train", make_job_cb,
+                                        process_job_cb, train_ids, output_db)
+  val_count = ProcessGroupBytecodeIds(db, "val", make_job_cb, process_job_cb,
+                                      val_ids, output_db)
+  test_count = ProcessGroupBytecodeIds(db, "test", make_job_cb, process_job_cb,
+                                       test_ids, output_db)
   app.Log(1, 'Exported %s graphs (%s train, %s val, %s test)',
           humanize.Commas(train_count + val_count + test_count),
           humanize.Commas(train_count), humanize.Commas(val_count),
           humanize.Commas(test_count))
 
 
-def MakeCfgOnlyJob(
-    s: database.Database.SessionType, bytecode_id: id
-) -> typing.Tuple[typing.List[str], str, str, str, int]:
+def MakeCfgOnlyJob(s: database.Database.SessionType, bytecode_id: id
+                  ) -> typing.Tuple[typing.List[str], str, str, str, int]:
 
   def GetConstantColumn(rows, column_idx, column_name):
     values = {r[column_idx] for r in rows}
@@ -440,7 +435,7 @@ def ProcessCfgOnlyJob(
 
 
 def MakeIcdfgJob(s: database.Database.SessionType,
-                  bytecode_id: id) -> typing.Tuple[str, str, str, str, int]:
+                 bytecode_id: id) -> typing.Tuple[str, str, str, str, int]:
   q = s.query(database.LlvmBytecode.bytecode,
               database.LlvmBytecode.source_name,
               database.LlvmBytecode.relpath,
@@ -451,7 +446,7 @@ def MakeIcdfgJob(s: database.Database.SessionType,
 
 
 def ProcessIcdfgJob(packed_args: typing.Tuple[str, str, str, str, int]
-                    ) -> typing.List[graph_database.GraphMeta]:
+                   ) -> typing.List[graph_database.GraphMeta]:
   """
 
   Args:
@@ -494,14 +489,22 @@ def main():
   with tempfile.TemporaryDirectory() as d:
     app.LogToDirectory(d, 'log')
 
+    # Record the number of instances per graph that we're generating.
+    app.Log(1, 'Generating up to %s instances per graph',
+            FLAGS.reachability_dataset_max_instances_per_graph)
+    with output_db.Session(commit=True) as s:
+      s.query(graph_database.Meta).filter(
+          graph_database.Meta.key == 'max_instances_per_graph').delete()
+      s.add(
+          graph_database.Meta(
+              key='max_instances_per_graph',
+              value=str(FLAGS.reachability_dataset_max_instances_per_graph)))
+
     app.Log(1, 'Seeding with %s', FLAGS.reachability_dataset_seed)
     random.seed(FLAGS.reachability_dataset_seed)
 
-    train_val_test_ratio = np.array([
-      1,
-      FLAGS.train_to_val_ratio,
-      FLAGS.train_to_test_ratio
-    ])
+    train_val_test_ratio = np.array(
+        [1, FLAGS.train_to_val_ratio, FLAGS.train_to_test_ratio])
     train_val_test_ratio /= sum(train_val_test_ratio)
 
     with prof.Profile('Read bytecode IDs from database'):
@@ -522,7 +525,8 @@ def main():
 
     log = fs.Read(pathlib.Path(d) / 'log.INFO')
     with output_db.Session(commit=True) as s:
-      s.query(graph_database.Meta).filter(graph_database.Meta.key=='log').delete()
+      s.query(graph_database.Meta).filter(
+          graph_database.Meta.key == 'log').delete()
       s.add(graph_database.Meta(key='log', value=log))
 
 
