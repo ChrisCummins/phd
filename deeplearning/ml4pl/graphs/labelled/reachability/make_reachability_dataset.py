@@ -416,13 +416,13 @@ def _ProcessBytecodeJob(
 
 class BytecodeExporter(DatasetExporterBase):
 
-  def MakeExportJob(self, session: database.Database.SessionType,
+  def MakeExportJob(self, session: bytecode_database.Database.SessionType,
                     bytecode_id: id) -> typing.Optional[BytecodeJob]:
-    q = session.query(database.LlvmBytecode.bytecode,
-                database.LlvmBytecode.source_name,
-                database.LlvmBytecode.relpath,
-                database.LlvmBytecode.language) \
-        .filter(database.LlvmBytecode.id == bytecode_id).one()
+    q = session.query(bytecode_database.LlvmBytecode.bytecode,
+                bytecode_database.LlvmBytecode.source_name,
+                bytecode_database.LlvmBytecode.relpath,
+                bytecode_database.LlvmBytecode.language) \
+        .filter(bytecode_database.LlvmBytecode.id == bytecode_id).one()
     bytecode, source, relpath, language = q
     return bytecode, source, relpath, language, bytecode_id
 
