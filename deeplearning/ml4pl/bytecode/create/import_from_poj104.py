@@ -33,10 +33,8 @@ FLAGS = app.FLAGS
 
 app.DEFINE_database('db', database.Database, None,
                     'Path of database to populate.')
-app.DEFINE_input_path('dataset',
-                      None,
-                      'Path of dataset to import.',
-                      is_dir=True)
+app.DEFINE_input_path(
+    'dataset', None, 'Path of dataset to import.', is_dir=True)
 
 
 def LlvmBytecodeIterator(base_path: pathlib.Path, source_name: str

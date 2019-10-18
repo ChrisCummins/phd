@@ -56,10 +56,11 @@ def BytecodeFromOpenClString(opencl_string: str,
   ]
   process = clang.Exec(clang_args, stdin=opencl_string)
   if process.returncode:
-    raise clang.ClangException("clang failed",
-                               returncode=process.returncode,
-                               stderr=process.stderr,
-                               command=clang_args)
+    raise clang.ClangException(
+        "clang failed",
+        returncode=process.returncode,
+        stderr=process.stderr,
+        command=clang_args)
   return process.stdout, clang_args
 
 
@@ -212,18 +213,19 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
         rows.append(row)
 
     # Create the output table.
-    df = pd.DataFrame(rows,
-                      columns=[
-                          'program:benchmark_suite_name',
-                          'program:benchmark_name',
-                          'program:opencl_kernel_name',
-                          'cfg:graph',
-                          'cfg:block_count',
-                          'cfg:edge_count',
-                          'cfg:edge_density',
-                          'cfg:is_valid',
-                          'cfg:is_strict_valid',
-                      ])
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            'program:benchmark_suite_name',
+            'program:benchmark_name',
+            'program:opencl_kernel_name',
+            'cfg:graph',
+            'cfg:block_count',
+            'cfg:edge_count',
+            'cfg:edge_density',
+            'cfg:is_valid',
+            'cfg:is_strict_valid',
+        ])
 
     df.set_index([
         'program:benchmark_suite_name',

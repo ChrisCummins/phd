@@ -293,16 +293,16 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
 
             # TODO: not well understood
             if self.params["use_propagation_attention"]:
-              message_source_states = tf.concat(message_source_states,
-                                                axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(
+                  message_source_states, axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (message_attention_scores *
-                                          message_edge_type_factors)
+              message_attention_scores = (
+                  message_attention_scores * message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per node.
               # As the number of incoming varies, we can't just use tf.softmax. Reimplement with logsumexp trick:
@@ -428,8 +428,8 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
       if self.params["ignore_edge_types"]:
         fwd_edge_type = 0  # Edge type optionally always 0
 
-      adj_lists[fwd_edge_type].append(
-          (src, dest, emb_idx))  # attach emb_idx in adj. list!
+      adj_lists[fwd_edge_type].append((src, dest,
+                                       emb_idx))  # attach emb_idx in adj. list!
       num_incoming_edges_dicts_per_type[fwd_edge_type][dest] += 1
 
       if FLAGS.tie_fwd_bkwd:
@@ -444,9 +444,9 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
     if not FLAGS.tie_fwd_bkwd:
       for (edge_type, edges) in adj_lists.items():
         bwd_edge_type = self.GetNumberOfEdgeTypes() + edge_type
-        final_adj_lists[bwd_edge_type] = np.array(sorted(
-            (y, x, emb_idx) for (x, y, emb_idx) in edges),
-                                                  dtype=np.int32)  # like this?
+        final_adj_lists[bwd_edge_type] = np.array(
+            sorted((y, x, emb_idx) for (x, y, emb_idx) in edges),
+            dtype=np.int32)  # like this?
         for (x, y, emb_idx) in edges:
           num_incoming_edges_dicts_per_type[bwd_edge_type][y] += 1
 
@@ -562,8 +562,8 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
                 np.array((node_offset, node_offset, 0), dtype=np.int32))
 
         # Turn counters for incoming edges into np array:
-        num_incoming_edges_per_type = np.zeros(
-            (num_nodes_in_graph, self.GetNumberOfEdgeTypes()))
+        num_incoming_edges_per_type = np.zeros((num_nodes_in_graph,
+                                                self.GetNumberOfEdgeTypes()))
         for (e_type, num_incoming_edges_per_type_dict
             ) in cur_graph["num_incoming_edge_per_type"].items():
           for (

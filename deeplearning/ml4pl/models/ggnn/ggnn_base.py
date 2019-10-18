@@ -21,7 +21,6 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
 
-
 FLAGS = app.FLAGS
 
 # Some of these flags define parameters which must be equal when restoring from
@@ -35,10 +34,11 @@ FLAGS = app.FLAGS
 # declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/ggnn/',
-                       'The directory to write files to.',
-                       is_dir=True)
+app.DEFINE_output_path(
+    'working_dir',
+    '/tmp/deeplearning/ml4pl/models/ggnn/',
+    'The directory to write files to.',
+    is_dir=True)
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
 app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
 app.DEFINE_integer(
@@ -59,8 +59,7 @@ MODEL_FLAGS.add("hidden_size")
 app.DEFINE_boolean("tie_fwd_bkwd", True, "If true, add backward edges.")
 MODEL_FLAGS.add("tie_fwd_bkwd")
 app.DEFINE_string(
-    "embeddings",
-    "inst2vec",
+    "embeddings", "inst2vec",
     "The type of embeddings to use. One of: {inst2vec,finetune,random}.")
 MODEL_FLAGS.add("embeddings")
 app.DEFINE_input_path(
@@ -79,41 +78,19 @@ app.DEFINE_input_path("restore_model", None,
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
 
-
 # Type alias for the feed_dict argument of tf.Session.run().
 FeedDict = typing.Dict[str, typing.Any]
 
-class GGNNBaseModel(object):
+
+class GgnnBaseModel(object):
   """Abstract base class for implementing gated graph neural networks."""
-
-  def GetModelFlagNames(self) -> typing.Iterable[str]:
-    """Subclasses may extend this method to mark additional flags as important."""
-    return MODEL_FLAGS
-
-  def ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
-    """Return the flags which are """
-    return {
-        flag: jsonutil.JsonSerializable(getattr(FLAGS, flag))
-        for flag in sorted(set(self.GetModelFlagNames()))
-    }
-
-  def GetNodeFeaturesDimensionality(self) -> int:
-    raise NotImplementedError("abstract class")
-
-  def GetNumberOfClasses(self) -> int:
-    raise NotImplementedError("abstract class")
-
-  def GetNumberOfEdgeTypes(self) -> int:
-    raise NotImplementedError("abstract class")
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     raise NotImplementedError("abstract class")
 
   def MakeMinibatchIterator(
-      self,
-      epoch_type: str
-  ) -> typing.Iterable[typing.Tuple[int, FeedDict]]:
+      self, epoch_type: str) -> typing.Iterable[typing.Tuple[int, FeedDict]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
@@ -124,6 +101,10 @@ class GGNNBaseModel(object):
       size (as an int), and a feed dict to be fed to tf.Session.run().
     """
     raise NotImplementedError("abstract class")
+
+  def GetModelFlagNames(self) -> typing.Iterable[str]:
+    """Subclasses may extend this method to mark additional flags as important."""
+    return MODEL_FLAGS
 
   def __init__(self):
     """Constructor.
@@ -148,7 +129,7 @@ class GGNNBaseModel(object):
             pbutil.ToJson(build_info.GetBuildInfo()))
 
     app.Log(1, "Using the following model flags:\n%s",
-            jsonutil.format_json(self.ModelFlagsToDict()))
+            jsonutil.format_json(self._ModelFlagsToDict()))
 
     random.seed(FLAGS.random_seed)
     np.random.seed(FLAGS.random_seed)
@@ -166,7 +147,7 @@ class GGNNBaseModel(object):
         self.ops = {}
         self._MakeModel()
       with prof.Profile('Make training step'), tf.variable_scope("train_step"):
-        self.ops["train_step"] = self.MakeTrainStep()
+        self.ops["train_step"] = self._MakeTrainStep()
 
       # Restor or initialize the model:
       if FLAGS.restore_model:
@@ -195,84 +176,7 @@ class GGNNBaseModel(object):
                                         self.sess.graph),
       }
 
-  def _MakeModel(self):
-    self.placeholders["num_graphs"] = tf.placeholder(tf.int32, [],
-                                                     name="num_graphs")
-    self.placeholders["out_layer_dropout_keep_prob"] = tf.placeholder(
-        tf.float32, [], name="out_layer_dropout_keep_prob")
-
-    self.weights["embedding_table"] = self.MakeEmbeddingsTable()
-
-    with tf.variable_scope("graph_model"):
-      self.ops["loss"], self.ops["accuracy"], self.ops["predictions"] = (
-          self.MakeLossAndAccuracyAndPredictionOps()
-      )
-
-    # Tensorboard summaries.
-    self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
-    # TODO(cec): More tensorboard telemetry: input class distributions,
-    # predicted class distributions, etc.
-
-  def MakeEmbeddingsTable(self) -> tf.Tensor:
-    with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
-      with open(FLAGS.embedding_path, 'rb') as f:
-        embedding_table = pickle.load(f)
-
-    if FLAGS.embeddings == "inst2vec":
-      return tf.constant(
-          embedding_table, dtype=tf.float32, name="embedding_table")
-    elif FLAGS.embeddings == "finetune":
-      return tf.Variable(
-          embedding_table, dtype=tf.float32, name="embedding_table",
-          trainable=True)
-    elif FLAGS.embeddings == "random":
-      return tf.Variable(ggnn_utils.uniform_init(
-          np.shape(embedding_table)),
-          dtype=tf.float32,
-          name="embedding_table",
-          trainable=True)
-    else:
-      raise ValueError("Invalid value for --embeding. Supported values are "
-                       "{inst2vec,finetune,random}")
-
-  def MakeTrainStep(self) -> tf.Tensor:
-    """Helper function."""
-    trainable_vars = self.sess.graph.get_collection(
-        tf.GraphKeys.TRAINABLE_VARIABLES)
-    if FLAGS.freeze_graph_model:
-      graph_vars = set(
-          self.sess.graph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope="graph_model"))
-      filtered_vars = []
-      for var in trainable_vars:
-        if var not in graph_vars:
-          filtered_vars.append(var)
-        else:
-          app.Log(1, "Freezing weights of variable `%s`.", var.name)
-      trainable_vars = filtered_vars
-    optimizer = tf.train.AdamOptimizer(FLAGS.learning_rate)
-    grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
-                                                 var_list=trainable_vars)
-    clipped_grads = []
-    for grad, var in grads_and_vars:
-      if grad is not None:
-        clipped_grads.append((tf.clip_by_norm(grad,
-                                              FLAGS.clamp_gradient_norm), var))
-      else:
-        clipped_grads.append((grad, var))
-    train_step = optimizer.apply_gradients(clipped_grads)
-
-    # Also run batch_norm update ops, if any.
-    update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)
-    train_step = tf.group([train_step, update_ops])
-
-    # Initialize newly-introduced variables:
-    self.sess.run(tf.local_variables_initializer())
-
-    return train_step
-
-  def RunEpoch(self,
-               epoch_name: str,
+  def RunEpoch(self, epoch_name: str,
                epoch_type: str) -> batch_logger.InMemoryBatchLogger:
     assert epoch_type in {"train", "val", "test"}
     logger = batch_logger.InMemoryBatchLogger(epoch_name)
@@ -283,9 +187,7 @@ class GGNNBaseModel(object):
       self.global_training_step += 1
 
       fetch_list = [
-        self.ops["loss"],
-        self.ops["accuracy"],
-        self.ops["summary_loss"]
+          self.ops["loss"], self.ops["accuracy"], self.ops["summary_loss"]
       ]
 
       batch[self.placeholders["num_graphs"]] = batch_size
@@ -301,17 +203,18 @@ class GGNNBaseModel(object):
           fetch_list, feed_dict=batch)
 
       if FLAGS.tensorboard_logging:
-        self.summary_writers[epoch_type].add_summary(
-            loss_summary, self.global_training_step)
-      print(logger.Log(batch_size=batch_size, loss=batch_loss,
-                       accuracy=batch_accuracy), end='\r')
+        self.summary_writers[epoch_type].add_summary(loss_summary,
+                                                     self.global_training_step)
+      print(
+          logger.Log(
+              batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy),
+          end='\r')
 
     print()
     logger.StopTheClock()
-    app.Log(
-        1, "%s: loss: %.5f | acc: %.5f | instances/sec: %.2f",
-        epoch_name, logger.average_loss, logger.average_accuracy,
-        logger.instances_per_second)
+    app.Log(1, "%s: loss: %.5f | acc: %.5f | instances/sec: %.2f", epoch_name,
+            logger.average_loss, logger.average_accuracy,
+            logger.instances_per_second)
     return logger
 
   def Train(self):
@@ -321,11 +224,11 @@ class GGNNBaseModel(object):
         print(f"== Epoch {epoch_num}")
         train = self.RunEpoch(f"Epoch {epoch_num}   training", "train")
         valid = self.RunEpoch(f"Epoch {epoch_num} validation", "val")
-        app.Log(1, "Epoch %s completed. "
-                   "Training and validation on %s instances in %s",
-                epoch_num,
-                humanize.Commas(train.instance_count + valid.instance_count),
-                humanize.Duration(time.time() - start_time))
+        app.Log(
+            1, "Epoch %s completed. "
+            "Training and validation on %s instances in %s", epoch_num,
+            humanize.Commas(train.instance_count + valid.instance_count),
+            humanize.Duration(time.time() - start_time))
         log_file = self.logger.Log({
             "epoch": epoch_num,
             "time": time.time() - start_time,
@@ -339,8 +242,8 @@ class GGNNBaseModel(object):
               1, "Best epoch so far, validation accuracy increased from "
               "%.5f from %.5f (+%.3f%%). Saving to '%s'",
               valid.average_accuracy, self.best_epoch_validation_accuracy,
-              ((valid.average_accuracy / self.best_epoch_validation_accuracy) - 1) * 100,
-              self.best_model_file)
+              ((valid.average_accuracy / self.best_epoch_validation_accuracy) -
+               1) * 100, self.best_model_file)
           self.best_epoch_validation_accuracy = valid.average_accuracy
           self.best_epoch_num = epoch_num
 
@@ -351,9 +254,8 @@ class GGNNBaseModel(object):
             # Add the test results to the logfile.
             log = jsonutil.read_file(log_file)
             log["time"] = time.time() - start_time
-            log['test_reults'] = (
-              test.average_loss, test.average_accuracy,
-              test.instances_per_second)
+            log['test_reults'] = (test.average_loss, test.average_accuracy,
+                                  test.instances_per_second)
             jsonutil.write_file(log_file, log)
         elif epoch_num - self.best_epoch_num >= FLAGS.patience:
           app.Log(
@@ -388,7 +290,7 @@ class GGNNBaseModel(object):
     # Save all of the flags and their values, as well as
     data_to_save = {
         "flags": app.FlagsToDict(json_safe=True),
-        "model_flags": self.ModelFlagsToDict(),
+        "model_flags": self._ModelFlagsToDict(),
         "weights": weights_to_save,
         "build_info": pbutil.ToJson(build_info.GetBuildInfo()),
         "global_training_step": self.global_training_step,
@@ -416,12 +318,11 @@ class GGNNBaseModel(object):
     self.global_training_step = data_to_load.get("global_training_step", 0)
     self.best_epoch_validation_accuracy = data_to_load.get(
         "best_epoch_validation_accuracy", 0)
-    self.best_epoch_num = data_to_load.get(
-        "best_epoch_num", 0)
+    self.best_epoch_num = data_to_load.get("best_epoch_num", 0)
 
     # Assert that we got the same model configuration.
     # Flag values found in the saved file but not present currently are ignored.
-    flags = self.ModelFlagsToDict()
+    flags = self._ModelFlagsToDict()
     saved_flags = data_to_load["model_flags"]
     flag_names = set(flags.keys())
     saved_flag_names = set(saved_flags.keys())
@@ -448,14 +349,99 @@ class GGNNBaseModel(object):
             restore_ops.append(
                 variable.assign(data_to_load["weights"][variable.name]))
           else:
-            app.Log(1, "Freshly initializing %s since no saved value "
-                    "was found.", variable.name)
+            app.Log(
+                1, "Freshly initializing %s since no saved value "
+                "was found.", variable.name)
             variables_to_initialize.append(variable)
         for var_name in data_to_load["weights"]:
           if var_name not in used_vars:
             app.Log(1, "Saved weights for %s not used by model.", var_name)
         restore_ops.append(tf.variables_initializer(variables_to_initialize))
         self.sess.run(restore_ops)
+
+  def _ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
+    """Return the flags which are """
+    return {
+        flag: jsonutil.JsonSerializable(getattr(FLAGS, flag))
+        for flag in sorted(set(self.GetModelFlagNames()))
+    }
+
+  def _MakeModel(self):
+    self.placeholders["num_graphs"] = tf.placeholder(
+        tf.int32, [], name="num_graphs")
+    self.placeholders["out_layer_dropout_keep_prob"] = tf.placeholder(
+        tf.float32, [], name="out_layer_dropout_keep_prob")
+
+    self.weights["embedding_table"] = self._MakeEmbeddingsTable()
+
+    with tf.variable_scope("graph_model"):
+      self.ops["loss"], self.ops["accuracy"], self.ops["predictions"] = (
+          self.MakeLossAndAccuracyAndPredictionOps())
+
+    # Tensorboard summaries.
+    self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
+    # TODO(cec): More tensorboard telemetry: input class distributions,
+    # predicted class distributions, etc.
+
+  def _MakeEmbeddingsTable(self) -> tf.Tensor:
+    with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
+      with open(FLAGS.embedding_path, 'rb') as f:
+        embedding_table = pickle.load(f)
+
+    if FLAGS.embeddings == "inst2vec":
+      return tf.constant(
+          embedding_table, dtype=tf.float32, name="embedding_table")
+    elif FLAGS.embeddings == "finetune":
+      return tf.Variable(
+          embedding_table,
+          dtype=tf.float32,
+          name="embedding_table",
+          trainable=True)
+    elif FLAGS.embeddings == "random":
+      return tf.Variable(
+          ggnn_utils.uniform_init(np.shape(embedding_table)),
+          dtype=tf.float32,
+          name="embedding_table",
+          trainable=True)
+    else:
+      raise ValueError("Invalid value for --embeding. Supported values are "
+                       "{inst2vec,finetune,random}")
+
+  def _MakeTrainStep(self) -> tf.Tensor:
+    """Helper function."""
+    trainable_vars = self.sess.graph.get_collection(
+        tf.GraphKeys.TRAINABLE_VARIABLES)
+    if FLAGS.freeze_graph_model:
+      graph_vars = set(
+          self.sess.graph.get_collection(
+              tf.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"))
+      filtered_vars = []
+      for var in trainable_vars:
+        if var not in graph_vars:
+          filtered_vars.append(var)
+        else:
+          app.Log(1, "Freezing weights of variable `%s`.", var.name)
+      trainable_vars = filtered_vars
+    optimizer = tf.train.AdamOptimizer(FLAGS.learning_rate)
+    grads_and_vars = optimizer.compute_gradients(
+        self.ops["loss"], var_list=trainable_vars)
+    clipped_grads = []
+    for grad, var in grads_and_vars:
+      if grad is not None:
+        clipped_grads.append((tf.clip_by_norm(grad, FLAGS.clamp_gradient_norm),
+                              var))
+      else:
+        clipped_grads.append((grad, var))
+    train_step = optimizer.apply_gradients(clipped_grads)
+
+    # Also run batch_norm update ops, if any.
+    update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)
+    train_step = tf.group([train_step, update_ops])
+
+    # Initialize newly-introduced variables:
+    self.sess.run(tf.local_variables_initializer())
+
+    return train_step
 
   # TODO(cec):
   # def predict(self, data):

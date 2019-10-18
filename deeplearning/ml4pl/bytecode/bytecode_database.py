@@ -32,13 +32,13 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
   cflags: str = sql.Column(sql.String(4096), nullable=False)
   charcount: int = sql.Column(sql.Integer, nullable=False)
   linecount: int = sql.Column(sql.Integer, nullable=False)
-  bytecode: str = sql.Column(sql.UnicodeText().with_variant(
-      sql.UnicodeText(2**31), 'mysql'),
-                             nullable=False)
+  bytecode: str = sql.Column(
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
+      nullable=False)
   clang_returncode: int = sql.Column(sql.Integer, nullable=False)
-  error_message: str = sql.Column(sql.UnicodeText().with_variant(
-      sql.UnicodeText(2**31), 'mysql'),
-                                  nullable=False)
+  error_message: str = sql.Column(
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
+      nullable=False)
 
   # TODO(cec): Add unique constraint on source_name and relpath.
 
@@ -64,27 +64,25 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
 
   proto_t = ml4pl_pb2.ControlFlowGraphFromLlvmBytecode
 
-  bytecode_id: int = sql.Column(sql.Integer,
-                                sql.ForeignKey(LlvmBytecode.id),
-                                nullable=False)
+  bytecode_id: int = sql.Column(
+      sql.Integer, sql.ForeignKey(LlvmBytecode.id), nullable=False)
   cfg_id: int = sql.Column(sql.Integer, nullable=False)
 
   # Composite primary key.
-  __table_args__ = (sql.PrimaryKeyConstraint('bytecode_id',
-                                             'cfg_id',
-                                             name='unique_id'),)
+  __table_args__ = (sql.PrimaryKeyConstraint(
+      'bytecode_id', 'cfg_id', name='unique_id'),)
 
   status: int = sql.Column(sql.Integer, nullable=False)
-  proto: str = sql.Column(sql.UnicodeText().with_variant(
-      sql.UnicodeText(2**31), 'mysql'),
-                          nullable=False)
+  proto: str = sql.Column(
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
+      nullable=False)
   # TODO: Switch string proto for a more compact serialized proto.
   # serialized_proto: str = sql.Column(
   #     sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql'),
   #     nullable=False)
-  error_message: str = sql.Column(sql.UnicodeText().with_variant(
-      sql.UnicodeText(2**31), 'mysql'),
-                                  nullable=False)
+  error_message: str = sql.Column(
+      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
+      nullable=False)
   block_count: int = sql.Column(sql.Integer, nullable=False)
   edge_count: int = sql.Column(sql.Integer, nullable=False)
   is_strict_valid: bool = sql.Column(sql.Boolean, nullable=False)

@@ -67,21 +67,21 @@ def GraphToInputTarget(spec: TargetGraphSpec):
 
   # Set node features.
   for node_index in input_graph.nodes():
-    input_graph.add_node(node_index,
-                         features=InputGraphNodeFeatures(spec, node_index))
+    input_graph.add_node(
+        node_index, features=InputGraphNodeFeatures(spec, node_index))
 
   for node_index in target_graph.nodes():
-    target_graph.add_node(node_index,
-                          features=TargetGraphNodeFeatures(spec, node_index))
+    target_graph.add_node(
+        node_index, features=TargetGraphNodeFeatures(spec, node_index))
 
   # Set edge features.
   for edge_index in input_graph.edges():
-    input_graph.add_edge(*edge_index,
-                         features=InputGraphEdgeFeatures(spec, edge_index))
+    input_graph.add_edge(
+        *edge_index, features=InputGraphEdgeFeatures(spec, edge_index))
 
   for edge_index in target_graph.edges():
-    target_graph.add_edge(*edge_index,
-                          features=TargetGraphEdgeFeatures(spec, edge_index))
+    target_graph.add_edge(
+        *edge_index, features=TargetGraphEdgeFeatures(spec, edge_index))
 
   # Set global (graph) features.
   input_graph.graph['features'] = np.array([0.0])

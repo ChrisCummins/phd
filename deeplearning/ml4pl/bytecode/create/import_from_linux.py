@@ -100,9 +100,10 @@ def BytecodeFromLinuxSrc(path: pathlib.Path, optimization_level: str) -> str:
   ]
   process = clang.Exec(clang_args)
   if process.returncode:
-    raise clang.ClangException(returncode=process.returncode,
-                               stderr=process.stderr,
-                               command=clang_args)
+    raise clang.ClangException(
+        returncode=process.returncode,
+        stderr=process.stderr,
+        command=clang_args)
   return process.stdout, clang_args
 
 
@@ -243,16 +244,17 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
         rows += row_batch
 
     # Create the output table.
-    df = pd.DataFrame(rows,
-                      columns=[
-                          'program:src_relpath',
-                          'cfg:graph',
-                          'cfg:block_count',
-                          'cfg:edge_count',
-                          'cfg:edge_density',
-                          'cfg:is_valid',
-                          'cfg:is_strict_valid',
-                      ])
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            'program:src_relpath',
+            'cfg:graph',
+            'cfg:block_count',
+            'cfg:edge_count',
+            'cfg:edge_density',
+            'cfg:is_valid',
+            'cfg:is_strict_valid',
+        ])
 
     df.set_index([
         'program:src_relpath',

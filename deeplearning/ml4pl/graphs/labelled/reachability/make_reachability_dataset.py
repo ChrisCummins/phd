@@ -30,11 +30,12 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import sqlutil
 
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecodes from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None,
+    'URL of database to read bytecodes from.',
+    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
@@ -282,9 +283,8 @@ class DatasetExporterBase(object):
       graph_metas = []
       chunksize = max(self.batch_size // 16, 8)
       job_processor = self.GetProcessJobFunction()
-      workers = self.pool.imap_unordered(job_processor,
-                                         jobs,
-                                         chunksize=chunksize)
+      workers = self.pool.imap_unordered(
+          job_processor, jobs, chunksize=chunksize)
       for graphs_chunk in workers:
         graph_metas += graphs_chunk
 

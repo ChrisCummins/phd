@@ -13,9 +13,9 @@ SMALL_NUMBER = 1e-7
 
 def glorot_init(shape):
   initialization_range = np.sqrt(6.0 / (shape[-2] + shape[-1]))
-  return np.random.uniform(low=-initialization_range,
-                           high=initialization_range,
-                           size=shape).astype(np.float32)
+  return np.random.uniform(
+      low=-initialization_range, high=initialization_range,
+      size=shape).astype(np.float32)
 
 
 def uniform_init(shape):
@@ -64,8 +64,8 @@ class MLP(object):
         for (i, s) in enumerate(weight_sizes)
     ]
     biases = [
-        tf.Variable(np.zeros(s[-1]).astype(np.float32),
-                    name='MLP_b_layer%i' % i)
+        tf.Variable(
+            np.zeros(s[-1]).astype(np.float32), name='MLP_b_layer%i' % i)
         for (i, s) in enumerate(weight_sizes)
     ]
 

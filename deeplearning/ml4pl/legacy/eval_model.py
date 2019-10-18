@@ -35,9 +35,8 @@ def main(argv):
   with open(model_dir / 'model.json') as f:
     model: keras.models.Model = keras.models.model_from_json(f.read())
 
-  model.compile(loss='binary_crossentropy',
-                metrics=['accuracy'],
-                optimizer='adam')
+  model.compile(
+      loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
   model.summary()
   print(f'Total training time: {training_time_natural} '
         f'({time_per_epoch_natural} per epoch).')

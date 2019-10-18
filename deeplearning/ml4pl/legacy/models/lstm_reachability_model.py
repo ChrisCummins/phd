@@ -59,9 +59,8 @@ def BuildKerasModel(sequence_length: int, num_classes: int, lstm_size: int,
                     dnn_size: int,
                     atomizer: atomizers.AtomizerBase) -> keras.models.Model:
   """Instantiate reachability classifier model."""
-  code_in = layers.Input(shape=(sequence_length,),
-                         dtype='int32',
-                         name='code_in')
+  code_in = layers.Input(
+      shape=(sequence_length,), dtype='int32', name='code_in')
   language_model = layers.Embedding(
       # Note the +1 on atomizer.vocab_size to accommodate the padding character.
       input_dim=atomizer.vocab_size + 1,
@@ -70,9 +69,8 @@ def BuildKerasModel(sequence_length: int, num_classes: int, lstm_size: int,
       name='embedding')(code_in)
 
   # LSTM model.
-  language_model = layers.LSTM(lstm_size,
-                               implementation=1,
-                               return_sequences=True)(language_model)
+  language_model = layers.LSTM(
+      lstm_size, implementation=1, return_sequences=True)(language_model)
   language_model = layers.LSTM(lstm_size, implementation=1)(language_model)
 
   # Node selector, a 1-hot vector which selects a node in the graph to predict
@@ -90,11 +88,12 @@ def BuildKerasModel(sequence_length: int, num_classes: int, lstm_size: int,
       for i in range(num_classes)
   ]
 
-  model = keras.models.Model(inputs=[node_selector, code_in],
-                             outputs=heuristic_model_outputs)
-  model.compile(optimizer="adam",
-                metrics=["accuracy"],
-                loss=["categorical_crossentropy"] * num_classes)
+  model = keras.models.Model(
+      inputs=[node_selector, code_in], outputs=heuristic_model_outputs)
+  model.compile(
+      optimizer="adam",
+      metrics=["accuracy"],
+      loss=["categorical_crossentropy"] * num_classes)
   return model
 
 
@@ -237,11 +236,12 @@ class LstmReachabilityModel(object):
     np.random.seed(FLAGS.reachability_model_seed)
     random.seed(FLAGS.reachability_model_seed)
     app.Log(1, 'Building Keras model ...')
-    self.model = BuildKerasModel(sequence_length=sequence_length,
-                                 num_classes=num_classes,
-                                 lstm_size=self.lstm_size,
-                                 dnn_size=self.dnn_size,
-                                 atomizer=atomizer)
+    self.model = BuildKerasModel(
+        sequence_length=sequence_length,
+        num_classes=num_classes,
+        lstm_size=self.lstm_size,
+        dnn_size=self.dnn_size,
+        atomizer=atomizer)
 
     self.num_classes = num_classes
 
@@ -259,10 +259,11 @@ class LstmReachabilityModel(object):
         test_logs = dict(
             zip(
                 self.model.metrics_names,
-                self.model.evaluate(self.test_x,
-                                    self.test_y,
-                                    batch_size=FLAGS.batch_size,
-                                    verbose=0)))
+                self.model.evaluate(
+                    self.test_x,
+                    self.test_y,
+                    batch_size=FLAGS.batch_size,
+                    verbose=0)))
         outputs = self.model.predict(self.test_x, batch_size=FLAGS.batch_size)
 
         accuracies = []

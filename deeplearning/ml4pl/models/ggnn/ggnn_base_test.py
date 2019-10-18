@@ -38,6 +38,7 @@ class MockModel(ggnn_base.GGNNBaseModel):
 
 
 def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path):
+  """Test saving a model to file."""
   FLAGS.working_dir = tempdir2
 
   model = MockModel()
@@ -54,7 +55,7 @@ def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path):
 
 
 def test_LoadModel(tempdir: pathlib.Path, tempdir2: pathlib.Path):
-  """Test loading model from file."""
+  """Test loading a model from file."""
   FLAGS.working_dir = tempdir2
 
   model = MockModel()
@@ -88,6 +89,7 @@ def test_LoadModel_unknown_saved_model_flag(tempdir: pathlib.Path,
 
 
 def test_Train(tempdir: pathlib.Path, tempdir2: pathlib.Path):
+  """Test that training terminates and bumps the epoch number."""
   FLAGS.working_dir = tempdir2
   FLAGS.num_epochs = 1
 

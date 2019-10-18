@@ -137,21 +137,21 @@ def SpecToInputTarget(spec: TargetGraphSpec):
 
   # Set node features.
   for node_index in input_graph.nodes():
-    input_graph.add_node(node_index,
-                         features=InputGraphNodeFeatures(spec, node_index))
+    input_graph.add_node(
+        node_index, features=InputGraphNodeFeatures(spec, node_index))
 
   for node_index in target_graph.nodes():
-    target_graph.add_node(node_index,
-                          features=TargetGraphNodeFeatures(spec, node_index))
+    target_graph.add_node(
+        node_index, features=TargetGraphNodeFeatures(spec, node_index))
 
   # Set edge features.
   for edge_index in input_graph.edges():
-    input_graph.add_edge(*edge_index,
-                         features=InputGraphEdgeFeatures(spec, edge_index))
+    input_graph.add_edge(
+        *edge_index, features=InputGraphEdgeFeatures(spec, edge_index))
 
   for edge_index in target_graph.edges():
-    target_graph.add_edge(*edge_index,
-                          features=TargetGraphEdgeFeatures(spec, edge_index))
+    target_graph.add_edge(
+        *edge_index, features=TargetGraphEdgeFeatures(spec, edge_index))
 
   # Set global (graph) features.
   input_graph.graph['features'] = np.array([0.0], dtype=np.float32)
@@ -205,20 +205,16 @@ def main(argv):
 
   with prof.Profile('synthetic training graphs'):
     training_graph_generator = SpecGenerator(
-        cfg_generator.ControlFlowGraphGenerator(random_state,
-                                                num_nodes_min_max_tr,
-                                                edge_density_tr,
-                                                strict=False))
+        cfg_generator.ControlFlowGraphGenerator(
+            random_state, num_nodes_min_max_tr, edge_density_tr, strict=False))
     train_df = SpecsToDataFrame(
         training_graph_generator.Generate(FLAGS.num_synthetic_training_graphs),
         'training')
 
   with prof.Profile('synthetic validation graphs'):
     validation_graph_generator = SpecGenerator(
-        cfg_generator.ControlFlowGraphGenerator(random_state,
-                                                num_nodes_min_max_ge,
-                                                edge_density_ge,
-                                                strict=False))
+        cfg_generator.ControlFlowGraphGenerator(
+            random_state, num_nodes_min_max_ge, edge_density_ge, strict=False))
     valid_df = SpecsToDataFrame(
         validation_graph_generator.Generate(
             FLAGS.num_synthetic_validation_graphs), 'validation')
@@ -249,8 +245,8 @@ def main(argv):
     ]
 
   PickleDataFrame(ocl_df, outdir / 'ocl.pkl')
-  PickleDataFrame(pd.concat((synthetic_df, ocl_df)),
-                  outdir / 'synthetic_ocl.pkl')
+  PickleDataFrame(
+      pd.concat((synthetic_df, ocl_df)), outdir / 'synthetic_ocl.pkl')
 
   # Linux dataset.
   with prof.Profile('linux dataset'):
@@ -272,11 +268,12 @@ def main(argv):
     ]
 
   PickleDataFrame(linux_df, outdir / 'linux.pkl')
-  PickleDataFrame(pd.concat((synthetic_df, linux_df)),
-                  outdir / 'synthetic_linux.pkl')
+  PickleDataFrame(
+      pd.concat((synthetic_df, linux_df)), outdir / 'synthetic_linux.pkl')
 
-  PickleDataFrame(pd.concat((synthetic_df, ocl_df, linux_df)),
-                  outdir / 'synthetic_linux_ocl.pkl')
+  PickleDataFrame(
+      pd.concat((synthetic_df, ocl_df, linux_df)),
+      outdir / 'synthetic_linux_ocl.pkl')
 
 
 if __name__ == '__main__':

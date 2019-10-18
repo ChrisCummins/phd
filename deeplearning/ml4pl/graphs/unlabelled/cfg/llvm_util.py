@@ -140,23 +140,26 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
             if remove_unconditional_branch_statements:
               block_instruction_count -= 1
             else:
-              sig.add_node(new_node_id,
-                           name=new_node_name,
-                           text=branch_text,
-                           basic_block=node)
+              sig.add_node(
+                  new_node_id,
+                  name=new_node_name,
+                  text=branch_text,
+                  basic_block=node)
           else:
             # TODO(cec): Do we want to preserve the "true" "false" information
             # for outgoing edges? We currently throw it away.
-            sig.add_node(new_node_id,
-                         name=new_node_name,
-                         text=branch_text,
-                         basic_block=node)
+            sig.add_node(
+                new_node_id,
+                name=new_node_name,
+                text=branch_text,
+                basic_block=node)
         else:
           # Regular instruction to add.
-          sig.add_node(new_node_id,
-                       name=new_node_name,
-                       text=instruction,
-                       basic_block=node)
+          sig.add_node(
+              new_node_id,
+              name=new_node_name,
+              text=instruction,
+              basic_block=node)
 
       # Add an entry to the node translation map for the start and end nodes
       # of this basic block.

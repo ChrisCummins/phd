@@ -48,6 +48,10 @@ py_binary(
     srcs = ["ggnn_node_classifier.py"],
     deps = [
         ":ggnn_base",
+        ":ggnn_utils",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs:graph_database_reader",
+        "//deeplearning/ml4pl/graphs:graph_database_stats",
         "//labm8:app",
         "//labm8:humanize",
         "//labm8:prof",
