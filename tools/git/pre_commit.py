@@ -156,7 +156,7 @@ def main(argv):
     linters_lib.Print(commits_behind_upstream, 'commits behind')
     PullAndRebaseOrDie()
   else:
-    linters_lib.Print('ok ({:.3f}s)'.format(time.time() - task_start_time))
+    linters_lib.Print('✅  {:.3f}s'.format(time.time() - task_start_time))
 
   files_that_exist = [f for f in staged_files if os.path.isfile(f)]
 
@@ -191,7 +191,7 @@ def main(argv):
         new_partially_staged_checksums.split('\n')):
       if left != right:
         partially_staged_modified_files.append(' '.join(left.split()[1:]))
-  linters_lib.Print('ok ({:.3f}s)'.format(time.time() - task_start_time))
+  linters_lib.Print('✅  {:.3f}s'.format(time.time() - task_start_time))
 
   linters = linters_lib.LinterActions(files_that_exist)
   num_actions = len(linters.paths_with_actions)
@@ -200,7 +200,7 @@ def main(argv):
     task_start_time = time.time()
     linters_lib.Print('Running', num_actions, 'linter actions ...', end=' ')
     linters.RunOrDie()
-    linters_lib.Print('ok ({:.3f}s)'.format(time.time() - task_start_time))
+    linters_lib.Print('✅  {:.3f}s'.format(time.time() - task_start_time))
 
     # Get a list of partially-staged files that were modified by the linters.
     partially_staged_files = set(
@@ -227,7 +227,7 @@ def main(argv):
       partially_staged_modified_files = list(
           sorted(set(partially_staged_modified_files)))
       linters_lib.Print(
-          'Partially staged modified files that must be inspected:')
+          '⚠️  Partially staged modified files that must be inspected:')
       for path in partially_staged_modified_files:
         linters_lib.Print('   ', path)
       linters_lib.Print()
@@ -239,7 +239,8 @@ def main(argv):
       sys.exit(1)
 
     linters_lib.Print(
-        'Pre-commit checks passed in {:.3f}s'.format(time.time() - start_time))
+        '✅  Pre-commit checks passed in {:.3f}s'.format(time.time() -
+                                                        start_time))
 
 
 if __name__ == '__main__':
