@@ -35,6 +35,9 @@ def GitPushOrDie(branch_name, remote_name):
 
 def main(argv):
   assert not argv
+
+  start_time = time.time()
+
   os.chdir(_PHD_ROOT)
 
   branch_name = linters_lib.GetGitBranchOrDie()
@@ -45,7 +48,8 @@ def main(argv):
   GitPushOrDie(branch_name, remote_name)
   linters_lib.Print('ok ({:.3f}s)'.format(time.time() - task_start_time))
 
-  linters_lib.Print('Post-commit checks passed')
+  linters_lib.Print(
+      'Post-commit checks passed in {:.3f}s'.format(time.time() - start_time))
 
 
 if __name__ == '__main__':
