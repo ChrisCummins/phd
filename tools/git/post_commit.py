@@ -49,7 +49,8 @@ def main(argv):
   linters_lib.Print('ok ({:.3f}s)'.format(time.time() - task_start_time))
 
   linters_lib.Print(
-      'Post-commit checks passed in {:.3f}s'.format(time.time() - start_time))
+      '✅  Post-commit checks passed in {:.3f}s'.format(time.time() -
+                                                       start_time))
 
 
 if __name__ == '__main__':
