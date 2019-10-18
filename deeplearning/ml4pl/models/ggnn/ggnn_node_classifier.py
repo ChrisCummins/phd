@@ -8,21 +8,21 @@ import tensorflow as tf
 import typing
 import utils
 
+from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as base_model
 from labm8 import app
-
 
 FLAGS = app.FLAGS
 
 CONFIG = json.load('config.json')
 
-app.DEFINE_integer(
-    "batch_size", 8000,
-    "The maximum number of nodes to include in a graph batch.")
-app.DEFINE_database(
-    'graph_db', graph_database.Database,
-    None, 'The database to read graph data from.',
-    must_exist=True)
+app.DEFINE_integer("batch_size", 8000,
+                   "The maximum number of nodes to include in a graph batch.")
+app.DEFINE_database('graph_db',
+                    graph_database.Database,
+                    None,
+                    'The database to read graph data from.',
+                    must_exist=True)
 app.DEFINE_integer(
     'max_steps', 0,
     'If > 0, limit the graphs used to those that can be computed in '
@@ -193,14 +193,17 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
       self._annotation_size = q.annotation_size
       self.min_steps_required = q.min_steps_required
 
-  def prepare_specific_graph_model(self) -> None:
+  def MakeLossAndAccuracyAndPredictionOps(
+      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     # Use a single layer GRU, with the minimum number of steps required to
     # process the dataset.
-    self.params["layer_timesteps"] = [self.min_steps_required]
-    app.Log(1, "Using layer timesteps: %s", self.params["layer_timesteps"])
+    layer_timesteps = [self.min_steps_required]
+    app.Log(1, "Using layer timesteps: %s", layer_timesteps)
 
     hidden_size = self.params["hidden_size"]
 
+    self.placeholders["target_values"] = tf.placeholder(tf.int32, [None, 2],
+                                                        name="target_values")
     self.placeholders["initial_node_representation"] = tf.placeholder(
         tf.float32, [None, hidden_size], name="node_features")
     self.placeholders["num_of_nodes_in_batch"] = tf.placeholder(
@@ -235,13 +238,14 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
     # Generate per-layer values for edge weights, biases and gated units:
     self.weights = {}  # Used by super-class to place generic things
     self.gnn_weights = GGNNWeights([], [], [], [])
-    for layer_index in range(len(self.params["layer_timesteps"])):
+    for layer_index in range(len(layer_timesteps)):
       with tf.variable_scope(f"gnn_layer_{layer_index}"):
         edge_weights = tf.nn.dropout(
             tf.reshape(
                 tf.Variable(
-                    utils.glorot_init(
-                        [self.GetNumberOfEdgeTypes() * hidden_size, hidden_size]),
+                    utils.glorot_init([
+                        self.GetNumberOfEdgeTypes() * hidden_size, hidden_size
+                    ]),
                     name=f"gnn_edge_weights_{layer_index}",
                 ), [self.GetNumberOfEdgeTypes(), hidden_size, hidden_size]),
             keep_prob=self.placeholders["edge_weight_dropout_keep_prob"])
@@ -282,7 +286,6 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
 
-  def compute_final_node_representations(self) -> tf.Tensor:
     # One entry per layer (final state of that layer), shape: number of nodes
     # in batch v x D.
     node_states_per_layer = []
@@ -316,7 +319,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
     message_targets = tf.concat(message_targets, axis=0)  # Shape [M]
     message_edge_types = tf.concat(message_edge_types, axis=0)  # Shape [M]
 
-    for (layer_idx, num_timesteps) in enumerate(self.params["layer_timesteps"]):
+    for (layer_idx, num_timesteps) in enumerate(layer_timesteps):
       with tf.variable_scope("gnn_layer_%i" % layer_idx):
         # Used shape abbreviations:
         #   V ~ number of nodes
@@ -447,51 +450,49 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
             node_states_per_layer[-1] = self.gnn_weights.rnn_cells[layer_idx](
                 incoming_information, node_states_per_layer[-1])[1]
 
-    return node_states_per_layer[-1]
+    self.ops["final_node_representations"] = node_states_per_layer[-1]
 
-  def make_target_values_placeholder(self) -> tf.Tensor:
-    return tf.placeholder(tf.int32, [None, 2], name="target_values")
+    with tf.variable_scope("output_layer"):
+      with tf.variable_scope("regression_gate"):
+        self.weights["regression_gate"] = utils.MLP(
+            # Concatenation of initial and final node states
+            in_size=2 * FLAGS.hidden_size,
+            out_size=self.GetNumberOfClasses(),
+            hid_sizes=[],
+            dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
+        )
 
-  def MakeLossAndAccuracyAndPredictionOps(self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
-    with tf.variable_scope("regression_gate"):
-      self.weights["regression_gate"] = utils.MLP(
-          # Concatenation of initial and final node states
-          in_size=2 * FLAGS.hidden_size,
-          out_size=self.GetNumberOfClasses(),
-          hid_sizes=[],
-          dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
-      )
+      with tf.variable_scope("regression"):
+        self.weights["regression_transform"] = utils.MLP(
+            in_size=FLAGS.hidden_size,
+            out_size=self.GetNumberOfClasses(),
+            hid_sizes=[],
+            dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
+        )
 
-    with tf.variable_scope("regression"):
-      self.weights["regression_transform"] = utils.MLP(
-          in_size=FLAGS.hidden_size,
-          out_size=self.GetNumberOfClasses(),
-          hid_sizes=[],
-          dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
-      )
+      # TODO(cec): Can we just stick this in a loop to run inference for more
+      # steps?
+      computed_values = self.gated_regression(
+          self.ops["final_node_representations"],
+          self.weights["regression_gate"],
+          self.weights["regression_transform"],
+      )  # [v, c]
 
-    # TODO(cec): Can we just stick this in a loop to run for more steps?
-    computed_values = self.gated_regression(
-        self.ops["final_node_representations"],
-        self.weights["regression_gate"],
-        self.weights["regression_transform"],
-    )  # [v, c]
+      predictions = tf.argmax(self.placeholders["target_values"],
+                              axis=1,
+                              output_type=tf.int32)
 
+      accuracy = tf.reduce_mean(
+          tf.cast(
+              tf.equal(
+                  predictions,
+                  tf.argmax(computed_values, axis=1, output_type=tf.int32),
+              ),
+              tf.float32,
+          ))
 
-    predictions = tf.argmax(
-        self.placeholders["target_values"], axis=1, output_type=tf.int32)
-
-    accuracy = tf.reduce_mean(
-        tf.cast(
-            tf.equal(
-                predictions,
-                tf.argmax(computed_values, axis=1, output_type=tf.int32),
-            ),
-            tf.float32,
-        ))
-
-    loss = tf.losses.softmax_cross_entropy(self.placeholders["target_values"],
-                                           computed_values)
+      loss = tf.losses.softmax_cross_entropy(self.placeholders["target_values"],
+                                             computed_values)
 
     return loss, accuracy, predictions
 
@@ -500,11 +501,13 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
     # last_h: [v x h]
     initial_node_rep = self.placeholders["initial_node_representation"]
     gate_input = tf.concat([last_h, initial_node_rep], axis=-1)  # [v x 2h]
-    self.output = tf.nn.sigmoid(
-        regression_gate(gate_input)) * regression_transform(last_h)
-    return self.output
 
-  def make_minibatch_iterator(self, epoch_type: str):
+    return tf.nn.sigmoid(
+        regression_gate(gate_input)) * regression_transform(last_h)
+
+  def MakeMinibatchIterator(
+      self, epoch_type: str
+  ) -> typing.Iterable[typing.Tuple[int, ggnn_base.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
     # Graphs are keyed into {train,val,test} groups.
@@ -543,8 +546,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
 
       graph = next(db_reader)
 
-      while (graph and
-             node_offset + graph.node_count < FLAGS.batch_size):
+      while (graph and node_offset + graph.node_count < FLAGS.batch_size):
         # De-serialize pickled data in database and process.
         graph_dict = pickle.loads(graph.graph.data)
         ProcessGraphDict(

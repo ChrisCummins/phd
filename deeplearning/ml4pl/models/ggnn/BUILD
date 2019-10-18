@@ -1,14 +1,17 @@
 py_library(
     name = "ggnn_base",
-    data = ["//deeplearning/ncc/published_results:embeddings"],
     srcs = ["ggnn_base.py"],
+    data = ["//deeplearning/ncc/published_results:embeddings"],
     deps = [
         ":ggnn_utils",
+        "//:build_info",
+        "//deeplearning/ml4pl/models:batch_logger",
+        "//deeplearning/ml4pl/models:log_writer",
         "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:humanize",
         "//labm8:prof",
         "//labm8:system",
-        "//labm8:jsonutil",
-        "//labm8:bazelutil",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
     ],
@@ -19,10 +22,12 @@ py_test(
     srcs = ["ggnn_base_test.py"],
     deps = [
         ":ggnn_base",
-        "//third_party/py/pytest",
-        "//labm8:test",
         "//labm8:app",
-    ]
+        "//labm8:test",
+        "//third_party/py/numpy",
+        "//third_party/py/pytest",
+        "//third_party/py/tensorflow",
+    ],
 )
 
 py_binary(

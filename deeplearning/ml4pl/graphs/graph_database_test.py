@@ -8,7 +8,6 @@ from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import test
 
-
 FLAGS = app.FLAGS
 
 

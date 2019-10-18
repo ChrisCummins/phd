@@ -9,7 +9,6 @@ from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
 from labm8 import app
 from labm8 import test
 
-
 FLAGS = app.FLAGS
 
 
@@ -94,7 +93,8 @@ def test_StatementIsSuccessor_linear_control_path():
   assert not query.StatementIsSuccessor(g, 'b', 'a')
   assert not query.StatementIsSuccessor(g, 'a', '_not_in_graph_')
   with pytest.raises(Exception):
-    assert not query.StatementIsSuccessor(g, '_not_in_graph_', '_not_in_graph2_')
+    assert not query.StatementIsSuccessor(g, '_not_in_graph_',
+                                          '_not_in_graph2_')
 
 
 def test_StatementIsSuccessor_branched_control_path():

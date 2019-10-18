@@ -6,8 +6,8 @@ from deeplearning.ml4pl.graphs import graph_query as query
 from labm8 import app
 from labm8 import test
 
-
 FLAGS = app.FLAGS
+
 
 @pytest.fixture(scope='function')
 def graph():

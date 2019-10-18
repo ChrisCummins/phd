@@ -6,8 +6,8 @@ from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from labm8 import app
 from labm8 import test
 
-
 FLAGS = app.FLAGS
+
 
 @pytest.fixture(scope='function')
 def graph():
@@ -30,20 +30,26 @@ def graph():
 def test_StatementNodeIterator(graph):
   assert len(list(iterators.StatementNodeIterator(graph))) == 4
 
+
 def test_IdentifierNodeIterator(graph):
   assert len(list(iterators.IdentifierNodeIterator(graph))) == 1
+
 
 def test_EntryBlockIterator(graph):
   assert len(list(iterators.EntryBlockIterator(graph))) == 1
 
+
 def test_ExitBlockIterator(graph):
   assert len(list(iterators.ExitBlockIterator(graph))) == 1
+
 
 def test_ControlFlowEdgeIterator(graph):
   assert len(list(iterators.ControlFlowEdgeIterator(graph))) == 3
 
+
 def test_DataFlowEdgeIterator(graph):
   assert len(list(iterators.DataFlowEdgeIterator(graph))) == 2
+
 
 if __name__ == '__main__':
   test.Main()

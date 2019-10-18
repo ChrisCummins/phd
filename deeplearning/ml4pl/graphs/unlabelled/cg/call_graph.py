@@ -6,7 +6,6 @@ import typing
 
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 

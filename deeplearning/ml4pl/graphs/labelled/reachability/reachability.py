@@ -7,7 +7,6 @@ from deeplearning.ml4pl.graphs import graph_query as query
 from labm8 import app
 from labm8 import decorators
 
-
 FLAGS = app.FLAGS
 
 

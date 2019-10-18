@@ -5,7 +5,6 @@ import typing
 
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 
@@ -26,7 +25,7 @@ def SuccessorNodes(
     g: nx.DiGraph,
     node: str,
     direction: typing.Optional[
-      typing.Callable[[typing.Any, typing.Any], typing.Any]] = None,
+        typing.Callable[[typing.Any, typing.Any], typing.Any]] = None,
     ignored_nodes: typing.Optional[typing.Iterable[str]] = None
 ) -> typing.List[str]:
   """Find the successor nodes of a node."""
@@ -42,7 +41,9 @@ def SuccessorNodes(
   return real
 
 
-def StatementIsSuccessor(g: nx.MultiDiGraph, src: str, dst: str,
+def StatementIsSuccessor(g: nx.MultiDiGraph,
+                         src: str,
+                         dst: str,
                          flow: str = 'control') -> bool:
   """Return True if `dst` is successor to `src`."""
   visited = set()

@@ -6,7 +6,6 @@ import io
 from labm8 import app
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 
-
 FLAGS = app.FLAGS
 
 CreateLabelCallback = typing.Callable[[typing.Dict[str, typing.Any]], str]
@@ -15,19 +14,19 @@ StringOrCallback = typing.Union[str, CreateLabelCallback]
 
 
 def GraphToDot(g: nx.Graph,
-          statement_label: KeyOrCallback = 'text',
-          statement_shape: StringOrCallback = 'box',
-          statement_color: StringOrCallback = 'white',
-          identifier_label: KeyOrCallback = 'name',
-          identifier_shape: StringOrCallback = 'ellipse',
-          identifier_color: StringOrCallback = 'white',
-          magic_label: KeyOrCallback = 'name',
-          magic_shape: StringOrCallback = 'doubleoctagon',
-          magic_color: StringOrCallback = 'white',
-          control_flow_color: StringOrCallback = 'blue',
-          data_flow_label: KeyOrCallback = 'identifier',
-          data_flow_color: StringOrCallback = 'red',
-          call_edge_color: StringOrCallback = 'green'):
+               statement_label: KeyOrCallback = 'text',
+               statement_shape: StringOrCallback = 'box',
+               statement_color: StringOrCallback = 'white',
+               identifier_label: KeyOrCallback = 'name',
+               identifier_shape: StringOrCallback = 'ellipse',
+               identifier_color: StringOrCallback = 'white',
+               magic_label: KeyOrCallback = 'name',
+               magic_shape: StringOrCallback = 'doubleoctagon',
+               magic_color: StringOrCallback = 'white',
+               control_flow_color: StringOrCallback = 'blue',
+               data_flow_label: KeyOrCallback = 'identifier',
+               data_flow_color: StringOrCallback = 'red',
+               call_edge_color: StringOrCallback = 'green'):
   """Render the dot visualiation of the graph.
 
   Args:

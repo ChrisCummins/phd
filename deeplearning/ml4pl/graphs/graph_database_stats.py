@@ -6,7 +6,6 @@ from labm8 import app
 from labm8 import decorators
 from labm8 import prof
 
-
 FLAGS = app.FLAGS
 
 
@@ -42,16 +41,15 @@ class GraphDatabaseStats(object):
   def _ComputeStats(self) -> None:
     with prof.Profile("Computed database stats"), self.db.Session() as s:
       q = s.query(
-          sql.func.count(
-              graph_database.GraphMeta.id).label("graph_count"),
-          sql.func.max(
-              graph_database.GraphMeta.edge_type_count).label("edge_type_count"),
+          sql.func.count(graph_database.GraphMeta.id).label("graph_count"),
+          sql.func.max(graph_database.GraphMeta.edge_type_count).label(
+              "edge_type_count"),
           sql.func.max(
               graph_database.GraphMeta.node_features_dimensionality).label(
-              "node_features_dimensionality"),
+                  "node_features_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.data_flow_max_steps_required).label(
-              "data_flow_max_steps_required")).one()
+                  "data_flow_max_steps_required")).one()
 
       self._graph_count = q.graph_count
       self._edge_type_count = q.edge_type_count

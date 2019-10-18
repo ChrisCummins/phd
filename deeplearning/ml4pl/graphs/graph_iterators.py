@@ -3,8 +3,8 @@ import networkx as nx
 
 from labm8 import app
 
-
 FLAGS = app.FLAGS
+
 
 def NodeTypeIterator(g: nx.DiGraph, type_name: str):
   """Iterate over nodes in a graph of a given type."""

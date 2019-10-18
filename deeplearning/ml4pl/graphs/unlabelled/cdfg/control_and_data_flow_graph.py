@@ -19,7 +19,6 @@ from deeplearning.ncc.inst2vec import inst2vec_preprocess
 from labm8 import app
 from labm8 import humanize
 
-
 FLAGS = app.FLAGS
 
 
@@ -243,13 +242,13 @@ class ControlAndDataFlowGraphBuilder(object):
       in_edges = g.in_edges(node)
       out_edges = g.out_edges(node)
       in_nodes = iterators.SuccessorNodes(g,
-                                node,
-                                ignored_nodes=nodes_to_remove,
-                                direction=lambda src, dst: src)
+                                          node,
+                                          ignored_nodes=nodes_to_remove,
+                                          direction=lambda src, dst: src)
       out_nodes = iterators.SuccessorNodes(g,
-                                 node,
-                                 ignored_nodes=nodes_to_remove,
-                                 direction=lambda src, dst: dst)
+                                           node,
+                                           ignored_nodes=nodes_to_remove,
+                                           direction=lambda src, dst: dst)
 
       for edge in in_edges:
         edges_to_remove.add(edge)

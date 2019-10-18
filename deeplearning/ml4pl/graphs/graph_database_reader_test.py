@@ -8,7 +8,6 @@ from deeplearning.ml4pl.graphs import graph_database_reader as reader
 from labm8 import app
 from labm8 import test
 
-
 FLAGS = app.FLAGS
 
 
@@ -43,8 +42,7 @@ def db_512(db: graph_database.Database) -> graph_database.Database:
 def test_BufferedGraphReader_length(db_512: graph_database.Database,
                                     buffer_size: int):
   """Test that the expected number of graphs are returned"""
-  graphs = list(
-      reader.BufferedGraphReader(db_512, buffer_size=buffer_size))
+  graphs = list(reader.BufferedGraphReader(db_512, buffer_size=buffer_size))
   assert len(graphs) == 512
   assert all([g.bytecode_id == 1 for g in graphs])
   assert all([g.node_count == i for i, g in enumerate(graphs)])
@@ -56,9 +54,7 @@ def test_BufferedGraphReader_filter(db_512: graph_database.Database,
   """Test using a filter callback."""
   filter_cb = lambda: graph_database.GraphMeta.node_count % 2 == 0
   graphs = list(
-      reader.BufferedGraphReader(db_512,
-                                         filters=[filter_cb],
-                                         buffer_size=10))
+      reader.BufferedGraphReader(db_512, filters=[filter_cb], buffer_size=10))
   assert len(graphs) == 256
 
 
@@ -67,8 +63,8 @@ def test_BufferedGraphReader_filters(db_512: graph_database.Database,
                                      buffer_size: int):
   """Test using multiple filters in combination."""
   filters = [
-    lambda: graph_database.GraphMeta.node_count % 2 == 0, lambda:
-    graph_database.GraphMeta.id < 256
+      lambda: graph_database.GraphMeta.node_count % 2 == 0, lambda:
+      graph_database.GraphMeta.id < 256
   ]
   graphs = list(reader.BufferedGraphReader(db_512, filters=filters))
   assert len(graphs) == 128
@@ -78,8 +74,7 @@ def test_BufferedGraphReader_filters(db_512: graph_database.Database,
 def test_BufferedGraphReader_order_by_random(db_512: graph_database.Database,
                                              buffer_size: int):
   """Test using `order_by_random` arg to randomize row order."""
-  graphs = list(reader.BufferedGraphReader(db_512,
-                                                   order_by_random=True))
+  graphs = list(reader.BufferedGraphReader(db_512, order_by_random=True))
   node_counts = [g.node_count for g in graphs]
   # Flaky: there is a possibility that random order returns all rows in order!
   assert sorted(node_counts) != node_counts

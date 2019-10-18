@@ -24,7 +24,6 @@ from typing import Any, Dict, Sequence, Tuple  # noqa
 from deeplearning.ml4pl.models.ggnn import ggnn_base
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 GGNNWeights = namedtuple(
@@ -149,8 +148,8 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
             glorot_init([self.GetNumberOfEdgeTypes() * h_dim, h_dim]),
             name="gnn_edge_weights_for_emb_%i" % layer_idx,
         )
-        edge_weights_for_emb = tf.reshape(edge_weights_for_emb,
-                                          [self.GetNumberOfEdgeTypes(), h_dim, h_dim])
+        edge_weights_for_emb = tf.reshape(
+            edge_weights_for_emb, [self.GetNumberOfEdgeTypes(), h_dim, h_dim])
         edge_weights_for_emb = tf.nn.dropout(
             edge_weights_for_emb,
             keep_prob=self.placeholders["edge_weight_dropout_keep_prob"],
@@ -167,12 +166,14 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
         if self.params["use_edge_bias"]:
           self.gnn_weights.edge_biases.append(
               tf.Variable(
-                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim], dtype=np.float32),
+                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim],
+                           dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_idx,
               ))
           self.gnn_weights.edge_biases_for_embs.append(
               tf.Variable(
-                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim], dtype=np.float32),
+                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim],
+                           dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_idx,
               ))
 
@@ -201,7 +202,10 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
 
     # we drop the initial states placeholder in the first layer as they are all zero.
     node_states_per_layer.append(
-        tf.zeros([num_nodes, FLAGS.hidden_size], dtype=tf.float32,))
+        tf.zeros(
+            [num_nodes, FLAGS.hidden_size],
+            dtype=tf.float32,
+        ))
 
     message_targets = []  # list of tensors of message targets of shape [E]
     message_edge_types = []  # list of tensors of edge type of shape [E]
@@ -265,7 +269,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
               edge_sources = adjacency_list_for_edge_type[:, 0]
               edge_emb_idxs = adjacency_list_for_edge_type[:, 2]
               edge_embs = tf.nn.embedding_lookup(
-                  params=self.constants["embedding_table"],
+                  params=self.weights["embedding_table"],
                   ids=edge_emb_idxs,
               )
               edge_source_states = tf.nn.embedding_lookup(
@@ -533,9 +537,9 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
       batch_graph_nodes_list = []
       node_offset = 0
 
-      while (num_graphs < len(data) and
-             node_offset + data[num_graphs]["number_of_nodes"] <
-             FLAGS.batch_size):
+      while (
+          num_graphs < len(data) and
+          node_offset + data[num_graphs]["number_of_nodes"] < FLAGS.batch_size):
         cur_graph = data[num_graphs]
         num_nodes_in_graph = cur_graph["number_of_nodes"]
         # padded_features = np.pad(

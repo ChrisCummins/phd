@@ -8,7 +8,6 @@ from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
 
-
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()

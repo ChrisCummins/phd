@@ -5,7 +5,7 @@ py_library(
     deps = [
         "//labm8:app",
         "//third_party/py/networkx",
-        "//third_party/py/pyparsing",
         "//third_party/py/pydot",
-    ]
+        "//third_party/py/pyparsing",
+    ],
 )
