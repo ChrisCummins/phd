@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import os
 import sys
-
+import time
 
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
@@ -40,9 +40,10 @@ def main(argv):
   branch_name = linters_lib.GetGitBranchOrDie()
   remote_name = linters_lib.GetGitRemoteOrDie(branch_name)
 
+  task_start_time = time.time()
   linters_lib.Print('Pushing', branch_name, 'to', remote_name, '...', end=' ')
   GitPushOrDie(branch_name, remote_name)
-  linters_lib.Print('ok')
+  linters_lib.Print('ok ({:.3f}s)'.format(time.time() - task_start_time))
 
   linters_lib.Print('Post-commit checks passed')
 
