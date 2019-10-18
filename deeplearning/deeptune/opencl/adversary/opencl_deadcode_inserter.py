@@ -23,16 +23,15 @@
   have a fixed formatting, etc. If you try this on unformatted code, it will
   likely break (silently).
 """
+import numpy as np
 import re
 import typing
 
-import numpy as np
-
 from deeplearning.clgen.preprocessors import opencl
-from experimental.compilers.reachability import control_flow_graph_generator
 from gpu.cldrive.legacy import args
 from labm8 import app
 from labm8 import fmt
+
 
 FLAGS = app.FLAGS
 
@@ -198,6 +197,67 @@ def KernelToFunction(kernel: str) -> OpenClFunction:
     return OpenClFunction(kernel[len('kernel '):], is_kernel=False)
 
 
+class UniqueNameSequence(object):
+  """A unique name sequence generator.
+
+  Generates name sequences from a base characeter.
+  E.g. 'a', 'b', 'c', ... 'aa', 'ab', ...
+  """
+
+  def __init__(self, base_char: str, prefix: str = '', suffix: str = ''):
+    """Instantiate a unique name sequence.
+
+    Args:
+      base_char: The first character in the sequence. Must be 'a' or 'A'.
+      prefix: An optional prefix to include in sequence names.
+      suffix: An optional suffix to include in sequence names.
+
+    Raises:
+      ValueError: If base_char is not 'a' or 'A'.
+    """
+    if base_char not in {'a', 'A'}:
+      raise ValueError(f"Invalid base_char '{base_char}'")
+    self._base_ord = ord(base_char)
+    self._prefix = prefix
+    self._suffix = suffix
+    self._i = 0
+
+  def StringInSequence(self, i: int) -> str:
+    """Return the i-th string in the sequence.
+
+    Args:
+      i: The index into the name sequence.
+
+    Returns:
+      The i-th name in the sequence.
+
+    Raises:
+      ValueError: If i is out of range (negative).
+    """
+    if i < 0:
+      raise ValueError
+    s = [self._prefix]
+
+    while (i > 25):
+      k = i // 26
+      i %= 26
+      s.append(chr(self._base_ord - 1 + k))
+    s.append(chr(self._base_ord + i))
+
+    s.append(self._suffix)
+
+    return ''.join(s)
+
+  def __iter__(self):
+    return self
+
+  def __next__(self) -> str:
+    """Generate the next name in the sequence."""
+    s = self.StringInSequence(self._i)
+    self._i += 1
+    return s
+
+
 class OpenClDeadcodeInserter(object):
   """A dead code OpenCL source mutator."""
 
@@ -237,7 +297,7 @@ class OpenClDeadcodeInserter(object):
   def opencl_source(self) -> str:
     """Serialize the mutated source to a string."""
     # Rename the functions.
-    gen = control_flow_graph_generator.UniqueNameSequence(base_char='A')
+    gen = UniqueNameSequence(base_char='A')
     [cb.SetFunctionName(next(gen)) for cb in self._functions]
 
     return '\n\n'.join([cb.src for cb in self._functions])

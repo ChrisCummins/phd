@@ -34,7 +34,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/preprocessors:opencl",
-        "//experimental/compilers/reachability:control_flow_graph_generator",
         "//gpu/cldrive/legacy:args",
         "//labm8:app",
         "//labm8:fmt",

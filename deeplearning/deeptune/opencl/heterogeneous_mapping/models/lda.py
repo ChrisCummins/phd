@@ -13,15 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """LDA model."""
-import collections
 import multiprocessing
-import pathlib
-import typing
 
+import collections
 import networkx as nx
 import numpy as np
 import pandas as pd
+import pathlib
 import tensorflow as tf
+import typing
 from graph_nets.demos import models as gn_models
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
@@ -29,8 +29,9 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
-from experimental.compilers.reachability import llvm_util
+from experimental.compilers.ml4pl.graphs.cfg import llvm_util
 from labm8 import app
+
 
 FLAGS = app.FLAGS
 
