@@ -240,3 +240,18 @@ def Chunkify(iterable: typing.Iterable[typing.Any],
   while piece:
     yield piece
     piece = list(itertools.islice(i, chunk_size))
+
+def DeleteKeys(d, keys):
+  """Delete the keys from the given dictionary, if present.
+
+  Args:
+    d: The dictionary to remove the keys from.
+    keys: The list of keys to remove.
+
+  Returns:
+    The dictionary.
+  """
+  for key in keys:
+    if key in d:
+      del d[key]
+  return d

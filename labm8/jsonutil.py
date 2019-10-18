@@ -123,3 +123,15 @@ def loads(text, **kwargs):
         lines[index] = re.sub(regex_inline, r'\1', line)
 
   return json.loads('\n'.join(lines), **kwargs)
+
+def JsonSerializable(val):
+  """Return a JSON-serializable version of the object.
+
+  If the object is natively JSON-serializable, then the object is return
+  unmodified. Else the string representation of the object is returned.
+  """
+  try:
+    json.dumps(val)
+    return val
+  except TypeError:
+    return str(val)
