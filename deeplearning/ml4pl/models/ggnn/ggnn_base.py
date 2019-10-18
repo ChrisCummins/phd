@@ -208,6 +208,9 @@ class GgnnBaseModel(object):
     batch_iterator = ggnn_utils.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type), max_queue_size=5)
     for step, (batch_size, batch) in enumerate(batch_iterator):
+      if not batch_size:
+        raise ValueError("Mini-batch with zero graphs generated")
+
       self.global_training_step += 1
 
       fetch_list = [
