@@ -1,4 +1,11 @@
-"""Train and evaluate a model for reachability analysis."""
+"""Train and evaluate a model for reachability analysis.
+
+  $ bazel run //deeplearning/ml4pl/models/ggnn:ggnn_node_classifier -- \
+        --graph_db=$DATABASE \
+        --batch_size=2000 \
+        --max_instance_count=100 \
+        --alsologtostderr
+"""
 import collections
 import numpy as np
 import pathlib
@@ -222,7 +229,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         cell_type_name = FLAGS.graph_rnn_cell.lower()
         if cell_type_name == "gru":
           cell = tf.nn.rnn_cell.GRUCell(
-              FLAGS.hidden_size, activation=activation_function)
+              FLAGS.hidden_size,
+              activation=activation_function,
+              name=f"cell_layer_{layer_index}")
         elif cell_type_name == "cudnncompatiblegrucell":
           import tensorflow.contrib.cudnn_rnn as cudnn_rnn
           if activation_function_name != "tanh":

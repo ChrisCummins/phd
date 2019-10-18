@@ -23,6 +23,8 @@ from labm8 import system
 
 FLAGS = app.FLAGS
 
+##### Beginning of flag declarations.
+#
 # Some of these flags define parameters which must be equal when restoring from
 # file, such as the hidden layer sizes. Other parameters may change between
 # runs of the same model, such as the input data batch size. To accomodate for
@@ -39,51 +41,71 @@ app.DEFINE_output_path(
     '/tmp/deeplearning/ml4pl/models/ggnn/',
     'The directory to write files to.',
     is_dir=True)
+
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
+
 app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
+
 app.DEFINE_integer(
     "patience", 300,
     "The number of epochs to train for without any improvement in validation "
     "accuracy before stopping.")
+
 app.DEFINE_float("learning_rate", 0.001, "The initial learning rate.")
 MODEL_FLAGS.add("learning_rate")
+
 # TODO(cec): Poorly understood:
 app.DEFINE_float("clamp_gradient_norm", 1.0, "Clip gradients to L-2 norm.")
 MODEL_FLAGS.add("clamp_gradient_norm")
+
 app.DEFINE_float(
     "out_layer_dropout_keep_prob", 1.0,
     "Dropout keep probability on the output layer. In range 0 < x <= 1.")
 MODEL_FLAGS.add("out_layer_dropout_keep_prob")
+
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 MODEL_FLAGS.add("hidden_size")
+
 app.DEFINE_boolean("tie_fwd_bkwd", True, "If true, add backward edges.")
 MODEL_FLAGS.add("tie_fwd_bkwd")
+
 app.DEFINE_string(
     "embeddings", "inst2vec",
     "The type of embeddings to use. One of: {inst2vec,finetune,random}.")
 MODEL_FLAGS.add("embeddings")
+
 app.DEFINE_input_path(
     "embedding_path",
     bazelutil.DataPath('phd/deeplearning/ncc/published_results/emb.p'),
     "The path of the embeddings file to use.")
+
 app.DEFINE_boolean(
     "tensorboard_logging", True,
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
+
 app.DEFINE_boolean(
     "test_on_improvement", True,
     "If true, test model accuracy on test data when the validation accuracy "
     "improves.")
+
 app.DEFINE_input_path("restore_model", None,
                       "An optional file to restore the model from.")
+
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
+
+##### End of flag declarations.
 
 # Type alias for the feed_dict argument of tf.Session.run().
 FeedDict = typing.Dict[str, typing.Any]
 
 
 class GgnnBaseModel(object):
-  """Abstract base class for implementing gated graph neural networks."""
+  """Abstract base class for implementing gated graph neural networks.
+
+  Subclasses must provide implementations of
+  MakeLossAndAccuracyAndPredictionOps() and MakeMinibatchIterator().
+  """
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
@@ -122,7 +144,9 @@ class GgnnBaseModel(object):
 
     # Write app.Log() calls to file. To also log to stderr, use flag
     # --alsologtostderr.
-    app.Log(1, 'Writing files to `%s`', self.working_dir)
+    app.Log(
+        1, 'Writing logs to `%s`. Unless --alsologtostderr flag is set, '
+        'this is the last message you will see.', self.working_dir)
     app.LogToDirectory(self.working_dir, 'model')
 
     app.Log(1, "Build information:\n%s",

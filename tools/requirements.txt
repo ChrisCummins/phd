@@ -43,6 +43,7 @@ fs.sshfs==0.11.1
 funcsigs==1.0.2
 futures==3.1.1
 fuzzywuzzy==0.16.0
+gast==0.2.2. # Dependency of tensorflow.
 GitPython==2.1.11
 graph_nets==1.0.2
 graphviz==0.9
