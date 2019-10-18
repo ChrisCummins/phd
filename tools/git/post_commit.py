@@ -46,7 +46,7 @@ def main(argv):
   task_start_time = time.time()
   linters_lib.Print('Pushing', branch_name, 'to', remote_name, '...', end=' ')
   GitPushOrDie(branch_name, remote_name)
-  linters_lib.Print('ok ({:.3f}s)'.format(time.time() - task_start_time))
+  linters_lib.Print('ok  {:.3f}s'.format(time.time() - task_start_time))
 
   linters_lib.Print(
       '✅  Post-commit checks passed in {:.3f}s'.format(time.time() -
