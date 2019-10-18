@@ -47,6 +47,10 @@ app.DEFINE_string("graph_rnn_activation", "tanh",
 app.DEFINE_boolean("use_propagation_attention", False, "")
 app.DEFINE_boolean("use_edge_bias", False, "")
 app.DEFINE_boolean("use_edge_msg_avg_aggregation", True, "")
+app.DEFINE_float("graph_state_dropout_keep_prob", 1.0,
+                 "Graph state dropout keep probability (rate = 1 - keep_prob)")
+app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
+                 "Edge weight dropout keep probability (rate = 1 - keep_prob)")
 
 # Type aliases to help make sense of the dictionaries.
 
@@ -147,7 +151,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
   def __init__(self, db: graph_database.Database):
     self.db = db
-    self.stats = graph_stats.GraphDatabaseStats(self.db)
+    filters = []
+    if FLAGS.max_steps:
+      filters.append(lambda: graph_database.GraphMeta.
+                     data_flow_max_steps_required <= FLAGS.max_steps)
+    self.stats = graph_stats.GraphDatabaseStats(self.db, filters=filters)
     super(GgnnNodeClassifierModel, self).__init__()
 
   def MakeLossAndAccuracyAndPredictionOps(
@@ -208,7 +216,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                     self.stats.edge_type_count, FLAGS.hidden_size,
                     FLAGS.hidden_size
                 ]),
-            keep_prob=self.placeholders["edge_weight_dropout_keep_prob"])
+            rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
         self.gnn_weights.edge_weights.append(edge_weights)
 
         if FLAGS.use_propagation_attention:
@@ -244,7 +252,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         else:
           raise ValueError(f"Unknown RNN cell type '{cell_type_name}'.")
 
-        cell = tf.nn.rnn_cell.DropoutWrapper(
+        cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
 
@@ -398,7 +406,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             if FLAGS.use_edge_msg_avg_aggregation:
               num_incoming_edges = tf.reduce_sum(
                   self.placeholders["num_incoming_edges_per_type"],
-                  keep_dims=True,
+                  keepdims=True,
                   axis=-1,
               )  # Shape [V, 1]
               incoming_messages /= num_incoming_edges + utils.SMALL_NUMBER
@@ -531,7 +539,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             ))
         # Offset the adjacency list node indices.
         for i in range(self.stats.edge_type_count):
-          adjacency_list = cur_graph["adjacency_lists"][i]
+          adjacency_list = graph_dict["adjacency_lists"][i]
           if adjacency_list.size:
             batch_adjacency_lists[i].append(adjacency_list + np.array(
                 (node_offset, node_offset), dtype=np.int32))
@@ -540,7 +548,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         num_incoming_edges_per_type = np.zeros((graph.node_count,
                                                 self.stats.edge_type_count))
         for edge_type, num_incoming_edges_per_type_dict in enumerate(
-            cur_graph["num_incoming_edge_per_type"]):
+            graph_dict["num_incoming_edge_per_type"]):
           for node_id, edge_count in num_incoming_edges_per_type_dict.items():
             num_incoming_edges_per_type[node_id, edge_type] = edge_count
         batch_num_incoming_edges_per_type.append(num_incoming_edges_per_type)
@@ -550,7 +558,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         node_offset += graph.node_count
 
         try:
-          cur_graph = next(graph_reader)
+          graph = next(graph_reader)
         except StopIteration:
           break
 
@@ -585,7 +593,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           adj_list = np.zeros((0, 2), dtype=np.int32)  # shape (0, 2).
         batch_feed_dict[self.placeholders["adjacency_lists"][i]] = adj_list
 
-      yield batch_feed_dict
+      yield num_graphs, batch_feed_dict
 
 
 def main():

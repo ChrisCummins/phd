@@ -236,8 +236,8 @@ class GgnnBaseModel(object):
 
     print()
     logger.StopTheClock()
-    app.Log(1, "%s: loss: %.5f | acc: %.5f | instances/sec: %.2f", epoch_name,
-            logger.average_loss, logger.average_accuracy,
+    app.Log(1, "%s: loss: %.5f | acc: %.3f%% | instances/sec: %.2f", epoch_name,
+            logger.average_loss, logger.average_accuracy * 100,
             logger.instances_per_second)
     return logger
 

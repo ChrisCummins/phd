@@ -1,6 +1,6 @@
 """A module for obtaining stats from graph databases."""
 import sqlalchemy as sql
-
+import typing
 from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import decorators
@@ -12,8 +12,12 @@ FLAGS = app.FLAGS
 class GraphDatabaseStats(object):
   """Efficient aggregation of graph stats."""
 
-  def __init__(self, db: graph_database.Database):
+  def __init__(
+      self,
+      db: graph_database.Database,
+      filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None):
     self.db = db
+    self._filters = filters or []
     self._edge_type_count = 0
     self._node_features_dimensionality = 0
     self._data_flow_max_steps_required = 0
@@ -54,10 +58,14 @@ class GraphDatabaseStats(object):
                   "node_features_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.node_labels_dimensionality).label(
-              "node_labels_dimensionality"),
+                  "node_labels_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.data_flow_max_steps_required).label(
-                  "data_flow_max_steps_required")).one()
+                  "data_flow_max_steps_required"))
+
+      for filter_cb in self._filters:
+        q = q.filter(filter_cb())
+      q = q.one()
 
       self._graph_count = q.graph_count
       self._edge_type_count = q.edge_type_count
