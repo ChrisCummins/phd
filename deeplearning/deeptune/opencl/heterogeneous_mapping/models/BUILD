@@ -84,7 +84,7 @@ py_library(
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
-        "//deeplearning/ml4pl:llvm_util",
+        "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
         "//labm8:app",
         "//third_party/py/graph_nets",
         "//third_party/py/numpy",
