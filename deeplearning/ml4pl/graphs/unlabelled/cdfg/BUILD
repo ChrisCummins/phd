@@ -6,7 +6,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//compilers/llvm:opt_util",
+        "//deeplearning/ml4pl/graphs:graph_iterators",
+        "//deeplearning/ml4pl/graphs:graph_query",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
+        "//deeplearning/ml4pl/graphs/unlabelled/cg:call_graph",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         "//labm8:app",
         "//labm8:humanize",

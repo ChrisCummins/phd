@@ -10,24 +10,23 @@ import utils
 
 from deeplearning.ml4pl.models.ggnn import ggnn_base as base_model
 from labm8 import app
-from labm8 import humanize
-from labm8 import prof
+
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
-app.DEFINE_output_path('working_dir',
-                       None,
-                       'The working directory.',
-                       is_dir=True)
+CONFIG = json.load('config.json')
+
+app.DEFINE_integer(
+    "batch_size", 8000,
+    "The maximum number of nodes to include in a graph batch.")
+app.DEFINE_database(
+    'graph_db', graph_database.Database,
+    None, 'The database to read graph data from.',
+    must_exist=True)
 app.DEFINE_integer(
     'max_steps', 0,
-    'If > 0, limit the graphs used to those that can be computed in <= '
-    'max_steps')
+    'If > 0, limit the graphs used to those that can be computed in '
+    '<= max_steps')
 app.DEFINE_integer(
     'max_instance_count', None,
     'A debugging option. Use this to set the maximum number of instances used '
@@ -136,8 +135,6 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
   def default_params(cls) -> typing.Dict[str, typing.Any]:
     params = super().default_params()
     params.update({
-        "batch_size":
-        80000,
         "clamp_gradient_norm":
         1,
         "edge_weight_dropout_keep_prob":
@@ -154,34 +151,18 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
         "GRU",  # {GRU,CudnnCompatibleGRUCell,RNN}
         "graph_state_dropout_keep_prob":
         1.0,
-        "hidden_size":
-        200,
         "ignore_edge_types":
         False,
         "ignore_node_features":
         False,
-        "learning_rate":
-        0.001,
-        "num_classes":
-        2,
-        "num_epochs":
-        50,
         "out_layer_dropout_keep_prob":
         1,
-        "patience":
-        300,
-        "random_seed":
-        42,
         "residual_connections": {},
-        "tie_fwd_bkwd":
-        False,  # insert backward edges
         "train_file":
         "train.json",
         "use_edge_bias":
         False,
         "use_edge_msg_avg_aggregation":
-        True,
-        "use_graph":
         True,
         "use_propagation_attention":
         False,
@@ -193,16 +174,12 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
         "val.pickle",
         "test_file":
         "test.pickle",
-        "tensorboard_logging":
-        True,
     })
     return params
 
   def load_datasets(self) -> None:
     with self.db.Session() as s:
       q = s.query(
-          sql.func.max(
-              graph_database.GraphMeta.node_count).label("max_num_vertices"),
           sql.func.max(
               graph_database.GraphMeta.edge_type_count).label("num_edge_types"),
           sql.func.max(
@@ -212,10 +189,8 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
               graph_database.GraphMeta.data_flow_max_steps_required).label(
                   "min_steps_required")).one()
 
-      self.max_num_vertices = q.max_num_vertices
-      self.num_edge_types = q.num_edge_types
-      self.num_edge_types = q.num_edge_types
-      self.annotation_size = q.annotation_size
+      self._num_edge_types = q.num_edge_types
+      self._annotation_size = q.annotation_size
       self.min_steps_required = q.min_steps_required
 
   def prepare_specific_graph_model(self) -> None:
@@ -234,10 +209,10 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
     self.placeholders["adjacency_lists"] = [
         tf.placeholder(tf.int32, [None, len(adjacency_list_format)],
                        name=f"adjacency_e{edge_type}")
-        for edge_type in range(self.num_edge_types)
+        for edge_type in range(self.GetNumberOfEdgeTypes())
     ]
     self.placeholders["num_incoming_edges_per_type"] = tf.placeholder(
-        tf.float32, [None, self.num_edge_types],
+        tf.float32, [None, self.GetNumberOfEdgeTypes()],
         name="num_incoming_edges_per_type")
     self.placeholders["graph_nodes_list"] = tf.placeholder(
         tf.int32, [None], name="graph_nodes_list")
@@ -266,23 +241,23 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
             tf.reshape(
                 tf.Variable(
                     utils.glorot_init(
-                        [self.num_edge_types * hidden_size, hidden_size]),
+                        [self.GetNumberOfEdgeTypes() * hidden_size, hidden_size]),
                     name=f"gnn_edge_weights_{layer_index}",
-                ), [self.num_edge_types, hidden_size, hidden_size]),
+                ), [self.GetNumberOfEdgeTypes(), hidden_size, hidden_size]),
             keep_prob=self.placeholders["edge_weight_dropout_keep_prob"])
         self.gnn_weights.edge_weights.append(edge_weights)
 
         if self.params["use_propagation_attention"]:
           self.gnn_weights.edge_type_attention_weights.append(
               tf.Variable(
-                  np.ones([self.num_edge_types], dtype=np.float32),
+                  np.ones([self.GetNumberOfEdgeTypes()], dtype=np.float32),
                   name=f"edge_type_attention_weights_{layer_index}",
               ))
 
         if self.params["use_edge_bias"]:
           self.gnn_weights.edge_biases.append(
               tf.Variable(
-                  np.zeros([self.num_edge_types, hidden_size],
+                  np.zeros([self.GetNumberOfEdgeTypes(), hidden_size],
                            dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_index,
               ))
@@ -319,7 +294,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
     # zero.
     node_states_per_layer.append(
         tf.zeros(
-            [num_nodes_in_batch, self.params["hidden_size"]],
+            [num_nodes_in_batch, FLAGS.hidden_size],
             dtype=tf.float32,
         ))
 
@@ -477,20 +452,20 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
   def make_target_values_placeholder(self) -> tf.Tensor:
     return tf.placeholder(tf.int32, [None, 2], name="target_values")
 
-  def make_loss_and_accuracy_ops(self) -> typing.Tuple[tf.Tensor, tf.Tensor]:
+  def MakeLossAndAccuracyAndPredictionOps(self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     with tf.variable_scope("regression_gate"):
       self.weights["regression_gate"] = utils.MLP(
           # Concatenation of initial and final node states
-          in_size=2 * self.params["hidden_size"],
-          out_size=self.params["num_classes"],
+          in_size=2 * FLAGS.hidden_size,
+          out_size=self.GetNumberOfClasses(),
           hid_sizes=[],
           dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
       )
 
     with tf.variable_scope("regression"):
       self.weights["regression_transform"] = utils.MLP(
-          in_size=self.params["hidden_size"],
-          out_size=self.params["num_classes"],
+          in_size=FLAGS.hidden_size,
+          out_size=self.GetNumberOfClasses(),
           hid_sizes=[],
           dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
       )
@@ -502,12 +477,14 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
         self.weights["regression_transform"],
     )  # [v, c]
 
+
+    predictions = tf.argmax(
+        self.placeholders["target_values"], axis=1, output_type=tf.int32)
+
     accuracy = tf.reduce_mean(
         tf.cast(
             tf.equal(
-                tf.argmax(self.placeholders["target_values"],
-                          axis=1,
-                          output_type=tf.int32),
+                predictions,
                 tf.argmax(computed_values, axis=1, output_type=tf.int32),
             ),
             tf.float32,
@@ -516,7 +493,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
     loss = tf.losses.softmax_cross_entropy(self.placeholders["target_values"],
                                            computed_values)
 
-    return loss, accuracy
+    return loss, accuracy, predictions
 
   def gated_regression(self, last_h, regression_gate, regression_transform):
     """Helper function."""
@@ -544,7 +521,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
         filters=filters,
         order_by_random=True,
         eager_graph_loading=True,
-        buffer_size=min(256, self.params["batch_size"] // 10),
+        buffer_size=min(256, FLAGS.batch_size // 10),
         limit=FLAGS.max_instance_count)
 
     state_dropout_keep_prob = (self.params["graph_state_dropout_keep_prob"]
@@ -559,7 +536,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
       num_graphs_in_batch = 0
       batch_node_features = []
       batch_target_values = []
-      batch_adjacency_lists = [[] for _ in range(self.num_edge_types)]
+      batch_adjacency_lists = [[] for _ in range(self.GetNumberOfEdgeTypes())]
       batch_num_incoming_edges_per_type = []
       batch_graph_nodes_list = []
       node_offset = 0
@@ -567,17 +544,17 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
       graph = next(db_reader)
 
       while (graph and
-             node_offset + graph.node_count < self.params["batch_size"]):
+             node_offset + graph.node_count < FLAGS.batch_size):
         # De-serialize pickled data in database and process.
         graph_dict = pickle.loads(graph.graph.data)
         ProcessGraphDict(
-            (graph_dict, self.num_edge_types, self.params["tie_fwd_bkwd"]))
+            (graph_dict, self.GetNumberOfEdgeTypes(), FLAGS.tie_fwd_bkwd))
 
         # Pad node feature vector of size <= hidden_size up to hidden_size so
         # that the size matches embedding dimensionality.
         padded_features = np.pad(
             graph_dict["node_features"],
-            ((0, 0), (0, self.params["hidden_size"] - self.annotation_size)),
+            ((0, 0), (0, FLAGS.hidden_size - self.GetNumberOfEdgeTypes())),
             "constant",
         )
         # Shape: [num_nodes, node_feature_dim]
@@ -591,7 +568,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
                 dtype=np.int32,
             ))
         # Offset the adjacency list node indices.
-        for i in range(self.num_edge_types):
+        for i in range(self.GetNumberOfEdgeTypes()):
           adjacency_list = cur_graph["adjacency_lists"][i]
           if adjacency_list.size:
             batch_adjacency_lists[i].append(adjacency_list + np.array(
@@ -599,7 +576,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
 
         # Turn counters for incoming edges into np array:
         num_incoming_edges_per_type = np.zeros(
-            (graph.node_count, self.num_edge_types))
+            (graph.node_count, self.GetNumberOfEdgeTypes()))
         for edge_type, num_incoming_edges_per_type_dict in enumerate(
             cur_graph["num_incoming_edge_per_type"]):
           for node_id, edge_count in num_incoming_edges_per_type_dict.items():
@@ -639,7 +616,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
       }
 
       # Merge adjacency lists and information about incoming nodes:
-      for i in range(self.num_edge_types):
+      for i in range(self.GetNumberOfEdgeTypes()):
         if len(batch_adjacency_lists[i]) > 0:
           adj_list = np.concatenate(batch_adjacency_lists[i])
         else:
@@ -651,7 +628,7 @@ class GGNNReachabilityModel(base_model.GGNNBaseModel):
 
 def main():
   """Main entry point."""
-  db = FLAGS.db()
+  db = FLAGS.graph_db()
   working_dir = FLAGS.working_dir
   if not working_dir:
     raise app.UsageError("--working_dir is required")
@@ -662,7 +639,7 @@ def main():
       "--data_dir": str(working_dir),
       "--log_dir": str(working_dir / 'logs'),
   })
-  model.train()
+  model.Train()
 
 
 if __name__ == '__main__':

@@ -1,10 +1,12 @@
 """Library for labelling program graphs with reachability information."""
-
+import collections
 import networkx as nx
 import typing
 
+from deeplearning.ml4pl.graphs import graph_query as query
 from labm8 import app
 from labm8 import decorators
+
 
 FLAGS = app.FLAGS
 
@@ -43,7 +45,7 @@ def SetReachableNodes(g: nx.MultiDiGraph,
     next, steps = q.popleft()
     visited.add(next)
     if not max_steps or steps + 1 <= max_steps:
-      for neighbor in cdfg.StatementNeighbors(g, next):
+      for neighbor in query.StatementNeighbors(g, next):
         if neighbor not in visited:
           q.append((neighbor, steps + 1))
 

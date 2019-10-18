@@ -23,6 +23,7 @@ py_library(
     name = "reachability",
     srcs = ["reachability.py"],
     deps = [
+        "//deeplearning/ml4pl/graphs:graph_query",
         "//labm8:app",
         "//labm8:decorators",
         "//third_party/py/networkx",

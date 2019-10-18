@@ -22,6 +22,10 @@ from docopt import docopt
 from typing import Any, Dict, Sequence, Tuple  # noqa
 
 from deeplearning.ml4pl.models.ggnn import ggnn_base
+from labm8 import app
+
+
+FLAGS = app.FLAGS
 
 GGNNWeights = namedtuple(
     "GGNNWeights",
@@ -45,7 +49,6 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
   def default_params(cls):
     params = dict(super().default_params())
     params.update({
-        "batch_size": 80000,  # 100000,
         "use_edge_bias": False,
         "use_propagation_attention": False,
         "use_edge_msg_avg_aggregation": True,
@@ -62,15 +65,38 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
         "edge_weight_dropout_keep_prob": 0.8,
         # set to ignore different edgetypes 'data', 'ctrl', 'path', 'none'
         "ignore_edge_types": False,  # only have one edgetype
-        "map_none_type_to_ctrl":
-        False,  # correct none type (in ret calls) to path?
         "ignore_node_features": True,
         "embeddings": "inst2vec"  # "finetune", "random"
     })
     return params
 
+  def load_data(self, file_name, is_training_data: bool):
+    full_path = os.path.join(self.data_dir, file_name)
+    with prof.Profile(f"loaded data `{full_path}`"):
+      with open(full_path, "r") as f:
+        data = json.load(f)
+
+    restrict = self.args.get("--restrict_data")
+    if restrict is not None and restrict > 0:
+      data = data[:restrict]
+
+    # Get some common data out:
+    ss = time.time()
+    app.Log(1, "Getting some common data from loaded json...")
+    num_fwd_edge_types = 0
+    for g in data:
+      num_fwd_edge_types = max(num_fwd_edge_types,
+                               max([e[1] for e in g["graph"]]))
+
+    app.Log(
+        1,
+        f"Getting some common data from loaded json... took {time.time() - ss} seconds."
+    )
+
+    return self.process_raw_graphs(data, is_training_data)
+
   def prepare_specific_graph_model(self) -> None:
-    h_dim = self.params["hidden_size"]
+    h_dim = FLAGS.hidden_size
 
     # self.placeholders["initial_node_representation"] = tf.placeholder(
     #     tf.float32, [None, h_dim], name="node_features"
@@ -79,10 +105,10 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
         tf.int32, [], name="num_of_nodes_in_batch")
     self.placeholders["adjacency_lists"] = [
         tf.placeholder(tf.int32, [None, 3], name="adjacency_e%s" % e)
-        for e in range(self.num_edge_types)
+        for e in range(self.GetNumberOfEdgeTypes())
     ]  # changed adj. list to [None, 3] to add emb_idx at the end!
     self.placeholders["num_incoming_edges_per_type"] = tf.placeholder(
-        tf.float32, [None, self.num_edge_types],
+        tf.float32, [None, self.GetNumberOfEdgeTypes()],
         name="num_incoming_edges_per_type")
     self.placeholders["graph_nodes_list"] = tf.placeholder(
         tf.int32, [None], name="graph_nodes_list")
@@ -106,11 +132,11 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
     for layer_idx in range(len(self.params["layer_timesteps"])):
       with tf.variable_scope("gnn_layer_%i" % layer_idx):
         edge_weights = tf.Variable(
-            glorot_init([self.num_edge_types * h_dim, h_dim]),
+            glorot_init([self.GetNumberOfEdgeTypes() * h_dim, h_dim]),
             name="gnn_edge_weights_%i" % layer_idx,
         )
         edge_weights = tf.reshape(edge_weights,
-                                  [self.num_edge_types, h_dim, h_dim])
+                                  [self.GetNumberOfEdgeTypes(), h_dim, h_dim])
         edge_weights = tf.nn.dropout(
             edge_weights,
             keep_prob=self.placeholders["edge_weight_dropout_keep_prob"],
@@ -120,11 +146,11 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
         # analogous to how edge_weights (for mult. with neighbor states) looked like.
         # this is where we designed the update func. to be: U_m = A*s_n + B*e_(n,m) for all neighbors n of m.
         edge_weights_for_emb = tf.Variable(
-            glorot_init([self.num_edge_types * h_dim, h_dim]),
+            glorot_init([self.GetNumberOfEdgeTypes() * h_dim, h_dim]),
             name="gnn_edge_weights_for_emb_%i" % layer_idx,
         )
         edge_weights_for_emb = tf.reshape(edge_weights_for_emb,
-                                          [self.num_edge_types, h_dim, h_dim])
+                                          [self.GetNumberOfEdgeTypes(), h_dim, h_dim])
         edge_weights_for_emb = tf.nn.dropout(
             edge_weights_for_emb,
             keep_prob=self.placeholders["edge_weight_dropout_keep_prob"],
@@ -134,19 +160,19 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
         if self.params["use_propagation_attention"]:
           self.gnn_weights.edge_type_attention_weights.append(
               tf.Variable(
-                  np.ones([self.num_edge_types], dtype=np.float32),
+                  np.ones([self.GetNumberOfEdgeTypes()], dtype=np.float32),
                   name="edge_type_attention_weights_%i" % layer_idx,
               ))
 
         if self.params["use_edge_bias"]:
           self.gnn_weights.edge_biases.append(
               tf.Variable(
-                  np.zeros([self.num_edge_types, h_dim], dtype=np.float32),
+                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim], dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_idx,
               ))
           self.gnn_weights.edge_biases_for_embs.append(
               tf.Variable(
-                  np.zeros([self.num_edge_types, h_dim], dtype=np.float32),
+                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim], dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_idx,
               ))
 
@@ -175,10 +201,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
 
     # we drop the initial states placeholder in the first layer as they are all zero.
     node_states_per_layer.append(
-        tf.zeros(
-            [num_nodes, self.params["hidden_size"]],
-            dtype=tf.float32,
-        ))
+        tf.zeros([num_nodes, FLAGS.hidden_size], dtype=tf.float32,))
 
     message_targets = []  # list of tensors of message targets of shape [E]
     message_edge_types = []  # list of tensors of edge type of shape [E]
@@ -242,25 +265,9 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
               edge_sources = adjacency_list_for_edge_type[:, 0]
               edge_emb_idxs = adjacency_list_for_edge_type[:, 2]
               edge_embs = tf.nn.embedding_lookup(
-                  params=self.constants["edge_emb_table"],
+                  params=self.constants["embedding_table"],
                   ids=edge_emb_idxs,
               )
-              # # check if were are in the first layer
-              # if node_states_per_layer[-1] == []:
-              #     # states are all zero here, so the second matmul suffices
-              #     all_messages_for_edge_type = tf.matmul(
-              #         edge_embs,
-              #         self.gnn_weights.edge_weights[layer_idx][
-              #             edge_type_idx
-              #         ],
-              #     )  # Shape [E, D]
-              #     edge_source_states = tf.zeros(
-              #         [
-              #             tf.shape(edge_sources)[0],
-              #             self.params["hidden_size"],
-              #         ]
-              #     )  # Shape [E, D]
-              # else:
               edge_source_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=edge_sources)  # Shape [E, D]
@@ -362,7 +369,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
 
     if self.params['ignore_node_features']:
       num_nodes = self.placeholders['num_of_nodes_in_batch']
-      initial_node_rep = tf.zeros([num_nodes, self.params['hidden_size']])
+      initial_node_rep = tf.zeros([num_nodes, FLAGS.hidden_size])
     else:
       initial_node_rep = self.placeholders["initial_node_representation"]
 
@@ -416,18 +423,12 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
     for src, fwd_edge_type, dest, emb_idx in graph:
       if self.params["ignore_edge_types"]:
         fwd_edge_type = 0  # Edge type optionally always 0
-      elif self.params[
-          "map_none_type_to_ctrl"]:  # optionally fix the bug which introduced return flow as none.
-        # map 3->2, 2->1, 1->0 and 0->1 as well (none->control)
-        fwd_edge_type -= 1
-        if fwd_edge_type == -1:
-          fwd_edge_type = 1
 
       adj_lists[fwd_edge_type].append(
           (src, dest, emb_idx))  # attach emb_idx in adj. list!
       num_incoming_edges_dicts_per_type[fwd_edge_type][dest] += 1
 
-      if self.params["tie_fwd_bkwd"]:
+      if FLAGS.tie_fwd_bkwd:
         adj_lists[fwd_edge_type].append((dest, src, emb_idx))  # here too
         num_incoming_edges_dicts_per_type[fwd_edge_type][src] += 1
 
@@ -436,9 +437,9 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
     }  # turn in normal dict.
 
     # Add backward edges as an additional edge type that goes backwards:
-    if not (self.params["tie_fwd_bkwd"]):
+    if not FLAGS.tie_fwd_bkwd:
       for (edge_type, edges) in adj_lists.items():
-        bwd_edge_type = self.num_edge_types + edge_type
+        bwd_edge_type = self.GetNumberOfEdgeTypes() + edge_type
         final_adj_lists[bwd_edge_type] = np.array(sorted(
             (y, x, emb_idx) for (x, y, emb_idx) in edges),
                                                   dtype=np.int32)  # like this?
@@ -475,15 +476,15 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
     with tf.variable_scope("regression_gate"):
       self.weights["regression_gate"] = MLP(
           # Concatenation of initial and final node states
-          in_size=2 * self.params["hidden_size"],
-          out_size=self.params["num_classes"],
+          in_size=2 * FLAGS.hidden_size,
+          out_size=self.GetNumberOfClasses(),
           hid_sizes=[],
           dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
       )
     with tf.variable_scope("regression"):
       self.weights["regression_transform"] = MLP(
-          self.params["hidden_size"],
-          self.params["num_classes"],
+          FLAGS.hidden_size,
+          self.GetNumberOfClasses(),
           [],
           self.placeholders["out_layer_dropout_keep_prob"],
       )
@@ -527,19 +528,19 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
       num_graphs_in_batch = 0
       # batch_node_features = []
       batch_target_values = []
-      batch_adjacency_lists = [[] for _ in range(self.num_edge_types)]
+      batch_adjacency_lists = [[] for _ in range(self.GetNumberOfEdgeTypes())]
       batch_num_incoming_edges_per_type = []
       batch_graph_nodes_list = []
       node_offset = 0
 
       while (num_graphs < len(data) and
              node_offset + data[num_graphs]["number_of_nodes"] <
-             self.params["batch_size"]):
+             FLAGS.batch_size):
         cur_graph = data[num_graphs]
         num_nodes_in_graph = cur_graph["number_of_nodes"]
         # padded_features = np.pad(
         #     cur_graph["init"],
-        #     ((0, 0), (0, self.params["hidden_size"] - self.annotation_size)),
+        #     ((0, 0), (0, FLAGS.hidden_size - self.GetNodeFeaturesDimensionality())),
         #     "constant",
         # )
         # batch_node_features.extend(padded_features)
@@ -549,7 +550,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
                 fill_value=num_graphs_in_batch,
                 dtype=np.int32,
             ))
-        for i in range(self.num_edge_types):
+        for i in range(self.GetNumberOfEdgeTypes()):
           if i in cur_graph["adjacency_lists"]:
             # change: don't offset the edge emb idx.
             batch_adjacency_lists[i].append(
@@ -558,7 +559,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
 
         # Turn counters for incoming edges into np array:
         num_incoming_edges_per_type = np.zeros(
-            (num_nodes_in_graph, self.num_edge_types))
+            (num_nodes_in_graph, self.GetNumberOfEdgeTypes()))
         for (e_type, num_incoming_edges_per_type_dict
             ) in cur_graph["num_incoming_edge_per_type"].items():
           for (
@@ -605,7 +606,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
       }
 
       # Merge adjacency lists and information about incoming nodes:
-      for i in range(self.num_edge_types):
+      for i in range(self.GetNumberOfEdgeTypes()):
         if len(batch_adjacency_lists[i]) > 0:
           adj_list = np.concatenate(batch_adjacency_lists[i])
         else:
@@ -622,9 +623,9 @@ def main():
   model = GGNNClassifyappModel(args)
   if args["--evaluate"]:
     assert args["--restore"], "You meant to provide a restore file."
-    model.test()
+    model.Test()
   else:
-    model.train()
+    model.Train()
   # except:
   #     typ, value, tb = sys.exc_info()
   #     traceback.print_exc()
