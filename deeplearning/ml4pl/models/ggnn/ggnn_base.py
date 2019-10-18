@@ -249,8 +249,8 @@ class GgnnBaseModel(object):
     with self.graph.as_default():
       for epoch_num in range(1, FLAGS.num_epochs + 1):
         print(f"== Epoch {epoch_num}")
-        train = self.RunEpoch(f"Epoch {epoch_num}   training", "train")
-        valid = self.RunEpoch(f"Epoch {epoch_num} validation", "val")
+        train = self.RunEpoch(f"Epoch {epoch_num} train", "train")
+        valid = self.RunEpoch(f"Epoch {epoch_num}   val", "val")
         app.Log(
             1, "Epoch %s completed. "
             "Training and validation on %s instances in %s", epoch_num,
