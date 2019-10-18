@@ -122,16 +122,7 @@ def RunWithArgs(
       print(FlagsToString())
       sys.exit(0)
     elif FLAGS.dump_flags_to_json:
-      flags_dict = FlagsToDict()
-      # Flags values can have non-serializable types, so try each one and
-      # stringify those that require it. An alternative would be to stringify
-      # all values, but this would lose type information on ints/floats/etc.
-      for flag in flags_dict:
-        try:
-          json.dumps(flags_dict[flag])
-        except TypeError:
-          flags_dict[flag] = str(flags_dict[flag])
-      print(json.dumps(flags_dict, sort_keys=True, indent=2,
+      print(json.dumps(FlagsToDict(), sort_keys=True, indent=2,
                        separators=(',', ': ')))
       sys.exit(0)
     main(argv)
@@ -320,7 +311,7 @@ def get_calling_module_name():
 # TODO(cec): Add validator callbacks.
 
 
-def FlagsToDict() -> Dict[str, Any]:
+def FlagsToDict(json_safe: bool = False) -> Dict[str, Any]:
   """Return a dictionary of flags and their values.
 
   Keys are the names of flags, prefixed by their defining module, e.g.
@@ -335,6 +326,18 @@ def FlagsToDict() -> Dict[str, Any]:
   for module in flags_dict:
     for flag in flags_dict[module]:
       flattened_flags_dict[f'{module}.{flag.name}'] = flag.value
+
+  if json_safe:
+    # Flags values can have non-serializable types, so try each one and
+    # stringify those that cannot be serialized to JSON. An alternative would
+    # be to stringify all values, but this would lose type information on
+    # ints/floats/etc.
+    for flag in flattened_flags_dict:
+      try:
+        json.dumps(flattened_flags_dict[flag])
+      except TypeError:
+        flattened_flags_dict[flag] = str(flattened_flags_dict[flag])
+
   return flattened_flags_dict
 
 def FlagsToString() -> str:
