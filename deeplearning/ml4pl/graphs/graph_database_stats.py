@@ -34,6 +34,11 @@ class GraphDatabaseStats(object):
     return self._node_features_dimensionality
 
   @decorators.memoized_property
+  def node_labels_dimensionality(self) -> int:
+    self._ComputeStats()
+    return self._node_labels_dimensionality
+
+  @decorators.memoized_property
   def data_flow_max_steps_required(self) -> int:
     self._ComputeStats()
     return self._data_flow_max_steps_required
@@ -48,10 +53,14 @@ class GraphDatabaseStats(object):
               graph_database.GraphMeta.node_features_dimensionality).label(
                   "node_features_dimensionality"),
           sql.func.max(
+              graph_database.GraphMeta.node_labels_dimensionality).label(
+              "node_labels_dimensionality"),
+          sql.func.max(
               graph_database.GraphMeta.data_flow_max_steps_required).label(
                   "data_flow_max_steps_required")).one()
 
       self._graph_count = q.graph_count
       self._edge_type_count = q.edge_type_count
       self._node_features_dimensionality = q.node_features_dimensionality
+      self._node_labels_dimensionality = q.node_labels_dimensionality
       self._data_flow_max_steps_required = q.data_flow_max_steps_required
