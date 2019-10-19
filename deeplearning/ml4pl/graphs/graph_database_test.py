@@ -78,5 +78,59 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
     assert gm.id == gm.graph.id
 
 
+@pytest.fixture(scope='function')
+def graph() -> nx.MultiDiGraph:
+  g = nx.MultiDiGraph()
+  g.bytecode_id = 1
+  g.source_name = 'foo'
+  g.relpath = 'bar'
+  g.language = 'c'
+  g.x = [0, 0, 0, 0]
+  g.data_flow_max_steps_required = 10
+  g.add_node('A', type='statement', x=[0, 1], y=[1])
+  g.add_node('B', type='statement', x=[0, 1], y=[1])
+  g.add_node('C', type='statement', x=[0, 1], y=[1])
+  g.add_node('D', type='statement', x=[0, 1], y=[1])
+  g.add_node('root', type='magic', x=[0, 1], y=[1])
+  g.add_edge('A', 'B', flow='control', fx=[0, 0, 0], fy=[2, 2])
+  g.add_edge('B', 'C', flow='control', fx=[0, 0, 0], fy=[2, 2])
+  g.add_edge('C', 'D', flow='control', fx=[0, 0, 0], fy=[2, 2])
+  g.add_edge('root', 'A', flow='call', fx=[0, 0, 0], fy=[2, 2])
+  g.add_edge('A', 'D', flow='data', fx=[0, 0, 0], fy=[2, 2])
+  return g
+
+
+def test_Graph_CreateWithGraphDict(graph: nx.MultiDiGraph):
+  """Test column values created by CreateWithGraphDict()."""
+  gm = graph_database.GraphMeta.CreateWithGraphDict(graph,
+                                                    {'control', 'call', 'data'},
+                                                    edge_x='fx',
+                                                    edge_y='fy')
+
+  assert gm.bytecode_id == 1
+  assert gm.source_name == 'foo'
+  assert gm.relpath == 'bar'
+  assert gm.language == 'c'
+  assert gm.node_count == 5
+  assert gm.edge_count == 5
+  assert gm.edge_type_count == 3
+  assert gm.node_features_dimensionality == 2
+  assert gm.node_labels_dimensionality == 1
+  assert gm.edge_features_dimensionality == 3
+  assert gm.edge_labels_dimensionality == 2
+  assert gm.graph_features_dimensionality == 4
+  assert gm.graph_labels_dimensionality == 0
+  assert gm.data_flow_max_steps_required == 10
+  assert gm.graph.data
+
+
+def test_benchmark_Graph_CreateWithGraphDict(benchmark, graph: nx.MultiDiGraph):
+  """Benchmark CreateWithGraphDict()."""
+  benchmark(graph_database.GraphMeta.CreateWithGraphDict,
+            graph, {'control', 'call', 'data'},
+            edge_x='fx',
+            edge_y='fy')
+
+
 if __name__ == '__main__':
   test.Main()

@@ -8,7 +8,6 @@ import time
 import networkx as nx
 import numpy as np
 import pathlib
-import pickle
 import random
 import sqlalchemy as sql
 import tempfile
@@ -18,12 +17,12 @@ from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
+from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from labm8 import app
-from labm8 import decorators
 from labm8 import fs
 from labm8 import humanize
 from labm8 import labtypes
@@ -31,19 +30,20 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import sqlutil
 
-
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None,
-    'URL of database to read bytecodes from.',
-    must_exist=True)
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecodes from.',
+                    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
 app.DEFINE_string('group_type', 'all', 'The type of dataset to export.')
 app.DEFINE_string('graph_type', 'cfg_from_proto',
                   'The type of dataset to export.')
+app.DEFINE_string(
+    'dataflow', 'none',
+    'The type of dataflow annotations to add to generated graphs.')
 app.DEFINE_integer('reachability_num_steps', 0,
                    'If > 0, the number of steps to resolve reachability for.')
 app.DEFINE_integer(
@@ -72,49 +72,11 @@ app.DEFINE_integer('reachability_dataset_bytecode_batch_size', 10000,
 FLAGS = app.FLAGS
 
 
-@decorators.timeout(seconds=60)
-def AnnotatedGraphToDatabase(g: nx.MultiDiGraph) -> graph_database.GraphMeta:
-  # Translate arbitrary node labels into a zero-based index list.
-  node_to_index = {node: i for i, node in enumerate(g.nodes)}
-  edge_type_to_int = {'control': 0, 'data': 1, 'call': 2}
-  edge_types = set()
-
-  edge_list = []
-  for src, dst, data in g.edges(data=True):
-    src_idx = node_to_index[src]
-    dst_idx = node_to_index[dst]
-    edge_type = edge_type_to_int[data['flow']]
-    edge_types.add(edge_type)
-    edge_list.append([src_idx, edge_type, dst_idx, -1])
-
-  node_list = [None] * g.number_of_nodes()
-  for node, data in g.nodes(data=True):
-    node_idx = node_to_index[node]
-    node_list[node_idx] = data['x']
-
-  label_list = [None] * g.number_of_nodes()
-  for node, data in g.nodes(data=True):
-    node_idx = node_to_index[node]
-    label_list[node_idx] = data['y']
-
-  graph_dict = {
-      'edge_list': edge_list,
-      'node_features': node_list,
-      'targets': label_list,
-  }
-
-  return graph_database.GraphMeta(
-      bytecode_id=g.bytecode_id,
-      source_name=g.source_name,
-      relpath=g.relpath,
-      language=g.language,
-      node_count=g.number_of_nodes(),
-      edge_count=g.number_of_edges(),
-      edge_type_count=len(edge_types),
-      node_features_dimensionality=2,
-      node_labels_dimensionality=2,
-      data_flow_max_steps_required=g.max_steps_required,
-      graph=graph_database.Graph(data=pickle.dumps(graph_dict)))
+def ToGraphMetas(annotated_graphs: typing.Iterable[nx.MultiDiGraph]
+                ) -> typing.Iterable[graph_dict.GraphDict]:
+  """Create GraphMeta instances from the given annotated graphs."""
+  return (graph_database.GraphMeta.CreateWithGraphDict(
+      graph, {'control', 'data', 'call'}) for graph in annotated_graphs)
 
 
 def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
@@ -285,8 +247,9 @@ class DatasetExporterBase(object):
       graph_metas = []
       chunksize = max(self.batch_size // 16, 8)
       job_processor = self.GetProcessJobFunction()
-      workers = self.pool.imap_unordered(
-          job_processor, jobs, chunksize=chunksize)
+      workers = self.pool.imap_unordered(job_processor,
+                                         jobs,
+                                         chunksize=chunksize)
       for graphs_chunk in workers:
         graph_metas += graphs_chunk
 
@@ -314,7 +277,7 @@ def _ProcessControlFlowGraphJob(
   proto_strings, source_name, relpath, language, bytecode_id = job
 
   builder = cdfg.ControlAndDataFlowGraphBuilder(
-      dataflow='none',
+      dataflow=FLAGS.dataflow,
       preprocess_text=False,
       discard_unknown_statements=False,
   )
@@ -339,7 +302,7 @@ def _ProcessControlFlowGraphJob(
       graph.language = language
       annotated_graphs += MakeReachabilityAnnotatedGraphs(
           graph, FLAGS.reachability_dataset_max_instances_per_graph)
-    return [AnnotatedGraphToDatabase(graph) for graph in annotated_graphs]
+    return ToGraphMetas(annotated_graphs)
   except Exception as e:
     app.Error('Failed to create CDFG for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
@@ -347,6 +310,7 @@ def _ProcessControlFlowGraphJob(
 
 
 class ControlFlowGraphProtoExporter(DatasetExporterBase):
+  """Export from control flow graph protos."""
 
   @staticmethod
   def GetConstantColumn(rows, column_idx, column_name):
@@ -397,8 +361,7 @@ def _ProcessBytecodeJob(
   """
   bytecode, source_name, relpath, language, bytecode_id = job
   builder = cdfg.ControlAndDataFlowGraphBuilder(
-      dataflow='edges_only',
-      preprocess_text=True,
+      dataflow=FLAGS.dataflow,
       discard_unknown_statements=False,
   )
 
@@ -409,7 +372,7 @@ def _ProcessBytecodeJob(
     graph.language = language
     annotated_graphs = MakeReachabilityAnnotatedGraphs(
         graph, FLAGS.reachability_dataset_max_instances_per_graph)
-    return [AnnotatedGraphToDatabase(graph) for graph in annotated_graphs]
+    return ToGraphMetas(annotated_graphs)
   except Exception as e:
     app.Error('Failed to create graph for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
@@ -417,6 +380,7 @@ def _ProcessBytecodeJob(
 
 
 class BytecodeExporter(DatasetExporterBase):
+  """Export from LLVM bytecodes."""
 
   def MakeExportJob(self, session: bytecode_database.Database.SessionType,
                     bytecode_id: id) -> typing.Optional[BytecodeJob]:

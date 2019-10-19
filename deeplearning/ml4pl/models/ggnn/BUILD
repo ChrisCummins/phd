@@ -52,11 +52,23 @@ py_binary(
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs:graph_database_reader",
         "//deeplearning/ml4pl/graphs:graph_database_stats",
+        "//deeplearning/ml4pl/graphs/labelled/graph_dict",
         "//labm8:app",
         "//labm8:humanize",
         "//labm8:prof",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
+    ],
+)
+
+py_test(
+    name = "ggnn_node_classifier_test",
+    srcs = ["ggnn_node_classifier_test.py"],
+    deps = [
+        ":ggnn_node_classifier",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//labm8:app",
+        "//labm8:test",
     ],
 )
 

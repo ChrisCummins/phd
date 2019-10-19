@@ -13,7 +13,7 @@ from labm8 import test
 FLAGS = app.FLAGS
 
 
-class MockModel(ggnn_base.GGNNBaseModel):
+class MockModel(ggnn_base.GgnnBaseModel):
   """A mock GGNN model."""
 
   def MakeLossAndAccuracyAndPredictionOps(self):

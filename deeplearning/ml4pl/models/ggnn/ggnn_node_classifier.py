@@ -8,29 +8,26 @@
 """
 import collections
 import numpy as np
-import pathlib
 import pickle
-import sqlalchemy as sql
 import tensorflow as tf
 import typing
 
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
-from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
+from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
+from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
 FLAGS = app.FLAGS
 
 app.DEFINE_integer("batch_size", 8000,
                    "The maximum number of nodes to include in a graph batch.")
-app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
-    None,
-    'The database to read graph data from.',
-    must_exist=True)
+app.DEFINE_database('graph_db',
+                    graph_database.Database,
+                    None,
+                    'The database to read graph data from.',
+                    must_exist=True)
 app.DEFINE_integer(
     'max_steps', 0,
     'If > 0, limit the graphs used to those that can be computed in '
@@ -64,8 +61,6 @@ GraphDict = typing.Dict[str, typing.Any]
 Edge = typing.Tuple[NodeIndex, EdgeType, NodeIndex, int]
 # A list of <source, destination> node pairs.
 AdjacencyList = typing.List[typing.Tuple[NodeIndex, NodeIndex]]
-# A mapping from a node to the number of incoming edges.
-IncomingEdgeCount = typing.Dict[NodeIndex, int]
 
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
@@ -110,7 +105,8 @@ def ProcessGraphDict(
     adjacency_lists.append([])
     incoming_edge_counts_per_type_lists.append({})
 
-  for src, edge_type, dst, unused_embedding_index in graph_dict['edge_list']:
+  for src, edge_type, dst, unused_embedding_index in graph_dict[
+      'adjacency_list']:
     adjacency_lists[edge_type].append((src, dst))
     incoming_edge_counts_per_type_lists[edge_type][dst] = (
         incoming_edge_counts_per_type_lists[edge_type].get(dst, 0) + 1)
@@ -124,8 +120,8 @@ def ProcessGraphDict(
       backward_edge_type = (edge_type_count // 2) + edge_type
       adjacency_lists[backward_edge_type].append((dst, src))
       incoming_edge_counts_per_type_lists[backward_edge_type][src] = (
-          incoming_edge_counts_per_type_lists[backward_edge_type].get(src,
-                                                                      0) + 1)
+          incoming_edge_counts_per_type_lists[backward_edge_type].get(src, 0) +
+          1)
 
   # Sort the adjacency lists and convert to numpy arrays.
   adjacency_lists = [
@@ -136,8 +132,8 @@ def ProcessGraphDict(
   graph_dict['adjacency_lists'] = adjacency_lists
   graph_dict['num_incoming_edge_per_type'] = incoming_edge_counts_per_type_lists
 
-  # No need to keep the edge list any more.
-  del graph_dict['edge_list']
+  # No need to keep the adjacency list any more.
+  del graph_dict['adjacency_list']
 
   return graph_dict
 
@@ -165,17 +161,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     layer_timesteps = [self.stats.data_flow_max_steps_required]
     app.Log(1, "Using layer timesteps: %s", layer_timesteps)
 
-    self.placeholders["target_values"] = tf.placeholder(
-        tf.int32, [None, 2], name="target_values")
+    self.placeholders["target_values"] = tf.placeholder(tf.int32, [None, 2],
+                                                        name="target_values")
     self.placeholders["initial_node_representation"] = tf.placeholder(
         tf.float32, [None, FLAGS.hidden_size], name="node_features")
     self.placeholders["num_of_nodes_in_batch"] = tf.placeholder(
         tf.int32, [], name="num_of_nodes_in_batch")
     adjacency_list_format = ['src', 'dst']
     self.placeholders["adjacency_lists"] = [
-        tf.placeholder(
-            tf.int32, [None, len(adjacency_list_format)],
-            name=f"adjacency_e{edge_type}")
+        tf.placeholder(tf.int32, [None, len(adjacency_list_format)],
+                       name=f"adjacency_e{edge_type}")
         for edge_type in range(self.stats.edge_type_count)
     ]
     self.placeholders["num_incoming_edges_per_type"] = tf.placeholder(
@@ -236,10 +231,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
         cell_type_name = FLAGS.graph_rnn_cell.lower()
         if cell_type_name == "gru":
-          cell = tf.nn.rnn_cell.GRUCell(
-              FLAGS.hidden_size,
-              activation=activation_function,
-              name=f"cell_layer_{layer_index}")
+          cell = tf.nn.rnn_cell.GRUCell(FLAGS.hidden_size,
+                                        activation=activation_function,
+                                        name=f"cell_layer_{layer_index}")
         elif cell_type_name == "cudnncompatiblegrucell":
           import tensorflow.contrib.cudnn_rnn as cudnn_rnn
           if activation_function_name != "tanh":
@@ -247,8 +241,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                 "cudnncompatiblegrucell must be used with tanh activation")
           cell = cudnn_rnn.CudnnCompatibleGRUCell(FLAGS.hidden_size)
         elif cell_type_name == "rnn":
-          cell = tf.nn.rnn_cell.BasicRNNCell(
-              FLAGS.hidden_size, activation=activation_function)
+          cell = tf.nn.rnn_cell.BasicRNNCell(FLAGS.hidden_size,
+                                             activation=activation_function)
         else:
           raise ValueError(f"Unknown RNN cell type '{cell_type_name}'.")
 
@@ -343,16 +337,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(
-                  message_source_states, axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(message_source_states,
+                                                axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (
-                  message_attention_scores * message_edge_type_factors)
+              message_attention_scores = (message_attention_scores *
+                                          message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -447,8 +441,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           self.weights["regression_transform"],
       )  # [v, c]
 
-      predictions = tf.argmax(
-          self.placeholders["target_values"], axis=1, output_type=tf.int32)
+      predictions = tf.argmax(self.placeholders["target_values"],
+                              axis=1,
+                              output_type=tf.int32)
 
       accuracy = tf.reduce_mean(
           tf.cast(
@@ -516,8 +511,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       while (graph and node_offset + graph.node_count < FLAGS.batch_size):
         # De-serialize pickled data in database and process.
         graph_dict = pickle.loads(graph.graph.data)
-        ProcessGraphDict((graph_dict, self.stats.edge_type_count,
-                          FLAGS.tie_fwd_bkwd))
+        ProcessGraphDict(
+            (graph_dict, self.stats.edge_type_count, FLAGS.tie_fwd_bkwd))
 
         # Pad node feature vector of size <= hidden_size up to hidden_size so
         # that the size matches embedding dimensionality.
@@ -544,14 +539,12 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             batch_adjacency_lists[i].append(adjacency_list + np.array(
                 (node_offset, node_offset), dtype=np.int32))
 
-        # Turn counters for incoming edges into np array:
-        num_incoming_edges_per_type = np.zeros((graph.node_count,
-                                                self.stats.edge_type_count))
-        for edge_type, num_incoming_edges_per_type_dict in enumerate(
-            graph_dict["num_incoming_edge_per_type"]):
-          for node_id, edge_count in num_incoming_edges_per_type_dict.items():
-            num_incoming_edges_per_type[node_id, edge_type] = edge_count
-        batch_num_incoming_edges_per_type.append(num_incoming_edges_per_type)
+        # Turn counters for incoming edges into a dense array:
+        batch_num_incoming_edges_per_type.append(
+            graph_dict.IncomingEdgeCountsToDense(
+                graph_dict["incoming_edge_counts"],
+                node_count=graph.node_count,
+                edge_type_count=self.stats.edge_type_count))
 
         num_graphs += 1
         num_graphs_in_batch += 1
