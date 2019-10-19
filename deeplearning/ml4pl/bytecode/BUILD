@@ -11,3 +11,29 @@ py_library(
         "//third_party/py/sqlalchemy",
     ],
 )
+
+py_library(
+    name = "splitters",
+    srcs = ["splitters.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        "//labm8:app",
+        "//labm8:humanize",
+        "//labm8:prof",
+        ":bytecode_database",
+        "//third_party/py/sqlalchemy",
+        "//third_party/py/numpy",
+    ]
+)
+
+py_test(
+    name = "splitters_test",
+    srcs = ["splitters_test.py"],
+    deps = [
+        ":splitters",
+        "//labm8:app",
+        "//labm8:test",
+        ":bytecode_database",
+        "//third_party/py/pytest",
+    ]
+)

@@ -7,6 +7,7 @@ from deeplearning.ml4pl import ml4pl_pb2
 from labm8 import app
 from labm8 import sqlutil
 
+
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -40,7 +41,16 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
       sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
       nullable=False)
 
+  cfgs: 'ControlFlowGraphProto' = sql.orm.relationship(
+      'ControlFlowGraphProto', back_populates="bytecode")
+
   # TODO(cec): Add unique constraint on source_name and relpath.
+
+  # TODO(cec): Add date_added field.
+  # date_added: datetime.datetime = sql.Column(
+  #     sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+  #     nullable=False,
+  #     default=labdate.GetUtcMillisecondsNow)
 
   @classmethod
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
@@ -86,6 +96,15 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
   block_count: int = sql.Column(sql.Integer, nullable=False)
   edge_count: int = sql.Column(sql.Integer, nullable=False)
   is_strict_valid: bool = sql.Column(sql.Boolean, nullable=False)
+
+  # TODO(cec): Add date_added field.
+  # date_added: datetime.datetime = sql.Column(
+  #     sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+  #     nullable=False,
+  #     default=labdate.GetUtcMillisecondsNow)
+
+  bytecode: LlvmBytecode = sql.orm.relationship(
+      LlvmBytecode, uselist=False, back_populates="cfgs")
 
   @classmethod
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:

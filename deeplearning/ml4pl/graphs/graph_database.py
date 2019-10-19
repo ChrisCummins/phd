@@ -1,6 +1,7 @@
 """Database backend for GGNN graphs."""
 import datetime
 import networkx as nx
+import pickle
 import sqlalchemy as sql
 import typing
 from sqlalchemy.dialects import mysql
@@ -10,6 +11,7 @@ from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
 from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
+
 
 FLAGS = app.FLAGS
 
@@ -143,7 +145,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         graph_features_dimensionality=graph_features_dimensionality,
         graph_labels_dimensionality=graph_labels_dimensionality,
         data_flow_max_steps_required=data_flow_max_steps_required,
-        graph=Graph(data=gd))
+        graph=Graph(data=pickle.dumps(gd)))
 
 
 class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):

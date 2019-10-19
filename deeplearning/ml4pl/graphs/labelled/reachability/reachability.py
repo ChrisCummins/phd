@@ -1,11 +1,14 @@
 """Library for labelling program graphs with reachability information."""
 import collections
 import networkx as nx
+import random
 import typing
 
+from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs import graph_query as query
 from labm8 import app
 from labm8 import decorators
+
 
 FLAGS = app.FLAGS
 
@@ -17,7 +20,7 @@ def SetReachableNodes(g: nx.MultiDiGraph,
                       x_label: str = 'x',
                       y_label: str = 'y',
                       true=True,
-                      false=False) -> int:
+                      false=False) -> typing.Tuple[int, int]:
   """Annotate nodes in the graph with x, y values for reachability.
 
   Args:
@@ -27,8 +30,9 @@ def SetReachableNodes(g: nx.MultiDiGraph,
       computing reachability to this value.
 
   Returns:
-    The true number of steps required to compute reachability for this graph.
-    If max_steps > 0, this value is in the range 0 < n <= max_steps.
+    The number of reachable nodes in the range 0 < n <= node_count, and the
+    number of steps required to compute reachability for this graph. If
+    max_steps > 0, this value is in the range 0 < n <= max_steps.
   """
   # Initialize all nodes as unreachable and not root node, except the root node.
   for node, data in g.nodes(data=True):
@@ -38,10 +42,12 @@ def SetReachableNodes(g: nx.MultiDiGraph,
 
   # Breadth-first traversal to mark reachable nodes.
   steps = 0
+  reachable_count = 0
   visited = set()
   q = collections.deque([(root_node, 0)])
   while q:
     next, steps = q.popleft()
+    reachable_count += 1
     visited.add(next)
     if not max_steps or steps + 1 <= max_steps:
       for neighbor in query.StatementNeighbors(g, next):
@@ -51,4 +57,42 @@ def SetReachableNodes(g: nx.MultiDiGraph,
     # Mark the node as reachable.
     g.nodes[next][y_label] = true
 
-  return steps
+  return reachable_count, steps
+
+
+def MakeReachabilityGraphs(
+    g: nx.MultiDiGraph,
+    n: typing.Optional[int] = None,
+    false = False,
+    true = True,
+) -> typing.Iterable[nx.MultiDiGraph]:
+  """Produce up to `n` reachability graphs
+
+  :param g:
+  :param n:
+  :param false:
+  :param true:
+  :return:
+  """
+  nodes = [node for node, _ in iterators.StatementNodeIterator(g)]
+  n = n or len(nodes)
+
+  # If we're taking a sample of nodes to produce graphs (i.e. not all of them),
+  # process the nodes in a random order.
+  if n < len(nodes):
+    random.shuffle(nodes)
+
+  for node in nodes[:n]:
+    reachable = g.copy()
+    reachable.bytecode_id = g.bytecode_id
+    reachable.source_name = g.source_name
+    reachable.relpath = g.relpath
+    reachable.language = g.language
+    reachable.reachable_node_count, reachable.max_steps_required = (
+      SetReachableNodes(
+        reachable,
+        node,
+        FLAGS.reachability_num_steps,
+        false=false,
+        true=true))
+    yield reachable

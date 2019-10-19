@@ -6,6 +6,7 @@ from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from labm8 import app
 from labm8 import test
 
+
 FLAGS = app.FLAGS
 
 
@@ -23,22 +24,22 @@ def graph():
 
 
 def test_SetReachableNodes_distance_zero(graph):
-  distance = reachability.SetReachableNodes(graph, 'D', 0)
+  _, distance = reachability.SetReachableNodes(graph, 'D', 0)
   assert distance == 0
 
 
 def test_SetReachableNodes_distance_one(graph):
-  distance = reachability.SetReachableNodes(graph, 'A', 1)
+  _, distance = reachability.SetReachableNodes(graph, 'A', 1)
   assert distance == 1
 
 
 def test_SetReachableNodes_distance_two(graph):
-  distance = reachability.SetReachableNodes(graph, 'A', 2)
+  _, distance = reachability.SetReachableNodes(graph, 'A', 2)
   assert distance == 2
 
 
 def test_SetReachableNodes_distance_three(graph):
-  distance = reachability.SetReachableNodes(graph, 'A', 0)
+  _, distance = reachability.SetReachableNodes(graph, 'A', 0)
   assert distance == 3
 
 
