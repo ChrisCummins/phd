@@ -2,6 +2,7 @@
 import networkx as nx
 import numpy as np
 import pathlib
+import pickle
 import pytest
 
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -9,10 +10,21 @@ from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.classifyapp import \
   make_classifyapp_dataset as classifyapp
 from labm8 import app
+from labm8 import bazelutil
+from labm8 import fs
 from labm8 import test
 
 
 FLAGS = app.FLAGS
+
+REAL_BYTECODE = fs.Read(bazelutil.DataPath(
+    'phd/deeplearning/ml4pl/graphs/labelled/classifyapp/test_data/bytecode.ll'))
+
+INST2VEC_DICITONARY_PATH = bazelutil.DataPath(
+    'phd/deeplearning/ncc/published_results/dic_pickle')
+
+with open(INST2VEC_DICITONARY_PATH, 'rb') as f:
+  INST2VEC_DICTIONARY = pickle.load(f)
 
 
 @pytest.fixture(scope='function')
@@ -121,6 +133,35 @@ def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
     assert 'edge_y' not in graph_dict
     assert 'graph_x' not in graph_dict
     assert 'graph_y' in graph_dict
+
+@pytest.fixture(scope='function')
+def poj104_bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
+  """Return an bytecode database with a single bytecode from POJ-104 dataset."""
+  db = bytecode_database.Database(f'sqlite:///{tempdir}/bytecode_db')
+  with db.Session(commit=True) as session:
+    session.add(bytecode_database.LlvmBytecode(
+        source_name='poj-104:train',
+        relpath = '1/bytecode.ll',
+        language = 'cpp',
+        cflags = '',
+        charcount = len(REAL_BYTECODE),
+        linecount = len(REAL_BYTECODE.split('\n')),
+        bytecode = REAL_BYTECODE,
+        clang_returncode = 0,
+        error_message = '',
+    ))
+  return db
+
+
+def test_BytecodeExporter_poj104_smoke_test(
+    poj104_bytecode_db: bytecode_database.Database,
+    graph_db: graph_database.Database):
+  exporter = classifyapp.Exporter(bytecode_db, graph_db, INST2VEC_DICTIONARY)
+  exporter.Export()
+
+  with db.Session() as session:
+    assert session.query(graph_database.GraphMeta).count() == 1
+
 
 
 if __name__ == '__main__':

@@ -22,11 +22,17 @@ py_binary(
 py_test(
     name = "make_classifyapp_dataset_test",
     srcs = ["make_classifyapp_dataset_test.py"],
+    data = [
+        "//deeplearning/ml4pl/graphs/labelled/classifyapp/test_data:bytecode",
+        "//deeplearning/ncc/published_results:dictionary",
+    ],
     deps = [
         ":make_classifyapp_dataset",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//labm8:app",
+        "//labm8:fs",
+        "//labm8:bazelutil",
         "//labm8:test",
         "//third_party/py/networkx",
     ],
