@@ -134,6 +134,7 @@ def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
     assert 'graph_x' not in graph_dict
     assert 'graph_y' in graph_dict
 
+
 @pytest.fixture(scope='function')
 def poj104_bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
   """Return an bytecode database with a single bytecode from POJ-104 dataset."""
@@ -156,10 +157,11 @@ def poj104_bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
 def test_BytecodeExporter_poj104_smoke_test(
     poj104_bytecode_db: bytecode_database.Database,
     graph_db: graph_database.Database):
-  exporter = classifyapp.Exporter(bytecode_db, graph_db, INST2VEC_DICTIONARY)
+  exporter = classifyapp.Exporter(
+      poj104_bytecode_db, graph_db, INST2VEC_DICTIONARY)
   exporter.Export()
 
-  with db.Session() as session:
+  with graph_db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 1
 
 
