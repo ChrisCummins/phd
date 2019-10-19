@@ -1,15 +1,17 @@
 """This module prepares the POJ-104 dataset for algorithm classification."""
 
+import networkx as nx
 import pathlib
+import pickle
 import random
 import tempfile
 import typing
 
 from deeplearning.ml4pl.bytecode import bytecode_database
+from deeplearning.ml4pl.bytecode import splitters
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import database_exporters
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
-  control_and_data_flow_graph as cdfg
+from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import fs
 
@@ -22,68 +24,91 @@ app.DEFINE_database('bytecode_db',
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
+app.DEFINE_input_path('dictionary', None,
+                      'The path of the pickled dictionary to use.')
 
 FLAGS = app.FLAGS
 
 
-def GetAlgorithmClass(bytecode: bytecode_database.LlvmBytecode) -> int:
-  """Get the algorithm class, in the range 0 < x <= 104."""
+def GetGraphLabel(source_name: str) -> int:
+  """Get the algorithm class as an int in the range 0 < x <= 104."""
   # POJ-104 dataset is divided into subdirectories, one for every class.
   # Therefore to get the class, get the directory name.
-  return int(bytecode.source_name.split('/')[0])
+  return int(source_name.split('/')[0])
 
 
-BytecodeJob = typing.Tuple[str, str, str, str, int]
+def AddXfgFeatures(graph: nx.MultiDiGraph, dictionary) -> None:
+  """Add edge features (embedding indices) and graph labels (class num)."""
+  # Set edge features.
+  for _, _, data in graph.edges(data=True):
+    data['x'] = [dictionary.get(data['stmt'], dictionary["!UNK"])]
+    if data['x'][0] == dictionary["!UNK"]:
+      print("UNKNOWN", data['stmt'])
+    # Map unlabelled return flow to control paths. Workaround for a bug.
+    data['flow'] = data.get('flow', 'ctrl')
+  # Set graph label.
+  graph.y = [GetGraphLabel(graph.relpath)]
+  return graph
 
 
 def _ProcessBytecodeJob(
-    job: BytecodeJob) -> typing.List[graph_database.GraphMeta]:
-  """
+    job: typing.Any) -> typing.List[graph_database.GraphMeta]:
+  """Process a bytecode into a POJ-104 XFG graph representation.
 
   Args:
-    packed_args: A packed arguments tuple consisting of a list serialized,
-     protos, the source name, the relpath of the bytecode, and the bytecode ID.
+    packed_args: A packed arguments tuple consisting of a bytecode string,
+      the source name, the relpath of the bytecode, the bytecode ID, and
+      the vocabular dictionary.
 
   Returns:
     A list of reachability-annotated dictionaries.
   """
-  bytecode, source_name, relpath, language, bytecode_id = job
-  builder = cdfg.ControlAndDataFlowGraphBuilder(
-      dataflow=FLAGS.dataflow,
-      discard_unknown_statements=False,
-  )
+  bytecode, source_name, relpath, language, bytecode_id, dictionary = job
 
   try:
-    graph = builder.Build(bytecode)
+    graph = inst2vec.LlvmBytecodeToContextualFlowGraph(bytecode)
     graph.source_name = source_name
     graph.bytecode_id = str(bytecode_id)
     graph.language = language
-    annotated_graphs = MakeReachabilityAnnotatedGraphs(
-        graph, FLAGS.reachability_dataset_max_instances_per_graph)
-    return ToGraphMetas(annotated_graphs)
+
+    AddXfgFeatures(graph, dictionary)
+
+    graph_dict = graph_database.GraphMeta.CreateWithGraphDict(
+        graph, {'path', 'ctrl', 'data'})
+    return [graph_dict]
   except Exception as e:
     app.Error('Failed to create graph for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
     return []
 
 
-class BytecodeExporter(database_exporters.BytecodeDatabaseExporterBase):
+class Exporter(database_exporters.BytecodeDatabaseExporterBase):
   """Export from LLVM bytecodes."""
 
+  def __init__(self, *args, **kwargs):
+    super(Exporter, self).__init__(*args, **kwargs)
+    with prof.Profile("Read dictionary from `{FLAGS.dictionary}`"):
+      with open(FLAGS.dictionary, 'rb') as f:
+        self.dictionary = pickle.load(f)
+
   def MakeExportJob(self, session: bytecode_database.Database.SessionType,
-                    bytecode_id: id) -> typing.Optional[BytecodeJob]:
+                    bytecode_id: id) -> typing.Optional[typing.Any]:
     q = session.query(bytecode_database.LlvmBytecode.bytecode,
                       bytecode_database.LlvmBytecode.source_name,
                       bytecode_database.LlvmBytecode.relpath,
                       bytecode_database.LlvmBytecode.language) \
       .filter(bytecode_database.LlvmBytecode.id == bytecode_id).one()
     bytecode, source, relpath, language = q
-    return bytecode, source, relpath, language, bytecode_id
+    return bytecode, source, relpath, language, bytecode_id, self.dictionary
 
   def GetProcessJobFunction(
       self
-  ) -> typing.Callable[[BytecodeJob], typing.List[graph_database.GraphMeta]]:
+  ) -> typing.Callable[[typing.Any], typing.List[graph_database.GraphMeta]]:
     return _ProcessBytecodeJob
+
+  def Export(self):
+    groups = splitters.GetPoj104BytecodeGroups(self.bytecode_db)
+    return self.ExportGroups(self, groups)
 
 
 def main():
@@ -105,10 +130,8 @@ def main():
     app.Log(1, 'Seeding with %s', FLAGS.reachability_dataset_seed)
     random.seed(FLAGS.reachability_dataset_seed)
 
-    groups = GetPoj104BytecodeGroups(bytecode_db, train_val_test_ratio)
-    exporter = BytecodeExporter(bytecode_db, graph_db)
-
-    exporter.ExportGroups(groups)
+    exporter = Exporter(bytecode_db, graph_db)
+    exporter.Export()
 
     log = fs.Read(pathlib.Path(d) / 'log.INFO')
     with graph_db.Session(commit=True) as s:
