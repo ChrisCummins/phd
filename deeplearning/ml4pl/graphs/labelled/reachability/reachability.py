@@ -9,7 +9,6 @@ from deeplearning.ml4pl.graphs import graph_query as query
 from labm8 import app
 from labm8 import decorators
 
-
 FLAGS = app.FLAGS
 
 
@@ -63,8 +62,8 @@ def SetReachableNodes(g: nx.MultiDiGraph,
 def MakeReachabilityGraphs(
     g: nx.MultiDiGraph,
     n: typing.Optional[int] = None,
-    false = False,
-    true = True,
+    false=False,
+    true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
   """Produce up to `n` reachability graphs
 
@@ -88,11 +87,11 @@ def MakeReachabilityGraphs(
     reachable.source_name = g.source_name
     reachable.relpath = g.relpath
     reachable.language = g.language
-    reachable.reachable_node_count, reachable.max_steps_required = (
-      SetReachableNodes(
-        reachable,
-        node,
-        FLAGS.reachability_num_steps,
-        false=false,
-        true=true))
+    reachable.reachable_node_count, reachable.data_flow_max_steps_required = (
+        SetReachableNodes(
+            reachable,
+            node,
+            FLAGS.reachability_num_steps,
+            false=false,
+            true=true))
     yield reachable
