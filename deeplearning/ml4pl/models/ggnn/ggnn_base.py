@@ -267,7 +267,7 @@ class GgnnBaseModel(object):
           app.Log(
               1, "Best epoch so far, validation accuracy increased from "
               "%.5f from %.5f (+%.3f%%). Saving to '%s'",
-              valid.average_accuracy, self.best_epoch_validation_accuracy,
+              self.best_epoch_validation_accuracy, valid.average_accuracy,
               ((valid.average_accuracy / self.best_epoch_validation_accuracy) -
                1) * 100, self.best_model_file)
           self.best_epoch_validation_accuracy = valid.average_accuracy
