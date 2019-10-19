@@ -89,6 +89,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                      data_flow_max_steps_required <= FLAGS.max_steps)
     self.stats = graph_stats.GraphDatabaseStats(self.db, filters=filters)
     super(GgnnNodeClassifierModel, self).__init__()
+    app.Log(1, "%s", self.stats)
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
