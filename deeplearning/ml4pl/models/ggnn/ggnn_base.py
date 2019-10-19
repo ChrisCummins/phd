@@ -150,7 +150,7 @@ class GgnnBaseModel(object):
     app.Log(1, "Build information: %s",
             jsonutil.format_json(pbutil.ToJson(build_info.GetBuildInfo())))
 
-    app.Log(1, "Using the following model flags: %s",
+    app.Log(1, "Model flags: %s",
             jsonutil.format_json(self._ModelFlagsToDict()))
 
     random.seed(FLAGS.random_seed)
