@@ -64,7 +64,7 @@ app.DEFINE_integer(
     'reachability_dataset_seed', 0xCEC,
     'The random seed value to use when shuffling graph statements when '
     'selecting the root statement.')
-app.DEFINE_integer('reachability_dataset_bytecode_batch_size', 512,
+app.DEFINE_integer('reachability_dataset_bytecode_batch_size', 10000,
                    'The number of bytecodes to process in a batch.')
 
 FLAGS = app.FLAGS
