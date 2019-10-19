@@ -116,7 +116,8 @@ class GraphDatabaseStats(object):
     return ", ".join(summaries)
 
   def _ComputeStats(self) -> None:
-    label = lambda t: f"Computed stats over {humanize.Commas(self.graph_count)} instances"
+    graph_count = 0
+    label = lambda t: f"Computed stats over {humanize.Commas(graph_count)} instances"
     with prof.Profile(label), self.db.Session() as s:
       q = s.query(
           sql.func.count(graph_database.GraphMeta.id).label("graph_count"),
@@ -150,4 +151,6 @@ class GraphDatabaseStats(object):
 
       for filter_cb in self._filters:
         q = q.filter(filter_cb())
+
       self._stats = q.one()
+      graph_count = self._stats.graph_count
