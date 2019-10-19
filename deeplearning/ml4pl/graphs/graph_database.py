@@ -87,6 +87,10 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
                                         uselist=False,
                                         back_populates="meta")
 
+  @property
+  def pickled_data(self) -> typing.Any:
+    return pickle.loads(self.graph.data)
+
   @classmethod
   def CreateWithGraphDict(cls, g: nx.MultiDiGraph, edge_types: typing.Set[str],
                           **graph_dict_opts):
@@ -145,7 +149,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         graph_features_dimensionality=graph_features_dimensionality,
         graph_labels_dimensionality=graph_labels_dimensionality,
         data_flow_max_steps_required=data_flow_max_steps_required,
-        graph=Graph(data=pickle.dumps(gd)))
+        graph=Graph.CreatePickled(gd))
 
 
 class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -159,6 +163,14 @@ class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
                        primary_key=True)
   data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(), nullable=False)
   meta: GraphMeta = sql.orm.relationship('GraphMeta', back_populates="graph")
+
+  @property
+  def pickled_data(self) -> typing.Any:
+    return pickle.loads(self.data)
+
+  @classmethod
+  def CreatePickled(cls, data: typing.Any) -> 'Graph':
+    return Graph(data=pickle.dumps(data))
 
 
 class Database(sqlutil.Database):
