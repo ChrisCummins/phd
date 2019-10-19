@@ -137,7 +137,7 @@ class GgnnBaseModel(object):
     self.working_dir = FLAGS.working_dir
     self.logger = log_writer.FormattedJsonLogWriter(
         self.working_dir / 'logs' / self.run_id)
-    self.best_model_file = self.working_dir / 'best_mode.pickle'
+    self.best_model_file = self.working_dir / f'{self.run_id}.best_model.pickle'
     self.working_dir.mkdir(exist_ok=True, parents=True)
 
     # Write app.Log() calls to file. To also log to stderr, use flag
