@@ -5,6 +5,7 @@ import typing
 
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 
 NodeIndex = int
@@ -157,3 +158,61 @@ def IncomingEdgeCountsToDense(
     for node_id, edge_count in incoming_edge_dict.items():
       dense[node_id, edge_type] = edge_count
   return dense
+
+
+def GraphDictToNetworkx(graph_dict: GraphDict) -> nx.MultiDiGraph:
+  """Construct a networkx graph from a graph dict.
+
+  Use this function for producing interpretible representation of graph_dicts,
+  but note that this is not an inverse of the ToGraphDict() function, since
+  critical information is lost, e.g. the mapping from edge flow types to numeric
+  ID. the name of feature and label attributes, etc.
+  """
+  g = nx.MultiDiGraph()
+
+  # Build the list of edges and their properties by iterating over the adjacency
+  # lists and producing a flat list of edge dicts which can then be augmented
+  # with features or labels.
+  flattened_edge_dicts: typing.List[typing.Dict[str, typing.Any]] = []
+
+  for edge_type, adjacency_list in enumerate(graph_dict['adjacency_lists']):
+    for src, dst in adjacency_list:
+      flattened_edge_dicts.append({'src': src, 'dst': dst, 'flow': edge_type})
+
+  if 'edge_x' in graph_dict:
+    i = 0
+    for edge_list in graph_dict['edge_x']:
+      for x in edge_list:
+        flattened_edge_dicts[i]['x'] = x
+        i += 1
+
+  if 'edge_y' in graph_dict:
+    i = 0
+    for edge_list in graph_dict['edge_y']:
+      for y in edge_list:
+        flattened_edge_dicts[i]['y'] = y
+        i += 1
+
+  # Add the edges and their properties to the graph.
+  for edge_dict in flattened_edge_dicts:
+    print("EDGE", edge_dict)
+    src, dst = edge_dict['src'], edge_dict['dst']
+    del edge_dict['src']
+    del edge_dict['dst']
+    g.add_edge(src, dst, **edge_dict)
+
+  if 'node_x' in graph_dict:
+    for i, x in enumerate(graph_dict['node_x']):
+      g.nodes[i]['x'] = x
+
+  if 'node_y' in graph_dict:
+    for i, y in enumerate(graph_dict['node_y']):
+      g.nodes[i]['y'] = y
+
+  if 'graph_x' in graph_dict:
+    g.x = graph_dict['graph_x']
+
+  if 'graph_y' in graph_dict:
+    g.y = graph_dict['graph_y']
+
+  return g

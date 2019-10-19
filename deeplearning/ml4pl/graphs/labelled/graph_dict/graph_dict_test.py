@@ -7,6 +7,7 @@ from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
 from labm8 import app
 from labm8 import test
 
+
 FLAGS = app.FLAGS
 
 
@@ -218,6 +219,24 @@ def test_IncomingEdgeCountsToDense():
           [0, 0, 1],
           [0, 2, 0],
       ]))
+
+def test_GraphDictToNetworkx():
+  g = graph_dict.GraphDictToNetworkx({
+    'adjacency_lists': [[(0, 1), (1, 2)], [(0, 2)]],
+    'node_x': [[1], [2], [3]],
+    'edge_y': [[[1], [2]], [[3]]],
+  })
+
+  assert g.number_of_nodes() == 3
+  assert g.number_of_edges() == 3
+
+  assert g.nodes[0]['x'] == [1]
+  assert g.nodes[1]['x'] == [2]
+  assert g.nodes[2]['x'] == [3]
+
+  assert g.edges[0, 1, 0]['y'] == [1]
+  assert g.edges[1, 2, 0]['y'] == [2]
+  assert g.edges[0, 2, 0]['y'] == [3]
 
 
 if __name__ == '__main__':
