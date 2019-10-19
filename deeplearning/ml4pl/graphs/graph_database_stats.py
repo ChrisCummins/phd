@@ -8,7 +8,6 @@ from labm8 import decorators
 from labm8 import humanize
 from labm8 import prof
 
-
 FLAGS = app.FLAGS
 
 
@@ -82,68 +81,72 @@ class GraphDatabaseStats(object):
 
   def __repr__(self):
     summaries = [
-      f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
-      humanize.Plural(self.edge_type_count, 'edge type'),
-      f"max {humanize.Plural(self.max_node_count, 'node')}",
-      f"max {humanize.Plural(self.max_edge_count, 'edge')}",
+        f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
+        humanize.Plural(self.edge_type_count, 'edge type'),
+        f"max {humanize.Plural(self.max_node_count, 'node')}",
+        f"max {humanize.Plural(self.max_edge_count, 'edge')}",
     ]
     if self.node_features_dimensionality:
-      summaries.append(humanize.Plural(self.node_features_dimensionality,
-                                       'node feature dimension'))
+      summaries.append(
+          humanize.Plural(self.node_features_dimensionality,
+                          'node feature dimension'))
     if self.edge_features_dimensionality:
-      summaries.append(humanize.Plural(self.edge_features_dimensionality,
-                                       'edge feature dimension'))
+      summaries.append(
+          humanize.Plural(self.edge_features_dimensionality,
+                          'edge feature dimension'))
     if self.graph_features_dimensionality:
-      summaries.append(humanize.Plural(self.graph_features_dimensionality,
-                                       'graph feature dimension'))
+      summaries.append(
+          humanize.Plural(self.graph_features_dimensionality,
+                          'graph feature dimension'))
     if self.node_labels_dimensionality:
-      summaries.append(humanize.Plural(self.node_labels_dimensionality,
-                                       'node label dimension'))
+      summaries.append(
+          humanize.Plural(self.node_labels_dimensionality,
+                          'node label dimension'))
     if self.edge_labels_dimensionality:
-      summaries.append(humanize.Plural(self.edge_labels_dimensionality,
-                                       'edge label dimension'))
+      summaries.append(
+          humanize.Plural(self.edge_labels_dimensionality,
+                          'edge label dimension'))
     if self.graph_labels_dimensionality:
-      summaries.append(humanize.Plural(self.graph_labels_dimensionality,
-                                       'graph label dimension'))
+      summaries.append(
+          humanize.Plural(self.graph_labels_dimensionality,
+                          'graph label dimension'))
     if self.data_flow_max_steps_required:
-      summaries.append(humanize.Plural(self.data_flow_max_steps_required,
-                                       'data flow step'))
+      summaries.append(
+          humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
     return ", ".join(summaries)
 
   def _ComputeStats(self) -> None:
-    with prof.Profile("Computed database stats"), self.db.Session() as s:
+    label = lambda t: f"Computed stats over {humanize.Commas(self.graph_count)} instances"
+    with prof.Profile(label), self.db.Session() as s:
       q = s.query(
           sql.func.count(graph_database.GraphMeta.id).label("graph_count"),
           sql.func.max(graph_database.GraphMeta.edge_type_count).label(
               "edge_type_count"),
           sql.func.max(
-              graph_database.GraphMeta.node_count).label(
-              "max_node_count"),
+              graph_database.GraphMeta.node_count).label("max_node_count"),
           sql.func.max(
-              graph_database.GraphMeta.edge_count).label(
-              "max_edge_count"),
+              graph_database.GraphMeta.edge_count).label("max_edge_count"),
           sql.func.max(
               graph_database.GraphMeta.node_features_dimensionality).label(
                   "node_features_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.edge_features_dimensionality).label(
-              "edge_features_dimensionality"),
+                  "edge_features_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.graph_features_dimensionality).label(
-              "graph_features_dimensionality"),
+                  "graph_features_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.node_labels_dimensionality).label(
                   "node_labels_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.edge_labels_dimensionality).label(
-              "edge_labels_dimensionality"),
+                  "edge_labels_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.graph_labels_dimensionality).label(
-              "graph_labels_dimensionality"),
+                  "graph_labels_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.data_flow_max_steps_required).label(
-                  "data_flow_max_steps_required")
-      )
+                  "data_flow_max_steps_required"))
 
       for filter_cb in self._filters:
         q = q.filter(filter_cb())
