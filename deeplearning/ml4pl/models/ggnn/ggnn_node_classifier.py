@@ -13,6 +13,7 @@ import tensorflow as tf
 import typing
 
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict as graph_dicts
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
@@ -453,7 +454,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         # Pad node feature vector of size <= hidden_size up to hidden_size so
         # that the size matches embedding dimensionality.
         padded_features = np.pad(
-            graph_dict["node_features"],
+            graph_dict["node_x"],
             ((0, 0),
              (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
             "constant",
@@ -461,7 +462,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         # Shape: [num_nodes, node_feature_dim]
         batch_node_features.extend(padded_features)
         # Shape: [num_nodes, num_classes]
-        batch_target_values.extend(graph_dict['targets'])
+        batch_target_values.extend(graph_dict['node_y'])
         batch_graph_nodes_list.append(
             np.full(
                 shape=[graph.node_count],
@@ -478,7 +479,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
         # Turn counters for incoming edges into a dense array:
         batch_num_incoming_edges_per_type.append(
-            graph_dict.IncomingEdgeCountsToDense(
+            graph_dicts.IncomingEdgeCountsToDense(
                 graph_dict["incoming_edge_counts"],
                 node_count=graph.node_count,
                 edge_type_count=self.stats.edge_type_count))
