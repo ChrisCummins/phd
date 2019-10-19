@@ -22,7 +22,6 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
 
-
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -231,7 +230,8 @@ class GgnnBaseModel(object):
       if FLAGS.tensorboard_logging:
         self.summary_writers[epoch_type].add_summary(loss_summary,
                                                      self.global_training_step)
-      logger.Log(batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy)
+      logger.Log(
+          batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy)
       sys.stdout.write(f'\r{logger}')
       sys.stdout.flush()
 
@@ -250,9 +250,10 @@ class GgnnBaseModel(object):
         train = self.RunEpoch(f"Epoch {epoch_num} train", "train")
         valid = self.RunEpoch(f"Epoch {epoch_num}   val", "val")
         app.Log(
-            1, "Epoch %s completed. "
-            "Training and validation on %s instances in %s", epoch_num,
-            humanize.Commas(train.instance_count + valid.instance_count),
+            1, "Epoch %s completed. Trained on %s instances and validated on "
+            "%s instances in %s", epoch_num,
+            humanize.Commas(train.instance_count),
+            humanize.Commas(valid.instance_count),
             humanize.Duration(time.time() - epoch_start_time))
         log_file = self.logger.Log({
             "epoch": epoch_num,
