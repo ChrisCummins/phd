@@ -95,7 +95,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     # Use a single layer GRU, with the minimum number of steps required to
     # process the dataset.
-    layer_timesteps = [self.stats.data_flow_max_steps_required]
+    num_steps = max(FLAGS.max_steps, self.stats.data_flow_max_steps_required)
+    layer_timesteps = [num_steps]
     app.Log(1, "Using layer timesteps: %s", layer_timesteps)
 
     self.placeholders["target_values"] = tf.placeholder(tf.int32, [None, 2],
