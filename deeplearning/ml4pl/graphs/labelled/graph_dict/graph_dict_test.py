@@ -199,17 +199,17 @@ def test_ToGraphDict_graph_targets(graph: nx.MultiDiGraph):
 
 
 def test_IncomingEdgeCountsToDense():
-  dense = graph_dict.IncomingEdgeCountsToDense([{
-      0: 1
+  incoming_edge_counts = [{
+    0: 1
   }, {
-      0: 10,
-      3: 2
+    0: 10,
+    3: 2
   }, {
-      0: 6,
-      2: 1
-  }],
-                                               node_count=4,
-                                               edge_type_count=3)
+    0: 6,
+    2: 1
+  }]
+  dense = graph_dict.IncomingEdgeCountsToDense(
+      incoming_edge_counts, node_count=4, edge_type_count=3)
 
   assert np.array_equal(
       dense, np.array([
