@@ -243,9 +243,9 @@ class GgnnBaseModel(object):
     return logger
 
   def Train(self):
-    start_time = time.time()
     with self.graph.as_default():
       for epoch_num in range(1, FLAGS.num_epochs + 1):
+        epoch_start_time = time.time()
         print(f"== Epoch {epoch_num}")
         train = self.RunEpoch(f"Epoch {epoch_num} train", "train")
         valid = self.RunEpoch(f"Epoch {epoch_num}   val", "val")
@@ -253,10 +253,10 @@ class GgnnBaseModel(object):
             1, "Epoch %s completed. "
             "Training and validation on %s instances in %s", epoch_num,
             humanize.Commas(train.instance_count + valid.instance_count),
-            humanize.Duration(time.time() - start_time))
+            humanize.Duration(time.time() - epoch_start_time))
         log_file = self.logger.Log({
             "epoch": epoch_num,
-            "time": time.time() - start_time,
+            "time": time.time() - epoch_start_time,
             "train_results": train.ToJson(),
             "valid_results": valid.ToJson(),
         })
