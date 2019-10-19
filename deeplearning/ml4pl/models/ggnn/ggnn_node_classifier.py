@@ -426,7 +426,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         filters=filters,
         order_by_random=True,
         eager_graph_loading=True,
-        buffer_size=min(256, FLAGS.batch_size // 10),
+        buffer_size=min(512, FLAGS.batch_size // 10),
         limit=FLAGS.max_instance_count)
 
     state_dropout_keep_prob = (FLAGS.graph_state_dropout_keep_prob
