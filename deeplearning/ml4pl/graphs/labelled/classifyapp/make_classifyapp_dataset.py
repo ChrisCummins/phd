@@ -2,6 +2,7 @@
 
 import networkx as nx
 import pathlib
+import pickle
 import random
 import tempfile
 import typing
@@ -14,6 +15,8 @@ from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import database_exporters
 from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
+from labm8 import prof
+from labm8 import bazelutil
 from labm8 import fs
 
 app.DEFINE_database(
@@ -25,8 +28,10 @@ app.DEFINE_database(
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
-app.DEFINE_input_path('dictionary', None,
-                      'The path of the pickled dictionary to use.')
+app.DEFINE_input_path(
+    'dictionary',
+    bazelutil.DataPath('phd/deeplearning/ncc/published_results/dic_pickle'),
+    'The path of the pickled dictionary to use.')
 
 FLAGS = app.FLAGS
 
@@ -157,7 +162,13 @@ def main():
   with tempfile.TemporaryDirectory() as d:
     app.LogToDirectory(d, 'log')
 
-    exporter = Exporter(bytecode_db, graph_db)
+    with prof.Profile(
+        lambda t:
+        f"Read {len(dictionary)}-item dictionary from `{FLAGS.dictionary}`"):
+      with open(FLAGS.dictionary, 'rb') as f:
+        dictionary = pickle.load(f)
+
+    exporter = Exporter(bytecode_db, graph_db, dictionary)
     exporter.Export()
 
     log = fs.Read(pathlib.Path(d) / 'log.INFO')
