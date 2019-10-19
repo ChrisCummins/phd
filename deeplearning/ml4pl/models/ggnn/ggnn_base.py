@@ -2,6 +2,7 @@
 import os
 import time
 
+import sys
 import numpy as np
 import pathlib
 import pickle
@@ -230,13 +231,12 @@ class GgnnBaseModel(object):
       if FLAGS.tensorboard_logging:
         self.summary_writers[epoch_type].add_summary(loss_summary,
                                                      self.global_training_step)
-      print(
-          logger.Log(
-              batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy),
-          end='\r')
+      logger.Log(batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy)
+      sys.stdout.write(f'\r{logger}')
+      sys.stdout.flush()
 
-    print()
     logger.StopTheClock()
+    sys.stdout.write('\r\n')
     app.Log(1, "%s: loss: %.5f | acc: %.3f%% | instances/sec: %.2f", epoch_name,
             logger.average_loss, logger.average_accuracy * 100,
             logger.instances_per_second)
