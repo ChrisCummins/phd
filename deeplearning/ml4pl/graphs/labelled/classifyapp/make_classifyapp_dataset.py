@@ -16,12 +16,12 @@ from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import fs
 
-
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecodes from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None,
+    'URL of database to read bytecodes from.',
+    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
@@ -41,14 +41,14 @@ def GetGraphLabel(source_name: str) -> int:
 def AddXfgFeatures(graph: nx.MultiDiGraph, dictionary) -> None:
   """Add edge features (embedding indices) and graph labels (class num)."""
   flow_translation_table = {
-    'ctrl': 'control',
-    'data': 'data',
-    # TODO(cec): Consolidate XFG `path` flow with `call` flow used elsewhere?
-    'path': 'path',
-    # Map unlabelled return flow to control paths. Workaround for a bug in
-    # inst2vec.
-    None: 'control',
-    'none': 'control',
+      'ctrl': 'control',
+      'data': 'data',
+      # TODO(cec): Consolidate XFG `path` flow with `call` flow used elsewhere?
+      'path': 'path',
+      # Map unlabelled return flow to control paths. Workaround for a bug in
+      # inst2vec.
+      None: 'control',
+      'none': 'control',
   }
 
   stmt_count = 0
@@ -156,13 +156,6 @@ def main():
   # database's meta table.
   with tempfile.TemporaryDirectory() as d:
     app.LogToDirectory(d, 'log')
-
-    # Record the number of instances per graph that we're generating.
-    app.Log(1, 'Generating up to %s instances per graph',
-            FLAGS.reachability_dataset_max_instances_per_graph)
-
-    app.Log(1, 'Seeding with %s', FLAGS.reachability_dataset_seed)
-    random.seed(FLAGS.reachability_dataset_seed)
 
     exporter = Exporter(bytecode_db, graph_db)
     exporter.Export()
