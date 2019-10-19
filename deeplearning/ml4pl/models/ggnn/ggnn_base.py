@@ -279,7 +279,7 @@ class GgnnBaseModel(object):
 
             # Add the test results to the logfile.
             log = jsonutil.read_file(log_file)
-            log["time"] = time.time() - start_time
+            log["time"] = time.time() - epoch_start_time
             log['test_reults'] = (test.average_loss, test.average_accuracy,
                                   test.instances_per_second)
             jsonutil.write_file(log_file, log)

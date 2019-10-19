@@ -20,63 +20,49 @@ class GraphDatabaseStats(object):
       filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None):
     self.db = db
     self._filters = filters or []
-    self._edge_type_count = 0
-    self._node_features_dimensionality = 0
-    self._data_flow_max_steps_required = 0
 
-  @decorators.memoized_property
+  @property
   def graph_count(self) -> int:
-    self._ComputeStats()
     return self._stats.graph_count
 
-  @decorators.memoized_property
+  @property
   def edge_type_count(self) -> int:
-    self._ComputeStats()
     return self._stats.edge_type_count
 
-  @decorators.memoized_property
+  @property
   def max_node_count(self) -> int:
-    self._ComputeStats()
     return self._stats.max_node_count
 
-  @decorators.memoized_property
+  @property
   def max_edge_count(self) -> int:
-    self._ComputeStats()
     return self._stats.max_edge_count
 
-  @decorators.memoized_property
+  @property
   def node_features_dimensionality(self) -> int:
-    self._ComputeStats()
     return self._stats.node_features_dimensionality
 
-  @decorators.memoized_property
+  @property
   def edge_features_dimensionality(self) -> int:
-    self._ComputeStats()
     return self._stats.edge_features_dimensionality
 
-  @decorators.memoized_property
+  @property
   def graph_features_dimensionality(self) -> int:
-    self._ComputeStats()
     return self._stats.graph_features_dimensionality
 
-  @decorators.memoized_property
+  @property
   def node_labels_dimensionality(self) -> int:
-    self._ComputeStats()
     return self._stats.node_labels_dimensionality
 
-  @decorators.memoized_property
+  @property
   def edge_labels_dimensionality(self) -> int:
-    self._ComputeStats()
     return self._stats.edge_labels_dimensionality
 
-  @decorators.memoized_property
+  @property
   def graph_labels_dimensionality(self) -> int:
-    self._ComputeStats()
     return self._stats.graph_labels_dimensionality
 
-  @decorators.memoized_property
+  @property
   def data_flow_max_steps_required(self) -> int:
-    self._ComputeStats()
     return self._stats.data_flow_max_steps_required
 
   def __repr__(self):
@@ -115,7 +101,8 @@ class GraphDatabaseStats(object):
           humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
     return ", ".join(summaries)
 
-  def _ComputeStats(self) -> None:
+  @decorators.memoized_property
+  def _stats(self):
     graph_count = 0
     label = lambda t: f"Computed stats over {humanize.Commas(graph_count)} instances"
     with prof.Profile(label), self.db.Session() as s:
@@ -152,5 +139,7 @@ class GraphDatabaseStats(object):
       for filter_cb in self._filters:
         q = q.filter(filter_cb())
 
-      self._stats = q.one()
-      graph_count = self._stats.graph_count
+      stats = q.one()
+      graph_count = stats.graph_count
+
+    return stats
