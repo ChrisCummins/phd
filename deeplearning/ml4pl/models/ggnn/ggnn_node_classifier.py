@@ -20,16 +20,16 @@ from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 app.DEFINE_integer("batch_size", 8000,
                    "The maximum number of nodes to include in a graph batch.")
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
 app.DEFINE_integer(
     'max_steps', 0,
     'If > 0, limit the graphs used to those that can be computed in '
@@ -74,7 +74,6 @@ GGNNWeights = collections.namedtuple(
     ],
 )
 
-
 # TODO(cec): Refactor.
 residual_connections = {}
 
@@ -100,16 +99,17 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     layer_timesteps = [num_steps]
     app.Log(1, "Using layer timesteps: %s", layer_timesteps)
 
-    self.placeholders["target_values"] = tf.placeholder(tf.int32, [None, 2],
-                                                        name="target_values")
+    self.placeholders["target_values"] = tf.placeholder(
+        tf.int32, [None, 2], name="target_values")
     self.placeholders["initial_node_representation"] = tf.placeholder(
         tf.float32, [None, FLAGS.hidden_size], name="node_features")
     self.placeholders["num_of_nodes_in_batch"] = tf.placeholder(
         tf.int32, [], name="num_of_nodes_in_batch")
     adjacency_list_format = ['src', 'dst']
     self.placeholders["adjacency_lists"] = [
-        tf.placeholder(tf.int32, [None, len(adjacency_list_format)],
-                       name=f"adjacency_e{edge_type}")
+        tf.placeholder(
+            tf.int32, [None, len(adjacency_list_format)],
+            name=f"adjacency_e{edge_type}")
         for edge_type in range(self.stats.edge_type_count)
     ]
     self.placeholders["num_incoming_edges_per_type"] = tf.placeholder(
@@ -170,9 +170,10 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
         cell_type_name = FLAGS.graph_rnn_cell.lower()
         if cell_type_name == "gru":
-          cell = tf.nn.rnn_cell.GRUCell(FLAGS.hidden_size,
-                                        activation=activation_function,
-                                        name=f"cell_layer_{layer_index}")
+          cell = tf.nn.rnn_cell.GRUCell(
+              FLAGS.hidden_size,
+              activation=activation_function,
+              name=f"cell_layer_{layer_index}")
         elif cell_type_name == "cudnncompatiblegrucell":
           import tensorflow.contrib.cudnn_rnn as cudnn_rnn
           if activation_function_name != "tanh":
@@ -180,8 +181,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                 "cudnncompatiblegrucell must be used with tanh activation")
           cell = cudnn_rnn.CudnnCompatibleGRUCell(FLAGS.hidden_size)
         elif cell_type_name == "rnn":
-          cell = tf.nn.rnn_cell.BasicRNNCell(FLAGS.hidden_size,
-                                             activation=activation_function)
+          cell = tf.nn.rnn_cell.BasicRNNCell(
+              FLAGS.hidden_size, activation=activation_function)
         else:
           raise ValueError(f"Unknown RNN cell type '{cell_type_name}'.")
 
@@ -276,16 +277,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(message_source_states,
-                                                axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(
+                  message_source_states, axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (message_attention_scores *
-                                          message_edge_type_factors)
+              message_attention_scores = (
+                  message_attention_scores * message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -380,9 +381,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           self.weights["regression_transform"],
       )  # [v, c]
 
-      predictions = tf.argmax(self.placeholders["target_values"],
-                              axis=1,
-                              output_type=tf.int32)
+      predictions = tf.argmax(
+          self.placeholders["target_values"], axis=1, output_type=tf.int32)
 
       accuracy = tf.reduce_mean(
           tf.cast(
