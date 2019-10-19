@@ -14,6 +14,10 @@ from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 
+app.DEFINE_integer('database_exporter_batch_size', 10000,
+                   'The number of bytecodes to process in-memory before writing'
+                   'to database.')
+
 class BytecodeDatabaseExporterBase(object):
   """Abstract base class for implementing parallelized LLVM bytecode workers."""
 
@@ -25,7 +29,7 @@ class BytecodeDatabaseExporterBase(object):
     self.bytecode_db = bytecode_db
     self.graph_db = graph_db
     self.pool = pool or multiprocessing.Pool()
-    self.batch_size = batch_size or FLAGS.reachability_dataset_bytecode_batch_size
+    self.batch_size = batch_size or FLAGS.database_exporter_batch_size
 
   def MakeExportJob(self, session: bytecode_database.Database.SessionType,
                     bytecode_id: int) -> typing.Optional[typing.Any]:

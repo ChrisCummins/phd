@@ -1,5 +1,6 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/classifyapp:make_classifyapp_dataset."""
 import networkx as nx
+import numpy as np
 import pathlib
 import pytest
 
@@ -16,6 +17,7 @@ FLAGS = app.FLAGS
 
 @pytest.fixture(scope='function')
 def bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
+  """Return a bytecode database with three bytecodes."""
 
   def _MakeLlvmBytecode(source_name, relpath) -> bytecode_database.LlvmBytecode:
     return bytecode_database.LlvmBytecode(
@@ -49,39 +51,76 @@ def test_GetGraphLabel():
   assert classifyapp.GetGraphLabel('1/bar.ll') == 1
   assert classifyapp.GetGraphLabel('2/foo.ll') == 2
 
-def test_AddGraphFeatures():
+def test_AddXfgFeatures_counters():
+  """Test that graph annotations are added."""
   graph = nx.MultiDiGraph()
-  graph.relapth('13/foo.ll')
+  graph.relpath = '13/foo.ll'
   graph.add_edge('A', 'B', flow='ctrl', stmt='foo')
   graph.add_edge('B', 'C', flow='none', stmt='bar')
   graph.add_edge('C', 'D', flow='data', stmt='car')
 
-  classifyapp.AddGraphFeatures(
+  stmt_count, unknown_count = classifyapp.AddXfgFeatures(
       graph, {
         'foo': 1,
         'bar': 2,
         "!UNK": -1,
       })
 
-  assert np.array_equals(graph.y, [13])
-  assert np.array_equals(graph.edges['A', 'B', 0]['x'], [1])
-  assert np.array_equals(graph.edges['B', 'C', 0]['x'], [2])
-  assert np.array_equals(graph.edges['C', 'D', 0]['x'], [-1])
+  assert stmt_count == 3
+  assert unknown_count == 1
+
+def test_AddXfgFeatures_feature_values():
+  """Test that graph annotations are added."""
+  graph = nx.MultiDiGraph()
+  graph.relpath = '13/foo.ll'
+  graph.add_edge('A', 'B', flow='ctrl', stmt='foo')
+  graph.add_edge('B', 'C', flow='none', stmt='bar')
+  graph.add_edge('C', 'D', flow='data', stmt='car')
+
+  classifyapp.AddXfgFeatures(
+      graph, {
+        'foo': 1,
+        'bar': 2,
+        "!UNK": -1,
+      })
+
+  assert np.array_equal(graph.y, [13])
+  assert np.array_equal(graph.edges['A', 'B', 0]['x'], [1])
+  assert np.array_equal(graph.edges['B', 'C', 0]['x'], [2])
+  assert np.array_equal(graph.edges['C', 'D', 0]['x'], [-1])
 
 
-def test_BytecodeExporter(bytecode_db: bytecode_database.Database,
+def test_BytecodeExporter_num_rows(bytecode_db: bytecode_database.Database,
                           graph_db: graph_database.Database):
-  exporter = classifyapp.Exporter(bytecode_db, graph_db)
-
-  with bytecode_db.Session() as s:
-    ids = [r[0] for r in s.query(bytecode_database.LlvmBytecode.id)]
-
-  exporter.Export({
+  """Test the number of bytecodes exported."""
+  exporter = classifyapp.Exporter(bytecode_db, graph_db, {
     '!UNK': 1,
   })
+  exporter.Export()
 
   with graph_db.Session() as s:
     assert s.query(graph_database.GraphMeta).count() == 3
+
+
+def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
+                                     graph_db: graph_database.Database):
+  """Test the graph_dict properties of exported bytecodes."""
+  exporter = classifyapp.Exporter(bytecode_db, graph_db, {
+    '!UNK': 1,
+  })
+  exporter.Export()
+
+  with graph_db.Session() as s:
+    assert s.query(graph_database.GraphMeta).count() == 3
+    gm = s.query(graph_database.GraphMeta).first()
+    graph_dict = gm.pickled_data
+
+    assert 'node_x' not in graph_dict
+    assert 'node_y' not in graph_dict
+    assert 'edge_x' in graph_dict
+    assert 'edge_y' not in graph_dict
+    assert 'graph_x' not in graph_dict
+    assert 'graph_y' in graph_dict
 
 
 if __name__ == '__main__':

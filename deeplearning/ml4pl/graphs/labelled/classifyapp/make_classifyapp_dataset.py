@@ -2,10 +2,11 @@
 
 import networkx as nx
 import pathlib
-import pickle
 import random
 import tempfile
 import typing
+import traceback
+import sys
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.bytecode import splitters
@@ -39,16 +40,38 @@ def GetGraphLabel(source_name: str) -> int:
 
 def AddXfgFeatures(graph: nx.MultiDiGraph, dictionary) -> None:
   """Add edge features (embedding indices) and graph labels (class num)."""
+  flow_translation_table = {
+    'ctrl': 'control',
+    'data': 'data',
+    # TODO(cec): Consolidate XFG `path` flow with `call` flow used elsewhere?
+    'path': 'path',
+    # Map unlabelled return flow to control paths. Workaround for a bug in
+    # inst2vec.
+    None: 'control',
+    'none': 'control',
+  }
+
+  stmt_count = 0
+  unknown_count = 0
   # Set edge features.
   for _, _, data in graph.edges(data=True):
-    data['x'] = [dictionary.get(data['stmt'], dictionary["!UNK"])]
-    if data['x'][0] == dictionary["!UNK"]:
-      print("UNKNOWN", data['stmt'])
-    # Map unlabelled return flow to control paths. Workaround for a bug.
-    data['flow'] = data.get('flow', 'ctrl')
+    stmt_count += 1
+    if 'stmt' not in data:
+      raise ValueError(f"`stmt` missing from edge with data: {data}")
+    if data['flow'] not in flow_translation_table:
+      raise ValueError(f"Unknown edge flow type `{data['flow']}`")
+
+    data['flow'] = flow_translation_table.get(data['flow'], 'ctrl')
+
+    if data['stmt'] in dictionary:
+      data['x'] = [dictionary[data['stmt']]]
+    else:
+      unknown_count += 1
+      data['x'] = [dictionary["!UNK"]]
+
   # Set graph label.
   graph.y = [GetGraphLabel(graph.relpath)]
-  return graph
+  return stmt_count, unknown_count
 
 
 def _ProcessBytecodeJob(
@@ -68,16 +91,29 @@ def _ProcessBytecodeJob(
   try:
     graph = inst2vec.LlvmBytecodeToContextualFlowGraph(bytecode)
     graph.source_name = source_name
+    graph.relpath = relpath
     graph.bytecode_id = str(bytecode_id)
     graph.language = language
 
-    AddXfgFeatures(graph, dictionary)
+    num_stmts, num_unknowns = AddXfgFeatures(graph, dictionary)
 
-    graph_dict = graph_database.GraphMeta.CreateWithGraphDict(
-        graph, {'path', 'ctrl', 'data'})
-    return [graph_dict]
+    graph_meta = graph_database.GraphMeta.CreateWithGraphDict(
+        graph, {'path', 'control', 'data'})
+
+    # Add additional graph metadata and update graph dict.
+    graph_dict = graph_meta.pickled_data
+    graph_dict['num_stmts'] = num_stmts
+    graph_dict['num_unknowns'] = num_unknowns
+    graph_meta.graph = graph_database.Graph.CreatePickled(graph_dict)
+
+    return [graph_meta]
   except Exception as e:
-    app.Error('Failed to create graph for bytecode %d: %s (%s)', bytecode_id, e,
+    _, _, tb = sys.exc_info()
+    tb = traceback.extract_tb(tb, 2)
+    filename, line_number, function_name, *_ = tb[-1]
+    filename = pathlib.Path(filename).name
+    app.Error('Failed to create graph for bytecode %d: %s (%s:%s:%s() -> %s)',
+              bytecode_id, e, filename, line_number, function_name,
               type(e).__name__)
     return []
 
@@ -85,11 +121,9 @@ def _ProcessBytecodeJob(
 class Exporter(database_exporters.BytecodeDatabaseExporterBase):
   """Export from LLVM bytecodes."""
 
-  def __init__(self, *args, **kwargs):
-    super(Exporter, self).__init__(*args, **kwargs)
-    with prof.Profile("Read dictionary from `{FLAGS.dictionary}`"):
-      with open(FLAGS.dictionary, 'rb') as f:
-        self.dictionary = pickle.load(f)
+  def __init__(self, bytecode_db, graph_db, dictionary: typing.Dict[str, int]):
+    super(Exporter, self).__init__(bytecode_db, graph_db)
+    self.dictionary = dictionary
 
   def MakeExportJob(self, session: bytecode_database.Database.SessionType,
                     bytecode_id: id) -> typing.Optional[typing.Any]:
@@ -108,7 +142,7 @@ class Exporter(database_exporters.BytecodeDatabaseExporterBase):
 
   def Export(self):
     groups = splitters.GetPoj104BytecodeGroups(self.bytecode_db)
-    return self.ExportGroups(self, groups)
+    return self.ExportGroups(groups)
 
 
 def main():
