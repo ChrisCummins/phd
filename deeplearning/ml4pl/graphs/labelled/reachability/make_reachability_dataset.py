@@ -17,6 +17,7 @@ import typing
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
@@ -29,6 +30,7 @@ from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import prof
 from labm8 import sqlutil
+
 
 app.DEFINE_database(
     'bytecode_db',
@@ -118,7 +120,7 @@ def AnnotatedGraphToDatabase(g: nx.MultiDiGraph) -> graph_database.GraphMeta:
 def MakeReachabilityAnnotatedGraphs(g: nx.MultiDiGraph,
                                     n: typing.Optional[int] = None
                                    ) -> typing.Iterable[nx.MultiDiGraph]:
-  nodes = [node for node, _ in cdfg.StatementNodeIterator(g)]
+  nodes = [node for node, _ in iterators.StatementNodeIterator(g)]
   n = n or len(nodes)
 
   # If we're taking a sample of nodes to produce graphs (i.e. not all of them),

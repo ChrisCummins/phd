@@ -8,6 +8,7 @@ py_binary(
         ":reachability",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs:graph_iterators",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
         "//labm8:app",
