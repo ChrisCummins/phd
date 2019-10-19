@@ -8,7 +8,6 @@
 """
 import collections
 import numpy as np
-import pickle
 import tensorflow as tf
 import typing
 
@@ -449,7 +448,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
       while (graph and node_offset + graph.node_count < FLAGS.batch_size):
         # De-serialize pickled data in database and process.
-        graph_dict = pickle.loads(graph.graph.data)
+        graph_dict = graph.pickled_data
 
         # Pad node feature vector of size <= hidden_size up to hidden_size so
         # that the size matches embedding dimensionality.

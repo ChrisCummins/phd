@@ -1,18 +1,4 @@
-"""Train and evaluate a model for graph classification.
-
-Usage:
-    ggnn_classifyapp_model.py [options]
-
-Options:
-    -h --help                Show this screen.
-    --config-file FILE       Hyperparameter configuration file path (in JSON format).
-    --config CONFIG          Hyperparameter configuration dictionary (in JSON format).
-    --log_dir DIR            Log dir name.
-    --data_dir DIR           Data dir name.
-    --restore FILE           File to restore weights from.
-    --freeze-graph-model     Freeze weights of graph model components.
-    --evaluate               test evaluation mode using a restored model
-"""
+"""Train and evaluate a model for graph classification."""
 from collections import defaultdict, namedtuple
 
 import numpy as np
@@ -23,6 +9,7 @@ from typing import Any, Dict, Sequence, Tuple  # noqa
 
 from deeplearning.ml4pl.models.ggnn import ggnn_base
 from labm8 import app
+
 
 FLAGS = app.FLAGS
 
