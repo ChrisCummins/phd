@@ -59,7 +59,6 @@ def EntryBlockIterator(g: nx.Graph):
   for node, data in StatementNodeIterator(g):
     for src, dst in g.in_edges(node):
       flow = g.edges[src, dst, 0].get('flow', 'control')
-      print("NODE", node, src, dst, flow)
       if flow == 'control':
         break
     else:
