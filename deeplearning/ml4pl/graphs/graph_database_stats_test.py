@@ -8,6 +8,7 @@ from deeplearning.ml4pl.graphs import graph_database_stats as stats
 from labm8 import app
 from labm8 import test
 
+
 FLAGS = app.FLAGS
 
 
@@ -42,6 +43,13 @@ def test_GraphDatabaseStats_graph_count(db_512: graph_database.Database):
   """Test that the expected number of graphs are returned"""
   s = stats.GraphDatabaseStats(db_512)
   assert s.graph_count == 512
+
+
+def test_GraphDatabaseStats_repr(db_512: graph_database.Database):
+  """Test the string representation of the stats object"""
+  s = stats.GraphDatabaseStats(db_512)
+  assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
+                    "max 511 nodes, max 2 edges")
 
 
 if __name__ == '__main__':
