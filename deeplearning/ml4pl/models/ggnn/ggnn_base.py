@@ -149,10 +149,10 @@ class GgnnBaseModel(object):
         'this is the last message you will see.', self.working_dir)
     app.LogToDirectory(self.working_dir, 'model')
 
-    app.Log(1, "Build information:\n%s",
-            pbutil.ToJson(build_info.GetBuildInfo()))
+    app.Log(1, "Build information: %s",
+            jsonutil.format_json(pbutil.ToJson(build_info.GetBuildInfo())))
 
-    app.Log(1, "Using the following model flags:\n%s",
+    app.Log(1, "Using the following model flags: %s",
             jsonutil.format_json(self._ModelFlagsToDict()))
 
     random.seed(FLAGS.random_seed)
