@@ -21,6 +21,7 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
 
+
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -65,9 +66,6 @@ MODEL_FLAGS.add("out_layer_dropout_keep_prob")
 
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 MODEL_FLAGS.add("hidden_size")
-
-app.DEFINE_boolean("tie_fwd_bkwd", True, "If true, add backward edges.")
-MODEL_FLAGS.add("tie_fwd_bkwd")
 
 app.DEFINE_string(
     "embeddings", "inst2vec",

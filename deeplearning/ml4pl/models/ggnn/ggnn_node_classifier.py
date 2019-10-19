@@ -19,6 +19,7 @@ from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_integer("batch_size", 8000,
@@ -71,71 +72,6 @@ GGNNWeights = collections.namedtuple(
         "rnn_cells",
     ],
 )
-
-
-def ProcessGraphDict(
-    packed_args: typing.Tuple[GraphDict, int, bool]) -> GraphDict:
-  """Process a graph dictionary by building and setting adjacency lists and
-  incoming node counts.
-
-  This replaces the edge list with an adjacency list.
-
-  Adapted from GGNNClassifyappModel.process_raw_graphs() and
-  GGNNClassifyappModel.__graph_to_adjacency_lists().
-
-  Changes:
-    * Graph dictionaries (as loaded from the train/val/test files) are modified
-      in-place. This reduces memory churn and enables this function to be called
-      in parallel across the lists of graphs.
-    * Replaced the edge type dictionaries with lists. There are only a small
-      number of edge types so we can just use lists and index into them by the
-      edge type.
-    * Removed defaultdict in favour of vanilla dictionaries.
-  """
-  # Unpack the arguments.
-  graph_dict, edge_type_count, insert_backward_edges = packed_args
-
-  # Adjacency lists, one for each edge type.
-  adjacency_lists: typing.List[AdjacencyList] = []
-  # Lists of incoming edge counts for each mode, one for each edge type.
-  incoming_edge_counts_per_type_lists: typing.List[IncomingEdgeCount] = []
-
-  # Initialize the per-edge type lists.
-  for _ in range(edge_type_count):
-    adjacency_lists.append([])
-    incoming_edge_counts_per_type_lists.append({})
-
-  for src, edge_type, dst, unused_embedding_index in graph_dict[
-      'adjacency_list']:
-    adjacency_lists[edge_type].append((src, dst))
-    incoming_edge_counts_per_type_lists[edge_type][dst] = (
-        incoming_edge_counts_per_type_lists[edge_type].get(dst, 0) + 1)
-
-    # Optionally insert backward edges.
-    if insert_backward_edges:
-      adjacency_lists[edge_type].append((dst, src))
-      incoming_edge_counts_per_type_lists[edge_type][src] = (
-          incoming_edge_counts_per_type_lists[edge_type].get(src, 0) + 1)
-      # Add backward edges as an additional edge type that goes backwards.
-      backward_edge_type = (edge_type_count // 2) + edge_type
-      adjacency_lists[backward_edge_type].append((dst, src))
-      incoming_edge_counts_per_type_lists[backward_edge_type][src] = (
-          incoming_edge_counts_per_type_lists[backward_edge_type].get(src, 0) +
-          1)
-
-  # Sort the adjacency lists and convert to numpy arrays.
-  adjacency_lists = [
-      np.array(sorted(adjacency_list), dtype=np.int32)
-      for adjacency_list in adjacency_lists
-  ]
-
-  graph_dict['adjacency_lists'] = adjacency_lists
-  graph_dict['num_incoming_edge_per_type'] = incoming_edge_counts_per_type_lists
-
-  # No need to keep the adjacency list any more.
-  del graph_dict['adjacency_list']
-
-  return graph_dict
 
 
 # TODO(cec): Refactor.
@@ -511,8 +447,6 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       while (graph and node_offset + graph.node_count < FLAGS.batch_size):
         # De-serialize pickled data in database and process.
         graph_dict = pickle.loads(graph.graph.data)
-        ProcessGraphDict(
-            (graph_dict, self.stats.edge_type_count, FLAGS.tie_fwd_bkwd))
 
         # Pad node feature vector of size <= hidden_size up to hidden_size so
         # that the size matches embedding dimensionality.
@@ -532,6 +466,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                 fill_value=num_graphs_in_batch,
                 dtype=np.int32,
             ))
+
         # Offset the adjacency list node indices.
         for i in range(self.stats.edge_type_count):
           adjacency_list = graph_dict["adjacency_lists"][i]
