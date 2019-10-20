@@ -1,5 +1,5 @@
 """Unit tests for //deeplearning/ml4pl/models/ggnn:ggnn_graph_classifier."""
-import functools
+import contextlib
 import pathlib
 import tempfile
 
@@ -13,14 +13,14 @@ app.DEFINE_integer(
     'smoke_test_num_epochs', 2,
     '')
 app.DEFINE_output_path(
-    'working_dir', None,
+    'smoke_test_working_dir', None,
     'A directory to store persistent data files. If not provided, a temporrary directory will be used and deleted upon exit.',is_dir=True)
 
 
-@functools.contextmanager
+@contextlib.contextmanager
 def WorkingDirectory() -> pathlib.Path:
   with tempfile.TemporaryDirectory() as d:
-    working_dir = FLAGS.working_dir or pathlib.Path(d)
+    working_dir = FLAGS.smoke_test_working_dir or pathlib.Path(d)
     yield working_dir
 
 class SmokeTesterBase(object):
@@ -38,7 +38,7 @@ class SmokeTesterBase(object):
       if db_path.is_file():
         db_path.unlink()
 
-      db = graph_database.Database(f'sqlite:///{tempdir}/db')
+      db = graph_database.Database(f'sqlite:///{working_dir}/db')
       self.PopulateDatabase(db)
 
       model = self.GetModelClass()(db)

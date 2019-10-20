@@ -1,4 +1,5 @@
 """Smoke test for //deeplearning/ml4pl/models/ggnn:ggnn_graph_classifier."""
+import numpy as np
 import pickle
 
 from deeplearning.ml4pl.graphs import graph_database
@@ -28,12 +29,12 @@ class SmokeTester(smoke_test_base.SmokeTesterBase):
             edge_count=2,
             edge_type_count=3,
             edge_features_dimensionality=1,
-            graphs_labels_dimensionality=1,
+            graph_labels_dimensionality=1,
             graph=graph_database.Graph(
                 data=pickle.dumps({
-                  'adjacency_lists': [[(0, 1)], [(1, 2)], []],
-                  'edge_x': [[1], [2]],
-                  'graph_y': [1],
+                  'adjacency_lists': np.array([np.array([(0, 1)]), np.array([(1, 2)]), np.array([])]),
+                  'edge_x': np.array([np.array([1]), np.array([2])]),
+                  'graph_y': np.array([1]),
                 }))),
         graph_database.GraphMeta(
             group="train",
@@ -45,12 +46,12 @@ class SmokeTester(smoke_test_base.SmokeTesterBase):
             edge_count=2,
             edge_type_count=3,
             edge_features_dimensionality=1,
-            graphs_labels_dimensionality=1,
+            graph_labels_dimensionality=1,
             graph=graph_database.Graph(
                 data=pickle.dumps({
-                  'adjacency_lists': [[(0, 1)], [(1, 2)], []],
-                  'edge_x': [[1], [2]],
-                  'graph_y': [1],
+                  'adjacency_lists': np.array([np.array([(0, 1)]), np.array([(1, 2)]), np.array([])]),
+                  'edge_x': np.array([np.array([1]), np.array([2])]),
+                  'graph_y': np.array([1]),
                 }))),
         graph_database.GraphMeta(
             group="train",
@@ -62,12 +63,12 @@ class SmokeTester(smoke_test_base.SmokeTesterBase):
             edge_count=2,
             edge_type_count=3,
             edge_features_dimensionality=1,
-            graphs_labels_dimensionality=1,
+            graph_labels_dimensionality=1,
             graph=graph_database.Graph(
                 data=pickle.dumps({
-                  'adjacency_lists': [[(0, 1)], [(1, 2)], []],
-                  'edge_x': [[1], [2]],
-                  'graph_y': [1],
+                  'adjacency_lists': np.array([np.array([(0, 1)]), np.array([(1, 2)]), np.array([])]),
+                  'edge_x': np.array([np.array([1]), np.array([2])]),
+                  'graph_y': np.array([1]),
                 }))),
       ])
 

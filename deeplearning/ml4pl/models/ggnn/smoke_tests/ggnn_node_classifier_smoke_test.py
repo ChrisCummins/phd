@@ -1,6 +1,6 @@
 """Smoke test for //deeplearning/ml4pl/models/ggnn:ggnn_node_classifier."""
 import pickle
-
+import numpy as np
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models.ggnn import ggnn_node_classifier
 from deeplearning.ml4pl.models.ggnn.smoke_tests import smoke_test_base
@@ -32,17 +32,17 @@ class SmokeTester(smoke_test_base.SmokeTesterBase):
             data_flow_max_steps_required=2,
             graph=graph_database.Graph(
                 data=pickle.dumps({
-                  'adjacency_lists': [[(0, 1), (1, 2)]],
-                  'node_x': [
-                    (1, 0),
-                    (0, 1),
-                    (0, 0),
-                  ],
-                  'node_y': [
-                    (1, 0),
-                    (0, 1),
-                    (0, 0),
-                  ],
+                  'adjacency_lists': np.array([np.array([(0, 1), (1, 2)])]),
+                  'node_x': np.array([
+                    np.array([1, 0])),
+                    np.array([0, 1])),
+                    np.array([0, 0])),
+                  ], dtype=np.float32),
+                  'node_y': np.array([
+                    np.array([1, 0]),
+                    np.array([0, 1]),
+                    np.array([0, 0]),
+                  ], dtype=np.int32),
                 }))),
         graph_database.GraphMeta(
             group="val",
@@ -58,17 +58,17 @@ class SmokeTester(smoke_test_base.SmokeTesterBase):
             data_flow_max_steps_required=2,
             graph=graph_database.Graph(
                 data=pickle.dumps({
-                  'adjacency_lists': [[(0, 1), (1, 2)]],
-                  'node_x': [
-                    (1, 0),
-                    (0, 1),
-                    (0, 0),
-                  ],
-                  'node_y': [
-                    (1, 0),
-                    (0, 1),
-                    (0, 0),
-                  ],
+                  'adjacency_lists': np.array([np.array([(0, 1), (1, 2)])]),
+                  'node_x': np.array([
+                    np.array([1, 0]),
+                    np.array([0, 1]),
+                    np.array([0, 0]),
+                  ], dtype=np.float32),
+                  'node_y': np.array([
+                    np.array([1, 0]),
+                    np.array([0, 1]),
+                    np.array([0, 0]),
+                  ], dtype=np.int32),
                 }))),
         graph_database.GraphMeta(
             group="test",
@@ -84,17 +84,17 @@ class SmokeTester(smoke_test_base.SmokeTesterBase):
             data_flow_max_steps_required=2,
             graph=graph_database.Graph(
                 data=pickle.dumps({
-                  'adjacency_lists': [[(0, 1), (1, 2)]],
-                  'node_x': [
-                    (1, 0),
-                    (0, 1),
-                    (0, 0),
-                  ],
-                  'node_y': [
-                    (1, 0),
-                    (0, 1),
-                    (0, 0),
-                  ],
+                  'adjacency_lists': np.array([np.array([(0, 1), (1, 2)])]),
+                  'node_x': np.array([
+                    np.array([1, 0]),
+                    np.array([0, 1]),
+                    np.array([0, 0]),
+                  ], dtype=np.float32),
+                  'node_y': np.array([
+                    np.array([1, 0]),
+                    np.array([0, 1]),
+                    np.array([0, 0]),
+                  ], dtype=np.int32),
                 }))),
       ])
 

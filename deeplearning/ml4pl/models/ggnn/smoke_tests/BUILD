@@ -15,7 +15,9 @@ py_test(
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/models/ggnn:ggnn_graph_classifier",
         "//labm8:app",
+        "//third_party/py/numpy",
     ],
+    size = 'enormous',
 )
 
 py_test(
@@ -26,5 +28,7 @@ py_test(
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/models/ggnn:ggnn_node_classifier",
         "//labm8:app",
+        "//third_party/py/numpy",
     ],
+    size = 'enormous',
 )
