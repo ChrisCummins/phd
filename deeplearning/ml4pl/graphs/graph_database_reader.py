@@ -15,7 +15,8 @@ def BufferedGraphReader(
     order_by_random: bool = False,
     eager_graph_loading: bool = True,
     buffer_size: int = 256,
-    limit: typing.Optional[int] = None):
+    limit: typing.Optional[int] = None
+) -> typing.Iterable[graph_database.GraphMeta]:
   """An iterator over the graphs in a database.
 
   Args:
