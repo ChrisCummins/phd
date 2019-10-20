@@ -21,6 +21,7 @@ def PreprocessLlvmBytecode(bytecode: str) -> str:
   bytecode_lines = bytecode.split('\n')
   preprocessed, functions_declared_in_files = preprocess.preprocess(
       [bytecode_lines])
+  del functions_declared_in_files
   return '\n'.join(preprocessed[0])
 
 
