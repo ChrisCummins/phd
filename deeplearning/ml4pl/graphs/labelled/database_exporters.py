@@ -14,6 +14,8 @@ from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 
+app.DEFINE_boolean('multiprocess_database_exporters', True,
+                   'Enable multiprocessing for database job workers.')
 app.DEFINE_integer('database_exporter_batch_size', 10000,
                    'The number of bytecodes to process in-memory before writing'
                    'to database.')
@@ -88,9 +90,12 @@ class BytecodeDatabaseExporterBase(object):
       graph_metas = []
       chunksize = max(self.batch_size // 16, 8)
       job_processor = self.GetProcessJobFunction()
-      workers = self.pool.imap_unordered(job_processor,
-                                         jobs,
-                                         chunksize=chunksize)
+      if FLAGS.multiprocess_database_exporters:
+        workers = self.pool.imap_unordered(job_processor,
+                                           jobs,
+                                           chunksize=chunksize)
+      else:
+        workers = (job_processor(job) for job in jobs)
       for graphs_chunk in workers:
         graph_metas += graphs_chunk
 
