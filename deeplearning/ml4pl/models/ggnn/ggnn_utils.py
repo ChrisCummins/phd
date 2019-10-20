@@ -132,7 +132,7 @@ def BuildRnnCell(cell_type: str, activation_function: str, hidden_size: int,
 
 
 def MakePlaceholders(
-    stats: graph_database_stats.GraphDatabaseStats
+    stats: graph_database_stats.GraphDictDatabaseStats
 ) -> typing.Dict[str, tf.Tensor]:
   """Create tensorflow placeholders for graph dicts in the given dataset.
 
@@ -166,15 +166,17 @@ def MakePlaceholders(
 
   if stats.node_features_dimensionality:
     placeholders['node_x'] = tf.placeholder(
-        tf.int32, [None, stats.node_features_dimensionality], name="node_x")
+        stats.node_features_dtype,
+        [None, stats.node_features_dimensionality], name="node_x")
 
   if stats.node_labels_dimensionality:
     placeholders['node_y'] = tf.placeholder(
-        tf.int32, [None, stats.node_labels_dimensionality], name="node_y")
+        stats.node_labels_dtype,
+        [None, stats.node_labels_dimensionality], name="node_y")
 
   if stats.edge_features_dimensionality:
     placeholders['edge_x'] = [
-      tf.placeholder(tf.int32,
+      tf.placeholder(stats.edge_features_dtype,
                      [None, stats.edge_features_dimensionality],
                      name=f"edge_x_e{i}")
       for i in range(stats.edge_type_count)
@@ -182,7 +184,7 @@ def MakePlaceholders(
 
   if stats.edge_labels_dimensionality:
     placeholders['edge_x'] = [
-      tf.placeholder(tf.int32,
+      tf.placeholder(stats.edge_labels_dtype,
                      [None, stats.edge_features_dimensionality],
                      name=f"edge_x_e{i}")
       for i in range(stats.edge_type_count)
@@ -190,11 +192,13 @@ def MakePlaceholders(
 
   if stats.graph_features_dimensionality:
     placeholders['graph_x'] = tf.placeholder(
-        tf.int32, [None, stats.graph_features_dimensionality], name="graph_x")
+        stats.graph_features_dtype,
+        [None, stats.graph_features_dimensionality], name="graph_x")
 
   if stats.graph_labels_dimensionality:
     placeholders['graph_y'] = tf.placeholder(
-        tf.int32, [None, stats.graph_labels_dimensionality], name="graph_y")
+        stats.graph_labels_dtype,
+        [None, stats.graph_labels_dimensionality], name="graph_y")
 
   return placeholders
 
