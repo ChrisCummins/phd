@@ -87,3 +87,16 @@ class MLP(object):
       acts = tf.nn.relu(hid)
     last_hidden = hid
     return last_hidden
+
+
+def GetActivationFunctionFromName(name: str) -> typing.Callable[[typing.Any], tf.Tensor]:
+  activation_functions = {
+    'tanh': tf.nn.tanh,
+    'relu': tf.nn.relu,
+  }
+  activation_function = activation_functions.get(name.lower())
+  if not activation_function:
+    raise ValueError(
+        f"Unknown activation function: `{activation_function_name}`. "
+        f"Allowed values: {list(activation_function.keys())}")
+  return activation_function

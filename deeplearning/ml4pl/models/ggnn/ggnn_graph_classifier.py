@@ -3,15 +3,71 @@ from collections import defaultdict, namedtuple
 
 import numpy as np
 import tensorflow as tf
+import typing
 from deeplearning.ml4pl.models.ggnn.utils import MLP, SMALL_NUMBER, glorot_init
-from docopt import docopt
 from typing import Any, Dict, Sequence, Tuple  # noqa
 
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models.ggnn import ggnn_base
+from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
 
 FLAGS = app.FLAGS
+
+##### Beginning of flag declarations.
+#
+MODEL_FLAGS = set()
+
+app.DEFINE_integer("batch_size", 8000,
+                   "The maximum number of nodes to include in a graph batch.")
+
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
+
+app.DEFINE_integer(
+    'max_steps', 0,
+    'If > 0, limit the graphs used to those that can be computed in '
+    '<= max_steps')
+MODEL_FLAGS.add("max_steps")
+
+app.DEFINE_integer(
+    'max_instance_count', None,
+    'A debugging option. Use this to set the maximum number of instances used '
+    'from training/validation/test files. Note this still requires reading '
+    'the entirety of the file contents into memory.')
+
+app.DEFINE_string("graph_rnn_cell", "GRU",
+                  "The RNN cell type. One of {GRU,CudnnCompatibleGRUCell,RNN}")
+MODEL_FLAGS.add("graph_rnn_cell")
+
+app.DEFINE_string("graph_rnn_activation", "tanh",
+                  "The RNN activation type. One of {tanh,ReLU}")
+MODEL_FLAGS.add("graph_rnn_activation")
+
+app.DEFINE_boolean("use_propagation_attention", False, "")
+MODEL_FLAGS.add("use_propagation_attention")
+
+app.DEFINE_boolean("use_edge_bias", False, "")
+MODEL_FLAGS.add("use_edge_bias")
+
+app.DEFINE_boolean("use_edge_msg_avg_aggregation", True, "")
+MODEL_FLAGS.add("use_edge_msg_avg_aggregation")
+
+app.DEFINE_float("graph_state_dropout_keep_prob", 1.0,
+                 "Graph state dropout keep probability (rate = 1 - keep_prob)")
+MODEL_FLAGS.add("graph_state_dropout_keep_prob")
+
+app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
+                 "Edge weight dropout keep probability (rate = 1 - keep_prob)")
+MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
+#
+##### End of flag declarations.
 
 GGNNWeights = namedtuple(
     "GGNNWeights",
@@ -26,154 +82,147 @@ GGNNWeights = namedtuple(
 )
 
 
-class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
+class GgnnGraphClassifierModel(ggnn_base.GgnnBaseModel):
 
-  def __init__(self, args):
-    super().__init__(args)
+  def __init__(self, db: graph_database.Database):
+    self.db = db
+    self.stats = graph_stats.GraphDatabaseStats(self.db)
+    super(GgnnGraphClassifierModel, self).__init__()
+    app.Log(1, "%s", self.stats)
 
-  @classmethod
-  def default_params(cls):
-    params = dict(super().default_params())
-    params.update({
-        "use_edge_bias": False,
-        "use_propagation_attention": False,
-        "use_edge_msg_avg_aggregation": True,
-        "residual_connections":
-        {  # For layer i, specify list of layers whose output is added as an input
-            #"4": [0, 2]
-        },
-        "layer_timesteps":
-        [2, 2, 2],  # number of layers & propagation steps per layer
-        # "layer_timesteps": [2, 2, 1, 2, 1]
-        "graph_rnn_cell": "GRU",  # GRU, CudnnCompatibleGRUCell, or RNN
-        "graph_rnn_activation": "tanh",  # tanh, ReLU
-        "graph_state_dropout_keep_prob": 1.0,
-        "edge_weight_dropout_keep_prob": 0.8,
-        # set to ignore different edgetypes 'data', 'ctrl', 'path', 'none'
-        "ignore_edge_types": False,  # only have one edgetype
-        "ignore_node_features": True,
-        "embeddings": "inst2vec"  # "finetune", "random"
-    })
-    return params
+  def GetModelFlagNames(self) -> typing.Iterable[str]:
+    """Return the names of flags which define the model."""
+    base_flags = set(super(GgnnNodeClassifierModel, self).GetModelFlagNames())
+    return base_flags.union(MODEL_FLAGS)
 
-  def load_data(self, file_name, is_training_data: bool):
-    full_path = os.path.join(self.data_dir, file_name)
-    with prof.Profile(f"loaded data `{full_path}`"):
-      with open(full_path, "r") as f:
-        data = json.load(f)
+  # TODO(cec): Delete this.
+  # @classmethod
+  # def default_params(cls):
+  #   params = dict(super().default_params())
+  #   params.update({
+  #       "use_edge_bias": False,
+  #       "use_propagation_attention": False,
+  #       "use_edge_msg_avg_aggregation": True,
+  #       "residual_connections":
+  #       {  # For layer i, specify list of layers whose output is added as an input
+  #           #"4": [0, 2]
+  #       },
+  #       "layer_timesteps":
+  #       [2, 2, 2],  # number of layers & propagation steps per layer
+  #       # "layer_timesteps": [2, 2, 1, 2, 1]
+  #       "graph_rnn_cell": "GRU",  # GRU, CudnnCompatibleGRUCell, or RNN
+  #       "graph_rnn_activation": "tanh",  # tanh, ReLU
+  #       "graph_state_dropout_keep_prob": 1.0,
+  #       "edge_weight_dropout_keep_prob": 0.8,
+  #       # set to ignore different edgetypes 'data', 'ctrl', 'path', 'none'
+  #       "ignore_edge_types": False,  # only have one edgetype
+  #       "ignore_node_features": True,
+  #       "embeddings": "inst2vec"  # "finetune", "random"
+  #   })
+  #   return params
 
-    restrict = self.args.get("--restrict_data")
-    if restrict is not None and restrict > 0:
-      data = data[:restrict]
+  def MakeLossAndAccuracyAndPredictionOps(
+      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
 
-    # Get some common data out:
-    ss = time.time()
-    app.Log(1, "Getting some common data from loaded json...")
-    num_fwd_edge_types = 0
-    for g in data:
-      num_fwd_edge_types = max(num_fwd_edge_types,
-                               max([e[1] for e in g["graph"]]))
-
-    app.Log(
-        1,
-        f"Getting some common data from loaded json... took {time.time() - ss} seconds."
-    )
-
-    return self.process_raw_graphs(data, is_training_data)
-
-  def prepare_specific_graph_model(self) -> None:
-    h_dim = FLAGS.hidden_size
-
-    # self.placeholders["initial_node_representation"] = tf.placeholder(
-    #     tf.float32, [None, h_dim], name="node_features"
-    # )
     self.placeholders["num_of_nodes_in_batch"] = tf.placeholder(
         tf.int32, [], name="num_of_nodes_in_batch")
+
+    # TODO(cec): Removed edge embedding dimension and add edge_embedding_indices
+    # placeholder.
     self.placeholders["adjacency_lists"] = [
-        tf.placeholder(tf.int32, [None, 3], name="adjacency_e%s" % e)
-        for e in range(self.GetNumberOfEdgeTypes())
-    ]  # changed adj. list to [None, 3] to add emb_idx at the end!
+        tf.placeholder(tf.int32, [None, 2], name="adjacency_e%s" % e)
+        for e in range(self.stats.edge_type_count)
+    ]
+
+    self.placeholders["edge_embedding_indices"] = tf.placeholder(
+        tf.float32, [None, self.stats.edge_type_count],
+        name="edge_embedding_indices")
+
     self.placeholders["num_incoming_edges_per_type"] = tf.placeholder(
-        tf.float32, [None, self.GetNumberOfEdgeTypes()],
+        tf.float32, [None, self.stats.edge_type_count],
         name="num_incoming_edges_per_type")
+
     self.placeholders["graph_nodes_list"] = tf.placeholder(
         tf.int32, [None], name="graph_nodes_list")
+
     self.placeholders["graph_state_keep_prob"] = tf.placeholder(
         tf.float32, None, name="graph_state_keep_prob")
+
     self.placeholders["edge_weight_dropout_keep_prob"] = tf.placeholder(
         tf.float32, None, name="edge_weight_dropout_keep_prob")
 
-    activation_name = self.params["graph_rnn_activation"].lower()
-    if activation_name == "tanh":
-      activation_fun = tf.nn.tanh
-    elif activation_name == "relu":
-      activation_fun = tf.nn.relu
-    else:
-      raise Exception(
-          "Unknown activation function type '%s'." % activation_name)
+    activation_function = utils.GetActivationFunctionFromName(
+        FLAGS.graph_rnn_activation)
 
     # Generate per-layer values for edge weights, biases and gated units:
     self.weights = {}  # Used by super-class to place generic things
     self.gnn_weights = GGNNWeights([], [], [], [], [], [])
     for layer_idx in range(len(self.params["layer_timesteps"])):
-      with tf.variable_scope("gnn_layer_%i" % layer_idx):
-        edge_weights = tf.Variable(
-            glorot_init([self.GetNumberOfEdgeTypes() * h_dim, h_dim]),
-            name="gnn_edge_weights_%i" % layer_idx,
-        )
-        edge_weights = tf.reshape(edge_weights,
-                                  [self.GetNumberOfEdgeTypes(), h_dim, h_dim])
+      with tf.variable_scope(f"gnn_layer_{layer_index}"):
         edge_weights = tf.nn.dropout(
-            edge_weights,
-            keep_prob=self.placeholders["edge_weight_dropout_keep_prob"],
-        )
+            tf.reshape(
+                tf.Variable(
+                    utils.glorot_init([
+                      self.stats.edge_type_count * FLAGS.hidden_size,
+                      FLAGS.hidden_size
+                    ]),
+                    name=f"gnn_edge_weights_{layer_index}",
+                ), [
+                  self.stats.edge_type_count, FLAGS.hidden_size,
+                  FLAGS.hidden_size
+                ]),
+            rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
         self.gnn_weights.edge_weights.append(edge_weights)
 
         # analogous to how edge_weights (for mult. with neighbor states) looked like.
-        # this is where we designed the update func. to be: U_m = A*s_n + B*e_(n,m) for all neighbors n of m.
-        edge_weights_for_emb = tf.Variable(
-            glorot_init([self.GetNumberOfEdgeTypes() * h_dim, h_dim]),
-            name="gnn_edge_weights_for_emb_%i" % layer_idx,
-        )
-        edge_weights_for_emb = tf.reshape(
-            edge_weights_for_emb, [self.GetNumberOfEdgeTypes(), h_dim, h_dim])
+        # this is where we designed the update func. to be:
+        # U_m = A*s_n + B*e_(n,m) for all neighbors n of m.
         edge_weights_for_emb = tf.nn.dropout(
-            edge_weights_for_emb,
-            keep_prob=self.placeholders["edge_weight_dropout_keep_prob"],
-        )
-        self.gnn_weights.edge_weights_for_embs.append(edge_weights_for_emb)
+            tf.reshape(
+                tf.Variable(
+                    utils.glorot_init([
+                      self.stats.edge_type_count * FLAGS.hidden_size,
+                      FLAGS.hidden_size
+                    ]),
+                    name=f"gnn_edge_weights_for_emb_{layer_index}",
+                ), [
+                  self.stats.edge_type_count, FLAGS.hidden_size,
+                  FLAGS.hidden_size
+                ]),
+            rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
+        self.gnn_weights.edge_weights_for_embs.append(edge_weights)
 
         if self.params["use_propagation_attention"]:
           self.gnn_weights.edge_type_attention_weights.append(
               tf.Variable(
-                  np.ones([self.GetNumberOfEdgeTypes()], dtype=np.float32),
+                  np.ones([self.stats.edge_type_count], dtype=np.float32),
                   name="edge_type_attention_weights_%i" % layer_idx,
               ))
 
         if self.params["use_edge_bias"]:
           self.gnn_weights.edge_biases.append(
               tf.Variable(
-                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim],
+                  np.zeros([self.stats.edge_type_count, FLAGS.hidden_size],
                            dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_idx,
               ))
           self.gnn_weights.edge_biases_for_embs.append(
               tf.Variable(
-                  np.zeros([self.GetNumberOfEdgeTypes(), h_dim],
+                  np.zeros([self.stats.edge_type_count, FLAGS.hidden_size],
                            dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_idx,
               ))
 
         cell_type = self.params["graph_rnn_cell"].lower()
         if cell_type == "gru":
-          cell = tf.nn.rnn_cell.GRUCell(h_dim, activation=activation_fun)
+          cell = tf.nn.rnn_cell.GRUCell(FLAGS.hidden_size, activation=activation_function)
         elif cell_type == "cudnncompatiblegrucell":
           assert activation_name == "tanh"
           import tensorflow.contrib.cudnn_rnn as cudnn_rnn
 
-          cell = cudnn_rnn.CudnnCompatibleGRUCell(h_dim)
+          cell = cudnn_rnn.CudnnCompatibleGRUCell(FLAGS.hidden_size)
         elif cell_type == "rnn":
-          cell = tf.nn.rnn_cell.BasicRNNCell(h_dim, activation=activation_fun)
+          cell = tf.nn.rnn_cell.BasicRNNCell(FLAGS.hidden_size, activation=activation_function)
         else:
           raise Exception("Unknown RNN cell type '%s'." % cell_type)
         cell = tf.nn.rnn_cell.DropoutWrapper(
@@ -430,7 +479,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
     # Add backward edges as an additional edge type that goes backwards:
     if not FLAGS.tie_fwd_bkwd:
       for (edge_type, edges) in adj_lists.items():
-        bwd_edge_type = self.GetNumberOfEdgeTypes() + edge_type
+        bwd_edge_type = self.stats.edge_type_count + edge_type
         final_adj_lists[bwd_edge_type] = np.array(
             sorted((y, x, emb_idx) for (x, y, emb_idx) in edges),
             dtype=np.int32)  # like this?
@@ -519,7 +568,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
       num_graphs_in_batch = 0
       # batch_node_features = []
       batch_target_values = []
-      batch_adjacency_lists = [[] for _ in range(self.GetNumberOfEdgeTypes())]
+      batch_adjacency_lists = [[] for _ in range(self.stats.edge_type_count)]
       batch_num_incoming_edges_per_type = []
       batch_graph_nodes_list = []
       node_offset = 0
@@ -541,7 +590,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
                 fill_value=num_graphs_in_batch,
                 dtype=np.int32,
             ))
-        for i in range(self.GetNumberOfEdgeTypes()):
+        for i in range(self.stats.edge_type_count):
           if i in cur_graph["adjacency_lists"]:
             # change: don't offset the edge emb idx.
             batch_adjacency_lists[i].append(
@@ -550,7 +599,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
 
         # Turn counters for incoming edges into np array:
         num_incoming_edges_per_type = np.zeros((num_nodes_in_graph,
-                                                self.GetNumberOfEdgeTypes()))
+                                                self.stats.edge_type_count))
         for (e_type, num_incoming_edges_per_type_dict
             ) in cur_graph["num_incoming_edge_per_type"].items():
           for (
@@ -597,7 +646,7 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
       }
 
       # Merge adjacency lists and information about incoming nodes:
-      for i in range(self.GetNumberOfEdgeTypes()):
+      for i in range(self.stats.edge_type_count):
         if len(batch_adjacency_lists[i]) > 0:
           adj_list = np.concatenate(batch_adjacency_lists[i])
         else:
@@ -609,18 +658,15 @@ class GGNNClassifyappModel(ggnn_base.GGNNBaseModel):
 
 
 def main():
-  args = docopt(__doc__)
-  # try:
-  model = GGNNClassifyappModel(args)
-  if args["--evaluate"]:
-    assert args["--restore"], "You meant to provide a restore file."
-    model.Test()
-  else:
-    model.Train()
-  # except:
-  #     typ, value, tb = sys.exc_info()
-  #     traceback.print_exc()
-  #     pdb.post_mortem(tb)
+  db = FLAGS.graph_db()
+  working_dir = FLAGS.working_dir
+  if not working_dir:
+    raise app.UsageError("--working_dir is required")
+
+  app.Log(1, 'Using working dir %s', working_dir)
+
+  model = GgnnGraphClassifierModel(db)
+  model.Train()
 
 
 if __name__ == "__main__":
