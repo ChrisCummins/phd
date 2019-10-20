@@ -12,56 +12,68 @@ import tensorflow as tf
 import typing
 
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict as graph_dicts
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
+from deeplearning.ml4pl.graphs.labelled.graph_dict import \
+  graph_dict as graph_dicts
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
+
 FLAGS = app.FLAGS
+
+##### Beginning of flag declarations.
+#
+MODEL_FLAGS = set()
 
 app.DEFINE_integer("batch_size", 8000,
                    "The maximum number of nodes to include in a graph batch.")
+
 app.DEFINE_database(
     'graph_db',
     graph_database.Database,
     None,
     'The database to read graph data from.',
     must_exist=True)
+
 app.DEFINE_integer(
     'max_steps', 0,
     'If > 0, limit the graphs used to those that can be computed in '
     '<= max_steps')
+MODEL_FLAGS.add("max_steps")
+
 app.DEFINE_integer(
     'max_instance_count', None,
     'A debugging option. Use this to set the maximum number of instances used '
     'from training/validation/test files. Note this still requires reading '
     'the entirety of the file contents into memory.')
+
 app.DEFINE_string("graph_rnn_cell", "GRU",
                   "The RNN cell type. One of {GRU,CudnnCompatibleGRUCell,RNN}")
+MODEL_FLAGS.add("graph_rnn_cell")
+
 app.DEFINE_string("graph_rnn_activation", "tanh",
                   "The RNN activation type. One of {tanh,ReLU}")
+MODEL_FLAGS.add("graph_rnn_activation")
+
 app.DEFINE_boolean("use_propagation_attention", False, "")
+MODEL_FLAGS.add("use_propagation_attention")
+
 app.DEFINE_boolean("use_edge_bias", False, "")
+MODEL_FLAGS.add("use_edge_bias")
+
 app.DEFINE_boolean("use_edge_msg_avg_aggregation", True, "")
+MODEL_FLAGS.add("use_edge_msg_avg_aggregation")
+
 app.DEFINE_float("graph_state_dropout_keep_prob", 1.0,
                  "Graph state dropout keep probability (rate = 1 - keep_prob)")
+MODEL_FLAGS.add("graph_state_dropout_keep_prob")
+
 app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
                  "Edge weight dropout keep probability (rate = 1 - keep_prob)")
+MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
 
-# Type aliases to help make sense of the dictionaries.
-
-EdgeType = int  # A categorical value indicating the type of edge. Zero-based.
-NodeIndex = int  # A categorical value indicating a node. Zero-based.
-# A GraphDict is a dictionary describing the properties of a graph, containing
-# various attributes such as an edge list, node count, etc.
-GraphDict = typing.Dict[str, typing.Any]
-# A source node, edge type, destination node, and embedding index (unused in
-# this file).
-Edge = typing.Tuple[NodeIndex, EdgeType, NodeIndex, int]
-# A list of <source, destination> node pairs.
-AdjacencyList = typing.List[typing.Tuple[NodeIndex, NodeIndex]]
 
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
@@ -90,6 +102,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     super(GgnnNodeClassifierModel, self).__init__()
     app.Log(1, "%s", self.stats)
 
+  def GetModelFlagNames(self) -> typing.Iterable[str]:
+    """Return the names of flags which define the model."""
+    base_flags = set(super(GgnnNodeClassifierModel, self).GetModelFlagNames())
+    return base_flags.union(MODEL_FLAGS)
+
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     # Use a single layer GRU, with the minimum number of steps required to
@@ -100,10 +117,13 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     self.placeholders["target_values"] = tf.placeholder(
         tf.int32, [None, 2], name="target_values")
+
     self.placeholders["initial_node_representation"] = tf.placeholder(
         tf.float32, [None, FLAGS.hidden_size], name="node_features")
+
     self.placeholders["num_of_nodes_in_batch"] = tf.placeholder(
         tf.int32, [], name="num_of_nodes_in_batch")
+
     adjacency_list_format = ['src', 'dst']
     self.placeholders["adjacency_lists"] = [
         tf.placeholder(
@@ -111,13 +131,17 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             name=f"adjacency_e{edge_type}")
         for edge_type in range(self.stats.edge_type_count)
     ]
+
     self.placeholders["num_incoming_edges_per_type"] = tf.placeholder(
         tf.float32, [None, self.stats.edge_type_count],
         name="num_incoming_edges_per_type")
+
     self.placeholders["graph_nodes_list"] = tf.placeholder(
         tf.int32, [None], name="graph_nodes_list")
+
     self.placeholders["graph_state_keep_prob"] = tf.placeholder(
         tf.float32, None, name="graph_state_keep_prob")
+
     self.placeholders["edge_weight_dropout_keep_prob"] = tf.placeholder(
         tf.float32, None, name="edge_weight_dropout_keep_prob")
 
