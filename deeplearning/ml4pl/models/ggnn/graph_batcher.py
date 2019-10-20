@@ -35,7 +35,7 @@ class GraphBatcher(object):
                message_passing_step_count: int):
     self.db = db
     self.message_passing_step_count = message_passing_step_count
-    self.stats = graph_stats.GraphDatabaseStats(
+    self.stats = graph_stats.GraphDictDatabaseStats(
         self.db, filters=self._GetFilters())
     app.Log(1, "%s", self.stats)
 
