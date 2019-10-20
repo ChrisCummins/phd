@@ -5,6 +5,7 @@ import typing
 
 from labm8 import app
 
+
 FLAGS = app.FLAGS
 
 
@@ -21,7 +22,7 @@ class InMemoryBatchLogger(object):
     self.batch_count = 0
     self.instance_count = 0
 
-  def Log(self, batch_size: int, loss: float, accuracy: float) -> 'BatchLogger':
+  def Log(self, batch_size: int, loss: float, accuracy: float) -> str:
     """Log data from a batch.
 
     Args:
@@ -30,21 +31,24 @@ class InMemoryBatchLogger(object):
       accuracy: The batch accuracy.
 
     Returns:
-      This instance.
+      String representation.
     """
     self.loss += loss
     self.accuracy += accuracy
     self.batch_count += 1
     self.instance_count += batch_size
-    return self
+    return (f"{self.name}, batch {self.batch_count}. "
+            f"loss: {loss:.4f} | "
+            f"acc: {accuracy:.2%} | "
+            f"instances/sec: {self.instances_per_second:.2f}")
 
   def __repr__(self) -> str:
     """Stringify the aggregate batch stats."""
-    return (f"{self.name}, batch {self.batch_count}. "
-            f"Average batch_size={self.average_batch_size:.2f}, "
-            f"loss={self.average_loss:.4f}, "
-            f"acc={self.average_accuracy:.2%}, "
-            f"instances/sec={self.instances_per_second:.2f}.")
+    return (f"{self.name}. "
+            f"Average batch_size={self.average_batch_size:.2f} | "
+            f"loss={self.average_loss:.4f} | "
+            f"acc={self.average_accuracy:.2%} | "
+            f"instances/sec={self.instances_per_second:.2f}")
 
   def StopTheClock(self):
     """End the batch timer."""
