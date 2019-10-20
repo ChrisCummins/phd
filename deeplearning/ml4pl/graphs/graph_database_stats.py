@@ -76,8 +76,6 @@ class GraphDatabaseStats(object):
     summaries = [
         f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
         humanize.Plural(self.edge_type_count, 'edge type'),
-        f"max {humanize.Plural(self.max_node_count, 'node')}",
-        f"max {humanize.Plural(self.max_edge_count, 'edge')}",
     ]
     if self.node_features_dimensionality:
       summaries.append(f"{self.node_features_dimensionality}-d node features")
@@ -94,6 +92,10 @@ class GraphDatabaseStats(object):
     if self.data_flow_max_steps_required:
       summaries.append(
           humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
+    summaries += [
+      f"max {humanize.Plural(self.max_node_count, 'node')}",
+      f"max {humanize.Plural(self.max_edge_count, 'edge')}",
+    ]
     return ", ".join(summaries)
 
   @decorators.memoized_property
