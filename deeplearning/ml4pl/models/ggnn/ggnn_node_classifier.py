@@ -1,12 +1,11 @@
 """Train and evaluate a model for node classification."""
+import collections
 import numpy as np
 import tensorflow as tf
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
-from deeplearning.ml4pl.models.ggnn import graph_batcher
 from labm8 import app
 
 
@@ -62,17 +61,6 @@ residual_connections = {}
 
 class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
   """GGNN model for learning node classification."""
-
-  def __init__(self, db: graph_database.Database):
-    self.batcher = graph_batcher.GraphBatcher(db, np.prod(self.layer_timesteps))
-    self.stats = self.batcher.stats
-    super(GgnnNodeClassifierModel, self).__init__()
-    app.Log(1, "%s", self.stats)
-
-  @property
-  def layer_timesteps(self) -> np.array:
-    return np.array([int(x) for x in FLAGS.layer_timesteps])
-
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
