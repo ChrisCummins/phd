@@ -17,9 +17,14 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
-REAL_BYTECODES = [
+# Real-world bytecodes that can be converted to XFGs.
+REAL_OKAY_BYTECODES = [
   fs.Read(bazelutil.DataPath(
     'phd/deeplearning/ml4pl/graphs/labelled/classifyapp/test_data/bytecode.ll')),
+]
+
+# Real-world bytecodes that fail to be converted to XFGs.
+REAL_FAIL_BYTECODES = [
   fs.Read(bazelutil.DataPath(
       'phd/deeplearning/ml4pl/graphs/labelled/classifyapp/test_data/164689.ll')),
 ]
@@ -145,13 +150,13 @@ def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
 
 
 
-@pytest.mark.parametrize('bytecode_id', range(len(REAL_BYTECODES)))
-def test_BytecodeExporter_poj104_smoke_tests(
+@pytest.mark.parametrize('bytecode_id', range(len(REAL_OKAY_BYTECODES)))
+def test_BytecodeExporter_okay_bytecodes(
     tempdir: pathlib.Path,
     graph_db: graph_database.Database,
     bytecode_id: int):
   """Create creating Graphs from single-entry databases of real bytecodes."""
-  bytecode = REAL_BYTECODES[bytecode_id]
+  bytecode = REAL_OKAY_BYTECODES[bytecode_id]
 
   db = bytecode_database.Database(f'sqlite:///{tempdir}/bytecode_db')
   with db.Session(commit=True) as session:
@@ -171,6 +176,33 @@ def test_BytecodeExporter_poj104_smoke_tests(
 
   with graph_db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 1
+
+
+@pytest.mark.xfail()
+@pytest.mark.parametrize('bytecode_id', range(len(REAL_FAIL_BYTECODES)))
+def test_BytecodeExporter_okay_bytecodes(
+    tempdir: pathlib.Path,
+    graph_db: graph_database.Database,
+    bytecode_id: int):
+  """Create creating Graphs from single-entry databases of real bytecodes."""
+  bytecode = REAL_FAIL_BYTECODES[bytecode_id]
+
+  db = bytecode_database.Database(f'sqlite:///{tempdir}/bytecode_db')
+  with db.Session(commit=True) as session:
+    session.add(bytecode_database.LlvmBytecode(
+        source_name='poj-104:train',
+        relpath = '1/bytecode.ll',
+        language = 'cpp',
+        cflags = '',
+        charcount = len(bytecode),
+        linecount = len(bytecode.split('\n')),
+        bytecode = bytecode,
+        clang_returncode = 0,
+        error_message = '',
+    ))
+  exporter = classifyapp.Exporter(db, graph_db, INST2VEC_DICTIONARY)
+  exporter.Export()
+
 
 
 
