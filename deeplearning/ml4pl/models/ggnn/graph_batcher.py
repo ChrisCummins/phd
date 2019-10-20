@@ -60,10 +60,12 @@ class GraphBatcher(object):
       batch = self._CreateBatchDict(graph_reader)
       if batch:
         elapsed_time = time.time() - start_time
-        app.Log(1, "Created batch of %s graphs in %s (%.2f graphs / second)",
+        app.Log(1, "Created batch of %s graphs (%s nodes) in %s "
+                   "(%s graphs / second)",
                 humanize.Commas(batch['graph_count']),
+                humanize.Commas(batch['node_count']),
                 humanize.Duration(elapsed_time),
-                batch['graph_count'] / elapsed_time)
+                humanize.Commas(batch['graph_count'] / elapsed_time))
         yield batch
       else:
         return
