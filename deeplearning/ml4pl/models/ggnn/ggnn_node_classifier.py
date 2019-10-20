@@ -121,16 +121,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.placeholders["edge_weight_dropout_keep_prob"] = tf.placeholder(
         tf.float32, None, name="edge_weight_dropout_keep_prob")
 
-    activation_functions = {
-        'tanh': tf.nn.tanh,
-        'relu': tf.nn.relu,
-    }
-    activation_function_name = FLAGS.graph_rnn_activation.lower()
-    activation_function = activation_functions.get(activation_function_name)
-    if not activation_function:
-      raise ValueError(
-          f"Unknown graph_rnn_activation: {activation_function_name}. "
-          f"Allowed values: {list(activation_function.keys())}")
+    activation_function = utils.GetActivationFunctionFromName(
+        FLAGS.graph_rnn_activation)
 
     # Generate per-layer values for edge weights, biases and gated units:
     self.weights = {}  # Used by super-class to place generic things
@@ -175,7 +167,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
               name=f"cell_layer_{layer_index}")
         elif cell_type_name == "cudnncompatiblegrucell":
           import tensorflow.contrib.cudnn_rnn as cudnn_rnn
-          if activation_function_name != "tanh":
+          if activation_function != tf.nn.tanh:
             raise ValueError(
                 "cudnncompatiblegrucell must be used with tanh activation")
           cell = cudnn_rnn.CudnnCompatibleGRUCell(FLAGS.hidden_size)
