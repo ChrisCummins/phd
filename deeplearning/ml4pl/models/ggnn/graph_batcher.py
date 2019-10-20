@@ -62,7 +62,7 @@ class GraphBatcher(object):
         .filter(graph_database.GraphMeta.group == group)
       for filter_cb in self._GetFilters():
         q = q.filter(filter_cb())
-      num_rows = q.one()[]
+      num_rows = q.one()[0]
     return num_rows
 
   def MakeGroupBatchIterator(
