@@ -77,3 +77,18 @@ py_library(
         "//third_party/py/tensorflow",
     ],
 )
+
+py_library(
+    name = "graph_batcher",
+    srcs = ["graph_batcher.py"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs:graph_database_reader",
+        "//deeplearning/ml4pl/graphs:graph_database_stats",
+        "//deeplearning/ml4pl/graphs/labelled/graph_dict",
+        "//labm8:app",
+        "//labm8:humanize",
+        "//labm8:prof",
+        "//third_party/py/numpy",
+    ],
+)
