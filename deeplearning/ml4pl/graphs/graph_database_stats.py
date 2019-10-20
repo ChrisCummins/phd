@@ -107,6 +107,7 @@ class GraphDatabaseStats(object):
 
   @decorators.memoized_property
   def node_features_dtype(self) -> np.dtype:
+    """Return the numpy dtype of node features."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
@@ -114,6 +115,7 @@ class GraphDatabaseStats(object):
 
   @decorators.memoized_property
   def node_labels_dtype(self) -> np.dtype:
+    """Return the numpy dtype of node labels."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
@@ -121,6 +123,7 @@ class GraphDatabaseStats(object):
 
   @decorators.memoized_property
   def edge_features_dtype(self) -> np.dtype:
+    """Return the numpy dtype of edge features."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
@@ -131,6 +134,7 @@ class GraphDatabaseStats(object):
 
   @decorators.memoized_property
   def edge_labels_dtype(self) -> np.dtype:
+    """Return the numpy dtype of edge labels."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
@@ -141,6 +145,7 @@ class GraphDatabaseStats(object):
 
   @decorators.memoized_property
   def graph_features_dtype(self) -> np.dtype:
+    """Return the numpy dtype of graph features."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
@@ -148,6 +153,7 @@ class GraphDatabaseStats(object):
 
   @decorators.memoized_property
   def graph_labels_dtype(self) -> np.dtype:
+    """Return the numpy dtype of graph labels."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
@@ -157,7 +163,8 @@ class GraphDatabaseStats(object):
   def _stats(self):
     """Private helper function to compute whole-table stats."""
     graph_count = 0
-    label = lambda t: f"Computed stats over {humanize.Commas(graph_count)} instances"
+    label = lambda t: ("Computed stats over "
+                       f"{humanize.Commas(graph_count)} instances")
     with prof.Profile(label), self.db.Session() as s:
       q = s.query(
           sql.func.count(graph_database.GraphMeta.id).label("graph_count"),
