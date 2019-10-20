@@ -68,14 +68,20 @@ def LlvmBytecodeToContextualFlowGraph(bytecode: str) -> nx.DiGraph:
     capturing the notion of context; and <multi_edge_list> is a dictionary of
     edges that have parallel edges.
   """
-  preprocessed_bytecode = PreprocessLlvmBytecode(bytecode)
-  llvm_lines = preprocessed_bytecode.split('\n')
-  functions_declared_in_file = preprocess.GetFunctionsDeclaredInFile(llvm_lines)
+  # First preprocess the bytecode, with the side-effect of getting the list of
+  # function declarations.
+  bytecode_lines = bytecode.split('\n')
+  preprocessed_bytecodes, functions_declared_in_files = preprocess.preprocess(
+      [bytecode_lines])
+  preprocessed_bytecode = preprocessed_bytecodes[0]
+  functions_declared_in_file = functions_declared_in_files[0]
+  
+  # Then build the XFG from the preprocessed bytecode.
+  #
   # File name is required by BuildContextualFlowGraph(), but is used only to
   # produce descriptive error messages, so any value will do.
-  filename = '[input]'
   xfg, multi_edges = preprocess.BuildContextualFlowGraph(
-      llvm_lines, functions_declared_in_file, filename)
+      preprocessed_bytecode, functions_declared_in_file, filename='[input]')
   del multi_edges  # unused
   return xfg
 
