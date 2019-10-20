@@ -332,7 +332,7 @@ def _DotControlFlowGraphsFromBytecodeToQueue(
   try:
     queue.put(list(opt_util.DotControlFlowGraphsFromBytecode(bytecode)))
   except Exception as e:
-    queue.put(opt_util.DotControlFlowGraphsFromBytecodeError(bytecode, e))
+    queue.put(DotControlFlowGraphsFromBytecodeError(bytecode, e))
 
 
 def _ControlFlowGraphFromDotSourceToQueue(dot: str,
