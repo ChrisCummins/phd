@@ -44,10 +44,10 @@ install:
   - rm -rf $(pyenv root)
   # Swap out GCC for GCC-5 to enable support for --std=c++14.
   # See: https://gist.github.com/cotsog/3ce84675af0d74438d91
-  - then sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc
+  - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc
   - ./configure --noninteractive
   # Symlink the system python2 in place so that we bypass the pyenv shim.
-  - then ln -s /usr/bin/python2 $HOME/.local/bin
+  - ln -s /usr/bin/python2 $HOME/.local/bin
 
 before_script:
   # Print version numbers for debugging.
