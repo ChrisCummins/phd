@@ -5,7 +5,6 @@ import typing
 
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 NodeIndex = int
@@ -59,10 +58,11 @@ def ToGraphDict(g: nx.MultiDiGraph,
 
   # Create an adjacency list for each edge type.
   adjacency_lists: typing.List[AdjacencyList] = [
-    [] for _ in range(len(edge_types))]
+      [] for _ in range(len(edge_types))
+  ]
   # Lists of incoming edge counts for each mode, one for each edge type.
-  incoming_edge_counts: typing.List[IncomingEdgeCount] = np.array([
-    {} for _ in range(len(edge_types))])
+  incoming_edge_counts: typing.List[IncomingEdgeCount] = np.array(
+      [{} for _ in range(len(edge_types))])
 
   # Create a mapping from node ID to a numeric ID.
   node_to_index = {node: i for i, node in enumerate(g.nodes)}
@@ -109,8 +109,7 @@ def ToGraphDict(g: nx.MultiDiGraph,
 
   # Set edge features.
   if edge_x and edge_x in g.edges[src, dst, 0]:
-    edge_features_lists = [
-      [] for _ in range(len(edge_types))]
+    edge_features_lists = [[] for _ in range(len(edge_types))]
     for src, dst, data in g.edges(data=True):
       edge_type_index = edge_type_to_index[data['flow']]
       edge_features = edge_features_lists[edge_type_index]
