@@ -81,6 +81,7 @@ py_library(
     deps = [
         ":base",
         ":ncc",
+        "//compilers/llvm:opt_util",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:utils",
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
