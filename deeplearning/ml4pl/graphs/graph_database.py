@@ -61,6 +61,12 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
                                                   default=0,
                                                   nullable=False)
 
+  # TODO(cec): Add support for using node or edge features as embeddings.
+  # node_features_are_embedding_indices: bool = sql.Column(
+  #     sql.Boolean, default=False, nullable=False)
+  # edge_features_are_embedding_indices: bool = sql.Column(
+  #     sql.Boolean, default=False, nullable=False)
+
   node_labels_dimensionality: int = sql.Column(sql.Integer,
                                                default=0,
                                                nullable=False)
