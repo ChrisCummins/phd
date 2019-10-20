@@ -140,7 +140,7 @@ def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
     assert 'graph_x' not in graph_dict
     assert 'graph_y' in graph_dict
 
-    assert graph_dict['edge_x'].shape[1] == 1
+    assert graph_dict['edge_x'].shape == (gm.edge_type_count,)
     assert graph_dict['graph_y'].shape == (104,)
 
 

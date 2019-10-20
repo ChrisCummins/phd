@@ -71,10 +71,10 @@ def AddXfgFeatures(graph: nx.MultiDiGraph, dictionary) -> None:
     data['flow'] = flow_translation_table.get(data['flow'], 'ctrl')
 
     if data['stmt'] in dictionary:
-      data['x'] = [dictionary[data['stmt']]]
+      data['x'] = np.array([dictionary[data['stmt']]], dtype=np.int32)
     else:
       unknown_count += 1
-      data['x'] = [dictionary["!UNK"]]
+      data['x'] = np.array([dictionary["!UNK"]], dtype=np.int32)
 
   # Set graph label.
   label = GetGraphLabel(graph.relpath)
