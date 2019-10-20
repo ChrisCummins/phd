@@ -3,6 +3,7 @@ import time
 
 import numpy as np
 import typing
+import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
@@ -32,12 +33,37 @@ class GraphBatcher(object):
   """
 
   def __init__(self, db: graph_database.Database,
-               message_passing_step_count: int):
+               message_passing_step_count: typing.Optional[int] = None):
+    """Constructor.
+
+    Args:
+      db: The database to read and batch graphs from.
+      message_passing_step_count: The number of message passing steps in the
+        model that this batcher is feeding. This value is used when the
+        --limit_data_flow_max_steps_required_to_message_passing_steps flag is
+        set to limit the graphs which are used to construct batches.
+    """
+    if (FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps
+        and not message_passing_step_count):
+      raise ValueError(
+          "message_passing_step_count argument must be provied when "
+          "--limit_data_flow_max_steps_required_to_message_passing_steps "
+          "flag is set")
     self.db = db
     self.message_passing_step_count = message_passing_step_count
     self.stats = graph_stats.GraphDictDatabaseStats(
         self.db, filters=self._GetFilters())
     app.Log(1, "%s", self.stats)
+
+  def GetGraphsInGroupCount(self, group: str) -> int:
+    """Get the number of graphs in the given group."""
+    with self.db.Session() as s:
+      q = s.query(sql.func.count(graph_database.GraphMeta)) \
+        .filter(graph_database.GraphMeta.group == group)
+      for filter_cb in self._GetFilters():
+        q = q.filter(filter_cb())
+      num_rows = q.one()[]
+    return num_rows
 
   def MakeGroupBatchIterator(
       self, group: str
@@ -71,6 +97,7 @@ class GraphBatcher(object):
         return
 
   def _GetFilters(self):
+    """Private helper function to return GraphMeta table filters."""
     filters = []
     # Optionally limit the number of steps which are required to compute the
     # graphs.
