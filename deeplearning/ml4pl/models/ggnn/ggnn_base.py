@@ -260,8 +260,9 @@ class GgnnBaseModel(object):
                                                      self.global_training_step)
       app.Log(
           1, "%s",
-          logger.Log(
-              batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy))
+          logger.Log(batch_size=batch_size,
+                     loss=fetch_dict['loss'],
+                     accuracy=fetch_dict['accuracy']))
 
     logger.StopTheClock()
     return logger
