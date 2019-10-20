@@ -50,20 +50,25 @@ class ThreadedIterator:
 
 
 class MLP(object):
-  # MLP does just what you would expect: A relu activated, dropout equipped stack of linear layers.
-  # If hid=[] then exactly one weight layer W, b is created.
+  """MLP does just what you would expect: A relu activated, dropout equipped
+  stack of linear layers.
+  """
   def __init__(self, in_size, out_size, hid_sizes, dropout_keep_prob):
+    """Constructors.
+
+    If hid_sizes=[] then exactly one weight layer W, b is created.
+    """
     self.in_size = in_size
     self.out_size = out_size
     self.hid_sizes = hid_sizes
     self.dropout_keep_prob = dropout_keep_prob
-    self.params = self.make_network_params()
+    self.params = self.MakeNetworkParameters()
 
-  def make_network_params(self):
+  def MakeNetworkParameters(self):
     dims = [self.in_size] + self.hid_sizes + [self.out_size]
     weight_sizes = list(zip(dims[:-1], dims[1:]))
     weights = [
-        tf.Variable(self.init_weights(s), name='MLP_W_layer%i' % i)
+        tf.Variable(self.InitialWeights(s), name='MLP_W_layer%i' % i)
         for (i, s) in enumerate(weight_sizes)
     ]
     biases = [
@@ -79,7 +84,7 @@ class MLP(object):
 
     return network_params
 
-  def init_weights(self, shape):
+  def InitialWeights(self, shape):
     return np.sqrt(6.0 / (shape[-2] + shape[-1])) * (
         2 * np.random.rand(*shape).astype(np.float32) - 1)
 
