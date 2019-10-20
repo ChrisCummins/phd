@@ -6,11 +6,36 @@ import pytest
 import tensorflow as tf
 import typing
 
+from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base
 from labm8 import app
 from labm8 import test
 
+
 FLAGS = app.FLAGS
+
+@pytest.fixture(scope='function')
+def db(tempdir: pathlib.Path) -> graph_database.Database:
+  db_ = graph_database.Database(f'sqlite:///{tempdir}/db')
+  with db_.Session(commit=True) as s:
+    s.add(graph_database.GraphMeta(
+        group="train",
+        bytecode_id=0,
+        source_name="source",
+        relpath="relpath",
+        language="c",
+        node_count=3,
+        edge_count=2,
+        edge_type_count=3,
+        edge_features_dimensionality=1,
+        graph_labels_dimensionality=1,
+        graph=graph_database.Graph(
+            data=pickle.dumps({
+              'adjacency_lists': np.array([np.array([(0, 1)]), np.array([(1, 2)]), np.array([])]),
+              'edge_x': np.array([np.array([1]), np.array([2])]),
+              'graph_y': np.array([1]),
+            }))))
+  return db_
 
 
 class MockModel(ggnn_base.GgnnBaseModel):
@@ -37,11 +62,11 @@ class MockModel(ggnn_base.GgnnBaseModel):
       }
 
 
-def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path):
+def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path, db: graph_database.Database):
   """Test saving a model to file."""
   FLAGS.working_dir = tempdir2
 
-  model = MockModel()
+  model = MockModel(db)
   model.global_training_step = 10
   model.SaveModel(tempdir / 'foo.pickle')
   assert (tempdir / 'foo.pickle').is_file()
@@ -54,11 +79,12 @@ def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path):
   assert saved_model['global_training_step'] == 10
 
 
-def test_LoadModel(tempdir: pathlib.Path, tempdir2: pathlib.Path):
+def test_LoadModel(tempdir: pathlib.Path, tempdir2: pathlib.Path,
+                   db: graph_database.Database):
   """Test loading a model from file."""
   FLAGS.working_dir = tempdir2
 
-  model = MockModel()
+  model = MockModel(db)
   model.global_training_step = 10
   model.SaveModel(tempdir / 'foo.pickle')
 
@@ -68,10 +94,11 @@ def test_LoadModel(tempdir: pathlib.Path, tempdir2: pathlib.Path):
 
 
 def test_LoadModel_unknown_saved_model_flag(tempdir: pathlib.Path,
-                                            tempdir2: pathlib.Path):
+                                            tempdir2: pathlib.Path,
+                                            db: graph_database.Database):
   """Test that error is raised if saved model contains unknown flag."""
   FLAGS.working_dir = tempdir2
-  model = MockModel()
+  model = MockModel(db)
   model.SaveModel(tempdir / 'foo.pickle')
 
   with open(tempdir / 'foo.pickle', 'rb') as f:
@@ -88,12 +115,13 @@ def test_LoadModel_unknown_saved_model_flag(tempdir: pathlib.Path,
   assert 'a new flag' in str(e_ctx.value)
 
 
-def test_Train(tempdir: pathlib.Path, tempdir2: pathlib.Path):
+def test_Train(tempdir: pathlib.Path, tempdir2: pathlib.Path,
+               db: graph_database.Database):
   """Test that training terminates and bumps the epoch number."""
   FLAGS.working_dir = tempdir2
   FLAGS.num_epochs = 1
 
-  model = MockModel()
+  model = MockModel(db)
   model.Train()
   assert model.best_epoch_num == 1
 
