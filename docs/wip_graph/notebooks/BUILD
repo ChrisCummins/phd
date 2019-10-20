@@ -9,6 +9,8 @@ py_binary(
         "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
+        "//deeplearning/ml4pl/graphs/labelled/graph_dict",
+        "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl:ml4pl_pb_py",

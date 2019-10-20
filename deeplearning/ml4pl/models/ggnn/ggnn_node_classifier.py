@@ -352,13 +352,21 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                                       if epoch_type == "train" else 1.0)
 
     for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
-      feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
-      feed_dict.update({
-        self.placeholders["graph_state_keep_prob"]: state_dropout_keep_prob,
-        self.placeholders["edge_weight_dropout_keep_prob"]: (
-          edge_weights_dropout_keep_prob),
-      })
-
+      if epoch_type == "train":
+        feed_dict.update({
+          self.placeholders["graph_state_keep_prob"]: (
+            FLAGS.graph_state_dropout_keep_prob),
+          self.placeholders["edge_weight_dropout_keep_prob"]: (
+            FLAGS.edge_weight_dropout_keep_prob),
+          self.placeholders["out_layer_dropout_keep_prob"]: (
+            FLAGS.out_layer_dropout_keep_prob)
+        })
+      else:
+        feed_dict.update({
+          self.placeholders["graph_state_keep_prob"]: 1.0,
+          self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
+          self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
+        })
       yield batch['graph_count'], feed_dict
 
 

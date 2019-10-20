@@ -1,6 +1,5 @@
 """Base class for implementing gated graph neural networks."""
 import os
-import sys
 import time
 
 import numpy as np
@@ -23,6 +22,7 @@ from labm8 import jsonutil
 from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
+
 
 FLAGS = app.FLAGS
 
@@ -236,30 +236,27 @@ class GgnnBaseModel(object):
 
     batch_iterator = ggnn_utils.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type), max_queue_size=5)
-    for step, (batch_size, batch) in enumerate(batch_iterator):
+
+    for step, (batch_size, feed_dict) in enumerate(batch_iterator):
+      self.global_training_step += 1
+
       if not batch_size:
         raise ValueError("Mini-batch with zero graphs generated")
 
-      self.global_training_step += 1
-
-      fetch_list = [
-          self.ops["loss"], self.ops["accuracy"], self.ops["summary_loss"]
-      ]
-
-      batch[self.placeholders["graph_count"]] = batch_size
+      fetch_dict = {
+        "loss": self.ops["loss"],
+        "accuracy": self.ops["accuracy"],
+        "summary_loss": self.ops["summary_loss"],
+        # "summary_accuracy": self.ops["summary_accuracy"],
+      }
 
       if epoch_type == "train":
-        batch[self.placeholders["out_layer_dropout_keep_prob"]] = (
-            FLAGS.out_layer_dropout_keep_prob)
-        fetch_list.append(self.ops["train_step"])
-      else:
-        batch[self.placeholders["out_layer_dropout_keep_prob"]] = 1.0
+        fetch_dict["train_step"] = self.ops["train_step"]
 
-      batch_loss, batch_accuracy, loss_summary, *_ = self.sess.run(
-          fetch_list, feed_dict=batch)
+      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
 
       if FLAGS.tensorboard_logging:
-        self.summary_writers[epoch_type].add_summary(loss_summary,
+        self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
                                                      self.global_training_step)
       app.Log(
           1, "%s",

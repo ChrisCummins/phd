@@ -286,3 +286,13 @@ def MakeOutputLayer(initial_node_state, final_node_state,
                        regression_transform(initial_node_state))
 
   return computed_values, regression_gate, regression_transform
+
+def RunWithFetchDict(
+    sess: tf.Session, fetch_dict: typing.Dict[str, tf.Tensor],
+    feed_dict: typing.Dict[tf.Tensor, typing.Any]
+) -> typing.Dict[str, tf.Tensor]:
+  """A wrapper around session run which uses a dictionary for the fetch list."""
+  fetch_dict_keys = sorted(fetch_dict.keys())
+  fetch_dict_values = [fetch_dict[k] for k in fetch_dict_keys]
+  values = sess.run(fetch_dict_values, feed_dict)
+  return {fetch: value for fetch, value in zip(fetch_dict_keys, values)}
