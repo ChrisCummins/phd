@@ -125,7 +125,7 @@ class GraphDatabaseStats(object):
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
       for features_list in graph_dict['edge_x']:
-        if features_list:
+        if features_list.size:
           return features_list[0].dtype
     raise ValueError("Unable to determine edge features")
 
@@ -135,7 +135,7 @@ class GraphDatabaseStats(object):
       q = s.query(graph_database.Graph).first()
       graph_dict = q.pickled_data
       for labels_list in graph_dict['edge_y']:
-        if labels_list:
+        if labels_list.size:
           return labels_list[0].dtype
     raise ValueError("Unable to determine edge labels")
 
