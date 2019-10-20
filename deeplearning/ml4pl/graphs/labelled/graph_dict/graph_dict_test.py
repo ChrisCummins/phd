@@ -7,7 +7,6 @@ from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
 from labm8 import app
 from labm8 import test
 
-
 FLAGS = app.FLAGS
 
 
@@ -76,7 +75,7 @@ def test_ToGraphDict_node_features(graph: nx.MultiDiGraph):
   assert 'graph_x' not in d
   assert 'graph_y' not in d
 
-  assert d['node_x'].shape == (5,1)
+  assert d['node_x'].shape == (5, 1)
   assert d['node_x'][0] == [0]
   assert d['node_x'][1] == [1]
   assert d['node_x'][2] == [2]
@@ -125,7 +124,7 @@ def test_ToGraphDict_edge_features(graph: nx.MultiDiGraph):
 
   assert d['edge_x'].shape == (3,)
 
-  assert d['edge_x'][0].shape == (1,4)  # call flow
+  assert d['edge_x'][0].shape == (1, 4)  # call flow
   assert np.array_equal(d['edge_x'][0][0], [1, 1, 1, 0])  # root -> A
 
   assert d['edge_x'][1].shape == (3, 4)  # control flow
@@ -196,17 +195,10 @@ def test_ToGraphDict_graph_targets(graph: nx.MultiDiGraph):
 
 
 def test_IncomingEdgeCountsToDense():
-  incoming_edge_counts = [{
-    0: 1
-  }, {
-    0: 10,
-    3: 2
-  }, {
-    0: 6,
-    2: 1
-  }]
-  dense = graph_dict.IncomingEdgeCountsToDense(
-      incoming_edge_counts, node_count=4, edge_type_count=3)
+  incoming_edge_counts = [{0: 1}, {0: 10, 3: 2}, {0: 6, 2: 1}]
+  dense = graph_dict.IncomingEdgeCountsToDense(incoming_edge_counts,
+                                               node_count=4,
+                                               edge_type_count=3)
 
   assert np.array_equal(
       dense, np.array([
@@ -216,11 +208,12 @@ def test_IncomingEdgeCountsToDense():
           [0, 2, 0],
       ]))
 
+
 def test_GraphDictToNetworkx():
   g = graph_dict.GraphDictToNetworkx({
-    'adjacency_lists': [[(0, 1), (1, 2)], [(0, 2)]],
-    'node_x': [[1], [2], [3]],
-    'edge_y': [[[1], [2]], [[3]]],
+      'adjacency_lists': [[(0, 1), (1, 2)], [(0, 2)]],
+      'node_x': [[1], [2], [3]],
+      'edge_y': [[[1], [2]], [[3]]],
   })
 
   assert g.number_of_nodes() == 3
