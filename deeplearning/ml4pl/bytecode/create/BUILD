@@ -23,6 +23,7 @@ py_library(
     deps = [
         "//compilers/llvm:clang",
         "//compilers/llvm:opt",
+        "//compilers/llvm:opt_util",
         "//datasets/linux",
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//deeplearning/ml4pl/bytecode:bytecode_database",

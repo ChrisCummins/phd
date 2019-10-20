@@ -9,6 +9,7 @@ import typing
 
 from compilers.llvm import clang
 from compilers.llvm import opt
+from compilers.llvm import opt_util
 from datasets.linux import linux
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -16,6 +17,7 @@ from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from labm8 import app
 from labm8 import decorators
+
 
 FLAGS = app.FLAGS
 
@@ -130,7 +132,7 @@ def TryToCreateControlFlowGraphsFromLinuxSrc(
     return graphs
 
   # Extract a dot sources from the bytecode.
-  dot_generator = llvm_util.DotControlFlowGraphsFromBytecode(bytecode)
+  dot_generator = opt_util.DotControlFlowGraphsFromBytecode(bytecode)
   while True:
     try:
       dot = next(dot_generator)
