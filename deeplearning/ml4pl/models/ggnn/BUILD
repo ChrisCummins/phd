@@ -33,19 +33,7 @@ py_test(
 py_binary(
     name = "ggnn_graph_classifier",
     srcs = ["ggnn_graph_classifier.py"],
-    deps = [
-        ":ggnn_base",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:prof",
-        "//third_party/py/numpy",
-        "//third_party/py/tensorflow",
-    ],
-)
-
-py_binary(
-    name = "ggnn_node_classifier",
-    srcs = ["ggnn_node_classifier.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":ggnn_base",
         ":ggnn_utils",
@@ -61,14 +49,22 @@ py_binary(
     ],
 )
 
-py_test(
-    name = "ggnn_node_classifier_test",
-    srcs = ["ggnn_node_classifier_test.py"],
+py_binary(
+    name = "ggnn_node_classifier",
+    srcs = ["ggnn_node_classifier.py"],
+    visibility = ["//visibility:public"],
     deps = [
-        ":ggnn_node_classifier",
+        ":ggnn_base",
+        ":ggnn_utils",
         "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs:graph_database_reader",
+        "//deeplearning/ml4pl/graphs:graph_database_stats",
+        "//deeplearning/ml4pl/graphs/labelled/graph_dict",
         "//labm8:app",
-        "//labm8:test",
+        "//labm8:humanize",
+        "//labm8:prof",
+        "//third_party/py/numpy",
+        "//third_party/py/tensorflow",
     ],
 )
 

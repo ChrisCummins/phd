@@ -100,7 +100,9 @@ def test_AddXfgFeatures_feature_values():
         "!UNK": -1,
       })
 
-  assert np.array_equal(graph.y, [13])
+  label_one_hot = np.zeros(104, dtype=np.int32)
+  label_one_hot[12] = 1
+  assert np.array_equal(graph.y, label_one_hot)
   assert np.array_equal(graph.edges['A', 'B', 0]['x'], [1])
   assert np.array_equal(graph.edges['B', 'C', 0]['x'], [2])
   assert np.array_equal(graph.edges['C', 'D', 0]['x'], [-1])
@@ -137,6 +139,9 @@ def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
     assert 'edge_y' not in graph_dict
     assert 'graph_x' not in graph_dict
     assert 'graph_y' in graph_dict
+
+    assert graph_dict['edge_x'].shape[1] == 1
+    assert graph_dict['graph_y'].shape == (104,)
 
 
 

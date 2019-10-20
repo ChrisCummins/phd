@@ -1,13 +1,14 @@
 """This module prepares the POJ-104 dataset for algorithm classification."""
 
+import sys
+
 import networkx as nx
+import numpy as np
 import pathlib
 import pickle
-import random
 import tempfile
-import typing
 import traceback
-import sys
+import typing
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.bytecode import splitters
@@ -15,9 +16,10 @@ from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import database_exporters
 from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
-from labm8 import prof
 from labm8 import bazelutil
 from labm8 import fs
+from labm8 import prof
+
 
 app.DEFINE_database(
     'bytecode_db',
@@ -75,7 +77,10 @@ def AddXfgFeatures(graph: nx.MultiDiGraph, dictionary) -> None:
       data['x'] = [dictionary["!UNK"]]
 
   # Set graph label.
-  graph.y = [GetGraphLabel(graph.relpath)]
+  label = GetGraphLabel(graph.relpath)
+  label_one_hot = np.zeros(104, dtype=np.int32)
+  label_one_hot[label - 1] = 1  # Apple - 1 offset since classes start at 1.
+  graph.y = label_one_hot
   return stmt_count, unknown_count
 
 

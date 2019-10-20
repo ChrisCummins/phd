@@ -1,12 +1,4 @@
-"""Train and evaluate a model for reachability analysis.
-
-  $ bazel run //deeplearning/ml4pl/models/ggnn:ggnn_node_classifier -- \
-        --graph_db=$DATABASE \
-        --batch_size=2000 \
-        --max_instance_count=100 \
-        --alsologtostderr
-"""
-import collections
+"""Train and evaluate a model for node classification."""
 import numpy as np
 import tensorflow as tf
 import typing
@@ -19,6 +11,8 @@ from deeplearning.ml4pl.graphs.labelled.graph_dict import \
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
+from labm8 import humanize
+from labm8 import prof
 
 
 FLAGS = app.FLAGS
@@ -116,7 +110,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     app.Log(1, "Using layer timesteps: %s", layer_timesteps)
 
     self.placeholders["target_values"] = tf.placeholder(
-        tf.int32, [None, 2], name="target_values")
+        tf.int32, [None, self.stats.node_labels_dimensionality], name="target_values")
 
     self.placeholders["initial_node_representation"] = tf.placeholder(
         tf.float32, [None, FLAGS.hidden_size], name="node_features")
@@ -183,24 +177,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell_type_name = FLAGS.graph_rnn_cell.lower()
-        if cell_type_name == "gru":
-          cell = tf.nn.rnn_cell.GRUCell(
-              FLAGS.hidden_size,
-              activation=activation_function,
-              name=f"cell_layer_{layer_index}")
-        elif cell_type_name == "cudnncompatiblegrucell":
-          import tensorflow.contrib.cudnn_rnn as cudnn_rnn
-          if activation_function != tf.nn.tanh:
-            raise ValueError(
-                "cudnncompatiblegrucell must be used with tanh activation")
-          cell = cudnn_rnn.CudnnCompatibleGRUCell(FLAGS.hidden_size)
-        elif cell_type_name == "rnn":
-          cell = tf.nn.rnn_cell.BasicRNNCell(
-              FLAGS.hidden_size, activation=activation_function)
-        else:
-          raise ValueError(f"Unknown RNN cell type '{cell_type_name}'.")
-
+        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell, FLAGS.graph_rnn_activation,
+                                  FLAGS.hidden_size, name=f"cell_layer_{layer_index}")
         cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
@@ -266,7 +244,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         # be updated below:
         node_states_per_layer.append(node_states_per_layer[-1])
         for step in range(num_timesteps):
-          with tf.variable_scope("timestep_%i" % step):
+          with tf.variable_scope(f"timestep_{step}"):
             # list of tensors of messages of shape [E, D]
             messages = []
             # list of tensors of edge source states of shape [E, D]
@@ -396,20 +374,14 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           self.weights["regression_transform"],
       )  # [v, c]
 
-      predictions = tf.argmax(
-          self.placeholders["target_values"], axis=1, output_type=tf.int32)
+      predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32)
+      targets = tf.argmax(self.placeholders["target_values"], axis=1, output_type=tf.int32)
 
       accuracy = tf.reduce_mean(
-          tf.cast(
-              tf.equal(
-                  predictions,
-                  tf.argmax(computed_values, axis=1, output_type=tf.int32),
-              ),
-              tf.float32,
-          ))
+          tf.cast(tf.equal(predictions, targets), tf.float32))
 
-      loss = tf.losses.softmax_cross_entropy(self.placeholders["target_values"],
-                                             computed_values)
+      loss = tf.losses.softmax_cross_entropy(
+          self.placeholders["target_values"], computed_values)
 
     return loss, accuracy, predictions
 
@@ -450,96 +422,96 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                                       if epoch_type == "train" else 1.0)
 
     # Pack until we cannot fit more graphs in the batch.
-    num_graphs = 0
     while True:
-      num_graphs_in_batch = 0
-      batch_node_features = []
-      batch_target_values = []
-      batch_adjacency_lists = [[] for _ in range(self.stats.edge_type_count)]
-      batch_num_incoming_edges_per_type = []
-      batch_graph_nodes_list = []
-      node_offset = 0
-
-      graph = next(graph_reader)
-
-      while (graph and node_offset + graph.node_count < FLAGS.batch_size):
-        # De-serialize pickled data in database and process.
-        graph_dict = graph.pickled_data
-
-        # Pad node feature vector of size <= hidden_size up to hidden_size so
-        # that the size matches embedding dimensionality.
-        padded_features = np.pad(
-            graph_dict["node_x"],
-            ((0, 0),
-             (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
-            "constant",
-        )
-        # Shape: [num_nodes, node_feature_dim]
-        batch_node_features.extend(padded_features)
-        # Shape: [num_nodes, num_classes]
-        batch_target_values.extend(graph_dict['node_y'])
-        batch_graph_nodes_list.append(
-            np.full(
-                shape=[graph.node_count],
-                fill_value=num_graphs_in_batch,
-                dtype=np.int32,
-            ))
-
-        # Offset the adjacency list node indices.
-        for i in range(self.stats.edge_type_count):
-          adjacency_list = graph_dict["adjacency_lists"][i]
-          if adjacency_list.size:
-            batch_adjacency_lists[i].append(adjacency_list + np.array(
-                (node_offset, node_offset), dtype=np.int32))
-
-        # Turn counters for incoming edges into a dense array:
-        batch_num_incoming_edges_per_type.append(
-            graph_dicts.IncomingEdgeCountsToDense(
-                graph_dict["incoming_edge_counts"],
-                node_count=graph.node_count,
-                edge_type_count=self.stats.edge_type_count))
-
-        num_graphs += 1
-        num_graphs_in_batch += 1
-        node_offset += graph.node_count
+      with prof.Profile(lambda t: f"Created batch of {humanize.Commas(num_graphs)} graphs"):
+        num_graphs_in_batch = 0
+        batch_node_features = []
+        batch_target_values = []
+        batch_adjacency_lists = [[] for _ in range(self.stats.edge_type_count)]
+        batch_num_incoming_edges_per_type = []
+        batch_graph_nodes_list = []
+        node_offset = 0
 
         try:
           graph = next(graph_reader)
         except StopIteration:
-          break
+          return
 
-      batch_feed_dict = {
-          self.placeholders["initial_node_representation"]:
-          np.array(batch_node_features
-                  ),  # list[np.array], len ~ 100.000 (batch_size)
-          self.placeholders["num_incoming_edges_per_type"]:
-          np.concatenate(
-              batch_num_incoming_edges_per_type,
-              axis=0),  # list[np.array], len ~ 681 (num of graphs in batch)
-          self.placeholders["graph_nodes_list"]:
-          np.concatenate(batch_graph_nodes_list
-                        ),  # list[np.array], len ~ 681 (num of graphs in batch)
-          self.placeholders["target_values"]:
-          np.array(batch_target_values),  # [g * v, c]
-          self.placeholders["num_graphs"]:
-          num_graphs_in_batch,
-          self.placeholders["num_of_nodes_in_batch"]:
-          node_offset,
-          self.placeholders["graph_state_keep_prob"]:
-          state_dropout_keep_prob,
-          self.placeholders["edge_weight_dropout_keep_prob"]:
-          edge_weights_dropout_keep_prob,
-      }
+        while (graph and node_offset + graph.node_count < FLAGS.batch_size):
+          # De-serialize pickled data in database and process.
+          graph_dict = graph.pickled_data
 
-      # Merge adjacency lists and information about incoming nodes:
-      for i in range(self.stats.edge_type_count):
-        if len(batch_adjacency_lists[i]) > 0:
-          adj_list = np.concatenate(batch_adjacency_lists[i])
-        else:
-          adj_list = np.zeros((0, 2), dtype=np.int32)  # shape (0, 2).
-        batch_feed_dict[self.placeholders["adjacency_lists"][i]] = adj_list
+          # Pad node feature vector of size <= hidden_size up to hidden_size so
+          # that the size matches embedding dimensionality.
+          padded_features = np.pad(
+              graph_dict["node_x"],
+              ((0, 0),
+               (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
+              "constant",
+          )
+          # Shape: [num_nodes, node_feature_dim]
+          batch_node_features.extend(padded_features)
+          # Shape: [num_nodes, num_classes]
+          batch_target_values.extend(graph_dict['node_y'])
+          batch_graph_nodes_list.append(
+              np.full(
+                  shape=[graph.node_count],
+                  fill_value=num_graphs_in_batch,
+                  dtype=np.int32,
+              ))
 
-      yield num_graphs, batch_feed_dict
+          # Offset the adjacency list node indices.
+          for i in range(self.stats.edge_type_count):
+            adjacency_list = graph_dict["adjacency_lists"][i]
+            if adjacency_list.size:
+              batch_adjacency_lists[i].append(adjacency_list + np.array(
+                  (node_offset, node_offset), dtype=np.int32))
+
+          # Turn counters for incoming edges into a dense array:
+          batch_num_incoming_edges_per_type.append(
+              graph_dicts.IncomingEdgeCountsToDense(
+                  graph_dict["incoming_edge_counts"],
+                  node_count=graph.node_count,
+                  edge_type_count=self.stats.edge_type_count))
+
+          num_graphs_in_batch += 1
+          node_offset += graph.node_count
+
+          try:
+            graph = next(graph_reader)
+          except StopIteration:
+            break
+
+        # list[np.array], len ~ 100.000 (batch_size)
+        node_x = np.array(batch_node_features)
+        # list[np.array], len ~ 681 (num of graphs in batch)
+        incoming_edges = np.concatenate(batch_num_incoming_edges_per_type, axis=0)
+        # list[np.array], len ~ 681 (num of graphs in batch)
+        graph_nodes_list = np.concatenate(batch_graph_nodes_list)
+        # Shape: [g * v, c]
+        batch_target_values = np.array(batch_target_values)
+
+        feed_dict = {
+            self.placeholders["initial_node_representation"]: node_x,
+            self.placeholders["num_incoming_edges_per_type"]: incoming_edges,
+            self.placeholders["graph_nodes_list"]: graph_nodes_list,
+            self.placeholders["target_values"]: batch_target_values,
+            self.placeholders["num_graphs"]: num_graphs_in_batch,
+            self.placeholders["num_of_nodes_in_batch"]: node_offset,
+            self.placeholders["graph_state_keep_prob"]: state_dropout_keep_prob,
+            self.placeholders["edge_weight_dropout_keep_prob"]: (
+              edge_weights_dropout_keep_prob),
+        }
+
+        # Merge adjacency lists and information about incoming nodes:
+        for i in range(self.stats.edge_type_count):
+          if len(batch_adjacency_lists[i]) > 0:
+            adj_list = np.concatenate(batch_adjacency_lists[i])
+          else:
+            adj_list = np.zeros((0, 2), dtype=np.int32)  # shape (0, 2).
+          feed_dict[self.placeholders["adjacency_lists"][i]] = adj_list
+
+      yield num_graphs_in_batch, feed_dict
 
 
 def main():

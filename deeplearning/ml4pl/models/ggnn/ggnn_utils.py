@@ -3,8 +3,10 @@ import numpy as np
 import queue
 import tensorflow as tf
 import threading
+import typing
 
 from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -89,7 +91,10 @@ class MLP(object):
     return last_hidden
 
 
-def GetActivationFunctionFromName(name: str) -> typing.Callable[[typing.Any], tf.Tensor]:
+ActivationFunction = typing.Callable[[tf.Tensor], tf.Tensor]
+
+
+def GetActivationFunctionFromName(name: str) -> ActivationFunction:
   activation_functions = {
     'tanh': tf.nn.tanh,
     'relu': tf.nn.relu,
@@ -100,3 +105,26 @@ def GetActivationFunctionFromName(name: str) -> typing.Callable[[typing.Any], tf
         f"Unknown activation function: `{activation_function_name}`. "
         f"Allowed values: {list(activation_function.keys())}")
   return activation_function
+
+
+def BuildRnnCell(cell_type: str, activation_function: str, hidden_size: int,
+                 name: typing.Optional[str] = None):
+  activation_function = GetActivationFunctionFromName(activation_function)
+
+  cell_type = cell_type.lower()
+  if cell_type == "gru":
+    return tf.nn.rnn_cell.GRUCell(
+        hidden_size,
+        activation=activation_function,
+        name=name)
+  elif cell_type == "cudnncompatiblegrucell":
+    import tensorflow.contrib.cudnn_rnn as cudnn_rnn
+    if activation_function != tf.nn.tanh:
+      raise ValueError(
+          "cudnncompatiblegrucell must be used with tanh activation")
+    return cudnn_rnn.CudnnCompatibleGRUCell(hidden_size, name=name)
+  elif cell_type == "rnn":
+    return tf.nn.rnn_cell.BasicRNNCell(
+        hidden_size, activation=activation_function, name=name)
+  else:
+    raise ValueError(f"Unknown RNN cell type '{name}'.")

@@ -1,8 +1,8 @@
 """Base class for implementing gated graph neural networks."""
 import os
+import sys
 import time
 
-import sys
 import numpy as np
 import pathlib
 import pickle
@@ -21,6 +21,7 @@ from labm8 import jsonutil
 from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
+
 
 FLAGS = app.FLAGS
 
@@ -91,7 +92,7 @@ app.DEFINE_input_path("restore_model", None,
 
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
-
+#
 ##### End of flag declarations.
 
 # Type alias for the feed_dict argument of tf.Session.run().
@@ -164,12 +165,27 @@ class GgnnBaseModel(object):
     with self.graph.as_default():
       tf.set_random_seed(FLAGS.random_seed)
       with prof.Profile('Made model'):
-        self.placeholders = {}
-        self.weights = {}
+        self.placeholders = {
+          "num_graphs": tf.placeholder(tf.int32, [], name="num_graphs"),
+          "out_layer_dropout_keep_prob": tf.placeholder(
+            tf.float32, [], name="out_layer_dropout_keep_prob"),
+        }
+        self.weights = {
+          "embedding_table": self._GetEmbeddingsTable(),
+        }
+
         self.ops = {}
-        self._MakeModel()
-      with prof.Profile('Make training step'), tf.variable_scope("train_step"):
-        self.ops["train_step"] = self._MakeTrainStep()
+        with tf.variable_scope("graph_model"):
+          self.ops["loss"], self.ops["accuracy"], self.ops["predictions"] = (
+            self.MakeLossAndAccuracyAndPredictionOps())
+
+        # Tensorboard summaries.
+        self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
+        # TODO(cec): More tensorboard telemetry: input class distributions,
+        # predicted class distributions, etc.
+
+        with prof.Profile('Make training step'), tf.variable_scope("train_step"):
+          self.ops["train_step"] = self._MakeTrainStep()
 
       # Restor or initialize the model:
       if FLAGS.restore_model:
@@ -197,6 +213,7 @@ class GgnnBaseModel(object):
           "test": tf.summary.FileWriter(tensorboard_dir / "test",
                                         self.sess.graph),
       }
+
 
   def RunEpoch(self, epoch_name: str,
                epoch_type: str) -> batch_logger.InMemoryBatchLogger:
@@ -392,27 +409,11 @@ class GgnnBaseModel(object):
         for flag in sorted(set(self.GetModelFlagNames()))
     }
 
-  def _MakeModel(self):
-    self.placeholders["num_graphs"] = tf.placeholder(
-        tf.int32, [], name="num_graphs")
-    self.placeholders["out_layer_dropout_keep_prob"] = tf.placeholder(
-        tf.float32, [], name="out_layer_dropout_keep_prob")
-
-    self.weights["embedding_table"] = self._MakeEmbeddingsTable()
-
-    with tf.variable_scope("graph_model"):
-      self.ops["loss"], self.ops["accuracy"], self.ops["predictions"] = (
-          self.MakeLossAndAccuracyAndPredictionOps())
-
-    # Tensorboard summaries.
-    self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
-    # TODO(cec): More tensorboard telemetry: input class distributions,
-    # predicted class distributions, etc.
-
-  def _MakeEmbeddingsTable(self) -> tf.Tensor:
+  def _GetEmbeddingsTable(self) -> np.array:
+    """Reading embeddings table"""
     with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
       with open(FLAGS.embedding_path, 'rb') as f:
-        embedding_table = pickle.load(f)
+        return pickle.load(f)
 
     if FLAGS.embeddings == "inst2vec":
       return tf.constant(
@@ -469,37 +470,36 @@ class GgnnBaseModel(object):
 
     return train_step
 
-  # TODO(cec):
-  # def predict(self, data):
-  #   loss = 0
-  #   accuracies, predictions = [], []
-  #   start_time = time.time()
-  #   processed_graphs = 0
-  #   batch_iterator = ggnn_utils.ThreadedIterator(
-  #       self.MakeMinibatchIterator(data, is_training=False), max_queue_size=5
-  #   )
-  #
-  #   for step, batch in enumerate(batch_iterator):
-  #     num_graphs = batch[self.placeholders["num_graphs"]]
-  #     processed_graphs += num_graphs
-  #
-  #     batch[self.placeholders["out_layer_dropout_keep_prob"]] = 1.0
-  #     fetch_list = [self.ops["loss"], self.ops["accuracy"], self.ops["predictions"]]
-  #
-  #     batch_loss, batch_accuracy, _preds, *_ = self.sess.run(
-  #         fetch_list, feed_dict=batch
-  #     )
-  #     loss += batch_loss * num_graphs
-  #     accuracies.append(np.array(batch_accuracy) * num_graphs)
-  #     predictions.extend(_preds)
-  #
-  #     print(
-  #         "Running prediction, batch %i (has %i graphs). Loss so far: %.4f"
-  #         % (step, num_graphs, loss / processed_graphs),
-  #         end="\r",
-  #         )
-  #
-  #   accuracy = np.sum(accuracies, axis=0) / processed_graphs
-  #   loss = loss / processed_graphs
-  #   instance_per_sec = processed_graphs / (time.time() - start_time)
-  #   return predictions, loss, accuracy, instance_per_sec
+  def Predict(self, data):
+    loss = 0
+    accuracies, predictions = [], []
+    start_time = time.time()
+    processed_graphs = 0
+    batch_iterator = ggnn_utils.ThreadedIterator(
+        self.MakeMinibatchIterator(data, is_training=False), max_queue_size=5
+    )
+
+    for step, batch in enumerate(batch_iterator):
+      num_graphs = batch[self.placeholders["num_graphs"]]
+      processed_graphs += num_graphs
+
+      batch[self.placeholders["out_layer_dropout_keep_prob"]] = 1.0
+      fetch_list = [self.ops["loss"], self.ops["accuracy"], self.ops["predictions"]]
+
+      batch_loss, batch_accuracy, _preds, *_ = self.sess.run(
+          fetch_list, feed_dict=batch
+      )
+      loss += batch_loss * num_graphs
+      accuracies.append(np.array(batch_accuracy) * num_graphs)
+      predictions.extend(_preds)
+
+      print(
+          "Running prediction, batch %i (has %i graphs). Loss so far: %.4f"
+          % (step, num_graphs, loss / processed_graphs),
+          end="\r",
+          )
+
+    accuracy = np.sum(accuracies, axis=0) / processed_graphs
+    loss = loss / processed_graphs
+    instance_per_sec = processed_graphs / (time.time() - start_time)
+    return predictions, loss, accuracy, instance_per_sec

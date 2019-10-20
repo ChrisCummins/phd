@@ -16,6 +16,7 @@ py_binary(
         "//labm8:fs",
         "//labm8:prof",
         "//third_party/py/networkx",
+        "//third_party/py/numpy",
     ],
 )
 
