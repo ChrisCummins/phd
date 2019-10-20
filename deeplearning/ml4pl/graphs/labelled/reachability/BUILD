@@ -30,15 +30,15 @@ py_test(
         "//deeplearning/ml4pl/graphs:graph_database",
         "//labm8:app",
         "//labm8:test",
-    ]
+    ],
 )
 
 py_library(
     name = "reachability",
     srcs = ["reachability.py"],
     deps = [
-        "//deeplearning/ml4pl/graphs:graph_query",
         "//deeplearning/ml4pl/graphs:graph_iterators",
+        "//deeplearning/ml4pl/graphs:graph_query",
         "//labm8:app",
         "//labm8:decorators",
         "//third_party/py/networkx",
