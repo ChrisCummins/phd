@@ -24,7 +24,6 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
 
-
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -55,9 +54,8 @@ app.DEFINE_database(
 
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
 
-app.DEFINE_list(
-    'layer_timesteps', ['2', '2', '2'],
-    'The number of timesteps to propagate for each layer')
+app.DEFINE_list('layer_timesteps', ['2', '2', '2'],
+                'The number of timesteps to propagate for each layer')
 MODEL_FLAGS.add("layer_timesteps")
 
 app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
@@ -181,7 +179,7 @@ class GgnnBaseModel(object):
       tf.set_random_seed(FLAGS.random_seed)
       with prof.Profile('Made model'):
         self.weights = {
-          "embedding_table": self._GetEmbeddingsTable(),
+            "embedding_table": self._GetEmbeddingsTable(),
         }
 
         self.placeholders = ggnn_utils.MakePlaceholders(self.stats)
@@ -189,14 +187,15 @@ class GgnnBaseModel(object):
         self.ops = {}
         with tf.variable_scope("graph_model"):
           self.ops["loss"], self.ops["accuracy"], self.ops["predictions"] = (
-            self.MakeLossAndAccuracyAndPredictionOps())
+              self.MakeLossAndAccuracyAndPredictionOps())
 
         # Tensorboard summaries.
         self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
         # TODO(cec): More tensorboard telemetry: input class distributions,
         # predicted class distributions, etc.
 
-        with prof.Profile('Make training step'), tf.variable_scope("train_step"):
+        with prof.Profile('Make training step'), tf.variable_scope(
+            "train_step"):
           self.ops["train_step"] = self._MakeTrainStep()
 
       # Restor or initialize the model:
@@ -262,23 +261,18 @@ class GgnnBaseModel(object):
       if FLAGS.tensorboard_logging:
         self.summary_writers[epoch_type].add_summary(loss_summary,
                                                      self.global_training_step)
-      logger.Log(
-          batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy)
-      sys.stdout.write(f'\r{logger}')
-      sys.stdout.flush()
+      app.Log(
+          1, "%s",
+          logger.Log(
+              batch_size=batch_size, loss=batch_loss, accuracy=batch_accuracy))
 
     logger.StopTheClock()
-    sys.stdout.write('\r\n')
-    app.Log(1, "%s: loss: %.5f | acc: %.3f%% | instances/sec: %.2f", epoch_name,
-            logger.average_loss, logger.average_accuracy * 100,
-            logger.instances_per_second)
     return logger
 
   def Train(self):
     with self.graph.as_default():
       for epoch_num in range(1, FLAGS.num_epochs + 1):
         epoch_start_time = time.time()
-        print(f"== Epoch {epoch_num}")
         train = self.RunEpoch(f"Epoch {epoch_num} train", "train")
         valid = self.RunEpoch(f"Epoch {epoch_num}   val", "val")
         app.Log(
@@ -491,28 +485,28 @@ class GgnnBaseModel(object):
     start_time = time.time()
     processed_graphs = 0
     batch_iterator = ggnn_utils.ThreadedIterator(
-        self.MakeMinibatchIterator(data, is_training=False), max_queue_size=5
-    )
+        self.MakeMinibatchIterator(data, is_training=False), max_queue_size=5)
 
     for step, batch in enumerate(batch_iterator):
       num_graphs = batch[self.placeholders["graph_count"]]
       processed_graphs += num_graphs
 
       batch[self.placeholders["out_layer_dropout_keep_prob"]] = 1.0
-      fetch_list = [self.ops["loss"], self.ops["accuracy"], self.ops["predictions"]]
+      fetch_list = [
+          self.ops["loss"], self.ops["accuracy"], self.ops["predictions"]
+      ]
 
       batch_loss, batch_accuracy, _preds, *_ = self.sess.run(
-          fetch_list, feed_dict=batch
-      )
+          fetch_list, feed_dict=batch)
       loss += batch_loss * num_graphs
       accuracies.append(np.array(batch_accuracy) * num_graphs)
       predictions.extend(_preds)
 
       print(
-          "Running prediction, batch %i (has %i graphs). Loss so far: %.4f"
-          % (step, num_graphs, loss / processed_graphs),
+          "Running prediction, batch %i (has %i graphs). Loss so far: %.4f" %
+          (step, num_graphs, loss / processed_graphs),
           end="\r",
-          )
+      )
 
     accuracy = np.sum(accuracies, axis=0) / processed_graphs
     loss = loss / processed_graphs
