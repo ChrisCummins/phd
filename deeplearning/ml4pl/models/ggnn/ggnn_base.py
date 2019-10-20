@@ -13,7 +13,7 @@ import build_info
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models import batch_logger
 from deeplearning.ml4pl.models import log_writer
-from deeplearning.ml4pl.models.ggnn import ggnn_utils
+from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from deeplearning.ml4pl.models.ggnn import graph_batcher
 from labm8 import app
 from labm8 import bazelutil
@@ -182,7 +182,7 @@ class GgnnBaseModel(object):
             "embedding_table": self._GetEmbeddingsTable(),
         }
 
-        self.placeholders = ggnn_utils.MakePlaceholders(self.stats)
+        self.placeholders = utils.MakePlaceholders(self.stats)
 
         self.ops = {}
         with tf.variable_scope("graph_model"):
@@ -234,7 +234,7 @@ class GgnnBaseModel(object):
     assert epoch_type in {"train", "val", "test"}
     logger = batch_logger.InMemoryBatchLogger(epoch_name)
 
-    batch_iterator = ggnn_utils.ThreadedIterator(
+    batch_iterator = utils.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type), max_queue_size=5)
 
     for step, (batch_size, feed_dict) in enumerate(batch_iterator):
@@ -432,7 +432,7 @@ class GgnnBaseModel(object):
           trainable=True)
     elif FLAGS.embeddings == "random":
       return tf.Variable(
-          ggnn_utils.uniform_init(np.shape(embedding_table)),
+          utils.uniform_init(np.shape(embedding_table)),
           dtype=tf.float32,
           name="embedding_table",
           trainable=True)
@@ -481,7 +481,7 @@ class GgnnBaseModel(object):
     accuracies, predictions = [], []
     start_time = time.time()
     processed_graphs = 0
-    batch_iterator = ggnn_utils.ThreadedIterator(
+    batch_iterator = utils.ThreadedIterator(
         self.MakeMinibatchIterator(data, is_training=False), max_queue_size=5)
 
     for step, batch in enumerate(batch_iterator):
