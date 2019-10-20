@@ -11,9 +11,11 @@ import tensorflow as tf
 import typing
 
 import build_info
+from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models import batch_logger
 from deeplearning.ml4pl.models import log_writer
 from deeplearning.ml4pl.models.ggnn import ggnn_utils
+from deeplearning.ml4pl.models.ggnn import graph_batcher
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
@@ -44,7 +46,19 @@ app.DEFINE_output_path(
     'The directory to write files to.',
     is_dir=True)
 
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
+
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
+
+app.DEFINE_list(
+    'layer_timesteps', ['2', '2', '2'],
+    'The number of timesteps to propagate for each layer')
+MODEL_FLAGS.add("layer_timesteps")
 
 app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
 
@@ -127,13 +141,14 @@ class GgnnBaseModel(object):
     """Subclasses may extend this method to mark additional flags as important."""
     return MODEL_FLAGS
 
-  def __init__(self):
-    """Constructor.
-
-    All subclasses that define constructors must call this first!
-    """
+  def __init__(self, db: graph_database.Database):
+    """Constructor."""
     self.run_id: str = (f"{time.strftime('%Y.%m.%dT%H:%M:%S')}."
                         f"{system.HOSTNAME}.{os.getpid()}")
+
+    self.batcher = graph_batcher.GraphBatcher(db, np.prod(self.layer_timesteps))
+    self.stats = self.batcher.stats
+    app.Log(1, "%s", self.stats)
 
     self.working_dir = FLAGS.working_dir
     self.logger = log_writer.FormattedJsonLogWriter(
@@ -165,14 +180,11 @@ class GgnnBaseModel(object):
     with self.graph.as_default():
       tf.set_random_seed(FLAGS.random_seed)
       with prof.Profile('Made model'):
-        self.placeholders = {
-          "num_graphs": tf.placeholder(tf.int32, [], name="num_graphs"),
-          "out_layer_dropout_keep_prob": tf.placeholder(
-            tf.float32, [], name="out_layer_dropout_keep_prob"),
-        }
         self.weights = {
           "embedding_table": self._GetEmbeddingsTable(),
         }
+
+        self.placeholders = ggnn_utils.MakePlaceholders(self.stats)
 
         self.ops = {}
         with tf.variable_scope("graph_model"):
@@ -214,6 +226,9 @@ class GgnnBaseModel(object):
                                         self.sess.graph),
       }
 
+  @property
+  def layer_timesteps(self) -> np.array:
+    return np.array([int(x) for x in FLAGS.layer_timesteps])
 
   def RunEpoch(self, epoch_name: str,
                epoch_type: str) -> batch_logger.InMemoryBatchLogger:
@@ -232,7 +247,7 @@ class GgnnBaseModel(object):
           self.ops["loss"], self.ops["accuracy"], self.ops["summary_loss"]
       ]
 
-      batch[self.placeholders["num_graphs"]] = batch_size
+      batch[self.placeholders["graph_count"]] = batch_size
 
       if epoch_type == "train":
         batch[self.placeholders["out_layer_dropout_keep_prob"]] = (
@@ -480,7 +495,7 @@ class GgnnBaseModel(object):
     )
 
     for step, batch in enumerate(batch_iterator):
-      num_graphs = batch[self.placeholders["num_graphs"]]
+      num_graphs = batch[self.placeholders["graph_count"]]
       processed_graphs += num_graphs
 
       batch[self.placeholders["out_layer_dropout_keep_prob"]] = 1.0

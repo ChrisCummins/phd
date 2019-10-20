@@ -1,41 +1,18 @@
 """Train and evaluate a model for graph classification."""
-from collections import namedtuple
-
+import collections
 import numpy as np
 import tensorflow as tf
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
-from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
-from deeplearning.ml4pl.graphs.labelled.graph_dict import \
-  graph_dict as graph_dicts
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
-from labm8 import humanize
-from labm8 import prof
 
 
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
 #
-app.DEFINE_integer("batch_size", 8000,
-                   "The maximum number of nodes to include in a graph batch.")
-
-app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
-    None,
-    'The database to read graph data from.',
-    must_exist=True)
-
-app.DEFINE_list(
-    'layer_timesteps', ['2', '2', '2'],
-    'The number of timesteps to propagate for each layer')
-ggnn.MODEL_FLAGS.add("layer_timesteps")
-
 app.DEFINE_integer(
     'max_instance_count', None,
     'A debugging option. Use this to set the maximum number of instances used '
@@ -72,7 +49,7 @@ app.DEFINE_boolean('ignore_node_features', True, '???')
 #
 ##### End of flag declarations.
 
-GGNNWeights = namedtuple(
+GGNNWeights = collections.namedtuple(
     "GGNNWeights",
     [
         "edge_weights",
@@ -85,52 +62,16 @@ GGNNWeights = namedtuple(
 )
 
 
+# TODO(cec): Refactor.
 residual_connections = {}
 
 class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
-
-  def __init__(self, db: graph_database.Database):
-    self.db = db
-    self.stats = graph_stats.GraphDatabaseStats(self.db)
-    super(GgnnGraphClassifierModel, self).__init__()
-    app.Log(1, "%s", self.stats)
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
     app.Log(1, "Using layer timesteps: %s for a total step count of %s",
             layer_timesteps, np.prod(layer_timesteps))
-
-    self.placeholders["target_values"] = tf.placeholder(
-        tf.int32, [None], name="target_values")
-
-    self.placeholders["num_of_nodes_in_batch"] = tf.placeholder(
-        tf.int32, [], name="num_of_nodes_in_batch")
-
-    self.placeholders["adjacency_lists"] = [
-        tf.placeholder(tf.int32, [None, 2], name=f"adjacency_e{i}")
-        for i in range(self.stats.edge_type_count)
-    ]
-
-    self.placeholders["edge_x"] = [
-      tf.placeholder(tf.int32,
-                     [None, self.stats.edge_features_dimensionality],
-                     name=f"edge_x_e{i}")
-      for i in range(self.stats.edge_type_count)
-    ]
-
-    self.placeholders["num_incoming_edges_per_type"] = tf.placeholder(
-        tf.float32, [None, self.stats.edge_type_count],
-        name="num_incoming_edges_per_type")
-
-    self.placeholders["graph_nodes_list"] = tf.placeholder(
-        tf.int32, [None], name="graph_nodes_list")
-
-    self.placeholders["graph_state_keep_prob"] = tf.placeholder(
-        tf.float32, None, name="graph_state_keep_prob")
-
-    self.placeholders["edge_weight_dropout_keep_prob"] = tf.placeholder(
-        tf.float32, None, name="edge_weight_dropout_keep_prob")
 
     # Generate per-layer values for edge weights, biases and gated units:
     self.gnn_weights = GGNNWeights([], [], [], [], [], [])
@@ -196,12 +137,12 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
 
-    # TODO(cec): Next chunk of code from compute_final_node_representations() ...
+    # TODO(cec): Next chunk of code from compute_final_node_x() ...
     # one entry per layer (final state of that layer), shape: number of nodes in batch v x D
     node_states_per_layer = []
 
     # number of nodes in batch
-    num_nodes = self.placeholders['num_of_nodes_in_batch']
+    num_nodes = self.placeholders['node_count']
 
     # we drop the initial states placeholder in the first layer as they are all zero.
     node_states_per_layer.append(
@@ -347,13 +288,13 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
 
             if FLAGS.use_edge_bias:
               incoming_messages += tf.matmul(
-                  self.placeholders["num_incoming_edges_per_type"],
+                  self.placeholders["incoming_edge_counts"],
                   self.gnn_weights.edge_biases[layer_index],
               )  # Shape [V, D]
 
             if FLAGS.use_edge_msg_avg_aggregation:
               num_incoming_edges = tf.reduce_sum(
-                  self.placeholders["num_incoming_edges_per_type"],
+                  self.placeholders["incoming_edge_counts"],
                   keep_dims=True,
                   axis=-1,
               )  # Shape [V, 1]
@@ -368,68 +309,40 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
                 incoming_information,
                 node_states_per_layer[-1])[1]  # Shape [V, D]
 
-    self.ops["final_node_representations"] = node_states_per_layer[-1]
+    self.ops["final_node_x"] = node_states_per_layer[-1]
 
-    with tf.variable_scope("output_layer"):
-      with tf.variable_scope("regression_gate"):
-        self.weights["regression_gate"] = utils.MLP(
-            # Concatenation of initial and final node states
-            in_size=2 * FLAGS.hidden_size,
-            out_size=104, # TODO(cec): Un-hard-code to: self.stats.graph_labels_dimensionality,
-            hid_sizes=[],
-            dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
-        )
-        with tf.variable_scope("regression"):
-          self.weights["regression_transform"] = utils.MLP(
-              in_size=FLAGS.hidden_size,
-              out_size=104, # TODO(cec): Un-hard-code to: self.stats.graph_labels_dimensionality,
-              hid_sizes=[],
-              dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
-          )
+    computed_values, regression_gate, regression_transform = (
+      utils.MakeOutputLayer(
+          initial_node_state=tf.zeros([self.placeholders['node_count'], FLAGS.hidden_size]),
+          final_node_state=self.ops["final_node_x"],
+          hidden_size=FLAGS.hidden_size,
+          labels_dimensionality=self.stats.graph_labels_dimensionality,
+          dropout_keep_prob_placeholder=self.placeholders["out_layer_dropout_keep_prob"]
+      )
+    )
+    self.weights['regression_gate'] = regression_gate
+    self.weights['regression_transform'] = regression_transform
 
-        # this is all Eq. 7 in the GGNN paper here... (i.e. Eq. 4 in NMP for QC)
-        computed_values = self.GatedRegression(
-            self.ops["final_node_representations"],
-            self.weights["regression_gate"],
-            self.weights["regression_transform"],
-            name="computed_values"
-        )
-
-        predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32,
-                                name="predictions")
-
-        targets = self.placeholders["target_values"]
-
-        accuracy = tf.reduce_mean(
-            tf.cast(tf.equal(predictions, targets), tf.float32))
-
-        # cross-entropy loss
-        loss = tf.losses.sparse_softmax_cross_entropy(targets, computed_values)
-
-        return loss, accuracy, predictions
-
-
-  def GatedRegression(self, last_h, regression_gate, regression_transform,
-                      name: typing.Optional[str] = None):
-    # last_h: [v x h]
-
-    if FLAGS.ignore_node_features:
-      num_nodes = self.placeholders['num_of_nodes_in_batch']
-      initial_node_rep = tf.zeros([num_nodes, FLAGS.hidden_size])
-    else:
-      initial_node_rep = self.placeholders["initial_node_representation"]
-
-    gate_input = tf.concat([last_h, initial_node_rep], axis=-1)  # [v x 2h]
-    gated_outputs = (tf.nn.sigmoid(regression_gate(gate_input)) *
-                     regression_transform(last_h))  # [v x 1]
-
-    # Sum up all nodes per-graph
-    return tf.unsorted_segment_sum(
-        data=gated_outputs,
-        segment_ids=self.placeholders["graph_nodes_list"],
-        num_segments=self.placeholders["num_graphs"],
-        name=name,
+    # Sum node representations across graph.
+    computed_values = tf.unsorted_segment_sum(computed_values,
+            segment_ids=self.placeholders["graph_nodes_list"],
+            num_segments=self.placeholders["graph_count"],
+            name='computed_values',
     )  # [g, c]
+
+    predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32,
+                            name="predictions")
+
+    targets = tf.argmax(self.placeholders["graph_y"], axis=1,
+                        output_type=tf.int32, name="targets")
+
+    accuracy = tf.reduce_mean(
+        tf.cast(tf.equal(predictions, targets), tf.float32))
+
+    loss = tf.losses.softmax_cross_entropy(
+        self.placeholders["graph_y"], computed_values)
+
+    return loss, accuracy, predictions
 
 
   def MakeMinibatchIterator(
@@ -437,119 +350,19 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
       epoch_type: str) -> typing.Iterable[typing.Tuple[int, ggnn.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
-    # Graphs are keyed into {train,val,test} groups.
-    filters = [lambda: graph_database.GraphMeta.group == epoch_type]
-
-    graph_reader = graph_readers.BufferedGraphReader(
-        self.db,
-        filters=filters,
-        order_by_random=True,
-        eager_graph_loading=True,
-        buffer_size=min(512, FLAGS.batch_size // 10),
-        limit=FLAGS.max_instance_count)
-
-    graph_state_dropout = (FLAGS.graph_state_dropout_keep_prob
+    state_dropout_keep_prob = (FLAGS.graph_state_dropout_keep_prob
                                if epoch_type == "train" else 1.0)
-    edge_weight_dropout = (FLAGS.edge_weight_dropout_keep_prob
+    edge_weights_dropout_keep_prob = (FLAGS.edge_weight_dropout_keep_prob
                                       if epoch_type == "train" else 1.0)
 
-    # Pack until we cannot fit more graphs in the batch
-    while True:
-      with prof.Profile(lambda t: f"Created batch of {humanize.Commas(num_graphs)} graphs"):
-        num_graphs = 0
-        target_values = []
-        adjacency_lists = [[] for _ in range(self.stats.edge_type_count)]
-        embedding_indices = [[] for _ in range(self.stats.edge_type_count)]
-        incoming_edges = []
-        batch_graph_nodes_list = []
-        node_offset = 0
-
-        try:
-          graph = next(graph_reader)
-        except StopIteration:
-          # We have reached the end of the database.
-          break
-
-        while graph and node_offset + graph.node_count < FLAGS.batch_size:
-          # De-serialize pickled data in database and process.
-          graph_dict = graph.pickled_data
-
-          batch_graph_nodes_list.append(
-              np.full(
-                  shape=[graph.node_count],
-                  fill_value=num_graphs,
-                  dtype=np.int32,
-              ))
-
-          # Offset the adjacency list node indices.
-          for i in range(self.stats.edge_type_count):
-            adjacency_list = graph_dict["adjacency_lists"][i]
-            embedding_indices = graph_dict["edge_x"][i]
-            if adjacency_list.size:
-              adjacency_lists[i].append(adjacency_list + np.array(
-                  (node_offset, node_offset), dtype=np.int32))
-            if embedding_indices.size:
-              embedding_indices[i].append(embedding_indices)
-
-          # Turn counters for incoming edges into a dense array:
-          incoming_edges.append(
-              graph_dicts.IncomingEdgeCountsToDense(
-                  graph_dict["incoming_edge_counts"],
-                  node_count=graph.node_count,
-                  edge_type_count=self.stats.edge_type_count))
-
-          # TODO(cec): This is hard-coded to classifyapp task.
-          #
-          # Because classes start counting at 1.
-          target_value = graph_dict["graph_y"][0] - 1
-          # sanity checks
-          assert (target_value <= 103 and
-                  target_value >= 0), f"target_value range wrong: {target_value}"
-          target_values.append(target_value)
-
-          num_graphs += 1
-          node_offset += graph.node_count
-
-          try:
-            graph = next(graph_reader)
-          except StopIteration:
-            # We have reached the end of the database.
-            break
-
-        # list[np.array], len ~ 681 (num of graphs in batch)
-        incoming_edges = np.concatenate(
-            incoming_edges,
-            axis=0)
-        # list[np.array], len ~ 681 (num of graphs in batch)
-        batch_graph_nodes_list = np.concatenate(batch_graph_nodes_list)
-
-        target_values = np.array(target_values)
-
-        batch_feed_dict = {
-            self.placeholders["num_incoming_edges_per_type"]: incoming_edges,
-            self.placeholders["graph_nodes_list"]: batch_graph_nodes_list,
-            self.placeholders["target_values"]: target_values,
-            self.placeholders["num_graphs"]: num_graphs,
-            self.placeholders["num_of_nodes_in_batch"]: node_offset,
-            self.placeholders["graph_state_keep_prob"]: graph_state_dropout,
-            self.placeholders["edge_weight_dropout_keep_prob"]: edge_weight_dropout,
-        }
-
-        # Merge adjacency lists and information about incoming nodes:
-        for i in range(self.stats.edge_type_count):
-          if len(adjacency_lists[i]) > 0:
-            adj_list = np.concatenate(adjacency_lists[i])
-          else:
-            adj_list = np.zeros((0, 2), dtype=np.int32)  # shape (0, 2)
-          batch_feed_dict[self.placeholders["adjacency_lists"][i]] = adj_list
-
-          if len(embedding_indices[i]) > 0:
-            embedding_indices = np.concatenate(embedding_indices[i])
-          else:
-            embedding_indices = np.zeros((0), dtype=np.int32)  # shape (0, 2)
-          batch_feed_dict[self.placeholders["edge_x"][i]] = embedding_indices
-
-      yield num_graphs, batch_feed_dict
+    for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
+      feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
+      feed_dict.update({
+        self.placeholders["graph_state_keep_prob"]: state_dropout_keep_prob,
+        self.placeholders["edge_weight_dropout_keep_prob"]: (
+          edge_weights_dropout_keep_prob),
+      })
+      yield batch['graph_count'], feed_dict
 
 
 def main():

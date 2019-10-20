@@ -37,6 +37,7 @@ py_binary(
     deps = [
         ":ggnn_base",
         ":ggnn_utils",
+        ":graph_batcher",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs:graph_database_reader",
         "//deeplearning/ml4pl/graphs:graph_database_stats",
@@ -56,6 +57,7 @@ py_binary(
     deps = [
         ":ggnn_base",
         ":ggnn_utils",
+        ":graph_batcher",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs:graph_database_reader",
         "//deeplearning/ml4pl/graphs:graph_database_stats",
