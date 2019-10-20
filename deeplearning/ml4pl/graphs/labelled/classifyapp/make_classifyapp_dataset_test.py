@@ -17,8 +17,12 @@ from labm8 import test
 
 FLAGS = app.FLAGS
 
-REAL_BYTECODE = fs.Read(bazelutil.DataPath(
-    'phd/deeplearning/ml4pl/graphs/labelled/classifyapp/test_data/bytecode.ll'))
+REAL_BYTECODES = [
+  fs.Read(bazelutil.DataPath(
+    'phd/deeplearning/ml4pl/graphs/labelled/classifyapp/test_data/bytecode.ll')),
+  fs.Read(bazelutil.DataPath(
+      'phd/deeplearning/ml4pl/graphs/labelled/classifyapp/test_data/164689.ll')),
+]
 
 INST2VEC_DICITONARY_PATH = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/dic_pickle')
@@ -135,9 +139,15 @@ def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
     assert 'graph_y' in graph_dict
 
 
-@pytest.fixture(scope='function')
-def poj104_bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
-  """Return an bytecode database with a single bytecode from POJ-104 dataset."""
+
+@pytest.mark.parametrize('bytecode_id', range(len(REAL_BYTECODES)))
+def test_BytecodeExporter_poj104_smoke_tests(
+    tempdir: pathlib.Path,
+    graph_db: graph_database.Database,
+    bytecode_id: int):
+  """Create creating Graphs from single-entry databases of real bytecodes."""
+  bytecode = REAL_BYTECODES[bytecode_id]
+
   db = bytecode_database.Database(f'sqlite:///{tempdir}/bytecode_db')
   with db.Session(commit=True) as session:
     session.add(bytecode_database.LlvmBytecode(
@@ -145,20 +155,13 @@ def poj104_bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
         relpath = '1/bytecode.ll',
         language = 'cpp',
         cflags = '',
-        charcount = len(REAL_BYTECODE),
-        linecount = len(REAL_BYTECODE.split('\n')),
-        bytecode = REAL_BYTECODE,
+        charcount = len(bytecode),
+        linecount = len(bytecode.split('\n')),
+        bytecode = bytecode,
         clang_returncode = 0,
         error_message = '',
     ))
-  return db
-
-
-def test_BytecodeExporter_poj104_smoke_test(
-    poj104_bytecode_db: bytecode_database.Database,
-    graph_db: graph_database.Database):
-  exporter = classifyapp.Exporter(
-      poj104_bytecode_db, graph_db, INST2VEC_DICTIONARY)
+  exporter = classifyapp.Exporter(db, graph_db, INST2VEC_DICTIONARY)
   exporter.Export()
 
   with graph_db.Session() as session:
