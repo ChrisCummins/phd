@@ -387,8 +387,6 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
               dropout_keep_prob=self.placeholders["out_layer_dropout_keep_prob"],
           )
 
-        app.Log(1, "%s", tf.shape(self.ops["final_node_representations"]))
-
         # this is all Eq. 7 in the GGNN paper here... (i.e. Eq. 4 in NMP for QC)
         computed_values = self.GatedRegression(
             self.ops["final_node_representations"],
@@ -396,14 +394,11 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
             self.weights["regression_transform"],
             name="computed_values"
         )
-        app.Log(1, "computed_values %s", tf.shape(computed_values))
 
         predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32,
                                 name="predictions")
-        app.Log(1, "predictions %s", tf.shape(predictions))
 
         targets = self.placeholders["target_values"]
-        app.Log(1, "targets %s", tf.shape(targets))
 
         accuracy = tf.reduce_mean(
             tf.cast(tf.equal(predictions, targets), tf.float32))
@@ -462,9 +457,9 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
     while True:
       with prof.Profile(lambda t: f"Created batch of {humanize.Commas(num_graphs)} graphs"):
         num_graphs = 0
-        batch_target_values = []
-        batch_adjacency_lists = [[] for _ in range(self.stats.edge_type_count)]
-        batch_embedding_indices = [[] for _ in range(self.stats.edge_type_count)]
+        target_values = []
+        adjacency_lists = [[] for _ in range(self.stats.edge_type_count)]
+        embedding_indices = [[] for _ in range(self.stats.edge_type_count)]
         incoming_edges = []
         batch_graph_nodes_list = []
         node_offset = 0
@@ -491,10 +486,10 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
             adjacency_list = graph_dict["adjacency_lists"][i]
             embedding_indices = graph_dict["edge_x"][i]
             if adjacency_list.size:
-              batch_adjacency_lists[i].append(adjacency_list + np.array(
+              adjacency_lists[i].append(adjacency_list + np.array(
                   (node_offset, node_offset), dtype=np.int32))
             if embedding_indices.size:
-              batch_embedding_indices[i].append(embedding_indices)
+              embedding_indices[i].append(embedding_indices)
 
           # Turn counters for incoming edges into a dense array:
           incoming_edges.append(
@@ -510,7 +505,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
           # sanity checks
           assert (target_value <= 103 and
                   target_value >= 0), f"target_value range wrong: {target_value}"
-          batch_target_values.append(target_value)
+          target_values.append(target_value)
 
           num_graphs += 1
           node_offset += graph.node_count
@@ -528,18 +523,12 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
         # list[np.array], len ~ 681 (num of graphs in batch)
         batch_graph_nodes_list = np.concatenate(batch_graph_nodes_list)
 
-        batch_target_values = np.array(batch_target_values)
-
-        # TODO(cec):
-
-        app.Log(1, "Target values shape %s for %s", batch_target_values.shape,
-                num_graphs)
-        assert batch_target_values.shape == (num_graphs, 1)
+        target_values = np.array(target_values)
 
         batch_feed_dict = {
             self.placeholders["num_incoming_edges_per_type"]: incoming_edges,
             self.placeholders["graph_nodes_list"]: batch_graph_nodes_list,
-            self.placeholders["target_values"]: batch_target_values,
+            self.placeholders["target_values"]: target_values,
             self.placeholders["num_graphs"]: num_graphs,
             self.placeholders["num_of_nodes_in_batch"]: node_offset,
             self.placeholders["graph_state_keep_prob"]: graph_state_dropout,
@@ -548,14 +537,14 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
 
         # Merge adjacency lists and information about incoming nodes:
         for i in range(self.stats.edge_type_count):
-          if len(batch_adjacency_lists[i]) > 0:
-            adj_list = np.concatenate(batch_adjacency_lists[i])
+          if len(adjacency_lists[i]) > 0:
+            adj_list = np.concatenate(adjacency_lists[i])
           else:
             adj_list = np.zeros((0, 2), dtype=np.int32)  # shape (0, 2)
           batch_feed_dict[self.placeholders["adjacency_lists"][i]] = adj_list
 
-          if len(batch_embedding_indices[i]) > 0:
-            embedding_indices = np.concatenate(batch_embedding_indices[i])
+          if len(embedding_indices[i]) > 0:
+            embedding_indices = np.concatenate(embedding_indices[i])
           else:
             embedding_indices = np.zeros((0), dtype=np.int32)  # shape (0, 2)
           batch_feed_dict[self.placeholders["edge_x"][i]] = embedding_indices
