@@ -56,6 +56,14 @@ def test_GraphDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
   s = stats.GraphDatabaseStats(db_512)
   assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
+                    "2-d node features, 1-d graph labels, "
+                    "max 511 nodes, max 2 edges")
+
+
+def test_GraphDictDatabaseStats_repr(db_512: graph_database.Database):
+  """Test the string representation of the stats object"""
+  s = stats.GraphDictDatabaseStats(db_512)
+  assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
                     "2-d int32 node features, 1-d float32 graph labels, "
                     "max 511 nodes, max 2 edges")
 
