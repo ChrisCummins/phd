@@ -1,4 +1,5 @@
 """A module for obtaining stats from graph databases."""
+import numpy as np
 import sqlalchemy as sql
 import typing
 
@@ -7,6 +8,7 @@ from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import prof
+
 
 FLAGS = app.FLAGS
 
@@ -69,40 +71,91 @@ class GraphDatabaseStats(object):
     summaries = [
         f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
         humanize.Plural(self.edge_type_count, 'edge type'),
-        f"max {humanize.Plural(self.max_node_count, 'node')}",
-        f"max {humanize.Plural(self.max_edge_count, 'edge')}",
     ]
     if self.node_features_dimensionality:
       summaries.append(
-          humanize.Plural(self.node_features_dimensionality,
-                          'node feature dimension'))
+          f"{self.node_features_dimensionality}-d {self.node_features_dtype} "
+          "node features")
     if self.edge_features_dimensionality:
       summaries.append(
-          humanize.Plural(self.edge_features_dimensionality,
-                          'edge feature dimension'))
+          f"{self.edge_features_dimensionality}-d {self.edge_features_dtype} "
+          "edge features")
     if self.graph_features_dimensionality:
       summaries.append(
-          humanize.Plural(self.graph_features_dimensionality,
-                          'graph feature dimension'))
+          f"{self.graph_features_dimensionality}-d {self.graph_features_dtype} "
+          "graph features")
     if self.node_labels_dimensionality:
       summaries.append(
-          humanize.Plural(self.node_labels_dimensionality,
-                          'node label dimension'))
+          f"{self.node_labels_dimensionality}-d {self.node_labels_dtype} "
+          "node labels")
     if self.edge_labels_dimensionality:
       summaries.append(
-          humanize.Plural(self.edge_labels_dimensionality,
-                          'edge label dimension'))
+          f"{self.edge_labels_dimensionality}-d {self.edge_labels_dtype} "
+          "edge labels")
     if self.graph_labels_dimensionality:
       summaries.append(
-          humanize.Plural(self.graph_labels_dimensionality,
-                          'graph label dimension'))
+          f"{self.graph_labels_dimensionality}-d {self.graph_labels_dtype} "
+          "graph labels")
     if self.data_flow_max_steps_required:
       summaries.append(
           humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
+    summaries += [
+      f"max {humanize.Plural(self.max_node_count, 'node')}",
+      f"max {humanize.Plural(self.max_edge_count, 'edge')}",
+    ]
     return ", ".join(summaries)
 
   @decorators.memoized_property
+  def node_features_dtype(self) -> np.dtype:
+    with self.db.Session() as s:
+      q = s.query(graph_database.Graph).first()
+      graph_dict = q.pickled_data
+    return graph_dict['node_x'][0].dtype
+
+  @decorators.memoized_property
+  def node_labels_dtype(self) -> np.dtype:
+    with self.db.Session() as s:
+      q = s.query(graph_database.Graph).first()
+      graph_dict = q.pickled_data
+    return graph_dict['node_y'][0].dtype
+
+  @decorators.memoized_property
+  def edge_features_dtype(self) -> np.dtype:
+    with self.db.Session() as s:
+      q = s.query(graph_database.Graph).first()
+      graph_dict = q.pickled_data
+      for features_list in graph_dict['edge_x']:
+        if features_list:
+          return features_list[0].dtype
+    raise ValueError("Unable to determine edge features")
+
+  @decorators.memoized_property
+  def edge_labels_dtype(self) -> np.dtype:
+    with self.db.Session() as s:
+      q = s.query(graph_database.Graph).first()
+      graph_dict = q.pickled_data
+      for labels_list in graph_dict['edge_y']:
+        if labels_list:
+          return labels_list[0].dtype
+    raise ValueError("Unable to determine edge labels")
+
+  @decorators.memoized_property
+  def graph_features_dtype(self) -> np.dtype:
+    with self.db.Session() as s:
+      q = s.query(graph_database.Graph).first()
+      graph_dict = q.pickled_data
+    return graph_dict['graph_x'].dtype
+
+  @decorators.memoized_property
+  def graph_labels_dtype(self) -> np.dtype:
+    with self.db.Session() as s:
+      q = s.query(graph_database.Graph).first()
+      graph_dict = q.pickled_data
+    return graph_dict['graph_y'].dtype
+
+  @decorators.memoized_property
   def _stats(self):
+    """Private helper function to compute whole-table stats."""
     graph_count = 0
     label = lambda t: f"Computed stats over {humanize.Commas(graph_count)} instances"
     with prof.Profile(label), self.db.Session() as s:
