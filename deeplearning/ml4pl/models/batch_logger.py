@@ -18,7 +18,9 @@ class InMemoryBatchLogger(object):
     self.start_time = time.time()
     self.end_time = None  # Set by StopTheClock().
     self.loss = 0
+    self.losses = []
     self.accuracy = 0
+    self.accuracies = []
     self.batch_count = 0
     self.instance_count = 0
 
@@ -34,6 +36,8 @@ class InMemoryBatchLogger(object):
       String representation.
     """
     self.loss += loss
+    self.losses.append(loss)
+    self.accuracies.append(accuracy)
     self.accuracy += accuracy
     self.batch_count += 1
     self.instance_count += batch_size
@@ -60,7 +64,9 @@ class InMemoryBatchLogger(object):
         "instance_count": self.instance_count,
         "batch_count": self.batch_count,
         "loss": self.average_loss,
+        "losses": self.losses,
         "accuracy": self.average_accuracy,
+        "accuracies": self.accuracies,
         "instances_per_second": self.instances_per_second,
         "elapsed_seconds": self.elapsed_seconds,
     }
