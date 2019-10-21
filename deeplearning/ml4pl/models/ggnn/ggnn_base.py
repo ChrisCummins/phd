@@ -190,7 +190,10 @@ class GgnnBaseModel(object):
               self.MakeLossAndAccuracyAndPredictionOps())
 
         # Tensorboard summaries.
-        self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
+        self.ops["summary_loss"] = tf.summary.scalar(
+            "loss", self.ops["loss"])
+        self.ops["summary_accuracy"] = tf.summary.scalar(
+            "accuracy", self.ops["accuracy"])
         # TODO(cec): More tensorboard telemetry: input class distributions,
         # predicted class distributions, etc.
 
@@ -247,7 +250,7 @@ class GgnnBaseModel(object):
         "loss": self.ops["loss"],
         "accuracy": self.ops["accuracy"],
         "summary_loss": self.ops["summary_loss"],
-        # "summary_accuracy": self.ops["summary_accuracy"],
+        "summary_accuracy": self.ops["summary_accuracy"],
       }
 
       if epoch_type == "train":
@@ -257,6 +260,8 @@ class GgnnBaseModel(object):
 
       if FLAGS.tensorboard_logging:
         self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
+                                                     self.global_training_step)
+        self.summary_writers[epoch_type].add_summary(fetch_dict["summary_accuracy"],
                                                      self.global_training_step)
       app.Log(
           1, "%s",
