@@ -309,8 +309,7 @@ class GgnnBaseModel(object):
             # Add the test results to the logfile.
             log = jsonutil.read_file(log_file)
             log["time"] = time.time() - epoch_start_time
-            log['test'] = (test.average_loss, test.average_accuracy,
-                                  test.instances_per_second)
+            log['test'] = train.ToJson()
             jsonutil.write_file(log_file, log)
         elif epoch_num - self.best_epoch_num >= FLAGS.patience:
           app.Log(
