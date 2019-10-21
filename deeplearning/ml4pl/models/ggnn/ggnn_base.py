@@ -159,7 +159,7 @@ class GgnnBaseModel(object):
     app.Log(
         1, 'Writing logs to `%s`. Unless --alsologtostderr flag is set, '
         'this is the last message you will see.', self.working_dir)
-    app.LogToDirectory(self.working_dir, 'model')
+    app.LogToDirectory(self.working_dir, self.run_id)
 
     app.Log(1, "Build information: %s",
             jsonutil.format_json(pbutil.ToJson(build_info.GetBuildInfo())))
