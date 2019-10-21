@@ -1,4 +1,5 @@
 """Utility functions """
+import collections
 import pathlib
 import subprocess
 import tempfile
@@ -197,3 +198,123 @@ def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
       if not arg[0] == '-':
         raise llvm.LlvmError(f'Cannot interpret clang argument: {arg}')
   return args
+
+
+AliasSet = collections.namedtuple(
+    'AliasSet', [
+      # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
+      #
+      #    /// The kind of alias relationship between pointers of the set.
+      #    ///
+      #    /// These represent conservatively correct alias results between any members
+      #    /// of the set. We represent these independently of the values of alias
+      #    /// results in order to pack it into a single bit. Lattice goes from
+      #    /// MustAlias to MayAlias.
+      #    enum AliasLattice {
+      #      SetMustAlias = 0, SetMayAlias = 1
+      #    };
+      'type',  # str, one of {must alias, may alias}
+      # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
+      #
+      #    /// The kinds of access this alias set models.
+      #    ///
+      #    /// We keep track of whether this alias set merely refers to the locations of
+      #    /// memory (and not any particular access), whether it modifies or references
+      #    /// the memory, or whether it does both. The lattice goes from "NoAccess" to
+      #    /// either RefAccess or ModAccess, then to ModRefAccess as necessary.
+      #    enum AccessLattice {
+      #      NoAccess = 0,
+      #      RefAccess = 1,
+      #      ModAccess = 2,
+      #      ModRefAccess = RefAccess | ModAccess
+      #    };
+      'mod_ref',  # str, one of {Mod,Ref,Mod/Ref}
+      'pointers',  # typing.List[Pointer]
+    ]
+)
+
+Pointer = collections.namedtuple(
+    'Pointer', [
+      'type',  # str
+      'identifier',  # str
+      'size',  # int
+    ]
+)
+
+def GetAliasSetsByFunction(bytecode: str) -> typing.Dict[str, typing.List[AliasSet]]:
+  """Get the alias sets of a bytecode.
+
+  Args:
+    bytecode: An LLVM bytecode.
+
+  Returns:
+    A dictionary of alias sets, keyed by the function name.
+
+  Raises:
+    OptException: In case the opt pass fails.
+  """
+  process = opt.Exec(['-basicaa', '-print-alias-sets', '-disable-output'],
+                     stdin=bytecode,
+                     universal_newlines=True,
+                     log=False)
+
+  # Propagate failures from opt as OptExceptions.
+  if process.returncode:
+    raise opt.OptException(returncode=process.returncode, stderr=process.stderr)
+
+  return _ParseAliasSetsOutput(process.stderr)
+
+
+def _ParseAliasSetsOutput(output: str) -> typing.Dict[str, typing.List[AliasSet]]:
+  app.Log(1, "OUTPUT %s\n", output)
+  lines = output.split('\n')
+  function_alias_sets = {}
+
+  function = None
+  alias_sets = None
+  for line in lines:
+    if line.startswith("Alias sets for function "):
+      function = line[len("Alias sets for function '"):-len(":'")]
+      function_alias_sets[function] = []
+      alias_sets = function_alias_sets[function]
+    elif line.startswith("Alias Set Tracker: "):
+      if function is None:
+        raise ValueError("Unexpected line!")
+      pass
+    elif line.startswith("  AliasSet["):
+      if function is None:
+        raise ValueError("Unexpected line!")
+      line = line[len("  AliasSet[0x7fb068d1dd60, "):]
+      alias_set_size = int(line[:line.index(']')])
+      line = line[line.index(']') + 2:]
+      alias_set_type = line[:line.index(',')]
+      line = line[line.index(',') + 1:]
+      mod_ref = line.split()[0]
+      line = ' '.join(line.split()[2:])
+      pointers = line.split('),')
+      if len(pointers) != alias_set_size:
+        raise ValueError(f"Expected {alias_set_size} pointers in alias set, "
+                         f"found {len(pointers)}")
+
+      alias_set_pointers = []
+      for pointer in pointers:
+        pointer = pointer[1:]
+        if not pointer:
+          continue
+        typename, identifier, size = pointer.split()
+        identifier = identifier[:-1]
+        if size.endswith(')'):
+          size = size[:-1]
+        pointer = Pointer(type=typename, identifier=identifier, size=int(size))
+        alias_set_pointers.append(pointer)
+      if alias_set_pointers:
+        alias_sets.append(AliasSet(
+            type=alias_set_type,
+            mod_ref=mod_ref,
+            pointers=alias_set_pointers,
+        ))
+    elif 'Unknown instructions' in line:
+      pass
+    elif line.strip():  # Empty line
+      raise ValueError(line)
+  return function_alias_sets
