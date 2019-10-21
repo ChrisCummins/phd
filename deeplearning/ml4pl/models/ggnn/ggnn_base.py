@@ -287,8 +287,8 @@ class GgnnBaseModel(object):
         log_file = self.logger.Log({
             "epoch": epoch_num,
             "time": time.time() - epoch_start_time,
-            "train_results": train.ToJson(),
-            "valid_results": valid.ToJson(),
+            "train": train.ToJson(),
+            "valid": valid.ToJson(),
         })
 
         if valid.average_accuracy > self.best_epoch_validation_accuracy:
@@ -309,7 +309,7 @@ class GgnnBaseModel(object):
             # Add the test results to the logfile.
             log = jsonutil.read_file(log_file)
             log["time"] = time.time() - epoch_start_time
-            log['test_reults'] = (test.average_loss, test.average_accuracy,
+            log['test'] = (test.average_loss, test.average_accuracy,
                                   test.instances_per_second)
             jsonutil.write_file(log_file, log)
         elif epoch_num - self.best_epoch_num >= FLAGS.patience:
