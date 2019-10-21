@@ -141,7 +141,7 @@ class GgnnBaseModel(object):
 
   def __init__(self, db: graph_database.Database):
     """Constructor."""
-    self.run_id: str = (f"{time.strftime('%Y.%m.%dT%H:%M:%S')}."
+    self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}."
                         f"{system.HOSTNAME}.{os.getpid()}")
 
     self.batcher = graph_batcher.GraphBatcher(db, np.prod(self.layer_timesteps))
