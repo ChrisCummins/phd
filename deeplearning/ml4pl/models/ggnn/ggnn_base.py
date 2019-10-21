@@ -19,6 +19,7 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
 from labm8 import jsonutil
+from labm8 import labdate
 from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
@@ -286,9 +287,10 @@ class GgnnBaseModel(object):
             humanize.Duration(time.time() - epoch_start_time))
         log_file = self.logger.Log({
             "epoch": epoch_num,
-            "time": time.time() - epoch_start_time,
+            "epoch_elapsed_seconds": time.time() - epoch_start_time,
             "train": train.ToJson(),
             "valid": valid.ToJson(),
+            "timestamp": labdate.MillisecondsTimestamp(),
         })
 
         if valid.average_accuracy > self.best_epoch_validation_accuracy:
