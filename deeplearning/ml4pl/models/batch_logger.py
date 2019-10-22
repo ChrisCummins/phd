@@ -5,7 +5,6 @@ import typing
 
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 
@@ -36,8 +35,8 @@ class InMemoryBatchLogger(object):
       String representation.
     """
     self.loss += loss
-    self.losses.append(loss)
-    self.accuracies.append(accuracy)
+    self.losses.append(float(loss))
+    self.accuracies.append(float(accuracy))
     self.accuracy += accuracy
     self.batch_count += 1
     self.instance_count += batch_size
