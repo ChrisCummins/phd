@@ -8,7 +8,6 @@ from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -44,7 +43,6 @@ app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
                  "Edge weight dropout keep probability (rate = 1 - keep_prob)")
 ggnn.MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
 
-
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
     [
@@ -65,7 +63,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
     app.Log(1, "Using layer timesteps: %s for a total step count of %s",
-            self.layer_timesteps, np.prof(self.layer_timesteps))
+            self.layer_timesteps, np.prod(self.layer_timesteps))
 
     self.placeholders["target_values"] = tf.placeholder(
         tf.int32, [None, self.stats.node_labels_dimensionality], name="target_values")
