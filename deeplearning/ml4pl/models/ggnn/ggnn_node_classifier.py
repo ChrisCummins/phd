@@ -66,7 +66,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             self.layer_timesteps, np.prod(self.layer_timesteps))
 
     self.placeholders["target_values"] = tf.placeholder(
-        tf.int32, [None, self.stats.node_labels_dimensionality], name="target_values")
+        tf.int32, [None, self.stats.node_labels_dimensionality],
+        name="target_values")
 
     self.placeholders["node_x"] = tf.placeholder(
         tf.float32, [None, FLAGS.hidden_size], name="node_features")
@@ -133,8 +134,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell, FLAGS.graph_rnn_activation,
-                                  FLAGS.hidden_size, name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(
+            FLAGS.graph_rnn_cell,
+            FLAGS.graph_rnn_activation,
+            FLAGS.hidden_size,
+            name=f"cell_layer_{layer_index}")
         cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
@@ -305,25 +309,25 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.ops["final_node_x"] = node_states_per_layer[-1]
 
     computed_values, regression_gate, regression_transform = (
-      utils.MakeOutputLayer(
-          initial_node_state=self.placeholders["node_x"],
-          final_node_state=self.ops["final_node_x"],
-          hidden_size=FLAGS.hidden_size,
-          labels_dimensionality=self.stats.node_labels_dimensionality,
-          dropout_keep_prob_placeholder=self.placeholders["out_layer_dropout_keep_prob"]
-      )
-    )
+        utils.MakeOutputLayer(
+            initial_node_state=self.placeholders["node_x"],
+            final_node_state=self.ops["final_node_x"],
+            hidden_size=FLAGS.hidden_size,
+            labels_dimensionality=self.stats.node_labels_dimensionality,
+            dropout_keep_prob_placeholder=self.
+            placeholders["out_layer_dropout_keep_prob"]))
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
     predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32)
-    targets = tf.argmax(self.placeholders["target_values"], axis=1, output_type=tf.int32)
+    targets = tf.argmax(
+        self.placeholders["target_values"], axis=1, output_type=tf.int32)
 
     accuracy = tf.reduce_mean(
         tf.cast(tf.equal(predictions, targets), tf.float32))
 
-    loss = tf.losses.softmax_cross_entropy(
-        self.placeholders["target_values"], computed_values)
+    loss = tf.losses.softmax_cross_entropy(self.placeholders["target_values"],
+                                           computed_values)
 
     return loss, accuracy, predictions
 
