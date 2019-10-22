@@ -62,42 +62,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+    layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
     app.Log(1, "Using layer timesteps: %s for a total step count of %s",
-            self.layer_timesteps, np.prod(self.layer_timesteps))
-
-    self.placeholders["target_values"] = tf.placeholder(
-        tf.int32, [None, self.stats.node_labels_dimensionality],
-        name="target_values")
-
-    self.placeholders["node_x"] = tf.placeholder(
-        tf.float32, [None, FLAGS.hidden_size], name="node_features")
-
-    self.placeholders["node_count"] = tf.placeholder(
-        tf.int32, [], name="node_count")
-
-    adjacency_list_format = ['src', 'dst']
-    self.placeholders["adjacency_lists"] = [
-        tf.placeholder(
-            tf.int32, [None, len(adjacency_list_format)],
-            name=f"adjacency_e{edge_type}")
-        for edge_type in range(self.stats.edge_type_count)
-    ]
-
-    self.placeholders["incoming_edge_counts"] = tf.placeholder(
-        tf.float32, [None, self.stats.edge_type_count],
-        name="incoming_edge_counts")
-
-    self.placeholders["graph_nodes_list"] = tf.placeholder(
-        tf.int32, [None], name="graph_nodes_list")
-
-    self.placeholders["graph_state_keep_prob"] = tf.placeholder(
-        tf.float32, None, name="graph_state_keep_prob")
-
-    self.placeholders["edge_weight_dropout_keep_prob"] = tf.placeholder(
-        tf.float32, None, name="edge_weight_dropout_keep_prob")
-
-    activation_function = utils.GetActivationFunctionFromName(
-        FLAGS.graph_rnn_activation)
+            layer_timesteps, np.prod(layer_timesteps))
 
     # Generate per-layer values for edge weights, biases and gated units:
     self.weights = {}  # Used by super-class to place generic things
@@ -321,12 +288,12 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32)
     targets = tf.argmax(
-        self.placeholders["target_values"], axis=1, output_type=tf.int32)
+        self.placeholders["node_y"], axis=1, output_type=tf.int32)
 
     accuracy = tf.reduce_mean(
         tf.cast(tf.equal(predictions, targets), tf.float32))
 
-    loss = tf.losses.softmax_cross_entropy(self.placeholders["target_values"],
+    loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
                                            computed_values)
 
     return loss, accuracy, predictions
