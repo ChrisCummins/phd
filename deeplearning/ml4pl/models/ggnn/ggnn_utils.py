@@ -8,7 +8,6 @@ import typing
 from deeplearning.ml4pl.graphs import graph_database_stats
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 SMALL_NUMBER = 1e-7
@@ -53,6 +52,7 @@ class MLP(object):
   """MLP does just what you would expect: A relu activated, dropout equipped
   stack of linear layers.
   """
+
   def __init__(self, in_size, out_size, hid_sizes, dropout_keep_prob):
     """Constructors.
 
@@ -102,8 +102,8 @@ ActivationFunction = typing.Callable[[tf.Tensor], tf.Tensor]
 
 def GetActivationFunctionFromName(name: str) -> ActivationFunction:
   activation_functions = {
-    'tanh': tf.nn.tanh,
-    'relu': tf.nn.relu,
+      'tanh': tf.nn.tanh,
+      'relu': tf.nn.relu,
   }
   activation_function = activation_functions.get(name.lower())
   if not activation_function:
@@ -113,16 +113,16 @@ def GetActivationFunctionFromName(name: str) -> ActivationFunction:
   return activation_function
 
 
-def BuildRnnCell(cell_type: str, activation_function: str, hidden_size: int,
+def BuildRnnCell(cell_type: str,
+                 activation_function: str,
+                 hidden_size: int,
                  name: typing.Optional[str] = None):
   activation_function = GetActivationFunctionFromName(activation_function)
 
   cell_type = cell_type.lower()
   if cell_type == "gru":
     return tf.nn.rnn_cell.GRUCell(
-        hidden_size,
-        activation=activation_function,
-        name=name)
+        hidden_size, activation=activation_function, name=name)
   elif cell_type == "cudnncompatiblegrucell":
     import tensorflow.contrib.cudnn_rnn as cudnn_rnn
     if activation_function != tf.nn.tanh:
@@ -136,9 +136,8 @@ def BuildRnnCell(cell_type: str, activation_function: str, hidden_size: int,
     raise ValueError(f"Unknown RNN cell type '{name}'.")
 
 
-def MakePlaceholders(
-    stats: graph_database_stats.GraphDictDatabaseStats
-) -> typing.Dict[str, tf.Tensor]:
+def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
+                    ) -> typing.Dict[str, tf.Tensor]:
   """Create tensorflow placeholders for graph dicts in the given dataset.
 
   Args:
@@ -149,63 +148,69 @@ def MakePlaceholders(
     A dictionary mapping names to placeholder tensors.
   """
   placeholders = {
-    'graph_count': tf.placeholder(tf.int32, [], name="graph_count"),
-    'node_count': tf.placeholder(tf.int32, [], name="node_count"),
-    'adjacency_lists': [
-      tf.placeholder(tf.int32, [None, 2], name=f"adjacency_e{i}")
-      for i in range(stats.edge_type_count)
-    ],
-    'incoming_edge_counts': tf.placeholder(
-        tf.float32, [None, stats.edge_type_count],
-        name="incoming_edge_counts"),
-    'graph_nodes_list': tf.placeholder(
-        tf.int32, [None], name="graph_nodes_list"),
-    # Dropouts:
-    'graph_state_keep_prob': tf.placeholder(
-        tf.float32, None, name="graph_state_keep_prob"),
-    'edge_weight_dropout_keep_prob': tf.placeholder(
-        tf.float32, None, name="edge_weight_dropout_keep_prob"),
-    "out_layer_dropout_keep_prob": tf.placeholder(
-        tf.float32, [], name="out_layer_dropout_keep_prob"),
+      'graph_count':
+      tf.placeholder(tf.int32, [], name="graph_count"),
+      'node_count':
+      tf.placeholder(tf.int32, [], name="node_count"),
+      'adjacency_lists': [
+          tf.placeholder(tf.int32, [None, 2], name=f"adjacency_e{i}")
+          for i in range(stats.edge_type_count)
+      ],
+      'incoming_edge_counts':
+      tf.placeholder(
+          tf.float32, [None, stats.edge_type_count],
+          name="incoming_edge_counts"),
+      'graph_nodes_list':
+      tf.placeholder(tf.int32, [None], name="graph_nodes_list"),
+      # Dropouts:
+      'graph_state_keep_prob':
+      tf.placeholder(tf.float32, None, name="graph_state_keep_prob"),
+      'edge_weight_dropout_keep_prob':
+      tf.placeholder(tf.float32, None, name="edge_weight_dropout_keep_prob"),
+      "out_layer_dropout_keep_prob":
+      tf.placeholder(tf.float32, [], name="out_layer_dropout_keep_prob"),
   }
 
   if stats.node_features_dimensionality:
     placeholders['node_x'] = tf.placeholder(
         stats.node_features_dtype,
-        [None, stats.node_features_dimensionality], name="node_x")
+        # TODO(cec): This is hardcoded to padded node features.
+        # It should be stats.node_features_dimensionality.
+        [None, FLAGS.hidden_size],
+        name="node_x")
 
   if stats.node_labels_dimensionality:
     placeholders['node_y'] = tf.placeholder(
-        stats.node_labels_dtype,
-        [None, stats.node_labels_dimensionality], name="node_y")
+        stats.node_labels_dtype, [None, stats.node_labels_dimensionality],
+        name="node_y")
 
   if stats.edge_features_dimensionality:
     placeholders['edge_x'] = [
-      tf.placeholder(stats.edge_features_dtype,
-                     [None, stats.edge_features_dimensionality],
-                     name=f"edge_x_e{i}")
-      for i in range(stats.edge_type_count)
+        tf.placeholder(
+            stats.edge_features_dtype,
+            [None, stats.edge_features_dimensionality],
+            name=f"edge_x_e{i}") for i in range(stats.edge_type_count)
     ]
 
   if stats.edge_labels_dimensionality:
     placeholders['edge_x'] = [
-      tf.placeholder(stats.edge_labels_dtype,
-                     [None, stats.edge_features_dimensionality],
-                     name=f"edge_x_e{i}")
-      for i in range(stats.edge_type_count)
+        tf.placeholder(
+            stats.edge_labels_dtype, [None, stats.edge_features_dimensionality],
+            name=f"edge_x_e{i}") for i in range(stats.edge_type_count)
     ]
 
   if stats.graph_features_dimensionality:
     placeholders['graph_x'] = tf.placeholder(
-        stats.graph_features_dtype,
-        [None, stats.graph_features_dimensionality], name="graph_x")
+        stats.graph_features_dtype, [None, stats.graph_features_dimensionality],
+        name="graph_x")
 
   if stats.graph_labels_dimensionality:
     placeholders['graph_y'] = tf.placeholder(
-        stats.graph_labels_dtype,
-        [None, stats.graph_labels_dimensionality], name="graph_y")
+        stats.graph_labels_dtype, [None, stats.graph_labels_dimensionality],
+        name="graph_y")
 
   return placeholders
+
 
 def BatchDictToFeedDict(
     batch: typing.Dict[str, typing.Any],
@@ -226,10 +231,10 @@ def BatchDictToFeedDict(
   edge_type_count = len(batch['adjacency_lists'])
 
   feed_dict = {
-    placeholders["incoming_edge_counts"]: batch['incoming_edge_counts'],
-    placeholders['graph_nodes_list']: batch['graph_nodes_list'],
-    placeholders["graph_count"]: batch['graph_count'],
-    placeholders["node_count"]: batch['node_count'],
+      placeholders["incoming_edge_counts"]: batch['incoming_edge_counts'],
+      placeholders['graph_nodes_list']: batch['graph_nodes_list'],
+      placeholders["graph_count"]: batch['graph_count'],
+      placeholders["node_count"]: batch['node_count'],
   }
 
   for i in range(edge_type_count):
@@ -258,8 +263,8 @@ def BatchDictToFeedDict(
   return feed_dict
 
 
-def MakeOutputLayer(initial_node_state, final_node_state,
-                    hidden_size: int, labels_dimensionality: int,
+def MakeOutputLayer(initial_node_state, final_node_state, hidden_size: int,
+                    labels_dimensionality: int,
                     dropout_keep_prob_placeholder: str):
   with tf.variable_scope("output_layer"):
     with tf.variable_scope("regression_gate"):
@@ -271,7 +276,7 @@ def MakeOutputLayer(initial_node_state, final_node_state,
           dropout_keep_prob=dropout_keep_prob_placeholder,
       )
 
-    with tf.variable_scope("regression"):
+    with tf.variable_scope("regression_transform"):
       regression_transform = MLP(
           in_size=hidden_size,
           out_size=labels_dimensionality,
@@ -279,18 +284,18 @@ def MakeOutputLayer(initial_node_state, final_node_state,
           dropout_keep_prob=dropout_keep_prob_placeholder,
       )
 
-    gated_input = tf.concat(
-        [final_node_state, initial_node_state], axis=-1)
+    with tf.variable_scope("gated_regression"):
+      gated_input = tf.concat([final_node_state, initial_node_state], axis=-1)
 
-    computed_values = (tf.nn.sigmoid(regression_gate(gated_input)) *
-                       regression_transform(initial_node_state))
+      computed_values = (tf.nn.sigmoid(regression_gate(gated_input)) *
+                         regression_transform(initial_node_state))
 
   return computed_values, regression_gate, regression_transform
 
-def RunWithFetchDict(
-    sess: tf.Session, fetch_dict: typing.Dict[str, tf.Tensor],
-    feed_dict: typing.Dict[tf.Tensor, typing.Any]
-) -> typing.Dict[str, tf.Tensor]:
+
+def RunWithFetchDict(sess: tf.Session, fetch_dict: typing.Dict[str, tf.Tensor],
+                     feed_dict: typing.Dict[tf.Tensor, typing.Any]
+                    ) -> typing.Dict[str, tf.Tensor]:
   """A wrapper around session run which uses a dictionary for the fetch list."""
   fetch_dict_keys = sorted(fetch_dict.keys())
   fetch_dict_values = [fetch_dict[k] for k in fetch_dict_keys]
