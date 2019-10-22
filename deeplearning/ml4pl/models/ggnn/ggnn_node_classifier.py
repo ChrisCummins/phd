@@ -332,26 +332,22 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       epoch_type: str) -> typing.Iterable[typing.Tuple[int, ggnn.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
-    state_dropout_keep_prob = (FLAGS.graph_state_dropout_keep_prob
-                               if epoch_type == "train" else 1.0)
-    edge_weights_dropout_keep_prob = (FLAGS.edge_weight_dropout_keep_prob
-                                      if epoch_type == "train" else 1.0)
-
     for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
+      feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
       if epoch_type == "train":
         feed_dict.update({
-          self.placeholders["graph_state_keep_prob"]: (
-            FLAGS.graph_state_dropout_keep_prob),
-          self.placeholders["edge_weight_dropout_keep_prob"]: (
-            FLAGS.edge_weight_dropout_keep_prob),
-          self.placeholders["out_layer_dropout_keep_prob"]: (
-            FLAGS.out_layer_dropout_keep_prob)
+            self.placeholders["graph_state_keep_prob"]:
+            (FLAGS.graph_state_dropout_keep_prob),
+            self.placeholders["edge_weight_dropout_keep_prob"]:
+            (FLAGS.edge_weight_dropout_keep_prob),
+            self.placeholders["out_layer_dropout_keep_prob"]:
+            (FLAGS.out_layer_dropout_keep_prob)
         })
       else:
         feed_dict.update({
-          self.placeholders["graph_state_keep_prob"]: 1.0,
-          self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
-          self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
+            self.placeholders["graph_state_keep_prob"]: 1.0,
+            self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
+            self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
         })
       yield batch['graph_count'], feed_dict
 
