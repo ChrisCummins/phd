@@ -94,11 +94,11 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     return max(self.node_count, 1) / self.elapsed_time_seconds
 
   def __repr__(self) -> str:
-    return (f"Epoch {humanize.Commas(self.epoch)} {self.group}. "
-            f"batch={humanize.Commas(self.batch)} | "
-            f"graphs/sec={self.graphs_per_second:.2f} | "
-            f"loss={self.loss:.4f} | "
-            f"acc={self.accuracy:.2%}")
+    return (
+        f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.group}: "
+        f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
+        f"loss={self.loss:.4f} | "
+        f"acc={self.accuracy:.2%}")
 
 
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
