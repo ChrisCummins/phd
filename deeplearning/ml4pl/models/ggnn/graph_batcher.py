@@ -175,10 +175,10 @@ class GraphBatcher(object):
           ))
 
       # Offset the adjacency list node indices.
-      for i, adjacency_list in enumerate(graph_dict['adjacency_lists']):
+      for edge_type, adjacency_list in enumerate(graph_dict['adjacency_lists']):
         if adjacency_list.size:
-          batch['adjacency_lists'][i].append(adjacency_list + np.array(
-              (log.node_count, log.node_count), dtype=np.int32))
+          offset = np.array((log.node_count, log.node_count), dtype=np.int32)
+          batch['adjacency_lists'][edge_type].append(adjacency_list + offset)
 
       # Turn counters for incoming edges into a dense array:
       batch['incoming_edge_counts'].append(
