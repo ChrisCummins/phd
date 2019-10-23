@@ -1,5 +1,4 @@
 """Base class for implementing gated graph neural networks."""
-import os
 import time
 
 import numpy as np
@@ -144,8 +143,8 @@ class GgnnBaseModel(object):
   def __init__(self, db: graph_database.Database,
                log_db: log_database.Database):
     """Constructor."""
-    self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}."
-                        f"{system.HOSTNAME}.{os.getpid()}")
+    self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
+                        f"{system.HOSTNAME}")
 
     self.batcher = graph_batcher.GraphBatcher(db, np.prod(self.layer_timesteps))
     self.stats = self.batcher.stats
