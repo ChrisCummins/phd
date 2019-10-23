@@ -9,7 +9,6 @@ from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -301,8 +300,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     return loss, accuracy, predictions
 
   def MakeMinibatchIterator(
-      self,
-      epoch_type: str) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
+      self, epoch_type: str
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
     for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
@@ -327,14 +326,15 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
 def main():
   """Main entry point."""
-  db = FLAGS.graph_db()
+  graph_db = FLAGS.graph_db()
+  log_db = FLAGS.log_db()
   working_dir = FLAGS.working_dir
   if not working_dir:
     raise app.UsageError("--working_dir is required")
 
   app.Log(1, 'Using working dir %s', working_dir)
 
-  model = GgnnNodeClassifierModel(db)
+  model = GgnnNodeClassifierModel(graph_db, log_db)
   model.Train()
 
 

@@ -9,7 +9,6 @@ from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -62,9 +61,9 @@ GGNNWeights = collections.namedtuple(
     ],
 )
 
-
 # TODO(cec): Refactor.
 residual_connections = {}
+
 
 class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
 
@@ -82,13 +81,13 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
             tf.reshape(
                 tf.Variable(
                     utils.glorot_init([
-                      self.stats.edge_type_count * FLAGS.hidden_size,
-                      FLAGS.hidden_size
+                        self.stats.edge_type_count * FLAGS.hidden_size,
+                        FLAGS.hidden_size
                     ]),
                     name=f"gnn_edge_weights_{layer_index}",
                 ), [
-                  self.stats.edge_type_count, FLAGS.hidden_size,
-                  FLAGS.hidden_size
+                    self.stats.edge_type_count, FLAGS.hidden_size,
+                    FLAGS.hidden_size
                 ]),
             rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
         self.gnn_weights.edge_weights.append(edge_weights)
@@ -100,13 +99,13 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
             tf.reshape(
                 tf.Variable(
                     utils.glorot_init([
-                      self.stats.edge_type_count * FLAGS.hidden_size,
-                      FLAGS.hidden_size
+                        self.stats.edge_type_count * FLAGS.hidden_size,
+                        FLAGS.hidden_size
                     ]),
                     name=f"gnn_edge_weights_for_emb_{layer_index}",
                 ), [
-                  self.stats.edge_type_count, FLAGS.hidden_size,
-                  FLAGS.hidden_size
+                    self.stats.edge_type_count, FLAGS.hidden_size,
+                    FLAGS.hidden_size
                 ]),
             rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
         self.gnn_weights.edge_weights_for_embs.append(edge_weights)
@@ -132,8 +131,11 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell, FLAGS.graph_rnn_activation,
-                                  FLAGS.hidden_size, name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(
+            FLAGS.graph_rnn_cell,
+            FLAGS.graph_rnn_activation,
+            FLAGS.hidden_size,
+            name=f"cell_layer_{layer_index}")
         cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
@@ -213,8 +215,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
               # indices.
               edge_emb_idxs = edge_embeddings[:, 0]
               edge_embs = tf.nn.embedding_lookup(
-                  params=self.weights["embedding_table"],
-                  ids=edge_emb_idxs)
+                  params=self.weights["embedding_table"], ids=edge_emb_idxs)
               edge_source_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=edge_sources)  # Shape [E, D]
@@ -276,8 +277,8 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
                   indices=message_targets,
               )  # Shape [M]
               message_attention = message_attention_scores_exped / (
-                  message_attention_normalisation_sum_per_message + utils.SMALL_NUMBER
-              )  # Shape [M]
+                  message_attention_normalisation_sum_per_message +
+                  utils.SMALL_NUMBER)  # Shape [M]
               # Step (4): Weigh messages using the attention prob:
               messages = messages * tf.expand_dims(message_attention, -1)
 
@@ -313,73 +314,77 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
     self.ops["final_node_x"] = node_states_per_layer[-1]
 
     computed_values, regression_gate, regression_transform = (
-      utils.MakeOutputLayer(
-          initial_node_state=tf.zeros([self.placeholders['node_count'], FLAGS.hidden_size]),
-          final_node_state=self.ops["final_node_x"],
-          hidden_size=FLAGS.hidden_size,
-          labels_dimensionality=self.stats.graph_labels_dimensionality,
-          dropout_keep_prob_placeholder=self.placeholders["out_layer_dropout_keep_prob"]
-      )
-    )
+        utils.MakeOutputLayer(
+            initial_node_state=tf.zeros(
+                [self.placeholders['node_count'], FLAGS.hidden_size]),
+            final_node_state=self.ops["final_node_x"],
+            hidden_size=FLAGS.hidden_size,
+            labels_dimensionality=self.stats.graph_labels_dimensionality,
+            dropout_keep_prob_placeholder=self.
+            placeholders["out_layer_dropout_keep_prob"]))
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
     # Sum node representations across graph.
-    computed_values = tf.unsorted_segment_sum(computed_values,
-            segment_ids=self.placeholders["graph_nodes_list"],
-            num_segments=self.placeholders["graph_count"],
-            name='computed_values',
+    computed_values = tf.unsorted_segment_sum(
+        computed_values,
+        segment_ids=self.placeholders["graph_nodes_list"],
+        num_segments=self.placeholders["graph_count"],
+        name='computed_values',
     )  # [g, c]
 
-    predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32,
-                            name="predictions")
+    predictions = tf.argmax(
+        computed_values, axis=1, output_type=tf.int32, name="predictions")
 
-    targets = tf.argmax(self.placeholders["graph_y"], axis=1,
-                        output_type=tf.int32, name="targets")
+    targets = tf.argmax(
+        self.placeholders["graph_y"],
+        axis=1,
+        output_type=tf.int32,
+        name="targets")
 
     accuracy = tf.reduce_mean(
         tf.cast(tf.equal(predictions, targets), tf.float32))
 
-    loss = tf.losses.softmax_cross_entropy(
-        self.placeholders["graph_y"], computed_values)
+    loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
+                                           computed_values)
 
     return loss, accuracy, predictions
 
-
   def MakeMinibatchIterator(
-      self,
-      epoch_type: str) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
+      self, epoch_type: str
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
     for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
       feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
       if epoch_type == "train":
         feed_dict.update({
-          self.placeholders["graph_state_keep_prob"]: (
-            FLAGS.graph_state_dropout_keep_prob),
-          self.placeholders["edge_weight_dropout_keep_prob"]: (
-            FLAGS.edge_weight_dropout_keep_prob),
-          self.placeholders["out_layer_dropout_keep_prob"]: (
-            FLAGS.out_layer_dropout_keep_prob)
+            self.placeholders["graph_state_keep_prob"]:
+            (FLAGS.graph_state_dropout_keep_prob),
+            self.placeholders["edge_weight_dropout_keep_prob"]:
+            (FLAGS.edge_weight_dropout_keep_prob),
+            self.placeholders["out_layer_dropout_keep_prob"]:
+            (FLAGS.out_layer_dropout_keep_prob)
         })
       else:
         feed_dict.update({
-          self.placeholders["graph_state_keep_prob"]: 1.0,
-          self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
-          self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
+            self.placeholders["graph_state_keep_prob"]: 1.0,
+            self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
+            self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
         })
       yield batch['log'], feed_dict
 
 
 def main():
-  db = FLAGS.graph_db()
+  graph_db = FLAGS.graph_db()
+  log_db = FLAGS.log_db()
   working_dir = FLAGS.working_dir
   if not working_dir:
     raise app.UsageError("--working_dir is required")
 
   app.Log(1, 'Using working dir %s', working_dir)
 
-  model = GgnnGraphClassifierModel(db)
+  model = GgnnGraphClassifierModel(graph_db, log_db)
   model.Train()
 
 
