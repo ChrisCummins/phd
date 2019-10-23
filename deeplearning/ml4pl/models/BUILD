@@ -6,8 +6,9 @@ py_library(
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         "//labm8:app",
-        "//labm8:sqlutil",
+        "//labm8:humanize",
         "//labm8:labdate",
+        "//labm8:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -19,8 +20,8 @@ py_test(
         ":log_database",
         "//labm8:app",
         "//labm8:test",
-        "//third_party/py/pytest",
         "//third_party/py/numpy",
+        "//third_party/py/pytest",
     ],
 )
 

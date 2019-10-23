@@ -9,6 +9,7 @@ from sqlalchemy.ext import declarative
 from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
+from labm8 import humanize
 
 FLAGS = app.FLAGS
 
