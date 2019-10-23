@@ -111,20 +111,13 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
 
-    # One entry per layer (final state of that layer), shape: number of nodes
+    # Initial node states and then one entry per layer 
+    # (final state of that layer), shape: number of nodes
     # in batch v x D.
-    node_states_per_layer = []
+    node_states_per_layer = [self.placeholders['node_x']]
 
     # Number of nodes in batch.
     num_nodes_in_batch = self.placeholders['node_count']
-
-    # We drop the initial states placeholder in the first layer as they are all
-    # zero.
-    node_states_per_layer.append(
-        tf.zeros(
-            [num_nodes_in_batch, FLAGS.hidden_size],
-            dtype=tf.float32,
-        ))
 
     message_targets = []  # List of tensors of message targets of shape [E]
     message_edge_types = []  # List of tensors of edge type of shape [E]
@@ -278,7 +271,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     predictions, regression_gate, regression_transform = (
         utils.MakeOutputLayer(
-            initial_node_state=self.placeholders["node_x"],
+            initial_node_state=node_states_per_layer[0],
             final_node_state=self.ops["final_node_x"],
             hidden_size=FLAGS.hidden_size,
             labels_dimensionality=self.stats.node_labels_dimensionality,
