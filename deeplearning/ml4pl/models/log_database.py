@@ -87,11 +87,17 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   @property
   def graphs_per_second(self):
-    return max(self.graph_count, 1) / self.elapsed_time_seconds
+    if self.elapsed_time_seconds:
+      return max(self.graph_count, 1) / self.elapsed_time_seconds
+    else:
+      return 0
 
   @property
   def nodes_per_second(self):
-    return max(self.node_count, 1) / self.elapsed_time_seconds
+    if self.elapsed_time_seconds:
+      return max(self.node_count, 1) / self.elapsed_time_seconds
+    else:
+      return 0
 
   def __repr__(self) -> str:
     return (
