@@ -1,6 +1,30 @@
 # Machine learning models.
 
 py_library(
+    name = "log_database",
+    srcs = ["log_database.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        "//labm8:app",
+        "//labm8:sqlutil",
+        "//labm8:labdate",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "log_database_test",
+    srcs = ["log_database_test.py"],
+    deps = [
+        ":log_database",
+        "//labm8:app",
+        "//labm8:test",
+        "//third_party/py/pytest",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_library(
     name = "log_writer",
     srcs = ["log_writer.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
