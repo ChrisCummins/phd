@@ -133,8 +133,8 @@ class Database(sqlutil.Database):
           sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
           sql.func.sum(
               BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
-          sql.func.sum(BatchLog.graph_count).label("graph_count"),
-          sql.func.sum(BatchLog.node_count).label("node_count"),
+          sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count)).label("graph_count"),
+          sql.sql.expression.cast(sql.func.sum(BatchLog.node_count)).label("node_count"),
       )
 
       q = q.filter(BatchLog.run_id == run_id)
