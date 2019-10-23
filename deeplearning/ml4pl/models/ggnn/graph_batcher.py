@@ -91,7 +91,7 @@ class GraphBatcher(object):
         elapsed_time = time.time() - start_time
         app.Log(
             1, "Created batch of %s graphs (%s nodes) in %s "
-            "(%s graphs / second)", humanize.Commas(batch['log'].graph_count),
+            "(%s graphs/sec)", humanize.Commas(batch['log'].graph_count),
             humanize.Commas(batch['log'].node_count),
             humanize.Duration(elapsed_time),
             humanize.Commas(batch['log'].graph_count / elapsed_time))
