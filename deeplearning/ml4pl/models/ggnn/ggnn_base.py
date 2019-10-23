@@ -306,13 +306,17 @@ class GgnnBaseModel(object):
           self.SaveModel(self.best_model_file)
           # Compute the ratio of the new best validation accuracy against the
           # old best validation accuracy.
-          accuracy_ratio = (val_acc / max(self.best_epoch_validation_accuracy,
-                                          utils.SMALL_NUMBER))
+          if self.best_epoch_validation_accuracy:
+            accuracy_ratio = (val_acc / max(self.best_epoch_validation_accuracy,
+                                            utils.SMALL_NUMBER))
+            relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
+          else:
+            relative_increase = ''
           app.Log(
               1, "Best epoch so far, validation accuracy increased "
-              "+%.3f%%, (+%.3f%% relative). Saving to '%s'",
+              "+%.3f%%%s. Saving to '%s'",
               (val_acc - self.best_epoch_validation_accuracy) * 100,
-              (accuracy_ratio - 1) * 100, self.best_model_file)
+              relative_increase, self.best_model_file)
           self.best_epoch_validation_accuracy = val_acc
           self.best_epoch_num = epoch_num
 
