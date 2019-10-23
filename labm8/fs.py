@@ -35,6 +35,19 @@ class Error(Exception):
 class File404(Error):
   pass
 
+# A list of file names that frequently appear in file systems that are not
+# "useful".
+COMMONLY_IGNORED_FILE_NAMES = set([
+  "._.DS_Store",
+  ".com.apple.timemachine.donotpresent",
+  ".com.apple.timemachine.supported",
+  ".DS_Store",
+  ".sync.ffs_db",
+  ".sync_timestamp.txt",
+  ".VolumeIcon.icns",
+  ".VolumeIcon.ico",
+  "autorun.inf",
+])
 
 def path(*components):
   """
