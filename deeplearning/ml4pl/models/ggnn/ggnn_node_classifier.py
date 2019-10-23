@@ -276,7 +276,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     self.ops["final_node_x"] = node_states_per_layer[-1]
 
-    computed_values, regression_gate, regression_transform = (
+    predictions, regression_gate, regression_transform = (
         utils.MakeOutputLayer(
             initial_node_state=self.placeholders["node_x"],
             final_node_state=self.ops["final_node_x"],
@@ -287,16 +287,15 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
-    predictions = tf.argmax(computed_values, axis=1, output_type=tf.int32)
     targets = tf.argmax(
         self.placeholders["node_y"], axis=1, output_type=tf.int32)
 
-    accuracies = tf.equal(predictions, targets)
+    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
     loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
-                                           computed_values)
+                                           predictions)
 
     return loss, accuracies, accuracy, predictions
 
