@@ -22,7 +22,6 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
 
-
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -284,6 +283,7 @@ class GgnnBaseModel(object):
       log.loss = float(fetch_dict['loss'])
       log.accuracy = float(fetch_dict['accuracy'])
       log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
+      app.Log(1, "%s", log)
       # Create a new database session for every batch because we don't want to
       # leave the connection lying around for a long time (they can drop out)
       # and epochs may take O(hours). Alternatively we could store all of the
