@@ -13,6 +13,7 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled/graph_dict",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
+        "//deeplearning/ml4pl/models/ggnn:graph_batcher",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//deeplearning/ml4pl/graphs/labelled/reachability:make_reachability_dataset",
