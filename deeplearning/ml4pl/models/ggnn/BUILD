@@ -73,6 +73,7 @@ py_library(
 py_library(
     name = "graph_batcher",
     srcs = ["graph_batcher.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs:graph_database_reader",
