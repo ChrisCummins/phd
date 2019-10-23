@@ -120,7 +120,7 @@ class GgnnBaseModel(object):
   """
 
   def MakeLossAndAccuracyAndPredictionOps(
-      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     raise NotImplementedError("abstract class")
 
   def MakeMinibatchIterator(
@@ -191,7 +191,12 @@ class GgnnBaseModel(object):
 
         self.ops = {}
         with tf.variable_scope("graph_model"):
-          self.ops["loss"], self.ops["accuracy"], self.ops["predictions"] = (
+          (
+            self.ops["loss"],
+            self.ops["accuracies"],
+            self.ops["accuracy"],
+            self.ops["predictions"]
+          ) = (
               self.MakeLossAndAccuracyAndPredictionOps())
 
         # Tensorboard summaries.
@@ -258,6 +263,7 @@ class GgnnBaseModel(object):
 
       fetch_dict = {
           "loss": self.ops["loss"],
+          "accuracies": self.ops["accuracies"],
           "accuracy": self.ops["accuracy"],
           "predictions": self.ops["predictions"],
           "summary_loss": self.ops["summary_loss"],
@@ -280,6 +286,7 @@ class GgnnBaseModel(object):
       log.run_id = self.run_id
       log.loss = float(fetch_dict['loss'])
       log.accuracy = float(fetch_dict['accuracy'])
+      log.pickled_accuracies = pickle.dumps(fetch_dict['accuracies'])
       log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
       app.Log(1, "%s", log)
       # Create a new database session for every batch because we don't want to

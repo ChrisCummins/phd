@@ -65,6 +65,10 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   pickled_graph_indices: bytes = sql.Column(
       sqlutil.ColumnTypes.LargeBinary(), nullable=False)
 
+  # A pickled array of accuracies, with the same shape as pickled_predictions.
+  pickled_accuracies: bytes = sql.Column(
+      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
+
   # A pickled array of model predictions, one for each graph in the batch.
   pickled_predictions: bytes = sql.Column(
       sqlutil.ColumnTypes.LargeBinary(), nullable=False)
@@ -72,6 +76,10 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @property
   def graph_indices(self) -> typing.List[int]:
     return pickle.loads(self.pickled_graph_indices)
+
+  @property
+  def accuracies(self) -> typing.Any:
+    return pickle.loads(self.pickled_accuracies)
 
   @property
   def predictions(self) -> typing.Any:

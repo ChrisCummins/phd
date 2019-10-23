@@ -62,7 +62,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
   """GGNN model for learning node classification."""
 
   def MakeLossAndAccuracyAndPredictionOps(
-      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
     app.Log(1, "Using layer timesteps: %s for a total step count of %s",
             layer_timesteps, np.prod(layer_timesteps))
@@ -291,13 +291,14 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     targets = tf.argmax(
         self.placeholders["node_y"], axis=1, output_type=tf.int32)
 
-    accuracy = tf.reduce_mean(
-        tf.cast(tf.equal(predictions, targets), tf.float32))
+    accuracies = tf.equal(predictions, targets)
+
+    accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
     loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
                                            computed_values)
 
-    return loss, accuracy, predictions
+    return loss, accuracies, accuracy, predictions
 
   def MakeMinibatchIterator(
       self, epoch_type: str
