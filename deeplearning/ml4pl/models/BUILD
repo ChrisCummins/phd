@@ -3,11 +3,12 @@
 py_library(
     name = "log_database",
     srcs = ["log_database.py"],
-    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//labm8:app",
         "//labm8:humanize",
         "//labm8:labdate",
+        "//labm8:pdutil",
         "//labm8:sqlutil",
         "//third_party/py/sqlalchemy",
     ],

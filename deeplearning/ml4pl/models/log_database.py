@@ -7,9 +7,11 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from labm8 import app
-from labm8 import labdate
-from labm8 import sqlutil
 from labm8 import humanize
+from labm8 import labdate
+from labm8 import pdutil
+from labm8 import sqlutil
+
 
 FLAGS = app.FLAGS
 
@@ -92,7 +94,65 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
             f"acc={self.accuracy:.2%}")
 
 
+class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """TODO."""
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # A string to uniquely identify the given experiment run.
+  run_id: str = sql.Column(sql.String(64), nullable=False)
+
+  # One of: {model_flags,flags,build_info}
+  type: str = sql.Column(sql.String(256), primary_key=True)
+
+  # The name of the parameter.
+  parameter: str = sql.Column(sql.String(256), primary_key=True)
+  # The value for the parameter.
+  value: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+
+
 class Database(sqlutil.Database):
 
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
+
+  def BatchLogsToDataFrame(self, run_id: str, per_global_step: bool = False):
+    with self.Session() as session:
+      q = session.query(
+          BatchLog.epoch,
+          BatchLog.group,
+          sql.func.min(BatchLog.global_step).label("global_step"),
+          sql.func.avg(BatchLog.loss).label("loss"),
+          sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
+          sql.func.sum(BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
+          sql.func.sum(BatchLog.graph_count).label("graph_count"),
+          sql.func.sum(BatchLog.node_count).label("node_count"),
+      )
+        
+      q = q.filter(BatchLog.run_id == run_id)
+        
+      q = q.group_by(BatchLog.epoch, BatchLog.group)
+
+      # Group each individual step. Since there is only one log per step,
+      # this means return all rows without grouping.
+      if per_global_step:
+        q = q.group_by(BatchLog.global_step) \
+          .order_by(BatchLog.global_step)
+
+      q = q.order_by(BatchLog.epoch,
+                     BatchLog.group)
+
+      return pdutil.QueryToDataFrame(session, q)
+
+  def ParametersToDataFrame(self, run_id: str, type: str):
+    with self.Session() as session:
+      q = session.query(
+          Parameter.parameter,
+          Parameter.value,
+      )
+
+      q = q.filter(Parameter.run_id == run_id)
+
+      q = q.order_by(Paramete.parameter)
+
+      return pdutil.QueryToDataFrame(session, q)
