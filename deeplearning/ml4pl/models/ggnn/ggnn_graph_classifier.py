@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import typing
 
+from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
@@ -347,7 +348,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
 
   def MakeMinibatchIterator(
       self,
-      epoch_type: str) -> typing.Iterable[typing.Tuple[int, ggnn.FeedDict]]:
+      epoch_type: str) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
     for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
@@ -367,7 +368,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
           self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
           self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
         })
-      yield batch['graph_count'], feed_dict
+      yield batch['log'], feed_dict
 
 
 def main():

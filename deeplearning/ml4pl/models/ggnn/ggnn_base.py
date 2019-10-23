@@ -11,15 +11,13 @@ import typing
 
 import build_info
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.models import batch_logger
-from deeplearning.ml4pl.models import log_writer
+from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from deeplearning.ml4pl.models.ggnn import graph_batcher
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
 from labm8 import jsonutil
-from labm8 import labdate
 from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
@@ -52,6 +50,12 @@ app.DEFINE_database(
     None,
     'The database to read graph data from.',
     must_exist=True)
+
+app.DEFINE_database(
+    'log_db',
+    log_database.Database,
+    None,
+    'The database to write logs to.')
 
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
 
@@ -124,15 +128,15 @@ class GgnnBaseModel(object):
     raise NotImplementedError("abstract class")
 
   def MakeMinibatchIterator(
-      self, epoch_type: str) -> typing.Iterable[typing.Tuple[int, FeedDict]]:
+      self, epoch_type: str) -> typing.Iterable[typing.Tuple[log_database.BatchLog, FeedDict]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
       epoch_type: The type of epoch to return mini-batches for.
 
     Returns:
-      An iterator of mini-batches, where each mini-batch is a tuple of the batch
-      size (as an int), and a feed dict to be fed to tf.Session.run().
+      An iterator of mini-batches, where each mini-batch is a tuple of a list
+      of GraphMeta.ids, and a feed dict to be fed to tf.Session.run().
     """
     raise NotImplementedError("abstract class")
 
@@ -140,7 +144,8 @@ class GgnnBaseModel(object):
     """Subclasses may extend this method to mark additional flags as important."""
     return MODEL_FLAGS
 
-  def __init__(self, db: graph_database.Database):
+  def __init__(self, db: graph_database.Database,
+               log_db: log_database.Database):
     """Constructor."""
     self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}."
                         f"{system.HOSTNAME}.{os.getpid()}")
@@ -150,8 +155,6 @@ class GgnnBaseModel(object):
     app.Log(1, "%s", self.stats)
 
     self.working_dir = FLAGS.working_dir
-    self.logger = log_writer.FormattedJsonLogWriter(
-        self.working_dir / 'logs' / self.run_id)
     self.best_model_file = self.working_dir / f'{self.run_id}.best_model.pickle'
     self.working_dir.mkdir(exist_ok=True, parents=True)
 
@@ -159,8 +162,11 @@ class GgnnBaseModel(object):
     # --alsologtostderr.
     app.Log(
         1, 'Writing logs to `%s`. Unless --alsologtostderr flag is set, '
-        'this is the last message you will see.', self.working_dir)
+        'this is the last message you will see', self.working_dir)
     app.LogToDirectory(self.working_dir, self.run_id)
+
+    self.log_db = log_db
+    app.Log(1, 'Writing batch logs to `%s`', self.log_db.url)
 
     app.Log(1, "Build information: %s",
             jsonutil.format_json(pbutil.ToJson(build_info.GetBuildInfo())))
@@ -233,23 +239,30 @@ class GgnnBaseModel(object):
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
-  def RunEpoch(self, epoch_name: str,
-               epoch_type: str) -> batch_logger.InMemoryBatchLogger:
+  def RunEpoch(self, epoch_num: int,
+               epoch_type: str) -> float:
     assert epoch_type in {"train", "val", "test"}
-    logger = batch_logger.InMemoryBatchLogger(epoch_name)
+    accuracies = []
 
-    batch_iterator = utils.ThreadedIterator(
+    batch_iterator: typing.Iterable[
+      typing.Tuple[log_database.BatchLog,
+                   typing.Dict[str, typing.Any]]] = utils.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type), max_queue_size=5)
 
-    for step, (batch_size, feed_dict) in enumerate(batch_iterator):
+    for step, (log, feed_dict) in enumerate(batch_iterator):
+      batch_start_time = time.time()
       self.global_training_step += 1
+      log.epoch = epoch_num
+      log.batch = step
+      log.global_step = self.global_training_step
 
-      if not batch_size:
+      if not log.graph_count:
         raise ValueError("Mini-batch with zero graphs generated")
 
       fetch_dict = {
         "loss": self.ops["loss"],
         "accuracy": self.ops["accuracy"],
+        "predictions": self.ops["predictions"],
         "summary_loss": self.ops["summary_loss"],
         "summary_accuracy": self.ops["summary_accuracy"],
       }
@@ -264,55 +277,51 @@ class GgnnBaseModel(object):
                                                      self.global_training_step)
         self.summary_writers[epoch_type].add_summary(fetch_dict["summary_accuracy"],
                                                      self.global_training_step)
-      app.Log(
-          1, "%s",
-          logger.Log(batch_size=batch_size,
-                     loss=fetch_dict['loss'],
-                     accuracy=fetch_dict['accuracy']))
 
-    logger.StopTheClock()
-    return logger
+      accuracies.append(float(fetch_dict['accuracy']))
+      log.elapsed_time_seconds = time.time() - batch_start_time
+      log.run_id = self.run_id
+      log.loss = float(fetch_dict['loss'])
+      log.accuracy = float(fetch_dict['accuracy'])
+      log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
+      # Create a new database session for every batch because we don't want to
+      # leave the connection lying around for a long time (they can drop out)
+      # and epochs may take O(hours). Alternatively we could store all of the
+      # logs for an epoch in-memory and write them in a single shot, but this
+      # might consume a lot of memory (when the predictions arrays are large).
+      with self.log_db.Session(commit=True) as session:
+        session.add(log)
+
+    return sum(accuracies) / len(accuracies)
+
 
   def Train(self):
     with self.graph.as_default():
       for epoch_num in range(1, FLAGS.num_epochs + 1):
         epoch_start_time = time.time()
-        train = self.RunEpoch(f"Epoch {epoch_num} train", "train")
-        valid = self.RunEpoch(f"Epoch {epoch_num}   val", "val")
+        self.RunEpoch(epoch_num, "train")
+        val_acc = self.RunEpoch(epoch_num, "val")
         app.Log(
-            1, "Epoch %s completed. Trained on %s instances and validated on "
-            "%s instances in %s", epoch_num,
-            humanize.Commas(train.instance_count),
-            humanize.Commas(valid.instance_count),
-            humanize.Duration(time.time() - epoch_start_time))
-        log_file = self.logger.Log({
-            "epoch": epoch_num,
-            "epoch_elapsed_seconds": time.time() - epoch_start_time,
-            "train": train.ToJson(),
-            "valid": valid.ToJson(),
-            "timestamp": labdate.MillisecondsTimestamp(),
-        })
+            1, "Epoch %s completed. Trained and evaluated in %s. Validation "
+               "accuracy: %.5f", epoch_num,
+            humanize.Duration(time.time() - epoch_start_time), val_acc)
 
-        if valid.average_accuracy > self.best_epoch_validation_accuracy:
+        if val_acc > self.best_epoch_validation_accuracy:
           self.SaveModel(self.best_model_file)
           app.Log(
               1, "Best epoch so far, validation accuracy increased from "
               "%.5f from %.5f (+%.3f%%). Saving to '%s'",
-              self.best_epoch_validation_accuracy, valid.average_accuracy,
-              ((valid.average_accuracy / self.best_epoch_validation_accuracy) -
+              self.best_epoch_validation_accuracy, val_acc,
+              ((val_acc / self.best_epoch_validation_accuracy) -
                1) * 100, self.best_model_file)
-          self.best_epoch_validation_accuracy = valid.average_accuracy
+          self.best_epoch_validation_accuracy = val_acc
           self.best_epoch_num = epoch_num
 
           # Run on test set.
           if FLAGS.test_on_improvement:
-            test = self.RunEpoch(f"Epoch {epoch_num} (training)", "test")
-
-            # Add the test results to the logfile.
-            log = jsonutil.read_file(log_file)
-            log["time"] = time.time() - epoch_start_time
-            log['test'] = train.ToJson()
-            jsonutil.write_file(log_file, log)
+            test_acc = self.RunEpoch(epoch_num, "test")
+            app.Log(1, "Test accuracy at epoch %s: %.5f",
+                    epoch_num, test_acc)
         elif epoch_num - self.best_epoch_num >= FLAGS.patience:
           app.Log(
               1, "Stopping training after %i epochs without "
@@ -322,13 +331,8 @@ class GgnnBaseModel(object):
   def Test(self):
     start_time = time.time()
     with self.graph.as_default():
-      valid = self.RunEpoch("Test mode (validation)", "val")
-      test = self.RunEpoch("Test mode (test)", "test")
-      self.logger.Log({
-          "time": time.time() - start_time,
-          "valid_results": valid.ToJson(),
-          "test_results": test.ToJson(),
-      })
+      self.RunEpoch(epoch_num=-1, epoch_type="val")
+      self.RunEpoch(epoch_num=-1, epoch_type="test")
 
   def InitializeModel(self) -> None:
     with self.graph.as_default():

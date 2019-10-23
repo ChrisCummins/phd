@@ -2,14 +2,16 @@
 import time
 
 import numpy as np
-import typing
+import pickle
 import sqlalchemy as sql
+import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.graphs.labelled.graph_dict import \
   graph_dict as graph_dicts
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 
@@ -88,10 +90,10 @@ class GraphBatcher(object):
         elapsed_time = time.time() - start_time
         app.Log(1, "Created batch of %s graphs (%s nodes) in %s "
                    "(%s graphs / second)",
-                humanize.Commas(batch['graph_count']),
-                humanize.Commas(batch['node_count']),
+                humanize.Commas(batch['log'].graph_count),
+                humanize.Commas(batch['log'].node_count),
                 humanize.Duration(elapsed_time),
-                humanize.Commas(batch['graph_count'] / elapsed_time))
+                humanize.Commas(batch['log'].graph_count / elapsed_time))
         yield batch
       else:
         return
@@ -109,16 +111,18 @@ class GraphBatcher(object):
 
   def _CreateBatchDict(
       self, graphs: typing.Iterable[graph_database.GraphMeta]
-  ) -> typing.Optional[typing.Dict[str, typing.Union[int, np.array]]]:
+  ) -> typing.Optional[typing.Dict[str, typing.Any]]:
     """Construct a single batch dictionary.
 
     Args:
       graphs: An iterator of graphs to construct the batch from.
 
     Returns:
-      An batch dictionary, unless there are no graphs to batch, in which case
-      it returns None.
+      The batch dictionary. If there are no graphs to batch then None is
+      returned.
     """
+    graph_ids: typing.List[int] = []
+
     try:
       graph = next(graphs)
     except StopIteration:  # We have run out of graphs.
@@ -126,13 +130,16 @@ class GraphBatcher(object):
 
     edge_type_count = self.stats.edge_type_count
 
+    # The batch log contains properties describing the batch (such as the list
+    # of graphs used).
+    log = log_database.BatchLog(graph_count=0, node_count=0)
+
     # Create the empty batch dictionary.
     batch = {
       "adjacency_lists": [[] for _ in range(edge_type_count)],
       "incoming_edge_counts": [],
       "graph_nodes_list": [],
-      "graph_count": 0,
-      "node_count": 0,
+      "log": log,
     }
 
     if self.stats.node_features_dimensionality:
@@ -154,14 +161,16 @@ class GraphBatcher(object):
       batch['graph_y'] = []
 
     # Pack until we cannot fit more graphs in the batch.
-    while graph and batch['node_count'] + graph.node_count < FLAGS.batch_size:
+    while graph and log.node_count + graph.node_count < FLAGS.batch_size:
+      graph_ids.append(graph.id)
+
       # De-serialize pickled data in database and process.
       graph_dict = graph.pickled_data
 
       batch['graph_nodes_list'].append(
           np.full(
               shape=[graph.node_count],
-              fill_value=batch['graph_count'],
+              fill_value=log.graph_count,
               dtype=np.int32,
           ))
 
@@ -169,7 +178,7 @@ class GraphBatcher(object):
       for i, adjacency_list in enumerate(graph_dict['adjacency_lists']):
         if adjacency_list.size:
           batch['adjacency_lists'][i].append(
-              adjacency_list + np.array((batch['node_count'], batch['node_count']),
+              adjacency_list + np.array((log.node_count, log.node_count),
                                         dtype=np.int32))
 
       # Turn counters for incoming edges into a dense array:
@@ -216,8 +225,8 @@ class GraphBatcher(object):
         batch['graph_y'].append(graph_dict['graph_y'])
 
       # Update batch counters.
-      batch['graph_count'] += 1
-      batch['node_count'] += graph.node_count
+      log.graph_count += 1
+      log.node_count += graph.node_count
 
       try:
         graph = next(graphs)
@@ -264,5 +273,8 @@ class GraphBatcher(object):
 
     if 'graph_y' in batch:
       batch['graph_y'] = np.array(batch['graph_y'])
+
+    # Record the graphs that we used in this batch.
+    log.pickled_graph_indices = pickle.dumps(graph_ids)
 
     return batch
