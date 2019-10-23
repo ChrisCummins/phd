@@ -10,7 +10,6 @@ from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
 
-
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -19,8 +18,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                          nullable=False)
+  value: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
 
 
 class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -75,6 +74,21 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @property
   def predictions(self) -> typing.Any:
     return pickle.loads(self.pickled_predictions)
+
+  @property
+  def graphs_per_second(self):
+    return max(self.graph_count, 1) / self.elapsed_time_seconds
+
+  @property
+  def nodes_per_second(self):
+    return max(self.node_count, 1) / self.elapsed_time_seconds
+
+  def __repr__(self) -> str:
+    return (f"Epoch {humanize.Commas(self.epoch)} {self.group}. "
+            f"batch={humanize.Commas(self.batch)} | "
+            f"graphs/sec={self.graphs_per_second:.2f} | "
+            f"loss={self.loss:.4f} | "
+            f"acc={self.accuracy:.2%}")
 
 
 class Database(sqlutil.Database):
