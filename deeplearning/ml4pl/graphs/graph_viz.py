@@ -1,10 +1,11 @@
 """Utility functions for graphs."""
+import io
 import networkx as nx
 import typing
-import io
 
-from labm8 import app
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
+from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -61,17 +62,17 @@ def GraphToDot(g: nx.Graph,
     # Add a 'null' attribute to edges so that they can have empty labels.
     data['null'] = ''
 
-  for node, data in StatementNodeIterator(g):
+  for node, data in iterators.StatementNodeIterator(g):
     data['label'] = f'"{DataKeyOrCallback(data, statement_label)}"'
     data['shape'] = StringOrCallback(data, statement_shape)
     data['fillcolor'] = StringOrCallback(data, statement_color)
 
-  for node, data in IdentifierNodeIterator(g):
+  for node, data in iterators.IdentifierNodeIterator(g):
     data['label'] = f'"{DataKeyOrCallback(data, identifier_label)}"'
     data['shape'] = StringOrCallback(data, identifier_shape)
     data['fillcolor'] = StringOrCallback(data, identifier_color)
 
-  for node, data in MagicNodeIterator(g):
+  for node, data in iterators.MagicNodeIterator(g):
     data['label'] = f'"{DataKeyOrCallback(data, magic_label)}"'
     data['shape'] = StringOrCallback(data, magic_shape)
     data['fillcolor'] = StringOrCallback(data, magic_color)
