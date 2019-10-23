@@ -7,6 +7,7 @@ py_binary(
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/ncc/inst2vec:api",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping",
+        "//deeplearning/ml4pl/models:log_database",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
         "//deeplearning/ml4pl/graphs/labelled/graph_dict",
