@@ -22,7 +22,6 @@ from labm8 import pbutil
 from labm8 import prof
 from labm8 import system
 
-
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
@@ -251,7 +250,7 @@ class GgnnBaseModel(object):
       batch_start_time = time.time()
       self.global_training_step += 1
       log.epoch = epoch_num
-      log.batch = step
+      log.batch = step + 1
       log.global_step = self.global_training_step
 
       if not log.graph_count:
@@ -346,23 +345,22 @@ class GgnnBaseModel(object):
 
   def _CreateExperimentalParameters(self):
     """Private helper method to populate parameters table."""
+
     def ToParams(type, key_value_dict):
       return [
-        log_database.Parameter(
-            run_id=self.run_id,
-            type=type,
-            parameter=str(key),
-            value=str(value),
-        ) for key, value in key_value_dict.items()
+          log_database.Parameter(
+              run_id=self.run_id,
+              type=type,
+              parameter=str(key),
+              value=str(value),
+          ) for key, value in key_value_dict.items()
       ]
 
     with self.log_db.Session(commit=True) as session:
       session.add_all(
           ToParams('flags', app.FlagsToDict()) +
           ToParams('modeL_flags', self._ModelFlagsToDict()) +
-          ToParams('build_info', pbutil.ToJson(build_info.GetBuildInfo()))
-      )
-
+          ToParams('build_info', pbutil.ToJson(build_info.GetBuildInfo())))
 
   def SaveModel(self, path: pathlib.Path) -> None:
     with self.graph.as_default():

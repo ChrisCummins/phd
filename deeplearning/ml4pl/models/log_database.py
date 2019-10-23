@@ -12,7 +12,6 @@ from labm8 import labdate
 from labm8 import pdutil
 from labm8 import sqlutil
 
-
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -33,9 +32,9 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # A string to uniquely identify the given experiment run.
   run_id: str = sql.Column(sql.String(64), nullable=False)
 
-  # The epoch number, starting at zero.
+  # The epoch number, >= 1.
   epoch: int = sql.Column(sql.Integer, nullable=False)
-  # The batch number within the epoch, starting at zero.
+  # The batch number within the epoch, >= 1.
   batch: int = sql.Column(sql.Integer, nullable=False)
   # The batch number across all epochs.
   global_step: int = sql.Column(sql.Integer, nullable=False)
@@ -124,13 +123,14 @@ class Database(sqlutil.Database):
           sql.func.min(BatchLog.global_step).label("global_step"),
           sql.func.avg(BatchLog.loss).label("loss"),
           sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
-          sql.func.sum(BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
+          sql.func.sum(
+              BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
           sql.func.sum(BatchLog.graph_count).label("graph_count"),
           sql.func.sum(BatchLog.node_count).label("node_count"),
       )
-        
+
       q = q.filter(BatchLog.run_id == run_id)
-        
+
       q = q.group_by(BatchLog.epoch, BatchLog.group)
 
       # Group each individual step. Since there is only one log per step,
@@ -139,8 +139,7 @@ class Database(sqlutil.Database):
         q = q.group_by(BatchLog.global_step) \
           .order_by(BatchLog.global_step)
 
-      q = q.order_by(BatchLog.epoch,
-                     BatchLog.group)
+      q = q.order_by(BatchLog.epoch, BatchLog.group)
 
       return pdutil.QueryToDataFrame(session, q)
 
