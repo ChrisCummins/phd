@@ -50,11 +50,8 @@ app.DEFINE_database(
     'The database to read graph data from.',
     must_exist=True)
 
-app.DEFINE_database(
-    'log_db',
-    log_database.Database,
-    None,
-    'The database to write logs to.')
+app.DEFINE_database('log_db', log_database.Database, None,
+                    'The database to write logs to.')
 
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
 
@@ -127,7 +124,8 @@ class GgnnBaseModel(object):
     raise NotImplementedError("abstract class")
 
   def MakeMinibatchIterator(
-      self, epoch_type: str) -> typing.Iterable[typing.Tuple[log_database.BatchLog, FeedDict]]:
+      self, epoch_type: str
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, FeedDict]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
@@ -196,8 +194,7 @@ class GgnnBaseModel(object):
               self.MakeLossAndAccuracyAndPredictionOps())
 
         # Tensorboard summaries.
-        self.ops["summary_loss"] = tf.summary.scalar(
-            "loss", self.ops["loss"])
+        self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
         self.ops["summary_accuracy"] = tf.summary.scalar(
             "accuracy", self.ops["accuracy"])
         # TODO(cec): More tensorboard telemetry: input class distributions,
@@ -238,15 +235,15 @@ class GgnnBaseModel(object):
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
-  def RunEpoch(self, epoch_num: int,
-               epoch_type: str) -> float:
+  def RunEpoch(self, epoch_num: int, epoch_type: str) -> float:
     assert epoch_type in {"train", "val", "test"}
     accuracies = []
 
     batch_iterator: typing.Iterable[
-      typing.Tuple[log_database.BatchLog,
-                   typing.Dict[str, typing.Any]]] = utils.ThreadedIterator(
-        self.MakeMinibatchIterator(epoch_type), max_queue_size=5)
+        typing.Tuple[log_database.BatchLog, typing.
+                     Dict[str, typing.Any]]] = utils.ThreadedIterator(
+                         self.MakeMinibatchIterator(epoch_type),
+                         max_queue_size=5)
 
     for step, (log, feed_dict) in enumerate(batch_iterator):
       batch_start_time = time.time()
@@ -259,11 +256,11 @@ class GgnnBaseModel(object):
         raise ValueError("Mini-batch with zero graphs generated")
 
       fetch_dict = {
-        "loss": self.ops["loss"],
-        "accuracy": self.ops["accuracy"],
-        "predictions": self.ops["predictions"],
-        "summary_loss": self.ops["summary_loss"],
-        "summary_accuracy": self.ops["summary_accuracy"],
+          "loss": self.ops["loss"],
+          "accuracy": self.ops["accuracy"],
+          "predictions": self.ops["predictions"],
+          "summary_loss": self.ops["summary_loss"],
+          "summary_accuracy": self.ops["summary_accuracy"],
       }
 
       if epoch_type == "train":
@@ -274,8 +271,8 @@ class GgnnBaseModel(object):
       if FLAGS.tensorboard_logging:
         self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
                                                      self.global_training_step)
-        self.summary_writers[epoch_type].add_summary(fetch_dict["summary_accuracy"],
-                                                     self.global_training_step)
+        self.summary_writers[epoch_type].add_summary(
+            fetch_dict["summary_accuracy"], self.global_training_step)
 
       accuracies.append(float(fetch_dict['accuracy']))
       log.elapsed_time_seconds = time.time() - batch_start_time
@@ -294,34 +291,35 @@ class GgnnBaseModel(object):
 
     return sum(accuracies) / len(accuracies)
 
-
   def Train(self):
     with self.graph.as_default():
       for epoch_num in range(1, FLAGS.num_epochs + 1):
         epoch_start_time = time.time()
         self.RunEpoch(epoch_num, "train")
         val_acc = self.RunEpoch(epoch_num, "val")
-        app.Log(
-            1, "Epoch %s completed. Trained and evaluated in %s. Validation "
-               "accuracy: %.5f", epoch_num,
-            humanize.Duration(time.time() - epoch_start_time), val_acc)
+        app.Log(1, "Epoch %s completed in %s. Validation "
+                "accuracy: %.2f%%", epoch_num,
+                humanize.Duration(time.time() - epoch_start_time),
+                val_acc * 100)
 
         if val_acc > self.best_epoch_validation_accuracy:
           self.SaveModel(self.best_model_file)
+          # Compute the ratio of the new best validation accuracy against the
+          # old best validation accuracy.
+          accuracy_ratio = (val_acc / max(self.best_epoch_validation_accuracy,
+                                          utils.SMALL_NUMBER))
           app.Log(
-              1, "Best epoch so far, validation accuracy increased from "
-              "%.5f from %.5f (+%.3f%%). Saving to '%s'",
-              self.best_epoch_validation_accuracy, val_acc,
-              ((val_acc / self.best_epoch_validation_accuracy) -
-               1) * 100, self.best_model_file)
+              1, "Best epoch so far, validation accuracy increased "
+              "+%.3f%%, (+%.3f%% relative). Saving to '%s'",
+              (val_acc - self.best_epoch_validation_accuracy) * 100,
+              (accuracy_ratio - 1) * 100, self.best_model_file)
           self.best_epoch_validation_accuracy = val_acc
           self.best_epoch_num = epoch_num
 
           # Run on test set.
           if FLAGS.test_on_improvement:
             test_acc = self.RunEpoch(epoch_num, "test")
-            app.Log(1, "Test accuracy at epoch %s: %.5f",
-                    epoch_num, test_acc)
+            app.Log(1, "Test accuracy at epoch %s: %.5f", epoch_num, test_acc)
         elif epoch_num - self.best_epoch_num >= FLAGS.patience:
           app.Log(
               1, "Stopping training after %i epochs without "

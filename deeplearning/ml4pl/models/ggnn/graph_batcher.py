@@ -132,7 +132,7 @@ class GraphBatcher(object):
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLog(graph_count=0, node_count=0)
+    log = log_database.BatchLog(graph_count=0, node_count=0, group=graph.group)
 
     # Create the empty batch dictionary.
     batch = {
