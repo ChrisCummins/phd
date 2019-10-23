@@ -153,13 +153,8 @@ class Database(sqlutil.Database):
 
   def ParametersToDataFrame(self, run_id: str, type: str):
     with self.Session() as session:
-      q = session.query(
-          Parameter.parameter,
-          Parameter.value,
-      )
-
+      q = session.query(Parameter.parameter, Parameter.value)
       q = q.filter(Parameter.run_id == run_id)
-
-      q = q.order_by(Paramete.parameter)
-
-      return pdutil.QueryToDataFrame(session, q)
+      q = q.filter(Parameter.type == type)
+      q = q.order_by(Parameter.parameter)
+      return pdutil.QueryToDataFrame(session, q).set_index('parameter')
