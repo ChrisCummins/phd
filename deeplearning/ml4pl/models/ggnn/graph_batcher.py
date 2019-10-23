@@ -15,7 +15,6 @@ from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 
-
 FLAGS = app.FLAGS
 
 app.DEFINE_integer(
@@ -28,13 +27,15 @@ app.DEFINE_boolean(
     '--layer_timesteps=2,2,2, only graphs where data_flow_max_steps_required '
     '<= 6 will be used.')
 
+
 class GraphBatcher(object):
   """A generalised graph batcher which flattens adjacency matrics into a single
   adjacency matric with multiple disconnected components. Supports all feature
   and label types of graph dicts.
   """
 
-  def __init__(self, db: graph_database.Database,
+  def __init__(self,
+               db: graph_database.Database,
                message_passing_step_count: typing.Optional[int] = None):
     """Constructor.
 
@@ -45,8 +46,8 @@ class GraphBatcher(object):
         --limit_data_flow_max_steps_required_to_message_passing_steps flag is
         set to limit the graphs which are used to construct batches.
     """
-    if (FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps
-        and not message_passing_step_count):
+    if (FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps and
+        not message_passing_step_count):
       raise ValueError(
           "message_passing_step_count argument must be provied when "
           "--limit_data_flow_max_steps_required_to_message_passing_steps "
@@ -88,12 +89,12 @@ class GraphBatcher(object):
       batch = self._CreateBatchDict(graph_reader)
       if batch:
         elapsed_time = time.time() - start_time
-        app.Log(1, "Created batch of %s graphs (%s nodes) in %s "
-                   "(%s graphs / second)",
-                humanize.Commas(batch['log'].graph_count),
-                humanize.Commas(batch['log'].node_count),
-                humanize.Duration(elapsed_time),
-                humanize.Commas(batch['log'].graph_count / elapsed_time))
+        app.Log(
+            1, "Created batch of %s graphs (%s nodes) in %s "
+            "(%s graphs / second)", humanize.Commas(batch['log'].graph_count),
+            humanize.Commas(batch['log'].node_count),
+            humanize.Duration(elapsed_time),
+            humanize.Commas(batch['log'].graph_count / elapsed_time))
         yield batch
       else:
         return
@@ -105,13 +106,12 @@ class GraphBatcher(object):
     # graphs.
     if FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps:
       filters.append(
-          lambda: (graph_database.GraphMeta.data_flow_max_steps_required
-                   <= self.message_passing_step_count))
+          lambda: (graph_database.GraphMeta.data_flow_max_steps_required <= self
+                   .message_passing_step_count))
     return filters
 
-  def _CreateBatchDict(
-      self, graphs: typing.Iterable[graph_database.GraphMeta]
-  ) -> typing.Optional[typing.Dict[str, typing.Any]]:
+  def _CreateBatchDict(self, graphs: typing.Iterable[graph_database.GraphMeta]
+                      ) -> typing.Optional[typing.Dict[str, typing.Any]]:
     """Construct a single batch dictionary.
 
     Args:
@@ -136,10 +136,10 @@ class GraphBatcher(object):
 
     # Create the empty batch dictionary.
     batch = {
-      "adjacency_lists": [[] for _ in range(edge_type_count)],
-      "incoming_edge_counts": [],
-      "graph_nodes_list": [],
-      "log": log,
+        "adjacency_lists": [[] for _ in range(edge_type_count)],
+        "incoming_edge_counts": [],
+        "graph_nodes_list": [],
+        "log": log,
     }
 
     if self.stats.node_features_dimensionality:
@@ -177,9 +177,8 @@ class GraphBatcher(object):
       # Offset the adjacency list node indices.
       for i, adjacency_list in enumerate(graph_dict['adjacency_lists']):
         if adjacency_list.size:
-          batch['adjacency_lists'][i].append(
-              adjacency_list + np.array((log.node_count, log.node_count),
-                                        dtype=np.int32))
+          batch['adjacency_lists'][i].append(adjacency_list + np.array(
+              (log.node_count, log.node_count), dtype=np.int32))
 
       # Turn counters for incoming edges into a dense array:
       batch['incoming_edge_counts'].append(
@@ -237,7 +236,8 @@ class GraphBatcher(object):
 
     for i in range(self.stats.edge_type_count):
       if len(batch['adjacency_lists'][i]):
-        batch['adjacency_lists'][i] = np.concatenate(batch['adjacency_lists'][i])
+        batch['adjacency_lists'][i] = np.concatenate(
+            batch['adjacency_lists'][i])
       else:
         batch['adjacency_lists'][i] = np.zeros((0, 2), dtype=np.int32)
 
@@ -273,6 +273,9 @@ class GraphBatcher(object):
 
     if 'graph_y' in batch:
       batch['graph_y'] = np.array(batch['graph_y'])
+
+    batch['graph_count'] = log.graph_count
+    batch['node_count'] = log.node_count
 
     # Record the graphs that we used in this batch.
     log.pickled_graph_indices = pickle.dumps(graph_ids)
