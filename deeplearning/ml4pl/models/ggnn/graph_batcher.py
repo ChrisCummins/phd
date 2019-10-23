@@ -86,7 +86,7 @@ class GraphBatcher(object):
     # Batch creation outer-loop.
     while True:
       start_time = time.time()
-      batch = self._CreateBatchDict(graph_reader)
+      batch = self.CreateBatchDict(graph_reader)
       if batch:
         elapsed_time = time.time() - start_time
         app.Log(
@@ -110,7 +110,7 @@ class GraphBatcher(object):
                    .message_passing_step_count))
     return filters
 
-  def _CreateBatchDict(self, graphs: typing.Iterable[graph_database.GraphMeta]
+  def CreateBatchDict(self, graphs: typing.Iterable[graph_database.GraphMeta]
                       ) -> typing.Optional[typing.Dict[str, typing.Any]]:
     """Construct a single batch dictionary.
 
