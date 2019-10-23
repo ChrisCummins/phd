@@ -109,10 +109,10 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   run_id: str = sql.Column(sql.String(64), nullable=False)
 
   # One of: {model_flags,flags,build_info}
-  type: str = sql.Column(sql.String(256), primary_key=True)
+  type: str = sql.Column(sql.String(256), nullable=False)
 
   # The name of the parameter.
-  parameter: str = sql.Column(sql.String(256), primary_key=True)
+  parameter: str = sql.Column(sql.String(256), nullable=False)
   # The value for the parameter.
   value: str = sql.Column(
       sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
@@ -133,8 +133,10 @@ class Database(sqlutil.Database):
           sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
           sql.func.sum(
               BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count)).label("graph_count"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.node_count)).label("node_count"),
+          sql.sql.expression.cast(sql.func.sum(
+              BatchLog.graph_count)).label("graph_count"),
+          sql.sql.expression.cast(sql.func.sum(
+              BatchLog.node_count)).label("node_count"),
       )
 
       q = q.filter(BatchLog.run_id == run_id)
