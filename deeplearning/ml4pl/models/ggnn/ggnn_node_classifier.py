@@ -285,6 +285,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
 
+    # TODO(cec): Insert metrics to build confusion matrix.
+
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
     loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
