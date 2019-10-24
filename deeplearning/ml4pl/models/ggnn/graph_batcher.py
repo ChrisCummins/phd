@@ -1,6 +1,7 @@
 """A module for batching graph dictionaries."""
 import time
 
+import networkx as nx
 import numpy as np
 import pickle
 import sqlalchemy as sql
@@ -281,3 +282,88 @@ class GraphBatcher(object):
     log.pickled_graph_indices = pickle.dumps(graph_ids)
 
     return batch
+
+  @staticmethod
+  def BatchDictToGraphs(
+      batch_dict: typing.Dict[str, typing.Any]
+  ) -> typing.Iterable[nx.MultiDiGraph]:
+    """Perform the inverse transformation from batch_dict to list of graphs.
+
+    Args:
+      batch_dict: The batch dictionary to construct graphs from.
+
+    Returns:
+      A generator of graph instances.
+    """
+    node_count = 0
+    for graph_count in range(batch_dict['graph_count']):
+      g = nx.MultiDiGraph()
+      # Mask the nodes from the node list to determine how many nodes are in
+      # the graph.
+      nodes = batch_dict['graph_nodes_list'][batch_dict['graph_nodes_list'] == graph_count]
+      graph_node_count = len(nodes)
+
+      # Make a list of all the adj
+      adjacency_lists_indices = []
+
+      for edge_type, adjacency_list in enumerate(batch_dict['adjacency_lists']):
+        adjacency_list_indices = []
+        adjacency_lists_indices.append(adjacency_list_indices)
+
+        # No edges of this type.
+        if not adjacency_list.size:
+          continue
+
+        # The adjacency list contains the adjacencies for all graphs. Determine
+        # those that are in this graph by selecting only those with a source
+        # node in the list of this graph's nodes.
+        srcs = adjacency_list[:,0]
+        adjacency_list_indices.extend(np.where(np.logical_and(
+            srcs >= node_count, srcs < node_count + graph_node_count)))
+        adjacency_list = adjacency_list[tuple(adjacency_list_indices)]
+
+        # Negate the positive offset into adjacency lists.
+        offset = np.array((node_count, node_count), dtype=np.int32)
+        adjacency_list -= offset
+
+        # Add the edges to the graph.
+        for src, dst in adjacency_list:
+          g.add_edge(src, dst, flow=edge_type)
+
+      if 'node_x' in batch_dict:
+        node_x = batch_dict['node_x'][node_count:node_count + graph_node_count]
+        if len(node_x) != g.number_of_nodes():
+          raise ValueError(f"Graph has {g.number_of_nodes()} nodes but "
+                           f"expected {len(node_x)}")
+        for i, values in enumerate(node_x):
+          g.nodes[i]['x'] = values
+
+      if 'node_y' in batch_dict:
+        node_y = batch_dict['node_y'][node_count:node_count + graph_node_count]
+        if len(node_y) != g.number_of_nodes():
+          raise ValueError(f"Graph has {g.number_of_nodes()} nodes but "
+                           f"expected {len(node_y)}")
+        for i, values in enumerate(node_y):
+          g.nodes[i]['y'] = values
+
+      if 'edge_x' in batch_dict:
+        for edge_type, adjacency_list_indices in enumerate(adjacency_lists_indices):
+          values = batch_dict['edge_x'][edge_type][adjacency_list_indices]
+          for (_, _, data), value in zip(g.edges(data=True), values):
+            data['x'] = value
+
+      if 'edge_y' in batch_dict:
+        for edge_type, adjacency_list_indices in enumerate(adjacency_lists_indices):
+          values = batch_dict['edge_y'][edge_type][adjacency_list_indices]
+          for (_, _, data), value in zip(g.edges(data=True), values):
+            data['y'] = value
+
+      if 'graph_x' in batch_dict:
+        g.x = batch_dict['graph_x'][graph_count]
+
+      if 'graph_y' in batch_dict:
+        g.y = batch_dict['graph_y'][graph_count]
+
+      yield g
+
+      node_count += graph_node_count
