@@ -560,37 +560,3 @@ class GgnnBaseModel(object):
     self.sess.run(tf.local_variables_initializer())
 
     return train_step
-
-  def Predict(self, data):
-    loss = 0
-    accuracies, predictions = [], []
-    start_time = time.time()
-    processed_graphs = 0
-    batch_iterator = utils.ThreadedIterator(
-        self.MakeMinibatchIterator(data, is_training=False), max_queue_size=5)
-
-    for step, batch in enumerate(batch_iterator):
-      num_graphs = batch[self.placeholders["graph_count"]]
-      processed_graphs += num_graphs
-
-      batch[self.placeholders["out_layer_dropout_keep_prob"]] = 1.0
-      fetch_list = [
-          self.ops["loss"], self.ops["accuracy"], self.ops["predictions"]
-      ]
-
-      batch_loss, batch_accuracy, _preds, *_ = self.sess.run(
-          fetch_list, feed_dict=batch)
-      loss += batch_loss * num_graphs
-      accuracies.append(np.array(batch_accuracy) * num_graphs)
-      predictions.extend(_preds)
-
-      print(
-          "Running prediction, batch %i (has %i graphs). Loss so far: %.4f" %
-          (step, num_graphs, loss / processed_graphs),
-          end="\r",
-      )
-
-    accuracy = np.sum(accuracies, axis=0) / processed_graphs
-    loss = loss / processed_graphs
-    instance_per_sec = processed_graphs / (time.time() - start_time)
-    return predictions, loss, accuracy, instance_per_sec
