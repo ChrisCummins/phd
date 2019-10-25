@@ -15,9 +15,9 @@ SMALL_NUMBER = 1e-7
 
 def glorot_init(shape):
   initialization_range = np.sqrt(6.0 / (shape[-2] + shape[-1]))
-  return np.random.uniform(
-      low=-initialization_range, high=initialization_range,
-      size=shape).astype(np.float32)
+  return np.random.uniform(low=-initialization_range,
+                           high=initialization_range,
+                           size=shape).astype(np.float32)
 
 
 def uniform_init(shape):
@@ -72,8 +72,8 @@ class MLP(object):
         for (i, s) in enumerate(weight_sizes)
     ]
     biases = [
-        tf.Variable(
-            np.zeros(s[-1]).astype(np.float32), name='MLP_b_layer%i' % i)
+        tf.Variable(np.zeros(s[-1]).astype(np.float32),
+                    name='MLP_b_layer%i' % i)
         for (i, s) in enumerate(weight_sizes)
     ]
 
@@ -121,8 +121,9 @@ def BuildRnnCell(cell_type: str,
 
   cell_type = cell_type.lower()
   if cell_type == "gru":
-    return tf.nn.rnn_cell.GRUCell(
-        hidden_size, activation=activation_function, name=name)
+    return tf.nn.rnn_cell.GRUCell(hidden_size,
+                                  activation=activation_function,
+                                  name=name)
   elif cell_type == "cudnncompatiblegrucell":
     import tensorflow.contrib.cudnn_rnn as cudnn_rnn
     if activation_function != tf.nn.tanh:
@@ -130,8 +131,9 @@ def BuildRnnCell(cell_type: str,
           "cudnncompatiblegrucell must be used with tanh activation")
     return cudnn_rnn.CudnnCompatibleGRUCell(hidden_size, name=name)
   elif cell_type == "rnn":
-    return tf.nn.rnn_cell.BasicRNNCell(
-        hidden_size, activation=activation_function, name=name)
+    return tf.nn.rnn_cell.BasicRNNCell(hidden_size,
+                                       activation=activation_function,
+                                       name=name)
   else:
     raise ValueError(f"Unknown RNN cell type '{name}'.")
 
@@ -157,9 +159,8 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
           for i in range(stats.edge_type_count)
       ],
       'incoming_edge_counts':
-      tf.placeholder(
-          tf.float32, [None, stats.edge_type_count],
-          name="incoming_edge_counts"),
+      tf.placeholder(tf.float32, [None, stats.edge_type_count],
+                     name="incoming_edge_counts"),
       'graph_nodes_list':
       tf.placeholder(tf.int32, [None], name="graph_nodes_list"),
       # Dropouts:
@@ -186,17 +187,18 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
 
   if stats.edge_features_dimensionality:
     placeholders['edge_x'] = [
-        tf.placeholder(
-            stats.edge_features_dtype,
-            [None, stats.edge_features_dimensionality],
-            name=f"edge_x_e{i}") for i in range(stats.edge_type_count)
+        tf.placeholder(stats.edge_features_dtype,
+                       [None, stats.edge_features_dimensionality],
+                       name=f"edge_x_e{i}")
+        for i in range(stats.edge_type_count)
     ]
 
   if stats.edge_labels_dimensionality:
     placeholders['edge_x'] = [
-        tf.placeholder(
-            stats.edge_labels_dtype, [None, stats.edge_features_dimensionality],
-            name=f"edge_x_e{i}") for i in range(stats.edge_type_count)
+        tf.placeholder(stats.edge_labels_dtype,
+                       [None, stats.edge_features_dimensionality],
+                       name=f"edge_x_e{i}")
+        for i in range(stats.edge_type_count)
     ]
 
   if stats.graph_features_dimensionality:
@@ -301,3 +303,29 @@ def RunWithFetchDict(sess: tf.Session, fetch_dict: typing.Dict[str, tf.Tensor],
   fetch_dict_values = [fetch_dict[k] for k in fetch_dict_keys]
   values = sess.run(fetch_dict_values, feed_dict)
   return {fetch: value for fetch, value in zip(fetch_dict_keys, values)}
+
+
+def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
+  """Build a confusion matrix.
+
+  Args:
+    targets: A list of 1-hot vectors with shape [num_instances,num_classes].
+    predictions: A list of 1-hot vectors with shape [num_instances,num_classes].
+
+  Returns:
+    A pickled confusion matrix, which is a matrix of shape
+    [num_classes, num_classes] where the rows indicate true target class,
+    the columns indicate predicted target class, and the element values are
+    the number of instances of this type in the batch.
+  """
+  num_classes = len(targets[0])
+
+  # Convert 1-hot vectors to dense lists of integers.
+  targets = np.argmax(targets, axis=1)
+  predictions = np.argmax(predictions, axis=1)
+
+  confusion_matrix = np.zeros((len(targets), len(targets)))
+  for target, prediction in zip(targets, predictions):
+    confusion_matrix[target][prediction] += 1
+
+  return confusion_matrix

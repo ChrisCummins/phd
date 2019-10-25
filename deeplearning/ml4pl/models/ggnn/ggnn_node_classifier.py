@@ -102,16 +102,15 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(
-            FLAGS.graph_rnn_cell,
-            FLAGS.graph_rnn_activation,
-            FLAGS.hidden_size,
-            name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
+                                  FLAGS.graph_rnn_activation,
+                                  FLAGS.hidden_size,
+                                  name=f"cell_layer_{layer_index}")
         cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
 
-    # Initial node states and then one entry per layer 
+    # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
     node_states_per_layer = [self.placeholders['node_x']]
@@ -192,16 +191,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(
-                  message_source_states, axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(message_source_states,
+                                                axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (
-                  message_attention_scores * message_edge_type_factors)
+              message_attention_scores = (message_attention_scores *
+                                          message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -270,23 +269,22 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     self.ops["final_node_x"] = node_states_per_layer[-1]
 
-    predictions, regression_gate, regression_transform = (
-        utils.MakeOutputLayer(
-            initial_node_state=node_states_per_layer[0],
-            final_node_state=self.ops["final_node_x"],
-            hidden_size=FLAGS.hidden_size,
-            labels_dimensionality=self.stats.node_labels_dimensionality,
-            dropout_keep_prob_placeholder=self.
-            placeholders["out_layer_dropout_keep_prob"]))
+    predictions, regression_gate, regression_transform = (utils.MakeOutputLayer(
+        initial_node_state=node_states_per_layer[0],
+        final_node_state=self.ops["final_node_x"],
+        hidden_size=FLAGS.hidden_size,
+        labels_dimensionality=self.stats.node_labels_dimensionality,
+        dropout_keep_prob_placeholder=self.
+        placeholders["out_layer_dropout_keep_prob"]))
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
-    targets = tf.argmax(
-        self.placeholders["node_y"], axis=1, output_type=tf.int32)
+    targets = tf.argmax(self.placeholders["node_y"],
+                        axis=1,
+                        output_type=tf.int32)
 
-    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
-
-    # TODO(cec): Insert metrics to build confusion matrix.
+    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32),
+                          targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 

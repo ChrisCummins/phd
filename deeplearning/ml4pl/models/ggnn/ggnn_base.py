@@ -287,6 +287,12 @@ class GgnnBaseModel(object):
       log.accuracy = float(fetch_dict['accuracy'])
       log.pickled_accuracies = pickle.dumps(fetch_dict['accuracies'])
       log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
+      log.pickled_confusion_matrix = pickle.dumps(
+          utils.BuildConfusionMatrix(
+              # TODO(cec): Add support for edge classification if required.
+              targets=(feed_dict['node_y']
+                       if 'node_y' in feed_dict else feed_dict['graph_y']),
+              predictions=fetch_dict['predictions']))
       app.Log(1, "%s", log)
       # Create a new database session for every batch because we don't want to
       # leave the connection lying around for a long time (they can drop out)

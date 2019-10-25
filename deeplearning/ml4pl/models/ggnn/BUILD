@@ -71,6 +71,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "ggnn_utils_test",
+    srcs = ["ggnn_utils_test.py"],
+    deps = [
+        ":ggnn_utils",
+        "//labm8:app",
+        "//labm8:test",
+        "//third_party/py/numpy",
+    ],
+)
+
 py_library(
     name = "graph_batcher",
     srcs = ["graph_batcher.py"],

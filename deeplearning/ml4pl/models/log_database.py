@@ -20,8 +20,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                          nullable=False)
 
 
 class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -62,15 +62,22 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   group: str = sql.Column(sql.String(32), nullable=False)
 
   # A pickled array of GraphMeta.id values.
-  pickled_graph_indices: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
+  pickled_graph_indices: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                            nullable=False)
 
   # A pickled array of accuracies, with the same shape as pickled_predictions.
-  pickled_accuracies: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
+  pickled_accuracies: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                         nullable=False)
 
   # A pickled array of model predictions, one for each graph in the batch.
-  pickled_predictions: bytes = sql.Column(
+  pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                          nullable=False)
+
+  # A pickled confusion matrix, which is a matrix of shape
+  # [num_targets,num_targets] where the rows indicate true target class,
+  # the columns indicate predicted target class, and the element values are
+  # the number of instances of this type in the batch.
+  pickled_confusion_matrix: bytes = sql.Column(
       sqlutil.ColumnTypes.LargeBinary(), nullable=False)
 
   @property
@@ -84,6 +91,10 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @property
   def predictions(self) -> typing.Any:
     return pickle.loads(self.pickled_predictions)
+
+  @property
+  def confusion_matrix(self) -> 'np.array':
+    return pickle.loads(self.pickled_confusion_matrix)
 
   @property
   def graphs_per_second(self):
@@ -120,8 +131,8 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The name of the parameter.
   parameter: str = sql.Column(sql.String(256), nullable=False)
   # The value for the parameter.
-  value: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                          nullable=False)
 
 
 class Database(sqlutil.Database):
@@ -139,8 +150,10 @@ class Database(sqlutil.Database):
           sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
           sql.func.sum(
               BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count), sql.Integer).label("graph_count"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.node_count), sql.Integer).label("node_count"),
+          sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count),
+                                  sql.Integer).label("graph_count"),
+          sql.sql.expression.cast(sql.func.sum(BatchLog.node_count),
+                                  sql.Integer).label("node_count"),
       )
 
       q = q.filter(BatchLog.run_id == run_id)
