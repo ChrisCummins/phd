@@ -6,6 +6,7 @@ import networkx as nx
 import numpy as np
 import pathlib
 import pickle
+import sqlalchemy as sql
 import tempfile
 import traceback
 import typing
@@ -18,15 +19,14 @@ from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
+from labm8 import humanize
 from labm8 import prof
 
-
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None,
-    'URL of database to read bytecodes from.',
-    must_exist=True)
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecodes from.',
+                    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
@@ -181,6 +181,33 @@ def main():
       s.query(graph_database.Meta).filter(
           graph_database.Meta.key == 'log').delete()
       s.add(graph_database.Meta(key='log', value=log))
+
+  # Because this script is re-implementing an experiment written by
+  # @Zacharias030, we can compare the number of graphs we produced versus the
+  # number of graphs produced by the initial experiment in order to catch any
+  # regression or disparity between our two graph processing pipelines.
+  with graph_db.Session() as session:
+    expected_train_count = 220526
+    expected_val_count = 9155
+    expected_test_count = 9227
+
+    train_count = session.query(sql.func.count(graph_database.GraphMeta))\
+      .filter(graph_database.GraphMeta.group == 'train').one()[0]
+    val_count = session.query(sql.func.count(graph_database.GraphMeta)) \
+      .filter(graph_database.GraphMeta.group == 'val').one()[0]
+    test_count = session.query(sql.func.count(graph_database.GraphMeta)) \
+      .filter(graph_database.GraphMeta.group == 'test').one()[0]
+
+    if (train_count != expected_train_count or
+        val_count != expected_val_count or test_count != expected_test_count):
+      app.FatalWithoutStackTrace(
+          "The number of graphs produced does not match the expected counts. "
+          "Training graphs: expected=%s, actual=%s. "
+          "Validation graphs: expected=%s, actual=%s. "
+          "Test graphs: expected=%s, actual=%s.",
+          humanize.Commas(expected_train_count), humanize.Commas(train_count),
+          humanize.Commas(expected_val_count), humanize.Commas(val_count),
+          humanize.Commas(expected_test_count), humanize.Commas(test_count))
 
 
 if __name__ == '__main__':
