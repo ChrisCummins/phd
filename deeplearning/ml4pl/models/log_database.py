@@ -156,6 +156,9 @@ class Database(sqlutil.Database):
           sql.func.min(BatchLog.global_step).label("global_step"),
           sql.func.avg(BatchLog.loss).label("loss"),
           sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
+          sql.func.avg(BatchLog.precision).label("precision"),
+          sql.func.avg(BatchLog.recall).label("recall"),
+          sql.func.avg(BatchLog.f1).label("f1"),
           sql.func.sum(
               BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
           sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count),
