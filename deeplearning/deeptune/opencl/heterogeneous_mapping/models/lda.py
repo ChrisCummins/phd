@@ -33,7 +33,6 @@ from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
 from labm8 import app
 
-
 FLAGS = app.FLAGS
 
 # A value which has different values for training and testing.
@@ -95,8 +94,8 @@ def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
     # Encode the node's bytecode using the struct dict we derived from the
     # entire file. Since this is a full-flow graph, each instruction's
     # bytecode is a single statement.
-    encoded = vocab.EncodeLlvmBytecode(
-        bytecode, struct_dict=struct_dict).encoded
+    encoded = vocab.EncodeLlvmBytecode(bytecode,
+                                       struct_dict=struct_dict).encoded
     if len(encoded) != 1:
       raise ValueError(
           f"Encoded line `{bytecode}` to {len(encoded)} statements")
@@ -244,7 +243,7 @@ class Lda(base.HeterogeneousMappingModel):
     #
     # # Optimizer.
     # learning_rate = 1e-3
-    # optimizer = tf.train.AdamOptimizer(learning_rate)
+    # optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
     # self.train_op = optimizer.minimize(self.loss_ops.train)
     #
     # # Lets an iterable of TF graphs be output from a session as NP graphs.
@@ -322,8 +321,8 @@ class Lda(base.HeterogeneousMappingModel):
     with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
       # Create embedding lookup op.
       embedding_lookup_input_ph = tf.placeholder(dtype=tf.int32)
-      normalized_embedding_matrix = tf.nn.l2_normalize(
-          self.embedding_matrix, axis=1)
+      normalized_embedding_matrix = tf.nn.l2_normalize(self.embedding_matrix,
+                                                       axis=1)
       embedding_lookup_op = tf.nn.embedding_lookup(normalized_embedding_matrix,
                                                    embedding_lookup_input_ph)
 

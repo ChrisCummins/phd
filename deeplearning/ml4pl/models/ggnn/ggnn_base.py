@@ -498,7 +498,7 @@ class GgnnBaseModel(object):
         else:
           app.Log(1, "Freezing weights of variable `%s`.", var.name)
       trainable_vars = filtered_vars
-    optimizer = tf.train.AdamOptimizer(FLAGS.learning_rate)
+    optimizer = tf.compat.v1.train.AdamOptimizer(FLAGS.learning_rate)
     grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
                                                  var_list=trainable_vars)
     clipped_grads = []

@@ -521,7 +521,7 @@ class CompilerGraphNeuralNetwork(object):
     with prof.Profile('create optimizer'), tf.name_scope('optimizer'):
       # Learning rate is a variable so that we can adjust it during training.
       learning_rate = tf.Variable(0.0, trainable=False)
-      optimizer = tf.train.AdamOptimizer(learning_rate)
+      optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
       step_op = optimizer.minimize(loss_op)
 
     # Lets an iterable of TF graphs be output from a session as NP graphs.

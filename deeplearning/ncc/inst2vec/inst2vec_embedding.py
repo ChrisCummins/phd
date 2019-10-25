@@ -245,7 +245,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
     # Optimizer
     if FLAGS.optimizer == 'adam':
-      optimizer = tf.train.AdamOptimizer(
+      optimizer = tf.compat.v1.train.AdamOptimizer(
           learning_rate=learning_rate).minimize(loss)
     elif FLAGS.optimizer == 'nadam':
       optimizer = tf.contrib.opt.NadamOptimizer(
