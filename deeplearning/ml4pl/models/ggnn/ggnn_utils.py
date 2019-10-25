@@ -290,7 +290,7 @@ def MakeOutputLayer(initial_node_state, final_node_state, hidden_size: int,
       gated_input = tf.concat([final_node_state, initial_node_state], axis=-1)
 
       computed_values = (tf.nn.sigmoid(regression_gate(gated_input)) *
-                         regression_transform(initial_node_state))
+                         regression_transform(final_node_state))
 
   return computed_values, regression_gate, regression_transform
 
