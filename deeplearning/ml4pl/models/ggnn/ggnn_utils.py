@@ -171,8 +171,8 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
       tf.placeholder(tf.float32, None, name="graph_state_keep_prob"),
       'edge_weight_dropout_keep_prob':
       tf.placeholder(tf.float32, None, name="edge_weight_dropout_keep_prob"),
-      "out_layer_dropout_keep_prob":
-      tf.placeholder(tf.float32, [], name="out_layer_dropout_keep_prob"),
+      "output_layer_dropout_keep_prob":
+      tf.placeholder(tf.float32, [], name="output_layer_dropout_keep_prob"),
   }
 
   if stats.node_features_dimensionality:
