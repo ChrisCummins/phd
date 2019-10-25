@@ -18,7 +18,10 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
                           false: typing.Any = False) -> typing.Tuple[int, int]:
   # Create a map from nodes to predecessors.
   predecessors: typing.Dict[str, typing.Set[str]] = {
-      n: set([p for p in g.predecessors(n)]) for n in g.nodes()
+      n: set([
+          p for p in query.StatementNeighbors(
+              g, n, direction=lambda src, dst: src)
+      ]) for n in g.nodes()
   }
 
   # Initialize the dominator sets.
@@ -81,7 +84,7 @@ def MakeDominatorTreeGraphs(
   root_statements = query.SelectRandomNStatements(g, n)
 
   for root_node in root_statements[:n]:
-    reachable = g.copy()
-    reachable.dominated_node_count, reachable.data_flow_max_steps_required = (
-        AnnotateDominatorTree(reachable, root_node, false=false, true=true))
-    yield reachable
+    domtree = g.copy()
+    domtree.dominated_node_count, domtree.data_flow_max_steps_required = (
+        AnnotateDominatorTree(domtree, root_node, false=false, true=true))
+    yield domtree
