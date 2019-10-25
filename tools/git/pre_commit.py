@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Pre-commit git hook.
 
 This script performs a handful of actions:
@@ -73,8 +74,8 @@ def GetMd5sumOutputAsString(paths):
   """Return the output of md5sum on a list of paths as a string."""
   if not paths:
     return ''
-  return subprocess.check_output(
-      ['timeout', '-s9', '60', 'md5sum'] + paths, universal_newlines=True)
+  return subprocess.check_output(['timeout', '-s9', '60', 'md5sum'] + paths,
+                                 universal_newlines=True)
 
 
 class Gazelle(object):
@@ -143,13 +144,12 @@ def main(argv):
   staged_files = linters_lib.GetGitDiffFilesOrDie(staged=True)
   unstaged_files = linters_lib.GetGitDiffFilesOrDie(staged=False)
 
-  linters_lib.Print(
-      'Checking if',
-      branch_name,
-      'is up to date with',
-      remote_name,
-      '...',
-      end=' ')
+  linters_lib.Print('Checking if',
+                    branch_name,
+                    'is up to date with',
+                    remote_name,
+                    '...',
+                    end=' ')
   commits_behind_upstream = GetCommitsBehindUpstreamOrDie(
       remote_name, branch_name)
   if commits_behind_upstream:
@@ -186,9 +186,8 @@ def main(argv):
       partially_staged_files)
   if new_partially_staged_checksums != partially_staged_checksums:
     # Go line by line through the md5sum outputs to find the differing files.
-    for left, right in zip(
-        partially_staged_checksums.split('\n'),
-        new_partially_staged_checksums.split('\n')):
+    for left, right in zip(partially_staged_checksums.split('\n'),
+                           new_partially_staged_checksums.split('\n')):
       if left != right:
         partially_staged_modified_files.append(' '.join(left.split()[1:]))
   linters_lib.Print('ok  {:.3f}s'.format(time.time() - task_start_time))

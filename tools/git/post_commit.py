@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Post-commit git hook.
 
 This script pushes the freshly minted commit to remote.

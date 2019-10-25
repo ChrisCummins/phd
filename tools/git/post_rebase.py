@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Post-rebase git hook.
 
 This script updates submodules in the phd repo.
@@ -7,7 +8,6 @@ from __future__ import print_function
 
 import os
 import sys
-
 
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
