@@ -40,23 +40,23 @@ def SetReachableNodes(g: nx.MultiDiGraph,
   g.nodes[root_node][x_label] = true
 
   # Breadth-first traversal to mark reachable nodes.
-  steps = 0
-  reachable_count = 0
+  data_flow_steps = 0
+  reachable_nodes_count = 0
   visited = set()
-  q = collections.deque([(root_node, 0)])
+  q = collections.deque([(root_node, 1)])
   while q:
-    next, steps = q.popleft()
-    reachable_count += 1
+    next, data_flow_steps = q.popleft()
+    reachable_nodes_count += 1
     visited.add(next)
-    if not max_steps or steps + 1 <= max_steps:
+    if not max_steps or data_flow_steps + 1 <= max_steps:
       for neighbor in query.StatementNeighbors(g, next):
         if neighbor not in visited:
-          q.append((neighbor, steps + 1))
+          q.append((neighbor, data_flow_steps + 1))
 
     # Mark the node as reachable.
     g.nodes[next][y_label] = true
 
-  return reachable_count, steps
+  return reachable_nodes_count, data_flow_steps
 
 
 def MakeReachabilityGraphs(
@@ -88,10 +88,9 @@ def MakeReachabilityGraphs(
     reachable.relpath = g.relpath
     reachable.language = g.language
     reachable.reachable_node_count, reachable.data_flow_max_steps_required = (
-        SetReachableNodes(
-            reachable,
-            node,
-            FLAGS.reachability_num_steps,
-            false=false,
-            true=true))
+        SetReachableNodes(reachable,
+                          node,
+                          FLAGS.reachability_num_steps,
+                          false=false,
+                          true=true))
     yield reachable
