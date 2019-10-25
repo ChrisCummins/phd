@@ -1,8 +1,10 @@
 """Functions for iterating and maneuvering around graphs."""
 import collections
 import networkx as nx
+import random
 import typing
 
+from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -64,3 +66,15 @@ def StatementIsSuccessor(g: nx.MultiDiGraph,
         continue
       q.append(next_node)
   return False
+
+
+def SelectRandomNStatements(g: nx.Graph, n: int):
+  root_statements = [node for node, _ in iterators.StatementNodeIterator(g)]
+  n = n or len(root_statements)
+
+  # If we're taking a sample of nodes to produce graphs (i.e. not all of them),
+  # process the nodes in a random order.
+  if n < len(root_statements):
+    random.shuffle(root_statements)
+
+  return root_statements

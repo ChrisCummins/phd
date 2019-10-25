@@ -1,10 +1,8 @@
 """Library for labelling program graphs with reachability information."""
 import collections
 import networkx as nx
-import random
 import typing
 
-from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs import graph_query as query
 from labm8 import app
 from labm8 import decorators
@@ -82,13 +80,7 @@ def MakeReachabilityGraphs(
     the statement nodes, and additionally 'reachable_node_count' and
     'data_flow_max_steps_required' attributes.
   """
-  root_statements = [node for node, _ in iterators.StatementNodeIterator(g)]
-  n = n or len(root_statements)
-
-  # If we're taking a sample of nodes to produce graphs (i.e. not all of them),
-  # process the nodes in a random order.
-  if n < len(root_statements):
-    random.shuffle(root_statements)
+  root_statements = query.SelectRandomNStatements(g, n)
 
   for root_node in root_statements[:n]:
     reachable = g.copy()
