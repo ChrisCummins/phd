@@ -282,13 +282,13 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       out_layer_dropout = self.placeholders["out_layer_dropout_keep_prob"]
     else:
       out_layer_dropout = None
+
     predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
         initial_node_state=node_states_per_layer[0],
         final_node_state=self.ops["final_node_x"],
         hidden_size=FLAGS.hidden_size,
         labels_dimensionality=self.stats.node_labels_dimensionality,
-        dropout_keep_prob_placeholder=self.
-        placeholders["out_layer_dropout_keep_prob"])
+        dropout_keep_prob_placeholder=out_layer_dropout)
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 

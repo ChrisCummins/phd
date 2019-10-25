@@ -53,19 +53,21 @@ class MLP(object):
   stack of linear layers.
   """
 
-  def __init__(self, in_size, out_size, hid_sizes, dropout_keep_prob):
-    """Constructors.
+  def __init__(self, in_size: int, out_size: int,
+               hidden_sizes: typing.List[int],
+               dropout_keep_prob: typing.Optional[tf.Tensor]):
+    """Constructor.
 
-    If hid_sizes=[] then exactly one weight layer W, b is created.
+    If hidden_sizes=[] then exactly one weight layer W, b is created.
     """
     self.in_size = in_size
     self.out_size = out_size
-    self.hid_sizes = hid_sizes
+    self.hidden_sizes = hidden_sizes
     self.dropout_keep_prob = dropout_keep_prob
     self.params = self.MakeNetworkParameters()
 
   def MakeNetworkParameters(self):
-    dims = [self.in_size] + self.hid_sizes + [self.out_size]
+    dims = [self.in_size] + self.hidden_sizes + [self.out_size]
     weight_sizes = list(zip(dims[:-1], dims[1:]))
     weights = [
         tf.Variable(self.InitialWeights(s), name='MLP_W_layer%i' % i)
@@ -91,7 +93,9 @@ class MLP(object):
   def __call__(self, inputs):
     acts = inputs
     for W, b in zip(self.params["weights"], self.params["biases"]):
-      hid = tf.matmul(acts, tf.nn.dropout(W, self.dropout_keep_prob)) + b
+      if self.dropout_keep_prob:
+        W = tf.nn.dropout(W, self.dropout_keep_prob)
+      hid = tf.matmul(acts, W) + b
       acts = tf.nn.relu(hid)
     last_hidden = hid
     return last_hidden
@@ -265,14 +269,14 @@ def BatchDictToFeedDict(
 
 def MakeOutputLayer(initial_node_state, final_node_state, hidden_size: int,
                     labels_dimensionality: int,
-                    dropout_keep_prob_placeholder: str):
+                    dropout_keep_prob_placeholder: typing.Optional[str]):
   with tf.variable_scope("output_layer"):
     with tf.variable_scope("regression_gate"):
       regression_gate = MLP(
           # Concatenation of initial and final node states
           in_size=2 * hidden_size,
           out_size=labels_dimensionality,
-          hid_sizes=[],
+          hidden_sizes=[],
           dropout_keep_prob=dropout_keep_prob_placeholder,
       )
 
@@ -280,7 +284,7 @@ def MakeOutputLayer(initial_node_state, final_node_state, hidden_size: int,
       regression_transform = MLP(
           in_size=hidden_size,
           out_size=labels_dimensionality,
-          hid_sizes=[],
+          hidden_sizes=[],
           dropout_keep_prob=dropout_keep_prob_placeholder,
       )
 
