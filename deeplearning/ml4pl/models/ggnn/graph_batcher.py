@@ -23,10 +23,16 @@ app.DEFINE_integer(
     "The maximum number of nodes to include in each graph batch.")
 app.DEFINE_boolean(
     'limit_data_flow_max_steps_required_to_message_passing_steps', True,
-    'If true, limit the graphs loaded to those that require fewere data flow '
-    'steps than the number of layer timesteps. E.g. with '
+    'If true, limit the graphs loaded to those that require fewer data flow '
+    'steps than the number of message passing steps. E.g. with '
     '--layer_timesteps=2,2,2, only graphs where data_flow_max_steps_required '
     '<= 6 will be used.')
+app.DEFINE_boolean(
+    'match_data_flow_max_steps_required_to_message_passing_steps', True,
+    'If true, limit the graphs loaded to those that require exactly the '
+    'same number of data flow steps as there are message passing steps. E.g. '
+    'with --layer_timesteps=2,2,2, only graphs where '
+    'data_flow_max_steps_required == 6 will be used.')
 
 
 class GraphBatcher(object):
@@ -44,19 +50,21 @@ class GraphBatcher(object):
       db: The database to read and batch graphs from.
       message_passing_step_count: The number of message passing steps in the
         model that this batcher is feeding. This value is used when the
-        --limit_data_flow_max_steps_required_to_message_passing_steps flag is
-        set to limit the graphs which are used to construct batches.
+        --{limit,match}_data_flow_max_steps_required_to_message_passing_steps
+        flags are set to limit the graphs which are used to construct batches.
     """
-    if (FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps and
+    if ((FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps or
+         FLAGS.match_data_flow_max_steps_required_to_message_passing_steps) and
         not message_passing_step_count):
       raise ValueError(
           "message_passing_step_count argument must be provied when "
           "--limit_data_flow_max_steps_required_to_message_passing_steps "
-          "flag is set")
+          "or --match_data_flow_max_steps_required_to_message_passing_steps "
+          "flags are set")
     self.db = db
     self.message_passing_step_count = message_passing_step_count
-    self.stats = graph_stats.GraphDictDatabaseStats(
-        self.db, filters=self._GetFilters())
+    self.stats = graph_stats.GraphDictDatabaseStats(self.db,
+                                                    filters=self._GetFilters())
     app.Log(1, "%s", self.stats)
 
   def GetGraphsInGroupCount(self, group: str) -> int:
@@ -109,10 +117,14 @@ class GraphBatcher(object):
       filters.append(
           lambda: (graph_database.GraphMeta.data_flow_max_steps_required <= self
                    .message_passing_step_count))
+    if FLAGS.match_data_flow_max_steps_required_to_message_passing_steps:
+      filters.append(
+          lambda: (graph_database.GraphMeta.data_flow_max_steps_required == self
+                   .message_passing_step_count))
     return filters
 
   def CreateBatchDict(self, graphs: typing.Iterable[graph_database.GraphMeta]
-                      ) -> typing.Optional[typing.Dict[str, typing.Any]]:
+                     ) -> typing.Optional[typing.Dict[str, typing.Any]]:
     """Construct a single batch dictionary.
 
     Args:
@@ -284,9 +296,8 @@ class GraphBatcher(object):
     return batch
 
   @staticmethod
-  def BatchDictToGraphs(
-      batch_dict: typing.Dict[str, typing.Any]
-  ) -> typing.Iterable[nx.MultiDiGraph]:
+  def BatchDictToGraphs(batch_dict: typing.Dict[str, typing.Any]
+                       ) -> typing.Iterable[nx.MultiDiGraph]:
     """Perform the inverse transformation from batch_dict to list of graphs.
 
     Args:
@@ -300,7 +311,8 @@ class GraphBatcher(object):
       g = nx.MultiDiGraph()
       # Mask the nodes from the node list to determine how many nodes are in
       # the graph.
-      nodes = batch_dict['graph_nodes_list'][batch_dict['graph_nodes_list'] == graph_count]
+      nodes = batch_dict['graph_nodes_list'][batch_dict['graph_nodes_list'] ==
+                                             graph_count]
       graph_node_count = len(nodes)
 
       # Make a list of all the adj
@@ -317,9 +329,11 @@ class GraphBatcher(object):
         # The adjacency list contains the adjacencies for all graphs. Determine
         # those that are in this graph by selecting only those with a source
         # node in the list of this graph's nodes.
-        srcs = adjacency_list[:,0]
-        adjacency_list_indices.extend(np.where(np.logical_and(
-            srcs >= node_count, srcs < node_count + graph_node_count)))
+        srcs = adjacency_list[:, 0]
+        adjacency_list_indices.extend(
+            np.where(
+                np.logical_and(srcs >= node_count,
+                               srcs < node_count + graph_node_count)))
         adjacency_list = adjacency_list[tuple(adjacency_list_indices)]
 
         # Negate the positive offset into adjacency lists.
@@ -347,13 +361,15 @@ class GraphBatcher(object):
           g.nodes[i]['y'] = values
 
       if 'edge_x' in batch_dict:
-        for edge_type, adjacency_list_indices in enumerate(adjacency_lists_indices):
+        for edge_type, adjacency_list_indices in enumerate(
+            adjacency_lists_indices):
           values = batch_dict['edge_x'][edge_type][adjacency_list_indices]
           for (_, _, data), value in zip(g.edges(data=True), values):
             data['x'] = value
 
       if 'edge_y' in batch_dict:
-        for edge_type, adjacency_list_indices in enumerate(adjacency_lists_indices):
+        for edge_type, adjacency_list_indices in enumerate(
+            adjacency_lists_indices):
           values = batch_dict['edge_y'][edge_type][adjacency_list_indices]
           for (_, _, data), value in zip(g.edges(data=True), values):
             data['y'] = value
