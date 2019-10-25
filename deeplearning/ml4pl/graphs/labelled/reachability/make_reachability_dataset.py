@@ -64,11 +64,12 @@ FLAGS = app.FLAGS
 
 def MakeGraphMetas(
     graph: nx.MultiDiGraph) -> typing.Iterable[graph_dict.GraphDict]:
-  annotated_graphs = reachability.MakeReachabilityGraphs(
-      graph,
-      FLAGS.reachability_dataset_max_instances_per_graph,
-      false=np.array([1, 0], dtype=np.float32),
-      true=np.array([0, 1], dtype=np.float32))
+  annotated_graphs = list(
+      reachability.MakeReachabilityGraphs(
+          graph,
+          FLAGS.reachability_dataset_max_instances_per_graph,
+          false=np.array([1, 0], dtype=np.float32),
+          true=np.array([0, 1], dtype=np.float32)))
 
   # Copy over graph metadata.
   for annotated_graph in annotated_graphs:
