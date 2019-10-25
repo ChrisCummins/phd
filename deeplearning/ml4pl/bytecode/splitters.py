@@ -16,10 +16,10 @@ app.DEFINE_string('bytecode_split_type', 'all',
                   'The name of the bytecode dataset split to use.')
 
 
-def GetTrainValTestGroups(
-    db: bytecode_database.Database,
-    train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
-) -> typing.Dict[str, typing.List[int]]:
+def GetTrainValTestGroups(db: bytecode_database.Database,
+                          train_val_test_ratio: typing.Iterable[float] = (3, 1,
+                                                                          1)
+                         ) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
 
   This concatenates the POJ-104 sources with the other sources split into
@@ -44,18 +44,18 @@ def GetTrainValTestGroups(
 
     # Get the bytecode IDs of non-POJ-104
     num_bytecodes = s.query(sql.func.count(bytecode_database.LlvmBytecode.id))\
-      .filter(~bytecode_database.LlvmBytecode.source_name.like_('poj-104:%'))\
+      .filter(~bytecode_database.LlvmBytecode.source_name.like('poj-104:%'))\
       .one()[0]
     train_val_test_counts = np.floor(ratios * num_bytecodes).astype(np.int32)
     total_count = train_val_test_counts.sum()
     app.Log(1, 'Splitting %s bytecodes into groups: %s train, %s val, %s test',
             humanize.Commas(total_count),
-            humanize.Commas(train_val_test_counts[0]),
-            humanize.Commas(train_val_test_counts[1]),
-            humanize.Commas(train_val_test_counts[2]))
+            humanize.Commas(train_val_test_counts[0] + len(poj104['train'])),
+            humanize.Commas(train_val_test_counts[1] + len(poj104['val'])),
+            humanize.Commas(train_val_test_counts[2] + len(poj104['test'])))
 
     q = s.query(bytecode_database.LlvmBytecode.id) \
-      .filter(~bytecode_database.LlvmBytecode.source_name.like_('poj-104:%'))\
+      .filter(~bytecode_database.LlvmBytecode.source_name.like('poj-104:%'))\
       .order_by(db.Random())
     ids = [r[0] for r in q]
 
@@ -63,7 +63,7 @@ def GetTrainValTestGroups(
       'train':
       ids[:train_val_test_counts[0]] + poj104['train'],
       'val': (ids[train_val_test_counts[0]:sum(train_val_test_counts[:2])] +
-              poj['val']),
+              poj104['val']),
       'test':
       ids[sum(train_val_test_counts[:2]):] + poj104['test'],
   }
