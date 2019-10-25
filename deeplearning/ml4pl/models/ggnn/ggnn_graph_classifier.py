@@ -44,6 +44,11 @@ app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
                  "Edge weight dropout keep probability (rate = 1 - keep_prob)")
 ggnn.MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
 
+app.DEFINE_float(
+    "output_layer_dropout_keep_prob", 1.0,
+    "Dropout keep probability on the output layer. In range 0 < x <= 1.")
+ggnn.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
+
 app.DEFINE_boolean('ignore_node_features', True, '???')
 
 #
@@ -312,21 +317,24 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
 
     self.ops["final_node_x"] = node_states_per_layer[-1]
 
-    computed_values, regression_gate, regression_transform = (
-        utils.MakeOutputLayer(
-            initial_node_state=tf.zeros(
-                [self.placeholders['node_count'], FLAGS.hidden_size]),
-            final_node_state=self.ops["final_node_x"],
-            hidden_size=FLAGS.hidden_size,
-            labels_dimensionality=self.stats.graph_labels_dimensionality,
-            dropout_keep_prob_placeholder=self.
-            placeholders["out_layer_dropout_keep_prob"]))
+    if FLAGS.output_layer_dropout_keep_prob < 1:
+      out_layer_dropout = self.placeholders["output_layer_dropout_keep_prob"]
+    else:
+      out_layer_dropout = None
+
+    predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
+        initial_node_state=tf.zeros(
+            [self.placeholders['node_count'], FLAGS.hidden_size]),
+        final_node_state=self.ops["final_node_x"],
+        hidden_size=FLAGS.hidden_size,
+        labels_dimensionality=self.stats.graph_labels_dimensionality,
+        dropout_keep_prob_placeholder=out_layer_dropout)
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
     # Sum node representations across graph.
-    computed_values = tf.unsorted_segment_sum(
-        computed_values,
+    predictions = tf.unsorted_segment_sum(
+        predictions,
         segment_ids=self.placeholders["graph_nodes_list"],
         num_segments=self.placeholders["graph_count"],
         name='computed_values',
@@ -364,14 +372,17 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
             (FLAGS.graph_state_dropout_keep_prob),
             self.placeholders["edge_weight_dropout_keep_prob"]:
             (FLAGS.edge_weight_dropout_keep_prob),
-            self.placeholders["out_layer_dropout_keep_prob"]:
-            (FLAGS.out_layer_dropout_keep_prob)
+            self.placeholders["output_layer_dropout_keep_prob"]:
+            (FLAGS.output_layer_dropout_keep_prob)
         })
       else:
         feed_dict.update({
-            self.placeholders["graph_state_keep_prob"]: 1.0,
-            self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
-            self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
+            self.placeholders["graph_state_keep_prob"]:
+            1.0,
+            self.placeholders["edge_weight_dropout_keep_prob"]:
+            1.0,
+            self.placeholders["output_layer_dropout_keep_prob"]:
+            1.0,
         })
       yield batch['log'], feed_dict
 

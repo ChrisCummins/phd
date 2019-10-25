@@ -47,6 +47,11 @@ app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
                  "Edge weight dropout keep probability (rate = 1 - keep_prob)")
 ggnn.MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
 
+app.DEFINE_float(
+    "output_layer_dropout_keep_prob", 1.0,
+    "Dropout keep probability on the output layer. In range 0 < x <= 1.")
+ggnn.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
+
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
     [
@@ -106,11 +111,10 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(
-            FLAGS.graph_rnn_cell,
-            FLAGS.graph_rnn_activation,
-            FLAGS.hidden_size,
-            name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
+                                  FLAGS.graph_rnn_activation,
+                                  FLAGS.hidden_size,
+                                  name=f"cell_layer_{layer_index}")
         # Apply dropout as required.
         if FLAGS.graph_state_dropout_keep_prob < 1:
           cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
@@ -200,16 +204,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(
-                  message_source_states, axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(message_source_states,
+                                                axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (
-                  message_attention_scores * message_edge_type_factors)
+              message_attention_scores = (message_attention_scores *
+                                          message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -278,8 +282,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     self.ops["final_node_x"] = node_states_per_layer[-1]
 
-    if FLAGS.out_layer_dropout_keep_prob < 1:
-      out_layer_dropout = self.placeholders["out_layer_dropout_keep_prob"]
+    if FLAGS.output_layer_dropout_keep_prob < 1:
+      out_layer_dropout = self.placeholders["output_layer_dropout_keep_prob"]
     else:
       out_layer_dropout = None
 
@@ -292,11 +296,12 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
-    targets = tf.argmax(
-        self.placeholders["node_y"], axis=1, output_type=tf.int32)
+    targets = tf.argmax(self.placeholders["node_y"],
+                        axis=1,
+                        output_type=tf.int32)
 
-    accuracies = tf.equal(
-        tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
+    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32),
+                          targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
@@ -315,17 +320,20 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       if epoch_type == "train":
         feed_dict.update({
             self.placeholders["graph_state_dropout_keep_prob"]:
-            (FLAGS.graph_state_dropout_keep_prob),
+            FLAGS.graph_state_dropout_keep_prob,
             self.placeholders["edge_weight_dropout_keep_prob"]:
-            (FLAGS.edge_weight_dropout_keep_prob),
-            self.placeholders["out_layer_dropout_keep_prob"]:
-            (FLAGS.out_layer_dropout_keep_prob)
+            FLAGS.edge_weight_dropout_keep_prob,
+            self.placeholders["output_layer_dropout_keep_prob"]:
+            FLAGS.output_layer_dropout_keep_prob
         })
       else:
         feed_dict.update({
-            self.placeholders["graph_state_dropout_keep_prob"]: 1.0,
-            self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
-            self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
+            self.placeholders["graph_state_dropout_keep_prob"]:
+            1.0,
+            self.placeholders["edge_weight_dropout_keep_prob"]:
+            1.0,
+            self.placeholders["output_layer_dropout_keep_prob"]:
+            1.0,
         })
       yield batch['log'], feed_dict
 
