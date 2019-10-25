@@ -23,7 +23,6 @@ from labm8 import app
 from labm8 import fs
 from labm8 import pbutil
 
-
 app.DEFINE_database('bytecode_db',
                     bytecode_database.Database,
                     None,
@@ -63,15 +62,20 @@ app.DEFINE_integer(
 FLAGS = app.FLAGS
 
 
-def MakeGraphMetas(graph: nx.MultiDiGraph) -> typing.Iterable[graph_dict.GraphDict]:
+def MakeGraphMetas(
+    graph: nx.MultiDiGraph) -> typing.Iterable[graph_dict.GraphDict]:
   annotated_graphs = reachability.MakeReachabilityGraphs(
-      graph, FLAGS.reachability_dataset_max_instances_per_graph,
-      false = np.array([1, 0], dtype=np.float32),
-      true = np.array([0, 1], dtype=np.float32))
+      graph,
+      FLAGS.reachability_dataset_max_instances_per_graph,
+      false=np.array([1, 0], dtype=np.float32),
+      true=np.array([0, 1], dtype=np.float32))
+  if FLAGS.dataflow == 'none':
+    edge_types = {'control'}
+  else:
+    edge_types = {'control', 'data'}
   return [
-    graph_database.GraphMeta.CreateWithGraphDict(
-        graph, {'control', 'data', 'call'})
-    for graph in annotated_graphs
+      graph_database.GraphMeta.CreateWithGraphDict(graph, edge_types)
+      for graph in annotated_graphs
   ]
 
 
@@ -121,7 +125,8 @@ def _ProcessControlFlowGraphJob(
     return []
 
 
-class ControlFlowGraphProtoExporter(database_exporters.BytecodeDatabaseExporterBase):
+class ControlFlowGraphProtoExporter(
+    database_exporters.BytecodeDatabaseExporterBase):
   """Export from control flow graph protos."""
 
   @staticmethod
