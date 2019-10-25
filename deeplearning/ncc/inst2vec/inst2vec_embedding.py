@@ -181,33 +181,35 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
   # Placeholders for inputs
   with tf.name_scope("Input_Data") as scope:
     train_inputs = next_batch[:, 0]
-    train_labels = tf.reshape(
-        next_batch[:, 1], shape=[mini_batch_size, 1], name="training_labels")
+    train_labels = tf.reshape(next_batch[:, 1],
+                              shape=[mini_batch_size, 1],
+                              name="training_labels")
 
   # (input) Embedding matrix
   with tf.name_scope("Input_Layer") as scope:
-    W_in = tf.Variable(
-        tf.random_uniform([V, N], -1.0, 1.0), name="input-embeddings")
+    W_in = tf.Variable(tf.random_uniform([V, N], -1.0, 1.0),
+                       name="input-embeddings")
 
     # Look up the vector representing each source word in the batch (fetches rows of the embedding matrix)
-    h = tf.nn.embedding_lookup(
-        W_in, train_inputs, name="input_embedding_vectors")
+    h = tf.nn.embedding_lookup(W_in,
+                               train_inputs,
+                               name="input_embedding_vectors")
 
   # Normalized embedding matrix
   with tf.name_scope("Embeddings_Normalized") as scope:
-    normalized_embeddings = tf.nn.l2_normalize(
-        W_in, name="embeddings_normalized")
+    normalized_embeddings = tf.nn.l2_normalize(W_in,
+                                               name="embeddings_normalized")
 
   # (output) Embedding matrix ("output weights")
   with tf.name_scope("Output_Layer") as scope:
     if FLAGS.softmax:
-      W_out = tf.Variable(
-          tf.truncated_normal([N, V], stddev=1.0 / math.sqrt(N)),
-          name="output_embeddings")
+      W_out = tf.Variable(tf.truncated_normal([N, V],
+                                              stddev=1.0 / math.sqrt(N)),
+                          name="output_embeddings")
     else:
-      W_out = tf.Variable(
-          tf.truncated_normal([V, N], stddev=1.0 / math.sqrt(N)),
-          name="output_embeddings")
+      W_out = tf.Variable(tf.truncated_normal([V, N],
+                                              stddev=1.0 / math.sqrt(N)),
+                          name="output_embeddings")
 
     # Biases between hidden layer and output layer
     b_out = tf.Variable(tf.zeros([V]), name="nce_bias")
@@ -218,16 +220,15 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     if FLAGS.softmax:
       logits = tf.layers.dense(inputs=h, units=V)
       onehot = tf.one_hot(train_labels, V)
-      loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
-          labels=onehot, logits=logits)
+      loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(labels=onehot,
+                                                               logits=logits)
     else:
-      loss_tensor = tf.nn.nce_loss(
-          weights=W_out,
-          biases=b_out,
-          labels=train_labels,
-          inputs=h,
-          num_sampled=num_sampled,
-          num_classes=V)
+      loss_tensor = tf.nn.nce_loss(weights=W_out,
+                                   biases=b_out,
+                                   labels=train_labels,
+                                   inputs=h,
+                                   num_sampled=num_sampled,
+                                   num_classes=V)
     train_loss = tf.reduce_mean(loss_tensor, name="nce_loss")
 
     # Regularization (optional)
@@ -250,8 +251,10 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
       optimizer = tf.contrib.opt.NadamOptimizer(
           learning_rate=learning_rate).minimize(loss)
     elif FLAGS.optimizer == 'momentum':
-      global_train_step = tf.Variable(
-          0, trainable=False, dtype=tf.int32, name="global_step")
+      global_train_step = tf.Variable(0,
+                                      trainable=False,
+                                      dtype=tf.int32,
+                                      name="global_step")
       # Passing global_step to minimize() will increment it at each step.
       optimizer = (tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(
           loss, global_step=global_train_step))
@@ -259,18 +262,22 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
       raise ValueError('Unrecognized optimizer ' + FLAGS.optimizer)
 
   if FLAGS.optimizer != 'momentum':
-    global_train_step = tf.Variable(
-        0, trainable=False, dtype=tf.int32, name="global_step")
+    global_train_step = tf.Variable(0,
+                                    trainable=False,
+                                    dtype=tf.int32,
+                                    name="global_step")
 
   ####################################################################################################################
   # Validation block
   with tf.name_scope("Validation_Block") as scope:
-    valid_dataset = tf.constant(
-        valid_examples, dtype=tf.int32, name="validation_data_size")
+    valid_dataset = tf.constant(valid_examples,
+                                dtype=tf.int32,
+                                name="validation_data_size")
     valid_embeddings = tf.nn.embedding_lookup(normalized_embeddings,
                                               valid_dataset)
-    cosine_similarity = tf.matmul(
-        valid_embeddings, normalized_embeddings, transpose_b=True)
+    cosine_similarity = tf.matmul(valid_embeddings,
+                                  normalized_embeddings,
+                                  transpose_b=True)
 
   ####################################################################################################################
   # Summaries
@@ -280,8 +287,10 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     tf.summary.histogram("output_embeddings", W_out)
     tf.summary.scalar("nce_loss", loss)
 
-    analogy_score_tensor = tf.Variable(
-        0, trainable=False, dtype=tf.int32, name="analogy_score")
+    analogy_score_tensor = tf.Variable(0,
+                                       trainable=False,
+                                       dtype=tf.int32,
+                                       name="analogy_score")
     tf.summary.scalar("analogy_score", analogy_score_tensor)
 
   ####################################################################################################################
@@ -295,7 +304,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
   with tf.Session(config=config) as sess:
 
     # Add TensorBoard components
-    writer = tf.summary.FileWriter(log_dir)  # create summary writer
+    writer = tf.compat.v1.summary.FileWriter(log_dir)  # create summary writer
     writer.add_graph(sess.graph)
     gvars = [
         gvar for gvar in tf.global_variables()
@@ -323,8 +332,10 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
       graph_saver = tf.train.Saver(allow_empty=True)
       init.run()
-      graph_saver.save(
-          sess, ckpt_saver_file_init, global_step=0, write_meta_graph=True)
+      graph_saver.save(sess,
+                       ckpt_saver_file_init,
+                       global_step=0,
+                       write_meta_graph=True)
       tf.add_to_collection(tf.GraphKeys.SAVEABLE_OBJECTS, saveable_iterator)
       print("\tVariables initialized in TensorFlow")
 
@@ -385,14 +396,13 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
             if step > 0:
               avg_loss /= step_print_loss
 
-            analogy_score = i2v_eval.evaluate_analogies(
-                W_in.eval(),
-                reverse_dictionary,
-                analogies,
-                analogy_types,
-                analogy_evaluation_file,
-                session=sess,
-                print=i2v_eval.nop)
+            analogy_score = i2v_eval.evaluate_analogies(W_in.eval(),
+                                                        reverse_dictionary,
+                                                        analogies,
+                                                        analogy_types,
+                                                        analogy_evaluation_file,
+                                                        session=sess,
+                                                        print=i2v_eval.nop)
             total_analogy_score = sum([a[0] for a in analogy_score])
             analogy_score_tensor.assign(
                 total_analogy_score).eval()  # for tf.summary
@@ -411,20 +421,18 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
             # Display average loss
             print(
                 '{} Avg. loss at epoch {:>6,d}, step {:>12,d} of {:>12,d}, global step {:>15} : {:>12.3f}, analogies: {})'
-                .format(
-                    str(datetime.now()), epoch, step, num_steps, global_step,
-                    avg_loss, str(analogy_score)))
+                .format(str(datetime.now()), epoch, step, num_steps,
+                        global_step, avg_loss, str(analogy_score)))
             avg_loss = 0
 
             # Pickle intermediate embeddings
             i2v_utils.safe_pickle(W_in_val, embeddings_pickle)
 
             # Write to TensorBoard
-            saver.save(
-                sess,
-                ckpt_saver_file,
-                global_step=global_step,
-                write_meta_graph=False)
+            saver.save(sess,
+                       ckpt_saver_file,
+                       global_step=global_step,
+                       write_meta_graph=False)
             writer.add_summary(summary, global_step=global_step)
 
             if FLAGS.profile:
@@ -442,11 +450,10 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
           # Compute and print nearest neighbors every x steps
           if step_print_neighbors > 0 and step % int(step_print_neighbors) == 0:
-            print_neighbors(
-                op=cosine_similarity,
-                examples=valid_examples,
-                top_k=6,
-                reverse_dictionary=reverse_dictionary)
+            print_neighbors(op=cosine_similarity,
+                            examples=valid_examples,
+                            top_k=6,
+                            reverse_dictionary=reverse_dictionary)
 
           # Update loop index (steps in epoch)
           step += 1
@@ -464,11 +471,10 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     # End of training:
     # Print the nearest neighbors at the end of the run
     if step_print_neighbors == -1:
-      print_neighbors(
-          op=cosine_similarity,
-          examples=valid_examples,
-          top_k=6,
-          reverse_dictionary=reverse_dictionary)
+      print_neighbors(op=cosine_similarity,
+                      examples=valid_examples,
+                      top_k=6,
+                      reverse_dictionary=reverse_dictionary)
 
     # Save state of training and close the TensorBoard summary writer
     save_path = saver.save(sess, ckpt_saver_file_final, global_step)
@@ -592,8 +598,8 @@ def train_embeddings(data_folder, data_folders):
   ckpt_saver_file_init = os.path.join(log_dir, "inst2vec-init.ckpt")
   ckpt_saver_file_final = os.path.join(log_dir, "inst2vec-final.ckpt")
   os.makedirs(os.path.dirname(vocab_metada_file), exist_ok=True)
-  subprocess.call(
-      'cp ' + vocab_metada_file_ + ' ' + vocab_metada_file, shell=True)
+  subprocess.call('cp ' + vocab_metada_file_ + ' ' + vocab_metada_file,
+                  shell=True)
 
   # Train the embeddings (Skip-Gram model)
   print('\n--- Setup completed, starting to train the embeddings')

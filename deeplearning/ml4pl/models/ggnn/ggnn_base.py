@@ -223,12 +223,15 @@ class GgnnBaseModel(object):
       app.Log(1, f"Writing tensorboard logs to: `{tensorboard_dir}`")
       tensorboard_dir.mkdir(parents=True, exist_ok=True)
       self.summary_writers = {
-          "train": tf.summary.FileWriter(tensorboard_dir / "train",
-                                         self.sess.graph),
-          "val": tf.summary.FileWriter(tensorboard_dir / "val",
-                                       self.sess.graph),
-          "test": tf.summary.FileWriter(tensorboard_dir / "test",
-                                        self.sess.graph),
+          "train":
+          tf.compat.v1.summary.FileWriter(tensorboard_dir / "train",
+                                          self.sess.graph),
+          "val":
+          tf.compat.v1.summary.FileWriter(tensorboard_dir / "val",
+                                          self.sess.graph),
+          "test":
+          tf.compat.v1.summary.FileWriter(tensorboard_dir / "test",
+                                          self.sess.graph),
       }
 
   @property

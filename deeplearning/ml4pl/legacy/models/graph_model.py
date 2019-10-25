@@ -112,8 +112,9 @@ def CreatePlaceholdersFromGraphs(
     A tuple of the input graph's and target graph's placeholders, as a
     graph namedtuple.
   """
-  input_ph = utils_tf.placeholders_from_networkxs(
-      input_graphs, force_dynamic_num_graphs=True, name="input_ph")
+  input_ph = utils_tf.placeholders_from_networkxs(input_graphs,
+                                                  force_dynamic_num_graphs=True,
+                                                  name="input_ph")
   target_ph = utils_tf.placeholders_from_networkxs(
       target_graphs, force_dynamic_num_graphs=True, name="target_ph")
   return InputTargetValue(input_ph, target_ph)
@@ -190,10 +191,9 @@ def MakeMultilayerPerceptron() -> snt.Sequential:
     A Sonnet module which contains the MLP and LayerNorm.
   """
   return snt.Sequential([
-      snt.nets.MLP(
-          [FLAGS.experimental_mlp_model_latent_size] *
-          FLAGS.experimental_mlp_model_layer_count,
-          activate_final=True),
+      snt.nets.MLP([FLAGS.experimental_mlp_model_latent_size] *
+                   FLAGS.experimental_mlp_model_layer_count,
+                   activate_final=True),
       snt.LayerNorm()
   ])
 
@@ -286,8 +286,10 @@ class EncodeProcessDecode(snt.AbstractModule):
       self._encoder = MLPGraphIndependent(name="encoder")
       self._core = MLPGraphNetwork(name="core")
       self._decoder = MLPGraphIndependent(name="decoder")
-      self._output_transform = modules.GraphIndependent(
-          edge_fn, node_fn, global_fn, name="output_transform")
+      self._output_transform = modules.GraphIndependent(edge_fn,
+                                                        node_fn,
+                                                        global_fn,
+                                                        name="output_transform")
 
   def _build(self, input_op, num_processing_steps):
     latent = self._encoder(input_op)
@@ -331,10 +333,9 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
         latent = self._core(core_input)
 
       return [
-          LoopVars(
-              i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
-              latent=latent,
-              latent0=v.latent0)
+          LoopVars(i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
+                   latent=latent,
+                   latent0=v.latent0)
       ]
 
     init_latent = self._encoder(input_op)
@@ -547,12 +548,12 @@ class CompilerGraphNeuralNetwork(object):
       A list of output graphs, one for each graph in the test set.
     """
     summary_writers = TrainingValidationTestValue(
-        training=tf.summary.FileWriter(f'{self.outdir}/tensorboard/training',
-                                       sess.graph),
-        validation=tf.summary.FileWriter(
+        training=tf.compat.v1.summary.FileWriter(
+            f'{self.outdir}/tensorboard/training', sess.graph),
+        validation=tf.compat.v1.summary.FileWriter(
             f'{self.outdir}/tensorboard/validation', sess.graph),
-        test=tf.summary.FileWriter(f'{self.outdir}/tensorboard/test',
-                                   sess.graph))
+        test=tf.compat.v1.summary.FileWriter(f'{self.outdir}/tensorboard/test',
+                                             sess.graph))
 
     random_state = np.random.RandomState(FLAGS.model_seed)
 
@@ -633,14 +634,15 @@ class CompilerGraphNeuralNetwork(object):
             for s in range(0, self.num_processing_steps):
               feed_dict = CreateFeedDict(input_graphs, target_graphs,
                                          self.placeholders)
-              train_values = sess.run({
-                  "summary": self.loss_summary_op,
-                  "step": self.step_op,
-                  "target": self.placeholders.target,
-                  "loss": self.loss_op,
-                  "output": self.output_op,
-              },
-                                      feed_dict=feed_dict)
+              train_values = sess.run(
+                  {
+                      "summary": self.loss_summary_op,
+                      "step": self.step_op,
+                      "target": self.placeholders.target,
+                      "loss": self.loss_op,
+                      "output": self.output_op,
+                  },
+                  feed_dict=feed_dict)
 
             output_graphs += utils_np.graphs_tuple_to_data_dicts(
                 train_values["output"])
@@ -683,13 +685,14 @@ class CompilerGraphNeuralNetwork(object):
           num_graphs_processed += len(input_graphs)
           feed_dict = CreateFeedDict(input_graphs, target_graphs,
                                      self.placeholders)
-          validation_values = sess.run({
-              "summary": self.loss_summary_op,
-              "target": self.placeholders.target,
-              "loss": self.loss_op,
-              "output": self.output_op,
-          },
-                                       feed_dict=feed_dict)
+          validation_values = sess.run(
+              {
+                  "summary": self.loss_summary_op,
+                  "target": self.placeholders.target,
+                  "loss": self.loss_op,
+                  "output": self.output_op,
+              },
+              feed_dict=feed_dict)
           output_graphs += utils_np.graphs_tuple_to_data_dicts(
               validation_values["output"])
           summary_writers.validation.add_summary(validation_values['summary'],
@@ -725,13 +728,14 @@ class CompilerGraphNeuralNetwork(object):
           num_graphs_processed += len(input_graphs)
           feed_dict = CreateFeedDict(input_graphs, target_graphs,
                                      self.placeholders)
-          test_values = sess.run({
-              "summary": self.loss_summary_op,
-              "target": self.placeholders.target,
-              "loss": self.loss_op,
-              "output": self.output_op,
-          },
-                                 feed_dict=feed_dict)
+          test_values = sess.run(
+              {
+                  "summary": self.loss_summary_op,
+                  "target": self.placeholders.target,
+                  "loss": self.loss_op,
+                  "output": self.output_op,
+              },
+              feed_dict=feed_dict)
           output_graphs += utils_np.graphs_tuple_to_data_dicts(
               test_values["output"])
           summary_writers.test.add_summary(test_values['summary'],
