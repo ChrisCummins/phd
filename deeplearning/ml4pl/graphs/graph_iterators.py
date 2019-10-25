@@ -57,8 +57,7 @@ def EntryBlockIterator(g: nx.Graph):
   An entry block is a statement with no control predecessor.
   """
   for node, data in StatementNodeIterator(g):
-    for src, dst in g.in_edges(node):
-      flow = g.edges[src, dst, 0].get('flow', 'control')
+    for src, dst, flow in g.in_edges(node, data='flow', default='control'):
       if flow == 'control':
         break
     else:
@@ -71,8 +70,8 @@ def ExitBlockIterator(g: nx.Graph):
   An exit block is a statement with no control successor.
   """
   for node, data in StatementNodeIterator(g):
-    for src, dst in g.out_edges(node):
-      if g.edges[src, dst, 0].get('type', 'control') == 'control':
+    for src, dst, flow in g.out_edges(node, data='flow', default='control'):
+      if flow == 'control':
         break
     else:
       yield node, data
