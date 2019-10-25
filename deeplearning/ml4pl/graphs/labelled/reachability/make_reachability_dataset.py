@@ -69,13 +69,22 @@ def MakeGraphMetas(
       FLAGS.reachability_dataset_max_instances_per_graph,
       false=np.array([1, 0], dtype=np.float32),
       true=np.array([0, 1], dtype=np.float32))
+
+  # Copy over graph metadata.
+  for annotated_graph in annotated_graphs:
+    annotated_graph.bytecode_id = graph.bytecode_id
+    annotated_graph.source_name = graph.source_name
+    annotated_graph.relpath = graph.relpath
+    annotated_graph.language = graph.language
+
   if FLAGS.dataflow == 'none':
     edge_types = {'control'}
   else:
     edge_types = {'control', 'data'}
+
   return [
-      graph_database.GraphMeta.CreateWithGraphDict(graph, edge_types)
-      for graph in annotated_graphs
+      graph_database.GraphMeta.CreateWithGraphDict(annotated_graph, edge_types)
+      for annotated_graph in annotated_graphs
   ]
 
 

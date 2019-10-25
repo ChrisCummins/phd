@@ -83,10 +83,6 @@ def MakeReachabilityGraphs(
 
   for node in nodes[:n]:
     reachable = g.copy()
-    reachable.bytecode_id = g.bytecode_id
-    reachable.source_name = g.source_name
-    reachable.relpath = g.relpath
-    reachable.language = g.language
     reachable.reachable_node_count, reachable.data_flow_max_steps_required = (
         SetReachableNodes(reachable,
                           node,
