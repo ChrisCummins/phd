@@ -72,8 +72,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.gnn_weights = GGNNWeights([], [], [], [])
     for layer_index in range(len(self.layer_timesteps)):
       with tf.variable_scope(f"gnn_layer_{layer_index}"):
-        edge_weights = tf.nn.dropout(
-            tf.reshape(
+        edge_weights = tf.reshape(
                 tf.Variable(
                     utils.glorot_init([
                         self.stats.edge_type_count * FLAGS.hidden_size,
@@ -83,8 +82,12 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                 ), [
                     self.stats.edge_type_count, FLAGS.hidden_size,
                     FLAGS.hidden_size
-                ]),
-            rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
+                ])
+        # Add dropout as required.
+        if FLAGS.edge_weight_dropout_keep_prob < 1.0:
+          edge_weights = tf.nn.dropout(
+              edge_weights,
+              rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
         self.gnn_weights.edge_weights.append(edge_weights)
 
         if FLAGS.use_propagation_attention:
@@ -106,8 +109,10 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                                   FLAGS.graph_rnn_activation,
                                   FLAGS.hidden_size,
                                   name=f"cell_layer_{layer_index}")
-        cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
-            cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
+        # Apply dropout as required.
+        if FLAGS.graph_state_dropout_keep_prob < 1:
+          cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
+              cell, state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
 
     # Initial node states and then one entry per layer
