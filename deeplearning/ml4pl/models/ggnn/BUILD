@@ -2,6 +2,7 @@ py_library(
     name = "ggnn_base",
     srcs = ["ggnn_base.py"],
     data = ["//deeplearning/ncc/published_results:embeddings"],
+    visibility = ["//visibility:public"],
     deps = [
         ":ggnn_utils",
         ":graph_batcher",
@@ -64,6 +65,7 @@ py_binary(
 py_library(
     name = "ggnn_utils",
     srcs = ["ggnn_utils.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database_stats",
         "//labm8:app",
