@@ -37,16 +37,18 @@ FLAGS = app.FLAGS
 # declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/ggnn/',
-                       'The directory to write files to.',
-                       is_dir=True)
+app.DEFINE_output_path(
+    'working_dir',
+    '/tmp/deeplearning/ml4pl/models/ggnn/',
+    'The directory to write files to.',
+    is_dir=True)
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -294,8 +296,9 @@ class GgnnBaseModel(object):
       log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
 
       # Compute and record stats.
-      targets = (feed_dict[self.placeholders['node_y']] if 'node_y' in feed_dict
-                 else feed_dict[self.placeholders['graph_y']])
+      targets = (feed_dict[self.placeholders['node_y']]
+                 if self.placeholders['node_y'] in feed_dict else
+                 feed_dict[self.placeholders['graph_y']])
       y_true = np.argmax(targets, axis=1)
       y_pred = np.argmax(fetch_dict['predictions'], axis=1)
 
@@ -343,9 +346,8 @@ class GgnnBaseModel(object):
           # Compute the ratio of the new best validation accuracy against the
           # old best validation accuracy.
           if self.best_epoch_validation_accuracy:
-            accuracy_ratio = (
-                val_acc /
-                max(self.best_epoch_validation_accuracy, utils.SMALL_NUMBER))
+            accuracy_ratio = (val_acc / max(self.best_epoch_validation_accuracy,
+                                            utils.SMALL_NUMBER))
             relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
           else:
             relative_increase = ''
@@ -491,19 +493,20 @@ class GgnnBaseModel(object):
         return pickle.load(f)
 
     if FLAGS.embeddings == "inst2vec":
-      return tf.constant(embedding_table,
-                         dtype=tf.float32,
-                         name="embedding_table")
+      return tf.constant(
+          embedding_table, dtype=tf.float32, name="embedding_table")
     elif FLAGS.embeddings == "finetune":
-      return tf.Variable(embedding_table,
-                         dtype=tf.float32,
-                         name="embedding_table",
-                         trainable=True)
+      return tf.Variable(
+          embedding_table,
+          dtype=tf.float32,
+          name="embedding_table",
+          trainable=True)
     elif FLAGS.embeddings == "random":
-      return tf.Variable(utils.uniform_init(np.shape(embedding_table)),
-                         dtype=tf.float32,
-                         name="embedding_table",
-                         trainable=True)
+      return tf.Variable(
+          utils.uniform_init(np.shape(embedding_table)),
+          dtype=tf.float32,
+          name="embedding_table",
+          trainable=True)
     else:
       raise ValueError("Invalid value for --embeding. Supported values are "
                        "{inst2vec,finetune,random}")
@@ -514,8 +517,8 @@ class GgnnBaseModel(object):
         tf.GraphKeys.TRAINABLE_VARIABLES)
     if FLAGS.freeze_graph_model:
       graph_vars = set(
-          self.sess.graph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope="graph_model"))
+          self.sess.graph.get_collection(
+              tf.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"))
       filtered_vars = []
       for var in trainable_vars:
         if var not in graph_vars:
@@ -524,13 +527,13 @@ class GgnnBaseModel(object):
           app.Log(1, "Freezing weights of variable `%s`.", var.name)
       trainable_vars = filtered_vars
     optimizer = tf.compat.v1.train.AdamOptimizer(FLAGS.learning_rate)
-    grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
-                                                 var_list=trainable_vars)
+    grads_and_vars = optimizer.compute_gradients(
+        self.ops["loss"], var_list=trainable_vars)
     clipped_grads = []
     for grad, var in grads_and_vars:
       if grad is not None:
-        clipped_grads.append((tf.clip_by_norm(grad,
-                                              FLAGS.clamp_gradient_norm), var))
+        clipped_grads.append((tf.clip_by_norm(grad, FLAGS.clamp_gradient_norm),
+                              var))
       else:
         clipped_grads.append((grad, var))
     train_step = optimizer.apply_gradients(clipped_grads)
@@ -549,9 +552,8 @@ class GgnnBaseModel(object):
     accuracies, predictions = [], []
     start_time = time.time()
     processed_graphs = 0
-    batch_iterator = utils.ThreadedIterator(self.MakeMinibatchIterator(
-        data, is_training=False),
-                                            max_queue_size=5)
+    batch_iterator = utils.ThreadedIterator(
+        self.MakeMinibatchIterator(data, is_training=False), max_queue_size=5)
 
     for step, batch in enumerate(batch_iterator):
       num_graphs = batch[self.placeholders["graph_count"]]
@@ -562,8 +564,8 @@ class GgnnBaseModel(object):
           self.ops["loss"], self.ops["accuracy"], self.ops["predictions"]
       ]
 
-      batch_loss, batch_accuracy, _preds, *_ = self.sess.run(fetch_list,
-                                                             feed_dict=batch)
+      batch_loss, batch_accuracy, _preds, *_ = self.sess.run(
+          fetch_list, feed_dict=batch)
       loss += batch_loss * num_graphs
       accuracies.append(np.array(batch_accuracy) * num_graphs)
       predictions.extend(_preds)
