@@ -76,16 +76,14 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     for layer_index in range(len(self.layer_timesteps)):
       with tf.variable_scope(f"gnn_layer_{layer_index}"):
         edge_weights = tf.reshape(
-                tf.Variable(
-                    utils.glorot_init([
-                        self.stats.edge_type_count * FLAGS.hidden_size,
-                        FLAGS.hidden_size
-                    ]),
-                    name=f"gnn_edge_weights_{layer_index}",
-                ), [
-                    self.stats.edge_type_count, FLAGS.hidden_size,
+            tf.Variable(
+                utils.glorot_init([
+                    self.stats.edge_type_count * FLAGS.hidden_size,
                     FLAGS.hidden_size
-                ])
+                ]),
+                name=f"gnn_edge_weights_{layer_index}",
+            ),
+            [self.stats.edge_type_count, FLAGS.hidden_size, FLAGS.hidden_size])
         # Add dropout as required.
         if FLAGS.edge_weight_dropout_keep_prob < 1.0:
           edge_weights = tf.nn.dropout(
@@ -115,7 +113,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         # Apply dropout as required.
         if FLAGS.graph_state_dropout_keep_prob < 1:
           cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
-              cell, state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"])
+              cell,
+              state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"]
+          )
         self.gnn_weights.rnn_cells.append(cell)
 
     # Initial node states and then one entry per layer
@@ -134,9 +134,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     # I will have to only carry one adj. list (one edge type, maybe could go to
     # 2 for data and flow) and instead figure out how to carry the emb as
     # additional information, cf. "prep. spec. graphmodel: placeholder def.".
-    for edge_type, adjacency_list_for_edge_type in enumerate(
+    for edge_type, adjacency_list in enumerate(
         self.placeholders["adjacency_lists"]):
-      edge_targets = adjacency_list_for_edge_type[:, 1]
+      edge_targets = adjacency_list[:, 1]
       message_targets.append(edge_targets)
       message_edge_types.append(
           tf.ones_like(edge_targets, dtype=tf.int32) * edge_type)
@@ -145,7 +145,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     message_edge_types = tf.concat(message_edge_types, axis=0)  # Shape [M]
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
-      with tf.variable_scope("gnn_layer_%i" % layer_idx):
+      with tf.variable_scope(f"gnn_layer_{layer_idx}"):
         # Used shape abbreviations:
         #   V ~ number of nodes
         #   D ~ state dimension
@@ -180,9 +180,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             message_source_states = []
 
             # Collect incoming messages per edge type
-            for edge_type, adjacency_list_for_edge_type in enumerate(
+            for edge_type, adjacency_list in enumerate(
                 self.placeholders["adjacency_lists"]):
-              edge_sources = adjacency_list_for_edge_type[:, 0]
+              edge_sources = adjacency_list[:, 0]
               edge_source_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=edge_sources)  # Shape [E, D]
@@ -277,13 +277,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     self.ops["final_node_x"] = node_states_per_layer[-1]
 
-    predictions, regression_gate, regression_transform = (utils.MakeOutputLayer(
+    if FLAGS.out_layer_dropout_keep_prob < 1:
+      out_layer_dropout = self.placeholders["out_layer_dropout_keep_prob"]
+    else:
+      out_layer_dropout = None
+    predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
         initial_node_state=node_states_per_layer[0],
         final_node_state=self.ops["final_node_x"],
         hidden_size=FLAGS.hidden_size,
         labels_dimensionality=self.stats.node_labels_dimensionality,
-        dropout_keep_prob_placeholder=self.
-        placeholders["out_layer_dropout_keep_prob"]))
+        dropout_keep_prob_placeholder=)
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
@@ -310,7 +313,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
       if epoch_type == "train":
         feed_dict.update({
-            self.placeholders["graph_state_keep_prob"]:
+            self.placeholders["graph_state_dropout_keep_prob"]:
             (FLAGS.graph_state_dropout_keep_prob),
             self.placeholders["edge_weight_dropout_keep_prob"]:
             (FLAGS.edge_weight_dropout_keep_prob),
@@ -319,7 +322,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         })
       else:
         feed_dict.update({
-            self.placeholders["graph_state_keep_prob"]: 1.0,
+            self.placeholders["graph_state_dropout_keep_prob"]: 1.0,
             self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
             self.placeholders["out_layer_dropout_keep_prob"]: 1.0,
         })
