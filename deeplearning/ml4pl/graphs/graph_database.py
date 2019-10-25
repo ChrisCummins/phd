@@ -12,7 +12,6 @@ from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
 
-
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -141,7 +140,9 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         language=g.language,
         node_count=g.number_of_nodes(),
         edge_count=g.number_of_edges(),
-        edge_type_count=len(edge_types),
+        # Get the number of edge types *after* graph_dict has inserted the
+        # backward edges.
+        edge_type_count=len(gd['adjacency_lists']),
         node_features_dimensionality=node_features_dimensionality,
         node_labels_dimensionality=node_labels_dimensionality,
         edge_features_dimensionality=edge_features_dimensionality,
