@@ -130,7 +130,7 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
 
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """TODO."""
+  """A description of an experimental parameter."""
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
@@ -152,6 +152,16 @@ class Database(sqlutil.Database):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
   def BatchLogsToDataFrame(self, run_id: str, per_global_step: bool = False):
+    """Return a table of log stats for the given run_id.
+
+    Args:
+      run_id: The run ID to return the logs for.
+      per_global_step: If true, return the raw stats for each global step. Else,
+        aggregate stats across each epoch.
+
+    Returns:
+      A pandas dataframe.
+    """
     with self.Session() as session:
       q = session.query(
           BatchLog.epoch,
@@ -182,6 +192,15 @@ class Database(sqlutil.Database):
       return pdutil.QueryToDataFrame(session, q)
 
   def ParametersToDataFrame(self, run_id: str, type: str):
+    """Return a table of parameters of the given type for the specified run.
+
+    Args:
+      run_id: The run ID to return the parameters of.
+      type: The type of parameter to return.
+
+    Returns:
+      A pandas dataframe.
+    """
     with self.Session() as session:
       q = session.query(Parameter.parameter, Parameter.value)
       q = q.filter(Parameter.run_id == run_id)
