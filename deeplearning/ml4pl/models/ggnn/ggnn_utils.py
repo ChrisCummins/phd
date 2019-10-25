@@ -324,7 +324,7 @@ def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
   targets = np.argmax(targets, axis=1)
   predictions = np.argmax(predictions, axis=1)
 
-  confusion_matrix = np.zeros((len(targets), len(targets)))
+  confusion_matrix = np.zeros((num_classes, num_classes), dtype=np.int32)
   for target, prediction in zip(targets, predictions):
     confusion_matrix[target][prediction] += 1
 
