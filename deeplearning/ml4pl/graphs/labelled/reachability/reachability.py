@@ -65,27 +65,36 @@ def MakeReachabilityGraphs(
     false=False,
     true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
-  """Produce up to `n` reachability graphs
+  """Produce up to `n` reachability graphs from the given unlabelled graph.
 
-  :param g:
-  :param n:
-  :param false:
-  :param true:
-  :return:
+  Args:
+    g: The unlabelled input graph.
+    n: The maximum number of graphs to produce. Multiple graphs are produced by
+      selecting different root nodes for creating reachability labels. If `n` is
+      provided, the number of graphs generated will be in the range
+      1 <= x <= min(num_statements, n). Else, the number og graphs will be equal
+      to num_statements (i.e. one graph for each statement in the input graph).
+    false: The value to set for binary false values on X and Y labels.
+    true: The value to set for binary true values on X and Y labels.
+
+  Returns:
+    A generator of annotated graphs, where each graph has 'x' and 'y' labels on
+    the statement nodes, and additionally 'reachable_node_count' and
+    'data_flow_max_steps_required' attributes.
   """
-  nodes = [node for node, _ in iterators.StatementNodeIterator(g)]
-  n = n or len(nodes)
+  root_statements = [node for node, _ in iterators.StatementNodeIterator(g)]
+  n = n or len(root_statements)
 
   # If we're taking a sample of nodes to produce graphs (i.e. not all of them),
   # process the nodes in a random order.
-  if n < len(nodes):
-    random.shuffle(nodes)
+  if n < len(root_statements):
+    random.shuffle(root_statements)
 
-  for node in nodes[:n]:
+  for root_node in root_statements[:n]:
     reachable = g.copy()
     reachable.reachable_node_count, reachable.data_flow_max_steps_required = (
         SetReachableNodes(reachable,
-                          node,
+                          root_node,
                           FLAGS.reachability_num_steps,
                           false=false,
                           true=true))
