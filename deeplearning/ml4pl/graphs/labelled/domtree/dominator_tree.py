@@ -83,9 +83,5 @@ def MakeDominatorTreeGraphs(
   for root_node in root_statements[:n]:
     reachable = g.copy()
     reachable.dominated_node_count, reachable.data_flow_max_steps_required = (
-        AnnotateDominatorTree(reachable,
-                              root_node,
-                              FLAGS.reachability_num_steps,
-                              false=false,
-                              true=true))
+        AnnotateDominatorTree(reachable, root_node, false=false, true=true))
     yield reachable

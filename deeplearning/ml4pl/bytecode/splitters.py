@@ -49,7 +49,7 @@ def GetTrainValTestGroups(db: bytecode_database.Database,
     train_val_test_counts = np.floor(ratios * num_bytecodes).astype(np.int32)
     total_count = train_val_test_counts.sum()
     app.Log(1, 'Splitting %s bytecodes into groups: %s train, %s val, %s test',
-            humanize.Commas(total_count),
+            humanize.Commas(total_count + sum(len(s) for s in poj104.values())),
             humanize.Commas(train_val_test_counts[0] + len(poj104['train'])),
             humanize.Commas(train_val_test_counts[1] + len(poj104['val'])),
             humanize.Commas(train_val_test_counts[2] + len(poj104['test'])))
