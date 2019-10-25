@@ -64,6 +64,7 @@ py_library(
     name = "ggnn_utils",
     srcs = ["ggnn_utils.py"],
     deps = [
+        "//deeplearning/ml4pl/graphs:graph_database_stats",
         "//labm8:app",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
