@@ -8,7 +8,6 @@ from labm8 import app
 from labm8 import humanize
 from labm8 import prof
 
-
 FLAGS = app.FLAGS
 
 app.DEFINE_list('train_val_test_ratio', [3, 1, 1],
@@ -16,11 +15,15 @@ app.DEFINE_list('train_val_test_ratio', [3, 1, 1],
 app.DEFINE_string('bytecode_split_type', 'all',
                   'The name of the bytecode dataset split to use.')
 
+
 def GetTrainValTestGroups(
     db: bytecode_database.Database,
     train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
 ) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
+
+  This concatenates the POJ-104 sources with the other sources split into
+  train/val/test segments.
 
   Args:
     db: The database to read IDs from.
@@ -32,14 +35,17 @@ def GetTrainValTestGroups(
   Returns:
     A dictionary of bytecode IDs with "train", "val", and "test" keys.
   """
-
   # Normalize the ratios to sum to 1.
   ratios = np.array(list(train_val_test_ratio), dtype=np.float32)
   ratios /= sum(ratios)
 
   with db.Session() as s:
-    num_bytecodes = s.query(sql.func.count(
-        bytecode_database.LlvmBytecode.id)).one()[0]
+    poj104 = GetPoj104BytecodeGroups(db)
+
+    # Get the bytecode IDs of non-POJ-104
+    num_bytecodes = s.query(sql.func.count(bytecode_database.LlvmBytecode.id))\
+      .filter(~bytecode_database.LlvmBytecode.source_name.like_('poj-104:%'))\
+      .one()[0]
     train_val_test_counts = np.floor(ratios * num_bytecodes).astype(np.int32)
     total_count = train_val_test_counts.sum()
     app.Log(1, 'Splitting %s bytecodes into groups: %s train, %s val, %s test',
@@ -48,19 +54,23 @@ def GetTrainValTestGroups(
             humanize.Commas(train_val_test_counts[1]),
             humanize.Commas(train_val_test_counts[2]))
 
-    q = s.query(bytecode_database.LlvmBytecode.id).order_by(db.Random())
+    q = s.query(bytecode_database.LlvmBytecode.id) \
+      .filter(~bytecode_database.LlvmBytecode.source_name.like_('poj-104:%'))\
+      .order_by(db.Random())
     ids = [r[0] for r in q]
 
   return {
-    'train': ids[:train_val_test_counts[0]],
-    'val': ids[train_val_test_counts[0]:sum(train_val_test_counts[:2])],
-    'test': ids[sum(train_val_test_counts[:2]):],
+      'train':
+      ids[:train_val_test_counts[0]] + poj104['train'],
+      'val': (ids[train_val_test_counts[0]:sum(train_val_test_counts[:2])] +
+              poj['val']),
+      'test':
+      ids[sum(train_val_test_counts[:2]):] + poj104['test'],
   }
 
 
-def GetPoj104BytecodeGroups(
-    db: bytecode_database.Database,
-) -> typing.Dict[str, typing.List[int]]:
+def GetPoj104BytecodeGroups(db: bytecode_database.Database,
+                           ) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs for the POJ-104 app classification experiment."""
 
   def GetBytecodeIds(filter_cb) -> typing.List[int]:
@@ -73,9 +83,9 @@ def GetPoj104BytecodeGroups(
   test = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:test'
   val = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:val'
   return {
-    "train": GetBytecodeIds(train),
-    "val": GetBytecodeIds(val),
-    "test": GetBytecodeIds(test),
+      "train": GetBytecodeIds(train),
+      "val": GetBytecodeIds(val),
+      "test": GetBytecodeIds(test),
   }
 
 
