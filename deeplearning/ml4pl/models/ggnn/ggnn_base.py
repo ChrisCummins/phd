@@ -287,8 +287,9 @@ class GgnnBaseModel(object):
       log.pickled_confusion_matrix = pickle.dumps(
           utils.BuildConfusionMatrix(
               # TODO(cec): Add support for edge classification if required.
-              targets=(feed_dict['node_y']
-                       if 'node_y' in feed_dict else feed_dict['graph_y']),
+              targets=(feed_dict[self.placeholders['node_y']]
+                       if 'node_y' in feed_dict else
+                       feed_dict[self.placeholders['graph_y']]),
               predictions=fetch_dict['predictions']))
       app.Log(1, "%s", log)
       # Create a new database session for every batch because we don't want to
