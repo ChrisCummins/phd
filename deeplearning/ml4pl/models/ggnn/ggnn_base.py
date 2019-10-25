@@ -218,7 +218,7 @@ class GgnnBaseModel(object):
             "train_step"):
           self.ops["train_step"] = self._MakeTrainStep()
 
-      # Restor or initialize the model:
+      # Restore or initialize the model:
       if FLAGS.restore_model:
         with prof.Profile('Restored model'):
           self.LoadModel(FLAGS.restore_model)
