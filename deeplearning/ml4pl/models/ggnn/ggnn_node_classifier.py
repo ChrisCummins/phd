@@ -146,6 +146,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         #   M ~ number of messages (sum of all E)
 
         # Extract residual messages, if any:
+        # TODO(cec): Refactor into separate function.
         layer_residual_connections = residual_connections.get(str(layer_idx))
         if layer_residual_connections is None:
           layer_residual_states = []
