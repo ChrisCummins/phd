@@ -29,7 +29,9 @@ def graph() -> nx.MultiDiGraph:
 def test_ToGraphDict_adjacency_lists(graph: nx.MultiDiGraph):
   d = graph_dict.ToGraphDict(graph, {'call', 'control', 'data'})
 
-  assert d['adjacency_lists'].shape == (3,)
+  assert d['adjacency_lists'].shape == (6,)  # forward and backward edges
+
+  # Forward edges:
 
   assert d['adjacency_lists'][0].shape == (1, 2)  # call flow
   assert np.array_equal(d['adjacency_lists'][0][0], (4, 0))  # root -> A
@@ -42,11 +44,26 @@ def test_ToGraphDict_adjacency_lists(graph: nx.MultiDiGraph):
   assert d['adjacency_lists'][2].shape == (1, 2)  # data flow
   assert np.array_equal(d['adjacency_lists'][2][0], (0, 3))  # A -> D
 
+  # Backward edges:
+
+  assert d['adjacency_lists'][3].shape == (1, 2)  # backward call flow
+  assert np.array_equal(d['adjacency_lists'][3][0], (0, 4))  # root <- A
+
+  assert d['adjacency_lists'][4].shape == (3, 2)  # backward control flow
+  assert np.array_equal(d['adjacency_lists'][4][0], (1, 0))  # A <- B
+  assert np.array_equal(d['adjacency_lists'][4][1], (2, 1))  # B <- C
+  assert np.array_equal(d['adjacency_lists'][4][2], (3, 2))  # C <- D
+
+  assert d['adjacency_lists'][5].shape == (1, 2)  # backward data flow
+  assert np.array_equal(d['adjacency_lists'][5][0], (3, 0))  # A <- D
+
 
 def test_ToGraphDict_incoming_edges(graph: nx.MultiDiGraph):
   d = graph_dict.ToGraphDict(graph, {'call', 'control', 'data'})
 
-  assert d['incoming_edge_counts'].shape == (3,)
+  assert d['incoming_edge_counts'].shape == (6,)  # forward and backward edges
+
+  # Forward edges:
 
   assert len(d['incoming_edge_counts'][0].keys()) == 1
   assert d['incoming_edge_counts'][0][0] == 1
@@ -58,6 +75,19 @@ def test_ToGraphDict_incoming_edges(graph: nx.MultiDiGraph):
 
   assert len(d['incoming_edge_counts'][2].keys()) == 1
   assert d['incoming_edge_counts'][2][3] == 1
+
+  # Backward edges:
+
+  assert len(d['incoming_edge_counts'][3].keys()) == 1
+  assert d['incoming_edge_counts'][3][4] == 1
+
+  assert len(d['incoming_edge_counts'][4].keys()) == 3
+  assert d['incoming_edge_counts'][4][0] == 1
+  assert d['incoming_edge_counts'][4][1] == 1
+  assert d['incoming_edge_counts'][4][2] == 1
+
+  assert len(d['incoming_edge_counts'][5].keys()) == 1
+  assert d['incoming_edge_counts'][5][0] == 1
 
 
 def test_ToGraphDict_node_features(graph: nx.MultiDiGraph):
@@ -122,7 +152,9 @@ def test_ToGraphDict_edge_features(graph: nx.MultiDiGraph):
   assert 'graph_x' not in d
   assert 'graph_y' not in d
 
-  assert d['edge_x'].shape == (3,)
+  assert d['edge_x'].shape == (6,)  # Forward and backward edges.
+
+  # Forward edges:
 
   assert d['edge_x'][0].shape == (1, 4)  # call flow
   assert np.array_equal(d['edge_x'][0][0], [1, 1, 1, 0])  # root -> A
@@ -134,6 +166,19 @@ def test_ToGraphDict_edge_features(graph: nx.MultiDiGraph):
 
   assert d['edge_x'][2].shape == (1, 4)  # data flow
   assert np.array_equal(d['edge_x'][2][0], [1, 1, 1, 1])  # A -> D
+
+  # Backward edges:
+
+  assert d['edge_x'][3].shape == (1, 4)  # backward call flow
+  assert np.array_equal(d['edge_x'][3][0], [1, 1, 1, 0])  # root <- A
+
+  assert d['edge_x'][4].shape == (3, 4)  # backward control flow
+  assert np.array_equal(d['edge_x'][4][0], [0, 1, 1, 1])  # A <- B
+  assert np.array_equal(d['edge_x'][4][1], [1, 0, 1, 1])  # B <- C
+  assert np.array_equal(d['edge_x'][4][2], [1, 1, 0, 1])  # C <- D
+
+  assert d['edge_x'][5].shape == (1, 4)  # backward data flow
+  assert np.array_equal(d['edge_x'][5][0], [1, 1, 1, 1])  # A <- D
 
 
 def test_ToGraphDict_edge_targets(graph: nx.MultiDiGraph):
@@ -152,7 +197,9 @@ def test_ToGraphDict_edge_targets(graph: nx.MultiDiGraph):
   assert 'graph_x' not in d
   assert 'graph_y' not in d
 
-  assert d['edge_y'].shape == (3,)
+  assert d['edge_y'].shape == (6,)  # Forward and backward edges.
+
+  # Forward edges:
 
   assert d['edge_y'][0].shape == (1, 1)  # call flow
   assert np.array_equal(d['edge_y'][0][0], [6])  # root -> A
@@ -164,6 +211,19 @@ def test_ToGraphDict_edge_targets(graph: nx.MultiDiGraph):
 
   assert d['edge_y'][2].shape == (1, 1)  # data flow
   assert np.array_equal(d['edge_y'][2][0], [7])  # A -> D
+
+  # Backward edges:
+
+  assert d['edge_y'][3].shape == (1, 1)  # backward call flow
+  assert np.array_equal(d['edge_y'][3][0], [6])  # root <- A
+
+  assert d['edge_y'][4].shape == (3, 1)  # backward control flow
+  assert np.array_equal(d['edge_y'][4][0], [3])  # A <- B
+  assert np.array_equal(d['edge_y'][4][1], [4])  # B <- C
+  assert np.array_equal(d['edge_y'][4][2], [5])  # C <- D
+
+  assert d['edge_y'][5].shape == (1, 1)  # backward data flow
+  assert np.array_equal(d['edge_y'][5][0], [7])  # A <- D
 
 
 def test_ToGraphDict_graph_features(graph: nx.MultiDiGraph):
