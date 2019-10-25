@@ -65,11 +65,17 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   pickled_graph_indices: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
                                             nullable=False)
 
-  # A pickled array of accuracies, with the same shape as pickled_predictions.
+  # A pickled array of accuracies, of shape
+  # [num_instances * num_targets_per_instance]. The number of targets per
+  # instance will depend on the type of classification problem. For graph-level
+  # classification, there is one target per instance. For node-level
+  # classification, there are num_nodes targets for each graph.
   pickled_accuracies: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
                                          nullable=False)
 
-  # A pickled array of model predictions, one for each graph in the batch.
+  # A pickled array of sparse model predictions, of shape
+  # [num_instances * num_targets_per_instance, num_classes]. See
+  # pickled_accuracies for a description of row count.
   pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
                                           nullable=False)
 
@@ -77,6 +83,11 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # [num_targets,num_targets] where the rows indicate true target class,
   # the columns indicate predicted target class, and the element values are
   # the number of instances of this type in the batch.
+  #
+  # TODO(cec): Consider whether the extra time and disk overhead is worth it
+  # for storing these, since we can easily reconstruct confusion matrices
+  # after the fact by comparing the pickled_predictions column against the
+  # target attributes in the graphs referenced in pickled_graph_indices.
   pickled_confusion_matrix: bytes = sql.Column(
       sqlutil.ColumnTypes.LargeBinary(), nullable=False)
 
