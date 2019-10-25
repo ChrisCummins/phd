@@ -56,7 +56,11 @@ app.DEFINE_database('log_db', log_database.Database, None,
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
 
 app.DEFINE_list('layer_timesteps', ['2', '2', '2'],
-                'The number of timesteps to propagate for each layer')
+                'A list of layers, and the number of steps for each layer.')
+# Note that although layer_timesteps is a model flag, there is special handling
+# that permits the number of steps in each layer to differ when loading models.
+# This is to permit testing a model with a larger number of timesteps than it
+# was trained for.
 MODEL_FLAGS.add("layer_timesteps")
 
 app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
@@ -452,7 +456,17 @@ class GgnnBaseModel(object):
           f"Flags not found in saved flags: '{flag_names - saved_flag_names}'."
           f"Saved flags not present now: '{saved_flag_names - flag_names}'")
     for flag, flag_value in flags.items():
-      if flag_value != saved_flags[flag]:
+      # Special handling for layer_timesteps: We permit a different number of
+      # steps per layer, but require that the number of layers be the same.
+      if flag == 'layer_timesteps':
+        num_layers = len(flag_value)
+        saved_num_layers = len(saved_flags['layer_timesteps'])
+        if num_layers != saved_num_layers:
+          raise EnvironmentError(
+              "Saved model has "
+              f"{humanize.Plural(saved_num_layers, 'layer')} but flags has "
+              f"incompatible {humanize.Plural(num_layers, 'layer')}")
+      elif flag_value != saved_flags[flag]:
         raise EnvironmentError(
             f"Saved flag {flag} value does not match current value:"
             f"'{saved_flags[flag]}' != '{flag_value}'")
