@@ -15,6 +15,7 @@ py_library(
         "//labm8:prof",
         "//labm8:system",
         "//third_party/py/numpy",
+        "//third_party/py/scikit_learn",
         "//third_party/py/tensorflow",
     ],
 )

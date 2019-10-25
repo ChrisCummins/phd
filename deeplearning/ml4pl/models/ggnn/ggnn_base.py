@@ -5,6 +5,7 @@ import numpy as np
 import pathlib
 import pickle
 import random
+import sklearn.metrics
 import tensorflow as tf
 import typing
 
@@ -82,6 +83,13 @@ app.DEFINE_string(
     "embeddings", "inst2vec",
     "The type of embeddings to use. One of: {inst2vec,finetune,random}.")
 MODEL_FLAGS.add("embeddings")
+
+app.DEFINE_string(
+    'batch_scores_averaging_method', 'weighted',
+    'Selects the averaging method to use when computing recall/precision/F1 '
+    'scores. See <https://scikit-learn.org/stable/modules/generated/sklearn'
+    '.metrics.f1_score.html>')
+MODEL_FLAGS.add("batch_scores_averaging_method")
 
 app.DEFINE_input_path(
     "embedding_path",
@@ -284,13 +292,30 @@ class GgnnBaseModel(object):
       log.accuracy = float(fetch_dict['accuracy'])
       log.pickled_accuracies = pickle.dumps(fetch_dict['accuracies'])
       log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
-      log.pickled_confusion_matrix = pickle.dumps(
-          utils.BuildConfusionMatrix(
-              # TODO(cec): Add support for edge classification if required.
-              targets=(feed_dict[self.placeholders['node_y']]
-                       if 'node_y' in feed_dict else
-                       feed_dict[self.placeholders['graph_y']]),
-              predictions=fetch_dict['predictions']))
+
+      # Compute and record stats.
+      targets = (feed_dict[self.placeholders['node_y']] if 'node_y' in feed_dict
+                 else feed_dict[self.placeholders['graph_y']])
+      y_true = np.argmax(targets, axis=1)
+      y_pred = np.argmax(fetch_dict['predictions'], axis=1)
+
+      labels = list(range(len(targets[0])))
+      log.precision = sklearn.metrics.precision_score(
+          y_true,
+          y_pred,
+          labels=labels,
+          average=FLAGS.batch_scores_averaging_method)
+      log.recall = sklearn.metrics.recall_score(
+          y_true,
+          y_pred,
+          labels=labels,
+          average=FLAGS.batch_scores_averaging_method)
+      log.f1 = sklearn.metrics.f1_score(
+          y_true,
+          y_pred,
+          labels=labels,
+          average=FLAGS.batch_scores_averaging_method)
+
       app.Log(1, "%s", log)
       # Create a new database session for every batch because we don't want to
       # leave the connection lying around for a long time (they can drop out)

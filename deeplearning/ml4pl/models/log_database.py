@@ -55,8 +55,11 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The model loss on the batch.
   loss: float = sql.Column(sql.Float, nullable=False)
 
-  # The model accuracy on the batch.
+  # Metrics describing the classifier performance.
   accuracy: float = sql.Column(sql.Float, nullable=False)
+  precision: float = sql.Column(sql.Float, nullable=False)
+  recall: float = sql.Column(sql.Float, nullable=False)
+  f1: float = sql.Column(sql.Float, nullable=False)
 
   # The GraphMeta.group column that this batch of graphs came from.
   group: str = sql.Column(sql.String(32), nullable=False)
@@ -79,18 +82,6 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
                                           nullable=False)
 
-  # A pickled confusion matrix, which is a matrix of shape
-  # [num_targets,num_targets] where the rows indicate true target class,
-  # the columns indicate predicted target class, and the element values are
-  # the number of instances of this type in the batch.
-  #
-  # TODO(cec): Consider whether the extra time and disk overhead is worth it
-  # for storing these, since we can easily reconstruct confusion matrices
-  # after the fact by comparing the pickled_predictions column against the
-  # target attributes in the graphs referenced in pickled_graph_indices.
-  pickled_confusion_matrix: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
-
   @property
   def graph_indices(self) -> typing.List[int]:
     return pickle.loads(self.pickled_graph_indices)
@@ -102,10 +93,6 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @property
   def predictions(self) -> typing.Any:
     return pickle.loads(self.pickled_predictions)
-
-  @property
-  def confusion_matrix(self) -> 'np.array':
-    return pickle.loads(self.pickled_confusion_matrix)
 
   @property
   def graphs_per_second(self):
