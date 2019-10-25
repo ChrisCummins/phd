@@ -10,16 +10,26 @@ from labm8 import app
 FLAGS = app.FLAGS
 
 
-def StatementNeighbors(g: nx.Graph, node: str,
-                       flow='control') -> typing.Set[str]:
+def StatementNeighbors(
+    g: nx.Graph,
+    node: str,
+    flow='control',
+    direction: typing.Optional[
+        typing.Callable[[typing.Any, typing.Any], typing.Any]] = None
+) -> typing.Set[str]:
   """Return the neighboring statements connected by the given flow type."""
+  direction = direction or (lambda src, dst: dst)
   neighbors = set()
-  for src, dst in g.out_edges(node):
-    if g.edges[src, dst, 0]['flow'] == flow:
-      if g.nodes[dst].get('type', 'statement') == 'statement':
-        neighbors.add(dst)
+  for src, dst, edge_flow in direction(g.in_edges,
+                                       g.out_edges)(node,
+                                                    data='flow',
+                                                    default='control'):
+    neighbor = direction(src, dst)
+    if edge_flow == flow:
+      if g.nodes[neighbor].get('type', 'statement') == 'statement':
+        neighbors.add(neighbor)
       else:
-        neighbors = neighbors.union(StatementNeighbors(g, dst, flow=flow))
+        neighbors = neighbors.union(StatementNeighbors(g, neighbor, flow=flow))
   return neighbors
 
 
