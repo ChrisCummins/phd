@@ -39,6 +39,13 @@ absl_flags.DEFINE_boolean(
     'If True, the Engine will log all statements as well as a repr() of their '
     'parameter lists to the engines logger, which defaults to sys.stdout.',
 )
+absl_flags.DEFINE_boolean(
+    'sqlutil_pool_pre_ping', True,
+    'Enable pessimistic pre-ping to check that database connections are '
+    'alive. This adds some overhead, but reduces the risk of '
+    '"server has gone away" errors. See:'
+    '<https://docs.sqlalchemy.org/en/13/core/pooling.html#disconnect-handling-pessimistic>'
+)
 absl_flags.DEFINE_integer(
     'mysql_engine_pool_size',
     5,
@@ -271,10 +278,12 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     raise ValueError(f"Unsupported database URL='{url}'")
 
   # Create the engine.
-  engine = sql.create_engine(url,
-                             encoding='utf-8',
-                             echo=FLAGS.sqlutil_echo,
-                             **engine_args)
+  engine = sql.create_engine(
+      url,
+      encoding='utf-8',
+      echo=FLAGS.sqlutil_echo,
+      pool_pre_ping=FLAGS.sqlutil_pool_pre_ping,
+      **engine_args)
 
   # Create and immediately close a connection. This is because SQLAlchemy engine
   # is lazily instantiated, so for connections such as SQLite, this line
