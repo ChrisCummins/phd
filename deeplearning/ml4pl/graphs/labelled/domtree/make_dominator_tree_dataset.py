@@ -23,11 +23,12 @@ from labm8 import app
 from labm8 import fs
 from labm8 import pbutil
 
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecodes from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None,
+    'URL of database to read bytecodes from.',
+    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
@@ -56,6 +57,8 @@ app.DEFINE_integer(
     'seed', 0xCEC,
     'The random seed value to use when shuffling graph statements when '
     'selecting the root statement.')
+app.DEFINE_boolean('ignore_graph_creation_errors', True,
+                   'Ignore errors in graph creation.')
 
 FLAGS = app.FLAGS
 
@@ -63,12 +66,11 @@ FLAGS = app.FLAGS
 def MakeGraphMetas(
     graph: nx.MultiDiGraph) -> typing.Iterable[graph_dict.GraphDict]:
   annotated_graphs = list(
-      dominator_tree.MakeDominatorTreeGraphs(graph,
-                                             FLAGS.max_instances_per_graph,
-                                             false=np.array([1, 0],
-                                                            dtype=np.float32),
-                                             true=np.array([0, 1],
-                                                           dtype=np.float32)))
+      dominator_tree.MakeDominatorTreeGraphs(
+          graph,
+          FLAGS.max_instances_per_graph,
+          false=np.array([1, 0], dtype=np.float32),
+          true=np.array([0, 1], dtype=np.float32)))
 
   # Copy over graph metadata.
   for annotated_graph in annotated_graphs:
@@ -131,6 +133,8 @@ def _ProcessControlFlowGraphJob(
   except Exception as e:
     app.Error('Failed to create CDFG for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
+    if not FLAGS.ignore_graph_creation_errors:
+      raise e
     return []
 
 
@@ -242,8 +246,9 @@ def main():
       s.query(graph_database.Meta).filter(
           graph_database.Meta.key == 'max_instances_per_graph').delete()
       s.add(
-          graph_database.Meta(key='max_instances_per_graph',
-                              value=str(FLAGS.max_instances_per_graph)))
+          graph_database.Meta(
+              key='max_instances_per_graph',
+              value=str(FLAGS.max_instances_per_graph)))
 
     app.Log(1, 'Seeding with %s', FLAGS.seed)
     random.seed(FLAGS.seed)
