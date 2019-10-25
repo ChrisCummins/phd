@@ -13,7 +13,7 @@ FLAGS = app.FLAGS
 class SmokeTester(smoke_test_base.SmokeTesterBase):
 
   def GetModelClass(self):
-    return ggnn_node_classifier.GgnnGraphClassifierModel
+    return ggnn_node_classifier.GgnnNodeClassifierModel
 
   def PopulateDatabase(self, db: graph_database.Database):
     with db.Session(commit=True) as session:
@@ -34,9 +34,9 @@ class SmokeTester(smoke_test_base.SmokeTesterBase):
                 data=pickle.dumps({
                   'adjacency_lists': np.array([np.array([(0, 1), (1, 2)])]),
                   'node_x': np.array([
-                    np.array([1, 0])),
-                    np.array([0, 1])),
-                    np.array([0, 0])),
+                    np.array([1, 0]),
+                    np.array([0, 1]),
+                    np.array([0, 0]),
                   ], dtype=np.float32),
                   'node_y': np.array([
                     np.array([1, 0]),

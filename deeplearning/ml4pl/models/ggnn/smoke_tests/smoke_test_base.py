@@ -4,6 +4,7 @@ import pathlib
 import tempfile
 
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 
 
@@ -34,13 +35,18 @@ class SmokeTesterBase(object):
   def Run(self):
     FLAGS.num_epochs = FLAGS.smoke_test_num_epochs
     with WorkingDirectory() as working_dir:
-      db_path = working_dir / 'db'
-      if db_path.is_file():
-        db_path.unlink()
+      graph_db_path = working_dir / 'graphs.db'
+      if graph_db_path.is_file():
+        graph_db_path.unlink()
 
-      db = graph_database.Database(f'sqlite:///{working_dir}/db')
-      self.PopulateDatabase(db)
+      log_db_path = working_dir / 'logs.db'
+      if log_db_path.is_file():
+        log_db_path.unlink()
 
-      model = self.GetModelClass()(db)
+      graph_db = graph_database.Database(f'sqlite:///{working_dir}/graphs.db')
+      log_db = log_database.Database(f'sqlite:///{working_dir}/logs.db')
+      self.PopulateDatabase(graph_db)
+
+      model = self.GetModelClass()(graph_db, log_db)
       model.Train()
 
