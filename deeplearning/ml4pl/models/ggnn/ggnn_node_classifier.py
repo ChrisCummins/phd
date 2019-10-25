@@ -33,7 +33,10 @@ ggnn.MODEL_FLAGS.add("use_propagation_attention")
 app.DEFINE_boolean("use_edge_bias", False, "")
 ggnn.MODEL_FLAGS.add("use_edge_bias")
 
-app.DEFINE_boolean("use_edge_msg_avg_aggregation", True, "")
+app.DEFINE_boolean(
+    "use_edge_msg_avg_aggregation", True,
+    "If true, normalize incoming messages by the number of "
+    "incoming messages.")
 ggnn.MODEL_FLAGS.add("use_edge_msg_avg_aggregation")
 
 app.DEFINE_float("graph_state_dropout_keep_prob", 1.0,
