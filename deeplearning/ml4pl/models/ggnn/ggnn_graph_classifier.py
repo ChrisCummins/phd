@@ -71,7 +71,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
     app.Log(1, "Using layer timesteps: %s for a total step count of %s",
-            layer_timesteps, np.prod(layer_timesteps))
+            layer_timesteps, layer_timesteps.sum())
 
     # Generate per-layer values for edge weights, biases and gated units:
     self.gnn_weights = GGNNWeights([], [], [], [], [], [])
@@ -131,11 +131,10 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(
-            FLAGS.graph_rnn_cell,
-            FLAGS.graph_rnn_activation,
-            FLAGS.hidden_size,
-            name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
+                                  FLAGS.graph_rnn_activation,
+                                  FLAGS.hidden_size,
+                                  name=f"cell_layer_{layer_index}")
         cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
             cell, state_keep_prob=self.placeholders["graph_state_keep_prob"])
         self.gnn_weights.rnn_cells.append(cell)
@@ -235,16 +234,16 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(
-                  message_source_states, axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(message_source_states,
+                                                axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (
-                  message_attention_scores * message_edge_type_factors)
+              message_attention_scores = (message_attention_scores *
+                                          message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -333,14 +332,15 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
         name='computed_values',
     )  # [g, c]
 
-    predictions = tf.argmax(
-        computed_values, axis=1, output_type=tf.int32, name="predictions")
+    predictions = tf.argmax(computed_values,
+                            axis=1,
+                            output_type=tf.int32,
+                            name="predictions")
 
-    targets = tf.argmax(
-        self.placeholders["graph_y"],
-        axis=1,
-        output_type=tf.int32,
-        name="targets")
+    targets = tf.argmax(self.placeholders["graph_y"],
+                        axis=1,
+                        output_type=tf.int32,
+                        name="targets")
 
     accuracies = tf.equal(predictions, targets)
 

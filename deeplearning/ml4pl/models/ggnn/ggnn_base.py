@@ -144,7 +144,8 @@ class GgnnBaseModel(object):
     self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
                         f"{system.HOSTNAME}")
 
-    self.batcher = graph_batcher.GraphBatcher(db, np.prod(self.layer_timesteps))
+    self.batcher = graph_batcher.GraphBatcher(
+        db, message_passing_step_count=self.layer_timesteps.sum())
     self.stats = self.batcher.stats
     app.Log(1, "%s", self.stats)
 
