@@ -76,6 +76,10 @@ app.DEFINE_boolean(
 app.DEFINE_input_path("restore_model", None,
                       "An optional file to restore the model from.")
 
+app.DEFINE_boolean(
+    "test_only", False,
+    "If this flag is set, only a single pass of the test set is ran.")
+
 #
 ##### End of flag declarations.
 
@@ -387,4 +391,8 @@ def Run(model_class):
     with prof.Profile('Initialized model'):
       model.InitializeModel()
 
-  model.Train()
+  if FLAGS.test_only:
+    test_acc = model.RunEpoch("test")
+    app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
+  else:
+    model.Train()
