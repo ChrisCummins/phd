@@ -20,8 +20,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                          nullable=False)
 
 
 class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -30,10 +30,10 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = sql.Column(sql.String(64), nullable=False)
+  run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
 
   # The epoch number, >= 1.
-  epoch: int = sql.Column(sql.Integer, nullable=False)
+  epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
   # The batch number within the epoch, >= 1.
   batch: int = sql.Column(sql.Integer, nullable=False)
   # The batch number across all epochs.
@@ -65,22 +65,22 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   group: str = sql.Column(sql.String(32), nullable=False)
 
   # A pickled array of GraphMeta.id values.
-  pickled_graph_indices: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
+  pickled_graph_indices: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                            nullable=False)
 
   # A pickled array of accuracies, of shape
   # [num_instances * num_targets_per_instance]. The number of targets per
   # instance will depend on the type of classification problem. For graph-level
   # classification, there is one target per instance. For node-level
   # classification, there are num_nodes targets for each graph.
-  pickled_accuracies: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
+  pickled_accuracies: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                         nullable=False)
 
   # A pickled array of sparse model predictions, of shape
   # [num_instances * num_targets_per_instance, num_classes]. See
   # pickled_accuracies for a description of row count.
-  pickled_predictions: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
+  pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                          nullable=False)
 
   @property
   def graph_indices(self) -> typing.List[int]:
@@ -121,16 +121,16 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = sql.Column(sql.String(64), nullable=False)
+  run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
 
   # One of: {model_flags,flags,build_info}
-  type: str = sql.Column(sql.String(1024), nullable=False)
+  type: str = sql.Column(sql.String(1024), nullable=False, index=True)
 
   # The name of the parameter.
   parameter: str = sql.Column(sql.String(1024), nullable=False)
   # The value for the parameter.
-  value: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                          nullable=False)
 
 
 class Database(sqlutil.Database):
@@ -161,12 +161,10 @@ class Database(sqlutil.Database):
           sql.func.avg(BatchLog.f1).label("f1"),
           sql.func.sum(
               BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
-          sql.sql.expression.cast(
-              sql.func.sum(BatchLog.graph_count),
-              sql.Integer).label("graph_count"),
-          sql.sql.expression.cast(
-              sql.func.sum(BatchLog.node_count),
-              sql.Integer).label("node_count"),
+          sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count),
+                                  sql.Integer).label("graph_count"),
+          sql.sql.expression.cast(sql.func.sum(BatchLog.node_count),
+                                  sql.Integer).label("node_count"),
       )
 
       q = q.filter(BatchLog.run_id == run_id)

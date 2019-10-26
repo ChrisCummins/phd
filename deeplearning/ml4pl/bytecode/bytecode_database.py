@@ -7,7 +7,6 @@ from deeplearning.ml4pl import ml4pl_pb2
 from labm8 import app
 from labm8 import sqlutil
 
-
 FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
@@ -27,19 +26,19 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # The name of the source of the bytecode.
-  source_name: str = sql.Column(sql.String(256), nullable=False)
+  source_name: str = sql.Column(sql.String(256), nullable=False, index=True)
   relpath: str = sql.Column(sql.String(256), nullable=False)
-  language: str = sql.Column(sql.String(16), nullable=False)
+  language: str = sql.Column(sql.String(16), nullable=False, index=True)
   cflags: str = sql.Column(sql.String(4096), nullable=False)
   charcount: int = sql.Column(sql.Integer, nullable=False)
   linecount: int = sql.Column(sql.Integer, nullable=False)
-  bytecode: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
-      nullable=False)
+  bytecode: str = sql.Column(sql.UnicodeText().with_variant(
+      sql.UnicodeText(2**31), 'mysql'),
+                             nullable=False)
   clang_returncode: int = sql.Column(sql.Integer, nullable=False)
-  error_message: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
-      nullable=False)
+  error_message: str = sql.Column(sql.UnicodeText().with_variant(
+      sql.UnicodeText(2**31), 'mysql'),
+                                  nullable=False)
 
   cfgs: 'ControlFlowGraphProto' = sql.orm.relationship(
       'ControlFlowGraphProto', back_populates="bytecode")
@@ -74,25 +73,27 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
 
   proto_t = ml4pl_pb2.ControlFlowGraphFromLlvmBytecode
 
-  bytecode_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(LlvmBytecode.id), nullable=False)
+  bytecode_id: int = sql.Column(sql.Integer,
+                                sql.ForeignKey(LlvmBytecode.id),
+                                nullable=False)
   cfg_id: int = sql.Column(sql.Integer, nullable=False)
 
   # Composite primary key.
-  __table_args__ = (sql.PrimaryKeyConstraint(
-      'bytecode_id', 'cfg_id', name='unique_id'),)
+  __table_args__ = (sql.PrimaryKeyConstraint('bytecode_id',
+                                             'cfg_id',
+                                             name='unique_id'),)
 
   status: int = sql.Column(sql.Integer, nullable=False)
-  proto: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
-      nullable=False)
+  proto: str = sql.Column(sql.UnicodeText().with_variant(
+      sql.UnicodeText(2**31), 'mysql'),
+                          nullable=False)
   # TODO: Switch string proto for a more compact serialized proto.
   # serialized_proto: str = sql.Column(
   #     sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql'),
   #     nullable=False)
-  error_message: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
-      nullable=False)
+  error_message: str = sql.Column(sql.UnicodeText().with_variant(
+      sql.UnicodeText(2**31), 'mysql'),
+                                  nullable=False)
   block_count: int = sql.Column(sql.Integer, nullable=False)
   edge_count: int = sql.Column(sql.Integer, nullable=False)
   is_strict_valid: bool = sql.Column(sql.Boolean, nullable=False)
@@ -103,8 +104,9 @@ class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
   #     nullable=False,
   #     default=labdate.GetUtcMillisecondsNow)
 
-  bytecode: LlvmBytecode = sql.orm.relationship(
-      LlvmBytecode, uselist=False, back_populates="cfgs")
+  bytecode: LlvmBytecode = sql.orm.relationship(LlvmBytecode,
+                                                uselist=False,
+                                                back_populates="cfgs")
 
   @classmethod
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:

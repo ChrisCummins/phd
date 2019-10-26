@@ -34,7 +34,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # A string name to group graphs into discrete buckets, e.g. "train", "test",
   # or "1", "2", ... k for k-fold classification.
-  group: str = sql.Column(sql.String(32), nullable=False)
+  group: str = sql.Column(sql.String(32), nullable=False, index=True)
 
   # No foreign key relationship because they are separate databases.
   bytecode_id: int = sql.Column(sql.Integer, nullable=False)
