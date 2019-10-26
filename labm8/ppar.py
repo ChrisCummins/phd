@@ -17,7 +17,10 @@ The goal of the module is to provide easy to use implementations of typical
 parallel workloads, such as data parallel map operations.
 """
 import multiprocessing
+
+import queue
 import subprocess
+import threading
 import typing
 
 from labm8 import app
@@ -342,3 +345,27 @@ def MapDatabaseRowBatchProcessor(
     i += len(rows_batch)
 
     end_of_batch_callback(i)
+
+
+class ThreadedIterator:
+  """An iterator object that computes its elements in a parallel thread to be
+  ready to be consumed."""
+
+  def __init__(self,
+               iterator: typing.Iterable[typing.Any],
+               max_queue_size: int = 2):
+    self._queue = queue.Queue(maxsize=max_queue_size)
+    self._thread = threading.Thread(target=lambda: self.worker(iterator))
+    self._thread.start()
+
+  def worker(self, iterator):
+    for element in iterator:
+      self._queue.put(element, block=True)
+    self._queue.put(None, block=True)
+
+  def __iter__(self):
+    next_element = self._queue.get(block=True)
+    while next_element is not None:
+      yield next_element
+      next_element = self._queue.get(block=True)
+    self._thread.join()
