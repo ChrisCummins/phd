@@ -8,6 +8,7 @@ import pandas as pd
 import sqlalchemy as sql
 from labm8 import app
 from labm8 import decorators
+from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
 
@@ -38,9 +39,10 @@ class RunLogAnalyzer(object):
         .filter(log_database.BatchLog.run_id == self.run_id) \
         .count()
       if not num_logs:
-        raise ValueError(f"Run `{run_id}` not found in log database")
+        raise ValueError(f"Run `{self.run_id}` not found in log database")
 
-    print(f"Found {humanize.Commas(num_logs)} logs for run `{run_id}`")
+    app.Log(1, "Found %s logs for run `%s`", humanize.Commas(num_logs),
+            self.run_id)
 
   @decorators.memoized_property
   def batch_logs(self) -> pd.DataFrame:
@@ -58,7 +60,8 @@ class RunLogAnalyzer(object):
     if epoch_num not in self.epoch_logs.epoch:
       raise ValueError(f"Epoch `{epoch_num}` not in logs: "
                        f"{set(self.epoch_logs.epoch)}")
-    return self.epoch_df[self.epoch_df.epoch == epoch_num].set_index('group')
+    return self.epoch_logs[self.epoch_logs.epoch == epoch_num].set_index(
+        'group')
 
   def GetBestEpoch(self, metric='best accuracy'):
     """Select logs from best epoch."""
@@ -68,10 +71,12 @@ class RunLogAnalyzer(object):
           self.epoch_logs[self.epoch_logs['group'] == 'val'], column)
       best_validation_metric = self.epoch_logs.iloc[validation_metric.idxmax()]
       epoch_num = best_validation_metric.epoch
-    elif metric in {'90% val acc', '99% val acc', '99.9% val acc'}:
+    elif metric in {
+        '90% val acc', '95% val acc', '99% val acc', '99.9% val acc'
+    }:
       accuracy = float(metric.split('%')[0])
-      matching_rows = self.epoch_df[(self.epoch_logs['group'] == 'val') &
-                                    (self.epoch_logs['accuracy'] > accuracy)]
+      matching_rows = self.epoch_logs[(self.epoch_logs['group'] == 'val') &
+                                      (self.epoch_logs['accuracy'] > accuracy)]
       epoch_num = self.epoch_logs.iloc[matching_rows.index[0]].epoch
     else:
       raise ValueError(f"Unknown metric `{metric}`")
@@ -89,7 +94,9 @@ class RunLogAnalyzer(object):
         # Load the graphs in the same order as in the batch.
         graphs = sorted(graphs, key=lambda g: log.graph_indices.index(g.id))
 
-      return self.batcher.CreateBatchDict((g for g in graphs))
+      batch_dict = self.batcher.CreateBatchDict((g for g in graphs))
+
+    return batch_dict
 
   def GetInputOutputGraphsForRandomBatch(self,
                                          epoch_num: int,
@@ -109,12 +116,12 @@ class RunLogAnalyzer(object):
         .filter(log_database.BatchLog.global_step == random_row.global_step) \
         .one()
 
-    batch_dict = self.ReconstructBatchDict(log.global_step)
+    batch_dict = self.ReconstructBatchDict(log)
 
-    with prof.Profile(f"Recreated {batch['graph_count']} input graphs"):
+    with prof.Profile(f"Recreated {batch_dict['graph_count']} input graphs"):
       input_graphs = list(self.batcher.BatchDictToGraphs(batch_dict))
 
-    with prof.Profile(f"Recreated {batch['graph_count']} output graphs"):
+    with prof.Profile(f"Recreated {batch_dict['graph_count']} output graphs"):
       # Remove the features.
       labtypes.DeleteKeys(batch_dict, {'node_x', 'edge_x', 'graph_x'})
 
@@ -164,11 +171,16 @@ def ComputeGraphAccuracy(input_graph: nx.MultiDiGraph,
     Accuracy in the range 0 <= x <= 1.
   """
   try:
-    return int(input_graph.y == output_graph.y)
+    accuracy = int(input_graph.y == output_graph.y)
   except AttributeError:
-    true_y = np.array([y for _, y in input_graph.nodes(data='y')])
-    pred_y = np.array([y for _, y in output_graph.nodes(data='y')])
-    return (true_y == pred_y).mean()
+    true_y = np.argmax([y for _, y in input_graph.nodes(data='y')], axis=1)
+    pred_y = np.argmax([y for _, y in output_graph.nodes(data='y')], axis=1)
+    correct = (true_y == pred_y)
+    for i, (_, data) in enumerate(output_graph.nodes(data=True)):
+      data['correct'] = correct[i]
+    accuracy = (true_y == pred_y).mean()
+  output_graph.accuracy = accuracy
+  return accuracy
 
 
 def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:

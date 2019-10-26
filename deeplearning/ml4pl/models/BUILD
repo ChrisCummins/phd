@@ -33,6 +33,7 @@ py_library(
         "//deeplearning/ml4pl/graphs/labelled/graph_dict:graph_batcher",
         "//labm8:app",
         "//labm8:decorators",
+        "//labm8:humanize",
         "//labm8:labtypes",
         "//labm8:prof",
         "//third_party/py/networkx",
