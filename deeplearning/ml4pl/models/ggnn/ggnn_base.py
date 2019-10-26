@@ -1,12 +1,10 @@
 """Base class for implementing gated graph neural networks."""
 
 import numpy as np
-import pickle
 import tensorflow as tf
 import typing
 
 from deeplearning.ml4pl.models import classifier_base
-from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 from labm8 import humanize
@@ -138,8 +136,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
-  def RunMinibatch(self, log: log_database.BatchLog,
-                   feed_dict: FeedDict) -> typing.Tuple[np.array, np.array]:
+  def RunMinibatch(self, epoch_type: str, feed_dict: typing.Any
+                  ) -> classifier_base.ClassifierBase.MinibatchResults:
     fetch_dict = {
         "loss": self.ops["loss"],
         "accuracies": self.ops["accuracies"],
@@ -148,9 +146,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         "summary_loss": self.ops["summary_loss"],
         "summary_accuracy": self.ops["summary_accuracy"],
     }
-
-    epoch_type = log.group
-    assert epoch_type in {"train", "val", "test"}
 
     if epoch_type == "train":
       fetch_dict["train_step"] = self.ops["train_step"]
@@ -163,18 +158,14 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       self.summary_writers[epoch_type].add_summary(
           fetch_dict["summary_accuracy"], self.global_training_step)
 
-    log.loss = float(fetch_dict['loss'])
-    log.pickled_accuracies = pickle.dumps(fetch_dict['accuracies'])
-    log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
-
     # TODO(cec): Add support for edge labels.
     targets = (feed_dict[self.placeholders['node_y']]
                if self.placeholders['node_y'] in feed_dict else
                feed_dict[self.placeholders['graph_y']])
-    y_true = np.argmax(targets, axis=1)
-    y_pred = np.argmax(fetch_dict['predictions'], axis=1)
 
-    return y_true, y_pred
+    return self.MinibatchResults(loss=float(fetch_dict['loss']),
+                                 y_true_1hot=targets,
+                                 y_pred_1hot=fetch_dict['predictions'])
 
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()

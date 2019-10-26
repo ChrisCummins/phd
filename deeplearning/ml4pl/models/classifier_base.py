@@ -1,6 +1,7 @@
 """Base class for implementing classifier models."""
 import time
 
+import collections
 import numpy as np
 import pathlib
 import pickle
@@ -98,8 +99,11 @@ class ClassifierBase(object):
     """
     raise NotImplementedError("abstract class")
 
-  def RunMinibatch(self, log: log_database.BatchLog,
-                   batch: typing.Any) -> typing.Tuple[np.array, np.array]:
+  MinibatchResults = collections.namedtuple(
+      'MinibatchResults', ['loss', 'y_true_1hot', 'y_pred_1hot'])
+
+  def RunMinibatch(self, epoch_type: str,
+                   batch: typing.Any) -> MinibatchResults:
     raise NotImplementedError("abstract class")
 
   def GetModelFlagNames(self) -> typing.Iterable[str]:
@@ -162,7 +166,7 @@ class ClassifierBase(object):
 
   def RunEpoch(self, epoch_num: int, epoch_type: str) -> float:
     assert epoch_type in {"train", "val", "test"}
-    accuracies = []
+    epoch_accuracies = []
 
     batch_type = typing.Tuple[log_database.BatchLog, typing.Dict[str, typing.
                                                                  Any]]
@@ -180,9 +184,14 @@ class ClassifierBase(object):
       log.global_step = self.global_training_step
       log.run_id = self.run_id
 
-      y_true, y_pred = self.RunMinibatch(log, feed_dict)
+      assert log.group in {"train", "val", "test"}
+      log.loss, targets, predictions = self.RunMinibatch(log.group, feed_dict)
 
       # Compute statistics.
+      y_true = np.argmax(targets, axis=1)
+      y_pred = np.argmax(predictions, axis=1)
+      accuracies = y_true == y_pred
+
       log.accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
       log.precision = sklearn.metrics.precision_score(
           y_true,
@@ -200,7 +209,11 @@ class ClassifierBase(object):
           labels=self.labels,
           average=FLAGS.batch_scores_averaging_method)
 
-      accuracies.append(log.accuracy)
+      log.accuracy = accuracies.mean()
+      log.pickled_accuracies = pickle.dumps(accuracies)
+      log.pickled_predictions = pickle.dumps(predictions)
+
+      epoch_accuracies.append(log.accuracy)
 
       log.elapsed_time_seconds = time.time() - batch_start_time
 
@@ -213,7 +226,7 @@ class ClassifierBase(object):
       with self.log_db.Session(commit=True) as session:
         session.add(log)
 
-    return sum(accuracies) / len(accuracies)
+    return np.mean(epoch_accuracies)
 
   def Train(self):
     for epoch_num in range(1, FLAGS.num_epochs + 1):

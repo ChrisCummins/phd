@@ -5,7 +5,6 @@ py_library(
     deps = [
         ":ggnn_utils",
         "//deeplearning/ml4pl/models:classifier_base",
-        "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
         "//labm8:humanize",
         "//labm8:prof",
