@@ -107,8 +107,12 @@ def ApplySplitSizeLimit(groups: typing.Dict[str, typing.List[int]]):
   """
   if FLAGS.max_bytecode_split_size:
     for group in groups:
-      random.shuffle(groups[group])
-      groups[group] = groups[group][:FLAGS.max_bytecode_split_size]
+      if len(groups[group]) > FLAGS.max_bytecode_split_size:
+        app.Log(1, "Limiting the size of `%s` group to %s elements from %s",
+                group, humanize.Commas(FLAGS.max_bytecode_split_size),
+                humanize.Commas(len(groups[group])))
+        random.shuffle(groups[group])
+        groups[group] = groups[group][:FLAGS.max_bytecode_split_size]
 
   return groups
 
