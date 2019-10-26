@@ -66,6 +66,7 @@ FLAGS = app.FLAGS
 
 
 def GetAnnotatedGraphGenerator():
+  """Return the function that generates annotated data flow analysis graphs."""
   if FLAGS.analysis == 'reachability':
     return reachability.MakeReachabilityGraphs
   elif FLAGS.analysis == 'dominator_tree':
@@ -77,6 +78,7 @@ def GetAnnotatedGraphGenerator():
 
 
 def GetFalseTrueType():
+  """Return the values that should be used for false/true binary labels."""
   if FLAGS.annotation_dtype == 'one_hot_float32':
     return (np.array([1, 0],
                      dtype=np.float32), np.array([0, 1], dtype=np.float32))
@@ -84,11 +86,9 @@ def GetFalseTrueType():
     raise app.UsageError(f"Unknown annotation_dtype `{FLAGS.annotation_dtype}`")
 
 
-def MakeGraphMetas(
-    graph: nx.MultiDiGraph) -> typing.Iterable[graph_dict.GraphDict]:
-  annotated_graph_generator = GetAnnotatedGraphGenerator()
-  false, true = GetFalseTrueType()
-
+def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
+                   true) -> typing.Iterable[graph_dict.GraphDict]:
+  """Genereate GraphMeta database rows from the given graph."""
   annotated_graphs = list(
       annotated_graph_generator(graph,
                                 FLAGS.max_instances_per_graph,
@@ -221,13 +221,16 @@ def _ProcessBytecodeJob(
       discard_unknown_statements=False,
   )
 
+  annotated_graph_generator = GetAnnotatedGraphGenerator()
+  false, true = GetFalseTrueType()
+
   try:
     graph = builder.Build(bytecode)
     graph.source_name = source_name
     graph.relpath = relpath
     graph.bytecode_id = str(bytecode_id)
     graph.language = language
-    return MakeGraphMetas(graph)
+    return MakeGraphMetas(graph, annotated_graph_generator, false, true)
   except Exception as e:
     app.Error('Failed to create graph for bytecode %d: %s (%s)', bytecode_id, e,
               type(e).__name__)
