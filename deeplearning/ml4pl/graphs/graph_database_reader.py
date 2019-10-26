@@ -4,7 +4,8 @@ import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
-from labm8 import sqlutil
+from labm8 import humanize
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -34,23 +35,35 @@ def BufferedGraphReader(
   """
   filters = filters or []
 
+  # The order_by_random arguments means that we can't use
+  # labm8.sqlutil.OffsetLimitBatchedQuery() to read results as each query will
+  # produce a different random order. Instead, first run a query to read all of
+  # the IDs that match the query, then iterate through the list of IDs in
+  # batches.
+
   with db.Session() as s:
-    # Load both the graph data and the graph eagerly.
-    q = s.query(graph_database.GraphMeta)
+    with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graphs "
+                                 "from database")):
+      q = s.query(graph_database.GraphMeta.id)
+      for filter_cb in filters:
+        q = q.filter(filter_cb())
 
-    if eager_graph_loading:
-      q = q.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
+      if order_by_random:
+        q = q.order_by(db.Random())
 
-    for filter_cb in filters:
-      q = q.filter(filter_cb())
+      q = q.limit(limit)
 
-    if order_by_random:
-      q = q.order_by(db.Random())
+      ids = [r[0] for r in q]
 
-    count = 0
-    for batch in sqlutil.OffsetLimitBatchedQuery(q, batch_size=buffer_size):
-      for row in batch.rows:
-        yield row
-        count += 1
-        if limit and count >= limit:
-          return
+    # Iterate through the IDs in batches, running a new query for each.
+    while ids:
+      batch_ids = ids[:buffer_size]
+      ids = ids[buffer_size:]
+
+      q = s.query(graph_database.GraphMeta)
+      if eager_graph_loading:
+        q = q.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
+      q = q.filter(graph_database.GraphMeta.id.in_(batch_ids))
+
+      for graph_meta in q:
+        yield graph_meta
