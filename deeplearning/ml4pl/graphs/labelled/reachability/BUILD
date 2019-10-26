@@ -36,6 +36,7 @@ py_test(
 py_library(
     name = "reachability",
     srcs = ["reachability.py"],
+    visibility = ["//deeplearning/ml4pl/graphs/labelled:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_query",
         "//labm8:app",

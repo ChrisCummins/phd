@@ -3,6 +3,7 @@
 py_library(
     name = "dominator_tree",
     srcs = ["dominator_tree.py"],
+    visibility = ["//deeplearning/ml4pl/graphs/labelled:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_iterators",
         "//deeplearning/ml4pl/graphs:graph_query",
