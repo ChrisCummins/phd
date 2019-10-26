@@ -216,44 +216,42 @@ class ClassifierBase(object):
     return sum(accuracies) / len(accuracies)
 
   def Train(self):
-    with self.graph.as_default():
-      for epoch_num in range(1, FLAGS.num_epochs + 1):
-        epoch_start_time = time.time()
-        self.RunEpoch(epoch_num, "train")
-        val_acc = self.RunEpoch(epoch_num, "val")
-        app.Log(1, "Epoch %s completed in %s. Validation "
-                "accuracy: %.2f%%", epoch_num,
-                humanize.Duration(time.time() - epoch_start_time),
-                val_acc * 100)
+    for epoch_num in range(1, FLAGS.num_epochs + 1):
+      epoch_start_time = time.time()
+      self.RunEpoch(epoch_num, "train")
+      val_acc = self.RunEpoch(epoch_num, "val")
+      app.Log(1, "Epoch %s completed in %s. Validation "
+              "accuracy: %.2f%%", epoch_num,
+              humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
 
-        if val_acc > self.best_epoch_validation_accuracy:
-          self.SaveModel(self.best_model_file)
-          # Compute the ratio of the new best validation accuracy against the
-          # old best validation accuracy.
-          if self.best_epoch_validation_accuracy:
-            accuracy_ratio = (
-                val_acc /
-                max(self.best_epoch_validation_accuracy, SMALL_NUMBER))
-            relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
-          else:
-            relative_increase = ''
-          app.Log(
-              1, "Best epoch so far, validation accuracy increased "
-              "+%.3f%%%s. Saving to '%s'",
-              (val_acc - self.best_epoch_validation_accuracy) * 100,
-              relative_increase, self.best_model_file)
-          self.best_epoch_validation_accuracy = val_acc
-          self.best_epoch_num = epoch_num
+      if val_acc > self.best_epoch_validation_accuracy:
+        self.SaveModel(self.best_model_file)
+        # Compute the ratio of the new best validation accuracy against the
+        # old best validation accuracy.
+        if self.best_epoch_validation_accuracy:
+          accuracy_ratio = (
+              val_acc / max(self.best_epoch_validation_accuracy, SMALL_NUMBER))
+          relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
+        else:
+          relative_increase = ''
+        app.Log(
+            1, "Best epoch so far, validation accuracy increased "
+            "+%.3f%%%s. Saving to '%s'",
+            (val_acc - self.best_epoch_validation_accuracy) * 100,
+            relative_increase, self.best_model_file)
+        self.best_epoch_validation_accuracy = val_acc
+        self.best_epoch_num = epoch_num
 
-          # Run on test set.
-          if FLAGS.test_on_improvement:
-            test_acc = self.RunEpoch(epoch_num, "test")
-            app.Log(1, "Test accuracy at epoch %s: %.5f", epoch_num, test_acc)
-        elif epoch_num - self.best_epoch_num >= FLAGS.patience:
-          app.Log(
-              1, "Stopping training after %i epochs without "
-              "improvement on validation accuracy", FLAGS.patience)
-          break
+        # Run on test set.
+        if FLAGS.test_on_improvement:
+          test_acc = self.RunEpoch(epoch_num, "test")
+          app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
+                  test_acc * 100)
+      elif epoch_num - self.best_epoch_num >= FLAGS.patience:
+        app.Log(
+            1, "Stopping training after %i epochs without "
+            "improvement on validation accuracy", FLAGS.patience)
+        break
 
   def InitializeModel(self) -> None:
     """Initialize a new model state."""
