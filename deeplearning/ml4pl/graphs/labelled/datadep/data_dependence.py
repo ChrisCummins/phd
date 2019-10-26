@@ -10,7 +10,7 @@ from labm8 import decorators
 FLAGS = app.FLAGS
 
 
-@decorators.timeout(seconds=60)
+@decorators.timeout(seconds=120)
 def AnnotateDataDependencies(
     g: nx.MultiDiGraph,
     root_node: str,
@@ -35,8 +35,10 @@ def AnnotateDataDependencies(
     dependency_node_count += 1
     visited.add(next)
 
-    data_predecessors = query.StatementNeighbors(
-        g, next, flow='data', direction=lambda src, dst: src)
+    data_predecessors = query.StatementNeighbors(g,
+                                                 next,
+                                                 flow='data',
+                                                 direction=lambda src, dst: src)
     for neighbor in data_predecessors:
       if neighbor not in visited:
         q.append((neighbor, data_flow_steps + 1))
