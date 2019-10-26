@@ -3,6 +3,7 @@
 py_library(
     name = "classifier_base",
     srcs = ["classifier_base.py"],
+    data = ["//deeplearning/ncc/published_results:embeddings"],
     visibility = ["//visibility:public"],
     deps = [
         "//:build_info",

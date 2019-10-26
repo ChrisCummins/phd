@@ -1,7 +1,6 @@
 py_library(
     name = "ggnn_base",
     srcs = ["ggnn_base.py"],
-    data = ["//deeplearning/ncc/published_results:embeddings"],
     visibility = ["//visibility:public"],
     deps = [
         ":ggnn_utils",
