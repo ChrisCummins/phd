@@ -22,13 +22,13 @@ app.DEFINE_integer(
     "batch_size", 8000,
     "The maximum number of nodes to include in each graph batch.")
 app.DEFINE_boolean(
-    'limit_data_flow_max_steps_required_to_message_passing_steps', True,
+    'limit_data_flow_max_steps_required_to_message_passing_steps', False,
     'If true, limit the graphs loaded to those that require fewer data flow '
     'steps than the number of message passing steps. E.g. with '
     '--layer_timesteps=2,2,2, only graphs where data_flow_max_steps_required '
     '<= 6 will be used.')
 app.DEFINE_boolean(
-    'match_data_flow_max_steps_required_to_message_passing_steps', True,
+    'match_data_flow_max_steps_required_to_message_passing_steps', False,
     'If true, limit the graphs loaded to those that require exactly the '
     'same number of data flow steps as there are message passing steps. E.g. '
     'with --layer_timesteps=2,2,2, only graphs where '
