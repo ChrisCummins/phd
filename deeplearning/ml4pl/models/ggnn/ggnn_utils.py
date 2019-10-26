@@ -1,10 +1,11 @@
 """Utilities for working with GGNNs."""
-import numpy as np
-import tensorflow as tf
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database_stats
+import numpy as np
+import tensorflow as tf
 from labm8 import app
+
+from deeplearning.ml4pl.graphs import graph_database_stats
 
 FLAGS = app.FLAGS
 

@@ -1,10 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/graphs:graph_iterators."""
 import networkx as nx
 import pytest
-
-from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.graphs import graph_iterators as iterators
 
 FLAGS = app.FLAGS
 

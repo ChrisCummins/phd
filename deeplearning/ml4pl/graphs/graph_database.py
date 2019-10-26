@@ -1,16 +1,17 @@
 """Database backend for GGNN graphs."""
 import datetime
-import networkx as nx
 import pickle
-import sqlalchemy as sql
 import typing
+
+import networkx as nx
+import sqlalchemy as sql
+from labm8 import app
+from labm8 import labdate
+from labm8 import sqlutil
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
-from labm8 import app
-from labm8 import labdate
-from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 

@@ -1,18 +1,18 @@
 """Unit tests for //deeplearning/ml4pl:graph_model."""
-import json
-
 import collections
+import json
+import pathlib
+import pickle
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-import pathlib
-import pickle
 import pytest
 import tensorflow as tf
-from deeplearning.ml4pl.models import graph_model
-
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.models import graph_model
 
 FLAGS = app.FLAGS
 

@@ -1,13 +1,16 @@
 """This module prepares a dataset for learning data depedence from a
 database of control flow graph protocol buffers, with dataflow edges.
 """
-
-import networkx as nx
-import numpy as np
 import pathlib
 import random
 import tempfile
 import typing
+
+import networkx as nx
+import numpy as np
+from labm8 import app
+from labm8 import fs
+from labm8 import pbutil
 
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -19,16 +22,12 @@ from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import fs
-from labm8 import pbutil
 
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None,
-    'URL of database to read bytecodes from.',
-    must_exist=True)
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecodes from.',
+                    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write graphs to.')
@@ -66,11 +65,12 @@ FLAGS = app.FLAGS
 def MakeGraphMetas(
     graph: nx.MultiDiGraph) -> typing.Iterable[graph_dict.GraphDict]:
   annotated_graphs = list(
-      data_dependence.MakeDataDependencyGraphs(
-          graph,
-          FLAGS.max_instances_per_graph,
-          false=np.array([1, 0], dtype=np.float32),
-          true=np.array([0, 1], dtype=np.float32)))
+      data_dependence.MakeDataDependencyGraphs(graph,
+                                               FLAGS.max_instances_per_graph,
+                                               false=np.array([1, 0],
+                                                              dtype=np.float32),
+                                               true=np.array([0, 1],
+                                                             dtype=np.float32)))
 
   # Copy over graph metadata.
   for annotated_graph in annotated_graphs:
@@ -242,9 +242,8 @@ def main():
       s.query(graph_database.Meta).filter(
           graph_database.Meta.key == 'max_instances_per_graph').delete()
       s.add(
-          graph_database.Meta(
-              key='max_instances_per_graph',
-              value=str(FLAGS.max_instances_per_graph)))
+          graph_database.Meta(key='max_instances_per_graph',
+                              value=str(FLAGS.max_instances_per_graph)))
 
     app.Log(1, 'Seeding with %s', FLAGS.seed)
     random.seed(FLAGS.seed)

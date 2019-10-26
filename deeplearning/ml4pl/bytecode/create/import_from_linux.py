@@ -1,11 +1,13 @@
 """Import bytecodes from from Linux sources."""
 import multiprocessing
+import pathlib
+import typing
 
 import pandas as pd
-import pathlib
 import progressbar
 import pyparsing
-import typing
+from labm8 import app
+from labm8 import decorators
 
 from compilers.llvm import clang
 from compilers.llvm import opt
@@ -15,9 +17,6 @@ from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import decorators
-
 
 FLAGS = app.FLAGS
 
@@ -102,10 +101,9 @@ def BytecodeFromLinuxSrc(path: pathlib.Path, optimization_level: str) -> str:
   ]
   process = clang.Exec(clang_args)
   if process.returncode:
-    raise clang.ClangException(
-        returncode=process.returncode,
-        stderr=process.stderr,
-        command=clang_args)
+    raise clang.ClangException(returncode=process.returncode,
+                               stderr=process.stderr,
+                               command=clang_args)
   return process.stdout, clang_args
 
 
@@ -246,17 +244,16 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
         rows += row_batch
 
     # Create the output table.
-    df = pd.DataFrame(
-        rows,
-        columns=[
-            'program:src_relpath',
-            'cfg:graph',
-            'cfg:block_count',
-            'cfg:edge_count',
-            'cfg:edge_density',
-            'cfg:is_valid',
-            'cfg:is_strict_valid',
-        ])
+    df = pd.DataFrame(rows,
+                      columns=[
+                          'program:src_relpath',
+                          'cfg:graph',
+                          'cfg:block_count',
+                          'cfg:edge_count',
+                          'cfg:edge_density',
+                          'cfg:is_valid',
+                          'cfg:is_strict_valid',
+                      ])
 
     df.set_index([
         'program:src_relpath',

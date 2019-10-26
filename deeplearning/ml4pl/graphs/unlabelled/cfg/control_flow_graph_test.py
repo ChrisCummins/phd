@@ -1,11 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph."""
-
 import networkx as nx
 import pytest
-
-from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph
 
 FLAGS = app.FLAGS
 

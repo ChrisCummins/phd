@@ -1,14 +1,14 @@
 """Base class for implementing gated graph neural networks."""
+import typing
 
 import numpy as np
 import tensorflow as tf
-import typing
-
-from deeplearning.ml4pl.models import classifier_base
-from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
+
+from deeplearning.ml4pl.models import classifier_base
+from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 
 FLAGS = app.FLAGS
 

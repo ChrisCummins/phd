@@ -1,11 +1,12 @@
 """Functions for iterating and maneuvering around graphs."""
 import collections
-import networkx as nx
 import random
 import typing
 
-from deeplearning.ml4pl.graphs import graph_iterators as iterators
+import networkx as nx
 from labm8 import app
+
+from deeplearning.ml4pl.graphs import graph_iterators as iterators
 
 FLAGS = app.FLAGS
 

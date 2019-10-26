@@ -1,17 +1,17 @@
 """Utility code for creating CFGs and FFGs from LLVM bytecodes."""
-import multiprocessing
-
 import collections
-import pydot
-import pyparsing
+import multiprocessing
 import re
 import typing
+
+import pydot
+import pyparsing
+from labm8 import app
+from labm8 import pbutil
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
-from labm8 import app
-from labm8 import pbutil
 
 FLAGS = app.FLAGS
 
@@ -140,26 +140,23 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
             if remove_unconditional_branch_statements:
               block_instruction_count -= 1
             else:
-              sig.add_node(
-                  new_node_id,
-                  name=new_node_name,
-                  text=branch_text,
-                  basic_block=node)
+              sig.add_node(new_node_id,
+                           name=new_node_name,
+                           text=branch_text,
+                           basic_block=node)
           else:
             # TODO(cec): Do we want to preserve the "true" "false" information
             # for outgoing edges? We currently throw it away.
-            sig.add_node(
-                new_node_id,
-                name=new_node_name,
-                text=branch_text,
-                basic_block=node)
+            sig.add_node(new_node_id,
+                         name=new_node_name,
+                         text=branch_text,
+                         basic_block=node)
         else:
           # Regular instruction to add.
-          sig.add_node(
-              new_node_id,
-              name=new_node_name,
-              text=instruction,
-              basic_block=node)
+          sig.add_node(new_node_id,
+                       name=new_node_name,
+                       text=instruction,
+                       basic_block=node)
 
       # Add an entry to the node translation map for the start and end nodes
       # of this basic block.

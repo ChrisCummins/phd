@@ -1,11 +1,12 @@
 """A module defining graph database readers."""
-import sqlalchemy as sql
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database
+import sqlalchemy as sql
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
+
+from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 

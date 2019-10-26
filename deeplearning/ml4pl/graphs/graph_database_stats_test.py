@@ -1,14 +1,14 @@
 """Unit tests for //deeplearning/ml4pl/ggnn:graph_database."""
-import numpy as np
 import pathlib
 import pickle
-import pytest
 
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs import graph_database_stats as stats
+import numpy as np
+import pytest
 from labm8 import app
 from labm8 import test
 
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs import graph_database_stats as stats
 
 FLAGS = app.FLAGS
 

@@ -1,9 +1,9 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/domtree:dominator_tree."""
 import networkx as nx
-
-from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 
 FLAGS = app.FLAGS
 

@@ -5,10 +5,12 @@ experiments of this paper:
     Deep Learning of Optimization Heuristics. In PACT. IEEE.
 """
 import multiprocessing
+import typing
 
 import pandas as pd
 import progressbar
-import typing
+from labm8 import app
+from labm8 import decorators
 
 from compilers.llvm import clang
 from compilers.llvm import opt_util
@@ -19,8 +21,6 @@ from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import decorators
 
 FLAGS = app.FLAGS
 
@@ -56,11 +56,10 @@ def BytecodeFromOpenClString(opencl_string: str,
   ]
   process = clang.Exec(clang_args, stdin=opencl_string)
   if process.returncode:
-    raise clang.ClangException(
-        "clang failed",
-        returncode=process.returncode,
-        stderr=process.stderr,
-        command=clang_args)
+    raise clang.ClangException("clang failed",
+                               returncode=process.returncode,
+                               stderr=process.stderr,
+                               command=clang_args)
   return process.stdout, clang_args
 
 
@@ -213,19 +212,18 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
         rows.append(row)
 
     # Create the output table.
-    df = pd.DataFrame(
-        rows,
-        columns=[
-            'program:benchmark_suite_name',
-            'program:benchmark_name',
-            'program:opencl_kernel_name',
-            'cfg:graph',
-            'cfg:block_count',
-            'cfg:edge_count',
-            'cfg:edge_density',
-            'cfg:is_valid',
-            'cfg:is_strict_valid',
-        ])
+    df = pd.DataFrame(rows,
+                      columns=[
+                          'program:benchmark_suite_name',
+                          'program:benchmark_name',
+                          'program:opencl_kernel_name',
+                          'cfg:graph',
+                          'cfg:block_count',
+                          'cfg:edge_count',
+                          'cfg:edge_density',
+                          'cfg:is_valid',
+                          'cfg:is_strict_valid',
+                      ])
 
     df.set_index([
         'program:benchmark_suite_name',

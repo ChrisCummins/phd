@@ -1,10 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/reachability."""
 import networkx as nx
 import pytest
-
-from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 
 FLAGS = app.FLAGS
 

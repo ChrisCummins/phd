@@ -1,24 +1,25 @@
 """A module which defines a base class for implementing database exporters."""
 import multiprocessing
 import time
-
 import typing
 
-from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import sqlutil
 
+from deeplearning.ml4pl.bytecode import bytecode_database
+from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
 app.DEFINE_boolean('multiprocess_database_exporters', True,
                    'Enable multiprocessing for database job workers.')
-app.DEFINE_integer('database_exporter_batch_size', 10000,
-                   'The number of bytecodes to process in-memory before writing'
-                   'to database.')
+app.DEFINE_integer(
+    'database_exporter_batch_size', 10000,
+    'The number of bytecodes to process in-memory before writing'
+    'to database.')
+
 
 class BytecodeDatabaseExporterBase(object):
   """Abstract base class for implementing parallelized LLVM bytecode workers."""
@@ -53,7 +54,7 @@ class BytecodeDatabaseExporterBase(object):
       elapsed_time = time.time() - group_start_time
       app.Log(
           1, 'Exported %s graphs from %s bytecodes in %s '
-             '(%.2f graphs / second)', humanize.Commas(exported_graph_count),
+          '(%.2f graphs / second)', humanize.Commas(exported_graph_count),
           humanize.Commas(len(bytecode_ids)), humanize.Duration(elapsed_time),
           exported_graph_count / elapsed_time)
       group_to_graph_count_map[group] = exported_graph_count
@@ -62,8 +63,8 @@ class BytecodeDatabaseExporterBase(object):
     elapsed_time = time.time() - start_time
 
     group_str = ', '.join([
-      f'{humanize.Commas(count)} {group}'
-      for group, count in sorted(group_to_graph_count_map.items())
+        f'{humanize.Commas(count)} {group}'
+        for group, count in sorted(group_to_graph_count_map.items())
     ])
     app.Log(1, 'Exported %s graphs (%s) in %s (%.2f graphs / second)',
             humanize.Commas(total_count), group_str,

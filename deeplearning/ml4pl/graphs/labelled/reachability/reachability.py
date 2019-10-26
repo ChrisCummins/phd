@@ -1,11 +1,12 @@
 """Library for labelling program graphs with reachability information."""
 import collections
-import networkx as nx
 import typing
 
-from deeplearning.ml4pl.graphs import graph_query as query
+import networkx as nx
 from labm8 import app
 from labm8 import decorators
+
+from deeplearning.ml4pl.graphs import graph_query as query
 
 FLAGS = app.FLAGS
 

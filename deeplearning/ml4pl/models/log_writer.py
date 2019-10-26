@@ -1,5 +1,4 @@
 """This module defines log writer objects."""
-
 import datetime
 import pathlib
 import typing

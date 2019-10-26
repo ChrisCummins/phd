@@ -1,10 +1,11 @@
 """A generator for control flow graphs."""
-import networkx as nx
-import numpy as np
 import typing
 
-from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
+import networkx as nx
+import numpy as np
 from labm8 import app
+
+from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 
 FLAGS = app.FLAGS
 

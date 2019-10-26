@@ -25,12 +25,11 @@ from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None,
-    'URL of database to read bytecodes from.',
-    must_exist=True)
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecodes from.',
+                    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write annotated graphs to.')
@@ -80,8 +79,8 @@ def GetAnnotatedGraphGenerator():
 def GetFalseTrueType():
   """Return the values that should be used for false/true binary labels."""
   if FLAGS.annotation_dtype == 'one_hot_float32':
-    return (np.array([1, 0], dtype=np.float32),
-            np.array([0, 1], dtype=np.float32))
+    return (np.array([1, 0],
+                     dtype=np.float32), np.array([0, 1], dtype=np.float32))
   else:
     raise app.UsageError(f"Unknown annotation_dtype `{FLAGS.annotation_dtype}`")
 
@@ -90,8 +89,10 @@ def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
                    true) -> typing.Iterable[graph_dict.GraphDict]:
   """Genereate GraphMeta database rows from the given graph."""
   annotated_graphs = list(
-      annotated_graph_generator(
-          graph, FLAGS.max_instances_per_graph, false=false, true=true))
+      annotated_graph_generator(graph,
+                                FLAGS.max_instances_per_graph,
+                                false=false,
+                                true=true))
 
   # Copy over graph metadata.
   for annotated_graph in annotated_graphs:
@@ -279,9 +280,8 @@ def main():
       s.query(graph_database.Meta).filter(
           graph_database.Meta.key == 'max_instances_per_graph').delete()
       s.add(
-          graph_database.Meta(
-              key='max_instances_per_graph',
-              value=str(FLAGS.max_instances_per_graph)))
+          graph_database.Meta(key='max_instances_per_graph',
+                              value=str(FLAGS.max_instances_per_graph)))
 
     app.Log(1, 'Seeding with %s', FLAGS.seed)
     random.seed(FLAGS.seed)

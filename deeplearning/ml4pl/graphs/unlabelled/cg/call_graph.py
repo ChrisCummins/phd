@@ -1,9 +1,9 @@
 """LLVM Call Graphs."""
+import typing
+
 import networkx as nx
 import pydot
 import pyparsing
-import typing
-
 from labm8 import app
 
 FLAGS = app.FLAGS

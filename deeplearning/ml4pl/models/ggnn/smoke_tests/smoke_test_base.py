@@ -3,19 +3,19 @@ import contextlib
 import pathlib
 import tempfile
 
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.models import log_database
 from labm8 import app
 
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer(
-    'smoke_test_num_epochs', 2,
-    '')
+app.DEFINE_integer('smoke_test_num_epochs', 2, '')
 app.DEFINE_output_path(
-    'smoke_test_working_dir', None,
-    'A directory to store persistent data files. If not provided, a temporrary directory will be used and deleted upon exit.',is_dir=True)
+    'smoke_test_working_dir',
+    None,
+    'A directory to store persistent data files. If not provided, a temporrary directory will be used and deleted upon exit.',
+    is_dir=True)
 
 
 @contextlib.contextmanager
@@ -23,6 +23,7 @@ def WorkingDirectory() -> pathlib.Path:
   with tempfile.TemporaryDirectory() as d:
     working_dir = FLAGS.smoke_test_working_dir or pathlib.Path(d)
     yield working_dir
+
 
 class SmokeTesterBase(object):
 
@@ -49,4 +50,3 @@ class SmokeTesterBase(object):
 
       model = self.GetModelClass()(graph_db, log_db)
       model.Train()
-

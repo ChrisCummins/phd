@@ -1,6 +1,5 @@
 """This module defines a logger for batch stats."""
 import time
-
 import typing
 
 from labm8 import app

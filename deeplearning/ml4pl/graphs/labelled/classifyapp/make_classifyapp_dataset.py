@@ -1,26 +1,25 @@
 """This module prepares the POJ-104 dataset for algorithm classification."""
-
-import sys
-
-import networkx as nx
-import numpy as np
 import pathlib
 import pickle
-import sqlalchemy as sql
+import sys
 import tempfile
 import traceback
 import typing
+
+import networkx as nx
+import numpy as np
+import sqlalchemy as sql
+from labm8 import app
+from labm8 import bazelutil
+from labm8 import fs
+from labm8 import humanize
+from labm8 import prof
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.bytecode import splitters
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import database_exporters
 from deeplearning.ncc.inst2vec import api as inst2vec
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import humanize
-from labm8 import prof
 
 app.DEFINE_database('bytecode_db',
                     bytecode_database.Database,

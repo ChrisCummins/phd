@@ -1,10 +1,11 @@
 """A class representing a control flow graph."""
-import networkx as nx
 import typing
 
-from deeplearning.ml4pl import ml4pl_pb2
+import networkx as nx
 from labm8 import app
 from labm8 import pbutil
+
+from deeplearning.ml4pl import ml4pl_pb2
 
 FLAGS = app.FLAGS
 
@@ -226,8 +227,8 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   @property
   def edge_density(self) -> float:
     """The edge density is the ratio of edges to fully connected, [0,1]."""
-    return self.number_of_edges() / (
-        self.number_of_nodes() * self.number_of_nodes())
+    return self.number_of_edges() / (self.number_of_nodes() *
+                                     self.number_of_nodes())
 
   @property
   def undirected_diameter(self) -> int:
@@ -339,8 +340,8 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   def __hash__(self) -> int:
     """Return the numeric hash of the instance."""
     # The hash is based on the graph topology and node and edge attributes.
-    return hash((tuple(self.nodes), tuple(self.edges),
-                 tuple([str(self.nodes[n]) for n in self.nodes]),
+    return hash((tuple(self.nodes), tuple(
+        self.edges), tuple([str(self.nodes[n]) for n in self.nodes]),
                  tuple([str(self.edges[i, j]) for i, j in self.edges])))
 
   def IsomorphicHash(self) -> int:

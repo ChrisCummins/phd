@@ -1,11 +1,12 @@
 """A dataset of LLVM bytecodes."""
-import sqlalchemy as sql
 import typing
+
+import sqlalchemy as sql
+from labm8 import app
+from labm8 import sqlutil
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl import ml4pl_pb2
-from labm8 import app
-from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 

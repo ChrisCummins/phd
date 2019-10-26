@@ -1,13 +1,14 @@
 """A module for obtaining stats from graph databases."""
-import numpy as np
-import sqlalchemy as sql
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database
+import numpy as np
+import sqlalchemy as sql
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import prof
+
+from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 

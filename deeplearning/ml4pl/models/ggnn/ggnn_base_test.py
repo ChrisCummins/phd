@@ -1,39 +1,46 @@
 """Unit tests for //deeplearning/ml4pl/models/ggnn:ggnn_base."""
-import numpy as np
 import pathlib
 import pickle
-import pytest
-import tensorflow as tf
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.models.ggnn import ggnn_base
+import numpy as np
+import pytest
+import tensorflow as tf
 from labm8 import app
 from labm8 import test
 
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.models.ggnn import ggnn_base
 
 FLAGS = app.FLAGS
+
 
 @pytest.fixture(scope='function')
 def db(tempdir: pathlib.Path) -> graph_database.Database:
   db_ = graph_database.Database(f'sqlite:///{tempdir}/db')
   with db_.Session(commit=True) as s:
-    s.add(graph_database.GraphMeta(
-        group="train",
-        bytecode_id=0,
-        source_name="source",
-        relpath="relpath",
-        language="c",
-        node_count=3,
-        edge_count=2,
-        edge_type_count=3,
-        edge_features_dimensionality=1,
-        graph_labels_dimensionality=1,
-        graph=graph_database.Graph(
-            data=pickle.dumps({
-              'adjacency_lists': np.array([np.array([(0, 1)]), np.array([(1, 2)]), np.array([])]),
-              'edge_x': np.array([np.array([1]), np.array([2])]),
-              'graph_y': np.array([1]),
+    s.add(
+        graph_database.GraphMeta(
+            group="train",
+            bytecode_id=0,
+            source_name="source",
+            relpath="relpath",
+            language="c",
+            node_count=3,
+            edge_count=2,
+            edge_type_count=3,
+            edge_features_dimensionality=1,
+            graph_labels_dimensionality=1,
+            graph=graph_database.Graph(data=pickle.dumps({
+                'adjacency_lists':
+                np.array([np.array([(
+                    0,
+                    1)]), np.array([(1, 2)]),
+                          np.array([])]),
+                'edge_x':
+                np.array([np.array([1]), np.array([2])]),
+                'graph_y':
+                np.array([1]),
             }))))
   return db_
 
@@ -62,7 +69,8 @@ class MockModel(ggnn_base.GgnnBaseModel):
       }
 
 
-def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path, db: graph_database.Database):
+def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path,
+                   db: graph_database.Database):
   """Test saving a model to file."""
   FLAGS.working_dir = tempdir2
 
@@ -93,9 +101,8 @@ def test_LoadModel(tempdir: pathlib.Path, tempdir2: pathlib.Path,
   assert model.global_training_step == 10
 
 
-def test_LoadModel_unknown_saved_model_flag(tempdir: pathlib.Path,
-                                            tempdir2: pathlib.Path,
-                                            db: graph_database.Database):
+def test_LoadModel_unknown_saved_model_flag(
+    tempdir: pathlib.Path, tempdir2: pathlib.Path, db: graph_database.Database):
   """Test that error is raised if saved model contains unknown flag."""
   FLAGS.working_dir = tempdir2
   model = MockModel(db)

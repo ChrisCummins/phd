@@ -1,11 +1,11 @@
 """Unit tests for //deeplearning/ml4pl/models:log_writer."""
+import pathlib
 import time
 
-import pathlib
-
-from deeplearning.ml4pl.models import log_writer
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.models import log_writer
 
 FLAGS = app.FLAGS
 

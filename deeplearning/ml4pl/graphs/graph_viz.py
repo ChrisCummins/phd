@@ -1,15 +1,14 @@
 """Utility functions for graphs."""
 import io
-import networkx as nx
 import pathlib
 import tempfile
 import typing
 import zipfile
 
+import networkx as nx
 from labm8 import app
 from labm8 import fs
 from labm8 import labtypes
-
 
 FLAGS = app.FLAGS
 

@@ -1,18 +1,13 @@
 """Base class for implementing classifier models."""
-import time
-
 import collections
-import numpy as np
 import pathlib
 import pickle
 import random
-import sklearn.metrics
+import time
 import typing
 
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_batcher
-from deeplearning.ml4pl.models import log_database
+import numpy as np
+import sklearn.metrics
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
@@ -22,6 +17,11 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_batcher
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 

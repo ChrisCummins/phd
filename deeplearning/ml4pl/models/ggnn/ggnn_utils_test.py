@@ -1,10 +1,9 @@
 """Unit tests for //deeplearning/ml4pl/models/ggnn:ggnn_utils."""
-
 import numpy as np
-
-from deeplearning.ml4pl.models.ggnn import ggnn_utils
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.models.ggnn import ggnn_utils
 
 FLAGS = app.FLAGS
 

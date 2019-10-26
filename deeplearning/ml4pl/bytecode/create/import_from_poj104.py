@@ -19,22 +19,24 @@ buffer and packet values:
   mysql> set global max_allowed_packet=1000000000;
 """
 import os
-
 import pathlib
 import typing
 
-from deeplearning.ml4pl import ml4pl_pb2
-from deeplearning.ml4pl.bytecode import bytecode_database as database
 from labm8 import app
 from labm8 import fs
 from labm8 import labtypes
+
+from deeplearning.ml4pl import ml4pl_pb2
+from deeplearning.ml4pl.bytecode import bytecode_database as database
 
 FLAGS = app.FLAGS
 
 app.DEFINE_database('db', database.Database, None,
                     'Path of database to populate.')
-app.DEFINE_input_path(
-    'dataset', None, 'Path of dataset to import.', is_dir=True)
+app.DEFINE_input_path('dataset',
+                      None,
+                      'Path of dataset to import.',
+                      is_dir=True)
 
 
 def LlvmBytecodeIterator(base_path: pathlib.Path, source_name: str

@@ -1,12 +1,13 @@
 """Unit tests for //deeplearning/ml4pl/ggnn:graph_database."""
 import pathlib
 import pickle
+
 import pytest
+from labm8 import app
+from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as reader
-from labm8 import app
-from labm8 import test
 
 FLAGS = app.FLAGS
 
@@ -63,8 +64,8 @@ def test_BufferedGraphReader_filters(db_512: graph_database.Database,
                                      buffer_size: int):
   """Test using multiple filters in combination."""
   filters = [
-      lambda: graph_database.GraphMeta.node_count % 2 == 0, lambda:
-      graph_database.GraphMeta.id < 256
+      lambda: graph_database.GraphMeta.node_count % 2 == 0,
+      lambda: graph_database.GraphMeta.id < 256
   ]
   graphs = list(reader.BufferedGraphReader(db_512, filters=filters))
   assert len(graphs) == 128

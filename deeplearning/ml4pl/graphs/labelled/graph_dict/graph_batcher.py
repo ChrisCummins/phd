@@ -1,11 +1,13 @@
 """A module for batching graph dictionaries."""
+import pickle
 import time
+import typing
 
 import networkx as nx
 import numpy as np
-import pickle
 import sqlalchemy as sql
-import typing
+from labm8 import app
+from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
@@ -13,8 +15,6 @@ from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.graphs.labelled.graph_dict import \
   graph_dict as graph_dicts
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 

@@ -16,7 +16,6 @@ from graph_nets import graphs
 from graph_nets import modules
 from graph_nets import utils_np
 from graph_nets import utils_tf
-
 from labm8 import app
 from labm8 import labdate
 from labm8 import prof

@@ -1,6 +1,5 @@
 """Functions for iterating and maneuvering around graphs."""
 import networkx as nx
-
 from labm8 import app
 
 FLAGS = app.FLAGS

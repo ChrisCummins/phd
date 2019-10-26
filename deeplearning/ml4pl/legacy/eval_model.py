@@ -1,15 +1,16 @@
 """Evaluate a reachability classifier."""
-import keras
 import pathlib
 import pickle
-from deeplearning.ml4pl.proto import ml4pl_pb2
+
+import keras
+from labm8 import app
+from labm8 import humanize
+from labm8 import pbutil
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ml4pl import train_model
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
+from deeplearning.ml4pl.proto import ml4pl_pb2
 
 FLAGS = app.FLAGS
 
@@ -35,8 +36,9 @@ def main(argv):
   with open(model_dir / 'model.json') as f:
     model: keras.models.Model = keras.models.model_from_json(f.read())
 
-  model.compile(
-      loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
+  model.compile(loss='binary_crossentropy',
+                metrics=['accuracy'],
+                optimizer='adam')
   model.summary()
   print(f'Total training time: {training_time_natural} '
         f'({time_per_epoch_natural} per epoch).')

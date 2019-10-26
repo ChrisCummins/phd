@@ -4,11 +4,13 @@ CDFGs are directed multigraphs in which nodes represent single LLVM
 instructions, and edges show control and data flow. They are constructed from an
 LLVM module.
 """
-import itertools
-
 import copy
-import networkx as nx
+import itertools
 import typing
+
+import networkx as nx
+from labm8 import app
+from labm8 import humanize
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
@@ -16,8 +18,6 @@ from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
-from labm8 import app
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 

@@ -1,10 +1,11 @@
 """Populate the table of control flow graphs from the bytecodes table."""
 import multiprocessing
 import time
+import typing
 
 import progressbar
 import pyparsing
-import typing
+from labm8 import app
 
 from compilers.llvm import opt
 from compilers.llvm import opt_util
@@ -12,7 +13,6 @@ from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
 
 FLAGS = app.FLAGS
 

@@ -1,11 +1,11 @@
 """A Zero-R baseline classifier."""
+import typing
 
 import numpy as np
-import typing
+from labm8 import app
 
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
 
 FLAGS = app.FLAGS
 

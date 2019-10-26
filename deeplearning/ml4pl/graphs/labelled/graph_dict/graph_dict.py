@@ -1,8 +1,8 @@
 """The module implements conversion of graphs to dictionaries."""
-import networkx as nx
-import numpy as np
 import typing
 
+import networkx as nx
+import numpy as np
 from labm8 import app
 
 app.DEFINE_boolean(

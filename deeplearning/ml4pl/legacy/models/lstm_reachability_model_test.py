@@ -1,13 +1,14 @@
 """Unit tests for //deeplearning/ml4pl:lstm_model."""
-import pandas as pd
 import pathlib
+
+import pandas as pd
 import pytest
-from deeplearning.ml4pl.models import lstm_reachability_model
+from labm8 import app
+from labm8 import test
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph
-from labm8 import app
-from labm8 import test
+from deeplearning.ml4pl.models import lstm_reachability_model
 
 FLAGS = app.FLAGS
 
@@ -47,27 +48,30 @@ def df() -> pd.DataFrame:
 
 def test_BuildKerasModel_smoke_test(atomizer: atomizers.AtomizerBase):
   """Test that BuildKerasModel() doesn't blow up."""
-  assert lstm_reachability_model.BuildKerasModel(
-      sequence_length=10,
-      num_classes=3,
-      lstm_size=16,
-      dnn_size=4,
-      atomizer=atomizer)
+  assert lstm_reachability_model.BuildKerasModel(sequence_length=10,
+                                                 num_classes=3,
+                                                 lstm_size=16,
+                                                 dnn_size=4,
+                                                 atomizer=atomizer)
 
 
 def test_LstmReachabilityModel_TrainAndEvaluate_smoke_test(
     df: pd.DataFrame, tempdir: pathlib.Path):
   """Test that training doesn't blow up."""
-  model = lstm_reachability_model.LstmReachabilityModel(
-      df, tempdir, num_classes=2, lstm_size=8, dnn_size=4)
+  model = lstm_reachability_model.LstmReachabilityModel(df,
+                                                        tempdir,
+                                                        num_classes=2,
+                                                        lstm_size=8,
+                                                        dnn_size=4)
   model.TrainAndEvaluate(num_epochs=2)
 
 
 def test_ZeroRReachabilityModel_TrainAndEvaluate_smoke_test(
     df: pd.DataFrame, tempdir: pathlib.Path):
   """Test that training doesn't blow up."""
-  model = lstm_reachability_model.ZeroRReachabilityModel(
-      df, tempdir, num_classes=2)
+  model = lstm_reachability_model.ZeroRReachabilityModel(df,
+                                                         tempdir,
+                                                         num_classes=2)
   acc, solved = model.TrainAndEvaluate(num_epochs=None)
 
   # In our fixture df, training == test graph, so ZeroR learns on the graph that

@@ -1,12 +1,11 @@
 """Unit tests for //deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util."""
-
 import pyparsing
 import pytest
+from labm8 import app
+from labm8 import test
 
 from compilers.llvm import opt
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import test
 
 FLAGS = app.FLAGS
 
