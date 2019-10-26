@@ -27,7 +27,7 @@ app.DEFINE_integer(
     'from training/validation/test files. Note this still requires reading '
     'the entirety of the file contents into memory.')
 app.DEFINE_boolean(
-    'limit_data_flow_max_steps_required_to_message_passing_steps', False,
+    'limit_data_flow_max_steps_required_to_message_passing_steps', True,
     'If true, limit the graphs loaded to those that require fewer data flow '
     'steps than the number of message passing steps. E.g. with '
     '--layer_timesteps=2,2,2, only graphs where data_flow_max_steps_required '
