@@ -208,18 +208,8 @@ class GraphBatcher(object):
       # Add features and labels.
 
       if 'node_x' in batch:
-        # TODO(cec): Specialized to GGNN.
-        #
-        # Pad node feature vector of size <= hidden_size up to hidden_size so
-        # that the size matches embedding dimensionality.
-        padded_features = np.pad(
-            graph_dict["node_x"],
-            ((0, 0),
-             (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
-            "constant",
-        )
         # Shape: [graph.node_count, node_features_dimensionality]
-        batch['node_x'].extend(padded_features)
+        batch['node_x'].extend(graph_dict['node_x'])
 
       if 'node_y' in batch:
         # Shape: [graph.node_count, node_labels_dimensionality]
