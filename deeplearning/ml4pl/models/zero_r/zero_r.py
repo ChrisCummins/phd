@@ -1,7 +1,6 @@
 """A Zero-R baseline classifier."""
 
 import numpy as np
-import scipy.stats
 import typing
 
 from deeplearning.ml4pl.models import classifier_base
@@ -20,9 +19,7 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
 
   def __init__(self, *args):
     super(ZeroRNodeClassifier, self).__init__(*args)
-    # The one-hot prediction.
-    self.r = np.zeros(self.labels_dimensionality)
-    self.r[0] = 1
+    self.class_counts = np.zeros(self.labels_dimensionality, dtype=np.int32)
 
   def MakeMinibatchIterator(
       self, epoch_type: str
@@ -38,21 +35,27 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
 
   def RunMinibatch(self, epoch_type: str, targets: np.array
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
-    # "Training" step selects the most frequent label from the training set.
+    # "Training" step updates the class frequence counts.
     if epoch_type == "train":
-      self.r = scipy.stats.mode(targets)[0]
+      y_true = np.argmax(targets, axis=1)
+      freqs = np.bincount(y_true)
+      for i, n in enumerate(freqs):
+        self.class_counts[i] += n
 
-    n = len(targets)
+    # The 1-hot predicted value.
+    pred = np.zeros(self.labels_dimensionality, dtype=np.int32)
+    pred[np.argmax(self.class_counts)] = 1
+
     return self.MinibatchResults(loss=0,
                                  y_true_1hot=targets,
-                                 y_pred_1hot=np.tile(self.r, n).reshape(
+                                 y_pred_1hot=np.tile(pred, n).reshape(
                                      n, self.labels_dimensionality))
 
   def ModelDataToSave(self) -> typing.Any:
-    return self.r
+    return self.class_counts
 
   def LoadModelData(self, data_to_load: typing.Any) -> None:
-    self.r = data_to_load
+    self.class_counts = data_to_load
 
 
 def main():

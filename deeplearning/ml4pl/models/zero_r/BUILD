@@ -9,6 +9,5 @@ py_binary(
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
         "//third_party/py/numpy",
-        "//third_party/py/scipy",
     ],
 )
