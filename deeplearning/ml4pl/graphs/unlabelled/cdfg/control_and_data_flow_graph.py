@@ -32,9 +32,9 @@ def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
       f"Unable to find `alloca` statement for identifier `{identifier}`")
 
 
-def GetLlvmStatementDestinationAndOperands(
-    statement: str, store_destination_is_output: bool = True
-) -> typing.Tuple[str, typing.List[str]]:
+def GetLlvmStatementDefAndUses(statement: str,
+                               store_destination_is_output: bool = True
+                              ) -> typing.Tuple[str, typing.List[str]]:
   """Get the destination identifier for an LLVM statement (if any), and a list
   of operand identifiers (if any).
   """
@@ -241,16 +241,14 @@ class ControlAndDataFlowGraphBuilder(object):
     for node in nodes_to_remove:
       in_edges = g.in_edges(node)
       out_edges = g.out_edges(node)
-      in_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: src)
-      out_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: dst)
+      in_nodes = iterators.SuccessorNodes(g,
+                                          node,
+                                          ignored_nodes=nodes_to_remove,
+                                          direction=lambda src, dst: src)
+      out_nodes = iterators.SuccessorNodes(g,
+                                           node,
+                                           ignored_nodes=nodes_to_remove,
+                                           direction=lambda src, dst: dst)
 
       for edge in in_edges:
         edges_to_remove.add(edge)
@@ -320,11 +318,10 @@ class ControlAndDataFlowGraphBuilder(object):
     edges_to_add: typing.List[typing.Tuple[str, str, str]] = []
 
     for statement, data in iterators.StatementNodeIterator(g):
-      destination, operands = GetLlvmStatementDestinationAndOperands(
-          data['text'])
+      destination, operands = GetLlvmStatementDefAndUses(data['text'])
       if destination:  # Data flow out edge.
-        edges_to_add.append((statement, prefix(destination),
-                             prefix(destination)))
+        edges_to_add.append(
+            (statement, prefix(destination), prefix(destination)))
       for identifier in operands:  # Data flow in edge.
         edges_to_add.append((prefix(identifier), statement, prefix(identifier)))
 
@@ -457,11 +454,10 @@ class ControlAndDataFlowGraphBuilder(object):
     else:
       get_call_site_successor = lambda g, n: n
 
-    AddInterproceduralCallEdges(
-        interprocedural_graph,
-        call_graph,
-        function_entry_exit_nodes,
-        get_call_site_successor=get_call_site_successor)
+    AddInterproceduralCallEdges(interprocedural_graph,
+                                call_graph,
+                                function_entry_exit_nodes,
+                                get_call_site_successor=get_call_site_successor)
 
     return interprocedural_graph
 
