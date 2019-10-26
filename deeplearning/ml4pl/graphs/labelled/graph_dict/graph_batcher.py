@@ -94,7 +94,7 @@ class GraphBatcher(object):
         filters=filters,
         order_by_random=True,
         eager_graph_loading=True,
-        buffer_size=min(512, FLAGS.batch_size // 10),
+        buffer_size=max(min(64, FLAGS.batch_size // 100), 16),
         limit=FLAGS.max_instance_count)
 
     # Batch creation outer-loop.
