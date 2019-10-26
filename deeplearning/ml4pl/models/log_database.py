@@ -153,6 +153,7 @@ class Database(sqlutil.Database):
       q = session.query(
           BatchLog.epoch,
           BatchLog.group,
+          sql.func.min(BatchLog.timestamp).label('timestamp'),
           sql.func.min(BatchLog.global_step).label("global_step"),
           sql.func.avg(BatchLog.loss).label("loss"),
           sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
@@ -179,7 +180,11 @@ class Database(sqlutil.Database):
 
       q = q.order_by(BatchLog.epoch, BatchLog.group)
 
-      return pdutil.QueryToDataFrame(session, q)
+      df = pdutil.QueryToDataFrame(session, q)
+
+      df['reltime'] = [t - df['timestamp'][0] for t in df['timestamp']]
+
+      return df
 
   def ParametersToDataFrame(self, run_id: str, type: str):
     """Return a table of parameters of the given type for the specified run.
