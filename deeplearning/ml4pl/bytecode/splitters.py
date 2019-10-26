@@ -64,14 +64,14 @@ def GetTrainValTestGroups(
       .order_by(db.Random())
     ids = [r[0] for r in q]
 
-  return ApplySplitSizeLimit({
+  return {
       'train':
       ids[:train_val_test_counts[0]] + poj104['train'],
       'val': (ids[train_val_test_counts[0]:sum(train_val_test_counts[:2])] +
               poj104['val']),
       'test':
       ids[sum(train_val_test_counts[:2]):] + poj104['test'],
-  })
+  }
 
 
 def GetPoj104BytecodeGroups(db: bytecode_database.Database,
@@ -87,11 +87,11 @@ def GetPoj104BytecodeGroups(db: bytecode_database.Database,
   train = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:train'
   test = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:test'
   val = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:val'
-  return ApplySplitSizeLimit({
+  return {
       "train": GetBytecodeIds(train),
       "val": GetBytecodeIds(val),
       "test": GetBytecodeIds(test),
-  })
+  }
 
 
 def ApplySplitSizeLimit(groups: typing.Dict[str, typing.List[int]]):
@@ -130,6 +130,7 @@ def GetGroupsFromFlags(
   with prof.Profile(f'Read {FLAGS.bytecode_split_type} groups from database'):
     train_val_test_ratio = [float(x) for x in FLAGS.train_val_test_ratio]
     if FLAGS.bytecode_split_type == 'all':
-      return GetTrainValTestGroups(db, train_val_test_ratio)
+      return ApplySplitSizeLimit(GetTrainValTestGroups(db,
+                                                       train_val_test_ratio))
     elif FLAGS.bytecode_split_type == 'poj104':
-      return GetPoj104BytecodeGroups(db)
+      return ApplySplitSizeLimit(GetPoj104BytecodeGroups(db))
