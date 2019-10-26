@@ -6,9 +6,8 @@ through bazel.
 from __future__ import print_function
 
 import os
-import sys
-
 import subprocess
+import sys
 import threading
 
 # The path to the root of the PhD repository, i.e. the directory which this file
@@ -49,6 +48,7 @@ JSBEAUTIFY = WhichOrDie('js-beautify')
 JSON_LINT = WhichOrDie('jsonlint')
 SQLFORMAT = WhichOrDie('sqlformat')
 YAPF = WhichOrDie('yapf')
+REORDER_PYTHON_IMPORTS = WhichOrDie('reorder-python-imports')
 
 YAPF_RC = os.path.join(_PHD_ROOT, 'tools/code_style/yapf.yml')
 assert os.path.isfile(YAPF_RC)
@@ -146,10 +146,12 @@ class ClangFormatThread(LinterThread):
     ExecOrDie([CLANG_FORMAT, '-style', 'Google', '-i'] + self._paths)
 
 
-class YapfThread(LinterThread):
+class PythonThread(LinterThread):
 
   def run(self):
     ExecOrDie([YAPF, '--style', YAPF_RC, '-i'] + self._paths)
+    ExecOrDie([REORDER_PYTHON_IMPORTS, '--exit-zero-even-if-changed'] +
+              self._paths)
 
 
 class SqlFormat(LinterThread):
@@ -202,7 +204,7 @@ class LinterActions(object):
     self._paths = paths
     self._buildifier = []
     self._clang_format = []
-    self._yapf = []
+    self._python = []
     self._sqlformat = []
     self._jsbeautify = []
     self._gofmt = []
@@ -220,7 +222,7 @@ class LinterActions(object):
       if extension == '.cc' or extension == '.c' or extension == '.h' or extension == '.ino':
         self._clang_format.append(path)
       elif extension == '.py' or extension == '.bzl':
-        self._yapf.append(path)
+        self._python.append(path)
       elif extension == '.sql':
         self._sqlformat.append(path)
       elif extension == '.html' or extension == '.css' or extension == '.js':
@@ -238,7 +240,7 @@ class LinterActions(object):
 
   @property
   def paths_with_actions(self):
-    return (self._buildifier + self._clang_format + self._yapf +
+    return (self._buildifier + self._clang_format + self._python +
             self._sqlformat + self._jsbeautify + self._gofmt + self._java +
             self._json)
 
@@ -253,8 +255,8 @@ class LinterActions(object):
       linter_threads.append(BuildiferThread(self._buildifier))
     if self._clang_format:
       linter_threads.append(ClangFormatThread(self._clang_format))
-    if self._yapf:
-      linter_threads.append(YapfThread(self._yapf))
+    if self._python:
+      linter_threads.append(PythonThread(self._python))
     if self._sqlformat:
       linter_threads.append(SqlFormat(self._sqlformat))
     if self._jsbeautify:

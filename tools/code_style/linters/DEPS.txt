@@ -7,7 +7,8 @@ macos: brew install buildifier
 linux: sudo apt install -y --no-install-recommends clang-format
 macos: brew install clang-format
 # For linting Python files.
-all: python -m pip install yapf
+all: python -m pip install 'yapf==0.28.0'
+all: python -m pip install reorder-python-imports
 # For linting SQL files.
 all: python -m pip install sqlparse
 # For linting Protobuf files.
