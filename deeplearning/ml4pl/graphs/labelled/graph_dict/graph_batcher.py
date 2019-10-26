@@ -39,6 +39,8 @@ app.DEFINE_boolean(
     'with --layer_timesteps=2,2,2, only graphs where '
     'data_flow_max_steps_required == 6 will be used.')
 
+GraphBatch = typing.Dict[str, typing.Union[int, np.array]]
+
 
 class GraphBatcher(object):
   """A generalised graph batcher which flattens adjacency matrices into a single
@@ -82,9 +84,7 @@ class GraphBatcher(object):
       num_rows = q.one()[0]
     return num_rows
 
-  def MakeGroupBatchIterator(
-      self, group: str
-  ) -> typing.Iterable[typing.Dict[str, typing.Union[int, np.array]]]:
+  def MakeGroupBatchIterator(self, group: str) -> typing.Iterable[GraphBatch]:
     """Make a batch iterator over the given group."""
     filters = self._GetFilters()
     filters.append(lambda: graph_database.GraphMeta.group == group)
