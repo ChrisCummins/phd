@@ -46,10 +46,11 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
     pred = np.zeros(self.labels_dimensionality, dtype=np.int32)
     pred[np.argmax(self.class_counts)] = 1
 
-    return self.MinibatchResults(loss=0,
-                                 y_true_1hot=targets,
-                                 y_pred_1hot=np.tile(pred, n).reshape(
-                                     n, self.labels_dimensionality))
+    return self.MinibatchResults(
+        loss=0,
+        y_true_1hot=targets,
+        y_pred_1hot=np.tile(pred, len(targets)).reshape(
+            len(targets), self.labels_dimensionality))
 
   def ModelDataToSave(self) -> typing.Any:
     return self.class_counts
