@@ -282,29 +282,3 @@ def RunWithFetchDict(sess: tf.Session, fetch_dict: typing.Dict[str, tf.Tensor],
   fetch_dict_values = [fetch_dict[k] for k in fetch_dict_keys]
   values = sess.run(fetch_dict_values, feed_dict)
   return {fetch: value for fetch, value in zip(fetch_dict_keys, values)}
-
-
-def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
-  """Build a confusion matrix.
-
-  Args:
-    targets: A list of 1-hot vectors with shape [num_instances,num_classes].
-    predictions: A list of 1-hot vectors with shape [num_instances,num_classes].
-
-  Returns:
-    A pickled confusion matrix, which is a matrix of shape
-    [num_classes, num_classes] where the rows indicate true target class,
-    the columns indicate predicted target class, and the element values are
-    the number of instances of this type in the batch.
-  """
-  num_classes = len(targets[0])
-
-  # Convert 1-hot vectors to dense lists of integers.
-  targets = np.argmax(targets, axis=1)
-  predictions = np.argmax(predictions, axis=1)
-
-  confusion_matrix = np.zeros((num_classes, num_classes), dtype=np.int32)
-  for target, prediction in zip(targets, predictions):
-    confusion_matrix[target][prediction] += 1
-
-  return confusion_matrix

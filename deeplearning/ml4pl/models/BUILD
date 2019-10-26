@@ -24,6 +24,36 @@ py_library(
 )
 
 py_library(
+    name = "log_analysis",
+    srcs = ["log_analysis.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":log_database",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/labelled/graph_dict:graph_batcher",
+        "//labm8:app",
+        "//labm8:decorators",
+        "//labm8:labtypes",
+        "//labm8:prof",
+        "//third_party/py/networkx",
+        "//third_party/py/numpy",
+        "//third_party/py/pandas",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_test(
+    name = "log_analysis_test",
+    srcs = ["log_analysis_test.py"],
+    deps = [
+        ":log_analysis",
+        "//labm8:app",
+        "//labm8:test",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_library(
     name = "log_database",
     srcs = ["log_database.py"],
     visibility = ["//visibility:public"],
