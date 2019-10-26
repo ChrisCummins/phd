@@ -9,7 +9,6 @@ from labm8 import decorators
 from labm8 import humanize
 from labm8 import prof
 
-
 FLAGS = app.FLAGS
 
 
@@ -74,7 +73,7 @@ class GraphDatabaseStats(object):
 
   def __repr__(self):
     summaries = [
-        f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
+        f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
         humanize.Plural(self.edge_type_count, 'edge type'),
     ]
     if self.node_features_dimensionality:
@@ -93,8 +92,8 @@ class GraphDatabaseStats(object):
       summaries.append(
           humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
     summaries += [
-      f"max {humanize.Plural(self.max_node_count, 'node')}",
-      f"max {humanize.Plural(self.max_edge_count, 'edge')}",
+        f"max {humanize.Plural(self.max_node_count, 'node', commas=True)}",
+        f"max {humanize.Plural(self.max_edge_count, 'edge', commas=True)}",
     ]
     return ", ".join(summaries)
 
@@ -209,8 +208,8 @@ class GraphDictDatabaseStats(GraphDatabaseStats):
 
   def __repr__(self):
     summaries = [
-      f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
-      humanize.Plural(self.edge_type_count, 'edge type'),
+        f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
+        humanize.Plural(self.edge_type_count, 'edge type'),
     ]
     if self.node_features_dimensionality:
       summaries.append(
@@ -240,7 +239,7 @@ class GraphDictDatabaseStats(GraphDatabaseStats):
       summaries.append(
           humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
     summaries += [
-      f"max {humanize.Plural(self.max_node_count, 'node')}",
-      f"max {humanize.Plural(self.max_edge_count, 'edge')}",
+        f"max {humanize.Plural(self.max_node_count, 'node')}",
+        f"max {humanize.Plural(self.max_edge_count, 'edge')}",
     ]
     return ", ".join(summaries)
