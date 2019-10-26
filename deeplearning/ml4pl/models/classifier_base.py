@@ -146,6 +146,7 @@ class ClassifierBase(object):
     np.random.seed(FLAGS.random_seed)
 
     # Progress counters. These are saved and restored from file.
+    self.epoch_num = 1
     self.global_training_step = 0
     self.best_epoch_validation_accuracy = 0
     self.best_epoch_num = 0
@@ -164,7 +165,7 @@ class ClassifierBase(object):
   def labels(self):
     return np.arange(self.labels_dimensionality, dtype=np.int32)
 
-  def RunEpoch(self, epoch_num: int, epoch_type: str) -> float:
+  def RunEpoch(self, epoch_type: str) -> float:
     assert epoch_type in {"train", "val", "test"}
     epoch_accuracies = []
 
@@ -179,7 +180,7 @@ class ClassifierBase(object):
 
       batch_start_time = time.time()
       self.global_training_step += 1
-      log.epoch = epoch_num
+      log.epoch = self.epoch_num
       log.batch = step + 1
       log.global_step = self.global_training_step
       log.run_id = self.run_id
@@ -229,10 +230,11 @@ class ClassifierBase(object):
     return np.mean(epoch_accuracies)
 
   def Train(self):
-    for epoch_num in range(1, FLAGS.num_epochs + 1):
+    for epoch_num in range(self.epoch_num, FLAGS.num_epochs + 1):
+      self.epoch_num = epoch_num
       epoch_start_time = time.time()
-      self.RunEpoch(epoch_num, "train")
-      val_acc = self.RunEpoch(epoch_num, "val")
+      self.RunEpoch("train")
+      val_acc = self.RunEpoch("val")
       app.Log(1, "Epoch %s completed in %s. Validation "
               "accuracy: %.2f%%", epoch_num,
               humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
@@ -257,7 +259,7 @@ class ClassifierBase(object):
 
         # Run on test set.
         if FLAGS.test_on_improvement:
-          test_acc = self.RunEpoch(epoch_num, "test")
+          test_acc = self.RunEpoch("test")
           app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
                   test_acc * 100)
       elif epoch_num - self.best_epoch_num >= FLAGS.patience:
@@ -282,6 +284,7 @@ class ClassifierBase(object):
         "model_flags": self._ModelFlagsToDict(),
         "modeL_data": self.ModelDataToSave(),
         "build_info": pbutil.ToJson(build_info.GetBuildInfo()),
+        "epoch_num": self.epoch_num,
         "global_training_step": self.global_training_step,
         "best_epoch_validation_accuracy": self.best_epoch_validation_accuracy,
         "best_epoch_num": self.best_epoch_num,
@@ -330,6 +333,7 @@ class ClassifierBase(object):
         data_to_load = pickle.load(in_file)
 
     # Restore progress counters.
+    self.epoch_num = data_to_load.get('epoch_num', 0)
     self.global_training_step = data_to_load.get("global_training_step", 0)
     self.best_epoch_validation_accuracy = data_to_load.get(
         "best_epoch_validation_accuracy", 0)
