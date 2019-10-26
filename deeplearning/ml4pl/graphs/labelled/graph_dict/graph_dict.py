@@ -197,7 +197,7 @@ def IncomingEdgeCountsToDense(
 def GraphDictToNetworkx(graph_dict: GraphDict) -> nx.MultiDiGraph:
   """Construct a networkx graph from a graph dict.
 
-  Use this function for producing interpretible representation of graph_dicts,
+  Use this function for producing interpretable representation of graph_dicts,
   but note that this is not an inverse of the ToGraphDict() function, since
   critical information is lost, e.g. the mapping from edge flow types to numeric
   ID. the name of feature and label attributes, etc.
@@ -229,7 +229,6 @@ def GraphDictToNetworkx(graph_dict: GraphDict) -> nx.MultiDiGraph:
 
   # Add the edges and their properties to the graph.
   for edge_dict in flattened_edge_dicts:
-    print("EDGE", edge_dict)
     src, dst = edge_dict['src'], edge_dict['dst']
     del edge_dict['src']
     del edge_dict['dst']
