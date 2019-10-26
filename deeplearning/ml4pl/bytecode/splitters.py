@@ -1,5 +1,6 @@
 """Module for splitting bytecode dataset into groups."""
 import numpy as np
+import random
 import sqlalchemy as sql
 import typing
 
@@ -14,12 +15,16 @@ app.DEFINE_list('train_val_test_ratio', [3, 1, 1],
                 'The ratio of training to validation to test dataset sizes.')
 app.DEFINE_string('bytecode_split_type', 'all',
                   'The name of the bytecode dataset split to use.')
+app.DEFINE_integer(
+    'max_bytecode_split_size', 0,
+    'The maximum number of bytecodes to include in a splt. If '
+    '0, there is no limit.')
 
 
-def GetTrainValTestGroups(db: bytecode_database.Database,
-                          train_val_test_ratio: typing.Iterable[float] = (3, 1,
-                                                                          1)
-                         ) -> typing.Dict[str, typing.List[int]]:
+def GetTrainValTestGroups(
+    db: bytecode_database.Database,
+    train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
+) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
 
   This concatenates the POJ-104 sources with the other sources split into
@@ -59,14 +64,14 @@ def GetTrainValTestGroups(db: bytecode_database.Database,
       .order_by(db.Random())
     ids = [r[0] for r in q]
 
-  return {
+  return ApplySplitSizeLimit({
       'train':
       ids[:train_val_test_counts[0]] + poj104['train'],
       'val': (ids[train_val_test_counts[0]:sum(train_val_test_counts[:2])] +
               poj104['val']),
       'test':
       ids[sum(train_val_test_counts[:2]):] + poj104['test'],
-  }
+  })
 
 
 def GetPoj104BytecodeGroups(db: bytecode_database.Database,
@@ -82,11 +87,30 @@ def GetPoj104BytecodeGroups(db: bytecode_database.Database,
   train = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:train'
   test = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:test'
   val = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:val'
-  return {
+  return ApplySplitSizeLimit({
       "train": GetBytecodeIds(train),
       "val": GetBytecodeIds(val),
       "test": GetBytecodeIds(test),
-  }
+  })
+
+
+def ApplySplitSizeLimit(groups: typing.Dict[str, typing.List[int]]):
+  """Limit the size of ID lists per group if --max_bytecode_split_size > 0.
+
+  Ags:
+    groups: A mapping of group name to IDs.
+
+  Returns:
+    The groups dictionary, where each ID list has been limited to
+    --max_bytecode_split_size elements, if --max_bytecode_split_size > 0. Else,
+    the groups are returned unmodified.
+  """
+  if FLAGS.max_bytecode_split_size:
+    for group in groups:
+      random.shuffle(groups[group])
+      groups[group] = groups[group][:FLAGS.max_bytecode_split_size]
+
+  return groups
 
 
 def GetGroupsFromFlags(
