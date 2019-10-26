@@ -88,13 +88,14 @@ class GraphDatabaseStats(object):
       summaries.append(f"{self.edge_labels_dimensionality}-d edge labels")
     if self.graph_labels_dimensionality:
       summaries.append(f"{self.graph_labels_dimensionality}-d graph labels")
-    if self.data_flow_max_steps_required:
-      summaries.append(
-          humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
     summaries += [
         f"max {humanize.Plural(self.max_node_count, 'node', commas=True)}",
         f"max {humanize.Plural(self.max_edge_count, 'edge', commas=True)}",
     ]
+    if self.data_flow_max_steps_required:
+      summaries.append(
+          f"max {humanize.Plural(self.data_flow_max_steps_required, 'data flow step')}"
+      )
     return ", ".join(summaries)
 
   @decorators.memoized_property
