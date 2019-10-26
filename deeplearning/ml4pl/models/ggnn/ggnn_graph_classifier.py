@@ -13,12 +13,6 @@ FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
 #
-app.DEFINE_integer(
-    'max_instance_count', None,
-    'A debugging option. Use this to set the maximum number of instances used '
-    'from training/validation/test files. Note this still requires reading '
-    'the entirety of the file contents into memory.')
-
 app.DEFINE_string("graph_rnn_cell", "GRU",
                   "The RNN cell type. One of {GRU,CudnnCompatibleGRUCell,RNN}")
 ggnn.MODEL_FLAGS.add("graph_rnn_cell")

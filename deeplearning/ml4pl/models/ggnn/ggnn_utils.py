@@ -1,8 +1,6 @@
 """Utilities for working with GGNNs."""
 import numpy as np
-import queue
 import tensorflow as tf
-import threading
 import typing
 
 from deeplearning.ml4pl.graphs import graph_database_stats
@@ -15,37 +13,13 @@ SMALL_NUMBER = 1e-7
 
 def glorot_init(shape):
   initialization_range = np.sqrt(6.0 / (shape[-2] + shape[-1]))
-  return np.random.uniform(
-      low=-initialization_range, high=initialization_range,
-      size=shape).astype(np.float32)
+  return np.random.uniform(low=-initialization_range,
+                           high=initialization_range,
+                           size=shape).astype(np.float32)
 
 
 def uniform_init(shape):
   return np.random.uniform(low=-1.0, high=1, size=shape).astype(np.float32)
-
-
-class ThreadedIterator:
-  """An iterator object that computes its elements in a parallel thread to be ready to be consumed.
-  The iterator should *not* return None"""
-
-  def __init__(self, original_iterator, max_queue_size: int = 2):
-    self.__queue = queue.Queue(maxsize=max_queue_size)
-    self.__thread = threading.Thread(
-        target=lambda: self.worker(original_iterator))
-    self.__thread.start()
-
-  def worker(self, original_iterator):
-    for element in original_iterator:
-      assert element is not None, 'By convention, iterator elements much not be None'
-      self.__queue.put(element, block=True)
-    self.__queue.put(None, block=True)
-
-  def __iter__(self):
-    next_element = self.__queue.get(block=True)
-    while next_element is not None:
-      yield next_element
-      next_element = self.__queue.get(block=True)
-    self.__thread.join()
 
 
 class MLP(object):
@@ -74,8 +48,8 @@ class MLP(object):
         for (i, s) in enumerate(weight_sizes)
     ]
     biases = [
-        tf.Variable(
-            np.zeros(s[-1]).astype(np.float32), name='MLP_b_layer%i' % i)
+        tf.Variable(np.zeros(s[-1]).astype(np.float32),
+                    name='MLP_b_layer%i' % i)
         for (i, s) in enumerate(weight_sizes)
     ]
 
@@ -125,8 +99,9 @@ def BuildRnnCell(cell_type: str,
 
   cell_type = cell_type.lower()
   if cell_type == "gru":
-    return tf.nn.rnn_cell.GRUCell(
-        hidden_size, activation=activation_function, name=name)
+    return tf.nn.rnn_cell.GRUCell(hidden_size,
+                                  activation=activation_function,
+                                  name=name)
   elif cell_type == "cudnncompatiblegrucell":
     import tensorflow.contrib.cudnn_rnn as cudnn_rnn
     if activation_function != tf.nn.tanh:
@@ -134,8 +109,9 @@ def BuildRnnCell(cell_type: str,
           "cudnncompatiblegrucell must be used with tanh activation")
     return cudnn_rnn.CudnnCompatibleGRUCell(hidden_size, name=name)
   elif cell_type == "rnn":
-    return tf.nn.rnn_cell.BasicRNNCell(
-        hidden_size, activation=activation_function, name=name)
+    return tf.nn.rnn_cell.BasicRNNCell(hidden_size,
+                                       activation=activation_function,
+                                       name=name)
   else:
     raise ValueError(f"Unknown RNN cell type '{name}'.")
 
@@ -161,9 +137,8 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
           for i in range(stats.edge_type_count)
       ],
       'incoming_edge_counts':
-      tf.placeholder(
-          tf.float32, [None, stats.edge_type_count],
-          name="incoming_edge_counts"),
+      tf.placeholder(tf.float32, [None, stats.edge_type_count],
+                     name="incoming_edge_counts"),
       'graph_nodes_list':
       tf.placeholder(tf.int32, [None], name="graph_nodes_list"),
       # Dropouts:
@@ -190,17 +165,18 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
 
   if stats.edge_features_dimensionality:
     placeholders['edge_x'] = [
-        tf.placeholder(
-            stats.edge_features_dtype,
-            [None, stats.edge_features_dimensionality],
-            name=f"edge_x_e{i}") for i in range(stats.edge_type_count)
+        tf.placeholder(stats.edge_features_dtype,
+                       [None, stats.edge_features_dimensionality],
+                       name=f"edge_x_e{i}")
+        for i in range(stats.edge_type_count)
     ]
 
   if stats.edge_labels_dimensionality:
     placeholders['edge_x'] = [
-        tf.placeholder(
-            stats.edge_labels_dtype, [None, stats.edge_features_dimensionality],
-            name=f"edge_x_e{i}") for i in range(stats.edge_type_count)
+        tf.placeholder(stats.edge_labels_dtype,
+                       [None, stats.edge_features_dimensionality],
+                       name=f"edge_x_e{i}")
+        for i in range(stats.edge_type_count)
     ]
 
   if stats.graph_features_dimensionality:

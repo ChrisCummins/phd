@@ -5,18 +5,12 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":ggnn_utils",
-        ":graph_batcher",
-        "//:build_info",
-        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/models:classifier_base",
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
-        "//labm8:bazelutil",
         "//labm8:humanize",
-        "//labm8:jsonutil",
         "//labm8:prof",
-        "//labm8:system",
         "//third_party/py/numpy",
-        "//third_party/py/scikit_learn",
         "//third_party/py/tensorflow",
     ],
 )
@@ -57,6 +51,7 @@ py_binary(
         ":ggnn_utils",
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
+        "//labm8:prof",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
     ],
@@ -82,23 +77,5 @@ py_test(
         "//labm8:app",
         "//labm8:test",
         "//third_party/py/numpy",
-    ],
-)
-
-py_library(
-    name = "graph_batcher",
-    srcs = ["graph_batcher.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs:graph_database_reader",
-        "//deeplearning/ml4pl/graphs:graph_database_stats",
-        "//deeplearning/ml4pl/graphs/labelled/graph_dict",
-        "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:prof",
-        "//third_party/py/numpy",
-        "//third_party/py/sqlalchemy",
     ],
 )

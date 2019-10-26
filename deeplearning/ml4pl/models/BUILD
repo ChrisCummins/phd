@@ -1,6 +1,28 @@
 # Machine learning models.
 
 py_library(
+    name = "classifier_base",
+    srcs = ["classifier_base.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:build_info",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/labelled/graph_dict:graph_batcher",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:decorators",
+        "//labm8:humanize",
+        "//labm8:jsonutil",
+        "//labm8:ppar",
+        "//labm8:prof",
+        "//labm8:system",
+        "//third_party/py/numpy",
+        "//third_party/py/scikit_learn",
+    ],
+)
+
+py_library(
     name = "log_database",
     srcs = ["log_database.py"],
     visibility = ["//visibility:public"],

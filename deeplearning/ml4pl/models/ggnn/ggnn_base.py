@@ -1,26 +1,16 @@
 """Base class for implementing gated graph neural networks."""
-import time
 
 import numpy as np
-import pathlib
 import pickle
-import random
-import sklearn.metrics
 import tensorflow as tf
 import typing
 
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
-from deeplearning.ml4pl.models.ggnn import graph_batcher
 from labm8 import app
-from labm8 import bazelutil
 from labm8 import humanize
-from labm8 import jsonutil
-from labm8 import pbutil
 from labm8 import prof
-from labm8 import system
 
 FLAGS = app.FLAGS
 
@@ -29,37 +19,19 @@ FLAGS = app.FLAGS
 # Some of these flags define parameters which must be equal when restoring from
 # file, such as the hidden layer sizes. Other parameters may change between
 # runs of the same model, such as the input data batch size. To accomodate for
-# this, models have a GetModelFlagNames() method which returns the list of flags
+# this, a ClassifierBase.GetModelFlagNames() method returns the list of flags
 # which must be consistent between runs of the same model.
 #
 # For the sake of readability, these important model flags are saved into a
-# global set here, so that the declaration of model flags is local to the
-# declaration of the flag.
-MODEL_FLAGS = set()
-
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/ggnn/',
-                       'The directory to write files to.',
-                       is_dir=True)
-
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
-
-app.DEFINE_database('log_db', log_database.Database, None,
-                    'The database to write logs to.')
-
-app.DEFINE_integer("random_seed", 42, "A random seed value.")
-
+# global set classifier_base.MODEL_FLAGS here, so that the declaration of model
+# flags is local to the declaration of the flag.
 app.DEFINE_list('layer_timesteps', ['2', '2', '2'],
                 'A list of layers, and the number of steps for each layer.')
 # Note that although layer_timesteps is a model flag, there is special handling
 # that permits the number of steps in each layer to differ when loading models.
 # This is to permit testing a model with a larger number of timesteps than it
 # was trained for.
-MODEL_FLAGS.add("layer_timesteps")
+classifier_base.MODEL_FLAGS.add("layer_timesteps")
 
 app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
 
@@ -69,43 +41,23 @@ app.DEFINE_integer(
     "accuracy before stopping.")
 
 app.DEFINE_float("learning_rate", 0.001, "The initial learning rate.")
-MODEL_FLAGS.add("learning_rate")
+classifier_base.MODEL_FLAGS.add("learning_rate")
 
 # TODO(cec): Poorly understood:
 app.DEFINE_float("clamp_gradient_norm", 1.0, "Clip gradients to L-2 norm.")
-MODEL_FLAGS.add("clamp_gradient_norm")
+classifier_base.MODEL_FLAGS.add("clamp_gradient_norm")
 
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
-MODEL_FLAGS.add("hidden_size")
+classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_string(
     "embeddings", "inst2vec",
     "The type of embeddings to use. One of: {inst2vec,finetune,random}.")
-MODEL_FLAGS.add("embeddings")
-
-app.DEFINE_string(
-    'batch_scores_averaging_method', 'weighted',
-    'Selects the averaging method to use when computing recall/precision/F1 '
-    'scores. See <https://scikit-learn.org/stable/modules/generated/sklearn'
-    '.metrics.f1_score.html>')
-MODEL_FLAGS.add("batch_scores_averaging_method")
-
-app.DEFINE_input_path(
-    "embedding_path",
-    bazelutil.DataPath('phd/deeplearning/ncc/published_results/emb.p'),
-    "The path of the embeddings file to use.")
+classifier_base.MODEL_FLAGS.add("embeddings")
 
 app.DEFINE_boolean(
     "tensorboard_logging", True,
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
-
-app.DEFINE_boolean(
-    "test_on_improvement", True,
-    "If true, test model accuracy on test data when the validation accuracy "
-    "improves.")
-
-app.DEFINE_input_path("restore_model", None,
-                      "An optional file to restore the model from.")
 
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
@@ -116,70 +68,22 @@ app.DEFINE_boolean("freeze_graph_model", False, "???")
 FeedDict = typing.Dict[str, typing.Any]
 
 
-class GgnnBaseModel(object):
+class GgnnBaseModel(classifier_base.ClassifierBase):
   """Abstract base class for implementing gated graph neural networks.
 
   Subclasses must provide implementations of
-  MakeLossAndAccuracyAndPredictionOps() and MakeMinibatchIterator().
+  MakeLossAndAccuracyAndPredictionOps().
   """
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     raise NotImplementedError("abstract class")
 
-  def MakeMinibatchIterator(
-      self, epoch_type: str
-  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, FeedDict]]:
-    """Create and return an iterator over mini-batches of data.
-
-    Args:
-      epoch_type: The type of epoch to return mini-batches for.
-
-    Returns:
-      An iterator of mini-batches, where each mini-batch is a tuple of a list
-      of GraphMeta.ids, and a feed dict to be fed to tf.Session.run().
-    """
-    raise NotImplementedError("abstract class")
-
-  def GetModelFlagNames(self) -> typing.Iterable[str]:
-    """Subclasses may extend this method to mark additional flags as important."""
-    return MODEL_FLAGS
-
-  def __init__(self, db: graph_database.Database,
-               log_db: log_database.Database):
+  def __init__(self, *args):
     """Constructor."""
-    self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
-                        f"{system.HOSTNAME}")
+    super(GgnnBaseModel, self).__init__(*args)
 
-    self.batcher = graph_batcher.GraphBatcher(
-        db, message_passing_step_count=self.layer_timesteps.sum())
-    self.stats = self.batcher.stats
-    app.Log(1, "%s", self.stats)
-
-    self.working_dir = FLAGS.working_dir
-    self.best_model_file = self.working_dir / f'{self.run_id}.best_model.pickle'
-    self.working_dir.mkdir(exist_ok=True, parents=True)
-
-    # Write app.Log() calls to file. To also log to stderr, use flag
-    # --alsologtostderr.
-    app.Log(
-        1, 'Writing logs to `%s`. Unless --alsologtostderr flag is set, '
-        'this is the last message you will see', self.working_dir)
-    app.LogToDirectory(self.working_dir, self.run_id)
-
-    self.log_db = log_db
-    app.Log(1, 'Writing batch logs to `%s`', self.log_db.url)
-    self._CreateExperimentalParameters()
-
-    app.Log(1, "Build information: %s",
-            jsonutil.format_json(pbutil.ToJson(build_info.GetBuildInfo())))
-
-    app.Log(1, "Model flags: %s",
-            jsonutil.format_json(self._ModelFlagsToDict()))
-
-    random.seed(FLAGS.random_seed)
-    np.random.seed(FLAGS.random_seed)
-
+    # Instantiate Tensorflow model.
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     self.graph = tf.Graph()
@@ -211,19 +115,6 @@ class GgnnBaseModel(object):
             "train_step"):
           self.ops["train_step"] = self._MakeTrainStep()
 
-      # Restore or initialize the model:
-      if FLAGS.restore_model:
-        with prof.Profile('Restored model'):
-          self.LoadModel(FLAGS.restore_model)
-      else:
-        with prof.Profile('Initialized model'):
-          self.InitializeModel()
-
-    # Progress counters. These are saved and restored from file.
-    self.global_training_step = 0
-    self.best_epoch_validation_accuracy = 0
-    self.best_epoch_num = 0
-
     # Tensorboard logging.
     if FLAGS.tensorboard_logging:
       tensorboard_dir = self.working_dir / 'tensorboard' / self.run_id
@@ -245,226 +136,61 @@ class GgnnBaseModel(object):
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
-  def RunEpoch(self, epoch_num: int, epoch_type: str) -> float:
+  def RunMinibatch(self, log: log_database.BatchLog,
+                   feed_dict: FeedDict) -> typing.Tuple[np.array, np.array]:
+    fetch_dict = {
+        "loss": self.ops["loss"],
+        "accuracies": self.ops["accuracies"],
+        "accuracy": self.ops["accuracy"],
+        "predictions": self.ops["predictions"],
+        "summary_loss": self.ops["summary_loss"],
+        "summary_accuracy": self.ops["summary_accuracy"],
+    }
+
+    epoch_type = log.group
     assert epoch_type in {"train", "val", "test"}
-    accuracies = []
 
-    batch_type = typing.Tuple[log_database.BatchLog, typing.Dict[str, typing.
-                                                                 Any]]
-    batch_iterator: typing.Iterable[batch_type] = utils.ThreadedIterator(
-        self.MakeMinibatchIterator(epoch_type), max_queue_size=5)
+    if epoch_type == "train":
+      fetch_dict["train_step"] = self.ops["train_step"]
 
-    for step, (log, feed_dict) in enumerate(batch_iterator):
-      if not log.graph_count:
-        raise ValueError("Mini-batch with zero graphs generated")
+    fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
 
-      batch_start_time = time.time()
-      self.global_training_step += 1
-      log.epoch = epoch_num
-      log.batch = step + 1
-      log.global_step = self.global_training_step
+    if FLAGS.tensorboard_logging:
+      self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
+                                                   self.global_training_step)
+      self.summary_writers[epoch_type].add_summary(
+          fetch_dict["summary_accuracy"], self.global_training_step)
 
-      fetch_dict = {
-          "loss": self.ops["loss"],
-          "accuracies": self.ops["accuracies"],
-          "accuracy": self.ops["accuracy"],
-          "predictions": self.ops["predictions"],
-          "summary_loss": self.ops["summary_loss"],
-          "summary_accuracy": self.ops["summary_accuracy"],
-      }
+    log.loss = float(fetch_dict['loss'])
+    log.pickled_accuracies = pickle.dumps(fetch_dict['accuracies'])
+    log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
 
-      if epoch_type == "train":
-        fetch_dict["train_step"] = self.ops["train_step"]
+    # TODO(cec): Add support for edge labels.
+    targets = (feed_dict[self.placeholders['node_y']]
+               if self.placeholders['node_y'] in feed_dict else
+               feed_dict[self.placeholders['graph_y']])
+    y_true = np.argmax(targets, axis=1)
+    y_pred = np.argmax(fetch_dict['predictions'], axis=1)
 
-      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
-
-      if FLAGS.tensorboard_logging:
-        self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
-                                                     self.global_training_step)
-        self.summary_writers[epoch_type].add_summary(
-            fetch_dict["summary_accuracy"], self.global_training_step)
-
-      accuracies.append(float(fetch_dict['accuracy']))
-      log.elapsed_time_seconds = time.time() - batch_start_time
-      log.run_id = self.run_id
-      log.loss = float(fetch_dict['loss'])
-      log.accuracy = float(fetch_dict['accuracy'])
-      log.pickled_accuracies = pickle.dumps(fetch_dict['accuracies'])
-      log.pickled_predictions = pickle.dumps(fetch_dict['predictions'])
-
-      # Compute and record stats.
-      targets = (feed_dict[self.placeholders['node_y']]
-                 if self.placeholders['node_y'] in feed_dict else
-                 feed_dict[self.placeholders['graph_y']])
-      y_true = np.argmax(targets, axis=1)
-      y_pred = np.argmax(fetch_dict['predictions'], axis=1)
-
-      labels = list(range(len(targets[0])))
-      log.precision = sklearn.metrics.precision_score(
-          y_true,
-          y_pred,
-          labels=labels,
-          average=FLAGS.batch_scores_averaging_method)
-      log.recall = sklearn.metrics.recall_score(
-          y_true,
-          y_pred,
-          labels=labels,
-          average=FLAGS.batch_scores_averaging_method)
-      log.f1 = sklearn.metrics.f1_score(
-          y_true,
-          y_pred,
-          labels=labels,
-          average=FLAGS.batch_scores_averaging_method)
-
-      app.Log(1, "%s", log)
-      # Create a new database session for every batch because we don't want to
-      # leave the connection lying around for a long time (they can drop out)
-      # and epochs may take O(hours). Alternatively we could store all of the
-      # logs for an epoch in-memory and write them in a single shot, but this
-      # might consume a lot of memory (when the predictions arrays are large).
-      with self.log_db.Session(commit=True) as session:
-        session.add(log)
-
-    return sum(accuracies) / len(accuracies)
-
-  def Train(self):
-    with self.graph.as_default():
-      for epoch_num in range(1, FLAGS.num_epochs + 1):
-        epoch_start_time = time.time()
-        self.RunEpoch(epoch_num, "train")
-        val_acc = self.RunEpoch(epoch_num, "val")
-        app.Log(1, "Epoch %s completed in %s. Validation "
-                "accuracy: %.2f%%", epoch_num,
-                humanize.Duration(time.time() - epoch_start_time),
-                val_acc * 100)
-
-        if val_acc > self.best_epoch_validation_accuracy:
-          self.SaveModel(self.best_model_file)
-          # Compute the ratio of the new best validation accuracy against the
-          # old best validation accuracy.
-          if self.best_epoch_validation_accuracy:
-            accuracy_ratio = (
-                val_acc /
-                max(self.best_epoch_validation_accuracy, utils.SMALL_NUMBER))
-            relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
-          else:
-            relative_increase = ''
-          app.Log(
-              1, "Best epoch so far, validation accuracy increased "
-              "+%.3f%%%s. Saving to '%s'",
-              (val_acc - self.best_epoch_validation_accuracy) * 100,
-              relative_increase, self.best_model_file)
-          self.best_epoch_validation_accuracy = val_acc
-          self.best_epoch_num = epoch_num
-
-          # Run on test set.
-          if FLAGS.test_on_improvement:
-            test_acc = self.RunEpoch(epoch_num, "test")
-            app.Log(1, "Test accuracy at epoch %s: %.5f", epoch_num, test_acc)
-        elif epoch_num - self.best_epoch_num >= FLAGS.patience:
-          app.Log(
-              1, "Stopping training after %i epochs without "
-              "improvement on validation accuracy", FLAGS.patience)
-          break
-
-  def Test(self):
-    start_time = time.time()
-    with self.graph.as_default():
-      self.RunEpoch(epoch_num=-1, epoch_type="val")
-      self.RunEpoch(epoch_num=-1, epoch_type="test")
+    return y_true, y_pred
 
   def InitializeModel(self) -> None:
+    super(GgnnBaseModel, self).InitializeModel()
     with self.graph.as_default():
       init_op = tf.group(tf.global_variables_initializer(),
                          tf.local_variables_initializer())
       self.sess.run(init_op)
 
-  def _CreateExperimentalParameters(self):
-    """Private helper method to populate parameters table."""
-
-    def ToParams(type, key_value_dict):
-      return [
-          log_database.Parameter(
-              run_id=self.run_id,
-              type=type,
-              parameter=str(key),
-              value=str(value),
-          ) for key, value in key_value_dict.items()
-      ]
-
-    with self.log_db.Session(commit=True) as session:
-      session.add_all(
-          ToParams('flags', app.FlagsToDict()) +
-          ToParams('modeL_flags', self._ModelFlagsToDict()) +
-          ToParams('build_info', pbutil.ToJson(build_info.GetBuildInfo())))
-
-  def SaveModel(self, path: pathlib.Path) -> None:
+  def ModelDataToSave(self) -> typing.Any:
     with self.graph.as_default():
       weights_to_save = {}
       for variable in self.sess.graph.get_collection(
           tf.GraphKeys.GLOBAL_VARIABLES):
         assert variable.name not in weights_to_save
         weights_to_save[variable.name] = self.sess.run(variable)
-    # Save all of the flags and their values, as well as
-    data_to_save = {
-        "flags": app.FlagsToDict(json_safe=True),
-        "model_flags": self._ModelFlagsToDict(),
-        "weights": weights_to_save,
-        "build_info": pbutil.ToJson(build_info.GetBuildInfo()),
-        "global_training_step": self.global_training_step,
-        "best_epoch_validation_accuracy": self.best_epoch_validation_accuracy,
-        "best_epoch_num": self.best_epoch_num,
-    }
-    with open(path, "wb") as out_file:
-      pickle.dump(data_to_save, out_file, pickle.HIGHEST_PROTOCOL)
+    return weights_to_save
 
-  def LoadModel(self, path: pathlib.Path) -> None:
-    """Load and restore the model from the given model file.
-
-    Args:
-      path: The path of the file to restore from, as created by SaveModel().
-
-    Raises:
-      EnvironmentError: If the flags in the saved model do not match the current
-        model flags.
-    """
-    with prof.Profile(f"Read pickled model from `{path}`"):
-      with open(path, "rb") as in_file:
-        data_to_load = pickle.load(in_file)
-
-    # Restore progress counters.
-    self.global_training_step = data_to_load.get("global_training_step", 0)
-    self.best_epoch_validation_accuracy = data_to_load.get(
-        "best_epoch_validation_accuracy", 0)
-    self.best_epoch_num = data_to_load.get("best_epoch_num", 0)
-
-    # Assert that we got the same model configuration.
-    # Flag values found in the saved file but not present currently are ignored.
-    flags = self._ModelFlagsToDict()
-    saved_flags = data_to_load["model_flags"]
-    flag_names = set(flags.keys())
-    saved_flag_names = set(saved_flags.keys())
-    if flag_names != saved_flag_names:
-      raise EnvironmentError(
-          "Saved flags do not match current flags. "
-          f"Flags not found in saved flags: '{flag_names - saved_flag_names}'."
-          f"Saved flags not present now: '{saved_flag_names - flag_names}'")
-    for flag, flag_value in flags.items():
-      # Special handling for layer_timesteps: We permit a different number of
-      # steps per layer, but require that the number of layers be the same.
-      if flag == 'layer_timesteps':
-        num_layers = len(flag_value)
-        saved_num_layers = len(saved_flags['layer_timesteps'])
-        if num_layers != saved_num_layers:
-          raise EnvironmentError(
-              "Saved model has "
-              f"{humanize.Plural(saved_num_layers, 'layer')} but flags has "
-              f"incompatible {humanize.Plural(num_layers, 'layer')}")
-      elif flag_value != saved_flags[flag]:
-        raise EnvironmentError(
-            f"Saved flag {flag} value does not match current value:"
-            f"'{saved_flags[flag]}' != '{flag_value}'")
-
+  def LoadModelData(self, data_to_load: typing.Any) -> None:
     with self.graph.as_default():
       variables_to_initialize = []
       with tf.name_scope("restore"):
@@ -473,50 +199,35 @@ class GgnnBaseModel(object):
         for variable in self.sess.graph.get_collection(
             tf.GraphKeys.GLOBAL_VARIABLES):
           used_vars.add(variable.name)
-          if variable.name in data_to_load["weights"]:
-            restore_ops.append(
-                variable.assign(data_to_load["weights"][variable.name]))
+          if variable.name in data_to_load:
+            restore_ops.append(variable.assign(data_to_load[variable.name]))
           else:
             app.Log(
                 1, "Freshly initializing %s since no saved value "
                 "was found.", variable.name)
             variables_to_initialize.append(variable)
-        for var_name in data_to_load["weights"]:
+        for var_name in data_to_load:
           if var_name not in used_vars:
             app.Log(1, "Saved weights for %s not used by model.", var_name)
         restore_ops.append(tf.variables_initializer(variables_to_initialize))
         self.sess.run(restore_ops)
 
-  def _ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
-    """Return the flags which are """
-    return {
-        flag: jsonutil.JsonSerializable(getattr(FLAGS, flag))
-        for flag in sorted(set(self.GetModelFlagNames()))
-    }
+    def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
+      # Special handling for layer_timesteps: We permit a different number of
+      # steps per layer, but require that the number of layers be the same.
+      num_layers = len(flags['layer_timesteps'])
+      saved_num_layers = len(saved_flags['layer_timesteps'])
+      if num_layers != saved_num_layers:
+        raise EnvironmentError(
+            "Saved model has "
+            f"{humanize.Plural(saved_num_layers, 'layer')} but flags has "
+            f"incompatible {humanize.Plural(num_layers, 'layer')}")
 
-  def _GetEmbeddingsTable(self) -> np.array:
-    """Reading embeddings table"""
-    with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
-      with open(FLAGS.embedding_path, 'rb') as f:
-        return pickle.load(f)
-
-    if FLAGS.embeddings == "inst2vec":
-      return tf.constant(embedding_table,
-                         dtype=tf.float32,
-                         name="embedding_table")
-    elif FLAGS.embeddings == "finetune":
-      return tf.Variable(embedding_table,
-                         dtype=tf.float32,
-                         name="embedding_table",
-                         trainable=True)
-    elif FLAGS.embeddings == "random":
-      return tf.Variable(utils.uniform_init(np.shape(embedding_table)),
-                         dtype=tf.float32,
-                         name="embedding_table",
-                         trainable=True)
-    else:
-      raise ValueError("Invalid value for --embeding. Supported values are "
-                       "{inst2vec,finetune,random}")
+      # Use regular comparison method for the other flags.
+      del flags['layer_timesteps']
+      del saved_flags['layer_timesteps']
+      super(GgnnBaseModel, self).CheckThatModelFlagsAreEquivalent(
+          flags, saved_flags)
 
   def _MakeTrainStep(self) -> tf.Tensor:
     """Helper function."""

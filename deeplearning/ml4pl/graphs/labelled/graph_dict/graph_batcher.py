@@ -21,6 +21,11 @@ FLAGS = app.FLAGS
 app.DEFINE_integer(
     "batch_size", 8000,
     "The maximum number of nodes to include in each graph batch.")
+app.DEFINE_integer(
+    'max_instance_count', None,
+    'A debugging option. Use this to set the maximum number of instances used '
+    'from training/validation/test files. Note this still requires reading '
+    'the entirety of the file contents into memory.')
 app.DEFINE_boolean(
     'limit_data_flow_max_steps_required_to_message_passing_steps', False,
     'If true, limit the graphs loaded to those that require fewer data flow '
@@ -36,8 +41,8 @@ app.DEFINE_boolean(
 
 
 class GraphBatcher(object):
-  """A generalised graph batcher which flattens adjacency matrics into a single
-  adjacency matric with multiple disconnected components. Supports all feature
+  """A generalised graph batcher which flattens adjacency matrices into a single
+  adjacency matrix with multiple disconnected components. Supports all feature
   and label types of graph dicts.
   """
 

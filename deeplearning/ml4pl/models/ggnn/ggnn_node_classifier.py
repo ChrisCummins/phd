@@ -4,53 +4,61 @@ import numpy as np
 import tensorflow as tf
 import typing
 
+from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
 ##### Beginning of flag declarations.
 #
-app.DEFINE_integer(
-    'max_instance_count', None,
-    'A debugging option. Use this to set the maximum number of instances used '
-    'from training/validation/test files. Note this still requires reading '
-    'the entirety of the file contents into memory.')
-
+# Some of these flags define parameters which must be equal when restoring from
+# file, such as the hidden layer sizes. Other parameters may change between
+# runs of the same model, such as the input data batch size. To accomodate for
+# this, a ClassifierBase.GetModelFlagNames() method returns the list of flags
+# which must be consistent between runs of the same model.
+#
+# For the sake of readability, these important model flags are saved into a
+# global set classifier_base.MODEL_FLAGS here, so that the declaration of model
+# flags is local to the declaration of the flag.
 app.DEFINE_string("graph_rnn_cell", "GRU",
                   "The RNN cell type. One of {GRU,CudnnCompatibleGRUCell,RNN}")
-ggnn.MODEL_FLAGS.add("graph_rnn_cell")
+classifier_base.MODEL_FLAGS.add("graph_rnn_cell")
 
 app.DEFINE_string("graph_rnn_activation", "tanh",
                   "The RNN activation type. One of {tanh,ReLU}")
-ggnn.MODEL_FLAGS.add("graph_rnn_activation")
+classifier_base.MODEL_FLAGS.add("graph_rnn_activation")
 
 app.DEFINE_boolean("use_propagation_attention", False, "")
-ggnn.MODEL_FLAGS.add("use_propagation_attention")
+classifier_base.MODEL_FLAGS.add("use_propagation_attention")
 
 app.DEFINE_boolean("use_edge_bias", False, "")
-ggnn.MODEL_FLAGS.add("use_edge_bias")
+classifier_base.MODEL_FLAGS.add("use_edge_bias")
 
 app.DEFINE_boolean(
     "use_edge_msg_avg_aggregation", True,
     "If true, normalize incoming messages by the number of "
     "incoming messages.")
-ggnn.MODEL_FLAGS.add("use_edge_msg_avg_aggregation")
+classifier_base.MODEL_FLAGS.add("use_edge_msg_avg_aggregation")
 
 app.DEFINE_float("graph_state_dropout_keep_prob", 1.0,
                  "Graph state dropout keep probability (rate = 1 - keep_prob)")
-ggnn.MODEL_FLAGS.add("graph_state_dropout_keep_prob")
+classifier_base.MODEL_FLAGS.add("graph_state_dropout_keep_prob")
 
 app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
                  "Edge weight dropout keep probability (rate = 1 - keep_prob)")
-ggnn.MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
+classifier_base.MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
 
 app.DEFINE_float(
     "output_layer_dropout_keep_prob", 1.0,
     "Dropout keep probability on the output layer. In range 0 < x <= 1.")
-ggnn.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
+classifier_base.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
+
+app.DEFINE_input_path("restore_model", None,
+                      "An optional file to restore the model from.")
 
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
@@ -349,6 +357,15 @@ def main():
   app.Log(1, 'Using working dir %s', working_dir)
 
   model = GgnnNodeClassifierModel(graph_db, log_db)
+
+  # Restore or initialize the model:
+  if FLAGS.restore_model:
+    with prof.Profile('Restored model'):
+      model.LoadModel(FLAGS.restore_model)
+  else:
+    with prof.Profile('Initialized model'):
+      model.InitializeModel()
+
   model.Train()
 
 
