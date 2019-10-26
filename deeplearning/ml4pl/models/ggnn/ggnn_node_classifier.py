@@ -76,7 +76,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
     app.Log(1, "Using layer timesteps: %s for a total step count of %s",
-            layer_timesteps, layer_timesteps.sum())
+            layer_timesteps, self.message_passing_step_count)
 
     # Generate per-layer values for edge weights, biases and gated units:
     self.weights = {}  # Used by super-class to place generic things

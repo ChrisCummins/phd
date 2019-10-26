@@ -131,6 +131,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       }
 
   @property
+  def message_passing_step_count(self) -> int:
+    return self.layer_timesteps.sum()
+
+  @property
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 

@@ -146,6 +146,10 @@ class ClassifierBase(object):
     self.best_epoch_validation_accuracy = 0
     self.best_epoch_num = 0
 
+  @property
+  def message_passing_step_count(self) -> int:
+    return 0
+
   @decorators.memoized_property
   def labels_dimensionality(self) -> int:
     return (self.stats.node_labels_dimensionality +
