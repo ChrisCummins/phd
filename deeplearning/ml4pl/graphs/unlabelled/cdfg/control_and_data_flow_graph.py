@@ -474,7 +474,9 @@ class ControlAndDataFlowGraphBuilder(object):
 
 def ToControlFlowGraph(g: nx.MultiDiGraph):
   """Create a new graph with only the statements and control flow edges."""
-  cfg = nx.MultiDiGraph()
+  # CFGs cannot have parallel edges, so we use only a DiGraph rather than
+  # MultiDiGraph.
+  cfg = nx.DiGraph()
 
   for node, _ in iterators.StatementNodeIterator(g):
     cfg.add_node(node, type='statement')
