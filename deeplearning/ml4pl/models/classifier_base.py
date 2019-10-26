@@ -51,6 +51,8 @@ app.DEFINE_database('graph_db',
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
 
+app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
+
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
 
 app.DEFINE_input_path(
@@ -69,6 +71,9 @@ app.DEFINE_boolean(
     "test_on_improvement", True,
     "If true, test model accuracy on test data when the validation accuracy "
     "improves.")
+
+app.DEFINE_input_path("restore_model", None,
+                      "An optional file to restore the model from.")
 
 #
 ##### End of flag declarations.
@@ -108,7 +113,7 @@ class ClassifierBase(object):
                         f"{system.HOSTNAME}")
 
     self.batcher = graph_batcher.GraphBatcher(
-        db, message_passing_step_count=self.layer_timesteps.sum())
+        db, message_passing_step_count=self.message_passing_step_count)
     self.stats = self.batcher.stats
     app.Log(1, "%s", self.stats)
 
@@ -342,3 +347,25 @@ class ClassifierBase(object):
     with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
       with open(FLAGS.embedding_path, 'rb') as f:
         return pickle.load(f)
+
+
+def Run(model_class):
+  graph_db = FLAGS.graph_db()
+  log_db = FLAGS.log_db()
+  working_dir = FLAGS.working_dir
+  if not working_dir:
+    raise app.UsageError("--working_dir is required")
+
+  app.Log(1, 'Using working dir %s', working_dir)
+
+  model = model_class(graph_db, log_db)
+
+  # Restore or initialize the model:
+  if FLAGS.restore_model:
+    with prof.Profile('Restored model'):
+      model.LoadModel(FLAGS.restore_model)
+  else:
+    with prof.Profile('Initialized model'):
+      model.InitializeModel()
+
+  model.Train()

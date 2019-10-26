@@ -33,8 +33,6 @@ app.DEFINE_list('layer_timesteps', ['2', '2', '2'],
 # was trained for.
 classifier_base.MODEL_FLAGS.add("layer_timesteps")
 
-app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
-
 app.DEFINE_integer(
     "patience", 300,
     "The number of epochs to train for without any improvement in validation "

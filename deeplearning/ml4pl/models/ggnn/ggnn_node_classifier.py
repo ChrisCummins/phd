@@ -1,5 +1,4 @@
 """Train and evaluate a model for node classification."""
-import collections
 import numpy as np
 import tensorflow as tf
 import typing
@@ -9,7 +8,6 @@ from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
-from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -56,9 +54,6 @@ app.DEFINE_float(
     "output_layer_dropout_keep_prob", 1.0,
     "Dropout keep probability on the output layer. In range 0 < x <= 1.")
 classifier_base.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
-
-app.DEFINE_input_path("restore_model", None,
-                      "An optional file to restore the model from.")
 
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
@@ -348,25 +343,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
 def main():
   """Main entry point."""
-  graph_db = FLAGS.graph_db()
-  log_db = FLAGS.log_db()
-  working_dir = FLAGS.working_dir
-  if not working_dir:
-    raise app.UsageError("--working_dir is required")
-
-  app.Log(1, 'Using working dir %s', working_dir)
-
-  model = GgnnNodeClassifierModel(graph_db, log_db)
-
-  # Restore or initialize the model:
-  if FLAGS.restore_model:
-    with prof.Profile('Restored model'):
-      model.LoadModel(FLAGS.restore_model)
-  else:
-    with prof.Profile('Initialized model'):
-      model.InitializeModel()
-
-  model.Train()
+  classifier_base.Run(GgnnNodeClassifierModel)
 
 
 if __name__ == '__main__':
