@@ -1,4 +1,5 @@
 """Train and evaluate a model for node classification."""
+import collections
 import numpy as np
 import tensorflow as tf
 import typing
@@ -114,10 +115,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
-                                  FLAGS.graph_rnn_activation,
-                                  FLAGS.hidden_size,
-                                  name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(
+            FLAGS.graph_rnn_cell,
+            FLAGS.graph_rnn_activation,
+            FLAGS.hidden_size,
+            name=f"cell_layer_{layer_index}")
         # Apply dropout as required.
         if FLAGS.graph_state_dropout_keep_prob < 1:
           cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
@@ -207,16 +209,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(message_source_states,
-                                                axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(
+                  message_source_states, axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (message_attention_scores *
-                                          message_edge_type_factors)
+              message_attention_scores = (
+                  message_attention_scores * message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -299,12 +301,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
-    targets = tf.argmax(self.placeholders["node_y"],
-                        axis=1,
-                        output_type=tf.int32)
+    targets = tf.argmax(
+        self.placeholders["node_y"], axis=1, output_type=tf.int32)
 
-    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32),
-                          targets)
+    accuracies = tf.equal(
+        tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
