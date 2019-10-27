@@ -75,6 +75,9 @@ class BytecodeDatabaseExporterBase(object):
   def ExportGroup(self, group: str, bytecode_ids: typing.List[int]):
     exported_count = 0
 
+    chunksize = max(self.batch_size // 16, 8)
+    job_processor = self.GetProcessJobFunction()
+
     for i, chunk in enumerate(labtypes.Chunkify(bytecode_ids, self.batch_size)):
       app.Log(1, 'Processing %s-%s of %s bytecodes (%.2f%%)',
               i * self.batch_size, i * self.batch_size + len(chunk),
@@ -89,8 +92,6 @@ class BytecodeDatabaseExporterBase(object):
 
       # Process jobs in parallel.
       graph_metas = []
-      chunksize = max(self.batch_size // 16, 8)
-      job_processor = self.GetProcessJobFunction()
       if FLAGS.multiprocess_database_exporters:
         workers = self.pool.imap_unordered(job_processor,
                                            jobs,
