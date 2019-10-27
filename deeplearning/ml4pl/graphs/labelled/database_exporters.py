@@ -1,4 +1,5 @@
 """A module which defines a base class for implementing database exporters."""
+import math
 import multiprocessing
 import time
 import typing
@@ -7,6 +8,7 @@ from labm8 import app
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import ppar
+from labm8 import prof
 from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -35,8 +37,9 @@ class BytecodeDatabaseExporterBase(object):
     self.pool = pool or multiprocessing.Pool()
     self.batch_size = batch_size or FLAGS.database_exporter_batch_size
 
-  def MakeExportJob(self, session: bytecode_database.Database.SessionType,
-                    bytecode_id: int) -> typing.Optional[typing.Any]:
+  def GetMakeExportJob(
+      self) -> typing.Callable[[bytecode_database.Database.
+                                SessionType, int], typing.Optional[typing.Any]]:
     raise NotImplementedError("abstract class")
 
   def GetProcessJobFunction(
@@ -54,10 +57,10 @@ class BytecodeDatabaseExporterBase(object):
       exported_graph_count = self.ExportGroup(group, bytecode_ids)
       elapsed_time = time.time() - group_start_time
       app.Log(
-          1, 'Exported %s graphs from %s bytecodes in %s '
+          1, 'Exported %s %s graphs from %s bytecodes in %s '
           '(%.2f graphs / second)', humanize.Commas(exported_graph_count),
-          humanize.Commas(len(bytecode_ids)), humanize.Duration(elapsed_time),
-          exported_graph_count / elapsed_time)
+          group, humanize.Commas(len(bytecode_ids)),
+          humanize.Duration(elapsed_time), exported_graph_count / elapsed_time)
       group_to_graph_count_map[group] = exported_graph_count
 
     total_count = sum(group_to_graph_count_map.values())
@@ -74,43 +77,64 @@ class BytecodeDatabaseExporterBase(object):
     return total_count
 
   def ExportGroup(self, group: str, bytecode_ids: typing.List[int]):
+    """Export the given groups."""
     start_time = time.time()
     exported_count = 0
 
-    multiprocessing_chunksize = max(self.batch_size // 16, 8)
+    make_job = self.GetMakeExportJob()
     job_processor = self.GetProcessJobFunction()
 
-    job_builder = ppar.ThreadedIterator(self.MakeJobsIterator(),
-                                        max_queue_size=3)
+    chunksize = min(
+        max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
+        self.batch_size)
 
-    for i, jobs in enumerate(job_builder):
-      app.Log(
-          1, 'Processing %s-%s of %s %s bytecodes (%.2f%%, %.2f graphs/second)',
-          i * self.batch_size, i * self.batch_size + len(jobs),
-          humanize.Commas(len(bytecode_ids)), group,
-          ((i * self.batch_size) / len(bytecode_ids)) * 100,
-          exported_count / (time.time() - start_time))
-      # Process jobs in parallel.
-      if FLAGS.multiprocess_database_exporters:
-        workers = self.pool.imap_unordered(job_processor,
-                                           jobs,
-                                           chunksize=multiprocessing_chunksize)
-      else:
-        workers = (job_processor(job) for job in jobs)
+    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
+    jobs = [(self.bytecode_db.url, bytecode_ids_chunk, make_job, job_processor)
+            for bytecode_ids_chunk in bytecode_id_chunks]
+    app.Log(1, "Divided %s %s bytecode chunks into %s jobs",
+            humanize.Commas(len(bytecode_ids)), group, len(jobs))
 
-      with sqlutil.BufferedDatabaseWriter(self.graph_db).Session() as writer:
-        for graph_metas in workers:
-          # Set the GraphMeta.group column.
-          for graph in graph_metas:
-            graph.group = group
-          writer.AddMany(graph_metas)
+    if FLAGS.multiprocess_database_exporters:
+      workers = self.pool.imap_unordered(_Worker, jobs)
+    else:
+      workers = (_Worker(job) for job in jobs)
+
+    job_count = 0
+    with sqlutil.BufferedDatabaseWriter(self.graph_db).Session() as writer:
+      for graph_metas in workers:
+        exported_count += len(graph_metas)
+        job_count += 1
+        app.Log(1, 'Created %s %s graphs (%.2f%%, %.2f graphs/second)',
+                humanize.Commas(len(graph_metas)), group,
+                (job_count / len(jobs)) * 100,
+                exported_count / (time.time() - start_time))
+
+        # Set the GraphMeta.group column.
+        for graph in graph_metas:
+          graph.group = group
+        writer.AddMany(graph_metas)
 
     return exported_count
 
-  def MakeJobsIterator(self, bytecode_ids):
-    for i, chunk in enumerate(labtypes.Chunkify(bytecode_ids, self.batch_size)):
-      with self.bytecode_db.Session() as s:
-        jobs = [self.MakeExportJob(s, bytecode_id) for bytecode_id in chunk]
-      # Filter the failed jobs.
-      jobs = [j for j in jobs if j]
-      yield jobs
+
+def _Worker(packed_args):
+  """A bytecode processor worker. If --multiprocess_database_exporters is set,
+  this is called in a worker process.
+  """
+  bytecode_db_url, bytecode_ids, make_job, job_processor = packed_args
+
+  with prof.Profile(lambda t: (f"Created {len(jobs)} jobs from "
+                               f"{len(bytecode_ids)} bytecodes "
+                               f"({len(bytecode_ids) / t:.2f} "
+                               "bytecodes/sec)")):
+    bytecode_db = bytecode_database.Database(bytecode_db_url)
+    with bytecode_db.Session() as session:
+      jobs = [make_job(session, bytecode_id) for bytecode_id in bytecode_ids]
+    # Filter the failed jobs.
+    jobs = [j for j in jobs if j]
+
+  graph_metas = []
+  for job in jobs:
+    graph_metas += job_processor(job)
+
+  return graph_metas

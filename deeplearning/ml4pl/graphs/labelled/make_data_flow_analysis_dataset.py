@@ -109,6 +109,35 @@ def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
 ControlFlowGraphJob = typing.Tuple[typing.List[str], str, str, str, int]
 
 
+def _GetConstantColumn(bytecode_id: int, rows, column_idx, column_name):
+  values = {r[column_idx] for r in rows}
+  if len(values) != 1:
+    raise ValueError(f'Bytecode ID {bytecode_id} should have the same '
+                     f'{column_name} value across its {len(rows)} CFGs, '
+                     f'found these values: `{values}`')
+  return list(values)[0]
+
+
+def _MakeControlFlowGraphExportJob(
+    session: bytecode_database.Database.SessionType,
+    bytecode_id: id) -> typing.Optional[ControlFlowGraphJob]:
+  q = session.query(bytecode_database.ControlFlowGraphProto.proto,
+                    bytecode_database.LlvmBytecode.source_name,
+                    bytecode_database.LlvmBytecode.relpath,
+                    bytecode_database.LlvmBytecode.language) \
+    .join(bytecode_database.LlvmBytecode) \
+    .filter(bytecode_database.ControlFlowGraphProto.bytecode_id == bytecode_id) \
+    .filter(bytecode_database.ControlFlowGraphProto.status == 0).all()
+  if not q:
+    app.Log(2, 'Bytecode %s has no CFGs, ignoring', bytecode_id)
+    return None
+  proto_strings = [r[0] for r in q]
+  source = _GetConstantColumn(bytecode_id, q, 1, 'source')
+  relpath = _GetConstantColumn(bytecode_id, q, 2, 'relpath')
+  language = _GetConstantColumn(bytecode_id, q, 3, 'language')
+  return proto_strings, source, relpath, language, bytecode_id
+
+
 def _ProcessControlFlowGraphJob(
     job: ControlFlowGraphJob) -> typing.List[graph_database.GraphMeta]:
   """
@@ -181,32 +210,8 @@ class ControlFlowGraphProtoExporter(
     database_exporters.BytecodeDatabaseExporterBase):
   """Export from control flow graph protos."""
 
-  @staticmethod
-  def GetConstantColumn(rows, column_idx, column_name):
-    values = {r[column_idx] for r in rows}
-    if len(values) != 1:
-      raise ValueError(f'Bytecode ID {bytecode_id} should have the same '
-                       f'{column_name} value across its {len(rows)} CFGs, '
-                       f'found these values: `{values}`')
-    return list(values)[0]
-
-  def MakeExportJob(self, session: bytecode_database.Database.SessionType,
-                    bytecode_id: id) -> typing.Optional[ControlFlowGraphJob]:
-    q = session.query(bytecode_database.ControlFlowGraphProto.proto,
-                      bytecode_database.LlvmBytecode.source_name,
-                      bytecode_database.LlvmBytecode.relpath,
-                      bytecode_database.LlvmBytecode.language) \
-      .join(bytecode_database.LlvmBytecode) \
-      .filter(bytecode_database.ControlFlowGraphProto.bytecode_id == bytecode_id) \
-      .filter(bytecode_database.ControlFlowGraphProto.status == 0).all()
-    if not q:
-      app.Log(2, 'Bytecode %s has no CFGs, ignoring', bytecode_id)
-      return None
-    proto_strings = [r[0] for r in q]
-    source = self.GetConstantColumn(q, 1, 'source')
-    relpath = self.GetConstantColumn(q, 2, 'relpath')
-    language = self.GetConstantColumn(q, 3, 'language')
-    return proto_strings, source, relpath, language, bytecode_id
+  def GetMakeExportJob(self):
+    return _MakeControlFlowGraphExportJob
 
   def GetProcessJobFunction(
       self) -> typing.Callable[[ControlFlowGraphJob], typing.
@@ -215,6 +220,17 @@ class ControlFlowGraphProtoExporter(
 
 
 BytecodeJob = typing.Tuple[str, str, str, str, int]
+
+
+def _MakeBytecodeExportJob(session: bytecode_database.Database.SessionType,
+                           bytecode_id: id) -> typing.Optional[BytecodeJob]:
+  q = session.query(bytecode_database.LlvmBytecode.bytecode,
+                    bytecode_database.LlvmBytecode.source_name,
+                    bytecode_database.LlvmBytecode.relpath,
+                    bytecode_database.LlvmBytecode.language) \
+    .filter(bytecode_database.LlvmBytecode.id == bytecode_id).one()
+  bytecode, source, relpath, language = q
+  return bytecode, source, relpath, language, bytecode_id
 
 
 def _ProcessBytecodeJob(
@@ -253,15 +269,8 @@ def _ProcessBytecodeJob(
 class BytecodeExporter(database_exporters.BytecodeDatabaseExporterBase):
   """Export from LLVM bytecodes."""
 
-  def MakeExportJob(self, session: bytecode_database.Database.SessionType,
-                    bytecode_id: id) -> typing.Optional[BytecodeJob]:
-    q = session.query(bytecode_database.LlvmBytecode.bytecode,
-                      bytecode_database.LlvmBytecode.source_name,
-                      bytecode_database.LlvmBytecode.relpath,
-                      bytecode_database.LlvmBytecode.language) \
-      .filter(bytecode_database.LlvmBytecode.id == bytecode_id).one()
-    bytecode, source, relpath, language = q
-    return bytecode, source, relpath, language, bytecode_id
+  def GetMakeExportJob(self):
+    return _MakeBytecodeExportJob
 
   def GetProcessJobFunction(
       self) -> typing.Callable[[ControlFlowGraphJob], typing.
