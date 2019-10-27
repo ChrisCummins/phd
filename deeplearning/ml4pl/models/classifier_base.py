@@ -121,6 +121,7 @@ class ClassifierBase(object):
     """Constructor."""
     self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
                         f"{system.HOSTNAME}")
+    app.Log(1, "Run ID: %s", self.run_id)
 
     self.batcher = graph_batcher.GraphBatcher(
         db, message_passing_step_count=self.message_passing_step_count)
