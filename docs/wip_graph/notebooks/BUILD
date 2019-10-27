@@ -13,7 +13,6 @@ py_binary(
         "//deeplearning/ml4pl/graphs:graph_viz",
         "//deeplearning/ml4pl/graphs/labelled/graph_dict",
         "//deeplearning/ml4pl/graphs/labelled/graph_dict:graph_batcher",
-        "//deeplearning/ml4pl/graphs/labelled/reachability:make_reachability_dataset",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
         "//deeplearning/ml4pl/models:log_analysis",
