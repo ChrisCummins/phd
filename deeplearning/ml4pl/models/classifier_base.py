@@ -359,8 +359,14 @@ class ClassifierBase(object):
           f"Saved flags not present now: '{saved_flag_names - flag_names}'")
     self.CheckThatModelFlagsAreEquivalent(flags, saved_flags)
 
-    # Workaround for a typo in an earlier version of this script.
-    model_data = data_to_load.get('model_data', data_to_load['modeL_data'])
+    if 'model_data' in data_to_load:
+      model_data = data_to_load['model_data']
+    elif 'modeL_data' in data_to_load:
+      # Workaround for a typo in an earlier version of this script.
+      model_data = data_to_load['modeL_data']
+    else:
+      raise OSError("Model data not found in restore file with keys: "
+                    f"`{list(data_to_load.keys())}`")
     self.LoadModelData(model_data)
 
   def _ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
