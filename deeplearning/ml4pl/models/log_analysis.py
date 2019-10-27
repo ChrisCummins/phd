@@ -1,20 +1,20 @@
 """A module for analyzing log databases."""
+import random
+import typing
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-import random
 import sqlalchemy as sql
-import typing
-
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_batcher
-from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
 
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_batcher
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -159,7 +159,7 @@ class RunLogAnalyzer(object):
 
     # Annotate the graphs with their GraphMeta.id column value.
     for graph_index, input_graph, output_graph in zip(
-        batch_dict['graph_indices'], input_graphs, output_graphs)
+        batch_dict['graph_indices'], input_graphs, output_graphs):
       input_graph.id = graph_index
       output_graph.id = graph_index
 
