@@ -33,6 +33,7 @@ py_binary(
     deps = [
         ":ggnn_base",
         ":ggnn_utils",
+        "//deeplearning/ml4pl/models:classifier_base",
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
         "//third_party/py/numpy",

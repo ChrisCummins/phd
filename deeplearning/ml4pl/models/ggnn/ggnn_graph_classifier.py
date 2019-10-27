@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 from labm8 import app
 
+from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
@@ -16,33 +17,33 @@ FLAGS = app.FLAGS
 #
 app.DEFINE_string("graph_rnn_cell", "GRU",
                   "The RNN cell type. One of {GRU,CudnnCompatibleGRUCell,RNN}")
-ggnn.MODEL_FLAGS.add("graph_rnn_cell")
+classifier_base.MODEL_FLAGS.add("graph_rnn_cell")
 
 app.DEFINE_string("graph_rnn_activation", "tanh",
                   "The RNN activation type. One of {tanh,ReLU}")
-ggnn.MODEL_FLAGS.add("graph_rnn_activation")
+classifier_base.MODEL_FLAGS.add("graph_rnn_activation")
 
 app.DEFINE_boolean("use_propagation_attention", False, "")
-ggnn.MODEL_FLAGS.add("use_propagation_attention")
+classifier_base.MODEL_FLAGS.add("use_propagation_attention")
 
 app.DEFINE_boolean("use_edge_bias", False, "")
-ggnn.MODEL_FLAGS.add("use_edge_bias")
+classifier_base.MODEL_FLAGS.add("use_edge_bias")
 
 app.DEFINE_boolean("use_edge_msg_avg_aggregation", True, "")
-ggnn.MODEL_FLAGS.add("use_edge_msg_avg_aggregation")
+classifier_base.MODEL_FLAGS.add("use_edge_msg_avg_aggregation")
 
 app.DEFINE_float("graph_state_dropout_keep_prob", 1.0,
                  "Graph state dropout keep probability (rate = 1 - keep_prob)")
-ggnn.MODEL_FLAGS.add("graph_state_dropout_keep_prob")
+classifier_base.MODEL_FLAGS.add("graph_state_dropout_keep_prob")
 
 app.DEFINE_float("edge_weight_dropout_keep_prob", 1.0,
                  "Edge weight dropout keep probability (rate = 1 - keep_prob)")
-ggnn.MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
+classifier_base.MODEL_FLAGS.add("edge_weight_dropout_keep_prob")
 
 app.DEFINE_float(
     "output_layer_dropout_keep_prob", 1.0,
     "Dropout keep probability on the output layer. In range 0 < x <= 1.")
-ggnn.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
+classifier_base.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
 
 app.DEFINE_boolean('ignore_node_features', True, '???')
 
@@ -65,7 +66,7 @@ GGNNWeights = collections.namedtuple(
 residual_connections = {}
 
 
-class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
+class GgnnGraphClassifierModel(classifier_base.ClassifierBase):
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
@@ -92,8 +93,8 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
             rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
         self.gnn_weights.edge_weights.append(edge_weights)
 
-        # analogous to how edge_weights (for mult. with neighbor states) looked like.
-        # this is where we designed the update func. to be:
+        # analogous to how edge_weights (for mult. with neighbor states) looked
+        # like. this is where we designed the update func. to be:
         # U_m = A*s_n + B*e_(n,m) for all neighbors n of m.
         edge_weights_for_emb = tf.nn.dropout(
             tf.reshape(
@@ -108,7 +109,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
                     FLAGS.hidden_size
                 ]),
             rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
-        self.gnn_weights.edge_weights_for_embs.append(edge_weights)
+        self.gnn_weights.edge_weights_for_embs.append(edge_weights_for_emb)
 
         if FLAGS.use_propagation_attention:
           self.gnn_weights.edge_type_attention_weights.append(
@@ -328,7 +329,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
     self.weights['regression_transform'] = regression_transform
 
     # Sum node representations across graph.
-    predictions = tf.unsorted_segment_sum(
+    computed_values = tf.unsorted_segment_sum(
         predictions,
         segment_ids=self.placeholders["graph_nodes_list"],
         num_segments=self.placeholders["graph_count"],
@@ -352,7 +353,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
     loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
                                            computed_values)
 
-    return loss, accuracies, accuracy, predictions
+    return loss, accuracies, accuracy, computed_values
 
   def MakeMinibatchIterator(
       self, epoch_type: str
@@ -362,12 +363,13 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
     for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
       # Pad node feature vector of size <= hidden_size up to hidden_size so
       # that the size matches embedding dimensionality.
-      batch['node_x'] = np.pad(
-          batch["node_x"],
-          ((0, 0),
-           (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
-          "constant",
-      )
+      if 'node_x' in batch:
+        batch['node_x'] = np.pad(
+            batch["node_x"],
+            ((0, 0),
+             (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
+            "constant",
+        )
 
       feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
 
