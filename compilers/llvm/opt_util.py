@@ -5,12 +5,12 @@ import subprocess
 import tempfile
 import typing
 
-from compilers.llvm import llvm
-from compilers.llvm import llvm_as
-from compilers.llvm import opt
 from labm8 import app
 from labm8 import fs
 
+from compilers.llvm import llvm
+from compilers.llvm import llvm_as
+from compilers.llvm import opt
 
 FLAGS = app.FLAGS
 
@@ -102,8 +102,7 @@ def DotControlFlowGraphsFromBytecode(bytecode: str) -> typing.Iterator[str]:
 
 
 def DotCallGraphAndControlFlowGraphsFromBytecode(
-    bytecode: str
-) -> typing.Tuple[str, typing.List[str]]:
+    bytecode: str) -> typing.Tuple[str, typing.List[str]]:
   """Create call graph and control flow graphs from an LLVM bytecode file.
 
   When both a call graph and CFGs are required, calling this function is
@@ -167,7 +166,7 @@ def DotCallGraphAndControlFlowGraphsFromBytecode(
 
 
 def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
-               ) -> typing.List[typing.List[str]]:
+              ) -> typing.List[typing.List[str]]:
   """Get the arguments passed to opt.
 
   Args:
@@ -201,47 +200,49 @@ def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
 
 
 AliasSet = collections.namedtuple(
-    'AliasSet', [
-      # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
-      #
-      #    /// The kind of alias relationship between pointers of the set.
-      #    ///
-      #    /// These represent conservatively correct alias results between any members
-      #    /// of the set. We represent these independently of the values of alias
-      #    /// results in order to pack it into a single bit. Lattice goes from
-      #    /// MustAlias to MayAlias.
-      #    enum AliasLattice {
-      #      SetMustAlias = 0, SetMayAlias = 1
-      #    };
-      'type',  # str, one of {must alias, may alias}
-      # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
-      #
-      #    /// The kinds of access this alias set models.
-      #    ///
-      #    /// We keep track of whether this alias set merely refers to the locations of
-      #    /// memory (and not any particular access), whether it modifies or references
-      #    /// the memory, or whether it does both. The lattice goes from "NoAccess" to
-      #    /// either RefAccess or ModAccess, then to ModRefAccess as necessary.
-      #    enum AccessLattice {
-      #      NoAccess = 0,
-      #      RefAccess = 1,
-      #      ModAccess = 2,
-      #      ModRefAccess = RefAccess | ModAccess
-      #    };
-      'mod_ref',  # str, one of {Mod,Ref,Mod/Ref}
-      'pointers',  # typing.List[Pointer]
-    ]
-)
+    'AliasSet',
+    [
+        # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
+        #
+        #    /// The kind of alias relationship between pointers of the set.
+        #    ///
+        #    /// These represent conservatively correct alias results between any members
+        #    /// of the set. We represent these independently of the values of alias
+        #    /// results in order to pack it into a single bit. Lattice goes from
+        #    /// MustAlias to MayAlias.
+        #    enum AliasLattice {
+        #      SetMustAlias = 0, SetMayAlias = 1
+        #    };
+        'type',  # str, one of {must alias, may alias}
+        # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
+        #
+        #    /// The kinds of access this alias set models.
+        #    ///
+        #    /// We keep track of whether this alias set merely refers to the locations of
+        #    /// memory (and not any particular access), whether it modifies or references
+        #    /// the memory, or whether it does both. The lattice goes from "NoAccess" to
+        #    /// either RefAccess or ModAccess, then to ModRefAccess as necessary.
+        #    enum AccessLattice {
+        #      NoAccess = 0,
+        #      RefAccess = 1,
+        #      ModAccess = 2,
+        #      ModRefAccess = RefAccess | ModAccess
+        #    };
+        'mod_ref',  # str, one of {Mod,Ref,Mod/Ref}
+        'pointers',  # typing.List[Pointer]
+    ])
 
 Pointer = collections.namedtuple(
-    'Pointer', [
-      'type',  # str
-      'identifier',  # str
-      'size',  # int
-    ]
-)
+    'Pointer',
+    [
+        'type',  # str
+        'identifier',  # str
+        'size',  # int
+    ])
 
-def GetAliasSetsByFunction(bytecode: str) -> typing.Dict[str, typing.List[AliasSet]]:
+
+def GetAliasSetsByFunction(
+    bytecode: str) -> typing.Dict[str, typing.List[AliasSet]]:
   """Get the alias sets of a bytecode.
 
   Args:
@@ -262,11 +263,11 @@ def GetAliasSetsByFunction(bytecode: str) -> typing.Dict[str, typing.List[AliasS
   if process.returncode:
     raise opt.OptException(returncode=process.returncode, stderr=process.stderr)
 
-  return _ParseAliasSetsOutput(process.stderr)
+  return ParseAliasSetsOutput(process.stderr)
 
 
-def _ParseAliasSetsOutput(output: str) -> typing.Dict[str, typing.List[AliasSet]]:
-  app.Log(1, "OUTPUT %s\n", output)
+def ParseAliasSetsOutput(
+    output: str) -> typing.Dict[str, typing.List[AliasSet]]:
   lines = output.split('\n')
   function_alias_sets = {}
 
@@ -308,11 +309,12 @@ def _ParseAliasSetsOutput(output: str) -> typing.Dict[str, typing.List[AliasSet]
         pointer = Pointer(type=typename, identifier=identifier, size=int(size))
         alias_set_pointers.append(pointer)
       if alias_set_pointers:
-        alias_sets.append(AliasSet(
-            type=alias_set_type,
-            mod_ref=mod_ref,
-            pointers=alias_set_pointers,
-        ))
+        alias_sets.append(
+            AliasSet(
+                type=alias_set_type,
+                mod_ref=mod_ref,
+                pointers=alias_set_pointers,
+            ))
     elif 'Unknown instructions' in line:
       pass
     elif line.strip():  # Empty line
