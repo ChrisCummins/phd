@@ -44,14 +44,6 @@ app.DEFINE_string('graph_type', 'cfg_from_proto',
 app.DEFINE_string(
     'dataflow', 'none',
     'The type of data flow annotations to add to generated graphs.')
-app.DEFINE_float(
-    'train_to_val_ratio', 1 / 3,
-    'The ratio between the size of the validation set relative to the size of '
-    'the training set.')
-app.DEFINE_float(
-    'train_to_test_ratio', 1 / 3,
-    'The ratio between the size of the test set relative to the size of the '
-    'training set.')
 app.DEFINE_integer(
     'max_instances_per_graph', 3,
     'The maximum number of reachability graph instances to produce from a '
