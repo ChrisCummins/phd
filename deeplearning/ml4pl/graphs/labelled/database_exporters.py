@@ -6,6 +6,7 @@ import typing
 from labm8 import app
 from labm8 import humanize
 from labm8 import labtypes
+from labm8 import ppar
 from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -16,7 +17,7 @@ FLAGS = app.FLAGS
 app.DEFINE_boolean('multiprocess_database_exporters', True,
                    'Enable multiprocessing for database job workers.')
 app.DEFINE_integer(
-    'database_exporter_batch_size', 10000,
+    'database_exporter_batch_size', 1024,
     'The number of bytecodes to process in-memory before writing'
     'to database.')
 
@@ -76,38 +77,40 @@ class BytecodeDatabaseExporterBase(object):
     start_time = time.time()
     exported_count = 0
 
-    chunksize = max(self.batch_size // 16, 8)
+    multiprocessing_chunksize = max(self.batch_size // 16, 8)
     job_processor = self.GetProcessJobFunction()
 
-    for i, chunk in enumerate(labtypes.Chunkify(bytecode_ids, self.batch_size)):
+    job_builder = ppar.ThreadedIterator(self.MakeJobsIterator(),
+                                        max_queue_size=3)
+
+    for i, jobs in enumerate(job_builder):
       app.Log(
           1, 'Processing %s-%s of %s %s bytecodes (%.2f%%, %.2f graphs/second)',
-          i * self.batch_size, i * self.batch_size + len(chunk),
+          i * self.batch_size, i * self.batch_size + len(jobs),
           humanize.Commas(len(bytecode_ids)), group,
           ((i * self.batch_size) / len(bytecode_ids)) * 100,
           exported_count / (time.time() - start_time))
-      # Run the database queries from the master thread to produce
-      # jobs.
+      # Process jobs in parallel.
+      if FLAGS.multiprocess_database_exporters:
+        workers = self.pool.imap_unordered(job_processor,
+                                           jobs,
+                                           chunksize=multiprocessing_chunksize)
+      else:
+        workers = (job_processor(job) for job in jobs)
+
+      with sqlutil.BufferedDatabaseWriter(self.graph_db).Session() as writer:
+        for graph_metas in workers:
+          # Set the GraphMeta.group column.
+          for graph in graph_metas:
+            graph.group = group
+          writer.AddMany(graph_metas)
+
+    return exported_count
+
+  def MakeJobsIterator(self, bytecode_ids):
+    for i, chunk in enumerate(labtypes.Chunkify(bytecode_ids, self.batch_size)):
       with self.bytecode_db.Session() as s:
         jobs = [self.MakeExportJob(s, bytecode_id) for bytecode_id in chunk]
       # Filter the failed jobs.
       jobs = [j for j in jobs if j]
-
-      # Process jobs in parallel.
-      graph_metas = []
-      if FLAGS.multiprocess_database_exporters:
-        workers = self.pool.imap_unordered(job_processor,
-                                           jobs,
-                                           chunksize=chunksize)
-      else:
-        workers = (job_processor(job) for job in jobs)
-      for graphs_chunk in workers:
-        graph_metas += graphs_chunk
-
-      exported_count += len(graph_metas)
-      # Set the GraphMeta.group column.
-      for graph in graph_metas:
-        graph.group = group
-      sqlutil.ResilientAddManyAndCommit(self.graph_db, graph_metas)
-
-    return exported_count
+      yield jobs
