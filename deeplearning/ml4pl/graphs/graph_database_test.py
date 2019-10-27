@@ -113,8 +113,8 @@ def test_Graph_CreateWithGraphDict(graph: nx.MultiDiGraph):
   assert gm.relpath == 'bar'
   assert gm.language == 'c'
   assert gm.node_count == 5
-  assert gm.edge_count == 5
-  assert gm.edge_type_count == 3
+  assert gm.edge_count == 5 * 2  # forward and backward edges
+  assert gm.edge_type_count == 3 * 2  # foward and backward edge types.
   assert gm.node_features_dimensionality == 2
   assert gm.node_labels_dimensionality == 1
   assert gm.edge_features_dimensionality == 3

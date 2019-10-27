@@ -29,10 +29,14 @@ def test_BatchLog_columns(db: log_database.Database):
             graph_count=100,
             node_count=500,
             loss=.25,
+            precision=.5,
+            recall=.5,
+            f1=.5,
             accuracy=.75,
             group="train",
             pickled_graph_indices=pickle.dumps([0, 1, 2, 3]),
             pickled_predictions=pickle.dumps(np.array([0, 1, 2, 3])),
+            pickled_accuracies=pickle.dumps(np.array([True, False, False])),
         ))
 
   with db.Session() as session:
@@ -45,10 +49,14 @@ def test_BatchLog_columns(db: log_database.Database):
     assert log.graph_count == 100
     assert log.node_count == 500
     assert log.loss == .25
+    assert log.precision == .5
+    assert log.recall == .5
+    assert log.f1 == .5
     assert log.accuracy == .75
     assert log.group == "train"
     assert log.graph_indices == [0, 1, 2, 3]
     assert np.array_equal(log.predictions, np.array([0, 1, 2, 3]))
+    assert np.array_equal(log.accuracies, np.array([True, False, False]))
 
 
 if __name__ == '__main__':
