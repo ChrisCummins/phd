@@ -73,16 +73,19 @@ class BytecodeDatabaseExporterBase(object):
     return total_count
 
   def ExportGroup(self, group: str, bytecode_ids: typing.List[int]):
+    start_time = time.time()
     exported_count = 0
 
     chunksize = max(self.batch_size // 16, 8)
     job_processor = self.GetProcessJobFunction()
 
     for i, chunk in enumerate(labtypes.Chunkify(bytecode_ids, self.batch_size)):
-      app.Log(1, 'Processing %s-%s of %s %s bytecodes (%.2f%%)',
-              i * self.batch_size, i * self.batch_size + len(chunk),
-              humanize.Commas(len(bytecode_ids)), group,
-              ((i * self.batch_size) / len(bytecode_ids)) * 100)
+      app.Log(
+          1, 'Processing %s-%s of %s %s bytecodes (%.2f%%, %.2f graphs/second)',
+          i * self.batch_size, i * self.batch_size + len(chunk),
+          humanize.Commas(len(bytecode_ids)), group,
+          ((i * self.batch_size) / len(bytecode_ids)) * 100,
+          exported_count / (time.time() - start_time))
       # Run the database queries from the master thread to produce
       # jobs.
       with self.bytecode_db.Session() as s:
