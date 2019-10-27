@@ -82,35 +82,6 @@ def InsertFunctionGraph(graph, function_name, function_graphs
   return graph, function_graph.entry_block, function_graph.exit_block
 
 
-def GetCalledFunctionName(statement) -> typing.Optional[str]:
-  """Get the name of a function called in the statement."""
-  if 'call ' not in statement:
-    return None
-  # Try and resolve the call destination.
-  _, m_glob, _, _ = inst2vec_preprocess.get_identifiers_from_line(statement)
-  if not m_glob:
-    return None
-  return m_glob[0][1:]  # strip the leading '@' character
-
-
-def FindCallSites(graph, src, dst):
-  """Find the statements in `src` function that call `dst` function."""
-  call_sites = []
-  for node, data in iterators.StatementNodeIterator(graph):
-    if data['function'] != src:
-      continue
-    statement = data.get('original_text', data['text'])
-    called_function = GetCalledFunctionName(statement)
-    if not called_function:
-      continue
-    if called_function == dst:
-      call_sites.append(node)
-  if not call_sites:
-    raise ValueError(
-        "Unable to find any call statements from `{src}` to `{dst}`")
-  return call_sites
-
-
 def AddInterproceduralCallEdges(
     graph: nx.MultiDiGraph, call_multigraph: nx.MultiDiGraph,
     function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]],
@@ -126,7 +97,7 @@ def AddInterproceduralCallEdges(
     if src == 'external node':
       continue
 
-    call_sites = FindCallSites(graph, src, dst)
+    call_sites = query.FindCallSites(graph, src, dst)
 
     # Check that the number of call sounds we found matches the expected number
     # from the call graph.
@@ -144,18 +115,6 @@ def AddInterproceduralCallEdges(
       # Connect the noes.
       graph.add_edge(call_site, call_entry, flow='call')
       graph.add_edge(call_exit, call_site_successor, flow='call')
-
-
-def GetCallStatementSuccessor(graph: nx.MultiDiGraph, call_site: str):
-  """Find the neighboring"""
-  call_site_successors = StatementNeighbors(graph, call_site)
-  if len(call_site_successors) != 1:
-    raise ValueError(
-        f"Call statement `{call_site}` should have exactly one successor "
-        "statement but found "
-        f"{humanize.Plural(len(call_size_successors), 'successor')}: "
-        f"`{call_site_successors}`")
-  return list(call_site_successors)[0]
 
 
 class ControlAndDataFlowGraphBuilder(object):
@@ -452,7 +411,7 @@ class ControlAndDataFlowGraphBuilder(object):
       interprocedural_graph.add_edge('root', function_entry, flow='call')
 
     if self.call_edge_returns_to_successor:
-      get_call_site_successor = GetCallStatementSuccessor
+      get_call_site_successor = query.GetCallStatementSuccessor
     else:
       get_call_site_successor = lambda g, n: n
 
