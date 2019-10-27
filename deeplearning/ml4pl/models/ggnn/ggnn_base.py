@@ -163,9 +163,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
                if self.placeholders['node_y'] in feed_dict else
                feed_dict[self.placeholders['graph_y']])
 
-    return self.MinibatchResults(loss=float(fetch_dict['loss']),
-                                 y_true_1hot=targets,
-                                 y_pred_1hot=fetch_dict['predictions'])
+    return self.MinibatchResults(
+        loss=float(fetch_dict['loss']),
+        y_true_1hot=targets,
+        y_pred_1hot=fetch_dict['predictions'])
 
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()
@@ -205,22 +206,22 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         restore_ops.append(tf.variables_initializer(variables_to_initialize))
         self.sess.run(restore_ops)
 
-    def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
-      # Special handling for layer_timesteps: We permit a different number of
-      # steps per layer, but require that the number of layers be the same.
-      num_layers = len(flags['layer_timesteps'])
-      saved_num_layers = len(saved_flags['layer_timesteps'])
-      if num_layers != saved_num_layers:
-        raise EnvironmentError(
-            "Saved model has "
-            f"{humanize.Plural(saved_num_layers, 'layer')} but flags has "
-            f"incompatible {humanize.Plural(num_layers, 'layer')}")
+  def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
+    # Special handling for layer_timesteps: We permit a different number of
+    # steps per layer, but require that the number of layers be the same.
+    num_layers = len(flags['layer_timesteps'])
+    saved_num_layers = len(saved_flags['layer_timesteps'])
+    if num_layers != saved_num_layers:
+      raise EnvironmentError(
+          "Saved model has "
+          f"{humanize.Plural(saved_num_layers, 'layer')} but flags has "
+          f"incompatible {humanize.Plural(num_layers, 'layer')}")
 
-      # Use regular comparison method for the other flags.
-      del flags['layer_timesteps']
-      del saved_flags['layer_timesteps']
-      super(GgnnBaseModel, self).CheckThatModelFlagsAreEquivalent(
-          flags, saved_flags)
+    # Use regular comparison method for the other flags.
+    del flags['layer_timesteps']
+    del saved_flags['layer_timesteps']
+    super(GgnnBaseModel, self).CheckThatModelFlagsAreEquivalent(
+        flags, saved_flags)
 
   def _MakeTrainStep(self) -> tf.Tensor:
     """Helper function."""
@@ -228,8 +229,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         tf.GraphKeys.TRAINABLE_VARIABLES)
     if FLAGS.freeze_graph_model:
       graph_vars = set(
-          self.sess.graph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope="graph_model"))
+          self.sess.graph.get_collection(
+              tf.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"))
       filtered_vars = []
       for var in trainable_vars:
         if var not in graph_vars:
@@ -238,13 +239,13 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           app.Log(1, "Freezing weights of variable `%s`.", var.name)
       trainable_vars = filtered_vars
     optimizer = tf.compat.v1.train.AdamOptimizer(FLAGS.learning_rate)
-    grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
-                                                 var_list=trainable_vars)
+    grads_and_vars = optimizer.compute_gradients(
+        self.ops["loss"], var_list=trainable_vars)
     clipped_grads = []
     for grad, var in grads_and_vars:
       if grad is not None:
-        clipped_grads.append((tf.clip_by_norm(grad,
-                                              FLAGS.clamp_gradient_norm), var))
+        clipped_grads.append((tf.clip_by_norm(grad, FLAGS.clamp_gradient_norm),
+                              var))
       else:
         clipped_grads.append((grad, var))
     train_step = optimizer.apply_gradients(clipped_grads)
