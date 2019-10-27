@@ -1,6 +1,7 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/classifyapp:make_classifyapp_dataset."""
 import pathlib
 import pickle
+import typing
 
 import networkx as nx
 import numpy as np
@@ -35,9 +36,6 @@ REAL_FAIL_BYTECODES = [
 
 INST2VEC_DICITONARY_PATH = bazelutil.DataPath(
     'phd/deeplearning/ncc/published_results/dic_pickle')
-
-with open(INST2VEC_DICITONARY_PATH, 'rb') as f:
-  INST2VEC_DICTIONARY = pickle.load(f)
 
 
 @pytest.fixture(scope='function')
@@ -75,6 +73,12 @@ def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
 def test_GetGraphLabel():
   assert classifyapp.GetGraphLabel('1/bar.ll') == 1
   assert classifyapp.GetGraphLabel('2/foo.ll') == 2
+
+
+def _Pickle(path: pathlib.Path, data: typing.Any) -> str:
+  with open(path, 'wb') as f:
+    pickle.dump(data, f)
+  return str(path)
 
 
 def test_AddXfgFeatures_counters():
@@ -119,11 +123,16 @@ def test_AddXfgFeatures_feature_values():
 
 
 def test_BytecodeExporter_num_rows(bytecode_db: bytecode_database.Database,
-                                   graph_db: graph_database.Database):
+                                   graph_db: graph_database.Database,
+                                   tempdir: pathlib.Path):
   """Test the number of bytecodes exported."""
-  exporter = classifyapp.Exporter(bytecode_db, graph_db, {
-      '!UNK': 1,
+  FLAGS.dictionary = _Pickle(tempdir / 'dic', {
+      'foo': 1,
+      'bar': 2,
+      "!UNK": -1,
   })
+
+  exporter = classifyapp.Exporter(bytecode_db, graph_db)
   exporter.Export()
 
   with graph_db.Session() as s:
@@ -131,11 +140,16 @@ def test_BytecodeExporter_num_rows(bytecode_db: bytecode_database.Database,
 
 
 def test_BytecodeExporter_graph_dict(bytecode_db: bytecode_database.Database,
-                                     graph_db: graph_database.Database):
+                                     graph_db: graph_database.Database,
+                                     tempdir: pathlib.Path):
   """Test the graph_dict properties of exported bytecodes."""
-  exporter = classifyapp.Exporter(bytecode_db, graph_db, {
-      '!UNK': 1,
+  FLAGS.dictionary = _Pickle(tempdir / 'dic', {
+      'foo': 1,
+      'bar': 2,
+      "!UNK": -1,
   })
+
+  exporter = classifyapp.Exporter(bytecode_db, graph_db)
   exporter.Export()
 
   with graph_db.Session() as s:
@@ -186,6 +200,8 @@ def test_BytecodeExporter_okay_bytecodes(
 def test_BytecodeExporter_okay_bytecodes(
     tempdir: pathlib.Path, graph_db: graph_database.Database, bytecode_id: int):
   """Create creating Graphs from single-entry databases of real bytecodes."""
+  FLAGS.dictionary = INST2VEC_DICITONARY_PATH
+
   bytecode = REAL_FAIL_BYTECODES[bytecode_id]
 
   db = bytecode_database.Database(f'sqlite:///{tempdir}/bytecode_db')
@@ -202,7 +218,7 @@ def test_BytecodeExporter_okay_bytecodes(
             clang_returncode=0,
             error_message='',
         ))
-  exporter = classifyapp.Exporter(db, graph_db, INST2VEC_DICTIONARY)
+  exporter = classifyapp.Exporter(db, graph_db)
   exporter.Export()
 
 
