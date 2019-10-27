@@ -319,11 +319,11 @@ class ControlAndDataFlowGraphBuilder(object):
     edges_to_add: typing.List[typing.Tuple[str, str, str]] = []
 
     for statement, data in iterators.StatementNodeIterator(g):
-      destination, operands = GetLlvmStatementDefAndUses(data['text'])
-      if destination:  # Data flow out edge.
+      def_, uses = GetLlvmStatementDefAndUses(data['text'])
+      if def_:  # Data flow out edge.
         edges_to_add.append(
-            (statement, prefix(destination), prefix(destination)))
-      for identifier in operands:  # Data flow in edge.
+            (statement, prefix(def_), prefix(def_)))
+      for identifier in uses:  # Data flow in edge.
         edges_to_add.append((prefix(identifier), statement, prefix(identifier)))
 
     for src, dst, identifier in edges_to_add:
