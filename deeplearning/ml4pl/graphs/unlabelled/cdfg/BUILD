@@ -12,6 +12,7 @@ py_library(
         "//deeplearning/ml4pl/graphs/unlabelled/cg:call_graph",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         "//labm8:app",
+        "//labm8:decorators",
         "//labm8:humanize",
         "//third_party/py/networkx",
     ],
