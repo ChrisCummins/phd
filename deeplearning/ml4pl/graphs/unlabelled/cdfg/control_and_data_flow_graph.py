@@ -74,11 +74,24 @@ def InsertFunctionGraph(graph, function_name, function_graphs
 def AddInterproceduralCallEdges(
     graph: nx.MultiDiGraph, call_multigraph: nx.MultiDiGraph,
     function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]],
-    get_call_site_successor: typing.Callable[[nx.MultiDiGraph, str], str]):
-  """Add edges of type "call" between statements to match the call graph."""
+    get_call_site_successor: typing.Callable[[nx.MultiDiGraph, str], str]
+) -> None:
+  """Add "call" edges between procedures to match the call graph.
 
-  # Since we're not duplicating graphs, we can drop the parallel edges by
-  # converting the call graph back to a regular directed graph.
+  Args:
+    graph: The disconnected per-function graphs.
+    call_multigraph: A call graph with parallel edges to indicate multiple calls
+      from the same function.
+    function_entry_exit_nodes: A mapping from function name to a tuple of entry
+      and exit statements.
+    get_call_site_successor: A callback which takes as input a graph and a call
+      site statement within the graph, and returns the destination node for
+      calls from this site.
+  """
+  # Drop the parallel edges by converting the call graph back to a regular
+  # directed graph. Iterating over the edges in this graph then provides the
+  # functions that need connecting, while the multigraph tells us how many
+  # connections to expect.
   call_graph = nx.DiGraph(call_multigraph)
 
   for src, dst in call_graph.edges:
@@ -272,10 +285,10 @@ class ControlAndDataFlowGraphBuilder(object):
     edges_to_add: typing.List[typing.Tuple[str, str, str]] = []
 
     for statement, data in iterators.StatementNodeIterator(g):
-      def_, uses = GetLlvmStatementDefAndUses(data['text'])
+      def_, uses = GetLlvmStatementDefAndUses(
+          data['text'], store_destination_is_def=self.store_destination_is_def)
       if def_:  # Data flow out edge.
-        edges_to_add.append(
-            (statement, prefix(def_), prefix(def_)))
+        edges_to_add.append((statement, prefix(def_), prefix(def_)))
       for identifier in uses:  # Data flow in edge.
         edges_to_add.append((prefix(identifier), statement, prefix(identifier)))
 
@@ -409,10 +422,9 @@ class ControlAndDataFlowGraphBuilder(object):
     else:
       get_call_site_successor = lambda g, n: n
 
-    AddInterproceduralCallEdges(interprocedural_graph,
-                                call_graph,
+    AddInterproceduralCallEdges(interprocedural_graph, call_graph,
                                 function_entry_exit_nodes,
-                                get_call_site_successor=get_call_site_successor)
+                                get_call_site_successor)
 
     return interprocedural_graph
 
