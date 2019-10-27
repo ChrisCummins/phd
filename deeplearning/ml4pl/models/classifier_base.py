@@ -38,16 +38,18 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/ggnn/',
-                       'The directory to write files to.',
-                       is_dir=True)
+app.DEFINE_output_path(
+    'working_dir',
+    '/tmp/deeplearning/ml4pl/models/ggnn/',
+    'The directory to write files to.',
+    is_dir=True)
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -286,7 +288,7 @@ class ClassifierBase(object):
     data_to_save = {
         "flags": app.FlagsToDict(json_safe=True),
         "model_flags": self._ModelFlagsToDict(),
-        "modeL_data": self.ModelDataToSave(),
+        "model_data": self.ModelDataToSave(),
         "build_info": pbutil.ToJson(build_info.GetBuildInfo()),
         "epoch_num": self.epoch_num,
         "global_training_step": self.global_training_step,
@@ -356,7 +358,9 @@ class ClassifierBase(object):
           f"Saved flags not present now: '{saved_flag_names - flag_names}'")
     self.CheckThatModelFlagsAreEquivalent(flags, saved_flags)
 
-    self.LoadModelData(data_to_load['model_data'])
+    # Workaround for a typo in an earlier version of this script.
+    model_data = data_to_load.get('model_data', data_to_load['modeL_data'])
+    self.LoadModelData(model_data)
 
   def _ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
     """Return the flags which are """
