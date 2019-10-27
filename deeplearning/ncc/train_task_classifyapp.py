@@ -31,12 +31,12 @@ import numpy as np
 import tensorflow as tf
 from keras import utils
 from keras.callbacks import Callback
+from labm8 import app
+from labm8 import fs
 from sklearn.utils import resample
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
-from labm8 import app
-from labm8 import fs
 
 # Parameters of classifyapp
 app.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/classifyapp/ir',
@@ -135,7 +135,7 @@ class EmbeddingSequence(utils.Sequence):
     self.x_seq = x_seq
     self.y_1hot = y_1hot
     self.emb = embedding_mat
-    self.sess = tf.Session()
+    self.sess = tf.compat.v1.Session()
     self._set_index_array()
 
   def _set_index_array(self):
@@ -166,7 +166,7 @@ class EmbeddingPredictionSequence(utils.Sequence):
     self.x_seq = x_seq
     self.dataset_len = int(np.shape(x_seq)[0] // self.batch_size)
     self.emb = embedding_mat
-    self.sess = tf.Session()
+    self.sess = tf.compat.v1.Session()
 
   def __len__(self):
     return self.dataset_len
@@ -211,14 +211,14 @@ class NCC_classifyapp(object):
     np.random.seed(seed)
 
     # Keras model
-    inp = Input(
-        shape=(
-            maxlen,
-            embedding_dim,
-        ), dtype="float32", name="code_in")
-    x = LSTM(
-        embedding_dim, implementation=1, return_sequences=True,
-        name="lstm_1")(inp)
+    inp = Input(shape=(
+        maxlen,
+        embedding_dim,
+    ), dtype="float32", name="code_in")
+    x = LSTM(embedding_dim,
+             implementation=1,
+             return_sequences=True,
+             name="lstm_1")(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
 
     # Heuristic model: outputs 1-of-num_classes prediction
@@ -227,8 +227,9 @@ class NCC_classifyapp(object):
     outputs = Dense(num_classes, activation="sigmoid")(x)
 
     self.model = Model(inputs=inp, outputs=outputs)
-    self.model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=['accuracy'])
+    self.model.compile(optimizer="adam",
+                       loss="categorical_crossentropy",
+                       metrics=['accuracy'])
     print('\tbuilt Keras model')
 
   def save(self, outpath: str):
@@ -241,14 +242,13 @@ class NCC_classifyapp(object):
   def train(self, sequences: np.array, y_1hot: np.array,
             sequences_val: np.array, y_1hot_val: np.array, verbose: bool,
             epochs: int, batch_size: int) -> None:
-    self.model.fit(
-        x=sequences,
-        y=y_1hot,
-        epochs=epochs,
-        batch_size=batch_size,
-        verbose=verbose,
-        shuffle=True,
-        validation_data=(sequences_val, y_1hot_val))
+    self.model.fit(x=sequences,
+                   y=y_1hot,
+                   epochs=epochs,
+                   batch_size=batch_size,
+                   verbose=verbose,
+                   shuffle=True,
+                   validation_data=(sequences_val, y_1hot_val))
 
   def train_gen(self, train_generator: EmbeddingSequence,
                 validation_generator: EmbeddingSequence, verbose: bool,
@@ -256,22 +256,20 @@ class NCC_classifyapp(object):
     checkpoint = WeightsSaver(self.model, FLAGS.save_every, FLAGS.ring_size)
 
     try:
-      self.model.fit_generator(
-          train_generator,
-          epochs=epochs,
-          verbose=verbose,
-          validation_data=validation_generator,
-          shuffle=True,
-          callbacks=[checkpoint])
+      self.model.fit_generator(train_generator,
+                               epochs=epochs,
+                               verbose=verbose,
+                               validation_data=validation_generator,
+                               shuffle=True,
+                               callbacks=[checkpoint])
     except KeyboardInterrupt:
       print('Ctrl-C detected, saving weights to file')
       self.model.save_weights('weights-kill.h5')
 
   def predict(self, sequences: np.array, batch_size: int) -> np.array:
     # directly predict application class from source sequences:
-    p = np.array(
-        self.model.predict(sequences, batch_size=batch_size,
-                           verbose=0))  # one-hot(range([0, 103]))
+    p = np.array(self.model.predict(sequences, batch_size=batch_size,
+                                    verbose=0))  # one-hot(range([0, 103]))
     indices = [np.argmax(x) for x in p]
     return [i + 1 for i in indices
            ]  # range(y): [1, 104], range(indices): [0, 103]
@@ -325,11 +323,10 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
     assert len(seq_files) >= samples_per_class, "Cannot sample " + str(
         samples_per_class) + " from " + str(
             len(seq_files)) + " files found in " + folder
-    X_train += resample(
-        seq_files,
-        replace=False,
-        n_samples=samples_per_class,
-        random_state=seed)
+    X_train += resample(seq_files,
+                        replace=False,
+                        n_samples=samples_per_class,
+                        random_state=seed)
     y_train = np.concatenate(
         [y_train,
          np.array([int(i)] * samples_per_class, dtype=np.int32)])
@@ -346,11 +343,10 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
       assert len(seq_files) >= vsamples_per_class, "Cannot sample " + str(
           vsamples_per_class) + " from " + str(
               len(seq_files)) + " files found in " + folder
-      X_val += resample(
-          seq_files,
-          replace=False,
-          n_samples=vsamples_per_class,
-          random_state=seed)
+      X_val += resample(seq_files,
+                        replace=False,
+                        n_samples=vsamples_per_class,
+                        random_state=seed)
       y_val = np.concatenate(
           [y_val,
            np.array([int(i)] * vsamples_per_class, dtype=np.int32)])
@@ -436,20 +432,18 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
 
       # Create a new model and train it
       print('\n--- Initializing model...')
-      model.init(
-          seed=seed,
-          maxlen=maxlen,
-          embedding_dim=int(embedding_dimension),
-          num_classes=num_classes,
-          dense_layer_size=dense_layer_size)
+      model.init(seed=seed,
+                 maxlen=maxlen,
+                 embedding_dim=int(embedding_dimension),
+                 num_classes=num_classes,
+                 dense_layer_size=dense_layer_size)
       if print_summary:
         model.model.summary()
       print('\n--- Training model...')
-      model.train_gen(
-          train_generator=gen_train,
-          validation_generator=gen_val,
-          verbose=True,
-          epochs=num_epochs)
+      model.train_gen(train_generator=gen_train,
+                      validation_generator=gen_val,
+                      verbose=True,
+                      epochs=num_epochs)
 
       # Save the model
       fs.mkdir(fs.dirname(model_path))

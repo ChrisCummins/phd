@@ -111,10 +111,9 @@ def CreatePlaceholdersFromGraphs(
     A tuple of the input graph's and target graph's placeholders, as a
     graph namedtuple.
   """
-  input_ph = utils_tf.placeholders_from_networkxs(input_graphs,
-                                                  force_dynamic_num_graphs=True,
-                                                  name="input_ph")
-  target_ph = utils_tf.placeholders_from_networkxs(
+  input_ph = utils_tf.compat.v1.placeholders_from_networkxs(
+      input_graphs, force_dynamic_num_graphs=True, name="input_ph")
+  target_ph = utils_tf.compat.v1.placeholders_from_networkxs(
       target_graphs, force_dynamic_num_graphs=True, name="target_ph")
   return InputTargetValue(input_ph, target_ph)
 
@@ -537,7 +536,8 @@ class CompilerGraphNeuralNetwork(object):
     self.outdir = outdir
     self.evaluate_outputs = evaluate_outputs
 
-  def TrainAndEvaluate(self, sess: tf.Session) -> typing.List[nx.DiGraph]:
+  def TrainAndEvaluate(self,
+                       sess: tf.compat.v1.Session) -> typing.List[nx.DiGraph]:
     """Train and evaluate a model.
 
     Args:
@@ -831,7 +831,7 @@ def main(argv):
   # Create the model.
   model = CompilerGraphNeuralNetwork(df, outdir)
 
-  with profile_context as pctx, tf.Session() as sess:
+  with profile_context as pctx, tf.compat.v1.Session() as sess:
     # Set up profiling. Note that if not FLAGS.profile_tensorflow, these
     # methods are no-ops.
     pctx.add_auto_profiling('op', opts, [15, 50, 100])

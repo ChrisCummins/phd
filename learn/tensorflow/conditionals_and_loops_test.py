@@ -2,7 +2,6 @@
 import collections
 
 import tensorflow as tf
-
 from labm8 import app
 from labm8 import test
 
@@ -12,22 +11,21 @@ MODULE_UNDER_TEST = None  # No coverage.
 
 
 def ConditionalLessThan(x, y: int):
-  return tf.cond(
-      tf.less(x, tf.constant(
-          y)), lambda: tf.constant(True), lambda: tf.constant(False))
+  return tf.cond(tf.less(x, tf.constant(y)), lambda: tf.constant(True),
+                 lambda: tf.constant(False))
 
 
 def test_ConditionalLessThan_interger_input():
   """Test conditional with simple lambdas and int input."""
-  with tf.Session() as sess:
+  with tf.compat.v1.Session() as sess:
     assert sess.run(ConditionalLessThan(1, 10))
     assert not sess.run(ConditionalLessThan(10, 1))
 
 
 def test_ConditionalLessThan_placeholder_input():
   """Test conditional with simple lambdas and placeholder input."""
-  x = tf.placeholder(tf.int32, shape=())
-  with tf.Session() as sess:
+  x = tf.compat.v1.placeholder(tf.int32, shape=())
+  with tf.compat.v1.Session() as sess:
     assert sess.run(ConditionalLessThan(x, 10), feed_dict={x: 1})
     assert not sess.run(ConditionalLessThan(x, 1), feed_dict={x: 10})
 
@@ -44,10 +42,9 @@ def WhileLoopFactorial(n: int):
   def Body(vars: LoopVars):
     """The while loop body."""
     return [
-        LoopVars(
-            i=tf.add(vars.i, 1),
-            imax=vars.imax,
-            acc=tf.multiply(vars.acc, vars.i)),
+        LoopVars(i=tf.add(vars.i, 1),
+                 imax=vars.imax,
+                 acc=tf.multiply(vars.acc, vars.i)),
     ]
 
   init_vars = LoopVars(i=1, imax=n + 1, acc=1)
@@ -59,7 +56,7 @@ def WhileLoopFactorial(n: int):
 
 def test_WhileLoopFactorial():
   """Test factorial calculation."""
-  with tf.Session() as sess:
+  with tf.compat.v1.Session() as sess:
     final_vars, = sess.run(WhileLoopFactorial(9))
     assert final_vars.acc == 362880  # 9!
 
@@ -72,15 +69,14 @@ def WhileLoopFactorialIsEqualTo(x: int, y: int):
   # Use the while loop output as input to the conditional.
   final_vars, = WhileLoopFactorial(x)
 
-  cond = tf.cond(
-      tf.equal(final_vars.acc, tf.constant(
-          y)), lambda: tf.constant(True), lambda: tf.constant(False))
+  cond = tf.cond(tf.equal(final_vars.acc, tf.constant(y)),
+                 lambda: tf.constant(True), lambda: tf.constant(False))
   return cond
 
 
 def test_WhileLoopFactorialIsLessThan():
   """Test while loop conditional combination."""
-  with tf.Session() as sess:
+  with tf.compat.v1.Session() as sess:
     assert sess.run(WhileLoopFactorialIsEqualTo(1, 1))  # 1! = 1
     assert sess.run(WhileLoopFactorialIsEqualTo(2, 2))  # 2! = 2
     assert sess.run(WhileLoopFactorialIsEqualTo(3, 6))  # 3! = 6

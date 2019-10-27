@@ -13,16 +13,17 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """LDA model."""
-import multiprocessing
-
 import collections
+import multiprocessing
+import pathlib
+import typing
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-import pathlib
 import tensorflow as tf
-import typing
 from graph_nets.demos import models as gn_models
+from labm8 import app
 
 from compilers.llvm import opt_util
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
@@ -31,7 +32,6 @@ from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
-from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -44,7 +44,7 @@ InputTargetValue = collections.namedtuple('InputTargetValue',
 
 def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
                 vocab: inst2vec_vocabulary.VocabularyZipFile,
-                session: tf.Session, embedding_lookup_op,
+                session: tf.compat.v1.Session, embedding_lookup_op,
                 embedding_lookup_input_ph) -> llvm_util.LlvmControlFlowGraph:
   """Encode inst2vec attributes on an LLVM control flow graph.
 
@@ -320,13 +320,13 @@ class Lda(base.HeterogeneousMappingModel):
     """
     with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
       # Create embedding lookup op.
-      embedding_lookup_input_ph = tf.placeholder(dtype=tf.int32)
+      embedding_lookup_input_ph = tf.compat.v1.placeholder(dtype=tf.int32)
       normalized_embedding_matrix = tf.nn.l2_normalize(self.embedding_matrix,
                                                        axis=1)
       embedding_lookup_op = tf.nn.embedding_lookup(normalized_embedding_matrix,
                                                    embedding_lookup_input_ph)
 
-      with tf.Session() as session:
+      with tf.compat.v1.Session() as session:
         for i, (row, graph) in enumerate(data):
           app.Log(1, 'Encoding graph %d %s', i, row['program:benchmark_name'])
           yield row, EncodeGraph(graph, vocab, session, embedding_lookup_op,

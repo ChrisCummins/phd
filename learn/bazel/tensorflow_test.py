@@ -1,7 +1,5 @@
 """A simple test to ensure that TensorFlow is working."""
-
 import tensorflow as tf
-
 from labm8 import app
 from labm8 import test
 
@@ -12,7 +10,7 @@ MODULE_UNDER_TEST = None  # No coverage.
 
 def test_Tensorflow_hello_world():
   """The "hello world" of TensorFlow tests."""
-  sess = tf.Session()
+  sess = tf.compat.v1.Session()
   a = tf.constant(10)
   b = tf.constant(32)
   assert 42 == sess.run(a + b)

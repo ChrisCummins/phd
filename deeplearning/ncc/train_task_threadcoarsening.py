@@ -22,7 +22,6 @@
 # ==============================================================================
 """Training workflow for optimal thread coarsening factor prediction"""
 # Based on: https://github.com/ChrisCummins/paper-end2end-dl/blob/master/code/Case%20Study%20B.ipynb
-
 import math
 import os
 import pathlib
@@ -30,13 +29,13 @@ import pickle
 
 import numpy as np
 import pandas as pd
+from labm8 import app
+from labm8 import bazelutil
+from labm8 import fs
 from sklearn.model_selection import KFold
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
 
 app.DEFINE_string('input_data',
                   '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
@@ -184,21 +183,22 @@ class NCC_threadcoarsening:
     np.random.seed(seed)
 
     # Model
-    inp = Input(
-        shape=(
-            maxlen,
-            embedding_dim,
-        ), dtype="float32", name="code_in")
-    x = LSTM(
-        embedding_dim, implementation=1, return_sequences=True,
-        name="lstm_1")(inp)
+    inp = Input(shape=(
+        maxlen,
+        embedding_dim,
+    ), dtype="float32", name="code_in")
+    x = LSTM(embedding_dim,
+             implementation=1,
+             return_sequences=True,
+             name="lstm_1")(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
     x = BatchNormalization()(x)
     x = Dense(dense_layer_size, activation="relu")(x)
     outputs = Dense(6, activation="sigmoid")(x)
     self.model = Model(inputs=inp, outputs=outputs)
-    self.model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=['accuracy'])
+    self.model.compile(optimizer="adam",
+                       loss="categorical_crossentropy",
+                       metrics=['accuracy'])
     print('\tbuilt Keras model')
 
   def save(self, outpath: str):
@@ -210,18 +210,17 @@ class NCC_threadcoarsening:
 
   def train(self, sequences: np.array, y_1hot: np.array, verbose: bool,
             epochs: int, batch_size: int) -> None:
-    self.model.fit(
-        sequences,
-        y_1hot,
-        epochs=epochs,
-        batch_size=batch_size,
-        verbose=verbose,
-        shuffle=True)
+    self.model.fit(sequences,
+                   y_1hot,
+                   epochs=epochs,
+                   batch_size=batch_size,
+                   verbose=verbose,
+                   shuffle=True)
 
   def predict(self, sequences: np.array, batch_size: int) -> np.array:
     # directly predict optimal thread coarsening factor from source sequences:
-    p = np.array(
-        self.model.predict(sequences, batch_size=batch_size, verbose=0))
+    p = np.array(self.model.predict(sequences, batch_size=batch_size,
+                                    verbose=0))
     indices = [np.argmax(x) for x in p]
     return [cfs[x] for x in indices]
 
@@ -270,11 +269,11 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
     import tensorflow as tf  # for embeddings lookup
     embedding_matrix_normalized = tf.nn.l2_normalize(embeddings, axis=1)
     vocabulary_size, embedding_dimension = embedding_matrix_normalized.shape
-    seq_ = tf.placeholder(dtype=tf.int32)
+    seq_ = tf.compat.v1.placeholder(dtype=tf.int32)
 
     # Tensor of shape (num_input_files, sequence length, embbedding dimension)
     embedding_input_ = tf.nn.embedding_lookup(embedding_matrix_normalized, seq_)
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
       embedding_input = sess.run(embedding_input_, feed_dict={seq_: X_seq})
 
     # Leave-one-out cross-validation
@@ -316,12 +315,11 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
             model.model.summary()
 
           # Train and cache a model
-          model.train(
-              sequences=embedding_input[train_index, :, :],
-              verbose=True,
-              y_1hot=y_1hot[train_index],
-              epochs=num_epochs,
-              batch_size=batch_size)
+          model.train(sequences=embedding_input[train_index, :, :],
+                      verbose=True,
+                      y_1hot=y_1hot[train_index],
+                      epochs=num_epochs,
+                      batch_size=batch_size)
 
           # cache the model
           fs.mkdir(fs.dirname(model_path))
@@ -330,9 +328,8 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 
         # test model
         print('\n--- Testing model...')
-        p = model.predict(
-            sequences=embedding_input[test_index, :, :],
-            batch_size=batch_size)[0]
+        p = model.predict(sequences=embedding_input[test_index, :, :],
+                          batch_size=batch_size)[0]
 
         # The runtimes of some coarsening factors are not recorded in the data table. If that is the case for
         # the predicted cf, clamp it down to the highest cf for which the runtime is recorded
@@ -376,12 +373,11 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
           "Oracle": p_oracle
       })
 
-  return pd.DataFrame(
-      data,
-      columns=[
-          "Model", "Platform", "Kernel", "Oracle-CF", "Predicted-CF", "Speedup",
-          "Oracle"
-      ])
+  return pd.DataFrame(data,
+                      columns=[
+                          "Model", "Platform", "Kernel", "Oracle-CF",
+                          "Predicted-CF", "Speedup", "Oracle"
+                      ])
 
 
 ########################################################################################################################
@@ -443,8 +439,8 @@ def main(argv):
   d = np.array([ncc_threadcoarsening[['Speedup', 'Oracle']].mean()]).T
   print(
       '\n',
-      pd.DataFrame(
-          d, columns=["DeepTuneInst2Vec"], index=["Speedup", "Oracle"]))
+      pd.DataFrame(d, columns=["DeepTuneInst2Vec"], index=["Speedup",
+                                                           "Oracle"]))
 
   # Model comparison: speedups
   print('\nModel comparison: speedups')
@@ -467,12 +463,12 @@ def main(argv):
     devs = [_FLAG_TO_DEVICE_NAME[FLAGS.device]]
   print(
       '\n',
-      pd.DataFrame(
-          d,
-          columns=[
-              'Magni et al.', 'DeepTune', 'DeepTuneTL', 'DeepTuneInst2Vec'
-          ],
-          index=devs))
+      pd.DataFrame(d,
+                   columns=[
+                       'Magni et al.', 'DeepTune', 'DeepTuneTL',
+                       'DeepTuneInst2Vec'
+                   ],
+                   index=devs))
 
 
 if __name__ == '__main__':

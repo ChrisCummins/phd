@@ -3,10 +3,10 @@ import sys
 
 import numpy as np
 import pytest
-
-import getconfig
 from labm8 import app
 from labm8 import test
+
+import getconfig
 
 FLAGS = app.FLAGS
 
@@ -26,7 +26,7 @@ def test_tensorflow_session():
   a = tf.constant(1)
   b = tf.constant(2)
   c = a + b
-  with tf.Session() as sess:
+  with tf.compat.v1.Session() as sess:
     assert sess.run(c) == 3
 
 
@@ -35,7 +35,8 @@ def test_tensorflow_session():
 @pytest.mark.skipif(not getconfig.GetGlobalConfig().with_cuda, reason='No GPU')
 def test_tensorflow_gpu_constant():
   import tensorflow as tf
-  with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
+  with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(
+      log_device_placement=True)) as sess:
     with tf.device('/gpu:0'):
       assert sess.run(tf.constant(1)) == 1
 
@@ -55,9 +56,10 @@ def test_tensorflow_gpu_computation():
                     name='b',
                     dtype=tf.float32)
     c = tf.matmul(a, b)
-  with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
-    np.testing.assert_array_almost_equal(
-        sess.run(c), np.array([[22, 28], [49, 64]]))
+  with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(
+      log_device_placement=True)) as sess:
+    np.testing.assert_array_almost_equal(sess.run(c),
+                                         np.array([[22, 28], [49, 64]]))
 
 
 if __name__ == '__main__':

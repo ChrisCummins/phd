@@ -84,7 +84,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.weights = {}  # Used by super-class to place generic things
     self.gnn_weights = GGNNWeights([], [], [], [])
     for layer_index in range(len(self.layer_timesteps)):
-      with tf.variable_scope(f"gnn_layer_{layer_index}"):
+      with tf.compat.v1.variable_scope(f"gnn_layer_{layer_index}"):
         edge_weights = tf.reshape(
             tf.Variable(
                 utils.glorot_init([
@@ -155,7 +155,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     message_edge_types = tf.concat(message_edge_types, axis=0)  # Shape [M]
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
-      with tf.variable_scope(f"gnn_layer_{layer_idx}"):
+      with tf.compat.v1.variable_scope(f"gnn_layer_{layer_idx}"):
         # Used shape abbreviations:
         #   V ~ number of nodes
         #   D ~ state dimension
@@ -183,7 +183,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         # be updated below:
         node_states_per_layer.append(node_states_per_layer[-1])
         for step in range(num_timesteps):
-          with tf.variable_scope(f"timestep_{step}"):
+          with tf.compat.v1.variable_scope(f"timestep_{step}"):
             # list of tensors of messages of shape [E, D]
             messages = []
             # list of tensors of edge source states of shape [E, D]

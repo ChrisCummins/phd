@@ -82,7 +82,7 @@ def trained_model(df: pd.DataFrame,
                   module_tempdir: pathlib.Path) -> TrainedModel:
   """Test fixture which yields a trained model and its outputs.'"""
   model = graph_model.CompilerGraphNeuralNetwork(df, module_tempdir)
-  with tf.Session() as sess:
+  with tf.compat.v1.Session() as sess:
     outputs = model.TrainAndEvaluate(sess)
   yield TrainedModel(model, outputs)
 

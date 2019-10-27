@@ -28,15 +28,18 @@ import re
 import numpy as np
 import tensorflow as tf
 import umap
-from bokeh.models import CategoricalColorMapper, ColumnDataSource
+from bokeh.models import CategoricalColorMapper
+from bokeh.models import ColumnDataSource
 from bokeh.palettes import Category20
-from bokeh.plotting import figure, output_file, show
+from bokeh.plotting import figure
+from bokeh.plotting import output_file
+from bokeh.plotting import show
+from labm8 import app
 from sklearn.manifold import TSNE
 
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_analogygen as analogygen
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
-from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -282,9 +285,9 @@ def evaluate_analogies(W,
   # Build the computational graph
   # Placeholders to fill in with indices of words in an analogy question
   # (dim = [N], N = number of analogies to evaluate in one batch) (or rather: unknown at this point)
-  analogy_a = tf.placeholder(dtype=tf.int32)
-  analogy_b = tf.placeholder(dtype=tf.int32)
-  analogy_c = tf.placeholder(dtype=tf.int32)
+  analogy_a = tf.compat.v1.placeholder(dtype=tf.int32)
+  analogy_b = tf.compat.v1.placeholder(dtype=tf.int32)
+  analogy_c = tf.compat.v1.placeholder(dtype=tf.int32)
 
   # Embeddings (dim = [vocabulary size, embedding dimension])
   embedding_matrix = tf.nn.l2_normalize(W, axis=1)
@@ -393,7 +396,7 @@ def evaluate_analogies(W,
       incorrect_answers_a.append(incorrect_answers_a_)
 
   if session is None:
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
       inner_evaluate_analogies(sess)
   else:
     inner_evaluate_analogies(session)
@@ -727,8 +730,8 @@ def plot_clustering(eval_folder, embeddings, embeddings_file,
     pickle.dump([targets, labels], open(flags_file, 'wb'))
 
   if FLAGS.tsne:
-    embedding = TSNE(
-        metric=FLAGS.metric, verbose=FLAGS.verbose).fit_transform(embeddings)
+    embedding = TSNE(metric=FLAGS.metric,
+                     verbose=FLAGS.verbose).fit_transform(embeddings)
     np_file = os.path.join(
         folder_clusterplot,
         'tsne_' + embeddings_file[:-2].replace('/', '_') + '.np')
@@ -736,8 +739,8 @@ def plot_clustering(eval_folder, embeddings, embeddings_file,
         folder_clusterplot,
         'tsne_' + embeddings_file[:-2].replace('/', '_') + '.html')
   else:
-    embedding = umap.UMAP(
-        metric=FLAGS.metric, verbose=FLAGS.verbose).fit_transform(embeddings)
+    embedding = umap.UMAP(metric=FLAGS.metric,
+                          verbose=FLAGS.verbose).fit_transform(embeddings)
     np_file = os.path.join(
         folder_clusterplot,
         'umap_' + embeddings_file[:-2].replace('/', '_') + '.np')
@@ -751,24 +754,22 @@ def plot_clustering(eval_folder, embeddings, embeddings_file,
   print('Plotting')
 
   source = ColumnDataSource(
-      dict(
-          x=[e[0] for e in embedding],
-          y=[e[1] for e in embedding],
-          label=labels))
+      dict(x=[e[0] for e in embedding],
+           y=[e[1] for e in embedding],
+           label=labels))
 
-  cmap = CategoricalColorMapper(
-      factors=targets, palette=Category20[len(targets)])
+  cmap = CategoricalColorMapper(factors=targets,
+                                palette=Category20[len(targets)])
 
   p = figure(title="test umap")
-  p.circle(
-      x='x',
-      y='y',
-      source=source,
-      color={
-          "field": 'label',
-          "transform": cmap
-      },
-      legend='label')
+  p.circle(x='x',
+           y='y',
+           source=source,
+           color={
+               "field": 'label',
+               "transform": cmap
+           },
+           legend='label')
   show(p)
 
 

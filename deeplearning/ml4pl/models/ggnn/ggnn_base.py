@@ -60,7 +60,7 @@ app.DEFINE_boolean("freeze_graph_model", False, "???")
 #
 ##### End of flag declarations.
 
-# Type alias for the feed_dict argument of tf.Session.run().
+# Type alias for the feed_dict argument of tf.compat.v1.Session.run().
 FeedDict = typing.Dict[str, typing.Any]
 
 
@@ -80,10 +80,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     super(GgnnBaseModel, self).__init__(*args)
 
     # Instantiate Tensorflow model.
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
     self.graph = tf.Graph()
-    self.sess = tf.Session(graph=self.graph, config=config)
+    self.sess = tf.compat.v1.Session(graph=self.graph, config=config)
 
     with self.graph.as_default():
       tf.set_random_seed(FLAGS.random_seed)
@@ -95,7 +95,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         self.placeholders = utils.MakePlaceholders(self.stats)
 
         self.ops = {}
-        with tf.variable_scope("graph_model"):
+        with tf.compat.v1.variable_scope("graph_model"):
           (self.ops["loss"], self.ops["accuracies"], self.ops["accuracy"],
            self.ops["predictions"]) = (
                self.MakeLossAndAccuracyAndPredictionOps())
@@ -107,7 +107,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         # TODO(cec): More tensorboard telemetry: input class distributions,
         # predicted class distributions, etc.
 
-        with prof.Profile('Make training step'), tf.variable_scope(
+        with prof.Profile('Make training step'), tf.compat.v1.variable_scope(
             "train_step"):
           self.ops["train_step"] = self._MakeTrainStep()
 

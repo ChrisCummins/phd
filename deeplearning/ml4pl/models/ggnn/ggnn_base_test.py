@@ -49,8 +49,8 @@ class MockModel(ggnn_base.GgnnBaseModel):
   """A mock GGNN model."""
 
   def MakeLossAndAccuracyAndPredictionOps(self):
-    self.placeholders["X"] = tf.placeholder("float")
-    self.placeholders["Y"] = tf.placeholder("float")
+    self.placeholders["X"] = tf.compat.v1.placeholder("float")
+    self.placeholders["Y"] = tf.compat.v1.placeholder("float")
     W = tf.Variable(np.random.randn(), name="weight")
     b = tf.Variable(np.random.randn(), name="bias")
     predictions = tf.add(tf.multiply(self.placeholders["X"], W), b)

@@ -20,21 +20,21 @@ An implementation of the inst2vec embeddings + RNN classifier described in:
   Comprehension: A Learnable Representation of Code Semantics. In NeurIPS.
 """
 import multiprocessing
+import pathlib
+import typing
 
 import numpy as np
 import pandas as pd
-import pathlib
 import tensorflow as tf
-import typing
 from keras.preprocessing import sequence as keras_sequence
+from labm8 import app
+from labm8 import bazelutil
 
 from compilers.llvm import clang
 from deeplearning.clgen.preprocessors import opencl
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import deeptune
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
-from labm8 import app
-from labm8 import bazelutil
 
 # The pre-trained embeddings used by default by DeepTuneInst2Vec models.
 DEEPTUNE_INST2VEC_EMBEDDINGS = bazelutil.DataPath(
@@ -213,13 +213,13 @@ class DeepTuneInst2Vec(deeptune.DeepTune):
     sequences, _ = self.EncodeAndPadSources(df, self.input_shape[0])
 
     # Translate encoded sequences into sequences of normalized embeddings.
-    sequence_ph = tf.placeholder(dtype=tf.int32)
+    sequence_ph = tf.compat.v1.placeholder(dtype=tf.int32)
     normalized_embedding_matrix = tf.nn.l2_normalize(self.embedding_matrix,
                                                      axis=1)
     embedding_input_op = tf.nn.embedding_lookup(normalized_embedding_matrix,
                                                 sequence_ph)
 
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
       # Tensor of shape (len(df), sequence length, embedding dimension).
       embedding_input = sess.run(embedding_input_op,
                                  feed_dict={sequence_ph: sequences})

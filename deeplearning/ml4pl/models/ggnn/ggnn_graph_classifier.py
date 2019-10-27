@@ -76,7 +76,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
     # Generate per-layer values for edge weights, biases and gated units:
     self.gnn_weights = GGNNWeights([], [], [], [], [], [])
     for layer_index in range(len(layer_timesteps)):
-      with tf.variable_scope(f"gnn_layer_{layer_index}"):
+      with tf.compat.v1.variable_scope(f"gnn_layer_{layer_index}"):
         edge_weights = tf.nn.dropout(
             tf.reshape(
                 tf.Variable(
@@ -172,7 +172,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
     message_edge_types = tf.concat(message_edge_types, axis=0)  # Shape [M]
 
     for (layer_index, num_timesteps) in enumerate(layer_timesteps):
-      with tf.variable_scope("gnn_layer_%i" % layer_index):
+      with tf.compat.v1.variable_scope("gnn_layer_%i" % layer_index):
         # Used shape abbreviations:
         #   V ~ number of nodes
         #   D ~ state dimension
@@ -199,7 +199,7 @@ class GgnnGraphClassifierModel(ggnn.GgnnBaseModel):
         # be updated below:
         node_states_per_layer.append(node_states_per_layer[-1])
         for step in range(num_timesteps):
-          with tf.variable_scope(f"timestep_{step}"):
+          with tf.compat.v1.variable_scope(f"timestep_{step}"):
             # list of tensors of messages of shape [E, D]
             messages = []
             # list of tensors of edge source states of shape [E, D]

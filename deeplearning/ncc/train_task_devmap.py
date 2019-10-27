@@ -69,12 +69,12 @@ import pickle
 
 import numpy as np
 import pandas as pd
-
-from deeplearning.ncc import task_utils
-from deeplearning.ncc import vocabulary
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
+
+from deeplearning.ncc import task_utils
+from deeplearning.ncc import vocabulary
 
 # Parameters of devmap
 app.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/devmap',
@@ -200,14 +200,14 @@ class NCC_devmap:
     np.random.seed(seed)
 
     # Keras model
-    inp = Input(
-        shape=(
-            maxlen,
-            embedding_dim,
-        ), dtype="float32", name="code_in")
-    x = LSTM(
-        embedding_dim, implementation=1, return_sequences=True,
-        name="lstm_1")(inp)
+    inp = Input(shape=(
+        maxlen,
+        embedding_dim,
+    ), dtype="float32", name="code_in")
+    x = LSTM(embedding_dim,
+             implementation=1,
+             return_sequences=True,
+             name="lstm_1")(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
@@ -218,8 +218,8 @@ class NCC_devmap:
     x = Dense(dense_layer_size, activation="relu")(x)
     out = Dense(2, activation="sigmoid")(x)
 
-    self.model = Model(
-        inputs=[auxiliary_inputs, inp], outputs=[out, langmodel_out])
+    self.model = Model(inputs=[auxiliary_inputs, inp],
+                       outputs=[out, langmodel_out])
     self.model.compile(
         optimizer="adam",
         metrics=['accuracy'],
@@ -287,10 +287,10 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
     import tensorflow as tf  # for embeddings lookup
     embedding_matrix_normalized = tf.nn.l2_normalize(embeddings, axis=1)
     vocabulary_size, embedding_dimension = embedding_matrix_normalized.shape
-    seq_ = tf.placeholder(dtype=tf.int32)
+    seq_ = tf.compat.v1.placeholder(dtype=tf.int32)
     # Tensor of shape (num_input_files, sequence length, embbedding dimension)
     embedding_input_ = tf.nn.embedding_lookup(embedding_matrix_normalized, seq_)
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
       embedding_input = sess.run(embedding_input_, feed_dict={seq_: sequences})
 
     # Values used for training & predictions
@@ -329,38 +329,35 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
         else:
 
           # Initialize model and print summary
-          model.init(
-              seed=seed,
-              maxlen=maxlen,
-              embedding_dim=int(embedding_dimension),
-              dense_layer_size=dense_layer_size)
+          model.init(seed=seed,
+                     maxlen=maxlen,
+                     embedding_dim=int(embedding_dimension),
+                     dense_layer_size=dense_layer_size)
           if print_summary:
             model.model.summary()
 
           # Train and cache a model
           print('\n--- Training model... ')
-          model.train(
-              df=df,
-              aux_in=aux_in[train_index],
-              sequences=embedding_input[train_index, :, :],
-              y=y[train_index],
-              y_1hot=y_1hot[train_index],
-              verbose=False,
-              epochs=num_epochs,
-              batch_size=batch_size)
+          model.train(df=df,
+                      aux_in=aux_in[train_index],
+                      sequences=embedding_input[train_index, :, :],
+                      y=y[train_index],
+                      y_1hot=y_1hot[train_index],
+                      verbose=False,
+                      epochs=num_epochs,
+                      batch_size=batch_size)
           fs.mkdir(fs.dirname(model_path))
           model.save(model_path)
           print('\tsaved model to', model_path)
 
         # test model
         print('\n--- Testing model... ')
-        p = model.predict(
-            batch_size=batch_size,
-            aux_in=aux_in[test_index],
-            sequences=embedding_input[test_index, :, :],
-            y=y[test_index],
-            y_1hot=y_1hot[test_index],
-            verbose=False)
+        p = model.predict(batch_size=batch_size,
+                          aux_in=aux_in[test_index],
+                          sequences=embedding_input[test_index, :, :],
+                          y=y[test_index],
+                          y_1hot=y_1hot[test_index],
+                          verbose=False)
 
         # cache results
         fs.mkdir(fs.dirname(predictions_path))
@@ -397,14 +394,14 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
             "Speedup": p_speedup_,
         })
 
-  return pd.DataFrame(
-      data,
-      index=range(1,
-                  len(data) + 1),
-      columns=[
-          "Model", "Platform", "Benchmark", "Benchmark Suite", "Oracle Mapping",
-          "Predicted Mapping", "Correct?", "Speedup"
-      ])
+  return pd.DataFrame(data,
+                      index=range(1,
+                                  len(data) + 1),
+                      columns=[
+                          "Model", "Platform", "Benchmark", "Benchmark Suite",
+                          "Oracle Mapping", "Predicted Mapping", "Correct?",
+                          "Speedup"
+                      ])
 
 
 def main(argv):
@@ -482,12 +479,12 @@ def main(argv):
           ncc_devmap['Correct?'].mean() * 100))
   d = np.array(d).T.reshape(3, 4)
   print(
-      pd.DataFrame(
-          d,
-          columns=[
-              'Static mapping', 'Grewe et al.', 'DeepTune', 'DeepTuneInst2Vec'
-          ],
-          index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
+      pd.DataFrame(d,
+                   columns=[
+                       'Static mapping', 'Grewe et al.', 'DeepTune',
+                       'DeepTuneInst2Vec'
+                   ],
+                   index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
 
   # Model comparison: speedups
   print('--- Model comparison: speedups')
@@ -501,12 +498,12 @@ def main(argv):
           ncc_devmap['Speedup'].mean()))
   d = np.array(d).T.reshape(3, 4)
   print(
-      pd.DataFrame(
-          d,
-          columns=[
-              'Static mapping', 'Grewe et al.', 'DeepTune', 'DeepTuneInst2Vec'
-          ],
-          index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
+      pd.DataFrame(d,
+                   columns=[
+                       'Static mapping', 'Grewe et al.', 'DeepTune',
+                       'DeepTuneInst2Vec'
+                   ],
+                   index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
   app.Log(1, 'done')
 
 

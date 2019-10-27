@@ -21,6 +21,8 @@ import typing
 
 import numpy as np
 import progressbar
+from labm8 import app
+from labm8 import humanize
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
@@ -28,8 +30,6 @@ from deeplearning.clgen.dashboard import dashboard_db
 from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -138,19 +138,21 @@ class TensorFlowBackend(backends.BackendBase):
       cells_lst.append(cell_type(self.config.architecture.neurons_per_layer))
     self.cell = cell = rnn.MultiRNNCell(cells_lst, state_is_tuple=True)
 
-    self.input_data = tf.placeholder(tf.int32, [batch_size, sequence_length])
-    self.targets = tf.placeholder(tf.int32, [batch_size, sequence_length])
+    self.input_data = tf.compat.v1.placeholder(tf.int32,
+                                               [batch_size, sequence_length])
+    self.targets = tf.compat.v1.placeholder(tf.int32,
+                                            [batch_size, sequence_length])
     self.initial_state = self.cell.zero_state(batch_size, tf.float32)
     self.temperature = tf.Variable(1.0, trainable=False)
     self.seed_length = tf.Variable(32, trainable=False)
 
     if sampler:
-      self.lengths = tf.placeholder(tf.int32, [batch_size])
+      self.lengths = tf.compat.v1.placeholder(tf.int32, [batch_size])
     else:
       self.lengths = tf.fill([batch_size], sequence_length)
 
     scope_name = 'rnnlm'
-    with tf.variable_scope(scope_name):
+    with tf.compat.v1.variable_scope(scope_name):
       with tf.device('/cpu:0'):
         embedding = tf.compat.v1.get_variable(
             'embedding',

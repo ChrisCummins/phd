@@ -21,7 +21,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """inst2vec embedding training"""
-
 import datetime
 import math
 import os
@@ -33,12 +32,12 @@ from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
+from labm8 import app
 from tensorflow.contrib.tensorboard.plugins import projector
 from tensorflow.python.client import timeline
 
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
-from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -153,7 +152,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
     options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
     metadata = tf.RunMetadata()
   if FLAGS.xla:
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
   ####################################################################################################################
@@ -301,7 +300,7 @@ def train_skip_gram(V, data_folder, data_folders, dataset_size,
 
   ####################################################################################################################
   # Training
-  with tf.Session(config=config) as sess:
+  with tf.compat.v1.Session(config=config) as sess:
 
     # Add TensorBoard components
     writer = tf.compat.v1.summary.FileWriter(log_dir)  # create summary writer

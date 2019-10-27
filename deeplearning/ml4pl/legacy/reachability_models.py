@@ -104,9 +104,9 @@ def CreatePlaceholdersFromGraphs(graphs: typing.List[cfg.ControlFlowGraph],
   """
   input_graphs, target_graphs = zip(*[GraphToInputTarget(g) for g in graphs])
 
-  input_ph = graph_net_utils_tf.placeholders_from_networkxs(
+  input_ph = graph_net_utils_tf.compat.v1.placeholders_from_networkxs(
       input_graphs, force_dynamic_num_graphs=True)
-  target_ph = graph_net_utils_tf.placeholders_from_networkxs(
+  target_ph = graph_net_utils_tf.compat.v1.placeholders_from_networkxs(
       target_graphs, force_dynamic_num_graphs=True)
   return input_ph, target_ph
 

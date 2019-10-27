@@ -7,10 +7,9 @@ import typing
 
 import numpy as np
 import tensorflow as tf
+from labm8 import app
 from scipy.optimize import minimize
 from tensorflow.examples.tutorials.mnist import input_data
-
-from labm8 import app
 
 FLAGS = app.FLAGS
 app.DEFINE_integer('maxiter', 10,
@@ -21,7 +20,7 @@ def SoftmaxRegressor(tensor_size):
   """Build the regressor: y = Wx + b."""
   # Our tensor shape is N * flattened image size, where N is the
   # number of images:
-  x = tf.placeholder(tf.float32, [None, tensor_size])
+  x = tf.compat.v1.placeholder(tf.float32, [None, tensor_size])
 
   # Weights matrix. One weight for each class:
   W = tf.Variable(tf.zeros([tensor_size, 10]))
@@ -33,7 +32,7 @@ def SoftmaxRegressor(tensor_size):
   y = tf.nn.softmax(tf.matmul(x, W) + b)
 
   # Correct answers:
-  y_ = tf.placeholder(tf.float32, [None, 10])
+  y_ = tf.compat.v1.placeholder(tf.float32, [None, 10])
 
   # Cross entropy: -sum(y' * log(y))
   cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
@@ -80,7 +79,7 @@ def TrainAndTest(session,
   error = 1 - session(model["eval"], feed_dict=feed_dict)
 
   app.Log(1, "MNIST with batch size %d for %d iterations: %.3f %% error ",
-           batch_size, num_iterations, error * 100)
+          batch_size, num_iterations, error * 100)
   return error
 
 
@@ -98,7 +97,7 @@ def HyperParamSweep(maxiter: int = 50) -> typing.Dict[str, int]:
   tensor_size = image_width * image_width  # Flatten image to 1D
 
   # Build model:
-  session = tf.Session()
+  session = tf.compat.v1.Session()
   model = SoftmaxRegressor(tensor_size)
 
   def f(X):
@@ -107,13 +106,12 @@ def HyperParamSweep(maxiter: int = 50) -> typing.Dict[str, int]:
     hyperparameters.
     """
     batch_size, num_iterations = Denormalize(X)
-    return TrainAndTest(
-        session.run,
-        model,
-        mnist.train,
-        mnist.test,
-        batch_size=batch_size,
-        num_iterations=num_iterations)
+    return TrainAndTest(session.run,
+                        model,
+                        mnist.train,
+                        mnist.test,
+                        batch_size=batch_size,
+                        num_iterations=num_iterations)
 
   # Hyper-parameter search over batch size and training iterations.
   x0 = np.array([1, 1])
@@ -128,7 +126,7 @@ def main(argv):
 
   params = HyperParamSweep(FLAGS.maxiter)
   app.Log(1, "batch size: %d, nuber of iterations: %d", params['batch_size'],
-           params['numiter'])
+          params['numiter'])
 
 
 if __name__ == "__main__":
