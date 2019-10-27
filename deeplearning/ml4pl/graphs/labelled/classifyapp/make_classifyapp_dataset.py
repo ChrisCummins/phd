@@ -190,15 +190,17 @@ def main():
     expected_val_count = 9155
     expected_test_count = 9227
 
-    train_count = session.query(sql.func.count(graph_database.GraphMeta))\
+    train_count = session.query(sql.func.count(graph_database.GraphMeta.id))\
       .filter(graph_database.GraphMeta.group == 'train').one()[0]
-    val_count = session.query(sql.func.count(graph_database.GraphMeta)) \
+    val_count = session.query(sql.func.count(graph_database.GraphMeta.id)) \
       .filter(graph_database.GraphMeta.group == 'val').one()[0]
-    test_count = session.query(sql.func.count(graph_database.GraphMeta)) \
+    test_count = session.query(sql.func.count(graph_database.GraphMeta.id)) \
       .filter(graph_database.GraphMeta.group == 'test').one()[0]
 
-    if (train_count != expected_train_count or
-        val_count != expected_val_count or test_count != expected_test_count):
+    if (train_count == expected_train_count and
+        val_count == expected_val_count and test_count == expected_test_count):
+      app.Log(1, 'Validated graph counts')
+    else:
       app.FatalWithoutStackTrace(
           "The number of graphs produced does not match the expected counts. "
           "Training graphs: expected=%s, actual=%s. "
