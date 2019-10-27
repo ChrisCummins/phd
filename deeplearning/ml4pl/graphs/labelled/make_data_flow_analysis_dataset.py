@@ -137,12 +137,24 @@ def _ProcessControlFlowGraphJob(
       proto.Clear()
       pbutil.FromString(proto_string, proto)
       cfgs.append(llvm_util.LlvmControlFlowGraph.FromProto(proto))
+  except Exception as e:
+    _, _, tb = sys.exc_info()
+    tb = traceback.extract_tb(tb, 2)
+    filename, line_number, function_name, *_ = tb[-1]
+    filename = pathlib.Path(filename).name
+    app.Error(
+        'Failed to create control flow graphs from bytecode '
+        '%d: %s (%s:%s:%s() -> %s)', bytecode_id, e, filename, line_number,
+        function_name,
+        type(e).__name__)
+    return []
 
-    graph_metas = []
-    for cfg in cfgs:
+  graph_metas = []
+  for cfg in cfgs:
+    try:
       graph = builder.BuildFromControlFlowGraph(cfg)
       # Ignore single-node graphs (they have no adjacencies).
-      if not (g.number_of_nodes() and g.number_of_edges()):
+      if not (graph.number_of_nodes() and graph.number_of_edges()):
         continue
 
       graph.source_name = source_name
@@ -151,16 +163,18 @@ def _ProcessControlFlowGraphJob(
       graph.language = language
       graph_metas += MakeGraphMetas(graph, annotated_graph_generator, false,
                                     true)
-    return graph_metas
-  except Exception as e:
-    _, _, tb = sys.exc_info()
-    tb = traceback.extract_tb(tb, 2)
-    filename, line_number, function_name, *_ = tb[-1]
-    filename = pathlib.Path(filename).name
-    app.Error('Failed to create graphs from bytecode %d: %s (%s:%s:%s() -> %s)',
-              bytecode_id, e, filename, line_number, function_name,
-              type(e).__name__)
-    return []
+    except Exception as e:
+      _, _, tb = sys.exc_info()
+      tb = traceback.extract_tb(tb, 2)
+      filename, line_number, function_name, *_ = tb[-1]
+      filename = pathlib.Path(filename).name
+      app.Error(
+          'Failed to create meta graphs from bytecode '
+          '%d: %s (%s:%s:%s() -> %s)', bytecode_id, e, filename, line_number,
+          function_name,
+          type(e).__name__)
+
+  return graph_metas
 
 
 class ControlFlowGraphProtoExporter(
