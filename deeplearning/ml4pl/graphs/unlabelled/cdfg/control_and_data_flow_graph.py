@@ -10,6 +10,7 @@ import typing
 
 import networkx as nx
 from labm8 import app
+from labm8 import decorators
 from labm8 import humanize
 
 from compilers.llvm import opt_util
@@ -379,6 +380,7 @@ class ControlAndDataFlowGraphBuilder(object):
           for (dst, identifier), src in deduped_data_flow_edges.items()
       ]
 
+  @decorators.timeout(120)
   def BuildFromControlFlowGraph(
       self, cfg: llvm_util.LlvmControlFlowGraph) -> nx.DiGraph:
     """Build a CDFG from an LLVM Control Flow Graph.
@@ -461,6 +463,7 @@ class ControlAndDataFlowGraphBuilder(object):
 
     return interprocedural_graph
 
+  @decorators.timeout(120)
   def Build(self, bytecode: str) -> nx.MultiDiGraph:
     call_graph_dot, cfg_dots = (
         opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(bytecode))
