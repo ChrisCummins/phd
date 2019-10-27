@@ -106,14 +106,23 @@ class RunLogAnalyzer(object):
         graphs = sorted(graphs, key=lambda g: log.graph_indices.index(g.id))
 
       batch_dict = self.batcher.CreateBatchDict((g for g in graphs))
+      batch_dict['graph_indices'] = log.graph_indices
 
     return batch_dict
 
   def GetInputOutputGraphsForRandomBatch(self,
                                          epoch_num: int,
                                          group: str = 'val'):
-    """Fetch the batch dict for a random batch from the given epoch_num where
-    the accuracy was < 100%.
+    """Reconstruct nx.MultiDiGraphs for a random batch from the given epoch_num
+    where the accuracy was < 100%.
+
+    Each graph has a 'id' property set, which is the value of GraphMeta.id
+    column for the given graph.
+
+    Returns:
+      A list of <input,output> graph tuples, where each input graph is annotated
+      with features and labels, and each output graph is annotated with
+      predictions.
     """
     batches = self.batch_logs[(self.batch_logs['epoch'] == epoch_num) &
                               (self.batch_logs['group'] == group) &
@@ -147,6 +156,12 @@ class RunLogAnalyzer(object):
             f"keys: `{list(batch_dict.keys())}`")
 
       output_graphs = list(self.batcher.BatchDictToGraphs(batch_dict))
+
+    # Annotate the graphs with their GraphMeta.id column value.
+    for graph_index, input_graph, output_graph in zip(
+        batch_dict['graph_indices'], input_graphs, output_graphs)
+      input_graph.id = graph_index
+      output_graph.id = graph_index
 
     return list(zip(input_graphs, output_graphs))
 
