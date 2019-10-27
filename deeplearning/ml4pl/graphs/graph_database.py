@@ -140,9 +140,9 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         relpath=g.relpath,
         language=g.language,
         node_count=g.number_of_nodes(),
-        edge_count=g.number_of_edges(),
-        # Get the number of edge types *after* graph_dict has inserted the
+        # Get the edge stats *after* graph_dict has inserted the
         # backward edges.
+        edge_count=sum([len(a) for a in gd['adjacency_lists']]),
         edge_type_count=len(gd['adjacency_lists']),
         node_features_dimensionality=node_features_dimensionality,
         node_labels_dimensionality=node_labels_dimensionality,
