@@ -26,12 +26,11 @@ from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None,
-    'URL of database to read bytecodes from.',
-    must_exist=True)
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecodes from.',
+                    must_exist=True)
 app.DEFINE_database('graph_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write annotated graphs to.')
@@ -75,8 +74,8 @@ def GetAnnotatedGraphGenerator():
 def GetFalseTrueType():
   """Return the values that should be used for false/true binary labels."""
   if FLAGS.annotation_dtype == 'one_hot_float32':
-    return (np.array([1, 0], dtype=np.float32),
-            np.array([0, 1], dtype=np.float32))
+    return (np.array([1, 0],
+                     dtype=np.float32), np.array([0, 1], dtype=np.float32))
   else:
     raise app.UsageError(f"Unknown annotation_dtype `{FLAGS.annotation_dtype}`")
 
@@ -85,8 +84,10 @@ def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
                    true) -> typing.Iterable[graph_dict.GraphDict]:
   """Genereate GraphMeta database rows from the given graph."""
   annotated_graphs = list(
-      annotated_graph_generator(
-          graph, FLAGS.max_instances_per_graph, false=false, true=true))
+      annotated_graph_generator(graph,
+                                FLAGS.max_instances_per_graph,
+                                false=false,
+                                true=true))
 
   # Copy over graph metadata.
   for annotated_graph in annotated_graphs:
@@ -109,15 +110,6 @@ def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
 ControlFlowGraphJob = typing.Tuple[typing.List[str], str, str, str, int]
 
 
-def _GetConstantColumn(bytecode_id: int, rows, column_idx, column_name):
-  values = {r[column_idx] for r in rows}
-  if len(values) != 1:
-    raise ValueError(f'Bytecode ID {bytecode_id} should have the same '
-                     f'{column_name} value across its {len(rows)} CFGs, '
-                     f'found these values: `{values}`')
-  return list(values)[0]
-
-
 def _MakeControlFlowGraphExportJob(
     session: bytecode_database.Database.SessionType,
     bytecode_id: id) -> typing.Optional[ControlFlowGraphJob]:
@@ -132,9 +124,9 @@ def _MakeControlFlowGraphExportJob(
     app.Log(2, 'Bytecode %s has no CFGs, ignoring', bytecode_id)
     return None
   proto_strings = [r[0] for r in q]
-  source = _GetConstantColumn(bytecode_id, q, 1, 'source')
-  relpath = _GetConstantColumn(bytecode_id, q, 2, 'relpath')
-  language = _GetConstantColumn(bytecode_id, q, 3, 'language')
+  source = database_exporters.GetConstantColumn(bytecode_id, q, 1, 'source')
+  relpath = database_exporters.GetConstantColumn(bytecode_id, q, 2, 'relpath')
+  language = database_exporters.GetConstantColumn(bytecode_id, q, 3, 'language')
   return proto_strings, source, relpath, language, bytecode_id
 
 
@@ -297,9 +289,8 @@ def main():
       s.query(graph_database.Meta).filter(
           graph_database.Meta.key == 'max_instances_per_graph').delete()
       s.add(
-          graph_database.Meta(
-              key='max_instances_per_graph',
-              value=str(FLAGS.max_instances_per_graph)))
+          graph_database.Meta(key='max_instances_per_graph',
+                              value=str(FLAGS.max_instances_per_graph)))
 
     app.Log(1, 'Seeding with %s', FLAGS.seed)
     random.seed(FLAGS.seed)

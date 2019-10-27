@@ -13,7 +13,6 @@ from labm8 import app
 from labm8 import bazelutil
 from labm8 import fs
 from labm8 import humanize
-from labm8 import prof
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.bytecode import splitters
@@ -127,22 +126,27 @@ def _ProcessBytecodeJob(
     return []
 
 
+def _MakeExportJob(session: bytecode_database.Database.SessionType,
+                   bytecode_id: id) -> typing.Optional[typing.Any]:
+  q = session.query(bytecode_database.LlvmBytecode.bytecode,
+                    bytecode_database.LlvmBytecode.source_name,
+                    bytecode_database.LlvmBytecode.relpath,
+                    bytecode_database.LlvmBytecode.language) \
+    .filter(bytecode_database.LlvmBytecode.id == bytecode_id).one()
+  bytecode, source, relpath, language = q
+  with open(FLAGS.dictionary, 'rb') as f:
+    dictionary = pickle.load(f)
+  return bytecode, source, relpath, language, bytecode_id, dictionary
+
+
 class Exporter(database_exporters.BytecodeDatabaseExporterBase):
   """Export from LLVM bytecodes."""
 
-  def __init__(self, bytecode_db, graph_db, dictionary: typing.Dict[str, int]):
+  def __init__(self, bytecode_db, graph_db):
     super(Exporter, self).__init__(bytecode_db, graph_db)
-    self.dictionary = dictionary
 
-  def MakeExportJob(self, session: bytecode_database.Database.SessionType,
-                    bytecode_id: id) -> typing.Optional[typing.Any]:
-    q = session.query(bytecode_database.LlvmBytecode.bytecode,
-                      bytecode_database.LlvmBytecode.source_name,
-                      bytecode_database.LlvmBytecode.relpath,
-                      bytecode_database.LlvmBytecode.language) \
-      .filter(bytecode_database.LlvmBytecode.id == bytecode_id).one()
-    bytecode, source, relpath, language = q
-    return bytecode, source, relpath, language, bytecode_id, self.dictionary
+  def GetMakeExportJob(self):
+    return _MakeExportJob
 
   def GetProcessJobFunction(
       self
@@ -166,13 +170,7 @@ def main():
   with tempfile.TemporaryDirectory() as d:
     app.LogToDirectory(d, 'log')
 
-    with prof.Profile(
-        lambda t:
-        f"Read {len(dictionary)}-item dictionary from `{FLAGS.dictionary}`"):
-      with open(FLAGS.dictionary, 'rb') as f:
-        dictionary = pickle.load(f)
-
-    exporter = Exporter(bytecode_db, graph_db, dictionary)
+    exporter = Exporter(bytecode_db, graph_db)
     exporter.Export()
 
     log = fs.Read(pathlib.Path(d) / 'log.INFO')

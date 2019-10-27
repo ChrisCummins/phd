@@ -7,7 +7,6 @@ import typing
 from labm8 import app
 from labm8 import humanize
 from labm8 import labtypes
-from labm8 import ppar
 from labm8 import prof
 from labm8 import sqlutil
 
@@ -22,6 +21,15 @@ app.DEFINE_integer(
     'database_exporter_batch_size', 1024,
     'The number of bytecodes to process in-memory before writing'
     'to database.')
+
+
+def GetConstantColumn(bytecode_id: int, rows, column_idx, column_name):
+  values = {r[column_idx] for r in rows}
+  if len(values) != 1:
+    raise ValueError(f'Bytecode ID {bytecode_id} should have the same '
+                     f'{column_name} value across its {len(rows)} CFGs, '
+                     f'found these values: `{values}`')
+  return list(values)[0]
 
 
 class BytecodeDatabaseExporterBase(object):
@@ -84,9 +92,8 @@ class BytecodeDatabaseExporterBase(object):
     make_job = self.GetMakeExportJob()
     job_processor = self.GetProcessJobFunction()
 
-    chunksize = min(
-        max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-        self.batch_size)
+    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
+                    self.batch_size)
 
     bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
     jobs = [(self.bytecode_db.url, bytecode_ids_chunk, make_job, job_processor)
