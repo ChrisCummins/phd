@@ -230,7 +230,7 @@ def _ProcessBytecodeJob(
   """
 
   Args:
-    packed_args: A packed arguments tuple consisting of a list serialized,
+    job: A packed arguments tuple consisting of a list serialized,
      protos, the source name, the relpath of the bytecode, and the bytecode ID.
 
   Returns:
@@ -239,6 +239,7 @@ def _ProcessBytecodeJob(
   bytecode, source_name, relpath, language, bytecode_id = job
   builder = cdfg.ControlAndDataFlowGraphBuilder(
       dataflow=FLAGS.dataflow,
+      preprocess_text=False,
       discard_unknown_statements=False,
   )
 
