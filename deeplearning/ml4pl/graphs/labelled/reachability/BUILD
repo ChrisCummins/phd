@@ -16,7 +16,7 @@ py_test(
     name = "reachability_test",
     srcs = ["reachability_test.py"],
     deps = [
-        ":make_reachability_dataset",
+        ":reachability",
         "//labm8:app",
         "//labm8:test",
         "//third_party/py/networkx",

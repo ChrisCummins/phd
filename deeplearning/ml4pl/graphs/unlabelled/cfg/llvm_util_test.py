@@ -351,7 +351,7 @@ def test_BuildFullFlowGraph_num_nodes():
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
   sig = cfg.BuildFullFlowGraph()
 
-  assert sig.number_of_nodes() == 11
+  assert sig.number_of_nodes() == 13
 
 
 def test_BuildFullFlowGraph_node_text():
@@ -399,7 +399,7 @@ def test_BuildFullFlowGraph_num_edges():
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
   sig = cfg.BuildFullFlowGraph()
 
-  assert sig.number_of_edges() == 11
+  assert sig.number_of_edges() == 13
 
 
 def test_BuildFullFlowGraph_edges():
@@ -424,10 +424,12 @@ def test_BuildFullFlowGraph_edges():
   assert sig.has_edge(name_to_node['%1.6'], name_to_node['%8.0'])
 
   # Block %7.
-  assert sig.has_edge(name_to_node['%7.0'], name_to_node['%9.0'])
+  assert sig.has_edge(name_to_node['%7.0'], name_to_node['%7.1'])
+  assert sig.has_edge(name_to_node['%7.1'], name_to_node['%9.0'])
 
   # Block %8.
-  assert sig.has_edge(name_to_node['%8.0'], name_to_node['%9.0'])
+  assert sig.has_edge(name_to_node['%8.0'], name_to_node['%8.1'])
+  assert sig.has_edge(name_to_node['%8.1'], name_to_node['%9.0'])
 
   # Block %9.
   assert sig.has_edge(name_to_node['%9.0'], name_to_node['%9.1'])

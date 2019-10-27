@@ -252,7 +252,7 @@ def test_AnnotateDominatorTree_graph_B(graph: nx.MultiDiGraph):
   live_variable_count, data_flow_steps = liveness.AnnotateLiveness(graph, 'B')
   assert live_variable_count == 1
   # TODO(github.com/ChrisCummins/ml4pl/issues/2): Fix early-exit step count.
-  assert data_flow_steps == 5
+  assert data_flow_steps == 4
 
   # Features:
   assert not graph.nodes['A']['x']
@@ -277,7 +277,7 @@ def test_AnnotateDominatorTree_graph_C(graph: nx.MultiDiGraph):
   live_variable_count, data_flow_steps = liveness.AnnotateLiveness(graph, 'C')
   assert live_variable_count == 1
   # TODO(github.com/ChrisCummins/ml4pl/issues/2): Fix early-exit step count.
-  assert data_flow_steps == 5
+  assert data_flow_steps == 4
 
   # Features:
   assert not graph.nodes['A']['x']
@@ -302,7 +302,7 @@ def test_AnnotateDominatorTree_graph_D(graph: nx.MultiDiGraph):
   live_variable_count, data_flow_steps = liveness.AnnotateLiveness(graph, 'D')
   assert live_variable_count == 0
   # TODO(github.com/ChrisCummins/ml4pl/issues/2): Fix early-exit step count.
-  assert data_flow_steps == 5
+  assert data_flow_steps == 4
 
   # Features:
   assert not graph.nodes['A']['x']

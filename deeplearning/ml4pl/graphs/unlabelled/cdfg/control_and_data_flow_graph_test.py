@@ -13,12 +13,7 @@ FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')
-def builder() -> cdfg.ControlAndDataFlowGraphBuilder:
-  return cdfg.ControlAndDataFlowGraphBuilder()
-
-
-@pytest.fixture(scope='function')
-def graph(builder: cdfg.ControlAndDataFlowGraphBuilder):
+def simple_bytecode() -> str:
   """From C code:
 
       int B() {
@@ -33,7 +28,7 @@ def graph(builder: cdfg.ControlAndDataFlowGraphBuilder):
         return x;
       }
   """
-  return builder.Build("""
+  return """
 ; Function Attrs: noinline nounwind optnone ssp uwtable
 define i32 @B() #0 {
   ret i32 10
@@ -58,18 +53,22 @@ define i32 @A() #0 {
   %9 = load i32, i32* %1, align 4
   ret i32 %9
 }
-""")
+"""
 
 
-def test_that_root_node_is_connected_to_entry_points(graph: nx.MultiDiGraph):
+def test_that_root_node_is_connected_to_entry_points(simple_bytecode: str):
+  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  graph = builder.Build(simple_bytecode)
   assert 'root' in graph
   assert graph.in_degree('root') == 0
   assert len(graph.out_edges('root')) == 2
   assert set(graph.neighbors('root')) == {'A_0', 'B_0'}
 
 
-def test_every_statement_has_a_predecessor(graph: nx.MultiDiGraph):
+def test_every_statement_has_a_predecessor(simple_bytecode: str):
   """Test that every statement (except entry blocks) have control preds."""
+  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  graph = builder.Build(simple_bytecode)
   entry_blocks = set([node for node, _ in iterators.EntryBlockIterator(graph)])
   for node, _ in iterators.StatementNodeIterator(graph):
     if node in entry_blocks:
@@ -83,8 +82,8 @@ def test_every_statement_has_a_predecessor(graph: nx.MultiDiGraph):
 
 def test_StatementIsSuccessor_linear_control_path():
   g = nx.MultiDiGraph()
-  g.add_edge('a', 'b')
-  g.add_edge('b', 'c')
+  g.add_edge('a', 'b', type='control')
+  g.add_edge('b', 'c', type='control')
   assert query.StatementIsSuccessor(g, 'a', 'a')
   assert query.StatementIsSuccessor(g, 'a', 'b')
   assert query.StatementIsSuccessor(g, 'a', 'c')
@@ -99,10 +98,10 @@ def test_StatementIsSuccessor_linear_control_path():
 
 def test_StatementIsSuccessor_branched_control_path():
   g = nx.MultiDiGraph()
-  g.add_edge('a', 'b')
-  g.add_edge('a', 'c')
-  g.add_edge('b', 'd')
-  g.add_edge('c', 'd')
+  g.add_edge('a', 'b', type='control')
+  g.add_edge('a', 'c', type='control')
+  g.add_edge('b', 'd', type='control')
+  g.add_edge('c', 'd', type='control')
   assert query.StatementIsSuccessor(g, 'a', 'b')
   assert query.StatementIsSuccessor(g, 'a', 'c')
   assert query.StatementIsSuccessor(g, 'a', 'b')
