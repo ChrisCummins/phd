@@ -20,6 +20,7 @@ from deeplearning.ml4pl.graphs.labelled import database_exporters
 from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
 from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
+from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
@@ -35,14 +36,14 @@ app.DEFINE_database('graph_db', graph_database.Database,
                     'URL of the database to write annotated graphs to.')
 app.DEFINE_string(
     'analysis', 'reachability', 'The data flow to use. One of: '
-    '{reachability,domintor_tree,data_dependence}')
+    '{reachability,domintor_tree,data_dependence,liveness}')
 app.DEFINE_string('annotation_dtype', 'one_hot_float32',
                   'The data type to use for annotating X and Y attributes.')
 app.DEFINE_string('graph_type', 'cfg_from_proto',
                   'The type of dataset to export.')
 app.DEFINE_string(
     'dataflow', 'none',
-    'The type of dataflow annotations to add to generated graphs.')
+    'The type of data flow annotations to add to generated graphs.')
 app.DEFINE_float(
     'train_to_val_ratio', 1 / 3,
     'The ratio between the size of the validation set relative to the size of '
@@ -72,6 +73,8 @@ def GetAnnotatedGraphGenerator():
     return dominator_tree.MakeDominatorTreeGraphs
   elif FLAGS.analysis == 'data_dependence':
     return data_dependence.MakeDataDependencyGraphs
+  elif FLAGS.analysis == 'liveness':
+    return liveness.MakeLivenessGraphs
   else:
     raise app.UsageError(f"Unknown analysis type `{FLAGS.analysis}`")
 
