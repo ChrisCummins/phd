@@ -34,7 +34,7 @@ def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
 
 
 def GetLlvmStatementDefAndUses(statement: str,
-                               store_destination_is_output: bool = True
+                               store_destination_is_def: bool = True
                               ) -> typing.Tuple[str, typing.List[str]]:
   """Get the destination identifier for an LLVM statement (if any), and a list
   of operand identifiers (if any).
@@ -49,21 +49,10 @@ def GetLlvmStatementDefAndUses(statement: str,
   operands += m_loc + m_glob + m_label + m_label2
 
   # Store is a special case because it doesn't have an LHS, but writes to one
-  # of its operands.
-  if statement.startswith('store '):
-    if len(operands) == 1:
-      # store <immediate> <dst>
-      store_destination = operands[0]
-      operands = []
-    elif len(operands) == 2:
-      # store <src> <dst>
-      store_destination = operands[0]
-      operands = [operands[1]]
-    else:
-      raise ValueError(f'Unexpected number of operands ({len(operands)}) for '
-                       f'store statement: `{statement}`')
-    if store_destination_is_output:
-      destination = store_destination
+  # of its operands. If store_destination_is_output == True, then the
+  # destination of store statements have both an in- and out-flow edge.
+  if store_destination_is_def and statement.startswith('store '):
+    destination = operands[0]
 
   # Strip whitespace from the strings.
   strip = lambda strings: (s.strip() for s in strings)
@@ -124,7 +113,8 @@ class ControlAndDataFlowGraphBuilder(object):
                preprocess_text: bool = True,
                discard_unknown_statements: bool = False,
                only_add_entry_and_exit_blocks_if_required: bool = True,
-               call_edge_returns_to_successor: bool = False):
+               call_edge_returns_to_successor: bool = False,
+               store_destination_is_def: bool = False):
     """Instantiate a Control and Data Flow Graph (CDFG) builder.
 
     Args:
@@ -149,6 +139,9 @@ class ControlAndDataFlowGraphBuilder(object):
         functions, the edge returning from the called function points to the
         statement after the call statement. If False, the outgoing and return
         edges both point to the call statement.
+      store_destination_is_def: If True, the destination operand of store
+        statements is treated as an assignment, meaning that a data flow out
+        edge will be inserted.
     """
     self.dataflow = dataflow
     self.preprocess_text = preprocess_text
@@ -156,6 +149,7 @@ class ControlAndDataFlowGraphBuilder(object):
     self.only_add_entry_and_exit_blocks_if_required = (
         only_add_entry_and_exit_blocks_if_required)
     self.call_edge_returns_to_successor = call_edge_returns_to_successor
+    self.store_destination_is_def = store_destination_is_def
 
   def MaybePreprocessStatementText(self, g: nx.Graph) -> None:
     """Replace 'text' statement attributes with inst2vec preprocessed.
