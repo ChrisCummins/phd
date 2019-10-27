@@ -64,8 +64,19 @@ class RunLogAnalyzer(object):
         'group')
 
   def GetBestEpoch(self, metric='best accuracy'):
-    """Select logs from best epoch."""
-    if metric in {'best accuracy', 'best f1'}:
+    """Select the train/val/test epoch logs using the given metric.
+
+    Supported metrics are:
+      best accuracy
+      best precision
+      best recall
+      best f1
+      90% val acc
+      95% val acc
+      99% val acc
+      99.9% val acc
+    """
+    if metric in {'best accuracy', 'brest precision', 'best recall', 'best f1'}:
       column = metric[len('best '):]
       validation_metric = getattr(
           self.epoch_logs[self.epoch_logs['group'] == 'val'], column)
