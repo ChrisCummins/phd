@@ -22,10 +22,10 @@ def StatementNeighbors(
   """Return the neighboring statements connected by the given flow type."""
   direction = direction or (lambda src, dst: dst)
   neighbors = set()
-  for src, dst, edge_flow in direction(g.in_edges,
-                                       g.out_edges)(node,
-                                                    data='flow',
-                                                    default='control'):
+  neighbor_edges = direction(g.in_edges, g.out_edges)
+  for src, dst, edge_flow in neighbor_edges(node,
+                                            data='flow',
+                                            default='control'):
     neighbor = direction(src, dst)
     if edge_flow == flow:
       if g.nodes[neighbor].get('type', 'statement') == 'statement':
@@ -102,7 +102,9 @@ def GetCallStatementSuccessor(graph: nx.MultiDiGraph, call_site: str) -> str:
     ValueError: If call site does not have exactly one successor.
   """
   call_site_successors = []
-  for src, dst, flow in graph.out_edges(call_site, data='flow', default='control'):
+  for src, dst, flow in graph.out_edges(call_site,
+                                        data='flow',
+                                        default='control'):
     if (flow == 'control' and
         graph.nodes[dst].get('type', 'statement') == 'statement'):
       call_site_successors.append(dst)
