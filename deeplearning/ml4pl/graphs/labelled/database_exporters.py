@@ -79,9 +79,9 @@ class BytecodeDatabaseExporterBase(object):
     job_processor = self.GetProcessJobFunction()
 
     for i, chunk in enumerate(labtypes.Chunkify(bytecode_ids, self.batch_size)):
-      app.Log(1, 'Processing %s-%s of %s bytecodes (%.2f%%)',
+      app.Log(1, 'Processing %s-%s of %s %s bytecodes (%.2f%%)',
               i * self.batch_size, i * self.batch_size + len(chunk),
-              humanize.Commas(len(bytecode_ids)),
+              humanize.Commas(len(bytecode_ids)), group,
               ((i * self.batch_size) / len(bytecode_ids)) * 100)
       # Run the database queries from the master thread to produce
       # jobs.
