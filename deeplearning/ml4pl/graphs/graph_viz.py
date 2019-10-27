@@ -61,7 +61,8 @@ def GraphToDot(g: nx.Graph,
                node_shape: StringOrCallback = _NodeShape,
                node_color: StringOrCallback = 'white',
                edge_label: KeyOrCallback = 'null',
-               edge_color: StringOrCallback = _EdgeColor) -> str:
+               edge_color: StringOrCallback = _EdgeColor,
+               edge_style: StringOrCallback = 'solid') -> str:
   """Render the dot visualization of the graph.
 
   Args:
@@ -77,6 +78,9 @@ def GraphToDot(g: nx.Graph,
       label.
     edge_color: The color of a edge, else a callback that takes as input the
       data dictionary and returns a color.
+    edge_style: The style of an edge, else a callback that takes as input the
+      data dictionary and returns a style. Example values include {"solid",
+      "dashed","dotted"} etc.
 
   Returns:
     A dot graph string.
@@ -117,6 +121,7 @@ def GraphToDot(g: nx.Graph,
 
     data['label'] = f'"{DataKeyOrCallback(data, edge_label)}"'
     data['color'] = StringOrCallback(data, edge_color)
+    data['style'] = StringOrCallback(data, edge_style)
 
     # Remove unneeded attributes.
     labtypes.DeleteKeys(data, {'flow', 'key', 'null'})
