@@ -150,7 +150,10 @@ class GraphBatcher(object):
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLog(graph_count=0, node_count=0, group=graph.group)
+    log = log_database.BatchLog(graph_count=0,
+                                node_count=0,
+                                group=graph.group,
+                                instances=log_database.Instances())
 
     # Create the empty batch dictionary.
     batch = {
@@ -286,7 +289,7 @@ class GraphBatcher(object):
     batch['node_count'] = log.node_count
 
     # Record the graphs that we used in this batch.
-    log.pickled_graph_indices = pickle.dumps(graph_ids)
+    log.graph_indices = pickle.dumps(graph_ids)
 
     return batch
 
