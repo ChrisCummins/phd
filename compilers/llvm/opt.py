@@ -29,10 +29,11 @@ import subprocess
 import sys
 import typing
 
-from compilers.llvm import llvm
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import system
+
+from compilers.llvm import llvm
 
 FLAGS = app.FLAGS
 
@@ -510,7 +511,8 @@ def Exec(args: typing.List[str],
          stdin: typing.Optional[typing.Union[str, bytes]] = None,
          timeout_seconds: int = 60,
          universal_newlines: bool = True,
-         log: bool = True) -> subprocess.Popen:
+         log: bool = True,
+         opt: typing.Optional[pathlib.Path] = None) -> subprocess.Popen:
   """Run LLVM's optimizer.
 
   Args:
@@ -520,11 +522,13 @@ def Exec(args: typing.List[str],
     timeout_seconds: The number of seconds to allow opt to run for.
     universal_newlines: Argument passed to Popen() of opt process.
     log: If true, print executed command to DEBUG log.
+    opt: An optional `opt` binary path to use.
 
   Returns:
     A Popen instance with stdout and stderr set to strings.
   """
-  cmd = ['timeout', '-s9', str(timeout_seconds), str(OPT)] + args
+  opt = opt or OPT
+  cmd = ['timeout', '-s9', str(timeout_seconds), str(opt)] + args
   app.Log(3, '$ %s', ' '.join(cmd))
   process = subprocess.Popen(
       cmd,

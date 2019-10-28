@@ -164,7 +164,7 @@ attributes #4 = { nounwind }
 SIMPLE_C_DOT = """
 digraph "CFG for 'DoSomething' function" {
   label="CFG for 'DoSomething' function";
-  
+
   Node0x7f86c670c590 [shape=record,label="{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  %5 = alloca i32, align 4\l  store i32 %0, i32* %4, align 4\l  store i32 %1, i32* %5, align 4\l  %6 = load i32, i32* %4, align 4\l  %7 = srem i32 %6, 5\l  %8 = icmp ne i32 %7, 0\l  br i1 %8, label %9, label %12\l|{<s0>T|<s1>F}}"];
   Node0x7f86c670c590:s0 -> Node0x7f86c65001a0;
   Node0x7f86c670c590:s1 -> Node0x7f86c65001f0;
@@ -240,7 +240,7 @@ def test_GetAliasSetsByFunction_aliases():
   """Sample bytecode that contains alias sets."""
   alias_sets = opt_util.GetAliasSetsByFunction("""
 %struct.foo = type { i32 }
-  
+
 define i32 @A() #0 {
   %1 = alloca i32, align 4
   %2 = alloca i32, align 4
@@ -296,16 +296,13 @@ define i32 @A() #0 {
           type='must alias',
           mod_ref='Mod/Ref',
           pointers=[opt_util.Pointer(type='i32*', identifier='%2', size=4)]),
-      opt_util.AliasSet(type='may alias',
-                        mod_ref='Ref',
-                        pointers=[
-                            opt_util.Pointer(type='i8*',
-                                             identifier='%15',
-                                             size=1),
-                            opt_util.Pointer(type='(i8*',
-                                             identifier='%21',
-                                             size=1)
-                        ]),
+      opt_util.AliasSet(
+          type='may alias',
+          mod_ref='Ref',
+          pointers=[
+              opt_util.Pointer(type='i8*', identifier='%15', size=1),
+              opt_util.Pointer(type='(i8*', identifier='%21', size=1)
+          ]),
       opt_util.AliasSet(
           type='must alias',
           mod_ref='Mod',
@@ -318,13 +315,12 @@ define i32 @A() #0 {
           type='must alias',
           mod_ref='Mod',
           pointers=[opt_util.Pointer(type='i32**', identifier='%6', size=8)]),
-      opt_util.AliasSet(type='must alias',
-                        mod_ref='Mod',
-                        pointers=[
-                            opt_util.Pointer(type='%struct.foo**',
-                                             identifier='%7',
-                                             size=8)
-                        ]),
+      opt_util.AliasSet(
+          type='must alias',
+          mod_ref='Mod',
+          pointers=[
+              opt_util.Pointer(type='%struct.foo**', identifier='%7', size=8)
+          ]),
       opt_util.AliasSet(
           type='must alias',
           mod_ref='Mod',
@@ -341,7 +337,7 @@ def test_RunAnalysisPasses():
       opt_util.RunAnalysisPasses(
           """
 %struct.foo = type { i32 }
-  
+
 define i32 @A() #0 {
   %1 = alloca i32, align 4
   %2 = alloca i32, align 4
@@ -398,6 +394,7 @@ define i32 @A() #0 {
   assert analyses[0].function == 'A'
 
   assert analyses[1].analysis == 'Induction Variable Users'
+  assert analyses[1].lines
 
 
 if __name__ == '__main__':

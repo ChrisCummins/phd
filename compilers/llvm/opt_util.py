@@ -351,9 +351,18 @@ AnalysisOutput = collections.namedtuple(
     ])
 
 
-def RunAnalysisPasses(
-    bytecode: str, passes: typing.List[str]) -> typing.Iterable[AnalysisOutput]:
+def RunAnalysisPasses(bytecode: str,
+                      passes: typing.List[str],
+                      opt_path: typing.Optional[pathlib.Path] = None
+                     ) -> typing.Iterable[AnalysisOutput]:
   """Run the given opt analysis passes and parse the output.
+
+  TODO(github.com/ChrisCummins/phd/issues/54): this requires using an LLVM
+  built with debug+assert flags, which we do not currently have. You must
+  therefore use the `opt_path` argument to pass in the path of an opt binary
+  with the debug+assert flags enabled. Care should be taken to match the
+  version of opt against the one included in this project as the output format
+  may have changed between releases. See //:WORKSPACE for current llvm version.
 
   Args:
     bytecode: The bytecode to analyse.
@@ -361,28 +370,35 @@ def RunAnalysisPasses(
       <https://llvm.org/docs/Passes.html#analysis-passes> for a list.
 
   Returns:
-    A tuple of <global_analyses, local_analyses>
+    A generator of AnalysisOutput tuples.
   """
-  cmd = ['-analyze', '-'] + passes
-  p = opt.Exec(cmd, stdin=bytecode)
+  cmd = ['-analyze', '-stats', '-'] + passes
+  p = opt.Exec(cmd, stdin=bytecode, opt=opt_path)
   if p.returncode:
-    raise opt.OptException('opt analysis failed',
-                           returncode=p.returncode,
-                           stderr=p.stderr,
-                           command=cmd)
+    raise opt.OptException(
+        'opt analysis failed',
+        returncode=p.returncode,
+        stderr=p.stderr,
+        command=cmd)
+  return ParseAnalysisPassesOutput(p.stdout)
 
+
+def ParseAnalysisPassesOutput(stdout: str) -> typing.Iterable[AnalysisOutput]:
+  """Parse the output of opt's analysis passes.
+
+  Args:
+    stdout: The opt stdout to parse.
+
+  Returns:
+    A generator of AnalysisOutput tuples.
+  """
   global_analysis_re = re.compile(r"Printing analysis '(?P<analysis>[^']+)':")
   function_analysis_re = re.compile(
       r"Printing analysis '(?P<analysis>[^']+)' for function '(?P<function>[^']+)':"
   )
 
-  # Printing analysis 'Counts the various types of Instructions' for function 'A':
-  # Printing analysis 'Induction Variable Users':
-  # IV Users for loop %9:
-  # Printing analysis 'Natural Loop Information' for function 'A':
-  # Loop at depth 1 containing: %9<header><exiting>,%12,%24<latch>
   analysis = None
-  for line in p.stdout.split('\n'):
+  for line in stdout.split('\n'):
     line = line.strip()
     if not line:
       continue
@@ -391,18 +407,18 @@ def RunAnalysisPasses(
     if match:
       if analysis:  # Emit current analysis
         yield analysis
-      analysis = AnalysisOutput(analysis=match.group('analysis'),
-                                function=None,
-                                lines=[])
+      analysis = AnalysisOutput(
+          analysis=match.group('analysis'), function=None, lines=[])
       continue
 
     match = function_analysis_re.match(line)
     if match:
       if analysis:  # Emit current analysis
         yield analysis
-      analysis = AnalysisOutput(analysis=match.group('analysis'),
-                                function=match.group('function'),
-                                lines=[])
+      analysis = AnalysisOutput(
+          analysis=match.group('analysis'),
+          function=match.group('function'),
+          lines=[])
       continue
 
     if analysis:
