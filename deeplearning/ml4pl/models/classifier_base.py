@@ -38,18 +38,16 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path(
-    'working_dir',
-    '/tmp/deeplearning/ml4pl/models/ggnn/',
-    'The directory to write files to.',
-    is_dir=True)
+app.DEFINE_output_path('working_dir',
+                       '/tmp/deeplearning/ml4pl/models/ggnn/',
+                       'The directory to write files to.',
+                       is_dir=True)
 
-app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
-    None,
-    'The database to read graph data from.',
-    must_exist=True)
+app.DEFINE_database('graph_db',
+                    graph_database.Database,
+                    None,
+                    'The database to read graph data from.',
+                    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -218,8 +216,8 @@ class ClassifierBase(object):
           average=FLAGS.batch_scores_averaging_method)
 
       log.accuracy = accuracies.mean()
-      log.pickled_accuracies = pickle.dumps(accuracies)
-      log.pickled_predictions = pickle.dumps(predictions)
+      log.accuracies = accuracies
+      log.predictions = predictions
 
       epoch_accuracies.append(log.accuracy)
 
