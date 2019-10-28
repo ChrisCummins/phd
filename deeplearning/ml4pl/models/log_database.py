@@ -115,10 +115,9 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
 
 class Instances(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """The data for a graph.
+  """The per-instance results of a batch log.
 
-  This is an opaque byte array that can be used as needed, e.g. for pickled
-  dictionaries, networkx graphs, etc.
+  In practise, this table grows large.
   """
   id: int = sql.Column(sql.Integer,
                        sql.ForeignKey('batch_logs.id'),
