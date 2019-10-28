@@ -17,6 +17,17 @@
 licenses(["notice"])  # Apache 2.0
 
 py_binary(
+    name = "build",
+    srcs = ["build.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:prof",
+    ],
+)
+
+py_binary(
     name = "clang",
     srcs = ["clang.py"],
     data = select({
