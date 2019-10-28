@@ -64,35 +64,33 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The GraphMeta.group column that this batch of graphs came from.
   group: str = sql.Column(sql.String(32), nullable=False)
 
-  # A pickled array of GraphMeta.id values.
-  pickled_graph_indices: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                            nullable=False)
-
-  # A pickled array of accuracies, of shape
-  # [num_instances * num_targets_per_instance]. The number of targets per
-  # instance will depend on the type of classification problem. For graph-level
-  # classification, there is one target per instance. For node-level
-  # classification, there are num_nodes targets for each graph.
-  pickled_accuracies: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                         nullable=False)
-
-  # A pickled array of sparse model predictions, of shape
-  # [num_instances * num_targets_per_instance, num_classes]. See
-  # pickled_accuracies for a description of row count.
-  pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                          nullable=False)
+  instances: 'Instances' = sql.orm.relationship('Instances',
+                                                uselist=False,
+                                                back_populates="batch")
 
   @property
   def graph_indices(self) -> typing.List[int]:
-    return pickle.loads(self.pickled_graph_indices)
+    return pickle.loads(self.instances.pickled_graph_indices)
+
+  @graph_indices.setter
+  def graph_indices(self, data) -> typing.List[int]:
+    self.instances.pickled_graph_indices = pickle.dumps(data)
 
   @property
   def accuracies(self) -> typing.Any:
-    return pickle.loads(self.pickled_accuracies)
+    return pickle.loads(self.instances.pickled_accuracies)
+
+  @accuracies.setter
+  def accuracies(self, data) -> typing.Any:
+    self.instances.pickled_accuracies = pickle.dumps(data)
 
   @property
   def predictions(self) -> typing.Any:
-    return pickle.loads(self.pickled_predictions)
+    return pickle.loads(self.instances.pickled_predictions)
+
+  @predictions.setter
+  def predictions(self, data) -> typing.Any:
+    self.instances.pickled_predictions = pickle.dumps(data)
 
   @property
   def graphs_per_second(self):
@@ -114,6 +112,37 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
         f"loss={self.loss:.4f} | "
         f"acc={self.accuracy:.2%}")
+
+
+class Instances(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """The data for a graph.
+
+  This is an opaque byte array that can be used as needed, e.g. for pickled
+  dictionaries, networkx graphs, etc.
+  """
+  id: int = sql.Column(sql.Integer,
+                       sql.ForeignKey('batch_logs.id'),
+                       primary_key=True)
+
+  # A pickled array of GraphMeta.id values.
+  pickled_graph_indices: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                            nullable=False)
+
+  # A pickled array of accuracies, of shape
+  # [num_instances * num_targets_per_instance]. The number of targets per
+  # instance will depend on the type of classification problem. For graph-level
+  # classification, there is one target per instance. For node-level
+  # classification, there are num_nodes targets for each graph.
+  pickled_accuracies: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                         nullable=False)
+
+  # A pickled array of sparse model predictions, of shape
+  # [num_instances * num_targets_per_instance, num_classes]. See
+  # pickled_accuracies for a description of row count.
+  pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                          nullable=False)
+
+  batch: BatchLog = sql.orm.relationship(BatchLog, back_populates="instances")
 
 
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
