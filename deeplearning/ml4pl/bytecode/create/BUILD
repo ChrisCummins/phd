@@ -50,6 +50,17 @@ py_test(
     ],
 )
 
+py_binary(
+    name = "import_from_npb",
+    srcs = ["import_from_npb.py"],
+    deps = [
+        "//compilers/llvm:llvm_dis",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:sqlutil",
+    ],
+)
+
 py_library(
     name = "import_from_pact17_devmap",
     srcs = ["import_from_pact17_devmap.py"],
