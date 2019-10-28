@@ -271,10 +271,7 @@ class BytecodeExporter(database_exporters.BytecodeDatabaseExporterBase):
     return _ProcessBytecodeJob
 
 
-def main():
-  """Main entry point."""
-  if not FLAGS.bytecode_db:
-    raise app.UsageError('--db required')
+def Run(exporter_class):
   bytecode_db = FLAGS.bytecode_db()
   graph_db = FLAGS.graph_db()
 
@@ -298,13 +295,7 @@ def main():
 
     groups = splitters.GetGroupsFromFlags(bytecode_db)
 
-    if FLAGS.graph_type == 'cfg_from_proto':
-      exporter = ControlFlowGraphProtoExporter(bytecode_db, graph_db)
-    elif FLAGS.graph_type == 'icdfg_from_bytecode':
-      exporter = BytecodeExporter(bytecode_db, graph_db)
-    else:
-      raise app.UsageError('Unknown value for --graph_type')
-
+    exporter = exporter_class(bytecode_db, graph_db)
     exporter.ExportGroups(groups)
 
     log = fs.Read(pathlib.Path(d) / 'log.INFO')
@@ -312,6 +303,21 @@ def main():
       s.query(graph_database.Meta).filter(
           graph_database.Meta.key == 'log').delete()
       s.add(graph_database.Meta(key='log', value=log))
+
+
+def main():
+  """Main entry point."""
+  if not FLAGS.bytecode_db:
+    raise app.UsageError('--db required')
+
+  if FLAGS.graph_type == 'cfg_from_proto':
+    exporter = ControlFlowGraphProtoExporter
+  elif FLAGS.graph_type == 'icdfg_from_bytecode':
+    exporter = BytecodeExporter
+  else:
+    raise app.UsageError('Unknown value for --graph_type')
+
+  Run(exporter)
 
 
 if __name__ == '__main__':

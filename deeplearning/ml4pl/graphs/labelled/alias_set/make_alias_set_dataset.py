@@ -1,10 +1,12 @@
-"""This module prepares datasets for data flow analyses."""
-import sys
-
+"""This module prepares alias set datasets."""
 import pathlib
+import sys
 import tempfile
 import traceback
 import typing
+
+from labm8 import app
+from labm8 import fs
 
 from compilers.llvm import opt
 from compilers.llvm import opt_util
@@ -15,12 +17,8 @@ from deeplearning.ml4pl.graphs.labelled.alias_set import alias_set
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import fs
 
 FLAGS = app.FLAGS
-
-BytecodeJob = typing.Tuple[str, str, str, str, int]
 
 
 def RunOpt(bytecode: str):
@@ -63,13 +61,13 @@ def RunOpt(bytecode: str):
   lines = [l for l in lines if not l.startswith("Writing '")]
   alias_sets = opt_util.ParseAliasSetsOutput(lines)
   if len(alias_sets) != len(cfg_dots):
-    raise ValueError(f"{len(cfg_dots} CFGs produced, but only "
+    raise ValueError(f"{len(cfg_dots)} CFGs produced, but only "
                      f"{len(alias_sets)} alias sets extracted")
   return cfg_dots, alias_sets
 
 
 def _ProcessBytecodeJob(
-    job: BytecodeJob) -> typing.List[graph_database.GraphMeta]:
+    job: make_dataset.BytecodeJob) -> typing.List[graph_database.GraphMeta]:
   """
 
   Args:
