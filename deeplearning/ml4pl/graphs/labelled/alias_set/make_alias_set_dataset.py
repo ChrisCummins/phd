@@ -31,7 +31,7 @@ def RunOpt(bytecode: str):
     with fs.chdir(output_dir):
       process = opt.Exec(
           ['-dot-cfg', '-basicaa', '-print-alias-sets', '-disable-output'],
-          stdin=bytecode.encode('utf-8'),
+          stdin=bytecode,
           universal_newlines=True,
           log=False)
 
