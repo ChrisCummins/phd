@@ -73,7 +73,7 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     return pickle.loads(self.instances.pickled_graph_indices)
 
   @graph_indices.setter
-  def graph_indices(self, data) -> typing.List[int]:
+  def graph_indices(self, data) -> None:
     self.instances.pickled_graph_indices = pickle.dumps(data)
 
   @property
@@ -81,7 +81,7 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     return pickle.loads(self.instances.pickled_accuracies)
 
   @accuracies.setter
-  def accuracies(self, data) -> typing.Any:
+  def accuracies(self, data) -> None:
     self.instances.pickled_accuracies = pickle.dumps(data)
 
   @property
@@ -89,7 +89,7 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     return pickle.loads(self.instances.pickled_predictions)
 
   @predictions.setter
-  def predictions(self, data) -> typing.Any:
+  def predictions(self, data) -> None:
     self.instances.pickled_predictions = pickle.dumps(data)
 
   @property
