@@ -55,7 +55,7 @@ class LlvmBuild(object):
     return (f'https://releases.llvm.org/{self.version}/'
             f'llvm-{self.version}.src.tar.xz')
 
-  def MaybeBuild(self, run_regression_test: bool = True) -> None:
+  def MaybeBuild(self, run_regression_test: bool = False) -> None:
     """Run a temporary build."""
     if (self.install_dir / 'bin' / 'llvm-config').is_file():
       return
