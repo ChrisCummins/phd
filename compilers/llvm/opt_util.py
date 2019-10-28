@@ -1,6 +1,7 @@
 """Utility functions """
 import collections
 import pathlib
+import re
 import subprocess
 import tempfile
 import typing
@@ -320,3 +321,72 @@ def ParseAliasSetsOutput(
     elif line.strip():  # Empty line
       raise ValueError(line)
   return function_alias_sets
+
+
+AnalysisOutput = collections.namedtuple(
+    'AnalysisOutput',
+    [
+        'analysis',  # str, the name of the analysis
+        'function',  # typing.Optional[str], function name, or None if global analysis
+        'lines',  # typing.List[str], the output of the analysis
+    ])
+
+
+def RunAnalysisPasses(
+    bytecode: str, passes: typing.List[str]) -> typing.Iterable[AnalysisOutput]:
+  """Run the given opt analysis passes and parse the output.
+
+  Args:
+    bytecode: The bytecode to analyse.
+    passes: A list of passes to run. See:
+      <https://llvm.org/docs/Passes.html#analysis-passes> for a list.
+
+  Returns:
+    A tuple of <global_analyses, local_analyses>
+  """
+  cmd = ['-analyze', '-'] + passes
+  p = opt.Exec(cmd, stdin=bytecode)
+  if p.returncode:
+    raise opt.OptException('opt analysis failed',
+                           returncode=p.returncode,
+                           stderr=p.stderr,
+                           command=cmd)
+
+  global_analysis_re = re.compile(r"Printing analysis '(?P<analysis>[^']+)':")
+  function_analysis_re = re.compile(
+      r"Printing analysis '(?P<analysis>[^']+)' for function '(?P<function>[^']+)':"
+  )
+
+  # Printing analysis 'Counts the various types of Instructions' for function 'A':
+  # Printing analysis 'Induction Variable Users':
+  # IV Users for loop %9:
+  # Printing analysis 'Natural Loop Information' for function 'A':
+  # Loop at depth 1 containing: %9<header><exiting>,%12,%24<latch>
+  analysis = None
+  for line in p.stdout.split('\n'):
+    line = line.strip()
+    if not line:
+      continue
+
+    match = global_analysis_re.match(line)
+    if match:
+      if analysis:  # Emit current analysis
+        yield analysis
+      analysis = AnalysisOutput(analysis=match.group('analysis'),
+                                function=None,
+                                lines=[])
+      continue
+
+    match = function_analysis_re.match(line)
+    if match:
+      if analysis:  # Emit current analysis
+        yield analysis
+      analysis = AnalysisOutput(analysis=match.group('analysis'),
+                                function=match.group('function'),
+                                lines=[])
+      continue
+
+    if analysis:
+      analysis.lines.append(line)
+    else:
+      raise ValueError(f"Unable to parse analysis output: `{p.stdout.strip()}`")

@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //compilers/llvm/util.py."""
-import pytest
 import typing
+
+import pytest
+from labm8 import app
+from labm8 import test
 
 from compilers.llvm import llvm
 from compilers.llvm import opt
 from compilers.llvm import opt_util
-from labm8 import app
-from labm8 import test
 
 FLAGS = app.FLAGS
 
@@ -333,6 +334,70 @@ define i32 @A() #0 {
           mod_ref='Ref',
           pointers=[opt_util.Pointer(type='i32*', identifier='%1', size=4)])
   ]
+
+
+def test_RunAnalysisPasses():
+  analyses = list(
+      opt_util.RunAnalysisPasses(
+          """
+%struct.foo = type { i32 }
+  
+define i32 @A() #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  %3 = alloca [2 x i8], align 1
+  %4 = alloca [10 x i8], align 1
+  %5 = alloca %struct.foo, align 4
+  %6 = alloca i32*, align 8
+  %7 = alloca %struct.foo*, align 8
+  %8 = alloca i32*, align 8
+  store i32 0, i32* %2, align 4
+  br label %9
+
+; <label>:9:                                      ; preds = %24, %0
+  %10 = load i32, i32* %2, align 4
+  %11 = icmp ne i32 %10, 10
+  br i1 %11, label %12, label %27
+
+; <label>:12:                                     ; preds = %9
+  %13 = load i32, i32* %2, align 4
+  %14 = sext i32 %13 to i64
+  %15 = getelementptr inbounds [10 x i8], [10 x i8]* %4, i64 0, i64 %14
+  %16 = load i8, i8* %15, align 1
+  %17 = getelementptr inbounds [2 x i8], [2 x i8]* %3, i64 0, i64 0
+  store i8 %16, i8* %17, align 1
+  %18 = load i32, i32* %2, align 4
+  %19 = sub nsw i32 9, %18
+  %20 = sext i32 %19 to i64
+  %21 = getelementptr inbounds [10 x i8], [10 x i8]* %4, i64 0, i64 %20
+  %22 = load i8, i8* %21, align 1
+  %23 = getelementptr inbounds [2 x i8], [2 x i8]* %3, i64 0, i64 1
+  store i8 %22, i8* %23, align 1
+  br label %24
+
+; <label>:24:                                     ; preds = %12
+  %25 = load i32, i32* %2, align 4
+  %26 = add nsw i32 %25, 1
+  store i32 %26, i32* %2, align 4
+  br label %9
+
+; <label>:27:                                     ; preds = %9
+  %28 = getelementptr inbounds %struct.foo, %struct.foo* %5, i32 0, i32 0
+  store i32* %28, i32** %6, align 8
+  store %struct.foo* %5, %struct.foo** %7, align 8
+  store i32* null, i32** %8, align 8
+  %29 = load i32, i32* %1, align 4
+  ret i32 %29
+}
+""", ['-instcount', '-iv-users', '-loops']))
+  analyses = sorted(analyses, key=lambda a: (a.analysis, a.function))
+
+  assert len(analyses) == 2
+
+  assert analyses[0].analysis == 'Counts the various types of Instructions'
+  assert analyses[0].function == 'A'
+
+  assert analyses[1].analysis == 'Induction Variable Users'
 
 
 if __name__ == '__main__':
