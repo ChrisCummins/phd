@@ -272,6 +272,10 @@ def ParseAliasSetsOutput(
   lines = output.split('\n')
   function_alias_sets = {}
 
+  # Regex to strip alias set address prefix. Use a regex because address length
+  # is machine-dependent.
+  alias_set_size_re = re.compile(r"  AliasSet[0x[0-9a-f]+, (?P<size>\d+)")
+
   function = None
   alias_sets = None
   for line in lines:
@@ -286,10 +290,12 @@ def ParseAliasSetsOutput(
     elif line.startswith("  AliasSet["):
       if function is None:
         raise ValueError("Unexpected line!")
-      line = line[len("  AliasSet[0x7fb068d1dd60, "):]
-      alias_set_size = int(line[:line.index(']')])
-      line = line[line.index(']') + 2:]
-      alias_set_type = line[:line.index(',')]
+      match = alias_set_size_re.match(line)
+      if not match:
+        raise ValueError(f"Unable to interpret alias set: `{line}`")
+      alias_set_size = int(match.group('size'))
+      line = re.sub(alias_set_size_re, '', line)
+      alias_set_type = line[2:line.index(',')]
       line = line[line.index(',') + 1:]
       mod_ref = line.split()[0]
       line = ' '.join(line.split()[2:])
