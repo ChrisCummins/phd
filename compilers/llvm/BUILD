@@ -102,6 +102,36 @@ py_binary(
 )
 
 py_binary(
+    name = "llvm_dis",
+    srcs = ["llvm_dis.py"],
+    data = select({
+        "//:darwin": [
+            "@llvm_mac//:llvm-dis",
+        ],
+        "//conditions:default": [
+            "@llvm_linux//:llvm-dis",
+        ],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":llvm",
+        "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:system",
+    ],
+)
+
+py_test(
+    name = "llvm_dis_test",
+    srcs = ["llvm_dis_test.py"],
+    deps = [
+        ":llvm_dis",
+        "//labm8:app",
+        "//labm8:test",
+    ],
+)
+
+py_binary(
     name = "llvm_link",
     srcs = ["llvm_link.py"],
     data = select({
