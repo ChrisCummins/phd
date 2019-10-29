@@ -1,10 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/graphs:graph_query."""
 import networkx as nx
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_query as query
+from labm8 import app
+from labm8 import test
 
 FLAGS = app.FLAGS
 
@@ -38,6 +38,18 @@ def test_StatementNeighbors_data_flow(graph):
 def test_StatementIsSuccessor(graph):
   assert query.StatementIsSuccessor(graph, 'A', 'B')
   assert not query.StatementIsSuccessor(graph, 'B', 'A')
+
+
+def test_FindCallSites_multiple_call_sites():
+  g = nx.MultiDiGraph()
+  g.add_node('call', type='statement', function='A', text='%2 = call i32 @B()')
+  g.add_node('foo', type='statement', function='A', text='')
+  g.add_node(
+      'call2', type='statement', function='A', text='%call = call i32 @B()')
+
+  call_sites = query.FindCallSites(g, 'A', 'B')
+  assert len(call_sites) == 2
+  assert set(call_sites) == {'call', 'call2'}
 
 
 if __name__ == '__main__':
