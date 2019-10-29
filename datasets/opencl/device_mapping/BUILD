@@ -30,8 +30,8 @@ py_library(
     data = [":csv_files"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
         "//deeplearning/deeptune/opencl/adversary:opencl_deadcode_inserter",
+        "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:decorators",
         "//third_party/py/numpy",

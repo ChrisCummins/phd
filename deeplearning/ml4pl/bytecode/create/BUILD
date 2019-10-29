@@ -111,6 +111,8 @@ py_binary(
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
+        "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
         "//labm8:app",
     ],
 )

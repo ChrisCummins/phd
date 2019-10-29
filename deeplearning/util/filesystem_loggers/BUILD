@@ -4,5 +4,5 @@ py_library(
     deps = [
         "//labm8:app",
         "//labm8:fs",
-    ]
+    ],
 )

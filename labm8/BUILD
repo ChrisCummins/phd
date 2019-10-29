@@ -643,9 +643,9 @@ py_library(
     srcs = ["sqlutil.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":humanize",
         ":labdate",
         ":pbutil",
-        ":humanize",
         ":text",
         "//third_party/py/absl",
         "//third_party/py/sqlalchemy",
