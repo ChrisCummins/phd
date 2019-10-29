@@ -45,7 +45,10 @@ LANGUAGE_TO_CLANG_ARGS = {
         '-Wno-everything',  # No warnings please.
     ],
     'opencl': opencl.GetClangArgs(use_shim=True),
-    'swift': []
+    # These languages are handled separately without using clang, but they still
+    # need entries in this table:
+    'swift': [],
+    'haskell': [],
 }
 
 app.DEFINE_string('db', None, 'Path of database to populate.')
@@ -67,7 +70,7 @@ def GetSwiftBytecodesFromContentFiles(
   """
   protos = []
 
-  with tempfile.TemporaryDirectory(prefix='phd_import_') as d:
+  with tempfile.TemporaryDirectory(prefix='phd_import_swift_') as d:
     with fs.chdir(d) as d:
       for content_file_id, text in content_files:
         swift_file = d / 'file.swift'
@@ -100,6 +103,51 @@ def GetSwiftBytecodesFromContentFiles(
   return protos
 
 
+def GetHaskellBytecodesFromContentFiles(
+    source_name: str, content_files: typing.List[typing.Tuple[int, str]]
+) -> typing.List[ml4pl_pb2.LlvmBytecode]:
+  """Extract LLVM bytecodes from haskell contentfiles.
+
+  The process is haskell -> LLVM bytecode.
+
+  This requires the glasgow haskell compiler and LLVM backend, install them on
+  Ubuntu 16.04 using:
+
+    $ sudo apt-get install ghc llvm-3.5
+  """
+  protos = []
+
+  with tempfile.TemporaryDirectory(prefix='phd_import_haskell_') as d:
+    with fs.chdir(d) as d:
+      for content_file_id, text in content_files:
+        haskell_file = d / 'file.hs'
+        ll_file = d / 'file.ll'
+        fs.Write(haskell_file, text.encode('utf-8'))
+        ghc = subprocess.Popen([
+            'ghc', '-fllvm', '-keep-llvm-files', '-fforce-recomp',
+            haskell_file.name
+        ],
+                               stderr=subprocess.DEVNULL)
+        ghc.communicate()
+        if ghc.returncode:
+          continue
+        if not ll_file.is_file():
+          continue
+
+        protos.append(
+            ml4pl_pb2.LlvmBytecode(
+                source_name=source_name,
+                relpath=str(content_file_id),
+                lang='haskell',
+                cflags='ghc -fllm -keep-llvm-files',
+                bytecode=fs.Read(ll_file),
+                clang_returncode=0,
+                error_message='',
+            ))
+
+  return protos
+
+
 def GetBytecodesFromContentFiles(
     source_name: str, language: str,
     content_files: typing.List[typing.Tuple[int, str]]
@@ -120,6 +168,8 @@ def GetBytecodesFromContentFiles(
   """
   if language == 'swift':
     return GetSwiftBytecodesFromContentFiles(source_name, content_files)
+  elif language == 'haskell':
+    return GetHaskellBytecodesFromContentFiles(source_name, content_files)
 
   protos = []
   clang_args = LANGUAGE_TO_CLANG_ARGS[language] + [
