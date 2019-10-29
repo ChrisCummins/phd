@@ -73,14 +73,6 @@ language {
 }
 
 language {
-  language: "haskell"
-  query {
-    string: "language:haskell sort:stars fork:false"
-    max_results: 1000
-  }
-  destination_directory: "/var/phd/datasets/github/repos_by_lang/haskell"
-}
-language {
   language: "go"
   query {
     string: "language:go sort:stars fork:false"
