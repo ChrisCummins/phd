@@ -352,6 +352,97 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         })
       yield batch['log'], feed_dict
 
+  def MakeModularGraphOps(self):
+    assert self.weights['regression_gate'] and self.weights['regression_transform'], \
+      "Need to call MakeLossAndAccuracyAndPredictionOps() first!"
+
+    predictions = utils.MakeModularOutputLayer(self.placeholders['node_x'],
+                                               self.placeholders['raw_node_output_features'],
+                                               self.weights['regression_gate'],
+                                               self.weights['regression_transform'])
+    
+    targets = tf.argmax(self.placeholders["node_y"],
+                          axis=1,
+                          output_type=tf.int32)
+
+    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32),
+                          targets)
+
+    accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
+
+    loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
+                                            predictions)
+
+    return loss, accuracies, accuracy, predictions
+
+  def RunMinibatch(self, epoch_type: str, feed_dict: typing.Any
+                  ) -> classifier_base.ClassifierBase.MinibatchResults:
+    if FLAGS.dynamic_unroll_multiple == 1 or epoch_type == "train":
+      fetch_dict = {
+          "loss": self.ops["loss"],
+          "accuracies": self.ops["accuracies"],
+          "accuracy": self.ops["accuracy"],
+          "predictions": self.ops["predictions"],
+          "summary_loss": self.ops["summary_loss"],
+          "summary_accuracy": self.ops["summary_accuracy"],
+      }
+      unroll_multiple = 1
+    else:
+      fetch_dict = {
+        "loss": self.ops["modular_loss"],
+        "accuracies": self.ops["modular_accuracies"],
+        "accuracy": self.ops["modular_accuracy"],
+        "predictions": self.ops["modular_predictions"],
+        "summary_loss": self.ops["modular_summary_loss"],
+        "summary_accuracy": self.ops["modular_summary_accuracy"],
+      }
+      unroll_multiple = FLAGS.dynamic_unroll_multiple
+
+    if epoch_type == "train":
+      fetch_dict["train_step"] = self.ops["train_step"]
+
+    if unroll_multiple == 1:
+      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
+    else:
+      fetch_dict = self.ModularlyRunWithFetchDict(fetch_dict, feed_dict, unroll_multiple)
+
+    if FLAGS.tensorboard_logging:
+      self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
+                                                   self.global_training_step)
+      self.summary_writers[epoch_type].add_summary(
+          fetch_dict["summary_accuracy"], self.global_training_step)
+
+    # TODO(cec): Add support for edge labels.
+    targets = (feed_dict[self.placeholders['node_y']]
+               if self.placeholders['node_y'] in feed_dict else
+               feed_dict[self.placeholders['graph_y']])
+
+    return self.MinibatchResults(
+        loss=float(fetch_dict['loss']),
+        y_true_1hot=targets,
+        y_pred_1hot=fetch_dict['predictions'])
+
+  def ModularlyRunWithFetchDict(self,
+                                fetch_dict: typing.Dict[str, tf.Tensor],
+                                feed_dict: typing.Dict[tf.Tensor, typing.Any],
+                                unroll_multiple: int,
+                               ) -> typing.Dict[str, tf.Tensor]:
+    input_node_states = feed_dict[self.placeholders['node_x']]
+    _node_states = input_node_states
+    _fetch_dict = {"raw_node_output_features": self.ops["final_node_x"]}
+
+    for i in range(unroll_multiple):
+      feed_dict.update({self.placeholders['node_x']: _node_states})
+      _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
+      _node_states = _results["raw_node_output_features"]
+
+
+    feed_dict.update({
+        self.placeholders['node_x']: input_node_states,
+        self.placeholders['raw_node_output_features']: _node_states
+        })
+    fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
+    return fetch_dict
 
 def main():
   """Main entry point."""

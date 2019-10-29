@@ -55,6 +55,10 @@ app.DEFINE_boolean(
     "tensorboard_logging", True,
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
 
+app.DEFINE_integer(
+  "dynamic_unroll_multiple", 1,
+  "If n>1, the actual graph model will be dynamically reapplied n times before readout.")
+
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
 #
@@ -99,6 +103,17 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           (self.ops["loss"], self.ops["accuracies"], self.ops["accuracy"],
            self.ops["predictions"]) = (
                self.MakeLossAndAccuracyAndPredictionOps())
+
+        if FLAGS.dynamic_unroll_multiple > 1:
+          with tf.compat.v1.variable_scope("modular_graph_model"):
+            (self.ops["modular_loss"], self.ops["modular_accuracies"], self.ops["modular_accuracy"],
+            self.ops["modular_predictions"]) = (
+                self.MakeModularGraphOps())
+
+            # Modular Tensorboard summaries
+            self.ops["modular_summary_loss"] = tf.summary.scalar("modular_loss", self.ops["modular_loss"])
+            self.ops["modular_summary_accuracy"] = tf.summary.scalar(
+                "modular_accuracy", self.ops["modular_accuracy"])
 
         # Tensorboard summaries.
         self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])

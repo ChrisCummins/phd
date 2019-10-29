@@ -161,6 +161,10 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
         # It should be stats.node_features_dimensionality.
         [None, FLAGS.hidden_size],
         name="node_x")
+    placeholders['raw_node_output_features'] = tf.compat.v1.placeholder(
+      stats.node_features_dtype,
+      [None, FLAGS.hidden_size],
+      name="raw_node_output_features")
 
   if stats.node_labels_dimensionality:
     placeholders['node_y'] = tf.compat.v1.placeholder(
@@ -246,6 +250,15 @@ def BatchDictToFeedDict(
 
   return feed_dict
 
+def MakeModularOutputLayer(initial_node_state, final_node_state, regression_gate, regression_transform):
+  """An output layer that reuses weights, but can be fed with a placeholder."""
+  with tf.compat.v1.variable_scope("modular_output_layer"):
+    with tf.compat.v1.variable_scope("gated_regression"):
+      gated_input = tf.concat([final_node_state, initial_node_state], axis=-1)
+
+      computed_values = (tf.nn.sigmoid(regression_gate(gated_input)) *
+                         regression_transform(final_node_state))
+  return computed_values
 
 def MakeOutputLayer(initial_node_state, final_node_state, hidden_size: int,
                     labels_dimensionality: int,
