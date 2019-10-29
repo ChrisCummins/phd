@@ -25,14 +25,14 @@ app.DEFINE_string('cflags', '', 'The C_FLAGS used to build the bytecodes.')
 def main():
   # Find the paths to import.
   paths = subprocess.check_output(
-      ['find', str(FLAGS.directory), '-name', '*.ll'])
+      ['find', str(FLAGS.directory), '-name', '*.ll'], universal_newlines=True)
   paths = [pathlib.Path(result) for result in paths.split('\n') if result]
 
   i = 0
-  with sqlutil.BufferedDatabaseWriter(FLAGS.db()).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(FLAGS.bytecode_db()).Session() as writer:
     for i, path in enumerate(paths):
       bytecode = fs.Read(path)
-      relpath = os.path.relpath(path, FLAGS.path)
+      relpath = os.path.relpath(path, FLAGS.directory)
       app.Log(1, '%s:%s', FLAGS.source, relpath)
       writer.AddOne(
           bytecode_database.LlvmBytecode(
