@@ -56,8 +56,9 @@ app.DEFINE_boolean(
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
 
 app.DEFINE_integer(
-  "dynamic_unroll_multiple", 1,
-  "If n>1, the actual graph model will be dynamically reapplied n times before readout.")
+  "dynamic_unroll_multiple", 0,
+  "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
+  "n=-1 (maybe) runs until convergence of predictions.")
 
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
@@ -104,21 +105,23 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
            self.ops["predictions"]) = (
                self.MakeLossAndAccuracyAndPredictionOps())
 
-        if FLAGS.dynamic_unroll_multiple > 1:
+        if FLAGS.dynamic_unroll_multiple != 0:
           with tf.compat.v1.variable_scope("modular_graph_model"):
             (self.ops["modular_loss"], self.ops["modular_accuracies"], self.ops["modular_accuracy"],
             self.ops["modular_predictions"]) = (
                 self.MakeModularGraphOps())
 
-            # Modular Tensorboard summaries
-            self.ops["modular_summary_loss"] = tf.summary.scalar("modular_loss", self.ops["modular_loss"])
-            self.ops["modular_summary_accuracy"] = tf.summary.scalar(
-                "modular_accuracy", self.ops["modular_accuracy"])
+          # Modular Tensorboard summaries
+          self.ops["modular_summary_loss"] = tf.summary.scalar(
+              "modular_loss", self.ops["modular_loss"], family='loss')
+          self.ops["modular_summary_accuracy"] = tf.summary.scalar(
+              "modular_accuracy", self.ops["modular_accuracy"], family='accuracy')
 
         # Tensorboard summaries.
-        self.ops["summary_loss"] = tf.summary.scalar("loss", self.ops["loss"])
+        self.ops["summary_loss"] = tf.summary.scalar(
+            "loss", self.ops["loss"], family='loss')
         self.ops["summary_accuracy"] = tf.summary.scalar(
-            "accuracy", self.ops["accuracy"])
+            "accuracy", self.ops["accuracy"], family='accuracy')
         # TODO(cec): More tensorboard telemetry: input class distributions,
         # predicted class distributions, etc.
 
@@ -151,21 +154,44 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
+
+  def ModularlyRunWithFetchDict(self,
+                                fetch_dict: typing.Dict[str, tf.Tensor],
+                                feed_dict: typing.Dict[tf.Tensor, typing.Any],
+                                unroll_multiple: int,
+                                ) -> typing.Dict[str, tf.Tensor]:
+    raise NotImplementedError("abstract class")
+
   def RunMinibatch(self, epoch_type: str, feed_dict: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
-    fetch_dict = {
-        "loss": self.ops["loss"],
-        "accuracies": self.ops["accuracies"],
-        "accuracy": self.ops["accuracy"],
-        "predictions": self.ops["predictions"],
-        "summary_loss": self.ops["summary_loss"],
-        "summary_accuracy": self.ops["summary_accuracy"],
-    }
+    if FLAGS.dynamic_unroll_multiple == 0 or epoch_type == "train":
+      fetch_dict = {
+          "loss": self.ops["loss"],
+          "accuracies": self.ops["accuracies"],
+          "accuracy": self.ops["accuracy"],
+          "predictions": self.ops["predictions"],
+          "summary_loss": self.ops["summary_loss"],
+          "summary_accuracy": self.ops["summary_accuracy"],
+      }
+      unroll_multiple = 0
+    else:
+      fetch_dict = {
+        "loss": self.ops["modular_loss"],
+        "accuracies": self.ops["modular_accuracies"],
+        "accuracy": self.ops["modular_accuracy"],
+        "predictions": self.ops["modular_predictions"],
+        "summary_loss": self.ops["modular_summary_loss"],
+        "summary_accuracy": self.ops["modular_summary_accuracy"],
+      }
+      unroll_multiple = FLAGS.dynamic_unroll_multiple
 
     if epoch_type == "train":
       fetch_dict["train_step"] = self.ops["train_step"]
 
-    fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
+    if unroll_multiple == 0:
+      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
+    else:
+      fetch_dict = self.ModularlyRunWithFetchDict(fetch_dict, feed_dict, unroll_multiple)
 
     if FLAGS.tensorboard_logging:
       self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],

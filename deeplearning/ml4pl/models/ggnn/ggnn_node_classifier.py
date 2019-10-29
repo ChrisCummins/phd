@@ -375,53 +375,6 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     return loss, accuracies, accuracy, predictions
 
-  def RunMinibatch(self, epoch_type: str, feed_dict: typing.Any
-                  ) -> classifier_base.ClassifierBase.MinibatchResults:
-    if FLAGS.dynamic_unroll_multiple == 1 or epoch_type == "train":
-      fetch_dict = {
-          "loss": self.ops["loss"],
-          "accuracies": self.ops["accuracies"],
-          "accuracy": self.ops["accuracy"],
-          "predictions": self.ops["predictions"],
-          "summary_loss": self.ops["summary_loss"],
-          "summary_accuracy": self.ops["summary_accuracy"],
-      }
-      unroll_multiple = 1
-    else:
-      fetch_dict = {
-        "loss": self.ops["modular_loss"],
-        "accuracies": self.ops["modular_accuracies"],
-        "accuracy": self.ops["modular_accuracy"],
-        "predictions": self.ops["modular_predictions"],
-        "summary_loss": self.ops["modular_summary_loss"],
-        "summary_accuracy": self.ops["modular_summary_accuracy"],
-      }
-      unroll_multiple = FLAGS.dynamic_unroll_multiple
-
-    if epoch_type == "train":
-      fetch_dict["train_step"] = self.ops["train_step"]
-
-    if unroll_multiple == 1:
-      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
-    else:
-      fetch_dict = self.ModularlyRunWithFetchDict(fetch_dict, feed_dict, unroll_multiple)
-
-    if FLAGS.tensorboard_logging:
-      self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
-                                                   self.global_training_step)
-      self.summary_writers[epoch_type].add_summary(
-          fetch_dict["summary_accuracy"], self.global_training_step)
-
-    # TODO(cec): Add support for edge labels.
-    targets = (feed_dict[self.placeholders['node_y']]
-               if self.placeholders['node_y'] in feed_dict else
-               feed_dict[self.placeholders['graph_y']])
-
-    return self.MinibatchResults(
-        loss=float(fetch_dict['loss']),
-        y_true_1hot=targets,
-        y_pred_1hot=fetch_dict['predictions'])
-
   def ModularlyRunWithFetchDict(self,
                                 fetch_dict: typing.Dict[str, tf.Tensor],
                                 feed_dict: typing.Dict[tf.Tensor, typing.Any],
@@ -431,12 +384,48 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     _node_states = input_node_states
     _fetch_dict = {"raw_node_output_features": self.ops["final_node_x"]}
 
-    for i in range(unroll_multiple):
-      feed_dict.update({self.placeholders['node_x']: _node_states})
-      _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
-      _node_states = _results["raw_node_output_features"]
+    if unroll_multiple > 0:
+      for i in range(unroll_multiple):
+        feed_dict.update({self.placeholders['node_x']: _node_states})
+        _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
+        _node_states = _results["raw_node_output_features"]
+    
+    else: # unroll dynamically until predictions are stable
+      assert unroll_multiple < 0, "sanity check."
+
+      # first iteration manually
+      _node_states = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)["raw_node_output_features"]
+      feed_dict.update({
+          self.placeholders["raw_node_output_features"]: _node_states}
+      )
+      _new_predictions = utils.RunWithFetchDict(self.sess,
+                                        {"modular_predictions": self.ops["modular_predictions"]},
+                                        feed_dict
+                                       )["modular_predictions"]
+
+      # now always fetch modular_predictions w/ old _node_states and
+      # simulateously generate new _node_states from old _node_states
+      _fetch_dict = {"raw_node_output_features": self.ops["final_node_x"],
+                     "modular_predictions": self.ops["modular_predictions"]}
+
+      converged = False
+      sanity = 10
+      while not converged and sanity > 0:
+        feed_dict.update({
+          self.placeholders["node_x"]: _node_states,
+          self.placeholders["raw_node_output_features"]: _node_states,
+        })
+        _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
+        _node_states = _results["raw_node_output_features"]
+        _old_predictions = _new_predictions
+        _new_predictions = _results["modular_predictions"]
+        converged = (_new_predictions == _old_predictions).all()
+        sanity -= 1
+      if sanity == 0:
+        print("Solution didn't converge. Using current prediction to proceed.")
 
 
+    # finally compute everything from the originial fetch_dict
     feed_dict.update({
         self.placeholders['node_x']: input_node_states,
         self.placeholders['raw_node_output_features']: _node_states
