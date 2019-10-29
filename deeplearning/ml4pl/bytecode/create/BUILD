@@ -1,6 +1,17 @@
 # Datasets for compiler CFG problems.
 
 py_binary(
+    name = "import_from_directory",
+    srcs = ["import_from_directory.py"],
+    deps = [
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:sqlutil",
+    ],
+)
+
+py_binary(
     name = "import_from_github",
     srcs = ["import_from_github.py"],
     deps = [
