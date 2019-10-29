@@ -153,9 +153,9 @@ def ProcessOpenClProgramDfBytecode(
     error_message = e.stderr
 
   return ml4pl_pb2.LlvmBytecode(
-      source_name=f'{benchmark_suite_name}:{benchmark_name}',
-      relpath=kernel_name,
-      lang='OpenCL',
+      source_name='pact17_opencl_devmap',
+      relpath=f'{benchmark_suite_name}:{benchmark_name}:{kernel_name}',
+      lang='opencl',
       cflags=' '.join(cflags),
       bytecode=bytecode,
       clang_returncode=clang_returncode,
