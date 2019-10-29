@@ -1,11 +1,22 @@
--- How many bytecodes do we have, and where have they come from?
+-- Aggregate stats about bytecode corpus.
 
-SELECT `reachability`.`llvm_bytecode`.source_name AS SOURCE,
-       count(*) AS COUNT
-FROM `reachability`.`llvm_bytecode`
-WHERE clang_returncode = 0
-GROUP BY `reachability`.`llvm_bytecode`.source_name
-ORDER BY COUNT DESC;
+SELECT source_name,
+       LANGUAGE,
+       file_count,
+       count(*) AS function_count,
+       sum(linecount) AS line_count,
+       sum(block_count) AS basic_block_count,
+       avg(greatest(1, edge_count) / block_count) AS cfg_branch_factor
+FROM reachability.control_flow_graph_proto AS cfg
+LEFT JOIN reachability.llvm_bytecode AS bytecode ON cfg.bytecode_id = bytecode.id
+LEFT JOIN
+  (SELECT source_name AS source_name_,
+          count(*) AS file_count
+   FROM reachability.llvm_bytecode
+   GROUP BY source_name) AS t ON source_name_=source_name
+WHERE status=0
+GROUP BY source_name,
+         LANGUAGE;
 
 -- How many CFGs do we have, and where have they come from?
 
