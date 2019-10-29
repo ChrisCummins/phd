@@ -1,7 +1,8 @@
 """This module produces datasets of unlabelled graphs."""
+import pathlib
+import sys
+import traceback
 import typing
-
-from labm8 import app
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
@@ -10,6 +11,7 @@ from deeplearning.ml4pl.graphs.labelled import \
   make_data_flow_analysis_dataset as make_dataset
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -53,8 +55,15 @@ def _ProcessBytecodeJob(
     graph.language = language
     return [graph]
   except Exception as e:
-    app.Error('Failed to create graph for bytecode %d: %s (%s)', bytecode_id, e,
-              type(e).__name__)
+    _, _, tb = sys.exc_info()
+    tb = traceback.extract_tb(tb, 2)
+    filename, line_number, function_name, *_ = tb[-1]
+    filename = pathlib.Path(filename).name
+    app.Error(
+        'Failed to create control flow graphs from bytecode '
+        '%d: %s (%s:%s:%s() -> %s)', bytecode_id, e, filename, line_number,
+        function_name,
+        type(e).__name__)
     return []
 
 
