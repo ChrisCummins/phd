@@ -28,10 +28,12 @@ def main():
       ['find', str(FLAGS.directory), '-name', '*.ll'])
   paths = [pathlib.Path(result) for result in paths.split('\n') if result]
 
+  i = 0
   with sqlutil.BufferedDatabaseWriter(FLAGS.db()).Session() as writer:
-    for path in paths:
+    for i, path in enumerate(paths):
       bytecode = fs.Read(path)
       relpath = os.path.relpath(path, FLAGS.path)
+      app.Log(1, '%s:%s', FLAGS.source, relpath)
       writer.AddOne(
           bytecode_database.LlvmBytecode(
               source_name=FLAGS.source,
@@ -44,6 +46,8 @@ def main():
               clang_returncode=0,
               error_message='',
           ))
+
+  app.Log(1, 'Imported %s bytecodes', i)
 
 
 if __name__ == '__main__':
