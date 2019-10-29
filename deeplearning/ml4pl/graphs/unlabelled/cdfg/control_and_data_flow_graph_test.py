@@ -1,13 +1,13 @@
 """Unit tests for //deeplearning/ml4pl:control_and_data_flow_graph."""
 import networkx as nx
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8 import app
+from labm8 import test
 
 FLAGS = app.FLAGS
 
@@ -80,34 +80,39 @@ def test_every_statement_has_a_predecessor(simple_bytecode: str):
       assert False, f'{node} has no control flow predecessor.'
 
 
-def test_StatementIsSuccessor_linear_control_path():
-  g = nx.MultiDiGraph()
-  g.add_edge('a', 'b', type='control')
-  g.add_edge('b', 'c', type='control')
-  assert query.StatementIsSuccessor(g, 'a', 'a')
-  assert query.StatementIsSuccessor(g, 'a', 'b')
-  assert query.StatementIsSuccessor(g, 'a', 'c')
-  assert query.StatementIsSuccessor(g, 'b', 'c')
-  assert not query.StatementIsSuccessor(g, 'c', 'a')
-  assert not query.StatementIsSuccessor(g, 'b', 'a')
-  assert not query.StatementIsSuccessor(g, 'a', '_not_in_graph_')
-  with pytest.raises(Exception):
-    assert not query.StatementIsSuccessor(g, '_not_in_graph_',
-                                          '_not_in_graph2_')
+def test_ComposeGraphs_undefined():
+  """Test that function graph is inserted for call to undefined function."""
+  builder = cdfg.ControlAndDataFlowGraphBuilder()
 
+  A = nx.MultiDiGraph(name='A')
+  A.entry_block = 'A_entry'
+  A.exit_block = 'A_exit'
 
-def test_StatementIsSuccessor_branched_control_path():
-  g = nx.MultiDiGraph()
-  g.add_edge('a', 'b', type='control')
-  g.add_edge('a', 'c', type='control')
-  g.add_edge('b', 'd', type='control')
-  g.add_edge('c', 'd', type='control')
-  assert query.StatementIsSuccessor(g, 'a', 'b')
-  assert query.StatementIsSuccessor(g, 'a', 'c')
-  assert query.StatementIsSuccessor(g, 'a', 'b')
-  assert not query.StatementIsSuccessor(g, 'b', 'a')
-  assert not query.StatementIsSuccessor(g, 'b', 'c')
-  assert query.StatementIsSuccessor(g, 'b', 'd')
+  A.add_node(A.entry_block, type='statement', function='A', text='')
+  A.add_node(A.exit_block, type='statement', function='A', text='')
+  A.add_node('call', type='statement', function='A', text='call i32 @B(i32 1)')
+
+  A.add_edge(A.entry_block, 'call', flow='control', function='A')
+  A.add_edge('call', A.exit_block, flow='control', function='A')
+
+  call_graph = nx.MultiDiGraph()
+  call_graph.add_edge('external node', 'A')
+  call_graph.add_edge('external node', 'B')
+  call_graph.add_edge('A', 'B')
+
+  g = builder.ComposeGraphs([A], call_graph)
+
+  assert 'root' in g
+  assert 'B_entry' in g
+  assert 'B_exit' in g
+
+  assert g.edges('call', 'B_entry')
+  assert g.edges('B_exit', 'call')
+
+  assert g.number_of_nodes() == 6
+
+  assert g.edges('root', 'A')
+  assert g.edges('root', 'B')
 
 
 if __name__ == '__main__':

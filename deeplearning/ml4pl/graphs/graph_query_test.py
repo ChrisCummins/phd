@@ -40,6 +40,36 @@ def test_StatementIsSuccessor(graph):
   assert not query.StatementIsSuccessor(graph, 'B', 'A')
 
 
+def test_StatementIsSuccessor_linear_control_path():
+  g = nx.MultiDiGraph()
+  g.add_edge('a', 'b', type='control')
+  g.add_edge('b', 'c', type='control')
+  assert query.StatementIsSuccessor(g, 'a', 'a')
+  assert query.StatementIsSuccessor(g, 'a', 'b')
+  assert query.StatementIsSuccessor(g, 'a', 'c')
+  assert query.StatementIsSuccessor(g, 'b', 'c')
+  assert not query.StatementIsSuccessor(g, 'c', 'a')
+  assert not query.StatementIsSuccessor(g, 'b', 'a')
+  assert not query.StatementIsSuccessor(g, 'a', '_not_in_graph_')
+  with pytest.raises(Exception):
+    assert not query.StatementIsSuccessor(g, '_not_in_graph_',
+                                          '_not_in_graph2_')
+
+
+def test_StatementIsSuccessor_branched_control_path():
+  g = nx.MultiDiGraph()
+  g.add_edge('a', 'b', type='control')
+  g.add_edge('a', 'c', type='control')
+  g.add_edge('b', 'd', type='control')
+  g.add_edge('c', 'd', type='control')
+  assert query.StatementIsSuccessor(g, 'a', 'b')
+  assert query.StatementIsSuccessor(g, 'a', 'c')
+  assert query.StatementIsSuccessor(g, 'a', 'b')
+  assert not query.StatementIsSuccessor(g, 'b', 'a')
+  assert not query.StatementIsSuccessor(g, 'b', 'c')
+  assert query.StatementIsSuccessor(g, 'b', 'd')
+
+
 def test_FindCallSites_multiple_call_sites():
   g = nx.MultiDiGraph()
   g.add_node('call', type='statement', function='A', text='%2 = call i32 @B()')
