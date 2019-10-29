@@ -9,9 +9,6 @@ import itertools
 import typing
 
 import networkx as nx
-from labm8 import app
-from labm8 import decorators
-from labm8 import humanize
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
@@ -19,6 +16,9 @@ from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
+from labm8 import app
+from labm8 import decorators
+from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -59,12 +59,42 @@ def GetLlvmStatementDefAndUses(statement: str,
   return destination.strip(), strip(operands)
 
 
+def MakeUndefinedFunctionGraph(function_name: str) -> nx.MultiDiGraph:
+  """Create an empty function with the given name.
+
+  Use this to create function graphs for undefined functions. The generated
+  functions consist only of an entry and exit block, with a control edge
+  between them.
+  """
+  g = nx.MultiDiGraph()
+
+  g.name = function_name
+  g.entry_block = f'{function_name}_entry'
+  g.exit_block = f'{function_name}_exit'
+
+  g.add_node(
+      g.entry_block,
+      type='statement',
+      function=function_name,
+      text='UNK!',
+      original_text='UNK!')
+  g.add_node(
+      g.exit_block,
+      type='statement',
+      function=function_name,
+      text='UNK!',
+      original_text='UNK!')
+  g.add_edge(
+      g.entry_block, g.exit_block, function=function_name, flow='control')
+
+  return g
+
+
 def InsertFunctionGraph(graph, function_name, function_graphs
                        ) -> typing.Tuple[nx.MultiDiGraph, str, str]:
   """Insert the named function graph to the graph."""
   if function_name not in function_graphs:
-    raise ValueError(f"Cannot insert non-existent function `{function_name}`. "
-                     f"Available functions: {sorted(function_graphs.keys())}")
+    function_graphs[function_name] = MakeUndefinedFunctionGraph(function_name)
 
   function_graph = copy.deepcopy(function_graphs[function_name])
   graph = nx.compose(graph, function_graph)
@@ -100,6 +130,9 @@ def AddInterproceduralCallEdges(
       continue
 
     call_sites = query.FindCallSites(graph, src, dst)
+
+    if not call_sites:
+      continue
 
     # Check that the number of call sounds we found matches the expected number
     # from the call graph.
@@ -208,14 +241,16 @@ class ControlAndDataFlowGraphBuilder(object):
     for node in nodes_to_remove:
       in_edges = g.in_edges(node)
       out_edges = g.out_edges(node)
-      in_nodes = iterators.SuccessorNodes(g,
-                                          node,
-                                          ignored_nodes=nodes_to_remove,
-                                          direction=lambda src, dst: src)
-      out_nodes = iterators.SuccessorNodes(g,
-                                           node,
-                                           ignored_nodes=nodes_to_remove,
-                                           direction=lambda src, dst: dst)
+      in_nodes = iterators.SuccessorNodes(
+          g,
+          node,
+          ignored_nodes=nodes_to_remove,
+          direction=lambda src, dst: src)
+      out_nodes = iterators.SuccessorNodes(
+          g,
+          node,
+          ignored_nodes=nodes_to_remove,
+          direction=lambda src, dst: dst)
 
       for edge in in_edges:
         edges_to_remove.add(edge)
@@ -394,6 +429,9 @@ class ControlAndDataFlowGraphBuilder(object):
     if len(set(function_names)) != len(function_names):
       raise ValueError(
           f"Duplicate function names found: {sorted(function_names)}")
+
+    if 'external node' not in call_graph.nodes():
+      raise ValueError("Call graph missing `external node` root")
 
     # Add a function attribute to all nodes to track their originating function.
     for function_graph in function_graphs:

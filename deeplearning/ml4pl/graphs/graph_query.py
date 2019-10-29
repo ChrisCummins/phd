@@ -138,7 +138,4 @@ def FindCallSites(graph, src, dst):
       continue
     if called_function == dst:
       call_sites.append(node)
-  if not call_sites:
-    raise ValueError(
-        f"Unable to find any call statements from `{src}` to `{dst}`")
   return call_sites

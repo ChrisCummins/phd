@@ -4,7 +4,9 @@ import typing
 import networkx as nx
 import pydot
 import pyparsing
+
 from labm8 import app
+from labm8 import labtypes
 
 FLAGS = app.FLAGS
 
@@ -39,15 +41,24 @@ def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
   # the nodes by their label, which, for all except the magic "external node"
   # node, is the name of a function.
   node_name_to_label = {}
+
+  nodes_to_delete = []
+
   for node, data in graph.nodes(data=True):
+    if 'label' not in data:
+      nodes_to_delete.append(node)
+      continue
     label = data['label']
-    if not (label.startswith('"{') and label.endswith('}"')):
+    if label and not (label.startswith('"{') and label.endswith('}"')):
       raise ValueError(f"Invalid label: `{label}`")
     label = label[2:-2]
     node_name_to_label[node] = label
     # Remove unneeded data attributes.
-    del data['shape']
-    del data['label']
+    labtypes.DeleteKeys(data, {'shape', 'label'})
+
+  # Remove unlabelled nodes.
+  for node in nodes_to_delete:
+    graph.remove_node(node)
 
   nx.relabel_nodes(graph, node_name_to_label, copy=False)
   return graph

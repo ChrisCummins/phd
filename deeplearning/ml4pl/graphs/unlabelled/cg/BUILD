@@ -4,6 +4,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//labm8:app",
+        "//labm8:labtypes",
         "//third_party/py/networkx",
         "//third_party/py/pydot",
         "//third_party/py/pyparsing",
