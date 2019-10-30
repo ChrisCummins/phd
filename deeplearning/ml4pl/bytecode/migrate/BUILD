@@ -10,3 +10,12 @@ py_binary(
         "//labm8:prof",
     ],
 )
+
+py_binary(
+    name = "mark_duplicates",
+    srcs = ["mark_duplicates.py"],
+    deps = [
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//labm8:app",
+    ],
+)
