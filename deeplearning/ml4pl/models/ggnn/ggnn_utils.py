@@ -152,6 +152,7 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
       "output_layer_dropout_keep_prob":
       tf.compat.v1.placeholder(tf.float32, [],
                                name="output_layer_dropout_keep_prob"),
+      "is_training": tf.compat.v1.placeholder(dtype=tf.bool, shape=[])
   }
 
   if stats.node_features_dimensionality:
