@@ -190,6 +190,8 @@ class Database(sqlutil.Database):
           sql.func.min(BatchLog.timestamp).label('timestamp'),
           sql.func.min(BatchLog.global_step).label("global_step"),
           sql.func.avg(BatchLog.loss).label("loss"),
+          sql.func.avg(BatchLog.iteration_count).label("iteration_count"),
+          sql.func.avg(BatchLog.model_converged).label("converged"),
           sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
           sql.func.avg(BatchLog.precision).label("precision"),
           sql.func.avg(BatchLog.recall).label("recall"),
