@@ -146,7 +146,12 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     bytecodes = [row.bytecode for row in results]
 
     with prof.Profile('Encoded sequences'):
-      encoded_sequences = bytecode2seq.Encode(bytecodes, self.vocabulary)
+      encoded_sequences, vocab_out = bytecode2seq.Encode(
+          bytecodes, self.vocabulary)
+      if len(vocab_out) != len(self.vocabulary):
+        raise ValueError("Encoded vocabulary has different size "
+                         f"({len(vocab_out}}) than the input "
+                         f"({len(self.vocabulary)})")
 
     history = self.model.fit([encoded_sequences, batch['graph_x']],
                              batch['graph_y'],
