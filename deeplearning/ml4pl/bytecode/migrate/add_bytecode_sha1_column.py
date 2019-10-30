@@ -38,7 +38,7 @@ def main():
         for bytecode in bytecodes_to_process:
           bytecode.bytecode_sha1 = crypto.sha1_str(bytecode.bytecode)
 
-      with prof.Profile("Commited changes"):
+      with prof.Profile("Committed changes"):
         session.commit()
 
   app.Log(1, 'Finished after %s batches', batch)
