@@ -135,6 +135,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       graph_labels_dimensionality = len(gd['graph_y'])
     data_flow_max_steps_required = getattr(g, 'data_flow_max_steps_required', 0)
     return GraphMeta(
+        group=getattr(g, 'group', None),
         bytecode_id=g.bytecode_id,
         source_name=g.source_name,
         relpath=g.relpath,
