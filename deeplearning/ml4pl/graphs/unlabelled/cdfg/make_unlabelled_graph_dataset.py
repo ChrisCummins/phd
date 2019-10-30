@@ -1,10 +1,9 @@
 """This module produces datasets of unlabelled graphs."""
 import pathlib
+import pickle
 import sys
 import traceback
 import typing
-import pickle
-
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
@@ -59,8 +58,8 @@ def _ProcessBytecodeJob(
     # Get the number of types of nodes and edges. We could do this more
     # efficiently by tracking these values during graph construction, which
     # would require a refactor.
-    node_types = set([node_type, for _, node_type in g.nodes(data='type')])
-    edge_type_count = set([flow, for _, _, flow in g.edges(data='flow')])
+    node_types = set([node_type for _, node_type in graph.nodes(data='type')])
+    edge_type_count = set([flow for _, _, flow in graph.edges(data='flow')])
 
     if not len(node_types):
       raise ValueError("Graph has no nodes")
@@ -72,11 +71,11 @@ def _ProcessBytecodeJob(
         source_name=source_name,
         relpath=relpath,
         language=language,
-        node_count=g.number_of_nodes(),
-        edge_count=g.number_of_edges(),
+        node_count=graph.number_of_nodes(),
+        edge_count=graph.number_of_edges(),
         node_type_count=len(node_types),
         edge_type_count=len(edge_type_count),
-        data=graph_database.Graph(data=pickle.dumps(graph)),
+        graph=graph_database.Graph(data=pickle.dumps(graph)),
     )
 
     return [graph_meta]
