@@ -33,10 +33,10 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
         raise ValueError("Only node or graph labels are supported")
       yield batch['log'], targets
 
-  def RunMinibatch(self, epoch_type: str, targets: np.array
+  def RunMinibatch(self, log: log_database.BatchLog, targets: np.array
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     # "Training" step updates the class frequence counts.
-    if epoch_type == "train":
+    if log.epoch_type == "train":
       y_true = np.argmax(targets, axis=1)
       freqs = np.bincount(y_true)
       for i, n in enumerate(freqs):
@@ -47,7 +47,6 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
     pred[np.argmax(self.class_counts)] = 1
 
     return self.MinibatchResults(
-        loss=0,
         y_true_1hot=targets,
         y_pred_1hot=np.tile(pred, len(targets)).reshape(
             len(targets), self.labels_dimensionality))
