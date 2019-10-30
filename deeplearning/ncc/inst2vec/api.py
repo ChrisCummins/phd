@@ -1,19 +1,23 @@
 """My (Chris's) API for inst2vec codebase."""
 import copy
+import pickle
+import typing
+
 import networkx as nx
 import numpy as np
-import typing
+from labm8 import app
+from labm8 import bazelutil
 
 from deeplearning.ncc import vocabulary
 from deeplearning.ncc.inst2vec import inst2vec_preprocess as preprocess
-from labm8 import app
-
 
 FLAGS = app.FLAGS
 
-
 # Type hints for inst2vec parameters and return values.
 MultiEdges = typing.Dict[str, typing.List[str]]
+
+INST2VEC_DICITONARY_PATH = bazelutil.DataPath(
+    'phd/deeplearning/ncc/published_results/dic_pickle')
 
 
 def PreprocessLlvmBytecode(bytecode: str) -> str:
@@ -23,6 +27,12 @@ def PreprocessLlvmBytecode(bytecode: str) -> str:
       [bytecode_lines])
   del functions_declared_in_files
   return '\n'.join(preprocessed[0])
+
+
+def PretrainedEmbeddingIndicesDictionary() -> typing.Dict[str, int]:
+  """Read and return the embeddings indices dictionary."""
+  with open(INST2VEC_DICITONARY_PATH, 'rb') as f:
+    return pickle.load(f)
 
 
 def EncodeLlvmBytecode(bytecode: str,
@@ -75,7 +85,7 @@ def LlvmBytecodeToContextualFlowGraph(bytecode: str) -> nx.DiGraph:
       [bytecode_lines])
   preprocessed_bytecode = preprocessed_bytecodes[0]
   functions_declared_in_file = functions_declared_in_files[0]
-  
+
   # Then build the XFG from the preprocessed bytecode.
   #
   # File name is required by BuildContextualFlowGraph(), but is used only to
@@ -89,6 +99,7 @@ def LlvmBytecodeToContextualFlowGraph(bytecode: str) -> nx.DiGraph:
 def XfgToDot(xfg, dotpath):
   xfg = copy.deepcopy(xfg)
   for edge in xfg.edges:
-    xfg.edges[edge]['label'] = xfg.edges[edge]['stmt'].encode('ascii', 'ignore').decode('ascii').replace('\0', '0')
+    xfg.edges[edge]['label'] = xfg.edges[edge]['stmt'].encode(
+        'ascii', 'ignore').decode('ascii').replace('\0', '0')
     del xfg.edges[edge]['stmt']
   nx.drawing.nx_pydot.write_dot(xfg, dotpath)
