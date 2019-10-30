@@ -35,6 +35,7 @@ py_binary(
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
         "//labm8:prof",
+        "//third_party/py/numpy",
         "//third_party/py/tensorflow",
     ],
 )

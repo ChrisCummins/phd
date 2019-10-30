@@ -3,6 +3,7 @@ import pickle
 import typing
 
 import keras
+import numpy as np
 from keras import models
 from labm8 import app
 from labm8 import prof
@@ -52,6 +53,10 @@ app.DEFINE_database('bytecode_db',
                     None,
                     'URL of database to read bytecodes from.',
                     must_exist=True)
+
+app.DEFINE_integer(
+    'max_encoded_length', None,
+    'Override the max_encoded_length value loaded from the vocabulary.')
 #
 ##### End of flag declarations.
 
@@ -69,6 +74,12 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
       self.vocabulary = data_to_load['vocab']
       self.max_encoded_length = data_to_load['max_encoded_length']
 
+    if FLAGS.max_encoded_length:
+      self.max_encoded_length = FLAGS.max_encoded_length
+
+    app.Log(1, 'Using %s-element vocabulary with sequence length %s',
+            len(self.vocabulary), self.max_encoded_length)
+
     # Language model. It begins with an optional embedding layer, then has two
     # layers of LSTM network, returning a single vector of size
     # self.lstm_layer_size.
@@ -76,6 +87,8 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
                               dtype='int32',
                               name="model_in")
 
+    self.pad_val = len(self.vocabulary)
+    assert self.pad_val not in self.vocabulary
     embedding_dim = len(self.vocabulary) + 1
     lstm_input = keras.layers.Embedding(input_dim=embedding_dim,
                                         input_length=self.max_encoded_length,
@@ -150,10 +163,17 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
           bytecodes, self.vocabulary)
       if len(vocab_out) != len(self.vocabulary):
         raise ValueError("Encoded vocabulary has different size "
-                         f"({len(vocab_out}}) than the input "
+                         f"({len(vocab_out)}) than the input "
                          f"({len(self.vocabulary)})")
 
-    history = self.model.fit([encoded_sequences, batch['graph_x']],
+    one_hot_sequences = np.vstack(
+        np.array(
+            keras.preprocessing.sequence.pad_sequences(
+                encoded_sequences,
+                maxlen=self.max_encoded_length,
+                value=self.pad_val)))
+
+    history = self.model.fit([one_hot_sequences, batch['graph_x']],
                              batch['graph_y'],
                              epochs=1,
                              batch_size=FLAGS.batch_size,
