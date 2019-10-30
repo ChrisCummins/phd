@@ -147,7 +147,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
               graph_database.GraphMeta.bytecode_id) \
             .filter(graph_database.GraphMeta.id.in_(graph_ids))
 
-          bytecode_to_graph_ids = {row[1]: row[0] for row in query}
+          graph_to_bytecode_ids = {row[0]: row[1] for row in query}
 
         # Load the bytecode strings in the order of the graphs.
         with self.bytecode_db.Session() as session:
@@ -155,13 +155,13 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
               bytecode_database.LlvmBytecode.id,
               bytecode_database.LlvmBytecode.bytecode) \
             .filter(bytecode_database.LlvmBytecode.id.in_(
-              bytecode_to_graph_ids.keys()))
+              graph_to_bytecode_ids.values()))
 
-          results = sorted(
-              query,
-              key=lambda row: graph_ids.index(bytecode_to_graph_ids[row.id]))
+          bytecode_id_to_string = {row[0]: row[1] for row in query}
 
-        bytecodes = [row.bytecode for row in results]
+        bytecodes = [
+            bytecode_id_to_string[graph_to_bytecode_ids[i]] for i in graph_ids
+        ]
 
         encoded_sequences, vocab_out = bytecode2seq.Encode(
             bytecodes, self.vocabulary)
