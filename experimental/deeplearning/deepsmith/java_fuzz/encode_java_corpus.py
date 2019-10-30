@@ -1,18 +1,18 @@
 """Preprocess an exported database of Java methods."""
-import time
-
 import datetime
-import numpy as np
+import time
 import typing
 
-from deeplearning.clgen.corpuses import encoded
-from deeplearning.clgen.corpuses import preprocessed
-from deeplearning.clgen.proto import internal_pb2
+import numpy as np
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import humanize
 from labm8 import pbutil
 from labm8 import sqlutil
+
+from deeplearning.clgen.corpuses import encoded
+from deeplearning.clgen.corpuses import preprocessed
+from deeplearning.clgen.proto import internal_pb2
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
@@ -128,13 +128,14 @@ def EncodePreprocessedFiles(
 
   per_item_wall_time_ms = int(wall_time_ms / max(len(encodeds), 1))
   pp_cfs = [
-      encoded.EncodedContentFile(
-          id=cf.id,
-          data='.'.join(str(x) for x in enc),
-          tokencount=len(enc),
-          encoding_time_ms=per_item_wall_time_ms,
-          wall_time_ms=per_item_wall_time_ms,
-          date_added=datetime.datetime.now()) for cf, enc in zip(cfs, encodeds)
+      encoded.EncodedContentFile(id=cf.id,
+                                 data='.'.join(str(x)
+                                               for x in enc),
+                                 tokencount=len(enc),
+                                 encoding_time_ms=per_item_wall_time_ms,
+                                 wall_time_ms=per_item_wall_time_ms,
+                                 date_added=datetime.datetime.now())
+      for cf, enc in zip(cfs, encodeds)
   ]
   return pp_cfs, vocab
 
@@ -164,7 +165,7 @@ def EncodeFiles(input_db: preprocessed.PreprocessedContentFiles,
 
     vocab = GetVocabFromMetaTable(output_session)
 
-  # This method can take a while to complete, so discard the database sesssions
+  # This method can take a while to complete, so discard the database sessions
   # and re-open them later to avoid "MySQL server has gone away" errors.
   enc, vocab = EncodePreprocessedFiles(to_encode, vocab)
 
