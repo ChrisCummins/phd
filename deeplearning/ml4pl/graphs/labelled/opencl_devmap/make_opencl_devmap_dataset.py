@@ -7,20 +7,19 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
-
-from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import fs
 from labm8 import sqlutil
 
-app.DEFINE_database(
-    'input_db',
-    graph_database.Database,
-    None,
-    'URL of database to read unlabelled graphs from.',
-    must_exist=True)
+from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ncc.inst2vec import api as inst2vec
+
+app.DEFINE_database('input_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to read unlabelled graphs from.',
+                    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write labelled graphs to.')
@@ -72,14 +71,13 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
       for _, r in df.iterrows()
   ]
 
-  df.rename(
-      columns={
-          f'param:{gpu}:wgsize': 'wgsize',
-          f'feature:{gpu}:transfer': 'transfer',
-          f'runtime:{cpu}': 'runtime_cpu',
-          f'runtime:{gpu}': 'runtime_gpu',
-      },
-      inplace=True)
+  df.rename(columns={
+      f'param:{gpu}:wgsize': 'wgsize',
+      f'feature:{gpu}:transfer': 'transfer',
+      f'runtime:{cpu}': 'runtime_cpu',
+      f'runtime:{gpu}': 'runtime_gpu',
+  },
+            inplace=True)
 
   return df[[
       'relpath',
@@ -121,12 +119,13 @@ def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
       # Add 'x' node features as embedding indices for vocabulary.
       # TODO(cec): This maps identifier nodes to the same embedding as unknown
       # statements.
-      AddVocabularyIndicesToStatements(
-          graph, dictionary, x_for_non_statements=dictionary['!UNK'])
+      AddVocabularyIndicesToStatements(graph,
+                                       dictionary,
+                                       x_for_non_statements=dictionary['!UNK'])
 
       # Add the graph-level features.
       # TODO(cec): Should we apply any transforms to these values? Log?
-      graph.x = np.array([row['wgsize'], row['transfer']], dtype=np.int32)
+      graph.x = np.array([row['wgsize'], row['transfer']], dtype=np.int64)
 
       # Add 'y' graph feature as target.
       graph.y = row['y']
@@ -143,10 +142,11 @@ def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
 def MakeOpenClDevmapDataset(input_db: graph_database.Database,
                             output_db: graph_database.Database, gpu: str):
   """Create a labelled dataset for the given GPU."""
+  # TODO(cec): Change groups to k-fold classification.
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(
-      output_db, max_queue=8).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(output_db,
+                                      max_queue=8).Session() as writer:
     df = MakeGpuDataFrame(dataset.df, gpu)
 
     for graph in MakeAnnotatedGraphs(input_db, df):
