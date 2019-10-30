@@ -57,7 +57,7 @@ class RunLogAnalyzer(object):
 
   def GetEpochLogs(self, epoch_num: int) -> pd.DataFrame:
     """Return the logs for the given epoch number, index by group."""
-    if epoch_num not in self.epoch_logs.epoch:
+    if epoch_num not in self.epoch_logs.epoch.values:
       raise ValueError(f"Epoch `{epoch_num}` not in logs: "
                        f"{set(self.epoch_logs.epoch)}")
     return self.epoch_logs[self.epoch_logs.epoch == epoch_num].set_index(
@@ -136,24 +136,24 @@ class RunLogAnalyzer(object):
         .filter(log_database.BatchLog.global_step == random_row.global_step) \
         .one()
 
-    batch_dict = self.ReconstructBatchDict(log)
+      batch_dict = self.ReconstructBatchDict(log)
 
-    with prof.Profile(f"Recreated {batch_dict['graph_count']} input graphs"):
-      input_graphs = list(self.batcher.BatchDictToGraphs(batch_dict))
+      with prof.Profile(f"Recreated {batch_dict['graph_count']} input graphs"):
+        input_graphs = list(self.batcher.BatchDictToGraphs(batch_dict))
 
-    with prof.Profile(f"Recreated {batch_dict['graph_count']} output graphs"):
-      # Remove the features.
-      labtypes.DeleteKeys(batch_dict, {'node_x', 'edge_x', 'graph_x'})
+      with prof.Profile(f"Recreated {batch_dict['graph_count']} output graphs"):
+        # Remove the features.
+        labtypes.DeleteKeys(batch_dict, {'node_x', 'edge_x', 'graph_x'})
 
-      # Add the labels.
-      if 'node_y' in batch_dict:
-        batch_dict['node_y'] = log.predictions
-      elif 'graph_y' in batch_dict:
-        batch_dict['graph_y'] = log.predictions
-      else:
-        raise ValueError(
-            "Neither node or graph labels found in batch dict with "
-            f"keys: `{list(batch_dict.keys())}`")
+        # Add the labels.
+        if 'node_y' in batch_dict:
+          batch_dict['node_y'] = log.predictions
+        elif 'graph_y' in batch_dict:
+          batch_dict['graph_y'] = log.predictions
+        else:
+          raise ValueError(
+              "Neither node or graph labels found in batch dict with "
+              f"keys: `{list(batch_dict.keys())}`")
 
       output_graphs = list(self.batcher.BatchDictToGraphs(batch_dict))
 
