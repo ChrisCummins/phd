@@ -8,6 +8,11 @@ import typing
 
 import numpy as np
 import sklearn.metrics
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_batcher
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
@@ -17,11 +22,6 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
-
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_batcher
-from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -38,16 +38,18 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/ggnn/',
-                       'The directory to write files to.',
-                       is_dir=True)
+app.DEFINE_output_path(
+    'working_dir',
+    '/tmp/deeplearning/ml4pl/models/ggnn/',
+    'The directory to write files to.',
+    is_dir=True)
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -191,7 +193,7 @@ class ClassifierBase(object):
       log.run_id = self.run_id
 
       assert log.group in {"train", "val", "test"}
-      targets, predictions = self.RunMinibatch(log.group, feed_dict)
+      targets, predictions = self.RunMinibatch(log, feed_dict)
 
       # Compute statistics.
       y_true = np.argmax(targets, axis=1)

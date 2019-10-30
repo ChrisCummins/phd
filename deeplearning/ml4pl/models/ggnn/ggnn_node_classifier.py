@@ -411,9 +411,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       }
 
       converged = False
-      sanity = 25
+      # TODO(cec): Determine max_iteration_count based on the d(G) + 3 rule
+      # of the graphs in the feed_dict.
+      max_iteration_count = 25
       iteration_count = 1
-      while not converged and sanity > 0:
+      for iteration_count in range(1, max_iteration_count):
         iteration_count += 1
         feed_dict.update({
             self.placeholders["node_x"]:
@@ -425,17 +427,19 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         _node_states = _results["raw_node_output_features"]
         _old_predictions = _new_predictions
         _new_predictions = _results["modular_predictions"]
-        converged = (_new_predictions == _old_predictions).all()
-        sanity -= 1
+
+        converged = (np.argmax(_new_predictions, axis=1) == np.argmax(
+            _old_predictions, axis=1)).all()
+        if converged:
+          break
 
       log.model_converged = converged
       log.iteration_count = iteration_count
 
       if converged:
-        app.Log(1, "Model performed %s iterations and converges",
-                iteration_count)
+        app.Log(1, "Model outputs after %s iterations", iteration_count)
       else:
-        app.Log(1, "Model performed %s iterations and did not converge",
+        app.Log(1, "Model outputs failed to converge after %s iterations",
                 iteration_count)
 
     # finally compute everything from the originial fetch_dict
@@ -444,7 +448,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         self.placeholders['raw_node_output_features']: _node_states
     })
     fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
-    return fetch_dict, iteration_count, converged
+    return fetch_dict
 
 
 def main():
