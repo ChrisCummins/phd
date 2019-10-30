@@ -1,5 +1,4 @@
 """A module for batching graph dictionaries."""
-import pickle
 import time
 import typing
 
@@ -289,7 +288,7 @@ class GraphBatcher(object):
     batch['node_count'] = log.node_count
 
     # Record the graphs that we used in this batch.
-    log.graph_indices = pickle.dumps(graph_ids)
+    log.graph_indices = graph_ids
 
     return batch
 
