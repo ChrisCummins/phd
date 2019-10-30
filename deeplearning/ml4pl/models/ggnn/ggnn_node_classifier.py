@@ -385,62 +385,58 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     _node_states = input_node_states
     _fetch_dict = {"raw_node_output_features": self.ops["final_node_x"]}
 
+    # first iteration manually
+    _node_states = utils.RunWithFetchDict(self.sess, _fetch_dict,
+                                          feed_dict)["raw_node_output_features"]
+    feed_dict.update(
+        {self.placeholders["raw_node_output_features"]: _node_states})
+    _new_predictions = utils.RunWithFetchDict(
+        self.sess, {"modular_predictions": self.ops["modular_predictions"]},
+        feed_dict)["modular_predictions"]
+
+    # now always fetch modular_predictions w/ old _node_states and
+    # simulateously generate new _node_states from old _node_states
+    _fetch_dict = {
+        "raw_node_output_features": self.ops["final_node_x"],
+        "modular_predictions": self.ops["modular_predictions"]
+    }
+
     if unroll_multiple > 0:
-      for i in range(unroll_multiple):
-        feed_dict.update({self.placeholders['node_x']: _node_states})
-        _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
-        _node_states = _results["raw_node_output_features"]
-
-    else:  # unroll dynamically until predictions are stable
-      assert unroll_multiple < 0, "sanity check."
-
-      # first iteration manually
-      _node_states = utils.RunWithFetchDict(
-          self.sess, _fetch_dict, feed_dict)["raw_node_output_features"]
-      feed_dict.update(
-          {self.placeholders["raw_node_output_features"]: _node_states})
-      _new_predictions = utils.RunWithFetchDict(
-          self.sess, {"modular_predictions": self.ops["modular_predictions"]},
-          feed_dict)["modular_predictions"]
-
-      # now always fetch modular_predictions w/ old _node_states and
-      # simulateously generate new _node_states from old _node_states
-      _fetch_dict = {
-          "raw_node_output_features": self.ops["final_node_x"],
-          "modular_predictions": self.ops["modular_predictions"]
-      }
-
-      converged = False
+      max_iteration_count = unroll_multiple
+      stop_once_converged = False
+    else:
       # TODO(cec): Determine max_iteration_count based on the d(G) + 3 rule
       # of the graphs in the feed_dict.
       max_iteration_count = 25
-      iteration_count = 1
-      for iteration_count in range(1, max_iteration_count):
-        iteration_count += 1
-        feed_dict.update({
-            self.placeholders["node_x"]:
-            _node_states,
-            self.placeholders["raw_node_output_features"]:
-            _node_states,
-        })
-        _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
-        _node_states = _results["raw_node_output_features"]
-        _old_predictions = _new_predictions
-        _new_predictions = _results["modular_predictions"]
+      stop_once_converged = True
 
-        converged = (np.argmax(_new_predictions, axis=1) == np.argmax(
-            _old_predictions, axis=1)).all()
-        if converged:
-          break
+    converged = False
+    for iteration_count in range(1, max_iteration_count):
+      iteration_count += 1
+      feed_dict.update({
+          self.placeholders["node_x"]:
+          _node_states,
+          self.placeholders["raw_node_output_features"]:
+          _node_states,
+      })
+      _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
+      _node_states = _results["raw_node_output_features"]
+      _old_predictions = _new_predictions
+      _new_predictions = _results["modular_predictions"]
 
-      log.model_converged = converged
-      log.iteration_count = iteration_count
+      converged |= (np.argmax(_new_predictions, axis=1) == np.argmax(
+          _old_predictions, axis=1)).all()
+      if stop_once_converged and converged:
+        break
 
-      if converged:
-        app.Log(1, "Model outputs after %s iterations", iteration_count)
-      else:
-        app.Log(1, "Model outputs failed to converge after %s iterations",
-                iteration_count)
+    log.model_converged = converged
+    log.iteration_count = iteration_count
+
+    if converged:
+      app.Log(1, "Model outputs converged after %s iterations", iteration_count)
+    else:
+      app.Log(1, "Model outputs failed to converge after %s iterations",
+              iteration_count)
 
     # finally compute everything from the originial fetch_dict
     feed_dict.update({
