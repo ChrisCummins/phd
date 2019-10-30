@@ -23,3 +23,18 @@ py_binary(
         "//labm8:sqlutil",
     ],
 )
+
+py_binary(
+    name = "lstm_graph_classifier",
+    srcs = ["lstm_graph_classifier.py"],
+    deps = [
+        ":bytecode2seq",
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/models:classifier_base",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//labm8:prof",
+        "//third_party/py/tensorflow",
+    ],
+)
