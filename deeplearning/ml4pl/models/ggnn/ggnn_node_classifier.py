@@ -4,12 +4,12 @@ import typing
 
 import numpy as np
 import tensorflow as tf
-from labm8 import app
 
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
+from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -116,10 +116,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
-                                  FLAGS.graph_rnn_activation,
-                                  FLAGS.hidden_size,
-                                  name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(
+            FLAGS.graph_rnn_cell,
+            FLAGS.graph_rnn_activation,
+            FLAGS.hidden_size,
+            name=f"cell_layer_{layer_index}")
         # Apply dropout as required.
         if FLAGS.graph_state_dropout_keep_prob < 1:
           cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
@@ -209,16 +210,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(message_source_states,
-                                                axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(
+                  message_source_states, axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (message_attention_scores *
-                                          message_edge_type_factors)
+              message_attention_scores = (
+                  message_attention_scores * message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -301,12 +302,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
-    targets = tf.argmax(self.placeholders["node_y"],
-                        axis=1,
-                        output_type=tf.int32)
+    targets = tf.argmax(
+        self.placeholders["node_y"], axis=1, output_type=tf.int32)
 
-    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32),
-                          targets)
+    accuracies = tf.equal(
+        tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
@@ -356,30 +356,30 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     assert self.weights['regression_gate'] and self.weights['regression_transform'], \
       "Need to call MakeLossAndAccuracyAndPredictionOps() first!"
 
-    predictions = utils.MakeModularOutputLayer(self.placeholders['node_x'],
-                                               self.placeholders['raw_node_output_features'],
-                                               self.weights['regression_gate'],
-                                               self.weights['regression_transform'])
-    
-    targets = tf.argmax(self.placeholders["node_y"],
-                          axis=1,
-                          output_type=tf.int32)
+    predictions = utils.MakeModularOutputLayer(
+        self.placeholders['node_x'],
+        self.placeholders['raw_node_output_features'],
+        self.weights['regression_gate'], self.weights['regression_transform'])
 
-    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32),
-                          targets)
+    targets = tf.argmax(
+        self.placeholders["node_y"], axis=1, output_type=tf.int32)
+
+    accuracies = tf.equal(
+        tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
     loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
-                                            predictions)
+                                           predictions)
 
     return loss, accuracies, accuracy, predictions
 
-  def ModularlyRunWithFetchDict(self,
-                                fetch_dict: typing.Dict[str, tf.Tensor],
-                                feed_dict: typing.Dict[tf.Tensor, typing.Any],
-                                unroll_multiple: int,
-                               ) -> typing.Dict[str, tf.Tensor]:
+  def ModularlyRunWithFetchDict(
+      self,
+      fetch_dict: typing.Dict[str, tf.Tensor],
+      feed_dict: typing.Dict[tf.Tensor, typing.Any],
+      unroll_multiple: int,
+  ) -> typing.Dict[str, tf.Tensor]:
     input_node_states = feed_dict[self.placeholders['node_x']]
     _node_states = input_node_states
     _fetch_dict = {"raw_node_output_features": self.ops["final_node_x"]}
@@ -389,31 +389,36 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         feed_dict.update({self.placeholders['node_x']: _node_states})
         _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
         _node_states = _results["raw_node_output_features"]
-    
-    else: # unroll dynamically until predictions are stable
+
+    else:  # unroll dynamically until predictions are stable
       assert unroll_multiple < 0, "sanity check."
 
       # first iteration manually
-      _node_states = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)["raw_node_output_features"]
-      feed_dict.update({
-          self.placeholders["raw_node_output_features"]: _node_states}
-      )
-      _new_predictions = utils.RunWithFetchDict(self.sess,
-                                        {"modular_predictions": self.ops["modular_predictions"]},
-                                        feed_dict
-                                       )["modular_predictions"]
+      _node_states = utils.RunWithFetchDict(
+          self.sess, _fetch_dict, feed_dict)["raw_node_output_features"]
+      feed_dict.update(
+          {self.placeholders["raw_node_output_features"]: _node_states})
+      _new_predictions = utils.RunWithFetchDict(
+          self.sess, {"modular_predictions": self.ops["modular_predictions"]},
+          feed_dict)["modular_predictions"]
 
       # now always fetch modular_predictions w/ old _node_states and
       # simulateously generate new _node_states from old _node_states
-      _fetch_dict = {"raw_node_output_features": self.ops["final_node_x"],
-                     "modular_predictions": self.ops["modular_predictions"]}
+      _fetch_dict = {
+          "raw_node_output_features": self.ops["final_node_x"],
+          "modular_predictions": self.ops["modular_predictions"]
+      }
 
       converged = False
-      sanity = 10
+      sanity = 25
+      iteration_count = 1
       while not converged and sanity > 0:
+        iteration_count += 1
         feed_dict.update({
-          self.placeholders["node_x"]: _node_states,
-          self.placeholders["raw_node_output_features"]: _node_states,
+            self.placeholders["node_x"]:
+            _node_states,
+            self.placeholders["raw_node_output_features"]:
+            _node_states,
         })
         _results = utils.RunWithFetchDict(self.sess, _fetch_dict, feed_dict)
         _node_states = _results["raw_node_output_features"]
@@ -421,17 +426,20 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         _new_predictions = _results["modular_predictions"]
         converged = (_new_predictions == _old_predictions).all()
         sanity -= 1
-      if sanity == 0:
-        print("Solution didn't converge. Using current prediction to proceed.")
 
+      if converged:
+        app.Log(1, "Model performed %s iterations and converges")
+      else:
+        app.Log(1, "Model performed %s iterations and did not converge")
 
     # finally compute everything from the originial fetch_dict
     feed_dict.update({
         self.placeholders['node_x']: input_node_states,
         self.placeholders['raw_node_output_features']: _node_states
-        })
+    })
     fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
-    return fetch_dict
+    return fetch_dict, iteration_count, converged
+
 
 def main():
   """Main entry point."""

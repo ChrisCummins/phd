@@ -3,12 +3,12 @@ import typing
 
 import numpy as np
 import tensorflow as tf
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
 
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -56,9 +56,9 @@ app.DEFINE_boolean(
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
 
 app.DEFINE_integer(
-  "dynamic_unroll_multiple", 0,
-  "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
-  "n=-1 (maybe) runs until convergence of predictions.")
+    "dynamic_unroll_multiple", 0,
+    "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
+    "n=-1 (maybe) runs until convergence of predictions.")
 
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
@@ -107,15 +107,17 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
         if FLAGS.dynamic_unroll_multiple != 0:
           with tf.compat.v1.variable_scope("modular_graph_model"):
-            (self.ops["modular_loss"], self.ops["modular_accuracies"], self.ops["modular_accuracy"],
-            self.ops["modular_predictions"]) = (
-                self.MakeModularGraphOps())
+            (self.ops["modular_loss"], self.ops["modular_accuracies"],
+             self.ops["modular_accuracy"],
+             self.ops["modular_predictions"]) = (self.MakeModularGraphOps())
 
           # Modular Tensorboard summaries
           self.ops["modular_summary_loss"] = tf.summary.scalar(
               "modular_loss", self.ops["modular_loss"], family='loss')
           self.ops["modular_summary_accuracy"] = tf.summary.scalar(
-              "modular_accuracy", self.ops["modular_accuracy"], family='accuracy')
+              "modular_accuracy",
+              self.ops["modular_accuracy"],
+              family='accuracy')
 
         # Tensorboard summaries.
         self.ops["summary_loss"] = tf.summary.scalar(
@@ -154,12 +156,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
   def layer_timesteps(self) -> np.array:
     return np.array([int(x) for x in FLAGS.layer_timesteps])
 
-
-  def ModularlyRunWithFetchDict(self,
-                                fetch_dict: typing.Dict[str, tf.Tensor],
-                                feed_dict: typing.Dict[tf.Tensor, typing.Any],
-                                unroll_multiple: int,
-                                ) -> typing.Dict[str, tf.Tensor]:
+  def ModularlyRunWithFetchDict(
+      self,
+      fetch_dict: typing.Dict[str, tf.Tensor],
+      feed_dict: typing.Dict[tf.Tensor, typing.Any],
+      unroll_multiple: int,
+  ) -> typing.Dict[str, tf.Tensor]:
     raise NotImplementedError("abstract class")
 
   def RunMinibatch(self, epoch_type: str, feed_dict: typing.Any
@@ -176,12 +178,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       unroll_multiple = 0
     else:
       fetch_dict = {
-        "loss": self.ops["modular_loss"],
-        "accuracies": self.ops["modular_accuracies"],
-        "accuracy": self.ops["modular_accuracy"],
-        "predictions": self.ops["modular_predictions"],
-        "summary_loss": self.ops["modular_summary_loss"],
-        "summary_accuracy": self.ops["modular_summary_accuracy"],
+          "loss": self.ops["modular_loss"],
+          "accuracies": self.ops["modular_accuracies"],
+          "accuracy": self.ops["modular_accuracy"],
+          "predictions": self.ops["modular_predictions"],
+          "summary_loss": self.ops["modular_summary_loss"],
+          "summary_accuracy": self.ops["modular_summary_accuracy"],
       }
       unroll_multiple = FLAGS.dynamic_unroll_multiple
 
@@ -190,8 +192,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
     if unroll_multiple == 0:
       fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
+      iteration_count, converged = 1, False
     else:
-      fetch_dict = self.ModularlyRunWithFetchDict(fetch_dict, feed_dict, unroll_multiple)
+      fetch_dict, iteration_count, converged = self.ModularlyRunWithFetchDict(
+          fetch_dict, feed_dict, unroll_multiple)
 
     if FLAGS.tensorboard_logging:
       self.summary_writers[epoch_type].add_summary(fetch_dict["summary_loss"],
@@ -207,7 +211,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     return self.MinibatchResults(
         loss=float(fetch_dict['loss']),
         y_true_1hot=targets,
-        y_pred_1hot=fetch_dict['predictions'])
+        y_pred_1hot=fetch_dict['predictions'],
+        iteration_count=iteration_count,
+        converged=converged)
 
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()

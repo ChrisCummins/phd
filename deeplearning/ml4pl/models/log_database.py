@@ -4,13 +4,14 @@ import pickle
 import typing
 
 import sqlalchemy as sql
+from sqlalchemy.dialects import mysql
+from sqlalchemy.ext import declarative
+
 from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pdutil
 from labm8 import sqlutil
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import declarative
 
 FLAGS = app.FLAGS
 
@@ -20,8 +21,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                          nullable=False)
+  value: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
 
 
 class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -46,6 +47,12 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   elapsed_time_seconds: float = sql.Column(sql.Float, nullable=False)
 
+  # The number of model iterations to compute the final results.
+  iteration_count: int = sql.Column(sql.Integer, nullable=False, default=1)
+  # For iterative models, this indicates whether the state of the model at
+  # iteration_count had converged on a solution.
+  model_converged: bool = sql.Column(sql.Boolean, nullable=False, default=True)
+
   # The number of graphs in the batch.
   graph_count: int = sql.Column(sql.Integer, nullable=False)
 
@@ -64,9 +71,8 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The GraphMeta.group column that this batch of graphs came from.
   group: str = sql.Column(sql.String(32), nullable=False)
 
-  instances: 'Instances' = sql.orm.relationship('Instances',
-                                                uselist=False,
-                                                back_populates="batch")
+  instances: 'Instances' = sql.orm.relationship(
+      'Instances', uselist=False, back_populates="batch")
 
   @property
   def graph_indices(self) -> typing.List[int]:
@@ -119,27 +125,26 @@ class Instances(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   In practise, this table grows large.
   """
-  id: int = sql.Column(sql.Integer,
-                       sql.ForeignKey('batch_logs.id'),
-                       primary_key=True)
+  id: int = sql.Column(
+      sql.Integer, sql.ForeignKey('batch_logs.id'), primary_key=True)
 
   # A pickled array of GraphMeta.id values.
-  pickled_graph_indices: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                            nullable=False)
+  pickled_graph_indices: bytes = sql.Column(
+      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
 
   # A pickled array of accuracies, of shape
   # [num_instances * num_targets_per_instance]. The number of targets per
   # instance will depend on the type of classification problem. For graph-level
   # classification, there is one target per instance. For node-level
   # classification, there are num_nodes targets for each graph.
-  pickled_accuracies: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                         nullable=False)
+  pickled_accuracies: bytes = sql.Column(
+      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
 
   # A pickled array of sparse model predictions, of shape
   # [num_instances * num_targets_per_instance, num_classes]. See
   # pickled_accuracies for a description of row count.
-  pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                          nullable=False)
+  pickled_predictions: bytes = sql.Column(
+      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
 
   batch: BatchLog = sql.orm.relationship(BatchLog, back_populates="instances")
 
@@ -157,8 +162,8 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The name of the parameter.
   parameter: str = sql.Column(sql.String(1024), nullable=False)
   # The value for the parameter.
-  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                          nullable=False)
+  value: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
 
 
 class Database(sqlutil.Database):
@@ -190,10 +195,12 @@ class Database(sqlutil.Database):
           sql.func.avg(BatchLog.f1).label("f1"),
           sql.func.sum(
               BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count),
-                                  sql.Integer).label("graph_count"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.node_count),
-                                  sql.Integer).label("node_count"),
+          sql.sql.expression.cast(
+              sql.func.sum(BatchLog.graph_count),
+              sql.Integer).label("graph_count"),
+          sql.sql.expression.cast(
+              sql.func.sum(BatchLog.node_count),
+              sql.Integer).label("node_count"),
       )
 
       q = q.filter(BatchLog.run_id == run_id)
