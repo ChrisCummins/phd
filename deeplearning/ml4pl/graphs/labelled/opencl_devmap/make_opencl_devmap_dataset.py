@@ -128,7 +128,7 @@ def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
       graph.x = np.array([row['wgsize'], row['transfer']], dtype=np.int32)
 
       # Add 'y' graph feature as target.
-      graph.y = df['y']
+      graph.y = row['y']
 
       # Add graph metadata.
       graph.group = input_graph_meta.group
