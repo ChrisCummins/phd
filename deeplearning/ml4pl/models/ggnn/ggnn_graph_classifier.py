@@ -393,6 +393,27 @@ class GgnnGraphClassifierModel(classifier_base.ClassifierBase):
         })
       yield batch['log'], feed_dict
 
+  def MakeModularGraphOps(self):
+    assert self.weights['regression_gate'] and self.weights['regression_transform'], \
+      "Need to call MakeLossAndAccuracyAndPredictionOps() first!"
+
+    predictions = utils.MakeModularOutputLayer(
+        self.placeholders['node_x'],
+        self.placeholders['raw_node_output_features'],
+        self.weights['regression_gate'], self.weights['regression_transform'])
+
+    targets = tf.argmax(
+        self.placeholders["node_y"], axis=1, output_type=tf.int32)
+
+    accuracies = tf.equal(
+        tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
+
+    accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
+
+    loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
+                                           predictions)
+
+    return loss, accuracies, accuracy, predictions
 
 def main():
   graph_db = FLAGS.graph_db()
