@@ -148,7 +148,7 @@ class GgnnGraphClassifierModel(classifier_base.ClassifierBase):
     num_nodes = self.placeholders['node_count']
 
     # we drop the initial states placeholder in the first layer as they are all zero.
-    node_states_per_layer.append(
+    node_states_per_layer.append(self.placeholders.get('node_x') or
         tf.zeros(
             [num_nodes, FLAGS.hidden_size],
             dtype=tf.float32,
@@ -319,7 +319,7 @@ class GgnnGraphClassifierModel(classifier_base.ClassifierBase):
       out_layer_dropout = None
 
     predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
-        initial_node_state=tf.zeros(
+        initial_node_state=self.placeholders.get('node_x') or tf.zeros(
             [self.placeholders['node_count'], FLAGS.hidden_size]),
         final_node_state=self.ops["final_node_x"],
         hidden_size=FLAGS.hidden_size,
