@@ -10,6 +10,7 @@ py_library(
         "//deeplearning/ml4pl/graphs:graph_query",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
         "//deeplearning/ml4pl/graphs/unlabelled/cg:call_graph",
+        "//deeplearning/ncc:rgx_utils",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
         "//labm8:app",
         "//labm8:decorators",

@@ -89,6 +89,53 @@ def test_every_edge_has_position(simple_bytecode: str):
     ), f'No position for edge {graph.nodes[src]["original_text"]} -> {graph.nodes[dst]["original_text"]}'
 
 
+def test_GetLlvmStatementDefAndUses():
+  statement = '%1 = alloca i32, align 4'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == '%1'
+  assert not uses
+
+  statement = 'store i32 0, i32* %1, align 4'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == ''
+  assert uses == ['0', '%1']
+
+  statement = 'br label %3'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == ''
+  assert uses == ['%3']
+
+  statement = 'store i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i32 0, i32 0), i8** %3, align 8'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == ''
+  assert uses == ['@.str', '0', '0', '%3']
+
+  statement = '%5 = load i32, i32* %2, align 4'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == '%5'
+  assert uses == ['%2']
+
+  statement = '%6 = icmp sgt i32 %5, 0'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == '%6'
+  assert uses == ['%5', '0']
+
+  statement = 'br i1 %6, label %7, label %8'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == ''
+  assert uses == ['%6', '%7', '%8']
+
+
+@pytest.mark.xfail(reason='the code sucks')
+def test_GetLlvmStatementDefAndUses():
+  statement = 'store float 0x40C80C0F60000000, float* %4, align 4'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == ''
+  # TODO(cec): GetLlvmStatementDefAndUses() returns an additional integer
+  # operand: ['0x40C80C0F60000000', '0', '%4']
+  assert uses == ['0x40C80C0F60000000', '%4']
+
+
 def test_ComposeGraphs_undefined():
   """Test that function graph is inserted for call to undefined function."""
   builder = cdfg.ControlAndDataFlowGraphBuilder()

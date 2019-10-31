@@ -6,6 +6,7 @@ LLVM module.
 """
 import copy
 import itertools
+import re
 import typing
 
 import networkx as nx
@@ -18,6 +19,7 @@ from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
+from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
 
 FLAGS = app.FLAGS
@@ -34,29 +36,100 @@ def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
 
 
 def GetLlvmStatementDefAndUses(statement: str,
-                               store_destination_is_def: bool = True
+                               store_destination_is_def: bool = False
                               ) -> typing.Tuple[str, typing.List[str]]:
   """Get the destination identifier for an LLVM statement (if any), and a list
   of operand identifiers (if any).
   """
-  destination, operands = '', []
-
+  # Left hand side.
+  destination = ''
   if '=' in statement:
     destination, statement = statement.split('=')
 
-  m_loc, m_glob, m_label, m_label2 = inst2vec_preprocess.get_identifiers_from_line(
-      statement)
-  operands += m_loc + m_glob + m_label + m_label2
+  ############################
+  # Find identifiers, adapted from
+  # inst2vec_preprocess.get_identifiers_from_line().
+  #
+  # Find label nodes
+  m_label = []
+  m_label2 = []
+
+  if (statement.find('label') is not -1 or
+      re.match(rgx.local_id_no_perc + r':', statement)):
+    m_label1 = re.findall('label (' + rgx.local_id + ')', statement)
+    if re.match(r'; <label>:' + rgx.local_id_no_perc + ':\s+', statement):
+      m_label2 = re.findall('<label>:(' + rgx.local_id_no_perc + '):',
+                            statement)
+    elif 'invoke ' in statement:
+      m_label2 = re.findall('label (' + rgx.local_id_no_perc + ')', statement)
+    else:
+      m_label2 = re.findall('<label>:(' + rgx.local_id_no_perc + ')', statement) + \
+                 re.findall(r'(' + rgx.local_id_no_perc + r'):', statement)
+    for i in range(len(m_label2)):
+      # put the '%' back in
+      m_label2[i] = '%' + m_label2[i]
+    m_label = m_label1 + m_label2
+
+  # Find local identifier nodes
+  modif_line = re.sub(r'\"[^\s]*\"', '', statement)
+  local_identifiers = sorted(re.findall(rgx.local_id, modif_line))
+
+  # Remove what is actually an aggregate type and not a local identifier
+  if len(local_identifiers) > 0:
+    to_remove = []
+    for m in local_identifiers:
+      if m + '*' in statement:
+        to_remove.append(m)
+      if m[:2] == '%"':
+        to_remove.append(m)
+      if ' = phi ' + m in statement:
+        to_remove.append(m)
+      if ' x ' + m in statement:
+        to_remove.append(m)
+      if ' alloca ' + m in statement:
+        to_remove.append(m)
+    if len(to_remove) > 0:
+      local_identifiers = [m for m in local_identifiers if m not in to_remove]
+
+  # Find global identifier nodes
+  m_glob = re.findall(rgx.global_id, statement)
+
+  # Remove label nodes from local nodes (they overlap)
+  if len(m_label) > 0:
+    local_identifiers = list(set(local_identifiers) - set(m_label))
+
+  ##########################
+  # Extract immediate values, adapted from
+  # inst2vec_preprocess.PreprocessStatement()
+  immediates = []
+
+  # Extract floating point immediates.
+  immediates += re.findall(rgx.immediate_value_float_hexa, line)
+  immediates += re.findall(rgx.immediate_value_float_sci, line)
+
+  # Find integer values
+  if ("extractelement" not in line and "extractvalue" not in line and
+      "insertelement" not in line and "insertvalue" not in line):
+    immediates += re.findall(r'(?<!align)(?<!\[) ' + rgx.immediate_value_int,
+                             line)
+
+  # Extract string values
+  immediates += re.findall(rgx.immediate_value_string, line)
+
+  # TODO(cec): Sorting on the literal values is too crude.
+  # Return the operands ordered by their appearance in the string.
+  identifiers = local_identifiers + m_glob + m_label + m_label2
+  strip = lambda strings: (s.strip() for s in strings)
+  operands = sorted(strip(identifiers + immediates),
+                    key=lambda x: line.index(x))
 
   # Store is a special case because it doesn't have an LHS, but writes to one
   # of its operands. If store_destination_is_output == True, then the
   # destination of store statements have both an in- and out-flow edge.
   if store_destination_is_def and statement.startswith('store '):
-    destination = operands[0]
+    destination = operands[-1]
 
-  # Strip whitespace from the strings.
-  strip = lambda strings: (s.strip() for s in strings)
-  return destination.strip(), list(reversed(strip(operands)))
+  return destination.strip(), operands
 
 
 def MakeUndefinedFunctionGraph(function_name: str) -> nx.MultiDiGraph:
