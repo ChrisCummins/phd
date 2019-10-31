@@ -163,16 +163,10 @@ class GraphBatcher(object):
     }
 
     if self.stats.node_features_dimensionality:
-      batch['node_x'] = []
+      batch['node_x_indices'] = []
 
     if self.stats.node_labels_dimensionality:
       batch['node_y'] = []
-
-    if self.stats.edge_features_dimensionality:
-      batch['edge_x'] = [[] for _ in range(edge_type_count)]
-
-    if self.stats.edge_labels_dimensionality:
-      batch['edge_y'] = [[] for _ in range(edge_type_count)]
 
     if self.stats.graph_features_dimensionality:
       batch['graph_x'] = []
@@ -209,23 +203,13 @@ class GraphBatcher(object):
 
       # Add features and labels.
 
-      if 'node_x' in batch:
+      if 'node_x_indices' in batch:
         # Shape: [graph.node_count, node_features_dimensionality]
-        batch['node_x'].extend(graph_dict['node_x'])
+        batch['node_x_indices'].extend(graph_dict['node_x_indices'])
 
       if 'node_y' in batch:
         # Shape: [graph.node_count, node_labels_dimensionality]
         batch['node_y'].extend(graph_dict['node_y'])
-
-      if 'edge_x' in batch:
-        for i, feature_list in enumerate(graph_dict['edge_x']):
-          if feature_list.size:
-            batch['edge_x'][i].append(feature_list)
-
-      if 'edge_y' in batch:
-        for i, label_list in enumerate(graph_dict['edge_y']):
-          if label_list.size:
-            batch['edge_y'][i].append(label_list)
 
       if 'graph_x' in batch:
         batch['graph_x'].append(graph_dict['graph_x'])
@@ -251,32 +235,21 @@ class GraphBatcher(object):
       else:
         batch['adjacency_lists'][i] = np.zeros((0, 2), dtype=np.int32)
 
+      if len(batch['edge_positions'][i]):
+        batch['edge_positions'][i] = np.concatenate(batch['edge_positions'][i])
+      else:
+        batch['edge_positions'][i] = np.array([], dtype=np.int32)
+
     batch['incoming_edge_counts'] = np.concatenate(
         batch['incoming_edge_counts'], axis=0)
 
     batch['graph_nodes_list'] = np.concatenate(batch['graph_nodes_list'])
 
-    if 'node_x' in batch:
-      batch['node_x'] = np.array(batch['node_x'])
+    if 'node_x_indices' in batch:
+      batch['node_x_indices'] = np.array(batch['node_x_indices'])
 
     if 'node_y' in batch:
       batch['node_y'] = np.array(batch['node_y'])
-
-    if 'edge_x' in batch:
-      for i in range(self.stats.edge_type_count):
-        if len(batch['edge_x'][i]):
-          batch['edge_x'][i] = np.concatenate(batch['edge_x'][i])
-        else:
-          batch['edge_x'][i] = np.zeros(
-              (0, self.stats.edge_features_dimensionality), dtype=np.int32)
-
-    if 'edge_y' in batch:
-      for i in range(self.stats.edge_type_count):
-        if len(batch['edge_y'][i]):
-          batch['edge_y'][i] = np.concatenate(batch['edge_y'][i])
-        else:
-          batch['edge_y'][i] = np.zeros(
-              (0, self.stats.edge_features_dimensionality), dtype=np.int32)
 
     if 'graph_x' in batch:
       batch['graph_x'] = np.array(batch['graph_x'])
@@ -315,7 +288,8 @@ class GraphBatcher(object):
       # Make a list of all the adj
       adjacency_lists_indices = []
 
-      for edge_type, adjacency_list in enumerate(batch_dict['adjacency_lists']):
+      for edge_type, (adjacency_list, position_list) in enumerate(
+          batch_dict['adjacency_lists'], batch_dict['edge_positions']):
         adjacency_list_indices = []
         adjacency_lists_indices.append(adjacency_list_indices)
 
@@ -332,17 +306,19 @@ class GraphBatcher(object):
                 np.logical_and(srcs >= node_count,
                                srcs < node_count + graph_node_count)))
         adjacency_list = adjacency_list[tuple(adjacency_list_indices)]
+        position_list = position_list[tuple(adjacency_lists_indices)]
 
         # Negate the positive offset into adjacency lists.
         offset = np.array((node_count, node_count), dtype=np.int32)
         adjacency_list -= offset
 
         # Add the edges to the graph.
-        for src, dst in adjacency_list:
-          g.add_edge(src, dst, flow=edge_type)
+        for (src, dst), position in zip(adjacency_list, position_list):
+          g.add_edge(src, dst, flow=edge_type, position=position)
 
-      if 'node_x' in batch_dict:
-        node_x = batch_dict['node_x'][node_count:node_count + graph_node_count]
+      if 'node_x_indices' in batch_dict:
+        node_x = batch_dict['node_x_indices'][node_count:node_count +
+                                              graph_node_count]
         if len(node_x) != g.number_of_nodes():
           raise ValueError(f"Graph has {g.number_of_nodes()} nodes but "
                            f"expected {len(node_x)}")
@@ -356,20 +332,6 @@ class GraphBatcher(object):
                            f"expected {len(node_y)}")
         for i, values in enumerate(node_y):
           g.nodes[i]['y'] = values
-
-      if 'edge_x' in batch_dict:
-        for edge_type, adjacency_list_indices in enumerate(
-            adjacency_lists_indices):
-          values = batch_dict['edge_x'][edge_type][adjacency_list_indices]
-          for (_, _, data), value in zip(g.edges(data=True), values):
-            data['x'] = value
-
-      if 'edge_y' in batch_dict:
-        for edge_type, adjacency_list_indices in enumerate(
-            adjacency_lists_indices):
-          values = batch_dict['edge_y'][edge_type][adjacency_list_indices]
-          for (_, _, data), value in zip(g.edges(data=True), values):
-            data['y'] = value
 
       if 'graph_x' in batch_dict:
         g.x = batch_dict['graph_x'][graph_count]

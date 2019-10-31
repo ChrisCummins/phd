@@ -37,37 +37,41 @@ def GetBackwardEdgeType(forward_edge_type: int, edge_type_count: int):
 
 def ToGraphDict(g: nx.MultiDiGraph,
                 edge_types: typing.Iterable[str],
-                node_x: str = 'x',
+                node_x_indices: str = 'x',
                 node_y: str = 'y',
-                edge_x: str = 'x',
-                edge_y: str = 'y',
                 graph_x: str = 'x',
                 graph_y: str = 'y') -> GraphDict:
-  """
+  """Produce a dictionary representation of a graph.
 
-  Produce a dictionary representation of a graph. The dictionary has the
-  following properties:
+  Args:
+    g: The graph to convert to a graph_dict.
+    edge_types: The set of edge type names used. Defaults to {'call', 'control',
+      'data'}.
+    node_x_indices: The property in node data dicts which stores the node 
+      embedding index.
+    node_y: The property in node data dicts which stores the node label vector.
+    graph_x: The property of the graph which stores the graph feature vector.
+    graph_y: The property of the graph which stores the graph label vector.
 
-    adjacency_lists (np.array, Shape [edge_type_count, ?]): A list of adjacency
+  The dictionary has the following entries:
+
+    adjacency_lists (np.array, Shape [edge_type_count, ?, 2]): A list of adjacency
       lists, one for each edge_type, where an entry in an adjacency list is a
       <src,dst> tuple of node indices.
+    edge_positions (np.array, Shape [edge_type_count, ?]): A list of edge
+      positions, one for each edge type. An edge position is an integer in the
+      range 0 <= x < max_edge_position.
     incoming_edge_counts (np.array, Shape [edge_type_count, ?]): A list of
       incoming edge count dicts, one for each edge_type.
-    edge_x (np.array, Shape [edge_type_count, ?, edge_feature_dimensionality]):
-      A matrix of edge features with the same shape as adjacency_lists, but
-      instead of tuples, each item is a feature vector.
-    edge_y (np.array, Shape [edge_type_count, ?, edge_label_dimensionality]):
-      Same as edge_x, but for labels.
-    node_x (np.array, Shape [node_count, node_feature_dimensionality]): A list
-      of node feature vectors.
-    node_y (np.array, Shape [node_count, node_label_dimensionality]): Same as
+    node_x_indices (np.array, Shape [node_count]): A list of indices into the
+      node features table.
+    node_y (np.array, Shape [node_count, node_label_dimensionality]): A list
       node_x, but for labels.
-    graph_x (np.array, Shape [graph_feature_dimensionality]): A vector of graph
-      features.
+    graph_x (np.array, Shape [graph_feature_dimensionality]): A list of
+      indices into the graph features table.
     graph_y (np.array, Shape [graph_label_dimensionality]): A vector of graph
       labels.
   """
-  # TODO(cec): This implementation only supports a single node type.
   edge_type_count = len(edge_types)
   if not FLAGS.tie_forward_and_backward_edge_types:
     # Backward edges are inserted using a different type.
@@ -75,6 +79,10 @@ def ToGraphDict(g: nx.MultiDiGraph,
 
   # Create an adjacency list for each edge type.
   adjacency_lists: typing.List[AdjacencyList] = [
+      [] for _ in range(edge_type_count)
+  ]
+  # Create an edge position list for each edge type.
+  edge_positions: typing.List[typing.List[int]] = [
       [] for _ in range(edge_type_count)
   ]
   # Lists of incoming edge counts for each mode, one for each edge type.
@@ -87,7 +95,10 @@ def ToGraphDict(g: nx.MultiDiGraph,
   # lists.
   edge_type_to_index = {flow: i for i, flow in enumerate(sorted(edge_types))}
 
-  for src, dst, flow in g.edges(data='flow'):
+  for src, dst, data in g.edges(data=True):
+    flow = data['flow']
+    position = data['position']
+
     src_idx = node_to_index[src]
     dst_idx = node_to_index[dst]
 
@@ -100,6 +111,12 @@ def ToGraphDict(g: nx.MultiDiGraph,
     forward_adjacency_list.append((src_idx, dst_idx))
     backward_adjacency_list.append((dst_idx, src_idx))
 
+    # Add the edge positions.
+    forward_position_list = edge_positions[forward_edge_type]
+    backward_position_list = edge_positions[backward_edge_type]
+    forward_position_list.append(position)
+    backward_position_list.append(position)
+
     # Update the incoming edge counts.
     incoming_edge_count_dict = incoming_edge_counts[forward_edge_type]
     incoming_edge_count_dict[dst_idx] = (
@@ -108,23 +125,30 @@ def ToGraphDict(g: nx.MultiDiGraph,
     incoming_edge_count_dict[src_idx] = (
         incoming_edge_count_dict.get(src_idx, 0) + 1)
 
+  # Convert to numpy arrays.
   adjacency_lists = np.array([
       np.array(adjacency_list, dtype=np.int32)
       for adjacency_list in adjacency_lists
   ])
+  edge_positions = np.array([
+      np.array(edge_position, dtype=np.int32)
+      for edge_position in edge_positions
+  ])
 
   graph_dict = {
       'adjacency_lists': adjacency_lists,
+      'edge_positions': edge_positions,
       'incoming_edge_counts': incoming_edge_counts,
   }
 
-  # Set node features.
-  if node_x and node_x in g.nodes[src]:
-    node_features = [None] * g.number_of_nodes()
-    for node, x in g.nodes(data=node_x):
+  # Set node embedding indices.
+  if node_x_indices and node_x_indices in g.nodes[src]:
+    node_embedding_indices = [None] * g.number_of_nodes()
+    for node, embedding_index in g.nodes(data=node_x_indices):
       node_idx = node_to_index[node]
-      node_features[node_idx] = x
-    graph_dict['node_x'] = np.vstack(node_features)
+      node_embedding_indices[node_idx] = embedding_index
+    graph_dict['node_x_indices'] = np.array(node_embedding_indices,
+                                            dtype=np.int32)
 
   # Set node labels.
   if node_y and node_y in g.nodes[src]:
@@ -133,44 +157,6 @@ def ToGraphDict(g: nx.MultiDiGraph,
       node_idx = node_to_index[node]
       node_targets[node_idx] = y
     graph_dict['node_y'] = np.vstack(node_targets)
-
-  # Set edge features.
-  if edge_x and edge_x in g.edges[src, dst, 0]:
-    edge_features_lists = [[] for _ in range(edge_type_count)]
-    for src, dst, data in g.edges(data=True):
-      forward_edge_type = edge_type_to_index[data['flow']]
-      backward_edge_type = GetBackwardEdgeType(forward_edge_type,
-                                               edge_type_count)
-
-      # Add the forward and backward features.
-      forward_edge_features = edge_features_lists[forward_edge_type]
-      backward_edge_features = edge_features_lists[backward_edge_type]
-      forward_edge_features.append(data[edge_x])
-      backward_edge_features.append(data[edge_x])
-
-    graph_dict['edge_x'] = np.array([
-        np.array(edge_features, dtype=np.int32)
-        for edge_features in edge_features_lists
-    ])
-
-  # Set edge labels.
-  if edge_y and edge_y in g.edges[src, dst, 0]:
-    edge_targets_lists = [[] for _ in range(edge_type_count)]
-    for src, dst, data in g.edges(data=True):
-      forward_edge_type = edge_type_to_index[data['flow']]
-      backward_edge_type = GetBackwardEdgeType(forward_edge_type,
-                                               edge_type_count)
-
-      # Add the forward and backward targets.
-      forward_edge_targets = edge_targets_lists[forward_edge_type]
-      backward_edge_targets = edge_targets_lists[backward_edge_type]
-      forward_edge_targets.append(data[edge_y])
-      backward_edge_targets.append(data[edge_y])
-
-    graph_dict['edge_y'] = np.array([
-        np.array(edge_targets, dtype=np.int32)
-        for edge_targets in edge_targets_lists
-    ])
 
   # Set graph features.
   if graph_x and hasattr(g, graph_x):
@@ -186,7 +172,7 @@ def ToGraphDict(g: nx.MultiDiGraph,
 def IncomingEdgeCountsToDense(
     incoming_edge_counts: typing.List[IncomingEdgeCount], node_count: int,
     edge_type_count: int) -> np.ndarray:
-  # Turn counters for incoming edges into a dense array:
+  """Turn counters for incoming edges into a dense array."""
   dense = np.zeros((node_count, edge_type_count))
   for edge_type, incoming_edge_dict in enumerate(incoming_edge_counts):
     for node_id, edge_count in incoming_edge_dict.items():
@@ -213,20 +199,6 @@ def GraphDictToNetworkx(graph_dict: GraphDict) -> nx.MultiDiGraph:
     for src, dst in adjacency_list:
       flattened_edge_dicts.append({'src': src, 'dst': dst, 'flow': edge_type})
 
-  if 'edge_x' in graph_dict:
-    i = 0
-    for edge_list in graph_dict['edge_x']:
-      for x in edge_list:
-        flattened_edge_dicts[i]['x'] = x
-        i += 1
-
-  if 'edge_y' in graph_dict:
-    i = 0
-    for edge_list in graph_dict['edge_y']:
-      for y in edge_list:
-        flattened_edge_dicts[i]['y'] = y
-        i += 1
-
   # Add the edges and their properties to the graph.
   for edge_dict in flattened_edge_dicts:
     src, dst = edge_dict['src'], edge_dict['dst']
@@ -234,8 +206,8 @@ def GraphDictToNetworkx(graph_dict: GraphDict) -> nx.MultiDiGraph:
     del edge_dict['dst']
     g.add_edge(src, dst, **edge_dict)
 
-  if 'node_x' in graph_dict:
-    for i, x in enumerate(graph_dict['node_x']):
+  if 'node_x_indices' in graph_dict:
+    for i, x in enumerate(graph_dict['node_x_indices']):
       g.nodes[i]['x'] = x
 
   if 'node_y' in graph_dict:
