@@ -17,7 +17,7 @@ class GraphDatabaseStats(object):
   """Efficient aggregation of graph stats.
 
   This is a generic class for aggregating stats from GraphMeta tables. If you
-  are using pickled graph_dicts in the Graph table, use GraphDictDatabaseStats
+  are using pickled graph_tuples in the Graph table, use GraphTupleDatabaseStats
   to obtain additional stats.
   """
 
@@ -45,12 +45,12 @@ class GraphDatabaseStats(object):
     return self._stats.max_edge_count
 
   @property
-  def node_features_dimensionality(self) -> int:
-    return self._stats.node_features_dimensionality
+  def node_embedding_count(self) -> int:
+    return self._embedding_stats.node_embedding_count
 
   @property
-  def edge_features_dimensionality(self) -> int:
-    return self._stats.edge_features_dimensionality
+  def node_embedding_dimensionality(self) -> int:
+    return self._embedding_stats.node_embedding_dimensionality
 
   @property
   def graph_features_dimensionality(self) -> int:
@@ -59,10 +59,6 @@ class GraphDatabaseStats(object):
   @property
   def node_labels_dimensionality(self) -> int:
     return self._stats.node_labels_dimensionality
-
-  @property
-  def edge_labels_dimensionality(self) -> int:
-    return self._stats.edge_labels_dimensionality
 
   @property
   def graph_labels_dimensionality(self) -> int:
@@ -76,17 +72,13 @@ class GraphDatabaseStats(object):
     summaries = [
         f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
         humanize.Plural(self.edge_type_count, 'edge type'),
+        (f"{self.node_embedding_count}x{self.node_embedding_dimensionality} "
+         f"{self.node_embedding_dtype} node embeddings")
     ]
-    if self.node_features_dimensionality:
-      summaries.append(f"{self.node_features_dimensionality}-d node features")
-    if self.edge_features_dimensionality:
-      summaries.append(f"{self.edge_features_dimensionality}-d edge features")
     if self.graph_features_dimensionality:
       summaries.append(f"{self.graph_features_dimensionality}-d graph features")
     if self.node_labels_dimensionality:
       summaries.append(f"{self.node_labels_dimensionality}-d node labels")
-    if self.edge_labels_dimensionality:
-      summaries.append(f"{self.edge_labels_dimensionality}-d edge labels")
     if self.graph_labels_dimensionality:
       summaries.append(f"{self.graph_labels_dimensionality}-d graph labels")
     summaries += [
@@ -98,6 +90,26 @@ class GraphDatabaseStats(object):
           f"max {humanize.Plural(self.data_flow_max_steps_required, 'data flow step')}"
       )
     return ", ".join(summaries)
+
+  @decorators.memoized_property
+  def node_embedding_dtype(self) -> np.dtype:
+    """Return the numpy dtype of node embeddings."""
+    with self.db.Session() as s:
+      embedding_table = s.query(graph_database.EmbeddingTable).one()
+    return embedding_table.embedding_table.dtype
+
+  @decorators.memoized_property
+  def _embedding_stats(self):
+    with self.db.Session() as s:
+      q = s.query(
+          graph_database.EmbeddingTable.embedding_count.label(
+              'node_embedding_count'),
+          graph_database.EmbeddingTable.embedding_dimensionality.label(
+              'node_embedding_dimensionality'))
+      if q.count() != 1:
+        raise ValueError(
+            f"Expected a single embedding table, found {q.count()}")
+      return q.one()
 
   @decorators.memoized_property
   def _stats(self):
@@ -115,20 +127,11 @@ class GraphDatabaseStats(object):
           sql.func.max(
               graph_database.GraphMeta.edge_count).label("max_edge_count"),
           sql.func.max(
-              graph_database.GraphMeta.node_features_dimensionality).label(
-                  "node_features_dimensionality"),
-          sql.func.max(
-              graph_database.GraphMeta.edge_features_dimensionality).label(
-                  "edge_features_dimensionality"),
-          sql.func.max(
               graph_database.GraphMeta.graph_features_dimensionality).label(
                   "graph_features_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.node_labels_dimensionality).label(
                   "node_labels_dimensionality"),
-          sql.func.max(
-              graph_database.GraphMeta.edge_labels_dimensionality).label(
-                  "edge_labels_dimensionality"),
           sql.func.max(
               graph_database.GraphMeta.graph_labels_dimensionality).label(
                   "graph_labels_dimensionality"),
@@ -142,85 +145,50 @@ class GraphDatabaseStats(object):
       stats = q.one()
       graph_count = stats.graph_count
 
+    del graph_count  # Used in prof.Profile() callback.
     return stats
 
 
-class GraphDictDatabaseStats(GraphDatabaseStats):
-  """Aggregation of stats of databases of graph dicts.
+class GraphTupleDatabaseStats(GraphDatabaseStats):
+  """Aggregation of stats of databases of graph tuples.
 
-  This stats object is specialized to databases which store pickled graph_dict
+  This stats object is specialized to databases which store pickled graph_tuple
   dictionaries as their Graph.data column. See
-  //deeplearning/ml4pl/graphs/labelled/graph_dict for the schema of graph_dict
+  //deeplearning/ml4pl/graphs/labelled/graph_tuple for the schema of graph_tuple
   dictionaries.
   """
-
-  @decorators.memoized_property
-  def node_features_dtype(self) -> np.dtype:
-    """Return the numpy dtype of node features."""
-    with self.db.Session() as s:
-      q = s.query(graph_database.Graph).first()
-      graph_dict = q.pickled_data
-    return graph_dict['node_x'][0].dtype
 
   @decorators.memoized_property
   def node_labels_dtype(self) -> np.dtype:
     """Return the numpy dtype of node labels."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
-      graph_dict = q.pickled_data
-    return graph_dict['node_y'][0].dtype
-
-  @decorators.memoized_property
-  def edge_features_dtype(self) -> np.dtype:
-    """Return the numpy dtype of edge features."""
-    with self.db.Session() as s:
-      q = s.query(graph_database.Graph).first()
-      graph_dict = q.pickled_data
-      for features_list in graph_dict['edge_x']:
-        if features_list.size:
-          return features_list[0].dtype
-    raise ValueError("Unable to determine edge features")
-
-  @decorators.memoized_property
-  def edge_labels_dtype(self) -> np.dtype:
-    """Return the numpy dtype of edge labels."""
-    with self.db.Session() as s:
-      q = s.query(graph_database.Graph).first()
-      graph_dict = q.pickled_data
-      for labels_list in graph_dict['edge_y']:
-        if labels_list.size:
-          return labels_list[0].dtype
-    raise ValueError("Unable to determine edge labels")
+      graph_tuple = q.data
+    return graph_tuple.node_y[0].dtype
 
   @decorators.memoized_property
   def graph_features_dtype(self) -> np.dtype:
     """Return the numpy dtype of graph features."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
-      graph_dict = q.pickled_data
-    return graph_dict['graph_x'].dtype
+      graph_tuple = q.data
+    return graph_tuple.graph_x.dtype
 
   @decorators.memoized_property
   def graph_labels_dtype(self) -> np.dtype:
     """Return the numpy dtype of graph labels."""
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
-      graph_dict = q.pickled_data
-    return graph_dict['graph_y'].dtype
+      graph_tuple = q.data
+    return graph_tuple.graph_y.dtype
 
   def __repr__(self):
     summaries = [
         f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
         humanize.Plural(self.edge_type_count, 'edge type'),
+        (f"{self.node_embedding_count}x{self.node_embedding_dimensionality} "
+         f"{self.node_embedding_dtype} node embeddings")
     ]
-    if self.node_features_dimensionality:
-      summaries.append(
-          f"{self.node_features_dimensionality}-d {self.node_features_dtype} "
-          "node features")
-    if self.edge_features_dimensionality:
-      summaries.append(
-          f"{self.edge_features_dimensionality}-d {self.edge_features_dtype} "
-          "edge features")
     if self.graph_features_dimensionality:
       summaries.append(
           f"{self.graph_features_dimensionality}-d {self.graph_features_dtype} "
@@ -229,10 +197,6 @@ class GraphDictDatabaseStats(GraphDatabaseStats):
       summaries.append(
           f"{self.node_labels_dimensionality}-d {self.node_labels_dtype} "
           "node labels")
-    if self.edge_labels_dimensionality:
-      summaries.append(
-          f"{self.edge_labels_dimensionality}-d {self.edge_labels_dtype} "
-          "edge labels")
     if self.graph_labels_dimensionality:
       summaries.append(
           f"{self.graph_labels_dimensionality}-d {self.graph_labels_dtype} "

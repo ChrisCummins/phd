@@ -3,6 +3,7 @@ import pathlib
 import pickle
 
 import networkx as nx
+import numpy as np
 import pytest
 from labm8 import app
 from labm8 import test
@@ -34,7 +35,9 @@ def test_Graph_pickled_networkx_graph(db: graph_database.Database):
             language='c',
             node_count=g.number_of_nodes(),
             edge_count=g.number_of_edges(),
-            graph=graph_database.Graph(data=pickle.dumps(g))))
+            edge_position_max=0,
+            loop_connectedness=0,
+            graph=graph_database.Graph(pickled_data=pickle.dumps(g))))
   with db.Session() as s:
     gm = s.query(graph_database.GraphMeta).first()
     assert gm.group == "train"
@@ -45,7 +48,7 @@ def test_Graph_pickled_networkx_graph(db: graph_database.Database):
     assert gm.node_count == 3
     assert gm.edge_count == 2
 
-    g = pickle.loads(gm.graph.data)
+    g = gm.data
     assert g.number_of_nodes() == 3
     assert g.number_of_edges() == 2
 
@@ -64,7 +67,9 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
             language='c',
             node_count=1,
             edge_count=2,
-            graph=graph_database.Graph(data=pickle.dumps({
+            edge_position_max=0,
+            loop_connectedness=0,
+            graph=graph_database.Graph(pickled_data=pickle.dumps({
                 "a": 1,
                 "b": 2
             }))))
@@ -72,7 +77,7 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
     gm = s.query(graph_database.GraphMeta).first()
     assert gm.bytecode_id == 1
 
-    d = pickle.loads(gm.graph.data)
+    d = gm.data
     assert d["a"] == 1
     assert d["b"] == 2
 
@@ -93,20 +98,18 @@ def graph() -> nx.MultiDiGraph:
   g.add_node('C', type='statement', x=[0, 1], y=[1])
   g.add_node('D', type='statement', x=[0, 1], y=[1])
   g.add_node('root', type='magic', x=[0, 1], y=[1])
-  g.add_edge('A', 'B', flow='control', fx=[0, 0, 0], fy=[2, 2])
-  g.add_edge('B', 'C', flow='control', fx=[0, 0, 0], fy=[2, 2])
-  g.add_edge('C', 'D', flow='control', fx=[0, 0, 0], fy=[2, 2])
-  g.add_edge('root', 'A', flow='call', fx=[0, 0, 0], fy=[2, 2])
-  g.add_edge('A', 'D', flow='data', fx=[0, 0, 0], fy=[2, 2])
+  g.add_edge('A', 'B', flow='control', position=0)
+  g.add_edge('B', 'C', flow='control', position=0)
+  g.add_edge('C', 'D', flow='control', position=0)
+  g.add_edge('root', 'A', flow='call', position=0)
+  g.add_edge('A', 'D', flow='data', position=1)
   return g
 
 
-def test_Graph_CreateWithGraphDict(graph: nx.MultiDiGraph):
-  """Test column values created by CreateWithGraphDict()."""
-  gm = graph_database.GraphMeta.CreateWithGraphDict(graph,
-                                                    {'control', 'call', 'data'},
-                                                    edge_x='fx',
-                                                    edge_y='fy')
+def test_Graph_CreateFromNetworkX(graph: nx.MultiDiGraph):
+  """Test column values created by CreateFromNetworkX()."""
+  gm = graph_database.GraphMeta.CreateFromNetworkX(graph,
+                                                   {'control', 'call', 'data'})
 
   assert gm.bytecode_id == 1
   assert gm.source_name == 'foo'
@@ -114,23 +117,33 @@ def test_Graph_CreateWithGraphDict(graph: nx.MultiDiGraph):
   assert gm.language == 'c'
   assert gm.node_count == 5
   assert gm.edge_count == 5 * 2  # forward and backward edges
-  assert gm.edge_type_count == 3 * 2  # foward and backward edge types.
-  assert gm.node_features_dimensionality == 2
+  assert gm.edge_type_count == 3 * 2  # forward and backward edge types.
+  assert gm.edge_position_max == 1
   assert gm.node_labels_dimensionality == 1
-  assert gm.edge_features_dimensionality == 3
-  assert gm.edge_labels_dimensionality == 2
   assert gm.graph_features_dimensionality == 4
   assert gm.graph_labels_dimensionality == 0
   assert gm.data_flow_max_steps_required == 10
   assert gm.graph.data
 
 
-def test_benchmark_Graph_CreateWithGraphDict(benchmark, graph: nx.MultiDiGraph):
-  """Benchmark CreateWithGraphDict()."""
-  benchmark(graph_database.GraphMeta.CreateWithGraphDict,
-            graph, {'control', 'call', 'data'},
-            edge_x='fx',
-            edge_y='fy')
+def test_EmbeddingTable_from_numpy_array(db: graph_database.Database):
+  with db.Session(commit=True) as s:
+    s.add(
+        graph_database.EmbeddingTable.CreateFromNumpyArray(
+            np.vstack([
+                np.random.rand(200),
+                np.random.rand(200),
+                np.random.rand(200),
+            ])))
+  with db.Session() as s:
+    table = s.query(graph_database.EmbeddingTable).first()
+    assert table.embedding_table.shape == (3, 200)
+
+
+def test_benchmark_Graph_CreateFromNetworkX(benchmark, graph: nx.MultiDiGraph):
+  """Benchmark CreateFromNetworkX()."""
+  benchmark(graph_database.GraphMeta.CreateFromNetworkX, graph,
+            {'control', 'call', 'data'})
 
 
 if __name__ == '__main__':

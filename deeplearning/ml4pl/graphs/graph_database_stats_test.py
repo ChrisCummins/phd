@@ -9,6 +9,7 @@ from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_stats as stats
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
 
 FLAGS = app.FLAGS
 
@@ -32,16 +33,25 @@ def db_512(db: graph_database.Database) -> graph_database.Database:
         language='c',
         node_count=i,
         edge_count=2,
-        node_features_dimensionality=2,
         graph_labels_dimensionality=1,
+        loop_connectedness=0,
         graph=graph_database.Graph(data=pickle.dumps(
-            {
-                "node_x": np.array(np.array([1, 2], dtype=np.int32)),
-                "graph_y": np.array([1.4], dtype=np.float32)
-            })))
+            graph_tuple.GraphTuple(adjacency_lists='unused',
+                                   edge_positions='unused',
+                                   incoming_edge_counts='unused',
+                                   node_x_indices='unused',
+                                   graph_y=np.array([1, 2, 3],
+                                                    dtype=np.float32)))))
 
   with db.Session(commit=True) as s:
     s.add_all([_MakeGraphMeta(i) for i in range(512)])
+    s.add(
+        graph_database.EmbeddingTable.CreateFromNumpyArray(
+            np.vstack([
+                np.random.rand(250).astype(np.float32),
+                np.random.rand(250).astype(np.float32),
+                np.random.rand(250).astype(np.float32),
+            ])))
 
   return db
 
@@ -56,15 +66,15 @@ def test_GraphDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
   s = stats.GraphDatabaseStats(db_512)
   assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
-                    "2-d node features, 1-d graph labels, "
+                    "3x250 float32 node embeddings, 1-d graph labels, "
                     "max 511 nodes, max 2 edges")
 
 
-def test_GraphDictDatabaseStats_repr(db_512: graph_database.Database):
+def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
-  s = stats.GraphDictDatabaseStats(db_512)
+  s = stats.GraphTupleDatabaseStats(db_512)
   assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
-                    "2-d int32 node features, 1-d float32 graph labels, "
+                    "3x250 float32 node embeddings, 1-d float32 graph labels, "
                     "max 511 nodes, max 2 edges")
 
 

@@ -12,7 +12,9 @@ from labm8 import sqlutil
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
+from deeplearning.ml4pl.graphs import graph_query as query
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
+  graph_tuple as graph_tuples
 
 FLAGS = app.FLAGS
 
@@ -30,7 +32,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A table of graph metadata.
 
   For every GraphMeta, there should be a corresponding Graph row containing the
-  actual data.
+  actual data as pickled blob.
   """
   id: int = sql.Column(sql.Integer, primary_key=True)
 
@@ -52,22 +54,15 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   node_type_count: int = sql.Column(sql.Integer, default=1, nullable=False)
   edge_type_count: int = sql.Column(sql.Integer, default=1, nullable=False)
 
-  node_features_dimensionality: int = sql.Column(sql.Integer,
-                                                 default=0,
-                                                 nullable=False)
-  edge_features_dimensionality: int = sql.Column(sql.Integer,
-                                                 default=0,
-                                                 nullable=False)
-  graph_features_dimensionality: int = sql.Column(sql.Integer,
-                                                  default=0,
-                                                  nullable=False)
+  # The maximum value of the 'position' attribute of edges.
+  edge_position_max: int = sql.Column(sql.Integer, nullable=False)
 
   node_labels_dimensionality: int = sql.Column(sql.Integer,
                                                default=0,
                                                nullable=False)
-  edge_labels_dimensionality: int = sql.Column(sql.Integer,
-                                               default=0,
-                                               nullable=False)
+  graph_features_dimensionality: int = sql.Column(sql.Integer,
+                                                  default=0,
+                                                  nullable=False)
   graph_labels_dimensionality: int = sql.Column(sql.Integer,
                                                 default=0,
                                                 nullable=False)
@@ -90,55 +85,43 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   graph: 'Graph' = sql.orm.relationship('Graph',
                                         uselist=False,
-                                        back_populates="meta")
+                                        back_populates="meta",
+                                        cascade="all")
 
   @property
-  def pickled_data(self) -> typing.Any:
-    return pickle.loads(self.graph.data)
+  def data(self) -> typing.Any:
+    """Load the pickled data."""
+    return self.graph.data
 
   @classmethod
-  def CreateWithGraphDict(cls, g: nx.MultiDiGraph, edge_types: typing.Set[str],
-                          **graph_dict_opts):
-    """Create a GraphMeta with a corresponding Graph containing a graph dict.
+  def CreateFromNetworkX(cls, g: nx.MultiDiGraph, edge_types: typing.Set[str],
+                         **graph_tuple_opts):
+    """Create a GraphMeta with a corresponding Graph containing a graph tuple.
 
     Args:
       g: The graph to convert to a GraphMeta. Must have the following attributes
        set: bytecode_id, source_name, relpath, language.
       edge_types: The set of edge flow types, e.g. {"control", "flow"}, etc.
-      graph_dict_opts: Keyword argument to be passed to ToGraphDict().
+      graph_tuple_opts: Keyword argument to be passed to CreateFromNetworkX().
 
     Returns:
       A fully-populated GraphMeta instance.
     """
+    graph_tuple = graph_tuples.GraphTuple.CreateFromNetworkX(
+        g, edge_types, **graph_tuple_opts)
+    node_labels_dimensionality = (graph_tuple.node_y[0]
+                                  if graph_tuple.has_node_y else 0)
+    graph_features_dimensionality = (len(graph_tuple.graph_x)
+                                     if graph_tuple.has_graph_x else 0)
+    graph_labels_dimensionality = (len(graph_tuple.graph_y)
+                                   if graph_tuple.has_graph_y else 0)
 
-    # TODO(cec): This implementation only supports a single node type.
-
-    def _FirstFromListOfLists(list_of_lists):
-      """Return the first element in a list of lists."""
-      for lst in list_of_lists:
-        for element in lst:
-          return element
-
-    gd = graph_dict.ToGraphDict(g, edge_types, **graph_dict_opts)
-    node_features_dimensionality = 0
-    if 'node_x' in gd:
-      node_features_dimensionality = len(gd['node_x'][0])
-    node_labels_dimensionality = 0
-    if 'node_y' in gd:
-      node_labels_dimensionality = len(gd['node_y'][0])
-    edge_features_dimensionality = 0
-    if 'edge_x' in gd:
-      edge_features_dimensionality = len(_FirstFromListOfLists(gd['edge_x']))
-    edge_labels_dimensionality = 0
-    if 'edge_y' in gd:
-      edge_labels_dimensionality = len(_FirstFromListOfLists(gd['edge_y']))
-    graph_features_dimensionality = 0
-    if 'graph_x' in gd:
-      graph_features_dimensionality = len(gd['graph_x'])
-    graph_labels_dimensionality = 0
-    if 'graph_y' in gd:
-      graph_labels_dimensionality = len(gd['graph_y'])
     data_flow_max_steps_required = getattr(g, 'data_flow_max_steps_required', 0)
+
+    edge_position_max = 0
+    for src, dst, position in g.edges(data='position', default=0):
+      edge_position_max = max(edge_position_max, position)
+
     return GraphMeta(
         group=getattr(g, 'group', None),
         bytecode_id=g.bytecode_id,
@@ -146,39 +129,42 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         relpath=g.relpath,
         language=g.language,
         node_count=g.number_of_nodes(),
-        # Get the edge stats *after* graph_dict has inserted the
+        # Get the edge stats *after* graph_tuple has inserted the
         # backward edges.
-        edge_count=sum([len(a) for a in gd['adjacency_lists']]),
-        edge_type_count=len(gd['adjacency_lists']),
-        node_features_dimensionality=node_features_dimensionality,
+        edge_count=sum([len(a) for a in graph_tuple.adjacency_lists]),
+        edge_type_count=len(graph_tuple.adjacency_lists),
+        edge_position_max=edge_position_max,
         node_labels_dimensionality=node_labels_dimensionality,
-        edge_features_dimensionality=edge_features_dimensionality,
-        edge_labels_dimensionality=edge_labels_dimensionality,
         graph_features_dimensionality=graph_features_dimensionality,
         graph_labels_dimensionality=graph_labels_dimensionality,
         data_flow_max_steps_required=data_flow_max_steps_required,
-        graph=Graph.CreatePickled(gd))
+        loop_connectedness=query.LoopConnetedness(g),
+        graph=Graph.CreateFromPickled(graph_tuple))
 
 
 class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """The data for a graph.
 
   This is an opaque byte array that can be used as needed, e.g. for pickled
-  dictionaries, networkx graphs, etc.
+  graph tuples, networkx graphs, etc.
   """
   id: int = sql.Column(sql.Integer,
                        sql.ForeignKey('graph_metas.id'),
                        primary_key=True)
-  data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(), nullable=False)
-  meta: GraphMeta = sql.orm.relationship('GraphMeta', back_populates="graph")
+  pickled_data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                   nullable=False)
+  meta: GraphMeta = sql.orm.relationship('GraphMeta',
+                                         back_populates="graph",
+                                         uselist=False,
+                                         cascade="all")
 
   @property
-  def pickled_data(self) -> typing.Any:
-    return pickle.loads(self.data)
+  def data(self) -> typing.Any:
+    return pickle.loads(self.pickled_data)
 
   @classmethod
-  def CreatePickled(cls, data: typing.Any) -> 'Graph':
-    return Graph(data=pickle.dumps(data))
+  def CreateFromPickled(cls, data: typing.Any) -> 'Graph':
+    return Graph(pickled_data=pickle.dumps(data))
 
 
 class EmbeddingTable(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):

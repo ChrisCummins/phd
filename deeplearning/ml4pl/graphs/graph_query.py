@@ -158,10 +158,14 @@ def LoopConnetedness(graph) -> int:
   visited = set()
   back_edge_count = 0
 
-  if 'entry_block' not in graph:
-    raise ValueError("No entry block for graph")
+  for node in graph.nodes():
+    if graph.in_degree(node) == 1:
+      root = node
+      break
+  else:
+    raise ValueError("No entry block found in graph")
 
-  stack = [graph.entry_block]
+  stack = [root]
   while stack:
     node = stack[-1]
     stack.pop()
@@ -170,7 +174,7 @@ def LoopConnetedness(graph) -> int:
       back_edge_count += 1
     else:
       visited.add(node)
-      for _, dst, flow in graph.out_edges(node, data='flow'):
+      for _, dst, flow in graph.out_edges(node, data='flow', default='control'):
         if flow == 'control':
           stack.append(dst)
 
