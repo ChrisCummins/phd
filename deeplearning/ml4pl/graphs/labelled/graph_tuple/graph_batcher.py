@@ -11,8 +11,8 @@ from labm8 import humanize
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
-from deeplearning.ml4pl.graphs.labelled.graph_dict import \
-  graph_dict as graph_dicts
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
+  graph_tuple as graph_tuples
 from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
@@ -69,8 +69,8 @@ class GraphBatcher(object):
           "flags are set")
     self.db = db
     self.message_passing_step_count = message_passing_step_count
-    self.stats = graph_stats.GraphDictDatabaseStats(self.db,
-                                                    filters=self._GetFilters())
+    self.stats = graph_stats.GraphTupleDatabaseStats(self.db,
+                                                     filters=self._GetFilters())
     app.Log(1, "%s", self.stats)
 
   def GetGraphsInGroupCount(self, group: str) -> int:
@@ -179,7 +179,7 @@ class GraphBatcher(object):
       graph_ids.append(graph.id)
 
       # De-serialize pickled data in database and process.
-      graph_dict = graph.pickled_data
+      graph_tuple = graph.pickled_data
 
       batch['graph_nodes_list'].append(
           np.full(
@@ -189,15 +189,16 @@ class GraphBatcher(object):
           ))
 
       # Offset the adjacency list node indices.
-      for edge_type, adjacency_list in enumerate(graph_dict['adjacency_lists']):
+      for edge_type, adjacency_list in enumerate(
+          graph_tuple['adjacency_lists']):
         if adjacency_list.size:
           offset = np.array((log.node_count, log.node_count), dtype=np.int32)
           batch['adjacency_lists'][edge_type].append(adjacency_list + offset)
 
       # Turn counters for incoming edges into a dense array:
       batch['incoming_edge_counts'].append(
-          graph_dicts.IncomingEdgeCountsToDense(
-              graph_dict["incoming_edge_counts"],
+          graph_tuples.IncomingEdgeCountsToDense(
+              graph_tuple["incoming_edge_counts"],
               node_count=graph.node_count,
               edge_type_count=self.stats.edge_type_count))
 
@@ -205,17 +206,17 @@ class GraphBatcher(object):
 
       if 'node_x_indices' in batch:
         # Shape: [graph.node_count, node_features_dimensionality]
-        batch['node_x_indices'].extend(graph_dict['node_x_indices'])
+        batch['node_x_indices'].extend(graph_tuple['node_x_indices'])
 
       if 'node_y' in batch:
         # Shape: [graph.node_count, node_labels_dimensionality]
-        batch['node_y'].extend(graph_dict['node_y'])
+        batch['node_y'].extend(graph_tuple['node_y'])
 
       if 'graph_x' in batch:
-        batch['graph_x'].append(graph_dict['graph_x'])
+        batch['graph_x'].append(graph_tuple['graph_x'])
 
       if 'graph_y' in batch:
-        batch['graph_y'].append(graph_dict['graph_y'])
+        batch['graph_y'].append(graph_tuple['graph_y'])
 
       # Update batch counters.
       log.graph_count += 1

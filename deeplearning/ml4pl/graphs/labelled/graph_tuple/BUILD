@@ -5,10 +5,10 @@ py_library(
     srcs = ["graph_batcher.py"],
     visibility = ["//visibility:public"],
     deps = [
+        ":graph_tuple",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs:graph_database_reader",
         "//deeplearning/ml4pl/graphs:graph_database_stats",
-        "//deeplearning/ml4pl/graphs/labelled/graph_dict",
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
         "//labm8:humanize",
@@ -19,8 +19,8 @@ py_library(
 )
 
 py_library(
-    name = "graph_dict",
-    srcs = ["graph_dict.py"],
+    name = "graph_tuple",
+    srcs = ["graph_tuple.py"],
     visibility = ["//visibility:public"],
     deps = [
         "//labm8:app",
@@ -30,10 +30,10 @@ py_library(
 )
 
 py_test(
-    name = "graph_dict_test",
-    srcs = ["graph_dict_test.py"],
+    name = "graph_tuple_test",
+    srcs = ["graph_tuple_test.py"],
     deps = [
-        ":graph_dict",
+        ":graph_tuple",
         "//labm8:app",
         "//labm8:test",
         "//third_party/py/networkx",
