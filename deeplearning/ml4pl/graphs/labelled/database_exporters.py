@@ -89,6 +89,15 @@ class BytecodeDatabaseExporterBase(object):
     start_time = time.time()
     exported_count = 0
 
+    # Ignore bytecodes that we have already exported.
+    with self.graph_db.Session() as session:
+      query = session.query(graph_database.GraphMeta.bytecode_id) \
+        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
+      already_done = [r.bytecode_id for r in query]
+      app.Log(1, 'Skipping %s previously-exported bytecodes',
+              humanize.Commas(len(already_done)))
+      bytecode_ids = [b for b in bytecode_ids if b not in already_done]
+
     make_job = self.GetMakeExportJob()
     job_processor = self.GetProcessJobFunction()
 
