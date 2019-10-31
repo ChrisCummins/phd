@@ -68,7 +68,7 @@ class MLP(object):
   def __call__(self, inputs):
     acts = inputs
     for W, b in zip(self.params["weights"], self.params["biases"]):
-      if self.dropout_keep_prob:
+      if self.dropout_keep_prob is not None:
         W = tf.nn.dropout(W, self.dropout_keep_prob)
       hid = tf.matmul(acts, W) + b
       acts = tf.nn.relu(hid)
@@ -160,7 +160,7 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
         stats.node_features_dtype,
         # TODO(cec): This is hardcoded to padded node features.
         # It should be stats.node_features_dimensionality.
-        [None, FLAGS.hidden_size],
+        [None],
         name="node_x")
     placeholders['raw_node_output_features'] = tf.compat.v1.placeholder(
       stats.node_features_dtype,

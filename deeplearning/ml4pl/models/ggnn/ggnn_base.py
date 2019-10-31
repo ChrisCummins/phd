@@ -271,7 +271,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
     # TODO(cec): Add support for edge labels.
     targets = (feed_dict[self.placeholders['node_y']]
-               if self.placeholders['node_y'] in feed_dict else
+               if 'node_y' in self.placeholders else
                feed_dict[self.placeholders['graph_y']])
 
     log.loss = float(fetch_dict['loss'])

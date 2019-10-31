@@ -57,6 +57,18 @@ app.DEFINE_float(
     "Dropout keep probability on the output layer. In range 0 < x <= 1.")
 classifier_base.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
 
+
+app.DEFINE_float(
+    "intermediate_loss_discount_factor", 0.2,
+    "The actual loss is computed as loss + factor * intermediate_loss"
+)
+
+app.DEFINE_integer(
+    "auxiliary_inputs_dense_layer_size", 32,
+    "Size for MLP that combines graph_x and GGNN output features"
+)
+classifier_base.MODEL_FLAGS.add("auxiliary_inputs_dense_layer_size")
+
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
     [
@@ -128,11 +140,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
               state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"]
           )
         self.gnn_weights.rnn_cells.append(cell)
-
+    
+    with tf.compat.v1.variable_scope("Embeddings"):
+        #TODO(cec)/(zach) FIX HERE FOR NODE LEVEL PROBLEMS
+        self.weights['node_embeddings'] = tf.Variable(initial_value=np.random.rand(8569, 200), trainable=True, dtype=tf.float32)
+    encoded_node_x = tf.nn.embedding_lookup(self.weights['node_embeddings'], ids=self.placeholders['node_x'])
+    
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
-    node_states_per_layer = [self.placeholders['node_x']]
+    node_states_per_layer = [encoded_node_x]
 
     # Number of nodes in batch.
     num_nodes_in_batch = self.placeholders['node_count']
@@ -293,25 +310,70 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     else:
       out_layer_dropout = None
 
+    labels_dimensionality = self.stats.node_labels_dimensionality if self.placeholders.get('node_y') is not None else self.stats.graph_labels_dimensionality
+
     predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
         initial_node_state=node_states_per_layer[0],
         final_node_state=self.ops["final_node_x"],
         hidden_size=FLAGS.hidden_size,
-        labels_dimensionality=self.stats.node_labels_dimensionality,
+        labels_dimensionality=labels_dimensionality,
         dropout_keep_prob_placeholder=out_layer_dropout)
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
-    targets = tf.argmax(
-        self.placeholders["node_y"], axis=1, output_type=tf.int32)
+    if self.placeholders.get('graph_x') is not None:
+        # Sum node representations across graph (per graph).
+        computed_graph_only_values = tf.unsorted_segment_sum(
+            predictions,
+            segment_ids=self.placeholders["graph_nodes_list"],
+            num_segments=self.placeholders["graph_count"],
+            name='computed_graph_only_values',
+        )  # [g, c]
 
-    accuracies = tf.equal(
-        tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
+        # Adding global features to the graph readout:
+
+        # auxiliary inputs wgsize and dsize
+        # TODO(cec) this is still specific to the distribution of the graph_x features in devmap.
+        # TODO(cec) delete 2 lines once the dataset has logs.
+        graph_x = tf.log(tf.cast(self.placeholders["graph_x"], dtype=tf.float32))
+        graph_x = tf.clip_by_value(graph_x, -1.0, float('inf')) # set log(0)=-inf to -1!
+
+        x = tf.concat([computed_graph_only_values, graph_x], axis=-1)
+        x = tf.layers.batch_normalization(x, training=self.placeholders['is_training'])
+        x = tf.layers.dense(x, FLAGS.auxiliary_inputs_dense_layer_size, activation=tf.nn.relu)
+        x = tf.layers.dropout(x, rate=1-self.placeholders["output_layer_dropout_keep_prob"],
+                training=self.placeholders['is_training'])
+        predictions = tf.layers.dense(x, 2)
+
+
+    if self.placeholders.get("graph_y") is not None:
+        targets = tf.argmax(self.placeholders["graph_y"],
+                            axis=1,
+                            output_type=tf.int32,
+                            name="targets")
+    elif self.placeholders.get("node_y") is not None:
+        targets = tf.argmax(
+            self.placeholders["node_y"], axis=1, output_type=tf.int32)
+    else: #broken labels
+        raise
+
+    argmaxed_predictions = tf.argmax(predictions, axis=1, output_type=tf.int32)
+    accuracies = tf.equal(argmaxed_predictions, targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
-    loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
+
+    if self.placeholders.get("graph_y") is not None:
+        graph_only_loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
+                                           computed_graph_only_values)
+        _loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
                                            predictions)
+        loss = _loss + FLAGS.intermediate_loss_discount_factor * graph_only_loss
+    elif self.placeholders.get("node_y") is not None:
+        loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
+                                           argmaxed_predictions)
+    else:
+        raise
 
     return loss, accuracies, accuracy, predictions
 
@@ -323,12 +385,13 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
       # Pad node feature vector of size <= hidden_size up to hidden_size so
       # that the size matches embedding dimensionality.
-      batch['node_x'] = np.pad(
-          batch["node_x"],
-          ((0, 0),
-           (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
-          "constant",
-      )
+      # batch['node_x'] = np.pad(
+      #     batch["node_x"],
+      #     ((0, 0),
+      #      (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
+      #     "constant",
+      # )
+      batch['node_x'] = batch['node_x'][:, 0]
 
       feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
 
@@ -339,7 +402,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             self.placeholders["edge_weight_dropout_keep_prob"]:
             FLAGS.edge_weight_dropout_keep_prob,
             self.placeholders["output_layer_dropout_keep_prob"]:
-            FLAGS.output_layer_dropout_keep_prob
+            FLAGS.output_layer_dropout_keep_prob,
+            self.placeholders["is_training"]: True,
         })
       else:
         feed_dict.update({
@@ -349,6 +413,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             1.0,
             self.placeholders["output_layer_dropout_keep_prob"]:
             1.0,
+            self.placeholders["is_training"]: False,
         })
       yield batch['log'], feed_dict
 

@@ -27,21 +27,6 @@ py_test(
 )
 
 py_binary(
-    name = "ggnn_graph_classifier",
-    srcs = ["ggnn_graph_classifier.py"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":ggnn_base",
-        ":ggnn_utils",
-        "//deeplearning/ml4pl/models:classifier_base",
-        "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//third_party/py/numpy",
-        "//third_party/py/tensorflow",
-    ],
-)
-
-py_binary(
     name = "ggnn_node_classifier",
     srcs = ["ggnn_node_classifier.py"],
     visibility = ["//visibility:public"],
