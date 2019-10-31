@@ -17,7 +17,7 @@ IncomingEdgeCount = typing.Dict[int, int]
 
 
 class GraphTuple(typing.NamedTuple):
-  """The graph tuple: a compact, e"""
+  """The graph tuple: a compact, serializable representation of a graph."""
 
   # A list of adjacency lists, one for each edge_type, where an entry in an
   # adjacency list is a <src,dst> tuple of node indices.
