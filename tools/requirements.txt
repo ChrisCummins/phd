@@ -73,7 +73,7 @@ jupyter==1.0.0
 # https://research.google.com/colaboratory/local-runtimes.html
 jupyter_http_over_ws==0.0.1a3
 jwt==0.6.1  # Dependency PyGithub.
-Keras==2.1.6
+Keras==2.3.0
 kiwisolver==1.0.1
 lazy-object-proxy==1.3.1
 MarkupSafe==1.0
