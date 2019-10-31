@@ -1,13 +1,12 @@
 """Unit tests for //deeplearning/ml4pl:control_and_data_flow_graph."""
 import networkx as nx
 import pytest
-
-from deeplearning.ml4pl.graphs import graph_iterators as iterators
-from deeplearning.ml4pl.graphs import graph_query as query
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
-  control_and_data_flow_graph as cdfg
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.graphs import graph_iterators as iterators
+from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
+  control_and_data_flow_graph as cdfg
 
 FLAGS = app.FLAGS
 
@@ -78,6 +77,16 @@ def test_every_statement_has_a_predecessor(simple_bytecode: str):
         break
     else:
       assert False, f'{node} has no control flow predecessor.'
+
+
+def test_every_edge_has_position(simple_bytecode: str):
+  """Test that every edge has a position encoding."""
+  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  graph = builder.Build(simple_bytecode)
+  for src, dst, position in graph.edges(data='position'):
+    assert isinstance(
+        position, int
+    ), f'No position for edge {graph.nodes[src]["original_text"]} -> {graph.nodes[dst]["original_text"]}'
 
 
 def test_ComposeGraphs_undefined():

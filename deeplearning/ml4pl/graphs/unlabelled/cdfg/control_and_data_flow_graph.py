@@ -9,6 +9,9 @@ import itertools
 import typing
 
 import networkx as nx
+from labm8 import app
+from labm8 import decorators
+from labm8 import humanize
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
@@ -16,9 +19,6 @@ from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
-from labm8 import app
-from labm8 import decorators
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -56,7 +56,7 @@ def GetLlvmStatementDefAndUses(statement: str,
 
   # Strip whitespace from the strings.
   strip = lambda strings: (s.strip() for s in strings)
-  return destination.strip(), strip(operands)
+  return destination.strip(), list(reversed(strip(operands)))
 
 
 def MakeUndefinedFunctionGraph(function_name: str) -> nx.MultiDiGraph:
@@ -72,20 +72,21 @@ def MakeUndefinedFunctionGraph(function_name: str) -> nx.MultiDiGraph:
   g.entry_block = f'{function_name}_entry'
   g.exit_block = f'{function_name}_exit'
 
-  g.add_node(
-      g.entry_block,
-      type='statement',
-      function=function_name,
-      text='UNK!',
-      original_text='UNK!')
-  g.add_node(
-      g.exit_block,
-      type='statement',
-      function=function_name,
-      text='UNK!',
-      original_text='UNK!')
-  g.add_edge(
-      g.entry_block, g.exit_block, function=function_name, flow='control')
+  g.add_node(g.entry_block,
+             type='statement',
+             function=function_name,
+             text='UNK!',
+             original_text='UNK!')
+  g.add_node(g.exit_block,
+             type='statement',
+             function=function_name,
+             text='UNK!',
+             original_text='UNK!')
+  g.add_edge(g.entry_block,
+             g.exit_block,
+             function=function_name,
+             flow='control',
+             position=0)
 
   return g
 
@@ -147,15 +148,15 @@ def AddInterproceduralCallEdges(
       # Lookup the nodes to connect.
       call_entry, call_exit = function_entry_exit_nodes[dst]
       call_site_successor = get_call_site_successor(graph, call_site)
-      # Connect the noes.
-      graph.add_edge(call_site, call_entry, flow='call')
-      graph.add_edge(call_exit, call_site_successor, flow='call')
+      # Connect the nodes.
+      graph.add_edge(call_site, call_entry, flow='call', position=0)
+      graph.add_edge(call_exit, call_site_successor, flow='call', position=0)
 
 
 class ControlAndDataFlowGraphBuilder(object):
 
   def __init__(self,
-               dataflow: str = 'edges_only',
+               dataflow: str = 'nodes_and_edges',
                preprocess_text: bool = True,
                discard_unknown_statements: bool = False,
                only_add_entry_and_exit_blocks_if_required: bool = True,
@@ -164,12 +165,11 @@ class ControlAndDataFlowGraphBuilder(object):
     """Instantiate a Control and Data Flow Graph (CDFG) builder.
 
     Args:
-      dataflow: One of {none,edges_only,nodes_and_edges}. Determines the type of
+      dataflow: One of {none,nodes_and_edges}. Determines the type of
         data flow information that is added to control flow graphs. If `none`,
-        only control flow is used. if `edges_only`, data flow edges are inserted
-        between statements. If `nodes_and_edges`, nodes representing identifiers
-        are inserted, and data flow edges flowing between the identifier nodes
-        and statements.
+        only control flow is used. If `nodes_and_edges`, nodes representing
+        identifiers are inserted, and data flow edges flowing between the
+        identifier nodes and statements.
       preprocess_text: If true, pre-process the text of statements to discard
         literals, normalise identifiers, etc.
       discard_unknown_statements: Pre-processing can choose to delete statements
@@ -223,7 +223,8 @@ class ControlAndDataFlowGraphBuilder(object):
     # Keep track of those that have been discarded, to be removed later.
     nodes_to_remove: typing.Set[str] = set()
     edges_to_remove: typing.Set[typing.Tuple[str, str]] = set()
-    edges_to_add: typing.Set[typing.Tuple[str, str]] = set()
+    edges_to_add: typing.Set[
+        typing.Tuple[str, str, typing.Dict[str, typing.Any]]] = set()
     for (node, data), text in zip(g.nodes(data=True), preprocessed_texts):
       if text:
         data['original_text'] = data['text']
@@ -241,30 +242,29 @@ class ControlAndDataFlowGraphBuilder(object):
     for node in nodes_to_remove:
       in_edges = g.in_edges(node)
       out_edges = g.out_edges(node)
-      in_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: src)
-      out_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: dst)
+      in_nodes = iterators.SuccessorNodes(g,
+                                          node,
+                                          ignored_nodes=nodes_to_remove,
+                                          direction=lambda src, dst: src)
+      out_nodes = iterators.SuccessorNodes(g,
+                                           node,
+                                           ignored_nodes=nodes_to_remove,
+                                           direction=lambda src, dst: dst)
 
       for edge in in_edges:
         edges_to_remove.add(edge)
       for edge in out_edges:
         edges_to_remove.add(edge)
       for src, dst in itertools.product(in_nodes, out_nodes):
-        edges_to_add.add((src, dst))
+        # Note this loses position information.
+        edges_to_add.add((src, dst, {'position': 0}))
 
     for edge in edges_to_remove:
       g.remove_edge(*edge)
     for node in nodes_to_remove:
       g.remove_node(node)
-    for edge in edges_to_add:
-      g.add_edge(*edge)
+    for src, dst, data in edges_to_add:
+      g.add_edge(src, dst, **data)
 
   def MaybeAddSingleEntryBlock(self, g: nx.MultiDiGraph) -> None:
     """Add a magic entry block."""
@@ -317,18 +317,20 @@ class ControlAndDataFlowGraphBuilder(object):
 
     # Collect the edges to add so that we don't modify the graph while
     # iterating.
-    edges_to_add: typing.List[typing.Tuple[str, str, str]] = []
+    edges_to_add: typing.List[typing.Tuple[str, str, str, int]] = []
 
     for statement, data in iterators.StatementNodeIterator(g):
+      # TODO(cec): Get immediate values.
       def_, uses = GetLlvmStatementDefAndUses(
           data['text'], store_destination_is_def=self.store_destination_is_def)
       if def_:  # Data flow out edge.
-        edges_to_add.append((statement, prefix(def_), prefix(def_)))
-      for identifier in uses:  # Data flow in edge.
-        edges_to_add.append((prefix(identifier), statement, prefix(identifier)))
+        edges_to_add.append((statement, prefix(def_), prefix(def_), 0))
+      for position, identifier in enumerate(uses):  # Data flow in edge.
+        edges_to_add.append(
+            (prefix(identifier), statement, prefix(identifier), position))
 
-    for src, dst, identifier in edges_to_add:
-      g.add_edge(src, dst, flow='data')
+    for src, dst, identifier, position in edges_to_add:
+      g.add_edge(src, dst, flow='data', position=position)
       node = g.nodes[identifier]
       node['type'] = 'identifier'
       node['name'] = unprefix(identifier)
@@ -341,62 +343,26 @@ class ControlAndDataFlowGraphBuilder(object):
         nodes_to_remove.append(node)
     [g.remove_node(node) for node in nodes_to_remove]
 
-    if self.dataflow == 'edges_only':
-      # If we only want the dataflow edges, and not the intermediate nodes,
-      # then first build a list of all of the incoming and outgoing edges from
-      # identifier nodes, then replace them with direct edges and remove the
-      # original node and edges.
-      data_flow_edges_to_add: typing.List[typing.Tuple[str, str]] = []
-      edges_to_remove: typing.List[typing.Tuple[str, str]] = []
-      nodes_to_remove: typing.List[str] = []
-
-      for identifier, _ in iterators.IdentifierNodeIterator(g):
-        nodes_to_remove.append(identifier)
-        srcs = list(g.in_edges(identifier))
-        dsts = list(g.out_edges(identifier))
-        edges_to_remove += list(srcs) + list(dsts)
-        for (src, _), (_, dst) in itertools.product(srcs, dsts):
-          if query.StatementIsSuccessor(g, src, dst):
-            data_flow_edges_to_add.append((src, dst, unprefix(identifier)))
-
-      # Remove multiple incoming DF edges from the same identifier by keeping
-      # only the edge which is closest to the statement (i.e. the most-recent
-      # write).
-      # TODO(cec): This tramples the DF edge from '%1 = alloca ...' to
-      # 'store 1, %1', since both statements are considered writes, so the
-      # edge is discarded as a WAW.
-      deduped_data_flow_edges = {}
-      for src, dst, identifier in data_flow_edges_to_add:
-        if (dst, identifier) in deduped_data_flow_edges:
-          other_src = deduped_data_flow_edges[(dst, identifier)]
-          if query.StatementIsSuccessor(g, other_src, src):
-            deduped_data_flow_edges[(dst, identifier)] = src
-        else:
-          deduped_data_flow_edges[(dst, identifier)] = src
-
-      [g.remove_edge(*edge) for edge in edges_to_remove]
-      [g.remove_node(node) for node in nodes_to_remove]
-      [
-          g.add_edge(src, dst, identifier=identifier, flow='data')
-          for (dst, identifier), src in deduped_data_flow_edges.items()
-      ]
-
   @decorators.timeout(120)
   def BuildFromControlFlowGraph(
       self, cfg: llvm_util.LlvmControlFlowGraph) -> nx.DiGraph:
     """Build a CDFG from an LLVM Control Flow Graph.
 
     Args:
-      cfg: The control flow graph to build aCDFG from.
+      cfg: The control flow graph to build a CDFG from.
+
+    Returns:
+      A MultiDiGraph.
     """
     # Expand the control flow graph to a full flow graph (one block per
     # statement).
     ffg = cfg.BuildFullFlowGraph()
 
     # Copy the DiGraph to a MultiDiGraph, which is required for the parallel
-    # control- and data-flow edges. Also prefix the node and edge names with the
-    # name of the graph, so that multiple graphs from the same bytecode file can
-    # be composed.
+    # control- and data-flow edges.
+    #
+    # While doing this, prefix the node and edge names with thename of the
+    # graph so that multiple graphs from the same bytecode file can be composed.
     g = nx.MultiDiGraph()
     g.name = ffg.name
     for node, data in ffg.nodes(data=True):
@@ -453,7 +419,10 @@ class ControlAndDataFlowGraphBuilder(object):
       function_entry_exit_nodes[dst] = (function_entry, function_exit)
 
       # Connect the newly inserted function to the root node.
-      interprocedural_graph.add_edge('root', function_entry, flow='call')
+      interprocedural_graph.add_edge('root',
+                                     function_entry,
+                                     flow='call',
+                                     position=0)
 
     if self.call_edge_returns_to_successor:
       get_call_site_successor = query.GetCallStatementSuccessor
@@ -484,8 +453,8 @@ def ToControlFlowGraph(g: nx.MultiDiGraph):
   # MultiDiGraph.
   cfg = nx.DiGraph()
 
-  for node, _ in iterators.StatementNodeIterator(g):
-    cfg.add_node(node, type='statement')
+  for node, data in iterators.StatementNodeIterator(g):
+    cfg.add_node(node, **data)
 
-  for src, dst, _ in iterators.ControlFlowEdgeIterator(g):
-    cfg.add_edge(src, dst, flow='control')
+  for src, dst, data in iterators.ControlFlowEdgeIterator(g):
+    cfg.add_edge(src, dst, **data)
