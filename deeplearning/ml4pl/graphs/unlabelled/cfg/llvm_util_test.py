@@ -463,5 +463,56 @@ def test_BuildFullFlowGraph_exit_block():
   assert sig.nodes[name_to_node['%9.1']]['exit']
 
 
+def test_ControlFlowGraphFromDotSource_positions():
+  """A control flow graph with two nested loops.
+
+    int A() {
+      int n = 0;
+      for (int i = 0; i < 10; ++i) {
+        switch (n) {
+          case 0:
+            n += 1;
+          case 1:
+            n += 2;
+          default:
+            n += 3;
+            break;
+        }
+      }
+      return n;
+    }
+  """
+  cfg = llvm_util.ControlFlowGraphFromDotSource("""
+digraph "CFG for 'A' function" {
+	label="CFG for 'A' function";
+
+	Node0x7ff981522700 [shape=record,label="{%0:\l  %1 = alloca i32, align 4\l  %2 = alloca i32, align 4\l  store i32 0, i32* %1, align 4\l  store i32 0, i32* %2, align 4\l  br label %3\l}"];
+	Node0x7ff981522700 -> Node0x7ff981522980;
+	Node0x7ff981522980 [shape=record,label="{%3:\l\l  %4 = load i32, i32* %2, align 4\l  %5 = icmp slt i32 %4, 10\l  br i1 %5, label %6, label %21\l|{<s0>T|<s1>F}}"];
+	Node0x7ff981522980:s0 -> Node0x7ff981522b50;
+	Node0x7ff981522980:s1 -> Node0x7ff981522bd0;
+	Node0x7ff981522b50 [shape=record,label="{%6:\l\l  %7 = load i32, i32* %1, align 4\l  switch i32 %7, label %14 [\l    i32 0, label %8\l    i32 1, label %11\l  ]\l|{<s0>def|<s1>0|<s2>1}}"];
+	Node0x7ff981522b50:s0 -> Node0x7ff981522b90;
+	Node0x7ff981522b50:s1 -> Node0x7ff981522d30;
+	Node0x7ff981522b50:s2 -> Node0x7ff981522db0;
+	Node0x7ff981522d30 [shape=record,label="{%8:\l\l  %9 = load i32, i32* %1, align 4\l  %10 = add nsw i32 %9, 1\l  store i32 %10, i32* %1, align 4\l  br label %11\l}"];
+	Node0x7ff981522d30 -> Node0x7ff981522db0;
+	Node0x7ff981522db0 [shape=record,label="{%11:\l\l  %12 = load i32, i32* %1, align 4\l  %13 = add nsw i32 %12, 2\l  store i32 %13, i32* %1, align 4\l  br label %14\l}"];
+	Node0x7ff981522db0 -> Node0x7ff981522b90;
+	Node0x7ff981522b90 [shape=record,label="{%14:\l\l  %15 = load i32, i32* %1, align 4\l  %16 = add nsw i32 %15, 3\l  store i32 %16, i32* %1, align 4\l  br label %17\l}"];
+	Node0x7ff981522b90 -> Node0x7ff981522740;
+	Node0x7ff981522740 [shape=record,label="{%17:\l\l  br label %18\l}"];
+	Node0x7ff981522740 -> Node0x7ff981522d70;
+	Node0x7ff981522d70 [shape=record,label="{%18:\l\l  %19 = load i32, i32* %2, align 4\l  %20 = add nsw i32 %19, 1\l  store i32 %20, i32* %2, align 4\l  br label %3\l}"];
+	Node0x7ff981522d70 -> Node0x7ff981522980;
+	Node0x7ff981522bd0 [shape=record,label="{%21:\l\l  %22 = load i32, i32* %1, align 4\l  ret i32 %22\l}"];
+}
+""")
+  positions = set()
+  for _, _, position in cfg.edges(data='position'):
+    positions.add(position)
+  assert positions == {0, 1, 2}
+
+
 if __name__ == '__main__':
   test.Main()
