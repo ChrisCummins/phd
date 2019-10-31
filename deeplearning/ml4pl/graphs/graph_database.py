@@ -4,6 +4,7 @@ import pickle
 import typing
 
 import networkx as nx
+import numpy as np
 import sqlalchemy as sql
 from labm8 import app
 from labm8 import labdate
@@ -178,6 +179,50 @@ class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @classmethod
   def CreatePickled(cls, data: typing.Any) -> 'Graph':
     return Graph(data=pickle.dumps(data))
+
+
+class EmbeddingTable(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """A table of embeddings."""
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # The embedding table key. Currently we only support node embeddings, so this
+  # value can be left at the default value.
+  key: str = sql.Column(sql.String(64),
+                        index=True,
+                        default='node_x',
+                        nullable=False)
+
+  # The number of embeddings in the table.
+  embedding_count: int = sql.Column(sql.Integer, nullable=False)
+
+  # The width of the embedding vectors.
+  embedding_dimensionality: int = sql.Column(sql.Integer, nullable=False)
+
+  # The contents of the embedding table, as a pickled numpy array with shape
+  # [num_entries, embedding_dimensionality].
+  pickled_embedding_table: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                              nullable=False)
+
+  @property
+  def embedding_table(self) -> np.array:
+    """Access the pickled embedding table."""
+    table = pickle.loads(self.pickled_embedding_table)
+    if table.shape != (self.embedding_count, self.embedding_dimensionality):
+      raise EnvironmentError(
+          f"Loaded embedding table has shape {table.shape} but expected shape "
+          f"({self.embedding_count}, {self.embedding_dimensionality})")
+    return table
+
+  @classmethod
+  def CreateFromNumpyArray(cls, embedding_table: np.array,
+                           key=None) -> 'EmbeddingTable':
+    if len(embedding_table.shape) != 2:
+      raise ValueError(f"Embedding table with shape {embedding_table.shape} "
+                       "should have 2 dimensions")
+    return EmbeddingTable(key=key,
+                          embedding_count=embedding_table.shape[0],
+                          embedding_dimensionality=embedding_table.shape[1],
+                          pickled_embedding_table=pickle.dumps(embedding_table))
 
 
 class Database(sqlutil.Database):
