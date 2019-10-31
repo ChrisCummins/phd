@@ -104,24 +104,24 @@ def GetLlvmStatementDefAndUses(statement: str,
   immediates = []
 
   # Extract floating point immediates.
-  immediates += re.findall(rgx.immediate_value_float_hexa, line)
-  immediates += re.findall(rgx.immediate_value_float_sci, line)
+  immediates += re.findall(rgx.immediate_value_float_hexa, statement)
+  immediates += re.findall(rgx.immediate_value_float_sci, statement)
 
   # Find integer values
-  if ("extractelement" not in line and "extractvalue" not in line and
-      "insertelement" not in line and "insertvalue" not in line):
+  if ("extractelement" not in statement and "extractvalue" not in statement and
+      "insertelement" not in statement and "insertvalue" not in statement):
     immediates += re.findall(r'(?<!align)(?<!\[) ' + rgx.immediate_value_int,
-                             line)
+                             statement)
 
   # Extract string values
-  immediates += re.findall(rgx.immediate_value_string, line)
+  immediates += re.findall(rgx.immediate_value_string, statement)
 
   # TODO(cec): Sorting on the literal values is too crude.
   # Return the operands ordered by their appearance in the string.
   identifiers = local_identifiers + m_glob + m_label + m_label2
   strip = lambda strings: (s.strip() for s in strings)
   operands = sorted(strip(identifiers + immediates),
-                    key=lambda x: line.index(x))
+                    key=lambda x: statement.index(x))
 
   # Store is a special case because it doesn't have an LHS, but writes to one
   # of its operands. If store_destination_is_output == True, then the
