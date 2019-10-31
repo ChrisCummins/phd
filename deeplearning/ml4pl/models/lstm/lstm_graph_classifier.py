@@ -193,24 +193,33 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     x = [batch['sequence_1hot'], batch['graph_x']]
     y = [batch['graph_y'], batch['graph_y']]
 
+    losses = []
+
+    def _RecordLoss(epoch, data):
+      """Callback to record training/prediction loss."""
+      del epoch
+      losses.append(data['loss'])
+
+    callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
+
     if log.group == 'train':
-      # TODO(cec): Use keras.callbacks.callbacks.Callback() instead of history.
-      # keras.callbacks.callbacks.LambdaCallback()
-      history = self.model.fit(
+      self.model.fit(
           x,
           y,
           epochs=1,
-          batch_size=FLAGS.batch_size,
-          verbose=True,
+          batch_size=log.graph_count,
+          callbacks=callbacks,
+          verbose=False,
           shuffle=False)
+    else:
+      self.model.evaluate(
+          x, y, batch_size=log.graph_count, callbacks=callbacks, verbose=False)
 
-      app.Log(1, "HISTORY %s", history.history.keys())
-      log.loss = history.history['loss']
+    log.loss = sum(losses) / len(losses)
 
-    # app.Log(1, 'Running predictions')
-    # pred_y = self.model.predict(x)
+    pred_y = self.model.predict(x)
 
-    return batch['graph_y'], batch['graph_y']  # pred_y
+    return batch['graph_y'], pred_y[0]
 
   def ModelDataToSave(self):
     model_path = self.working_dir / f'{self.run_id}_keras_model.h5'
