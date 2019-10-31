@@ -147,7 +147,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
               graph_database.GraphMeta.bytecode_id) \
             .filter(graph_database.GraphMeta.id.in_(graph_ids))
 
-          bytecode_to_graph_ids = {row[1]: row[0] for row in query}
+          graph_to_bytecode_ids = {row[0]: row[1] for row in query}
 
         # Load the bytecode strings in the order of the graphs.
         with self.bytecode_db.Session() as session:
@@ -155,20 +155,25 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
               bytecode_database.LlvmBytecode.id,
               bytecode_database.LlvmBytecode.bytecode) \
             .filter(bytecode_database.LlvmBytecode.id.in_(
-              bytecode_to_graph_ids.keys()))
+              graph_to_bytecode_ids.values()))
 
-          results = sorted(
-              query,
-              key=lambda row: graph_ids.index(bytecode_to_graph_ids[row.id]))
+          bytecode_id_to_string = {row[0]: row[1] for row in query}
 
-        bytecodes = [row.bytecode for row in results]
-
-        encoded_sequences, vocab_out = bytecode2seq.Encode(
-            bytecodes, self.vocabulary)
+        # Encode the bytecodes.
+        encoded_bytecodes, vocab_out = bytecode2seq.Encode(
+            bytecode_id_to_string.values(), self.vocabulary)
         if len(vocab_out) != len(self.vocabulary):
           raise ValueError("Encoded vocabulary has different size "
                            f"({len(vocab_out)}) than the input "
                            f"({len(self.vocabulary)})")
+        bytecode_id_to_encoded = {
+            id_: encoded for id_, encoded in zip(bytecode_id_to_string.keys(),
+                                                 encoded_bytecodes)
+        }
+
+        encoded_sequences = [
+            bytecode_id_to_encoded[graph_to_bytecode_ids[i]] for i in graph_ids
+        ]
 
         one_hot_sequences = np.array(
             keras.preprocessing.sequence.pad_sequences(
@@ -176,8 +181,6 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
                 maxlen=self.max_encoded_length,
                 value=self.pad_val))
 
-      app.Log(1, "GRAPH Y SHAPE: %s", batch['graph_y'].shape,
-              np.vstack(batch['graph_y']))
       yield batch['log'], {
           'sequence_1hot': np.vstack(one_hot_sequences),
           'graph_x': np.vstack(batch['graph_x']),
@@ -187,9 +190,6 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
   def RunMinibatch(self, log: log_database.BatchLog, batch: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Pass"""
-    app.Log(1, "SHAPES: %s, %s, %s", batch['sequence_1hot'].shape,
-            batch['graph_x'].shape, batch['graph_y'].shape)
-    app.Log(1, 'GRAPHS: %s', batch['graph_x'][0])
     x = [batch['sequence_1hot'], batch['graph_x']]
     y = [batch['graph_y'], batch['graph_y']]
 
