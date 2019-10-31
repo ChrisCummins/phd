@@ -4,10 +4,10 @@ import random
 import typing
 
 import networkx as nx
+from labm8 import app
 
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
-from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -23,8 +23,9 @@ def StatementNeighbors(
   direction = direction or (lambda src, dst: dst)
   neighbors = set()
   neighbor_edges = direction(g.in_edges, g.out_edges)
-  for src, dst, edge_flow in neighbor_edges(
-      node, data='flow', default='control'):
+  for src, dst, edge_flow in neighbor_edges(node,
+                                            data='flow',
+                                            default='control'):
     neighbor = direction(src, dst)
     if edge_flow == flow:
       if g.nodes[neighbor].get('type', 'statement') == 'statement':
@@ -101,8 +102,9 @@ def GetCallStatementSuccessor(graph: nx.MultiDiGraph, call_site: str) -> str:
     ValueError: If call site does not have exactly one successor.
   """
   call_site_successors = []
-  for src, dst, flow in graph.out_edges(
-      call_site, data='flow', default='control'):
+  for src, dst, flow in graph.out_edges(call_site,
+                                        data='flow',
+                                        default='control'):
     if (flow == 'control' and
         graph.nodes[dst].get('type', 'statement') == 'statement'):
       call_site_successors.append(dst)
@@ -139,3 +141,37 @@ def FindCallSites(graph, src, dst):
     if called_function == dst:
       call_sites.append(node)
   return call_sites
+
+
+def LoopConnetedness(graph) -> int:
+  """Return the loop connectedness of a graph.
+
+  Args:
+    graph: The graph to compute the loop connectedness of.
+
+  Returns:
+    A non-negative loop connectedness value.
+  """
+  # TODO(github.com/ChrisCummins/ml4pl/issues/5): This overestimates the loop
+  # connectedness by counting *all* back edges, not just the ones on the longest
+  # acyclic path through the graph.
+  visited = set()
+  back_edge_count = 0
+
+  if 'entry_block' not in graph:
+    raise ValueError("No entry block for graph")
+
+  stack = [graph.entry_block]
+  while stack:
+    node = stack[-1]
+    stack.pop()
+
+    if node in visited:
+      back_edge_count += 1
+    else:
+      visited.add(node)
+      for _, dst, flow in graph.out_edges(node, data='flow'):
+        if flow == 'control':
+          stack.append(dst)
+
+  return back_edge_count
