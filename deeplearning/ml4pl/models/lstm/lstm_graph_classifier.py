@@ -147,7 +147,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
               graph_database.GraphMeta.bytecode_id) \
             .filter(graph_database.GraphMeta.id.in_(graph_ids))
 
-          graph_to_bytecode_ids = {row[0]: row[1] for row in query}
+          bytecode_to_graph_ids = {row[1]: row[0] for row in query}
 
         # Load the bytecode strings in the order of the graphs.
         with self.bytecode_db.Session() as session:
@@ -155,13 +155,13 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
               bytecode_database.LlvmBytecode.id,
               bytecode_database.LlvmBytecode.bytecode) \
             .filter(bytecode_database.LlvmBytecode.id.in_(
-              graph_to_bytecode_ids.values()))
+              bytecode_to_graph_ids.keys()))
 
-          bytecode_id_to_string = {row[0]: row[1] for row in query}
+          results = sorted(
+              query,
+              key=lambda row: graph_ids.index(bytecode_to_graph_ids[row.id]))
 
-        bytecodes = [
-            bytecode_id_to_string[graph_to_bytecode_ids[i]] for i in graph_ids
-        ]
+        bytecodes = [row.bytecode for row in results]
 
         encoded_sequences, vocab_out = bytecode2seq.Encode(
             bytecodes, self.vocabulary)
@@ -176,6 +176,8 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
                 maxlen=self.max_encoded_length,
                 value=self.pad_val))
 
+      app.Log(1, "GRAPH Y SHAPE: %s", batch['graph_y'].shape,
+              np.vstack(batch['graph_y']))
       yield batch['log'], {
           'sequence_1hot': np.vstack(one_hot_sequences),
           'graph_x': np.vstack(batch['graph_x']),
@@ -185,15 +187,27 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
   def RunMinibatch(self, log: log_database.BatchLog, batch: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Pass"""
-    history = self.model.fit([batch['sequence_1hot'], batch['graph_x']],
-                             [batch['graph_y'], batch['graph_y']],
-                             epochs=1,
-                             batch_size=FLAGS.batch_size,
-                             verbose=True,
-                             shuffle=False)
+    app.Log(1, "SHAPES: %s, %s, %s", batch['sequence_1hot'].shape,
+            batch['graph_x'].shape, batch['graph_y'].shape)
+    app.Log(1, 'GRAPHS: %s', batch['graph_x'][0])
+    x = [batch['sequence_1hot'], batch['graph_x']]
+    y = [batch['graph_y'], batch['graph_y']]
 
-    app.Log(1, "HISTORY %s", history.keys())
+    if log.group == 'train':
+      # TODO(cec): Use keras.callbacks.callbacks.Callback() instead of history.
+      history = self.model.fit(
+          x,
+          y,
+          epochs=1,
+          batch_size=FLAGS.batch_size,
+          verbose=True,
+          shuffle=False)
+
+      app.Log(1, "HISTORY %s", history.history.keys())
     # log.loss = history.
+    pred_y = self.model.predict(x)
+
+    return batch['graph_y'], pred_y
 
   def ModelDataToSave(self):
     model_path = self.working_dir / f'{self.run_id}_keras_model.h5'
