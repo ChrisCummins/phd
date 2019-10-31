@@ -195,6 +195,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     if log.group == 'train':
       # TODO(cec): Use keras.callbacks.callbacks.Callback() instead of history.
+      # keras.callbacks.callbacks.LambdaCallback()
       history = self.model.fit(
           x,
           y,
@@ -204,10 +205,12 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
           shuffle=False)
 
       app.Log(1, "HISTORY %s", history.history.keys())
-    # log.loss = history.
-    pred_y = self.model.predict(x)
+      log.loss = history.history['loss']
 
-    return batch['graph_y'], pred_y
+    # app.Log(1, 'Running predictions')
+    # pred_y = self.model.predict(x)
+
+    return batch['graph_y'], batch['graph_y']  # pred_y
 
   def ModelDataToSave(self):
     model_path = self.working_dir / f'{self.run_id}_keras_model.h5'
