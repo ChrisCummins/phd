@@ -60,7 +60,7 @@ def GraphToDot(g: nx.Graph,
                node_label: KeyOrCallback = _NodeLabel,
                node_shape: StringOrCallback = _NodeShape,
                node_color: StringOrCallback = 'white',
-               edge_label: KeyOrCallback = 'null',
+               edge_label: KeyOrCallback = 'position',
                edge_color: StringOrCallback = _EdgeColor,
                edge_style: StringOrCallback = 'solid') -> str:
   """Render the dot visualization of the graph.
