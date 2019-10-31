@@ -116,7 +116,8 @@ class BytecodeDatabaseExporterBase(object):
       workers = (_Worker(job) for job in jobs)
 
     job_count = 0
-    with sqlutil.BufferedDatabaseWriter(self.graph_db).Session() as writer:
+    with sqlutil.BufferedDatabaseWriter(self.graph_db,
+                                        max_queue=8).Session() as writer:
       for graph_metas in workers:
         exported_count += len(graph_metas)
         job_count += 1
