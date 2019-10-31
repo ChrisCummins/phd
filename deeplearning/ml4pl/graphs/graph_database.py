@@ -71,6 +71,10 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
                                                 default=0,
                                                 nullable=False)
 
+  # The loop connectedness (loop depth) of the graph. This is the largest number
+  # of back edges found in any cycle-free path of the full flow graph.
+  loop_connectedness: int = sql.Column(sql.Integer, nullable=False)
+
   # The minimum number of message passing steps that are be required to produce
   # the labels from the features. E.g. for graph flooding problems, this value
   # will be the diameter of the graph.
