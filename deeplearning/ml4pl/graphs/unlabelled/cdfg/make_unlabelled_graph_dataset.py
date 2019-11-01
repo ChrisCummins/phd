@@ -1,9 +1,10 @@
 """This module produces datasets of unlabelled graphs."""
 import pathlib
-import pickle
 import sys
 import traceback
 import typing
+
+from labm8 import app
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
@@ -12,7 +13,6 @@ from deeplearning.ml4pl.graphs.labelled import \
   make_data_flow_analysis_dataset as make_dataset
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
-from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -66,19 +66,7 @@ def _ProcessBytecodeJob(
     if not len(edge_type_count):
       raise ValueError("Graph has no edges")
 
-    graph_meta = graph_database.GraphMeta(
-        bytecode_id=str(bytecode_id),
-        source_name=source_name,
-        relpath=relpath,
-        language=language,
-        node_count=graph.number_of_nodes(),
-        edge_count=graph.number_of_edges(),
-        node_type_count=len(node_types),
-        edge_type_count=len(edge_type_count),
-        graph=graph_database.Graph(data=pickle.dumps(graph)),
-    )
-
-    return [graph_meta]
+    return [graph_database.GraphMeta.CreateFromNetworkX(graph)]
   except Exception as e:
     _, _, tb = sys.exc_info()
     tb = traceback.extract_tb(tb, 2)
