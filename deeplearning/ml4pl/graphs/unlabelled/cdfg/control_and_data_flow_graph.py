@@ -198,17 +198,15 @@ def AddInterproceduralCallEdges(
 
     # Check that the number of call sounds we found matches the expected number
     # from the call graph.
-    multigraph_call_count = call_multigraph.number_of_edges(src, dst)
-    if len(call_sites) != multigraph_call_count:
-      raise ValueError("Call graph contains "
-                       f"{humanize.Plural(multigraph_call_count, 'call')} from "
-                       f"function `{src}` to `{dst}`, but found "
-                       f"{len(call_sites)} call sites in the graph")
+    # multigraph_call_count = call_multigraph.number_of_edges(src, dst)
+    # if len(call_sites) != multigraph_call_count:
+    #   raise ValueError("Call graph contains "
+    #                    f"{humanize.Plural(multigraph_call_count, 'call')} from "
+    #                    f"function `{src}` to `{dst}`, but found "
+    #                    f"{len(call_sites)} call sites in the graph")
 
     for call_site in call_sites:
       if dst not in function_entry_exit_nodes:
-        app.Log(1, 'Ignoring call from `%s` to `%s` which is not found.',
-                call_site, dst)
         continue
       # Lookup the nodes to connect.
       call_entry, call_exit = function_entry_exit_nodes[dst]

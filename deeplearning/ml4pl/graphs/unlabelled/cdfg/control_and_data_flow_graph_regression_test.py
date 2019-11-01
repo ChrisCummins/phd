@@ -27,5 +27,10 @@ def test_105975(builder: cdfg.ControlAndDataFlowGraphBuilder):
   builder.Build(fs.Read(REGRESSION_TESTS / '105975.ll'))
 
 
+def test_115532(builder: cdfg.ControlAndDataFlowGraphBuilder):
+  """Number of callsites does not correlate with callgraph."""
+  builder.Build(fs.Read(REGRESSION_TESTS / '115532.ll'))
+
+
 if __name__ == '__main__':
   test.Main()
