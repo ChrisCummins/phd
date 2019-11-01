@@ -48,8 +48,8 @@ app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_string(
-    "embeddings", "inst2vec",
-    "The type of embeddings to use. One of: {inst2vec,finetune,random}.")
+    "embeddings", "constant",
+    "The type of embeddings to use. One of: {constant,finetune,random}.")
 classifier_base.MODEL_FLAGS.add("embeddings")
 
 app.DEFINE_boolean(
