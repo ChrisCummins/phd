@@ -5,11 +5,11 @@ import typing
 import numpy as np
 import sklearn.model_selection
 import sqlalchemy as sql
-
-from deeplearning.ml4pl.bytecode import bytecode_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
+
+from deeplearning.ml4pl.bytecode import bytecode_database
 
 FLAGS = app.FLAGS
 
@@ -23,10 +23,10 @@ app.DEFINE_integer(
     '0, there is no limit.')
 
 
-def GetTrainValTestGroups(db: bytecode_database.Database,
-                          train_val_test_ratio: typing.Iterable[float] = (3, 1,
-                                                                          1)
-                         ) -> typing.Dict[str, typing.List[int]]:
+def GetTrainValTestGroups(
+    db: bytecode_database.Database,
+    train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
+) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
 
   This concatenates the POJ-104 sources with the other sources split into
@@ -50,7 +50,8 @@ def GetTrainValTestGroups(db: bytecode_database.Database,
     poj104 = GetPoj104BytecodeGroups(db)
 
     # Get the bytecode IDs of non-POJ-104
-    num_bytecodes = s.query(sql.func.count(bytecode_database.LlvmBytecode.id))\
+    num_bytecodes = s.query(sql.func.count(bytecode_database.LlvmBytecode.id)) \
+      .filter(bytecode_database.LlvmBytecode.clang_returncode == 0) \
       .filter(~bytecode_database.LlvmBytecode.source_name.like('poj-104:%'))\
       .one()[0]
     train_val_test_counts = np.floor(ratios * num_bytecodes).astype(np.int32)
@@ -62,6 +63,7 @@ def GetTrainValTestGroups(db: bytecode_database.Database,
             humanize.Commas(train_val_test_counts[2] + len(poj104['test'])))
 
     q = s.query(bytecode_database.LlvmBytecode.id) \
+      .filter(bytecode_database.LlvmBytecode.clang_returncode == 0) \
       .filter(~bytecode_database.LlvmBytecode.source_name.like('poj-104:%'))\
       .order_by(db.Random())
     ids = [r[0] for r in q]
@@ -83,7 +85,9 @@ def GetPoj104BytecodeGroups(db: bytecode_database.Database,
   def GetBytecodeIds(filter_cb) -> typing.List[int]:
     """Return the bytecode IDs from the given filtered query."""
     with db.Session() as session:
-      q = session.query(bytecode_database.LlvmBytecode.id).filter(filter_cb())
+      q = session.query(bytecode_database.LlvmBytecode.id) \
+        .filter(bytecode_database.LlvmBytecode.clang_returncode == 0) \
+        .filter(filter_cb())
       return [r[0] for r in q]
 
   train = lambda: bytecode_database.LlvmBytecode.source_name == 'poj-104:train'
@@ -101,11 +105,10 @@ def GetPact17BytecodeGroups(
   """Get the bytecode IDs for the PACT'17 device mapping experiment."""
 
   with db.Session() as session:
-    all_ids = [
-        r[0] for r in session.query(bytecode_database.LlvmBytecode.id).filter(
-            bytecode_database.LlvmBytecode.source_name ==
-            'pact17_opencl_devmap')
-    ]
+    query = session.query(bytecode_database.LlvmBytecode.id) \
+      .filter(bytecode_database.LlvmBytecode.clang_returncode == 0) \
+      .filter(bytecode_database.LlvmBytecode.source_name == 'pact17_opencl_devmap')
+    all_ids = [r[0] for r in query]
   folds = sklearn.model_selection.KFold(all_ids)
   return {f'{k}': test for i, (train, test) in enumerate(folds)}
 
@@ -146,8 +149,8 @@ def GetGroupsFromFlags(
   with prof.Profile(f'Read {FLAGS.bytecode_split_type} groups from database'):
     train_val_test_ratio = [float(x) for x in FLAGS.train_val_test_ratio]
     if FLAGS.bytecode_split_type == 'all':
-      return ApplySplitSizeLimit(
-          GetTrainValTestGroups(db, train_val_test_ratio))
+      return ApplySplitSizeLimit(GetTrainValTestGroups(db,
+                                                       train_val_test_ratio))
     elif FLAGS.bytecode_split_type == 'poj104':
       return ApplySplitSizeLimit(GetPoj104BytecodeGroups(db))
     elif FLAGS.bytecode_split_type == 'pact17':
