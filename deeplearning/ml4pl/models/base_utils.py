@@ -1,6 +1,9 @@
 from typing import Union, List
 
 import numpy as np
+from labm8 import app
+
+FLAGS = app.FLAGS
 
 def pos_emb(position: Union[int, List[int], np.array], demb: int = 200):
     """Transformer-like sinusoidal positional embeddings.
