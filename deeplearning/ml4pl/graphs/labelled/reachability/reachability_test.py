@@ -54,7 +54,7 @@ def test_SetReachableNodes_node_y(graph):
   _ = reachability.SetReachableNodes(graph, 'B')
   assert not graph.nodes['A']['y']
   assert graph.nodes['B']['y']
-  assert not graph.nodes['C']['y']
+  assert graph.nodes['C']['y']
   assert graph.nodes['D']['y']
 
 
