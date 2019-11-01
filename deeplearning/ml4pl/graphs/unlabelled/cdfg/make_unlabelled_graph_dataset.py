@@ -65,10 +65,10 @@ def _ProcessBytecodeJob(
     if not len(edge_type_count):
       raise ValueError("Graph has no edges")
 
-    return [
-        graph_database.GraphMeta.CreateFromNetworkX(graph,
-                                                    {'call', 'control', 'data'})
-    ]
+    graph_meta = graph_database.GraphMeta.CreateFromNetworkX(graph)
+    app.Log(1, "Produced graph for bytecode %s with %s nodes",
+            graph_meta.bytecode_id, graph_meta.node_count)
+    return [graph_meta]
   except Exception as e:
     _, _, tb = sys.exc_info()
     tb = traceback.extract_tb(tb, 2)
