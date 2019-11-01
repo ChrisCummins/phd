@@ -215,3 +215,14 @@ class Database(sqlutil.Database):
 
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
+
+  def SetNodeEmbeddingTable(self, embedding_table: np.array) -> None:
+    """Set the node embedding table."""
+    with self.Session() as session:
+      if session.query(EmbeddingTable)\
+          .filter(EmbeddingTable.key == 'node_x')\
+          .first():
+        return
+      session.add(
+          EmbeddingTable.CreateFromNumpyArray(embedding_table, key='node_x'))
+      session.commit()

@@ -30,6 +30,9 @@ FLAGS = app.FLAGS
 DICTIONARY = bazelutil.DataPath(
     'phd/deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings/inst2vec_augmented_dictionary.pickle'
 )
+EMBEDDINGS = bazelutil.DataPath(
+    'phd/deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings/inst2vec_augmented_embeddings.pickle'
+)
 
 
 def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
@@ -257,6 +260,11 @@ class ControlAndDataFlowGraphBuilder(object):
         only_add_entry_and_exit_blocks_if_required)
     self.call_edge_returns_to_successor = call_edge_returns_to_successor
     self.store_destination_is_def = store_destination_is_def
+
+  @decorators.memoized_property
+  def embeddings_table(self) -> np.array:
+    with open(EMBEDDINGS, 'rb') as f:
+      return pickle.load(f)
 
   def MaybePreprocessStatementText(self, g: nx.Graph) -> None:
     """Replace 'text' statement attributes with inst2vec preprocessed.

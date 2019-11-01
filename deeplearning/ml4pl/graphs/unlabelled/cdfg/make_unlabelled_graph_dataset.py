@@ -83,6 +83,15 @@ def _ProcessBytecodeJob(
 class BytecodeExporter(database_exporters.BytecodeDatabaseExporterBase):
   """Export from LLVM bytecodes."""
 
+  def __init__(self, *args, **kwargs):
+    super(BytecodeExporter, self).__init__(*args, **kwargs)
+    builder = cdfg.ControlAndDataFlowGraphBuilder(
+        dataflow='nodes_and_edges',
+        preprocess_text=True,
+        discard_unknown_statements=False,
+    )
+    self.graph_db.SetNodeEmbeddingTable(builder.embeddings)
+
   def GetMakeExportJob(self):
     return _MakeBytecodeExportJob
 
