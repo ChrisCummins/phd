@@ -21,7 +21,7 @@ FLAGS = app.FLAGS
 app.DEFINE_boolean('multiprocess_database_exporters', True,
                    'Enable multiprocessing for database job workers.')
 app.DEFINE_integer(
-    'database_exporter_batch_size', 1024,
+    'database_exporter_batch_size', 32,
     'The number of bytecodes to process in-memory before writing'
     'to database.')
 app.DEFINE_integer(
