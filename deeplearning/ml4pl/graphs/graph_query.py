@@ -4,10 +4,10 @@ import random
 import typing
 
 import networkx as nx
-from labm8 import app
 
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
+from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -23,9 +23,8 @@ def StatementNeighbors(
   direction = direction or (lambda src, dst: dst)
   neighbors = set()
   neighbor_edges = direction(g.in_edges, g.out_edges)
-  for src, dst, edge_flow in neighbor_edges(node,
-                                            data='flow',
-                                            default='control'):
+  for src, dst, edge_flow in neighbor_edges(
+      node, data='flow', default='control'):
     neighbor = direction(src, dst)
     if edge_flow == flow:
       if g.nodes[neighbor].get('type', 'statement') == 'statement':
@@ -102,9 +101,8 @@ def GetCallStatementSuccessor(graph: nx.MultiDiGraph, call_site: str) -> str:
     ValueError: If call site does not have exactly one successor.
   """
   call_site_successors = []
-  for src, dst, flow in graph.out_edges(call_site,
-                                        data='flow',
-                                        default='control'):
+  for src, dst, flow in graph.out_edges(
+      call_site, data='flow', default='control'):
     if (flow == 'control' and
         graph.nodes[dst].get('type', 'statement') == 'statement'):
       call_site_successors.append(dst)
@@ -176,4 +174,4 @@ def LoopConnetedness(graph) -> int:
     A non-negative loop connectedness value.
   """
   entries = [dst for _, dst in graph.out_edges('root')]
-  return max([_LoopConnectedness(graph, entry) for entry in entries] or 0)
+  return max([_LoopConnectedness(graph, entry) for entry in entries] or [0])
