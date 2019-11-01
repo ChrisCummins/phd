@@ -1,10 +1,14 @@
 """A module which defines a base class for implementing database exporters."""
 import math
 import multiprocessing
+import pathlib
+import random
+import tempfile
 import time
 import typing
 
 from labm8 import app
+from labm8 import fs
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
@@ -232,3 +236,32 @@ def _GraphWorker(packed_args):
                                f"input graphs/sec)")):
     with graph_database.Database(graph_db_url).Session() as session:
       return job_processor(session, bytecode_ids)
+
+
+def Run(input_db, output_db, run_export):
+  """Run an exporter."""
+  # Temporarily redirect logs to a file, which we will later import into the
+  # database's meta table.
+  with tempfile.TemporaryDirectory() as d:
+    app.LogToDirectory(d, 'log')
+
+    # Record the number of instances per graph that we're generating.
+    app.Log(1, 'Generating up to %s instances per graph',
+            FLAGS.max_instances_per_graph)
+    with output_db.Session(commit=True) as s:
+      s.query(graph_database.Meta).filter(
+          graph_database.Meta.key == 'max_instances_per_graph').delete()
+      s.add(
+          graph_database.Meta(key='max_instances_per_graph',
+                              value=str(FLAGS.max_instances_per_graph)))
+
+    app.Log(1, 'Seeding with %s', FLAGS.seed)
+    random.seed(FLAGS.seed)
+
+    run_export(input_db, output_db)
+
+    log = fs.Read(pathlib.Path(d) / 'log.INFO')
+    with output_db.Session(commit=True) as s:
+      s.query(graph_database.Meta).filter(
+          graph_database.Meta.key == 'log').delete()
+      s.add(graph_database.Meta(key='log', value=log))
