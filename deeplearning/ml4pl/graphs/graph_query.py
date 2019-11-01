@@ -176,4 +176,4 @@ def LoopConnetedness(graph) -> int:
     A non-negative loop connectedness value.
   """
   entries = [dst for _, dst in graph.out_edges('root')]
-  return max(_LoopConnectedness(graph, entry) for entry in entries)
+  return max([_LoopConnectedness(graph, entry) for entry in entries] or 0)
