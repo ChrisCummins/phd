@@ -9,6 +9,8 @@ from labm8 import app
 from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
+  graph_tuple as graph_tuples
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base
 
@@ -29,19 +31,18 @@ def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
             node_count=3,
             edge_count=2,
             edge_type_count=3,
-            edge_features_dimensionality=1,
             graph_labels_dimensionality=1,
-            graph=graph_database.Graph(data=pickle.dumps({
-                'adjacency_lists':
-                np.array([np.array([(
-                    0,
-                    1)]), np.array([(1, 2)]),
-                          np.array([])]),
-                'edge_x':
-                np.array([np.array([1]), np.array([2])]),
-                'graph_y':
-                np.array([1]),
-            }))))
+            edge_position_max=0,
+            loop_connectedness=0,
+            undirected_diameter=1,
+            graph=graph_database.Graph(pickled_data=pickle.dumps(
+                graph_tuples.GraphTuple(
+                    adjacency_lists=None,
+                    edge_positions=None,
+                    incoming_edge_counts=None,
+                    node_x_indices=None,
+                    graph_y=np.array(np.array([1], dtype=np.float32)),
+                )))))
   return db
 
 

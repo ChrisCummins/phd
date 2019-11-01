@@ -31,6 +31,7 @@ def test_BatchLog_columns(db: log_database.Database):
                                 f1=.5,
                                 accuracy=.75,
                                 group="train",
+                                is_training=True,
                                 instances=log_database.Instances())
     log.graph_indices = [0, 1, 2, 3]
     log.predictions = np.array([0, 1, 2, 3])

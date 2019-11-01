@@ -26,6 +26,7 @@ def db_512(tempdir: pathlib.Path) -> bytecode_database.Database:
             bytecode='',
             clang_returncode=0,
             error_message='',
+            bytecode_sha1='',
         ) for _ in range(512)
     ])
   return db
@@ -68,6 +69,7 @@ def db_poj104(tempdir: pathlib.Path) -> bytecode_database.Database:
         bytecode='',
         clang_returncode=0,
         error_message='',
+        bytecode_sha1='',
     )
 
   db = bytecode_database.Database(f'sqlite:///{tempdir}/db')
