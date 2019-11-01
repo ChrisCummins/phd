@@ -22,6 +22,7 @@ py_library(
         "//labm8:humanize",
         "//labm8:prof",
         "//third_party/py/numpy",
+        "//third_party/py/scikit_learn",
         "//third_party/py/sqlalchemy",
     ],
 )
