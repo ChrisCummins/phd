@@ -169,8 +169,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       message_edge_types.append(
           tf.ones_like(edge_targets, dtype=tf.int32) * edge_type)
 
-    message_targets = tf.concat(message_targets, axis=0)  # Shape [M]
-    message_edge_types = tf.concat(message_edge_types, axis=0)  # Shape [M]
+    message_targets = tf.concat(message_targets, axis=0, name='message_targets')  # Shape [M]
+    message_edge_types = tf.concat(message_edge_types, axis=0, name='message_edge_types')  # Shape [M]
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       with tf.compat.v1.variable_scope(f"gnn_layer_{layer_idx}"):
@@ -311,7 +311,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       out_layer_dropout = None
 
     labels_dimensionality = self.stats.node_labels_dimensionality if self.placeholders.get('node_y') is not None else self.stats.graph_labels_dimensionality
-
+    labels_dimensionality = 2
     predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
         initial_node_state=node_states_per_layer[0],
         final_node_state=self.ops["final_node_x"],
@@ -355,7 +355,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         targets = tf.argmax(
             self.placeholders["node_y"], axis=1, output_type=tf.int32)
     else: #broken labels
-        raise
+        assert False
 
     argmaxed_predictions = tf.argmax(predictions, axis=1, output_type=tf.int32)
     accuracies = tf.equal(argmaxed_predictions, targets)
@@ -373,7 +373,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
                                            argmaxed_predictions)
     else:
-        raise
+        assert False
 
     return loss, accuracies, accuracy, predictions
 
@@ -391,7 +391,6 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       #      (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
       #     "constant",
       # )
-      batch['node_x'] = batch['node_x'][:, 0]
 
       feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
 
@@ -415,7 +414,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             1.0,
             self.placeholders["is_training"]: False,
         })
-      yield batch['log'], feed_dict
+      yield batch.log, feed_dict
 
   def MakeModularGraphOps(self):
     assert self.weights['regression_gate'] and self.weights['regression_transform'], \

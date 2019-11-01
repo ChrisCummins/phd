@@ -152,18 +152,17 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
       "output_layer_dropout_keep_prob":
       tf.compat.v1.placeholder(tf.float32, [],
                                name="output_layer_dropout_keep_prob"),
-      "is_training": tf.compat.v1.placeholder(dtype=tf.bool, shape=[])
+      "is_training": tf.compat.v1.placeholder(dtype=tf.bool, shape=[]),
+      "edge_positions": tf.compat.v1.placeholder(dtype=tf.int32, shape=[None]),
   }
 
-  if stats.node_features_dimensionality:
+  if stats.node_embedding_dimensionality:
     placeholders['node_x'] = tf.compat.v1.placeholder(
-        stats.node_features_dtype,
-        # TODO(cec): This is hardcoded to padded node features.
-        # It should be stats.node_features_dimensionality.
-        [None],
+        dtype=tf.int32,
+        shape=[None],
         name="node_x")
     placeholders['raw_node_output_features'] = tf.compat.v1.placeholder(
-      stats.node_features_dtype,
+      stats.node_embedding_dtype,
       [None, FLAGS.hidden_size],
       name="raw_node_output_features")
 
@@ -172,14 +171,16 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
         stats.node_labels_dtype, [None, stats.node_labels_dimensionality],
         name="node_y")
 
-  if stats.graph_features_dimensionality:
+  if stats.node_embedding_dimensionality:
     placeholders['graph_x'] = tf.compat.v1.placeholder(
         stats.graph_features_dtype, [None, stats.graph_features_dimensionality],
         name="graph_x")
 
-  if stats.graph_labels_dimensionality:
+  #if stats.graph_labels_dimensionality:
+  if 2:
     placeholders['graph_y'] = tf.compat.v1.placeholder(
-        stats.graph_labels_dtype, [None, stats.graph_labels_dimensionality],
+        #stats.graph_labels_dtype, [None, stats.graph_labels_dimensionality],
+        stats.graph_labels_dtype, [None, 2],
         name="graph_y")
 
   return placeholders
@@ -201,37 +202,37 @@ def BatchDictToFeedDict(
     The batch dictionary values, re-keyed by the corresponding values in the
     placeholders dictionary.
   """
-  edge_type_count = len(batch['adjacency_lists'])
+  edge_type_count = len(batch.adjacency_lists)
 
   feed_dict = {
-      placeholders["incoming_edge_counts"]: batch['incoming_edge_counts'],
-      placeholders['graph_nodes_list']: batch['graph_nodes_list'],
-      placeholders["graph_count"]: batch['graph_count'],
-      placeholders["node_count"]: batch['node_count'],
+      placeholders["incoming_edge_counts"]: batch.incoming_edge_counts,
+      placeholders['graph_nodes_list']: batch.graph_nodes_list,
+      placeholders["graph_count"]: batch.graph_count,
+      placeholders["node_count"]: batch.node_count,
+      placeholders["node_x"]: batch.node_x_indices,
   }
 
   for i in range(edge_type_count):
-    feed_dict[placeholders["adjacency_lists"][i]] = batch['adjacency_lists'][i]
+    feed_dict[placeholders["adjacency_lists"][i]] = batch.adjacency_lists[i]
 
-  if 'node_x' in batch:
-    feed_dict[placeholders["node_x"]] = batch['node_x']
 
-  if 'node_y' in batch:
-    feed_dict[placeholders["node_y"]] = batch['node_y']
 
-  if 'edge_x' in batch:
+  if batch.has_node_y:
+    feed_dict[placeholders["node_y"]] = batch.node_y
+
+  if batch.has_edge_positions:
     for i in range(edge_type_count):
-      feed_dict[placeholders["edge_x"][i]] = batch['edge_x'][i]
+      feed_dict[placeholders["edge_positions"][i]] = batch.edge_positions[i]
 
-  if 'edge_y' in batch:
-    for i in range(edge_type_count):
-      feed_dict[placeholders["edge_y"][i]] = batch['edge_y'][i]
+  #if batch.has_edge_y:
+  #  for i in range(edge_type_count):
+  #    feed_dict[placeholders["edge_y"][i]] = batch.edge_y[i]
 
-  if 'graph_x' in batch:
-    feed_dict[placeholders["graph_x"]] = batch['graph_x']
+  if batch.has_graph_x:
+    feed_dict[placeholders["graph_x"]] = batch.graph_x
 
-  if 'graph_y' in batch:
-    feed_dict[placeholders["graph_y"]] = batch['graph_y']
+  if batch.has_graph_y:
+    feed_dict[placeholders["graph_y"]] = batch.graph_y
 
   return feed_dict
 
