@@ -125,14 +125,9 @@ def test_GetLlvmStatementDefAndUses():
   assert def_ == ''
   assert uses == ['%6', '%7', '%8']
 
-
-@pytest.mark.xfail(reason='the code sucks')
-def test_GetLlvmStatementDefAndUses():
   statement = 'store float 0x40C80C0F60000000, float* %4, align 4'
   def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
   assert def_ == ''
-  # TODO(cec): GetLlvmStatementDefAndUses() returns an additional integer
-  # operand: ['0x40C80C0F60000000', '0', '%4']
   assert uses == ['0x40C80C0F60000000', '%4']
 
 

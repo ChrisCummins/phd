@@ -5,6 +5,7 @@ instructions, and edges show control and data flow. They are constructed from an
 LLVM module.
 """
 import copy
+import difflib
 import itertools
 import re
 import typing
@@ -35,6 +36,43 @@ def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
       f"Unable to find `alloca` statement for identifier `{identifier}`")
 
 
+def StripIdentifiersAndImmediates(stmt: str) -> str:
+  """This is a copy of inst2vec_preprocess.PreprocessStatement(), but instead
+  of substituting placeholders values, immediates and labels are removed
+  entirely from the string.
+  """
+  # Remove local identifiers
+  stmt = re.sub(rgx.local_id, '', stmt)
+  # Global identifiers
+  stmt = re.sub(rgx.global_id, '', stmt)
+  # Remove labels
+  if re.match(r'; <label>:\d+:?(\s+; preds = )?', stmt):
+    stmt = re.sub(r":\d+", ":", stmt)
+  elif re.match(rgx.local_id_no_perc + r':(\s+; preds = )?', stmt):
+    stmt = re.sub(rgx.local_id_no_perc + ':', ":", stmt)
+
+  # Remove floating point values
+  stmt = re.sub(rgx.immediate_value_float_hexa, "", stmt)
+  stmt = re.sub(rgx.immediate_value_float_sci, "", stmt)
+
+  # Remove integer values
+  if (re.match("<%ID> = extractelement", stmt) is None and
+      re.match("<%ID> = extractvalue", stmt) is None and
+      re.match("<%ID> = insertelement", stmt) is None and
+      re.match("<%ID> = insertvalue", stmt) is None):
+    stmt = re.sub(r'(?<!align)(?<!\[) ' + rgx.immediate_value_int, " ", stmt)
+
+  # Remove string values
+  stmt = re.sub(rgx.immediate_value_string, " ", stmt)
+
+  # Remove index types
+  if (re.match(" = extractelement", stmt) is not None or
+      re.match(" = insertelement", stmt) is not None):
+    stmt = re.sub(r'i\d+ ', ' ', stmt)
+
+  return stmt
+
+
 def GetLlvmStatementDefAndUses(statement: str,
                                store_destination_is_def: bool = False
                               ) -> typing.Tuple[str, typing.List[str]]:
@@ -46,90 +84,26 @@ def GetLlvmStatementDefAndUses(statement: str,
   if '=' in statement:
     destination, statement = statement.split('=')
 
-  ############################
-  # Find identifiers, adapted from
-  # inst2vec_preprocess.get_identifiers_from_line().
-  #
-  # Find label nodes
-  m_label = []
-  m_label2 = []
+  # Strip the identifiers and immediates from the statement, then use the
+  # diff to construct the set of identifiers and immediates that were stripped.
+  stripped = StripIdentifiersAndImmediates(statement)
+  tokens = []
 
-  if (statement.find('label') is not -1 or
-      re.match(rgx.local_id_no_perc + r':', statement)):
-    m_label1 = re.findall('label (' + rgx.local_id + ')', statement)
-    if re.match(r'; <label>:' + rgx.local_id_no_perc + ':\s+', statement):
-      m_label2 = re.findall('<label>:(' + rgx.local_id_no_perc + '):',
-                            statement)
-    elif 'invoke ' in statement:
-      m_label2 = re.findall('label (' + rgx.local_id_no_perc + ')', statement)
-    else:
-      m_label2 = re.findall('<label>:(' + rgx.local_id_no_perc + ')', statement) + \
-                 re.findall(r'(' + rgx.local_id_no_perc + r'):', statement)
-    for i in range(len(m_label2)):
-      # put the '%' back in
-      m_label2[i] = '%' + m_label2[i]
-    m_label = m_label1 + m_label2
+  last_token = []
+  last_index = -1
+  for i, diff in enumerate(difflib.ndiff(statement, stripped)):
+    if diff[0] == '-':
+      if i != last_index + 1 and last_token:
+        tokens.append(''.join(last_token))
+        last_token = []
 
-  # Find local identifier nodes
-  modif_line = re.sub(r'\"[^\s]*\"', '', statement)
-  local_identifiers = sorted(re.findall(rgx.local_id, modif_line))
+      last_token.append(diff[-1])
+      last_index = i
 
-  # Remove what is actually an aggregate type and not a local identifier
-  if len(local_identifiers) > 0:
-    to_remove = []
-    for m in local_identifiers:
-      if m + '*' in statement:
-        to_remove.append(m)
-      if m[:2] == '%"':
-        to_remove.append(m)
-      if ' = phi ' + m in statement:
-        to_remove.append(m)
-      if ' x ' + m in statement:
-        to_remove.append(m)
-      if ' alloca ' + m in statement:
-        to_remove.append(m)
-    if len(to_remove) > 0:
-      local_identifiers = [m for m in local_identifiers if m not in to_remove]
+  if last_token:
+    tokens.append(''.join(last_token))
 
-  # Find global identifier nodes
-  m_glob = re.findall(rgx.global_id, statement)
-
-  # Remove label nodes from local nodes (they overlap)
-  if len(m_label) > 0:
-    local_identifiers = list(set(local_identifiers) - set(m_label))
-
-  ##########################
-  # Extract immediate values, adapted from
-  # inst2vec_preprocess.PreprocessStatement()
-  immediates = []
-
-  # Extract floating point immediates.
-  immediates += re.findall(rgx.immediate_value_float_hexa, statement)
-  immediates += re.findall(rgx.immediate_value_float_sci, statement)
-
-  # Find integer values
-  if ("extractelement" not in statement and "extractvalue" not in statement and
-      "insertelement" not in statement and "insertvalue" not in statement):
-    immediates += re.findall(r'(?<!align)(?<!\[) ' + rgx.immediate_value_int,
-                             statement)
-
-  # Extract string values
-  immediates += re.findall(rgx.immediate_value_string, statement)
-
-  # TODO(cec): Sorting on the literal values is too crude.
-  # Return the operands ordered by their appearance in the string.
-  identifiers = local_identifiers + m_glob + m_label + m_label2
-  strip = lambda strings: (s.strip() for s in strings)
-  operands = sorted(strip(identifiers + immediates),
-                    key=lambda x: statement.index(x))
-
-  # Store is a special case because it doesn't have an LHS, but writes to one
-  # of its operands. If store_destination_is_output == True, then the
-  # destination of store statements have both an in- and out-flow edge.
-  if store_destination_is_def and statement.startswith('store '):
-    destination = operands[-1]
-
-  return destination.strip(), operands
+  return destination.strip(), tokens
 
 
 def MakeUndefinedFunctionGraph(function_name: str) -> nx.MultiDiGraph:
