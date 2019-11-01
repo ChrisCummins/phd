@@ -15,8 +15,8 @@ from labm8 import pbutil
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.bytecode import splitters
+from deeplearning.ml4pl.graphs import database_exporters
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled import database_exporters
 from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
 from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
