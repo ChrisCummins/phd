@@ -7,11 +7,13 @@ LLVM module.
 import copy
 import difflib
 import itertools
+import pickle
 import re
 import typing
 
 import networkx as nx
 from labm8 import app
+from labm8 import bazelutil
 from labm8 import decorators
 from labm8 import humanize
 
@@ -24,6 +26,10 @@ from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
 
 FLAGS = app.FLAGS
+
+DICTIONARY = bazelutil.DataPath(
+    'phd/deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings/inst2vec_augmented_dictionary.pickle'
+)
 
 
 def GetAllocationStatementForIdentifier(g: nx.Graph, identifier: str) -> str:
@@ -208,7 +214,8 @@ class ControlAndDataFlowGraphBuilder(object):
                discard_unknown_statements: bool = False,
                only_add_entry_and_exit_blocks_if_required: bool = True,
                call_edge_returns_to_successor: bool = False,
-               store_destination_is_def: bool = False):
+               store_destination_is_def: bool = False,
+               dictionary: typing.Optional[typing.Dict[str, int]] = None):
     """Instantiate a Control and Data Flow Graph (CDFG) builder.
 
     Args:
@@ -235,7 +242,14 @@ class ControlAndDataFlowGraphBuilder(object):
       store_destination_is_def: If True, the destination operand of store
         statements is treated as an assignment, meaning that a data flow out
         edge will be inserted.
+      dictionary: The dictionary to use.
     """
+    if dictionary is None:
+      with open(DICTIONARY, 'rb') as f:
+        self.dictionary = pickle.load(f)
+    else:
+      self.dictionary = dictionary
+
     self.dataflow = dataflow
     self.preprocess_text = preprocess_text
     self.discard_unknown_statements = discard_unknown_statements
@@ -277,12 +291,14 @@ class ControlAndDataFlowGraphBuilder(object):
         data['original_text'] = data['text']
         data['text'] = text
         data['type'] = 'statement'
+        data['x'] = self.DictionaryLookup(data['text'])
       elif self.discard_unknown_statements:
         nodes_to_remove.add(node)
       else:
         data['original_text'] = data['text']
         data['text'] = 'UNK!'
         data['type'] = 'statement'
+        data['x'] = self.DictionaryLookup(data['text'])
 
     # Delete the nodes that have been discarded by preprocessing, and re-connect
     # any edges that flow through the nodes.
@@ -324,7 +340,10 @@ class ControlAndDataFlowGraphBuilder(object):
       entry_block = entry_blocks[0][0]
     else:
       entry_block = f'{g.name}_entry'
-      g.add_node(entry_block, name=entry_block, type='magic')
+      g.add_node(entry_block,
+                 name=entry_block,
+                 type='magic',
+                 x=self.dictionary['!MAGIC'])
       for node, data in entry_blocks:
         g.add_edge(entry_block, node, flow='control')
     g.entry_block = entry_block
@@ -344,7 +363,10 @@ class ControlAndDataFlowGraphBuilder(object):
       exit_block = exit_blocks[0][0]
     else:
       exit_block = f'{g.name}_exit'
-      g.add_node(exit_block, name=exit_block, type='magic')
+      g.add_node(exit_block,
+                 name=exit_block,
+                 type='magic',
+                 x=self.dictionary['!MAGIC'])
       # Connect exit blocks.
       for node, data in exit_blocks:
         g.add_edge(node, exit_block, flow='control')
@@ -381,8 +403,16 @@ class ControlAndDataFlowGraphBuilder(object):
     for src, dst, identifier, position, name in edges_to_add:
       g.add_edge(src, dst, flow='data', position=position)
       node = g.nodes[identifier]
+      # TODO(cec): Consider separating !IDENTIFIER and !IMMEDIATE nodes.
       node['type'] = 'identifier'
       node['name'] = name
+      node['x'] = self.dictionary['!IDENTIFIER']
+
+  def DictionaryLookup(self, statement: str) -> int:
+    if statement in self.dictionary:
+      return self.dictionary[statement]
+    else:
+      return self.dictionary['!UNK']
 
   @decorators.timeout(120)
   def BuildFromControlFlowGraph(
@@ -447,9 +477,12 @@ class ControlAndDataFlowGraphBuilder(object):
 
     function_graph_map = {g.name: g for g in function_graphs}
 
-    # Create the interprocedural graph with a magic root node.
+    # Create the inter-procedural graph with a magic root node.
     interprocedural_graph = nx.MultiDiGraph()
-    interprocedural_graph.add_node('root', name='root', type='magic')
+    interprocedural_graph.add_node('root',
+                                   name='root',
+                                   type='magic',
+                                   x=self.dictionary['!MAGIC'])
 
     # Add each function to the interprocedural graph.
     function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]] = {}

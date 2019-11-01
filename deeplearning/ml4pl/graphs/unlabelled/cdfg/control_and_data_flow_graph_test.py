@@ -89,6 +89,15 @@ def test_every_edge_has_position(simple_bytecode: str):
     ), f'No position for edge {graph.nodes[src]["original_text"]} -> {graph.nodes[dst]["original_text"]}'
 
 
+def test_every_node_has_x(simple_bytecode: str):
+  """Test that every edge has a position encoding."""
+  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  graph = builder.Build(simple_bytecode)
+  for node, x in graph.nodes(data='x'):
+    assert isinstance(
+        x, int), f'No x for node {graph.nodes[node]["original_text"]}'
+
+
 def test_GetLlvmStatementDefAndUses():
   statement = '%1 = alloca i32, align 4'
   def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)

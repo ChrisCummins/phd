@@ -3,6 +3,7 @@
 py_library(
     name = "control_and_data_flow_graph",
     srcs = ["control_and_data_flow_graph.py"],
+    data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings:dictionary"],
     visibility = ["//visibility:public"],
     deps = [
         "//compilers/llvm:opt_util",
