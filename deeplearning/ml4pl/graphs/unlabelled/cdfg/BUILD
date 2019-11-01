@@ -36,6 +36,19 @@ py_test(
     ],
 )
 
+py_test(
+    name = "control_and_data_flow_graph_regression_test",
+    srcs = ["control_and_data_flow_graph_regression_test.py"],
+    data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/regression_tests:bytecodes"],
+    deps = [
+        ":control_and_data_flow_graph",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
 py_binary(
     name = "make_unlabelled_graph_dataset",
     srcs = ["make_unlabelled_graph_dataset.py"],
