@@ -4,16 +4,25 @@ import sys
 import traceback
 import typing
 
-from labm8 import app
-
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.bytecode import splitters
 from deeplearning.ml4pl.graphs import database_exporters
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8 import app
 
 FLAGS = app.FLAGS
+
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None,
+    'URL of database to read bytecodes from.',
+    must_exist=True)
+app.DEFINE_database('graph_db', graph_database.Database,
+                    'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
+                    'URL of the database to write unlabelled graph tuples to.')
 
 
 def _ProcessInputs(
@@ -55,7 +64,7 @@ def _ProcessInputs(
   return graphs
 
 
-class UnlabelledGraphExporter(database_exporters.GraphDatabaseExporterBase):
+class UnlabelledGraphExporter(database_exporters.BytecodeDatabaseExporterBase):
   """Export unlabelled graphs."""
 
   def GetProcessInputs(self):
@@ -70,10 +79,7 @@ def _UnlabelledGraphExport(input_db, output_db):
 
 def main():
   """Main entry point."""
-  if not FLAGS.input_db:
-    raise app.UsageError('--db required')
-
-  database_exporters.Run(FLAGS.bytecode_db(), FLAGS.output_db(),
+  database_exporters.Run(FLAGS.bytecode_db(), FLAGS.graph_db(),
                          _UnlabelledGraphExport)
 
 

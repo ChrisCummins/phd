@@ -7,15 +7,14 @@ import tempfile
 import time
 import typing
 
+from deeplearning.ml4pl.bytecode import bytecode_database
+from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import fs
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
 from labm8 import sqlutil
-
-from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
@@ -25,6 +24,10 @@ app.DEFINE_integer(
     'database_exporter_batch_size', 1024,
     'The number of bytecodes to process in-memory before writing'
     'to database.')
+app.DEFINE_integer(
+    'seed', 0xCEC,
+    'The random seed value to use when shuffling graph statements when '
+    'selecting the root statement.')
 
 
 class DatabaseExporterBase(object):
@@ -99,15 +102,17 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
     # Ignore bytecodes that we have already exported.
     with self.graph_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id) \
-        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
+        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)) \
+        .order_by(self.graph_db.Random())
       already_done = [r.bytecode_id for r in query]
       app.Log(1, 'Skipping %s previously-exported bytecodes',
               humanize.Commas(len(already_done)))
       bytecode_ids = [b for b in bytecode_ids if b not in already_done]
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-                    self.batch_size)
+    chunksize = min(
+        max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
+        self.batch_size)
 
     bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
     jobs = [(job_processor, self.bytecode_db.url, bytecode_ids_chunk)
@@ -121,8 +126,8 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
       workers = (_BytecodeWorker(job) for job in jobs)
 
     job_count = 0
-    with sqlutil.BufferedDatabaseWriter(self.graph_db,
-                                        max_queue=8).Session() as writer:
+    with sqlutil.BufferedDatabaseWriter(
+        self.graph_db, max_queue=8).Session() as writer:
       for graph_metas in workers:
         exported_count += len(graph_metas)
         job_count += 1
@@ -176,7 +181,8 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
 
     # Get the bytecode IDs of the graphs to export.
     with self.input_db.Session() as session:
-      query = session.query(graph_database.GraphMeta.bytecode_id)
+      query = session.query(graph_database.GraphMeta.bytecode_id) \
+        .order_by(self.graph_db.Random())
       bytecode_ids = [row.bytecode_id for row in query]
 
     # Ignore bytecodes that we have already exported.
@@ -189,8 +195,9 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
       bytecode_ids = [b for b in bytecode_ids if b not in already_done]
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-                    self.batch_size)
+    chunksize = min(
+        max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
+        self.batch_size)
 
     bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
     jobs = [(job_processor, self.input_db.url, bytecode_ids_chunk)
@@ -204,8 +211,8 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
       workers = (_GraphWorker(job) for job in jobs)
 
     job_count = 0
-    with sqlutil.BufferedDatabaseWriter(self.output_db,
-                                        max_queue=8).Session() as writer:
+    with sqlutil.BufferedDatabaseWriter(
+        self.output_db, max_queue=8).Session() as writer:
       for graph_metas in workers:
         exported_graph_count += len(graph_metas)
         job_count += 1
