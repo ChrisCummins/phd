@@ -207,9 +207,8 @@ def AddInterproceduralCallEdges(
 
     for call_site in call_sites:
       if dst not in function_entry_exit_nodes:
-        app.Log(
-            1, 'Ignoring call from `{call_site}` to `{dst}` which is not'
-            'found.')
+        app.Log(1, 'Ignoring call from `%s` to `%s` which is not found.',
+                call_site, dst)
         continue
       # Lookup the nodes to connect.
       call_entry, call_exit = function_entry_exit_nodes[dst]
