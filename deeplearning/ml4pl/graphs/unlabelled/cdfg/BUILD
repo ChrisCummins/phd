@@ -55,8 +55,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//deeplearning/ml4pl/graphs:database_exporters",
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled:database_exporters",
         "//deeplearning/ml4pl/graphs/labelled:make_data_flow_analysis_dataset",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
         "//labm8:app",
