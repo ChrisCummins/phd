@@ -8,19 +8,6 @@ py_library(
 )
 
 py_test(
-    name = "ggnn_graph_classifier_smoke_test",
-    size = "enormous",
-    srcs = ["ggnn_graph_classifier_smoke_test.py"],
-    deps = [
-        ":smoke_test_base",
-        "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/models/ggnn:ggnn_graph_classifier",
-        "//labm8:app",
-        "//third_party/py/numpy",
-    ],
-)
-
-py_test(
     name = "ggnn_node_classifier_smoke_test",
     size = "enormous",
     srcs = ["ggnn_node_classifier_smoke_test.py"],
