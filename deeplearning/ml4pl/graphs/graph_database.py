@@ -150,6 +150,45 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         data_flow_max_steps_required=data_flow_max_steps_required,
         graph=Graph.CreateFromPickled(graph_tuple))
 
+  @classmethod
+  def CreateWithNetworkXGraph(cls, g: nx.MultiDiGraph):
+    """Create a GraphMeta with a corresponding Graph containing a graph tuple.
+
+    Args:
+      g: The graph to convert to a GraphMeta. Must have the following attributes
+       set: bytecode_id, source_name, relpath, language.
+
+    Returns:
+      A fully-populated GraphMeta instance.
+    """
+    for node in g.nodes():
+      break
+
+    edge_types = set()
+    edge_position_max = 0
+    for src, dst, data in g.edges(data=True):
+      edge_position_max = max(edge_position_max, data.get('position', 0))
+      edge_types.add(data.get('flow', 'control'))
+
+    return GraphMeta(group=getattr(g, 'group', None),
+                     bytecode_id=g.bytecode_id,
+                     source_name=g.source_name,
+                     relpath=g.relpath,
+                     language=g.language,
+                     node_count=g.number_of_nodes(),
+                     edge_count=g.number_of_edges(),
+                     edge_type_count=len(edge_types),
+                     edge_position_max=edge_position_max,
+                     node_labels_dimensionality=(len(g.nodes[node]['y']) if
+                                                 'y' in g.nodes[node] else 0),
+                     graph_features_dimensionality=getattr(g, 'x', 0),
+                     graph_labels_dimensionality=getattr(g, 'y', 0),
+                     loop_connectedness=query.LoopConnetedness(g),
+                     undirected_diameter=nx.diameter(g.to_undirected()),
+                     data_flow_max_steps_required=getattr(
+                         g, 'data_flow_max_steps_required', 0),
+                     graph=Graph.CreateFromPickled(g))
+
 
 class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """The data for a graph.
