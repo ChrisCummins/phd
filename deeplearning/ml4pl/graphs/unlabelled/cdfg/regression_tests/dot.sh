@@ -11,7 +11,7 @@ for dotfile in $("$opt" -dot-cfg -dot-callgraph "$module" 2>&1 \
     | sed -r "s/^Writing '(.+)'\.\.\.$/\1/"); do
   dotout="$(echo $dotfile | sed -r 's/^\.//')"
   pngout="$(echo $dotout | sed -r 's/\.dot$/.png/')"
-  if [[ "$dotfile" != "$dotfile" ]]; then
+  if [[ "$dotout" != "$dotfile" ]]; then
     mv "$dotfile" "$dotout"
   fi
   dot "$dotout" -Tpng -o "$pngout";

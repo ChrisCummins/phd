@@ -32,5 +32,25 @@ def test_115532(builder: cdfg.ControlAndDataFlowGraphBuilder):
   builder.Build(fs.Read(REGRESSION_TESTS / '115532.ll'))
 
 
+@pytest.mark.xfail(reason='Timeout')
+def test_4180(builder: cdfg.ControlAndDataFlowGraphBuilder):
+  """Graph takes more than 120 seconds to construct."""
+  builder.Build(fs.Read(REGRESSION_TESTS / '4180.ll'))
+
+
+# TODO(cec): Add support for functions without exit blocks. They will have
+# no call return edges.
+@pytest.mark.xfail(reason='Cannot currently handle no exit blocks')
+def test_560(builder: cdfg.ControlAndDataFlowGraphBuilder):
+  """Graph has no exit blocks."""
+  builder.Build(fs.Read(REGRESSION_TESTS / '560.ll'))
+
+
+@pytest.mark.xfail(reason='opt exception')
+def test_400531(builder: cdfg.ControlAndDataFlowGraphBuilder):
+  """Graph has no exit blocks."""
+  builder.Build(fs.Read(REGRESSION_TESTS / '400531.ll'))
+
+
 if __name__ == '__main__':
   test.Main()
