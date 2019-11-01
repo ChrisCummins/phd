@@ -13,6 +13,7 @@ from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 
 FLAGS = app.FLAGS
