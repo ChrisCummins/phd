@@ -1,5 +1,4 @@
 """This module prepares a CPU/GPU OpenCL device-mapping dataset."""
-import networkx as nx
 import numpy as np
 import pandas as pd
 import pathlib
@@ -27,28 +26,6 @@ app.DEFINE_string('gpu', None,
                   'The gpu to use. One of: {amd_tahiti_7970,nvidia_gtx_960}')
 
 FLAGS = app.FLAGS
-
-
-def AddVocabularyIndicesToStatements(
-    graph: nx.MultiDiGraph, dictionary: typing.Dict[str, int],
-    x_for_non_statements: int) -> typing.Tuple[int, int]:
-  """Add node features (embedding indices) for nodes."""
-  statement_count = 0
-  unknown_count = 0
-  # Set node features.
-  for node, data in graph.nodes(data=True):
-    if data['type'] != 'statement':
-      data['x'] = np.array([x_for_non_statements], dtype=np.int32)
-      continue
-
-    statement_count += 1
-    if data['text'] in dictionary:
-      data['x'] = np.array([dictionary[data['text']]], dtype=np.int32)
-    else:
-      unknown_count += 1
-      data['x'] = np.array([dictionary["!UNK"]], dtype=np.int32)
-
-  return statement_count, unknown_count
 
 
 def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
@@ -93,8 +70,6 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
 def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
                        ) -> typing.Iterable[graph_database.GraphMeta]:
   """Make annotated graph's for the given devmap dataset."""
-  dictionary = inst2vec.PretrainedEmbeddingIndicesDictionary()
-
   with input_db.Session() as session:
     for _, row in df.iterrows():
       q = session.query(graph_database.GraphMeta)
@@ -115,13 +90,6 @@ def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
       q = q.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
       input_graph_meta = q.first()
       graph = input_graph_meta.data
-
-      # Add 'x' node features as embedding indices for vocabulary.
-      # TODO(cec): This maps identifier nodes to the same embedding as unknown
-      # statements.
-      AddVocabularyIndicesToStatements(graph,
-                                       dictionary,
-                                       x_for_non_statements=dictionary['!UNK'])
 
       # Add the graph-level features.
       # TODO(cec): Should we apply any transforms to these values? Log?

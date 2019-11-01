@@ -2,8 +2,8 @@
 # data.
 
 py_binary(
-    name = "make_opencl_devmap_dataset",
-    srcs = ["make_opencl_devmap_dataset.py"],
+    name = "make_devmap_dataset",
+    srcs = ["make_devmap_dataset.py"],
     deps = [
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/ml4pl/graphs:graph_database",
