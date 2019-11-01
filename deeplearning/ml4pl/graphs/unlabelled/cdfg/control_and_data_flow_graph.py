@@ -12,6 +12,7 @@ import re
 import typing
 
 import networkx as nx
+import numpy as np
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators

@@ -20,6 +20,7 @@ py_library(
         "//labm8:decorators",
         "//labm8:humanize",
         "//third_party/py/networkx",
+        "//third_party/py/numpy",
     ],
 )
 

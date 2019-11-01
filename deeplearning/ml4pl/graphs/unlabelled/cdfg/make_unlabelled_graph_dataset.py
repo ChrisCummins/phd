@@ -92,7 +92,8 @@ class BytecodeExporter(database_exporters.BytecodeDatabaseExporterBase):
         preprocess_text=True,
         discard_unknown_statements=False,
     )
-    self.graph_db.SetNodeEmbeddingTable(builder.embeddings)
+    # TODO(cec): Fix.
+    # self.graph_db.SetNodeEmbeddingTable(builder.embeddings_table)
 
   def GetMakeExportJob(self):
     return _MakeBytecodeExportJob
