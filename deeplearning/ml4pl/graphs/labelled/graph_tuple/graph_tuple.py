@@ -1,7 +1,8 @@
 """The module implements conversion of graphs to tuples of arrays."""
+import typing
+
 import networkx as nx
 import numpy as np
-import typing
 
 from labm8 import app
 
@@ -173,6 +174,8 @@ class GraphTuple(typing.NamedTuple):
     # Set node embedding indices.
     node_embedding_indices = [None] * g.number_of_nodes()
     for node, embedding_index in g.nodes(data=node_x_indices):
+      if embedding_index is None:
+        raise ValueError(f"No embedding for node `{node}`")
       node_idx = node_to_index[node]
       node_embedding_indices[node_idx] = embedding_index
     node_x_indices = np.array(node_embedding_indices, dtype=np.int32)

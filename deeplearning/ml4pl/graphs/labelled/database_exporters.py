@@ -4,14 +4,13 @@ import multiprocessing
 import time
 import typing
 
+from deeplearning.ml4pl.bytecode import bytecode_database
+from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
 from labm8 import sqlutil
-
-from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
@@ -101,8 +100,9 @@ class BytecodeDatabaseExporterBase(object):
     make_job = self.GetMakeExportJob()
     job_processor = self.GetProcessJobFunction()
 
-    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-                    self.batch_size)
+    chunksize = min(
+        max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
+        self.batch_size)
 
     bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
     jobs = [(self.bytecode_db.url, bytecode_ids_chunk, make_job, job_processor)
@@ -116,15 +116,17 @@ class BytecodeDatabaseExporterBase(object):
       workers = (_Worker(job) for job in jobs)
 
     job_count = 0
-    with sqlutil.BufferedDatabaseWriter(self.graph_db,
-                                        max_queue=8).Session() as writer:
+    with sqlutil.BufferedDatabaseWriter(
+        self.graph_db, max_queue=8).Session() as writer:
       for graph_metas in workers:
         exported_count += len(graph_metas)
         job_count += 1
-        app.Log(1, 'Created %s %s graphs (%.2f%%, %.2f graphs/second)',
-                humanize.Commas(len(graph_metas)), group,
-                (job_count / len(jobs)) * 100,
-                exported_count / (time.time() - start_time))
+        app.Log(
+            1,
+            'Created %s `%s` graphs from %s bytecodes (%.2f%%, %.2f graphs/second)',
+            humanize.Commas(len(graph_metas)), group, len(bytecode_ids),
+            (job_count / len(jobs)) * 100,
+            exported_count / (time.time() - start_time))
 
         # Set the GraphMeta.group column.
         for graph in graph_metas:

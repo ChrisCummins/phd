@@ -4,8 +4,6 @@ import sys
 import traceback
 import typing
 
-from labm8 import app
-
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import database_exporters
@@ -13,6 +11,7 @@ from deeplearning.ml4pl.graphs.labelled import \
   make_data_flow_analysis_dataset as make_dataset
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -66,7 +65,10 @@ def _ProcessBytecodeJob(
     if not len(edge_type_count):
       raise ValueError("Graph has no edges")
 
-    return [graph_database.GraphMeta.CreateFromNetworkX(graph)]
+    return [
+        graph_database.GraphMeta.CreateFromNetworkX(graph,
+                                                    {'call', 'control', 'data'})
+    ]
   except Exception as e:
     _, _, tb = sys.exc_info()
     tb = traceback.extract_tb(tb, 2)
