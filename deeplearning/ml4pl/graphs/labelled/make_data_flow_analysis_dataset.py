@@ -70,6 +70,7 @@ def _ProcessInputs(
   """
   jobs = session.query(graph_database.GraphMeta) \
     .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)).all()
+  session.close()
 
   annotated_graph_generator = GetAnnotatedGraphGenerator()
   false, true = GetFalseTrueType()
