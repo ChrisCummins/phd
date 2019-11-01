@@ -6,17 +6,17 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import bazelutil
+from labm8 import decorators
+from labm8 import labdate
+from labm8 import sqlutil
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
   graph_tuple as graph_tuples
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import decorators
-from labm8 import labdate
-from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 
@@ -30,8 +30,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                          nullable=False)
 
 
 class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -63,12 +63,15 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The maximum value of the 'position' attribute of edges.
   edge_position_max: int = sql.Column(sql.Integer, nullable=False)
 
-  node_labels_dimensionality: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
-  graph_features_dimensionality: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
-  graph_labels_dimensionality: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
+  node_labels_dimensionality: int = sql.Column(sql.Integer,
+                                               default=0,
+                                               nullable=False)
+  graph_features_dimensionality: int = sql.Column(sql.Integer,
+                                                  default=0,
+                                                  nullable=False)
+  graph_labels_dimensionality: int = sql.Column(sql.Integer,
+                                                default=0,
+                                                nullable=False)
 
   # The loop connectedness (loop depth) of the graph. This is the largest number
   # of back edges found in any cycle-free path of the full flow graph.
@@ -77,16 +80,19 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The minimum number of message passing steps that are be required to produce
   # the labels from the features. E.g. for graph flooding problems, this value
   # will be the diameter of the graph.
-  data_flow_max_steps_required: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
+  data_flow_max_steps_required: int = sql.Column(sql.Integer,
+                                                 default=0,
+                                                 nullable=False)
 
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
       nullable=False,
       default=labdate.GetUtcMillisecondsNow)
 
-  graph: 'Graph' = sql.orm.relationship(
-      'Graph', uselist=False, back_populates="meta", cascade="all")
+  graph: 'Graph' = sql.orm.relationship('Graph',
+                                        uselist=False,
+                                        back_populates="meta",
+                                        cascade="all")
 
   @property
   def data(self) -> typing.Any:
@@ -94,21 +100,19 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     return self.graph.data
 
   @classmethod
-  def CreateFromNetworkX(cls, g: nx.MultiDiGraph, edge_types: typing.Set[str],
-                         **graph_tuple_opts):
+  def CreateFromNetworkX(cls, g: nx.MultiDiGraph, **graph_tuple_opts):
     """Create a GraphMeta with a corresponding Graph containing a graph tuple.
 
     Args:
       g: The graph to convert to a GraphMeta. Must have the following attributes
        set: bytecode_id, source_name, relpath, language.
-      edge_types: The set of edge flow types, e.g. {"control", "flow"}, etc.
       graph_tuple_opts: Keyword argument to be passed to CreateFromNetworkX().
 
     Returns:
       A fully-populated GraphMeta instance.
     """
     graph_tuple = graph_tuples.GraphTuple.CreateFromNetworkX(
-        g, edge_types, **graph_tuple_opts)
+        g, **graph_tuple_opts)
     node_labels_dimensionality = (graph_tuple.node_y[0]
                                   if graph_tuple.has_node_y else 0)
     graph_features_dimensionality = (len(graph_tuple.graph_x)
@@ -179,12 +183,15 @@ class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   This is an opaque byte array that can be used as needed, e.g. for pickled
   graph tuples, networkx graphs, etc.
   """
-  id: int = sql.Column(
-      sql.Integer, sql.ForeignKey('graph_metas.id'), primary_key=True)
-  pickled_data: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
-  meta: GraphMeta = sql.orm.relationship(
-      'GraphMeta', back_populates="graph", uselist=False, cascade="all")
+  id: int = sql.Column(sql.Integer,
+                       sql.ForeignKey('graph_metas.id'),
+                       primary_key=True)
+  pickled_data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                   nullable=False)
+  meta: GraphMeta = sql.orm.relationship('GraphMeta',
+                                         back_populates="graph",
+                                         uselist=False,
+                                         cascade="all")
 
   @property
   def data(self) -> typing.Any:

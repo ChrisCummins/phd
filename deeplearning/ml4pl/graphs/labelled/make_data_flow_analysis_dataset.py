@@ -1,13 +1,16 @@
 """This module prepares datasets for data flow analyses."""
-import sys
-
-import networkx as nx
-import numpy as np
 import pathlib
 import random
+import sys
 import tempfile
 import traceback
 import typing
+
+import networkx as nx
+import numpy as np
+from labm8 import app
+from labm8 import fs
+from labm8 import pbutil
 
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -22,9 +25,6 @@ from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import fs
-from labm8 import pbutil
 
 app.DEFINE_database('bytecode_db',
                     bytecode_database.Database,
@@ -95,14 +95,8 @@ def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
     annotated_graph.source_name = graph.source_name
     annotated_graph.relpath = graph.relpath
     annotated_graph.language = graph.language
-
-  if FLAGS.dataflow == 'none':
-    edge_types = {'control'}
-  else:
-    edge_types = {'control', 'data'}
-
   return [
-      graph_database.GraphMeta.CreateFromNetworkX(annotated_graph, edge_types)
+      graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
       for annotated_graph in annotated_graphs
   ]
 

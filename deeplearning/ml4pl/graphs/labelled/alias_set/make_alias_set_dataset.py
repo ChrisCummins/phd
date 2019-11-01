@@ -129,8 +129,7 @@ def _ProcessBytecodeJob(
           false=false,
           true=true)
       graph_metas += [
-          graph_database.GraphMeta.CreateFromNetworkX(annotated_graph,
-                                                      {'control', 'data'})
+          graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
           for annotated_graph in annotated_graphs
       ]
     except Exception as e:

@@ -3,7 +3,6 @@ import typing
 
 import networkx as nx
 import numpy as np
-
 from labm8 import app
 
 app.DEFINE_boolean(
@@ -15,6 +14,13 @@ FLAGS = app.FLAGS
 
 # A mapping from a node to the number of incoming edges.
 IncomingEdgeCount = typing.Dict[int, int]
+
+# Perform the mapping between 'flow' property of edges and an index into a
+# list of adjacency lists.
+#
+# TODO(cec): Repace the string constants with an enum for flow types.
+FLOW_TO_EDGE_INDEX = {'control': 0, 'data': 1, 'call': 2}
+EDGE_INDEX_TO_FLOW = {v: k for k, v in FLOW_TO_EDGE_INDEX.items()}
 
 
 class GraphTuple(typing.NamedTuple):
@@ -84,19 +90,16 @@ class GraphTuple(typing.NamedTuple):
   @classmethod
   def CreateFromNetworkX(cls,
                          g: nx.MultiDiGraph,
-                         edge_types: typing.Iterable[str],
-                         node_x_indices: str = 'x',
                          node_y: str = 'y',
                          graph_x: str = 'x',
                          graph_y: str = 'y') -> 'GraphTuple':
     """Produce a tuple representation of a (multi-)directed networkx.
 
+    Each edge must have a position and flow, and each node must have an 'x'
+    embedding index.
+
     Args:
       g: The graph to convert to a graph_tuple.
-      edge_types: The set of edge type names used. Defaults to {'call', 'control',
-        'data'}.
-      node_x_indices: The property in node data dicts which stores the node
-        embedding index.
       node_y: The property in node data dicts which stores the node label
         vector. If not present, node labels are omitted.
       graph_x: The property of the graph which stores the graph feature vector.
@@ -107,7 +110,8 @@ class GraphTuple(typing.NamedTuple):
     Returns:
       A GraphTuple tuple.
     """
-    edge_type_count = len(edge_types)
+    edge_type_count = len(EDGE_INDEX_TO_FLOW)
+
     if not FLAGS.tie_forward_and_backward_edge_types:
       # Backward edges are inserted using a different type.
       edge_type_count *= 2
@@ -126,9 +130,6 @@ class GraphTuple(typing.NamedTuple):
 
     # Create a mapping from node ID to a numeric ID.
     node_to_index = {node: i for i, node in enumerate(g.nodes)}
-    # A mapping from edge 'flow' attribute to an index into the list of adjacency
-    # lists.
-    edge_type_to_index = {flow: i for i, flow in enumerate(sorted(edge_types))}
 
     for src, dst, data in g.edges(data=True):
       flow = data['flow']
@@ -137,7 +138,7 @@ class GraphTuple(typing.NamedTuple):
       src_idx = node_to_index[src]
       dst_idx = node_to_index[dst]
 
-      forward_edge_type = edge_type_to_index[flow]
+      forward_edge_type = FLOW_TO_EDGE_INDEX[flow]
       backward_edge_type = GetBackwardEdgeType(forward_edge_type,
                                                edge_type_count)
 
@@ -172,13 +173,13 @@ class GraphTuple(typing.NamedTuple):
     ])
 
     # Set node embedding indices.
-    node_embedding_indices = [None] * g.number_of_nodes()
-    for node, embedding_index in g.nodes(data=node_x_indices):
+    node_x_indices = [None] * g.number_of_nodes()
+    for node, embedding_index in g.nodes(data='x'):
       if embedding_index is None:
         raise ValueError(f"No embedding for node `{node}`")
       node_idx = node_to_index[node]
-      node_embedding_indices[node_idx] = embedding_index
-    node_x_indices = np.array(node_embedding_indices, dtype=np.int32)
+      node_x_indices[node_idx] = embedding_index
+    node_x_indices = np.array(node_x_indices, dtype=np.int32)
 
     # Set optional node labels.
     if node_y and node_y in g.nodes[src]:
@@ -222,27 +223,13 @@ class GraphTuple(typing.NamedTuple):
     """
     g = nx.MultiDiGraph()
 
-    # Build the list of edges and their properties by iterating over the
-    # adjacency lists and producing a flat list of edge dicts which can then be
-    # augmented with features or labels.
-    flattened_edge_dicts: typing.List[typing.Dict[str, typing.Any]] = []
-
     for edge_type, (adjacency_list, position_list) in enumerate(
         zip(self.adjacency_lists, self.edge_positions)):
       for (src, dst), position in zip(adjacency_list, position_list):
-        flattened_edge_dicts.append({
-            'src': src,
-            'dst': dst,
-            'flow': edge_type,
-            'position': position
-        })
-
-    # Add the edges and their properties to the graph.
-    for edge_dict in flattened_edge_dicts:
-      src, dst = edge_dict['src'], edge_dict['dst']
-      del edge_dict['src']
-      del edge_dict['dst']
-      g.add_edge(src, dst, **edge_dict)
+        g.add_edge(src,
+                   dst,
+                   flow=EDGE_INDEX_TO_FLOW[edge_type],
+                   position=position)
 
     for i, x in enumerate(self.node_x_indices):
       g.nodes[i]['x'] = x

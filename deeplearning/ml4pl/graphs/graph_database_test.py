@@ -108,8 +108,7 @@ def graph() -> nx.MultiDiGraph:
 
 def test_Graph_CreateFromNetworkX(graph: nx.MultiDiGraph):
   """Test column values created by CreateFromNetworkX()."""
-  gm = graph_database.GraphMeta.CreateFromNetworkX(graph,
-                                                   {'control', 'call', 'data'})
+  gm = graph_database.GraphMeta.CreateFromNetworkX(graph)
 
   assert gm.bytecode_id == 1
   assert gm.source_name == 'foo'
@@ -142,8 +141,7 @@ def test_EmbeddingTable_from_numpy_array(db: graph_database.Database):
 
 def test_benchmark_Graph_CreateFromNetworkX(benchmark, graph: nx.MultiDiGraph):
   """Benchmark CreateFromNetworkX()."""
-  benchmark(graph_database.GraphMeta.CreateFromNetworkX, graph,
-            {'control', 'call', 'data'})
+  benchmark(graph_database.GraphMeta.CreateFromNetworkX, graph)
 
 
 if __name__ == '__main__':
