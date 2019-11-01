@@ -61,7 +61,10 @@ def _ProcessInputs(
           '%d: %s (%s:%s:%s() -> %s)', bytecode_id, e, filename, line_number,
           function_name,
           type(e).__name__)
-  return graphs
+  return [
+      graph_database.GraphMeta.CreateWithNetworkXGraph(graph)
+      for graph in graphs
+  ]
 
 
 class UnlabelledGraphExporter(database_exporters.BytecodeDatabaseExporterBase):
