@@ -38,6 +38,7 @@ py_test(
 
 py_test(
     name = "control_and_data_flow_graph_regression_test",
+    timeout = "long",
     srcs = ["control_and_data_flow_graph_regression_test.py"],
     data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/regression_tests:bytecodes"],
     deps = [
