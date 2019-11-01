@@ -33,10 +33,6 @@ app.DEFINE_integer(
     'The maximum number of instances to produce from a single input graph. '
     'For a CDFG with `n` statements, `n` instances can be '
     'produced by changing the root statement for analyses.')
-app.DEFINE_integer(
-    'seed', 0xCEC,
-    'The random seed value to use when shuffling graph statements when '
-    'selecting the root statement.')
 
 FLAGS = app.FLAGS
 
