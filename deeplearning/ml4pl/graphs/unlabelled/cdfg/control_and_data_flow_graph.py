@@ -371,24 +371,18 @@ class ControlAndDataFlowGraphBuilder(object):
       def_, uses = GetLlvmStatementDefAndUses(
           data['text'], store_destination_is_def=self.store_destination_is_def)
       if def_:  # Data flow out edge.
-        edges_to_add.append((statement, prefix(def_), prefix(def_), 0))
+        def_name = f'{prefix(def_)}_operand'
+        edges_to_add.append((statement, def_name, def_name, 0, def_))
       for position, identifier in enumerate(uses):  # Data flow in edge.
+        identifier_name = f'{prefix(identifier)}_operand'
         edges_to_add.append(
-            (prefix(identifier), statement, prefix(identifier), position))
+            (identifier_name, statement, identifier_name, position, identifier))
 
-    for src, dst, identifier, position in edges_to_add:
+    for src, dst, identifier, position, name in edges_to_add:
       g.add_edge(src, dst, flow='data', position=position)
       node = g.nodes[identifier]
       node['type'] = 'identifier'
-      node['name'] = unprefix(identifier)
-
-    # Strip the identifier nodes which have no inputs, since they provide no
-    # meaningful data 'flow' information.
-    nodes_to_remove: typing.List[str] = []
-    for node, _ in iterators.IdentifierNodeIterator(g):
-      if not g.in_degree(node):
-        nodes_to_remove.append(node)
-    [g.remove_node(node) for node in nodes_to_remove]
+      node['name'] = name
 
   @decorators.timeout(120)
   def BuildFromControlFlowGraph(

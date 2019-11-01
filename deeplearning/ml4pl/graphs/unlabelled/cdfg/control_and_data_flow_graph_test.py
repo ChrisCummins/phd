@@ -130,6 +130,11 @@ def test_GetLlvmStatementDefAndUses():
   assert def_ == ''
   assert uses == ['0x40C80C0F60000000', '%4']
 
+  statement = '%3 = alloca i8*, align 8'
+  def_, uses = cdfg.GetLlvmStatementDefAndUses(statement)
+  assert def_ == '%3'
+  assert uses == []
+
 
 def test_ComposeGraphs_undefined():
   """Test that function graph is inserted for call to undefined function."""
