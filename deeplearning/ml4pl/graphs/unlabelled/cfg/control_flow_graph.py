@@ -172,8 +172,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
         app.Error("OUT DEGREE %s", self.out_degree(exit_node))
         raise InvalidNodeDegree(
             f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
-            f'{out_degrees[exit_node]} in function `{self.name}` with text '
-            f"`{self.nodes[exit_node]['text']}`")
+            f'{out_degrees[exit_node]} in function `{self.name}`')
 
     # Additional "strict" CFG tests.
     if strict:

@@ -337,7 +337,7 @@ def test_ControlFlowGraph_validate_empty_graph():
   g = control_flow_graph.ControlFlowGraph()
   with pytest.raises(control_flow_graph.NotEnoughNodes) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "Graph has no nodes"
+  assert str(e_ctx.value) == "Function `cfg` has no nodes"
   assert not g.IsValidControlFlowGraph()
 
 
@@ -373,7 +373,8 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_no_path_from_entry_to_exit():
   with pytest.raises(
       control_flow_graph.MalformedControlFlowGraphError) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "No path from entry node 'A' to exit node 'C'"
+  assert str(e_ctx.value) == ("No path from entry node 'A' to exit node 'C' "
+                              "in function `cfg`")
   assert not g.IsValidControlFlowGraph()
 
 
@@ -416,7 +417,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_unamed_nodes():
   g.add_edge(2, 3)
   with pytest.raises(control_flow_graph.MissingNodeName) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "Node 2 has no name"
+  assert str(e_ctx.value) == "Node 2 has no name in function `cfg`"
   assert not g.IsValidControlFlowGraph()
 
 
@@ -442,7 +443,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_duplicate_names():
   g.add_edge(2, 3)
   with pytest.raises(control_flow_graph.DuplicateNodeName) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "Duplicate node name 'B'"
+  assert str(e_ctx.value) == "Duplicate node name 'B' in function `cfg`"
   assert not g.IsValidControlFlowGraph()
 
 
@@ -469,7 +470,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_exit_block_has_output():
   g.add_edge(3, 0)
   with pytest.raises(control_flow_graph.InvalidNodeDegree) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == "Exit block outdegree(D) = 1"
+  assert str(e_ctx.value) == "Exit block outdegree(D) = 1 in function `cfg`"
   assert not g.IsValidControlFlowGraph()
 
 
