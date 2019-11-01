@@ -8,6 +8,7 @@ import networkx as nx
 import pydot
 import pyparsing
 from labm8 import app
+from labm8 import humanize
 from labm8 import pbutil
 
 from compilers.llvm import opt_util
@@ -315,9 +316,9 @@ def ControlFlowGraphFromDotSource(
 
     if removed_blocks_count:
       app.Log(
-          1, "Removed %d blocks without predecessors from `%s`, "
-          "%d blocks remaining", removed_blocks_count, graph.name,
-          graph.number_of_nodes())
+          1, "Removed %s without predecessors from `%s`, "
+          "%d blocks remaining", humanize.Plural(removed_blocks_count, 'block'),
+          graph.name, graph.number_of_nodes())
 
       # Rename nodes to retain a contiguous numeric sequence.
       node_rename_map = {
