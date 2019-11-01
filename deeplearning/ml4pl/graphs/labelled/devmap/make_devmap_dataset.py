@@ -1,24 +1,26 @@
 """This module prepares a CPU/GPU OpenCL device-mapping dataset."""
-import numpy as np
-import pandas as pd
 import pathlib
-import sqlalchemy as sql
 import tempfile
 import typing
 
+import numpy as np
+import pandas as pd
+import sqlalchemy as sql
+
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple as graph_tuples
 from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import fs
 from labm8 import sqlutil
 
-
-app.DEFINE_database('input_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to read unlabelled graphs from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'input_db',
+    graph_database.Database,
+    None,
+    'URL of database to read unlabelled graphs from.',
+    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write labelled graphs to.')
@@ -48,13 +50,14 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
       for _, r in df.iterrows()
   ]
 
-  df.rename(columns={
-      f'param:{gpu}:wgsize': 'wgsize',
-      f'feature:{gpu}:transfer': 'transfer',
-      f'runtime:{cpu}': 'runtime_cpu',
-      f'runtime:{gpu}': 'runtime_gpu',
-  },
-            inplace=True)
+  df.rename(
+      columns={
+          f'param:{gpu}:wgsize': 'wgsize',
+          f'feature:{gpu}:transfer': 'transfer',
+          f'runtime:{cpu}': 'runtime_cpu',
+          f'runtime:{gpu}': 'runtime_gpu',
+      },
+      inplace=True)
 
   return df[[
       'relpath',
@@ -89,22 +92,25 @@ def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
       # Load the graph data.
       q = q.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
       input_graph_meta = q.first()
-      graph = input_graph_meta.data
+      graph_tuple = input_graph_meta.data
 
       # Add the graph-level features.
       # TODO(cec): Should we apply any transforms to these values? Log?
-      graph.x = np.array([row['wgsize'], row['transfer']], dtype=np.int64)
+      graph_x = np.array([row['wgsize'], row['transfer']], dtype=np.int64)
 
       # Add 'y' graph feature as target.
-      graph.y = row['y']
+      graph_y = row['y']
 
-      # Add graph metadata.
-      graph.group = input_graph_meta.group
-      graph.name = ':'.join([row['relpath'], row['data:dataset_name']])
-      graph.runtime_cpu = row['runtime_cpu']
-      graph.runtime_gpu = row['runtime_gpu']
-
-      yield graph
+      yield graph_database.GraphMeta.CreateFromGraphMetaAndGraphTuple(
+          input_graph_meta,
+          graph_tuples.GraphTuple(
+              adjacency_lists=graph_tuple.adjacency_lists,
+              edge_positions=graph_tuple.edge_positions,
+              incoming_edge_counts=graph_tuple.incoming_edge_counts,
+              node_x_indices=graph_tuple.node_x_indices,
+              graph_x=graph_x,
+              graph_y=graph_y,
+          ))
 
 
 def MakeOpenClDevmapDataset(input_db: graph_database.Database,
@@ -113,15 +119,13 @@ def MakeOpenClDevmapDataset(input_db: graph_database.Database,
   # TODO(cec): Change groups to k-fold classification.
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(output_db,
-                                      max_queue=8).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(
+      output_db, max_queue=8).Session() as writer:
     df = MakeGpuDataFrame(dataset.df, gpu)
 
     for graph in MakeAnnotatedGraphs(input_db, df):
-      app.Log(1, 'Processed %s', graph.name)
-      writer.AddOne(
-          graph_database.GraphMeta.CreateFromNetworkX(
-              graph, edge_types={'control', 'data', 'call'},
+      app.Log(1, 'Processed graph')
+      writer.AddOne(graph)
 
 
 def main():

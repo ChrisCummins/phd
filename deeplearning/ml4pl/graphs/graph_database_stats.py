@@ -1,14 +1,15 @@
 """A module for obtaining stats from graph databases."""
+import pickle
 import typing
 
 import numpy as np
 import sqlalchemy as sql
+
+from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import prof
-
-from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
@@ -46,11 +47,15 @@ class GraphDatabaseStats(object):
 
   @property
   def node_embedding_count(self) -> int:
-    return self._embedding_stats.node_embedding_count
+    return self._embedding_stats['node_embedding_count']
 
   @property
   def node_embedding_dimensionality(self) -> int:
-    return self._embedding_stats.node_embedding_dimensionality
+    return self._embedding_stats['node_embedding_dimensionality']
+
+  @property
+  def node_embedding_dtype(self) -> np.dtype:
+    return self._embedding_stats['node_embedding_dtype']
 
   @property
   def graph_features_dimensionality(self) -> int:
@@ -92,24 +97,12 @@ class GraphDatabaseStats(object):
     return ", ".join(summaries)
 
   @decorators.memoized_property
-  def node_embedding_dtype(self) -> np.dtype:
-    """Return the numpy dtype of node embeddings."""
-    with self.db.Session() as s:
-      embedding_table = s.query(graph_database.EmbeddingTable).one()
-    return embedding_table.embedding_table.dtype
-
-  @decorators.memoized_property
   def _embedding_stats(self):
-    with self.db.Session() as s:
-      q = s.query(
-          graph_database.EmbeddingTable.embedding_count.label(
-              'node_embedding_count'),
-          graph_database.EmbeddingTable.embedding_dimensionality.label(
-              'node_embedding_dimensionality'))
-      if q.count() != 1:
-        raise ValueError(
-            f"Expected a single embedding table, found {q.count()}")
-      return q.one()
+    return {
+        'node_embedding_count': self.db.embeddings_table.shape[0],
+        'node_embedding_dimensionality': self.db.embeddings_table.shape[1],
+        'node_embedding_dtype': self.db.embeddings_table.dtype,
+    }
 
   @decorators.memoized_property
   def _stats(self):

@@ -5,14 +5,14 @@ import typing
 import keras
 import numpy as np
 from keras import models
-from labm8 import app
-from labm8 import prof
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import bytecode2seq
+from labm8 import app
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -48,11 +48,12 @@ app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
 
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecodes from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None,
+    'URL of database to read bytecodes from.',
+    must_exist=True)
 
 app.DEFINE_integer(
     'max_encoded_length', None,
@@ -84,28 +85,28 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     # Language model. It begins with an optional embedding layer, then has two
     # layers of LSTM network, returning a single vector of size
     # self.lstm_layer_size.
-    input_layer = keras.Input(shape=(self.max_encoded_length,),
-                              dtype='int32',
-                              name="model_in")
+    input_layer = keras.Input(
+        shape=(self.max_encoded_length,), dtype='int32', name="model_in")
 
     self.pad_val = len(self.vocabulary)
     assert self.pad_val not in self.vocabulary
     embedding_dim = len(self.vocabulary) + 1
-    lstm_input = keras.layers.Embedding(input_dim=embedding_dim,
-                                        input_length=self.max_encoded_length,
-                                        output_dim=FLAGS.hidden_size,
-                                        name="embedding")(input_layer)
+    lstm_input = keras.layers.Embedding(
+        input_dim=embedding_dim,
+        input_length=self.max_encoded_length,
+        output_dim=FLAGS.hidden_size,
+        name="embedding")(input_layer)
 
-    x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                               implementation=1,
-                               return_sequences=True,
-                               name="lstm_1")(lstm_input)
-    x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                               implementation=1,
-                               name="lstm_2")(x)
-    langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
-                                       activation="sigmoid",
-                                       name="langmodel_out")(x)
+    x = keras.layers.LSTM(
+        FLAGS.hidden_size,
+        implementation=1,
+        return_sequences=True,
+        name="lstm_1")(lstm_input)
+    x = keras.layers.LSTM(FLAGS.hidden_size, implementation=1, name="lstm_2")(x)
+    langmodel_out = keras.layers.Dense(
+        self.stats.graph_features_dimensionality,
+        activation="sigmoid",
+        name="langmodel_out")(x)
 
     # Auxiliary inputs.
     auxiliary_inputs = keras.Input(
@@ -115,15 +116,15 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     # and auxiliary inputs, outputs 1-hot encoded device mapping.
     x = keras.layers.Concatenate()([x, auxiliary_inputs])
     x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Dense(FLAGS.dense_hidden_size,
-                           activation="relu",
-                           name="heuristic_1")(x)
-    out = keras.layers.Dense(self.stats.graph_labels_dimensionality,
-                             activation="sigmoid",
-                             name='heuristic_2')(x)
+    x = keras.layers.Dense(
+        FLAGS.dense_hidden_size, activation="relu", name="heuristic_1")(x)
+    out = keras.layers.Dense(
+        self.stats.graph_labels_dimensionality,
+        activation="sigmoid",
+        name='heuristic_2')(x)
 
-    self.model = keras.Model(inputs=[input_layer, auxiliary_inputs],
-                             outputs=[out, langmodel_out])
+    self.model = keras.Model(
+        inputs=[input_layer, auxiliary_inputs], outputs=[out, langmodel_out])
     self.model.compile(
         optimizer="adam",
         metrics=['accuracy'],
@@ -136,7 +137,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
     for batch in self.batcher.MakeGaphBatchIterator(epoch_type):
-      graph_ids = batch['log'].graph_indices
+      graph_ids = batch.log.graph_indices
 
       with prof.Profile("Loaded and encoded bytecodes"):
         # Build a mapping from graph ID to bytecode ID.
@@ -180,17 +181,17 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
                 maxlen=self.max_encoded_length,
                 value=self.pad_val))
 
-      yield batch['log'], {
+      yield batch.log, {
           'sequence_1hot': np.vstack(one_hot_sequences),
-          'graph_x': np.vstack(batch['graph_x']),
-          'graph_y': np.vstack(batch['graph_y']),
+          'graph_x': np.vstack(batch.graph_x),
+          'graph_y': np.vstack(batch.graph_y),
       }
 
   def RunMinibatch(self, log: log_database.BatchLog, batch: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Pass"""
-    x = [batch['sequence_1hot'], batch['graph_x']]
-    y = [batch['graph_y'], batch['graph_y']]
+    x = [batch['sequence_1hot'], batch.graph_x]
+    y = [batch.graph_y, batch.graph_y]
 
     losses = []
 
@@ -202,25 +203,23 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
 
     if log.group == 'train':
-      self.model.fit(x,
-                     y,
-                     epochs=1,
-                     batch_size=log.graph_count,
-                     callbacks=callbacks,
-                     verbose=False,
-                     shuffle=False)
+      self.model.fit(
+          x,
+          y,
+          epochs=1,
+          batch_size=log.graph_count,
+          callbacks=callbacks,
+          verbose=False,
+          shuffle=False)
     else:
-      self.model.evaluate(x,
-                          y,
-                          batch_size=log.graph_count,
-                          callbacks=callbacks,
-                          verbose=False)
+      self.model.evaluate(
+          x, y, batch_size=log.graph_count, callbacks=callbacks, verbose=False)
 
     log.loss = sum(losses) / max(len(losses), 1)
 
     pred_y = self.model.predict(x)
 
-    return batch['graph_y'], pred_y[0]
+    return batch.graph_y, pred_y[0]
 
   def ModelDataToSave(self):
     model_path = self.working_dir / f'{self.run_id}_keras_model.h5'

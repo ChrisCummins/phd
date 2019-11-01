@@ -3,13 +3,13 @@ import typing
 
 import numpy as np
 import tensorflow as tf
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
 
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -31,11 +31,6 @@ app.DEFINE_list('layer_timesteps', ['2', '2', '2'],
 # This is to permit testing a model with a larger number of timesteps than it
 # was trained for.
 classifier_base.MODEL_FLAGS.add("layer_timesteps")
-
-app.DEFINE_integer(
-    "patience", 300,
-    "The number of epochs to train for without any improvement in validation "
-    "accuracy before stopping.")
 
 app.DEFINE_float("learning_rate", 0.001, "The initial learning rate.")
 classifier_base.MODEL_FLAGS.add("learning_rate")
@@ -121,12 +116,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
               family='accuracy')
 
         # Tensorboard summaries.
-        self.ops["summary_loss"] = tf.summary.scalar("loss",
-                                                     self.ops["loss"],
-                                                     family='loss')
-        self.ops["summary_accuracy"] = tf.summary.scalar("accuracy",
-                                                         self.ops["accuracy"],
-                                                         family='accuracy')
+        self.ops["summary_loss"] = tf.summary.scalar(
+            "loss", self.ops["loss"], family='loss')
+        self.ops["summary_accuracy"] = tf.summary.scalar(
+            "accuracy", self.ops["accuracy"], family='accuracy')
         # TODO(cec): More tensorboard telemetry: input class distributions,
         # predicted class distributions, etc.
 
@@ -276,8 +269,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
     log.loss = float(fetch_dict['loss'])
 
-    return self.MinibatchResults(y_true_1hot=targets,
-                                 y_pred_1hot=fetch_dict['predictions'])
+    return self.MinibatchResults(
+        y_true_1hot=targets, y_pred_1hot=fetch_dict['predictions'])
 
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()
@@ -341,8 +334,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         tf.GraphKeys.TRAINABLE_VARIABLES)
     if FLAGS.freeze_graph_model:
       graph_vars = set(
-          self.sess.graph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope="graph_model"))
+          self.sess.graph.get_collection(
+              tf.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"))
       filtered_vars = []
       for var in trainable_vars:
         if var not in graph_vars:
@@ -351,13 +344,13 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           app.Log(1, "Freezing weights of variable `%s`.", var.name)
       trainable_vars = filtered_vars
     optimizer = tf.compat.v1.train.AdamOptimizer(FLAGS.learning_rate)
-    grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
-                                                 var_list=trainable_vars)
+    grads_and_vars = optimizer.compute_gradients(
+        self.ops["loss"], var_list=trainable_vars)
     clipped_grads = []
     for grad, var in grads_and_vars:
       if grad is not None:
-        clipped_grads.append((tf.clip_by_norm(grad,
-                                              FLAGS.clamp_gradient_norm), var))
+        clipped_grads.append((tf.clip_by_norm(grad, FLAGS.clamp_gradient_norm),
+                              var))
       else:
         clipped_grads.append((grad, var))
     train_step = optimizer.apply_gradients(clipped_grads)

@@ -8,6 +8,11 @@ import typing
 
 import numpy as np
 import sklearn.metrics
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
@@ -17,11 +22,6 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
-
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -38,16 +38,18 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/',
-                       'The directory to write files to.',
-                       is_dir=True)
+app.DEFINE_output_path(
+    'working_dir',
+    '/tmp/deeplearning/ml4pl/models/',
+    'The directory to write files to.',
+    is_dir=True)
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -84,6 +86,11 @@ app.DEFINE_integer(
     "k_fold", 0,
     "Use this many groups for k-fold validation. This is incompatbile with the "
     "--test_only flag.")
+
+app.DEFINE_integer(
+    "patience", 300,
+    "The number of epochs to train for without any improvement in validation "
+    "accuracy before stopping.")
 
 #
 ##### End of flag declarations.

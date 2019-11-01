@@ -1,10 +1,10 @@
 """A module for batching graph tuples."""
 import time
+import typing
 
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
-import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
@@ -41,8 +41,24 @@ app.DEFINE_boolean(
 GraphBatch = typing.Dict[str, typing.Union[int, np.array]]
 
 
-class GraphBatch(graph_tuples.GraphTuple):
+class GraphBatch(typing.NamedTuple):
   """An extension to GraphTuple to support multiple disconnected graphs."""
+
+  # A list of adjacency lists, one for each edge_type, where an entry in an
+  # adjacency list is a <src,dst> tuple of node indices.
+  adjacency_lists: np.array  # Shape [edge_type_count, ?, 2], dtype int32
+
+  # A list of edge positions, one for each edge type. An edge position is an
+  # integer in the range 0 <= x < max_edge_position.
+  edge_positions: np.array  # Shape [edge_type_count, ?], dtype int32
+
+  # A list of incoming edge count dicts, one for each edge_type. Use
+  # IncomingEdgeCountsToDense() to convert this to a dense representation.
+  incoming_edge_counts: np.array  # Shape [edge_type_count, ?])
+
+  # A list of indices into the node features table.
+  node_x_indices: np.array  # Shape [node_count], dtype int32
+
   # A list of shape [node_count] which segments the nodes by graph.
   graph_nodes_list: np.array
 
@@ -52,7 +68,54 @@ class GraphBatch(graph_tuples.GraphTuple):
   # A batch log.
   log: log_database.BatchLog
 
-  def CreateFromGraphMetas(self,
+  # (optional) A list of node arrays of node labels.
+  # Shape [node_count, node_label_dimensionality]
+  node_y: typing.Optional[np.array] = None
+
+  # (optional) A list of indices into the graph features table.
+  # Shape [graph_feature_dimensionality]
+  graph_x: typing.Optional[np.array] = None
+
+  # (optional) A vector of graph labels.
+  graph_y: typing.Optional[
+      np.array] = None  # Shape [graph_label_dimensionality]
+
+  @property
+  def has_node_y(self) -> bool:
+    """Return whether graph tuple has node labels."""
+    return self.node_y is not None
+
+  @property
+  def has_graph_x(self) -> bool:
+    """Return whether graph tuple has graph features."""
+    return self.graph_x is not None
+
+  @property
+  def has_graph_y(self) -> bool:
+    """Return whether graph tuple has graph labels."""
+    return self.graph_y is not None
+
+  @property
+  def node_count(self) -> int:
+    """Return the number of nodes in the graph."""
+    return len(self.node_x_indices)
+
+  @property
+  def edge_type_count(self) -> int:
+    """Return the number of edge types."""
+    return len(self.adjacency_lists)
+
+  @property
+  def dense_incoming_edge_counts(self) -> np.array:
+    """Return counters for incoming edges as a dense array."""
+    dense = np.zeros((self.node_count, self.edge_type_count))
+    for edge_type, incoming_edge_dict in enumerate(self.incoming_edge_counts):
+      for node_id, edge_count in incoming_edge_dict.items():
+        dense[node_id, edge_type] = edge_count
+    return dense
+
+  @classmethod
+  def CreateFromGraphMetas(cls,
                            graphs: typing.Iterable[graph_database.GraphMeta],
                            stats: graph_stats.GraphTupleDatabaseStats
                           ) -> typing.Optional[graph_tuples.GraphTuple]:
@@ -73,10 +136,11 @@ class GraphBatch(graph_tuples.GraphTuple):
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLog(graph_count=0,
-                                node_count=0,
-                                group=graph.group,
-                                instances=log_database.Instances())
+    log = log_database.BatchLog(
+        graph_count=0,
+        node_count=0,
+        group=graph.group,
+        instances=log_database.Instances())
 
     graph_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
@@ -124,7 +188,7 @@ class GraphBatch(graph_tuples.GraphTuple):
         if adjacency_list.size:
           offset = np.array((log.node_count, log.node_count), dtype=np.int32)
           adjacency_lists[edge_type].append(adjacency_list + offset)
-          position_lists[edge_type].append(position_list + offset)
+          position_lists[edge_type].append(position_list + log.node_count)
 
       incoming_edge_counts.append(graph_tuple.dense_incoming_edge_counts)
 
@@ -178,7 +242,7 @@ class GraphBatch(graph_tuples.GraphTuple):
     # Record the graphs that we used in this batch.
     log.graph_indices = graph_ids
 
-    return GraphBatch(
+    return cls(
         adjacency_lists=adjacency_lists,
         edge_positions=position_lists,
         incoming_edge_counts=incoming_edge_counts,
@@ -293,8 +357,8 @@ class GraphBatcher(object):
           "flags are set")
     self.db = db
     self.message_passing_step_count = message_passing_step_count
-    self.stats = graph_stats.GraphTupleDatabaseStats(self.db,
-                                                     filters=self._GetFilters())
+    self.stats = graph_stats.GraphTupleDatabaseStats(
+        self.db, filters=self._GetFilters())
     app.Log(1, "%s", self.stats)
 
   def GetGraphsInGroupCount(self, group: str) -> int:
@@ -328,10 +392,10 @@ class GraphBatcher(object):
         elapsed_time = time.time() - start_time
         app.Log(
             1, "Created batch of %s graphs (%s nodes) in %s "
-            "(%s graphs/sec)", humanize.Commas(batch['log'].graph_count),
-            humanize.Commas(batch['log'].node_count),
+            "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
+            humanize.Commas(batch.log.node_count),
             humanize.Duration(elapsed_time),
-            humanize.Commas(batch['log'].graph_count / elapsed_time))
+            humanize.Commas(batch.log.graph_count / elapsed_time))
         yield batch
       else:
         return

@@ -6,17 +6,23 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import labdate
-from labm8 import sqlutil
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
   graph_tuple as graph_tuples
+from labm8 import app
+from labm8 import bazelutil
+from labm8 import decorators
+from labm8 import labdate
+from labm8 import sqlutil
 
 FLAGS = app.FLAGS
+
+EMBEDDINGS = bazelutil.DataPath(
+    'phd/deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings/inst2vec_augmented_embeddings.pickle'
+)
 
 Base = declarative.declarative_base()
 
@@ -24,8 +30,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                          nullable=False)
+  value: str = sql.Column(
+      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
 
 
 class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -57,15 +63,12 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The maximum value of the 'position' attribute of edges.
   edge_position_max: int = sql.Column(sql.Integer, nullable=False)
 
-  node_labels_dimensionality: int = sql.Column(sql.Integer,
-                                               default=0,
-                                               nullable=False)
-  graph_features_dimensionality: int = sql.Column(sql.Integer,
-                                                  default=0,
-                                                  nullable=False)
-  graph_labels_dimensionality: int = sql.Column(sql.Integer,
-                                                default=0,
-                                                nullable=False)
+  node_labels_dimensionality: int = sql.Column(
+      sql.Integer, default=0, nullable=False)
+  graph_features_dimensionality: int = sql.Column(
+      sql.Integer, default=0, nullable=False)
+  graph_labels_dimensionality: int = sql.Column(
+      sql.Integer, default=0, nullable=False)
 
   # The loop connectedness (loop depth) of the graph. This is the largest number
   # of back edges found in any cycle-free path of the full flow graph.
@@ -74,19 +77,16 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The minimum number of message passing steps that are be required to produce
   # the labels from the features. E.g. for graph flooding problems, this value
   # will be the diameter of the graph.
-  data_flow_max_steps_required: int = sql.Column(sql.Integer,
-                                                 default=0,
-                                                 nullable=False)
+  data_flow_max_steps_required: int = sql.Column(
+      sql.Integer, default=0, nullable=False)
 
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
       nullable=False,
       default=labdate.GetUtcMillisecondsNow)
 
-  graph: 'Graph' = sql.orm.relationship('Graph',
-                                        uselist=False,
-                                        back_populates="meta",
-                                        cascade="all")
+  graph: 'Graph' = sql.orm.relationship(
+      'Graph', uselist=False, back_populates="meta", cascade="all")
 
   @property
   def data(self) -> typing.Any:
@@ -141,6 +141,37 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         loop_connectedness=query.LoopConnetedness(g),
         graph=Graph.CreateFromPickled(graph_tuple))
 
+  @classmethod
+  def CreateFromGraphMetaAndGraphTuple(cls, graph_meta: 'GraphMeta',
+                                       graph_tuple: graph_tuples.GraphTuple):
+    """Create a GraphMeta with a corresponding Graph containing a graph tuple.
+
+    Args:
+      g: The graph to convert to a GraphMeta. Must have the following attributes
+       set: bytecode_id, source_name, relpath, language.
+      edge_types: The set of edge flow types, e.g. {"control", "flow"}, etc.
+      graph_tuple_opts: Keyword argument to be passed to CreateFromNetworkX().
+
+    Returns:
+      A fully-populated GraphMeta instance.
+    """
+    return GraphMeta(
+        group=graph_meta.group,
+        bytecode_id=graph_meta.bytecode_id,
+        source_name=graph_meta.source_name,
+        relpath=graph_meta.relpath,
+        language=graph_meta.language,
+        node_count=graph_meta.node_count,
+        edge_count=graph_meta.edge_count,
+        edge_type_count=graph_meta.edge_type_count,
+        edge_position_max=graph_meta.edge_position_max,
+        node_labels_dimensionality=graph_meta.node_labels_dimensionality,
+        graph_features_dimensionality=graph_meta.graph_features_dimensionality,
+        graph_labels_dimensionality=graph_meta.graph_labels_dimensionality,
+        data_flow_max_steps_required=graph_meta.data_flow_max_steps_required,
+        loop_connectedness=graph_meta.loop_connectedness,
+        graph=Graph.CreateFromPickled(graph_tuple))
+
 
 class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """The data for a graph.
@@ -148,15 +179,12 @@ class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   This is an opaque byte array that can be used as needed, e.g. for pickled
   graph tuples, networkx graphs, etc.
   """
-  id: int = sql.Column(sql.Integer,
-                       sql.ForeignKey('graph_metas.id'),
-                       primary_key=True)
-  pickled_data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                   nullable=False)
-  meta: GraphMeta = sql.orm.relationship('GraphMeta',
-                                         back_populates="graph",
-                                         uselist=False,
-                                         cascade="all")
+  id: int = sql.Column(
+      sql.Integer, sql.ForeignKey('graph_metas.id'), primary_key=True)
+  pickled_data: bytes = sql.Column(
+      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
+  meta: GraphMeta = sql.orm.relationship(
+      'GraphMeta', back_populates="graph", uselist=False, cascade="all")
 
   @property
   def data(self) -> typing.Any:
@@ -167,62 +195,12 @@ class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     return Graph(pickled_data=pickle.dumps(data))
 
 
-class EmbeddingTable(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """A table of embeddings."""
-  id: int = sql.Column(sql.Integer, primary_key=True)
-
-  # The embedding table key. Currently we only support node embeddings, so this
-  # value can be left at the default value.
-  key: str = sql.Column(sql.String(64),
-                        index=True,
-                        default='node_x',
-                        nullable=False)
-
-  # The number of embeddings in the table.
-  embedding_count: int = sql.Column(sql.Integer, nullable=False)
-
-  # The width of the embedding vectors.
-  embedding_dimensionality: int = sql.Column(sql.Integer, nullable=False)
-
-  # The contents of the embedding table, as a pickled numpy array with shape
-  # [num_entries, embedding_dimensionality].
-  pickled_embedding_table: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                              nullable=False)
-
-  @property
-  def embedding_table(self) -> np.array:
-    """Access the pickled embedding table."""
-    table = pickle.loads(self.pickled_embedding_table)
-    if table.shape != (self.embedding_count, self.embedding_dimensionality):
-      raise EnvironmentError(
-          f"Loaded embedding table has shape {table.shape} but expected shape "
-          f"({self.embedding_count}, {self.embedding_dimensionality})")
-    return table
-
-  @classmethod
-  def CreateFromNumpyArray(cls, embedding_table: np.array,
-                           key=None) -> 'EmbeddingTable':
-    if len(embedding_table.shape) != 2:
-      raise ValueError(f"Embedding table with shape {embedding_table.shape} "
-                       "should have 2 dimensions")
-    return EmbeddingTable(key=key,
-                          embedding_count=embedding_table.shape[0],
-                          embedding_dimensionality=embedding_table.shape[1],
-                          pickled_embedding_table=pickle.dumps(embedding_table))
-
-
 class Database(sqlutil.Database):
 
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
-  def SetNodeEmbeddingTable(self, embedding_table: np.array) -> None:
-    """Set the node embedding table."""
-    with self.Session() as session:
-      if session.query(EmbeddingTable)\
-          .filter(EmbeddingTable.key == 'node_x')\
-          .first():
-        return
-      session.add(
-          EmbeddingTable.CreateFromNumpyArray(embedding_table, key='node_x'))
-      session.commit()
+  @decorators.memoized_property
+  def embeddings_table(self) -> np.array:
+    with open(EMBEDDINGS, 'rb') as f:
+      return pickle.load(f)
