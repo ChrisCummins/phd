@@ -77,6 +77,10 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # of back edges found in any cycle-free path of the full flow graph.
   loop_connectedness: int = sql.Column(sql.Integer, nullable=False)
 
+  # The diameter of the graph is the maximum eccentricity, where eccentricity
+  # is the maximum distance from one node to all other nodes.
+  undirected_diameter: int = sql.Column(sql.Integer, nullable=False)
+
   # The minimum number of message passing steps that are be required to produce
   # the labels from the features. E.g. for graph flooding problems, this value
   # will be the diameter of the graph.
@@ -132,7 +136,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         source_name=g.source_name,
         relpath=g.relpath,
         language=g.language,
-        node_count=g.number_of_nodes(),
+        node_count=len(graph_tuple.node_x_indices),
         # Get the edge stats *after* graph_tuple has inserted the
         # backward edges.
         edge_count=sum([len(a) for a in graph_tuple.adjacency_lists]),
@@ -141,39 +145,9 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         node_labels_dimensionality=node_labels_dimensionality,
         graph_features_dimensionality=graph_features_dimensionality,
         graph_labels_dimensionality=graph_labels_dimensionality,
-        data_flow_max_steps_required=data_flow_max_steps_required,
         loop_connectedness=query.LoopConnetedness(g),
-        graph=Graph.CreateFromPickled(graph_tuple))
-
-  @classmethod
-  def CreateFromGraphMetaAndGraphTuple(cls, graph_meta: 'GraphMeta',
-                                       graph_tuple: graph_tuples.GraphTuple):
-    """Create a GraphMeta with a corresponding Graph containing a graph tuple.
-
-    Args:
-      g: The graph to convert to a GraphMeta. Must have the following attributes
-       set: bytecode_id, source_name, relpath, language.
-      edge_types: The set of edge flow types, e.g. {"control", "flow"}, etc.
-      graph_tuple_opts: Keyword argument to be passed to CreateFromNetworkX().
-
-    Returns:
-      A fully-populated GraphMeta instance.
-    """
-    return GraphMeta(
-        group=graph_meta.group,
-        bytecode_id=graph_meta.bytecode_id,
-        source_name=graph_meta.source_name,
-        relpath=graph_meta.relpath,
-        language=graph_meta.language,
-        node_count=graph_meta.node_count,
-        edge_count=graph_meta.edge_count,
-        edge_type_count=graph_meta.edge_type_count,
-        edge_position_max=graph_meta.edge_position_max,
-        node_labels_dimensionality=graph_meta.node_labels_dimensionality,
-        graph_features_dimensionality=graph_meta.graph_features_dimensionality,
-        graph_labels_dimensionality=graph_meta.graph_labels_dimensionality,
-        data_flow_max_steps_required=graph_meta.data_flow_max_steps_required,
-        loop_connectedness=graph_meta.loop_connectedness,
+        undirected_diameter=nx.diameter(g.to_undirected()),
+        data_flow_max_steps_required=data_flow_max_steps_required,
         graph=Graph.CreateFromPickled(graph_tuple))
 
 

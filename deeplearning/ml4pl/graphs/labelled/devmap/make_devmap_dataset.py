@@ -6,21 +6,20 @@ import typing
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
-
-from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple as graph_tuples
-from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import fs
 from labm8 import sqlutil
 
-app.DEFINE_database(
-    'input_db',
-    graph_database.Database,
-    None,
-    'URL of database to read unlabelled graphs from.',
-    must_exist=True)
+from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
+  graph_tuple as graph_tuples
+
+app.DEFINE_database('input_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to read unlabelled graphs from.',
+                    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write labelled graphs to.')
@@ -50,14 +49,13 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
       for _, r in df.iterrows()
   ]
 
-  df.rename(
-      columns={
-          f'param:{gpu}:wgsize': 'wgsize',
-          f'feature:{gpu}:transfer': 'transfer',
-          f'runtime:{cpu}': 'runtime_cpu',
-          f'runtime:{gpu}': 'runtime_gpu',
-      },
-      inplace=True)
+  df.rename(columns={
+      f'param:{gpu}:wgsize': 'wgsize',
+      f'feature:{gpu}:transfer': 'transfer',
+      f'runtime:{cpu}': 'runtime_cpu',
+      f'runtime:{gpu}': 'runtime_gpu',
+  },
+            inplace=True)
 
   return df[[
       'relpath',
@@ -101,9 +99,24 @@ def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
       # Add 'y' graph feature as target.
       graph_y = row['y']
 
-      yield graph_database.GraphMeta.CreateFromGraphMetaAndGraphTuple(
-          input_graph_meta,
-          graph_tuples.GraphTuple(
+      yield graph_database.GraphMeta(
+          group=input_graph_meta.group,
+          bytecode_id=input_graph_meta.bytecode_id,
+          source_name=input_graph_meta.source_name,
+          relpath=input_graph_meta.relpath,
+          language=input_graph_meta.language,
+          node_count=input_graph_meta.node_count,
+          edge_count=input_graph_meta.edge_count,
+          edge_type_count=input_graph_meta.edge_type_count,
+          edge_position_max=input_graph_meta.edge_position_max,
+          node_labels_dimensionality=0,
+          graph_features_dimensionality=2,
+          graph_labels_dimensionality=2,
+          loop_connectedness=input_graph_meta.loop_connectedness,
+          undirected_diameter=input_graph_meta.undirected_diameter,
+          data_flow_max_steps_required=input_graph_meta.
+          data_flow_max_steps_required,
+          graph=graph_tuples.GraphTuple(
               adjacency_lists=graph_tuple.adjacency_lists,
               edge_positions=graph_tuple.edge_positions,
               incoming_edge_counts=graph_tuple.incoming_edge_counts,
@@ -119,8 +132,8 @@ def MakeOpenClDevmapDataset(input_db: graph_database.Database,
   # TODO(cec): Change groups to k-fold classification.
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(
-      output_db, max_queue=8).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(output_db,
+                                      max_queue=8).Session() as writer:
     df = MakeGpuDataFrame(dataset.df, gpu)
 
     for graph in MakeAnnotatedGraphs(input_db, df):
