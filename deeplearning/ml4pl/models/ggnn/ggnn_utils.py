@@ -1,11 +1,11 @@
 """Utilities for working with GGNNs."""
-import typing
-
 import numpy as np
 import tensorflow as tf
-from labm8 import app
+import typing
 
 from deeplearning.ml4pl.graphs import graph_database_stats
+from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -117,13 +117,13 @@ def BuildRnnCell(cell_type: str,
     raise ValueError(f"Unknown RNN cell type '{name}'.")
 
 
-def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
+def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
                     ) -> typing.Dict[str, tf.Tensor]:
-  """Create tensorflow placeholders for graph dicts in the given dataset.
+  """Create tensorflow placeholders for graph tuples in the given dataset.
 
   Args:
     stats: A graph stats object which provides access to properties describing
-      the graph dicts.
+      the graph tuples.
 
   Returns:
     A dictionary mapping names to placeholder tensors.
@@ -172,22 +172,6 @@ def MakePlaceholders(stats: graph_database_stats.GraphDictDatabaseStats
         stats.node_labels_dtype, [None, stats.node_labels_dimensionality],
         name="node_y")
 
-  if stats.edge_features_dimensionality:
-    placeholders['edge_x'] = [
-        tf.compat.v1.placeholder(stats.edge_features_dtype,
-                                 [None, stats.edge_features_dimensionality],
-                                 name=f"edge_x_e{i}")
-        for i in range(stats.edge_type_count)
-    ]
-
-  if stats.edge_labels_dimensionality:
-    placeholders['edge_x'] = [
-        tf.compat.v1.placeholder(stats.edge_labels_dtype,
-                                 [None, stats.edge_features_dimensionality],
-                                 name=f"edge_x_e{i}")
-        for i in range(stats.edge_type_count)
-    ]
-
   if stats.graph_features_dimensionality:
     placeholders['graph_x'] = tf.compat.v1.placeholder(
         stats.graph_features_dtype, [None, stats.graph_features_dimensionality],
@@ -209,7 +193,7 @@ def BatchDictToFeedDict(
 
   Args:
     batch: A batch dictionary as produced by the
-      GraphBatcher.MakeGroupBatchIterator() iterator.
+      GraphBatcher.MakeGaphBatchIterator() iterator.
     placeholders: A dictionary mapping placeholder names to the names returned
       by tf.compat.v1.placeholder().
 

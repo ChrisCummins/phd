@@ -1,16 +1,13 @@
 """This module prepares datasets for data flow analyses."""
-import pathlib
-import random
 import sys
-import tempfile
-import traceback
-import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import fs
-from labm8 import pbutil
+import pathlib
+import random
+import tempfile
+import traceback
+import typing
 
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -19,12 +16,15 @@ from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import database_exporters
 from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
 from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
-from deeplearning.ml4pl.graphs.labelled.graph_dict import graph_dict
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
+from labm8 import app
+from labm8 import fs
+from labm8 import pbutil
 
 app.DEFINE_database('bytecode_db',
                     bytecode_database.Database,
@@ -81,7 +81,7 @@ def GetFalseTrueType():
 
 
 def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
-                   true) -> typing.Iterable[graph_dict.GraphDict]:
+                   true) -> typing.Iterable[graph_tuple.GraphTuple]:
   """Genereate GraphMeta database rows from the given graph."""
   annotated_graphs = list(
       annotated_graph_generator(graph,
@@ -102,7 +102,7 @@ def MakeGraphMetas(graph: nx.MultiDiGraph, annotated_graph_generator, false,
     edge_types = {'control', 'data'}
 
   return [
-      graph_database.GraphMeta.CreateWithGraphDict(annotated_graph, edge_types)
+      graph_database.GraphMeta.CreateFromNetworkX(annotated_graph, edge_types)
       for annotated_graph in annotated_graphs
   ]
 

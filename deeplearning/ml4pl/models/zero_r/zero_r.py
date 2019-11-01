@@ -1,11 +1,11 @@
 """A Zero-R baseline classifier."""
-import typing
-
 import numpy as np
-from labm8 import app
+import typing
 
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -24,19 +24,19 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
   def MakeMinibatchIterator(
       self, epoch_type: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, np.array]]:
-    for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
-      if 'node_y' in batch:
-        targets = batch['node_y']
-      elif 'graph_y' in batch:
-        targets = batch['graph_y']
+    for batch_tuple in self.batcher.MakeGaphBatchIterator(epoch_type):
+      if batch_tuple.has_node_y:
+        targets = batch_tuple.node_y
+      elif batch_tuple.has_graph_y:
+        targets = batch_tuple.graph_y
       else:
-        raise ValueError("Only node or graph labels are supported")
-      yield batch['log'], targets
+        raise ValueError("Could not determine label type")
+      yield batch_tuple['log'], targets
 
   def RunMinibatch(self, log: log_database.BatchLog, targets: np.array
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
-    # "Training" step updates the class frequence counts.
-    if log.epoch_type == "train":
+    # "Training" step updates the class frequency counts.
+    if log.is_training:
       y_true = np.argmax(targets, axis=1)
       freqs = np.bincount(y_true)
       for i, n in enumerate(freqs):

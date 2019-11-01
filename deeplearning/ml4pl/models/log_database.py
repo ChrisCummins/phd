@@ -1,16 +1,17 @@
 """Database backend for model logs."""
 import datetime
 import pickle
-import typing
-
 import sqlalchemy as sql
+import typing
+from sqlalchemy.dialects import mysql
+from sqlalchemy.ext import declarative
+
 from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pdutil
 from labm8 import sqlutil
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import declarative
+
 
 FLAGS = app.FLAGS
 

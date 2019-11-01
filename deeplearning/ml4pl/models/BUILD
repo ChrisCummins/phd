@@ -8,7 +8,7 @@ py_library(
     deps = [
         "//:build_info",
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled/graph_dict:graph_batcher",
+        "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
         "//labm8:bazelutil",
@@ -30,7 +30,7 @@ py_library(
     deps = [
         ":log_database",
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled/graph_dict:graph_batcher",
+        "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
         "//labm8:app",
         "//labm8:decorators",
         "//labm8:humanize",

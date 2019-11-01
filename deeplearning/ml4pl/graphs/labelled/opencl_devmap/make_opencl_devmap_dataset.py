@@ -1,19 +1,19 @@
 """This module prepares a CPU/GPU OpenCL device-mapping dataset."""
-import pathlib
-import tempfile
-import typing
-
 import networkx as nx
 import numpy as np
 import pandas as pd
+import pathlib
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import fs
-from labm8 import sqlutil
+import tempfile
+import typing
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ncc.inst2vec import api as inst2vec
+from labm8 import app
+from labm8 import fs
+from labm8 import sqlutil
+
 
 app.DEFINE_database('input_db',
                     graph_database.Database,
@@ -114,7 +114,7 @@ def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
       # Load the graph data.
       q = q.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
       input_graph_meta = q.first()
-      graph = input_graph_meta.pickled_data
+      graph = input_graph_meta.data
 
       # Add 'x' node features as embedding indices for vocabulary.
       # TODO(cec): This maps identifier nodes to the same embedding as unknown
@@ -152,8 +152,8 @@ def MakeOpenClDevmapDataset(input_db: graph_database.Database,
     for graph in MakeAnnotatedGraphs(input_db, df):
       app.Log(1, 'Processed %s', graph.name)
       writer.AddOne(
-          graph_database.GraphMeta.CreateWithGraphDict(
-              graph, edge_types={'control', 'data', 'call'}))
+          graph_database.GraphMeta.CreateFromNetworkX(
+              graph, edge_types={'control', 'data', 'call'},
 
 
 def main():

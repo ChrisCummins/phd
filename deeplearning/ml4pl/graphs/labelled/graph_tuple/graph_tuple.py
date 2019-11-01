@@ -1,8 +1,8 @@
 """The module implements conversion of graphs to tuples of arrays."""
-import typing
-
 import networkx as nx
 import numpy as np
+import typing
+
 from labm8 import app
 
 app.DEFINE_boolean(
@@ -210,7 +210,7 @@ class GraphTuple(typing.NamedTuple):
     )
 
   def ToNetworkx(self) -> nx.MultiDiGraph:
-    """Construct a networkx graph from a graph dict.
+    """Construct a networkx graph from a graph tuple.
 
     Use this function for producing interpretable representation of graph
     tuples, but note that this is not an inverse of the CreateFromNetworkX()

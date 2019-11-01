@@ -382,7 +382,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
-    for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
+    for batch in self.batcher.MakeGaphBatchIterator(epoch_type):
       # Pad node feature vector of size <= hidden_size up to hidden_size so
       # that the size matches embedding dimensionality.
       # batch['node_x'] = np.pad(

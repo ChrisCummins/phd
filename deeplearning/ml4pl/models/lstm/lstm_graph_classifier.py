@@ -135,7 +135,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
-    for batch in self.batcher.MakeGroupBatchIterator(epoch_type):
+    for batch in self.batcher.MakeGaphBatchIterator(epoch_type):
       graph_ids = batch['log'].graph_indices
 
       with prof.Profile("Loaded and encoded bytecodes"):

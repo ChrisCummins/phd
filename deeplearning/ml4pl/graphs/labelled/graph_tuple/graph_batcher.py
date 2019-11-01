@@ -1,12 +1,10 @@
-"""A module for batching graph dictionaries."""
+"""A module for batching graph tuples."""
 import time
-import typing
 
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
+import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
@@ -14,6 +12,8 @@ from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
   graph_tuple as graph_tuples
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
+from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -109,7 +109,7 @@ class GraphBatch(graph_tuples.GraphTuple):
       graph_ids.append(graph.id)
 
       # De-serialize pickled data in database and process.
-      graph_tuple = graph.pickled_data
+      graph_tuple = graph.data
 
       graph_nodes_list.append(
           np.full(
@@ -268,7 +268,7 @@ class GraphBatch(graph_tuples.GraphTuple):
 class GraphBatcher(object):
   """A generalised graph batcher which flattens adjacency matrices into a single
   adjacency matrix with multiple disconnected components. Supports all feature
-  and label types of graph dicts.
+  and label types of graph tuples.
   """
 
   def __init__(self,
