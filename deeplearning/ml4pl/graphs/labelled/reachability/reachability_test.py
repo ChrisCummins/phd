@@ -22,48 +22,28 @@ def graph():
   return g
 
 
-def test_SetReachableNodes_reachable_node_count_zero(graph):
-  reachable_node_count, _ = reachability.SetReachableNodes(graph, 'D', 0)
+def test_SetReachableNodes_reachable_node_count_D(graph):
+  reachable_node_count, _ = reachability.SetReachableNodes(graph, 'D')
   assert reachable_node_count == 1
 
 
-def test_SetReachableNodes_reachable_node_count_one(graph):
-  reachable_node_count, _ = reachability.SetReachableNodes(graph, 'A', 1)
-  assert reachable_node_count == 1
-
-
-def test_SetReachableNodes_reachable_node_count_two(graph):
-  reachable_node_count, _ = reachability.SetReachableNodes(graph, 'A', 2)
-  assert reachable_node_count == 2
-
-
-def test_SetReachableNodes_reachable_node_count_three(graph):
-  reachable_node_count, _ = reachability.SetReachableNodes(graph, 'A', 0)
+def test_SetReachableNodes_reachable_node_count_A(graph):
+  reachable_node_count, _ = reachability.SetReachableNodes(graph, 'A')
   assert reachable_node_count == 4
 
 
-def test_SetReachableNodes_data_flow_steps_zero(graph):
-  _, data_flow_steps = reachability.SetReachableNodes(graph, 'D', 0)
+def test_SetReachableNodes_data_flow_steps_D(graph):
+  _, data_flow_steps = reachability.SetReachableNodes(graph, 'D')
   assert data_flow_steps == 1
 
 
-def test_SetReachableNodes_data_flow_steps_one(graph):
-  _, data_flow_steps = reachability.SetReachableNodes(graph, 'A', 1)
-  assert data_flow_steps == 1
-
-
-def test_SetReachableNodes_data_flow_steps_two(graph):
-  _, data_flow_steps = reachability.SetReachableNodes(graph, 'A', 2)
-  assert data_flow_steps == 2
-
-
-def test_SetReachableNodes_data_flow_steps_three(graph):
-  _, data_flow_steps = reachability.SetReachableNodes(graph, 'A', 0)
+def test_SetReachableNodes_data_flow_steps_A(graph):
+  _, data_flow_steps = reachability.SetReachableNodes(graph, 'A')
   assert data_flow_steps == 4
 
 
 def test_SetReachableNodes_node_x(graph):
-  _ = reachability.SetReachableNodes(graph, 'A', 2)
+  _ = reachability.SetReachableNodes(graph, 'A')
   assert graph.nodes['A']['x']
   assert not graph.nodes['B']['x']
   assert not graph.nodes['C']['x']
@@ -71,11 +51,11 @@ def test_SetReachableNodes_node_x(graph):
 
 
 def test_SetReachableNodes_node_y(graph):
-  _ = reachability.SetReachableNodes(graph, 'A', 2)
-  assert graph.nodes['A']['y']
+  _ = reachability.SetReachableNodes(graph, 'B')
+  assert not graph.nodes['A']['y']
   assert graph.nodes['B']['y']
   assert not graph.nodes['C']['y']
-  assert not graph.nodes['D']['y']
+  assert graph.nodes['D']['y']
 
 
 if __name__ == '__main__':
