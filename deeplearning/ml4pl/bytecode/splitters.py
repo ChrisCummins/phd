@@ -109,8 +109,8 @@ def GetPact17BytecodeGroups(
       .filter(bytecode_database.LlvmBytecode.clang_returncode == 0) \
       .filter(bytecode_database.LlvmBytecode.source_name == 'pact17_opencl_devmap')
     all_ids = [r[0] for r in query]
-  folds = sklearn.model_selection.KFold(all_ids)
-  return {f'{k}': test for i, (train, test) in enumerate(folds)}
+  kfold = sklearn.model_selection.KFold(10).split(all_ids)
+  return {f'{k}': all_ids[test] for k, (train, test) in enumerate(kfold)}
 
 
 def ApplySplitSizeLimit(groups: typing.Dict[str, typing.List[int]]):
