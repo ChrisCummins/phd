@@ -1,18 +1,13 @@
 """Base class for implementing classifier models."""
-import time
-
 import collections
-import numpy as np
 import pathlib
 import pickle
 import random
-import sklearn.metrics
+import time
 import typing
 
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
+import numpy as np
+import sklearn.metrics
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
@@ -23,6 +18,10 @@ from labm8 import ppar
 from labm8 import prof
 from labm8 import system
 
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -91,12 +90,12 @@ class ClassifierBase(object):
   """Abstract base class for implementing classification models."""
 
   def MakeMinibatchIterator(
-      self, epoch_type: str
+      self, group: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, typing.Any]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
-      epoch_type: The type of epoch to return mini-batches for.
+      group: The dataset group to return mini-batches for.
 
     Returns:
       An iterator of mini-batches and batch logs, where each
@@ -104,20 +103,35 @@ class ClassifierBase(object):
     """
     raise NotImplementedError("abstract class")
 
+  # The result of running a minibatch. Return 1-hot target values and the raw
+  # 1-hot outputs of the model. These are used to compute evaluation metrics.
   MinibatchResults = collections.namedtuple('MinibatchResults',
                                             ['y_true_1hot', 'y_pred_1hot'])
 
-  def RunMinibatch(self, epoch_type: str,
+  def RunMinibatch(self, log: log_database.BatchLog,
                    batch: typing.Any) -> MinibatchResults:
+    """Process a mini-batch of data using the model.
+
+    Args:
+      log: The mini-batch log returned by MakeMinibatchIterator().
+      batch: The batch data returned by MakeMinibatchIterator().
+
+    Returns:
+      The target values for the batch, and the predicted values.
+    """
     raise NotImplementedError("abstract class")
 
   def GetModelFlagNames(self) -> typing.Iterable[str]:
-    """Subclasses may extend this method to mark additional flags as important."""
+    """Return the 'model flags', a subset of all flags which are used to
+    describe the model architecture. These flags must be consistent across runs
+    of the same model. Subclasses may extend this method to mark additional
+    flags as important.
+    """
     return MODEL_FLAGS
 
   def __init__(self, db: graph_database.Database,
                log_db: log_database.Database):
-    """Constructor."""
+    """Constructor. Subclasses should call this first."""
     self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
                         f"{system.HOSTNAME}")
     app.Log(1, "Run ID: %s", self.run_id)
@@ -159,27 +173,31 @@ class ClassifierBase(object):
 
   @property
   def message_passing_step_count(self) -> int:
+    """Return the maximum message passing steps of the model, or 0 if no
+    limit.
+    """
     return 0
 
   @decorators.memoized_property
   def labels_dimensionality(self) -> int:
+    """Return the dimensionality of the node/graph labels."""
     return (self.stats.node_labels_dimensionality +
             self.stats.graph_labels_dimensionality)
 
   @decorators.memoized_property
   def labels(self):
+    """Return a dense array of integer label values."""
     return np.arange(self.labels_dimensionality, dtype=np.int32)
 
-  def RunEpoch(self, epoch_type: str) -> float:
-    assert epoch_type in {"train", "val", "test"}
+  def RunEpoch(self, group: str, is_training: bool = False) -> float:
+    """Run the model with the given epoch."""
     epoch_accuracies = []
 
-    batch_type = typing.Tuple[log_database.BatchLog, typing.Dict[str, typing.
-                                                                 Any]]
-    batch_iterator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-        self.MakeMinibatchIterator(epoch_type), max_queue_size=5)
+    batch_type = typing.Tuple[log_database.BatchLog, typing.Any]
+    batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
+        self.MakeMinibatchIterator(group), max_queue_size=5)
 
-    for step, (log, feed_dict) in enumerate(batch_iterator):
+    for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:
         raise ValueError("Mini-batch with zero graphs generated")
 
@@ -189,9 +207,9 @@ class ClassifierBase(object):
       log.batch = step + 1
       log.global_step = self.global_training_step
       log.run_id = self.run_id
+      log.is_training = is_training
 
-      assert log.group in {"train", "val", "test"}
-      targets, predictions = self.RunMinibatch(log, feed_dict)
+      targets, predictions = self.RunMinibatch(log, batch_data)
 
       # Compute statistics.
       y_true = np.argmax(targets, axis=1)
@@ -234,16 +252,51 @@ class ClassifierBase(object):
 
     return np.mean(epoch_accuracies)
 
-  def Train(self):
+  def RunKFoldTrainAndValidate(self, k: int) -> typing.Tuple[float, float]:
+    """Run a single train/validation epoch using k-fold cross-validation.
+
+    This performs nested cross-validation so that both the entirety of the
+    training set is used for validation and testing.
+    """
+    test_accs = []
+    groups = list(str(x) for x in range(k))
+    for test in groups:
+      val_accs = []
+      for val in groups:
+        if val == test:
+          continue
+        for train in groups:
+          if train == test or train == val:
+            continue
+          self.RunEpoch(train, is_training=True)
+        val_accs.append(self.RunEpoch(val))
+      self.RunEpoch(train)
+    return np.array(val_accs).mean(), np.array(test_accs).mean()
+
+  def Train(self, k_fold: typing.Optional[int] = None) -> float:
+    """Train the model.
+
+    Args:
+      k_fold: If provided, use the given `k` splits. Else, use
+        `train`,`val`,`test` splits.
+
+    Returns:
+      The best validation accuracy of the model.
+    """
     for epoch_num in range(self.epoch_num, FLAGS.num_epochs + 1):
       self.epoch_num = epoch_num
       epoch_start_time = time.time()
-      self.RunEpoch("train")
-      val_acc = self.RunEpoch("val")
+
+      if FLAGS.k_fold:
+        val_acc, test_acc = self.RunKFoldTrainAndValidate(FLAGS.k_fold)
+      else:
+        self.RunEpoch("train", is_training=True)
+        val_acc = self.RunEpoch("val")
       app.Log(1, "Epoch %s completed in %s. Validation "
               "accuracy: %.2f%%", epoch_num,
               humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
 
+      # Save the model when validation accuracy improves.
       if val_acc > self.best_epoch_validation_accuracy:
         self.SaveModel(self.best_model_file)
         # Compute the ratio of the new best validation accuracy against the
@@ -262,9 +315,12 @@ class ClassifierBase(object):
         self.best_epoch_validation_accuracy = val_acc
         self.best_epoch_num = epoch_num
 
-        # Run on test set.
-        if FLAGS.test_on_improvement:
+        # Run on test set if we haven't already.
+        if not FLAGS.k_fold and FLAGS.test_on_improvement:
           test_acc = self.RunEpoch("test")
+          app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
+                  test_acc * 100)
+        elif FLAGS.k_fold:
           app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
                   test_acc * 100)
       elif epoch_num - self.best_epoch_num >= FLAGS.patience:
@@ -272,6 +328,8 @@ class ClassifierBase(object):
             1, "Stopping training after %i epochs without "
             "improvement on validation accuracy", FLAGS.patience)
         break
+
+    return self.best_epoch_validation_accuracy
 
   def InitializeModel(self) -> None:
     """Initialize a new model state."""

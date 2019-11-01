@@ -64,7 +64,7 @@ class MockModel(ggnn_base.GgnnBaseModel):
     accuracies = tf.Variable(np.random.rand())
     return loss, accuracy, accuracies, predictions
 
-  def MakeMinibatchIterator(self, epoch_type):
+  def MakeMinibatchIterator(self, group):
     del epoch_type
     for _ in range(3):
       log = log_database.BatchLog(graph_count=10)

@@ -1,17 +1,16 @@
 """Database backend for model logs."""
 import datetime
 import pickle
-import sqlalchemy as sql
 import typing
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import declarative
 
+import sqlalchemy as sql
 from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pdutil
 from labm8 import sqlutil
-
+from sqlalchemy.dialects import mysql
+from sqlalchemy.ext import declarative
 
 FLAGS = app.FLAGS
 
@@ -70,6 +69,7 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # The GraphMeta.group column that this batch of graphs came from.
   group: str = sql.Column(sql.String(32), nullable=False)
+  is_training: bool = sql.Column(sql.Boolean, nullable=False)
 
   instances: 'Instances' = sql.orm.relationship('Instances',
                                                 uselist=False,
