@@ -80,6 +80,11 @@ app.DEFINE_boolean(
     "test_only", False,
     "If this flag is set, only a single pass of the test set is ran.")
 
+app.DEFINE_integer(
+    "k_fold", 0,
+    "Use this many groups for k-fold validation. This is incompatbile with the "
+    "--test_only flag.")
+
 #
 ##### End of flag declarations.
 
@@ -287,8 +292,8 @@ class ClassifierBase(object):
       self.epoch_num = epoch_num
       epoch_start_time = time.time()
 
-      if FLAGS.k_fold:
-        val_acc, test_acc = self.RunKFoldTrainAndValidate(FLAGS.k_fold)
+      if k_fold:
+        val_acc, test_acc = self.RunKFoldTrainAndValidate(k_fold)
       else:
         self.RunEpoch("train", is_training=True)
         val_acc = self.RunEpoch("val")
@@ -316,11 +321,11 @@ class ClassifierBase(object):
         self.best_epoch_num = epoch_num
 
         # Run on test set if we haven't already.
-        if not FLAGS.k_fold and FLAGS.test_on_improvement:
+        if not k_fold and FLAGS.test_on_improvement:
           test_acc = self.RunEpoch("test")
           app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
                   test_acc * 100)
-        elif FLAGS.k_fold:
+        elif k_fold:
           app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
                   test_acc * 100)
       elif epoch_num - self.best_epoch_num >= FLAGS.patience:
@@ -462,4 +467,4 @@ def Run(model_class):
     test_acc = model.RunEpoch("test")
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
-    model.Train()
+    model.Train(FLAGS.k_fold)
