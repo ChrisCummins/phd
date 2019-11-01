@@ -18,6 +18,18 @@ WHERE status=0
 GROUP BY source_name,
          LANGUAGE;
 
+-- Check for duplicates in bytecode sources.
+
+SELECT bytecode_sha1,
+       `count`
+FROM
+  (SELECT bytecode_sha1,
+          count(*) AS 'count'
+   FROM reachability.llvm_bytecode
+   WHERE clang_returncode=0
+   GROUP BY bytecode_sha1) AS t
+ORDER BY `count` DESC;
+
 -- Agregate stats about the graph database.
 
 SELECT count(*)
