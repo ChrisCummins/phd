@@ -245,16 +245,6 @@ def Run(input_db, output_db, run_export):
   with tempfile.TemporaryDirectory() as d:
     app.LogToDirectory(d, 'log')
 
-    # Record the number of instances per graph that we're generating.
-    app.Log(1, 'Generating up to %s instances per graph',
-            FLAGS.max_instances_per_graph)
-    with output_db.Session(commit=True) as s:
-      s.query(graph_database.Meta).filter(
-          graph_database.Meta.key == 'max_instances_per_graph').delete()
-      s.add(
-          graph_database.Meta(key='max_instances_per_graph',
-                              value=str(FLAGS.max_instances_per_graph)))
-
     app.Log(1, 'Seeding with %s', FLAGS.seed)
     random.seed(FLAGS.seed)
 
