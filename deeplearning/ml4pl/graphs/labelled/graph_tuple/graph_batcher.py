@@ -5,6 +5,8 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
@@ -12,8 +14,6 @@ from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
   graph_tuple as graph_tuples
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -114,6 +114,30 @@ class GraphBatch(typing.NamedTuple):
         dense[node_id, edge_type] = edge_count
     return dense
 
+  @staticmethod
+  def NextGraph(graphs: typing.Iterable[graph_database.GraphMeta]
+               ) -> typing.Optional[graph_database.GraphMeta]:
+    """Read the next graph from graph iterable, or None if no more graphs.
+
+    Args:
+      graphs: An iterator over graphs.
+
+    Returns:
+      A graph, or None.
+
+    Raises:
+      ValueError: If the graph is larger than permitted by the batch size.
+    """
+    try:
+      graph = next(graphs)
+      if graph.node_count > FLAGS.batch_size:
+        raise ValueError(
+            f"Graph `{graph.id}` with {graph.node_count} is larger "
+            f"than batch size {FLAGS.batch_size}")
+      return graph
+    except StopIteration:  # We have run out of graphs.
+      return None
+
   @classmethod
   def CreateFromGraphMetas(cls,
                            graphs: typing.Iterable[graph_database.GraphMeta],
@@ -127,20 +151,18 @@ class GraphBatch(typing.NamedTuple):
     Returns:
       The graph batch. If there are no graphs to batch then None is returned.
     """
-    try:
-      graph = next(graphs)
-    except StopIteration:  # We have run out of graphs.
+    graph = cls.NextGraph(graphs)
+    if not graph:  # We have run out of graphs.
       return None
 
     edge_type_count = stats.edge_type_count
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLog(
-        graph_count=0,
-        node_count=0,
-        group=graph.group,
-        instances=log_database.Instances())
+    log = log_database.BatchLog(graph_count=0,
+                                node_count=0,
+                                group=graph.group,
+                                instances=log_database.Instances())
 
     graph_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
@@ -211,10 +233,9 @@ class GraphBatch(typing.NamedTuple):
       log.graph_count += 1
       log.node_count += graph.node_count
 
-      try:
-        graph = next(graphs)
-      except StopIteration:  # Nothing left to read from the database.
-        break
+      graph = cls.NextGraph(graphs)
+      if not graph:  # We have run out of graphs.
+        return None
 
     # Concatenate and convert lists to numpy arrays.
 
@@ -357,8 +378,8 @@ class GraphBatcher(object):
           "flags are set")
     self.db = db
     self.message_passing_step_count = message_passing_step_count
-    self.stats = graph_stats.GraphTupleDatabaseStats(
-        self.db, filters=self._GetFilters())
+    self.stats = graph_stats.GraphTupleDatabaseStats(self.db,
+                                                     filters=self._GetFilters())
     app.Log(1, "%s", self.stats)
 
   def GetGraphsInGroupCount(self, group: str) -> int:

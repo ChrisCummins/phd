@@ -18,6 +18,17 @@ py_library(
     ],
 )
 
+py_test(
+    name = "graph_batcher_test",
+    srcs = ["graph_batcher_test.py"],
+    deps = [
+        ":graph_batcher",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//labm8:app",
+        "//labm8:test",
+    ],
+)
+
 py_library(
     name = "graph_tuple",
     srcs = ["graph_tuple.py"],
