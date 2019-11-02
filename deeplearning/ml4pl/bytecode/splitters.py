@@ -153,7 +153,7 @@ def GetGroupsFromFlags(
           GetTrainValTestGroups(db, train_val_test_ratio))
     elif FLAGS.bytecode_split_type == 'poj104':
       return ApplySplitSizeLimit(GetPoj104BytecodeGroups(db))
-    elif FLAGS.bytecode_split_type == 'pact17':
+    elif FLAGS.bytecode_split_type == 'pact17_10_fold':
       return ApplySplitSizeLimit(GetPact17BytecodeGroups(db))
     else:
       raise app.UsageError("Unknown split type")
