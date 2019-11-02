@@ -8,6 +8,7 @@ import typing
 import numpy as np
 import sqlalchemy as sql
 from labm8 import app
+from labm8 import prof
 
 from deeplearning.ml4pl.graphs import database_exporters
 from deeplearning.ml4pl.graphs import graph_database
@@ -85,22 +86,28 @@ def _ProcessInputs(
 
     # Determine the number of instances to produce based on the size of the
     # input graph.
-    n = math.ceil(min(g.number_of_nodes() / 10, FLAGS.max_instances_per_graph))
+    n = math.ceil(
+        min(input_graph_meta.node_count / 10, FLAGS.max_instances_per_graph))
 
     try:
-      annotated_graphs = list(
-          annotated_graph_generator(graph, n=n, false=false, true=true))
+      with prof.Profile(
+          lambda t:
+          f"Produced {len(annotated_graphs)} {FLAGS.analysis} instances from {input_graph_meta.node_count}-node graph"
+      ):
+        annotated_graphs = list(
+            annotated_graph_generator(graph, n=n, false=false, true=true))
 
-      # Copy over graph metadata.
-      for annotated_graph in annotated_graphs:
-        annotated_graph.bytecode_id = graph.bytecode_id
-        annotated_graph.source_name = graph.source_name
-        annotated_graph.relpath = graph.relpath
-        annotated_graph.language = graph.language
-      graph_metas += [
-          graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
-          for annotated_graph in annotated_graphs
-      ]
+        # Copy over graph metadata.
+        for annotated_graph in annotated_graphs:
+          annotated_graph.group = input_graph_meta.group
+          annotated_graph.bytecode_id = graph.bytecode_id
+          annotated_graph.source_name = graph.source_name
+          annotated_graph.relpath = graph.relpath
+          annotated_graph.language = graph.language
+        graph_metas += [
+            graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
+            for annotated_graph in annotated_graphs
+        ]
     except Exception as e:
       _, _, tb = sys.exc_info()
       tb = traceback.extract_tb(tb, 2)
