@@ -129,3 +129,26 @@ def FastCreateRandom():
     g.remove_node(node)
 
   return g
+
+
+def AddRandomAnnotations(graphs: typing.List[nx.MultiDiGraph],
+                         node_y_choices=None,
+                         graph_x_choices=None,
+                         graph_y_choices=None):
+  """Add random additions to the graphs."""
+  if node_y_choices:
+    for graph in graphs:
+      node_y = np.random.choice(node_y_choices,
+                                shape=(graph.number_of_nodes(),))
+      for (node, data), y in zip(graph.nodes(data=True), node_y):
+        data['y'] = y
+
+  if graph_x_choices:
+    graph_x = np.random.choice(graph_x_choices, shape=(len(graphs),))
+    for graph, x in zip(graphs, graph_x):
+      graph.x = x
+
+  if graph_y_choices:
+    graph_y = np.random.choice(graph_y_choices, shape=(len(graphs),))
+    for graph, y in zip(graphs, graph_y):
+      graph.y = y
