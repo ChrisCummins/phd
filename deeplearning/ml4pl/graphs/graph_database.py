@@ -14,7 +14,6 @@ from labm8 import sqlutil
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-from deeplearning.ml4pl.graphs import graph_query as query
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
   graph_tuple as graph_tuples
 
@@ -145,8 +144,11 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         node_labels_dimensionality=node_labels_dimensionality,
         graph_features_dimensionality=graph_features_dimensionality,
         graph_labels_dimensionality=graph_labels_dimensionality,
-        loop_connectedness=query.LoopConnetedness(g),
-        undirected_diameter=nx.diameter(g.to_undirected()),
+        # TODO(cec): Compute loop connectedness and diameter later.
+        loop_connectedness=0,
+        undirected_diameter=0,
+        # loop_connectedness=query.LoopConnectedness(g),
+        # undirected_diameter=nx.diameter(g.to_undirected()),
         data_flow_max_steps_required=data_flow_max_steps_required,
         graph=Graph.CreateFromPickled(graph_tuple))
 
@@ -170,24 +172,29 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       edge_position_max = max(edge_position_max, data.get('position', 0))
       edge_types.add(data.get('flow', 'control'))
 
-    return GraphMeta(group=getattr(g, 'group', None),
-                     bytecode_id=g.bytecode_id,
-                     source_name=g.source_name,
-                     relpath=g.relpath,
-                     language=g.language,
-                     node_count=g.number_of_nodes(),
-                     edge_count=g.number_of_edges(),
-                     edge_type_count=len(edge_types),
-                     edge_position_max=edge_position_max,
-                     node_labels_dimensionality=(len(g.nodes[node]['y']) if
-                                                 'y' in g.nodes[node] else 0),
-                     graph_features_dimensionality=getattr(g, 'x', 0),
-                     graph_labels_dimensionality=getattr(g, 'y', 0),
-                     loop_connectedness=query.LoopConnetedness(g),
-                     undirected_diameter=nx.diameter(g.to_undirected()),
-                     data_flow_max_steps_required=getattr(
-                         g, 'data_flow_max_steps_required', 0),
-                     graph=Graph.CreateFromPickled(g))
+    return GraphMeta(
+        group=getattr(g, 'group', None),
+        bytecode_id=g.bytecode_id,
+        source_name=g.source_name,
+        relpath=g.relpath,
+        language=g.language,
+        node_count=g.number_of_nodes(),
+        edge_count=g.number_of_edges(),
+        edge_type_count=len(edge_types),
+        edge_position_max=edge_position_max,
+        node_labels_dimensionality=(len(g.nodes[node]['y'])
+                                    if 'y' in g.nodes[node] else 0),
+        graph_features_dimensionality=getattr(g, 'x', 0),
+        graph_labels_dimensionality=getattr(g, 'y', 0),
+        # TODO(github.com/ChrisCummins/ml4pl/issues/5): Compute
+        # loop connectedness and diameter later.
+        loop_connectedness=0,
+        undirected_diameter=0,
+        # loop_connectedness=query.LoopConnectedness(g),
+        # undirected_diameter=nx.diameter(g.to_undirected()),
+        data_flow_max_steps_required=getattr(g, 'data_flow_max_steps_required',
+                                             0),
+        graph=Graph.CreateFromPickled(g))
 
 
 class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
