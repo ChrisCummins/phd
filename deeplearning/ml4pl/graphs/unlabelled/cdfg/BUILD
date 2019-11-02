@@ -49,3 +49,25 @@ py_test(
         "//third_party/py/pytest",
     ],
 )
+
+py_library(
+    name = "random_cdfg_generator",
+    srcs = ["random_cdfg_generator.py"],
+    deps = [
+        ":control_and_data_flow_graph",
+        "//labm8:app",
+        "//third_party/py/networkx",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_test(
+    name = "random_cdfg_generator_test",
+    srcs = ["random_cdfg_generator_test.py"],
+    deps = [
+        ":random_cdfg_generator",
+        "//labm8:app",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
