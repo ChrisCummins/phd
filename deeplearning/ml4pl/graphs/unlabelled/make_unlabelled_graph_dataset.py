@@ -5,6 +5,7 @@ import traceback
 import typing
 
 from labm8 import app
+from labm8 import prof
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.bytecode import splitters
@@ -43,15 +44,18 @@ def _ProcessInputs(
 
   builder = cdfg.ControlAndDataFlowGraphBuilder()
 
-  graphs = []
+  graph_metas = []
   for bytecode_id, bytecode, source_name, relpath, language in jobs:
     try:
-      graph = builder.Build(bytecode)
+      with prof.Profile(
+          lambda t: f"Constructed {graph.number_of_nodes()}-node CDFG"):
+        graph = builder.Build(bytecode)
       graph.bytecode_id = bytecode_id
       graph.source_name = source_name
       graph.relpath = relpath
       graph.language = language
-      graphs.append(graph)
+      graph_metas.append(
+          graph_database.GraphMeta.CreateWithNetworkXGraph(graph))
     except Exception as e:
       _, _, tb = sys.exc_info()
       tb = traceback.extract_tb(tb, 2)
@@ -62,10 +66,7 @@ def _ProcessInputs(
           '%d: %s (%s:%s:%s() -> %s)', bytecode_id, e, filename, line_number,
           function_name,
           type(e).__name__)
-  return [
-      graph_database.GraphMeta.CreateWithNetworkXGraph(graph)
-      for graph in graphs
-  ]
+  return graph_metas
 
 
 class UnlabelledGraphExporter(database_exporters.BytecodeDatabaseExporterBase):
