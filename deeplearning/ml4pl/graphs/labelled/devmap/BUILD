@@ -10,6 +10,7 @@ py_binary(
         "//deeplearning/ncc/inst2vec:api",
         "//labm8:app",
         "//labm8:fs",
+        "//labm8:prof",
         "//labm8:sqlutil",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
