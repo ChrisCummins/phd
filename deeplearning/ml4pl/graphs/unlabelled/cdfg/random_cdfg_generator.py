@@ -35,7 +35,7 @@ def FastCreateRandom():
     5. Edges have positions.
     6. The graph is strongly connected.
   """
-  num_nodes = random.randint(10, 200)
+  num_nodes = random.randint(5, 50)
   g = nx.scale_free_graph(num_nodes)
 
   node_renamings = {}

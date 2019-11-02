@@ -14,6 +14,7 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
+        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
         "//deeplearning/ml4pl/models:log_analysis",
         "//deeplearning/ml4pl/models:log_database",
