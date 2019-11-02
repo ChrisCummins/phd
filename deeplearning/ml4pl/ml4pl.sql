@@ -1,22 +1,23 @@
 -- Aggregate stats about bytecode corpus.
 
-SELECT source_name,
-       LANGUAGE,
+SELECT graphs.source_name,
+       graphs.language,
        file_count,
-       count(*) AS function_count,
+       count(*) AS graph_count,
        sum(linecount) AS line_count,
-       sum(block_count) AS basic_block_count,
-       avg(greatest(1, edge_count) / block_count) AS cfg_branch_factor
-FROM reachability.control_flow_graph_proto AS cfg
-LEFT JOIN reachability.llvm_bytecode AS bytecode ON cfg.bytecode_id = bytecode.id
+       sum(node_count) AS node_count,
+       sum(edge_count) AS edge_count,
+       avg(greatest(1, edge_count) / node_count) AS branch_factor
+FROM ml4pl_unlabelled_corpus.graph_metas AS graphs
+LEFT JOIN reachability.llvm_bytecode AS bytecode ON graphs.bytecode_id = bytecode.id
 LEFT JOIN
   (SELECT source_name AS source_name_,
           count(*) AS file_count
    FROM reachability.llvm_bytecode
-   GROUP BY source_name) AS t ON source_name_=source_name
-WHERE status=0
+   WHERE clang_returncode=0
+   GROUP BY source_name_) AS t ON source_name_=graphs.source_name
 GROUP BY source_name,
-         LANGUAGE;
+         `language`;
 
 -- Check for duplicates in bytecode sources.
 
@@ -33,7 +34,7 @@ ORDER BY `count` DESC;
 -- Agregate stats about the graph database.
 
 SELECT count(*)
-FROM ml4pl_graphs.graph_metas;
+FROM ml4pl_unlabelled_corpus.graph_metas;
 
 
 SELECT source_name,
@@ -44,7 +45,7 @@ SELECT source_name,
        sum(edge_count) AS edge_count,
        round(avg(node_count)) AS avg_node_count,
        round(avg(edge_count)) AS avg_edge_count
-FROM ml4pl_graphs.graph_metas
+FROM ml4pl_unlabelled_corpus.graph_metas
 GROUP BY source_name,
          `language`,
          `group`
