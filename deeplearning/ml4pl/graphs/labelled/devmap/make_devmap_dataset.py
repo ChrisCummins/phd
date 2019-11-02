@@ -13,15 +13,12 @@ from labm8 import sqlutil
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
-  graph_tuple as graph_tuples
 
-app.DEFINE_database(
-    'input_db',
-    graph_database.Database,
-    None,
-    'URL of database to read unlabelled graphs from.',
-    must_exist=True)
+app.DEFINE_database('input_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to read unlabelled graphs from.',
+                    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write labelled graphs to.')
@@ -51,14 +48,13 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
       for _, r in df.iterrows()
   ]
 
-  df.rename(
-      columns={
-          f'param:{gpu}:wgsize': 'wgsize',
-          f'feature:{gpu}:transfer': 'transfer',
-          f'runtime:{cpu}': 'runtime_cpu',
-          f'runtime:{gpu}': 'runtime_gpu',
-      },
-      inplace=True)
+  df.rename(columns={
+      f'param:{gpu}:wgsize': 'wgsize',
+      f'feature:{gpu}:transfer': 'transfer',
+      f'runtime:{cpu}': 'runtime_cpu',
+      f'runtime:{gpu}': 'runtime_gpu',
+  },
+            inplace=True)
 
   return df[[
       'relpath',
@@ -71,12 +67,13 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
   ]]
 
 
-def MakeAnnotatedGraphs(input_db: graph_database.Database, df: pd.DataFrame
-                       ) -> typing.Iterable[graph_database.GraphMeta]:
-  """Make annotated graph's for the given devmap dataset."""
+def AnnotateGraphMetas(input_db: graph_database.Database, df: pd.DataFrame
+                      ) -> typing.Iterable[graph_database.GraphMeta]:
+  """Add features and labels to graph metas in database."""
   with input_db.Session() as session:
     for _, row in df.iterrows():
-      with prof.Profile("Processed graph"):
+      with prof.Profile(
+          f"Processed graph {row['relpath']}:{row['data:dataset_name']}"):
         q = session.query(graph_database.GraphMeta)
 
         # Select the corresponding graph from the input database.
@@ -112,11 +109,11 @@ def MakeOpenClDevmapDataset(input_db: graph_database.Database,
   """Create a labelled dataset for the given GPU."""
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(
-      output_db, max_queue=8).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(output_db,
+                                      max_queue=8).Session() as writer:
     df = MakeGpuDataFrame(dataset.df, gpu)
 
-    for graph in MakeAnnotatedGraphs(input_db, df):
+    for graph in AnnotateGraphMetas(input_db, df):
       writer.AddOne(graph)
 
 
