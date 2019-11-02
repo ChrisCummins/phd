@@ -1,7 +1,4 @@
-"""This file contains TODO: one line summary.
-
-TODO: Detailed explanation of the file.
-"""
+"""Copy the contents of a bytecode database."""
 import typing
 
 from labm8 import app
@@ -35,7 +32,7 @@ def ChunkedBytecodeDatabaseReader(
   # batches.
   with db.Session() as s:
     with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} "
-                                 f"bytecdes from database")):
+                                 f"bytecodes from database")):
       q = s.query(bytecode_database.LlvmBytecode.id)
       for filter_cb in filters:
         q = q.filter(filter_cb())
@@ -68,6 +65,7 @@ def main():
   filters = [lambda: bytecode_database.LlvmBytecode.clang_returncode == 0]
 
   for chunk in ChunkedBytecodeDatabaseReader(input_db,
+                                             filters=filters,
                                              order_by_random=True,
                                              limit=FLAGS.max_rows):
     with output_db.Session(commit=True) as session:
