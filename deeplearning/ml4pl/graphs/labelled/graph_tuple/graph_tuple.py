@@ -133,7 +133,7 @@ class GraphTuple(typing.NamedTuple):
 
     for src, dst, data in g.edges(data=True):
       flow = data['flow']
-      position = data['position']
+      position = data.get('position', 0)
 
       src_idx = node_to_index[src]
       dst_idx = node_to_index[dst]
@@ -226,10 +226,8 @@ class GraphTuple(typing.NamedTuple):
     for edge_type, (adjacency_list, position_list) in enumerate(
         zip(self.adjacency_lists, self.edge_positions)):
       for (src, dst), position in zip(adjacency_list, position_list):
-        g.add_edge(src,
-                   dst,
-                   flow=EDGE_INDEX_TO_FLOW[edge_type],
-                   position=position)
+        g.add_edge(
+            src, dst, flow=EDGE_INDEX_TO_FLOW[edge_type], position=position)
 
     for i, x in enumerate(self.node_x_indices):
       g.nodes[i]['x'] = x

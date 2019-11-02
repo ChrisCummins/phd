@@ -7,14 +7,15 @@ import tempfile
 import time
 import typing
 
-from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import fs
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
 from labm8 import sqlutil
+
+from deeplearning.ml4pl.bytecode import bytecode_database
+from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
@@ -182,11 +183,11 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
     # Get the bytecode IDs of the graphs to export.
     with self.input_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id) \
-        .order_by(self.graph_db.Random())
+        .order_by(self.input_db.Random())
       bytecode_ids = [row.bytecode_id for row in query]
 
     # Ignore bytecodes that we have already exported.
-    with self.graph_db.Session() as session:
+    with self.output_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id) \
         .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
       already_done = [row.bytecode_id for rrow in query]

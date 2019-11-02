@@ -6,6 +6,7 @@ import traceback
 import typing
 
 import numpy as np
+import sqlalchemy as sql
 from labm8 import app
 
 from deeplearning.ml4pl.graphs import database_exporters
@@ -15,11 +16,12 @@ from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 
-app.DEFINE_database('input_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to read pickled networkx graphs from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'input_db',
+    graph_database.Database,
+    None,
+    'URL of database to read pickled networkx graphs from.',
+    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write annotated graph tuples to.')
@@ -54,8 +56,8 @@ def GetAnnotatedGraphGenerator():
 def GetFalseTrueType():
   """Return the values that should be used for false/true binary labels."""
   if FLAGS.y_dtype == 'one_hot_float32':
-    return (np.array([1, 0],
-                     dtype=np.float32), np.array([0, 1], dtype=np.float32))
+    return (np.array([1, 0], dtype=np.float32),
+            np.array([0, 1], dtype=np.float32))
   else:
     raise app.UsageError(f"Unknown y_dtype `{FLAGS.y_dtype}`")
 
@@ -69,7 +71,9 @@ def _ProcessInputs(
     A list of analysis-annotated graphs.
   """
   jobs = session.query(graph_database.GraphMeta) \
-    .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)).all()
+    .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)) \
+    .options(sql.orm.joinedload(graph_database.GraphMeta.graph)) \
+    .all()
   session.close()
 
   annotated_graph_generator = GetAnnotatedGraphGenerator()
