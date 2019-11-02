@@ -24,6 +24,17 @@ py_library(
 )
 
 py_library(
+    name = "classifier_smoke_tester",
+    testonly = 1,
+    srcs = ["classifier_smoke_tester.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//labm8:app",
+    ],
+)
+
+py_library(
     name = "log_analysis",
     srcs = ["log_analysis.py"],
     visibility = ["//visibility:public"],
