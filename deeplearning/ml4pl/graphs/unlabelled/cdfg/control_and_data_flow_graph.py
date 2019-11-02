@@ -13,6 +13,9 @@ import typing
 
 import networkx as nx
 import numpy as np
+from labm8 import app
+from labm8 import bazelutil
+from labm8 import decorators
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
@@ -21,10 +24,6 @@ from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import decorators
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -132,26 +131,23 @@ def MakeUndefinedFunctionGraph(function_name: str,
   g.entry_block = f'{function_name}_entry'
   g.exit_block = f'{function_name}_exit'
 
-  g.add_node(
-      g.entry_block,
-      type='statement',
-      function=function_name,
-      text='!UNK',
-      original_text='!UNK',
-      x=dictionary['!UNK'])
-  g.add_node(
-      g.exit_block,
-      type='statement',
-      function=function_name,
-      text='!UNK',
-      original_text='!UNK',
-      x=dictionary['!UNK'])
-  g.add_edge(
-      g.entry_block,
-      g.exit_block,
-      function=function_name,
-      flow='control',
-      position=0)
+  g.add_node(g.entry_block,
+             type='statement',
+             function=function_name,
+             text='!UNK',
+             original_text=g.entry_block,
+             x=dictionary['!UNK'])
+  g.add_node(g.exit_block,
+             type='statement',
+             function=function_name,
+             text='!UNK',
+             original_text=g.exit_block,
+             x=dictionary['!UNK'])
+  g.add_edge(g.entry_block,
+             g.exit_block,
+             function=function_name,
+             flow='control',
+             position=0)
 
   return g
 
@@ -325,16 +321,14 @@ class ControlAndDataFlowGraphBuilder(object):
     for node in nodes_to_remove:
       in_edges = g.in_edges(node)
       out_edges = g.out_edges(node)
-      in_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: src)
-      out_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: dst)
+      in_nodes = iterators.SuccessorNodes(g,
+                                          node,
+                                          ignored_nodes=nodes_to_remove,
+                                          direction=lambda src, dst: src)
+      out_nodes = iterators.SuccessorNodes(g,
+                                           node,
+                                           ignored_nodes=nodes_to_remove,
+                                           direction=lambda src, dst: dst)
 
       for edge in in_edges:
         edges_to_remove.add(edge)
@@ -362,11 +356,10 @@ class ControlAndDataFlowGraphBuilder(object):
       entry_block = entry_blocks[0][0]
     else:
       entry_block = f'{g.name}_entry'
-      g.add_node(
-          entry_block,
-          name=entry_block,
-          type='magic',
-          x=self.dictionary['!MAGIC'])
+      g.add_node(entry_block,
+                 name=entry_block,
+                 type='magic',
+                 x=self.dictionary['!MAGIC'])
       for node, data in entry_blocks:
         g.add_edge(entry_block, node, flow='control')
     g.entry_block = entry_block
@@ -386,11 +379,10 @@ class ControlAndDataFlowGraphBuilder(object):
       exit_block = exit_blocks[0][0]
     else:
       exit_block = f'{g.name}_exit'
-      g.add_node(
-          exit_block,
-          name=exit_block,
-          type='magic',
-          x=self.dictionary['!MAGIC'])
+      g.add_node(exit_block,
+                 name=exit_block,
+                 type='magic',
+                 x=self.dictionary['!MAGIC'])
       # Connect exit blocks.
       for node, data in exit_blocks:
         g.add_edge(node, exit_block, flow='control')
@@ -421,8 +413,8 @@ class ControlAndDataFlowGraphBuilder(object):
         edges_to_add.append((statement, def_name, def_name, 0, def_))
       for position, identifier in enumerate(uses):  # Data flow in edge.
         identifier_name = f'{prefix(identifier)}_operand'
-        edges_to_add.append((identifier_name, statement, identifier_name,
-                             position, identifier))
+        edges_to_add.append(
+            (identifier_name, statement, identifier_name, position, identifier))
 
     for src, dst, identifier, position, name in edges_to_add:
       g.add_edge(src, dst, flow='data', position=position)
@@ -504,8 +496,10 @@ class ControlAndDataFlowGraphBuilder(object):
 
     # Create the inter-procedural graph with a magic root node.
     interprocedural_graph = nx.MultiDiGraph()
-    interprocedural_graph.add_node(
-        'root', name='root', type='magic', x=self.dictionary['!MAGIC'])
+    interprocedural_graph.add_node('root',
+                                   name='root',
+                                   type='magic',
+                                   x=self.dictionary['!MAGIC'])
 
     # Add each function to the interprocedural graph.
     function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]] = {}
@@ -516,8 +510,10 @@ class ControlAndDataFlowGraphBuilder(object):
       function_entry_exit_nodes[dst] = (function_entry, function_exit)
 
       # Connect the newly inserted function to the root node.
-      interprocedural_graph.add_edge(
-          'root', function_entry, flow='call', position=0)
+      interprocedural_graph.add_edge('root',
+                                     function_entry,
+                                     flow='call',
+                                     position=0)
 
     if self.call_edge_returns_to_successor:
       get_call_site_successor = query.GetCallStatementSuccessor
