@@ -5,13 +5,13 @@ import numpy as np
 from labm8 import app
 
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.models import classifier_smoke_tester
 from deeplearning.ml4pl.models.ggnn import ggnn_node_classifier
-from deeplearning.ml4pl.models.ggnn.smoke_tests import smoke_test_base
 
 FLAGS = app.FLAGS
 
 
-class SmokeTester(smoke_test_base.SmokeTesterBase):
+class SmokeTester(classifier_smoke_tester.SmokeTesterBase):
 
   def GetModelClass(self):
     return ggnn_node_classifier.GgnnNodeClassifierModel
