@@ -203,12 +203,9 @@ def test_SerializeToStatementList():
   statements = list(cdfg.SerializeToStatementList(g))
 
   assert statements == [
-      'define @root',
       'root',
-      'define @B_0',
       'B_0',
       'B_1',
-      'define @A_0',
       'A_0',
       'A_1b',
       'A_2',
