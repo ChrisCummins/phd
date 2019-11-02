@@ -6,9 +6,21 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl:ml4pl_pb_py",
+        "//labm8:app",
         "//labm8:pbutil",
         "//labm8:sqlutil",
         "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_binary(
+    name = "copy_database",
+    srcs = ["copy_database.py"],
+    deps = [
+        ":bytecode_database",
+        "//labm8:app",
+        "//labm8:humanize",
+        "//labm8:prof",
     ],
 )
 
