@@ -177,3 +177,30 @@ def LoopConnectedness(graph) -> int:
   """
   entries = [dst for _, dst in graph.out_edges('root')]
   return max([_LoopConnectedness(graph, entry) for entry in entries] or [0])
+
+
+def GetStatementsForNode(graph: nx.MultiDiGraph,
+                         node: str) -> typing.Iterable[str]:
+  """Return the statements which are connected to the given node.
+
+  Args:
+    graph: The graph to fetch the statements from.
+    node: The node to fetch the statements for. If the node is a statement, it
+      returns itself. If the node is an identifier, it returns all statements
+      which define/use this identifier.
+
+  Returns:
+    An iterator over statement nodes.
+  """
+  root = graph.nodes[node]
+  if root['type'] == 'statement':
+    yield node
+  elif root['type'] == 'identifier':
+    for src, dst in graph.in_edges(node):
+      if graph.nodes[src]['type'] == 'statement':
+        yield src
+    for src, dst in graph.out_edges(node):
+      if graph.nodes[dst]['type'] == 'statement':
+        yield dst
+  else:
+    raise ValueError(f"Unknown statement type `{root['type']}`")

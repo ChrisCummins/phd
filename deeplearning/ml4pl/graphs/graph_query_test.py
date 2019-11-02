@@ -1,10 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/graphs:graph_query."""
 import networkx as nx
 import pytest
-
-from deeplearning.ml4pl.graphs import graph_query as query
 from labm8 import app
 from labm8 import test
+
+from deeplearning.ml4pl.graphs import graph_query as query
 
 FLAGS = app.FLAGS
 
@@ -74,12 +74,36 @@ def test_FindCallSites_multiple_call_sites():
   g = nx.MultiDiGraph()
   g.add_node('call', type='statement', function='A', text='%2 = call i32 @B()')
   g.add_node('foo', type='statement', function='A', text='')
-  g.add_node(
-      'call2', type='statement', function='A', text='%call = call i32 @B()')
+  g.add_node('call2',
+             type='statement',
+             function='A',
+             text='%call = call i32 @B()')
 
   call_sites = query.FindCallSites(g, 'A', 'B')
   assert len(call_sites) == 2
   assert set(call_sites) == {'call', 'call2'}
+
+
+def test_GetStatementsForNode_node():
+  """Test the nodes returned when root is a statementt."""
+  g = nx.MultiDiGraph()
+  g.add_node('foo', type='statement')
+
+  nodes = list(query.GetStatementsForNode(g, 'foo'))
+  assert nodes == ['foo']
+
+
+def test_GetStatementsForNode_identifier():
+  """Test the nodes returned when root is an identifier."""
+  g = nx.MultiDiGraph()
+  g.add_node('foo', type='statement')
+  g.add_node('bar', type='statement')
+  g.add_node('%1', type='identifier')
+  g.add_edge('foo', '%1', flow='data')
+  g.add_edge('%1', 'bar', flow='data')
+
+  nodes = list(query.GetStatementsForNode(g, '%1'))
+  assert nodes == ['foo', 'bar']
 
 
 if __name__ == '__main__':
