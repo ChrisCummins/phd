@@ -53,6 +53,7 @@ py_test(
 py_library(
     name = "random_cdfg_generator",
     srcs = ["random_cdfg_generator.py"],
+    visibility = ["//visibility:public"],
     deps = [
         ":control_and_data_flow_graph",
         "//labm8:app",
