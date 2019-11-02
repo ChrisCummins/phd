@@ -1,11 +1,11 @@
 """A Zero-R baseline classifier."""
-import numpy as np
 import typing
+
+import numpy as np
+from labm8 import app
 
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-
 
 FLAGS = app.FLAGS
 
@@ -31,7 +31,7 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
         targets = batch_tuple.graph_y
       else:
         raise ValueError("Could not determine label type")
-      yield batch_tuple['log'], targets
+      yield batch_tuple.log, targets
 
   def RunMinibatch(self, log: log_database.BatchLog, targets: np.array
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
