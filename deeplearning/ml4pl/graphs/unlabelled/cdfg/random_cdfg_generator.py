@@ -1,6 +1,7 @@
 """A generator for random graphs."""
 import pickle
 import random
+import typing
 
 import networkx as nx
 import numpy as np
@@ -10,12 +11,6 @@ from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 
 FLAGS = app.FLAGS
-
-WEIGHTED_NODE_TYPES = {
-    'statement': 1,
-    'identifier': .7,
-    'immediate': .4,
-}
 
 with open(cdfg.DICTIONARY, 'rb') as f:
   DICTIONARY = pickle.load(f)
@@ -36,13 +31,36 @@ def FastCreateRandom():
     6. The graph is strongly connected.
   """
   num_nodes = random.randint(5, 50)
-  g = nx.scale_free_graph(num_nodes)
+  adjacency_matrix = np.random.choice([False, True],
+                                      size=(num_nodes, num_nodes),
+                                      p=(.9, .1))
+
+  g = nx.MultiDiGraph()
+
+  # Add the edges to the graph, subject to the constraints of CFGs.
+  for i, j in np.argwhere(adjacency_matrix):
+    # CFG nodes cannot be connected to themselves.
+    if i != j:
+      g.add_edge(i, j)
+
+  # Make sure that every node has one output. This ensures that the graph is
+  # fully connected, but does not ensure that each node has an incoming
+  # edge (i.e. is unreachable).
+  modified = True
+  while modified:
+    for node in g.nodes:
+      if not g.out_degree(node):
+        dst = node
+        while dst == node:
+          dst = random.randint(0, num_nodes)
+        g.add_edge(node, dst)
+        break
+    else:
+      # We iterated through all nodes without making any modifications: we're
+      # done.
+      modified = False
 
   node_renamings = {}
-
-  node_types = list(WEIGHTED_NODE_TYPES.keys())
-  node_weights = np.array(list(WEIGHTED_NODE_TYPES.values()), dtype=np.float32)
-  node_weights /= node_weights.sum()
 
   edges_to_remove = []
   for i, (node, data) in enumerate(g.nodes(data=True)):
@@ -61,11 +79,12 @@ def FastCreateRandom():
         edge['position'] = 0
     else:
       # Generate a node of random type.
-      type_ = np.random.choice(node_types, p=node_weights)
+      type_ = np.random.choice(['statement', 'identifier', 'immediate'],
+                               p=[.45, .3, .25])
       if type_ == 'statement':
-        node_renamings[node] = str(node)
+        # node_renamings[node] = str(node)
         data['type'] = 'statement'
-        data['text'] = np.random.choice(list(DICTIONARY.keys()))
+        data['text'] = '!UNK'
       elif type_ == 'immediate':
         node_renamings[node] = f'{node}_immediate'
         # TODO(github.com/ChrisCummins/ml4pl/issues/6): Update.
@@ -75,7 +94,7 @@ def FastCreateRandom():
         for src, dst in g.in_edges(node):
           edges_to_remove.append((src, dst))
       elif type_ == 'identifier':
-        node_renamings[node] = f'%{node}'
+        # node_renamings[node] = f'%{node}'
         data['type'] = 'identifier'
         data['text'] = '!IDENTIFIER'
       else:
@@ -91,11 +110,10 @@ def FastCreateRandom():
   # Assign position and flow type randomly. This does not produce meaningful
   # graphs, e.g. you can have statements with control edges into identifiers.
   for src, dst, data in g.edges(data=True):
-    position = random.randint(0, 2)
     if not src:  # Root node.
       continue
+    data['position'] = random.randint(0, 2)
     src_type = g.nodes[src]['type']
-    dst_type = g.nodes[dst]['type']
     if src_type == 'identifier':
       data['flow'] = 'data'
     elif src_type == 'immediate':
@@ -105,5 +123,9 @@ def FastCreateRandom():
 
   # Set the new node names.
   nx.relabel_nodes(g, node_renamings, copy=False)
+
+  # Remove any orphans.
+  for node in list(nx.isolates(g)):
+    g.remove_node(node)
 
   return g
