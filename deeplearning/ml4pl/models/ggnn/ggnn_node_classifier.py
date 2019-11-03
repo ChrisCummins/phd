@@ -77,9 +77,6 @@ GGNNWeights = collections.namedtuple(
     ],
 )
 
-# TODO(cec): Refactor.
-residual_connections = {}
-
 
 class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
   """GGNN model for learning node classification."""
@@ -180,17 +177,6 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         #   D ~ state dimension
         #   E ~ number of edges of current type
         #   M ~ number of messages (sum of all E)
-
-        # Extract residual messages, if any:
-        # TODO(cec): Refactor into separate function.
-        layer_residual_connections = residual_connections.get(str(layer_idx))
-        if layer_residual_connections is None:
-          layer_residual_states = []
-        else:
-          layer_residual_states = [
-              node_states_per_layer[residual_layer_idx]
-              for residual_layer_idx in layer_residual_connections
-          ]
 
         if FLAGS.use_propagation_attention:
           message_edge_type_factors = tf.nn.embedding_lookup(
