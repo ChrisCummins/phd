@@ -111,9 +111,8 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
       bytecode_ids = [b for b in bytecode_ids if b not in already_done]
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(
-        max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-        self.batch_size)
+    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
+                    self.batch_size)
 
     bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
     jobs = [(job_processor, self.bytecode_db.url, bytecode_ids_chunk)
@@ -127,22 +126,20 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
       workers = (_BytecodeWorker(job) for job in jobs)
 
     job_count = 0
-    with sqlutil.BufferedDatabaseWriter(
-        self.graph_db, max_queue=8).Session() as writer:
-      for graph_metas in workers:
-        exported_count += len(graph_metas)
-        job_count += 1
-        app.Log(
-            1,
-            'Created %s `%s` graphs from %s bytecodes (%.2f%%, %.2f graphs/second)',
-            humanize.Commas(len(graph_metas)), group, len(bytecode_ids),
-            (job_count / len(jobs)) * 100,
-            exported_count / (time.time() - start_time))
+    for graph_metas in workers:
+      exported_count += len(graph_metas)
+      job_count += 1
+      app.Log(
+          1,
+          'Created %s `%s` graphs from %s inputs (%.2f%%, %.2f graphs/second)',
+          humanize.Commas(len(graph_metas)), group, len(bytecode_ids),
+          (job_count / len(jobs)) * 100,
+          exported_count / (time.time() - start_time))
 
-        # Set the GraphMeta.group column.
-        for graph in graph_metas:
-          graph.group = group
-        writer.AddMany(graph_metas)
+      # Set the GraphMeta.group column.
+      for graph in graph_metas:
+        graph.group = group
+      sqlutil.ResilientAddManyAndCommit(self.graph_db, graph_metas)
 
     return exported_count
 
@@ -196,9 +193,8 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
       bytecode_ids = [b for b in bytecode_ids if b not in already_done]
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(
-        max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-        self.batch_size)
+    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
+                    self.batch_size)
 
     bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
     jobs = [(job_processor, self.input_db.url, bytecode_ids_chunk)
@@ -212,18 +208,16 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
       workers = (_GraphWorker(job) for job in jobs)
 
     job_count = 0
-    with sqlutil.BufferedDatabaseWriter(
-        self.output_db, max_queue=8).Session() as writer:
-      for graph_metas in workers:
-        exported_graph_count += len(graph_metas)
-        job_count += 1
-        app.Log(
-            1, 'Created %s graphs from %s bytecodes '
-            '(%.2f%%, %.2f graphs/second)', humanize.Commas(len(graph_metas)),
-            len(bytecode_ids), (job_count / len(jobs)) * 100,
-            exported_graph_count / (time.time() - start_time))
+    for graph_metas in workers:
+      exported_graph_count += len(graph_metas)
+      job_count += 1
+      app.Log(
+          1, 'Created %s graphs from %s bytecodes '
+          '(%.2f%%, %.2f graphs/second)', humanize.Commas(len(graph_metas)),
+          len(bytecode_ids), (job_count / len(jobs)) * 100,
+          exported_graph_count / (time.time() - start_time))
 
-        writer.AddMany(graph_metas)
+      sqlutil.ResilientAddManyAndCommit(self.output_db, graph_metas)
 
     elapsed_time = time.time() - start_time
     app.Log(
