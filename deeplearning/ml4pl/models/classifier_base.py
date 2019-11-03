@@ -73,6 +73,21 @@ app.DEFINE_boolean(
     "If true, test model accuracy on test data when the validation accuracy "
     "improves.")
 
+app.DEFINE_integer(
+    "batch_size", 15000,
+    "The maximum number of nodes to include in each graph batch.")
+
+app.DEFINE_integer(
+    'max_train_per_epoch', None,
+    'Use this flag to limit the maximum number of instances used in a single '
+    'training epoch. For k-fold cross-validation, each of the k folds will '
+    'train on a maximum of this many graphs.')
+
+app.DEFINE_integer(
+    'max_val_per_epoch', None,
+    'Use this flag to limit the maximum number of instances used in a single '
+    'validation epoch.')
+
 app.DEFINE_input_path("restore_model", None,
                       "An optional file to restore the model from.")
 
@@ -100,11 +115,13 @@ class ClassifierBase(object):
   """Abstract base class for implementing classification models."""
 
   def MakeMinibatchIterator(
-      self, group: str
+      self, epoch_type: str, group: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, typing.Any]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
+      epoch_type: The type of mini-batches to generate. One of {train,val,test}.
+        For some models, different data may be produced for training vs testing.
       group: The dataset group to return mini-batches for.
 
     Returns:
@@ -199,18 +216,19 @@ class ClassifierBase(object):
     """Return a dense array of integer label values."""
     return np.arange(self.labels_dimensionality, dtype=np.int32)
 
-  def RunEpoch(self, type: str, group: typing.Optional[str] = None) -> float:
+  def RunEpoch(self, epoch_type: str,
+               group: typing.Optional[str] = None) -> float:
     """Run the model with the given epoch."""
-    if type not in {"train", "val", "test"}:
+    if epoch_type not in {"train", "val", "test"}:
       raise ValueError(f"Unknown epoch type `{type}`. Expected one of "
                        "{train,val,test}")
-    group = group or type
+    group = group or epoch_type
 
     epoch_accuracies = []
 
     batch_type = typing.Tuple[log_database.BatchLog, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-        self.MakeMinibatchIterator(group), max_queue_size=5)
+        self.MakeMinibatchIterator(epoch_type, group), max_queue_size=5)
 
     for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:

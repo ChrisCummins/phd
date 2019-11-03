@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 from labm8 import app
 
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
@@ -384,11 +385,20 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     return loss, accuracies, accuracy, predictions
 
   def MakeMinibatchIterator(
-      self, epoch_type: str
+      self, epoch_type: str, group: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
-    """Create minibatches by flattening adjacency matrices into a single
+    """Create mini-batches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
-    for batch in self.batcher.MakeGraphBatchIterator(epoch_type):
+    options = graph_batcher.GraphBatchOptions(
+        max_nodes=FLAGS.batch_size,
+        group=group,
+        data_flow_max_steps_required=(None if epoch_type == 'test' else
+                                      self.message_passing_step_count))
+    max_instance_count = (
+        FLAGS.max_train_per_epoch if epoch_type == 'train' else
+        FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
+    for batch in self.batcher.MakeGraphBatchIterator(options,
+                                                     max_instance_count):
       # Pad node feature vector of size <= hidden_size up to hidden_size so
       # that the size matches embedding dimensionality.
       # batch['node_x'] = np.pad(

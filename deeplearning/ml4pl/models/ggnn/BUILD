@@ -33,6 +33,7 @@ py_binary(
     deps = [
         ":ggnn_base",
         ":ggnn_utils",
+        "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
         "//labm8:prof",

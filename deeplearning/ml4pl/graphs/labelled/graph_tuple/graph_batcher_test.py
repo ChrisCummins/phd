@@ -16,7 +16,8 @@ def _MakeIterator(graphs):
 
 def test_NextGraph_empty_list():
   """Empty iterator returns none."""
-  graph = graph_batcher.GraphBatch.NextGraph(_MakeIterator([]))
+  options = graph_batcher.GraphBatchOptions(max_nodes=100)
+  graph = graph_batcher.GraphBatch.NextGraph(_MakeIterator([]), options)
   assert graph is None
 
 
@@ -24,12 +25,13 @@ def test_NextGraph_larger_than_batch_size():
   """Error is raised when graph is larger than batch size."""
   big_graph = graph_database.GraphMeta(node_count=10000)
 
-  FLAGS.batch_size = 100
+  options = graph_batcher.GraphBatchOptions(max_nodes=100)
   with pytest.raises(ValueError):
-    graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]))
+    graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]), options)
 
-  FLAGS.batch_size = 999999
-  graph = graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]))
+  options = graph_batcher.GraphBatchOptions(max_nodes=9999999)
+  graph = graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]),
+                                             options)
   assert graph.node_count == big_graph.node_count
 
 

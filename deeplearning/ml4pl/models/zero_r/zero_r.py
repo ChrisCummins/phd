@@ -4,6 +4,7 @@ import typing
 import numpy as np
 from labm8 import app
 
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 
@@ -22,9 +23,15 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
     self.class_counts = np.zeros(self.labels_dimensionality, dtype=np.int32)
 
   def MakeMinibatchIterator(
-      self, epoch_type: str
+      self, epoch_type: str, group: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, np.array]]:
-    for batch_tuple in self.batcher.MakeGraphBatchIterator(epoch_type):
+    options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
+                                              group=group)
+    max_instance_count = (
+        FLAGS.max_train_per_epoch if epoch_type == 'train' else
+        FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
+    for batch_tuple in self.batcher.MakeGraphBatchIterator(
+        options, max_instance_count):
       if batch_tuple.has_node_y:
         targets = batch_tuple.node_y
       elif batch_tuple.has_graph_y:
