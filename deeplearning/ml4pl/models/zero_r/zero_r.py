@@ -37,7 +37,7 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     log.loss = 0
     # "Training" step updates the class frequency counts.
-    if log.is_training:
+    if log.type == "train":
       y_true = np.argmax(targets, axis=1)
       freqs = np.bincount(y_true)
       for i, n in enumerate(freqs):

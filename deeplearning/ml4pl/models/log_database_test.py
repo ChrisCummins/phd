@@ -30,8 +30,8 @@ def test_BatchLog_columns(db: log_database.Database):
                                 recall=.5,
                                 f1=.5,
                                 accuracy=.75,
-                                group="train",
-                                is_training=True,
+                                type="train",
+                                group="0",
                                 instances=log_database.Instances())
     log.graph_indices = [0, 1, 2, 3]
     log.predictions = np.array([0, 1, 2, 3])
@@ -52,7 +52,8 @@ def test_BatchLog_columns(db: log_database.Database):
     assert log.recall == .5
     assert log.f1 == .5
     assert log.accuracy == .75
-    assert log.group == "train"
+    assert log.type == "train"
+    assert log.group == "0"
     assert log.graph_indices == [0, 1, 2, 3]
     assert np.array_equal(log.predictions, np.array([0, 1, 2, 3]))
     assert np.array_equal(log.accuracies, np.array([True, False, False]))

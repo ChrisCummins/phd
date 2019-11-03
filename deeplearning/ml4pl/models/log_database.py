@@ -36,6 +36,10 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
   # The batch number within the epoch, >= 1.
   batch: int = sql.Column(sql.Integer, nullable=False)
+
+  # The type of batch. One of {train,test,val}
+  type: str = sql.Column(sql.String(32), nullable=False)
+
   # The batch number across all epochs.
   global_step: int = sql.Column(sql.Integer, nullable=False)
 
@@ -69,7 +73,6 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # The GraphMeta.group column that this batch of graphs came from.
   group: str = sql.Column(sql.String(32), nullable=False)
-  is_training: bool = sql.Column(sql.Boolean, nullable=False)
 
   instances: 'Instances' = sql.orm.relationship('Instances',
                                                 uselist=False,
@@ -187,7 +190,7 @@ class Database(sqlutil.Database):
     with self.Session() as session:
       q = session.query(
           BatchLog.epoch,
-          BatchLog.group,
+          BatchLog.type,
           sql.func.min(BatchLog.timestamp).label('timestamp'),
           sql.func.min(BatchLog.global_step).label("global_step"),
           sql.func.avg(BatchLog.loss).label("loss"),
@@ -207,7 +210,7 @@ class Database(sqlutil.Database):
 
       q = q.filter(BatchLog.run_id == run_id)
 
-      q = q.group_by(BatchLog.epoch, BatchLog.group)
+      q = q.group_by(BatchLog.epoch, BatchLog.type)
 
       # Group each individual step. Since there is only one log per step,
       # this means return all rows without grouping.
@@ -215,7 +218,7 @@ class Database(sqlutil.Database):
         q = q.group_by(BatchLog.global_step) \
           .order_by(BatchLog.global_step)
 
-      q = q.order_by(BatchLog.epoch, BatchLog.group)
+      q = q.order_by(BatchLog.epoch, BatchLog.type)
 
       df = pdutil.QueryToDataFrame(session, q)
 

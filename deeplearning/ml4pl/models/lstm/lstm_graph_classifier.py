@@ -127,7 +127,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
 
-    if log.group == 'train':
+    if log.type == 'train':
       self.model.fit(x,
                      y,
                      epochs=1,

@@ -8,11 +8,6 @@ import typing
 
 import numpy as np
 import sklearn.metrics
-
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
@@ -22,6 +17,11 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -38,18 +38,16 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path(
-    'working_dir',
-    '/tmp/deeplearning/ml4pl/models/',
-    'The directory to write files to.',
-    is_dir=True)
+app.DEFINE_output_path('working_dir',
+                       '/tmp/deeplearning/ml4pl/models/',
+                       'The directory to write files to.',
+                       is_dir=True)
 
-app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
-    None,
-    'The database to read graph data from.',
-    must_exist=True)
+app.DEFINE_database('graph_db',
+                    graph_database.Database,
+                    None,
+                    'The database to read graph data from.',
+                    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -201,8 +199,13 @@ class ClassifierBase(object):
     """Return a dense array of integer label values."""
     return np.arange(self.labels_dimensionality, dtype=np.int32)
 
-  def RunEpoch(self, group: str, is_training: bool = False) -> float:
+  def RunEpoch(self, type: str, group: typing.Optional[str] = None) -> float:
     """Run the model with the given epoch."""
+    if type not in {"train", "val", "test"}:
+      raise ValueError(f"Unknown epoch type `{type}`. Expected one of "
+                       "{train,val,test}")
+    group = group or type
+
     epoch_accuracies = []
 
     batch_type = typing.Tuple[log_database.BatchLog, typing.Any]
@@ -215,11 +218,11 @@ class ClassifierBase(object):
 
       batch_start_time = time.time()
       self.global_training_step += 1
+      log.type = type
       log.epoch = self.epoch_num
       log.batch = step + 1
       log.global_step = self.global_training_step
       log.run_id = self.run_id
-      log.is_training = is_training
 
       targets, predictions = self.RunMinibatch(log, batch_data)
 
@@ -280,9 +283,9 @@ class ClassifierBase(object):
         for train in groups:
           if train == test or train == val:
             continue
-          self.RunEpoch(train, is_training=True)
-        val_accs.append(self.RunEpoch(val))
-      self.RunEpoch(train)
+          self.RunEpoch("train", train)
+        val_accs.append(self.RunEpoch("val", val))
+      self.RunEpoch("test", test)
     return np.array(val_accs).mean(), np.array(test_accs).mean()
 
   def Train(self, k_fold: typing.Optional[int] = None) -> float:
@@ -302,7 +305,7 @@ class ClassifierBase(object):
       if k_fold:
         val_acc, test_acc = self.RunKFoldTrainAndValidate(k_fold)
       else:
-        self.RunEpoch("train", is_training=True)
+        self.RunEpoch("train")
         val_acc = self.RunEpoch("val")
       app.Log(1, "Epoch %s completed in %s. Validation "
               "accuracy: %.2f%%", epoch_num,
