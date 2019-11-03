@@ -392,7 +392,7 @@ class GraphBatcher(object):
       num_rows = q.one()[0]
     return num_rows
 
-  def MakeGaphBatchIterator(self, group: str) -> typing.Iterable[GraphBatch]:
+  def MakeGraphBatchIterator(self, group: str) -> typing.Iterable[GraphBatch]:
     """Make a batch iterator over the given group."""
     filters = self._GetFilters()
     filters.append(lambda: graph_database.GraphMeta.group == group)

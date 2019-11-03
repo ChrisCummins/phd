@@ -4,12 +4,12 @@ import typing
 
 import numpy as np
 import tensorflow as tf
+from labm8 import app
 
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
-from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -57,16 +57,13 @@ app.DEFINE_float(
     "Dropout keep probability on the output layer. In range 0 < x <= 1.")
 classifier_base.MODEL_FLAGS.add("output_layer_dropout_keep_prob")
 
-
 app.DEFINE_float(
     "intermediate_loss_discount_factor", 0.2,
-    "The actual loss is computed as loss + factor * intermediate_loss"
-)
+    "The actual loss is computed as loss + factor * intermediate_loss")
 
 app.DEFINE_integer(
     "auxiliary_inputs_dense_layer_size", 32,
-    "Size for MLP that combines graph_x and GGNN output features"
-)
+    "Size for MLP that combines graph_x and GGNN output features")
 classifier_base.MODEL_FLAGS.add("auxiliary_inputs_dense_layer_size")
 
 GGNNWeights = collections.namedtuple(
@@ -128,11 +125,10 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                   name="gnn_edge_biases_%i" % layer_index,
               ))
 
-        cell = utils.BuildRnnCell(
-            FLAGS.graph_rnn_cell,
-            FLAGS.graph_rnn_activation,
-            FLAGS.hidden_size,
-            name=f"cell_layer_{layer_index}")
+        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
+                                  FLAGS.graph_rnn_activation,
+                                  FLAGS.hidden_size,
+                                  name=f"cell_layer_{layer_index}")
         # Apply dropout as required.
         if FLAGS.graph_state_dropout_keep_prob < 1:
           cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
@@ -140,12 +136,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
               state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"]
           )
         self.gnn_weights.rnn_cells.append(cell)
-    
+
     with tf.compat.v1.variable_scope("Embeddings"):
-        #TODO(cec)/(zach) FIX HERE FOR NODE LEVEL PROBLEMS
-        self.weights['node_embeddings'] = tf.Variable(initial_value=np.random.rand(8569, 200), trainable=True, dtype=tf.float32)
-    encoded_node_x = tf.nn.embedding_lookup(self.weights['node_embeddings'], ids=self.placeholders['node_x'])
-    
+      #TODO(cec)/(zach) FIX HERE FOR NODE LEVEL PROBLEMS
+      self.weights['node_embeddings'] = tf.Variable(
+          initial_value=np.random.rand(8569, 200),
+          trainable=True,
+          dtype=tf.float32)
+    encoded_node_x = tf.nn.embedding_lookup(self.weights['node_embeddings'],
+                                            ids=self.placeholders['node_x'])
+
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
@@ -227,16 +227,16 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
             # TODO: not well understood
             if FLAGS.use_propagation_attention:
-              message_source_states = tf.concat(
-                  message_source_states, axis=0)  # Shape [M, D]
+              message_source_states = tf.concat(message_source_states,
+                                                axis=0)  # Shape [M, D]
               message_target_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=message_targets)  # Shape [M, D]
               message_attention_scores = tf.einsum(
                   "mi,mi->m", message_source_states,
                   message_target_states)  # Shape [M]
-              message_attention_scores = (
-                  message_attention_scores * message_edge_type_factors)
+              message_attention_scores = (message_attention_scores *
+                                          message_edge_type_factors)
 
               # The following is softmax-ing over the incoming messages per
               # node. As the number of incoming varies, we can't just use
@@ -310,7 +310,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     else:
       out_layer_dropout = None
 
-    labels_dimensionality = self.stats.node_labels_dimensionality if self.placeholders.get('node_y') is not None else self.stats.graph_labels_dimensionality
+    labels_dimensionality = self.stats.node_labels_dimensionality if self.placeholders.get(
+        'node_y') is not None else self.stats.graph_labels_dimensionality
 
     predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
         initial_node_state=node_states_per_layer[0],
@@ -322,58 +323,63 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.weights['regression_transform'] = regression_transform
 
     if self.placeholders.get('graph_x') is not None:
-        # Sum node representations across graph (per graph).
-        computed_graph_only_values = tf.unsorted_segment_sum(
-            predictions,
-            segment_ids=self.placeholders["graph_nodes_list"],
-            num_segments=self.placeholders["graph_count"],
-            name='computed_graph_only_values',
-        )  # [g, c]
+      # Sum node representations across graph (per graph).
+      computed_graph_only_values = tf.unsorted_segment_sum(
+          predictions,
+          segment_ids=self.placeholders["graph_nodes_list"],
+          num_segments=self.placeholders["graph_count"],
+          name='computed_graph_only_values',
+      )  # [g, c]
 
-        # Adding global features to the graph readout:
+      # Adding global features to the graph readout:
 
-        # auxiliary inputs wgsize and dsize
-        # TODO(cec) this is still specific to the distribution of the graph_x features in devmap.
-        # TODO(cec) delete 2 lines once the dataset has logs.
-        graph_x = tf.log(tf.cast(self.placeholders["graph_x"], dtype=tf.float32))
-        graph_x = tf.clip_by_value(graph_x, -1.0, float('inf')) # set log(0)=-inf to -1!
+      # auxiliary inputs wgsize and dsize
+      # TODO(cec) this is still specific to the distribution of the graph_x features in devmap.
+      # TODO(cec) delete 2 lines once the dataset has logs.
+      graph_x = tf.log(tf.cast(self.placeholders["graph_x"], dtype=tf.float32))
+      graph_x = tf.clip_by_value(graph_x, -1.0,
+                                 float('inf'))  # set log(0)=-inf to -1!
 
-        x = tf.concat([computed_graph_only_values, graph_x], axis=-1)
-        x = tf.layers.batch_normalization(x, training=self.placeholders['is_training'])
-        x = tf.layers.dense(x, FLAGS.auxiliary_inputs_dense_layer_size, activation=tf.nn.relu)
-        x = tf.layers.dropout(x, rate=1-self.placeholders["output_layer_dropout_keep_prob"],
-                training=self.placeholders['is_training'])
-        predictions = tf.layers.dense(x, 2)
-
+      x = tf.concat([computed_graph_only_values, graph_x], axis=-1)
+      x = tf.layers.batch_normalization(
+          x, training=self.placeholders['is_training'])
+      x = tf.layers.dense(x,
+                          FLAGS.auxiliary_inputs_dense_layer_size,
+                          activation=tf.nn.relu)
+      x = tf.layers.dropout(
+          x,
+          rate=1 - self.placeholders["output_layer_dropout_keep_prob"],
+          training=self.placeholders['is_training'])
+      predictions = tf.layers.dense(x, 2)
 
     if self.placeholders.get("graph_y") is not None:
-        targets = tf.argmax(self.placeholders["graph_y"],
-                            axis=1,
-                            output_type=tf.int32,
-                            name="targets")
+      targets = tf.argmax(self.placeholders["graph_y"],
+                          axis=1,
+                          output_type=tf.int32,
+                          name="targets")
     elif self.placeholders.get("node_y") is not None:
-        targets = tf.argmax(
-            self.placeholders["node_y"], axis=1, output_type=tf.int32)
-    else: #broken labels
-        raise
+      targets = tf.argmax(self.placeholders["node_y"],
+                          axis=1,
+                          output_type=tf.int32)
+    else:  #broken labels
+      raise
 
     argmaxed_predictions = tf.argmax(predictions, axis=1, output_type=tf.int32)
     accuracies = tf.equal(argmaxed_predictions, targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
-
     if self.placeholders.get("graph_y") is not None:
-        graph_only_loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
-                                           computed_graph_only_values)
-        _loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
-                                           predictions)
-        loss = _loss + FLAGS.intermediate_loss_discount_factor * graph_only_loss
+      graph_only_loss = tf.losses.softmax_cross_entropy(
+          self.placeholders["graph_y"], computed_graph_only_values)
+      _loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
+                                              predictions)
+      loss = _loss + FLAGS.intermediate_loss_discount_factor * graph_only_loss
     elif self.placeholders.get("node_y") is not None:
-        loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
-                                           argmaxed_predictions)
+      loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
+                                             argmaxed_predictions)
     else:
-        raise
+      raise
 
     return loss, accuracies, accuracy, predictions
 
@@ -382,7 +388,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
     """Create minibatches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
-    for batch in self.batcher.MakeGaphBatchIterator(epoch_type):
+    for batch in self.batcher.MakeGraphBatchIterator(epoch_type):
       # Pad node feature vector of size <= hidden_size up to hidden_size so
       # that the size matches embedding dimensionality.
       # batch['node_x'] = np.pad(
@@ -403,16 +409,14 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
             FLAGS.edge_weight_dropout_keep_prob,
             self.placeholders["output_layer_dropout_keep_prob"]:
             FLAGS.output_layer_dropout_keep_prob,
-            self.placeholders["is_training"]: True,
+            self.placeholders["is_training"]:
+            True,
         })
       else:
         feed_dict.update({
-            self.placeholders["graph_state_dropout_keep_prob"]:
-            1.0,
-            self.placeholders["edge_weight_dropout_keep_prob"]:
-            1.0,
-            self.placeholders["output_layer_dropout_keep_prob"]:
-            1.0,
+            self.placeholders["graph_state_dropout_keep_prob"]: 1.0,
+            self.placeholders["edge_weight_dropout_keep_prob"]: 1.0,
+            self.placeholders["output_layer_dropout_keep_prob"]: 1.0,
             self.placeholders["is_training"]: False,
         })
       yield batch['log'], feed_dict
@@ -426,11 +430,12 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
         self.placeholders['raw_node_output_features'],
         self.weights['regression_gate'], self.weights['regression_transform'])
 
-    targets = tf.argmax(
-        self.placeholders["node_y"], axis=1, output_type=tf.int32)
+    targets = tf.argmax(self.placeholders["node_y"],
+                        axis=1,
+                        output_type=tf.int32)
 
-    accuracies = tf.equal(
-        tf.argmax(predictions, axis=1, output_type=tf.int32), targets)
+    accuracies = tf.equal(tf.argmax(predictions, axis=1, output_type=tf.int32),
+                          targets)
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
@@ -438,6 +443,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                                            predictions)
 
     return loss, accuracies, accuracy, predictions
+
 
 def main():
   """Main entry point."""

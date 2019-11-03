@@ -24,7 +24,7 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
   def MakeMinibatchIterator(
       self, epoch_type: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, np.array]]:
-    for batch_tuple in self.batcher.MakeGaphBatchIterator(epoch_type):
+    for batch_tuple in self.batcher.MakeGraphBatchIterator(epoch_type):
       if batch_tuple.has_node_y:
         targets = batch_tuple.node_y
       elif batch_tuple.has_graph_y:
