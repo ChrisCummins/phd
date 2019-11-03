@@ -142,7 +142,7 @@ def AddRandomAnnotations(graphs: typing.List[nx.MultiDiGraph],
                          graph_x_choices=None,
                          graph_y_choices=None):
   """Add random additions to the graphs."""
-  if node_y_choices:
+  if node_y_choices is not None:
     for graph in graphs:
       node_y = [
           random.choice(node_y_choices) for _ in range(graph.number_of_nodes())
@@ -150,12 +150,12 @@ def AddRandomAnnotations(graphs: typing.List[nx.MultiDiGraph],
       for (node, data), y in zip(graph.nodes(data=True), node_y):
         data['y'] = y
 
-  if graph_x_choices:
+  if graph_x_choices is not None:
     graph_x = [random.choice(graph_x_choices) for _ in graphs]
     for graph, x in zip(graphs, graph_x):
       graph.x = x
 
-  if graph_y_choices:
+  if graph_y_choices is not None:
     graph_y = [random.choice(graph_y_choices) for _ in graphs]
     for graph, y in zip(graphs, graph_y):
       graph.y = y
