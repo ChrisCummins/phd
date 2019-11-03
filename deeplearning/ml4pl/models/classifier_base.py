@@ -1,5 +1,4 @@
 """Base class for implementing classifier models."""
-import collections
 import pathlib
 import pickle
 import random
@@ -132,8 +131,9 @@ class ClassifierBase(object):
 
   # The result of running a minibatch. Return 1-hot target values and the raw
   # 1-hot outputs of the model. These are used to compute evaluation metrics.
-  MinibatchResults = collections.namedtuple('MinibatchResults',
-                                            ['y_true_1hot', 'y_pred_1hot'])
+  class MinibatchResults(typing.NamedTuple):
+    y_true_1hot: np.array  # Shape [num_labels,num_classes]
+    y_pred_1hot: np.array  # Shape [num_labels,num_classes]
 
   def RunMinibatch(self, log: log_database.BatchLog,
                    batch: typing.Any) -> MinibatchResults:
