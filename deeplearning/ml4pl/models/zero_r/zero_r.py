@@ -38,7 +38,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
       elif batch_tuple.has_graph_y:
         targets = batch_tuple.graph_y
       else:
-        raise ValueError("Could not determine label type")
+        app.FatalWithoutStackTrace("Could not determine label type")
       yield batch_tuple.log, targets
 
   def RunMinibatch(self, log: log_database.BatchLog, targets: np.array
