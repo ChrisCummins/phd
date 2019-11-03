@@ -227,7 +227,7 @@ class ClassifierBase(object):
 
       batch_start_time = time.time()
       self.global_training_step += 1
-      log.type = type
+      log.type = epoch_type
       log.epoch = self.epoch_num
       log.batch = step + 1
       log.global_step = self.global_training_step
@@ -385,11 +385,11 @@ class ClassifierBase(object):
   def _CreateExperimentalParameters(self):
     """Private helper method to populate parameters table."""
 
-    def ToParams(type, key_value_dict):
+    def ToParams(type_name, key_value_dict):
       return [
           log_database.Parameter(
               run_id=self.run_id,
-              type=type,
+              type=type_name,
               parameter=str(key),
               value=str(value),
           ) for key, value in key_value_dict.items()
