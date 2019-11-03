@@ -3,21 +3,25 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
+
+from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import humanize
 
-from deeplearning.ml4pl.graphs import graph_database
-
 FLAGS = app.FLAGS
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to modify.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'URL of database to modify.',
+    must_exist=True)
 
 ###############################################################################
 # Splitters copied from //deeplearning/ml4pl/bytecode:splitters
+# This is a straight copy-and-paste, but adapted to work on graph databases
+# rather than LLVM bytecode databases. This requires removing references to
+# clang_returncode columns.
 
 
 def GetPoj104BytecodeGroups(db: graph_database.Database,
@@ -41,10 +45,10 @@ def GetPoj104BytecodeGroups(db: graph_database.Database,
   }
 
 
-def GetTrainValTestGroups(
-    db: graph_database.Database,
-    train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
-) -> typing.Dict[str, typing.List[int]]:
+def GetTrainValTestGroups(db: graph_database.Database,
+                          train_val_test_ratio: typing.Iterable[float] = (3, 1,
+                                                                          1)
+                         ) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
 
   This concatenates the POJ-104 sources with the other sources split into
@@ -80,7 +84,6 @@ def GetTrainValTestGroups(
             humanize.Commas(train_val_test_counts[2] + len(poj104['test'])))
 
     q = s.query(graph_database.GraphMeta.id) \
-      .filter(graph_database.GraphMeta.clang_returncode == 0) \
       .filter(~graph_database.GraphMeta.source_name.like('poj-104:%')) \
       .order_by(db.Random())
     ids = [r[0] for r in q]
@@ -104,19 +107,21 @@ def main():
   graph_db = FLAGS.graph_db()
 
   with graph_db.Session(commit=True) as session:
-    app.Log("Unsetting all graph groups")
-    update = graph_database.GraphMeta.update() \
+    app.Log(1, "Unsetting all graph groups")
+    update = sql.update(graph_database.GraphMeta) \
         .values(group='')
+    graph_db.engine.execute(update)
 
   groups = GetTrainValTestGroups(graph_db)
 
   for group, ids in groups.items():
     with graph_db.Session(commit=True) as session:
-      app.Log("Setting `%s` group on %s graphs", group,
+      app.Log(1, "Setting `%s` group on %s graphs", group,
               humanize.Commas(len(ids)))
-      update = graph_database.GraphMeta.update() \
+      update = sql.update(graph_database.GraphMeta) \
           .where(graph_database.GraphMeta.id.in_(ids)) \
           .values(group=group)
+      graph_db.engine.execute(update)
 
   app.Log(1, "done")
 
