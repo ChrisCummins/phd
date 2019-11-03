@@ -130,6 +130,10 @@ def FastCreateRandom():
   for node in list(nx.isolates(g)):
     g.remove_node(node)
 
+  # Abort, try again.
+  if not g.number_of_nodes():
+    return FastCreateRandom()
+
   return g
 
 
