@@ -20,5 +20,6 @@ py_test(
         ":zero_r",
         "//deeplearning/ml4pl/models:classifier_smoke_tester",
         "//labm8:app",
+        "//third_party/py/numpy",
     ],
 )
