@@ -118,7 +118,7 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   def __repr__(self) -> str:
     return (
-        f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.group}: "
+        f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type}: "
         f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
         f"loss={self.loss:.4f} | "
         f"acc={self.accuracy:.2%}")
@@ -191,6 +191,7 @@ class Database(sqlutil.Database):
       q = session.query(
           BatchLog.epoch,
           BatchLog.type,
+          sql.func.count(BatchLog.epoch).label("num_batches"),
           sql.func.min(BatchLog.timestamp).label('timestamp'),
           sql.func.min(BatchLog.global_step).label("global_step"),
           sql.func.avg(BatchLog.loss).label("loss"),
