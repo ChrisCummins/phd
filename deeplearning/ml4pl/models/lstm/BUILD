@@ -28,12 +28,15 @@ py_binary(
 py_library(
     name = "graph2seq",
     srcs = ["graph2seq.py"],
+    data = [":llvm_vocab"],
     deps = [
         ":bytecode2seq",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
         "//labm8:app",
+        "//labm8:bazelutil",
+        "//labm8:jsonutil",
         "//third_party/py/keras",
         "//third_party/py/numpy",
     ],
@@ -50,6 +53,11 @@ py_test(
         "//labm8:test",
         "//third_party/py/pytest",
     ],
+)
+
+filegroup(
+    name = "llvm_vocab",
+    srcs = ["llvm_vocab.json"],
 )
 
 py_binary(

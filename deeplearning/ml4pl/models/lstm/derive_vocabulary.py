@@ -1,4 +1,6 @@
 """Derive a vocabulary from the bytecode database."""
+import json
+
 from labm8 import app
 from labm8 import humanize
 from labm8 import jsonutil
@@ -23,7 +25,7 @@ app.DEFINE_integer('batch_size', 128,
                    'The number of bytecodes to process in a batch')
 app.DEFINE_boolean(
     'pact17_opencl_only', False,
-    "If true, derive the vocabulary only from the PACT'17 OpenCL source.")
+    "If true, derive the vocabulary only from the PACT'17 OpenCL sources.")
 
 
 def main():
@@ -31,7 +33,8 @@ def main():
   bytecode_db = FLAGS.bytecode_db()
 
   if FLAGS.vocabulary.is_file():
-    data_to_load = jsonutil.read_file(FLAGS.vocabulary)
+    with open(FLAGS.vocabulary) as f:
+      data_to_load = json.load(f)
     vocab = data_to_load['vocab']
     max_encoded_length = data_to_load['max_encoded_length']
   else:

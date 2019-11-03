@@ -1,4 +1,5 @@
-"""Utility code for LSTM models."""
+"""Module for conversion from labelled graphs to encoded sequences."""
+import json
 import pickle
 import typing
 
@@ -7,7 +8,6 @@ import networkx as nx
 import numpy as np
 from labm8 import app
 from labm8 import bazelutil
-from labm8 import jsonutil
 from labm8 import labtypes
 
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -64,7 +64,8 @@ class GraphToSequenceEncoder(object):
     self.graph_db = graph_db
 
     # Load the vocabulary used for encoding LLVM bytecode.
-    data_to_load = jsonutil.read_file(FLAGS.bytecode_vocabulary)
+    with open(FLAGS.bytecode_vocabulary) as f:
+      data_to_load = json.load(f)
     self.vocabulary = data_to_load['vocab']
     self.max_sequence_length = data_to_load['max_encoded_length']
 
@@ -280,7 +281,7 @@ class GraphToSequenceEncoder(object):
                        f"({len(self.vocabulary)})")
     return encoded_sequences
 
-  def StringsToEncodedSequencesAndGroupings(
+  def EncodeStringsWithGroupings(
       self, strings: typing.List[str]) -> typing.Tuple[np.array, np.array]:
     """Encode the given strings and return a flattened list of the encoded
     values, along with grouping IDs.
@@ -290,8 +291,8 @@ class GraphToSequenceEncoder(object):
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
 
-    encoded_sequences = np.concat(encoded_sequences)
-    statement_indices = np.concat(statement_indices)
+    encoded_sequences = np.concatenate(encoded_sequences)
+    statement_indices = np.concatenate(statement_indices)
 
     return encoded_sequences, statement_indices
 
@@ -310,7 +311,7 @@ class GraphToSequenceEncoder(object):
         for n in cdfg.SerializeToStatementList()
     ]
 
-    seqs, ids = self.StringsToEncodedSequencesAndGroupings(strings_to_encode)
+    seqs, ids = self.EncodeStringsWithGroupings(strings_to_encode)
 
     return seqs, ids, node_mask
 
@@ -334,7 +335,7 @@ class GraphToSequenceEncoder(object):
         ])
         for identifier in identifiers
     ]
-    seqs, ids = self.StringsToEncodedSequencesAndGroupings(strings_to_encode)
+    seqs, ids = self.EncodeStringsWithGroupings(strings_to_encode)
 
     return seqs, ids, np.array(node_mask, dtype=np.int32)
 
