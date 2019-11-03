@@ -45,11 +45,17 @@ def _ProcessInputs(
   builder = cdfg.ControlAndDataFlowGraphBuilder()
 
   graph_metas = []
+
   for bytecode_id, bytecode, source_name, relpath, language in jobs:
+    # Haskell uses an older version of LLVM which emits incompatible bytecode.
+    # When processing Haskell code we must use the older version of opt. Else,
+    # the default version is fine.
+    opt = 'opt-3.5' if language == 'haskell' else None
+
     try:
       with prof.Profile(
           lambda t: f"Constructed {graph.number_of_nodes()}-node CDFG"):
-        graph = builder.Build(bytecode)
+        graph = builder.Build(bytecode, opt=opt)
       graph.bytecode_id = bytecode_id
       graph.source_name = source_name
       graph.relpath = relpath
