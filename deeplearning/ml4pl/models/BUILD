@@ -30,7 +30,10 @@ py_library(
     visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",
+        "//third_party/py/numpy",
     ],
 )
 

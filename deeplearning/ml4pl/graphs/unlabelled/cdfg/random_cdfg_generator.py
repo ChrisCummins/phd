@@ -110,16 +110,18 @@ def FastCreateRandom():
   # Assign position and flow type randomly. This does not produce meaningful
   # graphs, e.g. you can have statements with control edges into identifiers.
   for src, dst, data in g.edges(data=True):
-    if not src:  # Root node.
-      continue
     data['position'] = random.randint(0, 2)
     src_type = g.nodes[src]['type']
     if src_type == 'identifier':
       data['flow'] = 'data'
     elif src_type == 'immediate':
       data['flow'] = 'data'
+    elif src_type == 'magic':
+      data['flow'] = 'call'
     elif src_type == 'statement':
       data['flow'] = np.random.choice(['control', 'call'], p=[.95, .05])
+    else:
+      raise AssertionError(f'unreachable src_type `{src_type}`')
 
   # Set the new node names.
   nx.relabel_nodes(g, node_renamings, copy=False)
@@ -138,17 +140,18 @@ def AddRandomAnnotations(graphs: typing.List[nx.MultiDiGraph],
   """Add random additions to the graphs."""
   if node_y_choices:
     for graph in graphs:
-      node_y = np.random.choice(node_y_choices,
-                                shape=(graph.number_of_nodes(),))
+      node_y = [
+          random.choice(node_y_choices) for _ in range(graph.number_of_nodes())
+      ]
       for (node, data), y in zip(graph.nodes(data=True), node_y):
         data['y'] = y
 
   if graph_x_choices:
-    graph_x = np.random.choice(graph_x_choices, shape=(len(graphs),))
+    graph_x = [random.choice(graph_x_choices) for _ in graphs]
     for graph, x in zip(graphs, graph_x):
       graph.x = x
 
   if graph_y_choices:
-    graph_y = np.random.choice(graph_y_choices, shape=(len(graphs),))
+    graph_y = [random.choice(graph_y_choices) for _ in graphs]
     for graph, y in zip(graphs, graph_y):
       graph.y = y

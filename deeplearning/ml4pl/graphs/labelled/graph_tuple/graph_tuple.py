@@ -182,14 +182,15 @@ class GraphTuple(typing.NamedTuple):
     node_x_indices = np.array(node_x_indices, dtype=np.int32)
 
     # Set optional node labels.
-    if node_y and node_y in g.nodes[src]:
-      node_targets = [None] * g.number_of_nodes()
-      for node, y in g.nodes(data=node_y):
-        node_idx = node_to_index[node]
-        node_targets[node_idx] = y
-      node_y = np.vstack(node_targets)
+    node_targets = [None] * g.number_of_nodes()
+    node_y = None
+    for node, node_y in g.nodes(data=node_y):
+      if node_y is None:
+        break
+      node_idx = node_to_index[node]
+      node_targets[node_idx] = y
     else:
-      node_y = None
+      node_y = np.vstack(node_targets)
 
     # Set optional graph features.
     if graph_x and hasattr(g, graph_x):
@@ -226,8 +227,10 @@ class GraphTuple(typing.NamedTuple):
     for edge_type, (adjacency_list, position_list) in enumerate(
         zip(self.adjacency_lists, self.edge_positions)):
       for (src, dst), position in zip(adjacency_list, position_list):
-        g.add_edge(
-            src, dst, flow=EDGE_INDEX_TO_FLOW[edge_type], position=position)
+        g.add_edge(src,
+                   dst,
+                   flow=EDGE_INDEX_TO_FLOW[edge_type],
+                   position=position)
 
     for i, x in enumerate(self.node_x_indices):
       g.nodes[i]['x'] = x

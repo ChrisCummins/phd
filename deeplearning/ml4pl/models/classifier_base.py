@@ -163,10 +163,8 @@ class ClassifierBase(object):
                         f"{system.HOSTNAME}")
     app.Log(1, "Run ID: %s", self.run_id)
 
-    self.batcher = graph_batcher.GraphBatcher(
-        db, message_passing_step_count=self.message_passing_step_count)
+    self.batcher = graph_batcher.GraphBatcher(db)
     self.stats = self.batcher.stats
-    app.Log(1, "%s", self.stats)
 
     self.working_dir = FLAGS.working_dir
     self.best_model_file = self.working_dir / f'{self.run_id}.best_model.pickle'
@@ -197,13 +195,6 @@ class ClassifierBase(object):
     self.global_training_step = 0
     self.best_epoch_validation_accuracy = 0
     self.best_epoch_num = 0
-
-  @property
-  def message_passing_step_count(self) -> int:
-    """Return the maximum message passing steps of the model, or 0 if no
-    limit.
-    """
-    return 0
 
   @decorators.memoized_property
   def labels_dimensionality(self) -> int:

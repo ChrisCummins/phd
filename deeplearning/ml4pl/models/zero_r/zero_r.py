@@ -11,7 +11,7 @@ from deeplearning.ml4pl.models import log_database
 FLAGS = app.FLAGS
 
 
-class ZeroRNodeClassifier(classifier_base.ClassifierBase):
+class ZeroRClassifier(classifier_base.ClassifierBase):
   """A Zero-R classifier that supports node-level or graph-level labels.
 
   A Zero-R classifier always predicts the mode value from the training set. It
@@ -19,7 +19,8 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
   """
 
   def __init__(self, *args):
-    super(ZeroRNodeClassifier, self).__init__(*args)
+    super(ZeroRClassifier, self).__init__(*args)
+    # The table used to count training labels.
     self.class_counts = np.zeros(self.labels_dimensionality, dtype=np.int32)
 
   def MakeMinibatchIterator(
@@ -68,7 +69,7 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
-  classifier_base.Run(ZeroRNodeClassifier)
+  classifier_base.Run(ZeroRClassifier)
 
 
 if __name__ == '__main__':

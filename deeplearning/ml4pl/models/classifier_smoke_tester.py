@@ -3,9 +3,12 @@ import contextlib
 import pathlib
 import tempfile
 
+import numpy as np
 from labm8 import app
+from labm8 import prof
 
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
 from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
@@ -28,34 +31,57 @@ def WorkingDirectory() -> pathlib.Path:
   is set, this is used. Else, a random directory is used."""
   with tempfile.TemporaryDirectory() as d:
     working_dir = FLAGS.smoke_test_working_dir or pathlib.Path(d)
+    app.Log(1, "Using working directory `%s` for smoke tests", working_dir)
     yield working_dir
 
 
-class SmokeTesterBase(object):
-  """The base class for implementing model smoke tests."""
+def _MakeNGroupGraphs(n: int, group: str):
+  for i in range(n):
+    g = random_cdfg_generator.FastCreateRandom()
+    g.bytecode_id = 0
+    g.relpath = str(i)
+    g.language = 'c'
+    g.group = group
+    g.source_name = 'rand'
+    yield g
 
-  def GetModelClass(self):
-    """Return the class to be tested."""
-    raise NotImplementedError
 
-  def GetAnnotatedGraphDatabase(self) -> graph_database.Database:
-    """Generate fake data for the graph database."""
+def RunNodeClassificationSmokeTest(model_class):
+  with WorkingDirectory() as working_dir:
+    graph_db_path = working_dir / 'node_classification_graphs.db'
+    if graph_db_path.is_file():
+      graph_db_path.unlink()
 
-  def Run(self):
-    FLAGS.num_epochs = FLAGS.smoke_test_num_epochs
+    log_db_path = working_dir / 'logs.db'
+    if log_db_path.is_file():
+      log_db_path.unlink()
 
-    with WorkingDirectory() as working_dir:
-      graph_db_path = working_dir / 'graphs.db'
-      if graph_db_path.is_file():
-        graph_db_path.unlink()
+    graph_db = graph_database.Database(f'sqlite:///{working_dir}/graphs.db')
+    log_db = log_database.Database(f'sqlite:///{working_dir}/logs.db')
 
-      log_db_path = working_dir / 'logs.db'
-      if log_db_path.is_file():
-        log_db_path.unlink()
+    with prof.Profile("Creating random testing graphs"):
+      graphs = (list(_MakeNGroupGraphs(30, 'train')) +
+                list(_MakeNGroupGraphs(10, 'val')) +
+                list(_MakeNGroupGraphs(10, 'test')))
 
-      graph_db = graph_database.Database(f'sqlite:///{working_dir}/graphs.db')
-      log_db = log_database.Database(f'sqlite:///{working_dir}/logs.db')
-      self.PopulateDatabase(graph_db)
+    with prof.Profile("Added random graph annotations"):
+      # Add node-level labels.
+      random_cdfg_generator.AddRandomAnnotations(graphs,
+                                                 node_y_choices=[
+                                                     np.array([1, 0],
+                                                              dtype=np.int32),
+                                                     np.array([0, 1],
+                                                              dtype=np.int32),
+                                                 ])
 
-      model = self.GetModelClass()(graph_db, log_db)
+    with prof.Profile("Added graphs to database"):
+      with graph_db.Session(commit=True) as s:
+        s.add_all(
+            [graph_database.GraphMeta.CreateFromNetworkX(g) for g in graphs])
+
+    with prof.Profile("Created model"):
+      model = model_class(graph_db, log_db)
+
+    with prof.Profile("Trained model"):
+      FLAGS.num_epochs = FLAGS.smoke_test_num_epochs
       model.Train()
