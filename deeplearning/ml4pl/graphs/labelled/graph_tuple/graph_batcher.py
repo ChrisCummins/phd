@@ -224,9 +224,9 @@ class GraphBatch(typing.NamedTuple):
       log.graph_count += 1
       log.node_count += graph.node_count
 
-      graph = cls.NextGraph(graphs)
+      graph = cls.NextGraph(graphs, options)
       if not graph:  # We have run out of graphs.
-        return None
+        break
 
     # Concatenate and convert lists to numpy arrays.
 
