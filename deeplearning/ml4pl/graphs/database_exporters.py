@@ -105,7 +105,7 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
       query = session.query(graph_database.GraphMeta.bytecode_id) \
         .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)) \
         .order_by(self.graph_db.Random())
-      already_done = [r.bytecode_id for r in query]
+      already_done = set([r.bytecode_id for r in query])
       app.Log(1, 'Skipping %s previously-exported bytecodes',
               humanize.Commas(len(already_done)))
       bytecode_ids = [b for b in bytecode_ids if b not in already_done]
@@ -181,7 +181,7 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
     with self.input_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id) \
         .order_by(self.input_db.Random())
-      bytecode_ids = [row.bytecode_id for row in query]
+      bytecode_ids = set([row.bytecode_id for row in query])
 
     # Ignore bytecodes that we have already exported.
     with self.output_db.Session() as session:
