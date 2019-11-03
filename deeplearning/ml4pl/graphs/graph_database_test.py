@@ -123,7 +123,8 @@ def test_Graph_CreateFromNetworkX(graph: nx.MultiDiGraph):
   assert gm.graph_features_dimensionality == 4
   assert gm.graph_labels_dimensionality == 0
   assert gm.loop_connectedness == 0
-  assert gm.undirected_diameter == 3
+  # TODO(github.com/ChrisCummins/ml4pl/issues/5): Update.
+  assert gm.undirected_diameter == 0
   assert gm.data_flow_max_steps_required == 10
   assert gm.graph.data
 
