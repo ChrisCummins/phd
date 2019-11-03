@@ -274,6 +274,9 @@ class ClassifierBase(object):
       with self.log_db.Session(commit=True) as session:
         session.add(log)
 
+    if not epoch_accuracies:
+      raise ValueError("Batch generator produced no batches!")
+
     return np.mean(epoch_accuracies)
 
   def RunKFoldTrainAndValidate(self, k: int) -> typing.Tuple[float, float]:
