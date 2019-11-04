@@ -85,6 +85,7 @@ py_test(
         ":lstm_graph_classifier",
         "//deeplearning/ml4pl/models:classifier_smoke_tester",
         "//labm8:app",
+        "//labm8:test",
         "//third_party/py/numpy",
     ],
 )
