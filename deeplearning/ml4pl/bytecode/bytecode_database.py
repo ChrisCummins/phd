@@ -70,62 +70,6 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
     }
 
 
-class ControlFlowGraphProto(Base, sqlutil.ProtoBackedMixin,
-                            sqlutil.TablenameFromCamelCapsClassNameMixin):
-  """A table of CFG protos."""
-
-  proto_t = ml4pl_pb2.ControlFlowGraphFromLlvmBytecode
-
-  bytecode_id: int = sql.Column(sql.Integer,
-                                sql.ForeignKey(LlvmBytecode.id),
-                                nullable=False)
-  cfg_id: int = sql.Column(sql.Integer, nullable=False)
-
-  # Composite primary key.
-  __table_args__ = (sql.PrimaryKeyConstraint('bytecode_id',
-                                             'cfg_id',
-                                             name='unique_id'),)
-
-  status: int = sql.Column(sql.Integer, nullable=False)
-  proto: str = sql.Column(sql.UnicodeText().with_variant(
-      sql.UnicodeText(2**31), 'mysql'),
-                          nullable=False)
-  # TODO: Switch string proto for a more compact serialized proto.
-  # serialized_proto: str = sql.Column(
-  #     sql.LargeBinary().with_variant(sql.LargeBinary(2**31), 'mysql'),
-  #     nullable=False)
-  error_message: str = sql.Column(sql.UnicodeText().with_variant(
-      sql.UnicodeText(2**31), 'mysql'),
-                                  nullable=False)
-  block_count: int = sql.Column(sql.Integer, nullable=False)
-  edge_count: int = sql.Column(sql.Integer, nullable=False)
-  is_strict_valid: bool = sql.Column(sql.Boolean, nullable=False)
-
-  # TODO(cec): Add date_added field.
-  # date_added: datetime.datetime = sql.Column(
-  #     sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-  #     nullable=False,
-  #     default=labdate.GetUtcMillisecondsNow)
-
-  bytecode: LlvmBytecode = sql.orm.relationship(LlvmBytecode,
-                                                uselist=False,
-                                                back_populates="cfgs")
-
-  @classmethod
-  def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
-    """Return a dictionary of instance constructor args from proto."""
-    return {
-        'bytecode_id': proto.bytecode_id,
-        'cfg_id': proto.cfg_id,
-        'proto': proto.control_flow_graph,
-        'status': proto.status,
-        'error_message': proto.error_message,
-        'block_count': proto.block_count,
-        'edge_count': proto.edge_count,
-        'is_strict_valid': proto.is_strict_valid,
-    }
-
-
 class Database(sqlutil.Database):
 
   def __init__(self, url: str, must_exist: bool = False):
