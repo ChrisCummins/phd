@@ -64,7 +64,7 @@ py_binary(
     name = "lstm_graph_classifier",
     srcs = ["lstm_graph_classifier.py"],
     deps = [
-        ":bytecode2seq",
+        ":graph2seq",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
