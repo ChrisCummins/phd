@@ -34,6 +34,7 @@ docutils==0.14
 editdistance==0.3.1
 entrypoints==0.2.3
 enum34==1.1.6
+flaky==3.6.1
 Flask==1.0.2
 Flask-Compress==1.4.0
 flask-cors==3.0.6
