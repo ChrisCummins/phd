@@ -1,48 +1,36 @@
-"""Unit tests for //deeplearning/ml4pl/models/ggnn:ggnn_base."""
+"""Unit tests for //deeplearning/ml4pl/models:classifier_base."""
 import pathlib
 import pickle
-
-import numpy as np
+import networkx as nx
+import typing
 import pytest
-import tensorflow as tf
+import numpy as np
+
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
+from deeplearning.ml4pl.models import classifier_base
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import test
 
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
-  graph_tuple as graph_tuples
-from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models.ggnn import ggnn_base
 
 FLAGS = app.FLAGS
 
 
 @pytest.fixture(scope='function')
 def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
+  """Fixture which returns a graph database containing 50 random graphs."""
   db = graph_database.Database(f'sqlite:///{tempdir}/graphs.db')
+  graphs = (list(_MakeNRandomGraphs(30, 'train')) +
+            list(_MakeNRandomGraphs(10, 'val')) +
+            list(_MakeNRandomGraphs(10, 'test')))
+  random_cdfg_generator.AddRandomAnnotations(
+      graphs,
+      graph_y_choices=[np.array([1, 0], dtype=np.int32),
+                       np.array([0, 1], dtype=np.int32)])
   with db.Session(commit=True) as s:
-    s.add(
-        graph_database.GraphMeta(
-            group="train",
-            bytecode_id=0,
-            source_name="source",
-            relpath="relpath",
-            language="c",
-            node_count=3,
-            edge_count=2,
-            edge_type_count=3,
-            graph_labels_dimensionality=1,
-            edge_position_max=0,
-            loop_connectedness=0,
-            undirected_diameter=0,
-            graph=graph_database.Graph(pickled_data=pickle.dumps(
-                graph_tuples.GraphTuple(
-                    adjacency_lists=None,
-                    edge_positions=None,
-                    incoming_edge_counts=None,
-                    node_x_indices=None,
-                    graph_y=np.array(np.array([1], dtype=np.float32)),
-                )))))
+    s.add_all(
+        [graph_database.GraphMeta.CreateFromNetworkX(g) for g in graphs])
   return db
 
 
@@ -51,28 +39,15 @@ def log_db(tempdir: pathlib.Path) -> log_database.Database:
   return log_database.Database(f'sqlite:///{tempdir}/logs.db')
 
 
-class MockModel(ggnn_base.GgnnBaseModel):
+class MockModel(classifier_base.ClassifierBase):
   """A mock GGNN model."""
 
-  def MakeLossAndAccuracyAndPredictionOps(self):
-    self.placeholders["X"] = tf.compat.v1.placeholder("float")
-    self.placeholders["Y"] = tf.compat.v1.placeholder("float")
-    W = tf.Variable(np.random.randn(), name="weight")
-    b = tf.Variable(np.random.randn(), name="bias")
-    predictions = tf.add(tf.multiply(self.placeholders["X"], W), b)
-    loss = tf.reduce_sum(tf.pow(predictions - self.placeholders["Y"], 2))
-    accuracy = tf.Variable(np.random.randn())
-    accuracies = tf.Variable(np.random.rand())
-    return loss, accuracy, accuracies, predictions
+  def __init__(self):
 
-  def MakeMinibatchIterator(self, group):
-    del epoch_type
-    for _ in range(3):
-      log = log_database.BatchLog(graph_count=10)
-      yield log, {
-          self.placeholders["X"]: 5,
-          self.placeholders["Y"]: 10,
-      }
+  def ModelDataToSave(self):
+    return {"foo": 1}
+  def LoadModelData(self, data_to_load)
+
 
 
 def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path,
@@ -148,6 +123,16 @@ def test_Train(tempdir2: pathlib.Path, graph_db: graph_database.Database,
   model.Train()
   assert model.best_epoch_num == 1
 
+def _MakeNRandomGraphs(n: int, group: str) -> typing.Iterable[nx.MultiDiGraph]:
+  """Private helper to generate random graphs of the given group."""
+  for i in range(n):
+    g = random_cdfg_generator.FastCreateRandom()
+    g.bytecode_id = 0
+    g.relpath = str(i)
+    g.language = 'c'
+    g.group = group
+    g.source_name = 'rand'
+    yield g
 
 if __name__ == '__main__':
   test.Main()

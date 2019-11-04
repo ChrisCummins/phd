@@ -111,7 +111,17 @@ SMALL_NUMBER = 1e-7
 
 
 class ClassifierBase(object):
-  """Abstract base class for implementing classification models."""
+  """Abstract base class for implementing classification models.
+
+  Subclasses must implement the following methods:
+    MakeMinibatchIterator()
+    RunMinibatch()
+
+  And may optionally wish to implement these additional methods:
+    InitializeModel()
+    ModelDataToSave()
+    LoadModelData()
+  """
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str

@@ -23,6 +23,20 @@ py_library(
     ],
 )
 
+# TODO(cec): Update classifier base tests.
+#py_test(
+#    name = "classifier_base_test",
+#    srcs = ["classifier_base_test.py"],
+#    deps = [
+#        ":classifier_base",
+#        "//labm8:app",
+#        "//labm8:test",
+#        "//third_party/py/numpy",
+#        "//third_party/py/pytest",
+#        "//third_party/py/tensorflow",
+#    ],
+#)
+
 py_library(
     name = "classifier_smoke_tester",
     testonly = 1,

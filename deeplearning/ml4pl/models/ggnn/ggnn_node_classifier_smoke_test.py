@@ -1,9 +1,11 @@
 """Smoke test for //deeplearning/ml4pl/models/ggnn:ggnn_node_classifier."""
 import numpy as np
-from labm8 import app
 
 from deeplearning.ml4pl.models import classifier_smoke_tester
 from deeplearning.ml4pl.models.ggnn import ggnn_node_classifier
+from labm8 import app
+from labm8 import test
+
 
 FLAGS = app.FLAGS
 

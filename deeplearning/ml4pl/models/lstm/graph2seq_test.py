@@ -1,14 +1,14 @@
 """Unit tests for //deeplearning/ml4pl/models/lstm:graph2seq."""
-import pathlib
-
 import numpy as np
+import pathlib
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models.lstm import graph2seq
+from labm8 import app
+from labm8 import test
+
 
 FLAGS = app.FLAGS
 
@@ -30,10 +30,10 @@ def test_Encode(graph_db: graph_database.Database):
   assert encoded[0] == [124, 7, 6, 6, 3, 51, 1, 71, 80, 6, 4]
 
 
-def test_StringsToEncodedSequencesAndGroupings():
+def test_EncodeStringsWithGroupings():
   encoder = graph2seq.GraphToSequenceEncoder(graph_db)
 
-  enc, idx = encoder.StringsToEncodedSequencesAndGroupings(["HH", "H", "H"])
+  enc, idx = encoder.EncodeStringsWithGroupings(["HH", "H", "H"])
 
   assert len(enc) == 4
   assert np.array_equal(enc, [124, 124, 124, 124])

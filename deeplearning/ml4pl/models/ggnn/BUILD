@@ -13,19 +13,6 @@ py_library(
     ],
 )
 
-py_test(
-    name = "ggnn_base_test",
-    srcs = ["ggnn_base_test.py"],
-    deps = [
-        ":ggnn_base",
-        "//labm8:app",
-        "//labm8:test",
-        "//third_party/py/numpy",
-        "//third_party/py/pytest",
-        "//third_party/py/tensorflow",
-    ],
-)
-
 py_binary(
     name = "ggnn_node_classifier",
     srcs = ["ggnn_node_classifier.py"],
