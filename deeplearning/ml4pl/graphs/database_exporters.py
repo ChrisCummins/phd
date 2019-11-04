@@ -139,7 +139,9 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
       # Set the GraphMeta.group column.
       for graph in graph_metas:
         graph.group = group
-      sqlutil.ResilientAddManyAndCommit(self.graph_db, graph_metas)
+
+      if graph_metas:
+        sqlutil.ResilientAddManyAndCommit(self.graph_db, graph_metas)
 
     return exported_count
 
@@ -217,7 +219,8 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
           len(bytecode_ids), (job_count / len(jobs)) * 100,
           exported_graph_count / (time.time() - start_time))
 
-      sqlutil.ResilientAddManyAndCommit(self.output_db, graph_metas)
+      if graph_metas:
+        sqlutil.ResilientAddManyAndCommit(self.output_db, graph_metas)
 
     elapsed_time = time.time() - start_time
     app.Log(
