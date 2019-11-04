@@ -462,12 +462,6 @@ class ClassifierBase(object):
         for flag in sorted(set(self.GetModelFlagNames()))
     }
 
-  def _GetEmbeddingsTable(self) -> np.array:
-    """Reading embeddings table"""
-    with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
-      with open(FLAGS.embedding_path, 'rb') as f:
-        return pickle.load(f)
-
 
 def Run(model_class):
   graph_db = FLAGS.graph_db()

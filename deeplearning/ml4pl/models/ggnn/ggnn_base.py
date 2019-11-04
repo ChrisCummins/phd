@@ -146,6 +146,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
                                           self.sess.graph),
       }
 
+  def _GetEmbeddingsTable(self) -> np.array:
+    """Reading embeddings table"""
+    with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
+      with open(FLAGS.embedding_path, 'rb') as f:
+        return pickle.load(f)
+
   @property
   def message_passing_step_count(self) -> int:
     return self.layer_timesteps.sum()
