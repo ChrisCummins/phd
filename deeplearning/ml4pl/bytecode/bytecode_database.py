@@ -46,9 +46,6 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
 
   bytecode_sha1: str = sql.Column(sql.String(40), nullable=False, index=True)
 
-  cfgs: 'ControlFlowGraphProto' = sql.orm.relationship(
-      'ControlFlowGraphProto', back_populates="bytecode")
-
   __table_args__ = (sql.UniqueConstraint('source_name',
                                          'relpath',
                                          name='unique_bytecode'),)
