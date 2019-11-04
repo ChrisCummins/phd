@@ -291,12 +291,14 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       self.summary_writers[log.group].add_summary(
           fetch_dict["summary_accuracy"], self.global_training_step)
 
-    # TODO(cec): Add support for edge labels.
-    targets = (feed_dict[self.placeholders['node_y']]
-               if 'node_y' in self.placeholders else
-               feed_dict[self.placeholders['graph_y']])
-
     log.loss = float(fetch_dict['loss'])
+
+    if 'node_y' in self.placeholders:
+      targets = feed_dict[self.placeholders['node_y']]
+    elif 'graph_y' in self.placeholders:
+      targets = feed_dict[self.placeholders['graph_y']]
+    else:
+      raise TypeError("Neither node_y or graph_y in placeholders dict!")
 
     return self.MinibatchResults(y_true_1hot=targets,
                                  y_pred_1hot=fetch_dict['predictions'])
