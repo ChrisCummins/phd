@@ -3,17 +3,14 @@ import typing
 
 import keras
 import numpy as np
-from keras import models
 import tensorflow as tf
+from keras import models
 from labm8 import app
-from labm8 import prof
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.lstm import graph2seq
-from deeplearning.ml4pl.models.lstm import byte2seq
 
 FLAGS = app.FLAGS
 
@@ -46,8 +43,8 @@ app.DEFINE_float('lang_model_loss_weight', .2,
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
 
 app.DEFINE_boolean(
-  'node_wise_model', True,
-  "hacky flag to activate node-wise classification instead of graph level classification"
+    'node_wise_model', True,
+    "hacky flag to activate node-wise classification instead of graph level classification"
 )
 classifier_base.MODEL_FLAGS.add("node_wise_model")
 #
@@ -79,41 +76,42 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     lstm_input = keras.layers.Embedding(input_dim=embedding_dim,
                                         input_length=self.max_encoded_length,
                                         output_dim=FLAGS.hidden_size,
-                                        name="embedding")(input_layer, input_segments)
+                                        name="embedding")(input_layer,
+                                                          input_segments)
 
     if FLAGS.node_wise_model:
       #TODO note that segment sum expects that all the index is sorted and covers all guys
       # it's like a reduce sum in slices
       x = keras.layers.Lambda(
-          lambda inputs, indices: tf.math.segment_sum(inputs, indices), name='segment_sum')(lstm_input, input_segments)
+          lambda inputs, indices: tf.math.segment_sum(inputs, indices),
+          name='segment_sum')(lstm_input, input_segments)
 
     x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
                                return_sequences=True,
                                name="lstm_1")(x)
     if FLAGS.node_wise_model:
       x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                                name="lstm_2",
-                                return_sequences=True,
-                                return_state=False)(x)
+                                 name="lstm_2",
+                                 return_sequences=True,
+                                 return_state=False)(x)
       langmodel_out = keras.layers.Dense(self.stats.node_labels_dimensionality,
-                                        activation="sigmoid",
-                                        name="langmodel_out")(x)
+                                         activation="sigmoid",
+                                         name="langmodel_out")(x)
       # no graph level features for node classification.
       out = langmodel_out
       self.model = keras.Model(inputs=[input_layer, input_segments],
                                outputs=[out])
-      self.model.compile(
-          optimizer="adam",
-          metrics=['accuracy'],
-          loss=["categorical_crossentropy"],
-          loss_weights=[1.0])
+      self.model.compile(optimizer="adam",
+                         metrics=['accuracy'],
+                         loss=["categorical_crossentropy"],
+                         loss_weights=[1.0])
     else:
-      x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                               name="lstm_2")(x)
-  
-      langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
-                                        activation="sigmoid",
-                                        name="langmodel_out")(x)
+      x = keras.layers.CuDNNLSTM(FLAGS.hidden_size, name="lstm_2")(x)
+
+      langmodel_out = keras.layers.Dense(
+          self.stats.graph_features_dimensionality,
+          activation="sigmoid",
+          name="langmodel_out")(x)
 
       # Auxiliary inputs.
       auxiliary_inputs = keras.Input(
@@ -124,11 +122,11 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
       x = keras.layers.Concatenate()([x, auxiliary_inputs])
       x = keras.layers.BatchNormalization()(x)
       x = keras.layers.Dense(FLAGS.dense_hidden_size,
-                            activation="relu",
-                            name="heuristic_1")(x)
+                             activation="relu",
+                             name="heuristic_1")(x)
       out = keras.layers.Dense(self.stats.graph_labels_dimensionality,
-                              activation="sigmoid",
-                              name='heuristic_2')(x)
+                               activation="sigmoid",
+                               name='heuristic_2')(x)
 
       self.model = keras.Model(inputs=[input_layer, auxiliary_inputs],
                                outputs=[out, langmodel_out])
@@ -162,7 +160,8 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
     if FLAGS.node_wise_model:
-      x = [batch['encoded_sequences'][0], batch['encoded_sequences'][1]] # for clarity
+      x = [batch['encoded_sequences'][0],
+           batch['encoded_sequences'][1]]  # for clarity
       y = [batch['node_y']]
     else:
       x = [batch['encoded_sequences'], batch['graph_x']]
