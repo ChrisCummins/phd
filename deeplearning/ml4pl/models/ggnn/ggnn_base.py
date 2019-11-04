@@ -226,7 +226,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     return fetch_dict
 
-  def RunMinibatch(self, log: log_database.BatchLog, feed_dict: typing.Any
+  def RunMinibatch(self, log: log_database.BatchLogMeta, feed_dict: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     if FLAGS.dynamic_unroll_multiple == 0 or log.type == "train":
       fetch_dict = {

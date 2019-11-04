@@ -130,7 +130,7 @@ class ClassifierBase(object):
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str
-  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, typing.Any]]:
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
@@ -150,7 +150,7 @@ class ClassifierBase(object):
     y_true_1hot: np.array  # Shape [num_labels,num_classes]
     y_pred_1hot: np.array  # Shape [num_labels,num_classes]
 
-  def RunMinibatch(self, log: log_database.BatchLog,
+  def RunMinibatch(self, log: log_database.BatchLogMeta,
                    batch: typing.Any) -> MinibatchResults:
     """Process a mini-batch of data using the model.
 
@@ -230,7 +230,7 @@ class ClassifierBase(object):
 
     epoch_accuracies = []
 
-    batch_type = typing.Tuple[log_database.BatchLog, typing.Any]
+    batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type, group), max_queue_size=5)
 
@@ -246,7 +246,7 @@ class ClassifierBase(object):
       log.global_step = self.global_training_step
       log.run_id = self.run_id
 
-      targets, predictions = self.RunMinibatch(log, feed_dict=batch_data)
+      targets, predictions = self.RunMinibatch(log, batch_data)
 
       # Compute statistics.
       y_true = np.argmax(targets, axis=1)
@@ -311,7 +311,7 @@ class ClassifierBase(object):
       The best validation accuracy of the model.
     """
     # We train on everything except the validation and test data.
-    train_groups = set(self.batcher.stats.groups) - set([val_group, test_group])
+    train_groups = set(self.batcher.stats.groups) - {val_group, test_group}
 
     for epoch_num in range(self.epoch_num, num_epochs + 1):
       self.epoch_num = epoch_num

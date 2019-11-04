@@ -167,8 +167,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       message_edge_types.append(
           tf.ones_like(edge_targets, dtype=tf.int32) * edge_type)
 
-    message_targets = tf.concat(message_targets, axis=0, name='message_targets')  # Shape [M]
-    message_edge_types = tf.concat(message_edge_types, axis=0, name='message_edge_types')  # Shape [M]
+    message_targets = tf.concat(message_targets, axis=0,
+                                name='message_targets')  # Shape [M]
+    message_edge_types = tf.concat(message_edge_types,
+                                   axis=0,
+                                   name='message_edge_types')  # Shape [M]
 
     for (layer_idx, num_timesteps) in enumerate(self.layer_timesteps):
       with tf.compat.v1.variable_scope(f"gnn_layer_{layer_idx}"):
@@ -371,7 +374,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str
-  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, ggnn.FeedDict]]:
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, ggnn.FeedDict]]:
     """Create mini-batches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
     options = graph_batcher.GraphBatchOptions(

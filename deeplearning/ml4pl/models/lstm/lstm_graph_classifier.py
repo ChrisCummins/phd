@@ -138,7 +138,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str
-  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, typing.Any]]:
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
     options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
@@ -156,7 +156,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
           'graph_y': np.vstack(batch.graph_y),
       }
 
-  def RunMinibatch(self, log: log_database.BatchLog, batch: typing.Any
+  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
     if FLAGS.node_wise_model:

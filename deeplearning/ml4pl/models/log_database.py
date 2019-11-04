@@ -24,33 +24,34 @@ class Meta(Base, sqlutil.TablenameFromClassNameMixin):
                           nullable=False)
 
 
-class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """A description of a batch of graphs and the results of running it through a
-  model."""
+class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """A description running a batch of graphs through a model."""
   id: int = sql.Column(sql.Integer, primary_key=True)
 
-  # A string to uniquely identify the given experiment run.
+  # A string to uniquely identify the given experiment run. An experiment run
+  # is a timestamp and a hostname.
   run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
 
   # The epoch number, >= 1.
   epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
+
   # The batch number within the epoch, >= 1.
   batch: int = sql.Column(sql.Integer, nullable=False)
 
   # The type of batch. One of {train,test,val}
   type: str = sql.Column(sql.String(32), nullable=False)
 
+  # The GraphMeta.group column that this batch of graphs came from.
+  group: str = sql.Column(sql.String(32), nullable=False)
+
   # The batch number across all epochs.
   global_step: int = sql.Column(sql.Integer, nullable=False)
 
-  timestamp: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False,
-      default=labdate.GetUtcMillisecondsNow)
-
+  # The duration of the batch.
   elapsed_time_seconds: float = sql.Column(sql.Float, nullable=False)
 
-  # The number of model iterations to compute the final results.
+  # The number of model iterations to compute the final results. This is used
+  # by iterative models such as message passing networks.
   iteration_count: int = sql.Column(sql.Integer, nullable=False, default=1)
   # For iterative models, this indicates whether the state of the model at
   # iteration_count had converged on a solution.
@@ -62,45 +63,50 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The number of nodes in the batch.
   node_count: int = sql.Column(sql.Integer, nullable=False)
 
-  # The model loss on the batch.
+  # Metrics describing model performance.
   loss: float = sql.Column(sql.Float, nullable=True)
-
-  # Metrics describing the classifier performance.
   accuracy: float = sql.Column(sql.Float, nullable=False)
   precision: float = sql.Column(sql.Float, nullable=False)
   recall: float = sql.Column(sql.Float, nullable=False)
   f1: float = sql.Column(sql.Float, nullable=False)
 
-  # The GraphMeta.group column that this batch of graphs came from.
-  group: str = sql.Column(sql.String(32), nullable=False)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
 
-  instances: 'Instances' = sql.orm.relationship('Instances',
-                                                uselist=False,
-                                                back_populates="batch")
+  batch_log: 'BatchLog' = sql.orm.relationship('BatchLog',
+                                               uselist=False,
+                                               cascade="all",
+                                               back_populates="meta")
+
+  # Convenience properties to access data in the joined 'BatchLog' table. If
+  # accessing many of these properties, consider using
+  # sql.orm.joinedload(BatchLogMeta.batch) to eagerly load the joined table.
 
   @property
   def graph_indices(self) -> typing.List[int]:
-    return pickle.loads(self.instances.pickled_graph_indices)
+    return pickle.loads(self.batch_log.pickled_graph_indices)
 
   @graph_indices.setter
   def graph_indices(self, data) -> None:
-    self.instances.pickled_graph_indices = pickle.dumps(data)
+    self.batch_log.pickled_graph_indices = pickle.dumps(data)
 
   @property
   def accuracies(self) -> typing.Any:
-    return pickle.loads(self.instances.pickled_accuracies)
+    return pickle.loads(self.batch_log.pickled_accuracies)
 
   @accuracies.setter
   def accuracies(self, data) -> None:
-    self.instances.pickled_accuracies = pickle.dumps(data)
+    self.batch_log.pickled_accuracies = pickle.dumps(data)
 
   @property
   def predictions(self) -> typing.Any:
-    return pickle.loads(self.instances.pickled_predictions)
+    return pickle.loads(self.batch_log.pickled_predictions)
 
   @predictions.setter
   def predictions(self, data) -> None:
-    self.instances.pickled_predictions = pickle.dumps(data)
+    self.batch_log.pickled_predictions = pickle.dumps(data)
 
   @property
   def graphs_per_second(self):
@@ -124,13 +130,13 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         f"acc={self.accuracy:.2%}")
 
 
-class Instances(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """The per-instance results of a batch log.
 
-  In practise, this table grows large.
+  In practise, this table will grow large.
   """
   id: int = sql.Column(sql.Integer,
-                       sql.ForeignKey('batch_logs.id'),
+                       sql.ForeignKey('batch_log_metas.id'),
                        primary_key=True)
 
   # A pickled array of GraphMeta.id values.
@@ -151,7 +157,8 @@ class Instances(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
                                           nullable=False)
 
-  batch: BatchLog = sql.orm.relationship(BatchLog, back_populates="instances")
+  meta: BatchLogMeta = sql.orm.relationship(BatchLogMeta,
+                                            back_populates="batch_log")
 
 
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -189,37 +196,37 @@ class Database(sqlutil.Database):
     """
     with self.Session() as session:
       q = session.query(
-          BatchLog.epoch,
-          BatchLog.type,
-          sql.func.count(BatchLog.epoch).label("num_batches"),
-          sql.func.min(BatchLog.timestamp).label('timestamp'),
-          sql.func.min(BatchLog.global_step).label("global_step"),
-          sql.func.avg(BatchLog.loss).label("loss"),
-          sql.func.avg(BatchLog.iteration_count).label("iteration_count"),
-          sql.func.avg(BatchLog.model_converged).label("converged"),
-          sql.func.avg(BatchLog.accuracy * 100).label("accuracy"),
-          sql.func.avg(BatchLog.precision).label("precision"),
-          sql.func.avg(BatchLog.recall).label("recall"),
-          sql.func.avg(BatchLog.f1).label("f1"),
+          BatchLogMeta.epoch,
+          BatchLogMeta.type,
+          sql.func.count(BatchLogMeta.epoch).label("num_batches"),
+          sql.func.min(BatchLogMeta.timestamp).label('timestamp'),
+          sql.func.min(BatchLogMeta.global_step).label("global_step"),
+          sql.func.avg(BatchLogMeta.loss).label("loss"),
+          sql.func.avg(BatchLogMeta.iteration_count).label("iteration_count"),
+          sql.func.avg(BatchLogMeta.model_converged).label("converged"),
+          sql.func.avg(BatchLogMeta.accuracy * 100).label("accuracy"),
+          sql.func.avg(BatchLogMeta.precision).label("precision"),
+          sql.func.avg(BatchLogMeta.recall).label("recall"),
+          sql.func.avg(BatchLogMeta.f1).label("f1"),
           sql.func.sum(
-              BatchLog.elapsed_time_seconds).label("elapsed_time_seconds"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.graph_count),
+              BatchLogMeta.elapsed_time_seconds).label("elapsed_time_seconds"),
+          sql.sql.expression.cast(sql.func.sum(BatchLogMeta.graph_count),
                                   sql.Integer).label("graph_count"),
-          sql.sql.expression.cast(sql.func.sum(BatchLog.node_count),
+          sql.sql.expression.cast(sql.func.sum(BatchLogMeta.node_count),
                                   sql.Integer).label("node_count"),
       )
 
-      q = q.filter(BatchLog.run_id == run_id)
+      q = q.filter(BatchLogMeta.run_id == run_id)
 
-      q = q.group_by(BatchLog.epoch, BatchLog.type)
+      q = q.group_by(BatchLogMeta.epoch, BatchLogMeta.type)
 
       # Group each individual step. Since there is only one log per step,
       # this means return all rows without grouping.
       if per_global_step:
-        q = q.group_by(BatchLog.global_step) \
-          .order_by(BatchLog.global_step)
+        q = q.group_by(BatchLogMeta.global_step) \
+          .order_by(BatchLogMeta.global_step)
 
-      q = q.order_by(BatchLog.epoch, BatchLog.type)
+      q = q.order_by(BatchLogMeta.epoch, BatchLogMeta.type)
 
       df = pdutil.QueryToDataFrame(session, q)
 

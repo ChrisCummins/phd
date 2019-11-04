@@ -90,7 +90,7 @@ def RunSmokeTest(
 
     # Check a properties of logs.
     with log_db.Session() as session:
-      logs = session.query(log_database.BatchLog).all()
+      logs = session.query(log_database.BatchLogMeta).all()
       logs = sorted(logs, key=lambda log: log.epoch)
 
       # There should be at least 5 and no more than 6 logs:
