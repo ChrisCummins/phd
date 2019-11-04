@@ -1,5 +1,4 @@
-"""Train and evaluate a model for graph classification."""
-import pickle
+"""Train and evaluate a model for graph-level classification."""
 import typing
 
 import keras
@@ -9,12 +8,12 @@ import tensorflow as tf
 from labm8 import app
 from labm8 import prof
 
-from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models import base_utils
-from deeplearning.ml4pl.models.lstm import bytecode2seq
+from deeplearning.ml4pl.models.lstm import graph2seq
+from deeplearning.ml4pl.models.lstm import byte2seq
 
 FLAGS = app.FLAGS
 
@@ -29,10 +28,6 @@ FLAGS = app.FLAGS
 # For the sake of readability, these important model flags are saved into a
 # global set classifier_base.MODEL_FLAGS here, so that the declaration of model
 # flags is local to the declaration of the flag.
-app.DEFINE_input_path(
-    "vocabulary", None, "The path to the vocabulary, as produced by "
-    "//deeplearning/ml4pl/models/lstm:derive_vocabulary")
-
 app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
@@ -50,17 +45,6 @@ app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
 
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None,
-    'URL of database to read bytecodes from.',
-    must_exist=True)
-
-app.DEFINE_integer(
-    'max_encoded_length', None,
-    'Override the max_encoded_length value loaded from the vocabulary.')
-
 app.DEFINE_boolean(
   'node_wise_model', True,
   "hacky flag to activate node-wise classification instead of graph level classification"
@@ -76,18 +60,8 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
   def __init__(self, *args, **kwargs):
     super(LstmGraphClassifierModel, self).__init__(*args, **kwargs)
 
-    self.bytecode_db = FLAGS.bytecode_db()
-
-    with open(FLAGS.vocabulary, 'rb') as f:
-      data_to_load = pickle.load(f)
-      self.vocabulary = data_to_load['vocab']
-      self.max_encoded_length = data_to_load['max_encoded_length']
-
-    if FLAGS.max_encoded_length:
-      self.max_encoded_length = FLAGS.max_encoded_length
-
-    app.Log(1, 'Using %s-element vocabulary with sequence length %s',
-            len(self.vocabulary), self.max_encoded_length)
+    # The encoder which performs translation from graphs to encoded sequences.
+    self.encoder = graph2seq.GraphToSequenceEncoder(self.batcher.db)
 
     # Language model. It begins with an optional embedding layer, then has two
     # layers of LSTM network, returning a single vector of size
@@ -165,87 +139,33 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
           loss_weights=[1., FLAGS.lang_model_loss_weight])
 
   def MakeMinibatchIterator(
-      self, epoch_type: str
+      self, epoch_type: str, group: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
-    for batch in self.batcher.MakeGaphBatchIterator(epoch_type):
+    options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
+                                              group=group)
+    max_instance_count = (
+        FLAGS.max_train_per_epoch if epoch_type == 'train' else
+        FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
+    for batch in self.batcher.MakeGraphBatchIterator(options,
+                                                     max_instance_count):
       graph_ids = batch.log.graph_indices
-
-      with prof.Profile("Loaded and encoded bytecodes"):
-        # Build a mapping from graph ID to bytecode ID.
-        with self.batcher.db.Session() as session:
-          query = session.query(
-              graph_database.GraphMeta.id,
-              graph_database.GraphMeta.bytecode_id) \
-            .filter(graph_database.GraphMeta.id.in_(graph_ids))
-
-          graph_to_bytecode_ids = {row[0]: row[1] for row in query}
-
-        # Load the bytecode strings in the order of the graphs.
-        with self.bytecode_db.Session() as session:
-          query = session.query(
-              bytecode_database.LlvmBytecode.id,
-              bytecode_database.LlvmBytecode.bytecode) \
-            .filter(bytecode_database.LlvmBytecode.id.in_(
-              graph_to_bytecode_ids.values()))
-
-          bytecode_id_to_string = {row[0]: row[1] for row in query}
-
-        # Encode the bytecodes.
-        encoded_bytecodes, vocab_out = bytecode2seq.Encode(
-            bytecode_id_to_string.values(), self.vocabulary)
-
-        if len(vocab_out) != len(self.vocabulary):
-          raise ValueError("Encoded vocabulary has different size "
-                           f"({len(vocab_out)}) than the input "
-                           f"({len(self.vocabulary)})")
-
-        if FLAGS.node_wise_model:
-          #TODO Assume, we get another vector of len(encoded_bytecodes) which holds the statement ids
-          # fake data     
-          token2node = []
-          for bc in encoded_bytecodes:
-            # t2n  gimme_seg_ids(size)
-            t2n = np.sort(np.random.randint(min(bc, 100), size=[len(bc)]))
-            token2node.append(t2n)
-          
-          bytecode_id_to_encoded = {
-            id_: (encoded,t2n) for id_, encoded, t2n in zip(bytecode_id_to_string.keys(),
-                                                 encoded_bytecodes, token2node)
-          }
-        else:
-          bytecode_id_to_encoded = {
-              id_: encoded for id_, encoded in zip(bytecode_id_to_string.keys(),
-                                                  encoded_bytecodes)
-          }
-
-        encoded_sequences = [
-            bytecode_id_to_encoded[graph_to_bytecode_ids[i]] for i in graph_ids
-        ]
-
-        #TODO(zach) ragged tensors already in 1.14!
-        #TODO(zach) this seems to not be one_hot?
-        one_hot_sequences = np.array( #np.array redundant?
-            keras.preprocessing.sequence.pad_sequences(
-                encoded_sequences,
-                maxlen=self.max_encoded_length,
-                value=self.pad_val))
-
-      yield batch['log'], {
-          'sequence_1hot': np.vstack(one_hot_sequences), #np.vstack redundant?
-          'graph_x': np.vstack(batch['graph_x']),
-          'graph_y': np.vstack(batch['graph_y']),
+      encoded_sequences = self.encoder.GraphsToEncodedBytecodes(graph_ids)
+      yield batch.log, {
+          'encoded_sequences': np.vstack(encoded_sequences),
+          'graph_x': np.vstack(batch.graph_x),
+          'graph_y': np.vstack(batch.graph_y),
       }
 
   def RunMinibatch(self, log: log_database.BatchLog, batch: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
-    """Pass"""
+    """Run a batch through the LSTM."""
     if FLAGS.node_wise_model:
-      x = [batch['sequence_1hot'][0], batch['sequence_1hot'][1]] # for clarity
+      x = [batch['encoded_sequences'][0], batch['encoded_sequences'][1]] # for clarity
       y = [batch['node_y']]
     else:
-      x = [batch['sequence_1hot'], batch['graph_x']]
+      x = [batch['encoded_sequences'], batch['graph_x']]
       y = [batch['graph_y'], batch['graph_y']]
 
     losses = []
@@ -257,21 +177,20 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
 
-    if log.group == 'train':
-      self.model.fit(
-          x,
-          y,
-          epochs=1,
-          batch_size=log.graph_count,
-          callbacks=callbacks,
-          verbose=False,
-          shuffle=False)
-    else:
-      self.model.evaluate(
-          x, y, batch_size=log.graph_count, callbacks=callbacks, verbose=False)
+    if log.type == 'train':
+      self.model.fit(x,
+                     y,
+                     epochs=1,
+                     batch_size=log.graph_count,
+                     callbacks=callbacks,
+                     verbose=False,
+                     shuffle=False)
 
     log.loss = sum(losses) / max(len(losses), 1)
 
+    # Run the same input again through the LSTM to get the raw predictions.
+    # This is obviously wasteful when training, but I don't know of a way to
+    # get the raw predictions from self.model.fit().
     pred_y = self.model.predict(x)
 
     return batch.graph_y, pred_y[0]

@@ -143,27 +143,12 @@ def FindCallSites(graph, src, dst):
   return call_sites
 
 
-def LoopConnetedness(graph) -> int:
-  """Return the loop connectedness of a graph.
-
-  Args:
-    graph: The graph to compute the loop connectedness of.
-
-  Returns:
-    A non-negative loop connectedness value.
-  """
+def _LoopConnectedness(graph, root) -> int:
   # TODO(github.com/ChrisCummins/ml4pl/issues/5): This overestimates the loop
   # connectedness by counting *all* back edges, not just the ones on the longest
   # acyclic path through the graph.
   visited = set()
   back_edge_count = 0
-
-  for node in graph.nodes():
-    if graph.in_degree(node) == 1:
-      root = node
-      break
-  else:
-    raise ValueError("No entry block found in graph")
 
   stack = [root]
   while stack:
@@ -179,3 +164,43 @@ def LoopConnetedness(graph) -> int:
           stack.append(dst)
 
   return back_edge_count
+
+
+def LoopConnectedness(graph) -> int:
+  """Return the loop connectedness of a graph.
+
+  Args:
+    graph: The graph to compute the loop connectedness of.
+
+  Returns:
+    A non-negative loop connectedness value.
+  """
+  entries = [dst for _, dst in graph.out_edges('root')]
+  return max([_LoopConnectedness(graph, entry) for entry in entries] or [0])
+
+
+def GetStatementsForNode(graph: nx.MultiDiGraph,
+                         node: str) -> typing.Iterable[str]:
+  """Return the statements which are connected to the given node.
+
+  Args:
+    graph: The graph to fetch the statements from.
+    node: The node to fetch the statements for. If the node is a statement, it
+      returns itself. If the node is an identifier, it returns all statements
+      which define/use this identifier.
+
+  Returns:
+    An iterator over statement nodes.
+  """
+  root = graph.nodes[node]
+  if root['type'] == 'statement':
+    yield node
+  elif root['type'] == 'identifier':
+    for src, dst in graph.in_edges(node):
+      if graph.nodes[src]['type'] == 'statement':
+        yield src
+    for src, dst in graph.out_edges(node):
+      if graph.nodes[dst]['type'] == 'statement':
+        yield dst
+  else:
+    raise ValueError(f"Unknown statement type `{root['type']}`")

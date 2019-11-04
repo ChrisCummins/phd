@@ -122,15 +122,15 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
     # CFGs must contain one or more nodes.
     if number_of_nodes < 1:
-      raise NotEnoughNodes(f'Graph has no nodes')
+      raise NotEnoughNodes(f'Function `{self.name}` has no nodes')
 
     # Get the entry and exit blocks. These properties will raise exceptions
     # if they are not found / duplicates found.
     entry_node = self.entry_block
     exit_nodes = self.exit_blocks
 
-    out_degrees = [self.out_degree(n) for n in self.nodes]
-    in_degrees = [self.in_degree(n) for n in self.nodes]
+    out_degrees = {n: self.out_degree(n) for n in self.nodes}
+    in_degrees = {n: self.in_degree(n) for n in self.nodes}
 
     if number_of_nodes > 1:
       if entry_node in exit_nodes:
@@ -141,19 +141,22 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
         if not nx.has_path(self, entry_node, exit_node):
           raise MalformedControlFlowGraphError(
               f"No path from entry node '{self.nodes[entry_node]['name']}' to "
-              f"exit node '{self.nodes[exit_node]['name']}'")
+              f"exit node '{self.nodes[exit_node]['name']}' in function "
+              f"`{self.name}`")
 
     # Validate node attributes.
     node_names = set()
     for node in self.nodes:
       # All nodes must have a name.
       if 'name' not in self.nodes[node]:
-        raise MissingNodeName(f'Node {node} has no name')
+        raise MissingNodeName(
+            f'Node {node} has no name in function `{self.name}`')
 
       # All node names must be unique.
       node_name = self.nodes[node]['name']
       if node_name in node_names:
-        raise DuplicateNodeName(f"Duplicate node name '{node_name}'")
+        raise DuplicateNodeName(
+            f"Duplicate node name '{node_name}' in function `{self.name}`")
       node_names.add(node_name)
 
       # All nodes must be connected (except for 1-node graphs).
@@ -166,9 +169,10 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     # The exit block cannot have outputs.
     for exit_node in exit_nodes:
       if out_degrees[exit_node]:
+        app.Error("OUT DEGREE %s", self.out_degree(exit_node))
         raise InvalidNodeDegree(
             f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
-            f'{out_degrees[exit_node]}')
+            f'{out_degrees[exit_node]} in function `{self.name}`')
 
     # Additional "strict" CFG tests.
     if strict:
@@ -203,13 +207,16 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
       return False
 
   def IsEntryBlock(self, node) -> bool:
+    """Return if the given node is an entry block."""
     return self.nodes[node].get('entry', False)
 
   def IsExitBlock(self, node) -> bool:
+    """Return if the given node is an exit block."""
     return self.nodes[node].get('exit', False)
 
   @property
   def entry_block(self) -> int:
+    """Return the entry block."""
     entry_blocks = [n for n in self.nodes if self.IsEntryBlock(n)]
     if not entry_blocks:
       raise NoEntryBlock()
@@ -218,7 +225,8 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     return entry_blocks[0]
 
   @property
-  def exit_blocks(self) -> int:
+  def exit_blocks(self) -> typing.List[int]:
+    """Return the exit blocks."""
     exit_blocks = [n for n in self.nodes if self.IsExitBlock(n)]
     if not exit_blocks:
       raise NoExitBlock()

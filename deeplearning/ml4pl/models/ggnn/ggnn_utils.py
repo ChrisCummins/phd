@@ -1,11 +1,11 @@
 """Utilities for working with GGNNs."""
-import numpy as np
-import tensorflow as tf
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database_stats
+import numpy as np
+import tensorflow as tf
 from labm8 import app
 
+from deeplearning.ml4pl.graphs import graph_database_stats
 
 FLAGS = app.FLAGS
 
@@ -193,7 +193,7 @@ def BatchDictToFeedDict(
 
   Args:
     batch: A batch dictionary as produced by the
-      GraphBatcher.MakeGaphBatchIterator() iterator.
+      GraphBatcher.MakeGraphBatchIterator() iterator.
     placeholders: A dictionary mapping placeholder names to the names returned
       by tf.compat.v1.placeholder().
 
@@ -242,7 +242,9 @@ def BatchDictToFeedDict(
 
   return feed_dict
 
-def MakeModularOutputLayer(initial_node_state, final_node_state, regression_gate, regression_transform):
+
+def MakeModularOutputLayer(initial_node_state, final_node_state,
+                           regression_gate, regression_transform):
   """An output layer that reuses weights, but can be fed with a placeholder."""
   with tf.compat.v1.variable_scope("modular_output_layer"):
     with tf.compat.v1.variable_scope("gated_regression"):
@@ -251,6 +253,7 @@ def MakeModularOutputLayer(initial_node_state, final_node_state, regression_gate
       computed_values = (tf.nn.sigmoid(regression_gate(gated_input)) *
                          regression_transform(final_node_state))
   return computed_values
+
 
 def MakeOutputLayer(initial_node_state, final_node_state, hidden_size: int,
                     labels_dimensionality: int,

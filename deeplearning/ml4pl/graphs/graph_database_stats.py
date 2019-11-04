@@ -1,15 +1,14 @@
 """A module for obtaining stats from graph databases."""
-import pickle
 import typing
 
 import numpy as np
 import sqlalchemy as sql
-
-from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import prof
+
+from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
@@ -72,6 +71,13 @@ class GraphDatabaseStats(object):
   @property
   def data_flow_max_steps_required(self) -> int:
     return self._stats.data_flow_max_steps_required
+
+  @decorators.memoized_property
+  def groups(self) -> typing.List[str]:
+    """Fetch a list of distinct group names."""
+    with self.db.Session() as session:
+      query = session.query(graph_database.GraphMeta.group).distinct()
+      return list(sorted([row.group for row in query]))
 
   def __repr__(self):
     summaries = [

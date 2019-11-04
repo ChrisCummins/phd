@@ -5,11 +5,6 @@ import networkx as nx
 import numpy as np
 from labm8 import app
 
-app.DEFINE_boolean(
-    "tie_forward_and_backward_edge_types", False,
-    "If true, insert backward edges using the same type as the forward edges. "
-    "By default, backward edges are inserted using a different type")
-
 FLAGS = app.FLAGS
 
 # A mapping from a node to the number of incoming edges.
@@ -18,9 +13,14 @@ IncomingEdgeCount = typing.Dict[int, int]
 # Perform the mapping between 'flow' property of edges and an index into a
 # list of adjacency lists.
 #
-# TODO(cec): Repace the string constants with an enum for flow types.
+# TODO(cec): Replace the string constants with an enum for flow types.
 FLOW_TO_EDGE_INDEX = {'control': 0, 'data': 1, 'call': 2}
+# Perform the reverse maddping from index into adjacency list to 'flow'
+# property.
 EDGE_INDEX_TO_FLOW = {v: k for k, v in FLOW_TO_EDGE_INDEX.items()}
+# Add lookup entries for backward edges.
+for k, v in FLOW_TO_EDGE_INDEX.items():
+  EDGE_INDEX_TO_FLOW[v + len(FLOW_TO_EDGE_INDEX)] = f'backward_{k}'
 
 
 class GraphTuple(typing.NamedTuple):
@@ -110,11 +110,11 @@ class GraphTuple(typing.NamedTuple):
     Returns:
       A GraphTuple tuple.
     """
-    edge_type_count = len(EDGE_INDEX_TO_FLOW)
+    # The number of forward edge types.
+    forward_edge_type_count = len(FLOW_TO_EDGE_INDEX)
 
-    if not FLAGS.tie_forward_and_backward_edge_types:
-      # Backward edges are inserted using a different type.
-      edge_type_count *= 2
+    # Backward edges are inserted using a different type.
+    edge_type_count = forward_edge_type_count * 2
 
     # Create an adjacency list for each edge type.
     adjacency_lists: typing.List[typing.List[typing.Tuple[int, int]]] = [
@@ -133,14 +133,13 @@ class GraphTuple(typing.NamedTuple):
 
     for src, dst, data in g.edges(data=True):
       flow = data['flow']
-      position = data['position']
+      position = data.get('position', 0)
 
       src_idx = node_to_index[src]
       dst_idx = node_to_index[dst]
 
       forward_edge_type = FLOW_TO_EDGE_INDEX[flow]
-      backward_edge_type = GetBackwardEdgeType(forward_edge_type,
-                                               edge_type_count)
+      backward_edge_type = forward_edge_type_count + forward_edge_type
 
       # Add the forward and backward edges.
       forward_adjacency_list = adjacency_lists[forward_edge_type]
@@ -182,14 +181,15 @@ class GraphTuple(typing.NamedTuple):
     node_x_indices = np.array(node_x_indices, dtype=np.int32)
 
     # Set optional node labels.
-    if node_y and node_y in g.nodes[src]:
-      node_targets = [None] * g.number_of_nodes()
-      for node, y in g.nodes(data=node_y):
-        node_idx = node_to_index[node]
-        node_targets[node_idx] = y
-      node_y = np.vstack(node_targets)
+    node_targets = [None] * g.number_of_nodes()
+    for node, y in g.nodes(data=node_y, default=None):
+      if y is None:
+        node_y = None
+        break
+      node_idx = node_to_index[node]
+      node_targets[node_idx] = y
     else:
-      node_y = None
+      node_y = np.vstack(node_targets)
 
     # Set optional graph features.
     if graph_x and hasattr(g, graph_x):
@@ -245,11 +245,3 @@ class GraphTuple(typing.NamedTuple):
       g.y = self.graph_y
 
     return g
-
-
-def GetBackwardEdgeType(forward_edge_type: int, edge_type_count: int):
-  """Return the backward edge index for the given forward edge."""
-  if FLAGS.tie_forward_and_backward_edge_types:
-    return forward_edge_type
-  else:
-    return (edge_type_count // 2) + forward_edge_type

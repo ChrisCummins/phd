@@ -32,6 +32,7 @@ py_library(
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//labm8:app",
+        "//labm8:humanize",
         "//labm8:pbutil",
         "//third_party/py/networkx",
         "//third_party/py/pydot",

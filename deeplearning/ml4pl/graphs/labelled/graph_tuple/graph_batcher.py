@@ -5,40 +5,28 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
-  graph_tuple as graph_tuples
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer(
-    "batch_size", 8000,
-    "The maximum number of nodes to include in each graph batch.")
-app.DEFINE_integer(
-    'max_instance_count', None,
-    'A debugging option. Use this to set the maximum number of instances used '
-    'from training/validation/test files. Note this still requires reading '
-    'the entirety of the file contents into memory.')
-app.DEFINE_boolean(
-    'limit_data_flow_max_steps_required_to_message_passing_steps', False,
-    'If true, limit the graphs loaded to those that require fewer data flow '
-    'steps than the number of message passing steps. E.g. with '
-    '--layer_timesteps=2,2,2, only graphs where data_flow_max_steps_required '
-    '<= 6 will be used.')
-app.DEFINE_boolean(
-    'match_data_flow_max_steps_required_to_message_passing_steps', False,
-    'If true, limit the graphs loaded to those that require exactly the '
-    'same number of data flow steps as there are message passing steps. E.g. '
-    'with --layer_timesteps=2,2,2, only graphs where '
-    'data_flow_max_steps_required == 6 will be used.')
 
-GraphBatch = typing.Dict[str, typing.Union[int, np.array]]
+class GraphBatchOptions(typing.NamedTuple):
+  """A tuple of options for constructing graph batches."""
+  # Limit the total number of nodes in a batch to this value.
+  max_nodes: int
+
+  # Filter graphs to this "GraphMeta.group" column. None value means no filter.
+  group: str = None
+
+  # Only include graphs which can be computed in less than or equal to this
+  # number of data flow steps. A value of zero means no limit.
+  data_flow_max_steps_required: int = 0
 
 
 class GraphBatch(typing.NamedTuple):
@@ -120,33 +108,58 @@ class GraphBatch(typing.NamedTuple):
         dense[node_id, edge_type] = edge_count
     return dense
 
+  @staticmethod
+  def NextGraph(
+      graphs: typing.Iterable[graph_database.GraphMeta],
+      options: GraphBatchOptions) -> typing.Optional[graph_database.GraphMeta]:
+    """Read the next graph from graph iterable, or None if no more graphs.
+
+    Args:
+      graphs: An iterator over graphs.
+
+    Returns:
+      A graph, or None.
+
+    Raises:
+      ValueError: If the graph is larger than permitted by the batch size.
+    """
+    try:
+      graph = next(graphs)
+      if graph.node_count > options.max_nodes:
+        raise ValueError(
+            f"Graph `{graph.id}` with {graph.node_count} is larger "
+            f"than batch size {options.max_nodes}")
+      return graph
+    except StopIteration:  # We have run out of graphs.
+      return None
+
   @classmethod
-  def CreateFromGraphMetas(cls,
-                           graphs: typing.Iterable[graph_database.GraphMeta],
-                           stats: graph_stats.GraphTupleDatabaseStats
-                          ) -> typing.Optional[graph_tuples.GraphTuple]:
+  def CreateFromGraphMetas(
+      cls, graphs: typing.Iterable[graph_database.GraphMeta],
+      stats: graph_stats.GraphTupleDatabaseStats,
+      options: GraphBatchOptions) -> typing.Optional['GraphBatch']:
     """Construct a graph batch.
 
     Args:
       graphs: An iterator of graphs to construct the batch from.
+      stats: A database stats instance.
+      options: The options for the graph batch.
 
     Returns:
       The graph batch. If there are no graphs to batch then None is returned.
     """
-    try:
-      graph = next(graphs)
-    except StopIteration:  # We have run out of graphs.
+    graph = cls.NextGraph(graphs, options)
+    if not graph:  # We have run out of graphs.
       return None
 
     edge_type_count = stats.edge_type_count
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLog(
-        graph_count=0,
-        node_count=0,
-        group=graph.group,
-        instances=log_database.Instances())
+    log = log_database.BatchLog(graph_count=0,
+                                node_count=0,
+                                group=graph.group,
+                                instances=log_database.Instances())
 
     graph_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
@@ -175,7 +188,7 @@ class GraphBatch(typing.NamedTuple):
       graph_y = None
 
     # Pack until we cannot fit more graphs in the batch.
-    while graph and log.node_count + graph.node_count < FLAGS.batch_size:
+    while (graph and log.node_count + graph.node_count < options.max_nodes):
       graph_ids.append(graph.id)
 
       # De-serialize pickled data in database and process.
@@ -217,9 +230,8 @@ class GraphBatch(typing.NamedTuple):
       log.graph_count += 1
       log.node_count += graph.node_count
 
-      try:
-        graph = next(graphs)
-      except StopIteration:  # Nothing left to read from the database.
+      graph = cls.NextGraph(graphs, options)
+      if not graph:  # We have run out of graphs.
         break
 
     # Concatenate and convert lists to numpy arrays.
@@ -341,9 +353,7 @@ class GraphBatcher(object):
   and label types of graph tuples.
   """
 
-  def __init__(self,
-               db: graph_database.Database,
-               message_passing_step_count: typing.Optional[int] = None):
+  def __init__(self, db: graph_database.Database):
     """Constructor.
 
     Args:
@@ -353,18 +363,8 @@ class GraphBatcher(object):
         --{limit,match}_data_flow_max_steps_required_to_message_passing_steps
         flags are set to limit the graphs which are used to construct batches.
     """
-    if ((FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps or
-         FLAGS.match_data_flow_max_steps_required_to_message_passing_steps) and
-        not message_passing_step_count):
-      raise ValueError(
-          "`message_passing_step_count` argument must be provied when "
-          "--limit_data_flow_max_steps_required_to_message_passing_steps "
-          "or --match_data_flow_max_steps_required_to_message_passing_steps "
-          "flags are set")
     self.db = db
-    self.message_passing_step_count = message_passing_step_count
-    self.stats = graph_stats.GraphTupleDatabaseStats(
-        self.db, filters=self._GetFilters())
+    self.stats = graph_stats.GraphTupleDatabaseStats(self.db)
     app.Log(1, "%s", self.stats)
 
   def GetGraphsInGroupCount(self, group: str) -> int:
@@ -377,23 +377,38 @@ class GraphBatcher(object):
       num_rows = q.one()[0]
     return num_rows
 
-  def MakeGaphBatchIterator(self, group: str) -> typing.Iterable[GraphBatch]:
-    """Make a batch iterator over the given group."""
-    filters = self._GetFilters()
-    filters.append(lambda: graph_database.GraphMeta.group == group)
+  def MakeGraphBatchIterator(self,
+                             options: GraphBatchOptions,
+                             max_instance_count: int = 0
+                            ) -> typing.Iterable[GraphBatch]:
+    """Make a batch iterator over the given group.
+
+    Args:
+      group: The group to select.
+      max_instance_count: Limit the total number of graphs returned across all
+        graph batches. A value of zero means no limit.
+
+    Returns:
+      An iterator over graph batch tuples.
+    """
+    filters = self.GetFiltersForOptions(options)
 
     graph_reader = graph_readers.BufferedGraphReader(
         self.db,
         filters=filters,
         order_by_random=True,
         eager_graph_loading=True,
-        buffer_size=max(min(64, FLAGS.batch_size // 100), 16),
-        limit=FLAGS.max_instance_count)
+        # Some "magic" to try and get a reasonable balance between memory
+        # requirements and database round trips. With batch size 8k, this will
+        # load 80 graphs at a time. With batch size 100k, this will load 128
+        # graphs at a time.
+        buffer_size=max(min(128, FLAGS.batch_size // 100), 16),
+        limit=max_instance_count)
 
     # Batch creation outer-loop.
     while True:
       start_time = time.time()
-      batch = GraphBatch.CreateFromGraphMetas(graph_reader, self.stats)
+      batch = GraphBatch.CreateFromGraphMetas(graph_reader, self.stats, options)
       if batch:
         elapsed_time = time.time() - start_time
         app.Log(
@@ -406,17 +421,24 @@ class GraphBatcher(object):
       else:
         return
 
-  def _GetFilters(self):
-    """Private helper function to return GraphMeta table filters."""
-    filters = []
-    # Optionally limit the number of steps which are required to compute the
-    # graphs.
-    if FLAGS.limit_data_flow_max_steps_required_to_message_passing_steps:
-      filters.append(
-          lambda: (graph_database.GraphMeta.data_flow_max_steps_required <= self
-                   .message_passing_step_count))
-    if FLAGS.match_data_flow_max_steps_required_to_message_passing_steps:
-      filters.append(
-          lambda: (graph_database.GraphMeta.data_flow_max_steps_required == self
-                   .message_passing_step_count))
+  @staticmethod
+  def GetFiltersForOptions(
+      options: GraphBatchOptions) -> typing.List[typing.Callable[[], bool]]:
+    """Convert the given batcher options to a set of SQL query filters.
+
+    Args:
+      options: The options to create filters for.
+
+    Returns:
+      A list of lambdas, where each lambda when called provides a sqlalchemy
+      filter.
+    """
+    filters = [
+        lambda: graph_database.GraphMeta.node_count <= options.max_nodes,
+        lambda: graph_database.GraphMeta.group == options.group,
+    ]
+    if options.data_flow_max_steps_required:
+      filters.append(lambda:
+                     (graph_database.GraphMeta.data_flow_max_steps_required <=
+                      options.data_flow_max_steps_required))
     return filters

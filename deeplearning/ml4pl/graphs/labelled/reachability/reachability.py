@@ -14,7 +14,6 @@ FLAGS = app.FLAGS
 @decorators.timeout(seconds=60)
 def SetReachableNodes(g: nx.MultiDiGraph,
                       root_node: str,
-                      max_steps: typing.Optional[int] = None,
                       x_label: str = 'x',
                       y_label: str = 'y',
                       true=True,
@@ -24,19 +23,16 @@ def SetReachableNodes(g: nx.MultiDiGraph,
   Args:
     g: The graph to annotate.
     root_node: The source node for determining reachability.
-    max_steps: If > 0, limit the maximum number of steps permitted when
-      computing reachability to this value.
 
   Returns:
     The number of reachable nodes in the range 0 < n <= node_count, and the
-    number of steps required to compute reachability for this graph. If
-    max_steps > 0, this value is in the range 0 < n <= max_steps.
+    number of steps required to compute reachability for this graph.
   """
   # Initialize all nodes as unreachable and not root node, except the root node.
   for node, data in g.nodes(data=True):
-    data[x_label] = false
+    data[x_label] = 0
     data[y_label] = false
-  g.nodes[root_node][x_label] = true
+  g.nodes[root_node][x_label] = 1
 
   # Breadth-first traversal to mark reachable nodes.
   data_flow_steps = 0
@@ -47,13 +43,13 @@ def SetReachableNodes(g: nx.MultiDiGraph,
     next, data_flow_steps = q.popleft()
     reachable_nodes_count += 1
     visited.add(next)
-    if not max_steps or data_flow_steps + 1 <= max_steps:
-      for neighbor in query.StatementNeighbors(g, next):
-        if neighbor not in visited:
-          q.append((neighbor, data_flow_steps + 1))
 
     # Mark the node as reachable.
     g.nodes[next][y_label] = true
+
+    for _, succ, flow in g.out_edges(next, data='flow'):
+      if flow == 'control' and succ not in visited:
+        q.append((succ, data_flow_steps + 1))
 
   return reachable_nodes_count, data_flow_steps
 
@@ -86,9 +82,5 @@ def MakeReachabilityGraphs(
   for root_node in root_statements[:n]:
     reachable = g.copy()
     reachable.reachable_node_count, reachable.data_flow_max_steps_required = (
-        SetReachableNodes(reachable,
-                          root_node,
-                          FLAGS.reachability_num_steps,
-                          false=false,
-                          true=true))
+        SetReachableNodes(reachable, root_node, false=false, true=true))
     yield reachable

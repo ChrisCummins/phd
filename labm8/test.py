@@ -27,15 +27,14 @@ import typing
 from importlib import util as importutil
 
 import pytest
-
 from labm8 import app
 
 FLAGS = app.FLAGS
 
-app.DEFINE_boolean('test_color', False, 'Colorize pytest output.')
+app.DEFINE_boolean('test_color', True, 'Colorize pytest output.')
 app.DEFINE_boolean(
     'test_skip_slow',
-    True,
+    False,
     'Skip tests that have been marked slow.',
 )
 app.DEFINE_integer(
@@ -160,7 +159,9 @@ exclude_lines =
     yield pytest_args
 
 
-def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
+def RunPytestOnFileAndExit(file_path: str,
+                           argv: typing.List[str],
+                           capture_output: bool = None):
   """Run pytest on a file and exit.
 
   This is invoked by absl.app.RunWithArgs(), and has access to absl flags.
@@ -171,9 +172,20 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
     file_path: The path of the file to test.
     argv: Positional arguments not parsed by absl. No additional arguments are
       supported.
+    capture_output: Whether to capture stdout/stderr when running tests. If
+      provided, this value overrides --test_capture_output.
   """
   if len(argv) > 1:
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+
+  # Always run with the most verbose logging option.
+  app.FLAGS.vmodule += [
+      "*=5",
+  ]
+
+  # Allow capture_output to override the flags value, if provided.
+  if capture_output is not None:
+    app.FLAGS.test_capture_output = capture_output
 
   # Test files must end with _test.py suffix. This is a code style choice, not
   # a hard requirement.
@@ -210,14 +222,18 @@ def RunPytestOnFileAndExit(file_path: str, argv: typing.List[str]):
   sys.exit(ret)
 
 
-def Main():
-  """Main entry point."""
-  app.FLAGS(['argv[0]', '--vmodule=*=5'])
+def Main(capture_output: typing.Optional[bool] = None):
+  """Main entry point.
 
+  Args:
+    capture_output: Whether to capture stdout/stderr when running tests. If
+      provided, this value overrides --test_capture_output.
+  """
   # Get the file path of the calling function. This is used to identify the
   # script to run the tests of.
   frame = inspect.stack()[1]
   module = inspect.getmodule(frame[0])
   file_path = module.__file__
 
-  app.RunWithArgs(lambda argv: RunPytestOnFileAndExit(file_path, argv))
+  app.RunWithArgs(lambda argv: RunPytestOnFileAndExit(
+      file_path, argv, capture_output=capture_output))

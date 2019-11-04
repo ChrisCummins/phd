@@ -31,7 +31,10 @@ def db_512(db: graph_database.Database) -> graph_database.Database:
         language='c',
         node_count=i,
         edge_count=2,
-        graph=graph_database.Graph(data=pickle.dumps({"a": 1})))
+        edge_position_max=0,
+        loop_connectedness=0,
+        undirected_diameter=0,
+        graph=graph_database.Graph(pickled_data=pickle.dumps({"a": 1})))
 
   with db.Session(commit=True) as s:
     s.add_all([_MakeGraphMeta(i) for i in range(512)])

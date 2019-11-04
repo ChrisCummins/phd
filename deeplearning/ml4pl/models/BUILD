@@ -33,6 +33,34 @@ py_library(
     ],
 )
 
+# TODO(cec): Update classifier base tests.
+#py_test(
+#    name = "classifier_base_test",
+#    srcs = ["classifier_base_test.py"],
+#    deps = [
+#        ":classifier_base",
+#        "//labm8:app",
+#        "//labm8:test",
+#        "//third_party/py/numpy",
+#        "//third_party/py/pytest",
+#        "//third_party/py/tensorflow",
+#    ],
+#)
+
+py_library(
+    name = "classifier_smoke_tester",
+    testonly = 1,
+    srcs = ["classifier_smoke_tester.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//third_party/py/numpy",
+    ],
+)
+
 py_library(
     name = "log_analysis",
     srcs = ["log_analysis.py"],
@@ -87,44 +115,5 @@ py_test(
         "//labm8:test",
         "//third_party/py/numpy",
         "//third_party/py/pytest",
-    ],
-)
-
-py_library(
-    name = "log_writer",
-    srcs = ["log_writer.py"],
-    visibility = ["//deeplearning/ml4pl:__subpackages__"],
-    deps = [
-        "//labm8:app",
-        "//labm8:jsonutil",
-    ],
-)
-
-py_test(
-    name = "log_writer_test",
-    srcs = ["log_writer_test.py"],
-    deps = [
-        ":log_writer",
-        "//labm8:app",
-        "//labm8:test",
-    ],
-)
-
-py_library(
-    name = "batch_logger",
-    srcs = ["batch_logger.py"],
-    visibility = ["//deeplearning/ml4pl:__subpackages__"],
-    deps = [
-        "//labm8:app",
-    ],
-)
-
-py_test(
-    name = "batch_logger_test",
-    srcs = ["batch_logger_test.py"],
-    deps = [
-        ":batch_logger",
-        "//labm8:app",
-        "//labm8:test",
     ],
 )

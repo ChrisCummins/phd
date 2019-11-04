@@ -120,6 +120,9 @@ def Encode(bytecodes: typing.List[str], vocab: typing.Dict[str, int]
   The vocabulary is lazily constructed. If a token is found that is not in the
   vocabulary, it is added.
 
+  There is non-negligible overhead in calling this method. For the sake of
+  efficiency try to minimize the number of calls to this method.
+
   Returns:
     A list of encoded bytecodes, and the output vocabulary.
   """

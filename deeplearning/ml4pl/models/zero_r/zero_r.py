@@ -1,16 +1,17 @@
 """A Zero-R baseline classifier."""
-import numpy as np
 import typing
 
-from deeplearning.ml4pl.models import classifier_base
-from deeplearning.ml4pl.models import log_database
+import numpy as np
 from labm8 import app
 
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import classifier_base
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
 
-class ZeroRNodeClassifier(classifier_base.ClassifierBase):
+class ZeroRClassifier(classifier_base.ClassifierBase):
   """A Zero-R classifier that supports node-level or graph-level labels.
 
   A Zero-R classifier always predicts the mode value from the training set. It
@@ -18,25 +19,33 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
   """
 
   def __init__(self, *args):
-    super(ZeroRNodeClassifier, self).__init__(*args)
+    super(ZeroRClassifier, self).__init__(*args)
+    # The table used to count training labels.
     self.class_counts = np.zeros(self.labels_dimensionality, dtype=np.int32)
 
   def MakeMinibatchIterator(
-      self, epoch_type: str
+      self, epoch_type: str, group: str
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, np.array]]:
-    for batch_tuple in self.batcher.MakeGaphBatchIterator(epoch_type):
+    options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
+                                              group=group)
+    max_instance_count = (
+        FLAGS.max_train_per_epoch if epoch_type == 'train' else
+        FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
+    for batch_tuple in self.batcher.MakeGraphBatchIterator(
+        options, max_instance_count):
       if batch_tuple.has_node_y:
         targets = batch_tuple.node_y
       elif batch_tuple.has_graph_y:
         targets = batch_tuple.graph_y
       else:
-        raise ValueError("Could not determine label type")
-      yield batch_tuple['log'], targets
+        app.FatalWithoutStackTrace("Could not determine label type")
+      yield batch_tuple.log, targets
 
   def RunMinibatch(self, log: log_database.BatchLog, targets: np.array
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
+    log.loss = 0
     # "Training" step updates the class frequency counts.
-    if log.is_training:
+    if log.type == "train":
       y_true = np.argmax(targets, axis=1)
       freqs = np.bincount(y_true)
       for i, n in enumerate(freqs):
@@ -60,7 +69,7 @@ class ZeroRNodeClassifier(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
-  classifier_base.Run(ZeroRNodeClassifier)
+  classifier_base.Run(ZeroRClassifier)
 
 
 if __name__ == '__main__':

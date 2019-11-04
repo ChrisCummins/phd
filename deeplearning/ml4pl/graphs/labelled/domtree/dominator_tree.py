@@ -19,10 +19,10 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
                           false: typing.Any = False) -> typing.Tuple[int, int]:
   # Create a map from nodes to predecessors.
   predecessors: typing.Dict[str, typing.Set[str]] = {
-      n: set([
-          p for p in query.StatementNeighbors(
-              g, n, direction=lambda src, dst: src)
-      ]) for n in g.nodes()
+      node: set([
+          src for src, _, flow in g.in_edges(node, data='flow')
+          if flow == 'control'
+      ]) for node in g.nodes()
   }
 
   # Initialize the dominator sets.
@@ -36,7 +36,9 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
   while changed:
     data_flow_steps += 1
     changed = False
-    for node in dominators.keys() - set([root_node]):
+    for node in dominators.keys():
+      if node == root_node:
+        continue
       dom_pred = [dominators[p] for p in predecessors[node]]
       if dom_pred:
         dom_pred = set.intersection(*dom_pred)
@@ -49,12 +51,14 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
 
   num_dominated = 0
   for node, data in g.nodes(data=True):
-    data[x_label] = true if node == root_node else false
+    data[x_label] = 0
     if root_node in dominators[node]:
       num_dominated += 1
       data[y_label] = true
     else:
       data[y_label] = false
+
+  g.nodes[root_node][x_label] = 1
 
   return num_dominated, data_flow_steps
 

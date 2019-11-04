@@ -3,7 +3,6 @@ import pathlib
 import pickle
 
 import networkx as nx
-import numpy as np
 import pytest
 from labm8 import app
 from labm8 import test
@@ -37,6 +36,7 @@ def test_Graph_pickled_networkx_graph(db: graph_database.Database):
             edge_count=g.number_of_edges(),
             edge_position_max=0,
             loop_connectedness=0,
+            undirected_diameter=0,
             graph=graph_database.Graph(pickled_data=pickle.dumps(g))))
   with db.Session() as s:
     gm = s.query(graph_database.GraphMeta).first()
@@ -69,6 +69,7 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
             edge_count=2,
             edge_position_max=0,
             loop_connectedness=0,
+            undirected_diameter=0,
             graph=graph_database.Graph(pickled_data=pickle.dumps({
                 "a": 1,
                 "b": 2
@@ -121,22 +122,11 @@ def test_Graph_CreateFromNetworkX(graph: nx.MultiDiGraph):
   assert gm.node_labels_dimensionality == 1
   assert gm.graph_features_dimensionality == 4
   assert gm.graph_labels_dimensionality == 0
+  assert gm.loop_connectedness == 0
+  # TODO(github.com/ChrisCummins/ml4pl/issues/5): Update.
+  assert gm.undirected_diameter == 0
   assert gm.data_flow_max_steps_required == 10
   assert gm.graph.data
-
-
-def test_EmbeddingTable_from_numpy_array(db: graph_database.Database):
-  with db.Session(commit=True) as s:
-    s.add(
-        graph_database.EmbeddingTable.CreateFromNumpyArray(
-            np.vstack([
-                np.random.rand(200),
-                np.random.rand(200),
-                np.random.rand(200),
-            ])))
-  with db.Session() as s:
-    table = s.query(graph_database.EmbeddingTable).first()
-    assert table.embedding_table.shape == (3, 200)
 
 
 def test_benchmark_Graph_CreateFromNetworkX(benchmark, graph: nx.MultiDiGraph):

@@ -36,16 +36,39 @@ py_test(
     ],
 )
 
-py_binary(
-    name = "make_unlabelled_graph_dataset",
-    srcs = ["make_unlabelled_graph_dataset.py"],
+py_test(
+    name = "control_and_data_flow_graph_regression_test",
+    timeout = "long",
+    srcs = ["control_and_data_flow_graph_regression_test.py"],
+    data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/regression_tests:bytecodes"],
+    deps = [
+        ":control_and_data_flow_graph",
+        "//labm8:app",
+        "//labm8:fs",
+        "//labm8:test",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_library(
+    name = "random_cdfg_generator",
+    srcs = ["random_cdfg_generator.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//deeplearning/ml4pl/bytecode:bytecode_database",
-        "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled:database_exporters",
-        "//deeplearning/ml4pl/graphs/labelled:make_data_flow_analysis_dataset",
-        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
+        ":control_and_data_flow_graph",
         "//labm8:app",
+        "//third_party/py/networkx",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_test(
+    name = "random_cdfg_generator_test",
+    srcs = ["random_cdfg_generator_test.py"],
+    deps = [
+        ":random_cdfg_generator",
+        "//labm8:app",
+        "//labm8:test",
+        "//third_party/py/pytest",
     ],
 )

@@ -33,6 +33,9 @@ def BufferedGraphReader(
       larger number reduces the number of queries, but increases the memory
       requirement.
     limit: Limit the total number of rows returned to this value.
+
+  Raises:
+    ValueError: If the query with the given filters .
   """
   filters = filters or []
 
@@ -55,6 +58,9 @@ def BufferedGraphReader(
       q = q.limit(limit)
 
       ids = [r[0] for r in q]
+
+    if not ids:
+      raise ValueError("Database query returned no results")
 
     # Iterate through the IDs in batches, running a new query for each.
     while ids:

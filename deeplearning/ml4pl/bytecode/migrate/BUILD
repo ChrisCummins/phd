@@ -12,6 +12,17 @@ py_binary(
 )
 
 py_binary(
+    name = "add_missing_devmap",
+    srcs = ["add_missing_devmap.py"],
+    deps = [
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//labm8:app",
+        "//labm8:crypto",
+        "//labm8:fs",
+    ],
+)
+
+py_binary(
     name = "mark_duplicates",
     srcs = ["mark_duplicates.py"],
     deps = [

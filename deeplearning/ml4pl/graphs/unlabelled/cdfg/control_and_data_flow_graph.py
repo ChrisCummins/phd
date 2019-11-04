@@ -24,7 +24,6 @@ from deeplearning.ncc.inst2vec import inst2vec_preprocess
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -92,7 +91,9 @@ def GetLlvmStatementDefAndUses(statement: str,
   # Left hand side.
   destination = ''
   if '=' in statement:
-    destination, statement = statement.split('=')
+    first_equals = statement.index('=')
+    destination = statement[:first_equals]
+    statement = statement[first_equals:]
 
   # Strip the identifiers and immediates from the statement, then use the
   # diff to construct the set of identifiers and immediates that were stripped.
@@ -135,14 +136,14 @@ def MakeUndefinedFunctionGraph(function_name: str,
       type='statement',
       function=function_name,
       text='!UNK',
-      original_text='!UNK',
+      original_text=g.entry_block,
       x=dictionary['!UNK'])
   g.add_node(
       g.exit_block,
       type='statement',
       function=function_name,
       text='!UNK',
-      original_text='!UNK',
+      original_text=g.exit_block,
       x=dictionary['!UNK'])
   g.add_edge(
       g.entry_block,
@@ -201,14 +202,16 @@ def AddInterproceduralCallEdges(
 
     # Check that the number of call sounds we found matches the expected number
     # from the call graph.
-    multigraph_call_count = call_multigraph.number_of_edges(src, dst)
-    if len(call_sites) != multigraph_call_count:
-      raise ValueError("Call graph contains "
-                       f"{humanize.Plural(multigraph_call_count, 'call')} from "
-                       f"function `{src}` to `{dst}`, but found "
-                       f"{len(call_sites)} call sites in the graph")
+    # multigraph_call_count = call_multigraph.number_of_edges(src, dst)
+    # if len(call_sites) != multigraph_call_count:
+    #   raise ValueError("Call graph contains "
+    #                    f"{humanize.Plural(multigraph_call_count, 'call')} from "
+    #                    f"function `{src}` to `{dst}`, but found "
+    #                    f"{len(call_sites)} call sites in the graph")
 
     for call_site in call_sites:
+      if dst not in function_entry_exit_nodes:
+        continue
       # Lookup the nodes to connect.
       call_entry, call_exit = function_entry_exit_nodes[dst]
       call_site_successor = get_call_site_successor(graph, call_site)
@@ -409,7 +412,8 @@ class ControlAndDataFlowGraphBuilder(object):
     edges_to_add: typing.List[typing.Tuple[str, str, str, int]] = []
 
     for statement, data in iterators.StatementNodeIterator(g):
-      # TODO(cec): Get immediate values.
+      # TODO(github.com/ChrisCummins/ml4pl/issues/6): Separate !IDENTIFIER
+      # and !IMMEDIATE uses.
       def_, uses = GetLlvmStatementDefAndUses(
           data['text'], store_destination_is_def=self.store_destination_is_def)
       if def_:  # Data flow out edge.
@@ -423,9 +427,11 @@ class ControlAndDataFlowGraphBuilder(object):
     for src, dst, identifier, position, name in edges_to_add:
       g.add_edge(src, dst, flow='data', position=position)
       node = g.nodes[identifier]
-      # TODO(cec): Consider separating !IDENTIFIER and !IMMEDIATE nodes.
+      # TODO(github.com/ChrisCummins/ml4pl/issues/6): Separate !IDENTIFIER
+      # and !IMMEDIATE nodes.
       node['type'] = 'identifier'
       node['name'] = name
+      node['text'] = name
       node['x'] = self.dictionary['!IDENTIFIER']
 
   def DictionaryLookup(self, statement: str) -> int:
@@ -526,9 +532,21 @@ class ControlAndDataFlowGraphBuilder(object):
     return interprocedural_graph
 
   @decorators.timeout(120)
-  def Build(self, bytecode: str) -> nx.MultiDiGraph:
+  def Build(self, bytecode: str, opt=None) -> nx.MultiDiGraph:
+    """Construct an inter-procedural control- and data-flow graph.
+
+    Args:
+      bytecode: The bytecode to construct the graph from.
+      opt: The path to LLVM `opt` binary to use to construct control-flow and
+        call graphs from. The default uses the opt binary packaged with
+        //compilers/llvm:opt.
+
+    Returns:
+      A networkx graph.
+    """
     call_graph_dot, cfg_dots = (
-        opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(bytecode))
+        opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(
+            bytecode, opt_path=opt))
     cfgs = [
         llvm_util.ControlFlowGraphFromDotSource(cfg_dot) for cfg_dot in cfg_dots
     ]
@@ -548,3 +566,40 @@ def ToControlFlowGraph(g: nx.MultiDiGraph):
 
   for src, dst, data in iterators.ControlFlowEdgeIterator(g):
     cfg.add_edge(src, dst, **data)
+
+
+def SerializeToStatementList(g: nx.MultiDiGraph,
+                             root: str = 'root') -> typing.Iterable[str]:
+  visited_statements = set()
+  visited_functions = set()
+
+  # Maintain a list of functions to visit.
+  functions = [root]
+
+  while functions:
+    function_name = functions[-1]
+    functions.pop()
+
+    visited_functions.add(function_name)
+
+    stack = [function_name]
+
+    # yield f'define @{stack[0]}'
+
+    # Pre-order depth first graph traversal to emit the strings.
+    while stack:
+      node = stack[-1]
+      stack.pop()
+
+      if node in visited_statements:
+        continue
+
+      visited_statements.add(node)
+      yield node
+      for _, dst, flow in g.out_edges(node, data='flow', default='control'):
+        if flow == 'control':
+          if dst not in visited_statements:
+            stack.append(dst)
+        elif flow == 'call':
+          if dst not in visited_functions:
+            functions.append(dst)

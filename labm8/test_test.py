@@ -13,11 +13,11 @@
 # limitations under the License.
 """Unit tests for //labm8:test."""
 import pathlib
+import random
 import sys
 import tempfile
 
 import pytest
-
 from labm8 import app
 from labm8 import test
 
@@ -54,8 +54,16 @@ def test_tempdir_fixture_overriden(tempdir: pathlib.Path):
 
 @pytest.mark.slow(reason='This is an example')
 def test_mark_slow():
-  """A test that is skipped unless run with --notest_skip_slow."""
+  """A test that is skipped when --test_skip_slow."""
   pass
+
+
+@pytest.mark.flaky(max_runs=100, min_passes=2)
+def test_mark_flaky():
+  """A test which is flaky is one where there is (legitimate) reason for it to
+  fail, e.g. because a timeout may or may not trigger depending on system load.
+  """
+  assert random.random() <= .5
 
 
 @pytest.mark.custom_marker

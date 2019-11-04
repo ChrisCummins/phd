@@ -35,7 +35,9 @@ def db_512(db: graph_database.Database) -> graph_database.Database:
         edge_count=2,
         graph_labels_dimensionality=1,
         loop_connectedness=0,
-        graph=graph_database.Graph(data=pickle.dumps(
+        edge_position_max=0,
+        undirected_diameter=0,
+        graph=graph_database.Graph(pickled_data=pickle.dumps(
             graph_tuple.GraphTuple(adjacency_lists='unused',
                                    edge_positions='unused',
                                    incoming_edge_counts='unused',
@@ -45,13 +47,6 @@ def db_512(db: graph_database.Database) -> graph_database.Database:
 
   with db.Session(commit=True) as s:
     s.add_all([_MakeGraphMeta(i) for i in range(512)])
-    s.add(
-        graph_database.EmbeddingTable.CreateFromNumpyArray(
-            np.vstack([
-                np.random.rand(250).astype(np.float32),
-                np.random.rand(250).astype(np.float32),
-                np.random.rand(250).astype(np.float32),
-            ])))
 
   return db
 
@@ -66,16 +61,23 @@ def test_GraphDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
   s = stats.GraphDatabaseStats(db_512)
   assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
-                    "3x250 float32 node embeddings, 1-d graph labels, "
+                    "8568x200 float64 node embeddings, 1-d graph labels, "
                     "max 511 nodes, max 2 edges")
 
 
 def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
   s = stats.GraphTupleDatabaseStats(db_512)
-  assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
-                    "3x250 float32 node embeddings, 1-d float32 graph labels, "
-                    "max 511 nodes, max 2 edges")
+  assert str(s) == (
+      "Graphs database: 512 instances, 1 edge type, "
+      "8568x200 float64 node embeddings, 1-d float32 graph labels, "
+      "max 511 nodes, max 2 edges")
+
+
+def test_GraphDatabaseStats_groups(db_512: graph_database.Database):
+  """Test that a list of distinct group names is returned."""
+  s = stats.GraphTupleDatabaseStats(db_512)
+  assert s.groups == ['train']
 
 
 if __name__ == '__main__':

@@ -1,20 +1,20 @@
 """A module for analyzing log databases."""
+import random
+import typing
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-import random
 import sqlalchemy as sql
-import typing
-
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
 
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -56,12 +56,11 @@ class RunLogAnalyzer(object):
                                               per_global_step=False)
 
   def GetEpochLogs(self, epoch_num: int) -> pd.DataFrame:
-    """Return the logs for the given epoch number, index by group."""
+    """Return the logs for the given epoch number, index by type."""
     if epoch_num not in self.epoch_logs.epoch.values:
       raise ValueError(f"Epoch `{epoch_num}` not in logs: "
                        f"{set(self.epoch_logs.epoch)}")
-    return self.epoch_logs[self.epoch_logs.epoch == epoch_num].set_index(
-        'group')
+    return self.epoch_logs[self.epoch_logs.epoch == epoch_num].set_index('type')
 
   def GetBestEpoch(self, metric='best accuracy'):
     """Select the train/val/test epoch logs using the given metric.
@@ -79,14 +78,14 @@ class RunLogAnalyzer(object):
     if metric in {'best accuracy', 'brest precision', 'best recall', 'best f1'}:
       column = metric[len('best '):]
       validation_metric = getattr(
-          self.epoch_logs[self.epoch_logs['group'] == 'val'], column)
+          self.epoch_logs[self.epoch_logs['type'] == 'val'], column)
       best_validation_metric = self.epoch_logs.iloc[validation_metric.idxmax()]
       epoch_num = best_validation_metric.epoch
     elif metric in {
         '90% val acc', '95% val acc', '99% val acc', '99.9% val acc'
     }:
       accuracy = float(metric.split('%')[0])
-      matching_rows = self.epoch_logs[(self.epoch_logs['group'] == 'val') &
+      matching_rows = self.epoch_logs[(self.epoch_logs['type'] == 'val') &
                                       (self.epoch_logs['accuracy'] > accuracy)]
       epoch_num = self.epoch_logs.iloc[matching_rows.index[0]].epoch
     else:
@@ -112,7 +111,7 @@ class RunLogAnalyzer(object):
 
   def GetInputOutputGraphsForRandomBatch(self,
                                          epoch_num: int,
-                                         group: str = 'val'):
+                                         type: str = 'val'):
     """Reconstruct nx.MultiDiGraphs for a random batch from the given epoch_num
     where the accuracy was < 100%.
 
@@ -125,7 +124,7 @@ class RunLogAnalyzer(object):
       predictions.
     """
     batches = self.batch_logs[(self.batch_logs['epoch'] == epoch_num) &
-                              (self.batch_logs['group'] == group) &
+                              (self.batch_logs['type'] == type) &
                               (self.batch_logs['accuracy'] < 100)]
 
     random_row = batches.iloc[random.randint(0, len(batches) - 1)]

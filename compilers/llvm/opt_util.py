@@ -19,12 +19,11 @@ import subprocess
 import tempfile
 import typing
 
-from labm8 import app
-from labm8 import fs
-
 from compilers.llvm import llvm
 from compilers.llvm import llvm_as
 from compilers.llvm import opt
+from labm8 import app
+from labm8 import fs
 
 FLAGS = app.FLAGS
 
@@ -116,7 +115,7 @@ def DotControlFlowGraphsFromBytecode(bytecode: str) -> typing.Iterator[str]:
 
 
 def DotCallGraphAndControlFlowGraphsFromBytecode(
-    bytecode: str) -> typing.Tuple[str, typing.List[str]]:
+    bytecode: str, opt_path: str = None) -> typing.Tuple[str, typing.List[str]]:
   """Create call graph and control flow graphs from an LLVM bytecode file.
 
   When both a call graph and CFGs are required, calling this function is
@@ -125,6 +124,7 @@ def DotCallGraphAndControlFlowGraphsFromBytecode(
 
   Args:
     bytecode: The LLVM bytecode to create call graph and CFGs from.
+    opt_path: The path to a custom opt binary. Overrides the default version.
 
   Returns:
     A tuple, where the first element is the call graph dot string, and the
@@ -147,7 +147,8 @@ def DotCallGraphAndControlFlowGraphsFromBytecode(
       process = opt.Exec(['-dot-cfg', '-dot-callgraph'],
                          stdin=bytecode.encode('utf-8'),
                          universal_newlines=False,
-                         log=False)
+                         log=False,
+                         opt=opt_path)
       stderr = process.stderr.decode('utf-8')
 
       # Propagate failures from opt as OptExceptions.
