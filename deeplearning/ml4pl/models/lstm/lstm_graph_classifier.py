@@ -80,10 +80,8 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
                                                           input_segments)
 
     if FLAGS.node_wise_model:
-      #TODO note that segment sum expects that all the index is sorted and covers all guys
-      # it's like a reduce sum in slices
       x = keras.layers.Lambda(
-          lambda inputs, indices: tf.math.segment_sum(inputs, indices),
+          lambda inputs, indices: tf.math.unsorted_segment_sum(inputs, indices),
           name='segment_sum')(lstm_input, input_segments)
 
     x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
