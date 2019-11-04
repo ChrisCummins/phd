@@ -18,9 +18,14 @@ IncomingEdgeCount = typing.Dict[int, int]
 # Perform the mapping between 'flow' property of edges and an index into a
 # list of adjacency lists.
 #
-# TODO(cec): Repace the string constants with an enum for flow types.
+# TODO(cec): Replace the string constants with an enum for flow types.
 FLOW_TO_EDGE_INDEX = {'control': 0, 'data': 1, 'call': 2}
+# Perform the reverse maddping from index into adjacency list to 'flow'
+# property.
 EDGE_INDEX_TO_FLOW = {v: k for k, v in FLOW_TO_EDGE_INDEX.items()}
+# Add lookup entries for backward edges.
+for k, v in FLOW_TO_EDGE_INDEX.items():
+  EDGE_INDEX_TO_FLOW[v + len(FLOW_TO_EDGE_INDEX)] = f'backward_{k}'
 
 
 class GraphTuple(typing.NamedTuple):
