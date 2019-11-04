@@ -48,7 +48,7 @@ py_library(
     ],
 )
 
-# TODO(cec): Broken.
+# TODO(cec): Linux build is broken. Investigate later.
 #py_test(
 #    name = "import_from_linux_test",
 #    srcs = ["import_from_linux_test.py"],
@@ -113,19 +113,5 @@ py_binary(
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//labm8:app",
         "//labm8:fs",
-    ],
-)
-
-py_binary(
-    name = "populate_cfg_table",
-    srcs = ["populate_cfg_table.py"],
-    deps = [
-        "//compilers/llvm:opt",
-        "//compilers/llvm:opt_util",
-        "//deeplearning/ml4pl:ml4pl_pb_py",
-        "//deeplearning/ml4pl/bytecode:bytecode_database",
-        "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
-        "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
-        "//labm8:app",
     ],
 )
