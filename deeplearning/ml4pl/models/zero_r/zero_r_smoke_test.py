@@ -9,8 +9,22 @@ FLAGS = app.FLAGS
 
 
 def main():
+  # Binary node labels.
   classifier_smoke_tester.RunSmokeTest(zero_r.ZeroRClassifier,
                                        node_y_choices=[
+                                           np.array([1, 0], dtype=np.int32),
+                                           np.array([0, 1], dtype=np.int32),
+                                       ])
+
+  # Graph features and labels.
+  classifier_smoke_tester.RunSmokeTest(zero_r.ZeroRClassifier,
+                                       graph_x_choices=[
+                                           np.array([32, 64], dtype=np.int32),
+                                           np.array([128, 1024],
+                                                    dtype=np.int32),
+                                           np.array([256, 13], dtype=np.int32),
+                                       ],
+                                       graph_y_choices=[
                                            np.array([1, 0], dtype=np.int32),
                                            np.array([0, 1], dtype=np.int32),
                                        ])

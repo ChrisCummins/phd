@@ -42,6 +42,18 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "ggnn_node_classifier_smoke_test",
+    size = "enormous",
+    srcs = ["ggnn_node_classifier_smoke_test.py"],
+    deps = [
+        ":ggnn_node_classifier",
+        "//deeplearning/ml4pl/models:classifier_smoke_tester",
+        "//labm8:app",
+        "//third_party/py/numpy",
+    ],
+)
+
 py_library(
     name = "ggnn_utils",
     srcs = ["ggnn_utils.py"],
@@ -51,16 +63,5 @@ py_library(
         "//labm8:app",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
-    ],
-)
-
-py_test(
-    name = "ggnn_utils_test",
-    srcs = ["ggnn_utils_test.py"],
-    deps = [
-        ":ggnn_utils",
-        "//labm8:app",
-        "//labm8:test",
-        "//third_party/py/numpy",
     ],
 )

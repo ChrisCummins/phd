@@ -34,7 +34,7 @@ def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
             graph_labels_dimensionality=1,
             edge_position_max=0,
             loop_connectedness=0,
-            undirected_diameter=1,
+            undirected_diameter=0,
             graph=graph_database.Graph(pickled_data=pickle.dumps(
                 graph_tuples.GraphTuple(
                     adjacency_lists=None,

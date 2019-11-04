@@ -300,7 +300,8 @@ class ClassifierBase(object):
       self.RunEpoch("test", test)
     return np.array(val_accs).mean(), np.array(test_accs).mean()
 
-  def Train(self, k_fold: typing.Optional[int] = None) -> float:
+  def Train(self, num_epochs: int,
+            k_fold: typing.Optional[int] = None) -> float:
     """Train the model.
 
     Args:
@@ -310,7 +311,7 @@ class ClassifierBase(object):
     Returns:
       The best validation accuracy of the model.
     """
-    for epoch_num in range(self.epoch_num, FLAGS.num_epochs + 1):
+    for epoch_num in range(self.epoch_num, num_epochs + 1):
       self.epoch_num = epoch_num
       epoch_start_time = time.time()
 
@@ -489,4 +490,4 @@ def Run(model_class):
     test_acc = model.RunEpoch("test")
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
-    model.Train(FLAGS.k_fold)
+    model.Train(num_epochs=FLAGS.num_epochs, k_fold=FLAGS.k_fold)

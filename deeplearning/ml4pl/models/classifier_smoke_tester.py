@@ -1,8 +1,11 @@
-"""Module defining smoke test utilites for classifier models."""
+"""Module defining smoke test utilities for classifier models."""
 import contextlib
 import pathlib
 import tempfile
+import typing
 
+import networkx as nx
+import numpy as np
 from labm8 import app
 from labm8 import prof
 
@@ -25,31 +28,20 @@ app.DEFINE_output_path(
     is_dir=True)
 
 
-@contextlib.contextmanager
-def WorkingDirectory() -> pathlib.Path:
-  """Create and get the model working directory. If --smoke_test_working_dir
-  is set, this is used. Else, a random directory is used."""
-  with tempfile.TemporaryDirectory() as d:
-    working_dir = FLAGS.smoke_test_working_dir or pathlib.Path(d)
-    app.Log(1, "Using working directory `%s` for smoke tests", working_dir)
-    yield working_dir
-
-
-def _MakeNGroupGraphs(n: int, group: str):
-  for i in range(n):
-    g = random_cdfg_generator.FastCreateRandom()
-    g.bytecode_id = 0
-    g.relpath = str(i)
-    g.language = 'c'
-    g.group = group
-    g.source_name = 'rand'
-    yield g
-
-
 def RunSmokeTest(model_class,
-                 node_y_choices=None,
-                 graph_x_choices=None,
-                 graph_y_choices=None):
+                 node_y_choices: typing.Optional[typing.List[np.array]] = None,
+                 graph_x_choices: typing.Optional[typing.List[np.array]] = None,
+                 graph_y_choices: typing.Optional[typing.List[np.array]] = None,
+                 num_epochs: int = 2):
+  """
+
+  :param model_class:
+  :param node_y_choices:
+  :param graph_x_choices:
+  :param graph_y_choices:
+  :param num_epochs:
+  :return:
+  """
   FLAGS.alsologtostderr = True
 
   with WorkingDirectory() as working_dir:
@@ -87,4 +79,26 @@ def RunSmokeTest(model_class,
 
     with prof.Profile("Trained model"):
       FLAGS.num_epochs = FLAGS.smoke_test_num_epochs
-      model.Train()
+      model.Train(num_epochs=num_epochs)
+
+
+def _MakeNGroupGraphs(n: int, group: str) -> nx.MultiDiGraph:
+  """Private helper to generate random graphs of the given group."""
+  for i in range(n):
+    g = random_cdfg_generator.FastCreateRandom()
+    g.bytecode_id = 0
+    g.relpath = str(i)
+    g.language = 'c'
+    g.group = group
+    g.source_name = 'rand'
+    yield g
+
+
+@contextlib.contextmanager
+def WorkingDirectory() -> pathlib.Path:
+  """Create and get the model working directory. If --smoke_test_working_dir
+  is set, this is used. Else, a random directory is used."""
+  with tempfile.TemporaryDirectory() as d:
+    working_dir = FLAGS.smoke_test_working_dir or pathlib.Path(d)
+    app.Log(1, "Using working directory `%s` for smoke tests", working_dir)
+    yield working_dir
