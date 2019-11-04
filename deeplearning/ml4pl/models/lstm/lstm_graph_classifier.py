@@ -63,21 +63,18 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     # Language model. It begins with an optional embedding layer, then has two
     # layers of LSTM network, returning a single vector of size
     # self.lstm_layer_size.
-    input_layer = keras.Input(shape=(self.max_encoded_length,),
+    input_layer = keras.Input(shape=(self.encoder.max_sequence_length,),
                               dtype='int32',
                               name="model_in")
-    input_segments = keras.Input(shape=(self.max_encoded_length,),
+    input_segments = keras.Input(shape=(self.encoder.max_sequence_length,),
                                  dtype='int32',
                                  name="model_in_segments")
 
-    self.pad_val = len(self.vocabulary)
-    assert self.pad_val not in self.vocabulary
-    embedding_dim = len(self.vocabulary) + 1
-    lstm_input = keras.layers.Embedding(input_dim=embedding_dim,
-                                        input_length=self.max_encoded_length,
-                                        output_dim=FLAGS.hidden_size,
-                                        name="embedding")(input_layer,
-                                                          input_segments)
+    lstm_input = keras.layers.Embedding(
+        input_dim=self.encoder.vocabulary_size_with_padding_token,
+        input_length=self.encoder.max_sequence_length,
+        output_dim=FLAGS.hidden_size,
+        name="embedding")(input_layer, input_segments)
 
     if FLAGS.node_wise_model:
       x = keras.layers.Lambda(
