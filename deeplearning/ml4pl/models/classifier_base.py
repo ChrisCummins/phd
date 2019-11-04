@@ -57,7 +57,8 @@ app.DEFINE_integer("random_seed", 42, "A random seed value.")
 
 app.DEFINE_input_path(
     "embedding_path",
-    bazelutil.DataPath('phd/deeplearning/ncc/published_results/emb.p'),
+    bazelutil.DataPath('phd/deeplearning/ml4pl/graphs/unlabelled/cdfg/'
+                       'node_embeddings/inst2vec_augmented_embeddings.pickle'),
     "The path of the embeddings file to use.")
 
 app.DEFINE_string(
@@ -175,6 +176,7 @@ class ClassifierBase(object):
   def __init__(self, db: graph_database.Database,
                log_db: log_database.Database):
     """Constructor. Subclasses should call this first."""
+    self._initialized = False  # Set by LoadModel() or InitializeModel()
     self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
                         f"{system.HOSTNAME}")
     app.Log(1, "Run ID: %s", self.run_id)
@@ -221,10 +223,22 @@ class ClassifierBase(object):
 
   def RunEpoch(self, epoch_type: str,
                group: typing.Optional[str] = None) -> float:
-    """Run the model with the given epoch."""
+    """Run the model with the given epoch.
+
+    Args:
+      epoch_type: The type of epoch. One of {train,val,test}.
+      group: The dataset group to use. This is the GraphMeta.group column that
+        is loaded. Defaults to `epoch_type`.
+
+    Returns:
+      The average accuracy of the model over all mini-batches.
+    """
+    if not self._initialized:
+      raise TypeError("RunEpoch() before model initialized")
+
     if epoch_type not in {"train", "val", "test"}:
-      raise ValueError(f"Unknown epoch type `{type}`. Expected one of "
-                       "{train,val,test}")
+      raise TypeError(f"Unknown epoch type `{type}`. Expected one of "
+                      "{train,val,test}")
     group = group or epoch_type
 
     epoch_accuracies = []
@@ -378,7 +392,7 @@ class ClassifierBase(object):
 
   def InitializeModel(self) -> None:
     """Initialize a new model state."""
-    pass
+    self._initialized = True
 
   def ModelDataToSave(self) -> None:
     return None
@@ -465,6 +479,8 @@ class ClassifierBase(object):
       self.best_epoch_num = checkpoint.epoch
       self.global_training_step = checkpoint.global_step
       self.LoadModelData(checkpoint.data)
+
+    self._initialized = True
 
   def _CreateExperimentalParameters(self):
     """Private helper method to populate parameters table."""

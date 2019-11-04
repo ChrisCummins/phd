@@ -44,7 +44,7 @@ app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_string(
-    "embeddings", "constant",
+    "embeddings", "finetune",
     "The type of embeddings to use. One of: {constant,finetune,random}.")
 classifier_base.MODEL_FLAGS.add("embeddings")
 
@@ -149,9 +149,29 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
   def _GetEmbeddingsTable(self) -> np.array:
     """Reading embeddings table"""
-    with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
-      with open(FLAGS.embedding_path, 'rb') as f:
-        return pickle.load(f)
+    with open(FLAGS.embedding_path, 'rb') as f:
+      return pickle.load(f)
+
+  def _GetEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
+    """Read the embeddings table and return as a tensorflow variable."""
+    embeddings = self._GetEmbeddingsTable()
+    if FLAGS.embeddings == 'constant':
+      app.Log(1,
+              "Using pre-trained inst2vec embeddings without further training")
+      trainable = False
+    elif FLAGS.embeddings == 'finetune':
+      app.Log(1, "Fine-tuning inst2vec embeddings")
+      trainable = True
+    elif FLAGS.embeddings == 'random':
+      app.Log(1, "Initializing with random embeddings")
+      embeddings = np.random.rand(embeddings.shape)
+      trainable = True
+    else:
+      raise app.UsageError(f"--embeddings=`{FLAGS.embeddings}` unrecognized. "
+                           "Must be one of {constant,finetune,random}")
+    return tf.Variable(initial_value=embeddings,
+                       trainable=trainable,
+                       dtype=tf.float32)
 
   @property
   def message_passing_step_count(self) -> int:
@@ -284,9 +304,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()
     with self.graph.as_default():
-      init_op = tf.group(tf.global_variables_initializer(),
-                         tf.local_variables_initializer())
-      self.sess.run(init_op)
+      self.sess.run(
+          tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer()))
 
   def ModelDataToSave(self) -> typing.Any:
     with self.graph.as_default():

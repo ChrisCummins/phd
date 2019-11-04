@@ -85,6 +85,9 @@ def RunSmokeTest(
     with prof.Profile("Created model"):
       model: classifier_base.ClassifierBase = model_class(graph_db, log_db)
 
+    with prof.Profile("Initialized model"):
+      model.InitializeModel()
+
     with prof.Profile("Trained model"):
       model.Train(num_epochs=2)
 

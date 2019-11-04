@@ -84,8 +84,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
-    app.Log(1, "Using layer timesteps: %s for a total step count of %s",
-            layer_timesteps, self.message_passing_step_count)
+    app.Log(
+        1, "Using layer timesteps: %s for a total of %s message passing "
+        "steps", layer_timesteps, self.message_passing_step_count)
 
     # Generate per-layer values for edge weights, biases and gated units:
     self.weights = {}  # Used by super-class to place generic things
@@ -135,12 +136,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           )
         self.gnn_weights.rnn_cells.append(cell)
 
-    with tf.compat.v1.variable_scope("Embeddings"):
-      #TODO(cec)/(zach) FIX HERE FOR NODE LEVEL PROBLEMS
-      self.weights['node_embeddings'] = tf.Variable(
-          initial_value=np.random.rand(8569, 200),
-          trainable=True,
-          dtype=tf.float32)
+    with tf.compat.v1.variable_scope("embeddings"):
+      self.weights['node_embeddings'] = (
+          self._GetEmbeddingsAsTensorflowVariable())
     encoded_node_x = tf.nn.embedding_lookup(self.weights['node_embeddings'],
                                             ids=self.placeholders['node_x'])
 
@@ -285,9 +283,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
               )  # Shape [V, 1]
               incoming_messages /= num_incoming_edges + utils.SMALL_NUMBER
 
-            incoming_information = tf.concat(
-                layer_residual_states + [incoming_messages],
-                axis=-1)  # Shape [V, D*(1 + num of residual connections)]
+            # Shape [V, D]
+            incoming_information = tf.concat([incoming_messages], axis=-1)
 
             # pass updated vertex features into RNN cell, shape [V, D].
             node_states_per_layer[-1] = self.gnn_weights.rnn_cells[layer_idx](
@@ -300,8 +297,8 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     else:
       out_layer_dropout = None
 
-    labels_dimensionality = self.stats.node_labels_dimensionality if self.placeholders.get(
-        'node_y') is not None else self.stats.graph_labels_dimensionality
+    labels_dimensionality = (self.stats.node_labels_dimensionality or
+                             self.stats.graph_labels_dimensionality)
     predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
         initial_node_state=node_states_per_layer[0],
         final_node_state=self.ops["final_node_x"],
@@ -311,7 +308,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     self.weights['regression_gate'] = regression_gate
     self.weights['regression_transform'] = regression_transform
 
-    if self.placeholders.get('graph_x') is not None:
+    if self.stats.graph_features_dimensionality:
       # Sum node representations across graph (per graph).
       computed_graph_only_values = tf.unsorted_segment_sum(
           predictions,
@@ -320,8 +317,11 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           name='computed_graph_only_values',
       )  # [g, c]
 
-      # Adding global features to the graph readout.
-      x = tf.concat([computed_graph_only_values, self.placeholders["graph_x"]],
+      # Add global features to the graph readout.
+      x = tf.concat([
+          computed_graph_only_values,
+          tf.cast(self.placeholders["graph_x"], tf.float32)
+      ],
                     axis=-1)
       x = tf.layers.batch_normalization(
           x, training=self.placeholders['is_training'])
@@ -334,7 +334,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           training=self.placeholders['is_training'])
       predictions = tf.layers.dense(x, 2)
 
-    if self.placeholders.get("graph_y") is not None:
+    if self.stats.graph_labels_dimensionality:
       targets = tf.argmax(self.placeholders["graph_y"],
                           axis=1,
                           output_type=tf.int32,
@@ -351,17 +351,17 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
-    if self.placeholders.get("graph_y") is not None:
+    if self.stats.graph_labels_dimensionality:
       graph_only_loss = tf.losses.softmax_cross_entropy(
           self.placeholders["graph_y"], computed_graph_only_values)
       _loss = tf.losses.softmax_cross_entropy(self.placeholders["graph_y"],
                                               predictions)
       loss = _loss + FLAGS.intermediate_loss_discount_factor * graph_only_loss
-    elif self.placeholders.get("node_y") is not None:
+    elif self.stats.node_labels_dimensionality:
       loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
-                                             argmaxed_predictions)
+                                             predictions)
     else:
-      app.Fatal("unreachable!")
+      raise ValueError("No graph labels and no node labels!")
 
     return loss, accuracies, accuracy, predictions
 
@@ -412,8 +412,10 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
       yield batch.log, feed_dict
 
   def MakeModularGraphOps(self):
-    assert self.weights['regression_gate'] and self.weights['regression_transform'], \
-      "Need to call MakeLossAndAccuracyAndPredictionOps() first!"
+    if not (self.weights['regression_gate'] and
+            self.weights['regression_transform']):
+      raise TypeError("MakeModularGraphOps() call before "
+                      "MakeLossAndAccuracyAndPredictionOps()")
 
     predictions = utils.MakeModularOutputLayer(
         self.placeholders['node_x'],

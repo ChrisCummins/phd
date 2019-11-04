@@ -170,7 +170,7 @@ class GraphBatch(typing.NamedTuple):
 
     has_node_labels = stats.node_labels_dimensionality > 0
     has_graph_features = stats.graph_features_dimensionality > 0
-    has_graph_labels = True  # stats.graph_labels_dimensionality > 0
+    has_graph_labels = stats.graph_labels_dimensionality > 0
 
     if has_node_labels:
       node_y = []

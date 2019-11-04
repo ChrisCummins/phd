@@ -13,7 +13,7 @@ py_library(
 py_library(
     name = "classifier_base",
     srcs = ["classifier_base.py"],
-    data = ["//deeplearning/ncc/published_results:embeddings"],
+    data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings:embeddings"],
     visibility = ["//visibility:public"],
     deps = [
         "//:build_info",
