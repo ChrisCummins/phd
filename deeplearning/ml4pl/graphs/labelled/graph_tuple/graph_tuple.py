@@ -183,8 +183,9 @@ class GraphTuple(typing.NamedTuple):
 
     # Set optional node labels.
     node_targets = [None] * g.number_of_nodes()
-    for node, y in g.nodes(data=node_y):
+    for node, y in g.nodes(data=node_y, default=None):
       if y is None:
+        node_y = None
         break
       node_idx = node_to_index[node]
       node_targets[node_idx] = y
