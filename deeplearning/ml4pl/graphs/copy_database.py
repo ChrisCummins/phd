@@ -67,7 +67,7 @@ def main():
 
   filters = []
   if FLAGS.group:
-    filters.apend(lambda: graph_database.GraphMeta.group == FLAGS.group)
+    filters.append(lambda: graph_database.GraphMeta.group == FLAGS.group)
 
   for chunk in ChunkedGraphDatabaseReader(input_db,
                                           order_by_random=True,
