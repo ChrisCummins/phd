@@ -15,6 +15,7 @@ app.DEFINE_database('input_db', graph_database.Database, None,
 app.DEFINE_database('output_db', graph_database.Database, None,
                     'The destination database.')
 app.DEFINE_integer('max_rows', 0, 'The maximum number of rows to copy.')
+app.DEFINE_string('group', None, 'Only export graphs from this group.')
 
 
 def ChunkedGraphDatabaseReader(
@@ -64,8 +65,13 @@ def main():
   input_db = FLAGS.input_db()
   output_db = FLAGS.output_db()
 
+  filters = []
+  if FLAGS.group:
+    filters.apend(lambda: graph_database.GraphMeta.group == FLAGS.group)
+
   for chunk in ChunkedGraphDatabaseReader(input_db,
                                           order_by_random=True,
+                                          filters=filters,
                                           limit=FLAGS.max_rows):
     with output_db.Session(commit=True) as session:
       for row in chunk:
