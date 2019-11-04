@@ -103,12 +103,14 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
     # Ignore bytecodes that we have already exported.
     with self.graph_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id) \
-        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)) \
-        .order_by(self.graph_db.Random())
+        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
       already_done = set([r.bytecode_id for r in query])
       app.Log(1, 'Skipping %s previously-exported bytecodes',
               humanize.Commas(len(already_done)))
       bytecode_ids = [b for b in bytecode_ids if b not in already_done]
+
+    # Process bytecodes in a random order.
+    random.shuffle(bytecode_ids)
 
     job_processor = self.GetProcessInputs()
     chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
@@ -181,8 +183,7 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
 
     # Get the bytecode IDs of the graphs to export.
     with self.input_db.Session() as session:
-      query = session.query(graph_database.GraphMeta.bytecode_id) \
-        .order_by(self.input_db.Random())
+      query = session.query(graph_database.GraphMeta.bytecode_id)
       bytecode_ids = set([row.bytecode_id for row in query])
 
     # Ignore bytecodes that we have already exported.
@@ -193,6 +194,9 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
       app.Log(1, 'Skipping %s previously-exported bytecodes',
               humanize.Commas(len(already_done)))
       bytecode_ids = [b for b in bytecode_ids if b not in already_done]
+
+    # Process bytecodes in a random order.
+    random.shuffle(bytecode_ids)
 
     job_processor = self.GetProcessInputs()
     chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
