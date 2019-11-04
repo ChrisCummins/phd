@@ -1,4 +1,5 @@
 """Base class for implementing gated graph neural networks."""
+import pickle
 import typing
 
 import numpy as np
