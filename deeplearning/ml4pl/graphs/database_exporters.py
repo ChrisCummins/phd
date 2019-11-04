@@ -214,10 +214,11 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
       exported_graph_count += len(graph_metas)
       job_count += 1
       app.Log(
-          1, 'Created %s graphs (%.2f graphs/second). %.2f%% of %s bytecodes '
+          1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
           'processed', humanize.Commas(len(graph_metas)),
           exported_graph_count / (time.time() - start_time),
-          (job_count / len(jobs)) * 100, len(bytecode_ids))
+          (job_count / len(jobs)) * 100,
+          humanize.DecimalPrefix(len(bytecode_ids), ''))
 
       if graph_metas:
         sqlutil.ResilientAddManyAndCommit(self.output_db, graph_metas)
