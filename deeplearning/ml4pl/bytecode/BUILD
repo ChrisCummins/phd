@@ -7,6 +7,7 @@ py_library(
     deps = [
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//labm8:app",
+        "//labm8:labdate",
         "//labm8:pbutil",
         "//labm8:sqlutil",
         "//third_party/py/sqlalchemy",

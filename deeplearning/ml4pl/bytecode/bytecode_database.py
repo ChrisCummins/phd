@@ -1,9 +1,12 @@
 """A dataset of LLVM bytecodes."""
+import datetime
 import typing
 
 import sqlalchemy as sql
 from labm8 import app
+from labm8 import labdate
 from labm8 import sqlutil
+from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl import ml4pl_pb2
@@ -46,13 +49,14 @@ class LlvmBytecode(Base, sqlutil.ProtoBackedMixin,
   cfgs: 'ControlFlowGraphProto' = sql.orm.relationship(
       'ControlFlowGraphProto', back_populates="bytecode")
 
-  # TODO(cec): Add unique constraint on source_name and relpath.
+  __table_args__ = (sql.UniqueConstraint('source_name',
+                                         'relpath',
+                                         name='unique_bytecode'),)
 
-  # TODO(cec): Add date_added field.
-  # date_added: datetime.datetime = sql.Column(
-  #     sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-  #     nullable=False,
-  #     default=labdate.GetUtcMillisecondsNow)
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
 
   @classmethod
   def FromProto(cls, proto: proto_t) -> typing.Dict[str, typing.Any]:
