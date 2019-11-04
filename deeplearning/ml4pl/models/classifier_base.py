@@ -94,10 +94,15 @@ app.DEFINE_boolean(
     "test_only", False,
     "If this flag is set, only a single pass of the test set is ran.")
 
-app.DEFINE_integer(
-    "k_fold", 0,
-    "Use this many groups for k-fold validation. This is incompatbile with the "
-    "--test_only flag.")
+app.DEFINE_string(
+    "val_group", "val",
+    "The name of the group to be used for validating model performance. All "
+    "groups except --val_group and --test_group will be used for training.")
+
+app.DEFINE_string(
+    "test_group", "test",
+    "The name of the hold-out group to be used for testing. All groups "
+    "except --val_group and --test_group will be used for training.")
 
 app.DEFINE_integer(
     "patience", 300,
@@ -287,47 +292,39 @@ class ClassifierBase(object):
 
     return np.mean(epoch_accuracies)
 
-  def RunKFoldTrainAndValidate(self, k: int) -> typing.Tuple[float, float]:
-    """Run a single train/validation epoch using k-fold cross-validation.
-
-    This performs nested cross-validation so that both the entirety of the
-    training set is used for validation and testing.
-    """
-    test_accs = []
-    groups = list(str(x) for x in range(k))
-    for test in groups:
-      val_accs = []
-      for val in groups:
-        if val == test:
-          continue
-        for train in groups:
-          if train == test or train == val:
-            continue
-          self.RunEpoch("train", train)
-        val_accs.append(self.RunEpoch("val", val))
-      self.RunEpoch("test", test)
-    return np.array(val_accs).mean(), np.array(test_accs).mean()
-
-  def Train(self, num_epochs: int,
-            k_fold: typing.Optional[int] = None) -> float:
-    """Train the model.
+  def Train(self,
+            num_epochs: int,
+            val_group: str = "val",
+            test_group: str = "test") -> float:
+    """Train and evaluate the model.
 
     Args:
-      k_fold: If provided, use the given `k` splits. Else, use
-        `train`,`val`,`test` splits.
+      num_epoch: The number of epochs to run for training and validation.
+      val_group: The name of the dataset group to use for validating model
+        performance.
+      test_group: The name of the dataset group to use as holdout test data.
+        This group is only used during training if the --test_on_improvement
+        flag is set, in which case test group performance is evaluated every
+        time that validation accuracy improves.
 
     Returns:
       The best validation accuracy of the model.
     """
+    # We train on everything except the validation and test data.
+    train_groups = set(self.batcher.stats.groups) - set([val_group, test_group])
+
     for epoch_num in range(self.epoch_num, num_epochs + 1):
       self.epoch_num = epoch_num
       epoch_start_time = time.time()
 
-      if k_fold:
-        val_acc, test_acc = self.RunKFoldTrainAndValidate(k_fold)
-      else:
-        self.RunEpoch("train")
-        val_acc = self.RunEpoch("val")
+      # Switch up the training group order between epochs.
+      random.shuffle(train_groups)
+
+      # Train on the training data.
+      [self.RunEpoch("train", train_group) for train_group in train_groups]
+
+      # Validate.
+      val_acc = self.RunEpoch("val", val_group)
       app.Log(1, "Epoch %s completed in %s. Validation "
               "accuracy: %.2f%%", epoch_num,
               humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
@@ -352,11 +349,8 @@ class ClassifierBase(object):
         self.best_epoch_num = epoch_num
 
         # Run on test set if we haven't already.
-        if not k_fold and FLAGS.test_on_improvement:
-          test_acc = self.RunEpoch("test")
-          app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
-                  test_acc * 100)
-        elif k_fold:
+        if FLAGS.test_on_improvement:
+          test_acc = self.RunEpoch("test", test_group)
           app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
                   test_acc * 100)
       elif epoch_num - self.best_epoch_num >= FLAGS.patience:
@@ -498,4 +492,6 @@ def Run(model_class):
     test_acc = model.RunEpoch("test")
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
-    model.Train(num_epochs=FLAGS.num_epochs, k_fold=FLAGS.k_fold)
+    model.Train(num_epochs=FLAGS.num_epochs,
+                val_group=FLAGS.val_group,
+                test_group=FLAGS.test_group)
