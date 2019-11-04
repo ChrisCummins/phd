@@ -153,11 +153,6 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
     message_targets = []  # List of tensors of message targets of shape [E]
     message_edge_types = []  # List of tensors of edge type of shape [E]
 
-    # TODO(cec): Investigate this.
-    # Each edge type gets a unique edge_type_idx from its own adjacency list.
-    # I will have to only carry one adj. list (one edge type, maybe could go to
-    # 2 for data and flow) and instead figure out how to carry the emb as
-    # additional information, cf. "prep. spec. graphmodel: placeholder def.".
     for edge_type, adjacency_list in enumerate(
         self.placeholders["adjacency_lists"]):
       edge_targets = adjacency_list[:, 1]
