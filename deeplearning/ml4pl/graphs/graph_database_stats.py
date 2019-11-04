@@ -160,6 +160,8 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
   @decorators.memoized_property
   def node_labels_dtype(self) -> np.dtype:
     """Return the numpy dtype of node labels."""
+    if not self.node_labels_dimensionality:
+      raise ValueError("Trying to access dtype when no node labels")
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_tuple = q.data
@@ -168,6 +170,8 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
   @decorators.memoized_property
   def graph_features_dtype(self) -> np.dtype:
     """Return the numpy dtype of graph features."""
+    if not self.graph_features_dimensionality:
+      raise ValueError("Trying to access dtype when no graph feature")
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_tuple = q.data
@@ -176,6 +180,8 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
   @decorators.memoized_property
   def graph_labels_dtype(self) -> np.dtype:
     """Return the numpy dtype of graph labels."""
+    if not self.graph_labels_dimensionality:
+      raise ValueError("Trying to access dtype when no graph labels")
     with self.db.Session() as s:
       q = s.query(graph_database.Graph).first()
       graph_tuple = q.data
