@@ -27,6 +27,13 @@ def test_105975(builder: cdfg.ControlAndDataFlowGraphBuilder):
   builder.Build(fs.Read(REGRESSION_TESTS / '105975.ll'))
 
 
+def _IsTimeout(err, *args):
+  del args
+  return isinstance(err[0], TimeoutError)
+
+
+# This is a large graph which may timeout on a loaded / slow system.
+@pytest.mark.flaky(max_runs=3, rerun_filter=_IsTimeout)
 def test_115532(builder: cdfg.ControlAndDataFlowGraphBuilder):
   """Number of callsites does not correlate with callgraph."""
   builder.Build(fs.Read(REGRESSION_TESTS / '115532.ll'))
