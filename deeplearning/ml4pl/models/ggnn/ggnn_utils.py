@@ -201,12 +201,6 @@ def BatchDictToFeedDict(
     The batch dictionary values, re-keyed by the corresponding values in the
     placeholders dictionary.
   """
-  #print("#######"*200)
-  #for b in batch:
-  #  print(b)
-  #  print(len(b))
-  #app.Log(1, "%s", batch)
-  #app.Log(1, "%s", placeholders)
   edge_type_count = len(batch.adjacency_lists)
 
   feed_dict = {
@@ -219,20 +213,10 @@ def BatchDictToFeedDict(
 
   for i in range(edge_type_count):
     feed_dict[placeholders["adjacency_lists"][i]] = batch.adjacency_lists[i]
-
-
+    feed_dict[placeholders["edge_positions"][i]] = batch.edge_positions[i]
 
   if batch.has_node_y:
     feed_dict[placeholders["node_y"]] = batch.node_y
-
-  #app.Log(1, "%s", batch.edge_positions)
-  if batch.has_edge_positions:
-    feed_dict[placeholders["edge_positions"]] = batch.edge_positions[i]
-
-
-  #if batch.has_edge_y:
-  #  for i in range(edge_type_count):
-  #    feed_dict[placeholders["edge_y"][i]] = batch.edge_y[i]
 
   if batch.has_graph_x:
     feed_dict[placeholders["graph_x"]] = batch.graph_x
