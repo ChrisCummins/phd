@@ -74,5 +74,11 @@ def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
       "max 511 nodes, max 2 edges")
 
 
+def test_GraphDatabaseStats_groups(db_512: graph_database.Database):
+  """Test that a list of distinct group names is returned."""
+  s = stats.GraphTupleDatabaseStats(db_512)
+  assert s.groups == ['train']
+
+
 if __name__ == '__main__':
   test.Main()
