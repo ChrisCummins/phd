@@ -8,6 +8,7 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple",
         "//labm8:app",
         "//labm8:humanize",
+        "//labm8:prof",
         "//third_party/py/numpy",
         "//third_party/py/sqlalchemy",
     ],

@@ -7,27 +7,31 @@ import pickle
 
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
   graph_tuple as graph_tuples
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to modify.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'URL of database to modify.',
+    must_exist=True)
 
 
 def ReplaceOneHotNodeFeaturesWithEmbeddings(
     graph_tuple: graph_tuples.GraphTuple) -> graph_tuples.GraphTuple:
   """Swap out the 1-hot binary `node_x_indices` values for integers."""
   node_x_indices = np.array(
-      [1 if x[1] else 0 for x in graph_tuple.node_x_indices], dtype=np.int32)
+      [(1 if x[1] else 0) if isinstance(x, np.ndarray) else x
+       for x in graph_tuple.node_x_indices],
+      dtype=np.int32)
 
   return graph_tuples.GraphTuple(
       adjacency_lists=graph_tuple.adjacency_lists,
@@ -44,7 +48,7 @@ def main():
 
   graph_db = FLAGS.graph_db()
 
-  buffer_size = 256
+  buffer_size = 1024
 
   with graph_db.Session() as s:
     with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graphs "
@@ -62,7 +66,8 @@ def main():
       q = q.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
       q = q.filter(graph_database.GraphMeta.id.in_(batch_ids))
 
-      with prof.Profile(f"Fixed embedding indices on {batch_ids}"):
+      with prof.Profile(
+          f"Fixed embedding indices of {len(batch_ids)} graph tuples"):
         for graph_meta in q:
           graph_meta.graph.pickled_data = pickle.dumps(
               ReplaceOneHotNodeFeaturesWithEmbeddings(graph_meta.data))
