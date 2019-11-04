@@ -327,8 +327,8 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
     # Compare node data.
     for i in self.nodes:
-      # TODO(cec): We may want to exclude the 'name' attribute from comparisons,
-      # assuming it has no logical meaning.
+      # We may want to exclude the 'name' attribute from comparisons, assuming
+      # it has no logical meaning.
       if self.nodes[i] != other.nodes[i]:
         return False
 

@@ -147,8 +147,6 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
                            text=branch_text,
                            basic_block=node)
           else:
-            # TODO(cec): Do we want to preserve the "true" "false" information
-            # for outgoing edges? We currently throw it away.
             sig.add_node(new_node_id,
                          name=new_node_name,
                          text=branch_text,

@@ -123,8 +123,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         self.ops["summary_accuracy"] = tf.summary.scalar("accuracy",
                                                          self.ops["accuracy"],
                                                          family='accuracy')
-        # TODO(cec): More tensorboard telemetry: input class distributions,
-        # predicted class distributions, etc.
 
         with prof.Profile('Make training step'), tf.compat.v1.variable_scope(
             "train_step"):
