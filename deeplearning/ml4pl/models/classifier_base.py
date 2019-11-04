@@ -88,8 +88,12 @@ app.DEFINE_integer(
     'Use this flag to limit the maximum number of instances used in a single '
     'validation epoch.')
 
-app.DEFINE_input_path("restore_model", None,
-                      "An optional file to restore the model from.")
+app.DEFINE_input_path(
+    "restore_model", None,
+    "Select a model checkpoint to restore the model state from. The checkpoint "
+    "is identified by a run ID and epoch number, in the format "
+    "--restore_model=<run_id>:<epoch_num>. Model checkpoints are loaded from "
+    "the log database.")
 
 app.DEFINE_boolean(
     "test_only", False,
@@ -533,8 +537,14 @@ def Run(model_class):
 
   # Restore or initialize the model:
   if FLAGS.restore_model:
+    try:
+      run_id, epoch_num = FLAGS.restore_model.split(":")
+      epoch_num = int(epoch_num)
+    except Exception as e:
+      raise app.UsageError(f"Invalid --restore_model=`{FLAGS.restore_model}`. "
+                           "Must be in the form <run_id>:<epoch_num>.")
     with prof.Profile('Restored model'):
-      model.LoadModel(FLAGS.restore_model)
+      model.LoadModel(run_id=run_id, epoch_num=epoch_num)
   else:
     with prof.Profile('Initialized model'):
       model.InitializeModel()
