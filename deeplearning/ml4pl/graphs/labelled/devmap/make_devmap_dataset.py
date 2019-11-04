@@ -24,6 +24,8 @@ app.DEFINE_database('output_db', graph_database.Database,
                     'URL of the database to write labelled graphs to.')
 app.DEFINE_string('gpu', None,
                   'The gpu to use. One of: {amd_tahiti_7970,nvidia_gtx_960}')
+app.DEFINE_boolean('log1p_graph_x', True,
+                   'If set, compute log(x + 1) for each graph feature.')
 
 FLAGS = app.FLAGS
 
@@ -94,8 +96,9 @@ def AnnotateGraphMetas(input_db: graph_database.Database, df: pd.DataFrame
         graph = input_graph_meta.data
 
         # Add the graph-level features.
-        # TODO(cec): Should we apply any transforms to these values? Log?
         graph.x = np.array([row['wgsize'], row['transfer']], dtype=np.int64)
+        if FLAGS.log1p_graph_x:
+          graph.x = np.log1p(graph.x.astype(np.float64))
         # Add 'y' graph feature as target.
         graph.y = row['y']
 
