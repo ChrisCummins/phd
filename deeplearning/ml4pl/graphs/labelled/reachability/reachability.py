@@ -43,12 +43,13 @@ def SetReachableNodes(g: nx.MultiDiGraph,
     next, data_flow_steps = q.popleft()
     reachable_nodes_count += 1
     visited.add(next)
-    for neighbor in query.StatementNeighbors(g, next):
-      if neighbor not in visited:
-        q.append((neighbor, data_flow_steps + 1))
 
     # Mark the node as reachable.
     g.nodes[next][y_label] = true
+
+    for _, succ, flow in g.out_edges(next, data='flow'):
+      if flow == 'control' and succ not in visited:
+        q.append((succ, data_flow_steps + 1))
 
   return reachable_nodes_count, data_flow_steps
 

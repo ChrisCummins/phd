@@ -36,7 +36,9 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
   while changed:
     data_flow_steps += 1
     changed = False
-    for node in dominators.keys() - set([root_node]):
+    for node in dominators.keys():
+      if node == root_node:
+        continue
       dom_pred = [dominators[p] for p in predecessors[node]]
       if dom_pred:
         dom_pred = set.intersection(*dom_pred)
