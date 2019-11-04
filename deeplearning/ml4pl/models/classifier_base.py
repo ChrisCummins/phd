@@ -170,11 +170,9 @@ class ClassifierBase(object):
     self.best_model_file = self.working_dir / f'{self.run_id}.best_model.pickle'
     self.working_dir.mkdir(exist_ok=True, parents=True)
 
-    # Write app.Log() calls to file. To also log to stderr, use flag
-    # --alsologtostderr.
-    app.Log(
-        1, 'Writing logs to `%s`. Unless --alsologtostderr flag is set, '
-        'this is the last message you will see', self.working_dir)
+    # Write app.Log() calls to file.
+    FLAGS.alsologtostderr = True
+    app.Log(1, 'Writing logs to `%s`', self.working_dir)
     app.LogToDirectory(self.working_dir, self.run_id)
 
     self.log_db = log_db

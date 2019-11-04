@@ -16,10 +16,6 @@ from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer(
-    'smoke_test_num_epochs', 2,
-    'The number of epochs to run the smoke test for. This overrides the normal '
-    '--num_epochs flag.')
 app.DEFINE_output_path(
     'smoke_test_working_dir',
     None,
@@ -28,22 +24,34 @@ app.DEFINE_output_path(
     is_dir=True)
 
 
-def RunSmokeTest(model_class,
-                 node_y_choices: typing.Optional[typing.List[np.array]] = None,
-                 graph_x_choices: typing.Optional[typing.List[np.array]] = None,
-                 graph_y_choices: typing.Optional[typing.List[np.array]] = None,
-                 num_epochs: int = 2):
-  """
+def RunSmokeTest(
+    model_class,
+    node_y_choices: typing.Optional[typing.List[np.array]] = None,
+    graph_x_choices: typing.Optional[typing.List[np.array]] = None,
+    graph_y_choices: typing.Optional[typing.List[np.array]] = None) -> None:
+  """Run a simple smoke test on a model.
 
-  :param model_class:
-  :param node_y_choices:
-  :param graph_x_choices:
-  :param graph_y_choices:
-  :param num_epochs:
-  :return:
-  """
-  FLAGS.alsologtostderr = True
+  The smoke test consists of:
+      1. Generate 50 random labelled graphs {30 train, 10 val, 10 test}.
+      2. Construct and train a models for 2 epochs.
+      3. Check that the model produces logs.
 
+  This high level test is *not* a substitute for proper unit testing of a
+  model's components, and does not test the learning power of the model.
+
+  Args:
+    model_class: The class under test. Must implement the interface of
+      classifier_base.ClassifierBase.
+    node_y_choices: A list of options for node labels. Randomly generated graphs
+      are randomly assigned labels from this list. If not provided, no node
+      labels are used.
+    graph_x_choices: A list of options for graph features. Randomly generated
+      graphs are randomly assigned labels from this list. If not provided, no
+      graph features are used.
+    graph_y_choices: A list of options for graph labels. Randomly generated
+      graphs are randomly assigned labels from this list. If not provided, no
+      graph labels are used.
+  """
   with WorkingDirectory() as working_dir:
     graph_db_path = working_dir / 'node_classification_graphs.db'
     if graph_db_path.is_file():
@@ -57,9 +65,9 @@ def RunSmokeTest(model_class,
     log_db = log_database.Database(f'sqlite:///{working_dir}/logs.db')
 
     with prof.Profile("Creating random testing graphs"):
-      graphs = (list(_MakeNGroupGraphs(30, 'train')) +
-                list(_MakeNGroupGraphs(10, 'val')) +
-                list(_MakeNGroupGraphs(10, 'test')))
+      graphs = (list(_MakeNRandomGraphs(30, 'train')) +
+                list(_MakeNRandomGraphs(10, 'val')) +
+                list(_MakeNRandomGraphs(10, 'test')))
 
     with prof.Profile("Added random graph annotations"):
       # Add node-level labels.
@@ -78,11 +86,30 @@ def RunSmokeTest(model_class,
       model: classifier_base.ClassifierBase = model_class(graph_db, log_db)
 
     with prof.Profile("Trained model"):
-      FLAGS.num_epochs = FLAGS.smoke_test_num_epochs
-      model.Train(num_epochs=num_epochs)
+      model.Train(num_epochs=2)
+
+    # Check a properties of logs.
+    with log_db.Session() as session:
+      logs = session.query(log_database.BatchLog).all()
+      logs = sorted(logs, key=lambda log: log.epoch)
+
+      # There should be at least 5 and no more than 6 logs:
+      #
+      #   Epoch 1 Training batch 1
+      #   Epoch 1 Validation batch 1
+      #   Epoch 1 Testing batch 1
+      #   Epoch 2 Training batch 1
+      #   Epoch 2 Validation batch 1
+      #   [Epoch 2 Testing batch 1]  <- only if validation acc improved
+      assert len(logs) in {5, 6}
+
+      # Check log properties.
+      for log in logs:
+        assert isinstance(log.loss, float)
+        assert log.type in {'train', 'test', 'val'}
 
 
-def _MakeNGroupGraphs(n: int, group: str) -> nx.MultiDiGraph:
+def _MakeNRandomGraphs(n: int, group: str) -> typing.Iterable[nx.MultiDiGraph]:
   """Private helper to generate random graphs of the given group."""
   for i in range(n):
     g = random_cdfg_generator.FastCreateRandom()

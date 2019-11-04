@@ -76,3 +76,15 @@ py_binary(
         "//third_party/py/tensorflow",
     ],
 )
+
+py_test(
+    name = "lstm_graph_classifier_smoke_test",
+    size = "large",
+    srcs = ["lstm_graph_classifier_smoke_test.py"],
+    deps = [
+        ":lstm_graph_classifier",
+        "//deeplearning/ml4pl/models:classifier_smoke_tester",
+        "//labm8:app",
+        "//third_party/py/numpy",
+    ],
+)

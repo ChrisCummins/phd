@@ -44,7 +44,7 @@ py_binary(
 
 py_test(
     name = "ggnn_node_classifier_smoke_test",
-    size = "enormous",
+    size = "large",
     srcs = ["ggnn_node_classifier_smoke_test.py"],
     deps = [
         ":ggnn_node_classifier",
