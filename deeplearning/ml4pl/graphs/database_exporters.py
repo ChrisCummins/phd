@@ -249,6 +249,7 @@ def Run(input_db, output_db, run_export):
   # Temporarily redirect logs to a file, which we will later import into the
   # database's meta table.
   with tempfile.TemporaryDirectory() as d:
+    FLAGS.alsologtostderr = True
     app.LogToDirectory(d, 'log')
 
     app.Log(1, 'Seeding with %s', FLAGS.seed)
