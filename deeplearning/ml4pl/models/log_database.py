@@ -1,5 +1,6 @@
 """Database backend for model logs."""
 import datetime
+import enum
 import pickle
 import typing
 
@@ -129,6 +130,10 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         f"loss={self.loss:.4f} | "
         f"acc={self.accuracy:.2%}")
 
+  __table_args__ = (sql.UniqueConstraint('run_id',
+                                         'global_step',
+                                         name='unique_global_step'),)
+
 
 class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """The per-instance results of a batch log.
@@ -161,6 +166,13 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
                                             back_populates="batch_log")
 
 
+class ParameterType(enum.Enum):
+  """The valid types for parameters."""
+  MODEL_FLAG = 1
+  FLAG = 2
+  BUILD_INFO = 3
+
+
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A description of an experimental parameter."""
   id: int = sql.Column(sql.Integer, primary_key=True)
@@ -168,14 +180,78 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # A string to uniquely identify the given experiment run.
   run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
 
-  # One of: {model_flags,flags,build_info}
-  type: str = sql.Column(sql.String(1024), nullable=False, index=True)
+  # One of: {model_flag,flags,build_info}
+  type: ParameterType = sql.Column(sql.Enum(ParameterType),
+                                   nullable=False,
+                                   index=True)
 
   # The name of the parameter.
   parameter: str = sql.Column(sql.String(1024), nullable=False)
   # The value for the parameter.
-  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                          nullable=False)
+  pickled_value: str = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                  nullable=False)
+
+  @property
+  def value(self) -> typing.Any:
+    return pickle.loads(self.pickled_value)
+
+  __table_args__ = (sql.UniqueConstraint('run_id',
+                                         'type',
+                                         'parameter',
+                                         name='unique_parameter'),)
+
+
+class ModelCheckpointMeta(Base,
+                          sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # A string to uniquely identify the given experiment run.
+  run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
+
+  # The epoch number, >= 1.
+  epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
+
+  # The batch number across all epochs.
+  global_step: int = sql.Column(sql.Integer, nullable=False)
+
+  # The validation accuracy of the model.
+  validation_accuracy: float = sql.Column(sql.Float, nullable=False)
+
+  date_added: datetime.datetime = sql.Column(
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow)
+
+  model_checkpoint: 'ModelCheckpoint' = sql.orm.relationship(
+      'ModelCheckpoint', uselist=False, cascade="all", back_populates="meta")
+
+  __table_args__ = (sql.UniqueConstraint('run_id',
+                                         'epoch',
+                                         name='unique_epoch_checkpoint'),)
+
+  @property
+  def data(self) -> typing.Any:
+    return pickle.loads(self.model_checkpoint.pickled_data)
+
+  @data.setter
+  def data(self, data) -> None:
+    self.model_checkpoint.pickled_data = pickle.dumps(data)
+
+
+class ModelCheckpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """The sister table of ModelCheckpointMeta, which stores the actual data of
+  a model, as returned by classifier_base.ModelDataToSave().
+  """
+  id: int = sql.Column(sql.Integer,
+                       sql.ForeignKey('model_checkpoint_metas.id'),
+                       primary_key=True)
+
+  # The model data.
+  pickled_data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                   nullable=False)
+
+  meta: ModelCheckpointMeta = sql.orm.relationship(
+      'ModelCheckpointMeta', back_populates="model_checkpoint")
 
 
 class Database(sqlutil.Database):
@@ -233,6 +309,14 @@ class Database(sqlutil.Database):
       df['reltime'] = [t - df['timestamp'][0] for t in df['timestamp']]
 
       return df
+
+  def ModelFlagsToDict(self, run_id: str):
+    """Load the model flags for the given run ID to a {flag: value} dict."""
+    with self.Session() as session:
+      q = session.query(Parameter)
+      q = q.filter(Parameter.run_id == run_id)
+      q = q.filter(Parameter.type == ParameterType.MODEL_FLAG)
+      return {param.parameter: param.value for param in q.all()}
 
   def ParametersToDataFrame(self, run_id: str, type: str):
     """Return a table of parameters of the given type for the specified run.

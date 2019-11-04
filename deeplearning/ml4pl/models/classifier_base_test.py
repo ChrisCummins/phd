@@ -81,28 +81,23 @@ class MockModel(classifier_base.ClassifierBase):
     )
 
 
-def test_SaveModel(tempdir: pathlib.Path, tempdir2: pathlib.Path,
-                   graph_db: graph_database.Database,
-                   log_db: log_database.Database):
+def test_SaveModel_adds_row_to_checkpoints_table(
+    tempdir2: pathlib.Path, graph_db: graph_database.Database,
+    log_db: log_database.Database):
   """Test saving a model to file."""
   FLAGS.working_dir = tempdir2
 
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
   model.global_training_step = 10
-  model.SaveModel(tempdir / 'foo.pickle')
-  assert (tempdir / 'foo.pickle').is_file()
+  model.SaveModel(validation_accuracy=.5)
 
-  with open(tempdir / 'foo.pickle', 'rb') as f:
-    saved_model = pickle.load(f)
-
-  assert 'model_flags' in saved_model
-  assert 'model_data' in saved_model
-  assert saved_model['global_training_step'] == 10
+  with model.log_db.Session() as session:
+    assert session.query(log_database.ModelCheckpointMeta).count() == 1
+    assert session.query(log_database.ModelCheckpoint).count() == 1
 
 
-def test_LoadModel(tempdir: pathlib.Path, tempdir2: pathlib.Path,
-                   graph_db: graph_database.Database,
+def test_LoadModel(tempdir2: pathlib.Path, graph_db: graph_database.Database,
                    log_db: log_database.Database):
   """Test loading a model from file."""
   FLAGS.working_dir = tempdir2
@@ -112,37 +107,40 @@ def test_LoadModel(tempdir: pathlib.Path, tempdir2: pathlib.Path,
   model.epoch_num = 2
   model.global_training_step = 10
   model.mock_data = 100
-  model.SaveModel(tempdir / 'foo.pickle')
+  model.SaveModel(validation_accuracy=.5)
 
   model.epoch_num = 0
   model.mock_data = 0
   model.global_training_step = 0
-  model.LoadModel(tempdir / 'foo.pickle')
+  model.LoadModel(run_id=model.run_id, epoch_num=2)
   assert model.epoch_num == 2
   assert model.global_training_step == 10
   assert model.mock_data == 100
 
 
-def test_LoadModel_unknown_saved_model_flag(
-    tempdir: pathlib.Path, tempdir2: pathlib.Path,
-    graph_db: graph_database.Database, log_db: log_database.Database):
+def test_LoadModel_unknown_saved_model_flag(tempdir2: pathlib.Path,
+                                            graph_db: graph_database.Database,
+                                            log_db: log_database.Database):
   """Test that error is raised if saved model contains unknown flag."""
   FLAGS.working_dir = tempdir2
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
-  model.SaveModel(tempdir / 'foo.pickle')
+  model.SaveModel(validation_accuracy=.5)
 
-  with open(tempdir / 'foo.pickle', 'rb') as f:
-    saved_model = pickle.load(f)
-
-  saved_model['model_flags']['a new flag'] = 10
-
-  with open(tempdir / 'foo.pickle', 'wb') as f:
-    pickle.dump(saved_model, f)
+  with model.log_db.Session(commit=True) as session:
+    # Insert a new "unknown" model flag.
+    session.add(
+        log_database.Parameter(
+            run_id=model.run_id,
+            type=log_database.ParameterType.MODEL_FLAG,
+            parameter='a new flag',
+            pickled_value=pickle.dumps(5),
+        ))
 
   with pytest.raises(EnvironmentError) as e_ctx:
-    model.LoadModel(tempdir / 'foo.pickle')
+    model.LoadModel(run_id=model.run_id, epoch_num=model.epoch_num)
 
+  # Check that the LoadModel() specifically complains about the new flag value.
   assert 'a new flag' in str(e_ctx.value)
 
 
