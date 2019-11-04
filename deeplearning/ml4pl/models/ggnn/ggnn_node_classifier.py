@@ -320,16 +320,9 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
           name='computed_graph_only_values',
       )  # [g, c]
 
-      # Adding global features to the graph readout:
-
-      # auxiliary inputs wgsize and dsize
-      # TODO(cec) this is still specific to the distribution of the graph_x features in devmap.
-      # TODO(cec) delete 2 lines once the dataset has logs.
-      graph_x = tf.log(tf.cast(self.placeholders["graph_x"], dtype=tf.float32))
-      graph_x = tf.clip_by_value(graph_x, -1.0,
-                                 float('inf'))  # set log(0)=-inf to -1!
-
-      x = tf.concat([computed_graph_only_values, graph_x], axis=-1)
+      # Adding global features to the graph readout.
+      x = tf.concat([computed_graph_only_values, self.placeholders["graph_x"]],
+                    axis=-1)
       x = tf.layers.batch_normalization(
           x, training=self.placeholders['is_training'])
       x = tf.layers.dense(x,
@@ -346,12 +339,12 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
                           axis=1,
                           output_type=tf.int32,
                           name="targets")
-    elif self.placeholders.get("node_y") is not None:
+    elif self.stats.node_labels_dimensionality:
       targets = tf.argmax(self.placeholders["node_y"],
                           axis=1,
                           output_type=tf.int32)
-    else:  #broken labels
-      app.Fatal("unreachable!")
+    else:
+      raise ValueError("No graph labels and no node labels!")
 
     argmaxed_predictions = tf.argmax(predictions, axis=1, output_type=tf.int32)
     accuracies = tf.equal(argmaxed_predictions, targets)
