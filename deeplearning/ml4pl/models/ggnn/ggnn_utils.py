@@ -152,8 +152,8 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
       "output_layer_dropout_keep_prob":
       tf.compat.v1.placeholder(tf.float32, [],
                                name="output_layer_dropout_keep_prob"),
-      "is_training": tf.compat.v1.placeholder(dtype=tf.bool, shape=[]),
-      "edge_positions": tf.compat.v1.placeholder(dtype=tf.int32, shape=[None]),
+      "is_training": tf.compat.v1.placeholder(dtype=tf.bool, shape=[], name='is_training'),
+      "edge_positions": tf.compat.v1.placeholder(dtype=tf.int32, shape=[None], name='edge_positions'),
   }
 
   if stats.node_embedding_dimensionality:
@@ -176,8 +176,7 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
         stats.graph_features_dtype, [None, stats.graph_features_dimensionality],
         name="graph_x")
 
-  #if stats.graph_labels_dimensionality:
-  if 2:
+  if stats.graph_labels_dimensionality:
     placeholders['graph_y'] = tf.compat.v1.placeholder(
         #stats.graph_labels_dtype, [None, stats.graph_labels_dimensionality],
         stats.graph_labels_dtype, [None, 2],
@@ -202,14 +201,20 @@ def BatchDictToFeedDict(
     The batch dictionary values, re-keyed by the corresponding values in the
     placeholders dictionary.
   """
+  #print("#######"*200)
+  #for b in batch:
+  #  print(b)
+  #  print(len(b))
+  #app.Log(1, "%s", batch)
+  #app.Log(1, "%s", placeholders)
   edge_type_count = len(batch.adjacency_lists)
 
   feed_dict = {
-      placeholders["incoming_edge_counts"]: batch.incoming_edge_counts,
-      placeholders['graph_nodes_list']: batch.graph_nodes_list,
       placeholders["graph_count"]: batch.graph_count,
-      placeholders["node_count"]: batch.node_count,
+      placeholders['graph_nodes_list']: batch.graph_nodes_list,
       placeholders["node_x"]: batch.node_x_indices,
+      placeholders["node_count"]: batch.node_count,
+      placeholders["incoming_edge_counts"]: batch.incoming_edge_counts,
   }
 
   for i in range(edge_type_count):
@@ -220,9 +225,10 @@ def BatchDictToFeedDict(
   if batch.has_node_y:
     feed_dict[placeholders["node_y"]] = batch.node_y
 
+  #app.Log(1, "%s", batch.edge_positions)
   if batch.has_edge_positions:
-    for i in range(edge_type_count):
-      feed_dict[placeholders["edge_positions"][i]] = batch.edge_positions[i]
+    feed_dict[placeholders["edge_positions"]] = batch.edge_positions[i]
+
 
   #if batch.has_edge_y:
   #  for i in range(edge_type_count):
@@ -283,5 +289,7 @@ def RunWithFetchDict(sess: tf.compat.v1.Session,
   """A wrapper around session run which uses a dictionary for the fetch list."""
   fetch_dict_keys = sorted(fetch_dict.keys())
   fetch_dict_values = [fetch_dict[k] for k in fetch_dict_keys]
+  app.Log(1, "%s", feed_dict)
+  print(list(feed_dict.keys()))
   values = sess.run(fetch_dict_values, feed_dict)
   return {fetch: value for fetch, value in zip(fetch_dict_keys, values)}

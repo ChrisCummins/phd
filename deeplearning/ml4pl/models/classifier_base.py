@@ -221,7 +221,7 @@ class ClassifierBase(object):
       log.run_id = self.run_id
       log.is_training = is_training
 
-      targets, predictions = self.RunMinibatch(log, batch_data)
+      targets, predictions = self.RunMinibatch(log, feed_dict=batch_data)
 
       # Compute statistics.
       y_true = np.argmax(targets, axis=1)
