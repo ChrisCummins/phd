@@ -246,7 +246,7 @@ class ClassifierBase(object):
       log.global_step = self.global_training_step
       log.run_id = self.run_id
 
-      targets, predictions = self.RunMinibatch(log, batch_data)
+      targets, predictions = self.RunMinibatch(log, feed_dict=batch_data)
 
       # Compute statistics.
       y_true = np.argmax(targets, axis=1)

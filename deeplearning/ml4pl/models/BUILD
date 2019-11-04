@@ -1,6 +1,16 @@
 # Machine learning models.
 
 py_library(
+    name = "base_utils",
+    srcs = ["base_utils.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/py/numpy",
+        "//labm8:app",
+    ],
+)
+
+py_library(
     name = "classifier_base",
     srcs = ["classifier_base.py"],
     data = ["//deeplearning/ncc/published_results:embeddings"],

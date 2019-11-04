@@ -70,6 +70,7 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
         "//deeplearning/ml4pl/models:classifier_base",
         "//deeplearning/ml4pl/models:log_database",
+        "//deeplearning/ml4pl/models:base_utils",
         "//labm8:app",
         "//labm8:prof",
         "//third_party/py/numpy",

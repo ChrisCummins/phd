@@ -39,6 +39,7 @@ class GraphBatch(typing.NamedTuple):
   # A list of edge positions, one for each edge type. An edge position is an
   # integer in the range 0 <= x < max_edge_position.
   edge_positions: np.array  # Shape [edge_type_count, ?], dtype int32
+  #TODO(zach) use the above!
 
   # A list of incoming edge count dicts, one for each edge_type. Use
   # IncomingEdgeCountsToDense() to convert this to a dense representation.
@@ -77,6 +78,11 @@ class GraphBatch(typing.NamedTuple):
   def has_graph_x(self) -> bool:
     """Return whether graph tuple has graph features."""
     return self.graph_x is not None
+  
+  @property
+  def has_edge_positions(self) -> bool:
+    """Return whether graph tuple has graph features."""
+    return self.edge_positions is not None
 
   @property
   def has_graph_y(self) -> bool:
@@ -164,7 +170,7 @@ class GraphBatch(typing.NamedTuple):
 
     has_node_labels = stats.node_labels_dimensionality > 0
     has_graph_features = stats.graph_features_dimensionality > 0
-    has_graph_labels = stats.graph_labels_dimensionality > 0
+    has_graph_labels = True # stats.graph_labels_dimensionality > 0
 
     if has_node_labels:
       node_y = []

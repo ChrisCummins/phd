@@ -4,12 +4,16 @@ import typing
 import keras
 import numpy as np
 from keras import models
+import tensorflow as tf
 from labm8 import app
+from labm8 import prof
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.lstm import graph2seq
+from deeplearning.ml4pl.models.lstm import byte2seq
 
 FLAGS = app.FLAGS
 
@@ -40,6 +44,12 @@ classifier_base.MODEL_FLAGS.add("input_sequence_len")
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
+
+app.DEFINE_boolean(
+  'node_wise_model', True,
+  "hacky flag to activate node-wise classification instead of graph level classification"
+)
+classifier_base.MODEL_FLAGS.add("node_wise_model")
 #
 ##### End of flag declarations.
 
@@ -55,49 +65,78 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     # Language model. It begins with an optional embedding layer, then has two
     # layers of LSTM network, returning a single vector of size
-    # self.lstm_layer_size. The input to the LSTM is encoded bytecode sequences,
-    # padded to the same length.
-    input_layer = keras.Input(shape=(self.encoder.max_sequence_length,),
+    # self.lstm_layer_size.
+    input_layer = keras.Input(shape=(self.max_encoded_length,),
                               dtype='int32',
                               name="model_in")
+    input_segments = keras.Input(shape=(self.max_encoded_length,),
+                                 dtype='int32',
+                                 name="model_in_segments")
 
-    lstm_input = keras.layers.Embedding(
-        input_dim=self.encoder.vocabulary_size_with_padding_token,
-        input_length=self.encoder.max_sequence_length,
-        output_dim=FLAGS.hidden_size,
-        name="embedding")(input_layer)
+    self.pad_val = len(self.vocabulary)
+    assert self.pad_val not in self.vocabulary
+    embedding_dim = len(self.vocabulary) + 1
+    lstm_input = keras.layers.Embedding(input_dim=embedding_dim,
+                                        input_length=self.max_encoded_length,
+                                        output_dim=FLAGS.hidden_size,
+                                        name="embedding")(input_layer, input_segments)
 
-    x = keras.layers.LSTM(FLAGS.hidden_size,
-                          implementation=1,
-                          return_sequences=True,
-                          name="lstm_1")(lstm_input)
-    x = keras.layers.LSTM(FLAGS.hidden_size, implementation=1, name="lstm_2")(x)
-    langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
-                                       activation="sigmoid",
-                                       name="langmodel_out")(x)
+    if FLAGS.node_wise_model:
+      #TODO note that segment sum expects that all the index is sorted and covers all guys
+      # it's like a reduce sum in slices
+      x = keras.layers.Lambda(
+          lambda inputs, indices: tf.math.segment_sum(inputs, indices), name='segment_sum')(lstm_input, input_segments)
 
-    # Auxiliary inputs.
-    auxiliary_inputs = keras.Input(
-        shape=(self.stats.graph_features_dimensionality,), name="aux_in")
+    x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
+                               return_sequences=True,
+                               name="lstm_1")(x)
+    if FLAGS.node_wise_model:
+      x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
+                                name="lstm_2",
+                                return_sequences=True,
+                                return_state=False)(x)
+      langmodel_out = keras.layers.Dense(self.stats.node_labels_dimensionality,
+                                        activation="sigmoid",
+                                        name="langmodel_out")(x)
+      # no graph level features for node classification.
+      out = langmodel_out
+      self.model = keras.Model(inputs=[input_layer, input_segments],
+                               outputs=[out])
+      self.model.compile(
+          optimizer="adam",
+          metrics=['accuracy'],
+          loss=["categorical_crossentropy"],
+          loss_weights=[1.0])
+    else:
+      x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
+                               name="lstm_2")(x)
+  
+      langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
+                                        activation="sigmoid",
+                                        name="langmodel_out")(x)
 
-    # Heuristic model. Takes as inputs a concatenation of the language model
-    # and auxiliary inputs, outputs 1-hot encoded device mapping.
-    x = keras.layers.Concatenate()([x, auxiliary_inputs])
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Dense(FLAGS.dense_hidden_size,
-                           activation="relu",
-                           name="heuristic_1")(x)
-    out = keras.layers.Dense(self.stats.graph_labels_dimensionality,
-                             activation="sigmoid",
-                             name='heuristic_2')(x)
+      # Auxiliary inputs.
+      auxiliary_inputs = keras.Input(
+          shape=(self.stats.graph_features_dimensionality,), name="aux_in")
 
-    self.model = keras.Model(inputs=[input_layer, auxiliary_inputs],
-                             outputs=[out, langmodel_out])
-    self.model.compile(
-        optimizer="adam",
-        metrics=['accuracy'],
-        loss=["categorical_crossentropy", "categorical_crossentropy"],
-        loss_weights=[1., FLAGS.lang_model_loss_weight])
+      # Heuristic model. Takes as inputs a concatenation of the language model
+      # and auxiliary inputs, outputs 1-hot encoded device mapping.
+      x = keras.layers.Concatenate()([x, auxiliary_inputs])
+      x = keras.layers.BatchNormalization()(x)
+      x = keras.layers.Dense(FLAGS.dense_hidden_size,
+                            activation="relu",
+                            name="heuristic_1")(x)
+      out = keras.layers.Dense(self.stats.graph_labels_dimensionality,
+                              activation="sigmoid",
+                              name='heuristic_2')(x)
+
+      self.model = keras.Model(inputs=[input_layer, auxiliary_inputs],
+                               outputs=[out, langmodel_out])
+      self.model.compile(
+          optimizer="adam",
+          metrics=['accuracy'],
+          loss=["categorical_crossentropy", "categorical_crossentropy"],
+          loss_weights=[1., FLAGS.lang_model_loss_weight])
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str
@@ -122,8 +161,12 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
   def RunMinibatch(self, log: log_database.BatchLog, batch: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
-    x = [batch['encoded_sequences'], batch.graph_x]
-    y = [batch.graph_y, batch.graph_y]
+    if FLAGS.node_wise_model:
+      x = [batch['encoded_sequences'][0], batch['encoded_sequences'][1]] # for clarity
+      y = [batch['node_y']]
+    else:
+      x = [batch['encoded_sequences'], batch['graph_x']]
+      y = [batch['graph_y'], batch['graph_y']]
 
     losses = []
 
