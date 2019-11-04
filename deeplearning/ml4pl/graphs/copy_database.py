@@ -10,8 +10,11 @@ from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('input_db', graph_database.Database, None,
-                    'The input database.')
+app.DEFINE_database('input_db',
+                    graph_database.Database,
+                    None,
+                    'The input database.',
+                    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database, None,
                     'The destination database.')
 app.DEFINE_integer('max_rows', 0, 'The maximum number of rows to copy.')
