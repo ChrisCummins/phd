@@ -49,12 +49,14 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
 
   num_dominated = 0
   for node, data in g.nodes(data=True):
-    data[x_label] = true if node == root_node else false
+    data[x_label] = 0
     if root_node in dominators[node]:
       num_dominated += 1
       data[y_label] = true
     else:
       data[y_label] = false
+
+  g.nodes[root_node][x_label] = 1
 
   return num_dominated, data_flow_steps
 

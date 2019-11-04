@@ -30,12 +30,12 @@ def test_AnnotateDominatorTree():
   assert max_steps in {2, 3}
 
   # Features
-  assert g.nodes['A']['x']
-  assert not g.nodes['B']['x']
-  assert not g.nodes['C']['x']
-  assert not g.nodes['D']['x']
-  assert not g.nodes['E']['x']
-  assert not g.nodes['%1']['x']
+  assert g.nodes['A']['x'] == 1
+  assert g.nodes['B']['x'] == 0
+  assert g.nodes['C']['x'] == 0
+  assert g.nodes['D']['x'] == 0
+  assert g.nodes['E']['x'] == 0
+  assert g.nodes['%1']['x'] == 0
 
   # Labels
   assert g.nodes['A']['y']

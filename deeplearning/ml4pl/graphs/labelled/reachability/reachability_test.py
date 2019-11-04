@@ -44,10 +44,10 @@ def test_SetReachableNodes_data_flow_steps_A(graph):
 
 def test_SetReachableNodes_node_x(graph):
   _ = reachability.SetReachableNodes(graph, 'A')
-  assert graph.nodes['A']['x']
-  assert not graph.nodes['B']['x']
-  assert not graph.nodes['C']['x']
-  assert not graph.nodes['D']['x']
+  assert graph.nodes['A']['x'] == 1
+  assert graph.nodes['B']['x'] == 0
+  assert graph.nodes['C']['x'] == 0
+  assert graph.nodes['D']['x'] == 0
 
 
 def test_SetReachableNodes_node_y(graph):

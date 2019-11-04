@@ -22,9 +22,9 @@ def AnnotateDataDependencies(
   # Initialize all nodes as not dependent and not the root node, except the root
   # node.
   for node, data in g.nodes(data=True):
-    data[x_label] = false
+    data[x_label] = 0
     data[y_label] = false
-  g.nodes[root_node][x_label] = true
+  g.nodes[root_node][x_label] = 1
 
   # Breadth-first traversal to mark node dependencies.
   data_flow_steps = 0
