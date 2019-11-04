@@ -78,8 +78,8 @@ GGNNWeights = collections.namedtuple(
 )
 
 
-class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
-  """GGNN model for learning node classification."""
+class GgnnClassifierModel(ggnn.GgnnBaseModel):
+  """GGNN model for node-level or graph-level classification."""
 
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
@@ -434,7 +434,7 @@ class GgnnNodeClassifierModel(ggnn.GgnnBaseModel):
 
 def main():
   """Main entry point."""
-  classifier_base.Run(GgnnNodeClassifierModel)
+  classifier_base.Run(GgnnClassifierModel)
 
 
 if __name__ == '__main__':
