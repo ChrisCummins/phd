@@ -36,16 +36,13 @@ def AnnotateDataDependencies(
     dependency_node_count += 1
     visited.add(next)
 
-    data_predecessors = query.StatementNeighbors(g,
-                                                 next,
-                                                 flow='data',
-                                                 direction=lambda src, dst: src)
-    for neighbor in data_predecessors:
-      if neighbor not in visited:
-        q.append((neighbor, data_flow_steps + 1))
-
     # Mark the node as dependent.
     g.nodes[next][y_label] = true
+
+    # Visit all data predecessors.
+    for pred, _, flow in g.in_edges(next, data='flow'):
+      if flow == 'data' and pred not in visited:
+        q.append((pred, data_flow_steps + 1))
 
   return dependency_node_count, data_flow_steps
 
