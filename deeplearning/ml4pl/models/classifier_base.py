@@ -328,7 +328,8 @@ class ClassifierBase(object):
       The best validation accuracy of the model.
     """
     # We train on everything except the validation and test data.
-    train_groups = set(self.batcher.stats.groups) - {val_group, test_group}
+    train_groups = list(
+        set(self.batcher.stats.groups) - {val_group, test_group})
 
     for epoch_num in range(self.epoch_num, num_epochs + 1):
       self.epoch_num = epoch_num
