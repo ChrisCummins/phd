@@ -54,7 +54,7 @@ def GetExpressionSets(g: nx.MultiDiGraph,
     # Add the statement node to the expression lists table.
     expression_sets[expression].append(node)
 
-  return expression_sets
+  return {k: list(set(v)) for k, v in expression_sets.items()}
 
 
 def AnnotateCommonSubexpressions(g: nx.MultiDiGraph,
@@ -66,7 +66,7 @@ def AnnotateCommonSubexpressions(g: nx.MultiDiGraph,
   """
   # Mark the root expression.
   root_node = random.choice(expression_sets[root_expression])
-  g.nodes[root_node]['x'] = true
+  g.nodes[root_node]['x'] = 1
 
   for node in expression_sets[root_expression]:
     g.nodes[node]['y'] = true
@@ -117,8 +117,6 @@ def MakeSubexpressionsGraphs(
 
   for root_expression in expressions:
     labelled = g.copy()
-    AnnotateCommonSubexpressions(labelled,
-                                 root_expression,
-                                 expression_sets,
-                                 true=true)
+    AnnotateCommonSubexpressions(
+        labelled, root_expression, expression_sets, true=true)
     yield labelled
