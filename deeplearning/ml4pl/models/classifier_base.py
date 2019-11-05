@@ -496,7 +496,10 @@ class ClassifierBase(object):
               run_id=self.run_id,
               type=type_,
               parameter=str(key),
-              pickled_value=pickle.dumps(value),
+              # TODO(cec): Total hack to support pickling database URLs rather
+              # than the values.
+              pickled_value=pickle.dumps(
+                  value().url if key.endswith('_db') else value),
           ) for key, value in key_value_dict.items()
       ]
 
