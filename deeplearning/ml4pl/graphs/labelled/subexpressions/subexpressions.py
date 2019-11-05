@@ -66,14 +66,10 @@ def AnnotateCommonSubexpressions(g: nx.MultiDiGraph,
   """
   # Mark the root expression.
   root_node = random.choice(expression_sets[root_expression])
-  for _, dst, flow in g.out_edges(root_node, data='flow'):
-    if flow == 'data':
-      g.nodes[dst]['x'] = true
+  g.nodes[root_node]['x'] = true
 
-  for statement in expression_sets[root_expression]:
-    for _, dst, flow in g.out_edges(statement, data='flow'):
-      if flow == 'data':
-        g.nodes[dst]['y'] = true
+  for node in expression_sets[root_expression]:
+    g.nodes[node]['y'] = true
 
 
 def MakeSubexpressionsGraphs(

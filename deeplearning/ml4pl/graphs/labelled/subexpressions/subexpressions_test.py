@@ -112,33 +112,33 @@ def test_MakeSubexpressionsGraphs_wiki(wiki: nx.MultiDiGraph):
   g = graphs[0]
 
   # Features
-  assert g.nodes['a1']['x'] != g.nodes['d1']['x']
+  assert g.nodes['a1']['x'] == 0
   assert g.nodes['a2']['x'] == 0
   assert g.nodes['b']['x'] == 0
   assert g.nodes['c']['x'] == 0
+  assert g.nodes['d1']['x'] == 0
   assert g.nodes['d2']['x'] == 0
   assert g.nodes['e']['x'] == 0
   assert g.nodes['g']['x'] == 0
 
-  assert g.nodes['s0']['x'] == 0
-  assert g.nodes['s1']['x'] == 0
+  assert g.nodes['s0']['x'] != g.nodes['s1']['x']
   assert g.nodes['s2']['x'] == 0
   assert g.nodes['s3']['x'] == 0
 
   # Labels
-  assert g.nodes['a1']['y'] == 1
-  assert g.nodes['a2']['y'] == 0
-  assert g.nodes['b']['y'] == 0
-  assert g.nodes['c']['y'] == 0
-  assert g.nodes['d1']['y'] == 1
-  assert g.nodes['d2']['y'] == 0
-  assert g.nodes['e']['y'] == 0
-  assert g.nodes['g']['y'] == 0
+  assert g.nodes['a1']['y'] == False
+  assert g.nodes['a2']['y'] == False
+  assert g.nodes['b']['y'] == False
+  assert g.nodes['c']['y'] == False
+  assert g.nodes['d1']['y'] == False
+  assert g.nodes['d2']['y'] == False
+  assert g.nodes['e']['y'] == False
+  assert g.nodes['g']['y'] == False
 
-  assert g.nodes['s0']['y'] == 0
-  assert g.nodes['s1']['y'] == 0
-  assert g.nodes['s2']['y'] == 0
-  assert g.nodes['s3']['y'] == 0
+  assert g.nodes['s0']['y'] == True
+  assert g.nodes['s1']['y'] == True
+  assert g.nodes['s2']['y'] == False
+  assert g.nodes['s3']['y'] == False
 
 
 def test_MakeSubexpressionsGraphs_wiki_without_subexpressions(
