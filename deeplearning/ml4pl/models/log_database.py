@@ -318,19 +318,23 @@ class Database(sqlutil.Database):
       q = q.filter(Parameter.type == ParameterType.MODEL_FLAG)
       return {param.parameter: param.value for param in q.all()}
 
-  def ParametersToDataFrame(self, run_id: str, type: str):
+  def ParametersToDataFrame(self, run_id: str, parameter_type: str):
     """Return a table of parameters of the given type for the specified run.
 
     Args:
       run_id: The run ID to return the parameters of.
-      type: The type of parameter to return.
+      parameter_type: The type of parameter to return.
 
     Returns:
       A pandas dataframe.
     """
     with self.Session() as session:
-      q = session.query(Parameter.parameter, Parameter.value)
+      q = session.query(Parameter.parameter,
+                        Parameter.pickled_value.label('value'))
       q = q.filter(Parameter.run_id == run_id)
-      q = q.filter(Parameter.type == type)
+      q = q.filter(Parameter.type == parameter_type)
       q = q.order_by(Parameter.parameter)
-      return pdutil.QueryToDataFrame(session, q).set_index('parameter')
+      df = pdutil.QueryToDataFrame(session, q).set_index('parameter')
+      # Un-pickle the parameter values:
+      df['value'] = [pickle.loads(x) for x in df['value'].values]
+      return df
