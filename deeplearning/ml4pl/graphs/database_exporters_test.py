@@ -28,7 +28,7 @@ def bytecode_db_512(
     session.add_all([
         bytecode_database.LlvmBytecode(
             source_name='foo',
-            relpath='bar',
+            relpath=f'bar_{i}.c',
             language='c',
             cflags='',
             charcount=i,

@@ -1,5 +1,4 @@
 """Unit tests for //deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph."""
-import networkx as nx
 import pytest
 from labm8 import app
 from labm8 import test
@@ -7,75 +6,6 @@ from labm8 import test
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph
 
 FLAGS = app.FLAGS
-
-
-def test_ControlFlowGraph_IsReachable_reachable():
-  """Test reachable node."""
-  g = control_flow_graph.ControlFlowGraph()
-  g.add_edge(0, 1)
-  assert g.IsReachable(0, 1)
-
-
-def test_ControlFlowGraph_IsReachable_indirectly_reachable():
-  """Test indirectly reachable node."""
-  g = control_flow_graph.ControlFlowGraph()
-  g.add_edge(0, 1)
-  g.add_edge(1, 2)
-  assert g.IsReachable(0, 2)
-
-
-def test_ControlFlowGraph_IsReachable_unreachable():
-  """Test unreachable node."""
-  g = control_flow_graph.ControlFlowGraph()
-  g.add_edge(0, 1)
-  assert not g.IsReachable(1, 0)
-
-
-def test_ControlFlowGraph_IsReachable_non_existent_node_raises_error():
-  """Test that error is raised if node is not in graph."""
-  g = control_flow_graph.ControlFlowGraph()
-  with pytest.raises(nx.exception.NetworkXError):
-    g.IsReachable(1, 0)
-
-
-# TODO(cec): Add more tests for IsReachable using common real-world graphs,
-# e.g. for loop.
-
-
-def test_ControlFlowGraph_Reachables_empty_graph():
-  """An empty graph has no reachables."""
-  g = control_flow_graph.ControlFlowGraph()
-  assert list(g.Reachables(0)) == []
-
-
-def test_ControlFlowGraph_Reachables_simple_graph():
-  """An empty graph has no reachables."""
-  g = control_flow_graph.ControlFlowGraph()
-  # Graph:
-  #
-  #   A  ->  B  ->  C
-  g.add_edge(0, 1)
-  g.add_edge(1, 2)
-  assert list(g.Reachables(0)) == [False, True, True]
-  assert list(g.Reachables(1)) == [False, False, True]
-  assert list(g.Reachables(2)) == [False, False, False]
-
-
-def test_ControlFlowGraph_Reachables_back_edge():
-  """Test reachability with a back edge in the graph."""
-  g = control_flow_graph.ControlFlowGraph()
-  # Graph:
-  #
-  #   A  ->  B  ->  C
-  #   ^      |
-  #   +------+
-  g.add_edge(0, 1)
-  g.add_edge(1, 0)
-  g.add_edge(1, 2)
-  # FIXME(cec): I don't believe these values. Isn't A reachable from A?
-  assert list(g.Reachables(0)) == [False, True, True]
-  assert list(g.Reachables(1)) == [True, False, True]
-  assert list(g.Reachables(2)) == [False, False, False]
 
 
 def test_ToSuccessorsString_straight_line_graph():

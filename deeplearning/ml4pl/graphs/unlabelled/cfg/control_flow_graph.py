@@ -74,16 +74,6 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   def __init__(self, name: str = 'cfg'):
     super(ControlFlowGraph, self).__init__(name=name)
 
-  def IsReachable(self, src, dst) -> bool:
-    """Return whether dst node is reachable from src."""
-    # TODO(cec): It seems that descendants() does not include self loops, so
-    # test for the node in both descendants and self loops.
-    return dst in nx.descendants(self, src)
-
-  def Reachables(self, src) -> typing.Iterator[bool]:
-    """Return whether each node is reachable from the src node."""
-    return (self.IsReachable(src, dst) for dst in self.nodes)
-
   def ToSuccessorsString(self) -> str:
     """Format graph as a sequence of node descendants lists."""
     ret = []
@@ -327,8 +317,8 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
     # Compare node data.
     for i in self.nodes:
-      # TODO(cec): We may want to exclude the 'name' attribute from comparisons,
-      # assuming it has no logical meaning.
+      # We may want to exclude the 'name' attribute from comparisons, assuming
+      # it has no logical meaning.
       if self.nodes[i] != other.nodes[i]:
         return False
 

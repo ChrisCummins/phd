@@ -14,8 +14,8 @@ py_library(
 )
 
 py_binary(
-    name = "ggnn_node_classifier",
-    srcs = ["ggnn_node_classifier.py"],
+    name = "ggnn",
+    srcs = ["ggnn.py"],
     visibility = ["//visibility:public"],
     deps = [
         ":ggnn_base",
@@ -30,11 +30,11 @@ py_binary(
 )
 
 py_test(
-    name = "ggnn_node_classifier_smoke_test",
+    name = "ggnn_smoke_test",
     size = "large",
-    srcs = ["ggnn_node_classifier_smoke_test.py"],
+    srcs = ["ggnn_smoke_test.py"],
     deps = [
-        ":ggnn_node_classifier",
+        ":ggnn",
         "//deeplearning/ml4pl/models:classifier_smoke_tester",
         "//labm8:app",
         "//labm8:test",

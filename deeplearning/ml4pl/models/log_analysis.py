@@ -35,8 +35,8 @@ class RunLogAnalyzer(object):
         message_passing_step_count=1)
 
     with self.log_db.Session() as session:
-      num_logs = session.query(log_database.BatchLog.run_id) \
-        .filter(log_database.BatchLog.run_id == self.run_id) \
+      num_logs = session.query(log_database.BatchLogMeta.run_id) \
+        .filter(log_database.BatchLogMeta.run_id == self.run_id) \
         .count()
       if not num_logs:
         raise ValueError(f"Run `{self.run_id}` not found in log database")
@@ -93,7 +93,7 @@ class RunLogAnalyzer(object):
 
     return self.GetEpochLogs(epoch_num)
 
-  def ReconstructBatchDict(self, log: log_database.BatchLog):
+  def ReconstructBatchDict(self, log: log_database.BatchLogMeta):
     """Reconstruct the batch dict for the given log."""
     with prof.Profile(lambda t: ('Reconstructed batch dict with '
                                  f'{batch_dict["graph_count"]} graphs')):
@@ -130,9 +130,9 @@ class RunLogAnalyzer(object):
     random_row = batches.iloc[random.randint(0, len(batches) - 1)]
 
     with self.log_db.Session() as session:
-      log = session.query(log_database.BatchLog) \
-        .filter(log_database.BatchLog.run_id == self.run_id) \
-        .filter(log_database.BatchLog.global_step == random_row.global_step) \
+      log = session.query(log_database.BatchLogMeta) \
+        .filter(log_database.BatchLogMeta.run_id == self.run_id) \
+        .filter(log_database.BatchLogMeta.global_step == random_row.global_step) \
         .one()
 
       batch_dict = self.ReconstructBatchDict(log)

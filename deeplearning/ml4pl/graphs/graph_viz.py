@@ -46,14 +46,23 @@ def _NodeShape(data):
 def _EdgeColor(data):
   """Helper callback to set default edge colors."""
   flow = data.get('flow')
-  if flow == 'control':
+  if flow == 'control' or flow == 'backward_control':
     return 'blue'
-  elif flow == 'data':
+  elif flow == 'data' or flow == 'backward_data':
     return 'red'
-  elif flow == 'call':
+  elif flow == 'call' or flow == 'backward_call':
     return 'green'
   else:
     return 'black'
+
+
+def _EdgeStyle(data):
+  """Helper callback to set default edge styles."""
+  flow = data.get('flow')
+  if flow in {'backward_control', 'backward_data', 'backward_call'}:
+    return 'dashed'
+  else:
+    return 'solid'
 
 
 def GraphToDot(g: nx.Graph,
@@ -62,7 +71,7 @@ def GraphToDot(g: nx.Graph,
                node_color: StringOrCallback = 'white',
                edge_label: KeyOrCallback = 'position',
                edge_color: StringOrCallback = _EdgeColor,
-               edge_style: StringOrCallback = 'solid') -> str:
+               edge_style: StringOrCallback = _EdgeStyle) -> str:
   """Render the dot visualization of the graph.
 
   Args:

@@ -79,8 +79,8 @@ def AnnotateLiveness(g: nx.MultiDiGraph,
     # No need to visit predecessors if the in-set is non-empty and has not
     # changed.
     #
-    # TODO(cec): Is it possible to exit early when root_node is not the entry
-    # block?
+    # TODO(github.com/ChrisCummins/ml4pl/issues/2): Is it possible to exit early
+    # when root_node is not the entry block?
     if not new_in_set or new_in_set != in_sets[node]:
       work_list.extend([p for p in predecessors if p not in work_list])
 

@@ -1,5 +1,4 @@
 """Base class for implementing classifier models."""
-import pathlib
 import pickle
 import random
 import time
@@ -7,6 +6,7 @@ import typing
 
 import numpy as np
 import sklearn.metrics
+import sqlalchemy as sql
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import decorators
@@ -57,7 +57,8 @@ app.DEFINE_integer("random_seed", 42, "A random seed value.")
 
 app.DEFINE_input_path(
     "embedding_path",
-    bazelutil.DataPath('phd/deeplearning/ncc/published_results/emb.p'),
+    bazelutil.DataPath('phd/deeplearning/ml4pl/graphs/unlabelled/cdfg/'
+                       'node_embeddings/inst2vec_augmented_embeddings.pickle'),
     "The path of the embeddings file to use.")
 
 app.DEFINE_string(
@@ -87,8 +88,12 @@ app.DEFINE_integer(
     'Use this flag to limit the maximum number of instances used in a single '
     'validation epoch.')
 
-app.DEFINE_input_path("restore_model", None,
-                      "An optional file to restore the model from.")
+app.DEFINE_input_path(
+    "restore_model", None,
+    "Select a model checkpoint to restore the model state from. The checkpoint "
+    "is identified by a run ID and epoch number, in the format "
+    "--restore_model=<run_id>:<epoch_num>. Model checkpoints are loaded from "
+    "the log database.")
 
 app.DEFINE_boolean(
     "test_only", False,
@@ -126,11 +131,12 @@ class ClassifierBase(object):
     InitializeModel()
     ModelDataToSave()
     LoadModelData()
+    CheckThatModelFlagsAreEquivalent()
   """
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str
-  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, typing.Any]]:
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
@@ -150,7 +156,7 @@ class ClassifierBase(object):
     y_true_1hot: np.array  # Shape [num_labels,num_classes]
     y_pred_1hot: np.array  # Shape [num_labels,num_classes]
 
-  def RunMinibatch(self, log: log_database.BatchLog,
+  def RunMinibatch(self, log: log_database.BatchLogMeta,
                    batch: typing.Any) -> MinibatchResults:
     """Process a mini-batch of data using the model.
 
@@ -174,6 +180,7 @@ class ClassifierBase(object):
   def __init__(self, db: graph_database.Database,
                log_db: log_database.Database):
     """Constructor. Subclasses should call this first."""
+    self._initialized = False  # Set by LoadModel() or InitializeModel()
     self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
                         f"{system.HOSTNAME}")
     app.Log(1, "Run ID: %s", self.run_id)
@@ -182,7 +189,6 @@ class ClassifierBase(object):
     self.stats = self.batcher.stats
 
     self.working_dir = FLAGS.working_dir
-    self.best_model_file = self.working_dir / f'{self.run_id}.best_model.pickle'
     self.working_dir.mkdir(exist_ok=True, parents=True)
 
     # Write app.Log() calls to file.
@@ -206,7 +212,6 @@ class ClassifierBase(object):
     # Progress counters. These are saved and restored from file.
     self.epoch_num = 1
     self.global_training_step = 0
-    self.best_epoch_validation_accuracy = 0
     self.best_epoch_num = 0
 
   @decorators.memoized_property
@@ -222,15 +227,27 @@ class ClassifierBase(object):
 
   def RunEpoch(self, epoch_type: str,
                group: typing.Optional[str] = None) -> float:
-    """Run the model with the given epoch."""
+    """Run the model with the given epoch.
+
+    Args:
+      epoch_type: The type of epoch. One of {train,val,test}.
+      group: The dataset group to use. This is the GraphMeta.group column that
+        is loaded. Defaults to `epoch_type`.
+
+    Returns:
+      The average accuracy of the model over all mini-batches.
+    """
+    if not self._initialized:
+      raise TypeError("RunEpoch() before model initialized")
+
     if epoch_type not in {"train", "val", "test"}:
-      raise ValueError(f"Unknown epoch type `{type}`. Expected one of "
-                       "{train,val,test}")
+      raise TypeError(f"Unknown epoch type `{type}`. Expected one of "
+                      "{train,val,test}")
     group = group or epoch_type
 
     epoch_accuracies = []
 
-    batch_type = typing.Tuple[log_database.BatchLog, typing.Any]
+    batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type, group), max_queue_size=5)
 
@@ -246,7 +263,7 @@ class ClassifierBase(object):
       log.global_step = self.global_training_step
       log.run_id = self.run_id
 
-      targets, predictions = self.RunMinibatch(log, feed_dict=batch_data)
+      targets, predictions = self.RunMinibatch(log, batch_data)
 
       # Compute statistics.
       y_true = np.argmax(targets, axis=1)
@@ -311,7 +328,8 @@ class ClassifierBase(object):
       The best validation accuracy of the model.
     """
     # We train on everything except the validation and test data.
-    train_groups = set(self.batcher.stats.groups) - set([val_group, test_group])
+    train_groups = list(
+        set(self.batcher.stats.groups) - {val_group, test_group})
 
     for epoch_num in range(self.epoch_num, num_epochs + 1):
       self.epoch_num = epoch_num
@@ -329,23 +347,25 @@ class ClassifierBase(object):
               "accuracy: %.2f%%", epoch_num,
               humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
 
+      # Get the current best validation accurcy now before saving the model,
+      # as that may become the new best.
+      previous_best_val_acc = self.best_epoch_validation_accuracy
+      self.SaveModel(validation_accuracy=val_acc)
+
       # Save the model when validation accuracy improves.
-      if val_acc > self.best_epoch_validation_accuracy:
-        self.SaveModel(self.best_model_file)
+      if val_acc > previous_best_val_acc:
         # Compute the ratio of the new best validation accuracy against the
         # old best validation accuracy.
-        if self.best_epoch_validation_accuracy:
+        if previous_best_val_acc:
           accuracy_ratio = (
               val_acc / max(self.best_epoch_validation_accuracy, SMALL_NUMBER))
           relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
         else:
           relative_increase = ''
-        app.Log(
-            1, "Best epoch so far, validation accuracy increased "
-            "+%.3f%%%s. Saving to '%s'",
-            (val_acc - self.best_epoch_validation_accuracy) * 100,
-            relative_increase, self.best_model_file)
-        self.best_epoch_validation_accuracy = val_acc
+        app.Log(1, "Best epoch so far, validation accuracy increased "
+                "+%.3f%%%s",
+                (val_acc - self.best_epoch_validation_accuracy) * 100,
+                relative_increase)
         self.best_epoch_num = epoch_num
 
         # Run on test set if we haven't already.
@@ -361,9 +381,23 @@ class ClassifierBase(object):
 
     return self.best_epoch_validation_accuracy
 
+  @property
+  def best_epoch_validation_accuracy(self) -> float:
+    with self.log_db.Session() as session:
+      q = session.query(log_database.ModelCheckpointMeta.validation_accuracy)
+      q = q.filter(log_database.ModelCheckpointMeta.run_id == self.run_id)
+      q = q.order_by(
+          log_database.ModelCheckpointMeta.validation_accuracy.desc())
+      q = q.limit(1)
+      best = q.first()
+      if best:
+        return best.validation_accuracy
+      else:
+        return 0
+
   def InitializeModel(self) -> None:
     """Initialize a new model state."""
-    pass
+    self._initialized = True
 
   def ModelDataToSave(self) -> None:
     return None
@@ -371,38 +405,108 @@ class ClassifierBase(object):
   def LoadModelData(self, data_to_load: typing.Any) -> None:
     return None
 
-  def SaveModel(self, path: pathlib.Path) -> None:
-    data_to_save = {
-        "flags": app.FlagsToDict(json_safe=True),
-        "model_flags": self._ModelFlagsToDict(),
-        "model_data": self.ModelDataToSave(),
-        "build_info": pbutil.ToJson(build_info.GetBuildInfo()),
-        "epoch_num": self.epoch_num,
-        "global_training_step": self.global_training_step,
-        "best_epoch_validation_accuracy": self.best_epoch_validation_accuracy,
-        "best_epoch_num": self.best_epoch_num,
-    }
-    with open(path, "wb") as out_file:
-      pickle.dump(data_to_save, out_file, pickle.HIGHEST_PROTOCOL)
+  def SaveModel(self, validation_accuracy: float) -> None:
+    # Compute the data to save first.
+    data_to_save = self.ModelDataToSave()
+
+    with self.log_db.Session(commit=True) as session:
+      # Check for an existing model with this state.
+      existing = session.query(log_database.ModelCheckpointMeta.id) \
+        .filter(log_database.ModelCheckpointMeta.run_id == self.run_id) \
+        .filter(log_database.ModelCheckpointMeta.epoch == self.epoch_num) \
+        .first()
+
+      # Delete any existing model checkpoint with this state.
+      if existing:
+        app.Log(1, "Replacing existing model checkpoint")
+        delete = sql.delete(log_database.ModelCheckpointMeta) \
+          .where(log_database.ModelCheckpointMeta.id == existing.id)
+        self.log_db.connection.execute(delete)
+
+      # Add the new checkpoint.
+      session.add(
+          log_database.ModelCheckpointMeta(
+              run_id=self.run_id,
+              epoch=self.epoch_num,
+              global_step=self.global_training_step,
+              validation_accuracy=validation_accuracy,
+              model_checkpoint=log_database.ModelCheckpoint(
+                  pickled_data=pickle.dumps(data_to_save))))
+
+  def LoadModel(self, run_id: str, epoch_num: int) -> None:
+    """Load and restore the model from the given model file.
+
+    Args:
+      run_id: The run ID of the model to checkpoint to restore.
+      epoch_num: The epoch number of the checkpoint to restore.
+
+    Raises:
+      LookupError: If no corresponding entry in the checkpoint table exists.
+      EnvironmentError: If the flags in the saved model do not match the current
+        model flags.
+    """
+    with self.log_db.Session() as session:
+      # Fetch the corresponding checkpoint from the database.
+      q = session.query(log_database.ModelCheckpointMeta)
+      q = q.filter(log_database.ModelCheckpointMeta.run_id == run_id)
+      q = q.filter(log_database.ModelCheckpointMeta.epoch == epoch_num)
+      q = q.options(
+          sql.orm.joinedload(log_database.ModelCheckpointMeta.model_checkpoint))
+      checkpoint: typing.Optional[log_database.ModelCheckpointMeta] = q.first()
+
+      if not checkpoint:
+        raise LookupError(f"No checkpoint found with run id `{run_id}` at "
+                          f"epoch {epoch_num}")
+
+      # Assert that we got the same model configuration.
+      # Flag values found in the saved file but not present currently are ignored.
+      flags = self._ModelFlagsToDict()
+      saved_flags = self.log_db.ModelFlagsToDict(run_id)
+      if not saved_flags:
+        raise LookupError("Unable to load model flags for run id `{run_id}`, "
+                          "but found a model checkpoint. This means that your "
+                          "log database is probably corrupt :-( "
+                          "sorry aboot that")
+      flag_names = set(flags.keys())
+      saved_flag_names = set(saved_flags.keys())
+      if flag_names != saved_flag_names:
+        raise EnvironmentError(
+            "Saved flags do not match current flags. "
+            f"Flags not found in saved flags: {flag_names - saved_flag_names}."
+            f"Saved flags not present now: {saved_flag_names - flag_names}")
+      self.CheckThatModelFlagsAreEquivalent(flags, saved_flags)
+
+      # Restore state from checkpoint.
+      self.epoch_num = checkpoint.epoch
+      # We assume that the model we are loading has a higher validation accuracy
+      # than current. Since best_epoch_num is used only for computing epoch
+      # patience, I think this is okay.
+      self.best_epoch_num = checkpoint.epoch
+      self.global_training_step = checkpoint.global_step
+      self.LoadModelData(checkpoint.data)
+
+    self._initialized = True
 
   def _CreateExperimentalParameters(self):
     """Private helper method to populate parameters table."""
 
-    def ToParams(type_name, key_value_dict):
+    def ToParams(type_: log_database.ParameterType, key_value_dict):
       return [
           log_database.Parameter(
               run_id=self.run_id,
-              type=type_name,
+              type=type_,
               parameter=str(key),
-              value=str(value),
+              pickled_value=pickle.dumps(value),
           ) for key, value in key_value_dict.items()
       ]
 
     with self.log_db.Session(commit=True) as session:
       session.add_all(
-          ToParams('flags', app.FlagsToDict()) +
-          ToParams('modeL_flags', self._ModelFlagsToDict()) +
-          ToParams('build_info', pbutil.ToJson(build_info.GetBuildInfo())))
+          ToParams(log_database.ParameterType.FLAG, app.FlagsToDict()) +
+          ToParams(log_database.ParameterType.MODEL_FLAG,
+                   self._ModelFlagsToDict()) +
+          ToParams(log_database.ParameterType.BUILD_INFO,
+                   pbutil.ToJson(build_info.GetBuildInfo())))
 
   def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
     for flag, flag_value in flags.items():
@@ -411,62 +515,14 @@ class ClassifierBase(object):
             f"Saved flag {flag} value does not match current value:"
             f"'{saved_flags[flag]}' != '{flag_value}'")
 
-  def LoadModel(self, path: pathlib.Path) -> None:
-    """Load and restore the model from the given model file.
-
-    Args:
-      path: The path of the file to restore from, as created by SaveModel().
-
-    Raises:
-      EnvironmentError: If the flags in the saved model do not match the current
-        model flags.
-    """
-    with prof.Profile(f"Read pickled model from `{path}`"):
-      with open(path, "rb") as in_file:
-        data_to_load = pickle.load(in_file)
-
-    # Restore progress counters.
-    self.epoch_num = data_to_load.get('epoch_num', 0)
-    self.global_training_step = data_to_load.get("global_training_step", 0)
-    self.best_epoch_validation_accuracy = data_to_load.get(
-        "best_epoch_validation_accuracy", 0)
-    self.best_epoch_num = data_to_load.get("best_epoch_num", 0)
-
-    # Assert that we got the same model configuration.
-    # Flag values found in the saved file but not present currently are ignored.
-    flags = self._ModelFlagsToDict()
-    saved_flags = data_to_load["model_flags"]
-    flag_names = set(flags.keys())
-    saved_flag_names = set(saved_flags.keys())
-    if flag_names != saved_flag_names:
-      raise EnvironmentError(
-          "Saved flags do not match current flags. "
-          f"Flags not found in saved flags: '{flag_names - saved_flag_names}'."
-          f"Saved flags not present now: '{saved_flag_names - flag_names}'")
-    self.CheckThatModelFlagsAreEquivalent(flags, saved_flags)
-
-    if 'model_data' in data_to_load:
-      model_data = data_to_load['model_data']
-    elif 'modeL_data' in data_to_load:
-      # Workaround for a typo in an earlier version of this script.
-      model_data = data_to_load['modeL_data']
-    else:
-      raise OSError("Model data not found in restore file with keys: "
-                    f"`{list(data_to_load.keys())}`")
-    self.LoadModelData(model_data)
-
   def _ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
-    """Return the flags which are """
-    return {
-        flag: jsonutil.JsonSerializable(getattr(FLAGS, flag))
+    """Return the flags which describe the model."""
+    model_flags = {
+        flag: getattr(FLAGS, flag)
         for flag in sorted(set(self.GetModelFlagNames()))
     }
-
-  def _GetEmbeddingsTable(self) -> np.array:
-    """Reading embeddings table"""
-    with prof.Profile(f"Read embeddings table `{FLAGS.embedding_path}`"):
-      with open(FLAGS.embedding_path, 'rb') as f:
-        return pickle.load(f)
+    # TODO(cec): Set database URL for input graphs.
+    return model_flags
 
 
 def Run(model_class):
@@ -482,8 +538,14 @@ def Run(model_class):
 
   # Restore or initialize the model:
   if FLAGS.restore_model:
+    try:
+      run_id, epoch_num = FLAGS.restore_model.split(":")
+      epoch_num = int(epoch_num)
+    except Exception as e:
+      raise app.UsageError(f"Invalid --restore_model=`{FLAGS.restore_model}`. "
+                           "Must be in the form <run_id>:<epoch_num>.")
     with prof.Profile('Restored model'):
-      model.LoadModel(FLAGS.restore_model)
+      model.LoadModel(run_id=run_id, epoch_num=epoch_num)
   else:
     with prof.Profile('Initialized model'):
       model.InitializeModel()

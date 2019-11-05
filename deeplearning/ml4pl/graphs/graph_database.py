@@ -29,8 +29,8 @@ Base = declarative.declarative_base()
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                          nullable=False)
 
 
 class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -62,12 +62,15 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The maximum value of the 'position' attribute of edges.
   edge_position_max: int = sql.Column(sql.Integer, nullable=False)
 
-  node_labels_dimensionality: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
-  graph_features_dimensionality: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
-  graph_labels_dimensionality: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
+  node_labels_dimensionality: int = sql.Column(sql.Integer,
+                                               default=0,
+                                               nullable=False)
+  graph_features_dimensionality: int = sql.Column(sql.Integer,
+                                                  default=0,
+                                                  nullable=False)
+  graph_labels_dimensionality: int = sql.Column(sql.Integer,
+                                                default=0,
+                                                nullable=False)
 
   # The loop connectedness (loop depth) of the graph. This is the largest number
   # of back edges found in any cycle-free path of the full flow graph.
@@ -80,16 +83,19 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The minimum number of message passing steps that are be required to produce
   # the labels from the features. E.g. for graph flooding problems, this value
   # will be the diameter of the graph.
-  data_flow_max_steps_required: int = sql.Column(
-      sql.Integer, default=0, nullable=False)
+  data_flow_max_steps_required: int = sql.Column(sql.Integer,
+                                                 default=0,
+                                                 nullable=False)
 
   date_added: datetime.datetime = sql.Column(
       sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
       nullable=False,
       default=labdate.GetUtcMillisecondsNow)
 
-  graph: 'Graph' = sql.orm.relationship(
-      'Graph', uselist=False, back_populates="meta", cascade="all")
+  graph: 'Graph' = sql.orm.relationship('Graph',
+                                        uselist=False,
+                                        back_populates="meta",
+                                        cascade="all")
 
   @property
   def data(self) -> typing.Any:
@@ -138,7 +144,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         node_labels_dimensionality=node_labels_dimensionality,
         graph_features_dimensionality=graph_features_dimensionality,
         graph_labels_dimensionality=graph_labels_dimensionality,
-        # TODO(cec): Compute loop connectedness and diameter later.
+        # TODO(github.com/ChrisCummins/ml4pl/issues/5): Compute loop stats.
         loop_connectedness=0,
         undirected_diameter=0,
         # loop_connectedness=query.LoopConnectedness(g),
@@ -180,8 +186,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
                                     if 'y' in g.nodes[node] else 0),
         graph_features_dimensionality=getattr(g, 'x', 0),
         graph_labels_dimensionality=getattr(g, 'y', 0),
-        # TODO(github.com/ChrisCummins/ml4pl/issues/5): Compute
-        # loop connectedness and diameter later.
+        # TODO(github.com/ChrisCummins/ml4pl/issues/5): Compute loop stats.
         loop_connectedness=0,
         undirected_diameter=0,
         # loop_connectedness=query.LoopConnectedness(g),
@@ -197,12 +202,15 @@ class Graph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   This is an opaque byte array that can be used as needed, e.g. for pickled
   graph tuples, networkx graphs, etc.
   """
-  id: int = sql.Column(
-      sql.Integer, sql.ForeignKey('graph_metas.id'), primary_key=True)
-  pickled_data: bytes = sql.Column(
-      sqlutil.ColumnTypes.LargeBinary(), nullable=False)
-  meta: GraphMeta = sql.orm.relationship(
-      'GraphMeta', back_populates="graph", uselist=False, cascade="all")
+  id: int = sql.Column(sql.Integer,
+                       sql.ForeignKey('graph_metas.id'),
+                       primary_key=True)
+  pickled_data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                   nullable=False)
+  meta: GraphMeta = sql.orm.relationship('GraphMeta',
+                                         back_populates="graph",
+                                         uselist=False,
+                                         cascade="all")
 
   @property
   def data(self) -> typing.Any:

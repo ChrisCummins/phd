@@ -137,6 +137,12 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
           tf.compat.v1.placeholder(tf.int32, [None, 2], name=f"adjacency_e{i}")
           for i in range(stats.edge_type_count)
       ],
+      "edge_positions": [
+          tf.compat.v1.placeholder(dtype=tf.int32,
+                                   shape=[None],
+                                   name=f'edge_positions_e{i}')
+          for i in range(stats.edge_type_count)
+      ],
       'incoming_edge_counts':
       tf.compat.v1.placeholder(tf.float32, [None, stats.edge_type_count],
                                name="incoming_edge_counts"),
@@ -152,26 +158,31 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
       "output_layer_dropout_keep_prob":
       tf.compat.v1.placeholder(tf.float32, [],
                                name="output_layer_dropout_keep_prob"),
-      "is_training": tf.compat.v1.placeholder(dtype=tf.bool, shape=[], name='is_training'),
-      "edge_positions": tf.compat.v1.placeholder(dtype=tf.int32, shape=[None], name='edge_positions'),
+      "is_training":
+      tf.compat.v1.placeholder(dtype=tf.bool, shape=[], name='is_training'),
   }
 
-  if stats.node_embedding_dimensionality:
-    placeholders['node_x'] = tf.compat.v1.placeholder(
-        dtype=tf.int32,
-        shape=[None],
-        name="node_x")
-    placeholders['raw_node_output_features'] = tf.compat.v1.placeholder(
-      stats.node_embedding_dtype,
-      [None, FLAGS.hidden_size],
+  placeholders['node_x'] = tf.compat.v1.placeholder(dtype=tf.int32,
+                                                    shape=[None],
+                                                    name="node_x")
+  placeholders['raw_node_output_features'] = tf.compat.v1.placeholder(
+      stats.node_embedding_dtype, [None, stats.node_embedding_dimensionality],
       name="raw_node_output_features")
+
+  # TODO(cec): Is there ever a case where --hiden_size does not need to equal
+  # node_embedding_dimensionality? If not, then lets remove the hidden_size
+  # flag and instead derive it from node_embedding_dimensionality.
+  if FLAGS.hidden_size != stats.node_embedding_dimensionality:
+    raise ValueError(
+        f"--hidden_size={FLAGS.hidden_size} != "
+        f"node_embedding_dimensionality={stats.node_embedding_dimensionality}")
 
   if stats.node_labels_dimensionality:
     placeholders['node_y'] = tf.compat.v1.placeholder(
         stats.node_labels_dtype, [None, stats.node_labels_dimensionality],
         name="node_y")
 
-  if stats.node_embedding_dimensionality:
+  if stats.graph_features_dimensionality:
     placeholders['graph_x'] = tf.compat.v1.placeholder(
         stats.graph_features_dtype, [None, stats.graph_features_dimensionality],
         name="graph_x")
@@ -179,7 +190,8 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
   if stats.graph_labels_dimensionality:
     placeholders['graph_y'] = tf.compat.v1.placeholder(
         #stats.graph_labels_dtype, [None, stats.graph_labels_dimensionality],
-        stats.graph_labels_dtype, [None, 2],
+        stats.graph_labels_dtype,
+        [None, 2],
         name="graph_y")
 
   return placeholders
@@ -201,12 +213,6 @@ def BatchDictToFeedDict(
     The batch dictionary values, re-keyed by the corresponding values in the
     placeholders dictionary.
   """
-  #print("#######"*200)
-  #for b in batch:
-  #  print(b)
-  #  print(len(b))
-  #app.Log(1, "%s", batch)
-  #app.Log(1, "%s", placeholders)
   edge_type_count = len(batch.adjacency_lists)
 
   feed_dict = {
@@ -219,20 +225,10 @@ def BatchDictToFeedDict(
 
   for i in range(edge_type_count):
     feed_dict[placeholders["adjacency_lists"][i]] = batch.adjacency_lists[i]
-
-
+    feed_dict[placeholders["edge_positions"][i]] = batch.edge_positions[i]
 
   if batch.has_node_y:
     feed_dict[placeholders["node_y"]] = batch.node_y
-
-  #app.Log(1, "%s", batch.edge_positions)
-  if batch.has_edge_positions:
-    feed_dict[placeholders["edge_positions"]] = batch.edge_positions[i]
-
-
-  #if batch.has_edge_y:
-  #  for i in range(edge_type_count):
-  #    feed_dict[placeholders["edge_y"][i]] = batch.edge_y[i]
 
   if batch.has_graph_x:
     feed_dict[placeholders["graph_x"]] = batch.graph_x
@@ -292,7 +288,5 @@ def RunWithFetchDict(sess: tf.compat.v1.Session,
   """A wrapper around session run which uses a dictionary for the fetch list."""
   fetch_dict_keys = sorted(fetch_dict.keys())
   fetch_dict_values = [fetch_dict[k] for k in fetch_dict_keys]
-  app.Log(1, "%s", feed_dict)
-  print(list(feed_dict.keys()))
   values = sess.run(fetch_dict_values, feed_dict)
   return {fetch: value for fetch, value in zip(fetch_dict_keys, values)}

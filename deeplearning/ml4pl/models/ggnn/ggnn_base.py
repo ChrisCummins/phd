@@ -1,4 +1,5 @@
 """Base class for implementing gated graph neural networks."""
+import pickle
 import typing
 
 import numpy as np
@@ -43,7 +44,7 @@ app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_string(
-    "embeddings", "constant",
+    "embeddings", "finetune",
     "The type of embeddings to use. One of: {constant,finetune,random}.")
 classifier_base.MODEL_FLAGS.add("embeddings")
 
@@ -122,8 +123,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         self.ops["summary_accuracy"] = tf.summary.scalar("accuracy",
                                                          self.ops["accuracy"],
                                                          family='accuracy')
-        # TODO(cec): More tensorboard telemetry: input class distributions,
-        # predicted class distributions, etc.
 
         with prof.Profile('Make training step'), tf.compat.v1.variable_scope(
             "train_step"):
@@ -145,6 +144,32 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           tf.compat.v1.summary.FileWriter(tensorboard_dir / "test",
                                           self.sess.graph),
       }
+
+  def _GetEmbeddingsTable(self) -> np.array:
+    """Reading embeddings table"""
+    with open(FLAGS.embedding_path, 'rb') as f:
+      return pickle.load(f)
+
+  def _GetEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
+    """Read the embeddings table and return as a tensorflow variable."""
+    embeddings = self._GetEmbeddingsTable()
+    if FLAGS.embeddings == 'constant':
+      app.Log(1,
+              "Using pre-trained inst2vec embeddings without further training")
+      trainable = False
+    elif FLAGS.embeddings == 'finetune':
+      app.Log(1, "Fine-tuning inst2vec embeddings")
+      trainable = True
+    elif FLAGS.embeddings == 'random':
+      app.Log(1, "Initializing with random embeddings")
+      embeddings = np.random.rand(embeddings.shape)
+      trainable = True
+    else:
+      raise app.UsageError(f"--embeddings=`{FLAGS.embeddings}` unrecognized. "
+                           "Must be one of {constant,finetune,random}")
+    return tf.Variable(initial_value=embeddings,
+                       trainable=trainable,
+                       dtype=tf.float32)
 
   @property
   def message_passing_step_count(self) -> int:
@@ -226,7 +251,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     return fetch_dict
 
-  def RunMinibatch(self, log: log_database.BatchLog, feed_dict: typing.Any
+  def RunMinibatch(self, log: log_database.BatchLogMeta, feed_dict: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     if FLAGS.dynamic_unroll_multiple == 0 or log.type == "train":
       fetch_dict = {
@@ -264,12 +289,14 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       self.summary_writers[log.group].add_summary(
           fetch_dict["summary_accuracy"], self.global_training_step)
 
-    # TODO(cec): Add support for edge labels.
-    targets = (feed_dict[self.placeholders['node_y']]
-               if 'node_y' in self.placeholders else
-               feed_dict[self.placeholders['graph_y']])
-
     log.loss = float(fetch_dict['loss'])
+
+    if 'node_y' in self.placeholders:
+      targets = feed_dict[self.placeholders['node_y']]
+    elif 'graph_y' in self.placeholders:
+      targets = feed_dict[self.placeholders['graph_y']]
+    else:
+      raise TypeError("Neither node_y or graph_y in placeholders dict!")
 
     return self.MinibatchResults(y_true_1hot=targets,
                                  y_pred_1hot=fetch_dict['predictions'])
@@ -277,9 +304,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()
     with self.graph.as_default():
-      init_op = tf.group(tf.global_variables_initializer(),
-                         tf.local_variables_initializer())
-      self.sess.run(init_op)
+      self.sess.run(
+          tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer()))
 
   def ModelDataToSave(self) -> typing.Any:
     with self.graph.as_default():

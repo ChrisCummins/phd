@@ -16,6 +16,7 @@ from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
 from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
+from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
 
 app.DEFINE_database('input_db',
                     graph_database.Database,
@@ -49,6 +50,8 @@ def GetAnnotatedGraphGenerator():
     return data_dependence.MakeDataDependencyGraphs
   elif FLAGS.analysis == 'liveness':
     return liveness.MakeLivenessGraphs
+  elif FLAGS.analysis == 'subexpressions':
+    return subexpressions.MakeSubexpressionsGraphs
   else:
     raise app.UsageError(f"Unknown analysis type `{FLAGS.analysis}`")
 

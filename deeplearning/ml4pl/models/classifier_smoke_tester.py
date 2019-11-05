@@ -85,12 +85,15 @@ def RunSmokeTest(
     with prof.Profile("Created model"):
       model: classifier_base.ClassifierBase = model_class(graph_db, log_db)
 
+    with prof.Profile("Initialized model"):
+      model.InitializeModel()
+
     with prof.Profile("Trained model"):
       model.Train(num_epochs=2)
 
     # Check a properties of logs.
     with log_db.Session() as session:
-      logs = session.query(log_database.BatchLog).all()
+      logs = session.query(log_database.BatchLogMeta).all()
       logs = sorted(logs, key=lambda log: log.epoch)
 
       # There should be at least 5 and no more than 6 logs:

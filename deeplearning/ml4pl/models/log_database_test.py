@@ -16,30 +16,30 @@ def db(tempdir: pathlib.Path):
   return log_database.Database(f'sqlite:///{tempdir}/db')
 
 
-def test_BatchLog_columns(db: log_database.Database):
+def test_BatchLogMeta_columns(db: log_database.Database):
   with db.Session(commit=True) as session:
-    log = log_database.BatchLog(run_id='20191023@foo',
-                                epoch=10,
-                                batch=0,
-                                global_step=1024,
-                                elapsed_time_seconds=.5,
-                                graph_count=100,
-                                node_count=500,
-                                loss=.25,
-                                precision=.5,
-                                recall=.5,
-                                f1=.5,
-                                accuracy=.75,
-                                type="train",
-                                group="0",
-                                instances=log_database.Instances())
+    log = log_database.BatchLogMeta(run_id='20191023@foo',
+                                    epoch=10,
+                                    batch=0,
+                                    global_step=1024,
+                                    elapsed_time_seconds=.5,
+                                    graph_count=100,
+                                    node_count=500,
+                                    loss=.25,
+                                    precision=.5,
+                                    recall=.5,
+                                    f1=.5,
+                                    accuracy=.75,
+                                    type="train",
+                                    group="0",
+                                    batch_log=log_database.BatchLog())
     log.graph_indices = [0, 1, 2, 3]
     log.predictions = np.array([0, 1, 2, 3])
     log.accuracies = np.array([True, False, False])
     session.add(log)
 
   with db.Session() as session:
-    log = session.query(log_database.BatchLog).first()
+    log = session.query(log_database.BatchLogMeta).first()
     assert log.run_id == '20191023@foo'
     assert log.epoch == 10
     assert log.batch == 0

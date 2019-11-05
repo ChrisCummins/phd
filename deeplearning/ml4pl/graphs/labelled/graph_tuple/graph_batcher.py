@@ -55,7 +55,7 @@ class GraphBatch(typing.NamedTuple):
   graph_count: int
 
   # A batch log.
-  log: log_database.BatchLog
+  log: log_database.BatchLogMeta
 
   # (optional) A list of node arrays of node labels.
   # Shape [node_count, node_label_dimensionality]
@@ -78,7 +78,7 @@ class GraphBatch(typing.NamedTuple):
   def has_graph_x(self) -> bool:
     """Return whether graph tuple has graph features."""
     return self.graph_x is not None
-  
+
   @property
   def has_edge_positions(self) -> bool:
     """Return whether graph tuple has graph features."""
@@ -156,10 +156,10 @@ class GraphBatch(typing.NamedTuple):
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLog(graph_count=0,
-                                node_count=0,
-                                group=graph.group,
-                                instances=log_database.Instances())
+    log = log_database.BatchLogMeta(graph_count=0,
+                                    node_count=0,
+                                    group=graph.group,
+                                    batch_log=log_database.BatchLog())
 
     graph_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
@@ -170,7 +170,7 @@ class GraphBatch(typing.NamedTuple):
 
     has_node_labels = stats.node_labels_dimensionality > 0
     has_graph_features = stats.graph_features_dimensionality > 0
-    has_graph_labels = True # stats.graph_labels_dimensionality > 0
+    has_graph_labels = stats.graph_labels_dimensionality > 0
 
     if has_node_labels:
       node_y = []

@@ -18,7 +18,7 @@ def db_512(tempdir: pathlib.Path) -> bytecode_database.Database:
     session.add_all([
         bytecode_database.LlvmBytecode(
             source_name='foo',
-            relpath='bar.c',
+            relpath=f'bar_{i}.c',
             language='c',
             cflags='',
             charcount=0,
@@ -27,7 +27,7 @@ def db_512(tempdir: pathlib.Path) -> bytecode_database.Database:
             clang_returncode=0,
             error_message='',
             bytecode_sha1='',
-        ) for _ in range(512)
+        ) for i in range(512)
     ])
   return db
 

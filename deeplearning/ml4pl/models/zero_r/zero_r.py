@@ -25,7 +25,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str
-  ) -> typing.Iterable[typing.Tuple[log_database.BatchLog, np.array]]:
+  ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, np.array]]:
     options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
                                               group=group)
     max_instance_count = (
@@ -41,7 +41,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
         app.FatalWithoutStackTrace("Could not determine label type")
       yield batch_tuple.log, targets
 
-  def RunMinibatch(self, log: log_database.BatchLog, targets: np.array
+  def RunMinibatch(self, log: log_database.BatchLogMeta, targets: np.array
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     log.loss = 0
     # "Training" step updates the class frequency counts.
