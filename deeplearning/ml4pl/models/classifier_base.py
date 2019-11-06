@@ -203,8 +203,7 @@ class ClassifierBase(object):
     app.Log(1, "Build information: %s",
             jsonutil.format_json(pbutil.ToJson(build_info.GetBuildInfo())))
 
-    app.Log(1, "Model flags: %s",
-            jsonutil.format_json(self._ModelFlagsToDict()))
+    app.Log(1, "Model flags: %s", jsonutil.format_json(self.ModelFlagsToDict()))
 
     random.seed(FLAGS.random_seed)
     np.random.seed(FLAGS.random_seed)
@@ -463,7 +462,7 @@ class ClassifierBase(object):
 
       # Assert that we got the same model configuration.
       # Flag values found in the saved file but not present currently are ignored.
-      flags = self._ModelFlagsToDict()
+      flags = self.ModelFlagsToDict()
       saved_flags = self.log_db.ModelFlagsToDict(run_id)
       if not saved_flags:
         raise LookupError("Unable to load model flags for run id `{run_id}`, "
@@ -510,7 +509,7 @@ class ClassifierBase(object):
       session.add_all(
           ToParams(log_database.ParameterType.FLAG, app.FlagsToDict()) +
           ToParams(log_database.ParameterType.MODEL_FLAG,
-                   self._ModelFlagsToDict()) +
+                   self.ModelFlagsToDict()) +
           ToParams(log_database.ParameterType.BUILD_INFO,
                    pbutil.ToJson(build_info.GetBuildInfo())))
 
@@ -521,13 +520,13 @@ class ClassifierBase(object):
             f"Saved flag {flag} value does not match current value:"
             f"'{saved_flags[flag]}' != '{flag_value}'")
 
-  def _ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
+  def ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
     """Return the flags which describe the model."""
     model_flags = {
         flag: getattr(FLAGS, flag)
         for flag in sorted(set(self.GetModelFlagNames()))
     }
-    # TODO(cec): Set database URL for input graphs.
+    model_flags['model'] = type(self).__name__
     return model_flags
 
 
