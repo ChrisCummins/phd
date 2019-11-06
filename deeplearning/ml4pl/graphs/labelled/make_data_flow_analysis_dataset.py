@@ -122,7 +122,7 @@ def _ProcessInputs(
   false, true = GetFalseTrueType()
 
   graph_metas = []
-  for i in range(graphs_to_process):
+  for i in range(len(graphs_to_process)):
     input_graph_meta = graphs_to_process[i]
     graph = input_graph_meta.data  # Load pickled networkx graph.
 
