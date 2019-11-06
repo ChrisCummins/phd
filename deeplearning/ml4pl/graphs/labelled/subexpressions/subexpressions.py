@@ -88,7 +88,7 @@ def AnnotateCommonSubexpressions(g: nx.MultiDiGraph,
   """
   # Mark the root expression.
   root_node = random.choice(expression_sets[root_expression])
-  g.nodes[root_node]['x'] = [g.nodes[root_node]['x'], 1]
+  g.nodes[root_node]['x'] = [g.nodes[root_node]['x'][0], 1]
 
   for node in expression_sets[root_expression]:
     g.nodes[node]['y'] = true

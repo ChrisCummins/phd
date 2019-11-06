@@ -45,7 +45,7 @@ def AnnotateAliasSet(g: nx.MultiDiGraph,
   for _, data in g.nodes(data=True):
     data[x_label] = [data[x_label], 0]
     data[y_label] = false
-  g.nodes[root_identifier][x_label] = [g.nodes[root_identifier][x_label], 1]
+  g.nodes[root_identifier][x_label] = [g.nodes[root_identifier][x_label][0], 1]
 
   # Mark the nodes in the alias set.
   for pointer in identifiers_in_set:
