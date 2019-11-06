@@ -83,6 +83,7 @@ class UnlabelledGraphExporter(database_exporters.BytecodeDatabaseExporterBase):
 
 
 def _UnlabelledGraphExport(input_db, output_db):
+  """The dataset export function."""
   groups = splitters.GetGroupsFromFlags(input_db)
   exporter = UnlabelledGraphExporter(input_db, output_db)
   exporter.ExportGroups(groups)
