@@ -310,6 +310,53 @@ class Database(sqlutil.Database):
 
       return df
 
+  def DeleteLogsForRunId(self, run_id: str) -> None:
+    """Delete the logs for this run.
+
+    This deletes the batch logs, model checkpoints, and model parameters.
+
+    Args:
+      run_id: The ID of the run to delete.
+    """
+    # Because the cascaded delete is broken, we first delete the BatchLog child
+    # rows, then the parents.
+    with self.Session() as session:
+      query = session.query(BatchLogMeta.id) \
+        .filter(BatchLogMeta.run_id == run_id)
+      ids_to_delete = [row.id for row in query]
+
+    app.Log(1, "Deleting %s batch logs", humanize.Commas(len(ids_to_delete)))
+    delete = sql.delete(BatchLog) \
+      .where(BatchLog.id.in_(ids_to_delete))
+    self.engine.execute(delete)
+
+    delete = sql.delete(BatchLogMeta) \
+      .where(BatchLogMeta.run_id == run_id)
+    self.engine.execute(delete)
+
+    # Because the cascaded delete is broken, we first delete the checkpoint
+    # child rows, then the parents.
+    with self.Session() as session:
+      query = session.query(ModelCheckpointMeta.id) \
+        .filter(ModelCheckpointMeta.run_id == run_id)
+      ids_to_delete = [row.id for row in query]
+
+    app.Log(1, "Deleting %s model checkpoints",
+            humanize.Commas(len(ids_to_delete)))
+    delete = sql.delete(ModelCheckpoint) \
+      .where(ModelCheckpoint.id.in_(ids_to_delete))
+    self.engine.execute(delete)
+
+    delete = sql.delete(ModelCheckpointMeta) \
+      .where(ModelCheckpointMeta.run_id == run_id)
+    self.engine.execute(delete)
+
+    # Delete the parameters for this Run ID.
+    app.Log(1, "Deleting model parameters")
+    delete = sql.delete(Parameter) \
+      .where(Parameter.run_id == run_id)
+    self.engine.execute(delete)
+
   def ModelFlagsToDict(self, run_id: str):
     """Load the model flags for the given run ID to a {flag: value} dict."""
     with self.Session() as session:
