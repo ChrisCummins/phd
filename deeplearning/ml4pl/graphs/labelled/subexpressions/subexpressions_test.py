@@ -143,7 +143,7 @@ def test_MakeSubexpressionsGraphs_wiki(wiki: nx.MultiDiGraph):
 
 def test_MakeSubexpressionsGraphs_wiki_without_subexpressions(
     wiki_without_subexpressions: nx.MultiDiGraph):
-  """Test that graph without common subexpressions yields no graphs."""
+  """Test that graph without common subexpressions yields no outputs."""
   graphs = list(
       subexpressions.MakeSubexpressionsGraphs(wiki_without_subexpressions))
   assert len(graphs) == 0

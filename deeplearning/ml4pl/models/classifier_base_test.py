@@ -144,6 +144,17 @@ def test_LoadModel_unknown_saved_model_flag(tempdir2: pathlib.Path,
   assert 'a new flag' in str(e_ctx.value)
 
 
+def test_ModelFlagsToDict_subclass_model_name(tempdir2: pathlib.Path,
+                                              graph_db: graph_database.Database,
+                                              log_db: log_database.Database):
+  """Test that model name uses subclass name, not the base class."""
+  FLAGS.working_dir = tempdir2
+
+  model = MockModel(graph_db, log_db)
+  assert 'model' in model.ModelFlagsToDict()
+  assert model.ModelFlagsToDict()['model'] == 'MockModel'
+
+
 def test_Train(tempdir2: pathlib.Path, graph_db: graph_database.Database,
                log_db: log_database.Database):
   """Test that training terminates and bumps the epoch number."""
