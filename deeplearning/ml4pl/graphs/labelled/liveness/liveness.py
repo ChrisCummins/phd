@@ -101,9 +101,9 @@ def AnnotateLiveness(g: nx.MultiDiGraph,
 
   # Now that we've computed the liveness results, annotate the graph.
   for _, data in g.nodes(data=True):
-    data[x_label] = 0
+    data[x_label] = [data[x_label], 0]
     data[y_label] = false
-  g.nodes[root_node][x_label] = 1
+  g.nodes[root_node][x_label] = [g.nodes[root_node][x_label][0], 1]
 
   for node in out_sets[root_node]:
     g.nodes[node][y_label] = true
