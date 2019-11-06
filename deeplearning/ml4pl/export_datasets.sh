@@ -17,66 +17,28 @@ create_tarballs() {
     cd -
 }
 
-if [[ -f "$EXPORT/devmap_amd_$TIMESTAMP.db.tar.bz2" ]]; then
-    echo "Skipping $EXPORT/devmap_amd_$TIMESTAMP.db"
-else
-    rm -f "$EXPORT/devmap_amd_$TIMESTAMP.db"
+export_dataset() {
+  local dataset="$1"
+  echo "exporting ${dataset} ..."
+  if [[ -f "$EXPORT/${dataset}_$TIMESTAMP.db.tar.bz2" ]]; then
+    echo "Skipping $EXPORT/${dataset}_$TIMESTAMP.db"
+  else
+    rm -f "$EXPORT/${dataset}_$TIMESTAMP.db"
     bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db='file:///var/phd/db/cc1.mysql?ml4pl_devmap_amd?charset=utf8' \
-        --output_db="sqlite:////$EXPORT/devmap_amd_$TIMESTAMP.db"
-    create_tarballs
-fi
-
-if [[ -f "$EXPORT/devmap_nvidia_$TIMESTAMP.db.tar.bz2" ]]; then
-    echo "Skipping $EXPORT/devmap_nvidia_$TIMESTAMP.db"
-else
-    rm -f "$EXPORT/devmap_nvidia_$TIMESTAMP.db"
-    bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db='file:///var/phd/db/cc1.mysql?ml4pl_devmap_nvidia?charset=utf8' \
-        --output_db="sqlite:////$EXPORT/devmap_nvidia_$TIMESTAMP.db"
-    create_tarballs
-fi
-
-if [[ -f "$EXPORT/reachability_$TIMESTAMP.db.tar.bz2" ]]; then
-    echo "Skipping $EXPORT/reachability_$TIMESTAMP.db"
-else
-    rm -f "$EXPORT/reachability_$TIMESTAMP.db"
-    bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db='file:///var/phd/db/cc1.mysql?ml4pl_reachability?charset=utf8' \
-        --output_db="sqlite:////$EXPORT/reachability_$TIMESTAMP.db" \
+        --input_db="file:///var/phd/db/cc1.mysql?ml4pl_${dataset}?charset=utf8" \
+        --output_db="sqlite:////$EXPORT/${dataset}_$TIMESTAMP.db" \
         --max_rows=4096
     create_tarballs
-fi
+  fi
+}
 
-if [[ -f "$EXPORT/domtree_$TIMESTAMP.db.tar.bz2" ]]; then
-    echo "Skipping $EXPORT/domtree_$TIMESTAMP.db"
-else
-    rm -f "$EXPORT/domtree_$TIMESTAMP.db"
-    bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db='file:///var/phd/db/cc1.mysql?ml4pl_domtree?charset=utf8' \
-        --output_db="sqlite:////$EXPORT/domtree_$TIMESTAMP.db" \
-        --max_rows=4096
-    create_tarballs
-fi
-
-if [[ -f "$EXPORT/datadep_$TIMESTAMP.db.tar.bz2" ]]; then
-    echo "Skipping $EXPORT/datadep_$TIMESTAMP.db"
-else
-    rm -f "$EXPORT/datadep_$TIMESTAMP.db"
-    bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db="file:///var/phd/db/cc1.mysql?ml4pl_datadep?charset=utf8" \
-        --output_db="sqlite:////$EXPORT/datadep_$TIMESTAMP.db" \
-        --max_rows=4096
-    create_tarballs
-fi
-
-if [[ -f "$EXPORT/liveness_$TIMESTAMP.db.tar.bz2" ]]; then
-    echo "Skipping $EXPORT/liveness_$TIMESTAMP.db"
-else
-    rm -f "$EXPORT/liveness_$TIMESTAMP.db"
-    bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db="file:///var/phd/db/cc1.mysql?ml4pl_liveness?charset=utf8" \
-        --output_db="sqlite:////$EXPORT/liveness_$TIMESTAMP.db" \
-        --max_rows=4096
-    create_tarballs
-fi
+main() {
+  export_dataset devmap_amd
+  export_dataset devmap_nvidia
+  export_dataset reachability
+  export_dataset domtree
+  export_dataset datadep
+  export_dataset liveness
+  export_dataset subexpressions
+}
+main $@
