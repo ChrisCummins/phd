@@ -19,11 +19,12 @@ import subprocess
 import tempfile
 import typing
 
+from labm8 import app
+from labm8 import fs
+
 from compilers.llvm import llvm
 from compilers.llvm import llvm_as
 from compilers.llvm import opt
-from labm8 import app
-from labm8 import fs
 
 FLAGS = app.FLAGS
 
@@ -214,46 +215,42 @@ def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
   return args
 
 
-AliasSet = collections.namedtuple(
-    'AliasSet',
-    [
-        # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
-        #
-        #    /// The kind of alias relationship between pointers of the set.
-        #    ///
-        #    /// These represent conservatively correct alias results between any members
-        #    /// of the set. We represent these independently of the values of alias
-        #    /// results in order to pack it into a single bit. Lattice goes from
-        #    /// MustAlias to MayAlias.
-        #    enum AliasLattice {
-        #      SetMustAlias = 0, SetMayAlias = 1
-        #    };
-        'type',  # str, one of {must alias, may alias}
-        # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
-        #
-        #    /// The kinds of access this alias set models.
-        #    ///
-        #    /// We keep track of whether this alias set merely refers to the locations of
-        #    /// memory (and not any particular access), whether it modifies or references
-        #    /// the memory, or whether it does both. The lattice goes from "NoAccess" to
-        #    /// either RefAccess or ModAccess, then to ModRefAccess as necessary.
-        #    enum AccessLattice {
-        #      NoAccess = 0,
-        #      RefAccess = 1,
-        #      ModAccess = 2,
-        #      ModRefAccess = RefAccess | ModAccess
-        #    };
-        'mod_ref',  # str, one of {Mod,Ref,Mod/Ref}
-        'pointers',  # typing.List[Pointer]
-    ])
+class Pointer(typing.NamedTuple):
+  """A pointer in an alias set."""
+  type: str
+  identifier: str
+  size: int
 
-Pointer = collections.namedtuple(
-    'Pointer',
-    [
-        'type',  # str
-        'identifier',  # str
-        'size',  # int
-    ])
+
+class AliasSet(typing.NamedTuple):
+  # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
+  #
+  #    /// The kind of alias relationship between pointers of the set.
+  #    ///
+  #    /// These represent conservatively correct alias results between any members
+  #    /// of the set. We represent these independently of the values of alias
+  #    /// results in order to pack it into a single bit. Lattice goes from
+  #    /// MustAlias to MayAlias.
+  #    enum AliasLattice {
+  #      SetMustAlias = 0, SetMayAlias = 1
+  #    };
+  type: str  # str, one of {must alias, may alias}
+  # From https://llvm.org/doxygen/AliasSetTracker_8h_source.html
+  #
+  #    /// The kinds of access this alias set models.
+  #    ///
+  #    /// We keep track of whether this alias set merely refers to the locations of
+  #    /// memory (and not any particular access), whether it modifies or references
+  #    /// the memory, or whether it does both. The lattice goes from "NoAccess" to
+  #    /// either RefAccess or ModAccess, then to ModRefAccess as necessary.
+  #    enum AccessLattice {
+  #      NoAccess = 0,
+  #      RefAccess = 1,
+  #      ModAccess = 2,
+  #      ModRefAccess = RefAccess | ModAccess
+  #    };
+  mod_ref: str  # str, one of {Mod,Ref,Mod/Ref}
+  pointers: typing.List[Pointer]
 
 
 def GetAliasSetsByFunction(
@@ -376,11 +373,10 @@ def RunAnalysisPasses(bytecode: str,
   cmd = ['-analyze', '-stats', '-'] + passes
   p = opt.Exec(cmd, stdin=bytecode, opt=opt_path)
   if p.returncode:
-    raise opt.OptException(
-        'opt analysis failed',
-        returncode=p.returncode,
-        stderr=p.stderr,
-        command=cmd)
+    raise opt.OptException('opt analysis failed',
+                           returncode=p.returncode,
+                           stderr=p.stderr,
+                           command=cmd)
   return ParseAnalysisPassesOutput(p.stdout)
 
 
@@ -408,18 +404,18 @@ def ParseAnalysisPassesOutput(stdout: str) -> typing.Iterable[AnalysisOutput]:
     if match:
       if analysis:  # Emit current analysis
         yield analysis
-      analysis = AnalysisOutput(
-          analysis=match.group('analysis'), function=None, lines=[])
+      analysis = AnalysisOutput(analysis=match.group('analysis'),
+                                function=None,
+                                lines=[])
       continue
 
     match = function_analysis_re.match(line)
     if match:
       if analysis:  # Emit current analysis
         yield analysis
-      analysis = AnalysisOutput(
-          analysis=match.group('analysis'),
-          function=match.group('function'),
-          lines=[])
+      analysis = AnalysisOutput(analysis=match.group('analysis'),
+                                function=match.group('function'),
+                                lines=[])
       continue
 
     if analysis:
