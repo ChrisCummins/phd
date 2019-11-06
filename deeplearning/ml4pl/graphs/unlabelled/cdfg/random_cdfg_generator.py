@@ -138,10 +138,19 @@ def FastCreateRandom():
 
 
 def AddRandomAnnotations(graphs: typing.List[nx.MultiDiGraph],
+                         auxiliary_node_x_indices_choices=None,
                          node_y_choices=None,
                          graph_x_choices=None,
                          graph_y_choices=None):
   """Add random additions to the graphs."""
+  if auxiliary_node_x_indices_choices is not None:
+    for graph in graphs:
+      auxiliary_node_x = [[
+          random.choice(x) for x in auxiliary_node_x_indices_choices
+      ] for _ in range(graph.number_of_nodes())]
+      for (_, data), x in zip(graph.nodes(data=True), auxiliary_node_x):
+        data['x'] = [data['x']] + x
+
   if node_y_choices is not None:
     for graph in graphs:
       node_y = [
