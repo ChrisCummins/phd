@@ -11,6 +11,7 @@ from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
+from deeplearning.ml4pl.models import base_utils
 
 FLAGS = app.FLAGS
 

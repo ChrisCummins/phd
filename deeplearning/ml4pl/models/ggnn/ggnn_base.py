@@ -11,6 +11,7 @@ from labm8 import prof
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
+from deeplearning.ml4pl.models import base_utils
 
 FLAGS = app.FLAGS
 
@@ -56,6 +57,17 @@ app.DEFINE_integer(
     "dynamic_unroll_multiple", 0,
     "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
     "n=-1 (maybe) runs until convergence of predictions.")
+
+# TODO: Not really a todo maybe:
+# We assume that position_embeddings exist in every dataset.
+# the flag now only controls whether they are used or not.
+# This could be nice for ablating our model and also debugging with and without.
+app.DEFINE_boolean(
+    "position_embeddings", True,
+    "Whether to use position embeddings as signals for edge order."
+    "We expect them to be part of the ds anyway, but you can toggle off their effect."
+)
+classifier_base.MODEL_FLAGS.add("position_embeddings")
 
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
@@ -144,6 +156,14 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           tf.compat.v1.summary.FileWriter(tensorboard_dir / "test",
                                           self.sess.graph),
       }
+
+  def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
+    """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
+    embeddings = base_utils.pos_emb(positions=range(512), demb=FLAGS.hidden_size)
+    pos_emb = tf.Variable(initial_value=embeddings,
+                          trainable=False,
+                          dtype=tf.float32)
+    return pos_emb
 
   def _GetEmbeddingsTable(self) -> np.array:
     """Reading embeddings table"""
@@ -306,8 +326,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     super(GgnnBaseModel, self).InitializeModel()
     with self.graph.as_default():
       self.sess.run(
-          tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer()))
+          tf.group(tf.compat.v1.global_variables_initializer(),
+                   tf.compat.v1.local_variables_initializer()))
 
   def ModelDataToSave(self) -> typing.Any:
     with self.graph.as_default():
@@ -390,6 +410,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     train_step = tf.group([train_step, update_ops])
 
     # Initialize newly-introduced variables:
-    self.sess.run(tf.local_variables_initializer())
+    self.sess.run(tf.compat.v1.local_variables_initializer())
 
     return train_step
