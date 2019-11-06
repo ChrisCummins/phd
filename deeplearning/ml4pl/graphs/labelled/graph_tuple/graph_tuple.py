@@ -45,15 +45,15 @@ class GraphTuple(typing.NamedTuple):
   # Shape [node_count,node_embeddings_count], dtype int32
   node_x_indices: np.array
 
-  # (optional) A list of arrays of node labels.
+  # (optional) A list of node labels arrays.
   # Shape [node_count, node_label_dimensionality]
   node_y: typing.Optional[np.array] = None
 
-  # (optional) A list of arrays of graph features.
+  # (optional) A list of graph features arrays.
   # Shape [graph_feature_dimensionality]
   graph_x: typing.Optional[np.array] = None
 
-  # (optional) A vector of graph labels.
+  # (optional) A vector of graph labels arrays.
   graph_y: typing.Optional[
       np.array] = None  # Shape [graph_label_dimensionality]
 

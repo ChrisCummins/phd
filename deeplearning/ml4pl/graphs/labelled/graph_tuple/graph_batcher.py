@@ -39,14 +39,16 @@ class GraphBatch(typing.NamedTuple):
   # A list of edge positions, one for each edge type. An edge position is an
   # integer in the range 0 <= x < max_edge_position.
   edge_positions: np.array  # Shape [edge_type_count, ?], dtype int32
-  #TODO(zach) use the above!
 
   # A list of incoming edge count dicts, one for each edge_type. Use
   # IncomingEdgeCountsToDense() to convert this to a dense representation.
   incoming_edge_counts: np.array  # Shape [edge_type_count, ?])
 
-  # A list of indices into the node features table.
-  node_x_indices: np.array  # Shape [node_count], dtype int32
+  # A matrix of indices into the node features table. Each row is a node,
+  # and each column is an embedding index for that node. Multiple embedding
+  # indices read from multiple embedding tables.
+  # Shape [node_count,node_embeddings_count], dtype int32
+  node_x_indices: np.array
 
   # A list of shape [node_count] which segments the nodes by graph.
   graph_nodes_list: np.array
@@ -57,17 +59,17 @@ class GraphBatch(typing.NamedTuple):
   # A batch log.
   log: log_database.BatchLogMeta
 
-  # (optional) A list of node arrays of node labels.
+  # (optional) A list of node labels arrays.
   # Shape [node_count, node_label_dimensionality]
   node_y: typing.Optional[np.array] = None
 
-  # (optional) A list of indices into the graph features table.
-  # Shape [graph_feature_dimensionality]
+  # (optional) A list of graph features arrays.
+  # Shape [graph_count,graph_feature_dimensionality]
   graph_x: typing.Optional[np.array] = None
 
-  # (optional) A vector of graph labels.
+  # (optional) A vector of graph labels arrays.
   graph_y: typing.Optional[
-      np.array] = None  # Shape [graph_label_dimensionality]
+      np.array] = None  # Shape [graph_count,graph_label_dimensionality]
 
   @property
   def has_node_y(self) -> bool:
