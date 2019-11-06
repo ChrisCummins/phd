@@ -13,14 +13,14 @@
 # limitations under the License.
 """Unit tests for //labm8:sqlutil."""
 import pathlib
+import typing
+
 import pytest
 import sqlalchemy as sql
-import typing
-from sqlalchemy.ext import declarative
-
 from labm8 import sqlutil
 from labm8 import test
 from labm8.test_data import test_protos_pb2
+from sqlalchemy.ext import declarative
 
 
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
@@ -152,6 +152,23 @@ def test_Session_GetOrAdd():
   with db.Session() as s:
     assert s.query(Table).count() == 1
     assert s.query(Table).one().value == 42
+
+
+def test_Close_raises_error_on_session():
+  """Test that session creation fails after call to Database.Close()."""
+  base = declarative.declarative_base()
+
+  class Table(base, sqlutil.TablenameFromClassNameMixin):
+    """A table containing a single 'value' primary key."""
+    value = sql.Column(sql.Integer, primary_key=True)
+
+  # Create the database.
+  db = sqlutil.Database('sqlite://', base)
+  db.Close()
+  with pytest.raises(sql.exc.OperationalError):
+    # Try and perform a query on the closed database.
+    with db.Session(commit=True) as s:
+      s.query(Table).all()
 
 
 class AbstractTestMessage(

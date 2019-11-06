@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for working with sqlalchemy."""
-import time
-
 import collections
 import contextlib
 import pathlib
-import sqlalchemy as sql
+import time
 import typing
-from absl import flags as absl_flags
-from sqlalchemy import func
-from sqlalchemy import orm
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import declarative
 
+import sqlalchemy as sql
+from absl import flags as absl_flags
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
 from labm8.internal import logging
+from sqlalchemy import func
+from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
+from sqlalchemy.ext import declarative
 
 FLAGS = absl_flags.FLAGS
 
@@ -278,12 +277,11 @@ def CreateEngine(url: str, must_exist: bool = False) -> sql.engine.Engine:
     raise ValueError(f"Unsupported database URL='{url}'")
 
   # Create the engine.
-  engine = sql.create_engine(
-      url,
-      encoding='utf-8',
-      echo=FLAGS.sqlutil_echo,
-      pool_pre_ping=FLAGS.sqlutil_pool_pre_ping,
-      **engine_args)
+  engine = sql.create_engine(url,
+                             encoding='utf-8',
+                             echo=FLAGS.sqlutil_echo,
+                             pool_pre_ping=FLAGS.sqlutil_pool_pre_ping,
+                             **engine_args)
 
   # Create and immediately close a connection. This is because SQLAlchemy engine
   # is lazily instantiated, so for connections such as SQLite, this line
@@ -406,6 +404,20 @@ class Database(object):
     # class, which is a subclass of the default SQLAlchemy Session with added
     # functionality.
     self.MakeSession = orm.sessionmaker(bind=self.engine, class_=Session)
+
+  def Close(self) -> None:
+    """Close the connection to the database.
+
+    Use this to free up the connection to a database, while keeping the database
+    instance around. After calling this method, attempting to run operations on
+    this database will raise an error (like a sqlalchemy.exc.OperationalError).
+
+    Usage of this method is generally discouraged - connections are
+    automatically closed up when a database instance is garbage collected, so
+    there are rarely cases for leaving a database instance around with the
+    connection closed. Use at your peril!
+    """
+    self.engine.dispose()
 
   def Drop(self, are_you_sure_about_this_flag: bool = False):
     """Drop the database, irreverisbly destroying it.
