@@ -209,7 +209,7 @@ class GraphBatch(typing.NamedTuple):
         if adjacency_list.size:
           offset = np.array((log.node_count, log.node_count), dtype=np.int32)
           adjacency_lists[edge_type].append(adjacency_list + offset)
-          position_lists[edge_type].append(position_list + log.node_count)
+          position_lists[edge_type].append(position_list)
 
       incoming_edge_counts.append(graph_tuple.dense_incoming_edge_counts)
 
