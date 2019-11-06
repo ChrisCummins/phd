@@ -115,6 +115,74 @@ def DotControlFlowGraphsFromBytecode(bytecode: str) -> typing.Iterator[str]:
           yield f.read()
 
 
+def DotGraphsFromBytecode(
+    bytecode: str,
+    opt_args: typing.List[str],
+    opt_path: str = None,
+    output_pred: typing.Callable[[str], bool] = None
+) -> typing.Tuple[typing.List[str], typing.List[str]]:
+  """Obtain dot graphs from an LLVM bytecode file using an opt pass.
+
+  Args:
+    bytecode: The LLVM bytecode to create the graphs from.
+    opt_args: A list of arguments to the opt tool that generate the graphs.
+    opt_path: The path to a custom opt binary. Overrides the default version.
+    output_pred: A predicate that receives an output file name, and returns
+                 True if it should be collected in the first part of the result tuple,
+                 or False if it should be collected in the second tuple element.
+                 If None, all outputs are collected to the first element.
+
+  Returns:
+    A 2-tuple of lists of graphs as dot strings.
+
+  Raises:
+    OptException: In case the opt pass fails.
+    UnicodeDecodeError: If generated dotfile can't be read.
+  """
+  graph_dots_true = []
+  graph_dots_false = []
+
+  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    output_dir = pathlib.Path(d)
+    # Change into the output directory, because the -dot-callgraph pass writes
+    # to the current working directory.
+    with fs.chdir(output_dir):
+      # We run with universal_newlines=False because the stdout of opt is the
+      # binary bitcode, which we completely ignore (we're only interested in
+      # stderr). This means we must encode stdin and decode stderr ourselves.
+      process = opt.Exec(opt_args,
+                         stdin=bytecode.encode('utf-8'),
+                         universal_newlines=False,
+                         log=False,
+                         opt=opt_path)
+      stderr = process.stderr.decode('utf-8')
+
+      # Propagate failures from opt as OptExceptions.
+      if process.returncode:
+        raise opt.OptException(returncode=process.returncode, stderr=stderr)
+
+      for file in output_dir.iterdir():
+        # Opt pass prints the name of the dot files it generates, e.g.:
+        #
+        #     $ opt -dot-cfg < foo.ll
+        #     WARNING: You're attempting to print out a bitcode file.
+        #     This is inadvisable as it may cause display problems. If
+        #     you REALLY want to taste LLVM bitcode first-hand, you
+        #     can force output with the `-f' option.
+        #
+        #     Writing 'cfg.DoSomething.dot'...
+        #     Writing 'cfg.main.dot'...
+        if f"Writing '{file.name}'..." not in stderr:
+          raise OSError(f"Could not find reference to file '{file.name}' in "
+                        f'opt stderr:\n{process.stderr}')
+        if not output_pred or output_pred(file.name):
+          graph_dots_true.append(fs.Read(file))
+        else:
+          graph_dots_false.append(fs.Read(file))
+
+      return graph_dots_true, graph_dots_false
+
+
 def DotCallGraphAndControlFlowGraphsFromBytecode(
     bytecode: str, opt_path: str = None) -> typing.Tuple[str, typing.List[str]]:
   """Create call graph and control flow graphs from an LLVM bytecode file.
@@ -135,50 +203,17 @@ def DotCallGraphAndControlFlowGraphsFromBytecode(
     OptException: In case the opt pass fails.
     UnicodeDecodeError: If generated dotfile can't be read.
   """
-  control_flow_graph_dots = []
+  control_flow_graph_dots, callgraph_dots = DotGraphsFromBytecode(
+    bytecode, ['-dot-cfg', '-dot-callgraph'], opt_path,
+    lambda name: name != 'callgraph.dot'
+  )
 
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    output_dir = pathlib.Path(d)
-    # Change into the output directory, because the -dot-callgraph pass writes
-    # to the current working directory.
-    with fs.chdir(output_dir):
-      # We run with universal_newlines=False because the stdout of opt is the
-      # binary bitcode, which we completely ignore (we're only interested in
-      # stderr). This means we must encode stdin and decode stderr ourselves.
-      process = opt.Exec(['-dot-cfg', '-dot-callgraph'],
-                         stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False,
-                         log=False,
-                         opt=opt_path)
-      stderr = process.stderr.decode('utf-8')
+  if len(callgraph_dots) != 1:
+    raise OSError(f"Callgraph dotfile not produced")
 
-      # Propagate failures from opt as OptExceptions.
-      if process.returncode:
-        raise opt.OptException(returncode=process.returncode, stderr=stderr)
+  callgraph = callgraph_dots[0]
 
-      callgraph = output_dir / 'callgraph.dot'
-
-      if not callgraph.is_file():
-        raise OSError(f"Callgraph dotfile not produced")
-
-      for file in output_dir.iterdir():
-        # Opt pass prints the name of the dot files it generates, e.g.:
-        #
-        #     $ opt -dot-cfg < foo.ll
-        #     WARNING: You're attempting to print out a bitcode file.
-        #     This is inadvisable as it may cause display problems. If
-        #     you REALLY want to taste LLVM bitcode first-hand, you
-        #     can force output with the `-f' option.
-        #
-        #     Writing 'cfg.DoSomething.dot'...
-        #     Writing 'cfg.main.dot'...
-        if f"Writing '{file.name}'..." not in stderr:
-          raise OSError(f"Could not find reference to file '{file.name}' in "
-                        f'opt stderr:\n{process.stderr}')
-        if file.name != 'callgraph.dot':
-          control_flow_graph_dots.append(fs.Read(file))
-
-      return fs.Read(callgraph), control_flow_graph_dots
+  return callgraph, control_flow_graph_dots
 
 
 def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
