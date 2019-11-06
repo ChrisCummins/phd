@@ -98,10 +98,17 @@ def MakeAliasSetGraphs(
       # Not all nodes have a 'function' attribute, e.g. the magic root node.
       if function
   }
-  app.Log(1, '%s', alias_sets_by_function)
-  if functions != alias_sets_by_function.keys():
-    raise ValueError(f"Expected functions `{functions}`, found "
-                     f"`{set(alias_sets_by_function.keys())}`")
+
+  # Silently drop alias sets for functions which don't exist in the graph.
+  deleted_alias_sets = []
+  for function in alias_sets_by_function:
+    if function not in functions:
+      deleted_alias_sets.append(function)
+      del alias_sets_by_function[function]
+  if deleted_alias_sets:
+    app.Warning(
+        "Removed %d alias sets generated from bytecode but not found in "
+        "graph: %s", len(deleted_alias_sets), deleted_alias_sets)
 
   function_alias_set_pairs: typing.List[
       typing.Tuple[str, opt_util.AliasSet]] = []
