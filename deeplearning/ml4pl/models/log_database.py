@@ -275,7 +275,7 @@ class Database(sqlutil.Database):
           BatchLogMeta.epoch,
           BatchLogMeta.type,
           sql.func.count(BatchLogMeta.epoch).label("num_batches"),
-          sql.func.min(BatchLogMeta.timestamp).label('timestamp'),
+          sql.func.min(BatchLogMeta.date_added).label('timestamp'),
           sql.func.min(BatchLogMeta.global_step).label("global_step"),
           sql.func.avg(BatchLogMeta.loss).label("loss"),
           sql.func.avg(BatchLogMeta.iteration_count).label("iteration_count"),
