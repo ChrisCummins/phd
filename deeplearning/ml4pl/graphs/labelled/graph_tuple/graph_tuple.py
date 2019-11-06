@@ -39,14 +39,17 @@ class GraphTuple(typing.NamedTuple):
   # IncomingEdgeCountsToDense() to convert this to a dense representation.
   incoming_edge_counts: np.array  # Shape [edge_type_count, ?])
 
-  # A list of indices into the node features table.
-  node_x_indices: np.array  # Shape [node_count], dtype int32
+  # A matrix of indices into the node features table. Each row is a node,
+  # and each column is an embedding index for that node. Multiple embedding
+  # indices read from multiple embedding tables.
+  # Shape [node_count,node_embeddings_count], dtype int32
+  node_x_indices: np.array
 
-  # (optional) A list of node arrays of node labels.
+  # (optional) A list of arrays of node labels.
   # Shape [node_count, node_label_dimensionality]
   node_y: typing.Optional[np.array] = None
 
-  # (optional) A list of indices into the graph features table.
+  # (optional) A list of arrays of graph features.
   # Shape [graph_feature_dimensionality]
   graph_x: typing.Optional[np.array] = None
 
