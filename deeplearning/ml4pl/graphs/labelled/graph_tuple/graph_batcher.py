@@ -215,7 +215,7 @@ class GraphBatch(typing.NamedTuple):
 
       # Add features and labels.
 
-      # Shape: [graph.node_count, node_features_dimensionality]
+      # Shape: [graph.node_count, node_embbeddings_count]
       node_x_indices.extend(graph_tuple.node_x_indices)
 
       if has_node_labels:
@@ -251,7 +251,7 @@ class GraphBatch(typing.NamedTuple):
 
     incoming_edge_counts = np.concatenate(incoming_edge_counts, axis=0)
     graph_nodes_list = np.concatenate(graph_nodes_list)
-    node_x_indices = np.array(node_x_indices)
+    node_x_indices = np.array(node_x_indices, dtype=np.int32)
     if has_node_labels:
       node_y = np.array(node_y)
     if has_graph_features:
@@ -323,12 +323,13 @@ class GraphBatch(typing.NamedTuple):
         for (src, dst), position in zip(adjacency_list, position_list):
           g.add_edge(src, dst, flow=edge_type, position=position)
 
-      node_x = self.node_x_indices[node_count:node_count + graph_node_count]
-      if len(node_x) != g.number_of_nodes():
+      node_x_embedding_indices = self.node_x_indices[node_count:node_count +
+                                                     graph_node_count]
+      if len(node_x_embedding_indices) != g.number_of_nodes():
         raise ValueError(f"Graph has {g.number_of_nodes()} nodes but "
-                         f"expected {len(node_x)}")
-      for i, values in enumerate(node_x):
-        g.nodes[i]['x'] = values
+                         f"expected {len(node_x_embedding_indices)}")
+      for i, node_embedding_indices in enumerate(node_x_node_embedding_indices):
+        g.nodes[i]['x'] = embedding_indices
 
       if self.has_node_y:
         node_y = self.node_y[node_count:node_count + graph_node_count]
