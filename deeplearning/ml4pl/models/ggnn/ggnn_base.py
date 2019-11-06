@@ -322,8 +322,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     super(GgnnBaseModel, self).InitializeModel()
     with self.graph.as_default():
       self.sess.run(
-          tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer()))
+          tf.group(tf.compat.v1.global_variables_initializer(),
+                   tf.compat.v1.local_variables_initializer()))
 
   def ModelDataToSave(self) -> typing.Any:
     with self.graph.as_default():
@@ -406,6 +406,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     train_step = tf.group([train_step, update_ops])
 
     # Initialize newly-introduced variables:
-    self.sess.run(tf.local_variables_initializer())
+    self.sess.run(tf.compat.v1.local_variables_initializer())
 
     return train_step
