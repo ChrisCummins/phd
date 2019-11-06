@@ -46,7 +46,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   group: str = sql.Column(sql.String(32), nullable=False, index=True)
 
   # No foreign key relationship because they are separate databases.
-  bytecode_id: int = sql.Column(sql.Integer, nullable=False)
+  bytecode_id: int = sql.Column(sql.Integer, nullable=False, index=True)
 
   # The source of the graph. This is duplicates of information stored in the
   # LlvmBytecode table.
