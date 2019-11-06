@@ -9,10 +9,6 @@ from labm8 import decorators
 
 FLAGS = app.FLAGS
 
-app.DEFINE_boolean(
-    'subexpressions_using_vocabulary_indices', False,
-    'If set, use the vocabulary indices to match expressions. Else, the text '
-    'of statements is used to match expressions.')
 app.DEFINE_integer(
     'expression_set_min_size', 2,
     'The minimum number of common subexpressions in a set to be used as a '
@@ -20,9 +16,7 @@ app.DEFINE_integer(
 
 
 @decorators.timeout(seconds=60)
-def GetExpressionSets(g: nx.MultiDiGraph,
-                      statement: str = 'text',
-                      false: typing.Any = False):
+def GetExpressionSets(g: nx.MultiDiGraph, false: typing.Any = False):
   """An expression is a statement and a list of operands, in order.
 
   Traverse the full graph to and build a mapping from expressions to a list of
@@ -37,24 +31,52 @@ def GetExpressionSets(g: nx.MultiDiGraph,
     if data['type'] != 'statement':
       continue
 
-    # Build a tuple of operands, ordered by position.
-    operands = []
+    # Build a tuple of operand position and operand values.
+    position_operand_pairs = []
     for src, _, edge in g.in_edges(node, data=True):
       if edge['flow'] == 'data':
-        operands.append((edge['position'], src))
-    # Sort the operands by their order.
-    operands = tuple(x[1] for x in sorted(operands, key=lambda x: x[0]))
+        position_operand_pairs.append((edge['position'], src))
 
-    if not operands:
+    # A statement without operands can never be a common subexpression.
+    if not position_operand_pairs:
       continue
 
+    # If the operands are commutative, sort operands by their name. For,
+    # non-commutative operands, sort the operand position (i.e. order).
+    # E.g.
+    #    '%3 = add %2 %1' == '%4 = add %1 %2'  # commutative
+    # but:
+    #    '%3 = sub %2 %1' != '%4 = sub %1 %2'  # non-commutative
+    #
+    # Commutative statements derived from:
+    # <https://llvm.org/docs/LangRef.html#instruction-reference>.
+    statement = data['text']
+    # Strip the lhs from the instruction, if any.
+    if ' = ' in statement:
+      statement = statement[statement.index(' = ') + 3:]
+    if (  # Binary operators:
+        statement.startswith('add ') or statement.startswith('fadd ') or
+        statement.startswith('mul ') or statement.startswith('fmul ') or
+        # Bitwise binary operators:
+        statement.startswith('and ') or statement.startswith('xor ') or
+        statement.startswith('or ')):
+      # Commutative statement, order by identifier name.
+      position_operand_pairs = sorted(position_operand_pairs,
+                                      key=lambda x: x[1])
+    else:
+      # Non-commutative statement, order by position.
+      position_operand_pairs = sorted(position_operand_pairs,
+                                      key=lambda x: x[0])
+
+    operands = tuple(x[1] for x in position_operand_pairs)
+
     # An expression is a statement and a list of ordered operands.
-    expression = (data[statement], operands)
+    expression = (statement, operands)
 
     # Add the statement node to the expression lists table.
     expression_sets[expression].append(node)
 
-  return {k: list(set(v)) for k, v in expression_sets.items()}
+  return {k: list(sorted(set(v))) for k, v in expression_sets.items()}
 
 
 def AnnotateCommonSubexpressions(g: nx.MultiDiGraph,
@@ -96,11 +118,7 @@ def MakeSubexpressionsGraphs(
     the statement nodes, and additionally 'live_out_count' and
     'data_flow_max_steps_required' attributes.
   """
-  expression_sets = GetExpressionSets(
-      g,
-      statement=('x'
-                 if FLAGS.subexpressions_using_vocabulary_indices else 'text'),
-      false=false)
+  expression_sets = GetExpressionSets(g, false=false)
 
   # Filter expression sets based on minimum size.
   expression_sets = {
@@ -117,6 +135,8 @@ def MakeSubexpressionsGraphs(
 
   for root_expression in expressions:
     labelled = g.copy()
-    AnnotateCommonSubexpressions(
-        labelled, root_expression, expression_sets, true=true)
+    AnnotateCommonSubexpressions(labelled,
+                                 root_expression,
+                                 expression_sets,
+                                 true=true)
     yield labelled
