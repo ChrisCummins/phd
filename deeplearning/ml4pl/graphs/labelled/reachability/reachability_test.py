@@ -12,10 +12,10 @@ FLAGS = app.FLAGS
 @pytest.fixture(scope='function')
 def graph():
   g = nx.MultiDiGraph()
-  g.add_node('A', type='statement')
-  g.add_node('B', type='statement')
-  g.add_node('C', type='statement')
-  g.add_node('D', type='statement')
+  g.add_node('A', type='statement', x=-1)
+  g.add_node('B', type='statement', x=-1)
+  g.add_node('C', type='statement', x=-1)
+  g.add_node('D', type='statement', x=-1)
   g.add_edge('A', 'B', flow='control')
   g.add_edge('B', 'C', flow='control')
   g.add_edge('C', 'D', flow='control')
@@ -44,10 +44,10 @@ def test_SetReachableNodes_data_flow_steps_A(graph):
 
 def test_SetReachableNodes_node_x(graph):
   _ = reachability.SetReachableNodes(graph, 'A')
-  assert graph.nodes['A']['x'] == 1
-  assert graph.nodes['B']['x'] == 0
-  assert graph.nodes['C']['x'] == 0
-  assert graph.nodes['D']['x'] == 0
+  assert graph.nodes['A']['x'] == [-1, 1]
+  assert graph.nodes['B']['x'] == [-1, 0]
+  assert graph.nodes['C']['x'] == [-1, 0]
+  assert graph.nodes['D']['x'] == [-1, 0]
 
 
 def test_SetReachableNodes_node_y(graph):
