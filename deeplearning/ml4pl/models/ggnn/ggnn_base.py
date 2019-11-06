@@ -299,11 +299,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       fetch_dict = self.ModularlyRunWithFetchDict(log, fetch_dict, feed_dict,
                                                   unroll_multiple)
 
-    if FLAGS.tensorboard_logging:
-      self.summary_writers[log.group].add_summary(fetch_dict["summary_loss"],
-                                                  self.global_training_step)
-      self.summary_writers[log.group].add_summary(
-          fetch_dict["summary_accuracy"], self.global_training_step)
+    # TODO(cec): Tensorboard logging seems to be broken. Disable it for now.
+    # if FLAGS.tensorboard_logging:
+    #   self.summary_writers[log.group].add_summary(fetch_dict["summary_loss"],
+    #                                               self.global_training_step)
+    #   self.summary_writers[log.group].add_summary(
+    #       fetch_dict["summary_accuracy"], self.global_training_step)
 
     log.loss = float(fetch_dict['loss'])
 

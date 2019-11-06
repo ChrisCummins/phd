@@ -22,12 +22,15 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
       node: set([
           src for src, _, flow in g.in_edges(node, data='flow')
           if flow == 'control'
-      ]) for node in g.nodes()
+      ]) for node in
+      [g for g, type_ in g.nodes(data='type') if type_ == 'statement']
   }
 
   # Initialize the dominator sets.
   dominators: typing.Dict[str, typing.Set[int]] = {
-      n: set(predecessors.keys()) - set([root_node]) for n in g.nodes()
+      n: set(predecessors.keys()) - set([root_node])
+      for n, type_ in g.nodes(data='type')
+      if type_ == 'statement'
   }
   dominators[root_node] = set([root_node])
 
@@ -52,7 +55,7 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
   num_dominated = 0
   for node, data in g.nodes(data=True):
     data[x_label] = 0
-    if root_node in dominators[node]:
+    if node in dominators and root_node in dominators[node]:
       num_dominated += 1
       data[y_label] = true
     else:

@@ -88,6 +88,8 @@ py_test(
     srcs = ["log_analysis_test.py"],
     deps = [
         ":log_analysis",
+        ":log_database",
+        "//deeplearning/ml4pl/graphs:graph_database",
         "//labm8:app",
         "//labm8:test",
         "//third_party/py/numpy",

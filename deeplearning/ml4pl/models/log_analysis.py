@@ -28,11 +28,9 @@ class RunLogAnalyzer(object):
     self.log_db = log_db
     self.run_id = run_id
 
-    self.batcher = graph_batcher.GraphBatcher(
-        self.graph_db,
-        # We can pass any non-zero value for message_passing_step_count, it
-        # won't be used.
-        message_passing_step_count=1)
+    # A graph batcher is used to re-construct networkx graphs from the graph
+    # tuples in the database.
+    self.batcher = graph_batcher.GraphBatcher(self.graph_db)
 
     with self.log_db.Session() as session:
       num_logs = session.query(log_database.BatchLogMeta.run_id) \
@@ -104,7 +102,7 @@ class RunLogAnalyzer(object):
         # Load the graphs in the same order as in the batch.
         graphs = sorted(graphs, key=lambda g: log.graph_indices.index(g.id))
 
-      batch_dict = self.batcher.CreateBatchDict((g for g in graphs))
+      batch_dict = self.batcher.CreateFromGraphMetas((g for g in graphs))
       batch_dict['graph_indices'] = log.graph_indices
 
     return batch_dict

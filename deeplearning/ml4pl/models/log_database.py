@@ -125,7 +125,7 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   def __repr__(self) -> str:
     return (
-        f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type}: "
+        f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type} batch: "
         f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
         f"loss={self.loss:.4f} | "
         f"acc={self.accuracy:.2%}")
@@ -275,7 +275,7 @@ class Database(sqlutil.Database):
           BatchLogMeta.epoch,
           BatchLogMeta.type,
           sql.func.count(BatchLogMeta.epoch).label("num_batches"),
-          sql.func.min(BatchLogMeta.timestamp).label('timestamp'),
+          sql.func.min(BatchLogMeta.date_added).label('timestamp'),
           sql.func.min(BatchLogMeta.global_step).label("global_step"),
           sql.func.avg(BatchLogMeta.loss).label("loss"),
           sql.func.avg(BatchLogMeta.iteration_count).label("iteration_count"),
@@ -310,6 +310,53 @@ class Database(sqlutil.Database):
 
       return df
 
+  def DeleteLogsForRunId(self, run_id: str) -> None:
+    """Delete the logs for this run.
+
+    This deletes the batch logs, model checkpoints, and model parameters.
+
+    Args:
+      run_id: The ID of the run to delete.
+    """
+    # Because the cascaded delete is broken, we first delete the BatchLog child
+    # rows, then the parents.
+    with self.Session() as session:
+      query = session.query(BatchLogMeta.id) \
+        .filter(BatchLogMeta.run_id == run_id)
+      ids_to_delete = [row.id for row in query]
+
+    app.Log(1, "Deleting %s batch logs", humanize.Commas(len(ids_to_delete)))
+    delete = sql.delete(BatchLog) \
+      .where(BatchLog.id.in_(ids_to_delete))
+    self.engine.execute(delete)
+
+    delete = sql.delete(BatchLogMeta) \
+      .where(BatchLogMeta.run_id == run_id)
+    self.engine.execute(delete)
+
+    # Because the cascaded delete is broken, we first delete the checkpoint
+    # child rows, then the parents.
+    with self.Session() as session:
+      query = session.query(ModelCheckpointMeta.id) \
+        .filter(ModelCheckpointMeta.run_id == run_id)
+      ids_to_delete = [row.id for row in query]
+
+    app.Log(1, "Deleting %s model checkpoints",
+            humanize.Commas(len(ids_to_delete)))
+    delete = sql.delete(ModelCheckpoint) \
+      .where(ModelCheckpoint.id.in_(ids_to_delete))
+    self.engine.execute(delete)
+
+    delete = sql.delete(ModelCheckpointMeta) \
+      .where(ModelCheckpointMeta.run_id == run_id)
+    self.engine.execute(delete)
+
+    # Delete the parameters for this Run ID.
+    app.Log(1, "Deleting model parameters")
+    delete = sql.delete(Parameter) \
+      .where(Parameter.run_id == run_id)
+    self.engine.execute(delete)
+
   def ModelFlagsToDict(self, run_id: str):
     """Load the model flags for the given run ID to a {flag: value} dict."""
     with self.Session() as session:
@@ -318,19 +365,23 @@ class Database(sqlutil.Database):
       q = q.filter(Parameter.type == ParameterType.MODEL_FLAG)
       return {param.parameter: param.value for param in q.all()}
 
-  def ParametersToDataFrame(self, run_id: str, type: str):
+  def ParametersToDataFrame(self, run_id: str, parameter_type: str):
     """Return a table of parameters of the given type for the specified run.
 
     Args:
       run_id: The run ID to return the parameters of.
-      type: The type of parameter to return.
+      parameter_type: The type of parameter to return.
 
     Returns:
       A pandas dataframe.
     """
     with self.Session() as session:
-      q = session.query(Parameter.parameter, Parameter.value)
+      q = session.query(Parameter.parameter,
+                        Parameter.pickled_value.label('value'))
       q = q.filter(Parameter.run_id == run_id)
-      q = q.filter(Parameter.type == type)
+      q = q.filter(Parameter.type == parameter_type)
       q = q.order_by(Parameter.parameter)
-      return pdutil.QueryToDataFrame(session, q).set_index('parameter')
+      df = pdutil.QueryToDataFrame(session, q).set_index('parameter')
+      # Un-pickle the parameter values:
+      df['value'] = [pickle.loads(x) for x in df['value'].values]
+      return df
