@@ -95,6 +95,13 @@ def AnnotateGraphMetas(input_db: graph_database.Database, df: pd.DataFrame
         input_graph_meta = q.first()
         graph = input_graph_meta.data
 
+        # Add a second embedding table index with constant value.
+        # This is a workaround for github.com/ChrisCummins/ml4pl/issues/12,
+        # which means that the input graphs have a single embedding index,
+        # wheras we want to produce labelled graphs with a 2D embedding index.
+        for _, data in g.nodes(data=True):
+          data['x'] = [data['x'], 0]
+
         # Add the graph-level features.
         graph.x = np.array([row['wgsize'], row['transfer']], dtype=np.int64)
         if FLAGS.log1p_graph_x:
