@@ -61,8 +61,8 @@ def test_GraphDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
   s = stats.GraphDatabaseStats(db_512)
   assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
-                    "8568x200 float64 node embeddings, 1-d graph labels, "
-                    "max 511 nodes, max 2 edges")
+                    "(8568x200, 2x2) float64 node embeddings, "
+                    "1-d graph labels, max 511 nodes, max 2 edges")
 
 
 def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
@@ -70,7 +70,7 @@ def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
   s = stats.GraphTupleDatabaseStats(db_512)
   assert str(s) == (
       "Graphs database: 512 instances, 1 edge type, "
-      "8568x200 float64 node embeddings, 1-d float32 graph labels, "
+      "(8568x200, 2x2) float64 node embeddings, 1-d float32 graph labels, "
       "max 511 nodes, max 2 edges")
 
 

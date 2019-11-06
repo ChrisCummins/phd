@@ -162,20 +162,23 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
       tf.compat.v1.placeholder(dtype=tf.bool, shape=[], name='is_training'),
   }
 
-  placeholders['node_x'] = tf.compat.v1.placeholder(dtype=tf.int32,
-                                                    shape=[None],
-                                                    name="node_x")
+  # This is a list of node embedding table indices. Each row is a node, column
+  # {i} is an index into embedding table {i}.
+  placeholders['node_x'] = tf.compat.v1.placeholder(
+      dtype=tf.int32, shape=[None, stats.node_embeddings_count], name="node_x")
+
   placeholders['raw_node_output_features'] = tf.compat.v1.placeholder(
-      stats.node_embedding_dtype, [None, stats.node_embedding_dimensionality],
+      stats.node_embeddings_dtype,
+      [None, stats.node_embeddings_concatenated_width],
       name="raw_node_output_features")
 
   # TODO(cec): Is there ever a case where --hiden_size does not need to equal
-  # node_embedding_dimensionality? If not, then lets remove the hidden_size
-  # flag and instead derive it from node_embedding_dimensionality.
-  if FLAGS.hidden_size != stats.node_embedding_dimensionality:
-    raise ValueError(
-        f"--hidden_size={FLAGS.hidden_size} != "
-        f"node_embedding_dimensionality={stats.node_embedding_dimensionality}")
+  # node_embeddings_concatenated_width? If not, then lets remove the hidden_size
+  # flag and instead derive it.
+  if FLAGS.hidden_size != stats.node_embeddings_concatenated_width:
+    raise ValueError(f"--hidden_size={FLAGS.hidden_size} != "
+                     "node_embeddings_concatenated_width="
+                     f"{stats.node_embeddings_concatenated_width}")
 
   if stats.node_labels_dimensionality:
     placeholders['node_y'] = tf.compat.v1.placeholder(

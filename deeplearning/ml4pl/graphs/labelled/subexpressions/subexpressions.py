@@ -26,7 +26,7 @@ def GetExpressionSets(g: nx.MultiDiGraph, false: typing.Any = False):
   expression_sets = collections.defaultdict(list)
 
   for node, data in g.nodes(data=True):
-    data['x'] = 0  # Mark expression as not the root node.
+    data['x'] = [data['x'], 0]  # Mark expression as not the root node.
     data['y'] = false  # Mark expression as not part of a set.
     if data['type'] != 'statement':
       continue
@@ -88,7 +88,7 @@ def AnnotateCommonSubexpressions(g: nx.MultiDiGraph,
   """
   # Mark the root expression.
   root_node = random.choice(expression_sets[root_expression])
-  g.nodes[root_node]['x'] = 1
+  g.nodes[root_node]['x'] = [g.nodes[root_node]['x'], 1]
 
   for node in expression_sets[root_expression]:
     g.nodes[node]['y'] = true

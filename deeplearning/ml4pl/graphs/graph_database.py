@@ -62,6 +62,10 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The maximum value of the 'position' attribute of edges.
   edge_position_max: int = sql.Column(sql.Integer, nullable=False)
 
+  # The number of distinct embeddings for each node.
+  node_embeddings_count: int = sql.Column(sql.Integer,
+                                          default=0,
+                                          nullable=False)
   node_labels_dimensionality: int = sql.Column(sql.Integer,
                                                default=0,
                                                nullable=False)
@@ -116,6 +120,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     """
     graph_tuple = graph_tuples.GraphTuple.CreateFromNetworkX(
         g, **graph_tuple_opts)
+    node_embeddings_count = len(graph_tuple.node_x_indices[0])
     node_labels_dimensionality = (len(graph_tuple.node_y[0])
                                   if graph_tuple.has_node_y else 0)
     graph_features_dimensionality = (len(graph_tuple.graph_x)
@@ -141,6 +146,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         edge_count=sum([len(a) for a in graph_tuple.adjacency_lists]),
         edge_type_count=len(graph_tuple.adjacency_lists),
         edge_position_max=edge_position_max,
+        node_embeddings_count=node_embeddings_count,
         node_labels_dimensionality=node_labels_dimensionality,
         graph_features_dimensionality=graph_features_dimensionality,
         graph_labels_dimensionality=graph_labels_dimensionality,
@@ -182,6 +188,7 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         edge_count=g.number_of_edges(),
         edge_type_count=len(edge_types),
         edge_position_max=edge_position_max,
+        node_embeddings_count=len(g.nodes[node]['x']),
         node_labels_dimensionality=(len(g.nodes[node]['y'])
                                     if 'y' in g.nodes[node] else 0),
         graph_features_dimensionality=getattr(g, 'x', 0),
@@ -227,6 +234,21 @@ class Database(sqlutil.Database):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
   @decorators.memoized_property
-  def embeddings_table(self) -> np.array:
+  def embeddings_tables(self) -> typing.List[np.array]:
+    """Return the embeddings tables."""
+    # TODO(github.com/ChrisCummins/ml4pl/issues/12): In the future we may want
+    # to add support for different numbers of embeddings tables, or embeddings
+    # tables with different types. This is hardcoded to support only two
+    # embeddings tables: our augmented inst2vec statement embeddings, and
+    # a binary 'selector' table which can be used to select one or more nodes
+    # of interests in graphs, e.g. for setting the starting point for computing
+    # iterative data flow analyses.
     with open(EMBEDDINGS, 'rb') as f:
-      return pickle.load(f)
+      augmented_inst2vec_embeddings = pickle.load(f)
+
+    node_selector = np.vstack([
+        [1, 0],
+        [0, 1],
+    ]).astype(np.float64)
+
+    return augmented_inst2vec_embeddings, node_selector

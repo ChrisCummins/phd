@@ -35,14 +35,14 @@ def wiki() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
 
   # Variables:
-  g.add_node('a', type='identifier')
-  g.add_node('b', type='identifier')
-  g.add_node('c', type='identifier')
-  g.add_node('d', type='identifier')
-  g.add_node('x', type='identifier')
+  g.add_node('a', type='identifier', x=-1)
+  g.add_node('b', type='identifier', x=-1)
+  g.add_node('c', type='identifier', x=-1)
+  g.add_node('d', type='identifier', x=-1)
+  g.add_node('x', type='identifier', x=-1)
 
   # b1
-  g.add_node('b1', type='statement')
+  g.add_node('b1', type='statement', x=-1)
   # Defs
   g.add_edge('b1', 'a', flow='data')
   g.add_edge('b1', 'b', flow='data')
@@ -50,7 +50,7 @@ def wiki() -> nx.MultiDiGraph:
   g.add_edge('b1', 'x', flow='data')
 
   # b2
-  g.add_node('b2', type='statement')
+  g.add_node('b2', type='statement', x=-1)
   g.add_edge('b1', 'b2', flow='control')
   # Defs
   g.add_edge('b2', 'c', flow='data')
@@ -60,14 +60,14 @@ def wiki() -> nx.MultiDiGraph:
   g.add_edge('b', 'b2', flow='data')
 
   # b3a
-  g.add_node('b3a', type='statement')
+  g.add_node('b3a', type='statement', x=-1)
   g.add_edge('b1', 'b3a', flow='control')
   g.add_edge('b2', 'b3a', flow='control')
   # Defs
   g.add_edge('b3a', 'c', flow='data')
 
   # b3b
-  g.add_node('b3b', type='statement')
+  g.add_node('b3b', type='statement', x=-1)
   g.add_edge('b3a', 'b3b', flow='control')
   # Uses
   g.add_edge('b', 'b3b', flow='data')
@@ -88,15 +88,15 @@ def test_AnnotateLiveness_wiki_b1(wiki: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert wiki.nodes['b1']['x'] == 1
-  assert wiki.nodes['b2']['x'] == 0
-  assert wiki.nodes['b3a']['x'] == 0
-  assert wiki.nodes['b3b']['x'] == 0
+  assert wiki.nodes['b1']['x'] == [-1, 1]
+  assert wiki.nodes['b2']['x'] == [-1, 0]
+  assert wiki.nodes['b3a']['x'] == [-1, 0]
+  assert wiki.nodes['b3b']['x'] == [-1, 0]
 
-  assert wiki.nodes['a']['x'] == 0
-  assert wiki.nodes['b']['x'] == 0
-  assert wiki.nodes['c']['x'] == 0
-  assert wiki.nodes['d']['x'] == 0
+  assert wiki.nodes['a']['x'] == [-1, 0]
+  assert wiki.nodes['b']['x'] == [-1, 0]
+  assert wiki.nodes['c']['x'] == [-1, 0]
+  assert wiki.nodes['d']['x'] == [-1, 0]
 
   # Labels:
   assert not wiki.nodes['b1']['y']
@@ -118,15 +118,15 @@ def test_AnnotateLiveness_wiki_b2(wiki: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert wiki.nodes['b1']['x'] == 0
-  assert wiki.nodes['b2']['x'] == 1
-  assert wiki.nodes['b3a']['x'] == 0
-  assert wiki.nodes['b3b']['x'] == 0
+  assert wiki.nodes['b1']['x'] == [-1, 0]
+  assert wiki.nodes['b2']['x'] == [-1, 1]
+  assert wiki.nodes['b3a']['x'] == [-1, 0]
+  assert wiki.nodes['b3b']['x'] == [-1, 0]
 
-  assert wiki.nodes['a']['x'] == 0
-  assert wiki.nodes['b']['x'] == 0
-  assert wiki.nodes['c']['x'] == 0
-  assert wiki.nodes['d']['x'] == 0
+  assert wiki.nodes['a']['x'] == [-1, 0]
+  assert wiki.nodes['b']['x'] == [-1, 0]
+  assert wiki.nodes['c']['x'] == [-1, 0]
+  assert wiki.nodes['d']['x'] == [-1, 0]
 
   # Labels:
   assert not wiki.nodes['b1']['y']
@@ -148,15 +148,15 @@ def test_AnnotateLiveness_wiki_b3a(wiki: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert wiki.nodes['b1']['x'] == 0
-  assert wiki.nodes['b2']['x'] == 0
-  assert wiki.nodes['b3a']['x'] == 1
-  assert wiki.nodes['b3b']['x'] == 0
+  assert wiki.nodes['b1']['x'] == [-1, 0]
+  assert wiki.nodes['b2']['x'] == [-1, 0]
+  assert wiki.nodes['b3a']['x'] == [-1, 1]
+  assert wiki.nodes['b3b']['x'] == [-1, 0]
 
-  assert wiki.nodes['a']['x'] == 0
-  assert wiki.nodes['b']['x'] == 0
-  assert wiki.nodes['c']['x'] == 0
-  assert wiki.nodes['d']['x'] == 0
+  assert wiki.nodes['a']['x'] == [-1, 0]
+  assert wiki.nodes['b']['x'] == [-1, 0]
+  assert wiki.nodes['c']['x'] == [-1, 0]
+  assert wiki.nodes['d']['x'] == [-1, 0]
 
   # Labels:
   assert not wiki.nodes['b1']['y']
@@ -178,15 +178,15 @@ def test_AnnotateLiveness_wiki_b3b(wiki: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert wiki.nodes['b1']['x'] == 0
-  assert wiki.nodes['b2']['x'] == 0
-  assert wiki.nodes['b3a']['x'] == 0
-  assert wiki.nodes['b3b']['x'] == 1
+  assert wiki.nodes['b1']['x'] == [-1, 0]
+  assert wiki.nodes['b2']['x'] == [-1, 0]
+  assert wiki.nodes['b3a']['x'] == [-1, 0]
+  assert wiki.nodes['b3b']['x'] == [-1, 1]
 
-  assert wiki.nodes['a']['x'] == 0
-  assert wiki.nodes['b']['x'] == 0
-  assert wiki.nodes['c']['x'] == 0
-  assert wiki.nodes['d']['x'] == 0
+  assert wiki.nodes['a']['x'] == [-1, 0]
+  assert wiki.nodes['b']['x'] == [-1, 0]
+  assert wiki.nodes['c']['x'] == [-1, 0]
+  assert wiki.nodes['d']['x'] == [-1, 0]
 
   # Labels:
   assert not wiki.nodes['b1']['y']
@@ -203,13 +203,13 @@ def test_AnnotateLiveness_wiki_b3b(wiki: nx.MultiDiGraph):
 @pytest.fixture(scope='function')
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
-  g.add_node('A', type='statement')
-  g.add_node('B', type='statement')
-  g.add_node('C', type='statement')
-  g.add_node('D', type='statement')
+  g.add_node('A', type='statement', x=-1)
+  g.add_node('B', type='statement', x=-1)
+  g.add_node('C', type='statement', x=-1)
+  g.add_node('D', type='statement', x=-1)
 
-  g.add_node('%1', type='identifier')
-  g.add_node('%2', type='identifier')
+  g.add_node('%1', type='identifier', x=-1)
+  g.add_node('%2', type='identifier', x=-1)
 
   g.add_edge('A', 'B', flow='control')
   g.add_edge('A', 'C', flow='control')
@@ -230,13 +230,13 @@ def test_AnnotateDominatorTree_graph_A(graph: nx.MultiDiGraph):
   assert data_flow_steps == 4
 
   # Features:
-  assert graph.nodes['A']['x'] == 1
-  assert graph.nodes['B']['x'] == 0
-  assert graph.nodes['C']['x'] == 0
-  assert graph.nodes['D']['x'] == 0
+  assert graph.nodes['A']['x'] == [-1, 1]
+  assert graph.nodes['B']['x'] == [-1, 0]
+  assert graph.nodes['C']['x'] == [-1, 0]
+  assert graph.nodes['D']['x'] == [-1, 0]
 
-  assert graph.nodes['%1']['x'] == 0
-  assert graph.nodes['%2']['x'] == 0
+  assert graph.nodes['%1']['x'] == [-1, 0]
+  assert graph.nodes['%2']['x'] == [-1, 0]
 
   # Labels:
   assert not graph.nodes['A']['y']
@@ -255,13 +255,13 @@ def test_AnnotateDominatorTree_graph_B(graph: nx.MultiDiGraph):
   assert data_flow_steps == 4
 
   # Features:
-  assert graph.nodes['A']['x'] == 0
-  assert graph.nodes['B']['x'] == 1
-  assert graph.nodes['C']['x'] == 0
-  assert graph.nodes['D']['x'] == 0
+  assert graph.nodes['A']['x'] == [-1, 0]
+  assert graph.nodes['B']['x'] == [-1, 1]
+  assert graph.nodes['C']['x'] == [-1, 0]
+  assert graph.nodes['D']['x'] == [-1, 0]
 
-  assert graph.nodes['%1']['x'] == 0
-  assert graph.nodes['%2']['x'] == 0
+  assert graph.nodes['%1']['x'] == [-1, 0]
+  assert graph.nodes['%2']['x'] == [-1, 0]
 
   # Labels:
   assert not graph.nodes['A']['y']
@@ -280,13 +280,13 @@ def test_AnnotateDominatorTree_graph_C(graph: nx.MultiDiGraph):
   assert data_flow_steps == 4
 
   # Features:
-  assert graph.nodes['A']['x'] == 0
-  assert graph.nodes['B']['x'] == 0
-  assert graph.nodes['C']['x'] == 1
-  assert graph.nodes['D']['x'] == 0
+  assert graph.nodes['A']['x'] == [-1, 0]
+  assert graph.nodes['B']['x'] == [-1, 0]
+  assert graph.nodes['C']['x'] == [-1, 1]
+  assert graph.nodes['D']['x'] == [-1, 0]
 
-  assert graph.nodes['%1']['x'] == 0
-  assert graph.nodes['%2']['x'] == 0
+  assert graph.nodes['%1']['x'] == [-1, 0]
+  assert graph.nodes['%2']['x'] == [-1, 0]
 
   # Labels:
   assert not graph.nodes['A']['y']
@@ -305,13 +305,13 @@ def test_AnnotateDominatorTree_graph_D(graph: nx.MultiDiGraph):
   assert data_flow_steps == 4
 
   # Features:
-  assert graph.nodes['A']['x'] == 0
-  assert graph.nodes['B']['x'] == 0
-  assert graph.nodes['C']['x'] == 0
-  assert graph.nodes['D']['x'] == 1
+  assert graph.nodes['A']['x'] == [-1, 0]
+  assert graph.nodes['B']['x'] == [-1, 0]
+  assert graph.nodes['C']['x'] == [-1, 0]
+  assert graph.nodes['D']['x'] == [-1, 1]
 
-  assert graph.nodes['%1']['x'] == 0
-  assert graph.nodes['%2']['x'] == 0
+  assert graph.nodes['%1']['x'] == [-1, 0]
+  assert graph.nodes['%2']['x'] == [-1, 0]
 
   # Labels:
   assert not graph.nodes['A']['y']
@@ -344,10 +344,10 @@ def while_loop() -> nx.MultiDiGraph:
   #    V    |
   #   [C]<--+
   g = nx.MultiDiGraph()
-  g.add_node('A', type='statement')  # Loop header
-  g.add_node('Ba', type='statement')  # Loop body
-  g.add_node('Bb', type='statement')  # Loop body
-  g.add_node('C', type='statement')  # Loop exit
+  g.add_node('A', type='statement', x=-1)  # Loop header
+  g.add_node('Ba', type='statement', x=-1)  # Loop body
+  g.add_node('Bb', type='statement', x=-1)  # Loop body
+  g.add_node('C', type='statement', x=-1)  # Loop exit
 
   # Control flow:
   g.add_edge('A', 'Ba', flow='control')
@@ -356,9 +356,9 @@ def while_loop() -> nx.MultiDiGraph:
   g.add_edge('A', 'C', flow='control')
 
   # Data flow:
-  g.add_node('%1', type='identifier')  # Loop induction variable
-  g.add_node('%2', type='identifier')  # Computed result
-  g.add_node('%3', type='identifier')  # Intermediate value
+  g.add_node('%1', type='identifier', x=-1)  # Loop induction variable
+  g.add_node('%2', type='identifier', x=-1)  # Computed result
+  g.add_node('%3', type='identifier', x=-1)  # Intermediate value
 
   g.add_edge('%1', 'A', flow='data')
   g.add_edge('Ba', '%3', flow='data')
@@ -376,14 +376,14 @@ def test_AnnotateDominatorTree_while_loop_A(while_loop: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert while_loop.nodes['A']['x'] == 1
-  assert while_loop.nodes['Ba']['x'] == 0
-  assert while_loop.nodes['Bb']['x'] == 0
-  assert while_loop.nodes['C']['x'] == 0
+  assert while_loop.nodes['A']['x'] == [-1, 1]
+  assert while_loop.nodes['Ba']['x'] == [-1, 0]
+  assert while_loop.nodes['Bb']['x'] == [-1, 0]
+  assert while_loop.nodes['C']['x'] == [-1, 0]
 
-  assert while_loop.nodes['%1']['x'] == 0
-  assert while_loop.nodes['%2']['x'] == 0
-  assert while_loop.nodes['%3']['x'] == 0
+  assert while_loop.nodes['%1']['x'] == [-1, 0]
+  assert while_loop.nodes['%2']['x'] == [-1, 0]
+  assert while_loop.nodes['%3']['x'] == [-1, 0]
 
   # Labels:
   assert not while_loop.nodes['A']['y']
@@ -404,14 +404,14 @@ def test_AnnotateDominatorTree_while_loop_Ba(while_loop: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert while_loop.nodes['A']['x'] == 0
-  assert while_loop.nodes['Ba']['x'] == 1
-  assert while_loop.nodes['Bb']['x'] == 0
-  assert while_loop.nodes['C']['x'] == 0
+  assert while_loop.nodes['A']['x'] == [-1, 0]
+  assert while_loop.nodes['Ba']['x'] == [-1, 1]
+  assert while_loop.nodes['Bb']['x'] == [-1, 0]
+  assert while_loop.nodes['C']['x'] == [-1, 0]
 
-  assert while_loop.nodes['%1']['x'] == 0
-  assert while_loop.nodes['%2']['x'] == 0
-  assert while_loop.nodes['%3']['x'] == 0
+  assert while_loop.nodes['%1']['x'] == [-1, 0]
+  assert while_loop.nodes['%2']['x'] == [-1, 0]
+  assert while_loop.nodes['%3']['x'] == [-1, 0]
 
   # Labels:
   assert not while_loop.nodes['A']['y']
@@ -432,14 +432,14 @@ def test_AnnotateDominatorTree_while_loop_Bb(while_loop: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert while_loop.nodes['A']['x'] == 0
-  assert while_loop.nodes['Ba']['x'] == 0
-  assert while_loop.nodes['Bb']['x'] == 1
-  assert while_loop.nodes['C']['x'] == 0
+  assert while_loop.nodes['A']['x'] == [-1, 0]
+  assert while_loop.nodes['Ba']['x'] == [-1, 0]
+  assert while_loop.nodes['Bb']['x'] == [-1, 1]
+  assert while_loop.nodes['C']['x'] == [-1, 0]
 
-  assert while_loop.nodes['%1']['x'] == 0
-  assert while_loop.nodes['%2']['x'] == 0
-  assert while_loop.nodes['%3']['x'] == 0
+  assert while_loop.nodes['%1']['x'] == [-1, 0]
+  assert while_loop.nodes['%2']['x'] == [-1, 0]
+  assert while_loop.nodes['%3']['x'] == [-1, 0]
 
   # Labels:
   assert not while_loop.nodes['A']['y']
@@ -460,14 +460,14 @@ def test_AnnotateDominatorTree_while_loop_C(while_loop: nx.MultiDiGraph):
   assert data_flow_steps == 5
 
   # Features:
-  assert not while_loop.nodes['A']['x']
-  assert not while_loop.nodes['Ba']['x']
-  assert not while_loop.nodes['Bb']['x']
-  assert while_loop.nodes['C']['x']
+  assert while_loop.nodes['A']['x'] == [-1, 0]
+  assert while_loop.nodes['Ba']['x'] == [-1, 0]
+  assert while_loop.nodes['Bb']['x'] == [-1, 0]
+  assert while_loop.nodes['C']['x'] == [-1, 1]
 
-  assert not while_loop.nodes['%1']['x']
-  assert not while_loop.nodes['%2']['x']
-  assert not while_loop.nodes['%3']['x']
+  assert while_loop.nodes['%1']['x'] == [-1, 0]
+  assert while_loop.nodes['%2']['x'] == [-1, 0]
+  assert while_loop.nodes['%3']['x'] == [-1, 0]
 
   # Labels:
   assert not while_loop.nodes['A']['y']

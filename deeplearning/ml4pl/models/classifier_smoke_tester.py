@@ -73,6 +73,7 @@ def RunSmokeTest(
       # Add node-level labels.
       random_cdfg_generator.AddRandomAnnotations(
           graphs,
+          auxiliary_node_x_indices_choices=[[0, 1]],
           node_y_choices=node_y_choices,
           graph_x_choices=graph_x_choices,
           graph_y_choices=graph_y_choices)

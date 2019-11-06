@@ -10,11 +10,11 @@ FLAGS = app.FLAGS
 
 def test_AnnotateDominatorTree():
   g = nx.MultiDiGraph()
-  g.add_node('A', type='statement')
-  g.add_node('B', type='statement')
-  g.add_node('C', type='statement')
-  g.add_node('D', type='statement')
-  g.add_node('E', type='statement')
+  g.add_node('A', type='statement', x=-1)
+  g.add_node('B', type='statement', x=-1)
+  g.add_node('C', type='statement', x=-1)
+  g.add_node('D', type='statement', x=-1)
+  g.add_node('E', type='statement', x=-1)
 
   g.add_edge('A', 'B', flow='control')
   g.add_edge('A', 'C', flow='control')
@@ -32,11 +32,11 @@ def test_AnnotateDominatorTree():
   assert max_steps == 3
 
   # Features
-  assert g.nodes['A']['x'] == 0
-  assert g.nodes['B']['x'] == 0
-  assert g.nodes['C']['x'] == 0
-  assert g.nodes['D']['x'] == 1
-  assert g.nodes['E']['x'] == 0
+  assert g.nodes['A']['x'] == [-1, 0]
+  assert g.nodes['B']['x'] == [-1, 0]
+  assert g.nodes['C']['x'] == [-1, 0]
+  assert g.nodes['D']['x'] == [-1, 1]
+  assert g.nodes['E']['x'] == [-1, 0]
 
   # Labels
   assert g.nodes['A']['y']

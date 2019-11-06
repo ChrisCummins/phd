@@ -13,11 +13,11 @@ FLAGS = app.FLAGS
 @pytest.fixture(scope='function')
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
-  g.add_node('A', type='statement', x=0)
-  g.add_node('B', type='statement', x=1)
-  g.add_node('C', type='statement', x=2)
-  g.add_node('D', type='statement', x=3)
-  g.add_node('root', type='magic', x=4)
+  g.add_node('A', type='statement', x=[0, 0])
+  g.add_node('B', type='statement', x=[1, 0])
+  g.add_node('C', type='statement', x=[2, 0])
+  g.add_node('D', type='statement', x=[3, 0])
+  g.add_node('root', type='magic', x=[4, 0])
   g.add_edge('A', 'B', flow='control', position=0)
   g.add_edge('B', 'C', flow='control', position=0)
   g.add_edge('C', 'D', flow='control', position=0)
@@ -129,12 +129,13 @@ def test_CreateFromNetworkX_node_embedding_indices(graph: nx.MultiDiGraph):
   assert not d.has_graph_x
   assert not d.has_graph_y
 
-  assert d.node_x_indices.shape == (5,)
-  assert d.node_x_indices[0] == 0
-  assert d.node_x_indices[1] == 1
-  assert d.node_x_indices[2] == 2
-  assert d.node_x_indices[3] == 3
-  assert d.node_x_indices[4] == 4
+  assert d.node_x_indices.shape == (5, 2)
+  assert d.node_x_indices.dtype == np.int32
+  assert np.array_equal(d.node_x_indices[0], [0, 0])
+  assert np.array_equal(d.node_x_indices[1], [1, 0])
+  assert np.array_equal(d.node_x_indices[2], [2, 0])
+  assert np.array_equal(d.node_x_indices[3], [3, 0])
+  assert np.array_equal(d.node_x_indices[4], [4, 0])
 
 
 def test_CreateFromNetworkX_node_labels(graph: nx.MultiDiGraph):

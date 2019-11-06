@@ -39,18 +39,21 @@ class GraphTuple(typing.NamedTuple):
   # IncomingEdgeCountsToDense() to convert this to a dense representation.
   incoming_edge_counts: np.array  # Shape [edge_type_count, ?])
 
-  # A list of indices into the node features table.
-  node_x_indices: np.array  # Shape [node_count], dtype int32
+  # A matrix of indices into the node features table. Each row is a node,
+  # and each column is an embedding index for that node. Multiple embedding
+  # indices read from multiple embedding tables.
+  # Shape [node_count,node_embeddings_count], dtype int32
+  node_x_indices: np.array
 
-  # (optional) A list of node arrays of node labels.
+  # (optional) A list of node labels arrays.
   # Shape [node_count, node_label_dimensionality]
   node_y: typing.Optional[np.array] = None
 
-  # (optional) A list of indices into the graph features table.
+  # (optional) A list of graph features arrays.
   # Shape [graph_feature_dimensionality]
   graph_x: typing.Optional[np.array] = None
 
-  # (optional) A vector of graph labels.
+  # (optional) A vector of graph labels arrays.
   graph_y: typing.Optional[
       np.array] = None  # Shape [graph_label_dimensionality]
 
@@ -174,16 +177,20 @@ class GraphTuple(typing.NamedTuple):
 
     # Set node embedding indices.
     node_x_indices = [None] * g.number_of_nodes()
-    for node, embedding_index in g.nodes(data='x'):
-      if embedding_index is None:
+    for node, embedding_indices in g.nodes(data='x'):
+      if embedding_indices is None:
         raise ValueError(f"No embedding for node `{node}`")
       node_idx = node_to_index[node]
-      node_x_indices[node_idx] = embedding_index
-    node_x_indices = np.array(node_x_indices, dtype=np.int32)
+      node_x_indices[node_idx] = embedding_indices
+    # All embedding_indices arrays must have the same length else this will
+    # fail.
+    node_x_indices = np.vstack(node_x_indices).astype(np.int32)
 
     # Set optional node labels.
     node_targets = [None] * g.number_of_nodes()
     for node, y in g.nodes(data=node_y, default=None):
+      # Node labels are optional. If the first node doesn't have one, stop
+      # iterating.
       if y is None:
         node_y = None
         break
