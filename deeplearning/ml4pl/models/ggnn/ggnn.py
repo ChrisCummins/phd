@@ -137,13 +137,23 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
         self.gnn_weights.rnn_cells.append(cell)
 
     with tf.compat.v1.variable_scope("embeddings"):
-      self.weights['node_embeddings'] = (
-          self._GetEmbeddingsAsTensorflowVariable())
       # generate table with position embs up to pos 512.
-      self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable()
-    encoded_node_x = tf.nn.embedding_lookup(self.weights['node_embeddings'],
-                                            ids=self.placeholders['node_x'])
-    
+      self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable(
+      )
+
+      # Lookup each node embedding table and concatenate the result.
+      embeddings = self._GetEmbeddingsAsTensorflowVariables()
+      for i in range(len(embeddings)):
+        self.weights[f'node_embeddings_{i}'] = embeddings[i]
+
+      encoded_node_x = tf.compat.v1.concat([
+          tf.nn.embedding_lookup(self.weights[f'node_embeddings_{i}'],
+                                 ids=self.placeholders['node_x'][:, i])
+          for i in range(len(embeddings))
+      ],
+                                           axis=1,
+                                           name='embeddings_concat')
+
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
@@ -194,18 +204,21 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
 
             # Collect incoming messages per edge type
             for edge_type, (adjacency_list, edge_positions) in enumerate(
-                zip(self.placeholders["adjacency_lists"], self.placeholders['edge_positions'])):
+                zip(self.placeholders["adjacency_lists"],
+                    self.placeholders['edge_positions'])):
               edge_sources = adjacency_list[:, 0]
               edge_source_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=edge_sources)  # Shape [E, D]
 
               edge_pos_embedding = tf.nn.embedding_lookup(
-                  self.position_embeddings,
-                  ids=edge_positions) # shape [E, D]
+                  self.position_embeddings, ids=edge_positions)  # shape [E, D]
 
-              if FLAGS.position_embeddings: #only place this flag is used!
-                edge_source_states_with_position = tf.add(edge_source_states, edge_pos_embedding, name='edge_source_states_with_position')
+              if FLAGS.position_embeddings:  #only place this flag is used!
+                edge_source_states_with_position = tf.add(
+                    edge_source_states,
+                    edge_pos_embedding,
+                    name='edge_source_states_with_position')
               else:
                 edge_source_states_with_position = edge_source_states
 
@@ -386,15 +399,6 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
-      # Pad node feature vector of size <= hidden_size up to hidden_size so
-      # that the size matches embedding dimensionality.
-      # batch['node_x'] = np.pad(
-      #     batch["node_x"],
-      #     ((0, 0),
-      #      (0, FLAGS.hidden_size - self.stats.node_features_dimensionality)),
-      #     "constant",
-      # )
-
       feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
 
       if epoch_type == "train":

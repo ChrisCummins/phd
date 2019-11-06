@@ -8,7 +8,6 @@ import numpy as np
 import sklearn.metrics
 import sqlalchemy as sql
 from labm8 import app
-from labm8 import bazelutil
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import jsonutil
@@ -54,12 +53,6 @@ app.DEFINE_database('log_db', log_database.Database, None,
 app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
 
 app.DEFINE_integer("random_seed", 42, "A random seed value.")
-
-app.DEFINE_input_path(
-    "embedding_path",
-    bazelutil.DataPath('phd/deeplearning/ml4pl/graphs/unlabelled/cdfg/'
-                       'node_embeddings/inst2vec_augmented_embeddings.pickle'),
-    "The path of the embeddings file to use.")
 
 app.DEFINE_string(
     'batch_scores_averaging_method', 'weighted',
@@ -186,6 +179,7 @@ class ClassifierBase(object):
     app.Log(1, "Run ID: %s", self.run_id)
 
     self.batcher = graph_batcher.GraphBatcher(db)
+    self.graph_db = db
     self.stats = self.batcher.stats
 
     self.working_dir = FLAGS.working_dir

@@ -1,5 +1,4 @@
 """Base class for implementing gated graph neural networks."""
-import pickle
 import typing
 
 import numpy as np
@@ -8,10 +7,10 @@ from labm8 import app
 from labm8 import humanize
 from labm8 import prof
 
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
-from deeplearning.ml4pl.models import base_utils
 
 FLAGS = app.FLAGS
 
@@ -41,13 +40,14 @@ classifier_base.MODEL_FLAGS.add("learning_rate")
 app.DEFINE_float("clamp_gradient_norm", 1.0, "Clip gradients to L-2 norm.")
 classifier_base.MODEL_FLAGS.add("clamp_gradient_norm")
 
-app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s).")
+app.DEFINE_integer("hidden_size", 202, "The size of hidden layer(s).")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_string(
-    "embeddings", "finetune",
-    "The type of embeddings to use. One of: {constant,finetune,random}.")
-classifier_base.MODEL_FLAGS.add("embeddings")
+    "inst2vec_embeddings", "finetune",
+    "The type of per-node inst2vec embeddings to use. One of: "
+    "{constant,finetune,random}.")
+classifier_base.MODEL_FLAGS.add("inst2vec_embeddings")
 
 app.DEFINE_boolean(
     "tensorboard_logging", True,
@@ -102,10 +102,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     with self.graph.as_default():
       tf.set_random_seed(FLAGS.random_seed)
       with prof.Profile('Made model'):
-        self.weights = {
-            "embedding_table": self._GetEmbeddingsTable(),
-        }
-
         self.placeholders = utils.MakePlaceholders(self.stats)
 
         self.ops = {}
@@ -159,37 +155,50 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
   def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
     """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
-    embeddings = base_utils.pos_emb(positions=range(512), demb=FLAGS.hidden_size)
+    embeddings = base_utils.pos_emb(positions=range(512),
+                                    demb=FLAGS.hidden_size)
     pos_emb = tf.Variable(initial_value=embeddings,
                           trainable=False,
                           dtype=tf.float32)
     return pos_emb
 
-  def _GetEmbeddingsTable(self) -> np.array:
-    """Reading embeddings table"""
-    with open(FLAGS.embedding_path, 'rb') as f:
-      return pickle.load(f)
-
-  def _GetEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
+  def _GetEmbeddingsAsTensorflowVariables(
+      self) -> typing.Tuple[tf.Tensor, tf.Tensor]:
     """Read the embeddings table and return as a tensorflow variable."""
-    embeddings = self._GetEmbeddingsTable()
-    if FLAGS.embeddings == 'constant':
+    # TODO(github.com/ChrisCummins/ml4pl/issues/12): In the future we may want
+    # to be more flexible in supporting multiple types of embeddings tables, but
+    # for now I have hardcoded this to always return a tuple
+    # <inst2vec_embeddings, selector_embeddings>, where inst2vec_embeddings
+    # is the augmented table of pre-trained statement embeddings (the
+    # augmentation adds !MAGIC, !IMMEDIATE, and !IDENTIFIER vocabulary
+    # elements). selector_embeddings is a 2x2 1-hot embedding table:
+    # [[1, 0], [0, 1]. The selector_embeddings table is always constant, the
+    # inst2vec_embeddings table can be made trainable or re-initialized with
+    # random values using the --inst2vec_embeddings flag.
+    embeddings = self.graph_db.embeddings_tables
+    if FLAGS.inst2vec_embeddings == 'constant':
       app.Log(1,
               "Using pre-trained inst2vec embeddings without further training")
       trainable = False
-    elif FLAGS.embeddings == 'finetune':
+    elif FLAGS.inst2vec_embeddings == 'finetune':
       app.Log(1, "Fine-tuning inst2vec embeddings")
       trainable = True
-    elif FLAGS.embeddings == 'random':
+    elif FLAGS.inst2vec_embeddings == 'random':
       app.Log(1, "Initializing with random embeddings")
-      embeddings = np.random.rand(embeddings.shape)
+      embeddings[0] = np.random.rand(embeddings[0].shape)
       trainable = True
     else:
-      raise app.UsageError(f"--embeddings=`{FLAGS.embeddings}` unrecognized. "
-                           "Must be one of {constant,finetune,random}")
-    return tf.Variable(initial_value=embeddings,
-                       trainable=trainable,
-                       dtype=tf.float32)
+      raise app.UsageError(
+          f"--instvec_embeddings=`{FLAGS.inst2vec_embeddings}` "
+          "unrecognized. Must be one of "
+          "{constant,finetune,random}")
+    inst2vec_embeddings = tf.Variable(initial_value=embeddings[0],
+                                      trainable=trainable,
+                                      dtype=tf.float32)
+    selector_embeddings = tf.Variable(initial_value=embeddings[1],
+                                      trainable=False,
+                                      dtype=tf.float32)
+    return inst2vec_embeddings, selector_embeddings
 
   @property
   def message_passing_step_count(self) -> int:
