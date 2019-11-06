@@ -72,13 +72,15 @@ def graph_db_512(graph_db: graph_database.Database) -> graph_database.Database:
   yield graph_db
 
 
-def _MockProcessBytecodeInputs(
-    bytecode_db_session: bytecode_database.Database.Session,
-    bytecode_ids: typing.List[int]):
+def _MockProcessBytecodeInputs(bytecode_db: bytecode_database.Database,
+                               bytecode_ids: typing.List[int]):
   """A fake bytecode job creator returns three graphs per input."""
-  bytecodes = bytecode_db_session.query(bytecode_database.LlvmBytecode.id,
-                                   bytecode_database.LlvmBytecode.bytecode) \
-    .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids))
+  with bytecode_db.Session() as session:
+    bytecodes = session.query(bytecode_database.LlvmBytecode.id,
+                                     bytecode_database.LlvmBytecode.bytecode) \
+      .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids)) \
+      .all()
+  bytecode_db.Close()  # Don't leave the database connection lying around.
   return [
       graph_database.GraphMeta(
           bytecode_id=bytecode_id,

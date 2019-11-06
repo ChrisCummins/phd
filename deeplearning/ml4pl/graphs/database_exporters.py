@@ -35,12 +35,11 @@ class DatabaseExporterBase(object):
   """Base class for implementing parallelized database workers."""
 
   def GetProcessInputs(
-      self) -> typing.Callable[[sqlutil.Database.SessionType, typing.
-                                List[int]], typing.Optional[typing.Any]]:
+      self) -> typing.Callable[[sqlutil.Database, typing.List[int]], typing.
+                               Optional[typing.Any]]:
     """A method which returns a function that accepts as input a database
-    session and an index into the database and optionally produces a
-    packaged set of arguments that are passed to the function returned by
-    GetProcessJobFunction().
+    and an index into a table in the database and yields a list of zero or more
+    graph metas.
     """
     raise NotImplementedError("abstract class")
 
@@ -156,8 +155,8 @@ def _BytecodeWorker(packed_args):
   with prof.Profile(lambda t: (f"Processed {humanize.Commas(len(bytecode_ids))}"
                                f" bytecodes ({len(bytecode_ids) / t:.2f} "
                                f"bytecodes/sec)")):
-    with bytecode_database.Database(bytecode_db_url).Session() as session:
-      return job_processor(session, bytecode_ids)
+    bytecode_db = bytecode_database.Database(bytecode_db_url)
+    return job_processor(bytecode_db, bytecode_ids)
 
 
 class GraphDatabaseExporterBase(DatabaseExporterBase):
@@ -244,8 +243,8 @@ def _GraphWorker(packed_args):
   with prof.Profile(lambda t: (f"Processed {humanize.Commas(len(bytecode_ids))}"
                                f" input graphs ({len(bytecode_ids) / t:.2f} "
                                f"input graphs/sec)")):
-    with graph_database.Database(graph_db_url).Session() as session:
-      return job_processor(session, bytecode_ids)
+    graph_db = graph_database.Database(graph_db_url)
+    return job_processor(graph_db, bytecode_ids)
 
 
 def Run(input_db, output_db, run_export):

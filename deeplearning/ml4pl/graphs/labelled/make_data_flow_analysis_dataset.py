@@ -66,17 +66,20 @@ def GetFalseTrueType():
 
 
 def _ProcessInputs(
-    session: graph_database.Database.SessionType,
+    graph_db: graph_database.Database,
     bytecode_ids: typing.List[int]) -> typing.List[graph_database.GraphMeta]:
   """Process a set of graphs.
 
   Returns:
     A list of analysis-annotated graphs.
   """
-  jobs = session.query(graph_database.GraphMeta) \
-    .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)) \
-    .options(sql.orm.joinedload(graph_database.GraphMeta.graph)) \
-    .all()
+  with graph_db.Session() as session:
+    graphs_to_process = session.query(graph_database.GraphMeta) \
+      .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids)) \
+      .options(sql.orm.joinedload(graph_database.GraphMeta.graph)) \
+      .order_by(graph_database.GraphMeta.bytecode_id) \
+      .all()
+  graph_db.Close()  # Don't leave the database connection lying around.
   session.close()
 
   annotated_graph_generator = GetAnnotatedGraphGenerator()

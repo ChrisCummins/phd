@@ -27,20 +27,21 @@ app.DEFINE_database('graph_db', graph_database.Database,
 
 
 def _ProcessInputs(
-    session: bytecode_database.Database.SessionType,
+    bytecode_db: bytecode_database.Database,
     bytecode_ids: typing.List[int]) -> typing.List[graph_database.GraphMeta]:
   """Process a set of bytecodes.
 
   Returns:
     A list of analysis-annotated graphs.
   """
-  jobs = session.query(bytecode_database.LlvmBytecode.id,
-                       bytecode_database.LlvmBytecode.bytecode,
-                       bytecode_database.LlvmBytecode.source_name,
-                       bytecode_database.LlvmBytecode.relpath,
-                       bytecode_database.LlvmBytecode.language) \
-    .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids)).all()
-  session.close()
+  with bytecode_db.Session() as session:
+    jobs = session.query(bytecode_database.LlvmBytecode.id,
+                         bytecode_database.LlvmBytecode.bytecode,
+                         bytecode_database.LlvmBytecode.source_name,
+                         bytecode_database.LlvmBytecode.relpath,
+                         bytecode_database.LlvmBytecode.language) \
+      .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids)).all()
+  bytecode_db.Close()  # Don't leave the database connection lying around.
 
   builder = cdfg.ControlAndDataFlowGraphBuilder()
 
