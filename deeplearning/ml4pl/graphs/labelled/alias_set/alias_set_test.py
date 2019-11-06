@@ -66,7 +66,7 @@ void A() {
   identifiers_in_alias_set = {'A_%16_operand', 'A_%10_operand'}
   for node, data in graphs[0].nodes(data=True):
     # Test the 'selector' node.
-    assert data['x'] in {0, 1}
+    assert data['x'][1] in {0, 1}
     # Test the labels.
     if node in identifiers_in_alias_set:
       assert np.array_equal(data['y'], [0, 1, 0])
@@ -104,7 +104,7 @@ void B() {
   for identifiers_in_alias_set, graph in zip(identifiers_in_alias_sets, graphs):
     for node, data in graph.nodes(data=True):
       # Test the 'selector' node.
-      assert data['x'] in {0, 1}
+      assert data['x'][1] in {0, 1}
       # Test the labels.
       if node in identifiers_in_alias_set:
         assert np.array_equal(data['y'], [0, 1, 0])
