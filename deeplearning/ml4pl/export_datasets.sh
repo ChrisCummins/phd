@@ -44,7 +44,7 @@ else
     bazel run //deeplearning/ml4pl/graphs:copy_database -- \
         --input_db='file:///var/phd/db/cc1.mysql?ml4pl_reachability?charset=utf8' \
         --output_db="sqlite:////$EXPORT/reachability_$TIMESTAMP.db" \
-        --max_rows=1024
+        --max_rows=4096
     create_tarballs
 fi
 
@@ -55,7 +55,7 @@ else
     bazel run //deeplearning/ml4pl/graphs:copy_database -- \
         --input_db='file:///var/phd/db/cc1.mysql?ml4pl_domtree?charset=utf8' \
         --output_db="sqlite:////$EXPORT/domtree_$TIMESTAMP.db" \
-        --max_rows=1024
+        --max_rows=4096
     create_tarballs
 fi
 
@@ -66,7 +66,7 @@ else
     bazel run //deeplearning/ml4pl/graphs:copy_database -- \
         --input_db="file:///var/phd/db/cc1.mysql?ml4pl_datadep?charset=utf8" \
         --output_db="sqlite:////$EXPORT/datadep_$TIMESTAMP.db" \
-        --max_rows=1024
+        --max_rows=4096
     create_tarballs
 fi
 
@@ -77,6 +77,6 @@ else
     bazel run //deeplearning/ml4pl/graphs:copy_database -- \
         --input_db="file:///var/phd/db/cc1.mysql?ml4pl_liveness?charset=utf8" \
         --output_db="sqlite:////$EXPORT/liveness_$TIMESTAMP.db" \
-        --max_rows=1024
+        --max_rows=4096
     create_tarballs
 fi
