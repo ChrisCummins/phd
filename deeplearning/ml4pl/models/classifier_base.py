@@ -327,6 +327,9 @@ class ClassifierBase(object):
     Returns:
       The best validation accuracy of the model.
     """
+    if val_group == test_group:
+      raise app.UsageError(
+          f"val_group `{val_group}` == test_group `{test_group}`!")
     # We train on everything except the validation and test data.
     train_groups = list(
         set(self.batcher.stats.groups) - {val_group, test_group})
