@@ -85,6 +85,9 @@ def RunSmokeTest(
     with prof.Profile("Created model"):
       model: classifier_base.ClassifierBase = model_class(graph_db, log_db)
 
+    # Check that model has correct name.
+    assert model.ModelFlagsToDict()['model'] == type(model_class).__name__
+
     with prof.Profile("Initialized model"):
       model.InitializeModel()
 
