@@ -58,6 +58,10 @@ app.DEFINE_integer(
     "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
     "n=-1 (maybe) runs until convergence of predictions.")
 
+# TODO: Not really a todo maybe:
+# We assume that position_embeddings exist in every dataset.
+# the flag now only controls whether they are used or not.
+# This could be nice for ablating our model and also debugging with and without.
 app.DEFINE_boolean(
     "position_embeddings", True,
     "Whether to use position embeddings as signals for edge order."
@@ -154,12 +158,11 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
   def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
     """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
-    if FLAGS.position_embeddings:
-      embeddings = base_utils.pos_emb(positions=range(512), demb=FLAGS.hidden_size)
-      pos_emb = tf.Variable(initial_value=embeddings,
-                            trainable=False,
-                            dtype=tf.float32)
-      return pos_emb
+    embeddings = base_utils.pos_emb(positions=range(512), demb=FLAGS.hidden_size)
+    pos_emb = tf.Variable(initial_value=embeddings,
+                          trainable=False,
+                          dtype=tf.float32)
+    return pos_emb
 
   def _GetEmbeddingsTable(self) -> np.array:
     """Reading embeddings table"""
