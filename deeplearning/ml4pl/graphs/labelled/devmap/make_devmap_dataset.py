@@ -14,11 +14,12 @@ from labm8 import sqlutil
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl.graphs import graph_database
 
-app.DEFINE_database('input_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to read unlabelled graphs from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'input_db',
+    graph_database.Database,
+    None,
+    'URL of database to read unlabelled graphs from.',
+    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write labelled graphs to.')
@@ -50,13 +51,14 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
       for _, r in df.iterrows()
   ]
 
-  df.rename(columns={
-      f'param:{gpu}:wgsize': 'wgsize',
-      f'feature:{gpu}:transfer': 'transfer',
-      f'runtime:{cpu}': 'runtime_cpu',
-      f'runtime:{gpu}': 'runtime_gpu',
-  },
-            inplace=True)
+  df.rename(
+      columns={
+          f'param:{gpu}:wgsize': 'wgsize',
+          f'feature:{gpu}:transfer': 'transfer',
+          f'runtime:{cpu}': 'runtime_cpu',
+          f'runtime:{gpu}': 'runtime_gpu',
+      },
+      inplace=True)
 
   return df[[
       'relpath',
@@ -99,7 +101,7 @@ def AnnotateGraphMetas(input_db: graph_database.Database, df: pd.DataFrame
         # This is a workaround for github.com/ChrisCummins/ml4pl/issues/12,
         # which means that the input graphs have a single embedding index,
         # wheras we want to produce labelled graphs with a 2D embedding index.
-        for _, data in g.nodes(data=True):
+        for _, data in graph.nodes(data=True):
           data['x'] = [data['x'], 0]
 
         # Add the graph-level features.
@@ -119,8 +121,8 @@ def MakeOpenClDevmapDataset(input_db: graph_database.Database,
   """Create a labelled dataset for the given GPU."""
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(output_db,
-                                      max_queue=8).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(
+      output_db, max_queue=8).Session() as writer:
     df = MakeGpuDataFrame(dataset.df, gpu)
 
     for graph in AnnotateGraphMetas(input_db, df):
