@@ -296,13 +296,16 @@ define i32 @A() #0 {
           type='must alias',
           mod_ref='Mod/Ref',
           pointers=[opt_util.Pointer(type='i32*', identifier='%2', size=4)]),
-      opt_util.AliasSet(
-          type='may alias',
-          mod_ref='Ref',
-          pointers=[
-              opt_util.Pointer(type='i8*', identifier='%15', size=1),
-              opt_util.Pointer(type='(i8*', identifier='%21', size=1)
-          ]),
+      opt_util.AliasSet(type='may alias',
+                        mod_ref='Ref',
+                        pointers=[
+                            opt_util.Pointer(type='i8*',
+                                             identifier='%15',
+                                             size=1),
+                            opt_util.Pointer(type='(i8*',
+                                             identifier='%21',
+                                             size=1)
+                        ]),
       opt_util.AliasSet(
           type='must alias',
           mod_ref='Mod',
@@ -315,12 +318,13 @@ define i32 @A() #0 {
           type='must alias',
           mod_ref='Mod',
           pointers=[opt_util.Pointer(type='i32**', identifier='%6', size=8)]),
-      opt_util.AliasSet(
-          type='must alias',
-          mod_ref='Mod',
-          pointers=[
-              opt_util.Pointer(type='%struct.foo**', identifier='%7', size=8)
-          ]),
+      opt_util.AliasSet(type='must alias',
+                        mod_ref='Mod',
+                        pointers=[
+                            opt_util.Pointer(type='%struct.foo**',
+                                             identifier='%7',
+                                             size=8)
+                        ]),
       opt_util.AliasSet(
           type='must alias',
           mod_ref='Mod',
@@ -330,6 +334,183 @@ define i32 @A() #0 {
           mod_ref='Ref',
           pointers=[opt_util.Pointer(type='i32*', identifier='%1', size=4)])
   ]
+
+
+@pytest.mark.xfail(reason='opt exception')
+def test_GetAliasSetsByFunction_regression_test_1():
+  """Regression test for bytecode which trips up pointer set size."""
+  alias_sets = opt_util.GetAliasSetsByFunction("""
+; ModuleID = '/scratch/talbn/classifyapp_code/train//71/149.txt.cpp'
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
+
+%"class.std::ios_base::Init" = type { i8 }
+
+@_ZStL8__ioinit = internal global %"class.std::ios_base::Init" zeroinitializer, align 1
+@__dso_handle = external global i8
+@_ZZ4mainE3yue = private unnamed_addr constant [11 x i32] [i32 31, i32 28, i32 31, i32 30, i32 31, i32 30, i32 31, i32 31, i32 30, i32 31, i32 30], align 16
+@.str = private unnamed_addr constant [3 x i8] c"%d\00", align 1
+@.str.1 = private unnamed_addr constant [9 x i8] c"%d %d %d\00", align 1
+@.str.2 = private unnamed_addr constant [5 x i8] c"YES\0A\00", align 1
+@.str.3 = private unnamed_addr constant [4 x i8] c"NO\0A\00", align 1
+@llvm.global_ctors = appending global [1 x { i32, void ()*, i8* }] [{ i32, void ()*, i8* } { i32 65535, void ()* @_GLOBAL__sub_I_149.txt.cpp, i8* null }]
+@str = private unnamed_addr constant [3 x i8] c"NO\00"
+@str.4 = private unnamed_addr constant [4 x i8] c"YES\00"
+
+define internal fastcc void @__cxx_global_var_init() #0 section ".text.startup" {
+entry:
+  tail call void @_ZNSt8ios_base4InitC1Ev(%"class.std::ios_base::Init"* nonnull @_ZStL8__ioinit)
+  %0 = tail call i32 @__cxa_atexit(void (i8*)* bitcast (void (%"class.std::ios_base::Init"*)* @_ZNSt8ios_base4InitD1Ev to void (i8*)*), i8* getelementptr inbounds (%"class.std::ios_base::Init", %"class.std::ios_base::Init"* @_ZStL8__ioinit, i64 0, i32 0), i8* nonnull @__dso_handle) #2
+  ret void
+}
+
+declare void @_ZNSt8ios_base4InitC1Ev(%"class.std::ios_base::Init"*) #0
+
+; Function Attrs: nounwind
+declare void @_ZNSt8ios_base4InitD1Ev(%"class.std::ios_base::Init"*) #1
+
+; Function Attrs: nounwind
+declare i32 @__cxa_atexit(void (i8*)*, i8*, i8*) #2
+
+; Function Attrs: nounwind uwtable
+define i32 @main() #3 {
+entry:
+  %n = alloca i32, align 4
+  %nian = alloca i32, align 4
+  %yue1 = alloca i32, align 4
+  %yue2 = alloca i32, align 4
+  %0 = bitcast i32* %n to i8*
+  call void @llvm.lifetime.start(i64 4, i8* %0) #2
+  %1 = bitcast i32* %nian to i8*
+  call void @llvm.lifetime.start(i64 4, i8* %1) #2
+  %2 = bitcast i32* %yue1 to i8*
+  call void @llvm.lifetime.start(i64 4, i8* %2) #2
+  %3 = bitcast i32* %yue2 to i8*
+  call void @llvm.lifetime.start(i64 4, i8* %3) #2
+  %call = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str, i64 0, i64 0), i32* nonnull %n)
+  %4 = load i32, i32* %n, align 4, !tbaa !1
+  %cmp.45 = icmp sgt i32 %4, 0
+  br i1 %cmp.45, label %for.body, label %for.end.27
+
+for.body:                                         ; preds = %entry, %for.inc.25
+  %i.046 = phi i32 [ %inc26, %for.inc.25 ], [ 0, %entry ]
+  %call1 = call i32 (i8*, ...) @scanf(i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.1, i64 0, i64 0), i32* nonnull %nian, i32* nonnull %yue1, i32* nonnull %yue2)
+  %5 = load i32, i32* %yue1, align 4, !tbaa !1
+  %6 = load i32, i32* %yue2, align 4, !tbaa !1
+  %cmp2 = icmp sgt i32 %5, %6
+  br i1 %cmp2, label %if.then, label %if.end
+
+if.then:                                          ; preds = %for.body
+  store i32 %5, i32* %yue2, align 4, !tbaa !1
+  store i32 %6, i32* %yue1, align 4, !tbaa !1
+  br label %if.end
+
+if.end:                                           ; preds = %if.then, %for.body
+  %7 = load i32, i32* %yue1, align 4, !tbaa !1
+  %8 = load i32, i32* %yue2, align 4, !tbaa !1
+  %cmp4.41 = icmp slt i32 %7, %8
+  br i1 %cmp4.41, label %for.body.5.lr.ph, label %for.end
+
+for.body.5.lr.ph:                                 ; preds = %if.end
+  %9 = load i32, i32* %yue2, align 4, !tbaa !1
+  %10 = sext i32 %7 to i64
+  %11 = sext i32 %9 to i64
+  br label %for.body.5
+
+for.body.5:                                       ; preds = %for.body.5.lr.ph, %for.body.5
+  %indvars.iv = phi i64 [ %10, %for.body.5.lr.ph ], [ %indvars.iv.next, %for.body.5 ]
+  %sum.043 = phi i32 [ 0, %for.body.5.lr.ph ], [ %add, %for.body.5 ]
+  %12 = add nsw i64 %indvars.iv, -1
+  %arrayidx = getelementptr inbounds [11 x i32], [11 x i32]* @_ZZ4mainE3yue, i64 0, i64 %12
+  %13 = load i32, i32* %arrayidx, align 4, !tbaa !1
+  %add = add nsw i32 %13, %sum.043
+  %indvars.iv.next = add nsw i64 %indvars.iv, 1
+  %cmp4 = icmp slt i64 %indvars.iv.next, %11
+  br i1 %cmp4, label %for.body.5, label %for.end
+
+for.end:                                          ; preds = %for.body.5, %if.end
+  %.lcssa = phi i32 [ %8, %if.end ], [ %9, %for.body.5 ]
+  %sum.0.lcssa = phi i32 [ 0, %if.end ], [ %add, %for.body.5 ]
+  %14 = load i32, i32* %yue1, align 4, !tbaa !1
+  %cmp6 = icmp slt i32 %14, 3
+  %cmp7 = icmp sgt i32 %.lcssa, 2
+  %or.cond = and i1 %cmp7, %cmp6
+  br i1 %or.cond, label %if.then.8, label %if.end.18
+
+if.then.8:                                        ; preds = %for.end
+  %15 = load i32, i32* %nian, align 4, !tbaa !1
+  %rem38 = and i32 %15, 3
+  %rem11 = srem i32 %15, 100
+  %notlhs = icmp eq i32 %rem38, 0
+  %notrhs = icmp ne i32 %rem11, 0
+  %or.cond39.not = and i1 %notrhs, %notlhs
+  %rem13 = srem i32 %15, 400
+  %cmp14 = icmp eq i32 %rem13, 0
+  %or.cond40 = or i1 %or.cond39.not, %cmp14
+  %inc16 = zext i1 %or.cond40 to i32
+  %inc16.sum.0 = add nsw i32 %inc16, %sum.0.lcssa
+  br label %if.end.18
+
+if.end.18:                                        ; preds = %if.then.8, %for.end
+  %sum.1 = phi i32 [ %sum.0.lcssa, %for.end ], [ %inc16.sum.0, %if.then.8 ]
+  %rem19 = srem i32 %sum.1, 7
+  %cmp20 = icmp eq i32 %rem19, 0
+  br i1 %cmp20, label %if.then.21, label %if.else
+
+if.then.21:                                       ; preds = %if.end.18
+  %puts37 = call i32 @puts(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str.4, i64 0, i64 0))
+  br label %for.inc.25
+
+if.else:                                          ; preds = %if.end.18
+  %puts = call i32 @puts(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str, i64 0, i64 0))
+  br label %for.inc.25
+
+for.inc.25:                                       ; preds = %if.then.21, %if.else
+  %inc26 = add nuw nsw i32 %i.046, 1
+  %16 = load i32, i32* %n, align 4, !tbaa !1
+  %cmp = icmp slt i32 %inc26, %16
+  br i1 %cmp, label %for.body, label %for.end.27
+
+for.end.27:                                       ; preds = %for.inc.25, %entry
+  call void @llvm.lifetime.end(i64 4, i8* %3) #2
+  call void @llvm.lifetime.end(i64 4, i8* %2) #2
+  call void @llvm.lifetime.end(i64 4, i8* %1) #2
+  call void @llvm.lifetime.end(i64 4, i8* %0) #2
+  ret i32 0
+}
+
+; Function Attrs: nounwind
+declare void @llvm.lifetime.start(i64, i8* nocapture) #2
+
+; Function Attrs: nounwind
+declare i32 @scanf(i8* nocapture readonly, ...) #1
+
+; Function Attrs: nounwind
+declare void @llvm.lifetime.end(i64, i8* nocapture) #2
+
+define internal void @_GLOBAL__sub_I_149.txt.cpp() #0 section ".text.startup" {
+entry:
+  tail call fastcc void @__cxx_global_var_init()
+  ret void
+}
+
+; Function Attrs: nounwind
+declare i32 @puts(i8* nocapture readonly) #2
+
+attributes #0 = { "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="true" "no-nans-fp-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="broadwell" "target-features"="+adx,+aes,+avx,+avx2,+bmi,+bmi2,+cmov,+cx16,+f16c,+fma,+fsgsbase,+hle,+lzcnt,+mmx,+movbe,+pclmul,+popcnt,+prfchw,+rdrnd,+rdseed,+rtm,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,-avx512bw,-avx512cd,-avx512dq,-avx512er,-avx512f,-avx512pf,-avx512vl,-fma4,-sha,-sse4a,-tbm,-xop" "unsafe-fp-math"="true" "use-soft-float"="false" }
+attributes #1 = { nounwind "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="true" "no-nans-fp-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="broadwell" "target-features"="+adx,+aes,+avx,+avx2,+bmi,+bmi2,+cmov,+cx16,+f16c,+fma,+fsgsbase,+hle,+lzcnt,+mmx,+movbe,+pclmul,+popcnt,+prfchw,+rdrnd,+rdseed,+rtm,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,-avx512bw,-avx512cd,-avx512dq,-avx512er,-avx512f,-avx512pf,-avx512vl,-fma4,-sha,-sse4a,-tbm,-xop" "unsafe-fp-math"="true" "use-soft-float"="false" }
+attributes #2 = { nounwind }
+attributes #3 = { nounwind uwtable "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="true" "no-nans-fp-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="broadwell" "target-features"="+adx,+aes,+avx,+avx2,+bmi,+bmi2,+cmov,+cx16,+f16c,+fma,+fsgsbase,+hle,+lzcnt,+mmx,+movbe,+pclmul,+popcnt,+prfchw,+rdrnd,+rdseed,+rtm,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,-avx512bw,-avx512cd,-avx512dq,-avx512er,-avx512f,-avx512pf,-avx512vl,-fma4,-sha,-sse4a,-tbm,-xop" "unsafe-fp-math"="true" "use-soft-float"="false" }
+
+!llvm.ident = !{!0}
+
+!0 = !{!"clang version 3.7.1 (tags/RELEASE_371/final)"}
+!1 = !{!2, !2, i64 0}
+!2 = !{!"int", !3, i64 0}
+!3 = !{!"omnipotent char", !4, i64 0}
+!4 = !{!"Simple C/C++ TBAA"}
+  """)
+  assert len(alias_sets) == 1
 
 
 def test_RunAnalysisPasses():
