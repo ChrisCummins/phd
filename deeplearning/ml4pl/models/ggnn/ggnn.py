@@ -139,9 +139,10 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
     with tf.compat.v1.variable_scope("embeddings"):
       self.weights['node_embeddings'] = (
           self._GetEmbeddingsAsTensorflowVariable())
+      if FLAGS.position_embeddings:
+        self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable()
     encoded_node_x = tf.nn.embedding_lookup(self.weights['node_embeddings'],
                                             ids=self.placeholders['node_x'])
-
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
@@ -153,8 +154,8 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
     message_targets = []  # List of tensors of message targets of shape [E]
     message_edge_types = []  # List of tensors of edge type of shape [E]
 
-    for edge_type, adjacency_list in enumerate(
-        self.placeholders["adjacency_lists"]):
+    for edge_type, (adjacency_list, edge_positions) in enumerate(
+        zip(self.placeholders["adjacency_lists"], self.placeholders['edge_positions'])):
       edge_targets = adjacency_list[:, 1]
       message_targets.append(edge_targets)
       message_edge_types.append(
@@ -194,13 +195,21 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
             for edge_type, adjacency_list in enumerate(
                 self.placeholders["adjacency_lists"]):
               edge_sources = adjacency_list[:, 0]
-              edge_source_states = tf.nn.embedding_lookup(
-                  params=node_states_per_layer[-1],
-                  ids=edge_sources)  # Shape [E, D]
+              edge_pos_embedding = tf.nn.embedding_lookup(
+                  self.position_embeddings,
+                  ids=edge_positions) # shape [E, D]
+              if FLAGS.position_embeddings:
+                edge_source_states = tf.nn.embedding_lookup(
+                    params=node_states_per_layer[-1],
+                    ids=edge_sources)  # Shape [E, D]
+
+                edge_source_states_with_position = edge_source_states + edge_pos_embedding
+              else:
+                edge_source_states_with_position = edge_source_states
 
               # Message propagation.
               all_messages_for_edge_type = tf.matmul(
-                  edge_source_states,
+                  edge_source_states_with_position,
                   self.gnn_weights.edge_weights[layer_idx][edge_type],
               )  # Shape [E, D]
               messages.append(all_messages_for_edge_type)

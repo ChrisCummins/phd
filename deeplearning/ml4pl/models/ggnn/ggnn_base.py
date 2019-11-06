@@ -11,6 +11,7 @@ from labm8 import prof
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
+from deeplearning.ml4pl.models import base_utils
 
 FLAGS = app.FLAGS
 
@@ -56,6 +57,12 @@ app.DEFINE_integer(
     "dynamic_unroll_multiple", 0,
     "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
     "n=-1 (maybe) runs until convergence of predictions.")
+
+app.DEFINE_boolean(
+    "position_embeddings", True,
+    "Whether to use position embeddings as signals for edge order."
+)
+classifier_base.MODEL_FLAGS.add("position_embeddings")
 
 # TODO(cec): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
@@ -144,6 +151,15 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           tf.compat.v1.summary.FileWriter(tensorboard_dir / "test",
                                           self.sess.graph),
       }
+
+  def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
+    """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
+    if FLAGS.position_embeddings:
+      embeddings = base_utils.pos_emb(positions=range(512), demb=FLAGS.hidden_size)
+      pos_emb = tf.Variable(initial_value=embeddings,
+                            trainable=False,
+                            dtype=tf.float32)
+      return pos_emb
 
   def _GetEmbeddingsTable(self) -> np.array:
     """Reading embeddings table"""
