@@ -65,6 +65,7 @@ app.DEFINE_integer(
 app.DEFINE_boolean(
     "position_embeddings", True,
     "Whether to use position embeddings as signals for edge order."
+    "We expect them to be part of the ds anyway, but you can toggle off their effect."
 )
 classifier_base.MODEL_FLAGS.add("position_embeddings")
 

@@ -139,10 +139,8 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
     with tf.compat.v1.variable_scope("embeddings"):
       self.weights['node_embeddings'] = (
           self._GetEmbeddingsAsTensorflowVariable())
-      # generate a table with position embs up to pos 512.
+      # generate table with position embs up to pos 512.
       self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable()
-      #app.Log(1, '%s', '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'*10)
-      #app.Log(1, '%s', self.position_embeddings.shape)
     encoded_node_x = tf.nn.embedding_lookup(self.weights['node_embeddings'],
                                             ids=self.placeholders['node_x'])
     

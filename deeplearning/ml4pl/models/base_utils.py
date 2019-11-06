@@ -17,8 +17,3 @@ def pos_emb(positions: Union[int, List[int], np.array], demb: int = 200):
     sinusoid_inp = np.outer(positions, inv_freq)
     pos_emb = np.hstack((np.sin(sinusoid_inp), np.cos(sinusoid_inp)))
     return pos_emb
-
-# deleted in favor of fixed size embedding table at model creation time.
-#def tensorflow_pos_emb(positions, demb: int = 200):
-#    """Same but with tf ops."""
-#    inv_freq = 1 / (10000 ** (np.arange(0.0, demb, 2.0) / demb))
