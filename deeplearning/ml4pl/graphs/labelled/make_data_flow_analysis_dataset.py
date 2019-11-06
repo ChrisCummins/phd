@@ -7,26 +7,33 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import prof
 
+from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.alias_set import alias_set
 from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
 from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
-from labm8 import app
-from labm8 import prof
 
-app.DEFINE_database(
-    'input_db',
-    graph_database.Database,
-    None,
-    'URL of database to read pickled networkx graphs from.',
-    must_exist=True)
+app.DEFINE_database('input_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to read pickled networkx graphs from.',
+                    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write annotated graph tuples to.')
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecode from. Only required when '
+                    'analysis requires bytecode.',
+                    must_exist=True)
 app.DEFINE_string(
     'analysis', 'reachability', 'The data flow to use. One of: '
     '{reachability,dominator_tree,data_dependence,liveness}')
@@ -41,18 +48,30 @@ app.DEFINE_integer(
 FLAGS = app.FLAGS
 
 
-def GetAnnotatedGraphGenerator():
+class GraphAnnotator(typing.NamedTuple):
+  """A named tuple describing a graph annotator, which is a function that
+  accepts graphs as inputs and produces labelled graphs."""
+  # The function that produces labelled graphs.
+  function: typing.Any
+  # If true, a list of bytecodes (one for every graph) is passes as the second
+  # argument to `function`.
+  requires_bytecode: bool = False
+
+
+def GetAnnotatedGraphGenerator() -> GraphAnnotator:
   """Return the function that generates annotated data flow analysis graphs."""
   if FLAGS.analysis == 'reachability':
-    return reachability.MakeReachabilityGraphs
+    return GraphAnnotator(function=reachability.MakeReachabilityGraphs)
   elif FLAGS.analysis == 'dominator_tree':
-    return dominator_tree.MakeDominatorTreeGraphs
+    return GraphAnnotator(function=dominator_tree.MakeDominatorTreeGraphs)
   elif FLAGS.analysis == 'data_dependence':
-    return data_dependence.MakeDataDependencyGraphs
+    return GraphAnnotator(function=data_dependence.MakeDataDependencyGraphs)
   elif FLAGS.analysis == 'liveness':
-    return liveness.MakeLivenessGraphs
+    return GraphAnnotator(function=liveness.MakeLivenessGraphs)
   elif FLAGS.analysis == 'subexpressions':
-    return subexpressions.MakeSubexpressionsGraphs
+    return GraphAnnotator(function=subexpressions.MakeSubexpressionsGraphs)
+  elif FLAGS.analysis == 'alias_sets':
+    return GraphAnnotator(function=alias_set.MakeAliasSetGraphs)
   else:
     raise app.UsageError(f"Unknown analysis type `{FLAGS.analysis}`")
 
@@ -60,8 +79,8 @@ def GetAnnotatedGraphGenerator():
 def GetFalseTrueType():
   """Return the values that should be used for false/true binary labels."""
   if FLAGS.y_dtype == 'one_hot_float32':
-    return (np.array([1, 0], dtype=np.float32),
-            np.array([0, 1], dtype=np.float32))
+    return (np.array([1, 0],
+                     dtype=np.float32), np.array([0, 1], dtype=np.float32))
   else:
     raise app.UsageError(f"Unknown y_dtype `{FLAGS.y_dtype}`")
 
@@ -81,13 +100,27 @@ def _ProcessInputs(
       .order_by(graph_database.GraphMeta.bytecode_id) \
       .all()
   graph_db.Close()  # Don't leave the database connection lying around.
+
+  # Optionally produce the list of bytecodes to pass to the dataset annotator.
+  if graph_annotator.requires_bytecode:
+    # Deferred database instantiation so that this script can be run without the
+    # --bytecode_db flag set when bytecodes are not required.
+    bytecode_db: bytecode_database.Database = FLAGS.bytecode_db()
+    with bytecode_db.Session() as session:
+      bytecodes = [
+        row.bytecode for row in
+        session.query(bytecode_database.LlvmBytecode.bytecode) \
+        .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids)) \
+        .order_by(bytecode_database.LlvmBytecode.id) \
+      ]
+
   session.close()
 
-  annotated_graph_generator = GetAnnotatedGraphGenerator()
   false, true = GetFalseTrueType()
 
   graph_metas = []
-  for input_graph_meta in graphs_to_process:
+  for i in range(graphs_to_process):
+    input_graph_meta = graphs_to_process[i]
     graph = input_graph_meta.data  # Load pickled networkx graph.
 
     # Determine the number of instances to produce based on the size of the
@@ -100,8 +133,13 @@ def _ProcessInputs(
           lambda t:
           f"Produced {len(annotated_graphs)} {FLAGS.analysis} instances from {input_graph_meta.node_count}-node graph"
       ):
-        annotated_graphs = list(
-            annotated_graph_generator(graph, n=n, false=false, true=true))
+        if graph_annotator.requires_bytecode:
+          bytecode = bytecodes[i]
+          annotated_graphs = list(
+              graph_annotator(graph, bytecode, n=n, false=false, true=true))
+        else:
+          annotated_graphs = list(
+              graph_annotator(graph, n=n, false=false, true=true))
 
         # Copy over graph metadata.
         for annotated_graph in annotated_graphs:
