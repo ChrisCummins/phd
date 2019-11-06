@@ -45,8 +45,16 @@ class GraphDatabaseStats(object):
     return self._stats.max_edge_count
 
   @property
+  def node_embeddings_count(self) -> int:
+    return self._node_embeddings_stats['node_embeddings_count']
+
+  @property
   def node_embeddings_shapes(self) -> int:
     return self._node_embeddings_stats['node_embeddings_shapes']
+
+  @property
+  def node_embeddings_concatenated_width(self) -> int:
+    return sum([shape[1] for shape in self.node_embeddings_shapes])
 
   @property
   def node_embeddings_dtype(self) -> np.dtype:
