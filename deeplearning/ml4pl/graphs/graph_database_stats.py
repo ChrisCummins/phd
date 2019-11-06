@@ -45,16 +45,12 @@ class GraphDatabaseStats(object):
     return self._stats.max_edge_count
 
   @property
-  def node_embedding_count(self) -> int:
-    return self._embedding_stats['node_embedding_count']
+  def node_embeddings_shapes(self) -> int:
+    return self._node_embeddings_stats['node_embeddings_shapes']
 
   @property
-  def node_embedding_dimensionality(self) -> int:
-    return self._embedding_stats['node_embedding_dimensionality']
-
-  @property
-  def node_embedding_dtype(self) -> np.dtype:
-    return self._embedding_stats['node_embedding_dtype']
+  def node_embeddings_dtype(self) -> np.dtype:
+    return self._node_embeddings_stats['node_embeddings_dtype']
 
   @property
   def graph_features_dimensionality(self) -> int:
@@ -80,11 +76,12 @@ class GraphDatabaseStats(object):
       return list(sorted([row.group for row in query]))
 
   def __repr__(self):
+    embeddings_shapes = ', '.join(
+        [f'{shape[0]}x{shape[1]}' for shape in self.node_embeddings_shapes])
     summaries = [
         f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
         humanize.Plural(self.edge_type_count, 'edge type'),
-        (f"{self.node_embedding_count}x{self.node_embedding_dimensionality} "
-         f"{self.node_embedding_dtype} node embeddings")
+        f'({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings',
     ]
     if self.graph_features_dimensionality:
       summaries.append(f"{self.graph_features_dimensionality}-d graph features")
@@ -103,11 +100,17 @@ class GraphDatabaseStats(object):
     return ", ".join(summaries)
 
   @decorators.memoized_property
-  def _embedding_stats(self):
+  def _node_embeddings_stats(self):
+    # Fetch all embeddings dtypes and assert that they are of the same type.
+    embedding_dtypes = [table.dtype for table in self.db.embeddings_tables]
+    if len(set(embedding_dtypes)) != 1:
+      raise ValueError("Embeddings tables must all have the same dtype. "
+                       f"Found {embedding_dtypes}")
+    embedding_shapes = [table.shape for table in self.db.embeddings_tables]
     return {
-        'node_embedding_count': self.db.embeddings_table.shape[0],
-        'node_embedding_dimensionality': self.db.embeddings_table.shape[1],
-        'node_embedding_dtype': self.db.embeddings_table.dtype,
+        'node_embeddings_count': len(embedding_shapes),
+        'node_embeddings_shapes': embedding_shapes,
+        'node_embeddings_dtype': embedding_dtypes[0],
     }
 
   @decorators.memoized_property
@@ -188,11 +191,12 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
     return graph_tuple.graph_y.dtype
 
   def __repr__(self):
+    embeddings_shapes = ', '.join(
+        [f'{shape[0]}x{shape[1]}' for shape in self.node_embeddings_shapes])
     summaries = [
-        f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
+        f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
         humanize.Plural(self.edge_type_count, 'edge type'),
-        (f"{self.node_embedding_count}x{self.node_embedding_dimensionality} "
-         f"{self.node_embedding_dtype} node embeddings")
+        f'({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings',
     ]
     if self.graph_features_dimensionality:
       summaries.append(

@@ -32,6 +32,7 @@ def test_Graph_pickled_networkx_graph(db: graph_database.Database):
             source_name='foo',
             relpath='bar',
             language='c',
+            node_embeddings_count=2,
             node_count=g.number_of_nodes(),
             edge_count=g.number_of_edges(),
             edge_position_max=0,
@@ -68,6 +69,7 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
             node_count=1,
             edge_count=2,
             edge_position_max=0,
+            node_embeddings_count=2,
             loop_connectedness=0,
             undirected_diameter=0,
             graph=graph_database.Graph(pickled_data=pickle.dumps({
@@ -119,6 +121,7 @@ def test_Graph_CreateFromNetworkX(graph: nx.MultiDiGraph):
   assert gm.edge_count == 5 * 2  # forward and backward edges
   assert gm.edge_type_count == 3 * 2  # forward and backward edge types.
   assert gm.edge_position_max == 1
+  assert gm.node_embeddings_count == 2
   assert gm.node_labels_dimensionality == 1
   assert gm.graph_features_dimensionality == 4
   assert gm.graph_labels_dimensionality == 0
