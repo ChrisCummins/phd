@@ -177,16 +177,20 @@ class GraphTuple(typing.NamedTuple):
 
     # Set node embedding indices.
     node_x_indices = [None] * g.number_of_nodes()
-    for node, embedding_index in g.nodes(data='x'):
-      if embedding_index is None:
+    for node, embedding_indices in g.nodes(data='x'):
+      if embedding_indices is None:
         raise ValueError(f"No embedding for node `{node}`")
       node_idx = node_to_index[node]
-      node_x_indices[node_idx] = embedding_index
-    node_x_indices = np.array(node_x_indices, dtype=np.int32)
+      node_x_indices[node_idx] = embedding_indices
+    # All embedding_indices arrays must have the same length else this will
+    # fail.
+    node_x_indices = np.vstack(node_x_indices).astype(np.int32)
 
     # Set optional node labels.
     node_targets = [None] * g.number_of_nodes()
     for node, y in g.nodes(data=node_y, default=None):
+      # Node labels are optional. If the first node doesn't have one, stop
+      # iterating.
       if y is None:
         node_y = None
         break
