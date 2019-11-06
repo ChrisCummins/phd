@@ -20,20 +20,21 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
 
-app.DEFINE_database('input_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to read pickled networkx graphs from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'input_db',
+    graph_database.Database,
+    None,
+    'URL of database to read pickled networkx graphs from.',
+    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write annotated graph tuples to.')
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecode from. Only required when '
-                    'analysis requires bytecode.',
-                    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None, 'URL of database to read bytecode from. Only required when '
+    'analysis requires bytecode.',
+    must_exist=True)
 app.DEFINE_string(
     'analysis', 'reachability', 'The data flow to use. One of: '
     '{reachability,dominator_tree,data_dependence,liveness}')
@@ -79,8 +80,8 @@ def GetAnnotatedGraphGenerator() -> GraphAnnotator:
 def GetFalseTrueType():
   """Return the values that should be used for false/true binary labels."""
   if FLAGS.y_dtype == 'one_hot_float32':
-    return (np.array([1, 0],
-                     dtype=np.float32), np.array([0, 1], dtype=np.float32))
+    return (np.array([1, 0], dtype=np.float32),
+            np.array([0, 1], dtype=np.float32))
   else:
     raise app.UsageError(f"Unknown y_dtype `{FLAGS.y_dtype}`")
 
@@ -100,6 +101,8 @@ def _ProcessInputs(
       .order_by(graph_database.GraphMeta.bytecode_id) \
       .all()
   graph_db.Close()  # Don't leave the database connection lying around.
+
+  graph_annotator = GetAnnotatedGraphGenerator()
 
   # Optionally produce the list of bytecodes to pass to the dataset annotator.
   if graph_annotator.requires_bytecode:
