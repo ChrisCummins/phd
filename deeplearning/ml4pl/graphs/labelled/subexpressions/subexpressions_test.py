@@ -14,31 +14,35 @@ def wiki() -> nx.MultiDiGraph:
   # a = b * c + g;
   # d = b * c * e;
   g = nx.MultiDiGraph()
-  g.add_node('a1', type='identifier', name='a1')
-  g.add_node('a2', type='identifier', name='a2')
-  g.add_node('b', type='identifier', name='b')
-  g.add_node('c', type='identifier', name='c')
-  g.add_node('d1', type='identifier', name='d1')
-  g.add_node('d2', type='identifier', name='d2')
-  g.add_node('e', type='identifier', name='e')
-  g.add_node('g', type='identifier', name='g')
+  g.add_node('a1', type='identifier', name='a1', x=-1)
+  g.add_node('a2', type='identifier', name='a2', x=-1)
+  g.add_node('b', type='identifier', name='b', x=-1)
+  g.add_node('c', type='identifier', name='c', x=-1)
+  g.add_node('d1', type='identifier', name='d1', x=-1)
+  g.add_node('d2', type='identifier', name='d2', x=-1)
+  g.add_node('e', type='identifier', name='e', x=-1)
+  g.add_node('g', type='identifier', name='g', x=-1)
 
   g.add_node('s0',
              type='statement',
              text='<ID> = mul <ID> <ID>',
-             original_text='%a1 = div %b %c')
+             original_text='%a1 = div %b %c',
+             x=-1)
   g.add_node('s1',
              type='statement',
              text='<ID> = mul <ID> <ID>',
-             original_text='%d1 = div %b %c')
+             original_text='%d1 = div %b %c',
+             x=-1)
   g.add_node('s2',
              type='statement',
              text='<ID> = add <ID> <ID>',
-             original_text='%a2 = add %a1 %g')
+             original_text='%a2 = add %a1 %g',
+             x=-1)
   g.add_node('s3',
              type='statement',
              text='<ID> = mul <ID> <ID>',
-             original_text='%d2 = mul %d1 %e')
+             original_text='%d2 = mul %d1 %e',
+             x=-1)
 
   g.add_edge('s0', 'a1', flow='data', position=0)
   g.add_edge('b', 's0', flow='data', position=0)
@@ -66,31 +70,35 @@ def wiki_without_subexpressions() -> nx.MultiDiGraph:
   # a = b / c + g;
   # d = c / b * e;
   g = nx.MultiDiGraph()
-  g.add_node('a1', type='identifier', name='a1')
-  g.add_node('a2', type='identifier', name='a2')
-  g.add_node('b', type='identifier', name='b')
-  g.add_node('c', type='identifier', name='c')
-  g.add_node('d1', type='identifier', name='d1')
-  g.add_node('d2', type='identifier', name='d2')
-  g.add_node('e', type='identifier', name='e')
-  g.add_node('g', type='identifier', name='g')
+  g.add_node('a1', type='identifier', name='a1', x=-1)
+  g.add_node('a2', type='identifier', name='a2', x=-1)
+  g.add_node('b', type='identifier', name='b', x=-1)
+  g.add_node('c', type='identifier', name='c', x=-1)
+  g.add_node('d1', type='identifier', name='d1', x=-1)
+  g.add_node('d2', type='identifier', name='d2', x=-1)
+  g.add_node('e', type='identifier', name='e', x=-1)
+  g.add_node('g', type='identifier', name='g', x=-1)
 
   g.add_node('s0',
              type='statement',
              text='<ID> = sdiv <ID> <ID>',
-             original_text='%a1 = sdiv %b %c')
+             original_text='%a1 = sdiv %b %c',
+             x=-1)
   g.add_node('s1',
              type='statement',
              text='<ID> = sdiv <ID> <ID>',
-             original_text='%d1 = sdiv %c %b')
+             original_text='%d1 = sdiv %c %b',
+             x=-1)
   g.add_node('s2',
              type='statement',
              text='<ID> = add <ID> <ID>',
-             original_text='%a2 = add %a1 %g')
+             original_text='%a2 = add %a1 %g',
+             x=-1)
   g.add_node('s3',
              type='statement',
              text='<ID> = mul <ID> <ID>',
-             original_text='%d2 = mul %d1 %e')
+             original_text='%d2 = mul %d1 %e',
+             x=-1)
 
   g.add_edge('s0', 'a1', flow='data', position=0)
   g.add_edge('b', 's0', flow='data', position=0)
@@ -117,31 +125,35 @@ def wiki_with_commutativity() -> nx.MultiDiGraph:
   # a = b * c + g;
   # d = c * b * e;
   g = nx.MultiDiGraph()
-  g.add_node('a1', type='identifier', name='a1')
-  g.add_node('a2', type='identifier', name='a2')
-  g.add_node('b', type='identifier', name='b')
-  g.add_node('c', type='identifier', name='c')
-  g.add_node('d1', type='identifier', name='d1')
-  g.add_node('d2', type='identifier', name='d2')
-  g.add_node('e', type='identifier', name='e')
-  g.add_node('g', type='identifier', name='g')
+  g.add_node('a1', type='identifier', name='a1', x=-1)
+  g.add_node('a2', type='identifier', name='a2', x=-1)
+  g.add_node('b', type='identifier', name='b', x=-1)
+  g.add_node('c', type='identifier', name='c', x=-1)
+  g.add_node('d1', type='identifier', name='d1', x=-1)
+  g.add_node('d2', type='identifier', name='d2', x=-1)
+  g.add_node('e', type='identifier', name='e', x=-1)
+  g.add_node('g', type='identifier', name='g', x=-1)
 
   g.add_node('s0',
              type='statement',
              text='<ID> = mul <ID> <ID>',
-             original_text='%a1 = mul %b %c')
+             original_text='%a1 = mul %b %c',
+             x=-1)
   g.add_node('s1',
              type='statement',
              text='<ID> = mul <ID> <ID>',
-             original_text='%d1 = mul %c %b')
+             original_text='%d1 = mul %c %b',
+             x=-1)
   g.add_node('s2',
              type='statement',
              text='<ID> = add <ID> <ID>',
-             original_text='%a2 = add %a1 %g')
+             original_text='%a2 = add %a1 %g',
+             x=-1)
   g.add_node('s3',
              type='statement',
              text='<ID> = mul <ID> <ID>',
-             original_text='%d2 = mul %d1 %e')
+             original_text='%d2 = mul %d1 %e',
+             x=-1)
 
   g.add_edge('s0', 'a1', flow='data', position=0)
   g.add_edge('b', 's0', flow='data', position=0)
@@ -195,18 +207,18 @@ def test_MakeSubexpressionsGraphs_wiki(wiki: nx.MultiDiGraph):
   g = graphs[0]
 
   # Features
-  assert g.nodes['a1']['x'] == 0
-  assert g.nodes['a2']['x'] == 0
-  assert g.nodes['b']['x'] == 0
-  assert g.nodes['c']['x'] == 0
-  assert g.nodes['d1']['x'] == 0
-  assert g.nodes['d2']['x'] == 0
-  assert g.nodes['e']['x'] == 0
-  assert g.nodes['g']['x'] == 0
+  assert g.nodes['a1']['x'] == [-1, 0]
+  assert g.nodes['a2']['x'] == [-1, 0]
+  assert g.nodes['b']['x'] == [-1, 0]
+  assert g.nodes['c']['x'] == [-1, 0]
+  assert g.nodes['d1']['x'] == [-1, 0]
+  assert g.nodes['d2']['x'] == [-1, 0]
+  assert g.nodes['e']['x'] == [-1, 0]
+  assert g.nodes['g']['x'] == [-1, 0]
 
   assert g.nodes['s0']['x'] != g.nodes['s1']['x']
-  assert g.nodes['s2']['x'] == 0
-  assert g.nodes['s3']['x'] == 0
+  assert g.nodes['s2']['x'] == [-1, 0]
+  assert g.nodes['s3']['x'] == [-1, 0]
 
   # Labels
   assert g.nodes['a1']['y'] == False
