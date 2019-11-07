@@ -34,7 +34,7 @@ app.DEFINE_database('bytecode_db',
                     'URL of database to read bytecode from. Only required when '
                     'analysis requires bytecode.',
                     must_exist=True)
-app.DEFINE_string(
+app.DEFINE_list(
     'analysis', 'reachability', 'The data flow to use. One of: '
     '{reachability,dominator_tree,data_dependence,liveness}')
 app.DEFINE_string('y_dtype', 'one_hot_float32',
@@ -51,30 +51,85 @@ FLAGS = app.FLAGS
 class GraphAnnotator(typing.NamedTuple):
   """A named tuple describing a graph annotator, which is a function that
   accepts graphs as inputs and produces labelled graphs."""
-  # The function that produces labelled graphs.
-  function: typing.Any
-  # If true, a list of bytecodes (one for every graph) is passes as the second
-  # argument to `function`.
-  requires_bytecode: bool = False
+  # The human-interpretable name of the analysis.
+  name: str
+
+  # The function that produces labelled GraphMeta instances.
+  function: typing.Callable[[typing.Any], typing.List[graph_database.GraphMeta]]
+
+  # If true, a list of networkx graphs is passed to `function` as named
+  # argument 'graphs'.
+  requires_graphs: bool = False
+
+  # If true, a list of bytecodes is passed to `function` as named argument
+  # 'bytecodes'.
+  requires_bytecodes: bool = False
 
 
-def GetAnnotatedGraphGenerator() -> GraphAnnotator:
-  """Return the function that generates annotated data flow analysis graphs."""
-  if FLAGS.analysis == 'reachability':
-    return GraphAnnotator(function=reachability.MakeReachabilityGraphs)
-  elif FLAGS.analysis == 'dominator_tree':
-    return GraphAnnotator(function=dominator_tree.MakeDominatorTreeGraphs)
-  elif FLAGS.analysis == 'data_dependence':
-    return GraphAnnotator(function=data_dependence.MakeDataDependencyGraphs)
-  elif FLAGS.analysis == 'liveness':
-    return GraphAnnotator(function=liveness.MakeLivenessGraphs)
-  elif FLAGS.analysis == 'subexpressions':
-    return GraphAnnotator(function=subexpressions.MakeSubexpressionsGraphs)
-  elif FLAGS.analysis == 'alias_sets':
-    return GraphAnnotator(function=alias_set.MakeAliasSetGraphs,
-                          requires_bytecode=True)
+def GetAnnotatedGraphGenerators(
+    *analysis_names: typing.Iterable[str]) -> typing.List[GraphAnnotator]:
+  """Return the graph annotators for the requested analyses. If no analyses are
+  provided, all annotators are returned."""
+  annotators: typing.List[GraphAnnotator] = []
+
+  if analysis_names:  # Strip duplicates from requested analyses.
+    all_analyses = False
+    analysis_names = set(analysis_names)
   else:
-    raise app.UsageError(f"Unknown analysis type `{FLAGS.analysis}`")
+    all_analyses = True
+
+  def AnalysisIsRequested(analysis_name: str, analysis_names: typing.Set[str],
+                          all_analyses: bool):
+    """Determine if the given analysis has been requested."""
+    if all_analyses:
+      return True
+    elif analysis_name in analysis_names:
+      analysis_names.remove(analysis_name)
+      return True
+    else:
+      return False
+
+  if AnalysisIsRequested('reachability', analysis_names, all_analyses):
+    annotators.append(
+        GraphAnnotator(name='reachability',
+                       requires_graphs=True,
+                       function=reachability.MakeReachabilityGraphs))
+
+  if AnalysisIsRequested('domtree', analysis_names, all_analyses):
+    annotators.append(
+        GraphAnnotator(name='domtree',
+                       requires_graphs=True,
+                       function=dominator_tree.MakeDominatorTreeGraphs))
+
+  if AnalysisIsRequested('datadep', analysis_names, all_analyses):
+    annotators.append(
+        GraphAnnotator(name='datadep',
+                       requires_graphs=True,
+                       function=data_dependence.MakeDataDependencyGraphs))
+
+  if AnalysisIsRequested('liveness', analysis_names, all_analyses):
+    annotators.append(
+        GraphAnnotator(name='liveness',
+                       requires_graphs=True,
+                       function=liveness.MakeLivenessGraphs))
+
+  if AnalysisIsRequested('subexpressions', analysis_names, all_analyses):
+    annotators.append(
+        GraphAnnotator(name='subexpressions',
+                       requires_graphs=True,
+                       function=subexpressions.MakeSubexpressionsGraphs))
+
+  if AnalysisIsRequested('alias_sets', analysis_names, all_analyses):
+    annotators.append(
+        GraphAnnotator(name='alias_sets',
+                       requires_graphs=True,
+                       requires_bytecodes=True,
+                       function=alias_set.MakeAliasSetGraphs))
+
+  if analysis_names:
+    raise app.UsageError(f"Unknown analyses {analysis_names}")
+
+  return annotators
 
 
 def GetFalseTrueType():
