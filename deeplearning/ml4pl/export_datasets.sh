@@ -33,6 +33,7 @@ export_dataset() {
 }
 
 main() {
+  # export_dataset bytecode
   export_dataset devmap_amd
   export_dataset devmap_nvidia
   export_dataset reachability
