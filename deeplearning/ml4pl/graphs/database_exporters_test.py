@@ -108,10 +108,7 @@ class MockBytecodeExporter(database_exporters.BytecodeDatabaseExporterBase):
 
 def test_MockBytecodeExporter(bytecode_db_512: bytecode_database.Database,
                               graph_db: graph_database.Database):
-  with bytecode_db_512.Session() as s:
-    bytecode_ids = [r.id for r in s.query(bytecode_database.LlvmBytecode.id)]
-  exporter = MockBytecodeExporter(bytecode_db_512, graph_db)
-  exporter.ExportGroups({'train': bytecode_ids})
+  MockBytecodeExporter()(bytecode_db_512, [graph_db])
 
   with graph_db.Session() as s:
     graphs = s.query(graph_database.GraphMeta).all()
@@ -119,7 +116,7 @@ def test_MockBytecodeExporter(bytecode_db_512: bytecode_database.Database,
   assert len(graphs) == 512
 
   for graph in graphs:
-    assert graph.group == 'train'
+    assert graph.group in {'train', 'val', 'test'}
     assert graph.bytecode_id <= 512
 
 
@@ -154,12 +151,9 @@ class MockGraphExporter(database_exporters.GraphDatabaseExporterBase):
     return _MockProcessGraphInputs
 
 
-def test_MockGraphExporter(bytecode_db_512: bytecode_database.Database,
+def test_MockGraphExporter(graph_db_512: bytecode_database.Database,
                            graph_db: graph_database.Database):
-  with bytecode_db_512.Session() as s:
-    bytecode_ids = [r.id for r in s.query(bytecode_database.LlvmBytecode.id)]
-  exporter = MockBytecodeExporter(bytecode_db_512, graph_db)
-  exporter.ExportGroups({'train': bytecode_ids})
+  MockGraphExporter()(graph_db_512, [graph_db])
 
   with graph_db.Session() as s:
     graphs = s.query(graph_database.GraphMeta).all()
@@ -167,7 +161,7 @@ def test_MockGraphExporter(bytecode_db_512: bytecode_database.Database,
   assert len(graphs) == 512
 
   for graph in graphs:
-    assert graph.group == 'train'
+    assert graph.group in {'train', 'val', 'test'}
     assert graph.bytecode_id <= 512
 
 
