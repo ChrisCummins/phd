@@ -54,7 +54,7 @@ def BufferedGraphReader(
 
       # Graphs that fail during dataset generation are inserted as zero-node
       # entries. Ignore those.
-      q = q.filter(graph_database.GraphMeta.node_count == 0)
+      q = q.filter(graph_database.GraphMeta.node_count > 1)
 
       if order_by_random:
         q = q.order_by(db.Random())

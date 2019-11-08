@@ -152,6 +152,10 @@ class GraphDatabaseStats(object):
       for filter_cb in self._filters:
         q = q.filter(filter_cb())
 
+      # Graphs that fail during dataset generation are inserted as zero-node
+      # entries. Ignore those.
+      q = q.filter(graph_database.GraphMeta.node_count > 1)
+
       stats = q.one()
       graph_count = stats.graph_count
 
