@@ -52,10 +52,7 @@ class PolyhedralRegionAnnotator(llvm_util.TagHook):
   
   def OnInstruction(self, node_attrs: typing.Dict[str, typing.Any],
                     instruction: str) -> typing.Dict[str, typing.Any]:
-    if 'polyhedral' in node_attrs:
-      return {'polyhedral': node_attrs['polyhedral']}
-    
-    return {'polyhedral': False}
+    return {'polyhedral': node_attrs.get('polyhedral', False)}
 
   def OnIdentifier(self, stmt_node: typing.Dict[str, typing.Any],
                    identifier_node: typing.Dict[str, typing.Any],
@@ -111,7 +108,7 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
   for cdfg in annotated_cdfgs:
     # Mark the nodes in the polyhedral regions
     for node, ndata in cdfg.nodes(data=True):
-      if 'polyhedral' not in ndata or ndata['polyhedral'] is False:
+      if not ndata.get('polyhedral'):
         continue
 
       if node not in g.nodes:
@@ -126,18 +123,14 @@ def MakePolyhedralGraphs(
     false=False,
     true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
-  """Create up to `n` annotated graphs from a bytecode that potentially contains 
+  """Create an annotated graph from a bytecode that potentially contains 
      polyhedral loops.
 
   Args:
     g: The unlabelled input graph.
     bytecode: The bytecode which produced the input graph.
-    n: The maximum number of graphs to produce. Multiple graphs are produced by
-      selecting different root pointers for alias sets. If `n` is provided,
-      the number of graphs generated will be in the range
-      1 <= x <= min(num_polyhedral_regions, n), where the first term is the number of
-      detected polyhedral regions. If n is None, num_polyhedral_regions
-      graphs will be produced.
+    n: The maximum number of graphs to produce. This value is ignored and one graph 
+       will be produced with all polyhedral regions annotated.
     false: TODO(cec): Unused. This method is hardcoded to use 2-class 1-hots.
     true: TODO(cec): Unused. This method is hardcoded to use 2-class 1-hots.
 
@@ -150,6 +143,7 @@ def MakePolyhedralGraphs(
   # graph annotator functions.
   del false
   del true
+  del n
   
   # One-hot encoding
   false = np.array([1, 0], np.int32)
@@ -175,28 +169,11 @@ def MakePolyhedralGraphs(
     annotated_cdfg = builder.BuildFromControlFlowGraph(cfg)
 
     steps = sum(1 for nid, node in annotated_cdfg.nodes(data=True)
-                 if 'polyhedral' in node and node['polyhedral'] is True)
-    if n is None:
-      max_steps = max(max_steps, steps)
-      cdfgs.append(annotated_cdfg)
-    else:
-      max_steps = steps
-      cdfgs = [annotated_cdfg]
-      
-    # TODO(talbn): Not sure if looping is a good idea. We are potentially annotating
-    #              polyhedral parts of the graph as non-polyhedral.
-    #              The alternative is to yield one graph.
-    if n is not None:
-      labelled = g.copy()
-      labelled.data_flow_max_steps_required = max_steps
-      AnnotatePolyhedra(labelled, cdfgs, false=false, true=true)
-      yield labelled
-
-      if i >= n:
-        break
-
-  if n is None:
-    labelled = g.copy()
-    labelled.data_flow_max_steps_required = max_steps
-    AnnotatePolyhedra(labelled, cdfgs, false=false, true=true)
-    yield labelled
+                 if node.get('polyhedral'))
+    max_steps = max(max_steps, steps)
+    cdfgs.append(annotated_cdfg)
+    
+  labelled = g.copy()
+  labelled.data_flow_max_steps_required = max_steps
+  AnnotatePolyhedra(labelled, cdfgs, false=false, true=true)
+  yield labelled

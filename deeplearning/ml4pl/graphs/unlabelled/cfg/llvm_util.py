@@ -64,17 +64,17 @@ class TagHook(object):
   
   def OnGraphBegin(self, dot: pydot.Dot):
     """Called upon first encounter of a dot graph."""
-    raise NotImplementedError
+    pass
 
   def OnNode(self, node: pydot.Node) -> typing.Dict[str, typing.Any]:
     """Called when a node is encountered. Returns additional attributes to encountered node."""
-    raise NotImplementedError
+    pass
 
   def OnInstruction(self, node_attrs: typing.Dict[str, typing.Any],
                     instruction: str) -> typing.Dict[str, typing.Any]:
     """Called when an instruction is created in full-flow graphs. 
     Returns additional attributes to encountered node."""
-    raise NotImplementedError
+    pass
 
   def OnIdentifier(self, stmt_node: typing.Dict[str, typing.Any],
                    identifier_node: typing.Dict[str, typing.Any],
@@ -88,7 +88,7 @@ class TagHook(object):
     Returns:
       Additional attributes to encountered node.
     """
-    raise NotImplementedError
+    pass
   
 
 class LlvmControlFlowGraph(cfg.ControlFlowGraph):
@@ -100,7 +100,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
   def __init__(self, *args, tag_hook: typing.Optional[TagHook] = None,
                **kwargs):
-    super().__init__(*args, **kwargs)
+    super(LlvmControlFlowGraph, self).__init__(*args, **kwargs)
     self.tag_hook = tag_hook
   
   
@@ -157,7 +157,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
         # instruction count.
         new_node_name = f"{data['name']}.{block_instruction_count}"
 
-        if self.tag_hook is not None:
+        if self.tag_hook:
           other_attrs = self.tag_hook.OnInstruction(data, instruction) or {}
         else:
           other_attrs = {}
@@ -291,7 +291,7 @@ def ControlFlowGraphFromDotSource(
 
   dot = parsed_dots[0]
 
-  if tag_hook is not None:
+  if tag_hook:
     tag_hook.OnGraphBegin(dot)
   
   function_name_match = re.match(_DOT_CFG_FUNCTION_NAME_RE, dot.get_name())
@@ -309,7 +309,7 @@ def ControlFlowGraphFromDotSource(
     if node.get_name() in node_name_to_index_map:
       raise ValueError(f"Duplicate node name: '{node.get_name()}'")
     node_name_to_index_map[node.get_name()] = i
-    if tag_hook is not None:
+    if tag_hook:
       other_attrs = tag_hook.OnNode(node) or {}
     else:
       other_attrs = {}
