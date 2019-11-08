@@ -20,6 +20,7 @@ from deeplearning.ml4pl.graphs.labelled.alias_set import alias_set
 from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
 from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
+from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
 from labm8 import app
@@ -136,6 +137,14 @@ def GetAnnotatedGraphGenerators(
             requires_graphs=True,
             requires_bytecodes=True,
             function=alias_set.MakeAliasSetGraphs))
+
+  if AnalysisIsRequested('polyhedra', analysis_names):
+    annotators.append(
+        GraphAnnotator(
+            name='polyhedra',
+            requires_graphs=True,
+            requires_bytecodes=True,
+            function=polyhedra.MakePolyhedralGraphs))
 
   if analysis_names:
     raise app.UsageError(f"Unknown analyses {analysis_names}")

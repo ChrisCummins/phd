@@ -122,7 +122,6 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
 
 
 def MakePolyhedralGraphs(
-    g: nx.MultiDiGraph,
     bytecode: str,
     n: typing.Optional[int] = None,
     false=False,
