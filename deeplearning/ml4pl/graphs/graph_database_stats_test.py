@@ -62,7 +62,8 @@ def test_GraphDatabaseStats_repr(db_512: graph_database.Database):
   s = stats.GraphDatabaseStats(db_512)
   assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
                     "(8568x200, 2x2) float64 node embeddings, "
-                    "1-d graph labels, max 511 nodes, max 2 edges")
+                    "1-d graph labels, max 511 nodes, max 2 edges, "
+                    "0 max edge positions")
 
 
 def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
@@ -71,7 +72,7 @@ def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
   assert str(s) == (
       "Graphs database: 512 instances, 1 edge type, "
       "(8568x200, 2x2) float64 node embeddings, 1-d float32 graph labels, "
-      "max 511 nodes, max 2 edges")
+      "max 511 nodes, max 2 edges, 0 max edge positions")
 
 
 def test_GraphDatabaseStats_groups(db_512: graph_database.Database):

@@ -45,6 +45,10 @@ class GraphDatabaseStats(object):
     return self._stats.max_edge_count
 
   @property
+  def max_edge_positions(self) -> int:
+    return self._stats.max_edge_positions
+
+  @property
   def node_embeddings_count(self) -> int:
     return self._node_embeddings_stats['node_embeddings_count']
 
@@ -100,6 +104,7 @@ class GraphDatabaseStats(object):
     summaries += [
         f"max {humanize.Plural(self.max_node_count, 'node', commas=True)}",
         f"max {humanize.Plural(self.max_edge_count, 'edge', commas=True)}",
+        f"{self.max_edge_positions} max edge positions",
     ]
     if self.data_flow_max_steps_required:
       summaries.append(
@@ -136,6 +141,8 @@ class GraphDatabaseStats(object):
               graph_database.GraphMeta.node_count).label("max_node_count"),
           sql.func.max(
               graph_database.GraphMeta.edge_count).label("max_edge_count"),
+          sql.func.max(graph_database.GraphMeta.edge_position_max).label(
+              "max_edge_positions"),
           sql.func.max(
               graph_database.GraphMeta.graph_features_dimensionality).label(
                   "graph_features_dimensionality"),
@@ -228,5 +235,6 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
     summaries += [
         f"max {humanize.Plural(self.max_node_count, 'node')}",
         f"max {humanize.Plural(self.max_edge_count, 'edge')}",
+        f"{self.max_edge_positions} max edge positions",
     ]
     return ", ".join(summaries)
