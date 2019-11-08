@@ -1,4 +1,5 @@
 """This module prepares datasets for data flow analyses."""
+import itertools
 import math
 import multiprocessing
 import pathlib
@@ -271,29 +272,35 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
             humanize.Commas(len(bytecodes_to_process)), len(bytecode_id_chunks),
             batch_size)
 
-    if FLAGS.nproc > 1:
-      workers = pool.imap_unordered(_GraphWorker, jobs)
-    else:
-      workers = (_GraphWorker(job) for job in jobs)
+    # Split the jobs into smaller chunks so that imap_unordered doesn't outrun
+    # the database writer by too much.
+    for jobs_chunk in iter(
+        lambda: list(itertools.islice(jobs, FLAGS.nproc * 4)), []):
+      app.Log(1, 'Starting chunk of %s jobs', FLAGS.nproc * 4)
+      if FLAGS.nproc > 1:
+        workers = pool.imap_unordered(_GraphWorker, jobs_chunk)
+      else:
+        workers = (_GraphWorker(job) for job in jobs_chunk)
 
-    job_count = 0
-    for graph_metas_by_output in workers:
-      job_count += 1
-      exported_graph_count += sum([len(x) for x in graph_metas_by_output])
-      app.Log(
-          1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
-          'processed',
-          humanize.Commas(sum([len(x) for x in graph_metas_by_output])),
-          exported_graph_count / (time.time() - start_time),
-          (job_count / len(bytecode_id_chunks)) * 100,
-          humanize.DecimalPrefix(len(bytecodes_to_process), ''))
+      job_count = 0
+      for graph_metas_by_output in workers:
+        job_count += 1
+        exported_graph_count += sum([len(x) for x in graph_metas_by_output])
+        app.Log(
+            1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
+            'processed',
+            humanize.Commas(sum([len(x) for x in graph_metas_by_output])),
+            exported_graph_count / (time.time() - start_time),
+            (job_count / len(bytecode_id_chunks)) * 100,
+            humanize.DecimalPrefix(len(bytecodes_to_process), ''))
 
-      for output, graph_metas, output in zip(
-          self.outputs, graph_metas_by_output, self.outputs):
-        if graph_metas:
-          with prof.Profile(
-              f"Added {len(graph_metas)} {output.annotator.name} graph metas"):
-            sqlutil.ResilientAddManyAndCommit(output.db, graph_metas)
+        for output, graph_metas, output in zip(
+            self.outputs, graph_metas_by_output, self.outputs):
+          if graph_metas:
+            with prof.Profile(
+                f"Added {len(graph_metas)} {output.annotator.name} graph metas"
+            ):
+              sqlutil.ResilientAddManyAndCommit(output.db, graph_metas)
 
     elapsed_time = time.time() - start_time
     app.Log(
@@ -308,86 +315,78 @@ def _GraphWorker(packed_args):
   """A graph processor worker. If --multiprocess_database_exporters is set,
   this is called in a worker process.
   """
-  with prof.Profile(lambda t:
-                    (f"Generated "
-                     f"{humanize.Commas(generated_graphs_count)}"
-                     f" labelled graphs ({generated_graphs_count / t:.2f} "
-                     f"input graphs/sec)")):
-    input_graph_db_url, annotators, bytecode_ids_to_process = packed_args
+  input_graph_db_url, annotators, bytecode_ids_to_process = packed_args
 
-    def LoadGraph(group: str, pickled_data: bytes):
-      graph = pickle.loads(pickled_data)
-      graph.group = group
-      return graph
+  def LoadGraph(group: str, pickled_data: bytes):
+    graph = pickle.loads(pickled_data)
+    graph.group = group
+    return graph
 
-    with prof.Profile(
-        lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
-      input_graph_db = graph_database.Database(input_graph_db_url)
-      # Read the required graphs from the database.
-      bytecode_ids_to_fetch = list(
-          sorted(
-              set(bytecode_ids_to_process[np.nonzero(
-                  bytecode_ids_to_process)])))
-      with input_graph_db.Session() as session:
-        query = session.query(graph_database.GraphMeta.group,
-                              graph_database.Graph.pickled_data) \
-          .join(graph_database.Graph) \
-          .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids_to_fetch)) \
-          .order_by(graph_database.GraphMeta.bytecode_id)
+  with prof.Profile(
+      lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
+    input_graph_db = graph_database.Database(input_graph_db_url)
+    # Read the required graphs from the database.
+    bytecode_ids_to_fetch = list(
+        sorted(set(
+            bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
+    with input_graph_db.Session() as session:
+      query = session.query(graph_database.GraphMeta.group,
+                            graph_database.Graph.pickled_data) \
+        .join(graph_database.Graph) \
+        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids_to_fetch)) \
+        .order_by(graph_database.GraphMeta.bytecode_id)
 
-        bytecode_id_to_graph: typing.Dict[int, nx.MultiDiGraph] = {
-            id_: LoadGraph(*row)
-            for id_, row in zip(bytecode_ids_to_fetch, query)
-        }
-      input_graph_db.Close(
-      )  # Don't leave the database connection lying around.
+      bytecode_id_to_graph: typing.Dict[int, nx.MultiDiGraph] = {
+          id_: LoadGraph(*row) for id_, row in zip(bytecode_ids_to_fetch, query)
+      }
+    input_graph_db.Close()  # Don't leave the database connection lying around.
 
-    # Optionally read the required bytecodes from the bytecode database.
-    bytecode_ids_to_fetch = []
-    for i, bytecode_ids_for_annotator in enumerate(bytecode_ids_to_process):
-      if annotators[i].requires_bytecodes:
-        bytecode_ids_to_fetch.extend(
-            bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])
-    bytecode_ids_to_fetch = list(sorted(set(bytecode_ids_to_fetch)))
+  # Optionally read the required bytecodes from the bytecode database.
+  bytecode_ids_to_fetch = []
+  for i, bytecode_ids_for_annotator in enumerate(bytecode_ids_to_process):
+    if annotators[i].requires_bytecodes:
+      bytecode_ids_to_fetch.extend(
+          bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])
+  bytecode_ids_to_fetch = list(sorted(set(bytecode_ids_to_fetch)))
 
-    if bytecode_ids_to_fetch:
-      with prof.Profile(f"Read {len(bytecode_ids_to_fetch)} bytecode texts"):
-        # Deferred database instantiation so that this script can be run without the
-        # --bytecode_db flag set when bytecodes are not required.
-        bytecode_db: bytecode_database.Database = FLAGS.bytecode_db()
-        with bytecode_db.Session() as session:
-          bytecodes = [
-            row.bytecode for row in
-            session.query(bytecode_database.LlvmBytecode.bytecode) \
-              .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch)) \
-              .order_by(bytecode_database.LlvmBytecode.id) \
-            ]
-        bytecode_id_to_bytecode: typing.Dict[int, str] = {
-            id_: bytecode
-            for id_, bytecode in zip(bytecode_ids_to_fetch, bytecodes)
-        }
-        bytecode_db.Close()  # Don't leave the database connection lying around.
+  if bytecode_ids_to_fetch:
+    with prof.Profile(f"Read {len(bytecode_ids_to_fetch)} bytecode texts"):
+      # Deferred database instantiation so that this script can be run without the
+      # --bytecode_db flag set when bytecodes are not required.
+      bytecode_db: bytecode_database.Database = FLAGS.bytecode_db()
+      with bytecode_db.Session() as session:
+        bytecodes = [
+          row.bytecode for row in
+          session.query(bytecode_database.LlvmBytecode.bytecode) \
+            .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch)) \
+            .order_by(bytecode_database.LlvmBytecode.id) \
+          ]
+      bytecode_id_to_bytecode: typing.Dict[int, str] = {
+          id_: bytecode
+          for id_, bytecode in zip(bytecode_ids_to_fetch, bytecodes)
+      }
+      bytecode_db.Close()  # Don't leave the database connection lying around.
+  else:
+    bytecode_id_to_bytecode: typing.Dict[int, str] = {}
+
+  graph_metas_by_output = []
+  for annotator, bytecode_ids in zip(annotators, bytecode_ids_to_process):
+    # Ignore the bytecodes that do not need processing.
+    bytecode_ids = bytecode_ids[np.nonzero(bytecode_ids)]
+
+    graphs = [bytecode_id_to_graph[i] for i in bytecode_ids]
+    if annotator.requires_bytecodes:
+      bytecodes = [bytecode_id_to_bytecode[i] for i in bytecode_ids]
     else:
-      bytecode_id_to_bytecode: typing.Dict[int, str] = {}
+      bytecodes = None
 
-    graph_metas_by_output = []
-    for annotator, bytecode_ids in zip(annotators, bytecode_ids_to_process):
-      # Ignore the bytecodes that do not need processing.
-      bytecode_ids = bytecode_ids[np.nonzero(bytecode_ids)]
+    graph_metas_by_output.append(
+        CreateAnnotatedGraphs(annotator, graphs, bytecodes))
 
-      graphs = [bytecode_id_to_graph[i] for i in bytecode_ids]
-      if annotator.requires_bytecodes:
-        bytecodes = [bytecode_id_to_bytecode[i] for i in bytecode_ids]
-      else:
-        bytecodes = None
+    # Used by prof.Profile() callback:
+    generated_graphs_count = sum([len(x) for x in graph_metas_by_output])
 
-      graph_metas_by_output.append(
-          CreateAnnotatedGraphs(annotator, graphs, bytecodes))
-
-      # Used by prof.Profile() callback:
-      generated_graphs_count = sum([len(x) for x in graph_metas_by_output])
-
-    return graph_metas_by_output
+  return graph_metas_by_output
 
 
 def CreateAnnotatedGraphs(annotator: GraphAnnotator,
