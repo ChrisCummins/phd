@@ -18,8 +18,13 @@ FLAGS = app.FLAGS
 
 class GraphBatchOptions(typing.NamedTuple):
   """A tuple of options for constructing graph batches."""
-  # Limit the total number of nodes in a batch to this value.
-  max_nodes: int
+  # The maximum number of graphs to include in a batch. If zero, the number of
+  # graphs is not limited.
+  max_graphs: int = 0
+
+  # The maximum number of graphs to include in batch, across all graphs. If
+  # zero, the number of nodes is not limited.
+  max_nodes: int = 0
 
   # Filter graphs to this "GraphMeta.group" column. None value means no filter.
   group: str = None
@@ -27,6 +32,25 @@ class GraphBatchOptions(typing.NamedTuple):
   # Only include graphs which can be computed in less than or equal to this
   # number of data flow steps. A value of zero means no limit.
   data_flow_max_steps_required: int = 0
+
+  def ShouldAddToBatch(self, graph: graph_database.GraphMeta,
+                       log: log_database.BatchLogMeta) -> bool:
+    """Return whether the given graph should be added to the batch.
+
+    Args:
+      graph: A graph.
+      log: The current state of the batch. The node_count and graph_count
+        attributes are accessed.
+    """
+    # Check if we already have enough graphs.
+    if self.max_nodes and log.node_count + graph.node_count >= self.max_nodes:
+      return False
+
+    # Check if we already have enough graphs.
+    if self.max_graphs and log.graph_count >= self.max_graphs:
+      return False
+
+    return True
 
 
 class GraphBatch(typing.NamedTuple):
@@ -190,7 +214,7 @@ class GraphBatch(typing.NamedTuple):
       graph_y = None
 
     # Pack until we cannot fit more graphs in the batch.
-    while (graph and log.node_count + graph.node_count < options.max_nodes):
+    while graph and options.ShouldAddToBatch(graph, log):
       graph_ids.append(graph.id)
 
       # De-serialize pickled data in database and process.
