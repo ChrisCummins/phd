@@ -1,12 +1,18 @@
 """Prune log databases."""
-from labm8 import app
+
+import sqlalchemy as sql
 
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
+from labm8 import humanize
+
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to prune.')
 app.DEFINE_boolean('prune_runs_with_no_checkpoints', False,
                    "Delete logs for run IDs with no model checkpoints.")
+app.DEFINE_boolean('prune_orphans', False,
+                   "Delete orphaned child table entries.")
 
 FLAGS = app.FLAGS
 
@@ -30,10 +36,46 @@ def PruneRunsWithNoCheckpoints(log_db: log_database.Database):
       log_db.DeleteLogsForRunId(run_id)
 
 
+def PruneOrphans(log_db: log_database.Database):
+  """Prune orphaned child nodes. Orphans are never a good thing."""
+  with log_db.Session() as session:
+    checkpoint_ids = [
+      row.id for row in session.query(log_database.ModelCheckpointMeta.id)
+    ]
+    orphans = session.query(log_database.ModelCheckpoint)
+    orphans = orphans.filter(~log_database.ModelCheckpoint.id.in_(checkpoint_ids))
+    orphaned_checkpoints = [row.id for row in orphans]
+
+    app.Log(1, 'Found %s orphaned checkpoints to delete',
+            humanize.Commas(len(orphaned_checkpoints)))
+    if orphaned_checkpoints:
+      delete = sql.delete(log_database.ModelCheckpoint)
+      delete = delete.where(log_database.ModelCheckpoint.id.in_(orphaned_checkpoints))
+      log_db.engine.execute(delete)
+
+  with log_db.Session() as session:
+    batch_log_ids = [
+      row.id for row in session.query(log_database.BatchLogMeta.id)
+    ]
+    orphans = session.query(log_database.BatchLog)
+    orphans = orphans.filter(~log_database.BatchLog.id.in_(batch_log_ids))
+    orphaned_batch_logs = [row.id for row in orphans]
+
+    app.Log(1, 'Found %s orphaned batch_logs to delete',
+            humanize.Commas(len(orphaned_batch_logs)))
+    if orphaned_batch_logs:
+      delete = sql.delete(log_database.BatchLog)
+      delete = delete.where(log_database.ModelCheckpoint.id.in_(orphaned_batch_logs))
+      log_db.engine.execute(delete)
+
+
+
 def main():
   """Main entry point."""
   log_db: log_database.Database = FLAGS.log_db()
 
+  if FLAGS.prune_orphans:
+    PruneOrphans(log_db)
   if FLAGS.prune_runs_with_no_checkpoints:
     PruneRunsWithNoCheckpoints(log_db)
 
