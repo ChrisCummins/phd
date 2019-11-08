@@ -252,3 +252,28 @@ class Database(sqlutil.Database):
     ]).astype(np.float64)
 
     return augmented_inst2vec_embeddings, node_selector
+
+  def DeleteGraphs(self, graph_ids: typing.List[int]) -> None:
+    """Delete the logs for this run.
+
+    This deletes the batch logs, model checkpoints, and model parameters.
+
+    Args:
+      run_id: The ID of the run to delete.
+    """
+    graph_ids = list(graph_ids)
+    # Because the cascaded delete is broken, we first delete the Graph rows,
+    # then the GraphMetas.
+    with self.Session() as session:
+      query = session.query(GraphMeta.id) \
+        .filter(GraphMeta.id.in_(graph_ids))
+      ids_to_delete = [row.id for row in query]
+
+    app.Log(1, "Deleting %s graphs", humanize.Commas(len(ids_to_delete)))
+    delete = sql.delete(Graph) \
+      .where(Graph.id.in_(ids_to_delete))
+    self.engine.execute(delete)
+
+    delete = sql.delete(GraphMeta) \
+      .where(GraphMeta.id.in_(ids_to_delete))
+    self.engine.execute(delete)
