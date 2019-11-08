@@ -12,10 +12,6 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -26,6 +22,10 @@ from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
 app.DEFINE_database(
     'input_graphs_db',
@@ -210,7 +210,7 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
           list(set(all_bytecodes_to_process)), dtype=np.int32)
       frequency_table = bytecodes_to_process  # Used prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
-      num_to_select = min(1000, len(frequency_table) // 3)
+      num_to_select = min(10000, len(frequency_table) // 3)
       bytecodes_to_process = bytecodes_to_process[:num_to_select]
     else:
       # Create a frequency table how for many times each unprocessed bytecode
@@ -220,7 +220,7 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
       # Sort the frequency table by count so that most frequently unprocessed
       # bytecodes occur *at the end* of the list.
       sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
-      num_to_select = min(1000, len(frequency_table) // 3)
+      num_to_select = min(10000, len(frequency_table) // 3)
       bytecodes_to_process = frequency_table[:num_to_select, 0]
 
     # TODO(cec): No need to insert the zero elements here. Remove this, and all
