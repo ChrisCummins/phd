@@ -188,8 +188,8 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The name of the parameter.
   parameter: str = sql.Column(sql.String(1024), nullable=False)
   # The value for the parameter.
-  pickled_value: str = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                  nullable=False)
+  pickled_value: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
+                                    nullable=False)
 
   @property
   def value(self) -> typing.Any:
@@ -385,3 +385,10 @@ class Database(sqlutil.Database):
       # Un-pickle the parameter values:
       df['value'] = [pickle.loads(x) for x in df['value'].values]
       return df
+
+  @property
+  def run_ids(self) -> typing.List[str]:
+    """Get a list of all run IDs in the databse."""
+    with self.Session() as session:
+      query = session.query(Parameter.run_id.distinct().label('run_id'))
+      return [row.run_id for row in query]

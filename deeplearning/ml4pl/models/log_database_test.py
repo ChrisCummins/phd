@@ -85,5 +85,25 @@ def test_DeleteLogsForRunId(db: log_database.Database):
     assert not session.query(log_database.Parameter.id).count()
 
 
+def test_run_ids(db: log_database.Database):
+  """Test that property returns all run IDs."""
+  with db.Session(commit=True) as session:
+    session.add_all([
+        log_database.Parameter(run_id='a',
+                               type=log_database.ParameterType.MODEL_FLAG,
+                               parameter='foo',
+                               pickled_value=pickle.dumps('foo')),
+        log_database.Parameter(run_id='a',
+                               type=log_database.ParameterType.MODEL_FLAG,
+                               parameter='bar',
+                               pickled_value=pickle.dumps('bar')),
+        log_database.Parameter(run_id='b',
+                               type=log_database.ParameterType.MODEL_FLAG,
+                               parameter='foo',
+                               pickled_value=pickle.dumps('foo')),
+    ])
+  assert db.run_ids == ['a', 'b']
+
+
 if __name__ == '__main__':
   test.Main()
