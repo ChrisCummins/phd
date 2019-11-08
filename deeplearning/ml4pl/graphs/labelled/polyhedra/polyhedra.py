@@ -1,4 +1,4 @@
-"""Module for labelling program graphs with alias sets."""
+"""Module for labelling program graphs with polyhedral SCoPs."""
 import random
 import typing
 

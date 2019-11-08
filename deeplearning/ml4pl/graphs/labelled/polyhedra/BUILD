@@ -1,12 +1,14 @@
-# Annotating graphs with alias sets.
+# Annotating program graphs with polyhedral SCoPs
 
 py_library(
     name = "polyhedra",
     srcs = ["polyhedra.py"],
     visibility = ["//deeplearning/ml4pl/graphs:__subpackages__"],
     deps = [
+        "//compilers/llvm:opt",
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
+        "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
         "//labm8:app",
         "//labm8:decorators",
     ],
@@ -18,6 +20,7 @@ py_test(
     deps = [
         ":polyhedra",
         "//compilers/llvm:clang",
+        "//compilers/llvm:opt",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
         "//labm8:test",
         "//third_party/py/networkx",

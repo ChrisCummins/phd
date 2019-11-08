@@ -1,4 +1,4 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/alias_set."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled/polyhedra."""
 import typing
 
 import networkx as nx
