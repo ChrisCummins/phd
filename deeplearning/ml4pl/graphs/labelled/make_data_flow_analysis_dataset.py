@@ -210,7 +210,8 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
           list(set(all_bytecodes_to_process)), dtype=np.int32)
       frequency_table = bytecodes_to_process  # Used prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
-      bytecodes_to_process = bytecodes_to_process[:10000]
+      num_to_select = min(1000, len(frequency_table) // 3)
+      bytecodes_to_process = bytecodes_to_process[:num_to_select]
     else:
       # Create a frequency table how for many times each unprocessed bytecode
       # occurs.
@@ -219,7 +220,8 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
       # Sort the frequency table by count so that most frequently unprocessed
       # bytecodes occur *at the end* of the list.
       sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
-      bytecodes_to_process = frequency_table[:10000, 0]
+      num_to_select = min(1000, len(frequency_table) // 3)
+      bytecodes_to_process = frequency_table[:num_to_select, 0]
 
     # TODO(cec): No need to insert the zero elements here. Remove this, and all
     # of the nonzero() calls.
