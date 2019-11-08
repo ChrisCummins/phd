@@ -325,15 +325,16 @@ class Database(sqlutil.Database):
         .filter(BatchLogMeta.run_id == run_id)
       ids_to_delete = [row.id for row in query]
 
-    app.Log(1, "Deleting %s batch logs for run %s",
-            humanize.Commas(len(ids_to_delete)), run_id)
-    delete = sql.delete(BatchLog) \
-      .where(BatchLog.id.in_(ids_to_delete))
-    self.engine.execute(delete)
+    if ids_to_delete:
+      app.Log(1, "Deleting %s batch logs for run %s",
+              humanize.Commas(len(ids_to_delete)), run_id)
+      delete = sql.delete(BatchLog) \
+        .where(BatchLog.id.in_(ids_to_delete))
+      self.engine.execute(delete)
 
-    delete = sql.delete(BatchLogMeta) \
-      .where(BatchLogMeta.run_id == run_id)
-    self.engine.execute(delete)
+      delete = sql.delete(BatchLogMeta) \
+        .where(BatchLogMeta.run_id == run_id)
+      self.engine.execute(delete)
 
     # Because the cascaded delete is broken, we first delete the checkpoint
     # child rows, then the parents.
@@ -342,15 +343,16 @@ class Database(sqlutil.Database):
         .filter(ModelCheckpointMeta.run_id == run_id)
       ids_to_delete = [row.id for row in query]
 
-    app.Log(1, "Deleting %s model checkpoints for run %s",
-            humanize.Commas(len(ids_to_delete)), run_id)
-    delete = sql.delete(ModelCheckpoint) \
-      .where(ModelCheckpoint.id.in_(ids_to_delete))
-    self.engine.execute(delete)
+    if ids_to_delete:
+      app.Log(1, "Deleting %s model checkpoints for run %s",
+              humanize.Commas(len(ids_to_delete)), run_id)
+      delete = sql.delete(ModelCheckpoint) \
+        .where(ModelCheckpoint.id.in_(ids_to_delete))
+      self.engine.execute(delete)
 
-    delete = sql.delete(ModelCheckpointMeta) \
-      .where(ModelCheckpointMeta.run_id == run_id)
-    self.engine.execute(delete)
+      delete = sql.delete(ModelCheckpointMeta) \
+        .where(ModelCheckpointMeta.run_id == run_id)
+      self.engine.execute(delete)
 
     # Delete the parameters for this Run ID.
     app.Log(1, "Deleting model parameters for run %s", run_id)
