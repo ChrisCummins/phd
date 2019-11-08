@@ -49,7 +49,9 @@ def test_BufferedGraphReader_length(db_512: graph_database.Database,
   graphs = list(reader.BufferedGraphReader(db_512, buffer_size=buffer_size))
   assert len(graphs) == 510
   assert all([g.bytecode_id == 1 for g in graphs])
-  assert all([g.node_count == i for i, g in enumerate(graphs)])
+  # Check the graph node counts, offset by the first two which are ignored
+  # (because graphs with zero or one nodes are filtered out).
+  assert all([g.node_count == i + 2 for i, g in enumerate(graphs)])
 
 
 @pytest.mark.parametrize('buffer_size', [1, 10, 25, 10000])
@@ -59,7 +61,7 @@ def test_BufferedGraphReader_filter(db_512: graph_database.Database,
   filter_cb = lambda: graph_database.GraphMeta.node_count % 2 == 0
   graphs = list(
       reader.BufferedGraphReader(db_512, filters=[filter_cb], buffer_size=10))
-  assert len(graphs) == 256
+  assert len(graphs) == 255
 
 
 @pytest.mark.parametrize('buffer_size', [1, 10, 25, 10000])
@@ -97,7 +99,7 @@ def test_BufferedGraphReader_next(db_512: graph_database.Database,
                                   buffer_size: int):
   """Test using next() to read from BufferedGraphReader()."""
   db_reader = reader.BufferedGraphReader(db_512)
-  for _ in range(512):
+  for _ in range(510):
     next(db_reader)
   with pytest.raises(StopIteration):
     next(db_reader)
