@@ -54,7 +54,7 @@ class DatabaseExporterBase(object):
                output_dbs: typing.List[graph_database.Database],
                pool: typing.Optional[multiprocessing.Pool] = None,
                batch_size: typing.Optional[int] = None):
-    pool = pool or multiprocessing.Pool(processes=1)
+    pool = pool or multiprocessing.Pool(processes=FLAGS.nproc)
     batch_size = batch_size or FLAGS.batch_size
 
     with tempfile.TemporaryDirectory() as d:
