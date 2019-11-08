@@ -16,7 +16,9 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled/reachability",
         "//deeplearning/ml4pl/graphs/labelled/subexpressions",
         "//labm8:app",
+        "//third_party/py/networkx",
         "//third_party/py/numpy",
+        "//third_party/py/sqlalchemy",
     ],
 )
 
@@ -26,4 +28,13 @@ py3_image(
     base = "@base//image",
     main = "make_data_flow_analysis_dataset.py",
     deps = [":make_data_flow_analysis_dataset"],
+)
+
+py_test(
+    name = "make_data_flow_analysis_dataset_test",
+    srcs = ["make_data_flow_analysis_dataset_test.py"],
+    deps = [
+        ":make_data_flow_analysis_dataset",
+        "//labm8:test",
+    ],
 )

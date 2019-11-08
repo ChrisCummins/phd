@@ -1,5 +1,4 @@
 """A module which defines a base class for implementing database exporters."""
-import math
 import multiprocessing
 import pathlib
 import random
@@ -13,16 +12,18 @@ from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
 from labm8 import sqlutil
+from labm8 import system
 
 from deeplearning.ml4pl.bytecode import bytecode_database
+from deeplearning.ml4pl.bytecode import splitters
 from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
-app.DEFINE_boolean('multiprocess_database_exporters', True,
+app.DEFINE_integer('nproc', multiprocessing.cpu_count(),
                    'Enable multiprocessing for database job workers.')
 app.DEFINE_integer(
-    'database_exporter_batch_size', 8,
+    'batch_size', 8,
     'The number of bytecodes to process in-memory before writing'
     'to database.')
 app.DEFINE_integer(
@@ -43,28 +44,58 @@ class DatabaseExporterBase(object):
     """
     raise NotImplementedError("abstract class")
 
+  def Export(self, input_db: sqlutil.Database,
+             output_dbs: typing.List[graph_database.Database],
+             pool: multiprocessing.Pool, batch_size: int):
+    raise NotImplementedError("abstract class")
+
+  def __call__(self,
+               input_db: sqlutil.Database,
+               output_dbs: typing.List[graph_database.Database],
+               pool: typing.Optional[multiprocessing.Pool] = None,
+               batch_size: typing.Optional[int] = None):
+    pool = pool or multiprocessing.Pool(processes=1)
+    batch_size = batch_size or FLAGS.batch_size
+
+    with tempfile.TemporaryDirectory() as d:
+      # Temporarily redirect logs to a file, which we will later import into the
+      # database's meta table.
+      FLAGS.alsologtostderr = True
+      app.LogToDirectory(d, 'log')
+
+      try:
+        app.Log(1, 'Seeding export with %s', FLAGS.seed)
+        random.seed(FLAGS.seed)
+        self.Export(input_db, output_dbs, pool, batch_size)
+      finally:
+        # Add a 'log' entry to the export database.
+        log = fs.Read(pathlib.Path(d) / 'log.INFO')
+        for output_db in output_dbs:
+          with output_db.Session(commit=True) as s:
+            run_id = (f"{time.strftime('%Y%m%dT%H%M%S')}@" f"{system.HOSTNAME}")
+            s.add(graph_database.Meta(key=f'log:{run_id}', value=log))
+
 
 class BytecodeDatabaseExporterBase(DatabaseExporterBase):
   """Base class for implementing parallelized LLVM bytecode database workers."""
 
-  def __init__(self,
-               bytecode_db: bytecode_database.Database,
-               graph_db: graph_database.Database,
-               pool: typing.Optional[multiprocessing.Pool] = None,
-               batch_size: typing.Optional[int] = None):
-    self.bytecode_db = bytecode_db
-    self.graph_db = graph_db
-    self.pool = pool or multiprocessing.Pool()
-    self.batch_size = batch_size or FLAGS.database_exporter_batch_size
+  def Export(self, input_db: sqlutil.Database,
+             output_dbs: typing.List[graph_database.Database],
+             pool: typing.Optional[multiprocessing.Pool],
+             batch_size: typing.Optional[int]):
+    if len(output_dbs) != 1:
+      raise TypeError("Bytecode exporters only support a single output "
+                      "database.")
 
-  def ExportGroups(self,
-                   group_to_ids_map: typing.Dict[str, typing.List[int]]) -> int:
+    group_to_ids_map = splitters.GetGroupsFromFlags(input_db)
+
     start_time = time.time()
     group_to_graph_count_map = dict()
     # Export from each group in turn.
     for group, bytecode_ids in group_to_ids_map.items():
       group_start_time = time.time()
-      exported_graph_count = self.ExportGroup(group, bytecode_ids)
+      exported_graph_count = self.ExportGroup(input_db, output_dbs[0], group,
+                                              bytecode_ids, pool, batch_size)
       elapsed_time = time.time() - group_start_time
       app.Log(
           1, 'Exported %s %s graphs from %s bytecodes in %s '
@@ -86,7 +117,10 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
 
     return total_count
 
-  def ExportGroup(self, group: str, bytecode_ids: typing.List[int]) -> int:
+  def ExportGroup(self, input_db: sqlutil.Database,
+                  output_db: graph_database.Database, group: str,
+                  bytecode_ids: typing.List[int], pool: multiprocessing.Pool,
+                  batch_size: int) -> int:
     """Export the given group.
 
     Args:
@@ -100,7 +134,7 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
     exported_count = 0
 
     # Ignore bytecodes that we have already exported.
-    with self.graph_db.Session() as session:
+    with output_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id) \
         .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
       already_done = set([r.bytecode_id for r in query])
@@ -112,17 +146,14 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
     random.shuffle(bytecode_ids)
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-                    self.batch_size)
-
-    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
-    jobs = [(job_processor, self.bytecode_db.url, bytecode_ids_chunk)
+    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, batch_size)
+    jobs = [(job_processor, input_db.url, bytecode_ids_chunk)
             for bytecode_ids_chunk in bytecode_id_chunks]
     app.Log(1, "Divided %s %s bytecode chunks into %s jobs",
             humanize.Commas(len(bytecode_ids)), group, len(jobs))
 
-    if FLAGS.multiprocess_database_exporters:
-      workers = self.pool.imap_unordered(_BytecodeWorker, jobs)
+    if FLAGS.nproc > 1:
+      workers = pool.imap_unordered(_BytecodeWorker, jobs)
     else:
       workers = (_BytecodeWorker(job) for job in jobs)
 
@@ -142,13 +173,13 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
         graph.group = group
 
       if graph_metas:
-        sqlutil.ResilientAddManyAndCommit(self.graph_db, graph_metas)
+        sqlutil.ResilientAddManyAndCommit(output_db, graph_metas)
 
     return exported_count
 
 
 def _BytecodeWorker(packed_args):
-  """A bytecode processor worker. If --multiprocess_database_exporters is set,
+  """A bytecode processor worker. If --nproc is set,
   this is called in a worker process.
   """
   job_processor, bytecode_db_url, bytecode_ids = packed_args
@@ -162,31 +193,29 @@ def _BytecodeWorker(packed_args):
 class GraphDatabaseExporterBase(DatabaseExporterBase):
   """Base class for implementing parallelized graph database workers.
 
-  This supports one-to-many graph to graph exporters, where each input graph
-  is a unique bytecode ID.
+  This supports multiple output databases, where each output database has a
+  one-to-many relationship to the input database, identified by unique bytecode
+  IDs.
   """
 
-  def __init__(self,
-               input_db: graph_database.Database,
-               output_db: graph_database.Database,
-               pool: typing.Optional[multiprocessing.Pool] = None,
-               batch_size: typing.Optional[int] = None):
-    self.input_db = input_db
-    self.output_db = output_db
-    self.pool = pool or multiprocessing.Pool()
-    self.batch_size = batch_size or FLAGS.database_exporter_batch_size
+  def Export(self, input_db: sqlutil.Database,
+             output_dbs: typing.List[graph_database.Database],
+             pool: typing.Optional[multiprocessing.Pool],
+             batch_size: typing.Optional[int]):
+    if len(output_dbs) != 1:
+      raise TypeError
+    output_db = output_dbs[0]
 
-  def Export(self) -> int:
     start_time = time.time()
     exported_graph_count = 0
 
     # Get the bytecode IDs of the graphs to export.
-    with self.input_db.Session() as session:
+    with input_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id)
       bytecode_ids = set([row.bytecode_id for row in query])
 
     # Ignore bytecodes that we have already exported.
-    with self.output_db.Session() as session:
+    with output_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id) \
         .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
       already_done = set([row.bytecode_id for row in query])
@@ -198,17 +227,14 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
     random.shuffle(bytecode_ids)
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(max(math.ceil(len(bytecode_ids) / self.pool._processes), 8),
-                    self.batch_size)
-
-    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
-    jobs = [(job_processor, self.input_db.url, bytecode_ids_chunk)
+    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, FLAGS.batch_size)
+    jobs = [(job_processor, input_db.url, bytecode_ids_chunk)
             for bytecode_ids_chunk in bytecode_id_chunks]
     app.Log(1, "Divided %s bytecode chunks into %s jobs",
             humanize.Commas(len(bytecode_ids)), len(jobs))
 
-    if FLAGS.multiprocess_database_exporters:
-      workers = self.pool.imap_unordered(_GraphWorker, jobs)
+    if FLAGS.nproc:
+      workers = pool.imap_unordered(_GraphWorker, jobs)
     else:
       workers = (_GraphWorker(job) for job in jobs)
 
@@ -224,7 +250,7 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
           humanize.DecimalPrefix(len(bytecode_ids), ''))
 
       if graph_metas:
-        sqlutil.ResilientAddManyAndCommit(self.output_db, graph_metas)
+        sqlutil.ResilientAddManyAndCommit(output_db, graph_metas)
 
     elapsed_time = time.time() - start_time
     app.Log(
@@ -236,7 +262,7 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
 
 
 def _GraphWorker(packed_args):
-  """A graph processor worker. If --multiprocess_database_exporters is set,
+  """A graph processor worker. If --nproc is set,
   this is called in a worker process.
   """
   job_processor, graph_db_url, bytecode_ids = packed_args
@@ -245,23 +271,3 @@ def _GraphWorker(packed_args):
                                f"input graphs/sec)")):
     graph_db = graph_database.Database(graph_db_url)
     return job_processor(graph_db, bytecode_ids)
-
-
-def Run(input_db, output_db, run_export):
-  """Run an exporter."""
-  # Temporarily redirect logs to a file, which we will later import into the
-  # database's meta table.
-  with tempfile.TemporaryDirectory() as d:
-    FLAGS.alsologtostderr = True
-    app.LogToDirectory(d, 'log')
-
-    app.Log(1, 'Seeding with %s', FLAGS.seed)
-    random.seed(FLAGS.seed)
-
-    run_export(input_db, output_db)
-
-    log = fs.Read(pathlib.Path(d) / 'log.INFO')
-    with output_db.Session(commit=True) as s:
-      s.query(graph_database.Meta).filter(
-          graph_database.Meta.key == 'log').delete()
-      s.add(graph_database.Meta(key='log', value=log))

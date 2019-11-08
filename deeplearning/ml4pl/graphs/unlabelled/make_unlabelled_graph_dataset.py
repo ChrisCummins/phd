@@ -8,7 +8,6 @@ from labm8 import app
 from labm8 import prof
 
 from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.bytecode import splitters
 from deeplearning.ml4pl.graphs import database_exporters
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
@@ -83,17 +82,9 @@ class UnlabelledGraphExporter(database_exporters.BytecodeDatabaseExporterBase):
     return _ProcessInputs
 
 
-def _UnlabelledGraphExport(input_db, output_db):
-  """The dataset export function."""
-  groups = splitters.GetGroupsFromFlags(input_db)
-  exporter = UnlabelledGraphExporter(input_db, output_db)
-  exporter.ExportGroups(groups)
-
-
 def main():
   """Main entry point."""
-  database_exporters.Run(FLAGS.bytecode_db(), FLAGS.graph_db(),
-                         _UnlabelledGraphExport)
+  UnlabelledGraphExporter()(FLAGS.bytecode_db(), [FLAGS.graph_db()])
 
 
 if __name__ == '__main__':
