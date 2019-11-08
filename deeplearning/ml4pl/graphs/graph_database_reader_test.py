@@ -47,7 +47,7 @@ def test_BufferedGraphReader_length(db_512: graph_database.Database,
                                     buffer_size: int):
   """Test that the expected number of graphs are returned"""
   graphs = list(reader.BufferedGraphReader(db_512, buffer_size=buffer_size))
-  assert len(graphs) == 512
+  assert len(graphs) == 510
   assert all([g.bytecode_id == 1 for g in graphs])
   assert all([g.node_count == i for i, g in enumerate(graphs)])
 
@@ -71,7 +71,7 @@ def test_BufferedGraphReader_filters(db_512: graph_database.Database,
       lambda: graph_database.GraphMeta.id < 256
   ]
   graphs = list(reader.BufferedGraphReader(db_512, filters=filters))
-  assert len(graphs) == 128
+  assert len(graphs) == 127
 
 
 @pytest.mark.parametrize('buffer_size', [1, 10, 25, 10000])
