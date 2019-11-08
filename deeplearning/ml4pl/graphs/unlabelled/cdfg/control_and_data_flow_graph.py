@@ -400,7 +400,8 @@ class ControlAndDataFlowGraphBuilder(object):
           break
     g.exit_block = exit_block
 
-  def MaybeAddDataFlowElements(self, g: nx.MultiDiGraph) -> None:
+  def MaybeAddDataFlowElements(self, g: nx.MultiDiGraph,
+                               tag_hook: typing.Optional[llvm_util.TagHook]) -> None:
     if self.dataflow == 'none':
       return
 
@@ -418,13 +419,13 @@ class ControlAndDataFlowGraphBuilder(object):
           data['text'], store_destination_is_def=self.store_destination_is_def)
       if def_:  # Data flow out edge.
         def_name = f'{prefix(def_)}_operand'
-        edges_to_add.append((statement, def_name, def_name, 0, def_))
+        edges_to_add.append((statement, def_name, def_name, 0, def_, data, 'def'))
       for position, identifier in enumerate(uses):  # Data flow in edge.
         identifier_name = f'{prefix(identifier)}_operand'
         edges_to_add.append((identifier_name, statement, identifier_name,
-                             position, identifier))
+                             position, identifier, data, 'use'))
 
-    for src, dst, identifier, position, name in edges_to_add:
+    for src, dst, identifier, position, name, original_node, dtype in edges_to_add:
       g.add_edge(src, dst, flow='data', position=position)
       node = g.nodes[identifier]
       # TODO(github.com/ChrisCummins/ml4pl/issues/6): Separate !IDENTIFIER
@@ -433,6 +434,11 @@ class ControlAndDataFlowGraphBuilder(object):
       node['name'] = name
       node['text'] = name
       node['x'] = self.dictionary['!IDENTIFIER']
+      
+      if tag_hook is not None:
+        other_attrs = tag_hook.OnIdentifier(original_node, node, dtype) or {}
+        for attrname, attrval in other_attrs.items():
+          node[attrname] = attrval
 
   def DictionaryLookup(self, statement: str) -> int:
     if statement in self.dictionary:
@@ -474,7 +480,7 @@ class ControlAndDataFlowGraphBuilder(object):
     for _, _, data in g.edges(data=True):
       data['flow'] = 'control'
 
-    self.MaybeAddDataFlowElements(g)
+    self.MaybeAddDataFlowElements(g, ffg.tag_hook)
     self.MaybePreprocessStatementText(g)
     self.MaybeAddSingleEntryBlock(g)
     self.MaybeAddSingleExitBlock(g)
@@ -532,7 +538,8 @@ class ControlAndDataFlowGraphBuilder(object):
     return interprocedural_graph
 
   @decorators.timeout(120)
-  def Build(self, bytecode: str, opt=None) -> nx.MultiDiGraph:
+  def Build(self, bytecode: str, opt=None,
+            tag_hook: typing.Optional[llvm_util.TagHook] = None) -> nx.MultiDiGraph:
     """Construct an inter-procedural control- and data-flow graph.
 
     Args:
@@ -540,6 +547,9 @@ class ControlAndDataFlowGraphBuilder(object):
       opt: The path to LLVM `opt` binary to use to construct control-flow and
         call graphs from. The default uses the opt binary packaged with
         //compilers/llvm:opt.
+      tag_hook: An optional object that can tag specific nodes in the graph
+                according to some logic.
+
 
     Returns:
       A networkx graph.
@@ -548,7 +558,8 @@ class ControlAndDataFlowGraphBuilder(object):
         opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(
             bytecode, opt_path=opt))
     cfgs = [
-        llvm_util.ControlFlowGraphFromDotSource(cfg_dot) for cfg_dot in cfg_dots
+      llvm_util.ControlFlowGraphFromDotSource(cfg_dot, tag_hook=tag_hook)
+      for cfg_dot in cfg_dots
     ]
     call_graph = cg.CallGraphFromDotSource(call_graph_dot)
     graphs = [self.BuildFromControlFlowGraph(cfg) for cfg in cfgs]
