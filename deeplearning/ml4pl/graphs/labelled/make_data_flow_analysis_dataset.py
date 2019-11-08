@@ -328,11 +328,6 @@ def _GraphWorker(packed_args):
   """
   input_graph_db_url, annotators, bytecode_ids_to_process = packed_args
 
-  def LoadGraph(group: str, pickled_data: bytes):
-    graph = pickle.loads(pickled_data)
-    graph.group = group
-    return graph
-
   with prof.Profile(lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"
                    ):
     input_graph_db = graph_database.Database(input_graph_db_url)
@@ -340,15 +335,20 @@ def _GraphWorker(packed_args):
     bytecode_ids_to_fetch = list(
         sorted(
             set(bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
+
+    # Determine whether we need to load the graph data, or just the metadata.
+    load_graphs = any(annotator.requires_graphs for annotator in annotators)
+
     with input_graph_db.Session() as session:
-      query = session.query(graph_database.GraphMeta.group,
-                            graph_database.Graph.pickled_data) \
-        .join(graph_database.Graph) \
+      query = session.query(graph_database.GraphMeta) \
         .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids_to_fetch)) \
         .order_by(graph_database.GraphMeta.bytecode_id)
 
-      bytecode_id_to_graph: typing.Dict[int, nx.MultiDiGraph] = {
-          id_: LoadGraph(*row) for id_, row in zip(bytecode_ids_to_fetch, query)
+      if load_graphs:
+        query = query.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
+
+      bytecode_id_to_graph_meta: typing.Dict[int, graph_database.GraphMeta] = {
+          id_: row for id_, row in zip(bytecode_ids_to_fetch, query)
       }
     input_graph_db.Close()  # Don't leave the database connection lying around.
 
@@ -385,14 +385,14 @@ def _GraphWorker(packed_args):
     # Ignore the bytecodes that do not need processing.
     bytecode_ids = bytecode_ids[np.nonzero(bytecode_ids)]
 
-    graphs = [bytecode_id_to_graph[i] for i in bytecode_ids]
+    graph_metas = [bytecode_id_to_graph_meta[i] for i in bytecode_ids]
     if annotator.requires_bytecodes:
       bytecodes = [bytecode_id_to_bytecode[i] for i in bytecode_ids]
     else:
-      bytecodes = None
+      bytecodes = [None] * len(bytecode_ids)
 
     graph_metas_by_output.append(
-        CreateAnnotatedGraphs(annotator, graphs, bytecodes))
+        CreateAnnotatedGraphs(annotator, graph_metas, bytecodes))
 
     # Used by prof.Profile() callback:
     generated_graphs_count = sum([len(x) for x in graph_metas_by_output])
@@ -401,48 +401,49 @@ def _GraphWorker(packed_args):
 
 
 def CreateAnnotatedGraphs(annotator: GraphAnnotator,
-                          graphs: typing.List[nx.MultiDiGraph],
+                          graph_metas: typing.List[graph_database.GraphMeta],
                           bytecodes: typing.Optional[typing.List[str]] = None):
   """Generate annotated graphs using the given annotator."""
-  graph_metas = []
+  generated_graph_metas = []
 
-  for i, graph in enumerate(graphs):
+  for i, graph_meta in enumerate(graph_metas):
     # Determine the number of instances to produce based on the size of the
     # input graph.
     n = math.ceil(
-        min(graph.number_of_nodes() / 10, FLAGS.max_instances_per_graph))
+        min(graph_meta.node_count / 10, FLAGS.max_instances_per_graph))
 
     try:
       with prof.Profile(
           lambda t:
-          f"Produced {len(annotated_graphs)} {annotator.name} instances from {graph.number_of_nodes()}-node graph for bytecode {graph.bytecode_id}"
+          f"Produced {len(annotated_graphs)} {annotator.name} instances from {graph_meta.node_count}-node graph for bytecode {graph.bytecode_id}"
       ):
-        if annotator.requires_bytecodes:
-          args = (graph, bytecodes[i])
-        else:
-          args = (graph,)
+        kwargs = {
+          n:n,
+          false:np.array([1, 0], dtype=np.float32),
+          true:np.array([0, 1], dtype=np.float32))
+        }
 
-        annotated_graphs = list(
-            annotator.function(
-                *args,
-                n=n,
-                false=np.array([1, 0], dtype=np.float32),
-                true=np.array([0, 1], dtype=np.float32)))
+        if annotator.requires_graphs:
+          kwargs['g'] = graph_meta.graph
+        if annotator.requires_bytecodes:
+          args['bytecode'] = bytecodes[i]
+
+        annotated_graphs = list(annotator.function(**kwargs))
 
         # Copy over graph metadata.
         for annotated_graph in annotated_graphs:
-          annotated_graph.group = graph.group
-          annotated_graph.bytecode_id = graph.bytecode_id
-          annotated_graph.source_name = graph.source_name
-          annotated_graph.relpath = graph.relpath
-          annotated_graph.language = graph.language
-        graph_metas += [
+          annotated_graph.group = graph_meta.group
+          annotated_graph.bytecode_id = graph_meta.bytecode_id
+          annotated_graph.source_name = graph_meta.source_name
+          annotated_graph.relpath = graph_meta.relpath
+          annotated_graph.language = graph_meta.language
+        generated_graph_metas += [
             graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
             for annotated_graph in annotated_graphs
         ]
     except Exception as e:
       # Insert a zero-node graph to mark that exporting this graph failed.
-      graph_metas.append(
+      generated_graph_metas.append(
           graph_database.GraphMeta(
               group=graph.group,
               bytecode_id=graph.bytecode_id,
@@ -467,7 +468,7 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
       if FLAGS.error:
         raise e
 
-  return graph_metas
+  return generated_graph_metas
 
 
 def main():
