@@ -78,7 +78,7 @@ GGNNWeights = collections.namedtuple(
 )
 
 
-class GgnnClassifierModel(ggnn.GgnnBaseModel):
+class GgnnClassifier(ggnn.GgnnBaseModel):
   """GGNN model for node-level or graph-level classification."""
 
   def MakeLossAndAccuracyAndPredictionOps(
@@ -449,7 +449,7 @@ class GgnnClassifierModel(ggnn.GgnnBaseModel):
 
 def main():
   """Main entry point."""
-  classifier_base.Run(GgnnClassifierModel)
+  classifier_base.Run(GgnnClassifier)
 
 
 if __name__ == '__main__':
