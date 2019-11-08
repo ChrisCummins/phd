@@ -8,7 +8,7 @@ import pydot
 from labm8 import app
 from labm8 import decorators
 
-from compilers.llvm import opt_util
+from compilers.llvm import opt, opt_util
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import control_and_data_flow_graph as cdfg
 
@@ -67,7 +67,20 @@ class PolyhedralRegionAnnotator(llvm_util.TagHook):
     # TODO(talbn): Perhaps no need for definition_type == 'use' (may come from outside region)
     
     return {}
-  
+
+
+def BytecodeToPollyCanonicalized(source: str) -> str:
+  process = opt.Exec(['-polly-canonicalize', '-S', '-', '-o', '-'],
+                     stdin=source)
+  if process.returncode:
+    raise opt.OptException('Error in canonicalization opt execution (%d)' % process.returncode)
+  return process.stdout
+
+
+def CreateCDFG(bytecode: str) -> nx.MultiDiGraph:
+  builder = cdfg.ControlAndDataFlowGraphBuilder()
+  return builder.Build(bytecode)
+
 
 @decorators.timeout(seconds=120)
 def AnnotatePolyhedra(g: nx.MultiDiGraph,
@@ -101,18 +114,6 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
       if 'polyhedral' not in ndata or ndata['polyhedral'] is False:
         continue
 
-      # Find matching node for ndata in the original graph
-      if 'original_text' not in ndata:
-        gnode = node
-      else:
-        # This overcomes an issue with mismatching unique node identifiers between
-        # an LLVM CFG and a SCoP graph
-        try:
-          gnode = next(n for n, d in g.nodes(data=True) if 'original_text' in d
-                       and d['original_text'] == ndata['original_text'])
-        except StopIteration:
-          gnode = node
-          
       if node not in g.nodes:
         raise ValueError(f"Entity `{node}` not found in graph, {g.nodes(data=True)}")
       g.nodes[node][y_label] = true
@@ -153,10 +154,14 @@ def MakePolyhedralGraphs(
   # One-hot encoding
   false = np.array([1, 0], np.int32)
   true = np.array([0, 1], np.int32)
+
+  # Canonicalize input graph (see http://polly.llvm.org/docs/Architecture.html)
+  bytecode = BytecodeToPollyCanonicalized(bytecode)
+  g = CreateCDFG(bytecode)
   
   # Build the polyhedral building blocks
   scop_graphs, _ = opt_util.DotGraphsFromBytecode(
-    bytecode, ['-O3', '-polly-process-unprofitable', '-polly-optimized-scops', '-polly-dot'])
+    bytecode, ['-O1', '-polly-process-unprofitable', '-polly-optimized-scops', '-polly-dot', '-polly-optimizer=none'])
   
   
   # Loop over each function

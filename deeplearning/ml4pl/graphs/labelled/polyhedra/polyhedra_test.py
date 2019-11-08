@@ -30,7 +30,6 @@ def CSourceToBytecode(source: str) -> str:
   assert not process.returncode
   return process.stdout
 
-
 def CSourceToInputPair(source: str) -> InputPair:
   """Create a graph and bytecode for the given C source string.
   This is a convenience method for generating test inputs. If this method fails,
@@ -66,9 +65,10 @@ void A(double alpha, double beta, double C[1000][1100], double A[1000][1200], do
 """)
   graphs = list(polyhedra.MakePolyhedralGraphs(*input_pair))
   assert len(graphs) == 1
+
   # Computed by polly separately.
   polyhedral_identifiers = [f'%{i}' for i in range(6, 37)]
-  
+ 
   for node, data in graphs[0].nodes(data=True):
     # Test the 'selector' node.
     assert data['x'][1] == 0
@@ -76,9 +76,9 @@ void A(double alpha, double beta, double C[1000][1100], double A[1000][1200], do
     if any('original_text' in data and data['original_text'].startswith(identifier)
            for identifier in polyhedral_identifiers):
       if data['y'][1] != 1:
-        raise NotImplementedError(str(data))
+        raise ValueError('Identifier is not polyhedral: ' + str(data))
+      
       assert np.array_equal(data['y'], [0, 1])
 
-      
 if __name__ == '__main__':
   test.Main()
