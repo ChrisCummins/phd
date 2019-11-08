@@ -23,7 +23,7 @@ FLAGS = app.FLAGS
 app.DEFINE_integer('nproc', multiprocessing.cpu_count(),
                    'Enable multiprocessing for database job workers.')
 app.DEFINE_integer(
-    'batch_size', 8,
+    'batch_size', 32,
     'The number of bytecodes to process in-memory before writing'
     'to database.')
 app.DEFINE_integer(
