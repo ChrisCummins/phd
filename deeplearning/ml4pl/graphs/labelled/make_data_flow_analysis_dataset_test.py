@@ -13,26 +13,6 @@ def test_GetAnnotatedGraphGenerators_unknown_analysis():
     make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators('foo')
 
 
-def test_GetAnnotatedGraphGenerators_no_names():
-  """Test that calling the function with no args returns all annotators."""
-  annotators = make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators()
-  annotator_names = [a.name for a in annotators]
-
-  # Check that there are no duplicates.
-  assert len(set(annotator_names)) == len(annotator_names)
-
-  # Check that all of the analyses are returned.
-  assert set(annotator_names) == {
-      'reachability',
-      'domtree',
-      'liveness',
-      'datadep',
-      'liveness',
-      'subexpressions',
-      'alias_sets',
-  }
-
-
 def test_GetAnnotatedGraphGenerators_with_requested_analyses():
   """Test requesting analyses by name."""
   annotators = make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(

@@ -1,5 +1,4 @@
 """A module which defines a base class for implementing database exporters."""
-import math
 import multiprocessing
 import pathlib
 import random
@@ -21,10 +20,10 @@ from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
-app.DEFINE_boolean('multiprocess_database_exporters', True,
+app.DEFINE_integer('nproc', multiprocessing.cpu_count(),
                    'Enable multiprocessing for database job workers.')
 app.DEFINE_integer(
-    'database_exporter_batch_size', 8,
+    'batch_size', 8,
     'The number of bytecodes to process in-memory before writing'
     'to database.')
 app.DEFINE_integer(
@@ -55,8 +54,8 @@ class DatabaseExporterBase(object):
                output_dbs: typing.List[graph_database.Database],
                pool: typing.Optional[multiprocessing.Pool] = None,
                batch_size: typing.Optional[int] = None):
-    pool = pool or multiprocessing.Pool()
-    batch_size = batch_size or FLAGS.database_exporter_batch_size
+    pool = pool or multiprocessing.Pool(processes=1)
+    batch_size = batch_size or FLAGS.batch_size
 
     with tempfile.TemporaryDirectory() as d:
       # Temporarily redirect logs to a file, which we will later import into the
@@ -147,16 +146,13 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
     random.shuffle(bytecode_ids)
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(max(math.ceil(len(bytecode_ids) / pool._processes), 8),
-                    batch_size)
-
-    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
+    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, batch_size)
     jobs = [(job_processor, input_db.url, bytecode_ids_chunk)
             for bytecode_ids_chunk in bytecode_id_chunks]
     app.Log(1, "Divided %s %s bytecode chunks into %s jobs",
             humanize.Commas(len(bytecode_ids)), group, len(jobs))
 
-    if FLAGS.multiprocess_database_exporters:
+    if FLAGS.nproc > 1:
       workers = pool.imap_unordered(_BytecodeWorker, jobs)
     else:
       workers = (_BytecodeWorker(job) for job in jobs)
@@ -183,7 +179,7 @@ class BytecodeDatabaseExporterBase(DatabaseExporterBase):
 
 
 def _BytecodeWorker(packed_args):
-  """A bytecode processor worker. If --multiprocess_database_exporters is set,
+  """A bytecode processor worker. If --nproc is set,
   this is called in a worker process.
   """
   job_processor, bytecode_db_url, bytecode_ids = packed_args
@@ -231,16 +227,13 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
     random.shuffle(bytecode_ids)
 
     job_processor = self.GetProcessInputs()
-    chunksize = min(max(math.ceil(len(bytecode_ids) / pool._processes), 8),
-                    batch_size)
-
-    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, chunksize)
+    bytecode_id_chunks = labtypes.Chunkify(bytecode_ids, FLAGS.batch_size)
     jobs = [(job_processor, input_db.url, bytecode_ids_chunk)
             for bytecode_ids_chunk in bytecode_id_chunks]
     app.Log(1, "Divided %s bytecode chunks into %s jobs",
             humanize.Commas(len(bytecode_ids)), len(jobs))
 
-    if FLAGS.multiprocess_database_exporters:
+    if FLAGS.nproc:
       workers = pool.imap_unordered(_GraphWorker, jobs)
     else:
       workers = (_GraphWorker(job) for job in jobs)
@@ -269,7 +262,7 @@ class GraphDatabaseExporterBase(DatabaseExporterBase):
 
 
 def _GraphWorker(packed_args):
-  """A graph processor worker. If --multiprocess_database_exporters is set,
+  """A graph processor worker. If --nproc is set,
   this is called in a worker process.
   """
   job_processor, graph_db_url, bytecode_ids = packed_args
