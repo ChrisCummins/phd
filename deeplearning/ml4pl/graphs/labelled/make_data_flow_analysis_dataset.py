@@ -12,10 +12,6 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -26,18 +22,23 @@ from deeplearning.ml4pl.graphs.labelled.domtree import dominator_tree
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
-app.DEFINE_database('input_graphs_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to read unlabelled networkx graphs from.',
-                    must_exist=True)
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecode from. Only required when '
-                    'analysis requires bytecode.',
-                    must_exist=True)
+app.DEFINE_database(
+    'input_graphs_db',
+    graph_database.Database,
+    None,
+    'URL of database to read unlabelled networkx graphs from.',
+    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None, 'URL of database to read bytecode from. Only required when '
+    'analysis requires bytecode.',
+    must_exist=True)
 app.DEFINE_list(
     'outputs', None,
     "A list of outputs to generate, where each element in the list"
@@ -95,40 +96,46 @@ def GetAnnotatedGraphGenerators(
 
   if AnalysisIsRequested('reachability', analysis_names):
     annotators.append(
-        GraphAnnotator(name='reachability',
-                       requires_graphs=True,
-                       function=reachability.MakeReachabilityGraphs))
+        GraphAnnotator(
+            name='reachability',
+            requires_graphs=True,
+            function=reachability.MakeReachabilityGraphs))
 
   if AnalysisIsRequested('domtree', analysis_names):
     annotators.append(
-        GraphAnnotator(name='domtree',
-                       requires_graphs=True,
-                       function=dominator_tree.MakeDominatorTreeGraphs))
+        GraphAnnotator(
+            name='domtree',
+            requires_graphs=True,
+            function=dominator_tree.MakeDominatorTreeGraphs))
 
   if AnalysisIsRequested('datadep', analysis_names):
     annotators.append(
-        GraphAnnotator(name='datadep',
-                       requires_graphs=True,
-                       function=data_dependence.MakeDataDependencyGraphs))
+        GraphAnnotator(
+            name='datadep',
+            requires_graphs=True,
+            function=data_dependence.MakeDataDependencyGraphs))
 
   if AnalysisIsRequested('liveness', analysis_names):
     annotators.append(
-        GraphAnnotator(name='liveness',
-                       requires_graphs=True,
-                       function=liveness.MakeLivenessGraphs))
+        GraphAnnotator(
+            name='liveness',
+            requires_graphs=True,
+            function=liveness.MakeLivenessGraphs))
 
   if AnalysisIsRequested('subexpressions', analysis_names):
     annotators.append(
-        GraphAnnotator(name='subexpressions',
-                       requires_graphs=True,
-                       function=subexpressions.MakeSubexpressionsGraphs))
+        GraphAnnotator(
+            name='subexpressions',
+            requires_graphs=True,
+            function=subexpressions.MakeSubexpressionsGraphs))
 
   if AnalysisIsRequested('alias_sets', analysis_names):
     annotators.append(
-        GraphAnnotator(name='alias_sets',
-                       requires_graphs=True,
-                       requires_bytecodes=True,
-                       function=alias_set.MakeAliasSetGraphs))
+        GraphAnnotator(
+            name='alias_sets',
+            requires_graphs=True,
+            requires_bytecodes=True,
+            function=alias_set.MakeAliasSetGraphs))
 
   if analysis_names:
     raise app.UsageError(f"Unknown analyses {analysis_names}")
@@ -163,9 +170,9 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
                            ) -> typing.Tuple[typing.List[int], int]:
   """Get a list of bytecode IDs to process."""
   # Read all bytecode IDs.
-  with prof.Profile(lambda t:
-                    (f"Read {humanize.Commas(len(all_bytecode_ids))} input "
-                     "bytecode IDs")):
+  with prof.Profile(lambda t: (
+      f"Read {humanize.Commas(len(all_bytecode_ids))} input "
+      "bytecode IDs")):
     with input_db.Session() as session:
       query = session.query(graph_database.GraphMeta.bytecode_id)
       all_bytecode_ids = set([row.bytecode_id for row in query])
@@ -179,10 +186,10 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
       already_done = set([row.bytecode_id for row in query])
     return all_bytecode_ids - already_done
 
-  with prof.Profile(
-      lambda t: ("Read the "
-                 f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
-                 f"IDs to process")):
+  with prof.Profile(lambda t: (
+      "Read the "
+      f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
+      f"IDs to process")):
     all_bytecodes_to_process_by_output = [
         GetBytecodesToProcessForOutput(output_db, all_bytecode_ids)
         for output_db in output_dbs
@@ -199,8 +206,8 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
       f"{humanize.Commas(bytecodes_to_process_by_output[np.nonzero(bytecodes_to_process_by_output)].size)} annotations"
   )):
     if FLAGS.order_by == 'random':
-      bytecodes_to_process = np.array(list(set(all_bytecodes_to_process)),
-                                      dtype=np.int32)
+      bytecodes_to_process = np.array(
+          list(set(all_bytecodes_to_process)), dtype=np.int32)
       frequency_table = bytecodes_to_process  # Used prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
       num_to_select = min(10000, len(frequency_table) // 3)
@@ -326,13 +333,13 @@ def _GraphWorker(packed_args):
     graph.group = group
     return graph
 
-  with prof.Profile(
-      lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
+  with prof.Profile(lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"
+                   ):
     input_graph_db = graph_database.Database(input_graph_db_url)
     # Read the required graphs from the database.
     bytecode_ids_to_fetch = list(
-        sorted(set(
-            bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
+        sorted(
+            set(bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
     with input_graph_db.Session() as session:
       query = session.query(graph_database.GraphMeta.group,
                             graph_database.Graph.pickled_data) \
@@ -416,10 +423,11 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
           args = (graph,)
 
         annotated_graphs = list(
-            annotator.function(*args,
-                               n=n,
-                               false=np.array([1, 0], dtype=np.float32),
-                               true=np.array([0, 1], dtype=np.float32)))
+            annotator.function(
+                *args,
+                n=n,
+                false=np.array([1, 0], dtype=np.float32),
+                true=np.array([0, 1], dtype=np.float32)))
 
         # Copy over graph metadata.
         for annotated_graph in annotated_graphs:
@@ -434,19 +442,19 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
         ]
     except Exception as e:
       # Insert a zero-node graph to mark that exporting this graph failed.
-      graph_metas.append([
-          graph_database.GraphMeta(group=graph.group,
-                                   bytecode_id=graph.bytecode_id,
-                                   source_name=graph.source_name,
-                                   relpath=graph.relpath,
-                                   language=graph.language,
-                                   node_count=0,
-                                   edge_count=0,
-                                   node_embeddings_count=0,
-                                   edge_position_max=0,
-                                   loop_connectedness=0,
-                                   undirected_diameter=0)
-      ])
+      graph_metas.append(
+          graph_database.GraphMeta(
+              group=graph.group,
+              bytecode_id=graph.bytecode_id,
+              source_name=graph.source_name,
+              relpath=graph.relpath,
+              language=graph.language,
+              node_count=0,
+              edge_count=0,
+              node_embeddings_count=0,
+              edge_position_max=0,
+              loop_connectedness=0,
+              undirected_diameter=0))
       _, _, tb = sys.exc_info()
       tb = traceback.extract_tb(tb, 2)
       filename, line_number, function_name, *_ = tb[-1]
