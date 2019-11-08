@@ -310,6 +310,8 @@ class Database(sqlutil.Database):
 
       return df
 
+  # TODO(cec): Add a DeleteLogsForRunIds() method which accepts a list of run
+  # ids, allowing us to perform a single delete query for all.
   def DeleteLogsForRunId(self, run_id: str) -> None:
     """Delete the logs for this run.
 
