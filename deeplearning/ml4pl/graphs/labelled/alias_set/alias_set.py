@@ -101,15 +101,16 @@ def MakeAliasSetGraphs(
   }
 
   # Silently drop alias sets for functions which don't exist in the graph.
-  deleted_alias_sets = []
+  alias_sets_to_delete = []
   for function in alias_sets_by_function:
     if function not in functions:
-      deleted_alias_sets.append(function)
+      alias_sets_to_delete.append(function)
+  if alias_sets_to_delete:
+    for function in alias_sets_to_delete:
       del alias_sets_by_function[function]
-  if deleted_alias_sets:
     app.Warning(
         "Removed %d alias sets generated from bytecode but not found in "
-        "graph: %s", len(deleted_alias_sets), deleted_alias_sets)
+        "graph: %s", len(alias_sets_to_delete), alias_sets_to_delete)
 
   function_alias_set_pairs: typing.List[
       typing.Tuple[str, opt_util.AliasSet]] = []
