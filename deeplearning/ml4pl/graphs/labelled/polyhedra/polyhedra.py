@@ -36,7 +36,7 @@ def GetSubgraph(subgraph: pydot.Dot, state: typing.Dict[pydot.Dot, typing.Any]):
 
 
 class PolyhedralRegionAnnotator(llvm_util.TagHook):
-  """Tag hook that annotates polyhedral regions on the nodes (with the attribute 
+  """Tag hook that annotates polyhedral regions on the nodes (with the attribute
   `polyhedral=True`)"""
 
   def OnGraphBegin(self, dot: pydot.Dot):
@@ -73,8 +73,8 @@ def BytecodeToPollyCanonicalized(source: str) -> str:
   process = opt.Exec(['-polly-canonicalize', '-S', '-', '-o', '-'],
                      stdin=source)
   if process.returncode:
-    raise opt.OptException(
-        'Error in canonicalization opt execution (%d)' % process.returncode)
+    raise opt.OptException('Error in canonicalization opt execution (%d)' %
+                           process.returncode[:120])
   return process.stdout
 
 
@@ -116,8 +116,7 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
         continue
 
       if node not in g.nodes:
-        raise ValueError(
-            f"Entity `{node}` not found in graph, {g.nodes(data=True)}")
+        raise ValueError(f"Entity `{node}` not found in graph")
       g.nodes[node][y_label] = true
 
 
@@ -127,13 +126,13 @@ def MakePolyhedralGraphs(
     false=False,
     true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
-  """Create an annotated graph from a bytecode that potentially contains 
+  """Create an annotated graph from a bytecode that potentially contains
      polyhedral loops.
 
   Args:
     g: The unlabelled input graph.
     bytecode: The bytecode which produced the input graph.
-    n: The maximum number of graphs to produce. This value is ignored and one graph 
+    n: The maximum number of graphs to produce. This value is ignored and one graph
        will be produced with all polyhedral regions annotated.
     false: TODO(cec): Unused. This method is hardcoded to use 2-class 1-hots.
     true: TODO(cec): Unused. This method is hardcoded to use 2-class 1-hots.

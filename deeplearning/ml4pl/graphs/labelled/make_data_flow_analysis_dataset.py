@@ -12,6 +12,11 @@ import typing
 
 import networkx as nx
 import numpy as np
+import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -23,10 +28,6 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 app.DEFINE_database(
     'input_graphs_db',
@@ -142,7 +143,7 @@ def GetAnnotatedGraphGenerators(
     annotators.append(
         GraphAnnotator(
             name='polyhedra',
-            requires_graphs=True,
+            requires_graphs=False,
             requires_bytecodes=True,
             function=polyhedra.MakePolyhedralGraphs))
 
@@ -354,7 +355,8 @@ def _GraphWorker(packed_args):
         .order_by(graph_database.GraphMeta.bytecode_id)
 
       if load_graphs:
-        query = query.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
+        query = query.options(
+            sql.orm.joinedload(graph_database.GraphMeta.graph))
 
       bytecode_id_to_graph_meta: typing.Dict[int, graph_database.GraphMeta] = {
           id_: row for id_, row in zip(bytecode_ids_to_fetch, query)
@@ -424,18 +426,18 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
     try:
       with prof.Profile(
           lambda t:
-          f"Produced {len(annotated_graphs)} {annotator.name} instances from {graph_meta.node_count}-node graph for bytecode {graph.bytecode_id}"
+          f"Produced {len(annotated_graphs)} {annotator.name} instances from {graph_meta.node_count}-node graph for bytecode {graph_meta.bytecode_id}"
       ):
         kwargs = {
-          n:n,
-          false:np.array([1, 0], dtype=np.float32),
-          true:np.array([0, 1], dtype=np.float32))
+            'n': n,
+            'false': np.array([1, 0], dtype=np.float32),
+            'true': np.array([0, 1], dtype=np.float32),
         }
 
         if annotator.requires_graphs:
           kwargs['g'] = graph_meta.graph
         if annotator.requires_bytecodes:
-          args['bytecode'] = bytecodes[i]
+          kwargs['bytecode'] = bytecodes[i]
 
         annotated_graphs = list(annotator.function(**kwargs))
 
@@ -454,11 +456,11 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
       # Insert a zero-node graph to mark that exporting this graph failed.
       generated_graph_metas.append(
           graph_database.GraphMeta(
-              group=graph.group,
-              bytecode_id=graph.bytecode_id,
-              source_name=graph.source_name,
-              relpath=graph.relpath,
-              language=graph.language,
+              group=graph_meta.group,
+              bytecode_id=graph_meta.bytecode_id,
+              source_name=graph_meta.source_name,
+              relpath=graph_meta.relpath,
+              language=graph_meta.language,
               node_count=0,
               edge_count=0,
               node_embeddings_count=0,
@@ -471,7 +473,7 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
       filename = pathlib.Path(filename).name
       app.Error(
           'Failed to annotate graph for bytecode '
-          '%d: %s (%s:%s:%s() -> %s)', graph.bytecode_id, e, filename,
+          '%d: %s (%s:%s:%s() -> %s)', graph_meta.bytecode_id, e, filename,
           line_number, function_name,
           type(e).__name__)
       if FLAGS.error:
