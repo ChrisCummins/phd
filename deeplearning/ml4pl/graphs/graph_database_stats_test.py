@@ -54,13 +54,15 @@ def db_512(db: graph_database.Database) -> graph_database.Database:
 def test_GraphDatabaseStats_graph_count(db_512: graph_database.Database):
   """Test that the expected number of graphs are returned"""
   s = stats.GraphDatabaseStats(db_512)
-  assert s.graph_count == 512
+  # Note that the first two rows (with zero and one node respectively) are
+  # ignored by the database reader.
+  assert s.graph_count == 510
 
 
 def test_GraphDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
   s = stats.GraphDatabaseStats(db_512)
-  assert str(s) == ("Graphs database: 512 instances, 1 edge type, "
+  assert str(s) == ("Graphs database: 510 instances, 1 edge type, "
                     "(8568x200, 2x2) float64 node embeddings, "
                     "1-d graph labels, max 511 nodes, max 2 edges, "
                     "0 max edge positions")
@@ -70,7 +72,7 @@ def test_GraphTupleDatabaseStats_repr(db_512: graph_database.Database):
   """Test the string representation of the stats object"""
   s = stats.GraphTupleDatabaseStats(db_512)
   assert str(s) == (
-      "Graphs database: 512 instances, 1 edge type, "
+      "Graphs database: 510 instances, 1 edge type, "
       "(8568x200, 2x2) float64 node embeddings, 1-d float32 graph labels, "
       "max 511 nodes, max 2 edges, 0 max edge positions")
 
