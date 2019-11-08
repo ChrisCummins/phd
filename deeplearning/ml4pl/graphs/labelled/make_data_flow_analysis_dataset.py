@@ -206,7 +206,9 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
       f"{humanize.Commas(bytecodes_to_process_by_output[np.nonzero(bytecodes_to_process_by_output)].size)} annotations"
   )):
     if FLAGS.order_by == 'random':
-      bytecodes_to_process = list(set(all_bytecodes_to_process))
+      bytecodes_to_process = np.array(
+          list(set(all_bytecodes_to_process)), dtype=np.int32)
+      frequency_table = bytecodes_to_process  # Used prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
       bytecodes_to_process = bytecodes_to_process[:10000]
     else:
