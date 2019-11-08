@@ -169,10 +169,10 @@ class GraphToSequenceEncoder(object):
         ret i32 15
       }
 
-    would comprise three statement notes, and additional data nodes for the
-    statement operands (e.g. %1). A pre-order depth first traversal of the graph
-    produces the linear ordering of statement nodes, which are then encoded and
-    concatenated to produce a list of voabulary indices such as:
+    would comprise three statement nodes, and additional data nodes for the
+    statements' operands (e.g. %1). A pre-order depth first traversal of the
+    graph produces the linear ordering of statement nodes, which are then
+    encoded and concatenated to produce a list of vocabulary indices such as:
 
       [
          0, 1, 2, 1, 4, 5, 6,  # encoded `%1 = alloca i32, align 4`
