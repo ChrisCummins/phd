@@ -207,7 +207,6 @@ def GetBytecodeIdsToProcess(
     if FLAGS.order_by == 'random':
       bytecodes_to_process = np.array(list(set(all_bytecodes_to_process)),
                                       dtype=np.int32)
-      app.Log(1, 'Ordering jobs randomly')
       frequency_table = bytecodes_to_process  # Used in prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
       bytecodes_subset = bytecodes_to_process[:batch_size]
