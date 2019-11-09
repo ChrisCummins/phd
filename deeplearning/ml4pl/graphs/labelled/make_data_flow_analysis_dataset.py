@@ -1,5 +1,4 @@
 """This module prepares datasets for data flow analyses."""
-import itertools
 import math
 import multiprocessing
 import pathlib
@@ -170,16 +169,8 @@ def GetAllBytecodeIds(db: graph_database.Database) -> typing.Set[int]:
   return all_ids
 
 
-def GetBytecodesToProcessForOutput(
-    all_bytecode_ids: typing.Set[int],
-    output_db: graph_database.Database,
-) -> typing.Set[int]:
-  """Return the subset of bytecode IDs that do not exist in the output database."""
-  return all_bytecode_ids - GetAllBytecodeIds(output_db)
-
-
 def GetBytecodeIdsToProcess(
-    input_db: graph_database.Database,
+    input_ids: typing.Set[int],
     output_dbs: typing.List[graph_database.Database],
     batch_size: int) -> typing.Tuple[typing.List[int], int]:
   """Get the bytecode IDs to process.
@@ -192,25 +183,20 @@ def GetBytecodeIdsToProcess(
   with zeros. So for eah row in bytecodes_by_output, the bytecodes that need
   processing for a particular output are row[np.nonzero(row)].
   """
-  # Read all of the bytecode IDs from the input database.
-  with prof.Profile(lambda t: (f"Read {humanize.Commas(len(all_ids))} input "
-                               "bytecode IDs")):
-    all_ids = GetAllBytecodeIds(input_db)
-
   with prof.Profile(
       lambda t: ("Read the "
                  f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
                  f"IDs to process")):
-    ids_by_output = [
-        all_ids - GetAllBytecodeIds(output_db) for output_db in output_dbs
+    ids_todo_by_output = [
+        input_ids - GetAllBytecodeIds(output_db) for output_db in output_dbs
     ]
 
     # Flatten the list of all bytecodes that haven't been processed. This list
     # includes duplicates for bytecodes that need processing by multiple
     # outputs. This is intentional, allowing us to sort bytecodes by frequency.
     all_bytecodes_to_process: typing.List[str] = []
-    for bytecodes_to_process in ids_by_output:
-      all_bytecodes_to_process.extend(list(bytecodes_to_process))
+    for ids in ids_todo_by_output:
+      all_bytecodes_to_process.extend(list(ids))
 
   with prof.Profile(lambda t: (
       f"Selected {humanize.Commas(len(bytecodes_to_process))} of "
@@ -224,7 +210,7 @@ def GetBytecodeIdsToProcess(
       app.Log(1, 'Ordering jobs randomly')
       frequency_table = bytecodes_to_process  # Used in prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
-      bytecodes_to_process = bytecodes_to_process[:batch_size * 5]
+      bytecodes_subset = bytecodes_to_process[:batch_size]
     elif FLAGS.order_by == 'frequency':
       # Create a frequency table how for many times each unprocessed bytecode
       # occurs.
@@ -233,7 +219,7 @@ def GetBytecodeIdsToProcess(
       # Sort the frequency table by count so that most frequently unprocessed
       # bytecodes occur *at the end* of the list.
       sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
-      bytecodes_to_process = sorted_frequency_table[-batch_size * 5:, 0]
+      bytecodes_subset = sorted_frequency_table[-batch_size:, 0]
     elif FLAGS.order_by == 'reverse_frequency':
       # Create a frequency table how for many times each unprocessed bytecode
       # occurs.
@@ -242,21 +228,19 @@ def GetBytecodeIdsToProcess(
       # Sort the frequency table by count so that most frequently unprocessed
       # bytecodes occur *at the end* of the list.
       sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
-      bytecodes_to_process = sorted_frequency_table[batch_size * 5:, 0]
+      bytecodes_subset = sorted_frequency_table[batch_size:, 0]
     else:
       raise app.UsageError("Unknown `order_by` option.")
 
     # Produce the zero-d matrix of bytecodes that need processing for each
     # output.
-    bytecodes_to_process_by_output = []
-    for all_bytecodes_to_process_for_output in ids_by_output:
-      bytecodes_to_process_by_output.append([
-          x if x in all_bytecodes_to_process_for_output else 0
-          for x in bytecodes_to_process
-      ])
-    bytecodes_to_process_by_output = np.vstack(bytecodes_to_process_by_output)
+    todo_by_output = []
+    for ids_for_output in ids_todo_by_output:
+      todo_by_output.append(
+          [x if x in ids_for_output else 0 for x in bytecodes_subset])
+    todo_by_output = np.vstack(todo_by_output)
 
-  return bytecodes_to_process, bytecodes_to_process_by_output
+  return bytecodes_subset, todo_by_output
 
 
 def ResilientAddUnique(db: graph_database.Database,
@@ -349,8 +333,13 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
     start_time = time.time()
     exported_graph_count = 0
 
+    # Read all of the bytecode IDs from the input database.
+    with prof.Profile(lambda t: (f"Read {humanize.Commas(len(all_ids))} input "
+                                 "bytecode IDs")):
+      input_ids = GetAllBytecodeIds(input_db)
+
     bytecodes_to_process, bytecodes_to_process_by_output = GetBytecodeIdsToProcess(
-        input_db, [output.db for output in self.outputs], batch_size)
+        input_ids, [output.db for output in self.outputs], batch_size)
     if not bytecodes_to_process.size:
       return 0
 
@@ -371,34 +360,33 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
 
     # Split the jobs into smaller chunks so that imap_unordered doesn't outrun
     # the database writer by too much.
-    for jobs_chunk in iter(
-        lambda: list(itertools.islice(jobs, FLAGS.nproc * 2)), []):
-      app.Log(1, 'Starting chunk of %s jobs', FLAGS.nproc * 2)
-      if FLAGS.nproc > 1:
-        workers = pool.imap_unordered(_Worker, jobs_chunk)
-      else:
-        workers = (_Worker(job) for job in jobs_chunk)
+    # for jobs_chunk in iter(
+    #     lambda: list(itertools.islice(jobs, FLAGS.nproc * 2)), []):
+    # app.Log(1, 'Starting chunk of %s jobs', FLAGS.nproc * 2)
+    if FLAGS.nproc > 1:
+      workers = pool.imap_unordered(_Worker, jobs)
+    else:
+      workers = (_Worker(job) for job in jobs)
 
-      job_count = 0
-      for annotator, graph_metas_by_output in zip(annotators, workers):
-        job_count += 1
-        app.Log(
-            1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
-            'processed',
-            humanize.Commas(sum([len(x) for x in graph_metas_by_output])),
-            exported_graph_count / (time.time() - start_time),
-            (job_count / len(bytecode_id_chunks)) * 100,
-            humanize.DecimalPrefix(len(bytecodes_to_process), ''))
+    job_count = 0
+    for annotator, graph_metas_by_output in zip(annotators, workers):
+      job_count += 1
+      app.Log(
+          1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
+          'processed',
+          humanize.Commas(sum([len(x) for x in graph_metas_by_output])),
+          exported_graph_count / (time.time() - start_time),
+          (job_count / len(bytecode_id_chunks)) * 100,
+          humanize.DecimalPrefix(len(bytecodes_to_process), ''))
 
-        for output, graph_metas, output in zip(
-            self.outputs, graph_metas_by_output, self.outputs):
-          if graph_metas:
-            with prof.Profile(lambda t:
-                              (f"Added {added_to_database} "
-                               f"{output.annotator.name} graph metas")):
-              added_to_database = ResilientAddUnique(output.db, graph_metas,
-                                                     annotator.name)
-              exported_graph_count += added_to_database
+      for output, graph_metas, output in zip(
+          self.outputs, graph_metas_by_output, self.outputs):
+        if graph_metas:
+          with prof.Profile(lambda t: (f"Added {added_to_database} "
+                                       f"{output.annotator.name} graph metas")):
+            added_to_database = ResilientAddUnique(output.db, graph_metas,
+                                                   annotator.name)
+            exported_graph_count += added_to_database
 
     elapsed_time = time.time() - start_time
     app.Log(
