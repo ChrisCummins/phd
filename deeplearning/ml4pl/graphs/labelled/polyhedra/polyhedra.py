@@ -139,7 +139,6 @@ def MakePolyhedralGraphs(
      polyhedral loops.
 
   Args:
-    g: The unlabelled input graph.
     bytecode: The bytecode which produced the input graph.
     n: The maximum number of graphs to produce. This value is ignored and one graph
        will be produced with all polyhedral regions annotated.
