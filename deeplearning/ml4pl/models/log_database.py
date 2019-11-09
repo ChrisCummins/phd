@@ -1,17 +1,19 @@
 """Database backend for model logs."""
+import codecs
 import datetime
 import enum
 import pickle
 import typing
 
 import sqlalchemy as sql
+from sqlalchemy.dialects import mysql
+from sqlalchemy.ext import declarative
+
 from labm8 import app
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pdutil
 from labm8 import sqlutil
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import declarative
 
 FLAGS = app.FLAGS
 
@@ -95,11 +97,15 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   @property
   def accuracies(self) -> typing.Any:
-    return pickle.loads(self.batch_log.pickled_accuracies)
+    # Accuracies are stored with zlib compression.
+    return pickle.loads(codecs.decode(self.batch_log.pickled_accuracies,
+                                      'zlib'))
 
   @accuracies.setter
   def accuracies(self, data) -> None:
-    self.batch_log.pickled_accuracies = pickle.dumps(data)
+    # Accuracies are stored with zlib compression.
+    self.batch_log.pickled_accuracies = codecs.encode(pickle.dumps(data),
+                                                      'zlib')
 
   @property
   def predictions(self) -> typing.Any:
