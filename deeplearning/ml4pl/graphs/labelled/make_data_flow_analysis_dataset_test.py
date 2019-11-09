@@ -1,15 +1,15 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/graph_batcher."""
-import numpy as np
 import pathlib
 import pickle
-import pytest
 import typing
 
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled import make_data_flow_analysis_dataset
+import numpy as np
+import pytest
 from labm8 import app
 from labm8 import test
 
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled import make_data_flow_analysis_dataset
 
 FLAGS = app.FLAGS
 
@@ -134,16 +134,18 @@ def test_GetBytecodeIdsToProcess_with_some_outputs(db, db2, db3, db4):
 
 # ResilientAddUnique() tests.
 
+
 def test_ResilientAddUnique_empty_db(db: graph_database.Database):
   just_done = [1, 1, 1, 2]
-  make_data_flow_analysis_dataset.ResilientAddUnique(db, [
-    MakeGraphMeta(i) for i in just_done
-  ])
+  make_data_flow_analysis_dataset.ResilientAddUnique(
+      db, [MakeGraphMeta(i) for i in just_done])
 
   with db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 4
-    assert session.query(graph_database.GraphMeta).filter(graph_database.GraphMeta.bytecode_id == 1).count() == 3
-    assert session.query(graph_database.GraphMeta).filter(graph_database.GraphMeta.bytecode_id == 2).count() == 1
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 1).count() == 3
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 2).count() == 1
 
 
 def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
@@ -152,18 +154,21 @@ def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
   just_done = [1, 1, 1, 2, 2, 2]
 
   db = AddGraphMetas(db, already_done)
-  make_data_flow_analysis_dataset.ResilientAddUnique(db, [
-    MakeGraphMeta(i) for i in just_done
-  ])
+  make_data_flow_analysis_dataset.ResilientAddUnique(
+      db, [MakeGraphMeta(i) for i in just_done])
 
   with db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 7
-    assert session.query(graph_database.GraphMeta).filter(graph_database.GraphMeta.bytecode_id == 1).count() == 2
-    assert session.query(graph_database.GraphMeta).filter(graph_database.GraphMeta.bytecode_id == 2).count() == 3
-    assert session.query(graph_database.GraphMeta).filter(graph_database.GraphMeta.bytecode_id == 3).count() == 2
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 1).count() == 2
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 2).count() == 3
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 3).count() == 2
 
 
 # DataFlowAnalysisGraphExporter() tests.
+
 
 def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
   """Test end-to-end dataset export with three annotators."""
@@ -181,20 +186,21 @@ def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
         db=db_)
 
   outputs = [
-    MakeOutput('reachability', output_dbs[0]),
-    MakeOutput('liveness', output_dbs[1]),
-    MakeOutput('domtree', output_dbs[2]),
+      MakeOutput('reachability', output_dbs[0]),
+      MakeOutput('liveness', output_dbs[1]),
+      MakeOutput('domtree', output_dbs[2]),
   ]
 
-  exporter = make_data_flow_analysis_dataset.DataFlowAnalysisGraphExporter(outputs)
+  exporter = make_data_flow_analysis_dataset.DataFlowAnalysisGraphExporter(
+      outputs)
   exporter(input_db, output_dbs)
 
   # Check that all databases have an entry.
   for output_db in output_dbs:
     with output_db.Session() as session:
       bytecode_ids = [
-        row.bytecode_id
-        for row in session.query(graph_database.GraphMeta.bytecode_id)
+          row.bytecode_id
+          for row in session.query(graph_database.GraphMeta.bytecode_id)
       ]
       assert sorted(bytecode_ids) == [1, 2, 3, 5, 10]
 
@@ -206,8 +212,8 @@ def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
   for output_db in output_dbs:
     with output_db.Session() as session:
       bytecode_ids = [
-        row.bytecode_id
-        for row in session.query(graph_database.GraphMeta.bytecode_id)
+          row.bytecode_id
+          for row in session.query(graph_database.GraphMeta.bytecode_id)
       ]
       assert sorted(bytecode_ids) == [1, 2, 3, 5, 10]
 

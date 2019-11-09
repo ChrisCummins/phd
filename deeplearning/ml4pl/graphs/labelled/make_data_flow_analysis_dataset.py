@@ -2,15 +2,19 @@
 import itertools
 import math
 import multiprocessing
-import sys
-import time
-
-import numpy as np
 import pathlib
 import random
-import sqlalchemy as sql
+import sys
+import time
 import traceback
 import typing
+
+import numpy as np
+import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -22,11 +26,6 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
-
 
 app.DEFINE_database('input_graphs_db',
                     graph_database.Database,
@@ -394,10 +393,8 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
 
 
 def FetchGraphs(
-      annotators: typing.List[GraphAnnotator],
-      bytecode_ids_to_process: np.array,
-      input_graph_db_url: str
-  ) -> typing.Dict[int, graph_database.GraphMeta]:
+    annotators: typing.List[GraphAnnotator], bytecode_ids_to_process: np.array,
+    input_graph_db_url: str) -> typing.Dict[int, graph_database.GraphMeta]:
   """Read the required graphs and return a map from bytecode ID to graph meta.
 
   This attempts to read the least possible amount of data from database by only
@@ -414,7 +411,8 @@ def FetchGraphs(
   """
   load_graphs = any(annotator.requires_graphs for annotator in annotators)
 
-  with prof.Profile(lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
+  with prof.Profile(
+      lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
     # Determine the graph metas that need to be read from the database.
     # Use an ordered list so that we can zip these ids with the return of the
     # query.
@@ -446,14 +444,14 @@ def FetchGraphs(
             f"but received {[g.bytecode_id for g in graph_metas]}")
 
       bytecode_id_to_graph_meta: typing.Dict[int, graph_database.GraphMeta] = {
-        id_: row for id_, row in zip(bytecode_ids_to_fetch, graph_metas)
+          id_: row for id_, row in zip(bytecode_ids_to_fetch, graph_metas)
       }
     input_db.Close()  # Don't leave the database connection lying around.
   return bytecode_id_to_graph_meta
 
-def FetchBytecodes(
-    annotators: typing.List[GraphAnnotator],
-    bytecode_ids_to_process: np.array):
+
+def FetchBytecodes(annotators: typing.List[GraphAnnotator],
+                   bytecode_ids_to_process: np.array):
   """Read the required bytecoes and return a map from bytecode ID to bytecode
   string.
 
@@ -486,8 +484,8 @@ def FetchBytecodes(
       bytecode_db: bytecode_database.Database = FLAGS.bytecode_db()
       with bytecode_db.Session() as session:
         query = session.query(bytecode_database.LlvmBytecode.bytecode)
-        query = query.filter(bytecode_database.LlvmBytecode.id.in_(
-            bytecode_ids_to_fetch))
+        query = query.filter(
+            bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch))
         # Order by bytecode ID so that we can zip the results with the requested
         # bytecodes.
         query = query.order_by(bytecode_database.LlvmBytecode.id)
@@ -497,13 +495,14 @@ def FetchBytecodes(
         raise EnvironmentError(f"Requested bytecodes {bytecode_ids_to_fetch} "
                                f"but received {[b.id for b in bytecodes]}")
       bytecode_id_to_bytecode: typing.Dict[int, str] = {
-        id_: bytecode
-        for id_, bytecode in zip(bytecode_ids_to_fetch, bytecodes)
+          id_: bytecode
+          for id_, bytecode in zip(bytecode_ids_to_fetch, bytecodes)
       }
       bytecode_db.Close()  # Don't leave the database connection lying around.
     return bytecode_id_to_bytecode
   else:
     return {}
+
 
 def _Worker(packed_args):
   """A graph processor worker. If --nproc > 1, this is called in a worker
@@ -512,10 +511,10 @@ def _Worker(packed_args):
   input_graph_db_url, annotators, bytecode_ids_to_process = packed_args
 
   bytecode_id_to_graph_meta: typing.Dict[int, graph_database.GraphMeta] = (
-    FetchGraphs(annotators, bytecode_ids_to_process, input_graph_db_url))
+      FetchGraphs(annotators, bytecode_ids_to_process, input_graph_db_url))
 
-  bytecode_id_to_bytecode: typing.Dict[int, str] = (
-    FetchBytecodes(annotators, bytecode_ids_to_process))
+  bytecode_id_to_bytecode: typing.Dict[int, str] = (FetchBytecodes(
+      annotators, bytecode_ids_to_process))
 
   graph_metas_by_output = []
   for annotator, bytecode_ids in zip(annotators, bytecode_ids_to_process):
