@@ -4,6 +4,7 @@ import typing
 import os
 
 import numpy as np
+import tensorflow as tf
 from labm8 import app
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -12,8 +13,6 @@ from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 
-#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-import tensorflow as tf
 
 FLAGS = app.FLAGS
 
@@ -452,8 +451,6 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
 def main():
   """Main entry point."""
-  app.logging.SetLogLevel(2)
-  #tf.logging.set_verbosity(tf.logging.ERROR)
   classifier_base.Run(GgnnClassifier)
 
 

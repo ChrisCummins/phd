@@ -265,7 +265,6 @@ class ClassifierBase(object):
       y_pred = np.argmax(predictions, axis=1)
       accuracies = y_true == y_pred
 
-      # print("self.labels: ", self.labels)
       log.accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
       log.precision = sklearn.metrics.precision_score(
           y_true,

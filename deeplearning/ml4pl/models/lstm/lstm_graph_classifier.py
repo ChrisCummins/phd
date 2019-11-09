@@ -155,9 +155,6 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     # get the raw predictions from self.model.fit().
     pred_y = self.model.predict(x)
     assert batch['graph_y'].shape == pred_y[0].shape
-    
-    #print("graph_y: ", batch['graph_y'])
-    #print("pred_y: ", pred_y[0])
 
     return batch['graph_y'], pred_y[0]
 
@@ -173,7 +170,6 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
-  app.logging.SetLogLevel(1)
   classifier_base.Run(LstmGraphClassifierModel)
 
 

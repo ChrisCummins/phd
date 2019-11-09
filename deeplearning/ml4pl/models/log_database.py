@@ -125,7 +125,7 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   def __repr__(self) -> str:
     return (
-        f"{self.run_id or '--'} Epoch {humanize.Commas(self.epoch or '--')} {self.type or '--'} batch: "
+        f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type} batch: "
         f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
         f"loss={self.loss:.4f} | "
         f"acc={self.accuracy:.2%}")
