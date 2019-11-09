@@ -132,28 +132,70 @@ def test_GetBytecodeIdsToProcess_with_some_outputs(db, db2, db3, db4):
   assert np.array_equal(ids_by_output[2], [0, 2, 3, 10])
 
 
-def test_DataFlowAnalysisGraphExporter(db, db2, db3, db4):
-  input_db = AddGraphMetas(db, [1, 2, 3, 5, 10])
-  output_dbs = [AddGraphMetas(db2, [1, 2]), db3, db4]
+# ResilientAddUnique() tests.
+
+
+def test_ResilientAddUnique_empty_db(db: graph_database.Database):
+  just_done = [1, 1, 1, 2]
+  make_data_flow_analysis_dataset.ResilientAddUnique(
+      db, [MakeGraphMeta(i) for i in just_done])
+
+  with db.Session() as session:
+    assert session.query(graph_database.GraphMeta).count() == 4
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 1).count() == 3
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 2).count() == 1
+
+
+def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
+  """Test that ResilientAddUnique() ignores bytecodes that already exist."""
+  already_done = [1, 1, 3, 3]
+  just_done = [1, 1, 1, 2, 2, 2]
+
+  db = AddGraphMetas(db, already_done)
+  make_data_flow_analysis_dataset.ResilientAddUnique(
+      db, [MakeGraphMeta(i) for i in just_done])
+
+  with db.Session() as session:
+    assert session.query(graph_database.GraphMeta).count() == 7
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 1).count() == 2
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 2).count() == 3
+    assert session.query(graph_database.GraphMeta).filter(
+        graph_database.GraphMeta.bytecode_id == 3).count() == 2
+
+
+# DataFlowAnalysisGraphExporter() tests.
+
+
+def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
+  """Test end-to-end dataset export with three annotators."""
+  all_bytecode_ids = [1, 2, 3, 5, 10]
+  already_done = [1, 2]
+
+  input_db = AddGraphMetas(db, all_bytecode_ids)
+  output_dbs = [AddGraphMetas(db2, already_done), db3, db4]
+
+  def MakeOutput(annotator_name, db_):
+    """Generate an output from the given name and database."""
+    return make_data_flow_analysis_dataset.Output(
+        annotator=make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
+            annotator_name)[0],
+        db=db_)
 
   outputs = [
-      make_data_flow_analysis_dataset.Output(
-          annotator=make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
-              'reachability')[0],
-          db=output_dbs[0]),
-      make_data_flow_analysis_dataset.Output(
-          annotator=make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
-              'liveness')[0],
-          db=output_dbs[1]),
-      make_data_flow_analysis_dataset.Output(
-          annotator=make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
-              'domtree')[0],
-          db=output_dbs[2]),
+      MakeOutput('reachability', output_dbs[0]),
+      MakeOutput('liveness', output_dbs[1]),
+      MakeOutput('domtree', output_dbs[2]),
   ]
 
-  make_data_flow_analysis_dataset.DataFlowAnalysisGraphExporter(outputs)(
-      input_db, output_dbs)
+  exporter = make_data_flow_analysis_dataset.DataFlowAnalysisGraphExporter(
+      outputs)
+  exporter(input_db, output_dbs)
 
+  # Check that all databases have an entry.
   for output_db in output_dbs:
     with output_db.Session() as session:
       bytecode_ids = [
@@ -162,10 +204,11 @@ def test_DataFlowAnalysisGraphExporter(db, db2, db3, db4):
       ]
       assert sorted(bytecode_ids) == [1, 2, 3, 5, 10]
 
-  # Running it a second time should make no changes.
-  make_data_flow_analysis_dataset.DataFlowAnalysisGraphExporter(outputs)(
-      input_db, output_dbs)
+  # Running the exporter multiple times should yield no changes.
+  exporter(input_db, output_dbs)
+  exporter(input_db, output_dbs)
 
+  # Check that all databases have an entry.
   for output_db in output_dbs:
     with output_db.Session() as session:
       bytecode_ids = [

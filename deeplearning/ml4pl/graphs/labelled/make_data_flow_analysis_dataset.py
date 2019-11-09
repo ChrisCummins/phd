@@ -250,39 +250,31 @@ def GetBytecodeIdsToProcess(input_db: graph_database.Database,
   return bytecodes_to_process, bytecodes_to_process_by_output
 
 
-def ResilientAddManyAndCommit(
+def ResilientAddUnique(
     db: graph_database.Database,
-    graph_metas: typing.List[graph_database.GraphMeta]):
-  """Attempt to commit all mapped objects and return those that fail.
+    graph_metas: typing.List[graph_database.GraphMeta]) -> None:
+  """Attempt to commit all graph metas to the database.
 
-  This method creates a session and commits the given mapped objects.
-  In case of error, this method will recurse up to O(log(n)) times, committing
-  as many objects that can be as possible.
+  This function adds graph metas to the database, provided they do not already
+  exist.
 
   Args:
     db: The database to add the objects to.
     graph_metas: A sequence of graph metas to commit.
-
-  Returns:
-    Any items in `mapped` which could not be committed, if any. Relative order
-    of items is preserved.
   """
   if not graph_metas:
     return
 
   try:
+    bytecode_ids = {g.bytecode_id for g in graph_metas}
     with db.Session(commit=True) as session:
       # Get the bytecodes which have already been imported into the database and
       # commit only the new ones. This is prevention against multiple-versions
       # of the graph being added when there are parallel importers.
-      already_done_ids = {
-          row.bytecode_id
-          for row in session.query(graph_database.GraphMeta.bytecode_id.
-                                   distinct().label('bytecode_id')).filter(
-                                       graph_database.GraphMeta.bytecode_id.in_(
-                                           {g.bytecode_id
-                                            for g in graph_metas}))
-      }
+      query = session.query(
+          graph_database.GraphMeta.bytecode_id.distinct().label('bytecode_id')) \
+        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
+      already_done_ids = {row.bytecode_id for row in query}
       graph_metas_to_commit = [
           g for g in graph_metas if g.bytecode_id not in already_done_ids
       ]
@@ -308,8 +300,8 @@ def ResilientAddManyAndCommit(
       mid = int(len(graph_metas) / 2)
       left = graph_metas[:mid]
       right = graph_metas[mid:]
-      ResilientAddManyAndCommit(db, left)
-      ResilientAddManyAndCommit(db, right)
+      ResilientAddUnique(db, left)
+      ResilientAddUnique(db, right)
 
 
 class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
@@ -368,9 +360,9 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
         lambda: list(itertools.islice(jobs, FLAGS.nproc * 2)), []):
       app.Log(1, 'Starting chunk of %s jobs', FLAGS.nproc * 2)
       if FLAGS.nproc > 1:
-        workers = pool.imap_unordered(_GraphWorker, jobs_chunk)
+        workers = pool.imap_unordered(_Worker, jobs_chunk)
       else:
-        workers = (_GraphWorker(job) for job in jobs_chunk)
+        workers = (_Worker(job) for job in jobs_chunk)
 
       job_count = 0
       for graph_metas_by_output in workers:
@@ -387,10 +379,9 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
         for output, graph_metas, output in zip(
             self.outputs, graph_metas_by_output, self.outputs):
           if graph_metas:
-            with prof.Profile(
-                f"Added {len(graph_metas)} {output.annotator.name} graph metas"
-            ):
-              ResilientAddManyAndCommit(output.db, graph_metas)
+            with prof.Profile(f"Added {len(graph_metas)} "
+                              f"{output.annotator.name} graph metas"):
+              ResilientAddUnique(output.db, graph_metas)
 
     elapsed_time = time.time() - start_time
     app.Log(
@@ -401,27 +392,45 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
     return exported_graph_count
 
 
-def _GraphWorker(packed_args):
-  """A graph processor worker. If --multiprocess_database_exporters is set,
-  this is called in a worker process.
+def FetchGraphs(
+    annotators: typing.List[GraphAnnotator], bytecode_ids_to_process: np.array,
+    input_graph_db_url: str) -> typing.Dict[int, graph_database.GraphMeta]:
+  """Read the required graphs and return a map from bytecode ID to graph meta.
+
+  This attempts to read the least possible amount of data from database by only
+  reading the graph data strings if they will be later consumed by an annotator.
+
+  Args:
+    annotators: The annotators that will consume the bytecode.
+    bytecode_ids_to_process: A (annotators,num_bytecodes) shape array of
+      bytecode IDs to process.
+    input_graph_db_url: The URL of the input graph database.
+
+  Returns:
+    A map from bytecode ID to bytecode string.
   """
-  input_graph_db_url, annotators, bytecode_ids_to_process = packed_args
+  load_graphs = any(annotator.requires_graphs for annotator in annotators)
 
   with prof.Profile(
       lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
-    input_graph_db = graph_database.Database(input_graph_db_url)
-    # Read the required graphs from the database.
-    bytecode_ids_to_fetch = list(
+    # Determine the graph metas that need to be read from the database.
+    # Use an ordered list so that we can zip these ids with the return of the
+    # query.
+    bytecode_ids_to_fetch: typing.List[int] = list(
         sorted(set(
             bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
 
-    # Determine whether we need to load the graph data, or just the metadata.
-    load_graphs = any(annotator.requires_graphs for annotator in annotators)
+    input_db = graph_database.Database(input_graph_db_url)
 
-    with input_graph_db.Session() as session:
-      query = session.query(graph_database.GraphMeta) \
-        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids_to_fetch)) \
-        .order_by(graph_database.GraphMeta.bytecode_id)
+    # Read the graphs metas from the database. If we need to access the graph
+    # data, this is jointly loaded.
+    with input_db.Session() as session:
+      query = session.query(graph_database.GraphMeta)
+      query = query.filter(
+          graph_database.GraphMeta.bytecode_id.in_(bytecode_ids_to_fetch))
+      # Order by bytecode ID so that we can zip the results with the requested
+      # bytecodes.
+      query = query.order_by(graph_database.GraphMeta.bytecode_id)
 
       if load_graphs:
         query = query.options(sql.orm.joinedload(
@@ -432,19 +441,40 @@ def _GraphWorker(packed_args):
         raise EnvironmentError(
             "Requested graphs with bytecode IDs "
             f"{bytecode_ids_to_fetch} "
-            f"but received {[g.byteocde_id for g in graph_metas]}")
+            f"but received {[g.bytecode_id for g in graph_metas]}")
 
       bytecode_id_to_graph_meta: typing.Dict[int, graph_database.GraphMeta] = {
           id_: row for id_, row in zip(bytecode_ids_to_fetch, graph_metas)
       }
-    input_graph_db.Close()  # Don't leave the database connection lying around.
+    input_db.Close()  # Don't leave the database connection lying around.
+  return bytecode_id_to_graph_meta
 
-  # Optionally read the required bytecodes from the bytecode database.
-  bytecode_ids_to_fetch = []
-  for i, bytecode_ids_for_annotator in enumerate(bytecode_ids_to_process):
+
+def FetchBytecodes(annotators: typing.List[GraphAnnotator],
+                   bytecode_ids_to_process: np.array):
+  """Read the required bytecoes and return a map from bytecode ID to bytecode
+  string.
+
+  This attempts to read the least possible amount of data from database by only
+  reading the bytecodes that will later be consumed by an annotator.
+
+  Args:
+    annotators: The annotators that will consume the bytecode.
+    bytecode_ids_to_process: A (annotators,num_bytecodes) shape array of
+      bytecode IDs to process.
+
+  Returns:
+    A map from bytecode ID to bytecode string.
+  """
+  # Optionally read the required bytecodes from the bytecode database. Only read
+  # those which are needed by annotators that require bytecodes.
+  bytecode_ids_to_fetch: typing.List[int] = []
+  for i, ids_for_annotator in enumerate(bytecode_ids_to_process):
     if annotators[i].requires_bytecodes:
       bytecode_ids_to_fetch.extend(
-          bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])
+          ids_for_annotator[np.nonzero(ids_for_annotator)])
+  # Use an ordered list so that we can zip these ids with the return of the
+  # query.
   bytecode_ids_to_fetch = list(sorted(set(bytecode_ids_to_fetch)))
 
   if bytecode_ids_to_fetch:
@@ -453,12 +483,14 @@ def _GraphWorker(packed_args):
       # --bytecode_db flag set when bytecodes are not required.
       bytecode_db: bytecode_database.Database = FLAGS.bytecode_db()
       with bytecode_db.Session() as session:
-        bytecodes = [
-          row.bytecode for row in
-          session.query(bytecode_database.LlvmBytecode.bytecode) \
-            .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch)) \
-            .order_by(bytecode_database.LlvmBytecode.id) \
-          ]
+        query = session.query(bytecode_database.LlvmBytecode.bytecode)
+        query = query.filter(
+            bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch))
+        # Order by bytecode ID so that we can zip the results with the requested
+        # bytecodes.
+        query = query.order_by(bytecode_database.LlvmBytecode.id)
+
+        bytecodes = [row.bytecode for row in query]
       if len(bytecodes) != len(bytecode_ids_to_fetch):
         raise EnvironmentError(f"Requested bytecodes {bytecode_ids_to_fetch} "
                                f"but received {[b.id for b in bytecodes]}")
@@ -467,8 +499,22 @@ def _GraphWorker(packed_args):
           for id_, bytecode in zip(bytecode_ids_to_fetch, bytecodes)
       }
       bytecode_db.Close()  # Don't leave the database connection lying around.
+    return bytecode_id_to_bytecode
   else:
-    bytecode_id_to_bytecode: typing.Dict[int, str] = {}
+    return {}
+
+
+def _Worker(packed_args):
+  """A graph processor worker. If --nproc > 1, this is called in a worker
+  process, hence the packed arguments.
+  """
+  input_graph_db_url, annotators, bytecode_ids_to_process = packed_args
+
+  bytecode_id_to_graph_meta: typing.Dict[int, graph_database.GraphMeta] = (
+      FetchGraphs(annotators, bytecode_ids_to_process, input_graph_db_url))
+
+  bytecode_id_to_bytecode: typing.Dict[int, str] = (FetchBytecodes(
+      annotators, bytecode_ids_to_process))
 
   graph_metas_by_output = []
   for annotator, bytecode_ids in zip(annotators, bytecode_ids_to_process):
@@ -504,9 +550,10 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
 
     try:
       with prof.Profile(
-          lambda t:
-          f"Produced {len(annotated_graphs)} {annotator.name} instances from {graph_meta.node_count}-node graph for bytecode {graph_meta.bytecode_id}"
-      ):
+          lambda t: (f"Produced {len(annotated_graphs)} {annotator.name} "
+                     f"instances from {graph_meta.node_count}-node graph for "
+                     f"bytecode {graph_meta.bytecode_id}")):
+        # Build the arguments list for the graph annotator function.
         kwargs = {
             'n': n,
             'false': np.array([1, 0], dtype=np.float32),
@@ -514,25 +561,29 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
         }
 
         if annotator.requires_graphs:
+          # TODO(cec): Rename this argument 'graph' and refactor the graph
+          # annotators.
           kwargs['g'] = graph_meta.data
         if annotator.requires_bytecodes:
           kwargs['bytecode'] = bytecodes[i]
 
+        # Run the annotator to produce the annotated graphs.
         annotated_graphs = list(annotator.function(**kwargs))
 
-        # Copy over graph metadata.
+        # Copy over the graph metadata.
         for annotated_graph in annotated_graphs:
           annotated_graph.group = graph_meta.group
           annotated_graph.bytecode_id = graph_meta.bytecode_id
           annotated_graph.source_name = graph_meta.source_name
           annotated_graph.relpath = graph_meta.relpath
           annotated_graph.language = graph_meta.language
+
         generated_graph_metas += [
             graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
             for annotated_graph in annotated_graphs
         ]
     except Exception as e:
-      # Insert a zero-node graph to mark that exporting this graph failed.
+      # Insert a zero-node graph meta to mark that exporting this graph failed.
       generated_graph_metas.append(
           graph_database.GraphMeta(group=graph_meta.group,
                                    bytecode_id=graph_meta.bytecode_id,
