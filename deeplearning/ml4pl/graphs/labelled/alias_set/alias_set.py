@@ -4,10 +4,10 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import decorators
 
 from compilers.llvm import opt_util
+from labm8 import app
+from labm8 import decorators
 
 FLAGS = app.FLAGS
 
@@ -108,8 +108,8 @@ def MakeAliasSetGraphs(
   if alias_sets_to_delete:
     for function in alias_sets_to_delete:
       del alias_sets_by_function[function]
-    app.Warning(
-        "Removed %d alias sets generated from bytecode but not found in "
+    app.Log(
+        2, "Removed %d alias sets generated from bytecode but not found in "
         "graph: %s", len(alias_sets_to_delete), alias_sets_to_delete)
 
   function_alias_set_pairs: typing.List[
