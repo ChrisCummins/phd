@@ -27,17 +27,18 @@ from labm8 import humanize
 from labm8 import prof
 from labm8 import sqlutil
 
-app.DEFINE_database('input_graphs_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to read unlabelled networkx graphs from.',
-                    must_exist=True)
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecode from. Only required when '
-                    'analysis requires bytecode.',
-                    must_exist=True)
+app.DEFINE_database(
+    'input_graphs_db',
+    graph_database.Database,
+    None,
+    'URL of database to read unlabelled networkx graphs from.',
+    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None, 'URL of database to read bytecode from. Only required when '
+    'analysis requires bytecode.',
+    must_exist=True)
 app.DEFINE_list(
     'outputs', None,
     "A list of outputs to generate, where each element in the list"
@@ -91,47 +92,54 @@ def GetAnnotatedGraphGenerators(
 
   if AnalysisIsRequested('reachability', analysis_names):
     annotators.append(
-        GraphAnnotator(name='reachability',
-                       requires_graphs=True,
-                       function=reachability.MakeReachabilityGraphs))
+        GraphAnnotator(
+            name='reachability',
+            requires_graphs=True,
+            function=reachability.MakeReachabilityGraphs))
 
   if AnalysisIsRequested('domtree', analysis_names):
     annotators.append(
-        GraphAnnotator(name='domtree',
-                       requires_graphs=True,
-                       function=dominator_tree.MakeDominatorTreeGraphs))
+        GraphAnnotator(
+            name='domtree',
+            requires_graphs=True,
+            function=dominator_tree.MakeDominatorTreeGraphs))
 
   if AnalysisIsRequested('datadep', analysis_names):
     annotators.append(
-        GraphAnnotator(name='datadep',
-                       requires_graphs=True,
-                       function=data_dependence.MakeDataDependencyGraphs))
+        GraphAnnotator(
+            name='datadep',
+            requires_graphs=True,
+            function=data_dependence.MakeDataDependencyGraphs))
 
   if AnalysisIsRequested('liveness', analysis_names):
     annotators.append(
-        GraphAnnotator(name='liveness',
-                       requires_graphs=True,
-                       function=liveness.MakeLivenessGraphs))
+        GraphAnnotator(
+            name='liveness',
+            requires_graphs=True,
+            function=liveness.MakeLivenessGraphs))
 
   if AnalysisIsRequested('subexpressions', analysis_names):
     annotators.append(
-        GraphAnnotator(name='subexpressions',
-                       requires_graphs=True,
-                       function=subexpressions.MakeSubexpressionsGraphs))
+        GraphAnnotator(
+            name='subexpressions',
+            requires_graphs=True,
+            function=subexpressions.MakeSubexpressionsGraphs))
 
   if AnalysisIsRequested('alias_sets', analysis_names):
     annotators.append(
-        GraphAnnotator(name='alias_sets',
-                       requires_graphs=True,
-                       requires_bytecodes=True,
-                       function=alias_set.MakeAliasSetGraphs))
+        GraphAnnotator(
+            name='alias_sets',
+            requires_graphs=True,
+            requires_bytecodes=True,
+            function=alias_set.MakeAliasSetGraphs))
 
   if AnalysisIsRequested('polyhedra', analysis_names):
     annotators.append(
-        GraphAnnotator(name='polyhedra',
-                       requires_graphs=False,
-                       requires_bytecodes=True,
-                       function=polyhedra.MakePolyhedralGraphs))
+        GraphAnnotator(
+            name='polyhedra',
+            requires_graphs=False,
+            requires_bytecodes=True,
+            function=polyhedra.MakePolyhedralGraphs))
 
   if analysis_names:
     raise app.UsageError(f"Unknown analyses {analysis_names}")
@@ -197,10 +205,10 @@ def GetBytecodeIdsToProcess(
                                "bytecode IDs")):
     all_ids = GetAllBytecodeIds(input_db)
 
-  with prof.Profile(
-      lambda t: ("Read the "
-                 f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
-                 f"IDs to process")):
+  with prof.Profile(lambda t: (
+      "Read the "
+      f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
+      f"IDs to process")):
     ids_by_output = [
         all_ids - GetAllBytecodeIds(output_db) for output_db in output_dbs
     ]
@@ -219,8 +227,8 @@ def GetBytecodeIdsToProcess(
       f"{humanize.Commas(bytecodes_to_process_by_output[np.nonzero(bytecodes_to_process_by_output)].size)} annotations"
   )):
     if FLAGS.order_by == 'random':
-      bytecodes_to_process = np.array(list(set(all_bytecodes_to_process)),
-                                      dtype=np.int32)
+      bytecodes_to_process = np.array(
+          list(set(all_bytecodes_to_process)), dtype=np.int32)
       frequency_table = bytecodes_to_process  # Used in prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
       bytecodes_to_process = bytecodes_to_process[:batch_size * 10]
@@ -247,9 +255,9 @@ def GetBytecodeIdsToProcess(
   return bytecodes_to_process, bytecodes_to_process_by_output
 
 
-def ResilientAddUnique(
-    db: graph_database.Database,
-    graph_metas: typing.List[graph_database.GraphMeta]) -> int:
+def ResilientAddUnique(db: graph_database.Database,
+                       graph_metas: typing.List[graph_database.GraphMeta],
+                       annotator_name: str) -> None:
   """Attempt to commit all graph metas to the database.
 
   This function adds graph metas to the database, provided they do not already
@@ -279,15 +287,17 @@ def ResilientAddUnique(
           g for g in graph_metas if g.bytecode_id not in already_done_ids
       ]
       if len(graph_metas_to_commit) < len(graph_metas):
-        app.Log(1, 'Ignoring %s graph metas that already exist in the database',
-                len(graph_metas) - len(graph_metas_to_commit))
+        app.Warning(
+            'Ignoring %s %s graph metas that already exist in the database',
+            len(graph_metas) - len(graph_metas_to_commit), annotator_name)
       session.add_all(graph_metas_to_commit)
       return len(graph_metas_to_commit)
   except sql.exc.SQLAlchemyError as e:
     app.Log(
         1,
-        'Caught error while committing %d graph metas: %s',
+        'Caught error while committing %d %s graphs: %s',
         len(graph_metas),
+        annotator_name,
         e,
     )
 
@@ -301,7 +311,8 @@ def ResilientAddUnique(
       mid = int(len(graph_metas) / 2)
       left = graph_metas[:mid]
       right = graph_metas[mid:]
-      return ResilientAddUnique(db, left) + ResilientAddUnique(db, right)
+      return (ResilientAddUnique(db, left, annotator_name) + ResilientAddUnique(
+          db, right, annotator_name))
 
 
 class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
@@ -365,7 +376,7 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
         workers = (_Worker(job) for job in jobs_chunk)
 
       job_count = 0
-      for graph_metas_by_output in workers:
+      for annotator, graph_metas_by_output in zip(annotators, workers):
         job_count += 1
         app.Log(
             1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
@@ -378,10 +389,11 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
         for output, graph_metas, output in zip(
             self.outputs, graph_metas_by_output, self.outputs):
           if graph_metas:
-            with prof.Profile(lambda t:
-                              (f"Added {added_to_database} "
-                               f"{output.annotator.name} graph metas")):
-              added_to_database = ResilientAddUnique(output.db, graph_metas)
+            with prof.Profile(lambda t: (f"Added {added_to_database} "
+                                         f"{output.annotator.name} graph metas")
+                             ):
+              added_to_database = ResilientAddUnique(output.db, graph_metas,
+                                                     annotator.name)
               exported_graph_count += added_to_database
 
     elapsed_time = time.time() - start_time
@@ -412,14 +424,14 @@ def FetchGraphs(
   """
   load_graphs = any(annotator.requires_graphs for annotator in annotators)
 
-  with prof.Profile(
-      lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
+  with prof.Profile(lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"
+                   ):
     # Determine the graph metas that need to be read from the database.
     # Use an ordered list so that we can zip these ids with the return of the
     # query.
     bytecode_ids_to_fetch: typing.List[int] = list(
-        sorted(set(
-            bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
+        sorted(
+            set(bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
 
     input_db = graph_database.Database(input_graph_db_url)
 
@@ -434,8 +446,8 @@ def FetchGraphs(
       query = query.order_by(graph_database.GraphMeta.bytecode_id)
 
       if load_graphs:
-        query = query.options(sql.orm.joinedload(
-            graph_database.GraphMeta.graph))
+        query = query.options(
+            sql.orm.joinedload(graph_database.GraphMeta.graph))
 
       graph_metas = query.all()
       if len(graph_metas) != len(bytecode_ids_to_fetch):
@@ -551,8 +563,8 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
   for i, graph_meta in enumerate(graph_metas):
     # Determine the number of instances to produce based on the size of the
     # input graph.
-    n = math.ceil(min(graph_meta.node_count / 10,
-                      FLAGS.max_instances_per_graph))
+    n = math.ceil(
+        min(graph_meta.node_count / 10, FLAGS.max_instances_per_graph))
 
     try:
       # Build the arguments list for the graph annotator function.
@@ -587,17 +599,18 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
     except Exception as e:
       # Insert a zero-node graph meta to mark that exporting this graph failed.
       generated_graph_metas.append(
-          graph_database.GraphMeta(group=graph_meta.group,
-                                   bytecode_id=graph_meta.bytecode_id,
-                                   source_name=graph_meta.source_name,
-                                   relpath=graph_meta.relpath,
-                                   language=graph_meta.language,
-                                   node_count=0,
-                                   edge_count=0,
-                                   node_embeddings_count=0,
-                                   edge_position_max=0,
-                                   loop_connectedness=0,
-                                   undirected_diameter=0))
+          graph_database.GraphMeta(
+              group=graph_meta.group,
+              bytecode_id=graph_meta.bytecode_id,
+              source_name=graph_meta.source_name,
+              relpath=graph_meta.relpath,
+              language=graph_meta.language,
+              node_count=0,
+              edge_count=0,
+              node_embeddings_count=0,
+              edge_position_max=0,
+              loop_connectedness=0,
+              undirected_diameter=0))
       _, _, tb = sys.exc_info()
       tb = traceback.extract_tb(tb, 2)
       filename, line_number, function_name, *_ = tb[-1]
