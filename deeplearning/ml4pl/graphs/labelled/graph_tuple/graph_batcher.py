@@ -5,13 +5,13 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
+from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -184,8 +184,7 @@ class GraphBatch(typing.NamedTuple):
     # of graphs used).
     log = log_database.BatchLogMeta(graph_count=0,
                                     node_count=0,
-                                    group=graph.group,
-                                    batch_log=log_database.BatchLog())
+                                    group=graph.group)
 
     graph_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
@@ -283,8 +282,10 @@ class GraphBatch(typing.NamedTuple):
     if has_graph_labels:
       graph_y = np.array(graph_y)
 
-    # Record the graphs that we used in this batch.
-    log.graph_indices = graph_ids
+    # Record the graphs that we used in this batch to an unmapped property.
+    # TODO(cec): Setting a attribute on a mapped object at run time like this
+    # is shitty. Rethink.
+    log._graph_indices = graph_ids
 
     return cls(
         adjacency_lists=adjacency_lists,

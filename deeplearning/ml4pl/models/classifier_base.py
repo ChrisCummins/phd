@@ -7,6 +7,11 @@ import typing
 import numpy as np
 import sklearn.metrics
 import sqlalchemy as sql
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
@@ -15,11 +20,6 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
-
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -281,8 +281,13 @@ class ClassifierBase(object):
           average=FLAGS.batch_scores_averaging_method)
 
       log.accuracy = accuracies.mean()
-      log.accuracies = accuracies
-      log.predictions = predictions
+
+      # Only create a batch log for test runs.
+      if epoch_type == 'test':
+        log.batch_log = log_database.BatchLog()
+        log.graph_indices = log._graph_indices
+        log.accuracies = accuracies
+        log.predictions = predictions
 
       epoch_accuracies.append(log.accuracy)
 

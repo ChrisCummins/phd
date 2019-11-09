@@ -6,13 +6,13 @@ import typing
 import networkx as nx
 import numpy as np
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
+from labm8 import test
 
 FLAGS = app.FLAGS
 
@@ -66,9 +66,8 @@ class MockModel(classifier_base.ClassifierBase):
           type=epoch_type,
           node_count=10,
           graph_count=10,  # fake the number of graphs as this is checked.
-          batch_log=log_database.BatchLog(),
       )
-      log.graph_indices = []
+      log._graph_indices = [1, 2, 3]
       yield log, i
 
   def RunMinibatch(self, log: log_database.BatchLogMeta,
@@ -164,6 +163,44 @@ def test_Train(tempdir2: pathlib.Path, graph_db: graph_database.Database,
   model.InitializeModel()
   model.Train(num_epochs=1)
   assert model.best_epoch_num == 1
+
+
+def test_Train_creates_only_test_batch_logs(tempdir2: pathlib.Path,
+                                            graph_db: graph_database.Database,
+                                            log_db: log_database.Database):
+  """Test that training produces no batch logs."""
+  FLAGS.working_dir = tempdir2
+
+  model = MockModel(graph_db, log_db)
+  model.InitializeModel()
+  model.Train(num_epochs=1)
+  with log_db.Session() as session:
+    assert session.query(log_database.BatchLogMeta).count() == 30
+    assert session.query(log_database.BatchLog).count() == 10
+
+    query = session.query(log_database.BatchLogMeta)
+    query = query.filter(log_database.BatchLogMeta.type == 'test')
+    for batch_log_meta in query:
+      assert batch_log_meta.batch_log
+
+    query = session.query(log_database.BatchLogMeta)
+    query = query.filter(log_database.BatchLogMeta.type.in_(['train', 'val']))
+    for batch_log_meta in query:
+      assert not batch_log_meta.batch_log
+
+
+def test_Test_creates_batch_logs(tempdir2: pathlib.Path,
+                                 graph_db: graph_database.Database,
+                                 log_db: log_database.Database):
+  """Test that testing produces batch logs."""
+  FLAGS.working_dir = tempdir2
+
+  model = MockModel(graph_db, log_db)
+  model.InitializeModel()
+  model.RunEpoch(epoch_type='test')
+  with log_db.Session() as session:
+    assert session.query(log_database.BatchLogMeta).count() == 10
+    assert session.query(log_database.BatchLog).count() == 10
 
 
 def _MakeNRandomGraphs(n: int, group: str) -> typing.Iterable[nx.MultiDiGraph]:
