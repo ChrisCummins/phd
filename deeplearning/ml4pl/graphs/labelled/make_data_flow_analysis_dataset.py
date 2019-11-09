@@ -3,14 +3,12 @@ import itertools
 import math
 import multiprocessing
 import pathlib
-import pickle
 import random
 import sys
 import time
 import traceback
 import typing
 
-import networkx as nx
 import numpy as np
 import sqlalchemy as sql
 from labm8 import app
@@ -29,18 +27,17 @@ from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
 
-app.DEFINE_database(
-    'input_graphs_db',
-    graph_database.Database,
-    None,
-    'URL of database to read unlabelled networkx graphs from.',
-    must_exist=True)
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None, 'URL of database to read bytecode from. Only required when '
-    'analysis requires bytecode.',
-    must_exist=True)
+app.DEFINE_database('input_graphs_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to read unlabelled networkx graphs from.',
+                    must_exist=True)
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecode from. Only required when '
+                    'analysis requires bytecode.',
+                    must_exist=True)
 app.DEFINE_list(
     'outputs', None,
     "A list of outputs to generate, where each element in the list"
@@ -98,54 +95,47 @@ def GetAnnotatedGraphGenerators(
 
   if AnalysisIsRequested('reachability', analysis_names):
     annotators.append(
-        GraphAnnotator(
-            name='reachability',
-            requires_graphs=True,
-            function=reachability.MakeReachabilityGraphs))
+        GraphAnnotator(name='reachability',
+                       requires_graphs=True,
+                       function=reachability.MakeReachabilityGraphs))
 
   if AnalysisIsRequested('domtree', analysis_names):
     annotators.append(
-        GraphAnnotator(
-            name='domtree',
-            requires_graphs=True,
-            function=dominator_tree.MakeDominatorTreeGraphs))
+        GraphAnnotator(name='domtree',
+                       requires_graphs=True,
+                       function=dominator_tree.MakeDominatorTreeGraphs))
 
   if AnalysisIsRequested('datadep', analysis_names):
     annotators.append(
-        GraphAnnotator(
-            name='datadep',
-            requires_graphs=True,
-            function=data_dependence.MakeDataDependencyGraphs))
+        GraphAnnotator(name='datadep',
+                       requires_graphs=True,
+                       function=data_dependence.MakeDataDependencyGraphs))
 
   if AnalysisIsRequested('liveness', analysis_names):
     annotators.append(
-        GraphAnnotator(
-            name='liveness',
-            requires_graphs=True,
-            function=liveness.MakeLivenessGraphs))
+        GraphAnnotator(name='liveness',
+                       requires_graphs=True,
+                       function=liveness.MakeLivenessGraphs))
 
   if AnalysisIsRequested('subexpressions', analysis_names):
     annotators.append(
-        GraphAnnotator(
-            name='subexpressions',
-            requires_graphs=True,
-            function=subexpressions.MakeSubexpressionsGraphs))
+        GraphAnnotator(name='subexpressions',
+                       requires_graphs=True,
+                       function=subexpressions.MakeSubexpressionsGraphs))
 
   if AnalysisIsRequested('alias_sets', analysis_names):
     annotators.append(
-        GraphAnnotator(
-            name='alias_sets',
-            requires_graphs=True,
-            requires_bytecodes=True,
-            function=alias_set.MakeAliasSetGraphs))
+        GraphAnnotator(name='alias_sets',
+                       requires_graphs=True,
+                       requires_bytecodes=True,
+                       function=alias_set.MakeAliasSetGraphs))
 
   if AnalysisIsRequested('polyhedra', analysis_names):
     annotators.append(
-        GraphAnnotator(
-            name='polyhedra',
-            requires_graphs=False,
-            requires_bytecodes=True,
-            function=polyhedra.MakePolyhedralGraphs))
+        GraphAnnotator(name='polyhedra',
+                       requires_graphs=False,
+                       requires_bytecodes=True,
+                       function=polyhedra.MakePolyhedralGraphs))
 
   if analysis_names:
     raise app.UsageError(f"Unknown analyses {analysis_names}")
@@ -175,38 +165,54 @@ def GetOutputsFromStrings(outputs: typing.List[str]) -> typing.List[Output]:
   ]
 
 
-def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
+def GetAllBytecodeIds(db: graph_database.Database) -> typing.Set[int]:
+  """Read all unique bytecode IDs from the database as a set."""
+  with db.Session() as session:
+    query = session.query(
+        graph_database.GraphMeta.bytecode_id.distinct().label('bytecode_id'))
+    all_ids = set([row.bytecode_id for row in query])
+  return all_ids
+
+
+def GetBytecodesToProcessForOutput(
+    all_bytecode_ids: typing.Set[int],
+    output_db: graph_database.Database,
+) -> typing.Set[int]:
+  """Return the subset of bytecode IDs that do not exist in the output database."""
+  return all_bytecode_ids - GetAllBytecodeIds(output_db)
+
+
+def GetBytecodeIdsToProcess(input_db: graph_database.Database,
                             output_dbs: typing.List[graph_database.Database]
                            ) -> typing.Tuple[typing.List[int], int]:
-  """Get a list of bytecode IDs to process."""
-  # Read all bytecode IDs.
-  with prof.Profile(lambda t: (
-      f"Read {humanize.Commas(len(all_bytecode_ids))} input "
-      "bytecode IDs")):
-    with input_db.Session() as session:
-      query = session.query(graph_database.GraphMeta.bytecode_id)
-      all_bytecode_ids = set([row.bytecode_id for row in query])
+  """Get the bytecode IDs to process.
 
-  def GetBytecodesToProcessForOutput(
-      output_db: graph_database.Database,
-      all_bytecode_ids: typing.Set[int],
-  ) -> typing.Set[int]:
-    with output_db.Session() as session:
-      query = session.query(graph_database.GraphMeta.bytecode_id)
-      already_done = set([row.bytecode_id for row in query])
-    return all_bytecode_ids - already_done
+  This returns a tuple of <all_bytecode_ids,bytecodes_by_output>, where
+  all_bytecode_ids is an array of shape (min(n,10000),?) and includes the
+  total set of unique bytecodes to be processed. bytecodes_by_output is a
+  matrix of shape (num_outputs,min(n,10000)), where each row corresponds with
+  an output_db. Bytecodes that already exist in an output database are marked
+  with zeros. So for eah row in bytecodes_by_output, the bytecodes that need
+  processing for a particular output are row[np.nonzero(row)].
+  """
+  # Read all of the bytecode IDs from the input database.
+  with prof.Profile(lambda t: (f"Read {humanize.Commas(len(all_ids))} input "
+                               "bytecode IDs")):
+    all_ids = GetAllBytecodeIds(input_db)
 
-  with prof.Profile(lambda t: (
-      "Read the "
-      f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
-      f"IDs to process")):
-    all_bytecodes_to_process_by_output = [
-        GetBytecodesToProcessForOutput(output_db, all_bytecode_ids)
-        for output_db in output_dbs
+  with prof.Profile(
+      lambda t: ("Read the "
+                 f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
+                 f"IDs to process")):
+    ids_by_output = [
+        all_ids - GetAllBytecodeIds(output_db) for output_db in output_dbs
     ]
 
+    # Flatten the list of all bytecodes that haven't been processed. This list
+    # includes duplicates for bytecodes that need processing by multiple
+    # outputs. This is intentional, allowing us to sort bytecodes by frequency.
     all_bytecodes_to_process: typing.List[str] = []
-    for bytecodes_to_process in all_bytecodes_to_process_by_output:
+    for bytecodes_to_process in ids_by_output:
       all_bytecodes_to_process.extend(list(bytecodes_to_process))
 
   with prof.Profile(lambda t: (
@@ -216,12 +222,11 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
       f"{humanize.Commas(bytecodes_to_process_by_output[np.nonzero(bytecodes_to_process_by_output)].size)} annotations"
   )):
     if FLAGS.order_by == 'random':
-      bytecodes_to_process = np.array(
-          list(set(all_bytecodes_to_process)), dtype=np.int32)
-      frequency_table = bytecodes_to_process  # Used prof.Profile() callback.
+      bytecodes_to_process = np.array(list(set(all_bytecodes_to_process)),
+                                      dtype=np.int32)
+      frequency_table = bytecodes_to_process  # Used in prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
-      num_to_select = min(10000, len(frequency_table) // 3)
-      bytecodes_to_process = bytecodes_to_process[:num_to_select]
+      bytecodes_to_process = bytecodes_to_process[:5000]
     else:
       # Create a frequency table how for many times each unprocessed bytecode
       # occurs.
@@ -230,13 +235,12 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
       # Sort the frequency table by count so that most frequently unprocessed
       # bytecodes occur *at the end* of the list.
       sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
-      num_to_select = min(10000, len(frequency_table) // 3)
-      bytecodes_to_process = frequency_table[:num_to_select, 0]
+      bytecodes_to_process = sorted_frequency_table[-5000:, 0]
 
-    # TODO(cec): No need to insert the zero elements here. Remove this, and all
-    # of the nonzero() calls.
+    # Produce the zero-d matrix of bytecodes that need processing for each
+    # output.
     bytecodes_to_process_by_output = []
-    for all_bytecodes_to_process_for_output in all_bytecodes_to_process_by_output:
+    for all_bytecodes_to_process_for_output in ids_by_output:
       bytecodes_to_process_by_output.append([
           x if x in all_bytecodes_to_process_for_output else 0
           for x in bytecodes_to_process
@@ -244,6 +248,65 @@ def GetBytecodeIdsToProcess(input_db: bytecode_database.Database,
     bytecodes_to_process_by_output = np.vstack(bytecodes_to_process_by_output)
 
   return bytecodes_to_process, bytecodes_to_process_by_output
+
+
+def ResilientAddManyAndCommit(
+    db: graph_database.Database,
+    graph_metas: typing.List[graph_database.GraphMeta]):
+  """Attempt to commit all mapped objects and return those that fail.
+
+  This method creates a session and commits the given mapped objects.
+  In case of error, this method will recurse up to O(log(n)) times, committing
+  as many objects that can be as possible.
+
+  Args:
+    db: The database to add the objects to.
+    graph_metas: A sequence of graph metas to commit.
+
+  Returns:
+    Any items in `mapped` which could not be committed, if any. Relative order
+    of items is preserved.
+  """
+  if not graph_metas:
+    return
+
+  try:
+    with db.Session(commit=True) as session:
+      # Get the bytecodes which have already been imported into the database and
+      # commit only the new ones. This is prevention against multiple-versions
+      # of the graph being added when there are parallel importers.
+      already_done_ids = session.query(
+          graph_database.GraphMeta.bytecode_id.distinct().label(
+              'bytecode_id')).filter(
+                  graph_database.GraphMeta.bytecode_id.in_(
+                      {g.bytecode_id for g in graph_metas}))
+      graph_metas_to_commit = [
+          g for g in graph_metas if g.bytecode_id not in already_done_ids
+      ]
+      if len(graph_metas_to_commit) < len(graph_metas):
+        app.Log(1, 'Ignoring %s graph metas that already exist in the database',
+                len(graph_metas) - len(graph_metas_to_commit))
+      session.add_all(graph_metas_to_commit)
+  except sql.exc.SQLAlchemyError as e:
+    app.Log(
+        1,
+        'Caught error while committing %d graph metas: %s',
+        len(graph_metas),
+        e,
+    )
+
+    # Divide and conquer. If we're committing only a single object, then a
+    # failure to commit it means that we can do nothing other than return it.
+    # Else, divide the mapped objects in half and attempt to commit as many of
+    # them as possible.
+    if len(graph_metas) == 1:
+      return
+    else:
+      mid = int(len(graph_metas) / 2)
+      left = graph_metas[:mid]
+      right = graph_metas[mid:]
+      ResilientAddManyAndCommit(db, left)
+      ResilientAddManyAndCommit(db, right)
 
 
 class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
@@ -278,16 +341,19 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
 
     bytecodes_to_process, bytecodes_to_process_by_output = GetBytecodeIdsToProcess(
         input_db, [output.db for output in self.outputs])
-    if not bytecodes_to_process.shape:
+    if not bytecodes_to_process.size:
       return 0
+
+    annotators: typing.List[GraphAnnotator] = [
+        x.annotator for x in self.outputs
+    ]
 
     # Break the bytecodes to process into chunks.
     bytecode_id_chunks = np.split(
         bytecodes_to_process_by_output,
         list(range(0, len(bytecodes_to_process_by_output[0]), batch_size))[1:],
         axis=1)
-    jobs = list((input_db.url, [x.annotator
-                                for x in self.outputs], bytecode_ids_chunk)
+    jobs = list((input_db.url, annotators, bytecode_ids_chunk)
                 for bytecode_ids_chunk in bytecode_id_chunks)
     app.Log(1, "Divided %s bytecodes into %s %s-bytecode jobs",
             humanize.Commas(len(bytecodes_to_process)), len(bytecode_id_chunks),
@@ -321,7 +387,7 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
             with prof.Profile(
                 f"Added {len(graph_metas)} {output.annotator.name} graph metas"
             ):
-              sqlutil.ResilientAddManyAndCommit(output.db, graph_metas)
+              ResilientAddManyAndCommit(output.db, graph_metas)
 
     elapsed_time = time.time() - start_time
     app.Log(
@@ -338,13 +404,13 @@ def _GraphWorker(packed_args):
   """
   input_graph_db_url, annotators, bytecode_ids_to_process = packed_args
 
-  with prof.Profile(lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"
-                   ):
+  with prof.Profile(
+      lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
     input_graph_db = graph_database.Database(input_graph_db_url)
     # Read the required graphs from the database.
     bytecode_ids_to_fetch = list(
-        sorted(
-            set(bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
+        sorted(set(
+            bytecode_ids_to_process[np.nonzero(bytecode_ids_to_process)])))
 
     # Determine whether we need to load the graph data, or just the metadata.
     load_graphs = any(annotator.requires_graphs for annotator in annotators)
@@ -355,11 +421,18 @@ def _GraphWorker(packed_args):
         .order_by(graph_database.GraphMeta.bytecode_id)
 
       if load_graphs:
-        query = query.options(
-            sql.orm.joinedload(graph_database.GraphMeta.graph))
+        query = query.options(sql.orm.joinedload(
+            graph_database.GraphMeta.graph))
+
+      graph_metas = query.all()
+      if len(graph_metas) != len(bytecode_ids_to_fetch):
+        raise EnvironmentError(
+            "Requested graphs with bytecode IDs "
+            f"{bytecode_ids_to_fetch} "
+            f"but received {[g.byteocde_id for g in graph_metas]}")
 
       bytecode_id_to_graph_meta: typing.Dict[int, graph_database.GraphMeta] = {
-          id_: row for id_, row in zip(bytecode_ids_to_fetch, query)
+          id_: row for id_, row in zip(bytecode_ids_to_fetch, graph_metas)
       }
     input_graph_db.Close()  # Don't leave the database connection lying around.
 
@@ -383,6 +456,9 @@ def _GraphWorker(packed_args):
             .filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch)) \
             .order_by(bytecode_database.LlvmBytecode.id) \
           ]
+      if len(bytecodes) != len(bytecode_ids_to_fetch):
+        raise EnvironmentError(f"Requested bytecodes {bytecode_ids_to_fetch} "
+                               f"but received {[b.id for b in bytecodes]}")
       bytecode_id_to_bytecode: typing.Dict[int, str] = {
           id_: bytecode
           for id_, bytecode in zip(bytecode_ids_to_fetch, bytecodes)
@@ -420,8 +496,8 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
   for i, graph_meta in enumerate(graph_metas):
     # Determine the number of instances to produce based on the size of the
     # input graph.
-    n = math.ceil(
-        min(graph_meta.node_count / 10, FLAGS.max_instances_per_graph))
+    n = math.ceil(min(graph_meta.node_count / 10,
+                      FLAGS.max_instances_per_graph))
 
     try:
       with prof.Profile(
@@ -455,18 +531,17 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
     except Exception as e:
       # Insert a zero-node graph to mark that exporting this graph failed.
       generated_graph_metas.append(
-          graph_database.GraphMeta(
-              group=graph_meta.group,
-              bytecode_id=graph_meta.bytecode_id,
-              source_name=graph_meta.source_name,
-              relpath=graph_meta.relpath,
-              language=graph_meta.language,
-              node_count=0,
-              edge_count=0,
-              node_embeddings_count=0,
-              edge_position_max=0,
-              loop_connectedness=0,
-              undirected_diameter=0))
+          graph_database.GraphMeta(group=graph_meta.group,
+                                   bytecode_id=graph_meta.bytecode_id,
+                                   source_name=graph_meta.source_name,
+                                   relpath=graph_meta.relpath,
+                                   language=graph_meta.language,
+                                   node_count=0,
+                                   edge_count=0,
+                                   node_embeddings_count=0,
+                                   edge_position_max=0,
+                                   loop_connectedness=0,
+                                   undirected_diameter=0))
       _, _, tb = sys.exc_info()
       tb = traceback.extract_tb(tb, 2)
       filename, line_number, function_name, *_ = tb[-1]
