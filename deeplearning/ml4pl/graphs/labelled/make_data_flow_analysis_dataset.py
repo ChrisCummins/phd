@@ -10,6 +10,10 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -21,10 +25,6 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 app.DEFINE_database('input_graphs_db',
                     graph_database.Database,
@@ -202,7 +202,7 @@ def GetBytecodeIdsToProcess(
       f"Selected {humanize.Commas(len(bytecodes_to_process))} of "
       f"{humanize.Commas(len(frequency_table))} bytecodes to "
       "process with "
-      f"{humanize.Commas(bytecodes_to_process_by_output[np.nonzero(bytecodes_to_process_by_output)].size)} annotations"
+      f"{humanize.Commas(todo_by_output[np.nonzero(todo_by_output)].size)} annotations"
   )):
     if FLAGS.order_by == 'random':
       bytecodes_to_process = np.array(list(set(all_bytecodes_to_process)),
@@ -334,8 +334,9 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
     exported_graph_count = 0
 
     # Read all of the bytecode IDs from the input database.
-    with prof.Profile(lambda t: (f"Read {humanize.Commas(len(all_ids))} input "
-                                 "bytecode IDs")):
+    with prof.Profile(lambda t:
+                      (f"Read {humanize.Commas(len(input_ids))} input "
+                       "bytecode IDs")):
       input_ids = GetAllBytecodeIds(input_db)
 
     bytecodes_to_process, bytecodes_to_process_by_output = GetBytecodeIdsToProcess(
