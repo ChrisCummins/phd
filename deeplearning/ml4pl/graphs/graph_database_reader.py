@@ -47,7 +47,8 @@ def BufferedGraphReader(
 
   with db.Session() as s:
     with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graphs "
-                                 "from database")):
+                                 "from database"),
+                      print_to=lambda msg: app.Log(3, msg)):
       q = s.query(graph_database.GraphMeta.id)
       for filter_cb in filters:
         q = q.filter(filter_cb())

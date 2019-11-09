@@ -92,8 +92,8 @@ class GraphBatch(typing.NamedTuple):
   graph_x: typing.Optional[np.array] = None
 
   # (optional) A vector of graph labels arrays.
-  graph_y: typing.Optional[
-      np.array] = None  # Shape [graph_count,graph_label_dimensionality]
+  # Shape [graph_count,graph_label_dimensionality]
+  graph_y: typing.Optional[np.array] = None
 
   @property
   def has_node_y(self) -> bool:
@@ -440,7 +440,7 @@ class GraphBatcher(object):
       if batch:
         elapsed_time = time.time() - start_time
         app.Log(
-            1, "Created batch of %s graphs (%s nodes) in %s "
+            3, "Created batch of %s graphs (%s nodes) in %s "
             "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
             humanize.Commas(batch.log.node_count),
             humanize.Duration(elapsed_time),
