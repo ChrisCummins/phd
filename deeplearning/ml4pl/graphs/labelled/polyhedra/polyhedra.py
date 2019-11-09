@@ -128,7 +128,7 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
 
   if mismatched_entities > 0:
     warnings.warn('%d (%f%%) mismatched entities in code' % (mismatched_entities,
-                                                             mismatched_entities / entities))
+                                                             mismatched_entities / entities * 100))
 
 def MakePolyhedralGraphs(
     bytecode: str,
