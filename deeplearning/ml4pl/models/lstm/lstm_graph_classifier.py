@@ -3,15 +3,13 @@ import typing
 
 import keras
 import numpy as np
-import tensorflow as tf
 from keras import models
-from labm8 import app
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
-from deeplearning.ml4pl.models import base_utils
+from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -26,7 +24,8 @@ FLAGS = app.FLAGS
 # For the sake of readability, these important model flags are saved into a
 # global set classifier_base.MODEL_FLAGS here, so that the declaration of model
 # flags is local to the declaration of the flag.
-app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s) in the LSTM baselines.")
+app.DEFINE_integer("hidden_size", 200,
+                   "The size of hidden layer(s) in the LSTM baselines.")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_integer("dense_hidden_size", 32, "The size of the dense ")
@@ -72,10 +71,9 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     x = keras.layers.CuDNNLSTM(FLAGS.hidden_size, name="lstm_2")(x)
 
-    langmodel_out = keras.layers.Dense(
-        self.stats.graph_features_dimensionality,
-        activation="sigmoid",
-        name="langmodel_out")(x)
+    langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
+                                       activation="sigmoid",
+                                       name="langmodel_out")(x)
 
     # Auxiliary inputs.
     auxiliary_inputs = keras.Input(
@@ -86,14 +84,14 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     x = keras.layers.Concatenate()([x, auxiliary_inputs])
     x = keras.layers.BatchNormalization()(x)
     x = keras.layers.Dense(FLAGS.dense_hidden_size,
-                            activation="relu",
-                            name="heuristic_1")(x)
+                           activation="relu",
+                           name="heuristic_1")(x)
     out = keras.layers.Dense(self.stats.graph_labels_dimensionality,
-                              activation="sigmoid",
-                              name='heuristic_2')(x)
+                             activation="sigmoid",
+                             name='heuristic_2')(x)
 
     self.model = keras.Model(inputs=[input_layer, auxiliary_inputs],
-                              outputs=[out, langmodel_out])
+                             outputs=[out, langmodel_out])
     self.model.compile(
         optimizer="adam",
         metrics=['accuracy'],
@@ -112,10 +110,9 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
-      graph_ids = batch.log.graph_indices
-
       # returns a list of encoded bytecodes padded to max_sequence_length.
-      encoded_sequences = self.encoder.GraphsToEncodedBytecodes(graph_ids)
+      encoded_sequences = self.encoder.GraphsToEncodedBytecodes(
+          batch.log._graph_indices)
       # for graph_classifier we just need graph_x, graph_y split per graph
       # which is already the case.
       yield batch.log, { # vstack lists to np.arrays w/ [batch, ...] shape
