@@ -10,10 +10,6 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -25,6 +21,10 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
 app.DEFINE_database('input_graphs_db',
                     graph_database.Database,
@@ -183,10 +183,10 @@ def GetBytecodeIdsToProcess(
   with zeros. So for eah row in bytecodes_by_output, the bytecodes that need
   processing for a particular output are row[np.nonzero(row)].
   """
-  with prof.Profile(
-      lambda t: ("Read the "
-                 f"{humanize.Commas(len(all_bytecodes_to_process))} bytecode "
-                 f"IDs to process")):
+  with prof.Profile(lambda t:
+                    ("Read the "
+                     f"{humanize.Commas(len(all_bytecodes_to_process))} jobs "
+                     f"to process")):
     ids_todo_by_output = [
         input_ids - GetAllBytecodeIds(output_db) for output_db in output_dbs
     ]
@@ -316,11 +316,18 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
     del output_dbs  # Unused, self.outputs holds the output databases.
 
     start_time = time.time()
+
+    # Read all of the bytecode IDs from the input database.
+    with prof.Profile(lambda t:
+                      (f"Read {humanize.Commas(len(input_ids))} input "
+                       "bytecode IDs")):
+      input_ids = GetAllBytecodeIds(input_db)
+
     all_exported_graph_count = 0
-    exported_graph_count = self._Export(input_db, pool, batch_size)
+    exported_graph_count = self._Export(input_db, input_ids, pool, batch_size)
     while exported_graph_count:
       all_exported_graph_count += exported_graph_count
-      exported_graph_count = self._Export(input_db, pool, batch_size)
+      exported_graph_count = self._Export(input_db, input_ids, pool, batch_size)
 
     elapsed_time = time.time() - start_time
     app.Log(1, 'Exported %s graphs in %s '
@@ -328,16 +335,10 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
             humanize.Duration(elapsed_time),
             exported_graph_count / elapsed_time)
 
-  def _Export(self, input_db: sqlutil.Database, pool: multiprocessing.Pool,
-              batch_size: int) -> int:
+  def _Export(self, input_db: sqlutil.Database, input_ids: typing.Set[int],
+              pool: multiprocessing.Pool, batch_size: int) -> int:
     start_time = time.time()
     exported_graph_count = 0
-
-    # Read all of the bytecode IDs from the input database.
-    with prof.Profile(lambda t:
-                      (f"Read {humanize.Commas(len(input_ids))} input "
-                       "bytecode IDs")):
-      input_ids = GetAllBytecodeIds(input_db)
 
     bytecodes_to_process, bytecodes_to_process_by_output = GetBytecodeIdsToProcess(
         input_ids, [output.db for output in self.outputs], batch_size)
