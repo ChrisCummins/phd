@@ -62,6 +62,8 @@ class GraphToSequenceEncoder(object):
 
   def __init__(self, graph_db: graph_database.Database):
     self.graph_db = graph_db
+    self._bytecode_db = None
+    self._unlabelled_graph_db = None
 
     # Load the vocabulary used for encoding LLVM bytecode.
     with open(FLAGS.bytecode_vocabulary) as f:
@@ -342,21 +344,21 @@ class GraphToSequenceEncoder(object):
   @property
   def bytecode_db(self) -> bytecode_database.Database:
     """Get the bytecode database."""
-    if self.bytecode_db:
-      return self.bytecode_db
+    if self._bytecode_db:
+      return self._bytecode_db
     elif FLAGS.bytecode_db:
-      self.bytecode_db = FLAGS.bytecode_db()
-      return self.bytecode_db
+      self._bytecode_db = FLAGS.bytecode_db()
+      return self._bytecode_db
     else:
       raise app.UsageError("--bytecode_db must be set to reach")
 
   @property
   def unlabelled_graph_db(self) -> graph_database.Database:
     """Get the database of unlabelled graphs."""
-    if self.unlabelled_graph_db:
-      return self.unlabelled_graph_db
+    if self._unlabelled_graph_db:
+      return self._unlabelled_graph_db
     elif FLAGS.unlabelled_graph_db:
-      self.unlabelled_graph_db = FLAGS.unlabelled_graph_db()
-      return self.unlabelled_graph_db
+      self._unlabelled_graph_db = FLAGS.unlabelled_graph_db()
+      return self._unlabelled_graph_db
     else:
       raise app.UsageError("--bytecode_db must be set to reach")
