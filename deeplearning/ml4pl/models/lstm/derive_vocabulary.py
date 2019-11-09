@@ -1,14 +1,13 @@
 """Derive a vocabulary from the bytecode database."""
 import json
 
+from deeplearning.ml4pl.bytecode import bytecode_database
+from deeplearning.ml4pl.models.lstm import bytecode2seq
 from labm8 import app
 from labm8 import humanize
 from labm8 import jsonutil
 from labm8 import prof
 from labm8 import sqlutil
-
-from deeplearning.ml4pl.bytecode import bytecode_database
-from deeplearning.ml4pl.models.lstm import bytecode2seq
 
 FLAGS = app.FLAGS
 
@@ -52,6 +51,7 @@ def main():
         query = query.filter(bytecode_database.LlvmBytecode.source_name ==
                              'pact17_opencl_devmap')
 
+      encoded_lengths = []
       for i, chunk in enumerate(
           sqlutil.OffsetLimitBatchedQuery(query,
                                           FLAGS.batch_size,
@@ -62,17 +62,19 @@ def main():
         with prof.Profile(
             lambda t: (f"Encoded {humanize.Commas(FLAGS.batch_size)} bytecodes "
                        f"({humanize.Commas(sum(encoded_lengths))} "
-                       f"tokens, vocab size {len(vocab)}, max encoded "
-                       f"length {humanize.Commas(max_encoded_length)})")):
+                       f"tokens, vocab size {len(vocab)}")):
           encoded, vocab = bytecode2seq.Encode([r.bytecode for r in chunk.rows],
                                                vocab)
-          encoded_lengths = [len(x) for x in encoded]
-          max_encoded_length = max(max(encoded_lengths), max_encoded_length)
+          encoded_lengths.extend([len(x) for x in encoded])
           if len(vocab) < vocab_size:
             app.FatalWithoutStackTrace("Vocabulary shrunk!?")
           vocab_size = len(vocab)
   finally:
-    data_to_save = {'vocab': vocab, 'max_encoded_length': max_encoded_length}
+    data_to_save = {
+        'vocab': vocab,
+        'max_encoded_length': max(encoded_lengths),
+        'encoded_lengths': encoded_lengths
+    }
     jsonutil.write_file(FLAGS.vocabulary, data_to_save)
     app.Log(1, 'Wrote %s', FLAGS.vocabulary)
 
