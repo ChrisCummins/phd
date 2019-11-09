@@ -31,27 +31,25 @@ def CSourceToBytecode(source: str) -> str:
   return process.stdout
 
 
-def CSourceToInputPair(source: str) -> InputPair:
-  """Create a graph and bytecode for the given C source string.
+def CSourceToInput(source: str) -> str:
+  """Create a bytecode for the given C source string.
   This is a convenience method for generating test inputs. If this method fails,
-  it is because graph construction or clang is broken.
+  it is because clang is broken.
   """
   bytecode = CSourceToBytecode(source)
-  builder = cdfg.ControlAndDataFlowGraphBuilder()
-  graph = builder.Build(bytecode)
-  return InputPair(graph=graph, bytecode=bytecode)
+  return bytecode
 
 
 def test_MakePolyhedralGraphs_invalid_bytecode():
   graph = nx.MultiDiGraph()
   bytecode = "invalid bytecode!"
   with pytest.raises(opt.OptException):
-    list(polyhedra.MakePolyhedralGraphs(graph, bytecode))
+    list(polyhedra.MakePolyhedralGraphs(bytecode))
 
 
 def test_MakePolyhedralGraphs_basic_gemm():
   # Snippet adapted from Polybench 4.2, gemm.c
-  input_pair = CSourceToInputPair("""
+  bytecode = CSourceToInput("""
 void A(double alpha, double beta, double C[1000][1100], double A[1000][1200], double B[1200][1100]) {
   int i, j, k;
   for (i = 0; i < 1000; i++) {
@@ -64,7 +62,7 @@ void A(double alpha, double beta, double C[1000][1100], double A[1000][1200], do
   }
 }
 """)
-  graphs = list(polyhedra.MakePolyhedralGraphs(*input_pair))
+  graphs = list(polyhedra.MakePolyhedralGraphs(bytecode))
   assert len(graphs) == 1
 
   # Computed by polly separately.

@@ -75,7 +75,7 @@ def BytecodeToPollyCanonicalized(source: str) -> str:
                      stdin=source)
   if process.returncode:
     raise opt.OptException('Error in canonicalization opt execution (%d)' %
-                           process.returncode[:120])
+                           process.returncode)
   return process.stdout
 
 
@@ -122,13 +122,12 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
       if node not in g.nodes:
         mismatched_entities += 1
         continue
-        #raise ValueError(f"Entity `{node}` not found in graph")
       g.nodes[node][y_label] = true
 
 
   if mismatched_entities > 0:
-    warnings.warn('%d (%f%%) mismatched entities in code' % (mismatched_entities,
-                                                             mismatched_entities / entities * 100))
+    app.Warning('%d (%f%%) mismatched entities in code', mismatched_entities, 
+                mismatched_entities / entities * 100)
 
 def MakePolyhedralGraphs(
     bytecode: str,
@@ -140,7 +139,6 @@ def MakePolyhedralGraphs(
      polyhedral loops.
 
   Args:
-    g: The unlabelled input graph.
     bytecode: The bytecode which produced the input graph.
     n: The maximum number of graphs to produce. This value is ignored and one graph
        will be produced with all polyhedral regions annotated.
