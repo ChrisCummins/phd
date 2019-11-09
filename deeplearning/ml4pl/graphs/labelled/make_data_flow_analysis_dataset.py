@@ -11,10 +11,6 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -26,6 +22,10 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
 app.DEFINE_database('input_graphs_db',
                     graph_database.Database,
@@ -527,8 +527,13 @@ def _Worker(packed_args):
     else:
       bytecodes = [None] * len(bytecode_ids)
 
-    graph_metas_by_output.append(
-        CreateAnnotatedGraphs(annotator, graph_metas, bytecodes))
+    start_time = time.time()
+    annotator_graph_metas = CreateAnnotatedGraphs(annotator, graph_metas,
+                                                  bytecodes)
+    graph_metas_by_output.append(annotator_graph_metas)
+    app.Log(1, "Produced %s %s instances at graphs/sec=%.2f",
+            len(annotator_graph_metas), annotator.name,
+            len(annotator_graph_metas) / time.time())
 
     # Used by prof.Profile() callback:
     generated_graphs_count = sum([len(x) for x in graph_metas_by_output])
@@ -549,39 +554,35 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
                       FLAGS.max_instances_per_graph))
 
     try:
-      with prof.Profile(
-          lambda t: (f"Produced {len(annotated_graphs)} {annotator.name} "
-                     f"instances from {graph_meta.node_count}-node graph for "
-                     f"bytecode {graph_meta.bytecode_id}")):
-        # Build the arguments list for the graph annotator function.
-        kwargs = {
-            'n': n,
-            'false': np.array([1, 0], dtype=np.float32),
-            'true': np.array([0, 1], dtype=np.float32),
-        }
+      # Build the arguments list for the graph annotator function.
+      kwargs = {
+          'n': n,
+          'false': np.array([1, 0], dtype=np.float32),
+          'true': np.array([0, 1], dtype=np.float32),
+      }
 
-        if annotator.requires_graphs:
-          # TODO(cec): Rename this argument 'graph' and refactor the graph
-          # annotators.
-          kwargs['g'] = graph_meta.data
-        if annotator.requires_bytecodes:
-          kwargs['bytecode'] = bytecodes[i]
+      if annotator.requires_graphs:
+        # TODO(cec): Rename this argument 'graph' and refactor the graph
+        # annotators.
+        kwargs['g'] = graph_meta.data
+      if annotator.requires_bytecodes:
+        kwargs['bytecode'] = bytecodes[i]
 
-        # Run the annotator to produce the annotated graphs.
-        annotated_graphs = list(annotator.function(**kwargs))
+      # Run the annotator to produce the annotated graphs.
+      annotated_graphs = list(annotator.function(**kwargs))
 
-        # Copy over the graph metadata.
-        for annotated_graph in annotated_graphs:
-          annotated_graph.group = graph_meta.group
-          annotated_graph.bytecode_id = graph_meta.bytecode_id
-          annotated_graph.source_name = graph_meta.source_name
-          annotated_graph.relpath = graph_meta.relpath
-          annotated_graph.language = graph_meta.language
+      # Copy over the graph metadata.
+      for annotated_graph in annotated_graphs:
+        annotated_graph.group = graph_meta.group
+        annotated_graph.bytecode_id = graph_meta.bytecode_id
+        annotated_graph.source_name = graph_meta.source_name
+        annotated_graph.relpath = graph_meta.relpath
+        annotated_graph.language = graph_meta.language
 
-        generated_graph_metas += [
-            graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
-            for annotated_graph in annotated_graphs
-        ]
+      generated_graph_metas += [
+          graph_database.GraphMeta.CreateFromNetworkX(annotated_graph)
+          for annotated_graph in annotated_graphs
+      ]
     except Exception as e:
       # Insert a zero-node graph meta to mark that exporting this graph failed.
       generated_graph_metas.append(
