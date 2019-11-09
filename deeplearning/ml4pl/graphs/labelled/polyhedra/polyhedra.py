@@ -1,6 +1,7 @@
 """Module for labelling program graphs with polyhedral SCoPs."""
 import random
 import typing
+import warnings
 
 import networkx as nx
 import numpy as np
