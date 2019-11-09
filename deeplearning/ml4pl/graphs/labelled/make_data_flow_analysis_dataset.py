@@ -178,9 +178,10 @@ def GetBytecodesToProcessForOutput(
   return all_bytecode_ids - GetAllBytecodeIds(output_db)
 
 
-def GetBytecodeIdsToProcess(input_db: graph_database.Database,
-                            output_dbs: typing.List[graph_database.Database]
-                           ) -> typing.Tuple[typing.List[int], int]:
+def GetBytecodeIdsToProcess(
+    input_db: graph_database.Database,
+    output_dbs: typing.List[graph_database.Database],
+    batch_size: int) -> typing.Tuple[typing.List[int], int]:
   """Get the bytecode IDs to process.
 
   This returns a tuple of <all_bytecode_ids,bytecodes_by_output>, where
@@ -222,7 +223,7 @@ def GetBytecodeIdsToProcess(input_db: graph_database.Database,
                                       dtype=np.int32)
       frequency_table = bytecodes_to_process  # Used in prof.Profile() callback.
       random.shuffle(bytecodes_to_process)
-      bytecodes_to_process = bytecodes_to_process[:5000]
+      bytecodes_to_process = bytecodes_to_process[:batch_size * 10]
     else:
       # Create a frequency table how for many times each unprocessed bytecode
       # occurs.
@@ -231,7 +232,7 @@ def GetBytecodeIdsToProcess(input_db: graph_database.Database,
       # Sort the frequency table by count so that most frequently unprocessed
       # bytecodes occur *at the end* of the list.
       sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
-      bytecodes_to_process = sorted_frequency_table[-5000:, 0]
+      bytecodes_to_process = sorted_frequency_table[-batch_size * 10:, 0]
 
     # Produce the zero-d matrix of bytecodes that need processing for each
     # output.
@@ -334,7 +335,7 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
     exported_graph_count = 0
 
     bytecodes_to_process, bytecodes_to_process_by_output = GetBytecodeIdsToProcess(
-        input_db, [output.db for output in self.outputs])
+        input_db, [output.db for output in self.outputs], batch_size)
     if not bytecodes_to_process.size:
       return 0
 
