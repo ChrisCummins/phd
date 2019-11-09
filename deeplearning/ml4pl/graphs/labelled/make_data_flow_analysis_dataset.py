@@ -71,10 +71,6 @@ class GraphAnnotator(typing.NamedTuple):
   # 'bytecodes'.
   requires_bytecodes: bool = False
 
-  # If true a list of graph IDs is passed to the `function` as named argument
-  # `graph_ids`.
-  requires_graph_ids: bool = False
-
 
 def GetAnnotatedGraphGenerators(
     *analysis_names: typing.Iterable[str]) -> typing.List[GraphAnnotator]:
