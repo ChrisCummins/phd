@@ -1,6 +1,7 @@
 """Module for labelling program graphs with polyhedral SCoPs."""
 import random
 import typing
+import warnings
 
 import networkx as nx
 import numpy as np
@@ -108,17 +109,26 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
     data[x_label] = [data[x_label], 0]
     data[y_label] = false
 
-  # Obtain nodes in g (slimmed down version of CDFG generation, only nodes)
+  # Obtain nodes in g
+  entities = 0
+  mismatched_entities = 0
   for cdfg in annotated_cdfgs:
     # Mark the nodes in the polyhedral regions
     for node, ndata in cdfg.nodes(data=True):
       if not ndata.get('polyhedral'):
         continue
 
+      entities += 1 
       if node not in g.nodes:
-        raise ValueError(f"Entity `{node}` not found in graph")
+        mismatched_entities += 1
+        continue
+        #raise ValueError(f"Entity `{node}` not found in graph")
       g.nodes[node][y_label] = true
 
+
+  if mismatched_entities > 0:
+    warnings.warn('%d (%f%%) mismatched entities in code' % (mismatched_entities,
+                                                             mismatched_entities / entities * 100))
 
 def MakePolyhedralGraphs(
     bytecode: str,
