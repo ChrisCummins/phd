@@ -234,6 +234,15 @@ def GetBytecodeIdsToProcess(
       # bytecodes occur *at the end* of the list.
       sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
       bytecodes_to_process = sorted_frequency_table[-batch_size * 5:, 0]
+    elif FLAGS.order_by == 'reverse_frequency':
+      # Create a frequency table how for many times each unprocessed bytecode
+      # occurs.
+      frequency_table = np.vstack(
+          np.unique(all_bytecodes_to_process, return_counts=True)).T
+      # Sort the frequency table by count so that most frequently unprocessed
+      # bytecodes occur *at the end* of the list.
+      sorted_frequency_table = frequency_table[frequency_table[:, 1].argsort()]
+      bytecodes_to_process = sorted_frequency_table[batch_size * 5:, 0]
     else:
       raise app.UsageError("Unknown `order_by` option.")
 
