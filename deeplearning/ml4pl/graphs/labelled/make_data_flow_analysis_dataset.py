@@ -428,8 +428,8 @@ def FetchGraphs(
   """
   load_graphs = any(annotator.requires_graphs for annotator in annotators)
 
-  with prof.Profile(
-      lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs"):
+  with prof.Profile(lambda t: f"Read {len(bytecode_ids_to_fetch)} input graphs",
+                    print_to=lambda msg: app.Log(2, msg)):
     # Determine the graph metas that need to be read from the database.
     # Use an ordered list so that we can zip these ids with the return of the
     # query.
@@ -495,7 +495,8 @@ def FetchBytecodes(annotators: typing.List[GraphAnnotator],
   bytecode_ids_to_fetch = list(sorted(set(bytecode_ids_to_fetch)))
 
   if bytecode_ids_to_fetch:
-    with prof.Profile(f"Read {len(bytecode_ids_to_fetch)} bytecode texts"):
+    with prof.Profile(f"Read {len(bytecode_ids_to_fetch)} bytecode texts",
+                      print_to=lambda msg: app.Log(2, msg)):
       # Deferred database instantiation so that this script can be run without the
       # --bytecode_db flag set when bytecodes are not required.
       bytecode_db: bytecode_database.Database = FLAGS.bytecode_db()
