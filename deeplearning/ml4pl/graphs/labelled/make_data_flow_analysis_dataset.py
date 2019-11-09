@@ -260,7 +260,7 @@ def GetBytecodeIdsToProcess(input_db: graph_database.Database,
 
 def ResilientAddUnique(
     db: graph_database.Database,
-    graph_metas: typing.List[graph_database.GraphMeta]) -> None:
+    graph_metas: typing.List[graph_database.GraphMeta]) -> int:
   """Attempt to commit all graph metas to the database.
 
   This function adds graph metas to the database, provided they do not already
@@ -269,9 +269,12 @@ def ResilientAddUnique(
   Args:
     db: The database to add the objects to.
     graph_metas: A sequence of graph metas to commit.
+
+  Returns:
+    The number of graphs added.
   """
   if not graph_metas:
-    return
+    return 0
 
   try:
     bytecode_ids = {g.bytecode_id for g in graph_metas}
@@ -290,6 +293,7 @@ def ResilientAddUnique(
         app.Log(1, 'Ignoring %s graph metas that already exist in the database',
                 len(graph_metas) - len(graph_metas_to_commit))
       session.add_all(graph_metas_to_commit)
+      return len(graph_metas_to_commit)
   except sql.exc.SQLAlchemyError as e:
     app.Log(
         1,
@@ -308,8 +312,7 @@ def ResilientAddUnique(
       mid = int(len(graph_metas) / 2)
       left = graph_metas[:mid]
       right = graph_metas[mid:]
-      ResilientAddUnique(db, left)
-      ResilientAddUnique(db, right)
+      return ResilientAddUnique(db, left) + ResilientAddUnique(db, right)
 
 
 class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
@@ -375,7 +378,6 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
       job_count = 0
       for graph_metas_by_output in workers:
         job_count += 1
-        exported_graph_count += sum([len(x) for x in graph_metas_by_output])
         app.Log(
             1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
             'processed',
@@ -387,9 +389,11 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
         for output, graph_metas, output in zip(
             self.outputs, graph_metas_by_output, self.outputs):
           if graph_metas:
-            with prof.Profile(f"Added {len(graph_metas)} "
-                              f"{output.annotator.name} graph metas"):
-              ResilientAddUnique(output.db, graph_metas)
+            with prof.Profile(lambda t:
+                              (f"Added {added_to_database} "
+                               f"{output.annotator.name} graph metas")):
+              added_to_database = ResilientAddUnique(output.db, graph_metas)
+              exported_graph_count += added_to_database
 
     elapsed_time = time.time() - start_time
     app.Log(
