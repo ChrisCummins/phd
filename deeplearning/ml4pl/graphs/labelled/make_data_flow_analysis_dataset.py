@@ -539,9 +539,9 @@ def _Worker(packed_args):
     annotator_graph_metas = CreateAnnotatedGraphs(annotator, graph_metas,
                                                   bytecodes)
     graph_metas_by_output.append(annotator_graph_metas)
-    app.Log(1, "Produced %s %s instances at graphs/sec=%.2f",
+    app.Log(1, "Produced %s %s graphs at bytecodes/sec=%.2f",
             len(annotator_graph_metas), annotator.name,
-            len(annotator_graph_metas) / (time.time() - start_time))
+            len(bytecodes) / (time.time() - start_time))
 
     # Used by prof.Profile() callback:
     generated_graphs_count = sum([len(x) for x in graph_metas_by_output])
