@@ -275,14 +275,14 @@ def ResilientAddManyAndCommit(
       # Get the bytecodes which have already been imported into the database and
       # commit only the new ones. This is prevention against multiple-versions
       # of the graph being added when there are parallel importers.
-      already_done_ids = [
+      already_done_ids = {
           row.bytecode_id
           for row in session.query(graph_database.GraphMeta.bytecode_id.
                                    distinct().label('bytecode_id')).filter(
                                        graph_database.GraphMeta.bytecode_id.in_(
                                            {g.bytecode_id
                                             for g in graph_metas}))
-      ]
+      }
       graph_metas_to_commit = [
           g for g in graph_metas if g.bytecode_id not in already_done_ids
       ]
