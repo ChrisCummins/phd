@@ -1,12 +1,10 @@
 """Copy run logs from one database to another."""
 import sqlalchemy as sql
+
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import sqlutil
-
-from deeplearning.ml4pl.models import log_database
-
-FLAGS = app.FLAGS
 
 app.DEFINE_database('input_db',
                     log_database.Database,
@@ -18,6 +16,8 @@ app.DEFINE_database('output_db', log_database.Database, None,
 app.DEFINE_list(
     'run_id', None, 'A list of run IDs to copy. If not provided, all runs are '
     'copied.')
+
+FLAGS = app.FLAGS
 
 
 def CopyRunId(input_db: log_database.Database, output_db: log_database.Database,
