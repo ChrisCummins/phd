@@ -11,11 +11,12 @@ from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecodes from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'bytecode_db',
+    bytecode_database.Database,
+    None,
+    'URL of database to read bytecodes from.',
+    must_exist=True)
 app.DEFINE_output_path(
     'vocabulary', None,
     'The vocabulary file to read and update. If it does not exist, it is '
@@ -25,6 +26,9 @@ app.DEFINE_integer('batch_size', 128,
 app.DEFINE_boolean(
     'pact17_opencl_only', False,
     "If true, derive the vocabulary only from the PACT'17 OpenCL sources.")
+app.DEFINE_integer(
+    "start_at", 0,
+    "The row to start at. Use this to resume partially complete jobs.")
 
 
 def main():
@@ -53,16 +57,18 @@ def main():
 
       encoded_lengths = []
       for i, chunk in enumerate(
-          sqlutil.OffsetLimitBatchedQuery(query,
-                                          FLAGS.batch_size,
-                                          compute_max_rows=True)):
+          sqlutil.OffsetLimitBatchedQuery(
+              query,
+              FLAGS.batch_size,
+              start_at=FLAGS.start_at,
+              compute_max_rows=True)):
         app.Log(1, "Running batch %s, bytecodes %s of %s", i + 1, chunk.offset,
                 chunk.max_rows)
 
-        with prof.Profile(
-            lambda t: (f"Encoded {humanize.Commas(FLAGS.batch_size)} bytecodes "
-                       f"({humanize.Commas(sum(encoded_lengths))} "
-                       f"tokens, vocab size {len(vocab)}")):
+        with prof.Profile(lambda t: (
+            f"Encoded {humanize.Commas(FLAGS.batch_size)} bytecodes "
+            f"({humanize.Commas(sum(encoded_lengths))} "
+            f"tokens, vocab size {len(vocab)}")):
           encoded, vocab = bytecode2seq.Encode([r.bytecode for r in chunk.rows],
                                                vocab)
           encoded_lengths.extend([len(x) for x in encoded])
