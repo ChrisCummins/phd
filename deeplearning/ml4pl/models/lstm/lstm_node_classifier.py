@@ -59,18 +59,18 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # define token ids as input
 
-    input_layer = keras.Input(shape=(self.encoder.max_sequence_length,),
+    input_layer = keras.Input(batch_shape=(self.encoder.max_sequence_length,),
                               dtype='int32',
                               name="model_in")
     app.Log(1, '%s', "$$$$"*100)
     app.Log(1, '%s', input_layer)
     app.Log(1, '%s', input_layer.shape)
     # and the segment indices
-    input_segments = keras.Input(shape=(self.encoder.max_sequence_length,),
+    input_segments = keras.Input(batch_shape=(self.encoder.max_sequence_length,),
                                  dtype='int32',
                                  name="model_in_segments")
 
-    input_graph_node_list = keras.Input(shape=(self.encoder.max_sequence_length,),
+    input_graph_node_list = keras.Input(batch_shape=(self.encoder.max_sequence_length,),
                                         dtype='int32',
                                         name='graph_node_list_input')
 
@@ -83,20 +83,35 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # do the unsorted segment sum to get the actual lstm inputs
     def segment_sum_wrapper(args):
-      """args: [encoded_tokens, segment_ids, graph_nodes_list]"""
-      encoded_tokens, segment_ids, graph_node_list = args
-      sums = tf.math.unsorted_segment_sum(
-                data=encoded_tokens,
-                segment_ids=tf.cast(segment_ids, dtype=tf.int32),
-                num_segments=tf.cast(tf.math.reduce_max(segment_ids) + 1, dtype=tf.int32)
-            )
-      sums = tf.expand_dims(sums,axis=0)
-      #sums = tf.dynamic_partition(
-      #    sums,
-      #    graph_node_list,
-      #    num_partitions=tf.math.reduce_max(graph_node_list) + 1
-      #)
-      return sums
+        """args: [encoded_tokens, segment_ids, graph_nodes_list]"""
+        encoded_tokens, segment_ids, graph_node_list = args
+        graph_node_list = tf.cast(graph_node_list, dtype=tf.int64)
+        
+        # I  want the unsorted seg sum to have shape [?, 200], ? = num_graphs
+        sums = tf.math.unsorted_segment_sum(
+                  data=encoded_tokens,
+                  segment_ids=tf.cast(segment_ids, dtype=tf.int32),
+                  num_segments=tf.cast(tf.math.reduce_max(segment_ids) + 1, dtype=tf.int32)
+              )
+        print("Unsorted segment sum: ", sums.shape, sums)
+        print("FOOOOOOOOOOOOOOXY")
+        #sums = tf.expand_dims(sums,axis=0)
+        sums = tf.RaggedTensor.from_value_rowids(
+                  sums,
+                  graph_node_list,
+                  nrows=tf.math.reduce_max(graph_node_list) + 1).to_tensor()
+        print("Ragged Tensor: ", sums.shape, sums)
+
+        #sums = sums.to_tensor(default_value=0)
+        print("to_tensor(): ", sums.shape, sums)
+        #sums = tf.dynamic_partition(
+        #    sums,
+        #    graph_node_list,
+        #    num_partitions=FLAGS.batch_size  # has to be constant unfortunately
+        #)
+        #pad_length = 
+        #sums = [sum]
+        return sums
 
     x = keras.layers.Lambda(segment_sum_wrapper)([encoded_inputs, input_segments, input_graph_node_list])
 
@@ -123,6 +138,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # pass both inputs to the model class.
     self.model = keras.Model(inputs=[input_layer, input_segments, input_graph_node_list],
                               outputs=[out])
+    #self.model.summary()
 
     self.model.compile(optimizer="adam",
                         metrics=['accuracy'],
@@ -134,7 +150,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
-    options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
+    if FLAGS.batch_size > 1024:
+      raise ValueError(f"Here batch size counts number of graphs, so {FLAGS.batch_size} is too many.")
+
+    options = graph_batcher.GraphBatchOptions(max_graphs=FLAGS.batch_size,
                                               group=group)
     max_instance_count = (
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
