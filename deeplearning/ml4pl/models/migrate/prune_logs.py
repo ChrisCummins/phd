@@ -11,6 +11,7 @@ app.DEFINE_boolean('prune_runs_with_no_checkpoints', False,
                    "Delete logs for run IDs with no model checkpoints.")
 app.DEFINE_boolean('prune_orphans', False,
                    "Delete orphaned child table entries.")
+app.DEFINE_list('run_id', [], 'A list of run IDs to delte.')
 
 FLAGS = app.FLAGS
 
@@ -78,6 +79,8 @@ def main():
     PruneOrphans(log_db)
   if FLAGS.prune_runs_with_no_checkpoints:
     PruneRunsWithNoCheckpoints(log_db)
+  for run_id in FLAGS.run_id:
+    log_db.DeleteLogsForRunId(run_id)
 
 
 if __name__ == '__main__':
