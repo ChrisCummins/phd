@@ -5,13 +5,13 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -51,6 +51,25 @@ class GraphBatchOptions(typing.NamedTuple):
       return False
 
     return True
+
+  def GetDatabaseQueryFilters(self) -> typing.List[typing.Callable[[], bool]]:
+    """Convert the given batcher options to a set of SQL query filters.
+
+    Returns:
+      A list of lambdas, where each lambda when called provides a sqlalchemy
+      filter.
+    """
+    filters = []
+    if self.max_nodes:
+      filters.append(
+          lambda: graph_database.GraphMeta.node_count <= self.max_nodes)
+    if self.group:
+      filters.append(lambda: graph_database.GraphMeta.group == self.group)
+    if self.data_flow_max_steps_required:
+      filters.append(
+          lambda: (graph_database.GraphMeta.data_flow_max_steps_required <= self
+                   .data_flow_max_steps_required))
+    return filters
 
 
 class GraphBatch(typing.NamedTuple):
@@ -151,7 +170,7 @@ class GraphBatch(typing.NamedTuple):
     """
     try:
       graph = next(graphs)
-      if graph.node_count > options.max_nodes:
+      if options.max_nodes and graph.node_count > options.max_nodes:
         raise ValueError(
             f"Graph `{graph.id}` with {graph.node_count} is larger "
             f"than batch size {options.max_nodes}")
@@ -405,12 +424,12 @@ class GraphBatcher(object):
       num_rows = q.one()[0]
     return num_rows
 
-  def MakeGraphBatchIterator(self,
-                             options: GraphBatchOptions,
-                             # TODO(cec): This duplicates the logic of the
-                             # GraphTuplesOptions field. Consolidate these.
-                             max_instance_count: int = 0
-                            ) -> typing.Iterable[GraphBatch]:
+  def MakeGraphBatchIterator(
+      self,
+      options: GraphBatchOptions,
+      # TODO(cec): This duplicates the logic of the
+      # GraphTuplesOptions field. Consolidate these.
+      max_instance_count: int = 0) -> typing.Iterable[GraphBatch]:
     """Make a batch iterator over the given group.
 
     Args:
@@ -421,18 +440,16 @@ class GraphBatcher(object):
     Returns:
       An iterator over graph batch tuples.
     """
-    filters = self.GetFiltersForOptions(options)
+    filters = options.GetDatabaseQueryFilters()
 
     graph_reader = graph_readers.BufferedGraphReader(
         self.db,
         filters=filters,
         order_by_random=True,
         eager_graph_loading=True,
-        # Some "magic" to try and get a reasonable balance between memory
-        # requirements and database round trips. With batch size 8k, this will
-        # load 80 graphs at a time. With batch size 100k, this will load 128
-        # graphs at a time.
-        buffer_size=max(min(128, FLAGS.batch_size // 100), 16),
+        # Magic constant to try and get a reasonable balance between memory
+        # requirements and database round trips.
+        buffer_size=128,
         limit=max_instance_count)
 
     # Batch creation outer-loop.
@@ -450,25 +467,3 @@ class GraphBatcher(object):
         yield batch
       else:
         return
-
-  @staticmethod
-  def GetFiltersForOptions(
-      options: GraphBatchOptions) -> typing.List[typing.Callable[[], bool]]:
-    """Convert the given batcher options to a set of SQL query filters.
-
-    Args:
-      options: The options to create filters for.
-
-    Returns:
-      A list of lambdas, where each lambda when called provides a sqlalchemy
-      filter.
-    """
-    filters = [
-        lambda: graph_database.GraphMeta.node_count <= options.max_nodes,
-        lambda: graph_database.GraphMeta.group == options.group,
-    ]
-    if options.data_flow_max_steps_required:
-      filters.append(lambda:
-                     (graph_database.GraphMeta.data_flow_max_steps_required <=
-                      options.data_flow_max_steps_required))
-    return filters

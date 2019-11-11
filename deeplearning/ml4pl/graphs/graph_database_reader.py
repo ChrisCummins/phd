@@ -60,12 +60,14 @@ def BufferedGraphReader(
       if order_by_random:
         q = q.order_by(db.Random())
 
-      q = q.limit(limit)
+      if limit:
+        q = q.limit(limit)
 
       ids = [r[0] for r in q]
 
     if not ids:
-      raise ValueError("Database query returned no results")
+      raise ValueError(
+          f"Query on database `{db.url}` returned no results: `{q}`")
 
     # Iterate through the IDs in batches, running a new query for each.
     while ids:

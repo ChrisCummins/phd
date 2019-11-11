@@ -3,12 +3,13 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
 from sklearn import model_selection
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from labm8 import app
-from labm8 import humanize
 
 FLAGS = app.FLAGS
 
@@ -100,23 +101,27 @@ def GetTrainValTestGroups(
   }
 
 
+# End of splitters copied from //deeplearning/ml4pl/bytecode:splitters
+###############################################################################
+
+
 def StratifiedKFold(db: graph_database.Database, num_splits: int):
   """Apply a stratified K-fold split on the graph database."""
   with db.Session() as session:
     num_graphs = session.query(sql.func.count(
         graph_database.GraphMeta.id)).one()[0]
-    app.Log(1, 'Loading labels from %s graphs', num_graphs)
+    with prof.Profile(f'Loaded labels from {num_graphs} graphs'):
+      # Load all graphs as a single batch. WARNING this will not work for large
+      # datasets!
+      batcher = graph_batcher.GraphBatcher(db)
+      options = graph_batcher.GraphBatchOptions(max_graphs=num_graphs + 1)
+      graph_batches = list(batcher.MakeGraphBatchIterator(options))
+      assert len(graph_batches) == 1
+      graph_batch = graph_batches[0]
 
-    # Load all graphs as a single batch. WARNING this will not work for large
-    # datasets1
-    options = graph_batcher.GraphBatchOptions(max_graphs=num_graphs + 1)
-    batcher = graph_batcher.GraphBatcher(db)
-    graph_batches = list(batcher.MakeGraphBatchIterator(options))
-    assert len(graph_batches) == 1
-    graph_batch = graph_batches[0]
-
-    graph_ids = graph_batch.log._graph_indices
-    labels = graph_batch.graph_y
+      graph_ids = np.array(graph_batch.log._graph_indices, dtype=np.int32)
+      # Compute the dense labels from one-hot vectors.
+      labels = np.argmax(graph_batch.graph_y, axis=1)
 
   # Split the graphs
   seed = 0xCEC
@@ -125,13 +130,10 @@ def StratifiedKFold(db: graph_database.Database, num_splits: int):
                                              random_state=seed)
   dataset_splits = splitter.split(graph_ids, labels)
 
-  groups = {str(i): graph_ids[split] for i, split in enumerate(dataset_splits)}
-  app.Log(1, "Groups %s", groups)
+  groups = {
+      str(i): graph_ids[test] for i, (train, test) in enumerate(dataset_splits)
+  }
   return groups
-
-
-# End of splitters copied from //deeplearning/ml4pl/bytecode:splitters
-###############################################################################
 
 
 def main():
