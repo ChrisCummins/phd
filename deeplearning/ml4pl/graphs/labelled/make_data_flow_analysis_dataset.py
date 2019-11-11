@@ -10,6 +10,10 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
+from labm8 import prof
+from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -21,10 +25,6 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 app.DEFINE_database(
     'input_graphs_db',
@@ -359,7 +359,9 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
     # Break the bytecodes to process into chunks.
     bytecode_id_chunks = np.split(
         bytecodes_to_process_by_output,
-        list(range(0, len(bytecodes_to_process_by_output[0]), batch_size))[1:],
+        list(
+            range(0, len(bytecodes_to_process_by_output[0]),
+                  max(batch_size // FLAGS.nproc, 1)))[1:],
         axis=1)
     jobs = list((input_db.url, annotators, bytecode_ids_chunk)
                 for bytecode_ids_chunk in bytecode_id_chunks)
