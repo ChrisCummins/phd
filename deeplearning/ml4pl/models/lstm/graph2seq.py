@@ -6,9 +6,6 @@ import typing
 import keras
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import labtypes
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
@@ -16,6 +13,9 @@ from deeplearning.ml4pl.graphs import graph_query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.models.lstm import bytecode2seq
+from labm8 import app
+from labm8 import bazelutil
+from labm8 import labtypes
 
 FLAGS = app.FLAGS
 
@@ -350,7 +350,7 @@ class GraphToSequenceEncoder(object):
       self._bytecode_db = FLAGS.bytecode_db()
       return self._bytecode_db
     else:
-      raise app.UsageError("--bytecode_db must be set to reach")
+      raise app.UsageError("--bytecode_db must be set")
 
   @property
   def unlabelled_graph_db(self) -> graph_database.Database:
@@ -361,4 +361,4 @@ class GraphToSequenceEncoder(object):
       self._unlabelled_graph_db = FLAGS.unlabelled_graph_db()
       return self._unlabelled_graph_db
     else:
-      raise app.UsageError("--bytecode_db must be set to reach")
+      raise app.UsageError("--unlabelled_graph_db must be set")
