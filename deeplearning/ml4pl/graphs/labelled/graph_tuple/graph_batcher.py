@@ -407,6 +407,8 @@ class GraphBatcher(object):
 
   def MakeGraphBatchIterator(self,
                              options: GraphBatchOptions,
+                             # TODO(cec): This duplicates the logic of the
+                             # GraphTuplesOptions field. Consolidate these.
                              max_instance_count: int = 0
                             ) -> typing.Iterable[GraphBatch]:
     """Make a batch iterator over the given group.
