@@ -6,6 +6,7 @@ zero_r() {
   local test="$2"
   local val="$3"
 
+  sleep 1  # For unique run ID.
   deeplearning/ml4pl/models/zero_r/zero_r \
       --graph_db='file:///var/phd/db/cc1.mysql?ml4pl_devmap_'"$gpu"'?charset=utf8' \
       --log_db='file:///var/phd/db/cc1.mysql?ml4pl_logs?charset=utf8' \
