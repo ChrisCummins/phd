@@ -360,14 +360,13 @@ class ClassifierBase(object):
         # Compute the ratio of the new best validation accuracy against the
         # old best validation accuracy.
         if previous_best_val_acc:
-          accuracy_ratio = (
-              val_acc / max(self.best_epoch_validation_accuracy, SMALL_NUMBER))
+          accuracy_ratio = (val_acc /
+                            max(self.previous_best_val_acc, SMALL_NUMBER))
           relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
         else:
           relative_increase = ''
         app.Log(1, "Best epoch so far, validation accuracy increased "
-                "+%.3f%%%s",
-                (val_acc - self.best_epoch_validation_accuracy) * 100,
+                "+%.3f%%%s", (val_acc - self.previous_best_val_acc) * 100,
                 relative_increase)
         self.best_epoch_num = epoch_num
 
