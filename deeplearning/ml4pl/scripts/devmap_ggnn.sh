@@ -8,7 +8,7 @@ zero_r() {
 
   deeplearning/ml4pl/models/ggnn/ggnn \
       --log_db='file:///var/phd/db/cc1.mysql?ml4pl_logs?charset=utf8' \
-      --graph_db='sqlite:////var/phd/shared/ml4pl/db/devmap_amd_20191107.db' \
+      --graph_db='sqlite:////var/phd/shared/ml4pl/db/devmap_'"$gpu"'_20191107.db' \
       --num_epochs=100 \
       --graph_state_dropout_keep_prob=.5 \
       --output_layer_dropout_keep_prob=.5 \
