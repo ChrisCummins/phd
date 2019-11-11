@@ -7,11 +7,6 @@ import typing
 import numpy as np
 import sklearn.metrics
 import sqlalchemy as sql
-
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
@@ -20,6 +15,11 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -360,13 +360,12 @@ class ClassifierBase(object):
         # Compute the ratio of the new best validation accuracy against the
         # old best validation accuracy.
         if previous_best_val_acc:
-          accuracy_ratio = (val_acc /
-                            max(self.previous_best_val_acc, SMALL_NUMBER))
+          accuracy_ratio = (val_acc / max(previous_best_val_acc, SMALL_NUMBER))
           relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
         else:
           relative_increase = ''
         app.Log(1, "Best epoch so far, validation accuracy increased "
-                "+%.3f%%%s", (val_acc - self.previous_best_val_acc) * 100,
+                "+%.3f%%%s", (val_acc - previous_best_val_acc) * 100,
                 relative_increase)
         self.best_epoch_num = epoch_num
 
