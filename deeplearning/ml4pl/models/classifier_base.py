@@ -428,13 +428,12 @@ class ClassifierBase(object):
 
       # Add the new checkpoint.
       session.add(
-          log_database.ModelCheckpointMeta(
+          log_database.ModelCheckpointMeta.Create(
               run_id=self.run_id,
               epoch=self.epoch_num,
               global_step=self.global_training_step,
               validation_accuracy=validation_accuracy,
-              model_checkpoint=log_database.ModelCheckpoint(
-                  pickled_data=pickle.dumps(data_to_save))))
+              data=data_to_save))
 
   def LoadModel(self, run_id: str, epoch_num: int) -> None:
     """Load and restore the model from the given model file.

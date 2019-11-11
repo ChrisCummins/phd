@@ -237,11 +237,29 @@ class ModelCheckpointMeta(Base,
 
   @property
   def data(self) -> typing.Any:
-    return pickle.loads(self.model_checkpoint.pickled_data)
+    # Checkpoints are stored with zlib compression.
+    return pickle.loads(
+        codecs.decode(self.model_checkpoint.pickled_data, 'zlib'))
 
   @data.setter
   def data(self, data) -> None:
-    self.model_checkpoint.pickled_data = pickle.dumps(data)
+    # Checkpoints are stored with zlib compression.
+    self.model_checkpoint.pickled_data = codecs.encode(pickle.dumps(data),
+                                                       'zlib')
+
+  @classmethod
+  def Create(cls, run_id: str, epoch: int, global_step: int,
+             validation_accuracy: float, data: typing.Any):
+    """Instantiate a model checkpoint. Use this convenience method rather than
+    constructing objects directly to ensure that fields are encoded correctly.
+    """
+    checkpoint = ModelCheckpointMeta(run_id=run_id,
+                                     epoch=epoch,
+                                     global_step=global_step,
+                                     validation_accuracy=validation_accuracy,
+                                     model_checkpoint=ModelCheckpoint())
+    checkpoint.data = data
+    return checkpoint
 
 
 class ModelCheckpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -252,7 +270,8 @@ class ModelCheckpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
                        sql.ForeignKey('model_checkpoint_metas.id'),
                        primary_key=True)
 
-  # The model data.
+  # The model data. This is stored as a zlib pickled dump of the data returned
+  # by a model's ModelDataToSave() method.
   pickled_data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
                                    nullable=False)
 
