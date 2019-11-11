@@ -2,6 +2,7 @@
 import pickle
 import re
 
+import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 
@@ -44,24 +45,38 @@ def GetBestEpochStats(session, df):
   index = []
   rows = []
   for run_id, row in df.iterrows():
-    query = session.query(log_database.ModelCheckpointMeta.epoch)
-    query = query.filter(log_database.ModelCheckpointMeta.run_id == run_id)
-    query = query.filter(
-        log_database.ModelCheckpointMeta.validation_accuracy == row['val_acc'])
-    best_epoch = query.one().epoch
+    # Skip runs for which there is no checkpoint data.
+    if np.isnan(row['val_acc']):
+      continue
 
+    # Find the "best" epoch - the one which produced the best validation
+    # accuracy.
+    query = session.query(log_database.ModelCheckpointMeta.epoch)
+    query = query.filter(
+        log_database.ModelCheckpointMeta.run_id == run_id,
+        log_database.ModelCheckpointMeta.validation_accuracy == row['val_acc'])
+    # If multiple epochs produced the same validation accuracy, select the
+    # first.
+    query = query.order_by(log_database.ModelCheckpointMeta.epoch)
+    best_epoch = query.first().epoch
+
+    # Aggregate performance on the test set at the best epoch.
     query = session.query(
         sql.func.avg(log_database.BatchLogMeta.accuracy).label('test_acc'),
         sql.func.avg(log_database.BatchLogMeta.precision).label('precision'),
         sql.func.avg(log_database.BatchLogMeta.recall).label('recall'))
-    query = query.filter(log_database.BatchLogMeta.run_id == run_id)
-    query = query.filter(log_database.BatchLogMeta.epoch == best_epoch)
-    test_acc = query.one().test_acc
+    query = query.filter(log_database.BatchLogMeta.run_id == run_id,
+                         log_database.BatchLogMeta.epoch == best_epoch)
+    query = query.group_by(log_database.BatchLogMeta.run_id,
+                           log_database.BatchLogMeta.epoch)
+    result = query.one()
 
     index.append(run_id)
-    rows.append([best_epoch, test_acc])
+    rows.append([best_epoch, result.test_acc, result.precision, result.recall])
 
-  return pd.DataFrame(rows, index=index, columns=['best_epoch', 'test_acc'])
+  return pd.DataFrame(rows,
+                      index=index,
+                      columns=['best_epoch', 'accuracy', 'precision', 'recall'])
 
 
 def GetLeaderboard(log_db: log_database.Database,
@@ -151,8 +166,8 @@ def GetLeaderboard(log_db: log_database.Database,
                          lambda x: re.sub(r'(Classifier|Model)$', '', x))
 
     # Rewrite columns to be more user friendly.
-    pdutil.RewriteColumn(df, 'last_log', humanize.Time)
     if human_readable:
+      pdutil.RewriteColumn(df, 'last_log', humanize.Time)
       pdutil.RewriteColumn(df, 'runtime', humanize.Duration)
       pdutil.RewriteColumn(df, 'val_acc', lambda x: f'{x:.2%}')
       pdutil.RewriteColumn(df, 'accuracy', lambda x: f'{x:.2%}')
