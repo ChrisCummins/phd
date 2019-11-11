@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility code for working with pandas."""
-import pandas as pd
 import typing
+
+import pandas as pd
+import tabulate
 from absl import flags as absl_flags
 
 from labm8 import sqlutil
@@ -59,3 +61,18 @@ def ModelToDataFrame(
   df = QueryToDataFrame(session, query_identity(query))
   df.columns = columns
   return df
+
+
+def RewriteColumn(df: pd.DataFrame, column: str,
+                  rewrite: typing.Callable[[typing.Any], typing.Any]):
+  """Rewrite the values in a column in-place."""
+  df[column] = [rewrite(x) for x in df[column]]
+
+
+def FormatDataFrameAsAsciiTable(df: pd.DataFrame, **tabulate_args):
+  default_args = {
+      'headers': 'keys',
+      'tablefmt': 'psql',
+  }
+  default_args.update(tabulate_args)
+  return tabulate.tabulate(df, **default_args)

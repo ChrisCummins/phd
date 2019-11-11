@@ -556,6 +556,7 @@ py_library(
         ":app",
         ":sqlutil",
         "//third_party/py/pandas",
+        "//third_party/py/tabulate",
     ],
 )
 
