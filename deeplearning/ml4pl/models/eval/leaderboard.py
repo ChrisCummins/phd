@@ -51,7 +51,9 @@ def GetBestEpochStats(session, df):
     best_epoch = query.one().epoch
 
     query = session.query(
-        sql.func.avg(log_database.BatchLogMeta.accuracy).label('test_acc'))
+        sql.func.avg(log_database.BatchLogMeta.accuracy).label('test_acc'),
+        sql.func.avg(log_database.BatchLogMeta.precision).label('precision'),
+        sql.func.avg(log_database.BatchLogMeta.recall).label('recall'))
     query = query.filter(log_database.BatchLogMeta.run_id == run_id)
     query = query.filter(log_database.BatchLogMeta.epoch == best_epoch)
     test_acc = query.one().test_acc
