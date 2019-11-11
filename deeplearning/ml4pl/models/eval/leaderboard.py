@@ -149,9 +149,9 @@ def GetLeaderboard(log_db: log_database.Database,
                          lambda x: re.sub(r'(Classifier|Model)$', '', x))
 
     # Rewrite columns to be more user friendly.
+    pdutil.RewriteColumn(df, 'last_log', humanize.Time)
     if human_readable:
       pdutil.RewriteColumn(df, 'runtime', humanize.Duration)
-      pdutil.RewriteColumn(df, 'last_log', humanize.Time)
       pdutil.RewriteColumn(df, 'val_acc', lambda x: f'{x:.2%}')
       pdutil.RewriteColumn(df, 'accuracy', lambda x: f'{x:.2%}')
 
