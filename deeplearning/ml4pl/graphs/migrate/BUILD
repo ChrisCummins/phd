@@ -28,9 +28,11 @@ py_binary(
     srcs = ["reapply_split.py"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
         "//labm8:app",
         "//labm8:humanize",
         "//third_party/py/numpy",
+        "//third_party/py/scikit_learn",
         "//third_party/py/sqlalchemy",
     ],
 )

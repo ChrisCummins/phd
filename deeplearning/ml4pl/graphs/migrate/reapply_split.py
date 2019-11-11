@@ -3,19 +3,21 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
+from sklearn import model_selection
 
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from labm8 import app
 from labm8 import humanize
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
-    None,
-    'URL of database to modify.',
-    must_exist=True)
+app.DEFINE_database('graph_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to modify.',
+                    must_exist=True)
+app.DEFINE_integer('k_fold', 0, 'If > 0, use stratified k-fold split.')
 
 ###############################################################################
 # Splitters copied from //deeplearning/ml4pl/bytecode:splitters
@@ -45,10 +47,10 @@ def GetPoj104BytecodeGroups(db: graph_database.Database,
   }
 
 
-def GetTrainValTestGroups(db: graph_database.Database,
-                          train_val_test_ratio: typing.Iterable[float] = (3, 1,
-                                                                          1)
-                         ) -> typing.Dict[str, typing.List[int]]:
+def GetTrainValTestGroups(
+    db: graph_database.Database,
+    train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
+) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
 
   This concatenates the POJ-104 sources with the other sources split into
@@ -98,6 +100,36 @@ def GetTrainValTestGroups(db: graph_database.Database,
   }
 
 
+def StratifiedKFold(db: graph_database.Database, num_splits: int):
+  """Apply a stratified K-fold split on the graph database."""
+  with db.Session() as session:
+    num_graphs = session.query(sql.func.count(
+        graph_database.GraphMeta.id)).one()[0]
+    app.Log(1, 'Loading labels from %s graphs', num_graphs)
+
+    # Load all graphs as a single batch. WARNING this will not work for large
+    # datasets1
+    options = graph_batcher.GraphBatchOptions(max_graphs=num_graphs + 1)
+    batcher = graph_batcher.GraphBatcher(db)
+    graph_batches = list(batcher.MakeGraphBatchIterator(options))
+    assert len(graph_batches) == 1
+    graph_batch = graph_batches[0]
+
+    graph_ids = graph_batch.log._graph_indices
+    labels = graph_batch.graph_y
+
+  # Split the graphs
+  seed = 0xCEC
+  splitter = model_selection.StratifiedKFold(n_splits=num_splits,
+                                             shuffle=True,
+                                             random_state=seed)
+  dataset_splits = splitter.split(graph_ids, labels)
+
+  groups = {str(i): graph_ids[split] for i, split in enumerate(dataset_splits)}
+  app.Log(1, "Groups %s", groups)
+  return groups
+
+
 # End of splitters copied from //deeplearning/ml4pl/bytecode:splitters
 ###############################################################################
 
@@ -112,7 +144,10 @@ def main():
         .values(group='')
     graph_db.engine.execute(update)
 
-  groups = GetTrainValTestGroups(graph_db)
+  if FLAGS.k_fold:
+    groups = StratifiedKFold(graph_db, FLAGS.k_fold)
+  else:
+    groups = GetTrainValTestGroups(graph_db)
 
   for group, ids in groups.items():
     with graph_db.Session(commit=True) as session:
