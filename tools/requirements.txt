@@ -162,6 +162,7 @@ SQLAlchemy==1.3.10
 sqlparse==0.3.0
 statistics==1.0.3.5
 subprocess32==3.5.0
+tabulate==0.8.5
 # If ./configure detects CUDA, tensorflow-gpu is used.
 # Maintenance note: If changing the version of tensorflow, you must check the
 # TensorFlow release notes for the required version of CUDA, and if necessary
