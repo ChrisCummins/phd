@@ -31,6 +31,8 @@ classifier_base.MODEL_FLAGS.add("hidden_size")
 app.DEFINE_integer("dense_hidden_size", 32, "The size of the dense ")
 classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 
+app.DEFINE_string('tokenizer', 'opencl',
+                  'The tokenizer to use. One of {opencl,deeptune,inst2vec}')
 app.DEFINE_integer(
     "input_sequence_len", 10000,
     "The length of encoded input sequences. Sequences shorter "

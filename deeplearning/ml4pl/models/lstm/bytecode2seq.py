@@ -2,11 +2,11 @@
 import typing
 
 import numpy as np
+
+from deeplearning.clgen.proto import internal_pb2
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
-
-from deeplearning.clgen.proto import internal_pb2
 
 FLAGS = app.FLAGS
 
@@ -112,8 +112,117 @@ LLVM_IR_TOKENS = [
     "nocapture",
 ]
 
+# The vocabulary used in PACT'17 work.
+OPENCL_TOKENS = [
+    '__assert',
+    '__attribute',
+    '__builtin_astype',
+    '__clc_fabs',
+    '__clc_fma',
+    '__constant',
+    '__global',
+    '__inline',
+    '__kernel',
+    '__local',
+    '__private',
+    '__read_only',
+    '__read_write',
+    '__write_only',
+    'abs',
+    'alignas',
+    'alignof',
+    'atomic_add',
+    'auto',
+    'barrier',
+    'bool',
+    'break',
+    'case',
+    'char',
+    'clamp',
+    'complex',
+    'const',
+    'constant',
+    'continue',
+    'default',
+    'define',
+    'defined',
+    'do',
+    'double',
+    'elif',
+    'else',
+    'endif',
+    'enum',
+    'error',
+    'event_t',
+    'extern',
+    'fabs',
+    'false',
+    'float',
+    'for',
+    'get_global_id',
+    'get_global_size',
+    'get_local_id',
+    'get_local_size',
+    'get_num_groups',
+    'global',
+    'goto',
+    'half',
+    'if',
+    'ifdef',
+    'ifndef',
+    'image1d_array_t',
+    'image1d_buffer_t',
+    'image1d_t',
+    'image2d_array_t',
+    'image2d_t',
+    'image3d_t',
+    'imaginary',
+    'include',
+    'inline',
+    'int',
+    'into',
+    'kernel',
+    'line',
+    'local',
+    'long',
+    'noreturn',
+    'pragma',
+    'private',
+    'quad',
+    'read_only',
+    'read_write',
+    'register',
+    'restrict',
+    'return',
+    'sampler_t',
+    'short',
+    'shuffle',
+    'signed',
+    'size_t',
+    'sizeof',
+    'sqrt',
+    'static',
+    'struct',
+    'switch',
+    'true',
+    'typedef',
+    'u32',
+    'uchar',
+    'uint',
+    'ulong',
+    'undef',
+    'union',
+    'unsigned',
+    'void',
+    'volatile',
+    'while',
+    'wide',
+    'write_only',
+]
 
-def Encode(bytecodes: typing.List[str], vocab: typing.Dict[str, int]
+
+def Encode(bytecodes: typing.List[str], vocab: typing.Dict[str, int],
+           language: str == 'llvm'
           ) -> typing.Tuple[typing.List[np.array], typing.Dict[str, int]]:
   """Encode the given bytecodes using the vocabulary.
 
@@ -126,9 +235,14 @@ def Encode(bytecodes: typing.List[str], vocab: typing.Dict[str, int]
   Returns:
     A list of encoded bytecodes, and the output vocabulary.
   """
+  tokens = {
+      'llvm': LLVM_IR_TOKENS,
+      'opencl': OPENCL_TOKENS,
+  }[language]
+
   message = internal_pb2.LexerBatchJob(
       input=[internal_pb2.LexerJob(string=s) for s in bytecodes],
-      candidate_token=LLVM_IR_TOKENS,
+      candidate_token=tokens,
       vocabulary=vocab,
   )
   pbutil.RunProcessMessageInPlace([LEXER_WORKER], message, timeout_seconds=3600)

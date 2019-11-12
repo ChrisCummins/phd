@@ -11,12 +11,11 @@ from labm8 import sqlutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database(
-    'bytecode_db',
-    bytecode_database.Database,
-    None,
-    'URL of database to read bytecodes from.',
-    must_exist=True)
+app.DEFINE_database('bytecode_db',
+                    bytecode_database.Database,
+                    None,
+                    'URL of database to read bytecodes from.',
+                    must_exist=True)
 app.DEFINE_output_path(
     'vocabulary', None,
     'The vocabulary file to read and update. If it does not exist, it is '
@@ -29,6 +28,9 @@ app.DEFINE_boolean(
 app.DEFINE_integer(
     "start_at", 0,
     "The row to start at. Use this to resume partially complete jobs.")
+app.DEFINE_string(
+    "language", "llvm",
+    "The language to derive the vocabulary from. One of {llvm,opencl}.")
 
 
 def main():
@@ -40,9 +42,11 @@ def main():
       data_to_load = json.load(f)
     vocab = data_to_load['vocab']
     max_encoded_length = data_to_load['max_encoded_length']
+    encoded_lengths = data_to_load['encoded_lengths']
   else:
     vocab = {}
     max_encoded_length = 0
+    encoded_lengths = []
 
   vocab_size = len(vocab)
 
@@ -55,22 +59,21 @@ def main():
         query = query.filter(bytecode_database.LlvmBytecode.source_name ==
                              'pact17_opencl_devmap')
 
-      encoded_lengths = []
       for i, chunk in enumerate(
-          sqlutil.OffsetLimitBatchedQuery(
-              query,
-              FLAGS.batch_size,
-              start_at=FLAGS.start_at,
-              compute_max_rows=True)):
+          sqlutil.OffsetLimitBatchedQuery(query,
+                                          FLAGS.batch_size,
+                                          start_at=FLAGS.start_at,
+                                          compute_max_rows=True)):
         app.Log(1, "Running batch %s, bytecodes %s of %s", i + 1, chunk.offset,
                 chunk.max_rows)
 
-        with prof.Profile(lambda t: (
-            f"Encoded {humanize.Commas(FLAGS.batch_size)} bytecodes "
-            f"({humanize.Commas(sum(encoded_lengths))} "
-            f"tokens, vocab size {len(vocab)}")):
+        with prof.Profile(
+            lambda t: (f"Encoded {humanize.Commas(FLAGS.batch_size)} bytecodes "
+                       f"({humanize.Commas(sum(encoded_lengths))} "
+                       f"tokens, vocab size {len(vocab)}")):
           encoded, vocab = bytecode2seq.Encode([r.bytecode for r in chunk.rows],
-                                               vocab)
+                                               vocab,
+                                               language=FLAGS.language)
           encoded_lengths.extend([len(x) for x in encoded])
           if len(vocab) < vocab_size:
             app.FatalWithoutStackTrace("Vocabulary shrunk!?")
