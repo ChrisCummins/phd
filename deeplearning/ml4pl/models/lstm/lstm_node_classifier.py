@@ -35,6 +35,14 @@ classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
+
+app.DEFINE_boolean(
+    'cudnn_lstm', True,
+    'If set, use CuDNNLSTM implementation. Else use default '
+    'Keras implementation')
+# TODO(cec): Are weights of CuDNNLSTM and LSTM compatible? If so, no need for
+# this to be a model flag.
+classifier_base.MODEL_FLAGS.add("cudnn_lstm")
 #
 ##### End of flag declarations.
 
@@ -102,14 +110,18 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
         [encoded_inputs, input_segments])
 
     # vanilla
-    x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                               return_sequences=True,
-                               name="lstm_1")(x)
+    def Lstm(*args, **kwargs):
+      if FLAGS.cudnn_lstm:
+        return keras.layers.CuDNNLSTM(*args, **kwargs)
+      else:
+        return keras.layers.LSTM(*args, **kwargs, implementation=1)
 
-    x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                               name="lstm_2",
-                               return_sequences=True,
-                               return_state=False)(x)
+    x = Lstm(FLAGS.hidden_size, return_sequences=True, name="lstm_1")(x)
+
+    x = Lstm(FLAGS.hidden_size,
+             name="lstm_2",
+             return_sequences=True,
+             return_state=False)(x)
 
     # map to number of classes with a dense layer
     langmodel_out = keras.layers.Dense(self.stats.node_labels_dimensionality,
