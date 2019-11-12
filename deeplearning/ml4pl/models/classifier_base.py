@@ -7,6 +7,11 @@ import typing
 import numpy as np
 import sklearn.metrics
 import sqlalchemy as sql
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
@@ -15,11 +20,6 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
-
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -174,6 +174,9 @@ class ClassifierBase(object):
                log_db: log_database.Database):
     """Constructor. Subclasses should call this first."""
     self._initialized = False  # Set by LoadModel() or InitializeModel()
+
+    # TODO(cec): Check in the database that the run ID is unique. If not,
+    # wait a second.
     self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
                         f"{system.HOSTNAME}")
     app.Log(1, "Run ID: %s", self.run_id)

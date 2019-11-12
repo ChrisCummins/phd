@@ -1,3 +1,11 @@
+-- How many poly graphs contain at least a single positive label?
+
+SELECT (count(*) /
+          (SELECT count(*)
+           FROM ml4pl_polyhedra.graph_metas)) * 100 AS '% poly'
+FROM ml4pl_polyhedra.graph_metas
+WHERE data_flow_max_steps_required > 0;
+
 -- Aggregate stats about bytecode corpus.
 
 SELECT graphs.source_name,
@@ -35,6 +43,110 @@ ORDER BY `count` DESC;
 
 SELECT count(*)
 FROM ml4pl_unlabelled_corpus.graph_metas;
+
+# How many graphs in each dataset?
+
+SELECT 'reachability',
+
+  (SELECT count(*)
+   FROM ml4pl_reachability.graph_metas) AS 'num_graphs',
+       count(*) /
+  (SELECT count(*)
+   FROM
+     (SELECT distinct(bytecode_id)
+      FROM ml4pl_unlabelled_corpus.graph_metas
+      GROUP BY bytecode_id) AS t1) * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_reachability.graph_metas) AS t2
+UNION
+SELECT 'domtree',
+
+  (SELECT count(*)
+   FROM ml4pl_domtree.graph_metas) AS 'num_graphs',
+       count(*) /
+  (SELECT count(*)
+   FROM
+     (SELECT distinct(bytecode_id)
+      FROM ml4pl_unlabelled_corpus.graph_metas
+      GROUP BY bytecode_id) AS t1) * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_domtree.graph_metas) AS t2
+UNION
+SELECT 'datadep',
+
+  (SELECT count(*)
+   FROM ml4pl_datadep.graph_metas) AS 'num_graphs',
+       count(*) /
+  (SELECT count(*)
+   FROM
+     (SELECT distinct(bytecode_id)
+      FROM ml4pl_unlabelled_corpus.graph_metas
+      GROUP BY bytecode_id) AS t1) * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_datadep.graph_metas) AS t2
+UNION
+SELECT 'liveness',
+
+  (SELECT count(*)
+   FROM ml4pl_liveness.graph_metas) AS 'num_graphs',
+       count(*) /
+  (SELECT count(*)
+   FROM
+     (SELECT distinct(bytecode_id)
+      FROM ml4pl_unlabelled_corpus.graph_metas
+      GROUP BY bytecode_id) AS t1) * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_liveness.graph_metas) AS t2
+UNION
+SELECT 'subexpressions',
+
+  (SELECT count(*)
+   FROM ml4pl_subexpressions.graph_metas) AS 'num_graphs',
+       count(*) /
+  (SELECT count(*)
+   FROM
+     (SELECT distinct(bytecode_id)
+      FROM ml4pl_unlabelled_corpus.graph_metas
+      GROUP BY bytecode_id) AS t1) * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_subexpressions.graph_metas) AS t2
+UNION
+SELECT 'alias_set',
+
+  (SELECT count(*)
+   FROM ml4pl_alias_set.graph_metas) AS 'num_graphs',
+       count(*) /
+  (SELECT count(*)
+   FROM
+     (SELECT distinct(bytecode_id)
+      FROM ml4pl_unlabelled_corpus.graph_metas
+      GROUP BY bytecode_id) AS t1) * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_alias_set.graph_metas) AS t2
+UNION
+SELECT 'devmap_amd',
+
+  (SELECT count(*)
+   FROM ml4pl_devmap_amd.graph_metas) AS 'num_graphs',
+       count(*) / 256 * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_devmap_amd.graph_metas) AS t2
+UNION
+SELECT 'devmap_nvidia',
+
+  (SELECT count(*)
+   FROM ml4pl_devmap_nvidia.graph_metas) AS 'num_graphs',
+       count(*) / 256 * 100 AS '% done'
+FROM
+  (SELECT distinct(bytecode_id)
+   FROM ml4pl_devmap_nvidia.graph_metas) AS t2;
 
 
 SELECT source_name,

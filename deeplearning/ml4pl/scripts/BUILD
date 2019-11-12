@@ -1,13 +1,15 @@
 # Scripts for training models.
 
-sh_binary(
-    name = "devmap_zero_r",
-    srcs = ["devmap_zero_r.sh"],
-    data = ["//deeplearning/ml4pl/models/zero_r"],
-)
-
-sh_binary(
-    name = "devmap_ggnn",
-    srcs = ["devmap_ggnn.sh"],
-    data = ["//deeplearning/ml4pl/models/ggnn"],
+py_binary(
+    name = "devmap",
+    srcs = ["devmap.py"],
+    data = [
+        "//deeplearning/ml4pl/models/ggnn",
+        "//deeplearning/ml4pl/models/lstm:lstm_graph_classifier",
+        "//deeplearning/ml4pl/models/zero_r",
+    ],
+    deps = [
+        "//labm8:app",
+        "//labm8:bazelutil",
+    ],
 )
