@@ -1,8 +1,9 @@
 """Train and evaluate a model for graph-level classification."""
+import typing
+
 import keras
 import numpy as np
 import tensorflow as tf
-import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -10,7 +11,6 @@ from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from labm8 import app
-
 
 FLAGS = app.FLAGS
 
@@ -25,7 +25,8 @@ FLAGS = app.FLAGS
 # For the sake of readability, these important model flags are saved into a
 # global set classifier_base.MODEL_FLAGS here, so that the declaration of model
 # flags is local to the declaration of the flag.
-app.DEFINE_integer("hidden_size", 200, "The size of hidden layer(s) in the LSTM baselines.")
+app.DEFINE_integer("hidden_size", 200,
+                   "The size of hidden layer(s) in the LSTM baselines.")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_integer("dense_hidden_size", 32, "The size of the dense ")
@@ -42,6 +43,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
   """LSTM baseline model for node level classification."""
 
   def __init__(self, *args, **kwargs):
+    app.Log(1, '-> LstmNodeClassifierModel()')
     super(LstmNodeClassifierModel, self).__init__(*args, **kwargs)
 
     # The encoder which performs translation from graphs to encoded sequences.
@@ -51,20 +53,23 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # define token ids as input
 
-    input_layer = keras.Input(batch_shape=(self.encoder.max_sequence_length,),
-                              dtype='int32',
-                              name="model_in")
-    app.Log(1, '%s', "$$$$"*100)
+    input_layer = keras.Input(
+        batch_shape=(16, self.encoder.max_sequence_length),
+        dtype='int32',
+        name="model_in")
+    app.Log(1, '%s', "$$$$" * 100)
     app.Log(1, '%s', input_layer)
     app.Log(1, '%s', input_layer.shape)
     # and the segment indices
-    input_segments = keras.Input(batch_shape=(self.encoder.max_sequence_length,),
-                                 dtype='int32',
-                                 name="model_in_segments")
+    input_segments = keras.Input(
+        batch_shape=(self.encoder.max_sequence_length,),
+        dtype='int32',
+        name="model_in_segments")
 
-    input_graph_node_list = keras.Input(batch_shape=(self.encoder.max_sequence_length,),
-                                        dtype='int32',
-                                        name='graph_node_list_input')
+    input_graph_node_list = keras.Input(
+        batch_shape=(self.encoder.max_sequence_length,),
+        dtype='int32',
+        name='graph_node_list_input')
 
     # lookup token embeddings
     encoded_inputs = keras.layers.Embedding(
@@ -75,67 +80,70 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # do the unsorted segment sum to get the actual lstm inputs
     def segment_sum_wrapper(args):
-        """args: [encoded_tokens, segment_ids, graph_nodes_list]"""
-        encoded_tokens, segment_ids, graph_node_list = args
-        graph_node_list = tf.cast(graph_node_list, dtype=tf.int64)
-        
-        # I  want the unsorted seg sum to have shape [?, 200], ? = num_graphs
-        sums = tf.math.unsorted_segment_sum(
-                  data=encoded_tokens,
-                  segment_ids=tf.cast(segment_ids, dtype=tf.int32),
-                  num_segments=tf.cast(tf.math.reduce_max(segment_ids) + 1, dtype=tf.int32)
-              )
-        print("Unsorted segment sum: ", sums.shape, sums)
-        print("FOOOOOOOOOOOOOOXY")
-        #sums = tf.expand_dims(sums,axis=0)
-        sums = tf.RaggedTensor.from_value_rowids(
-                  sums,
-                  graph_node_list,
-                  nrows=tf.math.reduce_max(graph_node_list) + 1).to_tensor()
-        print("Ragged Tensor: ", sums.shape, sums)
+      """args: [encoded_tokens, segment_ids, graph_nodes_list]"""
+      encoded_tokens, segment_ids, graph_node_list = args
+      graph_node_list = tf.cast(graph_node_list, dtype=tf.int64)
 
-        #sums = sums.to_tensor(default_value=0)
-        print("to_tensor(): ", sums.shape, sums)
-        #sums = tf.dynamic_partition(
-        #    sums,
-        #    graph_node_list,
-        #    num_partitions=FLAGS.batch_size  # has to be constant unfortunately
-        #)
-        #pad_length = 
-        #sums = [sum]
-        return sums
+      # I  want the unsorted seg sum to have shape [?, 200], ? = num_graphs
+      sums = tf.math.unsorted_segment_sum(
+          data=encoded_tokens,
+          segment_ids=tf.cast(segment_ids, dtype=tf.int32),
+          num_segments=tf.cast(tf.math.reduce_max(segment_ids) + 1,
+                               dtype=tf.int32))
+      print("Unsorted segment sum: ", sums.shape, sums)
+      print("FOOOOOOOOOOOOOOXY")
 
-    x = keras.layers.Lambda(segment_sum_wrapper)([encoded_inputs, input_segments, input_graph_node_list])
+      sums = tf.RaggedTensor.from_value_rowids(
+          sums, graph_node_list,
+          nrows=tf.math.reduce_max(graph_node_list) + 1).to_tensor()
+      print("Ragged Tensor: ", sums.shape, sums)
+
+      #sums = sums.to_tensor(default_value=0)
+      print("to_tensor(): ", sums.shape, sums)
+      #sums = tf.dynamic_partition(
+      #    sums,
+      #    graph_node_list,
+      #    num_partitions=FLAGS.batch_size  # has to be constant unfortunately
+      #)
+      #pad_length =
+      #sums = [sum]
+      return sums
+
+    app.Log(1, '>>>> lambda declared')
+    x = keras.layers.Lambda(segment_sum_wrapper)(
+        [encoded_inputs, input_segments, input_graph_node_list])
+    app.Log(1, '<<<< lambda declared')
 
     # vanilla
-    app.Log(1, '%s', "$111$$$"*100)
+    app.Log(1, '%s', "$111$$$" * 100)
     app.Log(1, '%s', x)
     x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
                                return_sequences=True,
                                name="lstm_1")(x)
 
     x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                                name="lstm_2",
-                                return_sequences=True,
-                                return_state=False)(x)
+                               name="lstm_2",
+                               return_sequences=True,
+                               return_state=False)(x)
 
     # map to number of classes with a dense layer
     langmodel_out = keras.layers.Dense(self.stats.node_labels_dimensionality,
-                                        activation="sigmoid",
-                                        name="langmodel_out")(x)
+                                       activation="sigmoid",
+                                       name="langmodel_out")(x)
 
     # no graph level features for node classification.
     out = langmodel_out
 
     # pass both inputs to the model class.
-    self.model = keras.Model(inputs=[input_layer, input_segments, input_graph_node_list],
-                              outputs=[out])
+    self.model = keras.Model(
+        inputs=[input_layer, input_segments, input_graph_node_list],
+        outputs=[out])
     #self.model.summary()
 
     self.model.compile(optimizer="adam",
-                        metrics=['accuracy'],
-                        loss=["categorical_crossentropy"],
-                        loss_weights=[1.0])
+                       metrics=['accuracy'],
+                       loss=["categorical_crossentropy"],
+                       loss_weights=[1.0])
 
   def MakeMinibatchIterator(
       self, epoch_type: str, group: str
@@ -143,7 +151,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
     if FLAGS.batch_size > 1024:
-      raise ValueError(f"Here batch size counts number of graphs, so {FLAGS.batch_size} is too many.")
+      raise ValueError(
+          f"Here batch size counts number of graphs, so {FLAGS.batch_size} is too many."
+      )
 
     options = graph_batcher.GraphBatchOptions(max_graphs=FLAGS.batch_size,
                                               group=group)
@@ -153,12 +163,16 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
       graph_ids = batch.log.graph_indices
-      encoded_sequences = self.encoder.GraphsToEncodedBytecodes(graph_ids)
+      encoded_sequences, grouping_ids, node_masks = (
+          self.encoder.GraphsToEncodedStatementGroups(graph_ids,
+                                                      group_by='statement'))
 
       assert batch.node_y is not None
       yield batch.log, {
           'encoded_sequences': np.vstack(encoded_sequences),
+          'segment_ids': np.vstack(grouping_ids),
           'node_x_indices': np.vstack(batch.node_x_indices),
+          # TODO(cec): what to do with node_masks?
           'node_y': np.vstack(batch.node_y),
       }
 
@@ -168,11 +182,11 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     log.loss = 0
 
     x = [
-          batch['encoded_sequences'][0],  # token ids
-          batch['encoded_sequences'][1],  # segment ids
-          batch['node_x_indices'],
-          #batch['graph_node_list'],
-        ]
+        batch['encoded_sequences'],  # token ids
+        batch['segment_ids'],  # segment ids
+        batch['node_x_indices'],
+        #batch['graph_node_list'],
+    ]
     y = [batch['node_y']]
 
     losses = []
