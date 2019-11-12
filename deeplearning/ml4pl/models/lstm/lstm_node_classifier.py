@@ -10,6 +10,7 @@ from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
+from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -35,14 +36,6 @@ classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
-
-app.DEFINE_boolean(
-    'cudnn_lstm', True,
-    'If set, use CuDNNLSTM implementation. Else use default '
-    'Keras implementation')
-# TODO(cec): Are weights of CuDNNLSTM and LSTM compatible? If so, no need for
-# this to be a model flag.
-classifier_base.MODEL_FLAGS.add("cudnn_lstm")
 #
 ##### End of flag declarations.
 
@@ -110,18 +103,13 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
         [encoded_inputs, input_segments])
 
     # vanilla
-    def Lstm(*args, **kwargs):
-      if FLAGS.cudnn_lstm:
-        return keras.layers.CuDNNLSTM(*args, **kwargs)
-      else:
-        return keras.layers.LSTM(*args, **kwargs, implementation=1)
+    x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True,
+                       name="lstm_1")(x)
 
-    x = Lstm(FLAGS.hidden_size, return_sequences=True, name="lstm_1")(x)
-
-    x = Lstm(FLAGS.hidden_size,
-             name="lstm_2",
-             return_sequences=True,
-             return_state=False)(x)
+    x = utils.MakeLstm(FLAGS.hidden_size,
+                       name="lstm_2",
+                       return_sequences=True,
+                       return_state=False)(x)
 
     # map to number of classes with a dense layer
     langmodel_out = keras.layers.Dense(self.stats.node_labels_dimensionality,

@@ -66,6 +66,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":graph2seq",
+        ":lstm_utils",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
@@ -85,6 +86,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":graph2seq",
+        ":lstm_utils",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
@@ -108,5 +110,15 @@ py_test(
         "//labm8:app",
         "//labm8:test",
         "//third_party/py/numpy",
+    ],
+)
+
+py_library(
+    name = "lstm_utils",
+    srcs = ["lstm_utils.py"],
+    deps = [
+        "//deeplearning/ml4pl/models:classifier_base",
+        "//labm8:app",
+        "//third_party/py/keras",
     ],
 )

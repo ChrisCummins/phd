@@ -9,6 +9,7 @@ from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
+from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -61,11 +62,10 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
         output_dim=FLAGS.hidden_size,
         name="embedding")(input_layer)
 
-    x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
-                               return_sequences=True,
-                               name="lstm_1")(x)
+    x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True,
+                       name="lstm_1")(x)
 
-    x = keras.layers.CuDNNLSTM(FLAGS.hidden_size, name="lstm_2")(x)
+    x = utils.MakeLstm(FLAGS.hidden_size, name="lstm_2")(x)
 
     langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
                                        activation="sigmoid",
