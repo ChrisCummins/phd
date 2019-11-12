@@ -5,7 +5,7 @@
 # Usage:
 #     $ ./tools/create_python_virtualenv.sh
 set -eux
-DIR="$PHD/../venv/phd"
+DIR="$PHD/tools/venv/phd"
 
 rm -rf "$DIR"
 mkdir -pv "$(dirname $DIR)"
