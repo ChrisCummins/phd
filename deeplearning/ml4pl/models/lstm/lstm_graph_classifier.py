@@ -1,8 +1,7 @@
 """Train and evaluate a model for graph-level classification."""
-import typing
-
 import keras
 import numpy as np
+import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -11,6 +10,7 @@ from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -106,9 +106,11 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
-      # returns a list of encoded bytecodes padded to max_sequence_length.
-      encoded_sequences = self.encoder.GraphsToEncodedBytecodes(
-          batch.log._graph_indices)
+      with prof.Profile(f'Encoded {len(batch.log._graph_indices)} bytecodes',
+                        print_to=lambda x: app.Log(2, x)):
+        # returns a list of encoded bytecodes padded to max_sequence_length.
+        encoded_sequences = self.encoder.GraphsToEncodedBytecodes(
+            batch.log._graph_indices)
       # for graph_classifier we just need graph_x, graph_y split per graph
       # which is already the case.
       yield batch.log, { # vstack lists to np.arrays w/ [batch, ...] shape
@@ -132,21 +134,25 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
 
-    if log.type == 'train':
-      self.model.fit(x,
-                     y,
-                     epochs=1,
-                     batch_size=log.graph_count,
-                     callbacks=callbacks,
-                     verbose=False,
-                     shuffle=False)
+    with prof.Profile(f'model.fit() {len(y[0]} instances',
+                      print_to=lambda x: app.Log(2, x)):
+      if log.type == 'train':
+        self.model.fit(x,
+                       y,
+                       epochs=1,
+                       batch_size=log.graph_count,
+                       callbacks=callbacks,
+                       verbose=False,
+                       shuffle=False)
 
     log.loss = sum(losses) / max(len(losses), 1)
 
     # Run the same input again through the LSTM to get the raw predictions.
     # This is obviously wasteful when training, but I don't know of a way to
     # get the raw predictions from self.model.fit().
-    pred_y = self.model.predict(x)
+    with prof.Profile(f'model.predict() {len(y[0]} instances',
+                      print_to=lambda x: app.Log(2, x)):
+      pred_y = self.model.predict(x)
     assert batch['graph_y'].shape == pred_y[0].shape
 
     return batch['graph_y'], pred_y[0]
