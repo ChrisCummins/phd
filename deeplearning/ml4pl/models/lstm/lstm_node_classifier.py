@@ -162,7 +162,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
-      graph_ids = batch.log.graph_indices
+      graph_ids = batch.log._graph_indices
       encoded_sequences, grouping_ids, node_masks = (
           self.encoder.GraphsToEncodedStatementGroups(graph_ids,
                                                       group_by='statement'))
