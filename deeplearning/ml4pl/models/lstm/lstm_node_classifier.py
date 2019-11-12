@@ -43,7 +43,6 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
   """LSTM baseline model for node level classification."""
 
   def __init__(self, *args, **kwargs):
-    app.Log(1, '-> LstmNodeClassifierModel()')
     super(LstmNodeClassifierModel, self).__init__(*args, **kwargs)
 
     # The encoder which performs translation from graphs to encoded sequences.
@@ -57,19 +56,16 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
         batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
         dtype='int32',
         name="model_in")
-    app.Log(1, '%s', "$$$$" * 100)
-    app.Log(1, '%s', input_layer)
-    app.Log(1, '%s', input_layer.shape)
     # and the segment indices
     input_segments = keras.Input(
         batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
         dtype='int32',
         name="model_in_segments")
 
-    input_graph_node_list = keras.Input(
-        batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
-        dtype='int32',
-        name='graph_node_list_input')
+    # input_graph_node_list = keras.Input(
+    #     batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
+    #     dtype='int32',
+    #     name='graph_node_list_input')
 
     # lookup token embeddings
     encoded_inputs = keras.layers.Embedding(
@@ -102,14 +98,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
       return tf.stack(segment_sums, axis=0)
 
-    app.Log(1, '>>>> lambda declared')
     x = keras.layers.Lambda(segment_sum_wrapper)(
         [encoded_inputs, input_segments])
-    app.Log(1, '<<<< lambda declared')
 
     # vanilla
-    app.Log(1, '%s', "$111$$$" * 100)
-    app.Log(1, '%s', x)
     x = keras.layers.CuDNNLSTM(FLAGS.hidden_size,
                                return_sequences=True,
                                name="lstm_1")(x)
@@ -128,9 +120,8 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     out = langmodel_out
 
     # pass both inputs to the model class.
-    self.model = keras.Model(
-        inputs=[input_layer, input_segments, input_graph_node_list],
-        outputs=[out])
+    self.model = keras.Model(inputs=[input_layer, input_segments],
+                             outputs=[out])
     #self.model.summary()
 
     self.model.compile(optimizer="adam",
@@ -175,11 +166,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     log.loss = 0
 
     x = [
-        batch['encoded_sequences'],  # token ids
-        batch['segment_ids'],  # segment ids
-        batch['node_x_indices'],
-        #batch['graph_node_list'],
+        batch['encoded_sequences'],
+        batch['segment_ids'],
     ]
+    # TODO(cec): Mask node_y
     y = [batch['node_y']]
 
     losses = []
@@ -187,6 +177,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     def _RecordLoss(epoch, data):
       """Callback to record training/prediction loss."""
       del epoch
+      app.Log(2, 'Loss %s', data['loss'])
       losses.append(data['loss'])
 
     callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
@@ -206,9 +197,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # Run the same input again through the LSTM to get the raw predictions.
     # This is obviously wasteful when training, but I don't know of a way to
     # get the raw predictions from self.model.fit().
-    pred_y = self.model.predict(x)
+    pred_y = self.model.predict(x)[0]
 
-    return batch.graph_y, pred_y[0]
+    return batch.graph_y, pred_y
 
   def ModelDataToSave(self):
     model_path = self.working_dir / f'{self.run_id}_keras_model.h5'
