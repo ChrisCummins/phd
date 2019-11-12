@@ -45,6 +45,29 @@ class PathParser(absl_flags.ArgumentParser):
     return pathlib.Path(argument)
 
 
+class _Database():
+  """A parsed database. This is instantiated by DatabaseParser.convert() and
+  used to provide a repr()-friendly method for instantiating databases.
+
+  E.g. repr(FLAGS.db) will yield "sqlite:////path/to/db" rather than an
+  anonymous lambda.
+  """
+
+  def __init__(self, database_class, url: str, must_exist: bool):
+    self.url = url
+    self.database_class = database_class
+    self.must_exist = must_exist
+
+  def __call__(self):
+    return self.database_class(url=self.url, must_exist=self.must_exist)
+
+  def __repr__(self):
+    return str(self.url)
+
+  def __str__(self):
+    return self.__repr__()
+
+
 class DatabaseParser(absl_flags.ArgumentParser):
   """Parser of path values."""
 
@@ -67,4 +90,4 @@ class DatabaseParser(absl_flags.ArgumentParser):
     """Returns the value of this argument."""
     if not argument:
       raise TypeError('Path flag must be set')
-    return lambda: self.database_class(url=argument, must_exist=self.must_exist)
+    return _Database(self.database_class, argument, self.must_exist)
