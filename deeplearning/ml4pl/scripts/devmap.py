@@ -1,5 +1,6 @@
 """Script to automate execution of devmap experiment over k-fold splits."""
 import subprocess
+import sys
 
 from labm8 import app
 from labm8 import bazelutil
@@ -14,6 +15,7 @@ app.DEFINE_string('working_dir', '/var/phd/ml4pl/models',
                   'Path of the working directory')
 app.DEFINE_list('groups', [str(x) for x in range(10)],
                 'The test groups to use.')
+app.DEFINE_boolean('cudnn_lstm', True, 'Use the CuDNNLSTM implementation')
 
 FLAGS = app.FLAGS
 
@@ -58,16 +60,10 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     if not FLAGS.bytecode_db:
       app.FatalWithoutStackTrace("--bytecode_db must be set")
     return [
-        str(LSTM),
-        '--num_epochs',
-        '100',
-        '--bytecode_db',
-        FLAGS.bytecode_db,
-        '--input_sequence_len',
-        '10000',
-        '--hidden_size',
-        '64',
-    ]
+        str(LSTM), '--num_epochs', '100', '--bytecode_db', FLAGS.bytecode_db,
+        '--max_encoded_length', '10000', '--hidden_size', '64',
+        '--cudnn_lstm' if FLAGS.cudnn_lstm else '--nocudnn_lstm'
+    ] + base_flags
   elif FLAGS.model == 'ggnn':
     return [
         str(GGNN),
@@ -79,7 +75,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
         '.5',
         '--edge_weight_dropout_keep_prob',
         '.5',
-    ]
+    ] + base_flags
   else:
     app.FatalWithoutStackTrace('Unknown model name `%s`', FLAGS.model)
 
@@ -92,7 +88,10 @@ def RunKFoldOnGraphsOrDie(graph_db: str):
     val_group = str((test_group_as_num + 1) % 10)
     cmd = GetModelCommandFromFlagsOrDie(graph_db, val_group, test_group)
     app.Log(1, '$ %s', ' '.join(cmd))
-    subprocess.check_call(cmd)
+    process = subprocess.Popen(cmd)
+    process.communicate()
+    if process.returncode:
+      sys.exit(process.returncode)
 
 
 def main():
