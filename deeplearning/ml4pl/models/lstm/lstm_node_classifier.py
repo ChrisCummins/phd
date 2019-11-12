@@ -1,8 +1,9 @@
 """Train and evaluate a model for graph-level classification."""
+import typing
+
 import keras
 import numpy as np
 import tensorflow as tf
-import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -10,7 +11,6 @@ from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from labm8 import app
-
 
 FLAGS = app.FLAGS
 
@@ -80,38 +80,31 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # do the unsorted segment sum to get the actual lstm inputs
     def segment_sum_wrapper(args):
-      """args: [encoded_tokens, segment_ids, graph_nodes_list]"""
-      encoded_tokens, segment_ids, graph_node_list = args
-      graph_node_list = tf.cast(graph_node_list, dtype=tf.int64)
+      """Sum the encoded_tokens by their segment IDs.
 
-      # I  want the unsorted seg sum to have shape [?, 200], ? = num_graphs
-      sums = tf.math.unsorted_segment_sum(
-          data=encoded_tokens,
-          segment_ids=tf.cast(segment_ids, dtype=tf.int32),
-          num_segments=tf.cast(tf.math.reduce_max(segment_ids) + 1,
-                               dtype=tf.int32))
-      print("Unsorted segment sum: ", sums.shape, sums)
-      print("FOOOOOOOOOOOOOOXY")
+      Args:
+        encoded_tokens.  Shape: (batch_size, sequence_length, embedding_dim).
+        segment_ids.  Shape: (batch_size, segment_ids).
+      """
+      encoded_tokens, segment_ids = args
 
-      sums = tf.RaggedTensor.from_value_rowids(
-          sums, graph_node_list,
-          nrows=tf.math.reduce_max(graph_node_list) + 1).to_tensor()
-      print("Ragged Tensor: ", sums.shape, sums)
+      segment_ids = tf.cast(segment_ids, dtype=tf.int32)
+      max_segment_id = tf.cast(tf.math.reduce_max(segment_ids) + 1,
+                               dtype=tf.int32)
 
-      #sums = sums.to_tensor(default_value=0)
-      print("to_tensor(): ", sums.shape, sums)
-      #sums = tf.dynamic_partition(
-      #    sums,
-      #    graph_node_list,
-      #    num_partitions=FLAGS.batch_size  # has to be constant unfortunately
-      #)
-      #pad_length =
-      #sums = [sum]
-      return sums
+      # Perform a segment sum for each row in the batch independently.
+      segment_sums = [
+          tf.math.unsorted_segment_sum(data=encoded_tokens[i],
+                                       segment_ids=segment_ids[i],
+                                       num_segments=max_segment_id)
+          for i in range(FLAGS.batch_size)
+      ]
+
+      return tf.stack(segment_sums, axis=0)
 
     app.Log(1, '>>>> lambda declared')
     x = keras.layers.Lambda(segment_sum_wrapper)(
-        [encoded_inputs, input_segments, input_graph_node_list])
+        [encoded_inputs, input_segments])
     app.Log(1, '<<<< lambda declared')
 
     # vanilla
