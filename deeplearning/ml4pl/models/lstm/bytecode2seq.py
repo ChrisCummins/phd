@@ -221,8 +221,9 @@ OPENCL_TOKENS = [
 ]
 
 
-def Encode(bytecodes: typing.List[str], vocab: typing.Dict[str, int],
-           language: str == 'llvm'
+def Encode(bytecodes: typing.List[str],
+           vocab: typing.Dict[str, int],
+           language: str = 'llvm'
           ) -> typing.Tuple[typing.List[np.array], typing.Dict[str, int]]:
   """Encode the given bytecodes using the vocabulary.
 

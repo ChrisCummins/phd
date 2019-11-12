@@ -220,18 +220,39 @@ class GraphToSequenceEncoder(object):
       raise ValueError("Unknown option for `group_by`. Expected one of "
                        "{statement,identifier}")
 
-    # Fetch the requested unlabelled graphs.
-    graph_ids_to_fetch = set(graph_ids)
+    # Update the mapping from graph to bytecode IDs.
+    unknown_graph_ids = [
+        id_ for id_ in graph_ids if id_ not in self.graph_to_bytecode_ids
+    ]
 
-    with self.unlabelled_graph_db.Session() as session:
+    # Lookup the bytecode IDs.
+    with self.graph_db.Session() as session:
       query = session.query(
           graph_database.GraphMeta.id,
+          graph_database.GraphMeta.bytecode_id) \
+        .filter(graph_database.GraphMeta.id.in_(unknown_graph_ids))
+      for graph_id, bytecode_id in query:
+        self.graph_to_bytecode_ids[graph_id] = bytecode_id
+
+    # Fetch the requested unlabelled graphs.
+    graph_ids_to_fetch = set(
+        [self.graph_to_bytecode_ids[graph_id] for graph_id in graph_ids])
+
+    # Fetch the graph data.
+    with self.unlabelled_graph_db.Session() as session:
+      query = session.query(
+          graph_database.GraphMeta.bytecode_id,
           graph_database.Graph.pickled_data) \
         .join(graph_database.Graph) \
-        .filter(graph_database.GraphMeta.id.in_(
+        .filter(graph_database.GraphMeta.bytecode_id.in_(
           graph_ids_to_fetch))
 
       ids_to_graphs = {graph_id: pickle.loads(data) for graph_id, data in query}
+
+    if len(graph_ids_to_fetch) != len(ids_to_graphs):
+      raise EnvironmentError(
+          f"Graph IDs not found in database {self.graph_db.url}: "
+          f"{set(graph_ids_to_fetch) - set(ids_to_graphs.keys())}")
 
     # Encode the graphs
     ids_to_encoded_sequences = {}
@@ -303,14 +324,14 @@ class GraphToSequenceEncoder(object):
       graph: nx.MultiDiGraph) -> typing.Tuple[np.array, np.array, np.array]:
     """Serialize the graph to an encoded sequence and set of statement indices.
     """
-    serialized_node_list = cdfg.SerializeToStatementList()
+    serialized_node_list = cdfg.SerializeToStatementList(graph)
     node_mask = np.array(
         [1 if node in serialized_node_list else 0 for node in graph.nodes()],
         dtype=np.int32)
 
     strings_to_encode = [
         graph.nodes[n].get('original_text', '')
-        for n in cdfg.SerializeToStatementList()
+        for n in cdfg.SerializeToStatementList(graph)
     ]
 
     seqs, ids = self.EncodeStringsWithGroupings(strings_to_encode)
