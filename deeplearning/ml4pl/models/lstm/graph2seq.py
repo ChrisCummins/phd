@@ -234,9 +234,12 @@ class GraphToSequenceEncoder(object):
       for graph_id, bytecode_id in query:
         self.graph_to_bytecode_ids[graph_id] = bytecode_id
 
+    bytecode_ids = [
+        self.graph_to_bytecode_ids[graph_id] for graph_id in graph_ids
+    ]
+
     # Fetch the requested unlabelled graphs.
-    graph_ids_to_fetch = set(
-        [self.graph_to_bytecode_ids[graph_id] for graph_id in graph_ids])
+    graph_ids_to_fetch = set(bytecode_ids)
 
     # Fetch the graph data.
     with self.unlabelled_graph_db.Session() as session:
@@ -247,7 +250,9 @@ class GraphToSequenceEncoder(object):
         .filter(graph_database.GraphMeta.bytecode_id.in_(
           graph_ids_to_fetch))
 
-      ids_to_graphs = {graph_id: pickle.loads(data) for graph_id, data in query}
+      ids_to_graphs = {
+          bytecode_id: pickle.loads(data) for bytecode_id, data in query
+      }
 
     if len(graph_ids_to_fetch) != len(ids_to_graphs):
       raise EnvironmentError(
@@ -258,17 +263,21 @@ class GraphToSequenceEncoder(object):
     ids_to_encoded_sequences = {}
     ids_to_grouping_ids = {}
     ids_to_node_masks = {}
-    for id_, graph in ids_to_graphs.items():
+    for bytecode_id, graph in ids_to_graphs.items():
       seqs, ids, node_mask = encode_graph(graph)
-      ids_to_encoded_sequences[id_] = seqs
-      ids_to_grouping_ids[id_] = ids
-      ids_to_node_masks[id_] = node_mask
+      ids_to_encoded_sequences[bytecode_id] = seqs
+      ids_to_grouping_ids[bytecode_id] = ids
+      ids_to_node_masks[bytecode_id] = node_mask
 
     encoded_sequences = [
-        ids_to_encoded_sequences[graph_id] for graph_id in graph_ids
+        ids_to_encoded_sequences[bytecode_id] for bytecode_id in bytecode_ids
     ]
-    grouping_ids = [ids_to_grouping_ids[graph_id] for graph_id in graph_ids]
-    node_masks = [ids_to_node_masks[graph_id] for graph_id in graph_ids]
+    grouping_ids = [
+        ids_to_grouping_ids[bytecode_id] for bytecode_id in bytecode_ids
+    ]
+    node_masks = [
+        ids_to_node_masks[bytecode_id] for bytecode_id in bytecode_ids
+    ]
 
     # Pad the sequences to the same length.
     encoded_sequences = np.array(
