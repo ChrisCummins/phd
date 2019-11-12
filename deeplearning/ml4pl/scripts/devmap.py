@@ -48,7 +48,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
 
   if FLAGS.model == 'zero_r':
     return [
-        ZERO_R,
+        str(ZERO_R),
         '--num_epochs',
         '1',
         '--batch_size',
@@ -58,7 +58,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     if not FLAGS.bytecode_db:
       app.FatalWithoutStackTrace("--bytecode_db must be set")
     return [
-        LSTM,
+        str(LSTM),
         '--num_epochs',
         '100',
         '--bytecode_db',
@@ -70,7 +70,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     ]
   elif FLAGS.model == 'ggnn':
     return [
-        GGNN,
+        str(GGNN),
         '--num_epochs',
         '100',
         '--graph_state_dropout_keep_prob',
@@ -86,6 +86,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
 
 def RunKFoldOnGraphsOrDie(graph_db: str):
   for test_group in FLAGS.groups:
+    app.Log(1, 'Testing group %s on database %s', test_group, graph_db)
     test_group_as_num = int(test_group)
     assert 10 > test_group_as_num >= 0
     val_group = str((test_group_as_num + 1) % 10)
