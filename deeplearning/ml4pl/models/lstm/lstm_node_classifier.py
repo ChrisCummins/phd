@@ -1,9 +1,8 @@
 """Train and evaluate a model for graph-level classification."""
-import typing
-
 import keras
 import numpy as np
 import tensorflow as tf
+import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -47,7 +46,8 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     super(LstmNodeClassifierModel, self).__init__(*args, **kwargs)
 
     # The encoder which performs translation from graphs to encoded sequences.
-    self.encoder = graph2seq.GraphToSequenceEncoder(self.batcher.db)
+    self.encoder = graph2seq.GraphToByteodeGroupingsEncoder(
+        self.batcher.db, group_by='statement')
 
     # Language model
 
@@ -148,8 +148,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                                                      max_instance_count):
       graph_ids = batch.log._graph_indices
       encoded_sequences, grouping_ids, node_masks = (
-          self.encoder.GraphsToEncodedStatementGroups(graph_ids,
-                                                      group_by='statement'))
+          self.encoder.GraphsToEncodedStatementGroups(graph_ids))
 
       assert batch.node_y is not None
       yield batch.log, {

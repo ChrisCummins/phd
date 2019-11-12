@@ -43,8 +43,8 @@ app.DEFINE_integer(
     'Override the max_encoded_length value loaded from the vocabulary.')
 
 
-class GraphToSequenceEncoder(object):
-  """A class for performing graph-to-encoded bytecode translation.
+class EncoderBase(object):
+  """Base class for performing graph-to-encoded bytecode translation.
 
   This graph exposes two methods for converting graphs to encoded sequences:
 
@@ -63,7 +63,6 @@ class GraphToSequenceEncoder(object):
   def __init__(self, graph_db: graph_database.Database):
     self.graph_db = graph_db
     self._bytecode_db = None
-    self._unlabelled_graph_db = None
 
     # Load the vocabulary used for encoding LLVM bytecode.
     with open(FLAGS.bytecode_vocabulary) as f:
@@ -86,16 +85,53 @@ class GraphToSequenceEncoder(object):
         'sequence length %s', self.vocabulary_size_with_padding_token,
         self.max_sequence_length)
 
-    # Maintain a mapping from graph IDs to bytecode IDs to amortize the costs
-    # of ID translation.
-    self.graph_to_bytecode_ids: typing.Dict[int, int] = {}
+  def Encode(self, graph_ids: typing.List[int]) -> typing.Any:
+    raise NotImplementedError("abstract class")
+
+  def EncodeStrings(self,
+                    strings: typing.List[str]) -> typing.List[typing.List[int]]:
+    """Encode the given strings and return a list encoded sequences.
+
+    There is non-negligible overhead in calling this method. For the sake of
+    efficiency try to minimize the number of calls to this method.
+
+    Args:
+      strings: A list of string to encode.
+    """
+    encoded_sequences, vocab_out = bytecode2seq.Encode(strings, self.vocabulary)
+    if len(vocab_out) != len(self.vocabulary):
+      raise ValueError("Encoded vocabulary has different size "
+                       f"({len(vocab_out)}) than the input "
+                       f"({len(self.vocabulary)})")
+    return encoded_sequences
+
+  @property
+  def bytecode_db(self) -> bytecode_database.Database:
+    """Get the bytecode database."""
+    if self._bytecode_db:
+      return self._bytecode_db
+    elif FLAGS.bytecode_db:
+      self._bytecode_db = FLAGS.bytecode_db()
+      return self._bytecode_db
+    else:
+      raise app.UsageError("--bytecode_db must be set")
 
   @property
   def vocabulary_size_with_padding_token(self) -> int:
     return len(self.vocabulary) + 1
 
-  def GraphsToEncodedBytecodes(
-      self, graph_ids: typing.List[int]) -> typing.List[typing.List[int]]:
+
+class GraphToBytecodeEncoder(object):
+  """Encode graphs to bytecode sequences."""
+
+  def __init__(self, graph_db: graph_database.Database):
+    super(GraphToBytecodeEncoder, self).__init__(graph_db)
+
+    # Maintain a mapping from graph IDs to bytecode IDs to amortize the costs
+    # of ID translation.
+    self.graph_to_encoded_bytecode: typing.Dict[int, np.array] = {}
+
+  def Encode(self, graph_ids: typing.List[int]):
     """Return encoded bytecodes for the given graph IDs.
 
     This adapts the methodology used in the PACT'17 "DeepTune" paper to LLVM
@@ -108,36 +144,48 @@ class GraphToSequenceEncoder(object):
     Returns:
       A list of encoded bytecodes.
     """
-    # Update the mapping from graph to bytecode IDs.
     unknown_graph_ids = [
-        id_ for id_ in graph_ids if id_ not in self.graph_to_bytecode_ids
+        graph_id for graph_id in graph_ids
+        if graph_id not in self.graph_to_encoded_bytecode
     ]
 
-    with self.graph_db.Session() as session:
-      query = session.query(
-          graph_database.GraphMeta.id,
-          graph_database.GraphMeta.bytecode_id) \
-        .filter(graph_database.GraphMeta.id.in_(unknown_graph_ids))
-      for graph_id, bytecode_id in query:
-        self.graph_to_bytecode_ids[graph_id] = bytecode_id
+    if unknown_graph_ids:
+      with self.graph_db.Session() as session:
+        query = session.query(graph_database.GraphMeta.id,
+                              graph_database.GraphMeta.bytecode_id)
+        query = query.filter(graph_database.GraphMeta.id.in_(unknown_graph_ids))
+        graph_to_bytecode_id = {
+            graph_id: bytecode_id for graph_id, bytecode_id in query
+        }
 
-    # Fetch the requested bytecode strings.
-    bytecode_ids_to_fetch = set(
-        [self.graph_to_bytecode_ids[graph_id] for graph_id in graph_ids])
+      bytecode_to_graph_id = {v: k for k, v in graph_to_bytecode_id.items()}
 
-    with self.bytecode_db.Session() as session:
-      query = session.query(
-          bytecode_database.LlvmBytecode.id,
-          bytecode_database.LlvmBytecode.bytecode) \
-        .filter(bytecode_database.LlvmBytecode.id.in_(
-          bytecode_ids_to_fetch))
+      # Fetch the requested bytecode strings.
+      bytecode_ids_to_fetch = list(sorted(set(graph_to_bytecode_id.values())))
+      with self.bytecode_db.Session() as session:
+        query = session.query(bytecode_database.LlvmBytecode.id,
+                              bytecode_database.LlvmBytecode.bytecode)
+        query = query.filter(
+            bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch))
+        query = query.order_by(bytecode_database.LlvmBytecode.id)
 
-      bytecode_id_to_string = {
-          bytecode_id: bytecode for bytecode_id, bytecode in query
-      }
+        bytecode_id_to_string = {
+            bytecode_id: bytecode for bytecode_id, bytecode in query
+        }
+        for bytecode_id, bytecode in query:
 
-    # Encode the requested bytecodes.
-    encoded_sequences = self.Encode(bytecode_id_to_string.values())
+          self.graph_to_encoded_bytecode[bytecode_to_graph_id[bytecode_id]] = (
+              bytecode)
+
+      # Encode the requested bytecodes.
+      encoded_sequences = self.EncodeStrings([
+          bytecode_id_to_string[bytecode_id]
+          for bytecode_id in bytecode_ids_to_fetch
+      ])
+
+      for bytecode_id, encoded_sequence in zip(bytecode_ids_to_fetch,
+                                               encoded_sequences):
+        self.graph_to_encoded_bytecode[bytecode_id] = encoded_sequence
 
     bytecode_id_to_encoded = {
         id_: encoded
@@ -154,9 +202,24 @@ class GraphToSequenceEncoder(object):
             maxlen=self.max_sequence_length,
             value=self.pad_val))
 
-  def GraphsToEncodedStatementGroups(
-      self, graph_ids: typing.List,
-      group_by='statement') -> typing.Tuple[np.array, np.array, np.array]:
+
+class GraphToByteodeGroupingsEncoder(object):
+  """Encode graphs to bytecode sequences with statement groupings."""
+
+  def __init__(self, graph_db: graph_database.Database, group_by: str):
+    super(GraphToByteodeGroupingsEncoder, self).__init__(graph_db)
+
+    self._unlabelled_graph_db = None
+
+    if group_by == 'statement':
+      self.encode_graph = self._GraphToEncodedStatementGroups
+    elif group_by == 'identifier':
+      self.encode_graph = self._GraphToEncodedIdentifierGroups
+    else:
+      raise ValueError("Unknown option for `group_by`. Expected one of "
+                       "{statement,identifier}")
+
+  def Encode(self, graph_ids: typing.List[int]):
     """Serialize a graph into an encoded sequence.
 
     This method is used to provide a serialized sequence of encoded tokens
@@ -212,14 +275,6 @@ class GraphToSequenceEncoder(object):
       shape [len(graph_ids),?] which lists the nodes which are selected from
       each graph.
     """
-    if group_by == 'statement':
-      encode_graph = self.GraphToEncodedStatementGroups
-    elif group_by == 'identifier':
-      encode_graph = self.GraphToEncodedIdentifierGroups
-    else:
-      raise ValueError("Unknown option for `group_by`. Expected one of "
-                       "{statement,identifier}")
-
     # Update the mapping from graph to bytecode IDs.
     unknown_graph_ids = [
         id_ for id_ in graph_ids if id_ not in self.graph_to_bytecode_ids
@@ -264,7 +319,7 @@ class GraphToSequenceEncoder(object):
     ids_to_grouping_ids = {}
     ids_to_node_masks = {}
     for bytecode_id, graph in ids_to_graphs.items():
-      seqs, ids, node_mask = encode_graph(graph)
+      seqs, ids, node_mask = self.encode_graph(graph)
       ids_to_encoded_sequences[bytecode_id] = seqs
       ids_to_grouping_ids[bytecode_id] = ids
       ids_to_node_masks[bytecode_id] = node_mask
@@ -293,32 +348,23 @@ class GraphToSequenceEncoder(object):
 
     return encoded_sequences, grouping_ids, node_masks
 
-  #############################################################################
-  # Helper methods
-  #############################################################################
+  @property
+  def unlabelled_graph_db(self) -> graph_database.Database:
+    """Get the database of unlabelled graphs."""
+    if self._unlabelled_graph_db:
+      return self._unlabelled_graph_db
+    elif FLAGS.unlabelled_graph_db:
+      self._unlabelled_graph_db = FLAGS.unlabelled_graph_db()
+      return self._unlabelled_graph_db
+    else:
+      raise app.UsageError("--unlabelled_graph_db must be set")
 
-  def Encode(self, strings: typing.List[str]) -> typing.List[typing.List[int]]:
-    """Encode the given strings and return a list encoded sequences.
-
-    There is non-negligible overhead in calling this method. For the sake of
-    efficiency try to minimize the number of calls to this method.
-
-    Args:
-      strings: A list of string to encode.
-    """
-    encoded_sequences, vocab_out = bytecode2seq.Encode(strings, self.vocabulary)
-    if len(vocab_out) != len(self.vocabulary):
-      raise ValueError("Encoded vocabulary has different size "
-                       f"({len(vocab_out)}) than the input "
-                       f"({len(self.vocabulary)})")
-    return encoded_sequences
-
-  def EncodeStringsWithGroupings(
+  def _EncodeStringsWithGroupings(
       self, strings: typing.List[str]) -> typing.Tuple[np.array, np.array]:
     """Encode the given strings and return a flattened list of the encoded
     values, along with grouping IDs.
     """
-    encoded_sequences = self.Encode(strings)
+    encoded_sequences = self.EncodeStrings(strings)
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
@@ -328,7 +374,7 @@ class GraphToSequenceEncoder(object):
 
     return encoded_sequences, statement_indices
 
-  def GraphToEncodedStatementGroups(
+  def _GraphToEncodedStatementGroups(
       self,
       graph: nx.MultiDiGraph) -> typing.Tuple[np.array, np.array, np.array]:
     """Serialize the graph to an encoded sequence and set of statement indices.
@@ -343,11 +389,11 @@ class GraphToSequenceEncoder(object):
         for n in cdfg.SerializeToStatementList(graph)
     ]
 
-    seqs, ids = self.EncodeStringsWithGroupings(strings_to_encode)
+    seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
     return seqs, ids, node_mask
 
-  def GraphToEncodedIdentifierGroups(
+  def _GraphToEncodedIdentifierGroups(
       self,
       graph: nx.MultiDiGraph) -> typing.Tuple[np.array, np.array, np.array]:
     """Serialize the graph to an encoded sequence and set of statement indices.
@@ -367,28 +413,6 @@ class GraphToSequenceEncoder(object):
         ])
         for identifier in identifiers
     ]
-    seqs, ids = self.EncodeStringsWithGroupings(strings_to_encode)
+    seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
     return seqs, ids, np.array(node_mask, dtype=np.int32)
-
-  @property
-  def bytecode_db(self) -> bytecode_database.Database:
-    """Get the bytecode database."""
-    if self._bytecode_db:
-      return self._bytecode_db
-    elif FLAGS.bytecode_db:
-      self._bytecode_db = FLAGS.bytecode_db()
-      return self._bytecode_db
-    else:
-      raise app.UsageError("--bytecode_db must be set")
-
-  @property
-  def unlabelled_graph_db(self) -> graph_database.Database:
-    """Get the database of unlabelled graphs."""
-    if self._unlabelled_graph_db:
-      return self._unlabelled_graph_db
-    elif FLAGS.unlabelled_graph_db:
-      self._unlabelled_graph_db = FLAGS.unlabelled_graph_db()
-      return self._unlabelled_graph_db
-    else:
-      raise app.UsageError("--unlabelled_graph_db must be set")
