@@ -33,12 +33,6 @@ classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 
 app.DEFINE_string('tokenizer', 'opencl',
                   'The tokenizer to use. One of {opencl,deeptune,inst2vec}')
-app.DEFINE_integer(
-    "input_sequence_len", 10000,
-    "The length of encoded input sequences. Sequences shorter "
-    "than this are padded. Sequences longer than this are "
-    "truncated.")
-classifier_base.MODEL_FLAGS.add("input_sequence_len")
 
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')

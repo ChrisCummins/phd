@@ -1,17 +1,16 @@
 """Train and evaluate a model for graph-level classification."""
-import typing
-
 import keras
 import numpy as np
 import tensorflow as tf
+import typing
 from keras import models
-from labm8 import app
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
-from deeplearning.ml4pl.models import base_utils
+from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -31,13 +30,6 @@ classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_integer("dense_hidden_size", 32, "The size of the dense ")
 classifier_base.MODEL_FLAGS.add("dense_hidden_size")
-
-app.DEFINE_integer(
-    "input_sequence_len", 10000,
-    "The length of encoded input sequences. Sequences shorter "
-    "than this are padded. Sequences longer than this are "
-    "truncated.")
-classifier_base.MODEL_FLAGS.add("input_sequence_len")
 
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
