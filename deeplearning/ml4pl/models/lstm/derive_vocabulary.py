@@ -41,11 +41,9 @@ def main():
     with open(FLAGS.vocabulary) as f:
       data_to_load = json.load(f)
     vocab = data_to_load['vocab']
-    max_encoded_length = data_to_load['max_encoded_length']
     encoded_lengths = data_to_load['encoded_lengths']
   else:
     vocab = {}
-    max_encoded_length = 0
     encoded_lengths = []
 
   vocab_size = len(vocab)
