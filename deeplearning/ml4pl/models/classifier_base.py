@@ -532,7 +532,10 @@ class ClassifierBase(object):
 
 
 def Run(model_class):
-  graph_db = FLAGS.graph_db()
+  if FLAGS.graph_db:
+    graph_db = FLAGS.graph_db()
+  else:
+    raise app.UsageError("--graph_db must be set")
   log_db = FLAGS.log_db()
   working_dir = FLAGS.working_dir
   if not working_dir:
