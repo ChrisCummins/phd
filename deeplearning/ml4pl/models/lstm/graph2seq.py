@@ -289,7 +289,7 @@ class GraphToSequenceEncoder(object):
         keras.preprocessing.sequence.pad_sequences(
             grouping_ids,
             maxlen=self.max_sequence_length,
-            value=max(grouping_ids) + 1))
+            value=max(max(m) for m in grouping_ids) + 1))
 
     return encoded_sequences, grouping_ids, node_masks
 
