@@ -60,9 +60,20 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     if not FLAGS.bytecode_db:
       app.FatalWithoutStackTrace("--bytecode_db must be set")
     return [
-        str(LSTM), '--num_epochs', '100', '--bytecode_db', FLAGS.bytecode_db,
-        '--max_encoded_length', '10000', '--hidden_size', '64', '--vmodule',
-        "*=5", '--cudnn_lstm' if FLAGS.cudnn_lstm else '--nocudnn_lstm'
+        str(LSTM),
+        '--num_epochs',
+        '50',
+        '--bytecode_db',
+        FLAGS.bytecode_db,
+        '--max_encoded_length',
+        '10000',
+        '--hidden_size',
+        '64',
+        '--vmodule',
+        "*=5",
+        '--cudnn_lstm' if FLAGS.cudnn_lstm else '--nocudnn_lstm',
+        '--batch_size',
+        '64',
     ] + base_flags
   elif FLAGS.model == 'ggnn':
     return [

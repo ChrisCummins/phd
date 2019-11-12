@@ -1,4 +1,5 @@
 """Module for conversion from labelled graphs to encoded sequences."""
+import collections
 import json
 import pickle
 import typing
@@ -6,6 +7,9 @@ import typing
 import keras
 import networkx as nx
 import numpy as np
+from labm8 import app
+from labm8 import bazelutil
+from labm8 import labtypes
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
@@ -13,9 +17,6 @@ from deeplearning.ml4pl.graphs import graph_query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.models.lstm import bytecode2seq
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import labtypes
 
 FLAGS = app.FLAGS
 
@@ -121,7 +122,7 @@ class EncoderBase(object):
     return len(self.vocabulary) + 1
 
 
-class GraphToBytecodeEncoder(object):
+class GraphToBytecodeEncoder(EncoderBase):
   """Encode graphs to bytecode sequences."""
 
   def __init__(self, graph_db: graph_database.Database):
@@ -150,6 +151,7 @@ class GraphToBytecodeEncoder(object):
     ]
 
     if unknown_graph_ids:
+      # Look the bytecode IDs of any unknown graphs.
       with self.graph_db.Session() as session:
         query = session.query(graph_database.GraphMeta.id,
                               graph_database.GraphMeta.bytecode_id)
@@ -157,8 +159,17 @@ class GraphToBytecodeEncoder(object):
         graph_to_bytecode_id = {
             graph_id: bytecode_id for graph_id, bytecode_id in query
         }
+      if len(graph_to_bytecode_id) != len(unknown_graph_ids):
+        raise EnvironmentError(
+            f"len(graph_to_bytecode_id)={len(graph_to_bytecode_id)} != "
+            f"len(unknown_graph_ids)={len(unknown_graph_ids)}")
 
-      bytecode_to_graph_id = {v: k for k, v in graph_to_bytecode_id.items()}
+      # Create reverse mapping from bytecode ID to a list of graph IDs. One
+      # bytecode can map to multiple graphs.
+      bytecode_to_graph_ids: typing.Dict[
+          int, typing.List[int]] = collections.defaultdict(list)
+      for graph_id, bytecode_id in graph_to_bytecode_id.items():
+        bytecode_to_graph_ids[bytecode_id].append(graph_id)
 
       # Fetch the requested bytecode strings.
       bytecode_ids_to_fetch = list(sorted(set(graph_to_bytecode_id.values())))
@@ -172,28 +183,29 @@ class GraphToBytecodeEncoder(object):
         bytecode_id_to_string = {
             bytecode_id: bytecode for bytecode_id, bytecode in query
         }
-        for bytecode_id, bytecode in query:
-
-          self.graph_to_encoded_bytecode[bytecode_to_graph_id[bytecode_id]] = (
-              bytecode)
+        if len(bytecode_ids_to_fetch) != len(bytecode_id_to_string):
+          raise EnvironmentError(
+              f"len(bytecode_ids_to_fetch)={len(bytecode_ids_to_fetch)} != "
+              f"len(bytecode_id_to_string)={len(bytecode_id_to_string)}")
 
       # Encode the requested bytecodes.
       encoded_sequences = self.EncodeStrings([
           bytecode_id_to_string[bytecode_id]
           for bytecode_id in bytecode_ids_to_fetch
       ])
+      if len(bytecode_ids_to_fetch) != len(encoded_sequences):
+        raise EnvironmentError(
+            f"len(bytecode_ids_to_fetch)={len(bytecode_ids_to_fetch)} != "
+            f"len(encoded_sequences)={len(encoded_sequences)}")
 
       for bytecode_id, encoded_sequence in zip(bytecode_ids_to_fetch,
                                                encoded_sequences):
-        self.graph_to_encoded_bytecode[bytecode_id] = encoded_sequence
-
-    bytecode_id_to_encoded = {
-        id_: encoded
-        for id_, encoded in zip(bytecode_id_to_string.keys(), encoded_sequences)
-    }
+        graph_ids_for_bytecode = bytecode_to_graph_ids[bytecode_id]
+        for graph_id in graph_ids_for_bytecode:
+          self.graph_to_encoded_bytecode[graph_id] = encoded_sequence
 
     encoded_sequences = [
-        bytecode_id_to_encoded[self.graph_to_bytecode_ids[i]] for i in graph_ids
+        self.graph_to_encoded_bytecode[graph_id] for graph_id in graph_ids
     ]
 
     return np.array(
@@ -203,7 +215,7 @@ class GraphToBytecodeEncoder(object):
             value=self.pad_val))
 
 
-class GraphToByteodeGroupingsEncoder(object):
+class GraphToByteodeGroupingsEncoder(EncoderBase):
   """Encode graphs to bytecode sequences with statement groupings."""
 
   def __init__(self, graph_db: graph_database.Database, group_by: str):
@@ -244,8 +256,8 @@ class GraphToByteodeGroupingsEncoder(object):
          12, 9, 3,             # encoded `store i32 0, i32* %1, align 4`
          9, 8,                 # encoded `ret i32 15`
       ]
-      
-    This encoded sequence can then be grouped into the three individual 
+
+    This encoded sequence can then be grouped into the three individual
     statements by assigning each statement a unique ID, such as:
 
       [
@@ -253,7 +265,7 @@ class GraphToByteodeGroupingsEncoder(object):
         1, 1, 1,
         2, 2,
       ]
-      
+
     This method computes and returns these two arrays, along with a third array
     which contains a masking of nodes from the input program graph, marking the
     non-statement nodes as inactive. E.g. for a graph with 5 statement nodes
