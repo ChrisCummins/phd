@@ -49,7 +49,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     super(LstmGraphClassifierModel, self).__init__(*args, **kwargs)
 
     # The encoder which performs translation from graphs to encoded sequences.
-    self.encoder = graph2seq.GraphToSequenceEncoder(self.batcher.db)
+    self.encoder = graph2seq.GraphToBytecodeEncoder(self.batcher.db)
 
     # The graph level LSTM baseline doesn't need to sum segments, although they might as well to be shorter be summed?
     input_layer = keras.Input(shape=(self.encoder.max_sequence_length,),
@@ -109,8 +109,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
       with prof.Profile(f'Encoded {len(batch.log._graph_indices)} bytecodes',
                         print_to=lambda x: app.Log(2, x)):
         # returns a list of encoded bytecodes padded to max_sequence_length.
-        encoded_sequences = self.encoder.GraphsToEncodedBytecodes(
-            batch.log._graph_indices)
+        encoded_sequences = self.encoder.Encode(batch.log._graph_indices)
       # for graph_classifier we just need graph_x, graph_y split per graph
       # which is already the case.
       yield batch.log, { # vstack lists to np.arrays w/ [batch, ...] shape
