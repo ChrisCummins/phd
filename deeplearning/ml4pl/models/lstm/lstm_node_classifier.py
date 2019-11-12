@@ -1,9 +1,8 @@
 """Train and evaluate a model for graph-level classification."""
-import typing
-
 import keras
 import numpy as np
 import tensorflow as tf
+import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -11,6 +10,7 @@ from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -54,7 +54,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # define token ids as input
 
     input_layer = keras.Input(
-        batch_shape=(16, self.encoder.max_sequence_length),
+        batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
         dtype='int32',
         name="model_in")
     app.Log(1, '%s', "$$$$" * 100)
@@ -62,12 +62,12 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     app.Log(1, '%s', input_layer.shape)
     # and the segment indices
     input_segments = keras.Input(
-        batch_shape=(self.encoder.max_sequence_length,),
+        batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
         dtype='int32',
         name="model_in_segments")
 
     input_graph_node_list = keras.Input(
-        batch_shape=(self.encoder.max_sequence_length,),
+        batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
         dtype='int32',
         name='graph_node_list_input')
 
