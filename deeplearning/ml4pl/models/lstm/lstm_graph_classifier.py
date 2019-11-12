@@ -1,16 +1,17 @@
 """Train and evaluate a model for graph-level classification."""
+import typing
+
 import keras
 import numpy as np
-import typing
 from keras import models
+from labm8 import app
+from labm8 import prof
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
-from labm8 import app
-from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -52,9 +53,10 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     self.encoder = graph2seq.GraphToBytecodeEncoder(self.batcher.db)
 
     # The graph level LSTM baseline doesn't need to sum segments, although they might as well to be shorter be summed?
-    input_layer = keras.Input(shape=(self.encoder.max_sequence_length,),
-                              dtype='int32',
-                              name="model_in")
+    input_layer = keras.Input(
+        shape=(self.encoder.max_sequence_length,),
+        dtype='int32',
+        name="model_in")
 
     x = keras.layers.Embedding(
         input_dim=self.encoder.vocabulary_size_with_padding_token,
@@ -62,14 +64,15 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
         output_dim=FLAGS.hidden_size,
         name="embedding")(input_layer)
 
-    x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True,
-                       name="lstm_1")(x)
+    x = utils.MakeLstm(
+        FLAGS.hidden_size, return_sequences=True, name="lstm_1")(x)
 
     x = utils.MakeLstm(FLAGS.hidden_size, name="lstm_2")(x)
 
-    langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
-                                       activation="sigmoid",
-                                       name="langmodel_out")(x)
+    langmodel_out = keras.layers.Dense(
+        self.stats.graph_features_dimensionality,
+        activation="sigmoid",
+        name="langmodel_out")(x)
 
     # Auxiliary inputs.
     auxiliary_inputs = keras.Input(
@@ -79,15 +82,15 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     # and auxiliary inputs, outputs 1-hot encoded device mapping.
     x = keras.layers.Concatenate()([x, auxiliary_inputs])
     x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Dense(FLAGS.dense_hidden_size,
-                           activation="relu",
-                           name="heuristic_1")(x)
-    out = keras.layers.Dense(self.stats.graph_labels_dimensionality,
-                             activation="sigmoid",
-                             name='heuristic_2')(x)
+    x = keras.layers.Dense(
+        FLAGS.dense_hidden_size, activation="relu", name="heuristic_1")(x)
+    out = keras.layers.Dense(
+        self.stats.graph_labels_dimensionality,
+        activation="sigmoid",
+        name='heuristic_2')(x)
 
-    self.model = keras.Model(inputs=[input_layer, auxiliary_inputs],
-                             outputs=[out, langmodel_out])
+    self.model = keras.Model(
+        inputs=[input_layer, auxiliary_inputs], outputs=[out, langmodel_out])
     self.model.compile(
         optimizer="adam",
         metrics=['accuracy'],
@@ -99,15 +102,16 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
-    options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
-                                              group=group)
+    options = graph_batcher.GraphBatchOptions(
+        max_nodes=FLAGS.batch_size, group=group)
     max_instance_count = (
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
-      with prof.Profile(f'Encoded {len(batch.log._graph_indices)} bytecodes',
-                        print_to=lambda x: app.Log(2, x)):
+      with prof.Profile(
+          f'Encoded {len(batch.log._graph_indices)} bytecodes',
+          print_to=lambda x: app.Log(2, x)):
         # returns a list of encoded bytecodes padded to max_sequence_length.
         encoded_sequences = self.encoder.Encode(batch.log._graph_indices)
       # for graph_classifier we just need graph_x, graph_y split per graph
@@ -133,24 +137,26 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
 
-    with prof.Profile(f'model.fit() {len(y[0]} instances',
-                      print_to=lambda x: app.Log(2, x)):
+    with prof.Profile(
+        f'model.fit() {len(y[0])} instances', print_to=lambda x: app.Log(2, x)):
       if log.type == 'train':
-        self.model.fit(x,
-                       y,
-                       epochs=1,
-                       batch_size=log.graph_count,
-                       callbacks=callbacks,
-                       verbose=False,
-                       shuffle=False)
+        self.model.fit(
+            x,
+            y,
+            epochs=1,
+            batch_size=log.graph_count,
+            callbacks=callbacks,
+            verbose=False,
+            shuffle=False)
 
     log.loss = sum(losses) / max(len(losses), 1)
 
     # Run the same input again through the LSTM to get the raw predictions.
     # This is obviously wasteful when training, but I don't know of a way to
     # get the raw predictions from self.model.fit().
-    with prof.Profile(f'model.predict() {len(y[0]} instances',
-                      print_to=lambda x: app.Log(2, x)):
+    with prof.Profile(
+        f'model.predict() {len(y[0])} instances',
+        print_to=lambda x: app.Log(2, x)):
       pred_y = self.model.predict(x)
     assert batch['graph_y'].shape == pred_y[0].shape
 
