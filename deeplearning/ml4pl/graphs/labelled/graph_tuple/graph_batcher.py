@@ -5,15 +5,21 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
+from labm8 import humanize
 
 FLAGS = app.FLAGS
+
+app.DEFINE_integer(
+    'graph_reader_buffer_size', 128,
+    'The number of graphs to read from the database per SQL '
+    'query. A larger number means fewer costly SQL queries, '
+    'but requires more memory.')
 
 
 class GraphBatchOptions(typing.NamedTuple):
@@ -449,7 +455,7 @@ class GraphBatcher(object):
         eager_graph_loading=True,
         # Magic constant to try and get a reasonable balance between memory
         # requirements and database round trips.
-        buffer_size=128,
+        buffer_size=FLAGS.graph_reader_buffer_size,
         limit=max_instance_count)
 
     # Batch creation outer-loop.
