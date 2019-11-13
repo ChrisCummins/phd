@@ -46,7 +46,7 @@ classifier_base.MODEL_FLAGS.add("hidden_size")
 app.DEFINE_string(
     "inst2vec_embeddings", "random",
     "The type of per-node inst2vec embeddings to use. One of: "
-    "{constant,finetune,random}.")
+    "{constant,constant_zero,finetune,random}.")
 classifier_base.MODEL_FLAGS.add("inst2vec_embeddings")
 
 app.DEFINE_boolean(
@@ -188,11 +188,14 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       app.Log(1, "Initializing with random embeddings")
       embeddings[0] = np.random.rand(embeddings[0].shape)
       trainable = True
+    elif FLAGS.inst2vec_embeddings == 'constant_zero':
+      embeddings[0] = np.zeros(embeddings[0].shape)
+      trainable = False
     else:
       raise app.UsageError(
-          f"--instvec_embeddings=`{FLAGS.inst2vec_embeddings}` "
+          f"--inst2vec_embeddings=`{FLAGS.inst2vec_embeddings}` "
           "unrecognized. Must be one of "
-          "{constant,finetune,random}")
+          "{constant,constant_zero,finetune,random}")
     inst2vec_embeddings = tf.Variable(initial_value=embeddings[0],
                                       trainable=trainable,
                                       dtype=tf.float32)
