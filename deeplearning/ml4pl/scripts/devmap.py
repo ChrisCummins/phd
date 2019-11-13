@@ -100,6 +100,8 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
         str(GGNN),
         '--num_epochs',
         '100',
+        '--vmodule',
+        "*=5",
     ] + base_flags + ggnn_flags
   else:
     app.FatalWithoutStackTrace('Unknown model name `%s`', FLAGS.model)
