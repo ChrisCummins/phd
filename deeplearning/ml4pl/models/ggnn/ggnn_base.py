@@ -58,7 +58,6 @@ app.DEFINE_integer(
     "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
     "n=-1 (maybe) runs until convergence of predictions.")
 
-# TODO: Not really a todo maybe:
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
 # This could be nice for ablating our model and also debugging with and without.
