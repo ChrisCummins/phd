@@ -380,7 +380,7 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
       workers = (_Worker(job) for job in jobs)
 
     job_count = 0
-    for annotator, graph_metas_by_output in zip(annotators, workers):
+    for graph_metas_by_output in workers:
       job_count += 1
       app.Log(
           1, 'Created %s graphs at %.2f graphs/sec. %.2f%% of %s bytecodes '
@@ -390,13 +390,12 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
           (job_count / len(bytecode_id_chunks)) * 100,
           humanize.DecimalPrefix(len(bytecodes_to_process), ''))
 
-      for output, graph_metas, output in zip(
-          self.outputs, graph_metas_by_output, self.outputs):
+      for output, graph_metas in zip(self.outputs, graph_metas_by_output):
         if graph_metas:
           with prof.Profile(lambda t: (f"Added {added_to_database} "
                                        f"{output.annotator.name} graph metas")):
             added_to_database = ResilientAddUnique(output.db, graph_metas,
-                                                   annotator.name)
+                                                   output.annotator.name)
             exported_graph_count += added_to_database
 
     elapsed_time = time.time() - start_time
