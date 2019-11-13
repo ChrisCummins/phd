@@ -1,15 +1,17 @@
 """My (Chris's) API for inst2vec codebase."""
 import copy
-import pickle
-import typing
-
 import networkx as nx
 import numpy as np
+import pickle
+import re
+import typing
+
+from deeplearning.ncc import rgx_utils as rgx
+from deeplearning.ncc import vocabulary
+from deeplearning.ncc.inst2vec import inst2vec_preprocess as preprocess
 from labm8 import app
 from labm8 import bazelutil
 
-from deeplearning.ncc import vocabulary
-from deeplearning.ncc.inst2vec import inst2vec_preprocess as preprocess
 
 FLAGS = app.FLAGS
 
@@ -38,7 +40,25 @@ def PretrainedEmbeddingIndicesDictionary() -> typing.Dict[str, int]:
 def EncodeLlvmBytecode(bytecode: str,
                        vocab: vocabulary.VocabularyZipFile) -> typing.List[int]:
   """Encode an LLVM bytecode to an array of vocabulary indices."""
-  raise NotImplementedError
+  bytecode_lines = bytecode.split('\n')
+  preprocessed_lines, functions_declared_in_files = preprocess.preprocess(
+      [bytecode_lines])
+  preprocessed_lines = preprocessed_lines[0]
+
+  # TODO(cec): inline_struct_types_txt
+
+  # Abstract identifiers from statements.
+  preprocessed_lines = [
+    preprocess.PreprocessStatement(statement)
+    for statement in preprocessed_lines
+  ]
+
+  # Translate from statement to encoded token.
+  return [
+    vocab.dictionary.get(statement, vocab.dictionary[rgx.unknown_token])
+    for statement in preprocessed_lines
+    if not re.match(r'((?:<label>:)?(<LABEL>):|:; <label>:<LABEL>)', statement)
+  ]
 
 
 def EmbedEncoded(encoded: typing.List[int], embedding_matrix) -> np.ndarray:
