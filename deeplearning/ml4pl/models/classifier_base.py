@@ -107,6 +107,9 @@ app.DEFINE_integer(
     "The number of epochs to train for without any improvement in validation "
     "accuracy before stopping.")
 
+app.DEFINE_list("batch_log_types", ["val", "test"],
+                "The types of epochs to record per-instance batch logs for.")
+
 #
 ##### End of flag declarations.
 
@@ -245,6 +248,9 @@ class ClassifierBase(object):
 
     epoch_accuracies = []
 
+    # Whether to record per-instance batch logs.
+    record_batch_logs = epoch_type in FLAGS.batch_log_types
+
     batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type, group), max_queue_size=5)
@@ -288,7 +294,7 @@ class ClassifierBase(object):
       log.accuracy = accuracies.mean()
 
       # Only create a batch log for test runs.
-      if epoch_type == 'test':
+      if record_batch_logs:
         log.batch_log = log_database.BatchLog()
         log.graph_indices = log._graph_indices
         log.accuracies = accuracies
