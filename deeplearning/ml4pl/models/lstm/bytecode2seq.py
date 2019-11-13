@@ -9,6 +9,8 @@ from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
+from deeplearning.ncc import vocabulary as inst2vec_vocab
+from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
@@ -359,11 +361,11 @@ class BytecodeEncoder(EncoderBase):
               f"len(bytecode_ids)={len(bytecode_ids)} != "
               f"len(bytecode_id_to_string)={len(bytecode_id_to_string)}")
 
-    return self.EncodeStrings([
+    return self.EncodeBytecodeStrings([
         bytecode_id_to_string[bytecode_id] for bytecode_id in bytecode_ids
     ])
 
-  def EncodeStrings(self, strings: typing.List[str]):
+  def EncodeBytecodeStrings(self, strings: typing.List[str]):
     # Encode the requested bytecodes.
     encoded_sequences = EncodeWithFixedVocab(strings, self.vocabulary, self.language)
     if len(strings) != len(encoded_sequences):
@@ -378,13 +380,42 @@ class BytecodeEncoder(EncoderBase):
 
 
 class Inst2VecEncoder(BytecodeEncoder):
+  """Translate bytecode IDs to inst2vec encoded sequences."""
 
   def __init__(self):
+    self.vocab = inst2vec_vocab.VocabularyZipFile.CreateFromPublishedResults()
+
+    # Unpack the vocabulary zipfile.
+    self.vocab.__enter__()
+
+    self.pad_val = len(self.vocab.dictionary)
+    assert self.pad_val not in self.vocab.dictionary.values()
+
+    # We must call the superclass constructor *after* unpacking the vocabulary
+    # zipfile.
     super(Inst2VecEncoder, self).__init__()
 
-  def EncodeStrings(self, strings: typing.List[str]):
-    # TODO(cec): Run through inst2vec pre-processor.
-    # TODO(cec): Figure out inst2vec.prepare_trainable and port it.
+  def __del__(self):
+    # Tidy up the unpacked vocabulary zipfile.
+    self.vocab.__exit__()
+
+  def EncodeBytecodeStrings(self, strings: typing.List[str]):
+    with self.vocab as vocab:
+      encoded_sequences = [
+        inst2vec.EncodeLlvmBytecode(bytecode, vocab) for bytecode in strings
+      ]
+
+    return np.array(
+        keras.preprocessing.sequence.pad_sequences(
+            encoded_sequences,
+            maxlen=self.max_sequence_length,
+            value=self.pad_val,
+        )
+    )
+
+  @property
+  def vocabulary_size_with_padding_token(self) -> int:
+    return len(self.vocab.dictionary) + 1
 
 
 class OpenClEncoder(EncoderBase):
