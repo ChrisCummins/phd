@@ -62,7 +62,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     '--graph_state_dropout_keep_prob', FLAGS.graph_state_dropout_keep_prob,
     '--output_layer_dropout_keep_prob', FLAGS.output_layer_dropout_keep_prob,
     '--edge_weight_dropout_keep_prob', FLAGS.edge_weight_dropout_keep_prob,
-    '--position_embeddings', FLAGS.position_embeddings,
+    '--position_embeddings', '--position_embeddings' if FLAGS.position_embeddings else '--noposition_embeddings',
   ]
 
   if FLAGS.model == 'zero_r':
