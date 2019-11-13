@@ -1,13 +1,33 @@
 py_library(
     name = "bytecode2seq",
     srcs = ["bytecode2seq.py"],
-    data = ["//deeplearning/clgen/corpuses/lexer:lexer_worker"],
+    data = ["//deeplearning/clgen/corpuses/lexer:lexer_worker", ":llvm_vocab"],
     deps = [
         "//deeplearning/clgen/proto:clgen_pb_py",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//labm8:app",
         "//labm8:bazelutil",
         "//labm8:pbutil",
         "//third_party/py/numpy",
+        "//third_party/py/keras",
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
+    ],
+)
+
+py_test(
+    name = "bytecode2seq_test",
+    srcs = ["bytecode2seq_test.py"],
+    deps = [
+        ":bytecode2seq",
+        "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
+        "//deeplearning/ml4pl/graphs/labelled/devmap:make_devmap_dataset",
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//labm8:app",
+        "//third_party/py/pandas",
+        "//labm8:test",
+        "//third_party/py/pytest",
     ],
 )
 

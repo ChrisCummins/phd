@@ -1,47 +1,28 @@
 """Module for conversion from labelled graphs to encoded sequences."""
-import collections
-import json
-import pickle
-import typing
 
+import collections
 import keras
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import labtypes
+import pickle
+import typing
 
-from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.models.lstm import bytecode2seq
+from labm8 import app
+from labm8 import labtypes
+
 
 FLAGS = app.FLAGS
-
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecodes from.',
-                    must_exist=True)
 
 app.DEFINE_database('unlabelled_graph_db',
                     graph_database.Database,
                     None,
                     'URL of unlabelled graphs to read bytecodes from.',
                     must_exist=True)
-
-app.DEFINE_input_path(
-    "bytecode_vocabulary",
-    bazelutil.DataPath('phd/deeplearning/ml4pl/models/lstm/llvm_vocab.json'),
-    "Override the default LLVM vocabulary file. Use "
-    "//deeplearning/ml4pl/models/lstm:derive_vocabulary to generate a "
-    "vocabulary.")
-
-app.DEFINE_integer(
-    'max_encoded_length', None,
-    'Override the max_encoded_length value loaded from the vocabulary.')
 
 
 class EncoderBase(object):
@@ -63,63 +44,9 @@ class EncoderBase(object):
 
   def __init__(self, graph_db: graph_database.Database):
     self.graph_db = graph_db
-    self._bytecode_db = None
-
-    # Load the vocabulary used for encoding LLVM bytecode.
-    with open(FLAGS.bytecode_vocabulary) as f:
-      data_to_load = json.load(f)
-    self.vocabulary = data_to_load['vocab']
-    self.max_sequence_length = data_to_load['max_encoded_length']
-
-    # Allow the --max_encoded_length to override the value stored in the
-    # vocabulary file.
-    if FLAGS.max_encoded_length:
-      self.max_sequence_length = FLAGS.max_encoded_length
-
-    # The out-of-vocabulary padding value, used to pad sequences to the same
-    # length.
-    self.pad_val = len(self.vocabulary)
-    assert self.pad_val not in self.vocabulary
-
-    app.Log(
-        1, 'Bytecode encoder using %s-element vocabulary with maximum '
-        'sequence length %s', self.vocabulary_size_with_padding_token,
-        self.max_sequence_length)
 
   def Encode(self, graph_ids: typing.List[int]) -> typing.Any:
     raise NotImplementedError("abstract class")
-
-  def EncodeStrings(self,
-                    strings: typing.List[str]) -> typing.List[typing.List[int]]:
-    """Encode the given strings and return a list encoded sequences.
-
-    There is non-negligible overhead in calling this method. For the sake of
-    efficiency try to minimize the number of calls to this method.
-
-    Args:
-      strings: A list of string to encode.
-    """
-    encoded_sequences, vocab_out = bytecode2seq.Encode(strings, self.vocabulary)
-    if len(vocab_out) != len(self.vocabulary):
-      raise ValueError("Encoded vocabulary has different size "
-                       f"({len(vocab_out)}) than the input "
-                       f"({len(self.vocabulary)})")
-    return encoded_sequences
-
-  @property
-  def bytecode_db(self) -> bytecode_database.Database:
-    """Get the bytecode database."""
-    if self._bytecode_db:
-      return self._bytecode_db
-    elif FLAGS.bytecode_db:
-      self._bytecode_db = FLAGS.bytecode_db()
-      return self._bytecode_db
-    else:
-      raise app.UsageError("--bytecode_db must be set")
-
-  @property
-  def vocabulary_size_with_padding_token(self) -> int:
-    return len(self.vocabulary) + 1
 
 
 class GraphToBytecodeEncoder(EncoderBase):
@@ -128,9 +55,10 @@ class GraphToBytecodeEncoder(EncoderBase):
   def __init__(self, graph_db: graph_database.Database):
     super(GraphToBytecodeEncoder, self).__init__(graph_db)
 
-    # Maintain a mapping from graph IDs to bytecode IDs to amortize the costs
-    # of ID translation.
+    # Maintain a mapping from graph IDs to encoded bytecodes to amortize the
+    # cost of encoding.
     self.graph_to_encoded_bytecode: typing.Dict[int, np.array] = {}
+    self.bytecode_encoder = bytecode2seq.BytecodeEncoder()
 
   def Encode(self, graph_ids: typing.List[int]):
     """Return encoded bytecodes for the given graph IDs.
@@ -171,57 +99,29 @@ class GraphToBytecodeEncoder(EncoderBase):
       for graph_id, bytecode_id in graph_to_bytecode_id.items():
         bytecode_to_graph_ids[bytecode_id].append(graph_id)
 
-      # Fetch the requested bytecode strings.
-      bytecode_ids_to_fetch = list(sorted(set(graph_to_bytecode_id.values())))
-      with self.bytecode_db.Session() as session:
-        query = session.query(bytecode_database.LlvmBytecode.id,
-                              bytecode_database.LlvmBytecode.bytecode)
-        query = query.filter(
-            bytecode_database.LlvmBytecode.id.in_(bytecode_ids_to_fetch))
-        query = query.order_by(bytecode_database.LlvmBytecode.id)
+      bytecodes_to_encode = sorted(list(bytecode_to_graph_ids.keys()))
+      encoded_sequences = self.bytecode_encoder.Encode(bytecodes_to_encode)
 
-        bytecode_id_to_string = {
-            bytecode_id: bytecode for bytecode_id, bytecode in query
-        }
-        if len(bytecode_ids_to_fetch) != len(bytecode_id_to_string):
-          raise EnvironmentError(
-              f"len(bytecode_ids_to_fetch)={len(bytecode_ids_to_fetch)} != "
-              f"len(bytecode_id_to_string)={len(bytecode_id_to_string)}")
-
-      # Encode the requested bytecodes.
-      encoded_sequences = self.EncodeStrings([
-          bytecode_id_to_string[bytecode_id]
-          for bytecode_id in bytecode_ids_to_fetch
-      ])
-      if len(bytecode_ids_to_fetch) != len(encoded_sequences):
-        raise EnvironmentError(
-            f"len(bytecode_ids_to_fetch)={len(bytecode_ids_to_fetch)} != "
-            f"len(encoded_sequences)={len(encoded_sequences)}")
-
-      for bytecode_id, encoded_sequence in zip(bytecode_ids_to_fetch,
+      for bytecode_id, encoded_sequence in zip(bytecodes_to_encode,
                                                encoded_sequences):
         graph_ids_for_bytecode = bytecode_to_graph_ids[bytecode_id]
         for graph_id in graph_ids_for_bytecode:
           self.graph_to_encoded_bytecode[graph_id] = encoded_sequence
 
-    encoded_sequences = [
+    return [
         self.graph_to_encoded_bytecode[graph_id] for graph_id in graph_ids
     ]
 
-    return np.array(
-        keras.preprocessing.sequence.pad_sequences(
-            encoded_sequences,
-            maxlen=self.max_sequence_length,
-            value=self.pad_val))
 
-
-class GraphToByteodeGroupingsEncoder(EncoderBase):
+class GraphToBytecodeGroupingsEncoder(EncoderBase):
   """Encode graphs to bytecode sequences with statement groupings."""
 
   def __init__(self, graph_db: graph_database.Database, group_by: str):
-    super(GraphToByteodeGroupingsEncoder, self).__init__(graph_db)
+    super(GraphToBytecodeGroupingsEncoder, self).__init__(graph_db)
 
     self._unlabelled_graph_db = None
+
+    self.bytecode_encoder = bytecode2seq.BytecodeEncoder()
 
     if group_by == 'statement':
       self.encode_graph = self._GraphToEncodedStatementGroups
@@ -230,6 +130,8 @@ class GraphToByteodeGroupingsEncoder(EncoderBase):
     else:
       raise ValueError("Unknown option for `group_by`. Expected one of "
                        "{statement,identifier}")
+
+    self.graph_to_bytecode_ids = {}
 
   def Encode(self, graph_ids: typing.List[int]):
     """Serialize a graph into an encoded sequence.
@@ -310,6 +212,7 @@ class GraphToByteodeGroupingsEncoder(EncoderBase):
 
     # Fetch the graph data.
     with self.unlabelled_graph_db.Session() as session:
+      # TODO: Rebuild networkx from graph tuples.
       query = session.query(
           graph_database.GraphMeta.bytecode_id,
           graph_database.Graph.pickled_data) \
@@ -350,12 +253,12 @@ class GraphToByteodeGroupingsEncoder(EncoderBase):
     encoded_sequences = np.array(
         keras.preprocessing.sequence.pad_sequences(
             encoded_sequences,
-            maxlen=self.max_sequence_length,
-            value=self.pad_val))
+            maxlen=self.bytecode_encoder.max_sequence_length,
+            value=self.bytecode_encoder.pad_val))
     grouping_ids = np.array(
         keras.preprocessing.sequence.pad_sequences(
             grouping_ids,
-            maxlen=self.max_sequence_length,
+            maxlen=self.bytecode_encoder.max_sequence_length,
             value=max(max(m) for m in grouping_ids) + 1))
 
     return encoded_sequences, grouping_ids, node_masks
@@ -376,7 +279,7 @@ class GraphToByteodeGroupingsEncoder(EncoderBase):
     """Encode the given strings and return a flattened list of the encoded
     values, along with grouping IDs.
     """
-    encoded_sequences = self.EncodeStrings(strings)
+    encoded_sequences = self.bytecode_encoder.EncodeStrings(strings)
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
@@ -391,17 +294,19 @@ class GraphToByteodeGroupingsEncoder(EncoderBase):
       graph: nx.MultiDiGraph) -> typing.Tuple[np.array, np.array, np.array]:
     """Serialize the graph to an encoded sequence and set of statement indices.
     """
-    serialized_node_list = cdfg.SerializeToStatementList(graph)
+    serialized_node_list = list(cdfg.SerializeToStatementList(graph))
     node_mask = np.array(
         [1 if node in serialized_node_list else 0 for node in graph.nodes()],
         dtype=np.int32)
 
     strings_to_encode = [
         graph.nodes[n].get('original_text', '')
-        for n in cdfg.SerializeToStatementList(graph)
+        for n in serialized_node_list
     ]
 
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
+
+    assert max(ids) < graph.number_of_nodes()
 
     return seqs, ids, node_mask
 
