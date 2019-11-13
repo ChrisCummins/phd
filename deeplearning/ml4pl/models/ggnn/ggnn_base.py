@@ -186,7 +186,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       trainable = True
     elif FLAGS.inst2vec_embeddings == 'random':
       app.Log(1, "Initializing with random embeddings")
-      embeddings[0] = np.random.rand(*(embeddings[0].shape))
+      embeddings[0] = np.random.rand(*embeddings[0].shape)
       trainable = True
     elif FLAGS.inst2vec_embeddings == 'constant_zero':
       embeddings[0] = np.zeros(embeddings[0].shape)
