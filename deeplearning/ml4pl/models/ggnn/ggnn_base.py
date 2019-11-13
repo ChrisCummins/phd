@@ -259,6 +259,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       _old_predictions = _new_predictions
       _new_predictions = _results["modular_predictions"]
 
+      # TODO(cec): This convergence check seems to be too "coarse", stopping
+      # early. Consider alternate convergence strategies. e.g. Check that the
+      # differences in predictions are below a certain threshold.
       converged |= (np.argmax(_new_predictions, axis=1) == np.argmax(
           _old_predictions, axis=1)).all()
       if stop_once_converged and converged:
