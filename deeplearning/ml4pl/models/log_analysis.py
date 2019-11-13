@@ -6,15 +6,15 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
+
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import labtypes
 from labm8 import prof
-
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -109,7 +109,7 @@ class RunLogAnalyzer(object):
 
   def GetInputOutputGraphsForRandomBatch(self,
                                          epoch_num: int,
-                                         type: str = 'val'):
+                                         epoch_type: str = 'test'):
     """Reconstruct nx.MultiDiGraphs for a random batch from the given epoch_num
     where the accuracy was < 100%.
 
@@ -122,16 +122,19 @@ class RunLogAnalyzer(object):
       predictions.
     """
     batches = self.batch_logs[(self.batch_logs['epoch'] == epoch_num) &
-                              (self.batch_logs['type'] == type) &
+                              (self.batch_logs['type'] == epoch_type) &
                               (self.batch_logs['accuracy'] < 100)]
 
     random_row = batches.iloc[random.randint(0, len(batches) - 1)]
 
     with self.log_db.Session() as session:
-      log = session.query(log_database.BatchLogMeta) \
+      log: log_database.BatchLogMeta = session.query(log_database.BatchLogMeta) \
         .filter(log_database.BatchLogMeta.run_id == self.run_id) \
         .filter(log_database.BatchLogMeta.global_step == random_row.global_step) \
         .one()
+
+      if not log.batch_log:
+        raise OSError("Cannot re-create batch dict without per-instance logs")
 
       batch_dict = self.ReconstructBatchDict(log)
 
