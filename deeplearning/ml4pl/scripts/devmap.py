@@ -25,7 +25,9 @@ app.DEFINE_string(
         'edge_weight_dropout_keep_prob',
         '.9',"")
 app.DEFINE_boolean("position_embeddings", True, "use pos emb.")
-
+app.DEFINE_string(
+        'graph_reader_buffer_size',
+        '1024',"")
 
 FLAGS = app.FLAGS
 
@@ -56,6 +58,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
       test_group,
       '--val_group',
       val_group,
+      '--graph_reader_buffer_size', FLAGS.graph_reader_buffer_size,
   ]
 
   ggnn_flags = [
