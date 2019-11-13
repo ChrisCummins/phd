@@ -1,15 +1,15 @@
 """Print a summary table of model results."""
-import pickle
-import re
-
 import numpy as np
 import pandas as pd
+import pickle
+import re
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import pdutil
+
 
 app.DEFINE_database('log_db',
                     log_database.Database,
@@ -162,8 +162,9 @@ def GetLeaderboard(log_db: log_database.Database,
     df = df.join(best_epoch_df)
 
     # Strip redundant suffix from model names.
-    pdutil.RewriteColumn(df, 'model',
-                         lambda x: re.sub(r'(Classifier|Model)$', '', x))
+    pdutil.RewriteColumn(
+        df, 'model',
+        lambda s: re.sub(r'(Classifier|ClassifierModel|Model)$', '', s))
 
     # Rewrite columns to be more user friendly.
     if human_readable:
