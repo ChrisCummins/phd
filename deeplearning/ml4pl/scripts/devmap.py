@@ -16,6 +16,16 @@ app.DEFINE_string('working_dir', '/var/phd/ml4pl/models',
 app.DEFINE_list('groups', [str(x) for x in range(10)],
                 'The test groups to use.')
 app.DEFINE_boolean('cudnn_lstm', True, 'Use the CuDNNLSTM implementation')
+app.DEFINE_string('graph_state_dropout_keep_prob',
+        '.5',"")
+app.DEFINE_string(
+        'output_layer_dropout_keep_prob',
+        '.5', "")
+app.DEFINE_string(
+        'edge_weight_dropout_keep_prob',
+        '.9',"")
+app.DEFINE_boolean("position_embeddings", True, "use pos emb.")
+
 
 FLAGS = app.FLAGS
 
@@ -46,6 +56,13 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
       test_group,
       '--val_group',
       val_group,
+  ]
+
+  ggnn_flags = [
+    '--graph_state_dropout_keep_prob', FLAGS.graph_state_dropout_keep_prob,
+    '--output_layer_dropout_keep_prob', FLAGS.output_layer_dropout_keep_prob,
+    '--edge_weight_dropout_keep_prob', FLAGS.edge_weight_dropout_keep_prob,
+    '--position_embeddings', FLAGS.position_embeddings,
   ]
 
   if FLAGS.model == 'zero_r':
@@ -80,13 +97,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
         str(GGNN),
         '--num_epochs',
         '100',
-        '--graph_state_dropout_keep_prob',
-        '.5',
-        '--output_layer_dropout_keep_prob',
-        '.5',
-        '--edge_weight_dropout_keep_prob',
-        '.5',
-    ] + base_flags
+    ] + base_flags + ggnn_flags
   else:
     app.FatalWithoutStackTrace('Unknown model name `%s`', FLAGS.model)
 
