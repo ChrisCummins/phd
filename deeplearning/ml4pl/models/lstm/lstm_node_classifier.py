@@ -1,8 +1,9 @@
 """Train and evaluate a model for graph-level classification."""
+import typing
+
 import keras
 import numpy as np
 import tensorflow as tf
-import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -44,6 +45,8 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
   def __init__(self, *args, **kwargs):
     super(LstmNodeClassifierModel, self).__init__(*args, **kwargs)
+
+    utils.SetAllowedGrowthOnKerasSession()
 
     # The encoder which performs translation from graphs to encoded sequences.
     self.encoder = graph2seq.GraphToByteodeGroupingsEncoder(

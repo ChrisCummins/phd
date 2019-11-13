@@ -4,14 +4,14 @@ import typing
 import keras
 import numpy as np
 from keras import models
-from labm8 import app
-from labm8 import prof
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
+from labm8 import app
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -48,6 +48,8 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
   def __init__(self, *args, **kwargs):
     super(LstmGraphClassifierModel, self).__init__(*args, **kwargs)
+
+    utils.SetAllowedGrowthOnKerasSession()
 
     # The encoder which performs translation from graphs to encoded sequences.
     self.encoder = graph2seq.GraphToBytecodeEncoder(self.batcher.db)

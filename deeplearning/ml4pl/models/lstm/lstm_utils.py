@@ -1,5 +1,7 @@
 """Utilities for LSTM models."""
 import keras
+import tensorflow as tf
+from keras.backend import tensorflow_backend
 
 from deeplearning.ml4pl.models import classifier_base
 from labm8 import app
@@ -20,3 +22,12 @@ def MakeLstm(*args, **kwargs):
     return keras.layers.CuDNNLSTM(*args, **kwargs)
   else:
     return keras.layers.LSTM(*args, **kwargs, implementation=1)
+
+
+def SetAllowedGrowthOnKerasSession():
+  """Allow growth on GPU."""
+  config = tf.ConfigProto()
+  config.gpu_options.allow_growth = True
+  config.log_device_placement = True
+  sess = tf.Session(config=config)
+  tensorflow_backend.set_session(sess)
