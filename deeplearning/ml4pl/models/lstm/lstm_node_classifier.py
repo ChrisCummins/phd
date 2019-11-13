@@ -1,9 +1,8 @@
 """Train and evaluate a model for graph-level classification."""
-import typing
-
 import keras
 import numpy as np
 import tensorflow as tf
+import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -12,6 +11,7 @@ from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
+
 
 FLAGS = app.FLAGS
 
@@ -49,7 +49,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     utils.SetAllowedGrowthOnKerasSession()
 
     # The encoder which performs translation from graphs to encoded sequences.
-    self.encoder = graph2seq.GraphToByteodeGroupingsEncoder(
+    self.encoder = graph2seq.GraphToBytecodeGroupingsEncoder(
         self.batcher.db, group_by='statement')
 
     # Language model
@@ -57,12 +57,14 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # define token ids as input
 
     input_layer = keras.Input(
-        batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
+        batch_shape=(FLAGS.batch_size,
+                     self.encoder.bytecode_encoder.max_sequence_length),
         dtype='int32',
         name="model_in")
     # and the segment indices
     input_segments = keras.Input(
-        batch_shape=(FLAGS.batch_size, self.encoder.max_sequence_length),
+        batch_shape=(FLAGS.batch_size,
+                     self.encoder.bytecode_encoder.max_sequence_length),
         dtype='int32',
         name="model_in_segments")
 
@@ -73,8 +75,8 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # lookup token embeddings
     encoded_inputs = keras.layers.Embedding(
-        input_dim=self.encoder.vocabulary_size_with_padding_token,
-        input_length=self.encoder.max_sequence_length,
+        input_dim=self.encoder.bytecode_encoder.vocabulary_size_with_padding_token,
+        input_length=self.encoder.bytecode_encoder.max_sequence_length,
         output_dim=FLAGS.hidden_size,
         name="embedding")(input_layer)
 
@@ -85,6 +87,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       Args:
         encoded_tokens.  Shape: (batch_size, sequence_length, embedding_dim).
         segment_ids.  Shape: (batch_size, segment_ids).
+
+      Returns:
+        Summed embedding vectors of Shape (batch_size, max_segment_id)
       """
       encoded_tokens, segment_ids = args
 
@@ -115,17 +120,14 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                        return_state=False)(x)
 
     # map to number of classes with a dense layer
-    langmodel_out = keras.layers.Dense(self.stats.node_labels_dimensionality,
-                                       activation="sigmoid",
-                                       name="langmodel_out")(x)
-
-    # no graph level features for node classification.
-    out = langmodel_out
+    out = keras.layers.Dense(self.stats.node_labels_dimensionality,
+                             activation="sigmoid",
+                             name="langmodel_out")(x)
 
     # pass both inputs to the model class.
     self.model = keras.Model(inputs=[input_layer, input_segments],
                              outputs=[out])
-    #self.model.summary()
+    self.model.summary()
 
     self.model.compile(optimizer="adam",
                        metrics=['accuracy'],
@@ -150,16 +152,24 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
       graph_ids = batch.log._graph_indices
-      encoded_sequences, grouping_ids, node_masks = (
-          self.encoder.GraphsToEncodedStatementGroups(graph_ids))
+      encoded_sequences, grouping_ids, node_masks = self.encoder.Encode(graph_ids)
 
-      assert batch.node_y is not None
+      split_indices = np.where(batch.graph_nodes_list[:-1] !=
+                               batch.graph_nodes_list[1:])[0] + 1
+      all_node_y_per_graph = np.split(batch.node_y, split_indices)
+
+      assert len(node_masks) == len(all_node_y_per_graph)
+      # Mask only the "active" node labels.
+      node_y_per_graph = [
+        node_y[tuple(node_mask)] for node_y, node_mask in
+        zip(all_node_y_per_graph, node_masks)
+      ]
+
       yield batch.log, {
           'encoded_sequences': np.vstack(encoded_sequences),
           'segment_ids': np.vstack(grouping_ids),
           'node_x_indices': np.vstack(batch.node_x_indices),
-          # TODO(cec): what to do with node_masks?
-          'node_y': np.vstack(batch.node_y),
+          'node_y': node_y_per_graph,
       }
 
   def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any
