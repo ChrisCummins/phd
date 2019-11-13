@@ -55,8 +55,8 @@ app.DEFINE_boolean(
 
 app.DEFINE_integer(
     "dynamic_unroll_multiple", 0,
-    "If n>=1, the actual graph model will be dynamically reapplied n times before readout."
-    "n=-1 (maybe) runs until convergence of predictions.")
+    "If n>=1, the actual model will be dynamically reapplied n times before "
+    "readout. n=-1 (maybe) runs until convergence of predictions.")
 
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
