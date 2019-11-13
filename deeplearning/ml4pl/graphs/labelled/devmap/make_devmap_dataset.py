@@ -6,20 +6,19 @@ import typing
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
+
+from datasets.opencl.device_mapping import opencl_device_mapping_dataset
+from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import fs
 from labm8 import prof
 from labm8 import sqlutil
 
-from datasets.opencl.device_mapping import opencl_device_mapping_dataset
-from deeplearning.ml4pl.graphs import graph_database
-
-app.DEFINE_database(
-    'input_db',
-    graph_database.Database,
-    None,
-    'URL of database to read unlabelled graphs from.',
-    must_exist=True)
+app.DEFINE_database('input_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to read unlabelled graphs from.',
+                    must_exist=True)
 app.DEFINE_database('output_db', graph_database.Database,
                     'sqlite:////var/phd/deeplearning/ml4pl/graphs.db',
                     'URL of the database to write labelled graphs to.')
@@ -51,14 +50,13 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
       for _, r in df.iterrows()
   ]
 
-  df.rename(
-      columns={
-          f'param:{gpu}:wgsize': 'wgsize',
-          f'feature:{gpu}:transfer': 'transfer',
-          f'runtime:{cpu}': 'runtime_cpu',
-          f'runtime:{gpu}': 'runtime_gpu',
-      },
-      inplace=True)
+  df.rename(columns={
+      f'param:{gpu}:wgsize': 'wgsize',
+      f'feature:{gpu}:transfer': 'transfer',
+      f'runtime:{cpu}': 'runtime_cpu',
+      f'runtime:{gpu}': 'runtime_gpu',
+  },
+            inplace=True)
 
   return df[[
       'relpath',
@@ -68,6 +66,7 @@ def MakeGpuDataFrame(df: pd.DataFrame, gpu: str):
       'runtime_cpu',
       'runtime_gpu',
       'data:dataset_name',
+      'program:opencl_src',
   ]]
 
 
@@ -121,8 +120,8 @@ def MakeOpenClDevmapDataset(input_db: graph_database.Database,
   """Create a labelled dataset for the given GPU."""
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(
-      output_db, max_queue=8).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(output_db,
+                                      max_queue=8).Session() as writer:
     df = MakeGpuDataFrame(dataset.df, gpu)
 
     for graph in AnnotateGraphMetas(input_db, df):
