@@ -211,7 +211,7 @@ class ClassifierBase(object):
     np.random.seed(FLAGS.random_seed)
 
     # Progress counters. These are saved and restored from file.
-    self.epoch_num = 1
+    self.epoch_num = 0
     self.global_training_step = 0
     self.best_epoch_num = 0
 
@@ -345,8 +345,8 @@ class ClassifierBase(object):
     train_groups = list(
         set(self.batcher.stats.groups) - {val_group, test_group})
 
-    for epoch_num in range(self.epoch_num, num_epochs + 1):
-      self.epoch_num = epoch_num
+    for epoch_num in range(self.epoch_num, self.epoch_num + num_epochs):
+      self.epoch_num = epoch_num + 1
       epoch_start_time = time.time()
 
       # Switch up the training group order between epochs.
@@ -361,15 +361,16 @@ class ClassifierBase(object):
       # Validate.
       val_acc = self.RunEpoch("val", [val_group])
       app.Log(1, "Epoch %s completed in %s. Validation "
-              "accuracy: %.2f%%", epoch_num,
+              "accuracy: %.2f%%", self.epoch_num,
               humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
 
       # Get the current best validation accurcy now before saving the model,
       # as that may become the new best.
       previous_best_val_acc = self.best_epoch_validation_accuracy
-      self.SaveModel(validation_accuracy=val_acc)
 
-      # Save the model when validation accuracy improves.
+      # To minimize the size of the log database we only store model checkpoints
+      # and detailed batch logs when the validation accuracy improves, and we
+      # only store a single checkpoint / set of logs.
       if val_acc > previous_best_val_acc:
         # Compute the ratio of the new best validation accuracy against the
         # old best validation accuracy.
@@ -381,14 +382,72 @@ class ClassifierBase(object):
         app.Log(1, "Best epoch so far, validation accuracy increased "
                 "+%.3f%%%s", (val_acc - previous_best_val_acc) * 100,
                 relative_increase)
-        self.best_epoch_num = epoch_num
+        self.best_epoch_num = self.epoch_num
+
+        self.SaveModel(validation_accuracy=val_acc)
+
+        # We only store a single model checkpoint, so delete any old ones.
+        with self.log_db.Session() as session:
+          query = session.query(log_database.ModelCheckpointMeta.id)
+          query = query.filter(
+              log_database.ModelCheckpointMeta.epoch != self.epoch_num)
+          model_checkpoints_to_delete = [row.id for row in query]
+        if model_checkpoints_to_delete:
+          app.Log(
+              2, "Deleting %s",
+              humanize.Plural(len(model_checkpoints_to_delete),
+                              'old model checkpoint'))
+          # Cascade delete is broken, we have to first delete the checkpoint
+          # data followed by the checkpoint meta entry.
+          delete = sql.delete(log_database.ModelCheckpoint)
+          delete = delete.where(
+              log_database.ModelCheckpoint.id.in_(model_checkpoints_to_delete))
+          self.log_db.engine.execute(delete)
+          delete = sql.delete(log_database.ModelCheckpointMeta)
+          delete = delete.where(
+              log_database.ModelCheckpointMeta.id.in_(
+                  model_checkpoints_to_delete))
+          self.log_db.engine.execute(delete)
 
         # Run on test set if we haven't already.
         if FLAGS.test_on_improvement:
-          test_acc = self.RunEpoch("test", test_group)
-          app.Log(1, "Test accuracy at epoch %s: %.3f%%", epoch_num,
+          test_acc = self.RunEpoch("test", [test_group])
+          app.Log(1, "Test accuracy at epoch %s: %.3f%%", self.epoch_num,
                   test_acc * 100)
-      elif epoch_num - self.best_epoch_num >= FLAGS.patience:
+
+        # Now that we have performed a new validation / test run, we delete the
+        # detailed logs of any old val/test runs.
+        with self.log_db.Session() as session:
+          query = session.query(log_database.BatchLogMeta.id)
+          query = query.filter(log_database.BatchLogMeta.run_id == self.run_id)
+          query = query.filter(
+              log_database.BatchLogMeta.epoch != self.epoch_num)
+          batch_logs_to_delete = [row.id for row in query]
+        if batch_logs_to_delete:
+          app.Log(2, 'Deleting %s old detailed batch logs',
+                  humanize.Commas(len(batch_logs_to_delete)))
+          delete = sql.delete(log_database.BatchLog)
+          delete = delete.where(
+              log_database.BatchLog.id.in_(batch_logs_to_delete))
+          self.log_db.engine.execute(delete)
+      else:
+        # No improvement over the previous epoch, so delete the detailed
+        # validation logs.
+        with self.log_db.Session() as session:
+          query = session.query(log_database.BatchLogMeta.id)
+          query = query.filter(log_database.BatchLogMeta.run_id == self.run_id)
+          query = query.filter(
+              log_database.BatchLogMeta.epoch == self.epoch_num)
+          batch_logs_to_delete = [row.id for row in query]
+        assert batch_logs_to_delete
+        app.Log(2, 'Deleting %s detailed batch logs',
+                humanize.Commas(len(batch_logs_to_delete)))
+        delete = sql.delete(log_database.BatchLog)
+        delete = delete.where(
+            log_database.BatchLog.id.in_(batch_logs_to_delete))
+        self.log_db.engine.execute(delete)
+
+      if self.epoch_num - self.best_epoch_num >= FLAGS.patience:
         app.Log(
             1, "Stopping training after %i epochs without "
             "improvement on validation accuracy", FLAGS.patience)
@@ -433,10 +492,13 @@ class ClassifierBase(object):
 
       # Delete any existing model checkpoint with this state.
       if existing:
-        app.Log(1, "Replacing existing model checkpoint")
+        app.Log(2, "Replacing existing model checkpoint")
+        delete = sql.delete(log_database.ModelCheckpoint) \
+          .where(log_database.ModelCheckpoint.id == existing.id)
+        self.log_db.engine.execute(delete)
         delete = sql.delete(log_database.ModelCheckpointMeta) \
           .where(log_database.ModelCheckpointMeta.id == existing.id)
-        self.log_db.connection.execute(delete)
+        self.log_db.engine.execute(delete)
 
       # Add the new checkpoint.
       session.add(
@@ -564,7 +626,7 @@ def Run(model_class):
     except Exception as e:
       raise app.UsageError(f"Invalid --restore_model=`{FLAGS.restore_model}`. "
                            "Must be in the form <run_id>:<epoch_num>.")
-    with prof.Profile('Restored model'):
+    with prof.Profile(f'Restored run {run_id} at epoch {epoch_num}'):
       model.LoadModel(run_id=run_id, epoch_num=epoch_num)
   else:
     with prof.Profile('Initialized model'):

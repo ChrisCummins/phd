@@ -167,6 +167,23 @@ def test_Train(tempdir2: pathlib.Path, graph_db: graph_database.Database,
   assert model.best_epoch_num == 1
 
 
+def test_Train_epoch_num(tempdir2: pathlib.Path,
+                         graph_db: graph_database.Database,
+                         log_db: log_database.Database):
+  """Test that epoch_num has expected value."""
+  FLAGS.working_dir = tempdir2
+
+  model = MockModel(graph_db, log_db)
+  model.InitializeModel()
+  assert model.epoch_num == 0
+  model.Train(num_epochs=1)
+  assert model.epoch_num == 1
+  model.Train(num_epochs=1)
+  assert model.epoch_num == 2
+  model.Train(num_epochs=2)
+  assert model.epoch_num == 4
+
+
 def test_Train_batch_log_count(tempdir2: pathlib.Path,
                                graph_db: graph_database.Database,
                                log_db: log_database.Database):
@@ -192,24 +209,50 @@ def test_Train_batch_log_count(tempdir2: pathlib.Path,
     for batch_log_meta in query:
       assert not batch_log_meta.batch_log
 
+  model.Train(num_epochs=1)
+  with log_db.Session() as session:
+    # + 10 train + 10 train (no change to val acc so there's no new test logs)
+    assert session.query(log_database.BatchLogMeta).count() == 50
 
-def test_Train_incremental(tempdir2: pathlib.Path,
-                               graph_db: graph_database.Database,
-                               log_db: log_database.Database):
-  """Test that training in one-epoch increments works."""
+
+def test_Train_keeps_a_single_checkpoint_and_set_of_batch_logs(
+    tempdir2: pathlib.Path, graph_db: graph_database.Database,
+    log_db: log_database.Database):
+  """Check that only a single model checkpoint and set of detailed val logs
+  are kept."""
   FLAGS.working_dir = tempdir2
 
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
   model.Train(num_epochs=1)
-  with log_db.Session() as session:
-    # 10 train + 10 val + 10 test logs
-    assert session.query(log_database.BatchLogMeta).count() == 30
+
+  # Force the model to believe that it performed worse than it did so that when
+  # we next call Train() it bumps the "best" accuracy.
+  log_db.engine.execute(
+      sql.update(log_database.ModelCheckpointMeta).values({
+          'validation_accuracy':
+          -1,
+      }))
+  assert model.best_epoch_validation_accuracy == -1  # Sanity check
 
   model.Train(num_epochs=1)
+  # assert model.best_epoch_validation_accuracy == 1  # Sanity check
+
   with log_db.Session() as session:
-    # + 10 train + 10 train (no change to val acc so there's no new test logs)
-    assert session.query(log_database.BatchLogMeta).count() == 50
+    # There should still only be a single model checkpoint.
+    assert session.query(log_database.ModelCheckpoint).count() == 1
+    assert session.query(log_database.ModelCheckpointMeta).count() == 1
+
+    # The "best" epoch is the new one.
+    assert session.query(log_database.ModelCheckpointMeta.epoch).one()[0] == 2
+
+    # 10 val + 10 test
+    assert session.query(log_database.BatchLog).count() == 20
+    # Check that the new batch logs replace the old ones.
+    detailed_logs = session.query(log_database.BatchLogMeta)
+    detailed_logs = detailed_logs.join(log_database.BatchLog)
+    for log in detailed_logs:
+      log.epoch == 2
 
 
 def test_Test_creates_batch_logs(tempdir2: pathlib.Path,
