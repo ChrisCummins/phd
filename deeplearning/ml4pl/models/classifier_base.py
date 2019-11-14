@@ -358,15 +358,16 @@ class ClassifierBase(object):
       # groups as list supported!
       self.RunEpoch("train", train_groups)
 
+      # Get the current best validation accuracy so that we can compare against.
+      previous_best_val_acc = self.best_epoch_validation_accuracy
+
       # Validate.
       val_acc = self.RunEpoch("val", [val_group])
-      app.Log(1, "Epoch %s completed in %s. Validation "
-              "accuracy: %.2f%%", self.epoch_num,
-              humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
-
-      # Get the current best validation accurcy now before saving the model,
-      # as that may become the new best.
-      previous_best_val_acc = self.best_epoch_validation_accuracy
+      app.Log(
+          1, "Epoch %s completed in %s. Validation "
+          "accuracy: %.2f%% (Previous best: %.2f%% @ epoch %s)", self.epoch_num,
+          humanize.Duration(time.time() - epoch_start_time), val_acc * 100,
+          previous_best_val_acc * 100, self.best_epoch_num)
 
       # To minimize the size of the log database we only store model checkpoints
       # and detailed batch logs when the validation accuracy improves, and we
