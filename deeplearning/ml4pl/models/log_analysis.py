@@ -13,7 +13,6 @@ from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
-from labm8 import labtypes
 from labm8 import prof
 
 FLAGS = app.FLAGS
@@ -91,10 +90,11 @@ class RunLogAnalyzer(object):
 
     return self.GetEpochLogs(epoch_num)
 
-  def ReconstructBatchDict(self, log: log_database.BatchLogMeta):
-    """Reconstruct the batch dict for the given log."""
-    with prof.Profile(lambda t: ('Reconstructed batch dict with '
-                                 f'{batch_dict["graph_count"]} graphs')):
+  def ReconstructGraphBatch(
+      self, log: log_database.BatchLogMeta) -> graph_batcher.GraphBatch:
+    """Reconstruct the graph batch tuple for the given log."""
+    with prof.Profile(lambda t: ('Reconstructed graph batch with '
+                                 f'{graph_batch.graph_count} graphs')):
       with self.graph_db.Session() as session:
         graphs = session.query(graph_database.GraphMeta) \
           .options(sql.orm.joinedload(graph_database.GraphMeta.graph)) \
@@ -102,11 +102,12 @@ class RunLogAnalyzer(object):
         # Load the graphs in the same order as in the batch.
         graphs = sorted(graphs, key=lambda g: log.graph_indices.index(g.id))
 
-      batch_dict = graph_batcher.GraphBatch.CreateFromGraphMetas(
-          (g for g in graphs))
-      batch_dict['graph_indices'] = log.graph_indices
+      graph_batch = graph_batcher.GraphBatch.CreateFromGraphMetas(
+          graphs=(g for g in graphs),
+          stats=self.batcher.stats,
+          options=graph_batcher.GraphBatchOptions())
 
-    return batch_dict
+    return graph_batch
 
   def GetInputOutputGraphsForRandomBatch(self,
                                          epoch_num: int,
@@ -137,32 +138,36 @@ class RunLogAnalyzer(object):
       if not log.batch_log:
         raise OSError("Cannot re-create batch dict without per-instance logs")
 
-      batch_dict = self.ReconstructBatchDict(log)
+      input_graph_batch = self.ReconstructGraphBatch(log)
 
-      with prof.Profile(f"Recreated {batch_dict['graph_count']} input graphs"):
-        input_graphs = list(self.batcher.BatchDictToGraphs(batch_dict))
+      with prof.Profile(
+          f"Recreated {input_graph_batch.graph_count} input graphs"):
+        input_graphs = list(input_graph_batch.ToNetworkXGraphs())
 
-      with prof.Profile(f"Recreated {batch_dict['graph_count']} output graphs"):
-        # Remove the features.
-        labtypes.DeleteKeys(batch_dict, {'node_x', 'edge_x', 'graph_x'})
+      with prof.Profile(
+          f"Recreated {input_graph_batch.graph_count} output graphs"):
+        # Create a duplicate graph batch which has the model predictions set
+        # in place of the node_y or graph_y attributes.
+        output_graph_batch = graph_batcher.GraphBatch(
+            adjacency_lists=input_graph_batch.adjacency_lists,
+            edge_positions=input_graph_batch.edge_positions,
+            incoming_edge_counts=input_graph_batch.incoming_edge_counts,
+            node_x_indices=np.zeros(len(input_graph_batch.node_x_indices)),
+            node_y=log.predictions if input_graph_batch.has_node_y else None,
+            graph_x=None,
+            graph_y=log.predictions if input_graph_batch.has_graph_y else None,
+            graph_nodes_list=input_graph_batch.graph_nodes_list,
+            graph_count=input_graph_batch.graph_count,
+            log=input_graph_batch.log,
+        )
 
-        # Add the labels.
-        if 'node_y' in batch_dict:
-          batch_dict['node_y'] = log.predictions
-        elif 'graph_y' in batch_dict:
-          batch_dict['graph_y'] = log.predictions
-        else:
-          raise ValueError(
-              "Neither node or graph labels found in batch dict with "
-              f"keys: `{list(batch_dict.keys())}`")
-
-      output_graphs = list(self.batcher.BatchDictToGraphs(batch_dict))
+      output_graphs = list(output_graph_batch.ToNetworkXGraphs())
 
     # Annotate the graphs with their GraphMeta.id column value.
-    for graph_index, input_graph, output_graph in zip(
-        batch_dict['graph_indices'], input_graphs, output_graphs):
-      input_graph.id = graph_index
-      output_graph.id = graph_index
+    for graph_id, input_graph, output_graph in zip(log.graph_indices,
+                                                   input_graphs, output_graphs):
+      input_graph.id = graph_id
+      output_graph.id = graph_id
 
     return list(zip(input_graphs, output_graphs))
 

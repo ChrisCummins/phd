@@ -313,7 +313,7 @@ class GraphBatch(typing.NamedTuple):
       graph_y = np.array(graph_y)
 
     # Record the graphs that we used in this batch to an unmapped property.
-    # TODO(cec): Setting a attribute on a mapped object at run time like this
+    # TODO(cec): Setting an attribute on a mapped object at run time like this
     # is shitty. Rethink.
     log._graph_indices = graph_ids
 
@@ -347,13 +347,9 @@ class GraphBatch(typing.NamedTuple):
       nodes = self.graph_nodes_list[self.graph_nodes_list == graph_count]
       graph_node_count = len(nodes)
 
-      # Make a list of all the adj
-      adjacency_lists_indices = []
-
-      for edge_type, (adjacency_list, position_list) in enumerate(
-          self.adjacency_lists, self.edge_positions):
-        adjacency_list_indices = []
-        adjacency_lists_indices.append(adjacency_list_indices)
+      for edge_type in range(len(self.adjacency_lists)):
+        adjacency_list = self.adjacency_lists[edge_type]
+        position_list = self.edge_positions[edge_type]
 
         # No edges of this type.
         if not adjacency_list.size:
@@ -363,12 +359,11 @@ class GraphBatch(typing.NamedTuple):
         # those that are in this graph by selecting only those with a source
         # node in the list of this graph's nodes.
         srcs = adjacency_list[:, 0]
-        adjacency_list_indices.extend(
-            np.where(
-                np.logical_and(srcs >= node_count,
-                               srcs < node_count + graph_node_count)))
-        adjacency_list = adjacency_list[tuple(adjacency_list_indices)]
-        position_list = position_list[tuple(adjacency_lists_indices)]
+        adjacency_list_indices = np.where(
+            np.logical_and(srcs >= node_count,
+                           srcs < node_count + graph_node_count))
+        adjacency_list = adjacency_list[adjacency_list_indices]
+        position_list = position_list[adjacency_list_indices]
 
         # Negate the positive offset into adjacency lists.
         offset = np.array((node_count, node_count), dtype=np.int32)
@@ -383,8 +378,8 @@ class GraphBatch(typing.NamedTuple):
       if len(node_x_embedding_indices) != g.number_of_nodes():
         raise ValueError(f"Graph has {g.number_of_nodes()} nodes but "
                          f"expected {len(node_x_embedding_indices)}")
-      for i, node_embedding_indices in enumerate(node_x_node_embedding_indices):
-        g.nodes[i]['x'] = embedding_indices
+      for i, x in enumerate(node_x_embedding_indices):
+        g.nodes[i]['x'] = x
 
       if self.has_node_y:
         node_y = self.node_y[node_count:node_count + graph_node_count]
