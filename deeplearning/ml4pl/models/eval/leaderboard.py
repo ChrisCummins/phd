@@ -1,4 +1,5 @@
 """Print a summary table of model results."""
+import io
 import pickle
 import re
 
@@ -11,6 +12,8 @@ from labm8 import app
 from labm8 import humanize
 from labm8 import pdutil
 
+app.DEFINE_string('format', 'txt',
+                  'The format to print the result table. One of {txt,csv}')
 app.DEFINE_database('log_db',
                     log_database.Database,
                     None,
@@ -53,9 +56,7 @@ def GetBestEpochStats(session, df):
     # Find the "best" epoch - the one which produced the best validation
     # accuracy.
     query = session.query(log_database.ModelCheckpointMeta.epoch)
-    query = query.filter(
-        log_database.ModelCheckpointMeta.run_id == run_id,
-        log_database.ModelCheckpointMeta.validation_accuracy == row['val_acc'])
+    query = query.filter(log_database.ModelCheckpointMeta.run_id == run_id)
     # If multiple epochs produced the same validation accuracy, select the
     # first.
     query = query.order_by(log_database.ModelCheckpointMeta.epoch)
@@ -175,10 +176,24 @@ def GetLeaderboard(log_db: log_database.Database,
         df, 'model',
         lambda s: re.sub(r'(Classifier|ClassifierModel|Model)$', '', s))
 
+    def Time(x):
+      """Humanize or default to '-' on failure."""
+      try:
+        return humanize.Time(x)
+      except:
+        return '-'
+
+    def Duration(x):
+      """Humanize or default to '-' on failure."""
+      try:
+        return humanize.Duration(x)
+      except:
+        return '-'
+
     # Rewrite columns to be more user friendly.
     if human_readable:
-      pdutil.RewriteColumn(df, 'last_log', humanize.Time)
-      pdutil.RewriteColumn(df, 'runtime', humanize.Duration)
+      pdutil.RewriteColumn(df, 'last_log', Time)
+      pdutil.RewriteColumn(df, 'runtime', Duration)
       pdutil.RewriteColumn(df, 'val_acc', lambda x: f'{x:.2%}')
       pdutil.RewriteColumn(df, 'accuracy', lambda x: f'{x:.2%}')
 
@@ -187,8 +202,16 @@ def GetLeaderboard(log_db: log_database.Database,
 
 def main():
   """Main entry point."""
-  df = GetLeaderboard(FLAGS.log_db(), human_readable=True)
-  print(pdutil.FormatDataFrameAsAsciiTable(df))
+  df = GetLeaderboard(FLAGS.log_db(), human_readable=False)
+  if FLAGS.format == 'csv':
+    buf = io.StringIO()
+    df.fillna('-', inplace=True)
+    df.to_csv(buf)
+    print(buf.getvalue())
+  elif FLAGS.format == 'txt':
+    print(pdutil.FormatDataFrameAsAsciiTable(df))
+  else:
+    raise app.UsageError(f"Unknown --format='{FLAGS.format}'")
 
 
 if __name__ == '__main__':
