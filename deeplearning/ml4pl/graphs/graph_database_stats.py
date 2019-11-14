@@ -3,12 +3,12 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
+
+from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
 from labm8 import prof
-
-from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
@@ -231,7 +231,8 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
           "graph labels")
     if self.data_flow_max_steps_required:
       summaries.append(
-          humanize.Plural(self.data_flow_max_steps_required, 'data flow step'))
+          f"max {humanize.Plural(self.data_flow_max_steps_required, 'data flow step')}"
+      )
     summaries += [
         f"max {humanize.Plural(self.max_node_count, 'node')}",
         f"max {humanize.Plural(self.max_edge_count, 'edge')}",
