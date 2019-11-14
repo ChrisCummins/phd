@@ -1,12 +1,12 @@
 """Base class for implementing classifier models."""
-import pickle
-import random
 import time
-import typing
 
 import numpy as np
+import pickle
+import random
 import sklearn.metrics
 import sqlalchemy as sql
+import typing
 
 import build_info
 from deeplearning.ml4pl.graphs import graph_database
@@ -20,6 +20,7 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
+
 
 FLAGS = app.FLAGS
 
@@ -81,7 +82,7 @@ app.DEFINE_integer(
     'Use this flag to limit the maximum number of instances used in a single '
     'validation epoch.')
 
-app.DEFINE_input_path(
+app.DEFINE_string(
     "restore_model", None,
     "Select a model checkpoint to restore the model state from. The checkpoint "
     "is identified by a run ID and epoch number, in the format "
