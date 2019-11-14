@@ -2,7 +2,7 @@
 # A script to export the labelled graph datasets.
 
 TIMESTAMP="$(date '+%Y%m%d')"
-EXPORT="$HOME/Inbox/db"
+EXPORT="$HOME/db"
 set -eu
 
 mkdir -p "$EXPORT"
@@ -12,7 +12,7 @@ create_tarballs() {
     for file in $(ls *.db); do
       echo "$file.tar.bz2"
       tar cjvf "$file.tar.bz2" "$file"
-      rm "$file"
+      # rm "$file"
     done
     cd -
 }
@@ -25,7 +25,7 @@ export_dataset() {
   else
     rm -f "$EXPORT/${dataset}_$TIMESTAMP.db"
     bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db="file:///var/phd/db/cc1.mysql?ml4pl_${dataset}?charset=utf8" \
+        --input_db="file:///users/zfisches/cc1.mysql?ml4pl_${dataset}?charset=utf8" \
         --output_db="sqlite:////$EXPORT/${dataset}_$TIMESTAMP.db" \
         --max_rows=4096
     create_tarballs

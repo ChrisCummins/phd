@@ -84,7 +84,9 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
         str(LSTM), '--num_epochs', '50', '--bytecode_db', FLAGS.bytecode_db,
         '--hidden_size', '64', '--vmodule', "*=5",
         '--cudnn_lstm' if FLAGS.cudnn_lstm else '--nocudnn_lstm',
-        '--batch_size', '64', '--bytecode_encoder', FLAGS.bytecode_encoder
+        '--batch_size', '64', '--bytecode_encoder', FLAGS.bytecode_encoder,
+        '--mysql_engine_pool_size', '20',
+        '--mysql_engine_max_overflow', '20',
     ] + base_flags
     if FLAGS.max_encoded_length:
       lstm_flags.extend(['--max_encoded_length', FLAGS.max_encoded_length])
