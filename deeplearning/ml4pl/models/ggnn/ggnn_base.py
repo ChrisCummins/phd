@@ -135,9 +135,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
                                                          self.ops["accuracy"],
                                                          family='accuracy')
 
-        with prof.Profile('Make training step'), tf.compat.v1.variable_scope(
-            "train_step"):
-          self.ops["train_step"] = self._MakeTrainStep()
+        if not FLAGS.test_only:
+          with prof.Profile('Make training step'):
+            with tf.compat.v1.variable_scope("train_step"):
+              self.ops["train_step"] = self._MakeTrainStep()
 
     # Tensorboard logging.
     if FLAGS.tensorboard_logging:
