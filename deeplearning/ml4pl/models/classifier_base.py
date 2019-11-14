@@ -1,12 +1,12 @@
 """Base class for implementing classifier models."""
-import time
-
-import numpy as np
 import pickle
 import random
+import time
+import typing
+
+import numpy as np
 import sklearn.metrics
 import sqlalchemy as sql
-import typing
 
 import build_info
 from deeplearning.ml4pl.graphs import graph_database
@@ -20,7 +20,6 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
-
 
 FLAGS = app.FLAGS
 
@@ -88,6 +87,7 @@ app.DEFINE_string(
     "is identified by a run ID and epoch number, in the format "
     "--restore_model=<run_id>:<epoch_num>. Model checkpoints are loaded from "
     "the log database.")
+MODEL_FLAGS.add("restore_model")
 
 app.DEFINE_boolean(
     "test_only", False,
