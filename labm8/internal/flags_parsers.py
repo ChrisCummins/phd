@@ -59,7 +59,11 @@ class _Database():
     self.must_exist = must_exist
 
   def __call__(self):
-    return self.database_class(url=self.url, must_exist=self.must_exist)
+    try:
+      return self.database_class(url=self.url, must_exist=self.must_exist)
+    except Exception as e:
+      raise TypeError(
+          f"Failed to construct database {database_class}({self.url}): {e}")
 
   def __repr__(self):
     return str(self.url)
