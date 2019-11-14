@@ -12,13 +12,15 @@ from labm8 import app
 from labm8 import humanize
 from labm8 import pdutil
 
-app.DEFINE_string('format', 'txt',
-                  'The format to print the result table. One of {txt,csv}')
 app.DEFINE_database('log_db',
                     log_database.Database,
                     None,
                     'The input log database.',
                     must_exist=True)
+app.DEFINE_string('format', 'txt',
+                  'The format to print the result table. One of {txt,csv}')
+app.DEFINE_boolean('human_readable', True,
+                   'Format the column data in a human-readable format.')
 FLAGS = app.FLAGS
 
 
@@ -190,22 +192,42 @@ def GetLeaderboard(log_db: log_database.Database,
       except:
         return '-'
 
+    def Percent(x):
+      try:
+        return f'{x:.2%}'
+      except:
+        return '-'
+
+    def Float(x):
+      try:
+        return f'{x:.3f}'
+      except:
+        return '-'
+
+    df.fillna('-', inplace=True)
+
     # Rewrite columns to be more user friendly.
     if human_readable:
       pdutil.RewriteColumn(df, 'last_log', Time)
       pdutil.RewriteColumn(df, 'runtime', Duration)
-      pdutil.RewriteColumn(df, 'val_acc', lambda x: f'{x:.2%}')
-      pdutil.RewriteColumn(df, 'accuracy', lambda x: f'{x:.2%}')
+      pdutil.RewriteColumn(df, 'train_acc', Percent)
+      pdutil.RewriteColumn(df, 'val_acc', Percent)
+      pdutil.RewriteColumn(df, 'test_acc', Percent)
+      pdutil.RewriteColumn(df, 'train_prec', Percent)
+      pdutil.RewriteColumn(df, 'val_prec', Percent)
+      pdutil.RewriteColumn(df, 'test_prec', Percent)
+      pdutil.RewriteColumn(df, 'train_rec', Percent)
+      pdutil.RewriteColumn(df, 'val_rec', Percent)
+      pdutil.RewriteColumn(df, 'test_rec', Percent)
 
     return df
 
 
 def main():
   """Main entry point."""
-  df = GetLeaderboard(FLAGS.log_db(), human_readable=False)
+  df = GetLeaderboard(FLAGS.log_db(), human_readable=FLAGS.human_readable)
   if FLAGS.format == 'csv':
     buf = io.StringIO()
-    df.fillna('-', inplace=True)
     df.to_csv(buf)
     print(buf.getvalue())
   elif FLAGS.format == 'txt':
