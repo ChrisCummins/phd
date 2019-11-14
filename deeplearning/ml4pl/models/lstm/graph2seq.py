@@ -278,7 +278,7 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     """Encode the given strings and return a flattened list of the encoded
     values, along with grouping IDs.
     """
-    encoded_sequences = self.bytecode_encoder.EncodeStrings(strings)
+    encoded_sequences = self.bytecode_encoder.EncodeBytecodeStrings(strings)
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
