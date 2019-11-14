@@ -102,7 +102,8 @@ class RunLogAnalyzer(object):
         # Load the graphs in the same order as in the batch.
         graphs = sorted(graphs, key=lambda g: log.graph_indices.index(g.id))
 
-      batch_dict = self.batcher.CreateFromGraphMetas((g for g in graphs))
+      batch_dict = graph_batcher.GraphBatch.CreateFromGraphMetas(
+          (g for g in graphs))
       batch_dict['graph_indices'] = log.graph_indices
 
     return batch_dict
