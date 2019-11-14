@@ -16,18 +16,12 @@ app.DEFINE_string('working_dir', '/var/phd/ml4pl/models',
 app.DEFINE_list('groups', [str(x) for x in range(10)],
                 'The test groups to use.')
 app.DEFINE_boolean('cudnn_lstm', True, 'Use the CuDNNLSTM implementation')
-app.DEFINE_string('graph_state_dropout_keep_prob',
-        '.5',"")
-app.DEFINE_string(
-        'output_layer_dropout_keep_prob',
-        '.5', "")
-app.DEFINE_string(
-        'edge_weight_dropout_keep_prob',
-        '.9',"")
+app.DEFINE_string('graph_state_dropout_keep_prob', '.5', "")
+app.DEFINE_string('output_layer_dropout_keep_prob', '.5', "")
+app.DEFINE_string('edge_weight_dropout_keep_prob', '.9', "")
 app.DEFINE_boolean("position_embeddings", True, "use pos emb.")
-app.DEFINE_string(
-        'graph_reader_buffer_size',
-        '1024',"")
+app.DEFINE_string('graph_reader_buffer_size', '1024', "")
+app.DEFINE_string("max_encoded_length", "25000", "")
 
 FLAGS = app.FLAGS
 
@@ -58,14 +52,19 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
       test_group,
       '--val_group',
       val_group,
-      '--graph_reader_buffer_size', FLAGS.graph_reader_buffer_size,
+      '--graph_reader_buffer_size',
+      FLAGS.graph_reader_buffer_size,
   ]
 
   ggnn_flags = [
-    '--graph_state_dropout_keep_prob', FLAGS.graph_state_dropout_keep_prob,
-    '--output_layer_dropout_keep_prob', FLAGS.output_layer_dropout_keep_prob,
-    '--edge_weight_dropout_keep_prob', FLAGS.edge_weight_dropout_keep_prob,
-    '--position_embeddings' if FLAGS.position_embeddings else '--noposition_embeddings',
+      '--graph_state_dropout_keep_prob',
+      FLAGS.graph_state_dropout_keep_prob,
+      '--output_layer_dropout_keep_prob',
+      FLAGS.output_layer_dropout_keep_prob,
+      '--edge_weight_dropout_keep_prob',
+      FLAGS.edge_weight_dropout_keep_prob,
+      '--position_embeddings'
+      if FLAGS.position_embeddings else '--noposition_embeddings',
   ]
 
   if FLAGS.model == 'zero_r':
@@ -86,7 +85,7 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
         '--bytecode_db',
         FLAGS.bytecode_db,
         '--max_encoded_length',
-        '10000',
+        FLAGS.max_encoded_length,
         '--hidden_size',
         '64',
         '--vmodule',
