@@ -4,11 +4,11 @@ import random
 import typing
 
 import sqlalchemy as sql
-
-from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
+
+from deeplearning.ml4pl.graphs import graph_database
 
 FLAGS = app.FLAGS
 
@@ -60,9 +60,10 @@ def BufferedGraphReader(
   """
   filters = filters or []
 
-  with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graphs "
-                               "IDs from database"),
-                    print_to=lambda msg: app.Log(3, msg)):
+  with prof.Profile(
+      lambda t: (f"Selected {humanize.Commas(len(ids))} graphs "
+                 "IDs from database"),
+      print_to=lambda msg: app.Log(3, msg)):
     with db.Session() as session:
       # Random ordering means that we can't use
       # labm8.sqlutil.OffsetLimitBatchedQuery() to read results as each query
@@ -76,6 +77,10 @@ def BufferedGraphReader(
       # Graphs that fail during dataset generation are inserted as zero-node
       # entries. Ignore those.
       query = query.filter(graph_database.GraphMeta.node_count > 1)
+
+      # Inner join to exclude graphs which do not have a corresponding graph
+      # entry. This is should never be the case, but is a precaution.
+      query = query.join(graph_database.Graph)
 
       # If we are ordering with global random then we can scan through the
       # graph table using index range checks, so we need the IDs sorted.
@@ -113,8 +118,8 @@ def BufferedGraphReader(
 
       if eager_graph_loading:
         # Combine the graph data and graph meta queries.
-        query = query.options(sql.orm.joinedload(
-            graph_database.GraphMeta.graph))
+        query = query.options(
+            sql.orm.joinedload(graph_database.GraphMeta.graph))
 
       # If we are reading in global random order then we must perform ID checks
       # for all IDs in the batch. If not then we have ordered the IDs by value
