@@ -9,6 +9,7 @@ from keras import models
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
@@ -33,6 +34,10 @@ classifier_base.MODEL_FLAGS.add("hidden_size")
 app.DEFINE_integer("dense_hidden_size", 32, "The size of the dense ")
 classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 
+app.DEFINE_string('bytecode_encoder', 'inst2vec',
+                  'The encoder to use. One of {llvm,inst2vec}')
+classifier_base.MODEL_FLAGS.add("bytecode_encoder")
+
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
@@ -49,8 +54,16 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     utils.SetAllowedGrowthOnKerasSession()
 
     # The encoder which performs translation from graphs to encoded sequences.
+    if FLAGS.bytecode_encoder == 'llvm':
+      bytecode_encoder = bytecode2seq.BytecodeEncoder()
+    elif FLAGS.bytecode_encoder == 'inst2vec':
+      bytecode_encoder = bytecode2seq.Inst2VecEncoder()
+    else:
+      raise app.UsageError(f"Unknown encoder '{FLAGS.bytecode_encoder}'")
+
+    # The encoder which performs translation from graphs to encoded sequences.
     self.encoder = graph2seq.GraphToBytecodeGroupingsEncoder(
-        self.batcher.db, group_by='statement')
+        self.batcher.db, bytecode_encoder, group_by='statement')
 
     # Language model
 
@@ -146,7 +159,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       )
 
     options = graph_batcher.GraphBatchOptions(max_graphs=FLAGS.batch_size,
-                                              groups=group)
+                                              groups=groups)
     max_instance_count = (
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)

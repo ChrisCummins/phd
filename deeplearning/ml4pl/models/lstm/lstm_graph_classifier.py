@@ -36,6 +36,7 @@ classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 
 app.DEFINE_string('bytecode_encoder', 'llvm',
                   'The encoder to use. One of {opencl,llvm,inst2vec}')
+classifier_base.MODEL_FLAGS.add("bytecode_encoder")
 
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')

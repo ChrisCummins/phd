@@ -114,12 +114,13 @@ class GraphToBytecodeEncoder(EncoderBase):
 class GraphToBytecodeGroupingsEncoder(EncoderBase):
   """Encode graphs to bytecode sequences with statement groupings."""
 
-  def __init__(self, graph_db: graph_database.Database, group_by: str):
+  def __init__(self, graph_db: graph_database.Database,
+               bytecode_encoder: bytecode2seq.EncoderBase, group_by: str):
     super(GraphToBytecodeGroupingsEncoder, self).__init__(graph_db)
 
     self._unlabelled_graph_db = None
 
-    self.bytecode_encoder = bytecode2seq.BytecodeEncoder()
+    self.bytecode_encoder = bytecode_encoder
 
     if group_by == 'statement':
       self.encode_graph = self._GraphToEncodedStatementGroups
