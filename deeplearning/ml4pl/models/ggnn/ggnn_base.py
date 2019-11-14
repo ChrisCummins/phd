@@ -46,7 +46,7 @@ classifier_base.MODEL_FLAGS.add("hidden_size")
 app.DEFINE_string(
     "inst2vec_embeddings", "constant",
     "The type of per-node inst2vec embeddings to use. One of: "
-    "{constant,constant_zero,finetune,random,random_constant}.")
+    "{constant,constant_zero,constant_random,finetune,random}.")
 classifier_base.MODEL_FLAGS.add("inst2vec_embeddings")
 
 app.DEFINE_boolean(
@@ -57,6 +57,10 @@ app.DEFINE_integer(
     "dynamic_unroll_multiple", 0,
     "If n>=1, the actual model will be dynamically reapplied n times before "
     "readout. n=-1 (maybe) runs until convergence of predictions.")
+
+# app.DEFINE_string(
+#     "convergenece_strategy", ""
+# )
 
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
@@ -183,6 +187,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     elif FLAGS.inst2vec_embeddings == 'constant_zero':
       embeddings[0] = np.zeros(embeddings[0].shape)
       trainable = False
+    elif FLAGS.inst2vec_embeddings == 'constant_random':
+      embeddings[0] = np.random.rand(*embeddings[0].shape)
+      trainable = False
     elif FLAGS.inst2vec_embeddings == 'finetune':
       app.Log(1, "Fine-tuning inst2vec embeddings")
       trainable = True
@@ -190,9 +197,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       app.Log(1, "Initializing with random embeddings")
       embeddings[0] = np.random.rand(*embeddings[0].shape)
       trainable = True
-    elif FLAGS.inst2vec_embeddings == 'random_constant':
-      embeddings[0] = np.random.rand(*embeddings[0].shape)
-      trainable = False
     else:
       raise app.UsageError(
           f"--inst2vec_embeddings=`{FLAGS.inst2vec_embeddings}` "
