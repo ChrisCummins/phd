@@ -359,7 +359,8 @@ class ClassifierBase(object):
       train_acc = self.RunEpoch("train", train_groups)
       app.Log(1, "Epoch %s completed in %s. Train "
               "accuracy: %.2f%%", self.epoch_num,
-              humanize.Duration(time.time() - epoch_start_time), train_acc * 100)
+              humanize.Duration(time.time() - epoch_start_time),
+              train_acc * 100)
 
       # Get the current best validation accuracy so that we can compare against.
       previous_best_val_acc = self.best_epoch_validation_accuracy
@@ -394,7 +395,8 @@ class ClassifierBase(object):
         with self.log_db.Session() as session:
           query = session.query(log_database.ModelCheckpointMeta.id)
           query = query.filter(
-              log_database.ModelCheckpointMeta.epoch != self.epoch_num)
+              log_database.ModelCheckpointMeta.epoch != self.epoch_num,
+              log_database.ModelCheckpointMeta.run_id == self.run_id)
           model_checkpoints_to_delete = [row.id for row in query]
         if model_checkpoints_to_delete:
           app.Log(
