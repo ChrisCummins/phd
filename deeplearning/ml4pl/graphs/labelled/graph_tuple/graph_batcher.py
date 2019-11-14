@@ -61,6 +61,11 @@ class GraphBatchOptions(typing.NamedTuple):
     if self.max_graphs and log.graph_count >= self.max_graphs:
       return False
 
+    # De-serialize pickled data in database and process.
+    if graph.graph is None:
+      app.Error("Failed to read data on graph %s", graph.id)
+      return False
+
     return True
 
   def GetDatabaseQueryFilters(self) -> typing.List[typing.Callable[[], bool]]:
@@ -243,12 +248,7 @@ class GraphBatch(typing.NamedTuple):
 
     # Pack until we cannot fit more graphs in the batch.
     while graph and options.ShouldAddToBatch(graph, log):
-      # De-serialize pickled data in database and process.
-      try:
-        graph_tuple = graph.data
-      except AttributeError:
-        app.Error("Failed to read data on graph %s", graph.id)
-        continue
+      graph_tuple = graph.data
 
       graph_ids.append(graph.id)
 
