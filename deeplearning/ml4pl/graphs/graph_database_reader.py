@@ -35,7 +35,7 @@ def BufferedGraphReader(
     limit: Limit the total number of rows returned to this value.
 
   Raises:
-    ValueError: If the query with the given filters .
+    ValueError: If the query with the given filters returns no results.
   """
   filters = filters or []
 
