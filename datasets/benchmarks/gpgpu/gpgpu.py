@@ -28,9 +28,10 @@ Usage:
       --gpgpu_envs='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2'
       --gpgpu_benchmarks_suites=amd,npb --gpgpu_logdir=/tmp/logs
 """
-import contextlib
 import multiprocessing
 import os
+
+import contextlib
 import pathlib
 import subprocess
 import tempfile
@@ -49,6 +50,7 @@ from labm8 import labtypes
 from labm8 import pbutil
 from labm8 import system
 from labm8 import text
+
 
 FLAGS = app.FLAGS
 
@@ -139,7 +141,7 @@ class BenchmarkRunObserver(object):
     """Notification callback that a new benchmark has been run.
 
     Args:
-      log: The benchamrk run log.
+      log: The benchmark run log.
 
     Returns:
       True if should caryy on benchmarking, else False. If False, benchmarking
