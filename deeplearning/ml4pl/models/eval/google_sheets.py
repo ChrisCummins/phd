@@ -51,7 +51,11 @@ class GoogleSheets():
   @staticmethod
   def ExportDataFrame(worksheet, df: pd.DataFrame, index: bool = True) -> None:
     """Export the given dataframe to a worksheet."""
-    gspread_dataframe.set_with_dataframe(worksheet, df, include_index=index)
+
+    gspread_dataframe.set_with_dataframe(worksheet,
+                                         df,
+                                         include_index=index,
+                                         resize=True)
 
   @classmethod
   def CreateFromFlagsOrDie(cls) -> 'GoogleSheets':
