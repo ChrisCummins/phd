@@ -4,6 +4,8 @@ from deeplearning.ml4pl.models.eval import leaderboard
 from labm8 import app
 from labm8 import prof
 
+app.DEFINE_string('worksheet', 'Leaderboard',
+                  'The name of the worksheet to export to.')
 FLAGS = app.FLAGS
 
 
@@ -12,7 +14,7 @@ def main():
   with prof.Profile("Created google worksheet"):
     g = google_sheets.GoogleSheets.CreateFromFlagsOrDie()
     s = g.GetOrCreateSpreadsheet('ml4pl', 'chrisc.101@gmail.com')
-    ws = g.GetOrCreateWorksheet(s, 'Leaderboard')
+    ws = g.GetOrCreateWorksheet(s, FLAGS.worksheet)
 
   with prof.Profile("Created leaderboard"):
     df = leaderboard.GetLeaderboard(log_db=FLAGS.log_db())
