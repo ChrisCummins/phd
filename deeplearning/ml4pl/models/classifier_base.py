@@ -131,14 +131,14 @@ class ClassifierBase(object):
   """
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: typing.Union[str, typing.List[str]]
+      self, epoch_type: str, groups: typing.List[str]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
       epoch_type: The type of mini-batches to generate. One of {train,val,test}.
         For some models, different data may be produced for training vs testing.
-      group: The dataset group to return mini-batches for. Can be a list of groups.
+      groups: The dataset groups to return mini-batches for.
 
     Returns:
       An iterator of mini-batches and batch logs, where each
@@ -226,14 +226,15 @@ class ClassifierBase(object):
     """Return a dense array of integer label values."""
     return np.arange(self.labels_dimensionality, dtype=np.int32)
 
-  def RunEpoch(self, epoch_type: str,
-               group: typing.Optional[typing.Union[str, typing.List[str]]] = None) -> float:
+  def RunEpoch(self,
+               epoch_type: str,
+               groups: typing.Optional[typing.List[str]] = None) -> float:
     """Run the model with the given epoch.
 
     Args:
       epoch_type: The type of epoch. One of {train,val,test}.
-      group: The dataset group to use. This is the GraphMeta.group column that
-        is loaded. Defaults to `epoch_type`. Can be a list of groups.
+      groups: The dataset groups to use. This is a list of GraphMeta.group
+        column values that are loaded. Defaults to [epoch_type].
 
     Returns:
       The average accuracy of the model over all mini-batches.
@@ -244,7 +245,8 @@ class ClassifierBase(object):
     if epoch_type not in {"train", "val", "test"}:
       raise TypeError(f"Unknown epoch type `{type}`. Expected one of "
                       "{train,val,test}")
-    groups = group or epoch_type
+
+    groups = groups or [epoch_type]
 
     epoch_accuracies = []
 
@@ -352,12 +354,12 @@ class ClassifierBase(object):
 
       # Train on the training data.
       #[self.RunEpoch("train", train_group) for train_group in train_groups]
-      
+
       # groups as list supported!
       self.RunEpoch("train", train_groups)
 
       # Validate.
-      val_acc = self.RunEpoch("val", val_group)
+      val_acc = self.RunEpoch("val", [val_group])
       app.Log(1, "Epoch %s completed in %s. Validation "
               "accuracy: %.2f%%", epoch_num,
               humanize.Duration(time.time() - epoch_start_time), val_acc * 100)
@@ -569,7 +571,7 @@ def Run(model_class):
       model.InitializeModel()
 
   if FLAGS.test_only:
-    test_acc = model.RunEpoch("test")
+    test_acc = model.RunEpoch("test", [FLAGS.test_group])
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
     model.Train(num_epochs=FLAGS.num_epochs,

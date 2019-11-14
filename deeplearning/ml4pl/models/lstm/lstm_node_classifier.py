@@ -1,8 +1,9 @@
 """Train and evaluate a model for graph-level classification."""
+import typing
+
 import keras
 import numpy as np
 import tensorflow as tf
-import typing
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -11,7 +12,6 @@ from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
-
 
 FLAGS = app.FLAGS
 
@@ -75,7 +75,8 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # lookup token embeddings
     encoded_inputs = keras.layers.Embedding(
-        input_dim=self.encoder.bytecode_encoder.vocabulary_size_with_padding_token,
+        input_dim=self.encoder.bytecode_encoder.
+        vocabulary_size_with_padding_token,
         input_length=self.encoder.bytecode_encoder.max_sequence_length,
         output_dim=FLAGS.hidden_size,
         name="embedding")(input_layer)
@@ -135,7 +136,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                        loss_weights=[1.0])
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: str
+      self, epoch_type: str, groups: typing.List[str]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
@@ -145,24 +146,25 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       )
 
     options = graph_batcher.GraphBatchOptions(max_graphs=FLAGS.batch_size,
-                                              group=group)
+                                              groups=group)
     max_instance_count = (
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
       graph_ids = batch.log._graph_indices
-      encoded_sequences, grouping_ids, node_masks = self.encoder.Encode(graph_ids)
+      encoded_sequences, grouping_ids, node_masks = self.encoder.Encode(
+          graph_ids)
 
-      split_indices = np.where(batch.graph_nodes_list[:-1] !=
-                               batch.graph_nodes_list[1:])[0] + 1
+      split_indices = np.where(
+          batch.graph_nodes_list[:-1] != batch.graph_nodes_list[1:])[0] + 1
       all_node_y_per_graph = np.split(batch.node_y, split_indices)
 
       assert len(node_masks) == len(all_node_y_per_graph)
       # Mask only the "active" node labels.
       node_y_per_graph = [
-        node_y[tuple(node_mask)] for node_y, node_mask in
-        zip(all_node_y_per_graph, node_masks)
+          node_y[tuple(node_mask)]
+          for node_y, node_mask in zip(all_node_y_per_graph, node_masks)
       ]
 
       yield batch.log, {

@@ -6,6 +6,7 @@ import typing
 import networkx as nx
 import numpy as np
 import pytest
+import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
@@ -57,18 +58,19 @@ class MockModel(classifier_base.ClassifierBase):
     self.mock_data = data_to_load["mock_data"]
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: str
+      self, epoch_type: str, groups: typing.List[str]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Generate mini-batches of fake data."""
-    for i in range(10):
-      log = log_database.BatchLogMeta(
-          group=group,
-          type=epoch_type,
-          node_count=10,
-          graph_count=10,  # fake the number of graphs as this is checked.
-      )
-      log._graph_indices = [1, 2, 3]
-      yield log, i
+    for group in groups:
+      for i in range(10):
+        log = log_database.BatchLogMeta(
+            group=group,
+            type=epoch_type,
+            node_count=10,
+            graph_count=10,  # fake the number of graphs as this is checked.
+        )
+        log._graph_indices = [1, 2, 3]
+        yield log, i
 
   def RunMinibatch(self, log: log_database.BatchLogMeta,
                    i: int) -> classifier_base.ClassifierBase.MinibatchResults:
@@ -165,18 +167,20 @@ def test_Train(tempdir2: pathlib.Path, graph_db: graph_database.Database,
   assert model.best_epoch_num == 1
 
 
-def test_Train_creates_only_test_batch_logs(tempdir2: pathlib.Path,
-                                            graph_db: graph_database.Database,
-                                            log_db: log_database.Database):
-  """Test that training produces no batch logs."""
+def test_Train_batch_log_count(tempdir2: pathlib.Path,
+                               graph_db: graph_database.Database,
+                               log_db: log_database.Database):
+  """Test that training produces only batch logs for {val,test} runs."""
   FLAGS.working_dir = tempdir2
 
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
   model.Train(num_epochs=1)
   with log_db.Session() as session:
+    # 10 train + 10 val + 10 test logs
     assert session.query(log_database.BatchLogMeta).count() == 30
-    assert session.query(log_database.BatchLog).count() == 10
+    # 10 val + 10 test logs
+    assert session.query(log_database.BatchLog).count() == 20
 
     query = session.query(log_database.BatchLogMeta)
     query = query.filter(log_database.BatchLogMeta.type == 'test')
@@ -184,9 +188,28 @@ def test_Train_creates_only_test_batch_logs(tempdir2: pathlib.Path,
       assert batch_log_meta.batch_log
 
     query = session.query(log_database.BatchLogMeta)
-    query = query.filter(log_database.BatchLogMeta.type.in_(['train', 'val']))
+    query = query.filter(log_database.BatchLogMeta.type == 'train')
     for batch_log_meta in query:
       assert not batch_log_meta.batch_log
+
+
+def test_Train_incremental(tempdir2: pathlib.Path,
+                               graph_db: graph_database.Database,
+                               log_db: log_database.Database):
+  """Test that training in one-epoch increments works."""
+  FLAGS.working_dir = tempdir2
+
+  model = MockModel(graph_db, log_db)
+  model.InitializeModel()
+  model.Train(num_epochs=1)
+  with log_db.Session() as session:
+    # 10 train + 10 val + 10 test logs
+    assert session.query(log_database.BatchLogMeta).count() == 30
+
+  model.Train(num_epochs=1)
+  with log_db.Session() as session:
+    # + 10 train + 10 train (no change to val acc so there's no new test logs)
+    assert session.query(log_database.BatchLogMeta).count() == 50
 
 
 def test_Test_creates_batch_logs(tempdir2: pathlib.Path,

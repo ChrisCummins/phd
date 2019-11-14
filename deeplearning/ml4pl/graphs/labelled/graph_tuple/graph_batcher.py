@@ -32,9 +32,9 @@ class GraphBatchOptions(typing.NamedTuple):
   # zero, the number of nodes is not limited.
   max_nodes: int = 0
 
-  # Filter graphs to this "GraphMeta.group" column. None value means no filter.
-  # This can be a list of groups as well.
-  group: typing.Union[str, typing.List[str]] = None
+  # Filter graphs to these "GraphMeta.group" columns. None value means no
+  # filter.
+  groups: typing.List[str] = None
 
   # Only include graphs which can be computed in less than or equal to this
   # number of data flow steps. A value of zero means no limit.
@@ -70,11 +70,8 @@ class GraphBatchOptions(typing.NamedTuple):
     if self.max_nodes:
       filters.append(
           lambda: graph_database.GraphMeta.node_count <= self.max_nodes)
-    if self.group:
-      if type(self.group) == list:
-        filters.append(lambda: graph_database.GraphMeta.group.in_(tuple(self.group)))
-      else:  # type == int
-        filters.append(lambda: graph_database.GraphMeta.group == self.group)
+    if self.groups:
+      filters.append(lambda: graph_database.GraphMeta.group.in_(self.groups))
     if self.data_flow_max_steps_required:
       filters.append(
           lambda: (graph_database.GraphMeta.data_flow_max_steps_required <= self
@@ -424,15 +421,11 @@ class GraphBatcher(object):
     self.stats = graph_stats.GraphTupleDatabaseStats(self.db)
     app.Log(1, "%s", self.stats)
 
-  def GetGraphsInGroupCount(self, group: typing.Union[str, typing.List[str]]) -> int:
+  def GetGraphsInGroupCount(self, groups: typing.List[str]) -> int:
     """Get the number of graphs in the given group(s)."""
-    if type(group) == list:
-      _filter = lambda: graph_database.GraphMeta.group.in_(tuple(group))
-    else:  # type == int
-      _filter = lambda: graph_database.GraphMeta.group == group
     with self.db.Session() as s:
       q = s.query(sql.func.count(graph_database.GraphMeta)) \
-        .filter(_filter)
+        .filter(lambda: graph_database.GraphMeta.group.in_(groups))
       for filter_cb in self._GetFilters():
         q = q.filter(filter_cb())
       num_rows = q.one()[0]
@@ -447,7 +440,6 @@ class GraphBatcher(object):
     """Make a batch iterator over the given group.
 
     Args:
-      group: The group to select. Can be a list of groups.
       max_instance_count: Limit the total number of graphs returned across all
         graph batches. A value of zero means no limit.
 

@@ -2,11 +2,11 @@
 import typing
 
 import numpy as np
-from labm8 import app
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -24,10 +24,10 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
     self.class_counts = np.zeros(self.labels_dimensionality, dtype=np.int32)
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: str
+      self, epoch_type: str, groups: typing.List[str]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, np.array]]:
     options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
-                                              group=group)
+                                              groups=groups)
     max_instance_count = (
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)

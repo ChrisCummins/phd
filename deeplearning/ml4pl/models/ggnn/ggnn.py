@@ -1,18 +1,16 @@
 """Train and evaluate a model for node classification."""
 import collections
 import typing
-import os
 
 import numpy as np
 import tensorflow as tf
-from labm8 import app
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
-
+from labm8 import app
 
 FLAGS = app.FLAGS
 
@@ -387,13 +385,13 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     return loss, accuracies, accuracy, predictions
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: typing.Union[str, typing.List[str]]
+      self, epoch_type: str, groups: typing.List[str]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, ggnn.FeedDict]]:
     """Create mini-batches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
     options = graph_batcher.GraphBatchOptions(
         max_nodes=FLAGS.batch_size,
-        group=group,
+        groups=groups,
         data_flow_max_steps_required=(None if epoch_type == 'test' else
                                       self.message_passing_step_count))
     max_instance_count = (
