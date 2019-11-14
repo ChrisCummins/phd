@@ -13,13 +13,17 @@ from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 
-FLAGS = app.FLAGS
-
 app.DEFINE_integer(
     'graph_reader_buffer_size', 128,
     'The number of graphs to read from the database per SQL '
     'query. A larger number means fewer costly SQL queries, '
     'but requires more memory.')
+app.DEFINE_string(
+    'graph_reader_order', 'batch_random',
+    'The order to read graphs from. See BufferedGraphReaderOrder. One of'
+    '{in_order,global_random,batch_random}')
+
+FLAGS = app.FLAGS
 
 
 class GraphBatchOptions(typing.NamedTuple):
@@ -448,10 +452,20 @@ class GraphBatcher(object):
     """
     filters = options.GetDatabaseQueryFilters()
 
+    if FLAGS.graph_reader_order == 'in_order':
+      order = graph_readers.BufferedGraphReaderOrder.IN_ORDER
+    elif FLAGS.graph_reader_order == 'global_random':
+      order = graph_readers.BufferedGraphReaderOrder.GLOBAL_RANDOM
+    elif FLAGS.graph_reader_order == 'batch_random':
+      order = graph_readers.BufferedGraphReaderOrder.BATCH_RANDOM
+    else:
+      raise app.UsageError(
+          f"Unknown --graph_reader_order=`{FLAGS.graph_reader_order}`.")
+
     graph_reader = graph_readers.BufferedGraphReader(
         self.db,
         filters=filters,
-        order_by_random=True,
+        order=order,
         eager_graph_loading=True,
         # Magic constant to try and get a reasonable balance between memory
         # requirements and database round trips.
