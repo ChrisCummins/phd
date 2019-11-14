@@ -479,7 +479,7 @@ class GraphBatcher(object):
       if batch:
         elapsed_time = time.time() - start_time
         app.Log(
-            3, "Created batch of %s graphs (%s nodes) in %s "
+            5, "Created batch of %s graphs (%s nodes) in %s "
             "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
             humanize.Commas(batch.log.node_count),
             humanize.Duration(elapsed_time),

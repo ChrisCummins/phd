@@ -67,7 +67,7 @@ app.DEFINE_boolean(
     "improves.")
 
 app.DEFINE_integer(
-    "batch_size", 15000,
+    "batch_size", 80000,
     "The maximum number of nodes to include in each graph batch.")
 
 app.DEFINE_integer(
@@ -356,7 +356,10 @@ class ClassifierBase(object):
       #[self.RunEpoch("train", train_group) for train_group in train_groups]
 
       # groups as list supported!
-      self.RunEpoch("train", train_groups)
+      train_acc = self.RunEpoch("train", train_groups)
+      app.Log(1, "Epoch %s completed in %s. Train "
+              "accuracy: %.2f%%", self.epoch_num,
+              humanize.Duration(time.time() - epoch_start_time), train_acc * 100)
 
       # Get the current best validation accuracy so that we can compare against.
       previous_best_val_acc = self.best_epoch_validation_accuracy

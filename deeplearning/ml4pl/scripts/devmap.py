@@ -16,9 +16,14 @@ app.DEFINE_string('working_dir', '/var/phd/ml4pl/models',
 app.DEFINE_list('groups', [str(x) for x in range(10)],
                 'The test groups to use.')
 app.DEFINE_boolean('cudnn_lstm', True, 'Use the CuDNNLSTM implementation')
-app.DEFINE_string('graph_state_dropout_keep_prob', '.5', "")
-app.DEFINE_string('output_layer_dropout_keep_prob', '.5', "")
-app.DEFINE_string('edge_weight_dropout_keep_prob', '.9', "")
+app.DEFINE_string('graph_state_dropout_keep_prob',
+        '.9',"")
+app.DEFINE_string(
+        'output_layer_dropout_keep_prob',
+        '.5', "")
+app.DEFINE_string(
+        'edge_weight_dropout_keep_prob',
+        '1.0',"")
 app.DEFINE_boolean("position_embeddings", True, "use pos emb.")
 app.DEFINE_string('graph_reader_buffer_size', '1024', "")
 app.DEFINE_string("max_encoded_length", None, "")
@@ -95,9 +100,9 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     return [
         str(GGNN),
         '--num_epochs',
-        '100',
+        '300',
         '--vmodule',
-        "*=5",
+        "*=4",
     ] + base_flags + ggnn_flags
   else:
     app.FatalWithoutStackTrace('Unknown model name `%s`', FLAGS.model)

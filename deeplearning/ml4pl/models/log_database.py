@@ -45,7 +45,7 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   type: str = sql.Column(sql.String(32), nullable=False)
 
   # The GraphMeta.group column that this batch of graphs came from.
-  group: str = sql.Column(sql.String(32), nullable=False)
+  group: str = sql.Column(sql.String(32), nullable=False)  # 32 enough for lists?
 
   # The batch number across all epochs.
   global_step: int = sql.Column(sql.Integer, nullable=False)

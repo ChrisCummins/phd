@@ -44,13 +44,13 @@ app.DEFINE_integer("hidden_size", 202, "The size of hidden layer(s).")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_string(
-    "inst2vec_embeddings", "random",
+    "inst2vec_embeddings", "constant",
     "The type of per-node inst2vec embeddings to use. One of: "
     "{constant,constant_zero,finetune,random}.")
 classifier_base.MODEL_FLAGS.add("inst2vec_embeddings")
 
 app.DEFINE_boolean(
-    "tensorboard_logging", False,
+    "tensorboard_logging", True,
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
 
 app.DEFINE_integer(
@@ -62,7 +62,7 @@ app.DEFINE_integer(
 # the flag now only controls whether they are used or not.
 # This could be nice for ablating our model and also debugging with and without.
 app.DEFINE_boolean(
-    "position_embeddings", True,
+    "position_embeddings", False,
     "Whether to use position embeddings as signals for edge order."
     "We expect them to be part of the ds anyway, but you can toggle off their effect."
 )
