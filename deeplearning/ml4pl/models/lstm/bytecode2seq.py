@@ -4,6 +4,7 @@ import typing
 
 import keras
 import numpy as np
+import sqlalchemy as sql
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.proto import internal_pb2
@@ -378,6 +379,9 @@ class BytecodeEncoder(EncoderBase):
 class Inst2VecEncoder(BytecodeEncoder):
   """Translate bytecode IDs to inst2vec encoded sequences."""
 
+  # TODO(cec): There is no need to inherit from BytecodeEncoder, and this causes
+  # confusion with having to set the max_sequence_length twice. Refactor.
+
   def __init__(self):
     self.vocab = inst2vec_vocab.VocabularyZipFile.CreateFromPublishedResults()
 
@@ -390,6 +394,18 @@ class Inst2VecEncoder(BytecodeEncoder):
     # We must call the superclass constructor *after* unpacking the vocabulary
     # zipfile.
     super(Inst2VecEncoder, self).__init__()
+
+    with self.bytecode_db.Session() as session:
+      max_linecount = session.query(
+          sql.func.max(bytecode_database.LlvmBytecode.linecount)).one()[0]
+      self.max_sequence_length = max_linecount
+
+    # Allow the --max_encoded_length to override the value stored in the
+    # vocabulary file.
+    if FLAGS.max_encoded_length:
+      app.Log(1, 'Changing inst2vec max sequence length from %s to %s',
+              self.max_sequence_length, FLAGS.max_encoded_length)
+      self.max_sequence_length = FLAGS.max_encoded_length
 
   def __del__(self):
     # Tidy up the unpacked vocabulary zipfile.
