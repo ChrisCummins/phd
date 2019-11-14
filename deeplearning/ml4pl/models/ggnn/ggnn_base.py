@@ -46,7 +46,7 @@ classifier_base.MODEL_FLAGS.add("hidden_size")
 app.DEFINE_string(
     "inst2vec_embeddings", "constant",
     "The type of per-node inst2vec embeddings to use. One of: "
-    "{constant,constant_zero,finetune,random}.")
+    "{constant,constant_zero,finetune,random,random_constant}.")
 classifier_base.MODEL_FLAGS.add("inst2vec_embeddings")
 
 app.DEFINE_boolean(
@@ -180,6 +180,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       app.Log(1,
               "Using pre-trained inst2vec embeddings without further training")
       trainable = False
+    elif FLAGS.inst2vec_embeddings == 'constant_zero':
+      embeddings[0] = np.zeros(embeddings[0].shape)
+      trainable = False
     elif FLAGS.inst2vec_embeddings == 'finetune':
       app.Log(1, "Fine-tuning inst2vec embeddings")
       trainable = True
@@ -187,8 +190,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       app.Log(1, "Initializing with random embeddings")
       embeddings[0] = np.random.rand(*embeddings[0].shape)
       trainable = True
-    elif FLAGS.inst2vec_embeddings == 'constant_zero':
-      embeddings[0] = np.zeros(embeddings[0].shape)
+    elif FLAGS.inst2vec_embeddings == 'random_constant':
+      embeddings[0] = np.random.rand(*embeddings[0].shape)
       trainable = False
     else:
       raise app.UsageError(
