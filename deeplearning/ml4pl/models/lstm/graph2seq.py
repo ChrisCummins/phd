@@ -1,11 +1,11 @@
 """Module for conversion from labelled graphs to encoded sequences."""
-
 import collections
+import pickle
+import typing
+
 import keras
 import networkx as nx
 import numpy as np
-import pickle
-import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_query
@@ -14,7 +14,6 @@ from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from labm8 import app
 from labm8 import labtypes
-
 
 FLAGS = app.FLAGS
 
@@ -52,13 +51,14 @@ class EncoderBase(object):
 class GraphToBytecodeEncoder(EncoderBase):
   """Encode graphs to bytecode sequences."""
 
-  def __init__(self, graph_db: graph_database.Database):
+  def __init__(self, graph_db: graph_database.Database,
+               bytecode_encoder: bytecode2seq.EncoderBase):
     super(GraphToBytecodeEncoder, self).__init__(graph_db)
 
     # Maintain a mapping from graph IDs to encoded bytecodes to amortize the
     # cost of encoding.
     self.graph_to_encoded_bytecode: typing.Dict[int, np.array] = {}
-    self.bytecode_encoder = bytecode2seq.BytecodeEncoder()
+    self.bytecode_encoder = bytecode_encoder
 
   def Encode(self, graph_ids: typing.List[int]):
     """Return encoded bytecodes for the given graph IDs.
@@ -108,9 +108,7 @@ class GraphToBytecodeEncoder(EncoderBase):
         for graph_id in graph_ids_for_bytecode:
           self.graph_to_encoded_bytecode[graph_id] = encoded_sequence
 
-    return [
-        self.graph_to_encoded_bytecode[graph_id] for graph_id in graph_ids
-    ]
+    return [self.graph_to_encoded_bytecode[graph_id] for graph_id in graph_ids]
 
 
 class GraphToBytecodeGroupingsEncoder(EncoderBase):
@@ -300,8 +298,7 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
         dtype=np.int32)
 
     strings_to_encode = [
-        graph.nodes[n].get('original_text', '')
-        for n in serialized_node_list
+        graph.nodes[n].get('original_text', '') for n in serialized_node_list
     ]
 
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)

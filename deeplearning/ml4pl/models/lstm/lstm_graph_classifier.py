@@ -8,6 +8,7 @@ from keras import models
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
@@ -33,8 +34,8 @@ classifier_base.MODEL_FLAGS.add("hidden_size")
 app.DEFINE_integer("dense_hidden_size", 32, "The size of the dense ")
 classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 
-app.DEFINE_string('tokenizer', 'opencl',
-                  'The tokenizer to use. One of {opencl,deeptune,inst2vec}')
+app.DEFINE_string('bytecode_encoder', 'llvm',
+                  'The encoder to use. One of {opencl,llvm,inst2vec}')
 
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
@@ -52,16 +53,28 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     utils.SetAllowedGrowthOnKerasSession()
 
     # The encoder which performs translation from graphs to encoded sequences.
-    self.encoder = graph2seq.GraphToBytecodeEncoder(self.batcher.db)
+    if FLAGS.bytecode_encoder == 'llvm':
+      bytecode_encoder = bytecode2seq.BytecodeEncoder()
+    elif FLAGS.bytecode_encoder == 'inst2vec':
+      bytecode_encoder = bytecode2seq.Inst2VecEncoder()
+    elif FLAGS.bytecode_encoder == 'opencl':
+      bytecode_encoder = bytecode2seq.OpenClEncoder()
+    else:
+      raise app.UsageError(f"Unknown encoder '{FLAGS.bytecode_encoder}'")
+
+    self.encoder = graph2seq.GraphToBytecodeEncoder(self.batcher.db,
+                                                    bytecode_encoder)
 
     # The graph level LSTM baseline doesn't need to sum segments, although they might as well to be shorter be summed?
-    input_layer = keras.Input(shape=(self.encoder.max_sequence_length,),
-                              dtype='int32',
-                              name="model_in")
+    input_layer = keras.Input(
+        shape=(self.encoder.bytecode_encoder.max_sequence_length,),
+        dtype='int32',
+        name="model_in")
 
     x = keras.layers.Embedding(
-        input_dim=self.encoder.vocabulary_size_with_padding_token,
-        input_length=self.encoder.max_sequence_length,
+        input_dim=self.encoder.bytecode_encoder.
+        vocabulary_size_with_padding_token,
+        input_length=self.encoder.bytecode_encoder.max_sequence_length,
         output_dim=FLAGS.hidden_size,
         name="embedding")(input_layer)
 
