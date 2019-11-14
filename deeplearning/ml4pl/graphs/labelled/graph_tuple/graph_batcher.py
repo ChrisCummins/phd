@@ -33,7 +33,8 @@ class GraphBatchOptions(typing.NamedTuple):
   max_nodes: int = 0
 
   # Filter graphs to this "GraphMeta.group" column. None value means no filter.
-  group: str = None
+  # This can be a list of groups as well.
+  group: typing.Union[str, typing.List[str]] = None
 
   # Only include graphs which can be computed in less than or equal to this
   # number of data flow steps. A value of zero means no limit.
@@ -70,7 +71,10 @@ class GraphBatchOptions(typing.NamedTuple):
       filters.append(
           lambda: graph_database.GraphMeta.node_count <= self.max_nodes)
     if self.group:
-      filters.append(lambda: graph_database.GraphMeta.group == self.group)
+      if type(self.group) == list:
+        filters.append(lambda: graph_database.GraphMeta.group.in_(tuple(self.group)))
+      else:  # type == int
+        filters.append(lambda: graph_database.GraphMeta.group == self.group)
     if self.data_flow_max_steps_required:
       filters.append(
           lambda: (graph_database.GraphMeta.data_flow_max_steps_required <= self
@@ -420,11 +424,15 @@ class GraphBatcher(object):
     self.stats = graph_stats.GraphTupleDatabaseStats(self.db)
     app.Log(1, "%s", self.stats)
 
-  def GetGraphsInGroupCount(self, group: str) -> int:
-    """Get the number of graphs in the given group."""
+  def GetGraphsInGroupCount(self, group: typing.Union[str, typing.List[str]]) -> int:
+    """Get the number of graphs in the given group(s)."""
+    if type(group) == list:
+      _filter = lambda: graph_database.GraphMeta.group.in_(tuple(group))
+    else:  # type == int
+      _filter = lambda: graph_database.GraphMeta.group == group
     with self.db.Session() as s:
       q = s.query(sql.func.count(graph_database.GraphMeta)) \
-        .filter(graph_database.GraphMeta.group == group)
+        .filter(_filter)
       for filter_cb in self._GetFilters():
         q = q.filter(filter_cb())
       num_rows = q.one()[0]
@@ -439,7 +447,7 @@ class GraphBatcher(object):
     """Make a batch iterator over the given group.
 
     Args:
-      group: The group to select.
+      group: The group to select. Can be a list of groups.
       max_instance_count: Limit the total number of graphs returned across all
         graph batches. A value of zero means no limit.
 

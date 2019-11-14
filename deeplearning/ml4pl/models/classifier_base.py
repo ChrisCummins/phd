@@ -131,14 +131,14 @@ class ClassifierBase(object):
   """
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: str
+      self, epoch_type: str, group: typing.Union[str, typing.List[str]]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create and return an iterator over mini-batches of data.
 
     Args:
       epoch_type: The type of mini-batches to generate. One of {train,val,test}.
         For some models, different data may be produced for training vs testing.
-      group: The dataset group to return mini-batches for.
+      group: The dataset group to return mini-batches for. Can be a list of groups.
 
     Returns:
       An iterator of mini-batches and batch logs, where each
@@ -227,13 +227,13 @@ class ClassifierBase(object):
     return np.arange(self.labels_dimensionality, dtype=np.int32)
 
   def RunEpoch(self, epoch_type: str,
-               group: typing.Optional[str] = None) -> float:
+               group: typing.Optional[typing.Union[str, typing.List[str]]] = None) -> float:
     """Run the model with the given epoch.
 
     Args:
       epoch_type: The type of epoch. One of {train,val,test}.
       group: The dataset group to use. This is the GraphMeta.group column that
-        is loaded. Defaults to `epoch_type`.
+        is loaded. Defaults to `epoch_type`. Can be a list of groups.
 
     Returns:
       The average accuracy of the model over all mini-batches.
@@ -244,7 +244,7 @@ class ClassifierBase(object):
     if epoch_type not in {"train", "val", "test"}:
       raise TypeError(f"Unknown epoch type `{type}`. Expected one of "
                       "{train,val,test}")
-    group = group or epoch_type
+    groups = group or epoch_type
 
     epoch_accuracies = []
 
@@ -253,7 +253,7 @@ class ClassifierBase(object):
 
     batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-        self.MakeMinibatchIterator(epoch_type, group), max_queue_size=5)
+        self.MakeMinibatchIterator(epoch_type, groups), max_queue_size=5)
 
     for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:
@@ -351,7 +351,10 @@ class ClassifierBase(object):
       random.shuffle(train_groups)
 
       # Train on the training data.
-      [self.RunEpoch("train", train_group) for train_group in train_groups]
+      #[self.RunEpoch("train", train_group) for train_group in train_groups]
+      
+      # groups as list supported!
+      self.RunEpoch("train", train_groups)
 
       # Validate.
       val_acc = self.RunEpoch("val", val_group)

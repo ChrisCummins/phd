@@ -387,7 +387,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     return loss, accuracies, accuracy, predictions
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: str
+      self, epoch_type: str, group: typing.Union[str, typing.List[str]]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, ggnn.FeedDict]]:
     """Create mini-batches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""

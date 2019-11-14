@@ -98,7 +98,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
         loss_weights=[1., FLAGS.lang_model_loss_weight])
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, group: str
+      self, epoch_type: str, group: typing.Union[str, typing.List[str]]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
