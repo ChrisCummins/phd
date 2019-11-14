@@ -1,15 +1,15 @@
 """Print a summary table of model results."""
-import numpy as np
-import pandas as pd
 import pickle
 import re
+
+import numpy as np
+import pandas as pd
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import pdutil
-
 
 app.DEFINE_database('log_db',
                     log_database.Database,
@@ -42,6 +42,7 @@ def GetProblemFromPickledGraphDbUrl(pickled_column_value: bytes):
 
 
 def GetBestEpochStats(session, df):
+  """Fetch the acc/prec/recall stats for the best epoch."""
   index = []
   rows = []
   for run_id, row in df.iterrows():
@@ -62,21 +63,29 @@ def GetBestEpochStats(session, df):
 
     # Aggregate performance on the test set at the best epoch.
     query = session.query(
-        sql.func.avg(log_database.BatchLogMeta.accuracy).label('test_acc'),
+        log_database.BatchLogMeta.type,
+        sql.func.avg(log_database.BatchLogMeta.accuracy).label('accuracy'),
         sql.func.avg(log_database.BatchLogMeta.precision).label('precision'),
         sql.func.avg(log_database.BatchLogMeta.recall).label('recall'))
     query = query.filter(log_database.BatchLogMeta.run_id == run_id,
                          log_database.BatchLogMeta.epoch == best_epoch)
     query = query.group_by(log_database.BatchLogMeta.run_id,
-                           log_database.BatchLogMeta.epoch)
-    result = query.one()
+                           log_database.BatchLogMeta.epoch,
+                           log_database.BatchLogMeta.type)
+    results = {row[0]: row[1:] for row in query}
 
     index.append(run_id)
-    rows.append([best_epoch, result.test_acc, result.precision, result.recall])
+    column_names = ['best_epoch']
+    column_values = [best_epoch]
+    for type_ in ['train', 'val', 'test']:
+      column_names.extend([f'{type_}_acc', f'{type_}_prec', f'{type_}_rec'])
+      column_values.extend(results.get(type_, ['-', '-', '-']))
+    rows.append(column_values)
 
-  return pd.DataFrame(rows,
-                      index=index,
-                      columns=['best_epoch', 'accuracy', 'precision', 'recall'])
+  # Now that we are done we can drop the duplicate validation accuracy.
+  df.drop(columns=['val_acc'], inplace=True)
+
+  return pd.DataFrame(rows, index=index, columns=column_names)
 
 
 def GetLeaderboard(log_db: log_database.Database,
