@@ -22,6 +22,8 @@ app.DEFINE_string('edge_weight_dropout_keep_prob', '.9', "")
 app.DEFINE_boolean("position_embeddings", True, "use pos emb.")
 app.DEFINE_string('graph_reader_buffer_size', '1024', "")
 app.DEFINE_string("max_encoded_length", "25000", "")
+app.DEFINE_string('bytecode_encoder', 'llvm',
+                  'The encoder to use. One of {opencl,llvm,inst2vec}')
 
 FLAGS = app.FLAGS
 
@@ -79,20 +81,11 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     if not FLAGS.bytecode_db:
       app.FatalWithoutStackTrace("--bytecode_db must be set")
     return [
-        str(LSTM),
-        '--num_epochs',
-        '50',
-        '--bytecode_db',
-        FLAGS.bytecode_db,
-        '--max_encoded_length',
-        FLAGS.max_encoded_length,
-        '--hidden_size',
-        '64',
-        '--vmodule',
-        "*=5",
+        str(LSTM), '--num_epochs', '50', '--bytecode_db', FLAGS.bytecode_db,
+        '--max_encoded_length', FLAGS.max_encoded_length, '--hidden_size', '64',
+        '--vmodule', "*=5",
         '--cudnn_lstm' if FLAGS.cudnn_lstm else '--nocudnn_lstm',
-        '--batch_size',
-        '64',
+        '--batch_size', '64', '--bytecode_encoder', FLAGS.bytecode_encoder
     ] + base_flags
   elif FLAGS.model == 'ggnn':
     return [
