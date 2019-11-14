@@ -21,6 +21,7 @@ app.DEFINE_string('format', 'txt',
                   'The format to print the result table. One of {txt,csv}')
 app.DEFINE_boolean('human_readable', True,
                    'Format the column data in a human-readable format.')
+app.DEFINE_list('extra_model_flags', [], 'Additional model flags to print.')
 FLAGS = app.FLAGS
 
 
@@ -132,6 +133,17 @@ def GetLeaderboard(log_db: log_database.Database,
         GetProblemFromPickledGraphDbUrl(x) for x in graph_df['problem']
     ]
     graph_df.set_index('run_id', inplace=True)
+
+    for flag in FLAGS.extra_model_flags:
+      query = session.query(log_database.Parameter.run_id,
+                            log_database.Parameter.pickled_value.label(flag))
+      query = query.filter(
+          log_database.Parameter.type == log_database.ParameterType.MODEL_FLAG)
+      query = query.filter(log_database.Parameter.parameter == flag)
+      flag_df = pdutil.QueryToDataFrame(session, query)
+      flag_df[flag] = [pickle.loads(x) for x in flag_df[flag]]
+      flag_df.set_index('run_id', inplace=True)
+      graph_df = graph_df.join(flag_df)
 
     # Create a table with the names of the test groups.
     query = session.query(log_database.Parameter.run_id,
