@@ -1,9 +1,9 @@
 """Module to convert bytecode IDs into vocabulary sequences."""
 import json
+import typing
 
 import keras
 import numpy as np
-import typing
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.proto import internal_pb2
@@ -14,7 +14,6 @@ from deeplearning.ncc.inst2vec import api as inst2vec
 from labm8 import app
 from labm8 import bazelutil
 from labm8 import pbutil
-
 
 app.DEFINE_database('bytecode_db',
                     bytecode_database.Database,
@@ -246,10 +245,11 @@ OPENCL_TOKENS = [
 ]
 
 
-def Encode(bytecodes: typing.List[str],
-           vocab: typing.Dict[str, int],
-           language: str = 'llvm',
-          ) -> typing.Tuple[typing.List[typing.List[int]], typing.Dict[str, int]]:
+def Encode(
+    bytecodes: typing.List[str],
+    vocab: typing.Dict[str, int],
+    language: str = 'llvm',
+) -> typing.Tuple[typing.List[typing.List[int]], typing.Dict[str, int]]:
   """Encode the given bytecodes using the vocabulary.
 
   The vocabulary is lazily constructed. If a token is found that is not in the
@@ -275,15 +275,16 @@ def Encode(bytecodes: typing.List[str],
   return [list(j.token) for j in message.input], dict(message.vocabulary)
 
 
-def EncodeWithFixedVocab(bytecodes: typing.List[str],
-                         vocab: typing.Dict[str, int],
-           language: str = 'llvm',
-           ) -> typing.List[typing.List[int]]:
+def EncodeWithFixedVocab(
+    bytecodes: typing.List[str],
+    vocab: typing.Dict[str, int],
+    language: str = 'llvm',
+) -> typing.List[typing.List[int]]:
   encoded_sequences, vocab_out = Encode(bytecodes, vocab, language)
   if len(vocab_out) != len(vocab):
-      raise ValueError("Encoded vocabulary has different size "
-                       f"({len(vocab_out)}) than the input "
-                       f"({len(vocab)})")
+    raise ValueError("Encoded vocabulary has different size "
+                     f"({len(vocab_out)}) than the input "
+                     f"({len(vocab)})")
   return encoded_sequences
 
 
@@ -293,9 +294,8 @@ class EncoderBase(object):
   def __init__(self):
     self._bytecode_db = None
 
-  def Encode(
-      self, bytecode_ids: typing.List[int]
-  ) -> typing.List[typing.List[int]]:
+  def Encode(self,
+             bytecode_ids: typing.List[int]) -> typing.List[typing.List[int]]:
     """Convert a list of bytecode IDs to a list of encoded sequences."""
     raise NotImplementedError("abstract class")
 
@@ -337,41 +337,37 @@ class BytecodeEncoder(EncoderBase):
 
     app.Log(
         1, 'Bytecode encoder using %s-element vocabulary with maximum '
-           'sequence length %s', self.vocabulary_size_with_padding_token,
+        'sequence length %s', self.vocabulary_size_with_padding_token,
         self.max_sequence_length)
 
   @property
   def vocabulary_size_with_padding_token(self) -> int:
     return len(self.vocabulary) + 1
 
-  def Encode(
-    self, bytecode_ids: typing.List[int]
-  ) -> np.array:
+  def Encode(self, bytecode_ids: typing.List[int]) -> np.array:
     with self.bytecode_db.Session() as session:
       query = session.query(bytecode_database.LlvmBytecode.id,
                             bytecode_database.LlvmBytecode.bytecode)
-      query = query.filter(
-          bytecode_database.LlvmBytecode.id.in_(bytecode_ids))
+      query = query.filter(bytecode_database.LlvmBytecode.id.in_(bytecode_ids))
 
       bytecode_id_to_string = {
           bytecode_id: bytecode for bytecode_id, bytecode in query
       }
       if len(set(bytecode_ids)) != len(bytecode_id_to_string):
-          raise EnvironmentError(
-              f"len(bytecode_ids)={len(bytecode_ids)} != "
-              f"len(bytecode_id_to_string)={len(bytecode_id_to_string)}")
+        raise EnvironmentError(
+            f"len(bytecode_ids)={len(bytecode_ids)} != "
+            f"len(bytecode_id_to_string)={len(bytecode_id_to_string)}")
 
-    return self.EncodeBytecodeStrings([
-        bytecode_id_to_string[bytecode_id] for bytecode_id in bytecode_ids
-    ])
+    return self.EncodeBytecodeStrings(
+        [bytecode_id_to_string[bytecode_id] for bytecode_id in bytecode_ids])
 
   def EncodeBytecodeStrings(self, strings: typing.List[str]):
     # Encode the requested bytecodes.
-    encoded_sequences = EncodeWithFixedVocab(strings, self.vocabulary, self.language)
+    encoded_sequences = EncodeWithFixedVocab(strings, self.vocabulary,
+                                             self.language)
     if len(strings) != len(encoded_sequences):
-      raise EnvironmentError(
-          f"len(strings)={len(strings)} != "
-          f"len(encoded_sequences)={len(encoded_sequences)}")
+      raise EnvironmentError(f"len(strings)={len(strings)} != "
+                             f"len(encoded_sequences)={len(encoded_sequences)}")
     return np.array(
         keras.preprocessing.sequence.pad_sequences(
             encoded_sequences,
@@ -402,7 +398,7 @@ class Inst2VecEncoder(BytecodeEncoder):
   def EncodeBytecodeStrings(self, strings: typing.List[str]):
     with self.vocab as vocab:
       encoded_sequences = [
-        inst2vec.EncodeLlvmBytecode(bytecode, vocab) for bytecode in strings
+          inst2vec.EncodeLlvmBytecode(bytecode, vocab) for bytecode in strings
       ]
 
     return np.array(
@@ -410,8 +406,7 @@ class Inst2VecEncoder(BytecodeEncoder):
             encoded_sequences,
             maxlen=self.max_sequence_length,
             value=self.pad_val,
-        )
-    )
+        ))
 
   @property
   def vocabulary_size_with_padding_token(self) -> int:
@@ -431,22 +426,19 @@ class OpenClEncoder(EncoderBase):
     # Map relpath -> src.
     df = make_devmap_dataset.MakeGpuDataFrame(
         opencl_device_mapping_dataset.OpenClDeviceMappingsDataset().df,
-        'amd_tahiti_7970'
-    )
+        'amd_tahiti_7970')
     relpath_to_src = {
-      row['relpath']: row['program:opencl_src']
-      for _, row in df.iterrows()
+        row['relpath']: row['program:opencl_src'] for _, row in df.iterrows()
     }
 
     # Map relpath -> bytecode ID.
     with self.bytecode_db.Session() as session:
-      query = session.query(
-          bytecode_database.LlvmBytecode.id,
-          bytecode_database.LlvmBytecode.relpath)
-      query = query.filter(bytecode_database.LlvmBytecode.source_name ==
-                           'pact17_opencl_devmap')
+      query = session.query(bytecode_database.LlvmBytecode.id,
+                            bytecode_database.LlvmBytecode.relpath)
+      query = query.filter(
+          bytecode_database.LlvmBytecode.source_name == 'pact17_opencl_devmap')
       relpath_to_bytecode_id = {
-        relpath: bytecode_id for bytecode_id, relpath in query
+          relpath: bytecode_id for bytecode_id, relpath in query
       }
 
     not_found = set(relpath_to_src.keys()) - set(relpath_to_bytecode_id.keys())
@@ -454,13 +446,11 @@ class OpenClEncoder(EncoderBase):
       raise OSError(f"Relpaths not bound in bytecode database: {not_found}")
 
     # Map bytecode ID -> OpenCL.
-    bytecode_id_src_pairs = {
-      (relpath_to_bytecode_id[relpath], src)
-      for relpath, src in relpath_to_src.items()
-    }
+    bytecode_id_src_pairs = {(relpath_to_bytecode_id[relpath], src)
+                             for relpath, src in relpath_to_src.items()}
 
-    encoded, self.vocabulary = Encode([x[1] for x in bytecode_id_src_pairs],
-                                      {}, 'opencl')
+    encoded, self.vocabulary = Encode([x[1] for x in bytecode_id_src_pairs], {},
+                                      'opencl')
 
     self.max_sequence_length = max(len(m) for m in encoded)
     # Allow the --max_encoded_length to override the value stored in the
@@ -471,10 +461,24 @@ class OpenClEncoder(EncoderBase):
       self.max_sequence_length = FLAGS.max_encoded_length
 
     self.bytecode_to_encoded = {
-      bytecode_id: encoded
-      for (bytecode_id, src), encoded in zip(bytecode_id_src_pairs, encoded)
+        bytecode_id: encoded
+        for (bytecode_id, src), encoded in zip(bytecode_id_src_pairs, encoded)
     }
 
+    self.pad_val = len(self.vocabulary)
+    assert self.pad_val not in self.vocabulary.values()
+
+  @property
+  def vocabulary_size_with_padding_token(self) -> int:
+    return len(self.vocabulary) + 1
 
   def Encode(self, bytecode_ids: typing.List[int]):
-    return [self.bytecode_to_encoded[bytecode_id] for bytecode_id in bytecode_ids]
+    encoded_sequences = [
+        self.bytecode_to_encoded[bytecode_id] for bytecode_id in bytecode_ids
+    ]
+    return np.array(
+        keras.preprocessing.sequence.pad_sequences(
+            encoded_sequences,
+            maxlen=self.max_sequence_length,
+            value=self.pad_val,
+        ))
