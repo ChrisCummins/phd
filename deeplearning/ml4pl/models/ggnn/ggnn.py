@@ -67,6 +67,16 @@ app.DEFINE_integer(
     "Size for MLP that combines graph_x and GGNN output features")
 classifier_base.MODEL_FLAGS.add("auxiliary_inputs_dense_layer_size")
 
+
+###########################
+app.DEFINE_boolean('kfold', False, "Set to do automatic kfold validation on devmap.")
+
+app.DEFINE_list('groups', [str(x) for x in range(10)],
+                'The test groups to use.')
+
+app.DEFINE_integer('graph_reader_buffer_size', 1024, "How many graphs to fetch from db at once")
+###########################
+
 GGNNWeights = collections.namedtuple(
     "GGNNWeights",
     [
@@ -447,10 +457,30 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     return loss, accuracies, accuracy, predictions
 
 
+def RunKFoldOrDie():
+  for test_group in FLAGS.groups:
+    app.Log(1, 'Testing group %s on database %s', test_group, FLAGS.graph_db)
+    
+    test_group_as_num = int(test_group)
+    assert 10 > test_group_as_num >= 0
+    val_group = str((test_group_as_num + 1) % 10)
+
+    FLAGS.test_group = test_group
+    FLAGS.val_group = val_group
+    classifier_base.Run(GgnnClassifier)
+
 def main():
   """Main entry point."""
-  classifier_base.Run(GgnnClassifier)
+  if not FLAGS.log_db:
+    app.FatalWithoutStackTrace("--log_db must be set")
+  if not FLAGS.working_dir:
+    app.FatalWithoutStackTrace("--working_dir must be set")
 
+  if not FLAGS.kfold:
+    classifier_base.Run(GgnnClassifier)
+  else:
+    app.Log(1, "Running kfold on test groups %s", FLAGS.groups)
+    RunKFoldOrDie()
 
 if __name__ == '__main__':
   app.Run(main)
