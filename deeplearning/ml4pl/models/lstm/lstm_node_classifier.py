@@ -27,7 +27,7 @@ FLAGS = app.FLAGS
 # For the sake of readability, these important model flags are saved into a
 # global set classifier_base.MODEL_FLAGS here, so that the declaration of model
 # flags is local to the declaration of the flag.
-app.DEFINE_integer("hidden_size", 200,
+app.DEFINE_integer("hidden_size", 64,
                    "The size of hidden layer(s) in the LSTM baselines.")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
@@ -174,9 +174,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       all_node_y_per_graph = np.split(batch.node_y, split_indices)
 
       assert len(node_masks) == len(all_node_y_per_graph)
+
       # Mask only the "active" node labels.
       node_y_per_graph = [
-          node_y[tuple(node_mask)]
+          node_y[node_mask]
           for node_y, node_mask in zip(all_node_y_per_graph, node_masks)
       ]
 
