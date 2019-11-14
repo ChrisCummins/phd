@@ -14,7 +14,7 @@ from labm8 import app
 from labm8 import humanize
 
 app.DEFINE_integer(
-    'graph_reader_buffer_size', 128,
+    'graph_reader_buffer_size', 1024,
     'The number of graphs to read from the database per SQL '
     'query. A larger number means fewer costly SQL queries, '
     'but requires more memory.')
