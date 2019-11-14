@@ -5,13 +5,13 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
+from labm8 import app
+from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import humanize
 
 app.DEFINE_integer(
     'graph_reader_buffer_size', 1024,
@@ -72,8 +72,8 @@ class GraphBatchOptions(typing.NamedTuple):
     """
     filters = []
     if self.max_nodes:
-      filters.append(
-          lambda: graph_database.GraphMeta.node_count <= self.max_nodes)
+      filters.append(lambda: graph_database.GraphMeta.node_count <= self.
+                     max_nodes)
     if self.groups:
       filters.append(lambda: graph_database.GraphMeta.group.in_(self.groups))
     if self.data_flow_max_steps_required:
@@ -212,9 +212,8 @@ class GraphBatch(typing.NamedTuple):
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLogMeta(graph_count=0,
-                                    node_count=0,
-                                    group=graph.group)
+    log = log_database.BatchLogMeta(
+        graph_count=0, node_count=0, group=graph.group)
 
     graph_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
@@ -244,10 +243,14 @@ class GraphBatch(typing.NamedTuple):
 
     # Pack until we cannot fit more graphs in the batch.
     while graph and options.ShouldAddToBatch(graph, log):
-      graph_ids.append(graph.id)
-
       # De-serialize pickled data in database and process.
-      graph_tuple = graph.data
+      try:
+        graph_tuple = graph.data
+      except AttributeError:
+        app.Error("Failed to read data on graph %s", graph.id)
+        continue
+
+      graph_ids.append(graph.id)
 
       graph_nodes_list.append(
           np.full(
