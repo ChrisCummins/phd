@@ -134,8 +134,7 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
         f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type} batch: "
         f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
         f"loss={self.loss:.4f} | "
-        f"acc={self.accuracy:.2%} | prec={self.precision:.3f} | "
-        f"rec={self.recall:.3f}")
+        f"acc={self.accuracy:.2%}")
 
   __table_args__ = (sql.UniqueConstraint('run_id',
                                          'global_step',
