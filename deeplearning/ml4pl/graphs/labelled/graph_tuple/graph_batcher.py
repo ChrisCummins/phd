@@ -213,6 +213,9 @@ class GraphBatch(typing.NamedTuple):
     if not graph:  # We have run out of graphs.
       return None
 
+    data_flow_max_steps_required = graph.data_flow_max_steps_required
+    max_edge_count = graph.edge_count
+
     edge_type_count = stats.edge_type_count
 
     # The batch log contains properties describing the batch (such as the list
@@ -289,6 +292,9 @@ class GraphBatch(typing.NamedTuple):
       log.node_count += graph.node_count
 
       graph = cls.NextGraph(graphs, options)
+      data_flow_max_steps_required = max(data_flow_max_steps_required,
+                                         graph.data_flow_max_steps_required)
+      max_edge_count = max(max_edge_count, graph.edge_count)
       if not graph:  # We have run out of graphs.
         break
 
@@ -322,7 +328,11 @@ class GraphBatch(typing.NamedTuple):
     # Record the graphs that we used in this batch to an unmapped property.
     # TODO(cec): Setting an attribute on a mapped object at run time like this
     # is shitty. Rethink.
-    log._graph_indices = graph_ids
+    log._transient_data = {
+      'graph_indices': graph_ids,
+      'data_flow_max_steps_required': data_flow_max_steps_required,
+      'max_edge_count': max_edge_count,
+    }
 
     return cls(
         adjacency_lists=adjacency_lists,

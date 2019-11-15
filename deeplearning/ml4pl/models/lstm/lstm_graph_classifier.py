@@ -123,10 +123,10 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
-      with prof.Profile(f'Encoded {len(batch.log._graph_indices)} bytecodes',
+      with prof.Profile(f"Encoded {len(batch.log._transient_data['graph_indices'])} bytecodes",
                         print_to=lambda x: app.Log(2, x)):
         # returns a list of encoded bytecodes padded to max_sequence_length.
-        encoded_sequences = self.encoder.Encode(batch.log._graph_indices)
+        encoded_sequences = self.encoder.Encode(batch.log._transient_data['graph_indices'])
       # for graph_classifier we just need graph_x, graph_y split per graph
       # which is already the case.
       yield batch.log, { # vstack lists to np.arrays w/ [batch, ...] shape

@@ -301,7 +301,7 @@ class ClassifierBase(object):
       # Only create a batch log for test runs.
       if record_batch_logs:
         log.batch_log = log_database.BatchLog()
-        log.graph_indices = log._graph_indices
+        log.graph_indices = log._transient_data['graph_indices']
         log.accuracies = accuracies
         log.predictions = predictions
 

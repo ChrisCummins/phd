@@ -119,7 +119,7 @@ def StratifiedKFold(db: graph_database.Database, num_splits: int):
       assert len(graph_batches) == 1
       graph_batch = graph_batches[0]
 
-      graph_ids = np.array(graph_batch.log._graph_indices, dtype=np.int32)
+      graph_ids = np.array(graph_batch.log._transient_data['graph_indices'], dtype=np.int32)
       # Compute the dense labels from one-hot vectors.
       labels = np.argmax(graph_batch.graph_y, axis=1)
 

@@ -69,7 +69,7 @@ class MockModel(classifier_base.ClassifierBase):
             node_count=10,
             graph_count=10,  # fake the number of graphs as this is checked.
         )
-        log._graph_indices = [1, 2, 3]
+        log._transient_data = {'graph_indices': [1, 2, 3]}
         yield log, i
 
   def RunMinibatch(self, log: log_database.BatchLogMeta,
