@@ -37,7 +37,7 @@ class GoogleSheets():
       sheet = self._connection.open(name)
     except gspread.exceptions.SpreadsheetNotFound:
       sheet = self._connection.create(name)
-    sheet.share(share_with_email_address, perm_type='user', role='writer')
+      sheet.share(share_with_email_address, perm_type='user', role='writer')
     return sheet
 
   @staticmethod
