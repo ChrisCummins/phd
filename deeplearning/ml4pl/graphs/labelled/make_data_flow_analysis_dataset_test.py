@@ -1,15 +1,15 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/graph_batcher."""
+import numpy as np
 import pathlib
 import pickle
-import typing
-
-import numpy as np
 import pytest
+import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import make_data_flow_analysis_dataset
 from labm8 import app
 from labm8 import test
+
 
 FLAGS = app.FLAGS
 
@@ -71,22 +71,6 @@ def AddGraphMetas(db_: graph_database.Database, bytecode_ids: typing.List[int]):
     session.add_all([MakeGraphMeta(id) for id in bytecode_ids])
   return db_
 
-
-# GetBytecodesToProcessForOutput() tests.
-
-
-def test_GetBytecodesToProcessForOutput_empty_db(db: graph_database.Database):
-  output_db = AddGraphMetas(db, [])
-  assert make_data_flow_analysis_dataset.GetBytecodesToProcessForOutput(
-      {1, 2, 3, 5, 10}, output_db) == {1, 2, 3, 5, 10}
-
-
-def test_GetBytecodesToProcessForOutput_empty_db(db: graph_database.Database):
-  output_db = AddGraphMetas(db, [1, 2, 3, 4, 6])
-  assert make_data_flow_analysis_dataset.GetBytecodesToProcessForOutput(
-      {1, 2, 3, 5, 10}, output_db) == {5, 10}
-
-
 # GetBytecodeIdsToProcess() tests.
 
 
@@ -95,7 +79,7 @@ def test_GetBytecodeIdsToProcess_empty_output_databases(db, db2, db3, db4):
   output_dbs = [db2, db3, db4]
 
   all_ids, ids_by_output = make_data_flow_analysis_dataset.GetBytecodeIdsToProcess(
-      input_db, output_dbs)
+      {1, 2, 3, 5, 10}, output_dbs, 16)
 
   assert np.array_equal(all_ids, [1, 2, 3, 5, 10])
   assert ids_by_output.shape == (3, 5)
@@ -122,7 +106,7 @@ def test_GetBytecodeIdsToProcess_with_some_outputs(db, db2, db3, db4):
   ]
 
   all_ids, ids_by_output = make_data_flow_analysis_dataset.GetBytecodeIdsToProcess(
-      input_db, output_dbs)
+      {1, 2, 3, 5, 10}, output_dbs, 16)
 
   assert np.array_equal(sorted(all_ids), [2, 3, 5, 10])
   assert ids_by_output.shape == (3, 4)
@@ -138,7 +122,7 @@ def test_GetBytecodeIdsToProcess_with_some_outputs(db, db2, db3, db4):
 def test_ResilientAddUnique_empty_db(db: graph_database.Database):
   just_done = [1, 1, 1, 2]
   make_data_flow_analysis_dataset.ResilientAddUnique(
-      db, [MakeGraphMeta(i) for i in just_done])
+      db, [MakeGraphMeta(i) for i in just_done], 'foo')
 
   with db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 4
@@ -155,7 +139,7 @@ def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
 
   db = AddGraphMetas(db, already_done)
   make_data_flow_analysis_dataset.ResilientAddUnique(
-      db, [MakeGraphMeta(i) for i in just_done])
+      db, [MakeGraphMeta(i) for i in just_done], 'foo')
 
   with db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 7
