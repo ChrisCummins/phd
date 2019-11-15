@@ -1,17 +1,17 @@
 """Print a summary table of model results."""
 import io
-import numpy as np
-import pandas as pd
 import pickle
 import re
-import sqlalchemy as sql
 import typing
+
+import numpy as np
+import pandas as pd
+import sqlalchemy as sql
 
 from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import pdutil
-
 
 app.DEFINE_database('log_db',
                     log_database.Database,
@@ -187,7 +187,7 @@ def GetLeaderboard(log_db: log_database.Database,
         [model_df, test_group_df, val_group_df, batch_df, checkpoint_df])
 
     best_epoch_df = GetBestEpochStats(session, df)
-    if best_epoch_df:
+    if best_epoch_df is not None:
       df = df.join(best_epoch_df)
 
     # Strip redundant suffix from model names.
