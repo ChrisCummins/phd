@@ -14,6 +14,7 @@ py_binary(
 
 py_library(
     name = "google_sheets",
+    visibility = ["//visibility:public"],
     srcs = ["google_sheets.py"],
     deps = [
         "//labm8:app",
@@ -25,6 +26,7 @@ py_library(
 py_binary(
     name = "leaderboard",
     srcs = ["leaderboard.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl/models:log_database",
         "//labm8:app",

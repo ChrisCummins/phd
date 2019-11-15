@@ -13,3 +13,15 @@ py_binary(
         "//labm8:bazelutil",
     ],
 )
+
+py_binary(
+    name = "export_leaderboards",
+    srcs = ["export_leaderboards.py"],
+    deps = [
+        "//deeplearning/ml4pl/models/eval:google_sheets",
+        "//deeplearning/ml4pl/models/eval:leaderboard",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//labm8:prof",
+    ],
+)

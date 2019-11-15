@@ -1,16 +1,17 @@
 """Print a summary table of model results."""
 import io
-import pickle
-import re
-
 import numpy as np
 import pandas as pd
+import pickle
+import re
 import sqlalchemy as sql
+import typing
 
 from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import pdutil
+
 
 app.DEFINE_database('log_db',
                     log_database.Database,
@@ -47,7 +48,7 @@ def GetProblemFromPickledGraphDbUrl(pickled_column_value: bytes):
     raise ValueError(f"Could not interpret database URL '{db_url}'")
 
 
-def GetBestEpochStats(session, df):
+def GetBestEpochStats(session, df) -> typing.Optional[pd.DataFrame]:
   """Fetch the acc/prec/recall stats for the best epoch."""
   index = []
   rows = []
@@ -85,6 +86,9 @@ def GetBestEpochStats(session, df):
       column_names.extend([f'{type_}_acc', f'{type_}_prec', f'{type_}_rec'])
       column_values.extend(results.get(type_, ['-', '-', '-']))
     rows.append(column_values)
+
+  if not rows:
+    return None
 
   # Now that we are done we can drop the duplicate validation accuracy.
   df.drop(columns=['val_acc'], inplace=True)
@@ -183,7 +187,8 @@ def GetLeaderboard(log_db: log_database.Database,
         [model_df, test_group_df, val_group_df, batch_df, checkpoint_df])
 
     best_epoch_df = GetBestEpochStats(session, df)
-    df = df.join(best_epoch_df)
+    if best_epoch_df:
+      df = df.join(best_epoch_df)
 
     # Strip redundant suffix from model names.
     pdutil.RewriteColumn(
