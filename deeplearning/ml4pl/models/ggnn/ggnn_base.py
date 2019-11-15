@@ -68,9 +68,12 @@ app.DEFINE_float(
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
 # This could be nice for ablating our model and also debugging with and without.
-app.DEFINE_boolean(
-    "position_embeddings", False,
+app.DEFINE_string(
+    "position_embeddings", "fancy",
     "Whether to use position embeddings as signals for edge order."
+    "Options: initial, every, fancy, off"
+    "initial takes A (h + pos) at first timestep, every does the same at every timestep"
+    "fancy learns another weight matrix B, s.th. propagation is A h + B pos"
     "We expect them to be part of the ds anyway, but you can toggle off their effect."
 )
 classifier_base.MODEL_FLAGS.add("position_embeddings")

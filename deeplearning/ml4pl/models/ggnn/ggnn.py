@@ -74,7 +74,6 @@ app.DEFINE_boolean('kfold', False, "Set to do automatic kfold validation on devm
 app.DEFINE_list('groups', [str(x) for x in range(10)],
                 'The test groups to use.')
 
-app.DEFINE_integer('graph_reader_buffer_size', 1024, "How many graphs to fetch from db at once")
 ###########################
 
 GGNNWeights = collections.namedtuple(
@@ -101,17 +100,25 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     # Generate per-layer values for edge weights, biases and gated units:
     self.weights = {}  # Used by super-class to place generic things
     self.gnn_weights = GGNNWeights([], [], [], [])
+
     for layer_index in range(len(self.layer_timesteps)):
       with tf.compat.v1.variable_scope(f"gnn_layer_{layer_index}"):
+        # position propagation matrices are treated like another edge type
+        if FLAGS.position_embeddings == 'fancy':
+          type_count_with_fancy = 1 + self.stats.edge_type_count
+        else:
+          type_count_with_fancy = self.stats.edge_type_count
+
         edge_weights = tf.reshape(
             tf.Variable(
                 utils.glorot_init([
-                    self.stats.edge_type_count * FLAGS.hidden_size,
+                    type_count_with_fancy * FLAGS.hidden_size,
                     FLAGS.hidden_size
                 ]),
                 name=f"gnn_edge_weights_{layer_index}",
             ),
-            [self.stats.edge_type_count, FLAGS.hidden_size, FLAGS.hidden_size])
+            [type_count_with_fancy, FLAGS.hidden_size, FLAGS.hidden_size])
+
         # Add dropout as required.
         if FLAGS.edge_weight_dropout_keep_prob < 1.0:
           edge_weights = tf.nn.dropout(
@@ -122,14 +129,14 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
         if FLAGS.use_propagation_attention:
           self.gnn_weights.edge_type_attention_weights.append(
               tf.Variable(
-                  np.ones([self.stats.edge_type_count], dtype=np.float32),
+                  np.ones([type_count_with_fancy], dtype=np.float32),
                   name=f"edge_type_attention_weights_{layer_index}",
               ))
 
         if FLAGS.use_edge_bias:
           self.gnn_weights.edge_biases.append(
               tf.Variable(
-                  np.zeros([self.stats.edge_type_count, FLAGS.hidden_size],
+                  np.zeros([type_count_with_fancy, FLAGS.hidden_size],
                            dtype=np.float32),
                   name="gnn_edge_biases_%i" % layer_index,
               ))
@@ -145,11 +152,12 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
               state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"]
           )
         self.gnn_weights.rnn_cells.append(cell)
+      # end of variable scope f"gnn_layer_{layer_index}"
 
     with tf.compat.v1.variable_scope("embeddings"):
-      # generate table with position embs up to pos 512.
-      self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable(
-      )
+      # maybe generate table with position embs up to pos 512.
+      if FLAGS.position_embeddings != 'off':
+        self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable()
 
       # Lookup each node embedding table and concatenate the result.
       embeddings = self._GetEmbeddingsAsTensorflowVariables()
@@ -164,6 +172,9 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
                                            axis=1,
                                            name='embeddings_concat')
 
+    ###########################################################################
+    ###  GGNN UNROLLING START
+
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
@@ -174,7 +185,6 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
     message_targets = []  # List of tensors of message targets of shape [E]
     message_edge_types = []  # List of tensors of edge type of shape [E]
-
     for edge_type, adjacency_list in enumerate(
         self.placeholders['adjacency_lists']):
       edge_targets = adjacency_list[:, 1]
@@ -217,26 +227,39 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
                 zip(self.placeholders["adjacency_lists"],
                     self.placeholders['edge_positions'])):
               edge_sources = adjacency_list[:, 0]
+
               edge_source_states = tf.nn.embedding_lookup(
                   params=node_states_per_layer[-1],
                   ids=edge_sources)  # Shape [E, D]
 
-              edge_pos_embedding = tf.nn.embedding_lookup(
-                  self.position_embeddings, ids=edge_positions)  # shape [E, D]
+              if FLAGS.position_embeddings != 'off':
+                edge_pos_embedding = tf.nn.embedding_lookup(
+                    self.position_embeddings, ids=edge_positions)  # shape [E, D]
 
-              if FLAGS.position_embeddings:  #only place this flag is used!
-                edge_source_states_with_position = tf.add(
+              # one among: {initial, every, fancy, off}
+              # maybe add position to edge_source_states here
+              if FLAGS.position_embeddings == 'every' or \
+                (step and FLAGS.position_embeddings == 'initial'):
+                edge_source_states = tf.add(
                     edge_source_states,
                     edge_pos_embedding,
                     name='edge_source_states_with_position')
-              else:
-                edge_source_states_with_position = edge_source_states
 
               # Message propagation.
+              # Term: A * h
               all_messages_for_edge_type = tf.matmul(
-                  edge_source_states_with_position,
+                  edge_source_states,
                   self.gnn_weights.edge_weights[layer_idx][edge_type],
               )  # Shape [E, D]
+
+              # maybe add term B * pos
+              if FLAGS.position_embeddings == 'fancy':
+                all_messages_for_edge_type += tf.matmul(
+                  edge_pos_embedding,
+                  # last edge_type corresponds to fancy_position_weights B
+                  self.gnn_weights.edge_weights[layer_idx][-1],
+              )  # Shape [E, D]
+
               messages.append(all_messages_for_edge_type)
               message_source_states.append(edge_source_states)
 
@@ -320,6 +343,10 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
                 incoming_information, node_states_per_layer[-1])[1]
 
     self.ops["final_node_x"] = node_states_per_layer[-1]
+
+    ###  GGNN UNROLLING END
+    ###########################################################################
+    ###  GGNN READOUT START
 
     if FLAGS.output_layer_dropout_keep_prob < 1:
       out_layer_dropout = self.placeholders["output_layer_dropout_keep_prob"]
@@ -452,7 +479,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
     loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
-                                           predictions)
+                                          predictions)
 
     return loss, accuracies, accuracy, predictions
 
@@ -460,7 +487,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 def RunKFoldOrDie():
   for test_group in FLAGS.groups:
     app.Log(1, 'Testing group %s on database %s', test_group, FLAGS.graph_db)
-    
+
     test_group_as_num = int(test_group)
     assert 10 > test_group_as_num >= 0
     val_group = str((test_group_as_num + 1) % 10)
