@@ -1,8 +1,9 @@
 """Base class for implementing gated graph neural networks."""
-import typing
+import math
 
 import numpy as np
 import tensorflow as tf
+import typing
 
 from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
@@ -11,6 +12,7 @@ from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
+
 
 FLAGS = app.FLAGS
 
@@ -53,14 +55,15 @@ app.DEFINE_boolean(
     "tensorboard_logging", True,
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
 
-app.DEFINE_integer(
-    "dynamic_unroll_multiple", 0,
-    "If n>=1, the actual model will be dynamically reapplied n times before "
-    "readout. n=-1 (maybe) runs until convergence of predictions.")
+app.DEFINE_string("unroll_strategy", "none",
+                  "The unroll strategy to use.")
 
-# app.DEFINE_string(
-#     "convergenece_strategy", ""
-# )
+app.DEFINE_float(
+    "unroll_factor", 0,
+    "Determine the number of dynamic model unrolls to perform. If "
+    "--unroll_strategy=constant, this number of unrolls are performed. If "
+    "--unroll_strategy=edge_counts, max_edge_count * --unroll_factor unrolls "
+    "are performed.")
 
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
@@ -113,7 +116,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
            self.ops["predictions"]) = (
                self.MakeLossAndAccuracyAndPredictionOps())
 
-        if FLAGS.dynamic_unroll_multiple != 0:
+        if FLAGS.convergence_strategy != "none":
           with tf.compat.v1.variable_scope("modular_graph_model"):
             (self.ops["modular_loss"], self.ops["modular_accuracies"],
              self.ops["modular_accuracy"],
@@ -224,7 +227,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       log: log_database.Database,
       fetch_dict: typing.Dict[str, tf.Tensor],
       feed_dict: typing.Dict[tf.Tensor, typing.Any],
-      unroll_multiple: int,
+      unroll_factor: int,
   ) -> typing.Dict[str, tf.Tensor]:
     input_node_states = feed_dict[self.placeholders['node_x']]
     _node_states = input_node_states
@@ -246,18 +249,15 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         "modular_predictions": self.ops["modular_predictions"]
     }
 
-    if unroll_multiple > 0:
-      max_iteration_count = unroll_multiple
-      stop_once_converged = False
+    if unroll_factor < 1:
+      stop_once_converged = True
+      # We still provide *some* value to stop iterating.
+      unroll_factor = 100
     else:
-      # TODO(cec): Determine max_iteration_count based on the d(G) + 3 rule
-      # of the graphs in the feed_dict.
-      max_iteration_count = 25
       stop_once_converged = True
 
     converged = False
-    for iteration_count in range(1, max_iteration_count):
-      iteration_count += 1
+    for iteration_count in range(1, unroll_factor):
       feed_dict.update({
           self.placeholders["node_x"]:
           _node_states,
@@ -281,12 +281,13 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     log.iteration_count = iteration_count
 
     if converged:
-      app.Log(1, "Model outputs converged after %s iterations", iteration_count)
+      app.Log(2, "Model outputs converged after %s iterations",
+              iteration_count)
     else:
-      app.Log(1, "Model outputs failed to converge after %s iterations",
+      app.Log(2, "Model outputs failed to converge after %s iterations",
               iteration_count)
 
-    # finally compute everything from the originial fetch_dict
+    # finally compute everything from the original fetch_dict
     feed_dict.update({
         self.placeholders['node_x']: input_node_states,
         self.placeholders['raw_node_output_features']: _node_states
@@ -294,44 +295,70 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     return fetch_dict
 
+  def GetUnrollFactor(self, unroll_strategy: str, unroll_factor: float,
+                      log: log_database.BatchLogMeta) -> int:
+    """Determine the unroll factor from the --unroll_strategy and --unroll_factor
+    flags, and the batch log.
+    """
+    # Determine the unrolling strategy.
+    if unroll_strategy == "none" or log.type == "train":
+      # Perform no unrolling. The inputs are processed for a single run of
+      # message_passing_step_count. This is required during training to
+      # propagate gradients.
+      return 1
+    elif unroll_strategy == "constant":
+      # Unroll by a constant number of steps. The total number of steps is
+      # (unroll_factor * message_passing_step_count).
+      return int(unroll_factor)
+    elif unroll_strategy == "data_flow_max_steps":
+      max_data_flow_steps = log._transient_data['data_flow_max_steps_required']
+      unroll_factor = math.ceil(max_data_flow_steps /
+                                self.message_passing_step_count)
+      app.Log(2, 'Determined unroll factor %d from max data flow steps %d',
+              unroll_factor, max_data_flow_steps)
+      return unroll_factor
+    elif unroll_strategy == "edge_count":
+      max_edge_count = log._transient_data['max_edge_count']
+      unroll_factor = math.ceil((max_edge_count * unroll_factor) /
+                                self.message_passing_step_count)
+      app.Log(2, 'Determined unroll factor %d from max edge count %d',
+              unroll_factor, self.message_passing_step_count)
+      return unroll_factor
+    elif unroll_strategy == "label_convergence":
+      return 0
+    else:
+      raise app.UsageError(
+          f"Unknown unroll strategy '{unroll_strategy}'")
+
   def RunMinibatch(self, log: log_database.BatchLogMeta, feed_dict: typing.Any
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
-    if FLAGS.dynamic_unroll_multiple == 0 or log.type == "train":
-      fetch_dict = {
-          "loss": self.ops["loss"],
-          "accuracies": self.ops["accuracies"],
-          "accuracy": self.ops["accuracy"],
-          "predictions": self.ops["predictions"],
-          "summary_loss": self.ops["summary_loss"],
-          "summary_accuracy": self.ops["summary_accuracy"],
-      }
-      unroll_multiple = 0
-    else:
-      fetch_dict = {
-          "loss": self.ops["modular_loss"],
-          "accuracies": self.ops["modular_accuracies"],
-          "accuracy": self.ops["modular_accuracy"],
-          "predictions": self.ops["modular_predictions"],
-          "summary_loss": self.ops["modular_summary_loss"],
-          "summary_accuracy": self.ops["modular_summary_accuracy"],
-      }
-      unroll_multiple = FLAGS.dynamic_unroll_multiple
+    unroll_factor = self.GetUnrollFactor(FLAGS.unroll_strategy,
+                                         FLAGS.unroll_factor, log)
 
     if log.type == "train":
       fetch_dict["train_step"] = self.ops["train_step"]
 
-    if unroll_multiple == 0:
+    if unroll_factor == 1:
+      fetch_dict = {
+        "loss": self.ops["loss"],
+        "accuracies": self.ops["accuracies"],
+        "accuracy": self.ops["accuracy"],
+        "predictions": self.ops["predictions"],
+        "summary_loss": self.ops["summary_loss"],
+        "summary_accuracy": self.ops["summary_accuracy"],
+      }
       fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     else:
+      fetch_dict = {
+        "loss": self.ops["modular_loss"],
+        "accuracies": self.ops["modular_accuracies"],
+        "accuracy": self.ops["modular_accuracy"],
+        "predictions": self.ops["modular_predictions"],
+        "summary_loss": self.ops["modular_summary_loss"],
+        "summary_accuracy": self.ops["modular_summary_accuracy"],
+      }
       fetch_dict = self.ModularlyRunWithFetchDict(log, fetch_dict, feed_dict,
-                                                  unroll_multiple)
-
-    # TODO(cec): Tensorboard logging seems to be broken. Disable it for now.
-    # if FLAGS.tensorboard_logging:
-    #   self.summary_writers[log.group].add_summary(fetch_dict["summary_loss"],
-    #                                               self.global_training_step)
-    #   self.summary_writers[log.group].add_summary(
-    #       fetch_dict["summary_accuracy"], self.global_training_step)
+                                                  unroll_factor)
 
     log.loss = float(fetch_dict['loss'])
 

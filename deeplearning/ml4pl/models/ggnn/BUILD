@@ -4,12 +4,24 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":ggnn_utils",
+        "//deeplearning/ml4pl/models:base_utils",
         "//deeplearning/ml4pl/models:classifier_base",
         "//labm8:app",
         "//labm8:humanize",
         "//labm8:prof",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
+    ],
+)
+
+py_test(
+    name = "ggnn_base_test",
+    srcs = ["ggnn_base_test.py"],
+    deps = [
+        ":ggnn_base",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//labm8:test",
     ],
 )
 
