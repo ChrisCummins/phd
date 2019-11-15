@@ -338,9 +338,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     unroll_factor = self.GetUnrollFactor(FLAGS.unroll_strategy,
                                          FLAGS.unroll_factor, log)
 
-    if log.type == "train":
-      fetch_dict["train_step"] = self.ops["train_step"]
-
     if unroll_factor == 1:
       fetch_dict = {
         "loss": self.ops["loss"],
@@ -350,7 +347,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         "summary_loss": self.ops["summary_loss"],
         "summary_accuracy": self.ops["summary_accuracy"],
       }
-      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
+      if log.type == "train": fetch_dict["train_step"] = self.ops["train_step"]
+      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict) 
     else:
       fetch_dict = {
         "loss": self.ops["modular_loss"],
@@ -360,6 +358,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         "summary_loss": self.ops["modular_summary_loss"],
         "summary_accuracy": self.ops["modular_summary_accuracy"],
       }
+      if log.type == "train": fetch_dict["train_step"] = self.ops["train_step"]
       fetch_dict = self.ModularlyRunWithFetchDict(log, fetch_dict, feed_dict,
                                                   unroll_factor)
 
