@@ -579,6 +579,9 @@ def CreateAnnotatedGraphs(annotator: GraphAnnotator,
       # Run the annotator to produce the annotated graphs.
       annotated_graphs = list(annotator.function(**kwargs))
 
+      if not annotated_graphs:
+        raise ValueError("No graphs produced")
+
       # Copy over the graph metadata.
       for annotated_graph in annotated_graphs:
         annotated_graph.group = graph_meta.group
