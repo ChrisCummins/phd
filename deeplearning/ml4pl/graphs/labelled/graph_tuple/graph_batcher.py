@@ -5,13 +5,13 @@ import typing
 import networkx as nx
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models import log_database
+from labm8 import app
+from labm8 import humanize
 
 app.DEFINE_integer(
     'graph_reader_buffer_size', 1024,
@@ -77,8 +77,8 @@ class GraphBatchOptions(typing.NamedTuple):
     """
     filters = []
     if self.max_nodes:
-      filters.append(lambda: graph_database.GraphMeta.node_count <= self.
-                     max_nodes)
+      filters.append(
+          lambda: graph_database.GraphMeta.node_count <= self.max_nodes)
     if self.groups:
       filters.append(lambda: graph_database.GraphMeta.group.in_(self.groups))
     if self.data_flow_max_steps_required:
@@ -220,8 +220,9 @@ class GraphBatch(typing.NamedTuple):
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLogMeta(
-        graph_count=0, node_count=0, group=graph.group)
+    log = log_database.BatchLogMeta(graph_count=0,
+                                    node_count=0,
+                                    group=graph.group)
 
     graph_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
@@ -292,11 +293,11 @@ class GraphBatch(typing.NamedTuple):
       log.node_count += graph.node_count
 
       graph = cls.NextGraph(graphs, options)
+      if not graph:  # We have run out of graphs.
+        break
       data_flow_max_steps_required = max(data_flow_max_steps_required,
                                          graph.data_flow_max_steps_required)
       max_edge_count = max(max_edge_count, graph.edge_count)
-      if not graph:  # We have run out of graphs.
-        break
 
     # Empty batch
     if not len(incoming_edge_counts):
@@ -329,9 +330,9 @@ class GraphBatch(typing.NamedTuple):
     # TODO(cec): Setting an attribute on a mapped object at run time like this
     # is shitty. Rethink.
     log._transient_data = {
-      'graph_indices': graph_ids,
-      'data_flow_max_steps_required': data_flow_max_steps_required,
-      'max_edge_count': max_edge_count,
+        'graph_indices': graph_ids,
+        'data_flow_max_steps_required': data_flow_max_steps_required,
+        'max_edge_count': max_edge_count,
     }
 
     return cls(
