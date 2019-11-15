@@ -119,7 +119,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
            self.ops["predictions"]) = (
                self.MakeLossAndAccuracyAndPredictionOps())
 
-        if FLAGS.convergence_strategy != "none":
+        if FLAGS.unroll_strategy != "none":
           with tf.compat.v1.variable_scope("modular_graph_model"):
             (self.ops["modular_loss"], self.ops["modular_accuracies"],
              self.ops["modular_accuracy"],
