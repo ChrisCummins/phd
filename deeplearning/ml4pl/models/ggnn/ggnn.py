@@ -502,6 +502,8 @@ def main():
     app.FatalWithoutStackTrace("--log_db must be set")
   if not FLAGS.working_dir:
     app.FatalWithoutStackTrace("--working_dir must be set")
+  if FLAGS.position_embeddings not in ['initial', 'every', 'fancy', 'off']:
+    app.FatalWithoutStackTrace("--position_embeddings has to be one of <initial, every, fancy, off>")
 
   if not FLAGS.kfold:
     classifier_base.Run(GgnnClassifier)
