@@ -292,6 +292,10 @@ class GraphBatch(typing.NamedTuple):
       if not graph:  # We have run out of graphs.
         break
 
+    # Empty batch
+    if not len(incoming_edge_counts):
+      return None
+
     # Concatenate and convert lists to numpy arrays.
 
     for i in range(stats.edge_type_count):

@@ -7,11 +7,6 @@ import typing
 import numpy as np
 import sklearn.metrics
 import sqlalchemy as sql
-
-import build_info
-from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import log_database
 from labm8 import app
 from labm8 import decorators
 from labm8 import humanize
@@ -20,6 +15,11 @@ from labm8 import pbutil
 from labm8 import ppar
 from labm8 import prof
 from labm8 import system
+
+import build_info
+from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import log_database
 
 FLAGS = app.FLAGS
 
@@ -36,16 +36,18 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/',
-                       'The directory to write files to.',
-                       is_dir=True)
+app.DEFINE_output_path(
+    'working_dir',
+    '/tmp/deeplearning/ml4pl/models/',
+    'The directory to write files to.',
+    is_dir=True)
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -316,7 +318,7 @@ class ClassifierBase(object):
       with self.log_db.Session(commit=True) as session:
         session.add(log)
 
-    if not epoch_accuracies:
+    if not len(epoch_accuracies):
       raise ValueError("Batch generator produced no batches!")
 
     return np.mean(epoch_accuracies)
@@ -402,8 +404,8 @@ class ClassifierBase(object):
         if model_checkpoints_to_delete:
           app.Log(
               2, "Deleting %s",
-              humanize.Plural(len(model_checkpoints_to_delete),
-                              'old model checkpoint'))
+              humanize.Plural(
+                  len(model_checkpoints_to_delete), 'old model checkpoint'))
           # Cascade delete is broken, we have to first delete the checkpoint
           # data followed by the checkpoint meta entry.
           delete = sql.delete(log_database.ModelCheckpoint)
@@ -589,10 +591,9 @@ class ClassifierBase(object):
     with self.log_db.Session(commit=True) as session:
       session.add_all(
           ToParams(log_database.ParameterType.FLAG, app.FlagsToDict()) +
-          ToParams(log_database.ParameterType.MODEL_FLAG,
-                   self.ModelFlagsToDict()) +
-          ToParams(log_database.ParameterType.BUILD_INFO,
-                   pbutil.ToJson(build_info.GetBuildInfo())))
+          ToParams(log_database.ParameterType.MODEL_FLAG, self.ModelFlagsToDict(
+          )) + ToParams(log_database.ParameterType.BUILD_INFO,
+                        pbutil.ToJson(build_info.GetBuildInfo())))
 
   def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
     for flag, flag_value in flags.items():
@@ -643,6 +644,7 @@ def Run(model_class):
     test_acc = model.RunEpoch("test", [FLAGS.test_group])
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
-    model.Train(num_epochs=FLAGS.num_epochs,
-                val_group=FLAGS.val_group,
-                test_group=FLAGS.test_group)
+    model.Train(
+        num_epochs=FLAGS.num_epochs,
+        val_group=FLAGS.val_group,
+        test_group=FLAGS.test_group)
