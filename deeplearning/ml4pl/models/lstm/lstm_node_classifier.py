@@ -262,7 +262,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                       print_to=lambda x: app.Log(2, x)):
       pred_y = self.model.predict_on_batch(x)
 
-    assert len(pred_y) == len(batch['node_y'])
+    assert len(pred_y) == len(batch['node_y']), f"len pred_y={len(pred_y)} and len(batch)={len(batch['node_y'])}"
 
     num_classes = pred_y.shape[-1]
 
