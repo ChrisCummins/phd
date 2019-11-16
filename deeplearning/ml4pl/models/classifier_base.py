@@ -20,6 +20,7 @@ import build_info
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 
 FLAGS = app.FLAGS
 
@@ -360,10 +361,12 @@ class ClassifierBase(object):
 
       # groups as list supported!
       train_acc = self.RunEpoch("train", train_groups)
-      app.Log(1, "Epoch %s completed in %s. Train "
-              "accuracy: %.2f%%", self.epoch_num,
+      app.Log(1, "Epoch %s/%s completed in %s. Train "
+              "accuracy: %.2f%%", self.epoch_num, FLAGS.num_epochs,
               humanize.Duration(time.time() - epoch_start_time),
               train_acc * 100)
+      if FLAGS.use_lr_schedule:
+        app.Log(1, "learning_rate_multiple for next epoch is: %s", utils.WarmUpAndFinetuneLearningRateSchedule(self.epoch_num, FLAGS.num_epochs))
 
       # Get the current best validation accuracy so that we can compare against.
       previous_best_val_acc = self.best_epoch_validation_accuracy

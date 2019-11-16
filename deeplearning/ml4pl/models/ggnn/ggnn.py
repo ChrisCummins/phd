@@ -67,6 +67,15 @@ app.DEFINE_integer(
     "Size for MLP that combines graph_x and GGNN output features")
 classifier_base.MODEL_FLAGS.add("auxiliary_inputs_dense_layer_size")
 
+app.DEFINE_boolean("use_dsc_loss", False,
+    "Whether to use the DSC loss instead of Cross Entropy."
+    "DSC loss help with class imbalances. Refer to "
+    "https://arxiv.org/pdf/1911.02855.pdf"
+)
+
+app.DEFINE_boolean("use_lr_schedule", False,
+    "whether to use a warmup-train-finetune learning rate schedule."
+)
 
 ###########################
 app.DEFINE_boolean('kfold', False, "Set to do automatic kfold validation on devmap.")
@@ -414,12 +423,32 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
                                               predictions)
       loss = _loss + FLAGS.intermediate_loss_discount_factor * graph_only_loss
     elif self.stats.node_labels_dimensionality:
-      loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
+      if FLAGS.use_dsc_loss:
+        # self.placeholders['node_y'] have shape (num_nodes_in_batch, 2)
+        p1 = tf.nn.softmax(predictions[:, 0])
+        y1 = tf.cast(self.placeholders['node_y'][:, 0], tf.float32)
+
+        # we fix class 2 bc here 0 is the dominant mode!
+        p2 = 1.0 - tf.nn.softmax(predictions[:, 1])
+        y2 = 1.0 - tf.cast(self.placeholders['node_y'][:, 1], tf.float32)
+
+        loss = (self.make_dsc_loss(p1, y1) + self.make_dsc_loss(p2, y2)) / 2.0
+      else:
+        loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
                                              predictions)
+        #loss = 0.0
+
     else:
       raise ValueError("No graph labels and no node labels!")
 
     return loss, accuracies, accuracy, predictions
+
+  def make_dsc_loss(self, p1: tf.Tensor, y1: tf.Tensor):
+    normalization = tf.cast(self.placeholders['node_count'], tf.float32)
+    numerator = (1. - p1) * p1 * y1
+    denominator = ((1.0 - p1) * p1 + y1) * normalization
+    neg_loss = tf.reduce_sum(numerator / (denominator + utils.SMALL_NUMBER))
+    return 1.0 - neg_loss
 
   def MakeMinibatchIterator(
       self, epoch_type: str, groups: typing.List[str]
@@ -448,6 +477,8 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
             FLAGS.output_layer_dropout_keep_prob,
             self.placeholders["is_training"]:
             True,
+            self.placeholders['learning_rate_multiple']:
+            utils.WarmUpAndFinetuneLearningRateSchedule(self.epoch_num, FLAGS.num_epochs) if FLAGS.use_lr_schedule else 1.0
         })
       else:
         feed_dict.update({

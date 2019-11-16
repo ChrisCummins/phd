@@ -212,7 +212,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     inst2vec_embeddings = tf.Variable(initial_value=embeddings[0],
                                       trainable=trainable,
                                       dtype=tf.float32)
-    selector_embeddings = tf.Variable(initial_value=embeddings[1],
+    selector_embeddings = tf.Variable(initial_value=embeddings[1] * 50,
                                       trainable=False,
                                       dtype=tf.float32)
     return inst2vec_embeddings, selector_embeddings
@@ -445,7 +445,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         else:
           app.Log(1, "Freezing weights of variable `%s`.", var.name)
       trainable_vars = filtered_vars
-    optimizer = tf.compat.v1.train.AdamOptimizer(FLAGS.learning_rate)
+    optimizer = tf.compat.v1.train.AdamOptimizer(FLAGS.learning_rate * self.placeholders['learning_rate_multiple'])
     grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
                                                  var_list=trainable_vars)
     clipped_grads = []

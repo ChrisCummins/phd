@@ -18,7 +18,8 @@ def pos_emb(positions: Union[int, List[int], np.array], demb: int = 200, dpad: i
     pos_emb = np.hstack((np.sin(sinusoid_inp), np.cos(sinusoid_inp)))
 
     if dpad > 0:
-        pad = np.zeros([dpad, demb])
-        pos_emb = np.vstack([pos_emb, pad])
-        assert np.all(pos_emb[-1] == np.zeros([demb])), f"test failed. pos_emb: \n{pos_emb}"
+        in_length = 1 if type(positions) == int else len(positions)
+        pad = np.zeros([in_length, dpad])
+        pos_emb = np.hstack([pos_emb, pad])
+        assert np.all(pos_emb[:,-1] == np.zeros(in_length)), f"test failed. pos_emb: \n{pos_emb}"
     return pos_emb
