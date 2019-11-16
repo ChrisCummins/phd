@@ -1,11 +1,10 @@
 """Module for conversion from labelled graphs to encoded sequences."""
 import collections
-import pickle
-import typing
-
 import keras
 import networkx as nx
 import numpy as np
+import pickle
+import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_query
@@ -14,6 +13,7 @@ from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from labm8 import app
 from labm8 import labtypes
+
 
 FLAGS = app.FLAGS
 
@@ -55,10 +55,11 @@ class GraphToBytecodeEncoder(EncoderBase):
                bytecode_encoder: bytecode2seq.EncoderBase):
     super(GraphToBytecodeEncoder, self).__init__(graph_db)
 
+    self.bytecode_encoder = bytecode_encoder
+
     # Maintain a mapping from graph IDs to encoded bytecodes to amortize the
     # cost of encoding.
     self.graph_to_encoded_bytecode: typing.Dict[int, np.array] = {}
-    self.bytecode_encoder = bytecode_encoder
 
   def Encode(self, graph_ids: typing.List[int]):
     """Return encoded bytecodes for the given graph IDs.
@@ -111,6 +112,13 @@ class GraphToBytecodeEncoder(EncoderBase):
     return [self.graph_to_encoded_bytecode[graph_id] for graph_id in graph_ids]
 
 
+class EncodedBytecodeGrouping(typing.NamedTuple):
+  """An encoded bytecode with node segments."""
+  encoded_sequences: np.array
+  segment_ids: np.array
+  node_mask: np.array
+
+
 class GraphToBytecodeGroupingsEncoder(EncoderBase):
   """Encode graphs to bytecode sequences with statement groupings."""
 
@@ -131,6 +139,9 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
                        "{statement,identifier}")
 
     self.graph_to_bytecode_ids = {}
+
+    # TODO(cec): Implement LRU cache for encoded bytecodes.
+    self.graph_to_bytecode_grouping: typing.Dict[int, EncodedBytecodeGrouping] = {}
 
   def Encode(self, graph_ids: typing.List[int]):
     """Serialize a graph into an encoded sequence.
