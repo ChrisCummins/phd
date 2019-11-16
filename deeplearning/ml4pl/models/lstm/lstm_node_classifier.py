@@ -266,6 +266,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     num_classes = pred_y.shape[-1]
 
+    app.Log(1, "DEBUGGING: pred_y shape %s", pred_y.shape)
+    app.Log(1, "DEBUGGING: batch node_y shape %s", batch['node_y'].shape)
+
     # To handle the fact that LSTMs can't always receive the entire input
     # sequence, we pad the predictions.
     padded_y_pred = []
@@ -287,7 +290,6 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # TODO(cec): Here there is an error when broadcasting arrays, not sure
     # what's going on?
-
     return self.MinibatchResults(y_true_1hot=y_true, y_pred_1hot=pred_y)
 
   def ModelDataToSave(self):
