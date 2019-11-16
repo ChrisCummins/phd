@@ -149,7 +149,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # this is a hack to make the predictions during training accessible:
     # https://github.com/keras-team/keras/issues/3469
     # train_on_batch will now return a second argument.
-    self.model.metrics_tensors = [out]
+    # self.model.metrics_tensors = [out]
     self.model.compile(optimizer="adam",
                        metrics=['accuracy'],
                        loss=["categorical_crossentropy"],
@@ -255,12 +255,12 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     log.loss = loss
 
-    # Run the same input again through the LSTM to get the raw predictions.
-    # This is obviously wasteful when training, but I don't know of a way to
-    # get the raw predictions from self.model.fit().
-    #with prof.Profile(f'model.predict_on_batch() {len(y[0])} instances',
-    #                  print_to=lambda x: app.Log(2, x)):
-    #  pred_y = self.model.predict_on_batch(x)
+     # Run the same input again through the LSTM to get the raw predictions.
+     # This is obviously wasteful when training, but I don't know of a way to
+     # get the raw predictions from self.model.fit().
+    with prof.Profile(f'model.predict_on_batch() {len(y[0])} instances',
+                      print_to=lambda x: app.Log(2, x)):
+      pred_y = self.model.predict_on_batch(x)[0]
 
     assert len(pred_y) == len(batch['node_y'])
 
