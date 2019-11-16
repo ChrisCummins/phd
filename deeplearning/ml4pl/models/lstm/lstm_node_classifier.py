@@ -141,16 +141,16 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # pass both inputs to the model class.
     self.model = keras.Model(
         inputs=[input_layer, input_segments, selector_vector], outputs=[out])
-    self.model.summary()
-
-    self.model.compile(optimizer="adam",
-                       metrics=['accuracy'],
-                       loss=["categorical_crossentropy"],
-                       loss_weights=[1.0])
+    # self.model.summary()
     # this is a hack to make the predictions during training accessible:
     # https://github.com/keras-team/keras/issues/3469
     # train_on_batch will now return a second argument.
     self.model.metrics_tensors = [out]
+    self.model.compile(optimizer="adam",
+                       metrics=['accuracy'],
+                       loss=["categorical_crossentropy"],
+                       loss_weights=[1.0])
+
 
   def MakeMinibatchIterator(
       self, epoch_type: str, groups: typing.List[str]
