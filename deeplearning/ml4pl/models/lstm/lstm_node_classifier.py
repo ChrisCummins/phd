@@ -249,9 +249,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     if log.type == 'train':
       with prof.Profile(f'model.train_on_batch() {len(y[0])} instances',
                         print_to=lambda x: app.Log(2, x)):
-        res = self.model.train_on_batch(x, y)
-        app.Log(1, "results %s", res)
-        loss, pred_y = res
+        loss = self.model.train_on_batch(x, y)[0]
+        # app.Log(1, "results %s", res)
+        # loss, pred_y = res
 
     log.loss = loss
 
@@ -260,7 +260,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
      # get the raw predictions from self.model.fit().
     with prof.Profile(f'model.predict_on_batch() {len(y[0])} instances',
                       print_to=lambda x: app.Log(2, x)):
-      pred_y = self.model.predict_on_batch(x)[0]
+      pred_y = self.model.predict_on_batch(x)
 
     assert len(pred_y) == len(batch['node_y'])
 
