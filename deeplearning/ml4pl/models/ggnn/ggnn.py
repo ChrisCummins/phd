@@ -8,6 +8,7 @@ import tensorflow as tf
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
@@ -71,10 +72,6 @@ app.DEFINE_boolean("use_dsc_loss", False,
     "Whether to use the DSC loss instead of Cross Entropy."
     "DSC loss help with class imbalances. Refer to "
     "https://arxiv.org/pdf/1911.02855.pdf"
-)
-
-app.DEFINE_boolean("use_lr_schedule", False,
-    "whether to use a warmup-train-finetune learning rate schedule."
 )
 
 ###########################
@@ -478,7 +475,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
             self.placeholders["is_training"]:
             True,
             self.placeholders['learning_rate_multiple']:
-            utils.WarmUpAndFinetuneLearningRateSchedule(self.epoch_num, FLAGS.num_epochs) if FLAGS.use_lr_schedule else 1.0
+            base_utils.WarmUpAndFinetuneLearningRateSchedule(self.epoch_num, FLAGS.num_epochs) if FLAGS.use_lr_schedule else 1.0
         })
       else:
         feed_dict.update({

@@ -20,7 +20,7 @@ import build_info
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
+from deeplearning.ml4pl.models import base_utils as utils
 
 FLAGS = app.FLAGS
 
@@ -114,7 +114,11 @@ app.DEFINE_integer(
 app.DEFINE_list("batch_log_types", ["val", "test"],
                 "The types of epochs to record per-instance batch logs for.")
 
-#
+app.DEFINE_boolean("use_lr_schedule", False,
+    "whether to use a warmup-train-finetune learning rate schedule."
+    "doesn't support LSTMs with keras currently."
+)
+
 ##### End of flag declarations.
 
 SMALL_NUMBER = 1e-7
