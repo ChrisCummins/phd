@@ -20,7 +20,7 @@ def main():
     "datadep",
     "liveness",
     "subexpressions",
-    # "alias_set",
+    "alias_set",
     # "poly",
     # "devmap"
   ]
