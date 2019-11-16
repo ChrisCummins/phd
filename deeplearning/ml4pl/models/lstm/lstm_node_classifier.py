@@ -4,7 +4,11 @@ import warnings
 
 import keras
 import numpy as np
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
