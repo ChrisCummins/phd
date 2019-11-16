@@ -267,7 +267,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     num_classes = pred_y.shape[-1]
 
     app.Log(1, "DEBUGGING: pred_y shape %s", pred_y.shape)
-    app.Log(1, "DEBUGGING: batch node_y shape %s", batch['node_y'].shape)
+    app.Log(1, "DEBUGGING: batch node_y shape %s", [x.shape for x in batch['node_y']])
 
     # To handle the fact that LSTMs can't always receive the entire input
     # sequence, we pad the predictions.
