@@ -1,14 +1,15 @@
 """Train and evaluate a model for node classification."""
 import collections
 import typing
+import warnings
 
 import numpy as np
 import tensorflow as tf
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
@@ -68,16 +69,18 @@ app.DEFINE_integer(
     "Size for MLP that combines graph_x and GGNN output features")
 classifier_base.MODEL_FLAGS.add("auxiliary_inputs_dense_layer_size")
 
-app.DEFINE_boolean("use_dsc_loss", False,
+app.DEFINE_boolean(
+    "use_dsc_loss", False,
     "Whether to use the DSC loss instead of Cross Entropy."
     "DSC loss help with class imbalances. Refer to "
-    "https://arxiv.org/pdf/1911.02855.pdf"
-)
-app.DEFINE_string("manual_tag", "",
+    "https://arxiv.org/pdf/1911.02855.pdf")
+app.DEFINE_string(
+    "manual_tag", "",
     "An arbitrary tag that can be printed to the leaderboard later.")
 
 ###########################
-app.DEFINE_boolean('kfold', False, "Set to do automatic kfold validation on devmap.")
+app.DEFINE_boolean('kfold', False,
+                   "Set to do automatic kfold validation on devmap.")
 
 app.DEFINE_list('groups', [str(x) for x in range(10)],
                 'The test groups to use.')
@@ -120,12 +123,10 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
         edge_weights = tf.reshape(
             tf.Variable(
                 utils.glorot_init([
-                    type_count_with_fancy * FLAGS.hidden_size,
-                    FLAGS.hidden_size
+                    type_count_with_fancy * FLAGS.hidden_size, FLAGS.hidden_size
                 ]),
                 name=f"gnn_edge_weights_{layer_index}",
-            ),
-            [type_count_with_fancy, FLAGS.hidden_size, FLAGS.hidden_size])
+            ), [type_count_with_fancy, FLAGS.hidden_size, FLAGS.hidden_size])
 
         # Add dropout as required.
         if FLAGS.edge_weight_dropout_keep_prob < 1.0:
@@ -165,7 +166,8 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     with tf.compat.v1.variable_scope("embeddings"):
       # maybe generate table with position embs up to pos 512.
       if FLAGS.position_embeddings != 'off':
-        self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable()
+        self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable(
+        )
 
       # Lookup each node embedding table and concatenate the result.
       embeddings = self._GetEmbeddingsAsTensorflowVariables()
@@ -242,7 +244,8 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
               if FLAGS.position_embeddings != 'off':
                 edge_pos_embedding = tf.nn.embedding_lookup(
-                    self.position_embeddings, ids=edge_positions)  # shape [E, D]
+                    self.position_embeddings,
+                    ids=edge_positions)  # shape [E, D]
 
               # one among: {initial, every, fancy, off}
               # maybe add position to edge_source_states here
@@ -263,10 +266,10 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
               # maybe add term B * pos
               if FLAGS.position_embeddings == 'fancy':
                 all_messages_for_edge_type += tf.matmul(
-                  edge_pos_embedding,
-                  # last edge_type corresponds to fancy_position_weights B
-                  self.gnn_weights.edge_weights[layer_idx][-1],
-              )  # Shape [E, D]
+                    edge_pos_embedding,
+                    # last edge_type corresponds to fancy_position_weights B
+                    self.gnn_weights.edge_weights[layer_idx][-1],
+                )  # Shape [E, D]
 
               messages.append(all_messages_for_edge_type)
               message_source_states.append(edge_source_states)
@@ -434,7 +437,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
         loss = (self.make_dsc_loss(p1, y1) + self.make_dsc_loss(p2, y2)) / 2.0
       else:
         loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
-                                             predictions)
+                                               predictions)
         #loss = 0.0
 
     else:
@@ -477,7 +480,9 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
             self.placeholders["is_training"]:
             True,
             self.placeholders['learning_rate_multiple']:
-            base_utils.WarmUpAndFinetuneLearningRateSchedule(self.epoch_num, FLAGS.num_epochs) if FLAGS.use_lr_schedule else 1.0
+            base_utils.WarmUpAndFinetuneLearningRateSchedule(
+                self.epoch_num, FLAGS.num_epochs)
+            if FLAGS.use_lr_schedule else 1.0
         })
       else:
         feed_dict.update({
@@ -509,7 +514,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
     loss = tf.losses.softmax_cross_entropy(self.placeholders["node_y"],
-                                          predictions)
+                                           predictions)
 
     return loss, accuracies, accuracy, predictions
 
@@ -526,20 +531,26 @@ def RunKFoldOrDie():
     FLAGS.val_group = val_group
     classifier_base.Run(GgnnClassifier)
 
+
 def main():
   """Main entry point."""
+  # TODO(cec): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
+  warnings.filterwarnings("ignore")
+
   if not FLAGS.log_db:
     app.FatalWithoutStackTrace("--log_db must be set")
   if not FLAGS.working_dir:
     app.FatalWithoutStackTrace("--working_dir must be set")
   if FLAGS.position_embeddings not in ['initial', 'every', 'fancy', 'off']:
-    app.FatalWithoutStackTrace("--position_embeddings has to be one of <initial, every, fancy, off>")
+    app.FatalWithoutStackTrace(
+        "--position_embeddings has to be one of <initial, every, fancy, off>")
 
   if not FLAGS.kfold:
     classifier_base.Run(GgnnClassifier)
   else:
     app.Log(1, "Running kfold on test groups %s", FLAGS.groups)
     RunKFoldOrDie()
+
 
 if __name__ == '__main__':
   app.Run(main)
