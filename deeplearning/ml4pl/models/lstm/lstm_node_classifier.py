@@ -1,15 +1,10 @@
 """Train and evaluate a model for graph-level classification."""
-import os
 import typing
 import warnings
 
 import keras
 import numpy as np
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
@@ -271,14 +266,17 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       # Mask only the "active" node labels.
       # Shape (batch_size, ?, 2)
       node_y_per_graph = [
-          node_y[node_mask]
+          node_y[np.where(node_mask)]
           for node_y, node_mask in zip(all_node_y_per_graph, node_masks)
       ]
+
       max_nodes_in_graph = max(max(m) for m in segment_ids) + 1
+      # Enforce a maximum length on the number of statements that can be
+      # processed to prevent OOM for really big graphs.
       max_nodes_in_graph = min(max_nodes_in_graph, FLAGS.max_nodes_in_graph)
       app.Log(2, "Padding graph batch to %s nodes", max_nodes_in_graph)
 
-      # Shape (batch_size, ?, 2)
+      # Shape (batch_size, max_nodes_in_graph, 2)
       node_y_truncated = np.array(
           keras.preprocessing.sequence.pad_sequences(
               node_y_per_graph,
@@ -359,32 +357,21 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     num_classes = pred_y.shape[-1]
 
-    # app.Log(1, "DEBUGGING: pred_y shape %s", pred_y.shape)
-    # app.Log(1, "DEBUGGING: batch node_y shape %s", [x.shape for x in batch['node_y']])
-    # app.Log(1, "DEBUGGING: batch node_y_truncated shape %s", [x.shape for x in batch['node_y_truncated']])
-
     # To handle the fact that LSTMs can't always receive the entire input
     # sequence, we pad the predictions.
-    #padded_y_pred = []
-    #for y_pred_for_graph, true_node_y in zip(pred_y, batch['node_y']):
-    #  pad_count = max(len(true_node_y) - len(y_pred_for_graph), 0)
-    #  if pad_count > 0:
-    #    app.Log(3, 'Inserting %s padding predictions from %s to %s', pad_count,
-    #            len(y_pred_for_graph), len(true_node_y))
-    #    padding = np.zeros((pad_count, num_classes))
-    #    padded_y_pred.append(np.concatenate([y_pred_for_graph, padding]))
-    #  else:
-    #    padded_y_pred.append(y_pred_for_graph[:len(true_node_y)])
-    #  app.Log(3, 'Padded lengths %s %s', padded_y_pred[-1].shape,
-    #          true_node_y.shape)
+    padded_y_pred = []
+    for y_pred_for_graph, true_node_y in zip(pred_y, batch['node_y']):
+      pad_count = max(len(true_node_y) - len(y_pred_for_graph), 0)
+      if pad_count > 0:
+        padding = np.zeros((pad_count, num_classes))
+        padded_y_pred.append(np.concatenate([y_pred_for_graph, padding]))
+      else:
+        padded_y_pred.append(y_pred_for_graph[:len(true_node_y)])
 
     # Flatten the per-graph predictions and labels.
-    y_true = np.reshape(batch['node_y_truncated'], (-1, num_classes))
-    pred_y = np.reshape(np.array(pred_y), (-1, num_classes))
-    # pred_y = np.reshape(np.array(padded_y_pred), (-1, num_classes))
+    pred_y = np.concatenate(padded_y_pred)
+    y_true = np.concatenate(batch['node_y'])
 
-    # TODO(cec): Here there is an error when broadcasting arrays, not sure
-    # what's going on?
     return self.MinibatchResults(y_true_1hot=y_true, y_pred_1hot=pred_y)
 
   def ModelDataToSave(self):

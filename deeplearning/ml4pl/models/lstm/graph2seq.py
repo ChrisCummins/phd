@@ -337,8 +337,9 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     """Serialize the graph to an encoded sequence and set of statement indices.
     """
     serialized_node_list = list(cdfg.SerializeToStatementList(graph))
+    statement_nodes = set(serialized_node_list)
     node_mask = np.array(
-        [1 if node in serialized_node_list else 0 for node in graph.nodes()],
+        [1 if node in statement_nodes else 0 for node in graph.nodes()],
         dtype=np.int32)
 
     strings_to_encode = [
