@@ -1,10 +1,10 @@
 """Module for conversion from labelled graphs to encoded sequences."""
 import collections
-import keras
-import networkx as nx
-import numpy as np
 import pickle
 import typing
+
+import networkx as nx
+import numpy as np
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_query
@@ -13,7 +13,6 @@ from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from labm8 import app
 from labm8 import labtypes
-
 
 FLAGS = app.FLAGS
 
@@ -141,7 +140,8 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     self.graph_to_bytecode_ids = {}
 
     # TODO(cec): Implement LRU cache for encoded bytecodes.
-    self.graph_to_bytecode_grouping: typing.Dict[int, EncodedBytecodeGrouping] = {}
+    self.graph_to_bytecode_grouping: typing.Dict[int,
+                                                 EncodedBytecodeGrouping] = {}
 
   def Encode(self, graph_ids: typing.List[int]):
     """Serialize a graph into an encoded sequence.
@@ -249,29 +249,60 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
       ids_to_grouping_ids[bytecode_id] = ids
       ids_to_node_masks[bytecode_id] = node_mask
 
-    encoded_sequences = [
-        ids_to_encoded_sequences[bytecode_id] for bytecode_id in bytecode_ids
-    ]
-    grouping_ids = [
-        ids_to_grouping_ids[bytecode_id] for bytecode_id in bytecode_ids
-    ]
-    node_masks = [
-        ids_to_node_masks[bytecode_id] for bytecode_id in bytecode_ids
-    ]
+    return ids_to_encoded_sequences, ids_to_grouping_ids, ids_to_node_masks
 
-    # Pad the sequences to the same length.
-    encoded_sequences = np.array(
-        keras.preprocessing.sequence.pad_sequences(
-            encoded_sequences,
-            maxlen=self.bytecode_encoder.max_sequence_length,
-            value=self.bytecode_encoder.pad_val))
-    grouping_ids = np.array(
-        keras.preprocessing.sequence.pad_sequences(
-            grouping_ids,
-            maxlen=self.bytecode_encoder.max_sequence_length,
-            value=max(max(m) for m in grouping_ids) + 1))
+  def EncodeBytecodes(self, bytecode_ids: typing.List[int]):
+    with self.unlabelled_graph_db.Session() as session:
+      # TODO: Rebuild networkx from graph tuples.
+      query = session.query(
+          graph_database.GraphMeta.bytecode_id,
+          graph_database.Graph.pickled_data) \
+        .join(graph_database.Graph) \
+        .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
 
-    return encoded_sequences, grouping_ids, node_masks
+      ids_to_graphs = {
+          bytecode_id: pickle.loads(data) for bytecode_id, data in query
+      }
+
+    if len(bytecode_ids) != len(ids_to_graphs):
+      raise EnvironmentError(
+          f"Graph IDs not found in database {self.graph_db.url}: "
+          f"{set(graph_ids_to_fetch) - set(ids_to_graphs.keys())}")
+
+    encoded_sequences, segment_ids, node_masks = [], [], []
+
+    for bytecode_id in bytecode_ids:
+      graph = ids_to_graphs[bytecode_id]
+      seqs, ids, node_mask = self.encode_graph(graph)
+      encoded_sequences.append(seqs)
+      segment_ids.append(ids)
+      node_masks.append(node_mask)
+
+    return encoded_sequences, segment_ids, node_masks
+
+    # encoded_sequences = [
+    #     ids_to_encoded_sequences[bytecode_id] for bytecode_id in bytecode_ids
+    # ]
+    # grouping_ids = [
+    #     ids_to_grouping_ids[bytecode_id] for bytecode_id in bytecode_ids
+    # ]
+    # node_masks = [
+    #     ids_to_node_masks[bytecode_id] for bytecode_id in bytecode_ids
+    # ]
+    #
+    # # Pad the sequences to the same length.
+    # encoded_sequences = np.array(
+    #     keras.preprocessing.sequence.pad_sequences(
+    #         encoded_sequences,
+    #         maxlen=self.bytecode_encoder.max_sequence_length,
+    #         value=self.bytecode_encoder.pad_val))
+    # grouping_ids = np.array(
+    #     keras.preprocessing.sequence.pad_sequences(
+    #         grouping_ids,
+    #         maxlen=self.bytecode_encoder.max_sequence_length,
+    #         value=max(max(m) for m in grouping_ids) + 1))
+    #
+    # return encoded_sequences, grouping_ids, node_masks
 
   @property
   def unlabelled_graph_db(self) -> graph_database.Database:
