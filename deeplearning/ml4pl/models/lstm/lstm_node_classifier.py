@@ -127,10 +127,12 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
       # Perform a segment sum for each row in the batch independently.
       segment_sums = [
+          # Note the slice so that graphs larger than max_nodes_in_graph are
+          # truncated.
           tf.math.unsorted_segment_sum(data=encoded_tokens[i],
                                        segment_ids=segment_ids[i],
                                        num_segments=max_segment_id)
-          for i in range(FLAGS.batch_size)
+          [:FLAGS.max_nodes_in_graph] for i in range(FLAGS.batch_size)
       ]
 
       return tf.stack(segment_sums, axis=0)
