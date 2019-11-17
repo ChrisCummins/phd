@@ -362,18 +362,21 @@ class BytecodeEncoder(EncoderBase):
     return self.EncodeBytecodeStrings(
         [bytecode_id_to_string[bytecode_id] for bytecode_id in bytecode_ids])
 
-  def EncodeBytecodeStrings(self, strings: typing.List[str]):
+  def EncodeBytecodeStrings(self, strings: typing.List[str], pad: bool = True):
     # Encode the requested bytecodes.
     encoded_sequences = EncodeWithFixedVocab(strings, self.vocabulary,
                                              self.language)
     if len(strings) != len(encoded_sequences):
       raise EnvironmentError(f"len(strings)={len(strings)} != "
                              f"len(encoded_sequences)={len(encoded_sequences)}")
-    return np.array(
-        keras.preprocessing.sequence.pad_sequences(
-            encoded_sequences,
-            maxlen=self.max_sequence_length,
-            value=self.pad_val))
+    if pad:
+      return np.array(
+          keras.preprocessing.sequence.pad_sequences(
+              encoded_sequences,
+              maxlen=self.max_sequence_length,
+              value=self.pad_val))
+    else:
+      return np.array(encoded_sequences)
 
 
 class Inst2VecEncoder(BytecodeEncoder):

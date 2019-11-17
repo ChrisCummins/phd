@@ -5,6 +5,7 @@ import warnings
 
 import keras
 import numpy as np
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -15,6 +16,7 @@ from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import bytecode2seq
+from deeplearning.ml4pl.models.lstm import encoded_bytecode_database
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
 from labm8 import app
@@ -47,6 +49,14 @@ classifier_base.MODEL_FLAGS.add("bytecode_encoder")
 app.DEFINE_float('lang_model_loss_weight', .2,
                  'Weight for language model auxiliary loss.')
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
+
+app.DEFINE_database('encoded_bytecode_db', encoded_bytecode_database.Database,
+                    None, 'Path to the encoded bytecode database to populate.')
+
+app.DEFINE_integer(
+    "max_nodes_in_graph", 25000,
+    "The maximum number of grouped statements to feed through "
+    "the LSTM.")
 #
 ##### End of flag declarations.
 
@@ -70,6 +80,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # The encoder which performs translation from graphs to encoded sequences.
     self.encoder = graph2seq.GraphToBytecodeGroupingsEncoder(
         self.batcher.db, bytecode_encoder, group_by='statement')
+
+    self.encoded_bytecode_db: encoded_bytecode_database.EncodedBytecode = (
+        FLAGS.encoded_bytecode_db())
 
     # Language model
 
@@ -155,6 +168,67 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                        loss=["categorical_crossentropy"],
                        loss_weights=[1.0])
 
+  def GetEncodedBytecodes(
+      self, bytecode_ids: typing.List[int]
+  ) -> typing.Tuple[typing.List[np.array], typing.List[np.array], typing.
+                    List[np.array]]:
+    """Get the encoded bytecodes.
+
+    Args:
+      bytecode_ids: A list of bytecode IDs to encode.
+
+    Returns:
+      A tuple of encoded_sequences, segment_ids, and node_masks.
+    """
+    unique_bytecode_ids = set(bytecode_ids)
+
+    # Get the set of bytecode IDs that have already been processed.
+    with self.encoded_bytecode_db.Session() as session:
+      query = session.query(encoded_bytecode_database.EncodedBytecode)
+      query = query.filter(
+          encoded_bytecode_database.EncodedBytecode.bytecode_id.in_(
+              unique_bytecode_ids))
+      id_to_encoded_sequences: typing.Dict[int, np.array] = ({
+          row.bytecode_id: row.encoded_sequence for row in query
+      })
+      id_to_segment_ids: typing.Dict[int, np.array] = ({
+          row.bytecode_id: row.segment_ids for row in query
+      })
+      id_to_node_mask: typing.Dict[int, np.array] = ({
+          row.bytecode_id: row.node_mask for row in query
+      })
+
+    # Encode any bytecodes not already found in the database.
+    bytecode_ids_to_encode = list(unique_bytecode_ids -
+                                  id_to_encoded_sequences.keys())
+    if bytecode_ids_to_encode:
+      with prof.Profile(f'Encoded {len(bytecode_ids_to_encode)} bytecodes',
+                        print_to=lambda x: app.Log(2, x)):
+        encoded_sequences, grouping_ids, node_masks = self.encoder.EncodeBytecodes(
+            bytecode_ids_to_encode)
+
+      with prof.Profile(f'Storing {len(encoded_sequences)} encoded sequences',
+                        print_to=lambda x: app.Log(2, x)):
+        with self.encoded_bytecode_db.Session(commit=True) as session:
+          for bytecode_id, encoded_sequence, segment_ids, node_mask in zip(
+              bytecode_ids_to_encode, encoded_sequences, grouping_ids,
+              node_masks):
+            result = encoded_bytecode_database.EncodedBytecode(
+                bytecode_id=bytecode_id)
+            result.encoded_sequence = encoded_sequence
+            result.segment_ids = segment_ids
+            result.node_mask = node_mask
+            id_to_encoded_sequences[bytecode_id] = encoded_sequence
+            id_to_segment_ids[bytecode_id] = segment_ids
+            id_to_node_mask[bytecode_id] = node_mask
+            session.add(result)
+
+    return (
+        [id_to_encoded_sequences[bytecode_id] for bytecode_id in bytecode_ids],
+        [id_to_segment_ids[bytecode_id] for bytecode_id in bytecode_ids],
+        [id_to_node_mask[bytecode_id] for bytecode_id in bytecode_ids],
+    )
+
   def MakeMinibatchIterator(
       self, epoch_type: str, groups: typing.List[str]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
@@ -164,7 +238,6 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       raise ValueError(
           f"Here batch size counts number of graphs, so {FLAGS.batch_size} is "
           f"too many.")
-
     options = graph_batcher.GraphBatchOptions(max_graphs=FLAGS.batch_size,
                                               groups=groups)
     max_instance_count = (
@@ -172,12 +245,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
-      graph_ids = batch.log._transient_data['graph_indices']
-
-      with prof.Profile(f'self.encoder.Encode() {len(graph_ids)} instances:',
-                        print_to=lambda x: app.Log(2, x)):
-        encoded_sequences, grouping_ids, node_masks = self.encoder.Encode(
-            graph_ids)
+      # Get the encoded bytecodes.
+      bytecode_ids = batch.log._transient_data['bytecode_ids']
+      encoded_sequences, segment_ids, node_masks = self.GetEncodedBytecodes(
+          bytecode_ids)
 
       # takes node_y and node_x_indices and splits it
       # such that the resulting lists hold one graph of the batch per element
@@ -197,16 +268,12 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
       # Mask only the "active" node labels.
       # Shape (batch_size, ?, 2)
-      # app.Log(1, "all_node_y_per_graph[0]:\n%s", all_node_y_per_graph[0])
-      # app.Log(1, "node_masks[0]:\n%s", node_masks[0])
-
-      # why not keep all?
-      # node_y_per_graph = all_node_y_per_graph
       node_y_per_graph = [
           node_y[node_mask]
           for node_y, node_mask in zip(all_node_y_per_graph, node_masks)
       ]
-      max_nodes_in_graph = max(max(m) for m in grouping_ids) + 1
+      max_nodes_in_graph = max(max(m) for m in segment_ids) + 1
+      max_nodes_in_graph = min(max_nodes_in_graph, FLAGS.max_nodes_in_graph)
       app.Log(2, "Padding graph batch to %s nodes", max_nodes_in_graph)
 
       # Shape (batch_size, ?, 2)
@@ -234,13 +301,33 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
       assert selector_vectors.shape == node_y_truncated.shape
 
+      # Pad and truncate encoded sequences
+      # Shape (batch_size, max_sequence_length)
+      encoded_sequences = np.array(
+          keras.preprocessing.sequence.pad_sequences(
+              encoded_sequences,
+              maxlen=self.encoder.bytecode_encoder.max_sequence_length,
+              value=self.encoder.bytecode_encoder.pad_val,
+          ))
+      # Shape (batch_size, max_sequence_length)
+      segment_ids = np.array(
+          keras.preprocessing.sequence.pad_sequences(
+              segment_ids,
+              maxlen=self.encoder.bytecode_encoder.max_sequence_length,
+              value=max_nodes_in_graph,
+          ))
+
       yield batch.log, {
+          # Shape (batch_size, max_sequence_length)
           'encoded_sequences': np.vstack(encoded_sequences),
-          'segment_ids': np.vstack(grouping_ids),
+          # Shape (batch_size, max_sequence_length)
+          'segment_ids': np.vstack(segment_ids),
+          # Shape (batch_size, max_nodes_in_graph)
           'selector_vectors': selector_vectors,
           # The y values as fed to the model.
+          # Shape (batch_size, max_nodes_in_graph, 2)
           'node_y_truncated': node_y_truncated,
-          # The "true" y values without padding/truncation.
+          # Shape (batch_size, ?, 2).
           'node_y': node_y_per_graph,
       }
 
@@ -256,20 +343,12 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     ]
     y = [batch['node_y_truncated']]
 
-    if log.type == 'train':
-      with prof.Profile(f'model.train_on_batch() {len(y[0])} instances',
-                        print_to=lambda x: app.Log(2, x)):
-        loss = self.model.train_on_batch(x, y)[0]
-        # app.Log(1, "results %s", res)
-        # loss, pred_y = res
-
-    log.loss = loss
-
-    # Run the same input again through the LSTM to get the raw predictions.
-    # This is obviously wasteful when training, but I don't know of a way to
-    # get the raw predictions from self.model.fit().
-    with prof.Profile(f'model.predict_on_batch() {len(y[0])} instances',
+    with prof.Profile(f'model.train_on_batch() {len(y[0])} instances',
                       print_to=lambda x: app.Log(2, x)):
+      if log.type == 'train':
+        loss = self.model.train_on_batch(x, y)[0]
+        log.loss = loss
+
       pred_y = self.model.predict_on_batch(x)
 
     assert len(pred_y) == len(
