@@ -16,6 +16,7 @@ py_library(
     data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings:embeddings"],
     visibility = ["//visibility:public"],
     deps = [
+        ":base_utils",
         "//:build_info",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
