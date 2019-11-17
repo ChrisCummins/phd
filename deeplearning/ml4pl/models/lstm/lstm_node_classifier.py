@@ -174,15 +174,21 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
       graph_ids = batch.log._transient_data['graph_indices']
-      encoded_sequences, grouping_ids, node_masks = self.encoder.Encode(
-          graph_ids)
+      
+      with prof.Profile(f'self.encoder.Encode() instances:',
+                      print_to=lambda x: app.Log(2, x)):
+        encoded_sequences, grouping_ids, node_masks = self.encoder.Encode(
+            graph_ids)
 
+      # takes node_y and node_x_indices and splits it
+      # such that the resulting lists hold one graph of the batch per element
+      # so batch_size is the len of the resulting lists
       split_indices = np.where(
           batch.graph_nodes_list[:-1] != batch.graph_nodes_list[1:])[0] + 1
       all_node_y_per_graph = np.split(batch.node_y, split_indices)
-
       all_node_x_per_graph = np.split(batch.node_x_indices, split_indices)
 
+      # confirm that we have as many node_masks as batch_size
       if len(node_masks) != len(all_node_y_per_graph):
         raise OSError(f"len(node_masks)={len(node_masks)} != "
                       f"len(all_node_y_per_graph)={len(all_node_y_per_graph)}")
@@ -192,6 +198,11 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
       # Mask only the "active" node labels.
       # Shape (batch_size, ?, 2)
+      # app.Log(1, "all_node_y_per_graph[0]:\n%s", all_node_y_per_graph[0])
+      # app.Log(1, "node_masks[0]:\n%s", node_masks[0])
+
+      # why not keep all?
+      # node_y_per_graph = all_node_y_per_graph
       node_y_per_graph = [
           node_y[node_mask]
           for node_y, node_mask in zip(all_node_y_per_graph, node_masks)
@@ -255,9 +266,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     log.loss = loss
 
-     # Run the same input again through the LSTM to get the raw predictions.
-     # This is obviously wasteful when training, but I don't know of a way to
-     # get the raw predictions from self.model.fit().
+    # Run the same input again through the LSTM to get the raw predictions.
+    # This is obviously wasteful when training, but I don't know of a way to
+    # get the raw predictions from self.model.fit().
     with prof.Profile(f'model.predict_on_batch() {len(y[0])} instances',
                       print_to=lambda x: app.Log(2, x)):
       pred_y = self.model.predict_on_batch(x)
@@ -266,27 +277,29 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     num_classes = pred_y.shape[-1]
 
-    app.Log(1, "DEBUGGING: pred_y shape %s", pred_y.shape)
-    app.Log(1, "DEBUGGING: batch node_y shape %s", [x.shape for x in batch['node_y']])
+    # app.Log(1, "DEBUGGING: pred_y shape %s", pred_y.shape)
+    # app.Log(1, "DEBUGGING: batch node_y shape %s", [x.shape for x in batch['node_y']])
+    # app.Log(1, "DEBUGGING: batch node_y_truncated shape %s", [x.shape for x in batch['node_y_truncated']])
 
     # To handle the fact that LSTMs can't always receive the entire input
     # sequence, we pad the predictions.
-    padded_y_pred = []
-    for y_pred_for_graph, true_node_y in zip(pred_y, batch['node_y']):
-      pad_count = max(len(true_node_y) - len(y_pred_for_graph), 0)
-      if pad_count > 0:
-        app.Log(3, 'Inserting %s padding predictions from %s to %s', pad_count,
-                len(y_pred_for_graph), len(true_node_y))
-        padding = np.zeros((pad_count, num_classes))
-        padded_y_pred.append(np.concatenate([y_pred_for_graph, padding]))
-      else:
-        padded_y_pred.append(y_pred_for_graph[:len(true_node_y)])
-      app.Log(3, 'Padded lengths %s %s', padded_y_pred[-1].shape,
-              true_node_y.shape)
+    #padded_y_pred = []
+    #for y_pred_for_graph, true_node_y in zip(pred_y, batch['node_y']):
+    #  pad_count = max(len(true_node_y) - len(y_pred_for_graph), 0)
+    #  if pad_count > 0:
+    #    app.Log(3, 'Inserting %s padding predictions from %s to %s', pad_count,
+    #            len(y_pred_for_graph), len(true_node_y))
+    #    padding = np.zeros((pad_count, num_classes))
+    #    padded_y_pred.append(np.concatenate([y_pred_for_graph, padding]))
+    #  else:
+    #    padded_y_pred.append(y_pred_for_graph[:len(true_node_y)])
+    #  app.Log(3, 'Padded lengths %s %s', padded_y_pred[-1].shape,
+    #          true_node_y.shape)
 
     # Flatten the per-graph predictions and labels.
-    y_true = np.reshape(batch['node_y'], (-1, num_classes))
-    pred_y = np.reshape(np.array(padded_y_pred), (-1, num_classes))
+    y_true = np.reshape(batch['node_y_truncated'], (-1, num_classes))
+    pred_y = np.reshape(np.array(pred_y), (-1, num_classes))
+    # pred_y = np.reshape(np.array(padded_y_pred), (-1, num_classes))
 
     # TODO(cec): Here there is an error when broadcasting arrays, not sure
     # what's going on?
