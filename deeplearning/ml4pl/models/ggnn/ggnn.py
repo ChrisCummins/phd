@@ -73,6 +73,8 @@ app.DEFINE_boolean("use_dsc_loss", False,
     "DSC loss help with class imbalances. Refer to "
     "https://arxiv.org/pdf/1911.02855.pdf"
 )
+app.DEFINE_string("manual_tag", "",
+    "An arbitrary tag that can be printed to the leaderboard later.")
 
 ###########################
 app.DEFINE_boolean('kfold', False, "Set to do automatic kfold validation on devmap.")
