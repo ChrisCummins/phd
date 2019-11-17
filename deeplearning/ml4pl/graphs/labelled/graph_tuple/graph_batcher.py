@@ -225,6 +225,7 @@ class GraphBatch(typing.NamedTuple):
                                     group=graph.group)
 
     graph_ids: typing.List[int] = []
+    bytecode_ids: typing.List[int] = []
     adjacency_lists = [[] for _ in range(edge_type_count)]
     position_lists = [[] for _ in range(edge_type_count)]
     incoming_edge_counts = []
@@ -255,6 +256,7 @@ class GraphBatch(typing.NamedTuple):
       graph_tuple = graph.data
 
       graph_ids.append(graph.id)
+      bytecode_ids.append(graph.bytecode_id)
 
       graph_nodes_list.append(
           np.full(
@@ -331,6 +333,7 @@ class GraphBatch(typing.NamedTuple):
     # is shitty. Rethink.
     log._transient_data = {
         'graph_indices': graph_ids,
+        'bytecode_ids': bytecode_ids,
         'data_flow_max_steps_required': data_flow_max_steps_required,
         'max_edge_count': max_edge_count,
     }
