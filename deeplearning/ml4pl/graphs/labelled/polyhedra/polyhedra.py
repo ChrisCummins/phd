@@ -70,6 +70,7 @@ class PolyhedralRegionAnnotator(llvm_util.TagHook):
     return {}
 
 
+@decorators.timeout(seconds=60)
 def BytecodeToPollyCanonicalized(source: str) -> str:
   process = opt.Exec(['-polly-canonicalize', '-S', '-', '-o', '-'],
                      stdin=source)
@@ -79,11 +80,13 @@ def BytecodeToPollyCanonicalized(source: str) -> str:
   return process.stdout
 
 
+@decorators.timeout(seconds=60)
 def CreateCDFG(bytecode: str) -> nx.MultiDiGraph:
   builder = cdfg.ControlAndDataFlowGraphBuilder()
   return builder.Build(bytecode)
 
 
+@decorators.timeout(seconds=60)
 def AnnotatePolyhedra(g: nx.MultiDiGraph,
                       annotated_cdfgs: typing.List[nx.MultiDiGraph],
                       x_label: str = 'x',
