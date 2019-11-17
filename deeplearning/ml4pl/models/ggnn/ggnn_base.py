@@ -167,7 +167,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
     embeddings = base_utils.pos_emb(positions=range(
         self.stats.max_edge_positions),
-                                    demb=FLAGS.hidden_size)
+                                    demb=FLAGS.hidden_size - 2) # hard coded
     pos_emb = tf.Variable(initial_value=embeddings,
                           trainable=False,
                           dtype=tf.float32)
