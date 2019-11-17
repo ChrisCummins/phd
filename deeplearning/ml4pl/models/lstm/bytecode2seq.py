@@ -283,9 +283,9 @@ def EncodeWithFixedVocab(
 ) -> typing.List[typing.List[int]]:
   encoded_sequences, vocab_out = Encode(bytecodes, vocab, language)
   if len(vocab_out) != len(vocab):
-    raise ValueError("Encoded vocabulary has different size "
-                     f"({len(vocab_out)}) than the input "
-                     f"({len(vocab)})")
+    app.Error("Encoded vocabulary has different size "
+              f"({len(vocab_out)}) than the input "
+              f"({len(vocab)})")
   return encoded_sequences
 
 
