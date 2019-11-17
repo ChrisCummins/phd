@@ -28,6 +28,5 @@ def SetAllowedGrowthOnKerasSession():
   """Allow growth on GPU."""
   config = tf.ConfigProto()
   config.gpu_options.allow_growth = True
-  config.log_device_placement = True
   sess = tf.Session(config=config)
   tensorflow_backend.set_session(sess)
