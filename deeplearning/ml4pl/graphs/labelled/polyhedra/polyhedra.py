@@ -6,13 +6,13 @@ import warnings
 import networkx as nx
 import numpy as np
 import pydot
-from labm8 import app
-from labm8 import decorators
 
 from compilers.llvm import opt
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
+from labm8 import app
+from labm8 import decorators
 
 FLAGS = app.FLAGS
 
@@ -74,8 +74,8 @@ def BytecodeToPollyCanonicalized(source: str) -> str:
   process = opt.Exec(['-polly-canonicalize', '-S', '-', '-o', '-'],
                      stdin=source)
   if process.returncode:
-    raise opt.OptException('Error in canonicalization opt execution (%d)' %
-                           process.returncode)
+    raise opt.OptException(
+        'Error in canonicalization opt execution (%d)' % process.returncode)
   return process.stdout
 
 
@@ -84,7 +84,6 @@ def CreateCDFG(bytecode: str) -> nx.MultiDiGraph:
   return builder.Build(bytecode)
 
 
-@decorators.timeout(seconds=120)
 def AnnotatePolyhedra(g: nx.MultiDiGraph,
                       annotated_cdfgs: typing.List[nx.MultiDiGraph],
                       x_label: str = 'x',
@@ -118,17 +117,18 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
       if not ndata.get('polyhedral'):
         continue
 
-      entities += 1 
+      entities += 1
       if node not in g.nodes:
         mismatched_entities += 1
         continue
       g.nodes[node][y_label] = true
 
-
   if mismatched_entities > 0:
-    app.Warning('%d (%f%%) mismatched entities in code', mismatched_entities, 
+    app.Warning('%d (%f%%) mismatched entities in code', mismatched_entities,
                 mismatched_entities / entities * 100)
 
+
+@decorators.timeout(seconds=120)
 def MakePolyhedralGraphs(
     bytecode: str,
     n: typing.Optional[int] = None,
