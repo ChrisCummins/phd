@@ -1,10 +1,10 @@
 """Train and evaluate a model for graph-level classification."""
+import os
 import typing
 import warnings
 
 import keras
 import numpy as np
-import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -155,7 +155,6 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                        loss=["categorical_crossentropy"],
                        loss_weights=[1.0])
 
-
   def MakeMinibatchIterator(
       self, epoch_type: str, groups: typing.List[str]
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
@@ -174,9 +173,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count):
       graph_ids = batch.log._transient_data['graph_indices']
-      
-      with prof.Profile(f'self.encoder.Encode() instances:',
-                      print_to=lambda x: app.Log(2, x)):
+
+      with prof.Profile(f'self.encoder.Encode() {len(graph_ids)} instances:',
+                        print_to=lambda x: app.Log(2, x)):
         encoded_sequences, grouping_ids, node_masks = self.encoder.Encode(
             graph_ids)
 
@@ -273,7 +272,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                       print_to=lambda x: app.Log(2, x)):
       pred_y = self.model.predict_on_batch(x)
 
-    assert len(pred_y) == len(batch['node_y']), f"len pred_y={len(pred_y)} and len(batch)={len(batch['node_y'])}"
+    assert len(pred_y) == len(
+        batch['node_y']
+    ), f"len pred_y={len(pred_y)} and len(batch)={len(batch['node_y'])}"
 
     num_classes = pred_y.shape[-1]
 
