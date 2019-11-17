@@ -48,6 +48,16 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "encoded_bytecode_database",
+    srcs = ["encoded_bytecode_database.py"],
+    deps = [
+        "//labm8:app",
+        "//labm8:sqlutil",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
 py_library(
     name = "graph2seq",
     srcs = ["graph2seq.py"],
@@ -145,5 +155,26 @@ py_library(
         "//deeplearning/ml4pl/models:classifier_base",
         "//labm8:app",
         "//third_party/py/keras",
+    ],
+)
+
+py_binary(
+    name = "populate_encoded_bytecode_database",
+    srcs = ["populate_encoded_bytecode_database.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":encoded_bytecode_database",
+        ":graph2seq",
+        ":lstm_utils",
+        "//deeplearning/ml4pl/bytecode:bytecode_database",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
+        "//deeplearning/ml4pl/models:base_utils",
+        "//deeplearning/ml4pl/models:classifier_base",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//labm8:prof",
+        "//third_party/py/numpy",
+        "//third_party/py/tensorflow",
     ],
 )
