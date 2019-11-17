@@ -107,7 +107,8 @@ def GetLeaderboard(log_db: log_database.Database,
         sql.func.sum(
             log_database.BatchLogMeta.elapsed_time_seconds).label('runtime'),
         sql.func.max(log_database.BatchLogMeta.date_added).label('last_log'),
-        sql.func.count(log_database.BatchLogMeta.run_id).label("batches"))
+        sql.func.count(log_database.BatchLogMeta.run_id).label("batches"),
+        sql.func.max(log_database.BatchLogMeta.epoch).label("epoch_count"))
     query = query.group_by(log_database.BatchLogMeta.run_id)
     batch_df = pdutil.QueryToDataFrame(session, query)
     batch_df.set_index('run_id', inplace=True)
