@@ -151,7 +151,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       max_number_nodes = tf.shape(selector_vector)[1]
       x = x[:, :max_number_nodes]
       return x
-    
+
     x = keras.layers.Lambda(slice_to_size)([x, selector_vector])
 
     # now x cannot be 1 too large anymore for concat.
@@ -291,7 +291,11 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       # Enforce a maximum length on the number of statements that can be
       # processed to prevent OOM for really big graphs.
       max_nodes_in_graph = min(max_nodes_in_graph, FLAGS.max_nodes_in_graph)
-      app.Log(2, "Padding graph batch to %s nodes", max_nodes_in_graph)
+
+      #if app.GetVerbosity >= 5:
+      #  with print_context():
+      #    app.Log(5, "Padding graph batch to %s nodes", max_nodes_in_graph)
+      app.Log(5, "Padding graph batch to %s nodes", max_nodes_in_graph, print_context=print_context)
 
       # Shape (batch_size, max_nodes_in_graph, 2)
       node_y_truncated = np.array(
@@ -401,10 +405,32 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     models.load_model(model_path)
 
 
+def appLog_wrapper(log_level, message, *args, print_context=None):
+  "Optionally wraps app.Log in a print_context. Required for nice TQDM progress bars."
+  if app.GetVerbosity() >= log_level:
+    if print_context:
+      with print_context():
+        app.Log(log_level, message, args)
+    else:
+      app.Log(log_level, message, args)
+
+
 def main():
   """Main entry point."""
   # TODO(cec): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
   warnings.filterwarnings("ignore")
+  app.Log = appLog_wrapper
+
+  # Hopefully not required as a solution. Instead I maybe discard the last batch
+  # This is common practice in ML, although it's not ideal for testing but on 200k graphs, I just don't care.
+
+  # if FLAGS.max_train_per_epoch % FLAGS.batch_size:
+  #   FLAGS.max_train_per_epoch = FLAGS.max_train_per_epoch - (FLAGS.max_train_per_epoch % FLAGS.batch_size)
+  #   app.Log(1, f"Setting max_train_per_epoch to {FLAGS.max_train_per_epoch} (multiple of batch_size={FLAGS.batch_size})")
+  # if FLAGS.max_val_per_epoch % FLAGS.batch_size:
+  #   FLAGS.max_val_per_epoch = FLAGS.max_val_per_epoch - (FLAGS.max_val_per_epoch % FLAGS.batch_size)
+  #   app.Log(1, f"Setting max_val_per_epoch to {FLAGS.max_val_per_epoch} (multiple of batch_size={FLAGS.batch_size})")
+
   classifier_base.Run(LstmNodeClassifierModel)
 
 
