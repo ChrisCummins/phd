@@ -274,7 +274,7 @@ class ClassifierBase(object):
     epoch_size = min(epoch_size,(
       FLAGS.max_train_per_epoch if epoch_type == 'train' else
       FLAGS.max_val_per_epoch if epoch_type == 'val' else 206000))
-    bar = tqdm.tqdm(total=epoch_size, leave=False)
+    bar = tqdm.tqdm(total=epoch_size, leave=False, desc=epoch_type + f" epoch {self.epoch_num}:")
     for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:
         raise ValueError("Mini-batch with zero graphs generated")
@@ -293,8 +293,9 @@ class ClassifierBase(object):
       y_true = np.argmax(targets, axis=1)
       y_pred = np.argmax(predictions, axis=1)
 
-      app.Log(4, 'Bincount y_true: %s, pred_y: %s', np.bincount(y_true),
-              np.bincount(y_pred))
+      with bar.external_write_mode():
+        app.Log(4, 'Bincount y_true: %s, pred_y: %s', np.bincount(y_true),
+                np.bincount(y_pred))
 
       accuracies = y_true == y_pred
 
@@ -328,16 +329,18 @@ class ClassifierBase(object):
 
       log.elapsed_time_seconds = time.time() - batch_start_time
 
-      app.Log(2, "%s", log)
+      with bar.external_write_mode():
+        app.Log(2, "%s", log)
       bar.update(log.graph_count)
       # Create a new database session for every batch because we don't want to
       # leave the connection lying around for a long time (they can drop out)
       # and epochs may take O(hours). Alternatively we could store all of the
       # logs for an epoch in-memory and write them in a single shot, but this
       # might consume a lot of memory (when the predictions arrays are large).
-      with prof.Profile(f"Wrote log to database in", print_to=lambda msg: app.Log(5, msg)):
-        with self.log_db.Session(commit=True) as session:
-          session.add(log)
+      with bar.external_write_mode():
+        with prof.Profile(f"Wrote log to database in", print_to=lambda msg: app.Log(5, msg)):
+          with self.log_db.Session(commit=True) as session:
+            session.add(log)
 
     bar.close()
     if not len(epoch_accuracies):
