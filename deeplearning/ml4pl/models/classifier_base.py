@@ -264,6 +264,13 @@ class ClassifierBase(object):
     #  q = s.query(sql.func.count(graph_database.GraphMeta)) \
     # "Object %r is not legal as a SQL literal value" % value
     # sqlalchemy.exc.ArgumentError: Object <class 'deeplearning.ml4pl.graphs.graph_database.GraphMeta'> is not legal as a SQL literal value
+    if FLAGS.max_train_per_epoch and epoch_type == 'train':
+      epoch_size = min(epoch_size, FLAGS.max_train_per_epoch)
+    elif FLAGS.max_val_per_epoch and epoch_type == 'val':
+      epoch_size = min(epoch_size, FLAGS.max_val_per_epoch)
+    else:
+      epoch_size = 206000
+
     epoch_size = min(epoch_size,(
       FLAGS.max_train_per_epoch if epoch_type == 'train' else
       FLAGS.max_val_per_epoch if epoch_type == 'val' else 206000))
