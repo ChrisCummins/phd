@@ -7,6 +7,7 @@ import typing
 import numpy as np
 import sklearn.metrics
 import sqlalchemy as sql
+import tqdm
 
 import build_info
 from deeplearning.ml4pl.graphs import graph_database
@@ -263,6 +264,12 @@ class ClassifierBase(object):
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
         self.MakeMinibatchIterator(epoch_type, groups), max_queue_size=5)
 
+    # progress bar
+    epoch_size = (
+      FLAGS.max_train_per_epoch if epoch_type == 'train' else
+      FLAGS.max_val_per_epoch if epoch_type == 'val' else 2**30)
+    epoch_size = min(epoch_size, self.batcher.GetGraphsInGroupCount(groups))
+    bar = tqdm.tqdm(total=epoch_size, leave=False)
     for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:
         raise ValueError("Mini-batch with zero graphs generated")
@@ -322,9 +329,12 @@ class ClassifierBase(object):
       # and epochs may take O(hours). Alternatively we could store all of the
       # logs for an epoch in-memory and write them in a single shot, but this
       # might consume a lot of memory (when the predictions arrays are large).
-      with self.log_db.Session(commit=True) as session:
-        session.add(log)
+      with prof.Profile(f"Wrote log to database in", print_to=lambda msg: app.Log(5, msg)):
+        with self.log_db.Session(commit=True) as session:
+          session.add(log)
 
+      bar.update(log.graph_count)
+    bar.close()
     if not len(epoch_accuracies):
       raise ValueError("Batch generator produced no batches!")
 
