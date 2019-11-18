@@ -404,22 +404,29 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     model_path = data_to_load['model_path']
     models.load_model(model_path)
 
-
-def appLog_wrapper(log_level, message, *args, print_context=None):
+class AppLogWrapper(object):
   "Optionally wraps app.Log in a print_context. Required for nice TQDM progress bars."
-  if app.GetVerbosity() >= log_level:
-    if print_context:
-      with print_context():
-        app.Log(log_level, message, args)
-    else:
-      app.Log(log_level, message, args)
+  def __init__(self):
+    self.verbosity_level = app.GetVerbosity()
+    self.logger = app.Log
+
+  def __call__(self, level: int, msg, *args, **kwargs):
+      if self.verbosity_level >= level:
+        print_context = kwargs.pop('print_context', None)
+        if print_context:
+          with print_context():
+            self.logger(level, msg, *args, **kwargs)
+        else:
+          self.logger(level, msg, *args, **kwargs)
+  
 
 
 def main():
   """Main entry point."""
   # TODO(cec): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
   warnings.filterwarnings("ignore")
-  app.Log = appLog_wrapper
+
+  app.Log = AppLogWrapper()
 
   # Hopefully not required as a solution. Instead I maybe discard the last batch
   # This is common practice in ML, although it's not ideal for testing but on 200k graphs, I just don't care.

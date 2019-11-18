@@ -258,8 +258,13 @@ class ClassifierBase(object):
     epoch_accuracies = []
 
     # FANCY PROGRESS BAR
+    # TODO(cec) method still not working.
     # epoch_size = self.batcher.GetGraphsInGroupCount(groups)
     epoch_size = 2**30
+    if 'devmap' in self.graph_db.url:
+      epoch_size = 544 if epoch_type == 'train' else 68
+    elif 'alias' in self.graph_db.url:
+      epoch_size = 269000 if epoch_type == 'train' else 31500
     # TODO(cec) please have a look at the preceding line, i think the method is rotten:
     #  q = s.query(sql.func.count(graph_database.GraphMeta)) \
     # "Object %r is not legal as a SQL literal value" % value
@@ -269,9 +274,10 @@ class ClassifierBase(object):
     elif FLAGS.max_val_per_epoch and epoch_type == 'val':
       epoch_size = min(epoch_size, FLAGS.max_val_per_epoch)
     else:
-      epoch_size = 206000
+      # guestimate for test set size on the full dataset
+      epoch_size = min(epoch_size, 206000)
 
-    bar = tqdm.tqdm(total=epoch_size, leave=False, desc=epoch_type + f" epoch {self.epoch_num}")
+    bar = tqdm.tqdm(total=epoch_size, leave=False, desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}")
 
     # Whether to record per-instance batch logs.
     record_batch_logs = epoch_type in FLAGS.batch_log_types
