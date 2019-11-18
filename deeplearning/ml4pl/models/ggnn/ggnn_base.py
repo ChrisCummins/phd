@@ -56,14 +56,18 @@ app.DEFINE_boolean(
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
 
 app.DEFINE_string("unroll_strategy", "none",
-                  "The unroll strategy to use.")
+                  "The unroll strategy to use. One of: "
+                  "{none, constant, edge_count, data_flow_max_steps, label_convergence} "
+                  "constant: Unroll by a constant number of steps. The total number of steps is "
+                  "(unroll_factor * message_passing_step_count).")
 
 app.DEFINE_float(
     "unroll_factor", 0,
     "Determine the number of dynamic model unrolls to perform. If "
-    "--unroll_strategy=constant, this number of unrolls are performed. If "
-    "--unroll_strategy=edge_counts, max_edge_count * --unroll_factor unrolls "
-    "are performed.")
+    "--unroll_strategy=constant, this number of unrolls - each of size sum(layer_timesteps) are performed. "
+    "So one unroll adds sum(layer_timesteps) many steps to the network. If "
+    "--unroll_strategy=edge_counts, max_edge_count * --unroll_factor timesteps "
+    "are performed. (rounded up to the next multiple of sum(layer_timesteps))")
 
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
