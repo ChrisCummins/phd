@@ -329,6 +329,7 @@ class ClassifierBase(object):
       log.elapsed_time_seconds = time.time() - batch_start_time
 
       app.Log(2, "%s", log)
+      bar.update(log.graph_count)
       # Create a new database session for every batch because we don't want to
       # leave the connection lying around for a long time (they can drop out)
       # and epochs may take O(hours). Alternatively we could store all of the
@@ -338,7 +339,6 @@ class ClassifierBase(object):
         with self.log_db.Session(commit=True) as session:
           session.add(log)
 
-      bar.update(log.graph_count)
     bar.close()
     if not len(epoch_accuracies):
       raise ValueError("Batch generator produced no batches!")
