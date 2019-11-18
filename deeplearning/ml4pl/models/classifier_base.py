@@ -609,6 +609,8 @@ class ClassifierBase(object):
                    pbutil.ToJson(build_info.GetBuildInfo())))
 
   def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
+    flags = dict(flags)  # shallow copy
+    flags.pop('restore_model', None)
     for flag, flag_value in flags.items():
       if flag_value != saved_flags[flag]:
         raise EnvironmentError(
