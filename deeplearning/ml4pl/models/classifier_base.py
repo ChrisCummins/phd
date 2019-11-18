@@ -271,9 +271,6 @@ class ClassifierBase(object):
     else:
       epoch_size = 206000
 
-    epoch_size = min(epoch_size,(
-      FLAGS.max_train_per_epoch if epoch_type == 'train' else
-      FLAGS.max_val_per_epoch if epoch_type == 'val' else 206000))
     bar = tqdm.tqdm(total=epoch_size, leave=False, desc=epoch_type + f" epoch {self.epoch_num}")
 
     # Whether to record per-instance batch logs.
