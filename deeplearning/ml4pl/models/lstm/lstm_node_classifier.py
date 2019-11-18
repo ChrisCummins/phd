@@ -229,7 +229,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     )
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str]
+      self, epoch_type: str, groups: typing.List[str], print_context: typing.Any = None
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
@@ -243,7 +243,8 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
-                                                     max_instance_count):
+                                                     max_instance_count,
+                                                     print_context):
       # Get the encoded bytecodes.
       bytecode_ids = batch.log._transient_data['bytecode_ids']
       encoded_sequences, segment_ids, node_masks = self.GetEncodedBytecodes(

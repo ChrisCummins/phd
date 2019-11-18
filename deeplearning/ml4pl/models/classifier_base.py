@@ -138,7 +138,7 @@ class ClassifierBase(object):
   """
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str]
+      self, epoch_type: str, groups: typing.List[str], print_context: typing.Any
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create and return an iterator over mini-batches of data.
 

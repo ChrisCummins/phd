@@ -24,7 +24,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
     self.class_counts = np.zeros(self.labels_dimensionality, dtype=np.int32)
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str]
+      self, epoch_type: str, groups: typing.List[str], print_context: typing.Any = None
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, np.array]]:
     options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
                                               groups=groups)
@@ -32,7 +32,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch_tuple in self.batcher.MakeGraphBatchIterator(
-        options, max_instance_count):
+        options, max_instance_count, print_context):
       if batch_tuple.has_node_y:
         targets = batch_tuple.node_y
       elif batch_tuple.has_graph_y:
