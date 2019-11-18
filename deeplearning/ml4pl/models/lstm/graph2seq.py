@@ -365,13 +365,11 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
       else:
         node_mask.append(0)
 
-    strings_to_encode = [
-        labtypes.flatten([
-            graph.nodes[n].get('original_text', '')
-            for n in graph_query.GetStatementsForNode(graph, identifier)
-        ])
-        for identifier in identifiers
+    strings_to_encode = labtypes.flatten([[
+        graph.nodes[n].get('original_text', '')
+        for n in graph_query.GetStatementsForNode(graph, identifier)
     ]
+                                          for identifier in identifiers])
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
     return seqs, ids, np.array(node_mask, dtype=np.int32)
