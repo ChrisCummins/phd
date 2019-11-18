@@ -163,7 +163,7 @@ def GetVerbosity() -> int:
 
   This can be set per-module using --vmodule flag.
   """
-  return logging.GetVerbosity(logging.GetCallingModuleName())
+  return logging.GetModuleVerbosity(logging.GetCallingModuleName())
 
 
 def _MaybeColorizeLog(color: str, msg: str, *args) -> str:
