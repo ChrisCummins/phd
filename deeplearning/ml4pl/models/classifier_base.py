@@ -265,10 +265,15 @@ class ClassifierBase(object):
         self.MakeMinibatchIterator(epoch_type, groups), max_queue_size=5)
 
     # progress bar
-    epoch_size = (
+    # epoch_size = self.batcher.GetGraphsInGroupCount(groups)
+    epoch_size = 2**30
+    # TODO(cec) please have a look at the preceding line, i think the method is rotten:
+    #  q = s.query(sql.func.count(graph_database.GraphMeta)) \
+    # "Object %r is not legal as a SQL literal value" % value
+    # sqlalchemy.exc.ArgumentError: Object <class 'deeplearning.ml4pl.graphs.graph_database.GraphMeta'> is not legal as a SQL literal value
+    epoch_size = min(epoch_size,(
       FLAGS.max_train_per_epoch if epoch_type == 'train' else
-      FLAGS.max_val_per_epoch if epoch_type == 'val' else 2**30)
-    epoch_size = min(epoch_size, self.batcher.GetGraphsInGroupCount(groups))
+      FLAGS.max_val_per_epoch if epoch_type == 'val' else 206000))
     bar = tqdm.tqdm(total=epoch_size, leave=False)
     for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:
