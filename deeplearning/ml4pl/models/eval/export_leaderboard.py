@@ -13,7 +13,7 @@ def main():
   """Main entry point."""
   with prof.Profile("Created google worksheet"):
     g = google_sheets.GoogleSheets.CreateFromFlagsOrDie()
-    s = g.GetOrCreateSpreadsheet('ml4pl', 'chrisc.101@gmail.com')
+    s = g.GetOrCreateSpreadsheet('ProGraML_Leaderboard_export', 'zacharias.vf@gmail.com')
     ws = g.GetOrCreateWorksheet(s, FLAGS.worksheet)
 
   with prof.Profile("Created leaderboard"):

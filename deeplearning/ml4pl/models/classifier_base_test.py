@@ -58,7 +58,7 @@ class MockModel(classifier_base.ClassifierBase):
     self.mock_data = data_to_load["mock_data"]
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str]
+      self, epoch_type: str, groups: typing.List[str], print_context = None
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Generate mini-batches of fake data."""
     for group in groups:
@@ -73,7 +73,7 @@ class MockModel(classifier_base.ClassifierBase):
         yield log, i
 
   def RunMinibatch(self, log: log_database.BatchLogMeta,
-                   i: int) -> classifier_base.ClassifierBase.MinibatchResults:
+                   i: int, print_context: typing.Any = None) -> classifier_base.ClassifierBase.MinibatchResults:
     """Fake mini-batch 'run'."""
     log.loss = 0
     return classifier_base.ClassifierBase.MinibatchResults(

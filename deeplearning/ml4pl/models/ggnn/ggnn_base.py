@@ -235,6 +235,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       fetch_dict: typing.Dict[str, tf.Tensor],
       feed_dict: typing.Dict[tf.Tensor, typing.Any],
       unroll_factor: int,
+      print_context: typing.Any = None,
   ) -> typing.Dict[str, tf.Tensor]:
     input_node_states = feed_dict[self.placeholders['node_x']]
     _node_states = input_node_states
@@ -289,10 +290,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
     if converged:
       app.Log(2, "Model outputs converged after %s iterations",
-              iteration_count)
+              iteration_count, print_context=print_context)
     else:
       app.Log(2, "Model outputs failed to converge after %s iterations",
-              iteration_count)
+              iteration_count, print_context=print_context)
 
     # finally compute everything from the original fetch_dict
     feed_dict.update({
@@ -337,8 +338,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       raise app.UsageError(
           f"Unknown unroll strategy '{unroll_strategy}'")
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta, feed_dict: typing.Any
-                  ) -> classifier_base.ClassifierBase.MinibatchResults:
+  def RunMinibatch(self, log: log_database.BatchLogMeta, feed_dict: typing.Any,
+                  print_context: typing.Any = None) -> classifier_base.ClassifierBase.MinibatchResults:
     unroll_factor = self.GetUnrollFactor(FLAGS.unroll_strategy,
                                          FLAGS.unroll_factor, log)
 

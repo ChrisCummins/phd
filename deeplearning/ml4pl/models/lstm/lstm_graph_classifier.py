@@ -8,6 +8,7 @@ from keras import models
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
@@ -123,10 +124,10 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count,
-                                                     print_context):
+                                                     print_context=print_context):
       with prof.Profile(
           f"Encoded {len(batch.log._transient_data['graph_indices'])} bytecodes",
-          print_to=lambda x: app.Log(2, x)):
+          print_to=lambda x: app.Log(2, x, print_context=print_context)):
         # returns a list of encoded bytecodes padded to max_sequence_length.
         encoded_sequences = self.encoder.Encode(
             batch.log._transient_data['graph_indices'])
@@ -138,7 +139,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
           'graph_y': np.vstack(batch.graph_y),
       }
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any
+  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any, print_context=None
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
     x = [batch['encoded_sequences'], batch['graph_x']]
@@ -155,7 +156,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
     if log.type == 'train':
       with prof.Profile(f'model.fit() {len(y[0])} instances',
-                        print_to=lambda x: app.Log(2, x)):
+                        print_to=lambda x: app.Log(2, x, print_context=print_context)):
         self.model.fit(x,
                        y,
                        epochs=1,
@@ -170,7 +171,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     # This is obviously wasteful when training, but I don't know of a way to
     # get the raw predictions from self.model.fit().
     with prof.Profile(f'model.predict() {len(y[0])} instances',
-                      print_to=lambda x: app.Log(2, x)):
+                      print_to=lambda x: app.Log(2, x, print_context=print_context)):
       pred_y = self.model.predict(x)
     assert batch['graph_y'].shape == pred_y[0].shape
 
@@ -188,6 +189,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
+  app.Log = base_utils.AppLogWrapper()
   classifier_base.Run(LstmGraphClassifierModel)
 
 

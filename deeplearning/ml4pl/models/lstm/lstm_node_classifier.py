@@ -10,6 +10,7 @@ from keras import models
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import encoded_bytecode_database
 from deeplearning.ml4pl.models.lstm import graph2seq
@@ -216,12 +217,12 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                                   id_to_encoded_sequences.keys())
     if bytecode_ids_to_encode:
       with prof.Profile(f'Encoded {len(bytecode_ids_to_encode)} bytecodes',
-                        print_to=lambda x: app.Log(2, x)):
+                        print_to=lambda x: app.Log(2, x, print_context=print_context)):
         encoded_sequences, grouping_ids, node_masks = self.encoder.EncodeBytecodes(
             bytecode_ids_to_encode)
 
       with prof.Profile(f'Storing {len(encoded_sequences)} encoded sequences',
-                        print_to=lambda x: app.Log(2, x)):
+                        print_to=lambda x: app.Log(2, x, print_context=print_context)):
         with self.encoded_bytecode_db.Session(commit=True) as session:
           for bytecode_id, encoded_sequence, segment_ids, node_mask in zip(
               bytecode_ids_to_encode, encoded_sequences, grouping_ids,
@@ -258,7 +259,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
                                                      max_instance_count,
-                                                     print_context):
+                                                     print_context=print_context):
       # Get the encoded bytecodes.
       bytecode_ids = batch.log._transient_data['bytecode_ids']
       encoded_sequences, segment_ids, node_masks = self.GetEncodedBytecodes(
@@ -352,7 +353,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
           'node_y': node_y_per_graph,
       }
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any
+  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any, print_context=None
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
     log.loss = 0
@@ -365,7 +366,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     y = [batch['node_y_truncated']]
 
     with prof.Profile(f'model.train_on_batch() {len(y[0])} instances',
-                      print_to=lambda x: app.Log(2, x)):
+                      print_to=lambda x: app.Log(5, x, print_context=print_context)):
       if log.type == 'train':
         loss = self.model.train_on_batch(x, y)[0]
         log.loss = loss
@@ -404,29 +405,13 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     model_path = data_to_load['model_path']
     models.load_model(model_path)
 
-class AppLogWrapper(object):
-  "Optionally wraps app.Log in a print_context. Required for nice TQDM progress bars."
-  def __init__(self):
-    self.verbosity_level = app.GetVerbosity()
-    self.logger = app.Log
-
-  def __call__(self, level: int, msg, *args, **kwargs):
-      if self.verbosity_level >= level:
-        print_context = kwargs.pop('print_context', None)
-        if print_context:
-          with print_context():
-            self.logger(level, msg, *args, **kwargs)
-        else:
-          self.logger(level, msg, *args, **kwargs)
-  
-
 
 def main():
   """Main entry point."""
   # TODO(cec): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
   warnings.filterwarnings("ignore")
 
-  app.Log = AppLogWrapper()
+  app.Log = base_utils.AppLogWrapper()
 
   # Hopefully not required as a solution. Instead I maybe discard the last batch
   # This is common practice in ML, although it's not ideal for testing but on 200k graphs, I just don't care.

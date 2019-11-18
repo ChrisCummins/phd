@@ -160,7 +160,7 @@ class ClassifierBase(object):
     y_pred_1hot: np.array  # Shape [num_labels,num_classes]
 
   def RunMinibatch(self, log: log_database.BatchLogMeta,
-                   batch: typing.Any) -> MinibatchResults:
+                   batch: typing.Any, print_context: typing.Any = None) -> MinibatchResults:
     """Process a mini-batch of data using the model.
 
     Args:
@@ -277,7 +277,7 @@ class ClassifierBase(object):
       # guestimate for test set size on the full dataset
       epoch_size = min(epoch_size, 206000)
 
-    bar = tqdm.tqdm(total=epoch_size, leave=False, desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}")
+    bar = tqdm.tqdm(total=epoch_size, desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}")
 
     # Whether to record per-instance batch logs.
     record_batch_logs = epoch_type in FLAGS.batch_log_types
@@ -304,9 +304,9 @@ class ClassifierBase(object):
       y_true = np.argmax(targets, axis=1)
       y_pred = np.argmax(predictions, axis=1)
 
-      with bar.external_write_mode():
-        app.Log(4, 'Bincount y_true: %s, pred_y: %s', np.bincount(y_true),
-                np.bincount(y_pred))
+
+      app.Log(4, 'Bincount y_true: %s, pred_y: %s', np.bincount(y_true),
+              np.bincount(y_pred), print_context=bar.external_write_mode)
 
       accuracies = y_true == y_pred
 
@@ -327,6 +327,7 @@ class ClassifierBase(object):
           labels=self.labels,
           average=FLAGS.batch_scores_averaging_method)
 
+      # TODO(cec) redundant with above assignment?
       log.accuracy = accuracies.mean()
 
       # Only create a batch log for test runs.
@@ -340,18 +341,17 @@ class ClassifierBase(object):
 
       log.elapsed_time_seconds = time.time() - batch_start_time
 
-      with bar.external_write_mode():
-        app.Log(2, "%s", log)
+
+      app.Log(2, "%s", log, print_context=bar.external_write_mode)
       bar.update(log.graph_count)
       # Create a new database session for every batch because we don't want to
       # leave the connection lying around for a long time (they can drop out)
       # and epochs may take O(hours). Alternatively we could store all of the
       # logs for an epoch in-memory and write them in a single shot, but this
       # might consume a lot of memory (when the predictions arrays are large).
-      with bar.external_write_mode():
-        with prof.Profile(f"Wrote log to database in", print_to=lambda msg: app.Log(5, msg)):
-          with self.log_db.Session(commit=True) as session:
-            session.add(log)
+      with prof.Profile(f"Wrote log to database in", print_to=lambda msg: app.Log(5, msg, bar.external_write_mode)):
+        with self.log_db.Session(commit=True) as session:
+          session.add(log)
 
     bar.close()
     if not len(epoch_accuracies):

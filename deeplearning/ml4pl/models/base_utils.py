@@ -6,6 +6,22 @@ from labm8 import app
 
 FLAGS = app.FLAGS
 
+class AppLogWrapper(object):
+  "Optionally wraps app.Log in a print_context. Required for nice TQDM progress bars."
+  def __init__(self):
+    self.verbosity_level = app.GetVerbosity()
+    self.logger = app.Log
+
+  def __call__(self, level: int, msg, *args, **kwargs):
+      if self.verbosity_level >= level:
+        print_context = kwargs.pop('print_context', None)
+        if print_context:
+          with print_context():
+            self.logger(level, msg, *args, **kwargs)
+        else:
+          self.logger(level, msg, *args, **kwargs)
+
+
 def pos_emb(positions: Union[int, List[int], np.array], demb: int = 200, dpad: int = 2):
     """Transformer-like sinusoidal positional embeddings.
         Args:

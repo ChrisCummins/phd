@@ -545,6 +545,7 @@ def main():
     app.FatalWithoutStackTrace(
         "--position_embeddings has to be one of <initial, every, fancy, off>")
 
+  app.Log = base_utils.AppLogWrapper()
   if not FLAGS.kfold:
     classifier_base.Run(GgnnClassifier)
   else:

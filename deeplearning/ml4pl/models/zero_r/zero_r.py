@@ -6,6 +6,7 @@ import numpy as np
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import base_utils
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -32,7 +33,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch_tuple in self.batcher.MakeGraphBatchIterator(
-        options, max_instance_count, print_context):
+        options, max_instance_count, print_context=print_context):
       if batch_tuple.has_node_y:
         targets = batch_tuple.node_y
       elif batch_tuple.has_graph_y:
@@ -69,6 +70,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
+  app.Log = base_utils.AppLogWrapper()
   classifier_base.Run(ZeroRClassifier)
 
 
