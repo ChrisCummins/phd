@@ -304,6 +304,11 @@ class GraphBatch(typing.NamedTuple):
     # Empty batch
     if not len(incoming_edge_counts):
       return None
+    
+    # Return None as well if we are in the fixed number of graphs mode and
+    # the batch has less than that number of graphs.
+    if options.max_graphs and log.graph_count < options.max_graphs:
+      return None
 
     # Concatenate and convert lists to numpy arrays.
 
