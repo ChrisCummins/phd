@@ -453,7 +453,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     return 1.0 - neg_loss
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str]
+      self, epoch_type: str, groups: typing.List[str], print_context: typing.Any = None
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, ggnn.FeedDict]]:
     """Create mini-batches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
@@ -466,7 +466,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
     for batch in self.batcher.MakeGraphBatchIterator(options,
-                                                     max_instance_count):
+                                                     max_instance_count, print_context=print_context):
       feed_dict = utils.BatchDictToFeedDict(batch, self.placeholders)
 
       if epoch_type == "train":

@@ -257,14 +257,7 @@ class ClassifierBase(object):
 
     epoch_accuracies = []
 
-    # Whether to record per-instance batch logs.
-    record_batch_logs = epoch_type in FLAGS.batch_log_types
-
-    batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
-    batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-        self.MakeMinibatchIterator(epoch_type, groups), max_queue_size=5)
-
-    # progress bar
+    # FANCY PROGRESS BAR
     # epoch_size = self.batcher.GetGraphsInGroupCount(groups)
     epoch_size = 2**30
     # TODO(cec) please have a look at the preceding line, i think the method is rotten:
@@ -274,7 +267,15 @@ class ClassifierBase(object):
     epoch_size = min(epoch_size,(
       FLAGS.max_train_per_epoch if epoch_type == 'train' else
       FLAGS.max_val_per_epoch if epoch_type == 'val' else 206000))
-    bar = tqdm.tqdm(total=epoch_size, leave=False, desc=epoch_type + f" epoch {self.epoch_num}:")
+    bar = tqdm.tqdm(total=epoch_size, leave=False, desc=epoch_type + f" epoch {self.epoch_num}")
+
+    # Whether to record per-instance batch logs.
+    record_batch_logs = epoch_type in FLAGS.batch_log_types
+
+    batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
+    batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
+        self.MakeMinibatchIterator(epoch_type, groups, print_context=bar.external_write_mode), max_queue_size=5)
+
     for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:
         raise ValueError("Mini-batch with zero graphs generated")

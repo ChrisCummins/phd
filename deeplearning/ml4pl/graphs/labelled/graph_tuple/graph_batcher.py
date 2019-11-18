@@ -456,7 +456,8 @@ class GraphBatcher(object):
       options: GraphBatchOptions,
       # TODO(cec): This duplicates the logic of the
       # GraphTuplesOptions field. Consolidate these.
-      max_instance_count: int = 0) -> typing.Iterable[GraphBatch]:
+      max_instance_count: int = 0,
+      print_context: typing.Any = None) -> typing.Iterable[GraphBatch]:
     """Make a batch iterator over the given group.
 
     Args:
@@ -494,12 +495,21 @@ class GraphBatcher(object):
       batch = GraphBatch.CreateFromGraphMetas(graph_reader, self.stats, options)
       if batch:
         elapsed_time = time.time() - start_time
-        app.Log(
-            5, "Created batch of %s graphs (%s nodes) in %s "
-            "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
-            humanize.Commas(batch.log.node_count),
-            humanize.Duration(elapsed_time),
-            humanize.Commas(batch.log.graph_count / elapsed_time))
+        if print_context is not None:
+          with print_context():
+            app.Log(
+              5, "Created batch of %s graphs (%s nodes) in %s "
+              "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
+              humanize.Commas(batch.log.node_count),
+              humanize.Duration(elapsed_time),
+              humanize.Commas(batch.log.graph_count / elapsed_time))
+        else: # ugly duplication, but saves importing from contextlib.
+          app.Log(
+              5, "Created batch of %s graphs (%s nodes) in %s "
+              "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
+              humanize.Commas(batch.log.node_count),
+              humanize.Duration(elapsed_time),
+              humanize.Commas(batch.log.graph_count / elapsed_time))
         yield batch
       else:
         return
