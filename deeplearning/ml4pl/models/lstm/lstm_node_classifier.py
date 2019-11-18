@@ -146,9 +146,16 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # therefore the segment sum emits a tensor of shape [B, max_nodes + 1, 64] IFF
     # something was padded and [B, max_nodes, 64] otherwise.
     # we want to discard the + 1 guy because that just summed padded tokens anyway.
-    max_number_nodes = tf.shape(selector_vector)[1]
-    x = x[:, :max_number_nodes]
-    x = keras.layers.Concatenate()([x, selector_vector],)
+    def slice_to_size(args):
+      x, selector_vector = args
+      max_number_nodes = tf.shape(selector_vector)[1]
+      x = x[:, :max_number_nodes]
+      return x
+    
+    x = keras.layers.Lambda(slice_to_size)([x, selector_vector])
+
+    # now x cannot be 1 too large anymore for concat.
+    x = keras.layers.Concatenate(axis=2)([x, selector_vector],)
 
     x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True,
                        name="lstm_1")(x)
