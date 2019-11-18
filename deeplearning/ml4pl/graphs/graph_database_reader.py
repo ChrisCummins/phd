@@ -39,7 +39,8 @@ def BufferedGraphReader(
     order: BufferedGraphReaderOrder = BufferedGraphReaderOrder.IN_ORDER,
     eager_graph_loading: bool = True,
     buffer_size: int = 256,
-    limit: typing.Optional[int] = None
+    limit: typing.Optional[int] = None,
+    print_context: typing.Any = None,
 ) -> typing.Iterable[graph_database.GraphMeta]:
   """An iterator over the graphs in a database.
 
@@ -60,9 +61,9 @@ def BufferedGraphReader(
   """
   filters = filters or []
 
-  with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graphs "
+  with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graph "
                                "IDs from database"),
-                    print_to=lambda msg: app.Log(3, msg)):
+                    print_to=lambda msg: app.Log(3, msg, print_context=print_context)):
     with db.Session() as session:
       # Random ordering means that we can't use
       # labm8.sqlutil.OffsetLimitBatchedQuery() to read results as each query

@@ -493,7 +493,8 @@ class GraphBatcher(object):
         # Magic constant to try and get a reasonable balance between memory
         # requirements and database round trips.
         buffer_size=FLAGS.graph_reader_buffer_size,
-        limit=max_instance_count)
+        limit=max_instance_count,
+        print_context=print_context)
 
     # Batch creation outer-loop.
     while True:
@@ -501,21 +502,12 @@ class GraphBatcher(object):
       batch = GraphBatch.CreateFromGraphMetas(graph_reader, self.stats, options)
       if batch:
         elapsed_time = time.time() - start_time
-        if print_context is not None:
-          with print_context():
-            app.Log(
-                5, "Created batch of %s graphs (%s nodes) in %s "
-                "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
-                humanize.Commas(batch.log.node_count),
-                humanize.Duration(elapsed_time),
-                humanize.Commas(batch.log.graph_count / elapsed_time))
-        else:  # ugly duplication, but saves importing from contextlib.
-          app.Log(
-              5, "Created batch of %s graphs (%s nodes) in %s "
-              "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
-              humanize.Commas(batch.log.node_count),
-              humanize.Duration(elapsed_time),
-              humanize.Commas(batch.log.graph_count / elapsed_time))
+        app.Log(
+            5, "Created batch of %s graphs (%s nodes) in %s "
+            "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
+            humanize.Commas(batch.log.node_count),
+            humanize.Duration(elapsed_time),
+            humanize.Commas(batch.log.graph_count / elapsed_time), print_context=print_context)
         yield batch
       else:
         return
