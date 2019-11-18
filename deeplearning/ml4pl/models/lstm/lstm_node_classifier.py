@@ -141,6 +141,13 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # Concatenate the "selector vector" input.
     selector_vector = keras.Input(batch_shape=(FLAGS.batch_size, None, 2),
                                   name="selector_vector")
+
+    # because padded values in segment_ids have value max_number_of_nodes,
+    # therefore the segment sum emits a tensor of shape [B, max_nodes + 1, 64] IFF
+    # something was padded and [B, max_nodes, 64] otherwise.
+    # we want to discard the + 1 guy because that just summed padded tokens anyway.
+    max_number_nodes = tf.shape(selector_vector)[1]
+    x = x[:max_number_nodes]
     x = keras.layers.Concatenate()([x, selector_vector],)
 
     x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True,
