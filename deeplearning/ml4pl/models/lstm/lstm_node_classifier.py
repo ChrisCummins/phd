@@ -147,7 +147,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     # something was padded and [B, max_nodes, 64] otherwise.
     # we want to discard the + 1 guy because that just summed padded tokens anyway.
     max_number_nodes = tf.shape(selector_vector)[1]
-    x = x[:max_number_nodes]
+    x = x[:, :max_number_nodes]
     x = keras.layers.Concatenate()([x, selector_vector],)
 
     x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True,
