@@ -48,6 +48,8 @@ classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
 app.DEFINE_database('encoded_bytecode_db', encoded_bytecode_database.Database,
                     None, 'Path to the encoded bytecode database to populate.')
 
+app.DEFINE_string('group_by', 'statement', 'Group by statement or identifier.')
+
 app.DEFINE_integer(
     "max_nodes_in_graph", 25000,
     "The maximum number of grouped statements to feed through "
@@ -74,7 +76,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
     # The encoder which performs translation from graphs to encoded sequences.
     self.encoder = graph2seq.GraphToBytecodeGroupingsEncoder(
-        self.batcher.db, bytecode_encoder, group_by='statement')
+        self.batcher.db, bytecode_encoder, group_by=FLAGS.group_by)
 
     self.encoded_bytecode_db: encoded_bytecode_database.EncodedBytecode = (
         FLAGS.encoded_bytecode_db())
