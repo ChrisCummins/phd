@@ -5,9 +5,9 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=zacharias.vf@gmail.com
-#SBATCH --constraint=NV
+#SBATCH --exclude=ault07,ault08
 
 source /users/zfisches/.bash_profile;
 cd /users/zfisches/phd;
 
-srun ./debug_run.sh
+srun bash ./deeplearning/ml4pl/scripts/devmap_runs/debug_run.sh
