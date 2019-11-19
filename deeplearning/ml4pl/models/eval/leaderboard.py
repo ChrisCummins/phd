@@ -161,8 +161,8 @@ def GetLeaderboard(log_db: log_database.Database,
           log_database.Parameter.run_id,
           log_database.Parameter.pickled_value.label(flag_name))
       query = query.filter(
-          log_database.Parameter.type == log_database.ParameterType.FLAG)
-      query = query.filter(log_database.Parameter.parameter == flag)
+          sql.func.lower(log_database.Parameter.type) == 'flag')
+      query = query.filter(log_database.Parameter.parameter.like(f'%.{flag}'))
       flag_df = pdutil.QueryToDataFrame(session, query)
       # Un-pickle flag values.
       pdutil.RewriteColumn(flag_df, flag_name, lambda x: pickle.loads(x))
