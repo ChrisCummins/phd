@@ -10,8 +10,7 @@ from labm8 import app
 
 app.DEFINE_input_path(
     'google_sheets_credentials',
-    #'/var/phd/deeplearning/ml4pl/google_sheets_credentials.json',
-    '/users/zfisches/google_api.json',
+    '/var/phd/deeplearning/ml4pl/google_sheets_credentials.json',
     'The path to a google service account credentials JSON file.')
 
 FLAGS = app.FLAGS
