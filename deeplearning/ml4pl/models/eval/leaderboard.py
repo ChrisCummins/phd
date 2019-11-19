@@ -41,6 +41,8 @@ def GetProblemFromPickledGraphDbUrl(pickled_column_value: bytes):
     return 'subexpressions'
   elif 'alias_set' in db_url:
     return 'alias_sets'
+  elif 'polyhedra' in db_url:
+    return 'polyhedras'
   elif 'devmap_amd' in db_url:
     return 'devmap_amd'
   elif 'devmap_nvidia' in db_url:
