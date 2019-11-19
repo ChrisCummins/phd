@@ -335,7 +335,7 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
 
     if max(ids) > graph.number_of_nodes():
       raise ValueError(f"Found max ID {max(ids)} in graph of only "
-                       " {graph.number_of_nodes()} nodes")
+                       f"{graph.number_of_nodes()} nodes")
 
     return seqs, ids, node_mask
 
@@ -367,6 +367,6 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
 
     if max(ids) > graph.number_of_nodes():
       raise ValueError(f"Found max ID {max(ids)} in graph of only "
-                       " {graph.number_of_nodes()} nodes")
+                       f"{graph.number_of_nodes()} nodes")
 
     return seqs, ids, node_mask
