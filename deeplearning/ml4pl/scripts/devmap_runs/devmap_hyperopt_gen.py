@@ -36,7 +36,18 @@ def ggnn_devmap_hyperopt(start_step=0, gpus=[0,1,2,3], how_many=None, test_group
     
     # cd phd; export CUDA_VISIBLE_DEVICES={device}; \
     
-    template = """#!/bin/bash\n \
+    template = """#!/bin/bash
+#SBATCH --job-name=devmap
+#SBATCH --time=00:30:00
+#SBATCH --partition=total
+#SBATCH --gres=gpu:1
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=zacharias.vf@gmail.com
+#SBATCH --exclude=ault07,ault08
+
+source /users/zfisches/.bash_profile;
+cd /users/zfisches/phd;
+
 bazel run //deeplearning/ml4pl/models/ggnn:ggnn -- \
 --graph_db='sqlite:////users/zfisches/db/devmap_{dataset}_20191113.db' \
 --log_db='sqlite:////users/zfisches/{log_db}' \
@@ -48,7 +59,7 @@ bazel run //deeplearning/ml4pl/models/ggnn:ggnn -- \
 --inst2vec_embeddings={emb} \
 --output_layer_dropout_keep_prob={out_drop} \
 --graph_state_dropout_keep_prob={state_drop} \
---edge_weight_dropout_keep_prob={edge_drop}
+--edge_weight_dropout_keep_prob={edge_drop} \
 --batch_size={batch_size} \
 --manual_tag=HyperOpt-{i:03d}-{stamp} \
     """
@@ -86,5 +97,5 @@ if __name__ == '__main__':
     import sys
     tg = sys.argv[1]
     tgs = [int(tg)]
-    base_path = Path('/home/zacharias/ml4pl/deeplearning/ml4pl/scripts/devmap_runs/')
+    base_path = Path('/users/zfisches/phd/deeplearning/ml4pl/scripts/devmap_runs/')
     ggnn_devmap_hyperopt(test_groups=tgs)
