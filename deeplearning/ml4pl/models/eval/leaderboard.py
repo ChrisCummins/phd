@@ -145,7 +145,7 @@ def GetLeaderboard(log_db: log_database.Database,
       query = session.query(log_database.Parameter.run_id,
                             log_database.Parameter.pickled_value.label(flag))
       query = query.filter(
-          log_database.Parameter.type == log_database.ParameterType.MODEL_FLAG)
+          sql.func.lower(log_database.Parameter.type) == 'model_flag')
       query = query.filter(log_database.Parameter.parameter == flag)
       flag_df = pdutil.QueryToDataFrame(session, query)
       # Un-pickle flag value.

@@ -408,14 +408,14 @@ class Database(sqlutil.Database):
       A pandas dataframe.
     """
     with self.Session() as session:
-      q = session.query(Parameter.parameter,
-                        Parameter.pickled_value.label('value'))
-      q = q.filter(Parameter.run_id == run_id)
-      q = q.filter(Parameter.type == parameter_type)
-      q = q.order_by(Parameter.parameter)
-      df = pdutil.QueryToDataFrame(session, q).set_index('parameter')
+      query = session.query(Parameter.parameter,
+                            Parameter.pickled_value.label('value'))
+      query = query.filter(Parameter.run_id == run_id)
+      query = query.filter(sql.func.lower(Parameter.type) == parameter_type)
+      query = query.order_by(Parameter.parameter)
+      df = pdutil.QueryToDataFrame(session, query).set_index('parameter')
       # Un-pickle the parameter values:
-      df['value'] = [pickle.loads(x) for x in df['value'].values]
+      pdutil.RewriteColumn(df, 'value', lambda x: pickle.loads(x))
       return df
 
   @property
