@@ -8,7 +8,7 @@ licenses(["notice"])  # BSD
 
 py_library(
     name = "dash",
-    srcs = ["dash.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("dash"),
         requirement("plotly"),

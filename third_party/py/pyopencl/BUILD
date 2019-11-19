@@ -8,7 +8,7 @@ licenses(["notice"])  # MIT
 
 py_library(
     name = "pyopencl",
-    srcs = ["pyopencl.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("pyopencl"),
     ],

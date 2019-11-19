@@ -8,7 +8,7 @@ licenses(["restricted"])  # GPL
 
 py_library(
     name = "libxmp",
-    srcs = ["libxmp.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("python-xmp-toolkit"),
         requirement("pytz"),

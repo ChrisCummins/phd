@@ -8,7 +8,7 @@ licenses(["notice"])  # Apache 2.0
 
 py_library(
     name = "portpicker",
-    srcs = ["portpicker.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("portpicker"),
     ],

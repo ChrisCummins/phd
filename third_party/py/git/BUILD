@@ -12,7 +12,7 @@ licenses(["notice"])  # BSD
 # holds.
 py_library(
     name = "git",
-    srcs = ["git.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("GitPython"),
         requirement("gitdb2"),

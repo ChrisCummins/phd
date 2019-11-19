@@ -8,7 +8,7 @@ licenses(["notice"])  # MIT
 
 py_library(
     name = "pydot",
-    srcs = ["pydot.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("pydot"),
     ],

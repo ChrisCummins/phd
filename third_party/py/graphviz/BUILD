@@ -8,7 +8,7 @@ licenses(["notice"])  # MIT
 
 py_library(
     name = "graphviz",
-    srcs = ["graphviz.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("graphviz"),
     ],

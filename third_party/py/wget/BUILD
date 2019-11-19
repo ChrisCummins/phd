@@ -8,7 +8,7 @@ licenses(["permissive"])  # Public domain
 
 py_library(
     name = "wget",
-    srcs = ["wget.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("wget"),
     ],

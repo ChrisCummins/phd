@@ -8,7 +8,7 @@ licenses(["notice"])  # Apache
 
 py_library(
     name = "sqlparse",
-    srcs = ["sqlparse.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("sqlparse"),
     ],

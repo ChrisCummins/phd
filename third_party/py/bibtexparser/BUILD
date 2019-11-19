@@ -8,7 +8,7 @@ licenses(["notice"])  # BSD
 
 py_library(
     name = "bibtexparser",
-    srcs = ["bibtexparser.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("bibtexparser"),
         "//third_party/py/pyparsing",

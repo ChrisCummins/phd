@@ -8,7 +8,7 @@ licenses(["notice"])  # BSD
 
 py_library(
     name = "github",
-    srcs = ["github.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("PyGithub"),
         requirement("jwt"),  # Implicit dependency.

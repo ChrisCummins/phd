@@ -8,7 +8,7 @@ licenses(["notice"])  # BSD
 
 py_library(
     name = "umap",
-    srcs = ["umap.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("umap"),
     ],

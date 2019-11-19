@@ -8,7 +8,7 @@ licenses(["notice"])  # BSD
 
 py_library(
     name = "flask",
-    srcs = ["flask.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         "//third_party/py/requests",
         requirement("Flask"),

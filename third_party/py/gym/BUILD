@@ -8,7 +8,7 @@ licenses(["notice"])  # MIT
 
 py_library(
     name = "gym",
-    srcs = ["gym.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("gym"),
         "//third_party/py/scipy",

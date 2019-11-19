@@ -8,7 +8,7 @@ licenses(["notice"])  # MIT
 
 py_library(
     name = "ascii_art",
-    srcs = ["ascii_art.py"],
+    srcs = ["//third_party/py:empty.py"],
     deps = [
         requirement("ascii_art"),
     ],
