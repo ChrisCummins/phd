@@ -227,15 +227,14 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
           for bytecode_id, encoded_sequence, segment_ids, node_mask in zip(
               bytecode_ids_to_encode, encoded_sequences, grouping_ids,
               node_masks):
-            result = encoded_bytecode_database.EncodedBytecode(
-                bytecode_id=bytecode_id)
+            result = session.GetOrAdd(encoded_bytecode_database.EncodedBytecode,
+                                      bytecode_id=bytecode_id)
             result.encoded_sequence = encoded_sequence
             result.segment_ids = segment_ids
             result.node_mask = node_mask
             id_to_encoded_sequences[bytecode_id] = encoded_sequence
             id_to_segment_ids[bytecode_id] = segment_ids
             id_to_node_mask[bytecode_id] = node_mask
-            session.add(result)
 
     return (
         [id_to_encoded_sequences[bytecode_id] for bytecode_id in bytecode_ids],
