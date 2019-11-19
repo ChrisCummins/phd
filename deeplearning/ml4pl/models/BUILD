@@ -81,6 +81,7 @@ py_library(
         "//third_party/py/networkx",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
+        "//third_party/py/scikit_learn",
         "//third_party/py/sqlalchemy",
     ],
 )

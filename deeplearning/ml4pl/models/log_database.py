@@ -413,10 +413,12 @@ class Database(sqlutil.Database):
       query = query.filter(Parameter.run_id == run_id)
       query = query.filter(sql.func.lower(Parameter.type) == parameter_type)
       query = query.order_by(Parameter.parameter)
-      df = pdutil.QueryToDataFrame(session, query).set_index('parameter')
+      df = pdutil.QueryToDataFrame(session, query)
+      # Strip the prefix, 'foo.bar' -> 'foo':
+      pdutil.RewriteColumn(df, 'parameter', lambda x: x.split('.')[-1])
       # Un-pickle the parameter values:
       pdutil.RewriteColumn(df, 'value', lambda x: pickle.loads(x))
-      return df
+      return df.set_index('parameter')
 
   @property
   def run_ids(self) -> typing.List[str]:

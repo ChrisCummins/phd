@@ -21,7 +21,7 @@ def main():
       "subexpressions",
       "alias_set",
       "polyhedra",
-      "devmap_unbalanced_split_logs",
+      "devmap_unbalanced_split",
   ]
 
   for db in dbs:

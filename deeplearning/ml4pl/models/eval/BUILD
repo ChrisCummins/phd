@@ -14,8 +14,8 @@ py_binary(
 
 py_library(
     name = "google_sheets",
-    visibility = ["//visibility:public"],
     srcs = ["google_sheets.py"],
+    visibility = ["//visibility:public"],
     deps = [
         "//labm8:app",
         "//third_party/py/gspread",
@@ -33,6 +33,19 @@ py_binary(
         "//labm8:pdutil",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
+        "//third_party/py/sqlalchemy",
+    ],
+)
+
+py_binary(
+    name = "recreate_graphs",
+    srcs = ["recreate_graphs.py"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/models:log_analysis",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//labm8:prof",
         "//third_party/py/sqlalchemy",
     ],
 )

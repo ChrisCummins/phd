@@ -5,6 +5,7 @@ import typing
 import networkx as nx
 import numpy as np
 import pandas as pd
+import sklearn.metrics
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
@@ -90,17 +91,22 @@ class RunLogAnalyzer(object):
 
     return self.GetEpochLogs(epoch_num)
 
-  def ReconstructGraphBatch(
+  def ReconstructBatchFromLog(
       self, log: log_database.BatchLogMeta) -> graph_batcher.GraphBatch:
-    """Reconstruct the graph batch tuple for the given log."""
+    """Reconstruct a graph batch at the given global step."""
+    if not log.batch_log:
+      raise OSError("Cannot re-create batch without detailed logs")
+
     with prof.Profile(lambda t: ('Reconstructed graph batch with '
                                  f'{graph_batch.graph_count} graphs')):
       with self.graph_db.Session() as session:
-        graphs = session.query(graph_database.GraphMeta) \
-          .options(sql.orm.joinedload(graph_database.GraphMeta.graph)) \
-          .filter(graph_database.GraphMeta.id.in_(log.graph_indices)).all()
+        query = session.query(graph_database.GraphMeta)
+        query = query.options(sql.orm.joinedload(
+            graph_database.GraphMeta.graph))
+        query = query.filter(graph_database.GraphMeta.id.in_(log.graph_indices))
         # Load the graphs in the same order as in the batch.
-        graphs = sorted(graphs, key=lambda g: log.graph_indices.index(g.id))
+        graphs = sorted(query.all(),
+                        key=lambda g: log.graph_indices.index(g.id))
 
       graph_batch = graph_batcher.GraphBatch.CreateFromGraphMetas(
           graphs=(g for g in graphs),
@@ -108,6 +114,55 @@ class RunLogAnalyzer(object):
           options=graph_batcher.GraphBatchOptions())
 
     return graph_batch
+
+  def ReconstructBatchAtStep(self,
+                             global_step: int) -> graph_batcher.GraphBatch:
+    """Reconstruct a graph batch at the given global step."""
+    with self.log_db.Session() as session:
+      query = session.query(log_database.BatchLogMeta)
+      query = query.filter(log_database.BatchLogMeta.run_id == self.run_id)
+      query = query.filter(log_database.BatchLogMeta.global_step == global_step)
+      query = query.limit(1)
+
+      log: log_database.BatchLogMeta = query.first()
+
+      if not log:
+        raise OSError(f"No log found for run {self.run_id} at global step "
+                      f"{global_step}")
+
+      return self.ReconstructBatchFromLog(log)
+
+  def GetInputOutputGraphsFromLog(self, log: log_database.BatchLogMeta):
+    batch = self.ReconstructBatchFromLog(log)
+
+    with prof.Profile(f"Recreated {batch.graph_count} input graphs"):
+      input_graphs = list(batch.ToNetworkXGraphs())
+
+    with prof.Profile(f"Recreated {batch.graph_count} output graphs"):
+      # Create a duplicate graph batch which has the model predictions set
+      # in place of the node_y or graph_y attributes.
+      output_graph_batch = graph_batcher.GraphBatch(
+          adjacency_lists=batch.adjacency_lists,
+          edge_positions=batch.edge_positions,
+          incoming_edge_counts=batch.incoming_edge_counts,
+          node_x_indices=np.zeros(len(batch.node_x_indices)),
+          node_y=log.predictions if batch.has_node_y else None,
+          graph_x=None,
+          graph_y=log.predictions if batch.has_graph_y else None,
+          graph_nodes_list=batch.graph_nodes_list,
+          graph_count=batch.graph_count,
+          log=batch.log,
+      )
+
+    output_graphs = list(output_graph_batch.ToNetworkXGraphs())
+
+    # Annotate the graphs with their GraphMeta.id column value.
+    for graph_id, input_graph, output_graph in zip(log.graph_indices,
+                                                   input_graphs, output_graphs):
+      input_graph.id = graph_id
+      output_graph.id = graph_id
+
+    return list(zip(input_graphs, output_graphs))
 
   def GetInputOutputGraphsForRandomBatch(self,
                                          epoch_num: int,
@@ -123,45 +178,37 @@ class RunLogAnalyzer(object):
       with features and labels, and each output graph is annotated with
       predictions.
     """
+    # Select a random batch with imperfect results.
     batches = self.batch_logs[(self.batch_logs['epoch'] == epoch_num) &
                               (self.batch_logs['type'] == epoch_type) &
                               (self.batch_logs['accuracy'] < 100)]
 
     random_row = batches.iloc[random.randint(0, len(batches) - 1)]
 
-    with self.log_db.Session() as session:
-      log: log_database.BatchLogMeta = session.query(log_database.BatchLogMeta) \
-        .filter(log_database.BatchLogMeta.run_id == self.run_id) \
-        .filter(log_database.BatchLogMeta.global_step == random_row.global_step) \
-        .one()
+    input_graph_batch = self.ReconstructBatchAtStep(random_row.global_step)
 
-      if not log.batch_log:
-        raise OSError("Cannot re-create batch dict without per-instance logs")
+    with prof.Profile(
+        f"Recreated {input_graph_batch.graph_count} input graphs"):
+      input_graphs = list(input_graph_batch.ToNetworkXGraphs())
 
-      input_graph_batch = self.ReconstructGraphBatch(log)
+    with prof.Profile(
+        f"Recreated {input_graph_batch.graph_count} output graphs"):
+      # Create a duplicate graph batch which has the model predictions set
+      # in place of the node_y or graph_y attributes.
+      output_graph_batch = graph_batcher.GraphBatch(
+          adjacency_lists=input_graph_batch.adjacency_lists,
+          edge_positions=input_graph_batch.edge_positions,
+          incoming_edge_counts=input_graph_batch.incoming_edge_counts,
+          node_x_indices=np.zeros(len(input_graph_batch.node_x_indices)),
+          node_y=log.predictions if input_graph_batch.has_node_y else None,
+          graph_x=None,
+          graph_y=log.predictions if input_graph_batch.has_graph_y else None,
+          graph_nodes_list=input_graph_batch.graph_nodes_list,
+          graph_count=input_graph_batch.graph_count,
+          log=input_graph_batch.log,
+      )
 
-      with prof.Profile(
-          f"Recreated {input_graph_batch.graph_count} input graphs"):
-        input_graphs = list(input_graph_batch.ToNetworkXGraphs())
-
-      with prof.Profile(
-          f"Recreated {input_graph_batch.graph_count} output graphs"):
-        # Create a duplicate graph batch which has the model predictions set
-        # in place of the node_y or graph_y attributes.
-        output_graph_batch = graph_batcher.GraphBatch(
-            adjacency_lists=input_graph_batch.adjacency_lists,
-            edge_positions=input_graph_batch.edge_positions,
-            incoming_edge_counts=input_graph_batch.incoming_edge_counts,
-            node_x_indices=np.zeros(len(input_graph_batch.node_x_indices)),
-            node_y=log.predictions if input_graph_batch.has_node_y else None,
-            graph_x=None,
-            graph_y=log.predictions if input_graph_batch.has_graph_y else None,
-            graph_nodes_list=input_graph_batch.graph_nodes_list,
-            graph_count=input_graph_batch.graph_count,
-            log=input_graph_batch.log,
-        )
-
-      output_graphs = list(output_graph_batch.ToNetworkXGraphs())
+    output_graphs = list(output_graph_batch.ToNetworkXGraphs())
 
     # Annotate the graphs with their GraphMeta.id column value.
     for graph_id, input_graph, output_graph in zip(log.graph_indices,
@@ -194,7 +241,8 @@ def SortGraphsByAccuracy(
 
 
 def ComputeGraphAccuracy(input_graph: nx.MultiDiGraph,
-                         output_graph: nx.MultiDiGraph):
+                         output_graph: nx.MultiDiGraph,
+                         averaging_method: str = 'weighted'):
   """Return the classification accuracy of the given input/output graph.
 
   Supports node-level or graph-level labels.
@@ -203,16 +251,30 @@ def ComputeGraphAccuracy(input_graph: nx.MultiDiGraph,
     Accuracy in the range 0 <= x <= 1.
   """
   try:
-    accuracy = int(input_graph.y == output_graph.y)
+    true_y = np.argmax(input_graph.y)
+    pred_y = np.argmax(output_graph.y)
+    output_graph.correct = true_y == pred_y
+    labels = np.arange(2, dtype=np.int32)
   except AttributeError:
     true_y = np.argmax([y for _, y in input_graph.nodes(data='y')], axis=1)
     pred_y = np.argmax([y for _, y in output_graph.nodes(data='y')], axis=1)
+    labels = np.arange(len(input_graph.nodes[0]['y']), dtype=np.int32)
     correct = (true_y == pred_y)
     for i, (_, data) in enumerate(output_graph.nodes(data=True)):
       data['correct'] = correct[i]
-    accuracy = (true_y == pred_y).mean()
-  output_graph.accuracy = accuracy
-  return accuracy
+
+  output_graph.accuracy = (true_y == pred_y).mean()
+  output_graph.precision = sklearn.metrics.precision_score(
+      true_y, pred_y, labels=labels, average=averaging_method)
+  output_graph.recall = sklearn.metrics.recall_score(true_y,
+                                                     pred_y,
+                                                     labels=labels,
+                                                     average=averaging_method)
+  output_graph.f1 = sklearn.metrics.f1_score(true_y,
+                                             pred_y,
+                                             labels=labels,
+                                             average=averaging_method)
+  return output_graph.accuracy
 
 
 def BuildConfusionMatrix(targets: np.array, predictions: np.array) -> np.array:
