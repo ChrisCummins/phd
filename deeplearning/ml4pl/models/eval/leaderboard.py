@@ -43,6 +43,10 @@ def GetProblemFromPickledGraphDbUrl(pickled_column_value: bytes):
     return 'alias_sets'
   elif 'polyhedra' in db_url:
     return 'polyhedras'
+  elif 'devmap_amd_unbalanced_split' in db_url:
+    return 'devmap_amd_unbalanced_split'
+  elif 'devmap_nvidia_unbalanced_split' in db_url:
+    return 'devmap_nvidia_unbalanced_split'
   elif 'devmap_amd' in db_url:
     return 'devmap_amd'
   elif 'devmap_nvidia' in db_url:
