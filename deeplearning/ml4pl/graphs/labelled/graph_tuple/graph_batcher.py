@@ -449,11 +449,9 @@ class GraphBatcher(object):
   def GetGraphsInGroupCount(self, groups: typing.List[str]) -> int:
     """Get the number of graphs in the given group(s)."""
     with self.db.Session() as s:
-      q = s.query(sql.func.count(graph_database.GraphMeta))
+      q = s.query(sql.func.count(graph_database.GraphMeta.id))
       q = q.filter(graph_database.GraphMeta.group.in_(groups))
       q = q.filter(graph_database.GraphMeta.node_count > 1)
-      for filter_cb in self._GetFilters():
-        q = q.filter(filter_cb())
       num_rows = q.one()[0]
     return num_rows
 
