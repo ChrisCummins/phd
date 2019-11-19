@@ -5,14 +5,14 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import labtypes
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.models.lstm import bytecode2seq
+from labm8 import app
+from labm8 import labtypes
 
 FLAGS = app.FLAGS
 
@@ -143,7 +143,9 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     self.graph_to_bytecode_grouping: typing.Dict[int,
                                                  EncodedBytecodeGrouping] = {}
 
-  def Encode(self, graph_ids: typing.List[int]):
+  def Encode(self, graph_ids: typing.List[int]
+            ) -> typing.Tuple[typing.Dict[int, np.array], typing.
+                              Dict[int, np.array], typing.Dict[int, np.array]]:
     """Serialize a graph into an encoded sequence.
 
     This method is used to provide a serialized sequence of encoded tokens
@@ -193,10 +195,11 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
         grouped.
 
     Returns:
-      A tuple of <encoded_sequences, statement_groupings, node_mask>, where
-      the encoded_sequences and statement_groupings are 2D matrices of shape
-      [len(graph_ids), self.max_sequence_length]. The node_mask is an array of
-      shape [len(graph_ids),?] which lists the nodes which are selected from
+      A tuple of <encoded_sequences, statement_groupings, node_mask>
+      dictionaries, which map graph_id to encoded sequences and statement
+      groupings (2D matrices of shape [len(graph_ids),
+      self.max_sequence_length]), and node_mask arrays of shape
+      [len(graph_ids),?] which list the nodes which are selected from
       each graph.
     """
     # Update the mapping from graph to bytecode IDs.
@@ -280,30 +283,6 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
 
     return encoded_sequences, segment_ids, node_masks
 
-    # encoded_sequences = [
-    #     ids_to_encoded_sequences[bytecode_id] for bytecode_id in bytecode_ids
-    # ]
-    # grouping_ids = [
-    #     ids_to_grouping_ids[bytecode_id] for bytecode_id in bytecode_ids
-    # ]
-    # node_masks = [
-    #     ids_to_node_masks[bytecode_id] for bytecode_id in bytecode_ids
-    # ]
-    #
-    # # Pad the sequences to the same length.
-    # encoded_sequences = np.array(
-    #     keras.preprocessing.sequence.pad_sequences(
-    #         encoded_sequences,
-    #         maxlen=self.bytecode_encoder.max_sequence_length,
-    #         value=self.bytecode_encoder.pad_val))
-    # grouping_ids = np.array(
-    #     keras.preprocessing.sequence.pad_sequences(
-    #         grouping_ids,
-    #         maxlen=self.bytecode_encoder.max_sequence_length,
-    #         value=max(max(m) for m in grouping_ids) + 1))
-    #
-    # return encoded_sequences, grouping_ids, node_masks
-
   @property
   def unlabelled_graph_db(self) -> graph_database.Database:
     """Get the database of unlabelled graphs."""
@@ -325,6 +304,7 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
+
     if not encoded_sequences == []:
       encoded_sequences = np.concatenate(encoded_sequences)
     if not statement_indices == []:
@@ -343,13 +323,17 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
         [1 if node in statement_nodes else 0 for node in graph.nodes()],
         dtype=np.int32)
 
+    if not any(node_mask):
+      return (np.array([], dtype=np.int32), np.array(
+          [], dtype=np.int32), np.array([], dtype=np.int32))
+
     strings_to_encode = [
         graph.nodes[n].get('original_text', '') for n in serialized_node_list
     ]
 
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
-    assert not ids or max(ids) < graph.number_of_nodes()
+    assert max(ids) < graph.number_of_nodes()
 
     return seqs, ids, node_mask
 
@@ -365,12 +349,20 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
         node_mask.append(1)
       else:
         node_mask.append(0)
+    node_mask = np.array(node_mask, dtype=np.int32)
+
+    if not any(node_mask):
+      return (np.array([], dtype=np.int32), np.array(
+          [], dtype=np.int32), np.array([], dtype=np.int32))
 
     strings_to_encode = labtypes.flatten([[
         graph.nodes[n].get('original_text', '')
         for n in graph_query.GetStatementsForNode(graph, identifier)
     ]
                                           for identifier in identifiers])
+
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
-    return seqs, ids, np.array(node_mask, dtype=np.int32)
+    assert max(ids) < graph.number_of_nodes()
+
+    return seqs, ids, node_mask

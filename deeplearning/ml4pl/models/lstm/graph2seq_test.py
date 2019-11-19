@@ -42,8 +42,8 @@ def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
   # Add a program graph, which is used by GraphToBytecodeGroupingsEncoder.
   g = nx.MultiDiGraph()
   g.add_node('root', type='magic')
-  g.add_node('a', type='statement', function='a', text='a')
-  g.add_node('%1', type='statement', function='a', text='%1')
+  g.add_node('a', type='statement', function='a', original_text='a')
+  g.add_node('%1', type='identifier', function='a', original_text='%1')
   g.add_edge('root', 'a', flow='call')
   g.add_edge('%1', 'a', flow='data')
   with db.Session(commit=True) as session:
@@ -86,12 +86,17 @@ def test_GraphToBytecodeGroupingsEncoder_Encode(
 
   encoded_sequences, segment_ids, node_masks = encoder.Encode([1])
 
+  assert 1 in encoded_sequences
+  assert 1 in segment_ids
+  assert 1 in node_masks
+
   assert len(encoded_sequences) == 1
-  assert len(encoded_sequences[0])
   assert len(segment_ids) == 1
-  assert len(segment_ids[0])
   assert len(node_masks) == 1
-  assert len(node_masks[0])
+
+  assert len(encoded_sequences[1])
+  assert len(segment_ids[1])
+  assert len(node_masks[1])
 
 
 if __name__ == '__main__':
