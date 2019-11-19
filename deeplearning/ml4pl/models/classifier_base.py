@@ -1,10 +1,10 @@
 """Base class for implementing classifier models."""
+import binascii
+import os
 import pickle
 import random
 import time
 import typing
-import os
-import binascii
 
 import numpy as np
 import sklearn.metrics
@@ -161,8 +161,10 @@ class ClassifierBase(object):
     y_true_1hot: np.array  # Shape [num_labels,num_classes]
     y_pred_1hot: np.array  # Shape [num_labels,num_classes]
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta,
-                   batch: typing.Any, print_context: typing.Any = None) -> MinibatchResults:
+  def RunMinibatch(self,
+                   log: log_database.BatchLogMeta,
+                   batch: typing.Any,
+                   print_context: typing.Any = None) -> MinibatchResults:
     """Process a mini-batch of data using the model.
 
     Args:
@@ -281,20 +283,23 @@ class ClassifierBase(object):
       # guestimate for test set size on the full dataset
       epoch_size = min(epoch_size, 206000)
 
-    bar = tqdm.tqdm(total=epoch_size,
-                    desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}",
-                    unit='graphs',
-                    position=1,
-                    )
+    bar = tqdm.tqdm(
+        total=epoch_size,
+        desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}",
+        unit='graphs',
+        position=1,
+    )
     loss_sum = acc_sum = prec_sum = rec_sum = 0.0
-    
 
     # Whether to record per-instance batch logs.
     record_batch_logs = epoch_type in FLAGS.batch_log_types
 
     batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-        self.MakeMinibatchIterator(epoch_type, groups, print_context=bar.external_write_mode), max_queue_size=5)
+        self.MakeMinibatchIterator(epoch_type,
+                                   groups,
+                                   print_context=bar.external_write_mode),
+        max_queue_size=5)
 
     for step, (log, batch_data) in enumerate(batch_generator):
       if not log.graph_count:
@@ -314,9 +319,11 @@ class ClassifierBase(object):
       y_true = np.argmax(targets, axis=1)
       y_pred = np.argmax(predictions, axis=1)
 
-
-      app.Log(4, 'Bincount y_true: %s, pred_y: %s', np.bincount(y_true),
-              np.bincount(y_pred), print_context=bar.external_write_mode)
+      app.Log(4,
+              'Bincount y_true: %s, pred_y: %s',
+              np.bincount(y_true),
+              np.bincount(y_pred),
+              print_context=bar.external_write_mode)
 
       accuracies = y_true == y_pred
 
@@ -351,10 +358,9 @@ class ClassifierBase(object):
 
       log.elapsed_time_seconds = time.time() - batch_start_time
 
-
       # now only for debugging:
       app.Log(6, "%s", log, print_context=bar.external_write_mode)
-      
+
       # update epoch-so-far avgs for printing in bar
       loss_sum += log.loss
       acc_sum += log.accuracy
@@ -371,7 +377,9 @@ class ClassifierBase(object):
       # and epochs may take O(hours). Alternatively we could store all of the
       # logs for an epoch in-memory and write them in a single shot, but this
       # might consume a lot of memory (when the predictions arrays are large).
-      with prof.Profile(f"Wrote log to database in", print_to=lambda msg: app.Log(5, msg, bar.external_write_mode)):
+      with prof.Profile("Wrote log to database",
+                        print_to=lambda msg: app.Log(
+                            5, msg, print_context=bar.external_write_mode)):
         with self.log_db.Session(commit=True) as session:
           session.add(log)
 
