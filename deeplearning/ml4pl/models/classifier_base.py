@@ -277,7 +277,13 @@ class ClassifierBase(object):
       # guestimate for test set size on the full dataset
       epoch_size = min(epoch_size, 206000)
 
-    bar = tqdm.tqdm(total=epoch_size, desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}")
+    bar = tqdm.tqdm(total=epoch_size,
+                    desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}",
+                    unit='graphs',
+                    position=1,
+                    )
+    loss_sum = acc_sum = prec_sum = rec_sum = 0.0
+    
 
     # Whether to record per-instance batch logs.
     record_batch_logs = epoch_type in FLAGS.batch_log_types
@@ -342,8 +348,20 @@ class ClassifierBase(object):
       log.elapsed_time_seconds = time.time() - batch_start_time
 
 
-      app.Log(2, "%s", log, print_context=bar.external_write_mode)
+      # now only for debugging:
+      app.Log(6, "%s", log, print_context=bar.external_write_mode)
+      
+      # update epoch-so-far avgs for printing in bar
+      loss_sum += log.loss
+      acc_sum += log.accuracy
+      prec_sum += log.precision
+      rec_sum += log.recall
+      bar.set_postfix(loss=loss_sum / (step + 1),
+                      acc=acc_sum / (step + 1),
+                      prec=prec_sum / (step + 1),
+                      rec=rec_sum / (step + 1))
       bar.update(log.graph_count)
+
       # Create a new database session for every batch because we don't want to
       # leave the connection lying around for a long time (they can drop out)
       # and epochs may take O(hours). Alternatively we could store all of the
@@ -384,7 +402,13 @@ class ClassifierBase(object):
     train_groups = list(
         set(self.batcher.stats.groups) - {val_group, test_group})
 
-    for epoch_num in range(self.epoch_num, self.epoch_num + num_epochs):
+    for epoch_num in tqdm.tqdm(
+        range(self.epoch_num, self.epoch_num + num_epochs),
+        unit='ep',
+        initial=self.epoch_num,
+        total=self.epoch_num + num_epochs,
+        position=0,
+        desc=f"(Grps:{test_group}|{val_group}) " + self.run_id):
       self.epoch_num = epoch_num + 1
       epoch_start_time = time.time()
 

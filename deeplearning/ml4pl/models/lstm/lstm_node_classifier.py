@@ -183,7 +183,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
                        loss_weights=[1.0])
 
   def GetEncodedBytecodes(
-      self, bytecode_ids: typing.List[int]
+      self, bytecode_ids: typing.List[int], print_context: typing.Any = None
   ) -> typing.Tuple[typing.List[np.array], typing.List[np.array], typing.
                     List[np.array]]:
     """Get the encoded bytecodes.
@@ -263,7 +263,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       # Get the encoded bytecodes.
       bytecode_ids = batch.log._transient_data['bytecode_ids']
       encoded_sequences, segment_ids, node_masks = self.GetEncodedBytecodes(
-          bytecode_ids)
+          bytecode_ids, print_context=print_context)
 
       # takes node_y and node_x_indices and splits it
       # such that the resulting lists hold one graph of the batch per element
@@ -353,7 +353,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
           'node_y': node_y_per_graph,
       }
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any, print_context=None
+  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any, print_context: typing.Any = None
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
     log.loss = 0
