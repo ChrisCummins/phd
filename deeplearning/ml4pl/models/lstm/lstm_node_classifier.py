@@ -8,9 +8,9 @@ import tensorflow as tf
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import encoded_bytecode_database
 from deeplearning.ml4pl.models.lstm import graph2seq
@@ -127,10 +127,11 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       segment_sums = [
           # Note the slice so that graphs larger than max_nodes_in_graph are
           # truncated.
-          tf.math.unsorted_segment_sum(data=encoded_tokens[i],
-                                       segment_ids=segment_ids[i],
-                                       num_segments=max_segment_id)
-          [:FLAGS.max_nodes_in_graph] for i in range(FLAGS.batch_size)
+          tf.math.unsorted_segment_sum(
+              data=encoded_tokens[i][:FLAGS.max_encoded_length],
+              segment_ids=segment_ids[i][:FLAGS.max_encoded_length],
+              num_segments=max_segment_id)[:FLAGS.max_nodes_in_graph]
+          for i in range(FLAGS.batch_size)
       ]
 
       return tf.stack(segment_sums, axis=0)
@@ -216,13 +217,15 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     bytecode_ids_to_encode = list(unique_bytecode_ids -
                                   id_to_encoded_sequences.keys())
     if bytecode_ids_to_encode:
-      with prof.Profile(f'Encoded {len(bytecode_ids_to_encode)} bytecodes',
-                        print_to=lambda x: app.Log(2, x, print_context=print_context)):
+      with prof.Profile(
+          f'Encoded {len(bytecode_ids_to_encode)} bytecodes',
+          print_to=lambda x: app.Log(2, x, print_context=print_context)):
         encoded_sequences, grouping_ids, node_masks = self.encoder.EncodeBytecodes(
             bytecode_ids_to_encode)
 
-      with prof.Profile(f'Storing {len(encoded_sequences)} encoded sequences',
-                        print_to=lambda x: app.Log(2, x, print_context=print_context)):
+      with prof.Profile(
+          f'Storing {len(encoded_sequences)} encoded sequences',
+          print_to=lambda x: app.Log(2, x, print_context=print_context)):
         with self.encoded_bytecode_db.Session(commit=True) as session:
           for bytecode_id, encoded_sequence, segment_ids, node_mask in zip(
               bytecode_ids_to_encode, encoded_sequences, grouping_ids,
@@ -243,7 +246,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     )
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str], print_context: typing.Any = None
+      self,
+      epoch_type: str,
+      groups: typing.List[str],
+      print_context: typing.Any = None
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
@@ -256,9 +262,8 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     max_instance_count = (
         FLAGS.max_train_per_epoch if epoch_type == 'train' else
         FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
-    for batch in self.batcher.MakeGraphBatchIterator(options,
-                                                     max_instance_count,
-                                                     print_context=print_context):
+    for batch in self.batcher.MakeGraphBatchIterator(
+        options, max_instance_count, print_context=print_context):
       # Get the encoded bytecodes.
       bytecode_ids = batch.log._transient_data['bytecode_ids']
       encoded_sequences, segment_ids, node_masks = self.GetEncodedBytecodes(
@@ -295,7 +300,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
       #if app.GetVerbosity >= 5:
       #  with print_context():
       #    app.Log(5, "Padding graph batch to %s nodes", max_nodes_in_graph)
-      app.Log(5, "Padding graph batch to %s nodes", max_nodes_in_graph, print_context=print_context)
+      app.Log(5,
+              "Padding graph batch to %s nodes",
+              max_nodes_in_graph,
+              print_context=print_context)
 
       # Shape (batch_size, max_nodes_in_graph, 2)
       node_y_truncated = np.array(
@@ -352,7 +360,10 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
           'node_y': node_y_per_graph,
       }
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta, batch: typing.Any, print_context: typing.Any = None
+  def RunMinibatch(self,
+                   log: log_database.BatchLogMeta,
+                   batch: typing.Any,
+                   print_context: typing.Any = None
                   ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
     log.loss = 0
@@ -364,8 +375,9 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
     ]
     y = [batch['node_y_truncated']]
 
-    with prof.Profile(f'model.train_on_batch() {len(y[0])} instances',
-                      print_to=lambda x: app.Log(5, x, print_context=print_context)):
+    with prof.Profile(
+        f'model.train_on_batch() {len(y[0])} instances',
+        print_to=lambda x: app.Log(5, x, print_context=print_context)):
       if log.type == 'train':
         loss = self.model.train_on_batch(x, y)[0]
         log.loss = loss
