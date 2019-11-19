@@ -325,9 +325,10 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
-
-    encoded_sequences = np.concatenate(encoded_sequences)
-    statement_indices = np.concatenate(statement_indices)
+    if not encoded_sequences == []:
+      encoded_sequences = np.concatenate(encoded_sequences)
+    if not statement_indices == []:
+      statement_indices = np.concatenate(statement_indices)
 
     return encoded_sequences, np.array(statement_indices, dtype=np.int32)
 
@@ -348,7 +349,7 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
 
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
-    assert max(ids) < graph.number_of_nodes()
+    assert not ids or max(ids) < graph.number_of_nodes()
 
     return seqs, ids, node_mask
 
