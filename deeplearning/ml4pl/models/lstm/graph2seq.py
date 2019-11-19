@@ -5,14 +5,14 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import labtypes
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.models.lstm import bytecode2seq
+from labm8 import app
+from labm8 import labtypes
 
 FLAGS = app.FLAGS
 
