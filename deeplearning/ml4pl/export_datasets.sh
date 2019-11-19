@@ -25,7 +25,7 @@ export_dataset() {
   else
     rm -f "$EXPORT/${dataset}_$TIMESTAMP.db"
     bazel run //deeplearning/ml4pl/graphs:copy_database -- \
-        --input_db="file:///users/zfisches/cc1.mysql?ml4pl_${dataset}?charset=utf8" \
+        --input_db="file:///var/phd/db/cc1.mysql?ml4pl_${dataset}?charset=utf8" \
         --output_db="sqlite:////$EXPORT/${dataset}_$TIMESTAMP.db" \
         --max_rows=4096
     create_tarballs
@@ -34,12 +34,14 @@ export_dataset() {
 
 main() {
   # export_dataset bytecode
-  export_dataset devmap_amd
-  export_dataset devmap_nvidia
-  export_dataset reachability
-  export_dataset domtree
-  export_dataset datadep
-  export_dataset liveness
-  export_dataset subexpressions
+  export_dataset devmap_amd_unbalanced_split
+  export_dataset devmap_nvidia_unbalanced_split
+#  export_dataset devmap_amd
+#  export_dataset devmap_nvidia
+#  export_dataset reachability
+#  export_dataset domtree
+#  export_dataset datadep
+#  export_dataset liveness
+#  export_dataset subexpressions
 }
 main $@
