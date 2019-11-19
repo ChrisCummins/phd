@@ -3,6 +3,8 @@ import pickle
 import random
 import time
 import typing
+import os
+import binascii
 
 import numpy as np
 import sklearn.metrics
@@ -187,7 +189,9 @@ class ClassifierBase(object):
 
     # TODO(cec): Check in the database that the run ID is unique. If not,
     # wait a second.
-    self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}@"
+    # had to solve it for the batch scheduler to work reliably...
+    unique = binascii.b2a_hex(os.urandom(15))[:5]
+    self.run_id: str = (f"{time.strftime('%Y%m%dT%H%M%S')}-{unique}@"
                         f"{system.HOSTNAME}")
     app.Log(1, "Run ID: %s", self.run_id)
 
