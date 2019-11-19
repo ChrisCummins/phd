@@ -4,9 +4,9 @@ import typing
 import numpy as np
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models import base_utils
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -25,7 +25,10 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
     self.class_counts = np.zeros(self.labels_dimensionality, dtype=np.int32)
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str], print_context: typing.Any = None
+      self,
+      epoch_type: str,
+      groups: typing.List[str],
+      print_context: typing.Any = None
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, np.array]]:
     options = graph_batcher.GraphBatchOptions(max_nodes=FLAGS.batch_size,
                                               groups=groups)
@@ -70,7 +73,6 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
-  app.Log = base_utils.AppLogWrapper()
   classifier_base.Run(ZeroRClassifier)
 
 

@@ -422,8 +422,6 @@ def main():
   # TODO(cec): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
   warnings.filterwarnings("ignore")
 
-  app.Log = base_utils.AppLogWrapper()
-
   # Hopefully not required as a solution. Instead I maybe discard the last batch
   # This is common practice in ML, although it's not ideal for testing but on 200k graphs, I just don't care.
 

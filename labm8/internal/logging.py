@@ -88,7 +88,12 @@ def Log(calling_module_name: str, level: int, msg, *args, **kwargs):
   """
   module_level = GetModuleVerbosity(calling_module_name)
   if level <= module_level:
-    absl_logging.info(msg, *args, **kwargs)
+    print_context = kwargs.pop('print_context', None)
+    if print_context:
+      with print_context():
+        absl_logging.info(msg, *args, **kwargs)
+    else:
+      absl_logging.info(msg, *args, **kwargs)
 
 
 @absl_logging.skip_log_prefix
