@@ -1,14 +1,14 @@
 """A module for reaching graphs from graph databases."""
 import enum
 import random
-import typing
-
 import sqlalchemy as sql
+import typing
 
 from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
+
 
 FLAGS = app.FLAGS
 
@@ -71,12 +71,13 @@ def BufferedGraphReader(
       # read all of the IDs that match the query, then iterate through the list
       # of IDs in batches.
       query = session.query(graph_database.GraphMeta.id)
-      for filter_cb in filters:
-        query = query.filter(filter_cb())
 
       # Graphs that fail during dataset generation are inserted as zero-node
       # entries. Ignore those.
       query = query.filter(graph_database.GraphMeta.node_count > 1)
+
+      for filter_cb in filters:
+        query = query.filter(filter_cb())
 
       # If we are ordering with global random then we can scan through the
       # graph table using index range checks, so we need the IDs sorted.
@@ -94,7 +95,7 @@ def BufferedGraphReader(
     # When we are limiting the number of rows and not reading the table in
     # order, pick a random starting point in the list of IDs.
     if limit and order != BufferedGraphReaderOrder.IN_ORDER:
-      batch_start = random.randint(0, max(len(ids) - limit, 0))
+      batch_start = random.randint(0, max(len(ids) - limit - 1, 0))
       ids = ids[batch_start:batch_start + limit]
     elif limit:
       # If we are reading the table in order, we must still respect the limit
@@ -107,10 +108,6 @@ def BufferedGraphReader(
       ids = ids[buffer_size:]
 
       query = session.query(graph_database.GraphMeta)
-
-      # Apply the requested filters.
-      for filter in filters:
-        query = query.filter(filter())
 
       if eager_graph_loading:
         # Combine the graph data and graph meta queries.
@@ -125,8 +122,17 @@ def BufferedGraphReader(
       else:
         query = query.filter(graph_database.GraphMeta.id >= batch_ids[0],
                              graph_database.GraphMeta.id <= batch_ids[-1])
+        # Note that for index range comparisons we must repeat the same
+        # filters as when first getting the graphs.
+        query = query.filter(graph_database.GraphMeta.node_count > 1)
+        for filter in filters:
+          query = query.filter(filter())
 
       graph_metas = query.all()
+
+      if len(graph_metas) != len(batch_ids):
+        raise OSError(f"Requested {len(batch_ids)} graphs in a batch but "
+                      f"received {len(graph_metas)}")
 
       # For batch-level random ordering, shuffle the result of the (in-order)
       # graph query.
