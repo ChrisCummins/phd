@@ -8,7 +8,7 @@ def stamp(stuff):
     hex_dig = hash_object.hexdigest()
     return hex_dig[:7]
 
-def ggnn_devmap_hyperopt(start_step=0, gpus=[0,1,2,3], how_many=None, test_groups=[0,1,2,3,4,5,6,7,8,9]):
+def ggnn_devmap_hyperopt(start_step=0, gpus=[0,1,2,3], how_many=None, test_groups='kfold'):
     # GGNN DEVMAP HYPER OPT SERIES
     # fix
     log_db = 'ggnn_devmap_hyperopt.db'
@@ -24,7 +24,7 @@ def ggnn_devmap_hyperopt(start_step=0, gpus=[0,1,2,3], how_many=None, test_group
     pos_choices = ['off', 'fancy']
     
     # order is important!
-    template_keys = ['state_drop','timesteps','dataset','batch_size','out_drop','edge_drop','emb','pos']
+    hyperparam_keys = ['state_drop','timesteps','dataset','batch_size','out_drop','edge_drop','emb','pos']
     opt_space = [[state_drops[0]], [timestep_choices[0]], datasets, [batch_sizes[0]], out_drops, edge_drops, embs, pos_choices]
     configs = list(itertools.product(*opt_space))
     length = len(configs)
@@ -37,18 +37,25 @@ def ggnn_devmap_hyperopt(start_step=0, gpus=[0,1,2,3], how_many=None, test_group
     # cd phd; export CUDA_VISIBLE_DEVICES={device}; \
     
     template = """#!/bin/bash
-#SBATCH --job-name=devmap
-#SBATCH --time=00:30:00
+#SBATCH --job-name=dvmp{i:03d}
+#SBATCH --time={timelimit}
 #SBATCH --partition=total
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=ALL
+#SBATCH --cpus-per-task=8
 #SBATCH --mail-user=zacharias.vf@gmail.com
 #SBATCH --exclude=ault07,ault08
 
 source /users/zfisches/.bash_profile;
 cd /users/zfisches/phd;
 
-bazel run //deeplearning/ml4pl/models/ggnn:ggnn -- \
+# Make sure you run the build command before launching:
+# {build_command}
+# Alternatively run manually with
+# cd phd; export CUDA_VISIBLE_DEVICES=0;
+# bazel run //deeplearning/ml4pl/models/ggnn:ggnn --
+
+srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
 --graph_db='sqlite:////users/zfisches/db/devmap_{dataset}_20191113.db' \
 --log_db='sqlite:////users/zfisches/{log_db}' \
 --working_dir='/users/zfisches/logs_ggnn_devmap_20191117' \
@@ -62,40 +69,62 @@ bazel run //deeplearning/ml4pl/models/ggnn:ggnn -- \
 --edge_weight_dropout_keep_prob={edge_drop} \
 --batch_size={batch_size} \
 --manual_tag=HyperOpt-{i:03d}-{stamp} \
-    """
+"""  # NO WHITESPACE!!!
+
+    build_command = "bazel build //deeplearning/ml4pl/models/ggnn"
+
 
     if test_groups == 'kfold':
-        template += template + '--kfold'
+        template += ' --kfold'
         test_groups=['kfold']
     else:
-        template += "--test_group={test_group} --val_group={val_group}"
+        template += " --test_group={test_group} --val_group={val_group}"
     for g in test_groups:
-        print(f'############### TEST GROUP {g} ##############\n')
+        path = (base_path / str(g))
+        path.mkdir(parents=True, exist_ok=True)
+        readme = open(path/'README.txt', 'w')
+        print(f'############### TEST GROUP {g} ##############\n', file=readme)
+        print(hyperparam_keys, file=readme)
+        print("\n", file=readme)
         for i in range(start_step, start_step + how_many):
-            config = dict(zip(template_keys, configs[i]))
-            print(f'############## HYPEROPT {i} ###################\n')
-            print(config)
-            print('')
+            config = dict(zip(hyperparam_keys, configs[i]))
+            stmp = stamp(config)
+            print(f"HyperOpt-{i:03d}-{stmp}: " +  str(config), file=readme)
             config.update({
-                'stamp': stamp(config),
+                'stamp': stmp,
                 'log_db': log_db,
                 'i': i,
+                'build_command': build_command,
                 # 'device': gpus[i % len(gpus)]
             })
             if not g == 'kfold':
-                config.update({'test_group': g,
+                config.update({'timelimit': '00:30:00',
+                              'test_group': g,
                               'val_group': (g + 1) % 9})
+            else: #kfold 4h
+                config.update({'timelimit': '04:00:00'})
+
             print(template.format(**config))
-            print('\n\n\n\n')
+            print('\n')
             
-            (base_path / str(g)).mkdir(parents=True, exist_ok=True)
-            with open(base_path / str(g) / f'run_{g}_{i:03d}.sh', 'w') as f:
+            with open(base_path / str(g) / f'run_{g}_{i:03d}_{stmp}.sh', 'w') as f:
                 f.write(template.format(**config))
+                f.write(f"\n# HyperOpt-{i:03d}-{stmp}:")
+                f.write(f"\n# {config}\n")
+        readme.close()
+    readme.close()
+    print("Success.")
+    # print(build_helper.format(build_command=build_command))
+    print("Build before run with:\n")
+    print(build_command)
 
 
 if __name__ == '__main__':
     import sys
-    tg = sys.argv[1]
-    tgs = [int(tg)]
+    if len(sys.argv) > 1:
+        tg = sys.argv[1]
+        tgs = [int(tg)]
+    else:
+        tgs = 'kfold'
     base_path = Path('/users/zfisches/phd/deeplearning/ml4pl/scripts/devmap_runs/')
     ggnn_devmap_hyperopt(test_groups=tgs)
