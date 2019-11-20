@@ -188,7 +188,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
-    node_states_per_layer = [encoded_node_x]
+    node_states_per_layer = [self.encoded_node_x]
 
     # Number of nodes in batch.
     num_nodes_in_batch = self.placeholders['node_count']
