@@ -174,7 +174,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
       for i in range(len(embeddings)):
         self.weights[f'node_embeddings_{i}'] = embeddings[i]
 
-      encoded_node_x = tf.compat.v1.concat([
+      self.encoded_node_x = tf.compat.v1.concat([
           tf.nn.embedding_lookup(self.weights[f'node_embeddings_{i}'],
                                  ids=self.placeholders['node_x'][:, i])
           for i in range(len(embeddings))
@@ -503,7 +503,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
                       "MakeLossAndAccuracyAndPredictionOps()")
 
     predictions = utils.MakeModularOutputLayer(
-        self.placeholders['node_x'],
+        self.encoded_node_x,
         self.placeholders['raw_node_output_features'],
         self.weights['regression_gate'], self.weights['regression_transform'])
 
