@@ -12,6 +12,18 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "ault_export_leaderboard",
+    srcs = ["ault_export_leaderboard.py"],
+    deps = [
+        ":google_sheets",
+        ":leaderboard",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8:app",
+        "//labm8:prof",
+    ],
+)
+
 py_library(
     name = "google_sheets",
     srcs = ["google_sheets.py"],
