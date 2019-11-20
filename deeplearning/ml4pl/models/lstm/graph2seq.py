@@ -78,7 +78,10 @@ class GraphToBytecodeEncoder(EncoderBase):
         if graph_id not in self.graph_to_encoded_bytecode
     ]
 
-    if unknown_graph_ids:
+    if unknown_graph_ids:  
+      # we hope this will not be printed at epoch 2...
+      app.Log(1, "unknown_graph_ids has length %s and ids %s", len(unknown_graph_ids), unknown_graph_ids)
+
       # Look the bytecode IDs of any unknown graphs.
       with self.graph_db.Session() as session:
         query = session.query(graph_database.GraphMeta.id,

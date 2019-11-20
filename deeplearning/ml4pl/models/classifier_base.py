@@ -313,6 +313,7 @@ class ClassifierBase(object):
       log.global_step = self.global_training_step
       log.run_id = self.run_id
 
+      # at this point we are pretty sure that batch_data has in fact at least one sequence.
       targets, predictions = self.RunMinibatch(log, batch_data)
 
       # Compute statistics.

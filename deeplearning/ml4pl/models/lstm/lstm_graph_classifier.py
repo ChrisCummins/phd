@@ -135,6 +135,7 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
             batch.log._transient_data['graph_indices'])
       # for graph_classifier we just need graph_x, graph_y split per graph
       # which is already the case.
+      assert len(encoded_sequences) > 0
       yield batch.log, { # vstack lists to np.arrays w/ [batch, ...] shape
           'encoded_sequences': np.vstack(encoded_sequences),
           'graph_x': np.vstack(batch.graph_x),

@@ -506,6 +506,7 @@ class GraphBatcher(object):
             humanize.Commas(batch.log.node_count),
             humanize.Duration(elapsed_time),
             humanize.Commas(batch.log.graph_count / elapsed_time), print_context=print_context)
+        assert batch.log.graph_count > 0
         yield batch
       else:
         return
