@@ -29,6 +29,8 @@ app.DEFINE_string('graph_reader_buffer_size', '1024', "")
 app.DEFINE_string("max_encoded_length", None, "")
 app.DEFINE_string('bytecode_encoder', 'llvm',
                   'The encoder to use. One of {opencl,llvm,inst2vec}')
+app.DEFINE_string('batch_size', '64',
+    "ATTENTION: ANY BATCH_SIZE LARGER THAN 25 WILL BREAK UNBALANCED DEVMAP AS THE SMALLEST SPLIT IS 25 GUYS.")
 
 FLAGS = app.FLAGS
 
@@ -89,9 +91,10 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
         str(LSTM), '--num_epochs', '50', '--bytecode_db', FLAGS.bytecode_db,
         '--hidden_size', '64', '--vmodule', "*=5",
         '--cudnn_lstm' if FLAGS.cudnn_lstm else '--nocudnn_lstm',
-        '--batch_size', '64', '--bytecode_encoder', FLAGS.bytecode_encoder,
+        '--batch_size', FLAGS.batch_size, '--bytecode_encoder', FLAGS.bytecode_encoder,
         '--mysql_engine_pool_size', '20',
         '--mysql_engine_max_overflow', '20',
+        #'--graph_reader_order', 'global_random',
     ] + base_flags
     if FLAGS.max_encoded_length:
       lstm_flags.extend(['--max_encoded_length', FLAGS.max_encoded_length])
