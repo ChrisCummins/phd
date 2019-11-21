@@ -1,6 +1,6 @@
 """Print a summary table of model results."""
 import io
-
+import pickle
 import pandas as pd
 import sqlalchemy as sql
 
@@ -29,16 +29,31 @@ def GetLeaderboard(log_db: log_database.Database,
     # Create a table with batch log stats.
     query = session.query(
         log_database.BatchLogMeta.run_id,
-        sql.func.sum(
-            log_database.BatchLogMeta.elapsed_time_seconds).label('runtime'),
         sql.func.max(log_database.BatchLogMeta.date_added).label('last_log'),
-        sql.func.count(log_database.BatchLogMeta.run_id).label("batches"))
+        log_database.BatchLogMeta.epoch,
+        sql.func.count(log_database.BatchLogMeta.run_id).label("num_batches"),
+        sql.func.avg(log_database.BatchLogMeta.accuracy).label('accuracy'),
+        sql.func.avg(log_database.BatchLogMeta.precision).label('precision'),
+        sql.func.avg(log_database.BatchLogMeta.recall).label('recall'))
+    query = query.filter(log_database.BatchLogMeta.type == 'test')
     query = query.group_by(log_database.BatchLogMeta.run_id)
     query = query.group_by(log_database.BatchLogMeta.epoch)
     df = pdutil.QueryToDataFrame(session, query)
-    df.set_index(['run_id', 'epoch'], inplace=True)
+    df.set_index(['run_id'], inplace=True)
 
-    # TODO: Print all test stats.
+    # Add extra model flags.
+    model_flags = ['restore_model'] + FLAGS.extra_model_flags
+    for flag in model_flags:
+      query = session.query(log_database.Parameter.run_id,
+                            log_database.Parameter.pickled_value.label(flag))
+      query = query.filter(
+          sql.func.lower(log_database.Parameter.type) == 'model_flag')
+      query = query.filter(log_database.Parameter.parameter == flag)
+      aux_df = pdutil.QueryToDataFrame(session, query)
+      # Un-pickle flag value.
+      pdutil.RewriteColumn(aux_df, flag, lambda x: pickle.loads(x))
+      aux_df.set_index('run_id', inplace=True)
+      df = df.join(aux_df)
 
     return df
 
