@@ -1,14 +1,14 @@
 """A module for reaching graphs from graph databases."""
 import enum
 import random
-import sqlalchemy as sql
 import typing
+
+import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
-
 
 FLAGS = app.FLAGS
 
@@ -61,9 +61,10 @@ def BufferedGraphReader(
   """
   filters = filters or []
 
-  with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graph "
-                               "IDs from database"),
-                    print_to=lambda msg: app.Log(3, msg, print_context=print_context)):
+  with prof.Profile(
+      lambda t: (f"Selected {humanize.Commas(len(ids))} graph "
+                 f"IDs from database using query {query}"),
+      print_to=lambda msg: app.Log(3, msg, print_context=print_context)):
     with db.Session() as session:
       # Random ordering means that we can't use
       # labm8.sqlutil.OffsetLimitBatchedQuery() to read results as each query
@@ -86,7 +87,7 @@ def BufferedGraphReader(
       else:
         query = query.order_by(graph_database.GraphMeta.id)
 
-      ids = [r[0] for r in query]
+      ids = [r[0] for r in query.all()]
 
     if not ids:
       raise ValueError(
