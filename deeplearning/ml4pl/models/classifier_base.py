@@ -680,7 +680,7 @@ class ClassifierBase(object):
     for flag, flag_value in flags.items():
       if flag_value != saved_flags[flag]:
         raise EnvironmentError(
-            f"Saved flag {flag} value does not match current value:"
+            f"Saved flag '{flag}' value does not match current value:"
             f"'{saved_flags[flag]}' != '{flag_value}'")
 
   def ModelFlagsToDict(self) -> typing.Dict[str, typing.Any]:
