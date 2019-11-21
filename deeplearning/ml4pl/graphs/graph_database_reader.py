@@ -61,10 +61,7 @@ def BufferedGraphReader(
   """
   filters = filters or []
 
-  with prof.Profile(
-      lambda t: (f"Selected {humanize.Commas(len(ids))} graph "
-                 f"IDs from database using query {query}"),
-      print_to=lambda msg: app.Log(3, msg, print_context=print_context)):
+  with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graph")):
     with db.Session() as session:
       # Random ordering means that we can't use
       # labm8.sqlutil.OffsetLimitBatchedQuery() to read results as each query
@@ -89,55 +86,53 @@ def BufferedGraphReader(
 
       ids = [r[0] for r in query.all()]
 
-    if not ids:
-      raise ValueError(
-          f"Query on database `{db.url}` returned no results: `{q}`")
+  if not ids:
+    raise ValueError(f"Query on database `{db.url}` returned no results: `{q}`")
 
-    # When we are limiting the number of rows and not reading the table in
-    # order, pick a random starting point in the list of IDs.
-    if limit and order != BufferedGraphReaderOrder.IN_ORDER:
-      batch_start = random.randint(0, max(len(ids) - limit - 1, 0))
-      ids = ids[batch_start:batch_start + limit]
-    elif limit:
-      # If we are reading the table in order, we must still respect the limit
-      # argument.
-      ids = ids[:limit]
+  # When we are limiting the number of rows and not reading the table in
+  # order, pick a random starting point in the list of IDs.
+  if limit and order != BufferedGraphReaderOrder.IN_ORDER:
+    batch_start = random.randint(0, max(len(ids) - limit - 1, 0))
+    ids = ids[batch_start:batch_start + limit]
+  elif limit:
+    # If we are reading the table in order, we must still respect the limit
+    # argument.
+    ids = ids[:limit]
 
-    while ids:
-      # Peel off a batch of IDs to query.
-      batch_ids = ids[:buffer_size]
-      ids = ids[buffer_size:]
+  while ids:
+    # Peel off a batch of IDs to query.
+    batch_ids = ids[:buffer_size]
+    ids = ids[buffer_size:]
 
-      query = session.query(graph_database.GraphMeta)
+    query = session.query(graph_database.GraphMeta)
 
-      if eager_graph_loading:
-        # Combine the graph data and graph meta queries.
-        query = query.options(sql.orm.joinedload(
-            graph_database.GraphMeta.graph))
+    if eager_graph_loading:
+      # Combine the graph data and graph meta queries.
+      query = query.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
 
-      # If we are reading in global random order then we must perform ID checks
-      # for all IDs in the batch. If not then we have ordered the IDs by value
-      # so we can use (faster) index range comparisons.
-      if order == BufferedGraphReaderOrder.GLOBAL_RANDOM:
-        query = query.filter(graph_database.GraphMeta.id.in_(batch_ids))
-      else:
-        query = query.filter(graph_database.GraphMeta.id >= batch_ids[0],
-                             graph_database.GraphMeta.id <= batch_ids[-1])
-        # Note that for index range comparisons we must repeat the same
-        # filters as when first getting the graphs.
-        query = query.filter(graph_database.GraphMeta.node_count > 1)
-        for filter in filters:
-          query = query.filter(filter())
+    # If we are reading in global random order then we must perform ID checks
+    # for all IDs in the batch. If not then we have ordered the IDs by value
+    # so we can use (faster) index range comparisons.
+    if order == BufferedGraphReaderOrder.GLOBAL_RANDOM:
+      query = query.filter(graph_database.GraphMeta.id.in_(batch_ids))
+    else:
+      query = query.filter(graph_database.GraphMeta.id >= batch_ids[0],
+                           graph_database.GraphMeta.id <= batch_ids[-1])
+      # Note that for index range comparisons we must repeat the same
+      # filters as when first getting the graphs.
+      query = query.filter(graph_database.GraphMeta.node_count > 1)
+      for filter in filters:
+        query = query.filter(filter())
 
-      graph_metas = query.all()
+    graph_metas = query.all()
 
-      if len(graph_metas) != len(batch_ids):
-        raise OSError(f"Requested {len(batch_ids)} graphs in a batch but "
-                      f"received {len(graph_metas)}")
+    if len(graph_metas) != len(batch_ids):
+      raise OSError(f"Requested {len(batch_ids)} graphs in a batch but "
+                    f"received {len(graph_metas)}")
 
-      # For batch-level random ordering, shuffle the result of the (in-order)
-      # graph query.
-      if order == BufferedGraphReaderOrder.BATCH_RANDOM:
-        random.shuffle(graph_metas)
+    # For batch-level random ordering, shuffle the result of the (in-order)
+    # graph query.
+    if order == BufferedGraphReaderOrder.BATCH_RANDOM:
+      random.shuffle(graph_metas)
 
-      yield from graph_metas
+    yield from graph_metas
