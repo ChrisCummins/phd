@@ -101,95 +101,22 @@ GGNNWeights = collections.namedtuple(
 class GgnnClassifier(ggnn.GgnnBaseModel):
   """GGNN model for node-level or graph-level classification."""
 
-  def MakeLossAndAccuracyAndPredictionOps(
-      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
-    layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
-    app.Log(
-        1, "Using layer timesteps: %s for a total of %s message passing "
-        "steps", layer_timesteps, self.message_passing_step_count)
+  def MakeTransformAndUpdateOps(self, raw_node_input_features: tf.Tensor) -> tf.Tensor:
+    """
+    Takes node input states (raw vectors) and returns the transformed and updated final raw node states
+    
+    Depends many attributes existing:
+        self.placeholders: dict,
+        self.layer_timesteps,
+        self.ggnn_weights,
+        self.position_embeddings,
+    """
 
-    # Generate per-layer values for edge weights, biases and gated units:
-    self.weights = {}  # Used by super-class to place generic things
-    self.gnn_weights = GGNNWeights([], [], [], [])
-
-    for layer_index in range(len(self.layer_timesteps)):
-      with tf.compat.v1.variable_scope(f"gnn_layer_{layer_index}"):
-        # position propagation matrices are treated like another edge type
-        if FLAGS.position_embeddings == 'fancy':
-          type_count_with_fancy = 1 + self.stats.edge_type_count
-        else:
-          type_count_with_fancy = self.stats.edge_type_count
-
-        edge_weights = tf.reshape(
-            tf.Variable(
-                utils.glorot_init([
-                    type_count_with_fancy * FLAGS.hidden_size, FLAGS.hidden_size
-                ]),
-                name=f"gnn_edge_weights_{layer_index}",
-            ), [type_count_with_fancy, FLAGS.hidden_size, FLAGS.hidden_size])
-
-        # Add dropout as required.
-        if FLAGS.edge_weight_dropout_keep_prob < 1.0:
-          edge_weights = tf.nn.dropout(
-              edge_weights,
-              rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
-        self.gnn_weights.edge_weights.append(edge_weights)
-
-        if FLAGS.use_propagation_attention:
-          self.gnn_weights.edge_type_attention_weights.append(
-              tf.Variable(
-                  np.ones([type_count_with_fancy], dtype=np.float32),
-                  name=f"edge_type_attention_weights_{layer_index}",
-              ))
-
-        if FLAGS.use_edge_bias:
-          self.gnn_weights.edge_biases.append(
-              tf.Variable(
-                  np.zeros([type_count_with_fancy, FLAGS.hidden_size],
-                           dtype=np.float32),
-                  name="gnn_edge_biases_%i" % layer_index,
-              ))
-
-        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
-                                  FLAGS.graph_rnn_activation,
-                                  FLAGS.hidden_size,
-                                  name=f"cell_layer_{layer_index}")
-        # Apply dropout as required.
-        if FLAGS.graph_state_dropout_keep_prob < 1:
-          cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
-              cell,
-              state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"]
-          )
-        self.gnn_weights.rnn_cells.append(cell)
-      # end of variable scope f"gnn_layer_{layer_index}"
-
-    with tf.compat.v1.variable_scope("embeddings"):
-      # maybe generate table with position embs up to pos 512.
-      if FLAGS.position_embeddings != 'off':
-        self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable(
-        )
-
-      # Lookup each node embedding table and concatenate the result.
-      embeddings = self._GetEmbeddingsAsTensorflowVariables()
-      for i in range(len(embeddings)):
-        self.weights[f'node_embeddings_{i}'] = embeddings[i]
-
-      self.encoded_node_x = tf.compat.v1.concat([
-          tf.nn.embedding_lookup(self.weights[f'node_embeddings_{i}'],
-                                 ids=self.placeholders['node_x'][:, i])
-          for i in range(len(embeddings))
-      ],
-                                           axis=1,
-                                           name='embeddings_concat')
-
-    ###########################################################################
-    ###  GGNN UNROLLING START
 
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
     # in batch v x D.
-    node_states_per_layer = [self.encoded_node_x]
-
+    node_states_per_layer = [raw_node_input_features]
     # Number of nodes in batch.
     num_nodes_in_batch = self.placeholders['node_count']
 
@@ -353,7 +280,97 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
             node_states_per_layer[-1] = self.gnn_weights.rnn_cells[layer_idx](
                 incoming_information, node_states_per_layer[-1])[1]
 
-    self.ops["final_node_x"] = node_states_per_layer[-1]
+    return node_states_per_layer[-1]
+
+
+  def MakeLossAndAccuracyAndPredictionOps(
+      self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
+    layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
+    app.Log(
+        1, "Using layer timesteps: %s for a total of %s message passing "
+        "steps", layer_timesteps, self.message_passing_step_count)
+
+    # Generate per-layer values for edge weights, biases and gated units:
+    self.weights = {}  # Used by super-class to place generic things
+    self.gnn_weights = GGNNWeights([], [], [], [])
+
+    for layer_index in range(len(self.layer_timesteps)):
+      with tf.compat.v1.variable_scope(f"gnn_layer_{layer_index}"):
+        # position propagation matrices are treated like another edge type
+        if FLAGS.position_embeddings == 'fancy':
+          type_count_with_fancy = 1 + self.stats.edge_type_count
+        else:
+          type_count_with_fancy = self.stats.edge_type_count
+
+        edge_weights = tf.reshape(
+            tf.Variable(
+                utils.glorot_init([
+                    type_count_with_fancy * FLAGS.hidden_size, FLAGS.hidden_size
+                ]),
+                name=f"gnn_edge_weights_{layer_index}",
+            ), [type_count_with_fancy, FLAGS.hidden_size, FLAGS.hidden_size])
+
+        # Add dropout as required.
+        if FLAGS.edge_weight_dropout_keep_prob < 1.0:
+          edge_weights = tf.nn.dropout(
+              edge_weights,
+              rate=1 - self.placeholders["edge_weight_dropout_keep_prob"])
+        self.gnn_weights.edge_weights.append(edge_weights)
+
+        if FLAGS.use_propagation_attention:
+          self.gnn_weights.edge_type_attention_weights.append(
+              tf.Variable(
+                  np.ones([type_count_with_fancy], dtype=np.float32),
+                  name=f"edge_type_attention_weights_{layer_index}",
+              ))
+
+        if FLAGS.use_edge_bias:
+          self.gnn_weights.edge_biases.append(
+              tf.Variable(
+                  np.zeros([type_count_with_fancy, FLAGS.hidden_size],
+                           dtype=np.float32),
+                  name="gnn_edge_biases_%i" % layer_index,
+              ))
+
+        cell = utils.BuildRnnCell(FLAGS.graph_rnn_cell,
+                                  FLAGS.graph_rnn_activation,
+                                  FLAGS.hidden_size,
+                                  name=f"cell_layer_{layer_index}")
+        # Apply dropout as required.
+        if FLAGS.graph_state_dropout_keep_prob < 1:
+          cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
+              cell,
+              state_keep_prob=self.placeholders["graph_state_dropout_keep_prob"]
+          )
+        self.gnn_weights.rnn_cells.append(cell)
+      # end of variable scope f"gnn_layer_{layer_index}"
+
+    with tf.compat.v1.variable_scope("embeddings"):
+      # maybe generate table with position embs up to pos 512.
+      if FLAGS.position_embeddings != 'off':
+        self.position_embeddings = self._GetPositionEmbeddingsAsTensorflowVariable(
+        )
+
+      # Lookup each node embedding table and concatenate the result.
+      embeddings = self._GetEmbeddingsAsTensorflowVariables()
+      for i in range(len(embeddings)):
+        self.weights[f'node_embeddings_{i}'] = embeddings[i]
+
+      self.encoded_node_x = tf.compat.v1.concat([
+          tf.nn.embedding_lookup(self.weights[f'node_embeddings_{i}'],
+                                 ids=self.placeholders['node_x'][:, i])
+          for i in range(len(embeddings))
+      ],
+                                           axis=1,
+                                           name='embeddings_concat')
+
+    ###########################################################################
+    ###  GGNN UNROLLING START
+
+    with tf.compat.v1.variable_scope('TransformAndUpdate'):
+      self.ops["final_node_x"] = self.MakeTransformAndUpdateOps(
+          self.encoded_node_x,
+      )
 
     ###  GGNN UNROLLING END
     ###########################################################################
@@ -367,7 +384,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     labels_dimensionality = (self.stats.node_labels_dimensionality or
                              self.stats.graph_labels_dimensionality)
     predictions, regression_gate, regression_transform = utils.MakeOutputLayer(
-        initial_node_state=node_states_per_layer[0],
+        initial_node_state=self.encoded_node_x,
         final_node_state=self.ops["final_node_x"],
         hidden_size=FLAGS.hidden_size,
         labels_dimensionality=labels_dimensionality,
@@ -497,13 +514,27 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
       yield batch.log, feed_dict
 
   def MakeModularGraphOps(self):
-    if not (self.weights['regression_gate'] and
-            self.weights['regression_transform']):
-      raise TypeError("MakeModularGraphOps() call before "
-                      "MakeLossAndAccuracyAndPredictionOps()")
+    """ Maps from
+            self.placeholders['raw_node_input_features'] and
+            self.placeholders['raw_node_output_features']
+        to modular
+            loss, accuracies, accuracy and predictions
+        ops.
 
+        Depends on the usual attributes existing.
+    """
+    # get this out of the way:
+    if not (self.weights['regression_gate'] and \
+            self.weights['regression_transform']) and \
+            self.encoded_node_x and \
+            self.placeholders['raw_node_input_features'] and \
+            self.placeholders['raw_node_output_features']:
+      raise TypeError("MakeModularGraphOps() call before "
+                      "MakeLossAndAccuracyAndPredictionOps() is not working!")
+
+    # map from placeholders for raw features to predictions
     predictions = utils.MakeModularOutputLayer(
-        self.encoded_node_x,
+        self.placeholders['raw_node_input_features'],
         self.placeholders['raw_node_output_features'],
         self.weights['regression_gate'], self.weights['regression_transform'])
 

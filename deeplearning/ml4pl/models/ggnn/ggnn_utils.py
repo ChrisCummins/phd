@@ -169,10 +169,19 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
   placeholders['node_x'] = tf.compat.v1.placeholder(
       dtype=tf.int32, shape=[None, stats.node_embeddings_count], name="node_x")
 
+  # We need the raw (i.e. vector representations of node states) as placeholders
+  # at input and output for dynamic unrolling
   placeholders['raw_node_output_features'] = tf.compat.v1.placeholder(
-      stats.node_embeddings_dtype,
+      #stats.node_embeddings_dtype,
+      tf.float32,
       [None, stats.node_embeddings_concatenated_width],
       name="raw_node_output_features")
+
+  placeholders['raw_node_input_features'] = tf.compat.v1.placeholder(
+      #stats.node_embeddings_dtype,
+      tf.float32,
+      [None, stats.node_embeddings_concatenated_width],
+      name="raw_node_input_features")
 
   # TODO(cec): Is there ever a case where --hiden_size does not need to equal
   # node_embeddings_concatenated_width? If not, then lets remove the hidden_size
