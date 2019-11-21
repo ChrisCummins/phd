@@ -62,7 +62,10 @@ def GetLeaderboard(log_db: log_database.Database,
         sql.func.count(log_database.BatchLogMeta.run_id).label("num_batches"),
         sql.func.avg(log_database.BatchLogMeta.accuracy).label('accuracy'),
         sql.func.avg(log_database.BatchLogMeta.precision).label('precision'),
-        sql.func.avg(log_database.BatchLogMeta.recall).label('recall'))
+        sql.func.avg(log_database.BatchLogMeta.recall).label('recall'),
+        sql.func.avg(log_database.BatchLogMeta.iteration_count).label('avg_iteration_count'),
+        sql.func.avg(log_database.BatchLogMeta.model_converged).label('avg_model_converged'),
+    )
     query = query.filter(log_database.BatchLogMeta.type == 'test')
     query = query.group_by(log_database.BatchLogMeta.run_id)
     query = query.group_by(log_database.BatchLogMeta.epoch)
@@ -99,7 +102,7 @@ def GetLeaderboard(log_db: log_database.Database,
       aux_df.set_index('run_id', inplace=True)
       df = df.join(aux_df)
 
-    extra_flags = ['unroll_strategy', 'unroll_factor']
+    extra_flags = ['unroll_strategy', 'unroll_factor', 'layer_timesteps'] + FLAGS.extra_flags
     for flag in extra_flags:
       # Strip the fully qualified flag name, e.g. "foo.bar.flag" -> "flag".
       flag_name = flag.split('.')[-1]
