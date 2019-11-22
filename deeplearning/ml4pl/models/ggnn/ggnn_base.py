@@ -237,13 +237,14 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       print_context: typing.Any = None,
   ) -> typing.Dict[str, tf.Tensor]:
 
-    print("#" * 30 + "fetch dict keys" + "#" * 30)
-    for k in fetch_dict.keys():
-      print(k, "   --   ", fetch_dict[k])
-
-    print("#" * 30 + "feed dict keys" + "#" * 30)
-    for k in feed_dict.keys():
-      print(k)
+    # cec: Temporarily disabling all of this debugging printout:
+    # print("#" * 30 + "fetch dict keys" + "#" * 30)
+    # for k in fetch_dict.keys():
+    #   print(k, "   --   ", fetch_dict[k])
+    #
+    # print("#" * 30 + "feed dict keys" + "#" * 30)
+    # for k in feed_dict.keys():
+    #   print(k)
 
     # leaving debug comments for the next problem with another unrolling mode...
     # print("#"*30 + "fetch dict complete" + "#"*30)
