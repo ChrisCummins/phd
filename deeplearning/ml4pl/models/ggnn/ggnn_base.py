@@ -305,6 +305,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
     converged = False
     for iteration_count in range(1, unroll_factor):
+      # First compute the current model labels.
+      previous_labels = np.argmax(_new_predictions, axis=1)
+
       # we use the same value to simultaneously get
       # the next state update and the predictions from
       # that same state update.
@@ -316,14 +319,13 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       })
       _results = utils.RunWithFetchDict(self.sess, loop_fetch, feed_dict)
       _node_states = _results["raw_node_output_features"]
-      _old_predictions = _new_predictions
-      _new_predictions = _results["modular_predictions"]
 
-      # TODO(cec): This convergence check seems to be too "coarse", stopping
-      # early. Consider alternate convergence strategies. e.g. Check that the
-      # differences in predictions are below a certain threshold.
-      converged |= (np.argmax(_new_predictions, axis=1) == np.argmax(
-          _old_predictions, axis=1)).all()
+      # Compute the current model labels.
+      current_labels = np.argmax(_results['module_predictions'], axis=1)
+
+      # Compare the labels before and after running to see if the model has
+      # converged.
+      converged |= (previous_labels == current_labels).all()
       if stop_once_converged and converged:
         break
 
