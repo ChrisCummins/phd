@@ -142,10 +142,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
               family='accuracy')
 
         # Tensorboard summaries.
-        self.ops["summary_loss"] = tf.summary.scalar(
-            "loss", self.ops["loss"], family='loss')
-        self.ops["summary_accuracy"] = tf.summary.scalar(
-            "accuracy", self.ops["accuracy"], family='accuracy')
+        self.ops["summary_loss"] = tf.summary.scalar("loss",
+                                                     self.ops["loss"],
+                                                     family='loss')
+        self.ops["summary_accuracy"] = tf.summary.scalar("accuracy",
+                                                         self.ops["accuracy"],
+                                                         family='accuracy')
 
         if not FLAGS.test_only:
           with prof.Profile('Make training step'):
@@ -171,11 +173,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
   def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
     """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
-    embeddings = base_utils.pos_emb(
-        positions=range(self.stats.max_edge_positions),
-        demb=FLAGS.hidden_size - 2)  # hard coded
-    pos_emb = tf.Variable(
-        initial_value=embeddings, trainable=False, dtype=tf.float32)
+    embeddings = base_utils.pos_emb(positions=range(
+        self.stats.max_edge_positions),
+                                    demb=FLAGS.hidden_size - 2)  # hard coded
+    pos_emb = tf.Variable(initial_value=embeddings,
+                          trainable=False,
+                          dtype=tf.float32)
     return pos_emb
 
   def _GetEmbeddingsAsTensorflowVariables(
@@ -214,10 +217,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           f"--inst2vec_embeddings=`{FLAGS.inst2vec_embeddings}` "
           "unrecognized. Must be one of "
           "{constant,constant_zero,finetune,random}")
-    inst2vec_embeddings = tf.Variable(
-        initial_value=embeddings[0], trainable=trainable, dtype=tf.float32)
-    selector_embeddings = tf.Variable(
-        initial_value=embeddings[1] * 50, trainable=False, dtype=tf.float32)
+    inst2vec_embeddings = tf.Variable(initial_value=embeddings[0],
+                                      trainable=trainable,
+                                      dtype=tf.float32)
+    selector_embeddings = tf.Variable(initial_value=embeddings[1] * 50,
+                                      trainable=False,
+                                      dtype=tf.float32)
     return inst2vec_embeddings, selector_embeddings
 
   @property
@@ -326,17 +331,15 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     log.iteration_count = iteration_count
 
     if converged:
-      app.Log(
-          2,
-          "Model outputs converged after %s iterations",
-          iteration_count,
-          print_context=print_context)
+      app.Log(2,
+              "Model outputs converged after %s iterations",
+              iteration_count,
+              print_context=print_context)
     else:
-      app.Log(
-          2,
-          "Model outputs failed to converge after %s iterations",
-          iteration_count,
-          print_context=print_context)
+      app.Log(2,
+              "Model outputs failed to converge after %s iterations",
+              iteration_count,
+              print_context=print_context)
 
     # finally compute everything from the original fetch_dict
     # using our unrolled states.
@@ -432,8 +435,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     else:
       raise TypeError("Neither node_y or graph_y in placeholders dict!")
 
-    return self.MinibatchResults(
-        y_true_1hot=targets, y_pred_1hot=fetch_dict['predictions'])
+    return self.MinibatchResults(y_true_1hot=targets,
+                                 y_pred_1hot=fetch_dict['predictions'])
 
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()
@@ -497,8 +500,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         tf.GraphKeys.TRAINABLE_VARIABLES)
     if FLAGS.freeze_graph_model:
       graph_vars = set(
-          self.sess.graph.get_collection(
-              tf.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"))
+          self.sess.graph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                         scope="graph_model"))
       filtered_vars = []
       for var in trainable_vars:
         if var not in graph_vars:
@@ -508,13 +511,13 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       trainable_vars = filtered_vars
     optimizer = tf.compat.v1.train.AdamOptimizer(
         FLAGS.learning_rate * self.placeholders['learning_rate_multiple'])
-    grads_and_vars = optimizer.compute_gradients(
-        self.ops["loss"], var_list=trainable_vars)
+    grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
+                                                 var_list=trainable_vars)
     clipped_grads = []
     for grad, var in grads_and_vars:
       if grad is not None:
-        clipped_grads.append((tf.clip_by_norm(grad, FLAGS.clamp_gradient_norm),
-                              var))
+        clipped_grads.append((tf.clip_by_norm(grad,
+                                              FLAGS.clamp_gradient_norm), var))
       else:
         clipped_grads.append((grad, var))
     train_step = optimizer.apply_gradients(clipped_grads)
