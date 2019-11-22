@@ -335,18 +335,16 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     log.model_converged = converged
     log.iteration_count = iteration_count
 
-    if converged:
-      app.Log(
-          2,
-          "Model outputs converged after %s iterations",
-          iteration_count,
-          print_context=print_context)
+    if log.model_converged:
+      app.Log(2,
+              "Model outputs converged after %s iterations",
+              iteration_count,
+              print_context=print_context)
     else:
-      app.Log(
-          2,
-          "Model outputs failed to converge after %s iterations",
-          iteration_count,
-          print_context=print_context)
+      app.Log(2,
+              "Model outputs failed to converge after %s iterations",
+              iteration_count,
+              print_context=print_context)
 
     # finally compute everything from the original fetch_dict
     # using our unrolled states.
@@ -418,7 +416,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           "summary_loss": self.ops["summary_loss"],
           "summary_accuracy": self.ops["summary_accuracy"],
       }
-      if log.type == "train": fetch_dict["train_step"] = self.ops["train_step"]
+      if log.type == "train":
+        fetch_dict["train_step"] = self.ops["train_step"]
       fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     else:
       fetch_dict = {
@@ -426,10 +425,11 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           "accuracies": self.ops["modular_accuracies"],
           "accuracy": self.ops["modular_accuracy"],
           "predictions": self.ops["modular_predictions"],
-          "summary_loss": self.ops["modular_summary_loss"],
-          "summary_accuracy": self.ops["modular_summary_accuracy"],
+          # "summary_loss": self.ops["modular_summary_loss"],
+          # "summary_accuracy": self.ops["modular_summary_accuracy"],
       }
-      if log.type == "train": fetch_dict["train_step"] = self.ops["train_step"]
+      if log.type == "train":
+        fetch_dict["train_step"] = self.ops["train_step"]
       fetch_dict = self.ModularlyRunWithFetchDict(log, fetch_dict, feed_dict,
                                                   unroll_factor)
 
