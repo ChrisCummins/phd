@@ -65,6 +65,17 @@ py_library(
     ],
 )
 
+py_binary(
+    name = "copy_database",
+    srcs = ["copy_database.py"],
+    deps = [
+        ":log_database",
+        "//labm8:app",
+        "//labm8:prof",
+        "//labm8:sqlutil",
+    ],
+)
+
 py_library(
     name = "log_analysis",
     srcs = ["log_analysis.py"],
