@@ -68,6 +68,11 @@ app.DEFINE_float(
     "--unroll_strategy=edge_counts, max_edge_count * --unroll_factor timesteps "
     "are performed. (rounded up to the next multiple of sum(layer_timesteps))")
 
+app.DEFINE_float(
+    "convergence_threshold", .99,
+    "The ratio of labels which must have converged when "
+    "--unroll_strategy=label_convergence for dynamic unrolling to cease.")
+
 # We assume that position_embeddings exist in every dataset.
 # the flag now only controls whether they are used or not.
 # This could be nice for ablating our model and also debugging with and without.
@@ -236,59 +241,44 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       unroll_factor: int,
       print_context: typing.Any = None,
   ) -> typing.Dict[str, tf.Tensor]:
+    app.Log(1, '-> MODULARLY RUN', print_context=print_context)
 
-    # cec: Temporarily disabling all of this debugging printout:
-    # print("#" * 30 + "fetch dict keys" + "#" * 30)
-    # for k in fetch_dict.keys():
-    #   print(k, "   --   ", fetch_dict[k])
-    #
-    # print("#" * 30 + "feed dict keys" + "#" * 30)
-    # for k in feed_dict.keys():
-    #   print(k)
-
-    # leaving debug comments for the next problem with another unrolling mode...
-    # print("#"*30 + "fetch dict complete" + "#"*30)
-    # print(fetch_dict)
-    # print('\n')
-    # print("#"*30 + "feed dict complete" + "#"*30)
-    # print(feed_dict)
-    # print('\n')
-    # assert False
-
-    # first get input_nodes_states manually
-    # depends on placeholder['node_x']
-    input_node_states = utils.RunWithFetchDict(
+    # First we compute the input_nodes_states placeholder['node_x'] to produce
+    # the initial encoded inputs.
+    initial_node_states = utils.RunWithFetchDict(
         self.sess, {'in': self.encoded_node_x}, feed_dict)['in']
-    # now we should be independent of node_x, o/w we cannot guarantee that
-    # no fetch_dict op won't use self.encoded_node_x which it is not allowed to under
-    # modular unrolling!
+
+    # Now we are independent of node_x, otherwise we cannot guarantee that a
+    # fetch_dict op won't use self.encoded_node_x which it is not allowed to
+    # under modular unrolling.
     feed_dict.pop(self.placeholders['node_x'])
 
-    # now get first raw_node_output_states manually
-    # depends on placeholder['raw_node_input_features']
+    # Now we compute the first raw_node_output_states manually using
+    # placeholder['raw_node_input_features'].
+    loop_feed = {
+        self.placeholders['raw_node_input_features']: initial_node_states
+    }
     loop_fetch = {
         "raw_node_output_features": self.ops["raw_node_output_features"]
     }
 
-    loop_feed = {
-        self.placeholders['raw_node_input_features']: input_node_states
-    }
+    # TODO(cec): Investigate this.
     feed_dict.update(loop_feed)
 
-    _node_states = utils.RunWithFetchDict(self.sess, loop_fetch,
-                                          feed_dict)["raw_node_output_features"]
+    node_states = utils.RunWithFetchDict(self.sess, loop_fetch,
+                                         feed_dict)["raw_node_output_features"]
 
-    # add the loop_feed to the feed_dict
-    feed_dict.update(
-        {self.placeholders["raw_node_output_features"]: _node_states})
+    # Add the loop_feed to the feed_dict.
+    feed_dict[self.placeholders["raw_node_output_features"]] = node_states
 
     # now get first predictions manually (for convergence tests)
     pred_fetch = {"modular_predictions": self.ops["modular_predictions"]}
-    _new_predictions = utils.RunWithFetchDict(self.sess, pred_fetch,
-                                              feed_dict)["modular_predictions"]
+    current_predictions = utils.RunWithFetchDict(
+        self.sess, pred_fetch, feed_dict)["modular_predictions"]
+    current_labels = np.argmax(current_predictions, axis=1)
 
-    # now always fetch modular_predictions w/ old _node_states and
-    # simulateously generate new _node_states from old _node_states
+    # now always fetch modular_predictions w/ old node_states and
+    # simulateously generate new node_states from old node_states
     loop_fetch.update(pred_fetch)
 
     if unroll_factor < 1:
@@ -299,52 +289,55 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       stop_once_converged = True
 
     log.model_converged = False
+    iteration_count = 1
     for iteration_count in range(1, unroll_factor):
+      app.Log(1, '--> DYNAMIC UNROLL LOOP', print_context=print_context)
       # First compute the current model labels.
-      previous_labels = np.argmax(_new_predictions, axis=1)
+      previous_labels = current_labels
 
       # we use the same value to simultaneously get
       # the next state update and the predictions from
       # that same state update.
       feed_dict.update({
           self.placeholders["raw_node_input_features"]:
-          _node_states,
+          node_states,
           self.placeholders["raw_node_output_features"]:
-          _node_states,
+          node_states,
       })
       _results = utils.RunWithFetchDict(self.sess, loop_fetch, feed_dict)
-      _node_states = _results["raw_node_output_features"]
+      node_states = _results["raw_node_output_features"]
 
       # Compute the current model labels.
       current_labels = np.argmax(_results['modular_predictions'], axis=1)
 
       # Compare the labels before and after running to see if the model has
       # converged.
-      converged = (previous_labels == current_labels).all()
-      log.model_converged |= converged
+      converged_labels = (previous_labels == current_labels).mean()
+      log.model_converged |= converged_labels >= FLAGS.convergence_threshold
 
       app.Log(
           4,
-          'Completed dynamic unrolling loop step %s. Converged? %s',
+          'Completed dynamic unrolling loop step %s. Converged labels: %s',
           iteration_count,
-          converged,
+          converged_labels,
           print_context=print_context)
-      if stop_once_converged and converged:
+      if stop_once_converged and log.model_converged:
         break
 
-    log.model_converged = converged
     log.iteration_count = iteration_count
 
     if log.model_converged:
-      app.Log(2,
-              "Model outputs converged after %s iterations",
-              iteration_count,
-              print_context=print_context)
+      app.Log(
+          2,
+          "Model outputs converged after %s iterations",
+          iteration_count,
+          print_context=print_context)
     else:
-      app.Log(2,
-              "Model outputs failed to converge after %s iterations",
-              iteration_count,
-              print_context=print_context)
+      app.Log(
+          2,
+          "Model outputs failed to converge after %s iterations",
+          iteration_count,
+          print_context=print_context)
 
     # finally compute everything from the original fetch_dict
     # using our unrolled states.
@@ -356,11 +349,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     feed_dict.pop(self.placeholders['raw_node_input_features'])
 
     feed_dict.update({
-        # and add the actual input features from above
+        # Add the actual input features that we computed above.
+        # TODO(cec): Why??
         self.placeholders['raw_node_input_features']:
-        input_node_states,
+        initial_node_states,
         self.placeholders["raw_node_output_features"]:
-        _node_states,
+        node_states,
     })
     fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     return fetch_dict
