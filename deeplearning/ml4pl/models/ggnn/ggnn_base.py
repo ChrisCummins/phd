@@ -1,9 +1,9 @@
 """Base class for implementing gated graph neural networks."""
 import math
+import typing
 
 import numpy as np
 import tensorflow as tf
-import typing
 
 from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
@@ -12,7 +12,6 @@ from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
 from labm8 import app
 from labm8 import humanize
 from labm8 import prof
-
 
 FLAGS = app.FLAGS
 
@@ -46,7 +45,7 @@ app.DEFINE_integer("hidden_size", 202, "The size of hidden layer(s).")
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_string(
-    "inst2vec_embeddings", "constant",
+    "inst2vec_embeddings", "random",
     "The type of per-node inst2vec embeddings to use. One of: "
     "{constant,constant_zero,constant_random,finetune,random}.")
 classifier_base.MODEL_FLAGS.add("inst2vec_embeddings")
@@ -55,11 +54,11 @@ app.DEFINE_boolean(
     "tensorboard_logging", True,
     "If true, write tensorboard logs to '<working_dir>/tensorboard'.")
 
-app.DEFINE_string("unroll_strategy", "none",
-                  "The unroll strategy to use. One of: "
-                  "{none, constant, edge_count, data_flow_max_steps, label_convergence} "
-                  "constant: Unroll by a constant number of steps. The total number of steps is "
-                  "(unroll_factor * message_passing_step_count).")
+app.DEFINE_string(
+    "unroll_strategy", "none", "The unroll strategy to use. One of: "
+    "{none, constant, edge_count, data_flow_max_steps, label_convergence} "
+    "constant: Unroll by a constant number of steps. The total number of steps is "
+    "(unroll_factor * message_passing_step_count).")
 
 app.DEFINE_float(
     "unroll_factor", 0,
@@ -128,11 +127,11 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
             (self.ops["modular_loss"], self.ops["modular_accuracies"],
              self.ops["modular_accuracy"],
              self.ops["modular_predictions"]) = (self.MakeModularGraphOps())
-             
+
             with tf.compat.v1.variable_scope("TransformAndUpdate"):
-              self.ops["raw_node_output_features"] = self.MakeTransformAndUpdateOps(
-                self.placeholders['raw_node_input_features']
-              )
+              self.ops[
+                  "raw_node_output_features"] = self.MakeTransformAndUpdateOps(
+                      self.placeholders['raw_node_input_features'])
 
           # Modular Tensorboard summaries
           self.ops["modular_summary_loss"] = tf.summary.scalar(
@@ -143,12 +142,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
               family='accuracy')
 
         # Tensorboard summaries.
-        self.ops["summary_loss"] = tf.summary.scalar("loss",
-                                                     self.ops["loss"],
-                                                     family='loss')
-        self.ops["summary_accuracy"] = tf.summary.scalar("accuracy",
-                                                         self.ops["accuracy"],
-                                                         family='accuracy')
+        self.ops["summary_loss"] = tf.summary.scalar(
+            "loss", self.ops["loss"], family='loss')
+        self.ops["summary_accuracy"] = tf.summary.scalar(
+            "accuracy", self.ops["accuracy"], family='accuracy')
 
         if not FLAGS.test_only:
           with prof.Profile('Make training step'):
@@ -174,12 +171,11 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
   def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
     """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
-    embeddings = base_utils.pos_emb(positions=range(
-        self.stats.max_edge_positions),
-                                    demb=FLAGS.hidden_size - 2) # hard coded
-    pos_emb = tf.Variable(initial_value=embeddings,
-                          trainable=False,
-                          dtype=tf.float32)
+    embeddings = base_utils.pos_emb(
+        positions=range(self.stats.max_edge_positions),
+        demb=FLAGS.hidden_size - 2)  # hard coded
+    pos_emb = tf.Variable(
+        initial_value=embeddings, trainable=False, dtype=tf.float32)
     return pos_emb
 
   def _GetEmbeddingsAsTensorflowVariables(
@@ -218,12 +214,10 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
           f"--inst2vec_embeddings=`{FLAGS.inst2vec_embeddings}` "
           "unrecognized. Must be one of "
           "{constant,constant_zero,finetune,random}")
-    inst2vec_embeddings = tf.Variable(initial_value=embeddings[0],
-                                      trainable=trainable,
-                                      dtype=tf.float32)
-    selector_embeddings = tf.Variable(initial_value=embeddings[1] * 50,
-                                      trainable=False,
-                                      dtype=tf.float32)
+    inst2vec_embeddings = tf.Variable(
+        initial_value=embeddings[0], trainable=trainable, dtype=tf.float32)
+    selector_embeddings = tf.Variable(
+        initial_value=embeddings[1] * 50, trainable=False, dtype=tf.float32)
     return inst2vec_embeddings, selector_embeddings
 
   @property
@@ -243,11 +237,11 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       print_context: typing.Any = None,
   ) -> typing.Dict[str, tf.Tensor]:
 
-    print("#"*30 + "fetch dict keys" + "#"*30)
+    print("#" * 30 + "fetch dict keys" + "#" * 30)
     for k in fetch_dict.keys():
       print(k, "   --   ", fetch_dict[k])
 
-    print("#"*30 + "feed dict keys" + "#"*30)
+    print("#" * 30 + "feed dict keys" + "#" * 30)
     for k in feed_dict.keys():
       print(k)
 
@@ -262,7 +256,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
     # first get input_nodes_states manually
     # depends on placeholder['node_x']
-    input_node_states = utils.RunWithFetchDict(self.sess, {'in': self.encoded_node_x}, feed_dict)['in']
+    input_node_states = utils.RunWithFetchDict(
+        self.sess, {'in': self.encoded_node_x}, feed_dict)['in']
     # now we should be independent of node_x, o/w we cannot guarantee that
     # no fetch_dict op won't use self.encoded_node_x which it is not allowed to under
     # modular unrolling!
@@ -271,24 +266,25 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     # now get first raw_node_output_states manually
     # depends on placeholder['raw_node_input_features']
     loop_fetch = {
-      "raw_node_output_features": self.ops["raw_node_output_features"]
+        "raw_node_output_features": self.ops["raw_node_output_features"]
     }
 
-    loop_feed = {self.placeholders['raw_node_input_features']: input_node_states}
+    loop_feed = {
+        self.placeholders['raw_node_input_features']: input_node_states
+    }
     feed_dict.update(loop_feed)
 
-    _node_states = utils.RunWithFetchDict(self.sess, loop_fetch, feed_dict)["raw_node_output_features"]
+    _node_states = utils.RunWithFetchDict(self.sess, loop_fetch,
+                                          feed_dict)["raw_node_output_features"]
 
     # add the loop_feed to the feed_dict
     feed_dict.update(
         {self.placeholders["raw_node_output_features"]: _node_states})
-    
+
     # now get first predictions manually (for convergence tests)
-    pred_fetch = {
-      "modular_predictions": self.ops["modular_predictions"]
-    }
-    _new_predictions = utils.RunWithFetchDict(
-        self.sess, pred_fetch, feed_dict)["modular_predictions"]
+    pred_fetch = {"modular_predictions": self.ops["modular_predictions"]}
+    _new_predictions = utils.RunWithFetchDict(self.sess, pred_fetch,
+                                              feed_dict)["modular_predictions"]
 
     # now always fetch modular_predictions w/ old _node_states and
     # simulateously generate new _node_states from old _node_states
@@ -329,26 +325,33 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     log.iteration_count = iteration_count
 
     if converged:
-      app.Log(2, "Model outputs converged after %s iterations",
-              iteration_count, print_context=print_context)
+      app.Log(
+          2,
+          "Model outputs converged after %s iterations",
+          iteration_count,
+          print_context=print_context)
     else:
-      app.Log(2, "Model outputs failed to converge after %s iterations",
-              iteration_count, print_context=print_context)
+      app.Log(
+          2,
+          "Model outputs failed to converge after %s iterations",
+          iteration_count,
+          print_context=print_context)
 
     # finally compute everything from the original fetch_dict
     # using our unrolled states.
     # we have to pop self.placeholders['node_x']
     # just to make sure that no output depends on self.encoded_node_x
     # implicitly, as whatever that is should use raw_node_input now!
-    
+
     # we pop the globally speaking "intermediate node features"
     feed_dict.pop(self.placeholders['raw_node_input_features'])
 
     feed_dict.update({
         # and add the actual input features from above
-        self.placeholders['raw_node_input_features']: input_node_states,
+        self.placeholders['raw_node_input_features']:
+        input_node_states,
         self.placeholders["raw_node_output_features"]:
-          _node_states,
+        _node_states,
     })
     fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     return fetch_dict
@@ -370,48 +373,50 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       return int(unroll_factor)
     elif unroll_strategy == "data_flow_max_steps":
       max_data_flow_steps = log._transient_data['data_flow_max_steps_required']
-      unroll_factor = math.ceil(max_data_flow_steps /
-                                self.message_passing_step_count)
+      unroll_factor = math.ceil(
+          max_data_flow_steps / self.message_passing_step_count)
       app.Log(2, 'Determined unroll factor %d from max data flow steps %d',
               unroll_factor, max_data_flow_steps)
       return unroll_factor
     elif unroll_strategy == "edge_count":
       max_edge_count = log._transient_data['max_edge_count']
-      unroll_factor = math.ceil((max_edge_count * unroll_factor) /
-                                self.message_passing_step_count)
+      unroll_factor = math.ceil(
+          (max_edge_count * unroll_factor) / self.message_passing_step_count)
       app.Log(2, 'Determined unroll factor %d from max edge count %d',
               unroll_factor, self.message_passing_step_count)
       return unroll_factor
     elif unroll_strategy == "label_convergence":
       return 0
     else:
-      raise app.UsageError(
-          f"Unknown unroll strategy '{unroll_strategy}'")
+      raise app.UsageError(f"Unknown unroll strategy '{unroll_strategy}'")
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta, feed_dict: typing.Any,
-                  print_context: typing.Any = None) -> classifier_base.ClassifierBase.MinibatchResults:
+  def RunMinibatch(self,
+                   log: log_database.BatchLogMeta,
+                   feed_dict: typing.Any,
+                   print_context: typing.Any = None
+                  ) -> classifier_base.ClassifierBase.MinibatchResults:
     unroll_factor = self.GetUnrollFactor(FLAGS.unroll_strategy,
                                          FLAGS.unroll_factor, log)
 
     if unroll_factor == 1:
       fetch_dict = {
-        "loss": self.ops["loss"],
-        "accuracies": self.ops["accuracies"],
-        "accuracy": self.ops["accuracy"],
-        "predictions": self.ops["predictions"],
-        "summary_loss": self.ops["summary_loss"],
-        "summary_accuracy": self.ops["summary_accuracy"],
+          "loss": self.ops["loss"],
+          "accuracies": self.ops["accuracies"],
+          "accuracy": self.ops["accuracy"],
+          "predictions": self.ops["predictions"],
+          "summary_loss": self.ops["summary_loss"],
+          "summary_accuracy": self.ops["summary_accuracy"],
       }
       if log.type == "train": fetch_dict["train_step"] = self.ops["train_step"]
-      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict) 
+      fetch_dict = utils.RunWithFetchDict(self.sess, fetch_dict, feed_dict)
     else:
       fetch_dict = {
-        "loss": self.ops["modular_loss"],
-        "accuracies": self.ops["modular_accuracies"],
-        "accuracy": self.ops["modular_accuracy"],
-        "predictions": self.ops["modular_predictions"],
-        "summary_loss": self.ops["modular_summary_loss"],
-        "summary_accuracy": self.ops["modular_summary_accuracy"],
+          "loss": self.ops["modular_loss"],
+          "accuracies": self.ops["modular_accuracies"],
+          "accuracy": self.ops["modular_accuracy"],
+          "predictions": self.ops["modular_predictions"],
+          "summary_loss": self.ops["modular_summary_loss"],
+          "summary_accuracy": self.ops["modular_summary_accuracy"],
       }
       if log.type == "train": fetch_dict["train_step"] = self.ops["train_step"]
       fetch_dict = self.ModularlyRunWithFetchDict(log, fetch_dict, feed_dict,
@@ -426,8 +431,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     else:
       raise TypeError("Neither node_y or graph_y in placeholders dict!")
 
-    return self.MinibatchResults(y_true_1hot=targets,
-                                 y_pred_1hot=fetch_dict['predictions'])
+    return self.MinibatchResults(
+        y_true_1hot=targets, y_pred_1hot=fetch_dict['predictions'])
 
   def InitializeModel(self) -> None:
     super(GgnnBaseModel, self).InitializeModel()
@@ -491,8 +496,8 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         tf.GraphKeys.TRAINABLE_VARIABLES)
     if FLAGS.freeze_graph_model:
       graph_vars = set(
-          self.sess.graph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope="graph_model"))
+          self.sess.graph.get_collection(
+              tf.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"))
       filtered_vars = []
       for var in trainable_vars:
         if var not in graph_vars:
@@ -500,14 +505,15 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         else:
           app.Log(1, "Freezing weights of variable `%s`.", var.name)
       trainable_vars = filtered_vars
-    optimizer = tf.compat.v1.train.AdamOptimizer(FLAGS.learning_rate * self.placeholders['learning_rate_multiple'])
-    grads_and_vars = optimizer.compute_gradients(self.ops["loss"],
-                                                 var_list=trainable_vars)
+    optimizer = tf.compat.v1.train.AdamOptimizer(
+        FLAGS.learning_rate * self.placeholders['learning_rate_multiple'])
+    grads_and_vars = optimizer.compute_gradients(
+        self.ops["loss"], var_list=trainable_vars)
     clipped_grads = []
     for grad, var in grads_and_vars:
       if grad is not None:
-        clipped_grads.append((tf.clip_by_norm(grad,
-                                              FLAGS.clamp_gradient_norm), var))
+        clipped_grads.append((tf.clip_by_norm(grad, FLAGS.clamp_gradient_norm),
+                              var))
       else:
         clipped_grads.append((grad, var))
     train_step = optimizer.apply_gradients(clipped_grads)
