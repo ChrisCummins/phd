@@ -316,6 +316,11 @@ class ClassifierBase(object):
       # at this point we are pretty sure that batch_data has in fact at least one sequence.
       targets, predictions = self.RunMinibatch(log, batch_data)
 
+      if targets.shape != predictions.shape:
+        raise TypeError("Expected model to produce targets with shape "
+                        f"{targets.shape} but instead received predictions "
+                        f"with shape {predictions.shape}")
+
       # Compute statistics.
       y_true = np.argmax(targets, axis=1)
       y_pred = np.argmax(predictions, axis=1)
