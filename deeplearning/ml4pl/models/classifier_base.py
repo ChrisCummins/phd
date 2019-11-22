@@ -325,11 +325,12 @@ class ClassifierBase(object):
       y_true = np.argmax(targets, axis=1)
       y_pred = np.argmax(predictions, axis=1)
 
-      app.Log(4,
-              'Bincount y_true: %s, pred_y: %s',
-              np.bincount(y_true),
-              np.bincount(y_pred),
-              print_context=bar.external_write_mode)
+      if app.GetVerbosity() >= 4:
+        app.Log(4,
+                'Bincount y_true: %s, pred_y: %s',
+                np.bincount(y_true),
+                np.bincount(y_pred),
+                print_context=bar.external_write_mode)
 
       accuracies = y_true == y_pred
 
