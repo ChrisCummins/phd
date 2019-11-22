@@ -303,7 +303,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     else:
       stop_once_converged = True
 
-    converged = False
+    log.model_converged = False
     for iteration_count in range(1, unroll_factor):
       # First compute the current model labels.
       previous_labels = np.argmax(_new_predictions, axis=1)
@@ -325,7 +325,11 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
 
       # Compare the labels before and after running to see if the model has
       # converged.
-      converged |= (previous_labels == current_labels).all()
+      converged = (previous_labels == current_labels).all()
+      log.model_converged |= converged
+
+      app.Log(4, 'Completed dynamic unrolling loop step %s. Converged? %s',
+              iteration_count, converged)
       if stop_once_converged and converged:
         break
 
