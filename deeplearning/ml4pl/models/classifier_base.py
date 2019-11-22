@@ -88,8 +88,9 @@ app.DEFINE_integer(
 app.DEFINE_string(
     "restore_model", None,
     "Select a model checkpoint to restore the model state from. The checkpoint "
-    "is identified by a run ID and epoch number, in the format "
-    "--restore_model=<run_id>:<epoch_num>. Model checkpoints are loaded from "
+    "is identified by a run ID and optionally an epoch number, in the format "
+    "--restore_model=<run_id>[:<epoch_num>]. If no epoch number is specified, "
+    "the most recent epoch is used. Model checkpoints are loaded from "
     "the log database.")
 MODEL_FLAGS.add("restore_model")
 
@@ -716,11 +717,27 @@ def Run(model_class):
   # Restore or initialize the model:
   if FLAGS.restore_model:
     try:
-      run_id, epoch_num = FLAGS.restore_model.split(":")
-      epoch_num = int(epoch_num)
+      # Restore from a specific epoch number:
+      if ':' in FLAGS.restore_model:
+        run_id, epoch_num = FLAGS.restore_model.split(":")
+        epoch_num = int(epoch_num)
+      else:
+        # No epoch num specified, so use the most recent checkpoint.
+        run_id = FLAGS.restore_model
+        with self.log_db.Session() as session:
+          query = session.query(log_database.ModelCheckpointMeta.epoch)
+          query = query.filter(
+              log_database.ModelCheckpointMeta.run_id == run_id)
+          query = query.order_by(
+              log_database.ModelCheckpointMeta.date_added.desc())
+          result = query.first()
+        if not result:
+          raise app.UsageError(
+              f"No checkpoints found for model {FLAGS.restore_model}")
+        epoch_num = result.epoch_num
     except Exception as e:
       raise app.UsageError(f"Invalid --restore_model=`{FLAGS.restore_model}`. "
-                           "Must be in the form <run_id>:<epoch_num>.")
+                           "Must be in the form <run_id>[:<epoch_num>].")
     with prof.Profile(f'Restored run {run_id} at epoch {epoch_num}'):
       model.LoadModel(run_id=run_id, epoch_num=epoch_num)
   else:
