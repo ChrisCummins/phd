@@ -78,6 +78,11 @@ app.DEFINE_string(
     "manual_tag", "",
     "An arbitrary tag that can be printed to the leaderboard later.")
 
+app.DEFINE_boolean(
+    "batch_by_graph", False,
+    "If set, construct batches of --batch_size graphs. Else, construct graphs "
+    "of --batch_size nodes.")
+
 ###########################
 app.DEFINE_boolean('kfold', False,
                    "Set to do automatic kfold validation on devmap.")
@@ -101,7 +106,8 @@ GGNNWeights = collections.namedtuple(
 class GgnnClassifier(ggnn.GgnnBaseModel):
   """GGNN model for node-level or graph-level classification."""
 
-  def MakeTransformAndUpdateOps(self, raw_node_input_features: tf.Tensor) -> tf.Tensor:
+  def MakeTransformAndUpdateOps(
+      self, raw_node_input_features: tf.Tensor) -> tf.Tensor:
     """
     Takes node input states (raw vectors) and returns the transformed and updated final raw node states
     
@@ -111,7 +117,6 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
         self.ggnn_weights,
         self.position_embeddings,
     """
-
 
     # Initial node states and then one entry per layer
     # (final state of that layer), shape: number of nodes
@@ -282,7 +287,6 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
     return node_states_per_layer[-1]
 
-
   def MakeLossAndAccuracyAndPredictionOps(
       self) -> typing.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
     layer_timesteps = np.array([int(x) for x in FLAGS.layer_timesteps])
@@ -361,16 +365,15 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
                                  ids=self.placeholders['node_x'][:, i])
           for i in range(len(embeddings))
       ],
-                                           axis=1,
-                                           name='embeddings_concat')
+                                                axis=1,
+                                                name='embeddings_concat')
 
     ###########################################################################
     ###  GGNN UNROLLING START
 
     with tf.compat.v1.variable_scope('TransformAndUpdate'):
       self.ops["final_node_x"] = self.MakeTransformAndUpdateOps(
-          self.encoded_node_x,
-      )
+          self.encoded_node_x,)
 
     ###  GGNN UNROLLING END
     ###########################################################################
@@ -478,7 +481,8 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     """Create mini-batches by flattening adjacency matrices into a single
     adjacency matrix with multiple disconnected components."""
     options = graph_batcher.GraphBatchOptions(
-        max_nodes=FLAGS.batch_size,
+        max_nodes=0 if FLAGS.batch_by_graph else FLAGS.batch_size,
+        max_graphs=FLAGS.batch_size if FLAGS.batch_by_graph else 0,
         groups=groups,
         data_flow_max_steps_required=(None if epoch_type == 'test' else
                                       self.message_passing_step_count))
