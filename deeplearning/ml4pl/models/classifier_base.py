@@ -40,16 +40,18 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path('working_dir',
-                       '/tmp/deeplearning/ml4pl/models/',
-                       'The directory to write files to.',
-                       is_dir=True)
+app.DEFINE_output_path(
+    'working_dir',
+    '/tmp/deeplearning/ml4pl/models/',
+    'The directory to write files to.',
+    is_dir=True)
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'The database to read graph data from.',
-                    must_exist=True)
+app.DEFINE_database(
+    'graph_db',
+    graph_database.Database,
+    None,
+    'The database to read graph data from.',
+    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -297,9 +299,8 @@ class ClassifierBase(object):
 
     batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-        self.MakeMinibatchIterator(epoch_type,
-                                   groups,
-                                   print_context=bar.external_write_mode),
+        self.MakeMinibatchIterator(
+            epoch_type, groups, print_context=bar.external_write_mode),
         max_queue_size=5)
 
     for step, (log, batch_data) in enumerate(batch_generator):
@@ -327,11 +328,12 @@ class ClassifierBase(object):
       y_pred = np.argmax(predictions, axis=1)
 
       if app.GetVerbosity() >= 4:
-        app.Log(4,
-                'Bincount y_true: %s, pred_y: %s',
-                np.bincount(y_true),
-                np.bincount(y_pred),
-                print_context=bar.external_write_mode)
+        app.Log(
+            4,
+            'Bincount y_true: %s, pred_y: %s',
+            np.bincount(y_true),
+            np.bincount(y_pred),
+            print_context=bar.external_write_mode)
 
       accuracies = y_true == y_pred
 
@@ -374,10 +376,11 @@ class ClassifierBase(object):
       acc_sum += log.accuracy
       prec_sum += log.precision
       rec_sum += log.recall
-      bar.set_postfix(loss=loss_sum / (step + 1),
-                      acc=acc_sum / (step + 1),
-                      prec=prec_sum / (step + 1),
-                      rec=rec_sum / (step + 1))
+      bar.set_postfix(
+          loss=loss_sum / (step + 1),
+          acc=acc_sum / (step + 1),
+          prec=prec_sum / (step + 1),
+          rec=rec_sum / (step + 1))
       bar.update(log.graph_count)
 
       # Create a new database session for every batch because we don't want to
@@ -385,9 +388,10 @@ class ClassifierBase(object):
       # and epochs may take O(hours). Alternatively we could store all of the
       # logs for an epoch in-memory and write them in a single shot, but this
       # might consume a lot of memory (when the predictions arrays are large).
-      with prof.Profile("Wrote log to database",
-                        print_to=lambda msg: app.Log(
-                            5, msg, print_context=bar.external_write_mode)):
+      with prof.Profile(
+          "Wrote log to database",
+          print_to=lambda msg: app.Log(
+              5, msg, print_context=bar.external_write_mode)):
         with self.log_db.Session(commit=True) as session:
           session.add(log)
 
@@ -489,8 +493,8 @@ class ClassifierBase(object):
         if model_checkpoints_to_delete:
           app.Log(
               2, "Deleting %s",
-              humanize.Plural(len(model_checkpoints_to_delete),
-                              'old model checkpoint'))
+              humanize.Plural(
+                  len(model_checkpoints_to_delete), 'old model checkpoint'))
           # Cascade delete is broken, we have to first delete the checkpoint
           # data followed by the checkpoint meta entry.
           delete = sql.delete(log_database.ModelCheckpoint)
@@ -676,10 +680,9 @@ class ClassifierBase(object):
     with self.log_db.Session(commit=True) as session:
       session.add_all(
           ToParams(log_database.ParameterType.FLAG, app.FlagsToDict()) +
-          ToParams(log_database.ParameterType.MODEL_FLAG,
-                   self.ModelFlagsToDict()) +
-          ToParams(log_database.ParameterType.BUILD_INFO,
-                   pbutil.ToJson(build_info.GetBuildInfo())))
+          ToParams(log_database.ParameterType.MODEL_FLAG, self.ModelFlagsToDict(
+          )) + ToParams(log_database.ParameterType.BUILD_INFO,
+                        pbutil.ToJson(build_info.GetBuildInfo())))
 
   def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
     flags = dict(flags)  # shallow copy
@@ -716,28 +719,28 @@ def Run(model_class):
 
   # Restore or initialize the model:
   if FLAGS.restore_model:
-    try:
+    if ':' in FLAGS.restore_model:
       # Restore from a specific epoch number:
-      if ':' in FLAGS.restore_model:
+      try:
         run_id, epoch_num = FLAGS.restore_model.split(":")
         epoch_num = int(epoch_num)
-      else:
-        # No epoch num specified, so use the most recent checkpoint.
-        run_id = FLAGS.restore_model
-        with self.log_db.Session() as session:
-          query = session.query(log_database.ModelCheckpointMeta.epoch)
-          query = query.filter(
-              log_database.ModelCheckpointMeta.run_id == run_id)
-          query = query.order_by(
-              log_database.ModelCheckpointMeta.date_added.desc())
-          result = query.first()
-        if not result:
-          raise app.UsageError(
-              f"No checkpoints found for model {FLAGS.restore_model}")
-        epoch_num = result.epoch_num
-    except Exception as e:
-      raise app.UsageError(f"Invalid --restore_model=`{FLAGS.restore_model}`. "
-                           "Must be in the form <run_id>[:<epoch_num>].")
+      except Exception as e:
+        raise app.UsageError(
+            f"Invalid --restore_model=`{FLAGS.restore_model}`. "
+            "Must be in the form <run_id>[:<epoch_num>].")
+    else:
+      # No epoch num specified, so use the most recent checkpoint.
+      run_id = FLAGS.restore_model
+      with log_db.Session() as session:
+        query = session.query(log_database.ModelCheckpointMeta.epoch)
+        query = query.filter(log_database.ModelCheckpointMeta.run_id == run_id)
+        query = query.order_by(
+            log_database.ModelCheckpointMeta.date_added.desc())
+        result = query.first()
+      if not result:
+        raise app.UsageError(
+            f"No checkpoints found for model {FLAGS.restore_model}")
+      epoch_num = result.epoch
     with prof.Profile(f'Restored run {run_id} at epoch {epoch_num}'):
       model.LoadModel(run_id=run_id, epoch_num=epoch_num)
   else:
@@ -748,6 +751,7 @@ def Run(model_class):
     test_acc = model.RunEpoch("test", [FLAGS.test_group])
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
-    model.Train(num_epochs=FLAGS.num_epochs,
-                val_group=FLAGS.val_group,
-                test_group=FLAGS.test_group)
+    model.Train(
+        num_epochs=FLAGS.num_epochs,
+        val_group=FLAGS.val_group,
+        test_group=FLAGS.test_group)
