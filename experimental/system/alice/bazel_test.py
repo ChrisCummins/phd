@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
-"""Unit tests for //alice:bazel.py."""
+"""Unit tests for //experimental/system/alice:bazel.py."""
 import os
 import pathlib
 import signal
@@ -20,12 +20,12 @@ import time
 
 import pytest
 
-from alice import alice_pb2
-from alice import bazel
+from experimental.system.alice import alice_pb2
+from experimental.system.alice import bazel
 from labm8 import system
 from labm8 import test
 
-DUMMY_TARGET = '//alice/test:dummy_target'
+DUMMY_TARGET = '//experimental/system/alice/test:dummy_target'
 
 
 @pytest.fixture(scope='module')

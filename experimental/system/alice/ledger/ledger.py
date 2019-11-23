@@ -16,23 +16,22 @@
 
 TODO: Detailed explanation of the file.
 """
-import time
-
-import config_pb2
 import datetime
-import grpc
 import random
-import sqlalchemy as sql
+import time
 import typing
 from concurrent import futures
+
+import config_pb2
+import grpc
+import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
-from alice import alice_pb2
-from alice import alice_pb2_grpc
+from experimental.system.alice import alice_pb2
+from experimental.system.alice import alice_pb2_grpc
 from labm8 import app
 from labm8 import labdate
 from labm8 import sqlutil
-
 
 FLAGS = app.FLAGS
 
@@ -135,24 +134,22 @@ class LedgerEntry(Base, sqlutil.TablenameFromCamelCapsClassNameMixin,
 
 class StdoutString(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """Ledger outputs."""
-  ledger_id: int = sql.Column(
-      sql.Integer,
-      sql.ForeignKey(LedgerEntry.id),
-      nullable=False,
-      primary_key=True)
-  string: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  ledger_id: int = sql.Column(sql.Integer,
+                              sql.ForeignKey(LedgerEntry.id),
+                              nullable=False,
+                              primary_key=True)
+  string: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                           nullable=False)
 
 
 class StderrString(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """Ledger outputs."""
-  ledger_id: int = sql.Column(
-      sql.Integer,
-      sql.ForeignKey(LedgerEntry.id),
-      nullable=False,
-      primary_key=True)
-  string: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  ledger_id: int = sql.Column(sql.Integer,
+                              sql.ForeignKey(LedgerEntry.id),
+                              nullable=False,
+                              primary_key=True)
+  string: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                           nullable=False)
 
 
 class Database(sqlutil.Database):

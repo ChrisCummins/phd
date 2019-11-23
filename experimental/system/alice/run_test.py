@@ -12,25 +12,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
+"""Unit tests for //experimental/system/alice:run.py."""
+from experimental.system.alice import run
+from labm8 import test
 
-py_binary(
-    name = "worker_bee",
-    srcs = ["worker_bee.py"],
-    deps = [
-        "//alice:alice_pb_py_grpc",
-        "//alice:bazel",
-        "//alice:git_repo",
-        "//labm8:app",
-        "//labm8:system",
-        "//third_party/py/grpcio",
-    ],
-)
+MODULE_UNDER_TEST = None  # No coverage.
 
-py_test(
-    name = "worker_bee_test",
-    srcs = ["worker_bee_test.py"],
-    deps = [
-        ":worker_bee",
-        "//labm8:test",
-    ],
-)
+
+def test_TODO():
+  """Short summary of test."""
+  _ = run
+
+
+if __name__ == '__main__':
+  test.Main()

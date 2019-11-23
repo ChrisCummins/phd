@@ -12,8 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
-"""Unit tests for //alice:run.py."""
-from alice import run
+"""Unit tests for //experimental/system/alice:xdata.py."""
+from experimental.system.alice import xdata
 from labm8 import test
 
 MODULE_UNDER_TEST = None  # No coverage.
@@ -21,7 +21,7 @@ MODULE_UNDER_TEST = None  # No coverage.
 
 def test_TODO():
   """Short summary of test."""
-  _ = run
+  _ = xdata
 
 
 if __name__ == '__main__':

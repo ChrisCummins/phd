@@ -19,9 +19,9 @@ import time
 
 import grpc
 
-from alice import alice_pb2
-from alice import alice_pb2_grpc
-from alice import git_repo
+from experimental.system.alice import alice_pb2
+from experimental.system.alice import alice_pb2_grpc
+from experimental.system.alice import git_repo
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -36,9 +36,8 @@ app.DEFINE_integer('timeout_seconds', None, 'Timeout.')
 
 def SummarizeJobStatus(ledger: alice_pb2.LedgerEntry):
   if ledger.HasField('job_outcome'):
-    print(
-        alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_status),
-        alice_pb2.LedgerEntry.JobOutcome.Name(ledger.job_outcome))
+    print(alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_status),
+          alice_pb2.LedgerEntry.JobOutcome.Name(ledger.job_outcome))
 
 
 def main(argv):

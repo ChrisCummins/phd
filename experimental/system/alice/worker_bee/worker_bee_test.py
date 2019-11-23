@@ -12,10 +12,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
+"""Unit tests for //experimental/system/alice/worker_bee."""
+from experimental.system.alice.worker_bee import worker_bee
+from labm8 import test
 
-cc_binary(
-    name = "dummy_target",
-    testonly = 1,
-    srcs = ["dummy_target.cc"],
-    visibility = ["//alice:__subpackages__"],
-)
+MODULE_UNDER_TEST = None  # No coverage.
+
+
+def test_TODO():
+  """Short summary of test."""
+  _ = worker_bee
+
+
+if __name__ == '__main__':
+  test.Main()

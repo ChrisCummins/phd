@@ -12,14 +12,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
-"""Unit tests for //alice:git_repo."""
+"""Unit tests for //experimental/system/alice:git_repo."""
 import collections
 import pathlib
-import pytest
 import subprocess
 
+import pytest
+
 import getconfig
-from alice import git_repo
+from experimental.system.alice import git_repo
 from labm8 import pbutil
 from labm8 import test
 

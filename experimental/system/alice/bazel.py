@@ -19,7 +19,7 @@ import pathlib
 import subprocess
 import typing
 
-from alice import alice_pb2
+from experimental.system.alice import alice_pb2
 from labm8 import app
 from labm8 import fs
 
@@ -39,8 +39,9 @@ class BazelRunProcess(multiprocessing.Process):
     self.id = run_request.ledger_id
     self.bazel_repo_dir = bazel_repo_dir
     self.workdir = workdir
-    super(BazelRunProcess, self).__init__(
-        target=_BazelRunRequest, args=(run_request, bazel_repo_dir, workdir))
+    super(BazelRunProcess,
+          self).__init__(target=_BazelRunRequest,
+                         args=(run_request, bazel_repo_dir, workdir))
 
   @property
   def pid(self) -> int:
@@ -104,8 +105,9 @@ def _BazelRunRequest(run_request: alice_pb2.RunRequest,
 
   app.Log(1, '$ %s', ' '.join(cmd))
   with fs.chdir(bazel_repo_dir):
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
 
   stdout = subprocess.Popen(['tee', str(workdir / 'stdout.txt')],
                             stdin=process.stdout)

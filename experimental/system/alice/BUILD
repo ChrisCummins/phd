@@ -40,7 +40,7 @@ python_grpc_library(
 py_library(
     name = "bazel",
     srcs = ["bazel.py"],
-    visibility = ["//alice:__subpackages__"],
+    visibility = ["//experimental/system/alice:__subpackages__"],
     deps = [
         ":alice_pb_py_grpc",
         "//labm8:app",
@@ -52,7 +52,7 @@ py_library(
 py_test(
     name = "bazel_test",
     srcs = ["bazel_test.py"],
-    data = ["//alice/test:dummy_target"],
+    data = ["//experimental/system/alice/test:dummy_target"],
     deps = [
         ":alice_pb_py_grpc",
         ":bazel",
@@ -64,7 +64,7 @@ py_test(
 py_library(
     name = "git_repo",
     srcs = ["git_repo.py"],
-    visibility = ["//alice:__subpackages__"],
+    visibility = ["//experimental/system/alice:__subpackages__"],
     deps = [
         ":alice_pb_py_grpc",
         "//labm8:app",

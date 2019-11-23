@@ -12,16 +12,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
-"""Unit tests for //alice/ledger."""
+"""Unit tests for //experimental/system/alice/ledger."""
+import grpc
 import pathlib
+import pytest
+from experimental.system.alice import alice_pb2
+from experimental.system.alice import alice_pb2_grpc
+from experimental.system.alice.ledger import ledger
 from concurrent import futures
 
-import grpc
-import pytest
-
-from alice import alice_pb2
-from alice import alice_pb2_grpc
-from alice.ledger import ledger
 from labm8 import test
 
 
