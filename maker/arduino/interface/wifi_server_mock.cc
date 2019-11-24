@@ -6,7 +6,7 @@ class WiFiServerClient {};
 
 void ESP8266WiFiServer::Init(bool serial_print) {}
 
-WiFiServerClient ESP8266WiFiServer::BlockUntilClientConnected() const {
+WiFiServerClient ESP8266WiFiServer::BlockUntilClientConnected() {
   return WiFiServerClient();
 }
 

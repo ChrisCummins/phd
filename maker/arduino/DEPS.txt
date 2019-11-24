@@ -1,2 +1,2 @@
 # For compiling arduino code:
-all: python -m pip install platformio
+all: python -m pip install 'platformio==4.1.0'
