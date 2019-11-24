@@ -102,7 +102,7 @@ py_test(
         ":models",
         ":testlib",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
-        "//deeplearning/ml4pl:llvm_util",
+        "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
         "//labm8:test",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
