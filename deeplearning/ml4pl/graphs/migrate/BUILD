@@ -10,6 +10,26 @@ py_binary(
 )
 
 py_binary(
+    name = "migrate_graph_database",
+    srcs = ["migrate_graph_database.py"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/labelled/graph_tuple",
+        "//labm8:app",
+    ],
+)
+
+py_test(
+    name = "migrate_graph_database_test",
+    srcs = ["migrate_graph_database_test.py"],
+    deps = [
+        ":migrate_graph_database",
+        "//labm8:app",
+        "//labm8:test",
+    ],
+)
+
+py_binary(
     name = "one_hot_x_features_to_embeddings",
     srcs = ["one_hot_x_features_to_embeddings.py"],
     deps = [
