@@ -31,6 +31,10 @@ class BufferedGraphReaderOrder(enum.Enum):
   # size of the graph table, this is equivalent to GLOBAL_RANDOM. When
   # buffer_size == 1, this is the same as IN_ORDER.
   BATCH_RANDOM = 3
+  # Ordering by data flow max steps required is an optimization for when testing
+  # on large graphs by enabling graph batches to be constructed with largely
+  # similar sized graphs, minimizing the amount of redundant
+  DATA_FLOW_MAX_STEPS_REQUIRED = 4
 
 
 def BufferedGraphReader(
@@ -81,6 +85,9 @@ def BufferedGraphReader(
       # graph table using index range checks, so we need the IDs sorted.
       if order == BufferedGraphReaderOrder.GLOBAL_RANDOM:
         query = query.order_by(db.Random())
+      elif order == BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED:
+        query = query.order_by(
+            graph_database.GraphMeta.data_flow_max_steps_required)
       else:
         query = query.order_by(graph_database.GraphMeta.id)
 
@@ -110,16 +117,17 @@ def BufferedGraphReader(
       # Combine the graph data and graph meta queries.
       query = query.options(sql.orm.joinedload(graph_database.GraphMeta.graph))
 
-    # If we are reading in global random order then we must perform ID checks
-    # for all IDs in the batch. If not then we have ordered the IDs by value
-    # so we can use (faster) index range comparisons.
-    if order == BufferedGraphReaderOrder.GLOBAL_RANDOM:
+    # If we are reading in non-ID order then we must perform ID checks for all
+    # IDs in the batch. If the IDs are ordered we can use (faster) index range
+    # comparisons.
+    if (order == BufferedGraphReaderOrder.GLOBAL_RANDOM or
+        order == BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED):
       query = query.filter(graph_database.GraphMeta.id.in_(batch_ids))
     else:
       query = query.filter(graph_database.GraphMeta.id >= batch_ids[0],
                            graph_database.GraphMeta.id <= batch_ids[-1])
-      # Note that for index range comparisons we must repeat the same
-      # filters as when first getting the graphs.
+      # For index range comparisons we must repeat the same filters as when
+      # first getting the graph IDs.
       query = query.filter(graph_database.GraphMeta.node_count > 1)
       for filter in filters:
         query = query.filter(filter())
