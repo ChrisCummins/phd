@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from graph_nets.demos import models as gn_models
-from labm8 import app
 
 from compilers.llvm import opt_util
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
@@ -32,14 +31,20 @@ from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
+from labm8 import app
 
 FLAGS = app.FLAGS
 
-# A value which has different values for training and testing.
-TrainTestValue = collections.namedtuple('TrainTestValue', ['train', 'test'])
 
-InputTargetValue = collections.namedtuple('InputTargetValue',
-                                          ['input', 'target'])
+class TrainTestValue(typing.NamedTuple):
+  """A value which has different values for training and testing."""
+  train: typing.Any
+  test: typing.Any
+
+
+class InputTargetValue(typing.NamedTuple):
+  input: typing.Any
+  target: typing.Any
 
 
 def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,

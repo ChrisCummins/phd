@@ -3,16 +3,17 @@ import collections
 import json
 import pathlib
 import pickle
+import typing
 
 import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
 import tensorflow as tf
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.models import graph_model
+from labm8 import app
+from labm8 import test
 
 FLAGS = app.FLAGS
 
@@ -74,7 +75,9 @@ def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
 # A model which has been evaluated. Running even a small GraphNet still takes
 # a few seconds, so we cache the results of running one network and use it as
 # a shared test fixture.
-TrainedModel = collections.namedtuple('TrainedModel', ['model', 'outputs'])
+class TrainedModel(typing.NamedTuple):
+  model: graph_model.CompilerGraphNeuralNetwork
+  outputs: typing.List[nx.DiGraph]
 
 
 @pytest.fixture(scope='module')

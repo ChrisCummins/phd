@@ -31,7 +31,10 @@ from labm8 import pbutil
 
 FLAGS = app.FLAGS
 
-IndexProgress = collections.namedtuple('IndexProgress', ['i', 'n'])
+
+class IndexProgress(typing.NamedTuple):
+  i: int
+  n: int
 
 
 class GitHubRepo(object):

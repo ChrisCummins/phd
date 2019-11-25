@@ -16,6 +16,7 @@
 import collections
 import pathlib
 import subprocess
+import typing
 
 import pytest
 
@@ -30,7 +31,9 @@ def _Git(gitdir: pathlib.Path, *args):
   subprocess.check_call(['git', '-C', gitdir] + list(args))
 
 
-MockRepo = collections.namedtuple('MockRepo', ['path', 'remote'])
+class MockRepo(typing.NamedTuple):
+  path: pathlib.Path
+  remote: pathlib.Path
 
 
 @pytest.fixture(scope='function')

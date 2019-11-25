@@ -39,8 +39,8 @@ INLINED_OPENCL_HEADER = bazelutil.DataPath(
 
 # On Linux we must preload the LLVM shared libraries.
 FEATURE_EXTRACTOR_ENV = os.environ.copy()
-_LIBCLANG_SO = bazelutil.DataPath(
-    'llvm_linux/lib/libclang.so', must_exist=False)
+_LIBCLANG_SO = bazelutil.DataPath('llvm_linux/lib/libclang.so',
+                                  must_exist=False)
 _LIBLTO_SO = bazelutil.DataPath('llvm_linux/lib/libLTO.so', must_exist=False)
 if _LIBCLANG_SO.is_file() and _LIBLTO_SO.is_file():
   FEATURE_EXTRACTOR_ENV['LD_PRELOAD'] = f'{_LIBCLANG_SO}:{_LIBLTO_SO}'
@@ -48,21 +48,19 @@ if _LIBCLANG_SO.is_file() and _LIBLTO_SO.is_file():
 app.DEFINE_string('feature_extractor_opencl_src_path', None,
                   'Path of OpenCL file to extract features of.')
 
+
 # The definition of features extracted by the feature extractor.
-GreweEtAlFeatures = collections.namedtuple(
-    'GreweEtAlFeatures',
-    [
-        'file',  # str: the base name of the file path.
-        'kernel_name',  # str: name of the kernel, e.g. `kernel void A() {}` -> `A`.
-        'compute_operation_count',  # int: compute operation count
-        'rational_operation_count',  # int: rational operation count
-        'global_memory_access_count',  # int: accesses to global memory
-        'local_memory_access_count',  # int: accesses to local memory
-        'coalesced_memory_access_count',  # int: coalesced memory accesses
-        'atomic_operation_count',  # int: atomic operations
-        'coalesced_memory_access_ratio',  # float: derived feature
-        'compute_to_memory_access_ratio',  # float: derived feature
-    ])
+class GreweEtAlFeatures(typing.NamedTuple):
+  file: str  # the base name of the file path.
+  kernel_name: str  # name of the kernel, e.g. `kernel void A() {}` -> `A`.
+  compute_operation_count: int  # compute operation count
+  rational_operation_count: int  # rational operation count
+  global_memory_access_count: int  # accesses to global memory
+  local_memory_access_count: int  # accesses to local memory
+  coalesced_memory_access_count: int  # coalesced memory accesses
+  atomic_operation_count: int  # atomic operations
+  coalesced_memory_access_ratio: float  # derived feature
+  compute_to_memory_access_ratio: float  # derived feature
 
 
 def _GreweEtAlFeatures_from_binary_output(
@@ -72,12 +70,15 @@ def _GreweEtAlFeatures_from_binary_output(
     coalesced_memory_access_ratio,
     compute_to_memory_access_ratio) -> GreweEtAlFeatures:
   """Tuple constructor which converts types."""
-  return GreweEtAlFeatures(
-      str(file), str(kernel_name), int(compute_operation_count),
-      int(rational_operation_count), int(global_memory_access_count),
-      int(local_memory_access_count), int(coalesced_memory_access_count),
-      int(atomic_operation_count), float(coalesced_memory_access_ratio),
-      float(compute_to_memory_access_ratio))
+  return GreweEtAlFeatures(str(file), str(kernel_name),
+                           int(compute_operation_count),
+                           int(rational_operation_count),
+                           int(global_memory_access_count),
+                           int(local_memory_access_count),
+                           int(coalesced_memory_access_count),
+                           int(atomic_operation_count),
+                           float(coalesced_memory_access_ratio),
+                           float(compute_to_memory_access_ratio))
 
 
 GreweEtAlFeatures._from_binary_output = _GreweEtAlFeatures_from_binary_output
@@ -121,12 +122,11 @@ def ExtractFeaturesFromPath(
       str(path)
   ] + [f'-extra_arg={arg}' for arg in extra_args]
   app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      env=FEATURE_EXTRACTOR_ENV,
-      universal_newlines=True)
+  process = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             env=FEATURE_EXTRACTOR_ENV,
+                             universal_newlines=True)
   stdout, stderr = process.communicate()
 
   lines = [line.split(',') for line in stdout.split('\n')]
@@ -168,8 +168,8 @@ def ExtractFeatures(
   contents = opencl_src.encode('utf-8')
   prefix = 'phd_research_grewe_2013_cgo_feature_extractor_'
   with fs.TemporaryFileWithContents(contents, prefix=prefix) as f:
-    return ExtractFeaturesFromPath(
-        pathlib.Path(f.name), extra_args, timeout_seconds)
+    return ExtractFeaturesFromPath(pathlib.Path(f.name), extra_args,
+                                   timeout_seconds)
 
 
 def main(argv):

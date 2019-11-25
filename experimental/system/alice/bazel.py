@@ -25,7 +25,9 @@ from labm8 import fs
 
 FLAGS = app.FLAGS
 
-RunContext = collections.namedtuple('RunContext', ['process'])
+
+class RunContext(typing.NamedTuple):
+  process: typing.Any
 
 
 class BazelError(OSError):

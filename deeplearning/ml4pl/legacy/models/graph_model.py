@@ -16,6 +16,7 @@ from graph_nets import graphs
 from graph_nets import modules
 from graph_nets import utils_np
 from graph_nets import utils_tf
+
 from labm8 import app
 from labm8 import labdate
 from labm8 import prof
@@ -63,16 +64,24 @@ app.DEFINE_integer(
     '--experimental_use_encode_process_decode_with_loop is '
     'set')
 
-# A value which has different values for training, validation, and testing.
-TrainingValidationTestValue = collections.namedtuple(
-    'TrainingValidationTestValue', ['training', 'validation', 'test'])
 
-# A value which has an input and target pair.
-InputTargetValue = collections.namedtuple('InputTargetValue',
-                                          ['input', 'target'])
+class TrainingValidationTestValue(typing.NamedTuple):
+  """A value which has different values for training, validation, and testing."""
+  training: typing.Any
+  validation: typing.Any
+  test: typing.Any
 
-InputLatentTargetValue = collections.namedtuple('InputLatentTargetValue',
-                                                ['input', 'latent', 'target'])
+
+class InputTargetValue(typing.NamedTuple):
+  """A value which has an input and target pair."""
+  input: typing.Any
+  target: typing.Any
+
+
+class InputLatentTargetValue(typing.NamedTuple):
+  input: typing.Any
+  latent: typing.Any
+  target: typing.Any
 
 
 def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
@@ -314,7 +323,11 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
   """
 
   def _build(self, input_op, num_processing_steps):
-    LoopVars = collections.namedtuple('LoopVars', ['i', 'latent', 'latent0'])
+
+    class LoopVars(typing.NamedTuple):
+      i: tf.Tensor
+      latent: tf.Tensor
+      latent0: tf.Tensor
 
     imax = tf.constant(num_processing_steps)
 
@@ -391,8 +404,9 @@ class LossOps(object):
     return tf.losses.softmax_cross_entropy(target_ph.nodes, output_op.nodes)
 
 
-EvaluationResult = collections.namedtuple('EvaluationResult',
-                                          ['accuracy', 'solved'])
+class EvaluationResult(typing.NamedTuple):
+  accuracy: float
+  solved: float
 
 
 class AccuracyEvaluators(object):

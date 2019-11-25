@@ -251,8 +251,9 @@ def InlineHeaders(import_root: pathlib.Path, file_relpath: str, text: str,
   return '\n'.join(output)
 
 
-FuzzyIncludeMatch = collections.namedtuple('FuzzyIncludeMatch',
-                                           ['path', 'confidence'])
+class FuzzyIncludeMatch(typing.NamedTuple):
+  path: str
+  confidence: float
 
 
 def FindCandidateInclude(include_match: str,

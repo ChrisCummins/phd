@@ -19,12 +19,11 @@ import subprocess
 import tempfile
 import typing
 
-from labm8 import app
-from labm8 import fs
-
 from compilers.llvm import llvm
 from compilers.llvm import llvm_as
 from compilers.llvm import opt
+from labm8 import app
+from labm8 import fs
 
 FLAGS = app.FLAGS
 
@@ -115,12 +114,11 @@ def DotControlFlowGraphsFromBytecode(bytecode: str) -> typing.Iterator[str]:
           yield f.read()
 
 
-def DotGraphsFromBytecode(
-    bytecode: str,
-    opt_args: typing.List[str],
-    opt_path: str = None,
-    output_pred: typing.Callable[[str], bool] = None
-) -> typing.Tuple[typing.List[str], typing.List[str]]:
+def DotGraphsFromBytecode(bytecode: str,
+                          opt_args: typing.List[str],
+                          opt_path: str = None,
+                          output_pred: typing.Callable[[str], bool] = None
+                         ) -> typing.Tuple[typing.List[str], typing.List[str]]:
   """Obtain dot graphs from an LLVM bytecode file using an opt pass.
 
   Args:
@@ -204,9 +202,8 @@ def DotCallGraphAndControlFlowGraphsFromBytecode(
     UnicodeDecodeError: If generated dotfile can't be read.
   """
   control_flow_graph_dots, callgraph_dots = DotGraphsFromBytecode(
-    bytecode, ['-dot-cfg', '-dot-callgraph'], opt_path,
-    lambda name: name != 'callgraph.dot'
-  )
+      bytecode, ['-dot-cfg', '-dot-callgraph'], opt_path,
+      lambda name: name != 'callgraph.dot')
 
   if len(callgraph_dots) != 1:
     raise OSError(f"Callgraph dotfile not produced")
@@ -366,13 +363,10 @@ def ParseAliasSetsOutput(
   return function_alias_sets
 
 
-AnalysisOutput = collections.namedtuple(
-    'AnalysisOutput',
-    [
-        'analysis',  # str, the name of the analysis
-        'function',  # typing.Optional[str], function name, or None if global analysis
-        'lines',  # typing.List[str], the output of the analysis
-    ])
+class AnalysisOutput(typing.NamedTuple):
+  analysis: str  # the name of the analysis
+  function: typing.Optional[str]  # function name, or None if global analysis
+  lines: typing.List[str]  # the output of the analysis
 
 
 def RunAnalysisPasses(bytecode: str,

@@ -1,7 +1,9 @@
 """Learning conditional and loop patterns for TensorFlow."""
 import collections
+import typing
 
 import tensorflow as tf
+
 from labm8 import app
 from labm8 import test
 
@@ -32,8 +34,12 @@ def test_ConditionalLessThan_placeholder_input():
 
 def WhileLoopFactorial(n: int):
   """Calculating factorial in a while loop."""
+
   # The loop variables.
-  LoopVars = collections.namedtuple('LoopVars', ['i', 'imax', 'acc'])
+  class LoopVars(typing.NamedTuple):
+    i: tf.Tensor
+    imax: tf.Tensor
+    acc: tf.Tensor
 
   def Condition(vars: LoopVars):
     """The while loop condition."""

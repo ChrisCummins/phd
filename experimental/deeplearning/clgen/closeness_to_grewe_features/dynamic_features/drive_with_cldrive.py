@@ -49,7 +49,11 @@ app.DEFINE_boolean(
     '--norandom_order, results are ordered by their static features ID in '
     'ascending values. This flag reverses that order.')
 
-KernelToDrive = collections.namedtuple('KernelToDrive', ['id', 'src'])
+
+class KernelToDrive(typing.NamedTuple):
+  id: int
+  src: str
+
 
 # Use the same combinations of local and global sizes as in the CGO'17 paper.
 LSIZE_GSIZE_PROTO_PAIRS = [
@@ -96,16 +100,15 @@ def DriveKernelAndRecordResults(
     )
 
   try:
-    df = cldrive.DriveToDataFrame(
-        cldrive_pb2.CldriveInstances(instance=[
-            cldrive_pb2.CldriveInstance(
-                device=env.proto,
-                opencl_src=src,
-                dynamic_params=dynamic_params,
-                min_runs_per_kernel=num_runs,
-            )
-        ]),
-        timeout_seconds=FLAGS.cldrive_timeout_seconds)
+    df = cldrive.DriveToDataFrame(cldrive_pb2.CldriveInstances(instance=[
+        cldrive_pb2.CldriveInstance(
+            device=env.proto,
+            opencl_src=src,
+            dynamic_params=dynamic_params,
+            min_runs_per_kernel=num_runs,
+        )
+    ]),
+                                  timeout_seconds=FLAGS.cldrive_timeout_seconds)
 
     # Record programs which contain no kernels.
     if not len(df):
@@ -120,13 +123,12 @@ def DriveKernelAndRecordResults(
     df.drop(columns=['instance', 'build_opts', 'kernel'], inplace=True)
 
     # Fix the naming differences between cldrive and the database.
-    df.rename(
-        columns={
-            'device': 'opencl_env',
-            'global_size': 'gsize',
-            'local_size': 'wgsize'
-        },
-        inplace=True)
+    df.rename(columns={
+        'device': 'opencl_env',
+        'global_size': 'gsize',
+        'local_size': 'wgsize'
+    },
+              inplace=True)
 
     # NaN values are excluded in groupby statements, and we need to groupby
     # columns that may be NaN (gsize and wgsize). Replace NaN with -1 since all
@@ -153,12 +155,11 @@ def DriveKernelAndRecordResults(
     df['hostname'] = system.HOSTNAME
 
     # Import the dataframe into the SQL table.
-    df.to_sql(
-        db.DynamicFeatures.__tablename__,
-        con=database.engine,
-        if_exists='append',
-        index=False,
-        dtype={'driver': sql.Enum(db.DynamicFeaturesDriver)})
+    df.to_sql(db.DynamicFeatures.__tablename__,
+              con=database.engine,
+              if_exists='append',
+              index=False,
+              dtype={'driver': sql.Enum(db.DynamicFeaturesDriver)})
     app.Log(1, 'Imported %d dynamic features', len(df))
   except cldrive.CldriveCrash:
     with database.Session(commit=True) as session:

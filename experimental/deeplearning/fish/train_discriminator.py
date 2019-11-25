@@ -33,8 +33,10 @@ app.DEFINE_integer('num_epochs', 50, 'The number of epochs to train for.')
 app.DEFINE_integer('batch_size', 64, 'The training batch size.')
 app.DEFINE_integer('seed', None, 'Random seed value.')
 
-PositiveNegativeDataset = collections.namedtuple('PositiveNegativeDataset',
-                                                 ['positive', 'negative'])
+
+class PositiveNegativeDataset(typing.NamedTuple):
+  positive: typing.Any
+  negative: typing.Any
 
 
 def EncodeAndPad(srcs: typing.List[str], padded_length: int,
@@ -57,8 +59,9 @@ def Encode1HotLabels(y: np.array) -> np.array:
 
 def BuildKerasModel(sequence_length: int, lstm_size: int, num_layers: int,
                     dnn_size: int, atomizer: atomizers.AtomizerBase):
-  code_in = keras.layers.Input(
-      shape=(sequence_length,), dtype='int32', name='code_in')
+  code_in = keras.layers.Input(shape=(sequence_length,),
+                               dtype='int32',
+                               name='code_in')
   x = keras.layers.Embedding(
       # Note the +1 on atomizer.vocab_size to accommodate the padding character.
       input_dim=atomizer.vocab_size + 1,
@@ -66,17 +69,19 @@ def BuildKerasModel(sequence_length: int, lstm_size: int, num_layers: int,
       output_dim=lstm_size,
       name='embedding')(code_in)
   for i in range(num_layers):
-    x = keras.layers.LSTM(
-        lstm_size, implementation=1, return_sequences=True,
-        go_backwards=not i)(x)
+    x = keras.layers.LSTM(lstm_size,
+                          implementation=1,
+                          return_sequences=True,
+                          go_backwards=not i)(x)
   x = keras.layers.LSTM(lstm_size, implementation=1)(x)
   x = keras.layers.Dense(dnn_size, activation='relu')(x)
   # There are two output classes.
   out = keras.layers.Dense(2, activation='sigmoid')(x)
 
   model = keras.models.Model(input=code_in, output=out)
-  model.compile(
-      loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
+  model.compile(loss='categorical_crossentropy',
+                metrics=['accuracy'],
+                optimizer='adam')
   model.summary()
   return model
 
@@ -102,8 +107,8 @@ def ProtosToModelData(protos: PositiveNegativeDataset, sequence_length: int,
                       atomizer: atomizers.AtomizerBase):
   x = EncodeAndPad([p.src for p in protos.positive + protos.negative],
                    sequence_length, atomizer)
-  y = np.concatenate((np.ones(len(protos.positive)),
-                      np.zeros(len(protos.negative))))
+  y = np.concatenate(
+      (np.ones(len(protos.positive)), np.zeros(len(protos.negative))))
   assert len(x) == len(protos.positive) + len(protos.negative)
   assert len(y) == len(protos.positive) + len(protos.negative)
   return x, y
@@ -130,16 +135,16 @@ def main(argv):
   training_protos = LoadPositiveNegativeProtos(dataset_root / 'training')
   validation_protos = LoadPositiveNegativeProtos(dataset_root / 'validation')
   testing_protos = LoadPositiveNegativeProtos(dataset_root / 'testing')
-  app.Log(1, 
-      'Number of training examples: %s.',
+  app.Log(
+      1, 'Number of training examples: %s.',
       humanize.Commas(
           len(training_protos.positive) + len(training_protos.negative)))
-  app.Log(1, 
-      'Number of validation examples: %s.',
+  app.Log(
+      1, 'Number of validation examples: %s.',
       humanize.Commas(
           len(validation_protos.positive) + len(validation_protos.negative)))
-  app.Log(1, 
-      'Number of testing examples: %s.',
+  app.Log(
+      1, 'Number of testing examples: %s.',
       humanize.Commas(
           len(testing_protos.positive) + len(testing_protos.negative)))
 
@@ -170,43 +175,40 @@ def main(argv):
 
   np.random.seed(FLAGS.seed)
   app.Log(1, 'Building Keras model')
-  model = BuildKerasModel(
-      sequence_length=sequence_length,
-      lstm_size=FLAGS.lstm_size,
-      num_layers=FLAGS.num_layers,
-      dnn_size=FLAGS.dnn_size,
-      atomizer=atomizer)
+  model = BuildKerasModel(sequence_length=sequence_length,
+                          lstm_size=FLAGS.lstm_size,
+                          num_layers=FLAGS.num_layers,
+                          dnn_size=FLAGS.dnn_size,
+                          atomizer=atomizer)
   app.Log(1, 'Training model')
 
   def OnEpochEnd(epoch, logs):
     """End-of-epoch model evaluate."""
     del logs
     app.Log(1, 'Evaluating model at epoch %d', epoch)
-    score, accuracy = model.evaluate(
-        test_x,
-        Encode1HotLabels(test_y),
-        batch_size=FLAGS.batch_size,
-        verbose=0)
+    score, accuracy = model.evaluate(test_x,
+                                     Encode1HotLabels(test_y),
+                                     batch_size=FLAGS.batch_size,
+                                     verbose=0)
     app.Log(1, 'Score: %.2f, Accuracy: %.2f', score * 100, accuracy * 100)
 
   logger = telemetry.TrainingLogger(pathlib.Path(FLAGS.model_path))
-  model.fit(
-      x,
-      Encode1HotLabels(y),
-      epochs=FLAGS.num_epochs,
-      batch_size=FLAGS.batch_size,
-      verbose=True,
-      shuffle=True,
-      validation_data=validation_data,
-      callbacks=[
-          keras.callbacks.ModelCheckpoint(
-              FLAGS.model_path + '/weights_{epoch:03d}.hdf5',
-              verbose=1,
-              mode="min",
-              save_best_only=False),
-          keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
-          logger.KerasCallback(keras),
-      ])
+  model.fit(x,
+            Encode1HotLabels(y),
+            epochs=FLAGS.num_epochs,
+            batch_size=FLAGS.batch_size,
+            verbose=True,
+            shuffle=True,
+            validation_data=validation_data,
+            callbacks=[
+                keras.callbacks.ModelCheckpoint(
+                    FLAGS.model_path + '/weights_{epoch:03d}.hdf5',
+                    verbose=1,
+                    mode="min",
+                    save_best_only=False),
+                keras.callbacks.LambdaCallback(on_epoch_end=OnEpochEnd),
+                logger.KerasCallback(keras),
+            ])
 
 
 if __name__ == '__main__':

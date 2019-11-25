@@ -48,14 +48,17 @@ CLANG = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
 # Valid optimization levels.
 OPTIMIZATION_LEVELS = {"-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"}
 
+
 # A structured representation of the output of clang's bisect debugging, e.g.
 #     $ clang foo.c -mllvm -opt-bisect-limit=-1.
 # The output is of the form:
 #     BISECT: running pass (<number>) <name> on <target_type> (<target>)
 #
 # See ClangBisectMessageToInvocation() for the conversion.
-OptPassRunInvocation = collections.namedtuple('OptPassRunInvocation',
-                                              ['name', 'target', 'target_type'])
+class OptPassRunInvocation(typing.NamedTuple):
+  name: str
+  target: str
+  target_type: str
 
 
 class ClangException(llvm.LlvmError):
@@ -104,12 +107,11 @@ def Exec(args: typing.List[str],
   cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG)] + args
   if log:
     app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdout=stdout,
-      stderr=stderr,
-      stdin=subprocess.PIPE if stdin else None,
-      universal_newlines=True)
+  process = subprocess.Popen(cmd,
+                             stdout=stdout,
+                             stderr=stderr,
+                             stdin=subprocess.PIPE if stdin else None,
+                             universal_newlines=True)
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:
@@ -153,9 +155,8 @@ def Compile(srcs: typing.List[pathlib.Path],
   # Ensure the output directory exists.
   out.parent.mkdir(parents=True, exist_ok=True)
 
-  proc = Exec(
-      [str(x) for x in srcs] + ['-o', str(out)] + copts,
-      timeout_seconds=timeout_seconds)
+  proc = Exec([str(x) for x in srcs] + ['-o', str(out)] + copts,
+              timeout_seconds=timeout_seconds)
   if proc.returncode == 9:
     raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds} seconds')
   elif proc.returncode:
@@ -214,10 +215,9 @@ def ClangBisectMessageToInvocation(line: str) -> OptPassRunInvocation:
   m = _CLANG_BISECT_MESSAGE_RE.match(line)
   if not m:
     raise ClangException(msg=f'Cannot interpret line: {line}')
-  return OptPassRunInvocation(
-      name=m.group('name'),
-      target=m.group('target') or '',
-      target_type=m.group('target_type'))
+  return OptPassRunInvocation(name=m.group('name'),
+                              target=m.group('target') or '',
+                              target_type=m.group('target_type'))
 
 
 def GetOptPasses(cflags: typing.Optional[typing.List[str]] = None,

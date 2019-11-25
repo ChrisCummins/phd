@@ -50,11 +50,20 @@ app.DEFINE_integer(
     'Ignore programs whose sources are longer than this number of characters')
 app.DEFINE_integer('seed', 0, 'Random seed to use when splitting data.')
 
-# The size ratios to use for training, validation, and testing. Must sum to 1.
-DatasetRatios = collections.namedtuple('DataSetRatios',
-                                       ['train', 'val', 'test'])
 
-DatasetSizes = collections.namedtuple('DataSetSizes', ['train', 'val', 'test'])
+class DatasetRatios(typing.NameTuple):
+  """The size ratios to use for training, validation, and testing. Must sum to
+  1."""
+  train: float
+  val: float
+  test: float
+
+
+class DatasetSizes(typing.NameTuple):
+  train: int
+  val: int
+  test: int
+
 
 # Type alias for training protos.
 TrainingProto = fish_pb2.CompilerCrashDiscriminatorTrainingExample
@@ -99,15 +108,15 @@ def LoadNegativeProtos(
   if balance_class_lengths:
     positive_proto_sizes = [len(p.src) for p in positive_protos]
     app.Log(1, 'Loaded %s negative protos. Balancing lengths ...',
-             humanize.Commas(len(candidate_protos)))
+            humanize.Commas(len(candidate_protos)))
     negative_proto_sizes = np.array([len(p.src) for p in candidate_protos],
                                     dtype=np.int32)
     negative_protos = []
     for i, positive_proto_size in enumerate(positive_proto_sizes):
       size_diffs = np.abs(negative_proto_sizes - positive_proto_size)
       idx_of_closest: int = np.argmin(size_diffs)
-      app.Log(1, 
-          'Found negative example of size %s to match positive '
+      app.Log(
+          1, 'Found negative example of size %s to match positive '
           'example of size %s (diff %s)',
           humanize.Commas(negative_proto_sizes[idx_of_closest]),
           humanize.Commas(positive_proto_size), size_diffs.min())
@@ -125,7 +134,7 @@ def LoadNegativeProtos(
       positive_protos = positive_protos[:min_count]
     negative_protos = candidate_protos
   app.Log(1, 'Loaded %s negative data protos',
-           humanize.Commas(len(negative_protos)))
+          humanize.Commas(len(negative_protos)))
   return positive_protos, negative_protos
 
 
@@ -189,7 +198,7 @@ def main(argv):
     pbutil.ToFile(proto,
                   (dataset_root / 'training' / f'negative-{i:04d}.pbtxt'))
   app.Log(1, 'Wrote %s training examples',
-           humanize.Commas(positive_sizes[0] + negative_sizes[0]))
+          humanize.Commas(positive_sizes[0] + negative_sizes[0]))
   positive_protos = positive_protos[positive_sizes[0]:]
   negative_protos = negative_protos[negative_sizes[0]:]
 
@@ -200,7 +209,7 @@ def main(argv):
     pbutil.ToFile(proto,
                   (dataset_root / 'validation' / f'negative-{i:04d}.pbtxt'))
   app.Log(1, 'Wrote %s validation examples',
-           humanize.Commas(positive_sizes[1] + negative_sizes[1]))
+          humanize.Commas(positive_sizes[1] + negative_sizes[1]))
   positive_protos = positive_protos[positive_sizes[1]:]
   negative_protos = negative_protos[negative_sizes[1]:]
 
@@ -209,7 +218,7 @@ def main(argv):
   for i, proto in enumerate(negative_protos[:negative_sizes[2]]):
     pbutil.ToFile(proto, (dataset_root / 'testing' / f'negative-{i:04d}.pbtxt'))
   app.Log(1, 'Wrote %s testing examples',
-           humanize.Commas(positive_sizes[2] + negative_sizes[2]))
+          humanize.Commas(positive_sizes[2] + negative_sizes[2]))
 
 
 if __name__ == '__main__':

@@ -107,10 +107,11 @@ def GetResultOutputClass(r: result.Result) -> str:
   raise LookupError('Failed to output class of result.')
 
 
-Majority = collections.namedtuple('Majority', [
-    'majority_outcome', 'outcome_majority_size', 'majority_stdout',
-    'stdout_majority_size'
-])
+class Majority(typing.NamedTuple):
+  majority_outcome: str
+  outcome_majority_size: int
+  majority_stdout: str
+  stdout_majority_size: int
 
 
 def GetMajorityOutput(results: typing.List[result.Result]) -> Majority:

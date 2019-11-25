@@ -165,18 +165,22 @@ def AddClassificationTargetToDataFrame(df: pd.DataFrame,
   return df
 
 
-# A train+test data batch for evaluation.
-TrainTestSplit = collections.namedtuple(
-    'TrainTestSplit', ['i', 'train_df', 'test_df', 'gpu_name', 'global_step'])
+class TrainTestSplit(typing.NamedTuple):
+  """A train+test data batch for evaluation."""
+  i: int
+  train_df: pd.DataFrame
+  test_df: pd.DataFrame
+  gpu_name: str
+  global_step: int
 
-# A train+val+test data batch for evaluation.
-TrainValTestSplit = collections.namedtuple('TrainValTestSplit', [
-    'gpu_name',
-    'train_df',
-    'valid_df',
-    'test_df',
-    'global_step',
-])
+
+class TrainValTestSplit(typing.NamedTuple):
+  """A train+val+test data batch for evaluation."""
+  gpu_name: str
+  train_df: pd.DataFrame
+  valid_df: pd.DataFrame
+  test_df: pd.DataFrame
+  global_step: int
 
 
 def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
@@ -185,19 +189,19 @@ def TrainTestSplitGenerator(df: pd.DataFrame, seed: int, split_count: int = 10):
     df = AddClassificationTargetToDataFrame(df, gpu_name).reset_index()
 
     # Split into train/test indices for stratified 10-fold cross-validation.
-    dataset_splitter = model_selection.StratifiedKFold(
-        n_splits=split_count, shuffle=True, random_state=seed)
+    dataset_splitter = model_selection.StratifiedKFold(n_splits=split_count,
+                                                       shuffle=True,
+                                                       random_state=seed)
     dataset_splits = dataset_splitter.split(np.zeros(len(df)), df['y'].values)
 
     global_step = 0
     for i, (train_index, test_index) in enumerate(dataset_splits):
       global_step += 1
-      yield TrainTestSplit(
-          i=i + 1,
-          train_df=df.iloc[train_index, :].copy(),
-          test_df=df.iloc[test_index, :].copy(),
-          gpu_name=gpu_name,
-          global_step=global_step)
+      yield TrainTestSplit(i=i + 1,
+                           train_df=df.iloc[train_index, :].copy(),
+                           test_df=df.iloc[test_index, :].copy(),
+                           gpu_name=gpu_name,
+                           global_step=global_step)
 
 
 def TrainValidationTestSplits(df: pd.DataFrame,
@@ -263,12 +267,11 @@ def TrainValidationTestSplits(df: pd.DataFrame,
     val = val.sample(frac=1, random_state=rand)
     test = test.sample(frac=1, random_state=rand)
 
-    yield TrainValTestSplit(
-        gpu_name=gpu_name,
-        train_df=train,
-        valid_df=val,
-        test_df=test,
-        global_step=i)
+    yield TrainValTestSplit(gpu_name=gpu_name,
+                            train_df=train,
+                            valid_df=val,
+                            test_df=test,
+                            global_step=i)
 
 
 def LoadPredictionsFromFile(predictions_path: pathlib.Path):
@@ -329,19 +332,17 @@ def evaluate(model: 'HeterogemeousMappingModel', df: pd.DataFrame, atomizer,
       else:
         # Train and cache a model.
         model.init(seed=seed, atomizer=atomizer)
-        model.train(
-            df=split.train_df,
-            platform_name=split.gpu_name,
-            verbose=FLAGS.verbosity)
+        model.train(df=split.train_df,
+                    platform_name=split.gpu_name,
+                    verbose=FLAGS.verbosity)
         model.save(model_path)
 
       # Test the model.
       app.Log(1, "Predicting %d %s mappings for device %s", len(split.test_df),
               model.__name__, split.gpu_name)
-      predictions = model.predict(
-          df=split.test_df,
-          platform_name=split.gpu_name,
-          verbose=FLAGS.verbosity)
+      predictions = model.predict(df=split.test_df,
+                                  platform_name=split.gpu_name,
+                                  verbose=FLAGS.verbosity)
       app.Log(1, 'Writing %s', predictions_path)
       SavePredictionsToFile(predictions, predictions_path)
 
@@ -354,14 +355,14 @@ def PredictionEvaluationsToTable(
     data: typing.Iterable[typing.Dict[str, typing.Union[str, float, int]]]
 ) -> pd.DataFrame:
   """Create a table from the results of EvaluatePredictions()."""
-  return pd.DataFrame(
-      data,
-      index=range(1,
-                  len(data) + 1),
-      columns=[
-          "Model", "Platform", "Benchmark Suite", "Benchmark", "Dataset",
-          "Oracle Mapping", "Predicted Mapping", "Correct?", "Speedup"
-      ])
+  return pd.DataFrame(data,
+                      index=range(1,
+                                  len(data) + 1),
+                      columns=[
+                          "Model", "Platform", "Benchmark Suite", "Benchmark",
+                          "Dataset", "Oracle Mapping", "Predicted Mapping",
+                          "Correct?", "Speedup"
+                      ])
 
 
 def EvaluatePredictions(

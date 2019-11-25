@@ -132,8 +132,10 @@ def KernelInvocationsFromCeclLog(
   return kernel_invocations
 
 
-StderrComponents = collections.namedtuple(
-    'StderrComponents', ['stderr', 'cecl_log', 'program_sources'])
+class StderrComponents(typing.NamedTuple):
+  stderr: str
+  cecl_log: str
+  program_sources: typing.List[str]
 
 
 def SplitStderrComponents(stderr: str) -> StderrComponents:

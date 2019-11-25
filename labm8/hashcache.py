@@ -38,12 +38,15 @@ FLAGS = app.FLAGS
 
 Base = declarative.declarative_base()
 
-# An in-memory cache which is optionally shared amongst all HashCache instances.
-# The in-memory cache omits timestamps from records.
-InMemoryCacheKey = collections.namedtuple(
-    'InMemoryCacheKey',
-    ['hash_fn', 'path'],
-)
+
+class InMemoryCacheKey(typing.NamedTuple):
+  """An in-memory cache which is optionally shared amongst all HashCache
+  instances. The in-memory cache omits timestamps from records.
+  """
+  hash_fn: str
+  path: str
+
+
 IN_MEMORY_CACHE: typing.Dict[InMemoryCacheKey, str] = {}
 
 

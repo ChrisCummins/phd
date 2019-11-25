@@ -20,7 +20,8 @@ import sys
 import typing
 from contextlib import suppress
 from signal import Signals
-from subprocess import PIPE, Popen
+from subprocess import PIPE
+from subprocess import Popen
 from tempfile import NamedTemporaryFile
 
 import numpy as np
@@ -30,8 +31,6 @@ from gpu.cldrive.legacy import env as _env
 from labm8 import app
 
 FLAGS = app.FLAGS
-
-ArgTuple = collections.namedtuple('ArgTuple', ['hostdata', 'devdata'])
 
 
 class TimeoutError(RuntimeError):
@@ -54,7 +53,7 @@ class PorcelainError(RuntimeError):
     return f"Porcelain subprocess exited with return code {self.status}"
 
 
-class NDRange(collections.namedtuple('NDRange', ['x', 'y', 'z'])):
+class NDRange(typing.NamedTuple):
   """A 3 dimensional NDRange tuple. Has components x,y,z.
 
   Attributes:
@@ -72,7 +71,9 @@ class NDRange(collections.namedtuple('NDRange', ['x', 'y', 'z'])):
     >>> NDRange(10, 10, 10) > NDRange(10, 9, 10)
     True
   """
-  __slots__ = ()
+  x: int
+  y: int
+  z: int
 
   def __repr__(self) -> str:
     return f"[{self.x}, {self.y}, {self.z}]"

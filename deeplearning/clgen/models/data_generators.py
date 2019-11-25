@@ -19,7 +19,6 @@ a reasonable size, the full training data may not fit in memory. This modules
 provides Python Generator classes for use by a sequential Keras model's
 fit_generator() method to stream batches of training data.
 """
-
 import collections
 import sys
 import time
@@ -34,8 +33,11 @@ from labm8 import humanize
 
 FLAGS = app.FLAGS
 
-# An <X,y> data tuple used for training one batch.
-DataBatch = collections.namedtuple('DataBatch', ['X', 'y'])
+
+class DataBatch(typing.NamedTuple):
+  """An <X,y> data tuple used for training one batch."""
+  X: np.array
+  y: np.array
 
 
 def AutoGenerator(corpus: 'corpuses.Corpus',

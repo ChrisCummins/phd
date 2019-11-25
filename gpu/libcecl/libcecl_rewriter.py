@@ -29,7 +29,11 @@ app.DEFINE_list('opencl_rewrite_paths', [],
 app.DEFINE_list('libcecl_rewrite_paths', [],
                 'A list of paths to rewrite using OpenCL.')
 
-Rewrite = collections.namedtuple('Rewrite', ('opencl', 'libcecl'))
+
+class Rewrite(typing.NamedTuple):
+  opencl: str
+  libcecl: str
+
 
 # The OpenCL functions and their corresponding libcecl implementations. We use
 # a list of rewrites rather than a map since the order that they are applied

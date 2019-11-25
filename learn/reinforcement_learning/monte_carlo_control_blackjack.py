@@ -23,15 +23,25 @@ app.DEFINE_boolean(
 # is a usable ace in the player's hand. A usable ace means that the sum of the
 # hand with an Ace value of 11 is <= 21.
 observation_t = typing.Tuple[int, int, bool]
-Observation = collections.namedtuple(
-    'Observation', ['player_score', 'dealer_score', 'usable_ace'])
+
+
+class Observation(typing.NamedTuple):
+  player_score: int
+  dealer_score: int
+  usable_ace: bool
+
 
 # The action space is a single bool, either True to hit, or False to stick.
 action_t = bool
 
 # A single step includes the observation, the selected action, and its reward.
 step_t = typing.Tuple[Observation, action_t, float]
-Step = collections.namedtuple('Step', ['observation', 'action', 'reward'])
+
+
+class Step(typing.NamedTuple):
+  observation: typing.Any
+  action: typing.Any
+  reward: float
 
 
 class MonteCarloControlBlackjack(object):
@@ -102,9 +112,9 @@ class MonteCarloControlBlackjack(object):
       self.num_episodes += 1
       episode = self.GetAnEpisode()
       app.Log(2,
-          'Episode %d, steps = %d, final_score = %02d:%02d, reward = %.1f', i,
-          len(episode), episode[-1].observation.player_score,
-          episode[-1].observation.dealer_score, episode[-1].reward)
+              'Episode %d, steps = %d, final_score = %02d:%02d, reward = %.1f',
+              i, len(episode), episode[-1].observation.player_score,
+              episode[-1].observation.dealer_score, episode[-1].reward)
       for j in range(1, len(episode)):
         state = episode[j - 1].observation
         indices = (state.player_score - 1, state.dealer_score - 1,

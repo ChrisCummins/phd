@@ -20,15 +20,16 @@ import typing
 
 import sqlalchemy as sql
 from absl import flags as absl_flags
+from sqlalchemy import func
+from sqlalchemy import orm
+from sqlalchemy.dialects import mysql
+from sqlalchemy.ext import declarative
+
 from labm8 import humanize
 from labm8 import labdate
 from labm8 import pbutil
 from labm8 import text
 from labm8.internal import logging
-from sqlalchemy import func
-from sqlalchemy import orm
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext import declarative
 
 FLAGS = absl_flags.FLAGS
 
@@ -609,14 +610,18 @@ class ProtoBackedMixin(object):
     return cls.FromProto(proto)
 
 
-# The results of an offset-limit batched query. The batch num is the current
-# batch number. The offset is the offset into the results set, the limit is the
-# last row in the results set, max_rows is the total number of rows in the query
-# (only set if compute_max_rows, else None), and rows it the results.
-OffsetLimitQueryResultsBatch = collections.namedtuple(
-    'QueryResultsBatch',
-    ['batch_num', 'offset', 'limit', 'max_rows', 'rows'],
-)
+class OffsetLimitQueryResultsBatch(typing.NamedTuple):
+  """The results of an offset-limit batched query."""
+  # The current batch number.
+  batch_num: int
+  # Offset into the results set.
+  offset: int
+  # Limit is the last row in the results set.
+  limit: int
+  # The total number of rows in the query if compute_max_rows=True, else None.
+  max_rows: int
+  # The results of the query.
+  rows: typing.List[typing.Any]
 
 
 def OffsetLimitBatchedQuery(

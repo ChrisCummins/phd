@@ -26,8 +26,8 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   git_commit = sql.Column(sql.String(40), nullable=False)
   # A datetime used to group all test target results from a single bazel test
   # invocation.
-  invocation_datetime = sql.Column(
-      sqlutil.ColumnTypes.MillisecondDatetime(), nullable=False)
+  invocation_datetime = sql.Column(sqlutil.ColumnTypes.MillisecondDatetime(),
+                                   nullable=False)
   # The name of the bazel target.
   bazel_target = sql.Column(sql.String(256), nullable=False)
   # The number of tests executed.
@@ -41,10 +41,9 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   __table_args__ = (
       # Each target is invoked only once.
-      sql.UniqueConstraint(
-          'invocation_datetime',
-          'bazel_target',
-          name='unique_target_per_invocation'),)
+      sql.UniqueConstraint('invocation_datetime',
+                           'bazel_target',
+                           name='unique_target_per_invocation'),)
 
   @staticmethod
   def FromXml(xml: etree.ElementTree) -> typing.Dict[str, typing.Any]:
@@ -72,8 +71,11 @@ class TestTargetResult(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
     }
 
 
-TestDelta = collections.namedtuple(
-    'TestDelta', ['broken', 'fixed', 'still_broken', 'still_pass'])
+class TestDelta(typing.NamedTuple):
+  broken: int
+  fixed: int
+  still_broken: int
+  still_pass: int
 
 
 def GetTestDelta(session,
@@ -123,11 +125,10 @@ def GetTestDelta(session,
         )).all(),
     )
   else:
-    return TestDelta(
-        broken=passed.all(),
-        fixed=failed.all(),
-        still_broken=[],
-        still_passing=[])
+    return TestDelta(broken=passed.all(),
+                     fixed=failed.all(),
+                     still_broken=[],
+                     still_passing=[])
 
 
 class Database(sqlutil.Database):

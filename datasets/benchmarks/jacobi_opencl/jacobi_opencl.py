@@ -28,17 +28,17 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-import json
-import math
-import time
-import threading
-import typing
-
 import argparse
 import collections
+import json
+import math
+import signal
+import threading
+import time
+import typing
+
 import numpy as np
 import pyopencl as CL
-import signal
 
 from labm8 import app
 
@@ -48,8 +48,12 @@ app.DEFINE_input_path('config', None, 'Path to config file')
 app.DEFINE_integer('device_id', 0, 'The device ID to use.')
 app.DEFINE_boolean('list_devices', False, 'Print devices and exit.')
 
-JacobiBenchmarkRun = collections.namedtuple(
-    'JacobiBenchmarkRun', ['runtime', 'error', 'iteration_count', 'throughput'])
+
+class JacobiBenchmarkRun(typing.NamedTuple):
+  runtime: float
+  error: int
+  iteration_count: int
+  throughput: float
 
 
 def GetBuildOptions(config) -> str:
@@ -114,14 +118,18 @@ class JacobiBenchmarkThread(threading.Thread):
     typesize = self._dtype.itemsize
     self._vectorsize = config['norder'] * typesize
     self._matrixsize = config['norder'] * config['norder'] * typesize
-    self._d_A = CL.Buffer(
-        self._context, CL.mem_flags.READ_ONLY, size=self._matrixsize)
-    self._d_b = CL.Buffer(
-        self._context, CL.mem_flags.READ_ONLY, size=self._vectorsize)
-    self._d_x0 = CL.Buffer(
-        self._context, CL.mem_flags.READ_WRITE, size=self._vectorsize)
-    self._d_x1 = CL.Buffer(
-        self._context, CL.mem_flags.READ_WRITE, size=self._vectorsize)
+    self._d_A = CL.Buffer(self._context,
+                          CL.mem_flags.READ_ONLY,
+                          size=self._matrixsize)
+    self._d_b = CL.Buffer(self._context,
+                          CL.mem_flags.READ_ONLY,
+                          size=self._vectorsize)
+    self._d_x0 = CL.Buffer(self._context,
+                           CL.mem_flags.READ_WRITE,
+                           size=self._vectorsize)
+    self._d_x1 = CL.Buffer(self._context,
+                           CL.mem_flags.READ_WRITE,
+                           size=self._vectorsize)
     self._d_xold = self._d_x0
     self._d_xnew = self._d_x1
 
@@ -164,8 +172,9 @@ class JacobiBenchmarkThread(threading.Thread):
     conv_wgsize = 64  # TODO: Pick something else? (e.g wgsize[0]*wgsize[1])
     num_groups = config['norder'] // conv_wgsize
     h_err = np.zeros(num_groups)
-    self._d_err = CL.Buffer(
-        self._context, CL.mem_flags.WRITE_ONLY, size=num_groups * typesize)
+    self._d_err = CL.Buffer(self._context,
+                            CL.mem_flags.WRITE_ONLY,
+                            size=num_groups * typesize)
     self._convergence.set_arg(0, self._d_x0)
     self._convergence.set_arg(1, self._d_x1)
     self._convergence.set_arg(2, self._d_err)
@@ -180,8 +189,9 @@ class JacobiBenchmarkThread(threading.Thread):
 
     if config['layout'] == 'col-major':
       # Run kernel to self._transpose data on device
-      self._d_A_colmaj = CL.Buffer(
-          self._context, CL.mem_flags.READ_WRITE, size=self._matrixsize)
+      self._d_A_colmaj = CL.Buffer(self._context,
+                                   CL.mem_flags.READ_WRITE,
+                                   size=self._matrixsize)
       self._transpose.set_arg(0, self._d_A)
       self._transpose.set_arg(1, self._d_A_colmaj)
       CL.enqueue_nd_range_kernel(self._queue, self._transpose,
@@ -190,8 +200,9 @@ class JacobiBenchmarkThread(threading.Thread):
 
     if config['divide_A'] in ['precompute-global', 'precompute-constant']:
       # Run kernel to precompute 1/A for diagonal
-      self._d_inv_A = CL.Buffer(
-          self._context, CL.mem_flags.READ_WRITE, size=self._vectorsize)
+      self._d_inv_A = CL.Buffer(self._context,
+                                CL.mem_flags.READ_WRITE,
+                                size=self._vectorsize)
       self._precompute_inv_A.set_arg(0, self._d_A)
       self._precompute_inv_A.set_arg(1, self._d_inv_A)
       CL.enqueue_nd_range_kernel(self._queue, self._precompute_inv_A,
@@ -247,11 +258,10 @@ class JacobiBenchmarkThread(threading.Thread):
     self._stop_event.set()
 
   def GetResult(self) -> JacobiBenchmarkRun:
-    return JacobiBenchmarkRun(
-        runtime=self._runtime,
-        error=-1,
-        iteration_count=self._iteration_count,
-        throughput=self._iteration_count / self._runtime)
+    return JacobiBenchmarkRun(runtime=self._runtime,
+                              error=-1,
+                              iteration_count=self._iteration_count,
+                              throughput=self._iteration_count / self._runtime)
 
 
 def GenerateJacobiOpenClKernelSource(config) -> str:

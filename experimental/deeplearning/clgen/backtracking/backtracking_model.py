@@ -10,7 +10,8 @@ import shutil
 import tempfile
 import time
 import typing
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 import numpy as np
 import scipy
@@ -93,8 +94,8 @@ class OpenClBacktrackingHelper(object):
     self.working_dir = pathlib.Path(
         tempfile.mkdtemp(prefix='phd_clgen_backtracking_'))
     self.symtok = samplers.SymmetricalTokenDepthCriterion(
-        sampler_pb2.SymmetricalTokenDepth(
-            depth_increase_token='{', depth_decrease_token='}'))
+        sampler_pb2.SymmetricalTokenDepth(depth_increase_token='{',
+                                          depth_decrease_token='}'))
     self.symtok.Specialize(atomizer)
 
     # Feature hill climbing state.
@@ -269,8 +270,9 @@ class OpenClBacktrackingHelper(object):
 
 
 # A candidate statement for an in-progress synthesized program.
-CandidateStatement = collections.namedtuple('CandidateStatement',
-                                            ['statement', 'feature_distance'])
+class CandidateStatement(typing.NamedTuple):
+  statement: str
+  feature_distance: float
 
 
 class BacktrackingModel(models.Model):
@@ -335,12 +337,11 @@ class BacktrackingModel(models.Model):
     sampler.encoded_start_text = original_sampler_encoded_start_text
 
     # Notify sample observers.
-    sample = model_pb2.Sample(
-        text=text,
-        sample_start_epoch_ms_utc=start_time,
-        sample_time_ms=end_time - start_time,
-        wall_time_ms=end_time - start_time,
-        num_tokens=len(sampled_tokens))
+    sample = model_pb2.Sample(text=text,
+                              sample_start_epoch_ms_utc=start_time,
+                              sample_time_ms=end_time - start_time,
+                              wall_time_ms=end_time - start_time,
+                              num_tokens=len(sampled_tokens))
     return all([not obs.OnSample(sample) for obs in sample_observers])
 
   def TryToGenerateCandidateStatements(
@@ -362,8 +363,9 @@ class BacktrackingModel(models.Model):
       sampled tokens and the feature distance of this candidate.
     """
     init_feature_distance = backtracker.feature_distance
-    self.backend.ResetSampleState(
-        sampler, state=initial_state, seed=initial_index)
+    self.backend.ResetSampleState(sampler,
+                                  state=initial_state,
+                                  seed=initial_index)
     candidate_statements = []
 
     # Set sampler state to the last good state.
@@ -390,15 +392,14 @@ class BacktrackingModel(models.Model):
             new_feature_distance = backtracker.feature_distance
             backtracker.feature_distance = init_feature_distance
             candidate_statements.append(
-                CandidateStatement(
-                    statement=list(candidate_statement),
-                    feature_distance=new_feature_distance))
+                CandidateStatement(statement=list(candidate_statement),
+                                   feature_distance=new_feature_distance))
           else:
             app.Log(4, 'Rejecting candidate statement: `%s`',
                     ''.join(candidate_statement))
             candidate_statements.append(
-                CandidateStatement(
-                    statement=candidate_statement, feature_distance=None))
+                CandidateStatement(statement=candidate_statement,
+                                   feature_distance=None))
             break
 
     return candidate_statements
@@ -461,8 +462,8 @@ class BacktrackingModel(models.Model):
 
       # Select the best candidate.
       if self._target_features is not None:
-        best_candidate = min(
-            candidate_statements, key=lambda x: x.feature_distance)
+        best_candidate = min(candidate_statements,
+                             key=lambda x: x.feature_distance)
       else:
         best_candidate = random.choice(candidate_statements)
       app.Log(
@@ -568,8 +569,8 @@ class BacktrackingModel(models.Model):
         break
 
       # Select the best candidate.
-      best_candidate = min(
-          candidate_statements, key=lambda x: x.feature_distance)
+      best_candidate = min(candidate_statements,
+                           key=lambda x: x.feature_distance)
 
       # Select a candidate using stochastic hill climbing
       old = backtracker.feature_distance
@@ -599,9 +600,9 @@ class BacktrackingModel(models.Model):
       else:
         stagnation = 0
         if step_count % 10 == 0:
-          rollback_history.append((copy.deepcopy(backtracker),
-                                   list(sample_in_progress), rollback_state,
-                                   rollback_index))
+          rollback_history.append(
+              (copy.deepcopy(backtracker), list(sample_in_progress),
+               rollback_state, rollback_index))
 
       # Set the sampler's rollback state to be the state produced by feeding
       # the best candidate in the input, so that future samples start from

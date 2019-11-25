@@ -5,14 +5,14 @@ import typing
 
 import numpy as np
 import pandas as pd
-from labm8 import app
-from labm8 import prof
 
 from deeplearning.ml4pl.datasets import linux
 from deeplearning.ml4pl.datasets import opencl
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 from deeplearning.ml4pl.legacy import \
   control_flow_graph_generator as cfg_generator
+from labm8 import app
+from labm8 import prof
 
 FLAGS = app.FLAGS
 
@@ -32,8 +32,10 @@ num_nodes_min_max_ge = (15, 25)
 edge_density_tr = .01
 edge_density_ge = .01
 
-TargetGraphSpec = collections.namedtuple('TargetGraphSpec',
-                                         ['graph', 'target_node_index'])
+
+class TargetGraphSpec(typing.NamedTuple):
+  graph: cfg.ControlFlowGraph
+  target_node_index: int
 
 
 class SpecGenerator(object):

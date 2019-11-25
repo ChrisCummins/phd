@@ -92,15 +92,12 @@ app.DEFINE_list('groups', [str(x) for x in range(10)],
 
 ###########################
 
-GGNNWeights = collections.namedtuple(
-    "GGNNWeights",
-    [
-        "edge_weights",
-        "edge_biases",
-        "edge_type_attention_weights",
-        "rnn_cells",
-    ],
-)
+
+class GGNNWeights(typing.NamedTuple):
+  edge_weights: typing.List[tf.Tensor]
+  edge_biases: typing.List[tf.Tensor]
+  edge_type_attention_weights: typing.List[tf.Tensor]
+  rnn_cells: typing.List[tf.Tensor]
 
 
 class GgnnClassifier(ggnn.GgnnBaseModel):

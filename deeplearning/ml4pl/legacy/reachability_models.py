@@ -4,14 +4,17 @@ import typing
 
 import numpy as np
 from graph_nets import utils_tf as graph_net_utils_tf
-from labm8 import app
 
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
+from labm8 import app
 
 FLAGS = app.FLAGS
 
-TargetGraphSpec = collections.namedtuple('TargetGraphSpec',
-                                         ['graph', 'target_node_index'])
+
+class TargetGraphSpec(typing.NamedTuple):
+  graph: cfg.ControlFlowGraph
+  target_node_index: int
+
 
 # Functions to generate feature vectors. Features vectors are np.arrays of
 # floating point values.
