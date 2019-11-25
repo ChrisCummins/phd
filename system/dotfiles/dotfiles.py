@@ -370,7 +370,7 @@ class Unzip(Task):
   """ unzip pacakge """
   __platforms__ = ['osx', 'ubuntu']
   __deps__ = ['Homebrew']
-  __genfiles__ = [Homebrew.bin('unzip')]
+  __genfiles__ = ['/usr/local/opt/unzip/bin']
 
   def install(self):
     Homebrew().install_package("unzip")
@@ -412,7 +412,7 @@ class Curl(Task):
   """ curl command """
   __platforms__ = ['linux', 'osx']
   __deps__ = ['Homebrew']
-  __genfiles__ = [Homebrew.bin('curl')]
+  __genfiles__ = ['/usr/local/opt/curl/bin']
 
   def install(self):
     Homebrew().install_package("curl")
@@ -443,9 +443,8 @@ class DropboxScripts(Task):
   __genfiles__ = ["~/.local/bin/dropbox-find-conflicts"]
 
   def install(self):
-    symlink(
-        usr_share("Dropbox/dropbox-find-conflicts.sh"),
-        "~/.local/bin/dropbox-find-conflicts")
+    symlink(usr_share("Dropbox/dropbox-find-conflicts.sh"),
+            "~/.local/bin/dropbox-find-conflicts")
 
 
 class Dropbox(Task):
@@ -578,11 +577,12 @@ class WacomDriver(Task):
     self.installed = False
 
   def install(self):
-    if Homebrew().install_cask('caskroom/drivers/wacom-intuos-tablet'):
+    # TODO: tap homebrew-cask/drivers
+    if Homebrew().install_cask('homebrew/cask-drivers/wacom-tablet'):
       self.installed = True
 
   def upgrade(self):
-    Homebrew().upgrade_cask("wacom-intuos-tablet")
+    Homebrew().upgrade_cask("wacom-tablet")
 
   def teardown(self):
     if self.installed:
@@ -662,16 +662,14 @@ class Zsh(Task):
     symlink(usr_share("Zsh/zshenv"), "~/.zshenv")
 
     # oh-my-zsh
-    clone_git_repo(
-        github_repo("robbyrussell", "oh-my-zsh"), "~/.oh-my-zsh",
-        self.__versions__["oh-my-zsh"])
+    clone_git_repo(github_repo("robbyrussell", "oh-my-zsh"), "~/.oh-my-zsh",
+                   self.__versions__["oh-my-zsh"])
     symlink("~/.zsh/cec.zsh-theme", "~/.oh-my-zsh/custom/cec.zsh-theme")
 
     # syntax highlighting module
-    clone_git_repo(
-        github_repo("zsh-users", "zsh-syntax-highlighting"),
-        "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
-        self.__versions__["zsh-syntax-highlighting"])
+    clone_git_repo(github_repo("zsh-users", "zsh-syntax-highlighting"),
+                   "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
+                   self.__versions__["zsh-syntax-highlighting"])
 
   def upgrade(self):
     Homebrew().upgrade_package("zsh")
@@ -823,8 +821,8 @@ class GogsConfig(Task):
   __genfiles__ = ["/opt/gogs/custom/conf/app.ini"]
 
   def install(self):
-    symlink(
-        usr_share("gogs/custom/conf/app.ini"), "/opt/gogs/custom/conf/app.ini")
+    symlink(usr_share("gogs/custom/conf/app.ini"),
+            "/opt/gogs/custom/conf/app.ini")
 
 
 class Wallpaper(Task):
@@ -888,28 +886,27 @@ class DiffSoFancy(Task):
     Node().npm_install("diff-so-fancy", self.VERSION)
 
 
-class Nbdime(Task):
-  """ diffs for Jupyter notebooks """
-  VERSION = '1.0.0'
+# class Nbdime(Task):
+#   """ diffs for Jupyter notebooks """
+#   VERSION = '1.0.0'
 
-  __platforms__ = ['linux', 'osx']
-  __deps__ = ['Git', 'Python']
-  __genfiles__ = [Homebrew.bin('nbdime')]
+#   __platforms__ = ['linux', 'osx']
+#   __deps__ = ['Git', 'Python']
+#   __genfiles__ = [Homebrew.bin('nbdime')]
 
-  def install(self):
-    Python().pip_install('nbdime', self.VERSION)
+#   def install(self):
+#     Python().pip_install('nbdime', self.VERSION)
 
+# class GhArchiver(Task):
+#   """ github archiver """
+#   VERSION = "0.0.6"
 
-class GhArchiver(Task):
-  """ github archiver """
-  VERSION = "0.0.6"
+#   __platforms__ = ['linux', 'osx']
+#   __deps__ = ['Python']
+#   __genfiles__ = [Homebrew.bin('gh-archiver')]
 
-  __platforms__ = ['linux', 'osx']
-  __deps__ = ['Python']
-  __genfiles__ = [Homebrew.bin('gh-archiver')]
-
-  def install(self):
-    Python().pip_install("gh-archiver", self.VERSION)
+#   def install(self):
+#     Python().pip_install("gh-archiver", self.VERSION)
 
 
 class Tmux(Task):
@@ -960,9 +957,8 @@ class Vim(Task):
     symlink(usr_share("Vim/vimrc"), "~/.vimrc")
 
     # Vundle
-    clone_git_repo(
-        github_repo("VundleVim", "Vundle.vim"), "~/.vim/bundle/Vundle.vim",
-        self.__versions__["vundle"])
+    clone_git_repo(github_repo("VundleVim", "Vundle.vim"),
+                   "~/.vim/bundle/Vundle.vim", self.__versions__["vundle"])
     if os.path.isfile(Homebrew.bin('vim')):
       # We use the absolute path to vim since on first run we won't
       # necessarily have the homebrew bin directory in out $PATH.
@@ -999,10 +995,9 @@ class Linters(Task):
   def install_osx(self):
     Python().pip_install("cpplint", version=self.__versions__["cpplint"])
     Node().npm_install("csslint", version=self.__versions__["csslint"])
-    Python().pip_install(
-        "pycodestyle",
-        version=self.__versions__["pycodestyle"],
-        python=Python.PYTHON3_BINARY)
+    Python().pip_install("pycodestyle",
+                         version=self.__versions__["pycodestyle"],
+                         python=Python.PYTHON3_BINARY)
     Homebrew().install_package("tidy-html5")
     Homebrew().install_package("buildifier")
     Go().get('github.com/ckaznocha/protoc-gen-lint')
@@ -1023,10 +1018,9 @@ class SublimeText(Task):
     Homebrew().install_cask("sublime-text")
 
     # Put sublime text in PATH
-    symlink(
-        "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
-        "/usr/local/bin/subl",
-        sudo=True)
+    symlink("/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl",
+            "/usr/local/bin/subl",
+            sudo=True)
 
     symlink("~/Library/Application Support/Sublime Text 3", "~/.subl")
 
@@ -1058,11 +1052,11 @@ class SublimeConfig(Task):
 class JetbrainsIDEs(Task):
   # A map of homebrew cask names to local apps.
   IDES = {
-      "datagrip": "/Applications/DataGrip.app",
-      "goland": "/Applications/GoLand.app",
-      "clion": "/Applications/CLion.app",
+      # "datagrip": "/Applications/DataGrip.app",
+      # "goland": "/Applications/GoLand.app",
+      # "clion": "/Applications/CLion.app",
       "intellij-idea": "/Applications/IntelliJ IDEA.app",
-      "pycharm": "/Applications/PyCharm.app",
+      # "pycharm": "/Applications/PyCharm.app",
   }
 
   __platforms__ = ['osx']
@@ -1094,10 +1088,9 @@ class SsmtpConfig(Task):
   __genfiles__ = ["/etc/ssmtp/ssmtp.conf"]
 
   def install_ubuntu(self):
-    symlink(
-        os.path.join(PRIVATE, "ssmtp", "ssmtp.conf"),
-        "/etc/ssmtp/ssmtp.conf",
-        sudo=True)
+    symlink(os.path.join(PRIVATE, "ssmtp", "ssmtp.conf"),
+            "/etc/ssmtp/ssmtp.conf",
+            sudo=True)
 
 
 class MySQL(Task):
@@ -1289,25 +1282,25 @@ class Caffeine(Task):
 class HomebrewCasks(Task):
   """ macOS homebrew binaries """
   CASKS = {
-      'alfred': '/Applications/Alfred 3.app',
+      'alfred': '/Applications/Alfred 4.app',
       'anki': '/Applications/Anki.app',
       'bartender': '/Applications/Bartender 3.app',
-      'bettertouchtool': '/Applications/BetterTouchTool.app',
+      # 'bettertouchtool': '/Applications/BetterTouchTool.app',
       'calibre': '/Applications/calibre.app',
       'dash': '/Applications/Dash.app',
       'disk-inventory-x': '/Applications/Disk Inventory X.app',
-      'etcher': '/Applications/Etcher.app',
+      # 'etcher': '/Applications/Etcher.app',
       'fantastical': '/Applications/Fantastical 2.app',
       'fluid': '/Applications/Fluid.app',
       'flux': '/Applications/Flux.app',
       'google-earth-pro': '/Applications/Google Earth Pro.app',
-      'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
-      'hipchat': '/Applications/HipChat.app',
-      'imageoptim': '/Applications/ImageOptim.app',
+      # 'google-photos-backup-and-sync': '/Applications/Backup and Sync.app',
+      # 'hipchat': '/Applications/HipChat.app',
+      # 'imageoptim': '/Applications/ImageOptim.app',
       'istat-menus': '/Applications/iStat Menus.app',
       'iterm2': '/Applications/iTerm.app',
-      'mendeley': '/Applications/Mendeley Desktop.app',
-      'microsoft-office': '/Applications/Microsoft Word.app',
+      'mendeley-desktop': '/Applications/Mendeley Desktop.app',
+      # 'microsoft-office': '/Applications/Microsoft Word.app',
       'mysqlworkbench': '/Applications/MySQLWorkbench.app',
       'omnigraffle': '/Applications/OmniGraffle.app',
       'omnioutliner': '/Applications/OmniOutliner.app',
@@ -1404,9 +1397,8 @@ class Emacs(Task):
     self._install_common()
 
   def _install_common(self):
-    clone_git_repo(
-        github_repo("bbatsov", "prelude"), "~/.emacs.d",
-        self.__versions__["prelude"])
+    clone_git_repo(github_repo("bbatsov", "prelude"), "~/.emacs.d",
+                   self.__versions__["prelude"])
     # prelude requires there be no ~/.emacs file on first run
     Trash().trash('~/.emacs')
 
@@ -1463,19 +1455,19 @@ class AppStoreApps(Task):
   """ install macOS apps from App Store """
   APPS = {
       443987910: '/Applications/1Password.app',
-      961632517: '/Applications/Be Focused Pro.app',
-      425264550: '/Applications/Blackmagic Disk Speed Test.app',
-      420212497: '/Applications/Byword.app',
-      563362017: '/Applications/CloudClip Manager.app',
-      668208984: '/Applications/GIPHY CAPTURE.app',
+      # 961632517: '/Applications/Be Focused Pro.app',
+      # 425264550: '/Applications/Blackmagic Disk Speed Test.app',
+      # 420212497: '/Applications/Byword.app',
+      # 563362017: '/Applications/CloudClip Manager.app',
+      # 668208984: '/Applications/GIPHY CAPTURE.app',
       1026566364: '/Applications/GoodNotes.app',
       409183694: '/Applications/Keynote.app',
-      784801555: '/Applications/Microsoft OneNote.app',
-      823766827: '/Applications/OneDrive.app',
-      409201541: '/Applications/Pages.app',
+      # 784801555: '/Applications/Microsoft OneNote.app',
+      # 823766827: '/Applications/OneDrive.app',
+      # 409201541: '/Applications/Pages.app',
       425424353: '/Applications/The Unarchiver.app',
       1147396723: '/Applications/WhatsApp.app',
-      410628904: '/Applications/Wunderlist.app',
+      # 410628904: '/Applications/Wunderlist.app',
   }
 
   __platforms__ = ['osx']
@@ -1550,17 +1542,16 @@ class Java(Task):
   """ java8 runtime and compiler """
   __platforms__ = ['linux', 'osx']
   __osx_deps__ = ['Homebrew']
-  __osx_genfiles__ = ['/usr/local/Caskroom/java8']
   __linux_genfiles__ = ['/usr/bin/java']
 
   def install_osx(self):
-    Homebrew().install_cask('caskroom/versions/java8')
+    Homebrew().install_cask('homebrew/cask-versions/adoptopenjdk8')
 
   def install_ubuntu(self):
     Apt().install_package("openjdk-8-jdk")
 
   def upgrade_osx(self):
-    Homebrew().upgrade_cask('java8')
+    Homebrew().upgrade_cask('adoptopenjdk8')
 
 
 class Go(Task):
@@ -1579,47 +1570,47 @@ class Go(Task):
     shell("cd ~ && go get {package}".format(package=package))
 
 
-class OmniFocus(Task):
-  """ task manager and utilities """
-  __platforms__ = ['linux', 'osx']
-  __osx_deps__ = ['Homebrew', 'Java']
-  __genfiles__ = ["/usr/local/bin/omni"]
-  __osx_genfiles__ = [
-      "/Applications/OmniFocus.app",
-      "/usr/local/opt/ofexport/bin/of2",
-  ]
-  __versions__ = {
-      "ofexport": "1.0.20",
-  }
+# class OmniFocus(Task):
+#   """ task manager and utilities """
+#   __platforms__ = ['linux', 'osx']
+#   __osx_deps__ = ['Homebrew', 'Java']
+#   __genfiles__ = ["/usr/local/bin/omni"]
+#   __osx_genfiles__ = [
+#       "/Applications/OmniFocus.app",
+#       "/usr/local/opt/ofexport/bin/of2",
+#   ]
+#   __versions__ = {
+#       "ofexport": "1.0.20",
+#   }
 
-  OFEXPORT_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + \
-                 __versions__["ofexport"] + ".zip"
+#   OFEXPORT_URL = "https://github.com/psidnell/ofexport2/archive/ofexport-v2-" + \
+#                  __versions__["ofexport"] + ".zip"
 
-  def install_osx(self):
-    Homebrew().install_cask('omnifocus')
+#   def install_osx(self):
+#     Homebrew().install_cask('omnifocus')
 
-    # Check that of2 is installed and is the correct version
-    if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") and
-        shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] !=
-        "Version: " + self.__versions__["ofexport"]):
-      task_print("Downloading ofexport")
-      shell("rm -rf /usr/local/opt/ofexport")
-      url, ver = self.OFEXPORT_URL, self.__versions__["ofexport"]
-      shell("wget {url} -O /tmp/ofexport.zip".format(**vars()))
-      task_print("Installing ofexport")
-      shell("unzip -o /tmp/ofexport.zip")
-      shell("rm -f /tmp/ofexport.zip")
-      shell("mv ofexport2-ofexport-v2-{ver} /usr/local/opt/ofexport".format(
-          **vars()))
+#     # Check that of2 is installed and is the correct version
+#     if (not os.path.exists("/usr/local/opt/ofexport/bin/of2") and
+#         shell("/usr/local/opt/ofexport/bin/of2 -h").split("\n")[2] !=
+#         "Version: " + self.__versions__["ofexport"]):
+#       task_print("Downloading ofexport")
+#       shell("rm -rf /usr/local/opt/ofexport")
+#       url, ver = self.OFEXPORT_URL, self.__versions__["ofexport"]
+#       shell("wget {url} -O /tmp/ofexport.zip".format(**vars()))
+#       task_print("Installing ofexport")
+#       shell("unzip -o /tmp/ofexport.zip")
+#       shell("rm -f /tmp/ofexport.zip")
+#       shell("mv ofexport2-ofexport-v2-{ver} /usr/local/opt/ofexport".format(
+#           **vars()))
 
-    # Run common-install commands:
-    self.install()
+#     # Run common-install commands:
+#     self.install()
 
-  def install(self):
-    symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
+#   def install(self):
+#     symlink(usr_share("OmniFocus/omni"), "/usr/local/bin/omni", sudo=True)
 
-  def upgrade_osx(self):
-    Homebrew().upgrade_cask('omnifocus')
+#   def upgrade_osx(self):
+#     Homebrew().upgrade_cask('omnifocus')
 
 
 class Timing(Task):
@@ -1642,16 +1633,16 @@ class Timer(Task):
     symlink(usr_share("timer", "timer.py"), "~/.local/bin/timer")
 
 
-class MeCsv(Task):
-  """ me.csv health and time tracking """
-  __platforms__ = ['osx']
-  __osx_deps__ = ['OmniFocus']
-  __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "me.csv"))]
-  __genfiles__ = ["~/.me.json", "~/me.csv"]
+# class MeCsv(Task):
+#   """ me.csv health and time tracking """
+#   __platforms__ = ['osx']
+#   # __osx_deps__ = ['OmniFocus']
+#   __reqs__ = [lambda: os.path.isdir(os.path.join(PRIVATE, "me.csv"))]
+#   __genfiles__ = ["~/.me.json", "~/me.csv"]
 
-  def install_osx(self):
-    symlink(os.path.join(PRIVATE, "me.csv", "config.json"), "~/.me.json")
-    symlink(os.path.join(PRIVATE, "me.csv", "data"), "~/me.csv")
+#   def install_osx(self):
+#     symlink(os.path.join(PRIVATE, "me.csv", "config.json"), "~/.me.json")
+#     symlink(os.path.join(PRIVATE, "me.csv", "data"), "~/me.csv")
 
 
 class Bazel(Task):
@@ -1809,9 +1800,8 @@ class FlorenceScripts(Task):
   ]
 
   def install(self):
-    symlink(
-        usr_share("scripts/orange_you_glad_you_backup.sh"),
-        "~/.local/bin/orange_you_glad_you_backup")
+    symlink(usr_share("scripts/orange_you_glad_you_backup.sh"),
+            "~/.local/bin/orange_you_glad_you_backup")
 
   def uninstall(self):
     task_print("Removing florence scripts")
@@ -1915,7 +1905,7 @@ class PhdBuildDeps(Task):
 class Phd(Task):
   """PhD repo"""
   __platforms__ = ['linux', 'osx']
-  __genfiles__ = ['~/phd/.env']
+  __genfiles__ = ['~/phd/WORKSPACE']
   __deps__ = ['PhdBuildDeps']
 
   def install(self):
@@ -1970,10 +1960,9 @@ class TransmissionConfig(Task):
   def install(self):
     if not os.path.islink(self.CFG):
       shell('sudo service transmission-daemon stop')
-      symlink(
-          '{private}/transmission/settings.json'.format(private=PRIVATE),
-          self.CFG,
-          sudo=True)
+      symlink('{private}/transmission/settings.json'.format(private=PRIVATE),
+              self.CFG,
+              sudo=True)
       shell('sudo service transmission-daemon start')
 
 
@@ -2021,8 +2010,8 @@ class DefaultApps(Task):
     Homebrew().install_package('duti')
     for extension in self.FILE_ASSOCIATIONS:
       app = self.FILE_ASSOCIATIONS[extension]
-      shell('duti -s {app} .{extension} all'.format(
-          app=app, extension=extension))
+      shell('duti -s {app} .{extension} all'.format(app=app,
+                                                    extension=extension))
 
   def upgrade(self):
     Homebrew().upgrade_package("duti")
@@ -2080,27 +2069,28 @@ class DnsTest(Task):
       shell('chmod +x ~/.local/bin/dnstest')
 
 
-class PlatformIO(Task):
-  """ Command line tools for building Arduino code. """
-  # See https://platformio.org/
-  __platforms__ = ['linux', 'osx']
-  __deps__ = ['Python']
-  __genfiles__ = ['/usr/local/bin/platformio']
-  __versions__ = {'platformio': '3.6.3'}
+# class PlatformIO(Task):
+#   """ Command line tools for building Arduino code. """
+#   # See https://platformio.org/
+#   __platforms__ = ['linux', 'osx']
+#   __deps__ = ['Python']
+#   __genfiles__ = ['/usr/local/bin/platformio']
+#   __versions__ = {'platformio': '3.6.3'}
 
-  def install_linux(self):
-    self.install()
-    # Linuxbrew installs binaries in ~linuxbrew/.linuxbrew/bin, but the
-    # bazel platformio rules are hardcoded to use only path /usr/local/bin.
-    symlink('/usr/local/bin/platformio',
-            '/home/linuxbrew/.linuxbrew/bin/platformio')
+#   def install_linux(self):
+#     self.install()
+#     # Linuxbrew installs binaries in ~linuxbrew/.linuxbrew/bin, but the
+#     # bazel platformio rules are hardcoded to use only path /usr/local/bin.
+#     symlink('/usr/local/bin/platformio',
+#             '/home/linuxbrew/.linuxbrew/bin/platformio')
 
-  def install(self):
-    Python().pip_install("autoenv", self.__versions__['platformio'])
+#   def install(self):
+#     Python().pip_install("platformio", self.__versions__['platformio'])
 
-  def uninstall_linux(self):
-    # Remove the symlink we created.
-    os.unlink('/usr/local/bin/platformio')
+#   def uninstall_linux(self):
+#     # Remove the symlink we created.
+#     os.unlink('/usr/local/bin/platformio')
+
 
 class FinderGo(Task):
   __platforms__ = ['osx']
@@ -2111,8 +2101,9 @@ class FinderGo(Task):
 
   def install(self):
     url = ('https://github.com/onmyway133/FinderGo/releases/download/'
-           '{version}/FinderGo.zip'.format(version=self.__versions__['FinderGo']))
-    if not os.path.isfile('/Applications/FinderGo.app'):
+           '{version}/FinderGo.zip'.format(
+               version=self.__versions__['FinderGo']))
+    if not os.path.isdir('/Applications/FinderGo.app'):
       shell("wget '{url}' -O /Applications/FinderGo.zip".format(url=url))
       shell("cd /Applications && unzip FinderGo.zip && rm FinderGo.zip")
       self.installed = True
@@ -2124,8 +2115,8 @@ class FinderGo(Task):
           "NOTE: manual step required to complete FinderGo installation:")
       logging.info(
           "    " + Colors.BOLD + Colors.RED +
-          "Cmd+click and drag /Applications/FinderGo.app into Finder toolbar"
-          + Colors.END)
+          "Cmd+click and drag /Applications/FinderGo.app into Finder toolbar" +
+          Colors.END)
 
 
 class Bat(Task):
