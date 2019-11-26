@@ -1623,6 +1623,16 @@ class Timing(Task):
     Homebrew().install_cask("timing")
 
 
+class NordVpn(Task):
+  """ time tracking app """
+  __platforms__ = ['osx']
+  __osx_genfiles__ = ['/Applications/NordVpn.app']
+  __osx_deps__ = ['Homebrew']
+
+  def install_osx(self):
+    Homebrew().install_cask("nordvpn")
+
+
 class Timer(Task):
   """ time tracking CLI """
   __platforms__ = ['linux', 'osx']
