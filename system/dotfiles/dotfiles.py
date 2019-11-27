@@ -1624,13 +1624,23 @@ class Timing(Task):
 
 
 class NordVpn(Task):
-  """ time tracking app """
+  """ VPN app """
   __platforms__ = ['osx']
   __osx_genfiles__ = ['/Applications/NordVpn.app']
   __osx_deps__ = ['Homebrew']
 
   def install_osx(self):
     Homebrew().install_cask("nordvpn")
+
+
+class Grammarly(Task):
+  """ spell checking and text linting """
+  __platforms__ = ['osx']
+  __osx_genfiles__ = ['/Applications/Grammarly.app']
+  __osx_deps__ = ['Homebrew']
+
+  def install_osx(self):
+    Homebrew().install_cask("grammarly")
 
 
 class Timer(Task):
