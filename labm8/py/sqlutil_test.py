@@ -23,6 +23,9 @@ from labm8.py import test
 from labm8.py.test_data import test_protos_pb2
 
 
+FLAGS = test.FLAGS
+
+
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
   """Test DatabaseNotFound for non-existent SQLite database."""
   with test.Raises(sqlutil.DatabaseNotFound) as e_ctx:
@@ -75,18 +78,38 @@ def test_CreateEngine_sqlite_from_file_with_suffix(tempdir: pathlib.Path):
   assert db_path.is_file()
 
 
-def test_ExpandFileUrl_unmodified():
-  assert sqlutil.ExpandFileUrl("sqlite:///tmp/foo.db") == "sqlite:///tmp/foo.db"
+def test_ResolveUrl_unmodified():
+  assert sqlutil.ResolveUrl("sqlite:///tmp/foo.db") == "sqlite:///tmp/foo.db"
 
 
-def test_ExpandFileUrl_path_not_found(tempdir: pathlib.Path):
+def test_ResolveUrl_path_not_found(tempdir: pathlib.Path):
   with test.Raises(FileNotFoundError):
-    sqlutil.ExpandFileUrl(f"file:///{tempdir}/file.txt")
+    sqlutil.ResolveUrl(f"file:///{tempdir}/file.txt")
 
 
-def test_ExpandFileUrl_path_is_directory(tempdir: pathlib.Path):
+def test_ResolveUrl_path_is_directory(tempdir: pathlib.Path):
   with test.Raises(FileNotFoundError):
-    sqlutil.ExpandFileUrl(f"file:///{tempdir}")
+    sqlutil.ResolveUrl(f"file:///{tempdir}")
+
+
+def test_ResolveUrl_mysql_charset():
+  FLAGS.mysql_assume_utf8_charset = True
+  assert sqlutil.ResolveUrl("mysql://foo/bar") == "mysql://foo/bar?charset=utf8"
+
+
+def test_ResolveUrl_no_mysql_charset():
+  FLAGS.mysql_assume_utf8_charset = False
+  assert sqlutil.ResolveUrl("mysql://foo/bar") == "mysql://foo/bar"
+
+
+def test_ResolveUrl_mysql_charset_with_file(tempdir: pathlib.Path):
+  FLAGS.mysql_assume_utf8_charset = True
+  with open(tempdir / "mysql.txt", "w") as f:
+    f.write(f"mysql://foo/bar")
+  assert (
+    sqlutil.ResolveUrl(f"file://{tempdir}/mysql.txt")
+    == "mysql://foo/bar?charset=utf8"
+  )
 
 
 def test_AllColumnNames_two_fields():
