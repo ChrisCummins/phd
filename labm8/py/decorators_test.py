@@ -116,5 +116,15 @@ def test_run_once_global():
   assert x == 1
 
 
+def test_loop_for():
+  """Test that loop_for runs."""
+
+  @decorators.loop_for(seconds=1)
+  def Foo() -> int:
+    return 5
+
+  Foo()
+
+
 if __name__ == "__main__":
   test.Main()
