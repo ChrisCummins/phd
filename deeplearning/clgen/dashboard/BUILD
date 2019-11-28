@@ -33,6 +33,7 @@ py_library(
         "//:build_info",
         "//labm8:app",
         "//labm8:bazelutil",
+        "//labm8:decorators",
         "//labm8:humanize",
         "//labm8:labdate",
         "//third_party/py/flask",
