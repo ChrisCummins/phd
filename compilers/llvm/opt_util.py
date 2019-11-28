@@ -333,6 +333,7 @@ def GetAliasSetsByFunction(
 def ParseAliasSetsOutput(
   output: str,
 ) -> typing.Dict[str, typing.List[AliasSet]]:
+  # TODO(github.com/ChrisCummins/ProGraML/issues/4): This is not robust.
   lines = output.split("\n")
   function_alias_sets = {}
 
