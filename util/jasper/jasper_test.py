@@ -1,10 +1,10 @@
 """Unit tests for //util/jasper."""
-
 import pathlib
+
 import pytest
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from util.jasper import jasper
 
 FLAGS = app.FLAGS

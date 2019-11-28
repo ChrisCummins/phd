@@ -3,7 +3,7 @@ from __future__ import print_function
 
 from omnitune import llvm
 
-from labm8 import system
+from labm8.py import system
 
 if system.HOSTNAME == "tim" or system.HOSTNAME == "zoo":
   from omnitune import opencl_tim as opencl

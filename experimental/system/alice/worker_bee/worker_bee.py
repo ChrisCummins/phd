@@ -24,8 +24,8 @@ from experimental.system.alice import alice_pb2
 from experimental.system.alice import alice_pb2_grpc
 from experimental.system.alice import bazel
 from experimental.system.alice import git_repo
-from labm8 import app
-from labm8 import system
+from labm8.py import app
+from labm8.py import system
 
 FLAGS = app.FLAGS
 

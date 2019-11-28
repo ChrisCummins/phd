@@ -21,9 +21,9 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import pbutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import pbutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

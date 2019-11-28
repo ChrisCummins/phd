@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from labm8 import fs
-from labm8 import math as labmath
-from labm8 import viz
+from labm8.py import fs
+from labm8.py import math as labmath
+from labm8.py import viz
 
 
 # Seaborn configuration:

@@ -16,7 +16,7 @@ py_binary(
     name = "py_binary",
     srcs = ["py_binary.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -24,7 +24,7 @@ py_library(
     name = "py_library",
     srcs = ["py_library.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -33,7 +33,7 @@ py_test(
     size = "small",
     srcs = ["py_test.py"],
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

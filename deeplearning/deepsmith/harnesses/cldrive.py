@@ -32,11 +32,11 @@ from gpu.cldrive.legacy import cgen
 from gpu.cldrive.legacy import data
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import labdate
-from labm8 import system
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import labdate
+from labm8.py import system
 
 FLAGS = app.FLAGS
 

@@ -3,10 +3,9 @@
 Mendeley exports a bibliographies with a bunch of extra fields that I don't
 want in bibtex files. This script removes the unwanted fields.
 """
-
 import bibtexparser
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

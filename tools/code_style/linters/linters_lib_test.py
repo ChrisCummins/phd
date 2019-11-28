@@ -4,8 +4,8 @@ import pathlib
 
 import pytest
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from tools.code_style.linters import linters_lib
 
 FLAGS = app.FLAGS

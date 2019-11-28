@@ -10,10 +10,6 @@ import numpy as np
 import pandas as pd
 from keras import layers
 from keras.preprocessing import sequence
-from labm8 import app
-from labm8 import humanize
-from labm8 import labdate
-from labm8 import prof
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ml4pl.datasets import \
@@ -21,6 +17,10 @@ from deeplearning.ml4pl.datasets import \
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph
 from deeplearning.ml4pl.legacy import \
   control_flow_graph_generator as cfg_generator
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import labdate
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

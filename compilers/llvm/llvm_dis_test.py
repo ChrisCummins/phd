@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //compilers/llvm:llvm_dis."""
-from labm8 import app
-from labm8 import test
-
 from compilers.llvm import llvm_dis
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

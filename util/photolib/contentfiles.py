@@ -1,11 +1,10 @@
 """Representation of a file in the photo library."""
 import os
-
 import pathlib
 import typing
 
-from labm8 import app
-from labm8 import decorators
+from labm8.py import app
+from labm8.py import decorators
 from util.photolib import common
 from util.photolib import xmp_cache
 

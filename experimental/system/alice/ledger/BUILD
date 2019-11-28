@@ -18,9 +18,9 @@ py_binary(
     srcs = ["ledger.py"],
     deps = [
         "//experimental/system/alice:alice_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -30,7 +30,7 @@ py_test(
     srcs = ["ledger_test.py"],
     deps = [
         ":ledger",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/grpcio",
     ],
 )

@@ -1,13 +1,13 @@
 """Unit tests for //deeplearning/ncc/inst2vec:api."""
 import pathlib
+
 import pytest
 
 from deeplearning.ncc import vocabulary
 from deeplearning.ncc.inst2vec import api
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import test
-
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

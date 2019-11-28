@@ -3,16 +3,17 @@ Code for compile-only experiments.
 """
 import re
 from collections import namedtuple
-from subprocess import PIPE, Popen
+from subprocess import PIPE
+from subprocess import Popen
 from tempfile import NamedTemporaryFile
 from time import time
-from typing import List, NewType
+from typing import List
+from typing import NewType
 
 from dsmith.db import *
 from dsmith.lib import *
 
-from labm8 import fs
-
+from labm8.py import fs
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
@@ -60,6 +61,7 @@ def drive(command: List[str], src: str) -> return_t:
 
   runtime = time() - start_time
 
-  return return_t(
-      runtime=runtime, status=status_t(process.returncode),
-      stdout=stdout, stderr=stderr)
+  return return_t(runtime=runtime,
+                  status=status_t(process.returncode),
+                  stdout=stdout,
+                  stderr=stderr)

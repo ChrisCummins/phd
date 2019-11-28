@@ -10,8 +10,8 @@ from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as graph_readers
 from deeplearning.ml4pl.graphs import graph_database_stats as graph_stats
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 app.DEFINE_integer(
     'graph_reader_buffer_size', 1024,
@@ -304,7 +304,7 @@ class GraphBatch(typing.NamedTuple):
     # Empty batch
     if not len(incoming_edge_counts):
       return None
-    
+
     # Return None as well if we are in the fixed number of graphs mode and
     # the batch has less than that number of graphs.
     if options.max_graphs and log.graph_count < options.max_graphs:
@@ -500,12 +500,13 @@ class GraphBatcher(object):
       batch = GraphBatch.CreateFromGraphMetas(graph_reader, self.stats, options)
       if batch:
         elapsed_time = time.time() - start_time
-        app.Log(
-            5, "Created batch of %s graphs (%s nodes) in %s "
-            "(%s graphs/sec)", humanize.Commas(batch.log.graph_count),
-            humanize.Commas(batch.log.node_count),
-            humanize.Duration(elapsed_time),
-            humanize.Commas(batch.log.graph_count / elapsed_time), print_context=print_context)
+        app.Log(5, "Created batch of %s graphs (%s nodes) in %s "
+                "(%s graphs/sec)",
+                humanize.Commas(batch.log.graph_count),
+                humanize.Commas(batch.log.node_count),
+                humanize.Duration(elapsed_time),
+                humanize.Commas(batch.log.graph_count / elapsed_time),
+                print_context=print_context)
         assert batch.log.graph_count > 0
         yield batch
       else:

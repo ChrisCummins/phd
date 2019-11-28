@@ -1,5 +1,4 @@
 """Create directories of training, test, and validation data."""
-import collections
 import pathlib
 import random
 import typing
@@ -7,10 +6,10 @@ import typing
 import numpy as np
 
 from experimental.deeplearning.fish.proto import fish_pb2
-from labm8 import app
-from labm8 import humanize
-from labm8 import labtypes
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import labtypes
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

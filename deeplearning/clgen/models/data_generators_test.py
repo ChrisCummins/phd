@@ -13,14 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/clgen/models/data_generators.py."""
-
 import numpy as np
 import pytest
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.models import data_generators
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

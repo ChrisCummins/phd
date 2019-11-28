@@ -20,8 +20,8 @@ import pytest
 from compilers.llvm import clang
 from datasets.benchmarks import llvm_test_suite
 from datasets.benchmarks.proto import benchmarks_pb2
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

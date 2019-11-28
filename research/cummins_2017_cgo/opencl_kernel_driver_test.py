@@ -16,8 +16,8 @@
 import pytest
 
 from gpu.cldrive.legacy import env as cldrive_env
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from research.cummins_2017_cgo import opencl_kernel_driver
 
 FLAGS = app.FLAGS

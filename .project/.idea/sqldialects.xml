@@ -2,6 +2,6 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/../datasets/me_db/providers/timing/timing.py" dialect="SQLite" />
-    <file url="file://$PROJECT_DIR$/../labm8/sqlutil.py" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/../labm8/py/sqlutil.py" dialect="GenericSQL" />
   </component>
 </project>

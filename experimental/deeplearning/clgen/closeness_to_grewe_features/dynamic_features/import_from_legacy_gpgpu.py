@@ -1,5 +1,4 @@
 """Import dynamic features from legacy GPGPU benchmarks driver."""
-
 import pathlib
 import tempfile
 import typing
@@ -12,9 +11,9 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db as db
 from gpu.libcecl import libcecl_runtime
 from gpu.libcecl.proto import libcecl_pb2
-from labm8 import app
-from labm8 import fs
-from labm8 import prof
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import prof
 from research.grewe_2013_cgo import feature_extractor
 
 FLAGS = app.FLAGS
@@ -25,11 +24,10 @@ app.DEFINE_input_path(
 app.DEFINE_database('db', db.Database, 'sqlite://',
                     'URL of the database to import dynamic features to.')
 app.DEFINE_string('device_name', None, 'The name of the OpenCL device')
-app.DEFINE_string(
-    'device_type',
-    None,
-    'The device type. One of: {CPU, GPU}',
-    validator=lambda val: val in {"CPU", "GPU"} if val else True)
+app.DEFINE_string('device_type',
+                  None,
+                  'The device type. One of: {CPU, GPU}',
+                  validator=lambda val: val in {"CPU", "GPU"} if val else True)
 app.DEFINE_string('opencl_env', None, 'The name of the OpenCL environment.')
 app.DEFINE_string('hostname', None, 'The name of the hostname')
 app.DEFINE_boolean('extract_static_features', True, 'Extract')
@@ -58,8 +56,8 @@ def GetFeatureVectors(
   try:
     return {
         features.kernel_name: (source, features)
-        for features in feature_extractor.ExtractFeatures(
-            source, timeout_seconds=5)
+        for features in feature_extractor.ExtractFeatures(source,
+                                                          timeout_seconds=5)
     }
   except feature_extractor.FeatureExtractionError:
     return {}
@@ -204,12 +202,11 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
     df['opencl_env'] = opencl_env
     df['hostname'] = hostname
 
-    df.to_sql(
-        db.DynamicFeatures.__tablename__,
-        con=database.engine,
-        if_exists='append',
-        index=False,
-        dtype={'driver': sql.Enum(db.DynamicFeaturesDriver)})
+    df.to_sql(db.DynamicFeatures.__tablename__,
+              con=database.engine,
+              if_exists='append',
+              index=False,
+              dtype={'driver': sql.Enum(db.DynamicFeaturesDriver)})
 
     app.Log(1, "Failed to find features for %d kernels", len(failures))
     app.Log(
@@ -220,13 +217,12 @@ def ImportFromLegacyGpgpu(database: db.Database, logs_zip: pathlib.Path,
 
 def main():
   """Main entry point."""
-  ImportFromLegacyGpgpu(
-      FLAGS.db(),
-      FLAGS.gpgpu_logs_zip,
-      expected_devtype=FLAGS.device_type,
-      expected_device_name=FLAGS.device_name,
-      opencl_env=FLAGS.opencl_env,
-      hostname=FLAGS.hostname)
+  ImportFromLegacyGpgpu(FLAGS.db(),
+                        FLAGS.gpgpu_logs_zip,
+                        expected_devtype=FLAGS.device_type,
+                        expected_device_name=FLAGS.device_name,
+                        opencl_env=FLAGS.opencl_env,
+                        hostname=FLAGS.hostname)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,4 @@
 """A CLgen model for incremental inference."""
-import collections
 import copy
 import html
 import json
@@ -26,10 +25,10 @@ from deeplearning.clgen.preprocessors import opencl
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import labdate
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import labdate
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = app.FLAGS

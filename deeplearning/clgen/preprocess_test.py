@@ -2,10 +2,11 @@
 import pathlib
 
 import pytest
+
 from deeplearning.clgen import preprocess
-from labm8 import app
-from labm8 import fs
-from labm8 import test
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

@@ -41,8 +41,8 @@ py_test(
     srcs = ["args_test.py"],
     deps = [
         ":args",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -63,7 +63,7 @@ py_library(
     deps = [
         ":args",
         ":driver",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/numpy",
     ],
 )
@@ -75,8 +75,8 @@ py_test(
     deps = [
         ":data",
         ":testlib",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -88,8 +88,8 @@ py_binary(
         ":args",
         ":env",
         "//gpu/cldrive/proto:cldrive_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//third_party/py/numpy",
     ],
 )
@@ -102,8 +102,8 @@ py_test(
         ":data",
         ":driver",
         ":testlib",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/numpy",
     ],
 )
@@ -116,9 +116,9 @@ py_library(
     deps = [
         "//gpu/clinfo/proto:clinfo_pb_py",
         "//gpu/oclgrind",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -128,8 +128,8 @@ py_test(
     srcs = ["env_test.py"],
     deps = [
         ":env",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 

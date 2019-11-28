@@ -1,17 +1,17 @@
 """Repo-wide pytest configuration and test fixtures."""
-import sys
-
 import pathlib
-import pytest
 import socket
+import sys
 import tempfile
 import typing
 
+import pytest
+
 import build_info
-from labm8 import app
+from labm8.py import app
 
 # *WARNING* Flags used in this file are not defined here! They are declared in
-# //labm8:test.
+# //labm8/py:test.
 FLAGS = app.FLAGS
 
 # Test fixtures.
@@ -66,12 +66,12 @@ def pytest_collection_modifyitems(config, items):
 
   # Fail early and verbosely if the flags cannot be accessed. This is a sign
   # that this file is being used incorrectly. To use this file, you must
-  # use labm8.test.Main() as the entry point to your tests.
+  # use labm8.py.test.Main() as the entry point to your tests.
   try:
     FLAGS.test_color
   except AttributeError:
-    app.Fatal("Failed to access flags defined in //labm8:test. Are you "
-              "sure you are running this test using labm8.test.Main()?")
+    app.Fatal("Failed to access flags defined in //labm8/py:test. Are you "
+              "sure you are running this test using labm8.py.test.Main()?")
 
   this_platform = sys.platform
   this_host = socket.gethostname()

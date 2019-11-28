@@ -20,7 +20,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Helper variables and functions for NCC task training"""
-
 import os
 import pathlib
 import pickle
@@ -32,12 +31,12 @@ import numpy as np
 import wget
 
 from deeplearning.ncc import vocabulary
-from labm8 import app
+from labm8.py import app
 
 # Embedding and vocabulary file paths
 app.DEFINE_string('embeddings_file', None, 'Path to the embeddings file')
 
-from labm8 import app
+from labm8.py import app
 FLAGS = app.FLAGS
 
 

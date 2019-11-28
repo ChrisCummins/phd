@@ -63,8 +63,8 @@ py_binary(
     srcs = ["libcecl_rewriter.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
-        "//labm8:fs",
+        "//labm8/py:app",
+        "//labm8/py:fs",
     ],
 )
 
@@ -73,7 +73,7 @@ py_test(
     srcs = ["libcecl_rewriter_test.py"],
     deps = [
         ":libcecl_rewriter",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -90,9 +90,9 @@ py_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:system",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:system",
     ],
 )
 
@@ -102,7 +102,7 @@ py_test(
     deps = [
         ":libcecl_compile",
         "//compilers/llvm:clang",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -115,8 +115,8 @@ py_library(
         ":libcecl_compile",
         "//gpu/cldrive/legacy:env",
         "//gpu/libcecl/proto:libcecl_pb_py",
-        "//labm8:app",
-        "//labm8:labdate",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
     ],
 )
 
@@ -127,7 +127,7 @@ py_test(
         ":libcecl_runtime",
         "//gpu/cldrive/legacy:env",
         "//gpu/libcecl/proto:libcecl_pb_py",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 

@@ -33,14 +33,14 @@ from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
-from labm8 import app
-from labm8 import crypto
-from labm8 import humanize
-from labm8 import labdate
-from labm8 import lockfile
-from labm8 import logutil
-from labm8 import pbutil
-from labm8 import system
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import humanize
+from labm8.py import labdate
+from labm8.py import lockfile
+from labm8.py import logutil
+from labm8.py import pbutil
+from labm8.py import system
 
 FLAGS = app.FLAGS
 

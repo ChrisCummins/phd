@@ -17,14 +17,13 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """Pytest fixtures for me.db tests."""
-
 import tempfile
 
 import pytest
 
 from datasets.me_db import me_db
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 app.DEFINE_string(

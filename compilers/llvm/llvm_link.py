@@ -29,9 +29,9 @@ import sys
 import typing
 
 from compilers.llvm import llvm
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import system
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -56,11 +56,10 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(LLVM_LINK)] + args
   app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      universal_newlines=True)
+  process = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True)
   stdout, stderr = process.communicate()
   if process.returncode == 9:
     raise llvm.LlvmTimeout(f'llvm-link timed out after {timeout_seconds}s')

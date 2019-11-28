@@ -11,10 +11,9 @@ Example usage:
       --clgen_multichar_tokenizer
 """
 from deeplearning.clgen import clgen
-from deeplearning.clgen.proto import corpus_pb2
 from experimental.deeplearning.deepsmith.java_fuzz import sample_java_model as java
+from labm8.py import app
 from research.cummins_2017_cgo import generative_model as opencl
-from labm8 import app
 
 FLAGS = app.FLAGS
 

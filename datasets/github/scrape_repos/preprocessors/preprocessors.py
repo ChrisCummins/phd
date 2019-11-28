@@ -13,12 +13,11 @@
 # limitations under the License.
 """Preprocess files within a dataset."""
 import importlib
-
 import pathlib
 import typing
 
 from datasets.github.scrape_repos.preprocessors import public
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

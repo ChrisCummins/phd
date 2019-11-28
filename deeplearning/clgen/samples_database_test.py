@@ -1,10 +1,11 @@
 """Unit tests for //deeplearning/clgen:samples_database."""
 import pathlib
+
 import pytest
 
 from deeplearning.clgen import samples_database
 from deeplearning.clgen.proto import model_pb2
-from labm8 import test
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

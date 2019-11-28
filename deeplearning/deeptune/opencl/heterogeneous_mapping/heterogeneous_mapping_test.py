@@ -22,8 +22,8 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import \
   models
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

@@ -1,7 +1,8 @@
 """A simple test to ensure that TensorFlow is working."""
 import tensorflow as tf
-from labm8 import app
-from labm8 import test
+
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

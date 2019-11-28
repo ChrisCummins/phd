@@ -14,16 +14,15 @@
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Preprocess source code files for machine learning."""
 import importlib
-
 import pathlib
 import typing
 from importlib import util as importlib_util
+from io import open
 
 from datasets.github.scrape_repos.preprocessors import secrets
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import public
-from io import open
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

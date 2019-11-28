@@ -3,9 +3,9 @@ py_binary(
     srcs = ["jacobi_demo.py"],
     deps = [
         "//datasets/benchmarks/jacobi_opencl",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:jsonutil",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:jsonutil",
+        "//labm8/py:prof",
     ],
 )

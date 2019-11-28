@@ -11,16 +11,16 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import orm
 from sqlalchemy import String
 from sqlalchemy import UniqueConstraint
-from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 import build_info
-from labm8 import app
-from labm8 import shell
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import shell
+from labm8.py import sqlutil
 from util.photolib import common
 from util.photolib import workspace
 

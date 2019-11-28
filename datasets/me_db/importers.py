@@ -23,8 +23,8 @@ import pathlib
 import typing
 
 from datasets.me_db import me_pb2
-from labm8 import app
-from labm8 import labtypes
+from labm8.py import app
+from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 

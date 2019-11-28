@@ -18,7 +18,7 @@ from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.backtracking import backtracking_model
 from experimental.deeplearning.clgen.backtracking.logger import \
   BacktrackingDatabaseLogger
-from labm8 import app
+from labm8.py import app
 from research.cummins_2017_cgo import generative_model
 
 FLAGS = app.FLAGS

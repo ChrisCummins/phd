@@ -5,9 +5,9 @@ py_binary(
     srcs = ["import_from_directory.py"],
     deps = [
         "//deeplearning/ml4pl/bytecode:bytecode_database",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:sqlutil",
     ],
 )
 
@@ -20,10 +20,10 @@ py_binary(
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:lockfile",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:lockfile",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -40,8 +40,8 @@ py_library(
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
-        "//labm8:app",
-        "//labm8:decorators",
+        "//labm8/py:app",
+        "//labm8/py:decorators",
         "//third_party/py/pandas",
         "//third_party/py/progressbar",
         "//third_party/py/pyparsing",
@@ -55,9 +55,9 @@ py_library(
 #    deps = [
 #        ":import_from_linux",
 #        "//datasets/linux",
-#        "//labm8:app",
-#        "//labm8:system",
-#        "//labm8:test",
+#        "//labm8/py:app",
+#        "//labm8/py:system",
+#        "//labm8/py:test",
 #        "//third_party/py/pytest",
 #    ],
 #)
@@ -68,9 +68,9 @@ py_binary(
     deps = [
         "//compilers/llvm:llvm_dis",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:sqlutil",
     ],
 )
 
@@ -86,8 +86,8 @@ py_library(
         "//deeplearning/ml4pl/bytecode:bytecode_database",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
-        "//labm8:app",
-        "//labm8:decorators",
+        "//labm8/py:app",
+        "//labm8/py:decorators",
         "//third_party/py/pandas",
         "//third_party/py/progressbar",
     ],
@@ -98,9 +98,9 @@ py_test(
     srcs = ["import_from_pact17_devmap_test.py"],
     deps = [
         ":import_from_pact17_devmap",
-        "//labm8:app",
-        "//labm8:system",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:system",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -111,7 +111,7 @@ py_binary(
     deps = [
         "//deeplearning/ml4pl:ml4pl_pb_py",
         "//deeplearning/ml4pl/bytecode:bytecode_database",
-        "//labm8:app",
-        "//labm8:fs",
+        "//labm8/py:app",
+        "//labm8/py:fs",
     ],
 )

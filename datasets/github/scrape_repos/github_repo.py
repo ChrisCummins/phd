@@ -13,7 +13,6 @@
 # limitations under the License.
 """This file defines the GitHubRepo class."""
 import binascii
-import collections
 import hashlib
 import multiprocessing
 import pathlib
@@ -25,9 +24,9 @@ import progressbar
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

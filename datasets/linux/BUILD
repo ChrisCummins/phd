@@ -25,10 +25,10 @@ py_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:decorators",
-        "//labm8:fs",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:decorators",
+        "//labm8/py:fs",
     ],
 )
 
@@ -37,7 +37,7 @@ py_test(
     srcs = ["linux_test.py"],
     deps = [
         ":linux",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

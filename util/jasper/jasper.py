@@ -27,9 +27,9 @@ import sys
 import tempfile
 import typing
 
-from labm8 import app
-from labm8 import fs
-from labm8 import text
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import text
 from tools.code_style.formatters import sql_formatter
 from util.lmk import lmk
 

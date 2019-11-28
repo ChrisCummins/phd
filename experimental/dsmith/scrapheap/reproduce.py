@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import datetime
 import os
 import sys
@@ -10,7 +9,7 @@ from dsmith.clgen_run_cl_launcher import *
 from dsmith.clsmith import *
 from dsmith.db import *
 
-from labm8 import crypto
+from labm8.py import crypto
 
 
 def cl_launcher(src: str, platform_id: int, device_id: int,
@@ -20,12 +19,17 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
     tmp.write(src.encode('utf-8'))
     tmp.flush()
 
-    return clsmith.cl_launcher(tmp.name, platform_id, device_id, *args,
+    return clsmith.cl_launcher(tmp.name,
+                               platform_id,
+                               device_id,
+                               *args,
                                timeout=os.environ.get("TIMEOUT", 60))
 
 
-def reproduce(file=sys.stdout, tablename='cl_launcherCLgenResult',
-              verbose=False, **args):
+def reproduce(file=sys.stdout,
+              tablename='cl_launcherCLgenResult',
+              verbose=False,
+              **args):
   table = eval(tablename)
   with Session(commit=False) as s:
     result = s.query(table).filter(table.id == args['result_id']).first()
@@ -40,15 +44,18 @@ def reproduce(file=sys.stdout, tablename='cl_launcherCLgenResult',
       # generate bug report
       now = datetime.datetime.utcnow().isoformat()
 
-      cli = ' '.join(cl_launcher_cli(
-          "kernel.cl", '$PLATFORM_ID', '$DEVICE_ID', *flags,
-          cl_launcher_path="./CLSmith/build/cl_launcher",
-          include_path="./CLSmith/runtime/"))
+      cli = ' '.join(
+          cl_launcher_cli("kernel.cl",
+                          '$PLATFORM_ID',
+                          '$DEVICE_ID',
+                          *flags,
+                          cl_launcher_path="./CLSmith/build/cl_launcher",
+                          include_path="./CLSmith/runtime/"))
 
       bug_type = {
-        "w": "miscompilation",
-        "bf": "compilation failure",
-        "c": "runtime crash"
+          "w": "miscompilation",
+          "bf": "compilation failure",
+          "c": "runtime crash"
       }[args['report']]
 
       report_id = crypto.md5_str(table.__name__) + "-" + str(result.id)
@@ -82,7 +89,8 @@ cat << EOF > kernel.cl
 {program.src}
 EOF
 echo "kernel written to 'kernel.cl'"
-""", file=file)
+""",
+            file=file)
       if args['report'] == "w":
         expected_output, majority_devs = util.get_majority_output(
             s, result, cl_launcherCLgenResult)
@@ -104,7 +112,8 @@ cat << EOF > actual-output.txt
 {result.stdout}
 EOF
 echo "actual output written to 'actual-output.txt'"
-""", file=file)
+""",
+              file=file)
       elif args['report'] == "c":
         print(f"""
 # Program output:
@@ -113,7 +122,8 @@ cat << EOF > reported-stderr.txt
 EOF
 echo "reported output written to 'reported-stderr.txt'"
 echo "reported program returncode is {result.status}"
-""", file=file)
+""",
+              file=file)
 
       print(f"""# Build requirements (CLSmith):
 if [ ! -d "./CLSmith" ]; then
@@ -134,7 +144,8 @@ fi
 # Run kernel using CLSmith's cl_launcher:
 {cli} >stdout.txt 2>stderr.txt
 echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
-""", file=file)
+""",
+            file=file)
 
       return
     else:
@@ -147,8 +158,8 @@ echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
         sys.exit(1)
 
       # run the program
-      runtime, status, stdout, stderr = cl_launcher(
-          program.src, platform_id, device_id, *flags)
+      runtime, status, stdout, stderr = cl_launcher(program.src, platform_id,
+                                                    device_id, *flags)
 
       # if verbose:
       #     print(stderr[:100])
@@ -167,15 +178,22 @@ echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
 
 def main():
   parser = ArgumentParser(description="Collect difftest results for a device")
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
                       help="MySQL database hostname")
-  parser.add_argument("-r", "--result", dest="result_id", type=int,
+  parser.add_argument("-r",
+                      "--result",
+                      dest="result_id",
+                      type=int,
                       default=None,
                       help="results ID")
-  parser.add_argument("-t", "--table", dest="tablename",
+  parser.add_argument("-t",
+                      "--table",
+                      dest="tablename",
                       default="cl_launcherCLgenResult")
-  parser.add_argument("--report",
-                      help="generate bug report of type: {w,bc}")
+  parser.add_argument("--report", help="generate bug report of type: {w,bc}")
   parser.add_argument("-v", "--verbose", action="store_true")
   args = parser.parse_args()
 

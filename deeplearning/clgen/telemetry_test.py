@@ -17,8 +17,8 @@ import pathlib
 import tempfile
 
 from deeplearning.clgen import telemetry
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 
 import smith
 
-from labm8 import fs
+from labm8.py import fs
 
 
 def sanitize_id(id):

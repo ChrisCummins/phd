@@ -35,8 +35,8 @@ py_library(
         "//compilers/llvm",
         "//compilers/llvm:clang_format",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
     ],
 )
 
@@ -45,8 +45,8 @@ py_test(
     srcs = ["clang_test.py"],
     deps = [
         ":clang",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -258,7 +258,7 @@ py_library(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -268,8 +268,8 @@ py_test(
     deps = [
         ":common",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -290,8 +290,8 @@ py_library(
         ":normalizer",
         ":public",
         "//compilers/llvm:clang",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
     ],
 )
 
@@ -301,12 +301,12 @@ py_test(
     deps = [
         ":cxx",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
-# FIXME(cec): py3_image is not a test rule, but //labm8:test is marked
+# FIXME(cec): py3_image is not a test rule, but //labm8/py:test is marked
 # test-only.
 # py3_image(
 #     name = "cxx_test_image",
@@ -316,8 +316,8 @@ py_test(
 #     deps = [
 #         ":cxx",
 #         "//deeplearning/clgen:errors",
-#         "//labm8:test",
-#         "//labm8:app",
+#         "//labm8/py:test",
+#         "//labm8/py:app",
 #     ],
 # )
 
@@ -331,8 +331,8 @@ py_library(
         ":public",
         "//datasets/github/scrape_repos/preprocessors:extractors",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
     ],
 )
 
@@ -342,8 +342,8 @@ py_test(
     deps = [
         ":java",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -469,8 +469,8 @@ py_library(
     ],
     deps = [
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
     ],
 )
 
@@ -480,8 +480,8 @@ py_test(
     deps = [
         ":normalizer",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -498,7 +498,7 @@ py_library(
         ":clang",
         ":normalizer",
         ":public",
-        "//labm8:bazelutil",
+        "//labm8/py:bazelutil",
     ],
 )
 
@@ -510,9 +510,9 @@ py_test(
         ":clang",
         ":opencl",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:test",
     ],
 )
 
@@ -536,7 +536,7 @@ py_library(
         "//datasets/github/scrape_repos/preprocessors:secrets",
         "//deeplearning/clgen:errors",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -548,9 +548,9 @@ py_test(
         ":public",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:test",
     ],
 )
 
@@ -559,7 +559,7 @@ py_library(
     srcs = ["public.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -569,7 +569,7 @@ py_test(
     deps = [
         ":public",
         "//deeplearning/clgen:errors",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

@@ -4,8 +4,10 @@
 #   ./search.py ~/src/clgen/model.json ~/src/clgen/tests/data/cl/sample-1.gs \
 #       ~/src/clgen/tests/data/tiny/corpus/3.cl || less search.log
 #
+from io import StringIO
 from random import randint
-from subprocess import PIPE, Popen
+from subprocess import PIPE
+from subprocess import Popen
 from tempfile import NamedTemporaryFile
 
 import clgen
@@ -13,12 +15,9 @@ import numpy as np
 from clgen import log as clgen_log
 from clgen import model
 from clgen import preprocess
+
+from labm8.py import fs
 from labm8.time import nowstr
-
-from labm8 import fs
-from phd import labm8
-
-from io import StringIO
 
 
 def features_from_file(path):
@@ -79,8 +78,11 @@ def get_sample(m, seed_text, seed):
   """
   try:
     buf = StringIO()
-    m.sample(
-        seed_text=seed_text, output=buf, seed=seed, max_length=5000, quiet=True)
+    m.sample(seed_text=seed_text,
+             output=buf,
+             seed=seed,
+             max_length=5000,
+             quiet=True)
     out = buf.getvalue()
     result = preprocess.preprocess(out)
     return 0, result
@@ -94,13 +96,12 @@ def get_start_code(m):
   while True:
     try:
       buf = StringIO()
-      m.sample(
-          seed_text='__kernel void A(__global float* a, '
-          '__global float* b, __global float* c, '
-          'const int d) {',
-          output=buf,
-          max_length=5000,
-          quiet=True)
+      m.sample(seed_text='__kernel void A(__global float* a, '
+               '__global float* b, __global float* c, '
+               'const int d) {',
+               output=buf,
+               max_length=5000,
+               quiet=True)
       out = buf.getvalue()
       return preprocess.preprocess(out)
     except preprocess.BadCodeException:
@@ -134,8 +135,14 @@ def get_mutation(m, start_code):
 
     start_text = start_code[:mutate_idx]
 
-    print(
-        ">>> attempt", i, "idx", mutate_idx, "seed", mutate_seed, "-", end=" ")
+    print(">>> attempt",
+          i,
+          "idx",
+          mutate_idx,
+          "seed",
+          mutate_seed,
+          "-",
+          end=" ")
     ret, code = get_sample(m, start_text, mutate_seed)
     if not ret and code != start_code:
       print("good")
@@ -216,16 +223,15 @@ def search(m, target_code, logpath, start_code=None):
     code_history = get_code_history(log)
   else:
     # create init entry
-    add_to_log(
-        log, {
-            "start_code": code,
-            "start_features": escape_features(features),
-            "target_features": escape_features(target_features),
-            "target_code": target_code,
-            "distance": distance,
-            "model": m.meta
-        },
-        name="init")
+    add_to_log(log, {
+        "start_code": code,
+        "start_features": escape_features(features),
+        "target_features": escape_features(target_features),
+        "target_code": target_code,
+        "distance": distance,
+        "model": m.meta
+    },
+               name="init")
     write_log(log, logpath)
     code_history = [code]
 
@@ -285,13 +291,12 @@ def search(m, target_code, logpath, start_code=None):
       print("found exact match!")
       break
 
-  add_to_log(
-      log, {
-          "best_code": best['code'],
-          "best_features": escape_features(best['features']),
-          "best_distance": best['distance']
-      },
-      name="end")
+  add_to_log(log, {
+      "best_code": best['code'],
+      "best_features": escape_features(best['features']),
+      "best_distance": best['distance']
+  },
+             name="end")
   write_log(log, logpath)
 
 
@@ -301,18 +306,16 @@ def main():
   parser = ArgumentParser()
   parser.add_argument("model", help="Path to model")
   parser.add_argument("target", help="Path to target code")
-  parser.add_argument(
-      "-i",
-      "--input",
-      metavar="path",
-      default=None,
-      help="Path to starting code")
-  parser.add_argument(
-      "-l",
-      "--log",
-      metavar="path",
-      default="search-log.json",
-      help="Path to log file")
+  parser.add_argument("-i",
+                      "--input",
+                      metavar="path",
+                      default=None,
+                      help="Path to starting code")
+  parser.add_argument("-l",
+                      "--log",
+                      metavar="path",
+                      default="search-log.json",
+                      help="Path to log file")
   args = parser.parse_args()
 
   clgen_log.init(verbose=True)

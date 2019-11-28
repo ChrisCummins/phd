@@ -1,5 +1,4 @@
 """Implementation of graph networks for compilers."""
-import collections
 import contextlib
 import json
 import pathlib
@@ -17,9 +16,9 @@ from graph_nets import modules
 from graph_nets import utils_np
 from graph_nets import utils_tf
 
-from labm8 import app
-from labm8 import labdate
-from labm8 import prof
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

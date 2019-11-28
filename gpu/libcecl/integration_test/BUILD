@@ -50,7 +50,7 @@ py_test(
         "//compilers/llvm:clang",
         "//gpu/libcecl:libcecl_rewriter",
         "//gpu/libcecl:libcecl_runtime",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

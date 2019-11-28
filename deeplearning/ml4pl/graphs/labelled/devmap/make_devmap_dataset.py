@@ -9,10 +9,10 @@ import sqlalchemy as sql
 
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.ml4pl.graphs import graph_database
-from labm8 import app
-from labm8 import fs
-from labm8 import prof
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import prof
+from labm8.py import sqlutil
 
 app.DEFINE_database('input_db',
                     graph_database.Database,

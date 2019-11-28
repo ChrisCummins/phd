@@ -4,10 +4,9 @@ import typing
 import numpy as np
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

@@ -14,8 +14,8 @@
 # along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import harness_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

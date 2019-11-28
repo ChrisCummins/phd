@@ -6,9 +6,9 @@ py_library(
         ":ggnn_utils",
         "//deeplearning/ml4pl/models:base_utils",
         "//deeplearning/ml4pl/models:classifier_base",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:prof",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
     ],
@@ -20,8 +20,8 @@ py_test(
     deps = [
         ":ggnn_base",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -33,10 +33,10 @@ py_binary(
         ":ggnn_base",
         ":ggnn_utils",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
-        "//deeplearning/ml4pl/models:log_database",
         "//deeplearning/ml4pl/models:base_utils",
-        "//labm8:app",
-        "//labm8:prof",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8/py:app",
+        "//labm8/py:prof",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
     ],
@@ -49,8 +49,8 @@ py_test(
     deps = [
         ":ggnn",
         "//deeplearning/ml4pl/models:classifier_smoke_tester",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/numpy",
     ],
 )
@@ -61,7 +61,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database_stats",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/numpy",
         "//third_party/py/tensorflow",
     ],

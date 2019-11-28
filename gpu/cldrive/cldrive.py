@@ -20,7 +20,7 @@ import sys
 from gpu.cldrive import api
 from gpu.cldrive.legacy import env
 from gpu.cldrive.proto import cldrive_pb2
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 app.DEFINE_string('src', None, 'Path to a file containing OpenCL kernels.')

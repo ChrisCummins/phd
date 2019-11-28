@@ -20,9 +20,9 @@ import pytest
 import deeplearning.clgen
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import opencl
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

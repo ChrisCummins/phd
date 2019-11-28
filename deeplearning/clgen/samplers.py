@@ -22,9 +22,9 @@ import typing
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import sampler_pb2
-from labm8 import app
-from labm8 import crypto
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

@@ -29,7 +29,7 @@ from gpu.cldrive.legacy import cgen
 from gpu.cldrive.legacy import data
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 app.DEFINE_boolean(

@@ -21,8 +21,8 @@ import pytest
 from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.proto import sampler_pb2
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

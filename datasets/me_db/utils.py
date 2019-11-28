@@ -21,7 +21,7 @@ import csv
 import datetime
 import os
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

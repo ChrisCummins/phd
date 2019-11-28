@@ -30,8 +30,8 @@ from deeplearning.deepsmith.proto import harness_pb2_grpc
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
-from labm8 import app
-from labm8 import labdate
+from labm8.py import app
+from labm8.py import labdate
 
 FLAGS = app.FLAGS
 

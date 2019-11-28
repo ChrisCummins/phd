@@ -9,11 +9,10 @@ import re
 import subprocess
 import typing
 
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import system
-
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -69,9 +68,9 @@ def MaybeTranscodeMp3(path: str,
         tempfile_suffix='.mp3')
     size_after = os.path.getsize(path)
     app.Log(1, f'%s changed from %s to %s (%.1f%% reduction)',
-             os.path.basename(path), humanize.BinaryPrefix(size_before, 'B'),
-             humanize.BinaryPrefix(size_after, 'B'),
-             (1 - (size_after / size_before)) * 100)
+            os.path.basename(path), humanize.BinaryPrefix(size_before, 'B'),
+            humanize.BinaryPrefix(size_after, 'B'),
+            (1 - (size_after / size_before)) * 100)
     out_csv.writerow(
         [datetime.datetime.now(), path, bit_rate, size_before, size_after])
     return True

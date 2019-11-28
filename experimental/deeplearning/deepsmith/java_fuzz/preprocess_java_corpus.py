@@ -25,11 +25,11 @@ from datasets.github.scrape_repos.preprocessors import secrets
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 app.DEFINE_database(

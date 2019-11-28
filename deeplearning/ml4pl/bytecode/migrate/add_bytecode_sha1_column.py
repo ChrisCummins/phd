@@ -1,9 +1,8 @@
 """Populate the 'bytecode_sha1' column."""
-from labm8 import app
-from labm8 import crypto
-from labm8 import prof
-
 from deeplearning.ml4pl.bytecode import bytecode_database
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

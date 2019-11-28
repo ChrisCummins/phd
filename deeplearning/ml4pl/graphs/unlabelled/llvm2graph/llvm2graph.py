@@ -1,6 +1,6 @@
 """Construct a ProGraML graph from LLVM intermediate representation."""
 from deeplearning.ml4pl.graphs.unlabelled.llvm2graph import graph_builder
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

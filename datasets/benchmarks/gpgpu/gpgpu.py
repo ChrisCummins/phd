@@ -28,10 +28,9 @@ Usage:
       --gpgpu_envs='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2'
       --gpgpu_benchmarks_suites=amd,npb --gpgpu_logdir=/tmp/logs
 """
+import contextlib
 import multiprocessing
 import os
-
-import contextlib
 import pathlib
 import subprocess
 import tempfile
@@ -42,15 +41,14 @@ from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_runtime
 from gpu.oclgrind import oclgrind
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import labdate
-from labm8 import labtypes
-from labm8 import pbutil
-from labm8 import system
-from labm8 import text
-
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import labdate
+from labm8.py import labtypes
+from labm8.py import pbutil
+from labm8.py import system
+from labm8.py import text
 
 FLAGS = app.FLAGS
 
@@ -122,15 +120,14 @@ def RewriteClDeviceType(env: cldrive_env.OclgrindOpenCLEnvironment,
   """Rewrite all instances of CL_DEVICE_TYPE_XXX in the given path."""
   cl_device_type = ('CL_DEVICE_TYPE_GPU' if env.device_type.lower() == 'gpu'
                     else 'CL_DEVICE_TYPE_CPU')
-  CheckCall(
-      f"""\
+  CheckCall(f"""\
 for f in $(find '{path}' -type f); do
   grep CL_DEVICE_TYPE_ $f &>/dev/null && {{
     sed -E -i 's/CL_DEVICE_TYPE_[A-Z]+/{cl_device_type}/g' $f
     echo Set {cl_device_type} in $f
   }} || true
 done""",
-      shell=True)
+            shell=True)
 
 
 class BenchmarkRunObserver(object):
@@ -262,10 +259,9 @@ def Make(
   # because some of the source codes have hard-coded relative paths.
   with MakeEnv(make_dir) as env:
     app.Log(2, 'Running make %s in %s', target, make_dir)
-    CheckCall(
-        ['make', '-j', FLAGS.gpgpu_build_process_count] +
-        ([target] if target else []) + (extra_make_args or []),
-        env=env)
+    CheckCall(['make', '-j', FLAGS.gpgpu_build_process_count] +
+              ([target] if target else []) + (extra_make_args or []),
+              env=env)
 
 
 def FindExecutableInDir(path: pathlib.Path) -> pathlib.Path:
@@ -484,9 +480,8 @@ class AmdAppSdkBenchmarkSuite(_BenchmarkSuite):
     ])
 
     for benchmark in self.benchmarks:
-      with MakeEnv(
-          self.path / f'samples/opencl/cl/1.x/{benchmark}',
-          opencl_headers=False) as env:
+      with MakeEnv(self.path / f'samples/opencl/cl/1.x/{benchmark}',
+                   opencl_headers=False) as env:
         env['CFLAGS'] = f'{env["CFLAGS"]} -isystem {self.path}/include'
         env['CXXFLAGS'] = f'{env["CXXFLAGS"]} -isystem {self.path}/include'
 
@@ -670,12 +665,12 @@ class ParboilBenchmarkSuite(_BenchmarkSuite):
 
   def _Run(self):
     for benchmark, dataset in self.benchmarks_and_datasets:
-      self._ExecToLogFile(
-          self.path / 'parboil',
-          f'{benchmark}.{dataset}',
-          command=[
-              'python2', './parboil', 'run', benchmark, 'opencl_base', dataset
-          ])
+      self._ExecToLogFile(self.path / 'parboil',
+                          f'{benchmark}.{dataset}',
+                          command=[
+                              'python2', './parboil', 'run', benchmark,
+                              'opencl_base', dataset
+                          ])
 
 
 class PolybenchGpuBenchmarkSuite(_BenchmarkSuite):
@@ -872,8 +867,8 @@ def main(argv: typing.List[str]):
 
   # Create the observers that will process the results..
   observers = [
-      DumpLogProtoToFileObserver(
-          pathlib.Path(FLAGS.gpgpu_logdir), FLAGS.gpgpu_log_extension)
+      DumpLogProtoToFileObserver(pathlib.Path(FLAGS.gpgpu_logdir),
+                                 FLAGS.gpgpu_log_extension)
   ]
 
   if FLAGS.gpgpu_fail_on_error:

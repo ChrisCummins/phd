@@ -19,7 +19,7 @@ py_library(
     testonly = 1,
     srcs = ["conftest.py"],
     deps = [
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -34,9 +34,9 @@ py_library(
     deps = [
         ":public",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -47,8 +47,8 @@ py_test(
     deps = [
         ":conftest",
         ":extractors",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -66,8 +66,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":public",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//third_party/py/fuzzywuzzy",
     ],
 )
@@ -79,8 +79,8 @@ py_test(
     deps = [
         ":conftest",
         ":inliners",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -143,7 +143,7 @@ py_library(
         ":inliners",
         ":public",
         ":secrets",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -155,8 +155,8 @@ py_test(
         ":conftest",
         ":preprocessors",
         ":public",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -165,8 +165,8 @@ py_library(
     srcs = ["public.py"],
     visibility = ["//datasets/github/scrape_repos:__subpackages__"],
     deps = [
-        "//labm8:app",
-        "//labm8:fs",
+        "//labm8/py:app",
+        "//labm8/py:fs",
     ],
 )
 
@@ -177,8 +177,8 @@ py_test(
     deps = [
         ":conftest",
         ":public",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -188,7 +188,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":public",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/detect_secrets",
     ],
 )
@@ -198,6 +198,6 @@ py_test(
     srcs = ["secrets_test.py"],
     deps = [
         ":secrets",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )

@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

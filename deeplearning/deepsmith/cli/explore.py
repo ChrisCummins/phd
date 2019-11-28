@@ -18,8 +18,8 @@ import random
 import deeplearning.deepsmith.result
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

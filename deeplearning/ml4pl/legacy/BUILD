@@ -5,7 +5,7 @@
 #    visibility = ["//visibility:public"],
 #    deps = [
 #        ":control_flow_graph",
-#        "//labm8:app",
+#        "//labm8/py:app",
 #        "//third_party/py/networkx",
 #        "//third_party/py/numpy",
 #    ],
@@ -17,8 +17,8 @@
 #    srcs = ["control_flow_graph_generator_test.py"],
 #    deps = [
 #        ":control_flow_graph_generator",
-#        "//labm8:app",
-#        "//labm8:test",
+#        "//labm8/py:app",
+#        "//labm8/py:test",
 #        "//third_party/py/networkx",
 #    ],
 #)
@@ -30,9 +30,9 @@
 #        ":ml4pl_pb_py",
 #        "//deeplearning/clgen:telemetry",
 #        "//deeplearning/clgen/corpuses:atomizers",
-#        "//labm8:app",
-#        "//labm8:humanize",
-#        "//labm8:pbutil",
+#        "//labm8/py:app",
+#        "//labm8/py:humanize",
+#        "//labm8/py:pbutil",
 #        "//third_party/py/keras",
 #        "//third_party/py/numpy",
 #    ],

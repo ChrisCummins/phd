@@ -1,12 +1,10 @@
 #!/usr/bin/env python3.6
-
 import sys
 
 from progressbar import ProgressBar
 
-from labm8 import crypto
-from labm8 import fs
-
+from labm8.py import crypto
+from labm8.py import fs
 
 if __name__ == "__main__":
   inpath = sys.argv[1]

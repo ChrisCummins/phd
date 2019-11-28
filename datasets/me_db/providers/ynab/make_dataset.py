@@ -17,14 +17,13 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """A module to generate random YNAB datasets."""
-
 import pathlib
 import random
 import time
 import typing
 
-from labm8 import app
-from labm8 import jsonutil
+from labm8.py import app
+from labm8.py import jsonutil
 
 FLAGS = app.FLAGS
 
@@ -143,13 +142,13 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized command line flags.')
 
-  generator = RandomDatasetGenerator(
-      start_date_seconds_since_epoch=time.mktime(
-          time.strptime('1/1/2018', '%m/%d/%Y')),
-      categories={
-          'Rainy Day': ['Savings', 'Pension'],
-          'Everyday Expenses': ['Groceries', 'Clothes'],
-      })
+  generator = RandomDatasetGenerator(start_date_seconds_since_epoch=time.mktime(
+      time.strptime('1/1/2018', '%m/%d/%Y')),
+                                     categories={
+                                         'Rainy Day': ['Savings', 'Pension'],
+                                         'Everyday Expenses':
+                                         ['Groceries', 'Clothes'],
+                                     })
   print(jsonutil.format_json(generator.Sample(30)))
 
 

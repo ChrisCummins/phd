@@ -14,7 +14,7 @@
 """Shared code for LLVM modules."""
 import typing
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

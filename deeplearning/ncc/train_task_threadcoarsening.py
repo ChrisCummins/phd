@@ -29,13 +29,13 @@ import pickle
 
 import numpy as np
 import pandas as pd
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
 from sklearn.model_selection import KFold
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
 
 app.DEFINE_string('input_data',
                   '/tmp/phd/deeplearning/ncc/task/threadcoarsening',

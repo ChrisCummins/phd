@@ -2,13 +2,13 @@
 
 This is a utility script for dumping methods to inspect / test with.
 """
-
 import pathlib
+
 import progressbar
 
 from deeplearning.clgen.corpuses import preprocessed
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 app.DEFINE_database(

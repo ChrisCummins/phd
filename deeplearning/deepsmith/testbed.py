@@ -23,10 +23,10 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.toolchain
-import labm8.sqlutil
+import labm8.py.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import labdate
+from labm8.py import labdate
 
 # The index types for tables defined in this file.
 _TestbedId = sql.Integer
@@ -139,7 +139,7 @@ class Testbed(db.Table):
     for proto_opt_name in sorted(proto.opts):
       proto_opt_value = proto.opts[proto_opt_name]
       md5.update((proto_opt_name + proto_opt_value).encode('utf-8'))
-      opt = labm8.sqlutil.GetOrAdd(
+      opt = labm8.py.sqlutil.GetOrAdd(
           session,
           TestbedOpt,
           name=TestbedOptName.GetOrAdd(session, proto_opt_name),
@@ -152,7 +152,7 @@ class Testbed(db.Table):
     for opt in opts:
       db.GetOrAdd(session, TestbedOptSet, id=optset_id, opt=opt)
 
-    return labm8.sqlutil.GetOrAdd(
+    return labm8.py.sqlutil.GetOrAdd(
         session,
         cls,
         toolchain=toolchain,

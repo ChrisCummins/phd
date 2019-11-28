@@ -9,8 +9,7 @@ from gym.envs import registration
 from datasets.benchmarks import bzip2
 from datasets.benchmarks import llvm_test_suite
 from experimental.compilers.random_opt.proto import random_opt_pb2
-from labm8 import app
-
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

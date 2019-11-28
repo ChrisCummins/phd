@@ -1,8 +1,8 @@
 """Copy the contents of a log database."""
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import prof
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import prof
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

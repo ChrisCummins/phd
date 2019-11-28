@@ -17,7 +17,7 @@ import contextlib
 import os
 import pathlib
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

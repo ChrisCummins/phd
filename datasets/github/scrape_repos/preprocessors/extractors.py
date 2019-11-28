@@ -13,16 +13,15 @@
 # limitations under the License.
 """Preprocessors to extract from source code."""
 import os
-
 import pathlib
 import subprocess
 import typing
-from datasets.github.scrape_repos.proto import scrape_repos_pb2
 
 from datasets.github.scrape_repos.preprocessors import public
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import pbutil
+from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

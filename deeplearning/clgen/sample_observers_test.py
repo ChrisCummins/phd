@@ -3,10 +3,10 @@ import pathlib
 
 from deeplearning.clgen import sample_observers
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import crypto
-from labm8 import fs
-from labm8 import test
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import fs
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

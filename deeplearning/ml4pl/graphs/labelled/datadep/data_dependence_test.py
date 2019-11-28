@@ -1,9 +1,9 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/datadep:data_dependence."""
 import networkx as nx
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs.labelled.datadep import data_dependence
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

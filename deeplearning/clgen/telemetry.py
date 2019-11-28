@@ -18,10 +18,10 @@ import re
 import typing
 
 from deeplearning.clgen.proto import telemetry_pb2
-from labm8 import app
-from labm8 import jsonutil
-from labm8 import labdate
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import jsonutil
+from labm8.py import labdate
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

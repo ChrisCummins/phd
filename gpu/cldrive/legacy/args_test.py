@@ -14,12 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //gpu/cldrive/legacy/args.py."""
-
 import pytest
 
 from gpu.cldrive.legacy import args
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

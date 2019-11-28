@@ -2,8 +2,8 @@
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.eval import google_sheets
 from deeplearning.ml4pl.models.eval import leaderboard
-from labm8 import app
-from labm8 import prof
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

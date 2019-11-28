@@ -1,8 +1,8 @@
 """Module for extracting and caching XMP data from image files."""
-import os
-
 import datetime
+import os
 import typing
+
 from libxmp import utils as xmputils
 from sqlalchemy import Binary
 from sqlalchemy import Boolean
@@ -10,13 +10,13 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
-from sqlalchemy import String
 from sqlalchemy import orm
+from sqlalchemy import String
 from sqlalchemy.ext import declarative
 
 import build_info
-from labm8 import app
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import sqlutil
 from util.photolib import common
 from util.photolib import workspace
 

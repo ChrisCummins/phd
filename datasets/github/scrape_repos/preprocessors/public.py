@@ -16,8 +16,8 @@ import pathlib
 import subprocess
 import typing
 
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 

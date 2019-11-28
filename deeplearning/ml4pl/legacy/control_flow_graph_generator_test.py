@@ -1,10 +1,10 @@
 """Unit tests for :control_flow_graph_generator."""
 import numpy as np
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.legacy import control_flow_graph_generator
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

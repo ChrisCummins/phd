@@ -23,15 +23,15 @@
   have a fixed formatting, etc. If you try this on unformatted code, it will
   likely break (silently).
 """
-import numpy as np
 import re
 import typing
 
+import numpy as np
+
 from deeplearning.clgen.preprocessors import opencl
 from gpu.cldrive.legacy import args
-from labm8 import app
-from labm8 import fmt
-
+from labm8.py import app
+from labm8.py import fmt
 
 FLAGS = app.FLAGS
 

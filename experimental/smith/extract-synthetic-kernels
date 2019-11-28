@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 import smith
 from smith import cgo13
 
-from labm8 import fs
+from labm8.py import fs
 
 
 def main():

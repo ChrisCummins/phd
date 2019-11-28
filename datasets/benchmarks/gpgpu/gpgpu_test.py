@@ -13,14 +13,15 @@
 # limitations under the License.
 """Unit tests for //datasets/benchmarks/gpgpu:gpgpu.py."""
 import pathlib
-import pytest
 import typing
+
+import pytest
 
 from datasets.benchmarks.gpgpu import gpgpu
 from datasets.benchmarks.gpgpu import gpgpu_pb2
 from gpu.cldrive.legacy import env as cldrive_env
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

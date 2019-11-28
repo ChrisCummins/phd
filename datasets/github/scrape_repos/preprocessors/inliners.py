@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Preprocessors to inline includes."""
-import collections
 import pathlib
 import re
 import sys
@@ -21,8 +20,8 @@ import typing
 from fuzzywuzzy import process
 
 from datasets.github.scrape_repos.preprocessors import public
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 

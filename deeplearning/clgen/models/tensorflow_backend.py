@@ -21,8 +21,6 @@ import typing
 
 import numpy as np
 import progressbar
-from labm8 import app
-from labm8 import humanize
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen import telemetry
@@ -30,6 +28,8 @@ from deeplearning.clgen.dashboard import dashboard_db
 from deeplearning.clgen.models import backends
 from deeplearning.clgen.models import data_generators
 from deeplearning.clgen.proto import model_pb2
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 

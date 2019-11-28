@@ -8,9 +8,9 @@ import sys
 
 import bibtexparser
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import jsonutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import jsonutil
 
 FLAGS = app.FLAGS
 

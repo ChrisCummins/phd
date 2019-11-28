@@ -24,14 +24,17 @@ import logging
 import os
 import sys
 import traceback
-from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
+from argparse import ArgumentParser
+from argparse import FileType
+from argparse import RawDescriptionHelpFormatter
 from typing import List
 
 from experimental import dsmith
 from experimental.dsmith import Colors
-from experimental.dsmith.repl import repl, run_command
-from labm8 import fs, prof
-
+from experimental.dsmith.repl import repl
+from experimental.dsmith.repl import run_command
+from labm8.py import fs
+from labm8.py import prof
 
 __help_epilog__ = """
 Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>.
@@ -141,11 +144,10 @@ def main(self, args: List[str] = sys.argv[1:]):
   """
   Compiler fuzzing through deep learning.
   """
-  parser = ArgumentParser(
-      prog="dsmith",
-      description=inspect.getdoc(self),
-      epilog=__help_epilog__,
-      formatter_class=RawDescriptionHelpFormatter)
+  parser = ArgumentParser(prog="dsmith",
+                          description=inspect.getdoc(self),
+                          epilog=__help_epilog__,
+                          formatter_class=RawDescriptionHelpFormatter)
 
   parser.add_argument(
       "--config",
@@ -153,29 +155,29 @@ def main(self, args: List[str] = sys.argv[1:]):
       type=FileType("r"),
       dest="rc_path",
       help=f"path to configuration file (default: '{dsmith.RC_PATH}')")
-  parser.add_argument(
-      "-v", "--verbose", action="store_true", help="increase output verbosity")
-  parser.add_argument(
-      "--debug", action="store_true", help="debugging output verbosity")
-  parser.add_argument(
-      "--db-debug",
-      action="store_true",
-      help="additional database debugging output")
-  parser.add_argument(
-      "--version",
-      action="store_true",
-      help="show version information and exit")
+  parser.add_argument("-v",
+                      "--verbose",
+                      action="store_true",
+                      help="increase output verbosity")
+  parser.add_argument("--debug",
+                      action="store_true",
+                      help="debugging output verbosity")
+  parser.add_argument("--db-debug",
+                      action="store_true",
+                      help="additional database debugging output")
+  parser.add_argument("--version",
+                      action="store_true",
+                      help="show version information and exit")
   parser.add_argument(
       "--profile",
       action="store_true",
       help=("enable internal API profiling. When combined with --verbose, "
             "prints a complete profiling trace"))
-  parser.add_argument(
-      "command",
-      metavar="<command>",
-      nargs="*",
-      help=("command to run. If not given, run an "
-            "interactive prompt"))
+  parser.add_argument("command",
+                      metavar="<command>",
+                      nargs="*",
+                      help=("command to run. If not given, run an "
+                            "interactive prompt"))
 
   args = parser.parse_args(args)
 
@@ -197,8 +199,8 @@ def main(self, args: List[str] = sys.argv[1:]):
     os.environ["DB_DEBUG"] = "1"
 
   # configure logger
-  logging.basicConfig(
-      format='%(asctime)s [%(levelname)s] %(message)s', level=loglvl)
+  logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
+                      level=loglvl)
 
   # set profile option
   if args.profile:

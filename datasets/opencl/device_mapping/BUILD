@@ -31,9 +31,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deeptune/opencl/adversary:opencl_deadcode_inserter",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:decorators",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:decorators",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
     ],
@@ -44,8 +44,8 @@ py_test(
     srcs = ["opencl_device_mapping_dataset_test.py"],
     deps = [
         ":opencl_device_mapping_dataset",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/numpy",
     ],
 )

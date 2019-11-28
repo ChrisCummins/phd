@@ -2,8 +2,8 @@
 import io
 
 from experimental.hotcrp import json_to_acm_proceedings
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -30,14 +30,13 @@ def test_JsonToCsv():
           "last": "Bloggs",
           "affiliation": "University of Joe, Manchester",
           "contact": True
-      },
-                  {
-                      "email": "example@yahoo.ac.uk",
-                      "first": "Eve A.",
-                      "last": "Example",
-                      "affiliation": "UoE",
-                      "contact": True
-                  }],
+      }, {
+          "email": "example@yahoo.ac.uk",
+          "first": "Eve A.",
+          "last": "Example",
+          "affiliation": "UoE",
+          "contact": True
+      }],
       "abstract":
       "This is a very good paper.",
       "submission": {

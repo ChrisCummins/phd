@@ -6,8 +6,6 @@ import typing
 import pandas as pd
 import progressbar
 import pyparsing
-from labm8 import app
-from labm8 import decorators
 
 from compilers.llvm import clang
 from compilers.llvm import opt
@@ -17,6 +15,8 @@ from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
+from labm8.py import app
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 

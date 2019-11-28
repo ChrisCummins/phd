@@ -26,8 +26,8 @@ import typing
 
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 

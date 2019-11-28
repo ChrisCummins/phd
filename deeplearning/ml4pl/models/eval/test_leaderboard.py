@@ -1,12 +1,13 @@
 """Print a summary table of model results."""
 import io
 import pickle
+
 import pandas as pd
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import pdutil
+from labm8.py import app
+from labm8.py import pdutil
 
 app.DEFINE_database('log_db',
                     log_database.Database,
@@ -63,8 +64,10 @@ def GetLeaderboard(log_db: log_database.Database,
         sql.func.avg(log_database.BatchLogMeta.accuracy).label('accuracy'),
         sql.func.avg(log_database.BatchLogMeta.precision).label('precision'),
         sql.func.avg(log_database.BatchLogMeta.recall).label('recall'),
-        sql.func.avg(log_database.BatchLogMeta.iteration_count).label('avg_iteration_count'),
-        sql.func.avg(log_database.BatchLogMeta.model_converged).label('avg_model_converged'),
+        sql.func.avg(log_database.BatchLogMeta.iteration_count).label(
+            'avg_iteration_count'),
+        sql.func.avg(log_database.BatchLogMeta.model_converged).label(
+            'avg_model_converged'),
     )
     query = query.filter(log_database.BatchLogMeta.type == 'test')
     query = query.group_by(log_database.BatchLogMeta.run_id)
@@ -102,7 +105,8 @@ def GetLeaderboard(log_db: log_database.Database,
       aux_df.set_index('run_id', inplace=True)
       df = df.join(aux_df)
 
-    extra_flags = ['unroll_strategy', 'unroll_factor', 'layer_timesteps'] + FLAGS.extra_flags
+    extra_flags = ['unroll_strategy', 'unroll_factor', 'layer_timesteps'
+                  ] + FLAGS.extra_flags
     for flag in extra_flags:
       # Strip the fully qualified flag name, e.g. "foo.bar.flag" -> "flag".
       flag_name = flag.split('.')[-1]

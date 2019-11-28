@@ -31,12 +31,12 @@ import numpy as np
 import tensorflow as tf
 from keras import utils
 from keras.callbacks import Callback
-from labm8 import app
-from labm8 import fs
 from sklearn.utils import resample
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
+from labm8.py import app
+from labm8.py import fs
 
 # Parameters of classifyapp
 app.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/classifyapp/ir',

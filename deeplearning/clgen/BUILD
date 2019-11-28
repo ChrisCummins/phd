@@ -49,9 +49,9 @@ py_library(
     srcs = ["cache.py"],
     visibility = ["//deeplearning/clgen:__subpackages__"],
     deps = [
-        "//labm8:app",
-        "//labm8:cache",
-        "//labm8:fs",
+        "//labm8/py:app",
+        "//labm8/py:cache",
+        "//labm8/py:fs",
     ],
 )
 
@@ -67,9 +67,9 @@ py_binary(
         "//deeplearning/clgen/models",
         "//deeplearning/clgen/models:pretrained",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:prof",
     ],
 )
 
@@ -86,11 +86,11 @@ py_test(
         ":clgen",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:pbutil",
-        "//labm8:tar",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:pbutil",
+        "//labm8/py:tar",
+        "//labm8/py:test",
     ],
 )
 
@@ -101,9 +101,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:test",
     ],
 )
 
@@ -120,8 +120,8 @@ py_binary(
     deps = [
         "//deeplearning/clgen/models",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -133,8 +133,8 @@ py_binary(
         "//deeplearning/clgen/corpuses:preprocessed",
         "//deeplearning/clgen/preprocessors",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
         "//third_party/py/progressbar",
     ],
 )
@@ -144,7 +144,7 @@ py_test(
     srcs = ["preprocess_test.py"],
     deps = [
         ":preprocess",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -158,8 +158,8 @@ py_library(
         ":samplers",
         "//deeplearning/clgen/models:pretrained",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -169,10 +169,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:crypto",
-        "//labm8:fs",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:crypto",
+        "//labm8/py:fs",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -182,10 +182,10 @@ py_test(
     deps = [
         ":sample_observers",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:crypto",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:crypto",
+        "//labm8/py:fs",
+        "//labm8/py:test",
     ],
 )
 
@@ -198,9 +198,9 @@ py_library(
         ":errors",
         "//deeplearning/clgen/corpuses:atomizers",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:crypto",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:crypto",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -211,8 +211,8 @@ py_test(
         ":conftest",
         ":errors",
         ":samplers",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -223,10 +223,10 @@ py_library(
     deps = [
         ":sample_observers",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:crypto",
-        "//labm8:labdate",
-        "//labm8:pbutil",
-        "//labm8:sqlutil",
+        "//labm8/py:crypto",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -237,7 +237,7 @@ py_test(
     deps = [
         ":samples_database",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -248,10 +248,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:jsonutil",
-        "//labm8:labdate",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:jsonutil",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -260,7 +260,7 @@ py_test(
     srcs = ["telemetry_test.py"],
     deps = [
         ":telemetry",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

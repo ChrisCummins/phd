@@ -18,8 +18,8 @@ import tempfile
 import pytest
 
 from datasets.github import api
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

@@ -1,10 +1,9 @@
 """Utilities for working with workspaces."""
 import os
-
 import pathlib
 import typing
 
-from labm8 import app
+from labm8.py import app
 from util.photolib import common
 
 FLAGS = app.FLAGS

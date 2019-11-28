@@ -39,10 +39,10 @@ from datasets.me_db.providers.health_kit import health_kit
 from datasets.me_db.providers.life_cycle import life_cycle
 from datasets.me_db.providers.timing import timing
 from datasets.me_db.providers.ynab import ynab
-from labm8 import app
-from labm8 import humanize
-from labm8 import labdate
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import labdate
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 
@@ -77,9 +77,9 @@ class Measurement(Base):
   family: str = sql.Column(sql.String(512), nullable=False)
   series: str = sql.Column(sql.String(512), nullable=False)
   group: str = sql.Column(sql.String(512), nullable=False)
-  date: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False)
+  date: datetime.datetime = sql.Column(sql.DateTime().with_variant(
+      mysql.DATETIME(fsp=3), 'mysql'),
+                                       nullable=False)
   value: int = sql.Column(sql.Integer, nullable=False)
   unit: str = sql.Column(sql.String(512), nullable=False)
   source: str = sql.Column(sql.String(512), nullable=False)
@@ -91,14 +91,14 @@ class Measurement(Base):
 def MeasurementsFromSeries(series: me_pb2.Series) -> typing.List[Measurement]:
   """Create a list of measurements from a me.Series proto."""
   return [
-      Measurement(
-          series=series.name,
-          date=labdate.DatetimeFromMillisecondsTimestamp(m.ms_since_unix_epoch),
-          family=series.family,
-          group=m.group,
-          value=m.value,
-          unit=series.unit,
-          source=m.source) for m in series.measurement
+      Measurement(series=series.name,
+                  date=labdate.DatetimeFromMillisecondsTimestamp(
+                      m.ms_since_unix_epoch),
+                  family=series.family,
+                  group=m.group,
+                  value=m.value,
+                  unit=series.unit,
+                  source=m.source) for m in series.measurement
   ]
 
 

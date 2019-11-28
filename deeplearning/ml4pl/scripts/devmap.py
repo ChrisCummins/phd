@@ -2,8 +2,8 @@
 import subprocess
 import sys
 
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 app.DEFINE_string('nvidia_graph_db', None, 'Path of the NVIDIA dataset graphs')
 app.DEFINE_string('amd_graph_db', None, 'Path of the AMD dataset graphs')
@@ -16,21 +16,18 @@ app.DEFINE_string('working_dir', '/var/phd/ml4pl/models',
 app.DEFINE_list('groups', [str(x) for x in range(10)],
                 'The test groups to use.')
 app.DEFINE_boolean('cudnn_lstm', True, 'Use the CuDNNLSTM implementation')
-app.DEFINE_string('graph_state_dropout_keep_prob',
-        '.9',"")
-app.DEFINE_string(
-        'output_layer_dropout_keep_prob',
-        '.5', "")
-app.DEFINE_string(
-        'edge_weight_dropout_keep_prob',
-        '1.0',"")
+app.DEFINE_string('graph_state_dropout_keep_prob', '.9', "")
+app.DEFINE_string('output_layer_dropout_keep_prob', '.5', "")
+app.DEFINE_string('edge_weight_dropout_keep_prob', '1.0', "")
 app.DEFINE_boolean("position_embeddings", True, "use pos emb.")
 app.DEFINE_string('graph_reader_buffer_size', '1024', "")
 app.DEFINE_string("max_encoded_length", None, "")
 app.DEFINE_string('bytecode_encoder', 'llvm',
                   'The encoder to use. One of {opencl,llvm,inst2vec}')
-app.DEFINE_string('batch_size', '64',
-    "ATTENTION: ANY BATCH_SIZE LARGER THAN 25 WILL BREAK UNBALANCED DEVMAP AS THE SMALLEST SPLIT IS 25 GUYS.")
+app.DEFINE_string(
+    'batch_size', '64',
+    "ATTENTION: ANY BATCH_SIZE LARGER THAN 25 WILL BREAK UNBALANCED DEVMAP AS THE SMALLEST SPLIT IS 25 GUYS."
+)
 
 FLAGS = app.FLAGS
 
@@ -88,12 +85,24 @@ def GetModelCommandFromFlagsOrDie(graph_db: str, val_group: str,
     if not FLAGS.bytecode_db:
       app.FatalWithoutStackTrace("--bytecode_db must be set")
     lstm_flags = [
-        str(LSTM), '--num_epochs', '50', '--bytecode_db', FLAGS.bytecode_db,
-        '--hidden_size', '64', '--vmodule', "*=5",
+        str(LSTM),
+        '--num_epochs',
+        '50',
+        '--bytecode_db',
+        FLAGS.bytecode_db,
+        '--hidden_size',
+        '64',
+        '--vmodule',
+        "*=5",
         '--cudnn_lstm' if FLAGS.cudnn_lstm else '--nocudnn_lstm',
-        '--batch_size', FLAGS.batch_size, '--bytecode_encoder', FLAGS.bytecode_encoder,
-        '--mysql_engine_pool_size', '20',
-        '--mysql_engine_max_overflow', '20',
+        '--batch_size',
+        FLAGS.batch_size,
+        '--bytecode_encoder',
+        FLAGS.bytecode_encoder,
+        '--mysql_engine_pool_size',
+        '20',
+        '--mysql_engine_max_overflow',
+        '20',
         #'--graph_reader_order', 'global_random',
     ] + base_flags
     if FLAGS.max_encoded_length:

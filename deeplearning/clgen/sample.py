@@ -22,8 +22,8 @@ from deeplearning.clgen import errors
 from deeplearning.clgen import samplers
 from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

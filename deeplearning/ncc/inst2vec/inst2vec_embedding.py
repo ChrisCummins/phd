@@ -32,12 +32,12 @@ from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
-from labm8 import app
 from tensorflow.contrib.tensorboard.plugins import projector
 from tensorflow.python.client import timeline
 
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

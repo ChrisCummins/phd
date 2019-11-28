@@ -20,10 +20,10 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:humanize",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
         "//third_party/py/progressbar",
     ],
 )
@@ -34,9 +34,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -47,9 +47,9 @@ py_binary(
     deps = [
         ":contentfiles",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -61,8 +61,8 @@ py_library(
         "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
         "//third_party/py/progressbar",
     ],
 )
@@ -73,10 +73,10 @@ py_test(
     deps = [
         ":github_repo",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:pbutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:pbutil",
+        "//labm8/py:test",
     ],
 )
 
@@ -89,9 +89,9 @@ py_binary(
         "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
@@ -104,9 +104,9 @@ py_test(
         ":contentfiles",
         ":importer",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:test",
     ],
 )
 
@@ -119,9 +119,9 @@ py_binary(
         "//datasets/github/scrape_repos/preprocessors",
         "//datasets/github/scrape_repos/preprocessors:public",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
         "//third_party/py/progressbar",
         "//third_party/py/sqlalchemy",
     ],
@@ -134,9 +134,9 @@ py_test(
         ":github_repo",
         ":indexer",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:test",
     ],
 )
 
@@ -151,9 +151,9 @@ py_library(
         ":scraper",
         "//datasets/github:api",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
         "//third_party/py/github",
     ],
 )
@@ -164,7 +164,7 @@ py_test(
     deps = [
         ":pipelined_scraper",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -175,11 +175,11 @@ py_binary(
     deps = [
         "//datasets/github:api",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:humanize",
-        "//labm8:labdate",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
         "//third_party/py/github",
         "//third_party/py/progressbar",
     ],
@@ -191,8 +191,8 @@ py_test(
     deps = [
         ":scraper",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:test",
     ],
 )

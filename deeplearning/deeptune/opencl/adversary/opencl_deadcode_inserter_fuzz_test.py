@@ -25,8 +25,8 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
 from gpu.oclgrind import oclgrind
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -127,8 +127,8 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
   seed = random.randint(0, 1e9)
   num_permutations_of_kernel = random.randint(1, 5)
   num_mutations_per_kernel_min = random.randint(1, 5)
-  num_mutations_per_kernel_max = (
-      num_mutations_per_kernel_min + random.randint(1, 5))
+  num_mutations_per_kernel_max = (num_mutations_per_kernel_min +
+                                  random.randint(1, 5))
   num_mutations_per_kernel = (num_mutations_per_kernel_min,
                               num_mutations_per_kernel_max)
 
@@ -159,8 +159,11 @@ def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
 
     with tempfile.TemporaryDirectory(prefix='phd_') as d:
       # Compile the driver.
-      binary = cldrive.CompileDriver(
-          driver, pathlib.Path(d) / 'exe', 0, 0, timeout_seconds=60)
+      binary = cldrive.CompileDriver(driver,
+                                     pathlib.Path(d) / 'exe',
+                                     0,
+                                     0,
+                                     timeout_seconds=60)
       # Execute the driver.
       proc = oclgrind.Exec([str(binary)])
 

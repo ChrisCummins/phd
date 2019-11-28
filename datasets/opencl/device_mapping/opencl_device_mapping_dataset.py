@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A dataset of OpenCL Device Mappings."""
-
 import typing
 
 import numpy as np
@@ -20,9 +19,9 @@ import pandas as pd
 
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import decorators
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 
@@ -140,37 +139,37 @@ class OpenClDeviceMappingsDataset(object):
     ]
 
     # Rename columns that we keep unmodified.
-    df.rename({
-        'benchmark_amd': 'benchmark',
-        'dataset_amd': 'data:dataset_name',
-        'wgsize_amd': 'wgsize',
-        'rational_amd': 'feature:rational',
-        'runtime_cpu_amd': 'runtime:intel_core_i7_3820',
-        'runtime_gpu_amd': 'runtime:amd_tahiti_7970',
-        'runtime_gpu_nvidia': 'runtime:nvidia_gtx_960',
-        'src_amd': 'program:opencl_src',
-        'wgsize_amd': 'param:amd_tahiti_7970:wgsize',
-        'wgsize_nvidia': 'param:nvidia_gtx_960:wgsize',
-        'transfer_amd': 'feature:amd_tahiti_7970:transfer',
-        'transfer_nvidia': 'feature:nvidia_gtx_960:transfer',
-        'comp_amd': 'feature:comp',
-        'atomic_amd': 'feature:atomic',
-        'mem_amd': 'feature:mem',
-        'coalesced_amd': 'feature:coalesced',
-        'localmem_amd': 'feature:localmem',
-    },
-              axis='columns',
-              inplace=True)
+    df.rename(
+        {
+            'benchmark_amd': 'benchmark',
+            'dataset_amd': 'data:dataset_name',
+            'wgsize_amd': 'wgsize',
+            'rational_amd': 'feature:rational',
+            'runtime_cpu_amd': 'runtime:intel_core_i7_3820',
+            'runtime_gpu_amd': 'runtime:amd_tahiti_7970',
+            'runtime_gpu_nvidia': 'runtime:nvidia_gtx_960',
+            'src_amd': 'program:opencl_src',
+            'wgsize_amd': 'param:amd_tahiti_7970:wgsize',
+            'wgsize_nvidia': 'param:nvidia_gtx_960:wgsize',
+            'transfer_amd': 'feature:amd_tahiti_7970:transfer',
+            'transfer_nvidia': 'feature:nvidia_gtx_960:transfer',
+            'comp_amd': 'feature:comp',
+            'atomic_amd': 'feature:atomic',
+            'mem_amd': 'feature:mem',
+            'coalesced_amd': 'feature:coalesced',
+            'localmem_amd': 'feature:localmem',
+        },
+        axis='columns',
+        inplace=True)
 
     # Sort the table values.
-    df.sort_values(
-        by=[
-            'program:benchmark_suite_name',
-            'program:benchmark_name',
-            'program:opencl_kernel_name',
-            'data:dataset_name',
-        ],
-        inplace=True)
+    df.sort_values(by=[
+        'program:benchmark_suite_name',
+        'program:benchmark_name',
+        'program:opencl_kernel_name',
+        'data:dataset_name',
+    ],
+                   inplace=True)
 
     # Reset to default integer index.
     df.reset_index(inplace=True, drop=True)

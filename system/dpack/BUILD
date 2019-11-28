@@ -7,11 +7,11 @@ par_binary(
     srcs = ["dpack.py"],
     visibility = ["//deeplearning/deepsmith:__subpackages__"],
     deps = [
-        "//labm8:app",
-        "//labm8:crypto",
-        "//labm8:fs",
-        "//labm8:labdate",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:crypto",
+        "//labm8/py:fs",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
         "//system/dpack/proto:dpack_pb_py",
     ],
 )
@@ -22,8 +22,8 @@ py_test(
     srcs = ["dpack_test.py"],
     deps = [
         ":dpack",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 

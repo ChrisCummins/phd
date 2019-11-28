@@ -16,7 +16,7 @@
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //gpu/libcecl:libcecl_rewriter."""
 from gpu.libcecl import libcecl_rewriter
-from labm8 import test
+from labm8.py import test
 
 
 def test_RewriteOpenClSource_adds_header():

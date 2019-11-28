@@ -3,23 +3,23 @@
 This is a debugging script for checking that the JavaPreprocessor behaves
 as expected. We expect the contents of the re-preprocessed db to match the oroginal
 """
-import sys
-import time
-
 import hashlib
 import pathlib
+import sys
 import threading
+import time
 import typing
 from concurrent import futures
+
 import sqlalchemy.orm.exc
 
 from datasets.github.scrape_repos import contentfiles
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
 from experimental.deeplearning.deepsmith.java_fuzz import preprocess_java_corpus
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
@@ -130,9 +130,8 @@ class RePreprocessor(threading.Thread):
 
 def GetPreprocessedCount(outdir: pathlib.Path) -> int:
   return (len(list(
-      (outdir / 'pass').iterdir())) + len(list(
-          (outdir / 'fail').iterdir())) + len(
-              list((outdir / 'unstable').iterdir())))
+      (outdir / 'pass').iterdir())) + len(list((outdir / 'fail').iterdir())) +
+          len(list((outdir / 'unstable').iterdir())))
 
 
 def Repreprocess(input_db, pp_db, outdir: pathlib.Path):

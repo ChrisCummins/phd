@@ -22,14 +22,13 @@ What it does
 """
 import faulthandler
 
-
 faulthandler.enable()
 
 import sys
 
 from argparse import ArgumentParser
 from collections import Counter
-from labm8 import fs
+from labm8.py import fs
 
 from dsmith import db
 from dsmith.db import *
@@ -48,10 +47,14 @@ def reproduce_clgen_build_failures(result):
   runtime, status, stdout, stderr = clgen_run_cldrive.drive(
       cli, result.program.src)
 
-  new_result = CLgenResult(
-      program=result.program, params=result.params, testbed=result.testbed,
-      cli=" ".join(cli), status=status, runtime=runtime,
-      stdout=stdout, stderr=stderr)
+  new_result = CLgenResult(program=result.program,
+                           params=result.params,
+                           testbed=result.testbed,
+                           cli=" ".join(cli),
+                           status=status,
+                           runtime=runtime,
+                           stdout=stdout,
+                           stderr=stderr)
 
   analyze.analyze_cldrive_result(new_result, CLgenResult, session)
 
@@ -110,6 +113,7 @@ Operating System:  {result.testbed.host}
 
 
 def generate_wrong_code_report(result):
+
   def summarize_stdout(stdout):
     components = [x for x in stdout.split(",") if x != ""]
     ncomponents = len(components)
@@ -139,8 +143,7 @@ def generate_wrong_code_report(result):
     else:
       majority_count = 2
 
-  majority_devices = [
-    r.testbed for r in results if r.stdout == majority_output]
+  majority_devices = [r.testbed for r in results if r.stdout == majority_output]
 
   kernel_nlines = len(result.program.src.split('\n'))
 
@@ -165,7 +168,10 @@ Majority devices:  {majority_count}
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
                       help="MySQL database hostname")
   args = parser.parse_args()
 

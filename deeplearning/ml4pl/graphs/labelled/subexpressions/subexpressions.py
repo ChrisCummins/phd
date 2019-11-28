@@ -4,8 +4,9 @@ import random
 import typing
 
 import networkx as nx
-from labm8 import app
-from labm8 import decorators
+
+from labm8.py import app
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 

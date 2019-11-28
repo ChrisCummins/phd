@@ -9,9 +9,9 @@ py_binary(
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:labtypes",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:labtypes",
         "//third_party/py/pandas",
     ],
 )

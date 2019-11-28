@@ -3,8 +3,8 @@ import time
 
 from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.backtracking import backtracking_model
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 

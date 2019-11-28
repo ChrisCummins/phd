@@ -12,7 +12,7 @@ py_test(
     srcs = ["linters_lib_test.py"],
     deps = [
         ":linters_lib",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

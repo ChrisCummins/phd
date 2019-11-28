@@ -3,8 +3,8 @@ import pathlib
 
 from compilers.llvm import clang
 from experimental.compilers.random_opt import implementation
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

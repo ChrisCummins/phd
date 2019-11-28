@@ -9,8 +9,8 @@ py3_image(
     data = [":datafile.txt"],
     main = "test.py",
     deps = [
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//third_party/py/pytest",
     ],
 )

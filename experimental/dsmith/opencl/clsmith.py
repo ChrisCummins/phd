@@ -20,15 +20,17 @@ Interface to CLSmith binaries
 """
 import re
 from collections import namedtuple
-from subprocess import PIPE, Popen
+from subprocess import PIPE
+from subprocess import Popen
 from tempfile import NamedTemporaryFile
 from time import time
-from typing import List, NewType, Tuple
+from typing import List
+from typing import NewType
+from typing import Tuple
 
 from experimental import dsmith
 from experimental.dsmith import Colors
-from labm8 import fs
-
+from labm8.py import fs
 
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
@@ -65,11 +67,10 @@ def clsmith(*args, exec_path=exec_path) -> return_t:
 
   runtime = runtime_t(time() - start_time)
 
-  return return_t(
-      runtime=runtime,
-      status=status_t(process.returncode),
-      stdout=stdout.decode('utf-8'),
-      stderr=stderr.decode('utf-8'))
+  return return_t(runtime=runtime,
+                  status=status_t(process.returncode),
+                  stdout=stdout.decode('utf-8'),
+                  stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
@@ -100,11 +101,10 @@ def cl_launcher(*args, **kwargs) -> return_t:
 
   runtime = runtime_t(time() - start_time)
 
-  return return_t(
-      runtime=runtime,
-      status=status_t(process.returncode),
-      stdout=stdout.decode('utf-8'),
-      stderr=stderr.decode('utf-8'))
+  return return_t(runtime=runtime,
+                  status=status_t(process.returncode),
+                  stdout=stdout.decode('utf-8'),
+                  stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_str(src: str, *args, **kwargs) -> Tuple[float, int, str, str]:
@@ -147,8 +147,8 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     # global size
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (int(match.group(1)), int(match.group(2)),
-                            int(match.group(3)))
+      actual_global_size = (int(match.group(1)), int(
+          match.group(2)), int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -159,8 +159,8 @@ def verify_cl_launcher_run(platform: str, device: str, optimizations: bool,
     # local size
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (int(match.group(1)), int(match.group(2)),
-                           int(match.group(3)))
+      actual_local_size = (int(match.group(1)), int(
+          match.group(2)), int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)

@@ -1,10 +1,10 @@
 """Script to produce a labelled CPU/GPU mapping dataset."""
+import sqlalchemy as sql
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import app
-from labm8 import prof
-import sqlalchemy as sql
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

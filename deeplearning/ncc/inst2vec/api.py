@@ -1,17 +1,17 @@
 """My (Chris's) API for inst2vec codebase."""
 import copy
-import networkx as nx
-import numpy as np
 import pickle
 import re
 import typing
 
+import networkx as nx
+import numpy as np
+
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc import vocabulary
 from deeplearning.ncc.inst2vec import inst2vec_preprocess as preprocess
-from labm8 import app
-from labm8 import bazelutil
-
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
@@ -49,15 +49,16 @@ def EncodeLlvmBytecode(bytecode: str,
 
   # Abstract identifiers from statements.
   preprocessed_lines = [
-    preprocess.PreprocessStatement(statement)
-    for statement in preprocessed_lines
+      preprocess.PreprocessStatement(statement)
+      for statement in preprocessed_lines
   ]
 
   # Translate from statement to encoded token.
   return [
-    vocab.dictionary.get(statement, vocab.dictionary[rgx.unknown_token])
-    for statement in preprocessed_lines
-    if not re.match(r'((?:<label>:)?(<LABEL>):|:; <label>:<LABEL>)', statement)
+      vocab.dictionary.get(statement, vocab.dictionary[rgx.unknown_token])
+      for statement in preprocessed_lines
+      if
+      not re.match(r'((?:<label>:)?(<LABEL>):|:; <label>:<LABEL>)', statement)
   ]
 
 

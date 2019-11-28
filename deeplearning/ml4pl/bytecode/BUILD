@@ -6,10 +6,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl:ml4pl_pb_py",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:pbutil",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -19,9 +19,9 @@ py_binary(
     srcs = ["copy_database.py"],
     deps = [
         ":bytecode_database",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:prof",
     ],
 )
 
@@ -31,9 +31,9 @@ py_library(
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         ":bytecode_database",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:prof",
         "//third_party/py/numpy",
         "//third_party/py/scikit_learn",
         "//third_party/py/sqlalchemy",
@@ -46,8 +46,8 @@ py_test(
     deps = [
         ":bytecode_database",
         ":splitters",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )

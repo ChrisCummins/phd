@@ -3,9 +3,9 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
 
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

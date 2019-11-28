@@ -1,11 +1,10 @@
 """Unit tests for //learn/daily/d181212_graph_nets_shortest_path:graph_util."""
-
 import networkx as nx
 import numpy as np
 import pytest
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from learn.daily.d181212_graph_nets_shortest_path import graph_util
 
 FLAGS = app.FLAGS
@@ -13,45 +12,41 @@ FLAGS = app.FLAGS
 
 def test_GenerateGraph_return_type():
   """Test that networkx Graph is returned."""
-  graph = graph_util.GenerateGraph(
-      rand=np.random.RandomState(seed=1),
-      num_nodes_min_max=[10, 15],
-      dimensions=2,
-      theta=20,
-      rate=1.0)
+  graph = graph_util.GenerateGraph(rand=np.random.RandomState(seed=1),
+                                   num_nodes_min_max=[10, 15],
+                                   dimensions=2,
+                                   theta=20,
+                                   rate=1.0)
   assert isinstance(graph, nx.Graph)
 
 
 def test_GenerateGraph_num_nodes():
   """Test that number of nodes is within requested range."""
-  graph = graph_util.GenerateGraph(
-      rand=np.random.RandomState(seed=1),
-      num_nodes_min_max=[10, 15],
-      dimensions=2,
-      theta=20,
-      rate=1.0)
+  graph = graph_util.GenerateGraph(rand=np.random.RandomState(seed=1),
+                                   num_nodes_min_max=[10, 15],
+                                   dimensions=2,
+                                   theta=20,
+                                   rate=1.0)
   assert 10 <= graph.number_of_nodes() < 15
 
 
 def test_GenerateGraph_num_edges():
   """Test that graph has at least one edge per node."""
-  graph = graph_util.GenerateGraph(
-      rand=np.random.RandomState(seed=1),
-      num_nodes_min_max=[10, 15],
-      dimensions=2,
-      theta=20,
-      rate=1.0)
+  graph = graph_util.GenerateGraph(rand=np.random.RandomState(seed=1),
+                                   num_nodes_min_max=[10, 15],
+                                   dimensions=2,
+                                   theta=20,
+                                   rate=1.0)
   assert graph.number_of_edges() >= graph.number_of_nodes()
 
 
 def test_GenerateGraph_is_connected():
   """Test that graph is connected."""
-  graph = graph_util.GenerateGraph(
-      rand=np.random.RandomState(seed=1),
-      num_nodes_min_max=[10, 15],
-      dimensions=2,
-      theta=20,
-      rate=1.0)
+  graph = graph_util.GenerateGraph(rand=np.random.RandomState(seed=1),
+                                   num_nodes_min_max=[10, 15],
+                                   dimensions=2,
+                                   theta=20,
+                                   rate=1.0)
   assert nx.is_connected(graph)
 
 
@@ -115,8 +110,9 @@ def test_AddShortestPath_simple_graph_path():
   g.add_edge('D', 'E')
   g.add_edge('E', 'F')
   # Use min_length 3 so that the path is A -> B -> C -> D
-  digraph = graph_util.AddShortestPath(
-      np.random.RandomState(seed=1), g, min_length=5)
+  digraph = graph_util.AddShortestPath(np.random.RandomState(seed=1),
+                                       g,
+                                       min_length=5)
   assert digraph.node['A']['start']
   assert digraph.node['A']['solution']
   assert not digraph.node['A']['end']
@@ -205,8 +201,8 @@ def test_GraphToInputTarget_edge_features_shape():
 
 def test_GenerateGraphs_number_of_graphs():
   """Test that correct number of graphs are generated."""
-  i, t, g = graph_util.GenerateGraphs(
-      np.random.RandomState(seed=1), 100, [10, 12], 1000)
+  i, t, g = graph_util.GenerateGraphs(np.random.RandomState(seed=1), 100,
+                                      [10, 12], 1000)
   assert len(i) == 100
   assert len(t) == 100
   assert len(g) == 100

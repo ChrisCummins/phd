@@ -17,9 +17,9 @@ import pathlib
 import pytest
 
 from compilers.llvm import llvm_link
-from labm8 import app
-from labm8 import fs
-from labm8 import test
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

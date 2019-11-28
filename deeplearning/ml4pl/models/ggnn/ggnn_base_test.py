@@ -3,11 +3,11 @@ import typing
 
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base
-from labm8 import app
-from labm8 import test
-
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
+
 
 class MockModel(ggnn_base.GgnnBaseModel):
   """A mock GGNN model class."""
@@ -17,6 +17,7 @@ class MockModel(ggnn_base.GgnnBaseModel):
 
 
 # GetUnrollFactor() tests.
+
 
 def test_GetUnrollFactor_none():
   model = MockModel()

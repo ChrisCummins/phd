@@ -16,7 +16,7 @@
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import \
   grewe
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import testlib
-from labm8 import test
+from labm8.py import test
 
 
 def test_model(classify_df, classify_df_atomizer):

@@ -13,13 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepSmith.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/deepsmith/difftests/difftests.py."""
-
 import pytest
 
 import deeplearning.deepsmith.difftests.difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

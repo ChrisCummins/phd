@@ -3,8 +3,8 @@ import pytest
 
 from deeplearning.clgen.corpuses import atomizers
 from experimental.deeplearning.clgen.backtracking import backtracking_model
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -24,8 +24,8 @@ kernel void A(global int* a, global int* b, const int c) {
 @pytest.fixture(scope='function')
 def backtracker(atomizer: atomizers.AtomizerBase
                ) -> backtracking_model.OpenClBacktrackingHelper:
-  return backtracking_model.OpenClBacktrackingHelper(
-      atomizer, target_features=None)
+  return backtracking_model.OpenClBacktrackingHelper(atomizer,
+                                                     target_features=None)
 
 
 def test_OpenClBacktrackingHelper_ShouldCheckpoint_no(

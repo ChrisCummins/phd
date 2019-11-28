@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Utility functions """
-import collections
 import pathlib
 import re
 import subprocess
@@ -22,8 +21,8 @@ import typing
 from compilers.llvm import llvm
 from compilers.llvm import llvm_as
 from compilers.llvm import opt
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 

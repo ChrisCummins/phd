@@ -3,14 +3,14 @@ import pathlib
 import pickle
 
 import keras
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
 
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ml4pl import train_model
 from deeplearning.ml4pl.proto import ml4pl_pb2
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

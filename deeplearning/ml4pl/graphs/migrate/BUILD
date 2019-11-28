@@ -5,7 +5,7 @@ py_binary(
     srcs = ["delete_single_node_graphs.py"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -15,7 +15,7 @@ py_binary(
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -24,7 +24,7 @@ py_test(
     srcs = ["migrate_graph_database_test.py"],
     deps = [
         ":migrate_graph_database",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -34,9 +34,9 @@ py_binary(
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:prof",
         "//third_party/py/numpy",
         "//third_party/py/sqlalchemy",
     ],
@@ -48,8 +48,8 @@ py_binary(
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
-        "//labm8:app",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
         "//third_party/py/numpy",
         "//third_party/py/scikit_learn",
         "//third_party/py/sqlalchemy",
@@ -61,7 +61,7 @@ py_binary(
     srcs = ["propagate_split.py"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/sqlalchemy",
     ],
 )

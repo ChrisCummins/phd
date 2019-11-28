@@ -9,7 +9,7 @@ import autotest
 import cldrive
 from dsmith.opencl import clsmith
 
-from labm8 import crypto
+from labm8.py import crypto
 
 
 class OpenCLTestcase(object):
@@ -116,8 +116,8 @@ class Reducer(object):
 def main(args):
   assert len(args) == 2
 
-  logging.basicConfig(
-      format='%(asctime)s [%(levelname)s] %(message)s', level=logging.DEBUG)
+  logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
+                      level=logging.DEBUG)
 
   with open(args[0]) as infile:
     json_config = json.loads(infile.read())

@@ -16,11 +16,11 @@ from deeplearning.deepsmith import db
 from deeplearning.deepsmith import result
 from deeplearning.deepsmith import testbed
 from deeplearning.deepsmith import testcase
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import labtypes
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import labtypes
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

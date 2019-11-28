@@ -21,7 +21,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Generate dataset for inst2vec training"""
-
 import os
 import pathlib
 import shutil
@@ -30,7 +29,7 @@ import zipfile
 
 import wget
 
-from labm8 import app
+from labm8.py import app
 
 # Datasets and their URLs.
 DATASETS = {

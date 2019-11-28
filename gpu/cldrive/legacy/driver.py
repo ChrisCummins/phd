@@ -13,7 +13,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <https://www.gnu.org/licenses/>.
-import collections
 import pickle
 import re
 import sys
@@ -28,7 +27,7 @@ import numpy as np
 
 from gpu.cldrive.legacy import args as _args
 from gpu.cldrive.legacy import env as _env
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

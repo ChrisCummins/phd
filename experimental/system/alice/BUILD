@@ -43,9 +43,9 @@ py_library(
     visibility = ["//experimental/system/alice:__subpackages__"],
     deps = [
         ":alice_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:system",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:system",
     ],
 )
 
@@ -56,7 +56,7 @@ py_test(
     deps = [
         ":alice_pb_py_grpc",
         ":bazel",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -67,7 +67,7 @@ py_library(
     visibility = ["//experimental/system/alice:__subpackages__"],
     deps = [
         ":alice_pb_py_grpc",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/git",
     ],
 )
@@ -78,8 +78,8 @@ py_test(
     deps = [
         ":git_repo",
         "//:getconfig",
-        "//labm8:pbutil",
-        "//labm8:test",
+        "//labm8/py:pbutil",
+        "//labm8/py:test",
         "//third_party/py/git",
         "//third_party/py/pytest",
     ],
@@ -91,7 +91,7 @@ py_binary(
     deps = [
         ":alice_pb_py_grpc",
         ":git_repo",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/grpcio",
     ],
 )
@@ -101,7 +101,7 @@ py_test(
     srcs = ["run_test.py"],
     deps = [
         ":run",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -109,7 +109,7 @@ py_library(
     name = "xdata",
     srcs = ["xdata.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -118,6 +118,6 @@ py_test(
     srcs = ["xdata_test.py"],
     deps = [
         ":xdata",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )

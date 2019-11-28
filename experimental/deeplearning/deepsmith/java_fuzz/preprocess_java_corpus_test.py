@@ -1,9 +1,7 @@
 """Unit tests for //experimental/deeplearning/deepsmith/java_fuzz:preprocess_java_corpus."""
-
 from datasets.github.scrape_repos import contentfiles
-
 from experimental.deeplearning.deepsmith.java_fuzz import preprocess_java_corpus
-from labm8 import test
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

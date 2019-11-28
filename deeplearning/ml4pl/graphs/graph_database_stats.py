@@ -5,10 +5,10 @@ import numpy as np
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
-from labm8 import app
-from labm8 import decorators
-from labm8 import humanize
-from labm8 import prof
+from labm8.py import app
+from labm8.py import decorators
+from labm8.py import humanize
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

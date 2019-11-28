@@ -27,11 +27,10 @@ import subprocess
 import sys
 import typing
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import system
-
 from compilers.llvm import llvm
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import system
 
 FLAGS = app.FLAGS
 

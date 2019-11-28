@@ -28,11 +28,11 @@ from deeplearning.clgen.models import tensorflow_backend
 from deeplearning.clgen.proto import internal_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import telemetry_pb2
-from labm8 import app
-from labm8 import cache
-from labm8 import humanize
-from labm8 import labdate
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import cache
+from labm8.py import humanize
+from labm8.py import labdate
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

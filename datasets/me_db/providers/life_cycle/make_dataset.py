@@ -26,7 +26,7 @@ import time
 import typing
 import zipfile
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -97,22 +97,21 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Unrecognized command line flags.')
 
-  generator = RandomDatasetGenerator(
-      start_time_seconds_since_epoch=time.mktime(
-          time.strptime('1/1/2018', '%m/%d/%Y')),
-      locations=[
-          'My House',
-          'The Office',
-          'A Restaurant',
-      ],
-      names=[
-          'Work',
-          'Home',
-          'Sleep',
-          'Fun',
-          'Commute to work',
-          'Commute to home',
-      ])
+  generator = RandomDatasetGenerator(start_time_seconds_since_epoch=time.mktime(
+      time.strptime('1/1/2018', '%m/%d/%Y')),
+                                     locations=[
+                                         'My House',
+                                         'The Office',
+                                         'A Restaurant',
+                                     ],
+                                     names=[
+                                         'Work',
+                                         'Home',
+                                         'Sleep',
+                                         'Fun',
+                                         'Commute to work',
+                                         'Commute to home',
+                                     ])
   buf = io.StringIO()
   generator.Sample(csv.writer(buf), 20)
   print(buf.getvalue().rstrip())

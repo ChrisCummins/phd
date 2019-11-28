@@ -18,7 +18,7 @@ import typing
 from deeplearning.deepsmith.difftests import difftests
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from gpu.cldrive.legacy import args
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

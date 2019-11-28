@@ -1,12 +1,13 @@
 """Unit tests for //datasets/github/scrape_repos:pipelined_scraper."""
-
 import pathlib
+
 import pytest
+
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import pipelined_scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

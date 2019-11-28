@@ -1,16 +1,18 @@
 """A flask server which renders test results."""
 import datetime
-from typing import Any, Dict, List
+from typing import Any
+from typing import Dict
+from typing import List
 
 import flask
 import portpicker
 import sqlalchemy as sql
 
 import build_info
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import humanize
-from labm8 import prof
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import humanize
+from labm8.py import prof
 from tools.continuous_integration import bazel_test_db as db
 
 FLAGS = app.FLAGS
@@ -113,11 +115,10 @@ def RenderInvocation(host, session, invocation):
           sum(t['runtime_ms'] for t in targets) / 1000),
       git_commit=targets[0]['git_commit'],
       git_branch=targets[0]['git_branch'],
-      delta=db.TestDelta(
-          broken=len(delta.broken),
-          fixed=len(delta.fixed),
-          still_broken=len(delta.still_broken),
-          still_pass=len(delta.still_pass)),
+      delta=db.TestDelta(broken=len(delta.broken),
+                         fixed=len(delta.fixed),
+                         still_broken=len(delta.still_broken),
+                         still_pass=len(delta.still_pass)),
       invocation_datetime=invocation,
       invocation_delta=humanize.Time(datetime.datetime.now() - invocation),
       urls=urls,

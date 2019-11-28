@@ -17,8 +17,8 @@ import pathlib
 
 from deeplearning.clgen.models import models
 from deeplearning.clgen.proto import internal_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

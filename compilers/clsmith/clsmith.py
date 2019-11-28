@@ -27,9 +27,9 @@ Usage:
 import subprocess
 import sys
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 
@@ -57,8 +57,9 @@ def Exec(*opts) -> str:
     The generated source code as a string.
   """
   with fs.TemporaryWorkingDir(prefix='clsmith_') as d:
-    proc = subprocess.Popen(
-        [CLSMITH] + list(opts), stderr=subprocess.PIPE, universal_newlines=True)
+    proc = subprocess.Popen([CLSMITH] + list(opts),
+                            stderr=subprocess.PIPE,
+                            universal_newlines=True)
     _, stderr = proc.communicate()
     if proc.returncode:
       raise CLSmithError(msg=stderr, returncode=proc.returncode)

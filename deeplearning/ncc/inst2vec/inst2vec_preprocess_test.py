@@ -5,8 +5,8 @@ import tempfile
 import pytest
 
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -90,15 +90,16 @@ def test_CreateContextualFlowGraphsFromBytecodes_files(data_folder: str):
   assert (d / 'BLAS-3.8.0/blas_preprocessed/xfg_dual').is_dir()
 
   # Files in folders:
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/data_transformed/fast_dcabs1.p'
-         ).is_file()
+  assert (
+      d /
+      'BLAS-3.8.0/blas_preprocessed/data_transformed/fast_dcabs1.p').is_file()
   assert (
       d /
       'BLAS-3.8.0/blas_preprocessed/preprocessed/fast_dcabs1_preprocessed.txt'
   ).is_file()
-  assert (
-      d / 'BLAS-3.8.0/blas_preprocessed/structure_dictionaries/fast_dcabs1.txt'
-  ).is_file()
+  assert (d /
+          'BLAS-3.8.0/blas_preprocessed/structure_dictionaries/fast_dcabs1.txt'
+         ).is_file()
   assert (d / 'BLAS-3.8.0/blas_preprocessed/xfg/fast_dcabs1.txt').is_file()
   assert (d / 'BLAS-3.8.0/blas_preprocessed/xfg_dual/fast_dcabs1.p').is_file()
 

@@ -23,8 +23,8 @@ py_test(
     srcs = ["0101-unique-chars-in-string_test.py"],
     main = "0101-unique-chars-in-string_test.py",
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -48,8 +48,8 @@ py_test(
     srcs = ["0103-permutations_test.py"],
     main = "0103-permutations_test.py",
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -66,8 +66,8 @@ py_test(
     srcs = ["0104-escape-string_test.py"],
     main = "0104-escape-string_test.py",
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -105,8 +105,8 @@ py_test(
     srcs = ["0201-list-remove-dups_test.py"],
     main = "0201-list-remove-dups_test.py",
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -236,7 +236,7 @@ py_test(
     srcs = ["1804-number-of-2s_test.py"],
     main = "1804-number-of-2s_test.py",
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

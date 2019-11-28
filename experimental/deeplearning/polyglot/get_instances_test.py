@@ -4,8 +4,8 @@ import tempfile
 import pytest
 
 from experimental.deeplearning.polyglot import get_instances
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

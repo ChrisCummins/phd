@@ -3,8 +3,8 @@ import os
 import pathlib
 from tempfile import TemporaryDirectory
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from util.photolib import workspace
 
 FLAGS = app.FLAGS

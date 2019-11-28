@@ -5,9 +5,9 @@ import subprocess
 import sys
 import typing
 
-from labm8 import app
-from labm8 import fs
-from labm8 import prof
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

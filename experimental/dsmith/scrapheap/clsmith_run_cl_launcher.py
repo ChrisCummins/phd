@@ -14,7 +14,7 @@ from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
 
-from labm8 import crypto
+from labm8.py import crypto
 
 
 def get_platform_name(platform_id):
@@ -41,13 +41,15 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
     tmp.write(src.encode('utf-8'))
     tmp.flush()
 
-    return clsmith.cl_launcher(tmp.name, platform_id, device_id, *args,
+    return clsmith.cl_launcher(tmp.name,
+                               platform_id,
+                               device_id,
+                               *args,
                                timeout=os.environ.get("TIMEOUT", 60))
 
 
 def verify_params(platform: str, device: str, optimizations: bool,
-                  global_size: tuple, local_size: tuple,
-                  stderr: str) -> None:
+                  global_size: tuple, local_size: tuple, stderr: str) -> None:
   """ verify that expected params match actual as reported by CLsmith """
   optimizations = "on" if optimizations else "off"
 
@@ -68,8 +70,8 @@ def verify_params(platform: str, device: str, optimizations: bool,
     # global size
     match = re.match('^3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_global_size = (
-        int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_global_size = (int(match.group(1)), int(
+          match.group(2)), int(match.group(3)))
     match = re.match('^2-D global size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_global_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -80,8 +82,8 @@ def verify_params(platform: str, device: str, optimizations: bool,
     # local size
     match = re.match('^3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
     if match:
-      actual_local_size = (
-        int(match.group(1)), int(match.group(2)), int(match.group(3)))
+      actual_local_size = (int(match.group(1)), int(
+          match.group(2)), int(match.group(3)))
     match = re.match('^2-D local size \d+ = \[(\d+), (\d+)\]', line)
     if match:
       actual_local_size = (int(match.group(1)), int(match.group(2)), 0)
@@ -106,7 +108,8 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
   return (int(components[0]), int(components[1]), int(components[2]))
 
 
-def get_num_to_run(session: db.session_t, testbed: Testbed,
+def get_num_to_run(session: db.session_t,
+                   testbed: Testbed,
                    optimizations: int = None):
   num_ran = session.query(sql.sql.func.count(CLSmithResult.id)) \
     .filter(CLSmithResult.testbed_id == testbed.id)
@@ -123,17 +126,25 @@ def get_num_to_run(session: db.session_t, testbed: Testbed,
 
 if __name__ == "__main__":
   parser = ArgumentParser()
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
                       help="MySQL database hostname")
-  parser.add_argument("platform_id", metavar="<platform-id>", type=int,
+  parser.add_argument("platform_id",
+                      metavar="<platform-id>",
+                      type=int,
                       help="OpenCL platform ID")
-  parser.add_argument("device_id", metavar="<device-id>", type=int,
+  parser.add_argument("device_id",
+                      metavar="<device-id>",
+                      type=int,
                       help="OpenCL device ID")
-  parser.add_argument(
-      "--opt", action="store_true", help="Only test with optimizations on")
-  parser.add_argument(
-      "--no-opt", action="store_true",
-      help="Only test with optimizations disabled")
+  parser.add_argument("--opt",
+                      action="store_true",
+                      help="Only test with optimizations on")
+  parser.add_argument("--no-opt",
+                      action="store_true",
+                      help="Only test with optimizations disabled")
   args = parser.parse_args()
 
   # Parse command line options
@@ -166,7 +177,6 @@ if __name__ == "__main__":
     # programs to run, and results to push to database
     inbox = deque()
 
-
     def next_batch():
       """
       Fill the inbox with jobs to run.
@@ -179,8 +189,8 @@ if __name__ == "__main__":
       bar.update(min(num_ran, num_to_run))
 
       # fill inbox
-      done = session.query(CLSmithResult.testcase_id).filter(
-          CLSmithResult.testbed == testbed)
+      done = session.query(
+          CLSmithResult.testcase_id).filter(CLSmithResult.testbed == testbed)
       if optimizations is not None:
         done = done.join(CLSmithTestCase).join(cl_launcherParams) \
           .filter(cl_launcherParams.optimizations == optimizations)
@@ -196,7 +206,6 @@ if __name__ == "__main__":
       todo = todo.limit(BATCH_SIZE)
       for testcase in todo:
         inbox.append(testcase)
-
 
     try:
       while True:
@@ -215,35 +224,39 @@ if __name__ == "__main__":
         flags = params.to_flags()
 
         # drive the program
-        runtime, status, stdout, stderr = cl_launcher(
-            program.src, platform_id, device_id, *flags)
+        runtime, status, stdout, stderr = cl_launcher(program.src, platform_id,
+                                                      device_id, *flags)
 
         # assert that executed params match expected
-        verify_params(platform=platform_name, device=device_name,
+        verify_params(platform=platform_name,
+                      device=device_name,
                       optimizations=params.optimizations,
-                      global_size=params.gsize, local_size=params.lsize,
+                      global_size=params.gsize,
+                      local_size=params.lsize,
                       stderr=stderr)
 
         # create new result
         stdout_ = util.escape_stdout(stdout)
-        stdout = get_or_create(
-            session, CLSmithStdout,
-            hash=crypto.sha1_str(stdout_), stdout=stdout_)
+        stdout = get_or_create(session,
+                               CLSmithStdout,
+                               hash=crypto.sha1_str(stdout_),
+                               stdout=stdout_)
 
         stderr_ = util.escape_stderr(stderr)
-        stderr = get_or_create(
-            session, CLSmithStderr,
-            hash=crypto.sha1_str(stderr_), stderr=stderr_)
+        stderr = get_or_create(session,
+                               CLSmithStderr,
+                               hash=crypto.sha1_str(stderr_),
+                               stderr=stderr_)
         session.flush()
 
-        result = CLSmithResult(
-            testbed_id=testbed.id,
-            testcase_id=testcase.id,
-            status=status,
-            runtime=runtime,
-            stdout_id=stdout.id,
-            stderr_id=stderr.id,
-            outcome=analyze.get_cl_launcher_outcome(status, runtime, stderr_))
+        result = CLSmithResult(testbed_id=testbed.id,
+                               testcase_id=testcase.id,
+                               status=status,
+                               runtime=runtime,
+                               stdout_id=stdout.id,
+                               stderr_id=stderr.id,
+                               outcome=analyze.get_cl_launcher_outcome(
+                                   status, runtime, stderr_))
 
         session.add(result)
         session.commit()

@@ -2,13 +2,12 @@
 
 Uses the OpenAI Gym Blackjack environment.
 """
-import collections
 import typing
 
 import gym
 import numpy as np
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

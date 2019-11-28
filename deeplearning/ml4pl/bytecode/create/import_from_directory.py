@@ -3,11 +3,10 @@ import os
 import pathlib
 import subprocess
 
-from labm8 import app
-from labm8 import fs
-from labm8 import sqlutil
-
 from deeplearning.ml4pl.bytecode import bytecode_database
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

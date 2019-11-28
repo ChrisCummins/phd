@@ -1,8 +1,8 @@
 """Get a baseline reading of CLgen OpenCL models."""
 from deeplearning.clgen import clgen
 from deeplearning.clgen import sample_observers
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 

@@ -64,7 +64,7 @@ py_test(
     name = "binary_search_second_largest_test",
     srcs = ["binary_search_second_largest_test.py"],
     deps = [
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -73,7 +73,7 @@ py_test(
     name = "cons_car_cdr_test",
     srcs = ["cons_car_cdr_test.py"],
     deps = [
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 

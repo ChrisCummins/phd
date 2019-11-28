@@ -14,7 +14,7 @@
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //experimental/system/alice:xdata.py."""
 from experimental.system.alice import xdata
-from labm8 import test
+from labm8.py import test
 
 MODULE_UNDER_TEST = None  # No coverage.
 

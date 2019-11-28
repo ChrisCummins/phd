@@ -2,8 +2,8 @@
 import pathlib
 import tempfile
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from system.dpack import dpack
 from system.dpack.proto import dpack_pb2
 

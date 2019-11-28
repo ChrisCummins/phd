@@ -5,10 +5,10 @@ py_binary(
     srcs = ["export_clang_opencl_dataset.py"],
     deps = [
         "//experimental/deeplearning/fish/proto:fish_pb_py",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:humanize",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
+        "//labm8/py:pbutil",
         "//third_party/py/mysql",
     ],
 )
@@ -19,9 +19,9 @@ py_binary(
     deps = [
         ":train_discriminator",
         "//deeplearning/clgen",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
-        "//labm8:viz",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
+        "//labm8/py:viz",
     ],
 )
 
@@ -30,11 +30,11 @@ py_binary(
     srcs = ["prepare_discriminator_dataset.py"],
     deps = [
         "//experimental/deeplearning/fish/proto:fish_pb_py",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:humanize",
-        "//labm8:labtypes",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
+        "//labm8/py:labtypes",
+        "//labm8/py:pbutil",
         "//third_party/py/numpy",
     ],
 )
@@ -45,8 +45,8 @@ py_binary(
     deps = [
         "//deeplearning/clgen",
         "//experimental/deeplearning/fish/proto:fish_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
         "//third_party/py/keras",
         "//third_party/py/numpy",
     ],

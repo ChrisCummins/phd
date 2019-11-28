@@ -22,9 +22,9 @@ import deeplearning.deepsmith.profiling_event
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import app
-from labm8 import labdate
-from labm8 import test
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

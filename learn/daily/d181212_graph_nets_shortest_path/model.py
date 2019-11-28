@@ -1,6 +1,6 @@
 """A model for predicting the shortest path in a graph."""
+from labm8.py import app
 
-from labm8 import app
 FLAGS = app.FLAGS
 
 

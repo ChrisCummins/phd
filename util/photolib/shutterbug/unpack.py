@@ -1,9 +1,8 @@
 """This file is the entry point for unpacking chunks."""
 import pathlib
 
-from labm8 import app
+from labm8.py import app
 from util.photolib.shutterbug import shutterbug
-
 
 FLAGS = app.FLAGS
 

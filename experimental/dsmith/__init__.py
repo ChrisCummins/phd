@@ -36,10 +36,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Tuple
 
-from experimental.dsmith._config import *
-from pkg_resources import require, resource_filename
+from pkg_resources import require
+from pkg_resources import resource_filename
 
-from labm8 import fs
+from experimental.dsmith._config import *
+from labm8.py import fs
 
 __author__ = "Chris Cummins"
 __copyright__ = "Copyright 2017, 2018 Chris Cummins"
@@ -89,8 +90,9 @@ def init_globals(rc_path: Path) -> None:
   DB_ENGINE = _config['database']['engine'].lower()
   DB_HOSTNAME = _config['database'].get('hostname', "")
   DB_PORT = _config['database'].get('port', "")
-  DB_CREDENTIALS = (_config['database'].get('username', ""),
-                    _config['database'].get('password', ""))
+  DB_CREDENTIALS = (_config['database'].get('username',
+                                            ""), _config['database'].get(
+                                                'password', ""))
   DB_DIR = _config['database'].get("dir", "")
   DB_BUF_SIZE = int(_config['database']['buffer_size'])
 

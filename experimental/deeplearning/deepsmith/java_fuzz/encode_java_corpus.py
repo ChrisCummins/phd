@@ -4,15 +4,15 @@ import time
 import typing
 
 import numpy as np
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import humanize
-from labm8 import pbutil
-from labm8 import sqlutil
 
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import humanize
+from labm8.py import pbutil
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 app.DEFINE_database(

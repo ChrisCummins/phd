@@ -1,6 +1,5 @@
 """An example app to run in a docker image."""
-
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

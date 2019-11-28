@@ -5,9 +5,9 @@ py_binary(
     srcs = ["copy_logs.py"],
     deps = [
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -18,8 +18,8 @@ py_test(
     deps = [
         ":copy_logs",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -29,8 +29,8 @@ py_binary(
     srcs = ["prune_logs.py"],
     deps = [
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -41,8 +41,8 @@ py_test(
     deps = [
         ":prune_logs",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )

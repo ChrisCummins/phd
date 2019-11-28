@@ -8,7 +8,7 @@ py_binary(
         "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
         "//deeplearning/ml4pl/models:classifier_base",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/numpy",
     ],
 )
@@ -19,8 +19,8 @@ py_test(
     deps = [
         ":zero_r",
         "//deeplearning/ml4pl/models:classifier_smoke_tester",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/numpy",
     ],
 )

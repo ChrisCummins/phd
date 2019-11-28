@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Runtime utility code for libcecl binaries."""
-import collections
 import os
 import time
 import typing
@@ -23,8 +22,8 @@ import typing
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl.proto import libcecl_pb2
-from labm8 import app
-from labm8 import labdate
+from labm8.py import app
+from labm8.py import labdate
 
 FLAGS = app.FLAGS
 

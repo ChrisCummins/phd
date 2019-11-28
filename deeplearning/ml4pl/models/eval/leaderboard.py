@@ -9,9 +9,9 @@ import pandas as pd
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import humanize
-from labm8 import pdutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pdutil
 
 app.DEFINE_database('log_db',
                     log_database.Database,

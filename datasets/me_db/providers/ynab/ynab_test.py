@@ -25,8 +25,8 @@ import pytest
 
 from datasets.me_db.providers.ynab import make_dataset
 from datasets.me_db.providers.ynab import ynab
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -58,8 +58,8 @@ def test_ProcessDirectory(temp_dir: pathlib.Path):
   assert len(series_collection.series) == 2
 
   # Sort series by name since the order of series isn't guaranteed.
-  budget_series, transactions_series = sorted(
-      series_collection.series, key=lambda s: s.name)
+  budget_series, transactions_series = sorted(series_collection.series,
+                                              key=lambda s: s.name)
 
   # The series name is a CamelCase version of 'Personal Finances' with suffix.
   assert transactions_series.name == 'PersonalFinancesTransactions'

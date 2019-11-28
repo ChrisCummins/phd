@@ -23,8 +23,7 @@ a flag in the same file that you invoke pytest.main(). This is because the
 pytest collector re-imports the file, causing absl to error because the flags
 have already been defined.
 """
-
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

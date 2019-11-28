@@ -21,8 +21,8 @@ py_binary(
     deps = [
         "//deeplearning/deeptune/opencl/heterogeneous_mapping",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models",
-        "//labm8:app",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:prof",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
     ],
@@ -35,8 +35,8 @@ py_library(
     deps = [
         "//deeplearning/clgen/preprocessors:opencl",
         "//gpu/cldrive/legacy:args",
-        "//labm8:app",
-        "//labm8:fmt",
+        "//labm8/py:app",
+        "//labm8/py:fmt",
         "//third_party/py/numpy",
     ],
 )
@@ -47,8 +47,8 @@ py_test(
     deps = [
         ":opencl_deadcode_inserter",
         "//compilers/llvm:clang",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/numpy",
     ],
 )
@@ -62,8 +62,8 @@ py_test(
         "//deeplearning/deepsmith/harnesses:cldrive",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//gpu/oclgrind",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/numpy",
     ],
 )

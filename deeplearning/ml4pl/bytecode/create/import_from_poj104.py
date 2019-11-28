@@ -22,12 +22,11 @@ import os
 import pathlib
 import typing
 
-from labm8 import app
-from labm8 import fs
-from labm8 import labtypes
-
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database as database
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 

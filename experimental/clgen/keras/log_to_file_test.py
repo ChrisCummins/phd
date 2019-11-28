@@ -1,9 +1,9 @@
 """Test absl logging to file."""
 import pathlib
 
-from labm8 import app
-from labm8 import logutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import logutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

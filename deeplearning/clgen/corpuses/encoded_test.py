@@ -13,17 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/clgen/corpuses:encoded.py."""
-import numpy as np
 import pathlib
-import pytest
 import tempfile
+
+import numpy as np
+import pytest
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

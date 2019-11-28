@@ -1,9 +1,9 @@
 """Unit tests for //tools/source_tree:conftest."""
-
 import pathlib
-import pytest
+
 import git
-from labm8 import test
+
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

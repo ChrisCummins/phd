@@ -23,8 +23,8 @@ from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

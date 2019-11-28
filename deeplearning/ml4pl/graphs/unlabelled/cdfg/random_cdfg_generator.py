@@ -5,10 +5,10 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
 
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

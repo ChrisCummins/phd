@@ -1,15 +1,15 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/graph_batcher."""
-import numpy as np
 import pathlib
 import pickle
-import pytest
 import typing
+
+import numpy as np
+import pytest
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import make_data_flow_analysis_dataset
-from labm8 import app
-from labm8 import test
-
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -70,6 +70,7 @@ def AddGraphMetas(db_: graph_database.Database, bytecode_ids: typing.List[int]):
   with db_.Session(commit=True) as session:
     session.add_all([MakeGraphMeta(id) for id in bytecode_ids])
   return db_
+
 
 # GetBytecodeIdsToProcess() tests.
 

@@ -25,8 +25,8 @@ py_binary(
     deps = [
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -35,9 +35,9 @@ py_test(
     srcs = ["generative_model_test.py"],
     deps = [
         ":generative_model",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:test",
     ],
 )
 
@@ -60,7 +60,7 @@ py_library(
         "//gpu/libcecl:libcecl_rewriter",
         "//gpu/libcecl:libcecl_runtime",
         "//gpu/libcecl/proto:libcecl_pb_py",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -70,7 +70,7 @@ py_test(
     deps = [
         ":opencl_kernel_driver",
         "//gpu/cldrive/legacy:env",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )

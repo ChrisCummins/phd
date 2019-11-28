@@ -8,13 +8,11 @@ import os
 import pathlib
 import shutil
 import subprocess
-import sys
-import tempfile
 import typing
 
 import getconfig
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 from tools.source_tree import phd_workspace
 
 FLAGS = app.FLAGS
@@ -34,7 +32,7 @@ app.DEFINE_list('keywords', None, 'A list of strings, containing keywords')
 app.DEFINE_string('license', None, 'The type of license to use')
 app.DEFINE_string(
     'long_description_file', None,
-    'A label with the long description of the package, e.g. "//labm8:README.md"'
+    'A label with the long description of the package, e.g. "//labm8/py:README.md"'
 )
 app.DEFINE_string('url', None, 'A homepage for the project.')
 
@@ -204,7 +202,7 @@ def DEPLOY_PIP(package_name: str = None,
     keywords: A list of strings, containing keywords.
     license: The type of license to use.
     long_description_file: A label with the long description of the package,
-      e.g. "//labm8:README.md".
+      e.g. "//labm8/py:README.md".
     url: A homepage for the project.
   """
   app.Run(lambda: _RunFunctionWithFatalOSError(_DoDeployPip,

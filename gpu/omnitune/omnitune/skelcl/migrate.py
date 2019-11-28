@@ -1,11 +1,11 @@
-from labm8.db import placeholders
 from omnitune.skelcl import db as _db
 
-from labm8 import fs
-from labm8 import io
 from . import hash_dataset
 from . import hash_device
 from . import hash_scenario
+from labm8.db import placeholders
+from labm8.py import fs
+from labm8.py import io
 
 
 def migrate_0_to_1(old):

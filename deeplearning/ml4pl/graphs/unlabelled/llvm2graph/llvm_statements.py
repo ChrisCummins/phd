@@ -1,24 +1,13 @@
 """Utilities for working with LLVM statements."""
-import copy
 import difflib
-import itertools
-import pickle
 import re
 import typing
 
 import networkx as nx
-import numpy as np
 
-from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
-from deeplearning.ml4pl.graphs import graph_query as query
-from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc import rgx_utils as rgx
-from deeplearning.ncc.inst2vec import inst2vec_preprocess
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import decorators
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

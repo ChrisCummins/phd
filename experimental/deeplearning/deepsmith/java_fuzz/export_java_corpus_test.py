@@ -1,11 +1,12 @@
 """Unit tests for //experimental/deeplearning/deepsmith/java_fuzz:export_java_corpus."""
 import datetime
 import pathlib
+
 import pytest
 
 from datasets.github.scrape_repos import contentfiles
 from experimental.deeplearning.deepsmith.java_fuzz import export_java_corpus
-from labm8 import test
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

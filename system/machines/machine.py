@@ -7,8 +7,8 @@ import pathlib
 import subprocess
 import typing
 
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 from system.machines import mirrored_directory
 from system.machines.mirrored_directory import MirroredDirectory
 from system.machines.proto import machine_spec_pb2

@@ -8,8 +8,8 @@ import typing
 import gym
 import numpy as np
 
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 
@@ -59,17 +59,17 @@ def Train(env: gym.Env,
   np.random.seed(seed)
   random.seed(seed)
   app.Log(1, 'Random seed: %d.', seed)
-  app.Log(1, 
-      'Beginning training for %s episodes (max %s steps per episode). '
+  app.Log(
+      1, 'Beginning training for %s episodes (max %s steps per episode). '
       'Initial learning rate: %.3f, decay rate: %.3f, '
       'initial epsilon: %.3f, min learning rate: %.3f, gamma: %.3f.',
       humanize.Commas(total_episodes), humanize.Commas(max_steps),
       learning_rate, decay_rate, init_epsilon, min_epsilon, gamma)
 
   app.Log(1, 'State space size: %s, action space size: %s. Q table: %dx%d.',
-           humanize.Commas(env.observation_space.n),
-           humanize.Commas(env.action_space.n), env.observation_space.n,
-           env.action_space.n)
+          humanize.Commas(env.observation_space.n),
+          humanize.Commas(env.action_space.n), env.observation_space.n,
+          env.action_space.n)
 
   q_table = np.zeros((env.observation_space.n, env.action_space.n))
   epsilon = init_epsilon
@@ -119,16 +119,15 @@ def main(argv: typing.List[str]):
     raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
 
   print(
-      Train(
-          gym.make("FrozenLake-v0"),
-          total_episodes=FLAGS.total_training_episodes,
-          learning_rate=FLAGS.q_learning_rate,
-          max_steps=FLAGS.max_steps_per_episode,
-          gamma=FLAGS.q_learning_gamma,
-          init_epsilon=FLAGS.q_learning_init_epsilon,
-          min_epsilon=FLAGS.q_learning_min_epsilon,
-          decay_rate=FLAGS.q_learning_decay_rate,
-          seed=FLAGS.q_learning_seed))
+      Train(gym.make("FrozenLake-v0"),
+            total_episodes=FLAGS.total_training_episodes,
+            learning_rate=FLAGS.q_learning_rate,
+            max_steps=FLAGS.max_steps_per_episode,
+            gamma=FLAGS.q_learning_gamma,
+            init_epsilon=FLAGS.q_learning_init_epsilon,
+            min_epsilon=FLAGS.q_learning_min_epsilon,
+            decay_rate=FLAGS.q_learning_decay_rate,
+            seed=FLAGS.q_learning_seed))
 
 
 if __name__ == '__main__':

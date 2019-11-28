@@ -11,9 +11,9 @@ py_binary(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:system",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:system",
     ],
 )

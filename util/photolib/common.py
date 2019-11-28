@@ -2,7 +2,7 @@
 import hashlib
 import re
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

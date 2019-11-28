@@ -1,11 +1,10 @@
 """Unit tests for //tools/source_tree."""
-
 import pathlib
-import pytest
-import git
-from labm8 import test
-from labm8 import fs
 
+import git
+
+from labm8.py import fs
+from labm8.py import test
 from tools.source_tree import source_tree
 
 FLAGS = test.FLAGS

@@ -6,10 +6,10 @@ import typing
 import MySQLdb
 
 from experimental.deeplearning.fish.proto import fish_pb2
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -111,11 +111,10 @@ def main(argv):
 
   app.Log(1, 'Connecting to MySQL database')
   credentials = GetMySqlCredentials()
-  cnx = MySQLdb.connect(
-      database='dsmith_04_opencl',
-      host='cc1',
-      user=credentials[0],
-      password=credentials[1])
+  cnx = MySQLdb.connect(database='dsmith_04_opencl',
+                        host='cc1',
+                        user=credentials[0],
+                        password=credentials[1])
   cursor = cnx.cursor()
   app.Log(1, 'Determining last export ID')
   ids = sorted([
@@ -128,7 +127,7 @@ def main(argv):
   cursor.close()
   cnx.close()
   app.Log(1, 'Exported training set of %s files to %s',
-           humanize.Commas(len(list(export_path.iterdir()))), export_path)
+          humanize.Commas(len(list(export_path.iterdir()))), export_path)
 
 
 if __name__ == '__main__':

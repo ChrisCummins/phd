@@ -25,11 +25,12 @@ from sqlalchemy.dialects import mysql
 
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
-import labm8.sqlutil
+import labm8.py.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith import profiling_event
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import labdate, pbutil
+from labm8.py import labdate
+from labm8.py import pbutil
 
 # The index types for tables defined in this file.
 _ResultId = sql.Integer
@@ -148,7 +149,7 @@ class Result(db.Table):
     for proto_output_name in sorted(proto.outputs):
       proto_output_value = proto.outputs[proto_output_name]
       md5.update((proto_output_name + proto_output_value).encode('utf-8'))
-      output = labm8.sqlutil.GetOrAdd(
+      output = labm8.py.sqlutil.GetOrAdd(
           session,
           ResultOutput,
           name=ResultOutputName.GetOrAdd(session, string=proto_output_name),
@@ -158,21 +159,21 @@ class Result(db.Table):
     # Create output set table entries.
     outputset_id = md5.digest()
     for output in outputs:
-      labm8.sqlutil.GetOrAdd(session,
-                             ResultOutputSet,
-                             id=outputset_id,
-                             output=output)
+      labm8.py.sqlutil.GetOrAdd(session,
+                                ResultOutputSet,
+                                id=outputset_id,
+                                output=output)
 
     # Create a new result only if everything *except* the profiling events
     # are unique. This means that if a generator produced the same testcase
     # twice (on separate occasions), only the first is added to the datastore.
-    result = labm8.sqlutil.Get(session,
-                               cls,
-                               testcase=testcase,
-                               testbed=testbed,
-                               returncode=proto.returncode,
-                               outputset_id=outputset_id,
-                               outcome_num=proto.outcome)
+    result = labm8.py.sqlutil.Get(session,
+                                  cls,
+                                  testcase=testcase,
+                                  testbed=testbed,
+                                  returncode=proto.returncode,
+                                  outputset_id=outputset_id,
+                                  outcome_num=proto.outcome)
     if not result:
       result = cls(testcase=testcase,
                    testbed=testbed,
@@ -352,7 +353,7 @@ class ResultOutputValue(db.Table):
       truncated_md5 = original_md5
       truncated_linecount = original_linecount
       truncated_charcount = original_charcount
-    return labm8.sqlutil.GetOrAdd(
+    return labm8.py.sqlutil.GetOrAdd(
         session,
         cls,
         original_md5=original_md5,

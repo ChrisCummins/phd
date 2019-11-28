@@ -17,8 +17,8 @@ import sys
 import typing
 
 from datasets.benchmarks.proto import benchmarks_pb2
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
@@ -65,11 +65,10 @@ def Exec(data: str, args: typing.List[str],
   """
   cmd = ['timeout', '-s9', str(timeout_seconds), str(BZIP2)] + args
   app.Log(2, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      stdin=subprocess.PIPE)
+  process = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             stdin=subprocess.PIPE)
   stdout, stderr = process.communicate(data)
   if process.returncode == 9:
     raise Bzip2Timeout(f'bzip2 timed out after {timeout_seconds}s')

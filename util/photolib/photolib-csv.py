@@ -1,11 +1,10 @@
 """A linter for ensuring that a Photo Library is organized correctly."""
 import os
-import sys
-
 import pathlib
+import sys
 import typing
 
-from labm8 import app
+from labm8.py import app
 from util.photolib import linters
 from util.photolib import workspace
 

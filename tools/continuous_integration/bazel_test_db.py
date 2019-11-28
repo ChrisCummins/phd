@@ -1,13 +1,12 @@
 """A database for storing bazel test results."""
-import collections
 import datetime
 import typing
 from xml import etree
 
 import sqlalchemy as sql
 
-from labm8 import app
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

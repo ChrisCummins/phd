@@ -11,7 +11,7 @@ py_test(
         "//experimental/deeplearning/deepsmith/java_fuzz:preprocess_java_corpus_image.tar",
         "//experimental/deeplearning/deepsmith/java_fuzz:re_preprocess_java_methods_image.tar",
         "//experimental/deeplearning/deepsmith/java_fuzz:scrape_java_files_image.tar",
-        "//labm8:dockerutil",
-        "//labm8:test",
+        "//labm8/py:dockerutil",
+        "//labm8/py:test",
     ],
 )

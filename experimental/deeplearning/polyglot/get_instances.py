@@ -7,9 +7,9 @@ from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

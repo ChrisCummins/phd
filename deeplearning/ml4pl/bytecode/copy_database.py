@@ -1,11 +1,10 @@
 """Copy the contents of a bytecode database."""
 import typing
 
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-
 from deeplearning.ml4pl.bytecode import bytecode_database
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 
@@ -29,9 +28,9 @@ def ChunkedBytecodeDatabaseReader(
   filters = filters or []
 
   # The order_by_random arguments means that we can't use
-  # labm8.sqlutil.OffsetLimitBatchedQuery() to read results as each query will
-  # produce a different random order. Instead, first run a query to read all of
-  # the IDs that match the query, then iterate through the list of IDs in
+  # labm8.py.sqlutil.OffsetLimitBatchedQuery() to read results as each query
+  # will produce a different random order. Instead, first run a query to read
+  # all of the IDs that match the query, then iterate through the list of IDs in
   # batches.
   with db.Session() as s:
     with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} "

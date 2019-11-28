@@ -6,7 +6,7 @@ py_binary(
     name = "data_tiers",
     srcs = ["data_tiers.py"],
     deps = [
-        "//labm8:pbutil",
+        "//labm8/py:pbutil",
         "//system/machines/proto:data_tiers_pb_py",
     ],
 )
@@ -17,8 +17,8 @@ par_binary(
     visibility = ["//system/machines:__subpackages__"],
     deps = [
         ":mirrored_directory",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
         "//system/machines/proto:machine_spec_pb_py",
     ],
 )
@@ -28,8 +28,8 @@ py_test(
     srcs = ["machine_test.py"],
     deps = [
         ":machine",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//system/machines/proto:machine_spec_pb_py",
     ],
 )
@@ -39,9 +39,9 @@ py_library(
     srcs = ["mirrored_directory.py"],
     visibility = ["//system/machines:__subpackages__"],
     deps = [
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:labtypes",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:labtypes",
         "//system/machines/proto:machine_spec_pb_py",
     ],
 )
@@ -51,8 +51,8 @@ py_test(
     srcs = ["mirrored_directory_test.py"],
     deps = [
         ":mirrored_directory",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:test",
     ],
 )

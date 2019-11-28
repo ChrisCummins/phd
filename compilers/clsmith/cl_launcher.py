@@ -31,10 +31,10 @@ import typing
 
 from gpu.cldrive.legacy import driver
 from gpu.cldrive.legacy import env
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import system
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -147,21 +147,20 @@ def ExecClsmithSource(opencl_environment: env.OpenCLEnvironment,
   with fs.TemporaryWorkingDir(prefix='cl_launcher_') as d:
     with open(d / 'CLProg.c', 'w') as f:
       f.write(src)
-    proc = Exec(
-        opencl_environment,
-        '-f',
-        str(d / 'CLProg.c'),
-        '-g',
-        gsize.ToString(),
-        '-l',
-        lsize.ToString(),
-        '-p',
-        str(platform_id),
-        '-d',
-        str(device_id),
-        *opts,
-        timeout_seconds=timeout_seconds,
-        env=env)
+    proc = Exec(opencl_environment,
+                '-f',
+                str(d / 'CLProg.c'),
+                '-g',
+                gsize.ToString(),
+                '-l',
+                lsize.ToString(),
+                '-p',
+                str(platform_id),
+                '-d',
+                str(device_id),
+                *opts,
+                timeout_seconds=timeout_seconds,
+                env=env)
   return proc
 
 

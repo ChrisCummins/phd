@@ -11,16 +11,15 @@ from dsmith import db
 from dsmith.db import *
 from progressbar import ProgressBar
 
-from labm8 import fs
+from labm8.py import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser()
-  parser.add_argument(
-      "-H",
-      "--hostname",
-      type=str,
-      default="cc1",
-      help="MySQL database hostname")
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
+                      help="MySQL database hostname")
   parser.add_argument("classname", help="db.py table class: {GitHubProgram}")
   parser.add_argument("directory", help="directory containing kernels")
   parser.add_argument(

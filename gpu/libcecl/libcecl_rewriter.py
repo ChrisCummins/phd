@@ -15,12 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Convert code to-and-from using OpenCL and libcecl."""
-import collections
 import pathlib
 import typing
 
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 

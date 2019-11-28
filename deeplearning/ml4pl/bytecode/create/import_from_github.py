@@ -27,11 +27,11 @@ from datasets.github.scrape_repos import contentfiles
 from deeplearning.clgen.preprocessors import opencl
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import lockfile
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import lockfile
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 
@@ -239,8 +239,8 @@ def PopulateBytecodeTable(cf: contentfiles.ContentFiles,
                  contentfiles.GitHubRepository.language == language).order_by(
                      contentfiles.ContentFile.id))
 
-    row_batches = sqlutil.OffsetLimitBatchedQuery(
-        q, batch_size=FLAGS.batch_size)
+    row_batches = sqlutil.OffsetLimitBatchedQuery(q,
+                                                  batch_size=FLAGS.batch_size)
 
     with writer.Session() as writer:
       for i, batch in zip(range(resume_from, n + 1), row_batches):

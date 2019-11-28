@@ -3,8 +3,8 @@ from __future__ import print_function
 import json
 import re
 
-from labm8 import crypto
-from labm8 import fs
+from labm8.py import crypto
+from labm8.py import fs
 
 
 class Error(Exception):

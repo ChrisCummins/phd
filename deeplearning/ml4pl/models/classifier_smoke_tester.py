@@ -6,13 +6,13 @@ import typing
 
 import networkx as nx
 import numpy as np
-from labm8 import app
-from labm8 import prof
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

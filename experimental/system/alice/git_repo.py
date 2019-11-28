@@ -18,7 +18,7 @@ import pathlib
 import git
 
 from experimental.system.alice import alice_pb2
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

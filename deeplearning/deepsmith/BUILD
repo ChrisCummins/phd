@@ -29,7 +29,7 @@ py_library(
         ":datastore",
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -56,9 +56,9 @@ py_library(
         ":toolchain",
         "//deeplearning/deepsmith/proto:datastore_pb_py",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:pbutil",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -69,9 +69,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:datastore_pb_py",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -84,8 +84,8 @@ py_test(
         ":conftest",
         ":db",
         ":toolchain",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -96,8 +96,8 @@ py_library(
     deps = [
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -110,8 +110,8 @@ py_test(
         ":conftest",
         ":generator",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -122,9 +122,9 @@ py_library(
     deps = [
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
-        "//labm8:system",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
+        "//labm8/py:system",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -137,8 +137,8 @@ py_test(
         ":conftest",
         ":harness",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -157,8 +157,8 @@ py_library(
         ":client",
         ":db",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -173,9 +173,9 @@ py_library(
         ":testbed",
         ":testcase",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:labdate",
-        "//labm8:pbutil",
-        "//labm8:sqlutil",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -194,9 +194,9 @@ py_test(
         ":testbed",
         ":testcase",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:test",
     ],
 )
 
@@ -206,8 +206,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/deepsmith/proto:service_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
         "//third_party/py/grpcio",
     ],
 )
@@ -220,8 +220,8 @@ py_library(
         ":db",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -235,8 +235,8 @@ py_test(
         ":testbed",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -251,9 +251,9 @@ py_library(
         ":profiling_event",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:labdate",
-        "//labm8:pbutil",
-        "//labm8:sqlutil",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -271,8 +271,8 @@ py_test(
         ":testcase",
         ":toolchain",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:test",
     ],
 )

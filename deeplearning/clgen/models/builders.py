@@ -13,11 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """This file builds Keras models from CLgen Model config protos."""
-
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -50,12 +49,12 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
     pbutil.AssertFieldConstraint(
         config.architecture, 'neurons_per_layer', lambda x: 0 < x,
         'NetworkArchitecture.neurons_per_layer must be > 0')
-    pbutil.AssertFieldConstraint(config.architecture,
-                                 'num_layers', lambda x: 0 < x,
+    pbutil.AssertFieldConstraint(config.architecture, 'num_layers',
+                                 lambda x: 0 < x,
                                  'NetworkArchitecture.num_layers must be > 0')
     pbutil.AssertFieldConstraint(
-        config.architecture,
-        'post_layer_dropout_micros', lambda x: 0 <= x <= 1000000,
+        config.architecture, 'post_layer_dropout_micros',
+        lambda x: 0 <= x <= 1000000,
         'NetworkArchitecture.post_layer_dropout_micros '
         'must be >= 0 and <= 1000000')
     pbutil.AssertFieldConstraint(config.training, 'num_epochs', lambda x: 0 < x,
@@ -67,29 +66,29 @@ def AssertIsBuildable(config: model_pb2.Model) -> model_pb2.Model:
     pbutil.AssertFieldIsSet(config.training, 'optimizer')
     if config.training.HasField('adam_optimizer'):
       pbutil.AssertFieldConstraint(
-          config.training.adam_optimizer,
-          'initial_learning_rate_micros', lambda x: 0 <= x,
+          config.training.adam_optimizer, 'initial_learning_rate_micros',
+          lambda x: 0 <= x,
           'AdamOptimizer.initial_learning_rate_micros must be >= 0')
       pbutil.AssertFieldConstraint(
           config.training.adam_optimizer,
           'learning_rate_decay_per_epoch_micros', lambda x: 0 <= x,
           'AdamOptimizer.learning_rate_decay_per_epoch_micros must be >= 0')
       pbutil.AssertFieldConstraint(
-          config.training.adam_optimizer,
-          'beta_1_micros', lambda x: 0 <= x <= 1000000,
+          config.training.adam_optimizer, 'beta_1_micros',
+          lambda x: 0 <= x <= 1000000,
           'AdamOptimizer.beta_1_micros must be >= 0 and <= 1000000')
       pbutil.AssertFieldConstraint(
-          config.training.adam_optimizer,
-          'beta_2_micros', lambda x: 0 <= x <= 1000000,
+          config.training.adam_optimizer, 'beta_2_micros',
+          lambda x: 0 <= x <= 1000000,
           'AdamOptimizer.beta_2_micros must be >= 0 and <= 1000000')
       pbutil.AssertFieldConstraint(
-          config.training.adam_optimizer,
-          'normalized_gradient_clip_micros', lambda x: 0 <= x,
+          config.training.adam_optimizer, 'normalized_gradient_clip_micros',
+          lambda x: 0 <= x,
           'AdamOptimizer.normalized_gradient_clip_micros must be >= 0')
     elif config.training.HasField('rmsprop_optimizer'):
       pbutil.AssertFieldConstraint(
-          config.training.rmsprop_optimizer,
-          'initial_learning_rate_micros', lambda x: 0 <= x,
+          config.training.rmsprop_optimizer, 'initial_learning_rate_micros',
+          lambda x: 0 <= x,
           'RmsPropOptimizer.initial_learning_rate_micros must be >= 0')
       pbutil.AssertFieldConstraint(
           config.training.rmsprop_optimizer,

@@ -10,11 +10,11 @@ from deeplearning.clgen.corpuses import corpuses
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import crypto
-from labm8 import humanize
-from labm8 import lockfile
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import humanize
+from labm8.py import lockfile
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -62,11 +62,10 @@ def SampleModel(instance: clgen.Instance) -> None:
     with sample_lock.acquire(replace_stale=True, block=True):
       num_samples = len(list(sample_dir.iterdir()))
       while num_samples < target_samples:
-        samples = instance.model.Sample(
-            instance.sampler,
-            target_samples - num_samples,
-            cache_samples=False,
-            print_samples=False)
+        samples = instance.model.Sample(instance.sampler,
+                                        target_samples - num_samples,
+                                        cache_samples=False,
+                                        print_samples=False)
         for sample in samples:
           sample_id = crypto.sha256_str(sample.text)
           pbutil.ToFile(sample, sample_dir / f'{sample_id}.pbtxt')
@@ -113,8 +112,8 @@ def main(argv):
 
   start_time = time.time()
   instances = [
-      clgen.Instance(p) for p in pbutil.FromFile(
-          pathlib.Path(FLAGS.instances), clgen_pb2.Instances()).instance
+      clgen.Instance(p) for p in pbutil.FromFile(pathlib.Path(FLAGS.instances),
+                                                 clgen_pb2.Instances()).instance
   ]
   random.shuffle(instances)
   candidate_instances = collections.deque(instances)

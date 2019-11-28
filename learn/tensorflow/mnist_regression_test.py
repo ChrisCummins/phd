@@ -1,7 +1,6 @@
 """Tests for //learn/tensorflow:mnist_regression."""
-
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from learn.tensorflow import mnist_regression
 
 FLAGS = app.FLAGS

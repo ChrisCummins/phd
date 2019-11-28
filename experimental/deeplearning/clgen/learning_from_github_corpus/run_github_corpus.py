@@ -21,9 +21,9 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from deeplearning.deepsmith.proto import service_pb2
 from gpu.oclgrind import oclgrind
-from labm8 import app
-from labm8 import humanize
-from labm8 import labtypes
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 
@@ -69,14 +69,13 @@ def OpenClSourceToTestCases(src: str) -> typing.List[deepsmith_pb2.Testcase]:
   """Generate DeepSmith testcases for each of the combination of gsize and
   lsize used in CGO'17 synthetic kernels."""
   return [
-      deepsmith_pb2.Testcase(
-          toolchain='opencl',
-          harness=deepsmith_pb2.Harness(name='cldrive'),
-          inputs={
-              'src': src,
-              'gsize': f'{gsize},1,1',
-              'lsize': f'{lsize},1,1',
-          }) for lsize, gsize in LSIZE_GSIZE_PAIRS
+      deepsmith_pb2.Testcase(toolchain='opencl',
+                             harness=deepsmith_pb2.Harness(name='cldrive'),
+                             inputs={
+                                 'src': src,
+                                 'gsize': f'{gsize},1,1',
+                                 'lsize': f'{lsize},1,1',
+                             }) for lsize, gsize in LSIZE_GSIZE_PAIRS
   ]
 
 
@@ -146,9 +145,8 @@ def GetOutcomeWithDynamicChecks(result: deepsmith_pb2.Result,
     return 'DIFFTEST_NONDETERMINISM_FAIL'
 
   # The outputs must be different when run twice with the same inputs.
-  if len(
-      set(r.outputs['stdout']
-          for r in [result, different_input_results[0]])) == 1:
+  if len(set(
+      r.outputs['stdout'] for r in [result, different_input_results[0]])) == 1:
     app.Log(1, 'Kernel produced identicial outputs with differnet inputs')
     return 'INPUT_INSENSITIVE'
 
@@ -201,8 +199,8 @@ def main(argv: typing.List[str]):
     num_good_files = q.count()
     num_files = session.query(preprocessed.PreprocessedContentFile).count()
     app.Log(1, 'Corpus of %s files (%.1f%% of %s)',
-             humanize.Commas(num_good_files),
-             (num_good_files / num_files) * 100, humanize.Commas(num_files))
+            humanize.Commas(num_good_files), (num_good_files / num_files) * 100,
+            humanize.Commas(num_files))
 
     srcs = [x[0] for x in q]
     batch_size = 8
@@ -234,10 +232,9 @@ def main(argv: typing.List[str]):
           pickle.dump(outcomes, f)
 
       all_outcomes += outcomes
-      df = pd.DataFrame(
-          list(zip(all_outcomes, np.ones(len(all_outcomes)))) +
-          [('Total', len(all_outcomes))],
-          columns=['outcome', 'count'])
+      df = pd.DataFrame(list(zip(all_outcomes, np.ones(len(all_outcomes)))) +
+                        [('Total', len(all_outcomes))],
+                        columns=['outcome', 'count'])
       summary = df.groupby('outcome').sum().reset_index()
       summary['ratio'] = [
           f'{x:.2%}' for x in

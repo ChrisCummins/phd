@@ -5,9 +5,9 @@ import pytest
 
 from deeplearning.ncc import task_utils
 from deeplearning.ncc import vocabulary
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

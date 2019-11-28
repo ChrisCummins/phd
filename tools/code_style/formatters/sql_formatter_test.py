@@ -1,6 +1,5 @@
 """Unit tests for //tools/code_style/formatters:sql_formatter."""
-
-from labm8 import test
+from labm8.py import test
 from tools.code_style.formatters import sql_formatter
 
 FLAGS = test.FLAGS

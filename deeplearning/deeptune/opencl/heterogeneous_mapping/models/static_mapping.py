@@ -20,7 +20,7 @@ import pandas as pd
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

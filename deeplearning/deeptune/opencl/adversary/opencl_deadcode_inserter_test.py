@@ -13,14 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for :opencl_deadcode_inserter."""
-
 import numpy as np
 import pytest
 
 from deeplearning.deeptune.opencl.adversary import \
   opencl_deadcode_inserter as dci
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -91,9 +90,9 @@ if (0) {
 
 def test_OpenClDeadcodeInserter_PrependFunctionDefinition():
   """Short summary of test."""
-  inserter = dci.OpenClDeadcodeInserter(
-      np.random.RandomState(0), "kernel void A(const int b) {}",
-      ["kernel void B(global int * a) {}"])
+  inserter = dci.OpenClDeadcodeInserter(np.random.RandomState(0),
+                                        "kernel void A(const int b) {}",
+                                        ["kernel void B(global int * a) {}"])
   inserter.PrependUnusedFunctionDeclaration()
   assert inserter.opencl_source == """\
 void A(global int * a);
@@ -103,9 +102,9 @@ kernel void B(const int b) {}"""
 
 def test_OpenClDeadcodeInserter_AppendFunctionDefinition():
   """Short summary of test."""
-  inserter = dci.OpenClDeadcodeInserter(
-      np.random.RandomState(0), "kernel void A(const int b) {}",
-      ["kernel void B(global int * a) {}"])
+  inserter = dci.OpenClDeadcodeInserter(np.random.RandomState(0),
+                                        "kernel void A(const int b) {}",
+                                        ["kernel void B(global int * a) {}"])
   inserter.AppendUnusedFunctionDeclaration()
   assert inserter.opencl_source == """\
 kernel void A(const int b) {}

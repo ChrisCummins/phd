@@ -3,11 +3,11 @@ import json
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.models.lstm import bytecode2seq
-from labm8 import app
-from labm8 import humanize
-from labm8 import jsonutil
-from labm8 import prof
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import jsonutil
+from labm8.py import prof
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

@@ -7,8 +7,8 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features.dynamic_feature
   drive_with_cldrive
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.cldrive.proto import cldrive_pb2
-from labm8 import system
-from labm8 import test
+from labm8.py import system
+from labm8.py import test
 
 
 def _DynamicFeatures(
@@ -81,8 +81,8 @@ def test_DriveKernelAndRecordResults(db: grewe_features_db.Database,
 
       assert record.work_item_local_mem_size == 0
       assert record.work_item_private_mem_size == 0
-      assert record.transferred_bytes == (
-          2 * 4 * dynamic_params[i].global_size_x)
+      assert record.transferred_bytes == (2 * 4 *
+                                          dynamic_params[i].global_size_x)
       assert record.transfer_time_ns >= 100  # Flaky but likely.
       assert record.kernel_time_ns >= 100  # Flaky but likely.
 

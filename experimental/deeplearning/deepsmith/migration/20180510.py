@@ -7,10 +7,10 @@ import typing
 import MySQLdb
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import app
-from labm8 import fs
-from labm8 import labdate
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import labdate
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -280,11 +280,10 @@ def _ExportProtos() -> None:
   assert proto_dir
 
   credentials = _GetMySqlCredentials()
-  cnx = MySQLdb.connect(
-      database='dsmith_04_opencl',
-      host='cc1',
-      user=credentials[0],
-      password=credentials[1])
+  cnx = MySQLdb.connect(database='dsmith_04_opencl',
+                        host='cc1',
+                        user=credentials[0],
+                        password=credentials[1])
   cursor = cnx.cursor()
 
   (proto_dir / 'testcases').mkdir(parents=True, exist_ok=True)
@@ -297,8 +296,8 @@ def _ExportProtos() -> None:
   cnx.close()
 
   app.Log(1, 'Exported %d testcases and %d results',
-           len(fs.ls(proto_dir / 'testcases')), len(
-               fs.ls(proto_dir / 'results')))
+          len(fs.ls(proto_dir / 'testcases')),
+          len(fs.ls(proto_dir / 'results')))
 
 
 def main(argv):

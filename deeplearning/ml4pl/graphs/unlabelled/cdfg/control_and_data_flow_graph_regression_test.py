@@ -1,12 +1,12 @@
 """Test graph builder on bytecodes that were found to exposure bugs."""
 import pytest
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import test
 
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

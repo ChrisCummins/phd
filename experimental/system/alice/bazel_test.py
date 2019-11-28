@@ -22,8 +22,8 @@ import pytest
 
 from experimental.system.alice import alice_pb2
 from experimental.system.alice import bazel
-from labm8 import system
-from labm8 import test
+from labm8.py import system
+from labm8.py import test
 
 DUMMY_TARGET = '//experimental/system/alice/test:dummy_target'
 

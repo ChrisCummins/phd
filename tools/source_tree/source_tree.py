@@ -1,14 +1,13 @@
 """Library for manipulating source trees."""
-
 import contextlib
-import time
-import git
-import typing
 import re
+import time
+import typing
+
 import git
 
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 

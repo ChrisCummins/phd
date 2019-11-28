@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file defines a database for importing cloned GitHub repos."""
-from sqlalchemy import orm
-
 import datetime
-import sqlalchemy as sql
 import typing
-from datasets.github.scrape_repos.proto import scrape_repos_pb2
+
+import sqlalchemy as sql
+from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
-from labm8 import app
-from labm8 import labdate
-from labm8 import sqlutil
+from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 app.DEFINE_boolean(

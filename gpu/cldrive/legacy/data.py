@@ -20,7 +20,7 @@ from enum import Enum
 import numpy as np
 
 from gpu.cldrive.legacy import args as _args
-from labm8 import app
+from labm8.py import app
 
 
 class Generator(Enum):

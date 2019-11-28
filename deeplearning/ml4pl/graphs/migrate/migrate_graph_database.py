@@ -5,7 +5,7 @@ experiments.
 """
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

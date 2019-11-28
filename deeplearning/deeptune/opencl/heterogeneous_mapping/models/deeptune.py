@@ -33,7 +33,7 @@ from keras.preprocessing import sequence as keras_sequence
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -105,23 +105,22 @@ class DeepTune(base.HeterogeneousMappingModel):
     # Language model. It begins with an optional embedding layer, then has two
     # layers of LSTM network, returning a single vector of size
     # self.lstm_layer_size.
-    input_layer = Input(
-        shape=self.input_shape, dtype=self.input_type, name="model_in")
+    input_layer = Input(shape=self.input_shape,
+                        dtype=self.input_type,
+                        name="model_in")
     lstm_input = input_layer
 
     if self.with_embedding_layer:
       embedding_dim = atomizer.vocab_size + 1
-      lstm_input = Embedding(
-          input_dim=embedding_dim,
-          input_length=self.input_shape[0],
-          output_dim=self.lstm_layer_size,
-          name="embedding")(input_layer)
+      lstm_input = Embedding(input_dim=embedding_dim,
+                             input_length=self.input_shape[0],
+                             output_dim=self.lstm_layer_size,
+                             name="embedding")(input_layer)
 
-    x = LSTM(
-        self.lstm_layer_size,
-        implementation=1,
-        return_sequences=True,
-        name="lstm_1")(lstm_input)
+    x = LSTM(self.lstm_layer_size,
+             implementation=1,
+             return_sequences=True,
+             name="lstm_1")(lstm_input)
     x = LSTM(self.lstm_layer_size, implementation=1, name="lstm_2")(x)
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
@@ -135,8 +134,8 @@ class DeepTune(base.HeterogeneousMappingModel):
     x = Dense(self.dense_layer_size, activation="relu")(x)
     out = Dense(2, activation="sigmoid")(x)
 
-    self.model = Model(
-        inputs=[auxiliary_inputs, input_layer], outputs=[out, langmodel_out])
+    self.model = Model(inputs=[auxiliary_inputs, input_layer],
+                       outputs=[out, langmodel_out])
     self.model.compile(
         optimizer="adam",
         metrics=['accuracy'],
@@ -183,21 +182,19 @@ class DeepTune(base.HeterogeneousMappingModel):
         self._atomizer = pickle.load(f)
 
   def train(self, df: pd.DataFrame, platform_name: str, verbose: bool = False):
-    self.model.fit(
-        self.DataFrameToModelInputs(df, platform_name),
-        self.DataFrameToModelTargets(df),
-        epochs=self.num_epochs,
-        batch_size=self.batch_size,
-        verbose=verbose,
-        shuffle=True)
+    self.model.fit(self.DataFrameToModelInputs(df, platform_name),
+                   self.DataFrameToModelTargets(df),
+                   epochs=self.num_epochs,
+                   batch_size=self.batch_size,
+                   verbose=verbose,
+                   shuffle=True)
 
   def predict(self, df: pd.DataFrame, platform_name: str,
               verbose: bool = False):
     p = np.array(
-        self.model.predict(
-            self.DataFrameToModelInputs(df, platform_name),
-            batch_size=self.batch_size,
-            verbose=verbose))
+        self.model.predict(self.DataFrameToModelInputs(df, platform_name),
+                           batch_size=self.batch_size,
+                           verbose=verbose))
     indices = [np.argmax(x) for x in p[0]]
     return indices
 

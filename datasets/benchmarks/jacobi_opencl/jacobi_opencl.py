@@ -28,11 +28,8 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-import argparse
-import collections
 import json
 import math
-import signal
 import threading
 import time
 import typing
@@ -40,7 +37,7 @@ import typing
 import numpy as np
 import pyopencl as CL
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

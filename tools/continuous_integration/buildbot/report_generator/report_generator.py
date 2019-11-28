@@ -9,10 +9,10 @@ import xml.etree.ElementTree as ET
 
 import sqlalchemy as sql
 
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import prof
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import prof
 from tools.continuous_integration import bazel_test_db as db
 
 FLAGS = app.FLAGS
@@ -119,7 +119,7 @@ def main():
 
     print(f'{humanize.Commas(num_targets)} targets ('
           f'{humanize.Commas(num_tests)} tests in '
-          f'{humanize.Duration(total_runtime_ms/1000)}), {num_failed} failed')
+          f'{humanize.Duration(total_runtime_ms / 1000)}), {num_failed} failed')
 
     delta = db.GetTestDelta(session, invocation_datetime)
 

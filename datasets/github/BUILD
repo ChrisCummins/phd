@@ -34,7 +34,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":github_pb_py",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/github",
     ],
 )
@@ -44,8 +44,8 @@ py_test(
     srcs = ["api_test.py"],
     deps = [
         ":api",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )

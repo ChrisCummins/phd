@@ -18,8 +18,8 @@ import socket
 import grpc
 
 from deeplearning.deepsmith.proto import service_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

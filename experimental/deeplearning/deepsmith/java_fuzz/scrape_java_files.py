@@ -1,21 +1,20 @@
 """Scrape Java files from GitHub and put them in a contentfiles database for
 later processing into a corpus."""
-
-import time
-
 import pathlib
 import random
 import tempfile
+import time
 import typing
+
+import github
+import urllib3
+
 from datasets.github import api as github_api
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import pipelined_scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-
-import github
-import urllib3
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_integer('n', int(1e6),

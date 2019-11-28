@@ -21,14 +21,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Compile classifyapp data to LLVM IR"""
-
 import os
 import random
 import subprocess
 
 import template_vars
 
-from labm8 import app
+from labm8.py import app
 
 
 class CompilerArgumentGenerator(object):
@@ -45,8 +44,8 @@ class CompilerArgumentGenerator(object):
   # Returns a tuple (cmdline, output_filename) -- for indexing purposes
   def get_cmdline(self, input_path, input_filename, additional_flags):
     # file.cpp -> file_RANDOM.ll
-    output_filename = (
-        input_filename[:-4] + '_' + template_vars.RandomStrVar()[0] + '.ll')
+    output_filename = (input_filename[:-4] + '_' +
+                       template_vars.RandomStrVar()[0] + '.ll')
 
     args = [self.compiler, self.optimization, self.fastmath, self.native]
     arg_strs = [str(random.choice(arg)) for arg in args]
@@ -59,7 +58,7 @@ app.DEFINE_string('output_path', None, 'Output path to store .ll files')
 app.DEFINE_string('compile_one', None, 'Define a single template to compile')
 app.DEFINE_integer('ir_per_file', 32, 'Number of .ll files generated per input')
 app.DEFINE_string('compiler_flags', '', 'Additional compiler flags')
-from labm8 import app
+from labm8.py import app
 FLAGS = app.FLAGS
 
 

@@ -21,7 +21,7 @@ from sklearn import tree as sktree
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import base
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -43,12 +43,11 @@ class Grewe(base.HeterogeneousMappingModel):
     self.model = None
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
-    self.model = sktree.DecisionTreeClassifier(
-        random_state=seed,
-        splitter="best",
-        criterion="entropy",
-        max_depth=5,
-        min_samples_leaf=5)
+    self.model = sktree.DecisionTreeClassifier(random_state=seed,
+                                               splitter="best",
+                                               criterion="entropy",
+                                               max_depth=5,
+                                               min_samples_leaf=5)
     return self
 
   def save(self, outpath):

@@ -6,10 +6,10 @@ import tempfile
 
 import pytest
 
-from labm8 import bazelutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 
-from labm8 import app
 FLAGS = app.FLAGS
 
 # The path of the configure script.

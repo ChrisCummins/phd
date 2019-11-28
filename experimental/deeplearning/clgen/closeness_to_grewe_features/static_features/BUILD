@@ -4,8 +4,8 @@ py_binary(
     data = ["//docs/2017_02_cgo/data:clgen_1000_tar"],
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//third_party/py/progressbar",
     ],
 )
@@ -17,8 +17,8 @@ py_binary(
         "//deeplearning/clgen/preprocessors",
         "//experimental/deeplearning/clgen/backtracking:backtracking_db",
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:sqlutil",
     ],
 )
 
@@ -29,8 +29,8 @@ py_binary(
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_pb_py",
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:prof",
     ],
 )
 
@@ -43,9 +43,9 @@ py_binary(
         "//deeplearning/deepsmith:testcase",
         "//deeplearning/deepsmith:toolchain",
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
-        "//labm8:pbutil",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:sqlutil",
     ],
 )
 
@@ -55,8 +55,8 @@ py_binary(
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
         "//experimental/deeplearning/fish/proto:fish_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -65,7 +65,7 @@ py_binary(
     srcs = ["import_from_directory.py"],
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -82,7 +82,7 @@ py_binary(
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping/models:ncc",
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/progressbar",
     ],
 )
@@ -92,6 +92,6 @@ py_binary(
     srcs = ["import_from_legacy_clgen.py"],
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )

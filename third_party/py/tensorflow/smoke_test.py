@@ -3,10 +3,10 @@ import sys
 
 import numpy as np
 import pytest
-from labm8 import app
-from labm8 import test
 
 import getconfig
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

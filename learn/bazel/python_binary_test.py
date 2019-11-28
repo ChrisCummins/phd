@@ -1,13 +1,11 @@
 """A test python binary which reads a data file and runs a data binary."""
 import os
+import subprocess
 import sys
 
-import subprocess
-
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import test
-
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

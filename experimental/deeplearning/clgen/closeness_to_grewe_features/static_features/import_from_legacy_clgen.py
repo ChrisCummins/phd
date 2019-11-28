@@ -8,8 +8,7 @@ import typing
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import app
-
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -80,7 +79,7 @@ def main(argv: typing.List[str]):
         success_count, new_row_count = db.ImportStaticFeaturesFromPaths(
             paths_to_import, FLAGS.origin, pool)
         app.Log(1, 'Extracted features from %d of %d kernels, %d new rows',
-                 success_count, FLAGS.batch_size, new_row_count)
+                success_count, FLAGS.batch_size, new_row_count)
 
 
 if __name__ == '__main__':

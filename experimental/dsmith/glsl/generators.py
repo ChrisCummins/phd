@@ -25,7 +25,7 @@ from time import time
 
 from experimental.dsmith.glsl.db import *
 from experimental.dsmith.langs import Generator
-from labm8 import fs
+from labm8.py import fs
 
 
 class GlslGenerator(Generator):
@@ -97,8 +97,8 @@ class GlslGenerator(Generator):
       # Print a preamble message:
       num_to_generate = max_value - num_progs
       if num_to_generate < math.inf:
-        estimated_time = (
-            self.generation_time(s) / max(num_progs, 1)) * num_to_generate
+        estimated_time = (self.generation_time(s) /
+                          max(num_progs, 1)) * num_to_generate
         eta = humanize.Duration(estimated_time)
         print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
               "to be generated. Estimated generation time is " +
@@ -106,8 +106,9 @@ class GlslGenerator(Generator):
       else:
         print(f"Generating programs {Colors.BOLD}forever{Colors.END} ...")
 
-      bar = progressbar.ProgressBar(
-          initial_value=num_progs, max_value=bar_max, redirect_stdout=True)
+      bar = progressbar.ProgressBar(initial_value=num_progs,
+                                    max_value=bar_max,
+                                    redirect_stdout=True)
 
       # The actual generation loop:
       buf = []

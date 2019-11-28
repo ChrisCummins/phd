@@ -20,8 +20,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Execution flags for inst2vec parameters"""
+from labm8.py import app
 
-from labm8 import app
 FLAGS = app.FLAGS
 
 # Vocabulary parameters

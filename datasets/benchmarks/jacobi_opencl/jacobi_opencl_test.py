@@ -1,9 +1,7 @@
 """Unit tests for //datasets/benchmarks/jacobi_opencl."""
-
-from labm8 import app
-from labm8 import test
-
 from datasets.benchmarks.jacobi_opencl import jacobi_opencl
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

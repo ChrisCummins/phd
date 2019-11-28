@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Preprocessor modules for the Java programming language."""
-
 import pathlib
 import re
 import subprocess
@@ -24,8 +23,8 @@ from datasets.github.scrape_repos.preprocessors import extractors
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import clang
 from deeplearning.clgen.preprocessors import public
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 

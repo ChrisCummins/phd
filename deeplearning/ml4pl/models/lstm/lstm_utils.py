@@ -4,7 +4,7 @@ import tensorflow as tf
 from keras.backend import tensorflow_backend
 
 from deeplearning.ml4pl.models import classifier_base
-from labm8 import app
+from labm8.py import app
 
 app.DEFINE_boolean(
     'cudnn_lstm', True,

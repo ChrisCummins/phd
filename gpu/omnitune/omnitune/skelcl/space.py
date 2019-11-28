@@ -3,10 +3,10 @@ from math import log
 
 import numpy as np
 
-from labm8 import io
-from labm8 import viz
 from . import hash_params
 from . import unhash_params
+from labm8.py import io
+from labm8.py import viz
 
 
 class ParamSpace(object):

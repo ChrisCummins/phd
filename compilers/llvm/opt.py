@@ -29,11 +29,10 @@ import subprocess
 import sys
 import typing
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import system
-
 from compilers.llvm import llvm
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -530,12 +529,11 @@ def Exec(args: typing.List[str],
   opt = opt or OPT
   cmd = ['timeout', '-s9', str(timeout_seconds), str(opt)] + args
   app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      stdin=subprocess.PIPE if stdin else None,
-      universal_newlines=universal_newlines)
+  process = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             stdin=subprocess.PIPE if stdin else None,
+                             universal_newlines=universal_newlines)
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:

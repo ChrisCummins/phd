@@ -3,13 +3,13 @@ import datetime
 import typing
 
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import labdate
-from labm8 import sqlutil
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl import ml4pl_pb2
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

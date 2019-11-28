@@ -6,8 +6,8 @@ import numpy as np
 import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
-from labm8 import app
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
 
 FLAGS = app.FLAGS
@@ -27,12 +27,11 @@ class FeatureVector(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   __table_args__ = (
       # <src,origin> pairs must be unique.
-      sql.UniqueConstraint(
-          'compute_operation_count',
-          'global_memory_access_count',
-          'local_memory_access_count',
-          'coalesced_memory_access_count',
-          name='unique_feature_vector'),)
+      sql.UniqueConstraint('compute_operation_count',
+                           'global_memory_access_count',
+                           'local_memory_access_count',
+                           'coalesced_memory_access_count',
+                           name='unique_feature_vector'),)
 
   @staticmethod
   def FromFeatureTuple(
@@ -75,10 +74,12 @@ class BacktrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   runtime_ms: int = sql.Column(sql.Integer, nullable=False)
 
   # Features.
-  target_features_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(FeatureVector.id), nullable=False)
-  features_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(FeatureVector.id), nullable=False)
+  target_features_id: int = sql.Column(sql.Integer,
+                                       sql.ForeignKey(FeatureVector.id),
+                                       nullable=False)
+  features_id: int = sql.Column(sql.Integer,
+                                sql.ForeignKey(FeatureVector.id),
+                                nullable=False)
   feature_distance: float = sql.Column(sql.Float, nullable=False)
   # Feature distance, but normalized to the starting feature distance. In range
   # [0,1] (assuming hill climbing).
@@ -94,14 +95,14 @@ class BacktrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   # The kernel source.
   token_count: int = sql.Column(sql.Integer, nullable=False)
-  src: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  src: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                        nullable=False)
 
   # Relationship.
   target_features: FeatureVector = sql.orm.relationship(
       'FeatureVector', foreign_keys=[target_features_id])
-  features: FeatureVector = sql.orm.relationship(
-      'FeatureVector', foreign_keys=[features_id])
+  features: FeatureVector = sql.orm.relationship('FeatureVector',
+                                                 foreign_keys=[features_id])
 
 
 class Database(sqlutil.Database):

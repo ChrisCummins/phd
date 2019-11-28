@@ -20,29 +20,26 @@ corpus - there is likely never a good reason to use this script. It is intended
 only for testing and debugging purposes.
 """
 import multiprocessing
+import pathlib
 import time
 
-import pathlib
-import typing
-from deeplearning.clgen.proto import internal_pb2
-from deeplearning.clgen.preprocessors import preprocessors
-
 import progressbar
+
 from deeplearning.clgen.corpuses import preprocessed
-from labm8 import app
-from labm8 import humanize
+from deeplearning.clgen.preprocessors import preprocessors
+from deeplearning.clgen.proto import internal_pb2
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
-app.DEFINE_input_path(
-    'contentfiles',
-    None,
-    'The directory containing content files.',
-    is_dir=True)
-app.DEFINE_output_path(
-    'outdir',
-    None,
-    'Directory to export preprocessed content files to.',
-    is_dir=True)
+app.DEFINE_input_path('contentfiles',
+                      None,
+                      'The directory containing content files.',
+                      is_dir=True)
+app.DEFINE_output_path('outdir',
+                       None,
+                       'Directory to export preprocessed content files to.',
+                       is_dir=True)
 app.DEFINE_list('preprocessors', [], 'The preprocessors to run, in order.')
 
 
@@ -61,10 +58,10 @@ def Preprocess(contentfiles: pathlib.Path, outdir: pathlib.Path,
   app.Log(1, 'Preprocessing %s of %s content files', humanize.Commas(len(todo)),
           humanize.Commas(len(relpaths)))
   jobs = [
-      internal_pb2.PreprocessorWorker(
-          contentfile_root=str(contentfiles),
-          relpath=t,
-          preprocessors=preprocessor_names) for t in todo
+      internal_pb2.PreprocessorWorker(contentfile_root=str(contentfiles),
+                                      relpath=t,
+                                      preprocessors=preprocessor_names)
+      for t in todo
   ]
   pool = multiprocessing.Pool()
   bar = progressbar.ProgressBar(max_value=len(jobs))

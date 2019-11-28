@@ -21,9 +21,9 @@ from deeplearning.deepsmith.generators import generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
-from labm8 import app
-from labm8 import labdate
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -39,17 +39,17 @@ class RandCharGenerator(generator.GeneratorServiceBase,
         opts={
             'toolchain':
             str(
-                pbutil.AssertFieldConstraint(self.config,
-                                             'toolchain', lambda x: len(x))),
+                pbutil.AssertFieldConstraint(self.config, 'toolchain',
+                                             lambda x: len(x))),
             'min_len':
             str(
-                pbutil.AssertFieldConstraint(
-                    self.config, 'string_min_len', lambda x: x > 0)),
+                pbutil.AssertFieldConstraint(self.config, 'string_min_len',
+                                             lambda x: x > 0)),
             'max_len':
             str(
                 pbutil.AssertFieldConstraint(
-                    self.config, 'string_max_len', lambda x: x > 0 and x >= self
-                    .config.string_min_len)),
+                    self.config, 'string_max_len',
+                    lambda x: x > 0 and x >= self.config.string_min_len)),
         })
 
   def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,

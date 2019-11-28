@@ -19,9 +19,9 @@ par_binary(
     name = "jasper",
     srcs = ["jasper.py"],
     deps = [
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:text",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:text",
         "//tools/code_style/formatters:sql_formatter",
         "//util/lmk",
     ],
@@ -32,7 +32,7 @@ py_test(
     srcs = ["jasper_test.py"],
     deps = [
         ":jasper",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )

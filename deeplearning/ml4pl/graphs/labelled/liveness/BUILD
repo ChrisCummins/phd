@@ -7,8 +7,8 @@ py_library(
     deps = [
         "//deeplearning/ml4pl/graphs:graph_iterators",
         "//deeplearning/ml4pl/graphs:graph_query",
-        "//labm8:app",
-        "//labm8:decorators",
+        "//labm8/py:app",
+        "//labm8/py:decorators",
         "//third_party/py/networkx",
     ],
 )
@@ -18,8 +18,8 @@ py_test(
     srcs = ["liveness_test.py"],
     deps = [
         ":liveness",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/networkx",
     ],
 )

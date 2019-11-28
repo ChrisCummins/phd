@@ -7,7 +7,8 @@ from dsmith import db
 from dsmith.db import *
 from progressbar import ProgressBar
 
-from labm8 import crypto, fs
+from labm8.py import crypto
+from labm8.py import fs
 
 
 def export_todir(s: session_t, table, dir: Path) -> None:
@@ -32,7 +33,10 @@ def export_protobufs(s: session_t) -> None:
 
 if __name__ == "__main__":
   parser = ArgumentParser(description="Collect difftest results for a device")
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
                       help="MySQL database hostname")
   args = parser.parse_args()
 

@@ -3,12 +3,12 @@ import pathlib
 
 import pandas as pd
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph
 from deeplearning.ml4pl.models import lstm_reachability_model
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

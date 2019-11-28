@@ -19,7 +19,6 @@ a reasonable size, the full training data may not fit in memory. This modules
 provides Python Generator classes for use by a sequential Keras model's
 fit_generator() method to stream batches of training data.
 """
-import collections
 import sys
 import time
 import typing
@@ -28,8 +27,8 @@ import numpy as np
 
 from deeplearning.clgen import errors
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 

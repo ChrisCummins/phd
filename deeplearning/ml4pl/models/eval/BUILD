@@ -7,8 +7,8 @@ py_binary(
         ":google_sheets",
         ":leaderboard",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:prof",
     ],
 )
 
@@ -19,8 +19,8 @@ py_binary(
         ":google_sheets",
         ":leaderboard",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:prof",
         "//third_party/py/pandas",
     ],
 )
@@ -30,7 +30,7 @@ py_library(
     srcs = ["google_sheets.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/gspread",
         "//third_party/py/oauth2client",
     ],
@@ -42,8 +42,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:pdutil",
+        "//labm8/py:app",
+        "//labm8/py:pdutil",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",
@@ -57,8 +57,8 @@ py_binary(
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/models:log_analysis",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:prof",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -69,8 +69,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:pdutil",
+        "//labm8/py:app",
+        "//labm8/py:pdutil",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/sqlalchemy",

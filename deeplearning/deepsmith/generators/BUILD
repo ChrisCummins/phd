@@ -30,7 +30,7 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -45,7 +45,7 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/grpcio",
     ],
 )
@@ -70,8 +70,8 @@ py_binary(
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
         "//deeplearning/deepsmith/proto:service_pb_py",
-        "//labm8:app",
-        "//labm8:labdate",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
     ],
 )
 
@@ -80,8 +80,8 @@ py_test(
     srcs = ["clsmith_test.py"],
     deps = [
         ":clsmith",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -97,9 +97,9 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
         "//third_party/py/grpcio",
     ],
 )
@@ -111,8 +111,8 @@ py_library(
     deps = [
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
         "//third_party/py/grpcio",
     ],
 )
@@ -126,9 +126,9 @@ py_binary(
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:deepsmith_pb_py_grpc",
         "//deeplearning/deepsmith/proto:generator_pb_py_grpc",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
         "//third_party/py/grpcio",
     ],
 )

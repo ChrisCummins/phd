@@ -11,8 +11,8 @@ from deeplearning.ml4pl.graphs import graph_query
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.models.lstm import bytecode2seq
-from labm8 import app
-from labm8 import labtypes
+from labm8.py import app
+from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 
@@ -78,9 +78,10 @@ class GraphToBytecodeEncoder(EncoderBase):
         if graph_id not in self.graph_to_encoded_bytecode
     ]
 
-    if unknown_graph_ids:  
+    if unknown_graph_ids:
       # we hope this will not be printed at epoch 2...
-      app.Log(1, "unknown_graph_ids has length %s and ids %s", len(unknown_graph_ids), unknown_graph_ids)
+      app.Log(1, "unknown_graph_ids has length %s and ids %s",
+              len(unknown_graph_ids), unknown_graph_ids)
 
       # Look the bytecode IDs of any unknown graphs.
       with self.graph_db.Session() as session:

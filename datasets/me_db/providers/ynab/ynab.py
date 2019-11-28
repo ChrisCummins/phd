@@ -24,9 +24,9 @@ import typing
 
 from datasets.me_db import importers
 from datasets.me_db import me_pb2
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

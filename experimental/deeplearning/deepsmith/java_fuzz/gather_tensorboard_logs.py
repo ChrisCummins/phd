@@ -1,24 +1,25 @@
 """Gather and serve tensorboard logs."""
 import pathlib
-import tempfile
-import typing
-import time
-import threading
 import shutil
+import tempfile
+import time
+import typing
+
+import fs
 from tensorboard import default
 from tensorboard import program
 
-import fs
-
-from labm8 import app
-from labm8 import system
+from labm8.py import app
+from labm8.py import system
 
 FLAGS = app.FLAGS
 
-app.DEFINE_input_path(
-    'src_logdir', None, 'Path to store CLgen cache files.', is_dir=True)
-app.DEFINE_list('hosts', list(
-    sorted({'cc1', 'cc2', 'cc3'} - {system.HOSTNAME})),
+app.DEFINE_input_path('src_logdir',
+                      None,
+                      'Path to store CLgen cache files.',
+                      is_dir=True)
+app.DEFINE_list('hosts',
+                list(sorted({'cc1', 'cc2', 'cc3'} - {system.HOSTNAME})),
                 'List of hosts to gather data from')
 
 

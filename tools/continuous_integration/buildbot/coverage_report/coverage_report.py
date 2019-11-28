@@ -3,9 +3,9 @@ import pathlib
 
 from coverage import cmdline as coverage_cli
 
-from labm8 import app
-from labm8 import fs
-from labm8 import prof
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

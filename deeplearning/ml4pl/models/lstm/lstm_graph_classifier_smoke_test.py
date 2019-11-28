@@ -3,9 +3,8 @@ import numpy as np
 
 from deeplearning.ml4pl.models import classifier_smoke_tester
 from deeplearning.ml4pl.models.lstm import lstm_graph_classifier
-from labm8 import app
-from labm8 import test
-
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

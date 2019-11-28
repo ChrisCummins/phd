@@ -20,11 +20,10 @@ test_string_concat[5000]     610.3570 (130.98)     773.2060 (14.27)    622.5233 
 There is essentially no difference in performance. Maybe concat is slightly
 faster (!).
 """
-
 import pytest
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

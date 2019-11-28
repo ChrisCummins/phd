@@ -34,12 +34,12 @@ from bokeh.palettes import Category20
 from bokeh.plotting import figure
 from bokeh.plotting import output_file
 from bokeh.plotting import show
-from labm8 import app
 from sklearn.manifold import TSNE
 
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_analogygen as analogygen
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

@@ -30,9 +30,9 @@ import sys
 import typing
 
 from compilers.llvm import llvm
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import system
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -78,12 +78,11 @@ def Exec(text: str,
       str(CLANG_FORMAT), '-assume-filename', f'input{suffix}'
   ] + args
   app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(
-      cmd,
-      stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
-      universal_newlines=True)
+  process = subprocess.Popen(cmd,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True)
   stdout, stderr = process.communicate(text)
   if process.returncode == 9:
     raise llvm.LlvmTimeout(f'clang-format timed out after {timeout_seconds}s')
@@ -96,11 +95,10 @@ def main(argv):
   """Main entry point."""
   try:
     print(
-        Exec(
-            fileinput.input(),
-            FLAGS.clang_format_file_suffix,
-            argv[1:],
-            timeout_seconds=FLAGS.clang_format_timeout_seconds))
+        Exec(fileinput.input(),
+             FLAGS.clang_format_file_suffix,
+             argv[1:],
+             timeout_seconds=FLAGS.clang_format_timeout_seconds))
   except (llvm.LlvmTimeout, ClangFormatException) as e:
     print(e, file=sys.stderr)
     sys.exit(1)

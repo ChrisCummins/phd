@@ -4,10 +4,10 @@ import random
 import typing
 
 import networkx as nx
-from labm8 import app
 
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

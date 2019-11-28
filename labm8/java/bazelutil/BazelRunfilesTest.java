@@ -21,7 +21,7 @@ public class BazelRunfilesTest {
 
   @Test
   public void getDataPathFileExists() throws Exception {
-    BazelRunfiles.getDataPath("phd/labm8/test_data/hello_world");
+    BazelRunfiles.getDataPath("phd/labm8/java/test_data/hello_world.txt");
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -31,13 +31,14 @@ public class BazelRunfilesTest {
 
   @Test
   public void getDataStringWithFile() throws Exception {
-    final String text = BazelRunfiles.getDataString("phd/labm8/test_data/hello_world");
+    final String text = BazelRunfiles.getDataString("phd/labm8/java/test_data/hello_world.txt");
     assertEquals(text, "Hello, world!\n");
   }
 
   @Test
   public void getDataStringOrDieWithFile() throws Exception {
-    final String text = BazelRunfiles.getDataStringOrDie("phd/labm8/test_data/hello_world");
+    final String text =
+        BazelRunfiles.getDataStringOrDie("phd/labm8/java/test_data/hello_world.txt");
     assertEquals(text, "Hello, world!\n");
   }
 }

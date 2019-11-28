@@ -28,8 +28,8 @@ py_library(
     srcs = ["contentfiles.py"],
     deps = [
         ":xmp_cache",
-        "//labm8:app",
-        "//labm8:decorators",
+        "//labm8/py:app",
+        "//labm8/py:decorators",
     ],
 )
 
@@ -37,7 +37,7 @@ py_library(
     name = "dashcam",
     srcs = ["dashcam.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -45,7 +45,7 @@ par_binary(
     name = "photolib",
     srcs = ["photolib.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -57,7 +57,7 @@ par_binary(
         ":linters",
         ":workspace",
         ":xmp_cache",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -66,9 +66,9 @@ par_binary(
     srcs = ["photolib-dashcam-tzoffset.py"],
     deps = [
         ":dashcam",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:labtypes",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:labtypes",
     ],
 )
 
@@ -77,9 +77,9 @@ par_binary(
     srcs = ["photolib-dashcat.py"],
     deps = [
         ":dashcam",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:labtypes",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:labtypes",
     ],
 )
 
@@ -89,8 +89,8 @@ par_binary(
     deps = [
         ":linters",
         ":workspace",
-        "//labm8:app",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
     ],
 )
 
@@ -99,7 +99,7 @@ py_library(
     srcs = ["workspace.py"],
     deps = [
         ":common",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -110,9 +110,9 @@ py_library(
         ":common",
         ":workspace",
         "//:build_info",
-        "//labm8:app",
-        "//labm8:shell",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:shell",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -123,8 +123,8 @@ py_library(
     deps = [
         ":common",
         "//:build_info",
-        "//labm8:app",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:sqlutil",
         "//third_party/py/libxmp",
         "//third_party/py/sqlalchemy",
     ],
@@ -150,8 +150,8 @@ py_library(
         ":contentfiles",
         ":lintercache",
         ":xmp_cache",
-        "//labm8:app",
-        "//labm8:shell",
+        "//labm8/py:app",
+        "//labm8/py:shell",
         "//third_party/py/protobuf",
     ],
 )
@@ -160,7 +160,7 @@ py_library(
     name = "common",
     srcs = ["common.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
         "//util/photolib/proto:photolint_pb_py",
     ],
 )
@@ -171,8 +171,8 @@ py_test(
     srcs = ["tests/linters_test.py"],
     deps = [
         ":linters",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -182,7 +182,7 @@ py_test(
     srcs = ["tests/workspace_test.py"],
     deps = [
         ":workspace",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

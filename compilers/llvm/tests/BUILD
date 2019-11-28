@@ -20,7 +20,7 @@ py_test(
     deps = [
         "//compilers/llvm:clang",
         "//compilers/llvm:opt",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

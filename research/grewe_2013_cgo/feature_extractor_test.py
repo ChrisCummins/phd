@@ -17,8 +17,8 @@ import pathlib
 
 import pytest
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from research.grewe_2013_cgo import feature_extractor
 
 FLAGS = app.FLAGS

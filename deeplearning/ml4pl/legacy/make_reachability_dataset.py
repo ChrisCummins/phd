@@ -1,5 +1,4 @@
 """Construct datasets for learning CFG reachability."""
-import collections
 import pathlib
 import typing
 
@@ -11,8 +10,8 @@ from deeplearning.ml4pl.datasets import opencl
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
 from deeplearning.ml4pl.legacy import \
   control_flow_graph_generator as cfg_generator
-from labm8 import app
-from labm8 import prof
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

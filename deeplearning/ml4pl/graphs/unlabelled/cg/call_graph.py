@@ -5,8 +5,8 @@ import networkx as nx
 import pydot
 import pyparsing
 
-from labm8 import app
-from labm8 import labtypes
+from labm8.py import app
+from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 

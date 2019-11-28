@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //experimental/system/alice:git_repo."""
-import collections
 import pathlib
 import subprocess
 import typing
@@ -22,8 +21,8 @@ import pytest
 
 import getconfig
 from experimental.system.alice import git_repo
-from labm8 import pbutil
-from labm8 import test
+from labm8.py import pbutil
+from labm8.py import test
 
 
 def _Git(gitdir: pathlib.Path, *args):

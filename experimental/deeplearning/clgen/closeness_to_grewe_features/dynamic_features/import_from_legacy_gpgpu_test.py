@@ -1,6 +1,6 @@
 """Unit tests for //experimental/deeplearning/clgen/closeness_to_grewe_features/dynamic_features:import_from_legacy_gpgpu."""
-import pathlib
 import hashlib
+import pathlib
 
 import pytest
 
@@ -8,9 +8,9 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from experimental.deeplearning.clgen.closeness_to_grewe_features.dynamic_features import \
   import_from_legacy_gpgpu
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 
 TEST_LOGS = bazelutil.DataPath(
     'phd/experimental/deeplearning/clgen/closeness_to_grewe_features/dynamic_features/tests/data/legacy_gpgpu_logs.zip'

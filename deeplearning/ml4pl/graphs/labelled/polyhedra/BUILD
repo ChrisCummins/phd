@@ -9,8 +9,8 @@ py_library(
         "//compilers/llvm:opt_util",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
-        "//labm8:app",
-        "//labm8:decorators",
+        "//labm8/py:app",
+        "//labm8/py:decorators",
     ],
 )
 
@@ -22,7 +22,7 @@ py_test(
         "//compilers/llvm:clang",
         "//compilers/llvm:opt",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/networkx",
         "//third_party/py/pytest",
     ],

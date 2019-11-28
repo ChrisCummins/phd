@@ -18,8 +18,8 @@ from deeplearning.deepsmith.generators import generator
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import generator_pb2_grpc
-from labm8 import app
-from labm8 import labdate
+from labm8.py import app
+from labm8.py import labdate
 
 FLAGS = app.FLAGS
 

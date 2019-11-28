@@ -4,7 +4,7 @@ import pytest
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.clinfo.proto import clinfo_pb2
 from gpu.libcecl import libcecl_runtime
-from labm8 import test
+from labm8.py import test
 
 
 def test_KernelInvocationsFromCeclLog():

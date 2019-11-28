@@ -88,13 +88,13 @@ py_binary(
         "//gpu/cldrive/legacy:env",
         "//gpu/libcecl:libcecl_runtime",
         "//gpu/oclgrind",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:labdate",
-        "//labm8:pbutil",
-        "//labm8:system",
-        "//labm8:text",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
+        "//labm8/py:system",
+        "//labm8/py:text",
     ],
 )
 
@@ -104,10 +104,10 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":gpgpu_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -117,8 +117,8 @@ py_test(
     deps = [
         ":gpgpu",
         ":gpgpu_pb_py",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 

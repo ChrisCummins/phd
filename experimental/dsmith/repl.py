@@ -32,10 +32,11 @@ import traceback
 
 from experimental import dsmith
 from experimental.dsmith import Colors
-from experimental.dsmith.langs import Generator, Language, mklang
-from labm8 import fs
-from labm8 import humanize
-
+from experimental.dsmith.langs import Generator
+from experimental.dsmith.langs import Language
+from experimental.dsmith.langs import mklang
+from labm8.py import fs
+from labm8.py import humanize
 
 _lang_str = f"{Colors.RED}<lang>{Colors.END}{Colors.BOLD}"
 _generator_str = f"{Colors.GREEN}<generator>{Colors.END}{Colors.BOLD}"
@@ -360,8 +361,7 @@ def _user_message_with_stacktrace(exception):
   stack_trace = "\n".join(_msg(*r) for r in enumerate(trace))
   typename = type(exception).__name__
 
-  print(
-      f"""
+  print(f"""
 ======================================================================
 💩  Fatal error!
 {exception} ({typename})
@@ -371,7 +371,7 @@ def _user_message_with_stacktrace(exception):
 
 Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 """,
-      file=sys.stderr)
+        file=sys.stderr)
 
 
 def run_command(command: str, file=sys.stdout) -> None:

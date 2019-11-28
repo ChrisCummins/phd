@@ -1,13 +1,13 @@
 """Unit tests for :01_evaluate_generator.py."""
 import importlib
 
-# Import the CLgen test fixtures into the global namespace. Note we can't import
-# only the fixtures we need here, since we must also import any dependent
-# fixtures.
 from deeplearning.clgen.conftest import *
 from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
-from labm8 import test
+from labm8.py import test
+# Import the CLgen test fixtures into the global namespace. Note we can't import
+# only the fixtures we need here, since we must also import any dependent
+# fixtures.
 
 # We must use importlib.import_module() since the package and module names start
 # with digits, which is considered invalid syntax using the normal import
@@ -21,14 +21,14 @@ def test_GenerateTestcases(abc_instance_config):
   generator_config = generator_pb2.ClgenGenerator(
       instance=abc_instance_config,
       testcase_skeleton=[
-          deepsmith_pb2.Testcase(
-              toolchain='opencl',
-              harness=deepsmith_pb2.Harness(
-                  name='cldrive', opts={'timeout_seconds': '60'}),
-              inputs={
-                  'gsize': '1,1,1',
-                  'lsize': '1,1,1',
-              })
+          deepsmith_pb2.Testcase(toolchain='opencl',
+                                 harness=deepsmith_pb2.Harness(
+                                     name='cldrive',
+                                     opts={'timeout_seconds': '60'}),
+                                 inputs={
+                                     'gsize': '1,1,1',
+                                     'lsize': '1,1,1',
+                                 })
       ])
   with tempfile.TemporaryDirectory() as d:
     d = pathlib.Path(d)

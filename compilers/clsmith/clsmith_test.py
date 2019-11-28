@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for //compilers/clsmith/clsmith.py."""
-
 import pytest
 
 from compilers.clsmith import clsmith
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

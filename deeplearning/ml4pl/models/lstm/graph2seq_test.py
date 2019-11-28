@@ -9,8 +9,8 @@ from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import graph2seq
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

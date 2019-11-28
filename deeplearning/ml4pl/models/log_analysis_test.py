@@ -4,12 +4,12 @@ import random
 
 import numpy as np
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.models import log_analysis
 from deeplearning.ml4pl.models import log_database
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

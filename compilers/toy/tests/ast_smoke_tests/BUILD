@@ -8,10 +8,10 @@ py_library(
     ],
     deps = [
         "//compilers/toy/tests:smoke_test_flags",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:test",
     ],
 )
 

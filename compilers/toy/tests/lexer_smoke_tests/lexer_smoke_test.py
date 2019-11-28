@@ -3,10 +3,10 @@ import pathlib
 import subprocess
 
 from compilers.toy.tests import smoke_test_flags
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import test
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import test
 
 FLAGS = smoke_test_flags.FLAGS
 

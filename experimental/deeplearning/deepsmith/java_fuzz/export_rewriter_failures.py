@@ -2,21 +2,20 @@
 
 This is a debugging script.
 """
-import sys
-import time
-
 import pathlib
-import sqlalchemy.orm.exc
+import sys
 import threading
+import time
 import typing
 from concurrent import futures
 
+import sqlalchemy.orm.exc
+
 from datasets.github.scrape_repos import contentfiles
 from deeplearning.clgen.corpuses import preprocessed
-from deeplearning.clgen.preprocessors import java
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_database(

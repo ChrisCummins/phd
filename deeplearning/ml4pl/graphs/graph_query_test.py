@@ -1,10 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/graphs:graph_query."""
 import networkx as nx
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_query as query
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

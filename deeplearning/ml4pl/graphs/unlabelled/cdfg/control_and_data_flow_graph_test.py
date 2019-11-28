@@ -1,12 +1,12 @@
 """Unit tests for //deeplearning/ml4pl:control_and_data_flow_graph."""
 import networkx as nx
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

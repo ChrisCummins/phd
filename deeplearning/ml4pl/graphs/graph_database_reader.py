@@ -6,9 +6,9 @@ import typing
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 
@@ -68,7 +68,7 @@ def BufferedGraphReader(
   with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} graph")):
     with db.Session() as session:
       # Random ordering means that we can't use
-      # labm8.sqlutil.OffsetLimitBatchedQuery() to read results as each query
+      # labm8.py.sqlutil.OffsetLimitBatchedQuery() to read results as each query
       # will produce a different random order. Instead, first run a query to
       # read all of the IDs that match the query, then iterate through the list
       # of IDs in batches.

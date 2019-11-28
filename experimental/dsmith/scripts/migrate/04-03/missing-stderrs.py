@@ -12,14 +12,18 @@ import sqlalchemy as sql
 from db import *
 from progressbar import ProgressBar
 
-from labm8 import crypto, fs
-
+from labm8.py import crypto
+from labm8.py import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
                       help="MySQL database hostname")
-  parser.add_argument("--commit", action="store_true",
+  parser.add_argument("--commit",
+                      action="store_true",
                       help="Commit changes (default is dry-run)")
   args = parser.parse_args()
 
@@ -35,7 +39,6 @@ if __name__ == "__main__":
         while len(to_del):
           fs.rm(to_del.popleft())
 
-
     print("Importing CLgen programs ...")
     paths = [p for p in Path("export/clgen/program").iterdir()]
     for i, path in enumerate(ProgressBar()(paths)):
@@ -45,9 +48,7 @@ if __name__ == "__main__":
       new_id = s.query(CLgenProgram.id) \
         .filter(CLgenProgram.hash == crypto.sha1_str(data["src"])).scalar()
 
-      idx = CLgenProgramTranslation(
-          old_id=data["id"],
-          new_id=new_id)
+      idx = CLgenProgramTranslation(old_id=data["id"], new_id=new_id)
       s.add(idx)
 
       to_del.append(path)
@@ -55,9 +56,8 @@ if __name__ == "__main__":
         flush()
     flush()
 
-    PROGRAMS = dict((old_id, new_id) for old_id, new_id in
-                    s.query(CLgenProgramTranslation.old_id,
-                            CLgenProgramTranslation.new_id).all())
+    PROGRAMS = dict((old_id, new_id) for old_id, new_id in s.query(
+        CLgenProgramTranslation.old_id, CLgenProgramTranslation.new_id).all())
 
     print("Import CLgen results ...")
     paths = [p for p in Path("export/clgen/result").iterdir()]
@@ -91,9 +91,10 @@ if __name__ == "__main__":
 
       if result:
         stderr_ = util.escape_stderr(data["stderr"])
-        stderr = get_or_create(
-            s, CLgenStderr,
-            hash=crypto.sha1_str(stderr_), stderr=stderr_)
+        stderr = get_or_create(s,
+                               CLgenStderr,
+                               hash=crypto.sha1_str(stderr_),
+                               stderr=stderr_)
         s.flush()
         assert isinstance(stderr.id, int)
         result.stderr_id = stderr.id

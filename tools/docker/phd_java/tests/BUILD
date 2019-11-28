@@ -4,7 +4,7 @@ py_test(
     name = "basic_app_test",
     srcs = ["basic_app_test.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 

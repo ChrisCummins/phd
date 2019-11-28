@@ -20,8 +20,8 @@ py_binary(
         "//experimental/system/alice:alice_pb_py_grpc",
         "//experimental/system/alice:bazel",
         "//experimental/system/alice:git_repo",
-        "//labm8:app",
-        "//labm8:system",
+        "//labm8/py:app",
+        "//labm8/py:system",
         "//third_party/py/grpcio",
     ],
 )
@@ -31,6 +31,6 @@ py_test(
     srcs = ["worker_bee_test.py"],
     deps = [
         ":worker_bee",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )

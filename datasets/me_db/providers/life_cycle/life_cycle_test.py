@@ -17,7 +17,6 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """Unit tests for //datasets/me_db/providers/life_cycle."""
-
 import pathlib
 import tempfile
 import time
@@ -27,8 +26,8 @@ import pytest
 
 from datasets.me_db.providers.life_cycle import life_cycle
 from datasets.me_db.providers.life_cycle import make_dataset
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -42,16 +41,16 @@ def temp_dir() -> pathlib.Path:
 @pytest.fixture(scope='function')
 def temp_inbox(temp_dir: pathlib.Path) -> pathlib.Path:
   (temp_dir / 'life_cycle').mkdir()
-  generator = make_dataset.RandomDatasetGenerator(
-      time.mktime(time.strptime('1/1/2018', '%m/%d/%Y')),
-      locations=[
-          'My House',
-          'The Office',
-      ],
-      names=[
-          'Work',
-          'Home',
-      ])
+  generator = make_dataset.RandomDatasetGenerator(time.mktime(
+      time.strptime('1/1/2018', '%m/%d/%Y')),
+                                                  locations=[
+                                                      'My House',
+                                                      'The Office',
+                                                  ],
+                                                  names=[
+                                                      'Work',
+                                                      'Home',
+                                                  ])
   generator.SampleZip(temp_dir / 'life_cycle' / 'LC_export.zip', 100)
   yield temp_dir
 

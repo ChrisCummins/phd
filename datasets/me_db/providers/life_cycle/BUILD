@@ -63,9 +63,9 @@ py_binary(
     deps = [
         "//datasets/me_db:importers",
         "//datasets/me_db:me_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -76,8 +76,8 @@ py_test(
         ":life_cycle",
         ":make_dataset",
         "//datasets/me_db:me_pb_py",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -86,7 +86,7 @@ py_binary(
     testonly = 1,
     srcs = ["make_dataset.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -95,7 +95,7 @@ py_test(
     srcs = ["make_dataset_test.py"],
     deps = [
         ":make_dataset",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

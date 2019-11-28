@@ -5,14 +5,13 @@ cause problems.
 
 https://github.com/github/git-sizer/
 """
-
 import pathlib
 import subprocess
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import system
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import system
 
 FLAGS = app.FLAGS
 

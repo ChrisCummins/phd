@@ -25,14 +25,13 @@ import deeplearning.deepsmith.harness
 import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testbed
 import deeplearning.deepsmith.testcase
-import deeplearning.deepsmith.testcase
 import deeplearning.deepsmith.toolchain
-import labm8.sqlutil
+import labm8.py.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -136,7 +135,7 @@ class DataStore(object):
 
     def _FilterToolchainGeneratorHarness(q):
       if request.HasField('toolchain'):
-        toolchain = labm8.sqlutil.GetOrAdd(
+        toolchain = labm8.py.sqlutil.GetOrAdd(
             session,
             deeplearning.deepsmith.toolchain.Toolchain,
             name=request.toolchain)
@@ -176,15 +175,16 @@ class DataStore(object):
 
     testbed_id = None
     if request.HasField('testbed'):
-      toolchain = labm8.sqlutil.GetOrAdd(
+      toolchain = labm8.py.sqlutil.GetOrAdd(
           session,
           deeplearning.deepsmith.toolchain.Toolchain,
           name=request.testbed)
-      testbed = labm8.sqlutil.GetOrAdd(session,
-                                       deeplearning.deepsmith.testbed.Testbed,
-                                       toolchain=toolchain,
-                                       name=request.testbed.toolchain,
-                                       version=request.testbed.version)
+      testbed = labm8.py.sqlutil.GetOrAdd(
+          session,
+          deeplearning.deepsmith.testbed.Testbed,
+          toolchain=toolchain,
+          name=request.testbed.toolchain,
+          version=request.testbed.version)
       testbed_id = testbed.id
 
     if testbed_id and not request.include_testcases_with_results:

@@ -10,10 +10,10 @@ import sys
 import typing
 from datetime import datetime
 from hashlib import md5
-from shutil import copy, copyfileobj
+from shutil import copy
+from shutil import copyfileobj
 
-from labm8 import app
-
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -69,8 +69,7 @@ def chunk_files(paths,
     author, email = __author__, __email__
     date = datetime.now()
     with open(readmepath, 'w') as outfile:
-      print(
-          """\
+      print("""\
 Created by: {progpath}
 Author: {author} <{email}>
 Version: {version}
@@ -84,7 +83,7 @@ line in the manifest file:
   2. Compare the output file md5sum against the checksum in the second column.
   3. Compare the output file size against the file size of the third column.\
 """.format(**vars()),
-          file=outfile)
+            file=outfile)
     print('Wrote', readmepath)
 
     chunksize_mb = chunksize / 1000**2
@@ -299,18 +298,16 @@ def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
           outpath,
           file=sys.stderr)
   except ValueError:
-    print(
-        'warning[{lineno}]: could not read file size in manifest'.format(
-            **vars()),
-        file=sys.stderr)
+    print('warning[{lineno}]: could not read file size in manifest'.format(
+        **vars()),
+          file=sys.stderr)
 
   # validate checksum
   actualchecksum = md5sum(outpath)
   if checksum != actualchecksum:
-    print(
-        'warning[{lineno}]: checksum validation failed. File is corrupt',
-        outpath,
-        file=sys.stderr)
+    print('warning[{lineno}]: checksum validation failed. File is corrupt',
+          outpath,
+          file=sys.stderr)
 
 
 def read_manifest(manifestpath):

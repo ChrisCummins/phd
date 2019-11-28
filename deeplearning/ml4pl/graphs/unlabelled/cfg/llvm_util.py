@@ -1,5 +1,4 @@
 """Utility code for creating CFGs and FFGs from LLVM bytecodes."""
-import collections
 import multiprocessing
 import re
 import typing
@@ -10,8 +9,8 @@ import pyparsing
 
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 

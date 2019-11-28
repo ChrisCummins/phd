@@ -9,7 +9,7 @@ import typing
 import MySQLdb
 
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -478,8 +478,9 @@ def _ExportProtos() -> None:
   assert proto_dir
 
   credentials = _GetMySqlCredentials()
-  cnx = MySQLdb.connect(
-      database='dsmith_04_opencl', user=credentials[0], password=credentials[1])
+  cnx = MySQLdb.connect(database='dsmith_04_opencl',
+                        user=credentials[0],
+                        password=credentials[1])
   cursor = cnx.cursor()
 
   # Get the last exported result.
@@ -499,8 +500,9 @@ def _ExportProtos() -> None:
   cursor.close()
   cnx.close()
 
-  cnx = MySQLdb.connect(
-      database='dsmith_04_sol', user=credentials[0], password=credentials[1])
+  cnx = MySQLdb.connect(database='dsmith_04_sol',
+                        user=credentials[0],
+                        password=credentials[1])
   cursor = cnx.cursor()
 
   # Get the last exported result.

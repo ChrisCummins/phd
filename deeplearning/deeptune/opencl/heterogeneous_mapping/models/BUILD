@@ -20,7 +20,7 @@ py_library(
     srcs = ["base.py"],
     deps = [
         "//deeplearning/clgen/corpuses:atomizers",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
     ],
@@ -32,7 +32,7 @@ py_library(
     deps = [
         ":base",
         "//deeplearning/clgen/corpuses:atomizers",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/keras",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
@@ -47,7 +47,7 @@ py_test(
         ":deeptune",
         ":testlib",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -58,7 +58,7 @@ py_library(
         ":base",
         "//datasets/opencl/device_mapping:opencl_device_mapping_dataset",
         "//deeplearning/clgen/corpuses:atomizers",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/pandas",
         "//third_party/py/scikit_learn",
     ],
@@ -71,7 +71,7 @@ py_test(
         ":grewe",
         ":testlib",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -86,7 +86,7 @@ py_library(
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/graph_nets",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
@@ -103,7 +103,7 @@ py_test(
         ":testlib",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
         "//deeplearning/ml4pl/graphs/unlabelled/cfg:llvm_util",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
@@ -122,8 +122,8 @@ py_library(
         ":lda",
         ":ncc",
         ":static_mapping",
-        "//labm8:app",
-        "//labm8:labtypes",
+        "//labm8/py:app",
+        "//labm8/py:labtypes",
     ],
 )
 
@@ -133,7 +133,7 @@ py_test(
     srcs = ["models_test.py"],
     deps = [
         ":models",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -153,8 +153,8 @@ py_library(
         "//deeplearning/clgen/preprocessors:opencl",
         "//deeplearning/ncc:task_utils",
         "//deeplearning/ncc:vocabulary",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
         "//third_party/py/numpy",
         "//third_party/py/pandas",
         "//third_party/py/tensorflow",
@@ -169,7 +169,7 @@ py_test(
         ":ncc",
         ":testlib",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -179,7 +179,7 @@ py_library(
     deps = [
         ":base",
         "//deeplearning/clgen/corpuses:atomizers",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/pandas",
     ],
 )
@@ -191,7 +191,7 @@ py_test(
         ":static_mapping",
         ":testlib",
         "//deeplearning/deeptune/opencl/heterogeneous_mapping:conftest",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -200,6 +200,6 @@ py_library(
     testonly = 1,
     srcs = ["testlib.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )

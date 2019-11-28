@@ -21,8 +21,8 @@ from typing import Iterator
 
 from gpu.clinfo.proto import clinfo_pb2
 from gpu.oclgrind import oclgrind
-from labm8 import bazelutil
-from labm8 import pbutil
+from labm8.py import bazelutil
+from labm8.py import pbutil
 
 CLINFO = bazelutil.DataPath('phd/gpu/clinfo/clinfo')
 

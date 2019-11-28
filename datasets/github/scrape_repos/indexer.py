@@ -20,9 +20,9 @@ import random
 from datasets.github.scrape_repos import github_repo
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 app.DEFINE_integer('indexer_processes', os.cpu_count(),

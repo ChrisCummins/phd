@@ -1,5 +1,4 @@
 """Unit tests for //experimental/deeplearning/deepsmith/opencl_fuzz/opencl_fuzz.py."""
-
 import pathlib
 import tempfile
 import typing
@@ -14,9 +13,9 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from experimental.deeplearning.deepsmith.opencl_fuzz import opencl_fuzz
 from gpu.cldrive.legacy import env
-from labm8 import app
-from labm8 import pbutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import pbutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -59,18 +58,17 @@ def cl_launcher_harness(
 @pytest.fixture(scope='function')
 def dummy_result() -> deepsmith_pb2.Result:
   """A test fixture which returns a dummy result."""
-  return deepsmith_pb2.Result(
-      testcase=deepsmith_pb2.Testcase(
-          harness=deepsmith_pb2.Harness(name='name'),
-          inputs={
-              'src': 'Kernel source.',
-              'gsize': '1,1,1',
-              'lsize': '2,2,2',
-          }),
-      outputs={
-          'stdout': 'Standard output.',
-          'stderr': 'Standard error.',
-      })
+  return deepsmith_pb2.Result(testcase=deepsmith_pb2.Testcase(
+      harness=deepsmith_pb2.Harness(name='name'),
+      inputs={
+          'src': 'Kernel source.',
+          'gsize': '1,1,1',
+          'lsize': '2,2,2',
+      }),
+                              outputs={
+                                  'stdout': 'Standard output.',
+                                  'stderr': 'Standard error.',
+                              })
 
 
 @pytest.fixture(scope='function')
@@ -273,11 +271,10 @@ def test_RunTestcases_cl_launcher_pass(
   cl_launcher_harness_config.opencl_opt[0] = opencl_opt
   harness = cl_launcher.ClLauncherHarness(cl_launcher_harness_config)
   testcases = [
-      deepsmith_pb2.Testcase(
-          toolchain='opencl',
-          harness=deepsmith_pb2.Harness(name='cl_launcher'),
-          inputs={
-              'src': """\
+      deepsmith_pb2.Testcase(toolchain='opencl',
+                             harness=deepsmith_pb2.Harness(name='cl_launcher'),
+                             inputs={
+                                 'src': """\
 // -g 1,1,1 -l 1,1,1
 #define int64_t long
 #define uint64_t ulong
@@ -334,10 +331,10 @@ __kernel void entry(__global ulong *result) {
     uint64_t crc64_context = 0xFFFFFFFFFFFFFFFFUL;
     result[get_linear_global_id()] = crc64_context ^ 0xFFFFFFFFFFFFFFFFUL;
 }""",
-              'gsize': '1,1,1',
-              'lsize': '1,1,1',
-              'timeout_seconds': '60',
-          })
+                                 'gsize': '1,1,1',
+                                 'lsize': '1,1,1',
+                                 'timeout_seconds': '60',
+                             })
   ]
   results = opencl_fuzz.RunTestcases(harness, testcases)
   assert len(results) == 1
@@ -366,15 +363,15 @@ def test_RunTestcases_cl_launcher_syntax_error(
   cl_launcher_harness_config.opencl_opt[0] = opencl_opt
   harness = cl_launcher.ClLauncherHarness(cl_launcher_harness_config)
   testcases = [
-      deepsmith_pb2.Testcase(
-          toolchain='opencl',
-          harness=deepsmith_pb2.Harness(name='cl_launcher'),
-          inputs={
-              'src': '__kernel void entry(\n!11@invalid syntax!',
-              'gsize': '1,1,1',
-              'lsize': '1,1,1',
-              'timeout_seconds': '60',
-          })
+      deepsmith_pb2.Testcase(toolchain='opencl',
+                             harness=deepsmith_pb2.Harness(name='cl_launcher'),
+                             inputs={
+                                 'src':
+                                 '__kernel void entry(\n!11@invalid syntax!',
+                                 'gsize': '1,1,1',
+                                 'lsize': '1,1,1',
+                                 'timeout_seconds': '60',
+                             })
   ]
   results = opencl_fuzz.RunTestcases(harness, testcases)
   assert len(results) == 1

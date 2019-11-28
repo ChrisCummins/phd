@@ -2,8 +2,8 @@
 import sqlalchemy as sql
 
 from datasets.github.scrape_repos import contentfiles
-from labm8 import app
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_database(

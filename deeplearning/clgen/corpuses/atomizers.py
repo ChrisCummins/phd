@@ -24,8 +24,8 @@ from collections import Counter
 import numpy as np
 
 from deeplearning.clgen import errors
-from labm8 import app
-from labm8 import labdate
+from labm8.py import app
+from labm8.py import labdate
 
 FLAGS = app.FLAGS
 

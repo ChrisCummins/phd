@@ -12,9 +12,9 @@ from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs.labelled.devmap import make_devmap_dataset
 from deeplearning.ncc import vocabulary as inst2vec_vocab
 from deeplearning.ncc.inst2vec import api as inst2vec
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import pbutil
 
 app.DEFINE_database('bytecode_db',
                     bytecode_database.Database,

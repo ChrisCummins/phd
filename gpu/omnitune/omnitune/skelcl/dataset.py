@@ -1,6 +1,6 @@
 from weka.filters import Filter as WekaFilter
 
-from labm8 import ml
+from labm8.py import ml
 
 
 class Dataset(ml.Dataset):

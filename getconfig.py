@@ -19,12 +19,12 @@ global configuration of the repository. The configuration schema is defined in
 script.
 """
 import os
+import pathlib
 
 import config_pb2
 import config_pbtxt_py
-import pathlib
 
-from labm8 import pbutil
+from labm8.py import pbutil
 
 # The path of the generated config file, which is //config.pbtxt.
 GLOBAL_CONFIG_PATH = pathlib.Path(

@@ -33,7 +33,7 @@ from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
 from gpu.libcecl.proto import libcecl_pb2
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -167,10 +167,9 @@ if (get_global_id(0) < c) {
     cflags, ldflags = libcecl_compile.LibCeclCompileAndLinkFlags()
 
     def CompileDriver(libcecl_src: str, binary_path: pathlib.Path):
-      proc = clang.Exec(
-          ['-x', 'c', '-std=c99', '-', '-o',
-           str(binary_path)] + cflags + ldflags,
-          stdin=libcecl_src)
+      proc = clang.Exec(['-x', 'c', '-std=c99', '-', '-o',
+                         str(binary_path)] + cflags + ldflags,
+                        stdin=libcecl_src)
       if proc.returncode:
         raise DriverCompilationFailed(proc.stderr[:1024])
       assert binary_path.is_file()

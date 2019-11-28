@@ -5,8 +5,8 @@ import typing
 import pandas as pd
 
 from datasets.benchmarks.gpgpu import gpgpu_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

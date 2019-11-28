@@ -3,8 +3,8 @@ import typing
 
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 app.DEFINE_string(

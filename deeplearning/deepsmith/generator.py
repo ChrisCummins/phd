@@ -22,10 +22,10 @@ import sqlalchemy as sql
 from sqlalchemy import orm
 from sqlalchemy.dialects import mysql
 
-import labm8.sqlutil
+import labm8.py.sqlutil
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import labdate
+from labm8.py import labdate
 
 # The index types for tables defined in this file.
 _GeneratorId = sql.Integer
@@ -108,7 +108,7 @@ class Generator(db.Table):
     for proto_opt_name in sorted(proto.opts):
       proto_opt_value = proto.opts[proto_opt_name]
       md5.update((proto_opt_name + proto_opt_value).encode('utf-8'))
-      opt = labm8.sqlutil.GetOrAdd(
+      opt = labm8.py.sqlutil.GetOrAdd(
           session,
           GeneratorOpt,
           name=GeneratorOptName.GetOrAdd(session, proto_opt_name),
@@ -119,9 +119,9 @@ class Generator(db.Table):
     # Create optset table entries.
     optset_id = md5.digest()
     for opt in opts:
-      labm8.sqlutil.GetOrAdd(session, GeneratorOptSet, id=optset_id, opt=opt)
+      labm8.py.sqlutil.GetOrAdd(session, GeneratorOptSet, id=optset_id, opt=opt)
 
-    return labm8.sqlutil.GetOrAdd(
+    return labm8.py.sqlutil.GetOrAdd(
         session,
         cls,
         name=proto.name,

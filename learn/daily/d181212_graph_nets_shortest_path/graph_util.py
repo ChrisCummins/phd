@@ -6,8 +6,8 @@ import networkx as nx
 import numpy as np
 from scipy import spatial
 
-from labm8 import app
-from labm8 import labtypes
+from labm8.py import app
+from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 
@@ -73,18 +73,20 @@ class GraphGenerator(object):
     pos = dict(enumerate(pos_array))
     weight = dict(
         enumerate(self.rand.exponential(self.options.rate, size=num_nodes)))
-    geo_graph = nx.geographical_threshold_graph(
-        num_nodes, self.options.theta, pos=pos, weight=weight)
+    geo_graph = nx.geographical_threshold_graph(num_nodes,
+                                                self.options.theta,
+                                                pos=pos,
+                                                weight=weight)
 
     # Create minimum spanning tree across geo_graph's nodes.
     distances = spatial.distance.squareform(spatial.distance.pdist(pos_array))
     i_, j_ = np.meshgrid(range(num_nodes), range(num_nodes), indexing="ij")
     weighted_edges = list(zip(i_.ravel(), j_.ravel(), distances.ravel()))
     mst_graph = nx.Graph()
-    mst_graph.add_weighted_edges_from(
-        weighted_edges, weight=self.options.weight_name)
-    mst_graph = nx.minimum_spanning_tree(
-        mst_graph, weight=self.options.weight_name)
+    mst_graph.add_weighted_edges_from(weighted_edges,
+                                      weight=self.options.weight_name)
+    mst_graph = nx.minimum_spanning_tree(mst_graph,
+                                         weight=self.options.weight_name)
     # Put geo_graph's node attributes into the mst_graph.
     for i in mst_graph.nodes():
       mst_graph.node[i].update(geo_graph.node[i])
@@ -144,19 +146,22 @@ class GraphGenerator(object):
     # Add the "start", "end", and "solution" attributes to the nodes.
     directed_graph.add_node(start, start=True)
     directed_graph.add_node(end, end=True)
-    directed_graph.add_nodes_from(
-        list(labtypes.SetDiff(directed_graph.nodes(), [start])), start=False)
-    directed_graph.add_nodes_from(
-        list(labtypes.SetDiff(directed_graph.nodes(), [end])), end=False)
-    directed_graph.add_nodes_from(
-        list(labtypes.SetDiff(directed_graph.nodes(), path)), solution=False)
+    directed_graph.add_nodes_from(list(
+        labtypes.SetDiff(directed_graph.nodes(), [start])),
+                                  start=False)
+    directed_graph.add_nodes_from(list(
+        labtypes.SetDiff(directed_graph.nodes(), [end])),
+                                  end=False)
+    directed_graph.add_nodes_from(list(
+        labtypes.SetDiff(directed_graph.nodes(), path)),
+                                  solution=False)
     directed_graph.add_nodes_from(path, solution=True)
 
     # Now do the same for the edges.
     path_edges = list(labtypes.PairwiseIterator(path))
-    directed_graph.add_edges_from(
-        list(labtypes.SetDiff(directed_graph.edges(), path_edges)),
-        solution=False)
+    directed_graph.add_edges_from(list(
+        labtypes.SetDiff(directed_graph.edges(), path_edges)),
+                                  solution=False)
     directed_graph.add_edges_from(path_edges, solution=True)
 
     return directed_graph
@@ -201,9 +206,9 @@ class GraphGenerator(object):
     solution_length = 0
     # Set node features.
     for node_index, node_feature in graph.nodes(data=True):
-      input_graph.add_node(
-          node_index,
-          features=cls.CreateFeature(node_feature, input_node_fields))
+      input_graph.add_node(node_index,
+                           features=cls.CreateFeature(node_feature,
+                                                      input_node_fields))
       target_node = cls.ToOneHot(
           cls.CreateFeature(node_feature, target_node_fields).astype(int), 2)[0]
       target_graph.add_node(node_index, features=target_node)
@@ -212,10 +217,10 @@ class GraphGenerator(object):
 
     # Set edge features.
     for receiver, sender, features in graph.edges(data=True):
-      input_graph.add_edge(
-          sender,
-          receiver,
-          features=cls.CreateFeature(features, input_edge_fields))
+      input_graph.add_edge(sender,
+                           receiver,
+                           features=cls.CreateFeature(features,
+                                                      input_edge_fields))
       target_edge = cls.ToOneHot(
           cls.CreateFeature(features, target_edge_fields).astype(int), 2)[0]
       target_graph.add_edge(sender, receiver, features=target_edge)
@@ -286,8 +291,10 @@ def GenerateGraph(rand: np.random.RandomState,
   pos_array = rand.uniform(size=(num_nodes, dimensions))
   pos = dict(enumerate(pos_array))
   weight = dict(enumerate(rand.exponential(rate, size=num_nodes)))
-  geo_graph = nx.geographical_threshold_graph(
-      num_nodes, theta, pos=pos, weight=weight)
+  geo_graph = nx.geographical_threshold_graph(num_nodes,
+                                              theta,
+                                              pos=pos,
+                                              weight=weight)
 
   # Create minimum spanning tree across geo_graph's nodes.
   distances = spatial.distance.squareform(spatial.distance.pdist(pos_array))
@@ -358,19 +365,22 @@ def AddShortestPath(rand: np.random.RandomState,
   # Add the "start", "end", and "solution" attributes to the nodes.
   directed_graph.add_node(start, start=True)
   directed_graph.add_node(end, end=True)
-  directed_graph.add_nodes_from(
-      list(labtypes.SetDiff(directed_graph.nodes(), [start])), start=False)
-  directed_graph.add_nodes_from(
-      list(labtypes.SetDiff(directed_graph.nodes(), [end])), end=False)
-  directed_graph.add_nodes_from(
-      list(labtypes.SetDiff(directed_graph.nodes(), path)), solution=False)
+  directed_graph.add_nodes_from(list(
+      labtypes.SetDiff(directed_graph.nodes(), [start])),
+                                start=False)
+  directed_graph.add_nodes_from(list(
+      labtypes.SetDiff(directed_graph.nodes(), [end])),
+                                end=False)
+  directed_graph.add_nodes_from(list(
+      labtypes.SetDiff(directed_graph.nodes(), path)),
+                                solution=False)
   directed_graph.add_nodes_from(path, solution=True)
 
   # Now do the same for the edges.
   path_edges = list(labtypes.PairwiseIterator(path))
-  directed_graph.add_edges_from(
-      list(labtypes.SetDiff(directed_graph.edges(), path_edges)),
-      solution=False)
+  directed_graph.add_edges_from(list(
+      labtypes.SetDiff(directed_graph.edges(), path_edges)),
+                                solution=False)
   directed_graph.add_edges_from(path_edges, solution=True)
 
   return directed_graph
@@ -414,8 +424,9 @@ def GraphToInputTarget(
   solution_length = 0
   # Set node features.
   for node_index, node_feature in graph.nodes(data=True):
-    input_graph.add_node(
-        node_index, features=CreateFeature(node_feature, input_node_fields))
+    input_graph.add_node(node_index,
+                         features=CreateFeature(node_feature,
+                                                input_node_fields))
     target_node = ToOneHot(
         CreateFeature(node_feature, target_node_fields).astype(int), 2)[0]
     target_graph.add_node(node_index, features=target_node)
@@ -424,8 +435,9 @@ def GraphToInputTarget(
 
   # Set edge features.
   for receiver, sender, features in graph.edges(data=True):
-    input_graph.add_edge(
-        sender, receiver, features=CreateFeature(features, input_edge_fields))
+    input_graph.add_edge(sender,
+                         receiver,
+                         features=CreateFeature(features, input_edge_fields))
     target_edge = ToOneHot(
         CreateFeature(features, target_edge_fields).astype(int), 2)[0]
     target_graph.add_edge(sender, receiver, features=target_edge)

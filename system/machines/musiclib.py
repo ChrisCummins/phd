@@ -1,12 +1,10 @@
 """Verify music library."""
-
 import pathlib
 import sys
 
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 from system.dpack import dpack
-
 
 FLAGS = app.FLAGS
 

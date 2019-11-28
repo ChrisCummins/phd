@@ -24,20 +24,24 @@ import re
 import threading
 from contextlib import contextmanager
 from signal import Signals
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable
+from typing import List
+from typing import Tuple
+from typing import Union
 
 import clgen
 import progressbar
 import sqlalchemy as sql
-from experimental.dsmith.db_base import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
 from experimental.dsmith import Colors
 from experimental.dsmith import db_base
+from experimental.dsmith.db_base import *
 from experimental.dsmith.opencl import oclgrind
-from labm8 import crypto, prof
-from labm8 import humanize
+from labm8.py import crypto
+from labm8.py import humanize
+from labm8.py import prof
 
 # Global state to manage database connections. Must call init() before
 # creating sessions.
@@ -126,16 +130,18 @@ class Program(Base):
   id = sql.Column(id_t, primary_key=True)
   generator = sql.Column(Generators.column_t, nullable=False)
   sha1 = sql.Column(sql.String(40), nullable=False)
-  date = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  date = sql.Column(sql.DateTime,
+                    nullable=False,
+                    default=datetime.datetime.utcnow)
   generation_time = sql.Column(sql.Float, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint(
-      'generator', 'sha1', name='uniq_program'),)
+  __table_args__ = (sql.UniqueConstraint('generator',
+                                         'sha1',
+                                         name='uniq_program'),)
 
   # Relationships
   testcases = sql.orm.relationship("Testcase", back_populates="program")
@@ -161,14 +167,13 @@ class ProgramProxy(Proxy):
     self.src = src
 
   def to_record(self, session: session_t) -> Program:
-    return Program(
-        generator=self.generator,
-        sha1=self.sha1,
-        date=self.date,
-        generation_time=self.generation_time,
-        linecount=self.linecount,
-        charcount=self.charcount,
-        src=self.src)
+    return Program(generator=self.generator,
+                   sha1=self.sha1,
+                   date=self.date,
+                   generation_time=self.generation_time,
+                   linecount=self.linecount,
+                   charcount=self.charcount,
+                   src=self.src)
 
 
 class ClsmithProgramMeta(Base):
@@ -260,14 +265,13 @@ class Threads(Base):
   lsize_z = sql.Column(sql.Integer, nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint(
-      'gsize_x',
-      'gsize_y',
-      'gsize_z',
-      'lsize_x',
-      'lsize_y',
-      'lsize_z',
-      name='unique_thread_size'),)
+  __table_args__ = (sql.UniqueConstraint('gsize_x',
+                                         'gsize_y',
+                                         'gsize_z',
+                                         'lsize_x',
+                                         'lsize_y',
+                                         'lsize_z',
+                                         name='unique_thread_size'),)
 
   # Relationships
   testcases = sql.orm.relationship("Testcase", back_populates="threads")
@@ -328,32 +332,33 @@ class Testcase(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  program_id = sql.Column(
-      Program.id_t, sql.ForeignKey("programs.id"), nullable=False)
-  threads_id = sql.Column(
-      Threads.id_t, sql.ForeignKey("threads.id"), nullable=False)
+  program_id = sql.Column(Program.id_t,
+                          sql.ForeignKey("programs.id"),
+                          nullable=False)
+  threads_id = sql.Column(Threads.id_t,
+                          sql.ForeignKey("threads.id"),
+                          nullable=False)
   harness = sql.Column(Harnesses.column_t, nullable=False)
   input_seed = sql.Column(sql.Integer)
   timeout = sql.Column(sql.Integer, nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint(
-      "program_id",
-      "threads_id",
-      "harness",
-      "input_seed",
-      "timeout",
-      name="unique_testcase"),)
+  __table_args__ = (sql.UniqueConstraint("program_id",
+                                         "threads_id",
+                                         "harness",
+                                         "input_seed",
+                                         "timeout",
+                                         name="unique_testcase"),)
 
   # Relationships
   program = sql.orm.relationship("Program", back_populates="testcases")
   threads = sql.orm.relationship("Threads", back_populates="testcases")
   results = sql.orm.relationship("Result", back_populates="testcase")
   majority = sql.orm.relationship("Majority", back_populates="testcase")
-  clsmith_meta = sql.orm.relationship(
-      "ClsmithTestcaseMeta", back_populates="testcase")
-  dsmith_meta = sql.orm.relationship(
-      "DsmithTestcaseMeta", back_populates="testcase")
+  clsmith_meta = sql.orm.relationship("ClsmithTestcaseMeta",
+                                      back_populates="testcase")
+  dsmith_meta = sql.orm.relationship("DsmithTestcaseMeta",
+                                     back_populates="testcase")
 
   def __repr__(self):
     return f"testcase {self.id} = {{program: {self.program_id}, threads: {self.threads} }}"
@@ -460,8 +465,9 @@ class DsmithTestcaseMeta(Base):
       .filter(DsmithProgramMeta.id == self.testcase.program_id) \
       .scalar()
     if not program_meta:
-      program_meta = get_or_add(
-          s, DsmithProgramMeta, id=self.testcase.program_id)
+      program_meta = get_or_add(s,
+                                DsmithProgramMeta,
+                                id=self.testcase.program_id)
       s.flush()
 
     return program_meta
@@ -540,14 +546,13 @@ class Platform(Base):
   host = sql.Column(sql.String(255), nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint(
-      'platform',
-      'device',
-      'driver',
-      'opencl',
-      'devtype',
-      'host',
-      name='unique_platform'),)
+  __table_args__ = (sql.UniqueConstraint('platform',
+                                         'device',
+                                         'driver',
+                                         'opencl',
+                                         'devtype',
+                                         'host',
+                                         name='unique_platform'),)
 
   # Relationships
   testbeds = sql.orm.relationship("Testbed", back_populates="platform")
@@ -647,15 +652,14 @@ class Platform(Base):
   def from_env(env: cldrive.OpenCLEnvironment,
                session: session_t = None) -> 'Testbed':
     with ReuseSession(session) as s:
-      return get_or_add(
-          s,
-          Platform,
-          platform=env.platform,
-          device=env.device,
-          driver=env.driver_version,
-          opencl=env.opencl_version,
-          devtype=env.device_type,
-          host=cldrive.host_os())
+      return get_or_add(s,
+                        Platform,
+                        platform=env.platform,
+                        device=env.device,
+                        driver=env.driver_version,
+                        opencl=env.opencl_version,
+                        devtype=env.device_type,
+                        host=cldrive.host_os())
 
   @staticmethod
   def _get_ids(platform: str, device: str, driver: str) -> Tuple[int, int]:
@@ -672,9 +676,10 @@ class Platform(Base):
           device_name = cl_device.get_info(cl.device_info.NAME)
           device_driver = cl_device.get_info(cl.device_info.DRIVER_VERSION)
 
-          app.Log(2, f"trying to match '{device} "
-                    f"{driver}' to '{device_name} "
-                    f"{device_driver}'")
+          app.Log(
+              2, f"trying to match '{device} "
+              f"{driver}' to '{device_name} "
+              f"{device_driver}'")
           if (device_name == device and device_driver == driver):
             app.Log(2, f"matched device '{device_name}'")
             return j, i
@@ -690,13 +695,15 @@ class Testbed(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  platform_id = sql.Column(
-      Platform.id_t, sql.ForeignKey("platforms.id"), nullable=False)
+  platform_id = sql.Column(Platform.id_t,
+                           sql.ForeignKey("platforms.id"),
+                           nullable=False)
   optimizations = sql.Column(sql.Boolean, nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint(
-      'platform_id', 'optimizations', name='unique_testbed'),)
+  __table_args__ = (sql.UniqueConstraint('platform_id',
+                                         'optimizations',
+                                         name='unique_testbed'),)
 
   # Relationships
   platform = sql.orm.relationship("Platform", back_populates="testbeds")
@@ -779,7 +786,8 @@ class Testbed(Base):
       ndone = already_done.count()
       ntodo = todo.count()
 
-      app.Log(2,
+      app.Log(
+          2,
           f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done"
       )
 
@@ -804,8 +812,9 @@ class Testbed(Base):
             f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
 
       # asynchronously run testcases, updating progress bar
-      bar = progressbar.ProgressBar(
-          initial_value=ndone, max_value=ndone + ntodo, redirect_stdout=True)
+      bar = progressbar.ProgressBar(initial_value=ndone,
+                                    max_value=ndone + ntodo,
+                                    redirect_stdout=True)
       worker = Worker(harness, generator, self.id)
       worker.start()
       while worker.is_alive():
@@ -864,24 +873,21 @@ class Testbed(Base):
         if str(testbed.platform.num) == string[:-1]:
           if string[-1] == "±":
             return [
-                get_or_add(
-                    s,
-                    Testbed,
-                    platform_id=testbed.platform.id,
-                    optimizations=True),
-                get_or_add(
-                    s,
-                    Testbed,
-                    platform_id=testbed.platform.id,
-                    optimizations=False)
+                get_or_add(s,
+                           Testbed,
+                           platform_id=testbed.platform.id,
+                           optimizations=True),
+                get_or_add(s,
+                           Testbed,
+                           platform_id=testbed.platform.id,
+                           optimizations=False)
             ]
           else:
             return [
-                get_or_add(
-                    s,
-                    Testbed,
-                    platform_id=testbed.platform.id,
-                    optimizations=True if string[-1] == "+" else False)
+                get_or_add(s,
+                           Testbed,
+                           platform_id=testbed.platform.id,
+                           optimizations=True if string[-1] == "+" else False)
             ]
 
     # Strip shell formatting
@@ -939,11 +945,10 @@ class TestbedProxy(Proxy, dsmith.ReprComparable):
     env = cldrive.make_env(self._platform, self._device)
     platform = Platform.from_env(env, session=session)
     session.flush()
-    testbed = get_or_add(
-        session,
-        Testbed,
-        platform_id=platform.id,
-        optimizations=self._optimizations)
+    testbed = get_or_add(session,
+                         Testbed,
+                         platform_id=platform.id,
+                         optimizations=self._optimizations)
     session.commit()
     app.Log(2, f"Added new Testbed {testbed}")
     return testbed
@@ -969,10 +974,10 @@ class Stdout(Base):
   @staticmethod
   def _escape(string: str) -> str:
     """ filter noise from test harness stdout """
-    return '\n'.join(
-        line for line in string.split('\n') if line != "ADL Escape failed." and
-        line != "WARNING:endless loop detected!" and
-        line != "One module without kernel function!")
+    return '\n'.join(line for line in string.split('\n')
+                     if line != "ADL Escape failed." and
+                     line != "WARNING:endless loop detected!" and
+                     line != "One module without kernel function!")
 
   @staticmethod
   def from_str(session: session_t, string: str) -> str:
@@ -982,8 +987,10 @@ class Stdout(Base):
     # Strip the noise
     string = Stdout._escape(string)
 
-    stdout = get_or_add(
-        session, Stdout, sha1=crypto.sha1_str(string), stdout=string)
+    stdout = get_or_add(session,
+                        Stdout,
+                        sha1=crypto.sha1_str(string),
+                        stdout=string)
     return stdout
 
 
@@ -1051,9 +1058,8 @@ class Stderr(Base):
   @staticmethod
   def _escape(string: str) -> str:
     """ filter noise from test harness stderr """
-    return '\n'.join(
-        line for line in string.split('\n')
-        if "no version information available" not in line)
+    return '\n'.join(line for line in string.split('\n')
+                     if "no version information available" not in line)
 
   @staticmethod
   def _get_assertion(session: session_t,
@@ -1080,8 +1086,10 @@ class Stderr(Base):
         else:
           msg = line
 
-        assertion = get_or_add(
-            session, Assertion, sha1=crypto.sha1_str(msg), assertion=msg)
+        assertion = get_or_add(session,
+                               Assertion,
+                               sha1=crypto.sha1_str(msg),
+                               assertion=msg)
         return assertion
 
   @staticmethod
@@ -1089,8 +1097,10 @@ class Stderr(Base):
                        lines: Iterable[str]) -> Union[None, Unreachable]:
     for line in lines:
       if "unreachable" in line.lower():
-        unreachable = get_or_add(
-            session, Unreachable, sha1=crypto.sha1_str(line), unreachable=line)
+        unreachable = get_or_add(session,
+                                 Unreachable,
+                                 sha1=crypto.sha1_str(line),
+                                 unreachable=line)
         return unreachable
 
   @staticmethod
@@ -1104,11 +1114,10 @@ class Stderr(Base):
           stackdump.append(line)
         else:
           stackdump_ = "\n".join(stackdump)
-          stackdump = get_or_add(
-              session,
-              StackDump,
-              sha1=crypto.sha1_str(stackdump_),
-              stackdump=stackdump_)
+          stackdump = get_or_add(session,
+                                 StackDump,
+                                 sha1=crypto.sha1_str(stackdump_),
+                                 stackdump=stackdump_)
           return stackdump
       elif "stack dump:" in line.lower():
         in_stackdump = True
@@ -1147,17 +1156,16 @@ class Stderr(Base):
                         f"Unreachable: {unreachable}\n" +
                         f"Stackdump: {stackdump}")
 
-    stderr = get_or_add(
-        session,
-        Stderr,
-        sha1=crypto.sha1_str(string),
-        assertion=assertion,
-        unreachable=unreachable,
-        stackdump=stackdump,
-        linecount=len(lines),
-        charcount=len(string),
-        truncated=len(string) > Stderr.max_chars,
-        stderr=string[:Stderr.max_chars])
+    stderr = get_or_add(session,
+                        Stderr,
+                        sha1=crypto.sha1_str(string),
+                        assertion=assertion,
+                        unreachable=unreachable,
+                        stackdump=stackdump,
+                        linecount=len(lines),
+                        charcount=len(string),
+                        truncated=len(string) > Stderr.max_chars,
+                        stderr=string[:Stderr.max_chars])
     return stderr
 
 
@@ -1200,26 +1208,32 @@ class Result(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  testbed_id = sql.Column(
-      Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True)
-  testcase_id = sql.Column(
-      Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True)
-  date = sql.Column(
-      sql.DateTime,
-      nullable=False,
-      index=True,
-      default=datetime.datetime.utcnow)
+  testbed_id = sql.Column(Testbed.id_t,
+                          sql.ForeignKey("testbeds.id"),
+                          nullable=False,
+                          index=True)
+  testcase_id = sql.Column(Testcase.id_t,
+                           sql.ForeignKey("testcases.id"),
+                           nullable=False,
+                           index=True)
+  date = sql.Column(sql.DateTime,
+                    nullable=False,
+                    index=True,
+                    default=datetime.datetime.utcnow)
   returncode = sql.Column(sql.SmallInteger, nullable=False)
   outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
   runtime = sql.Column(sql.Float, nullable=False)
-  stdout_id = sql.Column(
-      Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
-  stderr_id = sql.Column(
-      Stderr.id_t, sql.ForeignKey("stderrs.id"), nullable=False)
+  stdout_id = sql.Column(Stdout.id_t,
+                         sql.ForeignKey("stdouts.id"),
+                         nullable=False)
+  stderr_id = sql.Column(Stderr.id_t,
+                         sql.ForeignKey("stderrs.id"),
+                         nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint(
-      'testbed_id', 'testcase_id', name='unique_result_triple'),)
+  __table_args__ = (sql.UniqueConstraint('testbed_id',
+                                         'testcase_id',
+                                         name='unique_result_triple'),)
 
   # Relationships
   meta = sql.orm.relation("ResultMeta", back_populates="result")
@@ -1258,15 +1272,14 @@ class ResultProxy(object):
     stderr = Stderr.from_str(session, self.stderr)
     session.flush()  # required to get IDs
 
-    return Result(
-        testbed_id=self.testbed_id,
-        testcase_id=self.testcase_id,
-        returncode=self.returncode,
-        outcome=self.outcome,
-        runtime=self.runtime,
-        stdout=stdout,
-        stderr=stderr,
-        date=self.date)
+    return Result(testbed_id=self.testbed_id,
+                  testcase_id=self.testcase_id,
+                  returncode=self.returncode,
+                  outcome=self.outcome,
+                  runtime=self.runtime,
+                  stdout=stdout,
+                  stderr=stderr,
+                  date=self.date)
 
 
 class Cl_launcherResult(Result):
@@ -1428,10 +1441,10 @@ class ResultMeta(Base):
 
   # Fields
   id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
-  total_time = sql.Column(
-      sql.Float, nullable=False)  # time to generate and run test case
-  cumtime = sql.Column(
-      sql.Float, nullable=False)  # culumative time for this testbed time
+  total_time = sql.Column(sql.Float,
+                          nullable=False)  # time to generate and run test case
+  cumtime = sql.Column(sql.Float,
+                       nullable=False)  # culumative time for this testbed time
 
   # Relationships
   result = sql.orm.relationship("Result", back_populates="meta")
@@ -1484,8 +1497,9 @@ class Majority(Base):
   num_results = sql.Column(sql.SmallInteger, nullable=False)
   maj_outcome = sql.Column(Outcomes.column_t, nullable=False)
   outcome_majsize = sql.Column(sql.SmallInteger, nullable=False)
-  maj_stdout_id = sql.Column(
-      Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False)
+  maj_stdout_id = sql.Column(Stdout.id_t,
+                             sql.ForeignKey("stdouts.id"),
+                             nullable=False)
   stdout_majsize = sql.Column(sql.SmallInteger, nullable=False)
 
   # Relationships
@@ -1499,8 +1513,9 @@ class Reduction(Base):
 
   # Fields
   id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
-  date = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  date = sql.Column(sql.DateTime,
+                    nullable=False,
+                    default=datetime.datetime.utcnow)
   status = sql.Column(sql.Integer, nullable=False)
   runtime = sql.Column(sql.Float, nullable=False)
   reduced_src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)

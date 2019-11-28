@@ -3,15 +3,15 @@
 It is built on the functionality of Yelp's detect-secrets.
 See: https://github.com/Yelp/detect-secrets
 """
-
 import pathlib
 import typing
+
+from detect_secrets import main as detect_secrets_main
 from detect_secrets.plugins.common import \
   initialize as detect_secrets_initialize
 
 from datasets.github.scrape_repos.preprocessors import public
-from detect_secrets import main as detect_secrets_main
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

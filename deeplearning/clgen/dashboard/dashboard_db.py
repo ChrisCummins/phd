@@ -18,10 +18,10 @@ import datetime
 import sqlalchemy as sql
 from sqlalchemy.dialects import mysql
 
-from labm8 import app
-from labm8 import decorators
-from labm8 import labdate
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import decorators
+from labm8.py import labdate
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

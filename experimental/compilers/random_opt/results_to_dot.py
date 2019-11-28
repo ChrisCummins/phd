@@ -5,9 +5,9 @@ import typing
 import graphviz
 
 from experimental.compilers.random_opt.proto import random_opt_pb2
-from labm8 import app
-from labm8 import graph
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import graph
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

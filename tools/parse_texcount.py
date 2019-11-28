@@ -48,15 +48,16 @@ towards the total.
       chap/conclusions     0
                  Total  7363
 """
-
 from __future__ import print_function
 
 from os import environ
-from re import compile, search, sub
-from sys import stdin, stdout
+from re import compile
+from re import search
+from re import sub
+from sys import stdin
+from sys import stdout
 
-from labm8 import fmt
-
+from labm8.py import fmt
 
 _FILE_RE = compile("^File: (.+)")
 _WORDS_IN_TEXT_RE = compile("^Words in text: (\d+)")

@@ -1,5 +1,4 @@
 """Run kernels in features database using CGO'17 driver and settings."""
-import collections
 import typing
 
 import numpy as np
@@ -10,11 +9,11 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features import \
 from gpu.cldrive import api as cldrive
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.cldrive.proto import cldrive_pb2
-from labm8 import app
-from labm8 import pbutil
-from labm8 import prof
-from labm8 import sqlutil
-from labm8 import system
+from labm8.py import app
+from labm8.py import pbutil
+from labm8.py import prof
+from labm8.py import sqlutil
+from labm8.py import system
 from research.cummins_2017_cgo import opencl_kernel_driver
 
 FLAGS = app.FLAGS

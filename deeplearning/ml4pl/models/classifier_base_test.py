@@ -12,8 +12,8 @@ from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -58,7 +58,7 @@ class MockModel(classifier_base.ClassifierBase):
     self.mock_data = data_to_load["mock_data"]
 
   def MakeMinibatchIterator(
-      self, epoch_type: str, groups: typing.List[str], print_context = None
+      self, epoch_type: str, groups: typing.List[str], print_context=None
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Generate mini-batches of fake data."""
     for group in groups:
@@ -72,8 +72,11 @@ class MockModel(classifier_base.ClassifierBase):
         log._transient_data = {'graph_indices': [1, 2, 3]}
         yield log, i
 
-  def RunMinibatch(self, log: log_database.BatchLogMeta,
-                   i: int, print_context: typing.Any = None) -> classifier_base.ClassifierBase.MinibatchResults:
+  def RunMinibatch(self,
+                   log: log_database.BatchLogMeta,
+                   i: int,
+                   print_context: typing.Any = None
+                  ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Fake mini-batch 'run'."""
     log.loss = 0
     return classifier_base.ClassifierBase.MinibatchResults(

@@ -22,7 +22,7 @@ import deeplearning.deepsmith.result
 import deeplearning.deepsmith.testcase
 from deeplearning.deepsmith import datastore
 from deeplearning.deepsmith import db
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

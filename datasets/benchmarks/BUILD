@@ -26,8 +26,8 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/benchmarks/proto:benchmarks_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
     ],
 )
 
@@ -36,8 +36,8 @@ py_test(
     srcs = ["bzip2_test.py"],
     deps = [
         ":bzip2",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -79,7 +79,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//datasets/benchmarks/proto:benchmarks_pb_py",
-        "//labm8:bazelutil",
+        "//labm8/py:bazelutil",
     ],
 )
 
@@ -90,8 +90,8 @@ py_test(
         ":llvm_test_suite",
         "//compilers/llvm:clang",
         "//datasets/benchmarks/proto:benchmarks_pb_py",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 

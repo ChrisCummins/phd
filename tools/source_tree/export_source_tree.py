@@ -8,7 +8,6 @@ I feel like there's a 90-10 rule that applies to this repo: 90% of people who
 checkout this repo only need 10% of the code contained within it.
 This script provides a way to export that 10%.
 """
-import contextlib
 import pathlib
 import sys
 import tempfile
@@ -19,7 +18,7 @@ import github as github_lib
 
 import getconfig
 from datasets.github import api
-from labm8 import app
+from labm8.py import app
 from tools.source_tree import phd_workspace
 
 FLAGS = app.FLAGS

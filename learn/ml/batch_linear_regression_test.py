@@ -1,4 +1,4 @@
-from labm8 import test
+from labm8.py import test
 
 MODULE_UNDER_TEST = None  # No coverage.
 

@@ -1,5 +1,4 @@
 """Train a discriminator."""
-import collections
 import pathlib
 import pickle
 import typing
@@ -11,9 +10,9 @@ from keras.preprocessing import sequence
 from deeplearning.clgen import telemetry
 from deeplearning.clgen.corpuses import atomizers
 from experimental.deeplearning.fish.proto import fish_pb2
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

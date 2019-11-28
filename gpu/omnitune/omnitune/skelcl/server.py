@@ -1,20 +1,19 @@
 import time
 
-import dbus
 import dbus.mainloop.glib
 import dbus.service
 import gobject
 import omnitune
-# Local imports.
 import training
 from db import Database
 from migrate import migrate
 from omnitune import util
-
-from labm8 import cache
-from labm8 import fs
-from labm8 import io
 from phd import labm8 as lab
+
+from labm8.py import cache
+from labm8.py import fs
+from labm8.py import io
+# Local imports.
 
 SESSION_NAME = "org.omnitune"
 INTERFACE_NAME = "org.omnitune.skelcl"

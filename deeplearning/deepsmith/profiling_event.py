@@ -22,8 +22,8 @@ from sqlalchemy.dialects import mysql
 import deeplearning.deepsmith.client
 from deeplearning.deepsmith import db
 from deeplearning.deepsmith.proto import deepsmith_pb2
-from labm8 import labdate
-from labm8 import sqlutil
+from labm8.py import labdate
+from labm8.py import sqlutil
 
 
 class ProfilingEventType(db.StringTable):

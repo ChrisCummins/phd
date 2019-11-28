@@ -20,7 +20,7 @@ import grpc
 from deeplearning.deepsmith import services
 from deeplearning.deepsmith.proto import datastore_pb2
 from deeplearning.deepsmith.proto import datastore_pb2_grpc
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

@@ -29,9 +29,9 @@ from sqlalchemy.ext import declarative
 
 from experimental.system.alice import alice_pb2
 from experimental.system.alice import alice_pb2_grpc
-from labm8 import app
-from labm8 import labdate
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

@@ -5,9 +5,9 @@ py_library(
     srcs = ["grewe_features_db.py"],
     visibility = ["//experimental/deeplearning/clgen:__subpackages__"],
     deps = [
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:sqlutil",
         "//research/grewe_2013_cgo:feature_extractor",
         "//third_party/py/pandas",
         "//third_party/py/progressbar",
@@ -20,9 +20,9 @@ py_binary(
     srcs = ["make_cpu_gpu_set.py"],
     deps = [
         "//experimental/deeplearning/clgen/closeness_to_grewe_features:grewe_features_db",
-        "//labm8:app",
-        "//labm8:prof",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:prof",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )

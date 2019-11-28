@@ -10,9 +10,9 @@ py_library(
         "//deeplearning/ml4pl/graphs:graph_database_reader",
         "//deeplearning/ml4pl/graphs:graph_database_stats",
         "//deeplearning/ml4pl/models:log_database",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:prof",
         "//third_party/py/numpy",
         "//third_party/py/sqlalchemy",
     ],
@@ -24,8 +24,8 @@ py_test(
     deps = [
         ":graph_batcher",
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -34,7 +34,7 @@ py_library(
     srcs = ["graph_tuple.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
     ],
@@ -45,8 +45,8 @@ py_test(
     srcs = ["graph_tuple_test.py"],
     deps = [
         ":graph_tuple",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/networkx",
         "//third_party/py/pytest",
     ],

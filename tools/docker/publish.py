@@ -6,8 +6,8 @@ import pathlib
 import subprocess
 
 import getconfig
-from labm8 import app
-from labm8 import dockerutil
+from labm8.py import app
+from labm8.py import dockerutil
 
 FLAGS = app.FLAGS
 

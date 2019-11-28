@@ -6,8 +6,7 @@ import pyopencl as cl
 from dsmith.db import *
 from dsmith.lib import *
 
-from labm8 import fs
-
+from labm8.py import fs
 
 # paths to clreduce library
 CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')
@@ -35,6 +34,7 @@ def get_device_name(platform_id, device_id):
   device = platform.get_devices()[device_id]
   return device.get_info(cl.device_info.NAME)
 
+
 # def get_num_results_to_reduce(session: db.session_t, tables: Tableset, testbed: Testbed):
 #     num_ran = session.query(sql.sql.func.count(tables.reductions.id))\
 #         .join(tables.results)\
@@ -47,14 +47,12 @@ def get_device_name(platform_id, device_id):
 #         .scalar()
 #     return num_ran, total
 
-
 # def remove_preprocessor_comments(test_case_name):
 #     """ written by the CLreduce folks """
 #     for line in fileinput.input(test_case_name, inplace=True):
 #         if re.match(r'^# \d+ "[^"]*"', line):
 #             continue
 #         print(line, end="")
-
 
 # def run_reduction(s: session_t, tables: Tableset,
 #                   result: Union[CLSmithResult, CLgenResult]) -> Union[CLSmithReduction, CLgenReduction]:
@@ -138,7 +136,6 @@ def get_device_name(platform_id, device_id):
 
 #     return reduction_t(result=result, runtime=runtime, status=status,
 #                        linecount=len(src.split('\n')), src=src, log='\n'.join(out))
-
 
 # if __name__ == "__main__":
 #     parser = ArgumentParser()

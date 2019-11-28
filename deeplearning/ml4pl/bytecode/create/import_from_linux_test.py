@@ -1,10 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/datasets:linux.py."""
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.bytecode.create import \
   import_from_linux as linux
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

@@ -4,14 +4,13 @@ import sys
 import traceback
 import typing
 
-from labm8 import app
-from labm8 import prof
-
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

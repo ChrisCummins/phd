@@ -2,9 +2,9 @@
 import dash
 import portpicker
 
-from labm8 import app
-from labm8 import decorators
-from labm8 import test
+from labm8.py import app
+from labm8.py import decorators
+from labm8.py import test
 from learn.python.dash import hello_dash
 
 FLAGS = app.FLAGS

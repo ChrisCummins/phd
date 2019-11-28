@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-
 from __future__ import division
 from __future__ import print_function
 
@@ -10,13 +9,13 @@ import numpy as np
 import pandas
 import seaborn as sns
 from matplotlib.ticker import FormatStrFormatter
-
-from labm8 import math as labmath
-from labm8 import ml
-from labm8 import text
-from labm8 import viz
 from phd import labm8 as lab
+
 from . import space as _space
+from labm8.py import math as labmath
+from labm8.py import ml
+from labm8.py import text
+from labm8.py import viz
 
 
 def fmtdevid(id):

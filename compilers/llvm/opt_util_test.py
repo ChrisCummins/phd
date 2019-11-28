@@ -15,12 +15,12 @@
 import typing
 
 import pytest
-from labm8 import app
-from labm8 import test
 
 from compilers.llvm import llvm
 from compilers.llvm import opt
 from compilers.llvm import opt_util
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

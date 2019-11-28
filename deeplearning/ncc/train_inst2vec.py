@@ -21,7 +21,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Main inst2vec and ncc workflow"""
-
 import os
 import pathlib
 import pickle
@@ -32,7 +31,7 @@ from deeplearning.ncc.inst2vec import inst2vec_embedding as i2v_emb
 from deeplearning.ncc.inst2vec import inst2vec_evaluate as i2v_eval
 from deeplearning.ncc.inst2vec import inst2vec_preprocess as i2v_prep
 from deeplearning.ncc.inst2vec import inst2vec_vocabulary as i2v_vocab
-from labm8 import app
+from labm8.py import app
 
 # Get the app flags from a file.
 FLAGS = inst2vec_appflags.FLAGS

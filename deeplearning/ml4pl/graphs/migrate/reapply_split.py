@@ -3,13 +3,13 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
 from sklearn import model_selection
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 
@@ -119,7 +119,8 @@ def StratifiedKFold(db: graph_database.Database, num_splits: int):
       assert len(graph_batches) == 1
       graph_batch = graph_batches[0]
 
-      graph_ids = np.array(graph_batch.log._transient_data['graph_indices'], dtype=np.int32)
+      graph_ids = np.array(graph_batch.log._transient_data['graph_indices'],
+                           dtype=np.int32)
       # Compute the dense labels from one-hot vectors.
       labels = np.argmax(graph_batch.graph_y, axis=1)
 

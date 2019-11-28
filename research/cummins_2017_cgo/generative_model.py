@@ -30,8 +30,8 @@ from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -250,8 +250,8 @@ def CreateSamplerProtoFromFlags() -> sampler_pb2.Sampler:
 
 def CreateInstanceProtoFromFlags() -> clgen_pb2.Instance:
   if FLAGS.clgen_instance:
-    return pbutil.FromFile(
-        pathlib.Path(FLAGS.clgen_instance), clgen_pb2.Instance())
+    return pbutil.FromFile(pathlib.Path(FLAGS.clgen_instance),
+                           clgen_pb2.Instance())
   else:
     return clgen_pb2.Instance(
         working_dir=FLAGS.clgen_working_dir,

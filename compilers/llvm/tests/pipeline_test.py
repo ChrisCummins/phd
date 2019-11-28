@@ -17,8 +17,8 @@ import subprocess
 
 from compilers.llvm import clang
 from compilers.llvm import opt
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

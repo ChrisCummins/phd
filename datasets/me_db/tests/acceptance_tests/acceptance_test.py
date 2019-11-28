@@ -29,16 +29,17 @@ Usage:
         --test_flag=--me_db_acceptance_tests_inbox=/path/to/inbox
 """
 import datetime
-import pandas as pd
 import pathlib
-import pytest
 import tempfile
+
+import pandas as pd
+import pytest
 from sqlalchemy.sql.expression import func
 
 from datasets.me_db import me_db
 from datasets.me_db.tests.acceptance_tests import flags
-from labm8 import bazelutil
-from labm8 import test
+from labm8.py import bazelutil
+from labm8.py import test
 
 FLAGS = flags.FLAGS
 

@@ -19,8 +19,8 @@ import tempfile
 import typing
 
 from deeplearning.clgen import errors
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 

@@ -6,8 +6,8 @@ import pytest
 from deeplearning.clgen import clgen
 from deeplearning.clgen.docker import export_pretrained_model
 from deeplearning.clgen.proto import clgen_pb2
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

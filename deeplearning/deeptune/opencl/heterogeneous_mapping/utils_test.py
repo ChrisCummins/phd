@@ -13,14 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //deeplearning/deeptune/opencl/heterogeneous_mapping:utils."""
-
 import numpy as np
 import pandas as pd
 import pytest
 
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

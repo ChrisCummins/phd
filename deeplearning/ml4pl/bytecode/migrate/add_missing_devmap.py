@@ -1,9 +1,8 @@
 """Add the missing devmap bytecodes."""
-from labm8 import app
-from labm8 import crypto
-from labm8 import fs
-
 from deeplearning.ml4pl.bytecode import bytecode_database
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 

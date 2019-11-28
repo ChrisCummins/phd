@@ -1,8 +1,7 @@
 """Unit tests for //datasets/benchmarks/bzip2.py."""
-
 from datasets.benchmarks import bzip2
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

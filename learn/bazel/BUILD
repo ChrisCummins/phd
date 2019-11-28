@@ -8,9 +8,9 @@ py_test(
         ":data_file",
     ],
     deps = [
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:test",
     ],
 )
 
@@ -29,9 +29,9 @@ py_test(
     srcs = ["stamp_test.py"],
     data = [":stamp_file"],
     deps = [
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:test",
     ],
 )
 
@@ -54,8 +54,8 @@ py_test(
     name = "tensorflow_test",
     srcs = ["tensorflow_test.py"],
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/tensorflow",
     ],
 )

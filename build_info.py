@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Access to the build information."""
-
+import datetime
 import functools
 import re
+import typing
 
 import build_info_pbtxt_py
 import config_pb2
-import datetime
-import typing
 import version_py
 
-from labm8 import pbutil
+from labm8.py import pbutil
 
 
 @functools.lru_cache()

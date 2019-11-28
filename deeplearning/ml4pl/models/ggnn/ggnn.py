@@ -1,5 +1,4 @@
 """Train and evaluate a model for node classification."""
-import collections
 import typing
 import warnings
 
@@ -12,7 +11,7 @@ from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.ggnn import ggnn_base as ggnn
 from deeplearning.ml4pl.models.ggnn import ggnn_utils as utils
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

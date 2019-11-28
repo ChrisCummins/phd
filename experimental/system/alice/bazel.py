@@ -13,15 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
 """Utilities for working with bazel"""
-import collections
 import multiprocessing
 import pathlib
 import subprocess
 import typing
 
 from experimental.system.alice import alice_pb2
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 

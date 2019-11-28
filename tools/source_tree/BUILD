@@ -19,8 +19,8 @@ py_library(
     testonly = 1,
     srcs = ["conftest.py"],
     deps = [
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:fs",
+        "//labm8/py:test",
         "//third_party/py/git",
         "//third_party/py/pytest",
     ],
@@ -31,7 +31,7 @@ py_test(
     srcs = ["conftest_test.py"],
     deps = [
         ":conftest",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/git",
     ],
 )
@@ -43,8 +43,8 @@ par_binary(
     deps = [
         ":phd_workspace",
         "//:getconfig",
-        "//labm8:app",
-        "//labm8:fs",
+        "//labm8/py:app",
+        "//labm8/py:fs",
     ],
 )
 
@@ -57,10 +57,10 @@ par_binary(
         ":source_tree",
         "//:getconfig",
         "//datasets/github:api",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
         "//third_party/py/git",
         "//third_party/py/github",
     ],
@@ -72,9 +72,9 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":source_tree",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:humanize",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
         "//third_party/py/git",
     ],
 )
@@ -83,8 +83,8 @@ py_library(
     name = "source_tree",
     srcs = ["source_tree.py"],
     deps = [
-        "//labm8:app",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
         "//third_party/py/git",
     ],
 )
@@ -95,8 +95,8 @@ py_test(
     deps = [
         ":conftest",
         ":source_tree",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:fs",
+        "//labm8/py:test",
         "//third_party/py/git",
     ],
 )

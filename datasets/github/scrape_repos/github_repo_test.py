@@ -19,10 +19,10 @@ import pytest
 
 from datasets.github.scrape_repos import github_repo
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from labm8 import app
-from labm8 import fs
-from labm8 import pbutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import pbutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

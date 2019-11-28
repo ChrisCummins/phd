@@ -1,11 +1,12 @@
 """Unit tests for //gpu/libcecl:libcecl_compile."""
 import pathlib
-import pytest
 import subprocess
+
+import pytest
 
 from compilers.llvm import clang
 from gpu.libcecl import libcecl_compile
-from labm8 import test
+from labm8.py import test
 
 
 @pytest.fixture(scope='function')

@@ -9,9 +9,9 @@ from deeplearning.deepsmith import testcase
 from deeplearning.deepsmith import toolchain
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import app
-from labm8 import humanize
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 
@@ -62,16 +62,15 @@ def main(argv: typing.List[str]):
       .filter(testcase.Testcase.toolchain_id == toolchain_id[0]) \
       .order_by(testcase.Testcase.id)
 
-    batches = sqlutil.OffsetLimitBatchedQuery(
-        q,
-        batch_size=FLAGS.batch_size,
-        start_at=FLAGS.start_at,
-        compute_max_rows=True)
+    batches = sqlutil.OffsetLimitBatchedQuery(q,
+                                              batch_size=FLAGS.batch_size,
+                                              start_at=FLAGS.start_at,
+                                              compute_max_rows=True)
 
     for batch in batches:
-      app.Log(1, 'Batch %03d containing testcases %s..%s of %s', batch.batch_num,
-               humanize.Commas(batch.offset), humanize.Commas(batch.limit),
-               humanize.Commas(batch.max_rows))
+      app.Log(1, 'Batch %03d containing testcases %s..%s of %s',
+              batch.batch_num, humanize.Commas(batch.offset),
+              humanize.Commas(batch.limit), humanize.Commas(batch.max_rows))
       prefix = 'phd_experimental_deeplearning_clgen_'
       with tempfile.TemporaryDirectory(prefix=prefix) as d:
         d = pathlib.Path(d)

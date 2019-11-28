@@ -10,10 +10,10 @@ import typing
 
 import git
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import fs
-from labm8 import humanize
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import fs
+from labm8.py import humanize
 from tools.source_tree import source_tree
 
 FLAGS = app.FLAGS

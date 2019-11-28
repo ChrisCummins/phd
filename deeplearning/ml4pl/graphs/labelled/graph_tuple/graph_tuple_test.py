@@ -2,10 +2,10 @@
 import networkx as nx
 import numpy as np
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

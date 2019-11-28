@@ -1,8 +1,8 @@
 """Mark all-except-one duplicate bytecodes as "failed"."""
 import sqlalchemy as sql
-from labm8 import app
 
 from deeplearning.ml4pl.bytecode import bytecode_database
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

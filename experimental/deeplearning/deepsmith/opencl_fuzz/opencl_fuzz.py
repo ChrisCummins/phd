@@ -24,11 +24,11 @@ from deeplearning.deepsmith.proto import deepsmith_pb2
 from deeplearning.deepsmith.proto import generator_pb2
 from deeplearning.deepsmith.proto import harness_pb2
 from gpu.cldrive.legacy import env
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import humanize
-from labm8 import labdate
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import humanize
+from labm8.py import labdate
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
@@ -208,8 +208,8 @@ def ResultIsInteresting(
 
   # Determine whether we can use the difftest result.
   dt = filters.PostDifftest(
-      deepsmith_pb2.DifferentialTest(
-          result=[gs_result, result], outcome=dt_outcomes))
+      deepsmith_pb2.DifferentialTest(result=[gs_result, result],
+                                     outcome=dt_outcomes))
   if not dt:
     app.Log(1, 'Cannot use gold standard difftest result.')
     return NotInteresting(result)
@@ -334,8 +334,8 @@ def GetDeviceUnderTestHarness() -> base_harness.HarnessBase:
     A Harness instance.
   """
   if FLAGS.rerun_result:
-    result = pbutil.FromFile(
-        pathlib.Path(FLAGS.rerun_result), deepsmith_pb2.Result())
+    result = pbutil.FromFile(pathlib.Path(FLAGS.rerun_result),
+                             deepsmith_pb2.Result())
     if result.testcase.harness.name == 'cldrive':
       harness_class = cldrive.CldriveHarness
       config_class = harness_pb2.CldriveHarness
@@ -533,16 +533,15 @@ def main(argv):
   filters = GetFilters()
   dut_harness = GetDeviceUnderTestHarness()
   gs_harness = GetGoldStandardTestHarness()
-  TestingLoop(
-      FLAGS.min_interesting_results,
-      FLAGS.max_testing_time_seconds,
-      FLAGS.batch_size,
-      generator,
-      dut_harness,
-      gs_harness,
-      filters,
-      interesting_results_dir,
-      start_time=start_time)
+  TestingLoop(FLAGS.min_interesting_results,
+              FLAGS.max_testing_time_seconds,
+              FLAGS.batch_size,
+              generator,
+              dut_harness,
+              gs_harness,
+              filters,
+              interesting_results_dir,
+              start_time=start_time)
 
 
 if __name__ == '__main__':

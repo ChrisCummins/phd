@@ -8,7 +8,7 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":sql",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -29,9 +29,9 @@ py_library(
     visibility = ["//util/freefocus:__subpackages__"],
     deps = [
         ":freefocus_pb_py",
-        "//labm8:app",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
     ],
 )
 
@@ -41,8 +41,8 @@ py_test(
     deps = [
         ":freefocus_pb_py",
         ":sql",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 

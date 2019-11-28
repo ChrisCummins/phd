@@ -1,11 +1,12 @@
 """Unit tests for //experimental/deeplearning/deepsmith/java_fuzz:encode_java_corpus."""
 import pathlib
+
 import pytest
 
 from deeplearning.clgen.corpuses import encoded
 from deeplearning.clgen.corpuses import preprocessed
 from experimental.deeplearning.deepsmith.java_fuzz import encode_java_corpus
-from labm8 import test
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

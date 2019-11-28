@@ -1,7 +1,5 @@
 """Module for labelling program graphs with polyhedral SCoPs."""
-import random
 import typing
-import warnings
 
 import networkx as nx
 import numpy as np
@@ -11,8 +9,8 @@ from compilers.llvm import opt
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import control_and_data_flow_graph as cdfg
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import decorators
+from labm8.py import app
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 

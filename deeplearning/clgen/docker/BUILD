@@ -26,9 +26,9 @@ py_test(
         ":clgen_preprocess.tar",
     ],
     deps = [
-        "//labm8:dockerutil",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:dockerutil",
+        "//labm8/py:fs",
+        "//labm8/py:test",
     ],
 )
 
@@ -37,9 +37,9 @@ py_binary(
     srcs = ["export_pretrained_model.py"],
     deps = [
         "//deeplearning/clgen",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:pbutil",
         "//research/cummins_2017_cgo:generative_model",
     ],
 )
@@ -52,8 +52,8 @@ py_test(
         "//deeplearning/clgen",
         "//deeplearning/clgen:conftest",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )

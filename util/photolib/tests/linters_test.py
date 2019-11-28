@@ -1,9 +1,8 @@
 """Unit tests for linters.py."""
-
 import pytest
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 from util.photolib import linters
 
 FLAGS = app.FLAGS

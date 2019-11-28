@@ -1,8 +1,7 @@
 """Module to format SQL code."""
-
 import sqlparse
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

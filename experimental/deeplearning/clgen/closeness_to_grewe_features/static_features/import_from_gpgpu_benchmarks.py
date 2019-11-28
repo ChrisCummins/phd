@@ -8,7 +8,7 @@ from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 app.DEFINE_string(

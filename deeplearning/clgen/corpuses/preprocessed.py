@@ -13,30 +13,30 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """This file defines a database for pre-preprocessed content files."""
-import multiprocessing
-import os
-import time
-
 import contextlib
 import datetime
 import hashlib
+import multiprocessing
+import os
 import pathlib
-import sqlalchemy as sql
 import subprocess
 import tempfile
+import time
 import typing
-from deeplearning.clgen.proto import corpus_pb2
-from deeplearning.clgen.proto import internal_pb2
+
+import progressbar
+import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 from sqlalchemy.sql import func
 
-import progressbar
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import sqlutil
+from deeplearning.clgen.proto import corpus_pb2
+from deeplearning.clgen.proto import internal_pb2
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

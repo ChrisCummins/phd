@@ -1,11 +1,11 @@
 """Test for clgen_preprocess image."""
-
 import pathlib
 
 import pytest
-from labm8 import dockerutil
-from labm8 import fs
-from labm8 import test
+
+from labm8.py import dockerutil
+from labm8.py import fs
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

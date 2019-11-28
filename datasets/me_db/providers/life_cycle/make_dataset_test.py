@@ -26,8 +26,8 @@ import zipfile
 import pytest
 
 from datasets.me_db.providers.life_cycle import make_dataset
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

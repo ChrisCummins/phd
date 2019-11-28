@@ -1,10 +1,10 @@
 """Smoke test for //deeplearning/ml4pl/models/zero_r."""
 import numpy as np
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.models import classifier_smoke_tester
 from deeplearning.ml4pl.models.zero_r import zero_r
+from labm8.py import app
+from labm8.py import test
 
 MODULE_UNDER_TEST = 'deeplearning.ml4pl.models.zero_r.zero_r'
 

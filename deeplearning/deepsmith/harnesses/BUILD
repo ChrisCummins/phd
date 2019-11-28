@@ -43,12 +43,12 @@ py_binary(
         "//gpu/cldrive/legacy:driver",
         "//gpu/cldrive/legacy:env",
         "//gpu/oclgrind",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:labdate",
-        "//labm8:pbutil",
-        "//labm8:system",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:labdate",
+        "//labm8/py:pbutil",
+        "//labm8/py:system",
         "//third_party/py/grpcio",
     ],
 )
@@ -63,8 +63,8 @@ py_test(
         "//deeplearning/deepsmith/proto:service_pb_py",
         "//gpu/cldrive/legacy:env",
         "//gpu/oclgrind",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -78,7 +78,7 @@ py3_image(
 
 # A docker image for the cldrive unit tests. This is useful for testing the
 # hemetic-ness (definitely not a word) of the cldrive harness.
-# FIXME(cec): //labm8:test is marked test-only so cannot be depended on.
+# FIXME(cec): //labm8/py:test is marked test-only so cannot be depended on.
 # py3_image(
 #     name = "cldrive_test_image",
 #     srcs = ["cldrive_test.py"],
@@ -86,8 +86,8 @@ py3_image(
 #     main = "cldrive_test.py",
 #     deps = [
 #         ":cldrive",
-#         "//labm8:test",
-#         "//labm8:app",
+#         "//labm8/py:test",
+#         "//labm8/py:app",
 #     ],
 # )
 
@@ -102,8 +102,8 @@ py_binary(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//gpu/cldrive/legacy:driver",
         "//gpu/cldrive/legacy:env",
-        "//labm8:app",
-        "//labm8:labdate",
+        "//labm8/py:app",
+        "//labm8/py:labdate",
         "//third_party/py/grpcio",
     ],
 )
@@ -117,8 +117,8 @@ py_test(
         "//deeplearning/deepsmith/proto:harness_py_pb2",
         "//deeplearning/deepsmith/proto:service_pb_py",
         "//gpu/cldrive/legacy:env",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -129,7 +129,7 @@ py_library(
     deps = [
         "//deeplearning/deepsmith:services",
         "//deeplearning/deepsmith/proto:harness_py_pb2",
-        "//labm8:pbutil",
+        "//labm8/py:pbutil",
     ],
 )
 

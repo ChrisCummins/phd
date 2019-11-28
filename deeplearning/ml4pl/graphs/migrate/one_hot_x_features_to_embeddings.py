@@ -11,18 +11,17 @@ import sqlalchemy as sql
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import \
   graph_tuple as graph_tuples
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
-    None,
-    'URL of database to modify.',
-    must_exist=True)
+app.DEFINE_database('graph_db',
+                    graph_database.Database,
+                    None,
+                    'URL of database to modify.',
+                    must_exist=True)
 
 
 def ReplaceOneHotNodeFeaturesWithEmbeddings(

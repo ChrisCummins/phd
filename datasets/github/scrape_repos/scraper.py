@@ -17,21 +17,22 @@ This program reads a LanguageCloneList input, where each LanguageToClone entry
 in the LanguageCloneList specifies a programming language on GitHub and a number
 of repositories of this language to clone.
 """
+import pathlib
 import sys
+import threading
 import time
+import typing
 
 import github
-import pathlib
 import progressbar
-import threading
-import typing
+from github import Repository
+
 from datasets.github import api as github_api
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from github import Repository
-from labm8 import app
-from labm8 import humanize
-from labm8 import labdate
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import labdate
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

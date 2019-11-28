@@ -1,9 +1,9 @@
 """A flask server which renders test results."""
-
 import json
 import os
 import time
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 import flask
 import portpicker
@@ -12,9 +12,9 @@ import build_info
 from deeplearning.clgen import samplers
 from experimental.deeplearning.clgen.backtracking import backtracking_model
 from experimental.deeplearning.clgen.backtracking import logger
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import prof
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import prof
 from research.cummins_2017_cgo import generative_model
 
 FLAGS = app.FLAGS

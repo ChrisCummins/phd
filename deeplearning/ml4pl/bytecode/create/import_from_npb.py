@@ -28,12 +28,11 @@ import subprocess
 import tempfile
 import typing
 
-from labm8 import app
-from labm8 import fs
-from labm8 import sqlutil
-
 from compilers.llvm import llvm_dis
 from deeplearning.ml4pl.bytecode import bytecode_database
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

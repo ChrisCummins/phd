@@ -6,14 +6,13 @@ import numpy as np
 from keras import models
 
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
-from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from deeplearning.ml4pl.models.lstm import graph2seq
 from deeplearning.ml4pl.models.lstm import lstm_utils as utils
-from labm8 import app
-from labm8 import prof
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

@@ -29,9 +29,9 @@ from deeplearning.clgen import errors
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.proto import internal_pb2
-from labm8 import app
-from labm8 import humanize
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

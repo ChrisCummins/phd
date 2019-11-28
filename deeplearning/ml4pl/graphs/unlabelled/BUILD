@@ -9,8 +9,8 @@ py_binary(
         "//deeplearning/ml4pl/graphs:database_exporters",
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:control_and_data_flow_graph",
-        "//labm8:app",
-        "//labm8:prof",
+        "//labm8/py:app",
+        "//labm8/py:prof",
     ],
 )
 

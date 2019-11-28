@@ -1,11 +1,10 @@
 """Unit tests for //experimental/compilers/random_opt/environments.py."""
-
 import gym
 import pytest
 
 from experimental.compilers.random_opt import environments
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

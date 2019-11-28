@@ -5,7 +5,7 @@ See <github.com/ChrisCummins/ProGraML/issues/1>.
 import networkx as nx
 
 from deeplearning.ml4pl.graphs.unlabelled import programl_pb2
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

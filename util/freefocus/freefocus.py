@@ -1,9 +1,8 @@
 import pathlib
 import typing
 
-from labm8 import app
+from labm8.py import app
 from util.freefocus import sql
-
 
 FLAGS = app.FLAGS
 

@@ -11,11 +11,10 @@ import progressbar
 import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
-from labm8 import app
-from labm8 import humanize
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import sqlutil
 from research.grewe_2013_cgo import feature_extractor as grewe_features
-
 
 FLAGS = app.FLAGS
 
@@ -34,22 +33,22 @@ class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   # Raw values of Grewe et. al. feature space.
   grewe_compute_operation_count: int = sql.Column(sql.Integer, nullable=False)
   grewe_rational_operation_count: int = sql.Column(sql.Integer, nullable=False)
-  grewe_global_memory_access_count: int = sql.Column(
-      sql.Integer, nullable=False)
+  grewe_global_memory_access_count: int = sql.Column(sql.Integer,
+                                                     nullable=False)
   grewe_local_memory_access_count: int = sql.Column(sql.Integer, nullable=False)
-  grewe_coalesced_memory_access_count: int = sql.Column(
-      sql.Integer, nullable=False)
+  grewe_coalesced_memory_access_count: int = sql.Column(sql.Integer,
+                                                        nullable=False)
   grewe_atomic_operation_count: int = sql.Column(sql.Integer, nullable=False)
 
   # The kernel source.
-  src: str = sql.Column(
-      sql.UnicodeText().with_variant(sql.UnicodeText(2**31), 'mysql'),
-      nullable=False)
+  src: str = sql.Column(sql.UnicodeText().with_variant(sql.UnicodeText(2**31),
+                                                       'mysql'),
+                        nullable=False)
 
   __table_args__ = (
       # <src,origin> pairs must be unique.
-      sql.UniqueConstraint(
-          'src_sha256', 'origin', name='unique_src_for_origin'),)
+      sql.UniqueConstraint('src_sha256', 'origin',
+                           name='unique_src_for_origin'),)
 
   @classmethod
   def FromSrcOriginAndFeatures(
@@ -86,10 +85,12 @@ class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of dynamic features."""
   id: int = sql.Column(sql.Integer, primary_key=True)
   # Many-to-one mapping of dynamic features per static features.
-  static_features_id: int = sql.Column(
-      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
-  driver: DynamicFeaturesDriver = sql.Column(
-      sql.Enum(DynamicFeaturesDriver), nullable=False, index=True)
+  static_features_id: int = sql.Column(sql.Integer,
+                                       sql.ForeignKey(StaticFeatures.id),
+                                       nullable=False)
+  driver: DynamicFeaturesDriver = sql.Column(sql.Enum(DynamicFeaturesDriver),
+                                             nullable=False,
+                                             index=True)
 
   # The OpenClEnvironment.name of the device.
   opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
@@ -120,19 +121,22 @@ class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A grouping value.
-  cpu_gpu_mapping_set_name: str = sql.Column(
-      sql.String(128), nullable=False, index=True)
+  cpu_gpu_mapping_set_name: str = sql.Column(sql.String(128),
+                                             nullable=False,
+                                             index=True)
 
-  static_features_id = sql.Column(
-      sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False)
+  static_features_id = sql.Column(sql.Integer,
+                                  sql.ForeignKey(StaticFeatures.id),
+                                  nullable=False)
 
   # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
   # benchmark.
   origin: str = sql.Column(sql.String(128), nullable=False)
 
   # Dynamic Features values.
-  driver: DynamicFeaturesDriver = sql.Column(
-      sql.Enum(DynamicFeaturesDriver), nullable=False, index=True)
+  driver: DynamicFeaturesDriver = sql.Column(sql.Enum(DynamicFeaturesDriver),
+                                             nullable=False,
+                                             index=True)
   gsize: int = sql.Column(sql.Integer, nullable=False, index=True)
   wgsize: int = sql.Column(sql.Integer, nullable=False, index=True)
   transferred_bytes: int = sql.Column(sql.BigInteger, nullable=False)
@@ -261,8 +265,8 @@ class Database(sqlutil.Database):
     paths_to_import = list(paths_to_import)
     random.shuffle(paths_to_import)
     app.Log(1, 'Importing %s files ...', humanize.Commas(len(paths_to_import)))
-    bar = progressbar.ProgressBar(
-        max_value=len(paths_to_import), redirect_stderr=True)
+    bar = progressbar.ProgressBar(max_value=len(paths_to_import),
+                                  redirect_stderr=True)
 
     # Optionally multiprocess.
     if pool:
@@ -405,9 +409,9 @@ class Database(sqlutil.Database):
                StaticFeatures.grewe_global_memory_access_count))
     grewe2 = (StaticFeatures.grewe_coalesced_memory_access_count /
               StaticFeatures.grewe_global_memory_access_count)
-    grewe3 = (
-        devmap.c.wgsize * (StaticFeatures.grewe_local_memory_access_count /
-                           StaticFeatures.grewe_global_memory_access_count))
+    grewe3 = (devmap.c.wgsize *
+              (StaticFeatures.grewe_local_memory_access_count /
+               StaticFeatures.grewe_global_memory_access_count))
     grewe4 = (StaticFeatures.grewe_compute_operation_count /
               StaticFeatures.grewe_global_memory_access_count)
 

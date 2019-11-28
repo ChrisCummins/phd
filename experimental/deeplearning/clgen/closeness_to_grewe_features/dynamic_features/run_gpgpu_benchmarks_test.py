@@ -8,7 +8,7 @@ from experimental.deeplearning.clgen.closeness_to_grewe_features.dynamic_feature
   run_gpgpu_benchmarks
 from gpu.clinfo.proto import clinfo_pb2
 from gpu.libcecl.proto import libcecl_pb2
-from labm8 import test
+from labm8.py import test
 
 
 def _StaticFeatures(origin: str, src: str) -> grewe_features_db.StaticFeatures:

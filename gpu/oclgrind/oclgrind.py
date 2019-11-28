@@ -29,9 +29,9 @@ import sys
 import typing
 
 from gpu.clinfo.proto import clinfo_pb2
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import system
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import system
 
 FLAGS = app.FLAGS
 

@@ -16,12 +16,13 @@
 import pathlib
 
 import pytest
+
 from deeplearning.clgen import errors
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.preprocessors import public
-from labm8 import app
-from labm8 import fs
-from labm8 import test
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

@@ -3,9 +3,8 @@ import sys
 
 import pytest
 
-from labm8 import app
-from labm8 import bazelutil
-
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 

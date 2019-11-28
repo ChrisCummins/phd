@@ -4,14 +4,14 @@ import typing
 import networkx as nx
 import numpy as np
 import pytest
-from labm8 import app
-from labm8 import test
 
 from compilers.llvm import clang
 from compilers.llvm import opt
 from deeplearning.ml4pl.graphs.labelled.alias_set import alias_set
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
   control_and_data_flow_graph as cdfg
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

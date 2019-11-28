@@ -20,9 +20,8 @@ import pytest
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import lda
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import testlib
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
-from labm8 import app
-from labm8 import test
-
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -219,8 +218,8 @@ def test_Lda_GraphsToInputTargets_node_features_shape(
       model.EncodeGraphs(
           model.ExtractGraphs(lda.SetNormalizedColumns(single_program_df)))))
   assert len(input_graphs) == 1
-  assert input_graphs[0].nodes[0]['features'].shape == (
-      model.embedding_dim + 2,)
+  assert input_graphs[0].nodes[0]['features'].shape == (model.embedding_dim +
+                                                        2,)
   assert target_graphs[0].nodes[0]['features'].shape == (1,)
 
 

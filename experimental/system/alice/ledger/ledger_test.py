@@ -13,15 +13,16 @@
 # You should have received a copy of the GNU General Public License
 # along with alice.  If not, see <https://www.gnu.org/licenses/>.
 """Unit tests for //experimental/system/alice/ledger."""
-import grpc
 import pathlib
+from concurrent import futures
+
+import grpc
 import pytest
+
 from experimental.system.alice import alice_pb2
 from experimental.system.alice import alice_pb2_grpc
 from experimental.system.alice.ledger import ledger
-from concurrent import futures
-
-from labm8 import test
+from labm8.py import test
 
 
 @pytest.fixture(scope='function')

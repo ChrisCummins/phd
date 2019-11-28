@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for //datasets/github/scrape_repos:scraper."""
-
 import pytest
 
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from labm8 import app
-from labm8 import labdate
-from labm8 import test
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

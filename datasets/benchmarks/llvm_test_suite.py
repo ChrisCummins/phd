@@ -18,8 +18,8 @@ See: https://llvm.org/docs/TestingGuide.html#test-suite-overview
 import typing
 
 from datasets.benchmarks.proto import benchmarks_pb2
-from labm8 import app
-from labm8 import bazelutil
+from labm8.py import app
+from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 

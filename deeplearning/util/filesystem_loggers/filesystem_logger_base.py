@@ -1,12 +1,10 @@
 """Base class for loggers that write to filesystem."""
-
 import datetime
 import pathlib
 import typing
 
-from labm8 import app
-from labm8 import fs
-
+from labm8.py import app
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 

@@ -1,5 +1,4 @@
 # preamble
-
 import pickle
 import time
 from collections import Counter
@@ -13,7 +12,7 @@ from keras.preprocessing.sequence import pad_sequences
 from scipy.stats.mstats import gmean
 from sklearn.model_selection import StratifiedKFold
 
-from labm8 import fs
+from labm8.py import fs
 
 # plotting config:
 sns.set(style="ticks", color_codes=True)
@@ -110,8 +109,8 @@ def get_train_test_splits(D, n_splits=10, seed=1):
     assert len(indices) == len(benchmarks)
     assert set(benchmarks.index) == set(indices)
 
-    T.append((pd.concat((synthetics, benchmarks.loc[train_index])),
-              benchmarks.loc[test_index]))
+    T.append((pd.concat(
+        (synthetics, benchmarks.loc[train_index])), benchmarks.loc[test_index]))
   return T
 
 
@@ -149,8 +148,8 @@ def load_data_desc(platform,
   elif source == "N":
     dataframe = get_npb_benchmarks(platform)
   elif source == "NS":
-    dataframe = pd.concat((get_npb_benchmarks(platform),
-                           get_synthetics(platform)))
+    dataframe = pd.concat(
+        (get_npb_benchmarks(platform), get_synthetics(platform)))
   else:
     raise Exception
 
@@ -210,8 +209,8 @@ def get_training_data(data_desc,
                       **kwargs):
   dataframe = data_desc["dataframe"]
   seq_length = data_desc["seq_length"]
-  train, test = get_train_test_splits(
-      dataframe, seed=seed, n_splits=n_splits)[split_i]
+  train, test = get_train_test_splits(dataframe, seed=seed,
+                                      n_splits=n_splits)[split_i]
 
   x_train_2 = get_2(train)
   x_train_4 = get_4(train)
@@ -335,35 +334,38 @@ def train_and_save(model_desc,
     _atomizer = globals().get(atomizer)
 
     # load training data
-    data_desc = load_data_desc(
-        platform=platform,
-        source=source,
-        max_seq_len=maxlen,
-        atomizer=_atomizer)
-    train, test = get_training_data(
-        data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
+    data_desc = load_data_desc(platform=platform,
+                               source=source,
+                               max_seq_len=maxlen,
+                               atomizer=_atomizer)
+    train, test = get_training_data(data_desc,
+                                    seed=seed,
+                                    split_i=split_i,
+                                    n_splits=n_splits)
 
     # create model
     model = create_fn(seed=seed, data_desc=data_desc)
 
     # train model
-    train_fn(
-        model=model, train=train, seed=seed, platform=platform, source=source)
+    train_fn(model=model,
+             train=train,
+             seed=seed,
+             platform=platform,
+             source=source)
 
     fs.mkdir("models/{name}".format(**vars()))
     save_fn(outpath, model)
     print("model saved as", outpath)
 
   # evaluate model
-  return load_and_test(
-      model_desc,
-      platform,
-      source,
-      n_splits=n_splits,
-      split_i=split_i,
-      atomizer=atomizer,
-      maxlen=maxlen,
-      seed=seed)
+  return load_and_test(model_desc,
+                       platform,
+                       source,
+                       n_splits=n_splits,
+                       split_i=split_i,
+                       atomizer=atomizer,
+                       maxlen=maxlen,
+                       seed=seed)
 
 
 def load_and_test(model_desc,
@@ -383,15 +385,14 @@ def load_and_test(model_desc,
       **vars())
 
   if fs.exists(outpath):
-    return load_result(
-        model_desc,
-        platform,
-        source,
-        n_splits=n_splits,
-        split_i=split_i,
-        atomizer=atomizer,
-        maxlen=maxlen,
-        seed=seed)
+    return load_result(model_desc,
+                       platform,
+                       source,
+                       n_splits=n_splits,
+                       split_i=split_i,
+                       atomizer=atomizer,
+                       maxlen=maxlen,
+                       seed=seed)
   if not fs.exists(inpath):
     return False
 
@@ -400,14 +401,15 @@ def load_and_test(model_desc,
 
   # load training data
   _atomizer = globals().get(atomizer)
-  data_desc = load_data_desc(
-      platform=platform,
-      source=source,
-      max_seq_len=maxlen,
-      atomizer=_atomizer,
-      quiet=True)
-  train, test = get_training_data(
-      data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
+  data_desc = load_data_desc(platform=platform,
+                             source=source,
+                             max_seq_len=maxlen,
+                             atomizer=_atomizer,
+                             quiet=True)
+  train, test = get_training_data(data_desc,
+                                  seed=seed,
+                                  split_i=split_i,
+                                  n_splits=n_splits)
 
   # load model
   model = load_fn(inpath)
@@ -451,14 +453,15 @@ def benchmark_inference(model_desc,
 
   # load training data
   _atomizer = globals().get(atomizer)
-  data_desc = load_data_desc(
-      platform=platform,
-      source=source,
-      max_seq_len=maxlen,
-      atomizer=_atomizer,
-      quiet=True)
-  train, test = get_training_data(
-      data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
+  data_desc = load_data_desc(platform=platform,
+                             source=source,
+                             max_seq_len=maxlen,
+                             atomizer=_atomizer,
+                             quiet=True)
+  train, test = get_training_data(data_desc,
+                                  seed=seed,
+                                  split_i=split_i,
+                                  n_splits=n_splits)
 
   # load model
   model = load_fn(inpath)

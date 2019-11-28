@@ -31,7 +31,7 @@ from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ncc import inst2vec_pb2
 from deeplearning.ncc import task_utils as inst2vec_utils
 from deeplearning.ncc import vocabulary as inst2vec_vocabulary
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

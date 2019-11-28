@@ -4,11 +4,11 @@ import subprocess
 import tempfile
 import typing
 
-from research.cummins_2017_cgo import generative_model
 from deeplearning.clgen import clgen
-from labm8 import app
-from labm8 import fs
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import pbutil
+from research.cummins_2017_cgo import generative_model
 
 FLAGS = app.FLAGS
 

@@ -8,8 +8,8 @@ from deeplearning.clgen.preprocessors import preprocessors
 from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import app
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 
@@ -55,7 +55,7 @@ def ProcessBatch(batch: typing.List[typing.Tuple[str,]],
     success_count, new_row_count = db.ImportStaticFeaturesFromPaths(
         paths, FLAGS.origin, pool)
     app.Log(1, 'Extracted features from %d of %d kernels, %d new rows',
-             success_count, len(batch), new_row_count)
+            success_count, len(batch), new_row_count)
 
 
 def main(argv: typing.List[str]):
@@ -67,10 +67,10 @@ def main(argv: typing.List[str]):
   bdb = backtracking_db.Database(FLAGS.backtracking_db)
 
   with bdb.Session() as s, multiprocessing.Pool() as pool:
-    batches = sqlutil.OffsetLimitBatchedQuery(
-        s.query(backtracking_db.BacktrackingStep.src),
-        batch_size=FLAGS.batch_size,
-        compute_max_rows=True)
+    batches = sqlutil.OffsetLimitBatchedQuery(s.query(
+        backtracking_db.BacktrackingStep.src),
+                                              batch_size=FLAGS.batch_size,
+                                              compute_max_rows=True)
     for batch in batches:
       app.Log(1, 'Batch %d of %d rows', batch.batch_num, batch.max_rows)
       ProcessBatch(batch.rows, db, pool)

@@ -15,18 +15,19 @@
 # along with libcecl.  If not, see <https://www.gnu.org/licenses/>.
 """Integration test for //gpu/libcecl."""
 import pathlib
-import pytest
 import re
 import subprocess
+
+import pytest
 
 from gpu.cldrive.legacy import env as cldrive_env
 from gpu.libcecl import libcecl_compile
 from gpu.libcecl import libcecl_rewriter
 from gpu.libcecl import libcecl_runtime
 from gpu.libcecl.proto import libcecl_pb2
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

@@ -3,10 +3,10 @@ import pathlib
 
 from deeplearning.deepsmith.generators import clgen
 from deeplearning.deepsmith.proto import generator_pb2
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import crypto
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import crypto
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

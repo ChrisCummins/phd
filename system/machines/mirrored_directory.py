@@ -9,9 +9,9 @@ import subprocess
 import time
 import typing
 
-from labm8 import app
-from labm8 import fs
-from labm8 import labtypes
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import labtypes
 from system.machines.proto import machine_spec_pb2
 
 FLAGS = app.FLAGS

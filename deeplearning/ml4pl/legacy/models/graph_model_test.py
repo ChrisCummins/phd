@@ -1,5 +1,4 @@
 """Unit tests for //deeplearning/ml4pl:graph_model."""
-import collections
 import json
 import pathlib
 import pickle
@@ -12,8 +11,8 @@ import pytest
 import tensorflow as tf
 
 from deeplearning.ml4pl.models import graph_model
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

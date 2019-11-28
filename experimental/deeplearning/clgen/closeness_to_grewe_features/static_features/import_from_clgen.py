@@ -5,15 +5,15 @@ import tempfile
 import typing
 
 from deeplearning.clgen import clgen
+from deeplearning.clgen import sample_observers as sample_observers_lib
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import corpus_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from deeplearning.clgen import sample_observers as sample_observers_lib
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
-from labm8 import app
-from labm8 import prof
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

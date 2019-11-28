@@ -2,21 +2,23 @@
 """
 Create test harnesses for CLgen programs using cldrive.
 """
-
 from argparse import ArgumentParser
 from collections import deque
 
 import db
 from db import *
 
-from labm8 import fs
-
+from labm8.py import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
                       help="MySQL database hostname")
-  parser.add_argument("--commit", action="store_true",
+  parser.add_argument("--commit",
+                      action="store_true",
                       help="Commit changes (default is dry-run)")
   args = parser.parse_args()
 

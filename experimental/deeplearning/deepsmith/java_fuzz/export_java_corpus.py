@@ -12,25 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Export the content files from a database."""
-import multiprocessing
-import sys
-import time
-
 import collections
 import hashlib
+import multiprocessing
 import pathlib
 import re
+import sys
 import tempfile
 import threading
+import time
 import typing
 from concurrent import futures
 
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import extractors
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 app.DEFINE_database(

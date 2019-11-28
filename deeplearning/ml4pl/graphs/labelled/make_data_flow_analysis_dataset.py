@@ -10,10 +10,6 @@ import typing
 
 import numpy as np
 import sqlalchemy as sql
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
-from labm8 import sqlutil
 
 from deeplearning.ml4pl.bytecode import bytecode_database
 from deeplearning.ml4pl.graphs import database_exporters
@@ -25,6 +21,10 @@ from deeplearning.ml4pl.graphs.labelled.liveness import liveness
 from deeplearning.ml4pl.graphs.labelled.polyhedra import polyhedra
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
 from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import prof
+from labm8.py import sqlutil
 
 app.DEFINE_database('input_graphs_db',
                     graph_database.Database,

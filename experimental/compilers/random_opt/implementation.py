@@ -19,14 +19,14 @@ from compilers.llvm import llvm
 from compilers.llvm import llvm_link
 from compilers.llvm import opt
 from experimental.compilers.random_opt.proto import random_opt_pb2
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import jsonutil
+from labm8.py import labdate
+from labm8.py import pbutil
+from labm8.py import text
 # WARNING: No flags can be defined in this file, because it is loaded at runtime
 # by gym to resolve string entry points.
-from labm8 import app
-from labm8 import crypto
-from labm8 import jsonutil
-from labm8 import labdate
-from labm8 import pbutil
-from labm8 import text
 
 FLAGS = app.FLAGS
 
@@ -292,12 +292,12 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     if step.status == random_opt_pb2.Step.PASS:
       if self.BinaryIsValid():
         step.speedup = (
-            (sum(self.episodes[-1].step[-1].binary_runtime_ms) / len(
-                self.episodes[-1].step[-1].binary_runtime_ms)) /
+            (sum(self.episodes[-1].step[-1].binary_runtime_ms) /
+             len(self.episodes[-1].step[-1].binary_runtime_ms)) /
             (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
         step.total_speedup = (
-            (sum(self.episodes[-1].step[0].binary_runtime_ms) / len(
-                self.episodes[-1].step[0].binary_runtime_ms)) /
+            (sum(self.episodes[-1].step[0].binary_runtime_ms) /
+             len(self.episodes[-1].step[0].binary_runtime_ms)) /
             (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
       else:
         step.status = random_opt_pb2.Step.EVAL_FAILED
@@ -464,8 +464,8 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
   def ToProto(self) -> random_opt_pb2.DelayedRewardExperiment:
     """Return proto representation of environment."""
-    return random_opt_pb2.DelayedRewardExperiment(
-        env=self.config, episode=self.episodes)
+    return random_opt_pb2.DelayedRewardExperiment(env=self.config,
+                                                  episode=self.episodes)
 
   def render(self, outfile=sys.stdout):
     """Render text representation of environment."""
@@ -528,8 +528,10 @@ def ProduceBytecodeFromSources(
                     copts=copts + ['-O0', '-emit-llvm', '-S', '-c'],
                     timeout_seconds=timeout_seconds)
     # Link the separate bytecode files.
-    llvm_link.LinkBitcodeFilesToBytecode(
-        input_srcs, output_path, linkopts, timeout_seconds=timeout_seconds)
+    llvm_link.LinkBitcodeFilesToBytecode(input_srcs,
+                                         output_path,
+                                         linkopts,
+                                         timeout_seconds=timeout_seconds)
   return output_path
 
 

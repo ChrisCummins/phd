@@ -33,8 +33,8 @@ py_test(
     deps = [
         ":conftest",
         "//datasets/me_db",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -44,7 +44,7 @@ py_test(
     deps = [
         ":conftest",
         "//datasets/me_db",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )

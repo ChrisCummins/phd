@@ -10,11 +10,10 @@ import subprocess
 
 import pandas as pd
 
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pbutil
 from system.machines.proto import data_tiers_pb2
-
 
 FLAGS = app.FLAGS
 
@@ -53,8 +52,8 @@ def main(argv) -> None:
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
-  tiers = pbutil.FromFile(
-      pathlib.Path(FLAGS.data_tiers), data_tiers_pb2.DataTiers())
+  tiers = pbutil.FromFile(pathlib.Path(FLAGS.data_tiers),
+                          data_tiers_pb2.DataTiers())
   for tier in tiers.directory:
     app.Log(1, 'Processing %s', tier.path)
     _SetDirectorySize(tier)

@@ -20,7 +20,7 @@ py_library(
     srcs = ["loop_parallelization.py"],
     data = [":csv"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/pandas",
     ],
 )

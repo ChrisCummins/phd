@@ -1,6 +1,6 @@
 from unittest import main
 
-from labm8.tests.testutil import TestCase
+from labm8.py.tests.testutil import TestCase
 
 
 class TestSkelCLDB(TestCase):

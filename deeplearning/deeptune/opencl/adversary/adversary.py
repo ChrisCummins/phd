@@ -24,8 +24,8 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping import \
   heterogeneous_mapping
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
-from labm8 import app
-from labm8 import prof
+from labm8.py import app
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 
@@ -107,12 +107,11 @@ def main(argv: typing.List[str]):
     app.Log(1, 'Model: %s', model)
 
     app.Log(1, 'Evaluating model ...')
-    results = utils.evaluate(
-        model,
-        df=augmented_df,
-        atomizer=experiment.atomizer,
-        workdir=experiment.cache_dir,
-        seed=0x204)
+    results = utils.evaluate(model,
+                             df=augmented_df,
+                             atomizer=experiment.atomizer,
+                             workdir=experiment.cache_dir,
+                             seed=0x204)
 
     app.Log(1, 'Writing %s', cache_directory / 'adversarial_results.pkl')
     results.to_pickle(str(cache_directory / 'adversarial_results.pkl'))

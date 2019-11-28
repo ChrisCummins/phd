@@ -6,9 +6,9 @@ import os
 
 import pytest
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import test
 from system.machines import machine
 from system.machines import mirrored_directory
 

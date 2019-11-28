@@ -25,9 +25,9 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//gpu/clinfo/proto:clinfo_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:system",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:system",
     ],
 )
 
@@ -37,8 +37,8 @@ py_test(
     data = ["//gpu/oclgrind/test/data:oclgrind_working"],
     deps = [
         ":oclgrind",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:test",
     ],
 )

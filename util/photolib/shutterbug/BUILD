@@ -4,7 +4,7 @@ py_library(
     name = "shutterbug",
     srcs = ["shutterbug.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -13,8 +13,8 @@ py_test(
     srcs = ["shutterbug_test.py"],
     deps = [
         ":shutterbug",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -23,7 +23,7 @@ py_binary(
     srcs = ["pack.py"],
     deps = [
         ":shutterbug",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
 
@@ -32,6 +32,6 @@ py_binary(
     srcs = ["unpack.py"],
     deps = [
         ":shutterbug",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )

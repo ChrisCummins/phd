@@ -1,7 +1,6 @@
 """Delete graphs with a single node."""
-from labm8 import app
-
 from deeplearning.ml4pl.graphs import graph_database
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

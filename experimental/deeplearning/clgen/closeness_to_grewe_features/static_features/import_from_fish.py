@@ -6,8 +6,8 @@ import typing
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db
 from experimental.deeplearning.fish.proto import fish_pb2
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 app.DEFINE_string('protos_dir', None,

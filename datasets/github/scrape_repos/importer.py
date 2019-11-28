@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Import files into a ContentFiles database."""
-from sqlalchemy import orm
-
 import hashlib
 import pathlib
 import random
 import subprocess
 import typing
-from datasets.github.scrape_repos import contentfiles
-from datasets.github.scrape_repos.proto import scrape_repos_pb2
 
 import progressbar
+from sqlalchemy import orm
+
+from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.preprocessors import preprocessors
 from datasets.github.scrape_repos.preprocessors import public
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
+from datasets.github.scrape_repos.proto import scrape_repos_pb2
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 app.DEFINE_string('importer_clone_list', None,

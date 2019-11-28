@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with DeepTune.  If not, see <https://www.gnu.org/licenses/>.
 """Utility code for heterogeneous mapping experiment."""
-import collections
 import pathlib
 import pickle
 import typing
@@ -23,7 +22,7 @@ import pandas as pd
 from sklearn import model_selection
 
 from deeplearning.clgen.corpuses import atomizers
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

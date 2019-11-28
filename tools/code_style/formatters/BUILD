@@ -5,7 +5,7 @@ py_library(
     srcs = ["sql_formatter.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/sqlparse",
     ],
 )
@@ -15,6 +15,6 @@ py_test(
     srcs = ["sql_formatter_test.py"],
     deps = [
         ":sql_formatter",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )

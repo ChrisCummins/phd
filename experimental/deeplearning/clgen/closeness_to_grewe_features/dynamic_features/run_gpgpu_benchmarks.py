@@ -1,13 +1,14 @@
 """Run kernels in features database using CGO'17 driver and settings."""
-import typing
 import sys
+import typing
+
 from datasets.benchmarks.gpgpu import gpgpu
 from datasets.benchmarks.gpgpu import gpgpu_pb2
 from experimental.deeplearning.clgen.closeness_to_grewe_features import \
   grewe_features_db as db
 from gpu.cldrive.legacy import env as cldrive_env
-from labm8 import app
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

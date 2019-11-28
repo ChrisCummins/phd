@@ -47,9 +47,9 @@ from deeplearning.clgen.models import pretrained
 from deeplearning.clgen.proto import clgen_pb2
 from deeplearning.clgen.proto import model_pb2
 from deeplearning.clgen.proto import sampler_pb2
-from labm8 import app
-from labm8 import pbutil
-from labm8 import prof
+from labm8.py import app
+from labm8.py import pbutil
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 
@@ -78,7 +78,7 @@ app.DEFINE_string(
     'then be used as the pretrained_model field of an Instance proto config.')
 
 # TODO(github.com/ChrisCummins/clgen/issues/131): Remove these in favor of
-# standard labm8.app methods for enabling extra debugging or profiling
+# standard labm8.py.app methods for enabling extra debugging or profiling
 # information.
 app.DEFINE_boolean(
     'clgen_debug', False,

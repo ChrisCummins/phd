@@ -6,8 +6,8 @@ import gym
 
 from experimental.compilers.random_opt import environments
 from experimental.compilers.random_opt import implementation as implementation
-from labm8 import app
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

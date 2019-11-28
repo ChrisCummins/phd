@@ -4,6 +4,6 @@ py_binary(
     name = "generate_loops",
     srcs = ["generate_loops.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )

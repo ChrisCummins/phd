@@ -3,11 +3,11 @@ import pathlib
 import pickle
 
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.migrate import copy_logs
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

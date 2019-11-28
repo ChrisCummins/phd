@@ -5,16 +5,16 @@ importing stages of the GitHub repo scraper. Instead of first scraping all
 repos, then cloning them, then indexing them, this script performs all 3 stages
 for each repository in turn. This reduces the required storage overhead.
 """
+import github
+from github import Repository
+
 from datasets.github.scrape_repos import cloner
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos import importer
 from datasets.github.scrape_repos import scraper
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-
-import github
-from github import Repository
-from labm8 import app
-from labm8 import fs
+from labm8.py import app
+from labm8.py import fs
 
 FLAGS = app.FLAGS
 app.DEFINE_boolean(

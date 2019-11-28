@@ -3,12 +3,11 @@ import pathlib
 
 import pytest
 
-from labm8 import app
-from labm8 import sqlutil
-from labm8 import test
+from labm8.py import app
+from labm8.py import sqlutil
+from labm8.py import test
 from util.freefocus import freefocus_pb2
 from util.freefocus import sql
-
 
 FLAGS = app.FLAGS
 
@@ -26,14 +25,14 @@ def session(db) -> sqlutil.Session:
 
 def test_Person_CreateFromProto(session: sqlutil.Session):
   """Short summary of test."""
-  proto = freefocus_pb2.Person(
-      id='cec',
-      name=['Chris', 'Chris Cummins'],
-      email=['foo@bar.com'],
-      workspace_groups=[
-          freefocus_pb2.Person.WorkspaceGroups(
-              workspace_id='workspace', group_id=['cec', 'global'])
-      ])
+  proto = freefocus_pb2.Person(id='cec',
+                               name=['Chris', 'Chris Cummins'],
+                               email=['foo@bar.com'],
+                               workspace_groups=[
+                                   freefocus_pb2.Person.WorkspaceGroups(
+                                       workspace_id='workspace',
+                                       group_id=['cec', 'global'])
+                               ])
   person = sql.Person.CreateFromProto(session, proto)
   print(person.ToProto())
   assert True

@@ -6,8 +6,8 @@ py_test(
     name = "ascii_chart_test",
     srcs = ["ascii_chart_test.py"],
     deps = [
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/ascii_art",
     ],
 )
@@ -60,9 +60,9 @@ py_test(
     ],
     deps = [
         ":cpp_interop_proto_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:test",
     ],
 )
 
@@ -70,7 +70,7 @@ py_binary(
     name = "debugger",
     srcs = ["debugger.py"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/ipdb",
     ],
 )

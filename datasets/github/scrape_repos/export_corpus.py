@@ -14,15 +14,15 @@
 """Export ContentFiles to a directory."""
 import binascii
 import os
+import pathlib
+
 from sqlalchemy import orm
 
-import pathlib
 from datasets.github.scrape_repos import contentfiles
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-
-from labm8 import app
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

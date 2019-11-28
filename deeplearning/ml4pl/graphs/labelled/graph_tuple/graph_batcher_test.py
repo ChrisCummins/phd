@@ -4,9 +4,8 @@ import pytest
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import test
-
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -49,6 +48,7 @@ def test_GraphBatchOptions_ShouldAddToBatch_no_data():
   log = log_database.BatchLogMeta(node_count=0, graph_count=0)
   graph = graph_database.GraphMeta(node_count=0, graph=None)
   assert not options.ShouldAddToBatch(graph, log)
+
 
 def test_GraphBatchOptions_ShouldAddToBatch_node_count_filter():
   options = graph_batcher.GraphBatchOptions(max_graphs=0, max_nodes=100)

@@ -3,11 +3,11 @@ import collections
 import typing
 
 import networkx as nx
-from labm8 import app
-from labm8 import decorators
 
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs import graph_query as query
+from labm8.py import app
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 

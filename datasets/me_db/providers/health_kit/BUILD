@@ -27,9 +27,9 @@ py_binary(
     deps = [
         "//datasets/me_db:importers",
         "//datasets/me_db:me_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
     ],
 )
 

@@ -1,12 +1,11 @@
 """Models for learning reachability analysis."""
-import collections
 import typing
 
 import numpy as np
 from graph_nets import utils_tf as graph_net_utils_tf
 
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

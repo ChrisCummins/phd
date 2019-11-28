@@ -3,7 +3,7 @@ import typing
 
 import ipdb
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

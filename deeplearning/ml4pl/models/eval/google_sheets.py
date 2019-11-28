@@ -6,7 +6,7 @@ import gspread_dataframe
 import pandas as pd
 from oauth2client import service_account
 
-from labm8 import app
+from labm8.py import app
 
 app.DEFINE_input_path(
     'google_sheets_credentials',

@@ -4,8 +4,8 @@ import numpy as np
 import seaborn as sns
 from smith import cgo13
 
-from labm8 import fs
-from labm8 import viz
+from labm8.py import fs
+from labm8.py import viz
 
 
 # Seaborn configuration:

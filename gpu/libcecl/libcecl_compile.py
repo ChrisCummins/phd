@@ -18,8 +18,9 @@
 import functools
 import typing
 
-from labm8 import app
-from labm8 import bazelutil, system
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import system
 
 FLAGS = app.FLAGS
 

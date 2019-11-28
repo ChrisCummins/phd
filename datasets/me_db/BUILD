@@ -31,8 +31,8 @@ py_library(
     visibility = ["//datasets/me_db:__subpackages__"],
     deps = [
         ":me_pb_py",
-        "//labm8:app",
-        "//labm8:ppar",
+        "//labm8/py:app",
+        "//labm8/py:ppar",
     ],
 )
 
@@ -45,10 +45,10 @@ py_binary(
         "//datasets/me_db/providers/life_cycle",
         "//datasets/me_db/providers/timing",
         "//datasets/me_db/providers/ynab",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:labdate",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:labdate",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )

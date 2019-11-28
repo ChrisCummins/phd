@@ -21,10 +21,10 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.declarative import declarative_base
 
 from deeplearning.deepsmith.proto import datastore_pb2
-from labm8 import app
-from labm8 import labdate
-from labm8 import pbutil
-from labm8.sqlutil import GetOrAdd
+from labm8.py import app
+from labm8.py import labdate
+from labm8.py import pbutil
+from labm8.py.sqlutil import GetOrAdd
 
 FLAGS = app.FLAGS
 

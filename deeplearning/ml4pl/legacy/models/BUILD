@@ -8,9 +8,9 @@
 #    deps = [
 #        # Needed to resolve classes in pickled datasets.
 #        "//deeplearning/ml4pl:llvm_util",  # keep
-#        "//labm8:labdate",
-#        "//labm8:prof",
-#        "//labm8:app",
+#        "//labm8/py:labdate",
+#        "//labm8/py:prof",
+#        "//labm8/py:app",
 #        "//third_party/py/graph_nets",
 #        "//third_party/py/networkx",
 #        "//third_party/py/numpy",
@@ -25,8 +25,8 @@
 #    srcs = ["graph_model_test.py"],
 #    deps = [
 #        ":graph_model",
-#        "//labm8:app",
-#        "//labm8:test",
+#        "//labm8/py:app",
+#        "//labm8/py:test",
 #        "//third_party/py/pandas",
 #        "//third_party/py/pytest",
 #    ],
@@ -43,11 +43,11 @@
 #        "//deeplearning/ml4pl/graphs/unlabelled/cfg:control_flow_graph_generator",
 #        # Needed to resolve classes in pickled datasets.
 #        "//deeplearning/ml4pl:llvm_util",  # keep
-#        "//labm8:labdate",
-#        "//labm8:pbutil",
-#        "//labm8:prof",
-#        "//labm8:app",
-#        "//labm8:humanize",
+#        "//labm8/py:labdate",
+#        "//labm8/py:pbutil",
+#        "//labm8/py:prof",
+#        "//labm8/py:app",
+#        "//labm8/py:humanize",
 #        "//third_party/py/keras",
 #        "//third_party/py/numpy",
 #    ],
@@ -58,8 +58,8 @@
 #    srcs = ["lstm_reachability_model_test.py"],
 #    deps = [
 #        ":lstm_reachability_model",
-#        "//labm8:app",
-#        "//labm8:test",
+#        "//labm8/py:app",
+#        "//labm8/py:test",
 #        "//third_party/py/pytest",
 #    ],
 #)

@@ -16,18 +16,19 @@
 This looks for repo meta files and clones any which have not been cloned.
 """
 import multiprocessing
-
 import pathlib
-import progressbar
 import random
 import subprocess
 import threading
 import typing
+
+import progressbar
+
 from datasets.github.scrape_repos.proto import scrape_repos_pb2
-from labm8 import app
-from labm8 import fs
-from labm8 import humanize
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import humanize
+from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 

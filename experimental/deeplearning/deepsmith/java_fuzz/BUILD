@@ -26,10 +26,10 @@ py_binary(
         "//deeplearning/clgen/corpuses:encoded",
         "//deeplearning/clgen/corpuses:preprocessed",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
+        "//labm8/py:sqlutil",
         "//third_party/py/numpy",
     ],
 )
@@ -40,7 +40,7 @@ py_test(
     deps = [
         ":encode_java_corpus",
         "//deeplearning/clgen/corpuses:encoded",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -60,10 +60,10 @@ py_binary(
     deps = [
         "//datasets/github/scrape_repos:contentfiles",
         "//datasets/github/scrape_repos/preprocessors:extractors",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:humanize",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
+        "//labm8/py:sqlutil",
     ],
 )
 
@@ -82,7 +82,7 @@ py_test(
     deps = [
         ":export_java_corpus",
         "//datasets/github/scrape_repos:contentfiles",
-        "//labm8:test",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -92,8 +92,8 @@ py_binary(
     srcs = ["export_preprocessed_methods.py"],
     deps = [
         "//deeplearning/clgen/corpuses:preprocessed",
-        "//labm8:app",
-        "//labm8:fs",
+        "//labm8/py:app",
+        "//labm8/py:fs",
         "//third_party/py/progressbar",
     ],
 )
@@ -107,9 +107,9 @@ py_binary(
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//deeplearning/clgen/corpuses:preprocessed",
         "//deeplearning/clgen/preprocessors",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:humanize",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -119,8 +119,8 @@ py_binary(
     srcs = ["mask_contentfiles.py"],
     deps = [
         "//datasets/github/scrape_repos:contentfiles",
-        "//labm8:app",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -142,7 +142,7 @@ py_binary(
         "//datasets/github/scrape_repos:contentfiles",
         "//datasets/github/scrape_repos:pipelined_scraper",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/github",
         "//third_party/py/progressbar",
         "//third_party/py/urllib3",
@@ -176,10 +176,10 @@ py_binary(
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//deeplearning/clgen/corpuses:preprocessed",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:fs",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:fs",
+        "//labm8/py:pbutil",
         "//third_party/py/sqlalchemy",
     ],
 )
@@ -200,7 +200,7 @@ py_test(
         ":preprocess_java_corpus",
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )
 
@@ -208,8 +208,8 @@ py_binary(
     name = "gather_tensorboard_logs",
     srcs = ["gather_tensorboard_logs.py"],
     deps = [
-        "//labm8:app",
-        "//labm8:system",
+        "//labm8/py:app",
+        "//labm8/py:system",
         "//third_party/py/fs",
         "//third_party/py/tensorflow",
     ],
@@ -225,9 +225,9 @@ py_binary(
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//deeplearning/clgen/corpuses:preprocessed",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -249,9 +249,9 @@ py_binary(
         "//deeplearning/clgen:samples_database",
         "//deeplearning/clgen/corpuses:encoded",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:crypto",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:crypto",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -263,7 +263,7 @@ py_binary(
         ":sample_java_model",
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
+        "//labm8/py:app",
         "//research/cummins_2017_cgo:generative_model",
     ],
 )

@@ -7,8 +7,8 @@ py_binary(
     visibility = ["//experimental:__subpackages__"],
     deps = [
         "//deeplearning/clgen",
-        "//labm8:app",
-        "//labm8:lockfile",
+        "//labm8/py:app",
+        "//labm8/py:lockfile",
     ],
 )
 
@@ -18,8 +18,8 @@ py_test(
     srcs = ["get_instances_test.py"],
     deps = [
         ":get_instances",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
     ],
 )
 
@@ -30,10 +30,10 @@ py_binary(
         "//datasets/github/scrape_repos:contentfiles",
         "//deeplearning/clgen",
         "//experimental/deeplearning/polyglot:get_instances",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
-        "//labm8:viz",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
+        "//labm8/py:viz",
         "//third_party/py/jupyter",
     ],
 )
@@ -58,10 +58,10 @@ py_binary(
         ":get_instances",
         "//deeplearning/clgen",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:humanize",
-        "//labm8:lockfile",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:lockfile",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -72,9 +72,9 @@ py_test(
     deps = [
         "//datasets/github/scrape_repos/proto:scrape_repos_pb_py",
         "//deeplearning/clgen/proto:clgen_pb_py",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:pbutil",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:pbutil",
+        "//labm8/py:test",
     ],
 )

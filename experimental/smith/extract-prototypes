@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 
 from smith import clutil
 
-from labm8 import fs
+from labm8.py import fs
 
 
 def features_dir(csv_path):

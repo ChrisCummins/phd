@@ -1,9 +1,8 @@
 """Integration test for Java fuzz pipeline."""
-
 import pathlib
 
-from labm8 import dockerutil
-from labm8 import test
+from labm8.py import dockerutil
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

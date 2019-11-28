@@ -1,10 +1,10 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/liveness."""
 import networkx as nx
 import pytest
-from labm8 import app
-from labm8 import test
 
 from deeplearning.ml4pl.graphs.labelled.liveness import liveness
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 

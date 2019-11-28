@@ -25,9 +25,9 @@ from pathlib import Path
 import pytest
 
 from experimental import dsmith
-from labm8 import fs
-from labm8 import system
-from labm8 import tar
+from labm8.py import fs
+from labm8.py import system
+from labm8.py import tar
 
 
 class Data404(Exception):
@@ -37,8 +37,8 @@ class Data404(Exception):
 # test decorators
 needs_cuda = pytest.mark.skipif(not dsmith.USE_CUDA, reason="no CUDA support")
 needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
-skip_on_travis = pytest.mark.skipif(
-    os.environ.get("TRAVIS") == 'true', reason="skip on Travis CI")
+skip_on_travis = pytest.mark.skipif(os.environ.get("TRAVIS") == 'true',
+                                    reason="skip on Travis CI")
 
 
 def data_path(*components, exists=True) -> str:
@@ -188,8 +188,10 @@ def testsuite():
     with chdir(module_path()):  # run from module directory
       assert os.path.exists(coveragerc_path())
 
-      args = ["--doctest-modules", "--cov=dsmith",
-              "--cov-config", coveragerc_path()]
+      args = [
+          "--doctest-modules", "--cov=dsmith", "--cov-config",
+          coveragerc_path()
+      ]
 
       # unless verbose, don't print coverage report
       if logging.getLogger().isEnabledFor(logging.DEBUG):

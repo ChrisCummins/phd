@@ -11,7 +11,7 @@ from clgen import model
 from clgen import preprocess
 from clgen import sampler
 
-from labm8 import fs
+from labm8.py import fs
 
 
 def evaluate(model, sampler):
@@ -44,8 +44,9 @@ def evaluate(model, sampler):
   ugly_rate = 1 - (num_ugly_kernels / num_kernels)
 
   total_charcount = dbutil.cc(sample_db, "ContentFiles")
-  good_charcount = dbutil.cc(
-      sample_db, "PreprocessedFiles", condition="WHERE status=0")
+  good_charcount = dbutil.cc(sample_db,
+                             "PreprocessedFiles",
+                             condition="WHERE status=0")
 
   efficiency = good_charcount / total_charcount
   throughput = good_charcount / elapsed

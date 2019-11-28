@@ -7,18 +7,11 @@ import random
 import subprocess
 
 import omnitune
-from labm8.db import placeholders
-from labm8.db import where
 from omnitune.skelcl import features
+from phd import labm8 as lab
 from pkg_resources import resource_string
 from space import ParamSpace
 
-from labm8 import db
-from labm8 import fs
-from labm8 import io
-from labm8 import math as labmath
-from labm8 import prof
-from phd import labm8 as lab
 from . import get_kernel_name_and_type
 from . import hash_dataset
 from . import hash_device
@@ -29,6 +22,13 @@ from . import hash_ml_job
 from . import hash_params
 from . import hash_scenario
 from . import unhash_params
+from labm8.db import placeholders
+from labm8.db import where
+from labm8.py import db
+from labm8.py import fs
+from labm8.py import io
+from labm8.py import math as labmath
+from labm8.py import prof
 
 DEFAULT_PATH = fs.path("/usr/share/omnitune/db/skelcl.db")
 

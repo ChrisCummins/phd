@@ -1,19 +1,17 @@
 """A module for databases of CLgen samples."""
-
-import time
-
 import contextlib
 import datetime
-import sqlalchemy as sql
 import typing
+
+import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
 from deeplearning.clgen import sample_observers
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import crypto
-from labm8 import labdate
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import labdate
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 
@@ -29,16 +27,17 @@ class Sample(Base, sqlutil.ProtoBackedMixin):
   proto_t = model_pb2.Sample
 
   id: int = sql.Column(sql.Integer, primary_key=True)
-  text: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+  text: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
+                         nullable=False)
   # Checksum of the sample text.
   sha256: str = sql.Column(sql.String(64), nullable=False, index=True)
   num_tokens: int = sql.Column(sql.Integer, nullable=False)
   sample_time_ms: int = sql.Column(sql.Integer, nullable=False)
   wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
   sample_date: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
-  date_added: datetime.datetime = sql.Column(
-      sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = sql.Column(sql.DateTime,
+                                             nullable=False,
+                                             default=datetime.datetime.utcnow)
 
   def SetProto(self, proto: model_pb2.Sample) -> None:
     proto.text = self.text
@@ -92,9 +91,7 @@ class SamplesDatabaseObserver(sample_observers.SampleObserver):
                flush_secs: int = 30,
                commit_sample_frequency: int = 1024):
     self._writer = sqlutil.BufferedDatabaseWriter(
-        db,
-        flush_secs=flush_secs,
-        max_queue=commit_sample_frequency)
+        db, flush_secs=flush_secs, max_queue=commit_sample_frequency)
 
   def __del__(self):
     self.Flush()

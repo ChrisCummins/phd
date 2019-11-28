@@ -20,8 +20,8 @@ import pytest
 
 from datasets.opencl.device_mapping import \
   opencl_device_mapping_dataset as ocl_dataset
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
@@ -133,8 +133,8 @@ def test_df_gpu_runtimes_not_equal(
     lambda x: x.df,
     lambda x: x.ComputeGreweFeaturesForGpu('amd_tahiti_7970'),
     lambda x: x.ComputeGreweFeaturesForGpu('nvidia_gtx_960'),
-    lambda x: x.AugmentWithDeadcodeMutations(
-        np.random.RandomState(0), df=x.df[:10].copy()),
+    lambda x: x.AugmentWithDeadcodeMutations(np.random.RandomState(0),
+                                             df=x.df[:10].copy()),
 ))
 def test_df_nan(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset, table_getter: typing.
@@ -150,8 +150,9 @@ def test_df_nan(
 def test_AugmentWithDeadcodeMutations_num_output_rows(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset, mini_df: pd.DataFrame):
   """Test the number of rows in generated table."""
-  df = dataset.AugmentWithDeadcodeMutations(
-      np.random.RandomState(0), num_permutations_of_kernel=3, df=mini_df)
+  df = dataset.AugmentWithDeadcodeMutations(np.random.RandomState(0),
+                                            num_permutations_of_kernel=3,
+                                            df=mini_df)
   # the original kernel + 3 mutations
   assert len(df) == len(dataset.df) * (3 + 1)
 
@@ -162,8 +163,9 @@ def test_AugmentWithDeadcodeMutations_num_output_rows(
 def test_AugmentWithDeadcodeMutations_identical_columns(
     dataset: ocl_dataset.OpenClDeviceMappingsDataset, mini_df: pd.DataFrame):
   """Test the number of unique values in columns."""
-  df = dataset.AugmentWithDeadcodeMutations(
-      np.random.RandomState(0), num_permutations_of_kernel=3, df=mini_df)
+  df = dataset.AugmentWithDeadcodeMutations(np.random.RandomState(0),
+                                            num_permutations_of_kernel=3,
+                                            df=mini_df)
   # Iterate through dataset columns, not the new dataframe's columns. The new
   # dataframe has a 'program:is_mutation' column.
   for column in dataset.df.columns.values:

@@ -6,8 +6,8 @@ import typing
 import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
-from labm8 import app
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

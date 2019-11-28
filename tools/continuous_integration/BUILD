@@ -5,9 +5,9 @@ py_library(
     srcs = ["bazel_test_db.py"],
     visibility = ["//tools/continuous_integration:__subpackages__"],
     deps = [
-        "//labm8:app",
-        "//labm8:prof",
-        "//labm8:sqlutil",
+        "//labm8/py:app",
+        "//labm8/py:prof",
+        "//labm8/py:sqlutil",
         "//third_party/py/sqlalchemy",
     ],
 )

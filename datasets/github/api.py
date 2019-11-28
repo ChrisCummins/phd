@@ -18,13 +18,14 @@ GetGithubConectionFromFlagsOrDie() function defined in this module. Don't write
 your own credentials handling code.
 """
 import configparser
-import github
 import pathlib
 import socket
 import subprocess
 
+import github
+
 from datasets.github import github_pb2
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 

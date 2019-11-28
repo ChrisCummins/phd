@@ -22,7 +22,7 @@ from clgen import dbutil
 from clgen import explore
 from clgen import log
 
-from labm8 import fs
+from labm8.py import fs
 
 __description__ = """
 Merge kernel datasets.

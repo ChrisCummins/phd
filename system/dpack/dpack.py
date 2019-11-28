@@ -11,13 +11,12 @@ import sys
 import tarfile
 import typing
 
-from labm8 import app
-from labm8 import crypto
-from labm8 import fs
-from labm8 import labdate
-from labm8 import pbutil
+from labm8.py import app
+from labm8.py import crypto
+from labm8.py import fs
+from labm8.py import labdate
+from labm8.py import pbutil
 from system.dpack.proto import dpack_pb2
-
 
 FLAGS = app.FLAGS
 
@@ -61,10 +60,9 @@ def _IsManifest(path: pathlib.Path) -> bool:
 
 
 # The --sidecar argument optionally points to a DataPackage message.
-app.RegisterFlagValidator(
-    'sidecar',
-    lambda path: _IsManifest(path) if path else True,
-    message='--sidecar path not found.')
+app.RegisterFlagValidator('sidecar',
+                          lambda path: _IsManifest(path) if path else True,
+                          message='--sidecar path not found.')
 
 # A list of filename patterns to exclude from all data packages.
 ALWAYS_EXCLUDE_PATTERNS = [
@@ -289,8 +287,8 @@ def PackDataPackage(package_dir: pathlib.Path) -> None:
   manifest = pbutil.FromFile(package_dir / 'MANIFEST.pbtxt',
                              dpack_pb2.DataPackage())
   PackageManifestIsValid(package_dir, manifest)
-  archive_path = (
-      package_dir / f'../{package_dir.name}.dpack.tar.bz2').resolve()
+  archive_path = (package_dir /
+                  f'../{package_dir.name}.dpack.tar.bz2').resolve()
   sidecar_path = (package_dir / f'../{package_dir.name}.dpack.pbtxt').resolve()
   CreatePackageArchive(package_dir, manifest, archive_path)
   CreatePackageArchiveSidecar(archive_path, manifest, sidecar_path)

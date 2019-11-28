@@ -7,9 +7,9 @@ import sklearn.model_selection
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.bytecode import bytecode_database
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 
@@ -23,10 +23,10 @@ app.DEFINE_integer(
     '0, there is no limit.')
 
 
-def GetTrainValTestGroups(db: bytecode_database.Database,
-                          train_val_test_ratio: typing.Iterable[float] = (3, 1,
-                                                                          1)
-                         ) -> typing.Dict[str, typing.List[int]]:
+def GetTrainValTestGroups(
+    db: bytecode_database.Database,
+    train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
+) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
 
   This concatenates the POJ-104 sources with the other sources split into
@@ -149,8 +149,8 @@ def GetGroupsFromFlags(
   with prof.Profile(f'Read {FLAGS.bytecode_split_type} groups from database'):
     train_val_test_ratio = [float(x) for x in FLAGS.train_val_test_ratio]
     if FLAGS.bytecode_split_type == 'all':
-      return ApplySplitSizeLimit(
-          GetTrainValTestGroups(db, train_val_test_ratio))
+      return ApplySplitSizeLimit(GetTrainValTestGroups(db,
+                                                       train_val_test_ratio))
     elif FLAGS.bytecode_split_type == 'poj104':
       return ApplySplitSizeLimit(GetPoj104BytecodeGroups(db))
     elif FLAGS.bytecode_split_type == 'pact17_10_fold':

@@ -5,7 +5,7 @@ import sys
 from omnitune.skelcl import db as _db
 from omnitune.skelcl.migrate import migrate
 
-from labm8 import fs
+from labm8.py import fs
 
 
 def print_usage_and_exit():

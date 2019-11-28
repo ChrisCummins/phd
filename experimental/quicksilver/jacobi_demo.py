@@ -60,15 +60,14 @@ Reference run:
     Speedup of approach C over approach B: 1.292x
     bazel run experimental/quicksilver:jacobi_demo  6136.79s user 166.72s system 1115% cpu 9:25.27 total
 """
-
 import time
 
 import pyopencl as CL
 
 from datasets.benchmarks.jacobi_opencl import jacobi_opencl as jacobi
-from labm8 import app
-from labm8 import humanize
-from labm8 import prof
+from labm8.py import app
+from labm8.py import humanize
+from labm8.py import prof
 
 FLAGS = app.FLAGS
 

@@ -16,14 +16,14 @@ from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import base_utils as utils
 from deeplearning.ml4pl.models import log_database
-from labm8 import app
-from labm8 import decorators
-from labm8 import humanize
-from labm8 import jsonutil
-from labm8 import pbutil
-from labm8 import ppar
-from labm8 import prof
-from labm8 import system
+from labm8.py import app
+from labm8.py import decorators
+from labm8.py import humanize
+from labm8.py import jsonutil
+from labm8.py import pbutil
+from labm8.py import ppar
+from labm8.py import prof
+from labm8.py import system
 
 FLAGS = app.FLAGS
 
@@ -40,18 +40,16 @@ FLAGS = app.FLAGS
 # to the declaration of the flag.
 MODEL_FLAGS = set()
 
-app.DEFINE_output_path(
-    'working_dir',
-    '/tmp/deeplearning/ml4pl/models/',
-    'The directory to write files to.',
-    is_dir=True)
+app.DEFINE_output_path('working_dir',
+                       '/tmp/deeplearning/ml4pl/models/',
+                       'The directory to write files to.',
+                       is_dir=True)
 
-app.DEFINE_database(
-    'graph_db',
-    graph_database.Database,
-    None,
-    'The database to read graph data from.',
-    must_exist=True)
+app.DEFINE_database('graph_db',
+                    graph_database.Database,
+                    None,
+                    'The database to read graph data from.',
+                    must_exist=True)
 
 app.DEFINE_database('log_db', log_database.Database, None,
                     'The database to write logs to.')
@@ -299,8 +297,9 @@ class ClassifierBase(object):
 
     batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-        self.MakeMinibatchIterator(
-            epoch_type, groups, print_context=bar.external_write_mode),
+        self.MakeMinibatchIterator(epoch_type,
+                                   groups,
+                                   print_context=bar.external_write_mode),
         max_queue_size=5)
 
     for step, (log, batch_data) in enumerate(batch_generator):
@@ -328,12 +327,11 @@ class ClassifierBase(object):
       y_pred = np.argmax(predictions, axis=1)
 
       if app.GetVerbosity() >= 4:
-        app.Log(
-            4,
-            'Bincount y_true: %s, pred_y: %s',
-            np.bincount(y_true),
-            np.bincount(y_pred),
-            print_context=bar.external_write_mode)
+        app.Log(4,
+                'Bincount y_true: %s, pred_y: %s',
+                np.bincount(y_true),
+                np.bincount(y_pred),
+                print_context=bar.external_write_mode)
 
       accuracies = y_true == y_pred
 
@@ -376,11 +374,10 @@ class ClassifierBase(object):
       acc_sum += log.accuracy
       prec_sum += log.precision
       rec_sum += log.recall
-      bar.set_postfix(
-          loss=loss_sum / (step + 1),
-          acc=acc_sum / (step + 1),
-          prec=prec_sum / (step + 1),
-          rec=rec_sum / (step + 1))
+      bar.set_postfix(loss=loss_sum / (step + 1),
+                      acc=acc_sum / (step + 1),
+                      prec=prec_sum / (step + 1),
+                      rec=rec_sum / (step + 1))
       bar.update(log.graph_count)
 
       # Create a new database session for every batch because we don't want to
@@ -388,10 +385,9 @@ class ClassifierBase(object):
       # and epochs may take O(hours). Alternatively we could store all of the
       # logs for an epoch in-memory and write them in a single shot, but this
       # might consume a lot of memory (when the predictions arrays are large).
-      with prof.Profile(
-          "Wrote log to database",
-          print_to=lambda msg: app.Log(
-              5, msg, print_context=bar.external_write_mode)):
+      with prof.Profile("Wrote log to database",
+                        print_to=lambda msg: app.Log(
+                            5, msg, print_context=bar.external_write_mode)):
         with self.log_db.Session(commit=True) as session:
           session.add(log)
 
@@ -493,8 +489,8 @@ class ClassifierBase(object):
         if model_checkpoints_to_delete:
           app.Log(
               2, "Deleting %s",
-              humanize.Plural(
-                  len(model_checkpoints_to_delete), 'old model checkpoint'))
+              humanize.Plural(len(model_checkpoints_to_delete),
+                              'old model checkpoint'))
           # Cascade delete is broken, we have to first delete the checkpoint
           # data followed by the checkpoint meta entry.
           delete = sql.delete(log_database.ModelCheckpoint)
@@ -680,9 +676,10 @@ class ClassifierBase(object):
     with self.log_db.Session(commit=True) as session:
       session.add_all(
           ToParams(log_database.ParameterType.FLAG, app.FlagsToDict()) +
-          ToParams(log_database.ParameterType.MODEL_FLAG, self.ModelFlagsToDict(
-          )) + ToParams(log_database.ParameterType.BUILD_INFO,
-                        pbutil.ToJson(build_info.GetBuildInfo())))
+          ToParams(log_database.ParameterType.MODEL_FLAG,
+                   self.ModelFlagsToDict()) +
+          ToParams(log_database.ParameterType.BUILD_INFO,
+                   pbutil.ToJson(build_info.GetBuildInfo())))
 
   def CheckThatModelFlagsAreEquivalent(self, flags, saved_flags) -> None:
     flags = dict(flags)  # shallow copy
@@ -751,7 +748,6 @@ def Run(model_class):
     test_acc = model.RunEpoch("test", [FLAGS.test_group])
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
-    model.Train(
-        num_epochs=FLAGS.num_epochs,
-        val_group=FLAGS.val_group,
-        test_group=FLAGS.test_group)
+    model.Train(num_epochs=FLAGS.num_epochs,
+                val_group=FLAGS.val_group,
+                test_group=FLAGS.test_group)

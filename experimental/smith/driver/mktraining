@@ -9,8 +9,8 @@ from argparse import ArgumentParser
 import smith
 from smith import features
 
-from labm8 import fs
-from labm8 import math as labmath
+from labm8.py import fs
+from labm8.py import math as labmath
 
 
 class MalformedDataException(smith.SmithException): pass

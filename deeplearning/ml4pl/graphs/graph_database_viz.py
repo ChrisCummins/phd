@@ -5,9 +5,9 @@ import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_viz
-from labm8 import app
 from labm8 import flags
-from labm8 import labtypes
+from labm8.py import app
+from labm8.py import labtypes
 
 FLAGS = flags.FLAGS
 

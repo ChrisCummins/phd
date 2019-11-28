@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 import editdistance
 import smith
 
-from labm8 import fs
+from labm8.py import fs
 
 
 class MalformedDataException(smith.SmithException): pass

@@ -3,13 +3,13 @@ import pathlib
 
 import pytest
 
-from labm8 import app
-from labm8 import test
+from labm8.py import app
+from labm8.py import test
 
 FLAGS = app.FLAGS
 
-
 MODULE_UNDER_TEST = None  # No coverage.
+
 
 def test_Git(tempdir: pathlib.Path):
   """Test that git module can be imported."""

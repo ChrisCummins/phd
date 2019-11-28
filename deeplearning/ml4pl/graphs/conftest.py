@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from deeplearning.ml4pl.graphs import graph_database
-from labm8 import test
+from labm8.py import test
 
 FLAGS = test.FLAGS
 

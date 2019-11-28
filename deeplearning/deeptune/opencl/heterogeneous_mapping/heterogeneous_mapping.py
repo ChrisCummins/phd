@@ -32,8 +32,8 @@ import pandas as pd
 from datasets.opencl.device_mapping import opencl_device_mapping_dataset
 from deeplearning.deeptune.opencl.heterogeneous_mapping import utils
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import models
-from labm8 import app
-from labm8 import decorators
+from labm8.py import app
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 
@@ -75,12 +75,11 @@ class HeterogeneousMappingExperiment(object):
       A DataFrame of evaluation results.
     """
     model = model_class()
-    return utils.evaluate(
-        model=model,
-        df=self.dataset.df if df is None else df,
-        atomizer=self.atomizer,
-        workdir=self._cache_dir,
-        seed=0x204)
+    return utils.evaluate(model=model,
+                          df=self.dataset.df if df is None else df,
+                          atomizer=self.atomizer,
+                          workdir=self._cache_dir,
+                          seed=0x204)
 
   @property
   def cache_dir(self) -> pathlib.Path:

@@ -37,15 +37,15 @@ from deeplearning.clgen.corpuses import preprocessed
 from deeplearning.clgen.dashboard import dashboard_db
 from deeplearning.clgen.preprocessors import preprocessors
 from deeplearning.clgen.proto import corpus_pb2
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import crypto
-from labm8 import hashcache
-from labm8 import humanize
-from labm8 import lockfile
-from labm8 import pbutil
-from labm8 import prof
-from labm8 import sqlutil
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import crypto
+from labm8.py import hashcache
+from labm8.py import humanize
+from labm8.py import lockfile
+from labm8.py import pbutil
+from labm8.py import prof
+from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 

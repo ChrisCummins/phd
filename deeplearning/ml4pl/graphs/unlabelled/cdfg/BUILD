@@ -16,9 +16,9 @@ py_library(
         "//deeplearning/ml4pl/graphs/unlabelled/cg:call_graph",
         "//deeplearning/ncc:rgx_utils",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
-        "//labm8:app",
-        "//labm8:decorators",
-        "//labm8:humanize",
+        "//labm8/py:app",
+        "//labm8/py:decorators",
+        "//labm8/py:humanize",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
     ],
@@ -29,8 +29,8 @@ py_test(
     srcs = ["control_and_data_flow_graph_test.py"],
     deps = [
         ":control_and_data_flow_graph",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/networkx",
         "//third_party/py/pytest",
     ],
@@ -43,9 +43,9 @@ py_test(
     data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/regression_tests:bytecodes"],
     deps = [
         ":control_and_data_flow_graph",
-        "//labm8:app",
-        "//labm8:fs",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:fs",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )
@@ -56,7 +56,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":control_and_data_flow_graph",
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
     ],
@@ -67,8 +67,8 @@ py_test(
     srcs = ["random_cdfg_generator_test.py"],
     deps = [
         ":random_cdfg_generator",
-        "//labm8:app",
-        "//labm8:test",
+        "//labm8/py:app",
+        "//labm8/py:test",
         "//third_party/py/pytest",
     ],
 )

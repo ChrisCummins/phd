@@ -1,8 +1,8 @@
 """Photolib main entry point."""
-import sys
 import subprocess
+import sys
 
-from labm8 import app
+from labm8.py import app
 
 if __name__ == '__main__':
   """Main entry point."""

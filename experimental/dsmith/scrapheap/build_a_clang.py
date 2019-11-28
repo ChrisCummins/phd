@@ -4,15 +4,18 @@ import sys
 from argparse import ArgumentParser
 from collections import deque
 from tempfile import NamedTemporaryFile
-from time import strftime, time
-from typing import Tuple, Union
+from time import strftime
+from time import time
+from typing import Tuple
+from typing import Union
 
 from dsmith import db
 from dsmith.db import *
 from dsmith.lib import *
 from progressbar import ProgressBar
 
-from labm8 import crypto, fs
+from labm8.py import crypto
+from labm8.py import fs
 
 
 def get_num_programs_to_build(session: db.session_t, tables: Tableset,
@@ -39,12 +42,11 @@ def create_stderr(s: session_t, tables: Tableset,
                       f"Unreachable: {unreachable_}\n" +
                       f"Terminate: {terminate_}")
 
-  stderr = tables.clang_stderrs(
-      hash=hash_,
-      stderr=stderr,
-      assertion=assertion_,
-      unreachable=unreachable_,
-      terminate=terminate_)
+  stderr = tables.clang_stderrs(hash=hash_,
+                                stderr=stderr,
+                                assertion=assertion_,
+                                unreachable=unreachable_,
+                                terminate=terminate_)
   s.add(stderr)
   s.flush()
   return stderr
@@ -61,11 +63,10 @@ def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
     cmd = ['timeout', '-s9', '60s', clang, '-cc1', '-xcl', src_path]
 
     start_time = time()
-    process = subprocess.Popen(
-        cmd,
-        universal_newlines=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+    process = subprocess.Popen(cmd,
+                               universal_newlines=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
     _, stderr = process.communicate()
 
     return process.returncode, time() - start_time, stderr.strip()
@@ -76,19 +77,21 @@ def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
 
 if __name__ == "__main__":
   parser = ArgumentParser()
-  parser.add_argument(
-      "-H",
-      "--hostname",
-      type=str,
-      default="cc1",
-      help="MySQL database hostname")
+  parser.add_argument("-H",
+                      "--hostname",
+                      type=str,
+                      default="cc1",
+                      help="MySQL database hostname")
   parser.add_argument("clang", type=str, help="clang version")
-  parser.add_argument(
-      "--clsmith", action="store_true", help="Only reduce CLSmith results")
-  parser.add_argument(
-      "--clgen", action="store_true", help="Only reduce CLgen results")
-  parser.add_argument(
-      "--recheck", action="store_true", help="Re-check existing errors")
+  parser.add_argument("--clsmith",
+                      action="store_true",
+                      help="Only reduce CLSmith results")
+  parser.add_argument("--clgen",
+                      action="store_true",
+                      help="Only reduce CLgen results")
+  parser.add_argument("--recheck",
+                      action="store_true",
+                      help="Re-check existing errors")
   args = parser.parse_args()
 
   db.init(args.hostname)  # initialize db engine
@@ -193,12 +196,11 @@ if __name__ == "__main__":
           else:
             stderr_id = create_stderr(s, tables, stderr_).id
 
-          result = tables.clangs(
-              program_id=program.id,
-              clang=args.clang,
-              status=status,
-              runtime=runtime,
-              stderr_id=stderr_id)
+          result = tables.clangs(program_id=program.id,
+                                 clang=args.clang,
+                                 status=status,
+                                 runtime=runtime,
+                                 stderr_id=stderr_id)
 
           s.add(result)
           s.commit()

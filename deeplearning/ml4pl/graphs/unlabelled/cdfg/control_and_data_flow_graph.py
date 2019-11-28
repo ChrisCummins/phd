@@ -20,9 +20,9 @@ from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_preprocess
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import decorators
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 

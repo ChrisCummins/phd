@@ -7,9 +7,10 @@ import typing
 
 import numpy as np
 import tensorflow as tf
-from labm8 import app
 from scipy.optimize import minimize
 from tensorflow.examples.tutorials.mnist import input_data
+
+from labm8.py import app
 
 FLAGS = app.FLAGS
 app.DEFINE_integer('maxiter', 10,

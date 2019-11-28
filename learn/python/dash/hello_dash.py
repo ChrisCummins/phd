@@ -6,7 +6,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -49,27 +49,26 @@ Rendered markdown.
 """)
       ]),
       CreateTableHtml(CreateDataFrame()),
-      dcc.Graph(
-          id="example-graph",
-          figure={
-              "data": [
-                  {
-                      "x": [1, 2, 3],
-                      "y": [4, 1, 2],
-                      "type": "bar",
-                      "name": "SF"
-                  },
-                  {
-                      "x": [1, 2, 3],
-                      "y": [2, 4, 5],
-                      "type": "bar",
-                      "name": "Montréal"
-                  },
-              ],
-              "layout": {
-                  "title": "My Graph"
-              }
-          })
+      dcc.Graph(id="example-graph",
+                figure={
+                    "data": [
+                        {
+                            "x": [1, 2, 3],
+                            "y": [4, 1, 2],
+                            "type": "bar",
+                            "name": "SF"
+                        },
+                        {
+                            "x": [1, 2, 3],
+                            "y": [2, 4, 5],
+                            "type": "bar",
+                            "name": "Montréal"
+                        },
+                    ],
+                    "layout": {
+                        "title": "My Graph"
+                    }
+                })
   ])
   return dash_app
 

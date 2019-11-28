@@ -5,7 +5,7 @@ py_binary(
     srcs = ["jacobi_opencl.py"],
     visibility = ["//visibility:public"],
     deps = [
-        "//labm8:app",
+        "//labm8/py:app",
         "//third_party/py/numpy",
         "//third_party/py/pyopencl",
     ],
@@ -16,6 +16,6 @@ py_test(
     srcs = ["jacobi_opencl_test.py"],
     deps = [
         ":jacobi_opencl",
-        "//labm8:test",
+        "//labm8/py:test",
     ],
 )

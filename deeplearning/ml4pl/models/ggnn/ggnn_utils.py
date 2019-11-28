@@ -3,9 +3,9 @@ import typing
 
 import numpy as np
 import tensorflow as tf
-from labm8 import app
 
 from deeplearning.ml4pl.graphs import graph_database_stats
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -161,7 +161,9 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
       "is_training":
       tf.compat.v1.placeholder(dtype=tf.bool, shape=[], name='is_training'),
       "learning_rate_multiple":
-      tf.compat.v1.placeholder(dtype=tf.float32, shape=[], name='learning_rate_multiple')
+      tf.compat.v1.placeholder(dtype=tf.float32,
+                               shape=[],
+                               name='learning_rate_multiple')
   }
 
   # This is a list of node embedding table indices. Each row is a node, column
@@ -210,6 +212,7 @@ def MakePlaceholders(stats: graph_database_stats.GraphTupleDatabaseStats
 
   return placeholders
 
+
 def BatchDictToFeedDict(
     batch: typing.Dict[str, typing.Any],
     placeholders: typing.Dict[str, tf.Tensor],
@@ -249,7 +252,8 @@ def BatchDictToFeedDict(
   if batch.has_graph_y:
     feed_dict[placeholders["graph_y"]] = batch.graph_y
 
-  assert placeholders['learning_rate_multiple'] is not None, 'learning_rate_multiple is None'
+  assert placeholders[
+      'learning_rate_multiple'] is not None, 'learning_rate_multiple is None'
 
   return feed_dict
 

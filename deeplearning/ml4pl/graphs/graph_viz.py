@@ -6,9 +6,10 @@ import typing
 import zipfile
 
 import networkx as nx
-from labm8 import app
-from labm8 import fs
-from labm8 import labtypes
+
+from labm8.py import app
+from labm8.py import fs
+from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 

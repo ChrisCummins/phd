@@ -20,9 +20,9 @@ import pathlib
 import subprocess
 import typing
 
-from labm8 import app
-from labm8 import bazelutil
-from labm8 import decorators
+from labm8.py import app
+from labm8.py import bazelutil
+from labm8.py import decorators
 
 FLAGS = app.FLAGS
 

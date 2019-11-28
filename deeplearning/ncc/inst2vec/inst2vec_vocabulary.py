@@ -21,7 +21,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Construct vocabulary from XFGs and indexify the data set"""
-
 import collections
 import csv
 import math
@@ -37,7 +36,7 @@ from scipy import sparse
 
 from deeplearning.ncc import rgx_utils as rgx
 from deeplearning.ncc.inst2vec import inst2vec_utils as i2v_utils
-from labm8 import app
+from labm8.py import app
 
 FLAGS = app.FLAGS
 
@@ -138,8 +137,8 @@ def print_vocabulary(mylist_freq, filename):
 
       # Print all level 2
       for tag2 in to_iterate2:
-        f.write('{:>6}   {:<30}{:<25}\n'.format(
-            str(tag2[1]), '----------------------------', tag2[0]))
+        f.write('{:>6}   {:<30}{:<25}\n'.format(str(
+            tag2[1]), '----------------------------', tag2[0]))
 
         # Get stats l3
         mylist_families_l3 = rgx.get_list_tag_level_3(tag2[0])
@@ -550,8 +549,8 @@ def construct_vocabulary(data_folder, folders):
 
     # Get statistics of the combined list before pruning
     print('\n--- Compute some statistics on the combined data')
-    vocabulary_statistics(
-        source_data_list_combined, descr="combining data folders")
+    vocabulary_statistics(source_data_list_combined,
+                          descr="combining data folders")
 
     # Prune data
     source_data_list_combined, stmts_cut_off = prune_vocabulary(
@@ -559,8 +558,8 @@ def construct_vocabulary(data_folder, folders):
 
     # Get statistics of the combined list after pruning
     print('\n--- Compute some statistics on the combined data')
-    vocabulary_statistics(
-        source_data_list_combined, descr="pruning combined data")
+    vocabulary_statistics(source_data_list_combined,
+                          descr="pruning combined data")
 
     # Build the vocabulary
     print('\n--- Building the vocabulary and indices')

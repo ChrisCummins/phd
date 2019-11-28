@@ -13,14 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with clgen.  If not, see <https://www.gnu.org/licenses/>.
 """Neural network backends for CLgen models."""
-import numpy as np
 import typing
+
+import numpy as np
 
 from deeplearning.clgen import samplers
 from deeplearning.clgen.corpuses import atomizers
 from deeplearning.clgen.proto import model_pb2
-from labm8 import app
-from labm8 import cache
+from labm8.py import app
+from labm8.py import cache
 
 FLAGS = app.FLAGS
 

@@ -11,9 +11,9 @@ py_library(
         "//deeplearning/ml4pl/graphs/unlabelled/cg:call_graph",
         "//deeplearning/ncc:rgx_utils",
         "//deeplearning/ncc/inst2vec:inst2vec_preprocess",
-        "//labm8:app",
-        "//labm8:bazelutil",
-        "//labm8:decorators",
+        "//labm8/py:app",
+        "//labm8/py:bazelutil",
+        "//labm8/py:decorators",
         "//third_party/py/networkx",
         "//third_party/py/numpy",
     ],
@@ -25,8 +25,8 @@ py_binary(
     deps = [
         ":graph_builder",
         "//deeplearning/ml4pl/graphs/unlabelled:programl_pb_py",
-        "//labm8:app",
-        "//labm8:pbutil",
+        "//labm8/py:app",
+        "//labm8/py:pbutil",
     ],
 )
 
@@ -35,6 +35,6 @@ py_library(
     srcs = ["graph_builder.py"],
     deps = [
         "//deeplearning/ml4pl/graphs/unlabelled:programl_pb_py",
-        "//labm8:app",
+        "//labm8/py:app",
     ],
 )
