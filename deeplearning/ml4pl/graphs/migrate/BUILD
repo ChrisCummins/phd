@@ -29,6 +29,41 @@ py_test(
 )
 
 py_binary(
+    name = "networkx_to_protos",
+    srcs = ["networkx_to_protos.py"],
+    visibility = ["//deeplearning/ml4pl/graphs/unlabelled:__subpackages__"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/unlabelled:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
+        "//labm8/py:app",
+        "//labm8/py:humanize",
+        "//labm8/py:ppar",
+        "//labm8/py:prof",
+        "//third_party/py/networkx",
+        "//third_party/py/tqdm",
+    ],
+)
+
+py_test(
+    name = "networkx_to_protos_test",
+    srcs = ["networkx_to_protos_test.py"],
+    data = [
+        "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs",
+        "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs_db",
+    ],
+    deps = [
+        ":networkx_to_protos",
+        "//deeplearning/ml4pl/graphs:graph_database",
+        "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
+        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+        "//third_party/py/networkx",
+    ],
+)
+
+py_binary(
     name = "one_hot_x_features_to_embeddings",
     srcs = ["one_hot_x_features_to_embeddings.py"],
     deps = [
