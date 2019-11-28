@@ -12,6 +12,8 @@ from labm8 import test
 
 FLAGS = test.FLAGS
 
+MODULE_UNDER_TEST = None
+
 
 def PopulateGraphDatabase(graph_db: graph_database.Database,
                           graph_count: int) -> graph_database.Database:
