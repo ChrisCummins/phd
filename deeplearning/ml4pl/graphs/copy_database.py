@@ -1,4 +1,9 @@
-"""Copy a graph database."""
+"""Copy a graph database.
+
+This is a utility script used to copy the contents of graph databases, or export
+their contents to individual pickled files.
+"""
+import pickle
 import typing
 
 import sqlalchemy as sql
@@ -20,14 +25,25 @@ app.DEFINE_database(
 app.DEFINE_database(
   "output_db", graph_database.Database, None, "The destination database."
 )
+app.DEFINE_output_path(
+  "output_dir",
+  None,
+  "The directory to write individual files to. No effect if --output_db is "
+  "set.",
+)
 app.DEFINE_integer("max_rows", 0, "The maximum number of rows to copy.")
 app.DEFINE_string("group", None, "Only export graphs from this group.")
+app.DEFINE_integer(
+  "max_node_count",
+  0,
+  "Copy only graphs with fewer than this many nodes. If 0, "
+  "no limit is applied.",
+)
 
 
 def ChunkedGraphDatabaseReader(
   db: graph_database.Database,
   filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None,
-  order_by_random: bool = False,
   chunk_size: int = 256,
   limit: typing.Optional[int] = None,
 ) -> typing.Iterable[graph_database.GraphMeta]:
@@ -70,18 +86,34 @@ def ChunkedGraphDatabaseReader(
 def main():
   """Main entry point."""
   input_db = FLAGS.input_db()
-  output_db = FLAGS.output_db()
+
+  if FLAGS.output_db:
+    output_db = FLAGS.output_db()
+  else:
+    output_dir = FLAGS.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
 
   filters = []
+  if FLAGS.max_node_count:
+    filters.append(
+      lambda: graph_database.GraphMeta.node_count <= FLAGS.max_node_count
+    )
   if FLAGS.group:
     filters.append(lambda: graph_database.GraphMeta.group == FLAGS.group)
 
   for chunk in ChunkedGraphDatabaseReader(
-    input_db, order_by_random=True, filters=filters, limit=FLAGS.max_rows
+    input_db, filters=filters, limit=FLAGS.max_rows
   ):
-    with output_db.Session(commit=True) as session:
+    if FLAGS.output_db:
+      # Copy the results to a database.
+      with output_db.Session(commit=True) as session:
+        for row in chunk:
+          session.merge(row)
+    else:
+      # Write each row to a pickled file.
       for row in chunk:
-        session.merge(row)
+        with open(output_dir / f"{row.id}.pickle", "wb") as f:
+          pickle.dump(row.data, f)
 
 
 if __name__ == "__main__":
