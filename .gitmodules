@@ -46,3 +46,6 @@
 [submodule "util/srtime"]
 	path = util/srtime
 	url = https://github.com/ChrisCummins/srtime.git
+[submodule "tools/code_style/py/black-2spaces"]
+	path = tools/code_style/py/black-2spaces
+	url = https://github.com/ChrisCummins/black-2spaces.git
