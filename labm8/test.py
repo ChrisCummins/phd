@@ -27,6 +27,7 @@ import typing
 from importlib import util as importutil
 
 import pytest
+
 from labm8 import app
 
 FLAGS = app.FLAGS
@@ -37,6 +38,8 @@ app.DEFINE_boolean(
     False,
     'Skip tests that have been marked slow.',
 )
+app.DEFINE_boolean('test_skip_benchmarks', False,
+                   'Skip tests that are benchmarks.')
 app.DEFINE_integer(
     'test_maxfail',
     1,
@@ -207,6 +210,9 @@ def RunPytestOnFileAndExit(file_path: str,
 
   if FLAGS.test_maxfail != 0:
     pytest_args.append(f'--maxfail={FLAGS.test_maxfail}')
+
+  if FLAGS.test_skip_benchmarks:
+    pytest_args.append('--benchmark-skip')
 
   # Print the slowest test durations at the end of execution.
   if FLAGS.test_print_durations:
