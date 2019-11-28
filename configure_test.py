@@ -18,7 +18,7 @@ CONFIG_SCRIPT = bazelutil.DataPath("phd/configure")
 MODULE_UNDER_TEST = None  # No coverage.
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def configure():
   """A test fixture which yields the configure script as an imported module."""
   with tempfile.TemporaryDirectory() as d:

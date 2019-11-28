@@ -42,7 +42,7 @@ def _TestCacheOps(_cache):
 
   # Lookup error
   assert "notakey" not in _cache
-  assert pytest.raises(KeyError, _cache.__getitem__, "notakey")
+  assert test.Raises(KeyError, _cache.__getitem__, "notakey")
 
   # get() method
   assert 1 == _cache.get("foo")
@@ -62,13 +62,13 @@ def _TestCacheOps(_cache):
 def test_cache():
   # Test abstract interface.
   c = cache.Cache()
-  assert pytest.raises(NotImplementedError, c.get, "foo")
-  assert pytest.raises(NotImplementedError, c.clear)
-  assert pytest.raises(NotImplementedError, c.items)
-  assert pytest.raises(NotImplementedError, c.__getitem__, "foo")
-  assert pytest.raises(NotImplementedError, c.__setitem__, "foo", 1)
-  assert pytest.raises(NotImplementedError, c.__contains__, "foo")
-  assert pytest.raises(NotImplementedError, c.__delitem__, "foo")
+  assert test.Raises(NotImplementedError, c.get, "foo")
+  assert test.Raises(NotImplementedError, c.clear)
+  assert test.Raises(NotImplementedError, c.items)
+  assert test.Raises(NotImplementedError, c.__getitem__, "foo")
+  assert test.Raises(NotImplementedError, c.__setitem__, "foo", 1)
+  assert test.Raises(NotImplementedError, c.__contains__, "foo")
+  assert test.Raises(NotImplementedError, c.__delitem__, "foo")
 
 
 def test_TransientCache():
@@ -147,9 +147,9 @@ def test_set_and_get():
 
 def test_FSCache_404():
   c = cache.FSCache("/tmp/labm8_py-cache-404")
-  with pytest.raises(KeyError):
+  with test.Raises(KeyError):
     c["foobar"]
-  with pytest.raises(KeyError):
+  with test.Raises(KeyError):
     del c["foobar"]
   assert not c.get("foobar")
   assert c.get("foobar", 5) == 5
@@ -168,7 +168,7 @@ def test_FSCache_remove():
   assert fs.read(c["foobar"]) == ["Hello, world!"]
   # remove from cache
   del c["foobar"]
-  with pytest.raises(KeyError):
+  with test.Raises(KeyError):
     c["foobar"]
   assert not c.get("foobar")
   c.clear()
@@ -190,7 +190,7 @@ def test_FSCache_dict_key():
 
 def test_FSCache_missing_key():
   c = cache.FSCache("/tmp/labm8_py-missing-key")
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     c["foo"] = "/not/a/real/path"
   c.clear()
 

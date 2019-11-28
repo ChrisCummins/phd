@@ -11,7 +11,7 @@ FLAGS = app.FLAGS
 MODULE_UNDER_TEST = None
 
 
-@pytest.mark.parametrize("environment", environments.ENVIRONMENTS)
+@test.Parametrize("environment", environments.ENVIRONMENTS)
 def test_environments(environment: str):
   """Simple black box test of environment."""
   env = gym.make(environment)

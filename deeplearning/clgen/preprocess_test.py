@@ -11,7 +11,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def contentfiles(tempdir: pathlib.Path) -> pathlib.Path:
   fs.Write(tempdir / "a.txt", "int main() {}".encode("utf-8"))
   fs.Write(tempdir / "b.txt", "invalid syntax".encode("utf-8"))

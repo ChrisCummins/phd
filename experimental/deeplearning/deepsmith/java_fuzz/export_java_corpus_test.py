@@ -11,7 +11,7 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> contentfiles.ContentFiles:
   db_ = contentfiles.ContentFiles(f"sqlite:///{tempdir}/a")
   with db_.Session(commit=True) as session:
@@ -56,7 +56,7 @@ public class HelloWorld {
   return db_
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def empty_db(tempdir: pathlib.Path) -> contentfiles.ContentFiles:
   return contentfiles.ContentFiles(f"sqlite:///{tempdir}/b")
 

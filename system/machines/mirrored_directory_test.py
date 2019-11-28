@@ -17,7 +17,7 @@ from system.machines.proto import machine_spec_pb2
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def test_host() -> machine_spec_pb2.Host:
   return machine_spec_pb2.Host(host="localhost", port=22)
 
@@ -34,12 +34,12 @@ def _MakeMirroredDirectory():
       )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def test_mirrored_directory() -> machine_spec_pb2.MirroredDirectory:
   yield from _MakeMirroredDirectory()
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def test_mirrored_directory2() -> machine_spec_pb2.MirroredDirectory:
   yield from _MakeMirroredDirectory()
 
@@ -147,7 +147,7 @@ def test_PushLocalToRemote_pull_only_push_error(
   test_mirrored_directory.pull_only = True
   m = LocalMirroredDirectory(test_host, test_mirrored_directory)
 
-  with pytest.raises(mirrored_directory.InvalidOperation):
+  with test.Raises(mirrored_directory.InvalidOperation):
     m.PushFromLocalToRemote()
 
 
@@ -159,7 +159,7 @@ def test_PushLocalToRemote_push_only_pull_error(
   test_mirrored_directory.push_only = True
   m = LocalMirroredDirectory(test_host, test_mirrored_directory)
 
-  with pytest.raises(mirrored_directory.InvalidOperation):
+  with test.Raises(mirrored_directory.InvalidOperation):
     m.PullFromRemoteToLocal()
 
 
@@ -212,7 +212,7 @@ def test_PushLocalToRemote_timestamp_in_past_cannot_be_pushed(
 
   fs.Write(pathlib.Path(m.local_path) / "TIME.txt", "50".encode("utf-8"))
   fs.Write(pathlib.Path(m.remote_path) / "TIME.txt", "100".encode("utf-8"))
-  with pytest.raises(mirrored_directory.InvalidOperation):
+  with test.Raises(mirrored_directory.InvalidOperation):
     m.PushFromLocalToRemote()
 
 
@@ -226,7 +226,7 @@ def test_PullFromRemoteToLocal_timestamp_in_past_cannot_be_pulled(
 
   fs.Write(pathlib.Path(m.local_path) / "TIME.txt", "100".encode("utf-8"))
   fs.Write(pathlib.Path(m.remote_path) / "TIME.txt", "50".encode("utf-8"))
-  with pytest.raises(mirrored_directory.InvalidOperation):
+  with test.Raises(mirrored_directory.InvalidOperation):
     m.PullFromRemoteToLocal()
 
 
@@ -243,7 +243,7 @@ def test_push_race(
   m2 = LocalMirroredDirectory(test_host, test_mirrored_directory2)
 
   m1.PushFromLocalToRemote()
-  with pytest.raises(mirrored_directory.InvalidOperation):
+  with test.Raises(mirrored_directory.InvalidOperation):
     m2.PushFromLocalToRemote()
   assert m1.local_timestamp == m2.remote_timestamp
   assert m1.remote_timestamp == m2.remote_timestamp
@@ -251,7 +251,7 @@ def test_push_race(
   m1.PushFromLocalToRemote()
   time.sleep(0.1)  # Make sure that timestamp increases.
   m2.PullFromRemoteToLocal()
-  with pytest.raises(mirrored_directory.InvalidOperation):
+  with test.Raises(mirrored_directory.InvalidOperation):
     m1.PushFromLocalToRemote()
   m2.PushFromLocalToRemote()
 

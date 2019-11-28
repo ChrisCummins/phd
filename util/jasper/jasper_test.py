@@ -21,7 +21,7 @@ def _mock_edit_callback_with_query(path: pathlib.Path):
 
 
 def test_getQueryFromUserOrDie_no_change():
-  with pytest.raises(SystemExit):
+  with test.Raises(SystemExit):
     jasper.getQueryFromUserOrDie(_mock_edit_callback)
 
 

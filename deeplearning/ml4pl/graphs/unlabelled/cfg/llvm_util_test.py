@@ -164,7 +164,7 @@ digraph "CFG for 'DoSomething' function" {
 
 def test_NodeAttributesToBasicBlock_unrecognized_label():
   """Test that error is raised if label is not recognized."""
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     llvm_util.NodeAttributesToBasicBlock({"label": "invalid label"})
 
 
@@ -207,7 +207,7 @@ br label %7\
 
 def test_ControlFlowGraphFromDotSource_invalid_source():
   """Test that exception is raised if dot can't be parsed."""
-  with pytest.raises(pyparsing.ParseException):
+  with test.Raises(pyparsing.ParseException):
     llvm_util.ControlFlowGraphFromDotSource("invalid dot source!")
 
 
@@ -286,7 +286,7 @@ def test_ControlFlowGraphsFromBytecodes_one_failure():
   g.append(next(generator))
   # Instead of StopIteration, an ExceptionBuffer will be thrown, which contains
   # all the that were thrown, along with the inputs that caused the exception.
-  with pytest.raises(llvm_util.ExceptionBuffer) as e_ctx:
+  with test.Raises(llvm_util.ExceptionBuffer) as e_ctx:
     next(generator)
   assert len(e_ctx.value.errors) == 1
   assert e_ctx.value.errors[0].input == "Invalid bytecode!"

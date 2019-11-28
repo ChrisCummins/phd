@@ -10,7 +10,7 @@ from labm8.py import fs
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def repo_with_history(tempdir: pathlib.Path) -> git.Repo:
   """Test fixture that returns a git repo with history."""
   repo = git.Repo.init(tempdir)
@@ -46,14 +46,14 @@ def repo_with_history(tempdir: pathlib.Path) -> git.Repo:
   yield repo
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def empty_repo(tempdir2: pathlib.Path) -> git.Repo:
   """Test fixture that returns an empty git repo."""
   repo = git.Repo.init(tempdir2)
   yield repo
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def empty_repo2(tempdir3: pathlib.Path) -> git.Repo:
   """Test fixture that returns an empty git repo."""
   repo = git.Repo.init(tempdir3)

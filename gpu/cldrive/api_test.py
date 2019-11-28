@@ -44,7 +44,7 @@ def _MakeInstance(device, src, num_runs: int = 1, dynamic_params=[(1, 1),]):
   )
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def device() -> env.OpenCLEnvironment:
   """Test fixture which yields a testing OpenCL device."""
   return env.OclgrindOpenCLEnvironment().proto
@@ -160,7 +160,7 @@ def test_DriveToDataFrame_device_not_found(device: env.OpenCLEnvironment):
   device.name = "nope"
   device.platform_name = "not a real platform"
   device.device_name = "not a real device"
-  with pytest.raises(api.CldriveCrash):
+  with test.Raises(api.CldriveCrash):
     api.DriveToDataFrame(
       _MakeInstance(
         device, "kernel void A(global int* a) { a[get_global_id(0)] *= 2; }"

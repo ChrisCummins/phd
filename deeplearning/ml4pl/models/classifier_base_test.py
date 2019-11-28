@@ -18,7 +18,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
   """Fixture which returns a graph database containing 50 random graphs."""
   db = graph_database.Database(f"sqlite:///{tempdir}/graphs.db")
@@ -39,7 +39,7 @@ def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
   return db
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def log_db(tempdir: pathlib.Path) -> log_database.Database:
   return log_database.Database(f"sqlite:///{tempdir}/logs.db")
 
@@ -152,7 +152,7 @@ def test_LoadModel_unknown_saved_model_flag(
       )
     )
 
-  with pytest.raises(EnvironmentError) as e_ctx:
+  with test.Raises(EnvironmentError) as e_ctx:
     model.LoadModel(run_id=model.run_id, epoch_num=model.epoch_num)
 
   # Check that the LoadModel() specifically complains about the new flag value.

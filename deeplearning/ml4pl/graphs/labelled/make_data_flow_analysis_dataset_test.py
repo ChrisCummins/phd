@@ -14,28 +14,28 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path):
   yield graph_database.Database(f"sqlite:///{tempdir}/db1")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db2(tempdir: pathlib.Path):
   yield graph_database.Database(f"sqlite:///{tempdir}/db2")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db3(tempdir: pathlib.Path):
   yield graph_database.Database(f"sqlite:///{tempdir}/db3")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db4(tempdir: pathlib.Path):
   yield graph_database.Database(f"sqlite:///{tempdir}/db4")
 
 
 def test_GetAnnotatedGraphGenerators_unknown_analysis():
-  with pytest.raises(app.UsageError):
+  with test.Raises(app.UsageError):
     make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators("foo")
 
 
@@ -177,7 +177,7 @@ def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
 # DataFlowAnalysisGraphExporter() tests.
 
 
-@pytest.mark.xfail(reason="TODO(cec): Debug the failure here")
+@test.Xfail(reason="TODO(cec): Debug the failure here")
 def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
   """Test end-to-end dataset export with three annotators."""
   all_bytecode_ids = [1, 2, 3, 5, 10]

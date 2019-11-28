@@ -21,13 +21,13 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.mark.parametrize("o", ("-O0", "-O1", "-O2", "-O3", "-Os", "-Oz"))
+@test.Parametrize("o", ("-O0", "-O1", "-O2", "-O3", "-Os", "-Oz"))
 def test_ValidateOptimizationLevel_valid(o: str):
   """Test that valid optimization levels are returned."""
   assert opt.ValidateOptimizationLevel(o) == o
 
 
-@pytest.mark.parametrize(
+@test.Parametrize(
   "o",
   (
     "O0",  # missing leading '-'
@@ -38,7 +38,7 @@ def test_ValidateOptimizationLevel_valid(o: str):
 )  # not a real value
 def test_ValidateOptimizationLevel_invalid(o: str):
   """Test that invalid optimization levels raise an error."""
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     opt.ValidateOptimizationLevel(o)
   assert o in str(e_ctx.value)
 

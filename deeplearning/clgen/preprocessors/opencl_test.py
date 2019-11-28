@@ -161,7 +161,7 @@ kernel void A(global int*a ) {
 
 def test_Compile_missing_shim_define():
   """Test that Compile rejects a program which depends on the shim header."""
-  with pytest.raises(errors.ClangException):
+  with test.Raises(errors.ClangException):
     opencl.Compile(
       """
 kernel void A(global FLOAT_T* a) {}
@@ -187,14 +187,14 @@ kernel void A(global FLOAT_T* a) {}
 
 def test_Compile_syntax_error():
   """Test that Compile rejects a program with invalid syntax."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     opencl.Compile("kernel void A2@@1!!!#")
   assert "error: " in str(e_info.value)
 
 
 def test_Compile_undefined_variable():
   """Test that Compile rejects a program with an undefined variable."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     opencl.Compile(
       """
 kernel void A(global int* a) {
@@ -207,7 +207,7 @@ kernel void A(global int* a) {
 
 def test_Compile_undefined_function():
   """Test that Compile rejects a program with an undefined function."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     opencl.Compile(
       """
 kernel void A(global int* a) {
@@ -327,7 +327,7 @@ def test_benchmark_StripDoubleUnderscorePrefixes_hello_world(benchmark):
   benchmark(opencl.StripDoubleUnderscorePrefixes, HELLO_WORLD_CL)
 
 
-@pytest.mark.skip(reason="TODO(cec): Re-enable GPUVerify support.")
+@test.Skip(reason="TODO(cec): Re-enable GPUVerify support.")
 def test_GpuVerify():
   code = """\
 __kernel void A(__global float* a) {
@@ -337,13 +337,13 @@ __kernel void A(__global float* a) {
   assert opencl.GpuVerify(code, ["--local_size=64", "--num_groups=128"]) == code
 
 
-@pytest.mark.skip(reason="TODO(cec): Re-enable GPUVerify support.")
+@test.Skip(reason="TODO(cec): Re-enable GPUVerify support.")
 def test_GpuVerify_data_race():
   code = """\
 __kernel void A(__global float* a) {
   a[0] +=  1.0f;
 }"""
-  with pytest.raises(deeplearning.clgen.errors.GPUVerifyException):
+  with test.Raises(deeplearning.clgen.errors.GPUVerifyException):
     opencl.GpuVerify(code, ["--local_size=64", "--num_groups=128"])
 
 

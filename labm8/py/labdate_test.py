@@ -28,7 +28,7 @@ def test_GetUtcMillisecondsNow_millisecond_precision():
 
 
 def test_MillisecondsTimestamp_invalid_argument():
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     labdate.MillisecondsTimestamp("not a date")
 
 
@@ -38,12 +38,12 @@ def test_DatetimeFromMillisecondsTimestamp_default_argument():
 
 
 def test_DatetimeFromMillisecondsTimestamp_invalid_argument():
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     labdate.DatetimeFromMillisecondsTimestamp("not a timestamp")
 
 
 def test_DatetimeFromMillisecondsTimestamp_negative_int():
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     labdate.DatetimeFromMillisecondsTimestamp(-1)
 
 

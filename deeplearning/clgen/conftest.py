@@ -30,7 +30,7 @@ from labm8.py import pbutil
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def clgen_cache_dir() -> str:
   """Creates a temporary directory and sets CLGEN_CACHE to it.
 
@@ -45,7 +45,7 @@ def clgen_cache_dir() -> str:
     yield d
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_corpus() -> str:
   """A corpus consisting of three files.
 
@@ -66,7 +66,7 @@ def abc_corpus() -> str:
     yield d
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_corpus_archive(abc_corpus) -> str:
   """Creates a .tar.bz2 packed version of the abc_corpus.
 
@@ -81,7 +81,7 @@ def abc_corpus_archive(abc_corpus) -> str:
     yield d + "/corpus.tar.bz2"
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_corpus_config(abc_corpus):
   """The proto config for a simple Corpus."""
   return corpus_pb2.Corpus(
@@ -91,7 +91,7 @@ def abc_corpus_config(abc_corpus):
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_model_config(abc_corpus_config):
   """The proto config for a simple Model."""
   architecture = model_pb2.NetworkArchitecture(
@@ -121,7 +121,7 @@ def abc_model_config(abc_corpus_config):
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_sampler_config():
   """The sampler config for a simple Sampler."""
   maxlen = sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=5)
@@ -135,7 +135,7 @@ def abc_sampler_config():
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_instance_config(
   clgen_cache_dir, abc_model_config, abc_sampler_config
 ) -> clgen_pb2.Instance:
@@ -147,7 +147,7 @@ def abc_instance_config(
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_instance_file(abc_instance_config) -> str:
   """A test fixture that returns a path to an Instance config file."""
   with tempfile.NamedTemporaryFile() as f:

@@ -14,13 +14,13 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
   """Fixture that returns an sqlite database."""
   yield bytecode_database.Database(f"sqlite:///{tempdir}/bytecode.db")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def bytecode_db_512(
   bytecode_db: bytecode_database.Database,
 ) -> bytecode_database.Database:
@@ -46,13 +46,13 @@ def bytecode_db_512(
   yield bytecode_db
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
   """Fixture that returns an sqlite database."""
   yield graph_database.Database(f"sqlite:///{tempdir}/graphs.db")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph_db_512(graph_db: graph_database.Database) -> graph_database.Database:
   """Fixture that returns an sqlite database."""
   with graph_db.Session(commit=True) as session:

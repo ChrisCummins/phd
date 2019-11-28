@@ -28,7 +28,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def r() -> heterogeneous_mapping.HeterogeneousMappingExperiment:
   """Test fixture for experimental results."""
   with tempfile.TemporaryDirectory(prefix="phd_") as d:
@@ -85,7 +85,7 @@ def test_PrintResultsSummary_smoke_test(
   heterogeneous_mapping.HeterogeneousMappingExperiment.PrintResultsSummary(df)
 
 
-@pytest.mark.slow(reason="Takes several hours to train full model")
+@test.SlowTest(reason="Takes several hours to train full model")
 def test_deeptune_accuracy(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
@@ -95,7 +95,7 @@ def test_deeptune_accuracy(
   ].mean() == pytest.approx(0.819853)
 
 
-@pytest.mark.slow(reason="Takes several hours to train full model")
+@test.SlowTest(reason="Takes several hours to train full model")
 def test_deeptune_speedup(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
@@ -105,7 +105,7 @@ def test_deeptune_speedup(
   )
 
 
-@pytest.mark.slow(reason="Takes several hours to train full model")
+@test.SlowTest(reason="Takes several hours to train full model")
 def test_deeptune_inst2vec_accuracy(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):
@@ -116,7 +116,7 @@ def test_deeptune_inst2vec_accuracy(
   ].mean() == pytest.approx(0)
 
 
-@pytest.mark.slow(reason="Takes several hours to train full model")
+@test.SlowTest(reason="Takes several hours to train full model")
 def test_deeptune_inst2vec_speedup(
   r: heterogeneous_mapping.HeterogeneousMappingExperiment,
 ):

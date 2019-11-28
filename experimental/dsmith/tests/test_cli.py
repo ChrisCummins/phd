@@ -28,7 +28,7 @@ def mymethod(a, b):
   return c
 
 
-# @pytest.mark.xfail(reason="FIXME: cli.run() returning None")
+# @test.Xfail(reason="FIXME: cli.run() returning None")
 def test_run():
   assert cli.run(mymethod, 4, 2) == 2
 
@@ -36,14 +36,14 @@ def test_run():
 def test_run_exception_handler():
   # When DEBUG env variable set, exception is caught and system exits
   os.environ["DEBUG"] = ""
-  with pytest.raises(SystemExit):
+  with test.Raises(SystemExit):
     cli.run(mymethod, 1, 0)
 
 
 def test_run_exception_debug():
   # When DEBUG env variable set, exception is not caught
   os.environ["DEBUG"] = "1"
-  with pytest.raises(ZeroDivisionError):
+  with test.Raises(ZeroDivisionError):
     cli.run(mymethod, 1, 0)
 
 

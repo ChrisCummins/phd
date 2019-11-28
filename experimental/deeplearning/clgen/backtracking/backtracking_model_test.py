@@ -9,7 +9,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def atomizer() -> atomizers.AtomizerBase:
   return atomizers.AsciiCharacterAtomizer.FromText(
     """
@@ -23,7 +23,7 @@ kernel void A(global int* a, global int* b, const int c) {
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def backtracker(
   atomizer: atomizers.AtomizerBase,
 ) -> backtracking_model.OpenClBacktrackingHelper:

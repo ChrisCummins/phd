@@ -93,7 +93,7 @@ def test_timeout_timeout_raised():
     time.sleep(10)
     return 5
 
-  with pytest.raises(TimeoutError):
+  with test.Raises(TimeoutError):
     Func()
 
 

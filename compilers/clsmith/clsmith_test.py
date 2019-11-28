@@ -31,7 +31,7 @@ def test_Exec_no_args():
 
 def test_Exec_invalid_argument():
   """Test that CLSmithError is raised if invalid args passed to CLSmith."""
-  with pytest.raises(clsmith.CLSmithError) as e_ctx:
+  with test.Raises(clsmith.CLSmithError) as e_ctx:
     clsmith.Exec("--invalid_opt")
   assert "" == str(e_ctx.value)
   assert e_ctx.value.returncode == 255

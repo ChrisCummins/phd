@@ -28,6 +28,7 @@ from experimental import dsmith
 from labm8.py import fs
 from labm8.py import system
 from labm8.py import tar
+from labm8.py import test
 
 
 class Data404(Exception):
@@ -35,9 +36,9 @@ class Data404(Exception):
 
 
 # test decorators
-needs_cuda = pytest.mark.skipif(not dsmith.USE_CUDA, reason="no CUDA support")
-needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
-skip_on_travis = pytest.mark.skipif(
+needs_cuda = test.SkipIf(not dsmith.USE_CUDA, reason="no CUDA support")
+needs_linux = test.SkipIf(not system.is_linux(), reason="not linux")
+skip_on_travis = test.SkipIf(
   os.environ.get("TRAVIS") == "true", reason="skip on Travis CI"
 )
 

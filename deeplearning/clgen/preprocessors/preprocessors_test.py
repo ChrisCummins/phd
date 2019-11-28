@@ -58,21 +58,21 @@ def MockUndecoratedPreprocessor(text: str) -> str:
 
 def test_GetPreprocessFunction_empty_string():
   """Test that an UserError is raised if no preprocessor is given."""
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction("")
   assert "Invalid preprocessor name" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_module():
   """Test that UserError is raised if module not found."""
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction("not.a.real.module:Foo")
   assert "not found" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_function():
   """Test that UserError is raised if module exists but function doesn't."""
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
       "deeplearning.clgen.preprocessors.preprocessors_test:Foo"
     )
@@ -81,7 +81,7 @@ def test_GetPreprocessFunction_missing_function():
 
 def test_GetPreprocessFunction_undecorated_preprocessor():
   """Test that an UserError is raised if preprocessor not decorated."""
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
       "deeplearning.clgen.preprocessors.preprocessors_test"
       ":MockUndecoratedPreprocessor"
@@ -139,7 +139,7 @@ def Preprocess(src):
     ),
   )
 
-  with pytest.raises(errors.UserError):
+  with test.Raises(errors.UserError):
     preprocessors.GetPreprocessorFunction(f"{path}:Preprocess")
 
 
@@ -147,7 +147,7 @@ def test_GetPreprocessorFunction_absolute_path_not_found(tempdir: pathlib.Path):
   """Test loading module when file not found."""
   path = tempdir / "foo.py"
   fs.Write(path, "".encode("utf-8"))
-  with pytest.raises(errors.UserError):
+  with test.Raises(errors.UserError):
     preprocessors.GetPreprocessorFunction(f"{path}:NotFound")
 
 
@@ -155,7 +155,7 @@ def test_GetPreprocessorFunction_absolute_function_not_found(
   tempdir: pathlib.Path,
 ):
   """Test loading module when file not found."""
-  with pytest.raises(errors.UserError):
+  with test.Raises(errors.UserError):
     preprocessors.GetPreprocessorFunction(f"{tempdir}/foo.py:Preprocess")
 
 
@@ -180,7 +180,7 @@ def test_Preprocess_mock_preprocessor():
 
 def test_Preprocess_mock_preprocessor_bad_code():
   """Test that BadCodeException is propagated."""
-  with pytest.raises(errors.BadCodeException):
+  with test.Raises(errors.BadCodeException):
     preprocessors.Preprocess(
       "",
       [
@@ -192,7 +192,7 @@ def test_Preprocess_mock_preprocessor_bad_code():
 
 def test_Preprocess_mock_preprocessor_internal_error():
   """Test that InternalError is propagated."""
-  with pytest.raises(errors.InternalError):
+  with test.Raises(errors.InternalError):
     preprocessors.Preprocess(
       "",
       [
@@ -218,7 +218,7 @@ def test_Preprocess_RejectSecrets():
 
 def test_Preprocess_RejectSecrets():
   """Test that InternalError is propagated."""
-  with pytest.raises(errors.BadCodeException):
+  with test.Raises(errors.BadCodeException):
     preprocessors.Preprocess(
       "-----BEGIN RSA PRIVATE KEY-----",
       ["deeplearning.clgen.preprocessors.preprocessors" ":RejectSecrets"],

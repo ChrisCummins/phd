@@ -37,7 +37,7 @@ app.DEFINE_string(
 TEST_INBOX_PATH = bazelutil.DataPath("phd/datasets/me_db/tests/test_inbox")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def mutable_db() -> me_db.Database:
   """Returns a populated database for the scope of the function."""
   with tempfile.TemporaryDirectory(prefix="phd_") as d:
@@ -46,7 +46,7 @@ def mutable_db() -> me_db.Database:
     yield db
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def db() -> me_db.Database:
   """Returns a populated database that is reused for all tests.
 

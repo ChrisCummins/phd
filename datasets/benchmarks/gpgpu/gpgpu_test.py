@@ -39,7 +39,7 @@ def test_RewriteClDeviceType_rewrites_file(tempdir: pathlib.Path):
     assert f.read() == "Hello world! The device type is: CL_DEVICE_TYPE_CPU."
 
 
-@pytest.mark.parametrize("benchmark_suite", BENCHMARK_SUITES_TO_TEST)
+@test.Parametrize("benchmark_suite", BENCHMARK_SUITES_TO_TEST)
 def test_BenchmarkSuite_path_contains_files(benchmark_suite: typing.Callable):
   """Test that benchmark suite contains files."""
   with benchmark_suite() as bs:
@@ -47,11 +47,11 @@ def test_BenchmarkSuite_path_contains_files(benchmark_suite: typing.Callable):
     assert list(bs.path.iterdir())
 
 
-@pytest.mark.parametrize("benchmark_suite", BENCHMARK_SUITES_TO_TEST)
+@test.Parametrize("benchmark_suite", BENCHMARK_SUITES_TO_TEST)
 def test_BenchmarkSuite_invalid_path_access(benchmark_suite: typing.Callable):
   """Path cannot be accessed except when used as a context manager."""
   bs = benchmark_suite()
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     _ = bs.path
 
 
@@ -73,7 +73,7 @@ def test_MockBenchmarkObserver():
   assert observer.logs == ["a", "b", "c"]
 
 
-@pytest.mark.parametrize("benchmark_suite", BENCHMARK_SUITES_TO_TEST)
+@test.Parametrize("benchmark_suite", BENCHMARK_SUITES_TO_TEST)
 def test_BenchmarkSuite_integration_test(
   benchmark_suite: typing.Callable, tempdir: pathlib.Path
 ):

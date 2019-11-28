@@ -37,14 +37,14 @@ _CLINFO = bazelutil.DataPath("phd/third_party/clinfo/clinfo.c")
 _HELLO = bazelutil.DataPath("phd/gpu/libcecl/integration_test/hello.cc")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def hello_src() -> str:
   """Test fixture which returns the 'hello world' OpenCL app source."""
   with open(_HELLO) as f:
     return f.read()
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def clinfo_src() -> str:
   """Test fixture which returns the C source code for a clinfo program."""
   with open(_CLINFO, "rb") as f:

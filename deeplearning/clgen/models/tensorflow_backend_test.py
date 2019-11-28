@@ -55,7 +55,7 @@ class MockSampler(object):
     return len(sample_in_progress) >= 10
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_tensorflow_model_config(abc_model_config: model_pb2.Model):
   """A test fixture for a simple model with a TensorFlow backend."""
   abc_model_config.architecture.backend = (
@@ -73,7 +73,7 @@ def test_TensorFlowBackend_Train_GetShortSummary_before_create(
   """Test that model training produced telemetry files."""
   del clgen_cache_dir
   m = models.Model(abc_tensorflow_model_config)
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     m.GetShortSummary()
 
 

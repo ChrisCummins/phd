@@ -62,7 +62,7 @@ def _ReadTestDataStoreFiles() -> datastore_pb2.DataStoreTestSet:
 _DATASTORE_TESTSET = _ReadTestDataStoreFiles()
 
 
-@pytest.fixture(
+@test.Fixture(
   ids=_DATASTORE_TESTSET.values.keys(),
   params=_DATASTORE_TESTSET.values.values(),
   scope="function",
@@ -78,7 +78,7 @@ def ds(request) -> datastore.DataStore:
   return datastore.DataStore(request.param)
 
 
-@pytest.fixture(
+@test.Fixture(
   ids=_DATASTORE_TESTSET.values.keys(),
   params=_DATASTORE_TESTSET.values.values(),
   scope="function",

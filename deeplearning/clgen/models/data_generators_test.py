@@ -37,12 +37,12 @@ class CorpusMock(object):
 
 
 # BatchGenerator() tests.
-@pytest.mark.skip(reason="TODO(cec):")
+@test.Skip(reason="TODO(cec):")
 def test_BatchGenerator_sequence_length_too_large(abc_model_config):
   """Test that sequence length derives from TrainingOptions.sequence_length."""
   opt = abc_model_config.training
   opt.sequence_length = 50
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     data_generators.BatchGenerator(CorpusMock(corpus_length=10), opt)
   assert (
     "Requested training.sequence_length (50) is larger than the corpus "
@@ -50,13 +50,13 @@ def test_BatchGenerator_sequence_length_too_large(abc_model_config):
   ) == str(e_info.value)
 
 
-@pytest.mark.skip(reason="TODO(cec):")
+@test.Skip(reason="TODO(cec):")
 def test_BatchGenerator_batch_size_too_large(abc_model_config):
   """Test that batch size is reduced when larger than corpus."""
   opt = abc_model_config.training
   opt.batch_size = 50
   opt.sequence_length = 5
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     data_generators.BatchGenerator(CorpusMock(corpus_length=10), opt)
   assert ("") == str(e_info.value)
 
@@ -66,7 +66,7 @@ def test_BatchGenerator_batch_size_too_large(abc_model_config):
 
 def test_OneHotEncode_empty_input():
   """Test that OneHotEncode() rejects an empty input."""
-  with pytest.raises(IndexError):
+  with test.Raises(IndexError):
     data_generators.OneHotEncode(np.array([]), 3)
 
 
@@ -93,8 +93,8 @@ def test_OneHotEncode_values():
 # Benchmarks.
 
 
-@pytest.mark.parametrize("sequence_length", [50, 100, 500, 1000])
-@pytest.mark.parametrize("vocabulary_size", [100, 200])
+@test.Parametrize("sequence_length", [50, 100, 500, 1000])
+@test.Parametrize("vocabulary_size", [100, 200])
 def test_benchmark_OneHotEncode(benchmark, sequence_length, vocabulary_size):
   data = np.zeros(sequence_length, dtype=np.int32)
   benchmark(data_generators.OneHotEncode, data, vocabulary_size)

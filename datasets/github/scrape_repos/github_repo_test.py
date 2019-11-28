@@ -43,7 +43,7 @@ def _CreateTestRepo(
   return github_repo.GitHubRepo(root_dir / f"{owner_name}.pbtxt")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def test_repo(tempdir: pathlib.Path) -> github_repo.GitHubRepo:
   (tempdir / "src").mkdir()
   yield _CreateTestRepo(tempdir / "src", "Foo", "Bar")

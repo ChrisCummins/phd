@@ -26,7 +26,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def test_db(tempdir) -> contentfiles.ContentFiles:
   yield contentfiles.ContentFiles(f"sqlite:///{tempdir}/test.db")
 
@@ -38,7 +38,7 @@ def test_ImportFromLanguage_no_importer(
   language = scrape_repos_pb2.LanguageToClone(
     language="test", query=[], destination_directory=str(tempdir), importer=[]
   )
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     importer.ImportFromLanguage(test_db, language)
 
 

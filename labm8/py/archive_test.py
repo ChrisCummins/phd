@@ -13,7 +13,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(
+@test.Fixture(
   scope="function",
   params=[
     # Parameterized by tuple:
@@ -44,7 +44,7 @@ def Touch(path: pathlib.Path) -> pathlib.Path:
 
 def test_Archive_path_not_found(tempdir: pathlib.Path):
   """Test that FileNotFound raised if path doesn't exist."""
-  with pytest.raises(FileNotFoundError) as e_ctx:
+  with test.Raises(FileNotFoundError) as e_ctx:
     archive.Archive(tempdir / "a.zip")
   assert str(e_ctx.value).startswith("No such file: '")
 
@@ -52,7 +52,7 @@ def test_Archive_path_not_found(tempdir: pathlib.Path):
 def test_Archive_no_suffix(tempdir: pathlib.Path):
   """Test that error raised if path has no suffix."""
   Touch(tempdir / "a")
-  with pytest.raises(archive.UnsupportedArchiveFormat) as e_ctx:
+  with test.Raises(archive.UnsupportedArchiveFormat) as e_ctx:
     archive.Archive(tempdir / "a")
   assert str(e_ctx.value) == "Archive 'a' has no extension"
 
@@ -60,17 +60,17 @@ def test_Archive_no_suffix(tempdir: pathlib.Path):
 def test_Archive_assume_filename_no_suffix(tempdir: pathlib.Path):
   """Test that error raised if assumed path has no suffix."""
   Touch(tempdir / "a.zip")
-  with pytest.raises(archive.UnsupportedArchiveFormat) as e_ctx:
+  with test.Raises(archive.UnsupportedArchiveFormat) as e_ctx:
     archive.Archive(tempdir / "a.zip", assume_filename="a")
   assert str(e_ctx.value) == "Archive 'a' has no extension"
 
 
-@pytest.mark.parametrize("suffix", (".foo", ".tar.abc"))
+@test.Parametrize("suffix", (".foo", ".tar.abc"))
 def test_Archive_unsupported_suffixes(tempdir: pathlib.Path, suffix: str):
   path = tempdir / f"a{suffix}"
   Touch(path)
 
-  with pytest.raises(archive.UnsupportedArchiveFormat) as e_ctx:
+  with test.Raises(archive.UnsupportedArchiveFormat) as e_ctx:
     archive.Archive(path)
   assert re.match(
     f"Unsupported file extension '(.+)' for archive 'a{suffix}'",

@@ -31,7 +31,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def temp_dir() -> pathlib.Path:
   with tempfile.TemporaryDirectory(prefix="phd_") as d:
     yield pathlib.Path(d)

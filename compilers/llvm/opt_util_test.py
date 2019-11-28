@@ -206,13 +206,13 @@ def test_DotControlFlowGraphsFromBytecode_simple_c_program():
 
 def test_DotControlFlowGraphsFromBytecode_invalid_bytecode():
   """Test that exception is raised if bytecode is invalid."""
-  with pytest.raises(opt.OptException) as e_ctx:
+  with test.Raises(opt.OptException) as e_ctx:
     next(opt_util.DotControlFlowGraphsFromBytecode("invalid bytecode!"))
   assert e_ctx.value.returncode
   assert e_ctx.value.stderr
 
 
-@pytest.mark.parametrize("cflags", [["-O0"], ["-O1"], ["-O2"], ["-O3"]])
+@test.Parametrize("cflags", [["-O0"], ["-O1"], ["-O2"], ["-O3"]])
 def test_GetOptArgs_black_box(cflags: typing.List[str]):
   """Black box opt args test."""
   args = opt_util.GetOptArgs(cflags)
@@ -223,7 +223,7 @@ def test_GetOptArgs_black_box(cflags: typing.List[str]):
 
 def test_GetOptArgs_bad_args():
   """Error is raised if invalid args are passed."""
-  with pytest.raises(llvm.LlvmError):
+  with test.Raises(llvm.LlvmError):
     opt_util.GetOptArgs(["-not-a-real-arg!"])
 
 
@@ -343,7 +343,7 @@ define i32 @A() #0 {
   ]
 
 
-@pytest.mark.xfail(reason="opt exception")
+@test.Xfail(reason="opt exception")
 def test_GetAliasSetsByFunction_regression_test_1():
   """Regression test for bytecode which trips up pointer set size."""
   alias_sets = opt_util.GetAliasSetsByFunction(

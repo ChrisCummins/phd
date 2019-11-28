@@ -149,7 +149,7 @@ def test_MapWorker_binary_not_found():
     [protos_pb2.AddXandY()],
     protos_pb2.AddXandY,
   )
-  with pytest.raises(FileNotFoundError):
+  with test.Raises(FileNotFoundError):
     next(generator)
 
 

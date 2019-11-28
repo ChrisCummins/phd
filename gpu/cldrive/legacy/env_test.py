@@ -57,7 +57,7 @@ def test_OcldringOpenCLEnvironment_FromName_found():
 
 def test_OcldringOpenCLEnvironment_FromName_not_found():
   """Test name that can't be found."""
-  with pytest.raises(LookupError):
+  with test.Raises(LookupError):
     env.OclgrindOpenCLEnvironment.FromName("Not a real environment")
 
 

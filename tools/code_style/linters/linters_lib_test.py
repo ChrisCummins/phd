@@ -21,7 +21,7 @@ def test_WhichOrDie_file_exists(tempdir: pathlib.Path):
 def test_WhichOrDie_file_doesnt_exist(tempdir: pathlib.Path):
   """Test that error raised when file not in PATH."""
   os.environ["PATH"] = str(tempdir)
-  with pytest.raises(SystemExit):
+  with test.Raises(SystemExit):
     linters_lib.WhichOrDie("a")
 
 

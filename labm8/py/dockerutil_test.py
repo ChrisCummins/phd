@@ -16,7 +16,7 @@ if not system.which("docker"):
   MODULE_UNDER_TEST = None
 
 # Annotation for tests that require 'docker' in the system PATH.
-requires_docker = pytest.mark.skipif(
+requires_docker = test.SkipIf(
   not system.which("docker"), reason="docker binary not found in $PATH",
 )
 

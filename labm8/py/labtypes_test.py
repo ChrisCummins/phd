@@ -116,7 +116,7 @@ def test_PairwiseIterator_input_is_list():
   assert next(generator) == (0, 1)
   assert next(generator) == (1, 2)
   assert next(generator) == (2, 3)
-  with pytest.raises(StopIteration):
+  with test.Raises(StopIteration):
     next(generator)
 
 

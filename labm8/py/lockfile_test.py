@@ -26,7 +26,7 @@ from labm8.py.internal import lockfile_pb2
 _ = test, pbutil  # , lockfile
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def dummy_lockfile_proto() -> lockfile_pb2.LockFile:
   """A simple lockfile proto."""
   return lockfile_pb2.LockFile(
@@ -38,7 +38,7 @@ def dummy_lockfile_proto() -> lockfile_pb2.LockFile:
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def dummy_lockfile_path(
   dummy_lockfile_proto: lockfile_pb2.LockFile,
 ) -> pathlib.Path:
@@ -72,7 +72,7 @@ def test_LockFile_acquire_fail(dummy_lockfile_path):
   """Test that acquiring a lock owned by a different host fails."""
   lock = lockfile.LockFile(dummy_lockfile_path)
   assert lock.islocked
-  with pytest.raises(lockfile.UnableToAcquireLockError) as e_ctx:
+  with test.Raises(lockfile.UnableToAcquireLockError) as e_ctx:
     lock.acquire()
   assert (
     str(e_ctx.value)
@@ -91,7 +91,7 @@ def test_LockFile_release_fail(dummy_lockfile_path):
   """Test that releasing a lock owned by a different host fails."""
   lock = lockfile.LockFile(dummy_lockfile_path)
   assert lock.islocked
-  with pytest.raises(lockfile.UnableToReleaseLockError) as e_ctx:
+  with test.Raises(lockfile.UnableToReleaseLockError) as e_ctx:
     lock.release()
   assert (
     str(e_ctx.value)
@@ -135,7 +135,7 @@ def test_LockFile_replace_stale():
     lock.acquire(pid=MAX_PROCESSES + 1)
     assert lock.islocked
     assert not lock.owned_by_self
-    with pytest.raises(lockfile.UnableToAcquireLockError):
+    with test.Raises(lockfile.UnableToAcquireLockError):
       lock.acquire()
     lock.acquire(replace_stale=True)
     assert lock.islocked
@@ -153,7 +153,7 @@ def test_LockFile_force_replace_stale():
     lock.acquire(pid=MAX_PROCESSES + 1)
     assert lock.islocked
     assert not lock.owned_by_self
-    with pytest.raises(lockfile.UnableToAcquireLockError):
+    with test.Raises(lockfile.UnableToAcquireLockError):
       lock.acquire()
     lock.acquire(force=True)
     assert lock.islocked
@@ -162,7 +162,7 @@ def test_LockFile_force_replace_stale():
     assert not lock.path.is_file()
 
 
-@pytest.mark.parametrize("granularity", ("line", "function", "module"))
+@test.Parametrize("granularity", ("line", "function", "module"))
 def test_AutoLockFile_path(granularity: str):
   """Test the path of an automatic lock file."""
   # Get the line number directly before the lock is instantiated. These two
@@ -190,11 +190,11 @@ def test_AutoLockFile_path(granularity: str):
 
 def test_AutoLockFile_unknown_granularity():
   """Test that unknown granularity raises an error."""
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     lockfile.AutoLockFile(granularity="unknown")
 
 
-@pytest.mark.parametrize("granularity", ("line", "function", "module"))
+@test.Parametrize("granularity", ("line", "function", "module"))
 def test_AutoLockFile_acquire(granularity: str):
   """Test that an auto lockfile can be acquired."""
   lock = lockfile.AutoLockFile(granularity=granularity)
@@ -211,7 +211,7 @@ def test_AutoLockFile_acquire_fail(dummy_lockfile_proto: lockfile_pb2.LockFile):
   # Mock that a lock has been "acquired" by another process.
   pbutil.ToFile(dummy_lockfile_proto, lock.path)
 
-  with pytest.raises(lockfile.UnableToAcquireLockError):
+  with test.Raises(lockfile.UnableToAcquireLockError):
     lock.acquire()
 
 

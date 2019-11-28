@@ -14,13 +14,13 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> graph_database.Database:
   """Fixture that returns an sqlite database."""
   yield graph_database.Database(f"sqlite:///{tempdir}/db")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db_512(db: graph_database.Database) -> graph_database.Database:
   """Fixture which returns a database with 512 graphs, indexed by node_count."""
 

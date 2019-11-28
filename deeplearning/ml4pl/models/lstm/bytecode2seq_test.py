@@ -15,7 +15,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def opencl_dataset_df() -> pd.DataFrame:
   """Test fixture which yields a dataframe of the OpenCL dataset, complete with
   relpath column.
@@ -24,7 +24,7 @@ def opencl_dataset_df() -> pd.DataFrame:
   return make_devmap_dataset.MakeGpuDataFrame(dataset.df, "amd_tahiti_7970")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def bytecode_db(
   tempdir: pathlib.Path,
   opencl_dataset_df: opencl_device_mapping_dataset.OpenClDeviceMappingsDataset,
@@ -58,7 +58,7 @@ def bytecode_db(
   return db
 
 
-@pytest.mark.parametrize(
+@test.Parametrize(
   "encoder_class",
   [
     bytecode2seq.BytecodeEncoder,

@@ -82,21 +82,21 @@ def MockUndecoratedPreprocessor(
 
 def test_GetPreprocessFunction_empty_string():
   """Test that a ValueError is raised if no preprocessor is given."""
-  with pytest.raises(ValueError) as e_info:
+  with test.Raises(ValueError) as e_info:
     preprocessors.GetPreprocessorFunction("")
   assert "Invalid preprocessor name" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_module():
   """Test that ValueError is raised if module not found."""
-  with pytest.raises(ValueError) as e_info:
+  with test.Raises(ValueError) as e_info:
     preprocessors.GetPreprocessorFunction("not.a.real.module:Foo")
   assert "not found" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_function():
   """Test that ValueError is raised if module exists but function doesn't."""
-  with pytest.raises(ValueError) as e_info:
+  with test.Raises(ValueError) as e_info:
     preprocessors.GetPreprocessorFunction(
       "datasets.github.scrape_repos.preprocessors.preprocessors_test:Foo"
     )
@@ -105,7 +105,7 @@ def test_GetPreprocessFunction_missing_function():
 
 def test_GetPreprocessFunction_undecorated_preprocessor():
   """Test that an ValueError is raised if preprocessor not decorated."""
-  with pytest.raises(ValueError) as e_info:
+  with test.Raises(ValueError) as e_info:
     preprocessors.GetPreprocessorFunction(
       "datasets.github.scrape_repos.preprocessors.preprocessors_test"
       ":MockUndecoratedPreprocessor"
@@ -147,7 +147,7 @@ def test_Preprocess_mock_preprocessor(tempdir):
 def test_Preprocess_mock_preprocessor_exception(tempdir):
   """Test that an exception is propagated."""
   MakeFile(tempdir, "a", "hello")
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     preprocessors.Preprocess(
       tempdir,
       "a",

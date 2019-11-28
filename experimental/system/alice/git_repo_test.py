@@ -35,7 +35,7 @@ class MockRepo(typing.NamedTuple):
   remote: pathlib.Path
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def mock_repo(tempdir: pathlib.Path, tempdir2: pathlib.Path) -> MockRepo:
   """Test fixture that returns a mock repo with a remote."""
   remote_root = tempdir2 / "remote"

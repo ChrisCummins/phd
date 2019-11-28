@@ -3,7 +3,6 @@ import pathlib
 import pickle
 
 import numpy as np
-import pytest
 
 from deeplearning.ml4pl.graphs import graph_database
 from labm8.py import test
@@ -11,13 +10,13 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def empty_graph_db(tempdir: pathlib.Path) -> graph_database.Database:
   """Fixture that returns an sqlite database."""
   yield graph_database.Database(f"sqlite:///{tempdir}/graphs.db")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph_db_512(
   empty_graph_db: graph_database.Database,
 ) -> graph_database.Database:

@@ -15,7 +15,7 @@ import pytest
 from freefocus import freefocus
 
 
-@pytest.fixture
+@test.Fixture(scope="function")
 def client(request):
   db_fd, freefocus.app.config["DATABASE"] = tempfile.mkstemp()
   freefocus.app.config["TESTING"] = True

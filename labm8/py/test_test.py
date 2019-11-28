@@ -41,7 +41,7 @@ def test_tempdir_fixture_directory_is_empty(tempdir: pathlib.Path):
 # Although the 'tempdir' fixture was defined in //:conftest, it can be
 # overriden. This overiding fixture will be used for all of the tests in this
 # file.
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def tempdir() -> pathlib.Path:
   """Override the tempdir fixture in //:conftest."""
   with tempfile.TemporaryDirectory(prefix="phd_fixture_override_") as d:
@@ -53,18 +53,32 @@ def test_tempdir_fixture_overriden(tempdir: pathlib.Path):
   assert tempdir.name.startswith("phd_fixture_override_")
 
 
-@pytest.mark.slow(reason="This is an example")
+@test.SlowTest(reason="This is an example")
 def test_mark_slow():
   """A test that is skipped when --test_skip_slow."""
   pass
 
 
-@pytest.mark.flaky(max_runs=100, min_passes=2)
+@test.Flaky(max_runs=100, min_passes=2)
 def test_mark_flaky():
   """A test which is flaky is one where there is (legitimate) reason for it to
   fail, e.g. because a timeout may or may not trigger depending on system load.
   """
   assert random.random() <= 0.5
+
+
+@test.Flaky(max_runs=100, min_passes=2, expected_exception=IndexError)
+def test_mark_flaky_with_expected_exception():
+  """Test that expected_exception can be used to trigger re-runs."""
+  if random.random() > 0.5:
+    raise IndexError("woops!")
+
+
+@test.XFail(reason="Test is designed to fail.")
+@test.Flaky(expected_exception=IndexError)
+def test_mark_flaky_with_invalid_expected_exception():
+  """Test that only expected_exception triggers a re-run."""
+  raise TypeError("woops!")
 
 
 @pytest.mark.custom_marker
@@ -73,24 +87,22 @@ def test_custom_marker():
   pass
 
 
-@pytest.mark.win32
-def test_that_only_runs_on_windows():
-  pass
-
-
-@pytest.mark.linux
+@test.LinuxTest()
 def test_that_only_runs_on_linux():
+  """Test that executes only on Linux."""
   pass
 
 
-@pytest.mark.darwin
-def test_that_only_runs_on_darwin():
+@test.MacOsTest()
+def test_that_only_runs_on_macos():
+  """Test that executes only on MacOs."""
   pass
 
 
-@pytest.mark.darwin
-@pytest.mark.linux
-def test_that_runs_on_linux_or_darwin():
+@test.MacOsTest()
+@test.LinuxTest()
+def test_that_runs_on_linux_or_macos():
+  """Test that will execute both on Linux and MacOS."""
   pass
 
 
@@ -122,6 +134,69 @@ def test_captured_logging_warning():
   app.Warning(
     "This message is captured unless run with --notest_capture_output",
   )
+
+
+# Fixture tests.
+
+
+def test_Fixture_missing_scope():
+  with test.Raises(TypeError) as e_ctx:
+
+    @test.Fixture()
+    def fixture_Foo() -> int:
+      return 1
+
+  assert str(e_ctx.value) == "Test fixture must specify a scope"
+
+
+@test.Fixture(scope="function")
+def foo() -> str:
+  """A test fixture which returns a string."""
+  return "foo"
+
+
+def test_Fixture_foo(foo: str):
+  """Test that fixture returns expected value."""
+  assert foo == "foo"
+
+
+@test.Fixture(scope="function", params=[1, 2, 3])
+def fixture_with_param(request) -> int:
+  """A parametrized test fixture."""
+  return request.param
+
+
+def test_Fixture_params(fixture_with_param: int):
+  """Test that parameterized test fixtures work."""
+  assert fixture_with_param in {1, 2, 3}
+
+
+# Raises tests.
+
+
+def test_Raises_expected_error_is_raised():
+  with test.Raises(ValueError) as e_ctx:
+    raise ValueError("Foo")
+  assert str(e_ctx.value) == "Foo"
+
+
+@test.XFail(reason="Test is designed to fail")
+def test_Raises_expected_error_is_not_raises():
+  """A test fails if the expected exception is not raised."""
+  with test.Raises(AssertionError):
+    with test.Raises(ValueError):
+      pass
+
+
+@test.Parametrize("a", (1, 2, 3))
+@test.Parametrize("b", (4, 5))
+def test_Parameterize(a: int, b: int):
+  assert a + b > 4
+
+
+@test.XFail(reason="Test is designed to fail")
+def test_Fail():
+  test.Fail("Force a failed test here.")
 
 
 if __name__ == "__main__":

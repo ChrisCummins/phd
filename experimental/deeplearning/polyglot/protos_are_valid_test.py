@@ -44,12 +44,5 @@ def test_samplers_are_valid():
   )
 
 
-def main(argv):
-  """Main entry point."""
-  if len(argv) > 1:
-    raise app.UsageError("Unrecognized command line flags.")
-  sys.exit(pytest.main([__file__, "-vv"]))
-
-
 if __name__ == "__main__":
   test.Main()

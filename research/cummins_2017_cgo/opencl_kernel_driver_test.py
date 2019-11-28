@@ -23,7 +23,7 @@ from research.cummins_2017_cgo import opencl_kernel_driver
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def opencl_env() -> cldrive_env.OpenCLEnvironment:
   """A test fixture which yields an OpenCL environment for testing."""
   return cldrive_env.OclgrindOpenCLEnvironment()
@@ -31,13 +31,13 @@ def opencl_env() -> cldrive_env.OpenCLEnvironment:
 
 def test_Drive_invalid_opencl_kernel(opencl_env: cldrive_env.OpenCLEnvironment):
   """Test that the correct number of logs are returned."""
-  with pytest.raises(opencl_kernel_driver.DriverConstructionFailed):
+  with test.Raises(opencl_kernel_driver.DriverConstructionFailed):
     opencl_kernel_driver.Drive("Syntax error!", 16, 16, opencl_env, 5)
 
 
 def test_Drive_no_output(opencl_env: cldrive_env.OpenCLEnvironment):
   """Test that the correct number of logs are returned."""
-  with pytest.raises(opencl_kernel_driver.KernelProducesNoOutput):
+  with test.Raises(opencl_kernel_driver.KernelProducesNoOutput):
     opencl_kernel_driver.Drive(
       """
 kernel void A(global int* a, global int* b) {
@@ -59,7 +59,7 @@ def test_Drive_maybe_non_deterministic(
   non-deterministic results. I've "encouraged" non-determinism by accessing
   out of bounds and dividing by zero.
   """
-  with pytest.raises(opencl_kernel_driver.KernelIsNondeterministic):
+  with test.Raises(opencl_kernel_driver.KernelIsNondeterministic):
     opencl_kernel_driver.Drive(
       """
 kernel void A(global float* a, global float* b) {

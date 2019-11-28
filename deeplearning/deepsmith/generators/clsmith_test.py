@@ -27,7 +27,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_config() -> generator_pb2.ClsmithGenerator:
   return generator_pb2.ClsmithGenerator(
     testcase_skeleton=[
@@ -45,7 +45,7 @@ def abc_config() -> generator_pb2.ClsmithGenerator:
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_generator(
   abc_config: generator_pb2.ClsmithGenerator,
 ) -> clsmith.ClsmithGenerator:

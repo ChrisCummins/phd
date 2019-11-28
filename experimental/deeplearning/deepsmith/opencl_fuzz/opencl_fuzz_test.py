@@ -22,7 +22,7 @@ FLAGS = app.FLAGS
 # Test fixtures.
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def cldrive_harness_config() -> harness_pb2.CldriveHarness:
   """Test fixture to return an Cldrive test harness config."""
   config = harness_pb2.CldriveHarness()
@@ -31,7 +31,7 @@ def cldrive_harness_config() -> harness_pb2.CldriveHarness:
   return config
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def cldrive_harness(
   cldrive_harness_config: harness_pb2.CldriveHarness,
 ) -> cldrive.CldriveHarness:
@@ -39,7 +39,7 @@ def cldrive_harness(
   return cldrive.CldriveHarness(cldrive_harness_config)
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def cl_launcher_harness_config() -> harness_pb2.ClLauncherHarness:
   """Test fixture to return a cl_launcher test harness."""
   config = harness_pb2.ClLauncherHarness()
@@ -48,7 +48,7 @@ def cl_launcher_harness_config() -> harness_pb2.ClLauncherHarness:
   return config
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def cl_launcher_harness(
   cl_launcher_harness_config: harness_pb2.ClLauncherHarness,
 ) -> harness_pb2.ClLauncherHarness:
@@ -56,7 +56,7 @@ def cl_launcher_harness(
   return cldrive.CldriveHarness(cl_launcher_harness_config)
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def dummy_result() -> deepsmith_pb2.Result:
   """A test fixture which returns a dummy result."""
   return deepsmith_pb2.Result(
@@ -68,7 +68,7 @@ def dummy_result() -> deepsmith_pb2.Result:
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def clsmith_result(dummy_result: deepsmith_pb2.Result) -> pathlib.Path:
   """A test fixture which returns a dummy CLSmith result."""
   dummy_result.testcase.harness.name = "cl_launcher"
@@ -168,7 +168,7 @@ class MockHarness(harness.HarnessBase):
 # RunTestcases() tests.
 
 
-@pytest.mark.parametrize("opencl_opt", [True, False])
+@test.Parametrize("opencl_opt", [True, False])
 def test_RunTestcases_cldrive_pass(
   cldrive_harness_config: harness_pb2.CldriveHarness, opencl_opt: bool
 ):
@@ -224,7 +224,7 @@ done.
   )
 
 
-@pytest.mark.parametrize("opencl_opt", [True, False])
+@test.Parametrize("opencl_opt", [True, False])
 def test_RunTestcases_cldrive_syntax_error(
   cldrive_harness_config: harness_pb2.CldriveHarness, opencl_opt: bool
 ):
@@ -281,7 +281,7 @@ clBuildProgram CL_BUILD_PROGRAM_FAILURE
   )
 
 
-@pytest.mark.parametrize("opencl_opt", [True, False])
+@test.Parametrize("opencl_opt", [True, False])
 def test_RunTestcases_cl_launcher_pass(
   cl_launcher_harness_config: harness_pb2.ClLauncherHarness, opencl_opt: bool
 ):
@@ -379,7 +379,7 @@ Compilation terminated successfully...
   )
 
 
-@pytest.mark.parametrize("opencl_opt", [True, False])
+@test.Parametrize("opencl_opt", [True, False])
 def test_RunTestcases_cl_launcher_syntax_error(
   cl_launcher_harness_config: harness_pb2.ClLauncherHarness, opencl_opt: bool
 ):
@@ -497,7 +497,7 @@ def test_ResultIsInteresting_build_timeout():
 # UnpackResult() tests.
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def clgen_result(dummy_result: deepsmith_pb2.Result) -> pathlib.Path:
   """A test fixture which returns a dummy CLgen result."""
   dummy_result.testcase.harness.name = "cldrive"
@@ -508,9 +508,9 @@ def clgen_result(dummy_result: deepsmith_pb2.Result) -> pathlib.Path:
 
 def test_UnpackResult_no_result():
   """An error raised if no result to unpack is provided."""
-  with pytest.raises(app.UsageError):
+  with test.Raises(app.UsageError):
     opencl_fuzz.UnpackResult(None)
-  with pytest.raises(app.UsageError):
+  with test.Raises(app.UsageError):
     opencl_fuzz.UnpackResult("")
 
 

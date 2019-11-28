@@ -48,7 +48,7 @@ def test_ImportFromLanguage_no_importer(tempdir: pathlib.Path):
   language = scrape_repos_pb2.LanguageToClone(
     language="test", query=[], destination_directory=str(tempdir), importer=[]
   )
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     indexer.ImportFromLanguage(language, multiprocessing.Pool(1))
 
 

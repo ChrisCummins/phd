@@ -26,7 +26,7 @@ FLAGS = app.FLAGS
 
 def test_ExtractFeaturesFromPath_file_not_found(tempdir: pathlib.Path):
   """Error raised when file doesn't exist."""
-  with pytest.raises(FileNotFoundError):
+  with test.Raises(FileNotFoundError):
     feature_extractor.ExtractFeaturesFromPath(tempdir / "notafile")
 
 
@@ -188,7 +188,7 @@ def test_ExtractFeaturesFromPath_syntax_error(tempdir: pathlib.Path):
   """Error is raised if compilation fails."""
   with open(tempdir / "kernel.cl", "w") as f:
     f.write("/@*! Invalid syntax!")
-  with pytest.raises(feature_extractor.FeatureExtractionError) as e_ctx:
+  with test.Raises(feature_extractor.FeatureExtractionError) as e_ctx:
     feature_extractor.ExtractFeaturesFromPath(tempdir / "kernel.cl")
 
   assert "error: expected identifier or '('" in str(e_ctx.value)

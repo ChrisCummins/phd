@@ -9,7 +9,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def wiki() -> nx.MultiDiGraph:
   # a = b * c + g;
   # d = b * c * e;
@@ -69,7 +69,7 @@ def wiki() -> nx.MultiDiGraph:
   return g
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def wiki_without_subexpressions() -> nx.MultiDiGraph:
   """Same as the wiki graph, but the order of the operands for the two
   multiplications has been reversed so that they are no longer common, and
@@ -133,7 +133,7 @@ def wiki_without_subexpressions() -> nx.MultiDiGraph:
   return g
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def wiki_with_commutativity() -> nx.MultiDiGraph:
   """Same as the wiki graph, but the order of the operands has been reversed
   and the statement is commutative.

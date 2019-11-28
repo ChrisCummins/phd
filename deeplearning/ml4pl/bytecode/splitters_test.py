@@ -11,7 +11,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db_512(tempdir: pathlib.Path) -> bytecode_database.Database:
   db = bytecode_database.Database(f"sqlite:///{tempdir}/db")
   with db.Session(commit=True) as session:
@@ -60,7 +60,7 @@ def test_GetTrainValTestGroups_unique_ids(db_512: bytecode_database.Database):
   assert len(set(groups["train"] + groups["val"] + groups["test"])) == 512
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db_poj104(tempdir: pathlib.Path) -> bytecode_database.Database:
   def _MakeLlvmBytecode(source_name) -> bytecode_database.LlvmBytecode:
     return bytecode_database.LlvmBytecode(

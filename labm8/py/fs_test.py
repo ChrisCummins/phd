@@ -42,7 +42,7 @@ def test_must_exist():
   with tempfile.NamedTemporaryFile(prefix="labm8_") as f:
     assert fs.must_exist(f.name) == f.name
     assert fs.must_exist(fs.dirname(f.name), fs.basename(f.name)) == f.name
-  with pytest.raises(fs.File404):
+  with test.Raises(fs.File404):
     fs.must_exist("/not/a/real/path")
 
 
@@ -267,9 +267,7 @@ def test_rm_glob():
 
 
 # rmtrash()
-@pytest.mark.skip(
-  reason="Insufficient access privileges for operation on macOS",
-)
+@test.Skip(reason="Insufficient access privileges for operation on macOS",)
 def test_rmtrash():
   with tempfile.NamedTemporaryFile(prefix="labm8_") as f:
     assert fs.isfile(f.name)
@@ -303,7 +301,7 @@ def test_cp():
 
 
 def test_cp_no_file():
-  pytest.raises(IOError, fs.cp, "/not a real src", "/not/a/real dest")
+  assert test.Raises(IOError, fs.cp, "/not a real src", "/not/a/real dest")
 
 
 def test_cp_dir():
@@ -361,13 +359,13 @@ def test_mv():
 
 
 def test_mv_no_src():
-  with pytest.raises(fs.File404):
+  with test.Raises(fs.File404):
     fs.mv("/bad/path", "foo")
 
 
 def test_mv_no_dst():
   system.echo("Hello, world!", "/tmp/labm8_py.tmp")
-  with pytest.raises(IOError):
+  with test.Raises(IOError):
     fs.mv("/tmp/labm8_py.tmp", "/not/a/real/path")
   fs.rm("/tmp/labm8_py.tmp")
 
@@ -422,7 +420,7 @@ def test_ls_empty_dir():
 
 
 def test_ls_bad_path():
-  with pytest.raises(OSError):
+  with test.Raises(OSError):
     fs.ls("/not/a/real/path/bro")
 
 
@@ -444,7 +442,7 @@ def test_lsdirs_recursive():
 
 
 def test_lsdirs_bad_path():
-  with pytest.raises(OSError):
+  with test.Raises(OSError):
     fs.lsdirs("/not/a/real/path/bro")
 
 
@@ -470,7 +468,7 @@ def test_lsfiles_recursive():
 
 
 def test_lsfiles_bad_path():
-  with pytest.raises(OSError):
+  with test.Raises(OSError):
     fs.lsfiles("/not/a/real/path/bro")
 
 
@@ -532,7 +530,7 @@ def test_chdir_cwd():
 
 def test_chdir_not_a_directory():
   """Test that FileNotFoundError is raised if requested path does not exist."""
-  with pytest.raises(FileNotFoundError) as e_info:
+  with test.Raises(FileNotFoundError) as e_info:
     with fs.chdir("/not/a/real/path"):
       pass
   assert "No such file or directory: '/not/a/real/path'" in str(e_info)
@@ -541,7 +539,7 @@ def test_chdir_not_a_directory():
 def test_chdir_file_argument():
   """Test that NotADirectoryError is raised if requested path is a file."""
   with tempfile.NamedTemporaryFile(prefix="labm8_") as f:
-    with pytest.raises(NotADirectoryError) as e_info:
+    with test.Raises(NotADirectoryError) as e_info:
       with fs.chdir(f.name):
         pass
     # Bazel sandboxing only changes to directories within the sandbox, so there
@@ -570,7 +568,7 @@ def test_Write_overwrite(tempdir: pathlib.Path):
 
 def test_Write_exclusive(tempdir: pathlib.Path):
   fs.Write(tempdir / "file.txt", "original contents".encode("utf-8"))
-  with pytest.raises(OSError):
+  with test.Raises(OSError):
     fs.Write(
       tempdir / "file.txt",
       "Hello, world!".encode("utf-8"),

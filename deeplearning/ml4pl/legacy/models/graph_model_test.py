@@ -17,7 +17,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def input_graph() -> nx.DiGraph:
   """Test fixture which returns a simple graph for use as input or target."""
   g = nx.DiGraph(features=np.ones(1))
@@ -27,7 +27,7 @@ def input_graph() -> nx.DiGraph:
   yield g
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def target_graph() -> nx.DiGraph:
   """Test fixture which returns a simple graph for use as input or target."""
   g = nx.DiGraph(features=np.ones(2))
@@ -37,7 +37,7 @@ def target_graph() -> nx.DiGraph:
   yield g
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def df(input_graph: nx.DiGraph, target_graph) -> pd.DataFrame:
   """Dataframe containing a single training, validation, and test entry."""
   return pd.DataFrame(
@@ -81,7 +81,7 @@ class TrainedModel(typing.NamedTuple):
   outputs: typing.List[nx.DiGraph]
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def trained_model(
   df: pd.DataFrame, module_tempdir: pathlib.Path
 ) -> TrainedModel:

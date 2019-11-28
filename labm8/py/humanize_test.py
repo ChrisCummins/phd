@@ -289,11 +289,11 @@ def test_AddOrdinalSuffix():
   assert "100000th", humanize.AddOrdinalSuffix(100000)
   assert "100001st", humanize.AddOrdinalSuffix(100001)
   assert "100011th", humanize.AddOrdinalSuffix(100011)
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     humanize.AddOrdinalSuffix(-1)
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     humanize.AddOrdinalSuffix(0.5)
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     humanize.AddOrdinalSuffix(123.001)
 
 

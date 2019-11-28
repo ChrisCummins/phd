@@ -88,7 +88,7 @@ __kernel void entry(__global ulong *result) {
 # Test fixtures.
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_testcase() -> deepsmith_pb2.Testcase():
   """A test fixture which returns a very simple test case."""
   return deepsmith_pb2.Testcase(
@@ -98,7 +98,7 @@ def abc_testcase() -> deepsmith_pb2.Testcase():
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_harness_config() -> harness_pb2.ClLauncherHarness:
   """A test fixture which returns an oclgrind harness config."""
   config = harness_pb2.ClLauncherHarness()
@@ -107,13 +107,13 @@ def abc_harness_config() -> harness_pb2.ClLauncherHarness:
   return config
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_harness(abc_harness_config) -> cl_launcher.ClLauncherHarness:
   """A test fixture which returns an oclgrind harness."""
   return cl_launcher.ClLauncherHarness(abc_harness_config)
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_run_testcases_request(
   abc_testcase, abc_harness
 ) -> harness_pb2.RunTestcasesRequest:

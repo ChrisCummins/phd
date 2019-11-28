@@ -28,7 +28,7 @@ from labm8.py import test
 DUMMY_TARGET = "//experimental/system/alice/test:dummy_target"
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def workspace(module_tempdir: pathlib.Path) -> pathlib.Path:
   """Create a workspace with a single //:hello binary target."""
   with open(module_tempdir / "WORKSPACE", "w") as f:
@@ -66,13 +66,13 @@ cc_binary(
 
 def test_BazelClient_root_dir_not_found(tempdir: pathlib.Path):
   """Error is raised if root dir is not found."""
-  with pytest.raises(FileNotFoundError):
+  with test.Raises(FileNotFoundError):
     bazel.BazelClient(tempdir / "foo", tempdir / "work")
 
 
 def test_BazelClient_workspace_not_found(tempdir: pathlib.Path):
   """Error is raised if WORKSPACE is not found."""
-  with pytest.raises(bazel.BazelError):
+  with test.Raises(bazel.BazelError):
     (tempdir / "repo").mkdir()
     bazel.BazelClient(tempdir / "repo", tempdir / "work")
 
@@ -109,7 +109,7 @@ def test_BazelClient_Run_process_id(
   assert process.pid != system.PID
 
 
-@pytest.mark.xfail(reason="FIXME")
+@test.Xfail(reason="FIXME")
 def test_BazelClient_Run_stderr(workspace: pathlib.Path, tempdir: pathlib.Path):
   """Check stderr of test target."""
   client = bazel.BazelClient(workspace, tempdir)
@@ -156,7 +156,7 @@ def test_BazelClient_Run_process_isnt_running(
   process.join()
   try:
     os.kill(process.pid, 0)
-    pytest.fail(
+    test.Fail(
       "os.kill() didn't fail, that means the process is still " "running"
     )
   except ProcessLookupError:
@@ -200,7 +200,7 @@ int main() {
   process.join()
   try:
     os.kill(process.pid, 0)
-    pytest.fail(
+    test.Fail(
       "os.kill() didn't fail, that means the process is still " "running"
     )
   except ProcessLookupError:

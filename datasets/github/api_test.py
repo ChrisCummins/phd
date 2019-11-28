@@ -24,7 +24,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def credentials_file() -> pathlib.Path:
   """A test fixture to yield a GitHub credentials file."""
   with tempfile.TemporaryDirectory() as d:

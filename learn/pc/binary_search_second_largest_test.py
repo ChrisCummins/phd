@@ -62,7 +62,7 @@ def test_FindSecondLargest_tree3():
   # Tree:
   #     5
   bst = Node(5, None, None)
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     FindSecondLargest(bst)
 
 

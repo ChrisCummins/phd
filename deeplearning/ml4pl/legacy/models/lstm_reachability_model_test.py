@@ -13,13 +13,13 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="module")
+@test.Fixture(scope="module")
 def atomizer() -> atomizers.AtomizerBase:
   """Test fixture that returns a tiny atomizer."""
   return atomizers.AsciiCharacterAtomizer.FromText(" ABCD")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def df() -> pd.DataFrame:
   """Test fixture that returns a minimal valid dataframe."""
   g = control_flow_graph.ControlFlowGraph(name="A")

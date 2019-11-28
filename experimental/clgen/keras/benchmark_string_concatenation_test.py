@@ -30,7 +30,7 @@ FLAGS = app.FLAGS
 MODULE_UNDER_TEST = None  # No coverage.
 
 
-@pytest.mark.parametrize("iterations", [50, 100, 500, 1000, 5000])
+@test.Parametrize("iterations", [50, 100, 500, 1000, 5000])
 def test_string_concat(benchmark, iterations):
   """Benchmark string concatenation."""
 
@@ -44,7 +44,7 @@ def test_string_concat(benchmark, iterations):
   benchmark(Benchmark)
 
 
-@pytest.mark.parametrize("iterations", [50, 100, 500, 1000, 5000])
+@test.Parametrize("iterations", [50, 100, 500, 1000, 5000])
 def test_string_join(benchmark, iterations):
   """Benchmark string concatenation."""
 

@@ -28,7 +28,7 @@ def test_output_path_flag(tempdir: pathlib.Path):
 def test_int_flag_validator():
   FLAGS.unparse_flags()
   FLAGS(["argv[0]", "--int_flag_with_validator", "2"])
-  with pytest.raises(absl_flags.IllegalFlagValueError):
+  with test.Raises(absl_flags.IllegalFlagValueError):
     FLAGS(["argv[0]", "--int_flag_with_validator", "-1"])
 
 

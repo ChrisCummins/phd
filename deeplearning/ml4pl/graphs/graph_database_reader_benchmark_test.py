@@ -3,7 +3,6 @@ import pickle
 import random
 
 import numpy as np
-import pytest
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as reader
@@ -47,8 +46,8 @@ def PopulateGraphDatabase(
   return graph_db
 
 
-@pytest.mark.parametrize("buffer_size", [128, 512])
-@pytest.mark.parametrize("graph_count", [1000, 10000])
+@test.Parametrize("buffer_size", [128, 512])
+@test.Parametrize("graph_count", [1000, 10000])
 def test_benchmark_BufferedGraphReader_in_order(
   benchmark,
   empty_graph_db: graph_database.Database,
@@ -67,8 +66,8 @@ def test_benchmark_BufferedGraphReader_in_order(
   )
 
 
-@pytest.mark.parametrize("buffer_size", [128, 512])
-@pytest.mark.parametrize("graph_count", [1000, 10000])
+@test.Parametrize("buffer_size", [128, 512])
+@test.Parametrize("graph_count", [1000, 10000])
 def test_benchmark_BufferedGraphReader_global_random(
   benchmark,
   empty_graph_db: graph_database.Database,
@@ -87,8 +86,8 @@ def test_benchmark_BufferedGraphReader_global_random(
   )
 
 
-@pytest.mark.parametrize("buffer_size", [128, 512])
-@pytest.mark.parametrize("graph_count", [1000, 10000])
+@test.Parametrize("buffer_size", [128, 512])
+@test.Parametrize("graph_count", [1000, 10000])
 def test_benchmark_BufferedGraphReader_batch_random(
   benchmark,
   empty_graph_db: graph_database.Database,
@@ -107,8 +106,8 @@ def test_benchmark_BufferedGraphReader_batch_random(
   )
 
 
-@pytest.mark.parametrize("buffer_size", [128, 512])
-@pytest.mark.parametrize("graph_count", [1000, 10000])
+@test.Parametrize("buffer_size", [128, 512])
+@test.Parametrize("graph_count", [1000, 10000])
 def test_benchmark_BufferedGraphReader_data_flow_max_steps_required(
   benchmark,
   empty_graph_db: graph_database.Database,

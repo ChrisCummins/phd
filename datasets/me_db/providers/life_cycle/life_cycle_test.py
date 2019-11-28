@@ -32,13 +32,13 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def temp_dir() -> pathlib.Path:
   with tempfile.TemporaryDirectory(prefix="phd_") as d:
     yield pathlib.Path(d)
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def temp_inbox(temp_dir: pathlib.Path) -> pathlib.Path:
   (temp_dir / "life_cycle").mkdir()
   generator = make_dataset.RandomDatasetGenerator(

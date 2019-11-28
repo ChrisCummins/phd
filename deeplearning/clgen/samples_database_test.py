@@ -10,7 +10,7 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> samples_database.SamplesDatabase:
   yield samples_database.SamplesDatabase(f"sqlite:///{tempdir}/db")
 

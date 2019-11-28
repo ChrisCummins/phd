@@ -14,12 +14,12 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
   return graph_database.Database(f"sqlite:///{tempdir}/graphs.db")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> log_database.Database:
   return log_database.Database(f"sqlite:///{tempdir}/db")
 

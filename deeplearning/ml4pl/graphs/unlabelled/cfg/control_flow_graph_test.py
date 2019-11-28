@@ -295,7 +295,7 @@ D: """
 def test_ControlFlowGraph_validate_empty_graph():
   """Test that empty graph is invalid."""
   g = control_flow_graph.ControlFlowGraph()
-  with pytest.raises(control_flow_graph.NotEnoughNodes) as e_ctx:
+  with test.Raises(control_flow_graph.NotEnoughNodes) as e_ctx:
     g.ValidateControlFlowGraph()
   assert str(e_ctx.value) == "Function `cfg` has no nodes"
   assert not g.IsValidControlFlowGraph()
@@ -315,7 +315,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_disconnected_graph():
   g.add_node(1, name="B", exit=True)
   g.add_node(2, name="C")
   g.add_edge(0, 1)
-  with pytest.raises(control_flow_graph.UnconnectedNode) as e_ctx:
+  with test.Raises(control_flow_graph.UnconnectedNode) as e_ctx:
     g.ValidateControlFlowGraph()
   assert str(e_ctx.value) == "Unconnected node 'C'"
   assert not g.IsValidControlFlowGraph()
@@ -330,9 +330,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_no_path_from_entry_to_exit():
   g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(2, 1)
-  with pytest.raises(
-    control_flow_graph.MalformedControlFlowGraphError
-  ) as e_ctx:
+  with test.Raises(control_flow_graph.MalformedControlFlowGraphError) as e_ctx:
     g.ValidateControlFlowGraph()
   assert str(e_ctx.value) == (
     "No path from entry node 'A' to exit node 'C' " "in function `cfg`"
@@ -351,7 +349,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_invalid_degrees():
   g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
-  with pytest.raises(control_flow_graph.InvalidNodeDegree) as e_ctx:
+  with test.Raises(control_flow_graph.InvalidNodeDegree) as e_ctx:
     g.ValidateControlFlowGraph()
   assert str(e_ctx.value) == "outdegree(A) = 1, indegree(B) = 1"
   assert not g.IsValidControlFlowGraph()
@@ -377,7 +375,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_unamed_nodes():
   g.add_edge(0, 2)
   g.add_edge(1, 3)
   g.add_edge(2, 3)
-  with pytest.raises(control_flow_graph.MissingNodeName) as e_ctx:
+  with test.Raises(control_flow_graph.MissingNodeName) as e_ctx:
     g.ValidateControlFlowGraph()
   assert str(e_ctx.value) == "Node 2 has no name in function `cfg`"
   assert not g.IsValidControlFlowGraph()
@@ -403,7 +401,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_duplicate_names():
   g.add_edge(0, 2)
   g.add_edge(1, 3)
   g.add_edge(2, 3)
-  with pytest.raises(control_flow_graph.DuplicateNodeName) as e_ctx:
+  with test.Raises(control_flow_graph.DuplicateNodeName) as e_ctx:
     g.ValidateControlFlowGraph()
   assert str(e_ctx.value) == "Duplicate node name 'B' in function `cfg`"
   assert not g.IsValidControlFlowGraph()
@@ -430,7 +428,7 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_exit_block_has_output():
   g.add_edge(1, 3)
   g.add_edge(2, 3)
   g.add_edge(3, 0)
-  with pytest.raises(control_flow_graph.InvalidNodeDegree) as e_ctx:
+  with test.Raises(control_flow_graph.InvalidNodeDegree) as e_ctx:
     g.ValidateControlFlowGraph()
   assert str(e_ctx.value) == "Exit block outdegree(D) = 1 in function `cfg`"
   assert not g.IsValidControlFlowGraph()

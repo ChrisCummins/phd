@@ -1,6 +1,4 @@
 """Unit tests for //deeplearning/ml4pl/ggnn:graph_database_reader."""
-import pytest
-
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as reader
 from labm8.py import test
@@ -8,7 +6,7 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
+@test.Parametrize("buffer_size", [1, 25, 10000])
 def test_BufferedGraphReader_values_in_order(
   graph_db_512: graph_database.Database, buffer_size: int
 ):
@@ -26,8 +24,8 @@ def test_BufferedGraphReader_values_in_order(
   assert [all(g.data[0] == i + 2 for i, g in enumerate(graphs))]
 
 
-@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
-@pytest.mark.parametrize(
+@test.Parametrize("buffer_size", [1, 25, 10000])
+@test.Parametrize(
   "order",
   [
     reader.BufferedGraphReaderOrder.IN_ORDER,
@@ -51,8 +49,8 @@ def test_BufferedGraphReader_filter(
   assert len(graphs) == 255
 
 
-@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
-@pytest.mark.parametrize(
+@test.Parametrize("buffer_size", [1, 25, 10000])
+@test.Parametrize(
   "order",
   [
     reader.BufferedGraphReaderOrder.IN_ORDER,
@@ -81,9 +79,9 @@ def test_BufferedGraphReader_filters(
 
 # TODO(cec): Fix me.
 # There is a possibility that random order returns all rows in order!
-# @pytest.mark.flaky
-# @pytest.mark.parametrize('buffer_size', [25, 10000])
-# @pytest.mark.parametrize('order', [reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
+# @test.Flaky
+# @test.Parametrize('buffer_size', [25, 10000])
+# @test.Parametrize('order', [reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
 #                                    reader.BufferedGraphReaderOrder.BATCH_RANDOM])
 # def test_BufferedGraphReader_random_orders(
 #     graph_db_512: graph_database.Database,
@@ -97,8 +95,8 @@ def test_BufferedGraphReader_filters(
 
 
 # TODO(cec): Test with 'limit=1'.
-@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
-@pytest.mark.parametrize(
+@test.Parametrize("buffer_size", [1, 25, 10000])
+@test.Parametrize(
   "order",
   [
     reader.BufferedGraphReaderOrder.IN_ORDER,
@@ -107,7 +105,7 @@ def test_BufferedGraphReader_filters(
     reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED,
   ],
 )
-@pytest.mark.parametrize("limit", [25, 10000])
+@test.Parametrize("limit", [25, 10000])
 def test_BufferedGraphReader_limit(
   graph_db_512: graph_database.Database,
   buffer_size: int,
@@ -123,8 +121,8 @@ def test_BufferedGraphReader_limit(
   assert len(graphs) == min(limit, 510)
 
 
-@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
-@pytest.mark.parametrize(
+@test.Parametrize("buffer_size", [1, 25, 10000])
+@test.Parametrize(
   "order",
   [
     reader.BufferedGraphReaderOrder.IN_ORDER,
@@ -144,11 +142,11 @@ def test_BufferedGraphReader_next(
   )
   for _ in range(510):
     next(db_reader)
-  with pytest.raises(StopIteration):
+  with test.Raises(StopIteration):
     next(db_reader)
 
 
-@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
+@test.Parametrize("buffer_size", [1, 25, 10000])
 def test_BufferedGraphReader_data_flow_max_steps_order(
   graph_db_512: graph_database.Database, buffer_size: int
 ):

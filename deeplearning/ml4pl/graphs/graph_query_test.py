@@ -9,7 +9,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph():
   g = nx.MultiDiGraph()
   g.add_node("A", type="statement")
@@ -51,7 +51,7 @@ def test_StatementIsSuccessor_linear_control_path():
   assert not query.StatementIsSuccessor(g, "c", "a")
   assert not query.StatementIsSuccessor(g, "b", "a")
   assert not query.StatementIsSuccessor(g, "a", "_not_in_graph_")
-  with pytest.raises(Exception):
+  with test.Raises(Exception):
     assert not query.StatementIsSuccessor(
       g, "_not_in_graph_", "_not_in_graph2_"
     )

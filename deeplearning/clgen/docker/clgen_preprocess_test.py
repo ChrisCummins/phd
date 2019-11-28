@@ -12,7 +12,7 @@ FLAGS = test.FLAGS
 MODULE_UNDER_TEST = None
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def contentfiles(tempdir: pathlib.Path) -> pathlib.Path:
   fs.Write(tempdir / "a.cc", "int main() /* comment */ {}".encode("utf-8"))
   fs.Write(
@@ -30,7 +30,7 @@ public class HelloWorld {
   yield tempdir
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def preprocess() -> dockerutil.BazelPy3Image:
   return dockerutil.BazelPy3Image("deeplearning/clgen/docker/clgen_preprocess")
 

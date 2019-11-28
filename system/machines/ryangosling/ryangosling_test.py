@@ -21,7 +21,7 @@ _MACHINE_SPEC_PATH = bazelutil.DataPath(
 )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def ryangosling() -> machine.Machine:
   return machine.Machine.FromFile(_MACHINE_SPEC_PATH)
 
@@ -35,7 +35,7 @@ def test_Ryangosling_mirrored_directories(ryangosling: machine.Machine):
 
 @pytest.mark.diana
 @pytest.mark.florence
-@pytest.mark.skipif(
+@test.SkipIf(
   not os.path.isdir("/Volumes/Orange"), reason="Orange drive not found"
 )
 def test_Ryangosling_photos(ryangosling: machine.Machine):
@@ -57,7 +57,7 @@ def test_Ryangosling_photos(ryangosling: machine.Machine):
 
 @pytest.mark.diana
 @pytest.mark.florence
-@pytest.mark.parametrize("dir", ("music", "movies", "tv"))
+@test.Parametrize("dir", ("music", "movies", "tv"))
 def test_Ryangosling_mirrored_directory_exists(
   ryangosling: machine.Machine, dir: str
 ):
@@ -68,7 +68,7 @@ def test_Ryangosling_mirrored_directory_exists(
 
 @pytest.mark.diana
 @pytest.mark.florence
-@pytest.mark.parametrize("dir", ("music", "movies", "tv"))
+@test.Parametrize("dir", ("music", "movies", "tv"))
 def test_Ryangosling_mirrored_directory_remote_exists(
   ryangosling: machine.Machine, dir: str
 ):
@@ -80,7 +80,7 @@ def test_Ryangosling_mirrored_directory_remote_exists(
 
 @pytest.mark.diana
 @pytest.mark.florence
-@pytest.mark.parametrize("dir", ("music", "movies", "tv"))
+@test.Parametrize("dir", ("music", "movies", "tv"))
 def test_Ryangosling_mirrored_directory_local_exists(
   ryangosling: machine.Machine, dir: str
 ):

@@ -32,19 +32,19 @@ def test_make():
 
 
 def test_make_bad_target():
-  with pytest.raises(make.NoTargetError):
+  with test.Raises(make.NoTargetError):
     make.make(target="bad-target", dir="labm8/py/test_data/makeproj")
 
 
 def test_make_bad_target():
-  with pytest.raises(make.NoMakefileError):
+  with test.Raises(make.NoMakefileError):
     make.make(dir="/bad/path")
-  with pytest.raises(make.NoMakefileError):
+  with test.Raises(make.NoMakefileError):
     make.make(target="foo", dir="labm8/py/test_data")
 
 
 def test_make_fail():
-  with pytest.raises(make.MakeError):
+  with test.Raises(make.MakeError):
     make.make(target="fail", dir="labm8/py/test_data/makeproj")
 
 

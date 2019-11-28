@@ -9,7 +9,7 @@ from gpu.libcecl import libcecl_compile
 from labm8.py import test
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def c_program_src() -> str:
   """A fixture that returns the code for a simple C program."""
   return """
@@ -19,14 +19,14 @@ int main(int argc, char** argv) {
 """
 
 
-@pytest.mark.parametrize(
+@test.Parametrize(
   "flags_getter",
   (
     libcecl_compile.OpenClCompileAndLinkFlags,
     libcecl_compile.LibCeclCompileAndLinkFlags,
   ),
 )
-@pytest.mark.parametrize(
+@test.Parametrize(
   "flags_getter_args", ({"opencl_headers": True}, {"opencl_headers": False})
 )
 def test_OpenClCompileAndLinkFlags_smoke_test(

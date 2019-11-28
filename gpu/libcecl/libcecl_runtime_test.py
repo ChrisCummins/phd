@@ -29,7 +29,7 @@ def test_KernelInvocationsFromCeclLog():
 
 
 def test_KernelInvocationsFromCeclLog_different_device_type():
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     libcecl_runtime.KernelInvocationsFromCeclLog(
       ["clCreateCommandQueue ; GPU ; OpenCL Device",],
       expected_devtype="CPU",
@@ -38,7 +38,7 @@ def test_KernelInvocationsFromCeclLog_different_device_type():
 
 
 def test_KernelInvocationsFromCeclLog_different_device_name():
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     libcecl_runtime.KernelInvocationsFromCeclLog(
       ["clCreateCommandQueue ; CPU ; Different OpenCL Device",],
       expected_devtype="CPU",

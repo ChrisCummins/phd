@@ -50,7 +50,7 @@ def test_Instance_working_dir_shell_variable_expansion(abc_instance_config):
 def test_Instance_no_model_field(abc_instance_config):
   """Test that UserError is raised when no model field in config."""
   abc_instance_config.ClearField("model_specification")
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     clgen.Instance(abc_instance_config)
   assert "Field not set: 'Instance.model_specification'" == str(e_info.value)
 
@@ -58,7 +58,7 @@ def test_Instance_no_model_field(abc_instance_config):
 def test_Instance_no_sampler_field(abc_instance_config):
   """Test that UserError is raised when no model field in config."""
   abc_instance_config.ClearField("model_specification")
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     clgen.Instance(abc_instance_config)
   assert "Field not set: 'Instance.model_specification'" == str(e_info.value)
 
@@ -106,7 +106,7 @@ def test_RunWithErrorHandling_return_value(clgen_cache_dir):
 def test_RunWithErrorHandling_system_exit(clgen_cache_dir):
   """Test that SystemExit is raised on exception."""
   del clgen_cache_dir
-  with pytest.raises(SystemExit):
+  with test.Raises(SystemExit):
     clgen.RunWithErrorHandling(lambda a, b: a // b, 1, 0)
 
 
@@ -114,7 +114,7 @@ def test_RunWithErrorHandling_exception_debug(clgen_cache_dir):
   """Test that FLAGS.debug disables exception catching."""
   del clgen_cache_dir
   app.FLAGS(["argv[0]", "--clgen_debug"])
-  with pytest.raises(ZeroDivisionError):
+  with test.Raises(ZeroDivisionError):
     clgen.RunWithErrorHandling(lambda a, b: a // b, 1, 0)
 
 
@@ -123,14 +123,14 @@ def test_RunWithErrorHandling_exception_debug(clgen_cache_dir):
 
 def test_main_unrecognized_arguments():
   """Test that UsageError is raised if arguments are not recognized."""
-  with pytest.raises(app.UsageError) as e_info:
+  with test.Raises(app.UsageError) as e_info:
     clgen.main(["argv[0]", "--foo", "--bar"])
   assert "Unrecognized command line options: '--foo --bar'" == str(e_info.value)
 
 
 def test_main_no_config_flag():
   """Test that UsageError is raised if --config flag not set."""
-  with pytest.raises(app.UsageError) as e_info:
+  with test.Raises(app.UsageError) as e_info:
     clgen.main(["argv[0]"])
   assert "CLgen --config file not found: '/clgen/config.pbtxt'" == str(
     e_info.value
@@ -142,7 +142,7 @@ def test_main_config_file_not_found():
   with tempfile.TemporaryDirectory() as d:
     app.FLAGS.unparse_flags()
     app.FLAGS(["argv[0]", "--config", f"{d}/config.pbtxt"])
-    with pytest.raises(app.UsageError) as e_info:
+    with test.Raises(app.UsageError) as e_info:
       clgen.main(["argv[0]"])
     assert f"CLgen --config file not found: '{d}/config.pbtxt'" == str(
       e_info.value
@@ -192,7 +192,7 @@ def test_main_print_cache_invalid_argument(abc_instance_file):
   app.FLAGS(
     ["argv[0]", "--config", abc_instance_file, "--print_cache_path=foo"]
   )
-  with pytest.raises(app.UsageError) as e_info:
+  with test.Raises(app.UsageError) as e_info:
     clgen.main([])
   assert "Invalid --print_cache_path argument: 'foo'" == str(e_info.value)
 
@@ -232,7 +232,7 @@ def test_main_stop_after_uncrecognized(abc_instance_file):
   """Test that --stop_after raises an error on unknown."""
   app.FLAGS.unparse_flags()
   app.FLAGS(["argv[0]", "--config", abc_instance_file, "--stop_after", "foo"])
-  with pytest.raises(app.UsageError):
+  with test.Raises(app.UsageError):
     clgen.main([])
 
 

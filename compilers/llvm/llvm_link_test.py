@@ -40,7 +40,7 @@ def test_LinkBitcodeFilesToBytecode_syntax_error(tempdir: pathlib.Path):
   input_path = tempdir / "empty.ll"
   output_path = tempdir / "linked.ll"
   fs.Write(input_path, "syntax error!".encode("utf-8"))
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     llvm_link.LinkBitcodeFilesToBytecode(
       [input_path], output_path, timeout_seconds=5
     )

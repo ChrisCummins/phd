@@ -9,7 +9,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def wiki() -> nx.MultiDiGraph:
   # Example graph taken from Wikipedia:
   # <https://en.wikipedia.org/wiki/Live_variable_analysis>
@@ -200,7 +200,7 @@ def test_AnnotateLiveness_wiki_b3b(wiki: nx.MultiDiGraph):
   assert not wiki.nodes["d"]["y"]
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
   g.add_node("A", type="statement", x=-1)
@@ -323,7 +323,7 @@ def test_AnnotateDominatorTree_graph_D(graph: nx.MultiDiGraph):
   assert not graph.nodes["%2"]["y"]
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def while_loop() -> nx.MultiDiGraph:
   """Test fixture which returns a simple "while loop" graph."""
   #          (%1)

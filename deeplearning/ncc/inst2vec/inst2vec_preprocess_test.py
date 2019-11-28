@@ -11,7 +11,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def data_folder() -> str:
   """A test fixture that produces a data folder with a single bytecode."""
 

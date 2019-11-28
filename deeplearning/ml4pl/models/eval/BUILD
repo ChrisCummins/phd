@@ -12,6 +12,15 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "export_leaderboard_test",
+    srcs = ["export_leaderboard_test.py"],
+    deps = [
+        ":export_leaderboard",
+        "//labm8/py:test",
+    ],
+)
+
 py_binary(
     name = "ault_export_leaderboard",
     srcs = ["ault_export_leaderboard.py"],

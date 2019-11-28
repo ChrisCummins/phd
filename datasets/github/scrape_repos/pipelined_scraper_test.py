@@ -12,14 +12,14 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def query(tempdir: pathlib.Path) -> scrape_repos_pb2.GitHubRepositoryQuery:
   return scrape_repos_pb2.GitHubRepositoryQuery(
     string="test query", max_results=10,
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def language(
   tempdir: pathlib.Path, query: scrape_repos_pb2.GitHubRepositoryQuery
 ) -> scrape_repos_pb2.LanguageCloneList:
@@ -87,12 +87,12 @@ class MockGitHubConnection(object):
     return MockQuery([MockRepository()])
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def connection():
   return MockGitHubConnection()
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> contentfiles.ContentFiles:
   return contentfiles.ContentFiles(f"sqlite:///{tempdir}/db")
 

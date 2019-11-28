@@ -114,7 +114,7 @@ def test_table_columns():
 
 
 def test_table_bad_columns():
-  with pytest.raises(latex.Error):
+  with test.Raises(latex.Error):
     latex.table(
       (("foo", 1), ("bar", 2)),
       columns=("type", "value", "too", "many", "values"),
@@ -122,7 +122,7 @@ def test_table_bad_columns():
 
 
 def test_table_bad_rows():
-  with pytest.raises(latex.Error):
+  with test.Raises(latex.Error):
     latex.table((("foo", 1), ("bar", 2), ("car",)))
 
 

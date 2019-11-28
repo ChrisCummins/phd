@@ -25,7 +25,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture
+@test.Fixture(scope="function")
 def profiling_env() -> None:
   """Create a session for an in-memory SQLite datastore.
 
@@ -82,12 +82,12 @@ def test_named_timer(profiling_env):
 def test_stop_twice_error(profiling_env):
   prof.start("foo")
   prof.stop("foo")
-  with pytest.raises(KeyError):
+  with test.Raises(KeyError):
     prof.stop("foo")
 
 
 def test_stop_bad_name_error(profiling_env):
-  with pytest.raises(KeyError):
+  with test.Raises(KeyError):
     prof.stop("not a timer")
 
 

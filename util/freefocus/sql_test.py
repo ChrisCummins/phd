@@ -12,12 +12,12 @@ from util.freefocus import sql
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> sql.Database:
   yield sql.Database(tempdir / "test.db")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def session(db) -> sqlutil.Session:
   with db.Session() as session:
     yield session

@@ -1,11 +1,18 @@
-"""This file contains TODO: one line summary.
+"""Unit tests for //deeplearning/ml4pl/models/eval:export_leaderboard."""
+from labm8.py import test
 
-TODO: Detailed explanation of the file.
-"""
-from labm8.py import app
+FLAGS = test.FLAGS
 
-FLAGS = app.FLAGS
+MODULE_UNDER_TEST = None
 
-requires_google_sheets_credentials_file = pytest.mark.skipif(
+requires_google_sheets_credentials_file = test.SkipIf(
   not FLAGS.credentials.is_file(), reason="google sheets credentials not found",
 )
+
+
+def test_TODO():
+  pass
+
+
+if __name__ == "__main__":
+  test.Main()

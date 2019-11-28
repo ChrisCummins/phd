@@ -54,7 +54,7 @@ def test_table_columns():
 
 
 def test_table_bad_columns():
-  with pytest.raises(fmt.Error):
+  with test.Raises(fmt.Error):
     fmt.table(
       (("foo", 1), ("bar", 2)),
       columns=("type", "value", "too", "many", "values"),
@@ -62,7 +62,7 @@ def test_table_bad_columns():
 
 
 def test_table_bad_rows():
-  with pytest.raises(fmt.Error):
+  with test.Raises(fmt.Error):
     fmt.table((("foo", 1), ("bar", 2), ("car",)))
 
 

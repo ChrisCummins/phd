@@ -28,7 +28,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def tempfile_path() -> str:
   """Test fixture which returns the path to a temporary file."""
   with tempfile.NamedTemporaryFile(prefix="phd_test_") as f:
@@ -87,7 +87,7 @@ def test_subprocess_stderr():
 
 def test_subprocess_timeout():
   p = system.Subprocess(["sleep 10"], shell=True)
-  with pytest.raises(system.SubprocessError):
+  with test.Raises(system.SubprocessError):
     p.run(timeout=0.1)
 
 
@@ -104,9 +104,9 @@ def test_run():
 
 
 def test_run_timeout():
-  with pytest.raises(system.SubprocessError):
+  with test.Raises(system.SubprocessError):
     system.run(["sleep 10"], timeout=0.1, shell=True)
-  with pytest.raises(system.SubprocessError):
+  with test.Raises(system.SubprocessError):
     system.run(["sleep 10"], timeout=0.1, num_retries=2, shell=True)
 
 
@@ -145,7 +145,7 @@ def test_sed(tempdir: pathlib.Path):
 
 
 def test_sed_fail_no_file(tempdir: pathlib.Path):
-  with pytest.raises(system.SubprocessError):
+  with test.Raises(system.SubprocessError):
     system.sed("Hello", "Goodbye", tempdir / "not_a_file.txt")
 
 
@@ -170,10 +170,10 @@ def test_isprocess():
 
 
 def test_exit():
-  with pytest.raises(SystemExit) as ctx:
+  with test.Raises(SystemExit) as ctx:
     system.exit(0)
   assert ctx.value.code == 0
-  with pytest.raises(SystemExit) as ctx:
+  with test.Raises(SystemExit) as ctx:
     system.exit(1)
   assert ctx.value.code == 1
 
@@ -207,7 +207,7 @@ def test_ProcessFileAndReplace_exception(tempfile_path: str):
     raise ValueError("Broken function!")
 
   # Test that error is propagated.
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     system.ProcessFileAndReplace(tempfile_path, BrokenFunction)
   assert str(e_ctx.value) == "Broken function!"
 

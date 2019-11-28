@@ -67,7 +67,7 @@ attributes #0 = { noinline nounwind optnone ssp uwtable "correctly-rounded-divid
 """
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def vocab() -> vocabulary.VocabularyZipFile:
   """Test fixture which yields a vocabulary zip file instance as a ctx mngr."""
   with vocabulary.VocabularyZipFile(VOCABULARY_PATH) as v:

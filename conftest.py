@@ -16,6 +16,9 @@ FLAGS = app.FLAGS
 
 # Test fixtures.
 
+# Note that @pytest.fixture is used here in place of @test.Fixture to break
+# a circular dependency between this file and //labm8/py:test.
+
 
 @pytest.fixture(scope="function")
 def tempdir() -> pathlib.Path:
@@ -85,7 +88,7 @@ def pytest_collection_modifyitems(config, items):
     # Skip tests if they been marked for an incompatible platform. To mark a
     # test for a platform, wrap the test function with a decorator. Example:
     #
-    #   @pytest.mark.darwin
+    #   @test.MacOsTest()
     #   def test_will_only_run_on_darwin():
     #     pass
     #
@@ -108,7 +111,7 @@ def pytest_collection_modifyitems(config, items):
     # Skip tests that have been marked slow unless --notest_skip_slow. To mark
     # a test as slow, wrap the test function with a decorator. Example:
     #
-    #   @pytest.mark.slow(reason='This takes a while')
+    #   @test.SlowTest(reason='This takes a while')
     #   def test_long_running():
     #     ExpensiveTest()
     #
@@ -128,4 +131,5 @@ def pytest_report_header(config) -> typing.Union[str, typing.List[str]]:
   print in the header of the test report. See:
   https://docs.pytest.org/en/latest/example/simple.html#adding-info-to-test-report-header
   """
+  del config
   return f"phd: {build_info.FormatShortBuildDescription()}"

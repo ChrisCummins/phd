@@ -52,10 +52,10 @@ def test_Exec_timeout(mocker):
   """Test that error is raised if clang-format returns with SIGKILL."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(9)
-  with pytest.raises(llvm.LlvmTimeout):
+  with test.Raises(llvm.LlvmTimeout):
     clang_format.Exec("", ".cpp", [])
   # ClangTimeout inherits from ClangException.
-  with pytest.raises(llvm.LlvmError):
+  with test.Raises(llvm.LlvmError):
     clang_format.Exec("", ".cpp", [])
 
 
@@ -63,7 +63,7 @@ def test_Exec_error(mocker):
   """Test that error is raised if clang-format returns non-zero."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(1)
-  with pytest.raises(clang_format.ClangFormatException):
+  with test.Raises(clang_format.ClangFormatException):
     clang_format.Exec("", ".cpp", [])
 
 

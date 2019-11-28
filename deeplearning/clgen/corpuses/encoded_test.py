@@ -29,19 +29,19 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_atomizer() -> atomizers.AsciiCharacterAtomizer:
   """A test fixture which returns a simply atomizer."""
   return atomizers.AsciiCharacterAtomizer.FromText("abcde")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_preprocessed() -> preprocessed.PreprocessedContentFile:
   """A test fixture which returns a preprocessed content file."""
   return preprocessed.PreprocessedContentFile(id=123, text="aabbccddee")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def temp_db() -> encoded.EncodedContentFiles:
   """A test fixture which returns an empty EncodedContentFiles db."""
   with tempfile.TemporaryDirectory() as d:
@@ -160,7 +160,7 @@ def test_EncodedContentFiles_empty_preprocessed_db(
     p = preprocessed.PreprocessedContentFiles(
       f"sqlite:///{pathlib.Path(d)}/preprocessed.db"
     )
-    with pytest.raises(errors.EmptyCorpusException):
+    with test.Raises(errors.EmptyCorpusException):
       temp_db.Create(p, abc_atomizer, "\n\n")
 
 

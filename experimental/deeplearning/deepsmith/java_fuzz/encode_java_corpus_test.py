@@ -11,7 +11,7 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def preprocessed_db(
   tempdir: pathlib.Path,
 ) -> preprocessed.PreprocessedContentFile:
@@ -21,7 +21,7 @@ def preprocessed_db(
   return db
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def encoded_db(tempdir: pathlib.Path) -> encoded.EncodedContentFiles:
   db = encoded.EncodedContentFiles(f"sqlite:///{tempdir}/encoded")
   return db

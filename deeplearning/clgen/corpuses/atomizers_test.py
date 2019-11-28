@@ -179,7 +179,7 @@ def test_AsciiCharacterAtomizer_AtomizeString():
 
 def test_AsciiCharacterAtomizer_AtomizeString_vocab_error():
   c = atomizers.AsciiCharacterAtomizer({"a": 1, "b": 2, "c": 3})
-  with pytest.raises(deeplearning.clgen.errors.VocabError):
+  with test.Raises(deeplearning.clgen.errors.VocabError):
     c.AtomizeString("abcdeabc")
 
 
@@ -200,7 +200,7 @@ __kernel void A(__global float* a, const int b, const double c) {
 
 def test_AsciiCharacterAtomizer_DeatomizeIndices_error():
   c = atomizers.AsciiCharacterAtomizer({"a": 1, "b": 2, "c": 3})
-  with pytest.raises(deeplearning.clgen.errors.VocabError):
+  with test.Raises(deeplearning.clgen.errors.VocabError):
     c.DeatomizeIndices([1, 2, 5, 10, 0])
 
 

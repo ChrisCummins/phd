@@ -12,12 +12,12 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path):
   return log_database.Database(f"sqlite:///{tempdir}/db")
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def input_db(db: log_database.Database) -> log_database.Database:
   with db.Session(commit=True) as session:
     session.add_all(

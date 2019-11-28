@@ -29,7 +29,7 @@ FLAGS = app.FLAGS
 MODULE_UNDER_TEST = "gpu.cldrive"
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_empty_kernel():
   src = " kernel void A() {} "
   outputs = driver.DriveKernel(
@@ -38,7 +38,7 @@ def test_empty_kernel():
   assert len(outputs) == 0
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_simple():
   inputs = [[0, 1, 2, 3, 4, 5, 6, 7]]
   inputs_orig = [[0, 1, 2, 3, 4, 5, 6, 7]]
@@ -64,7 +64,7 @@ def test_simple():
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_vector_input():
   inputs = [[0, 1, 2, 3, 0, 1, 2, 3], [2, 4]]
   inputs_orig = [[0, 1, 2, 3, 0, 1, 2, 3], [2, 4]]
@@ -106,11 +106,11 @@ def test_vector_input():
   testlib.Assert2DArraysAlmostEqual(outputs2, outputs2_gs)
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_syntax_error():
   src = "kernel void A(gl ob a l  i nt* a) {}"
   with testlib.DevNullRedirect():
-    with pytest.raises(driver.OpenCLValueError):
+    with test.Raises(driver.OpenCLValueError):
       driver.DriveKernel(
         env.OclgrindOpenCLEnvironment(),
         src,
@@ -120,11 +120,11 @@ def test_syntax_error():
       )
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_incorrect_num_of_args():
   src = "kernel void A(const int a) {}"
   # too many inputs
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(),
       src,
@@ -134,13 +134,13 @@ def test_incorrect_num_of_args():
     )
 
   # too few inputs
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(), src, [], gsize=(1, 1, 1), lsize=(1, 1, 1)
     )
 
   # incorrect input width (3 ints instead of one)
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(),
       src,
@@ -150,11 +150,11 @@ def test_incorrect_num_of_args():
     )
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_timeout():
   # non-terminating kernel
   src = "kernel void A() { while (true) ; }"
-  with pytest.raises(driver.Timeout):
+  with test.Raises(driver.Timeout):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(),
       src,
@@ -165,12 +165,12 @@ def test_timeout():
     )
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_invalid_sizes():
   src = "kernel void A() {}"
 
   # invalid global size
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(),
       src,
@@ -180,7 +180,7 @@ def test_invalid_sizes():
     )
 
   # invalid local size
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(),
       src,
@@ -190,16 +190,16 @@ def test_invalid_sizes():
     )
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_gsize_smaller_than_lsize():
   src = "kernel void A() {}"
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(), src, [], gsize=(4, 1, 1), lsize=(8, 1, 1)
     )
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_iterative_increment():
   src = "kernel void A(global int* a) { a[get_global_id(0)] += 1; }"
 
@@ -216,7 +216,7 @@ def test_iterative_increment():
     testlib.Assert2DArraysAlmostEqual(d_cl, [d_host])
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_gsize_smaller_than_data():
   src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
 
@@ -234,10 +234,10 @@ def test_gsize_smaller_than_data():
   testlib.Assert2DArraysAlmostEqual(outputs, outputs_gs)
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_zero_size_input():
   src = "kernel void A(global int* a) {}"
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     driver.DriveKernel(
       env.OclgrindOpenCLEnvironment(),
       src,
@@ -247,7 +247,7 @@ def test_zero_size_input():
     )
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_comparison_against_pointer_warning():
   src = """
     kernel void A(global int* a) {
@@ -265,7 +265,7 @@ def test_comparison_against_pointer_warning():
   )
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_profiling():
   src = """
     kernel void A(global int* a, constant int* b) {
@@ -293,7 +293,7 @@ def test_profiling():
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_data_unchanged():
   src = "kernel void A(global int* a, global int* b, const int c) {}"
 
@@ -309,7 +309,7 @@ def test_data_unchanged():
   testlib.Assert2DArraysAlmostEqual(outputs, inputs)
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_data_zerod():
   # zero-ing a randomly initialized array
   src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
@@ -326,7 +326,7 @@ def test_data_zerod():
   testlib.Assert2DArraysAlmostEqual(outputs, [np.zeros(16)])
 
 
-@pytest.mark.skip(reason="FIXME(cec)")
+@test.Skip(reason="FIXME(cec)")
 def test_vector_input_switch():
   src = """
     kernel void A(global int2* a) {

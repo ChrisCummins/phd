@@ -46,7 +46,7 @@ def CSourceToInputPair(source: str) -> InputPair:
 def test_MakeAliasSetGraphs_invalid_bytecode():
   graph = nx.MultiDiGraph()
   bytecode = "invalid bytecode!"
-  with pytest.raises(opt.OptException):
+  with test.Raises(opt.OptException):
     list(alias_set.MakeAliasSetGraphs(graph, bytecode))
 
 

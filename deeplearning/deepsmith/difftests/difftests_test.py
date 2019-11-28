@@ -227,7 +227,7 @@ def test_GoldStandardDiffTester_DiffTestOne_both_pass_no_stdout():
   dt = deeplearning.deepsmith.difftests.difftests.GoldStandardDiffTester(
     deeplearning.deepsmith.difftests.difftests.NamedOutputIsEqual("stdout")
   )
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     dt.DiffTestOne(Result(outcome=Result.PASS), Result(outcome=Result.PASS))
   assert "'stdout' missing in one or more results." == str(e_ctx.value)
 

@@ -39,7 +39,7 @@ def test_truncate():
 
 
 def test_truncate_bad_maxchar():
-  with pytest.raises(text.TruncateError):
+  with test.Raises(text.TruncateError):
     text.truncate("foo", -1)
     text.truncate("foo", 3)
 
@@ -111,7 +111,7 @@ def test_AutoCompletePrefix_multiple_substring_match():
 def test_AutoCompletePrefix_not_wound():
   """Test that autocomplete raises error for non-matching substring."""
   trie = text.BuildPrefixTree({"abc"})
-  with pytest.raises(KeyError):
+  with test.Raises(KeyError):
     text.AutoCompletePrefix("d", trie)
 
 

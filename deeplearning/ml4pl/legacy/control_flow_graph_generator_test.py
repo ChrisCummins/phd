@@ -54,21 +54,21 @@ def test_UniqueNameSequence_StringInSequence_base_char():
 
 def test_UniqueNameSequence_StringInSequence_invalid_base_char():
   """Test that invalid base char raises error."""
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     control_flow_graph_generator.UniqueNameSequence("AA")
 
 
 def test_ControlFlowGraphGenerator_invalid_edge_density():
   """Test that invalid edge densities raise error."""
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     control_flow_graph_generator.ControlFlowGraphGenerator(
       np.random.RandomState(1), (10, 10), 0, strict=True
     )
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     control_flow_graph_generator.ControlFlowGraphGenerator(
       np.random.RandomState(1), (10, 10), -1, strict=True
     )
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     control_flow_graph_generator.ControlFlowGraphGenerator(
       np.random.RandomState(1), (10, 10), 1.1, strict=True
     )
@@ -100,7 +100,7 @@ def test_ControlFlowGraphGenerator_num_nodes():
   assert next(generator).number_of_nodes() == 5
 
 
-@pytest.mark.parametrize("edge_density", [0.1, 0.5, 0.8])
+@test.Parametrize("edge_density", [0.1, 0.5, 0.8])
 def test_ControlFlowGraphGenerator_minimum_edge_density(edge_density: float):
   """Test that edge density >= minimum."""
   generator = control_flow_graph_generator.ControlFlowGraphGenerator(
@@ -132,7 +132,7 @@ def test_ControlFlowGraphGenerator_GenerateUnique():
   assert len(set(uniq_graphs)) == 100
 
 
-@pytest.mark.parametrize("i", range(10))
+@test.Parametrize("i", range(10))
 def test_ControlFlowGraphGenerator_fuzz_test_batch(i: int):
   """Randomly parametrize and test CFG generator."""
   seed = i + np.random.randint(int(1e9))

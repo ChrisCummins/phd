@@ -30,7 +30,7 @@ def test_GetAtomizerFromOpenClSources_abc():
   assert atomizer.vocab_size == 4  # a, b, c, \n
 
 
-@pytest.mark.parametrize("gpu_name", ("amd_tahiti_7970", "nvidia_gtx_960",))
+@test.Parametrize("gpu_name", ("amd_tahiti_7970", "nvidia_gtx_960",))
 def test_AddClassificationTargetToDataFrame_ocl_dataset_columns(
   full_df: pd.DataFrame, gpu_name: str
 ):
@@ -41,7 +41,7 @@ def test_AddClassificationTargetToDataFrame_ocl_dataset_columns(
   assert "y_1hot" in full_df.columns.values
 
 
-@pytest.mark.parametrize("gpu_name", ("amd_tahiti_7970", "nvidia_gtx_960",))
+@test.Parametrize("gpu_name", ("amd_tahiti_7970", "nvidia_gtx_960",))
 def test_AddClassificationTargetToDataFrame_ocl_dataset_1hot(
   full_df: pd.DataFrame, gpu_name: str
 ):

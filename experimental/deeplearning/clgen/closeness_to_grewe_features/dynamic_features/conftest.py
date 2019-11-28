@@ -41,7 +41,7 @@ def _DynamicFeatures(
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db() -> grewe_features_db.Database:
   """A test fixture that yields a database with three static features in it."""
   db_ = grewe_features_db.Database("sqlite://")
@@ -62,7 +62,7 @@ def db() -> grewe_features_db.Database:
   yield db_
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def env() -> cldrive_env.OpenCLEnvironment:
   """Test fixture which yields a functional OpenCL environment."""
   return cldrive_env.OclgrindOpenCLEnvironment()

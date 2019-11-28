@@ -27,7 +27,7 @@ def test_NextGraph_larger_than_batch_size():
   big_graph = graph_database.GraphMeta(node_count=10000)
 
   options = graph_batcher.GraphBatchOptions(max_nodes=100)
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]), options)
 
   options = graph_batcher.GraphBatchOptions(max_nodes=9999999)

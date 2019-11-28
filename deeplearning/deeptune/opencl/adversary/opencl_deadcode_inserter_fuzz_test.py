@@ -117,7 +117,7 @@ __kernel void A(__global float* a, __global float* b, __global float* c, int d, 
 )
 
 
-@pytest.mark.parametrize("i", range(FUZZ_TEST_COUNT))
+@test.Parametrize("i", range(FUZZ_TEST_COUNT))
 def test_GenerateDeadcodeMutations_fuzz_test_batch(i: int):
   """Fuzz test the mutation generator.
 

@@ -33,7 +33,7 @@ FLAGS = app.FLAGS
 # Test fixtures.
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_testcase() -> deepsmith_pb2.Testcase():
   """A test fixture which returns a very simple test case."""
   return deepsmith_pb2.Testcase(
@@ -47,7 +47,7 @@ def abc_testcase() -> deepsmith_pb2.Testcase():
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_harness_config() -> harness_pb2.CldriveHarness:
   """A test fixture which returns an oclgrind harness config."""
   config = harness_pb2.CldriveHarness()
@@ -56,13 +56,13 @@ def abc_harness_config() -> harness_pb2.CldriveHarness:
   return config
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_harness(abc_harness_config) -> cldrive.CldriveHarness:
   """A test fixture which returns an oclgrind harness."""
   return cldrive.CldriveHarness(abc_harness_config)
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_run_testcases_request(
   abc_testcase, abc_harness
 ) -> harness_pb2.RunTestcasesRequest:
@@ -144,7 +144,7 @@ int main() {}
 def test_CompileDriver_DriverCompilationError_syntax_error():
   """Test that DriverCompilationError is raised if code does not compile."""
   with tempfile.TemporaryDirectory() as d:
-    with pytest.raises(cldrive.DriverCompilationError):
+    with test.Raises(cldrive.DriverCompilationError):
       cldrive.CompileDriver(
         "ina39lid s#yntax!", pathlib.Path(d) / "exe", 0, 0, timeout_seconds=60
       )
@@ -154,7 +154,7 @@ def test_CompileDriver_DriverCompilationError_syntax_error():
 def test_CompileDriver_invalid_cflags():
   """Test that DriverCompilationError is raised if cflags are invalid."""
   with tempfile.TemporaryDirectory() as d:
-    with pytest.raises(cldrive.DriverCompilationError):
+    with test.Raises(cldrive.DriverCompilationError):
       cldrive.CompileDriver(
         "int main() {}",
         pathlib.Path(d) / "exe",
@@ -185,7 +185,7 @@ def test_MakeDriver_ValueError_no_gsize():
   testcase = deepsmith_pb2.Testcase(
     inputs={"lsize": "1,1,1", "src": "kernel void A() {}"}
   )
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     cldrive.MakeDriver(testcase, True)
   assert "Field not set: 'Testcase.inputs[\"gsize\"]'" == str(e_ctx.value)
 
@@ -195,7 +195,7 @@ def test_MakeDriver_ValueError_no_lsize():
   testcase = deepsmith_pb2.Testcase(
     inputs={"gsize": "1,1,1", "src": "kernel void A() {}"}
   )
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     cldrive.MakeDriver(testcase, True)
   assert "Field not set: 'Testcase.inputs[\"lsize\"]'" == str(e_ctx.value)
 
@@ -205,7 +205,7 @@ def test_MakeDriver_ValueError_no_src():
   testcase = deepsmith_pb2.Testcase(
     inputs={"lsize": "1,1,1", "gsize": "1,1,1",}
   )
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     cldrive.MakeDriver(testcase, True)
   assert "Field not set: 'Testcase.inputs[\"src\"]'" == str(e_ctx.value)
 
@@ -215,7 +215,7 @@ def test_MakeDriver_ValueError_invalid_lsize():
   testcase = deepsmith_pb2.Testcase(
     inputs={"lsize": "abc", "gsize": "1,1,1", "src": "kernel void A() {}"}
   )
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     cldrive.MakeDriver(testcase, True)
   assert "invalid literal for int() with base 10: 'abc'" == str(e_ctx.value)
 
@@ -225,7 +225,7 @@ def test_MakeDriver_ValueError_invalid_gsize():
   testcase = deepsmith_pb2.Testcase(
     inputs={"lsize": "1,1,1", "gsize": "abc", "src": "kernel void A() {}"}
   )
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     cldrive.MakeDriver(testcase, True)
   assert "invalid literal for int() with base 10: 'abc'" == str(e_ctx.value)
 
@@ -301,7 +301,7 @@ def test_CldriveHarness_oclgrind_testbed_uneven_name_and_opt():
   config.opencl_env.extend([oclgrind_env_name, oclgrind_env_name])
   config.opencl_opt.extend([True])
 
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     cldrive.CldriveHarness(config, default_to_all_environments=False)
   assert (
     "CldriveHarness.opencl_env and CldriveHarness.opencl_opt lists are "

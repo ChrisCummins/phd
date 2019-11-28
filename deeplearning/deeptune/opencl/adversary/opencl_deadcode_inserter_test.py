@@ -45,14 +45,14 @@ def test_SetFunctionName_multichar_name():
 
 def test_SetFunctionName_invalid_kernel():
   """Test that error is raised if input is not kernel."""
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     # Leading underscores breaks regex match.
     dci.OpenClFunction("__kernel void A() {}").SetFunctionName("B")
 
 
 def test_KernelToFunctionDeclaration_invalid_kernel():
   """Test that error is raised if input is not kernel."""
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     dci.KernelToFunctionDeclaration("Hello, world!")
 
 
@@ -73,7 +73,7 @@ def test_KernelToFunctionDeclaration_args():
 
 def test_KernelToDeadCodeBlock_invalid_kernel():
   """Test that error is raised if input is not kernel."""
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     dci.KernelToDeadCodeBlock("Hello, world!")
 
 

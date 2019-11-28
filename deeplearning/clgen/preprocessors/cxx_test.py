@@ -54,7 +54,7 @@ int foo() { return foobar<int>(10); }
 
 def test_ClangPreprocess_missing_include():
   """Test that ClangPreprocessor error is raised on missing #include."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     cxx.ClangPreprocess('#include "my-missing-file.h"')
   assert "'my-missing-file.h' file not found" in str(e_info.value)
 
@@ -107,14 +107,14 @@ int A(FLOAT_T* a) {}
 
 def test_Compile_syntax_error():
   """Test that Compile rejects a program with invalid syntax."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     cxx.Compile("int mainA2@@1!!!#")
   assert "error: " in str(e_info.value)
 
 
 def test_Compile_undefined_variable():
   """Test that Compile rejects a program with an undefined variable."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     cxx.Compile(
       """
 int main(int argc, char** argv) {
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
 
 def test_Compile_undefined_function():
   """Test that Compile rejects a program with an undefined function."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     cxx.Compile(
       """
 int main(int argc, char** argv) {

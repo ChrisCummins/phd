@@ -37,7 +37,7 @@ def _StaticFeatures(origin: str) -> grewe_features_db.StaticFeatures:
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> grewe_features_db.Database:
   db = grewe_features_db.Database(f"sqlite:///{tempdir}/db")
   with db.Session(commit=True) as s:

@@ -33,7 +33,7 @@ ABC_MODEL_HASH = "bf95e335177883a9204a560617990caf3fd1efc6"
 
 def test_Model_config_type_error():
   """Test that a TypeError is raised if config is not a Model proto."""
-  with pytest.raises(TypeError) as e_info:
+  with test.Raises(TypeError) as e_info:
     models.Model(1)
   assert "Config must be a Model proto. Received: 'int'" == str(e_info.value)
 
@@ -83,7 +83,7 @@ def test_Model_config_sequence_length_not_set(
   """Test that an error is raised if sequence_length is < 1."""
   del clgen_cache_dir
   abc_model_config.training.sequence_length = -1
-  with pytest.raises(errors.UserError):
+  with test.Raises(errors.UserError):
     models.Model(abc_model_config)
 
 

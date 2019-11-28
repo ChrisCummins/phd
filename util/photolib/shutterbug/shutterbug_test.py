@@ -13,7 +13,7 @@ FLAGS = app.FLAGS
 # Test fixtures.
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def photodir(tempdir: pathlib.Path) -> pathlib.Path:
   """Test fixture to create a """
   with open(tempdir / "a.jpg", "w") as f:
@@ -51,7 +51,7 @@ def test_PathTuplesToChunk_directory_not_found(
   tempdir: pathlib.Path, photodir: pathlib.Path
 ):
   """A ValueError is raised if any of the source directories do not exist."""
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     shutterbug.PathTuplesToChunk([photodir, tempdir / "foo"])
   assert str(e_ctx.value) == f"{tempdir}/foo not found"
 

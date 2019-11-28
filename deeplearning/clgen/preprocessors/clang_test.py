@@ -99,10 +99,10 @@ def test_Preprocess_ClangTimeout(mocker):
   """Test that ClangTimeout is raised if clang returns with SIGKILL."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(9)
-  with pytest.raises(errors.ClangTimeout):
+  with test.Raises(errors.ClangTimeout):
     clang.Preprocess("", [])
   # ClangTimeout inherits from ClangException.
-  with pytest.raises(errors.ClangException):
+  with test.Raises(errors.ClangException):
     clang.Preprocess("", [])
 
 
@@ -110,7 +110,7 @@ def test_Preprocess_ClangException(mocker):
   """Test that ClangException is raised if clang returns non-zero returncode."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(1)
-  with pytest.raises(errors.ClangException):
+  with test.Raises(errors.ClangException):
     clang.Preprocess("", [])
 
 
@@ -213,7 +213,7 @@ int main(int argc, char** argv) { return UNDEFINED_FUNCTION(0); }
 
 def test_Preprocess_invalid_preprocessor_directive():
   """Test that an invalid preprocessor directive raises an error."""
-  with pytest.raises(errors.ClangException) as e_info:
+  with test.Raises(errors.ClangException) as e_info:
     clang.Preprocess(
       """
 #this_is_not_a_valid_directive
@@ -274,10 +274,10 @@ def test_ClangFormat_ClangTimeout(mocker):
   """Test that ClangTimeout is raised if clang-format returns with SIGKILL."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(9)
-  with pytest.raises(errors.ClangTimeout):
+  with test.Raises(errors.ClangTimeout):
     clang.ClangFormat("", ".cpp")
   # ClangTimeout inherits from ClangException.
-  with pytest.raises(errors.ClangException):
+  with test.Raises(errors.ClangException):
     clang.ClangFormat("", ".cpp")
 
 
@@ -285,7 +285,7 @@ def test_ClangFormat_ClangException(mocker):
   """Test that ClangException is raised if clang-format returns non-zero."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(1)
-  with pytest.raises(errors.ClangFormatException):
+  with test.Raises(errors.ClangFormatException):
     clang.ClangFormat("", ".cpp")
 
 
@@ -312,10 +312,10 @@ def test_CompileLlvmBytecode_ClangTimeout(mocker):
   """Test that ClangTimeout is raised if clang returns with SIGKILL."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(9)
-  with pytest.raises(errors.ClangTimeout):
+  with test.Raises(errors.ClangTimeout):
     clang.CompileLlvmBytecode("", ".c", [])
   # ClangTimeout inherits from ClangException.
-  with pytest.raises(errors.ClangException):
+  with test.Raises(errors.ClangException):
     clang.CompileLlvmBytecode("", ".c", [])
 
 
@@ -323,7 +323,7 @@ def test_CompileLlvmBytecode_ClangException(mocker):
   """Test that ClangException is raised if clang returns non-zero."""
   mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(1)
-  with pytest.raises(errors.ClangException):
+  with test.Raises(errors.ClangException):
     clang.CompileLlvmBytecode("", ".c", [])
 
 
@@ -356,7 +356,7 @@ def test_CompileLlvmBytecode_small_cl_program():
 
 def test_CompileLlvmBytecode_c_syntax_error():
   """Test that a ClangException is raised for a C program with syntax error."""
-  with pytest.raises(errors.ClangException):
+  with test.Raises(errors.ClangException):
     clang.CompileLlvmBytecode("int main@@()! ##", ".c", [])
 
 

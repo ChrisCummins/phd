@@ -42,7 +42,7 @@ def CSourceToInput(source: str) -> str:
 def test_MakePolyhedralGraphs_invalid_bytecode():
   graph = nx.MultiDiGraph()
   bytecode = "invalid bytecode!"
-  with pytest.raises(opt.OptException):
+  with test.Raises(opt.OptException):
     list(polyhedra.MakePolyhedralGraphs(bytecode))
 
 

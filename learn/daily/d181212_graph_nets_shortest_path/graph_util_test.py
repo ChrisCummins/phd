@@ -61,7 +61,7 @@ def test_GenerateGraph_is_connected():
 def test_AddShortestPath_empty_graph():
   """Test that error raised if graph is empty."""
   g = nx.Graph()
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     graph_util.AddShortestPath(np.random.RandomState(seed=1), g)
   assert str(e_ctx.value) == "All shortest paths are below the minimum length"
 
@@ -70,7 +70,7 @@ def test_AddShortestPath_min_length_too_large():
   """Test that error raised if min_length too large."""
   g = nx.Graph()
   g.add_edge("A", "B")
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     graph_util.AddShortestPath(np.random.RandomState(seed=1), g, min_length=5)
   assert str(e_ctx.value) == "All shortest paths are below the minimum length"
 

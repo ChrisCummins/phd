@@ -15,7 +15,7 @@ def test_Git(tempdir: pathlib.Path):
   """Test that git module can be imported."""
   import git
 
-  with pytest.raises(git.InvalidGitRepositoryError):
+  with test.Raises(git.InvalidGitRepositoryError):
     git.Repo(str(tempdir))
 
 

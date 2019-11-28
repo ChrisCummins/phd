@@ -67,7 +67,7 @@ attributes #3 = { nounwind readnone }
 """
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def llvm_ir_dir(tempdir: pathlib.Path) -> str:
   """A test fixture which returns the path to a directory containing LLVM IR."""
   (tempdir / "llvm_ir").mkdir()
@@ -76,7 +76,7 @@ def llvm_ir_dir(tempdir: pathlib.Path) -> str:
   yield str(tempdir / "llvm_ir")
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def vocab() -> vocabulary.VocabularyZipFile:
   """Test fixture which yields a vocabulary zip file instance as a ctx mngr."""
   with vocabulary.VocabularyZipFile(VOCABULARY_PATH) as v:

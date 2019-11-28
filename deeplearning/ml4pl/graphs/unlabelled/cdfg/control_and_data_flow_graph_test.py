@@ -12,7 +12,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def simple_bytecode() -> str:
   """From C code:
 

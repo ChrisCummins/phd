@@ -35,32 +35,32 @@ EMPTY_FILE_HASHES = {
 }
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def database_path() -> pathlib.Path:
   """A test fixture which returns a path to use as a HashCache database."""
   with tempfile.TemporaryDirectory(prefix="labm8_hashcache_") as d:
     yield pathlib.Path(d) / "hashcache.db"
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_unrecognized_hash_fn(database_path, hash_fn):
   """Test that a non-existent path raises an error."""
-  with pytest.raises(ValueError) as e_info:
+  with test.Raises(ValueError) as e_info:
     hashcache.HashCache(database_path, "null")
   assert "Hash function not recognized: 'null'" == str(e_info.value)
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_non_existent_path(database_path, hash_fn):
   """Test that a non-existent path raises an error."""
   c = hashcache.HashCache(database_path, hash_fn)
   with tempfile.TemporaryDirectory() as d:
-    with pytest.raises(FileNotFoundError) as e_info:
+    with test.Raises(FileNotFoundError) as e_info:
       c.GetHash(pathlib.Path(d) / "a")
     assert f"File not found: '{d}/a'" == str(e_info.value)
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_empty_file_md5(database_path, hash_fn):
   """Test the hash of an empty file."""
   c = hashcache.HashCache(database_path, hash_fn)
@@ -71,7 +71,7 @@ def test_HashCache_GetHash_empty_file_md5(database_path, hash_fn):
     assert EMPTY_FILE_HASHES[hash_fn] == c.GetHash(pathlib.Path(d) / "a")
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_empty_directory(database_path, hash_fn):
   """Test the hash of an empty directory."""
   c = hashcache.HashCache(database_path, hash_fn)
@@ -81,7 +81,7 @@ def test_HashCache_GetHash_empty_directory(database_path, hash_fn):
     assert EMPTY_FILE_HASHES[hash_fn] == c.GetHash(pathlib.Path(d))
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_unmodified_directory(database_path, hash_fn):
   """Test that an unmodified file returns the same hash."""
   c = hashcache.HashCache(database_path, hash_fn)
@@ -91,7 +91,7 @@ def test_HashCache_GetHash_unmodified_directory(database_path, hash_fn):
     assert hash_1 == hash_2
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_modified_directory(database_path, hash_fn):
   """Test that modifying a directory changes the hash."""
   c = hashcache.HashCache(database_path, hash_fn)
@@ -103,7 +103,7 @@ def test_HashCache_GetHash_modified_directory(database_path, hash_fn):
     assert hash_1 != hash_2
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_unmodified_file(database_path, hash_fn):
   """Test that an unmodified file returns the same hash."""
   c = hashcache.HashCache(database_path, hash_fn)
@@ -117,7 +117,7 @@ def test_HashCache_GetHash_unmodified_file(database_path, hash_fn):
     assert hash_1 == hash_2
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_in_memory_modified_file(database_path, hash_fn):
   """Test that modifying a file does not change the hash if in memory.
 
@@ -140,7 +140,7 @@ def test_HashCache_GetHash_in_memory_modified_file(database_path, hash_fn):
     assert hash_1 != hash_3
 
 
-@pytest.mark.parametrize("hash_fn", HASH_FUNCTIONS)
+@test.Parametrize("hash_fn", HASH_FUNCTIONS)
 def test_HashCache_GetHash_modified_file(database_path, hash_fn):
   """Test that modifying a file changes the hash."""
   c = hashcache.HashCache(database_path, hash_fn)

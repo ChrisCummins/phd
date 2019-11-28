@@ -89,7 +89,7 @@ def test_ResolveContentId_pre_encoded_corpus_url_mismatch():
 
 def test_Corpus_config_type_error():
   """Test that a TypeError is raised if config is not a Sampler proto."""
-  with pytest.raises(TypeError) as e_info:
+  with test.Raises(TypeError) as e_info:
     corpuses.Corpus(1)
   assert "Config must be a Corpus proto. Received: 'int'" == str(e_info.value)
 
@@ -98,7 +98,7 @@ def test_Corpus_badpath(clgen_cache_dir, abc_corpus_config):
   """Test that CLgenError is raised when corpus has a non-existent path."""
   del clgen_cache_dir
   abc_corpus_config.local_directory = "notarealpath"
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     corpuses.Corpus(abc_corpus_config)
   # We resolve the absolute path, so we can't match the whole string.
   assert str(e_info.value).startswith("File not found: '")
@@ -127,7 +127,7 @@ def test_Corpus_archive_not_found(clgen_cache_dir, abc_corpus_config):
   del clgen_cache_dir
   with tempfile.TemporaryDirectory() as d:
     abc_corpus_config.local_tar_archive = f"{d}/missing_archive.tar.bz2"
-    with pytest.raises(errors.UserError) as e_ctx:
+    with test.Raises(errors.UserError) as e_ctx:
       corpuses.Corpus(abc_corpus_config)
   assert f"Archive not found: '{d}/missing_archive.tar.bz2'" == str(e_ctx.value)
 
@@ -138,7 +138,7 @@ def test_Corpus_archive_cannot_be_unpacked(clgen_cache_dir, abc_corpus_config):
   with tempfile.TemporaryDirectory() as d:
     (pathlib.Path(d) / "empty.tar.bz2").touch()
     abc_corpus_config.local_tar_archive = str(pathlib.Path(d) / "empty.tar.bz2")
-    with pytest.raises(errors.UserError) as e_ctx:
+    with test.Raises(errors.UserError) as e_ctx:
       corpuses.Corpus(abc_corpus_config)
   assert f"Archive unpack failed: '{d}/empty.tar.bz2'" == str(e_ctx.value)
 
@@ -147,7 +147,7 @@ def test_Corpus_atomizer_before_Create(clgen_cache_dir, abc_corpus_config):
   """Test that error is raised if atomizer is accessed before Create()."""
   del clgen_cache_dir
   c = corpuses.Corpus(abc_corpus_config)
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     c.atomizer
   assert "Must call Create() before accessing atomizer property." == str(
     e_ctx.value
@@ -191,7 +191,7 @@ def test_Corpus_Create_empty_directory_raises_error(
   del clgen_cache_dir
   with tempfile.TemporaryDirectory() as d:
     abc_corpus_config.local_directory = d
-    with pytest.raises(errors.EmptyCorpusException) as e_info:
+    with test.Raises(errors.EmptyCorpusException) as e_info:
       corpuses.Corpus(abc_corpus_config).Create()
     assert f"Empty content files directory: '{d}'" == str(e_info.value)
 
@@ -206,7 +206,7 @@ def test_Corpus_Create_empty_preprocessed_raises_error(
   c.preprocessed.Create(abc_corpus_config)
   with c.preprocessed.Session(commit=True) as session:
     session.query(preprocessed.PreprocessedContentFile).delete()
-  with pytest.raises(errors.EmptyCorpusException) as e_info:
+  with test.Raises(errors.EmptyCorpusException) as e_info:
     c.Create()
   assert isinstance(e_info.value, errors.EmptyCorpusException)
   assert str(e_info.value).startswith(
@@ -220,7 +220,7 @@ def test_Corpus_greedy_multichar_atomizer_no_atoms(
   """Test that a GreedyMulticharAtomizer raises error if no tokens provided."""
   del clgen_cache_dir
   abc_corpus_config.greedy_multichar_atomizer.tokens[:] = []
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     corpuses.Corpus(abc_corpus_config)
   assert "GreedyMulticharAtomizer.tokens is empty" == str(e_info.value)
 
@@ -230,7 +230,7 @@ def test_Corpus_greedy_multichar_atomizer_empty_atoms(
 ):
   """Test that a GreedyMulticharAtomizer raises error for zero-length string."""
   del clgen_cache_dir
-  with pytest.raises(errors.UserError) as e_info:
+  with test.Raises(errors.UserError) as e_info:
     abc_corpus_config.greedy_multichar_atomizer.tokens[:] = [""]
     corpuses.Corpus(abc_corpus_config)
   assert "Empty string found in GreedyMulticharAtomizer.tokens is empty" == str(
@@ -290,7 +290,7 @@ def test_Corpus_invalid_content_id(clgen_cache_dir, abc_corpus_config):
   del clgen_cache_dir
   abc_corpus_config.ClearField("contentfiles")
   abc_corpus_config.content_id = "1234invalid"
-  with pytest.raises(errors.UserError) as e_ctx:
+  with test.Raises(errors.UserError) as e_ctx:
     corpuses.Corpus(abc_corpus_config)
   assert "Content ID not found: '1234invalid'" == str(e_ctx.value)
 
@@ -425,7 +425,7 @@ def test_Corpus_preprocessed_symlink(clgen_cache_dir, abc_corpus_config):
   )
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def abc_pre_encoded() -> str:
   """Test fixture that returns a database of a single encoded content file."""
   with tempfile.TemporaryDirectory(

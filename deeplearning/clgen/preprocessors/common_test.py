@@ -27,13 +27,13 @@ FLAGS = app.FLAGS
 
 def test_MinimumLineCount3_empty_input():
   """Test that MinimumLineCount3 rejects an empty input."""
-  with pytest.raises(errors.NoCodeException):
+  with test.Raises(errors.NoCodeException):
     common.MinimumLineCount3("")
 
 
 def test_MinimumLineCount3_whitespace_does_not_count():
   """Test that MinimumLineCount3 rejects ignores whitespace."""
-  with pytest.raises(errors.NoCodeException):
+  with test.Raises(errors.NoCodeException):
     common.MinimumLineCount3("\n\n  \n\n  \n\n   \n\n")
 
 

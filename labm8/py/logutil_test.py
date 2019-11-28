@@ -189,7 +189,7 @@ multiline!
 def test_TeeLogsToFile_dir_not_found():
   """Test that FileNotFoundError is raised if log_dir does not exist"""
   with tempfile.TemporaryDirectory() as d:
-    with pytest.raises(FileNotFoundError) as e_info:
+    with test.Raises(FileNotFoundError) as e_info:
       logutil.StartTeeLogsToFile("test", pathlib.Path(d) / "notadir")
     assert "Log directory not found: '{d}/notadir'"
 

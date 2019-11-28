@@ -12,7 +12,7 @@ MODULE_UNDER_TEST = "util.photolib.linters"
 
 def test_error():
   # error() raises an assertion if the category is not recognized.
-  with pytest.raises(AssertionError):
+  with test.Raises(AssertionError):
     linters.Error("//photos", "not/a/real/category", "msg")
 
 

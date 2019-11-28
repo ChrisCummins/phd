@@ -75,20 +75,18 @@ def test_Exec_compile_bytecode_stdin(tempdir: pathlib.Path):
   assert (tempdir / "foo.ll").is_file()
 
 
-@pytest.mark.parametrize(
-  "opt", ("-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz")
-)
+@test.Parametrize("opt", ("-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"))
 def test_ValidateOptimizationLevel_valid(opt: str):
   """Test that valid optimization levels are returned."""
   assert clang.ValidateOptimizationLevel(opt) == opt
 
 
-@pytest.mark.parametrize(
+@test.Parametrize(
   "opt", ("O0", "-O4", "foo")  # missing leading '-'  # not a real value
 )  # not a real value
 def test_ValidateOptimizationLevel_invalid(opt: str):
   """Test that invalid optimization levels raise an error."""
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     clang.ValidateOptimizationLevel(opt)
   assert opt in str(e_ctx.value)
 
@@ -125,13 +123,13 @@ int foo() { return foobar<int>(10); }
 
 def test_Preprocess_missing_include():
   """Test that Preprocessor error is raised on missing #include."""
-  with pytest.raises(clang.ClangException) as e_info:
+  with test.Raises(clang.ClangException) as e_info:
     clang.Preprocess('#include "my-missing-file.h"')
   assert "'my-missing-file.h' file not found" in str(e_info.value.stderr)
 
 
 def test_ClangBisectMessageToInvocation_inalid():
-  with pytest.raises(clang.ClangException) as e_ctx:
+  with test.Raises(clang.ClangException) as e_ctx:
     clang.ClangBisectMessageToInvocation("foo")
   assert "Cannot interpret line: foo" == str(e_ctx.value.msg)
 
@@ -146,10 +144,10 @@ def test_ClangBisectMessageToInvocation_valid():
   assert invocation.target == "_Z16show_short_boardP7NQueensPi"
 
 
-@pytest.mark.parametrize(
+@test.Parametrize(
   "optimization_level", ("-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz")
 )
-@pytest.mark.linux
+@test.LinuxTest()
 def test_GetOptPasses_O3_language_equivalence(optimization_level: str):
   """Test that passes run are the same C/C++ at all optimisation levels."""
   c_args = clang.GetOptPasses([opt], language="c")
@@ -157,7 +155,7 @@ def test_GetOptPasses_O3_language_equivalence(optimization_level: str):
   assert c_args == cxx_args
 
 
-@pytest.mark.linux
+@test.LinuxTest()
 def test_GetOptPasses_O3_cxx():
   """Test optimisations ran at -O3 for an empty C++ file."""
   args = clang.GetOptPasses(["-O3"], language="c++")
@@ -535,7 +533,7 @@ def test_GetOptPasses_O3_cxx():
   ]
 
 
-@pytest.mark.linux
+@test.LinuxTest()
 def test_GetOptPasses_O3_nqueens():
   """Black box opt passes test for -O0."""
   args = clang.GetOptPasses(["-O3"], stubfile=_NQUEENS_SRC, language="c++")

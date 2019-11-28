@@ -32,9 +32,9 @@ def test_ceil():
 
 
 def test_ceil_bad_params():
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     labmath.ceil(None)
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     labmath.ceil("abc")
 
 
@@ -47,9 +47,9 @@ def test_floor():
 
 
 def test_floor_bad_params():
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     labmath.floor(None)
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     labmath.floor("abc")
 
 

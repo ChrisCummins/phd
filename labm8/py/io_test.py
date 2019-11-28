@@ -76,7 +76,7 @@ def test_error():
 # fatal()
 def test_fatal():
   out = StringIO()
-  with pytest.raises(SystemExit) as ctx:
+  with test.Raises(SystemExit) as ctx:
     io.fatal("foo", file=out)
   assert ctx.value.code == 1
   assert "ERROR" == re.search("ERROR", out.getvalue()).group(0)
@@ -85,7 +85,7 @@ def test_fatal():
 
 def test_fatal_status():
   out = StringIO()
-  with pytest.raises(SystemExit) as ctx:
+  with test.Raises(SystemExit) as ctx:
     io.fatal("foo", file=out, status=10)
   assert ctx.value.code == 10
   assert "ERROR" == re.search("ERROR", out.getvalue()).group(0)

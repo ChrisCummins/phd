@@ -28,7 +28,7 @@ from labm8.py import app, viz, test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def test_plot():
   """Test fixture that makes a plot."""
   t = np.arange(0.0, 2.0, 0.01)
@@ -36,7 +36,7 @@ def test_plot():
   plt.plot(t, s)
 
 
-@pytest.mark.parametrize("extension", (".png", ".pdf"))
+@test.Parametrize("extension", (".png", ".pdf"))
 def test_Finalize_produces_a_file(
   test_plot, tempdir: pathlib.Path, extension: str,
 ):
@@ -46,7 +46,7 @@ def test_Finalize_produces_a_file(
   assert (tempdir / f"plot{extension}").is_file()
 
 
-@pytest.mark.parametrize("extension", (".png", ".pdf"))
+@test.Parametrize("extension", (".png", ".pdf"))
 def test_Finalize_tight(test_plot, tempdir: pathlib.Path, extension: str):
   """That tight keyword."""
   del test_plot
@@ -54,7 +54,7 @@ def test_Finalize_tight(test_plot, tempdir: pathlib.Path, extension: str):
   assert (tempdir / f"plot{extension}").is_file()
 
 
-@pytest.mark.parametrize("extension", (".png", ".pdf"))
+@test.Parametrize("extension", (".png", ".pdf"))
 def test_Finalize_figsize(test_plot, tempdir: pathlib.Path, extension: str):
   """That figsize keyword."""
   del test_plot

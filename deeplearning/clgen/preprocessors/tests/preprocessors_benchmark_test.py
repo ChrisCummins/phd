@@ -61,7 +61,7 @@ def _PreprocessBenchmarkInnerLoopBadCode(
   preprocessors_: typing.List[str], code_in
 ):
   """Benchmark inner loop for bad code."""
-  with pytest.raises(errors.BadCodeException):
+  with test.Raises(errors.BadCodeException):
     preprocessors.Preprocess(code_in, preprocessors_)
 
 

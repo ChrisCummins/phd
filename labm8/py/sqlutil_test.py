@@ -15,7 +15,6 @@
 import pathlib
 import typing
 
-import pytest
 import sqlalchemy as sql
 from sqlalchemy.ext import declarative
 
@@ -26,7 +25,7 @@ from labm8.py.test_data import test_protos_pb2
 
 def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
   """Test DatabaseNotFound for non-existent SQLite database."""
-  with pytest.raises(sqlutil.DatabaseNotFound) as e_ctx:
+  with test.Raises(sqlutil.DatabaseNotFound) as e_ctx:
     sqlutil.CreateEngine(
       f"sqlite:///{tempdir.absolute()}/db.db", must_exist=True,
     )
@@ -38,14 +37,14 @@ def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
 
 def test_CreateEngine_sqlite_invalid_relpath():
   """Test that relative paths are disabled."""
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     sqlutil.CreateEngine(f"sqlite:///relative.db")
   assert str(e_ctx.value) == "Relative path to SQLite database is not allowed"
 
 
 def test_CreateEngine_error_if_sqlite_in_memory_must_exist():
   """Error is raised if in-memory "must exist" database requested."""
-  with pytest.raises(ValueError) as e_ctx:
+  with test.Raises(ValueError) as e_ctx:
     sqlutil.CreateEngine("sqlite://", must_exist=True)
   assert str(e_ctx.value) == (
     "must_exist=True not valid for in-memory " "SQLite database"
@@ -81,12 +80,12 @@ def test_ExpandFileUrl_unmodified():
 
 
 def test_ExpandFileUrl_path_not_found(tempdir: pathlib.Path):
-  with pytest.raises(FileNotFoundError):
+  with test.Raises(FileNotFoundError):
     sqlutil.ExpandFileUrl(f"file:///{tempdir}/file.txt")
 
 
 def test_ExpandFileUrl_path_is_directory(tempdir: pathlib.Path):
-  with pytest.raises(FileNotFoundError):
+  with test.Raises(FileNotFoundError):
     sqlutil.ExpandFileUrl(f"file:///{tempdir}")
 
 
@@ -123,7 +122,7 @@ def test_AllColumnNames_invalid_object():
   class NotAModel(object):
     col_a = sql.Column(sql.Integer, primary_key=True)
 
-  with pytest.raises(TypeError):
+  with test.Raises(TypeError):
     sqlutil.ColumnNames(NotAModel)
 
 
@@ -171,7 +170,7 @@ def test_Close_raises_error_on_session():
   # Create the database.
   db = sqlutil.Database("sqlite://", base)
   db.Close()
-  with pytest.raises(sql.exc.OperationalError):
+  with test.Raises(sql.exc.OperationalError):
     # Try and perform a query on the closed database.
     with db.Session(commit=True) as s:
       s.query(Table).all()

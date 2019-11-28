@@ -52,8 +52,8 @@ def test_GetBatchOfKernelsToDrive_overlap(
   assert len(set(b.src for b in batch)) == 2
 
 
-@pytest.mark.parametrize("num_runs", [3, 5, 10])
-@pytest.mark.parametrize(
+@test.Parametrize("num_runs", [3, 5, 10])
+@test.Parametrize(
   "dynamic_params",
   [
     [cldrive_pb2.DynamicParams(global_size_x=1, local_size_x=1)],
@@ -105,8 +105,8 @@ def test_DriveKernelAndRecordResults(
       assert record.kernel_time_ns >= 100  # Flaky but likely.
 
 
-@pytest.mark.parametrize("num_runs", [3, 5, 10])
-@pytest.mark.parametrize(
+@test.Parametrize("num_runs", [3, 5, 10])
+@test.Parametrize(
   "dynamic_params",
   [
     [cldrive_pb2.DynamicParams(global_size_x=1, local_size_x=1)],
@@ -145,8 +145,8 @@ def test_DriveKernelAndRecordResults_broken_kernel(
     assert record.kernel_time_ns is None
 
 
-@pytest.mark.parametrize("num_runs", [3, 5, 10])
-@pytest.mark.parametrize(
+@test.Parametrize("num_runs", [3, 5, 10])
+@test.Parametrize(
   "dynamic_params",
   [
     [cldrive_pb2.DynamicParams(global_size_x=1, local_size_x=1)],
@@ -188,8 +188,8 @@ def test_DriveKernelAndRecordResults_no_output(
       assert record.kernel_time_ns is None
 
 
-@pytest.mark.parametrize("num_runs", [3, 5, 10])
-@pytest.mark.parametrize(
+@test.Parametrize("num_runs", [3, 5, 10])
+@test.Parametrize(
   "dynamic_params",
   [
     [cldrive_pb2.DynamicParams(global_size_x=1, local_size_x=1)],

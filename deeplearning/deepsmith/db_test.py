@@ -47,41 +47,41 @@ class DataStoreProtoMock(object):
 
 
 def test_Table_GetOrAdd_abstract():
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table.GetOrAdd("session", "proto")
 
 
 def test_Table_ToProto_abstract():
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table().ToProto()
 
 
 def test_Table_SetProto_abstract():
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table().SetProto("proto")
 
 
 def test_Table_ProtoFromFile_abstract():
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table.ProtoFromFile("path")
 
 
 def test_Table_FromFile_abstract():
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table.FromFile("session", "path")
 
 
 def test_Table_abstract_methods():
   table = db.Table()
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table.GetOrAdd("session", "proto")
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     table.ToProto()
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     table.SetProto("proto")
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table.ProtoFromFile("path")
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.Table.FromFile("session", "path")
 
 
@@ -92,7 +92,7 @@ def test_Table_repr():
 
 def test_StringTable_GetOrAdd_StringTooLongError(session):
   toolchain.Toolchain.GetOrAdd(session, "a" * toolchain.Toolchain.maxlen)
-  with pytest.raises(db.StringTooLongError):
+  with test.Raises(db.StringTooLongError):
     toolchain.Toolchain.GetOrAdd(
       session, "a" * (toolchain.Toolchain.maxlen + 1)
     )
@@ -111,7 +111,7 @@ def test_StringTable_TruncatedString_uninitialized():
 
 
 def test_MakeEngine_unknown_backend():
-  with pytest.raises(NotImplementedError):
+  with test.Raises(NotImplementedError):
     db.MakeEngine(DataStoreProtoMock())
 
 
@@ -119,7 +119,7 @@ def test_MakeEngine_mysql_database_backtick():
   config = DataStoreProtoMock()
   config.HasField = lambda x: x == "mysql"
   config.mysql.database = "backtick`"
-  with pytest.raises(db.InvalidDatabaseConfig):
+  with test.Raises(db.InvalidDatabaseConfig):
     db.MakeEngine(config)
 
 
@@ -127,7 +127,7 @@ def test_MakeEngine_postgresql_database_quote():
   config = DataStoreProtoMock()
   config.HasField = lambda x: x == "postgresql"
   config.postgresql.database = "singlequote'"
-  with pytest.raises(db.InvalidDatabaseConfig):
+  with test.Raises(db.InvalidDatabaseConfig):
     db.MakeEngine(config)
 
 

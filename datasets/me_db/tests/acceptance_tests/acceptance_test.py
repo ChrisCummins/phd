@@ -66,7 +66,7 @@ def GetInboxPath() -> pathlib.Path:
 
 # Pytest fixtures cannot be moved out to a conftest.py file since they need to
 # access FLAGS, and conftest loading occurs before app.RunWithArgs().
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def mutable_db() -> me_db.Database:
   """Returns a populated database for the scope of the function."""
   with tempfile.TemporaryDirectory(prefix="phd_") as d:
@@ -75,7 +75,7 @@ def mutable_db() -> me_db.Database:
     yield db
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def db() -> me_db.Database:
   """Returns a populated database that is reused for all tests.
 
@@ -152,7 +152,7 @@ def test_life_cycle_dates_do_not_overflow(db: me_db.Database):
         and end_date.minute == 0
         and end_date.second == 0
       ):
-        pytest.fail(
+        test.Fail(
           f"Date {start_date} overflows when adding measurement {value} ms "
           f"(calculated end date: {end_date})"
         )

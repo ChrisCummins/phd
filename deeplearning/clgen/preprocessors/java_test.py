@@ -68,7 +68,7 @@ extends VeryVeryLongNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeBase {}
 
 def test_Compile_empty_input():
   """That an empty file is rejected."""
-  with pytest.raises(errors.BadCodeException):
+  with test.Raises(errors.BadCodeException):
     java.Compile("")
 
 
@@ -144,13 +144,13 @@ private static void Hello() {
 
 def test_Compile_WrapMethodInClass_syntax_error():
   """Test that error is raised if method contains a syntax error."""
-  with pytest.raises(errors.BadCodeException):
+  with test.Raises(errors.BadCodeException):
     java.Compile(java.WrapMethodInClass("!@///"))
 
 
 def test_Compile_WrapMethodInClass_undefined_symbol():
   """Test that error is raised if method has undefined symbols."""
-  with pytest.raises(errors.BadCodeException):
+  with test.Raises(errors.BadCodeException):
     java.Compile(
       java.WrapMethodInClass(
         """
@@ -186,14 +186,14 @@ private static void Hello(){
 
 def test_UnwrapMethodInClass_no_methods():
   """Test that error is raised if class doesn't contain a method."""
-  with pytest.raises(errors.BadCodeException) as e_ctx:
+  with test.Raises(errors.BadCodeException) as e_ctx:
     java.UnwrapMethodInClass("public class HelloWorld {}")
   assert str(e_ctx.value) == "Expected 1 method, found 0"
 
 
 def test_UnwrapMethodInClass_multiple_methods():
   """Test that error is raised if class contains multiple methods."""
-  with pytest.raises(errors.BadCodeException) as e_ctx:
+  with test.Raises(errors.BadCodeException) as e_ctx:
     java.UnwrapMethodInClass(
       """
 public class HelloWorld {

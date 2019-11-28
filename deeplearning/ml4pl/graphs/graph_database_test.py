@@ -12,7 +12,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def db(tempdir: pathlib.Path) -> graph_database.Database:
   """Fixture that returns an sqlite database."""
   yield graph_database.Database(f"sqlite:///{tempdir}/db")
@@ -88,7 +88,7 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
     assert gm.id == gm.graph.id
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
   g.bytecode_id = 1

@@ -15,7 +15,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
   db = bytecode_database.Database(f"sqlite:///{tempdir}/bytecodes.db")
   with db.Session(commit=True) as session:
@@ -37,7 +37,7 @@ def bytecode_db(tempdir: pathlib.Path) -> bytecode_database.Database:
   yield db
 
 
-@pytest.fixture(scope="function")
+@test.Fixture(scope="function")
 def graph_db(tempdir: pathlib.Path) -> graph_database.Database:
   db = graph_database.Database(f"sqlite:///{tempdir}/graphs.db")
   # Add a program graph, which is used by GraphToBytecodeGroupingsEncoder.
@@ -79,7 +79,7 @@ def test_GraphToBytecodeEncoder_Encode(
   assert len(encoded[0])
 
 
-@pytest.mark.parametrize("group_by", ("statement", "identifier"))
+@test.Parametrize("group_by", ("statement", "identifier"))
 def test_GraphToBytecodeGroupingsEncoder_Encode(
   graph_db: graph_database.Database,
   bytecode_db: bytecode_database.Database,

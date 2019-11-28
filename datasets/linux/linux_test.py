@@ -21,7 +21,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def dataset() -> linux.LinuxSourcesDataset:
   yield linux.LinuxSourcesDataset()
 

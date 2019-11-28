@@ -34,7 +34,7 @@ def test_tensorflow_session():
 
 # If the project has been configured to use CUDA, this test will pin an
 # operation to the GPU and test that it works.
-@pytest.mark.skipif(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
+@test.SkipIf(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
 def test_tensorflow_gpu_constant():
   import tensorflow as tf
 
@@ -47,7 +47,7 @@ def test_tensorflow_gpu_constant():
 
 # If the project has been configured to use CUDA, this test will pin an
 # operation to the GPU and test that it works.
-@pytest.mark.skipif(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
+@test.SkipIf(not getconfig.GetGlobalConfig().with_cuda, reason="No GPU")
 def test_tensorflow_gpu_computation():
   import tensorflow as tf
 

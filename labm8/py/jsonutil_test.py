@@ -36,7 +36,7 @@ def test_loads():
 
 def test_loads_malformed():
   a_str = """bad json {asd,,}"""
-  with pytest.raises(ValueError):
+  with test.Raises(ValueError):
     jsonutil.loads(a_str)
 
 
@@ -53,7 +53,7 @@ def test_read_file():
 
 
 def test_read_file_bad_path():
-  with pytest.raises(fs.File404):
+  with test.Raises(fs.File404):
     jsonutil.read_file("/not/a/real/path")
   assert not jsonutil.read_file("/not/a/real/path", must_exist=False)
 

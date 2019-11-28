@@ -29,13 +29,13 @@ FLAGS = app.FLAGS
 
 # Use the session scope so that cached properties on the instance are shared
 # across tests.
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def dataset() -> ocl_dataset.OpenClDeviceMappingsDataset:
   """Test fixture which yields the dataset."""
   yield ocl_dataset.OpenClDeviceMappingsDataset()
 
 
-@pytest.fixture(scope="session")
+@test.Fixture(scope="session")
 def mini_df(dataset: ocl_dataset.OpenClDeviceMappingsDataset) -> pd.DataFrame:
   """Test fixture which yields a miniature version of the full dataframe."""
   return dataset.df[:10].copy()
@@ -81,7 +81,7 @@ def test_ComputeGreweFeaturesForGpu_unknown_device(
   dataset: ocl_dataset.OpenClDeviceMappingsDataset,
 ):
   """Test that error is raised for unknown device."""
-  with pytest.raises(KeyError):
+  with test.Raises(KeyError):
     dataset.ComputeGreweFeaturesForGpu("not a device")
 
 
@@ -142,7 +142,7 @@ def test_df_gpu_runtimes_not_equal(
   )
 
 
-@pytest.mark.parametrize(
+@test.Parametrize(
   "table_getter",
   (
     lambda x: x.df,
@@ -164,7 +164,7 @@ def test_df_nan(
   assert not df.isnull().values.any()
 
 
-@pytest.mark.slow(
+@test.SlowTest(
   reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset"
 )
 def test_AugmentWithDeadcodeMutations_num_output_rows(
@@ -178,7 +178,7 @@ def test_AugmentWithDeadcodeMutations_num_output_rows(
   assert len(df) == len(dataset.df) * (3 + 1)
 
 
-@pytest.mark.slow(
+@test.SlowTest(
   reason="AugementWithDeadcodeMutations is slow, should switch to a smaller dataset"
 )
 def test_AugmentWithDeadcodeMutations_identical_columns(

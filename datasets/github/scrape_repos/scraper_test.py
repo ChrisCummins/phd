@@ -62,7 +62,7 @@ def test_GetRepositoryMetadata_timestamp():
 
 def test_main_unrecognized_arguments():
   """Test that main() raises an error when passed arguments."""
-  with pytest.raises(app.UsageError):
+  with test.Raises(app.UsageError):
     scraper.main(["./scraper", "--unrecognized_argument"])
 
 

@@ -16,11 +16,11 @@ FLAGS = app.FLAGS
 
 def test_DataPath_path_not_found():
   """Test that FileNotFoundError is raised if the file is not found."""
-  with pytest.raises(FileNotFoundError) as e_info:
+  with test.Raises(FileNotFoundError) as e_info:
     bazelutil.DataPath("")
   assert f"No such file or directory: ''" in str(e_info)
 
-  with pytest.raises(FileNotFoundError) as e_info:
+  with test.Raises(FileNotFoundError) as e_info:
     bazelutil.DataPath("/not/a/real/path")
   assert f"No such file or directory: '/not/a/real/path'" in str(e_info)
 
@@ -29,7 +29,7 @@ def test_DataPath_missing_data_dep():
   """FileNotFoundError is raised if the file exists is not in target data."""
   # The file //labm8/py/test_data/diabetes.csv exists, but is not a data
   # dependency of this test target, so is not found.
-  with pytest.raises(FileNotFoundError) as e_info:
+  with test.Raises(FileNotFoundError) as e_info:
     bazelutil.DataPath("phd/labm8/py/test_data/diabetes.csv")
   assert (
     "No such file or directory: " "'phd/labm8/py/test_data/diabetes.csv'"
@@ -55,7 +55,7 @@ def test_DataString_missing_data_dep():
   """FileNotFoundError is raised if the file exists is not in target data."""
   # The file //labm8/py/test_data/diabetes.csv exists, but is not a data
   # dependency of this test target, so is not found.
-  with pytest.raises(FileNotFoundError) as e_info:
+  with test.Raises(FileNotFoundError) as e_info:
     bazelutil.DataString("phd/labm8/py/test_data/diabetes.csv")
 
 
@@ -86,7 +86,7 @@ def test_DataPath_different_working_dir():
 
 def test_DataArchive_path_not_found(tempdir: pathlib.Path):
   """Test that FileNotFound raised if path doesn't exist."""
-  with pytest.raises(FileNotFoundError) as e_ctx:
+  with test.Raises(FileNotFoundError) as e_ctx:
     bazelutil.DataArchive(tempdir / "a.zip")
   # The exception is raised by bazelutil.DataPath(), so has a slightly different
   # message than the one raised by Archive.__init__().
