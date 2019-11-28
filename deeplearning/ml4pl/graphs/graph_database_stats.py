@@ -93,7 +93,7 @@ class GraphDatabaseStats(object):
       [f"{shape[0]}x{shape[1]}" for shape in self.node_embeddings_shapes]
     )
     summaries = [
-      f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
+      f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
       humanize.Plural(self.edge_type_count, "edge type"),
       f"({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings",
     ]
@@ -104,8 +104,8 @@ class GraphDatabaseStats(object):
     if self.graph_labels_dimensionality:
       summaries.append(f"{self.graph_labels_dimensionality}-d graph labels")
     summaries += [
-      f"max {humanize.Plural(self.max_node_count, 'node', commas=True)}",
-      f"max {humanize.Plural(self.max_edge_count, 'edge', commas=True)}",
+      f"max {humanize.Plural(self.max_node_count, 'node')}",
+      f"max {humanize.Plural(self.max_edge_count, 'edge')}",
       f"{self.max_edge_positions} max edge positions",
     ]
     if self.data_flow_max_steps_required:
@@ -224,7 +224,7 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
       [f"{shape[0]}x{shape[1]}" for shape in self.node_embeddings_shapes]
     )
     summaries = [
-      f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
+      f"Graphs database: {humanize.Plural(self.graph_count, 'instance')}",
       humanize.Plural(self.edge_type_count, "edge type"),
       f"({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings",
     ]
