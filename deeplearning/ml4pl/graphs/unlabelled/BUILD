@@ -1,5 +1,7 @@
 # Unlabelled program graphs.
 
+load("@build_stack_rules_proto//python:python_proto_library.bzl", "python_proto_library")
+
 py_binary(
     name = "make_unlabelled_graph_dataset",
     srcs = ["make_unlabelled_graph_dataset.py"],
