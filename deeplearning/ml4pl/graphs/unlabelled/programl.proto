@@ -32,14 +32,13 @@ message Node {
 
   // The text of a node. This is the raw representation of a node, such as the
   // contents of a statement, or the name of an identifier.
-  repeated string text = 3;
+  optional string text = 3;
 
   // The pre-processed text of a node. This is the
   optional string preprocessed_text = 4;
 
-  // A sequence of encoded values representing this node. The length of
-  // encoded sequences for all nodes in a graph is constant.
-  repeated int64 encoded = 5;
+  // An encoded value representing this node.
+  optional int64 encoded = 5;
 }
 
 message Edge {
