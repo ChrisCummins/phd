@@ -24,7 +24,6 @@ py_test(
     srcs = ["migrate_graph_database_test.py"],
     deps = [
         ":migrate_graph_database",
-        "//labm8:app",
         "//labm8:test",
     ],
 )
