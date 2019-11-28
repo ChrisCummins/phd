@@ -13,3 +13,14 @@ py_binary(
         "//labm8:prof",
     ],
 )
+
+proto_library(
+    name = "programl_pb",
+    srcs = ["programl.proto"],
+)
+
+python_proto_library(
+    name = "programl_pb_py",
+    visibility = ["//visibility:public"],
+    deps = [":programl_pb"],
+)
