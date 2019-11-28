@@ -1,8 +1,7 @@
-"""This module defines the Control and Data Flow Graph (CDFG).
+"""This module defines the ProGraML graph representation.
 
-CDFGs are directed multigraphs in which nodes represent single LLVM
-instructions, and edges show control and data flow. They are constructed from an
-LLVM module.
+A ProGraML graph is a directed multigraph which is the union a control flow,
+data flow, and call graphs.
 """
 import copy
 import difflib
@@ -131,26 +130,23 @@ def MakeUndefinedFunctionGraph(function_name: str,
   g.entry_block = f'{function_name}_entry'
   g.exit_block = f'{function_name}_exit'
 
-  g.add_node(
-      g.entry_block,
-      type='statement',
-      function=function_name,
-      text='!UNK',
-      original_text=g.entry_block,
-      x=dictionary['!UNK'])
-  g.add_node(
-      g.exit_block,
-      type='statement',
-      function=function_name,
-      text='!UNK',
-      original_text=g.exit_block,
-      x=dictionary['!UNK'])
-  g.add_edge(
-      g.entry_block,
-      g.exit_block,
-      function=function_name,
-      flow='control',
-      position=0)
+  g.add_node(g.entry_block,
+             type='statement',
+             function=function_name,
+             text='!UNK',
+             original_text=g.entry_block,
+             x=dictionary['!UNK'])
+  g.add_node(g.exit_block,
+             type='statement',
+             function=function_name,
+             text='!UNK',
+             original_text=g.exit_block,
+             x=dictionary['!UNK'])
+  g.add_edge(g.entry_block,
+             g.exit_block,
+             function=function_name,
+             flow='control',
+             position=0)
 
   return g
 
@@ -324,16 +320,14 @@ class ControlAndDataFlowGraphBuilder(object):
     for node in nodes_to_remove:
       in_edges = g.in_edges(node)
       out_edges = g.out_edges(node)
-      in_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: src)
-      out_nodes = iterators.SuccessorNodes(
-          g,
-          node,
-          ignored_nodes=nodes_to_remove,
-          direction=lambda src, dst: dst)
+      in_nodes = iterators.SuccessorNodes(g,
+                                          node,
+                                          ignored_nodes=nodes_to_remove,
+                                          direction=lambda src, dst: src)
+      out_nodes = iterators.SuccessorNodes(g,
+                                           node,
+                                           ignored_nodes=nodes_to_remove,
+                                           direction=lambda src, dst: dst)
 
       for edge in in_edges:
         edges_to_remove.add(edge)
@@ -361,11 +355,10 @@ class ControlAndDataFlowGraphBuilder(object):
       entry_block = entry_blocks[0][0]
     else:
       entry_block = f'{g.name}_entry'
-      g.add_node(
-          entry_block,
-          name=entry_block,
-          type='magic',
-          x=self.dictionary['!MAGIC'])
+      g.add_node(entry_block,
+                 name=entry_block,
+                 type='magic',
+                 x=self.dictionary['!MAGIC'])
       for node, data in entry_blocks:
         g.add_edge(entry_block, node, flow='control')
     g.entry_block = entry_block
@@ -385,11 +378,10 @@ class ControlAndDataFlowGraphBuilder(object):
       exit_block = exit_blocks[0][0]
     else:
       exit_block = f'{g.name}_exit'
-      g.add_node(
-          exit_block,
-          name=exit_block,
-          type='magic',
-          x=self.dictionary['!MAGIC'])
+      g.add_node(exit_block,
+                 name=exit_block,
+                 type='magic',
+                 x=self.dictionary['!MAGIC'])
       # Connect exit blocks.
       for node, data in exit_blocks:
         g.add_edge(node, exit_block, flow='control')
@@ -400,8 +392,9 @@ class ControlAndDataFlowGraphBuilder(object):
           break
     g.exit_block = exit_block
 
-  def MaybeAddDataFlowElements(self, g: nx.MultiDiGraph,
-                               tag_hook: typing.Optional[llvm_util.TagHook]) -> None:
+  def MaybeAddDataFlowElements(
+      self, g: nx.MultiDiGraph,
+      tag_hook: typing.Optional[llvm_util.TagHook]) -> None:
     if self.dataflow == 'none':
       return
 
@@ -419,7 +412,8 @@ class ControlAndDataFlowGraphBuilder(object):
           data['text'], store_destination_is_def=self.store_destination_is_def)
       if def_:  # Data flow out edge.
         def_name = f'{prefix(def_)}_operand'
-        edges_to_add.append((statement, def_name, def_name, 0, def_, data, 'def'))
+        edges_to_add.append(
+            (statement, def_name, def_name, 0, def_, data, 'def'))
       for position, identifier in enumerate(uses):  # Data flow in edge.
         identifier_name = f'{prefix(identifier)}_operand'
         edges_to_add.append((identifier_name, statement, identifier_name,
@@ -434,7 +428,7 @@ class ControlAndDataFlowGraphBuilder(object):
       node['name'] = name
       node['text'] = name
       node['x'] = self.dictionary['!IDENTIFIER']
-      
+
       if tag_hook is not None:
         other_attrs = tag_hook.OnIdentifier(original_node, node, dtype) or {}
         for attrname, attrval in other_attrs.items():
@@ -488,7 +482,7 @@ class ControlAndDataFlowGraphBuilder(object):
 
   def ComposeGraphs(self, function_graphs: typing.List[nx.MultiDiGraph],
                     call_graph: nx.MultiDiGraph) -> nx.MultiDiGraph:
-    """Combine function-level graphs into a single interprocedural graph.
+    """Combine function-level graphs into a single inter-procedural graph.
 
     Args:
       function_graphs: The function graphs to compose. These are unmodified.
@@ -511,8 +505,10 @@ class ControlAndDataFlowGraphBuilder(object):
 
     # Create the inter-procedural graph with a magic root node.
     interprocedural_graph = nx.MultiDiGraph()
-    interprocedural_graph.add_node(
-        'root', name='root', type='magic', x=self.dictionary['!MAGIC'])
+    interprocedural_graph.add_node('root',
+                                   name='root',
+                                   type='magic',
+                                   x=self.dictionary['!MAGIC'])
 
     # Add each function to the interprocedural graph.
     function_entry_exit_nodes: typing.Dict[str, typing.Tuple[str, str]] = {}
@@ -523,8 +519,10 @@ class ControlAndDataFlowGraphBuilder(object):
       function_entry_exit_nodes[dst] = (function_entry, function_exit)
 
       # Connect the newly inserted function to the root node.
-      interprocedural_graph.add_edge(
-          'root', function_entry, flow='call', position=0)
+      interprocedural_graph.add_edge('root',
+                                     function_entry,
+                                     flow='call',
+                                     position=0)
 
     if self.call_edge_returns_to_successor:
       get_call_site_successor = query.GetCallStatementSuccessor
@@ -538,8 +536,11 @@ class ControlAndDataFlowGraphBuilder(object):
     return interprocedural_graph
 
   @decorators.timeout(120)
-  def Build(self, bytecode: str, opt=None,
-            tag_hook: typing.Optional[llvm_util.TagHook] = None) -> nx.MultiDiGraph:
+  def Build(
+      self,
+      bytecode: str,
+      opt=None,
+      tag_hook: typing.Optional[llvm_util.TagHook] = None) -> nx.MultiDiGraph:
     """Construct an inter-procedural control- and data-flow graph.
 
     Args:
@@ -554,15 +555,20 @@ class ControlAndDataFlowGraphBuilder(object):
     Returns:
       A networkx graph.
     """
+    # First construct the control flow graphs using opt.
     call_graph_dot, cfg_dots = (
-        opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(
-            bytecode, opt_path=opt))
-    cfgs = [
-      llvm_util.ControlFlowGraphFromDotSource(cfg_dot, tag_hook=tag_hook)
-      for cfg_dot in cfg_dots
-    ]
+        opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(bytecode,
+                                                              opt_path=opt))
+    # Then construct the call graph dot using opt.
     call_graph = cg.CallGraphFromDotSource(call_graph_dot)
+    # Construct networkx control flow graphs from the dot graphs.
+    cfgs = [
+        llvm_util.ControlFlowGraphFromDotSource(cfg_dot, tag_hook=tag_hook)
+        for cfg_dot in cfg_dots
+    ]
+    # Add data flow elements to control flow graphs.
     graphs = [self.BuildFromControlFlowGraph(cfg) for cfg in cfgs]
+    # Finally, compose the per-function graphs into a whole-module graph.
     return self.ComposeGraphs(graphs, call_graph)
 
 
