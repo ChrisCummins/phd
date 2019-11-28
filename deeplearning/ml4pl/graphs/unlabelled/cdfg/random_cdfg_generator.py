@@ -128,9 +128,21 @@ def FastCreateRandom():
   # Set the new node names.
   nx.relabel_nodes(g, node_renamings, copy=False)
 
-  # Remove any orphans.
+  # If there are orphan nodes, connect them to the root through call edges.
   for node in list(nx.isolates(g)):
-    g.remove_node(node)
+    if node == "root":
+      # Root node is orphan, so select a random statement to connect it to.
+      random_statement: str = None
+      for node, type_ in g.nodes(data="type"):
+        if type_ == "statement":
+          random_statement = node
+          break
+      else:
+        # Abort, try again.
+        return FastCreateRandom()
+      g.add_edge("root", random_statement, flow="call")
+    else:
+      g.add_edge("root", node, flow="call")
 
   # Abort, try again.
   if not g.number_of_nodes():
