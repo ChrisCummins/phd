@@ -69,7 +69,7 @@ def FastCreateRandom():
       # Generate the root node, which is the "magic" entry.
       node_renamings[node] = "root"
       data["type"] = "magic"
-      data["text"] = "!UNK"
+      data["text"] = "root"
 
       # Root node has no in-edges.
       for src, dst in g.in_edges(node):
@@ -103,7 +103,7 @@ def FastCreateRandom():
         assert False, "Unreachable"
 
     # Set the embedding indices and "original" text for nodes.
-    data["x"] = DICTIONARY[data["text"]]
+    data["x"] = DICTIONARY["!UNK" if data["text"] == "root" else data["text"]]
     data["original_text"] = data["text"]
 
   for src, dst in edges_to_remove:
