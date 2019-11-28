@@ -142,7 +142,7 @@ def test_BufferedGraphReader_data_flow_max_steps_order(
     assert graph.data_flow_max_steps_required >= current_steps
     current_steps = graph.data_flow_max_steps_required
   # Sanity check that database contains graphs.
-  assert i == 510
+  assert i == 509
 
 
 if __name__ == '__main__':
