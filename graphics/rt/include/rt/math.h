@@ -41,9 +41,7 @@ static const Scalar ScalarPrecision = 1e-6;
 
 namespace radians {
 // Conversion from radians to degrees.
-auto inline toDegrees(const Scalar radians) {
-  return radians * M_PI / 180.0;
-}
+auto inline toDegrees(const Scalar radians) { return radians * M_PI / 180.0; }
 }  // namespace radians
 
 namespace deg {
@@ -54,13 +52,9 @@ namespace deg {
 // sin():
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winfinite-recursion"
-Scalar inline sin(const Scalar theta) {
-  return sin(radians::toDegrees(theta));
-}
+Scalar inline sin(const Scalar theta) { return sin(radians::toDegrees(theta)); }
 
-Scalar inline cos(const Scalar theta) {
-  return cos(radians::toDegrees(theta));
-}
+Scalar inline cos(const Scalar theta) { return cos(radians::toDegrees(theta)); }
 #pragma GCC diagnostic pop
 
 }  // namespace deg
@@ -86,7 +80,8 @@ class Vector {
 
   // Contructor: V = (x,y,z,w)
   inline Vector(const Scalar _x, const Scalar _y, const Scalar _z = 0,
-                const Scalar _w = 0) : x(_x), y(_y), z(_z), w(_w) {}
+                const Scalar _w = 0)
+      : x(_x), y(_y), z(_z), w(_w) {}
 
   // Addition: A' = A + B
   auto inline operator+(const Vector &b) const {
@@ -121,9 +116,7 @@ class Vector {
 
   // Cross product: A' = A x B
   auto inline operator|(const Vector &b) const {
-    return Vector(y * b.z - z * b.y,
-                  z * b.x - x * b.z,
-                  x * b.y - y * b.z);
+    return Vector(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.z);
   }
 
   // Equality: A == B
@@ -132,29 +125,19 @@ class Vector {
   }
 
   // Inequality: A != B
-  auto inline operator!=(const Vector &b) const {
-    return !(*this == b);
-  }
+  auto inline operator!=(const Vector &b) const { return !(*this == b); }
 
   // Length of vector: |A| = sqrt(x^2 + y^2 + z^2)
-  auto inline size() const {
-    return sqrt(x * x + y * y + z * z);
-  }
+  auto inline size() const { return sqrt(x * x + y * y + z * z); }
 
   // Product of components: x * y * z
-  auto inline product() const {
-    return x * y * z;
-  }
+  auto inline product() const { return x * y * z; }
 
   // Sum of components: x + y + z
-  auto inline sum() const {
-    return x + y + z;
-  }
+  auto inline sum() const { return x + y + z; }
 
   // Normalise: A' = A / |A|
-  auto inline normalise() const {
-    return *this / size();
-  }
+  auto inline normalise() const { return *this / size(); }
 };
 
 // A 4x4 matrix. Matrices are immutable, and while declared row-wise,
@@ -167,27 +150,19 @@ class Matrix {
   // Column-wise vectors.
   const Vector c[4];
 
-  inline Matrix(const Vector r1,
-                const Vector r2,
-                const Vector r3,
+  inline Matrix(const Vector r1, const Vector r2, const Vector r3,
                 const Vector r4)
       : r{r1, r2, r3, r4},
-        c{Vector(r1.x, r2.x, r3.x, r4.x),
-              Vector(r1.y, r2.y, r3.y, r4.y),
-              Vector(r1.z, r2.z, r3.z, r4.z),
-              Vector(r1.w, r2.w, r3.w, r4.w)} {}
+        c{Vector(r1.x, r2.x, r3.x, r4.x), Vector(r1.y, r2.y, r3.y, r4.y),
+          Vector(r1.z, r2.z, r3.z, r4.z), Vector(r1.w, r2.w, r3.w, r4.w)} {}
 
   // Matrix multiplication.
   Matrix inline operator*(const Matrix &b) const {
     return Matrix(
-        Vector(r[0] ^ b.c[0], r[0] ^ b.c[1],
-               r[0] ^ b.c[2], r[0] ^ b.c[3]),
-        Vector(r[1] ^ b.c[0], r[1] ^ b.c[1],
-               r[1] ^ b.c[2], r[1] ^ b.c[3]),
-        Vector(r[2] ^ b.c[0], r[2] ^ b.c[1],
-               r[2] ^ b.c[2], r[2] ^ b.c[3]),
-        Vector(r[3] ^ b.c[0], r[3] ^ b.c[1],
-               r[3] ^ b.c[2], r[3] ^ b.c[3]));
+        Vector(r[0] ^ b.c[0], r[0] ^ b.c[1], r[0] ^ b.c[2], r[0] ^ b.c[3]),
+        Vector(r[1] ^ b.c[0], r[1] ^ b.c[1], r[1] ^ b.c[2], r[1] ^ b.c[3]),
+        Vector(r[2] ^ b.c[0], r[2] ^ b.c[1], r[2] ^ b.c[2], r[2] ^ b.c[3]),
+        Vector(r[3] ^ b.c[0], r[3] ^ b.c[1], r[3] ^ b.c[2], r[3] ^ b.c[3]));
   }
 
   // Matrix by vector multiplication.
@@ -207,14 +182,10 @@ class Matrix {
 class Translation : public Matrix {
  public:
   inline Translation(const Scalar x, const Scalar y, const Scalar z)
-      : Matrix(Vector(1, 0, 0, x),
-               Vector(0, 1, 0, y),
-               Vector(0, 0, 1, z),
+      : Matrix(Vector(1, 0, 0, x), Vector(0, 1, 0, y), Vector(0, 0, 1, z),
                Vector(0, 0, 0, 1)) {}
   explicit inline Translation(const Vector &t)
-      : Matrix(Vector(1, 0, 0, t.x),
-               Vector(0, 1, 0, t.y),
-               Vector(0, 0, 1, t.z),
+      : Matrix(Vector(1, 0, 0, t.x), Vector(0, 1, 0, t.y), Vector(0, 0, 1, t.z),
                Vector(0, 0, 0, 1)) {}
 };
 
@@ -222,15 +193,11 @@ class Translation : public Matrix {
 class Scale : public Matrix {
  public:
   inline Scale(const Scalar x, const Scalar y, const Scalar z)
-      : Matrix(Vector(x, 0, 0, 0),
-               Vector(0, y, 0, 0),
-               Vector(0, 0, z, 0),
+      : Matrix(Vector(x, 0, 0, 0), Vector(0, y, 0, 0), Vector(0, 0, z, 0),
                Vector(0, 0, 0, 1)) {}
 
   explicit inline Scale(const Vector &w)
-      : Matrix(Vector(w.x, 0, 0, 0),
-               Vector(0, w.y, 0, 0),
-               Vector(0, 0, w.z, 0),
+      : Matrix(Vector(w.x, 0, 0, 0), Vector(0, w.y, 0, 0), Vector(0, 0, w.z, 0),
                Vector(0, 0, 0, 1)) {}
 };
 
@@ -260,8 +227,7 @@ class RotationZ : public Matrix {
   explicit inline RotationZ(const Scalar theta)
       : Matrix(Vector(deg::cos(theta), -deg::sin(theta), 0, 0),
                Vector(deg::sin(theta), deg::cos(theta), 0, 0),
-               Vector(0, 0, 1, 0),
-               Vector(0, 0, 0, 1)) {}
+               Vector(0, 0, 1, 0), Vector(0, 0, 0, 1)) {}
 };
 
 // Yaw, pitch, roll rotation.

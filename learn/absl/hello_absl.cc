@@ -1,18 +1,18 @@
-#include "absl/strings/str_format.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_format.h"
 #include "learn/absl/message.pb.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
-#include <cstdlib>
 
 using std::string;
 
-#define FATAL(...) \
+#define FATAL(...)                           \
   std::cerr << absl::StrFormat(__VA_ARGS__); \
   exit(1);
 
-template<typename Container, typename K>
+template <typename Container, typename K>
 auto FindInMap(const Container& container, const K& key) {
   auto it = container.find(key);
   if (it == container.end()) {

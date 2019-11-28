@@ -6,7 +6,6 @@
 #include <stack>
 #include <ustl/stack>
 
-
 ///////////////////
 // Constructors: //
 ///////////////////
@@ -26,7 +25,6 @@ TEST(ustl_stack, constructors) {
   ustl::stack<int> s2{q};
   ustl::stack<int> s3{s2};
 }
-
 
 ///////////////////////
 // Member functions: //
@@ -56,7 +54,6 @@ TEST(ustl_stack, basic_ops) {
   ASSERT_TRUE(s1.empty());
 }
 
-
 TEST(std_stack, emplace) {
   std::stack<int> s1;
 
@@ -70,7 +67,6 @@ TEST(ustl_stack, emplace) {
   s1.emplace(5);
   ASSERT_EQ(5, s1.top());
 }
-
 
 TEST(std_stack, swap) {
   std::stack<int> s1;
@@ -121,7 +117,6 @@ TEST(ustl_stack, swap) {
   ASSERT_EQ(0, s1.top());
   ASSERT_EQ(3, s2.top());
 }
-
 
 ////////////////////////////////////
 // Non-member function overloads: //

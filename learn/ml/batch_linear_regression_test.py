@@ -15,7 +15,7 @@ def regression(data):
 
   def cost(h0, h1, data):
     """cost function of h for data"""
-    return sum([(h0 + h1 * d[0] - d[1])**2 for d in data]) / 2 * len(data)
+    return sum([(h0 + h1 * d[0] - d[1]) ** 2 for d in data]) / 2 * len(data)
 
   def gradient(h, a, data):
     """compute gradients of h with learning rate a for data"""
@@ -62,7 +62,7 @@ def test_validate_hypothesis():
   training_data = [(i, target_func(i)) for i in range(10)]
   h = regression(training_data)
   for x, y in training_data:
-    assert (abs(h(x) == y) < 0.0001)
+    assert abs(h(x) == y) < 0.0001
 
 
 if __name__ == "__main__":

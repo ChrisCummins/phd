@@ -70,54 +70,59 @@ class Model(object):
       raise TypeError(f"Config must be a Model proto. Received: '{t}'")
     # Validate config options.
     if config.training.sequence_length < 1:
-      raise errors.UserError('TrainingOptions.sequence_length must be >= 1')
+      raise errors.UserError("TrainingOptions.sequence_length must be >= 1")
 
     self.config = model_pb2.Model()
     self.config.CopyFrom(builders.AssertIsBuildable(config))
     self.corpus = corpuses.Corpus(config.corpus)
     self.hash = self._ComputeHash(self.corpus, self.config)
-    self.cache = cache.mkcache('model', self.hash)
+    self.cache = cache.mkcache("model", self.hash)
     # Create the necessary cache directories.
-    (self.cache.path / 'checkpoints').mkdir(exist_ok=True)
-    (self.cache.path / 'samples').mkdir(exist_ok=True)
-    (self.cache.path / 'logs').mkdir(exist_ok=True)
+    (self.cache.path / "checkpoints").mkdir(exist_ok=True)
+    (self.cache.path / "samples").mkdir(exist_ok=True)
+    (self.cache.path / "logs").mkdir(exist_ok=True)
 
     self._created = False
     self.dashboard_db = dashboard_db.GetDatabase()
     self._dashboard_db_id: typing.Optional[int] = None
 
     # Create symlink to encoded corpus.
-    symlink = self.cache.path / 'corpus'
+    symlink = self.cache.path / "corpus"
     if not symlink.is_symlink():
       os.symlink(
-          os.path.relpath(
-              pathlib.Path(self.corpus.encoded.url[len('sqlite:///'):]).parent,
-              self.cache.path), symlink)
+        os.path.relpath(
+          pathlib.Path(self.corpus.encoded.url[len("sqlite:///") :]).parent,
+          self.cache.path,
+        ),
+        symlink,
+      )
 
     # Create symlink to the atomizer.
-    symlink = self.cache.path / 'atomizer'
+    symlink = self.cache.path / "atomizer"
     if not symlink.is_symlink():
-      os.symlink(os.path.relpath(self.corpus.atomizer_path, self.cache.path),
-                 symlink)
+      os.symlink(
+        os.path.relpath(self.corpus.atomizer_path, self.cache.path), symlink
+      )
 
     # Validate metadata against cache.
-    if self.cache.get('META.pbtxt'):
-      cached_meta = pbutil.FromFile(pathlib.Path(self.cache['META.pbtxt']),
-                                    internal_pb2.ModelMeta())
+    if self.cache.get("META.pbtxt"):
+      cached_meta = pbutil.FromFile(
+        pathlib.Path(self.cache["META.pbtxt"]), internal_pb2.ModelMeta()
+      )
       # Exclude num_epochs and corpus location from metadata comparison.
       config_to_compare = model_pb2.Model()
       config_to_compare.CopyFrom(self.config)
-      config_to_compare.corpus.ClearField('contentfiles')
-      config_to_compare.training.ClearField('num_epochs')
+      config_to_compare.corpus.ClearField("contentfiles")
+      config_to_compare.training.ClearField("num_epochs")
       # These fields should have already been cleared, but we'll do it again
       # so that metadata comparisons don't fail when the cached meta schema
       # is updated.
       cached_to_compare = model_pb2.Model()
       cached_to_compare.CopyFrom(cached_meta.config)
-      cached_to_compare.corpus.ClearField('contentfiles')
-      cached_to_compare.training.ClearField('num_epochs')
+      cached_to_compare.corpus.ClearField("contentfiles")
+      cached_to_compare.training.ClearField("num_epochs")
       if config_to_compare != cached_to_compare:
-        raise errors.InternalError('Metadata mismatch')
+        raise errors.InternalError("Metadata mismatch")
       self.meta = cached_meta
     else:
       self.meta = internal_pb2.ModelMeta()
@@ -125,9 +130,8 @@ class Model(object):
       self._WriteMetafile()
 
     self.backend = {
-        model_pb2.NetworkArchitecture.TENSORFLOW:
-        tensorflow_backend.TensorFlowBackend,
-        model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
+      model_pb2.NetworkArchitecture.TENSORFLOW: tensorflow_backend.TensorFlowBackend,
+      model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
     }[config.architecture.backend](self.config, self.cache, self.corpus)
 
   def GetShortSummary(self) -> str:
@@ -153,8 +157,8 @@ class Model(object):
     """
     config_to_hash = model_pb2.Model()
     config_to_hash.CopyFrom(config)
-    config_to_hash.ClearField('corpus')
-    config_to_hash.training.ClearField('num_epochs')
+    config_to_hash.ClearField("corpus")
+    config_to_hash.training.ClearField("num_epochs")
     return crypto.sha1_list(corpus_.hash, config_to_hash.SerializeToString())
 
   def Create(self) -> bool:
@@ -167,16 +171,17 @@ class Model(object):
     with self.dashboard_db.Session(commit=True) as session:
       config_to_store = model_pb2.Model()
       config_to_store.CopyFrom(self.config)
-      config_to_store.ClearField('corpus')
-      config_to_store.training.ClearField('num_epochs')
+      config_to_store.ClearField("corpus")
+      config_to_store.training.ClearField("num_epochs")
       corpus = session.GetOrAdd(
-          dashboard_db.Model,
-          corpus_id=self.corpus.dashboard_db_id,
-          config_proto_sha1=crypto.sha1(config_to_store.SerializeToString()),
-          config_proto=str(config_to_store),
-          cache_path=(f'ssh://{system.USERNAME}@{system.HOSTNAME}'
-                      f'/{self.cache.path}'),
-          summary=self.GetShortSummary(),
+        dashboard_db.Model,
+        corpus_id=self.corpus.dashboard_db_id,
+        config_proto_sha1=crypto.sha1(config_to_store.SerializeToString()),
+        config_proto=str(config_to_store),
+        cache_path=(
+          f"ssh://{system.USERNAME}@{system.HOSTNAME}" f"/{self.cache.path}"
+        ),
+        summary=self.GetShortSummary(),
       )
       session.flush()
       self._dashboard_db_id = corpus.id
@@ -186,10 +191,10 @@ class Model(object):
   @property
   def dashboard_db_id(self) -> int:
     if not self._created:
-      raise TypeError('Cannot access dashboard_db_id before Create() called')
+      raise TypeError("Cannot access dashboard_db_id before Create() called")
     return self._dashboard_db_id
 
-  def Train(self, **kwargs) -> 'Model':
+  def Train(self, **kwargs) -> "Model":
     """Train the model.
 
     Returns:
@@ -202,19 +207,25 @@ class Model(object):
     self.Create()
     with self.training_lock.acquire():
       self.backend.Train(self.corpus, **kwargs)
-    telemetry_logs = self.TrainingTelemetry()[:self.config.training.num_epochs]
+    telemetry_logs = self.TrainingTelemetry()[: self.config.training.num_epochs]
     final_loss = telemetry_logs[-1].loss
     total_time_ms = sum(t.epoch_wall_time_ms for t in telemetry_logs)
-    app.Log(1, 'Trained model for %d epochs in %s ms (%s). '
-            'Training loss: %f.', self.config.training.num_epochs,
-            humanize.Commas(total_time_ms),
-            humanize.Duration(total_time_ms / 1000), final_loss)
+    app.Log(
+      1,
+      "Trained model for %d epochs in %s ms (%s). " "Training loss: %f.",
+      self.config.training.num_epochs,
+      humanize.Commas(total_time_ms),
+      humanize.Duration(total_time_ms / 1000),
+      final_loss,
+    )
     return self
 
-  def Sample(self,
-             sampler: samplers.Sampler,
-             sample_observers: typing.List[sample_observers_lib.SampleObserver],
-             seed: int = None) -> None:
+  def Sample(
+    self,
+    sampler: samplers.Sampler,
+    sample_observers: typing.List[sample_observers_lib.SampleObserver],
+    seed: int = None,
+  ) -> None:
     """Sample a model.
 
     This method uses the observer model, returning nothing. To access the
@@ -242,14 +253,15 @@ class Model(object):
         encoded.
     """
     if not sample_observers:
-      raise errors.UserError('Cannot sample without any observers')
+      raise errors.UserError("Cannot sample without any observers")
 
     sample_start_time = labdate.MillisecondsTimestamp()
 
     self.Train()
 
-    with logutil.TeeLogsToFile(f'sampler_{sampler.hash}',
-                               self.cache.path / 'logs'):
+    with logutil.TeeLogsToFile(
+      f"sampler_{sampler.hash}", self.cache.path / "logs"
+    ):
       app.Log(1, "Sampling: '%s'", sampler.start_text)
 
       atomizer = self.corpus.atomizer
@@ -263,18 +275,23 @@ class Model(object):
 
       time_now = labdate.MillisecondsTimestamp()
       app.Log(
-          1, 'Produced %s sample batches at a rate of %s ms / batch.',
-          humanize.Commas(batch_count),
-          humanize.Commas(
-              int((time_now - sample_start_time) / max(batch_count, 1))))
+        1,
+        "Produced %s sample batches at a rate of %s ms / batch.",
+        humanize.Commas(batch_count),
+        humanize.Commas(
+          int((time_now - sample_start_time) / max(batch_count, 1))
+        ),
+      )
 
   def _SampleBatch(
-      self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
-      sample_observers: typing.List[sample_observers_lib.SampleObserver]
+    self,
+    sampler: samplers.Sampler,
+    atomizer: atomizers.AtomizerBase,
+    sample_observers: typing.List[sample_observers_lib.SampleObserver],
   ) -> bool:
     """Run a single iteration of the batched sample inner-loop."""
     samples_in_progress = [
-        sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
+      sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
     ]
     done = np.zeros(sampler.batch_size, dtype=np.bool)
     start_time = labdate.MillisecondsTimestamp()
@@ -301,14 +318,17 @@ class Model(object):
           if sampler.SampleIsComplete(samples_in_progress[i]):
             end_time = labdate.MillisecondsTimestamp()
             done[i] = 1
-            sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
-                                      sample_start_epoch_ms_utc=start_time,
-                                      sample_time_ms=end_time - start_time,
-                                      wall_time_ms=end_time - wall_time_start,
-                                      num_tokens=len(samples_in_progress[i]))
+            sample = model_pb2.Sample(
+              text="".join(samples_in_progress[i]),
+              sample_start_epoch_ms_utc=start_time,
+              sample_time_ms=end_time - start_time,
+              wall_time_ms=end_time - wall_time_start,
+              num_tokens=len(samples_in_progress[i]),
+            )
             # Notify sample observers.
             continue_sampling &= all(
-                [obs.OnSample(sample) for obs in sample_observers])
+              [obs.OnSample(sample) for obs in sample_observers]
+            )
 
             # Wall sample time is the difference between the end of the previous
             # sample and the end of the current sample.
@@ -327,14 +347,14 @@ class Model(object):
       A path to a directory. Note that this directory may not exist - it is
       created only after a call to Sample().
     """
-    return self.cache.path / 'samples' / sampler.hash
+    return self.cache.path / "samples" / sampler.hash
 
   def _WriteMetafile(self) -> None:
-    pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath('META.pbtxt')))
+    pbutil.ToFile(self.meta, pathlib.Path(self.cache.keypath("META.pbtxt")))
 
   def TrainingTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Get the training telemetry data."""
-    return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
+    return telemetry.TrainingLogger(self.cache.path / "logs").EpochTelemetry()
 
   def InferenceManifest(self) -> typing.List[pathlib.Path]:
     """Return the list of files which are required for model inference.
@@ -342,10 +362,10 @@ class Model(object):
     Returns:
       A list of absolute paths.
     """
-    return sorted([
-        self.cache.path / 'atomizer',
-        self.cache.path / 'META.pbtxt',
-    ] + self.backend.InferenceManifest())
+    return sorted(
+      [self.cache.path / "atomizer", self.cache.path / "META.pbtxt",]
+      + self.backend.InferenceManifest()
+    )
 
   @property
   def atomizer(self) -> atomizers.AtomizerBase:
@@ -354,7 +374,7 @@ class Model(object):
   @property
   def training_lock(self) -> lockfile.LockFile:
     """A lockfile for exclusive training."""
-    return lockfile.LockFile(self.cache.keypath('LOCK'))
+    return lockfile.LockFile(self.cache.keypath("LOCK"))
 
   @property
   def is_trained(self) -> bool:
@@ -362,7 +382,7 @@ class Model(object):
 
   def __repr__(self) -> str:
     """String representation."""
-    return f'model[{self.hash}]'
+    return f"model[{self.hash}]"
 
   def __eq__(self, rhs) -> bool:
     if not isinstance(rhs, Model):

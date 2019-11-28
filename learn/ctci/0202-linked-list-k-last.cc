@@ -1,20 +1,20 @@
 /*
- * Implement an algorithm to find the kth to last element of a single liked list.
+ * Implement an algorithm to find the kth to last element of a single liked
+ * list.
  */
 #include "./ctci.h"
 
-#include <vector>
 #include <forward_list>
-
+#include <vector>
 
 //
 // Store a circular buffer of the last k+1 elements.
 //
 // O(n) time, O(n) space.
 //
-template<typename T>
-typename std::forward_list<T>::const_iterator
-k_last_elem(const std::forward_list<T> lst, const size_t k) {
+template <typename T>
+typename std::forward_list<T>::const_iterator k_last_elem(
+    const std::forward_list<T> lst, const size_t k) {
   std::vector<typename std::forward_list<T>::const_iterator> tmp(k + 1);
   size_t i = 0;
   auto first = lst.begin();
@@ -26,7 +26,6 @@ k_last_elem(const std::forward_list<T> lst, const size_t k) {
 
   return tmp[i];
 }
-
 
 ///////////
 // Tests //

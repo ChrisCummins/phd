@@ -8,19 +8,22 @@ import numpy as np
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_query
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import \
-  control_and_data_flow_graph as cdfg
+from deeplearning.ml4pl.graphs.unlabelled.cdfg import (
+  control_and_data_flow_graph as cdfg,
+)
 from deeplearning.ml4pl.models.lstm import bytecode2seq
 from labm8.py import app
 from labm8.py import labtypes
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('unlabelled_graph_db',
-                    graph_database.Database,
-                    None,
-                    'URL of unlabelled graphs to read bytecodes from.',
-                    must_exist=True)
+app.DEFINE_database(
+  "unlabelled_graph_db",
+  graph_database.Database,
+  None,
+  "URL of unlabelled graphs to read bytecodes from.",
+  must_exist=True,
+)
 
 
 class EncoderBase(object):
@@ -50,8 +53,11 @@ class EncoderBase(object):
 class GraphToBytecodeEncoder(EncoderBase):
   """Encode graphs to bytecode sequences."""
 
-  def __init__(self, graph_db: graph_database.Database,
-               bytecode_encoder: bytecode2seq.EncoderBase):
+  def __init__(
+    self,
+    graph_db: graph_database.Database,
+    bytecode_encoder: bytecode2seq.EncoderBase,
+  ):
     super(GraphToBytecodeEncoder, self).__init__(graph_db)
 
     self.bytecode_encoder = bytecode_encoder
@@ -74,40 +80,49 @@ class GraphToBytecodeEncoder(EncoderBase):
       A list of encoded bytecodes.
     """
     unknown_graph_ids = [
-        graph_id for graph_id in graph_ids
-        if graph_id not in self.graph_to_encoded_bytecode
+      graph_id
+      for graph_id in graph_ids
+      if graph_id not in self.graph_to_encoded_bytecode
     ]
 
     if unknown_graph_ids:
       # we hope this will not be printed at epoch 2...
-      app.Log(1, "unknown_graph_ids has length %s and ids %s",
-              len(unknown_graph_ids), unknown_graph_ids)
+      app.Log(
+        1,
+        "unknown_graph_ids has length %s and ids %s",
+        len(unknown_graph_ids),
+        unknown_graph_ids,
+      )
 
       # Look the bytecode IDs of any unknown graphs.
       with self.graph_db.Session() as session:
-        query = session.query(graph_database.GraphMeta.id,
-                              graph_database.GraphMeta.bytecode_id)
+        query = session.query(
+          graph_database.GraphMeta.id, graph_database.GraphMeta.bytecode_id
+        )
         query = query.filter(graph_database.GraphMeta.id.in_(unknown_graph_ids))
         graph_to_bytecode_id = {
-            graph_id: bytecode_id for graph_id, bytecode_id in query
+          graph_id: bytecode_id for graph_id, bytecode_id in query
         }
       if len(graph_to_bytecode_id) != len(unknown_graph_ids):
         raise EnvironmentError(
-            f"len(graph_to_bytecode_id)={len(graph_to_bytecode_id)} != "
-            f"len(unknown_graph_ids)={len(unknown_graph_ids)}")
+          f"len(graph_to_bytecode_id)={len(graph_to_bytecode_id)} != "
+          f"len(unknown_graph_ids)={len(unknown_graph_ids)}"
+        )
 
       # Create reverse mapping from bytecode ID to a list of graph IDs. One
       # bytecode can map to multiple graphs.
       bytecode_to_graph_ids: typing.Dict[
-          int, typing.List[int]] = collections.defaultdict(list)
+        int, typing.List[int]
+      ] = collections.defaultdict(list)
       for graph_id, bytecode_id in graph_to_bytecode_id.items():
         bytecode_to_graph_ids[bytecode_id].append(graph_id)
 
       bytecodes_to_encode = sorted(list(bytecode_to_graph_ids.keys()))
       encoded_sequences = self.bytecode_encoder.Encode(bytecodes_to_encode)
 
-      for bytecode_id, encoded_sequence in zip(bytecodes_to_encode,
-                                               encoded_sequences):
+      for bytecode_id, encoded_sequence in zip(
+        bytecodes_to_encode, encoded_sequences
+      ):
         graph_ids_for_bytecode = bytecode_to_graph_ids[bytecode_id]
         for graph_id in graph_ids_for_bytecode:
           self.graph_to_encoded_bytecode[graph_id] = encoded_sequence
@@ -117,6 +132,7 @@ class GraphToBytecodeEncoder(EncoderBase):
 
 class EncodedBytecodeGrouping(typing.NamedTuple):
   """An encoded bytecode with node segments."""
+
   encoded_sequences: np.array
   segment_ids: np.array
   node_mask: np.array
@@ -125,31 +141,42 @@ class EncodedBytecodeGrouping(typing.NamedTuple):
 class GraphToBytecodeGroupingsEncoder(EncoderBase):
   """Encode graphs to bytecode sequences with statement groupings."""
 
-  def __init__(self, graph_db: graph_database.Database,
-               bytecode_encoder: bytecode2seq.EncoderBase, group_by: str):
+  def __init__(
+    self,
+    graph_db: graph_database.Database,
+    bytecode_encoder: bytecode2seq.EncoderBase,
+    group_by: str,
+  ):
     super(GraphToBytecodeGroupingsEncoder, self).__init__(graph_db)
 
     self._unlabelled_graph_db = None
 
     self.bytecode_encoder = bytecode_encoder
 
-    if group_by == 'statement':
+    if group_by == "statement":
       self.encode_graph = self._GraphToEncodedStatementGroups
-    elif group_by == 'identifier':
+    elif group_by == "identifier":
       self.encode_graph = self._GraphToEncodedIdentifierGroups
     else:
-      raise ValueError("Unknown option for `group_by`. Expected one of "
-                       "{statement,identifier}")
+      raise ValueError(
+        "Unknown option for `group_by`. Expected one of "
+        "{statement,identifier}"
+      )
 
     self.graph_to_bytecode_ids = {}
 
     # TODO(cec): Implement LRU cache for encoded bytecodes.
-    self.graph_to_bytecode_grouping: typing.Dict[int,
-                                                 EncodedBytecodeGrouping] = {}
+    self.graph_to_bytecode_grouping: typing.Dict[
+      int, EncodedBytecodeGrouping
+    ] = {}
 
-  def Encode(self, graph_ids: typing.List[int]
-            ) -> typing.Tuple[typing.Dict[int, np.array], typing.
-                              Dict[int, np.array], typing.Dict[int, np.array]]:
+  def Encode(
+    self, graph_ids: typing.List[int]
+  ) -> typing.Tuple[
+    typing.Dict[int, np.array],
+    typing.Dict[int, np.array],
+    typing.Dict[int, np.array],
+  ]:
     """Serialize a graph into an encoded sequence.
 
     This method is used to provide a serialized sequence of encoded tokens
@@ -208,20 +235,19 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     """
     # Update the mapping from graph to bytecode IDs.
     unknown_graph_ids = [
-        id_ for id_ in graph_ids if id_ not in self.graph_to_bytecode_ids
+      id_ for id_ in graph_ids if id_ not in self.graph_to_bytecode_ids
     ]
 
     # Lookup the bytecode IDs.
     with self.graph_db.Session() as session:
       query = session.query(
-          graph_database.GraphMeta.id,
-          graph_database.GraphMeta.bytecode_id) \
-        .filter(graph_database.GraphMeta.id.in_(unknown_graph_ids))
+        graph_database.GraphMeta.id, graph_database.GraphMeta.bytecode_id
+      ).filter(graph_database.GraphMeta.id.in_(unknown_graph_ids))
       for graph_id, bytecode_id in query:
         self.graph_to_bytecode_ids[graph_id] = bytecode_id
 
     bytecode_ids = [
-        self.graph_to_bytecode_ids[graph_id] for graph_id in graph_ids
+      self.graph_to_bytecode_ids[graph_id] for graph_id in graph_ids
     ]
 
     # Fetch the requested unlabelled graphs.
@@ -230,21 +256,24 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     # Fetch the graph data.
     with self.unlabelled_graph_db.Session() as session:
       # TODO: Rebuild networkx from graph tuples.
-      query = session.query(
+      query = (
+        session.query(
           graph_database.GraphMeta.bytecode_id,
-          graph_database.Graph.pickled_data) \
-        .join(graph_database.Graph) \
-        .filter(graph_database.GraphMeta.bytecode_id.in_(
-          graph_ids_to_fetch))
+          graph_database.Graph.pickled_data,
+        )
+        .join(graph_database.Graph)
+        .filter(graph_database.GraphMeta.bytecode_id.in_(graph_ids_to_fetch))
+      )
 
       ids_to_graphs = {
-          bytecode_id: pickle.loads(data) for bytecode_id, data in query
+        bytecode_id: pickle.loads(data) for bytecode_id, data in query
       }
 
     if len(graph_ids_to_fetch) != len(ids_to_graphs):
       raise EnvironmentError(
-          f"Graph IDs not found in database {self.graph_db.url}: "
-          f"{set(graph_ids_to_fetch) - set(ids_to_graphs.keys())}")
+        f"Graph IDs not found in database {self.graph_db.url}: "
+        f"{set(graph_ids_to_fetch) - set(ids_to_graphs.keys())}"
+      )
 
     # Encode the graphs
     ids_to_encoded_sequences = {}
@@ -261,20 +290,24 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
   def EncodeBytecodes(self, bytecode_ids: typing.List[int]):
     with self.unlabelled_graph_db.Session() as session:
       # TODO: Rebuild networkx from graph tuples.
-      query = session.query(
+      query = (
+        session.query(
           graph_database.GraphMeta.bytecode_id,
-          graph_database.Graph.pickled_data) \
-        .join(graph_database.Graph) \
+          graph_database.Graph.pickled_data,
+        )
+        .join(graph_database.Graph)
         .filter(graph_database.GraphMeta.bytecode_id.in_(bytecode_ids))
+      )
 
       ids_to_graphs = {
-          bytecode_id: pickle.loads(data) for bytecode_id, data in query
+        bytecode_id: pickle.loads(data) for bytecode_id, data in query
       }
 
     if len(bytecode_ids) != len(ids_to_graphs):
       raise EnvironmentError(
-          f"Graph IDs not found in database {self.graph_db.url}: "
-          f"{set(graph_ids_to_fetch) - set(ids_to_graphs.keys())}")
+        f"Graph IDs not found in database {self.graph_db.url}: "
+        f"{set(graph_ids_to_fetch) - set(ids_to_graphs.keys())}"
+      )
 
     encoded_sequences, segment_ids, node_masks = [], [], []
 
@@ -299,12 +332,14 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
       raise app.UsageError("--unlabelled_graph_db must be set")
 
   def _EncodeStringsWithGroupings(
-      self, strings: typing.List[str]) -> typing.Tuple[np.array, np.array]:
+    self, strings: typing.List[str]
+  ) -> typing.Tuple[np.array, np.array]:
     """Encode the given strings and return a flattened list of the encoded
     values, along with grouping IDs.
     """
-    encoded_sequences = self.bytecode_encoder.EncodeBytecodeStrings(strings,
-                                                                    pad=False)
+    encoded_sequences = self.bytecode_encoder.EncodeBytecodeStrings(
+      strings, pad=False
+    )
     statement_indices = []
     for i, enc in enumerate(encoded_sequences):
       statement_indices.append([i] * len(enc))
@@ -317,40 +352,47 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     return encoded_sequences, np.array(statement_indices, dtype=np.int32)
 
   def _GraphToEncodedStatementGroups(
-      self,
-      graph: nx.MultiDiGraph) -> typing.Tuple[np.array, np.array, np.array]:
+    self, graph: nx.MultiDiGraph
+  ) -> typing.Tuple[np.array, np.array, np.array]:
     """Serialize the graph to an encoded sequence and set of statement indices.
     """
     serialized_node_list = list(cdfg.SerializeToStatementList(graph))
     statement_nodes = set(serialized_node_list)
     node_mask = np.array(
-        [1 if node in statement_nodes else 0 for node in graph.nodes()],
-        dtype=np.int32)
+      [1 if node in statement_nodes else 0 for node in graph.nodes()],
+      dtype=np.int32,
+    )
 
     if not any(node_mask):
-      return (np.array([], dtype=np.int32), np.array(
-          [], dtype=np.int32), np.array([], dtype=np.int32))
+      return (
+        np.array([], dtype=np.int32),
+        np.array([], dtype=np.int32),
+        np.array([], dtype=np.int32),
+      )
 
     strings_to_encode = [
-        graph.nodes[n].get('original_text', '') for n in serialized_node_list
+      graph.nodes[n].get("original_text", "") for n in serialized_node_list
     ]
 
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
     if max(ids) > graph.number_of_nodes():
-      app.Error("Found max ID %s in graph of only %s nodes", max(ids),
-                graph.number_of_nodes())
+      app.Error(
+        "Found max ID %s in graph of only %s nodes",
+        max(ids),
+        graph.number_of_nodes(),
+      )
 
     return seqs, ids, node_mask
 
   def _GraphToEncodedIdentifierGroups(
-      self,
-      graph: nx.MultiDiGraph) -> typing.Tuple[np.array, np.array, np.array]:
+    self, graph: nx.MultiDiGraph
+  ) -> typing.Tuple[np.array, np.array, np.array]:
     """Serialize the graph to an encoded sequence and set of statement indices.
     """
     identifiers, node_mask = [], []
-    for node, type_ in graph.nodes(data='type'):
-      if type_ == 'identifier':
+    for node, type_ in graph.nodes(data="type"):
+      if type_ == "identifier":
         identifiers.append(node)
         node_mask.append(1)
       else:
@@ -358,19 +400,29 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
     node_mask = np.array(node_mask, dtype=np.int32)
 
     if not any(node_mask):
-      return (np.array([], dtype=np.int32), np.array(
-          [], dtype=np.int32), np.array([], dtype=np.int32))
+      return (
+        np.array([], dtype=np.int32),
+        np.array([], dtype=np.int32),
+        np.array([], dtype=np.int32),
+      )
 
-    strings_to_encode = labtypes.flatten([[
-        graph.nodes[n].get('original_text', '')
-        for n in graph_query.GetStatementsForNode(graph, identifier)
-    ]
-                                          for identifier in identifiers])
+    strings_to_encode = labtypes.flatten(
+      [
+        [
+          graph.nodes[n].get("original_text", "")
+          for n in graph_query.GetStatementsForNode(graph, identifier)
+        ]
+        for identifier in identifiers
+      ]
+    )
 
     seqs, ids = self._EncodeStringsWithGroupings(strings_to_encode)
 
     if max(ids) > graph.number_of_nodes():
-      app.Error("Found max ID %s in graph of only %s nodes", max(ids),
-                graph.number_of_nodes())
+      app.Error(
+        "Found max ID %s in graph of only %s nodes",
+        max(ids),
+        graph.number_of_nodes(),
+      )
 
     return seqs, ids, node_mask

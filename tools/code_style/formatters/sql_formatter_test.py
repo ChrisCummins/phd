@@ -14,11 +14,14 @@ def test_FormatSql_hello_world():
 
 
 def test_FormatSql_sql_query():
-  assert sql_formatter.FormatSql("select count(*),foo.bar from foo;") == """\
+  assert (
+    sql_formatter.FormatSql("select count(*),foo.bar from foo;")
+    == """\
 SELECT count(*),
        foo.bar
 FROM foo;"""
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -35,10 +35,10 @@ def profiling_env() -> None:
     A Session instance.
   """
   try:
-    os.environ['PROFILE'] = '1'
+    os.environ["PROFILE"] = "1"
     yield None
   finally:
-    os.environ['PROFILE'] = ''
+    os.environ["PROFILE"] = ""
 
 
 def test_enable_disable():
@@ -54,45 +54,44 @@ def test_enable_disable():
 def test_named_timer(profiling_env):
   buf = StringIO()
 
-  prof.start('foo')
-  prof.stop('foo', file=buf)
+  prof.start("foo")
+  prof.stop("foo", file=buf)
 
   out = buf.getvalue()
-  assert ' foo ' == re.search(' foo ', out).group(0)
+  assert " foo " == re.search(" foo ", out).group(0)
 
 
 def test_named_timer(profiling_env):
   buf = StringIO()
 
-  prof.start('foo')
-  prof.start('bar')
-  prof.stop('bar', file=buf)
+  prof.start("foo")
+  prof.start("bar")
+  prof.stop("bar", file=buf)
 
   out = buf.getvalue()
-  assert not re.search(' foo ', out)
-  assert ' bar ' == re.search(' bar ', out).group(0)
+  assert not re.search(" foo ", out)
+  assert " bar " == re.search(" bar ", out).group(0)
 
-  prof.stop('foo', file=buf)
+  prof.stop("foo", file=buf)
 
   out = buf.getvalue()
-  assert ' foo ' == re.search(' foo ', out).group(0)
-  assert ' bar ' == re.search(' bar ', out).group(0)
+  assert " foo " == re.search(" foo ", out).group(0)
+  assert " bar " == re.search(" bar ", out).group(0)
 
 
 def test_stop_twice_error(profiling_env):
-  prof.start('foo')
-  prof.stop('foo')
+  prof.start("foo")
+  prof.stop("foo")
   with pytest.raises(KeyError):
-    prof.stop('foo')
+    prof.stop("foo")
 
 
 def test_stop_bad_name_error(profiling_env):
   with pytest.raises(KeyError):
-    prof.stop('not a timer')
+    prof.stop("not a timer")
 
 
 def test_profile(profiling_env):
-
   def test_fn(x, y):
     return x + y
 
@@ -101,11 +100,11 @@ def test_profile(profiling_env):
 
 def test_timers(profiling_env):
   x = len(list(prof.timers()))
-  prof.start('new timer')
+  prof.start("new timer")
   assert len(list(prof.timers())) == x + 1
-  prof.stop('new timer')
+  prof.stop("new timer")
   assert len(list(prof.timers())) == x
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

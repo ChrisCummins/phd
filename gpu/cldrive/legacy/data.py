@@ -25,6 +25,7 @@ from labm8.py import app
 
 class Generator(Enum):
   """Data generator types."""
+
   # We wrap functions in a partial so that they are interpreted as attributes
   # rather than methods. See: http://stackoverflow.com/a/40339397
   RAND = functools.partial(np.random.rand)
@@ -37,7 +38,7 @@ class Generator(Enum):
     return self.value(*args, **kwargs).astype(numpy_type)
 
   @staticmethod
-  def FromString(string: str) -> 'Generator':
+  def FromString(string: str) -> "Generator":
     if string == "rand":
       return Generator.RAND
     elif string == "arange":
@@ -50,10 +51,9 @@ class Generator(Enum):
       raise ValueError(f"Unknown generator name: '{string}'")
 
 
-def MakeData(src: str,
-             size: int,
-             data_generator: Generator,
-             scalar_val: float = None) -> np.array:
+def MakeData(
+  src: str, size: int, data_generator: Generator, scalar_val: float = None
+) -> np.array:
   """Generate data for OpenCL kernels.
 
   Creates a numpy array for each OpenCL argument, except arguments with the
@@ -87,8 +87,11 @@ def MakeData(src: str,
   """
   # check the input types
   app.AssertOrRaise(isinstance(src, str), TypeError)
-  app.AssertOrRaise(isinstance(data_generator, Generator), TypeError,
-                    "invalid argument type for enum data_generator")
+  app.AssertOrRaise(
+    isinstance(data_generator, Generator),
+    TypeError,
+    "invalid argument type for enum data_generator",
+  )
 
   if scalar_val is None:
     scalar_val = size

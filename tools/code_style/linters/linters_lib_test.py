@@ -13,17 +13,17 @@ FLAGS = app.FLAGS
 
 def test_WhichOrDie_file_exists(tempdir: pathlib.Path):
   """Test that file can be found in PATH."""
-  os.environ['PATH'] = str(tempdir)
-  (tempdir / 'a').touch()
-  assert linters_lib.WhichOrDie('a')
+  os.environ["PATH"] = str(tempdir)
+  (tempdir / "a").touch()
+  assert linters_lib.WhichOrDie("a")
 
 
 def test_WhichOrDie_file_doesnt_exist(tempdir: pathlib.Path):
   """Test that error raised when file not in PATH."""
-  os.environ['PATH'] = str(tempdir)
+  os.environ["PATH"] = str(tempdir)
   with pytest.raises(SystemExit):
-    linters_lib.WhichOrDie('a')
+    linters_lib.WhichOrDie("a")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

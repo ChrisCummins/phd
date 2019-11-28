@@ -1,19 +1,15 @@
-#include <memory>
 #include <iostream>
+#include <memory>
 
 class X {
  public:
-  X() : data(0) {
-    std::cout << "-> X()\n";
-  }
+  X() : data(0) { std::cout << "-> X()\n"; }
 
   explicit X(const int n) : data(n) {
     std::cout << "-> explicit X(" << n << ")\n";
   }
 
-  ~X() {
-    std::cout << "-> ~X(" << data << ")\n";
-  }
+  ~X() { std::cout << "-> ~X(" << data << ")\n"; }
 
   friend std::ostream& operator<<(std::ostream& out, const X& x) {
     out << "x = " << x.data;
@@ -25,16 +21,12 @@ class X {
 };
 
 // Capture by reference, std::unique_ptr has no copy constructor.
-void print_x(const std::unique_ptr<X>& x) {
-  std::cout << *x << std::endl;
-}
+void print_x(const std::unique_ptr<X>& x) { std::cout << *x << std::endl; }
 
 // Capture by value.
-void print_x(const std::shared_ptr<X> x) {
-  std::cout << *x << std::endl;
-}
+void print_x(const std::shared_ptr<X> x) { std::cout << *x << std::endl; }
 
-template<typename... Arg>
+template <typename... Arg>
 auto make_x(Arg&&... args) {
   return std::make_unique<X>(args...);
 }

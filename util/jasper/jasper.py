@@ -34,8 +34,9 @@ from tools.code_style.formatters import sql_formatter
 from util.lmk import lmk
 
 FLAGS = app.FLAGS
-app.DEFINE_string('host', 'localhost',
-                  'The MySQL host to execute the command on.')
+app.DEFINE_string(
+  "host", "localhost", "The MySQL host to execute the command on."
+)
 
 
 def runEditorOnFileOrDie(path: pathlib.Path) -> None:
@@ -46,21 +47,22 @@ def runEditorOnFileOrDie(path: pathlib.Path) -> None:
   Arg:
     path: The path to edit.
   """
-  editor = os.environ.get('VISUAL', os.environ.get('EDITOR'))
+  editor = os.environ.get("VISUAL", os.environ.get("EDITOR"))
   if not editor:
-    print('fatal: $EDITOR not set', file=sys.stderr)
+    print("fatal: $EDITOR not set", file=sys.stderr)
     sys.exit(1)
 
-  cmd = f'{editor} {path}'
+  cmd = f"{editor} {path}"
   try:
     subprocess.check_call(cmd, shell=True)
   except subprocess.SubprocessError:
-    print(f'fatal: Editor `{cmd}` failed. Aborting', file=sys.stderr)
+    print(f"fatal: Editor `{cmd}` failed. Aborting", file=sys.stderr)
     sys.exit(1)
 
 
 def getQueryFromUserOrDie(
-    edit_file_callback: typing.Callable[[pathlib.Path], None]) -> str:
+  edit_file_callback: typing.Callable[[pathlib.Path], None]
+) -> str:
   """Get the query to run from the user.
 
   This prompts the user for a query to run, then formats it.
@@ -76,21 +78,22 @@ def getQueryFromUserOrDie(
 # Please enter the SQL query to execute. Comments beginning with
 # '//', '#', and '--' are ignored. An empty query executes nothing.
 """
-  with tempfile.TemporaryDirectory(prefix='phd_jasper_') as d:
-    query_file = pathlib.Path(d) / 'query.sql'
-    fs.Write(query_file, query.encode('utf-8'))
+  with tempfile.TemporaryDirectory(prefix="phd_jasper_") as d:
+    query_file = pathlib.Path(d) / "query.sql"
+    fs.Write(query_file, query.encode("utf-8"))
     edit_file_callback(query_file)
     query = fs.Read(query_file)
 
     # Strip comments and trailing whitespace.
-    query = text.StripSingleLineComments(query, '(#|//|--)')
-    query = '\n'.join(
-        [x.rstrip() for x in query.split('\n') if x.strip()]).strip()
+    query = text.StripSingleLineComments(query, "(#|//|--)")
+    query = "\n".join(
+      [x.rstrip() for x in query.split("\n") if x.strip()]
+    ).strip()
 
     query = sql_formatter.FormatSql(query)
 
   if not query:
-    print('No query to execute, aborting.', file=sys.stderr)
+    print("No query to execute, aborting.", file=sys.stderr)
     sys.exit(1)
   return query
 
@@ -107,40 +110,48 @@ def execMysqlQuery(query: str, host: str) -> None:
   Raises:
     OSError: If MySQL fails.
   """
-  process = subprocess.Popen(['mysql', '-h', host, '--table'],
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             universal_newlines=True)
+  process = subprocess.Popen(
+    ["mysql", "-h", host, "--table"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    universal_newlines=True,
+  )
   stdout, stderr = process.communicate(query)
   if process.returncode:
-    raise OSError(f'MySQL terminated with returncode {process.returncode} and '
-                  f'output:\n{stdout}\n{stderr}')
+    raise OSError(
+      f"MySQL terminated with returncode {process.returncode} and "
+      f"output:\n{stdout}\n{stderr}"
+    )
   return stdout
 
 
 def executeQueryAndNotify(query: str, host: str) -> bool:
   """Execute the query, send a notification, and return True on error."""
   date_started = datetime.datetime.now()
-  message_to_print = f'{datetime.datetime.now()}\n\n{query}'
-  print('\n'.join([f'-- {x}' for x in message_to_print.split('\n')]))
+  message_to_print = f"{datetime.datetime.now()}\n\n{query}"
+  print("\n".join([f"-- {x}" for x in message_to_print.split("\n")]))
 
   try:
     output = execMysqlQuery(query, FLAGS.host)
     print(output)
-    lmk.let_me_know(output,
-                    command=query,
-                    returncode=0,
-                    date_started=date_started,
-                    date_ended=datetime.datetime.now())
+    lmk.let_me_know(
+      output,
+      command=query,
+      returncode=0,
+      date_started=date_started,
+      date_ended=datetime.datetime.now(),
+    )
     return False
   except OSError as e:
     print(e, file=sys.stderr)
-    lmk.let_me_know(str(e),
-                    command=query,
-                    returncode=1,
-                    date_started=date_started,
-                    date_ended=datetime.datetime.now())
+    lmk.let_me_know(
+      str(e),
+      command=query,
+      returncode=1,
+      date_started=date_started,
+      date_ended=datetime.datetime.now(),
+    )
     return True
 
 
@@ -148,7 +159,7 @@ def readFileOrDie(arg: str) -> str:
   """Read contents of file to string or die."""
   path = pathlib.Path(arg)
   if not path.is_file():
-    print(f'fatal: file not found {arg}', file=sys.stderr)
+    print(f"fatal: file not found {arg}", file=sys.stderr)
     sys.exit(1)
   with open(path) as f:
     data = f.read()
@@ -170,9 +181,7 @@ def main(argv: typing.List[str]):
     for arg in argv[1:]:
       query = readFileOrDie(arg)
       error |= executeQueryAndNotify(query, FLAGS.host)
-  elif select.select([
-      sys.stdin,
-  ], [], [], 0.0)[0]:
+  elif select.select([sys.stdin,], [], [], 0.0)[0]:
     query = sys.stdin.read()
     error = executeQueryAndNotify(query, FLAGS.host)
   else:
@@ -182,5 +191,5 @@ def main(argv: typing.List[str]):
   sys.exit(1 if error else 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

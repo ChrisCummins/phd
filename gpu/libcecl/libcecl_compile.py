@@ -24,33 +24,40 @@ from labm8.py import system
 
 FLAGS = app.FLAGS
 
-OPENCL_HEADERS_DIR = bazelutil.DataPath('opencl_120_headers')
+OPENCL_HEADERS_DIR = bazelutil.DataPath("opencl_120_headers")
 
 # Path to OpenCL headers and library.
 if system.is_linux():
-  LIBOPENCL_DIR = bazelutil.DataPath('libopencl')
+  LIBOPENCL_DIR = bazelutil.DataPath("libopencl")
 
-LIBCECL_SO = bazelutil.DataPath('phd/gpu/libcecl/libcecl.so')
-LIBCECL_HEADER = bazelutil.DataPath('phd/gpu/libcecl/libcecl.h')
+LIBCECL_SO = bazelutil.DataPath("phd/gpu/libcecl/libcecl.so")
+LIBCECL_HEADER = bazelutil.DataPath("phd/gpu/libcecl/libcecl.h")
 
 
-def _OpenClCompileAndLinkFlags(
-) -> typing.Tuple[typing.List[str], typing.List[str]]:
+def _OpenClCompileAndLinkFlags() -> typing.Tuple[
+  typing.List[str], typing.List[str]
+]:
   """Private helper method to get device-specific OpenCL flags."""
   if system.is_linux():
-    return (['-isystem', str(OPENCL_HEADERS_DIR)], [
-        f'-L{LIBOPENCL_DIR}', f'-Wl,-rpath,{LIBOPENCL_DIR}', '-lOpenCL',
-        '-DCL_SILENCE_DEPRECATION'
-    ])
+    return (
+      ["-isystem", str(OPENCL_HEADERS_DIR)],
+      [
+        f"-L{LIBOPENCL_DIR}",
+        f"-Wl,-rpath,{LIBOPENCL_DIR}",
+        "-lOpenCL",
+        "-DCL_SILENCE_DEPRECATION",
+      ],
+    )
   else:  # macOS
-    return ['-isystem', str(OPENCL_HEADERS_DIR)], [
-        '-framework', 'OpenCL', '-DCL_SILENCE_DEPRECATION'
-    ]
+    return (
+      ["-isystem", str(OPENCL_HEADERS_DIR)],
+      ["-framework", "OpenCL", "-DCL_SILENCE_DEPRECATION"],
+    )
 
 
 @functools.lru_cache(maxsize=2)
 def OpenClCompileAndLinkFlags(
-    opencl_headers: bool = True
+  opencl_headers: bool = True,
 ) -> typing.Tuple[typing.List[str], typing.List[str]]:
   """Get device-specific OpenCL compile and link flags."""
   cflags, ldflags = _OpenClCompileAndLinkFlags()
@@ -61,7 +68,7 @@ def OpenClCompileAndLinkFlags(
 
 @functools.lru_cache(maxsize=2)
 def LibCeclCompileAndLinkFlags(
-    opencl_headers: bool = True
+  opencl_headers: bool = True,
 ) -> typing.Tuple[typing.List[str], typing.List[str]]:
   """Get device-specific LibCecl compile and link flags.
 
@@ -70,8 +77,10 @@ def LibCeclCompileAndLinkFlags(
   correct LD_LIBRARY_PATH!
   """
   cflags, ldflags = OpenClCompileAndLinkFlags(opencl_headers=opencl_headers)
-  return (cflags + ['-isystem', str(LIBCECL_HEADER.parent)],
-          ldflags + ['-lcecl', f'-L{LIBCECL_SO.parent}'])
+  return (
+    cflags + ["-isystem", str(LIBCECL_HEADER.parent)],
+    ldflags + ["-lcecl", f"-L{LIBCECL_SO.parent}"],
+  )
 
 
 def LibCeclExecutableEnvironmentVariables() -> typing.Dict[str, str]:
@@ -79,6 +88,6 @@ def LibCeclExecutableEnvironmentVariables() -> typing.Dict[str, str]:
   binaries.
   """
   return {
-      'LD_LIBRARY_PATH': str(LIBCECL_SO.parent),
-      'DYLD_LIBRARY_PATH': str(LIBCECL_SO.parent),
+    "LD_LIBRARY_PATH": str(LIBCECL_SO.parent),
+    "DYLD_LIBRARY_PATH": str(LIBCECL_SO.parent),
   }

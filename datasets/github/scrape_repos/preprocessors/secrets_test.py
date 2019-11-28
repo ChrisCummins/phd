@@ -10,17 +10,19 @@ FLAGS = app.FLAGS
 
 def test_TODO():
   """Test a text that doesn't contain a secret."""
-  assert secrets.ScanForSecrets('Hello, world!')
+  assert secrets.ScanForSecrets("Hello, world!")
 
 
 def test_ScanForSecrets_rsa_private_key():
   """Test a (false positive) text that may contain a secret."""
   with pytest.raises(secrets.TextContainsSecret) as e_ctx:
-    secrets.ScanForSecrets("""
+    secrets.ScanForSecrets(
+      """
 -----BEGIN RSA PRIVATE KEY-----
-""")
-  assert str(e_ctx.value) == 'PrivateKeyDetector'
+"""
+    )
+  assert str(e_ctx.value) == "PrivateKeyDetector"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

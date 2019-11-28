@@ -27,14 +27,15 @@ from labm8.py import pbutil
 @functools.lru_cache()
 def GetBuildInfo() -> config_pb2.BuildInfo:
   """Return the build state."""
-  return pbutil.FromString(build_info_pbtxt_py.STRING,
-                           config_pb2.BuildInfo(),
-                           uninitialized_okay=False)
+  return pbutil.FromString(
+    build_info_pbtxt_py.STRING, config_pb2.BuildInfo(), uninitialized_okay=False
+  )
 
 
 def GetGithubCommitUrl(
-    remote_url: typing.Optional[str] = None,
-    commit_hash: typing.Optional[str] = None) -> typing.Optional[str]:
+  remote_url: typing.Optional[str] = None,
+  commit_hash: typing.Optional[str] = None,
+) -> typing.Optional[str]:
   """Calculate the GitHub URL for a commit."""
   try:
     build_info = GetBuildInfo()
@@ -43,10 +44,10 @@ def GetGithubCommitUrl(
   remote_url = remote_url or build_info.git_remote_url
   commit_hash = commit_hash or build_info.git_commit
 
-  m = re.match(f'git@github\.com:([^/]+)/(.+)\.git', remote_url)
+  m = re.match(f"git@github\.com:([^/]+)/(.+)\.git", remote_url)
   if not m:
     return None
-  return f'https://github.com/{m.group(1)}/{m.group(2)}/commit/{commit_hash}'
+  return f"https://github.com/{m.group(1)}/{m.group(2)}/commit/{commit_hash}"
 
 
 def FormatShortRevision(html: bool = False) -> str:
@@ -61,7 +62,7 @@ def FormatShortRevision(html: bool = False) -> str:
 
 
 def FormatVersion() -> str:
-  return f'version: {Version()}'
+  return f"version: {Version()}"
 
 
 def Version() -> str:
@@ -77,18 +78,22 @@ def FormatShortBuildDescription(html: bool = False) -> str:
   """Get build string in the form: 'build SHORT_HASH on DATE by USER@HOST'."""
   build_info = GetBuildInfo()
   natural_date = datetime.datetime.fromtimestamp(
-      build_info.seconds_since_epoch).strftime("%Y-%m-%d")
+    build_info.seconds_since_epoch
+  ).strftime("%Y-%m-%d")
   revision = FormatShortRevision(html)
-  return (f"build: {revision} on {natural_date} by "
-          f"{build_info.user}@{build_info.host}")
+  return (
+    f"build: {revision} on {natural_date} by "
+    f"{build_info.user}@{build_info.host}"
+  )
 
 
 def FormatLongBuildDescription(html: bool = False) -> str:
   """Get long multi-line build string."""
   build_info = GetBuildInfo()
   natural_datetime = datetime.datetime.fromtimestamp(
-      build_info.seconds_since_epoch).strftime("%Y-%m-%d %H:%M:%S")
+    build_info.seconds_since_epoch
+  ).strftime("%Y-%m-%d %H:%M:%S")
   revision = FormatShortRevision(html=html)
-  return (f"""\
+  return f"""\
 Built by {build_info.user}@{build_info.host} at {natural_datetime}.
-Revision: {revision}.""")
+Revision: {revision}."""

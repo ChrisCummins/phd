@@ -42,9 +42,8 @@ class Pixel {
   value_type r, g, b;
 
   // Output stream formatter.
-  friend auto& operator<<(std::ostream& os, const Pixel &pixel) {
-    os << unsigned(pixel.r) << " "
-       << unsigned(pixel.g) << " "
+  friend auto &operator<<(std::ostream &os, const Pixel &pixel) {
+    os << unsigned(pixel.r) << " " << unsigned(pixel.g) << " "
        << unsigned(pixel.b);
     return os;
   }
@@ -74,8 +73,7 @@ class Colour {
         b((hex & 0xff) / 255.) {}
 
   // Contructor: C = (r,g,b)
-  explicit inline Colour(const Scalar _r = 0,
-                         const Scalar _g = 0,
+  explicit inline Colour(const Scalar _r = 0, const Scalar _g = 0,
                          const Scalar _b = 0)
       : r(_r), g(_g), b(_b) {}
 
@@ -104,14 +102,10 @@ class Colour {
   }
 
   // Scalar colour multiplication.
-  auto operator*(const Scalar x) const {
-    return Colour(r * x, g * x, b * x);
-  }
+  auto operator*(const Scalar x) const { return Colour(r * x, g * x, b * x); }
 
   // Scalar colour divison.
-  auto operator/(const Scalar x) const {
-    return Colour(r / x, g / x, b / x);
-  }
+  auto operator/(const Scalar x) const { return Colour(r / x, g / x, b / x); }
 
   // Combination of two colours: A' = (Ar * Br, Ag * Bg, Ab * Bb)
   auto operator*(const Colour &rhs) const {
@@ -123,21 +117,13 @@ class Colour {
     return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
   }
 
-  auto max() const {
-    return std::max(r, std::max(g, b));
-  }
+  auto max() const { return std::max(r, std::max(g, b)); }
 
-  auto min() const {
-    return std::min(r, std::min(g, b));
-  }
+  auto min() const { return std::min(r, std::min(g, b)); }
 
-  auto clampRange() const {
-    return Colour(clamp(r), clamp(g), clamp(b));
-  }
+  auto clampRange() const { return Colour(clamp(r), clamp(g), clamp(b)); }
 
-  auto delta() const {
-    return max() - min();
-  }
+  auto delta() const { return max() - min(); }
 
   // Return the sum difference between the r,g,b colour
   // components.

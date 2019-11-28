@@ -38,30 +38,34 @@ class Meta(Base):
 
 class Directory(Base):
   """Directory cache entry."""
+
   __tablename__ = "directories"
 
   relpath_md5: str = Column(Binary(16), primary_key=True)
-  checksum: bytes = Column(sql.Binary(16).with_variant(mysql.BINARY(16),
-                                                       'mysql'),
-                           nullable=False)
-  date_added: datetime.datetime = Column(DateTime,
-                                         nullable=False,
-                                         default=datetime.datetime.utcnow)
+  checksum: bytes = Column(
+    sql.Binary(16).with_variant(mysql.BINARY(16), "mysql"), nullable=False
+  )
+  date_added: datetime.datetime = Column(
+    DateTime, nullable=False, default=datetime.datetime.utcnow
+  )
 
   def __repr__(self):
-    return (f'{self.relpath}:  '
-            f'{shell.ShellEscapeCodes.YELLOW}{self.message}'
-            f'{shell.ShellEscapeCodes.END}  [{self.category}]')
+    return (
+      f"{self.relpath}:  "
+      f"{shell.ShellEscapeCodes.YELLOW}{self.message}"
+      f"{shell.ShellEscapeCodes.END}  [{self.category}]"
+    )
 
 
 class CachedError(Base):
   """Cached linter error."""
+
   __tablename__ = "errors"
 
   id: int = Column(Integer, primary_key=True)
-  dir: str = Column(Binary(16),
-                    ForeignKey("directories.relpath_md5"),
-                    nullable=False)
+  dir: str = Column(
+    Binary(16), ForeignKey("directories.relpath_md5"), nullable=False
+  )
   relpath: str = Column(String(1024), nullable=False)
   category: str = Column(String(512), nullable=False)
   message: str = Column(String(512), nullable=False)
@@ -69,24 +73,31 @@ class CachedError(Base):
 
   directory: Directory = orm.relationship("Directory")
 
-  __table_args__ = (UniqueConstraint('dir',
-                                     'relpath',
-                                     'category',
-                                     'message',
-                                     'fix_it',
-                                     name='unique_error'),)
+  __table_args__ = (
+    UniqueConstraint(
+      "dir", "relpath", "category", "message", "fix_it", name="unique_error"
+    ),
+  )
 
   def __repr__(self):
-    return (f'{self.relpath}:  '
-            f'{shell.ShellEscapeCodes.YELLOW}{self.message}'
-            f'{shell.ShellEscapeCodes.END}  [{self.category}]')
+    return (
+      f"{self.relpath}:  "
+      f"{shell.ShellEscapeCodes.YELLOW}{self.message}"
+      f"{shell.ShellEscapeCodes.END}  [{self.category}]"
+    )
 
 
 class CacheLookupResult(object):
   """Contains results of a cache lookup."""
 
-  def __init__(self, exists: bool, checksum: bytes, relpath: str,
-               relpath_md5: str, errors: typing.List[CachedError]):
+  def __init__(
+    self,
+    exists: bool,
+    checksum: bytes,
+    relpath: str,
+    relpath_md5: str,
+    errors: typing.List[CachedError],
+  ):
     self.exists = exists
     self.checksum = checksum
     self.relpath = relpath
@@ -116,10 +127,10 @@ class LinterCache(sqlutil.Database):
     """Check that """
     meta_key = "version"
 
-    cached_version = self.session.query(Meta) \
-      .filter(Meta.key == meta_key) \
-      .first()
-    cached_version_str = (cached_version.value if cached_version else "")
+    cached_version = (
+      self.session.query(Meta).filter(Meta.key == meta_key).first()
+    )
+    cached_version_str = cached_version.value if cached_version else ""
 
     actual_version = Meta(key=meta_key, value=build_info.Version())
 
@@ -131,22 +142,27 @@ class LinterCache(sqlutil.Database):
       self.session.add(actual_version)
       self.session.commit()
 
-  def AddLinterErrors(self, entry: CacheLookupResult,
-                      errors: typing.List[str]) -> None:
+  def AddLinterErrors(
+    self, entry: CacheLookupResult, errors: typing.List[str]
+  ) -> None:
     """Record linter errors in the cache."""
     # Create a directory cache entry.
-    directory = Directory(relpath_md5=entry.relpath_md5,
-                          checksum=entry.checksum)
+    directory = Directory(
+      relpath_md5=entry.relpath_md5, checksum=entry.checksum
+    )
 
     self.session.add(directory)
 
     # Create entries for the errors.
     errors_ = [
-        CachedError(dir=directory.relpath_md5,
-                    relpath=e.relpath,
-                    category=e.category,
-                    message=e.message,
-                    fix_it=e.fix_it or "") for e in errors
+      CachedError(
+        dir=directory.relpath_md5,
+        relpath=e.relpath,
+        category=e.category,
+        message=e.message,
+        fix_it=e.fix_it or "",
+      )
+      for e in errors
     ]
     if errors_:
       self.session.bulk_save_objects(errors_)
@@ -160,31 +176,33 @@ class LinterCache(sqlutil.Database):
     # Get the time of the most-recently modified file in the directory.
     checksum = GetDirectoryChecksum(abspath).digest()
 
-    ret = CacheLookupResult(exists=False,
-                            checksum=checksum,
-                            relpath=relpath,
-                            relpath_md5=relpath_md5,
-                            errors=[])
+    ret = CacheLookupResult(
+      exists=False,
+      checksum=checksum,
+      relpath=relpath,
+      relpath_md5=relpath_md5,
+      errors=[],
+    )
 
-    directory = self.session \
-      .query(Directory) \
-      .filter(Directory.relpath_md5 == ret.relpath_md5) \
+    directory = (
+      self.session.query(Directory)
+      .filter(Directory.relpath_md5 == ret.relpath_md5)
       .first()
+    )
 
     if directory and directory.checksum == ret.checksum:
       ret.exists = True
-      ret.errors = self.session \
-        .query(CachedError) \
-        .filter(CachedError.dir == ret.relpath_md5)
+      ret.errors = self.session.query(CachedError).filter(
+        CachedError.dir == ret.relpath_md5
+      )
     elif directory:
       app.Log(2, "Removing stale directory cache: `%s`", relpath)
 
       # Delete all existing cache entries.
       self.session.delete(directory)
-      self.session \
-        .query(CachedError) \
-        .filter(CachedError.dir == ret.relpath_md5) \
-        .delete()
+      self.session.query(CachedError).filter(
+        CachedError.dir == ret.relpath_md5
+      ).delete()
 
     return ret
 
@@ -219,8 +237,8 @@ def GetDirectoryChecksum(abspath: pathlib.Path) -> str:
   paths = [os.path.join(abspath, filename) for filename in os.listdir(abspath)]
   if paths:
     directory_mtime = int(max(os.path.getmtime(path) for path in paths))
-    hash.update(str(directory_mtime).encode('utf-8'))
+    hash.update(str(directory_mtime).encode("utf-8"))
     for path in paths:
       if os.path.isfile(path):
-        hash.update(str(path).encode('utf-8'))
+        hash.update(str(path).encode("utf-8"))
   return hash

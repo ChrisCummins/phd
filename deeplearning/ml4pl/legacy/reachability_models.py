@@ -23,15 +23,18 @@ def InputGraphNodeFeatures(spec: TargetGraphSpec, node_index: int) -> np.array:
   """Extract node features for an input graph."""
   # If the node is the target node, the features are [0, 1]. Else, the features
   # are [1, 0].
-  return np.array([
+  return np.array(
+    [
       0 if node_index == spec.target_node_index else 1,
       1 if node_index == spec.target_node_index else 0,
-  ],
-                  dtype=float)
+    ],
+    dtype=float,
+  )
 
 
-def InputGraphEdgeFeatures(spec: TargetGraphSpec,
-                           edge_index: typing.Tuple[int, int]):
+def InputGraphEdgeFeatures(
+  spec: TargetGraphSpec, edge_index: typing.Tuple[int, int]
+):
   """Extract edge features for an input graph."""
   del spec
   del edge_index
@@ -43,14 +46,12 @@ def TargetGraphNodeFeatures(spec: TargetGraphSpec, node_index: int):
   reachable = spec.graph.IsReachable(spec.target_node_index, node_index)
   # If the node is reachable, the features are [0, 1]. Else, the features
   # are [1, 0].
-  return np.array([
-      0 if reachable else 1,
-      1 if reachable else 0,
-  ], dtype=float)
+  return np.array([0 if reachable else 1, 1 if reachable else 0,], dtype=float)
 
 
-def TargetGraphEdgeFeatures(spec: TargetGraphSpec,
-                            edge_index: typing.Tuple[int, int]):
+def TargetGraphEdgeFeatures(
+  spec: TargetGraphSpec, edge_index: typing.Tuple[int, int]
+):
   """Extract edge features for a target graph."""
   del spec
   del edge_index
@@ -69,31 +70,36 @@ def GraphToInputTarget(spec: TargetGraphSpec):
 
   # Set node features.
   for node_index in input_graph.nodes():
-    input_graph.add_node(node_index,
-                         features=InputGraphNodeFeatures(spec, node_index))
+    input_graph.add_node(
+      node_index, features=InputGraphNodeFeatures(spec, node_index)
+    )
 
   for node_index in target_graph.nodes():
-    target_graph.add_node(node_index,
-                          features=TargetGraphNodeFeatures(spec, node_index))
+    target_graph.add_node(
+      node_index, features=TargetGraphNodeFeatures(spec, node_index)
+    )
 
   # Set edge features.
   for edge_index in input_graph.edges():
-    input_graph.add_edge(*edge_index,
-                         features=InputGraphEdgeFeatures(spec, edge_index))
+    input_graph.add_edge(
+      *edge_index, features=InputGraphEdgeFeatures(spec, edge_index)
+    )
 
   for edge_index in target_graph.edges():
-    target_graph.add_edge(*edge_index,
-                          features=TargetGraphEdgeFeatures(spec, edge_index))
+    target_graph.add_edge(
+      *edge_index, features=TargetGraphEdgeFeatures(spec, edge_index)
+    )
 
   # Set global (graph) features.
-  input_graph.graph['features'] = np.array([0.0])
-  target_graph.graph['features'] = np.array([0.0])
+  input_graph.graph["features"] = np.array([0.0])
+  target_graph.graph["features"] = np.array([0.0])
 
   return input_graph, target_graph
 
 
-def CreatePlaceholdersFromGraphs(graphs: typing.List[cfg.ControlFlowGraph],
-                                 batch_size: int):
+def CreatePlaceholdersFromGraphs(
+  graphs: typing.List[cfg.ControlFlowGraph], batch_size: int
+):
   """Creates placeholders for the model training and evaluation.
 
   Args:
@@ -107,20 +113,22 @@ def CreatePlaceholdersFromGraphs(graphs: typing.List[cfg.ControlFlowGraph],
   input_graphs, target_graphs = zip(*[GraphToInputTarget(g) for g in graphs])
 
   input_ph = graph_net_utils_tf.compat.v1.placeholders_from_networkxs(
-      input_graphs, force_dynamic_num_graphs=True)
+    input_graphs, force_dynamic_num_graphs=True
+  )
   target_ph = graph_net_utils_tf.compat.v1.placeholders_from_networkxs(
-      target_graphs, force_dynamic_num_graphs=True)
+    target_graphs, force_dynamic_num_graphs=True
+  )
   return input_ph, target_ph
 
 
 def PrintGraphTuple(gt):
-  print('nodes', gt.nodes)
-  print('edges', gt.edges)
-  print('receivers', gt.receivers)
-  print('senders', gt.senders)
-  print('globals', gt.globals)
-  print('n_node', gt.n_node)
-  print('n_edge', gt.n_edge)
+  print("nodes", gt.nodes)
+  print("edges", gt.edges)
+  print("receivers", gt.receivers)
+  print("senders", gt.senders)
+  print("globals", gt.globals)
+  print("n_node", gt.n_node)
+  print("n_edge", gt.n_edge)
 
 
 def MakeRunnableInSession(*args):
@@ -129,7 +137,6 @@ def MakeRunnableInSession(*args):
 
 
 class SpecGenerator(object):
-
   def __init__(self, graphs: typing.Iterator[cfg.ControlFlowGraph]):
     self._graphs = graphs
 
@@ -150,9 +157,11 @@ class SpecGenerator(object):
 
 
 class ReachabilityModelBase(object):
-
-  def Fit(self, training_graphs: typing.Iterator[cfg.ControlFlowGraph],
-          validation_graphs: typing.Iterator[cfg.ControlFlowGraph]):
+  def Fit(
+    self,
+    training_graphs: typing.Iterator[cfg.ControlFlowGraph],
+    validation_graphs: typing.Iterator[cfg.ControlFlowGraph],
+  ):
     raise NotImplementedError
 
   def Predict(self, testing_graphs: typing.Iterator[cfg.ControlFlowGraph]):

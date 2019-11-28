@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from collections import deque
-
 from typing import List
 
 
@@ -52,8 +51,10 @@ V = ({})
 E = (
   {}
 )
-""".format(', '.join([str(x) for x in self.vertices]),
-           ',\n  '.join([f'({x[0]} -> {x[1]})' for x in self.edges]))
+""".format(
+      ", ".join([str(x) for x in self.vertices]),
+      ",\n  ".join([f"({x[0]} -> {x[1]})" for x in self.edges]),
+    )
 
   def __contains__(self, vertex: int):
     return vertex >= 0 and vertex < len(self)
@@ -97,14 +98,14 @@ if __name__ == "__main__":
   v5 = g.add_vertex()
 
   g.add_edges(
-      (v0, v1),
-      (v0, v2),
-      (v1, v2),
-      (v1, v3),
-      (v2, v4),
-      (v3, v4),
-      (v4, v5),
-      (v3, v5),
+    (v0, v1),
+    (v0, v2),
+    (v1, v2),
+    (v1, v3),
+    (v2, v4),
+    (v3, v4),
+    (v4, v5),
+    (v3, v5),
   )
 
   print(g)

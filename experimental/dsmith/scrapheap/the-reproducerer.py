@@ -38,6 +38,7 @@ from dsmith.lib import *
 def reproduce_clgen_build_failures(result):
   import analyze
   import clgen_run_cldrive
+
   print(result)
 
   ### Reproduce using Python
@@ -45,16 +46,19 @@ def reproduce_clgen_build_failures(result):
   cli = cldrive_cli(result.testbed.platform, result.testbed.device, *flags)
 
   runtime, status, stdout, stderr = clgen_run_cldrive.drive(
-      cli, result.program.src)
+    cli, result.program.src
+  )
 
-  new_result = CLgenResult(program=result.program,
-                           params=result.params,
-                           testbed=result.testbed,
-                           cli=" ".join(cli),
-                           status=status,
-                           runtime=runtime,
-                           stdout=stdout,
-                           stderr=stderr)
+  new_result = CLgenResult(
+    program=result.program,
+    params=result.params,
+    testbed=result.testbed,
+    cli=" ".join(cli),
+    status=status,
+    runtime=runtime,
+    stdout=stdout,
+    stderr=stderr,
+  )
 
   analyze.analyze_cldrive_result(new_result, CLgenResult, session)
 
@@ -65,7 +69,7 @@ def reproduce_clgen_build_failures(result):
   print(">>>> Reproduced using cldrive")
 
   ### Reproduce using C standalone binary
-  with open(result.program.id + '.cl', 'w') as outfile:
+  with open(result.program.id + ".cl", "w") as outfile:
     print(result.program.src, file=outfile)
 
   # TODO:
@@ -113,7 +117,6 @@ Operating System:  {result.testbed.host}
 
 
 def generate_wrong_code_report(result):
-
   def summarize_stdout(stdout):
     components = [x for x in stdout.split(",") if x != ""]
     ncomponents = len(components)
@@ -122,10 +125,15 @@ def generate_wrong_code_report(result):
     else:
       return stdout
 
-  results = session.query(CLSmithResult) \
-    .filter(CLSmithResult.program == result.program,
-            CLSmithResult.params == result.params,
-            CLSmithResult.status == 0).all()
+  results = (
+    session.query(CLSmithResult)
+    .filter(
+      CLSmithResult.program == result.program,
+      CLSmithResult.params == result.params,
+      CLSmithResult.status == 0,
+    )
+    .all()
+  )
 
   if len(results) > 2:
     # Use voting to pick oracle.
@@ -145,14 +153,16 @@ def generate_wrong_code_report(result):
 
   majority_devices = [r.testbed for r in results if r.stdout == majority_output]
 
-  kernel_nlines = len(result.program.src.split('\n'))
+  kernel_nlines = len(result.program.src.split("\n"))
 
   majority_str = "\n    - ".join(t.device for t in majority_devices)
 
   program_output = summarize_stdout(result.stdout)
   expected_output = summarize_stdout(majority_output)
 
-  return generate_report_base(result) + f"""
+  return (
+    generate_report_base(result)
+    + f"""
 Global size:       {result.params.gsize}
 Workgroup size:    {result.params.lsize}
 Optimizations:     {result.params.optimizations_on_off}
@@ -164,35 +174,37 @@ Expected output:   {expected_output}
 Majority devices:  {majority_count}
     - {majority_str}\
 """
+  )
 
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
-  parser.add_argument("-H",
-                      "--hostname",
-                      type=str,
-                      default="cc1",
-                      help="MySQL database hostname")
+  parser.add_argument(
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
   args = parser.parse_args()
 
   db.init(args.hostname)
   session = db.make_session()
 
-  clsmith_wrong_code_programs = session.query(CLSmithResult) \
-    .filter(CLSmithResult.classification == "w")
+  clsmith_wrong_code_programs = session.query(CLSmithResult).filter(
+    CLSmithResult.classification == "w"
+  )
   fs.mkdir("../data/difftest/unreduced/clsmith/wrong_code")
   fs.mkdir("../data/difftest/unreduced/clsmith/wrong_code/reports")
   for result in clsmith_wrong_code_programs:
     vendor = vendor_str(result.testbed.platform)
 
     with open(
-        f"../data/difftest/unreduced/clsmith/wrong_code/{vendor}-{result.program.id}.cl",
-        "w") as outfile:
+      f"../data/difftest/unreduced/clsmith/wrong_code/{vendor}-{result.program.id}.cl",
+      "w",
+    ) as outfile:
       print(result.program.src, file=outfile)
 
     with open(
-        f"../data/difftest/unreduced/clsmith/wrong_code/reports/{vendor}-{result.id}.txt",
-        "w") as outfile:
+      f"../data/difftest/unreduced/clsmith/wrong_code/reports/{vendor}-{result.id}.txt",
+      "w",
+    ) as outfile:
       print(outfile.name)
       print(generate_wrong_code_report(result), file=outfile)
 

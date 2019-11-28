@@ -41,19 +41,19 @@ def test_tempdir_fixture_directory_is_empty(tempdir: pathlib.Path):
 # Although the 'tempdir' fixture was defined in //:conftest, it can be
 # overriden. This overiding fixture will be used for all of the tests in this
 # file.
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def tempdir() -> pathlib.Path:
   """Override the tempdir fixture in //:conftest."""
-  with tempfile.TemporaryDirectory(prefix='phd_fixture_override_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_fixture_override_") as d:
     yield pathlib.Path(d)
 
 
 def test_tempdir_fixture_overriden(tempdir: pathlib.Path):
   """Test that the overriden test fixture is used, not the one in conftest."""
-  assert tempdir.name.startswith('phd_fixture_override_')
+  assert tempdir.name.startswith("phd_fixture_override_")
 
 
-@pytest.mark.slow(reason='This is an example')
+@pytest.mark.slow(reason="This is an example")
 def test_mark_slow():
   """A test that is skipped when --test_skip_slow."""
   pass
@@ -64,7 +64,7 @@ def test_mark_flaky():
   """A test which is flaky is one where there is (legitimate) reason for it to
   fail, e.g. because a timeout may or may not trigger depending on system load.
   """
-  assert random.random() <= .5
+  assert random.random() <= 0.5
 
 
 @pytest.mark.custom_marker
@@ -96,32 +96,33 @@ def test_that_runs_on_linux_or_darwin():
 
 def test_captured_stdout():
   """A test which prints to stdout."""
-  print('This message is captured, unless run with --notest_capture_output')
+  print("This message is captured, unless run with --notest_capture_output")
 
 
 def test_captured_stderr():
   """A test which prints to stderr."""
   print(
-      'This message is captured, unless run with --notest_capture_output',
-      file=sys.stderr,
+    "This message is captured, unless run with --notest_capture_output",
+    file=sys.stderr,
   )
 
 
 def test_captured_logging_info():
   """A test which prints to app.Log"""
-  app.Log(1, 'This message is captured unless run with --notest_capture_output')
+  app.Log(1, "This message is captured unless run with --notest_capture_output")
 
 
 def test_captured_logging_debug():
   """A test which prints to app.Log"""
-  app.Log(2, 'This message is captured unless run with --notest_capture_output')
+  app.Log(2, "This message is captured unless run with --notest_capture_output")
 
 
 def test_captured_logging_warning():
   """A test which prints to app.Warning"""
   app.Warning(
-      'This message is captured unless run with --notest_capture_output',)
+    "This message is captured unless run with --notest_capture_output",
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

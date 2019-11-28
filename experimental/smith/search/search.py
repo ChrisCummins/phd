@@ -4,7 +4,8 @@
 #
 import os
 from random import randint
-from subprocess import PIPE, Popen
+from subprocess import PIPE
+from subprocess import Popen
 from sys import exit
 from tempfile import NamedTemporaryFile
 
@@ -15,12 +16,26 @@ from smith import preprocess
 def sample(seed, mutate_idx=-1, mutate_seed=0, start="start.txt"):
   os.chdir(os.path.expanduser("~/src/torch-rnn"))
   cmd = [
-    "th", "sample.lua", "-temperature", "0.9", "-checkpoint",
-    "cv/checkpoint_530000.t7", "-length", "11000",
-    "-opencl", "1", "-n", "1",
-    "-start", start,
-    "-seed", str(seed), "-mutate_idx", str(mutate_idx),
-    "-mutate_seed", str(mutate_seed)
+    "th",
+    "sample.lua",
+    "-temperature",
+    "0.9",
+    "-checkpoint",
+    "cv/checkpoint_530000.t7",
+    "-length",
+    "11000",
+    "-opencl",
+    "1",
+    "-n",
+    "1",
+    "-start",
+    start,
+    "-seed",
+    str(seed),
+    "-mutate_idx",
+    str(mutate_idx),
+    "-mutate_seed",
+    str(mutate_seed),
   ]
   proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
   cout, _ = proc.communicate()
@@ -85,11 +100,12 @@ def get_features(code):
 
 def FeaturesFromFile(path):
   # Hacky call to smith-features and parse output
-  cmd = ['smith-features', path]
+  cmd = ["smith-features", path]
   proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
   cout, _ = proc.communicate()
-  features = [float(x) for x in
-              cout.decode('utf-8').split('\n')[1].split(',')[2:]]
+  features = [
+    float(x) for x in cout.decode("utf-8").split("\n")[1].split(",")[2:]
+  ]
   return np.array(features)
 
 
@@ -111,7 +127,7 @@ def get_sample(start_txt, seed):
 
 
 def get_mutation(input):
-  min_mutate_idx = len('__kernel void ')
+  min_mutate_idx = len("__kernel void ")
   max_mutate_idx = len(input) - 1
 
   while True:
@@ -139,15 +155,14 @@ def search(input, benchmark, datadir, logpath="search.log"):
   log(">>> target code:" + "\n" + indent(benchmark))
 
   log(">>> target features:  ", ", ".join([str(x) for x in target_features]))
-  log(">>> starting features:", ", ".join([str(x) for x in features]),
-      "distance", distance)
+  log(
+    ">>> starting features:",
+    ", ".join([str(x) for x in features]),
+    "distance",
+    distance,
+  )
 
-  best = {
-    "distance": distance,
-    "idx": -1,
-    "seed": 0,
-    "code": code
-  }
+  best = {"distance": distance, "idx": -1, "seed": 0, "code": code}
 
   count = 0
   improved_counter = 0
@@ -159,35 +174,54 @@ def search(input, benchmark, datadir, logpath="search.log"):
 
     count += 1
 
-    log(">>>", count, "new mutation",
-        "features:", ", ".join([str(x) for x in features]),
-        "distance:", distance,
-        "( best:", best["distance"], ")")
+    log(
+      ">>>",
+      count,
+      "new mutation",
+      "features:",
+      ", ".join([str(x) for x in features]),
+      "distance:",
+      distance,
+      "( best:",
+      best["distance"],
+      ")",
+    )
     log(indent(newcode))
 
     if distance < best["distance"]:
       improved_counter += 1
-      log("-> best feature distance reduced from", best["distance"],
-          "to", distance, "(-{:.2f}%)".format(
-            ((1 - distance / best["distance"]) * 100)),
-          "improved_counter:", improved_counter)
+      log(
+        "-> best feature distance reduced from",
+        best["distance"],
+        "to",
+        distance,
+        "(-{:.2f}%)".format(((1 - distance / best["distance"]) * 100)),
+        "improved_counter:",
+        improved_counter,
+      )
       best["distance"] = distance
       best["idx"] = mutate_idx
       best["seed"] = mutate_seed
       best["code"] = newcode
 
       outpath = os.path.join(
-          datadir, "search-step-{}.cl".format(improved_counter))
+        datadir, "search-step-{}.cl".format(improved_counter)
+      )
       with open(outpath, "w") as outfile:
         print("/* Iteration #{} */".format(count), file=outfile)
-        print("/* Improvement #{} */".format(improved_counter),
-              file=outfile)
-        print("/* Target features: {} */".format(
-            ", ".join([str(x) for x in target_features])),
-            file=outfile)
-        print("/*        Features: {} */".format(
-            ", ".join([str(x) for x in features])),
-            file=outfile)
+        print("/* Improvement #{} */".format(improved_counter), file=outfile)
+        print(
+          "/* Target features: {} */".format(
+            ", ".join([str(x) for x in target_features])
+          ),
+          file=outfile,
+        )
+        print(
+          "/*        Features: {} */".format(
+            ", ".join([str(x) for x in features])
+          ),
+          file=outfile,
+        )
         print("/* Distance: {} */".format(distance), file=outfile)
         print(newcode, file=outfile)
 
@@ -199,6 +233,7 @@ def search(input, benchmark, datadir, logpath="search.log"):
 
 def main():
   from argparse import ArgumentParser
+
   parser = ArgumentParser()
   parser.add_argument("input")
   parser.add_argument("benchmark")

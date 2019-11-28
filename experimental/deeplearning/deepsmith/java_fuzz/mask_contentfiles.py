@@ -7,24 +7,39 @@ from labm8.py import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
-    'db', contentfiles.ContentFiles,
-    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/java.db',
-    'URL of the database to modify.')
-app.DEFINE_boolean('dry_run', False, 'Whether to save changes.')
-app.DEFINE_boolean('reset', False, 'Mark all repositories as active.')
-app.DEFINE_boolean('reset_exported', False,
-                   'Unmark all repositories as exported.')
-app.DEFINE_integer('max_repo_count', 0,
-                   'Mask by the maximum number of repositories.')
+  "db",
+  contentfiles.ContentFiles,
+  "sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/java.db",
+  "URL of the database to modify.",
+)
+app.DEFINE_boolean("dry_run", False, "Whether to save changes.")
+app.DEFINE_boolean("reset", False, "Mark all repositories as active.")
+app.DEFINE_boolean(
+  "reset_exported", False, "Unmark all repositories as exported."
+)
 app.DEFINE_integer(
-    'min_star_count', 0,
-    'Mask by the minimum number of Github stars a repository has.')
-app.DEFINE_integer('min_repo_file_count', 0,
-                   'Mask by the minimum number of contentfiles in a repo.')
-app.DEFINE_integer('max_repo_file_count', 0,
-                   'Mask by the maxmium number of contentfiles in a repo.')
-app.DEFINE_boolean('exclude_strings', False,
-                   'Mask by the maxmium number of contentfiles in a repo.')
+  "max_repo_count", 0, "Mask by the maximum number of repositories."
+)
+app.DEFINE_integer(
+  "min_star_count",
+  0,
+  "Mask by the minimum number of Github stars a repository has.",
+)
+app.DEFINE_integer(
+  "min_repo_file_count",
+  0,
+  "Mask by the minimum number of contentfiles in a repo.",
+)
+app.DEFINE_integer(
+  "max_repo_file_count",
+  0,
+  "Mask by the maxmium number of contentfiles in a repo.",
+)
+app.DEFINE_boolean(
+  "exclude_strings",
+  False,
+  "Mask by the maxmium number of contentfiles in a repo.",
+)
 
 
 def Reset(db: contentfiles.ContentFiles) -> None:
@@ -34,27 +49,37 @@ def Reset(db: contentfiles.ContentFiles) -> None:
     db: The database to modify.
   """
   with db.Session(commit=not FLAGS.dry_run) as session:
-    inactive_repos = session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active == False)
+    inactive_repos = session.query(contentfiles.GitHubRepository).filter(
+      contentfiles.GitHubRepository.active == False
+    )
     inactive_repos_count = inactive_repos.count()
 
     repos_count = session.query(contentfiles.GitHubRepository).count()
 
-    app.Log(1, 'Restoring active status to %s of %s repos (%.2f %%)',
-            humanize.Commas(inactive_repos_count), humanize.Commas(repos_count),
-            (inactive_repos_count / repos_count) * 100)
-    inactive_repos.update({'active': True})
+    app.Log(
+      1,
+      "Restoring active status to %s of %s repos (%.2f %%)",
+      humanize.Commas(inactive_repos_count),
+      humanize.Commas(repos_count),
+      (inactive_repos_count / repos_count) * 100,
+    )
+    inactive_repos.update({"active": True})
 
-    inactive_cf = session.query(contentfiles.ContentFile) \
-      .filter(contentfiles.ContentFile.active == False)
+    inactive_cf = session.query(contentfiles.ContentFile).filter(
+      contentfiles.ContentFile.active == False
+    )
     inactive_cf_count = inactive_cf.count()
 
     cf_count = session.query(contentfiles.ContentFile).count()
 
-    app.Log(1, 'Restoring active status to %s of %s content files (%.2f %%)',
-            humanize.Commas(inactive_cf_count), humanize.Commas(cf_count),
-            (inactive_cf_count / cf_count) * 100)
-    inactive_cf.update({'active': True})
+    app.Log(
+      1,
+      "Restoring active status to %s of %s content files (%.2f %%)",
+      humanize.Commas(inactive_cf_count),
+      humanize.Commas(cf_count),
+      (inactive_cf_count / cf_count) * 100,
+    )
+    inactive_cf.update({"active": True})
 
 
 def ResetExported(db: contentfiles.ContentFiles) -> None:
@@ -64,20 +89,26 @@ def ResetExported(db: contentfiles.ContentFiles) -> None:
     db: The database to modify.
   """
   with db.Session(commit=not FLAGS.dry_run) as session:
-    exported_repos = session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.exported == True)
+    exported_repos = session.query(contentfiles.GitHubRepository).filter(
+      contentfiles.GitHubRepository.exported == True
+    )
     exported_repos_count = exported_repos.count()
 
     repos_count = session.query(contentfiles.GitHubRepository).count()
 
-    app.Log(1, 'Marking %s of %s repos as not exported (%.2f %%)',
-            humanize.Commas(exported_repos_count), humanize.Commas(repos_count),
-            (exported_repos_count / repos_count) * 100)
-    exported_repos.update({'exported': False})
+    app.Log(
+      1,
+      "Marking %s of %s repos as not exported (%.2f %%)",
+      humanize.Commas(exported_repos_count),
+      humanize.Commas(repos_count),
+      (exported_repos_count / repos_count) * 100,
+    )
+    exported_repos.update({"exported": False})
 
 
-def MaskOnMaxRepoCount(db: contentfiles.ContentFiles,
-                       max_repo_count: int) -> None:
+def MaskOnMaxRepoCount(
+  db: contentfiles.ContentFiles, max_repo_count: int
+) -> None:
   """Mask by the maximum number of repos.
 
   Args:
@@ -85,30 +116,35 @@ def MaskOnMaxRepoCount(db: contentfiles.ContentFiles,
     max_repo_count: The maximum number of active repos.
   """
   with db.Session(commit=not FLAGS.dry_run) as session:
-    active_repos = session.query(contentfiles.GitHubRepository.clone_from_url)\
-      .filter(contentfiles.GitHubRepository.active == True)
+    active_repos = session.query(
+      contentfiles.GitHubRepository.clone_from_url
+    ).filter(contentfiles.GitHubRepository.active == True)
     active_repos_count = active_repos.count()
 
     repos_to_mark_inactive_count = max(0, active_repos_count - max_repo_count)
 
-    repos_to_mark_inactive = active_repos\
-        .order_by(db.Random())\
-        .limit(repos_to_mark_inactive_count)
+    repos_to_mark_inactive = active_repos.order_by(db.Random()).limit(
+      repos_to_mark_inactive_count
+    )
 
-    app.Log(1, 'Marking %s of %s active repos inactive (%.2f %%)',
-            humanize.Commas(repos_to_mark_inactive_count),
-            humanize.Commas(active_repos_count),
-            (repos_to_mark_inactive_count / active_repos_count) * 100)
+    app.Log(
+      1,
+      "Marking %s of %s active repos inactive (%.2f %%)",
+      humanize.Commas(repos_to_mark_inactive_count),
+      humanize.Commas(active_repos_count),
+      (repos_to_mark_inactive_count / active_repos_count) * 100,
+    )
     # Can't call Query.update() or Query.delete() when limit() has been called,
     # hence the subquery.
     clone_from_urls = {r[0] for r in repos_to_mark_inactive}
-    session.query(contentfiles.GitHubRepository)\
-        .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
-        .update({'active': False}, synchronize_session='fetch')
+    session.query(contentfiles.GitHubRepository).filter(
+      contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls)
+    ).update({"active": False}, synchronize_session="fetch")
 
 
-def MaskOnMinStarCount(db: contentfiles.ContentFiles,
-                       min_star_count: int) -> None:
+def MaskOnMinStarCount(
+  db: contentfiles.ContentFiles, min_star_count: int
+) -> None:
   """Mask by the minimum repo star count.
 
   Args:
@@ -116,23 +152,32 @@ def MaskOnMinStarCount(db: contentfiles.ContentFiles,
     min_star_count: The minimum number of stars for a repo to be active.
   """
   with db.Session(commit=not FLAGS.dry_run) as session:
-    active_repo_count = session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active).count()
+    active_repo_count = (
+      session.query(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active)
+      .count()
+    )
 
-    repos_to_mark_inactive = session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active == True)\
+    repos_to_mark_inactive = (
+      session.query(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active == True)
       .filter(contentfiles.GitHubRepository.num_stars < min_star_count)
+    )
     repos_to_mark_inactive_count = repos_to_mark_inactive.count()
 
-    app.Log(1, 'Marking %s of %s active repos inactive (%.2f %%)',
-            humanize.Commas(repos_to_mark_inactive_count),
-            humanize.Commas(active_repo_count),
-            (repos_to_mark_inactive_count / active_repo_count) * 100)
-    repos_to_mark_inactive.update({'active': False})
+    app.Log(
+      1,
+      "Marking %s of %s active repos inactive (%.2f %%)",
+      humanize.Commas(repos_to_mark_inactive_count),
+      humanize.Commas(active_repo_count),
+      (repos_to_mark_inactive_count / active_repo_count) * 100,
+    )
+    repos_to_mark_inactive.update({"active": False})
 
 
-def MaskOnMinRepoFileCount(db: contentfiles.ContentFiles,
-                           min_repo_file_count: int) -> None:
+def MaskOnMinRepoFileCount(
+  db: contentfiles.ContentFiles, min_repo_file_count: int
+) -> None:
   """Mask by the minimum repo file count.
 
   Args:
@@ -141,34 +186,46 @@ def MaskOnMinRepoFileCount(db: contentfiles.ContentFiles,
         be active.
   """
   with db.Session(commit=not FLAGS.dry_run) as session:
-    active_repo_count = session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active).count()
+    active_repo_count = (
+      session.query(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active)
+      .count()
+    )
 
-    repos_to_mark_inactive = session.query(
-          contentfiles.ContentFile.clone_from_url,
-          sql.func.count(contentfiles.ContentFile.clone_from_url))\
-      .join(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active == True)\
-      .group_by(contentfiles.ContentFile.clone_from_url) \
-      .having(sql.func.count(contentfiles.ContentFile.clone_from_url) <
-              min_repo_file_count)
+    repos_to_mark_inactive = (
+      session.query(
+        contentfiles.ContentFile.clone_from_url,
+        sql.func.count(contentfiles.ContentFile.clone_from_url),
+      )
+      .join(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active == True)
+      .group_by(contentfiles.ContentFile.clone_from_url)
+      .having(
+        sql.func.count(contentfiles.ContentFile.clone_from_url)
+        < min_repo_file_count
+      )
+    )
     repos_to_mark_inactive_count = repos_to_mark_inactive.count()
 
-    app.Log(1, 'Marking %s of %s active repos inactive (%.2f %%)',
-            humanize.Commas(repos_to_mark_inactive_count),
-            humanize.Commas(active_repo_count),
-            (repos_to_mark_inactive_count / active_repo_count) * 100)
+    app.Log(
+      1,
+      "Marking %s of %s active repos inactive (%.2f %%)",
+      humanize.Commas(repos_to_mark_inactive_count),
+      humanize.Commas(active_repo_count),
+      (repos_to_mark_inactive_count / active_repo_count) * 100,
+    )
 
     # Can't call Query.update() or Query.delete() when limit() has been called,
     # hence the subquery.
     clone_from_urls = {r.clone_from_url for r in repos_to_mark_inactive}
-    session.query(contentfiles.GitHubRepository)\
-        .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
-        .update({'active': False})
+    session.query(contentfiles.GitHubRepository).filter(
+      contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls)
+    ).update({"active": False})
 
 
-def MaskOnMaxRepoFileCount(db: contentfiles.ContentFiles,
-                           max_repo_file_count: int) -> None:
+def MaskOnMaxRepoFileCount(
+  db: contentfiles.ContentFiles, max_repo_file_count: int
+) -> None:
   """Mask by the maximum repo file count.
 
   Args:
@@ -177,30 +234,41 @@ def MaskOnMaxRepoFileCount(db: contentfiles.ContentFiles,
         be active.
   """
   with db.Session(commit=not FLAGS.dry_run) as session:
-    active_repo_count = session.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active).count()
+    active_repo_count = (
+      session.query(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active)
+      .count()
+    )
 
-    repos_to_mark_inactive = session.query(
-          contentfiles.ContentFile.clone_from_url,
-          sql.func.count(contentfiles.ContentFile.clone_from_url))\
-      .join(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active == True)\
-      .group_by(contentfiles.ContentFile.clone_from_url) \
-      .having(sql.func.count(contentfiles.ContentFile.clone_from_url) >
-              max_repo_file_count)
+    repos_to_mark_inactive = (
+      session.query(
+        contentfiles.ContentFile.clone_from_url,
+        sql.func.count(contentfiles.ContentFile.clone_from_url),
+      )
+      .join(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active == True)
+      .group_by(contentfiles.ContentFile.clone_from_url)
+      .having(
+        sql.func.count(contentfiles.ContentFile.clone_from_url)
+        > max_repo_file_count
+      )
+    )
     repos_to_mark_inactive_count = repos_to_mark_inactive.count()
 
-    app.Log(1, 'Marking %s of %s active repos inactive (%.2f %%)',
-            humanize.Commas(repos_to_mark_inactive_count),
-            humanize.Commas(active_repo_count),
-            (repos_to_mark_inactive_count / active_repo_count) * 100)
+    app.Log(
+      1,
+      "Marking %s of %s active repos inactive (%.2f %%)",
+      humanize.Commas(repos_to_mark_inactive_count),
+      humanize.Commas(active_repo_count),
+      (repos_to_mark_inactive_count / active_repo_count) * 100,
+    )
 
     # Can't call Query.update() or Query.delete() when limit() has been called,
     # hence the subquery.
     clone_from_urls = {r.clone_from_url for r in repos_to_mark_inactive}
-    session.query(contentfiles.GitHubRepository)\
-        .filter(contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls))\
-        .update({'active': False}, synchronize_session='fetch')
+    session.query(contentfiles.GitHubRepository).filter(
+      contentfiles.GitHubRepository.clone_from_url.in_(clone_from_urls)
+    ).update({"active": False}, synchronize_session="fetch")
 
 
 def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
@@ -210,22 +278,28 @@ def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
     db: The database to modify.
   """
   with db.Session(commit=not FLAGS.dry_run) as session:
-    active_cf_count = session.query(
-        contentfiles.ContentFile.id) \
-      .join(contentfiles.GitHubRepository) \
-      .filter(contentfiles.GitHubRepository.active == True).count()
+    active_cf_count = (
+      session.query(contentfiles.ContentFile.id)
+      .join(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active == True)
+      .count()
+    )
 
-    cfs_to_mark_inactive = session.query(
-        contentfiles.ContentFile.id) \
-      .join(contentfiles.GitHubRepository) \
-      .filter(contentfiles.GitHubRepository.active == True)\
-      .filter(contentfiles.ContentFile.text.like('%String%'))
+    cfs_to_mark_inactive = (
+      session.query(contentfiles.ContentFile.id)
+      .join(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active == True)
+      .filter(contentfiles.ContentFile.text.like("%String%"))
+    )
     cfs_to_mark_inactive_count = cfs_to_mark_inactive.count()
 
-    app.Log(1, 'Marking %s of %s active content files inactive (%.2f %%)',
-            humanize.Commas(cfs_to_mark_inactive_count),
-            humanize.Commas(active_cf_count),
-            (cfs_to_mark_inactive_count / active_cf_count) * 100)
+    app.Log(
+      1,
+      "Marking %s of %s active content files inactive (%.2f %%)",
+      humanize.Commas(cfs_to_mark_inactive_count),
+      humanize.Commas(active_cf_count),
+      (cfs_to_mark_inactive_count / active_cf_count) * 100,
+    )
 
     # Can't call Query.update() on query with join, hence the subquery.
     cfs_to_mark_inactive = list({r[0] for r in cfs_to_mark_inactive})
@@ -234,17 +308,22 @@ def MaskContentfilesWithStrings(db: contentfiles.ContentFile) -> None:
     # long time and we want to make incremental progress.
     for i in range(0, len(cfs_to_mark_inactive), 10000):
       app.Log(
-          1,
-          'Marking %s of %s contentfiles containing String inactive (%.2f %%) ...',
-          humanize.Commas(i), humanize.Commas(len(cfs_to_mark_inactive)),
-          (i / len(cfs_to_mark_inactive) * 100))
-      session.query(contentfiles.ContentFile.id) \
-        .filter(contentfiles.ContentFile.active == True) \
-        .filter(contentfiles.ContentFile.id.in_(cfs_to_mark_inactive[i:i+10000])) \
-        .update({'active': False}, synchronize_session=False)
+        1,
+        "Marking %s of %s contentfiles containing String inactive (%.2f %%) ...",
+        humanize.Commas(i),
+        humanize.Commas(len(cfs_to_mark_inactive)),
+        (i / len(cfs_to_mark_inactive) * 100),
+      )
+      session.query(contentfiles.ContentFile.id).filter(
+        contentfiles.ContentFile.active == True
+      ).filter(
+        contentfiles.ContentFile.id.in_(cfs_to_mark_inactive[i : i + 10000])
+      ).update(
+        {"active": False}, synchronize_session=False
+      )
       if not FLAGS.dry_run:
         session.commit()
-    app.Log(1, 'Done')
+    app.Log(1, "Done")
 
 
 def main():
@@ -269,8 +348,8 @@ def main():
   elif FLAGS.exclude_strings:
     MaskContentfilesWithStrings(db)
   if FLAGS.dry_run:
-    app.Log(1, 'Dry run, rolling back ...')
+    app.Log(1, "Dry run, rolling back ...")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

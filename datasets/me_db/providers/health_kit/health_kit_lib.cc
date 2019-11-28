@@ -114,9 +114,8 @@ Series* HealthKitRecordImporter::GetOrCreateSeries(
     absl::flat_hash_map<string, Series*>* type_to_series_map) {
   bool* new_series = &new_series_;
   return FindOrAdd<string, Series*>(
-      type_to_series_map, type_,
-      [&type_to_series_map, series_collection,
-       new_series](const string& name) -> Series* {
+      type_to_series_map, type_, [&type_to_series_map, series_collection,
+                                  new_series](const string& name) -> Series* {
         // Create the new series. We don't set series field values immediately,
         // since we handle the conversion from XML Record values to our values
         // at the same time we create measurements. So instead we set the

@@ -12,7 +12,6 @@ MODULE_UNDER_TEST = None  # No coverage.
 # Interview, Chapter 2, page 77.
 #
 class Node:
-
   def __init__(self, key):
     self.key = key
     self.next = None
@@ -85,5 +84,5 @@ def test_main():
   assert str(a) == "1 2 3 4"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

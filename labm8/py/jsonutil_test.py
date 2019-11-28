@@ -31,7 +31,7 @@ def test_loads():
       // begin with comment
       """
   a = jsonutil.loads(a_str)
-  assert a == {'a': 1, 'b': [1, 2, 3]}
+  assert a == {"a": 1, "b": [1, 2, 3]}
 
 
 def test_loads_malformed():
@@ -47,29 +47,29 @@ def test_read_file():
       } # end comment
       // begin with comment
       """
-  system.echo(a_str, '/tmp/labm8_py.loaf.json')
-  a = jsonutil.read_file('/tmp/labm8_py.loaf.json')
-  assert a == {'a': 1, 'b': [1, 2, 3]}
+  system.echo(a_str, "/tmp/labm8_py.loaf.json")
+  a = jsonutil.read_file("/tmp/labm8_py.loaf.json")
+  assert a == {"a": 1, "b": [1, 2, 3]}
 
 
 def test_read_file_bad_path():
   with pytest.raises(fs.File404):
-    jsonutil.read_file('/not/a/real/path')
-  assert not jsonutil.read_file('/not/a/real/path', must_exist=False)
+    jsonutil.read_file("/not/a/real/path")
+  assert not jsonutil.read_file("/not/a/real/path", must_exist=False)
 
 
 def test_write_file():
-  d1 = {'a': '1', 'b': '2'}
-  jsonutil.write_file('/tmp/labm8_py.write_file.json', d1)
-  d2 = jsonutil.read_file('/tmp/labm8_py.write_file.json')
-  fs.rm('/tmp/labm8_py.write_file.json')
+  d1 = {"a": "1", "b": "2"}
+  jsonutil.write_file("/tmp/labm8_py.write_file.json", d1)
+  d2 = jsonutil.read_file("/tmp/labm8_py.write_file.json")
+  fs.rm("/tmp/labm8_py.write_file.json")
 
-  jsonutil.write_file('/tmp/labm8_py.write_file2.json', d1)
-  d3 = jsonutil.read_file('/tmp/labm8_py.write_file2.json')
-  fs.rm('/tmp/labm8_py.write_file2.json')
+  jsonutil.write_file("/tmp/labm8_py.write_file2.json", d1)
+  d3 = jsonutil.read_file("/tmp/labm8_py.write_file2.json")
+  fs.rm("/tmp/labm8_py.write_file2.json")
 
   assert d1 == d2 == d3
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

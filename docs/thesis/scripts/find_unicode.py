@@ -14,11 +14,11 @@ def main(argv):
   del argv
 
   # Read the input.
-  with open('thesis.tex') as f:
+  with open("thesis.tex") as f:
     string = f.read()
-  if u"\u200B" in string:
-    print('found!')
+  if "\u200B" in string:
+    print("found!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.run(main)

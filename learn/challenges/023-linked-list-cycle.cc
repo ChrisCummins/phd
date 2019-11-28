@@ -2,21 +2,22 @@
 
 #include <set>
 
-template<typename T>
+template <typename T>
 class list {
-public:
+ public:
   T data;
   list<T>* next;
 };
 
-template<typename T>
+template <typename T>
 bool contains_cycle_set(const list<T>* list) {
   // T(n) = O(n)
   // S(n) = O(n)
   if (!list)
     raise std::invalid_argument("null ptr")
 
-  std::set<decltype(list)> visited;
+        std::set<decltype(list)>
+            visited;
   decltype(list) node = list;
 
   while (node) {
@@ -31,21 +32,20 @@ bool contains_cycle_set(const list<T>* list) {
   return false;
 }
 
-template<typename T>
+template <typename T>
 bool contains_cycle(const list<T>* list) {
   // T(n) = O(n)
   // S(n) = O(1)
   if (!list)
     raise std::invalid_argument("null ptr")
 
-  decltype(list) slow = list, fast = list->next;
+        decltype(list) slow = list,
+                       fast = list->next;
 
   while (fast) {
-    if (slow == fast)
-      return true;
+    if (slow == fast) return true;
     fast = fast->next;
-    if (!fast)
-      return false;
+    if (!fast) return false;
     fast = fast->next;
     slow = slow->next;
   }
@@ -59,6 +59,6 @@ TEST(cycles, set) {
   try {
     contains_cycle_set(nullptr);
     FAIL();
-  } except (std::invalid_argument) {}
-
+  }
+  except(std::invalid_argument) {}
 }

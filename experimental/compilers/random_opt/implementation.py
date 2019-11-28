@@ -25,6 +25,7 @@ from labm8.py import jsonutil
 from labm8.py import labdate
 from labm8.py import pbutil
 from labm8.py import text
+
 # WARNING: No flags can be defined in this file, because it is loaded at runtime
 # by gym to resolve string entry points.
 
@@ -33,6 +34,7 @@ FLAGS = app.FLAGS
 
 class Environment(gym.Env):
   """Base class which defines the interface for LLVM opt environments."""
+
   step_t = typing.Tuple[np.ndarray, int, bool, jsonutil.JSON]
 
   def __init__(self, config: random_opt_pb2.Environment):
@@ -46,7 +48,8 @@ class Environment(gym.Env):
     # A working directory that an inheriting class can use as a scratch space
     # for reading and writing files. Destroyed during __del__ operator.
     self.working_dir = pathlib.Path(
-        tempfile.mkdtemp(prefix='phd_llvm_opt_env_'))
+      tempfile.mkdtemp(prefix="phd_llvm_opt_env_")
+    )
 
     self.config = config
 
@@ -70,14 +73,14 @@ class Environment(gym.Env):
         raise ValueError(f"Environment.input_src not found: '{src}'.")
 
     # Produce the bytecode file.
-    self.bytecode_path = self.working_dir / 'base_input.ll'
-    self.working_bytecode_path = self.working_dir / 'working_input.ll'
+    self.bytecode_path = self.working_dir / "base_input.ll"
+    self.working_bytecode_path = self.working_dir / "working_input.ll"
     ProduceBytecodeFromSources(srcs, self.bytecode_path)
 
-    self.binary_path = self.working_dir / 'binary'
+    self.binary_path = self.working_dir / "binary"
     self.exec_cmd = self._MakeVariableSubstitution(self.config.exec_cmd)
     self.eval_cmd = None
-    if self.config.HasField('eval_cmd'):
+    if self.config.HasField("eval_cmd"):
       self.eval_cmd = self._MakeVariableSubstitution(self.config.eval_cmd)
 
   def reset(self):
@@ -100,26 +103,30 @@ class Environment(gym.Env):
     raise NotImplementedError
 
   def RunSetupCommand(self, timeout_seconds: int = 60) -> None:
-    if self.config.HasField('setup_cmd'):
+    if self.config.HasField("setup_cmd"):
       cmd = self._MakeVariableSubstitution(self.config.setup_cmd)
       cmd = f"timeout -s9 {timeout_seconds} bash -c '{cmd}'"
-      app.Log(2, '$ %s', cmd)
+      app.Log(2, "$ %s", cmd)
       subprocess.check_call(cmd, shell=True)
 
   def RunBinary(self, timeout_seconds: int = 60) -> int:
     """Run the binary and return runtime. Requires that binary exists."""
     exec_cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.exec_cmd}'"
-    app.Log(2, '$ %s', exec_cmd)
+    app.Log(2, "$ %s", exec_cmd)
     start_time = time.time()
     proc = subprocess.Popen(exec_cmd, shell=True)
     proc.communicate()
     end_time = time.time()
     if proc.returncode == 9:
-      raise ValueError(f"Command timed out after {timeout_seconds} seconds: "
-                       f"'{self.exec_cmd}'")
+      raise ValueError(
+        f"Command timed out after {timeout_seconds} seconds: "
+        f"'{self.exec_cmd}'"
+      )
     elif proc.returncode:
-      raise ValueError(f"Command exited with return code {proc.returncode}: "
-                       f"'{self.exec_cmd}'")
+      raise ValueError(
+        f"Command exited with return code {proc.returncode}: "
+        f"'{self.exec_cmd}'"
+      )
     return int(round((end_time - start_time) * 1000))
 
   def GetRuntimes(self) -> typing.List[int]:
@@ -135,7 +142,7 @@ class Environment(gym.Env):
     if self.eval_cmd:
       try:
         cmd = f"timeout -s9 {timeout_seconds} bash -c '{self.eval_cmd}'"
-        app.Log(2, '$ %s', cmd)
+        app.Log(2, "$ %s", cmd)
         subprocess.check_call(cmd, shell=True)
         return True
       except subprocess.CalledProcessError:
@@ -159,9 +166,9 @@ class Environment(gym.Env):
   def _MakeVariableSubstitution(self, cmd: str) -> str:
     """Perform make variable substitution on the given string."""
     substitutions = {
-        '$@': str(self.binary_path),
-        '$<': str(self.working_bytecode_path),
-        '@D': str(self.working_dir),
+      "$@": str(self.binary_path),
+      "$<": str(self.working_bytecode_path),
+      "@D": str(self.working_dir),
     }
     for src, dst in substitutions.items():
       cmd = cmd.replace(src, dst)
@@ -189,28 +196,32 @@ class LlvmOptEnv(Environment):
     self.observation_space = spaces.Discrete(10)
 
   def reset(self):
-    app.Log(2, '$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
+    app.Log(2, "$ cp %s %s", self.bytecode_path, self.working_bytecode_path)
     shutil.copyfile(self.bytecode_path, self.working_bytecode_path)
-    clang.Compile([self.working_bytecode_path], self.binary_path, copts=['-O0'])
+    clang.Compile([self.working_bytecode_path], self.binary_path, copts=["-O0"])
     start_time = labdate.MillisecondsTimestamp()
     self.RunSetupCommand()
     self.RunBinary()
     if not self.BinaryIsValid():
       raise ValueError(f"Failed to validate base binary.")
     self.episodes.append(
-        random_opt_pb2.Episode(step=[
-            random_opt_pb2.Step(
-                start_time_epoch_ms=start_time,
-                status=random_opt_pb2.Step.PASS,
-                binary_runtime_ms=self.GetRuntimes(),
-                reward=0,
-                total_reward=0,
-                speedup=1.0,
-                total_speedup=1.0,
-            )
-        ]))
+      random_opt_pb2.Episode(
+        step=[
+          random_opt_pb2.Step(
+            start_time_epoch_ms=start_time,
+            status=random_opt_pb2.Step.PASS,
+            binary_runtime_ms=self.GetRuntimes(),
+            reward=0,
+            total_reward=0,
+            speedup=1.0,
+            total_speedup=1.0,
+          )
+        ]
+      )
+    )
     self.episodes[-1].step[0].total_step_runtime_ms = (
-        labdate.MillisecondsTimestamp() - start_time)
+      labdate.MillisecondsTimestamp() - start_time
+    )
 
   def render(self, outfile=sys.stdout):
     """Render text representation of environment.
@@ -221,11 +232,14 @@ class LlvmOptEnv(Environment):
     Returns:
       The outfile.
     """
-    bin_changed = ('changed' if self.episodes[-1].step[-1].binary_changed else
-                   'unchanged')
-    bytecode_changed = ('changed' if self.episodes[-1].step[-1].bytecode_changed
-                        else 'unchanged')
-    outfile.write(f'''\
+    bin_changed = (
+      "changed" if self.episodes[-1].step[-1].binary_changed else "unchanged"
+    )
+    bytecode_changed = (
+      "changed" if self.episodes[-1].step[-1].bytecode_changed else "unchanged"
+    )
+    outfile.write(
+      f"""\
 ==================================================
 EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
 
@@ -235,12 +249,14 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
   Binary Runtimes: {self.episodes[-1].step[-1].binary_runtime_ms} ms.
   Reward: {self.episodes[-1].step[-1].reward:.3f} ({self.episodes[-1].step[-1].total_reward:.3f} total)
   Speedup: {self.episodes[-1].step[-1].speedup:.2f}x ({self.episodes[-1].step[-1].total_speedup:.2f}x total)
-''')
+"""
+    )
     if self.episodes[-1].step[-1].status != random_opt_pb2.Step.PASS:
       last_status = random_opt_pb2.Step.Status.Name(
-          self.episodes[-1].step[-1].status)
-      outfile.write(f'  Status: {last_status}\n')
-    outfile.write('\n')
+        self.episodes[-1].step[-1].status
+      )
+      outfile.write(f"  Status: {last_status}\n")
+    outfile.write("\n")
     return outfile
 
   def Step(self, step: random_opt_pb2.Step) -> random_opt_pb2.Step:
@@ -255,26 +271,28 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     start_time = labdate.MillisecondsTimestamp()
     step.start_time_epoch_ms = start_time
     step.status = random_opt_pb2.Step.PASS
-    temp_bytecode = self.working_dir / 'temp_src.ll'
-    temp_binary = self.working_dir / 'temp_binary'
+    temp_bytecode = self.working_dir / "temp_src.ll"
+    temp_binary = self.working_dir / "temp_binary"
 
     # Run the pass.
     try:
-      opt.RunOptPassOnBytecode(self.working_bytecode_path, temp_bytecode,
-                               list(step.opt_pass))
+      opt.RunOptPassOnBytecode(
+        self.working_bytecode_path, temp_bytecode, list(step.opt_pass)
+      )
     except llvm.LlvmError as e:
       step.status = random_opt_pb2.Step.OPT_FAILED
       step.status_msg = text.truncate(str(e), 255)
 
     if step.status == random_opt_pb2.Step.PASS:
       # Update bytecode file.
-      app.Log(2, '$ mv %s %s', temp_bytecode, self.working_bytecode_path)
-      step.bytecode_changed = BytecodesAreEqual(temp_bytecode,
-                                                self.working_bytecode_path)
+      app.Log(2, "$ mv %s %s", temp_bytecode, self.working_bytecode_path)
+      step.bytecode_changed = BytecodesAreEqual(
+        temp_bytecode, self.working_bytecode_path
+      )
       os.rename(str(temp_bytecode), str(self.working_bytecode_path))
       # Compile a new binary.
       try:
-        clang.Compile([self.working_bytecode_path], temp_binary, copts=['-O0'])
+        clang.Compile([self.working_bytecode_path], temp_binary, copts=["-O0"])
         step.binary_changed = BinariesAreEqual(temp_binary, self.binary_path)
         os.rename(str(temp_binary), str(self.binary_path))
       except llvm.LlvmError as e:
@@ -292,13 +310,13 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     if step.status == random_opt_pb2.Step.PASS:
       if self.BinaryIsValid():
         step.speedup = (
-            (sum(self.episodes[-1].step[-1].binary_runtime_ms) /
-             len(self.episodes[-1].step[-1].binary_runtime_ms)) /
-            (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
+          sum(self.episodes[-1].step[-1].binary_runtime_ms)
+          / len(self.episodes[-1].step[-1].binary_runtime_ms)
+        ) / (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms))
         step.total_speedup = (
-            (sum(self.episodes[-1].step[0].binary_runtime_ms) /
-             len(self.episodes[-1].step[0].binary_runtime_ms)) /
-            (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms)))
+          sum(self.episodes[-1].step[0].binary_runtime_ms)
+          / len(self.episodes[-1].step[0].binary_runtime_ms)
+        ) / (sum(step.binary_runtime_ms) / len(step.binary_runtime_ms))
       else:
         step.status = random_opt_pb2.Step.EVAL_FAILED
 
@@ -312,7 +330,8 @@ EPISODE #{len(self.episodes)}, STEP #{len(self.episodes[-1].step) - 1}:
     if not self.action_space.contains(action):
       raise ValueError(f"Unknown action: '{action}'")
     proto = self.Step(
-        random_opt_pb2.Step(opt_pass=[self.config.candidate_pass[action]]))
+      random_opt_pb2.Step(opt_pass=[self.config.candidate_pass[action]])
+    )
     self.episodes[-1].step.extend([proto])
     # TODO(cec): Calculate observation once observation space is implemented.
     obs = self.observation_space.sample()
@@ -383,15 +402,19 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
   def reset(self):
     """Reset the environment state."""
-    app.Log(2, '$ cp %s %s', self.bytecode_path, self.working_bytecode_path)
+    app.Log(2, "$ cp %s %s", self.bytecode_path, self.working_bytecode_path)
     shutil.copyfile(self.bytecode_path, self.working_bytecode_path)
-    clang.Compile([self.bytecode_path], self.binary_path, copts=['-O0'])
+    clang.Compile([self.bytecode_path], self.binary_path, copts=["-O0"])
     self.RunSetupCommand()
     self.episodes.append(
-        random_opt_pb2.DelayedRewardEpisode(step=[
-            random_opt_pb2.DelayedRewardStep(
-                start_time_epoch_ms=labdate.MillisecondsTimestamp(),)
-        ]))
+      random_opt_pb2.DelayedRewardEpisode(
+        step=[
+          random_opt_pb2.DelayedRewardStep(
+            start_time_epoch_ms=labdate.MillisecondsTimestamp(),
+          )
+        ]
+      )
+    )
 
   def step(self, action: int) -> Environment.step_t:
     """Perform the given action and return a step_t."""
@@ -408,20 +431,24 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
     opt_pass = self.config.candidate_pass[action]
 
     step = random_opt_pb2.DelayedRewardStep(
-        start_time_epoch_ms=start_ms,
-        opt_pass=opt_pass,
+      start_time_epoch_ms=start_ms, opt_pass=opt_pass,
     )
 
     # Run the full list of passes and update working_bytecode file.
     try:
       all_passes = [step.opt_pass for step in self.episodes[-1].step[1:]]
-      opt.RunOptPassOnBytecode(self.bytecode_path, self.working_dir / 'temp.ll',
-                               all_passes)
-      step.bytecode_changed = BytecodesAreEqual(self.working_dir / 'temp.ll',
-                                                self.working_bytecode_path)
-      shutil.copyfile(self.working_dir / 'temp.ll', self.working_bytecode_path)
-      step.reward = (self.bytecode_changed_reward if step.bytecode_changed else
-                     self.bytecode_unchanged_reward)
+      opt.RunOptPassOnBytecode(
+        self.bytecode_path, self.working_dir / "temp.ll", all_passes
+      )
+      step.bytecode_changed = BytecodesAreEqual(
+        self.working_dir / "temp.ll", self.working_bytecode_path
+      )
+      shutil.copyfile(self.working_dir / "temp.ll", self.working_bytecode_path)
+      step.reward = (
+        self.bytecode_changed_reward
+        if step.bytecode_changed
+        else self.bytecode_unchanged_reward
+      )
     except llvm.LlvmError as e:
       # Opt failed, set the error message.
       step.reward = self.opt_failed_reward
@@ -435,25 +462,27 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
     start_ms = labdate.MillisecondsTimestamp()
     step = random_opt_pb2.DelayedRewardStep(start_time_epoch_ms=start_ms,)
     try:
-      clang.Compile([self.working_bytecode_path],
-                    self.binary_path,
-                    copts=['-O0'])
+      clang.Compile(
+        [self.working_bytecode_path], self.binary_path, copts=["-O0"]
+      )
       try:
         runtimes = self.GetRuntimes()
         self.episodes[-1].binary_runtime_ms.extend(runtimes)
         if self.BinaryIsValid():
           step.reward = self.runtime_reward(sum(runtimes) / len(runtimes))
         else:
-          self.episodes[-1].outcome = (
-              random_opt_pb2.DelayedRewardEpisode.EVAL_FAILED)
+          self.episodes[
+            -1
+          ].outcome = random_opt_pb2.DelayedRewardEpisode.EVAL_FAILED
           step.reward = self.eval_failed_reward
       except ValueError as e:
         self.episodes[-1].outcome = random_opt_pb2.Step.EXEC_FAILED
         self.episodes[-1].outcome_error_msg = text.truncate(str(e), 255)
         step.reward = self.exec_failed_reward
     except clang.ClangException as e:
-      self.episodes[-1].outcome = (
-          random_opt_pb2.DelayedRewardEpisode.COMPILE_FAILED)
+      self.episodes[
+        -1
+      ].outcome = random_opt_pb2.DelayedRewardEpisode.COMPILE_FAILED
       self.episodes[-1].outcome_error_msg = text.truncate(str(e), 255)
       step.reward = self.compile_failed_reward
 
@@ -464,42 +493,49 @@ class LlvmOptDelayedRewardEnv(LlvmOptEnv):
 
   def ToProto(self) -> random_opt_pb2.DelayedRewardExperiment:
     """Return proto representation of environment."""
-    return random_opt_pb2.DelayedRewardExperiment(env=self.config,
-                                                  episode=self.episodes)
+    return random_opt_pb2.DelayedRewardExperiment(
+      env=self.config, episode=self.episodes
+    )
 
   def render(self, outfile=sys.stdout):
     """Render text representation of environment."""
     episode, step = self.episodes[-1], self.episodes[-1].step[-1]
-    bytecode_changed = ('changed' if step.bytecode_changed else 'unchanged')
-    outfile.write(f'''\
+    bytecode_changed = "changed" if step.bytecode_changed else "unchanged"
+    outfile.write(
+      f"""\
 ==================================================
 EPISODE #{len(self.episodes)}, STEP #{len(episode.step) - 1}:
 
   Step time: {step.total_step_runtime_ms} ms.
   Opt pass: {step.opt_pass} (bytecode {bytecode_changed}).
   Reward: {step.reward}.
-''')
+"""
+    )
     if step.opt_error_msg:
-      outfile.write(f'  Opt error: {step.opt_error_msg}\n')
+      outfile.write(f"  Opt error: {step.opt_error_msg}\n")
     if len(episode.step) and not step.opt_pass:
       outcome = random_opt_pb2.DelayedRewardEpisode.Outcome.Name(
-          episode.outcome)
+        episode.outcome
+      )
       total_reward = sum(step.reward for step in episode.step)
-      outfile.write(f'''\
+      outfile.write(
+        f"""\
   Runtimes: {episode.binary_runtime_ms}
   Outcome: {outcome}
   Total reward: {total_reward}
-''')
-    outfile.write('\n')
+"""
+      )
+    outfile.write("\n")
     return outfile
 
 
 def ProduceBytecodeFromSources(
-    input_paths: typing.List[pathlib.Path],
-    output_path: pathlib.Path,
-    copts: typing.Optional[typing.List[str]] = None,
-    linkopts: typing.Optional[typing.List[str]] = None,
-    timeout_seconds: int = 60) -> pathlib.Path:
+  input_paths: typing.List[pathlib.Path],
+  output_path: pathlib.Path,
+  copts: typing.Optional[typing.List[str]] = None,
+  linkopts: typing.Optional[typing.List[str]] = None,
+  timeout_seconds: int = 60,
+) -> pathlib.Path:
   """Produce a single bytecode file for a set of sources.
 
   Args:
@@ -520,27 +556,28 @@ def ProduceBytecodeFromSources(
   with tempfile.TemporaryDirectory() as d:
     d = pathlib.Path(d)
     input_srcs = [
-        d / (crypto.sha256_str(str(src)) + '.l') for src in input_paths
+      d / (crypto.sha256_str(str(src)) + ".l") for src in input_paths
     ]
     for src, input_src in zip(input_paths, input_srcs):
-      clang.Compile([src],
-                    input_src,
-                    copts=copts + ['-O0', '-emit-llvm', '-S', '-c'],
-                    timeout_seconds=timeout_seconds)
+      clang.Compile(
+        [src],
+        input_src,
+        copts=copts + ["-O0", "-emit-llvm", "-S", "-c"],
+        timeout_seconds=timeout_seconds,
+      )
     # Link the separate bytecode files.
-    llvm_link.LinkBitcodeFilesToBytecode(input_srcs,
-                                         output_path,
-                                         linkopts,
-                                         timeout_seconds=timeout_seconds)
+    llvm_link.LinkBitcodeFilesToBytecode(
+      input_srcs, output_path, linkopts, timeout_seconds=timeout_seconds
+    )
   return output_path
 
 
 def BytecodesAreEqual(a: pathlib.Path, b: pathlib.Path) -> bool:
   # TODO(cec): Just ignoring the first line is not enough.
   with open(a) as f:
-    a_src = '\n'.join(f.read().split('\n')[1:])
+    a_src = "\n".join(f.read().split("\n")[1:])
   with open(b) as f:
-    b_src = '\n'.join(f.read().split('\n')[1:])
+    b_src = "\n".join(f.read().split("\n")[1:])
   return a_src == b_src
 
 

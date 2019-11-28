@@ -1,22 +1,21 @@
-#include <iostream>
 #include <initializer_list>
+#include <iostream>
 
 // A vector class
 
-template<typename T>
+template <typename T>
 class Container {
  public:
   virtual ~Container() {}
   virtual size_t size() const = 0;
 };
 
-template<typename T>
+template <typename T>
 class MyVector : Container<T> {
  public:
   // Create uninitialised
   explicit MyVector(const size_t size) {
-    if (size == 0)
-      throw std::invalid_argument("0 size vector!");
+    if (size == 0) throw std::invalid_argument("0 size vector!");
 
     _size = size;
     _data = new T[size];
@@ -33,31 +32,24 @@ class MyVector : Container<T> {
     }
   }
 
-  virtual ~MyVector() {
-    delete[] _data;
-  }
+  virtual ~MyVector() { delete[] _data; }
 
   T &operator[](const size_t i) {
-    if (i >= size())
-      throw std::out_of_range("Vector::operator[]");
+    if (i >= size()) throw std::out_of_range("Vector::operator[]");
 
     return _data[i];
   }
 
-  const T& operator[](const size_t i) const {
-    if (i >= size())
-      throw std::out_of_range("Vector::operator[]");
+  const T &operator[](const size_t i) const {
+    if (i >= size()) throw std::out_of_range("Vector::operator[]");
 
     return _data[i];
   }
 
-  size_t size() const {
-    return _size;
-  }
+  size_t size() const { return _size; }
 
   friend std::ostream &operator<<(std::ostream &o, const MyVector<T> &v) {
-    for (size_t i = 0; i < v._size; i++)
-      o << v[i] << " ";
+    for (size_t i = 0; i < v._size; i++) o << v[i] << " ";
     return o;
   }
 
@@ -68,26 +60,24 @@ class MyVector : Container<T> {
 
 // Support iteration:
 
-template<typename T>
-const T *begin(const MyVector<T>& v) {
+template <typename T>
+const T *begin(const MyVector<T> &v) {
   return v.size() ? &v[0] : nullptr;
 }
 
-template<typename T>
-const T *end(const MyVector<T>& v) {
+template <typename T>
+const T *end(const MyVector<T> &v) {
   return begin(v) + v.size();
 }
 
 // Summation operator:
 
-template<typename T>
+template <typename T>
 T &sum(const MyVector<T> &vec, T *acc) {
-  for (auto &v : vec)
-    *acc += v;
+  for (auto &v : vec) *acc += v;
 
   return *acc;
 }
-
 
 int main(int argc, char **argv) {
   std::cout << "Hello, world!" << std::endl;

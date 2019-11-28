@@ -24,13 +24,13 @@
 
 namespace debug {
 
-  // Highlight pixels which are flagged for recursive super-sampling
-  // beyond a certain depth. Useful for debugging the anti-aliasing
-  // logic.
-  //
-  // A value of '0' disables highlighting.
-  const size_t RECURSIVE_HIGHLIGHT_DEPTH  = 0;
-  const int    RECURSIVE_HIGHLIGHT_COLOUR = 0xffffff;
+// Highlight pixels which are flagged for recursive super-sampling
+// beyond a certain depth. Useful for debugging the anti-aliasing
+// logic.
+//
+// A value of '0' disables highlighting.
+const size_t RECURSIVE_HIGHLIGHT_DEPTH = 0;
+const int RECURSIVE_HIGHLIGHT_COLOUR = 0xffffff;
 
 }  // namespace debug
 

@@ -14,15 +14,18 @@ def test_ToSuccessorsString_straight_line_graph():
   # Graph:
   #
   #      A --> B --> C
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
-  assert g.ToSuccessorsString() == """\
+  assert (
+    g.ToSuccessorsString()
+    == """\
 A: B C
 B: C
 C: """
+  )
 
 
 def test_ControlFlowGraph_ToSuccessorsString_if_else_loop():
@@ -37,19 +40,22 @@ def test_ControlFlowGraph_ToSuccessorsString_if_else_loop():
   #     |             ^
   #     |             |
   #     +----> C -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
   g.add_edge(2, 3)
-  assert g.ToSuccessorsString() == """\
+  assert (
+    g.ToSuccessorsString()
+    == """\
 A: B C D
 B: D
 C: D
 D: """
+  )
 
 
 def test_ControlFlowGraph_ToSuccessorsString_while_loop():
@@ -64,17 +70,20 @@ def test_ControlFlowGraph_ToSuccessorsString_while_loop():
   #     |                ^
   #     |                |
   #     +----------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 0)
   g.add_edge(0, 2)
   # TODO(cec): I don't beleive these. Why isn't self included?
-  assert g.ToSuccessorsString() == """\
+  assert (
+    g.ToSuccessorsString()
+    == """\
 A: B C
 B: A C
 C: """
+  )
 
 
 def test_ControlFlowGraph_ToSuccessorsString_while_loop_with_exit():
@@ -89,21 +98,24 @@ def test_ControlFlowGraph_ToSuccessorsString_while_loop_with_exit():
   #     |        |               ^
   #     |        |               |
   #     +------->+---------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   g.add_edge(2, 0)
   g.add_edge(0, 3)
   g.add_edge(1, 3)
   # TODO(cec): I don't beleive these. Why isn't self included?
-  assert g.ToSuccessorsString() == """\
+  assert (
+    g.ToSuccessorsString()
+    == """\
 A: B C D
 B: A C D
 C: A B D
 D: """
+  )
 
 
 def test_ControlFlowGraph_ToSuccessorsString_irreducible_loop():
@@ -120,20 +132,23 @@ def test_ControlFlowGraph_ToSuccessorsString_irreducible_loop():
   #     |        D       |
   #     |                |
   #     +----------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 2)
   g.add_edge(2, 1)
   g.add_edge(1, 3)
-  assert g.ToSuccessorsString() == """\
+  assert (
+    g.ToSuccessorsString()
+    == """\
 A: B C D
 B: C D
 C: B D
 D: """
+  )
 
 
 def test_ToNeighborsString_straight_line_graph():
@@ -142,15 +157,18 @@ def test_ToNeighborsString_straight_line_graph():
   # Graph:
   #
   #      A --> B --> C
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
-  assert g.ToNeighborsString() == """\
+  assert (
+    g.ToNeighborsString()
+    == """\
 A: B
 B: C
 C: """
+  )
 
 
 def test_ControlFlowGraph_ToNeighborsString_if_else_loop():
@@ -165,19 +183,22 @@ def test_ControlFlowGraph_ToNeighborsString_if_else_loop():
   #     |             ^
   #     |             |
   #     +----> C -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
   g.add_edge(2, 3)
-  assert g.ToNeighborsString() == """\
+  assert (
+    g.ToNeighborsString()
+    == """\
 A: B C
 B: D
 C: D
 D: """
+  )
 
 
 def test_ControlFlowGraph_ToNeighborsString_while_loop():
@@ -192,16 +213,19 @@ def test_ControlFlowGraph_ToNeighborsString_while_loop():
   #     |                ^
   #     |                |
   #     +----------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 0)
   g.add_edge(0, 2)
-  assert g.ToNeighborsString() == """\
+  assert (
+    g.ToNeighborsString()
+    == """\
 A: B C
 B: A
 C: """
+  )
 
 
 def test_ControlFlowGraph_ToNeighborsString_while_loop_with_exit():
@@ -216,20 +240,23 @@ def test_ControlFlowGraph_ToNeighborsString_while_loop_with_exit():
   #     |        |               ^
   #     |        |               |
   #     +------->+---------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   g.add_edge(2, 0)
   g.add_edge(0, 3)
   g.add_edge(1, 3)
-  assert g.ToNeighborsString() == """\
+  assert (
+    g.ToNeighborsString()
+    == """\
 A: B D
 B: C D
 C: A
 D: """
+  )
 
 
 def test_ControlFlowGraph_ToNeighborsString_irreducible_loop():
@@ -246,20 +273,23 @@ def test_ControlFlowGraph_ToNeighborsString_irreducible_loop():
   #     |        D       |
   #     |                |
   #     +----------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 2)
   g.add_edge(2, 1)
   g.add_edge(1, 3)
-  assert g.ToNeighborsString() == """\
+  assert (
+    g.ToNeighborsString()
+    == """\
 A: B C
 B: C D
 C: B
 D: """
+  )
 
 
 def test_ControlFlowGraph_validate_empty_graph():
@@ -274,16 +304,16 @@ def test_ControlFlowGraph_validate_empty_graph():
 def test_ControlFlowGraph_validate_one_node():
   """Test that single-node graph is valid."""
   g = control_flow_graph.ControlFlowGraph()
-  g.add_node(0, name='A', entry=True, exit=True)
+  g.add_node(0, name="A", entry=True, exit=True)
   g.ValidateControlFlowGraph()
 
 
 def test_ControlFlowGraph_IsValidControlFlowGraph_disconnected_graph():
   """A disconnected graph is not valid."""
   g = control_flow_graph.ControlFlowGraph()
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B', exit=True)
-  g.add_node(2, name='C')
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B", exit=True)
+  g.add_node(2, name="C")
   g.add_edge(0, 1)
   with pytest.raises(control_flow_graph.UnconnectedNode) as e_ctx:
     g.ValidateControlFlowGraph()
@@ -295,16 +325,18 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_no_path_from_entry_to_exit():
   """A disconnected graph is not valid."""
   # Graph: A -> B <- C
   g = control_flow_graph.ControlFlowGraph()
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(2, 1)
   with pytest.raises(
-      control_flow_graph.MalformedControlFlowGraphError) as e_ctx:
+    control_flow_graph.MalformedControlFlowGraphError
+  ) as e_ctx:
     g.ValidateControlFlowGraph()
-  assert str(e_ctx.value) == ("No path from entry node 'A' to exit node 'C' "
-                              "in function `cfg`")
+  assert str(e_ctx.value) == (
+    "No path from entry node 'A' to exit node 'C' " "in function `cfg`"
+  )
   assert not g.IsValidControlFlowGraph()
 
 
@@ -314,9 +346,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_invalid_degrees():
   # Graph:
   #
   #      A --> B --> C
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   with pytest.raises(control_flow_graph.InvalidNodeDegree) as e_ctx:
@@ -337,10 +369,10 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_unamed_nodes():
   #     |             ^
   #     |             |
   #     +---->   -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
   g.add_node(2)
-  g.add_node(3, name='D', exit=True)
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -363,10 +395,10 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_duplicate_names():
   #     |             ^
   #     |             |
   #     +----> B -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='B')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="B")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -389,10 +421,10 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_exit_block_has_output():
   #     |             ^
   #     |             |
   #     +----> C -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -416,10 +448,10 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_if_else_loop():
   #     |             ^
   #     |             |
   #     +----> C -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -440,9 +472,9 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_while_loop():
   #     |                ^
   #     |                |
   #     +----------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 0)
   g.add_edge(0, 2)
@@ -462,10 +494,10 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_while_loop_with_exit():
   #     |        |               ^
   #     |        |               |
   #     +------->+---------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(1, 2)
   g.add_edge(2, 0)
@@ -489,10 +521,10 @@ def test_ControlFlowGraph_IsValidControlFlowGraph_irreducible_loop():
   #     |        D       |
   #     |                |
   #     +----------------+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 2)
@@ -514,10 +546,10 @@ def test_ControlFlowGraph_entry_block():
   #     |             ^
   #     |             |
   #     +----> C -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -537,10 +569,10 @@ def test_ControlFlowGraph_exit_block():
   #     |             ^
   #     |             |
   #     +----> C -----+
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -552,14 +584,14 @@ def test_ControlFlowGraph_equal():
   """Test that equal graphs can be compared."""
   # Graph 1: A --> B
   g1 = control_flow_graph.ControlFlowGraph()
-  g1.add_node(0, name='A', entry=True)
-  g1.add_node(1, name='B', exit=True)
+  g1.add_node(0, name="A", entry=True)
+  g1.add_node(1, name="B", exit=True)
   g1.add_edge(0, 1)
 
   # Graph 2: A --> B
   g2 = control_flow_graph.ControlFlowGraph()
-  g2.add_node(0, name='A', entry=True)
-  g2.add_node(1, name='B', exit=True)
+  g2.add_node(0, name="A", entry=True)
+  g2.add_node(1, name="B", exit=True)
   g2.add_edge(0, 1)
 
   assert g1 == g2
@@ -569,15 +601,15 @@ def test_ControlFlowGraph_unequal_nodes():
   """Test that graphs with unequal nodes are not equal."""
   # Graph 1: A --> B    C
   g1 = control_flow_graph.ControlFlowGraph()
-  g1.add_node(0, name='A', entry=True)
-  g1.add_node(1, name='B', exit=True)
-  g1.add_node(2, name='C', exit=True)
+  g1.add_node(0, name="A", entry=True)
+  g1.add_node(1, name="B", exit=True)
+  g1.add_node(2, name="C", exit=True)
   g1.add_edge(0, 1)
 
   # Graph 2: A --> B
   g2 = control_flow_graph.ControlFlowGraph()
-  g2.add_node(0, name='A', entry=True)
-  g2.add_node(1, name='B', exit=True)
+  g2.add_node(0, name="A", entry=True)
+  g2.add_node(1, name="B", exit=True)
   g2.add_edge(0, 1)
 
   assert g1 != g2
@@ -587,14 +619,14 @@ def test_ControlFlowGraph_unequal_edges():
   """Test that graphs with unequal edges are not equal."""
   # Graph 1: A --> B
   g1 = control_flow_graph.ControlFlowGraph()
-  g1.add_node(0, name='A', entry=True)
-  g1.add_node(1, name='B', exit=True)
+  g1.add_node(0, name="A", entry=True)
+  g1.add_node(1, name="B", exit=True)
   g1.add_edge(0, 1)
 
   # Graph 2: B --> A
   g2 = control_flow_graph.ControlFlowGraph()
-  g2.add_node(0, name='A', entry=True)
-  g2.add_node(1, name='B', exit=True)
+  g2.add_node(0, name="A", entry=True)
+  g2.add_node(1, name="B", exit=True)
   g2.add_edge(1, 0)
 
   assert g1 != g2
@@ -603,15 +635,15 @@ def test_ControlFlowGraph_unequal_edges():
 def test_ControlFlowGraph_unequal_graph_names_are_equal():
   """Test that graph names are not used in comparison."""
   # Graph 1: A --> B
-  g1 = control_flow_graph.ControlFlowGraph(name='foo')
-  g1.add_node(0, name='A', entry=True)
-  g1.add_node(1, name='B', exit=True)
+  g1 = control_flow_graph.ControlFlowGraph(name="foo")
+  g1.add_node(0, name="A", entry=True)
+  g1.add_node(1, name="B", exit=True)
   g1.add_edge(0, 1)
 
   # Graph 2: A --> B
-  g2 = control_flow_graph.ControlFlowGraph(name='bar')
-  g2.add_node(0, name='A', entry=True)
-  g2.add_node(1, name='B', exit=True)
+  g2 = control_flow_graph.ControlFlowGraph(name="bar")
+  g2.add_node(0, name="A", entry=True)
+  g2.add_node(1, name="B", exit=True)
   g2.add_edge(0, 1)
 
   assert g1 == g2
@@ -620,15 +652,15 @@ def test_ControlFlowGraph_unequal_graph_names_are_equal():
 def test_ControlFlowGraph_unequal_edge_data():
   """Test that edge data is used in comparison."""
   # Graph 1: A --> B
-  g1 = control_flow_graph.ControlFlowGraph(name='foo')
-  g1.add_node(0, name='A', exit=True)
-  g1.add_node(1, name='B')
+  g1 = control_flow_graph.ControlFlowGraph(name="foo")
+  g1.add_node(0, name="A", exit=True)
+  g1.add_node(1, name="B")
   g1.add_edge(0, 1)
 
   # Graph 2: A --> B
-  g2 = control_flow_graph.ControlFlowGraph(name='bar')
-  g2.add_node(0, name='A')
-  g2.add_node(1, name='B', entry=True)
+  g2 = control_flow_graph.ControlFlowGraph(name="bar")
+  g2.add_node(0, name="A")
+  g2.add_node(1, name="B", entry=True)
   g2.add_edge(0, 1)
 
   assert g1 != g2
@@ -646,10 +678,10 @@ def test_ControlFlowGraph_ToProto_FromProto_equivalency():
   #     |             ^
   #     |             |
   #     +----> C -----+
-  g1.add_node(0, name='A', entry=True)
-  g1.add_node(1, name='B')
-  g1.add_node(2, name='C')
-  g1.add_node(3, name='D', exit=True)
+  g1.add_node(0, name="A", entry=True)
+  g1.add_node(1, name="B")
+  g1.add_node(2, name="C")
+  g1.add_node(3, name="D", exit=True)
   g1.add_edge(0, 1)
   g1.add_edge(0, 2)
   g1.add_edge(1, 3)
@@ -677,10 +709,10 @@ def test_ControlFlowGraph_edge_density():
   #     |             |
   #     +----> C -----+
   g = control_flow_graph.ControlFlowGraph()
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -705,10 +737,10 @@ def test_ControlFlowGraph_undirected_diameter():
   #     |             |
   #     +----> C -----+
   g = control_flow_graph.ControlFlowGraph()
-  g.add_node(0, name='A', entry=True)
-  g.add_node(1, name='B')
-  g.add_node(2, name='C')
-  g.add_node(3, name='D', exit=True)
+  g.add_node(0, name="A", entry=True)
+  g.add_node(1, name="B")
+  g.add_node(2, name="C")
+  g.add_node(3, name="D", exit=True)
   g.add_edge(0, 1)
   g.add_edge(0, 2)
   g.add_edge(1, 3)
@@ -717,7 +749,7 @@ def test_ControlFlowGraph_undirected_diameter():
   assert g.undirected_diameter == 2
 
   # Increase the diameter by adding a new E node and D -> E path.
-  g.add_node(4, name='E')
+  g.add_node(4, name="E")
   g.add_edge(3, 4)
   assert g.undirected_diameter == 3
 
@@ -725,15 +757,15 @@ def test_ControlFlowGraph_undirected_diameter():
 def test_ControlFlowGraph_equivalent_hashes():
   """Test equivalent hashes, despite different graph names."""
   # Graph 1: A --> B
-  g1 = control_flow_graph.ControlFlowGraph(name='foo')
-  g1.add_node(0, name='A', entry=True)
-  g1.add_node(1, name='B', exit=True)
+  g1 = control_flow_graph.ControlFlowGraph(name="foo")
+  g1.add_node(0, name="A", entry=True)
+  g1.add_node(1, name="B", exit=True)
   g1.add_edge(0, 1)
 
   # Graph 2: A --> B
-  g2 = control_flow_graph.ControlFlowGraph(name='bar')
-  g2.add_node(0, name='A', entry=True)
-  g2.add_node(1, name='B', exit=True)
+  g2 = control_flow_graph.ControlFlowGraph(name="bar")
+  g2.add_node(0, name="A", entry=True)
+  g2.add_node(1, name="B", exit=True)
   g2.add_edge(0, 1)
 
   assert hash(g1) == hash(g2)
@@ -742,10 +774,10 @@ def test_ControlFlowGraph_equivalent_hashes():
 def test_ControlFlowGraph_node_name_changes_hash():
   """Test that hash depends on node name."""
   g1 = control_flow_graph.ControlFlowGraph()
-  g1.add_node(0, name='A', entry=True)
+  g1.add_node(0, name="A", entry=True)
 
   g2 = control_flow_graph.ControlFlowGraph()
-  g2.add_node(0, name='B', entry=True)
+  g2.add_node(0, name="B", entry=True)
 
   assert hash(g1) != hash(g2)
 
@@ -753,31 +785,31 @@ def test_ControlFlowGraph_node_name_changes_hash():
 def test_ControlFlowGraph_node_attribute_changes_hash():
   """Test that hash depends on node attributes."""
   g1 = control_flow_graph.ControlFlowGraph()
-  g1.add_node(0, name='A')
+  g1.add_node(0, name="A")
 
   g2 = g1.copy()
   assert hash(g1) == hash(g2)
 
-  g2.nodes[0]['entry'] = True
+  g2.nodes[0]["entry"] = True
   assert hash(g1) != hash(g2)
 
 
 def test_ControlFlowGraph_IsomorphicHash_equivalency():
   """Test equivalent hashes, despite different attributes."""
   # Graph 1: A --> B
-  g1 = control_flow_graph.ControlFlowGraph(name='foo')
-  g1.add_node(0, name='A', entry=True)
-  g1.add_node(1, name='B', exit=True)
+  g1 = control_flow_graph.ControlFlowGraph(name="foo")
+  g1.add_node(0, name="A", entry=True)
+  g1.add_node(1, name="B", exit=True)
   g1.add_edge(0, 1)
 
   # Graph 2: C --> D
-  g2 = control_flow_graph.ControlFlowGraph(name='bar')
-  g2.add_node(0, name='C', entry=True)
-  g2.add_node(1, name='D', exit=True)
+  g2 = control_flow_graph.ControlFlowGraph(name="bar")
+  g2.add_node(0, name="C", entry=True)
+  g2.add_node(1, name="D", exit=True)
   g2.add_edge(0, 1)
 
   assert g1.IsomorphicHash() == g2.IsomorphicHash()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

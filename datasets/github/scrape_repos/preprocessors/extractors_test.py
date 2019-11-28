@@ -28,8 +28,11 @@ def test_JavaMethods_hello_world():
 
 def test_JavaMethods_simple_file():
   """Test output of simple class file."""
-  assert extractors.JavaMethods(
-      None, None, """
+  assert (
+    extractors.JavaMethods(
+      None,
+      None,
+      """
 public class A {
 
   public static void main(String[] args) {
@@ -38,60 +41,76 @@ public class A {
 
   private int foo() { /* comment */ return 5; }
 }
-""", None) == [
-          """\
+""",
+      None,
+    )
+    == [
+      """\
 public static void main(String[] args){
   System.out.println("Hello, world!");
 }
-""", """\
+""",
+      """\
 private int foo(){
   return 5;
 }
-"""
-      ]
+""",
+    ]
+  )
 
 
 def test_JavaMethods_syntax_error():
   """Test that syntax errors are silently ignored."""
-  assert extractors.JavaMethods(
-      None, None, """
+  assert (
+    extractors.JavaMethods(
+      None,
+      None,
+      """
 public class A {
 
   public static void main(String[] args) {
     /@! syntax error!
   }
 }
-""", None) == ["public static void main(String[] args){\n}\n"]
+""",
+      None,
+    )
+    == ["public static void main(String[] args){\n}\n"]
+  )
 
 
 # BatchedMethodExtractor() tests.
 
 
 def test_BatchedMethodExtractor_valid_input():
-  extractors.BatchedMethodExtractor([
+  extractors.BatchedMethodExtractor(
+    [
       """
 public class A {
   public static void main(String[] args) {
     System.out.println("Hello, world!");
   }
 }
-    """, """
+    """,
+      """
 public class A {
   public static void main(String[] args) {
     System.out.println("Hi, world!");
   }
 }
-    """
-  ]) == [
-      """\
+    """,
+    ]
+  ) == [
+    """\
 public static void main(String[] args) {
   System.out.println("Hello, world!");
 }
-""", """\
+""",
+    """\
 public static void main(String[] args) {
   System.out.println("Hi, world!");
 }
-"""
+""",
   ]
 
 
@@ -100,8 +119,11 @@ public static void main(String[] args) {
 
 def test_JavaStaticMethods_simple_file():
   """Test output of simple class file."""
-  assert extractors.JavaStaticMethods(
-      None, None, """
+  assert (
+    extractors.JavaStaticMethods(
+      None,
+      None,
+      """
 public class A {
 
   public static void main(String[] args) {
@@ -110,19 +132,26 @@ public class A {
 
   private int foo() { /* comment */ return 5; }
 }
-""", None) == [
-          """\
+""",
+      None,
+    )
+    == [
+      """\
 public static void main(String[] args){
   System.out.println("Hello, world!");
 }
 """
-      ]
+    ]
+  )
 
 
 def test_JavaStaticMethods_docstring_is_stripped():
   """Test that dosctring is not exported."""
-  assert extractors.JavaStaticMethods(
-      None, None, """
+  assert (
+    extractors.JavaStaticMethods(
+      None,
+      None,
+      """
 public class A {
 
   /**
@@ -133,14 +162,18 @@ public class A {
     System.out.println("Hello, world!");
   }
 }
-""", None) == [
-          """\
+""",
+      None,
+    )
+    == [
+      """\
 public static void main(String[] args){
   System.out.println("Hello, world!");
 }
 """
-      ]
+    ]
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

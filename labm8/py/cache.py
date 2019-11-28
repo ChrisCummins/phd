@@ -205,13 +205,9 @@ class JsonCache(TransientCache):
     Write contents of cache to disk.
     """
     io.debug("Storing cache '{0}'".format(self.path))
-    with open(self.path, 'w') as file:
+    with open(self.path, "w") as file:
       json.dump(
-          self._data,
-          file,
-          sort_keys=True,
-          indent=2,
-          separators=(',', ': '),
+        self._data, file, sort_keys=True, indent=2, separators=(",", ": "),
       )
 
 
@@ -226,7 +222,7 @@ def escape_path(key):
   """
   Convert a key to a filename by escaping invalid characters.
   """
-  return re.sub(r'[ \\/]+', '_', key)
+  return re.sub(r"[ \\/]+", "_", key)
 
 
 class FSCache(Cache):

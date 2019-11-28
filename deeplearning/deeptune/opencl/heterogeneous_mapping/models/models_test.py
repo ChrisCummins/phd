@@ -24,5 +24,5 @@ def test_num_models():
   assert len(models.ALL_MODELS) == 5
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

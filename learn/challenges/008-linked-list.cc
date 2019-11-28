@@ -32,7 +32,6 @@
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
 
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 
@@ -44,13 +43,12 @@
 // A pretty opaque singly linked list implementation. A private
 // subclass represents nodes. Manages node allocation dynamically.
 //
-template<typename T>
+template <typename T>
 class SinglyLinkedList {
  public:
   SinglyLinkedList() : _head(nullptr) {}
 
-  explicit SinglyLinkedList(std::initializer_list<T> il)
-      : SinglyLinkedList() {
+  explicit SinglyLinkedList(std::initializer_list<T> il) : SinglyLinkedList() {
     auto rit = il.end() - 1;
     while (rit != il.begin() - 1) {
       push_front(*rit--);
@@ -88,46 +86,40 @@ class SinglyLinkedList {
   }
 
   void insert_after(const std::size_t index, const T& data) {
-    node *current = _node_at(index);
-    node *n = new node(data, current->next);
+    node* current = _node_at(index);
+    node* n = new node(data, current->next);
     current->next = n;
   }
 
   void insert_after(const std::size_t index, const T&& data) {
-    node *current = _node_at(index);
-    node *n = new node(std::move(data), current->next);
+    node* current = _node_at(index);
+    node* n = new node(std::move(data), current->next);
     current->next = n;
   }
 
-  auto empty() const {
-    return !_head;
-  }
+  auto empty() const { return !_head; }
 
-  auto& operator[](const std::size_t index) {
-    return _node_at(index)->data;
-  }
+  auto& operator[](const std::size_t index) { return _node_at(index)->data; }
 
   auto& front() {
-    if (empty())
-      throw std::out_of_range("SinglyLinkedList.front()");
+    if (empty()) throw std::out_of_range("SinglyLinkedList.front()");
     return _head->data;
   }
 
-  template<typename _T>
+  template <typename _T>
   friend bool operator==(const SinglyLinkedList<_T>& lhs,
                          const SinglyLinkedList<_T>& rhs);
 
  private:
   class node;
 
-  node *_head;
+  node* _head;
 
   auto _node_at(const std::size_t index) {
-    node *n = _head;
+    node* n = _head;
 
     for (std::size_t i = 0; i < index; i++) {
-      if (!n->next)
-        throw std::out_of_range("SinglyLinkedList._node_at()");
+      if (!n->next) throw std::out_of_range("SinglyLinkedList._node_at()");
       n = n->next;
     }
 
@@ -136,22 +128,21 @@ class SinglyLinkedList {
 
   class node {
    public:
-    node(const T& _data, node *_next) : next(_next), data(_data) {}
+    node(const T& _data, node* _next) : next(_next), data(_data) {}
 
-    node *next;
+    node* next;
     const T data;
   };
 };
 
-template<typename T>
+template <typename T>
 bool operator==(const SinglyLinkedList<T>& lhs,
                 const SinglyLinkedList<T>& rhs) {
   auto lit = lhs._head;
   auto rit = rhs._head;
 
   while (lit && rit) {
-    if (lit->data != rit->data)
-      return false;
+    if (lit->data != rit->data) return false;
 
     lit = lit->next;
     rit = rit->next;
@@ -159,7 +150,6 @@ bool operator==(const SinglyLinkedList<T>& lhs,
 
   return !(lit || rit);
 }
-
 
 TEST(SinglyLinkedList, push_front) {
   SinglyLinkedList<int> li;
@@ -217,10 +207,10 @@ TEST(SinglyLinkedList, insert_after) {
 
 TEST(SinglyLinkedList, erase_at) {
   SinglyLinkedList<int> l1{1, 2, 2, 3, 4, 5, 6, 7};
-  SinglyLinkedList<int> l2{1,    2, 3, 4, 5, 6, 7};
-  SinglyLinkedList<int> l3{1,       3, 4, 5, 6, 7};
-  SinglyLinkedList<int> l4{         3, 4, 5, 6, 7};
-  SinglyLinkedList<int> l5{         3, 4, 5, 6   };
+  SinglyLinkedList<int> l2{1, 2, 3, 4, 5, 6, 7};
+  SinglyLinkedList<int> l3{1, 3, 4, 5, 6, 7};
+  SinglyLinkedList<int> l4{3, 4, 5, 6, 7};
+  SinglyLinkedList<int> l5{3, 4, 5, 6};
 
   l1.erase_at(1);
   ASSERT_TRUE(l1 == l2);
@@ -232,18 +222,16 @@ TEST(SinglyLinkedList, erase_at) {
   ASSERT_TRUE(l1 == l5);
 }
 
-
 /////////////////////////
 // Sorted linked list: //
 /////////////////////////
 
-template<typename T>
+template <typename T>
 class SortedLinkedList {
  public:
   SortedLinkedList() : _head(nullptr) {}
 
-  explicit SortedLinkedList(std::initializer_list<T> il)
-      : SortedLinkedList() {
+  explicit SortedLinkedList(std::initializer_list<T> il) : SortedLinkedList() {
     auto rit = il.end() - 1;
     while (rit != il.begin() - 1) {
       insert(*rit--);
@@ -261,7 +249,7 @@ class SortedLinkedList {
   }
 
   void insert(const T& data) {
-    node* prev = nullptr, * curr = _head;
+    node *prev = nullptr, *curr = _head;
 
     // Iterate to correct point in list.
     while (curr && curr->data < data) {
@@ -278,7 +266,7 @@ class SortedLinkedList {
   }
 
   void erase(const T& data) {
-    node* prev = nullptr, * curr = _head;
+    node *prev = nullptr, *curr = _head;
 
     while (curr && curr->data != data) {
       prev = curr;
@@ -286,8 +274,7 @@ class SortedLinkedList {
     }
 
     // We reached the end of the list and didn't find the value:
-    if (!curr)
-      throw std::invalid_argument("SortedLinkedList.erase()");
+    if (!curr) throw std::invalid_argument("SortedLinkedList.erase()");
 
     if (prev)
       prev->next = curr->next;
@@ -297,35 +284,29 @@ class SortedLinkedList {
     delete curr;
   }
 
-  auto empty() const {
-    return !_head;
-  }
+  auto empty() const { return !_head; }
 
-  auto& operator[](const std::size_t index) {
-    return _node_at(index)->data;
-  }
+  auto& operator[](const std::size_t index) { return _node_at(index)->data; }
 
   auto& front() {
-    if (empty())
-      throw std::out_of_range("SortedLinkedList.front()");
+    if (empty()) throw std::out_of_range("SortedLinkedList.front()");
     return _head->data;
   }
 
-  template<typename _T>
+  template <typename _T>
   friend bool operator==(const SortedLinkedList<_T>& lhs,
                          const SortedLinkedList<_T>& rhs);
 
  private:
   class node;
 
-  node *_head;
+  node* _head;
 
   auto _node_at(const std::size_t index) {
-    node *n = _head;
+    node* n = _head;
 
     for (std::size_t i = 0; i < index; i++) {
-      if (!n->next)
-        throw std::out_of_range("SortedLinkedList._node_at()");
+      if (!n->next) throw std::out_of_range("SortedLinkedList._node_at()");
       n = n->next;
     }
 
@@ -334,22 +315,21 @@ class SortedLinkedList {
 
   class node {
    public:
-    node(const T& _data, node *_next) : next(_next), data(_data) {}
+    node(const T& _data, node* _next) : next(_next), data(_data) {}
 
-    node *next;
+    node* next;
     const T data;
   };
 };
 
-template<typename T>
+template <typename T>
 bool operator==(const SortedLinkedList<T>& lhs,
                 const SortedLinkedList<T>& rhs) {
   auto lit = lhs._head;
   auto rit = rhs._head;
 
   while (lit && rit) {
-    if (lit->data != rit->data)
-      return false;
+    if (lit->data != rit->data) return false;
 
     lit = lit->next;
     rit = rit->next;
@@ -398,10 +378,10 @@ TEST(SortedLinkedList, relational_op) {
 
 TEST(SortedLinkedList, erase) {
   SortedLinkedList<int> l1{1, 2, 2, 3, 4, 5, 6, 7};
-  SortedLinkedList<int> l2{1,    2, 3, 4, 5, 6, 7};
-  SortedLinkedList<int> l3{1,       3, 4, 5, 6, 7};
-  SortedLinkedList<int> l4{         3, 4, 5, 6, 7};
-  SortedLinkedList<int> l5{         3, 4, 5, 6   };
+  SortedLinkedList<int> l2{1, 2, 3, 4, 5, 6, 7};
+  SortedLinkedList<int> l3{1, 3, 4, 5, 6, 7};
+  SortedLinkedList<int> l4{3, 4, 5, 6, 7};
+  SortedLinkedList<int> l5{3, 4, 5, 6};
 
   l1.erase(2);
   ASSERT_TRUE(l1 == l2);
@@ -415,8 +395,7 @@ TEST(SortedLinkedList, erase) {
 
 #pragma GCC diagnostic pop  // -Wpadded
 
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

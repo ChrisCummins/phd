@@ -40,8 +40,9 @@ class Timer {
     const std::chrono::high_resolution_clock::time_point end =
         std::chrono::high_resolution_clock::now();
     return static_cast<Scalar>(
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            end - start).count() / 1e6);
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+            .count() /
+        1e6);
   }
 
  private:

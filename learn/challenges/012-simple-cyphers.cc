@@ -17,51 +17,47 @@ using char_freqs = std::array<double, 26>;
 using perms = std::array<std::string, 26>;
 
 std::ostream& operator<<(std::ostream& out, const char_freqs& freqs) {
-  for (const auto& f : freqs)
-    std::cout << f << ' ';
+  for (const auto& f : freqs) std::cout << f << ' ';
   std::cout << std::endl;
   return out;
 }
 
 std::ostream& operator<<(std::ostream& out, const perms& p) {
-  for (const auto& str : p)
-    std::cout << str << std::endl;
+  for (const auto& str : p) std::cout << str << std::endl;
 
   return out;
 }
 
-
 // English letter frequencies,
 // source: https://en.wikipedia.org/wiki/Letter_frequency
-static const char_freqs english_char_freqs {
-  0.08167,  // a
-  0.01492,  // b
-  0.02782,  // c
-  0.04253,  // d
-  0.12702,  // e
-  0.02228,  // f
-  0.02015,  // g
-  0.06094,  // h
-  0.06966,  // i
-  0.00153,  // j
-  0.00772,  // k
-  0.04025,  // l
-  0.02406,  // m
-  0.06749,  // n
-  0.07507,  // o
-  0.01929,  // p
-  0.00095,  // q
-  0.05987,  // r
-  0.06327,  // s
-  0.09056,  // t
-  0.02758,  // u
-  0.00978,  // v
-  0.02361,  // w
-  0.00150,  // x
-  0.01974,  // y
-  0.00074   // z
+static const char_freqs english_char_freqs{
+    0.08167,  // a
+    0.01492,  // b
+    0.02782,  // c
+    0.04253,  // d
+    0.12702,  // e
+    0.02228,  // f
+    0.02015,  // g
+    0.06094,  // h
+    0.06966,  // i
+    0.00153,  // j
+    0.00772,  // k
+    0.04025,  // l
+    0.02406,  // m
+    0.06749,  // n
+    0.07507,  // o
+    0.01929,  // p
+    0.00095,  // q
+    0.05987,  // r
+    0.06327,  // s
+    0.09056,  // t
+    0.02758,  // u
+    0.00978,  // v
+    0.02361,  // w
+    0.00150,  // x
+    0.01974,  // y
+    0.00074   // z
 };
-
 
 // Rotate plaintext by 'shift' characters.
 std::string caesar_shift(const std::string& plaintext, const int shift) {
@@ -76,7 +72,6 @@ std::string caesar_shift(const std::string& plaintext, const int shift) {
 
   return text;
 }
-
 
 // Compute distribution of characters
 char_freqs char_distribution(const std::string& text) {
@@ -98,12 +93,10 @@ char_freqs char_distribution(const std::string& text) {
   const int nchars = std::accumulate(std::begin(freqs), std::end(freqs), 0);
 
   // Normalise frequencies:
-  for (auto& f : freqs)
-    f /= nchars;
+  for (auto& f : freqs) f /= nchars;
 
   return freqs;
 }
-
 
 // Generate all permutations of a cyphertext.
 perms permutations(const std::string& cyphertext) {
@@ -116,22 +109,19 @@ perms permutations(const std::string& cyphertext) {
   return p;
 }
 
-
 // Computer difference between two distributions in range [0,1] as sum
 // of differences between corresponding values.
 double linear_diff(const char_freqs& a, const char_freqs& b) {
   double diff{0};
 
-  for (size_t i = 0; i < 26; i++)
-    diff += std::abs(a[i] - b[i]);
+  for (size_t i = 0; i < 26; i++) diff += std::abs(a[i] - b[i]);
 
   return diff / 2;
 }
 
-
 std::string crack(const std::string& cyphertext,
                   std::function<double(const char_freqs&, const char_freqs&)>
-                    diff_fn = linear_diff,
+                      diff_fn = linear_diff,
                   const char_freqs& distribution = english_char_freqs) {
   double mindiff = DBL_MAX;
   std::string plaintext;
@@ -171,17 +161,16 @@ TEST(simple_cyphers, char_distribution) {
 }
 
 TEST(simple_cyphers, linear_diff) {
-  ASSERT_DOUBLE_EQ(0, linear_diff(char_distribution("abc"),
-                                  char_distribution("abc")));
-  ASSERT_DOUBLE_EQ(1, linear_diff(char_distribution("abc"),
-                                  char_distribution("def")));
-  ASSERT_DOUBLE_EQ(0.66666666666666663,
-                   linear_diff(char_distribution("abc"),
-                               char_distribution("cde")));
+  ASSERT_DOUBLE_EQ(
+      0, linear_diff(char_distribution("abc"), char_distribution("abc")));
+  ASSERT_DOUBLE_EQ(
+      1, linear_diff(char_distribution("abc"), char_distribution("def")));
+  ASSERT_DOUBLE_EQ(0.66666666666666663, linear_diff(char_distribution("abc"),
+                                                    char_distribution("cde")));
 }
 
 static const std::string sonnet{
-  R"(Let me not to the marriage of true minds Admit impediments.
+    R"(Let me not to the marriage of true minds Admit impediments.
      Love is not love Which alters when it alteration finds,
      Or bends with the remover to remove: O no; it is an ever-fixed mark,
      That looks on tempests, and is never shaken;

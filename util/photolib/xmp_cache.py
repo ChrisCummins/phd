@@ -30,6 +30,7 @@ class XmpCacheEntry(Base):
 
   Each XmpCacheEntry requires 64 (40 + 8 + 8 + ?) bytes.
   """
+
   __tablename__ = "files"
 
   relpath_md5: str = Column(Binary(16), primary_key=True)
@@ -43,35 +44,36 @@ class XmpCacheEntry(Base):
   aperture: str = Column(String(128), nullable=False)
   focal_length_35mm: str = Column(String(128), nullable=False)
   flash_fired: bool = Column(Boolean, nullable=False)
-  date_added: datetime.datetime = Column(DateTime,
-                                         nullable=False,
-                                         default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = Column(
+    DateTime, nullable=False, default=datetime.datetime.utcnow
+  )
 
-  keywords: 'Keywords' = orm.relationship("Keywords")
+  keywords: "Keywords" = orm.relationship("Keywords")
 
   def ToDict(self) -> typing.Dict[str, str]:
     return {
-        "relpath": self.relpath,
-        "camera": self.camera,
-        "lens": self.lens,
-        "iso": self.iso,
-        "shutter_speed": self.shutter_speed,
-        "aperture": self.aperture,
-        "focal_length_35mm": self.focal_length_35mm,
-        "flash_fired": self.flash_fired,
-        "keywords": ",".join(self.keywords.AsList())
+      "relpath": self.relpath,
+      "camera": self.camera,
+      "lens": self.lens,
+      "iso": self.iso,
+      "shutter_speed": self.shutter_speed,
+      "aperture": self.aperture,
+      "focal_length_35mm": self.focal_length_35mm,
+      "flash_fired": self.flash_fired,
+      "keywords": ",".join(self.keywords.AsList()),
     }
 
 
 class Keywords(Base):
   """A set of image keywords."""
+
   __tablename__ = "keywords"
 
   id: int = Column(Integer, primary_key=True)
   keywords: str = Column(String(4096), nullable=False, unique=True)
 
   def AsList(self) -> typing.List[str]:
-    return self.keywords.split(',')
+    return self.keywords.split(",")
 
   def AsSet(self) -> typing.Set[str]:
     return set(self.AsList())
@@ -100,10 +102,10 @@ class XmpCache(sqlutil.Database):
     """Refresh version."""
     meta_key = "version"
 
-    cached_version = self.session.query(Meta) \
-      .filter(Meta.key == meta_key) \
-      .first()
-    cached_version_str = (cached_version.value if cached_version else "")
+    cached_version = (
+      self.session.query(Meta).filter(Meta.key == meta_key).first()
+    )
+    cached_version_str = cached_version.value if cached_version else ""
 
     actual_version = Meta(key=meta_key, value=build_info.Version())
 
@@ -116,8 +118,9 @@ class XmpCache(sqlutil.Database):
       self.session.add(actual_version)
       self.session.commit()
 
-  def _CreateXmpCacheEntry(self, abspath: str, relpath: str, relpath_md5: str,
-                           mtime: float) -> XmpCacheEntry:
+  def _CreateXmpCacheEntry(
+    self, abspath: str, relpath: str, relpath_md5: str, mtime: float
+  ) -> XmpCacheEntry:
     """
     Add a new database entry for the given values.
 
@@ -128,88 +131,104 @@ class XmpCache(sqlutil.Database):
     """
     try:
       xmp = xmputils.file_to_dict(abspath)
-      lightroom_tags = xmp['http://ns.adobe.com/lightroom/1.0/']
+      lightroom_tags = xmp["http://ns.adobe.com/lightroom/1.0/"]
 
       keywords = set([e[1] for e in lightroom_tags if e[1]])
 
       iso = int(
-          _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/',
-                          'exifEX:PhotographicSensitivity', 0))
+        _GetFromXmpDict(
+          xmp, "http://cipa.jp/exif/1.0/", "exifEX:PhotographicSensitivity", 0
+        )
+      )
 
-      camera_make = _GetFromXmpDict(xmp, 'http://ns.adobe.com/tiff/1.0/',
-                                    'tiff:Make')
-      camera_model = _GetFromXmpDict(xmp, 'http://ns.adobe.com/tiff/1.0/',
-                                     'tiff:Model')
+      camera_make = _GetFromXmpDict(
+        xmp, "http://ns.adobe.com/tiff/1.0/", "tiff:Make"
+      )
+      camera_model = _GetFromXmpDict(
+        xmp, "http://ns.adobe.com/tiff/1.0/", "tiff:Model"
+      )
       if camera_make and camera_model:
-        camera = f'{camera_make} {camera_model}'
+        camera = f"{camera_make} {camera_model}"
       else:
-        camera = ''
+        camera = ""
 
-      shutter_speed = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/',
-                                      'exif:ExposureTime')
-      aperture = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/',
-                                 'exif:FNumber')
-      focal_length_35mm = _GetFromXmpDict(xmp, 'http://ns.adobe.com/exif/1.0/',
-                                          'exif:FocalLengthIn35mmFilm')
-      flash_fired = (True if _GetFromXmpDict(
-          xmp, 'http://ns.adobe.com/exif/1.0/',
-          'exif:Flash/exif:Fired') == 'True' else False)
+      shutter_speed = _GetFromXmpDict(
+        xmp, "http://ns.adobe.com/exif/1.0/", "exif:ExposureTime"
+      )
+      aperture = _GetFromXmpDict(
+        xmp, "http://ns.adobe.com/exif/1.0/", "exif:FNumber"
+      )
+      focal_length_35mm = _GetFromXmpDict(
+        xmp, "http://ns.adobe.com/exif/1.0/", "exif:FocalLengthIn35mmFilm"
+      )
+      flash_fired = (
+        True
+        if _GetFromXmpDict(
+          xmp, "http://ns.adobe.com/exif/1.0/", "exif:Flash/exif:Fired"
+        )
+        == "True"
+        else False
+      )
 
-      lens_make = _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/',
-                                  'exifEX:LensMake')
-      lens_model = _GetFromXmpDict(xmp, 'http://cipa.jp/exif/1.0/',
-                                   'exifEX:LensModel')
+      lens_make = _GetFromXmpDict(
+        xmp, "http://cipa.jp/exif/1.0/", "exifEX:LensMake"
+      )
+      lens_model = _GetFromXmpDict(
+        xmp, "http://cipa.jp/exif/1.0/", "exifEX:LensModel"
+      )
       if lens_make and lens_model:
-        lens = f'{lens_make} {lens_model}'
+        lens = f"{lens_make} {lens_model}"
       elif lens_make:
         lens = lens_make
       elif lens_model:
         lens = lens_model
       else:
-        lens = ''
+        lens = ""
     except KeyError:
-      app.Log(2, 'Failed to read keywords of file: `%s`', abspath)
+      app.Log(2, "Failed to read keywords of file: `%s`", abspath)
       keywords = []
       iso = 0
-      camera = ''
-      lens = ''
-      shutter_speed = ''
-      aperture = ''
-      focal_length_35mm = ''
+      camera = ""
+      lens = ""
+      shutter_speed = ""
+      aperture = ""
+      focal_length_35mm = ""
       flash_fired = False
 
-    keywords_ = sqlutil.GetOrAdd(self.session,
-                                 Keywords,
-                                 keywords=",".join(keywords))
+    keywords_ = sqlutil.GetOrAdd(
+      self.session, Keywords, keywords=",".join(keywords)
+    )
     entry = XmpCacheEntry(
-        relpath_md5=relpath_md5,
-        relpath=relpath,
-        mtime=int(mtime),
-        keywords=keywords_,
-        iso=iso,
-        camera=camera,
-        lens=lens,
-        shutter_speed=shutter_speed,
-        aperture=aperture,
-        focal_length_35mm=focal_length_35mm,
-        flash_fired=flash_fired,
+      relpath_md5=relpath_md5,
+      relpath=relpath,
+      mtime=int(mtime),
+      keywords=keywords_,
+      iso=iso,
+      camera=camera,
+      lens=lens,
+      shutter_speed=shutter_speed,
+      aperture=aperture,
+      focal_length_35mm=focal_length_35mm,
+      flash_fired=flash_fired,
     )
     self.session.add(entry)
     self.session.commit()
     return entry
 
-  def GetOrCreateXmpCacheEntry(self, abspath: str,
-                               relpath: str) -> XmpCacheEntry:
+  def GetOrCreateXmpCacheEntry(
+    self, abspath: str, relpath: str
+  ) -> XmpCacheEntry:
     relpath_md5 = common.Md5String(relpath).digest()
     mtime = int(os.path.getmtime(abspath))
-    entry = self.session \
-      .query(XmpCacheEntry) \
-      .filter(XmpCacheEntry.relpath_md5 == relpath_md5) \
+    entry = (
+      self.session.query(XmpCacheEntry)
+      .filter(XmpCacheEntry.relpath_md5 == relpath_md5)
       .first()
+    )
 
     if entry and entry.mtime == mtime:
       return entry
-    elif entry and entry.mtime != mtime and not abspath.endswith('.mov'):
+    elif entry and entry.mtime != mtime and not abspath.endswith(".mov"):
       self.session.delete(entry)
       entry = self._CreateXmpCacheEntry(abspath, relpath, relpath_md5, mtime)
       app.Log(2, "Refreshed cached XMP metadata `%s`", relpath)
@@ -236,10 +255,11 @@ class XmpCache(sqlutil.Database):
 
 
 def _GetFromXmpDict(
-    xmp: typing.Dict[str, typing.Tuple[str, str, typing.Dict[str, str]]],
-    xmp_type: str,
-    tag_name: str,
-    default=''):
+  xmp: typing.Dict[str, typing.Tuple[str, str, typing.Dict[str, str]]],
+  xmp_type: str,
+  tag_name: str,
+  default="",
+):
   keywords = xmp.get(xmp_type, {})
   for tag_, val, _ in keywords:
     if tag_ == tag_name:

@@ -45,24 +45,28 @@ def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
     ValueError: If the requested name cannot be found or is not a
       @dataset_preprocessor decorated function.
   """
-  components = name.split(':')
+  components = name.split(":")
   if len(components) != 2:
-    raise ValueError(f'Invalid preprocessor name {name}')
+    raise ValueError(f"Invalid preprocessor name {name}")
   module_name, function_name = components
   try:
     module = importlib.import_module(module_name)
     function_ = getattr(module, function_name)
   except (ModuleNotFoundError, AttributeError):
-    raise ValueError(f'Preprocessor {name} not found.')
-  if not function_.__dict__.get('is_dataset_preprocessor'):
+    raise ValueError(f"Preprocessor {name} not found.")
+  if not function_.__dict__.get("is_dataset_preprocessor"):
     raise ValueError(
-        f'Preprocessor {name} not decorated with @dataset_preprocessor')
+      f"Preprocessor {name} not decorated with @dataset_preprocessor"
+    )
   return function_
 
 
-def Preprocess(import_root: pathlib.Path, file_relpath: str,
-               all_file_relpaths: typing.List[str],
-               preprocessors: typing.List[str]) -> typing.List[str]:
+def Preprocess(
+  import_root: pathlib.Path,
+  file_relpath: str,
+  all_file_relpaths: typing.List[str],
+  preprocessors: typing.List[str],
+) -> typing.List[str]:
   """Preprocess a text using the given preprocessor pipeline.
 
   If preprocessing succeeds, the preprocessed text is returned. If preprocessing
@@ -98,9 +102,11 @@ def Preprocess(import_root: pathlib.Path, file_relpath: str,
   next_texts = []
   for preprocessor in preprocessor_functions:
     for text in texts:
-      next_texts += preprocessor(import_root=import_root,
-                                 file_relpath=file_relpath,
-                                 text=text,
-                                 all_file_relpaths=all_file_relpaths)
+      next_texts += preprocessor(
+        import_root=import_root,
+        file_relpath=file_relpath,
+        text=text,
+        all_file_relpaths=all_file_relpaths,
+      )
     texts = next_texts
   return texts

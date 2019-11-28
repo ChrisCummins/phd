@@ -34,23 +34,29 @@ from labm8.py import system
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer('llvm_as_timeout_seconds', 60,
-                   'The maximum number of seconds to allow process to run.')
+app.DEFINE_integer(
+  "llvm_as_timeout_seconds",
+  60,
+  "The maximum number of seconds to allow process to run.",
+)
 
-_LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
+_LLVM_REPO = "llvm_linux" if system.is_linux() else "llvm_mac"
 
 # Path to llvm-as binary.
-LLVM_AS = bazelutil.DataPath(f'{_LLVM_REPO}/bin/llvm-as')
+LLVM_AS = bazelutil.DataPath(f"{_LLVM_REPO}/bin/llvm-as")
 
 
 class LlvmAsError(llvm.LlvmError):
   """An error from llvm-as."""
+
   pass
 
 
-def Exec(args: typing.List[str],
-         stdin: typing.Optional[str] = None,
-         timeout_seconds: int = 60) -> subprocess.Popen:
+def Exec(
+  args: typing.List[str],
+  stdin: typing.Optional[str] = None,
+  timeout_seconds: int = 60,
+) -> subprocess.Popen:
   """Run llvm-as.
 
   Args:
@@ -64,19 +70,21 @@ def Exec(args: typing.List[str],
   Raises:
     LlvmTimeout: If llvm-as does not complete before timeout_seconds.
   """
-  cmd = ['timeout', '-s9', str(timeout_seconds), str(LLVM_AS)] + args
-  app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             stdin=subprocess.PIPE if stdin else None,
-                             universal_newlines=True)
+  cmd = ["timeout", "-s9", str(timeout_seconds), str(LLVM_AS)] + args
+  app.Log(3, "$ %s", " ".join(cmd))
+  process = subprocess.Popen(
+    cmd,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    stdin=subprocess.PIPE if stdin else None,
+    universal_newlines=True,
+  )
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:
     stdout, stderr = process.communicate()
   if process.returncode == 9:
-    raise llvm.LlvmTimeout(f'llvm-as timed out after {timeout_seconds}s')
+    raise llvm.LlvmTimeout(f"llvm-as timed out after {timeout_seconds}s")
   process.stdout = stdout
   process.stderr = stderr
   return process
@@ -96,5 +104,5 @@ def main(argv: typing.List[str]):
     sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

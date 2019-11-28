@@ -41,15 +41,15 @@ class HeterogeneousMappingModelTest(object):
 
   def test_save_restore(self):
     """Test that models can be saved and restored from file."""
-    with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    with tempfile.TemporaryDirectory(prefix="phd_") as d:
       tempdir = pathlib.Path(d)
 
       model_to_file = self.model_class(**self.model_init_opts)
       model_to_file.init(0, self.atomizer)
-      model_to_file.save(tempdir / 'model')
+      model_to_file.save(tempdir / "model")
 
       model_from_file = self.model_class(**self.model_init_opts)
-      model_from_file.restore(tempdir / 'model')
+      model_from_file.restore(tempdir / "model")
       # We can't test that restoring the model from file actually does anything,
       # since we don't have __eq__ operator implemented for models.
 
@@ -57,5 +57,5 @@ class HeterogeneousMappingModelTest(object):
     """Test that models can be trained, and used to make predictions."""
     model = self.model_class(**self.model_init_opts)
     model.init(0, self.atomizer)
-    model.train(self.df, 'amd_tahiti_7970')
-    model.predict(self.df, 'amd_tahiti_7970')
+    model.train(self.df, "amd_tahiti_7970")
+    model.predict(self.df, "amd_tahiti_7970")

@@ -9,10 +9,11 @@ from util.freefocus.sql import *
 
 
 def build_graph(
-    session, make_id: 'lambda item: object, type: str',
-    add_node: 'lambda id: str, item: object, type: str',
-    add_edge: 'lambda from_id: str, to_id: str, type: Tuple[str, str]'):
-
+  session,
+  make_id: "lambda item: object, type: str",
+  add_node: "lambda id: str, item: object, type: str",
+  add_edge: "lambda from_id: str, to_id: str, type: Tuple[str, str]",
+):
   def plot_items(parent_label, items: List[Base], node_type, edge_type):
     for item in items:
       label = make_id(item, type=node_type)
@@ -20,66 +21,72 @@ def build_graph(
         continue
       add_edge(parent_label, label, type=edge_type)
 
-      if hasattr(item, 'created_by') and item.created_by:
+      if hasattr(item, "created_by") and item.created_by:
         add_edge(
-            make_id(item.created_by, type='group'),
-            label,
-            type=("person", edge_type[1]))
+          make_id(item.created_by, type="group"),
+          label,
+          type=("person", edge_type[1]),
+        )
 
-      if hasattr(item, 'members'):
+      if hasattr(item, "members"):
         plot_items(
-            label,
-            item.members,
-            node_type="person",
-            edge_type=("group", "person"))
+          label, item.members, node_type="person", edge_type=("group", "person")
+        )
 
-      if hasattr(item, 'comments'):
+      if hasattr(item, "comments"):
         plot_items(
-            label,
-            item.comments,
-            node_type="comment",
-            edge_type=(edge_type[1], "comment"))
+          label,
+          item.comments,
+          node_type="comment",
+          edge_type=(edge_type[1], "comment"),
+        )
 
-      if hasattr(item, 'tags'):
+      if hasattr(item, "tags"):
         for tag in item.tags:
-          add_edge(make_id(tag, type='tag'), label, type=("tag", edge_type[1]))
+          add_edge(make_id(tag, type="tag"), label, type=("tag", edge_type[1]))
 
-      if hasattr(item, 'assets'):
+      if hasattr(item, "assets"):
         for asset in item.assets:
           add_edge(
-              make_id(asset, type='asset'), label, type=("asset", edge_type[1]))
+            make_id(asset, type="asset"), label, type=("asset", edge_type[1])
+          )
 
-      if hasattr(item, 'children'):
-        plot_items(label, item.children, node_type,
-                   (edge_type[1], edge_type[1]))
+      if hasattr(item, "children"):
+        plot_items(
+          label, item.children, node_type, (edge_type[1], edge_type[1])
+        )
 
   workspace = session.query(Workspace).one()
-  workspace_label = make_id(workspace, 'workspace')
+  workspace_label = make_id(workspace, "workspace")
   add_node(workspace_label, workspace, type="workspace")
 
   plot_items(  # groups
-      workspace_label,
-      session.query(Group).filter(Group.parent == None).all(),
-      node_type="group",
-      edge_type=("workspace", "group"))
+    workspace_label,
+    session.query(Group).filter(Group.parent == None).all(),
+    node_type="group",
+    edge_type=("workspace", "group"),
+  )
 
   plot_items(  # assets
-      workspace_label,
-      session.query(Asset).filter(Asset.parent == None).all(),
-      node_type="asset",
-      edge_type=("workspace", "asset"))
+    workspace_label,
+    session.query(Asset).filter(Asset.parent == None).all(),
+    node_type="asset",
+    edge_type=("workspace", "asset"),
+  )
 
   plot_items(  # tags
-      workspace_label,
-      session.query(Tag).filter(Tag.parent == None).all(),
-      node_type="tag",
-      edge_type=("workspace", "tag"))
+    workspace_label,
+    session.query(Tag).filter(Tag.parent == None).all(),
+    node_type="tag",
+    edge_type=("workspace", "tag"),
+  )
 
   plot_items(  # tasks
-      workspace_label,
-      session.query(Task).filter(Task.parent == None).all(),
-      node_type="task",
-      edge_type=("workspace", "task"))
+    workspace_label,
+    session.query(Task).filter(Task.parent == None).all(),
+    node_type="task",
+    edge_type=("workspace", "task"),
+  )
 
 
 if __name__ == "__main__":
@@ -101,10 +108,10 @@ if __name__ == "__main__":
   session = make_session()
 
   def build_html():
-    graph = {'nodes': [], 'links': []}
+    graph = {"nodes": [], "links": []}
 
     def escape(string):
-      line = str(string).strip().split('\n')[0]
+      line = str(string).strip().split("\n")[0]
       if len(line) > 30:
         return line[:27] + "..."
       else:
@@ -112,49 +119,49 @@ if __name__ == "__main__":
 
     def make_id(item, type):
       if type == "workspace":
-        return escape(f'Workspace: {item.uid}')
+        return escape(f"Workspace: {item.uid}")
       elif type == "person":
         return escape(f"Person: {item.name}")
       elif type == "group":
-        return escape(f'Group: {item.body}')
-      elif type == 'asset':
-        return escape(f'Asset: {item.body}')
-      elif type == 'tag':
-        return escape(f'Tag: {item.body}')
-      elif type == 'task':
-        return escape(f'Task: {item.body}')
-      elif type == 'comment':
-        return escape(f'Comment: {item.body}')
+        return escape(f"Group: {item.body}")
+      elif type == "asset":
+        return escape(f"Asset: {item.body}")
+      elif type == "tag":
+        return escape(f"Tag: {item.body}")
+      elif type == "task":
+        return escape(f"Task: {item.body}")
+      elif type == "comment":
+        return escape(f"Comment: {item.body}")
       else:
         raise LookupError(type)
 
     def add_node(id, item, type):
-      if hasattr(item, 'completed'):
+      if hasattr(item, "completed"):
         if item.completed != None and not args.complete:
           return False
 
       groups = {
-          'workspace': 1,
-          'person': 2,
-          'group': 3,
-          'asset': 4,
-          'tag': 5,
-          'task': 6,
-          'comment': 7,
+        "workspace": 1,
+        "person": 2,
+        "group": 3,
+        "asset": 4,
+        "tag": 5,
+        "task": 6,
+        "comment": 7,
       }
 
-      graph['nodes'].append({'id': id, 'group': groups[type]})
+      graph["nodes"].append({"id": id, "group": groups[type]})
       return True
 
     def add_edge(from_id, to_id, type):
       values = {
-          'workspace': 7,
-          'person': 6,
-          'group': 5,
-          'asset': 4,
-          'tag': 3,
-          'task': 2,
-          'comment': 1,
+        "workspace": 7,
+        "person": 6,
+        "group": 5,
+        "asset": 4,
+        "tag": 3,
+        "task": 2,
+        "comment": 1,
       }
 
       if type[0] == "person" and not args.created_by:
@@ -164,15 +171,14 @@ if __name__ == "__main__":
       if type[0] == "asset" and type[1] == "task" and not args.asset_refs:
         return
 
-      graph['links'].append({
-          'source': from_id,
-          "target": to_id,
-          "value": values[type[1]]
-      })
+      graph["links"].append(
+        {"source": from_id, "target": to_id, "value": values[type[1]]}
+      )
 
     build_graph(session, make_id, add_node, add_edge)
 
-    print("""\
+    print(
+      """\
 <!DOCTYPE html>
 <meta charset="utf-8">
 <!-- https://bl.ocks.org/mbostock/4062045 -->
@@ -274,14 +280,16 @@ redraw();
 </script>
 
 <button onclick="redraw()">Redraw</button>
-""" % json.dumps(graph, indent=2, separators=(',', ': ')))
+"""
+      % json.dumps(graph, indent=2, separators=(",", ": "))
+    )
 
   def build_dot():
     dot = Digraph(comment="FreeFocus")
-    dot.graph_attr['rankdir'] = 'LR'
+    dot.graph_attr["rankdir"] = "LR"
 
     def escape(string):
-      line = str(string).strip().split('\n')[0].replace(":", "/")
+      line = str(string).strip().split("\n")[0].replace(":", "/")
       if len(line) > 30:
         return line[:27] + "..."
       else:
@@ -293,45 +301,45 @@ redraw();
       elif type == "person":
         return escape(f"__persons__.{item.name}")
       elif type == "group":
-        return escape(f'__groups__.{item.body}')
-      elif type == 'asset':
-        return escape(f'__assets__.{item.body}')
-      elif type == 'tag':
-        return escape(f'__tags__.{item.body}')
-      elif type == 'task':
-        return escape(f'__tasks__.{item.body}')
-      elif type == 'comment':
-        return escape(f'__comments__.{item.body}')
+        return escape(f"__groups__.{item.body}")
+      elif type == "asset":
+        return escape(f"__assets__.{item.body}")
+      elif type == "tag":
+        return escape(f"__tags__.{item.body}")
+      elif type == "task":
+        return escape(f"__tasks__.{item.body}")
+      elif type == "comment":
+        return escape(f"__comments__.{item.body}")
       else:
         raise LookupError(type)
 
     def add_node(id, item, type):
-      if hasattr(item, 'completed'):
+      if hasattr(item, "completed"):
         if item.completed != None and not args.complete:
           return False
 
-      node_opts = {'shape': 'rect', 'style': 'filled'}
+      node_opts = {"shape": "rect", "style": "filled"}
 
       if type == "workspace":
         name = item.uid
       elif type == "person":
         name = f"@persons//{item.name}"
-        node_opts['fillcolor'] = '#FFD1DC'
+        node_opts["fillcolor"] = "#FFD1DC"
       elif type == "group":
-        name = f'@groups//{item.body}'
-        node_opts['fillcolor'] = '#77DD77'
-      elif type == 'asset':
-        name = f'@assets//{item.body}'
-        node_opts['fillcolor'] = '#FFD1DC'
-      elif type == 'tag':
-        name = f'@tags//{item.body}'
-        node_opts['fillcolor'] = '#AEC6CF'
-      elif type == 'task':
-        name = f'@tasks//{item.body}'
-        node_opts['fillcolor'] = '#FFB347'
-      elif type == 'comment':
-        name = f'@comments//{item.body}'
-        node_opts['fillcolor'] = '#FDFD96'
+        name = f"@groups//{item.body}"
+        node_opts["fillcolor"] = "#77DD77"
+      elif type == "asset":
+        name = f"@assets//{item.body}"
+        node_opts["fillcolor"] = "#FFD1DC"
+      elif type == "tag":
+        name = f"@tags//{item.body}"
+        node_opts["fillcolor"] = "#AEC6CF"
+      elif type == "task":
+        name = f"@tasks//{item.body}"
+        node_opts["fillcolor"] = "#FFB347"
+      elif type == "comment":
+        name = f"@comments//{item.body}"
+        node_opts["fillcolor"] = "#FDFD96"
       else:
         name = id
 

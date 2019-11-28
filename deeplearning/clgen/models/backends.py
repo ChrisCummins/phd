@@ -32,19 +32,23 @@ class BackendBase(object):
   A language model backend encapsulates all of the neural network logic.
   """
 
-  def __init__(self, config: model_pb2.Model, fs_cache: cache.FSCache,
-               atomizer: atomizers.AtomizerBase):
+  def __init__(
+    self,
+    config: model_pb2.Model,
+    fs_cache: cache.FSCache,
+    atomizer: atomizers.AtomizerBase,
+  ):
     self.config = config
     self.cache = fs_cache
     self.atomizer = atomizer
 
-  def Train(self, corpus: 'Corpus', **extra_kwargs) -> None:
+  def Train(self, corpus: "Corpus", **extra_kwargs) -> None:
     """Train the backend."""
     raise NotImplementedError
 
-  def InitSampling(self,
-                   sampler: samplers.Sampler,
-                   seed: typing.Optional[int] = None) -> None:
+  def InitSampling(
+    self, sampler: samplers.Sampler, seed: typing.Optional[int] = None
+  ) -> None:
     """Initialize backend for sampling."""
     raise NotImplementedError
 
@@ -52,8 +56,9 @@ class BackendBase(object):
     """Begin a new sampling batch. Only called after InitSampling()."""
     raise NotImplementedError
 
-  def SampleNextIndices(self, sampler: samplers.Sampler,
-                        done: np.ndarray) -> np.ndarray:
+  def SampleNextIndices(
+    self, sampler: samplers.Sampler, done: np.ndarray
+  ) -> np.ndarray:
     """Sample the next indices for the current sample batch.
 
     Returns:

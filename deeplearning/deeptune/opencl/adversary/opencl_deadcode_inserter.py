@@ -57,17 +57,22 @@ class OpenClFunction(object):
       ValueError: If the name could not be set.
     """
     if self.is_kernel:
-      self.src, num_replacements = re.subn(r'^kernel void ([A-Z]+)\(',
-                                           f'kernel void {new_name}(', self.src)
+      self.src, num_replacements = re.subn(
+        r"^kernel void ([A-Z]+)\(", f"kernel void {new_name}(", self.src
+      )
     else:
-      self.src, num_replacements = re.subn(r'^void ([A-Z]+)\(',
-                                           f'void {new_name}(', self.src)
+      self.src, num_replacements = re.subn(
+        r"^void ([A-Z]+)\(", f"void {new_name}(", self.src
+      )
     if num_replacements != 1:
-      raise ValueError(f"{num_replacements} substitutions made when trying to "
-                       f"set function name to '{new_name}'")
+      raise ValueError(
+        f"{num_replacements} substitutions made when trying to "
+        f"set function name to '{new_name}'"
+      )
 
-  def InsertBlockIntoKernel(self, rand: np.random.RandomState,
-                            block_to_insert: str) -> None:
+  def InsertBlockIntoKernel(
+    self, rand: np.random.RandomState, block_to_insert: str
+  ) -> None:
     """Insert a code block at a random position in the kernel.
 
     Args:
@@ -77,7 +82,7 @@ class OpenClFunction(object):
     if not self.is_kernel:
       raise TypeError("Cannot insert block into non-kernel.")
 
-    lines = self.src.split('\n')
+    lines = self.src.split("\n")
     if len(lines) < 2:
       raise ValueError("OpenCL kernel is less than two lines long.")
     # Try and find a point to
@@ -85,41 +90,46 @@ class OpenClFunction(object):
     rand.shuffle(indices)
     for insertion_line_idx in indices:
       previous_line = lines[insertion_line_idx - 1]
-      if previous_line[-1] == ';' or previous_line[-1] == '{':
+      if previous_line[-1] == ";" or previous_line[-1] == "{":
         # The previous line was either a statement or the start of a new block: we
         # can insert the block here.
         break
       else:
         app.Log(
-            2, 'Previous line "%s" not valid as a code block insertion '
-            'point', previous_line)
+          2,
+          'Previous line "%s" not valid as a code block insertion ' "point",
+          previous_line,
+        )
     else:
       raise ValueError(
-          f"Failed to find a position to insert block in function '{self.src}'")
+        f"Failed to find a position to insert block in function '{self.src}'"
+      )
 
     pre = lines[:insertion_line_idx]
     post = lines[insertion_line_idx:]
 
     indendation_at_point_of_insertion = 0
     for c in pre[-1]:
-      if c == ' ':
+      if c == " ":
         indendation_at_point_of_insertion += 1
       else:
         break
     else:
       raise ValueError(f"Line contains nothing but whitespace: '{pre[-1]}'")
 
-    if previous_line[-1] == '{':
+    if previous_line[-1] == "{":
       # Inserting block at the start of a new block, increase indentation.
       indendation_at_point_of_insertion += 2
 
     if indendation_at_point_of_insertion < 2:
-      raise ValueError("Line has insufficient indentation "
-                       f"({indendation_at_point_of_insertion}): '{pre[-1]}'")
+      raise ValueError(
+        "Line has insufficient indentation "
+        f"({indendation_at_point_of_insertion}): '{pre[-1]}'"
+      )
 
     block = fmt.Indent(indendation_at_point_of_insertion, block_to_insert)
 
-    self.src = '\n'.join(pre + [block] + post)
+    self.src = "\n".join(pre + [block] + post)
 
 
 def GetKernelArguments(kernel: str):
@@ -135,7 +145,7 @@ def GetKernelArguments(kernel: str):
     # This will parse:
     #
     #   kernel void A(const int a, global float* b) {}
-    kernel_declaration = kernel[:kernel.index('{')] + '{}'
+    kernel_declaration = kernel[: kernel.index("{")] + "{}"
     return args.GetKernelArguments(kernel_declaration)
   except ValueError as e:
     app.Error("Failure processing kernel: '%s'", kernel)
@@ -154,19 +164,23 @@ def KernelToFunctionDeclaration(kernel: str) -> OpenClFunction:
   Raises:
     ValueError: If kernel is invalid.
   """
-  match = re.match(r'^(kernel )?void ([A-Z]+)\(', kernel)
+  match = re.match(r"^(kernel )?void ([A-Z]+)\(", kernel)
   if not match:
     raise ValueError("Not a valid OpenCL function")
   name = match.group(2)
-  args_string = ', '.join(str(a) for a in GetKernelArguments(kernel))
-  return OpenClFunction(f'void {name}({args_string});', is_kernel=False)
+  args_string = ", ".join(str(a) for a in GetKernelArguments(kernel))
+  return OpenClFunction(f"void {name}({args_string});", is_kernel=False)
 
 
 def KernelArgumentToVariableDeclaration(arg: args.KernelArg) -> str:
   s = []
   for qual in arg.quals:
-    if (qual != "global" and qual != "local" and qual != "constant" and
-        qual != 'const'):
+    if (
+      qual != "global"
+      and qual != "local"
+      and qual != "constant"
+      and qual != "const"
+    ):
       s.append(qual)
   s.append(arg.typename)
   if arg.is_pointer:
@@ -179,22 +193,22 @@ def KernelArgumentToVariableDeclaration(arg: args.KernelArg) -> str:
 def KernelToDeadCodeBlock(kernel: str) -> str:
   # Convert arguments to variable declarations.
   declarations = [
-      KernelArgumentToVariableDeclaration(a) for a in GetKernelArguments(kernel)
+    KernelArgumentToVariableDeclaration(a) for a in GetKernelArguments(kernel)
   ]
   # The block header is the list of argument variable declarations.
-  header = '\n'.join(fmt.IndentList(2, declarations))
+  header = "\n".join(fmt.IndentList(2, declarations))
   # The block body is the kernel body. The kernel body is already indented, no
   # need to indent further.
-  body = '\n'.join(kernel.split('\n')[1:-1])
+  body = "\n".join(kernel.split("\n")[1:-1])
   # Wrap block in `if (0) { ... }` conditional.
   return f"if (0) {{\n{header}\n{body}\n}}"
 
 
 def KernelToFunction(kernel: str) -> OpenClFunction:
-  if not kernel.startswith('kernel void '):
+  if not kernel.startswith("kernel void "):
     raise ValueError("Invalid kernel")
   else:
-    return OpenClFunction(kernel[len('kernel '):], is_kernel=False)
+    return OpenClFunction(kernel[len("kernel ") :], is_kernel=False)
 
 
 class UniqueNameSequence(object):
@@ -204,7 +218,7 @@ class UniqueNameSequence(object):
   E.g. 'a', 'b', 'c', ... 'aa', 'ab', ...
   """
 
-  def __init__(self, base_char: str, prefix: str = '', suffix: str = ''):
+  def __init__(self, base_char: str, prefix: str = "", suffix: str = ""):
     """Instantiate a unique name sequence.
 
     Args:
@@ -215,7 +229,7 @@ class UniqueNameSequence(object):
     Raises:
       ValueError: If base_char is not 'a' or 'A'.
     """
-    if base_char not in {'a', 'A'}:
+    if base_char not in {"a", "A"}:
       raise ValueError(f"Invalid base_char '{base_char}'")
     self._base_ord = ord(base_char)
     self._prefix = prefix
@@ -238,7 +252,7 @@ class UniqueNameSequence(object):
       raise ValueError
     s = [self._prefix]
 
-    while (i > 25):
+    while i > 25:
       k = i // 26
       i %= 26
       s.append(chr(self._base_ord - 1 + k))
@@ -246,7 +260,7 @@ class UniqueNameSequence(object):
 
     s.append(self._suffix)
 
-    return ''.join(s)
+    return "".join(s)
 
   def __iter__(self):
     return self
@@ -261,8 +275,12 @@ class UniqueNameSequence(object):
 class OpenClDeadcodeInserter(object):
   """A dead code OpenCL source mutator."""
 
-  def __init__(self, rand: np.random.RandomState, kernel: str,
-               candidate_kernels: typing.List[str]):
+  def __init__(
+    self,
+    rand: np.random.RandomState,
+    kernel: str,
+    candidate_kernels: typing.List[str],
+  ):
     """Constructor.
 
     Args:
@@ -278,14 +296,14 @@ class OpenClDeadcodeInserter(object):
       if not src.startswith("kernel void "):
         raise ValueError("Invalid kernel")
       # Strip trailing whitespace, and exclude blank lines.
-      return '\n'.join(ln.rstrip() for ln in src.split('\n') if ln.rstrip())
+      return "\n".join(ln.rstrip() for ln in src.split("\n") if ln.rstrip())
 
     self._rand = rand
 
     # A list of code blocks, where each code block is a function definition or
     # declaration.
     self._functions = [
-        OpenClFunction(_PreprocessKernel(kernel), is_kernel=True)
+      OpenClFunction(_PreprocessKernel(kernel), is_kernel=True)
     ]
 
     if not len(candidate_kernels):
@@ -297,25 +315,30 @@ class OpenClDeadcodeInserter(object):
   def opencl_source(self) -> str:
     """Serialize the mutated source to a string."""
     # Rename the functions.
-    gen = UniqueNameSequence(base_char='A')
+    gen = UniqueNameSequence(base_char="A")
     [cb.SetFunctionName(next(gen)) for cb in self._functions]
 
-    return '\n\n'.join([cb.src for cb in self._functions])
+    return "\n\n".join([cb.src for cb in self._functions])
 
   def Mutate(self) -> None:
     """Run a random mutation."""
-    mutator = self._rand.choice([
-        self.PrependUnusedFunction, self.AppendUnusedFunction,
+    mutator = self._rand.choice(
+      [
+        self.PrependUnusedFunction,
+        self.AppendUnusedFunction,
         self.PrependUnusedFunctionDeclaration,
-        self.AppendUnusedFunctionDeclaration, self.InsertBlockIntoKernel
-    ])
+        self.AppendUnusedFunctionDeclaration,
+        self.InsertBlockIntoKernel,
+      ]
+    )
     mutator()
 
   def PrependUnusedFunctionDeclaration(self) -> None:
     # Select a random function to declare.
     to_prepend = self._rand.choice(self._candidates)
-    self._functions = [KernelToFunctionDeclaration(to_prepend)
-                      ] + self._functions
+    self._functions = [
+      KernelToFunctionDeclaration(to_prepend)
+    ] + self._functions
 
   def AppendUnusedFunctionDeclaration(self) -> None:
     # Select a random function to declare.
@@ -333,16 +356,17 @@ class OpenClDeadcodeInserter(object):
   def InsertBlockIntoKernel(self) -> None:
     to_modify = self._rand.choice([f for f in self._functions if f.is_kernel])
     to_insert = self._rand.choice(self._candidates)
-    to_modify.InsertBlockIntoKernel(self._rand,
-                                    KernelToDeadCodeBlock(to_insert))
+    to_modify.InsertBlockIntoKernel(
+      self._rand, KernelToDeadCodeBlock(to_insert)
+    )
 
 
 def GenerateDeadcodeMutations(
-    kernels: typing.Iterator[str],
-    rand: np.random.RandomState,
-    num_permutations_of_kernel: int = 5,
-    num_mutations_per_kernel: typing.Tuple[int, int] = (1, 5)) -> \
-    typing.Iterator[str]:
+  kernels: typing.Iterator[str],
+  rand: np.random.RandomState,
+  num_permutations_of_kernel: int = 5,
+  num_mutations_per_kernel: typing.Tuple[int, int] = (1, 5),
+) -> typing.Iterator[str]:
   """Generate dead code mutations for a set of kernels.
 
   Args:
@@ -364,8 +388,9 @@ def GenerateDeadcodeMutations(
 
       # RandomState.randint() is in range [low,high), hence add one to max to
       # make it inclusive.
-      num_mutations = rand.randint(num_mutations_per_kernel[0],
-                                   num_mutations_per_kernel[1] + 1)
+      num_mutations = rand.randint(
+        num_mutations_per_kernel[0], num_mutations_per_kernel[1] + 1
+      )
 
       for _ in range(num_mutations):
         dci.Mutate()

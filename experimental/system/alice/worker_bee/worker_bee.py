@@ -29,35 +29,47 @@ from labm8.py import system
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('worker_bee_hostname', None, 'The hostname.')
-app.DEFINE_integer('worker_bee_port', 5087, 'Port to listen for commands on.')
-app.DEFINE_string('worker_bee_repo_root', str(
-    pathlib.Path('~/phd').expanduser()), 'Path of worker bee root.')
-app.DEFINE_string('worker_bee_output_root', '/var/phd/alice/outputs/',
-                  'Path of worker bee root.')
-app.DEFINE_string('ledger', 'localhost:5088', 'The path of the ledger service.')
+app.DEFINE_string("worker_bee_hostname", None, "The hostname.")
+app.DEFINE_integer("worker_bee_port", 5087, "Port to listen for commands on.")
+app.DEFINE_string(
+  "worker_bee_repo_root",
+  str(pathlib.Path("~/phd").expanduser()),
+  "Path of worker bee root.",
+)
+app.DEFINE_string(
+  "worker_bee_output_root",
+  "/var/phd/alice/outputs/",
+  "Path of worker bee root.",
+)
+app.DEFINE_string("ledger", "localhost:5088", "The path of the ledger service.")
 
 
 class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
-
-  def __init__(self, ledger: alice_pb2_grpc.LedgerStub, repo: git_repo.PhdRepo,
-               output_dir: pathlib.Path):
+  def __init__(
+    self,
+    ledger: alice_pb2_grpc.LedgerStub,
+    repo: git_repo.PhdRepo,
+    output_dir: pathlib.Path,
+  ):
     self._ledger = ledger
     self._repo = repo
     self._bazel = bazel.BazelClient(repo.path, output_dir)
     self._processes: typing.Dict[int, bazel.BazelRunProcess] = {}
 
     self.ledger.RegisterWorkerBee(
-        alice_pb2.String(string=f'{self.hostname}:{FLAGS.worker_bee_port}'))
+      alice_pb2.String(string=f"{self.hostname}:{FLAGS.worker_bee_port}")
+    )
 
   def __del__(self):
     self.ledger.UnRegisterWorkerBee(
-        alice_pb2.String(string=f'{self.hostname}:{FLAGS.worker_bee_port}'))
+      alice_pb2.String(string=f"{self.hostname}:{FLAGS.worker_bee_port}")
+    )
 
     for ledger_id, process in self._processes.items():
       if process.is_alive():
-        app.Log(1, 'Waiting on job %d (process=%d) to finish', ledger_id,
-                process.pid)
+        app.Log(
+          1, "Waiting on job %d (process=%d) to finish", ledger_id, process.pid
+        )
         process.join()
       else:
         self.EndProcess(ledger_id)
@@ -119,13 +131,16 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     else:
       outcome = alice_pb2.LedgerEntry.RUN_FAILED
     return alice_pb2.LedgerEntry(
-        id=request.id,
-        job_status=(alice_pb2.LedgerEntry.RUNNING
-                    if process.is_alive() else alice_pb2.LedgerEntry.COMPLETE),
-        job_outcome=outcome,
-        stdout=process.stdout,
-        stderr=process.stderr,
-        returncode=returncode,
+      id=request.id,
+      job_status=(
+        alice_pb2.LedgerEntry.RUNNING
+        if process.is_alive()
+        else alice_pb2.LedgerEntry.COMPLETE
+      ),
+      job_outcome=outcome,
+      stdout=process.stdout,
+      stderr=process.stderr,
+      returncode=returncode,
     )
 
   @classmethod
@@ -136,7 +151,7 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
       A callable main method.
     """
     if len(argv) > 1:
-      raise app.UsageError('Unrecognized arguments')
+      raise app.UsageError("Unrecognized arguments")
 
     ledger_channel = grpc.insecure_channel(FLAGS.ledger)
     ledger = alice_pb2_grpc.LedgerStub(ledger_channel)
@@ -150,8 +165,8 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
     alice_pb2_grpc.add_WorkerBeeServicer_to_server(service, server)
 
     port = FLAGS.worker_bee_port
-    server.add_insecure_port(f'[::]:{port}')
-    app.Log(1, '🐝  Listening for commands on %s. Buzz ...', port)
+    server.add_insecure_port(f"[::]:{port}")
+    app.Log(1, "🐝  Listening for commands on %s. Buzz ...", port)
     server.start()
     try:
       while True:
@@ -160,5 +175,5 @@ class WorkerBee(alice_pb2_grpc.WorkerBeeServicer):
       server.stop(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(WorkerBee.Main)

@@ -12,27 +12,29 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db(tempdir: pathlib.Path):
-  return log_database.Database(f'sqlite:///{tempdir}/db')
+  return log_database.Database(f"sqlite:///{tempdir}/db")
 
 
 def MakeBatchLog():
-  log = log_database.BatchLogMeta(run_id='20191023@foo',
-                                  epoch=10,
-                                  batch=0,
-                                  global_step=1024,
-                                  elapsed_time_seconds=.5,
-                                  graph_count=100,
-                                  node_count=500,
-                                  loss=.25,
-                                  precision=.5,
-                                  recall=.5,
-                                  f1=.5,
-                                  accuracy=.75,
-                                  type="train",
-                                  group="0",
-                                  batch_log=log_database.BatchLog())
+  log = log_database.BatchLogMeta(
+    run_id="20191023@foo",
+    epoch=10,
+    batch=0,
+    global_step=1024,
+    elapsed_time_seconds=0.5,
+    graph_count=100,
+    node_count=500,
+    loss=0.25,
+    precision=0.5,
+    recall=0.5,
+    f1=0.5,
+    accuracy=0.75,
+    type="train",
+    group="0",
+    batch_log=log_database.BatchLog(),
+  )
   log.graph_indices = [0, 1, 2, 3]
   log.predictions = np.array([0, 1, 2, 3])
   log.accuracies = np.array([True, False, False])
@@ -45,18 +47,18 @@ def test_BatchLogMeta_columns(db: log_database.Database):
 
   with db.Session() as session:
     log = session.query(log_database.BatchLogMeta).first()
-    assert log.run_id == '20191023@foo'
+    assert log.run_id == "20191023@foo"
     assert log.epoch == 10
     assert log.batch == 0
     assert log.global_step == 1024
-    assert log.elapsed_time_seconds == .5
+    assert log.elapsed_time_seconds == 0.5
     assert log.graph_count == 100
     assert log.node_count == 500
-    assert log.loss == .25
-    assert log.precision == .5
-    assert log.recall == .5
-    assert log.f1 == .5
-    assert log.accuracy == .75
+    assert log.loss == 0.25
+    assert log.precision == 0.5
+    assert log.recall == 0.5
+    assert log.f1 == 0.5
+    assert log.accuracy == 0.75
     assert log.type == "train"
     assert log.group == "0"
     assert log.graph_indices == [0, 1, 2, 3]
@@ -72,10 +74,13 @@ def test_DeleteLogsForRunId(db: log_database.Database):
     session.add(log)
 
     session.add(
-        log_database.Parameter(run_id=run_id,
-                               parameter='foo',
-                               type=log_database.ParameterType.MODEL_FLAG,
-                               pickled_value=pickle.dumps('foo')))
+      log_database.Parameter(
+        run_id=run_id,
+        parameter="foo",
+        type=log_database.ParameterType.MODEL_FLAG,
+        pickled_value=pickle.dumps("foo"),
+      )
+    )
 
   db.DeleteLogsForRunId(run_id)
 
@@ -88,22 +93,30 @@ def test_DeleteLogsForRunId(db: log_database.Database):
 def test_run_ids(db: log_database.Database):
   """Test that property returns all run IDs."""
   with db.Session(commit=True) as session:
-    session.add_all([
-        log_database.Parameter(run_id='a',
-                               type=log_database.ParameterType.MODEL_FLAG,
-                               parameter='foo',
-                               pickled_value=pickle.dumps('foo')),
-        log_database.Parameter(run_id='a',
-                               type=log_database.ParameterType.MODEL_FLAG,
-                               parameter='bar',
-                               pickled_value=pickle.dumps('bar')),
-        log_database.Parameter(run_id='b',
-                               type=log_database.ParameterType.MODEL_FLAG,
-                               parameter='foo',
-                               pickled_value=pickle.dumps('foo')),
-    ])
-  assert db.run_ids == ['a', 'b']
+    session.add_all(
+      [
+        log_database.Parameter(
+          run_id="a",
+          type=log_database.ParameterType.MODEL_FLAG,
+          parameter="foo",
+          pickled_value=pickle.dumps("foo"),
+        ),
+        log_database.Parameter(
+          run_id="a",
+          type=log_database.ParameterType.MODEL_FLAG,
+          parameter="bar",
+          pickled_value=pickle.dumps("bar"),
+        ),
+        log_database.Parameter(
+          run_id="b",
+          type=log_database.ParameterType.MODEL_FLAG,
+          parameter="foo",
+          pickled_value=pickle.dumps("foo"),
+        ),
+      ]
+    )
+  assert db.run_ids == ["a", "b"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

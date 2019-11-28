@@ -10,7 +10,8 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 VOCABULARY_PATH = bazelutil.DataPath(
-    'phd/deeplearning/ncc/published_results/vocabulary.zip')
+  "phd/deeplearning/ncc/published_results/vocabulary.zip"
+)
 
 # LLVM IR for the following C function:
 #
@@ -66,7 +67,7 @@ attributes #0 = { noinline nounwind optnone ssp uwtable "correctly-rounded-divid
 """
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def vocab() -> vocabulary.VocabularyZipFile:
   """Test fixture which yields a vocabulary zip file instance as a ctx mngr."""
   with vocabulary.VocabularyZipFile(VOCABULARY_PATH) as v:
@@ -84,52 +85,62 @@ def test_VocabularyZipFile_dictionary_size(vocab: vocabulary.VocabularyZipFile):
 
 
 def test_VocabularyZipFile_dictionary_values_are_unique(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that values in vocabulary are unique."""
   assert len(set(vocab.dictionary.values())) == len(vocab.dictionary.values())
 
 
 def test_VocabularyZipFile_dictionary_values_are_positive_integers(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that values in vocabulary are unique."""
   for value in vocab.dictionary.values():
     assert value >= 0
 
 
 def test_VocabularyZipFile_cutoff_stmts_type(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that cutoff_stmts is a set."""
   assert isinstance(vocab.cutoff_stmts, set)
 
 
 def test_VocabularyZipFile_unknown_token_index_type(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that unknown token index is an integer."""
   assert isinstance(vocab.unknown_token_index, int)
   assert vocab.unknown_token_index > 0
 
 
 def test_VocabularyZipFile_unknown_token_index_value(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that unknown token index is positive."""
   assert vocab.unknown_token_index > 0
 
 
 def test_VocabularyZipFile_EncodeLlvmBytecode_bytecode(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that bytecode is set in return value."""
   result = vocab.EncodeLlvmBytecode(FIZZBUZZ_IR)
   assert result.input_bytecode == FIZZBUZZ_IR
 
 
 def test_VocabularyZipFile_EncodeLlvmBytecode_preprocessing(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test output of pre-processing bytecode."""
   options = inst2vec_pb2.EncodeBytecodeOptions(
-      set_bytecode_after_preprocessing=True)
+    set_bytecode_after_preprocessing=True
+  )
   result = vocab.EncodeLlvmBytecode(FIZZBUZZ_IR, options)
 
-  assert result.bytecode_after_preprocessing == """\
+  assert (
+    result.bytecode_after_preprocessing
+    == """\
 define i32 <@ID>(i32)
 <%ID> = alloca i32, align 4
 <%ID> = alloca i32, align 4
@@ -147,6 +158,7 @@ br label <%ID>
 ; <label>:<LABEL>: ; preds = <LABEL>, <LABEL>
 <%ID> = load i32, i32* <%ID>, align 4
 ret i32 <%ID>"""
+  )
 
 
 # LLVM IR for the following C code:
@@ -199,22 +211,27 @@ attributes #0 = { nounwind ssp uwtable "disable-tail-calls"="false" "less-precis
 
 
 def test_VocabularyZipFile_EncodeLlvmBytecode_struct_dict(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that struct appears in struct_dict."""
   options = inst2vec_pb2.EncodeBytecodeOptions(set_struct_dict=True)
   result = vocab.EncodeLlvmBytecode(BYTECODE_WITH_STRUCT, options)
 
-  assert dict(result.struct_dict) == {'%struct.Foo': '{ i32, i32 }'}
+  assert dict(result.struct_dict) == {"%struct.Foo": "{ i32, i32 }"}
 
 
 def test_VocabularyZipFile_EncodeLlvmBytecode_struct_not_in_preprocessed(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test that struct is inlined during pre-processing."""
   options = inst2vec_pb2.EncodeBytecodeOptions(
-      set_bytecode_after_preprocessing=True)
+    set_bytecode_after_preprocessing=True
+  )
   result = vocab.EncodeLlvmBytecode(BYTECODE_WITH_STRUCT, options)
 
-  assert result.bytecode_after_preprocessing == """\
+  assert (
+    result.bytecode_after_preprocessing
+    == """\
 define void <@ID>({ i32, i32 }*)
 <%ID> = alloca { i32, i32 }*, align 8
 store { i32, i32 }* <%ID>, { i32, i32 }** <%ID>, align 8
@@ -227,28 +244,35 @@ store { i32, i32 }* <%ID>, { i32, i32 }** <%ID>, align 8
 <%ID> = add nsw i32 <%ID>, <%ID>
 store i32 <%ID>, i32* <%ID>, align 4
 ret void"""
+  )
 
 
 def test_VocabularyZipFile_EncodeLlvmBytecode_encode_single_line(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   """Test encoding a single line of bytecode."""
   # A single line of bytecode which references a struct.
   result = vocab.EncodeLlvmBytecode(
-      "store %struct.Foo* %0, %struct.Foo** %2, align 8",
-      options=inst2vec_pb2.EncodeBytecodeOptions(
-          set_bytecode_after_preprocessing=True,),
-      struct_dict={'%struct.Foo': '{ i32, i32 }'})
+    "store %struct.Foo* %0, %struct.Foo** %2, align 8",
+    options=inst2vec_pb2.EncodeBytecodeOptions(
+      set_bytecode_after_preprocessing=True,
+    ),
+    struct_dict={"%struct.Foo": "{ i32, i32 }"},
+  )
 
-  assert (result.bytecode_after_preprocessing ==
-          "store { i32, i32 }* <%ID>, { i32, i32 }** <%ID>, align 8")
+  assert (
+    result.bytecode_after_preprocessing
+    == "store { i32, i32 }* <%ID>, { i32, i32 }** <%ID>, align 8"
+  )
 
 
 def test_VocabularyZipFile_EncodeLlvmBytecode_sequence(
-    vocab: vocabulary.VocabularyZipFile):
+  vocab: vocabulary.VocabularyZipFile,
+):
   # Function contains 14 statements.
   result = vocab.EncodeLlvmBytecode(FIZZBUZZ_IR)
   assert len(result.encoded) == 14
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

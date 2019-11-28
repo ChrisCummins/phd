@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-
 from collections import deque
-
 from typing import List
 
 
@@ -44,10 +42,10 @@ if __name__ == "__main__":
     pass
 
   examples = [
-      ([1, 2, 3], 6),
-      ([1, 8, 8], 64),
-      ([1, 8, 1, 8], 64),
-      ([1, 8, 1, 2, 8], 128),
+    ([1, 2, 3], 6),
+    ([1, 8, 8], 64),
+    ([1, 8, 1, 8], 64),
+    ([1, 8, 1, 2, 8], 128),
   ]
   for ins, outs in examples:
     print(ins, outs, approach1(ins))

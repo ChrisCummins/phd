@@ -15,4 +15,5 @@ SELECT scenario,
        max(runtime)
 FROM runtimes
 WHERE scenario=?
-  AND params=?
+  AND params=?;
+

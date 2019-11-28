@@ -11,7 +11,7 @@ MODULE_UNDER_TEST = None  # No coverage.
 class Node(object):
   """Node in a binary search tree."""
 
-  def __init__(self, val: int, left: Optional['Node'], right: Optional['Node']):
+  def __init__(self, val: int, left: Optional["Node"], right: Optional["Node"]):
     self.val = val
     self.left = left
     self.right = right
@@ -66,5 +66,5 @@ def test_FindSecondLargest_tree3():
     FindSecondLargest(bst)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

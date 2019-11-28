@@ -18,7 +18,7 @@ import tempfile
 import pytest
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def tempdir() -> pathlib.Path:
   """Test fixture for an empty temporary directory."""
   with tempfile.TemporaryDirectory() as d:

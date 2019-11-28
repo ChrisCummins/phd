@@ -34,9 +34,10 @@ from deeplearning.ncc import vocabulary
 from labm8.py import app
 
 # Embedding and vocabulary file paths
-app.DEFINE_string('embeddings_file', None, 'Path to the embeddings file')
+app.DEFINE_string("embeddings_file", None, "Path to the embeddings file")
 
 from labm8.py import app
+
 FLAGS = app.FLAGS
 
 
@@ -50,13 +51,13 @@ def download_and_unzip(url, dataset_name, data_folder):
   :param dataset_name: name of data set (for printing)
   :param data_folder: folder in which to put the downloaded data
   """
-  print('Downloading', dataset_name, 'data set...')
+  print("Downloading", dataset_name, "data set...")
   data_zip = wget.download(url, out=data_folder)
-  print('\tunzipping...')
-  zip_ = zipfile.ZipFile(data_zip, 'r')
+  print("\tunzipping...")
+  zip_ = zipfile.ZipFile(data_zip, "r")
   zip_.extractall(data_folder)
   zip_.close()
-  print('\tdone')
+  print("\tdone")
 
 
 ########################################################################################################################
@@ -66,13 +67,17 @@ def ReadEmbeddingFile(path: pathlib.Path) -> np.ndarray:
   """Load embedding matrix from file"""
   if not path.is_file():
     raise app.UsageError(f"Embedding file not found: '{path}'")
-  app.Log(1, 'Loading pre-trained embeddings from %s', path)
-  with open(path, 'rb') as f:
+  app.Log(1, "Loading pre-trained embeddings from %s", path)
+  with open(path, "rb") as f:
     embedding_matrix = pickle.load(f)
   vocabulary_size, embedding_dimension = embedding_matrix.shape
   app.Log(
-      1, 'Loaded pre-trained embeddings with vocabulary size: %d and '
-      'embedding dimension: %d', vocabulary_size, embedding_dimension)
+    1,
+    "Loaded pre-trained embeddings with vocabulary size: %d and "
+    "embedding dimension: %d",
+    vocabulary_size,
+    embedding_dimension,
+  )
   return embedding_matrix
 
 
@@ -94,11 +99,11 @@ def read_data_files_from_folder(foldername):
   data = list()
   file_names = list()
 
-  files_in_folder = os.listdir(foldername + '/')
+  files_in_folder = os.listdir(foldername + "/")
 
   # Loop over files in folder
   for path in files_in_folder:
-    if path[0] != '.' and path[-3:] == '.ll':
+    if path[0] != "." and path[-3:] == ".ll":
       # If this isn't a hidden file and it is an LLVM IR file ('.ll' extension),
       # open file and import content
       with open(os.path.join(foldername, path)) as f:
@@ -110,8 +115,9 @@ def read_data_files_from_folder(foldername):
   return data, file_names
 
 
-def CreateSeqDirFromIr(folder_ir: str,
-                       vocab: vocabulary.VocabularyZipFile) -> str:
+def CreateSeqDirFromIr(
+  folder_ir: str, vocab: vocabulary.VocabularyZipFile
+) -> str:
   """Transform a folder of raw IR into trainable data to be used as input data
   in tasks.
 
@@ -125,14 +131,14 @@ def CreateSeqDirFromIr(folder_ir: str,
   # Setup
   assert folder_ir, "Please specify a folder containing the raw LLVM IR"
   assert os.path.exists(folder_ir), "Folder not found: " + folder_ir
-  folder_seq = re.sub('_ir$', '_seq', folder_ir)
+  folder_seq = re.sub("_ir$", "_seq", folder_ir)
   if folder_seq:
-    app.Log(1, 'Preparing to write LLVM IR index sequences to %s', folder_seq)
+    app.Log(1, "Preparing to write LLVM IR index sequences to %s", folder_seq)
     if not os.path.exists(folder_seq):
       os.makedirs(folder_seq)
 
   # Get sub-folders if there are any
-  listing = os.listdir(folder_ir + '/')
+  listing = os.listdir(folder_ir + "/")
   folders_ir = list()
   folders_seq = list()
   found_subfolder = False
@@ -142,16 +148,16 @@ def CreateSeqDirFromIr(folder_ir: str,
       folders_seq.append(os.path.join(folder_seq, path))
       found_subfolder = True
   if found_subfolder:
-    app.Log(1, 'Found %d subfolders', len(folders_ir))
+    app.Log(1, "Found %d subfolders", len(folders_ir))
   else:
-    app.Log(1, 'No subfolders found in %s', folder_ir)
+    app.Log(1, "No subfolders found in %s", folder_ir)
     folders_ir = [folder_ir]
     folders_seq = [folder_seq]
 
   # Loop over sub-folders
   for i, raw_ir_folder in enumerate(folders_ir):
 
-    l = folders_seq[i] + '/'
+    l = folders_seq[i] + "/"
     if not os.path.exists(l) or not os.listdir(l):
       # Read data from folder
       raw_data, file_names = read_data_files_from_folder(raw_ir_folder)
@@ -166,13 +172,15 @@ def CreateSeqDirFromIr(folder_ir: str,
         result = vocab.EncodeLlvmBytecode(file)
 
         # Write to csv
-        file_name_csv = os.path.join(seq_folder,
-                                     file_names[i][:-3] + '_seq.csv')
-        file_name_rec = os.path.join(seq_folder,
-                                     file_names[i][:-3] + '_seq.rec')
-        with open(file_name_csv, 'w') as csv, open(file_name_rec, 'wb') as rec:
+        file_name_csv = os.path.join(
+          seq_folder, file_names[i][:-3] + "_seq.csv"
+        )
+        file_name_rec = os.path.join(
+          seq_folder, file_names[i][:-3] + "_seq.rec"
+        )
+        with open(file_name_csv, "w") as csv, open(file_name_rec, "wb") as rec:
           for ind in result.encoded:
-            csv.write(str(ind) + '\n')
-            rec.write(struct.pack('I', int(ind)))
+            csv.write(str(ind) + "\n")
+            rec.write(struct.pack("I", int(ind)))
 
   return folder_seq

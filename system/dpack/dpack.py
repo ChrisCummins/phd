@@ -20,20 +20,28 @@ from system.dpack.proto import dpack_pb2
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('package', os.getcwd(), 'The path of the target package.')
-app.DEFINE_string('sidecar', None, 'The path of the archive sidecar.')
+app.DEFINE_string("package", os.getcwd(), "The path of the target package.")
+app.DEFINE_string("sidecar", None, "The path of the archive sidecar.")
 app.DEFINE_list(
-    'exclude', [], 'A list of patterns to exclude from the package. Supports '
-    'UNIX-style globbing: *,?,[],[!].')
+  "exclude",
+  [],
+  "A list of patterns to exclude from the package. Supports "
+  "UNIX-style globbing: *,?,[],[!].",
+)
 app.DEFINE_boolean(
-    'init', False, 'If set, create the package MANIFEST.pbtxt file. This will '
-    'not overwrite an existing manifest file.')
+  "init",
+  False,
+  "If set, create the package MANIFEST.pbtxt file. This will "
+  "not overwrite an existing manifest file.",
+)
 app.DEFINE_boolean(
-    'update', False,
-    'If set, update the file attributes in MANIFEST.pbtxt file. '
-    'This can only be used in conjunction with --init flag. '
-    'If no MANIFEST.pbtxt exists, it is created.')
-app.DEFINE_boolean('pack', False, 'If set, create the package archive.')
+  "update",
+  False,
+  "If set, update the file attributes in MANIFEST.pbtxt file. "
+  "This can only be used in conjunction with --init flag. "
+  "If no MANIFEST.pbtxt exists, it is created.",
+)
+app.DEFINE_boolean("pack", False, "If set, create the package archive.")
 
 
 def _IsPackage(path: pathlib.Path) -> bool:
@@ -41,17 +49,18 @@ def _IsPackage(path: pathlib.Path) -> bool:
   if path.is_dir():
     return True
   else:
-    return path.is_file() and path.suffixes == ['.dpack', '.tar', '.bz2']
+    return path.is_file() and path.suffixes == [".dpack", ".tar", ".bz2"]
 
 
 # The --package argument points to either a directory or an archive file.
 app.RegisterFlagValidator(
-    'package',
-    # Flags validation occurs whenever this file is imported. During unit
-    # testing we have no value for this flag, so the validator should only
-    # run if the flag is present.
-    lambda path: pathlib.Path(path).exists() if path else True,
-    message='--package path not found.')
+  "package",
+  # Flags validation occurs whenever this file is imported. During unit
+  # testing we have no value for this flag, so the validator should only
+  # run if the flag is present.
+  lambda path: pathlib.Path(path).exists() if path else True,
+  message="--package path not found.",
+)
 
 
 def _IsManifest(path: pathlib.Path) -> bool:
@@ -60,27 +69,29 @@ def _IsManifest(path: pathlib.Path) -> bool:
 
 
 # The --sidecar argument optionally points to a DataPackage message.
-app.RegisterFlagValidator('sidecar',
-                          lambda path: _IsManifest(path) if path else True,
-                          message='--sidecar path not found.')
+app.RegisterFlagValidator(
+  "sidecar",
+  lambda path: _IsManifest(path) if path else True,
+  message="--sidecar path not found.",
+)
 
 # A list of filename patterns to exclude from all data packages.
 ALWAYS_EXCLUDE_PATTERNS = [
-    'MANIFEST.pbtxt',  # No self-reference.
-    '.DS_Store',
-    '._.DS_Store',
-    '*/.DS_Store',
-    '*/._.DS_Store',
-    '.com.apple.timemachine.supported',
-    '*/.com.apple.timemachine.supported',
-    '.sync.ffs_db',
-    '*/.sync.ffs_db',
+  "MANIFEST.pbtxt",  # No self-reference.
+  ".DS_Store",
+  "._.DS_Store",
+  "*/.DS_Store",
+  "*/._.DS_Store",
+  ".com.apple.timemachine.supported",
+  "*/.com.apple.timemachine.supported",
+  ".sync.ffs_db",
+  "*/.sync.ffs_db",
 ]
 
 
 def GetFilesInDirectory(
-    directory: pathlib.Path,
-    exclude_patterns: typing.List[str]) -> typing.List[pathlib.Path]:
+  directory: pathlib.Path, exclude_patterns: typing.List[str]
+) -> typing.List[pathlib.Path]:
   """Recursively list all files in a directory.
 
   Returns relative paths of all files in a directory which do not match the
@@ -98,17 +109,19 @@ def GetFilesInDirectory(
   for path in sorted(fs.lsfiles(directory, recursive=True)):
     for pattern in exclude_patterns:
       if fnmatch.fnmatch(path, pattern):
-        app.Log(1, '- %s', path)
+        app.Log(1, "- %s", path)
         break
     else:
-      app.Log(1, '+ %s', path)
+      app.Log(1, "+ %s", path)
       files.append(pathlib.Path(path))
   return files
 
 
-def SetDataPackageFileAttributes(package_root: pathlib.Path,
-                                 relpath: pathlib.Path,
-                                 f: dpack_pb2.DataPackageFile) -> None:
+def SetDataPackageFileAttributes(
+  package_root: pathlib.Path,
+  relpath: pathlib.Path,
+  f: dpack_pb2.DataPackageFile,
+) -> None:
   """Set the file attributes of a DataPackageFile message.
 
   Args:
@@ -123,8 +136,9 @@ def SetDataPackageFileAttributes(package_root: pathlib.Path,
   f.checksum_hash = dpack_pb2.SHA256
 
 
-def DataPackageFileAttributesAreValid(package_root: pathlib.Path,
-                                      f: dpack_pb2.DataPackageFile) -> bool:
+def DataPackageFileAttributesAreValid(
+  package_root: pathlib.Path, f: dpack_pb2.DataPackageFile
+) -> bool:
   """Check that the values in a DataPackageFile match the real file.
 
   Args:
@@ -146,24 +160,27 @@ def DataPackageFileAttributesAreValid(package_root: pathlib.Path,
 
   hash_fn = dpack_pb2.ChecksumHash.Name(f.checksum_hash).lower()
   try:
-    checksum_fn = getattr(crypto, hash_fn + '_file')
+    checksum_fn = getattr(crypto, hash_fn + "_file")
   except AttributeError:
-    app.Warning("unknown value for field checksum_hash in '%s'",
-                f.relative_path)
+    app.Warning(
+      "unknown value for field checksum_hash in '%s'", f.relative_path
+    )
     return False
 
   checksum = checksum_fn(abspath)
   if f.checksum != checksum:
     app.Warning(
-        "the contents of '%s' have changed but the size remains "
-        "the same", f.relative_path)
+      "the contents of '%s' have changed but the size remains " "the same",
+      f.relative_path,
+    )
     return False
 
   return True
 
 
-def MergeManifests(new: dpack_pb2.DataPackage,
-                   old: dpack_pb2.DataPackage) -> None:
+def MergeManifests(
+  new: dpack_pb2.DataPackage, old: dpack_pb2.DataPackage
+) -> None:
   """Transfer non-file attribute fields from old to new manifests.
 
   This copies over the comment and package date fields from the old manifest
@@ -182,8 +199,8 @@ def MergeManifests(new: dpack_pb2.DataPackage,
 
 
 def CreatePackageManifest(
-    package_root: pathlib.Path,
-    contents: typing.List[pathlib.Path]) -> dpack_pb2.DataPackage:
+  package_root: pathlib.Path, contents: typing.List[pathlib.Path]
+) -> dpack_pb2.DataPackage:
   """Create a DataPackage message for the contents of a package.
 
   Args:
@@ -194,18 +211,20 @@ def CreatePackageManifest(
     A DataPackage instance with attributes set.
   """
   manifest = dpack_pb2.DataPackage()
-  manifest.comment = ''
+  manifest.comment = ""
   manifest.utc_epoch_ms_packaged = labdate.MillisecondsTimestamp(
-      labdate.GetUtcMillisecondsNow())
+    labdate.GetUtcMillisecondsNow()
+  )
   for path in contents:
     f = manifest.file.add()
     SetDataPackageFileAttributes(package_root, path, f)
-    f.comment = f.comment or ''
+    f.comment = f.comment or ""
   return manifest
 
 
-def PackageManifestIsValid(package_root: pathlib.Path,
-                           manifest: dpack_pb2.DataPackage) -> bool:
+def PackageManifestIsValid(
+  package_root: pathlib.Path, manifest: dpack_pb2.DataPackage
+) -> bool:
   """Check that the package manifest is correct.
 
   Args:
@@ -216,12 +235,15 @@ def PackageManifestIsValid(package_root: pathlib.Path,
     True if the manifest matches the contents of the file system, else False.
   """
   return all(
-      DataPackageFileAttributesAreValid(package_root, f) for f in manifest.file)
+    DataPackageFileAttributesAreValid(package_root, f) for f in manifest.file
+  )
 
 
-def CreatePackageArchive(package_dir: pathlib.Path,
-                         manifest: dpack_pb2.DataPackage,
-                         archive_path: pathlib.Path) -> None:
+def CreatePackageArchive(
+  package_dir: pathlib.Path,
+  manifest: dpack_pb2.DataPackage,
+  archive_path: pathlib.Path,
+) -> None:
   """Create a tarball of the package.
 
   Args:
@@ -233,25 +255,27 @@ def CreatePackageArchive(package_dir: pathlib.Path,
     OSError: If archive_path already exists.
   """
   if archive_path.exists():
-    raise OSError(f'Refusing to overwrite {archive_path}.')
+    raise OSError(f"Refusing to overwrite {archive_path}.")
 
   # Change to the package directory so that relative paths within the archive
   # are preserved.
   os.chdir(package_dir.parent)
-  with tarfile.open(archive_path.absolute(), 'w:bz2') as tar:
-    path = os.path.join(package_dir.name, 'MANIFEST.pbtxt')
-    app.Log(1, '+ %s', path)
+  with tarfile.open(archive_path.absolute(), "w:bz2") as tar:
+    path = os.path.join(package_dir.name, "MANIFEST.pbtxt")
+    app.Log(1, "+ %s", path)
     tar.add(path)
     for f in manifest.file:
-      app.Log(1, '+ %s', f.relative_path)
+      app.Log(1, "+ %s", f.relative_path)
       path = os.path.join(package_dir.name, f.relative_path)
       tar.add(path)
-  app.Log(1, 'Created %s', archive_path.absolute())
+  app.Log(1, "Created %s", archive_path.absolute())
 
 
-def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
-                                manifest: dpack_pb2.DataPackage,
-                                sidecar_path: pathlib.Path) -> None:
+def CreatePackageArchiveSidecar(
+  archive_path: pathlib.Path,
+  manifest: dpack_pb2.DataPackage,
+  sidecar_path: pathlib.Path,
+) -> None:
   """Create a sidecar manifest to accompany an archive.
 
   Args:
@@ -263,9 +287,9 @@ def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
     OSError: If sidecar_path already exists, or archive_path does not.
   """
   if sidecar_path.exists():
-    raise OSError(f'Refusing to overwrite {sidecar_path}.')
+    raise OSError(f"Refusing to overwrite {sidecar_path}.")
   if not archive_path.is_file():
-    raise OSError(f'Archive {archive_path} does not exist')
+    raise OSError(f"Archive {archive_path} does not exist")
 
   sidecar = dpack_pb2.DataPackage()
   sidecar.CopyFrom(manifest)
@@ -279,46 +303,50 @@ def CreatePackageArchiveSidecar(archive_path: pathlib.Path,
   sidecar.checksum_hash = dpack_pb2.SHA256
   sidecar.checksum = crypto.sha256_file(archive_path)
   pbutil.ToFile(sidecar, sidecar_path)
-  app.Log(1, 'Wrote %s', sidecar_path.absolute())
+  app.Log(1, "Wrote %s", sidecar_path.absolute())
 
 
 def PackDataPackage(package_dir: pathlib.Path) -> None:
   """Create an archive and sidecar of a package."""
-  manifest = pbutil.FromFile(package_dir / 'MANIFEST.pbtxt',
-                             dpack_pb2.DataPackage())
+  manifest = pbutil.FromFile(
+    package_dir / "MANIFEST.pbtxt", dpack_pb2.DataPackage()
+  )
   PackageManifestIsValid(package_dir, manifest)
-  archive_path = (package_dir /
-                  f'../{package_dir.name}.dpack.tar.bz2').resolve()
-  sidecar_path = (package_dir / f'../{package_dir.name}.dpack.pbtxt').resolve()
+  archive_path = (
+    package_dir / f"../{package_dir.name}.dpack.tar.bz2"
+  ).resolve()
+  sidecar_path = (package_dir / f"../{package_dir.name}.dpack.pbtxt").resolve()
   CreatePackageArchive(package_dir, manifest, archive_path)
   CreatePackageArchiveSidecar(archive_path, manifest, sidecar_path)
 
 
-def InitManifest(package_dir: pathlib.Path, contents: typing.List[pathlib.Path],
-                 update: bool) -> None:
+def InitManifest(
+  package_dir: pathlib.Path, contents: typing.List[pathlib.Path], update: bool
+) -> None:
   """Write the MANIFEST.pbtxt file for a package."""
   manifest = CreatePackageManifest(package_dir, contents)
-  manifest_path = package_dir / 'MANIFEST.pbtxt'
+  manifest_path = package_dir / "MANIFEST.pbtxt"
   if update and pbutil.ProtoIsReadable(manifest_path, dpack_pb2.DataPackage()):
     old = pbutil.FromFile(manifest_path, dpack_pb2.DataPackage())
     MergeManifests(manifest, old)
   elif manifest_path.is_file():
-    raise OSError('Refusing to overwrite MANIFEST.pbtxt file.')
+    raise OSError("Refusing to overwrite MANIFEST.pbtxt file.")
   pbutil.ToFile(manifest, manifest_path)
-  app.Log(1, 'Wrote %s', manifest_path.absolute())
+  app.Log(1, "Wrote %s", manifest_path.absolute())
 
 
 def VerifyManifest(package_dir: pathlib.Path) -> bool:
   """Verify that the MANIFEST.pbtext file matches the contents."""
-  if not (package_dir / 'MANIFEST.pbtxt').is_file():
-    app.Log(1, '%s/MANIFEST.pbtxt missing, nothing to do.', package_dir)
+  if not (package_dir / "MANIFEST.pbtxt").is_file():
+    app.Log(1, "%s/MANIFEST.pbtxt missing, nothing to do.", package_dir)
     return False
-  manifest = pbutil.FromFile(package_dir / 'MANIFEST.pbtxt',
-                             dpack_pb2.DataPackage())
+  manifest = pbutil.FromFile(
+    package_dir / "MANIFEST.pbtxt", dpack_pb2.DataPackage()
+  )
   if not PackageManifestIsValid(package_dir, manifest):
-    app.Error('Package %s contains errors.', package_dir)
+    app.Error("Package %s contains errors.", package_dir)
     return False
-  app.Log(1, '%s verified. No changes to files in the manifest.', package_dir)
+  app.Log(1, "%s verified. No changes to files in the manifest.", package_dir)
   return True
 
 
@@ -328,7 +356,7 @@ def SidecarIsValid(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
 
   hash_fn = dpack_pb2.ChecksumHash.Name(sidecar_manifest.checksum_hash).lower()
   try:
-    checksum_fn = getattr(crypto, hash_fn + '_file')
+    checksum_fn = getattr(crypto, hash_fn + "_file")
   except AttributeError:
     app.Warning("unknown value for field checksum_hash in manifest")
     return False
@@ -336,7 +364,7 @@ def SidecarIsValid(archive: pathlib.Path, sidecar: pathlib.Path) -> None:
   if sidecar_manifest.checksum != checksum:
     app.Warning("the contents of '%s' have changed", archive.absolute())
     return False
-  app.Log(1, 'Package verified using the sidecar.')
+  app.Log(1, "Package verified using the sidecar.")
   return True
 
 
@@ -344,13 +372,13 @@ def main(argv) -> None:
   """Main entry point."""
   # Validate flags.
   if len(argv) > 1:
-    raise app.UsageError('Too many command-line arguments.')
+    raise app.UsageError("Too many command-line arguments.")
 
   if not FLAGS.package:
-    raise app.UsageError('--package argument is required.')
+    raise app.UsageError("--package argument is required.")
 
   if FLAGS.update and not FLAGS.init:
-    app.Warning('--update flag ignored.')
+    app.Warning("--update flag ignored.")
 
   package = pathlib.Path(FLAGS.package)
 
@@ -368,5 +396,5 @@ def main(argv) -> None:
       sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

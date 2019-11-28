@@ -3,8 +3,8 @@
 #include <unordered_map>
 #include <ustl/unordered_map>
 
-#include <vector>
 #include <ustl/vector>
+#include <vector>
 
 #include <utility>
 
@@ -26,24 +26,20 @@ TEST(std_unordered_map, constructors) {
   std::unordered_map<int, int> ra1(in1.begin(), in1.end());
 
   ASSERT_EQ(size_t(3), ra1.size());
-  for (auto& v : ra1)
-    ASSERT_TRUE(v.first == v.second - 1);
+  for (auto& v : ra1) ASSERT_TRUE(v.first == v.second - 1);
 
   // Initialiazer list:
   std::unordered_map<int, int> il1({{1, 2}, {2, 3}, {3, 4}});
 
   ASSERT_EQ(size_t(3), il1.size());
-  for (auto& v : il1)
-    ASSERT_TRUE(v.first == v.second - 1);
+  for (auto& v : il1) ASSERT_TRUE(v.first == v.second - 1);
 
   // Copy:
   auto cp1 = il1;
 
   ASSERT_EQ(size_t(3), cp1.size());
-  for (auto& v : cp1)
-    ASSERT_TRUE(v.first == v.second - 1);
+  for (auto& v : cp1) ASSERT_TRUE(v.first == v.second - 1);
 }
-
 
 TEST(ustl_unordered_map, constructors) {
   // Empty:
@@ -59,24 +55,20 @@ TEST(ustl_unordered_map, constructors) {
   ustl::vector<std::pair<int, int>> in1{{1, 2}, {2, 3}, {3, 4}};
   ustl::unordered_map<int, int> ra1(in1.begin(), in1.end());
   ASSERT_EQ(size_t(3), ra1.size());
-  for (auto& v : ra1)
-    ASSERT_TRUE(v.first == v.second - 1);
+  for (auto& v : ra1) ASSERT_TRUE(v.first == v.second - 1);
 
   // Initialiazer list:
   ustl::unordered_map<int, int> il1({{1, 2}, {2, 3}, {3, 4}});
 
   ASSERT_EQ(size_t(3), il1.size());
-  for (auto& v : il1)
-    ASSERT_TRUE(v.first == v.second - 1);
+  for (auto& v : il1) ASSERT_TRUE(v.first == v.second - 1);
 
   // Copy:
   auto cp1 = il1;
 
   ASSERT_EQ(size_t(3), cp1.size());
-  for (auto& v : cp1)
-    ASSERT_TRUE(v.first == v.second - 1);
+  for (auto& v : cp1) ASSERT_TRUE(v.first == v.second - 1);
 }
-
 
 TEST(std_unordered_map, assignment) {
   std::unordered_map<int, int> src{{1, 2}, {3, 4}, {5, 6}};
@@ -93,7 +85,6 @@ TEST(ustl_unordered_map, assignment) {
   dst = src;
   ASSERT_TRUE(src == dst);
 }
-
 
 ///////////////
 // Capacity: //
@@ -113,7 +104,6 @@ TEST(ustl_unordered_map_capacity, empty) {
   ASSERT_FALSE(l1.empty());
 }
 
-
 TEST(std_unordered_map_capacity, size) {
   std::unordered_map<int, int> l1;
   ASSERT_EQ(0u, l1.size());
@@ -124,7 +114,6 @@ TEST(std_unordered_map_capacity, size) {
   l1[1] = 5;
   ASSERT_EQ(2u, l1.size());
 }
-
 
 TEST(std_unordered_map_capacity, max_size) {
   std::unordered_map<int, int> l1;
@@ -141,7 +130,6 @@ TEST(ustl_unordered_map_capacity, max_size) {
   ASSERT_GT(l1.max_size(), 1u);
   ASSERT_GT(l2.max_size(), 3u);
 }
-
 
 ////////////////
 // Iterators: //
@@ -162,7 +150,6 @@ TEST(ustl_unsorted_map_iterator, begin) {
   ASSERT_EQ(1, (*l1.begin()).first);
   ASSERT_EQ(2, (*l1.begin()).second);
 }
-
 
 /////////////////////
 // Element Access: //
@@ -188,7 +175,6 @@ TEST(ustl_unsorted_map_access, subscript) {
   ASSERT_EQ(2, l1['b']);
 }
 
-
 TEST(std_unsorted_map_access, at) {
   std::unordered_map<char, int> l1;
   l1['a'] = 3;
@@ -200,7 +186,8 @@ TEST(std_unsorted_map_access, at) {
   try {
     l1.at('c') = 5;
     FAIL() << "std::out_of_range not thrown.";
-  } catch (std::out_of_range e) {}
+  } catch (std::out_of_range e) {
+  }
 }
 
 TEST(ustl_unsorted_map_access, at) {
@@ -214,9 +201,9 @@ TEST(ustl_unsorted_map_access, at) {
   try {
     l1.at('c') = 5;
     FAIL() << "std::out_of_range not thrown.";
-  } catch (std::out_of_range e) {}
+  } catch (std::out_of_range e) {
+  }
 }
-
 
 /////////////////////
 // Element Lookup: //

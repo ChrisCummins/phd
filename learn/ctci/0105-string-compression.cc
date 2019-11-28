@@ -7,8 +7,8 @@
  */
 #include "./ctci.h"
 
-#include <string>
 #include <ostream>
+#include <string>
 
 static unsigned int seed = 0xCEC;
 
@@ -29,22 +29,19 @@ std::string compress_str(const std::string &str) {
     if (c == curr_c) {
       count++;
     } else {
-      if (curr_c != '\0')
-        oss << curr_c << count;
+      if (curr_c != '\0') oss << curr_c << count;
       curr_c = c;
       count = 1;
     }
   }
 
   // Output last character:
-  if (curr_c != '\0')
-    oss << curr_c << count;
+  if (curr_c != '\0') oss << curr_c << count;
 
   // Return the shortest string:
   std::string os = oss.str();
   return os.size() < str.size() ? os : str;
 }
-
 
 ///////////
 // Tests //
@@ -60,7 +57,6 @@ TEST(Permutation, compress_str) {
   ASSERT_EQ(std::string("abcde"), out2);
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -68,7 +64,7 @@ TEST(Permutation, compress_str) {
 static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
-void BM_compress_str(benchmark::State& state) {
+void BM_compress_str(benchmark::State &state) {
   const auto strlen = static_cast<size_t>(state.range(0));
   std::string t;
 

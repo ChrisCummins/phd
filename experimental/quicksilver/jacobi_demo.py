@@ -73,79 +73,79 @@ FLAGS = app.FLAGS
 
 # App A is a small, long running job which has a modest speedup on GPU.
 APP_A_CONFIG = {
-    "norder": 64,
-    "iteration_count": 1000000,
-    "datatype": "double",
-    "convergence_frequency": 0,
-    "convergence_tolerance": 0.001,
-    "wgsize": [64, 1],
-    "unroll": 1,
-    "layout": "row-major",
-    "conditional": "branch",
-    "fmad": "op",
-    "divide_A": "normal",
-    "addrspace_b": "global",
-    "addrspace_xold": "global",
-    "integer": "uint",
-    "relaxed_math": False,
-    "use_const": False,
-    "use_restrict": False,
-    "use_mad24": False,
-    "const_norder": False,
-    "const_wgsize": False,
-    "coalesce_cols": True,
-    "min_runtime": 0,
-    "max_runtime": 0
+  "norder": 64,
+  "iteration_count": 1000000,
+  "datatype": "double",
+  "convergence_frequency": 0,
+  "convergence_tolerance": 0.001,
+  "wgsize": [64, 1],
+  "unroll": 1,
+  "layout": "row-major",
+  "conditional": "branch",
+  "fmad": "op",
+  "divide_A": "normal",
+  "addrspace_b": "global",
+  "addrspace_xold": "global",
+  "integer": "uint",
+  "relaxed_math": False,
+  "use_const": False,
+  "use_restrict": False,
+  "use_mad24": False,
+  "const_norder": False,
+  "const_wgsize": False,
+  "coalesce_cols": True,
+  "min_runtime": 0,
+  "max_runtime": 0,
 }
 
 # App B is a large, short running job which has a high speedup on GPU.
 APP_B_CONFIG = {
-    "norder": 1024,
-    "iteration_count": 400000,
-    "datatype": "float",
-    "convergence_frequency": 0,
-    "convergence_tolerance": 0.001,
-    "wgsize": [32, 1],
-    "unroll": 1,
-    "layout": "col-major",
-    "conditional": "branch",
-    "fmad": "op",
-    "divide_A": "normal",
-    "addrspace_b": "global",
-    "addrspace_xold": "global",
-    "integer": "int",
-    "relaxed_math": False,
-    "use_const": False,
-    "use_restrict": False,
-    "use_mad24": False,
-    "const_norder": False,
-    "const_wgsize": False,
-    "coalesce_cols": True,
-    "min_runtime": 0,
-    "max_runtime": 0
+  "norder": 1024,
+  "iteration_count": 400000,
+  "datatype": "float",
+  "convergence_frequency": 0,
+  "convergence_tolerance": 0.001,
+  "wgsize": [32, 1],
+  "unroll": 1,
+  "layout": "col-major",
+  "conditional": "branch",
+  "fmad": "op",
+  "divide_A": "normal",
+  "addrspace_b": "global",
+  "addrspace_xold": "global",
+  "integer": "int",
+  "relaxed_math": False,
+  "use_const": False,
+  "use_restrict": False,
+  "use_mad24": False,
+  "const_norder": False,
+  "const_wgsize": False,
+  "coalesce_cols": True,
+  "min_runtime": 0,
+  "max_runtime": 0,
 }
 
 
 def GetGpuDevice() -> CL.Device:
   for device in jacobi.GetDeviceList():
     if device.type == CL.device_type.GPU:
-      app.Log(1, 'Using GPU: %s', device.name)
+      app.Log(1, "Using GPU: %s", device.name)
       return device
 
 
 def GetCpuDevice() -> CL.Device:
   for device in jacobi.GetDeviceList():
     if device.type == CL.device_type.CPU:
-      app.Log(1, 'Using CPU: %s', device.name)
+      app.Log(1, "Using CPU: %s", device.name)
       return device
 
 
 def GetGpuSpeedup(config, gpu, cpu) -> float:
   """Measure the speedup of configuration on GPU over CPU."""
   benchmark_config = config.copy()
-  benchmark_config['iteration_count'] = 10
-  benchmark_config['min_runtime'] = 5
-  benchmark_config['max_runtime'] = 5
+  benchmark_config["iteration_count"] = 10
+  benchmark_config["min_runtime"] = 5
+  benchmark_config["max_runtime"] = 5
 
   gpu_run = jacobi.RunJacobiBenchmark(benchmark_config, gpu)
   cpu_run = jacobi.RunJacobiBenchmark(benchmark_config, cpu)
@@ -154,16 +154,18 @@ def GetGpuSpeedup(config, gpu, cpu) -> float:
 
 
 def Stringify(a):
-  return (f"runtime={a.runtime:.3f}s, "
-          f"iterations={humanize.Commas(a.iteration_count)}, "
-          f"throughput={a.throughput / 1000:.1f}k iterations / second")
+  return (
+    f"runtime={a.runtime:.3f}s, "
+    f"iterations={humanize.Commas(a.iteration_count)}, "
+    f"throughput={a.throughput / 1000:.1f}k iterations / second"
+  )
 
 
 def ApproachA(app_a_config, app_b_config, gpu, cpu, app_b_delay):
-  print('Approach A: Immediately launch app on best available device')
+  print("Approach A: Immediately launch app on best available device")
   a = jacobi.JacobiBenchmarkThread(app_a_config, gpu)
   b = jacobi.JacobiBenchmarkThread(app_b_config, cpu)
-  with prof.ProfileToStdout('Approach A'):
+  with prof.ProfileToStdout("Approach A"):
     start = time.time()
     # Run App A on GPU.
     a.start()
@@ -172,79 +174,83 @@ def ApproachA(app_a_config, app_b_config, gpu, cpu, app_b_delay):
     b.start()
     a.join()
     b.join()
-  print(f'Approach A: App A: {Stringify(a.GetResult())}')
-  print(f'Approach A: App B: {Stringify(b.GetResult())}')
+  print(f"Approach A: App A: {Stringify(a.GetResult())}")
+  print(f"Approach A: App B: {Stringify(b.GetResult())}")
   print()
   return time.time() - start
 
 
 def ApproachB(app_a_config, app_b_config, gpu, cpu, app_b_delay):
-  print('Approach B: Wait for best-available device')
+  print("Approach B: Wait for best-available device")
   a = jacobi.JacobiBenchmarkThread(app_a_config, gpu)
   b = jacobi.JacobiBenchmarkThread(app_b_config, gpu)
-  with prof.ProfileToStdout('Approach B'):
+  with prof.ProfileToStdout("Approach B"):
     start = time.time()
 
     # Run App A on GPU.
-    with prof.ProfileToStdout('section 1'):
+    with prof.ProfileToStdout("section 1"):
       a.start()
       time.sleep(app_b_delay)
       a.join()
 
     # Then run App B on GPU.
-    with prof.ProfileToStdout('section 2'):
+    with prof.ProfileToStdout("section 2"):
       b.start()
       b.join()
-  print(f'Approach B: App A: {Stringify(a.GetResult())}')
-  print(f'Approach B: App B: {Stringify(b.GetResult())}')
+  print(f"Approach B: App A: {Stringify(a.GetResult())}")
+  print(f"Approach B: App B: {Stringify(b.GetResult())}")
   print()
   return time.time() - start
 
 
 def ApproachC(app_a_config, app_b_config, gpu, cpu, app_b_delay):
-  print('Approach C: Pre-empt lower speedup job')
+  print("Approach C: Pre-empt lower speedup job")
   a1 = jacobi.JacobiBenchmarkThread(app_a_config, gpu)
   a2 = jacobi.JacobiBenchmarkThread(app_a_config, cpu)
   a3 = jacobi.JacobiBenchmarkThread(app_a_config, gpu)
   b = jacobi.JacobiBenchmarkThread(app_b_config, gpu)
-  with prof.ProfileToStdout('Approach C'):
+  with prof.ProfileToStdout("Approach C"):
     start = time.time()
 
     # Start App A on GPU.
     a1.start()
 
     # App B is going to pre-empt App A on GPU. App A moves over to the CPU.
-    with prof.ProfileToStdout('section 1'):
+    with prof.ProfileToStdout("section 1"):
       time.sleep(app_b_delay)
       a1.Interrupt()
       a1.join()
       a1_result = a1.GetResult()
 
-      a2._config['iteration_count'] -= a1_result.iteration_count
+      a2._config["iteration_count"] -= a1_result.iteration_count
       b.start()
       a2.start()
 
     # Block until App B is done.
-    with prof.ProfileToStdout('section 2'):
+    with prof.ProfileToStdout("section 2"):
       b.join()
       a2.Interrupt()
       a2.join()
       a2_result = a2.GetResult()
 
     # App A now moves back to the GPU until done.
-    with prof.ProfileToStdout('section 3'):
-      a3._config['iteration_count'] -= a2_result.iteration_count
+    with prof.ProfileToStdout("section 3"):
+      a3._config["iteration_count"] -= a2_result.iteration_count
       a3.start()
       a3.join()
 
-  print(f'Approach C: App A1: {Stringify(a1_result)}')
-  print(f'Approach C: App A2: {Stringify(a2_result)}')
-  print(f'Approach C: App A3: {Stringify(a3.GetResult())}')
+  print(f"Approach C: App A1: {Stringify(a1_result)}")
+  print(f"Approach C: App A2: {Stringify(a2_result)}")
+  print(f"Approach C: App A3: {Stringify(a3.GetResult())}")
   print(
-      'Approach C total iterations:',
-      str(a1_result.iteration_count + a2_result.iteration_count +
-          a3.GetResult().iteration_count))
-  print(f'Approach C: App B: {Stringify(b.GetResult())}')
+    "Approach C total iterations:",
+    str(
+      a1_result.iteration_count
+      + a2_result.iteration_count
+      + a3.GetResult().iteration_count
+    ),
+  )
+  print(f"Approach C: App B: {Stringify(b.GetResult())}")
   print()
   return time.time() - start
 
@@ -258,8 +264,8 @@ def main():
   app_a_speedup = GetGpuSpeedup(APP_A_CONFIG, gpu, cpu)
   app_b_speedup = GetGpuSpeedup(APP_B_CONFIG, gpu, cpu)
 
-  print(f'Speedup of App A on GPU: {app_a_speedup}')
-  print(f'Speedup of App B on GPU: {app_b_speedup}')
+  print(f"Speedup of App A on GPU: {app_a_speedup}")
+  print(f"Speedup of App B on GPU: {app_b_speedup}")
 
   print()
   a = ApproachA(APP_A_CONFIG, APP_B_CONFIG, gpu, cpu, app_b_delay)
@@ -269,5 +275,5 @@ def main():
   print(f"Speedup of approach C over approach B: {b / c:.3f}x")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

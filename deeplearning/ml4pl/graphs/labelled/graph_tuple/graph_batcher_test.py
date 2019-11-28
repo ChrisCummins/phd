@@ -31,8 +31,9 @@ def test_NextGraph_larger_than_batch_size():
     graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]), options)
 
   options = graph_batcher.GraphBatchOptions(max_nodes=9999999)
-  graph = graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]),
-                                             options)
+  graph = graph_batcher.GraphBatch.NextGraph(
+    _MakeIterator([big_graph]), options
+  )
   assert graph.node_count == big_graph.node_count
 
 
@@ -70,5 +71,5 @@ def test_GraphBatchOptions_ShouldAddToBatch_graph_count_filter():
   assert not options.ShouldAddToBatch(graph, log)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

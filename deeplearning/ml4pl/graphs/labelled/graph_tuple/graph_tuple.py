@@ -16,13 +16,13 @@ IncomingEdgeCount = typing.Dict[int, int]
 #
 # TODO(github.com/ChrisCummins/ml4pl/issues/7): Replace the string constants
 # with an enum for flow types.
-FLOW_TO_EDGE_INDEX = {'control': 0, 'data': 1, 'call': 2}
+FLOW_TO_EDGE_INDEX = {"control": 0, "data": 1, "call": 2}
 # Perform the reverse maddping from index into adjacency list to 'flow'
 # property.
 EDGE_INDEX_TO_FLOW = {v: k for k, v in FLOW_TO_EDGE_INDEX.items()}
 # Add lookup entries for backward edges.
 for k, v in FLOW_TO_EDGE_INDEX.items():
-  EDGE_INDEX_TO_FLOW[v + len(FLOW_TO_EDGE_INDEX)] = f'backward_{k}'
+  EDGE_INDEX_TO_FLOW[v + len(FLOW_TO_EDGE_INDEX)] = f"backward_{k}"
 
 
 class GraphTuple(typing.NamedTuple):
@@ -56,7 +56,8 @@ class GraphTuple(typing.NamedTuple):
 
   # (optional) A vector of graph labels arrays.
   graph_y: typing.Optional[
-      np.array] = None  # Shape [graph_label_dimensionality]
+    np.array
+  ] = None  # Shape [graph_label_dimensionality]
 
   @property
   def has_node_y(self) -> bool:
@@ -93,11 +94,13 @@ class GraphTuple(typing.NamedTuple):
     return dense
 
   @classmethod
-  def CreateFromNetworkX(cls,
-                         g: nx.MultiDiGraph,
-                         node_y: str = 'y',
-                         graph_x: str = 'x',
-                         graph_y: str = 'y') -> 'GraphTuple':
+  def CreateFromNetworkX(
+    cls,
+    g: nx.MultiDiGraph,
+    node_y: str = "y",
+    graph_x: str = "x",
+    graph_y: str = "y",
+  ) -> "GraphTuple":
     """Produce a tuple representation of a (multi-)directed networkx.
 
     Each edge must have a position and flow, and each node must have an 'x'
@@ -123,22 +126,23 @@ class GraphTuple(typing.NamedTuple):
 
     # Create an adjacency list for each edge type.
     adjacency_lists: typing.List[typing.List[typing.Tuple[int, int]]] = [
-        [] for _ in range(edge_type_count)
+      [] for _ in range(edge_type_count)
     ]
     # Create an edge position list for each edge type.
     edge_positions: typing.List[typing.List[int]] = [
-        [] for _ in range(edge_type_count)
+      [] for _ in range(edge_type_count)
     ]
     # Lists of incoming edge counts for each mode, one for each edge type.
     incoming_edge_counts: typing.List[IncomingEdgeCount] = np.array(
-        [{} for _ in range(edge_type_count)])
+      [{} for _ in range(edge_type_count)]
+    )
 
     # Create a mapping from node ID to a numeric ID.
     node_to_index = {node: i for i, node in enumerate(g.nodes)}
 
     for src, dst, data in g.edges(data=True):
-      flow = data['flow']
-      position = data.get('position', 0)
+      flow = data["flow"]
+      position = data.get("position", 0)
 
       src_idx = node_to_index[src]
       dst_idx = node_to_index[dst]
@@ -161,24 +165,30 @@ class GraphTuple(typing.NamedTuple):
       # Update the incoming edge counts.
       incoming_edge_count_dict = incoming_edge_counts[forward_edge_type]
       incoming_edge_count_dict[dst_idx] = (
-          incoming_edge_count_dict.get(dst_idx, 0) + 1)
+        incoming_edge_count_dict.get(dst_idx, 0) + 1
+      )
       incoming_edge_count_dict = incoming_edge_counts[backward_edge_type]
       incoming_edge_count_dict[src_idx] = (
-          incoming_edge_count_dict.get(src_idx, 0) + 1)
+        incoming_edge_count_dict.get(src_idx, 0) + 1
+      )
 
     # Convert to numpy arrays.
-    adjacency_lists = np.array([
+    adjacency_lists = np.array(
+      [
         np.array(adjacency_list, dtype=np.int32)
         for adjacency_list in adjacency_lists
-    ])
-    edge_positions = np.array([
+      ]
+    )
+    edge_positions = np.array(
+      [
         np.array(edge_position, dtype=np.int32)
         for edge_position in edge_positions
-    ])
+      ]
+    )
 
     # Set node embedding indices.
     node_x_indices = [None] * g.number_of_nodes()
-    for node, embedding_indices in g.nodes(data='x'):
+    for node, embedding_indices in g.nodes(data="x"):
       if embedding_indices is None:
         raise ValueError(f"No embedding for node `{node}`")
       node_idx = node_to_index[node]
@@ -213,13 +223,13 @@ class GraphTuple(typing.NamedTuple):
       graph_y = None
 
     return GraphTuple(
-        adjacency_lists=adjacency_lists,
-        edge_positions=edge_positions,
-        incoming_edge_counts=incoming_edge_counts,
-        node_x_indices=node_x_indices,
-        node_y=node_y,
-        graph_x=graph_x,
-        graph_y=graph_y,
+      adjacency_lists=adjacency_lists,
+      edge_positions=edge_positions,
+      incoming_edge_counts=incoming_edge_counts,
+      node_x_indices=node_x_indices,
+      node_y=node_y,
+      graph_x=graph_x,
+      graph_y=graph_y,
     )
 
   def ToNetworkx(self) -> nx.MultiDiGraph:
@@ -233,19 +243,19 @@ class GraphTuple(typing.NamedTuple):
     g = nx.MultiDiGraph()
 
     for edge_type, (adjacency_list, position_list) in enumerate(
-        zip(self.adjacency_lists, self.edge_positions)):
+      zip(self.adjacency_lists, self.edge_positions)
+    ):
       for (src, dst), position in zip(adjacency_list, position_list):
-        g.add_edge(src,
-                   dst,
-                   flow=EDGE_INDEX_TO_FLOW[edge_type],
-                   position=position)
+        g.add_edge(
+          src, dst, flow=EDGE_INDEX_TO_FLOW[edge_type], position=position
+        )
 
     for i, x in enumerate(self.node_x_indices):
-      g.nodes[i]['x'] = x
+      g.nodes[i]["x"] = x
 
     if self.has_node_y:
       for i, y in enumerate(self.node_y):
-        g.nodes[i]['y'] = y
+        g.nodes[i]["y"] = y
 
     if self.has_graph_x:
       g.x = self.graph_x

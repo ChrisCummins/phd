@@ -32,71 +32,83 @@ from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('cloner_clone_list', None,
-                  'The path to a LanguageCloneList file.')
+app.DEFINE_string(
+  "cloner_clone_list", None, "The path to a LanguageCloneList file."
+)
 app.DEFINE_integer(
-    'repository_clone_timeout_minutes', 30,
-    'The maximum number of minutes to attempt to clone a '
-    'repository before '
-    'quitting and moving on to the next repository.')
-app.DEFINE_integer('num_cloner_threads', 4,
-                   'The number of cloner threads to spawn.')
+  "repository_clone_timeout_minutes",
+  30,
+  "The maximum number of minutes to attempt to clone a "
+  "repository before "
+  "quitting and moving on to the next repository.",
+)
+app.DEFINE_integer(
+  "num_cloner_threads", 4, "The number of cloner threads to spawn."
+)
 
 
 def GetCloneDir(metafile: pathlib.Path) -> pathlib.Path:
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   if not meta.owner and meta.name:
-    app.Error('Metafile missing owner and name fields %s', metafile)
+    app.Error("Metafile missing owner and name fields %s", metafile)
     return
-  return metafile.parent / f'{meta.owner}_{meta.name}'
+  return metafile.parent / f"{meta.owner}_{meta.name}"
 
 
 def CloneFromMetafile(metafile: pathlib.Path) -> None:
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
   clone_dir = GetCloneDir(metafile)
   if not clone_dir:
-    app.Error('Failed to determine clone directory')
-  app.Log(2, '%s', meta)
-  if (clone_dir / '.git').is_dir():
+    app.Error("Failed to determine clone directory")
+  app.Log(2, "%s", meta)
+  if (clone_dir / ".git").is_dir():
     return
 
   # Remove anything left over from a previous attempt.
-  subprocess.check_call(['rm', '-rf', str(clone_dir)])
+  subprocess.check_call(["rm", "-rf", str(clone_dir)])
 
   cmd = [
-      'timeout', f'{FLAGS.repository_clone_timeout_minutes}m', '/usr/bin/git',
-      'clone', meta.clone_from_url,
-      str(clone_dir)
+    "timeout",
+    f"{FLAGS.repository_clone_timeout_minutes}m",
+    "/usr/bin/git",
+    "clone",
+    meta.clone_from_url,
+    str(clone_dir),
   ]
-  app.Log(2, '$ %s', ' '.join(cmd))
+  app.Log(2, "$ %s", " ".join(cmd))
 
   # Try to checkout the repository and submodules.
-  p = subprocess.Popen(cmd + ['--recursive'],
-                       stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE,
-                       universal_newlines=True)
+  p = subprocess.Popen(
+    cmd + ["--recursive"],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    universal_newlines=True,
+  )
   _, stderr = p.communicate()
-  if p.returncode and 'submodule' in stderr:
+  if p.returncode and "submodule" in stderr:
     # Remove anything left over from a previous attempt.
-    subprocess.check_call(['rm', '-rf', str(clone_dir)])
+    subprocess.check_call(["rm", "-rf", str(clone_dir)])
     # Try again, but this time without cloning submodules.
-    p = subprocess.Popen(cmd,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         universal_newlines=True)
+    p = subprocess.Popen(
+      cmd,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      universal_newlines=True,
+    )
     _, stderr = p.communicate()
 
   if p.returncode:
     # Give up.
-    app.Warning('\nClone failed %s:\n%s', meta.clone_from_url, stderr)
+    app.Warning("\nClone failed %s:\n%s", meta.clone_from_url, stderr)
     # Remove anything left over.
-    subprocess.check_call(['rm', '-rf', str(clone_dir)])
+    subprocess.check_call(["rm", "-rf", str(clone_dir)])
 
 
 def IsRepoMetaFile(f: str):
   """Determine if a path is a GitHubRepoMetadata message."""
-  return (fs.isfile(f) and
-          pbutil.ProtoIsReadable(f, scrape_repos_pb2.GitHubRepoMetadata()))
+  return fs.isfile(f) and pbutil.ProtoIsReadable(
+    f, scrape_repos_pb2.GitHubRepoMetadata()
+  )
 
 
 class AsyncWorker(threading.Thread):
@@ -117,33 +129,34 @@ class AsyncWorker(threading.Thread):
 def main(argv) -> None:
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError('Too many command-line arguments.')
+    raise app.UsageError("Too many command-line arguments.")
 
   clone_list_path = pathlib.Path(FLAGS.cloner_clone_list or "")
   if not clone_list_path.is_file():
-    raise app.UsageError('--clone_list is not a file.')
-  clone_list = pbutil.FromFile(clone_list_path,
-                               scrape_repos_pb2.LanguageCloneList())
+    raise app.UsageError("--clone_list is not a file.")
+  clone_list = pbutil.FromFile(
+    clone_list_path, scrape_repos_pb2.LanguageCloneList()
+  )
 
   meta_files = []
   for language in clone_list.language:
     directory = pathlib.Path(language.destination_directory)
     if directory.is_dir():
       meta_files += [
-          pathlib.Path(directory / f)
-          for f in directory.iterdir()
-          if IsRepoMetaFile(f)
+        pathlib.Path(directory / f)
+        for f in directory.iterdir()
+        if IsRepoMetaFile(f)
       ]
   random.shuffle(meta_files)
   worker = AsyncWorker(meta_files)
-  app.Log(1, 'Cloning %s repos from GitHub ...', humanize.Commas(worker.max))
+  app.Log(1, "Cloning %s repos from GitHub ...", humanize.Commas(worker.max))
   bar = progressbar.ProgressBar(max_value=worker.max, redirect_stderr=True)
   worker.start()
   while worker.is_alive():
     bar.update(worker.i)
-    worker.join(.5)
+    worker.join(0.5)
   bar.update(worker.i)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

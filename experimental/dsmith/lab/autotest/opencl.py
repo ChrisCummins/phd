@@ -13,7 +13,6 @@ from labm8.py import crypto
 
 
 class OpenCLTestcase(object):
-
   def __init__(self, path: Path):
     self.path = path
 
@@ -27,7 +26,6 @@ class OpenCLTestcase(object):
 
 
 class CLSmithGenerator(autotest.Generator):
-
   def __init__(self, exec: Path):
     self.exec = exec
     exec_checksum = crypto.sha1_file(self.exec)
@@ -37,10 +35,10 @@ class CLSmithGenerator(autotest.Generator):
     """ Generate a program using CLSmith """
     if attempt_num >= 1000:
       raise autotest.GeneratorError(
-          f"failed to generate a program using CLSmith after {attempt_num} attempts"
+        f"failed to generate a program using CLSmith after {attempt_num} attempts"
       )
 
-    flags = ['-o', path, *flags]
+    flags = ["-o", path, *flags]
     app.Log(2, " ".join([self.exec] + flags))
 
     _, returncode, stdout, stderr = clsmith.clsmith(*flags, exec_path=self.exec)
@@ -65,7 +63,6 @@ class CLSmithGenerator(autotest.Generator):
 
 
 class DeviceUnderTest(object):
-
   def __init__(self, platform: str, device: str, flags: List[str]):
     self.device = device
     self.platform = platform
@@ -75,7 +72,8 @@ class DeviceUnderTest(object):
 
   def run(self, testcase: autotest.testcase_t) -> autotest.output_t:
     runtime, returncode, stdout, stderr = clsmith.cl_launcher(
-        testcase.path, *self.ids, *self.flags)
+      testcase.path, *self.ids, *self.flags
+    )
 
     print(runtime)
     print(returncode)
@@ -84,7 +82,6 @@ class DeviceUnderTest(object):
 
 
 class StaticAnalyzer(object):
-
   def __init__(self):
     pass
 
@@ -93,31 +90,34 @@ class StaticAnalyzer(object):
 
 
 class DynamicAnalyzer(object):
-
   def __init__(self):
     pass
 
-  def is_valid(self, testcase: autotest.testcase_t,
-               duts: List[autotest.DeviceUnderTest],
-               outputs: List[autotest.output_t]) -> bool:
+  def is_valid(
+    self,
+    testcase: autotest.testcase_t,
+    duts: List[autotest.DeviceUnderTest],
+    outputs: List[autotest.output_t],
+  ) -> bool:
     pass
 
 
 class Reducer(object):
-
   def __init__(self):
     pass
 
-  def reduce(self, testcase: autotest.testcase_t,
-             dut: autotest.DeviceUnderTest) -> autotest.output_t:
+  def reduce(
+    self, testcase: autotest.testcase_t, dut: autotest.DeviceUnderTest
+  ) -> autotest.output_t:
     pass
 
 
 def main(args):
   assert len(args) == 2
 
-  logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
-                      level=logging.DEBUG)
+  logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(message)s", level=logging.DEBUG
+  )
 
   with open(args[0]) as infile:
     json_config = json.loads(infile.read())
@@ -126,17 +126,24 @@ def main(args):
 
   generator = CLSmithGenerator(clsmith.exec_path)
   preflight_checks = [
-      StaticAnalyzer(**x) for x in json_config["preflight_checks"]
+    StaticAnalyzer(**x) for x in json_config["preflight_checks"]
   ]
   duts = [DeviceUnderTest(**x) for x in json_config["duts"]]
   comparator = autotest.Comparator(**json_config["comparator"])
   postflight_checks = [
-      DynamicAnalyzer(**x) for x in json_config["postflight_checks"]
+    DynamicAnalyzer(**x) for x in json_config["postflight_checks"]
   ]
   reducer = Reducer(**json_config["reducer"])
 
-  autotest.autotest(num_batches, generator, preflight_checks, duts, comparator,
-                    postflight_checks, reducer)
+  autotest.autotest(
+    num_batches,
+    generator,
+    preflight_checks,
+    duts,
+    comparator,
+    postflight_checks,
+    reducer,
+  )
 
 
 if __name__ == "__main__":

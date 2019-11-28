@@ -8,7 +8,7 @@ from labm8.py import bazelutil
 from labm8.py import fs
 from labm8.py import test
 
-STAMP_FILE = bazelutil.DataPath('phd/learn/bazel/stamp_file.txt')
+STAMP_FILE = bazelutil.DataPath("phd/learn/bazel/stamp_file.txt")
 
 MODULE_UNDER_TEST = None  # No coverage.
 
@@ -16,8 +16,8 @@ MODULE_UNDER_TEST = None  # No coverage.
 def test_StampFile():
   stamp_file = fs.Read(STAMP_FILE)
   print(stamp_file)
-  assert 'BUILD_TIMESTAMP' in stamp_file
+  assert "BUILD_TIMESTAMP" in stamp_file
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

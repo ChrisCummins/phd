@@ -12,5 +12,5 @@ def main():
   # TODO: Implement!
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

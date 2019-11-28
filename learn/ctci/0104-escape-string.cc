@@ -15,8 +15,7 @@ void escape_space(char *s, size_t len) {
   for (int i = static_cast<int>(len) - 1; i >= 0; i--) {
     if (s[i] == ' ') {
       // Make room for escape characters:
-      for (int j = static_cast<int>(len) - 1; j > i; j--)
-        s[j + 2] = s[j];
+      for (int j = static_cast<int>(len) - 1; j > i; j--) s[j + 2] = s[j];
 
       s[i] = '%';
       s[i + 1] = '2';
@@ -25,7 +24,6 @@ void escape_space(char *s, size_t len) {
     }
   }
 }
-
 
 ///////////
 // Tests //
@@ -45,7 +43,6 @@ TEST(Escape, escape_space) {
   ASSERT_STREQ("a%20bc%20de", c);
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -63,11 +60,10 @@ void populateString(char *const t, const size_t strlen, size_t *len) {
 
   *len = strlen;
   for (size_t i = 0; i < strlen; i++)
-    if (t[i] == ' ')
-      *len -= 2;
+    if (t[i] == ' ') *len -= 2;
 }
 
-void BM_escape_space(benchmark::State& state) {
+void BM_escape_space(benchmark::State &state) {
   const auto strlen = static_cast<size_t>(state.range(0));
   char *const t = new char[strlen];
   size_t len = 0;

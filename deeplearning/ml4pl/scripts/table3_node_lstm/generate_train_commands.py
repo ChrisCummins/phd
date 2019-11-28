@@ -1,19 +1,21 @@
 """ Print run commands for TRAINING the node lstm baselines to stdout."""
 
+
 def lstm_node_series_base_script():
-    # NODE LSTM SERIES BASE SCRIPT
+  # NODE LSTM SERIES BASE SCRIPT
 
-    devices = [0,1,2,3,0,1]
-    datasets = ["ml4pl_reachability",
-                "ml4pl_datadep",
-                "ml4pl_domtree",
-                "ml4pl_liveness",
-                "ml4pl_polyhedra",
-                "ml4pl_alias_set"]
-    log_db = 'logs_node_lstm_series.db'
-    
+  devices = [0, 1, 2, 3, 0, 1]
+  datasets = [
+    "ml4pl_reachability",
+    "ml4pl_datadep",
+    "ml4pl_domtree",
+    "ml4pl_liveness",
+    "ml4pl_polyhedra",
+    "ml4pl_alias_set",
+  ]
+  log_db = "logs_node_lstm_series.db"
 
-    base = "cd phd; export CUDA_VISIBLE_DEVICES={}; \
+  base = "cd phd; export CUDA_VISIBLE_DEVICES={}; \
 bazel run deeplearning/ml4pl/models/lstm:lstm_node_classifier -- \
 --graph_db='file:///users/zfisches/cc1.mysql?{}?charset=utf8' \
 --log_db='sqlite:////users/zfisches/{}' \
@@ -32,13 +34,13 @@ bazel run deeplearning/ml4pl/models/lstm:lstm_node_classifier -- \
 --notest_on_improvement \
 --num_epochs=50 \
     "
-    for device, dataset in zip(devices,datasets):
-        if dataset == "ml4pl_liveness":
-            print(base.format(device, dataset, log_db) + " --group_by=identifier")
-        else:
-            print(base.format(device, dataset, log_db))
-        print('\n\n\n\n')
+  for device, dataset in zip(devices, datasets):
+    if dataset == "ml4pl_liveness":
+      print(base.format(device, dataset, log_db) + " --group_by=identifier")
+    else:
+      print(base.format(device, dataset, log_db))
+    print("\n\n\n\n")
 
 
-if __name__ == '__main__':
-    lstm_node_series_base_script()
+if __name__ == "__main__":
+  lstm_node_series_base_script()

@@ -9,18 +9,14 @@ static unsigned int move_assignments;
 
 class Vector {
  public:
-  explicit Vector(int s)
-      : _elems{new double[size_t(s)]}, _size{s} {}
+  explicit Vector(int s) : _elems{new double[size_t(s)]}, _size{s} {}
 
-  ~Vector() {
-    delete[] _elems;
-  }
+  ~Vector() { delete[] _elems; }
 
   Vector(const Vector& other) : Vector(other.size()) {
     ++copy_constructors;
 
-    for (size_t i = 0; i < size_t(size()); ++i)
-      _elems[i] = other[i];
+    for (size_t i = 0; i < size_t(size()); ++i) _elems[i] = other[i];
   }
 
   Vector& operator=(const Vector& rhs) {
@@ -33,8 +29,7 @@ class Vector {
         _size = rhs.size();
       }
 
-      for (size_t i = 0; i < size_t(size()); ++i)
-        _elems[i] = rhs[i];
+      for (size_t i = 0; i < size_t(size()); ++i) _elems[i] = rhs[i];
     }
 
     return *this;
@@ -62,25 +57,21 @@ class Vector {
     return *this;
   }
 
-  double& operator[](int i) {
-    return _elems[i];
-  }
+  double& operator[](int i) { return _elems[i]; }
 
-  const double& operator[](int i) const {
-    return _elems[i];
-  }
+  const double& operator[](int i) const { return _elems[i]; }
 
-  int size() const {
-    return _size;
-  }
+  int size() const { return _size; }
 
  private:
   double* _elems;
-  int     _size;
+  int _size;
 };
 
 Vector operator+(const Vector& a, const Vector& b) {
-  if (a.size() != b.size()) { std::exit(-1); }
+  if (a.size() != b.size()) {
+    std::exit(-1);
+  }
 
   auto v = Vector(a.size());
   for (auto i = 0; i < a.size(); ++i) {

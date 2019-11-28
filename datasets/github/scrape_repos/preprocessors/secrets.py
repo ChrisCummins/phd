@@ -7,8 +7,9 @@ import pathlib
 import typing
 
 from detect_secrets import main as detect_secrets_main
-from detect_secrets.plugins.common import \
-  initialize as detect_secrets_initialize
+from detect_secrets.plugins.common import (
+  initialize as detect_secrets_initialize,
+)
 
 from datasets.github.scrape_repos.preprocessors import public
 from labm8.py import app
@@ -18,6 +19,7 @@ FLAGS = app.FLAGS
 
 class TextContainsSecret(ValueError):
   """Error raised if a text contains a secret."""
+
   pass
 
 
@@ -33,21 +35,24 @@ def ScanForSecrets(text: str) -> bool:
   Raises:
     TextContainsSecret: If the text contains a secret.
   """
-  args = detect_secrets_main.parse_args(['scan'])
+  args = detect_secrets_main.parse_args(["scan"])
   plugins = detect_secrets_initialize.from_parser_builder(
-      args.plugins,
-      exclude_lines_regex='',
+    args.plugins, exclude_lines_regex="",
   )
   for plugin in plugins:
-    if plugin.analyze_string(text, 0, 'does_not_matter'):
+    if plugin.analyze_string(text, 0, "does_not_matter"):
       raise TextContainsSecret(plugin.__class__.__name__)
 
   return True
 
 
 @public.dataset_preprocessor
-def RejectSecrets(import_root: pathlib.Path, file_relpath: str, text: str,
-                  all_file_relpaths: typing.List[str]) -> typing.List[str]:
+def RejectSecrets(
+  import_root: pathlib.Path,
+  file_relpath: str,
+  text: str,
+  all_file_relpaths: typing.List[str],
+) -> typing.List[str]:
   """Test for secrets in a file.
 
   Args:

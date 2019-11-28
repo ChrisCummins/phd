@@ -29,23 +29,23 @@ from pycparserext.ext_c_parser import OpenCLCParser
 # A lookup table mapping OpenCL data type names to the corresponding numpy data
 # type.
 NUMPY_TYPES = {
-    "bool": np.dtype("bool"),
-    "char": np.dtype("int8"),
-    "double": np.dtype("float64"),
-    "float": np.dtype("float32"),
-    "half": np.dtype("uint8"),
-    "int": np.dtype("int32"),
-    "long": np.dtype("int64"),
-    "short": np.dtype("int16"),
-    "uchar": np.dtype("uint8"),
-    "uint": np.dtype("uint32"),
-    "ulong": np.dtype("uint64"),
-    "unsigned": np.dtype("uint32"),
-    "unsigned char": np.dtype("uint8"),
-    "unsigned int": np.dtype("uint32"),
-    "unsigned long": np.dtype("uint64"),
-    "unsigned short": np.dtype("uint16"),
-    "ushort": np.dtype("uint16"),
+  "bool": np.dtype("bool"),
+  "char": np.dtype("int8"),
+  "double": np.dtype("float64"),
+  "float": np.dtype("float32"),
+  "half": np.dtype("uint8"),
+  "int": np.dtype("int32"),
+  "long": np.dtype("int64"),
+  "short": np.dtype("int16"),
+  "uchar": np.dtype("uint8"),
+  "uint": np.dtype("uint32"),
+  "ulong": np.dtype("uint64"),
+  "unsigned": np.dtype("uint32"),
+  "unsigned char": np.dtype("uint8"),
+  "unsigned int": np.dtype("uint32"),
+  "unsigned long": np.dtype("uint64"),
+  "unsigned short": np.dtype("uint16"),
+  "ushort": np.dtype("uint16"),
 }
 
 # The inverse lookup table of NUMPY_TYPES.
@@ -53,17 +53,17 @@ OPENCL_TYPES = dict((v, k) for k, v in NUMPY_TYPES.items())
 
 # C printf() function format specifiers for numpy types.
 FORMAT_SPECIFIERS = {
-    np.dtype("bool"): "%d",
-    np.dtype("float32"): "%.3f",
-    np.dtype("float64"): "%.3f",
-    np.dtype("int16"): "%hd",
-    np.dtype("int32"): "%d",
-    np.dtype("int64"): "%ld",
-    np.dtype("int8"): "%hd",
-    np.dtype("uint16"): "%hu",
-    np.dtype("uint32"): "%u",
-    np.dtype("uint64"): "%lu",
-    np.dtype("uint8"): "%hd",
+  np.dtype("bool"): "%d",
+  np.dtype("float32"): "%.3f",
+  np.dtype("float64"): "%.3f",
+  np.dtype("int16"): "%hd",
+  np.dtype("int32"): "%d",
+  np.dtype("int64"): "%ld",
+  np.dtype("int8"): "%hd",
+  np.dtype("uint16"): "%hu",
+  np.dtype("uint32"): "%u",
+  np.dtype("uint64"): "%lu",
+  np.dtype("uint8"): "%hd",
 }
 
 # Private OpenCL parser instance.
@@ -91,16 +91,19 @@ class OpenCLPreprocessError(ValueError):
 
 class OpenCLValueError(ValueError):
   """Raised if there is an invalid OpenCL code."""
+
   pass
 
 
 class MultipleKernelsError(LookupError):
   """Raised if source contains multiple kernels."""
+
   pass
 
 
 class NoKernelError(LookupError):
   """Raised if a source does not contain a kernel."""
+
   pass
 
 
@@ -135,10 +138,11 @@ class KernelArg(object):
         type_names = self.ast.type.type.type.names
     except AttributeError as e:  # e.g. structs
       raise ValueError(
-          f"Unsupported data type for argument: '{self.name}'") from e
+        f"Unsupported data type for argument: '{self.name}'"
+      ) from e
 
     self.typename = " ".join(type_names)
-    self.bare_type = self.typename.rstrip('0123456789')
+    self.bare_type = self.typename.rstrip("0123456789")
 
     # Get address space.
     if self.is_pointer:
@@ -161,13 +165,15 @@ class KernelArg(object):
       if "__constant" in self.ast.quals:
         address_quals.append("constant")
 
-      err_prefix = ('Pointer argument '
-                    f"'{self.quals_str}{self.typename} *{self.name}'")
+      err_prefix = (
+        "Pointer argument " f"'{self.quals_str}{self.typename} *{self.name}'"
+      )
       if len(address_quals) == 1:
         self.address_space = address_quals[0]
       elif len(address_quals) > 1:
         raise OpenCLValueError(
-            f"{err_prefix} has multiple address space qualifiers")
+          f"{err_prefix} has multiple address space qualifiers"
+        )
       else:
         raise OpenCLValueError(f"{err_prefix} has no address space qualifier")
 
@@ -175,7 +181,7 @@ class KernelArg(object):
     self.is_const = "const" in self.quals or self.address_space == "constant"
 
     if self.is_vector:
-      m = re.search(r'([0-9]+)\*?$', self.typename)
+      m = re.search(r"([0-9]+)\*?$", self.typename)
       self.vector_width = int(m.group(1))
     else:
       self.vector_width = 1
@@ -187,10 +193,12 @@ class KernelArg(object):
       return NUMPY_TYPES[self.bare_type]
     except KeyError:
       supported_types_str = ",".join(sorted(NUMPY_TYPES.keys()))
-      raise OpenCLValueError(f"""\
+      raise OpenCLValueError(
+        f"""\
 Unsupported type '{self.typename}' for argument \
 '{self.quals_str}{self.typename} {self.name}'. \
-Supported types are: {{{supported_types_str}}}""")
+Supported types are: {{{supported_types_str}}}"""
+      )
 
   def __repr__(self):
     s = self.quals if len(self.quals) else []
@@ -227,7 +235,7 @@ class ArgumentExtractor(NodeVisitor):
 
   def visit_FuncDef(self, node):
     # Only visit kernels, not all functions.
-    if ("kernel" in node.decl.funcspec or "__kernel" in node.decl.funcspec):
+    if "kernel" in node.decl.funcspec or "__kernel" in node.decl.funcspec:
       self.kernel_count += 1
       self.name = node.decl.name
     else:
@@ -236,7 +244,8 @@ class ArgumentExtractor(NodeVisitor):
     # Ensure we've only visited one kernel.
     if self.kernel_count > 1:
       raise MultipleKernelsError(
-          "Source contains more than one kernel definition")
+        "Source contains more than one kernel definition"
+      )
 
     # Function may not have arguments
     if self.extract_args and node.decl.type.args:
@@ -350,4 +359,4 @@ def GetKernelName(src: str) -> str:
   if visitor.name:
     return visitor.name
   else:
-    raise NoKernelError('Source contains no kernel definitions')
+    raise NoKernelError("Source contains no kernel definitions")

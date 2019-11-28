@@ -14,84 +14,86 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 app.DEFINE_integer(
-    'runtime_num_runs', 10,
-    'The number of times to execute a binary to get its runtime.')
+  "runtime_num_runs",
+  10,
+  "The number of times to execute a binary to get its runtime.",
+)
 
 # A list of all environments registered in this file.
 ENVIRONMENTS = [
-    'LLVM-bzip2-512K-v0',
-    'LLVM-bzip2-1M-v0',
-    'LLVM-queens-8x8-v0',
-    'LLVM-queens-12x12-v0',
-    'LLVM-queens-14x14-v0',
-    'LLVM-delayed-reward-bzip2-512K-v0',
-    'LLVM-delayed-reward-bzip2-1M-v0',
-    'LLVM-delayed-reward-queens-8x8-v0',
-    'LLVM-delayed-reward-queens-14x14-v0',
+  "LLVM-bzip2-512K-v0",
+  "LLVM-bzip2-1M-v0",
+  "LLVM-queens-8x8-v0",
+  "LLVM-queens-12x12-v0",
+  "LLVM-queens-14x14-v0",
+  "LLVM-delayed-reward-bzip2-512K-v0",
+  "LLVM-delayed-reward-bzip2-1M-v0",
+  "LLVM-delayed-reward-queens-8x8-v0",
+  "LLVM-delayed-reward-queens-14x14-v0",
 ]
 
 # A default environment name, registered below.
-DEFAULT_ENV_ID = 'LLVM-delayed-reward-queens-14x14-v0'
+DEFAULT_ENV_ID = "LLVM-delayed-reward-queens-14x14-v0"
 
 # The list of opt passes which defines the action space.
 # Taken from https://releases.llvm.org/6.0.1/docs/Passes.html
 DEFAULT_PASS_LIST = [
-    '-adce',
-    '-always-inline',
-    '-argpromotion',
-    '-bb-vectorize',
-    '-block-placement',
-    '-break-crit-edges',
-    '-codegenprepare',
-    '-constmerge',
-    '-constprop',
-    '-dce',
-    '-deadargelim',
-    '-deadtypeelim',
-    '-die',
-    '-dse',
-    '-functionattrs',
-    '-globaldce',
-    '-globalopt',
-    '-gvn',
-    '-indvars',
-    '-inline',
-    '-instcombine',
-    '-internalize',
-    '-ipconstprop',
-    '-ipsccp',
-    '-jump-threading',
-    '-lcssa',
-    '-licm',
-    '-loop-deletion',
-    '-loop-extract',
-    '-loop-extract-single',
-    '-loop-reduce',
-    '-loop-rotate',
-    '-loop-simplify',
-    '-loop-unroll',
-    '-loop-unswitch',
-    '-loweratomic',
-    '-lowerinvoke',
-    '-lowerswitch',
-    '-mem2reg',
-    '-memcpyopt',
-    '-mergefunc',
-    '-mergereturn',
-    '-partial-inliner',
-    '-prune-eh',
-    '-reassociate',
-    '-reg2mem',
-    '-sroa',
-    '-sccp',
-    '-simplifycfg',
-    '-sink',
-    '-strip',
-    '-strip-dead-debug-info',
-    '-strip-dead-prototypes',
-    '-strip-debug-declare',
-    '-strip-nondebug',
-    '-tailcallelim',
+  "-adce",
+  "-always-inline",
+  "-argpromotion",
+  "-bb-vectorize",
+  "-block-placement",
+  "-break-crit-edges",
+  "-codegenprepare",
+  "-constmerge",
+  "-constprop",
+  "-dce",
+  "-deadargelim",
+  "-deadtypeelim",
+  "-die",
+  "-dse",
+  "-functionattrs",
+  "-globaldce",
+  "-globalopt",
+  "-gvn",
+  "-indvars",
+  "-inline",
+  "-instcombine",
+  "-internalize",
+  "-ipconstprop",
+  "-ipsccp",
+  "-jump-threading",
+  "-lcssa",
+  "-licm",
+  "-loop-deletion",
+  "-loop-extract",
+  "-loop-extract-single",
+  "-loop-reduce",
+  "-loop-rotate",
+  "-loop-simplify",
+  "-loop-unroll",
+  "-loop-unswitch",
+  "-loweratomic",
+  "-lowerinvoke",
+  "-lowerswitch",
+  "-mem2reg",
+  "-memcpyopt",
+  "-mergefunc",
+  "-mergereturn",
+  "-partial-inliner",
+  "-prune-eh",
+  "-reassociate",
+  "-reg2mem",
+  "-sroa",
+  "-sccp",
+  "-simplifycfg",
+  "-sink",
+  "-strip",
+  "-strip-dead-debug-info",
+  "-strip-dead-prototypes",
+  "-strip-debug-declare",
+  "-strip-nondebug",
+  "-tailcallelim",
 ]
 
 # Environment generator functions.
@@ -99,108 +101,101 @@ DEFAULT_PASS_LIST = [
 
 def _GetEntryPoint(delayed_reward: bool) -> str:
   if delayed_reward:
-    return ('phd.experimental.compilers.random_opt.implementation:'
-            'LlvmOptDelayedRewardEnv')
+    return (
+      "phd.experimental.compilers.random_opt.implementation:"
+      "LlvmOptDelayedRewardEnv"
+    )
   else:
-    return 'phd.experimental.compilers.random_opt.implementation:LlvmOptEnv'
+    return "phd.experimental.compilers.random_opt.implementation:LlvmOptEnv"
 
 
 def _GetBzip2EnvironmentArgs(dataset_size: str, delayed_reward: bool):
   return {
-      'entry_point': _GetEntryPoint(delayed_reward),
-      'kwargs': {
-          'config':
-          random_opt_pb2.Environment(
-              input_src=bzip2.Bzip2.srcs,
-              # Create random data for bzip to compress.
-              setup_cmd=f'head -c {dataset_size} </dev/urandom > @D/input.dat',
-              # Compress and deflate the input data.
-              exec_cmd=('$@ -z < @D/input.dat > @D/input.dat.bz2 && '
-                        '$@ -d < @D/input.dat.bz2 > @D/output.dat'),
-              eval_cmd='cmp --silent @D/input.dat @D/output.dat',
-              candidate_pass=DEFAULT_PASS_LIST,
-          )
-      }
+    "entry_point": _GetEntryPoint(delayed_reward),
+    "kwargs": {
+      "config": random_opt_pb2.Environment(
+        input_src=bzip2.Bzip2.srcs,
+        # Create random data for bzip to compress.
+        setup_cmd=f"head -c {dataset_size} </dev/urandom > @D/input.dat",
+        # Compress and deflate the input data.
+        exec_cmd=(
+          "$@ -z < @D/input.dat > @D/input.dat.bz2 && "
+          "$@ -d < @D/input.dat.bz2 > @D/output.dat"
+        ),
+        eval_cmd="cmp --silent @D/input.dat @D/output.dat",
+        candidate_pass=DEFAULT_PASS_LIST,
+      )
+    },
   }
 
 
 def _GetQueensEnvironmentArgs(n: int, delayed_reward: bool):
   return {
-      'entry_point': _GetEntryPoint(delayed_reward),
-      'kwargs': {
-          'config':
-          random_opt_pb2.Environment(
-              input_src=llvm_test_suite.SingleSource.Benchmarks.McGill.queens.
-              srcs,
-              # Generate a gold standard using the binary. The assumes that the base
-              # build (before any opt passes have been run) is correct.
-              setup_cmd=f'$@ {n} > @D/gold_standard_output.txt',
-              exec_cmd=f'$@ {n} > @D/output.txt',
-              eval_cmd='cmp --silent @D/gold_standard_output.txt @D/output.txt',
-              candidate_pass=DEFAULT_PASS_LIST,
-          )
-      }
+    "entry_point": _GetEntryPoint(delayed_reward),
+    "kwargs": {
+      "config": random_opt_pb2.Environment(
+        input_src=llvm_test_suite.SingleSource.Benchmarks.McGill.queens.srcs,
+        # Generate a gold standard using the binary. The assumes that the base
+        # build (before any opt passes have been run) is correct.
+        setup_cmd=f"$@ {n} > @D/gold_standard_output.txt",
+        exec_cmd=f"$@ {n} > @D/output.txt",
+        eval_cmd="cmp --silent @D/gold_standard_output.txt @D/output.txt",
+        candidate_pass=DEFAULT_PASS_LIST,
+      )
+    },
   }
 
 
 # Register the environments.
 
 registration.register(
-    id='LLVM-bzip2-512K-v0',
-    **_GetBzip2EnvironmentArgs('512K', False),
+  id="LLVM-bzip2-512K-v0", **_GetBzip2EnvironmentArgs("512K", False),
 )
 
 registration.register(
-    id='LLVM-bzip2-1M-v0',
-    **_GetBzip2EnvironmentArgs('1M', False),
+  id="LLVM-bzip2-1M-v0", **_GetBzip2EnvironmentArgs("1M", False),
 )
 
 registration.register(
-    id='LLVM-queens-8x8-v0',
-    **_GetQueensEnvironmentArgs(8, False),
+  id="LLVM-queens-8x8-v0", **_GetQueensEnvironmentArgs(8, False),
 )
 
 registration.register(
-    id='LLVM-queens-10x10-v0',
-    **_GetQueensEnvironmentArgs(10, False),
+  id="LLVM-queens-10x10-v0", **_GetQueensEnvironmentArgs(10, False),
 )
 
 registration.register(
-    id='LLVM-queens-12x12-v0',
-    **_GetQueensEnvironmentArgs(12, False),
+  id="LLVM-queens-12x12-v0", **_GetQueensEnvironmentArgs(12, False),
 )
 
 registration.register(
-    id='LLVM-queens-14x14-v0',
-    **_GetQueensEnvironmentArgs(14, False),
+  id="LLVM-queens-14x14-v0", **_GetQueensEnvironmentArgs(14, False),
 )
 
 registration.register(
-    id='LLVM-delayed-reward-bzip2-512K-v0',
-    **_GetBzip2EnvironmentArgs('512K', True),
+  id="LLVM-delayed-reward-bzip2-512K-v0",
+  **_GetBzip2EnvironmentArgs("512K", True),
 )
 
 registration.register(
-    id='LLVM-delayed-reward-bzip2-1M-v0',
-    **_GetBzip2EnvironmentArgs('1M', True),
+  id="LLVM-delayed-reward-bzip2-1M-v0", **_GetBzip2EnvironmentArgs("1M", True),
 )
 
 registration.register(
-    id='LLVM-delayed-reward-queens-8x8-v0',
-    **_GetQueensEnvironmentArgs(8, True),
+  id="LLVM-delayed-reward-queens-8x8-v0", **_GetQueensEnvironmentArgs(8, True),
 )
 
 registration.register(
-    id='LLVM-delayed-reward-queens-10x10-v0',
-    **_GetQueensEnvironmentArgs(10, True),
+  id="LLVM-delayed-reward-queens-10x10-v0",
+  **_GetQueensEnvironmentArgs(10, True),
 )
 
 registration.register(
-    id='LLVM-delayed-reward-queens-12x12-v0',
-    **_GetQueensEnvironmentArgs(12, True),
+  id="LLVM-delayed-reward-queens-12x12-v0",
+  **_GetQueensEnvironmentArgs(12, True),
 )
 
 registration.register(
-    id='LLVM-delayed-reward-queens-14x14-v0',
-    **_GetQueensEnvironmentArgs(14, True),
+  id="LLVM-delayed-reward-queens-14x14-v0",
+  **_GetQueensEnvironmentArgs(14, True),
 )

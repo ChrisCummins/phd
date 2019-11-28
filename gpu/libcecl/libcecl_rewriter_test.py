@@ -21,19 +21,24 @@ from labm8.py import test
 
 def test_RewriteOpenClSource_adds_header():
   """Short summary of test."""
-  assert libcecl_rewriter.RewriteOpenClSource("""\
+  assert (
+    libcecl_rewriter.RewriteOpenClSource(
+      """\
 #include <CL/cl.h>
 
 int main() {
 }
-""") == """\
+"""
+    )
+    == """\
 #include <libcecl.h>
 #include <CL/cl.h>
 
 int main() {
 }
 """
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

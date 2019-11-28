@@ -39,23 +39,31 @@ from labm8.py import app
 from labm8.py import fs
 
 # Parameters of classifyapp
-app.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/classifyapp/ir',
-                  'Path to input data')
 app.DEFINE_string(
-    'out', '/tmp/phd/deeplearning/ncc/task/classifyapp',
-    'Path to folder in which to write saved Keras models and predictions')
+  "input_data",
+  "/tmp/phd/deeplearning/ncc/task/classifyapp/ir",
+  "Path to input data",
+)
 app.DEFINE_string(
-    'vocabulary_zip_path', None,
-    'Path to the vocabulary zip file associated with those embeddings')
-app.DEFINE_integer('num_epochs', 50, 'number of training epochs')
-app.DEFINE_integer('batch_size', 64, 'training batch size')
-app.DEFINE_integer('dense_layer', 32, 'dense layer size')
-app.DEFINE_integer('train_samples', 1500,
-                   'Number of training samples per class')
-app.DEFINE_integer('vsamples', 0, 'Sampling on validation set')
-app.DEFINE_integer('save_every', 100, 'Save checkpoint every N batches')
-app.DEFINE_integer('ring_size', 5, 'Checkpoint ring buffer length')
-app.DEFINE_boolean('print_summary', False, 'Print summary of Keras model')
+  "out",
+  "/tmp/phd/deeplearning/ncc/task/classifyapp",
+  "Path to folder in which to write saved Keras models and predictions",
+)
+app.DEFINE_string(
+  "vocabulary_zip_path",
+  None,
+  "Path to the vocabulary zip file associated with those embeddings",
+)
+app.DEFINE_integer("num_epochs", 50, "number of training epochs")
+app.DEFINE_integer("batch_size", 64, "training batch size")
+app.DEFINE_integer("dense_layer", 32, "dense layer size")
+app.DEFINE_integer(
+  "train_samples", 1500, "Number of training samples per class"
+)
+app.DEFINE_integer("vsamples", 0, "Sampling on validation set")
+app.DEFINE_integer("save_every", 100, "Save checkpoint every N batches")
+app.DEFINE_integer("ring_size", 5, "Checkpoint ring buffer length")
+app.DEFINE_boolean("print_summary", False, "Print summary of Keras model")
 
 FLAGS = app.FLAGS
 
@@ -88,33 +96,44 @@ def encode_srcs(input_files, dataset_name, unk_index):
   num_unks = 0
   seq_lengths = list()
 
-  print('\n--- Preparing to read', num_files, 'input files for', dataset_name,
-        'data set')
+  print(
+    "\n--- Preparing to read",
+    num_files,
+    "input files for",
+    dataset_name,
+    "data set",
+  )
   seqs = list()
   for i, file in enumerate(input_files):
     if i % 10000 == 0:
-      print('\tRead', i, 'files')
-    file = file.replace('.ll', '_seq.rec')
-    assert os.path.exists(file), 'input file not found: ' + file
-    with open(file, 'rb') as f:
+      print("\tRead", i, "files")
+    file = file.replace(".ll", "_seq.rec")
+    assert os.path.exists(file), "input file not found: " + file
+    with open(file, "rb") as f:
       full_seq = f.read()
     seq = list()
     for j in range(0, len(full_seq), 4):  # read 4 bytes at a time
-      seq.append(struct.unpack('I', full_seq[j:j + 4])[0])
-    assert len(seq) > 0, 'Found empty file: ' + file
+      seq.append(struct.unpack("I", full_seq[j : j + 4])[0])
+    assert len(seq) > 0, "Found empty file: " + file
     num_unks += seq.count(str(unk_index))
     seq_lengths.append(len(seq))
     seqs.append([int(s) for s in seq])
 
-  print('\tShortest sequence    : {:>5}'.format(min(seq_lengths)))
+  print("\tShortest sequence    : {:>5}".format(min(seq_lengths)))
   maxlen = max(seq_lengths)
-  print('\tLongest sequence     : {:>5}'.format(maxlen))
-  print('\tMean sequence length : {:>5} (rounded down)'.format(
-      math.floor(np.mean(seq_lengths))))
-  print('\tNumber of \'UNK\'      : {:>5}'.format(num_unks))
-  print('\tPercentage of \'UNK\'  : {:>8.4} (% among all stmts)'.format(
-      (num_unks * 100) / sum(seq_lengths)))
-  print('\t\'UNK\' index          : {:>5}'.format(unk_index))
+  print("\tLongest sequence     : {:>5}".format(maxlen))
+  print(
+    "\tMean sequence length : {:>5} (rounded down)".format(
+      math.floor(np.mean(seq_lengths))
+    )
+  )
+  print("\tNumber of 'UNK'      : {:>5}".format(num_unks))
+  print(
+    "\tPercentage of 'UNK'  : {:>8.4} (% among all stmts)".format(
+      (num_unks * 100) / sum(seq_lengths)
+    )
+  )
+  print("\t'UNK' index          : {:>5}".format(unk_index))
 
   return seqs, maxlen
 
@@ -127,7 +146,6 @@ def pad_src(seqs, maxlen, unk_index):
 
 
 class EmbeddingSequence(utils.Sequence):
-
   def __init__(self, batch_size, x_seq, y_1hot, embedding_mat):
     self.batch_size = batch_size
     self.num_samples = np.shape(x_seq)[0]
@@ -160,7 +178,6 @@ class EmbeddingSequence(utils.Sequence):
 
 
 class EmbeddingPredictionSequence(utils.Sequence):
-
   def __init__(self, batch_size, x_seq, embedding_mat):
     self.batch_size = batch_size
     self.x_seq = x_seq
@@ -179,7 +196,6 @@ class EmbeddingPredictionSequence(utils.Sequence):
 
 
 class WeightsSaver(Callback):
-
   def __init__(self, model, save_every, ring_size):
     self.model = model
     self.save_every = save_every
@@ -189,7 +205,7 @@ class WeightsSaver(Callback):
 
   def on_batch_end(self, batch, logs={}):
     if self.batch % self.save_every == 0:
-      name = FLAGS.out + '/weights%d.h5' % self.ring
+      name = FLAGS.out + "/weights%d.h5" % self.ring
       self.model.save_weights(name)
       self.ring = (self.ring + 1) % self.ring_size
     self.batch += 1
@@ -202,8 +218,14 @@ class NCC_classifyapp(object):
   __name__ = "NCC_classifyapp"
   __basename__ = "ncc_classifyapp"
 
-  def init(self, seed: int, maxlen: int, embedding_dim: int, num_classes: int,
-           dense_layer_size: int):
+  def init(
+    self,
+    seed: int,
+    maxlen: int,
+    embedding_dim: int,
+    num_classes: int,
+    dense_layer_size: int,
+  ):
     from keras.layers import Input, LSTM, Dense
     from keras.layers.normalization import BatchNormalization
     from keras.models import Model
@@ -211,14 +233,10 @@ class NCC_classifyapp(object):
     np.random.seed(seed)
 
     # Keras model
-    inp = Input(shape=(
-        maxlen,
-        embedding_dim,
-    ), dtype="float32", name="code_in")
-    x = LSTM(embedding_dim,
-             implementation=1,
-             return_sequences=True,
-             name="lstm_1")(inp)
+    inp = Input(shape=(maxlen, embedding_dim,), dtype="float32", name="code_in")
+    x = LSTM(
+      embedding_dim, implementation=1, return_sequences=True, name="lstm_1"
+    )(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
 
     # Heuristic model: outputs 1-of-num_classes prediction
@@ -227,67 +245,96 @@ class NCC_classifyapp(object):
     outputs = Dense(num_classes, activation="sigmoid")(x)
 
     self.model = Model(inputs=inp, outputs=outputs)
-    self.model.compile(optimizer="adam",
-                       loss="categorical_crossentropy",
-                       metrics=['accuracy'])
-    print('\tbuilt Keras model')
+    self.model.compile(
+      optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
+    print("\tbuilt Keras model")
 
   def save(self, outpath: str):
     self.model.save(outpath)
 
   def restore(self, inpath: str):
     from keras.models import load_model
+
     self.model = load_model(inpath)
 
-  def train(self, sequences: np.array, y_1hot: np.array,
-            sequences_val: np.array, y_1hot_val: np.array, verbose: bool,
-            epochs: int, batch_size: int) -> None:
-    self.model.fit(x=sequences,
-                   y=y_1hot,
-                   epochs=epochs,
-                   batch_size=batch_size,
-                   verbose=verbose,
-                   shuffle=True,
-                   validation_data=(sequences_val, y_1hot_val))
+  def train(
+    self,
+    sequences: np.array,
+    y_1hot: np.array,
+    sequences_val: np.array,
+    y_1hot_val: np.array,
+    verbose: bool,
+    epochs: int,
+    batch_size: int,
+  ) -> None:
+    self.model.fit(
+      x=sequences,
+      y=y_1hot,
+      epochs=epochs,
+      batch_size=batch_size,
+      verbose=verbose,
+      shuffle=True,
+      validation_data=(sequences_val, y_1hot_val),
+    )
 
-  def train_gen(self, train_generator: EmbeddingSequence,
-                validation_generator: EmbeddingSequence, verbose: bool,
-                epochs: int) -> None:
+  def train_gen(
+    self,
+    train_generator: EmbeddingSequence,
+    validation_generator: EmbeddingSequence,
+    verbose: bool,
+    epochs: int,
+  ) -> None:
     checkpoint = WeightsSaver(self.model, FLAGS.save_every, FLAGS.ring_size)
 
     try:
-      self.model.fit_generator(train_generator,
-                               epochs=epochs,
-                               verbose=verbose,
-                               validation_data=validation_generator,
-                               shuffle=True,
-                               callbacks=[checkpoint])
+      self.model.fit_generator(
+        train_generator,
+        epochs=epochs,
+        verbose=verbose,
+        validation_data=validation_generator,
+        shuffle=True,
+        callbacks=[checkpoint],
+      )
     except KeyboardInterrupt:
-      print('Ctrl-C detected, saving weights to file')
-      self.model.save_weights('weights-kill.h5')
+      print("Ctrl-C detected, saving weights to file")
+      self.model.save_weights("weights-kill.h5")
 
   def predict(self, sequences: np.array, batch_size: int) -> np.array:
     # directly predict application class from source sequences:
-    p = np.array(self.model.predict(sequences, batch_size=batch_size,
-                                    verbose=0))  # one-hot(range([0, 103]))
+    p = np.array(
+      self.model.predict(sequences, batch_size=batch_size, verbose=0)
+    )  # one-hot(range([0, 103]))
     indices = [np.argmax(x) for x in p]
-    return [i + 1 for i in indices
-           ]  # range(y): [1, 104], range(indices): [0, 103]
+    return [
+      i + 1 for i in indices
+    ]  # range(y): [1, 104], range(indices): [0, 103]
 
   def predict_gen(self, generator: EmbeddingSequence) -> np.array:
     # directly predict application class from source sequences:
-    p = np.array(self.model.predict_generator(
-        generator, verbose=0))  # one-hot(range([0, 103]))
+    p = np.array(
+      self.model.predict_generator(generator, verbose=0)
+    )  # one-hot(range([0, 103]))
     indices = [np.argmax(x) for x in p]
-    return [i + 1 for i in indices
-           ]  # range(y): [1, 104], range(indices): [0, 103]
+    return [
+      i + 1 for i in indices
+    ]  # range(y): [1, 104], range(indices): [0, 103]
 
 
 ########################################################################################################################
 # Evaluate
 ########################################################################################################################
-def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
-             dense_layer_size, print_summary, num_epochs, batch_size):
+def evaluate(
+  model,
+  embeddings,
+  folder_data,
+  samples_per_class,
+  folder_results,
+  dense_layer_size,
+  print_summary,
+  num_epochs,
+  batch_size,
+):
   # Set seed for reproducibility
   seed = 204
 
@@ -299,14 +346,14 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
   num_classes = 104
   y_train = np.empty(0)  # training
   X_train = list()
-  folder_data_train = folder_data + '_train'
+  folder_data_train = folder_data + "_train"
   y_val = np.empty(0)  # validation
   X_val = list()
-  folder_data_val = folder_data + '_val'
+  folder_data_val = folder_data + "_val"
   y_test = np.empty(0)  # testing
   X_test = list()
-  folder_data_test = folder_data + '_test'
-  print('Getting file names for', num_classes, 'classes from folders:')
+  folder_data_test = folder_data + "_test"
+  print("Getting file names for", num_classes, "classes from folders:")
   print(folder_data_train)
   print(folder_data_val)
   print(folder_data_test)
@@ -314,76 +361,89 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
 
     # training: Read data file names
     folder = os.path.join(folder_data_train, str(i))
-    assert os.path.exists(folder), "Folder: " + folder + ' does not exist'
-    print('\ttraining  : Read file names from folder ', folder)
-    listing = os.listdir(folder + '/')
-    seq_files = [os.path.join(folder, f) for f in listing if f[-4:] == '.rec']
+    assert os.path.exists(folder), "Folder: " + folder + " does not exist"
+    print("\ttraining  : Read file names from folder ", folder)
+    listing = os.listdir(folder + "/")
+    seq_files = [os.path.join(folder, f) for f in listing if f[-4:] == ".rec"]
 
     # training: Randomly pick programs
-    assert len(seq_files) >= samples_per_class, "Cannot sample " + str(
-        samples_per_class) + " from " + str(
-            len(seq_files)) + " files found in " + folder
-    X_train += resample(seq_files,
-                        replace=False,
-                        n_samples=samples_per_class,
-                        random_state=seed)
+    assert len(seq_files) >= samples_per_class, (
+      "Cannot sample "
+      + str(samples_per_class)
+      + " from "
+      + str(len(seq_files))
+      + " files found in "
+      + folder
+    )
+    X_train += resample(
+      seq_files, replace=False, n_samples=samples_per_class, random_state=seed
+    )
     y_train = np.concatenate(
-        [y_train,
-         np.array([int(i)] * samples_per_class, dtype=np.int32)])
+      [y_train, np.array([int(i)] * samples_per_class, dtype=np.int32)]
+    )
 
     # validation: Read data file names
     folder = os.path.join(folder_data_val, str(i))
-    assert os.path.exists(folder), "Folder: " + folder + ' does not exist'
-    print('\tvalidation: Read file names from folder ', folder)
-    listing = os.listdir(folder + '/')
-    seq_files = [os.path.join(folder, f) for f in listing if f[-4:] == '.rec']
+    assert os.path.exists(folder), "Folder: " + folder + " does not exist"
+    print("\tvalidation: Read file names from folder ", folder)
+    listing = os.listdir(folder + "/")
+    seq_files = [os.path.join(folder, f) for f in listing if f[-4:] == ".rec"]
 
     # validation: Randomly pick programs
     if vsamples_per_class > 0:
-      assert len(seq_files) >= vsamples_per_class, "Cannot sample " + str(
-          vsamples_per_class) + " from " + str(
-              len(seq_files)) + " files found in " + folder
-      X_val += resample(seq_files,
-                        replace=False,
-                        n_samples=vsamples_per_class,
-                        random_state=seed)
+      assert len(seq_files) >= vsamples_per_class, (
+        "Cannot sample "
+        + str(vsamples_per_class)
+        + " from "
+        + str(len(seq_files))
+        + " files found in "
+        + folder
+      )
+      X_val += resample(
+        seq_files,
+        replace=False,
+        n_samples=vsamples_per_class,
+        random_state=seed,
+      )
       y_val = np.concatenate(
-          [y_val,
-           np.array([int(i)] * vsamples_per_class, dtype=np.int32)])
+        [y_val, np.array([int(i)] * vsamples_per_class, dtype=np.int32)]
+      )
     else:
       assert len(seq_files) > 0, "No .rec files found in" + folder
       X_val += seq_files
       y_val = np.concatenate(
-          [y_val, np.array([int(i)] * len(seq_files), dtype=np.int32)])
+        [y_val, np.array([int(i)] * len(seq_files), dtype=np.int32)]
+      )
 
     # test: Read data file names
     folder = os.path.join(folder_data_test, str(i))
-    assert os.path.exists(folder), "Folder: " + folder + ' does not exist'
-    print('\ttest      : Read file names from folder ', folder)
-    listing = os.listdir(folder + '/')
-    seq_files = [os.path.join(folder, f) for f in listing if f[-4:] == '.rec']
+    assert os.path.exists(folder), "Folder: " + folder + " does not exist"
+    print("\ttest      : Read file names from folder ", folder)
+    listing = os.listdir(folder + "/")
+    seq_files = [os.path.join(folder, f) for f in listing if f[-4:] == ".rec"]
     assert len(seq_files) > 0, "No .rec files found in" + folder
     X_test += seq_files
     y_test = np.concatenate(
-        [y_test, np.array([int(i)] * len(seq_files), dtype=np.int32)])
+      [y_test, np.array([int(i)] * len(seq_files), dtype=np.int32)]
+    )
 
   # Get the 'unknown' vocab index.
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
     unk_index = vocab.unknown_token_index
 
   # Encode source codes and get max. sequence length
-  X_seq_train, maxlen_train = encode_srcs(X_train, 'training', unk_index)
-  X_seq_val, maxlen_val = encode_srcs(X_val, 'validation', unk_index)
-  X_seq_test, maxlen_test = encode_srcs(X_test, 'testing', unk_index)
+  X_seq_train, maxlen_train = encode_srcs(X_train, "training", unk_index)
+  X_seq_val, maxlen_val = encode_srcs(X_val, "validation", unk_index)
+  X_seq_test, maxlen_test = encode_srcs(X_test, "testing", unk_index)
   maxlen = max(maxlen_train, maxlen_test, maxlen_val)
-  print('Max. sequence length overall:', maxlen)
-  print('Padding sequences')
+  print("Max. sequence length overall:", maxlen)
+  print("Padding sequences")
   X_seq_train = pad_src(X_seq_train, maxlen, unk_index)
   X_seq_val = pad_src(X_seq_val, maxlen, unk_index)
   X_seq_test = pad_src(X_seq_test, maxlen, unk_index)
 
   # Get one-hot vectors for classification
-  print('YTRAIN\n', y_train)
+  print("YTRAIN\n", y_train)
   y_1hot_train = get_onehot(y_train, num_classes)
   y_1hot_val = get_onehot(y_val, num_classes)
 
@@ -392,28 +452,32 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
 
   # Set up names paths
   model_name = model.__name__
-  model_path = os.path.join(folder_results,
-                            "classifyapp/models/{}.model".format(model_name))
+  model_path = os.path.join(
+    folder_results, "classifyapp/models/{}.model".format(model_name)
+  )
   predictions_path = os.path.join(
-      folder_results, "classifyapp/predictions/{}.result".format(model_name))
+    folder_results, "classifyapp/predictions/{}.result".format(model_name)
+  )
 
   # If predictions have already been made with these embeddings, load them
   if fs.exists(predictions_path):
     print("\tFound predictions in", predictions_path, ", skipping...")
-    with open(predictions_path, 'rb') as infile:
+    with open(predictions_path, "rb") as infile:
       p = pickle.load(infile)
 
   else:  # could not find predictions already computed with these embeddings
 
     # Embeddings
     import tensorflow as tf  # for embeddings lookup
+
     embedding_matrix_normalized = tf.nn.l2_normalize(embeddings, axis=1)
     vocabulary_size, embedding_dimension = embedding_matrix_normalized.shape
-    print('XSEQ:\n', X_seq_train)
-    print('EMB:\n', embedding_matrix_normalized)
+    print("XSEQ:\n", X_seq_train)
+    print("EMB:\n", embedding_matrix_normalized)
 
-    gen_test = EmbeddingPredictionSequence(batch_size, X_seq_test,
-                                           embedding_matrix_normalized)
+    gen_test = EmbeddingPredictionSequence(
+      batch_size, X_seq_test, embedding_matrix_normalized
+    )
 
     # If models have already been made with these embeddings, load them
     if fs.exists(model_path):
@@ -422,46 +486,52 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
 
     else:  # could not find models already computed with these embeddings
 
-      gen_train = EmbeddingSequence(batch_size, X_seq_train, y_1hot_train,
-                                    embedding_matrix_normalized)
-      gen_val = EmbeddingSequence(batch_size, X_seq_val, y_1hot_val,
-                                  embedding_matrix_normalized)
+      gen_train = EmbeddingSequence(
+        batch_size, X_seq_train, y_1hot_train, embedding_matrix_normalized
+      )
+      gen_val = EmbeddingSequence(
+        batch_size, X_seq_val, y_1hot_val, embedding_matrix_normalized
+      )
 
       ############################################################################################################
       # Train
 
       # Create a new model and train it
-      print('\n--- Initializing model...')
-      model.init(seed=seed,
-                 maxlen=maxlen,
-                 embedding_dim=int(embedding_dimension),
-                 num_classes=num_classes,
-                 dense_layer_size=dense_layer_size)
+      print("\n--- Initializing model...")
+      model.init(
+        seed=seed,
+        maxlen=maxlen,
+        embedding_dim=int(embedding_dimension),
+        num_classes=num_classes,
+        dense_layer_size=dense_layer_size,
+      )
       if print_summary:
         model.model.summary()
-      print('\n--- Training model...')
-      model.train_gen(train_generator=gen_train,
-                      validation_generator=gen_val,
-                      verbose=True,
-                      epochs=num_epochs)
+      print("\n--- Training model...")
+      model.train_gen(
+        train_generator=gen_train,
+        validation_generator=gen_val,
+        verbose=True,
+        epochs=num_epochs,
+      )
 
       # Save the model
       fs.mkdir(fs.dirname(model_path))
       model.save(model_path)
-      print('\tsaved model to', model_path)
+      print("\tsaved model to", model_path)
 
     ################################################################################################################
     # Test
 
     # Test model
-    print('\n--- Testing model...')
+    print("\n--- Testing model...")
     p = model.predict_gen(generator=gen_test)[0]
 
     # cache the prediction
     fs.mkdir(fs.dirname(predictions_path))
-    with open(predictions_path, 'wb') as outfile:
+    with open(predictions_path, "wb") as outfile:
       pickle.dump(p, outfile)
-    print('\tsaved predictions to', predictions_path)
+    print("\tsaved predictions to", predictions_path)
 
   ####################################################################################################################
   # Return accuracy
@@ -474,16 +544,16 @@ def evaluate(model, embeddings, folder_data, samples_per_class, folder_results,
 ########################################################################################################################
 def main(argv):
   if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
+    raise app.UsageError("Unrecognized command line flags.")
 
   ####################################################################################################################
   # Setup
   # Get flag values
   embeddings = task_utils.ReadEmbeddingFileFromFlags()
   folder_results = FLAGS.out
-  assert len(
-      folder_results
-  ) > 0, "Please specify a path to the results folder using --folder_results"
+  assert (
+    len(folder_results) > 0
+  ), "Please specify a path to the results folder using --folder_results"
   folder_data = FLAGS.input_data
   dense_layer_size = FLAGS.dense_layer
   print_summary = FLAGS.print_summary
@@ -494,20 +564,24 @@ def main(argv):
   pathlib.Path(folder_data).mkdir(parents=True, exist_ok=True)
 
   # Acquire data
-  if not os.path.exists(folder_data + '_train'):
+  if not os.path.exists(folder_data + "_train"):
     # Download data
     task_utils.download_and_unzip(
-        'https://polybox.ethz.ch/index.php/s/JOBjrfmAjOeWCyl/download',
-        'classifyapp_training_data', folder_data)
+      "https://polybox.ethz.ch/index.php/s/JOBjrfmAjOeWCyl/download",
+      "classifyapp_training_data",
+      folder_data,
+    )
 
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    task_utils.CreateSeqDirFromIr(folder_data + '_train', vocab)
-    assert os.path.exists(folder_data +
-                          '_val'), "Folder not found: " + folder_data + '_val'
-    task_utils.CreateSeqDirFromIr(folder_data + '_val', vocab)
-    assert os.path.exists(folder_data +
-                          '_test'), "Folder not found: " + folder_data + '_test'
-    task_utils.CreateSeqDirFromIr(folder_data + '_test', vocab)
+    task_utils.CreateSeqDirFromIr(folder_data + "_train", vocab)
+    assert os.path.exists(folder_data + "_val"), (
+      "Folder not found: " + folder_data + "_val"
+    )
+    task_utils.CreateSeqDirFromIr(folder_data + "_val", vocab)
+    assert os.path.exists(folder_data + "_test"), (
+      "Folder not found: " + folder_data + "_test"
+    )
+    task_utils.CreateSeqDirFromIr(folder_data + "_test", vocab)
 
   # Create directories if they do not exist
   if not os.path.exists(folder_results):
@@ -522,14 +596,25 @@ def main(argv):
   # Evaluate Classifyapp
   print("\nEvaluating ClassifyappInst2Vec ...")
   classifyapp_accuracy = evaluate(
-      NCC_classifyapp(), embeddings, folder_data, train_samples, folder_results,
-      dense_layer_size, print_summary, num_epochs, batch_size)
+    NCC_classifyapp(),
+    embeddings,
+    folder_data,
+    train_samples,
+    folder_results,
+    dense_layer_size,
+    print_summary,
+    num_epochs,
+    batch_size,
+  )
 
   ####################################################################################################################
   # Print results
-  print('\nTest accuracy:',
-        sum(classifyapp_accuracy) * 100 / len(classifyapp_accuracy), '%')
+  print(
+    "\nTest accuracy:",
+    sum(classifyapp_accuracy) * 100 / len(classifyapp_accuracy),
+    "%",
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

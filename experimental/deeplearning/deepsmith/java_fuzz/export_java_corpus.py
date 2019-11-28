@@ -33,29 +33,41 @@ from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
-    'input', contentfiles.ContentFiles,
-    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/java.db',
-    'URL of the database to preprocess content files from.')
+  "input",
+  contentfiles.ContentFiles,
+  "sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/java.db",
+  "URL of the database to preprocess content files from.",
+)
 app.DEFINE_database(
-    'output', contentfiles.ContentFiles,
-    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/export.db',
-    'URL of the database to export content files to.')
-app.DEFINE_boolean('static_only', True, 'Only export static methods.')
-app.DEFINE_integer('min_line_count', 3,
-                   'The minimum number of lines in a contentfile to export.')
-app.DEFINE_integer('min_char_count', 80,
-                   'The minimum number of chars in a contentfile to export.')
-app.DEFINE_boolean('multithreaded_export', True,
-                   'Use multiple threads for export.')
+  "output",
+  contentfiles.ContentFiles,
+  "sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/export.db",
+  "URL of the database to export content files to.",
+)
+app.DEFINE_boolean("static_only", True, "Only export static methods.")
+app.DEFINE_integer(
+  "min_line_count", 3, "The minimum number of lines in a contentfile to export."
+)
+app.DEFINE_integer(
+  "min_char_count",
+  80,
+  "The minimum number of chars in a contentfile to export.",
+)
+app.DEFINE_boolean(
+  "multithreaded_export", True, "Use multiple threads for export."
+)
 # nproc * 5 is the same as the default used by the standard library.
 # You may want to increase --sqlutil_engine_max_overflow to match this value.
-app.DEFINE_integer('export_worker_threads',
-                   multiprocessing.cpu_count() * 5,
-                   "The number of export worker threads.")
+app.DEFINE_integer(
+  "export_worker_threads",
+  multiprocessing.cpu_count() * 5,
+  "The number of export worker threads.",
+)
 
 # Regex to match a java import.
 _JAVA_IMPORT_RE = re.compile(
-    r'\s*import\s+(?P<package>[\w\.]+)\.(?P<classname>\w+)\s*;.*')
+  r"\s*import\s+(?P<package>[\w\.]+)\.(?P<classname>\w+)\s*;.*"
+)
 
 
 def ImportQueryResults(query, session):
@@ -67,7 +79,8 @@ def ImportQueryResults(query, session):
 
 
 def MaybeExtractJavaImport(
-    line: str) -> typing.Optional[typing.Tuple[str, str]]:
+  line: str,
+) -> typing.Optional[typing.Tuple[str, str]]:
   """Try and extract a java import basename from a given line of Java code.
 
   E.g. "import java.util.ArrayList;" -> "ArrayList"
@@ -86,7 +99,7 @@ def MaybeExtractJavaImport(
   """
   match = _JAVA_IMPORT_RE.match(line)
   if match:
-    return match.group('package'), match.group('classname')
+    return match.group("package"), match.group("classname")
 
 
 def GetJavaImports(src: str) -> typing.Set[typing.Tuple[str, str]]:
@@ -99,7 +112,7 @@ def GetJavaImports(src: str) -> typing.Set[typing.Tuple[str, str]]:
     A (possibly empty) set.
   """
   matches = []
-  for line in src.split('\n'):
+  for line in src.split("\n"):
     match = MaybeExtractJavaImport(line)
     if match:
       matches.append(match)
@@ -110,23 +123,35 @@ def InsertImportCommentHeader(method: str, imports: typing.Dict[str, str]):
   import_statements = []
   for basename, package in imports.items():
     if basename in method:
-      import_statements.append(f'//import {package}.{basename}\n')
-  return ''.join(import_statements) + method
+      import_statements.append(f"//import {package}.{basename}\n")
+  return "".join(import_statements) + method
 
 
-def DoProcessRepo(input_session: sqlutil.Session,
-                  output_session: sqlutil.Session, clone_from_url: str,
-                  workding_dir: pathlib.Path, static_only: bool) -> None:
+def DoProcessRepo(
+  input_session: sqlutil.Session,
+  output_session: sqlutil.Session,
+  clone_from_url: str,
+  workding_dir: pathlib.Path,
+  static_only: bool,
+) -> None:
   """Preprocess all content files from a single scraped repo."""
   candidate_contentfiles = input_session.query(
-        contentfiles.ContentFile.relpath, contentfiles.ContentFile.text)\
-      .filter(contentfiles.ContentFile.clone_from_url == clone_from_url)
-  contentfiles_to_export = candidate_contentfiles\
-      .filter(contentfiles.ContentFile.linecount >= FLAGS.min_line_count)\
-      .filter(contentfiles.ContentFile.charcount >= FLAGS.min_char_count).all()
-  app.Log(2, 'Exporting %s of %s content files from %s',
-          humanize.Commas(len(contentfiles_to_export)),
-          humanize.Commas(candidate_contentfiles.count()), clone_from_url)
+    contentfiles.ContentFile.relpath, contentfiles.ContentFile.text
+  ).filter(contentfiles.ContentFile.clone_from_url == clone_from_url)
+  contentfiles_to_export = (
+    candidate_contentfiles.filter(
+      contentfiles.ContentFile.linecount >= FLAGS.min_line_count
+    )
+    .filter(contentfiles.ContentFile.charcount >= FLAGS.min_char_count)
+    .all()
+  )
+  app.Log(
+    2,
+    "Exporting %s of %s content files from %s",
+    humanize.Commas(len(contentfiles_to_export)),
+    humanize.Commas(candidate_contentfiles.count()),
+    clone_from_url,
+  )
 
   # Create the directory tree first.
   for relpath, method_text in contentfiles_to_export:
@@ -135,13 +160,15 @@ def DoProcessRepo(input_session: sqlutil.Session,
     fs.Write(path, method_text.encode("utf-8"), overwrite_existing=False)
 
   # Copy repo to output.
-  repo = input_session.query(contentfiles.GitHubRepository) \
-      .filter(contentfiles.GitHubRepository.clone_from_url == clone_from_url)
+  repo = input_session.query(contentfiles.GitHubRepository).filter(
+    contentfiles.GitHubRepository.clone_from_url == clone_from_url
+  )
   ImportQueryResults(repo, output_session)
 
   # Run the preprocessors.
   methods_lists = extractors.BatchedMethodExtractor(
-      [text for _, text in contentfiles_to_export])
+    [text for _, text in contentfiles_to_export]
+  )
 
   relpath_counters = collections.defaultdict(int)
 
@@ -159,41 +186,53 @@ def DoProcessRepo(input_session: sqlutil.Session,
       # method_text = InsertImportCommentHeader(original_method_text, imports)
       method_text = original_method_text
 
-      encoded_text = method_text.encode('ascii', 'ignore')
+      encoded_text = method_text.encode("ascii", "ignore")
       sha256 = hashlib.sha256(encoded_text).hexdigest()
-      method_text = encoded_text.decode('ascii')
+      method_text = encoded_text.decode("ascii")
       # Add new contentfile.
       output_session.add(
-          contentfiles.ContentFile(
-              clone_from_url=clone_from_url,
-              relpath=relpath,
-              artifact_index=relpath_counters[relpath],
-              sha256=sha256,
-              charcount=len(original_method_text),
-              linecount=len(original_method_text.split('\n')),
-              text=method_text,
-          ))
+        contentfiles.ContentFile(
+          clone_from_url=clone_from_url,
+          relpath=relpath,
+          artifact_index=relpath_counters[relpath],
+          sha256=sha256,
+          charcount=len(original_method_text),
+          linecount=len(original_method_text.split("\n")),
+          text=method_text,
+        )
+      )
       relpath_counters[relpath] += 1
 
   # Mark repo as exported.
   repo.update({"exported": True})
 
 
-def ProcessRepo(input_db: contentfiles.ContentFiles,
-                output_db: contentfiles.ContentFiles, clone_from_url: str,
-                static_only: bool):
+def ProcessRepo(
+  input_db: contentfiles.ContentFiles,
+  output_db: contentfiles.ContentFiles,
+  clone_from_url: str,
+  static_only: bool,
+):
   """Preprocess all content files from a single scraped repo."""
   with input_db.Session(commit=True) as input_session:
     with output_db.Session(commit=True) as output_session:
-      with tempfile.TemporaryDirectory(prefix='phd_') as d:
-        DoProcessRepo(input_session, output_session, clone_from_url,
-                      pathlib.Path(d), static_only)
+      with tempfile.TemporaryDirectory(prefix="phd_") as d:
+        DoProcessRepo(
+          input_session,
+          output_session,
+          clone_from_url,
+          pathlib.Path(d),
+          static_only,
+        )
 
 
 class Exporter(threading.Thread):
-
-  def __init__(self, input_db: contentfiles.ContentFiles,
-               output_db: contentfiles.ContentFiles, static_only: bool):
+  def __init__(
+    self,
+    input_db: contentfiles.ContentFiles,
+    output_db: contentfiles.ContentFiles,
+    static_only: bool,
+  ):
     super(Exporter, self).__init__()
     self.input_db = input_db
     self.output_db = output_db
@@ -202,25 +241,35 @@ class Exporter(threading.Thread):
   def run(self):
     """Preprocess the content files directory and export to outdir."""
     with self.input_db.Session() as input_session:
-      repos_to_export = input_session.query(
-          contentfiles.GitHubRepository.clone_from_url)\
-          .filter(contentfiles.GitHubRepository.active == True)\
-          .filter(contentfiles.GitHubRepository.exported == False)
+      repos_to_export = (
+        input_session.query(contentfiles.GitHubRepository.clone_from_url)
+        .filter(contentfiles.GitHubRepository.active == True)
+        .filter(contentfiles.GitHubRepository.exported == False)
+      )
       clone_from_urls = [x[0] for x in repos_to_export]
 
     max_workers = FLAGS.export_worker_threads
-    app.Log(1, "Exporting contentfiles from %s repos in %s worker threads",
-            humanize.Commas(len(clone_from_urls)), max_workers)
+    app.Log(
+      1,
+      "Exporting contentfiles from %s repos in %s worker threads",
+      humanize.Commas(len(clone_from_urls)),
+      max_workers,
+    )
     if FLAGS.multithreaded_export:
       with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        f = lambda x: ProcessRepo(self.input_db, self.output_db, x, self.
-                                  static_only)
+        f = lambda x: ProcessRepo(
+          self.input_db, self.output_db, x, self.static_only
+        )
         for _ in executor.map(f, clone_from_urls):
           pass
     else:
       for clone_from_url in clone_from_urls:
-        ProcessRepo(self.input_db, self.output_db, clone_from_url,
-                    self.preprocessor_functions)
+        ProcessRepo(
+          self.input_db,
+          self.output_db,
+          clone_from_url,
+          self.preprocessor_functions,
+        )
 
 
 def main():
@@ -230,8 +279,11 @@ def main():
   exporter.start()
 
   with FLAGS.input().Session() as s:
-    repo_count = s.query(contentfiles.GitHubRepository)\
-      .filter(contentfiles.GitHubRepository.active == True).count()
+    repo_count = (
+      s.query(contentfiles.GitHubRepository)
+      .filter(contentfiles.GitHubRepository.active == True)
+      .count()
+    )
 
   while True:
     runtime = time.time() - start_time
@@ -239,12 +291,13 @@ def main():
       exported_repo_count = s.query(contentfiles.GitHubRepository).count()
       exported_contentfile_count = s.query(contentfiles.ContentFile).count()
     sys.stdout.write(
-        f"\rRuntime: {humanize.Duration(runtime)}. "
-        f"Exported repos: {humanize.Commas(exported_repo_count)} "
-        f"of {humanize.Commas(repo_count)} "
-        f"({exported_repo_count / repo_count:.2%}), "
-        f"exported contentfiles: {humanize.Commas(exported_contentfile_count)}"
-        "    ")
+      f"\rRuntime: {humanize.Duration(runtime)}. "
+      f"Exported repos: {humanize.Commas(exported_repo_count)} "
+      f"of {humanize.Commas(repo_count)} "
+      f"({exported_repo_count / repo_count:.2%}), "
+      f"exported contentfiles: {humanize.Commas(exported_contentfile_count)}"
+      "    "
+    )
     sys.stdout.flush()
 
     if not exporter.is_alive():
@@ -254,8 +307,8 @@ def main():
 
   sys.stdout.flush()
   sys.stderr.flush()
-  print('Done!')
+  print("Done!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

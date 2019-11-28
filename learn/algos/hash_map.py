@@ -3,7 +3,6 @@ def hash(key: str) -> int:
 
 
 class HashMap:
-
   def __init__(self, nbuckets=10):
     self.buckets = dict((k, []) for k in range(nbuckets))
 

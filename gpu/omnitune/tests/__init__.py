@@ -6,21 +6,26 @@ import unittest
 
 # Extension of unittest's TestCase.
 class TestCase(unittest.TestCase):
-
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
     self.stencil_gaussian_kernel = open(
-        "tests/data/stencil-gaussian-kernel.cl").read()
+      "tests/data/stencil-gaussian-kernel.cl"
+    ).read()
     self.stencil_gaussian_kernel_user = open(
-        "tests/data/stencil-gaussian-kernel-user.cl").read()
+      "tests/data/stencil-gaussian-kernel-user.cl"
+    ).read()
     self.stencil_gaussian_kernel_bc = open(
-        "tests/data/stencil-gaussian-kernel.bc").read()
+      "tests/data/stencil-gaussian-kernel.bc"
+    ).read()
     self.stencil_gaussian_kernel_ic = open(
-        "tests/data/stencil-gaussian-kernel.ic").read()
+      "tests/data/stencil-gaussian-kernel.ic"
+    ).read()
     self.stencil_gaussian_kernel_ic_json = json.loads(
-        open("tests/data/stencil-gaussian-kernel.ic.json").read())
+      open("tests/data/stencil-gaussian-kernel.ic.json").read()
+    )
     self.stencil_gaussian_kernel_ratios_json = json.loads(
-        open("tests/data/stencil-gaussian-kernel-ratios.json").read())
+      open("tests/data/stencil-gaussian-kernel-ratios.json").read()
+    )
 
   @staticmethod
   def _print(obj, **kwargs):

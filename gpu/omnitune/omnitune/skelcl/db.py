@@ -42,6 +42,7 @@ class Error(db.Error):
   """
   Module-level error.
   """
+
   pass
 
 
@@ -49,6 +50,7 @@ class NoSafeParamError(Error):
   """
   Thrown if an expected safe param is missing.
   """
+
   pass
 
 
@@ -56,6 +58,7 @@ class MissingDataError(Error):
   """
   Thrown if expected experimental data is missing.
   """
+
   pass
 
 
@@ -92,7 +95,6 @@ def _merge_max(lhs, rhs):
 
 
 class ItemAggregator(object):
-
   def __init__(self):
     self.items = []
 
@@ -101,13 +103,11 @@ class ItemAggregator(object):
 
 
 class GeomeanAggregate(ItemAggregator):
-
   def finalize(self):
     return labmath.geomean(self.items)
 
 
 class ConfErrorAggregate(ItemAggregator):
-
   def step(self, value, conf):
     self.items.append(value)
     self.conf = conf
@@ -124,10 +124,12 @@ class Database(db.Database):
   Persistent database store for Omnitune SkelCL data.
   """
 
-  def __init__(self,
-               path=fs.path(omnitune.LOCAL_DIR, "skelcl.db"),
-               remote=False,
-               remote_cfg={}):
+  def __init__(
+    self,
+    path=fs.path(omnitune.LOCAL_DIR, "skelcl.db"),
+    remote=False,
+    remote_cfg={},
+  ):
     """
     Create a new connection to database.
 
@@ -148,11 +150,14 @@ class Database(db.Database):
     self._select_perf_param_legal = sql_command("select_perf_param_legal")
     self._select_ratio_max_wgsize = sql_command("select_ratio_max_wgsize")
     self._best_classification_results = sql_command(
-        "best_classification_results")
+      "best_classification_results"
+    )
     self._best_synthetic_real_classification_results = sql_command(
-        "best_syn_real_classification_results")
+      "best_syn_real_classification_results"
+    )
     self._biggest_syn_real_classification_performance_drop = sql_command(
-        "biggest_syn_real_classification_performance_drop")
+      "biggest_syn_real_classification_performance_drop"
+    )
 
     self.connection.create_aggregate("geomean", 1, GeomeanAggregate)
     self.connection.create_aggregate("conferror", 2, ConfErrorAggregate)
@@ -175,6 +180,7 @@ class Database(db.Database):
     # Open a connection to the remote database.
     if remote:
       import mysql.connector
+
       self.remote = mysql.connector.connect(**remote_cfg)
 
   def pull_remote(self):
@@ -229,8 +235,9 @@ class Database(db.Database):
     cursor.execute("SELECT * FROM " + table)
     self.execute("DELETE FROM " + table)
     placeholders = ",".join(["?"] * ncols)
-    self.executemany("INSERT INTO " + table + " VALUES (" + placeholders + ")",
-                     cursor)
+    self.executemany(
+      "INSERT INTO " + table + " VALUES (" + placeholders + ")", cursor
+    )
     cursor.close()
 
     prof.stop(timer)
@@ -258,12 +265,14 @@ class Database(db.Database):
     slice_size = 10000
 
     for i in range(0, num_rows, slice_size):
-      rows = self.execute("SELECT * FROM {} LIMIT {} OFFSET {}".format(
-          table, slice_size, i)).fetchall()
+      rows = self.execute(
+        "SELECT * FROM {} LIMIT {} OFFSET {}".format(table, slice_size, i)
+      ).fetchall()
       if i:
         io.info("transmitting slice", i // slice_size)
       cursor.executemany(
-          "INSERT INTO " + table + " VALUES (" + placeholders + ")", rows)
+        "INSERT INTO " + table + " VALUES (" + placeholders + ")", rows
+      )
 
     self.remote.commit()
     cursor.close()
@@ -308,16 +317,19 @@ class Database(db.Database):
         (str, str): sqlite3 subprocess stdout and stderr.
     """
     script = sql_command(name)
-    process = subprocess.Popen(["sqlite3", self.path],
-                               stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+    process = subprocess.Popen(
+      ["sqlite3", self.path],
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+    )
     return process.communicate(input=script)
 
   @property
   def num_runtimes(self):
-    return self.execute("SELECT SUM(num_samples) "
-                        "FROM runtime_stats").fetchone()[0]
+    return self.execute(
+      "SELECT SUM(num_samples) " "FROM runtime_stats"
+    ).fetchone()[0]
 
   @property
   def params(self):
@@ -330,15 +342,19 @@ class Database(db.Database):
   @property
   def wg_r(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT wg_r FROM params "
-                                       "ORDER BY wg_r ASC")
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT wg_r FROM params " "ORDER BY wg_r ASC"
+      )
     ]
 
   @property
   def wg_c(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT wg_c FROM params "
-                                       "ORDER BY wg_c ASC")
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT wg_c FROM params " "ORDER BY wg_c ASC"
+      )
     ]
 
   @property
@@ -348,13 +364,13 @@ class Database(db.Database):
   @property
   def gpus(self):
     return [
-        row[0] for row in self.execute("SELECT id FROM devices where type=4")
+      row[0] for row in self.execute("SELECT id FROM devices where type=4")
     ]
 
   @property
   def cpus(self):
     return [
-        row[0] for row in self.execute("SELECT id FROM devices where type=2")
+      row[0] for row in self.execute("SELECT id FROM devices where type=2")
     ]
 
   @property
@@ -368,35 +384,39 @@ class Database(db.Database):
   @property
   def kernel_names(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT name FROM kernel_names")
+      row[0] for row in self.execute("SELECT DISTINCT name FROM kernel_names")
     ]
 
   @property
   def real_kernel_names(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT name FROM kernel_names "
-                                       "WHERE synthetic=0")
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT name FROM kernel_names " "WHERE synthetic=0"
+      )
     ]
 
   @property
   def synthetic_kernel_names(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT name FROM kernel_names "
-                                       "WHERE synthetic=1")
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT name FROM kernel_names " "WHERE synthetic=1"
+      )
     ]
 
   @property
   def real_kernels(self):
     return [
-        row[0]
-        for row in self.execute("SELECT id FROM kernel_names WHERE synthetic=1")
+      row[0]
+      for row in self.execute("SELECT id FROM kernel_names WHERE synthetic=1")
     ]
 
   @property
   def synthetic_kernels(self):
     return [
-        row[0]
-        for row in self.execute("SELECT id FROM kernel_names WHERE synthetic=0")
+      row[0]
+      for row in self.execute("SELECT id FROM kernel_names WHERE synthetic=0")
     ]
 
   @property
@@ -410,17 +430,21 @@ class Database(db.Database):
   @property
   def real_scenarios(self):
     return [
-        row[0] for row in self.execute(
-            "SELECT id FROM scenarios WHERE kernel IN"
-            "(SELECT id FROM kernel_names WHERE synthetic=1)")
+      row[0]
+      for row in self.execute(
+        "SELECT id FROM scenarios WHERE kernel IN"
+        "(SELECT id FROM kernel_names WHERE synthetic=1)"
+      )
     ]
 
   @property
   def synthetic_scenarios(self):
     return [
-        row[0] for row in self.execute(
-            "SELECT id FROM scenarios WHERE kernel IN"
-            "(SELECT id FROM kernel_names WHERE synthetic=0)")
+      row[0]
+      for row in self.execute(
+        "SELECT id FROM scenarios WHERE kernel IN"
+        "(SELECT id FROM kernel_names WHERE synthetic=0)"
+      )
     ]
 
   @property
@@ -434,114 +458,161 @@ class Database(db.Database):
 
             scenario,device,kernel,north,south,east,west,max_wg_size,width,height,tout
     """
-    query = ("SELECT\n"
-             "    scenarios.id,\n"
-             "    devices.name,\n"
-             "    kernel_names.name,\n"
-             "    kernels.north,\n"
-             "    kernels.south,\n"
-             "    kernels.east,\n"
-             "    kernels.west,\n"
-             "    kernels.max_wg_size,\n"
-             "    datasets.width,\n"
-             "    datasets.height,\n"
-             "    datasets.tout\n"
-             "FROM scenarios\n"
-             "LEFT JOIN devices\n"
-             "    ON scenarios.device=devices.id\n"
-             "LEFT JOIN kernel_names\n"
-             "    ON scenarios.kernel=kernel_names.id\n"
-             "LEFT JOIN kernels\n"
-             "    ON scenarios.kernel=kernels.id\n"
-             "LEFT JOIN datasets\n"
-             "    ON scenarios.dataset=datasets.id\n"
-             "ORDER BY scenarios.device ASC")
+    query = (
+      "SELECT\n"
+      "    scenarios.id,\n"
+      "    devices.name,\n"
+      "    kernel_names.name,\n"
+      "    kernels.north,\n"
+      "    kernels.south,\n"
+      "    kernels.east,\n"
+      "    kernels.west,\n"
+      "    kernels.max_wg_size,\n"
+      "    datasets.width,\n"
+      "    datasets.height,\n"
+      "    datasets.tout\n"
+      "FROM scenarios\n"
+      "LEFT JOIN devices\n"
+      "    ON scenarios.device=devices.id\n"
+      "LEFT JOIN kernel_names\n"
+      "    ON scenarios.kernel=kernel_names.id\n"
+      "LEFT JOIN kernels\n"
+      "    ON scenarios.kernel=kernels.id\n"
+      "LEFT JOIN datasets\n"
+      "    ON scenarios.dataset=datasets.id\n"
+      "ORDER BY scenarios.device ASC"
+    )
     if where is not None:
       query += " WHERE " + where
     return self.execute(query).fetchall()
 
   @property
   def mean_samples(self):
-    return self.execute("SELECT AVG(num_samples) FROM "
-                        "runtime_stats").fetchone()[0]
+    return self.execute(
+      "SELECT AVG(num_samples) FROM " "runtime_stats"
+    ).fetchone()[0]
 
   @property
   def num_scenarios_by_device(self):
-    return [(device,
-             self.execute("SELECT Count(*) FROM scenarios WHERE device=?",
-                          (device,)).fetchone()[0]) for device in self.devices]
+    return [
+      (
+        device,
+        self.execute(
+          "SELECT Count(*) FROM scenarios WHERE device=?", (device,)
+        ).fetchone()[0],
+      )
+      for device in self.devices
+    ]
 
   @property
   def num_runtime_stats_by_device(self):
-    return [(device,
-             self.execute(
-                 "SELECT Count(*) FROM runtime_stats "
-                 "WHERE scenario IN ("
-                 "    SELECT id FROM scenarios WHERE device=?"
-                 ")", (device,)).fetchone()[0]) for device in self.devices]
+    return [
+      (
+        device,
+        self.execute(
+          "SELECT Count(*) FROM runtime_stats "
+          "WHERE scenario IN ("
+          "    SELECT id FROM scenarios WHERE device=?"
+          ")",
+          (device,),
+        ).fetchone()[0],
+      )
+      for device in self.devices
+    ]
 
   @property
   def num_scenarios_by_kernel(self):
-    return [(name,
-             self.execute(
-                 "SELECT Count(*) FROM scenarios "
-                 "WHERE kernel IN ("
-                 "    SELECT id FROM kernel_names WHERE name=?"
-                 ")", (name,)).fetchone()[0]) for name in self.kernel_names]
+    return [
+      (
+        name,
+        self.execute(
+          "SELECT Count(*) FROM scenarios "
+          "WHERE kernel IN ("
+          "    SELECT id FROM kernel_names WHERE name=?"
+          ")",
+          (name,),
+        ).fetchone()[0],
+      )
+      for name in self.kernel_names
+    ]
 
   @property
   def num_runtime_stats_by_kernel(self):
-    return [(name,
-             self.execute(
-                 "SELECT Count(*) FROM runtime_stats "
-                 "WHERE scenario IN ("
-                 "    SELECT id FROM scenarios WHERE kernel IN ("
-                 "        SELECT id FROM kernel_names WHERE name=?"
-                 "    )"
-                 ")", (name,)).fetchone()[0]) for name in self.kernel_names]
+    return [
+      (
+        name,
+        self.execute(
+          "SELECT Count(*) FROM runtime_stats "
+          "WHERE scenario IN ("
+          "    SELECT id FROM scenarios WHERE kernel IN ("
+          "        SELECT id FROM kernel_names WHERE name=?"
+          "    )"
+          ")",
+          (name,),
+        ).fetchone()[0],
+      )
+      for name in self.kernel_names
+    ]
 
   @property
   def num_scenarios_by_dataset(self):
-    return [(dataset,
-             self.execute("SELECT Count(*) FROM scenarios WHERE dataset=?",
-                          (dataset,)).fetchone()[0])
-            for dataset in self.datasets]
+    return [
+      (
+        dataset,
+        self.execute(
+          "SELECT Count(*) FROM scenarios WHERE dataset=?", (dataset,)
+        ).fetchone()[0],
+      )
+      for dataset in self.datasets
+    ]
 
   @property
   def num_runtime_stats_by_dataset(self):
-    return [(dataset,
-             self.execute(
-                 "SELECT Count(*) FROM runtime_stats "
-                 "WHERE scenario IN ("
-                 "    SELECT id FROM scenarios WHERE dataset=?"
-                 ")", (dataset,)).fetchone()[0]) for dataset in self.datasets]
+    return [
+      (
+        dataset,
+        self.execute(
+          "SELECT Count(*) FROM runtime_stats "
+          "WHERE scenario IN ("
+          "    SELECT id FROM scenarios WHERE dataset=?"
+          ")",
+          (dataset,),
+        ).fetchone()[0],
+      )
+      for dataset in self.datasets
+    ]
 
   @property
   def min_sample_count(self):
-    return self.execute("SELECT MIN(num_samples) FROM "
-                        "runtime_stats").fetchone()[0]
+    return self.execute(
+      "SELECT MIN(num_samples) FROM " "runtime_stats"
+    ).fetchone()[0]
 
   @property
   def max_sample_count(self):
-    return self.execute("SELECT MAX(num_samples) FROM "
-                        "runtime_stats").fetchone()[0]
+    return self.execute(
+      "SELECT MAX(num_samples) FROM " "runtime_stats"
+    ).fetchone()[0]
 
   @property
   def ratio_refused_params(self):
     """
     The ratio of refused params.
     """
-    return self.execute("SELECT ("
-                        "    SELECT Count(*) FROM ("
-                        "         SELECT DISTINCT params FROM refused_params"
-                        "    )"
-                        ") * 1.0 / (SELECT Count(*) FROM params)").fetchone()[0]
+    return self.execute(
+      "SELECT ("
+      "    SELECT Count(*) FROM ("
+      "         SELECT DISTINCT params FROM refused_params"
+      "    )"
+      ") * 1.0 / (SELECT Count(*) FROM params)"
+    ).fetchone()[0]
 
   @property
   def ratio_refused_test_cases(self):
     return self.execute(
-        "SELECT (SELECT Count(*) FROM refused_params) * 1.0 / "
-        "       (SELECT Count(*) FROM runtime_stats)").fetchone()[0]
+      "SELECT (SELECT Count(*) FROM refused_params) * 1.0 / "
+      "       (SELECT Count(*) FROM runtime_stats)"
+    ).fetchone()[0]
 
   @property
   def approximate_compute_time(self):
@@ -552,30 +623,37 @@ class Database(db.Database):
         T = num of samples * mean runtime for each
     """
     return self.execute(
-        "SELECT SUM(num_samples * mean) FROM runtime_stats").fetchone()[0]
+      "SELECT SUM(num_samples * mean) FROM runtime_stats"
+    ).fetchone()[0]
 
   @property
   def scenario_params(self):
     return [
-        row for row in self.execute("SELECT scenario,params FROM "
-                                    "runtime_stats GROUP BY scenario,params")
+      row
+      for row in self.execute(
+        "SELECT scenario,params FROM " "runtime_stats GROUP BY scenario,params"
+      )
     ]
 
   @property
   def oracle_params(self):
-    return [(row[0], int(row[1]))
-            for row in self.execute("SELECT\n"
-                                    "    params,\n"
-                                    "    Count(params) AS count\n"
-                                    "FROM oracle_params\n"
-                                    "GROUP BY params\n"
-                                    "ORDER BY count DESC")]
+    return [
+      (row[0], int(row[1]))
+      for row in self.execute(
+        "SELECT\n"
+        "    params,\n"
+        "    Count(params) AS count\n"
+        "FROM oracle_params\n"
+        "GROUP BY params\n"
+        "ORDER BY count DESC"
+      )
+    ]
 
   @property
   def oracle_params_xy(self):
     return [
-        unhash_params(row[0])
-        for row in self.execute("SELECT oracle_param FROM scenario_stats")
+      unhash_params(row[0])
+      for row in self.execute("SELECT oracle_param FROM scenario_stats")
     ]
 
   @property
@@ -585,30 +663,39 @@ class Database(db.Database):
   @property
   def classification_classifiers(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT classifier FROM "
-                                       "classification_results")
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT classifier FROM " "classification_results"
+      )
     ]
 
   @property
   def regression_classifiers(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT classifier FROM "
-                                       "runtime_regression_results")
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT classifier FROM " "runtime_regression_results"
+      )
     ]
 
   @property
   def err_fns(self):
     return [
-        row[0] for row in self.execute("SELECT DISTINCT err_fn FROM "
-                                       "classification_results")
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT err_fn FROM " "classification_results"
+      )
     ]
 
   @property
   def classifier_err_fns(self):
     return [
-        row for row in self.execute("SELECT classifier,err_fn FROM "
-                                    "classification_results "
-                                    "GROUP BY classifier,err_fn")
+      row
+      for row in self.execute(
+        "SELECT classifier,err_fn FROM "
+        "classification_results "
+        "GROUP BY classifier,err_fn"
+      )
     ]
 
   @property
@@ -618,12 +705,14 @@ class Database(db.Database):
   @property
   def best_synthetic_real_classification_results(self):
     return self.execute(
-        self._best_synthetic_real_classification_results).fetchone()
+      self._best_synthetic_real_classification_results
+    ).fetchone()
 
   @property
   def biggest_synthetic_real_classification_performance_drop(self):
     return self.execute(
-        self._biggest_syn_real_classification_performance_drop).fetchone()[0]
+      self._biggest_syn_real_classification_performance_drop
+    ).fetchone()[0]
 
   def create_tables(self):
     """
@@ -662,9 +751,11 @@ class Database(db.Database):
 
     # Query lookup table.
     query = self.execute(
-        "SELECT id\n"
-        "FROM " + lookup_table + "\n"
-        "WHERE " + where(*lookup_columns), lookup_vals).fetchone()
+      "SELECT id\n"
+      "FROM " + lookup_table + "\n"
+      "WHERE " + where(*lookup_columns),
+      lookup_vals,
+    ).fetchone()
 
     # If there's an entry in the lookup table, return.
     if query:
@@ -680,14 +771,22 @@ class Database(db.Database):
     # "lookup key" -> "feature id" is many -> one, there may
     # already be an entry in the features table.
     row = (id,) + features
-    insert = ("INSERT OR IGNORE INTO " + features_table + " VALUES " +
-              placeholders(*row))
+    insert = (
+      "INSERT OR IGNORE INTO "
+      + features_table
+      + " VALUES "
+      + placeholders(*row)
+    )
     self.execute(insert, row)
 
     # Add entry to lookup table.
     row = lookup_vals + (id,)
-    insert = ("INSERT INTO " + lookup_table + " VALUES " +
-              placeholders("", *lookup_columns))
+    insert = (
+      "INSERT INTO "
+      + lookup_table
+      + " VALUES "
+      + placeholders("", *lookup_columns)
+    )
     self.execute(insert, row)
 
     self.commit()
@@ -706,8 +805,9 @@ class Database(db.Database):
 
         str: The unique device ID.
     """
-    return self._id("device", ("name", "count"), (name, count), features.device,
-                    hash_device)
+    return self._id(
+      "device", ("name", "count"), (name, count), features.device, hash_device
+    )
 
   def kernel_id(self, north, south, east, west, max_wg_size, source):
     """
@@ -726,10 +826,13 @@ class Database(db.Database):
 
         str: The unique kernel ID.
     """
-    return self._id("kernel",
-                    ("north", "south", "east", "west", "max_wg_size", "source"),
-                    (north, south, east, west, max_wg_size, source),
-                    features.kernel, hash_kernel)
+    return self._id(
+      "kernel",
+      ("north", "south", "east", "west", "max_wg_size", "source"),
+      (north, south, east, west, max_wg_size, source),
+      features.kernel,
+      hash_kernel,
+    )
 
   def datasets_id(self, width, height, tin, tout):
     """
@@ -746,8 +849,13 @@ class Database(db.Database):
 
         str: The unique dataset ID.
     """
-    return self._id("dataset", ("width", "height", "tin", "tout"),
-                    (width, height, tin, tout), features.dataset, hash_dataset)
+    return self._id(
+      "dataset",
+      ("width", "height", "tin", "tout"),
+      (width, height, tin, tout),
+      features.dataset,
+      hash_dataset,
+    )
 
   def scenario_id(self, device, kernel, dataset):
     """
@@ -804,28 +912,32 @@ class Database(db.Database):
       self._progress_report("runtime_stats", i, 1000, total)
       scenario, params, rhs_count, rhs_min, rhs_mean, rhs_max = row
       lhs = self.execute(
-          "SELECT num_samples,min,mean,max\n"
-          "FROM runtime_stats\n"
-          "WHERE scenario=? AND params=?", (scenario, params)).fetchone()
+        "SELECT num_samples,min,mean,max\n"
+        "FROM runtime_stats\n"
+        "WHERE scenario=? AND params=?",
+        (scenario, params),
+      ).fetchone()
       if lhs:
         # Prior value, so update the existing value.
         lhs_count, lhs_min, lhs_mean, lhs_max = lhs
 
         new_count = lhs_count + rhs_count
         new_min = min(lhs_min, rhs_min)
-        new_mean = ((lhs_mean * lhs_count + rhs_mean * rhs_count) / new_count)
+        new_mean = (lhs_mean * lhs_count + rhs_mean * rhs_count) / new_count
         new_max = max(lhs_max, rhs_max)
 
         self.execute(
-            "UPDATE runtime_stats\n"
-            "SET num_samples=?,min=?,mean=?,max=?\n"
-            "WHERE scenario=? AND params=?",
-            (new_count, new_min, new_mean, new_max, scenario, params))
+          "UPDATE runtime_stats\n"
+          "SET num_samples=?,min=?,mean=?,max=?\n"
+          "WHERE scenario=? AND params=?",
+          (new_count, new_min, new_mean, new_max, scenario, params),
+        )
       else:
         # No prior value, so just add a new row.
-        self.execute("INSERT INTO runtime_stats\n"
-                     "VALUES (?,?,?,?,?,?)",
-                     (scenario, params, rhs_count, rhs_min, rhs_mean, rhs_max))
+        self.execute(
+          "INSERT INTO runtime_stats\n" "VALUES (?,?,?,?,?,?)",
+          (scenario, params, rhs_count, rhs_min, rhs_mean, rhs_max),
+        )
 
     self.commit()
     self.detach("rhs")
@@ -857,15 +969,28 @@ class Database(db.Database):
     """
     Add a new measured experimental runtime.
     """
-    self.execute("INSERT INTO runtimes VALUES (?,?,?)",
-                 (scenario, params, runtime))
+    self.execute(
+      "INSERT INTO runtimes VALUES (?,?,?)", (scenario, params, runtime)
+    )
 
   def refuse_params(self, scenario, params):
-    self.execute("INSERT OR IGNORE INTO refused_params VALUES(?,?)",
-                 (scenario, params))
+    self.execute(
+      "INSERT OR IGNORE INTO refused_params VALUES(?,?)", (scenario, params)
+    )
 
-  def add_model_result(self, model, err_fn, scenario, actual, predicted,
-                       correct, illegal, refused, performance, speedup):
+  def add_model_result(
+    self,
+    model,
+    err_fn,
+    scenario,
+    actual,
+    predicted,
+    correct,
+    illegal,
+    refused,
+    performance,
+    speedup,
+  ):
     try:
       speedup_he = self.speedup(scenario, HE_PARAM, predicted)
     except:
@@ -877,14 +1002,40 @@ class Database(db.Database):
       speedup_mo = None
 
     self.execute(
-        "INSERT INTO model_results VALUES "
-        "(?,?,?,?,?,?,?,?,?,?,?,?)",
-        (model, err_fn, scenario, actual, predicted, correct, illegal, refused,
-         performance, speedup, speedup_he, speedup_mo))
+      "INSERT INTO model_results VALUES " "(?,?,?,?,?,?,?,?,?,?,?,?)",
+      (
+        model,
+        err_fn,
+        scenario,
+        actual,
+        predicted,
+        correct,
+        illegal,
+        refused,
+        performance,
+        speedup,
+        speedup_he,
+        speedup_mo,
+      ),
+    )
 
   def add_classification_result(
-      self, job, classifier, err_fn, dataset, scenario, actual, predicted,
-      baseline, correct, illegal, refused, performance, speedup, elapsed):
+    self,
+    job,
+    classifier,
+    err_fn,
+    dataset,
+    scenario,
+    actual,
+    predicted,
+    baseline,
+    correct,
+    illegal,
+    refused,
+    performance,
+    speedup,
+    elapsed,
+  ):
     """
     Add result of using a classifier to predict optimal workgroup size.
 
@@ -920,15 +1071,40 @@ class Database(db.Database):
       speedup_mo = None
 
     self.execute(
-        "INSERT INTO classification_results VALUES "
-        "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (job_id, classifier_id, err_fn_id, dataset_id, scenario, actual,
-         predicted, baseline, correct, illegal, refused, performance, speedup,
-         speedup_he, speedup_mo, elapsed))
+      "INSERT INTO classification_results VALUES "
+      "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      (
+        job_id,
+        classifier_id,
+        err_fn_id,
+        dataset_id,
+        scenario,
+        actual,
+        predicted,
+        baseline,
+        correct,
+        illegal,
+        refused,
+        performance,
+        speedup,
+        speedup_he,
+        speedup_mo,
+        elapsed,
+      ),
+    )
 
-  def add_runtime_regression_result(self, job, classifier, dataset, scenario,
-                                    params, actual, predicted, norm_predicted,
-                                    norm_error):
+  def add_runtime_regression_result(
+    self,
+    job,
+    classifier,
+    dataset,
+    scenario,
+    params,
+    actual,
+    predicted,
+    norm_predicted,
+    norm_error,
+  ):
     """
     Add result of using a regressor to predict stencil runtime.
 
@@ -949,14 +1125,32 @@ class Database(db.Database):
     dataset_id = self.ml_dataset_id(dataset)
 
     self.execute(
-        "INSERT INTO runtime_regression_results VALUES "
-        "(?,?,?,?,?,?,?,?,?)",
-        (job_id, classifier_id, dataset_id, scenario, params, actual, predicted,
-         norm_predicted, norm_error))
+      "INSERT INTO runtime_regression_results VALUES " "(?,?,?,?,?,?,?,?,?)",
+      (
+        job_id,
+        classifier_id,
+        dataset_id,
+        scenario,
+        params,
+        actual,
+        predicted,
+        norm_predicted,
+        norm_error,
+      ),
+    )
 
-  def add_runtime_classification_result(self, job, classifier, scenario, actual,
-                                        predicted, baseline, correct,
-                                        performance, speedup):
+  def add_runtime_classification_result(
+    self,
+    job,
+    classifier,
+    scenario,
+    actual,
+    predicted,
+    baseline,
+    correct,
+    performance,
+    speedup,
+  ):
     """
     Add result of using a runtime regressor to predict optimal
     workgroup size.
@@ -977,14 +1171,33 @@ class Database(db.Database):
     classifier_id = self.classifier_id(classifier)
 
     self.execute(
-        "INSERT INTO runtime_classification_results VALUES "
-        "(?,?,?,?,?,?,?,?,?)",
-        (job_id, classifier_id, scenario, actual, predicted, baseline, correct,
-         performance, speedup))
+      "INSERT INTO runtime_classification_results VALUES "
+      "(?,?,?,?,?,?,?,?,?)",
+      (
+        job_id,
+        classifier_id,
+        scenario,
+        actual,
+        predicted,
+        baseline,
+        correct,
+        performance,
+        speedup,
+      ),
+    )
 
-  def add_speedup_regression_result(self, job, classifier, dataset, scenario,
-                                    params, actual, predicted, norm_predicted,
-                                    norm_error):
+  def add_speedup_regression_result(
+    self,
+    job,
+    classifier,
+    dataset,
+    scenario,
+    params,
+    actual,
+    predicted,
+    norm_predicted,
+    norm_error,
+  ):
     """
     Add result of using a regressor to predict relative performance stencil.
 
@@ -1005,14 +1218,32 @@ class Database(db.Database):
     dataset_id = self.ml_dataset_id(dataset)
 
     self.execute(
-        "INSERT INTO speedup_regression_results VALUES "
-        "(?,?,?,?,?,?,?,?,?)",
-        (job_id, classifier_id, dataset_id, scenario, params, actual, predicted,
-         norm_predicted, norm_error))
+      "INSERT INTO speedup_regression_results VALUES " "(?,?,?,?,?,?,?,?,?)",
+      (
+        job_id,
+        classifier_id,
+        dataset_id,
+        scenario,
+        params,
+        actual,
+        predicted,
+        norm_predicted,
+        norm_error,
+      ),
+    )
 
-  def add_speedup_classification_result(self, job, classifier, scenario, actual,
-                                        predicted, baseline, correct,
-                                        performance, speedup):
+  def add_speedup_classification_result(
+    self,
+    job,
+    classifier,
+    scenario,
+    actual,
+    predicted,
+    baseline,
+    correct,
+    performance,
+    speedup,
+  ):
     """
     Add result of using a speedup regressor to predict optimal
     workgroup size.
@@ -1033,10 +1264,20 @@ class Database(db.Database):
     classifier_id = self.classifier_id(classifier)
 
     self.execute(
-        "INSERT INTO speedup_classification_results VALUES "
-        "(?,?,?,?,?,?,?,?,?)",
-        (job_id, classifier_id, scenario, actual, predicted, baseline, correct,
-         performance, speedup))
+      "INSERT INTO speedup_classification_results VALUES "
+      "(?,?,?,?,?,?,?,?,?)",
+      (
+        job_id,
+        classifier_id,
+        scenario,
+        actual,
+        predicted,
+        baseline,
+        correct,
+        performance,
+        speedup,
+      ),
+    )
 
   def ml_job_id(self, name):
     """
@@ -1054,8 +1295,10 @@ class Database(db.Database):
     classifier_id = str(classifier)
     classname = classifier.classname
     options = " ".join(classifier.options)
-    self.execute("INSERT OR IGNORE INTO classifiers VALUES (?,?,?)",
-                 (classifier_id, classname, options))
+    self.execute(
+      "INSERT OR IGNORE INTO classifiers VALUES (?,?,?)",
+      (classifier_id, classname, options),
+    )
     return classifier_id
 
   def err_fn_id(self, err_fn):
@@ -1084,11 +1327,12 @@ class Database(db.Database):
     else:
       if not i % n:
         self.commit()
-        io.info("Populating {table} ... {perc:.2f}% ({i} / {total} "
-                "rows).".format(table=table_name,
-                                perc=(i / total) * 100,
-                                i=i,
-                                total=total))
+        io.info(
+          "Populating {table} ... {perc:.2f}% ({i} / {total} "
+          "rows).".format(
+            table=table_name, perc=(i / total) * 100, i=i, total=total
+          )
+        )
 
   def populate_kernel_names_table(self):
     """
@@ -1103,12 +1347,13 @@ class Database(db.Database):
 
       if not query.fetchone():
         source = self.execute(
-            "SELECT source "
-            "FROM kernel_lookup "
-            "WHERE id=? LIMIT 1", (kernel,)).fetchone()[0]
+          "SELECT source " "FROM kernel_lookup " "WHERE id=? LIMIT 1", (kernel,)
+        ).fetchone()[0]
         synthetic, name = get_kernel_name_and_type(source)
-        self.execute("INSERT INTO kernel_names VALUES (?,?,?)",
-                     (kernel, 1 if synthetic else 0, name))
+        self.execute(
+          "INSERT INTO kernel_names VALUES (?,?,?)",
+          (kernel, 1 if synthetic else 0, name),
+        )
         self.commit()
 
   def populate_runtime_stats_table(self):
@@ -1146,19 +1391,26 @@ class Database(db.Database):
 
   def dump_nm_runtimes(self, path, num_tests=1000, num_samples=1000):
     scenario_params = [
-        row for row in self.execute(
-            "SELECT scenario,params\n"
-            "FROM runtime_stats\n"
-            "WHERE num_samples >= ?\n"
-            "ORDER BY RANDOM()\n"
-            "LIMIT ?", (num_samples, num_tests))
+      row
+      for row in self.execute(
+        "SELECT scenario,params\n"
+        "FROM runtime_stats\n"
+        "WHERE num_samples >= ?\n"
+        "ORDER BY RANDOM()\n"
+        "LIMIT ?",
+        (num_samples, num_tests),
+      )
     ]
 
     fs.mkdir("/tmp/omnitune.export")
 
     if len(scenario_params) < num_tests:
-      io.fatal("There isn't enough data to work with! "
-               "Requested:", num_tests, "Found:", len(scenario_params))
+      io.fatal(
+        "There isn't enough data to work with! " "Requested:",
+        num_tests,
+        "Found:",
+        len(scenario_params),
+      )
 
     samples = []
     for i, row in enumerate(scenario_params):
@@ -1166,20 +1418,23 @@ class Database(db.Database):
       prof.start(timer)
       scenario, params = row
       runtimes = [
-          row[0] for row in self.execute(
-              "SELECT runtime FROM runtimes WHERE "
-              "scenario=? AND params=? LIMIT ?", (scenario, params,
-                                                  num_samples))
+        row[0]
+        for row in self.execute(
+          "SELECT runtime FROM runtimes WHERE "
+          "scenario=? AND params=? LIMIT ?",
+          (scenario, params, num_samples),
+        )
       ]
       samples.append(runtimes)
       prof.stop(timer)
 
-      json.dump(runtimes,
-                open("/tmp/omnitune.export/{}.json".format(i + 1), "wb"))
+      json.dump(
+        runtimes, open("/tmp/omnitune.export/{}.json".format(i + 1), "wb")
+      )
 
     runtimes = [
-        json.load(open(file))
-        for file in fs.ls("/tmp/omnitune.export", abspaths=True)
+      json.load(open(file))
+      for file in fs.ls("/tmp/omnitune.export", abspaths=True)
     ]
 
     json.dump(runtimes, open(fs.path(path), "wb"))
@@ -1196,8 +1451,8 @@ class Database(db.Database):
       bin_end = bin_start + bin_size
 
       performances = [
-          row[0]
-          for row in self.execute(sql_command(command), (bin_start, bin_end))
+        row[0]
+        for row in self.execute(sql_command(command), (bin_start, bin_end))
       ]
       samples.append(performances)
       prof.stop(timer)
@@ -1223,7 +1478,7 @@ class Database(db.Database):
     sample_step = 1
     num_tests = len(sample_runtimes)
     num_repetitions = 10
-    conf = .95
+    conf = 0.95
 
     means = [labmath.mean(runtimes) for runtimes in sample_runtimes]
 
@@ -1232,25 +1487,27 @@ class Database(db.Database):
     for num_samples in range(min_samples, max_samples + 1, sample_step):
       confintervals = []
       timer = "variance_stats for {} of {} samples".format(
-          num_samples, max_samples)
+        num_samples, max_samples
+      )
 
       prof.start(timer)
       for _ in range(num_repetitions):
         for mean, runtimes in zip(means, sample_runtimes):
           random.shuffle(runtimes)
           subsample = runtimes[:num_samples]
-          confinterval = labmath.confinterval(subsample,
-                                              error_only=True,
-                                              conf=conf)
+          confinterval = labmath.confinterval(
+            subsample, error_only=True, conf=conf
+          )
 
           confintervals.append(confinterval / mean)
 
       mean_ci = labmath.mean(confintervals)
-      ci_ci = labmath.confinterval(confintervals, error_only=True, conf=.95)
+      ci_ci = labmath.confinterval(confintervals, error_only=True, conf=0.95)
       prof.stop(timer)
 
-      output.write(",".join([str(x) for x in [num_samples, mean_ci, ci_ci]]) +
-                   "\n")
+      output.write(
+        ",".join([str(x) for x in [num_samples, mean_ci, ci_ci]]) + "\n"
+      )
       output.flush()
 
     output.close()
@@ -1278,8 +1535,9 @@ class Database(db.Database):
     Return the number of runtimes for a particular scenario + params.
     """
     query = self.execute(
-        "SELECT Count(*) FROM runtimes WHERE "
-        "scenario=? AND params=?", (scenario, params))
+      "SELECT Count(*) FROM runtimes WHERE " "scenario=? AND params=?",
+      (scenario, params),
+    )
     return query.fetchone()[0]
 
   def lookup_named_kernel(self, name):
@@ -1295,9 +1553,10 @@ class Database(db.Database):
         list of str: A list of kernel IDs for the named kernel.
     """
     return [
-        row[0]
-        for row in self.execute("SELECT id FROM kernel_names WHERE name=?", (
-            name,))
+      row[0]
+      for row in self.execute(
+        "SELECT id FROM kernel_names WHERE name=?", (name,)
+      )
     ]
 
   def lookup_named_kernels(self):
@@ -1311,10 +1570,9 @@ class Database(db.Database):
     """
     return {name: self.lookup_named_kernel(name) for name in self.kernel_names}
 
-  def oracle_param_frequencies(self,
-                               table="scenario_stats",
-                               where=None,
-                               normalise=False):
+  def oracle_param_frequencies(
+    self, table="scenario_stats", where=None, normalise=False
+  ):
     """
     Return a frequency table of optimal parameter values.
 
@@ -1335,9 +1593,11 @@ class Database(db.Database):
       select.append("WHERE")
       select.append(where)
     freqs = {
-        row[0]: row[1] for row in self.execute(
-            "SELECT oracle_param AS param,Count(*) AS count FROM "
-            "{select} GROUP BY oracle_param".format(select=" ".join(select)))
+      row[0]: row[1]
+      for row in self.execute(
+        "SELECT oracle_param AS param,Count(*) AS count FROM "
+        "{select} GROUP BY oracle_param".format(select=" ".join(select))
+      )
     }
 
     # Normalise frequencies.
@@ -1387,10 +1647,13 @@ class Database(db.Database):
          (max_wgsize,frequency) pair.
     """
     freqs = [
-        row for row in self.execute("SELECT max_wg_size,Count(*) AS count FROM "
-                                    "kernels LEFT JOIN scenarios ON "
-                                    "kernel = kernels.id GROUP BY max_wg_size "
-                                    "ORDER BY count ASC")
+      row
+      for row in self.execute(
+        "SELECT max_wg_size,Count(*) AS count FROM "
+        "kernels LEFT JOIN scenarios ON "
+        "kernel = kernels.id GROUP BY max_wg_size "
+        "ORDER BY count ASC"
+      )
     ]
 
     # Normalise frequencies.
@@ -1422,9 +1685,10 @@ class Database(db.Database):
 
   def refused_param_frequencies(self, normalise=False):
     freqs = {
-        row[0]: row[1] for row in self.execute(
-            "SELECT params,Count(*) AS count FROM refused_params "
-            "GROUP BY params")
+      row[0]: row[1]
+      for row in self.execute(
+        "SELECT params,Count(*) AS count FROM refused_params " "GROUP BY params"
+      )
     }
 
     if normalise:
@@ -1456,7 +1720,7 @@ class Database(db.Database):
          (wgsize,frequency) pair.
     """
     return [
-        (param, self.param_coverage(param, **kwargs)) for param in self.params
+      (param, self.param_coverage(param, **kwargs)) for param in self.params
     ]
 
   def param_coverage_space(self, **kwargs):
@@ -1493,7 +1757,7 @@ class Database(db.Database):
          (wgsize,is_safe) pair.
     """
     return [
-        (param, self.param_is_safe(param, **kwargs)) for param in self.params
+      (param, self.param_is_safe(param, **kwargs)) for param in self.params
     ]
 
   def param_safe_space(self, **kwargs):
@@ -1560,8 +1824,8 @@ class Database(db.Database):
           scenario.
     """
     return self.execute(
-        "SELECT Count(*) FROM runtime_stats WHERE "
-        "scenario=?", (scenario,)).fetchone()[0]
+      "SELECT Count(*) FROM runtime_stats WHERE " "scenario=?", (scenario,)
+    ).fetchone()[0]
 
   def scenarios_for_device(self, device):
     """
@@ -1576,9 +1840,10 @@ class Database(db.Database):
         list of str: List of scenario IDs.
     """
     return [
-        row[0]
-        for row in self.execute("SELECT id FROM scenarios WHERE device=?", (
-            device,))
+      row[0]
+      for row in self.execute(
+        "SELECT id FROM scenarios WHERE device=?", (device,)
+      )
     ]
 
   def scenarios_for_kernel(self, kernel):
@@ -1594,9 +1859,10 @@ class Database(db.Database):
         list of str: List of scenario IDs.
     """
     return [
-        row[0]
-        for row in self.execute("SELECT id FROM scenarios WHERE kernel=?", (
-            kernel,))
+      row[0]
+      for row in self.execute(
+        "SELECT id FROM scenarios WHERE kernel=?", (kernel,)
+      )
     ]
 
   def scenarios_for_dataset(self, dataset):
@@ -1612,9 +1878,10 @@ class Database(db.Database):
         list of str: List of scenario IDs.
     """
     return [
-        row[0]
-        for row in self.execute("SELECT id FROM scenarios WHERE dataset=?", (
-            dataset,))
+      row[0]
+      for row in self.execute(
+        "SELECT id FROM scenarios WHERE dataset=?", (dataset,)
+      )
     ]
 
   def num_params_for_scenarios(self):
@@ -1627,8 +1894,8 @@ class Database(db.Database):
           number of parameters sampled for that scenario.
     """
     return {
-        scenario: self.num_params_for_scenario(scenario)
-        for scenario in self.scenarios
+      scenario: self.num_params_for_scenario(scenario)
+      for scenario in self.scenarios
     }
 
   def perf_scenario(self, scenario):
@@ -1648,8 +1915,9 @@ class Database(db.Database):
           parameters ID, and each value is the performance of that
           parameter relative to the oracle.
     """
-    query = self.execute(self._select_perf_scenario,
-                         (scenario, scenario, scenario)).fetchall()
+    query = self.execute(
+      self._select_perf_scenario, (scenario, scenario, scenario)
+    ).fetchall()
     return {t[0]: t[1] for t in query}
 
   def perf_param(self, param):
@@ -1739,11 +2007,14 @@ class Database(db.Database):
         list of float: Performance of each entry in runtime_Stats
           for that device.
     """
-    return lab.flatten([
+    return lab.flatten(
+      [
         self.perf_scenario(row[0]).values()
-        for row in self.execute("SELECT id FROM scenarios WHERE "
-                                "device=?", (device,))
-    ])
+        for row in self.execute(
+          "SELECT id FROM scenarios WHERE " "device=?", (device,)
+        )
+      ]
+    )
 
   def performance_of_kernels_with_name(self, name):
     """
@@ -1758,14 +2029,20 @@ class Database(db.Database):
         list of float: Performance of each entry in runtime_stats
           for all kernels with that name.
     """
-    kernels = ("(" + ",".join(
-        ['"' + id + '"' for id in self.lookup_named_kernel(name)]) + ")")
+    kernels = (
+      "("
+      + ",".join(['"' + id + '"' for id in self.lookup_named_kernel(name)])
+      + ")"
+    )
 
-    return lab.flatten([
+    return lab.flatten(
+      [
         self.perf_scenario(row[0]).values()
-        for row in self.execute("SELECT id FROM scenarios WHERE "
-                                "kernel IN " + kernels)
-    ])
+        for row in self.execute(
+          "SELECT id FROM scenarios WHERE " "kernel IN " + kernels
+        )
+      ]
+    )
 
   def performance_of_dataset(self, dataset):
     """
@@ -1780,26 +2057,30 @@ class Database(db.Database):
         list of float: Performance of each entry in runtime_stats
           for that dataset.
     """
-    return lab.flatten([
+    return lab.flatten(
+      [
         self.perf_scenario(row[0]).values()
-        for row in self.execute("SELECT id FROM scenarios WHERE "
-                                "dataset=?", (dataset,))
-    ])
+        for row in self.execute(
+          "SELECT id FROM scenarios WHERE " "dataset=?", (dataset,)
+        )
+      ]
+    )
 
   def oracle_param(self, scenario):
     # TODO: Document!
     """
     """
-    return self.execute("SELECT params FROM oracle_params WHERE scenario=?",
-                        (scenario,)).fetchone()[0]
+    return self.execute(
+      "SELECT params FROM oracle_params WHERE scenario=?", (scenario,)
+    ).fetchone()[0]
 
   def worst_param(self, scenario):
     # TODO: Document!
     """
     """
-    return \
-      self.execute("SELECT worst_param FROM scenario_stats WHERE scenario=?",
-                   (scenario,)).fetchone()[0]
+    return self.execute(
+      "SELECT worst_param FROM scenario_stats WHERE scenario=?", (scenario,)
+    ).fetchone()[0]
 
   def oracle_runtime(self, scenario):
     """
@@ -1813,8 +2094,9 @@ class Database(db.Database):
 
         float: Mean runtime of oracle param for scenario.
     """
-    return self.execute("SELECT runtime FROM oracle_params WHERE "
-                        "scenario=?", (scenario,)).fetchone()[0]
+    return self.execute(
+      "SELECT runtime FROM oracle_params WHERE " "scenario=?", (scenario,)
+    ).fetchone()[0]
 
   def runtime(self, scenario, param, default=None):
     """
@@ -1831,16 +2113,17 @@ class Database(db.Database):
     """
     try:
       return self.execute(
-          "SELECT mean\n"
-          "FROM runtime_stats\n"
-          "WHERE scenario=? AND params=?", (scenario, param)).fetchone()[0]
+        "SELECT mean\n" "FROM runtime_stats\n" "WHERE scenario=? AND params=?",
+        (scenario, param),
+      ).fetchone()[0]
     except TypeError as err:
       if default is not None:
         return default
       else:
-        raise MissingDataError("No runtime information for "
-                               "{scenario} {params}".format(scenario=scenario,
-                                                            params=param))
+        raise MissingDataError(
+          "No runtime information for "
+          "{scenario} {params}".format(scenario=scenario, params=param)
+        )
 
   def speedup(self, scenario, left, right):
     """
@@ -1886,8 +2169,9 @@ class Database(db.Database):
     """
     Return the ratio of the given param size to the max legal.
     """
-    return self.execute(sql_command("select_ratio_max_wgsize"),
-                        (param, scenario)).fetchone()[0]
+    return self.execute(
+      sql_command("select_ratio_max_wgsize"), (param, scenario)
+    ).fetchone()[0]
 
   def max_speedup(self, scenario):
     """
@@ -1901,58 +2185,65 @@ class Database(db.Database):
         float: Max speedup for scenario.
     """
     best = self.execute(
-        "SELECT runtime\n"
-        "FROM oracle_params\n"
-        "WHERE scenario=?", (scenario,)).fetchone()[0]
+      "SELECT runtime\n" "FROM oracle_params\n" "WHERE scenario=?", (scenario,)
+    ).fetchone()[0]
     worst = self.execute(
-        "SELECT\n"
-        "    mean AS runtime\n"
-        "FROM runtime_stats\n"
-        "WHERE\n"
-        "    scenario=? AND\n"
-        "    mean=(\n"
-        "        SELECT MAX(mean)\n"
-        "        FROM runtime_stats\n"
-        "        WHERE scenario=?\n"
-        "    )", (scenario, scenario)).fetchone()[0]
+      "SELECT\n"
+      "    mean AS runtime\n"
+      "FROM runtime_stats\n"
+      "WHERE\n"
+      "    scenario=? AND\n"
+      "    mean=(\n"
+      "        SELECT MAX(mean)\n"
+      "        FROM runtime_stats\n"
+      "        WHERE scenario=?\n"
+      "    )",
+      (scenario, scenario),
+    ).fetchone()[0]
     return worst / best
 
   @property
   def max_and_static_speedups(self):
     return [
-        row for row in self.execute(
-            "SELECT "
-            "    scenario_stats.worst_runtime / "
-            "      scenario_stats.oracle_runtime "
-            "      AS max_speedup, "
-            "    baseline.mean / scenario_stats.oracle_runtime "
-            "      AS baseline_speedup, "
-            "    he.mean / scenario_stats.oracle_runtime "
-            "      AS he_speedup "
-            "FROM scenario_stats "
-            "LEFT JOIN runtime_stats AS baseline "
-            "  ON scenario_stats.scenario=baseline.scenario "
-            "    AND baseline.params=? "
-            "LEFT JOIN runtime_stats AS he "
-            " ON scenario_stats.scenario=he.scenario "
-            "    AND he.params=? "
-            "ORDER BY max_speedup DESC", ("4x4", "32x4"))
+      row
+      for row in self.execute(
+        "SELECT "
+        "    scenario_stats.worst_runtime / "
+        "      scenario_stats.oracle_runtime "
+        "      AS max_speedup, "
+        "    baseline.mean / scenario_stats.oracle_runtime "
+        "      AS baseline_speedup, "
+        "    he.mean / scenario_stats.oracle_runtime "
+        "      AS he_speedup "
+        "FROM scenario_stats "
+        "LEFT JOIN runtime_stats AS baseline "
+        "  ON scenario_stats.scenario=baseline.scenario "
+        "    AND baseline.params=? "
+        "LEFT JOIN runtime_stats AS he "
+        " ON scenario_stats.scenario=he.scenario "
+        "    AND he.params=? "
+        "ORDER BY max_speedup DESC",
+        ("4x4", "32x4"),
+      )
     ]
 
   @property
   def min_num_params(self):
     return self.execute(
-        "SELECT MIN(num_params) from scenario_stats").fetchone()[0]
+      "SELECT MIN(num_params) from scenario_stats"
+    ).fetchone()[0]
 
   @property
   def max_num_params(self):
     return self.execute(
-        "SELECT MAX(num_params) from scenario_stats").fetchone()[0]
+      "SELECT MAX(num_params) from scenario_stats"
+    ).fetchone()[0]
 
   @property
   def avg_num_params(self):
     return self.execute(
-        "SELECT AVG(num_params) from scenario_stats").fetchone()[0]
+      "SELECT AVG(num_params) from scenario_stats"
+    ).fetchone()[0]
 
   def max_speedups(self):
     """
@@ -1983,11 +2274,13 @@ class Database(db.Database):
           normalised against the mean.
     """
     return self.execute(
-        "SELECT\n"
-        "    (min / mean),\n"
-        "    (max / mean),\n"
-        "FROM runtime_stats "
-        "WHERE scenario=? AND params=?", (scenario, params)).fetchone()
+      "SELECT\n"
+      "    (min / mean),\n"
+      "    (max / mean),\n"
+      "FROM runtime_stats "
+      "WHERE scenario=? AND params=?",
+      (scenario, params),
+    ).fetchone()
 
   def min_max_runtimes(self, where=None):
     """
@@ -1999,12 +2292,14 @@ class Database(db.Database):
           the scenario ID, the second is the param ID, and the
           third and fourth are the normalised min max runtimes.
     """
-    query = ("SELECT\n"
-             "    scenario,\n"
-             "    params,\n"
-             "    (min / mean),\n"
-             "    (max / mean)\n"
-             "FROM runtime_stats")
+    query = (
+      "SELECT\n"
+      "    scenario,\n"
+      "    params,\n"
+      "    (min / mean),\n"
+      "    (max / mean)\n"
+      "FROM runtime_stats"
+    )
     if where is not None:
       query += " WHERE " + where
     return [row for row in self.execute(query)]
@@ -2019,12 +2314,14 @@ class Database(db.Database):
           scenario ID, the second the params ID, the third the
           number of samples for that (scenario, params) pair.
     """
-    query = ("SELECT\n"
-             "    scenario,\n"
-             "    params,\n"
-             "    num_samples\n"
-             "FROM runtime_stats\n"
-             "ORDER BY num_samples DESC")
+    query = (
+      "SELECT\n"
+      "    scenario,\n"
+      "    params,\n"
+      "    num_samples\n"
+      "FROM runtime_stats\n"
+      "ORDER BY num_samples DESC"
+    )
     if where is not None:
       query += " WHERE " + where
     return [row for row in self.execute(query)]
@@ -2049,8 +2346,10 @@ class Database(db.Database):
     num_scenarios = self.execute(select).fetchone()[0]
 
     # Get the ratio of runtimes to total where params = param_id.
-    select = ("SELECT (CAST(Count(*) as REAL) / CAST(? AS REAL)) "
-              "FROM runtime_stats WHERE params=?")
+    select = (
+      "SELECT (CAST(Count(*) as REAL) / CAST(? AS REAL)) "
+      "FROM runtime_stats WHERE params=?"
+    )
     if where:
       select += " AND " + where
     return self.execute(select, (num_scenarios, param_id)).fetchone()[0]
@@ -2147,41 +2446,49 @@ class Database(db.Database):
     """
     one_r = self.one_r()[0]
     return {
-        scenario: self.speedup(scenario, one_r, self.oracle_param(scenario))
-        for scenario in self.scenarios
+      scenario: self.speedup(scenario, one_r, self.oracle_param(scenario))
+      for scenario in self.scenarios
     }
 
   def runtime_predictions(self, scenario, classifier, job):
     classifier_id = self.classifier_id(classifier)
     return [
-        row for row in self.execute(
-            "SELECT params,predicted "
-            "FROM runtime_regression_results "
-            "WHERE job=? AND classifier=? AND scenario=?", (job, classifier_id,
-                                                            scenario))
+      row
+      for row in self.execute(
+        "SELECT params,predicted "
+        "FROM runtime_regression_results "
+        "WHERE job=? AND classifier=? AND scenario=?",
+        (job, classifier_id, scenario),
+      )
     ]
 
   def speedup_predictions(self, scenario, classifier, job):
     classifier_id = self.classifier_id(classifier)
     return [
-        row for row in self.execute(
-            "SELECT params,predicted "
-            "FROM speedup_regression_results "
-            "WHERE job=? AND classifier=? AND scenario=?", (job, classifier_id,
-                                                            scenario))
+      row
+      for row in self.execute(
+        "SELECT params,predicted "
+        "FROM speedup_regression_results "
+        "WHERE job=? AND classifier=? AND scenario=?",
+        (job, classifier_id, scenario),
+      )
     ]
 
   def W_legal(self, scenario):
     return [
-        row[0] for row in self.execute(
-            "SELECT params FROM runtime_stats WHERE scenario=?", (scenario,))
+      row[0]
+      for row in self.execute(
+        "SELECT params FROM runtime_stats WHERE scenario=?", (scenario,)
+      )
     ]
 
   @property
   def W_safe(self):
     return [
-        row[0] for row in self.execute(
-            "SELECT params FROM param_stats WHERE coverage = 1")
+      row[0]
+      for row in self.execute(
+        "SELECT params FROM param_stats WHERE coverage = 1"
+      )
     ]
 
   def dump_csvs(self, path="."):
@@ -2232,53 +2539,83 @@ class Database(db.Database):
     # Delete all data for scenarios where the number of params is
     # less than "min_params".
     self.execute(
-        "DELETE FROM scenarios WHERE id IN ({})".format(quoted_scenarios))
-    self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})".format(
-        quoted_scenarios))
-    self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})".format(
-        quoted_scenarios))
-    self.execute("DELETE FROM oracle_params WHERE scenario IN ({})".format(
-        quoted_scenarios))
+      "DELETE FROM scenarios WHERE id IN ({})".format(quoted_scenarios)
+    )
+    self.execute(
+      "DELETE FROM scenario_stats WHERE scenario IN ({})".format(
+        quoted_scenarios
+      )
+    )
+    self.execute(
+      "DELETE FROM runtime_stats WHERE scenario IN ({})".format(
+        quoted_scenarios
+      )
+    )
+    self.execute(
+      "DELETE FROM oracle_params WHERE scenario IN ({})".format(
+        quoted_scenarios
+      )
+    )
     self.commit()
 
     num_scenarios_at_end = self.num_scenarios
     num_scenarios_removed = num_scenarios_at_start - num_scenarios_at_end
     io.info(
-        "Pruned", num_scenarios_removed, "scenarios ({:.1f}%)".format(
-            (num_scenarios_removed / num_scenarios_at_start) * 100))
+      "Pruned",
+      num_scenarios_removed,
+      "scenarios ({:.1f}%)".format(
+        (num_scenarios_removed / num_scenarios_at_start) * 100
+      ),
+    )
 
   def prune_safe_param(self, param):
     timer = "made {} safe".format(param)
     prof.start(timer)
     scenarios_to_delete = [
-        row[0] for row in self.execute(
-            "SELECT DISTINCT scenario FROM runtime_stats "
-            "WHERE scenario NOT IN ("
-            "    SELECT scenario FROM runtime_stats WHERE params=?"
-            ")", (param,))
+      row[0]
+      for row in self.execute(
+        "SELECT DISTINCT scenario FROM runtime_stats "
+        "WHERE scenario NOT IN ("
+        "    SELECT scenario FROM runtime_stats WHERE params=?"
+        ")",
+        (param,),
+      )
     ]
     if not len(scenarios_to_delete):
       io.info("Param", param, "already safe")
     else:
       quoted_scenarios = '"' + '","'.join(scenarios_to_delete) + '"'
       self.execute(
-          "DELETE FROM scenarios WHERE id IN ({})".format(quoted_scenarios))
-      self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})".format(
-          quoted_scenarios))
-      self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})".format(
-          quoted_scenarios))
-      self.execute("DELETE FROM oracle_params WHERE scenario IN ({})".format(
-          quoted_scenarios))
+        "DELETE FROM scenarios WHERE id IN ({})".format(quoted_scenarios)
+      )
+      self.execute(
+        "DELETE FROM runtime_stats WHERE scenario IN ({})".format(
+          quoted_scenarios
+        )
+      )
+      self.execute(
+        "DELETE FROM scenario_stats WHERE scenario IN ({})".format(
+          quoted_scenarios
+        )
+      )
+      self.execute(
+        "DELETE FROM oracle_params WHERE scenario IN ({})".format(
+          quoted_scenarios
+        )
+      )
     prof.stop(timer)
 
   def prune_safe_params(self, nsafe=1):
     num_scenarios_at_start = self.num_scenarios
 
     safe_params = [
-        row[0] for row in self.execute(
-            "SELECT params FROM param_stats\n"
-            "ORDER BY coverage DESC, performance DESC, params DESC\n"
-            "LIMIT ?", (nsafe,))
+      row[0]
+      for row in self.execute(
+        "SELECT params FROM param_stats\n"
+        "ORDER BY coverage DESC, performance DESC, params DESC\n"
+        "LIMIT ?",
+        (nsafe,),
+      )
     ]
 
     for param in safe_params:
@@ -2288,8 +2625,12 @@ class Database(db.Database):
     num_scenarios_at_end = self.num_scenarios
     num_scenarios_removed = num_scenarios_at_start - num_scenarios_at_end
     io.info(
-        "Pruned", num_scenarios_removed, "scenarios ({:.1f}%)".format(
-            (num_scenarios_removed / num_scenarios_at_start) * 100))
+      "Pruned",
+      num_scenarios_removed,
+      "scenarios ({:.1f}%)".format(
+        (num_scenarios_removed / num_scenarios_at_start) * 100
+      ),
+    )
     io.info("Safe params:", ", ".join([param for param in safe_params]))
 
   def repair(self, dry_run=True):
@@ -2297,37 +2638,53 @@ class Database(db.Database):
     params = self.params
 
     num_scenarios_in_runtime_stats = self.execute(
-        "SELECT Count(*) FROM (SELECT DISTINCT scenario FROM runtime_stats)"
+      "SELECT Count(*) FROM (SELECT DISTINCT scenario FROM runtime_stats)"
     ).fetchone()[0]
     num_params_in_runtime_stats = self.execute(
-        "SELECT Count(*) FROM (SELECT DISTINCT params FROM runtime_stats)"
+      "SELECT Count(*) FROM (SELECT DISTINCT params FROM runtime_stats)"
     ).fetchone()[0]
     if num_scenarios_in_runtime_stats != len(scenarios):
-      io.warn("Inconsitent number of scenarios in runtime_stats.", "Expected:",
-              len(scenarios), "Actual:", num_scenarios_in_runtime_stats)
+      io.warn(
+        "Inconsitent number of scenarios in runtime_stats.",
+        "Expected:",
+        len(scenarios),
+        "Actual:",
+        num_scenarios_in_runtime_stats,
+      )
 
       if not dry_run:
-        self.execute("DELETE FROM runtime_stats WHERE scenario NOT IN "
-                     "({})".format(",".join(
-                         ['"' + scenario + '"' for scenario in scenarios])))
+        self.execute(
+          "DELETE FROM runtime_stats WHERE scenario NOT IN "
+          "({})".format(
+            ",".join(['"' + scenario + '"' for scenario in scenarios])
+          )
+        )
         self.commit()
         self.repair(dry_run=dry_run)
     elif num_params_in_runtime_stats != len(params):
-      io.warn("Inconsitent number of params in runtime_stats.", "Expected:",
-              len(params), "Actual:", num_params_in_runtime_stats)
+      io.warn(
+        "Inconsitent number of params in runtime_stats.",
+        "Expected:",
+        len(params),
+        "Actual:",
+        num_params_in_runtime_stats,
+      )
 
       if not dry_run:
         if num_params_in_runtime_stats > len(params):
           quoted_params = ",".join(['"' + param + '"' for param in params])
-          self.execute("DELETE FROM runtime_stats WHERE params NOT IN "
-                       "({})".format(quoted_params))
+          self.execute(
+            "DELETE FROM runtime_stats WHERE params NOT IN "
+            "({})".format(quoted_params)
+          )
         else:
           params = [
-              '"' + row[0] + '"' for row in self.execute(
-                  "SELECT DISTINCT params FROM runtime_stats")
+            '"' + row[0] + '"'
+            for row in self.execute("SELECT DISTINCT params FROM runtime_stats")
           ]
-          self.execute("DELETE FROM params WHERE id NOT IN ({})".format(
-              ",".join(params)))
+          self.execute(
+            "DELETE FROM params WHERE id NOT IN ({})".format(",".join(params))
+          )
 
         self.commit()
         self.repair(dry_run=dry_run)
@@ -2335,14 +2692,24 @@ class Database(db.Database):
       io.info("runtime_stats is OK")
 
     if self.num_rows("scenario_stats") != len(scenarios):
-      io.warn("Inconsitent number of scenarios in scenario_stats.", "Expected:",
-              len(scenarios), "Actual:", self.num_rows("scenario_stats"))
+      io.warn(
+        "Inconsitent number of scenarios in scenario_stats.",
+        "Expected:",
+        len(scenarios),
+        "Actual:",
+        self.num_rows("scenario_stats"),
+      )
     else:
       io.info("scenario_stats is OK")
 
     if self.num_rows("param_stats") != len(params):
-      io.warn("Inconsistent number of params in param_stats.", "Expected:",
-              len(params), "Actual:", self.num_rows("param_stats"))
+      io.warn(
+        "Inconsistent number of params in param_stats.",
+        "Expected:",
+        len(params),
+        "Actual:",
+        self.num_rows("param_stats"),
+      )
       if not dry_run:
         self.populate_param_stats_table()
         self.repair(dry_run=dry_run)
@@ -2353,8 +2720,9 @@ class Database(db.Database):
     # Get a list of scenarios where there are less than
     # "min_params" unique parameters.
     scenarios_to_delete = [
-        scenario for scenario in self.scenarios
-        if self.num_params_for_scenario(scenario) < min_params
+      scenario
+      for scenario in self.scenarios
+      if self.num_params_for_scenario(scenario) < min_params
     ]
 
     # Do nothing if we have nothing to delete.
@@ -2366,20 +2734,34 @@ class Database(db.Database):
     # Delete all data for scenarios where the number of params is
     # less than "min_params".
     self.execute(
-        "DELETE FROM scenarios WHERE id IN ({})".format(quoted_scenarios))
-    self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})".format(
-        quoted_scenarios))
-    self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})".format(
-        quoted_scenarios))
-    self.execute("DELETE FROM oracle_params WHERE scenario IN ({})".format(
-        quoted_scenarios))
+      "DELETE FROM scenarios WHERE id IN ({})".format(quoted_scenarios)
+    )
+    self.execute(
+      "DELETE FROM scenario_stats WHERE scenario IN ({})".format(
+        quoted_scenarios
+      )
+    )
+    self.execute(
+      "DELETE FROM runtime_stats WHERE scenario IN ({})".format(
+        quoted_scenarios
+      )
+    )
+    self.execute(
+      "DELETE FROM oracle_params WHERE scenario IN ({})".format(
+        quoted_scenarios
+      )
+    )
     self.commit()
 
     num_scenarios_at_end = self.num_scenarios
     num_scenarios_removed = num_scenarios_at_start - num_scenarios_at_end
     io.info(
-        "Pruned", num_scenarios_removed, "scenarios ({:.1f}%)".format(
-            (num_scenarios_removed / num_scenarios_at_start) * 100))
+      "Pruned",
+      num_scenarios_removed,
+      "scenarios ({:.1f}%)".format(
+        (num_scenarios_removed / num_scenarios_at_start) * 100
+      ),
+    )
 
 
 def create_test_db(dst, src, num_runtimes=100000):
@@ -2412,24 +2794,34 @@ def create_test_db(dst, src, num_runtimes=100000):
 
   # Create new runtimes table.
   test.create_table_from("runtimes", "runtimes_tmp")
-  cmd = ("INSERT INTO runtimes SELECT * FROM runtimes_tmp "
-         "ORDER BY RANDOM() LIMIT {n}".format(n=num_runtimes))
+  cmd = (
+    "INSERT INTO runtimes SELECT * FROM runtimes_tmp "
+    "ORDER BY RANDOM() LIMIT {n}".format(n=num_runtimes)
+  )
   test.execute(cmd)
   test.drop_table("runtimes_tmp")
 
   # Remove unused scenarios.
-  test.execute("DELETE FROM scenarios WHERE id NOT IN "
-               "(SELECT DISTINCT scenario from runtimes)")
+  test.execute(
+    "DELETE FROM scenarios WHERE id NOT IN "
+    "(SELECT DISTINCT scenario from runtimes)"
+  )
 
   # Remove unused kernels.
-  test.execute("DELETE FROM kernels WHERE id NOT IN "
-               "(SELECT DISTINCT kernel from scenarios)")
+  test.execute(
+    "DELETE FROM kernels WHERE id NOT IN "
+    "(SELECT DISTINCT kernel from scenarios)"
+  )
   # Remove unused devices.
-  test.execute("DELETE FROM devices WHERE id NOT IN "
-               "(SELECT DISTINCT device from scenarios)")
+  test.execute(
+    "DELETE FROM devices WHERE id NOT IN "
+    "(SELECT DISTINCT device from scenarios)"
+  )
   # Remove unused datasets.
-  test.execute("DELETE FROM datasets WHERE id NOT IN "
-               "(SELECT DISTINCT dataset from scenarios)")
+  test.execute(
+    "DELETE FROM datasets WHERE id NOT IN "
+    "(SELECT DISTINCT dataset from scenarios)"
+  )
 
   test.commit()
 

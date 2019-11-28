@@ -68,7 +68,8 @@ class MaxSampleCountObserver(SampleObserver):
   def __init__(self, min_sample_count: int):
     if min_sample_count <= 0:
       raise ValueError(
-          f"min_sample_count must be >= 1. Received: {min_sample_count}")
+        f"min_sample_count must be >= 1. Received: {min_sample_count}"
+      )
 
     self._sample_count = 0
     self._min_sample_count = min_sample_count
@@ -89,8 +90,8 @@ class SaveSampleTextObserver(SampleObserver):
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback. Returns True if sampling should continue."""
     sample_id = crypto.sha256_str(sample.text)
-    path = self.path / f'{sample_id}.txt'
-    fs.Write(path, sample.text.encode('utf-8'))
+    path = self.path / f"{sample_id}.txt"
+    fs.Write(path, sample.text.encode("utf-8"))
     return True
 
 
@@ -99,7 +100,7 @@ class PrintSampleObserver(SampleObserver):
 
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback. Returns True if sampling should continue."""
-    print(f'=== CLGEN SAMPLE ===\n\n{sample.text}\n')
+    print(f"=== CLGEN SAMPLE ===\n\n{sample.text}\n")
     return True
 
 
@@ -137,6 +138,6 @@ class LegacySampleCacheObserver(SampleObserver):
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback. Returns True if sampling should continue."""
     sample_id = crypto.sha256_str(sample.text)
-    sample_path = self.cache_path / f'{sample_id}.pbtxt'
+    sample_path = self.cache_path / f"{sample_id}.pbtxt"
     pbutil.ToFile(sample, sample_path)
     return True

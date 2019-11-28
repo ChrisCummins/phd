@@ -2,13 +2,13 @@
  * Given a string s and a number N, find the longest substring of s
  * with maximum N unique characters.
  */
+#include <stdlib.h>
 #include <algorithm>
 #include <array>
 #include <bitset>
 #include <iostream>
 #include <limits>
 #include <map>
-#include <stdlib.h>
 #include <string>
 #include <vector>
 
@@ -31,9 +31,8 @@ std::string maxnsubstr_chris(const std::string& s, const size_t n) {
     std::bitset<std::numeric_limits<char>::max()> uniq{0};
     size_t j = i, count = 0;
 
-    for ( ; j < s.length() && count <= n; j++) {
-      if (!uniq[static_cast<size_t>(s[j])])
-        ++count;
+    for (; j < s.length() && count <= n; j++) {
+      if (!uniq[static_cast<size_t>(s[j])]) ++count;
       uniq[static_cast<size_t>(s[j])] = true;
     }
 
@@ -54,7 +53,7 @@ std::string maxnsubstr_chris(const std::string& s, const size_t n) {
 // of each character, and use that to calculate where to trim the
 // start of the string to
 //
-std::string maxnsubstr_adam(std::string s, int N){
+std::string maxnsubstr_adam(std::string s, int N) {
   // optimised lookup table for most recent N characters
   std::map<char, int> most_recent_indices;
 
@@ -62,16 +61,16 @@ std::string maxnsubstr_adam(std::string s, int N){
   int i = 0, j = 0;
   int best_length = 0, best_j = 0;
 
-  for(;i<s.length();i++){
+  for (; i < s.length(); i++) {
     // if we're finding a new character, increase the number of seen uniques
-    if(most_recent_indices.count(s[i]) == 0){
+    if (most_recent_indices.count(s[i]) == 0) {
       unique_count++;
     }
     // store i as the most recent index of the character O(N)
     most_recent_indices[s[i]] = i;
     // if we've added too many characters, correct using the
     // most recent indices to select a character to remove
-    if(unique_count > N){
+    if (unique_count > N) {
       // prune the substring using he least recently seen O(N)
       auto min = most_recent_indices.begin();
       char min_char = min->first;
@@ -86,7 +85,7 @@ std::string maxnsubstr_adam(std::string s, int N){
     // get the size of the current substring
     int current_length = (i - j) + 1;
     // update the best length if we've improved it
-    if(current_length > best_length){
+    if (current_length > best_length) {
       best_length = current_length;
       best_j = j;
     }
@@ -94,13 +93,12 @@ std::string maxnsubstr_adam(std::string s, int N){
   return s.substr(best_j, best_length);
 }
 
-
 // Christophe's implementation: use occurence counts for each
 // character to manually move the left hand pointer until one
 // occurence count is zero, at which point we've managed to remove a
 // unique character from the substring
 //
-std::string maxnsubstr_christophe(std::string s, int N){
+std::string maxnsubstr_christophe(std::string s, int N) {
   // lookup table from characters -> # of occurences in current substring
   std::array<int, 128> occurences;
   occurences.fill(0);
@@ -109,17 +107,17 @@ std::string maxnsubstr_christophe(std::string s, int N){
   int i = 0, j = 0;
   int best_length = 0, best_j = 0;
 
-  for(i = 0;i<s.length(); i++){
+  for (i = 0; i < s.length(); i++) {
     // if we're finding a new character, increase the number of seen uniques
-    if(occurences[s[i]] == 0){
+    if (occurences[s[i]] == 0) {
       unique_count++;
     }
     // increase the number of times we've seen this character
     occurences[s[i]]++;
     // correct for uniques if required by moving the "left" pointer along
-    while(unique_count > N){
+    while (unique_count > N) {
       occurences[s[j]]--;
-      if(occurences[s[j]] == 0){
+      if (occurences[s[j]] == 0) {
         unique_count--;
       }
       j++;
@@ -127,8 +125,7 @@ std::string maxnsubstr_christophe(std::string s, int N){
     // get the size of the current substring
     int current_length = (i - j) + 1;
     // update the best length if we've improved it
-    if(current_length > best_length)
-    {
+    if (current_length > best_length) {
       best_length = current_length;
       best_j = j;
     }
@@ -136,17 +133,16 @@ std::string maxnsubstr_christophe(std::string s, int N){
   return s.substr(best_j, best_length);
 }
 
-bool check_string(std::string s, int N){
+bool check_string(std::string s, int N) {
   std::bitset<128> bits;
   bits.reset();
-  for(auto c:s){
+  for (auto c : s) {
     bits.set(c);
   }
   return bits.count() <= N;
 }
 
 #pragma GCC diagnostic pop
-
 
 ///////////
 // Tests //
@@ -179,7 +175,6 @@ TEST(maxnsubstr, christophe) {
   ASSERT_EQ("", maxnsubstr_christophe("abcddddd", 0));
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -191,62 +186,61 @@ void baseline(benchmark::State& state) {
   std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
-    for (auto &c : t)  // generate string
+    for (auto& c : t)  // generate string
       c = rand_r(&seed) % std::numeric_limits<char>::max();
     benchmark::DoNotOptimize(t.data());
   }
 }
 BENCHMARK(baseline)->Range(BM_length_min, BM_length_max);
 
-
 void chris(benchmark::State& state) {
   std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
-    for (auto &c : t)  // generate string
+    for (auto& c : t)  // generate string
       c = rand_r(&seed) % std::numeric_limits<char>::max();
 
-    maxnsubstr_chris(t, (static_cast<unsigned long>(rand_r(&seed))
-                         % t.length()) / 2);
+    maxnsubstr_chris(
+        t, (static_cast<unsigned long>(rand_r(&seed)) % t.length()) / 2);
     benchmark::DoNotOptimize(t.data());
   }
 }
 BENCHMARK(chris)->Range(BM_length_min, BM_length_max);
 
-
 void adam(benchmark::State& state) {
   std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
-    for (auto &c : t)  // generate string
-      c = static_cast<unsigned long>(rand_r(&seed))
-          % std::numeric_limits<char>::max();
+    for (auto& c : t)  // generate string
+      c = static_cast<unsigned long>(rand_r(&seed)) %
+          std::numeric_limits<char>::max();
 
-    maxnsubstr_adam(t, static_cast<int>(
-        static_cast<unsigned long>(rand_r(&seed)) % t.length()) / 2);
+    maxnsubstr_adam(t,
+                    static_cast<int>(static_cast<unsigned long>(rand_r(&seed)) %
+                                     t.length()) /
+                        2);
     benchmark::DoNotOptimize(t.data());
   }
 }
 BENCHMARK(adam)->Range(BM_length_min, BM_length_max);
 
-
 void christophe(benchmark::State& state) {
   std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
-    for (auto &c : t)  // generate string
+    for (auto& c : t)  // generate string
       c = rand_r(&seed) % std::numeric_limits<char>::max();
 
-    maxnsubstr_christophe(t, static_cast<int>(
-        static_cast<unsigned long>(rand_r(&seed)) % t.length()) / 2);
+    maxnsubstr_christophe(
+        t, static_cast<int>(static_cast<unsigned long>(rand_r(&seed)) %
+                            t.length()) /
+               2);
     benchmark::DoNotOptimize(t.data());
   }
 }
 BENCHMARK(christophe)->Range(BM_length_min, BM_length_max);
 
-
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   const auto ret = RUN_ALL_TESTS();
   benchmark::Initialize(&argc, argv);

@@ -24,11 +24,10 @@ from gpu.oclgrind import oclgrind
 from labm8.py import bazelutil
 from labm8.py import pbutil
 
-CLINFO = bazelutil.DataPath('phd/gpu/clinfo/clinfo')
+CLINFO = bazelutil.DataPath("phd/gpu/clinfo/clinfo")
 
 
 class OpenCLEnvironment(object):
-
   def __init__(self, device: clinfo_pb2.OpenClDevice):
     self._proto = device
 
@@ -86,10 +85,12 @@ class OpenCLEnvironment(object):
     """
     return self.platform_id, self.device_id
 
-  def Exec(self,
-           argv: typing.List[str],
-           stdin: typing.Optional[str] = None,
-           env: typing.Dict[str, str] = None) -> subprocess.Popen:
+  def Exec(
+    self,
+    argv: typing.List[str],
+    stdin: typing.Optional[str] = None,
+    env: typing.Dict[str, str] = None,
+  ) -> subprocess.Popen:
     """Execute a command in an environment for the OpenCL device.
 
     This creates a Popen process, executes it, and sets the stdout and stderr
@@ -107,12 +108,14 @@ class OpenCLEnvironment(object):
       A Popen instance, with string stdout and stderr attributes set.
     """
     # app.Log(2, '$ %s', ' '.join(argv))
-    process = subprocess.Popen(argv,
-                               stdout=subprocess.PIPE,
-                               stdin=subprocess.PIPE if stdin else None,
-                               stderr=subprocess.PIPE,
-                               universal_newlines=True,
-                               env=env)
+    process = subprocess.Popen(
+      argv,
+      stdout=subprocess.PIPE,
+      stdin=subprocess.PIPE if stdin else None,
+      stderr=subprocess.PIPE,
+      universal_newlines=True,
+      env=env,
+    )
     if stdin:
       stdout, stderr = process.communicate(stdin)
     else:
@@ -121,7 +124,7 @@ class OpenCLEnvironment(object):
     return process
 
   @classmethod
-  def FromName(cls, env_name: str) -> 'OpenCLEnvironment':
+  def FromName(cls, env_name: str) -> "OpenCLEnvironment":
     """Look up OpenCL environment from name.
 
     Args:
@@ -137,10 +140,11 @@ class OpenCLEnvironment(object):
     if env_name in all_envs:
       return all_envs[env_name]
     else:
-      available = '\n'.join(f'    {n}' for n in sorted(all_envs.keys()))
+      available = "\n".join(f"    {n}" for n in sorted(all_envs.keys()))
       raise LookupError(
-          f"Requested OpenCL environment not available: '{env_name}'.\n"
-          f"Available OpenCL devices:\n{available}")
+        f"Requested OpenCL environment not available: '{env_name}'.\n"
+        f"Available OpenCL devices:\n{available}"
+      )
 
 
 class OclgrindOpenCLEnvironment(OpenCLEnvironment):
@@ -149,17 +153,26 @@ class OclgrindOpenCLEnvironment(OpenCLEnvironment):
   def __init__(self):
     super(OclgrindOpenCLEnvironment, self).__init__(oclgrind.CLINFO_DESCRIPTION)
 
-  def Exec(self,
-           argv: typing.List[str],
-           stdin: typing.Optional[str] = None,
-           env: typing.Dict[str, str] = None) -> subprocess.Popen:
+  def Exec(
+    self,
+    argv: typing.List[str],
+    stdin: typing.Optional[str] = None,
+    env: typing.Dict[str, str] = None,
+  ) -> subprocess.Popen:
     """Execute a command in the device environment."""
-    return oclgrind.Exec([
-        '--max-errors', '1', '--uninitialized', '--data-races',
-        '--uniform-writes', '--uniform-writes'
-    ] + argv,
-                         stdin=stdin,
-                         env=env)
+    return oclgrind.Exec(
+      [
+        "--max-errors",
+        "1",
+        "--uninitialized",
+        "--data-races",
+        "--uniform-writes",
+        "--uniform-writes",
+      ]
+      + argv,
+      stdin=stdin,
+      env=env,
+    )
 
 
 def host_os() -> str:
@@ -213,7 +226,7 @@ def has_cpu() -> bool:
   bool
       True if device available, else False.
   """
-  return any(env.device_type == 'CPU' for env in all_envs())
+  return any(env.device_type == "CPU" for env in all_envs())
 
 
 def has_gpu() -> bool:
@@ -225,7 +238,7 @@ def has_gpu() -> bool:
   bool
       True if device available, else False.
   """
-  return any(env.device_type == 'GPU' for env in all_envs())
+  return any(env.device_type == "GPU" for env in all_envs())
 
 
 def GetOpenClEnvironments() -> typing.List[OpenCLEnvironment]:
@@ -236,8 +249,9 @@ def GetOpenClEnvironments() -> typing.List[OpenCLEnvironment]:
   Returns:
     A list of OpenCLEnvironment instances.
   """
-  return sorted(list(all_envs()) + [OclgrindOpenCLEnvironment()],
-                key=lambda x: x.name)
+  return sorted(
+    list(all_envs()) + [OclgrindOpenCLEnvironment()], key=lambda x: x.name
+  )
 
 
 def GetTestbedNames() -> typing.List[str]:
@@ -251,8 +265,8 @@ def PrintOpenClEnvironments() -> None:
     if i:
       print()
     print(env.name)
-    print(f'    Platform:     {env.platform_name}')
-    print(f'    Device:       {env.device_name}')
-    print(f'    Driver:       {env.driver_version}')
-    print(f'    Device Type:  {env.device_type}')
-    print(f'    OpenCL:       {env.opencl_version}')
+    print(f"    Platform:     {env.platform_name}")
+    print(f"    Device:       {env.device_name}")
+    print(f"    Driver:       {env.driver_version}")
+    print(f"    Device Type:  {env.device_type}")
+    print(f"    OpenCL:       {env.opencl_version}")

@@ -11,5 +11,5 @@ def test_HyperParamSweep_smoke_test():
   assert mnist_regression.HyperParamSweep(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

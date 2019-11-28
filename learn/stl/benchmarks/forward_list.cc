@@ -14,8 +14,7 @@ static void std_forward_list_sort_int(benchmark::State& state) {
   std::forward_list<int> list(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
-    for (auto& i : list)
-      i = static_cast<int>(rand_r(&seed));
+    for (auto& i : list) i = static_cast<int>(rand_r(&seed));
 
     list.sort();
     benchmark::DoNotOptimize(list.front());
@@ -27,8 +26,7 @@ static void ustl_forward_list_sort_int(benchmark::State& state) {
   ustl::forward_list<int> list(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
-    for (auto& i : list)
-      i = static_cast<int>(rand_r(&seed));
+    for (auto& i : list) i = static_cast<int>(rand_r(&seed));
 
     list.sort();
     benchmark::DoNotOptimize(list.front());

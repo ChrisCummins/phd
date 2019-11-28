@@ -7,7 +7,7 @@
 //
 // Requires a temporary, not a solution.
 //
-template<typename T>
+template <typename T>
 void num_swap(T *const x, T *const y) {
   T tmp = *x;
 
@@ -18,13 +18,12 @@ void num_swap(T *const x, T *const y) {
 //
 // Solution: XOR trick.
 //
-template<typename T>
+template <typename T>
 void inplace_num_swap(T *const x, T *const y) {
   *x ^= *y;
   *y ^= *x;
   *x ^= *y;
 }
-
 
 ///////////
 // Tests //
@@ -62,7 +61,7 @@ TEST(NumSwap, inplace_num_swap_char) {
 // Benchmarks //
 ////////////////
 
-void BM_num_swap(benchmark::State& state) {
+void BM_num_swap(benchmark::State &state) {
   int x = 5, y = 10;
 
   while (state.KeepRunning()) {
@@ -73,7 +72,7 @@ void BM_num_swap(benchmark::State& state) {
 }
 BENCHMARK(BM_num_swap);
 
-void BM_inplace_num_swap_int(benchmark::State& state) {
+void BM_inplace_num_swap_int(benchmark::State &state) {
   int x = 5, y = 10;
 
   while (state.KeepRunning()) {
@@ -84,7 +83,7 @@ void BM_inplace_num_swap_int(benchmark::State& state) {
 }
 BENCHMARK(BM_inplace_num_swap_int);
 
-void BM_inplace_num_swap_char(benchmark::State& state) {
+void BM_inplace_num_swap_char(benchmark::State &state) {
   int x = 'a', y = 'b';
 
   while (state.KeepRunning()) {

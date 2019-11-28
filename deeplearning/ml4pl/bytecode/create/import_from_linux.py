@@ -20,8 +20,12 @@ from labm8.py import decorators
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('bytecode_db', bytecode_database.Database, None,
-                    'Path of database to populate.')
+app.DEFINE_database(
+  "bytecode_db",
+  bytecode_database.Database,
+  None,
+  "Path of database to populate.",
+)
 
 
 def BytecodeFromLinuxSrc(path: pathlib.Path, optimization_level: str) -> str:
@@ -44,71 +48,72 @@ def BytecodeFromLinuxSrc(path: pathlib.Path, optimization_level: str) -> str:
   # build and grabbing a random C compile target.
   # The build I took this from: Wp,-MD,arch/x86/kernel/.asm-offsets.s.d  -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/5/include -I./arch/x86/include -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/kconfig.h -include ./include/linux/compiler_types.h -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -Werror-implicit-function-declaration -Wno-format-security -std=gnu89 -fno-PIE -DCC_HAVE_ASM_GOTO -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -funit-at-a-time -DCONFIG_X86_X32_ABI -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_FXSAVEQ=1 -DCONFIG_AS_SSSE3=1 -DCONFIG_AS_CRC32=1 -DCONFIG_AS_AVX=1 -DCONFIG_AS_AVX2=1 -DCONFIG_AS_AVX512=1 -DCONFIG_AS_SHA1_NI=1 -DCONFIG_AS_SHA256_NI=1 -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -DRETPOLINE -fno-delete-null-pointer-checks -O2 --param=allow-store-data-races=0 -Wframe-larger-than=1024 -fstack-protector-strong -Wno-unused-but-set-variable -fno-var-tracking-assignments -g -gdwarf-4 -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fno-merge-all-constants -fmerge-constants -fno-stack-check -fconserve-stack -Werror=implicit-int -Werror=strict-prototypes -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init    -DKBUILD_BASENAME='"asm_offsets"' -DKBUILD_MODNAME='"asm_offsets"'  -fverbose-asm -S -o arch/x86/kernel/asm-offsets.s arch/x86/kernel/asm-offsets.c
   clang_args = [
-      '-S',
-      '-emit-llvm',
-      '-o',
-      '-',
-      clang.ValidateOptimizationLevel(optimization_level),
-      '-Wno-everything',  # No warnings please.
-      '-I',
-      str(root / 'arch/x86/include'),
-      '-I',
-      str(genroot / 'arch/x86/include/generated'),
-      '-I',
-      str(root / 'include'),
-      '-I',
-      str(root / 'arch/x86/include/uapi'),
-      '-I',
-      str(genroot / 'arch/x86/include/generated/uapi'),
-      '-I',
-      str(root / 'include/uapi'),
-      '-I',
-      str(genroot / 'include/generated/uapi'),
-      '-I',
-      str(genroot / 'arch/x86/include'),
-      '-I',
-      str(genroot / 'arch/x86/include/generated'),
-      '-I',
-      str(genroot / 'arch/x86/include/generated/uapi'),
-      '-I',
-      str(genroot / 'include'),
-      '-I',
-      str(genroot / 'include/generated'),
-      '-include',
-      str(genroot / 'include/linux/kconfig.h'),
-      '-include',
-      str(genroot / 'include/linux/compiler_types.h'),
-      '-D__KERNEL__',
-      '-m64',
-      '-DCONFIG_X86_X32_ABI',
-      '-DCONFIG_AS_CFI=1',
-      '-DCONFIG_AS_CFI_SIGNAL_FRAME=1',
-      '-DCONFIG_AS_CFI_SECTIONS=1',
-      '-DCONFIG_AS_FXSAVEQ=1',
-      '-DCONFIG_AS_SSSE3=1',
-      '-DCONFIG_AS_CRC32=1',
-      '-DCONFIG_AS_AVX=1',
-      '-DCONFIG_AS_AVX2=1',
-      '-DCONFIG_AS_AVX512=1',
-      '-DCONFIG_AS_SHA1_NI=1',
-      '-DCONFIG_AS_SHA256_NI=1',
-      '-pipe',
-      '-DRETPOLINE',
-      '-DCC_USING_FENTRY',
-      "-DKBUILD_BASENAME='\"asm_offsets\"'",
-      "-DKBUILD_MODNAME='\"asm_offsets\"'",
-      str(path),
+    "-S",
+    "-emit-llvm",
+    "-o",
+    "-",
+    clang.ValidateOptimizationLevel(optimization_level),
+    "-Wno-everything",  # No warnings please.
+    "-I",
+    str(root / "arch/x86/include"),
+    "-I",
+    str(genroot / "arch/x86/include/generated"),
+    "-I",
+    str(root / "include"),
+    "-I",
+    str(root / "arch/x86/include/uapi"),
+    "-I",
+    str(genroot / "arch/x86/include/generated/uapi"),
+    "-I",
+    str(root / "include/uapi"),
+    "-I",
+    str(genroot / "include/generated/uapi"),
+    "-I",
+    str(genroot / "arch/x86/include"),
+    "-I",
+    str(genroot / "arch/x86/include/generated"),
+    "-I",
+    str(genroot / "arch/x86/include/generated/uapi"),
+    "-I",
+    str(genroot / "include"),
+    "-I",
+    str(genroot / "include/generated"),
+    "-include",
+    str(genroot / "include/linux/kconfig.h"),
+    "-include",
+    str(genroot / "include/linux/compiler_types.h"),
+    "-D__KERNEL__",
+    "-m64",
+    "-DCONFIG_X86_X32_ABI",
+    "-DCONFIG_AS_CFI=1",
+    "-DCONFIG_AS_CFI_SIGNAL_FRAME=1",
+    "-DCONFIG_AS_CFI_SECTIONS=1",
+    "-DCONFIG_AS_FXSAVEQ=1",
+    "-DCONFIG_AS_SSSE3=1",
+    "-DCONFIG_AS_CRC32=1",
+    "-DCONFIG_AS_AVX=1",
+    "-DCONFIG_AS_AVX2=1",
+    "-DCONFIG_AS_AVX512=1",
+    "-DCONFIG_AS_SHA1_NI=1",
+    "-DCONFIG_AS_SHA256_NI=1",
+    "-pipe",
+    "-DRETPOLINE",
+    "-DCC_USING_FENTRY",
+    "-DKBUILD_BASENAME='\"asm_offsets\"'",
+    "-DKBUILD_MODNAME='\"asm_offsets\"'",
+    str(path),
   ]
   process = clang.Exec(clang_args)
   if process.returncode:
-    raise clang.ClangException(returncode=process.returncode,
-                               stderr=process.stderr,
-                               command=clang_args)
+    raise clang.ClangException(
+      returncode=process.returncode, stderr=process.stderr, command=clang_args
+    )
   return process.stdout, clang_args
 
 
 def TryToCreateControlFlowGraphsFromLinuxSrc(
-    path: pathlib.Path) -> typing.List[cfg.ControlFlowGraph]:
+  path: pathlib.Path,
+) -> typing.List[cfg.ControlFlowGraph]:
   """Try to create CFGs from a Linux C source file.
 
   On failure, an empty list is returned.
@@ -125,7 +130,7 @@ def TryToCreateControlFlowGraphsFromLinuxSrc(
   graphs = []
 
   try:
-    bytecode, _ = BytecodeFromLinuxSrc(path, '-O0')
+    bytecode, _ = BytecodeFromLinuxSrc(path, "-O0")
   except clang.ClangException:
     return graphs
 
@@ -138,8 +143,13 @@ def TryToCreateControlFlowGraphsFromLinuxSrc(
       graph = llvm_util.ControlFlowGraphFromDotSource(dot)
       graph.ValidateControlFlowGraph(strict=False)
       graphs.append(graph)
-    except (UnicodeDecodeError, cfg.MalformedControlFlowGraphError, ValueError,
-            opt.OptException, pyparsing.ParseException):
+    except (
+      UnicodeDecodeError,
+      cfg.MalformedControlFlowGraphError,
+      ValueError,
+      opt.OptException,
+      pyparsing.ParseException,
+    ):
       pass
     except StopIteration:
       break
@@ -148,19 +158,21 @@ def TryToCreateControlFlowGraphsFromLinuxSrc(
 
 
 def CfgDfRowFromControlFlowGraph(
-    graph: cfg.ControlFlowGraph) -> typing.Dict[str, typing.Any]:
+  graph: cfg.ControlFlowGraph,
+) -> typing.Dict[str, typing.Any]:
   return {
-      'cfg:graph': graph,
-      'cfg:block_count': graph.number_of_nodes(),
-      'cfg:edge_count': graph.number_of_edges(),
-      'cfg:edge_density': graph.edge_density,
-      'cfg:is_valid': graph.IsValidControlFlowGraph(strict=False),
-      'cfg:is_strict_valid': graph.IsValidControlFlowGraph(strict=True),
+    "cfg:graph": graph,
+    "cfg:block_count": graph.number_of_nodes(),
+    "cfg:edge_count": graph.number_of_edges(),
+    "cfg:edge_density": graph.edge_density,
+    "cfg:is_valid": graph.IsValidControlFlowGraph(strict=False),
+    "cfg:is_strict_valid": graph.IsValidControlFlowGraph(strict=True),
   }
 
 
 def ProcessLinuxSrc(
-    path: pathlib.Path) -> typing.Optional[typing.Dict[str, typing.Any]]:
+  path: pathlib.Path,
+) -> typing.Optional[typing.Dict[str, typing.Any]]:
   graphs = TryToCreateControlFlowGraphsFromLinuxSrc(path)
 
   src_root = LinuxSourcesDataset().src_tree_root
@@ -168,9 +180,9 @@ def ProcessLinuxSrc(
   rows = []
   for graph in graphs:
     row = CfgDfRowFromControlFlowGraph(graph)
-    row.update({
-        'program:src_relpath': str(path)[len(str(src_root)) + 1:],
-    })
+    row.update(
+      {"program:src_relpath": str(path)[len(str(src_root)) + 1 :],}
+    )
     rows.append(row)
 
   return rows
@@ -181,23 +193,23 @@ def ProcessLinuxSrcToBytecode(path: pathlib.Path) -> ml4pl_pb2.LlvmBytecode:
   version = LinuxSourcesDataset().version
 
   try:
-    bytecode, cflags = BytecodeFromLinuxSrc(path, '-O0')
+    bytecode, cflags = BytecodeFromLinuxSrc(path, "-O0")
     clang_returncode = 0
-    error_message = ''
+    error_message = ""
   except clang.ClangException as e:
-    bytecode = ''
+    bytecode = ""
     cflags = e.command
     clang_returncode = e.returncode
     error_message = e.stderr
 
   return ml4pl_pb2.LlvmBytecode(
-      source_name=f'linux-{version}',
-      relpath=str(path)[len(str(src_root)) + 1:],
-      lang='C',
-      cflags=' '.join(cflags),
-      bytecode=bytecode,
-      clang_returncode=clang_returncode,
-      error_message=error_message,
+    source_name=f"linux-{version}",
+    relpath=str(path)[len(str(src_root)) + 1 :],
+    lang="C",
+    cflags=" ".join(cflags),
+    bytecode=bytecode,
+    clang_returncode=clang_returncode,
+    error_message=error_message,
   )
 
 
@@ -216,9 +228,9 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
     cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
 
-  def PopulateBytecodeTable(self,
-                            db: bytecode_database.Database,
-                            commit_every: int = 1000):
+  def PopulateBytecodeTable(
+    self, db: bytecode_database.Database, commit_every: int = 1000
+  ):
     bar = progressbar.ProgressBar()
     bar.max_value = len(self.all_srcs)
 
@@ -226,11 +238,14 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
     pool = multiprocessing.Pool()
     with db.Session(commit=True) as s:
       for i, proto in enumerate(
-          pool.imap_unordered(ProcessLinuxSrcToBytecode, self.all_srcs)):
+        pool.imap_unordered(ProcessLinuxSrcToBytecode, self.all_srcs)
+      ):
         bar.update(i)
         s.add(
-            bytecode_database.LlvmBytecode(
-                **bytecode_database.LlvmBytecode.FromProto(proto)))
+          bytecode_database.LlvmBytecode(
+            **bytecode_database.LlvmBytecode.FromProto(proto)
+          )
+        )
         if not (i % commit_every):
           s.commit()
 
@@ -244,20 +259,20 @@ class LinuxSourcesDataset(linux.LinuxSourcesDataset):
         rows += row_batch
 
     # Create the output table.
-    df = pd.DataFrame(rows,
-                      columns=[
-                          'program:src_relpath',
-                          'cfg:graph',
-                          'cfg:block_count',
-                          'cfg:edge_count',
-                          'cfg:edge_density',
-                          'cfg:is_valid',
-                          'cfg:is_strict_valid',
-                      ])
+    df = pd.DataFrame(
+      rows,
+      columns=[
+        "program:src_relpath",
+        "cfg:graph",
+        "cfg:block_count",
+        "cfg:edge_count",
+        "cfg:edge_density",
+        "cfg:is_valid",
+        "cfg:is_strict_valid",
+      ],
+    )
 
-    df.set_index([
-        'program:src_relpath',
-    ], inplace=True)
+    df.set_index(["program:src_relpath",], inplace=True)
     df.sort_index(inplace=True)
     return df
 
@@ -268,5 +283,5 @@ def main():
   dataset.PopulateBytecodeTable(db)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

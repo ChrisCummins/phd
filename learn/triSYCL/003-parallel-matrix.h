@@ -9,17 +9,17 @@
 // elements using begin(), end(), and data().
 //
 class matrix {
-public:
-matrix(const size_t& nrows, const size_t& ncols, const float& val = float{})
-    : _data(nrows * ncols, val), _nrows(nrows), _ncols(ncols) {}
+ public:
+  matrix(const size_t& nrows, const size_t& ncols, const float& val = float{})
+      : _data(nrows * ncols, val), _nrows(nrows), _ncols(ncols) {}
 
-matrix(std::initializer_list<std::initializer_list<float>> il)
-    : _data(il.size() * il.begin()->size()),
-      _nrows(il.size()), _ncols(il.begin()->size()) {
+  matrix(std::initializer_list<std::initializer_list<float>> il)
+      : _data(il.size() * il.begin()->size()),
+        _nrows(il.size()),
+        _ncols(il.begin()->size()) {
     auto out = _data.begin();
     for (auto it1 = il.begin(); it1 != il.end(); it1++)
-      for (auto it2 = it1->begin(); it2 != it1->end(); it2++)
-        *out++ = *it2;
+      for (auto it2 = it1->begin(); it2 != it1->end(); it2++) *out++ = *it2;
   }
 
   friend auto& operator<<(std::ostream& out, const matrix& m) {
@@ -61,23 +61,19 @@ matrix(std::initializer_list<std::initializer_list<float>> il)
       cl::sycl::queue myQueue;
       cl::sycl::buffer<float, 2> dev_l(data(),
                                        cl::sycl::range<2>{nrows(), ncols()});
-      cl::sycl::buffer<float, 2> dev_r(rhs.data(),
-                                       cl::sycl::range<2>{
-                                         rhs.nrows(), rhs.ncols()});
-      cl::sycl::buffer<float, 2> dev_o(out.data(),
-                                       cl::sycl::range<2>{
-                                         out.nrows(), out.ncols()});
+      cl::sycl::buffer<float, 2> dev_r(
+          rhs.data(), cl::sycl::range<2>{rhs.nrows(), rhs.ncols()});
+      cl::sycl::buffer<float, 2> dev_o(
+          out.data(), cl::sycl::range<2>{out.nrows(), out.ncols()});
 
-      myQueue.submit([&](cl::sycl::handler &cgh) {
-          auto kl = dev_l.get_access<cl::sycl::access::read>(cgh);
-          auto kr = dev_r.get_access<cl::sycl::access::read>(cgh);
-          auto ko = dev_o.get_access<cl::sycl::access::write>(cgh);
-          cgh.parallel_for(
-              cl::sycl::range<2>{out.nrows(), out.ncols()},
-              [=](const cl::sycl::id<2> i) {
-                ko[i] = kl[i] + kr[i];
-              });
-        });
+      myQueue.submit([&](cl::sycl::handler& cgh) {
+        auto kl = dev_l.get_access<cl::sycl::access::read>(cgh);
+        auto kr = dev_r.get_access<cl::sycl::access::read>(cgh);
+        auto ko = dev_o.get_access<cl::sycl::access::write>(cgh);
+        cgh.parallel_for(
+            cl::sycl::range<2>{out.nrows(), out.ncols()},
+            [=](const cl::sycl::id<2> i) { ko[i] = kl[i] + kr[i]; });
+      });
     }
 
     return out;
@@ -95,23 +91,19 @@ matrix(std::initializer_list<std::initializer_list<float>> il)
       cl::sycl::queue myQueue;
       cl::sycl::buffer<float, 2> dev_l(data(),
                                        cl::sycl::range<2>{nrows(), ncols()});
-      cl::sycl::buffer<float, 2> dev_r(rhs.data(),
-                                       cl::sycl::range<2>{
-                                         rhs.nrows(), rhs.ncols()});
-      cl::sycl::buffer<float, 2> dev_o(out.data(),
-                                       cl::sycl::range<2>{
-                                         out.nrows(), out.ncols()});
+      cl::sycl::buffer<float, 2> dev_r(
+          rhs.data(), cl::sycl::range<2>{rhs.nrows(), rhs.ncols()});
+      cl::sycl::buffer<float, 2> dev_o(
+          out.data(), cl::sycl::range<2>{out.nrows(), out.ncols()});
 
-      myQueue.submit([&](cl::sycl::handler &cgh) {
-          auto kl = dev_l.get_access<cl::sycl::access::read>(cgh);
-          auto kr = dev_r.get_access<cl::sycl::access::read>(cgh);
-          auto ko = dev_o.get_access<cl::sycl::access::write>(cgh);
-          cgh.parallel_for(
-              cl::sycl::range<2>{out.nrows(), out.ncols()},
-              [=](const cl::sycl::id<2> i) {
-                ko[i] = kl[i] - kr[i];
-              });
-        });
+      myQueue.submit([&](cl::sycl::handler& cgh) {
+        auto kl = dev_l.get_access<cl::sycl::access::read>(cgh);
+        auto kr = dev_r.get_access<cl::sycl::access::read>(cgh);
+        auto ko = dev_o.get_access<cl::sycl::access::write>(cgh);
+        cgh.parallel_for(
+            cl::sycl::range<2>{out.nrows(), out.ncols()},
+            [=](const cl::sycl::id<2> i) { ko[i] = kl[i] - kr[i]; });
+      });
     }
 
     return out;
@@ -121,7 +113,7 @@ matrix(std::initializer_list<std::initializer_list<float>> il)
     return lhs._data == rhs._data;
   }
 
-private:
+ private:
   std::vector<float> _data;
   size_t _nrows;
   size_t _ncols;

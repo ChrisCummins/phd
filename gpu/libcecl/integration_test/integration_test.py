@@ -31,73 +31,80 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
-MODULE_UNDER_TEST = 'gpu'
+MODULE_UNDER_TEST = "gpu"
 
-_CLINFO = bazelutil.DataPath('phd/third_party/clinfo/clinfo.c')
-_HELLO = bazelutil.DataPath('phd/gpu/libcecl/integration_test/hello.cc')
+_CLINFO = bazelutil.DataPath("phd/third_party/clinfo/clinfo.c")
+_HELLO = bazelutil.DataPath("phd/gpu/libcecl/integration_test/hello.cc")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def hello_src() -> str:
   """Test fixture which returns the 'hello world' OpenCL app source."""
   with open(_HELLO) as f:
     return f.read()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def clinfo_src() -> str:
   """Test fixture which returns the C source code for a clinfo program."""
-  with open(_CLINFO, 'rb') as f:
-    return f.read().decode('utf-8').encode('ascii', 'ignore').decode('ascii')
+  with open(_CLINFO, "rb") as f:
+    return f.read().decode("utf-8").encode("ascii", "ignore").decode("ascii")
 
 
 def _RewriteCompileLinkExecute(
-    outdir: pathlib.Path,
-    src: str,
-    lang: str = 'c++',
-    extra_ldflags=None,
-    extra_cflags=None,
-    extra_exec_args=None) -> libcecl_pb2.LibceclExecutableRun:
+  outdir: pathlib.Path,
+  src: str,
+  lang: str = "c++",
+  extra_ldflags=None,
+  extra_cflags=None,
+  extra_exec_args=None,
+) -> libcecl_pb2.LibceclExecutableRun:
   """Compile, link, and execute a program using libcecl."""
   # Re-write OpenCL source to use libcecl.
   libcecl_src = libcecl_rewriter.RewriteOpenClSource(src)
 
   # Compile libcecl source to bytecode.
-  src_path = outdir / f'a.txt'
-  objectfile_path = outdir / 'a.o'
+  src_path = outdir / f"a.txt"
+  objectfile_path = outdir / "a.o"
   cflags, ldflags = libcecl_compile.LibCeclCompileAndLinkFlags()
 
-  with open(src_path, 'w') as f:
+  with open(src_path, "w") as f:
     f.write(libcecl_src)
   extra_cflags = extra_cflags or []
   subprocess.check_call(
-      ['clang++', '-x', lang,
-       str(src_path), '-c', '-o',
-       str(objectfile_path)] + cflags + extra_cflags)
+    ["clang++", "-x", lang, str(src_path), "-c", "-o", str(objectfile_path)]
+    + cflags
+    + extra_cflags
+  )
   assert objectfile_path.is_file()
 
   # Compile bytecode to executable and link.
-  bin_path = outdir / 'a.out'
+  bin_path = outdir / "a.out"
   extra_ldflags = extra_ldflags or []
   subprocess.check_call(
-      ['clang++', '-o', str(bin_path),
-       str(objectfile_path)] + ldflags + extra_ldflags)
+    ["clang++", "-o", str(bin_path), str(objectfile_path)]
+    + ldflags
+    + extra_ldflags
+  )
   assert bin_path.is_file()
 
   # Run executable on oclgrind.
   extra_exec_args = extra_exec_args or []
   return libcecl_runtime.RunLibceclExecutable(
-      [str(bin_path)] + extra_exec_args,
-      cldrive_env.OclgrindOpenCLEnvironment())
+    [str(bin_path)] + extra_exec_args, cldrive_env.OclgrindOpenCLEnvironment()
+  )
 
 
-def test_rewrite_compile_link_execute_clinfo(tempdir: pathlib.Path,
-                                             clinfo_src: str):
-  log = _RewriteCompileLinkExecute(tempdir,
-                                   clinfo_src,
-                                   lang='c',
-                                   extra_ldflags=['-lm', '-lstdc++'],
-                                   extra_exec_args=['--raw'])
+def test_rewrite_compile_link_execute_clinfo(
+  tempdir: pathlib.Path, clinfo_src: str
+):
+  log = _RewriteCompileLinkExecute(
+    tempdir,
+    clinfo_src,
+    lang="c",
+    extra_ldflags=["-lm", "-lstdc++"],
+    extra_exec_args=["--raw"],
+  )
 
   assert log.ms_since_unix_epoch
   assert log.returncode == 0
@@ -107,24 +114,25 @@ def test_rewrite_compile_link_execute_clinfo(tempdir: pathlib.Path,
 
   assert not log.stderr
   assert re.match(
-      r"0 CL_PLATFORM_NAME Oclgrind\n"
-      r"0 CL_PLATFORM_VERSION OpenCL \d+\.\d+ \(Oclgrind [\d\.]+\)\n"
-      r"0:0 CL_DEVICE_NAME Oclgrind Simulator\n"
-      r"0:0 CL_DEVICE_TYPE [a-zA-Z |]+\n"
-      r"0:0 CL_DEVICE_VERSION OpenCL \d+\.\d+ \(Oclgrind [\d\.]+\)\n"
-      r"0:0 CL_DEVICE_GLOBAL_MEM_SIZE \d+\n"
-      r"0:0 CL_DEVICE_LOCAL_MEM_SIZE \d+\n"
-      r"0:0 CL_DEVICE_MAX_WORK_GROUP_SIZE \d+\n"
-      r"0:0 CL_DEVICE_MAX_WORK_ITEM_SIZES \(\d+, \d+, \d+\)\n", log.stdout,
-      re.MULTILINE)
+    r"0 CL_PLATFORM_NAME Oclgrind\n"
+    r"0 CL_PLATFORM_VERSION OpenCL \d+\.\d+ \(Oclgrind [\d\.]+\)\n"
+    r"0:0 CL_DEVICE_NAME Oclgrind Simulator\n"
+    r"0:0 CL_DEVICE_TYPE [a-zA-Z |]+\n"
+    r"0:0 CL_DEVICE_VERSION OpenCL \d+\.\d+ \(Oclgrind [\d\.]+\)\n"
+    r"0:0 CL_DEVICE_GLOBAL_MEM_SIZE \d+\n"
+    r"0:0 CL_DEVICE_LOCAL_MEM_SIZE \d+\n"
+    r"0:0 CL_DEVICE_MAX_WORK_GROUP_SIZE \d+\n"
+    r"0:0 CL_DEVICE_MAX_WORK_ITEM_SIZES \(\d+, \d+, \d+\)\n",
+    log.stdout,
+    re.MULTILINE,
+  )
 
 
 def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   """Test end-to-end libcecl pipeline."""
-  log = _RewriteCompileLinkExecute(tempdir,
-                                   hello_src,
-                                   lang='c++',
-                                   extra_cflags=['-std=c++11'])
+  log = _RewriteCompileLinkExecute(
+    tempdir, hello_src, lang="c++", extra_cflags=["-std=c++11"]
+  )
 
   print(log.stdout)
   print(log.stderr)
@@ -135,7 +143,9 @@ def test_rewrite_compile_link_execute(tempdir: pathlib.Path, hello_src: str):
   assert log.device == cldrive_env.OclgrindOpenCLEnvironment().proto
   assert len(log.kernel_invocation) == 1
   assert len(log.opencl_program_source) == 1
-  assert log.opencl_program_source[0] == """\
+  assert (
+    log.opencl_program_source[0]
+    == """\
 __kernel void vadd(
    __global float* a,
    __global float* b,
@@ -146,20 +156,25 @@ __kernel void vadd(
    if(i < count)
        c[i] = a[i] + b[i];
 }"""
+  )
 
-  assert log.kernel_invocation[0].kernel_name == 'vadd'
+  assert log.kernel_invocation[0].kernel_name == "vadd"
   assert log.kernel_invocation[0].global_size == 1024
   assert log.kernel_invocation[0].local_size == 0
   assert log.kernel_invocation[0].transferred_bytes == 12288
-  assert log.kernel_invocation[
-      0].transfer_time_ns > 1000  # Flaky, but probably true.
-  assert log.kernel_invocation[
-      0].kernel_time_ns > 1000  # Flaky, but probably true.
+  assert (
+    log.kernel_invocation[0].transfer_time_ns > 1000
+  )  # Flaky, but probably true.
+  assert (
+    log.kernel_invocation[0].kernel_time_ns > 1000
+  )  # Flaky, but probably true.
 
-  profile_time = (log.kernel_invocation[0].transfer_time_ns +
-                  log.kernel_invocation[0].kernel_time_ns)
+  profile_time = (
+    log.kernel_invocation[0].transfer_time_ns
+    + log.kernel_invocation[0].kernel_time_ns
+  )
   assert 1000 < profile_time < log.elapsed_time_ns
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

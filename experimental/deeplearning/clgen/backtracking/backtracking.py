@@ -16,27 +16,30 @@ import typing
 from deeplearning.clgen import samplers
 from experimental.deeplearning.clgen.backtracking import backtracking_db
 from experimental.deeplearning.clgen.backtracking import backtracking_model
-from experimental.deeplearning.clgen.backtracking.logger import \
-  BacktrackingDatabaseLogger
+from experimental.deeplearning.clgen.backtracking.logger import (
+  BacktrackingDatabaseLogger,
+)
 from labm8.py import app
 from research.cummins_2017_cgo import generative_model
 
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
-    'db', 'sqlite:///tmp/phd/experimental/deplearning/clgen/backtracking/db.db',
-    'URL of the database for backtracking.')
-app.DEFINE_integer('sample_seed', 0, 'Random seed.')
+  "db",
+  "sqlite:///tmp/phd/experimental/deplearning/clgen/backtracking/db.db",
+  "URL of the database for backtracking.",
+)
+app.DEFINE_integer("sample_seed", 0, "Random seed.")
 
 
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   config = generative_model.CreateInstanceProtoFromFlags()
 
-  os.environ['CLGEN_CACHE'] = config.working_dir
+  os.environ["CLGEN_CACHE"] = config.working_dir
 
   logger = BacktrackingDatabaseLogger(backtracking_db.Database(FLAGS.db))
 
@@ -47,5 +50,5 @@ def main(argv: typing.List[str]):
   model.Sample(sampler, sample_observers, seed=FLAGS.sample_seed)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

@@ -45,15 +45,20 @@ def DumpCsvForDirsOrDie(paths: typing.List[pathlib.Path]) -> None:
 
   # Linting is on a per-directory level, not per-file.
   directories_to_lint = {
-      path if path.is_dir() else path.parent for path in paths
+    path if path.is_dir() else path.parent for path in paths
   }
 
   for i, directory in enumerate(sorted(directories_to_lint)):
     directory = directory.absolute()
-    app.Log(2, 'Dump directory `%s`', directory)
+    app.Log(2, "Dump directory `%s`", directory)
     workspace_ = workspace.Workspace.FindWorkspace(directory)
-    linter = CsvDump(workspace_, "photos", linters.CsvDirLinter,
-                     linters.CsvFileLinter, linters.TIMERS)
+    linter = CsvDump(
+      workspace_,
+      "photos",
+      linters.CsvDirLinter,
+      linters.CsvFileLinter,
+      linters.TIMERS,
+    )
 
     if FLAGS.write_header and not i:
       csv_dump = linters.CsvFileDumper(workspace_)

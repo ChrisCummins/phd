@@ -12,5 +12,5 @@ class TestOpenCL(TestCase):
     self._test(True, isinstance(opencl.get_devices(), list))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()

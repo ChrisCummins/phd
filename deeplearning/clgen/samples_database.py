@@ -23,45 +23,43 @@ class Sample(Base, sqlutil.ProtoBackedMixin):
 
   This is the clgen.Sample protocol buffer in SQL format.
   """
-  __tablename__ = 'samples'
+
+  __tablename__ = "samples"
   proto_t = model_pb2.Sample
 
   id: int = sql.Column(sql.Integer, primary_key=True)
-  text: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                         nullable=False)
+  text: str = sql.Column(
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
   # Checksum of the sample text.
   sha256: str = sql.Column(sql.String(64), nullable=False, index=True)
   num_tokens: int = sql.Column(sql.Integer, nullable=False)
   sample_time_ms: int = sql.Column(sql.Integer, nullable=False)
   wall_time_ms: int = sql.Column(sql.Integer, nullable=False)
   sample_date: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
-  date_added: datetime.datetime = sql.Column(sql.DateTime,
-                                             nullable=False,
-                                             default=datetime.datetime.utcnow)
+  date_added: datetime.datetime = sql.Column(
+    sql.DateTime, nullable=False, default=datetime.datetime.utcnow
+  )
 
   def SetProto(self, proto: model_pb2.Sample) -> None:
     proto.text = self.text
     proto.num_tokens = self.num_tokens
     proto.wall_time_ms = self.wall_time_ms
     proto.sample_start_epoch_ms_utc = labdate.MillisecondsTimestamp(
-        self.sample_date)
+      self.sample_date
+    )
 
   @classmethod
   def FromProto(cls, proto: model_pb2.Sample) -> typing.Dict[str, typing.Any]:
     return {
-        'text':
-        proto.text,
-        'sha256':
-        crypto.sha256_str(proto.text),
-        'num_tokens':
-        proto.num_tokens,
-        'sample_time_ms':
-        proto.sample_time_ms,
-        'wall_time_ms':
-        proto.wall_time_ms,
-        'sample_date':
-        labdate.DatetimeFromMillisecondsTimestamp(
-            proto.sample_start_epoch_ms_utc),
+      "text": proto.text,
+      "sha256": crypto.sha256_str(proto.text),
+      "num_tokens": proto.num_tokens,
+      "sample_time_ms": proto.sample_time_ms,
+      "wall_time_ms": proto.wall_time_ms,
+      "sample_date": labdate.DatetimeFromMillisecondsTimestamp(
+        proto.sample_start_epoch_ms_utc
+      ),
     }
 
 
@@ -86,12 +84,15 @@ class SamplesDatabaseObserver(sample_observers.SampleObserver):
   database in batches.
   """
 
-  def __init__(self,
-               db: SamplesDatabase,
-               flush_secs: int = 30,
-               commit_sample_frequency: int = 1024):
+  def __init__(
+    self,
+    db: SamplesDatabase,
+    flush_secs: int = 30,
+    commit_sample_frequency: int = 1024,
+  ):
     self._writer = sqlutil.BufferedDatabaseWriter(
-        db, flush_secs=flush_secs, max_queue=commit_sample_frequency)
+      db, flush_secs=flush_secs, max_queue=commit_sample_frequency
+    )
 
   def __del__(self):
     self.Flush()

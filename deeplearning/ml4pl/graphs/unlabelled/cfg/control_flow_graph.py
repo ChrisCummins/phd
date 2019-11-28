@@ -12,6 +12,7 @@ FLAGS = app.FLAGS
 
 class MalformedControlFlowGraphError(ValueError):
   """Base class for errors raised by ValidateControlFlowGraph."""
+
   pass
 
 
@@ -71,28 +72,28 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
   proto_t = ml4pl_pb2.ControlFlowGraph
 
-  def __init__(self, name: str = 'cfg'):
+  def __init__(self, name: str = "cfg"):
     super(ControlFlowGraph, self).__init__(name=name)
 
   def ToSuccessorsString(self) -> str:
     """Format graph as a sequence of node descendants lists."""
     ret = []
-    nodes = sorted(self.nodes(data=True), key=lambda n: n[1]['name'])
+    nodes = sorted(self.nodes(data=True), key=lambda n: n[1]["name"])
     for index, node in nodes:
-      descendants = [self.nodes[n]['name'] for n in nx.descendants(self, index)]
+      descendants = [self.nodes[n]["name"] for n in nx.descendants(self, index)]
       ret.append(f"{node['name']}: {' '.join(sorted(descendants))}")
-    return '\n'.join(ret)
+    return "\n".join(ret)
 
   def ToNeighborsString(self) -> str:
     """Format graph as a sequence of node neighbor lists."""
     ret = []
-    nodes = sorted(self.nodes(data=True), key=lambda n: n[1]['name'])
+    nodes = sorted(self.nodes(data=True), key=lambda n: n[1]["name"])
     for index, node in nodes:
-      descendants = [self.nodes[n]['name'] for n in nx.neighbors(self, index)]
+      descendants = [self.nodes[n]["name"] for n in nx.neighbors(self, index)]
       ret.append(f"{node['name']}: {' '.join(sorted(descendants))}")
-    return '\n'.join(ret)
+    return "\n".join(ret)
 
-  def ValidateControlFlowGraph(self, strict: bool = True) -> 'ControlFlowGraph':
+  def ValidateControlFlowGraph(self, strict: bool = True) -> "ControlFlowGraph":
     """Determine if the graph is a valid control flow graph.
 
     Args:
@@ -112,7 +113,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
     # CFGs must contain one or more nodes.
     if number_of_nodes < 1:
-      raise NotEnoughNodes(f'Function `{self.name}` has no nodes')
+      raise NotEnoughNodes(f"Function `{self.name}` has no nodes")
 
     # Get the entry and exit blocks. These properties will raise exceptions
     # if they are not found / duplicates found.
@@ -124,29 +125,34 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
     if number_of_nodes > 1:
       if entry_node in exit_nodes:
-        raise InvalidSpecialBlock(f'Exit and entry nodes are the same: '
-                                  f"'{self.nodes[entry_node]['name']}'")
+        raise InvalidSpecialBlock(
+          f"Exit and entry nodes are the same: "
+          f"'{self.nodes[entry_node]['name']}'"
+        )
 
       for exit_node in exit_nodes:
         if not nx.has_path(self, entry_node, exit_node):
           raise MalformedControlFlowGraphError(
-              f"No path from entry node '{self.nodes[entry_node]['name']}' to "
-              f"exit node '{self.nodes[exit_node]['name']}' in function "
-              f"`{self.name}`")
+            f"No path from entry node '{self.nodes[entry_node]['name']}' to "
+            f"exit node '{self.nodes[exit_node]['name']}' in function "
+            f"`{self.name}`"
+          )
 
     # Validate node attributes.
     node_names = set()
     for node in self.nodes:
       # All nodes must have a name.
-      if 'name' not in self.nodes[node]:
+      if "name" not in self.nodes[node]:
         raise MissingNodeName(
-            f'Node {node} has no name in function `{self.name}`')
+          f"Node {node} has no name in function `{self.name}`"
+        )
 
       # All node names must be unique.
-      node_name = self.nodes[node]['name']
+      node_name = self.nodes[node]["name"]
       if node_name in node_names:
         raise DuplicateNodeName(
-            f"Duplicate node name '{node_name}' in function `{self.name}`")
+          f"Duplicate node name '{node_name}' in function `{self.name}`"
+        )
       node_names.add(node_name)
 
       # All nodes must be connected (except for 1-node graphs).
@@ -161,15 +167,16 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
       if out_degrees[exit_node]:
         app.Error("OUT DEGREE %s", self.out_degree(exit_node))
         raise InvalidNodeDegree(
-            f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
-            f'{out_degrees[exit_node]} in function `{self.name}`')
+          f"Exit block outdegree({self.nodes[exit_node]['name']}) = "
+          f"{out_degrees[exit_node]} in function `{self.name}`"
+        )
 
     # Additional "strict" CFG tests.
     if strict:
       # Validate edge attributes.
       for src, dst in self.edges:
         if src == dst:
-          raise GraphContainsSelfLoops(f'Self loops: {src} -> {dst}')
+          raise GraphContainsSelfLoops(f"Self loops: {src} -> {dst}")
 
         # Each node in a CFG must have more than one output, or more than one
         # input. This is because nodes represent basic blocks: a node with only
@@ -177,8 +184,9 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
         # they are the same basic block).
         if not (out_degrees[src] > 1 or in_degrees[dst] > 1):
           raise InvalidNodeDegree(
-              f"outdegree({self.nodes[src]['name']}) = {out_degrees[src]}, "
-              f"indegree({self.nodes[dst]['name']}) = {in_degrees[dst]}")
+            f"outdegree({self.nodes[src]['name']}) = {out_degrees[src]}, "
+            f"indegree({self.nodes[dst]['name']}) = {in_degrees[dst]}"
+          )
 
     return self
 
@@ -198,11 +206,11 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
 
   def IsEntryBlock(self, node) -> bool:
     """Return if the given node is an entry block."""
-    return self.nodes[node].get('entry', False)
+    return self.nodes[node].get("entry", False)
 
   def IsExitBlock(self, node) -> bool:
     """Return if the given node is an exit block."""
-    return self.nodes[node].get('exit', False)
+    return self.nodes[node].get("exit", False)
 
   @property
   def entry_block(self) -> int:
@@ -225,8 +233,9 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   @property
   def edge_density(self) -> float:
     """The edge density is the ratio of edges to fully connected, [0,1]."""
-    return self.number_of_edges() / (self.number_of_nodes() *
-                                     self.number_of_nodes())
+    return self.number_of_edges() / (
+      self.number_of_nodes() * self.number_of_nodes()
+    )
 
   @property
   def undirected_diameter(self) -> int:
@@ -246,7 +255,7 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     self.ValidateControlFlowGraph(strict=False)
 
     # Set the graph-level properties.
-    proto.name = self.graph['name']
+    proto.name = self.graph["name"]
     proto.entry_block_index = self.entry_block
     proto.exit_block_index[:] = self.exit_blocks
 
@@ -257,10 +266,10 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
     for i, (node, data) in enumerate(self.nodes(data=True)):
       node_to_index[node] = i
       block = proto.block.add()
-      block.name = data['name']
-      text = data.get('text')
+      block.name = data["name"]
+      text = data.get("text")
       if text:
-        block.text = data.get('text')
+        block.text = data.get("text")
     # Create the edge protos.
     for src, dst in self.edges:
       edge = proto.edge.add()
@@ -268,24 +277,24 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
       edge.dst_index = node_to_index[dst]
 
   @classmethod
-  def FromProto(cls, proto: pbutil.ProtocolBuffer) -> 'ProtoBackedMixin':
+  def FromProto(cls, proto: pbutil.ProtocolBuffer) -> "ProtoBackedMixin":
     instance = cls(name=proto.name)
     # Create the nodes from the block protos.
     for i, block in enumerate(proto.block):
-      data = {'name': block.name}
+      data = {"name": block.name}
       if block.text:
-        data['text'] = block.text
+        data["text"] = block.text
       instance.add_node(i, **data)
     # Set the special block attributes.
-    instance.nodes[proto.entry_block_index]['entry'] = True
+    instance.nodes[proto.entry_block_index]["entry"] = True
     try:
       for index in proto.exit_block_index:
-        instance.nodes[index]['exit'] = True
+        instance.nodes[index]["exit"] = True
     except TypeError:
       # I changed the exit_block_index field from singular to repeated, so
       # attempting to iterate over it for old singular filed protos will yield
       # a type error.
-      instance.nodes[proto.exit_block]['exit'] = True
+      instance.nodes[proto.exit_block]["exit"] = True
     # Create the edges from protos.
     for edge in proto.edge:
       instance.add_edge(edge.src_index, edge.dst_index)
@@ -338,9 +347,14 @@ class ControlFlowGraph(nx.DiGraph, pbutil.ProtoBackedMixin):
   def __hash__(self) -> int:
     """Return the numeric hash of the instance."""
     # The hash is based on the graph topology and node and edge attributes.
-    return hash((tuple(self.nodes), tuple(
-        self.edges), tuple([str(self.nodes[n]) for n in self.nodes]),
-                 tuple([str(self.edges[i, j]) for i, j in self.edges])))
+    return hash(
+      (
+        tuple(self.nodes),
+        tuple(self.edges),
+        tuple([str(self.nodes[n]) for n in self.nodes]),
+        tuple([str(self.edges[i, j]) for i, j in self.edges]),
+      )
+    )
 
   def IsomorphicHash(self) -> int:
     """Return a numeric hash of the graph shape."""

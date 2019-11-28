@@ -33,7 +33,7 @@ from labm8.py import fs
 
 FLAGS = app.FLAGS
 
-CLSMITH = bazelutil.DataPath('CLSmith/CLSmith')
+CLSMITH = bazelutil.DataPath("CLSmith/CLSmith")
 
 
 class CLSmithError(EnvironmentError):
@@ -56,14 +56,14 @@ def Exec(*opts) -> str:
   Returns:
     The generated source code as a string.
   """
-  with fs.TemporaryWorkingDir(prefix='clsmith_') as d:
-    proc = subprocess.Popen([CLSMITH] + list(opts),
-                            stderr=subprocess.PIPE,
-                            universal_newlines=True)
+  with fs.TemporaryWorkingDir(prefix="clsmith_") as d:
+    proc = subprocess.Popen(
+      [CLSMITH] + list(opts), stderr=subprocess.PIPE, universal_newlines=True
+    )
     _, stderr = proc.communicate()
     if proc.returncode:
       raise CLSmithError(msg=stderr, returncode=proc.returncode)
-    with open(d / 'CLProg.c') as f:
+    with open(d / "CLProg.c") as f:
       src = f.read()
   return src
 
@@ -77,5 +77,5 @@ def main(argv):
     sys.exit(e.returncode)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

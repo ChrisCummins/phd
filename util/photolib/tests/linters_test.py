@@ -7,7 +7,7 @@ from util.photolib import linters
 
 FLAGS = app.FLAGS
 
-MODULE_UNDER_TEST = 'util.photolib.linters'
+MODULE_UNDER_TEST = "util.photolib.linters"
 
 
 def test_error():
@@ -21,14 +21,16 @@ def test_PhotolibFilename():
 
   def good_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(f"/photos/{filename}.dng", f"//photos/{filename}.jpg",
-           f"{filename}.jpg")
+    linter(
+      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
+    )
     assert linters.ERROR_COUNTS.get("file/name", 0) == n
 
   def bad_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(f"/photos/{filename}.dng", f"//photos/{filename}.jpg",
-           f"{filename}.jpg")
+    linter(
+      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
+    )
     assert linters.ERROR_COUNTS.get("file/name", 0) == n + 1
 
   bad_name("foo")
@@ -96,14 +98,16 @@ def test_GalleryFilename():
 
   def good_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(f"/photos/{filename}.dng", f"//photos/{filename}.jpg",
-           f"{filename}.jpg")
+    linter(
+      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
+    )
     assert linters.ERROR_COUNTS.get("file/name", 0) == n
 
   def bad_name(filename):
     n = linters.ERROR_COUNTS.get("file/name", 0)
-    linter(f"/photos/{filename}.dng", f"//photos/{filename}.jpg",
-           f"{filename}.jpg")
+    linter(
+      f"/photos/{filename}.dng", f"//photos/{filename}.jpg", f"{filename}.jpg"
+    )
     assert linters.ERROR_COUNTS.get("file/name", 0) == n + 1
 
   good_name("photos-1")

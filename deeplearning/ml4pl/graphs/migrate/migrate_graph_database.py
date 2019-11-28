@@ -13,13 +13,13 @@ FLAGS = app.FLAGS
 def RemoveBackwardEdges(graph: graph_tuple.GraphTuple):
   """Graph tuples store redundant backward edges. Remove those."""
   return graph_tuple.GraphTuple(
-      adjacency_lists=graph.adjacency_lists[:3],
-      edge_positions=graph.edge_positions[:3],
-      incoming_edge_counts=graph.incoming_edge_counts[:3],
-      node_x_indices=graph.node_x_indices,
-      node_y=graph.node_y,
-      graph_x=graph.graph_x,
-      graph_y=graph.graph_y,
+    adjacency_lists=graph.adjacency_lists[:3],
+    edge_positions=graph.edge_positions[:3],
+    incoming_edge_counts=graph.incoming_edge_counts[:3],
+    node_x_indices=graph.node_x_indices,
+    node_y=graph.node_y,
+    graph_x=graph.graph_x,
+    graph_y=graph.graph_y,
   )
 
 
@@ -33,5 +33,5 @@ def main():
   # TODO: Implement!
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

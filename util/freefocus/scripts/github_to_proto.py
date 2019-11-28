@@ -27,11 +27,12 @@ if __name__ == "__main__":
   config.read(os.path.expanduser(args.githubrc))
 
   try:
-    github_username = config['User']['Username']
-    github_pw = config['User']['Password']
+    github_username = config["User"]["Username"]
+    github_pw = config["User"]["Password"]
   except KeyError as e:
     print(
-        f'config variable {e} not set. Check {args.githubrc}', file=sys.stderr)
+      f"config variable {e} not set. Check {args.githubrc}", file=sys.stderr
+    )
     sys.exit(1)
 
   g = Github(github_username, github_pw)
@@ -42,8 +43,8 @@ if __name__ == "__main__":
   p = freefocus_pb2.Person(uid=args.owner, name=user.name)
 
   workspace = freefocus_pb2.Workspace(
-      uid="GitHub",
-      created=calendar.timegm(time.strptime("1/4/08", "%d/%m/%y")))
+    uid="GitHub", created=calendar.timegm(time.strptime("1/4/08", "%d/%m/%y"))
+  )
 
   group = workspace.groups.add()
   group.id = f"@groups//{user.name}"
@@ -91,7 +92,7 @@ if __name__ == "__main__":
         milestone = repo_subtree.children.add()
         milestone.id = milestone_id
         milestone.body = (
-            f"{issue.milestone.title}\n\n{issue.milestone.description}"
+          f"{issue.milestone.title}\n\n{issue.milestone.description}"
         ).rstrip()
         milestone.status = freefocus_pb2.Task.ACTIVE
 
@@ -99,7 +100,9 @@ if __name__ == "__main__":
         milestone.parent.task.id = repo_subtree.id
 
       task = milestone.children.add()
-      task.id = f"//{args.owner}/{args.repo}/{issue.milestone.title}:{issue.number}"
+      task.id = (
+        f"//{args.owner}/{args.repo}/{issue.milestone.title}:{issue.number}"
+      )
 
       task.parent.type = freefocus_pb2.Task.Parent.TASK
       task.parent.task.id = milestone_id
@@ -111,13 +114,16 @@ if __name__ == "__main__":
       task.parent.task.id = repo_subtree.id
 
     task.body = (
-        f"{issue.title}\n\n" + issue.body.replace('\r\n', '\n')).rstrip()
+      f"{issue.title}\n\n" + issue.body.replace("\r\n", "\n")
+    ).rstrip()
     task.status = freefocus_pb2.Task.ACTIVE
 
     for i, comment in enumerate(issue.get_comments()):
       j = i + 1
       comment_node = task.comments.add()
-      comment_node.id = f"@comments//{args.owner}/{args.repo}/{issue.number}:{j}"
+      comment_node.id = (
+        f"@comments//{args.owner}/{args.repo}/{issue.number}:{j}"
+      )
       comment_node.parent.type = freefocus_pb2.Comment.Parent.TASK
       comment_node.parent.task.id = task.id
       comment_node.body = issue.body

@@ -21,10 +21,10 @@ FLAGS = app.FLAGS
 
 def test_Exec_smoke_test():
   """llvm-link with an empty file."""
-  p = llvm_dis.Exec(['-help'])
+  p = llvm_dis.Exec(["-help"])
   assert not p.returncode
-  assert 'USAGE: llvm-dis' in p.stdout
+  assert "USAGE: llvm-dis" in p.stdout
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

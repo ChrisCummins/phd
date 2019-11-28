@@ -7,8 +7,10 @@ MAVEN_LOCAL = "MAVEN_LOCAL:"
 def _maven_release(ctx, parts):
   """induce jar and url name from maven coordinates."""
   if len(parts) not in [3, 4]:
-    fail('%s:\nexpected id="groupId:artifactId:version[:classifier]"' %
-         ctx.attr.artifact)
+    fail(
+      '%s:\nexpected id="groupId:artifactId:version[:classifier]"'
+      % ctx.attr.artifact
+    )
   if len(parts) == 4:
     group, artifact, version, classifier = parts
     file_version = version + "-" + classifier
@@ -16,13 +18,15 @@ def _maven_release(ctx, parts):
     group, artifact, version = parts
     file_version = version
   jar = artifact.lower() + "-" + file_version
-  url = "/".join([
+  url = "/".join(
+    [
       ctx.attr.repository,
       group.replace(".", "/"),
       artifact,
       version,
       artifact + "-" + file_version,
-  ])
+    ]
+  )
   return jar, url
 
 
@@ -40,12 +44,12 @@ def _create_coordinates(fully_qualified_name):
   else:
     fail("Invalid fully qualified name for artifact: %s" % fully_qualified_name)
   return struct(
-      fully_qualified_name=fully_qualified_name,
-      group_id=group_id,
-      artifact_id=artifact_id,
-      packaging=packaging,
-      classifier=classifier,
-      version=version,
+    fully_qualified_name=fully_qualified_name,
+    group_id=group_id,
+    artifact_id=artifact_id,
+    packaging=packaging,
+    classifier=classifier,
+    version=version,
   )
 
 
@@ -53,17 +57,20 @@ def _format_deps(attr, deps):
   formatted_deps = ""
   if deps:
     if len(deps) == 1:
-      formatted_deps += "%s = [\'%s\']," % (attr, deps[0])
+      formatted_deps += "%s = ['%s']," % (attr, deps[0])
     else:
       formatted_deps += "%s = [\n" % attr
       for dep in deps:
-        formatted_deps += "        \'%s\',\n" % dep
+        formatted_deps += "        '%s',\n" % dep
       formatted_deps += "    ],"
   return formatted_deps
 
 
 def _generate_build_files(ctx, binjar, srcjar):
-  header = "# DO NOT EDIT: automatically generated BUILD file for maven_jar rule %s" % ctx.name
+  header = (
+    "# DO NOT EDIT: automatically generated BUILD file for maven_jar rule %s"
+    % ctx.name
+  )
   srcjar_attr = ""
   if srcjar:
     srcjar_attr = 'srcjar = "%s",' % srcjar
@@ -85,11 +92,11 @@ java_import(
     {exports}
 )
 \n""".format(
-      srcjar_attr=srcjar_attr,
-      header=header,
-      binjar=binjar,
-      deps=_format_deps("deps", ctx.attr.deps),
-      exports=_format_deps("exports", ctx.attr.exports),
+    srcjar_attr=srcjar_attr,
+    header=header,
+    binjar=binjar,
+    deps=_format_deps("deps", ctx.attr.deps),
+    exports=_format_deps("exports", ctx.attr.exports),
   )
   if srcjar:
     contents += """
@@ -97,7 +104,9 @@ java_import(
     name = 'src',
     jars = ['{srcjar}'],
 )
-""".format(srcjar=srcjar)
+""".format(
+      srcjar=srcjar
+    )
   ctx.file("%s/BUILD" % ctx.path("jar"), contents, False)
   # Compatibility layer for java_import_external from rules_closure
   contents = """
@@ -107,7 +116,9 @@ alias(
     name = "{rule_name}",
     actual = "@{rule_name}//jar",
 )
-\n""".format(rule_name=ctx.name, header=header)
+\n""".format(
+    rule_name=ctx.name, header=header
+  )
   ctx.file("BUILD", contents, False)
 
 
@@ -149,19 +160,18 @@ def _maven_jar_impl(ctx):
 
 
 maven_jar = repository_rule(
-    attrs={
-        "artifact": attr.string(mandatory=True),
-        "sha1": attr.string(),
-        "src_sha1": attr.string(),
-        "_download_script":
-        attr.label(default=Label("//tools:download_file.py")),
-        "repository": attr.string(default=MAVEN_CENTRAL),
-        "attach_source": attr.bool(default=True),
-        "unsign": attr.bool(default=False),
-        "deps": attr.string_list(),
-        "exports": attr.string_list(),
-        "exclude": attr.string_list(),
-    },
-    local=True,
-    implementation=_maven_jar_impl,
+  attrs={
+    "artifact": attr.string(mandatory=True),
+    "sha1": attr.string(),
+    "src_sha1": attr.string(),
+    "_download_script": attr.label(default=Label("//tools:download_file.py")),
+    "repository": attr.string(default=MAVEN_CENTRAL),
+    "attach_source": attr.bool(default=True),
+    "unsign": attr.bool(default=False),
+    "deps": attr.string_list(),
+    "exports": attr.string_list(),
+    "exclude": attr.string_list(),
+  },
+  local=True,
+  implementation=_maven_jar_impl,
 )

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import argparse
 import logging
 import subprocess
@@ -13,7 +12,12 @@ LAUNCHER = clsmith.cl_launcher_path
 LAUNCHER_OPTS = ["-l", "1,1,1", "-g", "1,1,1"]
 OCLGRIND = "oclgrind"
 OCLGRIND_OPTS = [
-    "--max-errors", "16", "--build-options", "-O0", "-Wall", "--uninitialized"
+  "--max-errors",
+  "16",
+  "--build-options",
+  "-O0",
+  "-Wall",
+  "--uninitialized",
 ]
 
 reference_platforms = ["AMD", "Intel"]
@@ -47,10 +51,11 @@ class RunInThread:
   def __run(self, command):
     # Start the process
     self.process = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True)
+      command,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      universal_newlines=True,
+    )
     # Get its output (blocking call)
     self.stdout, self.stderr = self.process.communicate()
 
@@ -58,9 +63,12 @@ class RunInThread:
 def verify_with_oclgrind(clprogram):
   # Execute Oclgrind in a separate thread
   run = RunInThread(
-      [OCLGRIND] + OCLGRIND_OPTS +
-      [LAUNCHER, "-f", clprogram, "-p", "0", "-d", "0"] + LAUNCHER_OPTS,
-      timeout * 30)
+    [OCLGRIND]
+    + OCLGRIND_OPTS
+    + [LAUNCHER, "-f", clprogram, "-p", "0", "-d", "0"]
+    + LAUNCHER_OPTS,
+    timeout * 30,
+  )
 
   # Check to see if Oclgrind actually completed successfully
   if run.timed_out:
@@ -94,13 +102,15 @@ def get_reference_run(clprogram):
     result[platform_name] = None
 
     run = RunInThread(
-        [LAUNCHER, "-f", clprogram, "-p",
-         str(platform + 1), "-d",
-         str(device)] + LAUNCHER_OPTS, timeout)
+      [LAUNCHER, "-f", clprogram, "-p", str(platform + 1), "-d", str(device)]
+      + LAUNCHER_OPTS,
+      timeout,
+    )
 
     stdout, stderr = run.stdout, run.stderr
-    app.Log(2, "Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout,
-              stderr)
+    app.Log(
+      2, "Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout, stderr
+    )
 
     compiled = "ompilation terminated successfully" in stderr
     if compiled and not run.timed_out:
@@ -124,10 +134,10 @@ def get_reference_run(clprogram):
       return None
     if len(random_result) > 1:
       if "error" in random_result[1]:
-        app.Log(2, "\"error\" found in output")
+        app.Log(2, '"error" found in output')
         return False
       if "Error" in random_result[1]:
-        app.Log(2, "\"Error\" found in output")
+        app.Log(2, '"Error" found in output')
         return False
       if random_result[1] == "0,":
         app.Log(2, "Zero output is not interesting")
@@ -146,8 +156,10 @@ def get_ocl_run(clprogram):
   result = None
   platform_name = "OCL"
   run = RunInThread(
-      [LAUNCHER, "-f", clprogram, "-p",
-       str(0), "-d", str(device)] + LAUNCHER_OPTS, timeout)
+    [LAUNCHER, "-f", clprogram, "-p", str(0), "-d", str(device)]
+    + LAUNCHER_OPTS,
+    timeout,
+  )
 
   out, err = run.stdout, run.stderr
   app.Log(2, "OCL:\nOut: %r\nErr: %r\n", out, err)
@@ -186,17 +198,19 @@ def main(argv):
   global logfile
 
   argparser = argparse.ArgumentParser(
-      description="Check if the OpenCL kernel is interesting.")
-  argparser.add_argument('--logfile', action='store')
-  argparser.add_argument('--loglevel', action='store')
-  argparser.add_argument('--vectors', action='store', default=True)
-  argparser.add_argument('--no-oclgrind', action='store_true')
+    description="Check if the OpenCL kernel is interesting."
+  )
+  argparser.add_argument("--logfile", action="store")
+  argparser.add_argument("--loglevel", action="store")
+  argparser.add_argument("--vectors", action="store", default=True)
+  argparser.add_argument("--no-oclgrind", action="store_true")
   argparser.add_argument(
-      'clprogram',
-      metavar="KERNEL",
-      nargs='?',
-      default="CLProgram.cl",
-      help="The kernel file to run (CLProgram.cl by default)")
+    "clprogram",
+    metavar="KERNEL",
+    nargs="?",
+    default="CLProgram.cl",
+    help="The kernel file to run (CLProgram.cl by default)",
+  )
   args = argparser.parse_args(argv[1:])
 
   if args.loglevel or args.logfile:

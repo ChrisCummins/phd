@@ -1,9 +1,9 @@
 import hashlib
+import itertools
 import os
 from pathlib import Path
-import itertools
 
-template_header  ="""#!/bin/bash
+template_header = """#!/bin/bash
 #SBATCH --job-name=BlsT{idx:03d}
 #SBATCH --time={timelimit}
 #SBATCH --partition=total
@@ -54,73 +54,89 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
 
 """
 
-strategies = ['none', 'data_flow_max_steps', 'label_convergence'] # later add 'constant', 'edge_count'
-factors = ['0', '0', '0'] # for constant etc. we need more
+strategies = [
+  "none",
+  "data_flow_max_steps",
+  "label_convergence",
+]  # later add 'constant', 'edge_count'
+factors = ["0", "0", "0"]  # for constant etc. we need more
 
-timelimit = '04:00:00'
-log_db = 'sqlite:////users/zfisches/ggnn_case_study_logs.db'
-base_path = Path('/users/zfisches/phd/deeplearning/ml4pl/scripts/ggnn_baselines/testing/')
+timelimit = "04:00:00"
+log_db = "sqlite:////users/zfisches/ggnn_case_study_logs.db"
+base_path = Path(
+  "/users/zfisches/phd/deeplearning/ml4pl/scripts/ggnn_baselines/testing/"
+)
 
 restore_from = [
-    '20191117T024211@ault05.cscs.ch:102',
-    '20191117T031908@ault09.cscs.ch:89',
-    '20191117T032950@ault06.cscs.ch:47',
-    '20191117T033531@ault06.cscs.ch:52',
-    '20191117T160503@ault09.cscs.ch:82',
+  "20191117T024211@ault05.cscs.ch:102",
+  "20191117T031908@ault09.cscs.ch:89",
+  "20191117T032950@ault06.cscs.ch:47",
+  "20191117T033531@ault06.cscs.ch:52",
+  "20191117T160503@ault09.cscs.ch:82",
 ]
 
 databases = [
-    'ml4pl_reachability',
-    'ml4pl_datadep',
-    'ml4pl_domtree',
-    'ml4pl_subexpressions',
-    'ml4pl_liveness',
+  "ml4pl_reachability",
+  "ml4pl_datadep",
+  "ml4pl_domtree",
+  "ml4pl_subexpressions",
+  "ml4pl_liveness",
 ]
 
 
 def generate():
-    tmpl = template_header + template_command
-    modes = zip(strategies, factors)
-    models = zip(databases, restore_from)
-    dimensions = [modes, models]
-    configs = list(itertools.product(*dimensions))
+  tmpl = template_header + template_command
+  modes = zip(strategies, factors)
+  models = zip(databases, restore_from)
+  dimensions = [modes, models]
+  configs = list(itertools.product(*dimensions))
 
-    base_path.mkdir(parents=True, exist_ok=True)
-    readme = open(base_path / 'README.txt', 'w')
-    print(build_helper.format(build_command=build_command), file=readme)
+  base_path.mkdir(parents=True, exist_ok=True)
+  readme = open(base_path / "README.txt", "w")
+  print(build_helper.format(build_command=build_command), file=readme)
 
-    for i, c in enumerate(configs):
-        mode, model = c
-        fmtdic = {
-            'timelimit': timelimit, 'idx': i, 'log_db': log_db,
-            'restore': model[1],  'database': model[0],
-            'unroll_strategy': mode[0], 'unroll_factor': mode[1]
-        }
+  for i, c in enumerate(configs):
+    mode, model = c
+    fmtdic = {
+      "timelimit": timelimit,
+      "idx": i,
+      "log_db": log_db,
+      "restore": model[1],
+      "database": model[0],
+      "unroll_strategy": mode[0],
+      "unroll_factor": mode[1],
+    }
 
-        print(f'{i:03d}: {fmtdic}', file=readme)
+    print(f"{i:03d}: {fmtdic}", file=readme)
 
-        info = f'\n# Run No. {i:03d}:\n# {fmtdic}\n\n'
-        jobstr = template_header.format(**fmtdic) + info + template_command.format(**fmtdic) + '\n'
+    info = f"\n# Run No. {i:03d}:\n# {fmtdic}\n\n"
+    jobstr = (
+      template_header.format(**fmtdic)
+      + info
+      + template_command.format(**fmtdic)
+      + "\n"
+    )
 
-        filename = f"run_{i:03d}_{fmtdic['database']}_{fmtdic['unroll_strategy']}_{fmtdic['unroll_factor']}.sh"
-        path = base_path / filename
-        write_file(path, jobstr)
-    readme.close()
-    print("Success.")
-    print(build_helper.format(build_command=build_command))
-    print(build_command)
+    filename = f"run_{i:03d}_{fmtdic['database']}_{fmtdic['unroll_strategy']}_{fmtdic['unroll_factor']}.sh"
+    path = base_path / filename
+    write_file(path, jobstr)
+  readme.close()
+  print("Success.")
+  print(build_helper.format(build_command=build_command))
+  print(build_command)
+
 
 def stamp(stuff):
-    hash_object = hashlib.sha1(str(stuff).encode('utf-8'))
-    hex_dig = hash_object.hexdigest()
-    return hex_dig[:7]
+  hash_object = hashlib.sha1(str(stuff).encode("utf-8"))
+  hex_dig = hash_object.hexdigest()
+  return hex_dig[:7]
 
 
 def write_file(path: Path, content: str):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, 'w') as f:
-        f.write(content)
+  path.parent.mkdir(parents=True, exist_ok=True)
+  with open(path, "w") as f:
+    f.write(content)
 
 
-if __name__ == '__main__':
-    generate()
+if __name__ == "__main__":
+  generate()

@@ -9,8 +9,9 @@ from labm8.py import app
 
 FLAGS = app.FLAGS
 
-app.DEFINE_input_path('bibtex_path', None,
-                      'Path of bibtex file to minimize in place')
+app.DEFINE_input_path(
+  "bibtex_path", None, "Path of bibtex file to minimize in place"
+)
 
 
 def DeleteKeysInPlace(dictionary, keys):
@@ -24,25 +25,28 @@ def MinimizeBibtexInPlace(bibtex) -> None:
   """Minimize a bibtex in place."""
   # Strip the unwanted keys from the entries.
   for entry in bibtex.entries:
-    DeleteKeysInPlace(entry, [
-        'abstract',
-        'annote',
-        'archiveprefix',
-        'arxivid',
-        'eprint',
-        'file',
-        'doi',
-        'pages',
-        'isbn',
-        'issn',
-        'keywords',
-        'mendeley-tags',
-        'pmid',
-        'primaryclass',
-    ])
+    DeleteKeysInPlace(
+      entry,
+      [
+        "abstract",
+        "annote",
+        "archiveprefix",
+        "arxivid",
+        "eprint",
+        "file",
+        "doi",
+        "pages",
+        "isbn",
+        "issn",
+        "keywords",
+        "mendeley-tags",
+        "pmid",
+        "primaryclass",
+      ],
+    )
     # Only delete the URL of non-"misc" entries. Misc entries include websites.
-    if entry['ENTRYTYPE'] != 'misc' and 'url' in entry:
-      del entry['url']
+    if entry["ENTRYTYPE"] != "misc" and "url" in entry:
+      del entry["url"]
 
 
 def BibtexToString(bibtex) -> str:
@@ -50,8 +54,8 @@ def BibtexToString(bibtex) -> str:
   string = bibtexparser.dumps(bibtex)
   # Strip non-ASCII characters in serialized bibtex since LaTeX complains about
   # "Unicode char X not set up for use with LaTeX."
-  string = string.encode('ascii', 'ignore').decode('ascii')
-  string = string.replace(u"\u200B", "")
+  string = string.encode("ascii", "ignore").decode("ascii")
+  string = string.replace("\u200B", "")
   return string
 
 
@@ -66,9 +70,9 @@ def main():
   string = BibtexToString(bibtex)
 
   # Write the result.
-  with open(FLAGS.bibtex_path, 'w') as f:
+  with open(FLAGS.bibtex_path, "w") as f:
     f.write(string)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

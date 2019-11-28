@@ -19,37 +19,27 @@ class Node {
   ~Node() {}
 };
 
-
 //
 // First solution. Allocate new node and recursively assign children.
 //
 // O(n) time, O(n) space.
 //
 Node *deep_copy(Node *node) {
-  auto* newNode = new Node(node->data);
+  auto *newNode = new Node(node->data);
 
-  if (node->left)
-    newNode->left = deep_copy(node->left);
-  if (node->right)
-    newNode->right = deep_copy(node->right);
+  if (node->left) newNode->left = deep_copy(node->left);
+  if (node->right) newNode->right = deep_copy(node->right);
 
   return newNode;
 }
-
 
 ///////////
 // Tests //
 ///////////
 
 TEST(TreeCopy, tests) {
-  std::array<Node*, 6> nodes = {
-    new Node(0),
-    new Node(1),
-    new Node(2),
-    new Node(3),
-    new Node(4),
-    new Node(5)
-  };
+  std::array<Node *, 6> nodes = {new Node(0), new Node(1), new Node(2),
+                                 new Node(3), new Node(4), new Node(5)};
 
   // Assemble tree:
   nodes[0]->left = nodes[1];
@@ -58,16 +48,14 @@ TEST(TreeCopy, tests) {
   nodes[3]->left = nodes[4];
   nodes[2]->left = nodes[5];
 
-  auto* _newnodes = deep_copy(nodes[0]);
+  auto *_newnodes = deep_copy(nodes[0]);
 
-  std::array<Node*, 6> newnodes = {
-    _newnodes,
-    _newnodes->left,
-    _newnodes->right,
-    _newnodes->left->left,
-    _newnodes->left->left->left,
-    _newnodes->right->left
-  };
+  std::array<Node *, 6> newnodes = {_newnodes,
+                                    _newnodes->left,
+                                    _newnodes->right,
+                                    _newnodes->left->left,
+                                    _newnodes->left->left->left,
+                                    _newnodes->right->left};
 
   for (size_t i = 0; i < nodes.size(); i++) {
     // Addresses don't match (i.e. they're different objects).
@@ -81,10 +69,8 @@ TEST(TreeCopy, tests) {
       ASSERT_EQ(nodes[i]->right->data, newnodes[i]->right->data);
   }
 
-  for (auto* n : nodes)
-    delete n;
-  for (auto *n : newnodes)
-    delete n;
+  for (auto *n : nodes) delete n;
+  for (auto *n : newnodes) delete n;
 }
 
 CTCI_MAIN();

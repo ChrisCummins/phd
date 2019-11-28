@@ -3,9 +3,7 @@
 #define STR(x) #x
 #define PRINT(x) std::cout << STR(x) << " = " << x << std::endl
 
-int rvalue_ret() {
-  return 17;
-}
+int rvalue_ret() { return 17; }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-stack-address"

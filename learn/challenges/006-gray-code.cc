@@ -6,7 +6,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
-template<size_t nbits>
+template <size_t nbits>
 class Gray {
  public:
   Gray() : _msig(nbits - 1), _bits(0) {}
@@ -30,9 +30,7 @@ class Gray {
 
   Gray &operator++(int n) { return ++*this; }
 
-  const bool &operator[](const size_t index) const {
-    return _bits[index];
-  }
+  const bool &operator[](const size_t index) const { return _bits[index]; }
 
   size_t size() const { return nbits; }
 
@@ -45,7 +43,6 @@ class Gray {
   std::bitset<nbits> _bits;
 };
 #pragma GCC diagnostic pop  // -Wpadded
-
 
 int main(int argc, char **argv) {
   auto g = Gray<5>();

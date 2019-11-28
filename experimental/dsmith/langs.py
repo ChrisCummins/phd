@@ -24,7 +24,8 @@ Attributes:
 import math
 import sys
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Iterable
+from typing import Tuple
 
 from experimental import dsmith
 from experimental.dsmith import Colors
@@ -42,15 +43,15 @@ class Harness(dsmith.ReprComparable):
 
   # Abstract methods (must be implemented):
 
-  def run_testcases(self, testbeds: Iterable['Testbed']) -> None:
+  def run_testcases(self, testbeds: Iterable["Testbed"]) -> None:
     """ execute testcases on the specified testbeds and record the results """
     raise NotImplementedError("abstract class")
 
-  def testbeds(self) -> Iterable['Testbed']:
+  def testbeds(self) -> Iterable["Testbed"]:
     """ return all testbeds in the data store """
     pass
 
-  def available_testbeds(self) -> Iterable['Testbed']:
+  def available_testbeds(self) -> Iterable["Testbed"]:
     """ return testbeds available on this machine """
     pass
 
@@ -131,8 +132,9 @@ class Language(dsmith.ReprComparable):
 
   # Abstract methods (must be implemented):
 
-  def describe_testbeds(self, available_only: bool = False,
-                        file=sys.stdout) -> None:
+  def describe_testbeds(
+    self, available_only: bool = False, file=sys.stdout
+  ) -> None:
     """ describe testbeds """
     raise NotImplementedError("abstract class")
 
@@ -201,15 +203,18 @@ def mklang(name: str) -> Language:
     # Deferred importing of languages to break circular dependencies from
     # language modules which require this file.
     from dsmith.opencl import OpenCL
+
     langs["opencl"] = OpenCL
 
   if dsmith.WITH_SOLIDITY:
     from dsmith.sol import Solidity
+
     langs["solidity"] = Solidity
     langs["sol"] = Solidity
 
   if dsmith.WITH_GLSL:
     from dsmith.glsl import Glsl
+
     langs["glsl"] = Glsl
 
   lang = langs.get(name)

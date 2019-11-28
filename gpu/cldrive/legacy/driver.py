@@ -70,6 +70,7 @@ class NDRange(typing.NamedTuple):
     >>> NDRange(10, 10, 10) > NDRange(10, 9, 10)
     True
   """
+
   x: int
   y: int
   z: int
@@ -82,21 +83,25 @@ class NDRange(typing.NamedTuple):
     """Get the Linear product (x * y * z)."""
     return self.x * self.y * self.z
 
-  def __eq__(self, rhs: 'NDRange') -> bool:
+  def __eq__(self, rhs: "NDRange") -> bool:
     return self.x == rhs.x and self.y == rhs.y and self.z == rhs.z
 
-  def __gt__(self, rhs: 'NDRange') -> bool:
-    return (self.product > rhs.product and self.x >= rhs.x and
-            self.y >= rhs.y and self.z >= rhs.z)
+  def __gt__(self, rhs: "NDRange") -> bool:
+    return (
+      self.product > rhs.product
+      and self.x >= rhs.x
+      and self.y >= rhs.y
+      and self.z >= rhs.z
+    )
 
-  def __ge__(self, rhs: 'NDRange') -> bool:
+  def __ge__(self, rhs: "NDRange") -> bool:
     return self == rhs or self > rhs
 
   def ToString(self) -> str:
-    return f'{self.x},{self.y},{self.x}'
+    return f"{self.x},{self.y},{self.x}"
 
   @staticmethod
-  def FromString(string: str) -> 'NDRange':
+  def FromString(string: str) -> "NDRange":
     """Parse an NDRange from a string of format 'x,y,z'.
 
     Args:
@@ -117,22 +122,24 @@ class NDRange(typing.NamedTuple):
       ...
       ValueError
     """
-    components = string.split(',')
+    components = string.split(",")
     if not len(components) == 3:
       raise ValueError(f"invalid NDRange '{string}'")
     x, y, z = int(components[0]), int(components[1]), int(components[2])
     return NDRange(x, y, z)
 
 
-def DriveKernel(env: _env.OpenCLEnvironment,
-                src: str,
-                inputs: np.array,
-                gsize: typing.Union[typing.Tuple[int, int, int], NDRange],
-                lsize: typing.Union[typing.Tuple[int, int, int], NDRange],
-                timeout: int = -1,
-                optimizations: bool = True,
-                profiling: bool = False,
-                debug: bool = False) -> np.array:
+def DriveKernel(
+  env: _env.OpenCLEnvironment,
+  src: str,
+  inputs: np.array,
+  gsize: typing.Union[typing.Tuple[int, int, int], NDRange],
+  lsize: typing.Union[typing.Tuple[int, int, int], NDRange],
+  timeout: int = -1,
+  optimizations: bool = True,
+  profiling: bool = False,
+  debug: bool = False,
+) -> np.array:
   """Drive an OpenCL kernel.
 
   Executes an OpenCL kernel on the given environment, over the given inputs.
@@ -175,8 +182,11 @@ def DriveKernel(env: _env.OpenCLEnvironment,
       print(*args, **kwargs, file=sys.stderr)
 
   # Assert input types.
-  app.AssertOrRaise(isinstance(env, _env.OpenCLEnvironment), ValueError,
-                    "env argument is of incorrect type")
+  app.AssertOrRaise(
+    isinstance(env, _env.OpenCLEnvironment),
+    ValueError,
+    "env argument is of incorrect type",
+  )
   app.AssertOrRaise(isinstance(src, str), ValueError, "source is not a string")
 
   # Validate global and local sizes.
@@ -184,13 +194,21 @@ def DriveKernel(env: _env.OpenCLEnvironment,
   app.AssertOrRaise(len(lsize) == 3, TypeError)
   gsize, lsize = NDRange(*gsize), NDRange(*lsize)
 
-  app.AssertOrRaise(gsize.product >= 1, ValueError,
-                    f"Scalar global size {gsize.product} must be >= 1")
-  app.AssertOrRaise(lsize.product >= 1, ValueError,
-                    f"Scalar local size {lsize.product} must be >= 1")
   app.AssertOrRaise(
-      gsize >= lsize, ValueError,
-      f"Global size {gsize} must be larger than local size {lsize}")
+    gsize.product >= 1,
+    ValueError,
+    f"Scalar global size {gsize.product} must be >= 1",
+  )
+  app.AssertOrRaise(
+    lsize.product >= 1,
+    ValueError,
+    f"Scalar local size {lsize.product} must be >= 1",
+  )
+  app.AssertOrRaise(
+    gsize >= lsize,
+    ValueError,
+    f"Global size {gsize} must be larger than local size {lsize}",
+  )
 
   # Parse args in this process since we want to preserve the sueful exception
   # type.
@@ -198,12 +216,15 @@ def DriveKernel(env: _env.OpenCLEnvironment,
 
   # Check that the number of inputs is correct.
   args_with_inputs = [
-      i for i, arg in enumerate(args) if not arg.address_space == 'local'
+    i for i, arg in enumerate(args) if not arg.address_space == "local"
   ]
   app.AssertOrRaise(
-      len(args_with_inputs) == len(inputs), ValueError,
-      "Kernel expects {} inputs, but {} were provided".format(
-          len(args_with_inputs), len(inputs)))
+    len(args_with_inputs) == len(inputs),
+    ValueError,
+    "Kernel expects {} inputs, but {} were provided".format(
+      len(args_with_inputs), len(inputs)
+    ),
+  )
 
   # All inputs must have some length.
   for i, x in enumerate(inputs):
@@ -211,20 +232,21 @@ def DriveKernel(env: _env.OpenCLEnvironment,
 
   # Copy inputs into the expected data types.
   data = np.array(
-      [np.array(d).astype(a.numpy_type) for d, a in zip(inputs, args)])
+    [np.array(d).astype(a.numpy_type) for d, a in zip(inputs, args)]
+  )
 
   job = {
-      "env": env,
-      "src": src,
-      "args": args,
-      "data": data,
-      "gsize": gsize,
-      "lsize": lsize,
-      "optimizations": optimizations,
-      "profiling": profiling
+    "env": env,
+    "src": src,
+    "args": args,
+    "data": data,
+    "gsize": gsize,
+    "lsize": lsize,
+    "optimizations": optimizations,
+    "profiling": profiling,
   }
 
-  with NamedTemporaryFile('rb+', prefix='cldrive-', suffix='.job') as tmp_file:
+  with NamedTemporaryFile("rb+", prefix="cldrive-", suffix=".job") as tmp_file:
     porcelain_job_file = tmp_file.name
 
     # Write job file.
@@ -247,12 +269,12 @@ def DriveKernel(env: _env.OpenCLEnvironment,
     status = process.returncode
 
     if debug:
-      print(stdout.decode('utf-8').strip(), file=sys.stderr)
-      print(stderr.decode('utf-8').strip(), file=sys.stderr)
+      print(stdout.decode("utf-8").strip(), file=sys.stderr)
+      print(stderr.decode("utf-8").strip(), file=sys.stderr)
     elif profiling:
       # Print profiling output when not in debug mode.
-      for line in stderr.decode('utf-8').split('\n'):
-        if re.match(r'\[cldrive\] .+ time: [0-9]+\.[0-9]+ ms', line):
+      for line in stderr.decode("utf-8").split("\n"):
+        if re.match(r"\[cldrive\] .+ time: [0-9]+\.[0-9]+ ms", line):
           print(line, file=sys.stderr)
     Log(f"Porcelain return code: {status}")
 
@@ -262,7 +284,7 @@ def DriveKernel(env: _env.OpenCLEnvironment,
     #
     # FIXME: I'm seeing a number of SIGABRT return codes which I can't explain.
     # However, ignoring them seems to not cause a problem ...
-    if status != 0 and status != -Signals['SIGABRT'].value:
+    if status != 0 and status != -Signals["SIGABRT"].value:
       # A negative return code means a signal. Try and convert the value into a
       # signal name.
       with suppress(ValueError):

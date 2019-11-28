@@ -84,31 +84,39 @@ __kernel void entry(__global ulong *result) {
 def test_ExecClsmithSource_pass():
   """And end-to-end test of executing a CLSmith source."""
   env_ = env.OclgrindOpenCLEnvironment()
-  proc = cl_launcher.ExecClsmithSource(env_, CLSMITH_EXAMPLE_SRC,
-                                       driver.NDRange(1, 1, 1),
-                                       driver.NDRange(1, 1, 1), '---debug')
+  proc = cl_launcher.ExecClsmithSource(
+    env_,
+    CLSMITH_EXAMPLE_SRC,
+    driver.NDRange(1, 1, 1),
+    driver.NDRange(1, 1, 1),
+    "---debug",
+  )
 
   assert not proc.returncode
-  assert '3-D global size 1 = [1, 1, 1]' in proc.stderr
-  assert '3-D local size 1 = [1, 1, 1]' in proc.stderr
-  assert 'OpenCL optimizations: on' in proc.stderr
-  assert 'Platform: ' in proc.stderr
-  assert 'Device: ' in proc.stderr
-  assert 'Compilation terminated successfully...'
-  assert proc.stdout == '0,'
+  assert "3-D global size 1 = [1, 1, 1]" in proc.stderr
+  assert "3-D local size 1 = [1, 1, 1]" in proc.stderr
+  assert "OpenCL optimizations: on" in proc.stderr
+  assert "Platform: " in proc.stderr
+  assert "Device: " in proc.stderr
+  assert "Compilation terminated successfully..."
+  assert proc.stdout == "0,"
 
 
 def test_ExecClsmithSource_syntax_error():
   """Test outcome of kernel with syntax error."""
   env_ = env.OclgrindOpenCLEnvironment()
-  proc = cl_launcher.ExecClsmithSource(env_, "!@!###syntax error!",
-                                       driver.NDRange(1, 1, 1),
-                                       driver.NDRange(1, 1, 1), '---debug')
+  proc = cl_launcher.ExecClsmithSource(
+    env_,
+    "!@!###syntax error!",
+    driver.NDRange(1, 1, 1),
+    driver.NDRange(1, 1, 1),
+    "---debug",
+  )
 
   assert proc.returncode == 1
-  assert proc.stdout == ''
-  assert 'Error building program: -11' in proc.stderr
+  assert proc.stdout == ""
+  assert "Error building program: -11" in proc.stderr
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

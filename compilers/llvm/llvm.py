@@ -20,12 +20,13 @@ FLAGS = app.FLAGS
 
 
 class LlvmError(EnvironmentError):
-
-  def __init__(self,
-               msg: typing.Optional[str] = None,
-               returncode: typing.Optional[int] = None,
-               stderr: typing.Optional[str] = None,
-               command: typing.Optional[typing.List[str]] = None):
+  def __init__(
+    self,
+    msg: typing.Optional[str] = None,
+    returncode: typing.Optional[int] = None,
+    stderr: typing.Optional[str] = None,
+    command: typing.Optional[typing.List[str]] = None,
+  ):
     self.msg = msg
     self.returncode = returncode
     self.stderr = stderr

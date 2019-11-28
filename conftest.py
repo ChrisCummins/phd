@@ -17,28 +17,28 @@ FLAGS = app.FLAGS
 # Test fixtures.
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def tempdir() -> pathlib.Path:
   """A test fixture which yields a temporary directory."""
-  with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_test_") as d:
     yield pathlib.Path(d)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def tempdir2() -> pathlib.Path:
   """For when a single temporary directory just isn't enough!"""
-  with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_test_") as d:
     yield pathlib.Path(d)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def tempdir3() -> pathlib.Path:
   """For when a two temporary directories just aren't enough!"""
-  with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_test_") as d:
     yield pathlib.Path(d)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def module_tempdir() -> pathlib.Path:
   """A test fixture which yields a temporary directory.
 
@@ -47,7 +47,7 @@ def module_tempdir() -> pathlib.Path:
   which requires a tempdir. For all other uses, the regular tempdir() should
   be suitable.
   """
-  with tempfile.TemporaryDirectory(prefix='phd_test_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_test_") as d:
     yield pathlib.Path(d)
 
 
@@ -70,12 +70,14 @@ def pytest_collection_modifyitems(config, items):
   try:
     FLAGS.test_color
   except AttributeError:
-    app.Fatal("Failed to access flags defined in //labm8/py:test. Are you "
-              "sure you are running this test using labm8.py.test.Main()?")
+    app.Fatal(
+      "Failed to access flags defined in //labm8/py:test. Are you "
+      "sure you are running this test using labm8.py.test.Main()?"
+    )
 
   this_platform = sys.platform
   this_host = socket.gethostname()
-  slow_skip_marker = pytest.mark.skip(reason='Use --notest_skip_slow to run')
+  slow_skip_marker = pytest.mark.skip(reason="Use --notest_skip_slow to run")
 
   for item in items:
     # TODO(cec): Skip benchmarks by default.
@@ -115,8 +117,8 @@ def pytest_collection_modifyitems(config, items):
     # Explicitly marking them as skipped, as done here, ensures that the test
     # name still appears in the test output, with a 'skipped' message. This is
     # useful for keeping track of how many tests in a file are *not* being run.
-    if FLAGS.test_skip_slow and 'slow' in item.keywords:
-      app.Log(1, 'Skipping `%s` because it is slow', item.name)
+    if FLAGS.test_skip_slow and "slow" in item.keywords:
+      app.Log(1, "Skipping `%s` because it is slow", item.name)
       item.add_marker(slow_skip_marker)
       continue
 

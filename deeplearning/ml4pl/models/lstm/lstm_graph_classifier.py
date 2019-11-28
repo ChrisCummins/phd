@@ -27,19 +27,24 @@ FLAGS = app.FLAGS
 # For the sake of readability, these important model flags are saved into a
 # global set classifier_base.MODEL_FLAGS here, so that the declaration of model
 # flags is local to the declaration of the flag.
-app.DEFINE_integer("hidden_size", 200,
-                   "The size of hidden layer(s) in the LSTM baselines.")
+app.DEFINE_integer(
+  "hidden_size", 200, "The size of hidden layer(s) in the LSTM baselines."
+)
 classifier_base.MODEL_FLAGS.add("hidden_size")
 
 app.DEFINE_integer("dense_hidden_size", 32, "The size of the dense ")
 classifier_base.MODEL_FLAGS.add("dense_hidden_size")
 
-app.DEFINE_string('bytecode_encoder', 'llvm',
-                  'The encoder to use. One of {opencl,llvm,inst2vec}')
+app.DEFINE_string(
+  "bytecode_encoder",
+  "llvm",
+  "The encoder to use. One of {opencl,llvm,inst2vec}",
+)
 classifier_base.MODEL_FLAGS.add("bytecode_encoder")
 
-app.DEFINE_float('lang_model_loss_weight', .2,
-                 'Weight for language model auxiliary loss.')
+app.DEFINE_float(
+  "lang_model_loss_weight", 0.2, "Weight for language model auxiliary loss."
+)
 classifier_base.MODEL_FLAGS.add("lang_model_loss_weight")
 
 ##### End of flag declarations.
@@ -54,122 +59,141 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     utils.SetAllowedGrowthOnKerasSession()
 
     # The encoder which performs translation from graphs to encoded sequences.
-    if FLAGS.bytecode_encoder == 'llvm':
+    if FLAGS.bytecode_encoder == "llvm":
       bytecode_encoder = bytecode2seq.BytecodeEncoder()
-    elif FLAGS.bytecode_encoder == 'inst2vec':
+    elif FLAGS.bytecode_encoder == "inst2vec":
       bytecode_encoder = bytecode2seq.Inst2VecEncoder()
-    elif FLAGS.bytecode_encoder == 'opencl':
+    elif FLAGS.bytecode_encoder == "opencl":
       bytecode_encoder = bytecode2seq.OpenClEncoder()
     else:
       raise app.UsageError(f"Unknown encoder '{FLAGS.bytecode_encoder}'")
 
-    self.encoder = graph2seq.GraphToBytecodeEncoder(self.batcher.db,
-                                                    bytecode_encoder)
+    self.encoder = graph2seq.GraphToBytecodeEncoder(
+      self.batcher.db, bytecode_encoder
+    )
 
     # The graph level LSTM baseline doesn't need to sum segments, although they might as well to be shorter be summed?
     input_layer = keras.Input(
-        shape=(self.encoder.bytecode_encoder.max_sequence_length,),
-        dtype='int32',
-        name="model_in")
+      shape=(self.encoder.bytecode_encoder.max_sequence_length,),
+      dtype="int32",
+      name="model_in",
+    )
 
     x = keras.layers.Embedding(
-        input_dim=self.encoder.bytecode_encoder.
-        vocabulary_size_with_padding_token,
-        input_length=self.encoder.bytecode_encoder.max_sequence_length,
-        output_dim=FLAGS.hidden_size,
-        name="embedding")(input_layer)
+      input_dim=self.encoder.bytecode_encoder.vocabulary_size_with_padding_token,
+      input_length=self.encoder.bytecode_encoder.max_sequence_length,
+      output_dim=FLAGS.hidden_size,
+      name="embedding",
+    )(input_layer)
 
-    x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True,
-                       name="lstm_1")(x)
+    x = utils.MakeLstm(FLAGS.hidden_size, return_sequences=True, name="lstm_1")(
+      x
+    )
 
     x = utils.MakeLstm(FLAGS.hidden_size, name="lstm_2")(x)
 
-    langmodel_out = keras.layers.Dense(self.stats.graph_features_dimensionality,
-                                       activation="sigmoid",
-                                       name="langmodel_out")(x)
+    langmodel_out = keras.layers.Dense(
+      self.stats.graph_features_dimensionality,
+      activation="sigmoid",
+      name="langmodel_out",
+    )(x)
 
     # Auxiliary inputs.
     auxiliary_inputs = keras.Input(
-        shape=(self.stats.graph_features_dimensionality,), name="aux_in")
+      shape=(self.stats.graph_features_dimensionality,), name="aux_in"
+    )
 
     # Heuristic model. Takes as inputs a concatenation of the language model
     # and auxiliary inputs, outputs 1-hot encoded device mapping.
     x = keras.layers.Concatenate()([x, auxiliary_inputs])
     x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.Dense(FLAGS.dense_hidden_size,
-                           activation="relu",
-                           name="heuristic_1")(x)
-    out = keras.layers.Dense(self.stats.graph_labels_dimensionality,
-                             activation="sigmoid",
-                             name='heuristic_2')(x)
+    x = keras.layers.Dense(
+      FLAGS.dense_hidden_size, activation="relu", name="heuristic_1"
+    )(x)
+    out = keras.layers.Dense(
+      self.stats.graph_labels_dimensionality,
+      activation="sigmoid",
+      name="heuristic_2",
+    )(x)
 
-    self.model = keras.Model(inputs=[input_layer, auxiliary_inputs],
-                             outputs=[out, langmodel_out])
+    self.model = keras.Model(
+      inputs=[input_layer, auxiliary_inputs], outputs=[out, langmodel_out]
+    )
     self.model.compile(
-        optimizer="adam",
-        metrics=['accuracy'],
-        loss=["categorical_crossentropy", "categorical_crossentropy"],
-        loss_weights=[1., FLAGS.lang_model_loss_weight])
+      optimizer="adam",
+      metrics=["accuracy"],
+      loss=["categorical_crossentropy", "categorical_crossentropy"],
+      loss_weights=[1.0, FLAGS.lang_model_loss_weight],
+    )
 
   def MakeMinibatchIterator(
-      self,
-      epoch_type: str,
-      groups: typing.List[str],
-      print_context: typing.Any = None
+    self,
+    epoch_type: str,
+    groups: typing.List[str],
+    print_context: typing.Any = None,
   ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
     """Create minibatches by encoding, padding, and concatenating text
     sequences."""
-    options = graph_batcher.GraphBatchOptions(max_graphs=FLAGS.batch_size,
-                                              groups=groups)
+    options = graph_batcher.GraphBatchOptions(
+      max_graphs=FLAGS.batch_size, groups=groups
+    )
     max_instance_count = (
-        FLAGS.max_train_per_epoch if epoch_type == 'train' else
-        FLAGS.max_val_per_epoch if epoch_type == 'val' else None)
+      FLAGS.max_train_per_epoch
+      if epoch_type == "train"
+      else FLAGS.max_val_per_epoch
+      if epoch_type == "val"
+      else None
+    )
     for batch in self.batcher.MakeGraphBatchIterator(
-        options, max_instance_count, print_context=print_context):
+      options, max_instance_count, print_context=print_context
+    ):
       with prof.Profile(
-          f"Encoded {len(batch.log._transient_data['graph_indices'])} bytecodes",
-          print_to=lambda x: app.Log(2, x, print_context=print_context)):
+        f"Encoded {len(batch.log._transient_data['graph_indices'])} bytecodes",
+        print_to=lambda x: app.Log(2, x, print_context=print_context),
+      ):
         # returns a list of encoded bytecodes padded to max_sequence_length.
         encoded_sequences = self.encoder.Encode(
-            batch.log._transient_data['graph_indices'])
+          batch.log._transient_data["graph_indices"]
+        )
       # for graph_classifier we just need graph_x, graph_y split per graph
       # which is already the case.
       assert len(encoded_sequences) > 0
-      yield batch.log, { # vstack lists to np.arrays w/ [batch, ...] shape
-          'encoded_sequences': np.vstack(encoded_sequences),
-          'graph_x': np.vstack(batch.graph_x),
-          'graph_y': np.vstack(batch.graph_y),
+      yield batch.log, {  # vstack lists to np.arrays w/ [batch, ...] shape
+        "encoded_sequences": np.vstack(encoded_sequences),
+        "graph_x": np.vstack(batch.graph_x),
+        "graph_y": np.vstack(batch.graph_y),
       }
 
   def RunMinibatch(
-      self,
-      log: log_database.BatchLogMeta,
-      batch: typing.Any,
-      print_context=None) -> classifier_base.ClassifierBase.MinibatchResults:
+    self, log: log_database.BatchLogMeta, batch: typing.Any, print_context=None
+  ) -> classifier_base.ClassifierBase.MinibatchResults:
     """Run a batch through the LSTM."""
-    x = [batch['encoded_sequences'], batch['graph_x']]
-    y = [batch['graph_y'], batch['graph_y']]
+    x = [batch["encoded_sequences"], batch["graph_x"]]
+    y = [batch["graph_y"], batch["graph_y"]]
 
     losses = []
 
     def _RecordLoss(epoch, data):
       """Callback to record training/prediction loss."""
       del epoch
-      losses.append(data['loss'])
+      losses.append(data["loss"])
 
     callbacks = [keras.callbacks.LambdaCallback(on_epoch_end=_RecordLoss)]
 
-    if log.type == 'train':
+    if log.type == "train":
       with prof.Profile(
-          f'model.fit() {len(y[0])} instances',
-          print_to=lambda x: app.Log(2, x, print_context=print_context)):
-        self.model.fit(x,
-                       y,
-                       epochs=1,
-                       batch_size=log.graph_count,
-                       callbacks=callbacks,
-                       verbose=False,
-                       shuffle=False)
+        f"model.fit() {len(y[0])} instances",
+        print_to=lambda x: app.Log(2, x, print_context=print_context),
+      ):
+        self.model.fit(
+          x,
+          y,
+          epochs=1,
+          batch_size=log.graph_count,
+          callbacks=callbacks,
+          verbose=False,
+          shuffle=False,
+        )
 
     log.loss = sum(losses) / max(len(losses), 1)
 
@@ -177,20 +201,21 @@ class LstmGraphClassifierModel(classifier_base.ClassifierBase):
     # This is obviously wasteful when training, but I don't know of a way to
     # get the raw predictions from self.model.fit().
     with prof.Profile(
-        f'model.predict() {len(y[0])} instances',
-        print_to=lambda x: app.Log(2, x, print_context=print_context)):
+      f"model.predict() {len(y[0])} instances",
+      print_to=lambda x: app.Log(2, x, print_context=print_context),
+    ):
       pred_y = self.model.predict(x)
-    assert batch['graph_y'].shape == pred_y[0].shape
+    assert batch["graph_y"].shape == pred_y[0].shape
 
-    return batch['graph_y'], pred_y[0]
+    return batch["graph_y"], pred_y[0]
 
   def ModelDataToSave(self):
-    model_path = self.working_dir / f'{self.run_id}_keras_model.h5'
+    model_path = self.working_dir / f"{self.run_id}_keras_model.h5"
     self.model.save(model_path)
-    return {'model_path': model_path}
+    return {"model_path": model_path}
 
   def LoadModelData(self, data_to_load: typing.Any):
-    model_path = data_to_load['model_path']
+    model_path = data_to_load["model_path"]
     models.load_model(model_path)
 
 
@@ -199,5 +224,5 @@ def main():
   classifier_base.Run(LstmGraphClassifierModel)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

@@ -27,24 +27,29 @@ FLAGS = app.FLAGS
 
 def test_ClangPreprocess_empty_input():
   """Test that ClangPreprocess accepts an empty input."""
-  assert cxx.ClangPreprocess('') == '\n'
+  assert cxx.ClangPreprocess("") == "\n"
 
 
 def test_ClangPreprocess_small_cxx_program():
   """Test pre-processing a small C++ program."""
-  assert cxx.ClangPreprocess("""
+  assert (
+    cxx.ClangPreprocess(
+      """
 #define FOO T
 template<typename FOO>
 FOO foobar(const T& a) {return a;}
 
 int foo() { return foobar<int>(10); }
-""") == """
+"""
+    )
+    == """
 
 template<typename T>
 T foobar(const T& a) {return a;}
 
 int foo() { return foobar<int>(10); }
 """
+  )
 
 
 def test_ClangPreprocess_missing_include():
@@ -59,64 +64,78 @@ def test_ClangPreprocess_missing_include():
 
 def test_Compile_empty_input():
   """Test that Compile accepts an empty input."""
-  assert cxx.Compile('') == ''
+  assert cxx.Compile("") == ""
 
 
 def test_Compile_small_cxx_program():
   """Test Compile on a small C++ program."""
-  assert cxx.Compile("""
-#define FOO T
-template<typename FOO>
-FOO foobar(const T& a) {return a;}
-
-int foo() { return foobar<int>(10); }
-""") == """
+  assert (
+    cxx.Compile(
+      """
 #define FOO T
 template<typename FOO>
 FOO foobar(const T& a) {return a;}
 
 int foo() { return foobar<int>(10); }
 """
+    )
+    == """
+#define FOO T
+template<typename FOO>
+FOO foobar(const T& a) {return a;}
+
+int foo() { return foobar<int>(10); }
+"""
+  )
 
 
 def test_Compile_user_define():
   """Test that Compile accepts a program with a custom #define."""
-  assert cxx.Compile("""
-#define FLOAT_T float
-int A(FLOAT_T* a) {}
-""") == """
+  assert (
+    cxx.Compile(
+      """
 #define FLOAT_T float
 int A(FLOAT_T* a) {}
 """
+    )
+    == """
+#define FLOAT_T float
+int A(FLOAT_T* a) {}
+"""
+  )
 
 
 def test_Compile_syntax_error():
   """Test that Compile rejects a program with invalid syntax."""
   with pytest.raises(errors.ClangException) as e_info:
     cxx.Compile("int mainA2@@1!!!#")
-  assert 'error: ' in str(e_info.value)
+  assert "error: " in str(e_info.value)
 
 
 def test_Compile_undefined_variable():
   """Test that Compile rejects a program with an undefined variable."""
   with pytest.raises(errors.ClangException) as e_info:
-    cxx.Compile("""
+    cxx.Compile(
+      """
 int main(int argc, char** argv) {
   undefined_variable;
 }
-""")
-  assert 'use of undeclared identifier' in str(e_info.value)
+"""
+    )
+  assert "use of undeclared identifier" in str(e_info.value)
 
 
 def test_Compile_undefined_function():
   """Test that Compile rejects a program with an undefined function."""
   with pytest.raises(errors.ClangException) as e_info:
-    cxx.Compile("""
+    cxx.Compile(
+      """
 int main(int argc, char** argv) {
   undefined_function(argc);
 }
-""")
-  assert 'use of undeclared identifier' in str(e_info.value)
+"""
+    )
+  assert "use of undeclared identifier" in str(e_info.value)
 
 
 def test_Compile_cxx_header():
@@ -142,68 +161,98 @@ int main(int argc, char** argv) { return 0; }
 
 def test_ClangFormat_simple_c_program():
   """Test that a simple C program is unchanged."""
-  assert cxx.ClangFormat("""
+  assert (
+    cxx.ClangFormat(
+      """
 int main(int argc, char** argv) { return 0; }
-""") == """
+"""
+    )
+    == """
 int main(int argc, char** argv) {
   return 0;
 }
 """
+  )
 
 
 def test_ClangFormat_pointer_alignment():
   """Test that pointers are positioned left."""
-  assert cxx.ClangFormat("""
+  assert (
+    cxx.ClangFormat(
+      """
 int * A(int* a, int * b, int *c);
-""") == """
+"""
+    )
+    == """
 int* A(int* a, int* b, int* c);
 """
+  )
 
 
 def test_ClangFormat_undefined_data_type():
   """Test that an undefined data type does not cause an error."""
-  assert cxx.ClangFormat("""
+  assert (
+    cxx.ClangFormat(
+      """
 int main(MY_TYPE argc, char** argv) { return 0; }
-""") == """
+"""
+    )
+    == """
 int main(MY_TYPE argc, char** argv) {
   return 0;
 }
 """
+  )
 
 
 def test_ClangFormat_undefined_variable():
   """Test that an undefined variable does not cause an error."""
-  assert cxx.ClangFormat("""
+  assert (
+    cxx.ClangFormat(
+      """
 int main(int argc, char** argv) { return UNDEFINED_VARIABLE; }
-""") == """
+"""
+    )
+    == """
 int main(int argc, char** argv) {
   return UNDEFINED_VARIABLE;
 }
 """
+  )
 
 
 def test_ClangFormat_undefined_function():
   """Test that an undefined function does not cause an error."""
-  assert cxx.ClangFormat("""
+  assert (
+    cxx.ClangFormat(
+      """
 int main(int argc, char** argv) { return UNDEFINED_FUNCTION(0); }
-""") == """
+"""
+    )
+    == """
 int main(int argc, char** argv) {
   return UNDEFINED_FUNCTION(0);
 }
 """
+  )
 
 
 def test_ClangFormat_invalid_preprocessor_directive():
   """Test that an invalid preprocessor directive does not raise an error."""
-  assert cxx.ClangFormat("""
+  assert (
+    cxx.ClangFormat(
+      """
 #this_is_not_a_valid_directive
 int main(int argc, char** argv) { return 0; }
-""") == """
+"""
+    )
+    == """
 #this_is_not_a_valid_directive
 int main(int argc, char** argv) {
   return 0;
 }
 """
+  )
 
 
 # NormalizeIdentifiers() tests.
@@ -218,14 +267,16 @@ int A(int a, char** b) {
   int c = 2 * a;
   std::cout << c << ' args' << std::endl;
 }
-""" == cxx.NormalizeIdentifiers("""
+""" == cxx.NormalizeIdentifiers(
+    """
 #include <iostream>
 
 int main(int argc, char** argv) {
   int foo = 2 * argc;
   std::cout << foo << ' args' << std::endl;
 }
-""")
+"""
+  )
 
 
 # StripComments() tests.
@@ -233,30 +284,35 @@ int main(int argc, char** argv) {
 
 def test_StripComments_empty_input():
   """Test StripComments on an empty input."""
-  assert cxx.StripComments('') == ''
+  assert cxx.StripComments("") == ""
 
 
 def test_StripComments_only_comment():
   """Test StripComments on an input containing only comments."""
-  assert cxx.StripComments('// Just a comment') == ' '
-  assert cxx.StripComments('/* Just a comment */') == ' '
+  assert cxx.StripComments("// Just a comment") == " "
+  assert cxx.StripComments("/* Just a comment */") == " "
 
 
 def test_StripComments_small_program():
   """Test Strip Comments on a small program."""
-  assert cxx.StripComments("""
+  assert (
+    cxx.StripComments(
+      """
 /* comment header */
 
 int main(int argc, char** argv) { // main function.
   return /* foo */ 0;
 }
-""") == """
+"""
+    )
+    == """
  
 
 int main(int argc, char** argv) {  
   return   0;
 }
 """
+  )
 
 
 # Benchmarks.
@@ -286,5 +342,5 @@ def test_benchmark_StripComments_hello_world(benchmark):
   benchmark(cxx.StripComments, HELLO_WORLD_CXX)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

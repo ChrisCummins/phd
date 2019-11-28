@@ -17,14 +17,12 @@ from labm8.py import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
-  parser.add_argument("-H",
-                      "--hostname",
-                      type=str,
-                      default="cc1",
-                      help="MySQL database hostname")
-  parser.add_argument("--commit",
-                      action="store_true",
-                      help="Commit changes (default is dry-run)")
+  parser.add_argument(
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
+  parser.add_argument(
+    "--commit", action="store_true", help="Commit changes (default is dry-run)"
+  )
   args = parser.parse_args()
 
   db.init(args.hostname)
@@ -45,8 +43,11 @@ if __name__ == "__main__":
       with open(path) as infile:
         data = json.loads(infile.read())
 
-      new_id = s.query(CLgenProgram.id) \
-        .filter(CLgenProgram.hash == crypto.sha1_str(data["src"])).scalar()
+      new_id = (
+        s.query(CLgenProgram.id)
+        .filter(CLgenProgram.hash == crypto.sha1_str(data["src"]))
+        .scalar()
+      )
 
       idx = CLgenProgramTranslation(old_id=data["id"], new_id=new_id)
       s.add(idx)
@@ -56,16 +57,23 @@ if __name__ == "__main__":
         flush()
     flush()
 
-    PROGRAMS = dict((old_id, new_id) for old_id, new_id in s.query(
-        CLgenProgramTranslation.old_id, CLgenProgramTranslation.new_id).all())
+    PROGRAMS = dict(
+      (old_id, new_id)
+      for old_id, new_id in s.query(
+        CLgenProgramTranslation.old_id, CLgenProgramTranslation.new_id
+      ).all()
+    )
 
     print("Import CLgen results ...")
     paths = [p for p in Path("export/clgen/result").iterdir()]
 
     STDERR_MISSING_ID = 645948
 
-    num_todo = s.query(sql.sql.func.count(CLgenResult.id)) \
-      .filter(CLgenResult.stderr_id == STDERR_MISSING_ID).scalar()
+    num_todo = (
+      s.query(sql.sql.func.count(CLgenResult.id))
+      .filter(CLgenResult.stderr_id == STDERR_MISSING_ID)
+      .scalar()
+    )
     num_done = 0
 
     bar = ProgressBar(max_value=num_todo)
@@ -76,25 +84,34 @@ if __name__ == "__main__":
 
       program_id = PROGRAMS[data["program"]]
 
-      testcase = s.query(CLgenTestCase) \
-        .filter(CLgenTestCase.program_id == program_id,
-                CLgenTestCase.params_id == data["params"]).scalar()
+      testcase = (
+        s.query(CLgenTestCase)
+        .filter(
+          CLgenTestCase.program_id == program_id,
+          CLgenTestCase.params_id == data["params"],
+        )
+        .scalar()
+      )
 
       testbed_id = data["testbed"]
 
-      result = s.query(CLgenResult) \
-        .filter(CLgenResult.testbed_id == testbed_id,
-                CLgenResult.testcase_id == testcase.id,
-                CLgenResult.stderr_id == STDERR_MISSING_ID).first()
+      result = (
+        s.query(CLgenResult)
+        .filter(
+          CLgenResult.testbed_id == testbed_id,
+          CLgenResult.testcase_id == testcase.id,
+          CLgenResult.stderr_id == STDERR_MISSING_ID,
+        )
+        .first()
+      )
 
       to_del.append(path)
 
       if result:
         stderr_ = util.escape_stderr(data["stderr"])
-        stderr = get_or_create(s,
-                               CLgenStderr,
-                               hash=crypto.sha1_str(stderr_),
-                               stderr=stderr_)
+        stderr = get_or_create(
+          s, CLgenStderr, hash=crypto.sha1_str(stderr_), stderr=stderr_
+        )
         s.flush()
         assert isinstance(stderr.id, int)
         result.stderr_id = stderr.id

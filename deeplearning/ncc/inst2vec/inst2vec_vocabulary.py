@@ -55,9 +55,13 @@ def vocabulary_statistics(vocabulary_dic, descr):
   vocabulary_size = len(vocabulary_dic.keys())
 
   # Construct output
-  out = '\tAfter ' + descr + ':\n' \
-        + '\t--- {:<26}: {:>8,d}\n'.format('Number of lines', number_lines) \
-        + '\t--- {:<26}: {:>8,d}\n'.format('Vocabulary size', vocabulary_size)
+  out = (
+    "\tAfter "
+    + descr
+    + ":\n"
+    + "\t--- {:<26}: {:>8,d}\n".format("Number of lines", number_lines)
+    + "\t--- {:<26}: {:>8,d}\n".format("Vocabulary size", vocabulary_size)
+  )
   print(out)
 
 
@@ -70,17 +74,17 @@ def get_file_names(folder):
   :param folder: name of the folder in which the data files to be read are located
   :return: a list of strings representing the file names
   """
-  print('Reading file names from all files in folder ', folder)
+  print("Reading file names from all files in folder ", folder)
 
   # Helper variables
   file_names = dict()
   file_count = 0
-  listing = os.listdir(folder + '/')
+  listing = os.listdir(folder + "/")
   to_subtract = file_count
 
   # Loop over files in folder
   for file in listing:
-    if file[0] != '.' and file[-3:] == '.ll':
+    if file[0] != "." and file[-3:] == ".ll":
       # If this isn't a hidden file and it is an LLVM IR file ('.ll' extension),
       # Add file name to dictionary
       file_names[file_count] = file
@@ -88,7 +92,7 @@ def get_file_names(folder):
       # Increment counters
       file_count += 1
 
-  print('    Number of files read from', folder, ': ', file_count - to_subtract)
+  print("    Number of files read from", folder, ": ", file_count - to_subtract)
 
   return file_names
 
@@ -100,61 +104,78 @@ def print_vocabulary(mylist_freq, filename):
   :param filename: name of file in which to print
   """
   # Print vocabulary in alphabetical order with number of occurences
-  print('Printing vocabulary information to file', filename)
-  with open(filename + '_freq.txt', 'w') as f:
-    f.write('{:>6}   {}\n'.format('# occ', 'statement (in alphabetical order)'))
+  print("Printing vocabulary information to file", filename)
+  with open(filename + "_freq.txt", "w") as f:
+    f.write("{:>6}   {}\n".format("# occ", "statement (in alphabetical order)"))
     for key, value in sorted(mylist_freq.items()):
-      f.write('{:>6}   {}\n'.format(str(value), key))
+      f.write("{:>6}   {}\n".format(str(value), key))
 
   # Prepare to print statistics
   mylist_families_l1 = rgx.get_list_tag_level_1()
   to_iterate1 = list()
   for i in range(len(mylist_families_l1)):
-    to_iterate1.append([
+    to_iterate1.append(
+      [
         mylist_families_l1[i],
-        rgx.get_count(mylist_freq, mylist_families_l1[i], 1)
-    ])
+        rgx.get_count(mylist_freq, mylist_families_l1[i], 1),
+      ]
+    )
   to_iterate1.sort(key=lambda tup: tup[1], reverse=True)
 
   # Print statistics
-  with open(filename + '_class.txt', 'w') as f:
-    f.write('{:>6}   {:<30}{:<25}{}\n'.format('# occ', 'tag level 1',
-                                              'tag level 2', 'tag level 3'))
+  with open(filename + "_class.txt", "w") as f:
+    f.write(
+      "{:>6}   {:<30}{:<25}{}\n".format(
+        "# occ", "tag level 1", "tag level 2", "tag level 3"
+      )
+    )
 
     # Print all level 1
     for tag1 in to_iterate1:
-      f.write('{:>6}   {:<30}\n'.format(str(tag1[1]), tag1[0]))
+      f.write("{:>6}   {:<30}\n".format(str(tag1[1]), tag1[0]))
 
       # Get stats l2
       mylist_families_l2 = rgx.get_list_tag_level_2(tag1[0])
       to_iterate2 = list()
       for i in range(len(mylist_families_l2)):
-        to_iterate2.append([
+        to_iterate2.append(
+          [
             mylist_families_l2[i],
-            rgx.get_count(mylist_freq, mylist_families_l2[i], 2)
-        ])
+            rgx.get_count(mylist_freq, mylist_families_l2[i], 2),
+          ]
+        )
       to_iterate2.sort(key=lambda tup: tup[1], reverse=True)
 
       # Print all level 2
       for tag2 in to_iterate2:
-        f.write('{:>6}   {:<30}{:<25}\n'.format(str(
-            tag2[1]), '----------------------------', tag2[0]))
+        f.write(
+          "{:>6}   {:<30}{:<25}\n".format(
+            str(tag2[1]), "----------------------------", tag2[0]
+          )
+        )
 
         # Get stats l3
         mylist_families_l3 = rgx.get_list_tag_level_3(tag2[0])
         to_iterate3 = list()
         for i in range(len(mylist_families_l3)):
-          to_iterate3.append([
+          to_iterate3.append(
+            [
               mylist_families_l3[i],
-              rgx.get_count(mylist_freq, mylist_families_l3[i], 3)
-          ])
+              rgx.get_count(mylist_freq, mylist_families_l3[i], 3),
+            ]
+          )
         to_iterate3.sort(key=lambda tup: tup[1], reverse=True)
 
         # Print all level 3
         for tag3 in to_iterate3:
-          f.write('{:>6}   {:<30}{:<25}{}\n'.format(
-              str(tag3[1]), '----------------------------',
-              '-----------------------', tag3[0]))
+          f.write(
+            "{:>6}   {:<30}{:<25}{}\n".format(
+              str(tag3[1]),
+              "----------------------------",
+              "-----------------------",
+              tag3[0],
+            )
+          )
 
 
 def make_one_line_stmt(stmt):
@@ -165,7 +186,7 @@ def make_one_line_stmt(stmt):
   :param stmt: a string containing carriage returns
   :return: modified statement
   """
-  stmt = re.sub('\n', ' \ ', stmt)
+  stmt = re.sub("\n", " \ ", stmt)
   return stmt
 
 
@@ -177,21 +198,27 @@ def print_vocabulary_metadata(reverse_dictionary, source_data_freq, filename):
   :param source_data_freq: dictionary [key=statement, value=number of occurences]
   :param filename: file name
   """
-  to_track = ''
+  to_track = ""
 
-  print('Printing metadata information to file ', filename)
-  with open(filename, 'w') as f:
+  print("Printing metadata information to file ", filename)
+  with open(filename, "w") as f:
     # Write file header
-    f.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-        'stmt', 'count', 'tag1', 'tag2', 'tag3', 'newtagA', 'newtagB'))
+    f.write(
+      "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+        "stmt", "count", "tag1", "tag2", "tag3", "newtagA", "newtagB"
+      )
+    )
 
     # Loop over all words in dictionary
     vocabulary_size = len(reverse_dictionary)
     for i in range(vocabulary_size):
 
       if i % 100 == 0:
-        print('Processed {:>6,d} words out of {:>6,d} ...'.format(
-            i, vocabulary_size))
+        print(
+          "Processed {:>6,d} words out of {:>6,d} ...".format(
+            i, vocabulary_size
+          )
+        )
 
       word = reverse_dictionary[i]
       count = source_data_freq[word]
@@ -199,7 +226,7 @@ def print_vocabulary_metadata(reverse_dictionary, source_data_freq, filename):
       # Debugging
       if len(to_track) > 0:
         if word == to_track:
-          print('Found stmt', to_track)
+          print("Found stmt", to_track)
 
       # Find tags corresponding to this word in llvm_IR_stmt_families
       for fam in rgx.llvm_IR_stmt_families:
@@ -218,13 +245,14 @@ def print_vocabulary_metadata(reverse_dictionary, source_data_freq, filename):
           tnB = t[2]
           break
       else:
-        assert False, "No NEW tag found for stmt \"" + word + "\""
+        assert False, 'No NEW tag found for stmt "' + word + '"'
 
       # Write the line containing all information pertaining to this word
-      if '\n' in word:
+      if "\n" in word:
         word = make_one_line_stmt(word)
-      f.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(word, count, t1, t2, t3,
-                                                    tnA, tnB))
+      f.write(
+        "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(word, count, t1, t2, t3, tnA, tnB)
+      )
 
 
 ########################################################################################################################
@@ -268,7 +296,7 @@ def prune_vocabulary(data, cutoff):
     for s in data.keys():
       # Print ever so often to mark progress
       if i % 1e5 == 0:
-        print('statement {:>12,d} of {:>12,d} ...'.format(i, n_data))
+        print("statement {:>12,d} of {:>12,d} ...".format(i, n_data))
       if data[s] <= cutoff:
         stmts_cut_off.append(s)
         data[rgx.unknown_token] += data[s]  # add to number of unknowns
@@ -296,7 +324,7 @@ def build_dictionary(words):
   reversed_dictionary -- reversed_dictionary[index] = word
   """
   # Create a dictionary with an entry for each of the possible words
-  print('Create dictionary of statement indices ...')
+  print("Create dictionary of statement indices ...")
   dictionary = dict()
   for word in words.keys():
     dictionary[word] = len(dictionary)
@@ -307,8 +335,9 @@ def build_dictionary(words):
 ########################################################################################################################
 # Helper functions for pair construction
 ########################################################################################################################
-def build_H_dictionary(D, skip_window, folder, filename, dictionary,
-                       stmts_cut_off):
+def build_H_dictionary(
+  D, skip_window, folder, filename, dictionary, stmts_cut_off
+):
   """
   Build H-dictionary [keys=indexed data pairs, values=number of occurences in file] from dual-XFG and list of cut off
   statements and write them to a file
@@ -330,18 +359,18 @@ def build_H_dictionary(D, skip_window, folder, filename, dictionary,
     graph_is_big = False
 
   if graph_is_big:
-    print('got node list, length=', len(nodelist))
+    print("got node list, length=", len(nodelist))
 
   # Get adjacency matrix level 1
   if graph_is_big:
-    adj_mat_file = os.path.join(folder, filename + '_AdjMat' + '.npz')
+    adj_mat_file = os.path.join(folder, filename + "_AdjMat" + ".npz")
     if os.path.exists(adj_mat_file):
-      print('Load adjmat from', adj_mat_file)
+      print("Load adjmat from", adj_mat_file)
       A1 = sparse.load_npz(adj_mat_file)
     else:
       A1 = nx.adjacency_matrix(D)
       if sys.getsizeof(A1) < 45e5:
-        print('Save adjmat to', adj_mat_file)
+        print("Save adjmat to", adj_mat_file)
         sparse.save_npz(adj_mat_file, A1)
   else:
     A1 = nx.adjacency_matrix(D)
@@ -355,14 +384,14 @@ def build_H_dictionary(D, skip_window, folder, filename, dictionary,
     # Compute context-adjacency
     for i in range(skip_window - 1):
       if graph_is_big:
-        A_file = os.path.join(folder, filename + '_A' + str(i) + '.npz')
+        A_file = os.path.join(folder, filename + "_A" + str(i) + ".npz")
         if os.path.exists(A_file):
-          print('Load A mat from', A_file)
+          print("Load A mat from", A_file)
           A = sparse.load_npz(A_file)
         else:
           A *= A1
           if sys.getsizeof(A1) < 45e5:
-            print('Saving A mat to', A_file)
+            print("Saving A mat to", A_file)
             sparse.save_npz(A_file, A)
       else:
         A *= A1
@@ -370,7 +399,7 @@ def build_H_dictionary(D, skip_window, folder, filename, dictionary,
       A_context += A
 
       if graph_is_big:
-        print('completed step', i)
+        print("completed step", i)
     del A1, A
 
   # if context_width = 1, then A_context is simply A1
@@ -384,16 +413,16 @@ def build_H_dictionary(D, skip_window, folder, filename, dictionary,
   for i in range(A_num_rows):
 
     if graph_is_big and i % 5e3 == 0:
-      print('Adjmat rows:', i, '/', A_num_rows)
+      print("Adjmat rows:", i, "/", A_num_rows)
 
-    col_indices = A_indices[A_row_starts[i]:A_row_starts[i + 1]]
+    col_indices = A_indices[A_row_starts[i] : A_row_starts[i + 1]]
     for j in col_indices:
 
       if i != j:
 
         # Add nodes
-        target = re.sub('§\d+$', '', nodelist[i])
-        context = re.sub('§\d+$', '', nodelist[j])
+        target = re.sub("§\d+$", "", nodelist[i])
+        context = re.sub("§\d+$", "", nodelist[j])
 
         if target != context:
 
@@ -406,12 +435,13 @@ def build_H_dictionary(D, skip_window, folder, filename, dictionary,
             context = rgx.unknown_token
 
           # target-context index pair
-          if target not in dictionary.keys() or context not in dictionary.keys(
+          if (
+            target not in dictionary.keys() or context not in dictionary.keys()
           ):
             if target not in dictionary.keys():
-              print('WARNING, not in dictionary:', target)
+              print("WARNING, not in dictionary:", target)
             if context not in dictionary.keys():
-              print('WARNING, not in dictionary:', context)
+              print("WARNING, not in dictionary:", context)
           else:
             t = dictionary[target]
             c = dictionary[context]
@@ -434,7 +464,7 @@ def generate_data_pairs_from_H_dictionary(H_dic, t):
   file = 0
 
   # Loop over the "in-context" graphs
-  print('Generating data pairs from dic dump with subsampling threshold', t)
+  print("Generating data pairs from dic dump with subsampling threshold", t)
 
   n_possible_pairs = sum(list(H_dic.values()))
   var = t * n_possible_pairs
@@ -460,8 +490,11 @@ def generate_data_pairs_from_H_dictionary(H_dic, t):
   file += 1
 
   # Return
-  print('\nNumber of generated data pairs in file  : {:>12,d}'.format(
-      len(data_pairs)))
+  print(
+    "\nNumber of generated data pairs in file  : {:>12,d}".format(
+      len(data_pairs)
+    )
+  )
   return data_pairs
 
 
@@ -495,28 +528,32 @@ def construct_vocabulary(data_folder, folders):
   subsample_threshold = FLAGS.subsampling
 
   # Vocabulary folder
-  folder_vocabulary = os.path.join(data_folder, 'vocabulary')
+  folder_vocabulary = os.path.join(data_folder, "vocabulary")
   if not os.path.exists(folder_vocabulary):
     os.makedirs(folder_vocabulary)
 
   ####################################################################################################################
   # Build vocabulary
-  dictionary_csv = os.path.join(folder_vocabulary, 'dic.csv')
-  dictionary_pickle = os.path.join(folder_vocabulary, 'dic_pickle')
-  cutoff_stmts_pickle = os.path.join(folder_vocabulary, 'cutoff_stmts_pickle')
+  dictionary_csv = os.path.join(folder_vocabulary, "dic.csv")
+  dictionary_pickle = os.path.join(folder_vocabulary, "dic_pickle")
+  cutoff_stmts_pickle = os.path.join(folder_vocabulary, "cutoff_stmts_pickle")
   if not os.path.exists(dictionary_csv):
 
     # Combine the source data lists
-    print('\n--- Combining', len(folders),
-          'folders into one data set from which we build a vocabulary')
-    source_data_list_combined = dict(
+    print(
+      "\n--- Combining",
+      len(folders),
+      "folders into one data set from which we build a vocabulary",
+    )
+    source_data_list_combined = (
+      dict()
     )  # keys: statements as strings, values: number of occurences
     num_statements_total = 0
 
     for folder in folders:
 
-      folder_preprocessed = folder + '_preprocessed'
-      transformed_folder = os.path.join(folder_preprocessed, 'data_transformed')
+      folder_preprocessed = folder + "_preprocessed"
+      transformed_folder = os.path.join(folder_preprocessed, "data_transformed")
       file_names_dict = get_file_names(folder)
       file_names = file_names_dict.values()
       num_files = len(file_names)
@@ -524,45 +561,58 @@ def construct_vocabulary(data_folder, folders):
 
       for file_name in file_names:
 
-        source = os.path.join(transformed_folder, file_name[:-3] + '.p')
+        source = os.path.join(transformed_folder, file_name[:-3] + ".p")
 
         if os.path.exists(source):
-          with open(source, 'rb') as f:
+          with open(source, "rb") as f:
             # Load lists of statements
-            print('Fetching statements from file {:<60} ({:>2} / {:>2})'.format(
-                source, count, num_files))
+            print(
+              "Fetching statements from file {:<60} ({:>2} / {:>2})".format(
+                source, count, num_files
+              )
+            )
             source_data_list_ = pickle.load(f)
 
             # Add to cummulated list
             source_data_list_combined = add_to_vocabulary(
-                source_data_list_combined, source_data_list_)
+              source_data_list_combined, source_data_list_
+            )
 
             # Get numbers
             num_statements_in_file = len(source_data_list_)
             num_statements_total += num_statements_in_file
-            print('\tRead        {:>10,d} statements in this file'.format(
-                num_statements_in_file))
-            print('\tAccumulated {:>10,d} statements so far'.format(
-                num_statements_total))
+            print(
+              "\tRead        {:>10,d} statements in this file".format(
+                num_statements_in_file
+              )
+            )
+            print(
+              "\tAccumulated {:>10,d} statements so far".format(
+                num_statements_total
+              )
+            )
             del source_data_list_
             count += 1
 
     # Get statistics of the combined list before pruning
-    print('\n--- Compute some statistics on the combined data')
-    vocabulary_statistics(source_data_list_combined,
-                          descr="combining data folders")
+    print("\n--- Compute some statistics on the combined data")
+    vocabulary_statistics(
+      source_data_list_combined, descr="combining data folders"
+    )
 
     # Prune data
     source_data_list_combined, stmts_cut_off = prune_vocabulary(
-        source_data_list_combined, cutoff_unknown)
+      source_data_list_combined, cutoff_unknown
+    )
 
     # Get statistics of the combined list after pruning
-    print('\n--- Compute some statistics on the combined data')
-    vocabulary_statistics(source_data_list_combined,
-                          descr="pruning combined data")
+    print("\n--- Compute some statistics on the combined data")
+    vocabulary_statistics(
+      source_data_list_combined, descr="pruning combined data"
+    )
 
     # Build the vocabulary
-    print('\n--- Building the vocabulary and indices')
+    print("\n--- Building the vocabulary and indices")
 
     # Set the vocabulary size
     vocabulary_size = len(source_data_list_combined)
@@ -572,47 +622,50 @@ def construct_vocabulary(data_folder, folders):
     dictionary = build_dictionary(source_data_list_combined)
 
     # Print information about the vocabulary to console
-    out = '\tAfter building indexed vocabulary:\n' \
-          + '\t--- {:<26}: {:>8,d}\n'.format('Number of stmts',
-                                             number_statements) \
-          + '\t--- {:<26}: {:>8,d}\n'.format('Vocabulary size', vocabulary_size)
+    out = (
+      "\tAfter building indexed vocabulary:\n"
+      + "\t--- {:<26}: {:>8,d}\n".format("Number of stmts", number_statements)
+      + "\t--- {:<26}: {:>8,d}\n".format("Vocabulary size", vocabulary_size)
+    )
     print(out)
 
     # Print information about the vocabulary to file
-    vocab_info_file = os.path.join(folder_vocabulary, 'vocabulary_statistics')
+    vocab_info_file = os.path.join(folder_vocabulary, "vocabulary_statistics")
     print_vocabulary(source_data_list_combined, vocab_info_file)
 
     # Print dictionary
-    print('Writing dictionary to file', dictionary_pickle)
+    print("Writing dictionary to file", dictionary_pickle)
     i2v_utils.safe_pickle(dictionary, dictionary_pickle)
-    print('Writing dictionary to file', dictionary_csv)
-    with open(dictionary_csv, 'w', newline='') as f:
-      fieldnames = ['#statement', 'index']
+    print("Writing dictionary to file", dictionary_csv)
+    with open(dictionary_csv, "w", newline="") as f:
+      fieldnames = ["#statement", "index"]
       writer = csv.DictWriter(f, fieldnames=fieldnames)
       writer.writeheader()
       data = [
-          dict(zip(fieldnames, [k.replace('\n ', '\\n '), v]))
-          for k, v in dictionary.items()
+        dict(zip(fieldnames, [k.replace("\n ", "\\n "), v]))
+        for k, v in dictionary.items()
       ]
       writer.writerows(data)
 
     # Print cut off statements
-    print('Writing cut off statements to file', cutoff_stmts_pickle)
+    print("Writing cut off statements to file", cutoff_stmts_pickle)
     i2v_utils.safe_pickle(stmts_cut_off, cutoff_stmts_pickle)
-    cutoff_stmts_csv = os.path.join(folder_vocabulary, 'cutoff_stmts.csv')
-    print('Writing cut off statements to file', cutoff_stmts_csv)
-    with open(cutoff_stmts_csv, 'w', newline='\n') as f:
+    cutoff_stmts_csv = os.path.join(folder_vocabulary, "cutoff_stmts.csv")
+    print("Writing cut off statements to file", cutoff_stmts_csv)
+    with open(cutoff_stmts_csv, "w", newline="\n") as f:
       for c in stmts_cut_off:
-        f.write(c + '\n')
+        f.write(c + "\n")
     del cutoff_stmts_csv
 
     # Print metadata file used by TensorBoard
-    print('Building reverse dictionary...')
+    print("Building reverse dictionary...")
     reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
-    vocab_metada_file = os.path.join(folder_vocabulary,
-                                     'vocabulary_metadata_for_tboard')
-    print_vocabulary_metadata(reverse_dictionary, source_data_list_combined,
-                              vocab_metada_file)
+    vocab_metada_file = os.path.join(
+      folder_vocabulary, "vocabulary_metadata_for_tboard"
+    )
+    print_vocabulary_metadata(
+      reverse_dictionary, source_data_list_combined, vocab_metada_file
+    )
 
     # Let go of variables that aren't needed anymore so as to reduce memory usage
     del source_data_list_combined
@@ -621,28 +674,28 @@ def construct_vocabulary(data_folder, folders):
   # Generate data-pair dictionaries
 
   # Load dictionary and cutoff statements
-  print('\n--- Loading dictionary from file', dictionary_pickle)
-  with open(dictionary_pickle, 'rb') as f:
+  print("\n--- Loading dictionary from file", dictionary_pickle)
+  with open(dictionary_pickle, "rb") as f:
     dictionary = pickle.load(f)
-  print('Loading cut off statements from file', cutoff_stmts_pickle)
-  with open(cutoff_stmts_pickle, 'rb') as f:
+  print("Loading cut off statements from file", cutoff_stmts_pickle)
+  with open(cutoff_stmts_pickle, "rb") as f:
     stmts_cut_off = pickle.load(f)
   stmts_cut_off = set(stmts_cut_off)
 
   # Generate
   print(
-      '\n--- Generating data pair dictionary from dual graphs and dump to files'
+    "\n--- Generating data pair dictionary from dual graphs and dump to files"
   )
 
   for folder in folders:
 
-    folder_preprocessed = folder + '_preprocessed'
-    folder_Dfiles = os.path.join(folder_preprocessed, 'xfg_dual')
-    D_files_ = os.listdir(folder_Dfiles + '/')
-    D_files = [Df for Df in D_files_ if Df[-2:] == '.p']
+    folder_preprocessed = folder + "_preprocessed"
+    folder_Dfiles = os.path.join(folder_preprocessed, "xfg_dual")
+    D_files_ = os.listdir(folder_Dfiles + "/")
+    D_files = [Df for Df in D_files_ if Df[-2:] == ".p"]
     num_D_files = len(D_files)
-    folder_H = folder + '_datasetprep_cw_' + str(context_width)
-    folder_mat = folder + '_datasetprep_adjmat'
+    folder_H = folder + "_datasetprep_cw_" + str(context_width)
+    folder_mat = folder + "_datasetprep_adjmat"
     if not os.path.exists(folder_H):
       os.makedirs(folder_H)
     if not os.path.exists(folder_mat):
@@ -654,52 +707,63 @@ def construct_vocabulary(data_folder, folders):
       base_filename = D_file[:-2]
       D_file_open = os.path.join(folder_Dfiles, D_file)
       to_dump = os.path.join(
-          folder_H, base_filename + "_H_dic_cw_" + str(context_width) + '.p')
+        folder_H, base_filename + "_H_dic_cw_" + str(context_width) + ".p"
+      )
       if not os.path.exists(to_dump):
 
         # Load dual graph
-        print('Build H_dic from:', D_file_open, '(', i, '/', num_D_files, ')')
-        with open(D_file_open, 'rb') as f:
+        print("Build H_dic from:", D_file_open, "(", i, "/", num_D_files, ")")
+        with open(D_file_open, "rb") as f:
           D = pickle.load(f)
 
         # Build H-dictionary
-        H_dic = build_H_dictionary(D, context_width, folder_mat, base_filename,
-                                   dictionary, stmts_cut_off)
-        print('Print to', to_dump)
+        H_dic = build_H_dictionary(
+          D, context_width, folder_mat, base_filename, dictionary, stmts_cut_off
+        )
+        print("Print to", to_dump)
         i2v_utils.safe_pickle(H_dic, to_dump)
 
       else:
-        print('Found context-dictionary dump:', to_dump, '(', i, '/',
-              num_D_files, ')')
+        print(
+          "Found context-dictionary dump:",
+          to_dump,
+          "(",
+          i,
+          "/",
+          num_D_files,
+          ")",
+        )
 
   ####################################################################################################################
   # Generate data_pairs.rec from data pair dictionary dumps
 
   # Generate
-  print('\n--- Writing .rec files')
+  print("\n--- Writing .rec files")
 
   for folder in folders:
 
     # H dic dump files
-    folder_H = folder + '_datasetprep_cw_' + str(context_width)
-    H_files_ = os.listdir(folder_H + '/')
+    folder_H = folder + "_datasetprep_cw_" + str(context_width)
+    H_files_ = os.listdir(folder_H + "/")
     H_files = [
-        Hf for Hf in H_files_
-        if "_H_dic_cw_" + str(context_width) in Hf and Hf[-2:] == '.p'
+      Hf
+      for Hf in H_files_
+      if "_H_dic_cw_" + str(context_width) in Hf and Hf[-2:] == ".p"
     ]
     num_H_files = len(H_files)
 
     # Record files
-    folder_REC = folder + '_dataset_cw_' + str(context_width)
-    file_rec = os.path.join(folder_REC,
-                            'data_pairs_cw_' + str(context_width) + '.rec')
+    folder_REC = folder + "_dataset_cw_" + str(context_width)
+    file_rec = os.path.join(
+      folder_REC, "data_pairs_cw_" + str(context_width) + ".rec"
+    )
     if not os.path.exists(folder_REC):
       os.makedirs(folder_REC)
 
     if not os.path.exists(file_rec):
 
       # Clear contents
-      f = open(file_rec, 'wb')
+      f = open(file_rec, "wb")
       f.close()
 
       data_pairs_in_folder = 0
@@ -707,21 +771,29 @@ def construct_vocabulary(data_folder, folders):
 
         dic_dump = os.path.join(folder_H, H_file)
 
-        print('Building data pairs from file', dic_dump, '(', i, '/',
-              num_H_files, ')')
-        with open(dic_dump, 'rb') as f:
+        print(
+          "Building data pairs from file",
+          dic_dump,
+          "(",
+          i,
+          "/",
+          num_H_files,
+          ")",
+        )
+        with open(dic_dump, "rb") as f:
           H_dic = pickle.load(f)
 
         # Get pairs [target, context] from graph and write them to file
         data_pairs = generate_data_pairs_from_H_dictionary(
-            H_dic, subsample_threshold)
+          H_dic, subsample_threshold
+        )
         data_pairs_in_folder += len(data_pairs)
 
-        print('writing to fixed-length file: ', file_rec)
+        print("writing to fixed-length file: ", file_rec)
 
         # Start read and write
         counter = 0
-        with open(file_rec, 'ab') as rec:
+        with open(file_rec, "ab") as rec:
 
           # Loop over pairs
           num_pairs = len(data_pairs)
@@ -729,18 +801,21 @@ def construct_vocabulary(data_folder, folders):
 
             # Print progress ever so often
             if counter % 10e5 == 0 and counter != 0:
-              print('wrote pairs: {:>10,d} / {:>10,d} ...'.format(
-                  counter, num_pairs))
+              print(
+                "wrote pairs: {:>10,d} / {:>10,d} ...".format(
+                  counter, num_pairs
+                )
+              )
 
             # Write and increment counter
-            rec.write(struct.pack('II', int(p[0]), int(p[1])))
+            rec.write(struct.pack("II", int(p[0]), int(p[1])))
             counter += 1
 
-      print('Pairs in folder', folder, ':', data_pairs_in_folder)
+      print("Pairs in folder", folder, ":", data_pairs_in_folder)
 
     else:
 
       filesize_bytes = os.path.getsize(file_rec)
       # Number of pairs is filesize_bytes / 2 (pairs) / 4 (32-bit integers)
       file_pairs = int(filesize_bytes / 8)
-      print('Found', file_rec, 'with #pairs:', file_pairs)
+      print("Found", file_rec, "with #pairs:", file_pairs)

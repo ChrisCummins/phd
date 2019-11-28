@@ -6,7 +6,7 @@
 
 {% block body %}
 <div class="container">
-  <div class = "row">
+  <div class="row">
     <div class="col">
 
       <h3>Select a Model to inspect</h3>
@@ -14,17 +14,19 @@
       <ul>
         {% for corpus in data.corpuses %}
         <li class="corpus">
-          <b>{{ data.corpuses[corpus].summary }}</b><br><pre>{{ data.corpuses[corpus].name }}</pre>
+          <b>{{ data.corpuses[corpus].summary }}</b><br>
+          <pre>{{ data.corpuses[corpus].name }}</pre>
         </li>
-          <ul>
-            {% for model in data.corpuses[corpus].models %}
-            <li class="model">
-              <a href="/corpus/{{ corpus }}/model/{{ model }}/">
-                <b>{{ data.corpuses[corpus].models[model].summary }}</b><br><pre>{{ data.corpuses[corpus].models[model].name }}</pre>
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
+        <ul>
+          {% for model in data.corpuses[corpus].models %}
+          <li class="model">
+            <a href="/corpus/{{ corpus }}/model/{{ model }}/">
+              <b>{{ data.corpuses[corpus].models[model].summary }}</b><br>
+              <pre>{{ data.corpuses[corpus].models[model].name }}</pre>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
         </li>
         {% endfor %}
       </ul>

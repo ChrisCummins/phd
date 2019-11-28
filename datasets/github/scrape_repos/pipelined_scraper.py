@@ -18,23 +18,29 @@ from labm8.py import fs
 
 FLAGS = app.FLAGS
 app.DEFINE_boolean(
-    'pipelined_scraper_keep_files', False,
-    'If set, keep temporary files: metadata protos and cloned repos.')
+  "pipelined_scraper_keep_files",
+  False,
+  "If set, keep temporary files: metadata protos and cloned repos.",
+)
 
 
 class PipelinedScraperError(EnvironmentError):
   """Raised in case scraping a repo fails."""
+
   pass
 
 
 class PipelinedScraper(scraper.QueryScraper):
-
-  def __init__(self, language: scrape_repos_pb2.LanguageToClone,
-               query: scrape_repos_pb2.GitHubRepositoryQuery,
-               github_connection: github.Github, db: contentfiles.ContentFiles):
+  def __init__(
+    self,
+    language: scrape_repos_pb2.LanguageToClone,
+    query: scrape_repos_pb2.GitHubRepositoryQuery,
+    github_connection: github.Github,
+    db: contentfiles.ContentFiles,
+  ):
     super(PipelinedScraper, self).__init__(language, query, github_connection)
     if not db:
-      raise ValueError('contentfiles database not provided')
+      raise ValueError("contentfiles database not provided")
     self.contentfiles = db
 
   def DoProcessRepo(self, repo: Repository.Repository) -> None:
@@ -42,14 +48,14 @@ class PipelinedScraper(scraper.QueryScraper):
     super(PipelinedScraper, self).ProcessRepo(repo)
     meta_path = self.GetRepoMetaPath(repo)
     if not meta_path or not meta_path.is_file():
-      raise PipelinedScraperError('Failed to scrape repo')
+      raise PipelinedScraperError("Failed to scrape repo")
 
     # Clone the repo, producing directory <dir>/<repo>
     clone_dir = cloner.GetCloneDir(meta_path)
-    app.Log(1, 'Cloning repo %s', repo.html_url)
+    app.Log(1, "Cloning repo %s", repo.html_url)
     cloner.CloneFromMetafile(meta_path)
     if not clone_dir or not clone_dir.is_dir():
-      raise PipelinedScraperError('Failed to clone repo')
+      raise PipelinedScraperError("Failed to clone repo")
 
     # Import to database.
     with self.contentfiles.Session() as session:

@@ -46,13 +46,14 @@ class StaticMapping(base.HeterogeneousMappingModel):
   def train(self, df: pd.DataFrame, platform_name: str, verbose: bool = False):
     del verbose
 
-    if np.mean(df['y']) >= 0.5:
+    if np.mean(df["y"]) >= 0.5:
       self.model = "GPU"
     else:
       self.model = "CPU"
 
-  def predict(self, df: pd.DataFrame, platform_name: str,
-              verbose: bool = False):
+  def predict(
+    self, df: pd.DataFrame, platform_name: str, verbose: bool = False
+  ):
     del platform_name
     del verbose
     if self.model == "GPU":

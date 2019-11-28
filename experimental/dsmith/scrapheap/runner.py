@@ -6,7 +6,6 @@ Usage:
     ./runer [--verbose] [--only <testbed_ids>] [--exclude <testbed_ids>] [--batch-size <int>] [--host <hostname>]
     # Run testcases
 """
-
 from dsmith.db import *
 
 # result_t = Union[ClsmithResult, DsmithResult]

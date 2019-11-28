@@ -14,14 +14,14 @@ from dsmith.sol.db import *
 if __name__ == "__main__":
   import logging
 
-
   logging.getLogger().setLevel(logging.INFO)
   dsmith.langs.mklang("sol")
 
   with Session() as s:
     print("Replacing stderrs ...")
-    bar = progressbar.ProgressBar(max_value=s.query(Result).count(),
-                                  redirect_stdout=True)
+    bar = progressbar.ProgressBar(
+      max_value=s.query(Result).count(), redirect_stdout=True
+    )
 
     try:
       q = s.query(Result).options(sql.orm.joinedload(Result.stderr))

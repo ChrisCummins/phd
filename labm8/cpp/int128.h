@@ -205,7 +205,7 @@ inline uint128 operator~(const uint128 &val) {
 
 LOGIC128(|)
 LOGIC128(&)
-LOGIC128(^)
+LOGIC128 (^)
 
 #undef LOGIC128
 

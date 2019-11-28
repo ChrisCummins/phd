@@ -32,7 +32,7 @@ from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('healthkit_inbox', None, 'Inbox to process.')
+app.DEFINE_string("healthkit_inbox", None, "Inbox to process.")
 
 
 def ProcessXmlFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
@@ -50,13 +50,18 @@ def ProcessXmlFile(path: pathlib.Path) -> me_pb2.SeriesCollection:
   if not path.is_file():
     raise FileNotFoundError(str(path))
   try:
-    return pbutil.RunProcessMessageInPlace([
+    return pbutil.RunProcessMessageInPlace(
+      [
         str(
-            bazelutil.DataPath(
-                'phd/datasets/me_db/providers/health_kit/xml_export_worker'))
-    ], me_pb2.SeriesCollection(source=str(path)))
+          bazelutil.DataPath(
+            "phd/datasets/me_db/providers/health_kit/xml_export_worker"
+          )
+        )
+      ],
+      me_pb2.SeriesCollection(source=str(path)),
+    )
   except subprocess.CalledProcessError as e:
-    raise importers.ImporterError('HealthKit', path, str(e)) from e
+    raise importers.ImporterError("HealthKit", path, str(e)) from e
 
 
 def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
@@ -69,15 +74,15 @@ def ProcessInbox(inbox: pathlib.Path) -> me_pb2.SeriesCollection:
     A SeriesCollection message.
   """
   # Do nothing is there is there's no HealthKit export.zip file.
-  if not (inbox / 'health_kit' / 'export.zip').is_file():
+  if not (inbox / "health_kit" / "export.zip").is_file():
     return me_pb2.SeriesCollection()
 
-  app.Log(1, 'Unpacking %s', inbox / 'health_kit' / 'export.zip')
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
-    temp_xml = pathlib.Path(d) / 'export.xml'
-    with zipfile.ZipFile(inbox / 'health_kit' / 'export.zip') as z:
-      with z.open('apple_health_export/export.xml') as xml_in:
-        with open(temp_xml, 'wb') as f:
+  app.Log(1, "Unpacking %s", inbox / "health_kit" / "export.zip")
+  with tempfile.TemporaryDirectory(prefix="phd_") as d:
+    temp_xml = pathlib.Path(d) / "export.xml"
+    with zipfile.ZipFile(inbox / "health_kit" / "export.zip") as z:
+      with z.open("apple_health_export/export.xml") as xml_in:
+        with open(temp_xml, "wb") as f:
           f.write(xml_in.read())
 
     return ProcessXmlFile(temp_xml)
@@ -90,10 +95,10 @@ def ProcessInboxToQueue(inbox: pathlib.Path, queue: multiprocessing.Queue):
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   print(ProcessInbox(pathlib.Path(FLAGS.healthkit_inbox)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

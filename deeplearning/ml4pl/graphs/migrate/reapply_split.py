@@ -13,12 +13,14 @@ from labm8.py import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('graph_db',
-                    graph_database.Database,
-                    None,
-                    'URL of database to modify.',
-                    must_exist=True)
-app.DEFINE_integer('k_fold', 0, 'If > 0, use stratified k-fold split.')
+app.DEFINE_database(
+  "graph_db",
+  graph_database.Database,
+  None,
+  "URL of database to modify.",
+  must_exist=True,
+)
+app.DEFINE_integer("k_fold", 0, "If > 0, use stratified k-fold split.")
 
 ###############################################################################
 # Splitters copied from //deeplearning/ml4pl/bytecode:splitters
@@ -27,30 +29,30 @@ app.DEFINE_integer('k_fold', 0, 'If > 0, use stratified k-fold split.')
 # clang_returncode columns.
 
 
-def GetPoj104BytecodeGroups(db: graph_database.Database,
-                           ) -> typing.Dict[str, typing.List[int]]:
+def GetPoj104BytecodeGroups(
+  db: graph_database.Database,
+) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs for the POJ-104 app classification experiment."""
 
   def GetBytecodeIds(filter_cb) -> typing.List[int]:
     """Return the bytecode IDs from the given filtered query."""
     with db.Session() as session:
-      q = session.query(graph_database.GraphMeta.id) \
-        .filter(filter_cb())
+      q = session.query(graph_database.GraphMeta.id).filter(filter_cb())
       return [r[0] for r in q]
 
-  train = lambda: graph_database.GraphMeta.source_name == 'poj-104:train'
-  test = lambda: graph_database.GraphMeta.source_name == 'poj-104:test'
-  val = lambda: graph_database.GraphMeta.source_name == 'poj-104:val'
+  train = lambda: graph_database.GraphMeta.source_name == "poj-104:train"
+  test = lambda: graph_database.GraphMeta.source_name == "poj-104:test"
+  val = lambda: graph_database.GraphMeta.source_name == "poj-104:val"
   return {
-      "train": GetBytecodeIds(train),
-      "val": GetBytecodeIds(val),
-      "test": GetBytecodeIds(test),
+    "train": GetBytecodeIds(train),
+    "val": GetBytecodeIds(val),
+    "test": GetBytecodeIds(test),
   }
 
 
 def GetTrainValTestGroups(
-    db: graph_database.Database,
-    train_val_test_ratio: typing.Iterable[float] = (3, 1, 1)
+  db: graph_database.Database,
+  train_val_test_ratio: typing.Iterable[float] = (3, 1, 1),
 ) -> typing.Dict[str, typing.List[int]]:
   """Get the bytecode IDs split into train, val, and test groups.
 
@@ -75,29 +77,36 @@ def GetTrainValTestGroups(
     poj104 = GetPoj104BytecodeGroups(db)
 
     # Get the bytecode IDs of non-POJ-104
-    num_bytecodes = s.query(sql.func.count(graph_database.GraphMeta.id)) \
-      .filter(~graph_database.GraphMeta.source_name.like('poj-104:%')) \
+    num_bytecodes = (
+      s.query(sql.func.count(graph_database.GraphMeta.id))
+      .filter(~graph_database.GraphMeta.source_name.like("poj-104:%"))
       .one()[0]
+    )
     train_val_test_counts = np.floor(ratios * num_bytecodes).astype(np.int32)
     total_count = train_val_test_counts.sum()
-    app.Log(1, 'Splitting %s bytecodes into groups: %s train, %s val, %s test',
-            humanize.Commas(total_count + sum(len(s) for s in poj104.values())),
-            humanize.Commas(train_val_test_counts[0] + len(poj104['train'])),
-            humanize.Commas(train_val_test_counts[1] + len(poj104['val'])),
-            humanize.Commas(train_val_test_counts[2] + len(poj104['test'])))
+    app.Log(
+      1,
+      "Splitting %s bytecodes into groups: %s train, %s val, %s test",
+      humanize.Commas(total_count + sum(len(s) for s in poj104.values())),
+      humanize.Commas(train_val_test_counts[0] + len(poj104["train"])),
+      humanize.Commas(train_val_test_counts[1] + len(poj104["val"])),
+      humanize.Commas(train_val_test_counts[2] + len(poj104["test"])),
+    )
 
-    q = s.query(graph_database.GraphMeta.id) \
-      .filter(~graph_database.GraphMeta.source_name.like('poj-104:%')) \
+    q = (
+      s.query(graph_database.GraphMeta.id)
+      .filter(~graph_database.GraphMeta.source_name.like("poj-104:%"))
       .order_by(db.Random())
+    )
     ids = [r[0] for r in q]
 
   return {
-      'train':
-      ids[:train_val_test_counts[0]] + poj104['train'],
-      'val': (ids[train_val_test_counts[0]:sum(train_val_test_counts[:2])] +
-              poj104['val']),
-      'test':
-      ids[sum(train_val_test_counts[:2]):] + poj104['test'],
+    "train": ids[: train_val_test_counts[0]] + poj104["train"],
+    "val": (
+      ids[train_val_test_counts[0] : sum(train_val_test_counts[:2])]
+      + poj104["val"]
+    ),
+    "test": ids[sum(train_val_test_counts[:2]) :] + poj104["test"],
   }
 
 
@@ -108,9 +117,10 @@ def GetTrainValTestGroups(
 def StratifiedKFold(db: graph_database.Database, num_splits: int):
   """Apply a stratified K-fold split on the graph database."""
   with db.Session() as session:
-    num_graphs = session.query(sql.func.count(
-        graph_database.GraphMeta.id)).one()[0]
-    with prof.Profile(f'Loaded labels from {num_graphs} graphs'):
+    num_graphs = session.query(
+      sql.func.count(graph_database.GraphMeta.id)
+    ).one()[0]
+    with prof.Profile(f"Loaded labels from {num_graphs} graphs"):
       # Load all graphs as a single batch. WARNING this will not work for large
       # datasets!
       batcher = graph_batcher.GraphBatcher(db)
@@ -119,20 +129,21 @@ def StratifiedKFold(db: graph_database.Database, num_splits: int):
       assert len(graph_batches) == 1
       graph_batch = graph_batches[0]
 
-      graph_ids = np.array(graph_batch.log._transient_data['graph_indices'],
-                           dtype=np.int32)
+      graph_ids = np.array(
+        graph_batch.log._transient_data["graph_indices"], dtype=np.int32
+      )
       # Compute the dense labels from one-hot vectors.
       labels = np.argmax(graph_batch.graph_y, axis=1)
 
   # Split the graphs
   seed = 0xCEC
-  splitter = model_selection.StratifiedKFold(n_splits=num_splits,
-                                             shuffle=True,
-                                             random_state=seed)
+  splitter = model_selection.StratifiedKFold(
+    n_splits=num_splits, shuffle=True, random_state=seed
+  )
   dataset_splits = splitter.split(graph_ids, labels)
 
   groups = {
-      str(i): graph_ids[test] for i, (train, test) in enumerate(dataset_splits)
+    str(i): graph_ids[test] for i, (train, test) in enumerate(dataset_splits)
   }
   return groups
 
@@ -143,8 +154,7 @@ def main():
 
   with graph_db.Session(commit=True) as session:
     app.Log(1, "Unsetting all graph groups")
-    update = sql.update(graph_database.GraphMeta) \
-        .values(group='')
+    update = sql.update(graph_database.GraphMeta).values(group="")
     graph_db.engine.execute(update)
 
   if FLAGS.k_fold:
@@ -154,15 +164,18 @@ def main():
 
   for group, ids in groups.items():
     with graph_db.Session(commit=True) as session:
-      app.Log(1, "Setting `%s` group on %s graphs", group,
-              humanize.Commas(len(ids)))
-      update = sql.update(graph_database.GraphMeta) \
-          .where(graph_database.GraphMeta.id.in_(ids)) \
-          .values(group=group)
+      app.Log(
+        1, "Setting `%s` group on %s graphs", group, humanize.Commas(len(ids))
+      )
+      update = (
+        sql.update(graph_database.GraphMeta)
+        .where(graph_database.GraphMeta.id.in_(ids))
+        .values(group=group)
+      )
       graph_db.engine.execute(update)
 
   app.Log(1, "done")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

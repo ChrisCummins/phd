@@ -12,19 +12,23 @@ from labm8.py import decorators
 FLAGS = app.FLAGS
 
 app.DEFINE_integer(
-    'alias_set_min_size', 2,
-    'The minimum number of pointers in an alias set to be used as a labelled '
-    'example.')
+  "alias_set_min_size",
+  2,
+  "The minimum number of pointers in an alias set to be used as a labelled "
+  "example.",
+)
 
 
 @decorators.timeout(seconds=120)
-def AnnotateAliasSet(g: nx.MultiDiGraph,
-                     root_identifier: str,
-                     identifiers_in_set: typing.List[str],
-                     x_label: str = 'x',
-                     y_label: str = 'y',
-                     false=False,
-                     true=True) -> int:
+def AnnotateAliasSet(
+  g: nx.MultiDiGraph,
+  root_identifier: str,
+  identifiers_in_set: typing.List[str],
+  x_label: str = "x",
+  y_label: str = "y",
+  false=False,
+  true=True,
+) -> int:
   """
 
   Args:
@@ -51,21 +55,23 @@ def AnnotateAliasSet(g: nx.MultiDiGraph,
   for pointer in identifiers_in_set:
     if pointer not in g.nodes:
       identifier_nodes = [
-          node for node, type_ in g.nodes(data='type') if type_ == 'identifier'
+        node for node, type_ in g.nodes(data="type") if type_ == "identifier"
       ]
-      raise ValueError(f"Pointer `{pointer}` not in function with identifiers "
-                       f"{identifier_nodes}")
+      raise ValueError(
+        f"Pointer `{pointer}` not in function with identifiers "
+        f"{identifier_nodes}"
+      )
     g.nodes[pointer][y_label] = true
 
   return len(identifiers_in_set)
 
 
 def MakeAliasSetGraphs(
-    g: nx.MultiDiGraph,
-    bytecode: str,
-    n: typing.Optional[int] = None,
-    false=False,
-    true=True,
+  g: nx.MultiDiGraph,
+  bytecode: str,
+  n: typing.Optional[int] = None,
+  false=False,
+  true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
   """Produce up to `n` alias set graphs.
 
@@ -95,9 +101,10 @@ def MakeAliasSetGraphs(
   alias_sets_by_function = opt_util.GetAliasSetsByFunction(bytecode)
 
   functions = {
-      function for node, function in g.nodes(data='function')
-      # Not all nodes have a 'function' attribute, e.g. the magic root node.
-      if function
+    function
+    for node, function in g.nodes(data="function")
+    # Not all nodes have a 'function' attribute, e.g. the magic root node.
+    if function
   }
 
   # Silently drop alias sets for functions which don't exist in the graph.
@@ -109,18 +116,23 @@ def MakeAliasSetGraphs(
     for function in alias_sets_to_delete:
       del alias_sets_by_function[function]
     app.Log(
-        2, "Removed %d alias sets generated from bytecode but not found in "
-        "graph: %s", len(alias_sets_to_delete), alias_sets_to_delete)
+      2,
+      "Removed %d alias sets generated from bytecode but not found in "
+      "graph: %s",
+      len(alias_sets_to_delete),
+      alias_sets_to_delete,
+    )
 
   function_alias_set_pairs: typing.List[
-      typing.Tuple[str, opt_util.AliasSet]] = []
+    typing.Tuple[str, opt_util.AliasSet]
+  ] = []
   # Flatten the alias set dictionary and ignore any alias sets that are smaller
   # than the threshold size.
   for function, alias_sets in alias_sets_by_function.items():
     function_alias_set_pairs += [
-        (function, alias_set)
-        for alias_set in alias_sets
-        if len(alias_set.pointers) >= FLAGS.alias_set_min_size
+      (function, alias_set)
+      for alias_set in alias_sets
+      if len(alias_set.pointers) >= FLAGS.alias_set_min_size
     ]
 
   # Select `n` random alias sets to generate labelled graphs for.
@@ -130,10 +142,10 @@ def MakeAliasSetGraphs(
 
   for function, alias_set in function_alias_set_pairs:
     # Translate the must/may alias property into 3-class 1-hot labels.
-    if alias_set.type == 'may alias':
+    if alias_set.type == "may alias":
       false = np.array([1, 0, 0], np.int32)
       true = np.array([0, 1, 0], np.int32)
-    elif alias_set.type == 'must alias':
+    elif alias_set.type == "must alias":
       false = np.array([1, 0, 0], np.int32)
       true = np.array([0, 0, 1], np.int32)
     else:
@@ -143,14 +155,12 @@ def MakeAliasSetGraphs(
     # method in the graph builder. When we compose multiple graphs, we add the
     # function name as a prefix, and `_operand` suffix to identifier nodes.
     pointers = [
-        f'{function}_{p.identifier}_operand' for p in alias_set.pointers
+      f"{function}_{p.identifier}_operand" for p in alias_set.pointers
     ]
 
     root_pointer = random.choice(pointers)
     labelled = g.copy()
-    labelled.data_flow_max_steps_required = AnnotateAliasSet(labelled,
-                                                             root_pointer,
-                                                             pointers,
-                                                             false=false,
-                                                             true=true)
+    labelled.data_flow_max_steps_required = AnnotateAliasSet(
+      labelled, root_pointer, pointers, false=false, true=true
+    )
     yield labelled

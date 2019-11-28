@@ -33,11 +33,9 @@ def export_protobufs(s: session_t) -> None:
 
 if __name__ == "__main__":
   parser = ArgumentParser(description="Collect difftest results for a device")
-  parser.add_argument("-H",
-                      "--hostname",
-                      type=str,
-                      default="cc1",
-                      help="MySQL database hostname")
+  parser.add_argument(
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
   args = parser.parse_args()
 
   # Connect to database

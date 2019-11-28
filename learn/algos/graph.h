@@ -1,10 +1,10 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
-template<typename T>
+template <typename T>
 class Graph {
  public:
   Graph* left;

@@ -33,7 +33,6 @@ TEST(ustl_array_iterators, begin) {
   ASSERT_EQ(1, *cit);
 }
 
-
 TEST(std_array_iterators, rbegin) {
   std::array<int, 5> a{1, 2, 3, 4, 5};
 
@@ -53,7 +52,6 @@ TEST(ustl_array_iterators, rbegin) {
   ASSERT_EQ(3, *it);
   ASSERT_EQ(2, it[1]);
 }
-
 
 TEST(std_array_iterators, cbegin) {
   std::array<int, 5> a{1, 2, 3, 4, 5};
@@ -75,7 +73,6 @@ TEST(ustl_array_iterators, cbegin) {
   ASSERT_EQ(4, it[1]);
 }
 
-
 TEST(std_array_iterators, crbegin) {
   std::array<int, 5> a{1, 2, 3, 4, 5};
 
@@ -96,7 +93,6 @@ TEST(ustl_array_iterators, crbegin) {
   ASSERT_EQ(2, it[1]);
 }
 
-
 TEST(std_array_iterators, end) {
   std::array<int, 5> a{1, 2, 3, 4, 5};
   std::array<int, 5> b;
@@ -104,11 +100,9 @@ TEST(std_array_iterators, end) {
   auto first = a.begin(), last = a.end();
   auto dst = b.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(b[i], a[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(b[i], a[i]);
 }
 
 TEST(ustl_array_iterators, end) {
@@ -118,13 +112,10 @@ TEST(ustl_array_iterators, end) {
   auto first = a.begin(), last = a.end();
   auto dst = b.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(b[i], a[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(b[i], a[i]);
 }
-
 
 TEST(std_array_iterators, rend) {
   std::array<int, 5> a{1, 2, 3, 4, 5};
@@ -134,11 +125,9 @@ TEST(std_array_iterators, rend) {
   auto first = a.rbegin(), last = a.rend();
   auto dst = rev.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(rev[i], b[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(rev[i], b[i]);
 }
 
 TEST(ustl_array_iterators, rend) {
@@ -149,13 +138,10 @@ TEST(ustl_array_iterators, rend) {
   auto first = a.rbegin(), last = a.rend();
   auto dst = rev.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(rev[i], b[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(rev[i], b[i]);
 }
-
 
 TEST(std_array_iterators, cend) {
   std::array<int, 5> a{1, 2, 3, 4, 5};
@@ -164,11 +150,9 @@ TEST(std_array_iterators, cend) {
   auto first = a.cbegin(), last = a.cend();
   auto dst = b.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(b[i], a[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(b[i], a[i]);
 }
 
 TEST(ustl_array_iterators, cend) {
@@ -178,13 +162,10 @@ TEST(ustl_array_iterators, cend) {
   auto first = a.cbegin(), last = a.cend();
   auto dst = b.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(b[i], a[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(b[i], a[i]);
 }
-
 
 TEST(std_array_iterators, crend) {
   std::array<int, 5> a{1, 2, 3, 4, 5};
@@ -194,11 +175,9 @@ TEST(std_array_iterators, crend) {
   auto first = a.crbegin(), last = a.crend();
   auto dst = rev.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(rev[i], b[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(rev[i], b[i]);
 }
 
 TEST(ustl_array_iterators, crend) {
@@ -209,13 +188,10 @@ TEST(ustl_array_iterators, crend) {
   auto first = a.crbegin(), last = a.crend();
   auto dst = rev.begin();
 
-  while (first != last)
-    *dst++ = *first++;
+  while (first != last) *dst++ = *first++;
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(rev[i], b[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(rev[i], b[i]);
 }
-
 
 //////////////
 // Capacity //
@@ -244,7 +220,6 @@ TEST(ustl_array, size) {
   ASSERT_EQ(100u, c.size());
   ASSERT_EQ(0u, d.size());
 }
-
 
 TEST(std_array, max_size) {
   std::array<int, 10> a;
@@ -278,7 +253,6 @@ TEST(ustl_array, max_size) {
   ASSERT_EQ(d.size(), d.max_size());
 }
 
-
 TEST(ustl_array, empty) {
   ustl::array<int, 10> a;
   ustl::array<char, 1> b;
@@ -288,7 +262,7 @@ TEST(ustl_array, empty) {
   ASSERT_EQ(false, a.empty());
   ASSERT_EQ(false, b.empty());
   ASSERT_EQ(false, c.empty());
-  ASSERT_EQ(true,  d.empty());
+  ASSERT_EQ(true, d.empty());
 }
 
 TEST(std_array, empty) {
@@ -300,9 +274,8 @@ TEST(std_array, empty) {
   ASSERT_EQ(false, a.empty());
   ASSERT_EQ(false, b.empty());
   ASSERT_EQ(false, c.empty());
-  ASSERT_EQ(true,  d.empty());
+  ASSERT_EQ(true, d.empty());
 }
-
 
 TEST(ustl_array, subscript) {
   ustl::array<int, 2> a;
@@ -328,7 +301,6 @@ TEST(std_array, subscript) {
   ASSERT_EQ(2, a[1]);
 }
 
-
 TEST(std_array, at) {
   std::array<int, 2> a;
   std::array<int, 0> b;
@@ -345,12 +317,14 @@ TEST(std_array, at) {
   try {
     a.at(2) = 3;
     FAIL();
-  } catch (std::out_of_range) {}
+  } catch (std::out_of_range) {
+  }
 
   try {
     b.at(0) = 1;
     FAIL();
-  } catch (std::out_of_range) {}
+  } catch (std::out_of_range) {
+  }
 }
 
 TEST(ustl_array, at) {
@@ -369,14 +343,15 @@ TEST(ustl_array, at) {
   try {
     a.at(2) = 3;
     FAIL();
-  } catch (std::out_of_range) {}
+  } catch (std::out_of_range) {
+  }
 
   try {
     b.at(0) = 1;
     FAIL();
-  } catch (std::out_of_range) {}
+  } catch (std::out_of_range) {
+  }
 }
-
 
 TEST(std_array, front) {
   const std::array<int, 3> a{1, 2, 3};
@@ -387,7 +362,6 @@ TEST(ustl_array, front) {
   const ustl::array<int, 3> a{1, 2, 3};
   ASSERT_EQ(1, a.front());
 }
-
 
 TEST(std_array, back) {
   const std::array<int, 3> a{1, 2, 3};
@@ -433,7 +407,6 @@ TEST(ustl_array, data) {
   ASSERT_EQ(3, d[2]);
 }
 
-
 ///////////////////////////////////
 // Non-member Function Overloads //
 ///////////////////////////////////
@@ -453,7 +426,6 @@ TEST(ustl_array, get) {
   ASSERT_EQ(ustl::get<1>(a), 2);
   ASSERT_EQ(ustl::get<2>(a), 3);
 }
-
 
 // Relational operators:
 

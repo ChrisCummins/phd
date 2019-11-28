@@ -16,8 +16,9 @@
 import numpy as np
 import pytest
 
-from deeplearning.deeptune.opencl.adversary import \
-  opencl_deadcode_inserter as dci
+from deeplearning.deeptune.opencl.adversary import (
+  opencl_deadcode_inserter as dci,
+)
 from labm8.py import app
 from labm8.py import test
 
@@ -52,18 +53,22 @@ def test_SetFunctionName_invalid_kernel():
 def test_KernelToFunctionDeclaration_invalid_kernel():
   """Test that error is raised if input is not kernel."""
   with pytest.raises(ValueError):
-    dci.KernelToFunctionDeclaration('Hello, world!')
+    dci.KernelToFunctionDeclaration("Hello, world!")
 
 
 def test_KernelToFunctionDeclaration_no_args():
-  assert dci.KernelToFunctionDeclaration(
-      "kernel void B() {}").src == "void B();"
+  assert (
+    dci.KernelToFunctionDeclaration("kernel void B() {}").src == "void B();"
+  )
 
 
 def test_KernelToFunctionDeclaration_args():
-  assert (dci.KernelToFunctionDeclaration(
-      "kernel void A(global int * a, const int b) {}").src ==
-          "void A(global int * a, const int b);")
+  assert (
+    dci.KernelToFunctionDeclaration(
+      "kernel void A(global int * a, const int b) {}"
+    ).src
+    == "void A(global int * a, const int b);"
+  )
 
 
 def test_KernelToDeadCodeBlock_invalid_kernel():
@@ -73,12 +78,16 @@ def test_KernelToDeadCodeBlock_invalid_kernel():
 
 
 def test_KernelToDeadCodeBlock():
-  assert dci.KernelToDeadCodeBlock("""\
+  assert (
+    dci.KernelToDeadCodeBlock(
+      """\
 kernel void A(global int * a, const int b) {
   if (get_global_id(0) < b) {
     a[get_global_id(0)] *= 2;
   }
-}""") == """\
+}"""
+    )
+    == """\
 if (0) {
   int * a;
   int b;
@@ -86,31 +95,42 @@ if (0) {
     a[get_global_id(0)] *= 2;
   }
 }"""
+  )
 
 
 def test_OpenClDeadcodeInserter_PrependFunctionDefinition():
   """Short summary of test."""
-  inserter = dci.OpenClDeadcodeInserter(np.random.RandomState(0),
-                                        "kernel void A(const int b) {}",
-                                        ["kernel void B(global int * a) {}"])
+  inserter = dci.OpenClDeadcodeInserter(
+    np.random.RandomState(0),
+    "kernel void A(const int b) {}",
+    ["kernel void B(global int * a) {}"],
+  )
   inserter.PrependUnusedFunctionDeclaration()
-  assert inserter.opencl_source == """\
+  assert (
+    inserter.opencl_source
+    == """\
 void A(global int * a);
 
 kernel void B(const int b) {}"""
+  )
 
 
 def test_OpenClDeadcodeInserter_AppendFunctionDefinition():
   """Short summary of test."""
-  inserter = dci.OpenClDeadcodeInserter(np.random.RandomState(0),
-                                        "kernel void A(const int b) {}",
-                                        ["kernel void B(global int * a) {}"])
+  inserter = dci.OpenClDeadcodeInserter(
+    np.random.RandomState(0),
+    "kernel void A(const int b) {}",
+    ["kernel void B(global int * a) {}"],
+  )
   inserter.AppendUnusedFunctionDeclaration()
-  assert inserter.opencl_source == """\
+  assert (
+    inserter.opencl_source
+    == """\
 kernel void A(const int b) {}
 
 void B(global int * a);"""
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

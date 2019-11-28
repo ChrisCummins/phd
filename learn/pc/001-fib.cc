@@ -19,7 +19,7 @@
 //   Time: O(2^n * T::operator+)
 //   Space: O(n + n * T::operator+)
 //
-template<typename T>
+template <typename T>
 T fib(const T& n) {
   static_assert(std::is_integral<T>::value, "error");
 
@@ -46,14 +46,13 @@ T fib(const T& n) {
   }
 }
 
-
 //
 // Iterative fibonacci.
 //
 //   Time: O(n * T::operator+)
 //   Space: O(1) space
 //
-template<typename T>
+template <typename T>
 T fib_iter(T n) {
   static_assert(std::is_integral<T>::value, "error");
 
@@ -73,13 +72,12 @@ T fib_iter(T n) {
   return z;
 }
 
-
 //
 // Fibonacci using memoisation. Implemented using hash table for
 // lookups. Worst case performance equal to fib_iter(). Best case of
 // O(1) time for lookup table hit.
 //
-template<typename T>
+template <typename T>
 T fib_mem(const T& n) {
   static_assert(std::is_integral<T>::value, "error");
   static std::unordered_map<T, T> lookup_table;
@@ -96,7 +94,6 @@ T fib_mem(const T& n) {
   }
 }
 
-
 //
 // Specialisation for int memoisation. Using a flat array instead of a
 // hash table, since we can bound the valid sizes of .
@@ -107,21 +104,18 @@ int fib_mem(const int& n) {
 
   static int lookup_table[lookup_table_size] = {};
 
-  if (n < -max_idx && n > max_idx)
-    throw std::out_of_range("lookup_table");
+  if (n < -max_idx && n > max_idx) throw std::out_of_range("lookup_table");
 
   const auto idx = abs(n);
-  if (!lookup_table[idx])
-    lookup_table[idx] = fib_iter(n);
+  if (!lookup_table[idx]) lookup_table[idx] = fib_iter(n);
 
   return lookup_table[idx];
 }
 
-
 //
 // Compile time fibonacci.
 //
-template<typename Container, unsigned int n>
+template <typename Container, unsigned int n>
 class _fib {
  public:
   enum { val = _fib<Container, n - 1>::val + _fib<Container, n - 2>::val };
@@ -132,7 +126,7 @@ class _fib {
 };
 
 // Partial specialization of _fib for 0.
-template<typename Container>
+template <typename Container>
 class _fib<Container, 0> {
  public:
   enum { val };
@@ -140,7 +134,7 @@ class _fib<Container, 0> {
 };
 
 // Partial specialization of _fib for 1.
-template<typename Container>
+template <typename Container>
 class _fib<Container, 1> {
  public:
   enum { val = 1 };
@@ -150,11 +144,10 @@ class _fib<Container, 1> {
   }
 };
 
-
 //
 // Computation of fibonacci sequence at compile time.
 //
-template<typename T, unsigned int n>
+template <typename T, unsigned int n>
 constexpr auto compile_time_fib() {
   static_assert(n > 0, "error");
 
@@ -162,7 +155,6 @@ constexpr auto compile_time_fib() {
   _fib<decltype(result), n>::compute(result);
   return result;
 }
-
 
 ///////////
 // Tests //
@@ -254,7 +246,6 @@ TEST(fib_compile_time, basic) {
   ASSERT_EQ(55, seq[10]);
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -269,7 +260,6 @@ void BM_fib(benchmark::State& state) {
 }
 BENCHMARK(BM_fib)->Range(1, 25);
 
-
 void BM_fib_mem(benchmark::State& state) {
   const auto n = state.range(0);
 
@@ -279,7 +269,6 @@ void BM_fib_mem(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_fib_mem)->Range(1, 25);
-
 
 void BM_fib_mem_unsigned(benchmark::State& state) {
   const auto n = static_cast<unsigned>(state.range(0));
@@ -291,7 +280,6 @@ void BM_fib_mem_unsigned(benchmark::State& state) {
 }
 BENCHMARK(BM_fib_mem_unsigned)->Range(1, 25);
 
-
 void BM_fib_iter(benchmark::State& state) {
   const auto n = state.range(0);
 
@@ -302,8 +290,7 @@ void BM_fib_iter(benchmark::State& state) {
 }
 BENCHMARK(BM_fib_iter)->Range(1, 25);
 
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   const auto ret = RUN_ALL_TESTS();
   benchmark::Initialize(&argc, argv);

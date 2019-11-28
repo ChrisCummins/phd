@@ -15,38 +15,28 @@ class MockBibtex(object):
 
 def test_DeleteKeysInPlace():
   dictionary = {
-      'a': 1,
-      'b': 2,
-      'c': 3,
+    "a": 1,
+    "b": 2,
+    "c": 3,
   }
-  minimize_bibtex.DeleteKeysInPlace(dictionary, ['a', 'b', 'd'])
+  minimize_bibtex.DeleteKeysInPlace(dictionary, ["a", "b", "d"])
 
-  assert dictionary == {'c': 3}
+  assert dictionary == {"c": 3}
 
 
 def test_MinimizeBibtexInPlace():
   bibtex = MockBibtex()
-  bibtex.entries.append({
-      'a': 1,
-      'abstract': 2,
-      'url': 3,
-  })
-  bibtex.entries.append({
-      'b': 1,
-      'c': 2,
-      'd': 3,
-  })
+  bibtex.entries.append(
+    {"a": 1, "abstract": 2, "url": 3,}
+  )
+  bibtex.entries.append(
+    {"b": 1, "c": 2, "d": 3,}
+  )
 
   minimize_bibtex.MinimizeBibtexInPlace(bibtex)
 
-  assert bibtex.entries == [{
-      'a': 1
-  }, {
-      'b': 1,
-      'c': 2,
-      'd': 3,
-  }]
+  assert bibtex.entries == [{"a": 1}, {"b": 1, "c": 2, "d": 3,}]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

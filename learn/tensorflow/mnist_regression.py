@@ -13,8 +13,9 @@ from tensorflow.examples.tutorials.mnist import input_data
 from labm8.py import app
 
 FLAGS = app.FLAGS
-app.DEFINE_integer('maxiter', 10,
-                   'Maximum number of steps when sweeping hyperparms.')
+app.DEFINE_integer(
+  "maxiter", 10, "Maximum number of steps when sweeping hyperparms."
+)
 
 
 def SoftmaxRegressor(tensor_size):
@@ -53,18 +54,15 @@ def SoftmaxRegressor(tensor_size):
 
   # Return model:
   return {
-      "inputs": [x, y_],
-      "train": optimizer.minimize(cross_entropy),
-      "eval": tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    "inputs": [x, y_],
+    "train": optimizer.minimize(cross_entropy),
+    "eval": tf.reduce_mean(tf.cast(correct_prediction, tf.float32)),
   }
 
 
-def TrainAndTest(session,
-                 model,
-                 training_data,
-                 test_data,
-                 batch_size=100,
-                 num_iterations=1000) -> float:
+def TrainAndTest(
+  session, model, training_data, test_data, batch_size=100, num_iterations=1000
+) -> float:
   """Train and test regression model."""
   # Initialize variables:
   init = tf.initialize_all_variables()
@@ -79,8 +77,13 @@ def TrainAndTest(session,
   feed_dict = dict(zip(model["inputs"], [test_data.images, test_data.labels]))
   error = 1 - session(model["eval"], feed_dict=feed_dict)
 
-  app.Log(1, "MNIST with batch size %d for %d iterations: %.3f %% error ",
-          batch_size, num_iterations, error * 100)
+  app.Log(
+    1,
+    "MNIST with batch size %d for %d iterations: %.3f %% error ",
+    batch_size,
+    num_iterations,
+    error * 100,
+  )
   return error
 
 
@@ -107,27 +110,33 @@ def HyperParamSweep(maxiter: int = 50) -> typing.Dict[str, int]:
     hyperparameters.
     """
     batch_size, num_iterations = Denormalize(X)
-    return TrainAndTest(session.run,
-                        model,
-                        mnist.train,
-                        mnist.test,
-                        batch_size=batch_size,
-                        num_iterations=num_iterations)
+    return TrainAndTest(
+      session.run,
+      model,
+      mnist.train,
+      mnist.test,
+      batch_size=batch_size,
+      num_iterations=num_iterations,
+    )
 
   # Hyper-parameter search over batch size and training iterations.
   x0 = np.array([1, 1])
   res = minimize(f, x0, method="nelder-mead", options={"maxiter": maxiter})
 
   batch_size, numiter = Denormalize(res.x)
-  return {'batch_size': batch_size, 'numiter': numiter}
+  return {"batch_size": batch_size, "numiter": numiter}
 
 
 def main(argv):
   del argv
 
   params = HyperParamSweep(FLAGS.maxiter)
-  app.Log(1, "batch size: %d, nuber of iterations: %d", params['batch_size'],
-          params['numiter'])
+  app.Log(
+    1,
+    "batch size: %d, nuber of iterations: %d",
+    params["batch_size"],
+    params["numiter"],
+  )
 
 
 if __name__ == "__main__":

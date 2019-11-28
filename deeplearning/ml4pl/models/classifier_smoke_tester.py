@@ -17,18 +17,20 @@ from labm8.py import prof
 FLAGS = app.FLAGS
 
 app.DEFINE_output_path(
-    'smoke_test_working_dir',
-    None,
-    'A directory to store persistent data files. If not provided, a temporary '
-    'directory will be used and deleted upon exit.',
-    is_dir=True)
+  "smoke_test_working_dir",
+  None,
+  "A directory to store persistent data files. If not provided, a temporary "
+  "directory will be used and deleted upon exit.",
+  is_dir=True,
+)
 
 
 def RunSmokeTest(
-    model_class,
-    node_y_choices: typing.Optional[typing.List[np.array]] = None,
-    graph_x_choices: typing.Optional[typing.List[np.array]] = None,
-    graph_y_choices: typing.Optional[typing.List[np.array]] = None) -> None:
+  model_class,
+  node_y_choices: typing.Optional[typing.List[np.array]] = None,
+  graph_x_choices: typing.Optional[typing.List[np.array]] = None,
+  graph_y_choices: typing.Optional[typing.List[np.array]] = None,
+) -> None:
   """Run a simple smoke test on a model.
 
   The smoke test consists of:
@@ -53,41 +55,45 @@ def RunSmokeTest(
       graph labels are used.
   """
   with WorkingDirectory() as working_dir:
-    graph_db_path = working_dir / 'node_classification_graphs.db'
+    graph_db_path = working_dir / "node_classification_graphs.db"
     if graph_db_path.is_file():
       graph_db_path.unlink()
 
-    log_db_path = working_dir / 'logs.db'
+    log_db_path = working_dir / "logs.db"
     if log_db_path.is_file():
       log_db_path.unlink()
 
-    graph_db = graph_database.Database(f'sqlite:///{working_dir}/graphs.db')
-    log_db = log_database.Database(f'sqlite:///{working_dir}/logs.db')
+    graph_db = graph_database.Database(f"sqlite:///{working_dir}/graphs.db")
+    log_db = log_database.Database(f"sqlite:///{working_dir}/logs.db")
 
     with prof.Profile("Creating random testing graphs"):
-      graphs = (list(_MakeNRandomGraphs(30, 'train')) +
-                list(_MakeNRandomGraphs(10, 'val')) +
-                list(_MakeNRandomGraphs(10, 'test')))
+      graphs = (
+        list(_MakeNRandomGraphs(30, "train"))
+        + list(_MakeNRandomGraphs(10, "val"))
+        + list(_MakeNRandomGraphs(10, "test"))
+      )
 
     with prof.Profile("Added random graph annotations"):
       # Add node-level labels.
       random_cdfg_generator.AddRandomAnnotations(
-          graphs,
-          auxiliary_node_x_indices_choices=[[0, 1]],
-          node_y_choices=node_y_choices,
-          graph_x_choices=graph_x_choices,
-          graph_y_choices=graph_y_choices)
+        graphs,
+        auxiliary_node_x_indices_choices=[[0, 1]],
+        node_y_choices=node_y_choices,
+        graph_x_choices=graph_x_choices,
+        graph_y_choices=graph_y_choices,
+      )
 
     with prof.Profile("Added graphs to database"):
       with graph_db.Session(commit=True) as s:
         s.add_all(
-            [graph_database.GraphMeta.CreateFromNetworkX(g) for g in graphs])
+          [graph_database.GraphMeta.CreateFromNetworkX(g) for g in graphs]
+        )
 
     with prof.Profile("Created model"):
       model: classifier_base.ClassifierBase = model_class(graph_db, log_db)
 
     # Check that model has correct name.
-    assert model.ModelFlagsToDict()['model'] == model_class.__name__
+    assert model.ModelFlagsToDict()["model"] == model_class.__name__
 
     with prof.Profile("Initialized model"):
       model.InitializeModel()
@@ -113,7 +119,7 @@ def RunSmokeTest(
       # Check log properties.
       for log in logs:
         assert isinstance(log.loss, float)
-        assert log.type in {'train', 'test', 'val'}
+        assert log.type in {"train", "test", "val"}
 
 
 def _MakeNRandomGraphs(n: int, group: str) -> typing.Iterable[nx.MultiDiGraph]:
@@ -122,9 +128,9 @@ def _MakeNRandomGraphs(n: int, group: str) -> typing.Iterable[nx.MultiDiGraph]:
     g = random_cdfg_generator.FastCreateRandom()
     g.bytecode_id = 0
     g.relpath = str(i)
-    g.language = 'c'
+    g.language = "c"
     g.group = group
-    g.source_name = 'rand'
+    g.source_name = "rand"
     yield g
 
 

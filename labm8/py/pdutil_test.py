@@ -24,15 +24,15 @@ def test_QueryToDataFrame_column_names():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with db.Session() as s:
     df = pdutil.QueryToDataFrame(s, s.query(Table.col_a, Table.col_b))
 
-  assert list(df.columns.values) == ['col_a', 'col_b']
+  assert list(df.columns.values) == ["col_a", "col_b"]
 
 
 def test_ModelToDataFrame_column_names():
@@ -40,15 +40,15 @@ def test_ModelToDataFrame_column_names():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with db.Session() as s:
     df = pdutil.ModelToDataFrame(s, Table)
 
-  assert list(df.columns.values) == ['col_a', 'col_b']
+  assert list(df.columns.values) == ["col_a", "col_b"]
 
 
 def test_QueryToDataFrame_explicit_column_names():
@@ -56,12 +56,12 @@ def test_QueryToDataFrame_explicit_column_names():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with db.Session() as s:
-    df = pdutil.ModelToDataFrame(s, Table, ['col_b'])
+    df = pdutil.ModelToDataFrame(s, Table, ["col_b"])
 
-  assert list(df.columns.values) == ['col_b']
+  assert list(df.columns.values) == ["col_b"]

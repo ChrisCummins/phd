@@ -36,6 +36,7 @@ class Grewe(base.HeterogeneousMappingModel):
     Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
     https://doi.org/10.1109/CGO.2013.6494993
   """
+
   __name__ = "Grewe et al."
   __basename__ = "grewe"
 
@@ -43,11 +44,13 @@ class Grewe(base.HeterogeneousMappingModel):
     self.model = None
 
   def init(self, seed: int, atomizer: atomizers.AtomizerBase):
-    self.model = sktree.DecisionTreeClassifier(random_state=seed,
-                                               splitter="best",
-                                               criterion="entropy",
-                                               max_depth=5,
-                                               min_samples_leaf=5)
+    self.model = sktree.DecisionTreeClassifier(
+      random_state=seed,
+      splitter="best",
+      criterion="entropy",
+      max_depth=5,
+      min_samples_leaf=5,
+    )
     return self
 
   def save(self, outpath):
@@ -61,12 +64,15 @@ class Grewe(base.HeterogeneousMappingModel):
   def train(self, df: pd.DataFrame, platform_name: str, verbose: bool = False):
     del verbose
     features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
-        platform_name, df).values
+      platform_name, df
+    ).values
     self.model.fit(features, df["y"])
 
-  def predict(self, df: pd.DataFrame, platform_name: str,
-              verbose: bool = False):
+  def predict(
+    self, df: pd.DataFrame, platform_name: str, verbose: bool = False
+  ):
     del verbose
     features = opencl_device_mapping_dataset.ComputeGreweFeaturesForGpu(
-        platform_name, df).values
+      platform_name, df
+    ).values
     return self.model.predict(features)

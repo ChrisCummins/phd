@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import random
 import sys
 from argparse import ArgumentParser
@@ -18,9 +17,17 @@ def yes_no_or_skip(question, default="skip"):
 
   The "answer" return value is True for "yes" or False for "no".
   """
-  valid = {"yes": "yes", "y": "yes", "ye": "yes",
-           "no": "no", "n": "no",
-           "skip": "skip", "ski": "skip", "sk": "skip", "s": "skip", }
+  valid = {
+    "yes": "yes",
+    "y": "yes",
+    "ye": "yes",
+    "no": "no",
+    "n": "no",
+    "skip": "skip",
+    "ski": "skip",
+    "sk": "skip",
+    "s": "skip",
+  }
   if default is None:
     prompt = "[y/n/s]"
   elif default == "yes":
@@ -35,7 +42,7 @@ def yes_no_or_skip(question, default="skip"):
   while True:
     sys.stdout.write(f"{question} {prompt} ")
     choice = input().lower()
-    if default is not None and choice == '':
+    if default is not None and choice == "":
       return valid[default]
     elif choice in valid:
       return valid[choice]
@@ -46,14 +53,21 @@ def yes_no_or_skip(question, default="skip"):
 def handcheck(recheck=False, include_all=False):
   program = None
   with Session() as session:
-    q = session.query(CLgenProgram).distinct() \
-      .join(cl_launcherCLgenResult,
-            cl_launcherCLgenResult.program_id == CLgenProgram.id) \
+    q = (
+      session.query(CLgenProgram)
+      .distinct()
+      .join(
+        cl_launcherCLgenResult,
+        cl_launcherCLgenResult.program_id == CLgenProgram.id,
+      )
       .filter(CLgenProgram.gpuverified == 1)
+    )
 
     if not include_all:
-      q = q.filter(cl_launcherCLgenResult.status == 0,
-                   cl_launcherCLgenResult.classification == "Wrong code")
+      q = q.filter(
+        cl_launcherCLgenResult.status == 0,
+        cl_launcherCLgenResult.classification == "Wrong code",
+      )
 
     if not recheck:
       q = q.filter(CLgenProgram.handchecked == None)
@@ -83,12 +97,22 @@ def handcheck(recheck=False, include_all=False):
 
 def main():
   parser = ArgumentParser(description="Collect difftest results for a device")
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
-                      help="MySQL database hostname")
-  parser.add_argument("-r", "--recheck", action="store_true",
-                      help="include previously checked kernels")
-  parser.add_argument("-a", "--all", dest="include_all", action="store_true",
-                      help="include all kernels, not just wrong-code")
+  parser.add_argument(
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
+  parser.add_argument(
+    "-r",
+    "--recheck",
+    action="store_true",
+    help="include previously checked kernels",
+  )
+  parser.add_argument(
+    "-a",
+    "--all",
+    dest="include_all",
+    action="store_true",
+    help="include all kernels, not just wrong-code",
+  )
   args = parser.parse_args()
 
   # get testbed information

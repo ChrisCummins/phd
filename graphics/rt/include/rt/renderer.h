@@ -21,8 +21,8 @@
 #define RT_RENDERER_H_
 
 #include <array>
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 #ifdef USE_TBB
 #include "tbb/parallel_for.h"
@@ -38,15 +38,13 @@ namespace rt {
 
 class Renderer {
   // Anti-aliasing tunable knobs.
-  static constexpr Scalar maxPixelDiff     = 0.0000005;
-  static constexpr Scalar maxSubpixelDiff  = 0.008;
+  static constexpr Scalar maxPixelDiff = 0.0000005;
+  static constexpr Scalar maxSubpixelDiff = 0.008;
   static constexpr size_t maxSubpixelDepth = 3;
 
  public:
-  Renderer(const Scene &scene,
-           const rt::Camera *const restrict camera,
-           const size_t numDofSamples = 1,
-           const size_t maxRayDepth   = 5000);
+  Renderer(const Scene &scene, const rt::Camera *const restrict camera,
+           const size_t numDofSamples = 1, const size_t maxRayDepth = 5000);
 
   ~Renderer();
 
@@ -64,35 +62,29 @@ class Renderer {
   const size_t numDofSamples;
 
   // The heart of the raytracing engine.
-  template<typename Image>
+  template <typename Image>
   void render(Image *const image) const;
 
  private:
   // Recursively supersample a region.
-  Colour renderRegion(const Scalar x,
-                      const Scalar y,
-                      const Scalar regionSize,
-                      const Matrix &transform,
-                      const size_t depth = 0) const;
+  Colour renderRegion(const Scalar x, const Scalar y, const Scalar regionSize,
+                      const Matrix &transform, const size_t depth = 0) const;
 
   // Get the colour value at a single point.
-  Colour renderPoint(const Scalar x,
-                     const Scalar y,
+  Colour renderPoint(const Scalar x, const Scalar y,
                      const Matrix &transform) const;
 
   // Trace a ray trough a given scene and return the final
   // colour.
-  Colour trace(const Ray &ray,
-               const unsigned int depth = 0) const;
+  Colour trace(const Ray &ray, const unsigned int depth = 0) const;
 
   // Perform supersample interpolation.
-  Colour interpolate(const size_t image_x,
-                     const size_t image_y,
+  Colour interpolate(const size_t image_x, const size_t image_y,
                      const size_t dataWidth,
                      const Colour *const restrict data) const;
 };
 
-template<typename Image>
+template <typename Image>
 void Renderer::render(Image *const image) const {
   // Create image to camera transformation matrix.
   //
@@ -106,8 +98,7 @@ void Renderer::render(Image *const image) const {
   const Scale scale(camera->width / image->width,
                     camera->height / image->height, 1);
   // Offset from image coordinates to camera coordinates.
-  const Translation offset(-(image->width * .5),
-                           -(image->height * .5), 0);
+  const Translation offset(-(image->width * .5), -(image->height * .5), 0);
   const auto transformMatrix = scale * offset;
 
   // First, we collect a single sample for every pixel in the
@@ -117,25 +108,25 @@ void Renderer::render(Image *const image) const {
   const size_t borderedSize = borderedWidth * borderedHeight;
   std::vector<Colour> sampled(borderedSize);
 
-  // Collect pixel samples:
+// Collect pixel samples:
 #ifdef USE_TBB
-  tbb::parallel_for(
-      static_cast<size_t>(0), sampled.size(), [&](const size_t index)
-#else  // USE_TBB
+  tbb::parallel_for(static_cast<size_t>(0), sampled.size(),
+                    [&](const size_t index)
+#else   // USE_TBB
   for (size_t index = 0; index < sampled.size(); ++index)
 #endif  // USE_TBB
-    {
-      // Get the pixel coordinates.
-      const auto x = image::x(index, borderedWidth);
-      const auto y = image::y(index, borderedWidth);
+                    {
+                      // Get the pixel coordinates.
+                      const auto x = image::x(index, borderedWidth);
+                      const auto y = image::y(index, borderedWidth);
 
-      // Sample a point in the centre of the pixel.
-      sampled[index] = renderPoint(x + .5, y + .5,
-                                   transformMatrix);
-    }
+                      // Sample a point in the centre of the pixel.
+                      sampled[index] =
+                          renderPoint(x + .5, y + .5, transformMatrix);
+                    }
 #ifdef USE_TBB
-  );  // NOLINT
-#endif  // USE_TBB
+                    );  // NOLINT
+#endif                  // USE_TBB
 
   // Allocate memory for super-sampled image.
   std::vector<Colour> superSampled(image->size);
@@ -147,20 +138,18 @@ void Renderer::render(Image *const image) const {
     const size_t y = image::y(index, image->width);
 
     // Get the previously sampled pixel value.
-    Colour pixel = sampled[image::index(x + 1, y + 1,
-                                        borderedWidth)];
+    Colour pixel = sampled[image::index(x + 1, y + 1, borderedWidth)];
 
     // Create a list of all neighbouring element indices.
     const std::array<size_t, 8> neighbour_indices = {
-      image::index(x - 1, y - 1, borderedWidth),
-      image::index(x,     y - 1, borderedWidth),
-      image::index(x + 1, y - 1, borderedWidth),
-      image::index(x - 1, y,     borderedWidth),
-      image::index(x + 1, y,     borderedWidth),
-      image::index(x - 1, y + 1, borderedWidth),
-      image::index(x,     y + 1, borderedWidth),
-      image::index(x + 1, y + 1, borderedWidth)
-    };
+        image::index(x - 1, y - 1, borderedWidth),
+        image::index(x, y - 1, borderedWidth),
+        image::index(x + 1, y - 1, borderedWidth),
+        image::index(x - 1, y, borderedWidth),
+        image::index(x + 1, y, borderedWidth),
+        image::index(x - 1, y + 1, borderedWidth),
+        image::index(x, y + 1, borderedWidth),
+        image::index(x + 1, y + 1, borderedWidth)};
 
     // Calculate the difference between the neighbouring
     // pixel values.

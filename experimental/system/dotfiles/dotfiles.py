@@ -18,17 +18,18 @@ from experimental.system.dotfiles.implementation import task
 def BuildArgumentParser():
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      'tasks',
-      metavar='<task>',
-      nargs='*',
-      help="the name of tasks to run (default: all)")
+    "tasks",
+    metavar="<task>",
+    nargs="*",
+    help="the name of tasks to run (default: all)",
+  )
   action_group = parser.add_mutually_exclusive_group()
-  action_group.add_argument('-d', '--describe', action="store_true")
-  action_group.add_argument('-u', '--upgrade', action='store_true')
-  action_group.add_argument('-r', '--remove', action='store_true')
-  action_group.add_argument('--versions', action="store_true")
+  action_group.add_argument("-d", "--describe", action="store_true")
+  action_group.add_argument("-u", "--upgrade", action="store_true")
+  action_group.add_argument("-r", "--remove", action="store_true")
+  action_group.add_argument("--versions", action="store_true")
   verbosity_group = parser.add_mutually_exclusive_group()
-  verbosity_group.add_argument('-v', '--verbose', action='store_true')
+  verbosity_group.add_argument("-v", "--verbose", action="store_true")
   return parser
 
 
@@ -51,16 +52,17 @@ def main(argv):
   # --describe flag prints a description of the work to be done:
   platform = host.GetPlatform()
   if args.describe:
-    msg = ("There are {fmt_bld}{ntasks}{fmt_end} tasks to run on {platform}:".
-           format(**vars()))
+    msg = "There are {fmt_bld}{ntasks}{fmt_end} tasks to run on {platform}:".format(
+      **vars()
+    )
     app.Log(1, msg)
     for i, t in enumerate(queue):
       task_name = type(t).__name__
       j = i + 1
       desc = type(t).__name__
-      msg = (
-          "[{j:2d}/{ntasks:2d}]  {fmt_bld}{task_name}{fmt_end} ({desc})".format(
-              **vars()))
+      msg = "[{j:2d}/{ntasks:2d}]  {fmt_bld}{task_name}{fmt_end} ({desc})".format(
+        **vars()
+      )
       app.Log(1, msg)
       # build a list of generated files
       for file in t.genfiles:
@@ -84,8 +86,9 @@ def main(argv):
   else:
     task_type = "install"
 
-  msg = ("Running {fmt_bld}{ntasks} {task_type}{fmt_end} tasks on {platform}:".
-         format(**vars()))
+  msg = "Running {fmt_bld}{ntasks} {task_type}{fmt_end} tasks on {platform}:".format(
+    **vars()
+  )
   app.Log(1, msg)
 
   # Run the tasks
@@ -97,7 +100,8 @@ def main(argv):
 
       j = i + 1
       msg = "[{j:2d}/{ntasks:2d}] {fmt_bld}{task_name}{fmt_end} ...".format(
-          **vars())
+        **vars()
+      )
       app.Log(1, msg)
 
       start_time = time.time()
@@ -111,15 +115,19 @@ def main(argv):
         for file in t.genfiles:
           file = os.path.abspath(os.path.expanduser(file))
           app.Log(2, "assert exists: '{file}'".format(**vars()))
-          if not (os.path.exists(file) or host.CheckShellCommand(
-              "sudo test -f '{file}'".format(**vars())) or
-                  host.CheckShellCommand(
-                      "sudo test -d '{file}'".format(**vars()))):
+          if not (
+            os.path.exists(file)
+            or host.CheckShellCommand("sudo test -f '{file}'".format(**vars()))
+            or host.CheckShellCommand("sudo test -d '{file}'".format(**vars()))
+          ):
             raise task.InvalidTaskError(
-                'genfile "{file}" not created'.format(**vars()))
+              'genfile "{file}" not created'.format(**vars())
+            )
       runtime = time.time() - start_time
 
-      app.Log(2, "{task_name} task completed in {runtime:.3f}s".format(**vars()))
+      app.Log(
+        2, "{task_name} task completed in {runtime:.3f}s".format(**vars())
+      )
       sys.stdout.flush()
   except KeyboardInterrupt:
     app.Log(1, "\ninterrupt")
@@ -151,5 +159,5 @@ def main(argv):
   return 1 if errored else 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main(sys.argv[1:])

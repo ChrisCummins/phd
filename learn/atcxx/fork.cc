@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <unistd.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 int main() {
   pid_t pid = fork();
@@ -21,8 +21,7 @@ int main() {
       std::cout << "Process created with pid " << pid << std::endl;
 
       // Wait for process to finish:
-      while (!WIFEXITED(status))
-        waitpid(pid, &status, 0);
+      while (!WIFEXITED(status)) waitpid(pid, &status, 0);
 
       std::cout << "Process exited with " << WEXITSTATUS(status) << std::endl;
 

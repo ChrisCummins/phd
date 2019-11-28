@@ -12,7 +12,8 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 VOCABULARY_PATH = bazelutil.DataPath(
-    'phd/deeplearning/ncc/published_results/vocabulary.zip')
+  "phd/deeplearning/ncc/published_results/vocabulary.zip"
+)
 
 # An example LLVM IR, taken from the SHOC benchmark suite.
 EXAMPLE_OPENCL_IR = """\
@@ -66,16 +67,16 @@ attributes #3 = { nounwind readnone }
 """
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def llvm_ir_dir(tempdir: pathlib.Path) -> str:
   """A test fixture which returns the path to a directory containing LLVM IR."""
-  (tempdir / 'llvm_ir').mkdir()
-  with open(tempdir / 'llvm_ir' / 'program.ll', 'w') as f:
+  (tempdir / "llvm_ir").mkdir()
+  with open(tempdir / "llvm_ir" / "program.ll", "w") as f:
     f.write(EXAMPLE_OPENCL_IR)
-  yield str(tempdir / 'llvm_ir')
+  yield str(tempdir / "llvm_ir")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def vocab() -> vocabulary.VocabularyZipFile:
   """Test fixture which yields a vocabulary zip file instance as a ctx mngr."""
   with vocabulary.VocabularyZipFile(VOCABULARY_PATH) as v:
@@ -83,28 +84,34 @@ def vocab() -> vocabulary.VocabularyZipFile:
 
 
 def test_CreateSeqDirFromIr_creates_directory(
-    llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile):
+  llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile
+):
   """Test that sequence directory is returned."""
   sequence_folder = pathlib.Path(
-      task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab))
+    task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab)
+  )
   assert sequence_folder.is_dir()
 
 
 def test_CreateSeqDirFromIr_creates_csv_file(
-    llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile):
+  llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile
+):
   """Test that CSV file is created."""
   sequence_folder = pathlib.Path(
-      task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab))
-  assert (sequence_folder / 'program_seq.csv').is_file()
+    task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab)
+  )
+  assert (sequence_folder / "program_seq.csv").is_file()
 
 
 def test_CreateSeqDirFromIr_creates_rec_file(
-    llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile):
+  llvm_ir_dir: str, vocab: vocabulary.VocabularyZipFile
+):
   """Test that REC file is created."""
   sequence_folder = pathlib.Path(
-      task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab))
-  assert (sequence_folder / 'program_seq.rec').is_file()
+    task_utils.CreateSeqDirFromIr(llvm_ir_dir, vocab)
+  )
+  assert (sequence_folder / "program_seq.rec").is_file()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

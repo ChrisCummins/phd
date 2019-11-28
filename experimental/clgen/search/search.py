@@ -31,11 +31,11 @@ def features_from_file(path):
       np.array: Feature values.
   """
   # hacky call to opencl_kernel_features and parse output
-  cmd = ['opencl_kernel_features', path]
+  cmd = ["opencl_kernel_features", path]
   proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
   cout, _ = proc.communicate()
   features = [
-      float(x) for x in cout.decode('utf-8').split('\n')[1].split(',')[2:]
+    float(x) for x in cout.decode("utf-8").split("\n")[1].split(",")[2:]
   ]
   return np.array(features)
 
@@ -78,11 +78,9 @@ def get_sample(m, seed_text, seed):
   """
   try:
     buf = StringIO()
-    m.sample(seed_text=seed_text,
-             output=buf,
-             seed=seed,
-             max_length=5000,
-             quiet=True)
+    m.sample(
+      seed_text=seed_text, output=buf, seed=seed, max_length=5000, quiet=True
+    )
     out = buf.getvalue()
     result = preprocess.preprocess(out)
     return 0, result
@@ -96,12 +94,14 @@ def get_start_code(m):
   while True:
     try:
       buf = StringIO()
-      m.sample(seed_text='__kernel void A(__global float* a, '
-               '__global float* b, __global float* c, '
-               'const int d) {',
-               output=buf,
-               max_length=5000,
-               quiet=True)
+      m.sample(
+        seed_text="__kernel void A(__global float* a, "
+        "__global float* b, __global float* c, "
+        "const int d) {",
+        output=buf,
+        max_length=5000,
+        quiet=True,
+      )
       out = buf.getvalue()
       return preprocess.preprocess(out)
     except preprocess.BadCodeException:
@@ -122,9 +122,9 @@ def get_mutation(m, start_code):
       (str, int, int, list of tuples): Mutates source code, index of start
           text, seed value, list of attempts.
   """
-  min_mutate_idx = len('__kernel void ')
+  min_mutate_idx = len("__kernel void ")
   max_mutate_idx = len(start_code) - 1
-  attempts = ''
+  attempts = ""
 
   max_attempts = 500
 
@@ -135,14 +135,9 @@ def get_mutation(m, start_code):
 
     start_text = start_code[:mutate_idx]
 
-    print(">>> attempt",
-          i,
-          "idx",
-          mutate_idx,
-          "seed",
-          mutate_seed,
-          "-",
-          end=" ")
+    print(
+      ">>> attempt", i, "idx", mutate_idx, "seed", mutate_seed, "-", end=" "
+    )
     ret, code = get_sample(m, start_text, mutate_seed)
     if not ret and code != start_code:
       print("good")
@@ -170,7 +165,7 @@ def add_to_log(log, entry, name=None):
 
 
 def escape_features(features):
-  return ', '.join([str(x) for x in features])
+  return ", ".join([str(x) for x in features])
 
 
 def get_entries(log, name):
@@ -186,10 +181,10 @@ def get_steps(log):
 
 
 def get_code_history(log):
-  code_history = [log[0]['data']['start_code']]
+  code_history = [log[0]["data"]["start_code"]]
   for step in get_steps(log):
-    if step['data']['code'] != code_history[-1]:
-      code_history.append(step['data']['code'])
+    if step["data"]["code"] != code_history[-1]:
+      code_history.append(step["data"]["code"])
   return code_history
 
 
@@ -206,7 +201,7 @@ def search(m, target_code, logpath, start_code=None):
   if start_code and not len(steps):
     code = start_code
   elif len(steps):
-    code = steps[-1]['data']['code']
+    code = steps[-1]["data"]["code"]
   else:
     code = get_start_code(m)
 
@@ -216,28 +211,31 @@ def search(m, target_code, logpath, start_code=None):
 
   if get_entries(log, "init"):
     init = get_entries(log, "init")[0]
-    assert (init['data']['target_code'] == target_code)
-    assert (init['data']['target_features'] == escape_features(target_features))
+    assert init["data"]["target_code"] == target_code
+    assert init["data"]["target_features"] == escape_features(target_features)
 
     # load history from log
     code_history = get_code_history(log)
   else:
     # create init entry
-    add_to_log(log, {
+    add_to_log(
+      log,
+      {
         "start_code": code,
         "start_features": escape_features(features),
         "target_features": escape_features(target_features),
         "target_code": target_code,
         "distance": distance,
-        "model": m.meta
-    },
-               name="init")
+        "model": m.meta,
+      },
+      name="init",
+    )
     write_log(log, logpath)
     code_history = [code]
 
   # keep track of best
   if len(steps):
-    best = steps[-1]['data']['best']
+    best = steps[-1]["data"]["best"]
   else:
     best = {"distance": distance, "code": code, "improvement_count": 0}
 
@@ -291,12 +289,15 @@ def search(m, target_code, logpath, start_code=None):
       print("found exact match!")
       break
 
-  add_to_log(log, {
-      "best_code": best['code'],
-      "best_features": escape_features(best['features']),
-      "best_distance": best['distance']
-  },
-             name="end")
+  add_to_log(
+    log,
+    {
+      "best_code": best["code"],
+      "best_features": escape_features(best["features"]),
+      "best_distance": best["distance"],
+    },
+    name="end",
+  )
   write_log(log, logpath)
 
 
@@ -306,16 +307,16 @@ def main():
   parser = ArgumentParser()
   parser.add_argument("model", help="Path to model")
   parser.add_argument("target", help="Path to target code")
-  parser.add_argument("-i",
-                      "--input",
-                      metavar="path",
-                      default=None,
-                      help="Path to starting code")
-  parser.add_argument("-l",
-                      "--log",
-                      metavar="path",
-                      default="search-log.json",
-                      help="Path to log file")
+  parser.add_argument(
+    "-i", "--input", metavar="path", default=None, help="Path to starting code"
+  )
+  parser.add_argument(
+    "-l",
+    "--log",
+    metavar="path",
+    default="search-log.json",
+    help="Path to log file",
+  )
   args = parser.parse_args()
 
   clgen_log.init(verbose=True)

@@ -25,18 +25,15 @@
 void** my2DAlloc1(size_t nrows, size_t rowsize) {
   void** rows = (void**)malloc(nrows * sizeof(void*));  // NOLINT
 
-  while (nrows--)
-    rows[nrows] = malloc(rowsize);
+  while (nrows--) rows[nrows] = malloc(rowsize);
 
   return rows;
 }
 
 void my2DFree1(void** matrix, size_t nrows) {
-  for (size_t i = 0; i < nrows; i++)
-    free(matrix[i]);
+  for (size_t i = 0; i < nrows; i++) free(matrix[i]);
   free(matrix);
 }
-
 
 //
 // Second implementation. Allocate two arrays, one to hold pointer
@@ -50,21 +47,18 @@ void my2DFree1(void** matrix, size_t nrows) {
 int** my2DAlloc2(size_t nrows, size_t ncols) {
   assert(ncols);
 
-  int** rows = (int**)malloc(nrows * sizeof(int*));  // NOLINT
+  int** rows = (int**)malloc(nrows * sizeof(int*));       // NOLINT
   int* data = (int*)malloc(nrows * ncols * sizeof(int));  // NOLINT
 
-  while (nrows--)
-    rows[nrows] = &data[nrows * ncols];
+  while (nrows--) rows[nrows] = &data[nrows * ncols];
 
   return rows;  // NOLINT
 }
-
 
 void my2DFree2(int** matrix) {
   free(matrix[0]);
   free(matrix);
 }
-
 
 //
 // Third implementation. Allocate as a single contiguous block of
@@ -86,10 +80,7 @@ int** my2DAlloc3(size_t nrows, size_t ncols) {
   return data;
 }
 
-void my2DFree3(int **matrix) {
-  free(matrix);
-}
-
+void my2DFree3(int** matrix) { free(matrix); }
 
 ///////////
 // Tests //
@@ -203,7 +194,6 @@ TEST(my2DAlloc3, tests) {
   my2DFree3(matrix);
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -246,7 +236,6 @@ void BM_my2DAlloc3(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_my2DAlloc3)->Range(BM_size_min, BM_size_max);
-
 
 #pragma GCC diagnostic pop
 

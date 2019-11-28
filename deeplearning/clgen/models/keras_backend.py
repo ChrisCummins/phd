@@ -44,24 +44,24 @@ class KerasBackend(backends.BackendBase):
     super(KerasBackend, self).__init__(*args, **kwargs)
 
     # Create the necessary cache directories.
-    (self.cache.path / 'embeddings').mkdir(exist_ok=True)
+    (self.cache.path / "embeddings").mkdir(exist_ok=True)
 
     # Attributes that will be lazily set.
-    self._training_model: typing.Optional['keras.models.Sequential'] = None
-    self._inference_model: typing.Optional['keras.models.Sequential'] = None
+    self._training_model: typing.Optional["keras.models.Sequential"] = None
+    self._inference_model: typing.Optional["keras.models.Sequential"] = None
     self._inference_batch_size: typing.Optional[int] = None
 
     self.inference_indices = None
     self.inference_model = None
 
-  def GetTrainingModel(self) -> 'keras.models.Sequential':
+  def GetTrainingModel(self) -> "keras.models.Sequential":
     """Get the Keras model."""
     if self._training_model:
       return self._training_model
     self._training_model = self.Train()
     return self._training_model
 
-  def Train(self, corpus, **unused_kwargs) -> 'keras.models.Sequential':
+  def Train(self, corpus, **unused_kwargs) -> "keras.models.Sequential":
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -78,34 +78,37 @@ class KerasBackend(backends.BackendBase):
     del unused_kwargs
 
     model = builders.BuildKerasModel(self.config, self.atomizer.vocab_size)
-    with open(self.cache.keypath('model.yaml'), 'w') as f:
+    with open(self.cache.keypath("model.yaml"), "w") as f:
       f.write(model.to_yaml())
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=builders.BuildOptimizer(self.config))
+    model.compile(
+      loss="categorical_crossentropy",
+      optimizer=builders.BuildOptimizer(self.config),
+    )
 
     # Print a model summary.
     buf = io.StringIO()
-    model.summary(print_fn=lambda x: buf.write(x + '\n'))
-    app.Log(1, 'Model summary:\n%s', buf.getvalue())
+    model.summary(print_fn=lambda x: buf.write(x + "\n"))
+    app.Log(1, "Model summary:\n%s", buf.getvalue())
 
     # TODO(cec): Add an atomizer.CreateVocabularyFile() method, with frequency
     # counts for a given corpus.
     def Escape(token: str) -> str:
       """Make a token visible and printable."""
-      if token == '\t':
-        return '\\t'
-      elif token == '\n':
-        return '\\n'
+      if token == "\t":
+        return "\\t"
+      elif token == "\n":
+        return "\\n"
       elif not token.strip():
         return f"'{token}'"
       else:
         return token
 
-    if not (self.cache.path / 'embeddings' / 'metadata.tsv').is_file():
-      with open(self.cache.path / 'embeddings' / 'metadata.tsv', 'w') as f:
-        for _, token in sorted(self.atomizer.decoder.items(),
-                               key=lambda x: x[0]):
-          f.write(Escape(token) + '\n')
+    if not (self.cache.path / "embeddings" / "metadata.tsv").is_file():
+      with open(self.cache.path / "embeddings" / "metadata.tsv", "w") as f:
+        for _, token in sorted(
+          self.atomizer.decoder.items(), key=lambda x: x[0]
+        ):
+          f.write(Escape(token) + "\n")
 
     target_num_epochs = self.config.training.num_epochs
     starting_epoch = 0
@@ -114,13 +117,14 @@ class KerasBackend(backends.BackendBase):
     if len(epoch_checkpoints) >= target_num_epochs:
       # We have already trained a model to at least this number of epochs, so
       # simply the weights from that epoch and call it a day.
-      app.Log(1, 'Loading weights from %s',
-              epoch_checkpoints[target_num_epochs - 1])
+      app.Log(
+        1, "Loading weights from %s", epoch_checkpoints[target_num_epochs - 1]
+      )
       model.load_weights(epoch_checkpoints[target_num_epochs - 1])
       return model
 
     # Now entering the point at which training is inevitable.
-    with logutil.TeeLogsToFile('train', self.cache.path / 'logs'):
+    with logutil.TeeLogsToFile("train", self.cache.path / "logs"):
       # Deferred importing of Keras so that we don't have to activate the
       # TensorFlow backend every time we import this module.
       import keras
@@ -129,45 +133,48 @@ class KerasBackend(backends.BackendBase):
         # We have already trained a model at least part of the way to our target
         # number of epochs, so load the most recent one.
         starting_epoch = len(epoch_checkpoints)
-        app.Log(1, 'Resuming training from epoch %d.', starting_epoch)
+        app.Log(1, "Resuming training from epoch %d.", starting_epoch)
         model.load_weights(epoch_checkpoints[-1])
 
       callbacks = [
-          keras.callbacks.ModelCheckpoint(str(
-              self.cache.path / 'checkpoints' / '{epoch:03d}.hdf5'),
-                                          verbose=1,
-                                          mode="min",
-                                          save_best_only=False),
-          keras.callbacks.TensorBoard(
-              str(self.cache.path / 'embeddings'),
-              write_graph=True,
-              embeddings_freq=1,
-              embeddings_metadata={
-                  'embedding_1':
-                  str(self.cache.path / 'embeddings' / 'metadata.tsv'),
-              }),
-          telemetry.TrainingLogger(
-              self.cache.path / 'logs').KerasCallback(keras),
+        keras.callbacks.ModelCheckpoint(
+          str(self.cache.path / "checkpoints" / "{epoch:03d}.hdf5"),
+          verbose=1,
+          mode="min",
+          save_best_only=False,
+        ),
+        keras.callbacks.TensorBoard(
+          str(self.cache.path / "embeddings"),
+          write_graph=True,
+          embeddings_freq=1,
+          embeddings_metadata={
+            "embedding_1": str(self.cache.path / "embeddings" / "metadata.tsv"),
+          },
+        ),
+        telemetry.TrainingLogger(self.cache.path / "logs").KerasCallback(keras),
       ]
 
       generator = data_generators.AutoGenerator(corpus, self.config.training)
-      steps_per_epoch = (corpus.encoded.token_count -
-                         1) // (self.config.training.batch_size *
-                                self.config.training.sequence_length)
+      steps_per_epoch = (corpus.encoded.token_count - 1) // (
+        self.config.training.batch_size * self.config.training.sequence_length
+      )
       app.Log(
-          1, 'Step counts: %s per epoch, %s left to do, %s total',
-          humanize.Commas(steps_per_epoch),
-          humanize.Commas(
-              (target_num_epochs - starting_epoch) * steps_per_epoch),
-          humanize.Commas(target_num_epochs * steps_per_epoch))
-      model.fit_generator(generator,
-                          steps_per_epoch=steps_per_epoch,
-                          callbacks=callbacks,
-                          initial_epoch=starting_epoch,
-                          epochs=target_num_epochs)
+        1,
+        "Step counts: %s per epoch, %s left to do, %s total",
+        humanize.Commas(steps_per_epoch),
+        humanize.Commas((target_num_epochs - starting_epoch) * steps_per_epoch),
+        humanize.Commas(target_num_epochs * steps_per_epoch),
+      )
+      model.fit_generator(
+        generator,
+        steps_per_epoch=steps_per_epoch,
+        callbacks=callbacks,
+        initial_epoch=starting_epoch,
+        epochs=target_num_epochs,
+      )
     return model
 
-  def GetInferenceModel(self) -> 'keras.models.Sequential':
+  def GetInferenceModel(self) -> "keras.models.Sequential":
     """Like training model, but with different batch size."""
     if self._inference_model:
       return self._inference_model
@@ -176,11 +183,11 @@ class KerasBackend(backends.BackendBase):
     # TensorFlow backend every time we import this module.
     import keras
 
-    app.Log(1, 'Building inference model.')
+    app.Log(1, "Building inference model.")
     model = self.GetTrainingModel()
     config = model.get_config()
-    app.Log(1, 'Sampling with batch size %d', sampler.batch_size)
-    config[0]['config']['batch_input_shape'] = (sampler.batch_size, 1)
+    app.Log(1, "Sampling with batch size %d", sampler.batch_size)
+    config[0]["config"]["batch_input_shape"] = (sampler.batch_size, 1)
     inference_model = keras.models.Sequential.from_config(config)
     inference_model.trainable = False
     inference_model.set_weights(model.get_weights())
@@ -188,9 +195,9 @@ class KerasBackend(backends.BackendBase):
     self._inference_batch_size = sampler.batch_size
     return inference_model
 
-  def InitSampling(self,
-                   sampler: samplers.Sampler,
-                   seed: typing.Optional[int] = None) -> None:
+  def InitSampling(
+    self, sampler: samplers.Sampler, seed: typing.Optional[int] = None
+  ) -> None:
     self.inference_model = self.GetInferenceModel()
     if seed is not None:
       np.random.seed(seed)
@@ -203,8 +210,9 @@ class KerasBackend(backends.BackendBase):
       # input shape: (batch_size, 1)
       self.inference_model.predict(x)
 
-    self.inference_indices = ([sampler.encoded_start_text[-1]] *
-                              sampler.batch_size)
+    self.inference_indices = [
+      sampler.encoded_start_text[-1]
+    ] * sampler.batch_size
 
   def SampleNextIndices(self, sampler: samplers.Sampler, done: np.ndarray):
     del done
@@ -216,7 +224,7 @@ class KerasBackend(backends.BackendBase):
       probabilities = self.inference_model.predict(x)
       # Output shape: (batch_size, 1, vocab_size).
       self.inference_indices = [
-          WeightedPick(p.squeeze(), sampler.temperature) for p in probabilities
+        WeightedPick(p.squeeze(), sampler.temperature) for p in probabilities
       ]
       result[:, idx] = self.inference_indices
     return result
@@ -240,10 +248,10 @@ class KerasBackend(backends.BackendBase):
     Returns:
       A list of paths.
     """
-    checkpoint_dir = pathlib.Path(self.cache.path) / 'checkpoints'
+    checkpoint_dir = pathlib.Path(self.cache.path) / "checkpoints"
     return [
-        checkpoint_dir / x
-        for x in sorted(pathlib.Path(self.cache['checkpoints']).iterdir())
+      checkpoint_dir / x
+      for x in sorted(pathlib.Path(self.cache["checkpoints"]).iterdir())
     ]
 
   @property
@@ -254,7 +262,7 @@ class KerasBackend(backends.BackendBase):
 
 def WeightedPick(predictions: np.ndarray, temperature: float) -> int:
   """Make a weighted choice from a predictions array."""
-  predictions = np.log(np.asarray(predictions).astype('float64')) / temperature
+  predictions = np.log(np.asarray(predictions).astype("float64")) / temperature
   predictions_exp = np.exp(predictions)
   # Normalize the probabilities.
   predictions = predictions_exp / np.sum(predictions_exp)

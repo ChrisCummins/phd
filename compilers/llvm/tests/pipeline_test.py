@@ -22,49 +22,59 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
-MODULE_UNDER_TEST = 'compilers.llvm'
+MODULE_UNDER_TEST = "compilers.llvm"
 
 
 def test_LlvmPipeline(tempdir: pathlib.Path):
   """End-to-end test."""
-  with open(tempdir / 'foo.c', 'w') as f:
-    f.write("""
+  with open(tempdir / "foo.c", "w") as f:
+    f.write(
+      """
 int main() {
   int x = 0;
   if (x != 0)
     x = 5; // dead code
   return x;
 }
-""")
+"""
+    )
 
   # Generate bytecode.
-  p = clang.Exec([
-      str(tempdir / 'foo.c'), '-o',
-      str(tempdir / 'foo.ll'), '-S', '-xc++', '-emit-llvm', '-c', '-O0'
-  ])
+  p = clang.Exec(
+    [
+      str(tempdir / "foo.c"),
+      "-o",
+      str(tempdir / "foo.ll"),
+      "-S",
+      "-xc++",
+      "-emit-llvm",
+      "-c",
+      "-O0",
+    ]
+  )
   assert not p.stderr
   assert not p.stdout
   assert not p.returncode
-  assert (tempdir / 'foo.ll').is_file()
+  assert (tempdir / "foo.ll").is_file()
 
   # Run an optimization pass.
   p = opt.Exec(
-      [str(tempdir / 'foo.ll'), '-o',
-       str(tempdir / 'foo2.ll'), '-S', '-dce'])
+    [str(tempdir / "foo.ll"), "-o", str(tempdir / "foo2.ll"), "-S", "-dce"]
+  )
   assert not p.stderr
   assert not p.stdout
   assert not p.returncode
-  assert (tempdir / 'foo2.ll').is_file()
+  assert (tempdir / "foo2.ll").is_file()
 
   # Compile bytecode to LLVM IR.
-  p = clang.Exec([str(tempdir / 'foo2.ll'), '-o', str(tempdir / 'foo')])
+  p = clang.Exec([str(tempdir / "foo2.ll"), "-o", str(tempdir / "foo")])
   assert not p.stderr
   assert not p.stdout
   assert not p.returncode
-  assert (tempdir / 'foo').is_file()
+  assert (tempdir / "foo").is_file()
 
-  subprocess.check_call([str(tempdir / 'foo')])
+  subprocess.check_call([str(tempdir / "foo")])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

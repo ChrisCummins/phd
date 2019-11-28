@@ -6,14 +6,17 @@ from labm8.py import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('bytecode_db',
-                    bytecode_database.Database,
-                    None,
-                    'URL of database to read bytecodes from.',
-                    must_exist=True)
+app.DEFINE_database(
+  "bytecode_db",
+  bytecode_database.Database,
+  None,
+  "URL of database to read bytecodes from.",
+  must_exist=True,
+)
 
-app.DEFINE_integer('batch_size', 2048,
-                   'The number of bytecodes to process each batch.')
+app.DEFINE_integer(
+  "batch_size", 2048, "The number of bytecodes to process each batch."
+)
 
 
 def main():
@@ -25,10 +28,12 @@ def main():
     app.Log(1, "Running batch %s", batch)
     with bytecode_db.Session() as session:
       with prof.Profile(f"Read {FLAGS.batch_size} bytecodes"):
-        bytecodes_to_process = session.query(bytecode_database.LlvmBytecode) \
-          .filter(bytecode_database.LlvmBytecode.bytecode_sha1 == '') \
-          .limit(FLAGS.batch_size)\
+        bytecodes_to_process = (
+          session.query(bytecode_database.LlvmBytecode)
+          .filter(bytecode_database.LlvmBytecode.bytecode_sha1 == "")
+          .limit(FLAGS.batch_size)
           .all()
+        )
 
       if not bytecodes_to_process:
         break
@@ -40,8 +45,8 @@ def main():
       with prof.Profile("Committed changes"):
         session.commit()
 
-  app.Log(1, 'Finished after %s batches', batch)
+  app.Log(1, "Finished after %s batches", batch)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

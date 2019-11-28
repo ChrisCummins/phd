@@ -31,6 +31,7 @@ class HeterogeneousMappingModel(object):
     __name__ (str): Model name.
   __basename__ (str): Shortened name, used for files
   """
+
   __name__ = None
   __basename__ = None
 
@@ -73,8 +74,9 @@ class HeterogeneousMappingModel(object):
     """
     raise NotImplementedError
 
-  def train(self, df: pd.DataFrame, platform_name: str,
-            verbose: bool = False) -> None:
+  def train(
+    self, df: pd.DataFrame, platform_name: str, verbose: bool = False
+  ) -> None:
     """Train a model.
 
     Args:
@@ -84,8 +86,9 @@ class HeterogeneousMappingModel(object):
     """
     raise NotImplementedError
 
-  def predict(self, df: pd.DataFrame, platform_name: str,
-              verbose: bool = False) -> typing.Iterable[int]:
+  def predict(
+    self, df: pd.DataFrame, platform_name: str, verbose: bool = False
+  ) -> typing.Iterable[int]:
     """Make predictions for programs.
 
     Args:

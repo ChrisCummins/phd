@@ -11,18 +11,19 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def data_folder() -> str:
   """A test fixture that produces a data folder with a single bytecode."""
 
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_") as d:
     data_folder = pathlib.Path(d)
-    (data_folder / 'BLAS-3.8.0' / 'blas').mkdir(parents=True)
+    (data_folder / "BLAS-3.8.0" / "blas").mkdir(parents=True)
 
     # A single file from the BLAS dataset, downloaded from
     # https://polybox.ethz.ch/index.php/s/5ASMNv6dYsPKjyQ/download
-    with open(data_folder / 'BLAS-3.8.0' / 'blas' / 'fast_dcabs1.ll', 'w') as f:
-      f.write("""\
+    with open(data_folder / "BLAS-3.8.0" / "blas" / "fast_dcabs1.ll", "w") as f:
+      f.write(
+        """\
 ; ModuleID = '/tmp/dcabs1-c19f92.ll'
 source_filename = "/tmp/dcabs1-c19f92.ll"
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
@@ -67,7 +68,8 @@ attributes #1 = { nounwind readnone speculatable }
 !15 = !{!"unlimited ptr", !16, i64 0}
 !16 = !{!"Flang FAA 1"}
 !17 = !DILocation(line: 66, column: 1, scope: !12)\
-""")
+"""
+      )
 
     # Yield the temporary directory path as a string.
     yield d
@@ -79,30 +81,29 @@ def test_CreateContextualFlowGraphsFromBytecodes_files(data_folder: str):
   d = pathlib.Path(data_folder)
 
   # Files produced:
-  assert (d / 'BLAS-3.8.0/blas/data_read_pickle').is_file()
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/data_preprocessed_pickle').is_file()
+  assert (d / "BLAS-3.8.0/blas/data_read_pickle").is_file()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/data_preprocessed_pickle").is_file()
 
   # Folders produced:
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/data_transformed').is_dir()
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/preprocessed').is_dir()
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/structure_dictionaries').is_dir()
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/xfg').is_dir()
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/xfg_dual').is_dir()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/data_transformed").is_dir()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/preprocessed").is_dir()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/structure_dictionaries").is_dir()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/xfg").is_dir()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/xfg_dual").is_dir()
 
   # Files in folders:
   assert (
-      d /
-      'BLAS-3.8.0/blas_preprocessed/data_transformed/fast_dcabs1.p').is_file()
-  assert (
-      d /
-      'BLAS-3.8.0/blas_preprocessed/preprocessed/fast_dcabs1_preprocessed.txt'
+    d / "BLAS-3.8.0/blas_preprocessed/data_transformed/fast_dcabs1.p"
   ).is_file()
-  assert (d /
-          'BLAS-3.8.0/blas_preprocessed/structure_dictionaries/fast_dcabs1.txt'
-         ).is_file()
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/xfg/fast_dcabs1.txt').is_file()
-  assert (d / 'BLAS-3.8.0/blas_preprocessed/xfg_dual/fast_dcabs1.p').is_file()
+  assert (
+    d / "BLAS-3.8.0/blas_preprocessed/preprocessed/fast_dcabs1_preprocessed.txt"
+  ).is_file()
+  assert (
+    d / "BLAS-3.8.0/blas_preprocessed/structure_dictionaries/fast_dcabs1.txt"
+  ).is_file()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/xfg/fast_dcabs1.txt").is_file()
+  assert (d / "BLAS-3.8.0/blas_preprocessed/xfg_dual/fast_dcabs1.p").is_file()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

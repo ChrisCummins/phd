@@ -2,7 +2,6 @@
 
 
 def all_subsets(arr):
-
   def all_subset_helper(msk, i, n):
     if i == n:
       print([arr[i] for i in range(len(msk)) if msk[i]])
@@ -18,10 +17,9 @@ def all_subsets(arr):
 
 
 def all_permutations(a):
-
   def permutor(a, i, n):
     if i == n:
-      print(''.join(a))
+      print("".join(a))
       return
 
     for j in range(i, n):
@@ -33,12 +31,12 @@ def all_permutations(a):
 
 
 def main():
-  a = list('abc')
+  a = list("abc")
   all_permutations(a)
 
   a = [1, 2, 3]
   all_subsets(a)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()

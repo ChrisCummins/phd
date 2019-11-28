@@ -1,1 +1,1 @@
-#define rsqrt(x) (1.f/sqrt(x))
+#define rsqrt(x) (1.f / sqrt(x))

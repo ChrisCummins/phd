@@ -25,94 +25,113 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-class MockProcess():
+class MockProcess:
   """Mock class for subprocess.Popen() return."""
 
   def __init__(self, returncode):
     self.returncode = returncode
 
   def communicate(self, *args):
-    return '', ''
+    return "", ""
 
 
 def test_NormalizeIdentifiers_process_command(mocker):
   """Test the clang_rewriter comand which is run."""
-  mock_Popen = mocker.patch('subprocess.Popen')
+  mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(0)
-  normalizer.NormalizeIdentifiers('', '.c', ['-foo'])
+  normalizer.NormalizeIdentifiers("", ".c", ["-foo"])
   subprocess.Popen.assert_called_once()
   cmd = subprocess.Popen.call_args_list[0][0][0]
-  assert cmd[:3] == ['timeout', '-s9', '60']
+  assert cmd[:3] == ["timeout", "-s9", "60"]
 
 
 def test_NormalizeIdentifiers_ClangTimeout(mocker):
   """Test that ClangTimeout is raised if clang_rewriter returns with SIGKILL."""
-  mock_Popen = mocker.patch('subprocess.Popen')
+  mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(9)
   with pytest.raises(errors.ClangTimeout):
-    normalizer.NormalizeIdentifiers('', '.c', [])
+    normalizer.NormalizeIdentifiers("", ".c", [])
   # ClangTimeout inherits from ClangException.
   with pytest.raises(errors.ClangException):
-    normalizer.NormalizeIdentifiers('', '.c', [])
+    normalizer.NormalizeIdentifiers("", ".c", [])
 
 
 def test_NormalizeIdentifiers_RewriterException(mocker):
   """Test that ClangException is raised if clang_rewriter returns 204."""
-  mock_Popen = mocker.patch('subprocess.Popen')
+  mock_Popen = mocker.patch("subprocess.Popen")
   mock_Popen.return_value = MockProcess(204)
   with pytest.raises(errors.RewriterException):
-    normalizer.NormalizeIdentifiers('', '.c', [])
+    normalizer.NormalizeIdentifiers("", ".c", [])
   # RewriterException inherits from ClangException.
   with pytest.raises(errors.ClangException):
-    normalizer.NormalizeIdentifiers('', '.c', [])
+    normalizer.NormalizeIdentifiers("", ".c", [])
 
 
 def test_NormalizeIdentifiers_empty_c_file():
   """Test that RewriterException is raised on an empty file."""
   with pytest.raises(errors.RewriterException):
-    normalizer.NormalizeIdentifiers('', '.c', [])
+    normalizer.NormalizeIdentifiers("", ".c", [])
 
 
 def test_NormalizeIdentifiers_small_c_program():
   """Test the output of a small program."""
-  assert normalizer.NormalizeIdentifiers(
+  assert (
+    normalizer.NormalizeIdentifiers(
       """
 int main(int argc, char** argv) {}
-""", '.c', []) == """
+""",
+      ".c",
+      [],
+    )
+    == """
 int A(int a, char** b) {}
 """
+  )
 
 
 def test_NormalizeIdentifiers_variable_names_function_scope():
   """Test that variable name sequence reset for each function."""
-  assert normalizer.NormalizeIdentifiers(
+  assert (
+    normalizer.NormalizeIdentifiers(
       """
 int foo(int bar, int car) { int blah = bar; }
 int foobar(int hello, int bar) { int test = bar; }
-""", '.c', []) == """
+""",
+      ".c",
+      [],
+    )
+    == """
 int A(int a, int b) { int c = a; }
 int B(int a, int b) { int c = b; }
 """
+  )
 
 
 def test_NormalizeIdentifiers_small_cl_program():
   """Test the output of a small OpenCL program."""
-  assert normalizer.NormalizeIdentifiers(
+  assert (
+    normalizer.NormalizeIdentifiers(
       """
 kernel void foo(global int* bar) {}
-""", '.cl', []) == """
+""",
+      ".cl",
+      [],
+    )
+    == """
 kernel void A(global int* a) {}
 """
+  )
 
 
 def test_NormalizeIdentifiers_c_syntax_error():
   """Test that a syntax error does not prevent normalizer output."""
-  assert normalizer.NormalizeIdentifiers('int main@@()! ##', '.c', [])
+  assert normalizer.NormalizeIdentifiers("int main@@()! ##", ".c", [])
 
 
 def test_NormalizeIdentifiers_printf_not_rewritten():
   """Test that a call to printf is not rewritten."""
-  assert normalizer.NormalizeIdentifiers(
+  assert (
+    normalizer.NormalizeIdentifiers(
       """
 #include <stdio.h>
 
@@ -120,7 +139,11 @@ int main(int argc, char** argv) {
   printf("Hello, world!\\n");
   return 0;
 }
-""", '.c', []) == """
+""",
+      ".c",
+      [],
+    )
+    == """
 #include <stdio.h>
 
 int A(int a, char** b) {
@@ -128,20 +151,27 @@ int A(int a, char** b) {
   return 0;
 }
 """
+  )
 
 
 def test_NormalizeIdentifiers_undefined_not_rewritten():
   """Test that undefined functions and variables are not rewritten."""
-  assert normalizer.NormalizeIdentifiers(
+  assert (
+    normalizer.NormalizeIdentifiers(
       """
 void main(int argc, char** argv) {
   undefined_function(undefined_variable);
 }
-""", '.c', []) == """
+""",
+      ".c",
+      [],
+    )
+    == """
 void A(int a, char** b) {
   undefined_function(undefined_variable);
 }
 """
+  )
 
 
 # Benchmarks.
@@ -150,15 +180,19 @@ void A(int a, char** b) {
 def test_benchmark_NormalizeIdentifiers_c_hello_world(benchmark):
   """Benchmark NormalizeIdentifiers for a "hello world" C program."""
   benchmark(
-      normalizer.NormalizeIdentifiers, """
+    normalizer.NormalizeIdentifiers,
+    """
 #include <stdio.h>
 
 int main(int argc, char** argv) {
   printf("Hello, world!\\n");
   return 0;
 }
-""", '.c', [])
+""",
+    ".c",
+    [],
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

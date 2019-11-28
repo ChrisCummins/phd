@@ -31,15 +31,20 @@ FLAGS = app.FLAGS
 # An inbox importer is a function that takes a path to a directory (the inbox)
 # and a Queue. When called, the function places a SeriesCollection proto on the
 # queue.
-InboxImporter = typing.Callable[[pathlib.Path, multiprocessing.Queue], me_pb2.
-                                SeriesCollection]
+InboxImporter = typing.Callable[
+  [pathlib.Path, multiprocessing.Queue], me_pb2.SeriesCollection
+]
 
 
 class ImporterError(EnvironmentError):
   """Error raised if an importer fails."""
 
-  def __init__(self, name: str, source: typing.Union[str, pathlib.Path],
-               error_message: typing.Optional[str]):
+  def __init__(
+    self,
+    name: str,
+    source: typing.Union[str, pathlib.Path],
+    error_message: typing.Optional[str],
+  ):
     self._name = name
     self._source = source
     self._error_message = error_message
@@ -58,17 +63,20 @@ class ImporterError(EnvironmentError):
 
   def __repr__(self) -> str:
     if self.error_message:
-      return (f'{self.name} importer failed for source `{self.source}` with '
-              f'error: {self.error_message}')
+      return (
+        f"{self.name} importer failed for source `{self.source}` with "
+        f"error: {self.error_message}"
+      )
     else:
-      return f'{self.name} importer failed for source `{self.source}`'
+      return f"{self.name} importer failed for source `{self.source}`"
 
   def __str__(self) -> str:
     return repr(self)
 
 
-def ConcatenateSeries(series: typing.Iterator[me_pb2.SeriesCollection]
-                     ) -> me_pb2.SeriesCollection:
+def ConcatenateSeries(
+  series: typing.Iterator[me_pb2.SeriesCollection],
+) -> me_pb2.SeriesCollection:
   if len({s.name for s in series}) != 1:
     raise ValueError("Multiple names")
   if len({s.family for s in series}) != 1:
@@ -83,8 +91,9 @@ def ConcatenateSeries(series: typing.Iterator[me_pb2.SeriesCollection]
   return concat_series
 
 
-def MergeSeriesCollections(series: typing.Iterator[me_pb2.SeriesCollection]
-                          ) -> me_pb2.SeriesCollection:
+def MergeSeriesCollections(
+  series: typing.Iterator[me_pb2.SeriesCollection],
+) -> me_pb2.SeriesCollection:
   """Merge the given series collections into a single SeriesCollection.
 
   Args:
@@ -105,4 +114,5 @@ def MergeSeriesCollections(series: typing.Iterator[me_pb2.SeriesCollection]
   # Concatenate each list of series with the same name.
   concatenated_series = [ConcatenateSeries(s) for s in names_to_series.values()]
   return me_pb2.SeriesCollection(
-      series=sorted(concatenated_series, key=lambda s: s.name))
+    series=sorted(concatenated_series, key=lambda s: s.name)
+  )

@@ -8,28 +8,40 @@ import pandas as pd
 from deeplearning.ml4pl.datasets import linux
 from deeplearning.ml4pl.datasets import opencl
 from deeplearning.ml4pl.graphs.unlabelled.cfg import control_flow_graph as cfg
-from deeplearning.ml4pl.legacy import \
-  control_flow_graph_generator as cfg_generator
+from deeplearning.ml4pl.legacy import (
+  control_flow_graph_generator as cfg_generator,
+)
 from labm8.py import app
 from labm8.py import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('dataset_outdir',
-                  '/tmp/phd/docs/wip_graph/datasets/reachability',
-                  'The directory to write the output dataframes to.')
-app.DEFINE_integer('synthetic_generator_seed', 0xCEC,
-                   'Random seed for synthetic training graph generator.')
-app.DEFINE_integer('num_synthetic_training_graphs', 2000,
-                   'The number of training graphs to generate.')
-app.DEFINE_integer('num_synthetic_validation_graphs', 850,
-                   'The number of validation graphs to generate.')
+app.DEFINE_string(
+  "dataset_outdir",
+  "/tmp/phd/docs/wip_graph/datasets/reachability",
+  "The directory to write the output dataframes to.",
+)
+app.DEFINE_integer(
+  "synthetic_generator_seed",
+  0xCEC,
+  "Random seed for synthetic training graph generator.",
+)
+app.DEFINE_integer(
+  "num_synthetic_training_graphs",
+  2000,
+  "The number of training graphs to generate.",
+)
+app.DEFINE_integer(
+  "num_synthetic_validation_graphs",
+  850,
+  "The number of validation graphs to generate.",
+)
 
 # Synthetic graph properties.
 num_nodes_min_max_tr = (5, 20)
 num_nodes_min_max_ge = (15, 25)
-edge_density_tr = .01
-edge_density_ge = .01
+edge_density_tr = 0.01
+edge_density_ge = 0.01
 
 
 class TargetGraphSpec(typing.NamedTuple):
@@ -38,7 +50,6 @@ class TargetGraphSpec(typing.NamedTuple):
 
 
 class SpecGenerator(object):
-
   def __init__(self, graphs: typing.Iterator[cfg.ControlFlowGraph]):
     self._graphs = graphs
 
@@ -92,15 +103,18 @@ def InputGraphNodeFeatures(spec: TargetGraphSpec, node_index: int) -> np.array:
   """Extract node features for an input graph."""
   # If the node is the target node, the features are [0, 1]. Else, the features
   # are [1, 0].
-  return np.array([
+  return np.array(
+    [
       0 if node_index == spec.target_node_index else 1,
       1 if node_index == spec.target_node_index else 0,
-  ],
-                  dtype=np.float32)
+    ],
+    dtype=np.float32,
+  )
 
 
-def InputGraphEdgeFeatures(spec: TargetGraphSpec,
-                           edge_index: typing.Tuple[int, int]):
+def InputGraphEdgeFeatures(
+  spec: TargetGraphSpec, edge_index: typing.Tuple[int, int]
+):
   """Extract edge features for an input graph."""
   del spec
   del edge_index
@@ -112,15 +126,14 @@ def TargetGraphNodeFeatures(spec: TargetGraphSpec, node_index: int):
   reachable = spec.graph.IsReachable(spec.target_node_index, node_index)
   # If the node is reachable, the features are [0, 1]. Else, the features are
   # [1, 0].
-  return np.array([
-      0 if reachable else 1,
-      1 if reachable else 0,
-  ],
-                  dtype=np.float32)
+  return np.array(
+    [0 if reachable else 1, 1 if reachable else 0,], dtype=np.float32
+  )
 
 
-def TargetGraphEdgeFeatures(spec: TargetGraphSpec,
-                            edge_index: typing.Tuple[int, int]):
+def TargetGraphEdgeFeatures(
+  spec: TargetGraphSpec, edge_index: typing.Tuple[int, int]
+):
   """Extract edge features for a target graph."""
   del spec
   del edge_index
@@ -139,25 +152,29 @@ def SpecToInputTarget(spec: TargetGraphSpec):
 
   # Set node features.
   for node_index in input_graph.nodes():
-    input_graph.add_node(node_index,
-                         features=InputGraphNodeFeatures(spec, node_index))
+    input_graph.add_node(
+      node_index, features=InputGraphNodeFeatures(spec, node_index)
+    )
 
   for node_index in target_graph.nodes():
-    target_graph.add_node(node_index,
-                          features=TargetGraphNodeFeatures(spec, node_index))
+    target_graph.add_node(
+      node_index, features=TargetGraphNodeFeatures(spec, node_index)
+    )
 
   # Set edge features.
   for edge_index in input_graph.edges():
-    input_graph.add_edge(*edge_index,
-                         features=InputGraphEdgeFeatures(spec, edge_index))
+    input_graph.add_edge(
+      *edge_index, features=InputGraphEdgeFeatures(spec, edge_index)
+    )
 
   for edge_index in target_graph.edges():
-    target_graph.add_edge(*edge_index,
-                          features=TargetGraphEdgeFeatures(spec, edge_index))
+    target_graph.add_edge(
+      *edge_index, features=TargetGraphEdgeFeatures(spec, edge_index)
+    )
 
   # Set global (graph) features.
-  input_graph.graph['features'] = np.array([0.0], dtype=np.float32)
-  target_graph.graph['features'] = np.array([0.0], dtype=np.float32)
+  input_graph.graph["features"] = np.array([0.0], dtype=np.float32)
+  target_graph.graph["features"] = np.array([0.0], dtype=np.float32)
 
   return input_graph, target_graph
 
@@ -169,21 +186,21 @@ def SpecsToDataFrame(specs: typing.Iterator[TargetGraphSpec], split_type):
     """Compute a single row in dataframe as a dict."""
     input_graph, target_graph = SpecToInputTarget(spec)
     return {
-        'program:source': 'Synthetic',
-        'program:name': 'Synthetic',
-        'reachability:target_node_index': spec.target_node_index,
-        'cfg:graph': spec.graph,
-        'cfg:block_count': spec.graph.number_of_nodes(),
-        'cfg:edge_count': spec.graph.number_of_edges(),
-        'cfg:edge_density': spec.graph.edge_density,
-        'cfg:diameter': spec.graph.undirected_diameter,
-        'cfg:is_valid': spec.graph.IsValidControlFlowGraph(strict=False),
-        'cfg:is_strict_valid': spec.graph.IsValidControlFlowGraph(strict=True),
-        'networkx:input_graph': input_graph,
-        'networkx:target_graph': target_graph,
-        'split:type': split_type,
-        'graphnet:loss_op': 'NodesSoftmaxCrossEntropy',
-        'graphnet:accuracy_evaluator': 'OneHotNodes',
+      "program:source": "Synthetic",
+      "program:name": "Synthetic",
+      "reachability:target_node_index": spec.target_node_index,
+      "cfg:graph": spec.graph,
+      "cfg:block_count": spec.graph.number_of_nodes(),
+      "cfg:edge_count": spec.graph.number_of_edges(),
+      "cfg:edge_density": spec.graph.edge_density,
+      "cfg:diameter": spec.graph.undirected_diameter,
+      "cfg:is_valid": spec.graph.IsValidControlFlowGraph(strict=False),
+      "cfg:is_strict_valid": spec.graph.IsValidControlFlowGraph(strict=True),
+      "networkx:input_graph": input_graph,
+      "networkx:target_graph": target_graph,
+      "split:type": split_type,
+      "graphnet:loss_op": "NodesSoftmaxCrossEntropy",
+      "graphnet:accuracy_evaluator": "OneHotNodes",
     }
 
   return pd.DataFrame([SpecToRow(s) for s in specs])
@@ -198,88 +215,101 @@ def PickleDataFrame(df: pd.DataFrame, path: pathlib.Path):
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   outdir = pathlib.Path(FLAGS.dataset_outdir)
   outdir.mkdir(exist_ok=True, parents=True)
 
   random_state = np.random.RandomState(FLAGS.synthetic_generator_seed)
 
-  with prof.Profile('synthetic training graphs'):
+  with prof.Profile("synthetic training graphs"):
     training_graph_generator = SpecGenerator(
-        cfg_generator.ControlFlowGraphGenerator(random_state,
-                                                num_nodes_min_max_tr,
-                                                edge_density_tr,
-                                                strict=False))
+      cfg_generator.ControlFlowGraphGenerator(
+        random_state, num_nodes_min_max_tr, edge_density_tr, strict=False
+      )
+    )
     train_df = SpecsToDataFrame(
-        training_graph_generator.Generate(FLAGS.num_synthetic_training_graphs),
-        'training')
+      training_graph_generator.Generate(FLAGS.num_synthetic_training_graphs),
+      "training",
+    )
 
-  with prof.Profile('synthetic validation graphs'):
+  with prof.Profile("synthetic validation graphs"):
     validation_graph_generator = SpecGenerator(
-        cfg_generator.ControlFlowGraphGenerator(random_state,
-                                                num_nodes_min_max_ge,
-                                                edge_density_ge,
-                                                strict=False))
+      cfg_generator.ControlFlowGraphGenerator(
+        random_state, num_nodes_min_max_ge, edge_density_ge, strict=False
+      )
+    )
     valid_df = SpecsToDataFrame(
-        validation_graph_generator.Generate(
-            FLAGS.num_synthetic_validation_graphs), 'validation')
+      validation_graph_generator.Generate(
+        FLAGS.num_synthetic_validation_graphs
+      ),
+      "validation",
+    )
 
   synthetic_df = pd.concat((train_df, valid_df))
-  PickleDataFrame(synthetic_df, outdir / 'synthetic.pkl')
+  PickleDataFrame(synthetic_df, outdir / "synthetic.pkl")
 
   # OpenCL dataset.
-  with prof.Profile('opencl dataset'):
+  with prof.Profile("opencl dataset"):
     ocl_dataset = opencl.OpenClDeviceMappingsDataset().cfgs_df.reset_index()
 
     # Set the program names on the networkx graph instances.
     for _, row in ocl_dataset.iterrows():
-      row['cfg:graph'].graph['name'] = ':'.join([
-          row['program:benchmark_suite_name'],
-          row['program:benchmark_name'],
-          row['program:opencl_kernel_name'],
-      ])
+      row["cfg:graph"].graph["name"] = ":".join(
+        [
+          row["program:benchmark_suite_name"],
+          row["program:benchmark_name"],
+          row["program:opencl_kernel_name"],
+        ]
+      )
 
     ocl_df = SpecsToDataFrame(
-        SpecGenerator(ocl_dataset['cfg:graph'].values).Generate(), 'test')
+      SpecGenerator(ocl_dataset["cfg:graph"].values).Generate(), "test"
+    )
     del ocl_dataset
 
     # Set the program name column.
-    ocl_df['program:source'] = 'OpenCL'
-    ocl_df['program:name'] = [
-        r['cfg:graph'].graph['name'] for _, r in ocl_df.iterrows()
+    ocl_df["program:source"] = "OpenCL"
+    ocl_df["program:name"] = [
+      r["cfg:graph"].graph["name"] for _, r in ocl_df.iterrows()
     ]
 
-  PickleDataFrame(ocl_df, outdir / 'ocl.pkl')
-  PickleDataFrame(pd.concat((synthetic_df, ocl_df)),
-                  outdir / 'synthetic_ocl.pkl')
+  PickleDataFrame(ocl_df, outdir / "ocl.pkl")
+  PickleDataFrame(
+    pd.concat((synthetic_df, ocl_df)), outdir / "synthetic_ocl.pkl"
+  )
 
   # Linux dataset.
-  with prof.Profile('linux dataset'):
+  with prof.Profile("linux dataset"):
     linux_dataset = linux.LinuxSourcesDataset().cfgs_df.reset_index()
 
     # Set the program names on the networkx graph instances.
     for _, row in linux_dataset.iterrows():
-      row['cfg:graph'].graph['name'] = row['program:src_relpath'].replace(
-          '/', '.')
+      row["cfg:graph"].graph["name"] = row["program:src_relpath"].replace(
+        "/", "."
+      )
 
     linux_df = SpecsToDataFrame(
-        SpecGenerator(linux_dataset['cfg:graph'].values).Generate(), 'test')
+      SpecGenerator(linux_dataset["cfg:graph"].values).Generate(), "test"
+    )
     del linux_dataset
 
     # Set the program name column.
-    linux_df['program:source'] = 'Linux'
-    linux_df['program:name'] = [
-        r['cfg:graph'].graph['name'] for _, r in linux_df.iterrows()
+    linux_df["program:source"] = "Linux"
+    linux_df["program:name"] = [
+      r["cfg:graph"].graph["name"] for _, r in linux_df.iterrows()
     ]
 
-  PickleDataFrame(linux_df, outdir / 'linux.pkl')
-  PickleDataFrame(pd.concat((synthetic_df, linux_df)),
-                  outdir / 'synthetic_linux.pkl')
+  PickleDataFrame(linux_df, outdir / "linux.pkl")
+  PickleDataFrame(
+    pd.concat((synthetic_df, linux_df)), outdir / "synthetic_linux.pkl"
+  )
 
-  PickleDataFrame(pd.concat((synthetic_df, ocl_df, linux_df)),
-                  outdir / 'synthetic_linux_ocl.pkl')
+  PickleDataFrame(
+    pd.concat((synthetic_df, ocl_df, linux_df)),
+    outdir / "synthetic_linux_ocl.pkl",
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

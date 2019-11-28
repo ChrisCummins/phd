@@ -15,28 +15,46 @@
 
 class X {
  public:
-  int *data;
+  int* data;
 
   // Normal constructor:
-  X(int v1, int v2) { data = new int; *data = v1 + v2; }
+  X(int v1, int v2) {
+    data = new int;
+    *data = v1 + v2;
+  }
 
   // Explicit constructor:
-  explicit X(int val) { data = new int; *data = val; }
+  explicit X(int val) {
+    data = new int;
+    *data = val;
+  }
 
   // Default constructor:
-  X() { data = new int; *data = 5; }
+  X() {
+    data = new int;
+    *data = 5;
+  }
 
   // Copy constructor:
-  X(const X &x) { data = new int; *data = *x.data; }
+  X(const X& x) {
+    data = new int;
+    *data = *x.data;
+  }
 
   // Move constructor:
-  X(X &&x) { data = x.data; x.data = nullptr; }
+  X(X&& x) {
+    data = x.data;
+    x.data = nullptr;
+  }
 
   // Copy assignment:
-  X &operator=(const X &x) { *data = *x.data; return *this; }
+  X& operator=(const X& x) {
+    *data = *x.data;
+    return *this;
+  }
 
   // Move assignment:
-  X &operator=(X &&x) {
+  X& operator=(X&& x) {
     if (data != x.data) {
       delete data;
       data = std::move(x.data);
@@ -48,7 +66,7 @@ class X {
   ~X() { delete data; }  // NOLINT
 
   // Some operator.
-  X operator+(const X &x) { return X(*x.data + *data); }
+  X operator+(const X& x) { return X(*x.data + *data); }
 };
 
 class Y {
@@ -61,31 +79,40 @@ class Y {
 
   ~Y() { std::cout << "-> ~Y()\n"; }
 
-  Y(const Y& y) { data = y.data; std::cout << "-> Y(const Y&y)\n"; }
+  Y(const Y& y) {
+    data = y.data;
+    std::cout << "-> Y(const Y&y)\n";
+  }
 
-  Y(Y&& y) { data = y.data; std::cout << "-> Y(Y&&y)\n"; }
+  Y(Y&& y) {
+    data = y.data;
+    std::cout << "-> Y(Y&&y)\n";
+  }
 
   Y& operator=(const Y& y) {
     std::cout << "-> Y& operator=(const Y& y)\n";
-    data = y.data; return *this;
+    data = y.data;
+    return *this;
   }
 
   Y& operator=(Y&& y) {
     std::cout << "-> Y& operator=(Y&& y)\n";
-    data = y.data; return *this;
+    data = y.data;
+    return *this;
   }
 
   Y& operator+(const Y& y) {
     std::cout << "-> Y& operator+(const Y& y)\n";
-    data += y.data; return *this;
+    data += y.data;
+    return *this;
   }
 
   Y& operator+(const Y&& y) {
     std::cout << "-> Y& operator+(const Y&& y)\n";
-    data += y.data; return *this;
+    data += y.data;
+    return *this;
   }
 };
-
 
 TEST(Constructors, normal) {
   X x1(10, 5);
@@ -103,9 +130,7 @@ TEST(Constructors, explicit) {
   ASSERT_EQ(0, *x2.data);
 }
 
-TEST(Constructors, default) {
-  ASSERT_EQ(5, *X().data);
-}
+TEST(Constructors, default) { ASSERT_EQ(5, *X().data); }
 
 TEST(Constructors, copyConstructor) {
   X x1(10);
@@ -149,7 +174,7 @@ TEST(Constructors, copyAssignment) {
 //   ASSERT_EQ(25, *x1.data);
 // }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   Y y1(5);
   Y y2(10);
   Y y3(y2);
@@ -163,9 +188,7 @@ int main(int argc, char **argv) {
   }
 
   std::cout << "entering scope\n";
-  {
-    Y tmp(5);
-  }
+  { Y tmp(5); }
   std::cout << "left scope\n";
 
   // Run unit tests:

@@ -12,13 +12,13 @@ from labm8.py import labtypes
 
 def IsDockerContainer() -> bool:
   """Determine if running inside a docker container."""
-  return pathlib.Path('/.dockerenv').is_file()
+  return pathlib.Path("/.dockerenv").is_file()
 
 
 def _Docker(cmd: typing.List[str], timeout: int = 60):
   """Build a docker process invocation."""
-  cmd = ['timeout', '-s9', str(timeout), 'docker'] + [str(s) for s in cmd]
-  app.Log(2, '$ %s', ' '.join(cmd))
+  cmd = ["timeout", "-s9", str(timeout), "docker"] + [str(s) for s in cmd]
+  app.Log(2, "$ %s", " ".join(cmd))
   return cmd
 
 
@@ -29,12 +29,12 @@ class DockerImageRunContext(object):
     self.image_name = image_name
 
   def _CommandLineInvocation(
-      self,
-      args: typing.List[str],
-      flags: typing.Dict[str, str],
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str],
-      timeout: int,
-      entrypoint: typing.Optional[str],
+    self,
+    args: typing.List[str],
+    flags: typing.Dict[str, str],
+    volumes: typing.Dict[typing.Union[str, pathlib.Path], str],
+    timeout: int,
+    entrypoint: typing.Optional[str],
   ) -> typing.List[str]:
     """Build the command line arguments to execute the requested command.
 
@@ -56,23 +56,28 @@ class DockerImageRunContext(object):
     Returns:
       The command line as a list of strings.
     """
-    entrypoint_args = ['--entrypoint', entrypoint] if entrypoint else []
-    volume_args = [f'-v{src}:{dst}' for src, dst in (volumes or {}).items()]
+    entrypoint_args = ["--entrypoint", entrypoint] if entrypoint else []
+    volume_args = [f"-v{src}:{dst}" for src, dst in (volumes or {}).items()]
     flags_args = labtypes.flatten(
-        [[f'--{k}', str(v)] for k, v in (flags or {}).items()],)
+      [[f"--{k}", str(v)] for k, v in (flags or {}).items()],
+    )
     return _Docker(
-        ['run'] + entrypoint_args + volume_args + [self.image_name] + args +
-        flags_args,
-        timeout,
+      ["run"]
+      + entrypoint_args
+      + volume_args
+      + [self.image_name]
+      + args
+      + flags_args,
+      timeout,
     )
 
   def CheckCall(
-      self,
-      args: typing.List[str],
-      flags: typing.Dict[str, str] = None,
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
-      timeout: int = 600,
-      entrypoint: str = None,
+    self,
+    args: typing.List[str],
+    flags: typing.Dict[str, str] = None,
+    volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
+    timeout: int = 600,
+    entrypoint: str = None,
   ) -> None:
     """Run the docker image with specified args.
 
@@ -85,12 +90,12 @@ class DockerImageRunContext(object):
     subprocess.check_call(cmd)
 
   def CheckOutput(
-      self,
-      args: typing.List[str],
-      flags: typing.Dict[str, str] = None,
-      volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
-      timeout: int = 600,
-      entrypoint: str = None,
+    self,
+    args: typing.List[str],
+    flags: typing.Dict[str, str] = None,
+    volumes: typing.Dict[typing.Union[str, pathlib.Path], str] = None,
+    timeout: int = 600,
+    entrypoint: str = None,
   ) -> str:
     """Run the docker image with specified args and return its output.
 
@@ -140,25 +145,28 @@ class BazelPy3Image(object):
     """
     super(BazelPy3Image, self).__init__()
     self.data_path = data_path
-    self.tar_path = bazelutil.DataPath(f'phd/{data_path}.tar')
+    self.tar_path = bazelutil.DataPath(f"phd/{data_path}.tar")
 
-    components = self.data_path.split('/')
+    components = self.data_path.split("/")
     self.image_name = f'bazel/{"/".join(components[:-1])}:{components[-1]}'
 
   def _TemporaryImageName(self) -> str:
-    basename = self.data_path.split('/')[-1]
-    random_suffix = ''.join(
-        random.choice('0123456789abcdef') for _ in range(32))
-    return f'phd_{basename}_tmp_{random_suffix}'
+    basename = self.data_path.split("/")[-1]
+    random_suffix = "".join(
+      random.choice("0123456789abcdef") for _ in range(32)
+    )
+    return f"phd_{basename}_tmp_{random_suffix}"
 
   @contextlib.contextmanager
   def RunContext(self) -> DockerImageRunContext:
     subprocess.check_call(
-        _Docker(['load', '-i', str(self.tar_path)], timeout=600),)
+      _Docker(["load", "-i", str(self.tar_path)], timeout=600),
+    )
     tmp_name = self._TemporaryImageName()
     subprocess.check_call(
-        _Docker(['tag', self.image_name, tmp_name], timeout=60),)
-    subprocess.check_call(_Docker(['rmi', self.image_name], timeout=60))
+      _Docker(["tag", self.image_name, tmp_name], timeout=60),
+    )
+    subprocess.check_call(_Docker(["rmi", self.image_name], timeout=60))
     yield DockerImageRunContext(tmp_name)
     # FIXME(cec): Using the --force flag here is almost certainly the wrong
     # thing, but I'm getting strange errors when trying to untag the image
@@ -166,4 +174,4 @@ class BazelPy3Image(object):
     #   Error response from daemon: conflict: unable to remove repository
     #   reference "phd_..." (must force) - container ... is using its
     #   referenced image ...
-    subprocess.check_call(_Docker(['rmi', '--force', tmp_name], timeout=60))
+    subprocess.check_call(_Docker(["rmi", "--force", tmp_name], timeout=60))

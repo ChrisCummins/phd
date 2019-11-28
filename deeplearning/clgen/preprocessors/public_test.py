@@ -31,7 +31,7 @@ def test_clgen_preprocessor_good():
     """Mock preprocessor."""
     return text
 
-  assert MockPreprocessor('foo') == 'foo'
+  assert MockPreprocessor("foo") == "foo"
 
 
 def test_clgen_preprocessor_missing_return_type():
@@ -64,5 +64,5 @@ def test_clgen_preprocessor_incorrect_argument_name():
       del foo
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

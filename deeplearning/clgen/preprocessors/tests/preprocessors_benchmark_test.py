@@ -24,44 +24,42 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
-MODULE_UNDER_TEST = 'deeplearning.clgen'
+MODULE_UNDER_TEST = "deeplearning.clgen"
 
 # A full preprocessing pipeline for the C++ programming language.
 CXX_PREPROCESSORS = [
-    'deeplearning.clgen.preprocessors.cxx:ClangPreprocess',
-    'deeplearning.clgen.preprocessors.cxx:Compile',
-    'deeplearning.clgen.preprocessors.cxx'
-    ':NormalizeIdentifiers',
-    'deeplearning.clgen.preprocessors.common'
-    ':StripDuplicateEmptyLines',
-    'deeplearning.clgen.preprocessors.common'
-    ':MinimumLineCount3',
-    'deeplearning.clgen.preprocessors.common'
-    ':StripTrailingWhitespace',
-    'deeplearning.clgen.preprocessors.cxx:ClangFormat',
+  "deeplearning.clgen.preprocessors.cxx:ClangPreprocess",
+  "deeplearning.clgen.preprocessors.cxx:Compile",
+  "deeplearning.clgen.preprocessors.cxx" ":NormalizeIdentifiers",
+  "deeplearning.clgen.preprocessors.common" ":StripDuplicateEmptyLines",
+  "deeplearning.clgen.preprocessors.common" ":MinimumLineCount3",
+  "deeplearning.clgen.preprocessors.common" ":StripTrailingWhitespace",
+  "deeplearning.clgen.preprocessors.cxx:ClangFormat",
 ]
 # A full preprocessing pipeline for the OpenCL programming language.
 OPENCL_PREPROCESSORS = [
-    'deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim',
-    'deeplearning.clgen.preprocessors.opencl:Compile',
-    'deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers',
-    'deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes',
-    'deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines',
-    'deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype',
-    'deeplearning.clgen.preprocessors.common:StripTrailingWhitespace',
-    'deeplearning.clgen.preprocessors.opencl:ClangFormat',
-    'deeplearning.clgen.preprocessors.common:MinimumLineCount3',
+  "deeplearning.clgen.preprocessors.opencl:ClangPreprocessWithShim",
+  "deeplearning.clgen.preprocessors.opencl:Compile",
+  "deeplearning.clgen.preprocessors.opencl:NormalizeIdentifiers",
+  "deeplearning.clgen.preprocessors.opencl:StripDoubleUnderscorePrefixes",
+  "deeplearning.clgen.preprocessors.common:StripDuplicateEmptyLines",
+  "deeplearning.clgen.preprocessors.opencl:SanitizeKernelPrototype",
+  "deeplearning.clgen.preprocessors.common:StripTrailingWhitespace",
+  "deeplearning.clgen.preprocessors.opencl:ClangFormat",
+  "deeplearning.clgen.preprocessors.common:MinimumLineCount3",
 ]
 
 
-def _PreprocessBenchmarkInnerLoop(preprocessors_: typing.List[str],
-                                  code_in: str, code_out: str):
+def _PreprocessBenchmarkInnerLoop(
+  preprocessors_: typing.List[str], code_in: str, code_out: str
+):
   """Benchmark inner loop for code with expected output."""
   assert preprocessors.Preprocess(code_in, preprocessors_) == code_out
 
 
-def _PreprocessBenchmarkInnerLoopBadCode(preprocessors_: typing.List[str],
-                                         code_in):
+def _PreprocessBenchmarkInnerLoopBadCode(
+  preprocessors_: typing.List[str], code_in
+):
   """Benchmark inner loop for bad code."""
   with pytest.raises(errors.BadCodeException):
     preprocessors.Preprocess(code_in, preprocessors_)
@@ -89,8 +87,9 @@ int B(int a, char** b) {
 
 def test_benchmark_cxx_invalid_syntax(benchmark):
   """Benchmark preprocessing a C++ program with syntax errors."""
-  benchmark(_PreprocessBenchmarkInnerLoopBadCode, CXX_PREPROCESSORS,
-            'inva@asd!!!')
+  benchmark(
+    _PreprocessBenchmarkInnerLoopBadCode, CXX_PREPROCESSORS, "inva@asd!!!"
+  )
 
 
 def test_benchmark_opencl_small_program(benchmark):
@@ -109,15 +108,17 @@ kernel void A(global float* a, const int b) {
     a[c] = 0;
 }\
 """
-  benchmark(_PreprocessBenchmarkInnerLoop, OPENCL_PREPROCESSORS, code_in,
-            code_out)
+  benchmark(
+    _PreprocessBenchmarkInnerLoop, OPENCL_PREPROCESSORS, code_in, code_out
+  )
 
 
 def test_benchmark_opencl_invalid_syntax(benchmark):
   """Benchmark preprocessing an OpenCL program with syntax errors."""
-  benchmark(_PreprocessBenchmarkInnerLoopBadCode, OPENCL_PREPROCESSORS,
-            'inva@asd!!!')
+  benchmark(
+    _PreprocessBenchmarkInnerLoopBadCode, OPENCL_PREPROCESSORS, "inva@asd!!!"
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

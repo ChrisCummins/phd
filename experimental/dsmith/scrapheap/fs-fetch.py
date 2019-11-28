@@ -15,19 +15,18 @@ from labm8.py import fs
 
 if __name__ == "__main__":
   parser = ArgumentParser()
-  parser.add_argument("-H",
-                      "--hostname",
-                      type=str,
-                      default="cc1",
-                      help="MySQL database hostname")
+  parser.add_argument(
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
   parser.add_argument("classname", help="db.py table class: {GitHubProgram}")
   parser.add_argument("directory", help="directory containing kernels")
   parser.add_argument(
-      "-n",
-      "--num",
-      type=int,
-      default=-1,
-      help="max programs to import, no max if < 0 (default: -1)")
+    "-n",
+    "--num",
+    type=int,
+    default=-1,
+    help="max programs to import, no max if < 0 (default: -1)",
+  )
   args = parser.parse_args()
 
   # get a list of files to import
@@ -35,7 +34,7 @@ if __name__ == "__main__":
   shuffle(paths)
 
   if args.num > 1:  # limit number of imports if user requested
-    paths = paths[:args.num]
+    paths = paths[: args.num]
 
   # here be dragons.
   Class = eval(args.classname)

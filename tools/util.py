@@ -14,11 +14,11 @@
 from os import path
 
 REPO_ROOTS = {
-    'GERRIT': 'http://gerrit-maven.storage.googleapis.com',
-    'GERRIT_API': 'https://gerrit-api.commondatastorage.googleapis.com/release',
-    'MAVEN_CENTRAL': 'http://central.maven.org/maven2',
-    'MAVEN_LOCAL': 'file://' + path.expanduser('~/.m2/repository'),
-    'MAVEN_SNAPSHOT': 'https://oss.sonatype.org/content/repositories/snapshots',
+  "GERRIT": "http://gerrit-maven.storage.googleapis.com",
+  "GERRIT_API": "https://gerrit-api.commondatastorage.googleapis.com/release",
+  "MAVEN_CENTRAL": "http://central.maven.org/maven2",
+  "MAVEN_LOCAL": "file://" + path.expanduser("~/.m2/repository"),
+  "MAVEN_SNAPSHOT": "https://oss.sonatype.org/content/repositories/snapshots",
 }
 
 
@@ -33,19 +33,19 @@ def resolve_url(url, redirects):
   directly to maven_jar().
   Returns a resolved path for Maven artifact.
   """
-  s = url.find(':')
+  s = url.find(":")
   if s < 0:
     return url
-  scheme, rest = url[:s], url[s + 1:]
+  scheme, rest = url[:s], url[s + 1 :]
   if scheme in redirects:
     root = redirects[scheme]
   elif scheme in REPO_ROOTS:
     root = REPO_ROOTS[scheme]
   else:
     return url
-  root = root.rstrip('/')
-  rest = rest.lstrip('/')
-  return '/'.join([root, rest])
+  root = root.rstrip("/")
+  rest = rest.lstrip("/")
+  return "/".join([root, rest])
 
 
 def hash_file(hash_obj, path):
@@ -56,7 +56,7 @@ def hash_file(hash_obj, path):
   Returns:
     The passed-in hash_obj.
   """
-  with open(path, 'rb') as f:
+  with open(path, "rb") as f:
     while True:
       b = f.read(8192)
       if not b:

@@ -23,6 +23,7 @@ Base = declarative.declarative_base()
 
 class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of OpenCL kernels and their Grewe et. al. static values."""
+
   id: int = sql.Column(sql.Integer, primary_key=True)
   # The checksum of the 'src' column.
   src_sha256: str = sql.Column(sql.String(64), nullable=False)
@@ -33,39 +34,41 @@ class StaticFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   # Raw values of Grewe et. al. feature space.
   grewe_compute_operation_count: int = sql.Column(sql.Integer, nullable=False)
   grewe_rational_operation_count: int = sql.Column(sql.Integer, nullable=False)
-  grewe_global_memory_access_count: int = sql.Column(sql.Integer,
-                                                     nullable=False)
+  grewe_global_memory_access_count: int = sql.Column(
+    sql.Integer, nullable=False
+  )
   grewe_local_memory_access_count: int = sql.Column(sql.Integer, nullable=False)
-  grewe_coalesced_memory_access_count: int = sql.Column(sql.Integer,
-                                                        nullable=False)
+  grewe_coalesced_memory_access_count: int = sql.Column(
+    sql.Integer, nullable=False
+  )
   grewe_atomic_operation_count: int = sql.Column(sql.Integer, nullable=False)
 
   # The kernel source.
-  src: str = sql.Column(sql.UnicodeText().with_variant(sql.UnicodeText(2**31),
-                                                       'mysql'),
-                        nullable=False)
+  src: str = sql.Column(
+    sql.UnicodeText().with_variant(sql.UnicodeText(2 ** 31), "mysql"),
+    nullable=False,
+  )
 
   __table_args__ = (
-      # <src,origin> pairs must be unique.
-      sql.UniqueConstraint('src_sha256', 'origin',
-                           name='unique_src_for_origin'),)
+    # <src,origin> pairs must be unique.
+    sql.UniqueConstraint("src_sha256", "origin", name="unique_src_for_origin"),
+  )
 
   @classmethod
   def FromSrcOriginAndFeatures(
-      cls, src: str, origin: str,
-      features: grewe_features.GreweEtAlFeatures) -> 'StaticFeatures':
+    cls, src: str, origin: str, features: grewe_features.GreweEtAlFeatures
+  ) -> "StaticFeatures":
     """Instantiate a PreprocessedContentFile."""
     return cls(
-        src_sha256=hashlib.sha256(src.encode('utf-8')).hexdigest(),
-        origin=origin,
-        grewe_compute_operation_count=features.compute_operation_count,
-        grewe_rational_operation_count=features.rational_operation_count,
-        grewe_global_memory_access_count=features.global_memory_access_count,
-        grewe_local_memory_access_count=features.local_memory_access_count,
-        grewe_coalesced_memory_access_count=features.
-        coalesced_memory_access_count,
-        grewe_atomic_operation_count=features.atomic_operation_count,
-        src=src,
+      src_sha256=hashlib.sha256(src.encode("utf-8")).hexdigest(),
+      origin=origin,
+      grewe_compute_operation_count=features.compute_operation_count,
+      grewe_rational_operation_count=features.rational_operation_count,
+      grewe_global_memory_access_count=features.global_memory_access_count,
+      grewe_local_memory_access_count=features.local_memory_access_count,
+      grewe_coalesced_memory_access_count=features.coalesced_memory_access_count,
+      grewe_atomic_operation_count=features.atomic_operation_count,
+      src=src,
     )
 
 
@@ -83,14 +86,15 @@ class DynamicFeaturesDriver(enum.Enum):
 
 class DynamicFeatures(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of dynamic features."""
+
   id: int = sql.Column(sql.Integer, primary_key=True)
   # Many-to-one mapping of dynamic features per static features.
-  static_features_id: int = sql.Column(sql.Integer,
-                                       sql.ForeignKey(StaticFeatures.id),
-                                       nullable=False)
-  driver: DynamicFeaturesDriver = sql.Column(sql.Enum(DynamicFeaturesDriver),
-                                             nullable=False,
-                                             index=True)
+  static_features_id: int = sql.Column(
+    sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False
+  )
+  driver: DynamicFeaturesDriver = sql.Column(
+    sql.Enum(DynamicFeaturesDriver), nullable=False, index=True
+  )
 
   # The OpenClEnvironment.name of the device.
   opencl_env: str = sql.Column(sql.String(256), nullable=False, index=True)
@@ -118,25 +122,26 @@ class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   DynamicFeatures tables. It is purely a convenience to cache the results of the
   (expensive) aggregation queries in this table.
   """
+
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A grouping value.
-  cpu_gpu_mapping_set_name: str = sql.Column(sql.String(128),
-                                             nullable=False,
-                                             index=True)
+  cpu_gpu_mapping_set_name: str = sql.Column(
+    sql.String(128), nullable=False, index=True
+  )
 
-  static_features_id = sql.Column(sql.Integer,
-                                  sql.ForeignKey(StaticFeatures.id),
-                                  nullable=False)
+  static_features_id = sql.Column(
+    sql.Integer, sql.ForeignKey(StaticFeatures.id), nullable=False
+  )
 
   # The origin of the opencl kernel, e.g. "clgen" for a clgen-generated
   # benchmark.
   origin: str = sql.Column(sql.String(128), nullable=False)
 
   # Dynamic Features values.
-  driver: DynamicFeaturesDriver = sql.Column(sql.Enum(DynamicFeaturesDriver),
-                                             nullable=False,
-                                             index=True)
+  driver: DynamicFeaturesDriver = sql.Column(
+    sql.Enum(DynamicFeaturesDriver), nullable=False, index=True
+  )
   gsize: int = sql.Column(sql.Integer, nullable=False, index=True)
   wgsize: int = sql.Column(sql.Integer, nullable=False, index=True)
   transferred_bytes: int = sql.Column(sql.BigInteger, nullable=False)
@@ -162,25 +167,30 @@ class CpuGpuMappingSet(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   max_speedup: float = sql.Column(sql.Float, nullable=False)
 
 
-class CpuGpuClassificationResult(Base,
-                                 sqlutil.TablenameFromCamelCapsClassNameMixin):
+class CpuGpuClassificationResult(
+  Base, sqlutil.TablenameFromCamelCapsClassNameMixin
+):
   id: int = sql.Column(sql.Integer, primary_key=True)
   cpu_gpu_mapping_set_name: str = sql.Column(
-      sql.String(128),
-      sql.ForeignKey(CpuGpuMappingSet.cpu_gpu_mapping_set_name),
-      nullable=False)
+    sql.String(128),
+    sql.ForeignKey(CpuGpuMappingSet.cpu_gpu_mapping_set_name),
+    nullable=False,
+  )
 
   # A stringified JSON blob.
   dataset_stable_params: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
   dataset_stable_params_hexmd5: str = sql.Column(
-      sql.String(32), nullable=False)  # MD5(dataset_stable_params) hex.
+    sql.String(32), nullable=False
+  )  # MD5(dataset_stable_params) hex.
   # "Volatile" params are parameters that are assumed to change without
   # fundamentally affecting the behavior of the algorithm, e.g. a random seed
   # number.
   # A stringified JSON blob.
   dataset_volatile_params: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
 
   num_training_examples: int = sql.Column(sql.Integer, nullable=False)
   num_validation_examples: int = sql.Column(sql.Integer, nullable=False)
@@ -194,15 +204,18 @@ class CpuGpuClassificationResult(Base,
 
   # A stringified JSON blob.
   model_stable_params: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
   model_stable_params_hexmd5: str = sql.Column(
-      sql.String(32), nullable=False)  # MD5(model_stable_params) hex.
+    sql.String(32), nullable=False
+  )  # MD5(model_stable_params) hex.
   # "Volatile" params are parameters that are assumed to change without
   # fundamentally affecting the behavior of the algorithm, e.g. a random seed
   # number.
   # A stringified JSON blob.
   model_volatile_params: str = sql.Column(
-      sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False)
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
 
   # The elapsed time for training and inference.
   training_time_ms: int = sql.Column(sql.Integer, nullable=False)
@@ -211,9 +224,10 @@ class CpuGpuClassificationResult(Base,
 
 
 def _DatabaseImporterWorker(
-    path: pathlib.Path
-) -> typing.Tuple[typing.Optional[str], typing.Optional[grewe_features.
-                                                        GreweEtAlFeatures]]:
+  path: pathlib.Path,
+) -> typing.Tuple[
+  typing.Optional[str], typing.Optional[grewe_features.GreweEtAlFeatures]
+]:
   """Worker function for multi-processed database import."""
   try:
     features = list(grewe_features.ExtractFeaturesFromPath(path))
@@ -242,10 +256,10 @@ class Database(sqlutil.Database):
     super(Database, self).__init__(url, Base, *args, **kwargs)
 
   def ImportStaticFeaturesFromPaths(
-      self,
-      paths_to_import: typing.Iterable[pathlib.Path],
-      origin: str,
-      pool: typing.Optional[multiprocessing.Pool] = None
+    self,
+    paths_to_import: typing.Iterable[pathlib.Path],
+    origin: str,
+    pool: typing.Optional[multiprocessing.Pool] = None,
   ) -> typing.Tuple[int, int]:
     """Import a sequence of paths into the database.
 
@@ -264,9 +278,10 @@ class Database(sqlutil.Database):
     new_row_count = 0
     paths_to_import = list(paths_to_import)
     random.shuffle(paths_to_import)
-    app.Log(1, 'Importing %s files ...', humanize.Commas(len(paths_to_import)))
-    bar = progressbar.ProgressBar(max_value=len(paths_to_import),
-                                  redirect_stderr=True)
+    app.Log(1, "Importing %s files ...", humanize.Commas(len(paths_to_import)))
+    bar = progressbar.ProgressBar(
+      max_value=len(paths_to_import), redirect_stderr=True
+    )
 
     # Optionally multiprocess.
     if pool:
@@ -282,22 +297,27 @@ class Database(sqlutil.Database):
         with self.Session(commit=False) as session:
           obj = StaticFeatures.FromSrcOriginAndFeatures(src, origin, features)
           # Check if it already exists in the database.
-          exists = session.query(StaticFeatures) \
-            .filter_by(src_sha256=obj.src_sha256, origin=origin).first()
+          exists = (
+            session.query(StaticFeatures)
+            .filter_by(src_sha256=obj.src_sha256, origin=origin)
+            .first()
+          )
           if not exists:
             session.add(obj)
             new_row_count += 1
             try:
               session.commit()
             except (sql.exc.OperationalError, sql.exc.DataError) as e:
-              app.Warning('Failed to commit database entry: %s', e)
+              app.Warning("Failed to commit database entry: %s", e)
 
     return success_count, new_row_count
 
   @staticmethod
-  def AggregateRuntimes(session: sqlutil.Session,
-                        opencl_env: typing.Optional[str] = None,
-                        min_run_count: int = 30) -> sqlutil.Query:
+  def AggregateRuntimes(
+    session: sqlutil.Session,
+    opencl_env: typing.Optional[str] = None,
+    min_run_count: int = 30,
+  ) -> sqlutil.Query:
     """Produce a query which generates a table of runtime aggregates.
 
     Args:
@@ -309,20 +329,23 @@ class Database(sqlutil.Database):
       A query.
     """
     query = session.query(
-        DynamicFeatures.static_features_id,
-        DynamicFeatures.driver,
-        DynamicFeatures.gsize,
-        DynamicFeatures.wgsize,
-        DynamicFeatures.transferred_bytes,
-        DynamicFeatures.transfer_time_ns,
-        DynamicFeatures.kernel_time_ns,
-        # Runtime is the summation of average transfer and kernel execution
-        # times.
-        (DynamicFeatures.transfer_time_ns + DynamicFeatures.kernel_time_ns
-        ).label('runtime_ns'),
-        DynamicFeatures.run_count,
-    ).filter(DynamicFeatures.outcome == 'PASS',
-             DynamicFeatures.run_count >= min_run_count)
+      DynamicFeatures.static_features_id,
+      DynamicFeatures.driver,
+      DynamicFeatures.gsize,
+      DynamicFeatures.wgsize,
+      DynamicFeatures.transferred_bytes,
+      DynamicFeatures.transfer_time_ns,
+      DynamicFeatures.kernel_time_ns,
+      # Runtime is the summation of average transfer and kernel execution
+      # times.
+      (DynamicFeatures.transfer_time_ns + DynamicFeatures.kernel_time_ns).label(
+        "runtime_ns"
+      ),
+      DynamicFeatures.run_count,
+    ).filter(
+      DynamicFeatures.outcome == "PASS",
+      DynamicFeatures.run_count >= min_run_count,
+    )
 
     if opencl_env:
       query = query.filter(DynamicFeatures.opencl_env == opencl_env)
@@ -330,11 +353,9 @@ class Database(sqlutil.Database):
     return query
 
   @classmethod
-  def CpuGpuOracleMapping(cls,
-                          session: sqlutil.Session,
-                          cpu: str,
-                          gpu: str,
-                          min_run_count: int = 30) -> sqlutil.Query:
+  def CpuGpuOracleMapping(
+    cls, session: sqlutil.Session, cpu: str, gpu: str, min_run_count: int = 30
+  ) -> sqlutil.Query:
     """Produce a query that returns a CPU/GPU oracle mapping table.
 
     Args:
@@ -346,43 +367,56 @@ class Database(sqlutil.Database):
     Returns:
       A query.
     """
-    cpu_q = cls.AggregateRuntimes(session, cpu,
-                                  min_run_count).subquery(name='cpu')
-    gpu_q = cls.AggregateRuntimes(session, gpu,
-                                  min_run_count).subquery(name='gpu')
+    cpu_q = cls.AggregateRuntimes(session, cpu, min_run_count).subquery(
+      name="cpu"
+    )
+    gpu_q = cls.AggregateRuntimes(session, gpu, min_run_count).subquery(
+      name="gpu"
+    )
 
     return session.query(
-        cpu_q.c.static_features_id,
-        cpu_q.c.driver,
-        cpu_q.c.gsize,
-        cpu_q.c.wgsize,
-        cpu_q.c.transferred_bytes,
-        cpu_q.c.runtime_ns.label('cpu_runtime_ns'),
-        gpu_q.c.runtime_ns.label('gpu_runtime_ns'),
-        sql.func.if_(cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
-                     sql.sql.literal('CPU'),
-                     sql.sql.literal('GPU')).label("oracle"),
-        sql.func.if_(cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
-                     cpu_q.c.runtime_ns,
-                     gpu_q.c.runtime_ns).label("oracle_runtime_ns"),
-        sql.func.if_(
-            cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
-            gpu_q.c.runtime_ns / cpu_q.c.runtime_ns,
-            cpu_q.c.runtime_ns / gpu_q.c.runtime_ns).label("max_speedup"),
+      cpu_q.c.static_features_id,
+      cpu_q.c.driver,
+      cpu_q.c.gsize,
+      cpu_q.c.wgsize,
+      cpu_q.c.transferred_bytes,
+      cpu_q.c.runtime_ns.label("cpu_runtime_ns"),
+      gpu_q.c.runtime_ns.label("gpu_runtime_ns"),
+      sql.func.if_(
+        cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
+        sql.sql.literal("CPU"),
+        sql.sql.literal("GPU"),
+      ).label("oracle"),
+      sql.func.if_(
+        cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
+        cpu_q.c.runtime_ns,
+        gpu_q.c.runtime_ns,
+      ).label("oracle_runtime_ns"),
+      sql.func.if_(
+        cpu_q.c.runtime_ns < gpu_q.c.runtime_ns,
+        gpu_q.c.runtime_ns / cpu_q.c.runtime_ns,
+        cpu_q.c.runtime_ns / gpu_q.c.runtime_ns,
+      ).label("max_speedup"),
     ).join(
-        gpu_q,
-        sql.sql.and_(
-            cpu_q.c.static_features_id == gpu_q.c.static_features_id,
-            cpu_q.c.driver == gpu_q.c.driver,
-            cpu_q.c.gsize == gpu_q.c.gsize,
-            cpu_q.c.wgsize == gpu_q.c.wgsize,
-            cpu_q.c.transferred_bytes == gpu_q.c.transferred_bytes,
-        ))
+      gpu_q,
+      sql.sql.and_(
+        cpu_q.c.static_features_id == gpu_q.c.static_features_id,
+        cpu_q.c.driver == gpu_q.c.driver,
+        cpu_q.c.gsize == gpu_q.c.gsize,
+        cpu_q.c.wgsize == gpu_q.c.wgsize,
+        cpu_q.c.transferred_bytes == gpu_q.c.transferred_bytes,
+      ),
+    )
 
   @classmethod
-  def CreateCpuGpuDataset(cls, session: sqlutil.Session, dataset_name: str,
-                          cpu: str, gpu: str,
-                          min_run_count: int) -> sqlutil.Query:
+  def CreateCpuGpuDataset(
+    cls,
+    session: sqlutil.Session,
+    dataset_name: str,
+    cpu: str,
+    gpu: str,
+    min_run_count: int,
+  ) -> sqlutil.Query:
     """Create a labelled CPU/GPU dataset.
 
     Args:
@@ -396,43 +430,52 @@ class Database(sqlutil.Database):
     Raises:
       ValueError: If dataset_name already exists in the mapping table.
     """
-    if session.query(CpuGpuMappingSet.cpu_gpu_mapping_set_name)\
-        .filter(CpuGpuMappingSet.cpu_gpu_mapping_set_name == dataset_name)\
-        .first():
+    if (
+      session.query(CpuGpuMappingSet.cpu_gpu_mapping_set_name)
+      .filter(CpuGpuMappingSet.cpu_gpu_mapping_set_name == dataset_name)
+      .first()
+    ):
       raise ValueError("Dataset name {dataset_name} already exists")
 
-    devmap = cls.CpuGpuOracleMapping(session, cpu, gpu,
-                                     min_run_count).subquery(name='devmap')
+    devmap = cls.CpuGpuOracleMapping(session, cpu, gpu, min_run_count).subquery(
+      name="devmap"
+    )
 
-    grewe1 = (devmap.c.transferred_bytes /
-              (StaticFeatures.grewe_compute_operation_count +
-               StaticFeatures.grewe_global_memory_access_count))
-    grewe2 = (StaticFeatures.grewe_coalesced_memory_access_count /
-              StaticFeatures.grewe_global_memory_access_count)
-    grewe3 = (devmap.c.wgsize *
-              (StaticFeatures.grewe_local_memory_access_count /
-               StaticFeatures.grewe_global_memory_access_count))
-    grewe4 = (StaticFeatures.grewe_compute_operation_count /
-              StaticFeatures.grewe_global_memory_access_count)
+    grewe1 = devmap.c.transferred_bytes / (
+      StaticFeatures.grewe_compute_operation_count
+      + StaticFeatures.grewe_global_memory_access_count
+    )
+    grewe2 = (
+      StaticFeatures.grewe_coalesced_memory_access_count
+      / StaticFeatures.grewe_global_memory_access_count
+    )
+    grewe3 = devmap.c.wgsize * (
+      StaticFeatures.grewe_local_memory_access_count
+      / StaticFeatures.grewe_global_memory_access_count
+    )
+    grewe4 = (
+      StaticFeatures.grewe_compute_operation_count
+      / StaticFeatures.grewe_global_memory_access_count
+    )
 
     return session.query(
-        devmap.c.gsize,
-        devmap.c.wgsize,
-        # devmap column must appear first to anchor the FROM object in the join.
-        sql.sql.literal(dataset_name).label('cpu_gpu_mapping_set_name'),
-        StaticFeatures.id.label('static_features_id'),
-        StaticFeatures.origin,
-        devmap.c.driver,
-        devmap.c.transferred_bytes,
-        grewe1.label('grewe1'),
-        grewe2.label('grewe2'),
-        grewe3.label('grewe3'),
-        grewe4.label('grewe4'),
-        sql.sql.literal(cpu).label('cpu_opencl_env'),
-        sql.sql.literal(gpu).label('gpu_opencl_env'),
-        devmap.c.cpu_runtime_ns,
-        devmap.c.gpu_runtime_ns,
-        devmap.c.oracle_runtime_ns,
-        devmap.c.oracle,
-        devmap.c.max_speedup,
+      devmap.c.gsize,
+      devmap.c.wgsize,
+      # devmap column must appear first to anchor the FROM object in the join.
+      sql.sql.literal(dataset_name).label("cpu_gpu_mapping_set_name"),
+      StaticFeatures.id.label("static_features_id"),
+      StaticFeatures.origin,
+      devmap.c.driver,
+      devmap.c.transferred_bytes,
+      grewe1.label("grewe1"),
+      grewe2.label("grewe2"),
+      grewe3.label("grewe3"),
+      grewe4.label("grewe4"),
+      sql.sql.literal(cpu).label("cpu_opencl_env"),
+      sql.sql.literal(gpu).label("gpu_opencl_env"),
+      devmap.c.cpu_runtime_ns,
+      devmap.c.gpu_runtime_ns,
+      devmap.c.oracle_runtime_ns,
+      devmap.c.oracle,
+      devmap.c.max_speedup,
     ).join(StaticFeatures)

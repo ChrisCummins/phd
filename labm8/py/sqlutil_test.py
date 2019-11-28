@@ -28,65 +28,66 @@ def test_CreateEngine_sqlite_not_found(tempdir: pathlib.Path):
   """Test DatabaseNotFound for non-existent SQLite database."""
   with pytest.raises(sqlutil.DatabaseNotFound) as e_ctx:
     sqlutil.CreateEngine(
-        f'sqlite:///{tempdir.absolute()}/db.db',
-        must_exist=True,
+      f"sqlite:///{tempdir.absolute()}/db.db", must_exist=True,
     )
-  assert e_ctx.value.url == f'sqlite:///{tempdir.absolute()}/db.db'
-  assert str(e_ctx.value) == (f'Database not found: '
-                              f"'sqlite:///{tempdir.absolute()}/db.db'")
+  assert e_ctx.value.url == f"sqlite:///{tempdir.absolute()}/db.db"
+  assert str(e_ctx.value) == (
+    f"Database not found: " f"'sqlite:///{tempdir.absolute()}/db.db'"
+  )
 
 
 def test_CreateEngine_sqlite_invalid_relpath():
   """Test that relative paths are disabled."""
   with pytest.raises(ValueError) as e_ctx:
-    sqlutil.CreateEngine(f'sqlite:///relative.db')
-  assert str(e_ctx.value) == 'Relative path to SQLite database is not allowed'
+    sqlutil.CreateEngine(f"sqlite:///relative.db")
+  assert str(e_ctx.value) == "Relative path to SQLite database is not allowed"
 
 
 def test_CreateEngine_error_if_sqlite_in_memory_must_exist():
   """Error is raised if in-memory "must exist" database requested."""
   with pytest.raises(ValueError) as e_ctx:
-    sqlutil.CreateEngine('sqlite://', must_exist=True)
-  assert str(e_ctx.value) == ('must_exist=True not valid for in-memory '
-                              'SQLite database')
+    sqlutil.CreateEngine("sqlite://", must_exist=True)
+  assert str(e_ctx.value) == (
+    "must_exist=True not valid for in-memory " "SQLite database"
+  )
 
 
 def test_CreateEngine_sqlite_created(tempdir: pathlib.Path):
   """Test that SQLite database is found."""
-  sqlutil.CreateEngine(f'sqlite:///{tempdir}/db.db')
-  assert (tempdir / 'db.db').is_file()
+  sqlutil.CreateEngine(f"sqlite:///{tempdir}/db.db")
+  assert (tempdir / "db.db").is_file()
 
 
 def test_CreateEngine_sqlite_from_file(tempdir: pathlib.Path):
   """Test file:// sqlite URL."""
-  db_path = tempdir / 'sqlite.db'
-  with open(tempdir / 'sqlite.txt', 'w') as f:
-    f.write(f'sqlite:///{db_path}')
-  sqlutil.CreateEngine(f'file://{tempdir}/sqlite.txt')
+  db_path = tempdir / "sqlite.db"
+  with open(tempdir / "sqlite.txt", "w") as f:
+    f.write(f"sqlite:///{db_path}")
+  sqlutil.CreateEngine(f"file://{tempdir}/sqlite.txt")
   assert db_path.is_file()
 
 
 def test_CreateEngine_sqlite_from_file_with_suffix(tempdir: pathlib.Path):
   """Test file:// sqlite URL with suffix."""
-  db_path = tempdir / 'sqlite.db'
-  with open(tempdir / 'sqlite.txt', 'w') as f:
-    f.write(f'sqlite:///{tempdir}')
-  sqlutil.CreateEngine(f'file://{tempdir}/sqlite.txt?/sqlite.db')
+  db_path = tempdir / "sqlite.db"
+  with open(tempdir / "sqlite.txt", "w") as f:
+    f.write(f"sqlite:///{tempdir}")
+  sqlutil.CreateEngine(f"file://{tempdir}/sqlite.txt?/sqlite.db")
   assert db_path.is_file()
 
 
 def test_ExpandFileUrl_unmodified():
-  assert sqlutil.ExpandFileUrl('sqlite:///tmp/foo.db') == 'sqlite:///tmp/foo.db'
+  assert sqlutil.ExpandFileUrl("sqlite:///tmp/foo.db") == "sqlite:///tmp/foo.db"
 
 
 def test_ExpandFileUrl_path_not_found(tempdir: pathlib.Path):
   with pytest.raises(FileNotFoundError):
-    sqlutil.ExpandFileUrl(f'file:///{tempdir}/file.txt')
+    sqlutil.ExpandFileUrl(f"file:///{tempdir}/file.txt")
 
 
 def test_ExpandFileUrl_path_is_directory(tempdir: pathlib.Path):
   with pytest.raises(FileNotFoundError):
-    sqlutil.ExpandFileUrl(f'file:///{tempdir}')
+    sqlutil.ExpandFileUrl(f"file:///{tempdir}")
 
 
 def test_AllColumnNames_two_fields():
@@ -95,10 +96,11 @@ def test_AllColumnNames_two_fields():
 
   class Table(base, sqlutil.TablenameFromClassNameMixin):
     """A table containing two columns."""
+
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
-  assert sqlutil.ColumnNames(Table) == ['col_a', 'col_b']
+  assert sqlutil.ColumnNames(Table) == ["col_a", "col_b"]
 
 
 def test_AllColumnNames_two_fields_model_instance():
@@ -107,11 +109,12 @@ def test_AllColumnNames_two_fields_model_instance():
 
   class Table(base, sqlutil.TablenameFromClassNameMixin):
     """A table containing two columns."""
+
     col_a = sql.Column(sql.Integer, primary_key=True)
     col_b = sql.Column(sql.Integer)
 
   instance = Table(col_a=1, col_b=2)
-  assert sqlutil.ColumnNames(instance) == ['col_a', 'col_b']
+  assert sqlutil.ColumnNames(instance) == ["col_a", "col_b"]
 
 
 def test_AllColumnNames_invalid_object():
@@ -130,10 +133,11 @@ def test_Session_GetOrAdd():
 
   class Table(base, sqlutil.TablenameFromClassNameMixin):
     """A table containing a single 'value' primary key."""
+
     value = sql.Column(sql.Integer, primary_key=True)
 
   # Create the database.
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
 
   # Create an entry in the database.
   with db.Session(commit=True) as s:
@@ -161,10 +165,11 @@ def test_Close_raises_error_on_session():
 
   class Table(base, sqlutil.TablenameFromClassNameMixin):
     """A table containing a single 'value' primary key."""
+
     value = sql.Column(sql.Integer, primary_key=True)
 
   # Create the database.
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   db.Close()
   with pytest.raises(sql.exc.OperationalError):
     # Try and perform a query on the closed database.
@@ -173,8 +178,7 @@ def test_Close_raises_error_on_session():
 
 
 class AbstractTestMessage(
-    sqlutil.ProtoBackedMixin,
-    sqlutil.TablenameFromClassNameMixin,
+  sqlutil.ProtoBackedMixin, sqlutil.TablenameFromClassNameMixin,
 ):
   """A table containing a single 'value' primary key."""
 
@@ -192,8 +196,8 @@ class AbstractTestMessage(
   def FromProto(proto) -> typing.Dict[str, typing.Any]:
     """Instantiate an object from protocol buffer message."""
     return {
-        'string': proto.string,
-        'number': proto.number,
+      "string": proto.string,
+      "number": proto.number,
     }
 
 
@@ -204,9 +208,9 @@ def test_ProtoBackedMixin_FromProto():
   class TestMessage(AbstractTestMessage, base):
     pass
 
-  proto = test_protos_pb2.TestMessage(string='Hello, world!', number=42)
+  proto = test_protos_pb2.TestMessage(string="Hello, world!", number=42)
   row = TestMessage(**TestMessage.FromProto(proto))
-  assert row.string == 'Hello, world!'
+  assert row.string == "Hello, world!"
   assert row.number == 42
 
 
@@ -218,8 +222,8 @@ def test_ProtoBackedMixin_SetProto():
     pass
 
   proto = test_protos_pb2.TestMessage()
-  TestMessage(string='Hello, world!', number=42).SetProto(proto)
-  assert proto.string == 'Hello, world!'
+  TestMessage(string="Hello, world!", number=42).SetProto(proto)
+  assert proto.string == "Hello, world!"
   assert proto.number == 42
 
 
@@ -230,9 +234,9 @@ def test_ProtoBackedMixin_ToProto():
   class TestMessage(AbstractTestMessage, base):
     pass
 
-  row = TestMessage(string='Hello, world!', number=42)
+  row = TestMessage(string="Hello, world!", number=42)
   proto = row.ToProto()
-  assert proto.string == 'Hello, world!'
+  assert proto.string == "Hello, world!"
   assert proto.number == 42
 
 
@@ -243,11 +247,11 @@ def test_ProtoBackedMixin_FromFile(tempdir: pathlib.Path):
   class TestMessage(AbstractTestMessage, base):
     pass
 
-  with open(tempdir / 'proto.pbtxt', 'w') as f:
+  with open(tempdir / "proto.pbtxt", "w") as f:
     f.write('string: "Hello, world!"')
 
-  row = TestMessage(**TestMessage.FromFile(tempdir / 'proto.pbtxt'))
-  assert row.string == 'Hello, world!'
+  row = TestMessage(**TestMessage.FromFile(tempdir / "proto.pbtxt"))
+  assert row.string == "Hello, world!"
 
 
 def test_ColumnTypes_BinaryArray():
@@ -255,13 +259,13 @@ def test_ColumnTypes_BinaryArray():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     primary_key = sql.Column(sql.Integer, primary_key=True)
     col = sql.Column(sqlutil.ColumnTypes.BinaryArray(16))
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with db.Session(commit=True) as s:
-    s.add(Table(col='abc'.encode('utf-8')))
+    s.add(Table(col="abc".encode("utf-8")))
 
 
 def test_ColumnTypes_UnboundedUnicodeText():
@@ -269,13 +273,13 @@ def test_ColumnTypes_UnboundedUnicodeText():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     primary_key = sql.Column(sql.Integer, primary_key=True)
     col = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText())
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with db.Session(commit=True) as s:
-    s.add(Table(col='abc'))
+    s.add(Table(col="abc"))
 
 
 def test_Random_order_by():
@@ -283,10 +287,10 @@ def test_Random_order_by():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col = sql.Column(sql.Integer, primary_key=1)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with db.Session() as s:
     s.add(Table(col=1))
     s.add(Table(col=2))
@@ -301,10 +305,10 @@ def test_ResilientAddManyAndCommit_no_conflicts():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col = sql.Column(sql.Integer, primary_key=1)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   mapped = [Table(col=1), Table(col=2), Table(col=3)]
   assert not sqlutil.ResilientAddManyAndCommit(db, mapped)
 
@@ -316,20 +320,20 @@ def test_ResilientAddManyAndCommit_conflicting_primary_key():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col = sql.Column(sql.Integer, primary_key=1)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
 
   # Adding objects with conflicting primary keys will raise an error.
   # In which case, one will be committed succesfully. The other will be
   # returned.
   mapped = [
-      Table(col=1),
-      Table(col=1),
-      Table(col=1),
-      Table(col=1),
-      Table(col=1),
+    Table(col=1),
+    Table(col=1),
+    Table(col=1),
+    Table(col=1),
+    Table(col=1),
   ]
   failures = sqlutil.ResilientAddManyAndCommit(db, mapped)
 
@@ -347,10 +351,10 @@ def test_BufferedDatabaseWriter_add_one():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col = sql.Column(sql.Integer, primary_key=1)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with sqlutil.BufferedDatabaseWriter(db).Session() as writer:
     writer.AddOne(Table(col=1))
     writer.AddOne(Table(col=2))
@@ -364,10 +368,10 @@ def test_BufferedDatabaseWriter_add_many():
   base = declarative.declarative_base()
 
   class Table(base):
-    __tablename__ = 'test'
+    __tablename__ = "test"
     col = sql.Column(sql.Integer, primary_key=1)
 
-  db = sqlutil.Database('sqlite://', base)
+  db = sqlutil.Database("sqlite://", base)
   with sqlutil.BufferedDatabaseWriter(db).Session() as writer:
     writer.AddMany([Table(col=1), Table(col=2), Table(col=3)])
 
@@ -381,8 +385,8 @@ def test_PluralTablenameFromCamelCapsClassNameMixin():
   class FooBar(base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     col = sql.Column(sql.Integer, primary_key=1)
 
-  assert FooBar.__tablename__ == 'foo_bars'
+  assert FooBar.__tablename__ == "foo_bars"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

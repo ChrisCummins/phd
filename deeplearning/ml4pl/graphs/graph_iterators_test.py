@@ -9,21 +9,21 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def graph():
   g = nx.MultiDiGraph()
-  g.add_node('A', type='statement')
-  g.add_node('B', type='statement')
-  g.add_node('C', type='statement')
-  g.add_node('D', type='statement')
-  g.add_node('%1', type='identifier')
-  g.add_node('root', type='magic')
-  g.add_edge('A', 'B', flow='control')
-  g.add_edge('B', 'C', flow='control')
-  g.add_edge('C', 'D', flow='control')
-  g.add_edge('root', 'A', flow='call')
-  g.add_edge('A', '%1', flow='data')
-  g.add_edge('%1', 'D', flow='data')
+  g.add_node("A", type="statement")
+  g.add_node("B", type="statement")
+  g.add_node("C", type="statement")
+  g.add_node("D", type="statement")
+  g.add_node("%1", type="identifier")
+  g.add_node("root", type="magic")
+  g.add_edge("A", "B", flow="control")
+  g.add_edge("B", "C", flow="control")
+  g.add_edge("C", "D", flow="control")
+  g.add_edge("root", "A", flow="call")
+  g.add_edge("A", "%1", flow="data")
+  g.add_edge("%1", "D", flow="data")
   return g
 
 
@@ -51,5 +51,5 @@ def test_DataFlowEdgeIterator(graph):
   assert len(list(iterators.DataFlowEdgeIterator(graph))) == 2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

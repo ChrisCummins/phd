@@ -27,7 +27,7 @@ class NotInWonderland(EnvironmentError):
 
 
 def Id() -> int:
-  id = os.environ.get('ALICE_XDATA_ID')
+  id = os.environ.get("ALICE_XDATA_ID")
   if not id:
     raise NotImplementedError
   return id

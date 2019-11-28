@@ -18,4 +18,4 @@ def FormatSql(text: str) -> str:
   Returns:
     The formatted SQL string.
   """
-  return sqlparse.format(text, reindent=True, keyword_case='upper')
+  return sqlparse.format(text, reindent=True, keyword_case="upper")

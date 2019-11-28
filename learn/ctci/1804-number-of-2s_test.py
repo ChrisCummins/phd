@@ -28,5 +28,5 @@ def test_main():
   assert 9 == count_2s(25)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

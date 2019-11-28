@@ -13,20 +13,22 @@ from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('working_dir',
-                  '/mnt/cc/data/experimental/deeplearning/polyglot/clgen',
-                  'Path to CLgen working directory')
+app.DEFINE_string(
+  "working_dir",
+  "/mnt/cc/data/experimental/deeplearning/polyglot/clgen",
+  "Path to CLgen working directory",
+)
 
 # Paths to protos within //experimental/polyglot/baselines.
 LANGUAGES = {
-    'opencl': {
-        'corpuses': ['opencl-char', 'opencl-tok'],
-        'samplers': ['opencl-1.0', 'opencl-0.5'],
-    },
-    'java': {
-        'corpuses': ['java-char', 'java-tok'],
-        'samplers': ['java-1.0', 'java-0.5'],
-    }
+  "opencl": {
+    "corpuses": ["opencl-char", "opencl-tok"],
+    "samplers": ["opencl-1.0", "opencl-0.5"],
+  },
+  "java": {
+    "corpuses": ["java-char", "java-tok"],
+    "samplers": ["java-1.0", "java-0.5"],
+  },
 }
 
 # The CLgen model to base all permutations off, and the permutation options.
@@ -72,26 +74,32 @@ def EnumerateModels() -> typing.List[model_pb2.Model]:
 
 
 def EnumerateLanguageInstanceConfigs(
-    language: typing.Dict[str, typing.List[str]]
+  language: typing.Dict[str, typing.List[str]]
 ) -> typing.List[clgen_pb2.Instance]:
   """Enumerate the options for a language."""
   configs = []
-  for corpus, model, sampler in itertools.product(language['corpuses'],
-                                                  EnumerateModels(),
-                                                  language['samplers']):
+  for corpus, model, sampler in itertools.product(
+    language["corpuses"], EnumerateModels(), language["samplers"]
+  ):
     instance_config = clgen_pb2.Instance()
     instance_config.working_dir = FLAGS.working_dir
     instance_config.model.CopyFrom(model)
     instance_config.model.corpus.CopyFrom(
-        pbutil.FromFile(
-            bazelutil.DataPath(
-                f'phd/experimental/deeplearning/polyglot/corpuses/{corpus}.pbtxt'
-            ), corpus_pb2.Corpus()))
+      pbutil.FromFile(
+        bazelutil.DataPath(
+          f"phd/experimental/deeplearning/polyglot/corpuses/{corpus}.pbtxt"
+        ),
+        corpus_pb2.Corpus(),
+      )
+    )
     instance_config.sampler.CopyFrom(
-        pbutil.FromFile(
-            bazelutil.DataPath(
-                f'phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt'
-            ), sampler_pb2.Sampler()))
+      pbutil.FromFile(
+        bazelutil.DataPath(
+          f"phd/experimental/deeplearning/polyglot/samplers/{sampler}.pbtxt"
+        ),
+        sampler_pb2.Sampler(),
+      )
+    )
     configs.append(instance_config)
   return configs
 
@@ -111,14 +119,15 @@ def GetInstances() -> typing.List[clgen.Instance]:
 
 def RewriteContentIds(instances: typing.List[clgen.Instance]):
   for instance in instances:
-    instance.model.config.corpus.ClearField('contentfiles')
+    instance.model.config.corpus.ClearField("contentfiles")
     with instance.Session():
       instance.model.corpus.Create()
     instance.model.config.corpus.content_id = instance.model.corpus.content_id
 
 
 def GetInstancesConfig(
-    instances: typing.List[clgen.Instance]) -> clgen_pb2.Instances:
+  instances: typing.List[clgen.Instance],
+) -> clgen_pb2.Instances:
   """Get an Instances proto from a list of instances."""
   config = clgen_pb2.Instances()
   config.instance.extend(instance.ToProto() for instance in instances)
@@ -133,5 +142,5 @@ def main(argv):
   print(GetInstancesConfig(instances))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

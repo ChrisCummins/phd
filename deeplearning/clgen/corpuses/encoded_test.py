@@ -29,23 +29,23 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def abc_atomizer() -> atomizers.AsciiCharacterAtomizer:
   """A test fixture which returns a simply atomizer."""
-  return atomizers.AsciiCharacterAtomizer.FromText('abcde')
+  return atomizers.AsciiCharacterAtomizer.FromText("abcde")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def abc_preprocessed() -> preprocessed.PreprocessedContentFile:
   """A test fixture which returns a preprocessed content file."""
-  return preprocessed.PreprocessedContentFile(id=123, text='aabbccddee')
+  return preprocessed.PreprocessedContentFile(id=123, text="aabbccddee")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def temp_db() -> encoded.EncodedContentFiles:
   """A test fixture which returns an empty EncodedContentFiles db."""
   with tempfile.TemporaryDirectory() as d:
-    yield encoded.EncodedContentFiles(f'sqlite:///{d}/test.db')
+    yield encoded.EncodedContentFiles(f"sqlite:///{d}/test.db")
 
 
 # EncodedContentFile.FromPreprocessed() tests.
@@ -53,48 +53,53 @@ def temp_db() -> encoded.EncodedContentFiles:
 
 def test_EncodedContentFile_FromPreprocessed_id(abc_atomizer, abc_preprocessed):
   """Test that id is the same as the preprocessed content file."""
-  enc = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                    abc_atomizer,
-                                                    eof='a')
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, eof="a"
+  )
   assert enc.id == abc_preprocessed.id
 
 
 def test_EncodedContentFile_FromPreprocessed_indices_array(
-    abc_atomizer, abc_preprocessed):
+  abc_atomizer, abc_preprocessed
+):
   """Test that sha256 is the same as the preprocessed content file."""
-  enc = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                    abc_atomizer,
-                                                    eof='a')
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, eof="a"
+  )
   np.testing.assert_array_equal(
-      np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0], dtype=np.int32),
-      enc.indices_array)
+    np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0], dtype=np.int32),
+    enc.indices_array,
+  )
 
 
-def test_EncodedContentFile_FromPreprocessed_tokencount(abc_atomizer,
-                                                        abc_preprocessed):
+def test_EncodedContentFile_FromPreprocessed_tokencount(
+  abc_atomizer, abc_preprocessed
+):
   """Test that tokencount is the length of the array (minus EOF marker)."""
-  enc = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                    abc_atomizer,
-                                                    eof='a')
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, eof="a"
+  )
   # Single character encoding, so tokencount is the length of the string.
-  assert len('aabbccddee') == enc.tokencount
+  assert len("aabbccddee") == enc.tokencount
 
 
 def test_EncodedContentFile_FromPreprocessed_encoding_time_ms(
-    abc_atomizer, abc_preprocessed):
+  abc_atomizer, abc_preprocessed
+):
   """Test that encoding time is set."""
-  enc = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                    abc_atomizer,
-                                                    eof='a')
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, eof="a"
+  )
   assert enc.encoding_time_ms is not None
 
 
-def test_EncodedContentFile_FromPreprocessed_date_added(abc_atomizer,
-                                                        abc_preprocessed):
+def test_EncodedContentFile_FromPreprocessed_date_added(
+  abc_atomizer, abc_preprocessed
+):
   """Test that date_added is set."""
-  enc = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                    abc_atomizer,
-                                                    eof='a')
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, eof="a"
+  )
   assert enc.date_added
 
 
@@ -102,13 +107,15 @@ def test_EncodedContentFile_FromPreprocessed_date_added(abc_atomizer,
 
 
 def test_EncodedContentFiles_indices_array_equivalence(
-    temp_db: encoded.EncodedContentFiles,
-    abc_preprocessed: preprocessed.PreprocessedContentFile,
-    abc_atomizer: atomizers.AsciiCharacterAtomizer):
+  temp_db: encoded.EncodedContentFiles,
+  abc_preprocessed: preprocessed.PreprocessedContentFile,
+  abc_atomizer: atomizers.AsciiCharacterAtomizer,
+):
   """Test that indices_array is equivalent across db sessions."""
   # Session 1: Add encoded file.
-  enc = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                    abc_atomizer, 'a')
+  enc = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, "a"
+  )
   with temp_db.Session(commit=True) as session:
     array_in = enc.indices_array
     session.add(enc)
@@ -119,20 +126,24 @@ def test_EncodedContentFiles_indices_array_equivalence(
     array_out = enc.indices_array
 
   np.testing.assert_array_equal(
-      np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0], dtype=np.int32), array_in)
+    np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0], dtype=np.int32), array_in
+  )
   np.testing.assert_array_equal(array_in, array_out)
 
 
 def test_EncodedContentFiles_token_count(
-    temp_db: encoded.EncodedContentFiles,
-    abc_preprocessed: preprocessed.PreprocessedContentFile,
-    abc_atomizer: atomizers.AsciiCharacterAtomizer):
+  temp_db: encoded.EncodedContentFiles,
+  abc_preprocessed: preprocessed.PreprocessedContentFile,
+  abc_atomizer: atomizers.AsciiCharacterAtomizer,
+):
   """Test that token_count property returns sum of token_count column."""
-  enc1 = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                     abc_atomizer, 'a')
+  enc1 = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, "a"
+  )
   abc_preprocessed.id += 1
-  enc2 = encoded.EncodedContentFile.FromPreprocessed(abc_preprocessed,
-                                                     abc_atomizer, 'a')
+  enc2 = encoded.EncodedContentFile.FromPreprocessed(
+    abc_preprocessed, abc_atomizer, "a"
+  )
   with temp_db.Session(commit=True) as session:
     session.add(enc1)
     session.add(enc2)
@@ -141,15 +152,17 @@ def test_EncodedContentFiles_token_count(
 
 
 def test_EncodedContentFiles_empty_preprocessed_db(
-    temp_db: encoded.EncodedContentFiles,
-    abc_atomizer: atomizers.AsciiCharacterAtomizer):
+  temp_db: encoded.EncodedContentFiles,
+  abc_atomizer: atomizers.AsciiCharacterAtomizer,
+):
   """Test that EmptyCorpusException raised if preprocessed db is empty."""
   with tempfile.TemporaryDirectory() as d:
     p = preprocessed.PreprocessedContentFiles(
-        f'sqlite:///{pathlib.Path(d)}/preprocessed.db')
+      f"sqlite:///{pathlib.Path(d)}/preprocessed.db"
+    )
     with pytest.raises(errors.EmptyCorpusException):
-      temp_db.Create(p, abc_atomizer, '\n\n')
+      temp_db.Create(p, abc_atomizer, "\n\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

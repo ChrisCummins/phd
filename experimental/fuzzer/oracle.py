@@ -86,7 +86,7 @@ def demo(oracle):
       return [
         PlaceholderProductionRule(str(self) + "->a"),
         PlaceholderProductionRule(str(self) + "->b"),
-        PlaceholderProductionRule(str(self) + "->c")
+        PlaceholderProductionRule(str(self) + "->c"),
       ]
 
     def __repr__(self):

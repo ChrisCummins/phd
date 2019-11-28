@@ -15,18 +15,19 @@ from system.machines.proto import machine_spec_pb2
 
 FLAGS = app.FLAGS
 
-app.DEFINE_input_path('machine',
-                      None,
-                      'Path to MachineSpec proto.',
-                      required=True)
-app.DEFINE_list('push', [], 'Mirrored directories to push.')
-app.DEFINE_list('pull', [], 'Mirrored directories to push.')
-app.DEFINE_boolean('dry_run', True,
-                   'Whether to run ops without making changes.')
-app.DEFINE_boolean('delete', False, 'Whether to delete files during push/pull'
-                   'mirroring.')
-app.DEFINE_boolean('progress', False, 'Show progress during file transfers.')
-app.DEFINE_boolean('force', False, 'Show progress during file transfers.')
+app.DEFINE_input_path(
+  "machine", None, "Path to MachineSpec proto.", required=True
+)
+app.DEFINE_list("push", [], "Mirrored directories to push.")
+app.DEFINE_list("pull", [], "Mirrored directories to push.")
+app.DEFINE_boolean(
+  "dry_run", True, "Whether to run ops without making changes."
+)
+app.DEFINE_boolean(
+  "delete", False, "Whether to delete files during push/pull" "mirroring."
+)
+app.DEFINE_boolean("progress", False, "Show progress during file transfers.")
+app.DEFINE_boolean("force", False, "Show progress during file transfers.")
 
 
 def RespondsToPing(host: str) -> typing.Optional[str]:
@@ -39,14 +40,15 @@ def RespondsToPing(host: str) -> typing.Optional[str]:
     The host if it responds to ping, else None.
   """
   try:
-    subprocess.check_output(['ping', '-c1', '-W1', host])
+    subprocess.check_output(["ping", "-c1", "-W1", host])
     return host
   except subprocess.CalledProcessError:
     return None
 
 
 def ResolveHost(
-    hosts: typing.List[machine_spec_pb2.Host]) -> machine_spec_pb2.Host:
+  hosts: typing.List[machine_spec_pb2.Host],
+) -> machine_spec_pb2.Host:
   """Resolve the host from a list.
 
   Iterate through the list, seeing if any of the hosts respond to ping. If none
@@ -60,10 +62,10 @@ def ResolveHost(
   """
   for host in hosts[:-1]:
     if RespondsToPing(host.host):
-      app.Log(1, 'Resolved host %s', host.host)
+      app.Log(1, "Resolved host %s", host.host)
       return host
     else:
-      app.Log(2, 'Failed to resolve host %s', host.host)
+      app.Log(2, "Failed to resolve host %s", host.host)
   return hosts[-1]
 
 
@@ -91,7 +93,7 @@ class Machine(object):
   def mirrored_directories(self) -> typing.List[MirroredDirectory]:
     """Return a list of mirrored directories."""
     return [
-        MirroredDirectory(self.host, m) for m in self._proto.mirrored_directory
+      MirroredDirectory(self.host, m) for m in self._proto.mirrored_directory
     ]
 
   def MirroredDirectory(self, name: str) -> MirroredDirectory:
@@ -102,12 +104,12 @@ class Machine(object):
     return m
 
   @staticmethod
-  def FromProto(proto: machine_spec_pb2.MachineSpec) -> 'Machine':
+  def FromProto(proto: machine_spec_pb2.MachineSpec) -> "Machine":
     """Instantiate machine from proto."""
     return Machine(proto)
 
   @classmethod
-  def FromFile(cls, path: pathlib.Path) -> 'Machine':
+  def FromFile(cls, path: pathlib.Path) -> "Machine":
     """Instantiate machine from proto file path."""
     return cls.FromProto(pbutil.FromFile(path, machine_spec_pb2.MachineSpec()))
 
@@ -122,22 +124,26 @@ def main():
   try:
     for mirrored_dir_name in FLAGS.pull:
       mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-      mirrored_dir.PullFromRemoteToLocal(dry_run=FLAGS.dry_run,
-                                         verbose=True,
-                                         delete=FLAGS.delete,
-                                         progress=FLAGS.progress,
-                                         force=FLAGS.force)
+      mirrored_dir.PullFromRemoteToLocal(
+        dry_run=FLAGS.dry_run,
+        verbose=True,
+        delete=FLAGS.delete,
+        progress=FLAGS.progress,
+        force=FLAGS.force,
+      )
 
     for mirrored_dir_name in FLAGS.push:
       mirrored_dir = machine.MirroredDirectory(mirrored_dir_name)
-      mirrored_dir.PushFromLocalToRemote(dry_run=FLAGS.dry_run,
-                                         verbose=True,
-                                         delete=FLAGS.delete,
-                                         progress=FLAGS.progress,
-                                         force=FLAGS.force)
+      mirrored_dir.PushFromLocalToRemote(
+        dry_run=FLAGS.dry_run,
+        verbose=True,
+        delete=FLAGS.delete,
+        progress=FLAGS.progress,
+        force=FLAGS.force,
+      )
   except (subprocess.SubprocessError, mirrored_directory.InvalidOperation) as e:
     app.FatalWithoutStackTrace(e)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

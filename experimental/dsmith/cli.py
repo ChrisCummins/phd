@@ -69,12 +69,16 @@ def run(method, *args, **kwargs):
   """
 
   def _user_message(exception):
-    logging.critical("""\
+    logging.critical(
+      """\
 💩 Fatal error!
 {err} ({type})
 
 Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
-""".format(err=e, type=type(e).__name__))
+""".format(
+        err=e, type=type(e).__name__
+      )
+    )
     sys.exit(1)
 
   def _user_message_with_stacktrace(exception):
@@ -95,7 +99,8 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
     trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS + 1)[1:])
     message = "\n".join(_msg(*r) for r in enumerate(trace))
 
-    logging.critical("""\
+    logging.critical(
+      """\
 💩 Fatal error!
 {err} ({type})
 
@@ -103,14 +108,18 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
 {stack_trace}
 
 Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
-""".format(err=e, type=type(e).__name__, stack_trace=message))
+""".format(
+        err=e, type=type(e).__name__, stack_trace=message
+      )
+    )
     sys.exit(1)
 
   # if DEBUG var set, don't catch exceptions
   if os.environ.get("DEBUG", None):
     # verbose stack traces. see: https://pymotw.com/2/cgitb/
     import cgitb
-    cgitb.enable(format='text')
+
+    cgitb.enable(format="text")
 
     return method(*args, **kwargs)
 
@@ -120,7 +129,7 @@ Please report bugs at <https://github.com/ChrisCummins/dsmith/issues>\
       return method(*args, **kwargs)
 
     if prof.is_enabled() and logging.is_verbose():
-      return cProfile.runctx('runctx()', None, locals(), sort='tottime')
+      return cProfile.runctx("runctx()", None, locals(), sort="tottime")
     else:
       return runctx()
   except dsmith.UserError as err:
@@ -144,40 +153,48 @@ def main(self, args: List[str] = sys.argv[1:]):
   """
   Compiler fuzzing through deep learning.
   """
-  parser = ArgumentParser(prog="dsmith",
-                          description=inspect.getdoc(self),
-                          epilog=__help_epilog__,
-                          formatter_class=RawDescriptionHelpFormatter)
+  parser = ArgumentParser(
+    prog="dsmith",
+    description=inspect.getdoc(self),
+    epilog=__help_epilog__,
+    formatter_class=RawDescriptionHelpFormatter,
+  )
 
   parser.add_argument(
-      "--config",
-      metavar="<path>",
-      type=FileType("r"),
-      dest="rc_path",
-      help=f"path to configuration file (default: '{dsmith.RC_PATH}')")
-  parser.add_argument("-v",
-                      "--verbose",
-                      action="store_true",
-                      help="increase output verbosity")
-  parser.add_argument("--debug",
-                      action="store_true",
-                      help="debugging output verbosity")
-  parser.add_argument("--db-debug",
-                      action="store_true",
-                      help="additional database debugging output")
-  parser.add_argument("--version",
-                      action="store_true",
-                      help="show version information and exit")
+    "--config",
+    metavar="<path>",
+    type=FileType("r"),
+    dest="rc_path",
+    help=f"path to configuration file (default: '{dsmith.RC_PATH}')",
+  )
   parser.add_argument(
-      "--profile",
-      action="store_true",
-      help=("enable internal API profiling. When combined with --verbose, "
-            "prints a complete profiling trace"))
-  parser.add_argument("command",
-                      metavar="<command>",
-                      nargs="*",
-                      help=("command to run. If not given, run an "
-                            "interactive prompt"))
+    "-v", "--verbose", action="store_true", help="increase output verbosity"
+  )
+  parser.add_argument(
+    "--debug", action="store_true", help="debugging output verbosity"
+  )
+  parser.add_argument(
+    "--db-debug",
+    action="store_true",
+    help="additional database debugging output",
+  )
+  parser.add_argument(
+    "--version", action="store_true", help="show version information and exit"
+  )
+  parser.add_argument(
+    "--profile",
+    action="store_true",
+    help=(
+      "enable internal API profiling. When combined with --verbose, "
+      "prints a complete profiling trace"
+    ),
+  )
+  parser.add_argument(
+    "command",
+    metavar="<command>",
+    nargs="*",
+    help=("command to run. If not given, run an " "interactive prompt"),
+  )
 
   args = parser.parse_args(args)
 
@@ -188,7 +205,8 @@ def main(self, args: List[str] = sys.argv[1:]):
 
     # verbose stack traces. see: https://pymotw.com/2/cgitb/
     import cgitb
-    cgitb.enable(format='text')
+
+    cgitb.enable(format="text")
   elif args.verbose:
     loglvl = logging.INFO
   else:
@@ -199,8 +217,9 @@ def main(self, args: List[str] = sys.argv[1:]):
     os.environ["DB_DEBUG"] = "1"
 
   # configure logger
-  logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
-                      level=loglvl)
+  logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(message)s", level=loglvl
+  )
 
   # set profile option
   if args.profile:

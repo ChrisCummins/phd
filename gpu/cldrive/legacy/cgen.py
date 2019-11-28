@@ -23,9 +23,11 @@ from gpu.cldrive.legacy import driver
 
 def escape_c_string(s: str) -> str:
   """ quote and return the given string """
-  return '\n'.join('"{}"'.format(line.replace('"', '\\"'))
-                   for line in s.split('\n')
-                   if len(line.strip()))
+  return "\n".join(
+    '"{}"'.format(line.replace('"', '\\"'))
+    for line in s.split("\n")
+    if len(line.strip())
+  )
 
 
 def to_array_str(array):
@@ -34,12 +36,13 @@ def to_array_str(array):
   else:
     stringify = repr
 
-  array_values = ', '.join(stringify(x) for x in array.tolist())
+  array_values = ", ".join(stringify(x) for x in array.tolist())
   return f"{{ {array_values} }}"
 
 
-def gen_data_blocks(kernel_args: typing.List[_args.KernelArg],
-                    inputs: np.array):
+def gen_data_blocks(
+  kernel_args: typing.List[_args.KernelArg], inputs: np.array
+):
   setup_c, teardown_c, print_c = [], [], []
   for i, (arg, array) in enumerate(zip(kernel_args, inputs)):
     ctype = _args.OPENCL_TYPES[array.dtype]
@@ -55,25 +58,31 @@ def gen_data_blocks(kernel_args: typing.List[_args.KernelArg],
       else:
         flags += " | CL_MEM_READ_WRITE"
 
-      setup_c.append(f"""\
+      setup_c.append(
+        f"""\
     {ctype} host_{i}[{array.size}] = {array_str};
     cl_mem dev_{i} = clCreateBuffer(ctx, {flags}, sizeof({ctype}) * {array.size}, &host_{i}, &err);
     check_error("clCreateBuffer", err);
     err = clSetKernelArg(kernel, {i}, sizeof(cl_mem), &dev_{i});
     check_error("clSetKernelArg", err);
-""")
+"""
+      )
       if format_specifier and not arg.is_const:
-        teardown_c.append(f"""\
+        teardown_c.append(
+          f"""\
     err = clEnqueueReadBuffer(queue, dev_{i}, CL_TRUE, 0, sizeof({ctype}) * {array.size}, &host_{i}, 0, NULL, NULL);
     check_error("clEnqueueReadBuffer", err);
-""")
-        print_c.append(f"""\
+"""
+        )
+        print_c.append(
+          f"""\
     printf("{arg}:");
     for (int i = 0; i < {array.size}; i++) {{
         printf(" {format_specifier}", host_{i}[i]);
     }}
     printf("\\n");
-""")
+"""
+        )
     else:
       if array.size > 1:
         data_val = to_array_str(array)
@@ -81,25 +90,32 @@ def gen_data_blocks(kernel_args: typing.List[_args.KernelArg],
       else:
         setup_c.append(f"{ctype} host_{i} = {array[0]};")
 
-      setup_c.append(f"""\
+      setup_c.append(
+        f"""\
     err = clSetKernelArg(kernel, {i}, sizeof({ctype}), &host_{i});
     check_error("clSetKernelArg", err);
-""")
+"""
+      )
 
-  return ('\n'.join(setup_c).rstrip(), '\n'.join(teardown_c).rstrip(),
-          '\n'.join(print_c).rstrip())
+  return (
+    "\n".join(setup_c).rstrip(),
+    "\n".join(teardown_c).rstrip(),
+    "\n".join(print_c).rstrip(),
+  )
 
 
-def emit_c(src: str,
-           inputs: np.array,
-           gsize: typing.Optional[driver.NDRange],
-           lsize: typing.Optional[driver.NDRange],
-           timeout: int = -1,
-           optimizations: bool = True,
-           profiling: bool = False,
-           debug: bool = False,
-           compile_only: bool = False,
-           create_kernel: bool = True) -> np.array:
+def emit_c(
+  src: str,
+  inputs: np.array,
+  gsize: typing.Optional[driver.NDRange],
+  lsize: typing.Optional[driver.NDRange],
+  timeout: int = -1,
+  optimizations: bool = True,
+  profiling: bool = False,
+  debug: bool = False,
+  compile_only: bool = False,
+  create_kernel: bool = True,
+) -> np.array:
   """
   Generate C code to drive kernel.
 

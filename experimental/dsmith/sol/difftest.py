@@ -18,7 +18,6 @@
 """
 Differential test soldity results.
 """
-
 from experimental.dsmith.sol.db import *
 
 
@@ -43,17 +42,20 @@ def create_results_metas(s: session_t):
   print("creating results metas ...")
   s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
   app.Log(2, "deleted existing result metas")
-  testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness) \
-    .join(Testcase) \
-    .group_by(Result.testbed_id, Testcase.harness) \
-    .order_by(Testcase.harness, Result.testbed_id) \
+  testbeds_harnesses = (
+    s.query(Result.testbed_id, Testcase.harness)
+    .join(Testcase)
+    .group_by(Result.testbed_id, Testcase.harness)
+    .order_by(Testcase.harness, Result.testbed_id)
     .all()
+  )
 
   bar = progressbar.ProgressBar(redirect_stdout=True)
   for testbed_id, harness in bar(testbeds_harnesses):
     # FIXME: @cumtime variable is not supported by SQLite.
     s.execute(
-        sql_query(f"""
+      sql_query(
+        f"""
 INSERT INTO {ResultMeta.__tablename__} (id, total_time, cumtime)
 SELECT  results.id,
         results.runtime + programs.generation_time AS total_time,
@@ -64,7 +66,9 @@ INNER JOIN {Program.__tablename__} programs ON testcases.program_id = programs.i
 JOIN (SELECT @cumtime := 0) r
 WHERE results.testbed_id = {testbed_id}
 AND testcases.harness = {harness}
-ORDER BY programs.date"""))
+ORDER BY programs.date"""
+      )
+    )
     s.commit()
 
 
@@ -83,8 +87,11 @@ def create_majorities(s: session_t) -> None:
   # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
   # majority outcome, we order results by outcome number, so that '1' (build
   # failure) will over-rule '6' (pass).
-  insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
-  s.execute(f"""
+  insert_ignore = (
+    "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
+  )
+  s.execute(
+    f"""
 {insert_ignore} INTO {Majority.__tablename__}
     (id, num_results, maj_outcome, outcome_majsize, maj_stderr_id, stderr_majsize)
 SELECT  result_counts.testcase_id,
@@ -136,7 +143,8 @@ JOIN (
     ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.stderr_count
 ) stderr_majs ON outcome_majs.testcase_id = stderr_majs.testcase_id
 ORDER BY outcome_majs.maj_outcome DESC
-""")
+"""
+  )
   s.commit()
 
 
@@ -150,21 +158,26 @@ def create_classifications(s: session_t) -> None:
   min_majsize = 1
 
   print("creating {bc,bto} classifications ...")
-  s.execute(f"""
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BC}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BC}
-""")
-  s.execute(f"""
+"""
+  )
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BTO}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BTO}
-""")
+"""
+  )
 
   print("determining anomalous build-failures ...")
-  s.execute(f"""
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.ABF}
 FROM {Result.__tablename__} results
@@ -172,4 +185,5 @@ INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majoriti
 WHERE outcome = {Outcomes.BF}
 AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
-""")
+"""
+  )

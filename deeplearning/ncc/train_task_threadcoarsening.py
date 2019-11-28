@@ -37,30 +37,38 @@ from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import fs
 
-app.DEFINE_string('input_data',
-                  '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
-                  'Path to input data')
 app.DEFINE_string(
-    'out', '/tmp/phd/deeplearning/ncc/task/threadcoarsening',
-    'Path to folder in which to write saved Keras models and predictions')
+  "input_data",
+  "/tmp/phd/deeplearning/ncc/task/threadcoarsening",
+  "Path to input data",
+)
 app.DEFINE_string(
-    'vocabulary_zip_path', None,
-    'Path to the vocabulary zip file associated with those embeddings')
+  "out",
+  "/tmp/phd/deeplearning/ncc/task/threadcoarsening",
+  "Path to folder in which to write saved Keras models and predictions",
+)
 app.DEFINE_string(
-    'device', 'all',
-    'Device to evaluate model on. Options: all, Cypress, Tahiti, Fermi, Kepler')
-app.DEFINE_integer('num_epochs', 50, 'number of training epochs')
-app.DEFINE_integer('batch_size', 64, 'training batch size')
-app.DEFINE_integer('dense_layer', 32, 'dense layer size')
-app.DEFINE_boolean('print_summary', False, 'Print summary of Keras model')
+  "vocabulary_zip_path",
+  None,
+  "Path to the vocabulary zip file associated with those embeddings",
+)
+app.DEFINE_string(
+  "device",
+  "all",
+  "Device to evaluate model on. Options: all, Cypress, Tahiti, Fermi, Kepler",
+)
+app.DEFINE_integer("num_epochs", 50, "number of training epochs")
+app.DEFINE_integer("batch_size", 64, "training batch size")
+app.DEFINE_integer("dense_layer", 32, "dense layer size")
+app.DEFINE_boolean("print_summary", False, "Print summary of Keras model")
 
 FLAGS = app.FLAGS
 
 _FLAG_TO_DEVICE_NAME = {
-    'Cypress': 'AMD Radeon HD 5900',
-    'Tahiti': 'AMD Tahiti 7970',
-    'Fermi': 'NVIDIA GTX 480',
-    'Kepler': 'NVIDIA Tesla K20c'
+  "Cypress": "AMD Radeon HD 5900",
+  "Tahiti": "AMD Tahiti 7970",
+  "Fermi": "NVIDIA GTX 480",
+  "Kepler": "NVIDIA Tesla K20c",
 }
 
 ########################################################################################################################
@@ -82,23 +90,26 @@ def get_magni_features(df, oracles, platform):
   for kernel in sorted(set(df["kernel"])):
     _df = df[df["kernel"] == kernel]
 
-    oracle_cf = int(oracles[oracles["kernel"] == kernel]["cf_{}".format(
-        platform)].values[0])
+    oracle_cf = int(
+      oracles[oracles["kernel"] == kernel]["cf_{}".format(platform)].values[0]
+    )
 
-    feature_vectors = np.asarray([
-        _df['PCA1'].values,
-        _df['PCA2'].values,
-        _df['PCA3'].values,
-        _df['PCA4'].values,
-        _df['PCA5'].values,
-        _df['PCA6'].values,
-        _df['PCA7'].values,
-    ]).T
+    feature_vectors = np.asarray(
+      [
+        _df["PCA1"].values,
+        _df["PCA2"].values,
+        _df["PCA3"].values,
+        _df["PCA4"].values,
+        _df["PCA5"].values,
+        _df["PCA6"].values,
+        _df["PCA7"].values,
+      ]
+    ).T
 
     X_cc.append(feature_vectors)
     y = []
     cfs__ = []
-    for i, cf in enumerate(cfs[:len(feature_vectors)]):
+    for i, cf in enumerate(cfs[: len(feature_vectors)]):
       y_ = 1 if cf < oracle_cf else 0
       y.append(y_)
     y_cc.append(y)
@@ -121,34 +132,41 @@ def encode_srcs(data_folder, df: pd.DataFrame):
     unk_index = vocab.unknown_token_index
 
   # Get list of source file names
-  data_folder = os.path.join(data_folder, 'kernels_seq')
+  data_folder = os.path.join(data_folder, "kernels_seq")
   input_files = df["kernel"].values  # list of strings of kernel names
   num_files = len(input_files)
   num_unks = 0
   seq_lengths = list()
 
-  print('\n--- Preparing to read', num_files, 'input files from folder',
-        data_folder)
+  print(
+    "\n--- Preparing to read", num_files, "input files from folder", data_folder
+  )
   seqs = list()
   for file in input_files:
-    file = os.path.join(data_folder, file + '_seq.csv')
-    assert os.path.exists(file), 'input file not found: ' + file
-    with open(file, 'r') as f:
+    file = os.path.join(data_folder, file + "_seq.csv")
+    assert os.path.exists(file), "input file not found: " + file
+    with open(file, "r") as f:
       seq = f.read().splitlines()
-    assert len(seq) > 0, 'Found empty file: ' + file
+    assert len(seq) > 0, "Found empty file: " + file
     num_unks += seq.count(str(unk_index))
     seq_lengths.append(len(seq))
     seqs.append([int(s) for s in seq])
 
-    print('\tShortest sequence    : {:>5}'.format(min(seq_lengths)))
+    print("\tShortest sequence    : {:>5}".format(min(seq_lengths)))
     maxlen = max(seq_lengths)
-    print('\tLongest sequence     : {:>5}'.format(maxlen))
-    print('\tMean sequence length : {:>5} (rounded down)'.format(
-        math.floor(np.mean(seq_lengths))))
-    print('\tNumber of \'UNK\'      : {:>5}'.format(num_unks))
-    print('\tPercentage of \'UNK\'  : {:>8.4} (% among all stmts)'.format(
-        (num_unks * 100) / sum(seq_lengths)))
-    print('\t\'UNK\' index          : {:>5}'.format(unk_index))
+    print("\tLongest sequence     : {:>5}".format(maxlen))
+    print(
+      "\tMean sequence length : {:>5} (rounded down)".format(
+        math.floor(np.mean(seq_lengths))
+      )
+    )
+    print("\tNumber of 'UNK'      : {:>5}".format(num_unks))
+    print(
+      "\tPercentage of 'UNK'  : {:>8.4} (% among all stmts)".format(
+        (num_unks * 100) / sum(seq_lengths)
+      )
+    )
+    print("\t'UNK' index          : {:>5}".format(unk_index))
 
   encoded = np.array(pad_sequences(seqs, maxlen=maxlen, value=unk_index))
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded]), maxlen
@@ -174,8 +192,9 @@ class NCC_threadcoarsening:
   __name__ = "NCC_threadcoarsening"
   __basename__ = "ncc_threadcoarsening"
 
-  def init(self, seed: int, maxlen: int, embedding_dim: int,
-           dense_layer_size: int):
+  def init(
+    self, seed: int, maxlen: int, embedding_dim: int, dense_layer_size: int
+  ):
     from keras.layers import Input, LSTM, Dense
     from keras.layers.normalization import BatchNormalization
     from keras.models import Model
@@ -183,44 +202,50 @@ class NCC_threadcoarsening:
     np.random.seed(seed)
 
     # Model
-    inp = Input(shape=(
-        maxlen,
-        embedding_dim,
-    ), dtype="float32", name="code_in")
-    x = LSTM(embedding_dim,
-             implementation=1,
-             return_sequences=True,
-             name="lstm_1")(inp)
+    inp = Input(shape=(maxlen, embedding_dim,), dtype="float32", name="code_in")
+    x = LSTM(
+      embedding_dim, implementation=1, return_sequences=True, name="lstm_1"
+    )(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
     x = BatchNormalization()(x)
     x = Dense(dense_layer_size, activation="relu")(x)
     outputs = Dense(6, activation="sigmoid")(x)
     self.model = Model(inputs=inp, outputs=outputs)
-    self.model.compile(optimizer="adam",
-                       loss="categorical_crossentropy",
-                       metrics=['accuracy'])
-    print('\tbuilt Keras model')
+    self.model.compile(
+      optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
+    )
+    print("\tbuilt Keras model")
 
   def save(self, outpath: str):
     self.model.save(outpath)
 
   def restore(self, inpath: str):
     from keras.models import load_model
+
     self.model = load_model(inpath)
 
-  def train(self, sequences: np.array, y_1hot: np.array, verbose: bool,
-            epochs: int, batch_size: int) -> None:
-    self.model.fit(sequences,
-                   y_1hot,
-                   epochs=epochs,
-                   batch_size=batch_size,
-                   verbose=verbose,
-                   shuffle=True)
+  def train(
+    self,
+    sequences: np.array,
+    y_1hot: np.array,
+    verbose: bool,
+    epochs: int,
+    batch_size: int,
+  ) -> None:
+    self.model.fit(
+      sequences,
+      y_1hot,
+      epochs=epochs,
+      batch_size=batch_size,
+      verbose=verbose,
+      shuffle=True,
+    )
 
   def predict(self, sequences: np.array, batch_size: int) -> np.array:
     # directly predict optimal thread coarsening factor from source sequences:
-    p = np.array(self.model.predict(sequences, batch_size=batch_size,
-                                    verbose=0))
+    p = np.array(
+      self.model.predict(sequences, batch_size=batch_size, verbose=0)
+    )
     indices = [np.argmax(x) for x in p]
     return [cfs[x] for x in indices]
 
@@ -232,21 +257,31 @@ class NCC_threadcoarsening:
 seed = 204
 
 
-def evaluate(model, device, data_folder, out_folder, embeddings,
-             dense_layer_size, print_summary, num_epochs, batch_size):
+def evaluate(
+  model,
+  device,
+  data_folder,
+  out_folder,
+  embeddings,
+  dense_layer_size,
+  print_summary,
+  num_epochs,
+  batch_size,
+):
   data = []
 
   # Create device list
-  if device == 'all':
+  if device == "all":
     device_list = ["Cypress", "Tahiti", "Fermi", "Kepler"]
   else:
     device_list = [device]
 
   for i, platform in enumerate(device_list):
     print(
-        '\n------------------------------------------------------------------')
-    print('--- Platform', platform, '[', i + 1, '/ 4 ]')
-    print('------------------------------------------------------------------')
+      "\n------------------------------------------------------------------"
+    )
+    print("--- Platform", platform, "[", i + 1, "/ 4 ]")
+    print("------------------------------------------------------------------")
     platform_name = platform2str(platform)
 
     # Read data
@@ -254,11 +289,12 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
     oracles = pd.read_csv(oracle_file)
     runtimes_file = os.path.join(data_folder, "pact-2014-runtimes.csv")
     df = pd.read_csv(runtimes_file)
-    print('\tRead data from', oracle_file, '\n\tand', runtimes_file)
+    print("\tRead data from", oracle_file, "\n\tand", runtimes_file)
 
     # Extract data
     oracle_runtimes = np.array(
-        [float(x) for x in oracles["runtime_" + platform]])
+      [float(x) for x in oracles["runtime_" + platform]]
+    )
     y = np.array([int(x) for x in oracles["cf_" + platform]], dtype=np.int32)
     y_1hot = get_onehot(oracles, platform)
 
@@ -267,6 +303,7 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 
     # Embeddings
     import tensorflow as tf  # for embeddings lookup
+
     embedding_matrix_normalized = tf.nn.l2_normalize(embeddings, axis=1)
     vocabulary_size, embedding_dimension = embedding_matrix_normalized.shape
     seq_ = tf.compat.v1.placeholder(dtype=tf.int32)
@@ -280,7 +317,7 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
     kf = KFold(n_splits=len(y), shuffle=False)
 
     for j, (train_index, test_index) in enumerate(kf.split(y)):
-      print('--- Cross validation step [', j + 1, '/ ', len(y), ']')
+      print("--- Cross validation step [", j + 1, "/ ", len(y), "]")
       kernel = sorted(set(df["kernel"]))[test_index[0]]
       X_cc, y_cc = get_magni_features(df, oracles, platform)
 
@@ -288,17 +325,22 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
       model_basename = model.__basename__
 
       model_path = os.path.join(
-          out_folder, "models/{model_basename}-{platform}-{j}.model".format(
-              model_basename=model_basename, platform=platform, j=j))
+        out_folder,
+        "models/{model_basename}-{platform}-{j}.model".format(
+          model_basename=model_basename, platform=platform, j=j
+        ),
+      )
       predictions_path = os.path.join(
-          out_folder,
-          "predictions/{model_basename}-{platform}-{j}.result".format(
-              model_basename=model_basename, platform=platform, j=j))
+        out_folder,
+        "predictions/{model_basename}-{platform}-{j}.result".format(
+          model_basename=model_basename, platform=platform, j=j
+        ),
+      )
 
       if fs.exists(predictions_path):
         # load result from cache
         print("\tFound predictions in", predictions_path, ", skipping...")
-        with open(predictions_path, 'rb') as infile:
+        with open(predictions_path, "rb") as infile:
           p = pickle.load(infile)
       else:
 
@@ -309,49 +351,52 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
         else:
 
           # Initialize model and print summary
-          print('\n--- Training model...')
+          print("\n--- Training model...")
           model.init(seed, maxlen, int(embedding_dimension), dense_layer_size)
           if print_summary:
             model.model.summary()
 
           # Train and cache a model
-          model.train(sequences=embedding_input[train_index, :, :],
-                      verbose=True,
-                      y_1hot=y_1hot[train_index],
-                      epochs=num_epochs,
-                      batch_size=batch_size)
+          model.train(
+            sequences=embedding_input[train_index, :, :],
+            verbose=True,
+            y_1hot=y_1hot[train_index],
+            epochs=num_epochs,
+            batch_size=batch_size,
+          )
 
           # cache the model
           fs.mkdir(fs.dirname(model_path))
           model.save(model_path)
-          print('\tsaved model to', model_path)
+          print("\tsaved model to", model_path)
 
         # test model
-        print('\n--- Testing model...')
-        p = model.predict(sequences=embedding_input[test_index, :, :],
-                          batch_size=batch_size)[0]
+        print("\n--- Testing model...")
+        p = model.predict(
+          sequences=embedding_input[test_index, :, :], batch_size=batch_size
+        )[0]
 
         # The runtimes of some coarsening factors are not recorded in the data table. If that is the case for
         # the predicted cf, clamp it down to the highest cf for which the runtime is recorded
-        p = min(p, 2**(len(X_cc[test_index[0]]) - 1))
+        p = min(p, 2 ** (len(X_cc[test_index[0]]) - 1))
 
         # cache the prediction
         fs.mkdir(fs.dirname(predictions_path))
-        with open(predictions_path, 'wb') as outfile:
+        with open(predictions_path, "wb") as outfile:
           pickle.dump(p, outfile)
-        print('\tsaved predictions to', predictions_path)
+        print("\tsaved predictions to", predictions_path)
 
       o = y[test_index[0]]  # oracle prediction (true value)
       correct = p == o  # predictions' correctness
 
       # get runtime without thread coarsening
       row = df[(df["kernel"] == kernel) & (df["cf"] == 1)]
-      assert (len(row) == 1)  # sanity check
+      assert len(row) == 1  # sanity check
       nocf_runtime = float(row["runtime_" + platform])
 
       # get runtime of prediction
       row = df[(df["kernel"] == kernel) & (df["cf"] == p)]
-      assert (len(row) == 1)  # sanity check
+      assert len(row) == 1  # sanity check
       p_runtime = float(row["runtime_" + platform])
 
       # get runtime of oracle coarsening factor
@@ -363,21 +408,30 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
       p_oracle = o_runtime / p_runtime
 
       # record result
-      data.append({
+      data.append(
+        {
           "Model": model_name,
           "Platform": platform_name,
           "Kernel": kernel,
           "Oracle-CF": o,
           "Predicted-CF": p,
           "Speedup": p_speedup,
-          "Oracle": p_oracle
-      })
+          "Oracle": p_oracle,
+        }
+      )
 
-  return pd.DataFrame(data,
-                      columns=[
-                          "Model", "Platform", "Kernel", "Oracle-CF",
-                          "Predicted-CF", "Speedup", "Oracle"
-                      ])
+  return pd.DataFrame(
+    data,
+    columns=[
+      "Model",
+      "Platform",
+      "Kernel",
+      "Oracle-CF",
+      "Predicted-CF",
+      "Speedup",
+      "Oracle",
+    ],
+  )
 
 
 ########################################################################################################################
@@ -385,7 +439,7 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 ########################################################################################################################
 def main(argv):
   if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
+    raise app.UsageError("Unrecognized command line flags.")
 
   ####################################################################################################################
   # Setup
@@ -396,21 +450,27 @@ def main(argv):
   if not os.path.exists(out):
     os.makedirs(out)
   device = FLAGS.device
-  assert device in ["all", "Cypress", "Tahiti", "Fermi", "Kepler"], \
-    'Choose device among: all, Cypress, Tahiti, Fermi, Kepler'
+  assert device in [
+    "all",
+    "Cypress",
+    "Tahiti",
+    "Fermi",
+    "Kepler",
+  ], "Choose device among: all, Cypress, Tahiti, Fermi, Kepler"
   dense_layer_size = FLAGS.dense_layer
   print_summary = FLAGS.print_summary
   num_epochs = FLAGS.num_epochs
   batch_size = FLAGS.batch_size
 
   # Unpack data archive if necessary.
-  if not os.path.exists(os.path.join(input_data, 'kernels_ir')):
+  if not os.path.exists(os.path.join(input_data, "kernels_ir")):
     dataset = bazelutil.DataArchive(
-        'phd/deeplearning/ncc/published_results/task_threadcoarsening.zip')
+      "phd/deeplearning/ncc/published_results/task_threadcoarsening.zip"
+    )
     dataset.ExtractAll(pathlib.Path(input_data))
 
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    task_utils.CreateSeqDirFromIr(os.path.join(input_data, 'kernels_ir'), vocab)
+    task_utils.CreateSeqDirFromIr(os.path.join(input_data, "kernels_ir"), vocab)
 
   ####################################################################################################################
   # Reference values
@@ -426,50 +486,65 @@ def main(argv):
   # Train model
   # Evaluate NCC_threadcoarsening
   print("\nEvaluating NCC_threadcoarsening ...")
-  ncc_threadcoarsening = evaluate(NCC_threadcoarsening(), device, input_data,
-                                  out, embeddings, dense_layer_size,
-                                  print_summary, num_epochs, batch_size)
+  ncc_threadcoarsening = evaluate(
+    NCC_threadcoarsening(),
+    device,
+    input_data,
+    out,
+    embeddings,
+    dense_layer_size,
+    print_summary,
+    num_epochs,
+    batch_size,
+  )
 
   ####################################################################################################################
   # Print results
   print(
-      '\n',
-      ncc_threadcoarsening.groupby('Platform')
-      ['Platform', 'Speedup', 'Oracle'].mean())
-  d = np.array([ncc_threadcoarsening[['Speedup', 'Oracle']].mean()]).T
+    "\n",
+    ncc_threadcoarsening.groupby("Platform")[
+      "Platform", "Speedup", "Oracle"
+    ].mean(),
+  )
+  d = np.array([ncc_threadcoarsening[["Speedup", "Oracle"]].mean()]).T
   print(
-      '\n',
-      pd.DataFrame(d, columns=["DeepTuneInst2Vec"], index=["Speedup",
-                                                           "Oracle"]))
+    "\n",
+    pd.DataFrame(d, columns=["DeepTuneInst2Vec"], index=["Speedup", "Oracle"]),
+  )
 
   # Model comparison: speedups
-  print('\nModel comparison: speedups')
+  print("\nModel comparison: speedups")
   d = list()
   d.append(np.append(magni_pl_sp_vals, magni_sp_mean))
   d.append(np.append(deeptune_pl_sp_vals, deeptune_sp_mean))
   d.append(np.append(deeptuneTL_pl_sp_vals, deeptuneTL_sp_mean))
   d.append(
-      np.append(
-          ncc_threadcoarsening.groupby(['Platform'])['Speedup'].mean().values,
-          ncc_threadcoarsening['Speedup'].mean()))
-  if FLAGS.device == 'all':
+    np.append(
+      ncc_threadcoarsening.groupby(["Platform"])["Speedup"].mean().values,
+      ncc_threadcoarsening["Speedup"].mean(),
+    )
+  )
+  if FLAGS.device == "all":
     d = np.array(d).T.reshape(5, 4)
     devs = [
-        'AMD Radeon HD 5900', 'AMD Tahiti 7970', 'NVIDIA GTX 480',
-        'NVIDIA Tesla K20c', 'Average'
+      "AMD Radeon HD 5900",
+      "AMD Tahiti 7970",
+      "NVIDIA GTX 480",
+      "NVIDIA Tesla K20c",
+      "Average",
     ]
   else:
     d = np.array(d).T.reshape(1, 4)
     devs = [_FLAG_TO_DEVICE_NAME[FLAGS.device]]
   print(
-      '\n',
-      pd.DataFrame(d,
-                   columns=[
-                       'Magni et al.', 'DeepTune', 'DeepTuneTL',
-                       'DeepTuneInst2Vec'
-                   ],
-                   index=devs))
+    "\n",
+    pd.DataFrame(
+      d,
+      columns=["Magni et al.", "DeepTune", "DeepTuneTL", "DeepTuneInst2Vec"],
+      index=devs,
+    ),
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

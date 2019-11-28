@@ -42,14 +42,27 @@ def AssertConfigIsValid(config: sampler_pb2.Sampler) -> sampler_pb2.Sampler:
     UserError: If there are configuration errors.
   """
   try:
-    pbutil.AssertFieldConstraint(config, 'start_text', lambda s: len(s),
-                                 'Sampler.start_text must be a string')
-    pbutil.AssertFieldConstraint(config, 'batch_size', lambda x: 0 < x,
-                                 'Sampler.batch_size must be > 0')
-    pbutil.AssertFieldConstraint(config, 'sequence_length', lambda x: 0 < x,
-                                 'Sampler.sequence_length must be > 0')
-    pbutil.AssertFieldConstraint(config, 'temperature_micros', lambda x: 0 < x,
-                                 'Sampler.temperature_micros must be > 0')
+    pbutil.AssertFieldConstraint(
+      config,
+      "start_text",
+      lambda s: len(s),
+      "Sampler.start_text must be a string",
+    )
+    pbutil.AssertFieldConstraint(
+      config, "batch_size", lambda x: 0 < x, "Sampler.batch_size must be > 0"
+    )
+    pbutil.AssertFieldConstraint(
+      config,
+      "sequence_length",
+      lambda x: 0 < x,
+      "Sampler.sequence_length must be > 0",
+    )
+    pbutil.AssertFieldConstraint(
+      config,
+      "temperature_micros",
+      lambda x: 0 < x,
+      "Sampler.temperature_micros must be > 0",
+    )
     return config
   except pbutil.ProtoValueError as e:
     raise errors.UserError(e)
@@ -85,7 +98,7 @@ class TerminationCriterionBase(object):
     Returns:
       True if the sample is "complete", else False to continue sampling.
     """
-    raise NotImplementedError('abstract class')
+    raise NotImplementedError("abstract class")
 
 
 class MaxlenTerminationCriterion(TerminationCriterionBase):
@@ -94,8 +107,11 @@ class MaxlenTerminationCriterion(TerminationCriterionBase):
   def __init__(self, config: sampler_pb2.MaxTokenLength):
     try:
       self.max_len = pbutil.AssertFieldConstraint(
-          config, 'maximum_tokens_in_sample', lambda x: x > 1,
-          'MaxTokenLength.maximum_tokens_in_sample must be > 0')
+        config,
+        "maximum_tokens_in_sample",
+        lambda x: x > 1,
+        "MaxTokenLength.maximum_tokens_in_sample must be > 0",
+      )
     except pbutil.ProtoValueError as e:
       raise errors.UserError(e)
 
@@ -118,15 +134,21 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
   def __init__(self, config: sampler_pb2.SymmetricalTokenDepth):
     try:
       self.left_token = pbutil.AssertFieldConstraint(
-          config, 'depth_increase_token', lambda s: len(s) > 0,
-          'SymmetricalTokenDepth.depth_increase_token must be a string')
+        config,
+        "depth_increase_token",
+        lambda s: len(s) > 0,
+        "SymmetricalTokenDepth.depth_increase_token must be a string",
+      )
       self.right_token = pbutil.AssertFieldConstraint(
-          config, 'depth_decrease_token', lambda s: len(s) > 0,
-          'SymmetricalTokenDepth.depth_decrease_token must be a string')
+        config,
+        "depth_decrease_token",
+        lambda s: len(s) > 0,
+        "SymmetricalTokenDepth.depth_decrease_token must be a string",
+      )
     except pbutil.ProtoValueError as e:
       raise errors.UserError(e)
     if self.left_token == self.right_token:
-      raise errors.UserError('SymmetricalTokenDepth tokens must be different')
+      raise errors.UserError("SymmetricalTokenDepth tokens must be different")
 
   def Specialize(self, atomizer: atomizers.AtomizerBase) -> None:
     """Specialize a termination criteria to a vocabulary.
@@ -148,12 +170,14 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
       right = atomizer.AtomizeString(self.right_token)
       if len(left) > 1 or len(right) > 1:
         raise errors.InvalidSymtokTokens(
-            'Sampler symmetrical depth tokens do not encode to a single '
-            'token using the corpus vocabulary')
+          "Sampler symmetrical depth tokens do not encode to a single "
+          "token using the corpus vocabulary"
+        )
     except errors.VocabError:
       raise errors.InvalidSymtokTokens(
-          'Sampler symmetrical depth tokens cannot be encoded using the '
-          'corpus vocabulary')
+        "Sampler symmetrical depth tokens cannot be encoded using the "
+        "corpus vocabulary"
+      )
 
   def SampleIsComplete(self, sample_in_progress: typing.List[str]) -> bool:
     """Determine whether to stop sampling."""
@@ -183,8 +207,8 @@ class SymmetricalTokenDepthCriterion(TerminationCriterionBase):
 
 
 def GetTerminationCriteria(
-    config: typing.List[sampler_pb2.SampleTerminationCriterion]) \
-    -> typing.List[TerminationCriterionBase]:
+  config: typing.List[sampler_pb2.SampleTerminationCriterion],
+) -> typing.List[TerminationCriterionBase]:
   """Build a list of termination criteria from config protos.
 
   Args:
@@ -199,12 +223,12 @@ def GetTerminationCriteria(
   """
   terminators = []
   for criterion in config:
-    if criterion.HasField('maxlen'):
+    if criterion.HasField("maxlen"):
       terminators.append(MaxlenTerminationCriterion(criterion.maxlen))
-    elif criterion.HasField('symtok'):
+    elif criterion.HasField("symtok"):
       terminators.append(SymmetricalTokenDepthCriterion(criterion.symtok))
     else:
-      raise errors.InternalError('Unknown Sampler.termination_criteria')
+      raise errors.InternalError("Unknown Sampler.termination_criteria")
   return terminators
 
 
@@ -263,14 +287,16 @@ class Sampler(object):
       self.tokenized_start_text = atomizer.TokenizeString(self.start_text)
     except errors.VocabError:
       raise errors.InvalidStartText(
-          'Sampler start text cannot be encoded using the corpus vocabulary: '
-          f"'{self.start_text}'")
+        "Sampler start text cannot be encoded using the corpus vocabulary: "
+        f"'{self.start_text}'"
+      )
 
     if len(self.encoded_start_text) >= self.sequence_length:
       raise errors.InvalidStartText(
-          'Encoded sampler start text must be less than sampler sequence '
-          f'length. Sampler sequence length={self.sequence_length}, encoded '
-          f'start text length={len(self.encoded_start_text)}')
+        "Encoded sampler start text must be less than sampler sequence "
+        f"length. Sampler sequence length={self.sequence_length}, encoded "
+        f"start text length={len(self.encoded_start_text)}"
+      )
 
     [terminator.Specialize(atomizer) for terminator in self.terminators]
 

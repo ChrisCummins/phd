@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 
-
 //
 // Optimised solution. Read characters backwards from end of file,
 // stopping after k newlines.
@@ -41,8 +40,7 @@ void printLastKLines1(std::ifstream &file, size_t k,
       }
 
       // Move back one character if there's still stuff to read.
-      if (linesremaining)
-        file.seekg(-2, std::ios_base::cur);
+      if (linesremaining) file.seekg(-2, std::ios_base::cur);
     }
   }
 
@@ -53,7 +51,6 @@ void printLastKLines1(std::ifstream &file, size_t k,
     out << line << std::endl;
   }
 }
-
 
 ///////////
 // Tests //

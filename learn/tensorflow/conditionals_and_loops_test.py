@@ -12,8 +12,11 @@ MODULE_UNDER_TEST = None  # No coverage.
 
 
 def ConditionalLessThan(x, y: int):
-  return tf.cond(tf.less(x, tf.constant(y)), lambda: tf.constant(True),
-                 lambda: tf.constant(False))
+  return tf.cond(
+    tf.less(x, tf.constant(y)),
+    lambda: tf.constant(True),
+    lambda: tf.constant(False),
+  )
 
 
 def test_ConditionalLessThan_interger_input():
@@ -47,35 +50,36 @@ def WhileLoopFactorial(n: int):
   def Body(vars: LoopVars):
     """The while loop body."""
     return [
-        LoopVars(i=tf.add(vars.i, 1),
-                 imax=vars.imax,
-                 acc=tf.multiply(vars.acc, vars.i)),
+      LoopVars(
+        i=tf.add(vars.i, 1), imax=vars.imax, acc=tf.multiply(vars.acc, vars.i)
+      ),
     ]
 
   init_vars = LoopVars(i=1, imax=n + 1, acc=1)
-  while_loop = tf.while_loop(Condition, Body, [
-      init_vars,
-  ])
+  while_loop = tf.while_loop(Condition, Body, [init_vars,])
   return while_loop
 
 
 def test_WhileLoopFactorial():
   """Test factorial calculation."""
   with tf.compat.v1.Session() as sess:
-    final_vars, = sess.run(WhileLoopFactorial(9))
+    (final_vars,) = sess.run(WhileLoopFactorial(9))
     assert final_vars.acc == 362880  # 9!
 
-    final_vars, = sess.run(WhileLoopFactorial(10))
+    (final_vars,) = sess.run(WhileLoopFactorial(10))
     assert final_vars.acc == 3628800  # 10!
 
 
 def WhileLoopFactorialIsEqualTo(x: int, y: int):
   """Combining the previous two functions, compute and return x! < y."""
   # Use the while loop output as input to the conditional.
-  final_vars, = WhileLoopFactorial(x)
+  (final_vars,) = WhileLoopFactorial(x)
 
-  cond = tf.cond(tf.equal(final_vars.acc, tf.constant(y)),
-                 lambda: tf.constant(True), lambda: tf.constant(False))
+  cond = tf.cond(
+    tf.equal(final_vars.acc, tf.constant(y)),
+    lambda: tf.constant(True),
+    lambda: tf.constant(False),
+  )
   return cond
 
 
@@ -93,5 +97,5 @@ def test_WhileLoopFactorialIsLessThan():
     assert not sess.run(WhileLoopFactorialIsEqualTo(4, 25))  # 4! = 24
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

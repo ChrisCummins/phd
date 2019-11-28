@@ -165,27 +165,33 @@ digraph "CFG for 'DoSomething' function" {
 def test_NodeAttributesToBasicBlock_unrecognized_label():
   """Test that error is raised if label is not recognized."""
   with pytest.raises(ValueError):
-    llvm_util.NodeAttributesToBasicBlock({'label': 'invalid label'})
+    llvm_util.NodeAttributesToBasicBlock({"label": "invalid label"})
 
 
 def test_NodeAttributesToBasicBlock_name():
   """Test name extraction."""
-  label = ('"{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  '
-           '%5 = alloca i8**, align 8\l  %6 = alloca i32, align 4\l  '
-           'store i32 0, i32* %3, align 4\l  store i32 %0, i32* %4, '
-           'align 4\l  store i8** %1, i8*** %5, align 8\l  store i32 0, '
-           'i32* %6, align 4\l  br label %7\l}"')
-  assert llvm_util.NodeAttributesToBasicBlock({'label': label})['name'] == "%2"
+  label = (
+    '"{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  '
+    "%5 = alloca i8**, align 8\l  %6 = alloca i32, align 4\l  "
+    "store i32 0, i32* %3, align 4\l  store i32 %0, i32* %4, "
+    "align 4\l  store i8** %1, i8*** %5, align 8\l  store i32 0, "
+    'i32* %6, align 4\l  br label %7\l}"'
+  )
+  assert llvm_util.NodeAttributesToBasicBlock({"label": label})["name"] == "%2"
 
 
 def test_NodeAttributesToBasicBlock_text():
   """Test text extraction."""
-  label = ('"{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  '
-           '%5 = alloca i8**, align 8\l  %6 = alloca i32, align 4\l  '
-           'store i32 0, i32* %3, align 4\l  store i32 %0, i32* %4, '
-           'align 4\l  store i8** %1, i8*** %5, align 8\l  store i32 0, '
-           'i32* %6, align 4\l  br label %7\l}"')
-  assert llvm_util.NodeAttributesToBasicBlock({'label': label})['text'] == """\
+  label = (
+    '"{%2:\l  %3 = alloca i32, align 4\l  %4 = alloca i32, align 4\l  '
+    "%5 = alloca i8**, align 8\l  %6 = alloca i32, align 4\l  "
+    "store i32 0, i32* %3, align 4\l  store i32 %0, i32* %4, "
+    "align 4\l  store i8** %1, i8*** %5, align 8\l  store i32 0, "
+    'i32* %6, align 4\l  br label %7\l}"'
+  )
+  assert (
+    llvm_util.NodeAttributesToBasicBlock({"label": label})["text"]
+    == """\
 %3 = alloca i32, align 4
 %4 = alloca i32, align 4
 %5 = alloca i8**, align 8
@@ -196,6 +202,7 @@ store i8** %1, i8*** %5, align 8
 store i32 0, i32* %6, align 4
 br label %7\
 """
+  )
 
 
 def test_ControlFlowGraphFromDotSource_invalid_source():
@@ -207,7 +214,7 @@ def test_ControlFlowGraphFromDotSource_invalid_source():
 def test_ControlFlowGraphFromDotSource_graph_name():
   """Test that CFG has correct name."""
   g = llvm_util.ControlFlowGraphFromDotSource(SIMPLE_C_DOT)
-  assert g.graph['name'] == 'DoSomething'
+  assert g.graph["name"] == "DoSomething"
 
 
 def test_ControlFlowGraphFromDotSource_num_nodes():
@@ -234,9 +241,10 @@ def test_ControlFlowGraphFromDotSource_is_valid():
 def test_ControlFlowGraphFromDotSource_node_names():
   """Test that CFG names are as expected."""
   g = llvm_util.ControlFlowGraphFromDotSource(SIMPLE_C_DOT)
-  node_names = sorted([g.nodes[n]['name'] for n in g.nodes],
-                      key=lambda x: int(x[1:]))
-  assert node_names == ['%2', '%9', '%12', '%18']
+  node_names = sorted(
+    [g.nodes[n]["name"] for n in g.nodes], key=lambda x: int(x[1:])
+  )
+  assert node_names == ["%2", "%9", "%12", "%18"]
 
 
 def test_ControlFlowGraphFromDotSource_edges():
@@ -245,20 +253,19 @@ def test_ControlFlowGraphFromDotSource_edges():
   node_name_to_index_map = {g.nodes[n]["name"]: n for n in g.nodes}
   edges = set(g.edges)
 
-  assert (node_name_to_index_map['%2'], node_name_to_index_map['%9']) in edges
-  assert (node_name_to_index_map['%2'], node_name_to_index_map['%12']) in edges
-  assert (node_name_to_index_map['%9'], node_name_to_index_map['%18']) in edges
-  assert (node_name_to_index_map['%12'], node_name_to_index_map['%18']) in edges
+  assert (node_name_to_index_map["%2"], node_name_to_index_map["%9"]) in edges
+  assert (node_name_to_index_map["%2"], node_name_to_index_map["%12"]) in edges
+  assert (node_name_to_index_map["%9"], node_name_to_index_map["%18"]) in edges
+  assert (node_name_to_index_map["%12"], node_name_to_index_map["%18"]) in edges
 
 
 def test_ControlFlowGraphsFromBytecodes_num_graphs():
   """Test that expected number of CFGs are created."""
   g = list(
-      llvm_util.ControlFlowGraphsFromBytecodes([
-          SIMPLE_C_BYTECODE,
-          SIMPLE_C_BYTECODE,
-          SIMPLE_C_BYTECODE,
-      ]))
+    llvm_util.ControlFlowGraphsFromBytecodes(
+      [SIMPLE_C_BYTECODE, SIMPLE_C_BYTECODE, SIMPLE_C_BYTECODE,]
+    )
+  )
 
   assert len(g) == 6
 
@@ -266,11 +273,9 @@ def test_ControlFlowGraphsFromBytecodes_num_graphs():
 def test_ControlFlowGraphsFromBytecodes_one_failure():
   """Errors during construction of CFGs are buffered until complete."""
   # The middle job of the three will throw an opt.optException.
-  generator = llvm_util.ControlFlowGraphsFromBytecodes([
-      SIMPLE_C_BYTECODE,
-      "Invalid bytecode!",
-      SIMPLE_C_BYTECODE,
-  ])
+  generator = llvm_util.ControlFlowGraphsFromBytecodes(
+    [SIMPLE_C_BYTECODE, "Invalid bytecode!", SIMPLE_C_BYTECODE,]
+  )
 
   g = []
   # We can still get all of the valid CFGs out of input[0] and input[2]. The
@@ -318,18 +323,18 @@ digraph "CFG for 'FizzBuzz' function" {
 def test_ControlFlowGraphFromDotSource_fizz_buzz():
   """Test the fizz buzz graph properties."""
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
-  assert cfg.graph['name'] == 'FizzBuzz'
+  assert cfg.graph["name"] == "FizzBuzz"
   assert cfg.number_of_nodes() == 4
   assert cfg.number_of_edges() == 4
 
   # Create a map of node names to indices.
-  name_to_node = {data['name']: node for node, data in cfg.nodes(data=True)}
+  name_to_node = {data["name"]: node for node, data in cfg.nodes(data=True)}
 
   # Test that graph has required edges.
-  assert cfg.has_edge(name_to_node['%1'], name_to_node['%7'])
-  assert cfg.has_edge(name_to_node['%1'], name_to_node['%8'])
-  assert cfg.has_edge(name_to_node['%7'], name_to_node['%9'])
-  assert cfg.has_edge(name_to_node['%8'], name_to_node['%9'])
+  assert cfg.has_edge(name_to_node["%1"], name_to_node["%7"])
+  assert cfg.has_edge(name_to_node["%1"], name_to_node["%8"])
+  assert cfg.has_edge(name_to_node["%7"], name_to_node["%9"])
+  assert cfg.has_edge(name_to_node["%8"], name_to_node["%9"])
 
 
 def test_BuildFullFlowGraph_fizz_buzz():
@@ -340,7 +345,7 @@ def test_BuildFullFlowGraph_fizz_buzz():
   cfg = llvm_util.ControlFlowGraphFromDotSource(FIZZBUZZ_DOT)
   sig = cfg.BuildFullFlowGraph()
 
-  assert sig.graph['name'] == 'FizzBuzz'
+  assert sig.graph["name"] == "FizzBuzz"
 
 
 def test_BuildFullFlowGraph_num_nodes():
@@ -363,32 +368,38 @@ def test_BuildFullFlowGraph_node_text():
   sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
-  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+  name_to_node = {data["name"]: node for node, data in sig.nodes(data=True)}
 
   # Block %1.
-  assert sig.nodes[name_to_node['%1.0']]['text'] == '%2 = alloca i32, align 4'
-  assert sig.nodes[name_to_node['%1.1']]['text'] == '%3 = alloca i32, align 4'
-  assert sig.nodes[
-      name_to_node['%1.2']]['text'] == 'store i32 %0, i32* %3, align 4'
-  assert sig.nodes[
-      name_to_node['%1.3']]['text'] == '%4 = load i32, i32* %3, align 4'
-  assert sig.nodes[name_to_node['%1.4']]['text'] == '%5 = srem i32 %4, 15'
-  assert sig.nodes[name_to_node['%1.5']]['text'] == '%6 = icmp eq i32 %5, 0'
+  assert sig.nodes[name_to_node["%1.0"]]["text"] == "%2 = alloca i32, align 4"
+  assert sig.nodes[name_to_node["%1.1"]]["text"] == "%3 = alloca i32, align 4"
+  assert (
+    sig.nodes[name_to_node["%1.2"]]["text"] == "store i32 %0, i32* %3, align 4"
+  )
+  assert (
+    sig.nodes[name_to_node["%1.3"]]["text"] == "%4 = load i32, i32* %3, align 4"
+  )
+  assert sig.nodes[name_to_node["%1.4"]]["text"] == "%5 = srem i32 %4, 15"
+  assert sig.nodes[name_to_node["%1.5"]]["text"] == "%6 = icmp eq i32 %5, 0"
   # Note the conditional branch instruction has had the labels stripped.
-  assert sig.nodes[name_to_node['%1.6']]['text'] == 'br i1 %6'
+  assert sig.nodes[name_to_node["%1.6"]]["text"] == "br i1 %6"
 
   # Block %7.
-  assert sig.nodes[
-      name_to_node['%7.0']]['text'] == 'store i32 1, i32* %2, align 4'
+  assert (
+    sig.nodes[name_to_node["%7.0"]]["text"] == "store i32 1, i32* %2, align 4"
+  )
 
   # Block %8.
-  assert sig.nodes[
-      name_to_node['%8.0']]['text'] == 'store i32 0, i32* %2, align 4'
+  assert (
+    sig.nodes[name_to_node["%8.0"]]["text"] == "store i32 0, i32* %2, align 4"
+  )
 
   # Block %9.
-  assert sig.nodes[
-      name_to_node['%9.0']]['text'] == '%10 = load i32, i32* %2, align 4'
-  assert sig.nodes[name_to_node['%9.1']]['text'] == 'ret i32 %10'
+  assert (
+    sig.nodes[name_to_node["%9.0"]]["text"]
+    == "%10 = load i32, i32* %2, align 4"
+  )
+  assert sig.nodes[name_to_node["%9.1"]]["text"] == "ret i32 %10"
 
 
 def test_BuildFullFlowGraph_num_edges():
@@ -411,28 +422,28 @@ def test_BuildFullFlowGraph_edges():
   sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
-  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+  name_to_node = {data["name"]: node for node, data in sig.nodes(data=True)}
 
   # Block %1.
-  assert sig.has_edge(name_to_node['%1.0'], name_to_node['%1.1'])
-  assert sig.has_edge(name_to_node['%1.1'], name_to_node['%1.2'])
-  assert sig.has_edge(name_to_node['%1.2'], name_to_node['%1.3'])
-  assert sig.has_edge(name_to_node['%1.3'], name_to_node['%1.4'])
-  assert sig.has_edge(name_to_node['%1.4'], name_to_node['%1.5'])
-  assert sig.has_edge(name_to_node['%1.5'], name_to_node['%1.6'])
-  assert sig.has_edge(name_to_node['%1.6'], name_to_node['%7.0'])
-  assert sig.has_edge(name_to_node['%1.6'], name_to_node['%8.0'])
+  assert sig.has_edge(name_to_node["%1.0"], name_to_node["%1.1"])
+  assert sig.has_edge(name_to_node["%1.1"], name_to_node["%1.2"])
+  assert sig.has_edge(name_to_node["%1.2"], name_to_node["%1.3"])
+  assert sig.has_edge(name_to_node["%1.3"], name_to_node["%1.4"])
+  assert sig.has_edge(name_to_node["%1.4"], name_to_node["%1.5"])
+  assert sig.has_edge(name_to_node["%1.5"], name_to_node["%1.6"])
+  assert sig.has_edge(name_to_node["%1.6"], name_to_node["%7.0"])
+  assert sig.has_edge(name_to_node["%1.6"], name_to_node["%8.0"])
 
   # Block %7.
-  assert sig.has_edge(name_to_node['%7.0'], name_to_node['%7.1'])
-  assert sig.has_edge(name_to_node['%7.1'], name_to_node['%9.0'])
+  assert sig.has_edge(name_to_node["%7.0"], name_to_node["%7.1"])
+  assert sig.has_edge(name_to_node["%7.1"], name_to_node["%9.0"])
 
   # Block %8.
-  assert sig.has_edge(name_to_node['%8.0'], name_to_node['%8.1'])
-  assert sig.has_edge(name_to_node['%8.1'], name_to_node['%9.0'])
+  assert sig.has_edge(name_to_node["%8.0"], name_to_node["%8.1"])
+  assert sig.has_edge(name_to_node["%8.1"], name_to_node["%9.0"])
 
   # Block %9.
-  assert sig.has_edge(name_to_node['%9.0'], name_to_node['%9.1'])
+  assert sig.has_edge(name_to_node["%9.0"], name_to_node["%9.1"])
 
 
 def test_BuildFullFlowGraph_entry_block():
@@ -444,9 +455,9 @@ def test_BuildFullFlowGraph_entry_block():
   sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
-  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+  name_to_node = {data["name"]: node for node, data in sig.nodes(data=True)}
 
-  assert sig.nodes[name_to_node['%1.0']]['entry']
+  assert sig.nodes[name_to_node["%1.0"]]["entry"]
 
 
 def test_BuildFullFlowGraph_exit_block():
@@ -458,9 +469,9 @@ def test_BuildFullFlowGraph_exit_block():
   sig = cfg.BuildFullFlowGraph()
 
   # Create a map of node names to indices.
-  name_to_node = {data['name']: node for node, data in sig.nodes(data=True)}
+  name_to_node = {data["name"]: node for node, data in sig.nodes(data=True)}
 
-  assert sig.nodes[name_to_node['%9.1']]['exit']
+  assert sig.nodes[name_to_node["%9.1"]]["exit"]
 
 
 def test_ControlFlowGraphFromDotSource_positions():
@@ -482,7 +493,8 @@ def test_ControlFlowGraphFromDotSource_positions():
       return n;
     }
   """
-  cfg = llvm_util.ControlFlowGraphFromDotSource("""
+  cfg = llvm_util.ControlFlowGraphFromDotSource(
+    """
 digraph "CFG for 'A' function" {
 	label="CFG for 'A' function";
 
@@ -507,12 +519,13 @@ digraph "CFG for 'A' function" {
 	Node0x7ff981522d70 -> Node0x7ff981522980;
 	Node0x7ff981522bd0 [shape=record,label="{%21:\l\l  %22 = load i32, i32* %1, align 4\l  ret i32 %22\l}"];
 }
-""")
+"""
+  )
   positions = set()
-  for _, _, position in cfg.edges(data='position'):
+  for _, _, position in cfg.edges(data="position"):
     positions.add(position)
   assert positions == {0, 1, 2}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

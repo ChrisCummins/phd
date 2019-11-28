@@ -6,8 +6,8 @@
 #include <array>
 #include <ustl/array>
 
-#include <vector>
 #include <ustl/vector>
+#include <vector>
 
 static unsigned int seed = 0xCEC;
 
@@ -20,8 +20,7 @@ static void std_algorithm_sort_int(benchmark::State& state) {
   std::vector<int> v(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
-    for (auto& i : v)
-      i = static_cast<int>(rand_r(&seed));
+    for (auto& i : v) i = static_cast<int>(rand_r(&seed));
 
     std::sort(v.begin(), v.end());
     benchmark::DoNotOptimize(v.data());
@@ -33,8 +32,7 @@ static void ustl_algorithm_sort_int(benchmark::State& state) {
   ustl::vector<int> v(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
-    for (auto& i : v)
-      i = static_cast<int>(rand_r(&seed));
+    for (auto& i : v) i = static_cast<int>(rand_r(&seed));
 
     ustl::sort(v.begin(), v.end());
     benchmark::DoNotOptimize(v.data());

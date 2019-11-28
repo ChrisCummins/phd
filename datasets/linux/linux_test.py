@@ -21,7 +21,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def dataset() -> linux.LinuxSourcesDataset:
   yield linux.LinuxSourcesDataset()
 
@@ -32,13 +32,13 @@ def dataset() -> linux.LinuxSourcesDataset:
 
 
 def test_version(dataset: linux.LinuxSourcesDataset):
-  assert dataset.version == '4.19'
+  assert dataset.version == "4.19"
 
 
 def test_known_file_locations(dataset: linux.LinuxSourcesDataset):
   """Test that known files exist."""
-  assert (dataset.src_tree_root / 'kernel' / 'kexec.c').is_file()
-  assert (dataset.src_tree_root / 'kernel' / 'smpboot.h').is_file()
+  assert (dataset.src_tree_root / "kernel" / "kexec.c").is_file()
+  assert (dataset.src_tree_root / "kernel" / "smpboot.h").is_file()
 
 
 def test_all_srcs_count(dataset: linux.LinuxSourcesDataset):
@@ -97,8 +97,8 @@ def test_include_headers_count(dataset: linux.LinuxSourcesDataset):
   """Test the number of include headers."""
   # FIXME(cec): This value does not appear to stable across platforms, but it
   # should be.
-  assert abs(len(dataset.ListFiles('include', '*.h')) - 4890) < 100
+  assert abs(len(dataset.ListFiles("include", "*.h")) - 4890) < 100
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

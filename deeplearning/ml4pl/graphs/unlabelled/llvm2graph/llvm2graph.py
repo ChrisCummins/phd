@@ -8,7 +8,7 @@ FLAGS = app.FLAGS
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   # TODO(github.com/ChrisCummins/ProGraML/issues/2): Implement!
   bytecode = ""
@@ -19,5 +19,5 @@ def main(argv):
   print(graph_proto)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

@@ -36,7 +36,7 @@ from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('clone_list', None, 'The path to a LanguageCloneList file.')
+app.DEFINE_string("clone_list", None, "The path to a LanguageCloneList file.")
 
 
 class QueryScraper(threading.Thread):
@@ -45,9 +45,12 @@ class QueryScraper(threading.Thread):
   An instance of this class is executed as a thread.
   """
 
-  def __init__(self, language: scrape_repos_pb2.LanguageToClone,
-               query: scrape_repos_pb2.GitHubRepositoryQuery,
-               github_connection: github.Github):
+  def __init__(
+    self,
+    language: scrape_repos_pb2.LanguageToClone,
+    query: scrape_repos_pb2.GitHubRepositoryQuery,
+    github_connection: github.Github,
+  ):
     """Instantiate a QueryScraper.
 
     Args:
@@ -65,11 +68,12 @@ class QueryScraper(threading.Thread):
     while True:
       try:
         self.query = github_connection.search_repositories(
-            self.repo_query.string)
+          self.repo_query.string
+        )
         self.total_result_count = self.query.totalCount
         break
       except (github.RateLimitExceededException, github.GithubException) as e:
-        app.Log(2, 'Pausing on GitHub error: %s', e)
+        app.Log(2, "Pausing on GitHub error: %s", e)
         time.sleep(3)
     self.next_page_num = 0
     super(QueryScraper, self).__init__()
@@ -95,13 +99,13 @@ class QueryScraper(threading.Thread):
     """
     while True:
       try:
-        app.Log(2, 'Requesting page %d', self.next_page_num)
+        app.Log(2, "Requesting page %d", self.next_page_num)
         page = list(self.query.get_page(self.next_page_num))
-        app.Log(2, 'Page %d contains %d results', self.next_page_num, len(page))
+        app.Log(2, "Page %d contains %d results", self.next_page_num, len(page))
         self.next_page_num += 1
         return page
       except github.RateLimitExceededException:
-        app.Log(2, 'Pausing on GitHub rate limit')
+        app.Log(2, "Pausing on GitHub rate limit")
         time.sleep(3)
       except github.GithubException:
         # One possible cause for this exception is when trying to request
@@ -129,19 +133,20 @@ class QueryScraper(threading.Thread):
     self.destination_directory.mkdir(parents=True, exist_ok=True)
     repos = self.GetNextBatchOfResults()
     while not self.IsDone(repos):
-      num_remaining = (self.repo_query.max_results - self.i)
+      num_remaining = self.repo_query.max_results - self.i
       repos = repos[:num_remaining]
       self.ProcessReposBatch(repos)
       repos = self.GetNextBatchOfResults()
 
-  def ProcessReposBatch(self,
-                        repos: typing.List[Repository.Repository]) -> None:
+  def ProcessReposBatch(
+    self, repos: typing.List[Repository.Repository]
+  ) -> None:
     """Make meta files for a list of repositories.
 
     Args:
       repos: A list of GitHub Repository instances.
     """
-    app.Log(2, 'Scraping %s repositories', humanize.Commas(len(repos)))
+    app.Log(2, "Scraping %s repositories", humanize.Commas(len(repos)))
     for repo in repos:
       if self.is_stopped:
         return
@@ -151,10 +156,11 @@ class QueryScraper(threading.Thread):
   def ProcessRepo(self, repo: Repository.Repository) -> None:
     """Make metafile for a single repo."""
     meta_path = self.GetRepoMetaPath(repo)
-    if not pbutil.ProtoIsReadable(meta_path,
-                                  scrape_repos_pb2.GitHubRepoMetadata()):
+    if not pbutil.ProtoIsReadable(
+      meta_path, scrape_repos_pb2.GitHubRepoMetadata()
+    ):
       meta = GetRepositoryMetadata(repo)
-      app.Log(2, '%s', meta)
+      app.Log(2, "%s", meta)
 
       # Ignore URLs in the blacklist.
       if meta.clone_from_url.lower() in self.language.clone_from_url_blacklist:
@@ -164,9 +170,9 @@ class QueryScraper(threading.Thread):
 
   def GetRepoMetaPath(self, repo: Repository.Repository) -> pathlib.Path:
     """Get the path of the metafile for a repo."""
-    repo_name = '_'.join([repo.owner.login, repo.name])
+    repo_name = "_".join([repo.owner.login, repo.name])
     clone_dir = self.destination_directory / repo_name
-    meta_path = pathlib.Path(str(clone_dir) + '.pbtxt')
+    meta_path = pathlib.Path(str(clone_dir) + ".pbtxt")
     return meta_path
 
 
@@ -177,23 +183,29 @@ def RunQuery(worker: QueryScraper) -> None:
     worker: A QueryScraper worker instance.
   """
   sys.stderr.flush()
-  app.Log(1, "Query '%s' returned %s results. Processing first %s ...",
-          worker.repo_query.string, humanize.Commas(worker.total_result_count),
-          humanize.Commas(worker.repo_query.max_results))
-  bar = progressbar.ProgressBar(max_value=worker.repo_query.max_results,
-                                redirect_stderr=True)
+  app.Log(
+    1,
+    "Query '%s' returned %s results. Processing first %s ...",
+    worker.repo_query.string,
+    humanize.Commas(worker.total_result_count),
+    humanize.Commas(worker.repo_query.max_results),
+  )
+  bar = progressbar.ProgressBar(
+    max_value=worker.repo_query.max_results, redirect_stderr=True
+  )
   worker.start()
   while worker.is_alive():
     bar.update(worker.GetNumberOfResultsProcessed())
-    worker.join(.5)
+    worker.join(0.5)
   bar.update(worker.GetNumberOfResultsProcessed())
   bar.finish()
-  sys.stderr.write('\n')
+  sys.stderr.write("\n")
   sys.stderr.flush()
 
 
 def GetRepositoryMetadata(
-    repo: Repository.Repository) -> scrape_repos_pb2.GitHubRepoMetadata():
+  repo: Repository.Repository,
+) -> scrape_repos_pb2.GitHubRepoMetadata():
   """Get metadata about a GitHub repository.
 
   Args:
@@ -204,7 +216,8 @@ def GetRepositoryMetadata(
   """
   meta = scrape_repos_pb2.GitHubRepoMetadata()
   meta.scraped_utc_epoch_ms = labdate.MillisecondsTimestamp(
-      labdate.GetUtcMillisecondsNow())
+    labdate.GetUtcMillisecondsNow()
+  )
   meta.owner = repo.owner.login
   meta.name = repo.name
   meta.num_watchers = repo.watchers_count
@@ -222,7 +235,7 @@ def GetNumberOfRepoMetas(language: scrape_repos_pb2.LanguageToClone) -> int:
   """
   path = pathlib.Path(language.destination_directory)
   if path.is_dir():
-    return len([x for x in path.iterdir() if x.suffix == '.pbtxt'])
+    return len([x for x in path.iterdir() if x.suffix == ".pbtxt"])
   else:
     return 0
 
@@ -230,28 +243,37 @@ def GetNumberOfRepoMetas(language: scrape_repos_pb2.LanguageToClone) -> int:
 def main(argv) -> None:
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError('Too many command-line arguments.')
+    raise app.UsageError("Too many command-line arguments.")
 
   connection = github_api.GetGithubConectionFromFlagsOrDie()
 
   clone_list_path = pathlib.Path(FLAGS.clone_list or "")
   if not clone_list_path.is_file():
-    raise app.UsageError('--clone_list is not a file.')
+    raise app.UsageError("--clone_list is not a file.")
 
-  clone_list = pbutil.FromFile(clone_list_path,
-                               scrape_repos_pb2.LanguageCloneList())
+  clone_list = pbutil.FromFile(
+    clone_list_path, scrape_repos_pb2.LanguageCloneList()
+  )
 
   for language in clone_list.language:
-    app.Log(1, 'Scraping %s repos using %s queries ...', language.language,
-            humanize.Commas(len(language.query)))
+    app.Log(
+      1,
+      "Scraping %s repos using %s queries ...",
+      language.language,
+      humanize.Commas(len(language.query)),
+    )
     for query in language.query:
       RunQuery(QueryScraper(language, query, connection))
 
-  app.Log(1, 'Finished scraping. Indexed repository counts:')
+  app.Log(1, "Finished scraping. Indexed repository counts:")
   for language in clone_list.language:
-    app.Log(1, '  %s: %s', language.language,
-            humanize.Commas(GetNumberOfRepoMetas(language)))
+    app.Log(
+      1,
+      "  %s: %s",
+      language.language,
+      humanize.Commas(GetNumberOfRepoMetas(language)),
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

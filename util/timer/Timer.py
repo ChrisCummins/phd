@@ -68,7 +68,6 @@ def get_active_timer() -> str:
 
 
 class TimerMenubar(rumps.App):
-
   @rumps.clicked("Update Title")
   def update_title(self, _):
     self.title = get_active_timer()
@@ -79,7 +78,7 @@ class TimerMenubar(rumps.App):
 
   @rumps.clicked("Test Notification")
   def test_notification(self, _):
-    Notifier.notify('Test Notification', title='Timer')
+    Notifier.notify("Test Notification", title="Timer")
 
   @rumps.clicked("Test Checkbox")
   def test_button(self, sender):

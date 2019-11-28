@@ -32,7 +32,7 @@ def _MinimumLineCount(text: str, min_line_count: int) -> str:
   Raises:
     NoCodeException: If src is less than min_line_count long.
   """
-  if len(text.strip().split('\n')) < min_line_count:
+  if len(text.strip().split("\n")) < min_line_count:
     raise errors.NoCodeException
   return text
 
@@ -85,4 +85,4 @@ def StripTrailingWhitespace(text: str) -> str:
   Returns:
     The input text, with trailing whitespace removed.
   """
-  return '\n'.join(l.rstrip() for l in text.split('\n')).rstrip()
+  return "\n".join(l.rstrip() for l in text.split("\n")).rstrip()

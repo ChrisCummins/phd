@@ -22,11 +22,12 @@ if __name__ == "__main__":
   config.read(os.path.expanduser(args.githubrc))
 
   try:
-    github_username = config['User']['Username']
-    github_pw = config['User']['Password']
+    github_username = config["User"]["Username"]
+    github_pw = config["User"]["Password"]
   except KeyError as e:
     print(
-        f'config variable {e} not set. Check {args.githubrc}', file=sys.stderr)
+      f"config variable {e} not set. Check {args.githubrc}", file=sys.stderr
+    )
     sys.exit(1)
 
   g = Github(github_username, github_pw)
@@ -41,9 +42,9 @@ if __name__ == "__main__":
   session = make_session()
 
   def get_or_create_usergroup(p: Person) -> Group:
-    q = session.query(Group) \
-      .filter(Group.body == p.name,
-              Group.created == p.created)
+    q = session.query(Group).filter(
+      Group.body == p.name, Group.created == p.created
+    )
 
     if q.count():
       return q.one()
@@ -54,8 +55,9 @@ if __name__ == "__main__":
       return usergroup
 
   def get_or_create_user(github_user) -> Person:
-    q = session.query(Person).filter(Person.name == github_user.login,
-                                     Person.created == github_user.created_at)
+    q = session.query(Person).filter(
+      Person.name == github_user.login, Person.created == github_user.created_at
+    )
     if github_user.email:
       q = q.join(Email).filter(Email.address == github_user.email)
 
@@ -79,7 +81,8 @@ if __name__ == "__main__":
 
   # Create workspace
   workspace = Workspace(
-      uid="GitHub", created=datetime.strptime("1/4/08", "%d/%m/%y"))
+    uid="GitHub", created=datetime.strptime("1/4/08", "%d/%m/%y")
+  )
   session.add(workspace)
 
   # Import labels as Tags
@@ -101,25 +104,29 @@ if __name__ == "__main__":
   tasktree.owners.append(usergroup)
 
   repo_tasktree = tasktree.add_subtask(
-      Task(body=r.name, created_by=usergroup, created=r.created_at))
+    Task(body=r.name, created_by=usergroup, created=r.created_at)
+  )
 
   # Import Milestones as Tasks
-  for milestone in r.get_milestones(state='all'):
+  for milestone in r.get_milestones(state="all"):
     a = get_or_create_usergroup(get_or_create_user(milestone.creator))
     m = repo_tasktree.add_subtask(
-        Task(
-            body=(f"{milestone.title}\n\n{milestone.description}").rstrip(),
-            created_by=a,
-            created=milestone.created_at,
-            due=milestone.due_on,
-            modified=milestone.updated_at,
-        ))
+      Task(
+        body=(f"{milestone.title}\n\n{milestone.description}").rstrip(),
+        created_by=a,
+        created=milestone.created_at,
+        due=milestone.due_on,
+        modified=milestone.updated_at,
+      )
+    )
 
     for label in milestone.get_labels():
       # lookup tag
-      tag = session.query(Tag) \
-        .filter(Tag.parent == repo_tagtree,
-                Tag.body == label.name).one()
+      tag = (
+        session.query(Tag)
+        .filter(Tag.parent == repo_tagtree, Tag.body == label.name)
+        .one()
+      )
       m.tags.append(tag)
 
   session.add(repo_tasktree)
@@ -129,37 +136,46 @@ if __name__ == "__main__":
   for issue in r.get_issues(state="all"):
     if issue.milestone:
       # lookup milestone task
-      milestone = session.query(Task) \
-        .filter(Task.parent == repo_tasktree,
-                Task.body == (
-                  f"{issue.milestone.title}\n\n{issue.milestone.description}").rstrip()).one()
+      milestone = (
+        session.query(Task)
+        .filter(
+          Task.parent == repo_tasktree,
+          Task.body
+          == (
+            f"{issue.milestone.title}\n\n{issue.milestone.description}"
+          ).rstrip(),
+        )
+        .one()
+      )
       task_parent = milestone
     else:
       task_parent = repo_tasktree
 
     a = get_or_create_usergroup(get_or_create_user(issue.user))
     task = task_parent.add_subtask(
-        body=(f"{issue.title}\n\n" + issue.body.replace('\r\n', '\n')).rstrip(),
-        completed=issue.closed_at,
-        created_by=a,
-        created=issue.created_at,
+      body=(f"{issue.title}\n\n" + issue.body.replace("\r\n", "\n")).rstrip(),
+      completed=issue.closed_at,
+      created_by=a,
+      created=issue.created_at,
     )
 
     for comment in issue.get_comments():
       a = get_or_create_usergroup(get_or_create_user(comment.user))
       comment_node = TaskComment(
-          body=comment.body,
-          created_by=a,
-          created=issue.created_at,
-          modified=issue.updated_at,
+        body=comment.body,
+        created_by=a,
+        created=issue.created_at,
+        modified=issue.updated_at,
       )
       task.comments.append(comment_node)
 
     for label in issue.get_labels():
       # lookup tag
-      tag = session.query(Tag) \
-        .filter(Tag.parent == repo_tagtree,
-                Tag.body == label.name).one()
+      tag = (
+        session.query(Tag)
+        .filter(Tag.parent == repo_tagtree, Tag.body == label.name)
+        .one()
+      )
 
       task.tags.append(tag)
 

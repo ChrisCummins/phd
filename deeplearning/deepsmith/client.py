@@ -18,4 +18,4 @@ from deeplearning.deepsmith import db
 
 class Client(db.StringTable):
   id_t = db.StringTable.id_t
-  __tablename__ = 'clients'
+  __tablename__ = "clients"

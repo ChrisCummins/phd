@@ -12,9 +12,10 @@ from learn.python import cpp_interop_pb2
 FLAGS = app.FLAGS
 
 # Paths of the C++ binaries to be tested.
-CPP_INTEROP_BIN = bazelutil.DataPath('phd/learn/python/cpp_interop_bin')
+CPP_INTEROP_BIN = bazelutil.DataPath("phd/learn/python/cpp_interop_bin")
 CPP_INTEROP_IN_PLACE_BIN = bazelutil.DataPath(
-    'phd/learn/python/cpp_interop_inplace_bin')
+  "phd/learn/python/cpp_interop_inplace_bin"
+)
 
 MODULE_UNDER_TEST = None  # No coverage.
 
@@ -25,9 +26,9 @@ def test_AddXandY():
   input_proto = cpp_interop_pb2.AddXandY(x=2, y=3)
 
   # Run the C++ binary, passing the proto as input and capturing it's output.
-  process = subprocess.Popen([str(CPP_INTEROP_BIN)],
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
+  process = subprocess.Popen(
+    [str(CPP_INTEROP_BIN)], stdin=subprocess.PIPE, stdout=subprocess.PIPE
+  )
   stdout, _ = process.communicate(input_proto.SerializeToString())
   assert not process.returncode
 
@@ -51,9 +52,11 @@ def test_AddXandY_in_place():
   proto = cpp_interop_pb2.AddXandY(x=2, y=3)
 
   # Run the C++ binary, passing the proto as input and capturing it's output.
-  process = subprocess.Popen([str(CPP_INTEROP_IN_PLACE_BIN)],
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE)
+  process = subprocess.Popen(
+    [str(CPP_INTEROP_IN_PLACE_BIN)],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+  )
   stdout, _ = process.communicate(proto.SerializeToString())
   assert not process.returncode
 
@@ -66,5 +69,5 @@ def test_AddXandY_in_place():
   assert proto.result == 2 + 3
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

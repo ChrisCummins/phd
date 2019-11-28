@@ -38,13 +38,15 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 
-def EncodeAndPadSources(atomizer: atomizers.AtomizerBase,
-                        srcs: typing.List[str], maxlen: int) -> np.array:
+def EncodeAndPadSources(
+  atomizer: atomizers.AtomizerBase, srcs: typing.List[str], maxlen: int
+) -> np.array:
   """Encode and pad source code for learning."""
   seqs = [atomizer.AtomizeString(src) for src in srcs]
   pad_val = atomizer.vocab_size
   encoded = np.array(
-      keras_sequence.pad_sequences(seqs, maxlen=maxlen, value=pad_val))
+    keras_sequence.pad_sequences(seqs, maxlen=maxlen, value=pad_val)
+  )
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded])
 
 
@@ -60,17 +62,20 @@ class DeepTune(base.HeterogeneousMappingModel):
       ﻿Cummins, C., Petoumenos, P., Wang, Z., & Leather, H. (2017). End-to-end
       Deep Learning of Optimization Heuristics. In PACT. IEEE.
   """
+
   __name__ = "DeepTune"
   __basename__ = "deeptune"
 
-  def __init__(self,
-               lstm_layer_size: int = 64,
-               dense_layer_size: int = 32,
-               num_epochs: int = 50,
-               batch_size: int = 64,
-               input_shape: typing.List[int] = (1024,),
-               input_type: str = 'int32',
-               with_embedding_layer: bool = True):
+  def __init__(
+    self,
+    lstm_layer_size: int = 64,
+    dense_layer_size: int = 32,
+    num_epochs: int = 50,
+    batch_size: int = 64,
+    input_shape: typing.List[int] = (1024,),
+    input_type: str = "int32",
+    with_embedding_layer: bool = True,
+  ):
     """Constructor.
 
     Args:
@@ -105,22 +110,26 @@ class DeepTune(base.HeterogeneousMappingModel):
     # Language model. It begins with an optional embedding layer, then has two
     # layers of LSTM network, returning a single vector of size
     # self.lstm_layer_size.
-    input_layer = Input(shape=self.input_shape,
-                        dtype=self.input_type,
-                        name="model_in")
+    input_layer = Input(
+      shape=self.input_shape, dtype=self.input_type, name="model_in"
+    )
     lstm_input = input_layer
 
     if self.with_embedding_layer:
       embedding_dim = atomizer.vocab_size + 1
-      lstm_input = Embedding(input_dim=embedding_dim,
-                             input_length=self.input_shape[0],
-                             output_dim=self.lstm_layer_size,
-                             name="embedding")(input_layer)
+      lstm_input = Embedding(
+        input_dim=embedding_dim,
+        input_length=self.input_shape[0],
+        output_dim=self.lstm_layer_size,
+        name="embedding",
+      )(input_layer)
 
-    x = LSTM(self.lstm_layer_size,
-             implementation=1,
-             return_sequences=True,
-             name="lstm_1")(lstm_input)
+    x = LSTM(
+      self.lstm_layer_size,
+      implementation=1,
+      return_sequences=True,
+      name="lstm_1",
+    )(lstm_input)
     x = LSTM(self.lstm_layer_size, implementation=1, name="lstm_2")(x)
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
@@ -134,13 +143,15 @@ class DeepTune(base.HeterogeneousMappingModel):
     x = Dense(self.dense_layer_size, activation="relu")(x)
     out = Dense(2, activation="sigmoid")(x)
 
-    self.model = Model(inputs=[auxiliary_inputs, input_layer],
-                       outputs=[out, langmodel_out])
+    self.model = Model(
+      inputs=[auxiliary_inputs, input_layer], outputs=[out, langmodel_out]
+    )
     self.model.compile(
-        optimizer="adam",
-        metrics=['accuracy'],
-        loss=["categorical_crossentropy", "categorical_crossentropy"],
-        loss_weights=[1., .2])
+      optimizer="adam",
+      metrics=["accuracy"],
+      loss=["categorical_crossentropy", "categorical_crossentropy"],
+      loss_weights=[1.0, 0.2],
+    )
 
     return self
 
@@ -155,21 +166,21 @@ class DeepTune(base.HeterogeneousMappingModel):
     # contents:
     #     /keras_model.h5 - Full keras model.
     #     /atomizer.pkl - Pickled atomizer.
-    with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    with tempfile.TemporaryDirectory(prefix="phd_") as d:
       d = pathlib.Path(d)
 
       # Write the model files to a temporary directory.
-      self.model.save(d / 'keras_model.h5')
-      with open(d / 'atomizer.pkl', 'wb') as outfile:
+      self.model.save(d / "keras_model.h5")
+      with open(d / "atomizer.pkl", "wb") as outfile:
         pickle.dump(self._atomizer, outfile)
 
       # Package the files as an uncompressed tarball.
-      with tarfile.open(outpath, mode='w') as tar:
-        tar.add(d / 'keras_model.h5', arcname='keras_model.h5')
-        tar.add(d / 'atomizer.pkl', arcname='atomizer.pkl')
+      with tarfile.open(outpath, mode="w") as tar:
+        tar.add(d / "keras_model.h5", arcname="keras_model.h5")
+        tar.add(d / "atomizer.pkl", arcname="atomizer.pkl")
 
   def restore(self, inpath):
-    with tempfile.TemporaryDirectory(prefix='phd_') as d:
+    with tempfile.TemporaryDirectory(prefix="phd_") as d:
       d = pathlib.Path(d)
 
       # Unpack the tarball to a temporary directory.
@@ -177,39 +188,49 @@ class DeepTune(base.HeterogeneousMappingModel):
         tar.extractall(d)
 
       # Restore model properties from files.
-      self.model = keras_models.load_model(d / 'keras_model.h5')
-      with open(d / 'atomizer.pkl', 'rb') as f:
+      self.model = keras_models.load_model(d / "keras_model.h5")
+      with open(d / "atomizer.pkl", "rb") as f:
         self._atomizer = pickle.load(f)
 
   def train(self, df: pd.DataFrame, platform_name: str, verbose: bool = False):
-    self.model.fit(self.DataFrameToModelInputs(df, platform_name),
-                   self.DataFrameToModelTargets(df),
-                   epochs=self.num_epochs,
-                   batch_size=self.batch_size,
-                   verbose=verbose,
-                   shuffle=True)
+    self.model.fit(
+      self.DataFrameToModelInputs(df, platform_name),
+      self.DataFrameToModelTargets(df),
+      epochs=self.num_epochs,
+      batch_size=self.batch_size,
+      verbose=verbose,
+      shuffle=True,
+    )
 
-  def predict(self, df: pd.DataFrame, platform_name: str,
-              verbose: bool = False):
+  def predict(
+    self, df: pd.DataFrame, platform_name: str, verbose: bool = False
+  ):
     p = np.array(
-        self.model.predict(self.DataFrameToModelInputs(df, platform_name),
-                           batch_size=self.batch_size,
-                           verbose=verbose))
+      self.model.predict(
+        self.DataFrameToModelInputs(df, platform_name),
+        batch_size=self.batch_size,
+        verbose=verbose,
+      )
+    )
     indices = [np.argmax(x) for x in p[0]]
     return indices
 
-  def DataFrameToModelInputs(self, df: pd.DataFrame,
-                             gpu_name: str) -> typing.List[np.ndarray]:
+  def DataFrameToModelInputs(
+    self, df: pd.DataFrame, gpu_name: str
+  ) -> typing.List[np.ndarray]:
     """Convert a pandas table to a list of model inputs."""
-    sequences = EncodeAndPadSources(self.atomizer, df['program:opencl_src'],
-                                    self.input_shape[0])
-    aux_in = np.array([
+    sequences = EncodeAndPadSources(
+      self.atomizer, df["program:opencl_src"], self.input_shape[0]
+    )
+    aux_in = np.array(
+      [
         df[f"feature:{gpu_name}:transfer"].values,
         df[f"param:{gpu_name}:wgsize"].values,
-    ]).T
+      ]
+    ).T
     return [aux_in, sequences]
 
   @staticmethod
   def DataFrameToModelTargets(df: pd.DataFrame) -> typing.List[np.ndarray]:
     """Convert a pandas table to a list of model targets."""
-    return [np.vstack(df['y_1hot'].values), np.vstack(df['y_1hot'].values)]
+    return [np.vstack(df["y_1hot"].values), np.vstack(df["y_1hot"].values)]

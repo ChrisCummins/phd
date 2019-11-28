@@ -60,13 +60,13 @@ class AtomizerBase(object):
   def _UpdateVocabulary(self) -> None:
     """Private method which must be called if vocab is modified."""
     if not isinstance(self.vocab, dict):
-      raise TypeError('vocabulary must be a dict')
+      raise TypeError("vocabulary must be a dict")
 
     # Each atom and index must be unique to ensure deterministic encoding.
     if len(set(self.vocab.keys())) != len(self.vocab):
-      raise errors.InvalidVocab('all atoms must be unique')
+      raise errors.InvalidVocab("all atoms must be unique")
     if len(set(self.vocab.values())) != len(self.vocab):
-      raise errors.InvalidVocab('all indices must be unique')
+      raise errors.InvalidVocab("all indices must be unique")
 
     self.vocab_size = len(self.vocab)
     self.decoder = {val: key for key, val in self.vocab.items()}
@@ -107,17 +107,17 @@ class AtomizerBase(object):
       The decoded text.
     """
     try:
-      return ''.join(list(map(lambda x: self.decoder[x], encoded)))
+      return "".join(list(map(lambda x: self.decoder[x], encoded)))
     except KeyError:
       raise errors.VocabError
 
   def ToFile(self, path: pathlib.Path) -> None:
     """Save an atomizer to file."""
-    with open(path, 'wb') as f:
+    with open(path, "wb") as f:
       pickle.dump(self, f)
 
   @classmethod
-  def FromText(cls, text: str) -> 'AtomizerBase':
+  def FromText(cls, text: str) -> "AtomizerBase":
     """Instantiate and specialize an atomizer from a corpus text.
 
     Args:
@@ -129,9 +129,9 @@ class AtomizerBase(object):
     raise NotImplementedError("abstract class")
 
   @classmethod
-  def FromFile(cls, path: pathlib.Path) -> 'AtomizerBase':
+  def FromFile(cls, path: pathlib.Path) -> "AtomizerBase":
     """Load an atomizer from file."""
-    with open(path, 'rb') as infile:
+    with open(path, "rb") as infile:
       return pickle.load(infile)
 
 
@@ -153,10 +153,10 @@ class AsciiCharacterAtomizer(AtomizerBase):
       raise errors.VocabError
 
   def __repr__(self) -> str:
-    return f'AsciiCharacterAtomizer[{self.vocab_size} chars]'
+    return f"AsciiCharacterAtomizer[{self.vocab_size} chars]"
 
   @classmethod
-  def FromText(cls, text: str) -> 'AsciiCharacterAtomizer':
+  def FromText(cls, text: str) -> "AsciiCharacterAtomizer":
     """Instantiate and an atomizer from a corpus text.
 
     Args:
@@ -182,7 +182,8 @@ class GreedyAtomizer(AtomizerBase):
     multichars = set(k for k in self.atoms if len(k) > 1)
     first_chars = set(a[0] for a in multichars)
     self.lookup = dict(
-        (c, [a for a in multichars if a[0] == c]) for c in first_chars)
+      (c, [a for a in multichars if a[0] == c]) for c in first_chars
+    )
 
   def AtomizeString(self, text: str) -> np.array:
     """Atomize a text into an array of vocabulary indices.
@@ -208,7 +209,8 @@ class GreedyAtomizer(AtomizerBase):
       while i < len(text):
         if self.lookup.get(text[i]):
           if j <= len(text) and any(
-              x.startswith(text[i:j]) for x in self.lookup[text[i]]):
+            x.startswith(text[i:j]) for x in self.lookup[text[i]]
+          ):
             j += 1
           else:
             while j > i + 1:
@@ -236,10 +238,10 @@ class GreedyAtomizer(AtomizerBase):
     return np.array(indices, dtype=np.int32)
 
   def __repr__(self) -> str:
-    return f'GreedyAtomizer[{self.vocab_size} tokens]'
+    return f"GreedyAtomizer[{self.vocab_size} tokens]"
 
   @classmethod
-  def FromText(cls, text: str, atoms: typing.Set[str]) -> 'GreedyAtomizer':
+  def FromText(cls, text: str, atoms: typing.Set[str]) -> "GreedyAtomizer":
     """Instantiate and an atomizer from a corpus text.
 
     Args:
@@ -250,7 +252,7 @@ class GreedyAtomizer(AtomizerBase):
       An atomizer instance.
     """
     if not atoms:
-      raise errors.UserError('No atoms specified')
+      raise errors.UserError("No atoms specified")
 
     # Instantiate a greedy atomizer using the full vocabulary.
     full_vocab = dict(zip(atoms, range(len(atoms))))

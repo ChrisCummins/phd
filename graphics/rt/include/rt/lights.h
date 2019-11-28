@@ -20,8 +20,8 @@
 #ifndef RT_LIGHTS_H_
 #define RT_LIGHTS_H_
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "rt/graphics.h"
@@ -40,8 +40,7 @@ class Light {
 
   // Calculate the shading colour at `point' for a given surface
   // material, surface normal, and direction to the ray.
-  virtual Colour shade(const Vector &point,
-                       const Vector &normal,
+  virtual Colour shade(const Vector &point, const Vector &normal,
                        const Vector &toRay,
                        const Material *const restrict material,
                        const Objects objects) const = 0;
@@ -60,8 +59,7 @@ class SoftLight : public Light {
   // Constructor.
   inline SoftLight(const Vector &_position,
                    const Colour &_colour = Colour(0xff, 0xff, 0xff),
-                   const Scalar _radius = 0,
-                   const size_t _samples = 1)
+                   const Scalar _radius = 0, const size_t _samples = 1)
       : position(_position),
         colour(_colour),
         samples(_samples),
@@ -70,8 +68,7 @@ class SoftLight : public Light {
     profiling::counters::incLightsCount(_samples);
   }
 
-  virtual Colour shade(const Vector &point,
-                       const Vector &normal,
+  virtual Colour shade(const Vector &point, const Vector &normal,
                        const Vector &toRay,
                        const Material *const restrict material,
                        const Objects objects) const;

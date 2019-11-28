@@ -18,5 +18,5 @@ def test_Tensorflow_hello_world():
   sess.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

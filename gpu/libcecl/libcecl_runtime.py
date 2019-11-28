@@ -29,10 +29,10 @@ FLAGS = app.FLAGS
 
 
 def KernelInvocationsFromCeclLog(
-    cecl_log: typing.List[str],
-    expected_devtype: typing.Optional[str] = None,
-    expected_device_name: typing.Optional[str] = None,
-    nanosecond_identity: typing.Callable[[str], int] = int
+  cecl_log: typing.List[str],
+  expected_devtype: typing.Optional[str] = None,
+  expected_device_name: typing.Optional[str] = None,
+  nanosecond_identity: typing.Callable[[str], int] = int,
 ) -> typing.List[libcecl_pb2.OpenClKernelInvocation]:
   """Interpret and parse the output of a libcecl instrumented application.
 
@@ -59,10 +59,10 @@ def KernelInvocationsFromCeclLog(
   kernel_invocations = []
 
   # Iterate over each line in the cec log.
-  app.Log(2, 'Processing %d lines of libcecl logs', len(cecl_log))
+  app.Log(2, "Processing %d lines of libcecl logs", len(cecl_log))
   for line in cecl_log:
     # Split line based on ; delimiter into opcode and operands.
-    components = [x.strip() for x in line.strip().split(';')]
+    components = [x.strip() for x in line.strip().split(";")]
     opcode, operands = components[0], components[1:]
 
     # Skip empty lines.
@@ -75,35 +75,44 @@ def KernelInvocationsFromCeclLog(
       # If we don't know the device type, don't check it. This isn't a problem -
       # not all drivers report device type correctly, e.g. POCL returns a
       # non-standard device type value.
-      if (expected_devtype and devtype != 'UNKNOWN' and
-          devtype != expected_devtype):
+      if (
+        expected_devtype
+        and devtype != "UNKNOWN"
+        and devtype != expected_devtype
+      ):
         raise ValueError(
-            f"Expected device type {expected_devtype} does not match actual "
-            f"device type {devtype}")
+          f"Expected device type {expected_devtype} does not match actual "
+          f"device type {devtype}"
+        )
 
       if expected_device_name and devname != expected_device_name:
         raise ValueError(
-            f"Expected device name '{expected_device_name}' does not match "
-            f"actual device name '{devname}'")
+          f"Expected device name '{expected_device_name}' does not match "
+          f"actual device name '{devname}'"
+        )
 
     elif opcode == "clEnqueueNDRangeKernel":
       kernel_name, global_size, local_size, elapsed = operands
       kernel_invocations.append(
-          libcecl_pb2.OpenClKernelInvocation(
-              kernel_name=kernel_name,
-              global_size=int(global_size),
-              local_size=int(local_size),
-              kernel_time_ns=nanosecond_identity(elapsed)))
-      app.Log(2, 'Extracted clEnqueueNDRangeKernel from log')
+        libcecl_pb2.OpenClKernelInvocation(
+          kernel_name=kernel_name,
+          global_size=int(global_size),
+          local_size=int(local_size),
+          kernel_time_ns=nanosecond_identity(elapsed),
+        )
+      )
+      app.Log(2, "Extracted clEnqueueNDRangeKernel from log")
     elif opcode == "clEnqueueTask":
       kernel_name, elapsed = operands
       kernel_invocations.append(
-          libcecl_pb2.OpenClKernelInvocation(
-              kernel_name=kernel_name,
-              global_size=1,
-              local_size=1,
-              kernel_time_ns=nanosecond_identity(elapsed)))
-      app.Log(2, 'Extracted clEnqueueTask from log')
+        libcecl_pb2.OpenClKernelInvocation(
+          kernel_name=kernel_name,
+          global_size=1,
+          local_size=1,
+          kernel_time_ns=nanosecond_identity(elapsed),
+        )
+      )
+      app.Log(2, "Extracted clEnqueueTask from log")
     elif opcode == "clCreateBuffer":
       size, _, flags = operands
       size = int(size)
@@ -114,9 +123,12 @@ def KernelInvocationsFromCeclLog(
       else:
         # Host -> Device, or Device -> host.
         total_transferred_bytes += size
-      app.Log(2, 'Extracted clCreateBuffer from log')
-    elif (opcode == "clEnqueueReadBuffer" or opcode == "clEnqueueWriteBuffer" or
-          opcode == "clEnqueueMapBuffer"):
+      app.Log(2, "Extracted clCreateBuffer from log")
+    elif (
+      opcode == "clEnqueueReadBuffer"
+      or opcode == "clEnqueueWriteBuffer"
+      or opcode == "clEnqueueMapBuffer"
+    ):
       _, size, elapsed = operands
       total_transfer_time += nanosecond_identity(elapsed)
     else:
@@ -145,22 +157,22 @@ def SplitStderrComponents(stderr: str) -> StderrComponents:
   # Split libcecl logs out from stderr.
   cecl_lines, stderr_lines = [], []
   in_program_source = False
-  for line in stderr.split('\n'):
-    if line == '[CECL] BEGIN PROGRAM SOURCE':
+  for line in stderr.split("\n"):
+    if line == "[CECL] BEGIN PROGRAM SOURCE":
       assert not in_program_source
       in_program_source = True
       current_program_source = []
-    elif line == '[CECL] END PROGRAM SOURCE':
+    elif line == "[CECL] END PROGRAM SOURCE":
       assert in_program_source
       in_program_source = False
-      program_sources.append('\n'.join(current_program_source).strip())
+      program_sources.append("\n".join(current_program_source).strip())
       current_program_source = None
-    elif line.startswith('[CECL] '):
-      stripped_line = line[len('[CECL] '):].strip()
+    elif line.startswith("[CECL] "):
+      stripped_line = line[len("[CECL] ") :].strip()
       if in_program_source:
         # Right strip program sources only, don't left strip since that would
         # lose indentation.
-        current_program_source.append(line[len('[CECL] '):].rstrip())
+        current_program_source.append(line[len("[CECL] ") :].rstrip())
       elif stripped_line:
         cecl_lines.append(stripped_line)
     elif line.strip():
@@ -169,22 +181,24 @@ def SplitStderrComponents(stderr: str) -> StderrComponents:
   return StderrComponents(stderr_lines, cecl_lines, program_sources)
 
 
-def RunEnv(cldrive_environment: cldrive_env.OpenCLEnvironment,
-           os_env: typing.Optional[typing.Dict[str, str]] = None
-          ) -> typing.Dict[str, str]:
+def RunEnv(
+  cldrive_environment: cldrive_env.OpenCLEnvironment,
+  os_env: typing.Optional[typing.Dict[str, str]] = None,
+) -> typing.Dict[str, str]:
   """Return an execution environment for a libcecl benchmark."""
   env = (os_env or os.environ).copy()
   env.update(libcecl_compile.LibCeclExecutableEnvironmentVariables())
-  env['LIBCECL_DEVICE'] = cldrive_environment.device_name
-  env['LIBCECL_PLATFORM'] = cldrive_environment.platform_name
+  env["LIBCECL_DEVICE"] = cldrive_environment.device_name
+  env["LIBCECL_PLATFORM"] = cldrive_environment.platform_name
   return env
 
 
 def RunLibceclExecutable(
-    command: typing.List[str],
-    env: cldrive_env.OpenCLEnvironment,
-    os_env: typing.Optional[typing.Dict[str, str]] = None,
-    record_outputs: bool = True) -> libcecl_pb2.LibceclExecutableRun:
+  command: typing.List[str],
+  env: cldrive_env.OpenCLEnvironment,
+  os_env: typing.Optional[typing.Dict[str, str]] = None,
+  record_outputs: bool = True,
+) -> libcecl_pb2.LibceclExecutableRun:
   """Run executable using libcecl and log output."""
   timestamp = labdate.MillisecondsTimestamp()
 
@@ -194,18 +208,21 @@ def RunLibceclExecutable(
   elapsed = time.time() - start_time
 
   stderr_lines, cecl_lines, program_sources = SplitStderrComponents(
-      process.stderr)
+    process.stderr
+  )
 
   return libcecl_pb2.LibceclExecutableRun(
-      ms_since_unix_epoch=timestamp,
-      returncode=process.returncode,
-      stdout=process.stdout if record_outputs else '',
-      stderr='\n'.join(stderr_lines) if record_outputs else '',
-      cecl_log='\n'.join(cecl_lines) if record_outputs else '',
-      device=env.proto,
-      kernel_invocation=KernelInvocationsFromCeclLog(
-          cecl_lines,
-          expected_devtype=env.device_type,
-          expected_device_name=env.device_name),
-      elapsed_time_ns=int(elapsed * 1e9),
-      opencl_program_source=program_sources)
+    ms_since_unix_epoch=timestamp,
+    returncode=process.returncode,
+    stdout=process.stdout if record_outputs else "",
+    stderr="\n".join(stderr_lines) if record_outputs else "",
+    cecl_log="\n".join(cecl_lines) if record_outputs else "",
+    device=env.proto,
+    kernel_invocation=KernelInvocationsFromCeclLog(
+      cecl_lines,
+      expected_devtype=env.device_type,
+      expected_device_name=env.device_name,
+    ),
+    elapsed_time_ns=int(elapsed * 1e9),
+    opencl_program_source=program_sources,
+  )

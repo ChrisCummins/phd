@@ -11,18 +11,16 @@
 // values. Template solution supports any type which supports bitwise
 // XOR operator.
 //
-template<typename T>
+template <typename T>
 unsigned int bitdiff(const T& a, const T& b) {
   T diff{a ^ b};
   unsigned int count{0};
 
   for (size_t i = 0; i < sizeof(T) * 8; ++i)
-    if (diff & (1 << i))
-      ++count;
+    if (diff & (1 << i)) ++count;
 
   return count;
 }
-
 
 ///////////
 // Tests //

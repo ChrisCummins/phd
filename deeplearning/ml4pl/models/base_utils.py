@@ -8,15 +8,15 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 
-def pos_emb(positions: Union[int, List[int], np.array],
-            demb: int = 200,
-            dpad: int = 2):
+def pos_emb(
+  positions: Union[int, List[int], np.array], demb: int = 200, dpad: int = 2
+):
   """Transformer-like sinusoidal positional embeddings.
         Args:
         position: int or array of ints   positions to embed,
         demb: int    size of embedding vector
     """
-  inv_freq = 1 / (10000**(np.arange(0.0, demb, 2.0) / demb))
+  inv_freq = 1 / (10000 ** (np.arange(0.0, demb, 2.0) / demb))
 
   sinusoid_inp = np.outer(positions, inv_freq)
   pos_emb = np.hstack((np.sin(sinusoid_inp), np.cos(sinusoid_inp)))
@@ -25,8 +25,9 @@ def pos_emb(positions: Union[int, List[int], np.array],
     in_length = 1 if type(positions) == int else len(positions)
     pad = np.zeros([in_length, dpad])
     pos_emb = np.hstack([pos_emb, pad])
-    assert np.all(pos_emb[:, -1] == np.zeros(
-        in_length)), f"test failed. pos_emb: \n{pos_emb}"
+    assert np.all(
+      pos_emb[:, -1] == np.zeros(in_length)
+    ), f"test failed. pos_emb: \n{pos_emb}"
   return pos_emb
 
 
@@ -42,7 +43,7 @@ def WarmUpAndFinetuneLearningRateSchedule(curr_epoch, total_epochs):
 
   warmup_epochs = float(np.clip(total_epochs * 0.1, 1, 10))
   if curr_epoch <= warmup_epochs:
-    factor = min(1.0, curr_epoch**2 / warmup_epochs**2 + 0.01)
+    factor = min(1.0, curr_epoch ** 2 / warmup_epochs ** 2 + 0.01)
   elif curr_epoch <= 0.7 * total_epochs:
     factor = 1.0
   elif curr_epoch <= 0.85 * total_epochs:
@@ -54,7 +55,7 @@ def WarmUpAndFinetuneLearningRateSchedule(curr_epoch, total_epochs):
 
 # alternatively could use something like this:
 
-#def GetLearningRate(epoch_num: int) -> float:
+# def GetLearningRate(epoch_num: int) -> float:
 #  """Compute the learning rate.
 #
 #  Args:

@@ -37,8 +37,9 @@ class Data404(Exception):
 # test decorators
 needs_cuda = pytest.mark.skipif(not dsmith.USE_CUDA, reason="no CUDA support")
 needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
-skip_on_travis = pytest.mark.skipif(os.environ.get("TRAVIS") == 'true',
-                                    reason="skip on Travis CI")
+skip_on_travis = pytest.mark.skipif(
+  os.environ.get("TRAVIS") == "true", reason="skip on Travis CI"
+)
 
 
 def data_path(*components, exists=True) -> str:
@@ -189,8 +190,10 @@ def testsuite():
       assert os.path.exists(coveragerc_path())
 
       args = [
-          "--doctest-modules", "--cov=dsmith", "--cov-config",
-          coveragerc_path()
+        "--doctest-modules",
+        "--cov=dsmith",
+        "--cov-config",
+        coveragerc_path(),
       ]
 
       # unless verbose, don't print coverage report

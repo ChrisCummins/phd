@@ -22,6 +22,7 @@ import math
 
 import numpy as np
 from scipy import stats
+
 # Use floating point division by default.
 
 
@@ -145,7 +146,7 @@ def variance(array):
   if len(array) < 2:
     return 0
   u = mean(array)
-  return sum([(x - u)**2 for x in array]) / (len(array) - 1)
+  return sum([(x - u) ** 2 for x in array]) / (len(array) - 1)
 
 
 def stdev(array):
@@ -197,11 +198,7 @@ def filter_iqr(array, lower, upper):
 
 
 def confinterval(
-    array,
-    conf=0.95,
-    normal_threshold=30,
-    error_only=False,
-    array_mean=None,
+  array, conf=0.95, normal_threshold=30, error_only=False, array_mean=None,
 ):
   """
   Return the confidence interval of a list for a given confidence.
@@ -242,7 +239,8 @@ def confinterval(
       # If values are all the same, return that value.
       array_mean, c0, c1 = array[0], array[0], array[0]
     else:
-      if array_mean is None: array_mean = mean(array)
+      if array_mean is None:
+        array_mean = mean(array)
       if n < normal_threshold:
         # We have a "small" number of datapoints, so use a
         # t-distribution.

@@ -11,6 +11,7 @@ class Error(Exception):
   """
   Module-level base error class.
   """
+
   pass
 
 
@@ -18,6 +19,7 @@ class FeatureExtractionError(Error):
   """
   Error thrown if feature extraction fails.
   """
+
   pass
 
 
@@ -25,6 +27,7 @@ class ConfigNotFoundError(Error):
   """
   Error thrown if config file is not found.
   """
+
   pass
 
 
@@ -77,9 +80,7 @@ def hash_classifier(classifier):
   """
   Returns the hash of a classifier.
   """
-  string = " ".join([
-      classifier.classname,
-  ] + classifier.options)
+  string = " ".join([classifier.classname,] + classifier.options)
   return re.sub(r"[ -\.]+", "-", string)
 
 
@@ -142,17 +143,21 @@ def get_kernel_name_and_type(source):
   def _get_printable_source(lines):
     for i, line in enumerate(lines):
       # Store index of shape define lines.
-      if re.search(r"^#define SCL_NORTH", line): north = i
-      if re.search(r"^#define SCL_SOUTH", line): south = i
-      if re.search(r"^#define SCL_EAST", line): east = i
-      if re.search(r"^#define SCL_WEST", line): west = i
+      if re.search(r"^#define SCL_NORTH", line):
+        north = i
+      if re.search(r"^#define SCL_SOUTH", line):
+        south = i
+      if re.search(r"^#define SCL_EAST", line):
+        east = i
+      if re.search(r"^#define SCL_WEST", line):
+        west = i
 
       # If we've got as far as the user function, then print
       # what we have.
       if re.search("^(\w+) USR_FUNC", line):
         return "\n".join(
-            [lines[north], lines[south], lines[east], lines[west], ""] +
-            lines[i:])
+          [lines[north], lines[south], lines[east], lines[west], ""] + lines[i:]
+        )
 
     # Fall through, just print the whole bloody lot.
     return "\n".join(lines)
@@ -175,8 +180,10 @@ def get_kernel_name_and_type(source):
   synthetic = raw_input("Synthetic? (y/n): ")
 
   # Sanitise and return user input
-  return (True if synthetic.strip().lower() == "y" else False,
-          name.strip().lower())
+  return (
+    True if synthetic.strip().lower() == "y" else False,
+    name.strip().lower(),
+  )
 
 
 def load_config(path="~/.omnitunerc.json"):
@@ -189,4 +196,5 @@ def load_config(path="~/.omnitunerc.json"):
 
 def main():
   import server
+
   server.main()

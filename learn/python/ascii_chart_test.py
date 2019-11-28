@@ -11,20 +11,22 @@ MODULE_UNDER_TEST = None  # No coverage.
 
 def MultiLineRightStrip(s):
   """Right strip all lines of a multi-line string."""
-  return '\n'.join(x.rstrip() for x in str(s).split('\n'))
+  return "\n".join(x.rstrip() for x in str(s).split("\n"))
 
 
 def test_Chart():
   """Test that Chart produces text."""
   data = [
-      5.2,
-      2.1,
-      2.3,
-      -10,
+    5.2,
+    2.1,
+    2.3,
+    -10,
   ]
-  c = ascii_art.Chart(data, width=30, height=20, padding=2, axis_char=u'|')
+  c = ascii_art.Chart(data, width=30, height=20, padding=2, axis_char="|")
 
-  assert MultiLineRightStrip(c.render()) == """
+  assert (
+    MultiLineRightStrip(c.render())
+    == """
   5.2 |       ░
       | █     ░
       | █     ░
@@ -42,7 +44,8 @@ def test_Chart():
       | █ █ █ ░
     0 . . . . ░ . . . . .
 """
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

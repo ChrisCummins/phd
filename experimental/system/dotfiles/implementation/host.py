@@ -1,5 +1,4 @@
 """TODO."""
-
 import os
 import platform
 import subprocess
@@ -12,13 +11,9 @@ from experimental.system.dotfiles.implementation import io
 def GetPlatform():
   distro = platform.linux_distribution()
   if not distro[0]:
-    return {
-      "darwin": "osx",
-    }.get(sys.platform, sys.platform)
+    return {"darwin": "osx",}.get(sys.platform, sys.platform)
   else:
-    return {
-      "debian": "ubuntu",
-    }.get(distro[0].lower(), distro[0].lower())
+    return {"debian": "ubuntu",}.get(distro[0].lower(), distro[0].lower())
 
 
 def Which(binary):
@@ -30,8 +25,13 @@ def ShellCommand(*args):
   """ run a shell command and return its output. Raises CalledProcessError
       if fails """
   io.LogShellCommand(*args)
-  p = subprocess.Popen(*args, shell=True, stdout=subprocess.PIPE,
-                       stderr=subprocess.STDOUT, universal_newlines=True)
+  p = subprocess.Popen(
+    *args,
+    shell=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    universal_newlines=True,
+  )
   stdout, _ = p.communicate()
 
   stdout = stdout.rstrip()
@@ -39,9 +39,11 @@ def ShellCommand(*args):
 
   if p.returncode:
     cmd = " ".join(args)
-    msg = ("""\
+    msg = """\
 Command '{cmd}' failed with returncode {p.returncode} and output:
-{stdout}""".format(cmd=cmd, p=p, stdout=stdout))
+{stdout}""".format(
+      cmd=cmd, p=p, stdout=stdout
+    )
     raise CalledProcessError(msg)
   else:
     return stdout
@@ -51,8 +53,9 @@ def CheckShellCommand(*args):
   """ run a shell command and return False if error """
   io.LogShellCommand(*args)
   try:
-    subprocess.check_call(*args, shell=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
+    subprocess.check_call(
+      *args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     io.LogShellOutput("-> 0")
     return True
   except subprocess.CalledProcessError as e:
@@ -64,7 +67,7 @@ class CalledProcessError(EnvironmentError):
   pass
 
 
-LINUX_DISTROS = ['debian', 'ubuntu']
+LINUX_DISTROS = ["debian", "ubuntu"]
 
 
 def MakeSymlink(src, dst, sudo=False):
@@ -78,10 +81,12 @@ def MakeSymlink(src, dst, sudo=False):
 
   # Symlink already exists
   use_sudo = "sudo -H " if sudo else ""
-  if (CheckShellCommand("{use_sudo}test -f '{dst}'".format(**vars())) or
-      CheckShellCommand("{use_sudo}test -d '{dst}'".format(**vars()))):
+  if CheckShellCommand(
+    "{use_sudo}test -f '{dst}'".format(**vars())
+  ) or CheckShellCommand("{use_sudo}test -d '{dst}'".format(**vars())):
     linkdest = ShellCommand(
-        "{use_sudo}readlink {dst}".format(**vars())).rstrip()
+      "{use_sudo}readlink {dst}".format(**vars())
+    ).rstrip()
     if linkdest.startswith("/"):
       linkdest_abs = linkdest
     else:
@@ -89,15 +94,18 @@ def MakeSymlink(src, dst, sudo=False):
     if linkdest_abs == src_abs:
       return
 
-  if not (CheckShellCommand("{use_sudo}test -f '{src_abs}'".format(**vars())) or
-          CheckShellCommand("{use_sudo}test -d '{src_abs}'".format(**vars()))):
+  if not (
+    CheckShellCommand("{use_sudo}test -f '{src_abs}'".format(**vars()))
+    or CheckShellCommand("{use_sudo}test -d '{src_abs}'".format(**vars()))
+  ):
     raise OSError("symlink source '{src}' does not exist".format(**vars()))
   # if CheckShellCommand("{use_sudo}test -d '{dst}'".format(**vars())):
   #     raise OSError("symlink destination '{dst}' is a directory".format(**vars()))
 
   # Make a backup of existing file:
-  if (CheckShellCommand("{use_sudo}test -f '{dst}'".format(**vars())) or
-      CheckShellCommand("{use_sudo}test -d '{dst}'".format(**vars()))):
+  if CheckShellCommand(
+    "{use_sudo}test -f '{dst}'".format(**vars())
+  ) or CheckShellCommand("{use_sudo}test -d '{dst}'".format(**vars())):
     ShellCommand("{use_sudo}mv '{dst}' '{dst}'.backup".format(**vars()))
 
   # in case of broken symlink

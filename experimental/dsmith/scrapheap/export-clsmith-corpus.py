@@ -24,8 +24,11 @@ def main():
   session = db.make_session()
 
   program_ids = [
-    x[0] for x in session.query(sql.distinct(CLSmithResult.program_id)) \
-      .filter(CLSmithResult.classification == args.classification).all()]
+    x[0]
+    for x in session.query(sql.distinct(CLSmithResult.program_id))
+    .filter(CLSmithResult.classification == args.classification)
+    .all()
+  ]
 
   header = fs.Read(dsmith.data_path("include", "clsmith.h"))
 
@@ -35,8 +38,11 @@ def main():
     outpath = fs.path(args.outdir, program_id + ".cl")
 
     if not fs.exists(outpath):
-      program = session.query(CLSmithProgram) \
-        .filter(CLSmithProgram.id == program_id).one()
+      program = (
+        session.query(CLSmithProgram)
+        .filter(CLSmithProgram.id == program_id)
+        .one()
+      )
 
       pre, post = program.src.split('#include "CLSmith.h"')
 

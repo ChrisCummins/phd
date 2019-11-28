@@ -23,49 +23,74 @@ from labm8.py import prof
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
-    'df', '/tmp/phd/docs/wip_graph/lda_opencl_device_mapping_dataset.pkl',
-    'Path of the dataframe to load')
-app.DEFINE_string('outdir', '/tmp/phd/docs/wip_graph/model_files',
-                  'Path of directory to generate files')
-app.DEFINE_boolean('profile_tensorflow', False,
-                   'Enable profiling of tensorflow.')
-app.DEFINE_integer('model_seed', 0, 'Seed to use for reproducible results')
-app.DEFINE_integer('num_epochs', 3, 'The number of epochs to train for.')
-app.DEFINE_integer('batch_size', 64, 'Batch size.')
-app.DEFINE_float('initial_learning_rate', 1e-3,
-                 'The initial Adam learning rate.')
+  "df",
+  "/tmp/phd/docs/wip_graph/lda_opencl_device_mapping_dataset.pkl",
+  "Path of the dataframe to load",
+)
+app.DEFINE_string(
+  "outdir",
+  "/tmp/phd/docs/wip_graph/model_files",
+  "Path of directory to generate files",
+)
+app.DEFINE_boolean(
+  "profile_tensorflow", False, "Enable profiling of tensorflow."
+)
+app.DEFINE_integer("model_seed", 0, "Seed to use for reproducible results")
+app.DEFINE_integer("num_epochs", 3, "The number of epochs to train for.")
+app.DEFINE_integer("batch_size", 64, "Batch size.")
 app.DEFINE_float(
-    'learning_rate_exponential_decay', 0.1,
-    'The rate at which learning decays. If 1.0, the learning rate does not '
-    'decay.')
+  "initial_learning_rate", 1e-3, "The initial Adam learning rate."
+)
+app.DEFINE_float(
+  "learning_rate_exponential_decay",
+  0.1,
+  "The rate at which learning decays. If 1.0, the learning rate does not "
+  "decay.",
+)
 
 # Experimental flags.
 
-app.DEFINE_integer('experimental_force_num_processing_steps', 0,
-                   'If > 0, sets the number of processing steps.')
-app.DEFINE_boolean(
-    'experimental_graph_diameter_processing_steps', True,
-    'Use the undirected CFG diameter to derive the number of '
-    'processing steps.')
-app.DEFINE_integer('experimental_mlp_model_latent_size', 16,
-                   'Latent layer size in edge/node/global models.')
-app.DEFINE_integer('experimental_mlp_model_layer_count', 2,
-                   'Number of layers in edge/node/global models.')
-app.DEFINE_boolean(
-    'experimental_use_encode_process_decode_with_loop', False,
-    'Use an experimental encode-process-decode model which '
-    'uses a TensorFlow while loop rather than being unrolled '
-    'for each time step')
 app.DEFINE_integer(
-    'experimental_while_loop_sequence_length', 10,
-    'The number of unrolled steps inside while loop '
-    'sequences. Only matters is '
-    '--experimental_use_encode_process_decode_with_loop is '
-    'set')
+  "experimental_force_num_processing_steps",
+  0,
+  "If > 0, sets the number of processing steps.",
+)
+app.DEFINE_boolean(
+  "experimental_graph_diameter_processing_steps",
+  True,
+  "Use the undirected CFG diameter to derive the number of "
+  "processing steps.",
+)
+app.DEFINE_integer(
+  "experimental_mlp_model_latent_size",
+  16,
+  "Latent layer size in edge/node/global models.",
+)
+app.DEFINE_integer(
+  "experimental_mlp_model_layer_count",
+  2,
+  "Number of layers in edge/node/global models.",
+)
+app.DEFINE_boolean(
+  "experimental_use_encode_process_decode_with_loop",
+  False,
+  "Use an experimental encode-process-decode model which "
+  "uses a TensorFlow while loop rather than being unrolled "
+  "for each time step",
+)
+app.DEFINE_integer(
+  "experimental_while_loop_sequence_length",
+  10,
+  "The number of unrolled steps inside while loop "
+  "sequences. Only matters is "
+  "--experimental_use_encode_process_decode_with_loop is "
+  "set",
+)
 
 
 class TrainingValidationTestValue(typing.NamedTuple):
   """A value which has different values for training, validation, and testing."""
+
   training: typing.Any
   validation: typing.Any
   test: typing.Any
@@ -73,6 +98,7 @@ class TrainingValidationTestValue(typing.NamedTuple):
 
 class InputTargetValue(typing.NamedTuple):
   """A value which has an input and target pair."""
+
   input: typing.Any
   target: typing.Any
 
@@ -98,17 +124,17 @@ def GetNumberOfMessagePassingSteps(df: pd.DataFrame) -> int:
     return FLAGS.experimental_force_num_processing_steps
 
   # Consider only the training graphs when determining step count.
-  train_df = df[df['split:type'] == 'training']
+  train_df = df[df["split:type"] == "training"]
 
   if FLAGS.experimental_graph_diameter_processing_steps:
-    return int(train_df['cfg:diameter'].max())
+    return int(train_df["cfg:diameter"].max())
 
-  return int(train_df['cfg:block_count'].max())
+  return int(train_df["cfg:block_count"].max())
 
 
 def CreatePlaceholdersFromGraphs(
-    input_graphs: typing.List[nx.DiGraph],
-    target_graphs: typing.List[nx.DiGraph]) -> InputLatentTargetValue:
+  input_graphs: typing.List[nx.DiGraph], target_graphs: typing.List[nx.DiGraph]
+) -> InputLatentTargetValue:
   """Creates placeholders for the model training and evaluation.
 
   Args:
@@ -120,9 +146,11 @@ def CreatePlaceholdersFromGraphs(
     graph namedtuple.
   """
   input_ph = utils_tf.compat.v1.placeholders_from_networkxs(
-      input_graphs, force_dynamic_num_graphs=True, name="input_ph")
+    input_graphs, force_dynamic_num_graphs=True, name="input_ph"
+  )
   target_ph = utils_tf.compat.v1.placeholders_from_networkxs(
-      target_graphs, force_dynamic_num_graphs=True, name="target_ph")
+    target_graphs, force_dynamic_num_graphs=True, name="target_ph"
+  )
   return InputTargetValue(input_ph, target_ph)
 
 
@@ -133,8 +161,9 @@ def MakeRunnableInSession(*args):
 
 def GraphTupleToString(graph_tuple):
   """Format and a GraphTuple to string"""
-  return '\n'.join(
-      [f'    {k:10s} {v}' for k, v in graph_tuple._asdict().items()])
+  return "\n".join(
+    [f"    {k:10s} {v}" for k, v in graph_tuple._asdict().items()]
+  )
 
 
 def CreateFeedDict(input_graphs, target_graphs, placeholders):
@@ -149,8 +178,8 @@ def CreateFeedDict(input_graphs, target_graphs, placeholders):
   input_graphs = utils_np.networkxs_to_graphs_tuple(input_graphs)
   target_graphs = utils_np.networkxs_to_graphs_tuple(target_graphs)
   feed_dict = {
-      placeholders.input: input_graphs,
-      placeholders.target: target_graphs
+    placeholders.input: input_graphs,
+    placeholders.target: target_graphs,
   }
   return feed_dict
 
@@ -165,23 +194,24 @@ def GetLearningRate(epoch_num: int) -> float:
      A learning rate, in range (0,inf).
   """
   return FLAGS.initial_learning_rate / (
-      1 + FLAGS.learning_rate_exponential_decay * epoch_num)
+    1 + FLAGS.learning_rate_exponential_decay * epoch_num
+  )
 
 
 def AssertDataFrameIsValidOrDie(df: pd.DataFrame) -> None:
   """Assert that the dataframe is valid else die."""
   for column in [
-      'networkx:input_graph',
-      'networkx:target_graph',
-      'split:type',
-      'graphnet:loss_op',
-      'graphnet:accuracy_evaluator',
+    "networkx:input_graph",
+    "networkx:target_graph",
+    "split:type",
+    "graphnet:loss_op",
+    "graphnet:accuracy_evaluator",
   ]:
     assert column in df.columns.values
-  assert set(df['split:type']) == {'training', 'validation', 'test'}
+  assert set(df["split:type"]) == {"training", "validation", "test"}
 
-  assert len(set(df['graphnet:loss_op'])) == 1
-  assert len(set(df['graphnet:accuracy_evaluator'])) == 1
+  assert len(set(df["graphnet:loss_op"])) == 1
+  assert len(set(df["graphnet:accuracy_evaluator"])) == 1
 
 
 def MakeMultilayerPerceptron() -> snt.Sequential:
@@ -196,12 +226,16 @@ def MakeMultilayerPerceptron() -> snt.Sequential:
   Returns:
     A Sonnet module which contains the MLP and LayerNorm.
   """
-  return snt.Sequential([
-      snt.nets.MLP([FLAGS.experimental_mlp_model_latent_size] *
-                   FLAGS.experimental_mlp_model_layer_count,
-                   activate_final=True),
-      snt.LayerNorm()
-  ])
+  return snt.Sequential(
+    [
+      snt.nets.MLP(
+        [FLAGS.experimental_mlp_model_latent_size]
+        * FLAGS.experimental_mlp_model_layer_count,
+        activate_final=True,
+      ),
+      snt.LayerNorm(),
+    ]
+  )
 
 
 class MLPGraphIndependent(snt.AbstractModule):
@@ -211,9 +245,10 @@ class MLPGraphIndependent(snt.AbstractModule):
     super(MLPGraphIndependent, self).__init__(name=name)
     with self._enter_variable_scope():
       self._network = modules.GraphIndependent(
-          edge_model_fn=MakeMultilayerPerceptron,
-          node_model_fn=MakeMultilayerPerceptron,
-          global_model_fn=MakeMultilayerPerceptron)
+        edge_model_fn=MakeMultilayerPerceptron,
+        node_model_fn=MakeMultilayerPerceptron,
+        global_model_fn=MakeMultilayerPerceptron,
+      )
 
   def _build(self, inputs):
     return self._network(inputs)
@@ -226,20 +261,20 @@ class MLPGraphNetwork(snt.AbstractModule):
     super(MLPGraphNetwork, self).__init__(name=name)
     with self._enter_variable_scope():
       self._network = modules.GraphNetwork(
-          edge_model_fn=MakeMultilayerPerceptron,
-          node_model_fn=MakeMultilayerPerceptron,
-          global_model_fn=MakeMultilayerPerceptron,
-          # TODO(cec): To disable redundant feature values:
-          # edge_block_opt={
-          #   'use_edges': False,
-          #   'use_globals': False,
-          # },
-          # node_block_opt={
-          #   'use_globals': False,
-          # },
-          # global_block_opt={
-          #   'use_globals': False,
-          # }
+        edge_model_fn=MakeMultilayerPerceptron,
+        node_model_fn=MakeMultilayerPerceptron,
+        global_model_fn=MakeMultilayerPerceptron,
+        # TODO(cec): To disable redundant feature values:
+        # edge_block_opt={
+        #   'use_edges': False,
+        #   'use_globals': False,
+        # },
+        # node_block_opt={
+        #   'use_globals': False,
+        # },
+        # global_block_opt={
+        #   'use_globals': False,
+        # }
       )
 
   def _build(self, inputs):
@@ -268,11 +303,13 @@ class EncodeProcessDecode(snt.AbstractModule):
             *---------*     *------*     *---------*
   """
 
-  def __init__(self,
-               edge_output_size=None,
-               node_output_size=None,
-               global_output_size=None,
-               name="EncodeProcessDecode"):
+  def __init__(
+    self,
+    edge_output_size=None,
+    node_output_size=None,
+    global_output_size=None,
+    name="EncodeProcessDecode",
+  ):
     super(EncodeProcessDecode, self).__init__(name=name)
     # Transforms the outputs into the appropriate shapes.
     if edge_output_size is None:
@@ -292,10 +329,9 @@ class EncodeProcessDecode(snt.AbstractModule):
       self._encoder = MLPGraphIndependent(name="encoder")
       self._core = MLPGraphNetwork(name="core")
       self._decoder = MLPGraphIndependent(name="decoder")
-      self._output_transform = modules.GraphIndependent(edge_fn,
-                                                        node_fn,
-                                                        global_fn,
-                                                        name="output_transform")
+      self._output_transform = modules.GraphIndependent(
+        edge_fn, node_fn, global_fn, name="output_transform"
+      )
 
   def _build(self, input_op, num_processing_steps):
     latent = self._encoder(input_op)
@@ -322,7 +358,6 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
   """
 
   def _build(self, input_op, num_processing_steps):
-
     class LoopVars(typing.NamedTuple):
       i: tf.Tensor
       latent: tf.Tensor
@@ -343,17 +378,17 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
         latent = self._core(core_input)
 
       return [
-          LoopVars(i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
-                   latent=latent,
-                   latent0=v.latent0)
+        LoopVars(
+          i=tf.add(v.i, FLAGS.experimental_while_loop_sequence_length),
+          latent=latent,
+          latent0=v.latent0,
+        )
       ]
 
     init_latent = self._encoder(input_op)
 
     init_vars = LoopVars(i=0, latent=init_latent, latent0=init_latent)
-    final_vars, = tf.while_loop(Condition, Body, [
-        init_vars,
-    ])
+    (final_vars,) = tf.while_loop(Condition, Body, [init_vars,])
 
     decoded_op = self._decoder(final_vars.latent)
     output_op = self._output_transform(decoded_op)
@@ -361,7 +396,7 @@ class EncodeProcessDecodeUsingLoop(EncodeProcessDecode):
 
 
 def DataDictsToJsonSerializable(
-    data_dicts: typing.List[typing.Dict[str, typing.Any]]
+  data_dicts: typing.List[typing.Dict[str, typing.Any]]
 ) -> typing.List[typing.Dict[str, typing.Any]]:
   """Make data dicts JSON serializable."""
 
@@ -388,17 +423,20 @@ def DataDictsToJsonSerializable(
 
 class LossOps(object):
   """Operations for producing model loss."""
+
   Type = typing.Callable[[graphs.GraphsTuple, graphs.GraphsTuple], tf.Tensor]
 
   @staticmethod
-  def GlobalsSoftmaxCrossEntropy(target_ph: graphs.GraphsTuple,
-                                 output_op: graphs.GraphsTuple) -> tf.Tensor:
+  def GlobalsSoftmaxCrossEntropy(
+    target_ph: graphs.GraphsTuple, output_op: graphs.GraphsTuple
+  ) -> tf.Tensor:
     """Softmax cross entropy loss of graph globals."""
     return tf.losses.softmax_cross_entropy(target_ph.globals, output_op.globals)
 
   @staticmethod
-  def NodesSoftmaxCrossEntropy(target_ph: graphs.GraphsTuple,
-                               output_op: graphs.GraphsTuple) -> tf.Tensor:
+  def NodesSoftmaxCrossEntropy(
+    target_ph: graphs.GraphsTuple, output_op: graphs.GraphsTuple
+  ) -> tf.Tensor:
     """Softmax cross entropy loss of graph nodes."""
     return tf.losses.softmax_cross_entropy(target_ph.nodes, output_op.nodes)
 
@@ -410,35 +448,40 @@ class EvaluationResult(typing.NamedTuple):
 
 class AccuracyEvaluators(object):
   """Methods to compute the accuracy of a model's outputs."""
+
   Type = typing.Callable[
-      [typing.List[nx.DiGraph], typing.
-       List[typing.Dict[str, typing.Any]]], EvaluationResult]
+    [typing.List[nx.DiGraph], typing.List[typing.Dict[str, typing.Any]]],
+    EvaluationResult,
+  ]
 
   @staticmethod
-  def OneHotGlobals(target_graphs: typing.List[nx.DiGraph],
-                    output_graphs: typing.List[typing.Dict[str, typing.Any]]
-                   ) -> EvaluationResult:
+  def OneHotGlobals(
+    target_graphs: typing.List[nx.DiGraph],
+    output_graphs: typing.List[typing.Dict[str, typing.Any]],
+  ) -> EvaluationResult:
     """Return accuracy of one-hot globals features."""
-    targets = np.array([np.argmax(d.graph['features']) for d in target_graphs])
-    outputs = np.array([np.argmax(d['globals']) for d in output_graphs])
+    targets = np.array([np.argmax(d.graph["features"]) for d in target_graphs])
+    outputs = np.array([np.argmax(d["globals"]) for d in output_graphs])
     accuracy = (targets == outputs).mean()
     return EvaluationResult(float(accuracy), float(accuracy))
 
   @staticmethod
-  def OneHotNodes(target_graphs: typing.List[nx.DiGraph],
-                  output_graphs: typing.List[typing.Dict[str, typing.Any]]
-                 ) -> EvaluationResult:
+  def OneHotNodes(
+    target_graphs: typing.List[nx.DiGraph],
+    output_graphs: typing.List[typing.Dict[str, typing.Any]],
+  ) -> EvaluationResult:
     """Return accuracy of one-hot globals features."""
     cs = []
     ss = []
 
     predicted_reachabilities = [
-        np.argmax(d['nodes'], axis=-1) for d in output_graphs
+      np.argmax(d["nodes"], axis=-1) for d in output_graphs
     ]
 
     for target, predicted in zip(target_graphs, predicted_reachabilities):
       reachables = np.array(
-          [np.argmax(n['features']) for _, n in target.nodes(data=True)])
+        [np.argmax(n["features"]) for _, n in target.nodes(data=True)]
+      )
       c = [reachables == predicted]
       c = np.concatenate(c, axis=0)
       s = np.all(c)
@@ -451,26 +494,25 @@ class AccuracyEvaluators(object):
 
 
 def GuessOutputSizesFromTargetGraph(graph: nx.DiGraph) -> typing.Dict[str, int]:
-  global_features = graph.graph['features']
+  global_features = graph.graph["features"]
   for _, node in graph.nodes(data=True):
-    node_features = node['features']
+    node_features = node["features"]
     break
   for _, _, edge in graph.edges(data=True):
-    edge_features = edge['features']
+    edge_features = edge["features"]
     break
 
   def GuessOutputSize(features: np.ndarray) -> typing.Optional[int]:
     return len(features) if len(features) > 1 else None
 
   return {
-      'global_output_size': GuessOutputSize(global_features),
-      'node_output_size': GuessOutputSize(node_features),
-      'edge_output_size': GuessOutputSize(edge_features),
+    "global_output_size": GuessOutputSize(global_features),
+    "node_output_size": GuessOutputSize(node_features),
+    "edge_output_size": GuessOutputSize(edge_features),
   }
 
 
 class CompilerGraphNeuralNetwork(object):
-
   def __init__(self, df: pd.DataFrame, outdir: pathlib.Path):
     """Instantiate a compiler graph neural network for the given dataset.
 
@@ -488,32 +530,35 @@ class CompilerGraphNeuralNetwork(object):
     AssertDataFrameIsValidOrDie(df)
 
     # Lookup the loss op and evaluator functions from the table.
-    make_loss_op = getattr(LossOps, df['graphnet:loss_op'].values[0])
-    app.Log(1, 'Using loss op %s', make_loss_op.__name__)
-    evaluate_outputs = getattr(AccuracyEvaluators,
-                               df['graphnet:accuracy_evaluator'].values[0])
-    app.Log(1, 'Using evaluator %s', evaluate_outputs.__name__)
+    make_loss_op = getattr(LossOps, df["graphnet:loss_op"].values[0])
+    app.Log(1, "Using loss op %s", make_loss_op.__name__)
+    evaluate_outputs = getattr(
+      AccuracyEvaluators, df["graphnet:accuracy_evaluator"].values[0]
+    )
+    app.Log(1, "Using evaluator %s", evaluate_outputs.__name__)
 
     # Create output directories.
-    (outdir / 'telemetry').mkdir(exist_ok=True, parents=True)
-    (outdir / 'tensorboard').mkdir(exist_ok=True, parents=True)
-    (outdir / 'test_outputs').mkdir(exist_ok=True, parents=True)
+    (outdir / "telemetry").mkdir(exist_ok=True, parents=True)
+    (outdir / "tensorboard").mkdir(exist_ok=True, parents=True)
+    (outdir / "test_outputs").mkdir(exist_ok=True, parents=True)
 
     # Get the number of message passing steps.
     num_processing_steps = GetNumberOfMessagePassingSteps(df)
-    app.Log(1, 'Number of processing steps: %d', num_processing_steps)
+    app.Log(1, "Number of processing steps: %d", num_processing_steps)
 
-    with prof.Profile('create placeholders'):
+    with prof.Profile("create placeholders"):
       input_ph, target_ph = CreatePlaceholdersFromGraphs(
-          df['networkx:input_graph'], df['networkx:target_graph'])
+        df["networkx:input_graph"], df["networkx:target_graph"]
+      )
 
     app.Log(2, "Input placeholders:\n%s", GraphTupleToString(input_ph))
     app.Log(2, "Target placeholders:\n%s", GraphTupleToString(target_ph))
 
     # Instantiate the model.
-    with tf.name_scope('model'):
+    with tf.name_scope("model"):
       init_args = GuessOutputSizesFromTargetGraph(
-          df['networkx:target_graph'].values[0])
+        df["networkx:target_graph"].values[0]
+      )
 
       # Enable support for experimental while-loop model architecture.
       if FLAGS.experimental_use_encode_process_decode_with_loop:
@@ -522,14 +567,14 @@ class CompilerGraphNeuralNetwork(object):
         model = EncodeProcessDecode(**init_args)
 
       # Create loss ops.
-      with prof.Profile('create output op'):
+      with prof.Profile("create output op"):
         output_op = model(input_ph, num_processing_steps)
-      with prof.Profile('create training loss'):
+      with prof.Profile("create training loss"):
         loss_op = make_loss_op(target_ph, output_op)
         loss_summary_op = tf.summary.scalar("loss", loss_op)
 
     # Optimizer and training step.
-    with prof.Profile('create optimizer'), tf.name_scope('optimizer'):
+    with prof.Profile("create optimizer"), tf.name_scope("optimizer"):
       # Learning rate is a variable so that we can adjust it during training.
       learning_rate = tf.Variable(0.0, trainable=False)
       optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
@@ -549,8 +594,9 @@ class CompilerGraphNeuralNetwork(object):
     self.outdir = outdir
     self.evaluate_outputs = evaluate_outputs
 
-  def TrainAndEvaluate(self,
-                       sess: tf.compat.v1.Session) -> typing.List[nx.DiGraph]:
+  def TrainAndEvaluate(
+    self, sess: tf.compat.v1.Session
+  ) -> typing.List[nx.DiGraph]:
     """Train and evaluate a model.
 
     Args:
@@ -560,12 +606,16 @@ class CompilerGraphNeuralNetwork(object):
       A list of output graphs, one for each graph in the test set.
     """
     summary_writers = TrainingValidationTestValue(
-        training=tf.compat.v1.summary.FileWriter(
-            f'{self.outdir}/tensorboard/training', sess.graph),
-        validation=tf.compat.v1.summary.FileWriter(
-            f'{self.outdir}/tensorboard/validation', sess.graph),
-        test=tf.compat.v1.summary.FileWriter(f'{self.outdir}/tensorboard/test',
-                                             sess.graph))
+      training=tf.compat.v1.summary.FileWriter(
+        f"{self.outdir}/tensorboard/training", sess.graph
+      ),
+      validation=tf.compat.v1.summary.FileWriter(
+        f"{self.outdir}/tensorboard/validation", sess.graph
+      ),
+      test=tf.compat.v1.summary.FileWriter(
+        f"{self.outdir}/tensorboard/test", sess.graph
+      ),
+    )
 
     random_state = np.random.RandomState(FLAGS.model_seed)
 
@@ -575,56 +625,60 @@ class CompilerGraphNeuralNetwork(object):
 
     # Split the dataframe into training, validation, and test data. Make a copy
     # of the training data so that we can shuffle it.
-    train_df = self.df[self.df['split:type'] == 'training'].copy()
-    validation_df = self.df[self.df['split:type'] == 'validation']
-    test_df = self.df[self.df['split:type'] == 'test']
+    train_df = self.df[self.df["split:type"] == "training"].copy()
+    validation_df = self.df[self.df["split:type"] == "validation"]
+    test_df = self.df[self.df["split:type"] == "test"]
 
-    app.Log(1, "%d train graphs, %d validation graphs, %d test graphs",
-            len(train_df), len(validation_df), len(test_df))
+    app.Log(
+      1,
+      "%d train graphs, %d validation graphs, %d test graphs",
+      len(train_df),
+      len(validation_df),
+      len(test_df),
+    )
 
-    with prof.Profile('train split'):
+    with prof.Profile("train split"):
       batches = list(range(0, len(train_df), FLAGS.batch_size))
 
       # A counter of the global training step.
       tensorboard_step = 0
 
       for epoch_num in range(FLAGS.num_epochs):
-        with prof.Profile('train epoch'):
+        with prof.Profile("train epoch"):
           # Per-epoch log to be written to file.
           log = {
-              # Model attributes. These are constant across epochs.
-              'batch_size': FLAGS.batch_size,
-              'num_processing_steps': self.num_processing_steps,
-              'initial_learning_rate': FLAGS.initial_learning_rate,
-              'learning_rate_exponential_decay':
-              FLAGS.learning_rate_exponential_decay,
-              # Dataset attributes. These are constant across epochs.
-              'training_graph_count': len(train_df),
-              'validation_graph_count': len(validation_df),
-              'test_graph_count': len(test_df),
-              # Per-epoch attributes.
-              'epoch': epoch_num + 1,
-              'learning_rate': GetLearningRate(epoch_num),
-              # Runtime metrics.
-              'batch_runtime_ms': [],
-              'validation_runtime_ms': 0,
-              'test_runtime_ms': 0,
-              # Throughput metrics.
-              'training_graphs_per_second': 0,
-              'validation_graphs_per_second': 0,
-              'test_graphs_per_second': 0,
-              # Model losses. Record all training losses. Average validation and
-              # test losses across batches.
-              'training_losses': [],
-              'validation_loss': 0,
-              'test_loss': 0,
-              # Accuracies of model on training / validation / test data.
-              'training_accuracy': 0,
-              'training_solved': 0,
-              'validation_accuracy': 0,
-              'validation_solved': 0,
-              'test_accuracy': 0,
-              'test_solved': 0,
+            # Model attributes. These are constant across epochs.
+            "batch_size": FLAGS.batch_size,
+            "num_processing_steps": self.num_processing_steps,
+            "initial_learning_rate": FLAGS.initial_learning_rate,
+            "learning_rate_exponential_decay": FLAGS.learning_rate_exponential_decay,
+            # Dataset attributes. These are constant across epochs.
+            "training_graph_count": len(train_df),
+            "validation_graph_count": len(validation_df),
+            "test_graph_count": len(test_df),
+            # Per-epoch attributes.
+            "epoch": epoch_num + 1,
+            "learning_rate": GetLearningRate(epoch_num),
+            # Runtime metrics.
+            "batch_runtime_ms": [],
+            "validation_runtime_ms": 0,
+            "test_runtime_ms": 0,
+            # Throughput metrics.
+            "training_graphs_per_second": 0,
+            "validation_graphs_per_second": 0,
+            "test_graphs_per_second": 0,
+            # Model losses. Record all training losses. Average validation and
+            # test losses across batches.
+            "training_losses": [],
+            "validation_loss": 0,
+            "test_loss": 0,
+            # Accuracies of model on training / validation / test data.
+            "training_accuracy": 0,
+            "training_solved": 0,
+            "validation_accuracy": 0,
+            "validation_solved": 0,
+            "test_accuracy": 0,
+            "test_solved": 0,
           }
 
           # Set the learning rate based on the epoch number.
@@ -637,50 +691,66 @@ class CompilerGraphNeuralNetwork(object):
             batch_start_time = time.time()
 
             # Run a training set.
-            input_graphs = train_df['networkx:input_graph'].iloc[b:b + FLAGS.
-                                                                 batch_size]
-            target_graphs = train_df['networkx:target_graph'].iloc[b:b + FLAGS.
-                                                                   batch_size]
+            input_graphs = train_df["networkx:input_graph"].iloc[
+              b : b + FLAGS.batch_size
+            ]
+            target_graphs = train_df["networkx:target_graph"].iloc[
+              b : b + FLAGS.batch_size
+            ]
             num_graphs_processed = len(input_graphs)
 
             for s in range(0, self.num_processing_steps):
-              feed_dict = CreateFeedDict(input_graphs, target_graphs,
-                                         self.placeholders)
+              feed_dict = CreateFeedDict(
+                input_graphs, target_graphs, self.placeholders
+              )
               train_values = sess.run(
-                  {
-                      "summary": self.loss_summary_op,
-                      "step": self.step_op,
-                      "target": self.placeholders.target,
-                      "loss": self.loss_op,
-                      "output": self.output_op,
-                  },
-                  feed_dict=feed_dict)
+                {
+                  "summary": self.loss_summary_op,
+                  "step": self.step_op,
+                  "target": self.placeholders.target,
+                  "loss": self.loss_op,
+                  "output": self.output_op,
+                },
+                feed_dict=feed_dict,
+              )
 
             output_graphs += utils_np.graphs_tuple_to_data_dicts(
-                train_values["output"])
-            summary_writers.training.add_summary(train_values['summary'],
-                                                 tensorboard_step)
+              train_values["output"]
+            )
+            summary_writers.training.add_summary(
+              train_values["summary"], tensorboard_step
+            )
 
             batch_runtime = time.time() - batch_start_time
             graphs_per_second = num_graphs_processed / batch_runtime
             graphs_per_seconds.append(graphs_per_second)
 
-            log['batch_runtime_ms'].append(int(batch_runtime * 1000))
-            log['training_losses'].append(float(train_values['loss']))
+            log["batch_runtime_ms"].append(int(batch_runtime * 1000))
+            log["training_losses"].append(float(train_values["loss"]))
 
             app.Log(
-                1,
-                'Epoch %02d / %02d, batch %02d / %02d in %.3fs (%02d graphs/sec), '
-                'training loss: %.4f', epoch_num + 1, FLAGS.num_epochs, j + 1,
-                len(batches), batch_runtime, int(graphs_per_second),
-                train_values['loss'])
+              1,
+              "Epoch %02d / %02d, batch %02d / %02d in %.3fs (%02d graphs/sec), "
+              "training loss: %.4f",
+              epoch_num + 1,
+              FLAGS.num_epochs,
+              j + 1,
+              len(batches),
+              batch_runtime,
+              int(graphs_per_second),
+              train_values["loss"],
+            )
             tensorboard_step += 1
 
-        log['training_accuracy'], log['training_solved'] = (
-            self.evaluate_outputs(train_df['networkx:target_graph'],
-                                  output_graphs))
-        log['training_graphs_per_second'] = sum(graphs_per_seconds) / len(
-            graphs_per_seconds)
+        (
+          log["training_accuracy"],
+          log["training_solved"],
+        ) = self.evaluate_outputs(
+          train_df["networkx:target_graph"], output_graphs
+        )
+        log["training_graphs_per_second"] = sum(graphs_per_seconds) / len(
+          graphs_per_seconds
+        )
 
         # End of epoch. Evaluate model on the validation and test set.
 
@@ -690,42 +760,54 @@ class CompilerGraphNeuralNetwork(object):
         num_graphs_processed = 0
 
         for j, b in enumerate(range(0, len(validation_df), FLAGS.batch_size)):
-          input_graphs = validation_df['networkx:input_graph'].iloc[b:b + FLAGS.
-                                                                    batch_size]
-          target_graphs = validation_df['networkx:target_graph'].iloc[
-              b:b + FLAGS.batch_size]
+          input_graphs = validation_df["networkx:input_graph"].iloc[
+            b : b + FLAGS.batch_size
+          ]
+          target_graphs = validation_df["networkx:target_graph"].iloc[
+            b : b + FLAGS.batch_size
+          ]
           num_graphs_processed += len(input_graphs)
-          feed_dict = CreateFeedDict(input_graphs, target_graphs,
-                                     self.placeholders)
+          feed_dict = CreateFeedDict(
+            input_graphs, target_graphs, self.placeholders
+          )
           validation_values = sess.run(
-              {
-                  "summary": self.loss_summary_op,
-                  "target": self.placeholders.target,
-                  "loss": self.loss_op,
-                  "output": self.output_op,
-              },
-              feed_dict=feed_dict)
+            {
+              "summary": self.loss_summary_op,
+              "target": self.placeholders.target,
+              "loss": self.loss_op,
+              "output": self.output_op,
+            },
+            feed_dict=feed_dict,
+          )
           output_graphs += utils_np.graphs_tuple_to_data_dicts(
-              validation_values["output"])
-          summary_writers.validation.add_summary(validation_values['summary'],
-                                                 tensorboard_step)
-          losses.append(float(validation_values['loss']))
+            validation_values["output"]
+          )
+          summary_writers.validation.add_summary(
+            validation_values["summary"], tensorboard_step
+          )
+          losses.append(float(validation_values["loss"]))
 
         validation_runtime = time.time() - validation_start_time
         graphs_per_second = num_graphs_processed / validation_runtime
-        log['validation_graphs_per_second'] = graphs_per_second
+        log["validation_graphs_per_second"] = graphs_per_second
 
         eval_result = self.evaluate_outputs(
-            validation_df['networkx:target_graph'], output_graphs)
-        log['validation_accuracy'], log['validation_solved'] = eval_result
-        log['validation_loss'] = sum(losses) / len(losses)
-        log['validation_runtime_ms'] = validation_runtime * 1000
+          validation_df["networkx:target_graph"], output_graphs
+        )
+        log["validation_accuracy"], log["validation_solved"] = eval_result
+        log["validation_loss"] = sum(losses) / len(losses)
+        log["validation_runtime_ms"] = validation_runtime * 1000
 
         app.Log(
-            1, 'Validation set in %.3f seconds (%02d graphs/sec), '
-            'loss: %.4f, %.2f%% accuracy, %.2f%% solved', validation_runtime,
-            graphs_per_second, log['validation_loss'],
-            eval_result.accuracy * 100, eval_result.solved * 100)
+          1,
+          "Validation set in %.3f seconds (%02d graphs/sec), "
+          "loss: %.4f, %.2f%% accuracy, %.2f%% solved",
+          validation_runtime,
+          graphs_per_second,
+          log["validation_loss"],
+          eval_result.accuracy * 100,
+          eval_result.solved * 100,
+        )
 
         # Now the test set.
         output_graphs, losses = [], []
@@ -733,66 +815,82 @@ class CompilerGraphNeuralNetwork(object):
         num_graphs_processed = 0
 
         for j, b in enumerate(range(0, len(test_df), FLAGS.batch_size)):
-          input_graphs = test_df['networkx:input_graph'].iloc[b:b +
-                                                              FLAGS.batch_size]
-          target_graphs = test_df['networkx:target_graph'].iloc[b:b + FLAGS.
-                                                                batch_size]
+          input_graphs = test_df["networkx:input_graph"].iloc[
+            b : b + FLAGS.batch_size
+          ]
+          target_graphs = test_df["networkx:target_graph"].iloc[
+            b : b + FLAGS.batch_size
+          ]
           num_graphs_processed += len(input_graphs)
-          feed_dict = CreateFeedDict(input_graphs, target_graphs,
-                                     self.placeholders)
+          feed_dict = CreateFeedDict(
+            input_graphs, target_graphs, self.placeholders
+          )
           test_values = sess.run(
-              {
-                  "summary": self.loss_summary_op,
-                  "target": self.placeholders.target,
-                  "loss": self.loss_op,
-                  "output": self.output_op,
-              },
-              feed_dict=feed_dict)
+            {
+              "summary": self.loss_summary_op,
+              "target": self.placeholders.target,
+              "loss": self.loss_op,
+              "output": self.output_op,
+            },
+            feed_dict=feed_dict,
+          )
           output_graphs += utils_np.graphs_tuple_to_data_dicts(
-              test_values["output"])
-          summary_writers.test.add_summary(test_values['summary'],
-                                           tensorboard_step)
-          losses.append(float(test_values['loss']))
+            test_values["output"]
+          )
+          summary_writers.test.add_summary(
+            test_values["summary"], tensorboard_step
+          )
+          losses.append(float(test_values["loss"]))
 
         test_runtime = time.time() - test_start_time
         graphs_per_second = num_graphs_processed / test_runtime
-        log['test_graphs_per_second'] = graphs_per_second
+        log["test_graphs_per_second"] = graphs_per_second
 
         # Record the output graphs as JSON, and the accuracy of those outputs.
-        eval_result = self.evaluate_outputs(test_df['networkx:target_graph'],
-                                            output_graphs)
-        log['test_accuracy'], log['test_solved'] = eval_result
-        log['test_loss'] = sum(losses) / len(losses)
-        log['test_runtime_ms'] = test_runtime * 1000
+        eval_result = self.evaluate_outputs(
+          test_df["networkx:target_graph"], output_graphs
+        )
+        log["test_accuracy"], log["test_solved"] = eval_result
+        log["test_loss"] = sum(losses) / len(losses)
+        log["test_runtime_ms"] = test_runtime * 1000
 
         app.Log(
-            1, 'Test set in %.3f seconds (%02d graphs/sec), '
-            'loss: %.4f, %.2f%% accuracy, %.2f%% solved', test_runtime,
-            graphs_per_second, log['test_loss'], eval_result.accuracy * 100,
-            eval_result.solved * 100)
+          1,
+          "Test set in %.3f seconds (%02d graphs/sec), "
+          "loss: %.4f, %.2f%% accuracy, %.2f%% solved",
+          test_runtime,
+          graphs_per_second,
+          log["test_loss"],
+          eval_result.accuracy * 100,
+          eval_result.solved * 100,
+        )
 
         # Dump epoch log to file.
-        logpath = (f'{self.outdir}/telemetry/epoch_{epoch_num+1:03d}.'
-                   f'T{labdate.MillisecondsTimestamp()}.json')
-        with open(logpath, 'w') as f:
+        logpath = (
+          f"{self.outdir}/telemetry/epoch_{epoch_num+1:03d}."
+          f"T{labdate.MillisecondsTimestamp()}.json"
+        )
+        with open(logpath, "w") as f:
           json.dump(log, f)
         app.Log(1, "Wrote %s", logpath)
 
         test_outputs_path = (
-            f'{self.outdir}/test_outputs/epoch_{epoch_num+1:03d}.'
-            f'T{labdate.MillisecondsTimestamp()}.pkl')
-        with open(test_outputs_path, 'wb') as f:
+          f"{self.outdir}/test_outputs/epoch_{epoch_num+1:03d}."
+          f"T{labdate.MillisecondsTimestamp()}.pkl"
+        )
+        with open(test_outputs_path, "wb") as f:
           pickle.dump(output_graphs, f)
 
         # Shuffle the training data at the end of each epoch.
         train_df = train_df.sample(
-            frac=1, random_state=random_state).reset_index(drop=True)
+          frac=1, random_state=random_state
+        ).reset_index(drop=True)
 
     # Return the output graphs from the final epoch.
     return output_graphs
 
 
-class NoOpProfileContext():
+class NoOpProfileContext:
   """A profiling context which does no profiling.
 
   This is used a return value of ProfileContext() which allows the
@@ -817,9 +915,9 @@ def GetProfileContext(outdir: pathlib.Path, profile: bool = True):
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
-  app.Log(1, 'Starting evaluating graph model')
+  app.Log(1, "Starting evaluating graph model")
 
   # Load graphs from file.
   df_path = pathlib.Path(FLAGS.df)
@@ -828,18 +926,19 @@ def main(argv):
   assert FLAGS.outdir
   outdir = pathlib.Path(FLAGS.outdir)
   # Make the output directories.
-  (outdir / 'values').mkdir(exist_ok=True, parents=True)
+  (outdir / "values").mkdir(exist_ok=True, parents=True)
 
-  with prof.Profile('load dataframe'):
+  with prof.Profile("load dataframe"):
     df = pd.read_pickle(df_path)
-  app.Log(1, 'Loaded %s dataframe from %s', df.shape, df_path)
+  app.Log(1, "Loaded %s dataframe from %s", df.shape, df_path)
 
   # Prepare TensorFlow profiler.
   builder = tf.profiler.ProfileOptionBuilder
-  opts = builder(builder.time_and_memory()).order_by('micros').build()
+  opts = builder(builder.time_and_memory()).order_by("micros").build()
   opts2 = tf.profiler.ProfileOptionBuilder.trainable_variables_parameter()
-  profile_context = GetProfileContext(outdir / 'profile',
-                                      FLAGS.profile_tensorflow)
+  profile_context = GetProfileContext(
+    outdir / "profile", FLAGS.profile_tensorflow
+  )
 
   # Create the model.
   model = CompilerGraphNeuralNetwork(df, outdir)
@@ -847,15 +946,15 @@ def main(argv):
   with profile_context as pctx, tf.compat.v1.Session() as sess:
     # Set up profiling. Note that if not FLAGS.profile_tensorflow, these
     # methods are no-ops.
-    pctx.add_auto_profiling('op', opts, [15, 50, 100])
-    pctx.add_auto_profiling('scope', opts2, [14, 49, 99])
+    pctx.add_auto_profiling("op", opts, [15, 50, 100])
+    pctx.add_auto_profiling("scope", opts2, [14, 49, 99])
 
-    outputs_path = outdir / 'outputs.pkl'
+    outputs_path = outdir / "outputs.pkl"
     if not outputs_path.is_file():
       outputs = model.TrainAndEvaluate(sess)
-      with open(outdir / 'outputs.pkl', 'wb') as f:
+      with open(outdir / "outputs.pkl", "wb") as f:
         pickle.dump(outputs, f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

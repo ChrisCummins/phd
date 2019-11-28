@@ -2,11 +2,11 @@
 #define HASH_MAP_H
 
 #include <forward_list>
-#include <vector>
-#include <utility>
 #include <ostream>
+#include <utility>
+#include <vector>
 
-template<typename Key, typename T>
+template <typename Key, typename T>
 class hashmap {
  public:
   class iterator;
@@ -33,8 +33,7 @@ class hashmap {
     bucket_type& bucket = _table[table_idx];
 
     for (auto& pair : bucket) {
-      if (pair.first == key)
-        return pair.second;
+      if (pair.first == key) return pair.second;
     }
 
     bucket.emplace_front(key, mapped_type{});
@@ -43,15 +42,12 @@ class hashmap {
 
   iterator begin() {
     auto it = _table.begin();
-    while (it != _table.end() && (*it).empty())
-      it++;
+    while (it != _table.end() && (*it).empty()) it++;
 
     return iterator{_table, it, &(*it), (*it).begin()};
   }
 
-  iterator end() {
-    return iterator{_table, _table.end()};
-  }
+  iterator end() { return iterator{_table, _table.end()}; }
 
  private:
   table_type _table;
@@ -61,17 +57,17 @@ class hashmap {
  public:
   class iterator {
    public:
-    iterator(table_type& table, table_iterator table_it,
-             bucket_type* bucket, local_iterator bucket_it)
-        : _table_it(table_it), _table(table),
-          _bucket_it(bucket_it), _bucket(bucket) {}
+    iterator(table_type& table, table_iterator table_it, bucket_type* bucket,
+             local_iterator bucket_it)
+        : _table_it(table_it),
+          _table(table),
+          _bucket_it(bucket_it),
+          _bucket(bucket) {}
 
     iterator(table_type& table, table_iterator table_it)
         : _table_it(table_it), _table(table) {}
 
-    value_type& operator*() {
-      return *_bucket_it;
-    }
+    value_type& operator*() { return *_bucket_it; }
 
     iterator& operator++() {
       // No increment at the end of the table
@@ -110,13 +106,10 @@ class hashmap {
 
     friend bool operator==(const iterator& lhs, const iterator& rhs) {
       if (lhs._bucket && rhs._bucket) {
-        return lhs._table_it == rhs._table_it
-            && lhs._table == rhs._table
-            && lhs._bucket_it == rhs._bucket_it
-            && lhs._bucket == rhs._bucket;
+        return lhs._table_it == rhs._table_it && lhs._table == rhs._table &&
+               lhs._bucket_it == rhs._bucket_it && lhs._bucket == rhs._bucket;
       } else {
-        return lhs._table_it == rhs._table_it
-            && lhs._table == rhs._table;
+        return lhs._table_it == rhs._table_it && lhs._table == rhs._table;
       }
     }
 
@@ -132,19 +125,17 @@ class hashmap {
   };
 };
 
-template<typename Key, typename T>
+template <typename Key, typename T>
 std::ostream& operator<<(std::ostream& out, hashmap<Key, T>& map) {
   auto started = false;
   auto it = map.begin();
   while (it != map.end()) {
-    if (started)
-      out << "; ";
+    if (started) out << "; ";
     started = true;
     out << '<' << (*it).first << ", " << (*it++).second << '>';
-}
+  }
 
   return out;
 }
-
 
 #endif  // HASH_MAP_H

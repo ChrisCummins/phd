@@ -13,10 +13,12 @@ from progressbar import ProgressBar
 
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
-                      help="MySQL database hostname")
-  parser.add_argument("--commit", action="store_true",
-                      help="Commit changes (default is dry-run)")
+  parser.add_argument(
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
+  parser.add_argument(
+    "--commit", action="store_true", help="Commit changes (default is dry-run)"
+  )
   args = parser.parse_args()
 
   db.init(args.hostname)

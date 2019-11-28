@@ -58,7 +58,7 @@ else:
   from email.MIMEMultipart import MIMEMultipart
   from email.MIMEText import MIMEText
 
-DEFAULT_CFG_PATH = os.path.expanduser('~/.lmkrc')
+DEFAULT_CFG_PATH = os.path.expanduser("~/.lmkrc")
 
 __description__ = """\
 {bin}: let me know. Patiently awaits the completion of the
@@ -83,7 +83,9 @@ the smtp and message settings to suit.
 
 Made with \033[1;31m♥\033[0;0m by Chris Cummins.
 <https://github.com/ChrisCummins/phd>\
-""".format(bin=sys.argv[0], cfg=DEFAULT_CFG_PATH)
+""".format(
+  bin=sys.argv[0], cfg=DEFAULT_CFG_PATH
+)
 
 DEFAULT_CFG = """\
 ; lkm config <https://github.com/ChrisCummins/phd>
@@ -112,13 +114,14 @@ class colors:
   """
   Shell escape codes.
   """
-  reset = '\033[0;0m'
-  red = '\033[1;31m'
-  blue = '\033[1;34m'
-  cyan = '\033[1;36m'
-  green = '\033[0;32m'
-  bold = '\033[;1m'
-  reverse = '\033[;7m'
+
+  reset = "\033[0;0m"
+  red = "\033[1;31m"
+  blue = "\033[1;34m"
+  cyan = "\033[1;36m"
+  green = "\033[0;32m"
+  bold = "\033[;1m"
+  reverse = "\033[;7m"
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -131,24 +134,28 @@ class ArgumentParser(argparse.ArgumentParser):
     See python argparse.ArgumentParser.__init__().
     """
     super(ArgumentParser, self).__init__(*args, **kwargs)
-    self.add_argument('--version',
-                      action='store_true',
-                      help='show version information and exit')
-    self.add_argument('--create-config',
-                      action='store_true',
-                      help='create configuration file and exit')
+    self.add_argument(
+      "--version", action="store_true", help="show version information and exit"
+    )
+    self.add_argument(
+      "--create-config",
+      action="store_true",
+      help="create configuration file and exit",
+    )
 
   def parse_args(self, args=sys.argv[1:], namespace=None):
     """
     See python argparse.ArgumentParser.parse_args().
     """
     # --version option overrides the normal argument parsing process.
-    if '--version' in args:
-      print('lmk master, made with {c.red}♥{c.reset} by '
-            'Chris Cummins <chrisc.101@gmail.com>'.format(c=colors))
+    if "--version" in args:
+      print(
+        "lmk master, made with {c.red}♥{c.reset} by "
+        "Chris Cummins <chrisc.101@gmail.com>".format(c=colors)
+      )
       sys.exit(0)
 
-    if '--create-config' in args:
+    if "--create-config" in args:
       get_cfg_path()
       sys.exit(0)
 
@@ -278,8 +285,9 @@ def naturaldelta(value, months=True):
       if months == 1:
         return _("1 year, 1 month")
       else:
-        return ngettext("1 year, %d month", "1 year, %d months",
-                        months) % months
+        return (
+          ngettext("1 year, %d month", "1 year, %d months", months) % months
+        )
     else:
       return ngettext("1 year, %d day", "1 year, %d days", days) % days
   else:
@@ -301,7 +309,7 @@ def naturaltime(value, future=False, months=True):
   if isinstance(value, (datetime, timedelta)):
     future = date > now
 
-  ago = _('%s from now') if future else _('%s ago')
+  ago = _("%s from now") if future else _("%s ago")
   delta = naturaldelta(delta, months)
 
   if delta == _("a moment"):
@@ -322,15 +330,21 @@ def parse_args(args):
   str
       Command to execute.
   """
-  parser = ArgumentParser(description=__description__,
-                          formatter_class=argparse.RawDescriptionHelpFormatter)
-  parser.add_argument('-e',
-                      '--only-errors',
-                      action='store_true',
-                      help='only notify if command fails')
-  parser.add_argument('command',
-                      metavar='<command>',
-                      help='command to execute, or "-" to read from stdin')
+  parser = ArgumentParser(
+    description=__description__,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+  )
+  parser.add_argument(
+    "-e",
+    "--only-errors",
+    action="store_true",
+    help="only notify if command fails",
+  )
+  parser.add_argument(
+    "command",
+    metavar="<command>",
+    help='command to execute, or "-" to read from stdin',
+  )
   return parser.parse_args(args)
 
 
@@ -343,13 +357,15 @@ def create_default_cfg(path):
   path : str
       Path of cfg file to create.
   """
-  with open(path, 'w') as outfile:
-    print(DEFAULT_CFG, end='', file=outfile)
+  with open(path, "w") as outfile:
+    print(DEFAULT_CFG, end="", file=outfile)
   os.chmod(path, 384)  # 384 == 0o600
   print(
-      '{c.bold}[lmk] created default configuration file {path}{c.reset}'.format(
-          c=colors, path=path),
-      file=sys.stderr)
+    "{c.bold}[lmk] created default configuration file {path}{c.reset}".format(
+      c=colors, path=path
+    ),
+    file=sys.stderr,
+  )
 
 
 def parse_str(str_, substitutions={}):
@@ -367,13 +383,13 @@ def parse_str(str_, substitutions={}):
   """
 
   def expandvar():
-    if ''.join(varname) in substitutions:
-      var = substitutions[''.join(varname)]()
+    if "".join(varname) in substitutions:
+      var = substitutions["".join(varname)]()
     else:
-      var = os.environ.get(''.join(varname), '')
+      var = os.environ.get("".join(varname), "")
     out.append(var)
 
-  BASH_VAR_CHARS = string.ascii_letters + string.digits + '_'
+  BASH_VAR_CHARS = string.ascii_letters + string.digits + "_"
 
   # parser state
   out = []
@@ -382,17 +398,17 @@ def parse_str(str_, substitutions={}):
   escape = False
 
   for c in str_:
-    if c == '\\':
+    if c == "\\":
       if escape:
         # '\\' -> '\'
-        out.append('\\')
+        out.append("\\")
         escape = False
       else:
         escape = True
-    elif c == '$':
+    elif c == "$":
       if escape:
         # '\$' -> '$'
-        out.append('$')
+        out.append("$")
         escape = False
       else:
         if invar:
@@ -400,14 +416,14 @@ def parse_str(str_, substitutions={}):
           expandvar()
         varname = []
         invar = True
-    elif c == ' ':
+    elif c == " ":
       escape = False
       if invar:
         # '$foo ' -> $(foo)' '
         expandvar()
         varname = []
         invar = False
-      out.append(' ')
+      out.append(" ")
     else:
       if invar:
         if c in BASH_VAR_CHARS:
@@ -424,7 +440,7 @@ def parse_str(str_, substitutions={}):
 
   if invar:
     expandvar()
-  return ''.join(out)
+  return "".join(out)
 
 
 def load_cfg(path=None):
@@ -440,11 +456,14 @@ def load_cfg(path=None):
   """
 
   def _verify(stmt, *msg, **kwargs):
-    sep = kwargs.get('sep', ' ')
+    sep = kwargs.get("sep", " ")
     if not stmt:
-      print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(c=colors,
-                                                         msg=sep.join(msg)),
-            file=sys.stderr)
+      print(
+        "{c.bold}{c.red}[lmk] {msg}{c.reset}".format(
+          c=colors, msg=sep.join(msg)
+        ),
+        file=sys.stderr,
+      )
       sys.exit(E_CFG)
 
   if sys.version_info >= (3, 0):
@@ -458,42 +477,43 @@ def load_cfg(path=None):
   cfg = ConfigParser()
   cfg.read(path)
 
-  _verify('smtp' in cfg, 'config file %s contains no [smtp] section' % path)
-  _verify('host' in cfg['smtp'], 'no host in %s:smtp' % path)
-  _verify('port' in cfg['smtp'], 'no port in %s:smtp' % path)
-  _verify('username' in cfg['smtp'], 'no username in %s:smtp' % path)
-  _verify('password' in cfg['smtp'], 'no password in %s:smtp' % path)
+  _verify("smtp" in cfg, "config file %s contains no [smtp] section" % path)
+  _verify("host" in cfg["smtp"], "no host in %s:smtp" % path)
+  _verify("port" in cfg["smtp"], "no port in %s:smtp" % path)
+  _verify("username" in cfg["smtp"], "no username in %s:smtp" % path)
+  _verify("password" in cfg["smtp"], "no password in %s:smtp" % path)
 
-  _verify('messages' in cfg,
-          'config file %s contains no [messages] section' % path)
-  _verify('from' in cfg['messages'], 'no from address in %s:messages' % path)
-  _verify('to' in cfg['messages'], 'no to address in %s:messages' % path)
+  _verify(
+    "messages" in cfg, "config file %s contains no [messages] section" % path
+  )
+  _verify("from" in cfg["messages"], "no from address in %s:messages" % path)
+  _verify("to" in cfg["messages"], "no to address in %s:messages" % path)
 
-  parse = lambda x: parse_str(x, {'HOST': lambda: socket.gethostname()})
+  parse = lambda x: parse_str(x, {"HOST": lambda: socket.gethostname()})
 
-  cfg['smtp']['host'] = parse(cfg['smtp']['host'])
-  cfg['smtp']['port'] = parse(cfg['smtp']['port'])
-  cfg['smtp']['username'] = parse(cfg['smtp']['username'])
-  cfg['smtp']['password'] = parse(cfg['smtp']['password'])
+  cfg["smtp"]["host"] = parse(cfg["smtp"]["host"])
+  cfg["smtp"]["port"] = parse(cfg["smtp"]["port"])
+  cfg["smtp"]["username"] = parse(cfg["smtp"]["username"])
+  cfg["smtp"]["password"] = parse(cfg["smtp"]["password"])
 
-  _verify(cfg['smtp']['host'], 'stmp host is empty. Check %s' % path)
-  _verify(cfg['smtp']['port'], 'stmp port is empty. Check %s' % path)
-  _verify(cfg['smtp']['username'], 'stmp username is empty. Check %s' % path)
-  _verify(cfg['smtp']['password'], 'stmp password is empty. Check %s' % path)
+  _verify(cfg["smtp"]["host"], "stmp host is empty. Check %s" % path)
+  _verify(cfg["smtp"]["port"], "stmp port is empty. Check %s" % path)
+  _verify(cfg["smtp"]["username"], "stmp username is empty. Check %s" % path)
+  _verify(cfg["smtp"]["password"], "stmp password is empty. Check %s" % path)
 
-  cfg['messages']['from'] = parse(cfg['messages']['from'])
-  cfg['messages']['to'] = parse(cfg['messages']['to'])
+  cfg["messages"]["from"] = parse(cfg["messages"]["from"])
+  cfg["messages"]["to"] = parse(cfg["messages"]["to"])
   # note: 'subject' variables are parsed after command completion,
   #   so we can substitue in outcomes.
 
-  if 'exec' not in cfg:
-    cfg.add_section('exec')
-  if 'shell' not in cfg['exec']:
-    cfg['exec']['shell'] = '/bin/sh'
+  if "exec" not in cfg:
+    cfg.add_section("exec")
+  if "shell" not in cfg["exec"]:
+    cfg["exec"]["shell"] = "/bin/sh"
 
   # add runtime metadata
-  cfg.add_section('/run')
-  cfg['/run']['path'] = path
+  cfg.add_section("/run")
+  cfg["/run"]["path"] = path
 
   return cfg
 
@@ -517,33 +537,44 @@ def get_smtp_server(cfg):
   """
 
   def _error(*msg, **kwargs):
-    sep = kwargs.get('sep', ' ')
-    print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(c=colors,
-                                                       msg=sep.join(msg)),
-          file=sys.stderr)
+    sep = kwargs.get("sep", " ")
+    print(
+      "{c.bold}{c.red}[lmk] {msg}{c.reset}".format(c=colors, msg=sep.join(msg)),
+      file=sys.stderr,
+    )
     sys.exit(E_SMTP)
 
   try:
-    server = smtplib.SMTP(cfg['smtp']['host'], int(cfg['smtp']['port']))
+    server = smtplib.SMTP(cfg["smtp"]["host"], int(cfg["smtp"]["port"]))
     server.starttls()
-    server.login(cfg['smtp']['username'], cfg['smtp']['password'])
+    server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
     return server
   except smtplib.SMTPHeloError:
-    _error('connection to {host}:{port} failed'.format(
-        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
+    _error(
+      "connection to {host}:{port} failed".format(
+        host=cfg["smtp"]["host"], port=cfg["smtp"]["port"]
+      )
+    )
   except smtplib.SMTPAuthenticationError:
-    _error('smtp authentication failed. Check username and password in '
-           '%s' % cfg['/run']['path'])
+    _error(
+      "smtp authentication failed. Check username and password in "
+      "%s" % cfg["/run"]["path"]
+    )
   except smtplib.SMTPServerDisconnected:
     _error(
-        '{host}:{port} disconnected. Check smtp settings in {cfg_path}'.format(
-            host=cfg['smtp']['host'],
-            port=cfg['smtp']['port'],
-            cfg_path=cfg['/run']['path']),
-        file=sys.stderr)
+      "{host}:{port} disconnected. Check smtp settings in {cfg_path}".format(
+        host=cfg["smtp"]["host"],
+        port=cfg["smtp"]["port"],
+        cfg_path=cfg["/run"]["path"],
+      ),
+      file=sys.stderr,
+    )
   except smtplib.SMTPException:
-    _error('unknown error from {host}:{port}'.format(host=cfg['smtp']['host'],
-                                                     port=cfg['smtp']['port']))
+    _error(
+      "unknown error from {host}:{port}".format(
+        host=cfg["smtp"]["host"], port=cfg["smtp"]["port"]
+      )
+    )
 
 
 def send_email_smtp(cfg, server, msg):
@@ -564,43 +595,55 @@ def send_email_smtp(cfg, server, msg):
   """
 
   def _error(*msg, **kwargs):
-    sep = kwargs.get('sep', ' ')
-    print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(c=colors,
-                                                       msg=sep.join(msg)),
-          file=sys.stderr)
+    sep = kwargs.get("sep", " ")
+    print(
+      "{c.bold}{c.red}[lmk] {msg}{c.reset}".format(c=colors, msg=sep.join(msg)),
+      file=sys.stderr,
+    )
     return False
 
-  recipient = msg['To'].strip()
+  recipient = msg["To"].strip()
   if not recipient:
-    return _error('no recipient')
+    return _error("no recipient")
 
   try:
-    server.sendmail(msg['From'], msg['To'], msg.as_string())
-    print('{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'.format(
-        c=colors, recipient=recipient),
-          file=sys.stderr)
+    server.sendmail(msg["From"], msg["To"], msg.as_string())
+    print(
+      "{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}".format(
+        c=colors, recipient=recipient
+      ),
+      file=sys.stderr,
+    )
     return True
   except smtplib.SMTPHeloError:
-    return _error('connection to {host}:{port} failed'.format(
-        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
+    return _error(
+      "connection to {host}:{port} failed".format(
+        host=cfg["smtp"]["host"], port=cfg["smtp"]["port"]
+      )
+    )
   except smtplib.SMTPDataError:
-    return _error('unknown error from {host}:{port}'.format(
-        host=cfg['smtp']['host'], port=cfg['smtp']['port']))
+    return _error(
+      "unknown error from {host}:{port}".format(
+        host=cfg["smtp"]["host"], port=cfg["smtp"]["port"]
+      )
+    )
   except smtplib.SMTPRecipientsRefused:
-    return _error('recipient {recipient} refused'.format(recipient=recipient))
+    return _error("recipient {recipient} refused".format(recipient=recipient))
   except smtplib.SMTPSenderRefused:
-    return _error('sender {from_} refused'.format(from_=msg['From']))
+    return _error("sender {from_} refused".format(from_=msg["From"]))
   return False
 
 
-def build_html_message_body(output,
-                            command=None,
-                            returncode=None,
-                            date_started=None,
-                            date_ended=None,
-                            runtime=None,
-                            snip_after=220,
-                            snip_to=200):
+def build_html_message_body(
+  output,
+  command=None,
+  returncode=None,
+  date_started=None,
+  date_ended=None,
+  runtime=None,
+  snip_after=220,
+  snip_to=200,
+):
   """
   Parameters
   ----------
@@ -625,141 +668,162 @@ def build_html_message_body(output,
   if snip_to > snip_after:
     raise ValueError("snip_to must be <= snip_after")
 
-  user = os.environ['USER']
+  user = os.environ["USER"]
   host = socket.gethostname()
   cwd = os.getcwd()
   lmk = '<a href="github.com/ChrisCummins/phd">lmk</a>'
   me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
 
-  prompt_css = ";".join([
+  prompt_css = ";".join(
+    [
       "font-family:'Courier New', monospace",
       "font-weight:700",
       "font-size:14px",
       "padding-right:10px",
       "color:#000",
       "text-align:right",
-  ])
+    ]
+  )
 
-  command_css = ";".join([
+  command_css = ";".join(
+    [
       "font-family:'Courier New', monospace",
       "font-weight:700",
       "font-size:14px",
       "color:#000",
-  ])
+    ]
+  )
 
-  lineno_css = ";".join([
+  lineno_css = ";".join(
+    [
       "font-family:'Courier New', monospace",
       "font-size:14px",
       "padding-right:10px",
       "color:#666",
       "text-align:right",
-  ])
+    ]
+  )
 
-  line_css = ";".join([
-      "font-family:'Courier New', monospace",
-      "font-size:14px",
-      "color:#000",
-  ])
+  line_css = ";".join(
+    ["font-family:'Courier New', monospace", "font-size:14px", "color:#000",]
+  )
 
   # metadata block
-  html = '<table>\n'
-  style = 'padding-right:15px;'
+  html = "<table>\n"
+  style = "padding-right:15px;"
   if date_started:
     delta = naturaltime(datetime.now() - date_started)
-    html += (u'  <tr><td style="{style}">Started</td>'
-             u'<td>{date_started} ({delta})</td></tr>\n'.format(
-                 style=style, date_started=date_started, delta=delta))
+    html += (
+      '  <tr><td style="{style}">Started</td>'
+      "<td>{date_started} ({delta})</td></tr>\n".format(
+        style=style, date_started=date_started, delta=delta
+      )
+    )
   if date_ended:
-    html += (u'  <tr><td style="{style}">Completed</td>'
-             u'<td>{date_ended}</td></tr>\n'.format(style=style,
-                                                    date_ended=date_ended))
+    html += (
+      '  <tr><td style="{style}">Completed</td>'
+      "<td>{date_ended}</td></tr>\n".format(style=style, date_ended=date_ended)
+    )
   if returncode is not None:
-    html += (u'  <tr><td style="{style}">Return code</td>'
-             u'<td style="font-weight:700;">{returncode}</td></tr>\n'.format(
-                 style=style, returncode=returncode))
-  html += (u'  <tr><td style="{style}">Working directory</td>'
-           u'<td>{cwd}</td></tr>\n'.format(style=style, cwd=cwd))
+    html += (
+      '  <tr><td style="{style}">Return code</td>'
+      '<td style="font-weight:700;">{returncode}</td></tr>\n'.format(
+        style=style, returncode=returncode
+      )
+    )
+  html += (
+    '  <tr><td style="{style}">Working directory</td>'
+    "<td>{cwd}</td></tr>\n".format(style=style, cwd=cwd)
+  )
   html += '</table>\n<hr style="margin-top:20px;"/>\n'
 
   # output
-  html += '<table>\n'
+  html += "<table>\n"
 
   # command line invocation
   if command is not None:
     command_html = cgi.escape(command)
-    html += u"""\
+    html += """\
   <tr style="line-height:1em;">
     <td style="{prompt_css}">$</td>
     <td style="{command_css}">{command_html}</td>
   </tr>
-""".format(prompt_css=prompt_css,
-           command_css=command_css,
-           command_html=command_html)
+""".format(
+      prompt_css=prompt_css, command_css=command_css, command_html=command_html
+    )
 
   # command output
-  lines = output.split('\n')
+  lines = output.split("\n")
   truncated = False
 
   if len(lines) > snip_after:
     truncated = True
     # truncated report. First and last lines of output
     line_nums = range(1, snip_to // 2 + 1)
-    for line, lineno in zip(lines[:snip_to // 2], line_nums):
+    for line, lineno in zip(lines[: snip_to // 2], line_nums):
       line_html = cgi.escape(line)
-      html += u"""\
+      html += """\
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(lineno_css=lineno_css,
-           lineno=lineno,
-           line_css=line_css,
-           line_html=line_html)
+""".format(
+        lineno_css=lineno_css,
+        lineno=lineno,
+        line_css=line_css,
+        line_html=line_html,
+      )
     num_omitted = len(lines) - 200
     html += "</table>"
     html += "... ({num_omitted} lines snipped)".format(num_omitted=num_omitted)
     html += "<table>\n"
     line_nums = range(len(lines) - snip_to // 2 + 1, len(lines) + 1)
-    for line, lineno in zip(lines[-snip_to // 2:], line_nums):
+    for line, lineno in zip(lines[-snip_to // 2 :], line_nums):
       line_html = cgi.escape(line)
-      html += u"""\
+      html += """\
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(lineno_css=lineno_css,
-           lineno=lineno,
-           line_css=line_css,
-           line_html=line_html)
+""".format(
+        lineno_css=lineno_css,
+        lineno=lineno,
+        line_css=line_css,
+        line_html=line_html,
+      )
   else:
     # full length report
     for line, lineno in zip(lines, range(1, len(lines) + 1)):
       try:
-        line = line.decode('utf-8')
+        line = line.decode("utf-8")
       except AttributeError:  # str.decode() depends on Python version.
         pass
       line_html = cgi.escape(line)
-      html += u"""
+      html += """
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
-""".format(lineno_css=lineno_css,
-           lineno=lineno,
-           line_css=line_css,
-           line_html=line_html)
+""".format(
+        lineno_css=lineno_css,
+        lineno=lineno,
+        line_css=line_css,
+        line_html=line_html,
+      )
 
-  html += u'</table>\n'
+  html += "</table>\n"
 
   # footer
-  html += u"""\
+  html += """\
 </table>
 
 <hr style="margin-top:20px;"/>
 <center style="color:#626262;">
   {lmk} made with ♥ by {me}
 </center>
-""".format(lmk=lmk, me=me)
+""".format(
+    lmk=lmk, me=me
+  )
 
   return html, truncated
 
@@ -775,13 +839,16 @@ def get_cfg_path():
   str
       Config path.
   """
-  cfg_path = os.path.expanduser(os.environ.get('LMK_CFG', DEFAULT_CFG_PATH))
+  cfg_path = os.path.expanduser(os.environ.get("LMK_CFG", DEFAULT_CFG_PATH))
   if not os.path.exists(cfg_path) and cfg_path == DEFAULT_CFG_PATH:
     create_default_cfg(cfg_path)
   elif not os.path.exists(cfg_path):
-    print('{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}'.format(
-        c=colors, cfg_path=cfg_path),
-          file=sys.stderr)
+    print(
+      "{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}".format(
+        c=colors, cfg_path=cfg_path
+      ),
+      file=sys.stderr,
+    )
     sys.exit(E_CFG)
   return cfg_path
 
@@ -812,15 +879,17 @@ def truncate(string, maxchar):
   if len(string) <= maxchar:
     return string
   else:
-    return string[:maxchar - 3] + "..."
+    return string[: maxchar - 3] + "..."
 
 
-def build_message_subject(output,
-                          command=None,
-                          returncode=None,
-                          cfg=None,
-                          date_started=None,
-                          date_ended=None):
+def build_message_subject(
+  output,
+  command=None,
+  returncode=None,
+  cfg=None,
+  date_started=None,
+  date_ended=None,
+):
   """
   Build message subject line.
 
@@ -829,38 +898,39 @@ def build_message_subject(output,
   str
       Unicode message subject.
   """
-  user = os.environ['USER']
+  user = os.environ["USER"]
   host = socket.gethostname()
 
   # Strip newlines and truncate.
   if command is not None:
-    command = truncate(' '.join([x.strip() for x in command.split('\n')]), 50)
+    command = truncate(" ".join([x.strip() for x in command.split("\n")]), 50)
 
   if command is not None and returncode is not None:
-    happy_sad = u'🙈' if returncode else u'✔'
-    return u'{user}@{host} {happy_sad} $ {command}'.format(user=user,
-                                                           host=host,
-                                                           happy_sad=happy_sad,
-                                                           command=command)
+    happy_sad = "🙈" if returncode else "✔"
+    return "{user}@{host} {happy_sad} $ {command}".format(
+      user=user, host=host, happy_sad=happy_sad, command=command
+    )
   elif command is not None:
-    return u'{user}@{host} $ {command}'.format(user=user,
-                                               host=host,
-                                               command=command)
+    return "{user}@{host} $ {command}".format(
+      user=user, host=host, command=command
+    )
   elif date_started is not None:
     delta = naturaltime(datetime.now() - date_started)
-    return u'{user}@{host} finished job started {delta}'.format(user=user,
-                                                                host=host,
-                                                                delta=delta)
+    return "{user}@{host} finished job started {delta}".format(
+      user=user, host=host, delta=delta
+    )
   else:
-    return u'{user}@{host} finished job'.format(user=user, host=host)
+    return "{user}@{host} finished job".format(user=user, host=host)
 
 
-def let_me_know(output,
-                command=None,
-                returncode=None,
-                cfg=None,
-                date_started=None,
-                date_ended=None):
+def let_me_know(
+  output,
+  command=None,
+  returncode=None,
+  cfg=None,
+  date_started=None,
+  date_ended=None,
+):
   """Let me know: send an email to user.
 
   Args:
@@ -875,32 +945,36 @@ def let_me_know(output,
   if cfg is None:
     cfg = load_cfg()
 
-  subject = build_message_subject(output=output,
-                                  command=command,
-                                  returncode=returncode,
-                                  date_started=date_started,
-                                  date_ended=date_ended)
-  html, truncated = build_html_message_body(output=output,
-                                            command=command,
-                                            returncode=returncode,
-                                            date_started=date_started,
-                                            date_ended=date_ended)
+  subject = build_message_subject(
+    output=output,
+    command=command,
+    returncode=returncode,
+    date_started=date_started,
+    date_ended=date_ended,
+  )
+  html, truncated = build_html_message_body(
+    output=output,
+    command=command,
+    returncode=returncode,
+    date_started=date_started,
+    date_ended=date_ended,
+  )
   if sys.version_info < (3, 0):
-    html = html.encode('utf-8')
+    html = html.encode("utf-8")
 
   msg = MIMEMultipart()
-  msg['From'] = cfg['messages']['from']
-  msg['Subject'] = subject
-  msg.attach(MIMEText(html, 'html'))
+  msg["From"] = cfg["messages"]["from"]
+  msg["Subject"] = subject
+  msg.attach(MIMEText(html, "html"))
 
   if truncated:
     attachment = MIMEApplication(output, Name="output.txt")
-    attachment['Content-Disposition'] = 'attachment; filename="output.txt"'
+    attachment["Content-Disposition"] = 'attachment; filename="output.txt"'
     msg.attach(attachment)
 
   server = get_smtp_server(cfg)
-  for recipient in cfg['messages']['to'].split(','):
-    msg['To'] = recipient
+  for recipient in cfg["messages"]["to"].split(","):
+    msg["To"] = recipient
     send_email_smtp(cfg, server, msg)
   server.quit()
 
@@ -917,12 +991,11 @@ def read_from_stdin():
     out.append(line)
 
   date_ended = datetime.now()
-  output = ''.join(out).rstrip()
+  output = "".join(out).rstrip()
 
-  let_me_know(output=output,
-              cfg=cfg,
-              date_started=date_started,
-              date_ended=date_ended)
+  let_me_know(
+    output=output, cfg=cfg, date_started=date_started, date_ended=date_ended
+  )
 
 
 def run_subprocess(command, only_errors=False):
@@ -932,18 +1005,20 @@ def run_subprocess(command, only_errors=False):
   date_started = datetime.now()
 
   out = []
-  process = subprocess.Popen(command,
-                             shell=True,
-                             executable=cfg['exec']['shell'],
-                             universal_newlines=True,
-                             bufsize=1,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
+  process = subprocess.Popen(
+    command,
+    shell=True,
+    executable=cfg["exec"]["shell"],
+    universal_newlines=True,
+    bufsize=1,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+  )
 
   if sys.version_info >= (3, 0):
     output_iter = process.stdout
   else:
-    output_iter = iter(process.stdout.readline, b'')
+    output_iter = iter(process.stdout.readline, b"")
 
   with process.stdout:
     for line in output_iter:
@@ -953,16 +1028,18 @@ def run_subprocess(command, only_errors=False):
 
   date_ended = datetime.now()
 
-  output = ''.join(out).rstrip()
+  output = "".join(out).rstrip()
   returncode = process.returncode
 
   if returncode or not only_errors:
-    let_me_know(output=output,
-                command=command,
-                returncode=returncode,
-                cfg=cfg,
-                date_started=date_started,
-                date_ended=date_ended)
+    let_me_know(
+      output=output,
+      command=command,
+      returncode=returncode,
+      cfg=cfg,
+      date_started=date_started,
+      date_ended=date_ended,
+    )
 
   return returncode
 
@@ -971,20 +1048,22 @@ def main():
   args = parse_args(sys.argv[1:])
 
   try:
-    if args.command == '-':
+    if args.command == "-":
       # check that command line usage is correct
       if args.only_errors:
-        print('{c.bold}{c.red}[lmk] --only-errors option cannot be '
-              'used with stdin{c.reset}'.format(c=colors))
+        print(
+          "{c.bold}{c.red}[lmk] --only-errors option cannot be "
+          "used with stdin{c.reset}".format(c=colors)
+        )
         sys.exit(1)
 
       read_from_stdin()
     else:
       sys.exit(run_subprocess(args.command, only_errors=args.only_errors))
   except KeyboardInterrupt:
-    print('{c.bold}{c.red}[lmk] aborted{c.reset}'.format(c=colors))
+    print("{c.bold}{c.red}[lmk] aborted{c.reset}".format(c=colors))
     sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()

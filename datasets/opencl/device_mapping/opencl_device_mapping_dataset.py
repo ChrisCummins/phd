@@ -17,17 +17,19 @@ import typing
 import numpy as np
 import pandas as pd
 
-from deeplearning.deeptune.opencl.adversary import \
-  opencl_deadcode_inserter as dci
+from deeplearning.deeptune.opencl.adversary import (
+  opencl_deadcode_inserter as dci,
+)
 from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import decorators
 
 FLAGS = app.FLAGS
 
-_AMD_CSV_PATH = bazelutil.DataPath('phd/datasets/opencl/device_mapping/amd.csv')
+_AMD_CSV_PATH = bazelutil.DataPath("phd/datasets/opencl/device_mapping/amd.csv")
 _NVIDIA_CSV_PATH = bazelutil.DataPath(
-    'phd/datasets/opencl/device_mapping/nvidia.csv')
+  "phd/datasets/opencl/device_mapping/nvidia.csv"
+)
 
 
 def ComputeGreweFeaturesForGpu(gpu: str, df: pd.DataFrame) -> pd.DataFrame:
@@ -47,26 +49,28 @@ def ComputeGreweFeaturesForGpu(gpu: str, df: pd.DataFrame) -> pd.DataFrame:
   Returns:
     A table with the feature values.
   """
-  transfer = df[f'feature:{gpu}:transfer'].values
-  compute_operation_count = df['feature:comp'].values
-  global_memory_access_count = df['feature:mem'].values
-  local_memory_access_count = df['feature:localmem'].values
-  coalesced_memory_access_count = df['feature:coalesced'].values
-  wgsize = df[f'param:{gpu}:wgsize'].values
+  transfer = df[f"feature:{gpu}:transfer"].values
+  compute_operation_count = df["feature:comp"].values
+  global_memory_access_count = df["feature:mem"].values
+  local_memory_access_count = df["feature:localmem"].values
+  coalesced_memory_access_count = df["feature:coalesced"].values
+  wgsize = df[f"param:{gpu}:wgsize"].values
 
-  df = pd.DataFrame({
-      'feature:grewe1':
-      transfer / (compute_operation_count + global_memory_access_count),
-      'feature:grewe2':
-      (coalesced_memory_access_count / global_memory_access_count),
+  df = pd.DataFrame(
+    {
+      "feature:grewe1": transfer
+      / (compute_operation_count + global_memory_access_count),
+      "feature:grewe2": (
+        coalesced_memory_access_count / global_memory_access_count
+      ),
       # static
-      'feature:grewe3':
-      wgsize * (local_memory_access_count / global_memory_access_count),
+      "feature:grewe3": wgsize
+      * (local_memory_access_count / global_memory_access_count),
       # dynamic
-      'feature:grewe4':
-      compute_operation_count / global_memory_access_count,
+      "feature:grewe4": compute_operation_count / global_memory_access_count,
       # static
-  })
+    }
+  )
 
   return df
 
@@ -104,104 +108,111 @@ class OpenClDeviceMappingsDataset(object):
     nvidia_df = pd.read_csv(_NVIDIA_CSV_PATH)
 
     # Drop the redundant index columns.
-    amd_df.drop('Unnamed: 0', axis='columns', inplace=True)
-    nvidia_df.drop('Unnamed: 0', axis='columns', inplace=True)
+    amd_df.drop("Unnamed: 0", axis="columns", inplace=True)
+    nvidia_df.drop("Unnamed: 0", axis="columns", inplace=True)
 
     # Join the AMD and NVIDIA tables.
-    df = amd_df.join(nvidia_df, lsuffix='_amd', rsuffix='_nvidia')
+    df = amd_df.join(nvidia_df, lsuffix="_amd", rsuffix="_nvidia")
 
     # Check that the join has joined the correct benchmarks.
     def AssertJoinedColumnsAreIdentical(column_name: str):
-      np.testing.assert_array_equal(df[f'{column_name}_amd'].values,
-                                    df[f'{column_name}_nvidia'].values)
+      np.testing.assert_array_equal(
+        df[f"{column_name}_amd"].values, df[f"{column_name}_nvidia"].values
+      )
 
-    AssertJoinedColumnsAreIdentical('dataset')
-    AssertJoinedColumnsAreIdentical('comp')
-    AssertJoinedColumnsAreIdentical('rational')
-    AssertJoinedColumnsAreIdentical('mem')
-    AssertJoinedColumnsAreIdentical('localmem')
-    AssertJoinedColumnsAreIdentical('coalesced')
-    AssertJoinedColumnsAreIdentical('atomic')
-    AssertJoinedColumnsAreIdentical('runtime_cpu')
+    AssertJoinedColumnsAreIdentical("dataset")
+    AssertJoinedColumnsAreIdentical("comp")
+    AssertJoinedColumnsAreIdentical("rational")
+    AssertJoinedColumnsAreIdentical("mem")
+    AssertJoinedColumnsAreIdentical("localmem")
+    AssertJoinedColumnsAreIdentical("coalesced")
+    AssertJoinedColumnsAreIdentical("atomic")
+    AssertJoinedColumnsAreIdentical("runtime_cpu")
 
     # Each row in the CSV file has a benchmark name format:
     # '<suite>-<benchmark>-<kernel>.cl'. Extract the
     # '<suite>-<benchmark>-<kernel>' component of each row and assign to new
     # columns.
-    df['program:benchmark_suite_name'] = [
-        '-'.join(b.split('-')[:-2]) for b in df['benchmark_amd']
+    df["program:benchmark_suite_name"] = [
+      "-".join(b.split("-")[:-2]) for b in df["benchmark_amd"]
     ]
-    df['program:benchmark_name'] = [
-        b.split('-')[-2] for b in df['benchmark_amd']
+    df["program:benchmark_name"] = [
+      b.split("-")[-2] for b in df["benchmark_amd"]
     ]
-    df['program:opencl_kernel_name'] = [
-        b.split('-')[-1] for b in df['benchmark_amd']
+    df["program:opencl_kernel_name"] = [
+      b.split("-")[-1] for b in df["benchmark_amd"]
     ]
 
     # Rename columns that we keep unmodified.
     df.rename(
-        {
-            'benchmark_amd': 'benchmark',
-            'dataset_amd': 'data:dataset_name',
-            'wgsize_amd': 'wgsize',
-            'rational_amd': 'feature:rational',
-            'runtime_cpu_amd': 'runtime:intel_core_i7_3820',
-            'runtime_gpu_amd': 'runtime:amd_tahiti_7970',
-            'runtime_gpu_nvidia': 'runtime:nvidia_gtx_960',
-            'src_amd': 'program:opencl_src',
-            'wgsize_amd': 'param:amd_tahiti_7970:wgsize',
-            'wgsize_nvidia': 'param:nvidia_gtx_960:wgsize',
-            'transfer_amd': 'feature:amd_tahiti_7970:transfer',
-            'transfer_nvidia': 'feature:nvidia_gtx_960:transfer',
-            'comp_amd': 'feature:comp',
-            'atomic_amd': 'feature:atomic',
-            'mem_amd': 'feature:mem',
-            'coalesced_amd': 'feature:coalesced',
-            'localmem_amd': 'feature:localmem',
-        },
-        axis='columns',
-        inplace=True)
+      {
+        "benchmark_amd": "benchmark",
+        "dataset_amd": "data:dataset_name",
+        "wgsize_amd": "wgsize",
+        "rational_amd": "feature:rational",
+        "runtime_cpu_amd": "runtime:intel_core_i7_3820",
+        "runtime_gpu_amd": "runtime:amd_tahiti_7970",
+        "runtime_gpu_nvidia": "runtime:nvidia_gtx_960",
+        "src_amd": "program:opencl_src",
+        "wgsize_amd": "param:amd_tahiti_7970:wgsize",
+        "wgsize_nvidia": "param:nvidia_gtx_960:wgsize",
+        "transfer_amd": "feature:amd_tahiti_7970:transfer",
+        "transfer_nvidia": "feature:nvidia_gtx_960:transfer",
+        "comp_amd": "feature:comp",
+        "atomic_amd": "feature:atomic",
+        "mem_amd": "feature:mem",
+        "coalesced_amd": "feature:coalesced",
+        "localmem_amd": "feature:localmem",
+      },
+      axis="columns",
+      inplace=True,
+    )
 
     # Sort the table values.
-    df.sort_values(by=[
-        'program:benchmark_suite_name',
-        'program:benchmark_name',
-        'program:opencl_kernel_name',
-        'data:dataset_name',
-    ],
-                   inplace=True)
+    df.sort_values(
+      by=[
+        "program:benchmark_suite_name",
+        "program:benchmark_name",
+        "program:opencl_kernel_name",
+        "data:dataset_name",
+      ],
+      inplace=True,
+    )
 
     # Reset to default integer index.
     df.reset_index(inplace=True, drop=True)
 
     # Rearrange a subset of the columns to create the final table.
-    self._df = df[[
-        'program:benchmark_suite_name',
-        'program:benchmark_name',
-        'program:opencl_kernel_name',
-        'program:opencl_src',
-        'data:dataset_name',
-        'param:amd_tahiti_7970:wgsize',
-        'param:nvidia_gtx_960:wgsize',
-        'feature:mem',
-        'feature:comp',
-        'feature:localmem',
-        'feature:coalesced',
-        'feature:atomic',
-        'feature:rational',
-        'feature:amd_tahiti_7970:transfer',
-        'feature:nvidia_gtx_960:transfer',
-        'runtime:intel_core_i7_3820',
-        'runtime:amd_tahiti_7970',
-        'runtime:nvidia_gtx_960',
-    ]]
+    self._df = df[
+      [
+        "program:benchmark_suite_name",
+        "program:benchmark_name",
+        "program:opencl_kernel_name",
+        "program:opencl_src",
+        "data:dataset_name",
+        "param:amd_tahiti_7970:wgsize",
+        "param:nvidia_gtx_960:wgsize",
+        "feature:mem",
+        "feature:comp",
+        "feature:localmem",
+        "feature:coalesced",
+        "feature:atomic",
+        "feature:rational",
+        "feature:amd_tahiti_7970:transfer",
+        "feature:nvidia_gtx_960:transfer",
+        "runtime:intel_core_i7_3820",
+        "runtime:amd_tahiti_7970",
+        "runtime:nvidia_gtx_960",
+      ]
+    ]
 
   @property
   def df(self) -> pd.DataFrame:
     return self._df
 
-  def ComputeGreweFeaturesForGpu(self, gpu: str,
-                                 df: pd.DataFrame = None) -> pd.DataFrame:
+  def ComputeGreweFeaturesForGpu(
+    self, gpu: str, df: pd.DataFrame = None
+  ) -> pd.DataFrame:
     """Return the Grewe et al. features as a table.
 
     These are the features used in the publication:
@@ -234,23 +245,24 @@ class OpenClDeviceMappingsDataset(object):
         program:opencl_src (str): Entire source code of the preprocessed OpenCL
           kernel.
     """
-    df = self._df.groupby([
-        'program:benchmark_suite_name',
-        'program:benchmark_name',
-        'program:opencl_kernel_name',
-    ]).min()
-    df = df[[
-        'program:opencl_src',
-    ]]
+    df = self._df.groupby(
+      [
+        "program:benchmark_suite_name",
+        "program:benchmark_name",
+        "program:opencl_kernel_name",
+      ]
+    ).min()
+    df = df[["program:opencl_src",]]
     df.sort_index(inplace=True)
     return df
 
   def AugmentWithDeadcodeMutations(
-      self,
-      rand: np.random.RandomState,
-      num_permutations_of_kernel: int = 5,
-      mutations_per_kernel_min_max: typing.Tuple[int, int] = (1, 5),
-      df: pd.DataFrame = None) -> pd.DataFrame:
+    self,
+    rand: np.random.RandomState,
+    num_permutations_of_kernel: int = 5,
+    mutations_per_kernel_min_max: typing.Tuple[int, int] = (1, 5),
+    df: pd.DataFrame = None,
+  ) -> pd.DataFrame:
     """Return a table with dead code mutations for each kernel.
 
     This adds num_permutations_of_kernel * len(df) new rows to the data frame,
@@ -273,23 +285,26 @@ class OpenClDeviceMappingsDataset(object):
     """
     df = self.df if df is None else df
 
-    new_columns = list(df.columns.values) + ['program:is_mutation']
+    new_columns = list(df.columns.values) + ["program:is_mutation"]
 
     # The mutation generator is initialized with the programs it will mutate.
-    g = dci.GenerateDeadcodeMutations(df['program:opencl_src'].values, rand,
-                                      num_permutations_of_kernel,
-                                      mutations_per_kernel_min_max)
+    g = dci.GenerateDeadcodeMutations(
+      df["program:opencl_src"].values,
+      rand,
+      num_permutations_of_kernel,
+      mutations_per_kernel_min_max,
+    )
 
     # Generate the mutations and update the kernel column in the original table.
     new_rows = []
     for _, row in df.iterrows():
       # Make a copy to allow modifications.
       row = row.copy()
-      row['program:is_mutation'] = False
+      row["program:is_mutation"] = False
       new_rows.append(row)
       for _ in range(num_permutations_of_kernel):
-        row['program:is_mutation'] = True
-        row['program:opencl_src'] = next(g)
+        row["program:is_mutation"] = True
+        row["program:opencl_src"] = next(g)
         new_rows.append(row)
 
     # Sanity check that the generator has been exhausted.

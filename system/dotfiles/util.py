@@ -30,20 +30,15 @@ import shutil
 import socket
 import subprocess
 import sys
-
 from distutils.spawn import find_executable
 
 
 def get_platform():
   distro = platform.linux_distribution()
   if not distro[0]:
-    return {
-        "darwin": "osx",
-    }.get(sys.platform, sys.platform)
+    return {"darwin": "osx",}.get(sys.platform, sys.platform)
   else:
-    return {
-        "debian": "ubuntu",
-    }.get(distro[0].lower(), distro[0].lower())
+    return {"debian": "ubuntu",}.get(distro[0].lower(), distro[0].lower())
 
 
 class CalledProcessError(Exception):
@@ -57,7 +52,7 @@ def _log_shell(*args):
 
 def _log_shell_output(stdout):
   if logging.getLogger().level <= logging.INFO and len(stdout):
-    indented = '    ' + '\n    '.join(stdout.rstrip().split('\n'))
+    indented = "    " + "\n    ".join(stdout.rstrip().split("\n"))
     logging.debug(Colors.YELLOW + indented + Colors.END)
 
 
@@ -66,11 +61,12 @@ def shell(*args):
       if fails """
   _log_shell(*args)
   p = subprocess.Popen(
-      *args,
-      shell=True,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.STDOUT,
-      universal_newlines=True)
+    *args,
+    shell=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    universal_newlines=True,
+  )
   stdout, _ = p.communicate()
 
   stdout = stdout.rstrip()
@@ -78,9 +74,11 @@ def shell(*args):
 
   if p.returncode:
     cmd = " ".join(args)
-    msg = ("""\
+    msg = """\
 Command '{cmd}' failed with returncode {p.returncode} and output:
-{stdout}""".format(**vars()))
+{stdout}""".format(
+      **vars()
+    )
     raise CalledProcessError(msg)
   else:
     return stdout
@@ -91,7 +89,8 @@ def shell_ok(cmd):
   _log_shell(cmd)
   try:
     subprocess.check_call(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     _log_shell_output("-> 0")
     return True
   except subprocess.CalledProcessError as e:
@@ -112,7 +111,7 @@ APPLE_ID = _CFG["apple_id"]
 EXCLUDES = _CFG.get("excludes", [])
 IS_TRAVIS_CI = os.environ.get("TRAVIS", False)
 
-LINUX_DISTROS = ['debian', 'ubuntu']
+LINUX_DISTROS = ["debian", "ubuntu"]
 
 PLATFORM = get_platform()
 HOSTNAME = socket.gethostname()
@@ -165,6 +164,7 @@ class Task(object):
     teardown():
     teardown_<platform>():
   """
+
   __platforms__ = []
   __hosts__ = []
   __deps__ = []
@@ -224,7 +224,8 @@ class Task(object):
       _versions = merge_dicts(_versions, getattr(task, "__versions__"))
     if hasattr(task, "__" + get_platform() + "_version__"):
       _versions = merge_dicts(
-          _versions, getattr(task, "__" + get_platform() + "_version__"))
+        _versions, getattr(task, "__" + get_platform() + "_version__")
+      )
     return versions
 
 
@@ -233,16 +234,16 @@ class InvalidTaskError(Exception):
 
 
 class Colors:
-  PURPLE = '\033[95m'
-  CYAN = '\033[96m'
-  DARKCYAN = '\033[36m'
-  BLUE = '\033[94m'
-  GREEN = '\033[92m'
-  YELLOW = '\033[93m'
-  RED = '\033[91m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
-  END = '\033[0m'
+  PURPLE = "\033[95m"
+  CYAN = "\033[96m"
+  DARKCYAN = "\033[36m"
+  BLUE = "\033[94m"
+  GREEN = "\033[92m"
+  YELLOW = "\033[93m"
+  RED = "\033[91m"
+  BOLD = "\033[1m"
+  UNDERLINE = "\033[4m"
+  END = "\033[0m"
 
 
 def task_print(*msg, **kwargs):
@@ -287,8 +288,9 @@ def symlink(src, dst, sudo=False):
 
   # Symlink already exists
   use_sudo = "sudo -H " if sudo else ""
-  if (shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or
-      shell_ok("{use_sudo}test -d '{dst}'".format(**vars()))):
+  if shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or shell_ok(
+    "{use_sudo}test -d '{dst}'".format(**vars())
+  ):
     linkdest = shell("{use_sudo}readlink {dst}".format(**vars())).rstrip()
     if linkdest.startswith("/"):
       linkdest_abs = linkdest
@@ -297,15 +299,18 @@ def symlink(src, dst, sudo=False):
     if linkdest_abs == src_abs:
       return
 
-  if not (shell_ok("{use_sudo}test -f '{src_abs}'".format(**vars())) or
-          shell_ok("{use_sudo}test -d '{src_abs}'".format(**vars()))):
+  if not (
+    shell_ok("{use_sudo}test -f '{src_abs}'".format(**vars()))
+    or shell_ok("{use_sudo}test -d '{src_abs}'".format(**vars()))
+  ):
     raise OSError("symlink source '{src}' does not exist".format(**vars()))
   # if shell_ok("{use_sudo}test -d '{dst}'".format(**vars())):
   #     raise OSError("symlink destination '{dst}' is a directory".format(**vars()))
 
   # Make a backup of existing file:
-  if (shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or
-      shell_ok("{use_sudo}test -d '{dst}'".format(**vars()))):
+  if shell_ok("{use_sudo}test -f '{dst}'".format(**vars())) or shell_ok(
+    "{use_sudo}test -d '{dst}'".format(**vars())
+  ):
     shell("{use_sudo}mv '{dst}' '{dst}'.backup".format(**vars()))
 
   # in case of broken symlink
@@ -342,11 +347,9 @@ def copy_file(src, dst):
     shutil.copyfile(src, dst)
 
 
-def clone_git_repo(url,
-                   destination,
-                   version=None,
-                   shallow=False,
-                   recursive=True):
+def clone_git_repo(
+  url, destination, version=None, shallow=False, recursive=True
+):
   """ clone a git repo, returns True if cloned """
   # Cannot set the version of a shallow clone.
   assert not (version and shallow)
@@ -359,15 +362,16 @@ def clone_git_repo(url,
     task_print("Cloning git repository to {destination}".format(**vars()))
     cmd = ['git clone "{url}" "{destination}"'.format(**vars())]
     if shallow:
-      cmd.append('--depth 1')
+      cmd.append("--depth 1")
     if recursive:
-      cmd.append('--recursive')
-    shell(' '.join(cmd))
+      cmd.append("--recursive")
+    shell(" ".join(cmd))
     cloned = True
 
   if not os.path.isdir(os.path.join(destination, ".git")):
-    raise OSError('directory "' + os.path.join(destination, ".git") +
-                  '" does not exist')
+    raise OSError(
+      'directory "' + os.path.join(destination, ".git") + '" does not exist'
+    )
 
   if version:
     # set revision
@@ -440,8 +444,8 @@ def get_task_method(task, method_name):
     fn = getattr(task, method_name, None)
   if fn is None:
     raise InvalidTaskError(
-        "failed to resolve {method_name} method of Task {task}".format(
-            **vars()))
+      "failed to resolve {method_name} method of Task {task}".format(**vars())
+    )
   return fn
 
 
@@ -457,8 +461,8 @@ def usr_share(*components, **kwargs):
 def get_version_name(version=None):
   """ return the name for a version """
   if version is None:
-    version = shell('git rev-parse HEAD')
-  with open('names.txt') as infile:
+    version = shell("git rev-parse HEAD")
+  with open("names.txt") as infile:
     names = infile.readlines()
   index = hash(version) % len(names)
   return names[index]

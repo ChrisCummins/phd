@@ -1,11 +1,11 @@
 #include <algorithm>
+#include <forward_list>
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <utility>
-#include <forward_list>
+#include <vector>
 
 using flags_list = std::forward_list<std::pair<std::string, std::string>>;
 
@@ -21,39 +21,35 @@ using flags_list = std::forward_list<std::pair<std::string, std::string>>;
 //
 //   hash map of <string,T> pairs.
 //
-template<typename T, typename UnaryOp>
+template <typename T, typename UnaryOp>
 auto parse_flags(flags_list argv, UnaryOp convert) {
   std::unordered_map<std::string, T> flags;
 
-  std::for_each(argv.begin(), argv.end(),
-                [&](const auto& it)
-                { flags.emplace(it.first, convert(it.second)); });
+  std::for_each(argv.begin(), argv.end(), [&](const auto& it) {
+    flags.emplace(it.first, convert(it.second));
+  });
 
   return flags;
 }
 
-
 //
 // Base type. Error!!
 //
-template<typename T>
+template <typename T>
 auto parse_flags(flags_list argv);
-
 
 //
 // Parse int flags.
 //
-template<>
+template <>
 inline auto parse_flags<int>(flags_list argv) {
-  return parse_flags<int>(argv, [](const auto& i){return std::stoi(i);});
+  return parse_flags<int>(argv, [](const auto& i) { return std::stoi(i); });
 }
-
 
 int main(int argc, char** argv) {
   try {
     // Sanity check num of arguments.
-    if (!(argc % 2))
-      throw std::runtime_error("wrong num of arguments!");
+    if (!(argc % 2)) throw std::runtime_error("wrong num of arguments!");
 
     // Pair up arguments.
     flags_list arguments;
@@ -65,14 +61,13 @@ int main(int argc, char** argv) {
 
     // Print stuff ...
     std::cout << "\nInvoked program using:\n\n  ";
-    for (auto i = 0; i < argc; i++)
-      std::cout << argv[i] << ' ';
+    for (auto i = 0; i < argc; i++) std::cout << argv[i] << ' ';
     std::cout << "\n\nParsed " << flags.size() << " flags:\n\n";
     auto i{0};
-    for (auto &pair : flags)
+    for (auto& pair : flags)
       std::cout << "  flag " << ++i << " = " << pair.first
                 << ",  val = " << pair.second << std::endl;
-  } catch (std::runtime_error &e) {
+  } catch (std::runtime_error& e) {
     std::cerr << e.what();
     return 1;
   }

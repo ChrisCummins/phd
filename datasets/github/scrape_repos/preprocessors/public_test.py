@@ -30,9 +30,9 @@ def test_GetAllFilesRelativePaths_empty_dir(tempdir: pathlib.Path):
 
 def test_GetAllFilesRelativePaths_relpath(tempdir: pathlib.Path):
   """Test that relative paths are returned."""
-  (tempdir / 'a').touch()
-  assert public.GetAllFilesRelativePaths(tempdir) == ['a']
+  (tempdir / "a").touch()
+  assert public.GetAllFilesRelativePaths(tempdir) == ["a"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

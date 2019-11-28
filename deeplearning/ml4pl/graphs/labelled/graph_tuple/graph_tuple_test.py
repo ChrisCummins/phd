@@ -10,19 +10,19 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
-  g.add_node('A', type='statement', x=[0, 0])
-  g.add_node('B', type='statement', x=[1, 0])
-  g.add_node('C', type='statement', x=[2, 0])
-  g.add_node('D', type='statement', x=[3, 0])
-  g.add_node('root', type='magic', x=[4, 0])
-  g.add_edge('A', 'B', flow='control', position=0)
-  g.add_edge('B', 'C', flow='control', position=0)
-  g.add_edge('C', 'D', flow='control', position=0)
-  g.add_edge('root', 'A', flow='call', position=0)
-  g.add_edge('A', 'D', flow='data', position=1)
+  g.add_node("A", type="statement", x=[0, 0])
+  g.add_node("B", type="statement", x=[1, 0])
+  g.add_node("C", type="statement", x=[2, 0])
+  g.add_node("D", type="statement", x=[3, 0])
+  g.add_node("root", type="magic", x=[4, 0])
+  g.add_edge("A", "B", flow="control", position=0)
+  g.add_edge("B", "C", flow="control", position=0)
+  g.add_edge("C", "D", flow="control", position=0)
+  g.add_edge("root", "A", flow="call", position=0)
+  g.add_edge("A", "D", flow="data", position=1)
   return g
 
 
@@ -139,12 +139,12 @@ def test_CreateFromNetworkX_node_embedding_indices(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_node_labels(graph: nx.MultiDiGraph):
-  graph.nodes['A']['f'] = [4, 1, 0]
-  graph.nodes['B']['f'] = [3, 1, 0]
-  graph.nodes['C']['f'] = [2, 1, 0]
-  graph.nodes['D']['f'] = [1, 1, 0]
-  graph.nodes['root']['f'] = [0, 1, 0]
-  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph, node_y='f')
+  graph.nodes["A"]["f"] = [4, 1, 0]
+  graph.nodes["B"]["f"] = [3, 1, 0]
+  graph.nodes["C"]["f"] = [2, 1, 0]
+  graph.nodes["D"]["f"] = [1, 1, 0]
+  graph.nodes["root"]["f"] = [0, 1, 0]
+  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph, node_y="f")
 
   assert d.has_node_y
   assert not d.has_graph_x
@@ -160,7 +160,7 @@ def test_CreateFromNetworkX_node_labels(graph: nx.MultiDiGraph):
 
 def test_CreateFromNetworkX_graph_features(graph: nx.MultiDiGraph):
   graph.foo = [0, 1, 2, 3]
-  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph, graph_x='foo')
+  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph, graph_x="foo")
 
   assert not d.has_node_y
   assert d.has_graph_x
@@ -171,7 +171,7 @@ def test_CreateFromNetworkX_graph_features(graph: nx.MultiDiGraph):
 
 def test_CreateFromNetworkX_graph_targets(graph: nx.MultiDiGraph):
   graph.foo = [0, 1, 2, 3]
-  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph, graph_y='foo')
+  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph, graph_y="foo")
 
   assert not d.has_node_y
   assert not d.has_graph_x
@@ -186,27 +186,29 @@ def test_IncomingEdgeCountsToDense(graph: nx.MultiDiGraph):
 
 
 def test_GraphTupleToNetworkx():
-  g = graph_tuple.GraphTuple(adjacency_lists=[[(0, 1), (1, 2)], [(0, 2)]],
-                             incoming_edge_counts='__unused__',
-                             edge_positions=[[0, 0], [2]],
-                             node_x_indices=[1, 2, 3],
-                             graph_y=[1, 2, 3]).ToNetworkx()
+  g = graph_tuple.GraphTuple(
+    adjacency_lists=[[(0, 1), (1, 2)], [(0, 2)]],
+    incoming_edge_counts="__unused__",
+    edge_positions=[[0, 0], [2]],
+    node_x_indices=[1, 2, 3],
+    graph_y=[1, 2, 3],
+  ).ToNetworkx()
 
   assert g.number_of_nodes() == 3
   assert g.number_of_edges() == 3
 
-  assert g.edges[0, 1, 0]['flow'] == 'control'
-  assert g.edges[1, 2, 0]['flow'] == 'control'
+  assert g.edges[0, 1, 0]["flow"] == "control"
+  assert g.edges[1, 2, 0]["flow"] == "control"
 
-  assert g.edges[0, 1, 0]['position'] == 0
-  assert g.edges[1, 2, 0]['position'] == 0
+  assert g.edges[0, 1, 0]["position"] == 0
+  assert g.edges[1, 2, 0]["position"] == 0
 
-  assert g.nodes[0]['x'] == 1
-  assert g.nodes[1]['x'] == 2
-  assert g.nodes[2]['x'] == 3
+  assert g.nodes[0]["x"] == 1
+  assert g.nodes[1]["x"] == 2
+  assert g.nodes[2]["x"] == 3
 
   assert g.y == [1, 2, 3]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

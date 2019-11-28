@@ -1,7 +1,7 @@
 #include "./graph.h"
 
-#include <queue>
 #include <cassert>
+#include <queue>
 #include <set>
 
 /*
@@ -10,26 +10,23 @@
  *
  * Returns nullptr if value is not found in graph.
  */
-template<typename T>
+template <typename T>
 Graph<T>* _bfs(Graph<T>* graph, const T& val,
-               std::queue<Graph<T> *> queue = std::queue<Graph<T> *>(),
-               std::set<Graph<T> *> visited = std::set<Graph<T> *>()) {
+               std::queue<Graph<T>*> queue = std::queue<Graph<T>*>(),
+               std::set<Graph<T>*> visited = std::set<Graph<T>*>()) {
   assert(graph);
   std::cout << " " << graph->val;
 
-  if (graph->val == val)
-    return graph;
+  if (graph->val == val) return graph;
 
   visited.insert(graph);
 
   if (graph->left) {
-    if (visited.find(graph->left) == visited.end())
-      queue.push(graph->left);
+    if (visited.find(graph->left) == visited.end()) queue.push(graph->left);
   }
 
   if (graph->right) {
-    if (visited.find(graph->right) == visited.end())
-      queue.push(graph->right);
+    if (visited.find(graph->right) == visited.end()) queue.push(graph->right);
   }
 
   if (queue.size()) {
@@ -41,7 +38,7 @@ Graph<T>* _bfs(Graph<T>* graph, const T& val,
   return nullptr;
 }
 
-template<typename T>
+template <typename T>
 Graph<T>* bfs(Graph<T>* graph, const T& val) {
   return _bfs<T>(graph, val);
 }

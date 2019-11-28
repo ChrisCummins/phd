@@ -36,13 +36,16 @@ from labm8.py import system
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer('clang_timeout_seconds', 60,
-                   'The maximum number of seconds to allow process to run.')
+app.DEFINE_integer(
+  "clang_timeout_seconds",
+  60,
+  "The maximum number of seconds to allow process to run.",
+)
 
-_LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
+_LLVM_REPO = "llvm_linux" if system.is_linux() else "llvm_mac"
 
 # Path to clang binary.
-CLANG = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
+CLANG = bazelutil.DataPath(f"{_LLVM_REPO}/bin/clang")
 
 # Valid optimization levels.
 OPTIMIZATION_LEVELS = {"-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz"}
@@ -62,6 +65,7 @@ class OptPassRunInvocation(typing.NamedTuple):
 
 class ClangException(llvm.LlvmError):
   """An error from clang."""
+
   pass
 
 
@@ -79,16 +83,20 @@ def ValidateOptimizationLevel(opt: str) -> str:
   """
   if opt in OPTIMIZATION_LEVELS:
     return opt
-  raise ValueError(f"Invalid clang optimization level '{opt}'. "
-                   f"Valid levels are: {OPTIMIZATION_LEVELS}")
+  raise ValueError(
+    f"Invalid clang optimization level '{opt}'. "
+    f"Valid levels are: {OPTIMIZATION_LEVELS}"
+  )
 
 
-def Exec(args: typing.List[str],
-         stdin: typing.Optional[str] = None,
-         timeout_seconds: int = 60,
-         log: bool = True,
-         stdout=subprocess.PIPE,
-         stderr=subprocess.PIPE) -> subprocess.Popen:
+def Exec(
+  args: typing.List[str],
+  stdin: typing.Optional[str] = None,
+  timeout_seconds: int = 60,
+  log: bool = True,
+  stdout=subprocess.PIPE,
+  stderr=subprocess.PIPE,
+) -> subprocess.Popen:
   """Run clang.
 
   Args:
@@ -103,29 +111,33 @@ def Exec(args: typing.List[str],
   Raises:
     LlvmTimeout: If clang does not complete before timeout_seconds.
   """
-  cmd = ['timeout', '-s9', str(timeout_seconds), str(CLANG)] + args
+  cmd = ["timeout", "-s9", str(timeout_seconds), str(CLANG)] + args
   if log:
-    app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd,
-                             stdout=stdout,
-                             stderr=stderr,
-                             stdin=subprocess.PIPE if stdin else None,
-                             universal_newlines=True)
+    app.Log(3, "$ %s", " ".join(cmd))
+  process = subprocess.Popen(
+    cmd,
+    stdout=stdout,
+    stderr=stderr,
+    stdin=subprocess.PIPE if stdin else None,
+    universal_newlines=True,
+  )
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:
     stdout, stderr = process.communicate()
   if process.returncode == 9:
-    raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds}s')
+    raise llvm.LlvmTimeout(f"clang timed out after {timeout_seconds}s")
   process.stdout = stdout
   process.stderr = stderr
   return process
 
 
-def Compile(srcs: typing.List[pathlib.Path],
-            out: pathlib.Path,
-            copts: typing.Optional[typing.List[str]] = None,
-            timeout_seconds: int = 60) -> pathlib.Path:
+def Compile(
+  srcs: typing.List[pathlib.Path],
+  out: pathlib.Path,
+  copts: typing.Optional[typing.List[str]] = None,
+  timeout_seconds: int = 60,
+) -> pathlib.Path:
   """Compile input sources.
 
   This has some minor behavioural differences from calling into clang directly.
@@ -154,21 +166,26 @@ def Compile(srcs: typing.List[pathlib.Path],
   # Ensure the output directory exists.
   out.parent.mkdir(parents=True, exist_ok=True)
 
-  proc = Exec([str(x) for x in srcs] + ['-o', str(out)] + copts,
-              timeout_seconds=timeout_seconds)
+  proc = Exec(
+    [str(x) for x in srcs] + ["-o", str(out)] + copts,
+    timeout_seconds=timeout_seconds,
+  )
   if proc.returncode == 9:
-    raise llvm.LlvmTimeout(f'clang timed out after {timeout_seconds} seconds')
+    raise llvm.LlvmTimeout(f"clang timed out after {timeout_seconds} seconds")
   elif proc.returncode:
     raise ClangException(
-        f'clang exited with returncode {proc.returncode}: {proc.stderr}')
+      f"clang exited with returncode {proc.returncode}: {proc.stderr}"
+    )
   if not out.is_file():
     raise ClangException(f"Binary file not generated: '{out}'")
   return out
 
 
-def Preprocess(src: str,
-               copts: typing.Optional[typing.List[str]] = None,
-               timeout_seconds: int = 60):
+def Preprocess(
+  src: str,
+  copts: typing.Optional[typing.List[str]] = None,
+  timeout_seconds: int = 60,
+):
   """Run input code through the compiler frontend to inline macros.
 
   Args:
@@ -184,8 +201,8 @@ def Preprocess(src: str,
     ClangTimeout: If clang does not complete before timeout_seconds.
   """
   copts = copts or []
-  cmd = ['-E', '-c', '-', '-o', '-'] + copts
-  app.Log(3, '$ %s', ' '.join(cmd))
+  cmd = ["-E", "-c", "-", "-o", "-"] + copts
+  app.Log(3, "$ %s", " ".join(cmd))
   process = Exec(cmd, timeout_seconds=timeout_seconds, stdin=src)
   if process.returncode:
     raise ClangException(returncode=process.returncode, stderr=process.stderr)
@@ -195,8 +212,9 @@ def Preprocess(src: str,
 # A regex which matches the a line of clang's bisect debugging output, and
 # contains three named match groups: name, target, and target_type.
 _CLANG_BISECT_MESSAGE_RE = re.compile(
-    r'BISECT: running pass \([\d]+\) (?P<name>.+) on (?P<target_type>\w+)( '
-    r'\((?P<target>[^\)]+)\))?')
+  r"BISECT: running pass \([\d]+\) (?P<name>.+) on (?P<target_type>\w+)( "
+  r"\((?P<target>[^\)]+)\))?"
+)
 
 
 def ClangBisectMessageToInvocation(line: str) -> OptPassRunInvocation:
@@ -213,16 +231,19 @@ def ClangBisectMessageToInvocation(line: str) -> OptPassRunInvocation:
   """
   m = _CLANG_BISECT_MESSAGE_RE.match(line)
   if not m:
-    raise ClangException(msg=f'Cannot interpret line: {line}')
-  return OptPassRunInvocation(name=m.group('name'),
-                              target=m.group('target') or '',
-                              target_type=m.group('target_type'))
+    raise ClangException(msg=f"Cannot interpret line: {line}")
+  return OptPassRunInvocation(
+    name=m.group("name"),
+    target=m.group("target") or "",
+    target_type=m.group("target_type"),
+  )
 
 
-def GetOptPasses(cflags: typing.Optional[typing.List[str]] = None,
-                 language: typing.Optional[str] = 'c',
-                 stubfile: typing.Optional[str] = 'int main() {}'
-                ) -> typing.List[OptPassRunInvocation]:
+def GetOptPasses(
+  cflags: typing.Optional[typing.List[str]] = None,
+  language: typing.Optional[str] = "c",
+  stubfile: typing.Optional[str] = "int main() {}",
+) -> typing.List[OptPassRunInvocation]:
   """Get the list of passes run by opt.
 
   Args:
@@ -233,14 +254,17 @@ def GetOptPasses(cflags: typing.Optional[typing.List[str]] = None,
   Returns:
     A list of passes.
   """
-  cflags = cflags or ['-O0']
+  cflags = cflags or ["-O0"]
   process = Exec(
-      cflags + ['-mllvm', '-opt-bisect-limit=-1', f'-x{language}', '-'],
-      stdin=stubfile)
+    cflags + ["-mllvm", "-opt-bisect-limit=-1", f"-x{language}", "-"],
+    stdin=stubfile,
+  )
   if process.returncode:
-    raise ClangException(f'clang exited with returncode {process.returncode} '
-                         f'and stderr: {process.stderr}')
-  lines = process.stderr.rstrip().split('\n')
+    raise ClangException(
+      f"clang exited with returncode {process.returncode} "
+      f"and stderr: {process.stderr}"
+    )
+  lines = process.stderr.rstrip().split("\n")
   return [ClangBisectMessageToInvocation(line) for line in lines]
   return lines
 
@@ -259,5 +283,5 @@ def main(argv):
     sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

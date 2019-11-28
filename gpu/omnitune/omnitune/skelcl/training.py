@@ -154,8 +154,9 @@ def escape_kernel(kernel):
   return 'R"(' + kernel + ')";'
 
 
-def make_synthetic_benchmark(complexity, north, south, east, west, width,
-                             height):
+def make_synthetic_benchmark(
+  complexity, north, south, east, west, width, height
+):
   program = [common_header]
 
   program.append(define("HEIGHT", height))
@@ -167,7 +168,7 @@ def make_synthetic_benchmark(complexity, north, south, east, west, width,
 
   program.append("const char *KERNEL = ")
 
-  if complexity > .5:
+  if complexity > 0.5:
     program.append(escape_kernel(complex_kernel))
   else:
     program.append(escape_kernel(simple_kernel))

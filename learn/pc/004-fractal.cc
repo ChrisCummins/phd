@@ -18,14 +18,13 @@ class Pixel {
 };
 
 std::ostream& operator<<(std::ostream& out, const Pixel& pixel) {
-  out << static_cast<int>(pixel.r)
-      << ' ' << static_cast<int>(pixel.g)
-      << ' ' << static_cast<int>(pixel.b) << ' ';
+  out << static_cast<int>(pixel.r) << ' ' << static_cast<int>(pixel.g) << ' '
+      << static_cast<int>(pixel.b) << ' ';
   return out;
 }
 
 // A rendered image.
-template<size_t _width, size_t _height>
+template <size_t _width, size_t _height>
 class Image {
  public:
   const size_t width;
@@ -36,9 +35,7 @@ class Image {
     data.fill(Pixel{});
   }
 
-  auto operator[](const size_t y) {
-    return __arr(data, y);
-  }
+  auto operator[](const size_t y) { return __arr(data, y); }
 
   class __arr {
    public:
@@ -53,7 +50,7 @@ class Image {
   };
 
   friend auto& operator<<(std::ostream& out,
-                          const Image<_width, _height> &image) {
+                          const Image<_width, _height>& image) {
     // Print PPM header.
 
     // Magic number:
@@ -61,8 +58,7 @@ class Image {
     // Image dimensions:
     out << image.width << " " << image.height << std::endl;
     // Max colour value:
-    out << unsigned(std::numeric_limits<Pixel::value_type>::max())
-        << std::endl;
+    out << unsigned(std::numeric_limits<Pixel::value_type>::max()) << std::endl;
 
     // Iterate over each point in the image, writing pixel data.
     for (size_t i = 0; i < image.size; i++) {
@@ -70,8 +66,7 @@ class Image {
       out << pixel << ' ';
 
       // Add newline at the end of each row:
-      if (!(i % image.width))
-        out << std::endl;
+      if (!(i % image.width)) out << std::endl;
     }
 
     return out;
@@ -81,7 +76,6 @@ class Image {
   std::array<Pixel, _width * _height> data;
 };
 
-
 TEST(Fractals, imgTest) {
   static const size_t width = 200;
   static const size_t height = 100;
@@ -89,13 +83,12 @@ TEST(Fractals, imgTest) {
   Image<width, height> img;
 
   for (size_t y = 0; y < height; y++) {
-     for (size_t x = 0; x < width; x++) {
-       img[y][x] = Pixel{
-         static_cast<Pixel::value_type>((x / static_cast<double>(width)) * 255),
-         0,
-         static_cast<Pixel::value_type>((y / static_cast<double>(height))
-                                        * 255)};
-     }
+    for (size_t x = 0; x < width; x++) {
+      img[y][x] = Pixel{static_cast<Pixel::value_type>(
+                            (x / static_cast<double>(width)) * 255),
+                        0, static_cast<Pixel::value_type>(
+                               (y / static_cast<double>(height)) * 255)};
+    }
   }
 
   std::ofstream file;
@@ -129,10 +122,9 @@ TEST(Fractals, mandelbrot) {
       // Convert z to colour:
       double scaled = n / static_cast<double>(nmax);
       img[j][i] = Pixel{
-        static_cast<Pixel::value_type>(scaled * scaled * 255u),
-        static_cast<Pixel::value_type>(std::max(.25 - scaled, 0.0) * 255u),
-        static_cast<Pixel::value_type>(std::min(scaled * 1.25, 1.0) * 255u)
-      };
+          static_cast<Pixel::value_type>(scaled * scaled * 255u),
+          static_cast<Pixel::value_type>(std::max(.25 - scaled, 0.0) * 255u),
+          static_cast<Pixel::value_type>(std::min(scaled * 1.25, 1.0) * 255u)};
     }
   }
 

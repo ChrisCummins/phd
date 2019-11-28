@@ -15,7 +15,7 @@ using freq_map = std::unordered_map<char, size_t>;
 freq_map get_freqcounts(std::string s) {
   freq_map freq;
 
-  for (auto &c : s) {
+  for (auto& c : s) {
     if (freq.find(c) == freq.end())
       freq.emplace(c, 1);
     else
@@ -35,23 +35,19 @@ void sort_anagrams(std::vector<std::string>& arr) {
   using pair_type = std::pair<std::string, freq_map>;
   std::vector<pair_type> vals;
 
-  for (auto str : arr)
-    vals.push_back(pair_type(str, get_freqcounts(str)));
+  for (auto str : arr) vals.push_back(pair_type(str, get_freqcounts(str)));
 
   std::sort(vals.begin(), vals.end(),
             [](const pair_type& a, const pair_type& b) {
-      return a.second != b.second;
-    });
+              return a.second != b.second;
+            });
 
-  for (size_t i = 0; i < vals.size(); i++)
-    arr[i] = vals[i].first;
+  for (size_t i = 0; i < vals.size(); i++) arr[i] = vals[i].first;
 }
-
 
 bool is_anagram(std::string left, std::string right) {
   return get_freqcounts(left) == get_freqcounts(right);
 }
-
 
 ///////////
 // Tests //

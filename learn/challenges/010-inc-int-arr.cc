@@ -9,11 +9,11 @@
 
 char* inc_int_str(char* str) {
   size_t len{0};
-  char *cc;
+  char* cc;
 
   // Find last non-empty character.
-  for (cc = str; *cc >= '0' && *cc <= '9';
-       ++cc, ++len) ;  // NOLINT(whitespace/semicolon)
+  for (cc = str; *cc >= '0' && *cc <= '9'; ++cc, ++len)
+    ;  // NOLINT(whitespace/semicolon)
   cc = &str[len - 1];
 
   while (true) {
@@ -42,14 +42,9 @@ char* inc_int_str(char* str) {
   return str;
 }
 
-
 TEST(incr_int_arr, str) {
-  char str1[] = "0",
-       str2[] = "01",
-       str3[] = "002",
-       str4[] = "9 ",
-       str5[] = "1239",
-       str6[] = "999 ";
+  char str1[] = "0", str2[] = "01", str3[] = "002", str4[] = "9 ",
+       str5[] = "1239", str6[] = "999 ";
 
   ASSERT_STREQ("1", inc_int_str(str1));
   ASSERT_STREQ("02", inc_int_str(str2));
@@ -58,6 +53,5 @@ TEST(incr_int_arr, str) {
   ASSERT_STREQ("1240", inc_int_str(str5));
   ASSERT_STREQ("1000", inc_int_str(str6));
 }
-
 
 PHD_MAIN()

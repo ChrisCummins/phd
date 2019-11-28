@@ -14,20 +14,22 @@ KNOWN_IMG_FILE_EXTENSIONS = set([".dng", ".jpg", ".png", ".tif"])
 KNOWN_MOVIE_FILE_EXTENSIONS = set([".mov", ".mp4", ".m4v"])
 
 # The set of all valid content file extensions.
-KNOWN_FILE_EXTENSIONS = (
-    KNOWN_IMG_FILE_EXTENSIONS.union(KNOWN_MOVIE_FILE_EXTENSIONS))
+KNOWN_FILE_EXTENSIONS = KNOWN_IMG_FILE_EXTENSIONS.union(
+  KNOWN_MOVIE_FILE_EXTENSIONS
+)
 
 # A mapping from "bad" file extension to suggested file extension.
 FILE_EXTENSION_SUGGESTIONS = {
-    ".psd": ".tif",
-    ".raf": ".dng",
-    ".jpeg": ".jpg",
+  ".psd": ".tif",
+  ".raf": ".dng",
+  ".jpeg": ".jpg",
 }
 
 IGNORE_FILE_NAME = ".ignore"
 
 # Files which are not linted.
-IGNORED_FILES = set([
+IGNORED_FILES = set(
+  [
     IGNORE_FILE_NAME,
     "autorun.inf",
     ".DS_Store",
@@ -36,28 +38,30 @@ IGNORED_FILES = set([
     ".com.apple.timemachine.donotpresent",
     "README.md",
     ".sync_timestamp.txt",
-])
+  ]
+)
 
 # Directories which are not linted. The contents of ignored
 # directories are not traversed.
-IGNORED_DIRS = set([
-    ".tmp.drivedownload",
-])
+IGNORED_DIRS = set([".tmp.drivedownload",])
 
 PHOTO_LIB_PATH_COMPONENTS_RE = re.compile(
-    r"(?P<year>(1\d|20)\d\d)(?P<month>(0[1-9]|1[012]))(?P<day>(0[1-9]|[12]\d|3[012]))T"
-    r"(?P<hour>([01]\d|2[01234]))(?P<min>[0-5]\d)(?P<sec>[0-5]\d)(?P<seq>-\d+)?"
-    r"(-(?P<modifier>Edit|HDR|Pano)(-\d+)?)*$")
+  r"(?P<year>(1\d|20)\d\d)(?P<month>(0[1-9]|1[012]))(?P<day>(0[1-9]|[12]\d|3[012]))T"
+  r"(?P<hour>([01]\d|2[01234]))(?P<min>[0-5]\d)(?P<sec>[0-5]\d)(?P<seq>-\d+)?"
+  r"(-(?P<modifier>Edit|HDR|Pano)(-\d+)?)*$"
+)
 
 PHOTO_LIB_SCAN_PATH_COMPONENTS_RE = re.compile(
-    r"(?P<year>\d\d)(?P<month>(0[1-9]|1[012]))(?P<day>([012]\d|3[012]))"
-    r"(?P<roll>[A-Z]+)-(?P<exposure>\d\d)(?P<seq>-\d+)?"
-    r"(-(?P<modifier>Edit|HDR|Pano)(-\d+)?)*$")
+  r"(?P<year>\d\d)(?P<month>(0[1-9]|1[012]))(?P<day>([012]\d|3[012]))"
+  r"(?P<roll>[A-Z]+)-(?P<exposure>\d\d)(?P<seq>-\d+)?"
+  r"(-(?P<modifier>Edit|HDR|Pano)(-\d+)?)*$"
+)
 
 PHOTOLIB_LEAF_DIR_RE = re.compile(
-    r"//photos/\d\d\d\d/\d\d\d\d-\d\d/\d\d\d\d-\d\d-\d\d")
+  r"//photos/\d\d\d\d/\d\d\d\d-\d\d/\d\d\d\d-\d\d-\d\d"
+)
 
-COMPOSITE_FILE_NAME_SUFFIXES = {'HDR', 'Pano', 'Edit'}
+COMPOSITE_FILE_NAME_SUFFIXES = {"HDR", "Pano", "Edit"}
 
 
 def Md5String(string: str) -> hashlib.md5:

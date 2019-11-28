@@ -34,29 +34,29 @@ from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-_LLVM_REPO = 'llvm_mac' if sys.platform == 'darwin' else 'llvm_linux'
+_LLVM_REPO = "llvm_mac" if sys.platform == "darwin" else "llvm_linux"
 # Path to clang binary.
-CLANG = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang')
+CLANG = bazelutil.DataPath(f"{_LLVM_REPO}/bin/clang")
 # The marker used to mark stdin from clang pre-processor output.
 CLANG_STDIN_MARKER = re.compile(r'# \d+ "<stdin>" 2')
 # Options to pass to clang-format.
 # See: http://clang.llvm.org/docs/ClangFormatStyleOptions.html
 CLANG_FORMAT_CONFIG = {
-    'BasedOnStyle': 'Google',
-    'ColumnLimit': 5000,
-    'IndentWidth': 2,
-    'AllowShortBlocksOnASingleLine': False,
-    'AllowShortCaseLabelsOnASingleLine': False,
-    'AllowShortFunctionsOnASingleLine': False,
-    'AllowShortLoopsOnASingleLine': False,
-    'AllowShortIfStatementsOnASingleLine': False,
-    'DerivePointerAlignment': False,
-    'PointerAlignment': 'Left',
-    'BreakAfterJavaFieldAnnotations': True,
-    'BreakBeforeInheritanceComma': False,
-    'BreakBeforeTernaryOperators': False,
-    'AlwaysBreakAfterReturnType': 'None',
-    'AlwaysBreakAfterDefinitionReturnType': 'None',
+  "BasedOnStyle": "Google",
+  "ColumnLimit": 5000,
+  "IndentWidth": 2,
+  "AllowShortBlocksOnASingleLine": False,
+  "AllowShortCaseLabelsOnASingleLine": False,
+  "AllowShortFunctionsOnASingleLine": False,
+  "AllowShortLoopsOnASingleLine": False,
+  "AllowShortIfStatementsOnASingleLine": False,
+  "DerivePointerAlignment": False,
+  "PointerAlignment": "Left",
+  "BreakAfterJavaFieldAnnotations": True,
+  "BreakBeforeInheritanceComma": False,
+  "BreakBeforeTernaryOperators": False,
+  "AlwaysBreakAfterReturnType": "None",
+  "AlwaysBreakAfterDefinitionReturnType": "None",
 }
 
 
@@ -69,21 +69,23 @@ def StripPreprocessorLines(src: str) -> str:
   Returns:
     The output with preprocessor output stripped.
   """
-  lines = src.split('\n')
+  lines = src.split("\n")
   # Determine when the final included file ends.
   for i in range(len(lines) - 1, -1, -1):
     if CLANG_STDIN_MARKER.match(lines[i]):
       break
   else:
-    return ''
+    return ""
   # Strip lines beginning with '#' (that's preprocessor stuff):
-  return '\n'.join([line for line in lines[i:] if not line.startswith('#')])
+  return "\n".join([line for line in lines[i:] if not line.startswith("#")])
 
 
-def Preprocess(src: str,
-               cflags: typing.List[str],
-               timeout_seconds: int = 60,
-               strip_preprocessor_lines: bool = True):
+def Preprocess(
+  src: str,
+  cflags: typing.List[str],
+  timeout_seconds: int = 60,
+  strip_preprocessor_lines: bool = True,
+):
   """Run input code through the compiler frontend to inline macros.
 
   This uses the repository clang binary.
@@ -103,20 +105,29 @@ def Preprocess(src: str,
     ClangTimeout: If clang does not complete before timeout_seconds.
   """
   cmd = [
-      'timeout', '-s9',
-      str(timeout_seconds),
-      str(CLANG), '-E', '-c', '-', '-o', '-'
+    "timeout",
+    "-s9",
+    str(timeout_seconds),
+    str(CLANG),
+    "-E",
+    "-c",
+    "-",
+    "-o",
+    "-",
   ] + cflags
-  app.Log(2, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             universal_newlines=True)
+  app.Log(2, "$ %s", " ".join(cmd))
+  process = subprocess.Popen(
+    cmd,
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    universal_newlines=True,
+  )
   stdout, stderr = process.communicate(src)
   if process.returncode == 9:
     raise errors.ClangTimeout(
-        f'Clang preprocessor timed out after {timeout_seconds}s')
+      f"Clang preprocessor timed out after {timeout_seconds}s"
+    )
   elif process.returncode != 0:
     raise errors.ClangException(stderr)
   if strip_preprocessor_lines:
@@ -125,10 +136,9 @@ def Preprocess(src: str,
     return stdout
 
 
-def CompileLlvmBytecode(src: str,
-                        suffix: str,
-                        cflags: typing.List[str],
-                        timeout_seconds: int = 60) -> str:
+def CompileLlvmBytecode(
+  src: str, suffix: str, cflags: typing.List[str], timeout_seconds: int = 60
+) -> str:
   """Compile input code into textual LLVM byte code.
 
   Args:
@@ -145,23 +155,27 @@ def CompileLlvmBytecode(src: str,
     ClangException: In case of an error.
     ClangTimeout: If clang does not complete before timeout_seconds.
   """
-  builtin_cflags = ['-S', '-emit-llvm', '-o', '-']
+  builtin_cflags = ["-S", "-emit-llvm", "-o", "-"]
   with tempfile.NamedTemporaryFile(
-      'w', prefix='phd_deeplearning_clgen_preprocessors_clang_',
-      suffix=suffix) as f:
+    "w", prefix="phd_deeplearning_clgen_preprocessors_clang_", suffix=suffix
+  ) as f:
     f.write(src)
     f.flush()
-    cmd = ['timeout', '-s9',
-           str(timeout_seconds),
-           str(CLANG), f.name] + builtin_cflags + cflags
-    app.Log(2, '$ %s', ' '.join(cmd))
-    process = subprocess.Popen(cmd,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               universal_newlines=True)
+    cmd = (
+      ["timeout", "-s9", str(timeout_seconds), str(CLANG), f.name]
+      + builtin_cflags
+      + cflags
+    )
+    app.Log(2, "$ %s", " ".join(cmd))
+    process = subprocess.Popen(
+      cmd,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      universal_newlines=True,
+    )
     stdout, stderr = process.communicate()
   if process.returncode == 9:
-    raise errors.ClangTimeout(f'Clang timed out after {timeout_seconds}s')
+    raise errors.ClangTimeout(f"Clang timed out after {timeout_seconds}s")
   elif process.returncode != 0:
     raise errors.ClangException(stderr)
   return stdout
@@ -185,10 +199,14 @@ def ClangFormat(text: str, suffix: str, timeout_seconds: int = 60) -> str:
   """
   try:
     return clang_format.Exec(
-        text, suffix, ['-style={}'.format(json.dumps(CLANG_FORMAT_CONFIG))],
-        timeout_seconds)
+      text,
+      suffix,
+      ["-style={}".format(json.dumps(CLANG_FORMAT_CONFIG))],
+      timeout_seconds,
+    )
   except llvm.LlvmTimeout:
     raise errors.ClangTimeout(
-        f'Clang-format timed out after {timeout_seconds}s')
+      f"Clang-format timed out after {timeout_seconds}s"
+    )
   except clang_format.ClangFormatException as e:
     raise errors.ClangFormatException(str(e))

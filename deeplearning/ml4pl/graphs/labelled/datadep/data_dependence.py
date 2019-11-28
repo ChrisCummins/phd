@@ -13,12 +13,13 @@ FLAGS = app.FLAGS
 
 @decorators.timeout(seconds=120)
 def AnnotateDataDependencies(
-    g: nx.MultiDiGraph,
-    root_node: str,
-    x_label: str = 'x',
-    y_label: str = 'y',
-    true: typing.Any = True,
-    false: typing.Any = False) -> typing.Tuple[int, int]:
+  g: nx.MultiDiGraph,
+  root_node: str,
+  x_label: str = "x",
+  y_label: str = "y",
+  true: typing.Any = True,
+  false: typing.Any = False,
+) -> typing.Tuple[int, int]:
   # Initialize all nodes as not dependent and not the root node, except the root
   # node.
   for node, data in g.nodes(data=True):
@@ -40,18 +41,15 @@ def AnnotateDataDependencies(
     g.nodes[next][y_label] = true
 
     # Visit all data predecessors.
-    for pred, _, flow in g.in_edges(next, data='flow'):
-      if flow == 'data' and pred not in visited:
+    for pred, _, flow in g.in_edges(next, data="flow"):
+      if flow == "data" and pred not in visited:
         q.append((pred, data_flow_steps + 1))
 
   return dependency_node_count, data_flow_steps
 
 
 def MakeDataDependencyGraphs(
-    g: nx.MultiDiGraph,
-    n: typing.Optional[int] = None,
-    false=False,
-    true=True,
+  g: nx.MultiDiGraph, n: typing.Optional[int] = None, false=False, true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
   """Produce up to `n` dependency graphs from the given unlabelled graph.
 
@@ -74,6 +72,10 @@ def MakeDataDependencyGraphs(
 
   for root_node in root_statements[:n]:
     labelled = g.copy()
-    labelled.dependency_node_count, labelled.data_flow_max_steps_required = (
-        AnnotateDataDependencies(labelled, root_node, false=false, true=true))
+    (
+      labelled.dependency_node_count,
+      labelled.data_flow_max_steps_required,
+    ) = AnnotateDataDependencies(
+      labelled, root_node, false=false, true=true
+    )
     yield labelled

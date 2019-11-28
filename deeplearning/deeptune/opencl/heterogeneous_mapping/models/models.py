@@ -22,8 +22,9 @@ from deeplearning.deeptune.opencl.heterogeneous_mapping.models import deeptune
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import grewe
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import lda
 from deeplearning.deeptune.opencl.heterogeneous_mapping.models import ncc
-from deeplearning.deeptune.opencl.heterogeneous_mapping.models import \
-  static_mapping
+from deeplearning.deeptune.opencl.heterogeneous_mapping.models import (
+  static_mapping,
+)
 from labm8.py import app
 from labm8.py import labtypes
 

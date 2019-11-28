@@ -27,30 +27,40 @@ FLAGS = app.FLAGS
 
 def test_ClangFormat_hello_world():
   """Test formatting of a "hello world" Java program."""
-  assert java.ClangFormat("""
+  assert (
+    java.ClangFormat(
+      """
 public class HelloWorld {
     public static void main(String [] args) {
         System.out.println("Hello, World"    );
     } }
-""") == """
+"""
+    )
+    == """
 public class HelloWorld {
   public static void main(String[] args) {
     System.out.println("Hello, World");
   }
 }
 """
+  )
 
 
 def test_ClangFormat_long_line():
   """Test that extremely long lines are not wrapped."""
-  assert java.ClangFormat("""
+  assert (
+    java.ClangFormat(
+      """
 public class VeryVeryLongNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 extends VeryVeryLongNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeBase {
 }
-""") == """
+"""
+    )
+    == """
 public class VeryVeryLongNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee \
 extends VeryVeryLongNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeBase {}
 """
+  )
 
 
 # Compile() tests.
@@ -59,36 +69,36 @@ extends VeryVeryLongNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeBase {}
 def test_Compile_empty_input():
   """That an empty file is rejected."""
   with pytest.raises(errors.BadCodeException):
-    java.Compile('')
+    java.Compile("")
 
 
 def test_Compile_hello_world():
   """Test compilation of a "hello world" Java program."""
-  assert java.Compile("""
-public class HelloWorld {
-  public static void main(String[] args) {
-    System.out.println("Hello, World");
-  }
-}
-""") == """
+  assert (
+    java.Compile(
+      """
 public class HelloWorld {
   public static void main(String[] args) {
     System.out.println("Hello, World");
   }
 }
 """
+    )
+    == """
+public class HelloWorld {
+  public static void main(String[] args) {
+    System.out.println("Hello, World");
+  }
+}
+"""
+  )
 
 
 def test_Compile_class_name_whitespace():
   """Test that compile can infer the class name despite whitespace."""
-  assert java.Compile("""
-public
-class     HelloWorld {
-  public static void main(String[] args) {
-    System.out.println("Hello, World");
-  }
-}
-""") == """
+  assert (
+    java.Compile(
+      """
 public
 class     HelloWorld {
   public static void main(String[] args) {
@@ -96,6 +106,16 @@ class     HelloWorld {
   }
 }
 """
+    )
+    == """
+public
+class     HelloWorld {
+  public static void main(String[] args) {
+    System.out.println("Hello, World");
+  }
+}
+"""
+  )
 
 
 # WrapMethodInClass() tests.
@@ -103,17 +123,23 @@ class     HelloWorld {
 
 def test_Compile_WrapMethodInClass_hello_world():
   """Test output of wrapping a method in a class."""
-  assert java.Compile(
-      java.WrapMethodInClass("""\
+  assert (
+    java.Compile(
+      java.WrapMethodInClass(
+        """\
 private static void Hello() {
   System.out.println("Hello, world!");
-}""")) == """\
+}"""
+      )
+    )
+    == """\
 public class A {
 private static void Hello() {
   System.out.println("Hello, world!");
 }
 }
 """
+  )
 
 
 def test_Compile_WrapMethodInClass_syntax_error():
@@ -126,11 +152,14 @@ def test_Compile_WrapMethodInClass_undefined_symbol():
   """Test that error is raised if method has undefined symbols."""
   with pytest.raises(errors.BadCodeException):
     java.Compile(
-        java.WrapMethodInClass("""
+      java.WrapMethodInClass(
+        """
 private static void Hello() {
   UndefinedMethod(5);
 }
-"""))
+"""
+      )
+    )
 
 
 # UnwrapMethodInClass() tests.
@@ -138,16 +167,21 @@ private static void Hello() {
 
 def test_UnwrapMethodInClass_hello_world():
   """Test that method is extracted from a class."""
-  assert java.UnwrapMethodInClass("""
+  assert (
+    java.UnwrapMethodInClass(
+      """
 public class HelloWorld {
   private static void Hello() {
     System.out.println("Hello, world!");
   }
-}""") == """\
+}"""
+    )
+    == """\
 private static void Hello(){
   System.out.println("Hello, world!");
 }
 """
+  )
 
 
 def test_UnwrapMethodInClass_no_methods():
@@ -160,11 +194,13 @@ def test_UnwrapMethodInClass_no_methods():
 def test_UnwrapMethodInClass_multiple_methods():
   """Test that error is raised if class contains multiple methods."""
   with pytest.raises(errors.BadCodeException) as e_ctx:
-    java.UnwrapMethodInClass("""
+    java.UnwrapMethodInClass(
+      """
 public class HelloWorld {
   public static void Hello() {}
   public static void Goodbye() {}
-}""")
+}"""
+    )
   assert str(e_ctx.value) == "Expected 1 method, found 2"
 
 
@@ -179,13 +215,17 @@ private static void Hello() {
   System.out.println("Hello, world!");
 }
 """ in java.Compile(
-      java.InsertShimImports(
-          java.WrapMethodInClass("""\
+    java.InsertShimImports(
+      java.WrapMethodInClass(
+        """\
 private static void Hello() {
   ArrayList<Object> a = new ArrayList<>();
   System.out.println("Hello, world!");
 }
-""")))
+"""
+      )
+    )
+  )
 
 
 # JavaRewrite() tests.
@@ -198,40 +238,52 @@ def test_JavaRewrite_hello_world():
 
 def test_JavaRewrite_comments_are_unchanged():
   """Comment(s) are not deleted."""
-  assert java.JavaRewrite("""
-/**
- * Docstring format comment.
- */
-// And a line comment.
-/* And a C syntax style comment. */
-""") == """\
+  assert (
+    java.JavaRewrite(
+      """
 /**
  * Docstring format comment.
  */
 // And a line comment.
 /* And a C syntax style comment. */
 """
+    )
+    == """\
+/**
+ * Docstring format comment.
+ */
+// And a line comment.
+/* And a C syntax style comment. */
+"""
+  )
 
 
 def test_JavaRewrite_whitespace():
   """Multiple blank lines and whitespace is stripped."""
-  assert java.JavaRewrite('\n\n  \n\t\n') == '\n'
+  assert java.JavaRewrite("\n\n  \n\t\n") == "\n"
 
 
 def test_JavaRewrite_rewrite_class_name():
   """Test that class is renamed."""
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class MyJavaClass {
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 }
 """
+  )
 
 
 def test_JavaRewrite_rewrite_anonymous_class_names():
   """Test that anonymous classes are renamed."""
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class MyJavaClass {
   private class AnonymousClassA {
   }
@@ -239,7 +291,9 @@ public class MyJavaClass {
   private class AnotherPrivateClass {
   }
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tprivate class B {
 \t}
@@ -247,18 +301,23 @@ public class A {
 \t}
 }
 """
+  )
 
 
 def test_JavaRewrite_rewrite_static_method_argument_names():
   """Test that arguments are renamed."""
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class A {
   public static int myMethod(final int foo, int bar) {
     System.out.println("Hello world! " + bar); 
     return foo + bar;
   }
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tpublic static int fn_A(final int a, int b) {
 \t\tSystem.out.println("Hello world! " + b);
@@ -266,11 +325,14 @@ public class A {
 \t}
 }
 """
+  )
 
 
 def test_JavaRewrite_conflicting_length_name():
   """Test that rewriter gracefully handles 'length' used as variable."""
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class A {
   public static double[] createEntry(final double[] position){
     int length=position.length;
@@ -279,7 +341,9 @@ public class A {
     return 0.0;
   }
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tpublic static double[] fn_A(final double[] a) {
 \t\tint b = a.length;
@@ -288,22 +352,28 @@ public class A {
 \t}
 }
 """
+  )
 
 
 def test_JavaRewrite_formats_source():
   """Test that source is formatted."""
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class A { public      static
                              void Foo(int a) { return
 a;}
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tpublic static void fn_A(int a) {
 \t\treturn a;
 \t}
 }
 """
+  )
 
 
 def test_JavaRewrite_assertion_arg_rename_FAILS():
@@ -313,24 +383,31 @@ def test_JavaRewrite_assertion_arg_rename_FAILS():
   treated as the declaration of a new variable (of type 'assert'), and named
   'b'.
   """
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class A {
 \tpublic static void fn_A(int x) {
 \t\tassert x;
 \t}
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tpublic static void fn_A(int a) {
 \t\tassert b;
 \t}
 }
 """
+  )
 
 
 def test_JavaRewrite_optional_if_else_braces():
   """Test that if/else braces are inserted."""
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class A {
 \tpublic static int fn_A(int x) {
 \t\tif (x)
@@ -339,7 +416,9 @@ public class A {
 \t\t\treturn 0;
 \t}
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tpublic static int fn_A(int a) {
 \t\tif (a) {
@@ -350,17 +429,22 @@ public class A {
 \t}
 }
 """
+  )
 
 
 def test_JavaRewrite_optional_if_else_braces_on_one_line():
   """Test that if/else braces are inserted when declaration is on one line."""
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class A {
 \tpublic static int fn_A(int x) {
 \t\tif (x) return 1; else return 0;
 \t}
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tpublic static int fn_A(int a) {
 \t\tif (a) {
@@ -371,6 +455,7 @@ public class A {
 \t}
 }
 """
+  )
 
 
 def test_JavaRewrite_github_testcase_1():
@@ -383,7 +468,9 @@ def test_JavaRewrite_github_testcase_1():
       github.com/0001077192/discord-spicybot
       src/main/java/com/nsa/spicybot/commands/SpicyPointsCommand.java
   """
-  assert java.JavaRewrite("""
+  assert (
+    java.JavaRewrite(
+      """
 public class A {
 public static String format(int num){
   String original="" + num;
@@ -393,7 +480,9 @@ public static String format(int num){
   return dummy;
 }
 }
-""") == """\
+"""
+    )
+    == """\
 public class A {
 \tpublic static String fn_A(int a) {
 \t\tString b = "" + a;
@@ -408,7 +497,8 @@ public class A {
 \t}
 }
 """
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

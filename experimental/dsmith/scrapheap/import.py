@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from dsmith.db import *
 
 # def import_result_protobufs(s: session_t, path: Path, generator: Generators.type) -> None:

@@ -28,8 +28,7 @@ num_t triangle_number(const int min_divisors) {
 
   for (num_t i = 1; i < std::numeric_limits<num_t>::max(); ++i) {
     triangle += i;
-    if (num_divisors(triangle) > min_divisors)
-      return triangle;
+    if (num_divisors(triangle) > min_divisors) return triangle;
   }
   throw std::invalid_argument("reached value max");
 }

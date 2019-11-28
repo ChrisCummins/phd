@@ -20,36 +20,43 @@ from labm8.py import labtypes
 from util.photolib import dashcam
 
 FLAGS = app.FLAGS
-app.DEFINE_input_path("working_dir",
-                      os.getcwd(),
-                      "Working directory.",
-                      is_dir=True)
+app.DEFINE_input_path(
+  "working_dir", os.getcwd(), "Working directory.", is_dir=True
+)
 app.DEFINE_output_path(
-    "output_dir",
-    None,
-    "Directory to write concatenated segments to. If not provided, outputs are written to --working_dir",
-    is_dir=True)
+  "output_dir",
+  None,
+  "Directory to write concatenated segments to. If not provided, outputs are written to --working_dir",
+  is_dir=True,
+)
 app.DEFINE_string(
-    "segment_prefix", "segment_",
-    "The prefix for the names of concatenated dash video segments.")
-app.DEFINE_boolean("rm", False,
-                   "Delete original video files after concatenating them.")
+  "segment_prefix",
+  "segment_",
+  "The prefix for the names of concatenated dash video segments.",
+)
+app.DEFINE_boolean(
+  "rm", False, "Delete original video files after concatenating them."
+)
 
 # A regex to the match the line of output printed by ffprobe containing the
 # video duration.
 _DURATION_RE = re.compile(
-    r"Duration: (?P<hours>\d\d):(?P<minutes>\d\d):(?P<seconds>\d\d)\.\d\d")
+  r"Duration: (?P<hours>\d\d):(?P<minutes>\d\d):(?P<seconds>\d\d)\.\d\d"
+)
 
 
 def GetDurationOfVideoOrDie(path: pathlib.Path) -> datetime.timedelta:
   """Read the duration of a video file using ffprobe."""
-  result = subprocess.check_output(["ffprobe", path.absolute()],
-                                   stderr=subprocess.STDOUT,
-                                   universal_newlines=True)
+  result = subprocess.check_output(
+    ["ffprobe", path.absolute()],
+    stderr=subprocess.STDOUT,
+    universal_newlines=True,
+  )
   durations = [x for x in result.split("\n") if "Duration" in x]
   if not len(durations) == 1:
-    app.FatalWithoutStackTrace("Could not determine duration of video `%s`",
-                               path)
+    app.FatalWithoutStackTrace(
+      "Could not determine duration of video `%s`", path
+    )
   m = _DURATION_RE.search(durations[0])
   if not m:
     app.FatalWithoutStackTrace("Failed to pass duration `%s`", durations[0])
@@ -62,8 +69,9 @@ def GetDurationOfVideoOrDie(path: pathlib.Path) -> datetime.timedelta:
   return datetime.timedelta(**time_params)
 
 
-def Segmentize(files: typing.Iterable[pathlib.Path]
-              ) -> typing.Iterator[typing.List[pathlib.Path]]:
+def Segmentize(
+  files: typing.Iterable[pathlib.Path],
+) -> typing.Iterator[typing.List[pathlib.Path]]:
   """Group a list of dashcam video files into contiguous sequences."""
   files = list(sorted(files))
   segment_duration = datetime.timedelta()
@@ -86,8 +94,9 @@ def Segmentize(files: typing.Iterable[pathlib.Path]
       break
 
 
-def ConcatenateSegment(entries: typing.List[pathlib.Path],
-                       target: str) -> pathlib.Path:
+def ConcatenateSegment(
+  entries: typing.List[pathlib.Path], target: str
+) -> pathlib.Path:
   with tempfile.TemporaryDirectory(prefix="phd_dashcam_concat_") as d:
     concat_list = pathlib.Path(d) / "concat.txt"
 
@@ -96,9 +105,16 @@ def ConcatenateSegment(entries: typing.List[pathlib.Path],
         print(f"file '{entry.absolute()}'", file=f)
 
     cmd = [
-        "ffmpeg", "-f", "concat", "-safe", "0", "-i",
-        str(concat_list), "-c", "copy",
-        str(target)
+      "ffmpeg",
+      "-f",
+      "concat",
+      "-safe",
+      "0",
+      "-i",
+      str(concat_list),
+      "-c",
+      "copy",
+      str(target),
     ]
     app.Log(1, "$ %s", " ".join(cmd))
     subprocess.check_call(cmd)
@@ -112,14 +128,18 @@ def main():
   """Main entry point."""
   working_dir = FLAGS.working_dir
 
-  files = [x for x in working_dir.iterdir() if not x.name.startswith('.')]
+  files = [x for x in working_dir.iterdir() if not x.name.startswith(".")]
 
   # Segmentize all of the videos before concatenating so that we can sanity
   # check the sequences.
   sequences = []
   for sequence, duration in Segmentize(files):
-    app.Log(1, "Segment with %s, duration %s",
-            humanize.Plural(len(sequence), "entry", "entries"), duration)
+    app.Log(
+      1,
+      "Segment with %s, duration %s",
+      humanize.Plural(len(sequence), "entry", "entries"),
+      duration,
+    )
     for j, f in enumerate(sequence):
       app.Log(1, "  entry %s: %s", j + 1, f.name)
     sequences.append(sequence)
@@ -129,16 +149,25 @@ def main():
   sequences_files_set = set(f.name for f in sequences_files)
   if len(sequences_files_set) != len(sequences_files):
     app.FatalWithoutStackTrace(
-        "%s segments contain duplicates. Expected %s files, found %s",
-        len(sequences), len(sequences_files), len(sequences_files_set))
+      "%s segments contain duplicates. Expected %s files, found %s",
+      len(sequences),
+      len(sequences_files),
+      len(sequences_files_set),
+    )
 
   # Sanity check that segments contain all files.
   if len(sequences_files) != len(files):
     files_set = set(f.name for f in files)
-    app.Error("Files not included in segments:\n    %s",
-              "    \n".join(files_set - sequences_files_set))
-    app.FatalWithoutStackTrace("%d segments contain %s files, expected %s",
-                               len(sequences), len(sequences_files), len(files))
+    app.Error(
+      "Files not included in segments:\n    %s",
+      "    \n".join(files_set - sequences_files_set),
+    )
+    app.FatalWithoutStackTrace(
+      "%d segments contain %s files, expected %s",
+      len(sequences),
+      len(sequences_files),
+      len(files),
+    )
 
   # Concatenate each sequence.
   for i, sequence in enumerate(sequences):
@@ -146,12 +175,18 @@ def main():
     start_date = dashcam.ParseDatetimeFromFilenameOrDie(base_file.name)
 
     # Use a separate output directory if required.
-    output_dir = base_file.parent if FLAGS.output_dir is None else FLAGS.output_dir
+    output_dir = (
+      base_file.parent if FLAGS.output_dir is None else FLAGS.output_dir
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    target = output_dir / f'{FLAGS.segment_prefix}{start_date.strftime("%Y%m%dT%H%M%S")}.part_{i + 1}_of_{len(sequences)}{base_file.suffix.lower()}'
-    app.Log(1, "Creating sequence %s of %s: %s", i + 1, len(sequences),
-            target.name)
+    target = (
+      output_dir
+      / f'{FLAGS.segment_prefix}{start_date.strftime("%Y%m%dT%H%M%S")}.part_{i + 1}_of_{len(sequences)}{base_file.suffix.lower()}'
+    )
+    app.Log(
+      1, "Creating sequence %s of %s: %s", i + 1, len(sequences), target.name
+    )
     ConcatenateSegment(sequence, target)
 
     # Delete the files when we're done with them, if required.

@@ -24,8 +24,9 @@ FLAGS = app.FLAGS
 class DiffTesterBase(object):
   """Base class for differential testers."""
 
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]
-              ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
+  def __call__(
+    self, results: typing.List[deepsmith_pb2.Result]
+  ) -> typing.List["deepsmith_pb2.DifferentialTest.Outcome"]:
     """Differential test results and return their outcomes.
 
     Args:
@@ -76,9 +77,9 @@ class NamedOutputIsEqual(OutputsEqualityTest):
 
 
 class UnaryTester(DiffTesterBase):
-
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]
-              ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
+  def __call__(
+    self, results: typing.List[deepsmith_pb2.Result]
+  ) -> typing.List["deepsmith_pb2.DifferentialTest.Outcome"]:
     """Unary test a result.
 
     Args:
@@ -91,24 +92,19 @@ class UnaryTester(DiffTesterBase):
       ValueError: If called with more than or less than one Result proto.
     """
     if len(results) != 1:
-      raise ValueError('UnaryTester must be called with exactly one result.')
+      raise ValueError("UnaryTester must be called with exactly one result.")
 
-    return [{
-        deepsmith_pb2.Result.UNKNOWN:
-        deepsmith_pb2.DifferentialTest.UNKNOWN,
-        deepsmith_pb2.Result.BUILD_FAILURE:
-        deepsmith_pb2.DifferentialTest.PASS,
-        deepsmith_pb2.Result.BUILD_CRASH:
-        deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
-        deepsmith_pb2.Result.BUILD_TIMEOUT:
-        deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
-        deepsmith_pb2.Result.RUNTIME_CRASH:
-        deepsmith_pb2.DifferentialTest.PASS,
-        deepsmith_pb2.Result.RUNTIME_TIMEOUT:
-        deepsmith_pb2.DifferentialTest.PASS,
-        deepsmith_pb2.Result.PASS:
-        deepsmith_pb2.DifferentialTest.PASS,
-    }[results[0].outcome]]
+    return [
+      {
+        deepsmith_pb2.Result.UNKNOWN: deepsmith_pb2.DifferentialTest.UNKNOWN,
+        deepsmith_pb2.Result.BUILD_FAILURE: deepsmith_pb2.DifferentialTest.PASS,
+        deepsmith_pb2.Result.BUILD_CRASH: deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
+        deepsmith_pb2.Result.BUILD_TIMEOUT: deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE,
+        deepsmith_pb2.Result.RUNTIME_CRASH: deepsmith_pb2.DifferentialTest.PASS,
+        deepsmith_pb2.Result.RUNTIME_TIMEOUT: deepsmith_pb2.DifferentialTest.PASS,
+        deepsmith_pb2.Result.PASS: deepsmith_pb2.DifferentialTest.PASS,
+      }[results[0].outcome]
+    ]
 
 
 class GoldStandardDiffTester(DiffTesterBase):
@@ -117,8 +113,9 @@ class GoldStandardDiffTester(DiffTesterBase):
   def __init__(self, outputs_equality_test: OutputsEqualityTest):
     self.outputs_equality_test = outputs_equality_test
 
-  def __call__(self, results: typing.List[deepsmith_pb2.Result]
-              ) -> typing.List['deepsmith_pb2.DifferentialTest.Outcome']:
+  def __call__(
+    self, results: typing.List[deepsmith_pb2.Result]
+  ) -> typing.List["deepsmith_pb2.DifferentialTest.Outcome"]:
     """Perform a difftest.
 
     Args:
@@ -129,7 +126,7 @@ class GoldStandardDiffTester(DiffTesterBase):
     """
     gs_result, *results = results
     if not results:
-      raise ValueError('GoldStandardDiffTester called with only one result')
+      raise ValueError("GoldStandardDiffTester called with only one result")
 
     # Determine the outcome of the gold standard.
     outcomes = [self.DiffTestOne(gs_result, gs_result)]
@@ -141,9 +138,7 @@ class GoldStandardDiffTester(DiffTesterBase):
     return outcomes
 
   def DiffTestOne(
-      self,
-      gs_result: deepsmith_pb2.Result,
-      result: deepsmith_pb2.Result,
+    self, gs_result: deepsmith_pb2.Result, result: deepsmith_pb2.Result,
   ) -> deepsmith_pb2.DifferentialTest.Outcome:
     """Difftest one result against a golden standard.
 
@@ -165,67 +160,88 @@ class GoldStandardDiffTester(DiffTesterBase):
 
     # Outcomes which are uninteresting if they match.
     uninteresting_equal_outcomes = {
-        result_outcome.UNKNOWN,
-        result_outcome.BUILD_FAILURE,
-        result_outcome.RUNTIME_CRASH,
-        result_outcome.RUNTIME_TIMEOUT,
+      result_outcome.UNKNOWN,
+      result_outcome.BUILD_FAILURE,
+      result_outcome.RUNTIME_CRASH,
+      result_outcome.RUNTIME_TIMEOUT,
     }
 
     # Outcomes which signal build failures.
     build_failures = {
-        result_outcome.UNKNOWN,
-        result_outcome.BUILD_FAILURE,
-        result_outcome.BUILD_CRASH,
-        result_outcome.BUILD_TIMEOUT,
+      result_outcome.UNKNOWN,
+      result_outcome.BUILD_FAILURE,
+      result_outcome.BUILD_CRASH,
+      result_outcome.BUILD_TIMEOUT,
     }
 
     # Outcomes which signal runtime failures.
     runtime_failures = {
-        result_outcome.RUNTIME_CRASH,
-        result_outcome.RUNTIME_TIMEOUT,
+      result_outcome.RUNTIME_CRASH,
+      result_outcome.RUNTIME_TIMEOUT,
     }
 
     # Outcomes which are not interesting if they are equal.
-    if (gs_result.outcome in uninteresting_equal_outcomes and
-        gs_result.outcome == result.outcome):
+    if (
+      gs_result.outcome in uninteresting_equal_outcomes
+      and gs_result.outcome == result.outcome
+    ):
       return difftest_outcome.PASS
     # Build failures which are always interesting.
-    elif (result.outcome in {
-        result_outcome.BUILD_CRASH, result_outcome.BUILD_TIMEOUT
-    }):
+    elif result.outcome in {
+      result_outcome.BUILD_CRASH,
+      result_outcome.BUILD_TIMEOUT,
+    }:
       return difftest_outcome.ANOMALOUS_BUILD_FAILURE
     # Gold standard completed testcase, device under test failed to build OR
     # gold standard failed to build, device under test completed test.
-    elif (gs_result.outcome not in build_failures and
-          result.outcome in build_failures):
+    elif (
+      gs_result.outcome not in build_failures
+      and result.outcome in build_failures
+    ):
       return deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_FAILURE
-    elif (gs_result.outcome == result_outcome.BUILD_FAILURE and
-          result.outcome not in build_failures):
+    elif (
+      gs_result.outcome == result_outcome.BUILD_FAILURE
+      and result.outcome not in build_failures
+    ):
       return deepsmith_pb2.DifferentialTest.ANOMALOUS_BUILD_PASS
     # Gold standard completed testcase, device under test crashed OR
     # gold standard crashed, device under test completed testcase.
-    elif (gs_result.outcome == result_outcome.PASS and
-          result.outcome == result_outcome.RUNTIME_CRASH):
+    elif (
+      gs_result.outcome == result_outcome.PASS
+      and result.outcome == result_outcome.RUNTIME_CRASH
+    ):
       return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_CRASH
-    elif (gs_result.outcome in runtime_failures and
-          result.outcome == result_outcome.PASS):
+    elif (
+      gs_result.outcome in runtime_failures
+      and result.outcome == result_outcome.PASS
+    ):
       return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_PASS
     # Gold standard crashed, device under test times out OR
     # gold standard times out, device under test crashes.
-    elif ((gs_result.outcome == result_outcome.RUNTIME_CRASH and
-           result.outcome == result_outcome.RUNTIME_TIMEOUT) or
-          (gs_result.outcome == result_outcome.RUNTIME_TIMEOUT and
-           result.outcome == result_outcome.RUNTIME_CRASH)):
+    elif (
+      gs_result.outcome == result_outcome.RUNTIME_CRASH
+      and result.outcome == result_outcome.RUNTIME_TIMEOUT
+    ) or (
+      gs_result.outcome == result_outcome.RUNTIME_TIMEOUT
+      and result.outcome == result_outcome.RUNTIME_CRASH
+    ):
       return deepsmith_pb2.DifferentialTest.PASS
     # Gold standard passes, device under test times out.
-    elif (gs_result.outcome == result_outcome.PASS and
-          result.outcome == result_outcome.RUNTIME_TIMEOUT):
+    elif (
+      gs_result.outcome == result_outcome.PASS
+      and result.outcome == result_outcome.RUNTIME_TIMEOUT
+    ):
       return deepsmith_pb2.DifferentialTest.ANOMALOUS_RUNTIME_TIMEOUT
     # Both devices completed testcase, compare outputs.
-    elif (gs_result.outcome == result_outcome.PASS and
-          result.outcome == result_outcome.PASS):
-      return (difftest_outcome.PASS if self.outputs_equality_test(
-          [gs_result, result]) else difftest_outcome.ANOMALOUS_WRONG_OUTPUT)
+    elif (
+      gs_result.outcome == result_outcome.PASS
+      and result.outcome == result_outcome.PASS
+    ):
+      return (
+        difftest_outcome.PASS
+        if self.outputs_equality_test([gs_result, result])
+        else difftest_outcome.ANOMALOUS_WRONG_OUTPUT
+      )
 
     return difftest_outcome.UNKNOWN
 
@@ -233,8 +249,9 @@ class GoldStandardDiffTester(DiffTesterBase):
 class FiltersBase(object):
   """Base class for DeepSmith filters."""
 
-  def PreExec(self, testcase: deepsmith_pb2.Testcase
-             ) -> typing.Optional[deepsmith_pb2.Testcase]:
+  def PreExec(
+    self, testcase: deepsmith_pb2.Testcase
+  ) -> typing.Optional[deepsmith_pb2.Testcase]:
     """A filter callback to determine whether a testcase should be discarded.
 
     Args:
@@ -245,8 +262,9 @@ class FiltersBase(object):
     """
     return testcase
 
-  def PostExec(self, result: deepsmith_pb2.Result
-              ) -> typing.Optional[deepsmith_pb2.Result]:
+  def PostExec(
+    self, result: deepsmith_pb2.Result
+  ) -> typing.Optional[deepsmith_pb2.Result]:
     """A filter callback to determine whether a result should be discarded.
 
     Args:
@@ -257,8 +275,9 @@ class FiltersBase(object):
     """
     return result
 
-  def PreDifftest(self, difftest: deepsmith_pb2.DifferentialTest
-                 ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+  def PreDifftest(
+    self, difftest: deepsmith_pb2.DifferentialTest
+  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
     """A filter callback to determine whether a difftest should be discarded.
 
     Args:
@@ -269,8 +288,9 @@ class FiltersBase(object):
     """
     return difftest
 
-  def PostDifftest(self, difftest: deepsmith_pb2.DifferentialTest
-                  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
+  def PostDifftest(
+    self, difftest: deepsmith_pb2.DifferentialTest
+  ) -> typing.Optional[deepsmith_pb2.DifferentialTest]:
     """A filter callback to determine whether a difftest should be discarded.
 
     Args:

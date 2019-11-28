@@ -28,10 +28,10 @@ def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
   try:
     parsed_dots = pydot.graph_from_dot_data(dot_source)
   except TypeError as e:
-    raise pyparsing.ParseException('Failed to parse dot source') from e
+    raise pyparsing.ParseException("Failed to parse dot source") from e
 
   if len(parsed_dots) != 1:
-    raise ValueError(f'Expected 1 Dot in source, found {len(parsed_dots)}')
+    raise ValueError(f"Expected 1 Dot in source, found {len(parsed_dots)}")
 
   dot = parsed_dots[0]
 
@@ -45,16 +45,16 @@ def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
   nodes_to_delete = []
 
   for node, data in graph.nodes(data=True):
-    if 'label' not in data:
+    if "label" not in data:
       nodes_to_delete.append(node)
       continue
-    label = data['label']
+    label = data["label"]
     if label and not (label.startswith('"{') and label.endswith('}"')):
       raise ValueError(f"Invalid label: `{label}`")
     label = label[2:-2]
     node_name_to_label[node] = label
     # Remove unneeded data attributes.
-    labtypes.DeleteKeys(data, {'shape', 'label'})
+    labtypes.DeleteKeys(data, {"shape", "label"})
 
   # Remove unlabelled nodes.
   for node in nodes_to_delete:
@@ -65,7 +65,8 @@ def CallGraphFromDotSource(dot_source: str) -> nx.MultiDiGraph:
 
 
 def CallGraphToFunctionCallCounts(
-    call_graph: nx.MultiDiGraph) -> typing.Dict[str, int]:
+  call_graph: nx.MultiDiGraph,
+) -> typing.Dict[str, int]:
   """Build a table of call counts for each function.
 
   Args:
@@ -79,9 +80,9 @@ def CallGraphToFunctionCallCounts(
   """
   # Initialize the call count table with an entry for each function, except
   # the magic "external node" entry produced by LLVM's -dot-callgraph pass.
-  function_names = [n for n in call_graph.nodes if n != 'external node']
+  function_names = [n for n in call_graph.nodes if n != "external node"]
   call_counts = {n: 0 for n in function_names}
   for src, dst, _ in call_graph.edges:
-    if src != 'external node':
+    if src != "external node":
       call_counts[dst] += 1
   return call_counts

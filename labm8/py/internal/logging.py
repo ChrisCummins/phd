@@ -9,12 +9,14 @@ from absl import logging as absl_logging
 FLAGS = absl_flags.FLAGS
 
 absl_flags.DEFINE_list(
-    'vmodule', [],
-    'Per-module verbose level. The argument has to contain a comma-separated '
-    'list of <module name>=<log level>. <module name> is a glob pattern (e.g., '
-    "gfs* for all modules whose name starts with \"gfs\"), matched against the "
-    'filename base (that is, name ignoring .py). <log level> overrides any '
-    'value given by --v.')
+  "vmodule",
+  [],
+  "Per-module verbose level. The argument has to contain a comma-separated "
+  "list of <module name>=<log level>. <module name> is a glob pattern (e.g., "
+  'gfs* for all modules whose name starts with "gfs"), matched against the '
+  "filename base (that is, name ignoring .py). <log level> overrides any "
+  "value given by --v.",
+)
 
 # Logging functions.
 
@@ -33,10 +35,10 @@ def get_module_object_and_name(globals_dict):
     _ModuleObjectAndName - pair of module object & module name.
     Returns (None, None) if the module could not be identified.
   """
-  name = globals_dict.get('__name__', None)
+  name = globals_dict.get("__name__", None)
   module = sys.modules.get(name, None)
   # Pick a more informative name for the main module.
-  return module, (sys.argv[0] if name == '__main__' else name)
+  return module, (sys.argv[0] if name == "__main__" else name)
 
 
 def GetCallingModuleName():
@@ -51,22 +53,24 @@ def GetCallingModuleName():
   for depth in range(1, sys.getrecursionlimit()):
     # sys._getframe is the right thing to use here, as it's the best
     # way to walk up the call stack.
-    globals_for_frame = sys._getframe(depth).f_globals  # pylint: disable=protected-access
+    globals_for_frame = sys._getframe(
+      depth
+    ).f_globals  # pylint: disable=protected-access
     module, module_name = get_module_object_and_name(globals_for_frame)
     if id(module) not in disclaim_module_ids and module_name is not None:
       return module_name
-  raise AssertionError('No module was found')
+  raise AssertionError("No module was found")
 
 
 @functools.lru_cache(maxsize=1)
 def ModuleGlob():
-  return [(x.split('=')[0], int(x.split('=')[1])) for x in FLAGS.vmodule]
+  return [(x.split("=")[0], int(x.split("=")[1])) for x in FLAGS.vmodule]
 
 
 @functools.lru_cache(maxsize=128)
 def GetModuleVerbosity(module: str) -> int:
   """Return the verbosity level for the given module."""
-  module_basename = module.split('.')[-1]
+  module_basename = module.split(".")[-1]
   for module_glob, level in ModuleGlob():
     if fnmatch.fnmatch(module_basename, module_glob):
       return level
@@ -88,7 +92,7 @@ def Log(calling_module_name: str, level: int, msg, *args, **kwargs):
   """
   module_level = GetModuleVerbosity(calling_module_name)
   if level <= module_level:
-    print_context = kwargs.pop('print_context', None)
+    print_context = kwargs.pop("print_context", None)
     if print_context:
       with print_context():
         absl_logging.info(msg, *args, **kwargs)

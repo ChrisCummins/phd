@@ -18,12 +18,15 @@
 """
 The Solidity programming language.
 """
-
-from experimental.dsmith.langs import Generator, Harness, Language
+from experimental.dsmith.langs import Generator
+from experimental.dsmith.langs import Harness
+from experimental.dsmith.langs import Language
 from experimental.dsmith.sol import db
 from experimental.dsmith.sol import difftest
 from experimental.dsmith.sol.db import *
-from experimental.dsmith.sol.generators import DSmith, GitHub, RandChar
+from experimental.dsmith.sol.generators import DSmith
+from experimental.dsmith.sol.generators import GitHub
+from experimental.dsmith.sol.generators import RandChar
 from experimental.dsmith.sol.harnesses import Solc
 
 
@@ -31,14 +34,14 @@ class Solidity(Language):
   __name__ = "solidity"
 
   __generators__ = {
-      None: RandChar,  # default
-      "randchar": RandChar,
-      "dsmith": DSmith,
-      "github": GitHub,
+    None: RandChar,  # default
+    "randchar": RandChar,
+    "dsmith": DSmith,
+    "github": GitHub,
   }
 
   __harnesses__ = {
-      "solc": Solc,
+    "solc": Solc,
   }
 
   def __init__(self):
@@ -49,34 +52,38 @@ class Solidity(Language):
     """ Instantiate testbed(s) by name """
     with Session() as s:
       return [
-          TestbedProxy(testbed)
-          for testbed in Testbed.from_str(string, session=s)
+        TestbedProxy(testbed) for testbed in Testbed.from_str(string, session=s)
       ]
 
-  def run_testcases(self, testbeds: List[str],
-                    pairs: List[Tuple[Generator, Harness]]) -> None:
+  def run_testcases(
+    self, testbeds: List[str], pairs: List[Tuple[Generator, Harness]]
+  ) -> None:
     with Session() as s:
       for generator, harness in pairs:
         for testbed_name in testbeds:
           testbed = Testbed.from_str(testbed_name, session=s)[0]
           self._run_testcases(testbed, generator, harness, s)
 
-  def describe_testbeds(self, available_only: bool = False,
-                        file=sys.stdout) -> None:
+  def describe_testbeds(
+    self, available_only: bool = False, file=sys.stdout
+  ) -> None:
     with Session() as s:
       if not available_only:
         print(
-            f"The following {self} testbeds are in the data store:", file=file)
+          f"The following {self} testbeds are in the data store:", file=file
+        )
         for harness in sorted(self.harnesses):
           for testbed in sorted(harness.testbeds()):
             print(
-                f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
-                file=file)
+              f"    {harness} {testbed} {testbed.platform} on {testbed.host}",
+              file=file,
+            )
         print(file=file)
 
       print(
-          f"The following {self} testbeds are available on this machine:",
-          file=file)
+        f"The following {self} testbeds are available on this machine:",
+        file=file,
+      )
       for harness in sorted(self.harnesses):
         for testbed in sorted(harness.available_testbeds()):
           print(f"    {harness} {testbed} {testbed.platform}", file=file)
@@ -91,10 +98,11 @@ class Solidity(Language):
             if num_results:
               word_num = humanize.Commas(num_results)
               print(
-                  f"There are {Colors.BOLD}{word_num}{Colors.END} "
-                  f"{generator}:{harness} "
-                  f"results on {testbed}.",
-                  file=file)
+                f"There are {Colors.BOLD}{word_num}{Colors.END} "
+                f"{generator}:{harness} "
+                f"results on {testbed}.",
+                file=file,
+              )
 
   def difftest(self) -> None:
     difftest.difftest()

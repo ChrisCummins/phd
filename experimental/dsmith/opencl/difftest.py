@@ -18,7 +18,6 @@
 """
 Differential test OpenCL results.
 """
-
 from experimental.dsmith.opencl.db import *
 
 
@@ -42,8 +41,9 @@ def create_results_metas(s: session_t):
     """ worker thread to run testcases asynchronously """
 
     def __init__(
-        self,
-        testbeds_harnesses: List[Tuple['Testbed.id_t', 'Harnesses.column_t']]):
+      self,
+      testbeds_harnesses: List[Tuple["Testbed.id_t", "Harnesses.column_t"]],
+    ):
       self.ndone = 0
       self.testbeds_harnesses = testbeds_harnesses
       super(Worker, self).__init__()
@@ -56,7 +56,8 @@ def create_results_metas(s: session_t):
           testbed = s.query(Testbed).filter(Testbed.id == testbed_id).scalar()
 
           # FIXME: @cumtime variable is not supported by SQLite.
-          s.execute(f"""
+          s.execute(
+            f"""
 INSERT INTO {ResultMeta.__tablename__} (id, total_time, cumtime)
 SELECT  results.id,
         results.runtime + programs.generation_time AS total_time,
@@ -67,7 +68,8 @@ INNER JOIN {Program.__tablename__} programs ON testcases.program_id = programs.i
 JOIN (SELECT @cumtime := 0) r
 WHERE results.testbed_id = {testbed.id}
 AND testcases.harness = {harness}
-ORDER BY programs.date, testcases.threads_id""")
+ORDER BY programs.date, testcases.threads_id"""
+          )
           s.commit()
 
   # break early if we can
@@ -78,14 +80,17 @@ ORDER BY programs.date, testcases.threads_id""")
 
   print("creating results metas ...")
   s.execute(f"DELETE FROM {ResultMeta.__tablename__}")
-  testbeds_harnesses = s.query(Result.testbed_id, Testcase.harness) \
-    .join(Testcase) \
-    .group_by(Result.testbed_id, Testcase.harness) \
-    .order_by(Testcase.harness, Result.testbed_id) \
+  testbeds_harnesses = (
+    s.query(Result.testbed_id, Testcase.harness)
+    .join(Testcase)
+    .group_by(Result.testbed_id, Testcase.harness)
+    .order_by(Testcase.harness, Result.testbed_id)
     .all()
+  )
 
   bar = progressbar.ProgressBar(
-      initial_value=0, max_value=len(testbeds_harnesses), redirect_stdout=True)
+    initial_value=0, max_value=len(testbeds_harnesses), redirect_stdout=True
+  )
   worker = Worker(testbeds_harnesses)
   worker.start()
   while worker.is_alive():
@@ -108,8 +113,11 @@ def create_majorities(s: session_t) -> None:
   # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
   # majority outcome, we order results by outcome number, so that '1' (build
   # failure) will over-rule '6' (pass).
-  insert_ignore = "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
-  s.execute(f"""
+  insert_ignore = (
+    "INSERT IGNORE" if dsmith.DB_ENGINE == "mysql" else "INSERT OR IGNORE"
+  )
+  s.execute(
+    f"""
 {insert_ignore} INTO {Majority.__tablename__}
     (id, num_results, maj_outcome, outcome_majsize, maj_stdout_id, stdout_majsize)
 SELECT  result_counts.testcase_id,
@@ -161,7 +169,8 @@ JOIN (
     ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.stdout_count
 ) stdout_majs ON outcome_majs.testcase_id = stdout_majs.testcase_id
 ORDER BY outcome_majs.maj_outcome DESC
-""")
+"""
+  )
   s.commit()
 
 
@@ -174,21 +183,26 @@ def create_classifications(s: session_t) -> None:
   min_majsize = 7
 
   print("creating {bc,bto} classifications ...")
-  s.execute(f"""
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BC}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BC}
-""")
-  s.execute(f"""
+"""
+  )
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.BTO}
 FROM {Result.__tablename__} results
 WHERE outcome = {Outcomes.BTO}
-""")
+"""
+  )
 
   print("determining anomalous build-failures ...")
-  s.execute(f"""
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.ABF}
 FROM {Result.__tablename__} results
@@ -196,10 +210,12 @@ INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majoriti
 WHERE outcome = {Outcomes.BF}
 AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
-""")
+"""
+  )
 
   print("determining anomalous runtime crashes ...")
-  s.execute(f"""
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT {Result.__tablename__}.id, {Classifications.ARC}
 FROM {Result.__tablename__}
@@ -207,10 +223,12 @@ INNER JOIN {Majority.__tablename__} majorities ON results.testcase_id = majoriti
 WHERE outcome = {Outcomes.RC}
 AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {Outcomes.PASS}
-""")
+"""
+  )
 
   print("determining anomylous wrong output classifications ...")
-  s.execute(f"""
+  s.execute(
+    f"""
 INSERT INTO {Classification.__tablename__}
 SELECT results.id, {Classifications.AWO}
 FROM {Result.__tablename__} results
@@ -220,20 +238,20 @@ AND maj_outcome = {Outcomes.PASS}
 AND outcome_majsize >= {min_majsize}
 AND stdout_majsize >= CEILING(2 * outcome_majsize / 3)
 AND stdout_id <> maj_stdout_id
-""")
+"""
+  )
   s.commit()
 
 
 def prune_awo_classifications(s: session_t) -> None:
-
   def testcases_to_verify(session: session_t) -> query_t:
-    q = session.query(Result.testcase_id) \
-      .join(Classification) \
-      .filter(Classification.classification == Classifications.AWO) \
+    q = (
+      session.query(Result.testcase_id)
+      .join(Classification)
+      .filter(Classification.classification == Classifications.AWO)
       .distinct()
-    return session.query(Testcase) \
-      .filter(Testcase.id.in_(q)) \
-      .distinct()
+    )
+    return session.query(Testcase).filter(Testcase.id.in_(q)).distinct()
 
   class Worker(threading.Thread):
     """ worker thread to run testcases asynchronously """
@@ -254,7 +272,8 @@ def prune_awo_classifications(s: session_t) -> None:
   print("Verifying awo-classified testcases ...")
   ntodo = testcases_to_verify(s).count()
   bar = progressbar.ProgressBar(
-      initial_value=0, max_value=ntodo, redirect_stdout=True)
+    initial_value=0, max_value=ntodo, redirect_stdout=True
+  )
   worker = Worker()
   worker.start()
   while worker.is_alive():
@@ -268,23 +287,31 @@ def verify_opencl_version(s: session_t, testcase: Testcase) -> None:
   """
   opencl_2_0_platforms = s.query(Platform.id).filter(Platform.opencl == "2.0")
 
-  passes_2_0 = s.query(sql.sql.func.count(Result.id)) \
-    .join(Testbed) \
-    .filter(Result.testcase_id == testcase.id,
-            Testbed.platform_id.in_(opencl_2_0_platforms),
-            Result.outcome != Outcomes.BF) \
+  passes_2_0 = (
+    s.query(sql.sql.func.count(Result.id))
+    .join(Testbed)
+    .filter(
+      Result.testcase_id == testcase.id,
+      Testbed.platform_id.in_(opencl_2_0_platforms),
+      Result.outcome != Outcomes.BF,
+    )
     .scalar()
+  )
 
   if not passes_2_0:
     # If it didn't build on OpenCL 2.0, we're done.
     return
 
-  passes_1_2 = s.query(sql.sql.func.count(Result.id)) \
-    .join(Testbed) \
-    .filter(Result.testcase_id == testcase.id,
-            ~Testbed.platform_id.in_(opencl_2_0_platforms),
-            Result.outcome == Outcomes.PASS) \
+  passes_1_2 = (
+    s.query(sql.sql.func.count(Result.id))
+    .join(Testbed)
+    .filter(
+      Result.testcase_id == testcase.id,
+      ~Testbed.platform_id.in_(opencl_2_0_platforms),
+      Result.outcome == Outcomes.PASS,
+    )
     .scalar()
+  )
 
   if passes_1_2:
     # If it *did* build on OpenCL 1.2, we're done.
@@ -294,26 +321,30 @@ def verify_opencl_version(s: session_t, testcase: Testcase) -> None:
 
 
 def prune_abf_classifications(s: session_t) -> None:
-
   def prune_stderr_like(like):
-    q = s.query(Result.id) \
-      .join(Classification) \
-      .join(Stderr) \
-      .filter(Classification.classification == Classifications.ABF,
-              Stderr.stderr.like(f"%{like}%"))
+    q = (
+      s.query(Result.id)
+      .join(Classification)
+      .join(Stderr)
+      .filter(
+        Classification.classification == Classifications.ABF,
+        Stderr.stderr.like(f"%{like}%"),
+      )
+    )
     ids_to_delete = [x[0] for x in q]
 
     n = len(ids_to_delete)
     if n:
       print(f'retracting {n} bf-classified results with msg "{like[:40]}"')
-      s.query(Classification) \
-        .filter(Classification.id.in_(ids_to_delete)) \
-        .delete(synchronize_session=False)
+      s.query(Classification).filter(
+        Classification.id.in_(ids_to_delete)
+      ).delete(synchronize_session=False)
 
   prune_stderr_like("use of type 'double' requires cl_khr_fp64 extension")
   prune_stderr_like("implicit declaration of function")
   prune_stderr_like(
-      "function cannot have argument whose type is, or contains, type size_t")
+    "function cannot have argument whose type is, or contains, type size_t"
+  )
   prune_stderr_like("unresolved extern function")
   prune_stderr_like("error: cannot increment value of type%")
   prune_stderr_like("subscripted access is not allowed for OpenCL vectors")
@@ -323,16 +354,18 @@ def prune_abf_classifications(s: session_t) -> None:
   prune_stderr_like("Could not find a definition ")
 
   def testcases_to_verify(session: session_t) -> query_t:
-    q = session.query(Result.testcase_id) \
-      .join(Classification) \
-      .join(Testbed) \
-      .join(Platform) \
-      .filter(Classification.classification == Classifications.ABF,
-              Platform.opencl == "1.2") \
+    q = (
+      session.query(Result.testcase_id)
+      .join(Classification)
+      .join(Testbed)
+      .join(Platform)
+      .filter(
+        Classification.classification == Classifications.ABF,
+        Platform.opencl == "1.2",
+      )
       .distinct()
-    return session.query(Testcase) \
-      .filter(Testcase.id.in_(q)) \
-      .distinct()
+    )
+    return session.query(Testcase).filter(Testcase.id.in_(q)).distinct()
 
   class Worker(threading.Thread):
     """ worker thread to run testcases asynchronously """
@@ -353,7 +386,8 @@ def prune_abf_classifications(s: session_t) -> None:
   print("Verifying abf-classified testcases ...")
   ntodo = testcases_to_verify(s).count()
   bar = progressbar.ProgressBar(
-      initial_value=0, max_value=ntodo, redirect_stdout=True)
+    initial_value=0, max_value=ntodo, redirect_stdout=True
+  )
   worker = Worker()
   worker.start()
   while worker.is_alive():
@@ -362,32 +396,35 @@ def prune_abf_classifications(s: session_t) -> None:
 
 
 def prune_arc_classifications(s: session_t) -> None:
-
   def prune_stderr_like(like):
-    q = s.query(Result.id) \
-      .join(Classification) \
-      .join(Stderr) \
-      .filter(Classification.classification == Classifications.ARC,
-              Stderr.stderr.like(f"%{like}%"))
+    q = (
+      s.query(Result.id)
+      .join(Classification)
+      .join(Stderr)
+      .filter(
+        Classification.classification == Classifications.ARC,
+        Stderr.stderr.like(f"%{like}%"),
+      )
+    )
     ids_to_delete = [x[0] for x in q]
 
     n = len(ids_to_delete)
     if n:
       print(f"retracting {n} arc classified results with msg {like[:30]}")
-      s.query(Classification) \
-        .filter(Classification.id.in_(ids_to_delete)) \
-        .delete(synchronize_session=False)
+      s.query(Classification).filter(
+        Classification.id.in_(ids_to_delete)
+      ).delete(synchronize_session=False)
 
   prune_stderr_like("clFinish CL_INVALID_COMMAND_QUEUE")
 
   def testcases_to_verify(session: session_t) -> query_t:
-    q = session.query(Result.testcase_id) \
-      .join(Classification) \
-      .filter(Classification.classification == Classifications.ARC) \
+    q = (
+      session.query(Result.testcase_id)
+      .join(Classification)
+      .filter(Classification.classification == Classifications.ARC)
       .distinct()
-    return session.query(Testcase) \
-      .filter(Testcase.id.in_(q)) \
-      .distinct()
+    )
+    return session.query(Testcase).filter(Testcase.id.in_(q)).distinct()
 
   class Worker(threading.Thread):
     """ worker thread to run testcases asynchronously """
@@ -409,7 +446,8 @@ def prune_arc_classifications(s: session_t) -> None:
   print("Verifying arc-classified testcases ...")
   ntodo = testcases_to_verify(s).count()
   bar = progressbar.ProgressBar(
-      initial_value=0, max_value=ntodo, redirect_stdout=True)
+    initial_value=0, max_value=ntodo, redirect_stdout=True
+  )
   worker = Worker()
   worker.start()
   while worker.is_alive():

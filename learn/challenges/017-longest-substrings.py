@@ -22,7 +22,8 @@ def approach1(str1: str, str2: str) -> str:
 
       buf = []
       for left, right in zip(
-          range(left_start, len(str1)), range(right_start, len(str2))):
+        range(left_start, len(str1)), range(right_start, len(str2))
+      ):
         if str1[left] == str2[right]:
           buf.append(str1[left])
         else:
@@ -33,7 +34,7 @@ def approach1(str1: str, str2: str) -> str:
 
       right_start += 1
 
-  return ''.join(best)
+  return "".join(best)
 
 
 def approach2(str1: str, str2: str) -> str:
@@ -75,26 +76,26 @@ def approach2(str1: str, str2: str) -> str:
     else:
       raise Exception
 
-  return ''.join(result[::-1])
+  return "".join(result[::-1])
 
 
 def test_longest_substring(longest_substring) -> None:
   examples = [
-      (('', ''), ''),
-      (('a', 'a'), 'a'),
-      (('abcdefghijk', 'dabc2'), 'abc'),
-      (('abc', 'abc'), 'abc'),
-      (('abc', 'ab'), 'ab'),
+    (("", ""), ""),
+    (("a", "a"), "a"),
+    (("abcdefghijk", "dabc2"), "abc"),
+    (("abc", "abc"), "abc"),
+    (("abc", "ab"), "ab"),
   ]
 
   try:
-    longest_substring('abc', None)
+    longest_substring("abc", None)
     assert False
   except TypeError:
     pass
 
   try:
-    longest_substring(4.3, 'a')
+    longest_substring(4.3, "a")
     assert False
   except TypeError:
     pass

@@ -18,8 +18,9 @@ def migrate_0_to_1(old):
   """
 
   def get_source(checksum):
-    query = old.execute("SELECT source FROM kernels WHERE checksum = ?",
-                        (checksum,))
+    query = old.execute(
+      "SELECT source FROM kernels WHERE checksum = ?", (checksum,)
+    )
     return query.fetchone()[0]
 
   def get_device_attr(device_id, name, count):
@@ -62,24 +63,33 @@ def migrate_0_to_1(old):
     device_attr = get_device_attr(device_id, dev_name, dev_count)
 
     # Add database entries.
-    tmp.execute("INSERT OR IGNORE INTO kernels VALUES (?,?,?,?,?,?,?)",
-                (kernel_id, north, south, east, west, max_wg_size, user_source))
+    tmp.execute(
+      "INSERT OR IGNORE INTO kernels VALUES (?,?,?,?,?,?,?)",
+      (kernel_id, north, south, east, west, max_wg_size, user_source),
+    )
 
     placeholders = ",".join(["?"] * len(device_attr))
-    tmp.execute("INSERT OR IGNORE INTO devices VALUES (" + placeholders + ")",
-                device_attr)
+    tmp.execute(
+      "INSERT OR IGNORE INTO devices VALUES (" + placeholders + ")", device_attr
+    )
 
-    tmp.execute("INSERT OR IGNORE INTO data VALUES (?,?,?,?,?)",
-                (data_id, data_width, data_height, type_in, type_out))
+    tmp.execute(
+      "INSERT OR IGNORE INTO data VALUES (?,?,?,?,?)",
+      (data_id, data_width, data_height, type_in, type_out),
+    )
 
-    tmp.execute("INSERT OR IGNORE INTO params VALUES (?,?,?)",
-                (params_id, wg_c, wg_r))
+    tmp.execute(
+      "INSERT OR IGNORE INTO params VALUES (?,?,?)", (params_id, wg_c, wg_r)
+    )
 
-    tmp.execute("INSERT OR IGNORE INTO scenarios VALUES (?,?,?,?,?)",
-                (scenario_id, host, device_id, kernel_id, data_id))
+    tmp.execute(
+      "INSERT OR IGNORE INTO scenarios VALUES (?,?,?,?,?)",
+      (scenario_id, host, device_id, kernel_id, data_id),
+    )
 
-    tmp.execute("INSERT INTO runtimes VALUES (?,?,?)",
-                (scenario_id, params_id, runtime))
+    tmp.execute(
+      "INSERT INTO runtimes VALUES (?,?,?)", (scenario_id, params_id, runtime)
+    )
 
   # Create temporary database
   tmp = _db.Database("/tmp/omnitune.skelcl.migration.db")
@@ -104,71 +114,116 @@ def migrate_0_to_1(old):
 
   # Create table: kernels
   tmp.create_table(
-      "kernels",
-      (("id", "text primary key"), ("north", "integer"), ("south", "integer"),
-       ("east", "integer"), ("west", "integer"), ("max_wg_size", "integer"),
-       ("source", "text")))
+    "kernels",
+    (
+      ("id", "text primary key"),
+      ("north", "integer"),
+      ("south", "integer"),
+      ("east", "integer"),
+      ("west", "integer"),
+      ("max_wg_size", "integer"),
+      ("source", "text"),
+    ),
+  )
 
   # Create table: devices
   tmp.create_table(
-      "devices",
-      (("id", "text primary key"), ("name", "text"), ("count", "integer"),
-       ("address_bits", "integer"), ("double_fp_config", "integer"),
-       ("endian_little", "integer"), ("execution_capabilities", "integer"),
-       ("extensions", "text"), ("global_mem_cache_size", "integer"),
-       ("global_mem_cache_type", "integer"),
-       ("global_mem_cacheline_size", "integer"), ("global_mem_size", "integer"),
-       ("host_unified_memory", "integer"), ("image2d_max_height", "integer"),
-       ("image2d_max_width", "integer"), ("image3d_max_depth", "integer"),
-       ("image3d_max_height", "integer"), ("image3d_max_width", "integer"),
-       ("image_support", "integer"), ("local_mem_size", "integer"),
-       ("local_mem_type", "integer"), ("max_clock_frequency", "integer"),
-       ("max_compute_units", "integer"), ("max_constant_args", "integer"),
-       ("max_constant_buffer_size", "integer"),
-       ("max_mem_alloc_size", "integer"), ("max_parameter_size", "integer"),
-       ("max_read_image_args", "integer"), ("max_samplers", "integer"),
-       ("max_work_group_size", "integer"),
-       ("max_work_item_dimensions", "integer"), ("max_work_item_sizes_0",
-                                                 "integer"),
-       ("max_work_item_sizes_1", "integer"), ("max_work_item_sizes_2",
-                                              "integer"),
-       ("max_write_image_args", "integer"), ("mem_base_addr_align", "integer"),
-       ("min_data_type_align_size",
-        "integer"), ("native_vector_width_char",
-                     "integer"), ("native_vector_width_double", "integer"),
-       ("native_vector_width_float",
-        "integer"), ("native_vector_width_half",
-                     "integer"), ("native_vector_width_int", "integer"),
-       ("native_vector_width_long",
-        "integer"), ("native_vector_width_short",
-                     "integer"), ("preferred_vector_width_char", "integer"),
-       ("preferred_vector_width_double",
-        "integer"), ("preferred_vector_width_float",
-                     "integer"), ("preferred_vector_width_half", "integer"),
-       ("preferred_vector_width_int",
-        "integer"), ("preferred_vector_width_long",
-                     "integer"), ("preferred_vector_width_short", "integer"),
-       ("queue_properties", "integer"), ("single_fp_config", "integer"),
-       ("type", "integer"), ("vendor", "text"), ("vendor_id",
-                                                 "text"), ("version", "text")))
+    "devices",
+    (
+      ("id", "text primary key"),
+      ("name", "text"),
+      ("count", "integer"),
+      ("address_bits", "integer"),
+      ("double_fp_config", "integer"),
+      ("endian_little", "integer"),
+      ("execution_capabilities", "integer"),
+      ("extensions", "text"),
+      ("global_mem_cache_size", "integer"),
+      ("global_mem_cache_type", "integer"),
+      ("global_mem_cacheline_size", "integer"),
+      ("global_mem_size", "integer"),
+      ("host_unified_memory", "integer"),
+      ("image2d_max_height", "integer"),
+      ("image2d_max_width", "integer"),
+      ("image3d_max_depth", "integer"),
+      ("image3d_max_height", "integer"),
+      ("image3d_max_width", "integer"),
+      ("image_support", "integer"),
+      ("local_mem_size", "integer"),
+      ("local_mem_type", "integer"),
+      ("max_clock_frequency", "integer"),
+      ("max_compute_units", "integer"),
+      ("max_constant_args", "integer"),
+      ("max_constant_buffer_size", "integer"),
+      ("max_mem_alloc_size", "integer"),
+      ("max_parameter_size", "integer"),
+      ("max_read_image_args", "integer"),
+      ("max_samplers", "integer"),
+      ("max_work_group_size", "integer"),
+      ("max_work_item_dimensions", "integer"),
+      ("max_work_item_sizes_0", "integer"),
+      ("max_work_item_sizes_1", "integer"),
+      ("max_work_item_sizes_2", "integer"),
+      ("max_write_image_args", "integer"),
+      ("mem_base_addr_align", "integer"),
+      ("min_data_type_align_size", "integer"),
+      ("native_vector_width_char", "integer"),
+      ("native_vector_width_double", "integer"),
+      ("native_vector_width_float", "integer"),
+      ("native_vector_width_half", "integer"),
+      ("native_vector_width_int", "integer"),
+      ("native_vector_width_long", "integer"),
+      ("native_vector_width_short", "integer"),
+      ("preferred_vector_width_char", "integer"),
+      ("preferred_vector_width_double", "integer"),
+      ("preferred_vector_width_float", "integer"),
+      ("preferred_vector_width_half", "integer"),
+      ("preferred_vector_width_int", "integer"),
+      ("preferred_vector_width_long", "integer"),
+      ("preferred_vector_width_short", "integer"),
+      ("queue_properties", "integer"),
+      ("single_fp_config", "integer"),
+      ("type", "integer"),
+      ("vendor", "text"),
+      ("vendor_id", "text"),
+      ("version", "text"),
+    ),
+  )
 
   # Create table: data
-  tmp.create_table("data",
-                   (("id", "text primary key"), ("width", "integer"),
-                    ("height", "integer"), ("tin", "text"), ("tout", "text")))
+  tmp.create_table(
+    "data",
+    (
+      ("id", "text primary key"),
+      ("width", "integer"),
+      ("height", "integer"),
+      ("tin", "text"),
+      ("tout", "text"),
+    ),
+  )
 
   # Create table: params
-  tmp.create_table("params", (("id", "text primary key"), ("wg_c", "integer"),
-                              ("wg_r", "integer")))
+  tmp.create_table(
+    "params",
+    (("id", "text primary key"), ("wg_c", "integer"), ("wg_r", "integer")),
+  )
 
   # Create table: scenarios
-  tmp.create_table("scenarios",
-                   (("id", "text primary key"), ("host", "text"),
-                    ("device", "text"), ("kernel", "text"), ("data", "text")))
+  tmp.create_table(
+    "scenarios",
+    (
+      ("id", "text primary key"),
+      ("host", "text"),
+      ("device", "text"),
+      ("kernel", "text"),
+      ("data", "text"),
+    ),
+  )
 
   # Create table: runtimes
-  tmp.create_table("runtimes", (("scenario", "text"), ("params", "text"),
-                                ("runtime", "real")))
+  tmp.create_table(
+    "runtimes", (("scenario", "text"), ("params", "text"), ("runtime", "real"))
+  )
 
   i = 0
   for row in old.execute("SELECT * from runtimes"):
@@ -217,18 +272,31 @@ def migrate_1_to_2(old):
   tmp.execute("INSERT INTO version VALUES (2)")
 
   # Rename table "data" to "datasets"
-  tmp.create_table("datasets",
-                   (("id", "text primary key"), ("width", "integer"),
-                    ("height", "integer"), ("tin", "text"), ("tout", "text")))
+  tmp.create_table(
+    "datasets",
+    (
+      ("id", "text primary key"),
+      ("width", "integer"),
+      ("height", "integer"),
+      ("tin", "text"),
+      ("tout", "text"),
+    ),
+  )
   tmp.execute("INSERT INTO datasets SELECT * FROM data")
   tmp.drop_table("data")
 
   # Rename column "scenarios.data" to "scenarios.dataset"
   tmp.execute("ALTER TABLE scenarios RENAME TO old_scenarios")
   tmp.create_table(
-      "scenarios",
-      (("id", "text primary key"), ("host", "text"), ("device", "text"),
-       ("kernel", "text"), ("dataset", "text")))
+    "scenarios",
+    (
+      ("id", "text primary key"),
+      ("host", "text"),
+      ("device", "text"),
+      ("kernel", "text"),
+      ("dataset", "text"),
+    ),
+  )
   tmp.execute("INSERT INTO scenarios SELECT * FROM old_scenarios")
   tmp.drop_table("old_scenarios")
 
@@ -257,15 +325,17 @@ def migrate_2_to_3(old):
 
   def _old_kernel2new(old_id):
     kernel = old.execute(
-        "SELECT north,south,east,west,max_wg_size,source "
-        "FROM kernels WHERE id=?", (old_id,)).fetchone()
+      "SELECT north,south,east,west,max_wg_size,source "
+      "FROM kernels WHERE id=?",
+      (old_id,),
+    ).fetchone()
     if kernel:
       return tmp.kernel_id(*kernel)
 
   def _old_scenario2new(old_id):
     device, old_kernel, dataset = old.execute(
-        "SELECT device,kernel,dataset "
-        "FROM scenarios WHERE id=?", (old_id,)).fetchone()
+      "SELECT device,kernel,dataset " "FROM scenarios WHERE id=?", (old_id,)
+    ).fetchone()
     kernel = _old_kernel2new(old_kernel)
     return tmp.scenario_id(device, kernel, dataset)
 
@@ -323,8 +393,8 @@ def migrate_2_to_3(old):
     if kernel:
       row = (kernel, synthetic, name)
       tmp.execute(
-          "INSERT OR IGNORE INTO kernel_names VALUES " + placeholders(*row),
-          row)
+        "INSERT OR IGNORE INTO kernel_names VALUES " + placeholders(*row), row
+      )
   tmp.commit()
 
   # Populate scenarios table.
@@ -334,8 +404,9 @@ def migrate_2_to_3(old):
     new_id = hash_scenario(device, kernel, dataset)
 
     row = (new_id, device, kernel, dataset)
-    tmp.execute("INSERT OR IGNORE INTO scenarios VALUES " + placeholders(*row),
-                row)
+    tmp.execute(
+      "INSERT OR IGNORE INTO scenarios VALUES " + placeholders(*row), row
+    )
   tmp.commit()
 
   # Populate params table.
@@ -343,22 +414,24 @@ def migrate_2_to_3(old):
   tmp.commit()
 
   scenario_replacements = {
-      row[0]: _old_scenario2new(row[0])
-      for row in old.execute("SELECT * FROM scenarios")
+    row[0]: _old_scenario2new(row[0])
+    for row in old.execute("SELECT * FROM scenarios")
   }
 
   tmp.execute("INSERT INTO runtimes SELECT * from rhs.runtimes")
   for old_id, new_id in scenario_replacements.iteritems():
     io.info("Runtimes", old_id, "->", new_id)
-    tmp.execute("UPDATE runtimes SET scenario=? WHERE scenario=?",
-                (new_id, old_id))
+    tmp.execute(
+      "UPDATE runtimes SET scenario=? WHERE scenario=?", (new_id, old_id)
+    )
   tmp.commit()
 
   # Sanity checks
   bad = False
   for row in tmp.execute("SELECT DISTINCT scenario FROM runtimes"):
-    count = tmp.execute("SELECT Count(*) FROM scenarios WHERE id=?",
-                        (row[0],)).fetchone()[0]
+    count = tmp.execute(
+      "SELECT Count(*) FROM scenarios WHERE id=?", (row[0],)
+    ).fetchone()[0]
     if count != 1:
       io.error("Bad scenario count:", row[0], count)
       bad = True
@@ -397,9 +470,18 @@ def migrate_3_to_4(old):
   fs.cp(old.path, backup_path)
 
   tables = [
-      "kernels", "kernel_lookup", "kernel_names", "devices", "device_lookup",
-      "datasets", "dataset_lookup", "scenarios", "params", "runtimes",
-      "runtime_stats", "oracle_params"
+    "kernels",
+    "kernel_lookup",
+    "kernel_names",
+    "devices",
+    "device_lookup",
+    "datasets",
+    "dataset_lookup",
+    "scenarios",
+    "params",
+    "runtimes",
+    "runtime_stats",
+    "oracle_params",
   ]
 
   for table in tables:
@@ -454,7 +536,8 @@ def migrate_4_to_5(db):
   db.execute("DELETE FROM version")
   db.execute("INSERT INTO version VALUES (5)")
 
-  db.execute("""
+  db.execute(
+    """
 -- Parameter stats table
 CREATE TABLE IF NOT EXISTS param_stats (
     params                          VARCHAR(255), -- Key for params
@@ -463,15 +546,20 @@ CREATE TABLE IF NOT EXISTS param_stats (
     performance                     REAL,         -- Geometric mean of performance relative to the oracle for all scenarios for which param was legal, 0 < performance <= 1
     PRIMARY KEY (params)
 )
-""")
+"""
+  )
 
   db.populate_param_stats_table()
 
   # Sanity checks
   bad = False
   if db.num_rows("param_stats") != len(db.params):
-    io.error("Bad row count in params table! Expected", len(db.params),
-             "Observed:", db.num_rows("param_stats"))
+    io.error(
+      "Bad row count in params table! Expected",
+      len(db.params),
+      "Observed:",
+      db.num_rows("param_stats"),
+    )
     bad = True
 
   if bad:
@@ -503,7 +591,8 @@ def migrate_5_to_6(db):
   db.execute("DELETE FROM version")
   db.execute("INSERT INTO version VALUES (6)")
 
-  db.execute("""
+  db.execute(
+    """
 CREATE TABLE IF NOT EXISTS scenario_stats (
     scenario                        CHAR(40),     -- Key for scenarios
     num_params                      INTEGER,      -- The number of parameters in W_legal for scenario
@@ -514,15 +603,20 @@ CREATE TABLE IF NOT EXISTS scenario_stats (
     mean_runtime                    REAL,         -- The mean runtime of all parameters
     PRIMARY KEY (scenario)
 )
-""")
+"""
+  )
 
   db.populate_scenario_stats_table()
 
   # Sanity checks
   bad = False
   if db.num_rows("scenario_stats") != len(db.scenarios):
-    io.error("Bad row count in scenario_stats table! Expected",
-             len(db.scenarios), "Observed:", db.num_rows("scenario_stats"))
+    io.error(
+      "Bad row count in scenario_stats table! Expected",
+      len(db.scenarios),
+      "Observed:",
+      db.num_rows("scenario_stats"),
+    )
     bad = True
 
   if bad:

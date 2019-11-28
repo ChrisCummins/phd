@@ -14,7 +14,6 @@ TEST(Lm, Vector) {
   ASSERT_TRUE(v2 == v1);
 }
 
-
 TEST(Lm, Matrix) {
   lm::Matrix<> m{10, 5};
   lm::Matrix<> m1{{1, 2, 3}, {4, 5, 6}};
@@ -22,11 +21,11 @@ TEST(Lm, Matrix) {
   try {
     lm::Matrix<> m2{{1, 2, 3}, {4}};
     FAIL();
-  } catch(const std::runtime_error&) {}
+  } catch (const std::runtime_error &) {
+  }
 
   std::cout << m1;
 }
-
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

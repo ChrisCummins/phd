@@ -25,7 +25,8 @@ FLAGS = app.FLAGS
 
 class MockNamedUser(object):
   """Mock class for github.NamedUser.NamedUser."""
-  login = 'login'
+
+  login = "login"
 
 
 class MockRepository(object):
@@ -33,11 +34,11 @@ class MockRepository(object):
 
   def __init__(self):
     self.owner = MockNamedUser()
-    self.name = 'name'
+    self.name = "name"
     self.watchers_count = 1
     self.forks_count = 2
     self.stargazers_count = 3
-    self.clone_url = 'url'
+    self.clone_url = "url"
 
 
 def test_GetRepositoryMetadata():
@@ -62,8 +63,8 @@ def test_GetRepositoryMetadata_timestamp():
 def test_main_unrecognized_arguments():
   """Test that main() raises an error when passed arguments."""
   with pytest.raises(app.UsageError):
-    scraper.main(['./scraper', '--unrecognized_argument'])
+    scraper.main(["./scraper", "--unrecognized_argument"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

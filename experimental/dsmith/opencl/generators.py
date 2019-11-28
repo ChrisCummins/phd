@@ -53,31 +53,40 @@ class OpenCLGenerator(Generator):
   def num_programs(self, session: session_t = None) -> int:
     """ return the number of generated programs in the database """
     with ReuseSession(session) as s:
-      return s.query(func.count(Program.id)) \
-        .filter(Program.generator == self.id) \
+      return (
+        s.query(func.count(Program.id))
+        .filter(Program.generator == self.id)
         .scalar()
+      )
 
   def sloc_total(self, session: session_t = None) -> int:
     """ return the total linecount of generated programs """
     with ReuseSession(session) as s:
-      return s.query(func.sum(Program.linecount)) \
-        .filter(Program.generator == self.id) \
+      return (
+        s.query(func.sum(Program.linecount))
+        .filter(Program.generator == self.id)
         .scalar()
+      )
 
   def generation_time(self, session: session_t = None) -> float:
     """ return the total generation time of all programs """
     with ReuseSession(session) as s:
-      return s.query(func.sum(Program.generation_time)) \
-               .filter(Program.generator == self.id) \
-               .scalar() or 0
+      return (
+        s.query(func.sum(Program.generation_time))
+        .filter(Program.generator == self.id)
+        .scalar()
+        or 0
+      )
 
   def num_testcases(self, session: session_t = None) -> int:
     """ return the total number of testcases """
     with ReuseSession(session) as s:
-      return s.query(func.count(Testcase.id)) \
-        .join(Program) \
-        .filter(Program.generator == self.id) \
+      return (
+        s.query(func.count(Testcase.id))
+        .join(Program)
+        .filter(Program.generator == self.id)
         .scalar()
+      )
 
   def generate(self, n: int = math.inf, up_to: int = math.inf) -> None:
     """ generate 'n' new programs 'up_to' this many exist in db """
@@ -97,25 +106,30 @@ class OpenCLGenerator(Generator):
 
       # Exit early if possible:
       if num_progs >= max_value:
-        print(f"There are already {Colors.BOLD}{num_progs}{Colors.END} "
-              "programs in the database. Nothing to be done.")
+        print(
+          f"There are already {Colors.BOLD}{num_progs}{Colors.END} "
+          "programs in the database. Nothing to be done."
+        )
         return
 
       # Print a preamble message:
       num_to_generate = max_value - num_progs
       if num_to_generate < math.inf:
-        estimated_time = (self.generation_time(s) /
-                          max(num_progs, 1)) * num_to_generate
+        estimated_time = (
+          self.generation_time(s) / max(num_progs, 1)
+        ) * num_to_generate
         eta = humanize.Duration(estimated_time)
-        print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
-              "to be generated. Estimated generation time is " +
-              f"{Colors.BOLD}{eta}{Colors.END}.")
+        print(
+          f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
+          "to be generated. Estimated generation time is "
+          + f"{Colors.BOLD}{eta}{Colors.END}."
+        )
       else:
         print(f"Generating programs {Colors.BOLD}forever{Colors.END} ...")
 
-      bar = progressbar.ProgressBar(initial_value=num_progs,
-                                    max_value=bar_max,
-                                    redirect_stdout=True)
+      bar = progressbar.ProgressBar(
+        initial_value=num_progs, max_value=bar_max, redirect_stdout=True
+      )
 
       # The actual generation loop:
       buf = []
@@ -131,8 +145,10 @@ class OpenCLGenerator(Generator):
           num_progs = self.num_programs(s)
           buf = []
       save_proxies(s, buf)
-    print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
-          "{self} programs in the database")
+    print(
+      f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
+      "{self} programs in the database"
+    )
 
   def import_from_dir(self, indir: Path) -> None:
     """ import program sources from a directory """
@@ -142,13 +158,15 @@ class OpenCLGenerator(Generator):
       # Print a preamble message:
       paths = fs.ls(indir, abspaths=True)
       num_to_import = len(paths)
-      print(f"{Colors.BOLD}{num_to_import}{Colors.END} programs are "
-            "to be imported.")
+      print(
+        f"{Colors.BOLD}{num_to_import}{Colors.END} programs are "
+        "to be imported."
+      )
       bar_max = num_progs + num_to_import
 
-      bar = progressbar.ProgressBar(initial_value=num_progs,
-                                    max_value=bar_max,
-                                    redirect_stdout=True)
+      bar = progressbar.ProgressBar(
+        initial_value=num_progs, max_value=bar_max, redirect_stdout=True
+      )
 
       # The actual import loop:
       buf = []
@@ -164,34 +182,37 @@ class OpenCLGenerator(Generator):
           num_progs = self.num_programs(s)
           buf = []
       save_proxies(s, buf)
-    print(f"All done! Imported {Colors.BOLD}{num_to_import}{Colors.END} "
-          f"programs. You now have {Colors.BOLD}{num_progs}{Colors.END} "
-          "{self} programs in the database")
+    print(
+      f"All done! Imported {Colors.BOLD}{num_to_import}{Colors.END} "
+      f"programs. You now have {Colors.BOLD}{num_progs}{Colors.END} "
+      "{self} programs in the database"
+    )
 
 
 class CLSmith(OpenCLGenerator):
   __name__ = "clsmith"
   id = Generators.CLSMITH
 
-  def generate_one(self,
-                   session: session_t,
-                   attempt: int = 1,
-                   max_attempts: int = 10) -> ProgramProxy:
+  def generate_one(
+    self, session: session_t, attempt: int = 1, max_attempts: int = 10
+  ) -> ProgramProxy:
     """ Generate a single CLSmith program. """
-    with NamedTemporaryFile(prefix='dsmith-clsmith-', suffix='.cl') as tmp:
-      runtime, status, _, stderr = clsmith.clsmith('-o', tmp.name)
+    with NamedTemporaryFile(prefix="dsmith-clsmith-", suffix=".cl") as tmp:
+      runtime, status, _, stderr = clsmith.clsmith("-o", tmp.name)
 
       # A non-zero exit status of clsmith implies that no program was
       # generated. Try again:
       if status:
         if attempt > max_attempts:
           app.Error(stderr)
-          raise OSError(f"Failed to produce {self} program after "
-                        f"{max_attempts} attempts")
+          raise OSError(
+            f"Failed to produce {self} program after "
+            f"{max_attempts} attempts"
+          )
         else:
-          return self.generate_one(session,
-                                   attempt=attempt + 1,
-                                   max_attempts=max_attempts)
+          return self.generate_one(
+            session, attempt=attempt + 1, max_attempts=max_attempts
+          )
 
       src = fs.Read(tmp.name)
 
@@ -216,6 +237,7 @@ class RandChar(OpenCLGenerator):
   This generator produces a uniformly random sequence of ASCII characters, of
   a random length.
   """
+
   __name__ = "randchar"
   id = Generators.RANDCHAR
 
@@ -227,7 +249,7 @@ class RandChar(OpenCLGenerator):
     """ Generate a single program. """
     start_time = time()
     charcount = random.randint(*self.charcount_range)
-    src = ''.join(random.choices(string.printable, k=charcount))
+    src = "".join(random.choices(string.printable, k=charcount))
     runtime = time() - start_time
 
     return ProgramProxy(generator=self.id, generation_time=runtime, src=src)

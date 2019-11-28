@@ -22,9 +22,10 @@ class GraphDatabaseStats(object):
   """
 
   def __init__(
-      self,
-      db: graph_database.Database,
-      filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None):
+    self,
+    db: graph_database.Database,
+    filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None,
+  ):
     self.db = db
     self._filters = filters or []
 
@@ -50,11 +51,11 @@ class GraphDatabaseStats(object):
 
   @property
   def node_embeddings_count(self) -> int:
-    return self._node_embeddings_stats['node_embeddings_count']
+    return self._node_embeddings_stats["node_embeddings_count"]
 
   @property
   def node_embeddings_shapes(self) -> int:
-    return self._node_embeddings_stats['node_embeddings_shapes']
+    return self._node_embeddings_stats["node_embeddings_shapes"]
 
   @property
   def node_embeddings_concatenated_width(self) -> int:
@@ -62,7 +63,7 @@ class GraphDatabaseStats(object):
 
   @property
   def node_embeddings_dtype(self) -> np.dtype:
-    return self._node_embeddings_stats['node_embeddings_dtype']
+    return self._node_embeddings_stats["node_embeddings_dtype"]
 
   @property
   def graph_features_dimensionality(self) -> int:
@@ -88,12 +89,13 @@ class GraphDatabaseStats(object):
       return list(sorted([row.group for row in query]))
 
   def __repr__(self):
-    embeddings_shapes = ', '.join(
-        [f'{shape[0]}x{shape[1]}' for shape in self.node_embeddings_shapes])
+    embeddings_shapes = ", ".join(
+      [f"{shape[0]}x{shape[1]}" for shape in self.node_embeddings_shapes]
+    )
     summaries = [
-        f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
-        humanize.Plural(self.edge_type_count, 'edge type'),
-        f'({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings',
+      f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
+      humanize.Plural(self.edge_type_count, "edge type"),
+      f"({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings",
     ]
     if self.graph_features_dimensionality:
       summaries.append(f"{self.graph_features_dimensionality}-d graph features")
@@ -102,13 +104,13 @@ class GraphDatabaseStats(object):
     if self.graph_labels_dimensionality:
       summaries.append(f"{self.graph_labels_dimensionality}-d graph labels")
     summaries += [
-        f"max {humanize.Plural(self.max_node_count, 'node', commas=True)}",
-        f"max {humanize.Plural(self.max_edge_count, 'edge', commas=True)}",
-        f"{self.max_edge_positions} max edge positions",
+      f"max {humanize.Plural(self.max_node_count, 'node', commas=True)}",
+      f"max {humanize.Plural(self.max_edge_count, 'edge', commas=True)}",
+      f"{self.max_edge_positions} max edge positions",
     ]
     if self.data_flow_max_steps_required:
       summaries.append(
-          f"max {humanize.Plural(self.data_flow_max_steps_required, 'data flow step')}"
+        f"max {humanize.Plural(self.data_flow_max_steps_required, 'data flow step')}"
       )
     return ", ".join(summaries)
 
@@ -117,44 +119,52 @@ class GraphDatabaseStats(object):
     # Fetch all embeddings dtypes and assert that they are of the same type.
     embedding_dtypes = [table.dtype for table in self.db.embeddings_tables]
     if len(set(embedding_dtypes)) != 1:
-      raise ValueError("Embeddings tables must all have the same dtype. "
-                       f"Found {embedding_dtypes}")
+      raise ValueError(
+        "Embeddings tables must all have the same dtype. "
+        f"Found {embedding_dtypes}"
+      )
     embedding_shapes = [table.shape for table in self.db.embeddings_tables]
     return {
-        'node_embeddings_count': len(embedding_shapes),
-        'node_embeddings_shapes': embedding_shapes,
-        'node_embeddings_dtype': embedding_dtypes[0],
+      "node_embeddings_count": len(embedding_shapes),
+      "node_embeddings_shapes": embedding_shapes,
+      "node_embeddings_dtype": embedding_dtypes[0],
     }
 
   @decorators.memoized_property
   def _stats(self):
     """Private helper function to compute whole-table stats."""
     graph_count = 0
-    label = lambda t: ("Computed stats over "
-                       f"{humanize.Commas(graph_count)} instances")
+    label = lambda t: (
+      "Computed stats over " f"{humanize.Commas(graph_count)} instances"
+    )
     with prof.Profile(label), self.db.Session() as s:
       q = s.query(
-          sql.func.count(graph_database.GraphMeta.id).label("graph_count"),
-          sql.func.max(graph_database.GraphMeta.edge_type_count).label(
-              "edge_type_count"),
-          sql.func.max(
-              graph_database.GraphMeta.node_count).label("max_node_count"),
-          sql.func.max(
-              graph_database.GraphMeta.edge_count).label("max_edge_count"),
-          sql.func.max(graph_database.GraphMeta.edge_position_max).label(
-              "max_edge_positions"),
-          sql.func.max(
-              graph_database.GraphMeta.graph_features_dimensionality).label(
-                  "graph_features_dimensionality"),
-          sql.func.max(
-              graph_database.GraphMeta.node_labels_dimensionality).label(
-                  "node_labels_dimensionality"),
-          sql.func.max(
-              graph_database.GraphMeta.graph_labels_dimensionality).label(
-                  "graph_labels_dimensionality"),
-          sql.func.max(
-              graph_database.GraphMeta.data_flow_max_steps_required).label(
-                  "data_flow_max_steps_required"))
+        sql.func.count(graph_database.GraphMeta.id).label("graph_count"),
+        sql.func.max(graph_database.GraphMeta.edge_type_count).label(
+          "edge_type_count"
+        ),
+        sql.func.max(graph_database.GraphMeta.node_count).label(
+          "max_node_count"
+        ),
+        sql.func.max(graph_database.GraphMeta.edge_count).label(
+          "max_edge_count"
+        ),
+        sql.func.max(graph_database.GraphMeta.edge_position_max).label(
+          "max_edge_positions"
+        ),
+        sql.func.max(
+          graph_database.GraphMeta.graph_features_dimensionality
+        ).label("graph_features_dimensionality"),
+        sql.func.max(graph_database.GraphMeta.node_labels_dimensionality).label(
+          "node_labels_dimensionality"
+        ),
+        sql.func.max(
+          graph_database.GraphMeta.graph_labels_dimensionality
+        ).label("graph_labels_dimensionality"),
+        sql.func.max(
+          graph_database.GraphMeta.data_flow_max_steps_required
+        ).label("data_flow_max_steps_required"),
+      )
 
       for filter_cb in self._filters:
         q = q.filter(filter_cb())
@@ -210,32 +220,36 @@ class GraphTupleDatabaseStats(GraphDatabaseStats):
     return graph_tuple.graph_y.dtype
 
   def __repr__(self):
-    embeddings_shapes = ', '.join(
-        [f'{shape[0]}x{shape[1]}' for shape in self.node_embeddings_shapes])
+    embeddings_shapes = ", ".join(
+      [f"{shape[0]}x{shape[1]}" for shape in self.node_embeddings_shapes]
+    )
     summaries = [
-        f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
-        humanize.Plural(self.edge_type_count, 'edge type'),
-        f'({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings',
+      f"Graphs database: {humanize.Plural(self.graph_count, 'instance', commas=True)}",
+      humanize.Plural(self.edge_type_count, "edge type"),
+      f"({embeddings_shapes}) {self.node_embeddings_dtype} node embeddings",
     ]
     if self.graph_features_dimensionality:
       summaries.append(
-          f"{self.graph_features_dimensionality}-d {self.graph_features_dtype} "
-          "graph features")
+        f"{self.graph_features_dimensionality}-d {self.graph_features_dtype} "
+        "graph features"
+      )
     if self.node_labels_dimensionality:
       summaries.append(
-          f"{self.node_labels_dimensionality}-d {self.node_labels_dtype} "
-          "node labels")
+        f"{self.node_labels_dimensionality}-d {self.node_labels_dtype} "
+        "node labels"
+      )
     if self.graph_labels_dimensionality:
       summaries.append(
-          f"{self.graph_labels_dimensionality}-d {self.graph_labels_dtype} "
-          "graph labels")
+        f"{self.graph_labels_dimensionality}-d {self.graph_labels_dtype} "
+        "graph labels"
+      )
     if self.data_flow_max_steps_required:
       summaries.append(
-          f"max {humanize.Plural(self.data_flow_max_steps_required, 'data flow step')}"
+        f"max {humanize.Plural(self.data_flow_max_steps_required, 'data flow step')}"
       )
     summaries += [
-        f"max {humanize.Plural(self.max_node_count, 'node')}",
-        f"max {humanize.Plural(self.max_edge_count, 'edge')}",
-        f"{self.max_edge_positions} max edge positions",
+      f"max {humanize.Plural(self.max_node_count, 'node')}",
+      f"max {humanize.Plural(self.max_edge_count, 'edge')}",
+      f"{self.max_edge_positions} max edge positions",
     ]
     return ", ".join(summaries)

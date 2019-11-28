@@ -12,12 +12,14 @@ FLAGS = app.FLAGS
 
 
 @decorators.timeout(seconds=60)
-def SetReachableNodes(g: nx.MultiDiGraph,
-                      root_node: str,
-                      x_label: str = 'x',
-                      y_label: str = 'y',
-                      true=True,
-                      false=False) -> typing.Tuple[int, int]:
+def SetReachableNodes(
+  g: nx.MultiDiGraph,
+  root_node: str,
+  x_label: str = "x",
+  y_label: str = "y",
+  true=True,
+  false=False,
+) -> typing.Tuple[int, int]:
   """Annotate nodes in the graph with x, y values for reachability.
 
   Args:
@@ -47,18 +49,15 @@ def SetReachableNodes(g: nx.MultiDiGraph,
     # Mark the node as reachable.
     g.nodes[next][y_label] = true
 
-    for _, succ, flow in g.out_edges(next, data='flow'):
-      if flow == 'control' and succ not in visited:
+    for _, succ, flow in g.out_edges(next, data="flow"):
+      if flow == "control" and succ not in visited:
         q.append((succ, data_flow_steps + 1))
 
   return reachable_nodes_count, data_flow_steps
 
 
 def MakeReachabilityGraphs(
-    g: nx.MultiDiGraph,
-    n: typing.Optional[int] = None,
-    false=False,
-    true=True,
+  g: nx.MultiDiGraph, n: typing.Optional[int] = None, false=False, true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
   """Produce up to `n` reachability graphs from the given unlabelled graph.
 
@@ -81,6 +80,8 @@ def MakeReachabilityGraphs(
 
   for root_node in root_statements[:n]:
     reachable = g.copy()
-    reachable.reachable_node_count, reachable.data_flow_max_steps_required = (
-        SetReachableNodes(reachable, root_node, false=false, true=true))
+    (
+      reachable.reachable_node_count,
+      reachable.data_flow_max_steps_required,
+    ) = SetReachableNodes(reachable, root_node, false=false, true=true)
     yield reachable

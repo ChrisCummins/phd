@@ -1,7 +1,7 @@
 // Given an array of n integers, generate an int not in the input.
-#include <vector>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+#include <vector>
 
 // Solution 1: For i in 1..inf, scan through array to see if i
 // in array. If not, return it; if yes, repeat.
@@ -22,7 +22,6 @@ int Solution(const std::vector<int>& a) {
     return *max + 1;
   }
 }
-
 
 int main(int argc, char** argv) {
   std::cout << Solution({}) << std::endl;

@@ -27,45 +27,37 @@ static const size_t height = 512;
 
 int main() {
   // Create colours.
-  static const rt::Colour red   = rt::Colour(0xff0000);
+  static const rt::Colour red = rt::Colour(0xff0000);
   static const rt::Colour green = rt::Colour(0x00ff00);
-  static const rt::Colour blue  = rt::Colour(0x0000ff);
+  static const rt::Colour blue = rt::Colour(0x0000ff);
 
   // Create materials.
   const std::array<rt::Material *, 3> materials = {
-    new rt::Material(red, 0, 1, .2, 10, 0),
-    new rt::Material(green, 0, 1, .2, 10, 0),
-    new rt::Material(blue, 0, 1, .2, 10, 0)
-  };
+      new rt::Material(red, 0, 1, .2, 10, 0),
+      new rt::Material(green, 0, 1, .2, 10, 0),
+      new rt::Material(blue, 0, 1, .2, 10, 0)};
 
   // Create objects.
   const std::array<rt::Sphere *, 3> _objects = {
-    new rt::Sphere(rt::Vector(0,    50, 0), 50,
-                   materials[0]),
-    new rt::Sphere(rt::Vector(50,  -50, 0), 50,
-                   materials[1]),
-    new rt::Sphere(rt::Vector(-50, -50, 0), 50,
-                   materials[2])
-  };
+      new rt::Sphere(rt::Vector(0, 50, 0), 50, materials[0]),
+      new rt::Sphere(rt::Vector(50, -50, 0), 50, materials[1]),
+      new rt::Sphere(rt::Vector(-50, -50, 0), 50, materials[2])};
 
   // Create lights.
   const std::array<rt::Light *, 2> _lights = {
-    new rt::SoftLight(rt::Vector(-300,  400, -400),
-                      rt::Colour(0xffffff)),
-    new rt::SoftLight(rt::Vector( 300, -200,  100),
-                      rt::Colour(0x505050))
-  };
+      new rt::SoftLight(rt::Vector(-300, 400, -400), rt::Colour(0xffffff)),
+      new rt::SoftLight(rt::Vector(300, -200, 100), rt::Colour(0x505050))};
 
   // Create camera.
   const rt::Camera *const restrict camera =
-    new rt::Camera(rt::Vector(0, 0, -200),  // position
-                   rt::Vector(0, 0, 0),     // look at
-                   50, 50,         // film width & height
-                   rt::Lens(50));  // focal length
+      new rt::Camera(rt::Vector(0, 0, -200),  // position
+                     rt::Vector(0, 0, 0),     // look at
+                     50, 50,                  // film width & height
+                     rt::Lens(50));           // focal length
 
   // Create collections.
   const rt::Objects objects(_objects.begin(), _objects.end());
-  const rt::Lights  lights(_lights.begin(),  _lights.end());
+  const rt::Lights lights(_lights.begin(), _lights.end());
 
   // Create scene and renderer.
   const rt::Scene scene(objects, lights);

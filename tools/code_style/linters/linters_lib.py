@@ -5,6 +5,7 @@ through bazel.
 """
 from __future__ import print_function
 
+import itertools
 import os
 import subprocess
 import sys
@@ -13,7 +14,12 @@ import threading
 # The path to the root of the PhD repository, i.e. the directory which this file
 # is in.
 # WARNING: Moving this file may require updating this path!
-_PHD_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
+_PHD_ROOT = os.path.join(
+  os.path.dirname(os.path.realpath(__file__)), "../../.."
+)
+
+# The maximum number of arguments to pass to a single binary invocation.
+MAX_ARGUMENT_LIST_LENGTH = 128
 
 
 def WhichOrDie(name):
@@ -110,12 +116,32 @@ def GetGitRemoteOrDie(branch_name):
   return components[0]
 
 
+def Chunkify(iterable, chunk_size):
+  """Split an iterable into chunks of a given size.
+
+  This is copied from labm8.py.labtypes.Chunkify().
+
+  Args:
+    iterable: The iterable to split into chunks.
+    chunk_size: The size of the chunks to return.
+
+  Returns:
+    An iterator over chunks of the input iterable.
+  """
+  i = iter(iterable)
+  piece = list(itertools.islice(i, chunk_size))
+  while piece:
+    yield piece
+    piece = list(itertools.islice(i, chunk_size))
+
+
 class LinterThread(threading.Thread):
-  def __init__(self, paths):
+  def __init__(self, paths, verbose=False):
     super(LinterThread, self).__init__()
     assert paths
     self._original_mtimes = [os.path.getmtime(f) for f in paths]
     self._paths = paths
+    self._verbose = verbose
 
   @property
   def paths(self):
@@ -129,30 +155,51 @@ class LinterThread(threading.Thread):
         modified_paths.append(path)
     return modified_paths
 
+  def run(self):
+    for chunk in Chunkify(self._paths, MAX_ARGUMENT_LIST_LENGTH):
+      self._WrapRunMany(chunk)
+
+  def _WrapRunMany(self, paths):
+    """Lint multiple files."""
+    if self._verbose:
+      print(type(self).__name__, paths)
+    self.RunMany(paths)
+
+  def _WrapRunOne(self, path):
+    if self._verbose:
+      print(type(self).__name__, path)
+    self.RunOne(path)
+
+  def RunMany(self, paths):
+    """Lint multiple files."""
+    for path in paths:
+      self._WrapRunOne(path)
+
+  def RunOne(self, path):
+    """Lint a single file."""
+    self._WrapRunMany([path])
+
 
 class BuildiferThread(LinterThread):
-  def run(self):
-    ExecOrDie([BUILDIFIER] + self._paths)
+  def RunMany(self, paths):
+    ExecOrDie([BUILDIFIER] + paths)
 
 
 class ClangFormatThread(LinterThread):
-  def run(self):
+  def RunMany(self, paths):
     # TODO(cec): Use project-local clang-format style file.
-    ExecOrDie([CLANG_FORMAT, "-style", "Google", "-i"] + self._paths)
+    ExecOrDie([CLANG_FORMAT, "-style", "Google", "-i"] + paths)
 
 
 class PythonThread(LinterThread):
-  def run(self):
-    ExecOrDie([BLACK, "--line-length=82", "--target-version=py37"] + self._paths)
-    ExecOrDie(
-      [REORDER_PYTHON_IMPORTS, "--exit-zero-even-if-changed"] + self._paths
-    )
+  def RunMany(self, paths):
+    ExecOrDie([BLACK, "--line-length=80", "--target-version=py37"] + paths)
+    ExecOrDie([REORDER_PYTHON_IMPORTS, "--exit-zero-even-if-changed"] + paths)
 
 
 class SqlFormat(LinterThread):
-  def run(self):
-    for path in self.paths:
-      self.Lint(path)
+  def RunOne(self, path):
+    self.Lint(path)
 
   @staticmethod
   def Lint(path):
@@ -172,32 +219,30 @@ class SqlFormat(LinterThread):
 
 
 class JsBeautifyThread(LinterThread):
-  def run(self):
-    ExecOrDie([JSBEAUTIFY, "--replace", "--config", JSBEAUTIFY_RC] + self._paths)
+  def RunMany(self, paths):
+    ExecOrDie([JSBEAUTIFY, "--replace", "--config", JSBEAUTIFY_RC] + paths)
 
 
 class GoFmtThread(LinterThread):
-  def run(self):
+  def RunOne(self, path):
     # Run linter on each file individually because:
     #   1. An error in one file prevents linting in all other files.
     #   2. All files in a single invocation must be in the same directory.
-    for path in self._paths:
-      ExecOrDie([GO, "fmt", path])
+    ExecOrDie([GO, "fmt", path])
 
 
 class GoogleJavaFormatThread(LinterThread):
-  def run(self):
-    ExecOrDie([JAVA, "-jar", GOOGLE_JAVA_FORMAT, "-i"] + self._paths)
+  def RunMany(self, paths):
+    ExecOrDie([JAVA, "-jar", GOOGLE_JAVA_FORMAT, "-i"] + paths)
 
 
 class JsonlintThread(LinterThread):
-  def run(self):
-    for path in self._paths:
-      ExecOrDie([JSON_LINT, "-i", path])
+  def RunOne(self, path):
+    ExecOrDie([JSON_LINT, "-i", path])
 
 
 class LinterActions(object):
-  def __init__(self, paths):
+  def __init__(self, paths, verbose=False):
     self._paths = paths
     self._buildifier = []
     self._clang_format = []
@@ -208,6 +253,7 @@ class LinterActions(object):
     self._java = []
     self._json = []
     self._modified_paths = []
+    self._verbose = verbose
 
     for path in paths:
       basename = os.path.basename(path)
@@ -261,21 +307,29 @@ class LinterActions(object):
     linter_threads = []
 
     if self._buildifier:
-      linter_threads.append(BuildiferThread(self._buildifier))
+      linter_threads.append(
+        BuildiferThread(self._buildifier, verbose=self._verbose)
+      )
     if self._clang_format:
-      linter_threads.append(ClangFormatThread(self._clang_format))
+      linter_threads.append(
+        ClangFormatThread(self._clang_format, verbose=self._verbose)
+      )
     if self._python:
-      linter_threads.append(PythonThread(self._python))
+      linter_threads.append(PythonThread(self._python, verbose=self._verbose))
     if self._sqlformat:
-      linter_threads.append(SqlFormat(self._sqlformat))
+      linter_threads.append(SqlFormat(self._sqlformat, verbose=self._verbose))
     if self._jsbeautify:
-      linter_threads.append(JsBeautifyThread(self._jsbeautify))
+      linter_threads.append(
+        JsBeautifyThread(self._jsbeautify, verbose=self._verbose)
+      )
     if self._gofmt:
-      linter_threads.append(GoFmtThread(self._gofmt))
+      linter_threads.append(GoFmtThread(self._gofmt, verbose=self._verbose))
     if self._java:
-      linter_threads.append(GoogleJavaFormatThread(self._java))
+      linter_threads.append(
+        GoogleJavaFormatThread(self._java, verbose=self._verbose)
+      )
     if self._json:
-      linter_threads.append(JsonlintThread(self._json))
+      linter_threads.append(JsonlintThread(self._json, verbose=self._verbose))
 
     for thread in linter_threads:
       thread.start()

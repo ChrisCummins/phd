@@ -35,25 +35,27 @@ from labm8.py import system
 
 FLAGS = app.FLAGS
 
-_OCLGRIND_PKG = 'oclgrind_linux' if system.is_linux() else 'oclgrind_mac'
+_OCLGRIND_PKG = "oclgrind_linux" if system.is_linux() else "oclgrind_mac"
 # The path to the oclgrind binary.
-OCLGRIND_PATH = bazelutil.DataPath(f'{_OCLGRIND_PKG}/bin/oclgrind')
+OCLGRIND_PATH = bazelutil.DataPath(f"{_OCLGRIND_PKG}/bin/oclgrind")
 # The clinfo description of the local Oclgrind binary.
 CLINFO_DESCRIPTION = clinfo_pb2.OpenClDevice(
-    name='Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2',
-    platform_name='Oclgrind',
-    device_name='Oclgrind Simulator',
-    driver_version='Oclgrind 18.3',
-    opencl_version='1.2',
-    device_type='Emulator',
-    platform_id=0,
-    device_id=0,
+  name="Emulator|Oclgrind|Oclgrind_Simulator|Oclgrind_18.3|1.2",
+  platform_name="Oclgrind",
+  device_name="Oclgrind Simulator",
+  driver_version="Oclgrind 18.3",
+  opencl_version="1.2",
+  device_type="Emulator",
+  platform_id=0,
+  device_id=0,
 )
 
 
-def Exec(argv: typing.List[str],
-         stdin: typing.Optional[str] = None,
-         env: typing.Dict[str, str] = None) -> subprocess.Popen:
+def Exec(
+  argv: typing.List[str],
+  stdin: typing.Optional[str] = None,
+  env: typing.Dict[str, str] = None,
+) -> subprocess.Popen:
   """Execute a command using oclgrind.
 
   This creates a Popen process, executes it, and sets the stdout and stderr
@@ -67,13 +69,15 @@ def Exec(argv: typing.List[str],
     A Popen instance, with string stdout and stderr attributes set.
   """
   cmd = [str(OCLGRIND_PATH)] + argv
-  app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stdin=subprocess.PIPE if stdin else None,
-                             stderr=subprocess.PIPE,
-                             universal_newlines=True,
-                             env=env)
+  app.Log(3, "$ %s", " ".join(cmd))
+  process = subprocess.Popen(
+    cmd,
+    stdout=subprocess.PIPE,
+    stdin=subprocess.PIPE if stdin else None,
+    stderr=subprocess.PIPE,
+    universal_newlines=True,
+    env=env,
+  )
   if stdin:
     stdout, stderr = process.communicate(stdin)
   else:
@@ -90,5 +94,5 @@ def main(argv):
   sys.exit(proc.returncode)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

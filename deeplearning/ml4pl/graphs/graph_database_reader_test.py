@@ -8,12 +8,14 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@pytest.mark.parametrize('buffer_size', [1, 25, 10000])
+@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
 def test_BufferedGraphReader_values_in_order(
-    graph_db_512: graph_database.Database, buffer_size: int):
+  graph_db_512: graph_database.Database, buffer_size: int
+):
   """Test that the expected number of graphs are returned"""
   graphs = list(
-      reader.BufferedGraphReader(graph_db_512, buffer_size=buffer_size))
+    reader.BufferedGraphReader(graph_db_512, buffer_size=buffer_size)
+  )
   assert len(graphs) == 510
   assert all([g.bytecode_id == 1 for g in graphs])
   # Check the graph node counts, offset by the first two which are ignored
@@ -24,46 +26,56 @@ def test_BufferedGraphReader_values_in_order(
   assert [all(g.data[0] == i + 2 for i, g in enumerate(graphs))]
 
 
-@pytest.mark.parametrize('buffer_size', [1, 25, 10000])
-@pytest.mark.parametrize('order', [
+@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
+@pytest.mark.parametrize(
+  "order",
+  [
     reader.BufferedGraphReaderOrder.IN_ORDER,
     reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
     reader.BufferedGraphReaderOrder.BATCH_RANDOM,
-    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED
-])
-def test_BufferedGraphReader_filter(graph_db_512: graph_database.Database,
-                                    buffer_size: int,
-                                    order: reader.BufferedGraphReaderOrder):
+    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED,
+  ],
+)
+def test_BufferedGraphReader_filter(
+  graph_db_512: graph_database.Database,
+  buffer_size: int,
+  order: reader.BufferedGraphReaderOrder,
+):
   """Test using a filter callback."""
   filter_cb = lambda: graph_database.GraphMeta.node_count % 2 == 0
   graphs = list(
-      reader.BufferedGraphReader(graph_db_512,
-                                 filters=[filter_cb],
-                                 buffer_size=buffer_size,
-                                 order=order))
+    reader.BufferedGraphReader(
+      graph_db_512, filters=[filter_cb], buffer_size=buffer_size, order=order
+    )
+  )
   assert len(graphs) == 255
 
 
-@pytest.mark.parametrize('buffer_size', [1, 25, 10000])
-@pytest.mark.parametrize('order', [
+@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
+@pytest.mark.parametrize(
+  "order",
+  [
     reader.BufferedGraphReaderOrder.IN_ORDER,
     reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
     reader.BufferedGraphReaderOrder.BATCH_RANDOM,
-    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED
-])
-def test_BufferedGraphReader_filters(graph_db_512: graph_database.Database,
-                                     buffer_size: int,
-                                     order: reader.BufferedGraphReaderOrder):
+    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED,
+  ],
+)
+def test_BufferedGraphReader_filters(
+  graph_db_512: graph_database.Database,
+  buffer_size: int,
+  order: reader.BufferedGraphReaderOrder,
+):
   """Test using multiple filters in combination."""
   filters = [
-      lambda: graph_database.GraphMeta.node_count % 2 == 0,
-      lambda: graph_database.GraphMeta.id < 256
+    lambda: graph_database.GraphMeta.node_count % 2 == 0,
+    lambda: graph_database.GraphMeta.id < 256,
   ]
   graphs = list(
-      reader.BufferedGraphReader(graph_db_512,
-                                 filters=filters,
-                                 buffer_size=buffer_size,
-                                 order=order))
+    reader.BufferedGraphReader(
+      graph_db_512, filters=filters, buffer_size=buffer_size, order=order
+    )
+  )
   assert len(graphs) == 127
 
 
@@ -85,54 +97,67 @@ def test_BufferedGraphReader_filters(graph_db_512: graph_database.Database,
 
 
 # TODO(cec): Test with 'limit=1'.
-@pytest.mark.parametrize('buffer_size', [1, 25, 10000])
-@pytest.mark.parametrize('order', [
+@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
+@pytest.mark.parametrize(
+  "order",
+  [
     reader.BufferedGraphReaderOrder.IN_ORDER,
     reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
     reader.BufferedGraphReaderOrder.BATCH_RANDOM,
-    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED
-])
-@pytest.mark.parametrize('limit', [25, 10000])
+    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED,
+  ],
+)
+@pytest.mark.parametrize("limit", [25, 10000])
 def test_BufferedGraphReader_limit(
-    graph_db_512: graph_database.Database, buffer_size: int,
-    order: reader.BufferedGraphReaderOrder, limit: int):
+  graph_db_512: graph_database.Database,
+  buffer_size: int,
+  order: reader.BufferedGraphReaderOrder,
+  limit: int,
+):
   """Test using `limit` arg to limit number of returned rows."""
   graphs = list(
-      reader.BufferedGraphReader(graph_db_512,
-                                 limit=limit,
-                                 buffer_size=buffer_size,
-                                 order=order))
+    reader.BufferedGraphReader(
+      graph_db_512, limit=limit, buffer_size=buffer_size, order=order
+    )
+  )
   assert len(graphs) == min(limit, 510)
 
 
-@pytest.mark.parametrize('buffer_size', [1, 25, 10000])
-@pytest.mark.parametrize('order', [
+@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
+@pytest.mark.parametrize(
+  "order",
+  [
     reader.BufferedGraphReaderOrder.IN_ORDER,
     reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
     reader.BufferedGraphReaderOrder.BATCH_RANDOM,
-    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED
-])
-def test_BufferedGraphReader_next(graph_db_512: graph_database.Database,
-                                  buffer_size: int,
-                                  order: reader.BufferedGraphReaderOrder):
+    reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED,
+  ],
+)
+def test_BufferedGraphReader_next(
+  graph_db_512: graph_database.Database,
+  buffer_size: int,
+  order: reader.BufferedGraphReaderOrder,
+):
   """Test using next() to read from BufferedGraphReader()."""
-  db_reader = reader.BufferedGraphReader(graph_db_512,
-                                         buffer_size=buffer_size,
-                                         order=order)
+  db_reader = reader.BufferedGraphReader(
+    graph_db_512, buffer_size=buffer_size, order=order
+  )
   for _ in range(510):
     next(db_reader)
   with pytest.raises(StopIteration):
     next(db_reader)
 
 
-@pytest.mark.parametrize('buffer_size', [1, 25, 10000])
+@pytest.mark.parametrize("buffer_size", [1, 25, 10000])
 def test_BufferedGraphReader_data_flow_max_steps_order(
-    graph_db_512: graph_database.Database, buffer_size: int):
+  graph_db_512: graph_database.Database, buffer_size: int
+):
   """Test that data flow max steps increases monotonically."""
   db_reader = reader.BufferedGraphReader(
-      graph_db_512,
-      buffer_size=buffer_size,
-      order=reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED)
+    graph_db_512,
+    buffer_size=buffer_size,
+    order=reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED,
+  )
   current_steps = -1
   i = 0
   for i, graph in enumerate(db_reader):
@@ -145,5 +170,5 @@ def test_BufferedGraphReader_data_flow_max_steps_order(
   assert i == 509
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

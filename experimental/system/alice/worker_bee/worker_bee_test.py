@@ -24,5 +24,5 @@ def test_TODO():
   _ = worker_bee
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -51,8 +51,8 @@ std::vector<string> SplitCommaSeparated(const string& str) {
 // Read the entire contents of a file to string or abort.
 string ReadFileOrDie(const string& path) {
   const boost::filesystem::path fs_path(path);
-  CHECK(boost::filesystem::is_regular_file(fs_path))
-      << "Not a regular file: '" << path << "'";
+  CHECK(boost::filesystem::is_regular_file(fs_path)) << "Not a regular file: '"
+                                                     << path << "'";
   boost::filesystem::ifstream istream(fs_path);
   CHECK(istream.is_open()) << "Failed to open: '" << path << "'";
 

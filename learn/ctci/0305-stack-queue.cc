@@ -14,19 +14,15 @@
 // push(): O(1) time, O(1) space
 // pop(): O(n) time, O(1) space
 //
-template<typename T>
+template <typename T>
 class MyQueue {
  public:
   MyQueue() {}
 
   // Append to queue.
-  void push(const T& val) {
-    left.push(val);
-  }
+  void push(const T& val) { left.push(val); }
 
-  void push(T&& val) {
-    left.push(std::move(val));
-  }
+  void push(T&& val) { left.push(std::move(val)); }
 
   // Remove from front of queue.
   T pop() {
@@ -42,15 +38,12 @@ class MyQueue {
     return tmp;
   }
 
-  bool empty() const {
-    return right.empty() && left.empty();
-  }
+  bool empty() const { return right.empty() && left.empty(); }
 
  private:
   std::stack<T> left;
   std::stack<T> right;
 };
-
 
 ///////////
 // Tests //

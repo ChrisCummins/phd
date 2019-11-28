@@ -2,19 +2,18 @@
 
 #include <set>
 
-template<typename T>
+template <typename T>
 class list {
-public:
+ public:
   T data;
   list<T>* next;
 };
 
-template<typename T>
+template <typename T>
 bool contains_cycle_set(const list<T>* list) {
   // T(n) = O(n)
   // S(n) = O(n)
-  if (!list)
-    throw std::invalid_argument("null ptr");
+  if (!list) throw std::invalid_argument("null ptr");
 
   std::set<decltype(list)> visited;
   auto node = list;
@@ -31,21 +30,18 @@ bool contains_cycle_set(const list<T>* list) {
   return false;
 }
 
-template<typename T>
+template <typename T>
 bool contains_cycle(const list<T>* list) {
   // T(n) = O(n)
   // S(n) = O(1)
-  if (!list)
-    throw std::invalid_argument("null ptr");
+  if (!list) throw std::invalid_argument("null ptr");
 
   decltype(list) slow = list, fast = list->next;
 
   while (fast) {
-    if (slow == fast)
-      return true;
+    if (slow == fast) return true;
     fast = fast->next;
-    if (!fast)
-      return false;
+    if (!fast) return false;
     fast = fast->next;
     slow = slow->next;
   }
@@ -59,7 +55,8 @@ TEST(cycles, set) {
   try {
     contains_cycle_set(static_cast<const list<int>*>(nullptr));
     FAIL();
-  } catch (std::invalid_argument) {}
+  } catch (std::invalid_argument) {
+  }
 
   // ASSERT_EQ(contains_cycle_set(&a), false);
   // a.next = &b;
@@ -80,7 +77,8 @@ TEST(cycles, pointers) {
   try {
     contains_cycle(static_cast<const list<int>*>(nullptr));
     FAIL();
-  } catch (std::invalid_argument) {}
+  } catch (std::invalid_argument) {
+  }
 
   // ASSERT_EQ(contains_cycle(&a), false);
   // a.next = &b;
@@ -95,7 +93,7 @@ TEST(cycles, pointers) {
   // ASSERT_EQ(contains_cycle(&a), true);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

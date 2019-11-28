@@ -6,18 +6,24 @@
 
 {% block body %}
 <div class="container">
-  <div class = "row">
+  <div class="row">
     <div class="col">
-      <h1>{{ model.summary }}  <small class="text-muted">{{ corpus.summary }}</small></h1>
+      <h1>{{ model.summary }} <small class="text-muted">{{ corpus.summary }}</small></h1>
     </div>
   </div>
 
-  <div class = "row">
+  <div class="row">
     <div class="col">
       <h4>Corpus</h4>
       <table>
-        <tr><td>Encoded:</td><td><code>{{ data.encoded_url }}</code></td></tr>
-        <tr><td>Preprocessed:</td><td><code>{{ data.preprocessed_url }}</code></td></tr>
+        <tr>
+          <td>Encoded:</td>
+          <td><code>{{ data.encoded_url }}</code></td>
+        </tr>
+        <tr>
+          <td>Preprocessed:</td>
+          <td><code>{{ data.preprocessed_url }}</code></td>
+        </tr>
       </table>
       <div class="btn-group" role="group" aria-label="Corpus buttons">
         <a class="btn btn-primary" href="{{ urls.view_encoded_file }}" role="button">View Contentfile</a>
@@ -29,14 +35,14 @@
     </div>
   </div>
 
-  <div class = "row">
+  <div class="row">
     <div class="col">
       <h4>Training Loss</h4>
       <canvas id="loss-graph" width="800" height="350"></canvas>
     </div>
   </div>
 
-  <div class = "row">
+  <div class="row">
     <div class="col">
       <h4>Training Log</h4>
       <table class="table table-hover table-sm">
@@ -62,7 +68,7 @@
             <td>{{ telemetry.training_loss }}</td>
             <td>{% if not telemetry.pending %}
               <a href="/corpus/{{ corpus_id }}/model/{{ model_id }}/samples/{{ telemetry.epoch }}">Samples <i class="fas fa-angle-double-right"></i></a>
-            {% endif %}</td>
+              {% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -76,48 +82,66 @@
 {% block footer %}
 <script src="//cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script>
 <script>
-window.onload = function() {
-  var ctx = document.getElementById('loss-graph').getContext('2d');
-  window.myLine = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [{% for telemetry in data.telemetry %}'{{ telemetry.step }}',{% endfor %}],
-      datasets: [{
-        label: 'Training',
-        fill: false,
-        backgroundColor: window.chartColors.blue,
-        borderColor: window.chartColors.blue,
-        data: [{% for telemetry in data.telemetry %}{{ telemetry.training_loss}},{% endfor %}],
-      }]
-    },
-    options: {
-      responsive: true,
-      tooltips: {
-        mode: 'index',
-        intersect: false,
-      },
-      hover: {
-        mode: 'nearest',
-        intersect: true
-      },
-      scales: {
-        xAxes: [{
-          display: true,
-          scaleLabel: {
-            display: true,
-            labelString: 'Step'
+  window.onload = function() {
+    var ctx = document.getElementById('loss-graph').getContext('2d');
+    window.myLine = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [{
+            %
+            for telemetry in data.telemetry %
           }
-        }],
-        yAxes: [{
-          display: true,
-          scaleLabel: {
-            display: true,
-            labelString: 'Loss'
+          '{{ telemetry.step }}', {
+            %
+            endfor %
           }
+        ],
+        datasets: [{
+          label: 'Training',
+          fill: false,
+          backgroundColor: window.chartColors.blue,
+          borderColor: window.chartColors.blue,
+          data: [{
+            %
+            for telemetry in data.telemetry %
+          } {
+            {
+              telemetry.training_loss
+            }
+          }, {
+            %
+            endfor %
+          }],
         }]
+      },
+      options: {
+        responsive: true,
+        tooltips: {
+          mode: 'index',
+          intersect: false,
+        },
+        hover: {
+          mode: 'nearest',
+          intersect: true
+        },
+        scales: {
+          xAxes: [{
+            display: true,
+            scaleLabel: {
+              display: true,
+              labelString: 'Step'
+            }
+          }],
+          yAxes: [{
+            display: true,
+            scaleLabel: {
+              display: true,
+              labelString: 'Loss'
+            }
+          }]
+        }
       }
-    }
-  });
-};
+    });
+  };
 </script>
 {% endblock %}

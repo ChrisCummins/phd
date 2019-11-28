@@ -24,13 +24,13 @@
 #include <clc/clcversion.h>
 
 /* 6.11.1 Work-Item Functions */
-#include <clc/workitem/get_global_size.h>
 #include <clc/workitem/get_global_id.h>
-#include <clc/workitem/get_local_size.h>
-#include <clc/workitem/get_local_id.h>
-#include <clc/workitem/get_num_groups.h>
-#include <clc/workitem/get_group_id.h>
 #include <clc/workitem/get_global_offset.h>
+#include <clc/workitem/get_global_size.h>
+#include <clc/workitem/get_group_id.h>
+#include <clc/workitem/get_local_id.h>
+#include <clc/workitem/get_local_size.h>
+#include <clc/workitem/get_num_groups.h>
 
 /* 6.11.2 Math Functions */
 #include <clc/math/acos.h>
@@ -45,11 +45,11 @@
 #include <clc/math/atanh.h>
 #include <clc/math/atanpi.h>
 #include <clc/math/cbrt.h>
+#include <clc/math/ceil.h>
 #include <clc/math/copysign.h>
 #include <clc/math/cos.h>
 #include <clc/math/cosh.h>
 #include <clc/math/cospi.h>
-#include <clc/math/ceil.h>
 #include <clc/math/erf.h>
 #include <clc/math/erfc.h>
 #include <clc/math/exp.h>
@@ -77,19 +77,6 @@
 #include <clc/math/log2.h>
 #include <clc/math/mad.h>
 #include <clc/math/modf.h>
-#include <clc/math/nextafter.h>
-#include <clc/math/pow.h>
-#include <clc/math/pown.h>
-#include <clc/math/rint.h>
-#include <clc/math/round.h>
-#include <clc/math/sin.h>
-#include <clc/math/sincos.h>
-#include <clc/math/sinpi.h>
-#include <clc/math/sqrt.h>
-#include <clc/math/tan.h>
-#include <clc/math/tanh.h>
-#include <clc/math/tgamma.h>
-#include <clc/math/trunc.h>
 #include <clc/math/native_cos.h>
 #include <clc/math/native_divide.h>
 #include <clc/math/native_exp.h>
@@ -100,7 +87,20 @@
 #include <clc/math/native_powr.h>
 #include <clc/math/native_sin.h>
 #include <clc/math/native_sqrt.h>
+#include <clc/math/nextafter.h>
+#include <clc/math/pow.h>
+#include <clc/math/pown.h>
+#include <clc/math/rint.h>
+#include <clc/math/round.h>
 #include <clc/math/rsqrt.h>
+#include <clc/math/sin.h>
+#include <clc/math/sincos.h>
+#include <clc/math/sinpi.h>
+#include <clc/math/sqrt.h>
+#include <clc/math/tan.h>
+#include <clc/math/tanh.h>
+#include <clc/math/tgamma.h>
+#include <clc/math/trunc.h>
 
 /* 6.11.2.1 Floating-point macros */
 #include <clc/float/definitions.h>
@@ -133,8 +133,8 @@
 
 /* 6.11.4 Common Functions */
 #include <clc/common/degrees.h>
-#include <clc/common/radians.h>
 #include <clc/common/mix.h>
+#include <clc/common/radians.h>
 #include <clc/common/sign.h>
 #include <clc/common/smoothstep.h>
 #include <clc/common/step.h>
@@ -170,8 +170,8 @@
 #include <clc/relational/signbit.h>
 
 /* 6.11.8 Synchronization Functions */
-#include <clc/synchronization/cl_mem_fence_flags.h>
 #include <clc/synchronization/barrier.h>
+#include <clc/synchronization/cl_mem_fence_flags.h>
 
 /* 6.11.10 Async Copy and Prefetch Functions */
 #include <clc/async/async_work_group_copy.h>
@@ -224,8 +224,8 @@
 
 /* 6.11.13 Image Read and Write Functions */
 
-#include <clc/image/image_defines.h>
 #include <clc/image/image.h>
+#include <clc/image/image_defines.h>
 
 /* libclc internal defintions */
 #ifdef __CLC_INTERNAL

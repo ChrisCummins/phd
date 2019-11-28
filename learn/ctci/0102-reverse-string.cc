@@ -21,7 +21,6 @@ void reverse(char *str) {
     std::swap(str[i], str[len - i]);  // NOLINT(build/include_what_you_use)
 }
 
-
 ///////////
 // Tests //
 ///////////
@@ -37,7 +36,6 @@ TEST(Reverse, reverse) {
   ASSERT_STREQ(" gfedcba", test2);
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -45,7 +43,7 @@ TEST(Reverse, reverse) {
 static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
-void BM_reverse(benchmark::State& state) {
+void BM_reverse(benchmark::State &state) {
   const auto len = static_cast<size_t>(state.range(0));
   char *t = new char[len];
 

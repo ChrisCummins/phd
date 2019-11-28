@@ -21,5 +21,5 @@ def test_CreateApp_server_smoke_test():
   _RunDashApp(hello_dash.CreateApp())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -26,9 +26,13 @@ footer .footer-copyright {
 }
 
 li.model::before {
-  font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f542";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  content: "\f542";
 }
 
 li.corpus::before {
-  font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f07c";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  content: "\f07c";
 }

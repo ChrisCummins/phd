@@ -5,14 +5,10 @@
 
 #include <string>
 
-enum ctype {
-  digit = 0,
-  az = 1,
-  AZ = 2
-};
+enum ctype { digit = 0, az = 1, AZ = 2 };
 
 std::string increment(std::string c) {
-  char *cc = &c[c.length() - 1];
+  char* cc = &c[c.length() - 1];
   ctype type;
 
   while (true) {
@@ -58,11 +54,9 @@ std::string increment(std::string c) {
 }
 
 std::string increment(std::string c, unsigned int i) {
-  while (i--)
-    c = increment(c);
+  while (i--) c = increment(c);
   return c;
 }
-
 
 TEST(Counter, increment) {
   ASSERT_EQ("m", increment("a", 12));
@@ -73,7 +67,6 @@ TEST(Counter, increment) {
 
   ASSERT_EQ("gXrmc931", increment("gXrbk539", 278392));
 }
-
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

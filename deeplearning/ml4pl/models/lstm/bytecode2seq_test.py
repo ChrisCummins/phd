@@ -15,19 +15,19 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def opencl_dataset_df() -> pd.DataFrame:
   """Test fixture which yields a dataframe of the OpenCL dataset, complete with
   relpath column.
   """
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
-  return make_devmap_dataset.MakeGpuDataFrame(dataset.df, 'amd_tahiti_7970')
+  return make_devmap_dataset.MakeGpuDataFrame(dataset.df, "amd_tahiti_7970")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def bytecode_db(
-    tempdir: pathlib.Path,
-    opencl_dataset_df: opencl_device_mapping_dataset.OpenClDeviceMappingsDataset
+  tempdir: pathlib.Path,
+  opencl_dataset_df: opencl_device_mapping_dataset.OpenClDeviceMappingsDataset,
 ) -> bytecode_database.Database:
   """Test fixture which returns a bytecode datbase.
 
@@ -35,30 +35,37 @@ def bytecode_db(
   can lookup the relpath -> bytecode IDs.
   """
   # There are duplicate relpaths in the dataset.
-  relpaths = set([row['relpath'] for _, row in opencl_dataset_df.iterrows()])
-  db = bytecode_database.Database(f'sqlite:///{tempdir}/bytecodes.db')
+  relpaths = set([row["relpath"] for _, row in opencl_dataset_df.iterrows()])
+  db = bytecode_database.Database(f"sqlite:///{tempdir}/bytecodes.db")
   with db.Session(commit=True) as session:
-    session.add_all([
+    session.add_all(
+      [
         bytecode_database.LlvmBytecode(
-            source_name='pact17_opencl_devmap',
-            relpath=relpath,
-            language='c',
-            cflags='',
-            charcount=100,
-            linecount=10,
-            bytecode='1234',
-            clang_returncode=0,
-            error_message='',
-            bytecode_sha1='',
-        ) for relpath in relpaths
-    ])
+          source_name="pact17_opencl_devmap",
+          relpath=relpath,
+          language="c",
+          cflags="",
+          charcount=100,
+          linecount=10,
+          bytecode="1234",
+          clang_returncode=0,
+          error_message="",
+          bytecode_sha1="",
+        )
+        for relpath in relpaths
+      ]
+    )
   return db
 
 
-@pytest.mark.parametrize('encoder_class', [
-    bytecode2seq.BytecodeEncoder, bytecode2seq.OpenClEncoder,
-    bytecode2seq.Inst2VecEncoder
-])
+@pytest.mark.parametrize(
+  "encoder_class",
+  [
+    bytecode2seq.BytecodeEncoder,
+    bytecode2seq.OpenClEncoder,
+    bytecode2seq.Inst2VecEncoder,
+  ],
+)
 def test_Encode(bytecode_db: bytecode_database.Database, encoder_class):
   FLAGS.bytecode_db = lambda: bytecode_db
 
@@ -69,5 +76,5 @@ def test_Encode(bytecode_db: bytecode_database.Database, encoder_class):
   assert np.array_equal(encoded[0], encoded[1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

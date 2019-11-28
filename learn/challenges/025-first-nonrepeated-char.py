@@ -13,9 +13,9 @@ def first_nonrepeated_char(s: str) -> str:
   return None
 
 
-assert first_nonrepeated_char('aabbcddee') == 'c'
-assert first_nonrepeated_char('aabbccddee') == None
-assert first_nonrepeated_char('') == None
-assert first_nonrepeated_char('abcde') == 'a'
-assert first_nonrepeated_char('aabcde') == 'b'
-assert first_nonrepeated_char('aabcdebcd') == 'e'
+assert first_nonrepeated_char("aabbcddee") == "c"
+assert first_nonrepeated_char("aabbccddee") == None
+assert first_nonrepeated_char("") == None
+assert first_nonrepeated_char("abcde") == "a"
+assert first_nonrepeated_char("aabcde") == "b"
+assert first_nonrepeated_char("aabcdebcd") == "e"

@@ -11,14 +11,17 @@ from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('env', environments.DEFAULT_ENV_ID,
-                  'The name of the environment to use.')
-app.DEFINE_integer('num_episodes', 10, 'The number of episodes to run for.')
-app.DEFINE_integer('max_steps', 200, 'The maximum number of steps per episode.')
-app.DEFINE_boolean('render', True, 'Render the environment after every step.')
 app.DEFINE_string(
-    'proto_out', '/tmp/phd/experimental/compilers/random_opt/random_opt.pbtxt',
-    'The output path to write experiment proto to.')
+  "env", environments.DEFAULT_ENV_ID, "The name of the environment to use."
+)
+app.DEFINE_integer("num_episodes", 10, "The number of episodes to run for.")
+app.DEFINE_integer("max_steps", 200, "The maximum number of steps per episode.")
+app.DEFINE_boolean("render", True, "Render the environment after every step.")
+app.DEFINE_string(
+  "proto_out",
+  "/tmp/phd/experimental/compilers/random_opt/random_opt.pbtxt",
+  "The output path to write experiment proto to.",
+)
 
 
 def Render(env: gym.Env) -> None:
@@ -32,18 +35,22 @@ def ToFile(env: implementation.Environment) -> None:
   out_path = pathlib.Path(FLAGS.proto_out)
   out_path.parent.mkdir(parents=True, exist_ok=True)
   pbutil.ToFile(env.ToProto(), out_path)
-  app.Log(1, 'Wrote experimental results to: %s', out_path)
+  app.Log(1, "Wrote experimental results to: %s", out_path)
 
 
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
-  app.Log(1, 'Generating environment %s ...', FLAGS.env)
+  app.Log(1, "Generating environment %s ...", FLAGS.env)
   env = gym.make(FLAGS.env)
-  app.Log(1, 'Starting %d random walk episodes of %d steps each ...',
-          FLAGS.num_episodes, FLAGS.max_steps)
+  app.Log(
+    1,
+    "Starting %d random walk episodes of %d steps each ...",
+    FLAGS.num_episodes,
+    FLAGS.max_steps,
+  )
 
   for i in range(FLAGS.num_episodes):
     env.reset()
@@ -61,8 +68,8 @@ def main(argv: typing.List[str]):
       Render(env)
 
   ToFile(env)
-  app.Log(1, 'Done.')
+  app.Log(1, "Done.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

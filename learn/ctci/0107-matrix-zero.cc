@@ -14,7 +14,7 @@ static unsigned int seed = 0xCEC;
 //
 // O(n^2) time, O(n) space.
 //
-template<typename T>
+template <typename T>
 void matrix_zero(T *const m, const size_t rows, const size_t cols) {
   if (!(rows * cols) || !m) return;
 
@@ -31,66 +31,39 @@ void matrix_zero(T *const m, const size_t rows, const size_t cols) {
   }
 
   for (auto &row : rows_s)
-    for (size_t i = row * cols; i < (row + 1) * cols; i++)
-      m[i] = 0;
+    for (size_t i = row * cols; i < (row + 1) * cols; i++) m[i] = 0;
 
   for (auto &col : cols_s)
-    for (size_t i = col % cols; i < rows * cols; i += cols)
-      m[i] = 0;
+    for (size_t i = col % cols; i < rows * cols; i += cols) m[i] = 0;
 }
-
 
 ///////////
 // Tests //
 ///////////
 
 TEST(Permutation, matrix_zero) {
-  int m1[] = {
-    1, 2, 3,
-    4, 0, 6,
-    7, 8, 9
-  };
-  const int m2[] = {
-    1, 0, 3,
-    0, 0, 0,
-    7, 0, 9
-  };
+  int m1[] = {1, 2, 3, 4, 0, 6, 7, 8, 9};
+  const int m2[] = {1, 0, 3, 0, 0, 0, 7, 0, 9};
 
   matrix_zero(m1, 3, 3);
-  for (size_t i = 0; i < 9; i++)
-    ASSERT_EQ(m2[i], m1[i]);
+  for (size_t i = 0; i < 9; i++) ASSERT_EQ(m2[i], m1[i]);
 
-  float m3a[] = {
-    1.0, 2.0, 3.0,
-    4.0, 5.0, 6.0,
-    7.0, 8.0, 9.0
-  };
-  const float m3[] = {
-    1.0, 2.0, 3.0,
-    4.0, 5.0, 6.0,
-    7.0, 8.0, 9.0
-  };
+  float m3a[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  const float m3[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
 
   matrix_zero(m3a, 3, 3);
-  for (size_t i = 0; i < 9; i++)
-    ASSERT_EQ(m3a[i], m3[i]);
+  for (size_t i = 0; i < 9; i++) ASSERT_EQ(m3a[i], m3[i]);
 
   int m4[] = {
-    0,  2,  3,  4,
-    5,  6,  7,  8,
-    9, 10, 11, 12,
+      0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
   };
   const int m5[] = {
-    0,  0,  0,  0,
-    0,  6,  7,  8,
-    0, 10, 11, 12,
+      0, 0, 0, 0, 0, 6, 7, 8, 0, 10, 11, 12,
   };
 
   matrix_zero(m4, 3, 4);
-  for (size_t i = 0; i < 12; i++)
-    ASSERT_EQ(m4[i], m5[i]);
+  for (size_t i = 0; i < 12; i++) ASSERT_EQ(m4[i], m5[i]);
 }
-
 
 ////////////////
 // Benchmarks //
@@ -99,7 +72,7 @@ TEST(Permutation, matrix_zero) {
 static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 5;
 
-void BM_matrix_zero(benchmark::State& state) {
+void BM_matrix_zero(benchmark::State &state) {
   const auto n = static_cast<size_t>(state.range(0));
   int *m = new int[n * n];
 

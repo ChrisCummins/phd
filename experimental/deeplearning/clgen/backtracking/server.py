@@ -19,30 +19,35 @@ from research.cummins_2017_cgo import generative_model
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer('port', portpicker.pick_unused_port(),
-                   'The port to launch the server on.')
-app.DEFINE_boolean('debug_flask_server', True,
-                   'Launch flask app with debugging enabled.')
-app.DEFINE_integer('sample_seed', 0, 'Random seed.')
+app.DEFINE_integer(
+  "port", portpicker.pick_unused_port(), "The port to launch the server on."
+)
+app.DEFINE_boolean(
+  "debug_flask_server", True, "Launch flask app with debugging enabled."
+)
+app.DEFINE_integer("sample_seed", 0, "Random seed.")
 
 flask_app = flask.Flask(
-    __name__,
-    template_folder=bazelutil.DataPath(
-        'phd/experimental/deeplearning/clgen/backtracking/templates'),
-    static_folder=bazelutil.DataPath(
-        'phd/experimental/deeplearning/clgen/backtracking/static'))
+  __name__,
+  template_folder=bazelutil.DataPath(
+    "phd/experimental/deeplearning/clgen/backtracking/templates"
+  ),
+  static_folder=bazelutil.DataPath(
+    "phd/experimental/deeplearning/clgen/backtracking/static"
+  ),
+)
 
 
 @flask_app.route("/")
 def index():
-  with prof.Profile('Render /'):
+  with prof.Profile("Render /"):
     template_args = {
-        'build_info': build_info.FormatShortBuildDescription(html=True),
-        'urls': {
-            "cache_tag": 1,
-            "styles_css": flask.url_for('static', filename='bootstrap.css'),
-            "site_js": flask.url_for('static', filename='site.js'),
-        }
+      "build_info": build_info.FormatShortBuildDescription(html=True),
+      "urls": {
+        "cache_tag": 1,
+        "styles_css": flask.url_for("static", filename="bootstrap.css"),
+        "site_js": flask.url_for("static", filename="site.js"),
+      },
     }
     return flask.render_template("index.html", **template_args)
 
@@ -54,7 +59,7 @@ def Data(data: Dict[str, Any]):
 def SampleStream():
   config = generative_model.CreateInstanceProtoFromFlags()
 
-  os.environ['CLGEN_CACHE'] = config.working_dir
+  os.environ["CLGEN_CACHE"] = config.working_dir
 
   logger = MyLogger()
 
@@ -65,11 +70,13 @@ def SampleStream():
   sampler.Specialize(atomizer)
   batch_size = model.backend.InitSampling(sampler, 0)
   backtracker = backtracking_model.OpenClBacktrackingHelper(
-      atomizer, model._target_features)
+    atomizer, model._target_features
+  )
   model.backend.InitSampleBatch(sampler)
   logger.OnSampleStart(backtracker)
   yield from model.SampleOneWithBacktrackingToTextStream(
-      sampler, atomizer, backtracker)
+    sampler, atomizer, backtracker
+  )
 
 
 @flask_app.route("/append_state")
@@ -78,27 +85,36 @@ def stream():
 
 
 class MyLogger(logger.BacktrackingLogger):
-
   def __init__(self):
     self._step_count = 0
     self._start_time = None
 
-  def OnSampleStart(self,
-                    backtracker: backtracking_model.OpenClBacktrackingHelper):
+  def OnSampleStart(
+    self, backtracker: backtracking_model.OpenClBacktrackingHelper
+  ):
     self._step_count = 0
     self._start_time = time.time()
 
-  def OnSampleStep(self,
-                   backtracker: backtracking_model.OpenClBacktrackingHelper,
-                   attempt_count: int, token_count: int):
+  def OnSampleStep(
+    self,
+    backtracker: backtracking_model.OpenClBacktrackingHelper,
+    attempt_count: int,
+    token_count: int,
+  ):
     self._step_count += 1
 
     runtime_ms = int((time.time() - self._start_time) * 1000)
-    app.Log(1, 'Reached step %d after %d attempts, %d tokens', self._step_count,
-            attempt_count, token_count)
+    app.Log(
+      1,
+      "Reached step %d after %d attempts, %d tokens",
+      self._step_count,
+      attempt_count,
+      token_count,
+    )
 
-  def OnSampleEnd(self,
-                  backtracker: backtracking_model.OpenClBacktrackingHelper):
+  def OnSampleEnd(
+    self, backtracker: backtracking_model.OpenClBacktrackingHelper
+  ):
     del backtracker
     self._step_count += 1
     app.Log(1, "Sampling concluded at step %d", self._step_count)
@@ -107,8 +123,8 @@ class MyLogger(logger.BacktrackingLogger):
 
 def main():
   """Main entry point."""
-  flask_app.run(port=FLAGS.port, debug=FLAGS.debug_flask_server, host='0.0.0.0')
+  flask_app.run(port=FLAGS.port, debug=FLAGS.debug_flask_server, host="0.0.0.0")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

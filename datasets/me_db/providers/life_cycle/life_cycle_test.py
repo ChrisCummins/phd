@@ -32,26 +32,21 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def temp_dir() -> pathlib.Path:
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_") as d:
     yield pathlib.Path(d)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def temp_inbox(temp_dir: pathlib.Path) -> pathlib.Path:
-  (temp_dir / 'life_cycle').mkdir()
-  generator = make_dataset.RandomDatasetGenerator(time.mktime(
-      time.strptime('1/1/2018', '%m/%d/%Y')),
-                                                  locations=[
-                                                      'My House',
-                                                      'The Office',
-                                                  ],
-                                                  names=[
-                                                      'Work',
-                                                      'Home',
-                                                  ])
-  generator.SampleZip(temp_dir / 'life_cycle' / 'LC_export.zip', 100)
+  (temp_dir / "life_cycle").mkdir()
+  generator = make_dataset.RandomDatasetGenerator(
+    time.mktime(time.strptime("1/1/2018", "%m/%d/%Y")),
+    locations=["My House", "The Office",],
+    names=["Work", "Home",],
+  )
+  generator.SampleZip(temp_dir / "life_cycle" / "LC_export.zip", 100)
   yield temp_dir
 
 
@@ -61,19 +56,19 @@ def ProcessInbox(temp_inbox: pathlib.Path):
   series = list(series_collection.series)
   assert len(series) == 2
   series = sorted(series, key=lambda s: s.name)
-  assert series[0].name == 'HomeTime'
-  assert series[0].unit == 'milliseconds'
+  assert series[0].name == "HomeTime"
+  assert series[0].unit == "milliseconds"
   assert len(series[0].measurement) + len(series[1].measurement) == 100
 
   for measurement in series[0].measurement:
     assert measurement.group
-    assert measurement.source == 'LifeCycle'
+    assert measurement.source == "LifeCycle"
 
-  assert series[1].name == 'WorkTime'
-  assert series[1].unit == 'milliseconds'
+  assert series[1].name == "WorkTime"
+  assert series[1].unit == "milliseconds"
   for measurement in series[1].measurement:
     assert measurement.group
-    assert measurement.source == 'LifeCycle'
+    assert measurement.source == "LifeCycle"
 
 
 def test_ProcessInbox_future(temp_inbox: pathlib.Path):
@@ -84,5 +79,5 @@ def test_ProcessInbox_future(temp_inbox: pathlib.Path):
   assert len(series_collection.series) == 2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

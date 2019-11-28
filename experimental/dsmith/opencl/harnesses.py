@@ -22,48 +22,53 @@ import subprocess
 from tempfile import NamedTemporaryFile
 from time import time
 
-from experimental.dsmith.langs import Generator, Harness
+from experimental.dsmith.langs import Generator
+from experimental.dsmith.langs import Harness
 from experimental.dsmith.opencl import cldrive_mkharness
-from experimental.dsmith.opencl import clsmith, generators
+from experimental.dsmith.opencl import clsmith
+from experimental.dsmith.opencl import generators
 from experimental.dsmith.opencl.db import *
 
 
 def _non_zero_threads(session: session_t = None) -> List[Threads]:
   with ReuseSession(session) as s:
     return [
-        get_or_add(
-            s,
-            Threads,
-            gsize_x=1,
-            gsize_y=1,
-            gsize_z=1,
-            lsize_x=1,
-            lsize_y=1,
-            lsize_z=1),
-        get_or_add(
-            s,
-            Threads,
-            gsize_x=128,
-            gsize_y=16,
-            gsize_z=1,
-            lsize_x=32,
-            lsize_y=1,
-            lsize_z=1),
+      get_or_add(
+        s,
+        Threads,
+        gsize_x=1,
+        gsize_y=1,
+        gsize_z=1,
+        lsize_x=1,
+        lsize_y=1,
+        lsize_z=1,
+      ),
+      get_or_add(
+        s,
+        Threads,
+        gsize_x=128,
+        gsize_y=16,
+        gsize_z=1,
+        lsize_x=32,
+        lsize_y=1,
+        lsize_z=1,
+      ),
     ]
 
 
 def _zero_threads(session: session_t = None) -> List[Threads]:
   with ReuseSession(session) as s:
     return [
-        get_or_add(
-            s,
-            Threads,
-            gsize_x=0,
-            gsize_y=0,
-            gsize_z=0,
-            lsize_x=0,
-            lsize_y=0,
-            lsize_z=0)
+      get_or_add(
+        s,
+        Threads,
+        gsize_x=0,
+        gsize_y=0,
+        gsize_z=0,
+        lsize_x=0,
+        lsize_y=0,
+        lsize_z=0,
+      )
     ]
 
 
@@ -71,15 +76,19 @@ def _log_outcome(outcome: Outcomes, runtime: float):
   """ verbose logging output """
   outcome_name = Outcomes.to_str(outcome)
   return_color = Colors.GREEN if outcome == Outcomes.PASS else Colors.RED
-  app.Log(1, f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
-           f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds")
+  app.Log(
+    1,
+    f"↳  {Colors.BOLD}{return_color}{outcome_name}{Colors.END} "
+    f"after {Colors.BOLD}{runtime:.2f}{Colors.END} seconds",
+  )
 
 
 class OpenCLHarness(Harness):
   """ Common superclass for OpenCL test harnesses """
 
-  def run(self, session: session_t, testcase: Testcase,
-          testbed: Testbed) -> ResultProxy:
+  def run(
+    self, session: session_t, testcase: Testcase, testbed: Testbed
+  ) -> ResultProxy:
     """ execute a testcase """
     raise NotImplementedError
 
@@ -94,48 +103,55 @@ class OpenCLHarness(Harness):
 
       for threads in all_threads:
         # Make a list of programs which already have matching testcases
-        already_exists = s.query(Program.id) \
-          .join(Testcase) \
-          .filter(Program.generator == generator.id,
-                  Testcase.threads_id == threads.id,
-                  Testcase.harness == self.id)
+        already_exists = (
+          s.query(Program.id)
+          .join(Testcase)
+          .filter(
+            Program.generator == generator.id,
+            Testcase.threads_id == threads.id,
+            Testcase.harness == self.id,
+          )
+        )
 
         # The list of testcases to make is the compliment of the above:
-        todo = s.query(Program.id) \
-          .filter(Program.generator == generator.id,
-                  ~Program.id.in_(already_exists))
+        todo = s.query(Program.id).filter(
+          Program.generator == generator.id, ~Program.id.in_(already_exists)
+        )
 
         # Determine how many, if any, testcases need to be made:
         ndone = already_exists.count()
         ntodo = todo.count()
         ntotal = ndone + ntodo
-        app.Log(2,
-            f"{self}:{generator} {threads} testcases = {ndone} / {ntotal}")
+        app.Log(
+          2, f"{self}:{generator} {threads} testcases = {ndone} / {ntotal}"
+        )
 
         # Break early if there's nothing to do:
         if not ntodo:
           return
 
-        print(f"Generating {Colors.BOLD}{ntodo}{Colors.END} "
-              f"{self}:{generator} testcases with threads "
-              f"{Colors.BOLD}{threads}{Colors.END}")
+        print(
+          f"Generating {Colors.BOLD}{ntodo}{Colors.END} "
+          f"{self}:{generator} testcases with threads "
+          f"{Colors.BOLD}{threads}{Colors.END}"
+        )
 
         # Bulk insert new testcases:
         s.add_all(
-            Testcase(
-                program_id=program.id,
-                threads_id=threads.id,
-                harness=self.id,
-                input_seed=self.default_seed,
-                timeout=self.default_timeout,
-            ) for program in todo)
+          Testcase(
+            program_id=program.id,
+            threads_id=threads.id,
+            harness=self.id,
+            input_seed=self.default_seed,
+            timeout=self.default_timeout,
+          )
+          for program in todo
+        )
         s.commit()
 
   def testbeds(self, session: session_t = None) -> List[TestbedProxy]:
     with ReuseSession(session) as s:
-      q = s.query(Testbed) \
-        .join(Platform) \
-        .filter(Platform.platform != "clang")
+      q = s.query(Testbed).join(Platform).filter(Platform.platform != "clang")
       return sorted(TestbedProxy(testbed) for testbed in q)
 
   def available_testbeds(self, session: session_t = None) -> List[TestbedProxy]:
@@ -143,24 +159,26 @@ class OpenCLHarness(Harness):
       testbeds = []
       for env in cldrive.all_envs():
         testbeds += [
-            TestbedProxy(testbed)
-            for testbed in Testbed.from_env(env, session=s)
+          TestbedProxy(testbed) for testbed in Testbed.from_env(env, session=s)
         ]
       return sorted(testbeds)
 
-  def num_results(self,
-                  generator: Generator,
-                  testbed: str,
-                  session: session_t = None):
+  def num_results(
+    self, generator: Generator, testbed: str, session: session_t = None
+  ):
     with ReuseSession(session) as s:
       testbed_ = Testbed.from_str(testbed, session=s)[0]
-      n = s.query(func.count(Result.id)) \
-        .join(Testcase) \
-        .join(Program) \
-        .filter(Result.testbed_id == testbed_.id,
-                Program.generator == generator,
-                Testcase.harness == self.id) \
+      n = (
+        s.query(func.count(Result.id))
+        .join(Testcase)
+        .join(Program)
+        .filter(
+          Result.testbed_id == testbed_.id,
+          Program.generator == generator,
+          Testcase.harness == self.id,
+        )
         .scalar()
+      )
       return n
 
 
@@ -168,9 +186,10 @@ class Cl_launcher(OpenCLHarness):
   """
   cl_launcher, the CLSmith test harness.
   """
+
   __name__ = "cl_launcher"
   __generators__ = {
-      "clsmith": generators.CLSmith,
+    "clsmith": generators.CLSmith,
   }
 
   id = Harnesses.CL_LAUNCHER
@@ -180,49 +199,55 @@ class Cl_launcher(OpenCLHarness):
   def all_threads(self, session: session_t = None):
     return _non_zero_threads(session=session)
 
-  def run(self, session: session_t, testcase: Testcase,
-          testbed: Testbed) -> ResultProxy:
+  def run(
+    self, session: session_t, testcase: Testcase, testbed: Testbed
+  ) -> ResultProxy:
     """ execute a testcase using cl_launcher """
     # run testcase
     platform_id, device_id = testbed.ids
     runtime, returncode, stdout, stderr = clsmith.cl_launcher_str(
-        src=testcase.program.src,
-        platform_id=platform_id,
-        device_id=device_id,
-        optimizations=testbed.optimizations,
-        timeout=testcase.timeout)
+      src=testcase.program.src,
+      platform_id=platform_id,
+      device_id=device_id,
+      optimizations=testbed.optimizations,
+      timeout=testcase.timeout,
+    )
 
     # assert that executed params match expected
     clsmith.verify_cl_launcher_run(
-        platform=testbed.platform.platform,
-        device=testbed.platform.device,
-        optimizations=testbed.optimizations,
-        global_size=testcase.threads.gsize,
-        local_size=testcase.threads.lsize,
-        stderr=stderr)
+      platform=testbed.platform.platform,
+      device=testbed.platform.device,
+      optimizations=testbed.optimizations,
+      global_size=testcase.threads.gsize,
+      local_size=testcase.threads.lsize,
+      stderr=stderr,
+    )
 
     # outcome
-    outcome = Cl_launcherResult.get_outcome(returncode, stderr, runtime,
-                                            testcase.timeout)
+    outcome = Cl_launcherResult.get_outcome(
+      returncode, stderr, runtime, testcase.timeout
+    )
     _log_outcome(outcome, runtime)
 
     return ResultProxy(
-        testbed_id=testbed.id,
-        testcase_id=testcase.id,
-        returncode=returncode,
-        outcome=outcome,
-        runtime=runtime,
-        stdout=stdout,
-        stderr=stderr)
+      testbed_id=testbed.id,
+      testcase_id=testcase.id,
+      returncode=returncode,
+      outcome=outcome,
+      runtime=runtime,
+      stdout=stdout,
+      stderr=stderr,
+    )
 
 
 class Cldrive(OpenCLHarness):
   """
   cldrive test harness.
   """
+
   __name__ = "cldrive"
   __generators__ = {
-      "dsmith": generators.DSmith,
+    "dsmith": generators.DSmith,
   }
 
   id = Harnesses.CLDRIVE
@@ -230,9 +255,14 @@ class Cldrive(OpenCLHarness):
   default_timeout = 60
 
   @staticmethod
-  def _verify_params(platform: str, device: str, optimizations: bool,
-                     global_size: Tuple[int, int, int],
-                     local_size: Tuple[int, int, int], stderr: str) -> None:
+  def _verify_params(
+    platform: str,
+    device: str,
+    optimizations: bool,
+    global_size: Tuple[int, int, int],
+    local_size: Tuple[int, int, int],
+    stderr: str,
+  ) -> None:
     """ verify that expected params match actual as reported by cldrive """
     optimizations = "on" if optimizations else "off"
 
@@ -241,103 +271,124 @@ class Cldrive(OpenCLHarness):
     actual_optimizations = None
     actual_global_size = None
     actual_local_size = None
-    for line in stderr.split('\n'):
+    for line in stderr.split("\n"):
       if line.startswith("[cldrive] Platform: "):
-        actual_platform_name = re.sub(r"^\[cldrive\] Platform: ", "",
-                                      line).rstrip()
+        actual_platform_name = re.sub(
+          r"^\[cldrive\] Platform: ", "", line
+        ).rstrip()
       elif line.startswith("[cldrive] Device: "):
         actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
       elif line.startswith("[cldrive] OpenCL optimizations: "):
-        actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ",
-                                      "", line).rstrip()
+        actual_optimizations = re.sub(
+          r"^\[cldrive\] OpenCL optimizations: ", "", line
+        ).rstrip()
 
       # global size
       match = re.match(
-          '^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        "^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]", line
+      )
       if match:
-        actual_global_size = (int(match.group(1)), int(match.group(2)),
-                              int(match.group(3)))
+        actual_global_size = (
+          int(match.group(1)),
+          int(match.group(2)),
+          int(match.group(3)),
+        )
 
       # local size
       match = re.match(
-          '^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
+        "^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]", line
+      )
       if match:
-        actual_local_size = (int(match.group(1)), int(match.group(2)),
-                             int(match.group(3)))
+        actual_local_size = (
+          int(match.group(1)),
+          int(match.group(2)),
+          int(match.group(3)),
+        )
 
       # check if we've collected everything:
-      if (actual_platform and actual_device and actual_optimizations and
-          actual_global_size and actual_local_size):
-        assert (actual_platform == platform)
-        assert (actual_device == device)
-        assert (actual_optimizations == optimizations)
-        assert (actual_global_size == global_size)
-        assert (actual_local_size == local_size)
+      if (
+        actual_platform
+        and actual_device
+        and actual_optimizations
+        and actual_global_size
+        and actual_local_size
+      ):
+        assert actual_platform == platform
+        assert actual_device == device
+        assert actual_optimizations == optimizations
+        assert actual_global_size == global_size
+        assert actual_local_size == local_size
         return
 
   def all_threads(self, session: session_t = None):
     return _non_zero_threads(session=session)
 
-  def run(self, session: session_t, testcase: Testcase,
-          testbed: Testbed) -> ResultProxy:
+  def run(
+    self, session: session_t, testcase: Testcase, testbed: Testbed
+  ) -> ResultProxy:
     """ run cldrive testcase """
     platform_id, device_id = testbed.ids
     harness = cldrive_mkharness.mkharness(session, testbed.env, testcase)
 
-    with NamedTemporaryFile(prefix='dsmith-cldrive-', delete=False) as tmpfile:
+    with NamedTemporaryFile(prefix="dsmith-cldrive-", delete=False) as tmpfile:
       path = tmpfile.name
     try:
       cldrive_mkharness.compile_harness(
-          harness.src, path, platform_id=platform_id, device_id=device_id)
+        harness.src, path, platform_id=platform_id, device_id=device_id
+      )
 
-      cmd = ['timeout', '-s9', str(testcase.timeout), tmpfile.name]
+      cmd = ["timeout", "-s9", str(testcase.timeout), tmpfile.name]
 
       app.Log(2, f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
       start_time = time()
       proc = subprocess.Popen(
-          cmd,
-          stdout=subprocess.PIPE,
-          stderr=subprocess.PIPE,
-          universal_newlines=True)
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+      )
       stdout, stderr = proc.communicate()
       runtime = time() - start_time
       returncode = proc.returncode
     finally:
       fs.rm(path)
 
-    outcome = CldriveResult.get_outcome(returncode, stderr, runtime,
-                                        testcase.timeout)
+    outcome = CldriveResult.get_outcome(
+      returncode, stderr, runtime, testcase.timeout
+    )
 
     return ResultProxy(
-        testbed_id=testbed.id,
-        testcase_id=testcase.id,
-        returncode=returncode,
-        outcome=outcome,
-        runtime=runtime,
-        stdout=stdout,
-        stderr=stderr)
+      testbed_id=testbed.id,
+      testcase_id=testcase.id,
+      returncode=returncode,
+      outcome=outcome,
+      runtime=runtime,
+      stdout=stdout,
+      stderr=stderr,
+    )
 
 
 class Clang(OpenCLHarness):
   """
   Frontend-only clang harness.
   """
+
   __name__ = "clang"
   __generators__ = {
-      "clsmith": generators.CLSmith,
-      "dsmith": generators.DSmith,
-      "randchar": generators.RandChar,
-      "randtok": generators.RandTok,
+    "clsmith": generators.CLSmith,
+    "dsmith": generators.DSmith,
+    "randchar": generators.RandChar,
+    "randtok": generators.RandTok,
   }
   __clangs__ = {
-      "3.6.2": dsmith.root_path("third_party", "llvm", "3.6.2", "bin", "clang"),
-      "3.7.1": dsmith.root_path("third_party", "llvm", "3.7.1", "bin", "clang"),
-      "3.8.1": dsmith.root_path("third_party", "llvm", "3.8.1", "bin", "clang"),
-      "3.9.1": dsmith.root_path("third_party", "llvm", "3.9.1", "bin", "clang"),
-      "4.0.1": dsmith.root_path("third_party", "llvm", "4.0.1", "bin", "clang"),
-      "5.0.0": dsmith.root_path("third_party", "llvm", "5.0.0", "bin", "clang"),
-      "trunk": dsmith.root_path("third_party", "llvm", "trunk", "bin", "clang"),
+    "3.6.2": dsmith.root_path("third_party", "llvm", "3.6.2", "bin", "clang"),
+    "3.7.1": dsmith.root_path("third_party", "llvm", "3.7.1", "bin", "clang"),
+    "3.8.1": dsmith.root_path("third_party", "llvm", "3.8.1", "bin", "clang"),
+    "3.9.1": dsmith.root_path("third_party", "llvm", "3.9.1", "bin", "clang"),
+    "4.0.1": dsmith.root_path("third_party", "llvm", "4.0.1", "bin", "clang"),
+    "5.0.0": dsmith.root_path("third_party", "llvm", "5.0.0", "bin", "clang"),
+    "trunk": dsmith.root_path("third_party", "llvm", "trunk", "bin", "clang"),
   }
 
   id = Harnesses.CLANG
@@ -361,36 +412,37 @@ class Clang(OpenCLHarness):
     """ create a clang testbed """
     assert clang_version in self.__clangs__
     platform = get_or_add(
-        session,
-        Platform,
-        platform="clang",
-        device="",
-        driver=clang_version,
-        opencl="",
-        devtype="Compiler",
-        host=cldrive.host_os())
+      session,
+      Platform,
+      platform="clang",
+      device="",
+      driver=clang_version,
+      opencl="",
+      devtype="Compiler",
+      host=cldrive.host_os(),
+    )
     session.flush()
     testbed = get_or_add(
-        session, Testbed, platform_id=platform.id, optimizations=True)
+      session, Testbed, platform_id=platform.id, optimizations=True
+    )
     session.commit()
     app.Log(2, f"Added new Testbed {testbed}")
     return testbed
 
   def testbeds(self, session: session_t = None) -> List[TestbedProxy]:
     with ReuseSession(session) as s:
-      q = s.query(Testbed) \
-        .join(Platform) \
-        .filter(Platform.platform == "clang")
+      q = s.query(Testbed).join(Platform).filter(Platform.platform == "clang")
       return sorted(TestbedProxy(testbed) for testbed in q)
 
   def available_testbeds(self, session: session_t = None) -> List[TestbedProxy]:
     with ReuseSession(session) as s:
       return sorted(
-          TestbedProxy(self._make_testbed(s, clang))
-          for clang in self.__clangs__)
+        TestbedProxy(self._make_testbed(s, clang)) for clang in self.__clangs__
+      )
 
-  def run(self, session: session_t, testcase: Testcase,
-          testbed: Testbed) -> ResultProxy:
+  def run(
+    self, session: session_t, testcase: Testcase, testbed: Testbed
+  ) -> ResultProxy:
     """ compile a testcase using clang frontend """
     # Sanity checks
     if not testbed.optimizations:
@@ -405,7 +457,7 @@ class Clang(OpenCLHarness):
       raise OSError(f"clang binary '{clang}' not found")
 
     # Run clang frontend
-    with NamedTemporaryFile(prefix='dsmith-clang-', delete=False) as tmpfile:
+    with NamedTemporaryFile(prefix="dsmith-clang-", delete=False) as tmpfile:
       src_path = tmpfile.name
     try:
       # Dump source code to file
@@ -414,18 +466,24 @@ class Clang(OpenCLHarness):
 
       # Construct compile command
       cmd = [
-          'timeout', '-s9',
-          str(testcase.timeout), clang, '-cc1', '-xcl', src_path
+        "timeout",
+        "-s9",
+        str(testcase.timeout),
+        clang,
+        "-cc1",
+        "-xcl",
+        src_path,
       ]
 
       app.Log(2, f"{Colors.BOLD}${Colors.END} " + " ".join(cmd))
 
       start_time = time()
       process = subprocess.Popen(
-          cmd,
-          universal_newlines=True,
-          stdout=subprocess.PIPE,
-          stderr=subprocess.PIPE)
+        cmd,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+      )
       _, stderr = process.communicate()
 
       returncode = process.returncode
@@ -435,15 +493,17 @@ class Clang(OpenCLHarness):
       fs.rm(src_path)
 
     # outcome
-    outcome = ClangResult.get_outcome(returncode, stderr, runtime,
-                                      testcase.timeout)
+    outcome = ClangResult.get_outcome(
+      returncode, stderr, runtime, testcase.timeout
+    )
     _log_outcome(outcome, runtime)
 
     return ResultProxy(
-        testbed_id=testbed.id,
-        testcase_id=testcase.id,
-        returncode=returncode,
-        outcome=outcome,
-        runtime=runtime,
-        stdout="",
-        stderr=stderr)
+      testbed_id=testbed.id,
+      testcase_id=testcase.id,
+      returncode=returncode,
+      outcome=outcome,
+      runtime=runtime,
+      stdout="",
+      stderr=stderr,
+    )

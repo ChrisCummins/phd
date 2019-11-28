@@ -40,7 +40,7 @@ def DotCallGraphFromBytecode(bytecode: str) -> str:
     OptException: In case the opt pass fails.
     UnicodeDecodeError: If generated dotfile can't be read.
   """
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_") as d:
     output_dir = pathlib.Path(d)
     # Change into the output directory, because the -dot-callgraph pass writes
     # to the current working directory.
@@ -48,17 +48,19 @@ def DotCallGraphFromBytecode(bytecode: str) -> str:
       # We run with universal_newlines=False because the stdout of opt is the
       # binary bitcode, which we completely ignore (we're only interested in
       # stderr). This means we must encode stdin and decode stderr ourselves.
-      process = opt.Exec(['-dot-callgraph'],
-                         stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False,
-                         log=False)
-      stderr = process.stderr.decode('utf-8')
+      process = opt.Exec(
+        ["-dot-callgraph"],
+        stdin=bytecode.encode("utf-8"),
+        universal_newlines=False,
+        log=False,
+      )
+      stderr = process.stderr.decode("utf-8")
 
       # Propagate failures from opt as OptExceptions.
       if process.returncode:
         raise opt.OptException(returncode=process.returncode, stderr=stderr)
 
-      callgraph = output_dir / 'callgraph.dot'
+      callgraph = output_dir / "callgraph.dot"
       if not callgraph.is_file():
         raise OSError(f"Callgraph dotfile not produced")
       return fs.Read(callgraph)
@@ -77,7 +79,7 @@ def DotControlFlowGraphsFromBytecode(bytecode: str) -> typing.Iterator[str]:
     OptException: In case the opt pass fails.
     UnicodeDecodeError: If generated dotfile can't be read.
   """
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_") as d:
     output_dir = pathlib.Path(d)
     # Change into the output directory, because the -dot-cfg pass writes files
     # to the current working directory.
@@ -85,11 +87,13 @@ def DotControlFlowGraphsFromBytecode(bytecode: str) -> typing.Iterator[str]:
       # We run with universal_newlines=False because the stdout of opt is the
       # binary bitcode, which we completely ignore (we're only interested in
       # stderr). This means we must encode stdin and decode stderr ourselves.
-      process = opt.Exec(['-dot-cfg'],
-                         stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False,
-                         log=False)
-      stderr = process.stderr.decode('utf-8')
+      process = opt.Exec(
+        ["-dot-cfg"],
+        stdin=bytecode.encode("utf-8"),
+        universal_newlines=False,
+        log=False,
+      )
+      stderr = process.stderr.decode("utf-8")
 
       # Propagate failures from opt as OptExceptions.
       if process.returncode:
@@ -107,17 +111,20 @@ def DotControlFlowGraphsFromBytecode(bytecode: str) -> typing.Iterator[str]:
         #     Writing 'cfg.DoSomething.dot'...
         #     Writing 'cfg.main.dot'...
         if f"Writing '{file.name}'..." not in stderr:
-          raise OSError(f"Could not find reference to file '{file.name}' in "
-                        f'opt stderr:\n{process.stderr}')
+          raise OSError(
+            f"Could not find reference to file '{file.name}' in "
+            f"opt stderr:\n{process.stderr}"
+          )
         with open(file) as f:
           yield f.read()
 
 
-def DotGraphsFromBytecode(bytecode: str,
-                          opt_args: typing.List[str],
-                          opt_path: str = None,
-                          output_pred: typing.Callable[[str], bool] = None
-                         ) -> typing.Tuple[typing.List[str], typing.List[str]]:
+def DotGraphsFromBytecode(
+  bytecode: str,
+  opt_args: typing.List[str],
+  opt_path: str = None,
+  output_pred: typing.Callable[[str], bool] = None,
+) -> typing.Tuple[typing.List[str], typing.List[str]]:
   """Obtain dot graphs from an LLVM bytecode file using an opt pass.
 
   Args:
@@ -139,7 +146,7 @@ def DotGraphsFromBytecode(bytecode: str,
   graph_dots_true = []
   graph_dots_false = []
 
-  with tempfile.TemporaryDirectory(prefix='phd_') as d:
+  with tempfile.TemporaryDirectory(prefix="phd_") as d:
     output_dir = pathlib.Path(d)
     # Change into the output directory, because the -dot-callgraph pass writes
     # to the current working directory.
@@ -147,12 +154,14 @@ def DotGraphsFromBytecode(bytecode: str,
       # We run with universal_newlines=False because the stdout of opt is the
       # binary bitcode, which we completely ignore (we're only interested in
       # stderr). This means we must encode stdin and decode stderr ourselves.
-      process = opt.Exec(opt_args,
-                         stdin=bytecode.encode('utf-8'),
-                         universal_newlines=False,
-                         log=False,
-                         opt=opt_path)
-      stderr = process.stderr.decode('utf-8')
+      process = opt.Exec(
+        opt_args,
+        stdin=bytecode.encode("utf-8"),
+        universal_newlines=False,
+        log=False,
+        opt=opt_path,
+      )
+      stderr = process.stderr.decode("utf-8")
 
       # Propagate failures from opt as OptExceptions.
       if process.returncode:
@@ -170,8 +179,10 @@ def DotGraphsFromBytecode(bytecode: str,
         #     Writing 'cfg.DoSomething.dot'...
         #     Writing 'cfg.main.dot'...
         if f"Writing '{file.name}'..." not in stderr:
-          raise OSError(f"Could not find reference to file '{file.name}' in "
-                        f'opt stderr:\n{process.stderr}')
+          raise OSError(
+            f"Could not find reference to file '{file.name}' in "
+            f"opt stderr:\n{process.stderr}"
+          )
         if not output_pred or output_pred(file.name):
           graph_dots_true.append(fs.Read(file))
         else:
@@ -181,7 +192,8 @@ def DotGraphsFromBytecode(bytecode: str,
 
 
 def DotCallGraphAndControlFlowGraphsFromBytecode(
-    bytecode: str, opt_path: str = None) -> typing.Tuple[str, typing.List[str]]:
+  bytecode: str, opt_path: str = None
+) -> typing.Tuple[str, typing.List[str]]:
   """Create call graph and control flow graphs from an LLVM bytecode file.
 
   When both a call graph and CFGs are required, calling this function is
@@ -201,8 +213,11 @@ def DotCallGraphAndControlFlowGraphsFromBytecode(
     UnicodeDecodeError: If generated dotfile can't be read.
   """
   control_flow_graph_dots, callgraph_dots = DotGraphsFromBytecode(
-      bytecode, ['-dot-cfg', '-dot-callgraph'], opt_path,
-      lambda name: name != 'callgraph.dot')
+    bytecode,
+    ["-dot-cfg", "-dot-callgraph"],
+    opt_path,
+    lambda name: name != "callgraph.dot",
+  )
 
   if len(callgraph_dots) != 1:
     raise OSError(f"Callgraph dotfile not produced")
@@ -212,8 +227,9 @@ def DotCallGraphAndControlFlowGraphsFromBytecode(
   return callgraph, control_flow_graph_dots
 
 
-def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
-              ) -> typing.List[typing.List[str]]:
+def GetOptArgs(
+  cflags: typing.Optional[typing.List[str]] = None,
+) -> typing.List[typing.List[str]]:
   """Get the arguments passed to opt.
 
   Args:
@@ -222,32 +238,34 @@ def GetOptArgs(cflags: typing.Optional[typing.List[str]] = None
   Returns:
     A list of invocation arguments.
   """
-  cflags = cflags or ['-O0']
-  p1 = subprocess.Popen([llvm_as.LLVM_AS],
-                        stdin=subprocess.DEVNULL,
-                        stdout=subprocess.PIPE)
+  cflags = cflags or ["-O0"]
+  p1 = subprocess.Popen(
+    [llvm_as.LLVM_AS], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE
+  )
   p2 = subprocess.Popen(
-      [opt.OPT, '-disable-output', '-debug-pass=Arguments'] + cflags,
-      stdin=p1.stdout,
-      stderr=subprocess.PIPE,
-      universal_newlines=True)
+    [opt.OPT, "-disable-output", "-debug-pass=Arguments"] + cflags,
+    stdin=p1.stdout,
+    stderr=subprocess.PIPE,
+    universal_newlines=True,
+  )
   _, stderr = p2.communicate()
   if p2.returncode:
     raise llvm.LlvmError(stderr)
   args = []
-  for line in stderr.rstrip().split('\n'):
-    if not line.startswith('Pass Arguments:'):
-      raise llvm.LlvmError(f'Cannot interpret line: {line}')
-    line = line[len('Pass Arguments:'):]
+  for line in stderr.rstrip().split("\n"):
+    if not line.startswith("Pass Arguments:"):
+      raise llvm.LlvmError(f"Cannot interpret line: {line}")
+    line = line[len("Pass Arguments:") :]
     args.append(line.split())
     for arg in args[-1]:
-      if not arg[0] == '-':
-        raise llvm.LlvmError(f'Cannot interpret clang argument: {arg}')
+      if not arg[0] == "-":
+        raise llvm.LlvmError(f"Cannot interpret clang argument: {arg}")
   return args
 
 
 class Pointer(typing.NamedTuple):
   """A pointer in an alias set."""
+
   type: str
   identifier: str
   size: int
@@ -285,7 +303,8 @@ class AliasSet(typing.NamedTuple):
 
 
 def GetAliasSetsByFunction(
-    bytecode: str) -> typing.Dict[str, typing.List[AliasSet]]:
+  bytecode: str,
+) -> typing.Dict[str, typing.List[AliasSet]]:
   """Get the alias sets of a bytecode.
 
   Args:
@@ -297,10 +316,12 @@ def GetAliasSetsByFunction(
   Raises:
     OptException: In case the opt pass fails.
   """
-  process = opt.Exec(['-basicaa', '-print-alias-sets', '-disable-output'],
-                     stdin=bytecode,
-                     universal_newlines=True,
-                     log=False)
+  process = opt.Exec(
+    ["-basicaa", "-print-alias-sets", "-disable-output"],
+    stdin=bytecode,
+    universal_newlines=True,
+    log=False,
+  )
 
   # Propagate failures from opt as OptExceptions.
   if process.returncode:
@@ -310,15 +331,16 @@ def GetAliasSetsByFunction(
 
 
 def ParseAliasSetsOutput(
-    output: str) -> typing.Dict[str, typing.List[AliasSet]]:
-  lines = output.split('\n')
+  output: str,
+) -> typing.Dict[str, typing.List[AliasSet]]:
+  lines = output.split("\n")
   function_alias_sets = {}
 
   function = None
   alias_sets = None
   for line in lines:
     if line.startswith("Alias sets for function "):
-      function = line[len("Alias sets for function '"):-len(":'")]
+      function = line[len("Alias sets for function '") : -len(":'")]
       function_alias_sets[function] = []
       alias_sets = function_alias_sets[function]
     elif line.startswith("Alias Set Tracker: "):
@@ -327,12 +349,12 @@ def ParseAliasSetsOutput(
     elif line.startswith("  AliasSet["):
       if function is None:
         raise ValueError("Unexpected line!")
-      line = line[line.index('] ') + 2:]
-      alias_set_type = line[:line.index(',')]
-      line = line[line.index(',') + 1:]
+      line = line[line.index("] ") + 2 :]
+      alias_set_type = line[: line.index(",")]
+      line = line[line.index(",") + 1 :]
       mod_ref = line.split()[0]
-      line = ' '.join(line.split()[2:])
-      pointers = line.split('),')
+      line = " ".join(line.split()[2:])
+      pointers = line.split("),")
 
       alias_set_pointers = []
       for pointer in pointers:
@@ -344,18 +366,17 @@ def ParseAliasSetsOutput(
         except ValueError:
           raise ValueError(f"Failed to parse line '{line}'")
         identifier = identifier[:-1]
-        if size.endswith(')'):
+        if size.endswith(")"):
           size = size[:-1]
         pointer = Pointer(type=typename, identifier=identifier, size=int(size))
         alias_set_pointers.append(pointer)
       if alias_set_pointers:
         alias_sets.append(
-            AliasSet(
-                type=alias_set_type,
-                mod_ref=mod_ref,
-                pointers=alias_set_pointers,
-            ))
-    elif 'Unknown instructions' in line:
+          AliasSet(
+            type=alias_set_type, mod_ref=mod_ref, pointers=alias_set_pointers,
+          )
+        )
+    elif "Unknown instructions" in line:
       pass
     elif line.strip():  # Empty line
       raise ValueError(line)
@@ -368,10 +389,11 @@ class AnalysisOutput(typing.NamedTuple):
   lines: typing.List[str]  # the output of the analysis
 
 
-def RunAnalysisPasses(bytecode: str,
-                      passes: typing.List[str],
-                      opt_path: typing.Optional[pathlib.Path] = None
-                     ) -> typing.Iterable[AnalysisOutput]:
+def RunAnalysisPasses(
+  bytecode: str,
+  passes: typing.List[str],
+  opt_path: typing.Optional[pathlib.Path] = None,
+) -> typing.Iterable[AnalysisOutput]:
   """Run the given opt analysis passes and parse the output.
 
   TODO(github.com/ChrisCummins/phd/issues/54): this requires using an LLVM
@@ -389,13 +411,15 @@ def RunAnalysisPasses(bytecode: str,
   Returns:
     A generator of AnalysisOutput tuples.
   """
-  cmd = ['-analyze', '-stats', '-'] + passes
+  cmd = ["-analyze", "-stats", "-"] + passes
   p = opt.Exec(cmd, stdin=bytecode, opt=opt_path)
   if p.returncode:
-    raise opt.OptException('opt analysis failed',
-                           returncode=p.returncode,
-                           stderr=p.stderr,
-                           command=cmd)
+    raise opt.OptException(
+      "opt analysis failed",
+      returncode=p.returncode,
+      stderr=p.stderr,
+      command=cmd,
+    )
   return ParseAnalysisPassesOutput(p.stdout)
 
 
@@ -410,11 +434,11 @@ def ParseAnalysisPassesOutput(stdout: str) -> typing.Iterable[AnalysisOutput]:
   """
   global_analysis_re = re.compile(r"Printing analysis '(?P<analysis>[^']+)':")
   function_analysis_re = re.compile(
-      r"Printing analysis '(?P<analysis>[^']+)' for function '(?P<function>[^']+)':"
+    r"Printing analysis '(?P<analysis>[^']+)' for function '(?P<function>[^']+)':"
   )
 
   analysis = None
-  for line in stdout.split('\n'):
+  for line in stdout.split("\n"):
     line = line.strip()
     if not line:
       continue
@@ -423,18 +447,20 @@ def ParseAnalysisPassesOutput(stdout: str) -> typing.Iterable[AnalysisOutput]:
     if match:
       if analysis:  # Emit current analysis
         yield analysis
-      analysis = AnalysisOutput(analysis=match.group('analysis'),
-                                function=None,
-                                lines=[])
+      analysis = AnalysisOutput(
+        analysis=match.group("analysis"), function=None, lines=[]
+      )
       continue
 
     match = function_analysis_re.match(line)
     if match:
       if analysis:  # Emit current analysis
         yield analysis
-      analysis = AnalysisOutput(analysis=match.group('analysis'),
-                                function=match.group('function'),
-                                lines=[])
+      analysis = AnalysisOutput(
+        analysis=match.group("analysis"),
+        function=match.group("function"),
+        lines=[],
+      )
       continue
 
     if analysis:

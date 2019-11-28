@@ -24,7 +24,6 @@ FLAGS = app.FLAGS
 
 
 class DummyClass(object):
-
   def __init__(self):
     self.memoized_property_run_count = 0
 
@@ -101,21 +100,21 @@ def test_timeout_timeout_raised():
 def test_run_once_global():
   """Test that decorated function doesn't run more than once."""
 
-  g = {'i': 0}
+  g = {"i": 0}
 
   @decorators.run_once
   def Func() -> int:
-    g['i'] += 1
-    return g['i']
+    g["i"] += 1
+    return g["i"]
 
   x = Func()
-  assert g['i'] == 1
+  assert g["i"] == 1
   assert x == 1
 
   x = Func()
-  assert g['i'] == 1
+  assert g["i"] == 1
   assert x == 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

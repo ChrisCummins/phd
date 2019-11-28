@@ -15,23 +15,24 @@ FLAGS = app.FLAGS
 @pytest.fixture(scope="function")
 def query(tempdir: pathlib.Path) -> scrape_repos_pb2.GitHubRepositoryQuery:
   return scrape_repos_pb2.GitHubRepositoryQuery(
-      string="test query",
-      max_results=10,
+    string="test query", max_results=10,
   )
 
 
 @pytest.fixture(scope="function")
-def language(tempdir: pathlib.Path,
-             query: scrape_repos_pb2.GitHubRepositoryQuery
-            ) -> scrape_repos_pb2.LanguageCloneList:
+def language(
+  tempdir: pathlib.Path, query: scrape_repos_pb2.GitHubRepositoryQuery
+) -> scrape_repos_pb2.LanguageCloneList:
   return scrape_repos_pb2.LanguageToClone(
-      language="java",
-      query=[query],
-      destination_directory=str(tempdir),
-      importer=[
-          scrape_repos_pb2.ContentFilesImporterConfig(
-              source_code_pattern='.*\\.java')
-      ])
+    language="java",
+    query=[query],
+    destination_directory=str(tempdir),
+    importer=[
+      scrape_repos_pb2.ContentFilesImporterConfig(
+        source_code_pattern=".*\\.java"
+      )
+    ],
+  )
 
 
 class MockQuery(object):
@@ -54,7 +55,8 @@ class MockQuery(object):
 
 class MockNamedUser(object):
   """Mock class for github.NamedUser.NamedUser."""
-  login = 'ChrisCummins'
+
+  login = "ChrisCummins"
 
 
 class MockRepository(object):
@@ -62,14 +64,16 @@ class MockRepository(object):
 
   def __init__(self):
     self.owner = MockNamedUser()
-    self.name = 'empty_repository_for_testing'
+    self.name = "empty_repository_for_testing"
     self.watchers_count = 1
     self.forks_count = 0
     self.stargazers_count = 0
     self.html_url = (
-        'https://github.com/ChrisCummins/empty_repository_for_testing')
+      "https://github.com/ChrisCummins/empty_repository_for_testing"
+    )
     self.clone_url = (
-        'https://github.com/ChrisCummins/empty_repository_for_testing.git')
+      "https://github.com/ChrisCummins/empty_repository_for_testing.git"
+    )
 
 
 class MockGitHubConnection(object):
@@ -88,15 +92,17 @@ def connection():
   return MockGitHubConnection()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db(tempdir: pathlib.Path) -> contentfiles.ContentFiles:
-  return contentfiles.ContentFiles(f'sqlite:///{tempdir}/db')
+  return contentfiles.ContentFiles(f"sqlite:///{tempdir}/db")
 
 
 def test_PipelinedScraper_runs_query(
-    language: scrape_repos_pb2.LanguageCloneList,
-    query: scrape_repos_pb2.GitHubRepositoryQuery,
-    connection: MockGitHubConnection, db: contentfiles.ContentFiles):
+  language: scrape_repos_pb2.LanguageCloneList,
+  query: scrape_repos_pb2.GitHubRepositoryQuery,
+  connection: MockGitHubConnection,
+  db: contentfiles.ContentFiles,
+):
   """Test that github query is executed."""
   scraper = pipelined_scraper.PipelinedScraper(language, query, connection, db)
   scraper.start()
@@ -105,9 +111,11 @@ def test_PipelinedScraper_runs_query(
 
 
 def test_PipelinedScraper_temporary_files_are_deleted(
-    language: scrape_repos_pb2.LanguageCloneList,
-    query: scrape_repos_pb2.GitHubRepositoryQuery,
-    connection: MockGitHubConnection, db: contentfiles.ContentFiles):
+  language: scrape_repos_pb2.LanguageCloneList,
+  query: scrape_repos_pb2.GitHubRepositoryQuery,
+  connection: MockGitHubConnection,
+  db: contentfiles.ContentFiles,
+):
   """Test that meta files and cloned directories are deleted."""
   scraper = pipelined_scraper.PipelinedScraper(language, query, connection, db)
   scraper.start()
@@ -128,9 +136,11 @@ public class HelloWorld {
 
 
 def test_PipelinedScraper_contentfiles_database_contents(
-    language: scrape_repos_pb2.LanguageCloneList,
-    query: scrape_repos_pb2.GitHubRepositoryQuery,
-    connection: MockGitHubConnection, db: contentfiles.ContentFiles):
+  language: scrape_repos_pb2.LanguageCloneList,
+  query: scrape_repos_pb2.GitHubRepositoryQuery,
+  connection: MockGitHubConnection,
+  db: contentfiles.ContentFiles,
+):
   """Test database contents."""
   # This test will fail if the contents of GitHub repository
   # https://github.com/ChrisCummins/empty_repository_for_testing change.
@@ -142,18 +152,21 @@ def test_PipelinedScraper_contentfiles_database_contents(
     contentfile = session.query(contentfiles.ContentFile).first()
 
     assert contentfile.clone_from_url == (
-        'https://github.com/ChrisCummins/empty_repository_for_testing.git')
-    assert contentfile.relpath == 'HelloWorld.java'
+      "https://github.com/ChrisCummins/empty_repository_for_testing.git"
+    )
+    assert contentfile.relpath == "HelloWorld.java"
     assert contentfile.artifact_index == 0
     assert contentfile.text == HELLO_WORLD_TEXT
     assert contentfile.charcount == len(HELLO_WORLD_TEXT)
-    assert contentfile.linecount == len(HELLO_WORLD_TEXT.split('\n'))
+    assert contentfile.linecount == len(HELLO_WORLD_TEXT.split("\n"))
 
 
 def test_PipelinedScraper_contentfiles_database_repo_contents(
-    language: scrape_repos_pb2.LanguageCloneList,
-    query: scrape_repos_pb2.GitHubRepositoryQuery,
-    connection: MockGitHubConnection, db: contentfiles.ContentFiles):
+  language: scrape_repos_pb2.LanguageCloneList,
+  query: scrape_repos_pb2.GitHubRepositoryQuery,
+  connection: MockGitHubConnection,
+  db: contentfiles.ContentFiles,
+):
   """Test database contents."""
   # This test will fail if the contents of GitHub repository
   # https://github.com/ChrisCummins/empty_repository_for_testing change.
@@ -165,13 +178,16 @@ def test_PipelinedScraper_contentfiles_database_repo_contents(
     repo = session.query(contentfiles.GitHubRepository).first()
 
     assert repo.clone_from_url == (
-        'https://github.com/ChrisCummins/empty_repository_for_testing.git')
+      "https://github.com/ChrisCummins/empty_repository_for_testing.git"
+    )
 
 
 def test_PipelinedScraper_contentfiles_database_ignores_duplicates(
-    language: scrape_repos_pb2.LanguageCloneList,
-    query: scrape_repos_pb2.GitHubRepositoryQuery,
-    connection: MockGitHubConnection, db: contentfiles.ContentFiles):
+  language: scrape_repos_pb2.LanguageCloneList,
+  query: scrape_repos_pb2.GitHubRepositoryQuery,
+  connection: MockGitHubConnection,
+  db: contentfiles.ContentFiles,
+):
   """Test database contents."""
   scraper = pipelined_scraper.PipelinedScraper(language, query, connection, db)
   scraper.start()
@@ -185,9 +201,11 @@ def test_PipelinedScraper_contentfiles_database_ignores_duplicates(
   scraper.start()
   scraper.join()
   with db.Session() as session:
-    assert (session.query(
-        contentfiles.ContentFile).count() == original_contentfile_count)
+    assert (
+      session.query(contentfiles.ContentFile).count()
+      == original_contentfile_count
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

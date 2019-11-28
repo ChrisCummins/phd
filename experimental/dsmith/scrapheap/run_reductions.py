@@ -9,8 +9,8 @@ from dsmith.lib import *
 from labm8.py import fs
 
 # paths to clreduce library
-CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')
-CLSMITH_DIR = fs.abspath('..', 'lib', 'CLSmith', 'build')
+CLREDUCE_DIR = fs.abspath("..", "lib", "clreduce")
+CLSMITH_DIR = fs.abspath("..", "lib", "CLSmith", "build")
 
 # FIXME:
 # CL_LAUNCHER = fs.abspath('../lib/clsmith/build/cl_launcher')
@@ -20,8 +20,8 @@ CLSMITH_DIR = fs.abspath('..', 'lib', 'CLSmith', 'build')
 # INTERESTING_TEST = fs.abspath(CLREDUCE_DIR, 'interestingness_tests', 'wrong_code_bug.py')
 # OCLGRIND = fs.abspath('../lib/clgen/native/oclgrind/c3760d07365b74ccda04cd361e1b567a6d99dd8c/install/bin/oclgrind')
 
-status_t = NewType('status_t', int)
-return_t = namedtuple('return_t', ['runtime', 'status', 'log', 'src'])
+status_t = NewType("status_t", int)
+return_t = namedtuple("return_t", ["runtime", "status", "log", "src"])
 
 
 def get_platform_name(platform_id):

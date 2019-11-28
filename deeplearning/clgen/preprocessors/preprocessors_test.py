@@ -31,21 +31,21 @@ FLAGS = app.FLAGS
 def MockPreprocessor(text: str) -> str:
   """A mock preprocessor."""
   del text
-  return 'PREPROCESSED'
+  return "PREPROCESSED"
 
 
 @public.clgen_preprocessor
 def MockPreprocessorBadCode(text: str) -> str:
   """A mock preprocessor which raises a BadCodeException."""
   del text
-  raise errors.BadCodeException('bad code')
+  raise errors.BadCodeException("bad code")
 
 
 @public.clgen_preprocessor
 def MockPreprocessorInternalError(text: str) -> str:
   """A mock preprocessor which raises a BadCodeException."""
   del text
-  raise errors.InternalError('internal error')
+  raise errors.InternalError("internal error")
 
 
 def MockUndecoratedPreprocessor(text: str) -> str:
@@ -59,88 +59,104 @@ def MockUndecoratedPreprocessor(text: str) -> str:
 def test_GetPreprocessFunction_empty_string():
   """Test that an UserError is raised if no preprocessor is given."""
   with pytest.raises(errors.UserError) as e_info:
-    preprocessors.GetPreprocessorFunction('')
-  assert 'Invalid preprocessor name' in str(e_info.value)
+    preprocessors.GetPreprocessorFunction("")
+  assert "Invalid preprocessor name" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_module():
   """Test that UserError is raised if module not found."""
   with pytest.raises(errors.UserError) as e_info:
-    preprocessors.GetPreprocessorFunction('not.a.real.module:Foo')
-  assert 'not found' in str(e_info.value)
+    preprocessors.GetPreprocessorFunction("not.a.real.module:Foo")
+  assert "not found" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_missing_function():
   """Test that UserError is raised if module exists but function doesn't."""
   with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
-        'deeplearning.clgen.preprocessors.preprocessors_test:Foo')
-  assert 'not found' in str(e_info.value)
+      "deeplearning.clgen.preprocessors.preprocessors_test:Foo"
+    )
+  assert "not found" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_undecorated_preprocessor():
   """Test that an UserError is raised if preprocessor not decorated."""
   with pytest.raises(errors.UserError) as e_info:
     preprocessors.GetPreprocessorFunction(
-        'deeplearning.clgen.preprocessors.preprocessors_test'
-        ':MockUndecoratedPreprocessor')
-  assert '@clgen_preprocessor' in str(e_info.value)
+      "deeplearning.clgen.preprocessors.preprocessors_test"
+      ":MockUndecoratedPreprocessor"
+    )
+  assert "@clgen_preprocessor" in str(e_info.value)
 
 
 def test_GetPreprocessFunction_mock_preprocessor():
   """Test that a mock preprocessor can be found."""
   f = preprocessors.GetPreprocessorFunction(
-      'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor')
+    "deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor"
+  )
   assert f == MockPreprocessor
 
 
 def test_GetPreprocessorFunction_absolute_path(tempdir: pathlib.Path):
   """Test loading module from absolute path to file."""
-  path = tempdir / 'preprocessor.py'
+  path = tempdir / "preprocessor.py"
   fs.Write(
-      path, """
+    path,
+    """
 def Preprocess(src: str) -> str:
   return src.replace('a', 'b')
-""".encode('utf-8'))
+""".encode(
+      "utf-8"
+    ),
+  )
 
-  f = preprocessors.GetPreprocessorFunction(f'{path}:Preprocess')
-  assert f('abc') == 'bbc'
+  f = preprocessors.GetPreprocessorFunction(f"{path}:Preprocess")
+  assert f("abc") == "bbc"
 
 
 def test_GetPreprocessorFunction_absolute_path_with_dep(tempdir: pathlib.Path):
   """Test loading module from file which has a dependency."""
-  lib_module = tempdir / 'lib_module.py'
+  lib_module = tempdir / "lib_module.py"
   fs.Write(
-      lib_module, """
+    lib_module,
+    """
 def PreprocessImplementation(src):
   return src.replace('b', 'c')
-""".encode('utf-8'))
+""".encode(
+      "utf-8"
+    ),
+  )
 
-  path = tempdir / 'lib_module.py'
+  path = tempdir / "lib_module.py"
   fs.Write(
-      path, """
+    path,
+    """
 from . import lib_module
 def Preprocess(src):
   return lib_module.PreprocessImplementation(src)
-""".encode('utf-8'))
+""".encode(
+      "utf-8"
+    ),
+  )
 
   with pytest.raises(errors.UserError):
-    preprocessors.GetPreprocessorFunction(f'{path}:Preprocess')
+    preprocessors.GetPreprocessorFunction(f"{path}:Preprocess")
 
 
 def test_GetPreprocessorFunction_absolute_path_not_found(tempdir: pathlib.Path):
   """Test loading module when file not found."""
-  path = tempdir / 'foo.py'
-  fs.Write(path, "".encode('utf-8'))
+  path = tempdir / "foo.py"
+  fs.Write(path, "".encode("utf-8"))
   with pytest.raises(errors.UserError):
-    preprocessors.GetPreprocessorFunction(f'{path}:NotFound')
+    preprocessors.GetPreprocessorFunction(f"{path}:NotFound")
 
 
 def test_GetPreprocessorFunction_absolute_function_not_found(
-    tempdir: pathlib.Path):
+  tempdir: pathlib.Path,
+):
   """Test loading module when file not found."""
   with pytest.raises(errors.UserError):
-    preprocessors.GetPreprocessorFunction(f'{tempdir}/foo.py:Preprocess')
+    preprocessors.GetPreprocessorFunction(f"{tempdir}/foo.py:Preprocess")
 
 
 # Preprocess() tests.
@@ -148,32 +164,42 @@ def test_GetPreprocessorFunction_absolute_function_not_found(
 
 def test_Preprocess_no_preprocessors():
   """Test unmodified output if no preprocessors."""
-  assert preprocessors.Preprocess('hello', []) == 'hello'
+  assert preprocessors.Preprocess("hello", []) == "hello"
 
 
 def test_Preprocess_mock_preprocessor():
   """Test unmodified output if no preprocessors."""
-  assert preprocessors.Preprocess('hello', [
-    'deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor']) \
-         == 'PREPROCESSED'
+  assert (
+    preprocessors.Preprocess(
+      "hello",
+      ["deeplearning.clgen.preprocessors.preprocessors_test:MockPreprocessor"],
+    )
+    == "PREPROCESSED"
+  )
 
 
 def test_Preprocess_mock_preprocessor_bad_code():
   """Test that BadCodeException is propagated."""
   with pytest.raises(errors.BadCodeException):
-    preprocessors.Preprocess('', [
-        'deeplearning.clgen.preprocessors.preprocessors_test'
-        ':MockPreprocessorBadCode'
-    ])
+    preprocessors.Preprocess(
+      "",
+      [
+        "deeplearning.clgen.preprocessors.preprocessors_test"
+        ":MockPreprocessorBadCode"
+      ],
+    )
 
 
 def test_Preprocess_mock_preprocessor_internal_error():
   """Test that InternalError is propagated."""
   with pytest.raises(errors.InternalError):
-    preprocessors.Preprocess('', [
-        'deeplearning.clgen.preprocessors.preprocessors_test'
-        ':MockPreprocessorInternalError'
-    ])
+    preprocessors.Preprocess(
+      "",
+      [
+        "deeplearning.clgen.preprocessors.preprocessors_test"
+        ":MockPreprocessorInternalError"
+      ],
+    )
 
 
 # RejectSecrets() tests.
@@ -181,19 +207,22 @@ def test_Preprocess_mock_preprocessor_internal_error():
 
 def test_Preprocess_RejectSecrets():
   """Test that InternalError is propagated."""
-  assert preprocessors.Preprocess(
-      'Hello, world!',
-      ['deeplearning.clgen.preprocessors.preprocessors'
-       ':RejectSecrets']) == 'Hello, world!'
+  assert (
+    preprocessors.Preprocess(
+      "Hello, world!",
+      ["deeplearning.clgen.preprocessors.preprocessors" ":RejectSecrets"],
+    )
+    == "Hello, world!"
+  )
 
 
 def test_Preprocess_RejectSecrets():
   """Test that InternalError is propagated."""
   with pytest.raises(errors.BadCodeException):
     preprocessors.Preprocess(
-        '-----BEGIN RSA PRIVATE KEY-----',
-        ['deeplearning.clgen.preprocessors.preprocessors'
-         ':RejectSecrets'])
+      "-----BEGIN RSA PRIVATE KEY-----",
+      ["deeplearning.clgen.preprocessors.preprocessors" ":RejectSecrets"],
+    )
 
 
 # Benchmarks.
@@ -202,10 +231,10 @@ def test_Preprocess_RejectSecrets():
 def test_benchmark_GetPreprocessFunction_mock(benchmark):
   """Benchmark GetPreprocessFunction."""
   benchmark(
-      preprocessors.GetPreprocessorFunction,
-      'deeplearning.clgen.preprocessors.preprocessors_test'
-      ':MockPreprocessor')
+    preprocessors.GetPreprocessorFunction,
+    "deeplearning.clgen.preprocessors.preprocessors_test" ":MockPreprocessor",
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

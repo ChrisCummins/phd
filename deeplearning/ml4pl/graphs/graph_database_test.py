@@ -12,40 +12,42 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db(tempdir: pathlib.Path) -> graph_database.Database:
   """Fixture that returns an sqlite database."""
-  yield graph_database.Database(f'sqlite:///{tempdir}/db')
+  yield graph_database.Database(f"sqlite:///{tempdir}/db")
 
 
 def test_Graph_pickled_networkx_graph(db: graph_database.Database):
   """Test saving and loading graph with a pickled networkx graph of data."""
   g = nx.MultiDiGraph()
-  g.add_edge('A', 'B')
-  g.add_edge('B', 'C')
+  g.add_edge("A", "B")
+  g.add_edge("B", "C")
 
   with db.Session(commit=True) as s:
     s.add(
-        graph_database.GraphMeta(
-            group="train",
-            bytecode_id=1,
-            source_name='foo',
-            relpath='bar',
-            language='c',
-            node_embeddings_count=2,
-            node_count=g.number_of_nodes(),
-            edge_count=g.number_of_edges(),
-            edge_position_max=0,
-            loop_connectedness=0,
-            undirected_diameter=0,
-            graph=graph_database.Graph(pickled_data=pickle.dumps(g))))
+      graph_database.GraphMeta(
+        group="train",
+        bytecode_id=1,
+        source_name="foo",
+        relpath="bar",
+        language="c",
+        node_embeddings_count=2,
+        node_count=g.number_of_nodes(),
+        edge_count=g.number_of_edges(),
+        edge_position_max=0,
+        loop_connectedness=0,
+        undirected_diameter=0,
+        graph=graph_database.Graph(pickled_data=pickle.dumps(g)),
+      )
+    )
   with db.Session() as s:
     gm = s.query(graph_database.GraphMeta).first()
     assert gm.group == "train"
     assert gm.bytecode_id == 1
-    assert gm.source_name == 'foo'
-    assert gm.relpath == 'bar'
-    assert gm.language == 'c'
+    assert gm.source_name == "foo"
+    assert gm.relpath == "bar"
+    assert gm.language == "c"
     assert gm.node_count == 3
     assert gm.edge_count == 2
 
@@ -60,22 +62,21 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
   """Test saving and loading graph with a pickled dictionary of data."""
   with db.Session(commit=True) as s:
     s.add(
-        graph_database.GraphMeta(
-            group="train",
-            bytecode_id=1,
-            source_name='foo',
-            relpath='bar',
-            language='c',
-            node_count=1,
-            edge_count=2,
-            edge_position_max=0,
-            node_embeddings_count=2,
-            loop_connectedness=0,
-            undirected_diameter=0,
-            graph=graph_database.Graph(pickled_data=pickle.dumps({
-                "a": 1,
-                "b": 2
-            }))))
+      graph_database.GraphMeta(
+        group="train",
+        bytecode_id=1,
+        source_name="foo",
+        relpath="bar",
+        language="c",
+        node_count=1,
+        edge_count=2,
+        edge_position_max=0,
+        node_embeddings_count=2,
+        loop_connectedness=0,
+        undirected_diameter=0,
+        graph=graph_database.Graph(pickled_data=pickle.dumps({"a": 1, "b": 2})),
+      )
+    )
   with db.Session() as s:
     gm = s.query(graph_database.GraphMeta).first()
     assert gm.bytecode_id == 1
@@ -87,25 +88,25 @@ def test_Graph_pickled_dictionary(db: graph_database.Database):
     assert gm.id == gm.graph.id
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
   g.bytecode_id = 1
-  g.source_name = 'foo'
-  g.relpath = 'bar'
-  g.language = 'c'
+  g.source_name = "foo"
+  g.relpath = "bar"
+  g.language = "c"
   g.x = [0, 0, 0, 0]
   g.data_flow_max_steps_required = 10
-  g.add_node('A', type='statement', x=[0, 1], y=[1])
-  g.add_node('B', type='statement', x=[0, 1], y=[1])
-  g.add_node('C', type='statement', x=[0, 1], y=[1])
-  g.add_node('D', type='statement', x=[0, 1], y=[1])
-  g.add_node('root', type='magic', x=[0, 1], y=[1])
-  g.add_edge('A', 'B', flow='control', position=0)
-  g.add_edge('B', 'C', flow='control', position=0)
-  g.add_edge('C', 'D', flow='control', position=0)
-  g.add_edge('root', 'A', flow='call', position=0)
-  g.add_edge('A', 'D', flow='data', position=1)
+  g.add_node("A", type="statement", x=[0, 1], y=[1])
+  g.add_node("B", type="statement", x=[0, 1], y=[1])
+  g.add_node("C", type="statement", x=[0, 1], y=[1])
+  g.add_node("D", type="statement", x=[0, 1], y=[1])
+  g.add_node("root", type="magic", x=[0, 1], y=[1])
+  g.add_edge("A", "B", flow="control", position=0)
+  g.add_edge("B", "C", flow="control", position=0)
+  g.add_edge("C", "D", flow="control", position=0)
+  g.add_edge("root", "A", flow="call", position=0)
+  g.add_edge("A", "D", flow="data", position=1)
   return g
 
 
@@ -114,9 +115,9 @@ def test_Graph_CreateFromNetworkX(graph: nx.MultiDiGraph):
   gm = graph_database.GraphMeta.CreateFromNetworkX(graph)
 
   assert gm.bytecode_id == 1
-  assert gm.source_name == 'foo'
-  assert gm.relpath == 'bar'
-  assert gm.language == 'c'
+  assert gm.source_name == "foo"
+  assert gm.relpath == "bar"
+  assert gm.language == "c"
   assert gm.node_count == 5
   assert gm.edge_count == 5 * 2  # forward and backward edges
   assert gm.edge_type_count == 3 * 2  # forward and backward edge types.
@@ -137,5 +138,5 @@ def test_benchmark_Graph_CreateFromNetworkX(benchmark, graph: nx.MultiDiGraph):
   benchmark(graph_database.GraphMeta.CreateFromNetworkX, graph)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -10,8 +10,7 @@
 #include <string>
 #include <vector>
 
-
-template<typename T>
+template <typename T>
 class vec2 {
  public:
   using value_type = T;
@@ -20,8 +19,10 @@ class vec2 {
 
   value_type& operator[](const size_t i) {
     switch (i) {
-      case 1: return y;
-      default: return x;
+      case 1:
+        return y;
+      default:
+        return x;
     }
   }
 
@@ -46,14 +47,12 @@ class vec2 {
   }
 
   // implicit conversion between types
-  template<typename U>
+  template <typename U>
   operator vec2<U>() const {
-    return vec2<U>{ static_cast<U>(x), static_cast<U>(y) };
+    return vec2<U>{static_cast<U>(x), static_cast<U>(y)};
   }
 
-  float norm() const {
-    return std::sqrt(x * x + y * y);
-  }
+  float norm() const { return std::sqrt(x * x + y * y); }
 
   vec2& normalize(const value_type& l = value_type{1}) {
     *this = *this * (l / norm());
@@ -69,8 +68,7 @@ class vec2 {
 using vec2f = vec2<float>;
 using vec2i = vec2<int>;
 
-
-template<typename T>
+template <typename T>
 class vec3 {
  public:
   using value_type = T;
@@ -79,9 +77,12 @@ class vec3 {
 
   value_type& operator[](const size_t i) {
     switch (i) {
-      case 1: return y;
-      case 2: return z;
-      default: return x;
+      case 1:
+        return y;
+      case 2:
+        return z;
+      default:
+        return x;
     }
   }
 
@@ -93,8 +94,7 @@ class vec3 {
 
   // cross product
   inline vec3 operator^(const vec3& rhs) const {
-    return vec3(y * rhs.z - z * rhs.y,
-                z * rhs.x - x * rhs.z,
+    return vec3(y * rhs.z - z * rhs.y, z * rhs.x - x * rhs.z,
                 x * rhs.y - y * rhs.x);
   }
 
@@ -115,16 +115,12 @@ class vec3 {
   }
 
   // implicit conversion between types
-  template<typename U>
+  template <typename U>
   operator vec3<U>() const {
-    return vec3<U>{
-      static_cast<U>(x), static_cast<U>(y), static_cast<U>(z)
-    };
+    return vec3<U>{static_cast<U>(x), static_cast<U>(y), static_cast<U>(z)};
   }
 
-  float norm() const {
-    return std::sqrt(x * x + y * y + z * z);
-  }
+  float norm() const { return std::sqrt(x * x + y * y + z * z); }
 
   vec3& normalize(const value_type& l = value_type{1}) {
     *this = *this * (l / norm());
@@ -139,10 +135,9 @@ class vec3 {
 
 using vec3f = vec3<float>;
 
-
 vec3f barycentric(vec3f a, vec3f b, vec3f c, vec3f p) {
   vec3f s[2];
-  for (unsigned int i = 2; i--; ) {
+  for (unsigned int i = 2; i--;) {
     s[i][0] = c[i] - a[i];
     s[i][1] = b[i] - a[i];
     s[i][2] = a[i] - p[i];
@@ -160,14 +155,12 @@ vec3f barycentric(vec3f a, vec3f b, vec3f c, vec3f p) {
 
 vec3f barycentric(vec2f a, vec2f b, vec2f c, vec2f p) {
   vec3f u = vec3f{c[0] - a[0], b[0] - a[0], a[0] - p[0]}  // NOLINT
-            ^ vec3f{c[1] - a[1], b[1] - a[1], a[1] - p[1]};
+            ^ vec3f { c[1] - a[1], b[1] - a[1], a[1] - p[1] };
   // triangle is degenerate, in this case return smth with negative
   // coordinates:
-  if (std::abs(u[2]) < 1)
-    return vec3f(-1, 1, 1);
+  if (std::abs(u[2]) < 1) return vec3f(-1, 1, 1);
   return vec3f(1.0f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
 }
-
 
 class Model {
  public:
@@ -176,8 +169,7 @@ class Model {
 
   explicit Model(const std::string& filename) {
     std::ifstream in{filename, std::ifstream::in};
-    if (in.fail())
-      throw std::runtime_error{"loading model"};
+    if (in.fail()) throw std::runtime_error{"loading model"};
 
     std::string line;
 
@@ -191,8 +183,7 @@ class Model {
 
         // parse vector
         vec3f v;
-        for (size_t i = 0; i < 3; i++)
-          iss >> v[i];
+        for (size_t i = 0; i < 3; i++) iss >> v[i];
 
         _verts.push_back(v);
       } else if (!line.compare(0, 2, "f ")) {
@@ -222,7 +213,6 @@ class Model {
   faces_type _faces;
 };
 
-
 class pixel {
  public:
   using value_type = unsigned char;
@@ -233,16 +223,14 @@ class pixel {
       : r(_r), g(_g), b(_b) {}
 
   inline pixel operator*(const float f) const {
-    return pixel{static_cast<value_type>(r * f),
-          static_cast<value_type>(g * f),
-          static_cast<value_type>(b * f)};
+    return pixel{static_cast<value_type>(r * f), static_cast<value_type>(g * f),
+                 static_cast<value_type>(b * f)};
   }
 
   // human-readable:
   friend std::ostream& operator<<(std::ostream& out, const pixel& pixel) {
-    out << static_cast<int>(pixel.r)
-        << ' ' << static_cast<int>(pixel.g)
-        << ' ' << static_cast<int>(pixel.b) << ' ';
+    out << static_cast<int>(pixel.r) << ' ' << static_cast<int>(pixel.g) << ' '
+        << static_cast<int>(pixel.b) << ' ';
     return out;
   }
 };
@@ -255,8 +243,7 @@ static const pixel blue{0, 255, 0};
 static const pixel green{0, 0, 255};
 }  // namespace colors
 
-
-template<typename T>
+template <typename T>
 class subscriptable_t {
  public:
   using value_type = T;
@@ -270,7 +257,7 @@ class subscriptable_t {
   pointer _root;
 };
 
-template<typename T>
+template <typename T>
 class col_iterator {
  public:
   using value_type = T;
@@ -288,9 +275,7 @@ class col_iterator {
     return tmp;
   }
 
-  value_type& operator*() {
-    return *_data;
-  }
+  value_type& operator*() { return *_data; }
 
   friend bool operator==(const col_iterator& lhs, const col_iterator& rhs) {
     return lhs._data == rhs._data;
@@ -304,7 +289,7 @@ class col_iterator {
   pixel* _data;
 };
 
-template<typename T>
+template <typename T>
 class row_iterator {
  public:
   using value_type = T;
@@ -324,9 +309,7 @@ class row_iterator {
     return tmp;
   }
 
-  col_iterator<value_type> begin() {
-    return col_iterator<value_type>{_data};
-  }
+  col_iterator<value_type> begin() { return col_iterator<value_type>{_data}; }
 
   col_iterator<value_type> end() {
     return col_iterator<value_type>{_data + _stride};
@@ -349,20 +332,23 @@ class row_iterator {
   size_t _stride;
 };
 
-
 class Canvas {
  public:
   using iterator = row_iterator<pixel>;
 
-  Canvas(const size_t width, const size_t height,
-         bool inverted = true, const pixel& fill = pixel{})
-      : _width(width), _height(height), _inverted(inverted),
+  Canvas(const size_t width, const size_t height, bool inverted = true,
+         const pixel& fill = pixel{})
+      : _width(width),
+        _height(height),
+        _inverted(inverted),
         _data(width * height, fill),
         _zbuffer(width * height, -std::numeric_limits<float>::max()) {}
 
-  Canvas(const size_t width, const size_t height,
-         const pixel& fill, bool inverted = true)
-      : _width(width), _height(height), _inverted(inverted),
+  Canvas(const size_t width, const size_t height, const pixel& fill,
+         bool inverted = true)
+      : _width(width),
+        _height(height),
+        _inverted(inverted),
         _data(width * height, fill),
         _zbuffer(width * height, -std::numeric_limits<float>::max()) {}
 
@@ -378,13 +364,9 @@ class Canvas {
       return subscriptable_t<pixel>{_data.data() + y * width()};
   }
 
-  iterator begin() {
-    return iterator{_data.data(), width()};
-  }
+  iterator begin() { return iterator{_data.data(), width()}; }
 
-  iterator end() {
-    return iterator{_data.data() + _data.size()};
-  }
+  iterator end() { return iterator{_data.data() + _data.size()}; }
 
   void line(int x0, int y0, int x1, int y1, const pixel& color) {
     bool steep = false;
@@ -444,9 +426,8 @@ class Canvas {
     vec3f p;
     for (p.x = bboxmin.x; p.x <= bboxmax.x; ++p.x) {
       for (p.y = bboxmin.y; p.y <= bboxmax.y; ++p.y) {
-        vec3f bc_screen  = barycentric(t0, t1, t2, p);
-        if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
-          continue;
+        vec3f bc_screen = barycentric(t0, t1, t2, p);
+        if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0) continue;
 
         p.z = t0[2] * bc_screen[0];
         p.z += t1[2] * bc_screen[1];
@@ -478,7 +459,7 @@ class Canvas {
 
   vec3f world2screen(vec3f v) {
     return vec3f{static_cast<int>((v.x + 1) * width() / 2 + 0.5),
-          static_cast<int>((v.y + 1.) * height() / 2 + 0.5), v.z};
+                 static_cast<int>((v.y + 1.) * height() / 2 + 0.5), v.z};
   }
 
   void solid(const Model& model, const vec3f& light_direction,
@@ -515,33 +496,32 @@ class Canvas {
   std::vector<float> _zbuffer;
 };
 
-
 class Image : public Canvas {
  public:
-  Image(const size_t width, const size_t height,
-        bool inverted = true, const pixel& fill = pixel{})
+  Image(const size_t width, const size_t height, bool inverted = true,
+        const pixel& fill = pixel{})
       : Canvas(width, height, inverted, fill) {}
-  Image(const size_t width, const size_t height,
-        const pixel& fill, bool inverted = true)
+  Image(const size_t width, const size_t height, const pixel& fill,
+        bool inverted = true)
       : Canvas(width, height, inverted, fill) {}
 
   // P6 file format:
   friend auto& operator<<(std::ostream& out, const Image& img) {
-    out << "P6\n" << img.width() << ' ' << img.height() << '\n'
+    out << "P6\n"
+        << img.width() << ' ' << img.height() << '\n'
         << int(std::numeric_limits<pixel::value_type>::max()) << '\n';
 
-    for (const auto& pixel : img._data)
-      out << pixel.r << pixel.g << pixel.b;
+    for (const auto& pixel : img._data) out << pixel.r << pixel.g << pixel.b;
 
     return out;
   }
 };
 
-
 int main() {
   static const size_t width = 2048, height = 2048;
 
-  auto start = std::clock(); double timer;
+  auto start = std::clock();
+  double timer;
 
   Image img{width, height, pixel{255}};
   Model model{"playground/r/african_head.obj"};

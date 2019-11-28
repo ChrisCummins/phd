@@ -9,18 +9,16 @@
 // Solution for doubly linked list. Position forward and reverse
 // iterators at either end and advance towards midpoint.
 //
-template<typename T>
+template <typename T>
 bool is_palindrone(const std::list<T>& list) {
   auto left = list.begin();
   auto right = list.rbegin();
 
   for (size_t i = 0; i < list.size() / 2; i++)
-    if (*left++ != *right++)
-      return false;
+    if (*left++ != *right++) return false;
 
   return true;
 }
-
 
 ///////////
 // Tests //
@@ -37,7 +35,6 @@ TEST(ListPalindrone, is_palindrone) {
   ASSERT_TRUE(is_palindrone(l3));
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -52,11 +49,9 @@ void BM_is_palindrone(benchmark::State& state) {
   std::list<int> list;
 
   // Create palindrone.
-  for (int i = 0; i < static_cast<int>(half); i++)
-    list.push_back(i);
+  for (int i = 0; i < static_cast<int>(half); i++) list.push_back(i);
   auto it = list.crbegin();
-  while (it != list.crend())
-    list.push_back(*it++);
+  while (it != list.crend()) list.push_back(*it++);
 
   while (state.KeepRunning()) {
     auto c = is_palindrone(list);

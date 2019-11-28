@@ -12,8 +12,7 @@ using Board = std::array<std::array<char, 3>, 3>;
 
 inline void zero_board(Board &b) {
   for (auto &row : b)
-    for (auto &cell : row)
-      cell = '-';
+    for (auto &cell : row) cell = '-';
 }
 
 //
@@ -46,7 +45,6 @@ bool player_won(const Board &b, const char player) {
     return false;
 }
 
-
 ///////////
 // Tests //
 ///////////
@@ -65,16 +63,15 @@ TEST(TicTacToe, player_won) {
   b[1][2] = 'y';
   b[2][2] = 'y';
 
-  ASSERT_EQ(true,  player_won(b, 'x'));
+  ASSERT_EQ(true, player_won(b, 'x'));
   ASSERT_EQ(false, player_won(b, 'y'));
 }
-
 
 ////////////////
 // Benchmarks //
 ////////////////
 
-void BM_player_won(benchmark::State& state) {
+void BM_player_won(benchmark::State &state) {
   Board b;
 
   while (state.KeepRunning()) {

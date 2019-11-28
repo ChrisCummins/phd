@@ -96,10 +96,16 @@ def process_json(infile, outpath):
     writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
 
     # Write header
-    writer.writerow([
-        "Date", "Incomplete Tasks", "Complete Tasks", "Tasks Added",
-        "Tasks Completed", "Tasks Delta"
-    ])
+    writer.writerow(
+      [
+        "Date",
+        "Incomplete Tasks",
+        "Complete Tasks",
+        "Tasks Added",
+        "Tasks Completed",
+        "Tasks Delta",
+      ]
+    )
 
     last_incomplete, last_complete = 0, 0
 
@@ -110,17 +116,18 @@ def process_json(infile, outpath):
       delta_completed = complete - last_complete
       delta = delta_added - delta_completed
       writer.writerow(
-          [date, incomplete, complete, delta_added, delta_completed, delta])
+        [date, incomplete, complete, delta_added, delta_completed, delta]
+      )
       last_incomplete = incomplete
       last_complete = complete
 
     nrows = len(tasks)
-    app.Log(1, f"Exported {nrows} records to \"{outfile.name}\"")
+    app.Log(1, f'Exported {nrows} records to "{outfile.name}"')
 
 
 def generate_json(of2path, outpath):
   app.Log(2, f"Exporting OmniFocus database to JSON")
-  subprocess.check_output([of2path, '-o', outpath])
+  subprocess.check_output([of2path, "-o", outpath])
   return outpath
 
 

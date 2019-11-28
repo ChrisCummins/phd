@@ -30,38 +30,43 @@ FLAGS = app.FLAGS
 
 
 def ConfigToGenerator(
-    config: generator_pb2.ClsmithGenerator) -> deepsmith_pb2.Generator:
+  config: generator_pb2.ClsmithGenerator,
+) -> deepsmith_pb2.Generator:
   """Convert a config proto to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
-  g.name = 'clsmith'
-  g.opts['opts'] = ' '.join(config.opt)
+  g.name = "clsmith"
+  g.opts["opts"] = " ".join(config.opt)
   return g
 
 
-class ClsmithGenerator(generator.GeneratorServiceBase,
-                       generator_pb2_grpc.GeneratorServiceServicer):
-
+class ClsmithGenerator(
+  generator.GeneratorServiceBase, generator_pb2_grpc.GeneratorServiceServicer
+):
   def __init__(self, config: generator_pb2.ClgenGenerator):
     super(ClsmithGenerator, self).__init__(config)
-    self.toolchain = 'opencl'
+    self.toolchain = "opencl"
     self.generator = ConfigToGenerator(self.config)
     if not self.config.testcase_skeleton:
-      raise ValueError('No testcase skeletons provided')
+      raise ValueError("No testcase skeletons provided")
     for skeleton in self.config.testcase_skeleton:
       skeleton.generator.CopyFrom(self.generator)
 
-  def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
-                        context) -> generator_pb2.GenerateTestcasesResponse:
+  def GenerateTestcases(
+    self, request: generator_pb2.GenerateTestcasesRequest, context
+  ) -> generator_pb2.GenerateTestcasesResponse:
     del context
     num_programs = int(
-        math.ceil(request.num_testcases / len(self.config.testcase_skeleton)))
+      math.ceil(request.num_testcases / len(self.config.testcase_skeleton))
+    )
     response = services.BuildDefaultResponse(
-        generator_pb2.GenerateTestcasesResponse)
+      generator_pb2.GenerateTestcasesResponse
+    )
     try:
       for i in range(num_programs):
         response.testcases.extend(
-            self.SourceToTestcases(*self.GenerateOneSource()))
-        app.Log(1, 'Generated file %d.', i + 1)
+          self.SourceToTestcases(*self.GenerateOneSource())
+        )
+        app.Log(1, "Generated file %d.", i + 1)
     except clsmith.CLSmithError as e:
       response.status.returncode = service_pb2.ServiceStatus.ERROR
       response.status.error_message = str(e)
@@ -80,21 +85,21 @@ class ClsmithGenerator(generator.GeneratorServiceBase,
     return src, wall_time_ms, start_epoch_ms_utc
 
   def SourceToTestcases(
-      self, src: str, wall_time_ms: int,
-      start_epoch_ms_utc: int) -> typing.List[deepsmith_pb2.Testcase]:
+    self, src: str, wall_time_ms: int, start_epoch_ms_utc: int
+  ) -> typing.List[deepsmith_pb2.Testcase]:
     """Make testcases from a CLSmith generated source."""
     testcases = []
     for skeleton in self.config.testcase_skeleton:
       t = deepsmith_pb2.Testcase()
       t.CopyFrom(skeleton)
       p = t.profiling_events.add()
-      p.type = 'generation'
+      p.type = "generation"
       p.duration_ms = wall_time_ms
       p.event_start_epoch_ms = start_epoch_ms_utc
-      t.inputs['src'] = src
+      t.inputs["src"] = src
       testcases.append(t)
     return testcases
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(ClsmithGenerator.Main(generator_pb2.ClsmithGenerator))

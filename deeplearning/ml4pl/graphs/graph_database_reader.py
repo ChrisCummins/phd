@@ -15,6 +15,7 @@ FLAGS = app.FLAGS
 
 class BufferedGraphReaderOrder(enum.Enum):
   """Determine the order to read graphs from a database."""
+
   # In order reading always starts at the smallest graph ID and proceeds
   # incrementally through the graph table.
   IN_ORDER = 1
@@ -38,13 +39,13 @@ class BufferedGraphReaderOrder(enum.Enum):
 
 
 def BufferedGraphReader(
-    db: graph_database.Database,
-    filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None,
-    order: BufferedGraphReaderOrder = BufferedGraphReaderOrder.IN_ORDER,
-    eager_graph_loading: bool = True,
-    buffer_size: int = 256,
-    limit: typing.Optional[int] = None,
-    print_context: typing.Any = None,
+  db: graph_database.Database,
+  filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None,
+  order: BufferedGraphReaderOrder = BufferedGraphReaderOrder.IN_ORDER,
+  eager_graph_loading: bool = True,
+  buffer_size: int = 256,
+  limit: typing.Optional[int] = None,
+  print_context: typing.Any = None,
 ) -> typing.Iterable[graph_database.GraphMeta]:
   """An iterator over the graphs in a database.
 
@@ -87,7 +88,8 @@ def BufferedGraphReader(
         query = query.order_by(db.Random())
       elif order == BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED:
         query = query.order_by(
-            graph_database.GraphMeta.data_flow_max_steps_required)
+          graph_database.GraphMeta.data_flow_max_steps_required
+        )
       else:
         query = query.order_by(graph_database.GraphMeta.id)
 
@@ -100,7 +102,7 @@ def BufferedGraphReader(
   # order, pick a random starting point in the list of IDs.
   if limit and order != BufferedGraphReaderOrder.IN_ORDER:
     batch_start = random.randint(0, max(len(ids) - limit - 1, 0))
-    ids = ids[batch_start:batch_start + limit]
+    ids = ids[batch_start : batch_start + limit]
   elif limit:
     # If we are reading the table in order, we must still respect the limit
     # argument.
@@ -120,12 +122,16 @@ def BufferedGraphReader(
     # If we are reading in non-ID order then we must perform ID checks for all
     # IDs in the batch. If the IDs are ordered we can use (faster) index range
     # comparisons.
-    if (order == BufferedGraphReaderOrder.GLOBAL_RANDOM or
-        order == BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED):
+    if (
+      order == BufferedGraphReaderOrder.GLOBAL_RANDOM
+      or order == BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED
+    ):
       query = query.filter(graph_database.GraphMeta.id.in_(batch_ids))
     else:
-      query = query.filter(graph_database.GraphMeta.id >= batch_ids[0],
-                           graph_database.GraphMeta.id <= batch_ids[-1])
+      query = query.filter(
+        graph_database.GraphMeta.id >= batch_ids[0],
+        graph_database.GraphMeta.id <= batch_ids[-1],
+      )
       # For index range comparisons we must repeat the same filters as when
       # first getting the graph IDs.
       query = query.filter(graph_database.GraphMeta.node_count > 1)
@@ -135,8 +141,10 @@ def BufferedGraphReader(
     graph_metas = query.all()
 
     if len(graph_metas) != len(batch_ids):
-      raise OSError(f"Requested {len(batch_ids)} graphs in a batch but "
-                    f"received {len(graph_metas)}")
+      raise OSError(
+        f"Requested {len(batch_ids)} graphs in a batch but "
+        f"received {len(graph_metas)}"
+      )
 
     # For batch-level random ordering, shuffle the result of the (in-order)
     # graph query.

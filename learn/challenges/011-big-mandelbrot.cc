@@ -108,7 +108,7 @@ int main() {
     std::ostringstream header;
     header << "P6\n" << width << ' ' << height << '\n' << "255\n";
 
-    // Output file:
+// Output file:
 #ifdef use_mmap
     const auto headerlen = strlen(header.str().c_str());
     const auto filesize = headerlen + size * 3 * sizeof(char);

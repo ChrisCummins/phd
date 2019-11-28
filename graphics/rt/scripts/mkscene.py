@@ -16,22 +16,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with rt.  If not, see <http://www.gnu.org/licenses/>.
-
 from math import ceil
 from os.path import abspath
 from random import randint
-from re import compile, search, sub
-from sys import argv, exit, stdout
+from re import compile
+from re import search
+from re import sub
+from sys import argv
+from sys import exit
+from sys import stdout
 
 
 verbosity = {
-  "debug": {
-    "file_paths": True,
-    "macro_defs": False
-  },
-  "warn": {
-    "unused_def": True
-  }
+  "debug": {"file_paths": True, "macro_defs": False},
+  "warn": {"unused_def": True},
 }
 
 
@@ -58,7 +56,7 @@ def tokenise(characters):
   # Iterate over characters:
   for c in characters:
     # If it's a comment character, set "in_comment" flag.
-    if c == '#':
+    if c == "#":
       in_comment = True
     # If it's the end of a line, reset the "in_comment" flag, but
     # *don't* empty the buffer if we're in quotes, to support
@@ -175,8 +173,7 @@ def preprocess(tokens, macros={}):
       name = next_token_def_val
       macros[name] = [token, False]
       if verbosity["debug"]["macro_defs"]:
-        debug("Defined macro '{0}' = '{1}'"
-              .format(name, token))
+        debug("Defined macro '{0}' = '{1}'".format(name, token))
       next_token_def_val = False
       next_token_def = False
     elif lowertoken == "@import":
@@ -242,8 +239,7 @@ def get_colour(token):
 
 
 def get_vector(tokens):
-  return ("Vector({0}, {1}, {2})"
-          .format(tokens[0], tokens[1], tokens[2]))
+  return "Vector({0}, {1}, {2})".format(tokens[0], tokens[1], tokens[2])
 
 
 def pairs_to_str(pairs):
@@ -363,7 +359,7 @@ def set_renderer_softlights(pairs):
   lights = {}
   renderer["lights"] = lights
   lights["base"] = consume_int(pairs, "base", default=3)
-  lights["scalefactor"] = consume_scalar(pairs, "scalefactor", default=.01)
+  lights["scalefactor"] = consume_scalar(pairs, "scalefactor", default=0.01)
 
 
 materials = set()
@@ -381,16 +377,22 @@ def get_material_code(name, pairs):
     fatal("Unrecognised attributes:", pairs_to_str(pairs))
 
   if name in materials:
-    fatal("Duplicate material name '{0}'"
-          .format(name))
-  materials.add(name);
+    fatal("Duplicate material name '{0}'".format(name))
+  materials.add(name)
 
-  return ("const Material *const restrict {name} = "
-          "new Material({colour}, {ambient}, {diffuse}, "
-          "{specular}, {shininess}, {reflectivity});"
-          .format(name=name, colour=colour, ambient=ambient, diffuse=diffuse,
-                  specular=specular, shininess=shininess,
-                  reflectivity=reflectivity))
+  return (
+    "const Material *const restrict {name} = "
+    "new Material({colour}, {ambient}, {diffuse}, "
+    "{specular}, {shininess}, {reflectivity});".format(
+      name=name,
+      colour=colour,
+      ambient=ambient,
+      diffuse=diffuse,
+      specular=specular,
+      shininess=shininess,
+      reflectivity=reflectivity,
+    )
+  )
 
 
 objects = set()
@@ -402,14 +404,15 @@ def get_plane_code(name, pairs):
   material = consume_material(pairs, "material")
 
   if name in objects:
-    fatal("Duplicate object name '{0}'"
-          .format(name))
+    fatal("Duplicate object name '{0}'".format(name))
   objects.add(name)
 
-  return ("const Plane *const restrict {name} = "
-          "new Plane({position}, {direction}, {material});"
-          .format(name=name, position=position, direction=direction,
-                  material=material))
+  return (
+    "const Plane *const restrict {name} = "
+    "new Plane({position}, {direction}, {material});".format(
+      name=name, position=position, direction=direction, material=material
+    )
+  )
 
 
 def get_checkerboard_code(name, pairs):
@@ -420,15 +423,21 @@ def get_checkerboard_code(name, pairs):
   material2 = consume_material(pairs, "material2")
 
   if name in objects:
-    fatal("Duplicate object name '{0}'"
-          .format(name))
+    fatal("Duplicate object name '{0}'".format(name))
   objects.add(name)
 
-  return ("const CheckerBoard *const restrict {name} = "
-          "new CheckerBoard({position}, {direction}, {size}, "
-          "{material1}, {material2});"
-          .format(name=name, position=position, direction=direction,
-                  size=size, material1=material1, material2=material2))
+  return (
+    "const CheckerBoard *const restrict {name} = "
+    "new CheckerBoard({position}, {direction}, {size}, "
+    "{material1}, {material2});".format(
+      name=name,
+      position=position,
+      direction=direction,
+      size=size,
+      material1=material1,
+      material2=material2,
+    )
+  )
 
 
 def get_sphere_code(name, pairs):
@@ -437,14 +446,15 @@ def get_sphere_code(name, pairs):
   material = consume_material(pairs, "material")
 
   if name in objects:
-    fatal("Duplicate object name '{0}'"
-          .format(name))
+    fatal("Duplicate object name '{0}'".format(name))
   objects.add(name)
 
-  return ("const Sphere *const restrict {name} = "
-          "new Sphere({position}, {size}, {material});"
-          .format(name=name, position=position, size=size,
-                  material=material))
+  return (
+    "const Sphere *const restrict {name} = "
+    "new Sphere({position}, {size}, {material});".format(
+      name=name, position=position, size=size, material=material
+    )
+  )
 
 
 lights = set()
@@ -470,14 +480,15 @@ def get_softlight_code(name, pairs):
   samples = ceil(base + (size * scale) ** 3)
 
   if name in lights:
-    fatal("Duplicate light name '{0}'"
-          .format(name))
+    fatal("Duplicate light name '{0}'".format(name))
   lights.add(name)
 
-  return ("const SoftLight *const restrict {name} = "
-          "new SoftLight({position}, {colour}, {size}, {samples});"
-          .format(name=name, position=position, size=size,
-                  colour=colour, samples=samples))
+  return (
+    "const SoftLight *const restrict {name} = "
+    "new SoftLight({position}, {colour}, {size}, {samples});".format(
+      name=name, position=position, size=size, colour=colour, samples=samples
+    )
+  )
 
 
 def get_pointlight_code(name, pairs):
@@ -485,13 +496,15 @@ def get_pointlight_code(name, pairs):
   colour = consume_colour(pairs, "colour")
 
   if name in lights:
-    fatal("Duplicate light name '{0}'"
-          .format(name))
+    fatal("Duplicate light name '{0}'".format(name))
   lights.add(name)
 
-  return ("const SoftLight *const restrict {name} = "
-          "new SoftLight({position}, {colour});"
-          .format(name=name, position=position, colour=colour))
+  return (
+    "const SoftLight *const restrict {name} = "
+    "new SoftLight({position}, {colour});".format(
+      name=name, position=position, colour=colour
+    )
+  )
 
 
 def consume_val(pairs, name):
@@ -524,18 +537,24 @@ def get_camera_perspective_code(name, pairs):
   film = consume_film(pairs, "film")
 
   if camera:
-    fatal("Duplicate camera definitions: '{0}' and '{1}'"
-          .format(camera, name))
+    fatal("Duplicate camera definitions: '{0}' and '{1}'".format(camera, name))
   camera = name
 
-  return ("const Camera *const restrict {name} = "
-          "new Camera({position}, {lookat}, "
-          "{width}, {height}, "
-          "Lens({focal}, {aperture}, {focus}));"
-          .format(name=name, position=position, lookat=lookat,
-                  width=film["width"], height=film["height"],
-                  focal=lens["focal"], aperture=lens["aperture"],
-                  focus=lens["focus"]))
+  return (
+    "const Camera *const restrict {name} = "
+    "new Camera({position}, {lookat}, "
+    "{width}, {height}, "
+    "Lens({focal}, {aperture}, {focus}));".format(
+      name=name,
+      position=position,
+      lookat=lookat,
+      width=film["width"],
+      height=film["height"],
+      focal=lens["focal"],
+      aperture=lens["aperture"],
+      focus=lens["focus"],
+    )
+  )
 
 
 films = {}
@@ -548,13 +567,12 @@ def add_film(name, pairs):
   height = consume_int(pairs, "height")
 
   if name in films:
-    fatal("Duplicate film type '{0}'"
-          .format(name))
+    fatal("Duplicate film type '{0}'".format(name))
   films[name] = {
     "gamma": gamma,
     "saturation": saturation,
     "width": width,
-    "height": height
+    "height": height,
   }
 
 
@@ -567,14 +585,9 @@ def add_lens(name, pairs):
   focus = consume_scalar(pairs, "focus", 1)
 
   if name in lenses:
-    fatal("Duplicate lens type '{0}'"
-          .format(name))
+    fatal("Duplicate lens type '{0}'".format(name))
 
-  lenses[name] = {
-    "focal": focal,
-    "aperture": aperture,
-    "focus": focus
-  }
+  lenses[name] = {"focal": focal, "aperture": aperture, "focus": focus}
 
 
 def get_keyval_pairs(tokens):
@@ -585,15 +598,13 @@ def get_keyval_pairs(tokens):
     if token[-1] == ":":
       key = token[0:-1].lower()
       if key in pairs:
-        fatal("Duplicate key '{0}'"
-              .format(key))
+        fatal("Duplicate key '{0}'".format(key))
       pairs[key] = []
     else:
       if key:
         pairs[key].append(token)
       else:
-        fatal("Value without key '{0}'"
-              .format(token))
+        fatal("Value without key '{0}'".format(token))
 
   return pairs
 
@@ -659,10 +670,12 @@ def get_renderer_code():
   depth = renderer["depth"]
   dofsamples = renderer["dof"]
 
-  c = ("Renderer *const renderer = new Renderer(*{scene}, {camera}, "
-       "{dof}, {depth});"
-       .format(scene="scene", camera=camera, depth=depth,
-               dof=dofsamples))
+  c = (
+    "Renderer *const renderer = new Renderer(*{scene}, {camera}, "
+    "{dof}, {depth});".format(
+      scene="scene", camera=camera, depth=depth, dof=dofsamples
+    )
+  )
   return c
 
 
@@ -670,19 +683,16 @@ def get_image():
   width = renderer["scale"] * film["width"]
   height = renderer["scale"] * film["height"]
   itype = "Image<{width}, {height}>".format(width=width, height=height)
-  c = ("{itype} *const image = new {itype}("
-       "{saturation}, {colour});"
-       .format(itype=itype,
-               saturation=film["saturation"],
-               colour=("Colour({0}, {1}, {2})".format(film["gamma"][0],
-                                                      film["gamma"][1],
-                                                      film["gamma"][2]))))
-  return {
-    "code": c,
-    "width": width,
-    "height": height,
-    "type": itype
-  }
+  c = "{itype} *const image = new {itype}(" "{saturation}, {colour});".format(
+    itype=itype,
+    saturation=film["saturation"],
+    colour=(
+      "Colour({0}, {1}, {2})".format(
+        film["gamma"][0], film["gamma"][1], film["gamma"][2]
+      )
+    ),
+  )
+  return {"code": c, "width": width, "height": height, "type": itype}
 
 
 def get_code(sections):
@@ -690,9 +700,9 @@ def get_code(sections):
   render = []
 
   code.append('#include "rt/rt.h"')
-  code.append('using namespace rt;')
+  code.append("using namespace rt;")
 
-  code.append('int main(int argc, char **argv) {')
+  code.append("int main(int argc, char **argv) {")
   for section in sections:
     render.append(get_section_code(section))
   render.append(get_scene_code())
@@ -703,11 +713,13 @@ def get_code(sections):
   code.append(image["code"])
 
   # Render code:
-  code.append('render<{itype}>(*renderer, "{path}", image);'
-              .format(itype=image["type"],
-                      path=renderer["path"]))
-  code.append('return 0;')
-  code.append('}')
+  code.append(
+    'render<{itype}>(*renderer, "{path}", image);'.format(
+      itype=image["type"], path=renderer["path"]
+    )
+  )
+  code.append("return 0;")
+  code.append("}")
 
   return "\n".join(code)
 

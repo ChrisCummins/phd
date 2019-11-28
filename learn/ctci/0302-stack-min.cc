@@ -17,62 +17,53 @@ static unsigned int seed = 0xCEC;
 // list front), and the second storing pointers to minimum value
 // elements. push(), pop() and min() are all O(1).
 //
-template<typename T>
+template <typename T>
 class MinStack {
  public:
   MinStack() {}
 
   explicit MinStack(std::initializer_list<T> il) {
-    for (auto& elem : il)
-      push(elem);
+    for (auto& elem : il) push(elem);
   }
 
   void push(const T& elem) {
     _elem.push_front(elem);
 
     // Update min.
-    if (_min.empty() || elem <= *_min.front())
-      _min.push_front(&_elem.front());
+    if (_min.empty() || elem <= *_min.front()) _min.push_front(&_elem.front());
   }
 
   void push(const T&& elem) {
     _elem.push_front(std::move(elem));
 
     // Update min.
-    if (_min.empty() || elem <= *_min.front())
-      _min.push_front(&_elem.front());
+    if (_min.empty() || elem <= *_min.front()) _min.push_front(&_elem.front());
   }
 
   const T& pop() {
-    if (_elem.empty())
-      throw std::out_of_range("MinStack.pop()");
+    if (_elem.empty()) throw std::out_of_range("MinStack.pop()");
 
     auto& elem = _elem.front();
     _elem.pop_front();
 
     // Update min.
-    if (elem == *_min.front())
-      _min.pop_front();
+    if (elem == *_min.front()) _min.pop_front();
 
     return elem;
   }
 
   const T& min() {
-    if (_min.empty())
-      throw std::out_of_range("MinStack.min()");
+    if (_min.empty()) throw std::out_of_range("MinStack.min()");
 
     return *_min.front();
   }
 
-  bool empty() {
-    return _elem.empty();
-  }
+  bool empty() { return _elem.empty(); }
 
  private:
   std::forward_list<T> _elem;
   std::forward_list<T*> _min;
 };
-
 
 //
 // My first attempt at a solution. Store a pointer to the min
@@ -80,26 +71,23 @@ class MinStack {
 // for a new min if the popped element is the minimum. This also uses
 // a vector which is expensive for repeated inserts.
 //
-template<typename T>
+template <typename T>
 class MinStack_alt {
  public:
   MinStack_alt() : _data(), _min(nullptr) {}
 
   explicit MinStack_alt(std::initializer_list<T> il) : MinStack_alt() {
-    for (auto& v : il)
-      push(v);
+    for (auto& v : il) push(v);
   }
 
   const T& pop() {
-    if (!size())
-      throw std::out_of_range("Empty Stack.pop()");
+    if (!size()) throw std::out_of_range("Empty Stack.pop()");
 
     auto v = &_data[size() - 1];
     _data.pop_back();
 
     // Update min.
-    if (v == _min)
-      _min = &(*std::min_element(_data.begin(), _data.end()));
+    if (v == _min) _min = &(*std::min_element(_data.begin(), _data.end()));
 
     return *v;
   }
@@ -108,16 +96,14 @@ class MinStack_alt {
     _data.push_back(v);
 
     // Update min.
-    if ((_min && *_min > v) || !_min)
-      _min = &_data[size() - 1];
+    if ((_min && *_min > v) || !_min) _min = &_data[size() - 1];
   }
 
   void push(const T&& v) {
     _data.push_back(std::move(v));
 
     // Update min.
-    if ((_min && *_min > _data[size() - 1]) || !_min)
-      _min = &_data[size() - 1];
+    if ((_min && *_min > _data[size() - 1]) || !_min) _min = &_data[size() - 1];
   }
 
   const T& min() const {
@@ -127,19 +113,14 @@ class MinStack_alt {
     return *_min;
   }
 
-  size_t size() const {
-    return _data.size();
-  }
+  size_t size() const { return _data.size(); }
 
-  bool empty() {
-    return _data.empty();
-  }
+  bool empty() { return _data.empty(); }
 
  private:
   std::vector<T> _data;
   T* _min;
 };
-
 
 ///////////
 // Tests //
@@ -175,7 +156,6 @@ TEST(MinStack_alt, tests) {
   ASSERT_EQ(5, a.min());
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -188,8 +168,7 @@ void BM_MinStack(benchmark::State& state) {
   MinStack<int> a;
 
   while (state.KeepRunning()) {
-    for (int i = 0; i < len; i++)
-      a.push(static_cast<int>(rand_r(&seed)));
+    for (int i = 0; i < len; i++) a.push(static_cast<int>(rand_r(&seed)));
     for (int i = 0; i < len; i++) {
       auto res = a.min();
       a.pop();
@@ -204,8 +183,7 @@ void BM_MinStack_alt(benchmark::State& state) {
   MinStack_alt<int> a;
 
   while (state.KeepRunning()) {
-    for (int i = 0; i < len; i++)
-      a.push(static_cast<int>(rand_r(&seed)));
+    for (int i = 0; i < len; i++) a.push(static_cast<int>(rand_r(&seed)));
     for (int i = 0; i < len; i++) {
       auto res = a.min();
       a.pop();

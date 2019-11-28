@@ -1,42 +1,64 @@
 import hashlib
+import itertools
 import os
 from pathlib import Path
-import itertools
+
 
 def stamp(stuff):
-    hash_object = hashlib.sha1(str(stuff).encode('utf-8'))
-    hex_dig = hash_object.hexdigest()
-    return hex_dig[:7]
+  hash_object = hashlib.sha1(str(stuff).encode("utf-8"))
+  hex_dig = hash_object.hexdigest()
+  return hex_dig[:7]
 
-def ggnn_devmap_hyperopt(start_step=0, gpus=[0,1,2,3], how_many=None, test_groups='kfold'):
-    # GGNN DEVMAP HYPER OPT SERIES
-    # fix
-    log_db = 'ggnn_devmap_hyperopt.db'
-    #devices = [0,1,2,3]
-    # flexible
-    state_drops = ['1.0', '0.95', '0.9']
-    timestep_choices = ['2,2,2', '3,3', '30']
-    datasets = ["amd", "nvidia"]
-    batch_sizes = ['18000','40000', '9000']
-    out_drops = ['0.5', '0.8', '1.0']
-    edge_drops = ['0.8', '1.0', '0.9']
-    embs = ['constant', 'random']
-    pos_choices = ['off', 'fancy']
-    
-    # order is important!
-    hyperparam_keys = ['state_drop','timesteps','dataset','batch_size','out_drop','edge_drop','emb','pos']
-    opt_space = [[state_drops[0]], [timestep_choices[0]], datasets, [batch_sizes[0]], out_drops, edge_drops, embs, pos_choices]
-    configs = list(itertools.product(*opt_space))
-    length = len(configs)
-    print(f"Generating {length} configs per test group.\n")
-    
-    # None -> all.
-    if not how_many:
-        how_many = length - start_step
-    
-    # cd phd; export CUDA_VISIBLE_DEVICES={device}; \
-    
-    template = """#!/bin/bash
+
+def ggnn_devmap_hyperopt(
+  start_step=0, gpus=[0, 1, 2, 3], how_many=None, test_groups="kfold"
+):
+  # GGNN DEVMAP HYPER OPT SERIES
+  # fix
+  log_db = "ggnn_devmap_hyperopt.db"
+  # devices = [0,1,2,3]
+  # flexible
+  state_drops = ["1.0", "0.95", "0.9"]
+  timestep_choices = ["2,2,2", "3,3", "30"]
+  datasets = ["amd", "nvidia"]
+  batch_sizes = ["18000", "40000", "9000"]
+  out_drops = ["0.5", "0.8", "1.0"]
+  edge_drops = ["0.8", "1.0", "0.9"]
+  embs = ["constant", "random"]
+  pos_choices = ["off", "fancy"]
+
+  # order is important!
+  hyperparam_keys = [
+    "state_drop",
+    "timesteps",
+    "dataset",
+    "batch_size",
+    "out_drop",
+    "edge_drop",
+    "emb",
+    "pos",
+  ]
+  opt_space = [
+    [state_drops[0]],
+    [timestep_choices[0]],
+    datasets,
+    [batch_sizes[0]],
+    out_drops,
+    edge_drops,
+    embs,
+    pos_choices,
+  ]
+  configs = list(itertools.product(*opt_space))
+  length = len(configs)
+  print(f"Generating {length} configs per test group.\n")
+
+  # None -> all.
+  if not how_many:
+    how_many = length - start_step
+
+  # cd phd; export CUDA_VISIBLE_DEVICES={device}; \
+
+  template = """#!/bin/bash
 #SBATCH --job-name=dvmp{i:03d}
 #SBATCH --time={timelimit}
 #SBATCH --partition=total
@@ -71,60 +93,64 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
 --manual_tag=HyperOpt-{i:03d}-{stamp} \
 """  # NO WHITESPACE!!!
 
-    build_command = "bazel build //deeplearning/ml4pl/models/ggnn"
+  build_command = "bazel build //deeplearning/ml4pl/models/ggnn"
 
+  if test_groups == "kfold":
+    template += " --kfold"
+    test_groups = ["kfold"]
+  else:
+    template += " --test_group={test_group} --val_group={val_group}"
+  for g in test_groups:
+    path = base_path / str(g)
+    path.mkdir(parents=True, exist_ok=True)
+    readme = open(path / "README.txt", "w")
+    print(f"############### TEST GROUP {g} ##############\n", file=readme)
+    print(hyperparam_keys, file=readme)
+    print("\n", file=readme)
+    for i in range(start_step, start_step + how_many):
+      config = dict(zip(hyperparam_keys, configs[i]))
+      stmp = stamp(config)
+      print(f"HyperOpt-{i:03d}-{stmp}: " + str(config), file=readme)
+      config.update(
+        {
+          "stamp": stmp,
+          "log_db": log_db,
+          "i": i,
+          "build_command": build_command,
+          # 'device': gpus[i % len(gpus)]
+        }
+      )
+      if not g == "kfold":
+        config.update(
+          {"timelimit": "00:30:00", "test_group": g, "val_group": (g + 1) % 9}
+        )
+      else:  # kfold 4h
+        config.update({"timelimit": "04:00:00"})
 
-    if test_groups == 'kfold':
-        template += ' --kfold'
-        test_groups=['kfold']
-    else:
-        template += " --test_group={test_group} --val_group={val_group}"
-    for g in test_groups:
-        path = (base_path / str(g))
-        path.mkdir(parents=True, exist_ok=True)
-        readme = open(path/'README.txt', 'w')
-        print(f'############### TEST GROUP {g} ##############\n', file=readme)
-        print(hyperparam_keys, file=readme)
-        print("\n", file=readme)
-        for i in range(start_step, start_step + how_many):
-            config = dict(zip(hyperparam_keys, configs[i]))
-            stmp = stamp(config)
-            print(f"HyperOpt-{i:03d}-{stmp}: " +  str(config), file=readme)
-            config.update({
-                'stamp': stmp,
-                'log_db': log_db,
-                'i': i,
-                'build_command': build_command,
-                # 'device': gpus[i % len(gpus)]
-            })
-            if not g == 'kfold':
-                config.update({'timelimit': '00:30:00',
-                              'test_group': g,
-                              'val_group': (g + 1) % 9})
-            else: #kfold 4h
-                config.update({'timelimit': '04:00:00'})
+      print(template.format(**config))
+      print("\n")
 
-            print(template.format(**config))
-            print('\n')
-            
-            with open(base_path / str(g) / f'run_{g}_{i:03d}_{stmp}.sh', 'w') as f:
-                f.write(template.format(**config))
-                f.write(f"\n# HyperOpt-{i:03d}-{stmp}:")
-                f.write(f"\n# {config}\n")
-        readme.close()
+      with open(base_path / str(g) / f"run_{g}_{i:03d}_{stmp}.sh", "w") as f:
+        f.write(template.format(**config))
+        f.write(f"\n# HyperOpt-{i:03d}-{stmp}:")
+        f.write(f"\n# {config}\n")
     readme.close()
-    print("Success.")
-    # print(build_helper.format(build_command=build_command))
-    print("Build before run with:\n")
-    print(build_command)
+  readme.close()
+  print("Success.")
+  # print(build_helper.format(build_command=build_command))
+  print("Build before run with:\n")
+  print(build_command)
 
 
-if __name__ == '__main__':
-    import sys
-    if len(sys.argv) > 1:
-        tg = sys.argv[1]
-        tgs = [int(tg)]
-    else:
-        tgs = 'kfold'
-    base_path = Path('/users/zfisches/phd/deeplearning/ml4pl/scripts/devmap_runs/')
-    ggnn_devmap_hyperopt(test_groups=tgs)
+if __name__ == "__main__":
+  import sys
+
+  if len(sys.argv) > 1:
+    tg = sys.argv[1]
+    tgs = [int(tg)]
+  else:
+    tgs = "kfold"
+  base_path = Path(
+    "/users/zfisches/phd/deeplearning/ml4pl/scripts/devmap_runs/"
+  )
+  ggnn_devmap_hyperopt(test_groups=tgs)

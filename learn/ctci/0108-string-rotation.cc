@@ -22,12 +22,10 @@ bool isSubstring(const std::string a, const std::string b) {
 //
 bool isRotation(const std::string& a, const std::string& b) {
   // Strings must be the same size.
-  if (a.size() != b.size())
-    return false;
+  if (a.size() != b.size()) return false;
 
   return isSubstring(a, b + b);
 }
-
 
 ///////////
 // Tests //

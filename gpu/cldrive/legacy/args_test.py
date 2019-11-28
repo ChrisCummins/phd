@@ -28,12 +28,13 @@ FLAGS = app.FLAGS
 def test_GetKernelArguments_hello_world():
   """Simple hello world argument type test."""
   args_ = args.GetKernelArguments("kernel void a(global float* a) {}")
-  assert args_[0].typename == 'float'
+  assert args_[0].typename == "float"
 
 
 def test_GetKernelArguments_proper_kernel():
   """Test kernel arguments of a "real" kernel."""
-  args_ = args.GetKernelArguments("""
+  args_ = args.GetKernelArguments(
+    """
 typedef int foobar;
 
 void B(const int e);
@@ -45,7 +46,8 @@ __kernel void A(const __global int* data, __local float4 * restrict car,
 }
 
 void B(const int e) {}
-""")
+"""
+  )
   assert len(args_) == 5
   assert args_[0].is_const
   assert args_[0].is_pointer
@@ -68,10 +70,12 @@ def test_GetKernelArguments_declared_but_not_defined():
 def test_GetKernelArguments_multiple_kernels():
   """Test that error is raised if no kernel defined."""
   with pytest.raises(args.MultipleKernelsError):
-    args.GetKernelArguments("""
+    args.GetKernelArguments(
+      """
 kernel void A() {}
 kernel void B() {}
-""")
+"""
+    )
 
 
 def test_GetKernelArguments_struct_not_supported():
@@ -85,8 +89,10 @@ def test_GetKernelArguments_local_global_qualified():
   """Test that error is raised if address space is invalid."""
   with pytest.raises(args.OpenCLValueError) as e_ctx:
     args.GetKernelArguments("kernel void A(global local int* a) {}")
-  assert ("Pointer argument 'global local int *a' has multiple "
-          'address space qualifiers') == str(e_ctx.value)
+  assert (
+    "Pointer argument 'global local int *a' has multiple "
+    "address space qualifiers"
+  ) == str(e_ctx.value)
 
 
 def test_GetKernelArguments_no_qualifiers():
@@ -94,7 +100,8 @@ def test_GetKernelArguments_no_qualifiers():
   with pytest.raises(args.OpenCLValueError) as e_ctx:
     args.GetKernelArguments("kernel void A(float* a) {}")
   assert "Pointer argument 'float *a' has no address space qualifier" == str(
-      e_ctx.value)
+    e_ctx.value
+  )
 
 
 def test_GetKernelArguments_no_args():
@@ -104,12 +111,14 @@ def test_GetKernelArguments_no_args():
 
 def test_GetKernelArguments_address_spaces():
   """Test address space types."""
-  args_ = args.GetKernelArguments("""
+  args_ = args.GetKernelArguments(
+    """
 kernel void A(global int* a,
               local int* b,
               constant int* c,
               const int d) {}
-""")
+"""
+  )
   assert len(args_) == 4
   assert args_[0].address_space == "global"
   assert args_[1].address_space == "local"
@@ -119,10 +128,12 @@ kernel void A(global int* a,
 
 def test_GetKernelArguments_properties():
   """Test extracted properties of kernel."""
-  args_ = args.GetKernelArguments("""
+  args_ = args.GetKernelArguments(
+    """
 kernel void A(const global int* a, global const float* b,
               local float4 *const c, const int d, float2 e) {}
-""")
+"""
+  )
   assert len(args_) == 5
   assert args_[0].is_pointer
   assert args_[0].address_space == "global"
@@ -178,12 +189,13 @@ def test_ParseSource_syntax_error():
 
 def test_GetKernelName_hello_world():
   """Test name extraction from a simple kernel."""
-  assert 'hello_world' == args.GetKernelName('kernel void hello_world() {}')
+  assert "hello_world" == args.GetKernelName("kernel void hello_world() {}")
 
 
 def test_GetKernelName_hello_world_with_distractions():
   """A simple kernel test with unusual formatting."""
-  assert 'hello_world' == args.GetKernelName("""
+  assert "hello_world" == args.GetKernelName(
+    """
 int A() {}
 
 kernel
@@ -191,34 +203,37 @@ kernel
 hello_world(global int* a, const int c) {
   a[0] = 0;
 }
-""")
+"""
+  )
 
 
 def test_GetKernelName_no_kernels():
   """Test that error is raised if no kernels are defined."""
   with pytest.raises(args.NoKernelError) as e_ctx:
-    args.GetKernelName('')
-  assert 'Source contains no kernel definitions' == str(e_ctx.value)
+    args.GetKernelName("")
+  assert "Source contains no kernel definitions" == str(e_ctx.value)
 
   with pytest.raises(args.NoKernelError) as e_ctx:
-    args.GetKernelName('int A() {}')
-  assert 'Source contains no kernel definitions' == str(e_ctx.value)
+    args.GetKernelName("int A() {}")
+  assert "Source contains no kernel definitions" == str(e_ctx.value)
 
 
 def test_GetKernelName_multiple_kernels():
   """Test that error is raised if multiple kernels are defined."""
   with pytest.raises(args.MultipleKernelsError) as e_ctx:
-    args.GetKernelName("""
+    args.GetKernelName(
+      """
 kernel void A() {}
 kernel void B() {}
-""")
-  assert 'Source contains more than one kernel definition' == str(e_ctx.value)
+"""
+    )
+  assert "Source contains more than one kernel definition" == str(e_ctx.value)
 
 
 def test_GetKernelName_syntax_error():
   """Test that error is raised if source contains syntax error."""
   with pytest.raises(args.OpenCLValueError) as e_ctx:
-    args.GetKernelName('!@##syntax error!!!!1')
+    args.GetKernelName("!@##syntax error!!!!1")
   assert "Syntax error: ':1:1: before: !'" == str(e_ctx.value)
 
 

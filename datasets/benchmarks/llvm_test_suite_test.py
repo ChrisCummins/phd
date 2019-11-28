@@ -25,10 +25,10 @@ from labm8.py import test
 
 FLAGS = app.FLAGS
 
-MODULE_UNDER_TEST = 'datasets.benchmarks'
+MODULE_UNDER_TEST = "datasets.benchmarks"
 
 
-@pytest.mark.parametrize('benchmark', llvm_test_suite.BENCHMARKS)
+@pytest.mark.parametrize("benchmark", llvm_test_suite.BENCHMARKS)
 def test_benchmarks(benchmark: benchmarks_pb2.Benchmark):
   """Test attributes of protos."""
   assert benchmark.name
@@ -39,10 +39,11 @@ def test_benchmarks(benchmark: benchmarks_pb2.Benchmark):
     assert pathlib.Path(path).is_file()
   # Compile the sources.
   with tempfile.TemporaryDirectory() as d:
-    clang.Compile([pathlib.Path(x) for x in benchmark.srcs],
-                  pathlib.Path(d) / 'exe')
-    assert (pathlib.Path(d) / 'exe').is_file()
+    clang.Compile(
+      [pathlib.Path(x) for x in benchmark.srcs], pathlib.Path(d) / "exe"
+    )
+    assert (pathlib.Path(d) / "exe").is_file()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

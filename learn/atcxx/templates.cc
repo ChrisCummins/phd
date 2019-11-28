@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-template<typename Container, unsigned int n>
+template <typename Container, unsigned int n>
 class _fib {
  public:
   enum { val = _fib<Container, n - 1>::val + _fib<Container, n - 2>::val };
@@ -14,7 +14,7 @@ class _fib {
 };
 
 // Partial specialization of fib for 0.
-template<typename Container>
+template <typename Container>
 class _fib<Container, 0> {
  public:
   enum { val };
@@ -22,7 +22,7 @@ class _fib<Container, 0> {
 };
 
 // Partial specialization of fib for 1.
-template<typename Container>
+template <typename Container>
 class _fib<Container, 1> {
  public:
   enum { val = 1 };
@@ -32,11 +32,10 @@ class _fib<Container, 1> {
   }
 };
 
-
 //
 // Compilation of fibonacci sequence at compile time.
 //
-template<typename T, unsigned int n>
+template <typename T, unsigned int n>
 constexpr auto compile_time_fib() {
   static_assert(n > 0, "compile_time_fib(): argument < 1");
 
@@ -45,12 +44,11 @@ constexpr auto compile_time_fib() {
   return result;
 }
 
-
 //
 // A contrived "template template" parameters example.
 //
-template<template<typename, typename> class vector, typename T, typename A>
-void print_vec(const vector<T, A> &vec) {
+template <template <typename, typename> class vector, typename T, typename A>
+void print_vec(const vector<T, A>& vec) {
   for (typename vector<T, A>::size_type i = 0; i < vec.size(); ++i) {
     const T& val = vec[i];
     std::cout << val << ' ';
@@ -58,18 +56,16 @@ void print_vec(const vector<T, A> &vec) {
   std::cout << std::endl;
 }
 
-
 //
 // A contrived "enable_if" example. Typename T must be "int" type.
 //
-template<typename T,
-         typename = typename std::enable_if<std::is_same<T, int>::value>::type>
+template <typename T,
+          typename = typename std::enable_if<std::is_same<T, int>::value>::type>
 void _print_int(const std::string name, const T& val) {
   std::cout << name << " = " << val << std::endl;
 }
 
 #define print_int(x) _print_int((#x), (x));
-
 
 int main() {
   auto seq = compile_time_fib<uint64_t, 46>();

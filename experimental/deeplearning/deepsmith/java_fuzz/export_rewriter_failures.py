@@ -19,92 +19,117 @@ from labm8.py import humanize
 
 FLAGS = app.FLAGS
 app.DEFINE_database(
-    'input', contentfiles.ContentFiles,
-    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/exported.db',
-    'URL of the database of exported Java methods.')
+  "input",
+  contentfiles.ContentFiles,
+  "sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/exported.db",
+  "URL of the database of exported Java methods.",
+)
 app.DEFINE_database(
-    'input_pp', preprocessed.PreprocessedContentFiles,
-    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/preprocessed.db',
-    'URL of the database of preprocessed Java methods.')
+  "input_pp",
+  preprocessed.PreprocessedContentFiles,
+  "sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/preprocessed.db",
+  "URL of the database of preprocessed Java methods.",
+)
 app.DEFINE_output_path(
-    'outdir',
-    '/tmp/phd/experimental/deeplearning/deepsmith/java_fuzz/rewriter_failures',
-    'Directory to write re-writer failures to.',
-    is_dir=True)
-app.DEFINE_integer('preprocess_worker_chunk_size', 128,
-                   'The number of methods to batch to the preprocessors.')
-app.DEFINE_integer('preprocess_worker_threads', 16, 'Number of worker threads.')
-app.DEFINE_boolean('multithreaded_preprocess', True, 'Use multiple threads.')
+  "outdir",
+  "/tmp/phd/experimental/deeplearning/deepsmith/java_fuzz/rewriter_failures",
+  "Directory to write re-writer failures to.",
+  is_dir=True,
+)
+app.DEFINE_integer(
+  "preprocess_worker_chunk_size",
+  128,
+  "The number of methods to batch to the preprocessors.",
+)
+app.DEFINE_integer("preprocess_worker_threads", 16, "Number of worker threads.")
+app.DEFINE_boolean("multithreaded_preprocess", True, "Use multiple threads.")
 
 
 def GetOriginalContentFile(
-    input_session,
-    pp_cf: preprocessed.PreprocessedContentFile) -> contentfiles.ContentFile:
-  components = pp_cf.input_relpath.split(':')
-  clone_from_url = ':'.join(components[:-2])
+  input_session, pp_cf: preprocessed.PreprocessedContentFile
+) -> contentfiles.ContentFile:
+  components = pp_cf.input_relpath.split(":")
+  clone_from_url = ":".join(components[:-2])
   relpath = components[-2]
   artifact_index = int(components[-1])
   try:
-    return input_session.query(contentfiles.ContentFile) \
-      .filter(contentfiles.ContentFile.clone_from_url == clone_from_url) \
-      .filter(contentfiles.ContentFile.relpath == relpath) \
-      .filter(contentfiles.ContentFile.artifact_index == artifact_index).one()
+    return (
+      input_session.query(contentfiles.ContentFile)
+      .filter(contentfiles.ContentFile.clone_from_url == clone_from_url)
+      .filter(contentfiles.ContentFile.relpath == relpath)
+      .filter(contentfiles.ContentFile.artifact_index == artifact_index)
+      .one()
+    )
   except sqlalchemy.orm.exc.NoResultFound:
     app.FatalWithoutStackTrace(
-        f"could not resolve {clone_from_url} {relpath} {artifact_index}")
+      f"could not resolve {clone_from_url} {relpath} {artifact_index}"
+    )
     return None
 
 
-def ProcessList(input_session,
-                cfs: typing.List[preprocessed.PreprocessedContentFile],
-                outdir: pathlib.Path):
+def ProcessList(
+  input_session,
+  cfs: typing.List[preprocessed.PreprocessedContentFile],
+  outdir: pathlib.Path,
+):
   for pp_cf in cfs:
     cf = GetOriginalContentFile(input_session, pp_cf)
     if not cf:
       continue
     # rewritten = java.JavaRewrite(cf.text)
 
+    #     contents = f"""\
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORIGINAL
 
-#     contents = f"""\
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ORIGINAL
+    # {cf.text.rstrip()}
 
-# {cf.text.rstrip()}
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RE-WRITTEN
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RE-WRITTEN
-
-# {rewritten.rstrip()}
-# """
-    fs.Write(outdir / f'{cf.sha256}.txt', cf.text.encode('utf-8'))
+    # {rewritten.rstrip()}
+    # """
+    fs.Write(outdir / f"{cf.sha256}.txt", cf.text.encode("utf-8"))
 
 
-def ProcessBatch(input_db: contentfiles.ContentFiles,
-                 pp_db: preprocessed.PreprocessedContentFile,
-                 outdir: pathlib.Path, ids: typing.List[int]):
+def ProcessBatch(
+  input_db: contentfiles.ContentFiles,
+  pp_db: preprocessed.PreprocessedContentFile,
+  outdir: pathlib.Path,
+  ids: typing.List[int],
+):
   with pp_db.Session(commit=True) as pp_session:
     with input_db.Session() as input_session:
-      to_preprocess = pp_session.query(preprocessed.PreprocessedContentFile) \
-        .filter(preprocessed.PreprocessedContentFile.id.in_(ids))
+      to_preprocess = pp_session.query(
+        preprocessed.PreprocessedContentFile
+      ).filter(preprocessed.PreprocessedContentFile.id.in_(ids))
       ProcessList(input_session, to_preprocess, outdir)
 
 
 def Chunk(l, n):
   """Yield successive n-sized chunks from l."""
   for i in range(0, len(l), n):
-    yield l[i:i + n]
+    yield l[i : i + n]
 
 
 def GetPreprocessedContentFileIdsToProcess(pp_session):
-  return pp_session.query(preprocessed.PreprocessedContentFile.id) \
-    .filter(preprocessed.PreprocessedContentFile.preprocessing_succeeded == False) \
-    .filter(preprocessed.PreprocessedContentFile.text ==
-            'Failed to compile after re-writing')
+  return (
+    pp_session.query(preprocessed.PreprocessedContentFile.id)
+    .filter(
+      preprocessed.PreprocessedContentFile.preprocessing_succeeded == False
+    )
+    .filter(
+      preprocessed.PreprocessedContentFile.text
+      == "Failed to compile after re-writing"
+    )
+  )
 
 
 class RePreprocessor(threading.Thread):
-
-  def __init__(self, input_db: contentfiles.ContentFiles,
-               pp_db: preprocessed.PreprocessedContentFiles,
-               outdir: pathlib.Path):
+  def __init__(
+    self,
+    input_db: contentfiles.ContentFiles,
+    pp_db: preprocessed.PreprocessedContentFiles,
+    outdir: pathlib.Path,
+  ):
     super(RePreprocessor, self).__init__()
     self.input_db = input_db
     self.pp_db = pp_db
@@ -117,13 +142,18 @@ class RePreprocessor(threading.Thread):
       ids_to_process = [x[0] for x in todo]
 
     max_workers = FLAGS.preprocess_worker_threads
-    app.Log(1, "Preprocessing %s Java methods in %s worker threads",
-            humanize.Commas(len(ids_to_process)), max_workers)
+    app.Log(
+      1,
+      "Preprocessing %s Java methods in %s worker threads",
+      humanize.Commas(len(ids_to_process)),
+      max_workers,
+    )
     if FLAGS.multithreaded_preprocess:
       with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         f = lambda x: ProcessBatch(self.input_db, self.pp_db, self.outdir, x)
         for _ in executor.map(
-            f, Chunk(ids_to_process, FLAGS.preprocess_worker_chunk_size)):
+          f, Chunk(ids_to_process, FLAGS.preprocess_worker_chunk_size)
+        ):
           pass
     else:
       for id_ in ids_to_process:
@@ -144,10 +174,11 @@ def Repreprocess(input_db, pp_db, outdir: pathlib.Path):
     runtime = time.time() - start_time
     exported_count = len(list(outdir.iterdir()))
     sys.stdout.write(
-        f"\rRuntime: {humanize.Duration(runtime)}. "
-        f"Exported contentfiles: {humanize.Commas(exported_count)} "
-        f"of {humanize.Commas(cf_count)} "
-        f"({exported_count / max(cf_count, 1):.2%})    ")
+      f"\rRuntime: {humanize.Duration(runtime)}. "
+      f"Exported contentfiles: {humanize.Commas(exported_count)} "
+      f"of {humanize.Commas(cf_count)} "
+      f"({exported_count / max(cf_count, 1):.2%})    "
+    )
     sys.stdout.flush()
 
     if not thread.is_alive():
@@ -157,7 +188,7 @@ def Repreprocess(input_db, pp_db, outdir: pathlib.Path):
 
   sys.stdout.flush()
   sys.stderr.flush()
-  print('Done!')
+  print("Done!")
 
 
 def main():
@@ -165,5 +196,5 @@ def main():
   Repreprocess(FLAGS.input(), FLAGS.input_pp(), FLAGS.outdir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

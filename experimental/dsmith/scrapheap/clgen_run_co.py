@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from dsmith.db import *
 from dsmith.lib import *
 

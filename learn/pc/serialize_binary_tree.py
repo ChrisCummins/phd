@@ -28,13 +28,17 @@ def set_id(node: Node, counter: int):
 
 
 def serialize_dfs(node: Node, s: typing.List[str]):
-  s.append(' '.join(
-      str(x) for x in [
-          len(node.val),
-          node.val,
-          node.left.id if node.left else -1,
-          node.right.id if node.right else -1,
-      ]))
+  s.append(
+    " ".join(
+      str(x)
+      for x in [
+        len(node.val),
+        node.val,
+        node.left.id if node.left else -1,
+        node.right.id if node.right else -1,
+      ]
+    )
+  )
   if node.left:
     s = serialize_dfs(node.left, s)
   if node.right:
@@ -43,16 +47,16 @@ def serialize_dfs(node: Node, s: typing.List[str]):
 
 
 def read_line(s: str):
-  space = s.index(' ')
+  space = s.index(" ")
   val_len = int(s[:space])
-  s = s[space + 1:]
+  s = s[space + 1 :]
   val = s[:val_len]
 
-  s = s[val_len + 1:]
-  left = int(s[:s.index(' ')])
-  s = s[s.index(' ') + 1:]
-  right = int(s[:s.index('\n')])
-  s = s[s.index('\n'):]
+  s = s[val_len + 1 :]
+  left = int(s[: s.index(" ")])
+  s = s[s.index(" ") + 1 :]
+  right = int(s[: s.index("\n")])
+  s = s[s.index("\n") :]
 
   return s, val, left, right
 
@@ -62,7 +66,7 @@ def read_line(s: str):
 
 def serialize(node: Node):
   set_id(node, 0)
-  return '\n'.join(serialize_dfs(node, [])) + '\n'
+  return "\n".join(serialize_dfs(node, [])) + "\n"
 
 
 def deserialize(s: str) -> Node:
@@ -80,7 +84,7 @@ def deserialize(s: str) -> Node:
   return nodes[0]
 
 
-if __name__ == '__main__':
-  node = Node('root', Node('left', Node('left.left')), Node('right'))
+if __name__ == "__main__":
+  node = Node("root", Node("left", Node("left.left")), Node("right"))
   print(deserialize(serialize(node)))
-  assert deserialize(serialize(node)).left.left.val == 'left.left'
+  assert deserialize(serialize(node)).left.left.val == "left.left"

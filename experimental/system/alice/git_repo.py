@@ -24,7 +24,6 @@ FLAGS = app.FLAGS
 
 
 class PhdRepo(object):
-
   def __init__(self, path: pathlib.Path):
     self._path = path
     self._repo = git.Repo(path=path)
@@ -47,14 +46,14 @@ class PhdRepo(object):
     assert len(remote_urls) >= 1
 
     return alice_pb2.RepoState(
-        remote_url=remote_urls[0],
-        tracking_branch=tracking_branch.name,
-        head_id=self.repo.head.object.hexsha,
-        # TODO(cec): Assemble and return git diff.
+      remote_url=remote_urls[0],
+      tracking_branch=tracking_branch.name,
+      head_id=self.repo.head.object.hexsha,
+      # TODO(cec): Assemble and return git diff.
     )
 
   def FromRepoState(self, repo_state: alice_pb2.RepoState) -> None:
-    remote = self.repo.create_remote('alice_tmp_remote', repo_state.remote_url)
+    remote = self.repo.create_remote("alice_tmp_remote", repo_state.remote_url)
     assert remote.exists()
     remote.fetch()
     commit = repo_state.head_id

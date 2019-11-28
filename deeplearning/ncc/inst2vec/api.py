@@ -19,46 +19,49 @@ FLAGS = app.FLAGS
 MultiEdges = typing.Dict[str, typing.List[str]]
 
 INST2VEC_DICITONARY_PATH = bazelutil.DataPath(
-    'phd/deeplearning/ncc/published_results/dic_pickle')
+  "phd/deeplearning/ncc/published_results/dic_pickle"
+)
 
 
 def PreprocessLlvmBytecode(bytecode: str) -> str:
   """Pre-process an LLVM bytecode for encoding."""
-  bytecode_lines = bytecode.split('\n')
+  bytecode_lines = bytecode.split("\n")
   preprocessed, functions_declared_in_files = preprocess.preprocess(
-      [bytecode_lines])
+    [bytecode_lines]
+  )
   del functions_declared_in_files
-  return '\n'.join(preprocessed[0])
+  return "\n".join(preprocessed[0])
 
 
 def PretrainedEmbeddingIndicesDictionary() -> typing.Dict[str, int]:
   """Read and return the embeddings indices dictionary."""
-  with open(INST2VEC_DICITONARY_PATH, 'rb') as f:
+  with open(INST2VEC_DICITONARY_PATH, "rb") as f:
     return pickle.load(f)
 
 
-def EncodeLlvmBytecode(bytecode: str,
-                       vocab: vocabulary.VocabularyZipFile) -> typing.List[int]:
+def EncodeLlvmBytecode(
+  bytecode: str, vocab: vocabulary.VocabularyZipFile
+) -> typing.List[int]:
   """Encode an LLVM bytecode to an array of vocabulary indices."""
-  bytecode_lines = bytecode.split('\n')
+  bytecode_lines = bytecode.split("\n")
   preprocessed_lines, functions_declared_in_files = preprocess.preprocess(
-      [bytecode_lines])
+    [bytecode_lines]
+  )
   preprocessed_lines = preprocessed_lines[0]
 
   # TODO(cec): inline_struct_types_txt
 
   # Abstract identifiers from statements.
   preprocessed_lines = [
-      preprocess.PreprocessStatement(statement)
-      for statement in preprocessed_lines
+    preprocess.PreprocessStatement(statement)
+    for statement in preprocessed_lines
   ]
 
   # Translate from statement to encoded token.
   return [
-      vocab.dictionary.get(statement, vocab.dictionary[rgx.unknown_token])
-      for statement in preprocessed_lines
-      if
-      not re.match(r'((?:<label>:)?(<LABEL>):|:; <label>:<LABEL>)', statement)
+    vocab.dictionary.get(statement, vocab.dictionary[rgx.unknown_token])
+    for statement in preprocessed_lines
+    if not re.match(r"((?:<label>:)?(<LABEL>):|:; <label>:<LABEL>)", statement)
   ]
 
 
@@ -67,8 +70,9 @@ def EmbedEncoded(encoded: typing.List[int], embedding_matrix) -> np.ndarray:
   raise NotImplementedError
 
 
-def Inst2Vec(bytecode: str, vocab: vocabulary.VocabularyZipFile,
-             embedding) -> np.ndarray:
+def Inst2Vec(
+  bytecode: str, vocab: vocabulary.VocabularyZipFile, embedding
+) -> np.ndarray:
   """Transform an LLVM bytecode to an array of embeddings.
 
   Args:
@@ -101,9 +105,10 @@ def LlvmBytecodeToContextualFlowGraph(bytecode: str) -> nx.DiGraph:
   """
   # First preprocess the bytecode, with the side-effect of getting the list of
   # function declarations.
-  bytecode_lines = bytecode.split('\n')
+  bytecode_lines = bytecode.split("\n")
   preprocessed_bytecodes, functions_declared_in_files = preprocess.preprocess(
-      [bytecode_lines])
+    [bytecode_lines]
+  )
   preprocessed_bytecode = preprocessed_bytecodes[0]
   functions_declared_in_file = functions_declared_in_files[0]
 
@@ -112,7 +117,8 @@ def LlvmBytecodeToContextualFlowGraph(bytecode: str) -> nx.DiGraph:
   # File name is required by BuildContextualFlowGraph(), but is used only to
   # produce descriptive error messages, so any value will do.
   xfg, multi_edges = preprocess.BuildContextualFlowGraph(
-      preprocessed_bytecode, functions_declared_in_file, filename='[input]')
+    preprocessed_bytecode, functions_declared_in_file, filename="[input]"
+  )
   del multi_edges  # unused
   return xfg
 
@@ -120,7 +126,11 @@ def LlvmBytecodeToContextualFlowGraph(bytecode: str) -> nx.DiGraph:
 def XfgToDot(xfg, dotpath):
   xfg = copy.deepcopy(xfg)
   for edge in xfg.edges:
-    xfg.edges[edge]['label'] = xfg.edges[edge]['stmt'].encode(
-        'ascii', 'ignore').decode('ascii').replace('\0', '0')
-    del xfg.edges[edge]['stmt']
+    xfg.edges[edge]["label"] = (
+      xfg.edges[edge]["stmt"]
+      .encode("ascii", "ignore")
+      .decode("ascii")
+      .replace("\0", "0")
+    )
+    del xfg.edges[edge]["stmt"]
   nx.drawing.nx_pydot.write_dot(xfg, dotpath)

@@ -58,10 +58,13 @@ def merge(outpath, inpaths=[]):
     log.info("merging from", inpath)
     c = db.cursor()
     c.execute("ATTACH '{}' AS rhs".format(inpath))
-    c.execute("INSERT OR IGNORE INTO ContentFiles "
-              "SELECT * FROM rhs.ContentFiles")
-    c.execute("INSERT OR IGNORE INTO PreprocessedFiles "
-              "SELECT * FROM rhs.PreprocessedFiles")
+    c.execute(
+      "INSERT OR IGNORE INTO ContentFiles " "SELECT * FROM rhs.ContentFiles"
+    )
+    c.execute(
+      "INSERT OR IGNORE INTO PreprocessedFiles "
+      "SELECT * FROM rhs.PreprocessedFiles"
+    )
     c.execute("DETACH rhs")
     db.commit()
 
@@ -71,7 +74,7 @@ def merge(outpath, inpaths=[]):
 def main():
   parser = cli.ArgumentParser(description=__description__)
   parser.add_argument("dataset", help="path to output dataset")
-  parser.add_argument("inputs", nargs='*', help="path to input datasets")
+  parser.add_argument("inputs", nargs="*", help="path to input datasets")
   args = parser.parse_args()
 
   cli.main(merge, args.dataset, args.inputs)

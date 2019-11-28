@@ -8,14 +8,16 @@ import tensorflow as tf
 
 
 def main():
-  print("""
+  print(
+    """
 TENSORFLOW
 ====================
-""")
+"""
+  )
   print("tf.__version__             ", tf.__version__)
   print("$CUDA_VISIBLE_DEVICES      ", os.environ.get("CUDA_VISIBLE_DEVICES"))
   print("tf.test.is_gpu_available() ", tf.test.is_gpu_available())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()

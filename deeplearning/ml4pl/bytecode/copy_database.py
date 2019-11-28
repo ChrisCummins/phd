@@ -8,22 +8,25 @@ from labm8.py import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('input_db',
-                    bytecode_database.Database,
-                    None,
-                    'The input database.',
-                    must_exist=True)
-app.DEFINE_database('output_db', bytecode_database.Database, None,
-                    'The destination database.')
-app.DEFINE_integer('max_rows', 0, 'The maximum number of rows to copy.')
+app.DEFINE_database(
+  "input_db",
+  bytecode_database.Database,
+  None,
+  "The input database.",
+  must_exist=True,
+)
+app.DEFINE_database(
+  "output_db", bytecode_database.Database, None, "The destination database."
+)
+app.DEFINE_integer("max_rows", 0, "The maximum number of rows to copy.")
 
 
 def ChunkedBytecodeDatabaseReader(
-    db: bytecode_database.Database,
-    filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None,
-    order_by_random: bool = False,
-    chunk_size: int = 256,
-    limit: typing.Optional[int] = None
+  db: bytecode_database.Database,
+  filters: typing.Optional[typing.List[typing.Callable[[], bool]]] = None,
+  order_by_random: bool = False,
+  chunk_size: int = 256,
+  limit: typing.Optional[int] = None,
 ) -> typing.Iterable[bytecode_database.LlvmBytecode]:
   filters = filters or []
 
@@ -33,8 +36,11 @@ def ChunkedBytecodeDatabaseReader(
   # all of the IDs that match the query, then iterate through the list of IDs in
   # batches.
   with db.Session() as s:
-    with prof.Profile(lambda t: (f"Selected {humanize.Commas(len(ids))} "
-                                 f"bytecodes from database")):
+    with prof.Profile(
+      lambda t: (
+        f"Selected {humanize.Commas(len(ids))} " f"bytecodes from database"
+      )
+    ):
       q = s.query(bytecode_database.LlvmBytecode.id)
       for filter_cb in filters:
         q = q.filter(filter_cb())
@@ -66,14 +72,13 @@ def main():
 
   filters = [lambda: bytecode_database.LlvmBytecode.clang_returncode == 0]
 
-  for chunk in ChunkedBytecodeDatabaseReader(input_db,
-                                             filters=filters,
-                                             order_by_random=True,
-                                             limit=FLAGS.max_rows):
+  for chunk in ChunkedBytecodeDatabaseReader(
+    input_db, filters=filters, order_by_random=True, limit=FLAGS.max_rows
+  ):
     with output_db.Session(commit=True) as session:
       for row in chunk:
         session.merge(row)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

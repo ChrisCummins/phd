@@ -15,7 +15,7 @@ MODULE_UNDER_TEST = None  # No coverage.
 #
 # First off, let's get the obvious way over and done with:
 def escape_spaces_regexp(string, strlen):
-  return string.replace(' ', '%20')
+  return string.replace(" ", "%20")
 
 
 # Of course, this misses the purpose of the question by operating on a
@@ -28,7 +28,7 @@ def escape_spaces(string, strlen):
   # length of the escaped string.
   spaces_count = 0
   for c in list(string[:strlen]):
-    if c == ' ':
+    if c == " ":
       spaces_count += 1
 
   new_strlen = strlen + 2 * spaces_count
@@ -44,10 +44,10 @@ def escape_spaces(string, strlen):
   if new_strlen != strlen:
     for i in range(strlen - 1, -1, -1):
       new_strlen -= 1
-      if string[i] == ' ':
-        string[new_strlen - 2] = '%'
-        string[new_strlen - 1] = '2'
-        string[new_strlen] = '0'
+      if string[i] == " ":
+        string[new_strlen - 2] = "%"
+        string[new_strlen - 1] = "2"
+        string[new_strlen] = "0"
         new_strlen -= 2
       else:
         string[new_strlen] = string[i]
@@ -56,10 +56,13 @@ def escape_spaces(string, strlen):
 
 
 def test_main():
-  assert escape_spaces_regexp("Hello, the World!",
-                              17) == "Hello,%20the%20World!"
-  assert (''.join(escape_spaces(list("Hello, the World!        "),
-                                17)) == "Hello,%20the%20World!    ")
+  assert (
+    escape_spaces_regexp("Hello, the World!", 17) == "Hello,%20the%20World!"
+  )
+  assert (
+    "".join(escape_spaces(list("Hello, the World!        "), 17))
+    == "Hello,%20the%20World!    "
+  )
 
 
 if __name__ == "__main__":

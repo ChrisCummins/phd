@@ -16,13 +16,12 @@ static unsigned int seed = 0xCEC;
 //
 // O(n) time, O(n) space.
 //
-template<typename T>
-void inplace_merge(std::vector<T> &left, const size_t leftlen,
-                   std::vector<T> &right) {
+template <typename T>
+void inplace_merge(std::vector<T>& left, const size_t leftlen,
+                   std::vector<T>& right) {
   std::vector<T> res(leftlen + right.size());
-  const auto _leftlen
-      = static_cast<typename std::vector<T>::iterator::difference_type>(
-          leftlen);
+  const auto _leftlen =
+      static_cast<typename std::vector<T>::iterator::difference_type>(leftlen);
 
   auto lit = left.begin(), rit = right.begin(), oit = res.begin();
   while (lit != left.begin() + _leftlen && rit < right.end())
@@ -31,17 +30,13 @@ void inplace_merge(std::vector<T> &left, const size_t leftlen,
     else
       *oit++ = *rit++;
 
-  while (lit != left.begin() + _leftlen)
-    *oit++ = *lit++;
-  while (rit != right.end())
-    *oit++ = *rit++;
+  while (lit != left.begin() + _leftlen) *oit++ = *lit++;
+  while (rit != right.end()) *oit++ = *rit++;
 
   lit = left.begin();
   oit = res.begin();
-  while (lit != left.end())
-    *lit++ = *oit++;
+  while (lit != left.end()) *lit++ = *oit++;
 }
-
 
 ///////////
 // Tests //
@@ -52,10 +47,8 @@ TEST(Merge, merge) {
   std::vector<size_t> b{1, 3};
   inplace_merge(a, 3, b);
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], i);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], i);
 }
-
 
 ////////////////
 // Benchmarks //

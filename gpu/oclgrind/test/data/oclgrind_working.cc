@@ -46,12 +46,12 @@ int main(void) {
       CHECK(str.find("oclgrind") != string::npos)
           << "Expected device name 'Oclgrind', found '" << str << "'";
     }
-    CHECK(devices.size() == 1)
-        << "Expected 1 device, found: " << devices.size();
+    CHECK(devices.size() == 1) << "Expected 1 device, found: "
+                               << devices.size();
   }
 
-  CHECK(platforms.size() == 1)
-      << "Expected 1 platform, found: " << platforms.size();
+  CHECK(platforms.size() == 1) << "Expected 1 platform, found: "
+                               << platforms.size();
 
   LOG(INFO) << "done";
 

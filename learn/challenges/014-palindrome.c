@@ -15,7 +15,7 @@
 static char buf[MAX_INPUT_LEN];
 
 // Return 0 if 'str' is a palindrome, else
-int is_palindrome(const char*const str) {
+int is_palindrome(const char* const str) {
   const char* c = str;
   char* o = buf;
 
@@ -32,8 +32,8 @@ int is_palindrome(const char*const str) {
   }
 
   // Reset pointers
-  const char *left = buf;
-  const char *right = o - 1;
+  const char* left = buf;
+  const char* right = o - 1;
 
   // Iterate over [0:n/2) characters
   while (left < right) {
@@ -52,8 +52,7 @@ int is_palindrome(const char*const str) {
 
 int main(int argc, char** argv) {
   // Check for empty string
-  if (argc != 2)
-    return -1;
+  if (argc != 2) return -1;
 
   // Sanity checks
   TEST(!is_palindrome("abcd"));

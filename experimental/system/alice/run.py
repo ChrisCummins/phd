@@ -26,24 +26,26 @@ from labm8.py import app
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('phd', str(pathlib.Path("~/phd").expanduser()), 'Path.')
-app.DEFINE_string('ledger', 'localhost:5088', 'Ledger URL.')
-app.DEFINE_string('target', '', 'Target')
-app.DEFINE_list('bazel_args', [], 'Bazel args')
-app.DEFINE_list('bin_args', [], 'Binary args')
-app.DEFINE_integer('timeout_seconds', None, 'Timeout.')
+app.DEFINE_string("phd", str(pathlib.Path("~/phd").expanduser()), "Path.")
+app.DEFINE_string("ledger", "localhost:5088", "Ledger URL.")
+app.DEFINE_string("target", "", "Target")
+app.DEFINE_list("bazel_args", [], "Bazel args")
+app.DEFINE_list("bin_args", [], "Binary args")
+app.DEFINE_integer("timeout_seconds", None, "Timeout.")
 
 
 def SummarizeJobStatus(ledger: alice_pb2.LedgerEntry):
-  if ledger.HasField('job_outcome'):
-    print(alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_status),
-          alice_pb2.LedgerEntry.JobOutcome.Name(ledger.job_outcome))
+  if ledger.HasField("job_outcome"):
+    print(
+      alice_pb2.LedgerEntry.JobStatus.Name(ledger.job_status),
+      alice_pb2.LedgerEntry.JobOutcome.Name(ledger.job_outcome),
+    )
 
 
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   channel = grpc.insecure_channel(FLAGS.ledger)
   stub = alice_pb2_grpc.LedgerStub(channel)
@@ -58,15 +60,16 @@ def main(argv):
   timeout_seconds = FLAGS.timeout_seconds
 
   job_id = stub.Add(
-      alice_pb2.RunRequest(
-          repo_state=repo.ToRepoState(),
-          target=target,
-          bazel_args=bazel_args,
-          bin_args=bin_args,
-          timeout_seconds=timeout_seconds,
-      ))
+    alice_pb2.RunRequest(
+      repo_state=repo.ToRepoState(),
+      target=target,
+      bazel_args=bazel_args,
+      bin_args=bin_args,
+      timeout_seconds=timeout_seconds,
+    )
+  )
 
-  print(f'Started job {job_id.id}')
+  print(f"Started job {job_id.id}")
   while True:
     status = stub.Get(job_id)
     SummarizeJobStatus(status)
@@ -75,5 +78,5 @@ def main(argv):
       sys.exit(status.returncode)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

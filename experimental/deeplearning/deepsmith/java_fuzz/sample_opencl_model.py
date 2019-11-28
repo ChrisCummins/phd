@@ -11,27 +11,32 @@ Example usage:
       --clgen_multichar_tokenizer
 """
 from deeplearning.clgen import clgen
-from experimental.deeplearning.deepsmith.java_fuzz import sample_java_model as java
+from experimental.deeplearning.deepsmith.java_fuzz import (
+  sample_java_model as java,
+)
 from labm8.py import app
 from research.cummins_2017_cgo import generative_model as opencl
 
 FLAGS = app.FLAGS
 
 app.DEFINE_boolean(
-    'use_encoded_contentfiles_db', False,
-    'If set, use the --java_encoded_contentfiles flag to as the training '
-    'corpus.')
+  "use_encoded_contentfiles_db",
+  False,
+  "If set, use the --java_encoded_contentfiles flag to as the training "
+  "corpus.",
+)
 
 
 def main():
   """Main entry point."""
   config = java.MakeClgenInstanceConfig(
-      FLAGS.java_clgen_working_dir,
-      FLAGS.java_encoded_contentfiles(),
-      FLAGS.java_training_epochs,
-      'kernel void A(',  # OpenCL-specific seed text.
-      FLAGS.neurons_per_layer,
-      FLAGS.num_layers)
+    FLAGS.java_clgen_working_dir,
+    FLAGS.java_encoded_contentfiles(),
+    FLAGS.java_training_epochs,
+    "kernel void A(",  # OpenCL-specific seed text.
+    FLAGS.neurons_per_layer,
+    FLAGS.num_layers,
+  )
   if not FLAGS.use_encoded_contentfiles_db:
     # Replace the Java corpus with an OpenCL one.
     config.model.corpus.CopyFrom(opencl.CreateCorpusProtoFromFlags())
@@ -39,5 +44,5 @@ def main():
   java.TrainAndSampleInstance(clgen.Instance(config), samples_db)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

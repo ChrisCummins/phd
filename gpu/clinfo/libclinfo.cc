@@ -211,13 +211,11 @@ std::string GetOpenClDeviceType(const cl::Device& device) {
 }
 
 std::vector<std::pair<string, string>> kSubstitutions = {
-    {"Intel(R)", "Intel"},
-    {"Xeon(R)", "Xeon"},
+    {"Intel(R)", "Intel"}, {"Xeon(R)", "Xeon"},
 };
 
 std::vector<string> kSuffixes = {
-    " CUDA",
-    " OpenCL",
+    " CUDA", " OpenCL",
 };
 
 string FormatOpenClString(const std::string& str) {

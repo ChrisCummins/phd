@@ -55,5 +55,5 @@ def main(argv):
     PrintRandomResult(session)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

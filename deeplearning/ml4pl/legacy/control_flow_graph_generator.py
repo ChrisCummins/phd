@@ -17,7 +17,7 @@ class UniqueNameSequence(object):
   E.g. 'a', 'b', 'c', ... 'aa', 'ab', ...
   """
 
-  def __init__(self, base_char: str, prefix: str = '', suffix: str = ''):
+  def __init__(self, base_char: str, prefix: str = "", suffix: str = ""):
     """Instantiate a unique name sequence.
 
     Args:
@@ -28,7 +28,7 @@ class UniqueNameSequence(object):
     Raises:
       ValueError: If base_char is not 'a' or 'A'.
     """
-    if base_char not in {'a', 'A'}:
+    if base_char not in {"a", "A"}:
       raise ValueError(f"Invalid base_char '{base_char}'")
     self._base_ord = ord(base_char)
     self._prefix = prefix
@@ -51,7 +51,7 @@ class UniqueNameSequence(object):
       raise ValueError
     s = [self._prefix]
 
-    while (i > 25):
+    while i > 25:
       k = i // 26
       i %= 26
       s.append(chr(self._base_ord - 1 + k))
@@ -59,7 +59,7 @@ class UniqueNameSequence(object):
 
     s.append(self._suffix)
 
-    return ''.join(s)
+    return "".join(s)
 
   def __iter__(self):
     return self
@@ -74,9 +74,13 @@ class UniqueNameSequence(object):
 class ControlFlowGraphGenerator(object):
   """A generator for control flow graphs."""
 
-  def __init__(self, rand: np.random.RandomState,
-               num_nodes_min_max: typing.Tuple[int, int], edge_density: float,
-               strict: bool):
+  def __init__(
+    self,
+    rand: np.random.RandomState,
+    num_nodes_min_max: typing.Tuple[int, int],
+    edge_density: float,
+    strict: bool,
+  ):
     """Instantiate a control flow graph generator.
 
     Args:
@@ -94,12 +98,12 @@ class ControlFlowGraphGenerator(object):
     if num_nodes_min_max[0] < 2:
       raise ValueError("Lower bound for num nodes must be >= 2")
     if not 0 < edge_density <= 1:
-      raise ValueError('Edge density must be in range (0,1]')
+      raise ValueError("Edge density must be in range (0,1]")
 
     self._rand = rand
     self._num_nodes_min_max = num_nodes_min_max
     self._edge_density = edge_density
-    self._graph_name_sequence = UniqueNameSequence('A', prefix='cfg_')
+    self._graph_name_sequence = UniqueNameSequence("A", prefix="cfg_")
     self._strict = strict
 
   def __iter__(self):
@@ -130,19 +134,19 @@ class ControlFlowGraphGenerator(object):
 
     # Generate the graph and create the named nodes.
     graph = cfg.ControlFlowGraph(name=next(self._graph_name_sequence))
-    node_name_sequence = UniqueNameSequence('A')
+    node_name_sequence = UniqueNameSequence("A")
     [graph.add_node(i, name=next(node_name_sequence)) for i in range(num_nodes)]
 
     # Set the entry and exit blocks.
     entry_block = 0
     exit_block = num_nodes - 1
-    graph.nodes[entry_block]['entry'] = True
-    graph.nodes[exit_block]['exit'] = True
+    graph.nodes[entry_block]["entry"] = True
+    graph.nodes[exit_block]["exit"] = True
 
     # Generate an adjacency matrix of random binary values.
-    adjacency_matrix = self._rand.choice([False, True],
-                                         size=(num_nodes, num_nodes),
-                                         p=(0.9, 0.1))
+    adjacency_matrix = self._rand.choice(
+      [False, True], size=(num_nodes, num_nodes), p=(0.9, 0.1)
+    )
 
     # Helper methods.
 
@@ -198,8 +202,9 @@ class ControlFlowGraphGenerator(object):
       modified = True
       while modified:
         for src, dst in graph.edges:
-          if (not (graph.out_degree(src) > 1 or graph.in_degree(dst) > 1) and
-              NotExitNodeOutput(src, dst)):
+          if not (
+            graph.out_degree(src) > 1 or graph.in_degree(dst) > 1
+          ) and NotExitNodeOutput(src, dst):
             AddRandomEdge(src)
             break
         else:

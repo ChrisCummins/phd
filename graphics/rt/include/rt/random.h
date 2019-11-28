@@ -32,13 +32,14 @@ using seed = uint64_t;
 
 // A random number generator for sampling a uniform distribution
 // within a specific range.
-template<typename T>
+template <typename T>
 class UniformDistribution {
  public:
   UniformDistribution(const T& min, const T& max,
                       const seed seedval = seed{7564231})
       : _divisor(std::numeric_limits<T>::max() / (max - min)),
-        _min(min), _seed(seedval) {}  // NOLINT(build/include_what_you_use)
+        _min(min),
+        _seed(seedval) {}  // NOLINT(build/include_what_you_use)
 
   // Generate a new random value in the range [0,max - min].
   auto operator()() {
@@ -52,15 +53,12 @@ class UniformDistribution {
 };
 
 // A generator for sampling random points over a disk.
-template<typename T>
+template <typename T>
 class UniformDiskDistribution {
  public:
-  UniformDiskDistribution(const T radius,
-                          const seed seed1 = seed{7564231},
+  UniformDiskDistribution(const T radius, const seed seed1 = seed{7564231},
                           const seed seed2 = seed{7564231})
-      : angle(0, 2 * M_PI, seed1),
-        rand01(0, 1, seed2),
-        _radius(radius) {}
+      : angle(0, 2 * M_PI, seed1), rand01(0, 1, seed2), _radius(radius) {}
 
   // Return a random point on the disk, with the vector x and y
   // components corresponding to the x and y coordinates of the

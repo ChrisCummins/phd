@@ -17,7 +17,7 @@ FLAGS = app.FLAGS
 # The CLgen instance to benchmark. This is a multichar token model with a 512x2
 # TensorFlow LSTM.
 INSTANCE_TO_BENCHMARK = pbutil.FromString(
-    """
+  """
 # File: //deeplearning/clgen/proto/clgen.proto
 # Proto: clgen.Instance
 working_dir: "/tmp/phd/deeplearning/clgen/working_dir"
@@ -167,34 +167,36 @@ sampler {
     }
   }
 }
-""", clgen_pb2.Instance())
+""",
+  clgen_pb2.Instance(),
+)
 
 # The number of samples to take from the trained model.
 NUM_SAMPLES = 5000
 
 # Path to write benchmark log to.
-LOG_PATH = pathlib.Path('/tmp/phd/deeplearning/clgen/benchmark.txt')
+LOG_PATH = pathlib.Path("/tmp/phd/deeplearning/clgen/benchmark.txt")
 
 
 def main(argv: typing.List[str]):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-  with open(LOG_PATH, 'w') as f:
+  with open(LOG_PATH, "w") as f:
     print("Benchmark of instance:\n{INSTANCE_TO_BENCHMARK}", file=f)
 
-    with prof.ProfileToFile(f, 'instance'):
+    with prof.ProfileToFile(f, "instance"):
       instance = clgen.Instance(INSTANCE_TO_BENCHMARK)
-    with prof.ProfileToFile(f, 'training'):
+    with prof.ProfileToFile(f, "training"):
       instance.Train()
-    with prof.ProfileToFile(f, f'{NUM_SAMPLES} samples'):
-      instance.Sample(sample_observers=[
-          sample_observers.MaxSampleCountObserver(NUM_SAMPLES)
-      ])
+    with prof.ProfileToFile(f, f"{NUM_SAMPLES} samples"):
+      instance.Sample(
+        sample_observers=[sample_observers.MaxSampleCountObserver(NUM_SAMPLES)]
+      )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

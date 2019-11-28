@@ -88,20 +88,17 @@ __kernel void entry(__global ulong *result) {
 # Test fixtures.
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def abc_testcase() -> deepsmith_pb2.Testcase():
   """A test fixture which returns a very simple test case."""
   return deepsmith_pb2.Testcase(
-      toolchain='opencl',
-      harness=deepsmith_pb2.Harness(name='cl_launcher'),
-      inputs={
-          'src': CLSMITH_EXAMPLE_SRC,
-          'gsize': '1,1,1',
-          'lsize': '1,1,1',
-      })
+    toolchain="opencl",
+    harness=deepsmith_pb2.Harness(name="cl_launcher"),
+    inputs={"src": CLSMITH_EXAMPLE_SRC, "gsize": "1,1,1", "lsize": "1,1,1",},
+  )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def abc_harness_config() -> harness_pb2.ClLauncherHarness:
   """A test fixture which returns an oclgrind harness config."""
   config = harness_pb2.ClLauncherHarness()
@@ -110,18 +107,20 @@ def abc_harness_config() -> harness_pb2.ClLauncherHarness:
   return config
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def abc_harness(abc_harness_config) -> cl_launcher.ClLauncherHarness:
   """A test fixture which returns an oclgrind harness."""
   return cl_launcher.ClLauncherHarness(abc_harness_config)
 
 
-@pytest.fixture(scope='function')
-def abc_run_testcases_request(abc_testcase,
-                              abc_harness) -> harness_pb2.RunTestcasesRequest:
+@pytest.fixture(scope="function")
+def abc_run_testcases_request(
+  abc_testcase, abc_harness
+) -> harness_pb2.RunTestcasesRequest:
   """A test fixture which returns a RunTestcasesRequest for the abc_testcase."""
-  return harness_pb2.RunTestcasesRequest(testbed=abc_harness.testbeds[0],
-                                         testcases=[abc_testcase])
+  return harness_pb2.RunTestcasesRequest(
+    testbed=abc_harness.testbeds[0], testcases=[abc_testcase]
+  )
 
 
 # Unit tests.
@@ -132,17 +131,16 @@ def abc_run_testcases_request(abc_testcase,
 def test_ClLauncherHarness_oclgrind_testbed():
   """Test that harness can be made from project-local oclgrind."""
   config = harness_pb2.ClLauncherHarness()
-  config.opencl_env.extend([
-      env.OclgrindOpenCLEnvironment().name,
-      env.OclgrindOpenCLEnvironment().name
-  ])
+  config.opencl_env.extend(
+    [env.OclgrindOpenCLEnvironment().name, env.OclgrindOpenCLEnvironment().name]
+  )
   config.opencl_opt.extend([True, False])
   harness = cl_launcher.ClLauncherHarness(config)
   assert len(harness.testbeds) == 2
   assert harness.testbeds[0].name == env.OclgrindOpenCLEnvironment().name
-  assert harness.testbeds[0].opts['opencl_opt'] == 'enabled'
+  assert harness.testbeds[0].opts["opencl_opt"] == "enabled"
   assert harness.testbeds[1].name == env.OclgrindOpenCLEnvironment().name
-  assert harness.testbeds[1].opts['opencl_opt'] == 'disabled'
+  assert harness.testbeds[1].opts["opencl_opt"] == "disabled"
 
 
 def test_ClLauncherHarness_RunTestcases_no_testbed():
@@ -151,9 +149,11 @@ def test_ClLauncherHarness_RunTestcases_no_testbed():
   harness = cl_launcher.ClLauncherHarness(config)
   req = harness_pb2.RunTestcasesRequest(testbed=None, testcases=[])
   res = harness.RunTestcases(req, None)
-  assert (res.status.returncode ==
-          service_pb2.ServiceStatus.INVALID_REQUEST_PARAMETERS)
-  assert res.status.error_message == 'Requested testbed not found.'
+  assert (
+    res.status.returncode
+    == service_pb2.ServiceStatus.INVALID_REQUEST_PARAMETERS
+  )
+  assert res.status.error_message == "Requested testbed not found."
 
 
 def test_ClLauncherHarness_RunTestcases_no_testcases():
@@ -161,15 +161,17 @@ def test_ClLauncherHarness_RunTestcases_no_testcases():
   config = harness_pb2.ClLauncherHarness()
   harness = cl_launcher.ClLauncherHarness(config)
   assert len(harness.testbeds)
-  req = harness_pb2.RunTestcasesRequest(testbed=harness.testbeds[0],
-                                        testcases=[])
+  req = harness_pb2.RunTestcasesRequest(
+    testbed=harness.testbeds[0], testcases=[]
+  )
   res = harness.RunTestcases(req, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
   assert not res.results
 
 
 def test_ClLauncherHarness_RunTestcases_oclgrind_abc_testcase(
-    abc_harness, abc_run_testcases_request):
+  abc_harness, abc_run_testcases_request
+):
   """And end-to-end test of the abc_testcase on oclgrind."""
   res = abc_harness.RunTestcases(abc_run_testcases_request, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
@@ -181,20 +183,21 @@ def test_ClLauncherHarness_RunTestcases_oclgrind_abc_testcase(
 
   # Check the result properties.
   assert result.outcome == deepsmith_pb2.Result.PASS
-  print(result.outputs['stderr'])
-  assert '3-D global size 1 = [1, 1, 1]' in result.outputs['stderr']
-  assert '3-D local size 1 = [1, 1, 1]' in result.outputs['stderr']
-  assert 'OpenCL optimizations: on' in result.outputs['stderr']
-  assert 'Platform: ' in result.outputs['stderr']
-  assert 'Device: ' in result.outputs['stderr']
-  assert 'Compilation terminated successfully...'
-  assert result.outputs['stdout'] == '0,'
+  print(result.outputs["stderr"])
+  assert "3-D global size 1 = [1, 1, 1]" in result.outputs["stderr"]
+  assert "3-D local size 1 = [1, 1, 1]" in result.outputs["stderr"]
+  assert "OpenCL optimizations: on" in result.outputs["stderr"]
+  assert "Platform: " in result.outputs["stderr"]
+  assert "Device: " in result.outputs["stderr"]
+  assert "Compilation terminated successfully..."
+  assert result.outputs["stdout"] == "0,"
 
 
 def test_ClLauncherHarness_RunTestcases_oclgrind_syntax_error(
-    abc_harness, abc_run_testcases_request):
+  abc_harness, abc_run_testcases_request
+):
   """Test outcome of kernel with syntax error."""
-  abc_run_testcases_request.testcases[0].inputs['src'] = '!!11@invalid syntax'
+  abc_run_testcases_request.testcases[0].inputs["src"] = "!!11@invalid syntax"
   res = abc_harness.RunTestcases(abc_run_testcases_request, None)
   assert res.status.returncode == service_pb2.ServiceStatus.SUCCESS
   assert len(res.results) == 1
@@ -202,5 +205,5 @@ def test_ClLauncherHarness_RunTestcases_oclgrind_syntax_error(
   assert result.outcome == deepsmith_pb2.Result.BUILD_FAILURE
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

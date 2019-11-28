@@ -17,6 +17,7 @@ Base = declarative.declarative_base()
 
 class FeatureVector(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """A table of feature vectors."""
+
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # Raw values of Grewe et. al. feature space.
@@ -26,42 +27,48 @@ class FeatureVector(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   coalesced_memory_access_count: int = sql.Column(sql.Integer, nullable=False)
 
   __table_args__ = (
-      # <src,origin> pairs must be unique.
-      sql.UniqueConstraint('compute_operation_count',
-                           'global_memory_access_count',
-                           'local_memory_access_count',
-                           'coalesced_memory_access_count',
-                           name='unique_feature_vector'),)
+    # <src,origin> pairs must be unique.
+    sql.UniqueConstraint(
+      "compute_operation_count",
+      "global_memory_access_count",
+      "local_memory_access_count",
+      "coalesced_memory_access_count",
+      name="unique_feature_vector",
+    ),
+  )
 
   @staticmethod
   def FromFeatureTuple(
-      features: grewe_features.GreweEtAlFeatures) -> typing.Dict[str, int]:
+    features: grewe_features.GreweEtAlFeatures,
+  ) -> typing.Dict[str, int]:
     """Instantiate a PreprocessedContentFile."""
     return {
-        'compute_operation_count': features.compute_operation_count,
-        'global_memory_access_count': features.global_memory_access_count,
-        'local_memory_access_count': features.local_memory_access_count,
-        'coalesced_memory_access_count': features.coalesced_memory_access_count
+      "compute_operation_count": features.compute_operation_count,
+      "global_memory_access_count": features.global_memory_access_count,
+      "local_memory_access_count": features.local_memory_access_count,
+      "coalesced_memory_access_count": features.coalesced_memory_access_count,
     }
 
   @staticmethod
   def FromNumpyArray(features: np.array) -> typing.Dict[str, int]:
     assert features.shape == (4,)
     return {
-        'compute_operation_count': features[0],
-        'global_memory_access_count': features[1],
-        'local_memory_access_count': features[2],
-        'coalesced_memory_access_count': features[3]
+      "compute_operation_count": features[0],
+      "global_memory_access_count": features[1],
+      "local_memory_access_count": features[2],
+      "coalesced_memory_access_count": features[3],
     }
 
   def ToNumpyArray(self) -> np.array:
-    return np.array([
+    return np.array(
+      [
         self.compute_operation_count,
         self.global_memory_access_count,
         self.local_memory_access_count,
         self.coalesced_memory_access_count,
-    ],
-                    dtype=int)
+      ],
+      dtype=int,
+    )
 
 
 class BacktrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
@@ -74,12 +81,12 @@ class BacktrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   runtime_ms: int = sql.Column(sql.Integer, nullable=False)
 
   # Features.
-  target_features_id: int = sql.Column(sql.Integer,
-                                       sql.ForeignKey(FeatureVector.id),
-                                       nullable=False)
-  features_id: int = sql.Column(sql.Integer,
-                                sql.ForeignKey(FeatureVector.id),
-                                nullable=False)
+  target_features_id: int = sql.Column(
+    sql.Integer, sql.ForeignKey(FeatureVector.id), nullable=False
+  )
+  features_id: int = sql.Column(
+    sql.Integer, sql.ForeignKey(FeatureVector.id), nullable=False
+  )
   feature_distance: float = sql.Column(sql.Float, nullable=False)
   # Feature distance, but normalized to the starting feature distance. In range
   # [0,1] (assuming hill climbing).
@@ -95,14 +102,17 @@ class BacktrackingStep(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   # The kernel source.
   token_count: int = sql.Column(sql.Integer, nullable=False)
-  src: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                        nullable=False)
+  src: str = sql.Column(
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
 
   # Relationship.
   target_features: FeatureVector = sql.orm.relationship(
-      'FeatureVector', foreign_keys=[target_features_id])
-  features: FeatureVector = sql.orm.relationship('FeatureVector',
-                                                 foreign_keys=[features_id])
+    "FeatureVector", foreign_keys=[target_features_id]
+  )
+  features: FeatureVector = sql.orm.relationship(
+    "FeatureVector", foreign_keys=[features_id]
+  )
 
 
 class Database(sqlutil.Database):

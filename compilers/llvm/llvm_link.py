@@ -35,13 +35,16 @@ from labm8.py import system
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer('llvm_link_timeout_seconds', 60,
-                   'The maximum number of seconds to allow process to run.')
+app.DEFINE_integer(
+  "llvm_link_timeout_seconds",
+  60,
+  "The maximum number of seconds to allow process to run.",
+)
 
-_LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
+_LLVM_REPO = "llvm_linux" if system.is_linux() else "llvm_mac"
 
 # Path to llvm-link binary.
-LLVM_LINK = bazelutil.DataPath(f'{_LLVM_REPO}/bin/llvm-link')
+LLVM_LINK = bazelutil.DataPath(f"{_LLVM_REPO}/bin/llvm-link")
 
 
 def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
@@ -54,25 +57,25 @@ def Exec(args: typing.List[str], timeout_seconds: int = 60) -> subprocess.Popen:
   Returns:
     A Popen instance with stdout and stderr set to strings.
   """
-  cmd = ['timeout', '-s9', str(timeout_seconds), str(LLVM_LINK)] + args
-  app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             universal_newlines=True)
+  cmd = ["timeout", "-s9", str(timeout_seconds), str(LLVM_LINK)] + args
+  app.Log(3, "$ %s", " ".join(cmd))
+  process = subprocess.Popen(
+    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+  )
   stdout, stderr = process.communicate()
   if process.returncode == 9:
-    raise llvm.LlvmTimeout(f'llvm-link timed out after {timeout_seconds}s')
+    raise llvm.LlvmTimeout(f"llvm-link timed out after {timeout_seconds}s")
   process.stdout = stdout
   process.stderr = stderr
   return process
 
 
 def LinkBitcodeFilesToBytecode(
-    input_paths: typing.List[pathlib.Path],
-    output_path: pathlib.Path,
-    linkopts: typing.Optional[typing.List[str]] = None,
-    timeout_seconds: int = 60) -> pathlib.Path:
+  input_paths: typing.List[pathlib.Path],
+  output_path: pathlib.Path,
+  linkopts: typing.Optional[typing.List[str]] = None,
+  timeout_seconds: int = 60,
+) -> pathlib.Path:
   """Link multiple bitcode files to a single bytecode file.
 
   Args:
@@ -88,12 +91,13 @@ def LinkBitcodeFilesToBytecode(
     output_path.unlink()
   linkopts = linkopts or []
   proc = Exec(
-      [str(x) for x in input_paths] + ['-o', str(output_path), '-S'] + linkopts,
-      timeout_seconds=timeout_seconds)
+    [str(x) for x in input_paths] + ["-o", str(output_path), "-S"] + linkopts,
+    timeout_seconds=timeout_seconds,
+  )
   if proc.returncode:
-    raise ValueError(f'Failed to link bytecode: {proc.stderr}')
+    raise ValueError(f"Failed to link bytecode: {proc.stderr}")
   if not output_path.is_file():
-    raise ValueError(f'Bytecode file {output_path} not linked.')
+    raise ValueError(f"Bytecode file {output_path} not linked.")
   return output_path
 
 
@@ -111,5 +115,5 @@ def main(argv):
     sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

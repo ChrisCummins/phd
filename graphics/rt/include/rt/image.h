@@ -34,17 +34,17 @@ namespace image {
 // Helper functions to convert 2D to 1D flat array co-ordinates, and
 // vice versa.
 
-template<typename T>
+template <typename T>
 inline T index(const T& x, const T& y, const T& width) {
   return y * width + x;
 }
 
-template<typename T>
+template <typename T>
 inline T x(const T& index, const T& width) {
   return index % width;
 }
 
-template<typename T>
+template <typename T>
 inline T y(const T& index, const T& width) {
   return index / width;
 }
@@ -52,7 +52,7 @@ inline T y(const T& index, const T& width) {
 }  // namespace image
 
 // A rendered image.
-template<size_t _width, size_t _height>
+template <size_t _width, size_t _height>
 class Image {
  public:
   std::array<Pixel, _width * _height> data;
@@ -63,16 +63,13 @@ class Image {
   const Colour gamma;
   const bool inverted;
 
-  Image(const Scalar saturation = 1,
-        const Colour gamma = Colour(1, 1, 1),
+  Image(const Scalar saturation = 1, const Colour gamma = Colour(1, 1, 1),
         const bool inverted = true);
 
   ~Image() {}
 
   // [x,y] = value
-  auto inline set(const size_t x,
-                  const size_t y,
-                  const Colour &value) {
+  auto inline set(const size_t x, const size_t y, const Colour& value) {
     // Apply Y axis inversion if needed.
     const size_t row = inverted ? height - 1 - y : y;
     // Convert 2D coordinates to flat array index.
@@ -80,8 +77,7 @@ class Image {
   }
 
   // [index] = value
-  auto inline set(const size_t index,
-                  const Colour &value) {
+  auto inline set(const size_t index, const Colour& value) {
     const size_t x = image::x(index, width);
     const size_t y = image::y(index, width);
 
@@ -92,16 +88,12 @@ class Image {
     return image::index(x, y, width);
   }
 
-  auto x(const size_t index) {
-    return image::x(index, width);
-  }
+  auto x(const size_t index) { return image::x(index, width); }
 
-  auto y(const size_t index) {
-    return image::y(index, width);
-  }
+  auto y(const size_t index) { return image::y(index, width); }
 
   friend std::ostream& operator<<(std::ostream& out,
-                                  const Image<_width, _height> &image) {
+                                  const Image<_width, _height>& image) {
     // Print PPM header.
 
     // Magic number:
@@ -109,8 +101,7 @@ class Image {
     // Image dimensions:
     out << image.width << " " << image.height << std::endl;
     // Max colour value:
-    out << unsigned(std::numeric_limits<Pixel::value_type>::max())
-        << std::endl;
+    out << unsigned(std::numeric_limits<Pixel::value_type>::max()) << std::endl;
 
     // Iterate over each point in the image, writing pixel data.
     for (size_t i = 0; i < image.size; i++) {
@@ -118,8 +109,7 @@ class Image {
       out << pixel << " ";
 
       // Add newline at the end of each row:
-      if (!i % image.width)
-        out << std::endl;
+      if (!i % image.width) out << std::endl;
     }
 
     return out;
@@ -133,13 +123,11 @@ class Image {
   char _pad[7];
 #pragma GCC diagnostic pop  // Ignore unused "_pad" variable.
 
-  void _set(const size_t i,
-            const Colour &value);
+  void _set(const size_t i, const Colour& value);
 };
 
-template<size_t _width, size_t _height>
-Image<_width, _height>::Image(const Scalar _saturation,
-                              const Colour _gamma,
+template <size_t _width, size_t _height>
+Image<_width, _height>::Image(const Scalar _saturation, const Colour _gamma,
                               const bool _inverted)
     : data(),
       width(_width),
@@ -149,13 +137,12 @@ Image<_width, _height>::Image(const Scalar _saturation,
       gamma(1 / _gamma.r, 1 / _gamma.g, 1 / _gamma.b),
       inverted(_inverted) {}
 
-template<size_t width, size_t height>
-void Image<width, height>::_set(const size_t i,
-                                const Colour &value) {
+template <size_t width, size_t height>
+void Image<width, height>::_set(const size_t i, const Colour& value) {
   // Apply gamma correction.
-  Colour corrected = Colour(std::pow(value.r, gamma.r),
-                            std::pow(value.g, gamma.g),
-                            std::pow(value.b, gamma.b));
+  Colour corrected =
+      Colour(std::pow(value.r, gamma.r), std::pow(value.g, gamma.g),
+             std::pow(value.b, gamma.b));
 
   // TODO: Fix strange aliasing effect as a result of
   // RGB -> HSL -> RGB conversion.

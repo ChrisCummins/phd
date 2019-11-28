@@ -23,10 +23,11 @@ from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-LIBCLC = bazelutil.DataPath('phd/third_party/libclc/generic/include')
-OPENCL_H = bazelutil.DataPath('phd/deeplearning/clgen/data/include/opencl.h')
+LIBCLC = bazelutil.DataPath("phd/third_party/libclc/generic/include")
+OPENCL_H = bazelutil.DataPath("phd/deeplearning/clgen/data/include/opencl.h")
 SHIMFILE = bazelutil.DataPath(
-    'phd/deeplearning/clgen/data/include/opencl-shim.h')
+  "phd/deeplearning/clgen/data/include/opencl-shim.h"
+)
 
 
 def GetClangArgs(use_shim: bool) -> typing.List[str]:
@@ -40,14 +41,21 @@ def GetClangArgs(use_shim: bool) -> typing.List[str]:
     A list of command line arguments to pass to Popen().
   """
   args = [
-      '-I' + str(LIBCLC), '-include',
-      str(OPENCL_H), '-target', 'nvptx64-nvidia-nvcl', f'-ferror-limit=1',
-      '-xcl', '-Wno-ignored-pragmas', '-Wno-implicit-function-declaration',
-      '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
-      '-Wno-unused-parameter'
+    "-I" + str(LIBCLC),
+    "-include",
+    str(OPENCL_H),
+    "-target",
+    "nvptx64-nvidia-nvcl",
+    f"-ferror-limit=1",
+    "-xcl",
+    "-Wno-ignored-pragmas",
+    "-Wno-implicit-function-declaration",
+    "-Wno-incompatible-library-redeclaration",
+    "-Wno-macro-redefined",
+    "-Wno-unused-parameter",
   ]
   if use_shim:
-    args += ['-include', str(SHIMFILE)]
+    args += ["-include", str(SHIMFILE)]
   return args
 
 
@@ -107,8 +115,10 @@ def Compile(text: str) -> str:
   # We must override the flag -Wno-implicit-function-declaration from
   # GetClangArgs() to ensure that undefined functions are treated as errors.
   clang.CompileLlvmBytecode(
-      text, '.cl',
-      GetClangArgs(use_shim=False) + ['-Werror=implicit-function-declaration'])
+    text,
+    ".cl",
+    GetClangArgs(use_shim=False) + ["-Werror=implicit-function-declaration"],
+  )
   return text
 
 
@@ -126,7 +136,7 @@ def ClangFormat(text: str) -> str:
     ClangFormatException: In case of an error.
     ClangTimeout: If clang-format does not complete before timeout_seconds.
   """
-  return clang.ClangFormat(text, '.cl')
+  return clang.ClangFormat(text, ".cl")
 
 
 @public.clgen_preprocessor
@@ -143,8 +153,9 @@ def NormalizeIdentifiers(text: str) -> str:
     RewriterException: If rewriter found nothing to rewrite.
     ClangTimeout: If rewriter fails to complete within timeout_seconds.
   """
-  return normalizer.NormalizeIdentifiers(text, '.cl',
-                                         GetClangArgs(use_shim=False))
+  return normalizer.NormalizeIdentifiers(
+    text, ".cl", GetClangArgs(use_shim=False)
+  )
 
 
 # TODO(cec): Re-enable GPUVerify support.
@@ -208,8 +219,8 @@ def SanitizeKernelPrototype(text: str) -> str:
   """
   # Ensure that prototype is well-formed on a single line:
   try:
-    prototype_end_idx = text.index('{') + 1
-    prototype = ' '.join(text[:prototype_end_idx].split())
+    prototype_end_idx = text.index("{") + 1
+    prototype = " ".join(text[:prototype_end_idx].split())
     return prototype + text[prototype_end_idx:]
   except ValueError:
     # Ok so erm... if the '{' character isn't found, a ValueError
@@ -237,16 +248,16 @@ def StripDoubleUnderscorePrefixes(text: str) -> str:
   """
   # List of keywords taken from the OpenCL 1.2. specification, page 169.
   replacements = {
-      '__const': 'const',
-      '__constant': 'constant',
-      '__global': 'global',
-      '__kernel': 'kernel',
-      '__local': 'local',
-      '__private': 'private',
-      '__read_only': 'read_only',
-      '__read_write': 'read_write',
-      '__restrict': 'restrict',
-      '__write_only': 'write_only',
+    "__const": "const",
+    "__constant": "constant",
+    "__global": "global",
+    "__kernel": "kernel",
+    "__local": "local",
+    "__private": "private",
+    "__read_only": "read_only",
+    "__read_write": "read_write",
+    "__restrict": "restrict",
+    "__write_only": "write_only",
   }
   for old, new in replacements.items():
     text = text.replace(old, new)

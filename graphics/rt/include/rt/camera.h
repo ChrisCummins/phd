@@ -33,8 +33,7 @@ class Lens {
   const Scalar focus;
   mutable UniformDiskDistribution<Scalar> aperture;
 
-  inline Lens(const Scalar _focalLength,
-              const Scalar _aperture = 1,
+  inline Lens(const Scalar _focalLength, const Scalar _aperture = 1,
               const Scalar _focus = 1)
       : focalLength(_focalLength), focus(_focus), aperture(_aperture) {}
 };
@@ -50,18 +49,15 @@ class Camera {
   const Vector up;
   const Scalar width;
   const Scalar height;
-  const Lens   lens;
+  const Lens lens;
   const Scalar focusDistance;
 
-  inline Camera(const Vector &_position,
-                const Vector &_lookAt,
-                const Scalar _width,
-                const Scalar _height,
-                const Lens   &_lens)
+  inline Camera(const Vector &_position, const Vector &_lookAt,
+                const Scalar _width, const Scalar _height, const Lens &_lens)
       : position(_position),
         direction((_lookAt - _position).normalise()),
-        filmBack(_position - (_lookAt - _position).normalise()
-                 * _lens.focalLength),
+        filmBack(_position -
+                 (_lookAt - _position).normalise() * _lens.focalLength),
         right((_lookAt - _position).normalise() | Vector(0, 1, 0)),
         up(((_lookAt - _position).normalise() | Vector(0, 1, 0)) |
            (_lookAt - _position).normalise()),

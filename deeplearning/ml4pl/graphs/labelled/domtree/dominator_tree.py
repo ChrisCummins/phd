@@ -11,26 +11,31 @@ FLAGS = app.FLAGS
 
 
 @decorators.timeout(seconds=60)
-def AnnotateDominatorTree(g: nx.MultiDiGraph,
-                          root_node: str,
-                          x_label: str = 'x',
-                          y_label: str = 'y',
-                          true: typing.Any = True,
-                          false: typing.Any = False) -> typing.Tuple[int, int]:
+def AnnotateDominatorTree(
+  g: nx.MultiDiGraph,
+  root_node: str,
+  x_label: str = "x",
+  y_label: str = "y",
+  true: typing.Any = True,
+  false: typing.Any = False,
+) -> typing.Tuple[int, int]:
   # Create a map from nodes to predecessors.
   predecessors: typing.Dict[str, typing.Set[str]] = {
-      node: set([
-          src for src, _, flow in g.in_edges(node, data='flow')
-          if flow == 'control'
-      ]) for node in
-      [g for g, type_ in g.nodes(data='type') if type_ == 'statement']
+    node: set(
+      [
+        src
+        for src, _, flow in g.in_edges(node, data="flow")
+        if flow == "control"
+      ]
+    )
+    for node in [g for g, type_ in g.nodes(data="type") if type_ == "statement"]
   }
 
   # Initialize the dominator sets.
   dominators: typing.Dict[str, typing.Set[int]] = {
-      n: set(predecessors.keys()) - set([root_node])
-      for n, type_ in g.nodes(data='type')
-      if type_ == 'statement'
+    n: set(predecessors.keys()) - set([root_node])
+    for n, type_ in g.nodes(data="type")
+    if type_ == "statement"
   }
   dominators[root_node] = set([root_node])
 
@@ -67,10 +72,7 @@ def AnnotateDominatorTree(g: nx.MultiDiGraph,
 
 
 def MakeDominatorTreeGraphs(
-    g: nx.MultiDiGraph,
-    n: typing.Optional[int] = None,
-    false=False,
-    true=True,
+  g: nx.MultiDiGraph, n: typing.Optional[int] = None, false=False, true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
   """Produce up to `n` dominator trees from the given unlabelled graph.
 
@@ -93,6 +95,8 @@ def MakeDominatorTreeGraphs(
 
   for root_node in root_statements[:n]:
     domtree = g.copy()
-    domtree.dominated_node_count, domtree.data_flow_max_steps_required = (
-        AnnotateDominatorTree(domtree, root_node, false=false, true=true))
+    (
+      domtree.dominated_node_count,
+      domtree.data_flow_max_steps_required,
+    ) = AnnotateDominatorTree(domtree, root_node, false=false, true=true)
     yield domtree

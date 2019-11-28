@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <div class = "row">
+  <div class="row">
     <div class="col">
       <h4>Indices ({{ encoded.tokencount }} indices)</h4>
       <p class="lead">
@@ -35,7 +35,7 @@
     </div>
   </div>
 
-  <div class = "row">
+  <div class="row">
     <div class="col">
       <h4>Decoded Tokens ({{ encoded.tokencount }} tokens)</h4>
       <p class="lead">
@@ -49,17 +49,23 @@
     </div>
   </div>
 
-  <div class = "row">
+  <div class="row">
     <div class="col">
       <h4>Vocabulary ({{ vocab.size }} elements)</h4>
 
       <table class="table table-striped">
         <thead>
-          <tr><th scope="col">#</th><th scope="col">Token</th></tr>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Token</th>
+          </tr>
         </thead>
         <tbody>
           {% for idx in vocab.table %}
-          <tr><th scope="row">{{ idx[0] }}</th><td><code>{{ idx[1].encode('utf8') }}</code></td></tr>
+          <tr>
+            <th scope="row">{{ idx[0] }}</th>
+            <td><code>{{ idx[1].encode('utf8') }}</code></td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>

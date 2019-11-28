@@ -26,19 +26,19 @@ FLAGS = app.FLAGS
 def test_GetGlobalConfig_system_values():
   """Check that the repo config has all of the expected fields."""
   config = getconfig.GetGlobalConfig()
-  assert config.HasField('uname')
-  assert config.HasField('configure_id')
-  assert config.HasField('with_cuda')
-  assert config.options.HasField('with_cuda')
-  assert config.options.HasField('update_git_submodules')
-  assert config.paths.HasField('repo_root')
-  assert config.paths.HasField('python')
+  assert config.HasField("uname")
+  assert config.HasField("configure_id")
+  assert config.HasField("with_cuda")
+  assert config.options.HasField("with_cuda")
+  assert config.options.HasField("update_git_submodules")
+  assert config.paths.HasField("repo_root")
+  assert config.paths.HasField("python")
 
 
 def test_uname():
   """Test that uname is one of the expected values."""
   config = getconfig.GetGlobalConfig()
-  assert config.uname in {'darwin', 'linux'}
+  assert config.uname in {"darwin", "linux"}
 
 
 def test_configure_id():
@@ -48,18 +48,20 @@ def test_configure_id():
   run ./configure again.
   """
   config = getconfig.GetGlobalConfig()
-  configure_path = pathlib.Path(config.paths.repo_root) / 'configure'
+  configure_path = pathlib.Path(config.paths.repo_root) / "configure"
   assert configure_path.is_file()
 
   def ToConfigureArg(field: str) -> str:
     """Turn an 'options' field into a --[no]arg ./configure argument."""
-    return f'--{field}' if getattr(config.options, field) else f'--no{field}'
+    return f"--{field}" if getattr(config.options, field) else f"--no{field}"
 
   args = [ToConfigureArg(f.name) for f in config.options.DESCRIPTOR.fields]
-  cmd = [str(configure_path), '--print_id', '--noninteractive'] + args
-  print('$', ' '.join(cmd))
-  assert config.configure_id == subprocess.check_output(
-      cmd, universal_newlines=True).rstrip()
+  cmd = [str(configure_path), "--print_id", "--noninteractive"] + args
+  print("$", " ".join(cmd))
+  assert (
+    config.configure_id
+    == subprocess.check_output(cmd, universal_newlines=True).rstrip()
+  )
 
 
 def test_GlobalConfigPaths_repo_root():
@@ -75,5 +77,5 @@ def test_GlobalConfigPaths_python():
   assert os.access(config.paths.python, os.X_OK)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

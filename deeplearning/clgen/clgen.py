@@ -53,41 +53,60 @@ from labm8.py import prof
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('config', '/clgen/config.pbtxt',
-                  'Path to a clgen.Instance proto file.')
+app.DEFINE_string(
+  "config", "/clgen/config.pbtxt", "Path to a clgen.Instance proto file."
+)
 app.DEFINE_integer(
-    'min_samples', 0,
-    'The minimum number of samples to make. If <= 0, sampling continues '
-    'indefinitely and never terminates.')
-app.DEFINE_boolean('print_samples', True,
-                   'If set, print the generated samples.')
-app.DEFINE_boolean('cache_samples', False,
-                   'If set, cache the generated sample protobufs.')
-app.DEFINE_string('sample_text_dir', None,
-                  'A directory to write plain text samples to.')
-app.DEFINE_string('stop_after', None,
-                  'Stop CLgen early. Valid options are: "corpus", or "train".')
+  "min_samples",
+  0,
+  "The minimum number of samples to make. If <= 0, sampling continues "
+  "indefinitely and never terminates.",
+)
+app.DEFINE_boolean(
+  "print_samples", True, "If set, print the generated samples."
+)
+app.DEFINE_boolean(
+  "cache_samples", False, "If set, cache the generated sample protobufs."
+)
 app.DEFINE_string(
-    'print_cache_path', None,
-    'Print the directory of a cache and exit. Valid options are: "corpus", '
-    '"model", or "sampler".')
+  "sample_text_dir", None, "A directory to write plain text samples to."
+)
 app.DEFINE_string(
-    'export_model', None,
-    'Path to export a trained TensorFlow model to. This exports all of the '
-    'files required for sampling to specified directory. The directory can '
-    'then be used as the pretrained_model field of an Instance proto config.')
+  "stop_after",
+  None,
+  'Stop CLgen early. Valid options are: "corpus", or "train".',
+)
+app.DEFINE_string(
+  "print_cache_path",
+  None,
+  'Print the directory of a cache and exit. Valid options are: "corpus", '
+  '"model", or "sampler".',
+)
+app.DEFINE_string(
+  "export_model",
+  None,
+  "Path to export a trained TensorFlow model to. This exports all of the "
+  "files required for sampling to specified directory. The directory can "
+  "then be used as the pretrained_model field of an Instance proto config.",
+)
 
 # TODO(github.com/ChrisCummins/clgen/issues/131): Remove these in favor of
 # standard labm8.py.app methods for enabling extra debugging or profiling
 # information.
 app.DEFINE_boolean(
-    'clgen_debug', False,
-    'Enable a debugging mode of CLgen python runtime. When enabled, errors '
-    'which may otherwise be caught lead to program crashes and stack traces.')
-app.DEFINE_boolean('clgen_profiling', False,
-                   'Enable CLgen self profiling. Profiling results be logged.')
-app.DEFINE_boolean('clgen_dashboard_only', False,
-                   'If true, launch dashboard only.')
+  "clgen_debug",
+  False,
+  "Enable a debugging mode of CLgen python runtime. When enabled, errors "
+  "which may otherwise be caught lead to program crashes and stack traces.",
+)
+app.DEFINE_boolean(
+  "clgen_profiling",
+  False,
+  "Enable CLgen self profiling. Profiling results be logged.",
+)
+app.DEFINE_boolean(
+  "clgen_dashboard_only", False, "If true, launch dashboard only."
+)
 
 
 class Instance(object):
@@ -104,37 +123,39 @@ class Instance(object):
         a model or sampler fields.
     """
     try:
-      pbutil.AssertFieldIsSet(config, 'model_specification')
-      pbutil.AssertFieldIsSet(config, 'sampler')
+      pbutil.AssertFieldIsSet(config, "model_specification")
+      pbutil.AssertFieldIsSet(config, "sampler")
     except pbutil.ProtoValueError as e:
       raise errors.UserError(e)
 
     self.config = config
     self.working_dir = None
-    if config.HasField('working_dir'):
+    if config.HasField("working_dir"):
       self.working_dir: pathlib.Path = pathlib.Path(
-          os.path.expandvars(config.working_dir)).expanduser().absolute()
+        os.path.expandvars(config.working_dir)
+      ).expanduser().absolute()
     # Enter a session so that the cache paths are set relative to any requested
     # working directory.
     with self.Session():
-      if config.HasField('model'):
+      if config.HasField("model"):
         self.model: models.Model = models.Model(config.model)
       else:
         self.model: pretrained.PreTrainedModel = pretrained.PreTrainedModel(
-            pathlib.Path(config.pretrained_model))
+          pathlib.Path(config.pretrained_model)
+        )
       self.sampler: samplers.Sampler = samplers.Sampler(config.sampler)
 
     self.dashboard = dashboard.Launch(**dashboard_opts)
 
   @contextlib.contextmanager
-  def Session(self) -> 'Instance':
+  def Session(self) -> "Instance":
     """Scoped $CLGEN_CACHE value."""
-    old_working_dir = os.environ.get('CLGEN_CACHE', '')
+    old_working_dir = os.environ.get("CLGEN_CACHE", "")
     if self.working_dir:
-      os.environ['CLGEN_CACHE'] = str(self.working_dir)
+      os.environ["CLGEN_CACHE"] = str(self.working_dir)
     yield self
     if self.working_dir:
-      os.environ['CLGEN_CACHE'] = old_working_dir
+      os.environ["CLGEN_CACHE"] = old_working_dir
 
   def Create(self) -> None:
     with self.Session():
@@ -146,10 +167,13 @@ class Instance(object):
       test_sampler_config.CopyFrom(self.sampler.config)
       # Make all test samples the same 512-token length.
       del test_sampler_config.termination_criteria[:]
-      test_sampler_config.termination_criteria.extend([
+      test_sampler_config.termination_criteria.extend(
+        [
           sampler_pb2.SampleTerminationCriterion(
-              maxlen=sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=512)),
-      ])
+            maxlen=sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=512)
+          ),
+        ]
+      )
       test_sampler = samplers.Sampler(test_sampler_config)
 
       # We inject the `test_sampler` argument so that we can create samples
@@ -164,7 +188,7 @@ class Instance(object):
   def ExportPretrainedModel(self, export_dir: pathlib.Path) -> None:
     """Export a trained model."""
     if isinstance(self.model, pretrained.PreTrainedModel):
-      shutil.copytree(self.config.pretrained_model, export_dir / 'model')
+      shutil.copytree(self.config.pretrained_model, export_dir / "model")
     else:
       self.Train()
       for path in self.model.InferenceManifest():
@@ -181,7 +205,7 @@ class Instance(object):
     return config
 
   @classmethod
-  def FromFile(cls, path: pathlib.Path) -> 'Instance':
+  def FromFile(cls, path: pathlib.Path) -> "Instance":
     return cls(pbutil.FromFile(path, clgen_pb2.Instance()))
 
 
@@ -195,12 +219,14 @@ def Flush():
 def LogException(exception: Exception):
   """Log an error."""
   app.Error(
-      f"""\
+    f"""\
 %s (%s)
 
 Please report bugs at <https://github.com/ChrisCummins/phd/issues>\
-""", exception,
-      type(exception).__name__)
+""",
+    exception,
+    type(exception).__name__,
+  )
   sys.exit(1)
 
 
@@ -213,28 +239,32 @@ def LogExceptionWithStackTrace(exception: Exception):
     filename, lineno, fnname, _ = x
     # TODO(github.com/ChrisCummins/clgen/issues/131): Report filename relative
     # to PhD root.
-    loc = f'{filename}:{lineno}'
-    return f'      #{n}  {loc: <18} {fnname}()'
+    loc = f"{filename}:{lineno}"
+    return f"      #{n}  {loc: <18} {fnname}()"
 
   _, _, tb = sys.exc_info()
   NUM_ROWS = 5  # number of rows in traceback
   trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS + 1)[1:])
-  message = '\n'.join(_msg(*r) for r in enumerate(trace))
+  message = "\n".join(_msg(*r) for r in enumerate(trace))
   app.Error(
-      """\
+    """\
 %s (%s)
 
   stacktrace:
 %s
 
 Please report bugs at <https://github.com/ChrisCummins/phd/issues>\
-""", exception,
-      type(exception).__name__, message)
+""",
+    exception,
+    type(exception).__name__,
+    message,
+  )
   sys.exit(1)
 
 
-def RunWithErrorHandling(function_to_run: typing.Callable, *args,
-                         **kwargs) -> typing.Any:
+def RunWithErrorHandling(
+  function_to_run: typing.Callable, *args, **kwargs
+) -> typing.Any:
   """
   Runs the given method as the main entrypoint to a program.
 
@@ -252,7 +282,8 @@ def RunWithErrorHandling(function_to_run: typing.Callable, *args,
   if FLAGS.clgen_debug:
     # Enable verbose stack traces. See: https://pymotw.com/2/cgitb/
     import cgitb
-    cgitb.enable(format='text')
+
+    cgitb.enable(format="text")
     return function_to_run(*args, **kwargs)
 
   try:
@@ -262,18 +293,18 @@ def RunWithErrorHandling(function_to_run: typing.Callable, *args,
       return function_to_run(*args, **kwargs)
 
     if prof.is_enabled():
-      return cProfile.runctx('RunContext()', None, locals(), sort='tottime')
+      return cProfile.runctx("RunContext()", None, locals(), sort="tottime")
     else:
       return RunContext()
   except app.UsageError as err:
     # UsageError is handled by the call to app.RunWithArgs(), not here.
     raise err
   except errors.UserError as err:
-    app.Error('%s (%s)', err, type(err).__name__)
+    app.Error("%s (%s)", err, type(err).__name__)
     sys.exit(1)
   except KeyboardInterrupt:
     Flush()
-    print('\nReceived keyboard interrupt, terminating', file=sys.stderr)
+    print("\nReceived keyboard interrupt, terminating", file=sys.stderr)
     sys.exit(1)
   except errors.File404 as e:
     Flush()
@@ -290,34 +321,40 @@ def ConfigFromFlags() -> clgen_pb2.Instance:
   if not config_path.is_file():
     raise app.UsageError(f"CLgen --config file not found: '{config_path}'")
   config = pbutil.FromFile(config_path, clgen_pb2.Instance())
-  os.environ['PWD'] = str(config_path.parent)
+  os.environ["PWD"] = str(config_path.parent)
   return config
 
 
-def SampleObserversFromFlags(
-) -> typing.List[sample_observers_lib.SampleObserver]:
+def SampleObserversFromFlags() -> typing.List[
+  sample_observers_lib.SampleObserver
+]:
   """Instantiate sample observers from flag values."""
   sample_observers = []
   if FLAGS.min_samples <= 0:
     app.Warning(
-        'Entering an infinite sample loop, this process will never end!')
+      "Entering an infinite sample loop, this process will never end!"
+    )
   else:
     sample_observers.append(
-        sample_observers_lib.MaxSampleCountObserver(FLAGS.min_samples))
+      sample_observers_lib.MaxSampleCountObserver(FLAGS.min_samples)
+    )
   if FLAGS.print_samples:
     sample_observers.append(sample_observers_lib.PrintSampleObserver())
   if FLAGS.cache_samples:
     sample_observers.append(sample_observers_lib.LegacySampleCacheObserver())
   if FLAGS.sample_text_dir:
     sample_observers.append(
-        sample_observers_lib.SaveSampleTextObserver(
-            pathlib.Path(FLAGS.sample_text_dir)))
+      sample_observers_lib.SaveSampleTextObserver(
+        pathlib.Path(FLAGS.sample_text_dir)
+      )
+    )
   return sample_observers
 
 
 def DoFlagsAction(
-    instance: Instance,
-    sample_observers: typing.List[sample_observers_lib.SampleObserver]) -> None:
+  instance: Instance,
+  sample_observers: typing.List[sample_observers_lib.SampleObserver],
+) -> None:
   """Do the action requested by the command line flags.
 
   By default, this method trains and samples the instance using the given
@@ -339,28 +376,30 @@ def DoFlagsAction(
     if FLAGS.clgen_dashboard_only:
       instance.Create()
       return
-    if FLAGS.print_cache_path == 'corpus':
+    if FLAGS.print_cache_path == "corpus":
       print(instance.model.corpus.cache.path)
       return
-    elif FLAGS.print_cache_path == 'model':
+    elif FLAGS.print_cache_path == "model":
       print(instance.model.cache.path)
       return
-    elif FLAGS.print_cache_path == 'sampler':
+    elif FLAGS.print_cache_path == "sampler":
       print(instance.model.SamplerCache(instance.sampler))
       return
     elif FLAGS.print_cache_path:
       raise app.UsageError(
-          f"Invalid --print_cache_path argument: '{FLAGS.print_cache_path}'")
+        f"Invalid --print_cache_path argument: '{FLAGS.print_cache_path}'"
+      )
 
     # The default action is to sample the model.
-    if FLAGS.stop_after == 'corpus':
+    if FLAGS.stop_after == "corpus":
       instance.model.corpus.Create()
-    elif FLAGS.stop_after == 'train':
+    elif FLAGS.stop_after == "train":
       instance.Train()
-      app.Log(1, 'Model: %s', instance.model.cache.path)
+      app.Log(1, "Model: %s", instance.model.cache.path)
     elif FLAGS.stop_after:
       raise app.UsageError(
-          f"Invalid --stop_after argument: '{FLAGS.stop_after}'")
+        f"Invalid --stop_after argument: '{FLAGS.stop_after}'"
+      )
     elif FLAGS.export_model:
       instance.ExportPretrainedModel(pathlib.Path(FLAGS.export_model))
     else:
@@ -369,13 +408,12 @@ def DoFlagsAction(
 
 def main():
   """Main entry point."""
-  instance = Instance(ConfigFromFlags(),
-                      dashboard_opts={
-                          'debug': FLAGS.clgen_dashboard_only,
-                      })
+  instance = Instance(
+    ConfigFromFlags(), dashboard_opts={"debug": FLAGS.clgen_dashboard_only,}
+  )
   sample_observers = SampleObserversFromFlags()
   DoFlagsAction(instance, sample_observers)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(lambda: RunWithErrorHandling(main))

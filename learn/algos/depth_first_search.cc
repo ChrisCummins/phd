@@ -9,14 +9,13 @@
  *
  * Returns nullptr if value is not found in graph.
  */
-template<typename T>
+template <typename T>
 Graph<T>* _dfs(Graph<T>* graph, const T& val,
                std::set<Graph<T>*> visited = std::set<Graph<T>*>()) {
   assert(graph);
   std::cout << " " << graph->val;
 
-  if (graph->val == val)
-    return graph;
+  if (graph->val == val) return graph;
 
   visited.insert(graph);
 
@@ -29,7 +28,7 @@ Graph<T>* _dfs(Graph<T>* graph, const T& val,
   return nullptr;
 }
 
-template<typename T>
+template <typename T>
 Graph<T>* dfs(Graph<T>* graph, const T& val) {
   return _dfs<T>(graph, val);
 }

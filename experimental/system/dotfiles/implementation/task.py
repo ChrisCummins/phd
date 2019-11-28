@@ -19,23 +19,21 @@ class DuplicateTaskName(InvalidTaskError):
 
 
 class TaskArgumentError(InvalidTaskError):
-
   def __init__(self, argument, message):
     self.argument = argument
     self.message = message
 
   def __str__(self):
-    return ' '.join([self.argument, self.message])
+    return " ".join([self.argument, self.message])
 
 
 class Task(object):
-
   def __init__(self, name=None, genfiles=None, deps=None):
     print(self, "__init__")
     if name in TASKS:
       raise DuplicateTaskName(name)
     TASKS[name] = self
-    self.name = AssertSet(name, 'name')
+    self.name = AssertSet(name, "name")
     self.genfiles = genfiles or []
     self.deps = deps or []
 
@@ -86,8 +84,9 @@ def ScheduleTask(task_name, schedule, all_tasks, depth=1):
   """ recursively schedule a task and its dependencies """
   # Sanity check for scheduling errors:
   if depth > 1000:
-    raise SchedulingError("failed to resolve schedule for task '" + task_name +
-                          "' after 1000 tries")
+    raise SchedulingError(
+      "failed to resolve schedule for task '" + task_name + "' after 1000 tries"
+    )
     sys.exit(1)
 
   # Instantiate the task class:
@@ -120,7 +119,8 @@ def GetTasksToRun(task_names):
   task_names = set(task_names)
 
   with open(
-      os.path.expanduser('~/phd/experimental/system/dotfiles/test.py')) as f:
+    os.path.expanduser("~/phd/experimental/system/dotfiles/test.py")
+  ) as f:
     exec(f.read(), globals(), locals())
 
   # Determine the tasks which need scheduling:
@@ -146,6 +146,5 @@ def AssertSet(value, name):
 
 
 class MissingRequiredArgument(TaskArgumentError):
-
   def __init__(self, argument):
-    super(MissingRequiredArgument, self).__init__(argument, 'not set')
+    super(MissingRequiredArgument, self).__init__(argument, "not set")

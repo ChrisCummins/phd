@@ -12,6 +12,7 @@ class Error(Exception):
   """
   LLVM module error.
   """
+
   pass
 
 
@@ -19,6 +20,7 @@ class ProgramNotFoundError(Error):
   """
   Error thrown if a program is not found.
   """
+
   pass
 
 
@@ -26,6 +28,7 @@ class ClangError(Error):
   """
   Error thrown if clang exits with non-zero status.
   """
+
   pass
 
 
@@ -33,6 +36,7 @@ class OptError(Error):
   """
   Error thrown if opt exits with non-zero status.
   """
+
   pass
 
 
@@ -77,26 +81,28 @@ def bitcode(source, language="cl", path=DEFAULT_LLVM_PATH):
   assert_program_exists(str(path) + "clang")
 
   clang_args = [
-      str(path) + "clang",
-      "-Dcl_clang_storage_class_specifiers",
-      "-isystem",
-      "libclc/generic/include",
-      "-include",
-      "clc/clc.h",
-      "-target",
-      "nvptx64-nvidia-nvcl",
-      "-x" + str(language),
-      "-emit-llvm",
-      "-c",
-      "-",  # Read from stdin
-      "-o",
-      "-"  # Output to stdout
+    str(path) + "clang",
+    "-Dcl_clang_storage_class_specifiers",
+    "-isystem",
+    "libclc/generic/include",
+    "-include",
+    "clc/clc.h",
+    "-target",
+    "nvptx64-nvidia-nvcl",
+    "-x" + str(language),
+    "-emit-llvm",
+    "-c",
+    "-",  # Read from stdin
+    "-o",
+    "-",  # Output to stdout
   ]
 
-  clang = subprocess.Popen(clang_args,
-                           stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
+  clang = subprocess.Popen(
+    clang_args,
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+  )
   bitcode, err = clang.communicate(source)
   if clang.returncode != 0:
     raise ClangError(err)
@@ -130,19 +136,21 @@ def instcounts(bitcode, path=DEFAULT_LLVM_PATH):
   assert_program_exists(str(path) + "opt")
 
   opt_args = [
-      str(path) + "opt",
-      "-analyze",
-      "-stats",
-      "-instcount",
-      "-"  # Read from stdin
+    str(path) + "opt",
+    "-analyze",
+    "-stats",
+    "-instcount",
+    "-",  # Read from stdin
   ]
 
   # LLVM pass output pritns to stderr, so we'll pipe stderr to
   # stdout.
-  opt = subprocess.Popen(opt_args,
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
+  opt = subprocess.Popen(
+    opt_args,
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+  )
   out, _ = opt.communicate(bitcode)
   if opt.returncode != 0:
     raise OptError(out)

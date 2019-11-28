@@ -13,22 +13,23 @@ FLAGS = app.FLAGS
 
 
 def StatementNeighbors(
-    g: nx.Graph,
-    node: str,
-    flow='control',
-    direction: typing.Optional[
-        typing.Callable[[typing.Any, typing.Any], typing.Any]] = None
+  g: nx.Graph,
+  node: str,
+  flow="control",
+  direction: typing.Optional[
+    typing.Callable[[typing.Any, typing.Any], typing.Any]
+  ] = None,
 ) -> typing.Set[str]:
   """Return the neighboring statements connected by the given flow type."""
   direction = direction or (lambda src, dst: dst)
   neighbors = set()
   neighbor_edges = direction(g.in_edges, g.out_edges)
-  for src, dst, edge_flow in neighbor_edges(node,
-                                            data='flow',
-                                            default='control'):
+  for src, dst, edge_flow in neighbor_edges(
+    node, data="flow", default="control"
+  ):
     neighbor = direction(src, dst)
     if edge_flow == flow:
-      if g.nodes[neighbor].get('type', 'statement') == 'statement':
+      if g.nodes[neighbor].get("type", "statement") == "statement":
         neighbors.add(neighbor)
       else:
         neighbors = neighbors.union(StatementNeighbors(g, neighbor, flow=flow))
@@ -36,11 +37,12 @@ def StatementNeighbors(
 
 
 def SuccessorNodes(
-    g: nx.DiGraph,
-    node: str,
-    direction: typing.Optional[
-        typing.Callable[[typing.Any, typing.Any], typing.Any]] = None,
-    ignored_nodes: typing.Optional[typing.Iterable[str]] = None
+  g: nx.DiGraph,
+  node: str,
+  direction: typing.Optional[
+    typing.Callable[[typing.Any, typing.Any], typing.Any]
+  ] = None,
+  ignored_nodes: typing.Optional[typing.Iterable[str]] = None,
 ) -> typing.List[str]:
   """Find the successor nodes of a node."""
   direction = direction or (lambda src, dst: dst)
@@ -55,10 +57,9 @@ def SuccessorNodes(
   return real
 
 
-def StatementIsSuccessor(g: nx.MultiDiGraph,
-                         src: str,
-                         dst: str,
-                         flow: str = 'control') -> bool:
+def StatementIsSuccessor(
+  g: nx.MultiDiGraph, src: str, dst: str, flow: str = "control"
+) -> bool:
   """Return True if `dst` is successor to `src`."""
   visited = set()
   q = collections.deque([src])
@@ -68,11 +69,11 @@ def StatementIsSuccessor(g: nx.MultiDiGraph,
       return True
     visited.add(current)
     for next_node in g.neighbors(current):
-      edge_flow = g.edges[current, next_node, 0].get('flow', 'control')
+      edge_flow = g.edges[current, next_node, 0].get("flow", "control")
       if edge_flow != flow:
         continue
-      node_type = g.nodes[next_node].get('type', 'statement')
-      if node_type != 'statement':
+      node_type = g.nodes[next_node].get("type", "statement")
+      if node_type != "statement":
         continue
       if next_node in visited:
         continue
@@ -102,24 +103,27 @@ def GetCallStatementSuccessor(graph: nx.MultiDiGraph, call_site: str) -> str:
     ValueError: If call site does not have exactly one successor.
   """
   call_site_successors = []
-  for src, dst, flow in graph.out_edges(call_site,
-                                        data='flow',
-                                        default='control'):
-    if (flow == 'control' and
-        graph.nodes[dst].get('type', 'statement') == 'statement'):
+  for src, dst, flow in graph.out_edges(
+    call_site, data="flow", default="control"
+  ):
+    if (
+      flow == "control"
+      and graph.nodes[dst].get("type", "statement") == "statement"
+    ):
       call_site_successors.append(dst)
   if len(call_site_successors) != 1:
     raise ValueError(
-        f"Call statement `{call_site}` should have exactly one successor "
-        "statement but found "
-        f"{humanize.Plural(len(call_size_successors), 'successor')}: "
-        f"`{call_site_successors}`")
+      f"Call statement `{call_site}` should have exactly one successor "
+      "statement but found "
+      f"{humanize.Plural(len(call_size_successors), 'successor')}: "
+      f"`{call_site_successors}`"
+    )
   return list(call_site_successors)[0]
 
 
 def GetCalledFunctionName(statement) -> typing.Optional[str]:
   """Get the name of a function called in the statement."""
-  if 'call ' not in statement:
+  if "call " not in statement:
     return None
   # Try and resolve the call destination.
   _, m_glob, _, _ = inst2vec_preprocess.get_identifiers_from_line(statement)
@@ -132,9 +136,9 @@ def FindCallSites(graph, src, dst):
   """Find the statements in `src` function that call `dst` function."""
   call_sites = []
   for node, data in iterators.StatementNodeIterator(graph):
-    if data['function'] != src:
+    if data["function"] != src:
       continue
-    statement = data.get('original_text', data['text'])
+    statement = data.get("original_text", data["text"])
     called_function = GetCalledFunctionName(statement)
     if not called_function:
       continue
@@ -159,8 +163,8 @@ def _LoopConnectedness(graph, root) -> int:
       back_edge_count += 1
     else:
       visited.add(node)
-      for _, dst, flow in graph.out_edges(node, data='flow', default='control'):
-        if flow == 'control':
+      for _, dst, flow in graph.out_edges(node, data="flow", default="control"):
+        if flow == "control":
           stack.append(dst)
 
   return back_edge_count
@@ -175,12 +179,13 @@ def LoopConnectedness(graph) -> int:
   Returns:
     A non-negative loop connectedness value.
   """
-  entries = [dst for _, dst in graph.out_edges('root')]
+  entries = [dst for _, dst in graph.out_edges("root")]
   return max([_LoopConnectedness(graph, entry) for entry in entries] or [0])
 
 
-def GetStatementsForNode(graph: nx.MultiDiGraph,
-                         node: str) -> typing.Iterable[str]:
+def GetStatementsForNode(
+  graph: nx.MultiDiGraph, node: str
+) -> typing.Iterable[str]:
   """Return the statements which are connected to the given node.
 
   Args:
@@ -193,14 +198,14 @@ def GetStatementsForNode(graph: nx.MultiDiGraph,
     An iterator over statement nodes.
   """
   root = graph.nodes[node]
-  if root['type'] == 'statement':
+  if root["type"] == "statement":
     yield node
-  elif root['type'] == 'identifier':
+  elif root["type"] == "identifier":
     for src, dst in graph.in_edges(node):
-      if graph.nodes[src]['type'] == 'statement':
+      if graph.nodes[src]["type"] == "statement":
         yield src
     for src, dst in graph.out_edges(node):
-      if graph.nodes[dst]['type'] == 'statement':
+      if graph.nodes[dst]["type"] == "statement":
         yield dst
   else:
     raise ValueError(f"Unknown statement type `{root['type']}`")

@@ -10,7 +10,9 @@ import timeit
 from collections import deque
 from hashlib import sha1
 from string import ascii_lowercase
-from typing import Iterator, List, Set
+from typing import Iterator
+from typing import List
+from typing import Set
 
 
 # Approach 1: BFS, where neighboring nodes are computed on-the-fly.
@@ -20,9 +22,11 @@ def gen_permutations_in(D: Set[str], s: str) -> List[str]:
   permutations = []
   for i in range(len(s)):
     candidates = (
-        [s[:i] + s[i + 1:]] +  # remove character
-        [s[:i] + c + s[i:] for c in ascii_lowercase] +  # add character
-        [s[:i] + c + s[i + 1:] for c in ascii_lowercase]  # switch character
+      [s[:i] + s[i + 1 :]]
+      + [s[:i] + c + s[i:] for c in ascii_lowercase]  # remove character
+      + [  # add character
+        s[:i] + c + s[i + 1 :] for c in ascii_lowercase
+      ]  # switch character
     )
 
     permutations += [p for p in candidates if p in D]
@@ -67,9 +71,11 @@ def gen_permutations(s: str) -> List[str]:
   permutations = []
   for i in range(len(s)):
     permutations += (
-        [s[:i] + s[i + 1:]] +  # remove character
-        [s[:i] + c + s[i:] for c in ascii_lowercase] +  # add character
-        [s[:i] + c + s[i + 1:] for c in ascii_lowercase]  # switch character
+      [s[:i] + s[i + 1 :]]
+      + [s[:i] + c + s[i:] for c in ascii_lowercase]  # remove character
+      + [  # add character
+        s[:i] + c + s[i + 1 :] for c in ascii_lowercase
+      ]  # switch character
     )
 
   permutations += [s + c for c in ascii_lowercase]  # append character
@@ -103,12 +109,12 @@ def approach_3(filein: Iterator[str], start: str, end: str) -> int:
 
   # checksum input
   m = sha1()
-  m.update('\n'.join(filein).encode('utf-8'))
+  m.update("\n".join(filein).encode("utf-8"))
   checksum = str(m.hexdigest())
 
   # if cache file for checksum exists, read from it
   if os.path.exists(f"cache-{checksum}.pkl"):
-    with open(f'cache-{checksum}.pkl', 'rb') as infile:
+    with open(f"cache-{checksum}.pkl", "rb") as infile:
       D, G = pickle.load(infile)
   else:
     # adjacency lists:
@@ -121,7 +127,7 @@ def approach_3(filein: Iterator[str], start: str, end: str) -> int:
         if permutation in D:
           G[value].append(D[permutation])
 
-    with open(f'cache-{checksum}.pkl', 'wb') as outfile:
+    with open(f"cache-{checksum}.pkl", "wb") as outfile:
       pickle.dump((D, G), outfile)
 
   neighbours = lambda n: G[n]
@@ -132,16 +138,22 @@ def approach_3(filein: Iterator[str], start: str, end: str) -> int:
 #
 def test_algo(fn):
   tests = [
-      ((['abc'], 'abc', 'abc'), 0),
-      ((['abc', 'abd'], 'abc', 'abd'), 1),
-      ((['abc', 'abd'], 'abd', 'abc'), 1),
-      ((['abc', 'abde'], 'abc', 'abde'), -1),  # not found
-      ((['ABC', 'abcd'], 'abc', 'abcd'), 1),  # case insensitive
-      ((['abc', 'abcd', 'abcde'], 'abc', 'abcde'), 2),  # add letters
-      ((['abc', 'abcd', 'abcde'], 'abcde', 'abc'), 2),  # remove letters
-      ((['abcde', 'abcee', 'abeee'], 'abcde', 'abeee'), 2),  # remove letters
-      ((['abcdef', 'abcdefg', 'abcde', 'abcdeg', 'abc', 'abcd'], 'abcdef',
-        'abc'), 3),  # remove letters
+    ((["abc"], "abc", "abc"), 0),
+    ((["abc", "abd"], "abc", "abd"), 1),
+    ((["abc", "abd"], "abd", "abc"), 1),
+    ((["abc", "abde"], "abc", "abde"), -1),  # not found
+    ((["ABC", "abcd"], "abc", "abcd"), 1),  # case insensitive
+    ((["abc", "abcd", "abcde"], "abc", "abcde"), 2),  # add letters
+    ((["abc", "abcd", "abcde"], "abcde", "abc"), 2),  # remove letters
+    ((["abcde", "abcee", "abeee"], "abcde", "abeee"), 2),  # remove letters
+    (
+      (
+        ["abcdef", "abcdefg", "abcde", "abcdeg", "abc", "abcd"],
+        "abcdef",
+        "abc",
+      ),
+      3,
+    ),  # remove letters
   ]
   for ins, outs in tests:
     if fn(*ins) != outs:

@@ -38,6 +38,7 @@ FLAGS = app.FLAGS
 
 class TrainTestValue(typing.NamedTuple):
   """A value which has different values for training and testing."""
+
   train: typing.Any
   test: typing.Any
 
@@ -47,10 +48,13 @@ class InputTargetValue(typing.NamedTuple):
   target: typing.Any
 
 
-def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
-                vocab: inst2vec_vocabulary.VocabularyZipFile,
-                session: tf.compat.v1.Session, embedding_lookup_op,
-                embedding_lookup_input_ph) -> llvm_util.LlvmControlFlowGraph:
+def EncodeGraph(
+  graph: llvm_util.LlvmControlFlowGraph,
+  vocab: inst2vec_vocabulary.VocabularyZipFile,
+  session: tf.compat.v1.Session,
+  embedding_lookup_op,
+  embedding_lookup_input_ph,
+) -> llvm_util.LlvmControlFlowGraph:
   """Encode inst2vec attributes on an LLVM control flow graph.
 
   For every node in the graph, this adds to keys to the data dictionary:
@@ -71,12 +75,13 @@ def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
   # calling `vocab.GetStructDict(graph.graph['llvm_bytecode'].split('\n'))`,
   # but the extra debug information is useful.
   result = vocab.EncodeLlvmBytecode(
-      graph.graph['llvm_bytecode'],
-      inst2vec_pb2.EncodeBytecodeOptions(
-          set_bytecode_after_preprocessing=True,
-          set_unknown_statements=True,
-          set_struct_dict=True,
-      ))
+    graph.graph["llvm_bytecode"],
+    inst2vec_pb2.EncodeBytecodeOptions(
+      set_bytecode_after_preprocessing=True,
+      set_unknown_statements=True,
+      set_struct_dict=True,
+    ),
+  )
 
   # if len(result.encoded) != graph.number_of_nodes():
   #   raise ValueError(
@@ -88,23 +93,26 @@ def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
   struct_dict = dict(result.struct_dict)
 
   # Set debug info as global graph attributes.
-  graph.graph['num_unknown_statements'] = len(result.unknown_statements)
-  graph.graph['struct_dict'] = struct_dict
+  graph.graph["num_unknown_statements"] = len(result.unknown_statements)
+  graph.graph["struct_dict"] = struct_dict
   graph.graph[
-      'llvm_bytecode_preprocessed'] = result.bytecode_after_preprocessing
+    "llvm_bytecode_preprocessed"
+  ] = result.bytecode_after_preprocessing
 
   for _, data in graph.nodes(data=True):
-    bytecode = data['text']
+    bytecode = data["text"]
 
     # Encode the node's bytecode using the struct dict we derived from the
     # entire file. Since this is a full-flow graph, each instruction's
     # bytecode is a single statement.
-    encoded = vocab.EncodeLlvmBytecode(bytecode,
-                                       struct_dict=struct_dict).encoded
+    encoded = vocab.EncodeLlvmBytecode(
+      bytecode, struct_dict=struct_dict
+    ).encoded
     if len(encoded) != 1:
       raise ValueError(
-          f"Encoded line `{bytecode}` to {len(encoded)} statements")
-    data['inst2vec_encoded'] = encoded[0]
+        f"Encoded line `{bytecode}` to {len(encoded)} statements"
+      )
+    data["inst2vec_encoded"] = encoded[0]
 
     # Lookup the encoded value in the embedding matrix.
     # TODO(cec): This is a very slow way of doing it. Better would be to
@@ -112,14 +120,15 @@ def EncodeGraph(graph: llvm_util.LlvmControlFlowGraph,
     # lookup once.
     sequences = np.array(encoded, dtype=np.int32).reshape((1, 1))
     embedding_vector = session.run(
-        embedding_lookup_op, feed_dict={embedding_lookup_input_ph: sequences})
-    data['inst2vec'] = embedding_vector[0][0]
+      embedding_lookup_op, feed_dict={embedding_lookup_input_ph: sequences}
+    )
+    data["inst2vec"] = embedding_vector[0][0]
 
   return graph
 
 
 def _ExtractGraphBatchOrDie(
-    src_file_paths: typing.List[pathlib.Path], headers_dir: pathlib.Path
+  src_file_paths: typing.List[pathlib.Path], headers_dir: pathlib.Path
 ) -> typing.List[typing.Tuple[pathlib.Path, llvm_util.LlvmControlFlowGraph]]:
   """Process a patch of OpenCL sources to graphs.
 
@@ -133,17 +142,21 @@ def _ExtractGraphBatchOrDie(
   batch = []
 
   for src_file_path in src_file_paths:
-    app.Log(1, 'Compiling %s', src_file_path.name)
+    app.Log(1, "Compiling %s", src_file_path.name)
     bytecode = ncc.ExtractLlvmByteCodeOrDie(src_file_path, headers_dir)
     dot_strings = list(opt_util.DotControlFlowGraphsFromBytecode(bytecode))
     cfgs = [llvm_util.ControlFlowGraphFromDotSource(dot) for dot in dot_strings]
     if len(cfgs) != 1:
-      app.Fatal('Found %d CFGs in %s: %s', len(dot_strings), src_file_path.name,
-                [c.graph['name'] for c in cfgs])
+      app.Fatal(
+        "Found %d CFGs in %s: %s",
+        len(dot_strings),
+        src_file_path.name,
+        [c.graph["name"] for c in cfgs],
+      )
     ffg = cfgs[0].BuildFullFlowGraph()
 
     # Set the input bytecode as a graph property.
-    ffg.graph['llvm_bytecode'] = bytecode
+    ffg.graph["llvm_bytecode"] = bytecode
 
     batch.append((src_file_path, ffg))
 
@@ -153,9 +166,11 @@ def _ExtractGraphBatchOrDie(
 def NormalizedColumn(df: pd.DataFrame, column: str) -> np.array:
   """Return the values of a column normalized to range [-0.5,0.5]."""
   if column not in df.columns.values:
-    raise TypeError(f"Dataframe missing expected column: {column}. Actual "
-                    f"columns: {df.columns.values}")
-  return (df[column] / df[column].max()) - .5
+    raise TypeError(
+      f"Dataframe missing expected column: {column}. Actual "
+      f"columns: {df.columns.values}"
+    )
+  return (df[column] / df[column].max()) - 0.5
 
 
 def SetNormalizedColumns(df: pd.DataFrame) -> pd.DataFrame:
@@ -167,30 +182,35 @@ def SetNormalizedColumns(df: pd.DataFrame) -> pd.DataFrame:
   Returns:
     df: The dataframe, with additional '_norm' suffix columns set.
   """
-  for gpu_name in ['amd_tahiti_7970', 'nvidia_gtx_960']:
+  for gpu_name in ["amd_tahiti_7970", "nvidia_gtx_960"]:
     columns_to_normalize = [
-        f'feature:{gpu_name}:transfer', f'param:{gpu_name}:wgsize'
+      f"feature:{gpu_name}:transfer",
+      f"param:{gpu_name}:wgsize",
     ]
     for column in columns_to_normalize:
-      df[f'{column}_norm'] = NormalizedColumn(df, column)
+      df[f"{column}_norm"] = NormalizedColumn(df, column)
   return df
 
 
 class Lda(base.HeterogeneousMappingModel):
   """Work in progress."""
+
   __name__ = "lda"
   __basename__ = "lda"
 
-  def __init__(self,
-               embedding_matrix: np.ndarray = None,
-               vocabulary_file: typing.Optional[pathlib.Path] = None,
-               batch_size: TrainTestValue = TrainTestValue(32, 32),
-               num_processing_steps: typing.Optional[int] = 10):
+  def __init__(
+    self,
+    embedding_matrix: np.ndarray = None,
+    vocabulary_file: typing.Optional[pathlib.Path] = None,
+    batch_size: TrainTestValue = TrainTestValue(32, 32),
+    num_processing_steps: typing.Optional[int] = 10,
+  ):
 
     # If no embedding matrix is provided, the default is used.
     if embedding_matrix is None:
       embedding_matrix = inst2vec_utils.ReadEmbeddingFile(
-          ncc.DEEPTUNE_INST2VEC_EMBEDDINGS)
+        ncc.DEEPTUNE_INST2VEC_EMBEDDINGS
+      )
     if vocabulary_file is None:
       vocabulary_file = ncc.DEEPTUNE_INST2VEC_VOCAB_PATH
 
@@ -279,13 +299,14 @@ class Lda(base.HeterogeneousMappingModel):
     # TODO(cec): Extract checkpoint_dir from inpath.
     checkpoint_dir = inpath
     session_opts = {
-        'checkpoint_dir': checkpoint_dir,
+      "checkpoint_dir": checkpoint_dir,
     }
     with tf.train.SingularMonitoredSession(**session_opts) as sess:
       pass
 
-  def train(self, df: pd.DataFrame, platform_name: str,
-            verbose: bool = False) -> None:
+  def train(
+    self, df: pd.DataFrame, platform_name: str, verbose: bool = False
+  ) -> None:
     """Train a model."""
     # TODO(cec): Implement.
     # graphs = InputTargetValue(
@@ -304,17 +325,20 @@ class Lda(base.HeterogeneousMappingModel):
     # with tf.train.MonitoredTrainingSession(session_opts) as sess:
     #   pass
 
-  def predict(self, df: pd.DataFrame, platform_name: str,
-              verbose: bool = False) -> np.array:
+  def predict(
+    self, df: pd.DataFrame, platform_name: str, verbose: bool = False
+  ) -> np.array:
     """Make predictions for programs."""
     return np.ones(len(df))
 
   def EncodeGraphs(
-      self,
-      data: typing.Iterable[typing.Tuple[typing.Dict[str, typing.Any], llvm_util
-                                         .LlvmControlFlowGraph]]
-  ) -> typing.Iterable[typing.Tuple[typing.Dict[str, typing.Any], llvm_util.
-                                    LlvmControlFlowGraph]]:
+    self,
+    data: typing.Iterable[
+      typing.Tuple[typing.Dict[str, typing.Any], llvm_util.LlvmControlFlowGraph]
+    ],
+  ) -> typing.Iterable[
+    typing.Tuple[typing.Dict[str, typing.Any], llvm_util.LlvmControlFlowGraph]
+  ]:
     """Encode inst2vec attributes on graphs.
 
     Args:
@@ -326,20 +350,27 @@ class Lda(base.HeterogeneousMappingModel):
     with inst2vec_vocabulary.VocabularyZipFile(self.vocabulary_file) as vocab:
       # Create embedding lookup op.
       embedding_lookup_input_ph = tf.compat.v1.placeholder(dtype=tf.int32)
-      normalized_embedding_matrix = tf.nn.l2_normalize(self.embedding_matrix,
-                                                       axis=1)
-      embedding_lookup_op = tf.nn.embedding_lookup(normalized_embedding_matrix,
-                                                   embedding_lookup_input_ph)
+      normalized_embedding_matrix = tf.nn.l2_normalize(
+        self.embedding_matrix, axis=1
+      )
+      embedding_lookup_op = tf.nn.embedding_lookup(
+        normalized_embedding_matrix, embedding_lookup_input_ph
+      )
 
       with tf.compat.v1.Session() as session:
         for i, (row, graph) in enumerate(data):
-          app.Log(1, 'Encoding graph %d %s', i, row['program:benchmark_name'])
-          yield row, EncodeGraph(graph, vocab, session, embedding_lookup_op,
-                                 embedding_lookup_input_ph)
+          app.Log(1, "Encoding graph %d %s", i, row["program:benchmark_name"])
+          yield row, EncodeGraph(
+            graph,
+            vocab,
+            session,
+            embedding_lookup_op,
+            embedding_lookup_input_ph,
+          )
 
   @staticmethod
   def BuildSrcPathToGraphMap(
-      df: pd.DataFrame, headers_dir: pathlib.Path
+    df: pd.DataFrame, headers_dir: pathlib.Path
   ) -> typing.Dict[pathlib.Path, llvm_util.LlvmControlFlowGraph]:
     """Construct a map of OpenCL sources to control flow graphs.
 
@@ -355,16 +386,21 @@ class Lda(base.HeterogeneousMappingModel):
     src_path_to_graph = {}
 
     src_paths = list(
-        set(
-            ncc.DataFrameRowToKernelSrcPath(row, headers_dir)
-            for _, row in df.iterrows()))
+      set(
+        ncc.DataFrameRowToKernelSrcPath(row, headers_dir)
+        for _, row in df.iterrows()
+      )
+    )
 
     # Chunk the srcs and process in parallel.
     srcs_per_process = 16
-    encode_args = [(src_paths[i:i + srcs_per_process], headers_dir)
-                   for i in range(0, len(src_paths), srcs_per_process)]
-    batches = multiprocessing.Pool().starmap(_ExtractGraphBatchOrDie,
-                                             encode_args)
+    encode_args = [
+      (src_paths[i : i + srcs_per_process], headers_dir)
+      for i in range(0, len(src_paths), srcs_per_process)
+    ]
+    batches = multiprocessing.Pool().starmap(
+      _ExtractGraphBatchOrDie, encode_args
+    )
     for batch in batches:
       for src_file_path, graph in batch:
         src_path_to_graph[src_file_path] = graph
@@ -373,9 +409,10 @@ class Lda(base.HeterogeneousMappingModel):
 
   @classmethod
   def ExtractGraphs(
-      cls, df: pd.DataFrame
-  ) -> typing.Iterable[typing.Tuple[typing.Dict[str, typing.Any], llvm_util.
-                                    LlvmControlFlowGraph]]:
+    cls, df: pd.DataFrame
+  ) -> typing.Iterable[
+    typing.Tuple[typing.Dict[str, typing.Any], llvm_util.LlvmControlFlowGraph]
+  ]:
     """Extract control flow graphs from a dataframe.
 
     Args:
@@ -388,8 +425,8 @@ class Lda(base.HeterogeneousMappingModel):
       # Make a list of source paths so that we can use it to index into the
       # src_path_to_graph map.
       src_paths = [
-          ncc.DataFrameRowToKernelSrcPath(row, headers_dir)
-          for _, row in df.iterrows()
+        ncc.DataFrameRowToKernelSrcPath(row, headers_dir)
+        for _, row in df.iterrows()
       ]
       # Build a map of src paths to graphs.
       src_path_to_graph = cls.BuildSrcPathToGraphMap(df, headers_dir)
@@ -400,9 +437,11 @@ class Lda(base.HeterogeneousMappingModel):
 
   @classmethod
   def GraphsToInputTargets(
-      cls,
-      data: typing.Iterable[typing.Tuple[typing.Dict[str, typing.Any], llvm_util
-                                         .LlvmControlFlowGraph]]):
+    cls,
+    data: typing.Iterable[
+      typing.Tuple[typing.Dict[str, typing.Any], llvm_util.LlvmControlFlowGraph]
+    ],
+  ):
     """Produce two graphs with input and target feature vectors for training.
 
     Args:
@@ -412,9 +451,9 @@ class Lda(base.HeterogeneousMappingModel):
       yield cls.GraphToInputTarget(row, graph)
 
   @staticmethod
-  def GraphToInputTarget(row: typing.Dict[str, typing.Any],
-                         graph: llvm_util.LlvmControlFlowGraph
-                        ) -> typing.Tuple[nx.DiGraph, nx.DiGraph]:
+  def GraphToInputTarget(
+    row: typing.Dict[str, typing.Any], graph: llvm_util.LlvmControlFlowGraph
+  ) -> typing.Tuple[nx.DiGraph, nx.DiGraph]:
     """Produce two graphs with input and target feature vectors for training.
 
     A 'features' attributes is added with to nodes, edges, and the global graph,
@@ -435,39 +474,41 @@ class Lda(base.HeterogeneousMappingModel):
     # The input graph's node features are a concatenation:
     #    [entry,exit,embedding...].
     for node, data in input_graph.nodes(data=True):
-      data['features'] = np.concatenate(
-          ([graph.IsEntryBlock(node),
-            graph.IsExitBlock(node)], data['inst2vec'])).astype(np.float32)
+      data["features"] = np.concatenate(
+        ([graph.IsEntryBlock(node), graph.IsExitBlock(node)], data["inst2vec"])
+      ).astype(np.float32)
 
     for _, data in target_graph.nodes(data=True):
-      data['features'] = np.ones(1, dtype=np.float32)
+      data["features"] = np.ones(1, dtype=np.float32)
 
     # Set edge features.
     for _, _, data in input_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=np.float32)
+      data["features"] = np.ones(1, dtype=np.float32)
 
     for _, _, data in target_graph.edges(data=True):
-      data['features'] = np.ones(1, dtype=np.float32)
+      data["features"] = np.ones(1, dtype=np.float32)
 
     # Set global (graph) features.
 
     # The input graph's features are the auxiliary inputs (dynamic attributes
     # not captured by code).
-    gpu_name = row['target_gpu_name']
-    input_graph.graph['features'] = np.array([
+    gpu_name = row["target_gpu_name"]
+    input_graph.graph["features"] = np.array(
+      [
         row[f"feature:{gpu_name}:transfer_norm"],
         row[f"param:{gpu_name}:wgsize_norm"],
-    ],
-                                             dtype=np.float32)
+      ],
+      dtype=np.float32,
+    )
 
     # The target graph's features is the optimization target.
-    target_graph.graph['features'] = row['y_1hot'].astype(np.float32)
+    target_graph.graph["features"] = row["y_1hot"].astype(np.float32)
 
     return input_graph, target_graph
 
   @staticmethod
   def CreateLossOps(target_op, output_ops):
     return [
-        tf.losses.softmax_cross_entropy(target_op.globals, output_op.globals)
-        for output_op in output_ops
+      tf.losses.softmax_cross_entropy(target_op.globals, output_op.globals)
+      for output_op in output_ops
     ]

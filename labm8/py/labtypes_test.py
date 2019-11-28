@@ -23,13 +23,13 @@ FLAGS = app.FLAGS
 
 # is_str()
 def test_is_str():
-  assert labtypes.is_str('Hello, World!')
-  assert labtypes.is_str(str('Hello, World!'))
-  assert not labtypes.is_str('Hello, World!'.encode('utf-8'))
-  assert not labtypes.is_str(bytes('Hello, World!'.encode('utf-8')))
+  assert labtypes.is_str("Hello, World!")
+  assert labtypes.is_str(str("Hello, World!"))
+  assert not labtypes.is_str("Hello, World!".encode("utf-8"))
+  assert not labtypes.is_str(bytes("Hello, World!".encode("utf-8")))
   assert not labtypes.is_str(8)
-  assert not labtypes.is_str(['a', 'b', 'c'])
-  assert not labtypes.is_str({'a': 'b', 'c': 18})
+  assert not labtypes.is_str(["a", "b", "c"])
+  assert not labtypes.is_str({"a": "b", "c": 18})
 
 
 def test_is_str_seq():
@@ -45,20 +45,20 @@ def test_is_str_num():
 
 
 def test_is_str_dict():
-  assert not labtypes.is_str({'foo': 100})
-  assert not labtypes.is_str({10: ['a', 'b', 'c']})
+  assert not labtypes.is_str({"foo": 100})
+  assert not labtypes.is_str({10: ["a", "b", "c"]})
 
 
 # is_dict() tests
 def test_is_dict():
-  assert labtypes.is_dict({'foo': 100})
-  assert labtypes.is_dict({10: ['a', 'b', 'c']})
+  assert labtypes.is_dict({"foo": 100})
+  assert labtypes.is_dict({10: ["a", "b", "c"]})
 
 
 def test_is_dict_str():
-  assert not labtypes.is_dict('a')
-  assert not labtypes.is_dict('abc')
-  assert not labtypes.is_dict(['abc', 'def'][0])
+  assert not labtypes.is_dict("a")
+  assert not labtypes.is_dict("abc")
+  assert not labtypes.is_dict(["abc", "def"][0])
 
 
 def test_is_dict_seq():
@@ -82,9 +82,9 @@ def test_is_seq():
 
 
 def test_is_seq_str():
-  assert not labtypes.is_seq('a')
-  assert not labtypes.is_seq('abc')
-  assert not labtypes.is_seq(['abc', 'def'][0])
+  assert not labtypes.is_seq("a")
+  assert not labtypes.is_seq("abc")
+  assert not labtypes.is_seq(["abc", "def"][0])
 
 
 def test_is_seq_num():
@@ -93,8 +93,8 @@ def test_is_seq_num():
 
 
 def test_is_seq_dict():
-  assert not labtypes.is_seq({'foo': 100})
-  assert not labtypes.is_seq({10: ['a', 'b', 'c']})
+  assert not labtypes.is_seq({"foo": 100})
+  assert not labtypes.is_seq({10: ["a", "b", "c"]})
 
 
 # flatten()
@@ -130,11 +130,11 @@ def test_PairwiseIterator_input_is_iterator():
 
 def test_PairwiseIterator_input_is_string():
   """Test when input is list."""
-  generator = labtypes.PairwiseIterator('hello')
-  assert next(generator) == ('h', 'e')
-  assert next(generator) == ('e', 'l')
-  assert next(generator) == ('l', 'l')
-  assert next(generator) == ('l', 'o')
+  generator = labtypes.PairwiseIterator("hello")
+  assert next(generator) == ("h", "e")
+  assert next(generator) == ("e", "l")
+  assert next(generator) == ("l", "l")
+  assert next(generator) == ("l", "o")
 
 
 # SetDiff()
@@ -163,7 +163,7 @@ def test_SetDiff_overlapping_inputs():
 
 def test_SetDiff_unmatching_types():
   """Test when inputs are of different types."""
-  assert labtypes.SetDiff([1, 2, 3], ['a', 'b']) == {1, 2, 3, 'a', 'b'}
+  assert labtypes.SetDiff([1, 2, 3], ["a", "b"]) == {1, 2, 3, "a", "b"}
 
 
 def test_SetDiff_input_ranges():
@@ -176,6 +176,7 @@ def test_SetDiff_input_ranges():
 
 class A(object):
   """Class for AllSubclassesOfClass() tests."""
+
   pass
 
 
@@ -186,16 +187,19 @@ def test_AllSubclassesOfClass_no_subclasses():
 
 class B(object):
   """Class for AllSubclassesOfClass() tests."""
+
   pass
 
 
 class C(B):
   """Class for AllSubclassesOfClass() tests."""
+
   pass
 
 
 class D(B):
   """Class for AllSubclassesOfClass() tests."""
+
   pass
 
 
@@ -206,16 +210,19 @@ def test_AllSubclassesOfClass_direct_subclasses():
 
 class E(object):
   """Class for AllSubclassesOfClass() tests."""
+
   pass
 
 
 class F(E):
   """Class for AllSubclassesOfClass() tests."""
+
   pass
 
 
 class G(F):
   """Class for AllSubclassesOfClass() tests."""
+
   pass
 
 
@@ -239,5 +246,5 @@ def test_Chunkify_123_chunk_size_two():
   assert list(labtypes.Chunkify([1, 2, 3], 2)) == [[1, 2], [3]]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

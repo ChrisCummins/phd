@@ -23,7 +23,7 @@ FLAGS = app.FLAGS
 
 def test_FormatShortRevision():
   revision = build_info.FormatShortRevision()
-  assert re.match(r'[0-9a-f]{7}\*?', revision)
+  assert re.match(r"[0-9a-f]{7}\*?", revision)
 
 
 def test_FormatShortRevision_html():
@@ -34,9 +34,9 @@ def test_FormatShortRevision_html():
 def test_FormatShortBuildDescription():
   description = build_info.FormatShortBuildDescription()
   assert re.match(
-      r'build: [0-9a-f]{7}\*? on [0-9]{4}-[0-9]{2}-[0-9]{2} by .+@.+',
-      description)
+    r"build: [0-9a-f]{7}\*? on [0-9]{4}-[0-9]{2}-[0-9]{2} by .+@.+", description
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

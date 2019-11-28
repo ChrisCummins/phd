@@ -37,17 +37,22 @@ from labm8.py import app
 FLAGS = inst2vec_appflags.FLAGS
 
 # Data set parameters.
-app.DEFINE_string('data_folder', '/tmp/phd/deeplearning/ncc/inst2vec/data',
-                  'Dataset folder path.')
-app.DEFINE_boolean('download_datasets', True, 'Whether to use default dataset.')
+app.DEFINE_string(
+  "data_folder",
+  "/tmp/phd/deeplearning/ncc/inst2vec/data",
+  "Dataset folder path.",
+)
+app.DEFINE_boolean("download_datasets", True, "Whether to use default dataset.")
 app.DEFINE_list(
-    'dataset_urls', [],
-    'URLs of datasets to download. If not provided, all datasets will be used.')
+  "dataset_urls",
+  [],
+  "URLs of datasets to download. If not provided, all datasets will be used.",
+)
 
 
 def main(argv):
   if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
+    raise app.UsageError("Unrecognized command line flags.")
 
   data_folder = os.path.join(FLAGS.data_folder)
 
@@ -57,13 +62,15 @@ def main(argv):
   if not os.path.exists(FLAGS.embeddings_file):
     if FLAGS.download_datasets:
       # Generate the data set
-      print('Folder', data_folder,
-            'is empty - preparing to download training data')
+      print(
+        "Folder", data_folder, "is empty - preparing to download training data"
+      )
       i2v_datagen.DownloadDatasets(data_folder, urls=FLAGS.dataset_urls)
     else:
       # Assert the data folder's existence
-      assert os.path.exists(
-          data_folder), "Folder " + data_folder + " does not exist"
+      assert os.path.exists(data_folder), (
+        "Folder " + data_folder + " does not exist"
+      )
 
     # Build XFGs from raw code
     data_folders = i2v_prep.CreateContextualFlowGraphsFromBytecodes(data_folder)
@@ -73,12 +80,13 @@ def main(argv):
 
     # Train embeddings
     embedding_matrix, embeddings_file = i2v_emb.train_embeddings(
-        data_folder, data_folders)
+      data_folder, data_folders
+    )
 
   else:
 
-    print('Loading pre-trained embeddings from', FLAGS.embeddings_file)
-    with open(FLAGS.embeddings_file, 'rb') as f:
+    print("Loading pre-trained embeddings from", FLAGS.embeddings_file)
+    with open(FLAGS.embeddings_file, "rb") as f:
       embedding_matrix = pickle.load(f)
     embeddings_file = FLAGS.embeddings_file
 
@@ -86,5 +94,5 @@ def main(argv):
   i2v_eval.evaluate_embeddings(data_folder, embedding_matrix, embeddings_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

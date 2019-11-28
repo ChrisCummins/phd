@@ -27,7 +27,7 @@ def test_1layer_LSTM_no_compile(benchmark):
     model = models.Sequential()
     model.add(layers.LSTM(512, input_shape=(80, 200)))
     model.add(layers.Dense(200))
-    model.add(layers.Activation('softmax'))
+    model.add(layers.Activation("softmax"))
 
   benchmark(Benchmark)
 
@@ -40,8 +40,8 @@ def test_1layer_LSTM(benchmark):
     model = models.Sequential()
     model.add(layers.LSTM(512, input_shape=(80, 200)))
     model.add(layers.Dense(200))
-    model.add(layers.Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam')
+    model.add(layers.Activation("softmax"))
+    model.compile(loss="categorical_crossentropy", optimizer="adam")
 
   benchmark(Benchmark)
 
@@ -55,7 +55,7 @@ def test_2layer_LSTM_no_compile(benchmark):
     model.add(layers.LSTM(512, input_shape=(80, 200), return_sequences=True))
     model.add(layers.LSTM(512))
     model.add(layers.Dense(200))
-    model.add(layers.Activation('softmax'))
+    model.add(layers.Activation("softmax"))
 
   benchmark(Benchmark)
 
@@ -69,8 +69,8 @@ def test_2layer_LSTM(benchmark):
     model.add(layers.LSTM(512, input_shape=(80, 200), return_sequences=True))
     model.add(layers.LSTM(512))
     model.add(layers.Dense(200))
-    model.add(layers.Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam')
+    model.add(layers.Activation("softmax"))
+    model.compile(loss="categorical_crossentropy", optimizer="adam")
 
   benchmark(Benchmark)
 
@@ -80,16 +80,16 @@ def test_to_yaml(benchmark):
 
   def Benchmark(model_, path):
     """Benchmark inner loop."""
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
       f.write(model_.to_yaml())
 
   model = models.Sequential()
   model.add(layers.LSTM(512, input_shape=(80, 200), return_sequences=True))
   model.add(layers.LSTM(512))
   model.add(layers.Dense(200))
-  model.add(layers.Activation('softmax'))
-  model.compile(loss='categorical_crossentropy', optimizer='adam')
-  with tempfile.NamedTemporaryFile(prefix='clgen_') as f:
+  model.add(layers.Activation("softmax"))
+  model.compile(loss="categorical_crossentropy", optimizer="adam")
+  with tempfile.NamedTemporaryFile(prefix="clgen_") as f:
     benchmark(Benchmark, model, f.name)
 
 
@@ -99,10 +99,10 @@ def test_from_yaml(benchmark):
   model.add(layers.LSTM(512, input_shape=(80, 200), return_sequences=True))
   model.add(layers.LSTM(512))
   model.add(layers.Dense(200))
-  model.add(layers.Activation('softmax'))
-  model.compile(loss='categorical_crossentropy', optimizer='adam')
+  model.add(layers.Activation("softmax"))
+  model.compile(loss="categorical_crossentropy", optimizer="adam")
   benchmark(models.model_from_yaml, model.to_yaml())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -22,18 +22,14 @@ class quick_reverse_list {
   class __iterator;
 
  public:
-  enum direction {
-    forward = 0,
-    backward = 1
-  };
+  enum direction { forward = 0, backward = 1 };
 
   quick_reverse_list() {}
 
   quick_reverse_list(std::initializer_list<T> il,
                      direction direction = direction::forward)
       : _direction(direction) {
-    for (auto val : il)
-      push_back(val);
+    for (auto val : il) push_back(val);
   }
 
   ~quick_reverse_list() {
@@ -70,14 +66,11 @@ class quick_reverse_list {
       return __iterator(_tail, _direction);
   }
 
-  const __iterator end() const {
-    return __iterator(nullptr, _direction);
-  }
+  const __iterator end() const { return __iterator(nullptr, _direction); }
 
   friend std::ostream& operator<<(std::ostream& out,
                                   const quick_reverse_list& list) {
-    for (auto& val : list)
-      out << val << ' ';
+    for (auto& val : list) out << val << ' ';
     return out;
   }
 
@@ -87,11 +80,11 @@ class quick_reverse_list {
   //
   class __node {
    public:
-    explicit __node(const T& data,
-                    __node* forward = nullptr, __node* backward = nullptr)
+    explicit __node(const T& data, __node* forward = nullptr,
+                    __node* backward = nullptr)
         : _data(data), _forward(forward), _backward(backward) {}
-    explicit __node(T&& data,
-                    __node* forward = nullptr, __node* backward = nullptr)
+    explicit __node(T&& data, __node* forward = nullptr,
+                    __node* backward = nullptr)
         : _data(std::move(data)), _forward(forward), _backward(backward) {}
     T& data() { return _data; }
     const T& data() const { return _data; }
@@ -101,10 +94,11 @@ class quick_reverse_list {
       out << n._data;
       return out;
     }
+
    private:
     T _data;
-    __node *_forward;
-    __node *_backward;
+    __node* _forward;
+    __node* _backward;
   };
 
   //

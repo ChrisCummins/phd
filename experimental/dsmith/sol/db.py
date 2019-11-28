@@ -123,24 +123,24 @@ class Generators:
 
 class Program(Base):
   id_t = sql.Integer
-  __tablename__ = 'programs'
+  __tablename__ = "programs"
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
   generator = sql.Column(Generators.column_t, nullable=False)
   sha1 = sql.Column(sql.String(40), nullable=False)
-  date = sql.Column(sql.DateTime,
-                    nullable=False,
-                    default=datetime.datetime.utcnow)
+  date = sql.Column(
+    sql.DateTime, nullable=False, default=datetime.datetime.utcnow
+  )
   generation_time = sql.Column(sql.Float, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
-  src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+  src = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint('generator',
-                                         'sha1',
-                                         name='uniq_program'),)
+  __table_args__ = (
+    sql.UniqueConstraint("generator", "sha1", name="uniq_program"),
+  )
 
   # Relationships
   testcases = sql.orm.relationship("Testcase", back_populates="program")
@@ -155,8 +155,9 @@ class ProgramProxy(Proxy):
   database session.
   """
 
-  def __init__(self, generator: Generators.column_t, generation_time: float,
-               src: str):
+  def __init__(
+    self, generator: Generators.column_t, generation_time: float, src: str
+  ):
     self.generator = generator
     self.sha1 = crypto.sha1_str(src)
     self.date = datetime.datetime.utcnow()
@@ -166,13 +167,15 @@ class ProgramProxy(Proxy):
     self.src = src
 
   def to_record(self, session: session_t) -> Program:
-    return Program(generator=self.generator,
-                   sha1=self.sha1,
-                   date=self.date,
-                   generation_time=self.generation_time,
-                   linecount=self.linecount,
-                   charcount=self.charcount,
-                   src=self.src)
+    return Program(
+      generator=self.generator,
+      sha1=self.sha1,
+      date=self.date,
+      generation_time=self.generation_time,
+      linecount=self.linecount,
+      charcount=self.charcount,
+      src=self.src,
+    )
 
 
 # Testcases ###################################################################
@@ -186,10 +189,8 @@ class Harnesses(object):
   SOLC = 2
 
   @staticmethod
-  def to_str(harness: 'Harnesses.value_t') -> str:
-    return {
-        Harnesses.SOLC: "solc",
-    }[harness]
+  def to_str(harness: "Harnesses.value_t") -> str:
+    return {Harnesses.SOLC: "solc",}[harness]
 
 
 class Testcase(Base):
@@ -198,17 +199,18 @@ class Testcase(Base):
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  program_id = sql.Column(Program.id_t,
-                          sql.ForeignKey("programs.id"),
-                          nullable=False)
+  program_id = sql.Column(
+    Program.id_t, sql.ForeignKey("programs.id"), nullable=False
+  )
   harness = sql.Column(Harnesses.column_t, nullable=False)
   timeout = sql.Column(sql.Integer, nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint("program_id",
-                                         "harness",
-                                         "timeout",
-                                         name="unique_testcase"),)
+  __table_args__ = (
+    sql.UniqueConstraint(
+      "program_id", "harness", "timeout", name="unique_testcase"
+    ),
+  )
 
   # Relationships
   program = sql.orm.relationship("Program", back_populates="testcases")
@@ -224,7 +226,7 @@ class Testcase(Base):
 
 class Platform(Base):
   id_t = sql.SmallInteger().with_variant(sql.Integer, "sqlite")
-  __tablename__ = 'platforms'
+  __tablename__ = "platforms"
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
@@ -233,16 +235,15 @@ class Platform(Base):
   host = sql.Column(sql.String(255), nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint('platform',
-                                         'version',
-                                         'host',
-                                         name='unique_platform'),)
+  __table_args__ = (
+    sql.UniqueConstraint("platform", "version", "host", name="unique_platform"),
+  )
 
   # Relationships
   testbeds = sql.orm.relationship("Testbed", back_populates="platform")
 
   def __repr__(self) -> str:
-    return (f"{self.platform_name} {self.version_name}")
+    return f"{self.platform_name} {self.version_name}"
 
   @property
   def platform_name(self):
@@ -255,27 +256,27 @@ class Platform(Base):
   @property
   def host_name(self):
     return {
-        "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 x64",
-        "openSUSE  13.1 64bit": "openSUSE 13.1 x64",
-        "Ubuntu 16.04 64bit": "Ubuntu 16.04 x64",
+      "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 x64",
+      "openSUSE  13.1 64bit": "openSUSE 13.1 x64",
+      "Ubuntu 16.04 64bit": "Ubuntu 16.04 x64",
     }.get(self.host.strip(), self.host.strip())
 
 
 class Testbed(Base):
   id_t = sql.SmallInteger().with_variant(sql.Integer, "sqlite")
-  __tablename__ = 'testbeds'
+  __tablename__ = "testbeds"
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  platform_id = sql.Column(Platform.id_t,
-                           sql.ForeignKey("platforms.id"),
-                           nullable=False)
+  platform_id = sql.Column(
+    Platform.id_t, sql.ForeignKey("platforms.id"), nullable=False
+  )
   optimizations = sql.Column(sql.Boolean, nullable=False)
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint('platform_id',
-                                         'optimizations',
-                                         name='unique_testbed'),)
+  __table_args__ = (
+    sql.UniqueConstraint("platform_id", "optimizations", name="unique_testbed"),
+  )
 
   # Relationships
   platform = sql.orm.relationship("Platform", back_populates="testbeds")
@@ -283,28 +284,35 @@ class Testbed(Base):
   def __repr__(self) -> str:
     return f"{Colors.BOLD}{Colors.PURPLE}{self.platform.platform_name}{self.plus_minus}{Colors.END}"
 
-  def _testcase_ids_ran(self, session: session_t, harness,
-                        generator) -> query_t:
+  def _testcase_ids_ran(
+    self, session: session_t, harness, generator
+  ) -> query_t:
     """ return IDs of testcases with results """
-    return session.query(Result.testcase_id) \
-      .join(Testcase) \
-      .join(Program) \
-      .filter(Result.testbed_id == self.id,
-              Testcase.harness == harness.id,
-              Program.generator == generator.id)
+    return (
+      session.query(Result.testcase_id)
+      .join(Testcase)
+      .join(Program)
+      .filter(
+        Result.testbed_id == self.id,
+        Testcase.harness == harness.id,
+        Program.generator == generator.id,
+      )
+    )
 
-  def _testcases_to_run(self, session: session_t, harness,
-                        generator) -> query_t:
+  def _testcases_to_run(
+    self, session: session_t, harness, generator
+  ) -> query_t:
     """ return testcases which do not have results """
-    return session.query(Testcase) \
-      .join(Program) \
-      .filter(Testcase.harness == harness.id,
-              Program.generator == generator.id,
-              ~Testcase.id.in_(
-                  self._testcase_ids_ran(session, harness, generator))) \
-      .order_by(Program.date,
-                Program.id,
-                Testcase.timeout.desc())
+    return (
+      session.query(Testcase)
+      .join(Program)
+      .filter(
+        Testcase.harness == harness.id,
+        Program.generator == generator.id,
+        ~Testcase.id.in_(self._testcase_ids_ran(session, harness, generator)),
+      )
+      .order_by(Program.date, Program.id, Testcase.timeout.desc())
+    )
 
   def run_testcases(self, harness, generator, session: session_t = None):
     """ run tests on testbed """
@@ -325,12 +333,13 @@ class Testbed(Base):
       def run(self):
         """ main loop"""
         with Session() as s:
-          testbed = s.query(Testbed) \
-            .filter(Testbed.id == self.testbed_id) \
-            .scalar()
+          testbed = (
+            s.query(Testbed).filter(Testbed.id == self.testbed_id).scalar()
+          )
 
-          already_done = testbed._testcase_ids_ran(s, self.harness,
-                                                   self.generator)
+          already_done = testbed._testcase_ids_ran(
+            s, self.harness, self.generator
+          )
           todo = testbed._testcases_to_run(s, self.harness, self.generator)
 
           self.ndone = already_done.count()
@@ -359,34 +368,41 @@ class Testbed(Base):
       ntodo = todo.count()
 
       app.Log(
-          2,
-          f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done"
+        2,
+        f"run {ntodo} {harness}:{generator} testcases on {self}, {ndone} done",
       )
 
       # Break early if we have nothing to do
       if not ntodo:
         return
 
-      runtime = s.query(func.sum(Result.runtime)) \
-                  .join(Testcase) \
-                  .join(Program) \
-                  .filter(Result.testbed_id == self.id,
-                          Testcase.harness == harness.id,
-                          Program.generator == generator.id) \
-                  .scalar() or 0
+      runtime = (
+        s.query(func.sum(Result.runtime))
+        .join(Testcase)
+        .join(Program)
+        .filter(
+          Result.testbed_id == self.id,
+          Testcase.harness == harness.id,
+          Program.generator == generator.id,
+        )
+        .scalar()
+        or 0
+      )
 
       estimated_time = (runtime / max(ndone, 1)) * ntodo
       eta = humanize.Duration(estimated_time)
 
       words_ntodo = humanize.Commas(ntodo)
-      print(f"Running {Colors.BOLD}{words_ntodo} "
-            f"{generator}:{harness} testcases on {self}. "
-            f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}.")
+      print(
+        f"Running {Colors.BOLD}{words_ntodo} "
+        f"{generator}:{harness} testcases on {self}. "
+        f"Estimated runtime is {Colors.BOLD}{eta}{Colors.END}."
+      )
 
       # asynchronously run testcases, updating progress bar
-      bar = progressbar.ProgressBar(initial_value=ndone,
-                                    max_value=ndone + ntodo,
-                                    redirect_stdout=True)
+      bar = progressbar.ProgressBar(
+        initial_value=ndone, max_value=ndone + ntodo, redirect_stdout=True
+      )
       worker = Worker(harness, generator, self.id)
       worker.start()
       while worker.is_alive():
@@ -411,10 +427,11 @@ class Testbed(Base):
       solc, the solidity compiler commandline interface
       Version: 0.4.18+commit.9cf6e910.Linux.g++
     """
-    output = subprocess.check_output([path, '--version'],
-                                     universal_newlines=True)
+    output = subprocess.check_output(
+      [path, "--version"], universal_newlines=True
+    )
     line = output.split("\n")[-2]
-    return re.sub(r'^Version: +', '', line)
+    return re.sub(r"^Version: +", "", line)
 
   @staticmethod
   def host_os() -> str:
@@ -437,47 +454,47 @@ class Testbed(Base):
     return f"{system} {release} {arch}"
 
   @staticmethod
-  def from_bin(path: Path = "solc",
-               session: session_t = None) -> List['Testbed']:
+  def from_bin(
+    path: Path = "solc", session: session_t = None
+  ) -> List["Testbed"]:
     with ReuseSession(session) as s:
       basename = fs.basename(path)
       version = Testbed._get_version(path)
-      platform = get_or_add(s,
-                            Platform,
-                            platform=basename,
-                            version=version,
-                            host=Testbed.host_os())
+      platform = get_or_add(
+        s, Platform, platform=basename, version=version, host=Testbed.host_os()
+      )
       s.flush()
       return [
-          get_or_add(s, Testbed, platform_id=platform.id, optimizations=True),
-          get_or_add(s, Testbed, platform_id=platform.id, optimizations=False),
+        get_or_add(s, Testbed, platform_id=platform.id, optimizations=True),
+        get_or_add(s, Testbed, platform_id=platform.id, optimizations=False),
       ]
 
   @staticmethod
-  def from_str(string: str, session: session_t = None) -> List['Testbed']:
+  def from_str(string: str, session: session_t = None) -> List["Testbed"]:
     """ instantiate testbed(s) from shorthand string, e.g. '1+', '5±', etc. """
 
     def try_and_match(
-        string: str, testbeds: Iterable[Testbed]) -> Union[None, List[Testbed]]:
+      string: str, testbeds: Iterable[Testbed]
+    ) -> Union[None, List[Testbed]]:
       for testbed in testbeds:
         if str(testbed.platform.platform) == string[:-1]:
           if string[-1] == "±":
             return [
-                get_or_add(s,
-                           Testbed,
-                           platform_id=testbed.platform.id,
-                           optimizations=True),
-                get_or_add(s,
-                           Testbed,
-                           platform_id=testbed.platform.id,
-                           optimizations=False)
+              get_or_add(
+                s, Testbed, platform_id=testbed.platform.id, optimizations=True
+              ),
+              get_or_add(
+                s, Testbed, platform_id=testbed.platform.id, optimizations=False
+              ),
             ]
           else:
             return [
-                get_or_add(s,
-                           Testbed,
-                           platform_id=testbed.platform.id,
-                           optimizations=True if string[-1] == "+" else False)
+              get_or_add(
+                s,
+                Testbed,
+                platform_id=testbed.platform.id,
+                optimizations=True if string[-1] == "+" else False,
+              )
             ]
 
     # Strip shell formatting
@@ -537,15 +554,18 @@ class Stdout(Base):
   # Fields
   id = sql.Column(id_t, primary_key=True)
   sha1 = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
-  stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+  stdout = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   @staticmethod
   def _escape(string: str) -> str:
     """ filter noise from test harness stdout """
-    return '\n'.join(line for line in string.split('\n')
-                     if line != "ADL Escape failed." and
-                     line != "WARNING:endless loop detected!" and
-                     line != "One module without kernel function!")
+    return "\n".join(
+      line
+      for line in string.split("\n")
+      if line != "ADL Escape failed."
+      and line != "WARNING:endless loop detected!"
+      and line != "One module without kernel function!"
+    )
 
   @staticmethod
   def from_str(session: session_t, string: str) -> str:
@@ -555,10 +575,9 @@ class Stdout(Base):
     # Strip the noise
     string = Stdout._escape(string)
 
-    stdout = get_or_add(session,
-                        Stdout,
-                        sha1=crypto.sha1_str(string),
-                        stdout=string)
+    stdout = get_or_add(
+      session, Stdout, sha1=crypto.sha1_str(string), stdout=string
+    )
     return stdout
 
 
@@ -571,13 +590,14 @@ class Stderr(Base):
       * unreachable
       * stackdump
   """
+
   id_t = sql.Integer
   __tablename__ = "stderrs"
 
   # The regular expression to match source files in compiler output:
-  FILENAME_RE = re.compile(r'/tmp/dsmith-solc-[^.]+\.sol')
+  FILENAME_RE = re.compile(r"/tmp/dsmith-solc-[^.]+\.sol")
   # The replacement text for the source files in compiler output:
-  FILENAME_PLACEHOLDER = '@FILE@'
+  FILENAME_PLACEHOLDER = "@FILE@"
   # The maximum number of characters to keep before truncating
   MAX_CHARS = 64000
 
@@ -587,7 +607,7 @@ class Stderr(Base):
   linecount = sql.Column(sql.Integer, nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   truncated = sql.Column(sql.Boolean, nullable=False)
-  stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+  stderr = sql.Column(sql.UnicodeText(length=2 ** 31), nullable=False)
 
   def __repr__(self):
     return self.sha1
@@ -599,17 +619,19 @@ class Stderr(Base):
     return string
 
   @staticmethod
-  def from_str(session: session_t, string: str) -> 'Stderr':
+  def from_str(session: session_t, string: str) -> "Stderr":
     string = Stderr._escape(string)
     sha1 = crypto.sha1_str(string)
 
-    stderr = get_or_add(session,
-                        Stderr,
-                        sha1=sha1,
-                        linecount=len(string.split("\n")),
-                        charcount=len(string),
-                        truncated=len(string) > Stderr.MAX_CHARS,
-                        stderr=string[:Stderr.MAX_CHARS])
+    stderr = get_or_add(
+      session,
+      Stderr,
+      sha1=sha1,
+      linecount=len(string.split("\n")),
+      charcount=len(string),
+      truncated=len(string) > Stderr.MAX_CHARS,
+      stderr=string[: Stderr.MAX_CHARS],
+    )
     return stderr
 
 
@@ -617,6 +639,7 @@ class Outcomes:
   """
   A summary of the result of running a testcase on a testbed.
   """
+
   type = int
   column_t = sql.SmallInteger
 
@@ -628,14 +651,14 @@ class Outcomes:
   PASS = 6
 
   @staticmethod
-  def to_str(outcomes: 'Outcomes.value_t') -> str:
+  def to_str(outcomes: "Outcomes.value_t") -> str:
     """ convert to long-form string """
     return {
-        Outcomes.TODO: "unknown",
-        Outcomes.BF: "build failure",
-        Outcomes.BC: "build crash",
-        Outcomes.BTO: "build timeout",
-        Outcomes.PASS: "pass",
+      Outcomes.TODO: "unknown",
+      Outcomes.BF: "build failure",
+      Outcomes.BC: "build crash",
+      Outcomes.BTO: "build timeout",
+      Outcomes.PASS: "pass",
     }[outcomes]
 
 
@@ -643,37 +666,37 @@ class Result(Base):
   """
   The result of running a testcase on a testbed.
   """
+
   id_t = sql.Integer
   __tablename__ = "results"
 
   # Fields
   id = sql.Column(id_t, primary_key=True)
-  testbed_id = sql.Column(Testbed.id_t,
-                          sql.ForeignKey("testbeds.id"),
-                          nullable=False,
-                          index=True)
-  testcase_id = sql.Column(Testcase.id_t,
-                           sql.ForeignKey("testcases.id"),
-                           nullable=False,
-                           index=True)
-  date = sql.Column(sql.DateTime,
-                    nullable=False,
-                    index=True,
-                    default=datetime.datetime.utcnow)
+  testbed_id = sql.Column(
+    Testbed.id_t, sql.ForeignKey("testbeds.id"), nullable=False, index=True
+  )
+  testcase_id = sql.Column(
+    Testcase.id_t, sql.ForeignKey("testcases.id"), nullable=False, index=True
+  )
+  date = sql.Column(
+    sql.DateTime, nullable=False, index=True, default=datetime.datetime.utcnow
+  )
   returncode = sql.Column(sql.SmallInteger, nullable=False)
   outcome = sql.Column(Outcomes.column_t, nullable=False, index=True)
   runtime = sql.Column(sql.Float, nullable=False)
-  stdout_id = sql.Column(Stdout.id_t,
-                         sql.ForeignKey("stdouts.id"),
-                         nullable=False)
-  stderr_id = sql.Column(Stderr.id_t,
-                         sql.ForeignKey("stderrs.id"),
-                         nullable=False)
+  stdout_id = sql.Column(
+    Stdout.id_t, sql.ForeignKey("stdouts.id"), nullable=False
+  )
+  stderr_id = sql.Column(
+    Stderr.id_t, sql.ForeignKey("stderrs.id"), nullable=False
+  )
 
   # Constraints
-  __table_args__ = (sql.UniqueConstraint('testbed_id',
-                                         'testcase_id',
-                                         name='unique_result_triple'),)
+  __table_args__ = (
+    sql.UniqueConstraint(
+      "testbed_id", "testcase_id", name="unique_result_triple"
+    ),
+  )
 
   # Relationships
   meta = sql.orm.relation("ResultMeta", back_populates="result")
@@ -693,9 +716,16 @@ class ResultProxy(object):
   database session.
   """
 
-  def __init__(self, testbed_id: Testbed.id_t, testcase_id: Testcase.id_t,
-               returncode: int, outcome: Outcomes.type, runtime: float,
-               stdout: str, stderr: str):
+  def __init__(
+    self,
+    testbed_id: Testbed.id_t,
+    testcase_id: Testcase.id_t,
+    returncode: int,
+    outcome: Outcomes.type,
+    runtime: float,
+    stdout: str,
+    stderr: str,
+  ):
     self.testbed_id = testbed_id
     self.testcase_id = testcase_id
     self.returncode = returncode
@@ -711,21 +741,23 @@ class ResultProxy(object):
     stderr = Stderr.from_str(session, self.stderr)
     session.flush()  # required to get IDs
 
-    return Result(testbed_id=self.testbed_id,
-                  testcase_id=self.testcase_id,
-                  returncode=self.returncode,
-                  outcome=self.outcome,
-                  runtime=self.runtime,
-                  stdout=stdout,
-                  stderr=stderr,
-                  date=self.date)
+    return Result(
+      testbed_id=self.testbed_id,
+      testcase_id=self.testcase_id,
+      returncode=self.returncode,
+      outcome=self.outcome,
+      runtime=self.runtime,
+      stdout=stdout,
+      stderr=stderr,
+      date=self.date,
+    )
 
 
 class SolcResult(Result):
-
   @staticmethod
-  def get_outcome(returncode: int, stderr: str, runtime: float,
-                  timeout: int) -> Outcomes.type:
+  def get_outcome(
+    returncode: int, stderr: str, runtime: float, timeout: int
+  ) -> Outcomes.type:
     """
     Given a result, determine its outcome.
     See Outcomes for list of possible outcomes.
@@ -747,17 +779,21 @@ class ResultMeta(Base):
 
   # Fields
   id = sql.Column(id_t, sql.ForeignKey("results.id"), primary_key=True)
-  total_time = sql.Column(sql.Float,
-                          nullable=False)  # time to generate and run test case
-  cumtime = sql.Column(sql.Float,
-                       nullable=False)  # culumative time for this testbed time
+  total_time = sql.Column(
+    sql.Float, nullable=False
+  )  # time to generate and run test case
+  cumtime = sql.Column(
+    sql.Float, nullable=False
+  )  # culumative time for this testbed time
 
   # Relationships
   result = sql.orm.relationship("Result", back_populates="meta")
 
   def __repr__(self):
-    return (f"result: {self.id} total_time: {self.total_time:.3f}s, " +
-            f"cumtime: {self.cumtime:.1f}s")
+    return (
+      f"result: {self.id} total_time: {self.total_time:.3f}s, "
+      + f"cumtime: {self.cumtime:.1f}s"
+    )
 
 
 class Classifications:
@@ -770,11 +806,11 @@ class Classifications:
   ABF = 3
 
   @staticmethod
-  def to_str(outcomes: 'Classifications.value_t') -> str:
+  def to_str(outcomes: "Classifications.value_t") -> str:
     return {
-        Classifications.BC: "build crash",
-        Classifications.BTO: "build timeout",
-        Classifications.ABF: "anomylous build failure",
+      Classifications.BC: "build crash",
+      Classifications.BTO: "build timeout",
+      Classifications.ABF: "anomylous build failure",
     }[outcomes]
 
 

@@ -9,7 +9,6 @@
  */
 #include "./ctci.h"
 
-
 void drawHorizontalLine(unsigned char *screen, unsigned int width,
                         unsigned int x1, unsigned int x2, unsigned int y) {
   // const auto start_idx = x1 / 8;
@@ -23,16 +22,13 @@ void drawHorizontalLine(unsigned char *screen, unsigned int width,
   } else {
     // TODO: mask first and last byte.
     const auto start_inner = x1 / 8 + 1;
-    for (auto i = start_inner; i < last_idx; i++)
-      screen[i] = 0xff;
+    for (auto i = start_inner; i < last_idx; i++) screen[i] = 0xff;
   }
 }
 
 ///////////
 // Tests //
 ///////////
-TEST(drawHorizontalLine, drawHorizontalLine) {
-}
-
+TEST(drawHorizontalLine, drawHorizontalLine) {}
 
 CTCI_MAIN();

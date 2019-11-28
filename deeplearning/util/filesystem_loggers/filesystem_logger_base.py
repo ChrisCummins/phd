@@ -10,11 +10,12 @@ FLAGS = app.FLAGS
 
 
 class FilesystemLoggerBase(object):
-
-  def __init__(self,
-               outpath: pathlib.Path,
-               log_name_format: str = '%Y-%m-%dT%H-%M-%S.%f',
-               use_system_local_time: bool = False):
+  def __init__(
+    self,
+    outpath: pathlib.Path,
+    log_name_format: str = "%Y-%m-%dT%H-%M-%S.%f",
+    use_system_local_time: bool = False,
+  ):
     """Constructor.
 
     Args:
@@ -45,7 +46,7 @@ class FilesystemLoggerBase(object):
   def Log(self, data_to_log: typing.Any) -> pathlib.Path:
     """Log the given data to file and return the path of the log file."""
     now = self.now()
-    log_file = self.outpath / f'{now.strftime(self.log_name_format)}'
+    log_file = self.outpath / f"{now.strftime(self.log_name_format)}"
     self.WriteLog(data_to_log, log_file)
     return log_file
 

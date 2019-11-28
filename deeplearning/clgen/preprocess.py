@@ -32,19 +32,21 @@ from labm8.py import app
 from labm8.py import humanize
 
 FLAGS = app.FLAGS
-app.DEFINE_input_path('contentfiles',
-                      None,
-                      'The directory containing content files.',
-                      is_dir=True)
-app.DEFINE_output_path('outdir',
-                       None,
-                       'Directory to export preprocessed content files to.',
-                       is_dir=True)
-app.DEFINE_list('preprocessors', [], 'The preprocessors to run, in order.')
+app.DEFINE_input_path(
+  "contentfiles", None, "The directory containing content files.", is_dir=True
+)
+app.DEFINE_output_path(
+  "outdir",
+  None,
+  "Directory to export preprocessed content files to.",
+  is_dir=True,
+)
+app.DEFINE_list("preprocessors", [], "The preprocessors to run, in order.")
 
 
-def Preprocess(contentfiles: pathlib.Path, outdir: pathlib.Path,
-               preprocessor_names):
+def Preprocess(
+  contentfiles: pathlib.Path, outdir: pathlib.Path, preprocessor_names
+):
   # Error early if preprocessors are bad.
   [preprocessors.GetPreprocessorFunction(f) for f in preprocessor_names]
 
@@ -55,13 +57,19 @@ def Preprocess(contentfiles: pathlib.Path, outdir: pathlib.Path,
   relpaths = {f.name for f in contentfiles.iterdir()}
   done = {f.name for f in outdir.iterdir()}
   todo = relpaths - done
-  app.Log(1, 'Preprocessing %s of %s content files', humanize.Commas(len(todo)),
-          humanize.Commas(len(relpaths)))
+  app.Log(
+    1,
+    "Preprocessing %s of %s content files",
+    humanize.Commas(len(todo)),
+    humanize.Commas(len(relpaths)),
+  )
   jobs = [
-      internal_pb2.PreprocessorWorker(contentfile_root=str(contentfiles),
-                                      relpath=t,
-                                      preprocessors=preprocessor_names)
-      for t in todo
+    internal_pb2.PreprocessorWorker(
+      contentfile_root=str(contentfiles),
+      relpath=t,
+      preprocessors=preprocessor_names,
+    )
+    for t in todo
   ]
   pool = multiprocessing.Pool()
   bar = progressbar.ProgressBar(max_value=len(jobs))
@@ -70,17 +78,20 @@ def Preprocess(contentfiles: pathlib.Path, outdir: pathlib.Path,
   succeeded_count = 0
   for preprocessed_cf in bar(workers):
     wall_time_end = time.time()
-    preprocessed_cf.wall_time_ms = (int(
-        (wall_time_end - wall_time_start) * 1000))
+    preprocessed_cf.wall_time_ms = int((wall_time_end - wall_time_start) * 1000)
     wall_time_start = wall_time_end
     if preprocessed_cf.preprocessing_succeeded:
       succeeded_count += 1
-      with open(outdir / preprocessed_cf.input_relpath, 'w') as f:
+      with open(outdir / preprocessed_cf.input_relpath, "w") as f:
         f.write(preprocessed_cf.text)
 
-  app.Log(1, "Successfully preprocessed %s of %s files (%.2f %%)",
-          humanize.Commas(succeeded_count), humanize.Commas(len(todo)),
-          (succeeded_count / min(len(todo), 1)) * 100)
+  app.Log(
+    1,
+    "Successfully preprocessed %s of %s files (%.2f %%)",
+    humanize.Commas(succeeded_count),
+    humanize.Commas(len(todo)),
+    (succeeded_count / min(len(todo), 1)) * 100,
+  )
 
 
 def main():
@@ -88,5 +99,5 @@ def main():
   Preprocess(FLAGS.contentfiles, FLAGS.outdir, FLAGS.preprocessors)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

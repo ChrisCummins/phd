@@ -16,7 +16,8 @@ FLAGS = app.FLAGS
 
 
 def NodeAttributesToBasicBlock(
-    node_attributes: typing.Dict[str, str]) -> typing.Dict[str, str]:
+  node_attributes: typing.Dict[str, str]
+) -> typing.Dict[str, str]:
   """Get the basic block graph node attributes from a dot graph node.
 
   Args:
@@ -25,16 +26,16 @@ def NodeAttributesToBasicBlock(
   Returns:
     A dictionary of node attributes.
   """
-  label = node_attributes.get('label', '')
+  label = node_attributes.get("label", "")
   if not label.startswith('"{'):
     raise ValueError(f"Unhandled label: '{label}'")
   # Lines are separated using '\l' in the dot label.
-  lines = label.split('\l')
+  lines = label.split("\l")
   return {
-      # The name is in the first line.
-      'name': lines[0][len('"{'):].split(':')[0],
-      # All other lines except the last are either blank or contain instructions.
-      'text': '\n'.join(x.lstrip() for x in lines[1:-1] if x.lstrip()),
+    # The name is in the first line.
+    "name": lines[0][len('"{') :].split(":")[0],
+    # All other lines except the last are either blank or contain instructions.
+    "text": "\n".join(x.lstrip() for x in lines[1:-1] if x.lstrip()),
   }
 
 
@@ -47,12 +48,12 @@ def SplitInstructionsInBasicBlock(text: str) -> typing.List[str]:
   Returns:
     A list of lines.
   """
-  lines = text.split('\n')
+  lines = text.split("\n")
   # LLVM will wrap long lines by inserting an ellipsis at the start of the line.
   # Undo this.
   for i in range(len(lines) - 1, 0, -1):
-    if lines[i].startswith('... '):
-      lines[i - 1] += lines[i][len('...'):]
+    if lines[i].startswith("... "):
+      lines[i - 1] += lines[i][len("...") :]
       lines[i] = None
   return [line for line in lines if line]
 
@@ -69,17 +70,18 @@ class TagHook(object):
     """Called when a node is encountered. Returns additional attributes to encountered node."""
     pass
 
-  def OnInstruction(self, node_attrs: typing.Dict[str, typing.Any],
-                    instruction: str) -> typing.Dict[str, typing.Any]:
+  def OnInstruction(
+    self, node_attrs: typing.Dict[str, typing.Any], instruction: str
+  ) -> typing.Dict[str, typing.Any]:
     """Called when an instruction is created in full-flow graphs. 
     Returns additional attributes to encountered node."""
     pass
 
   def OnIdentifier(
-      self,
-      stmt_node: typing.Dict[str, typing.Any],
-      identifier_node: typing.Dict[str, typing.Any],
-      definition_type: str,
+    self,
+    stmt_node: typing.Dict[str, typing.Any],
+    identifier_node: typing.Dict[str, typing.Any],
+    definition_type: str,
   ) -> typing.Dict[str, typing.Any]:
     """Called when an identifier is created from an instruction in a CDFG.
 
@@ -99,16 +101,17 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
   contains the LLVM instructions for the basic block as a string.
   """
 
-  def __init__(self, *args, tag_hook: typing.Optional[TagHook] = None,
-               **kwargs):
+  def __init__(
+    self, *args, tag_hook: typing.Optional[TagHook] = None, **kwargs
+  ):
     super(LlvmControlFlowGraph, self).__init__(*args, **kwargs)
     self.tag_hook = tag_hook
 
   def BuildFullFlowGraph(
-      self,
-      remove_unconditional_branch_statements: bool = False,
-      remove_labels_in_branch_statements: bool = False,
-  ) -> 'LlvmControlFlowGraph':
+    self,
+    remove_unconditional_branch_statements: bool = False,
+    remove_labels_in_branch_statements: bool = False,
+  ) -> "LlvmControlFlowGraph":
     """Build a full program flow graph from the Control Flow Graph.
 
     This expands the control flow graph so that every node contains a single
@@ -129,7 +132,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
     self.ValidateControlFlowGraph(strict=False)
 
     # Create a new graph.
-    sig = LlvmControlFlowGraph(name=self.graph['name'], tag_hook=self.tag_hook)
+    sig = LlvmControlFlowGraph(name=self.graph["name"], tag_hook=self.tag_hook)
 
     # A global node count used to assign unique IDs to nodes in the new graph.
     sig_node_count = 0
@@ -140,6 +143,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
     # translate node IDs for adding edges.
     class NodeTranslationMapValue(typing.NamedTuple):
       """A [start,end] range of graph node IDs."""
+
       start: int
       end: int
 
@@ -147,7 +151,7 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
     # Iterate through all blocks in the source graph.
     for node, data in self.nodes(data=True):
-      instructions = SplitInstructionsInBasicBlock(data['text'])
+      instructions = SplitInstructionsInBasicBlock(data["text"])
       last_instruction = len(instructions) - 1
 
       # Split a block into a list of instructions and create a new destination
@@ -166,15 +170,17 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
           other_attrs = {}
 
         # Add a new node to the graph for the instruction.
-        if (block_instruction_count == last_instruction and
-            instruction.startswith('br ')):
+        if (
+          block_instruction_count == last_instruction
+          and instruction.startswith("br ")
+        ):
           # Branches can either be conditional, e.g.
           #     br il %6, label %7, label %8
           # or unconditional, e.g.
           #     br label %9
           # Unconditional branches can be skipped - they contain no useful
           # information. Conditional branches can have the labels stripped.
-          branch_instruction_components = instruction.split(', ')
+          branch_instruction_components = instruction.split(", ")
 
           if remove_labels_in_branch_statements:
             branch_text = instruction
@@ -187,36 +193,42 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
             if remove_unconditional_branch_statements:
               block_instruction_count -= 1
             else:
-              sig.add_node(new_node_id,
-                           name=new_node_name,
-                           text=branch_text,
-                           basic_block=node,
-                           **other_attrs)
+              sig.add_node(
+                new_node_id,
+                name=new_node_name,
+                text=branch_text,
+                basic_block=node,
+                **other_attrs,
+              )
           else:
-            sig.add_node(new_node_id,
-                         name=new_node_name,
-                         text=branch_text,
-                         basic_block=node,
-                         **other_attrs)
+            sig.add_node(
+              new_node_id,
+              name=new_node_name,
+              text=branch_text,
+              basic_block=node,
+              **other_attrs,
+            )
         else:
           # Regular instruction to add.
-          sig.add_node(new_node_id,
-                       name=new_node_name,
-                       text=instruction,
-                       basic_block=node,
-                       **other_attrs)
+          sig.add_node(
+            new_node_id,
+            name=new_node_name,
+            text=instruction,
+            basic_block=node,
+            **other_attrs,
+          )
 
       # Add an entry to the node translation map for the start and end nodes
       # of this basic block.
       node_translation_map[node] = NodeTranslationMapValue(
-          start=sig_node_count, end=sig_node_count + block_instruction_count)
+        start=sig_node_count, end=sig_node_count + block_instruction_count
+      )
 
       # Create edges between the sequential instruction nodes we just added
       # to the graph.
       [
-          sig.add_edge(i, i + 1, position=0)
-          for i in range(sig_node_count, sig_node_count +
-                         block_instruction_count)
+        sig.add_edge(i, i + 1, position=0)
+        for i in range(sig_node_count, sig_node_count + block_instruction_count)
       ]
 
       # Update the global node count to be the value of the next unused node ID.
@@ -224,31 +236,33 @@ class LlvmControlFlowGraph(cfg.ControlFlowGraph):
 
     # Iterate through the edges in the source graph, translating their IDs to
     # IDs in the new graph using the node_translation_map.
-    for src, dst, position in self.edges(data='position'):
+    for src, dst, position in self.edges(data="position"):
       new_src = node_translation_map[src].end
       new_dst = node_translation_map[dst].start
       sig.add_edge(new_src, new_dst, position=position)
 
     # Set the "entry" and "exit" blocks.
     new_entry_block = node_translation_map[self.entry_block].start
-    sig.nodes[new_entry_block]['entry'] = True
+    sig.nodes[new_entry_block]["entry"] = True
 
     for block in self.exit_blocks:
       new_exit_block = node_translation_map[block].end
-      sig.nodes[new_exit_block]['exit'] = True
+      sig.nodes[new_exit_block]["exit"] = True
 
     return sig.ValidateControlFlowGraph(strict=False)
 
-  def ValidateControlFlowGraph(self,
-                               strict: bool = True) -> 'LlvmControlFlowGraph':
+  def ValidateControlFlowGraph(
+    self, strict: bool = True
+  ) -> "LlvmControlFlowGraph":
     """Validate the control flow graph."""
     super(LlvmControlFlowGraph, self).ValidateControlFlowGraph(strict=strict)
 
     # Check that each basic block has a text section.
     for _, data in self.nodes(data=True):
-      if not data.get('text'):
+      if not data.get("text"):
         raise cfg.MalformedControlFlowGraphError(
-            f"Missing 'text' attribute from node '{data}'")
+          f"Missing 'text' attribute from node '{data}'"
+        )
 
     return self
 
@@ -259,9 +273,10 @@ _DOT_CFG_FUNCTION_NAME_RE = re.compile(r"\".* for '(.+)' function\"")
 
 
 def ControlFlowGraphFromDotSource(
-    dot_source: str,
-    remove_blocks_without_predecessors: bool = True,
-    tag_hook: typing.Optional[TagHook] = None) -> LlvmControlFlowGraph:
+  dot_source: str,
+  remove_blocks_without_predecessors: bool = True,
+  tag_hook: typing.Optional[TagHook] = None,
+) -> LlvmControlFlowGraph:
   """Create a control flow graph from an LLVM-generated dot file.
 
   The control flow graph generated from the dot source is not guaranteed to
@@ -287,10 +302,10 @@ def ControlFlowGraphFromDotSource(
   try:
     parsed_dots = pydot.graph_from_dot_data(dot_source)
   except TypeError as e:
-    raise pyparsing.ParseException('Failed to parse dot source') from e
+    raise pyparsing.ParseException("Failed to parse dot source") from e
 
   if len(parsed_dots) != 1:
-    raise ValueError(f'Expected 1 Dot in source, found {len(parsed_dots)}')
+    raise ValueError(f"Expected 1 Dot in source, found {len(parsed_dots)}")
 
   dot = parsed_dots[0]
 
@@ -302,8 +317,9 @@ def ControlFlowGraphFromDotSource(
     raise ValueError(f"Could not interpret graph name '{dot.get_name()}'")
 
   # Create the ControlFlowGraph instance.
-  graph = LlvmControlFlowGraph(name=function_name_match.group(1),
-                               tag_hook=tag_hook)
+  graph = LlvmControlFlowGraph(
+    name=function_name_match.group(1), tag_hook=tag_hook
+  )
 
   # Opt names nodes like 'Node0x7f86c670c590'. We discard those names and assign
   # nodes simple integer names.
@@ -317,8 +333,9 @@ def ControlFlowGraphFromDotSource(
       other_attrs = tag_hook.OnNode(node) or {}
     else:
       other_attrs = {}
-    graph.add_node(i, **NodeAttributesToBasicBlock(node.get_attributes()),
-                   **other_attrs)
+    graph.add_node(
+      i, **NodeAttributesToBasicBlock(node.get_attributes()), **other_attrs
+    )
 
   # Create edges and encode their position. The position is an integer starting
   # at zero and increasing for each outgoing edge, e.g. a switch with `n` cases
@@ -326,10 +343,11 @@ def ControlFlowGraphFromDotSource(
   for edge in dot.get_edges():
     # In the dot file, an edge looks like this:
     #     Node0x7f86c670c590:s0 -> Node0x7f86c65001a0;
-    src_components = edge.get_source().split(':')
+    src_components = edge.get_source().split(":")
     if len(src_components) > 2:
       raise ValueError(
-          f"Cannot interpret edge source name `{edge.get_source()}`")
+        f"Cannot interpret edge source name `{edge.get_source()}`"
+      )
     elif len(src_components) == 2:
       # Case: Node0x7f87aaf14520:s0
       src_name, position_name = src_components
@@ -361,25 +379,28 @@ def ControlFlowGraphFromDotSource(
 
     if removed_blocks_count:
       app.Log(
-          1, "Removed %s without predecessors from `%s`, "
-          "%d blocks remaining", humanize.Plural(removed_blocks_count, 'block'),
-          graph.name, graph.number_of_nodes())
+        1,
+        "Removed %s without predecessors from `%s`, " "%d blocks remaining",
+        humanize.Plural(removed_blocks_count, "block"),
+        graph.name,
+        graph.number_of_nodes(),
+      )
 
       # Rename nodes to retain a contiguous numeric sequence.
       node_rename_map = {
-          oldname: newname for newname, oldname in enumerate(graph.nodes())
+        oldname: newname for newname, oldname in enumerate(graph.nodes())
       }
       nx.relabel_nodes(graph, node_rename_map, copy=False)
 
   # The first block is always the function entry.
-  graph.nodes[0]['entry'] = True
+  graph.nodes[0]["entry"] = True
 
   # Mark the exit node.
   exit_count = 0
   for node, data in graph.nodes(data=True):
     if graph.out_degree(node) == 0:
       exit_count += 1
-      data['exit'] = True
+      data["exit"] = True
 
   # CFGs may have multiple exit blocks, e.g. unreachables, exceptions, etc.
   # However, they should have at least one block.
@@ -406,7 +427,8 @@ class ControlFlowGraphFromDotSourceError(ValueError):
 
 
 def _DotControlFlowGraphsFromBytecodeToQueue(
-    bytecode: str, queue: multiprocessing.Queue) -> None:
+  bytecode: str, queue: multiprocessing.Queue
+) -> None:
   """Process a bytecode and submit the dot source or the exception."""
   try:
     queue.put(list(opt_util.DotControlFlowGraphsFromBytecode(bytecode)))
@@ -414,8 +436,9 @@ def _DotControlFlowGraphsFromBytecodeToQueue(
     queue.put(DotControlFlowGraphsFromBytecodeError(bytecode, e))
 
 
-def _ControlFlowGraphFromDotSourceToQueue(dot: str,
-                                          queue: multiprocessing.Queue) -> None:
+def _ControlFlowGraphFromDotSourceToQueue(
+  dot: str, queue: multiprocessing.Queue
+) -> None:
   """Process a dot source and submit the CFG or the exception."""
   try:
     queue.put(ControlFlowGraphFromDotSource(dot))
@@ -431,14 +454,16 @@ class ExceptionBuffer(Exception):
 
 
 def ControlFlowGraphsFromBytecodes(
-    bytecodes: typing.Iterator[str]) -> typing.Iterator[cfg.ControlFlowGraph]:
+  bytecodes: typing.Iterator[str],
+) -> typing.Iterator[cfg.ControlFlowGraph]:
   """A parallelised implementation of bytecode->CFG function."""
   dot_processes = []
   dot_queue = multiprocessing.Queue()
   for bytecode in bytecodes:
     process = multiprocessing.Process(
-        target=_DotControlFlowGraphsFromBytecodeToQueue,
-        args=(bytecode, dot_queue))
+      target=_DotControlFlowGraphsFromBytecodeToQueue,
+      args=(bytecode, dot_queue),
+    )
     process.start()
     dot_processes.append(process)
 
@@ -454,7 +479,8 @@ def ControlFlowGraphsFromBytecodes(
     else:
       for dot in dots:
         process = multiprocessing.Process(
-            target=_ControlFlowGraphFromDotSourceToQueue, args=(dot, cfg_queue))
+          target=_ControlFlowGraphFromDotSourceToQueue, args=(dot, cfg_queue)
+        )
         process.start()
         cfg_processes.append(process)
 

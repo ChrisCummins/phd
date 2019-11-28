@@ -35,7 +35,7 @@ def get_toggl(api_path):
 
 def get_workspace(toggl, name):
   for workspace in toggl.getWorkspaces():
-    if workspace['name'] == name:
+    if workspace["name"] == name:
       return workspace
   raise LookupError(f"No Toggl Workspace with name {name}")
 
@@ -45,10 +45,10 @@ def get_report(toggl, params):
 
   def _get_report(records, params, page):
     """ return de-paginated list of time entries """
-    params['page'] = page
+    params["page"] = page
     response = toggl.getDetailedReport(params)
-    records += response['data']
-    if len(records) < response['total_count']:
+    records += response["data"]
+    if len(records) < response["total_count"]:
       records += _get_report(records, params, page + 1)
     return records
 
@@ -66,9 +66,9 @@ def parse_date(string):
 
 def parse_record(record):
   """ returns a (date, project, duration) tuple from a record """
-  date = parse_date(record['end'])
-  project = record['project']
-  duration = parse_datetime(record['end']) - parse_datetime(record['start'])
+  date = parse_date(record["end"])
+  project = record["project"]
+  duration = parse_datetime(record["end"]) - parse_datetime(record["start"])
   return (date, project, duration)
 
 
@@ -113,12 +113,13 @@ def export_csvs(outpath, keypath, workspace_name, start_date):
   toggl = get_toggl(keypath)
   workspace = get_workspace(toggl, workspace_name)
   records = get_report(
-      toggl,
-      {
-          'workspace_id': workspace['id'],
-          'since': start_date,
-          'until': str(datetime.datetime.now().date()),  # today
-      })
+    toggl,
+    {
+      "workspace_id": workspace["id"],
+      "since": start_date,
+      "until": str(datetime.datetime.now().date()),  # today
+    },
+  )
 
   # Created a sorted list of tuples by date:
   tuples = sorted([parse_record(x) for x in records], key=lambda x: x[0])
@@ -134,4 +135,4 @@ def export_csvs(outpath, keypath, workspace_name, start_date):
         writer.writerow(row)
 
       nrows = len(data[project])
-      app.Log(1, f"Exported {nrows} records to \"{outfile.name}\"")
+      app.Log(1, f'Exported {nrows} records to "{outfile.name}"')

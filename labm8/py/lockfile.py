@@ -26,16 +26,16 @@ from labm8.py import labdate
 from labm8.py import pbutil
 from labm8.py import system
 from labm8.py.internal import lockfile_pb2
+
 # Use absolute paths for imports so as to prevent a conflict with the
 # system "time" module.
 
 FLAGS = app.FLAGS
 
 app.DEFINE_float(
-    'lockfile_block_seconds',
-    10.0,
-    'The number of seconds to block for when waiting for a lock '
-    'files.',
+  "lockfile_block_seconds",
+  10.0,
+  "The number of seconds to block for when waiting for a lock " "files.",
 )
 
 
@@ -46,7 +46,7 @@ class Error(Exception):
 class UnableToAcquireLockError(Error):
   """ thrown if cannot acquire lock """
 
-  def __init__(self, lock: 'LockFile'):
+  def __init__(self, lock: "LockFile"):
     self.lock = lock
 
   def __str__(self):
@@ -68,13 +68,13 @@ class MalformedLockfileError(UnableToAcquireLockError):
     self.path = path
 
   def __str__(self):
-    return f'Lock file is malformed: {self.path}'
+    return f"Lock file is malformed: {self.path}"
 
 
 class UnableToReleaseLockError(Error):
   """ thrown if cannot release lock """
 
-  def __init__(self, lock: 'LockFile'):
+  def __init__(self, lock: "LockFile"):
     self.lock = lock
 
   def __str__(self):
@@ -108,7 +108,7 @@ class LockFile:
   def pid(self) -> typing.Optional[datetime.datetime]:
     """The process ID of the lock. Value is None if lock is not claimed."""
     lockfile = self.read(self.path)
-    if lockfile.HasField('owner_process_id'):
+    if lockfile.HasField("owner_process_id"):
       return lockfile.owner_process_id
     else:
       return None
@@ -120,7 +120,8 @@ class LockFile:
     lockfile = self.read(self.path)
     if lockfile.date_acquired_utc_epoch_ms:
       return labdate.DatetimeFromMillisecondsTimestamp(
-          lockfile.date_acquired_utc_epoch_ms,)
+        lockfile.date_acquired_utc_epoch_ms,
+      )
     else:
       return None
 
@@ -128,7 +129,7 @@ class LockFile:
   def hostname(self) -> typing.Optional[str]:
     """The hostname of the lock owner. Value is None if lock is unclaimed."""
     lockfile = self.read(self.path)
-    if lockfile.HasField('owner_hostname'):
+    if lockfile.HasField("owner_hostname"):
       return lockfile.owner_hostname
     else:
       return None
@@ -137,7 +138,7 @@ class LockFile:
   def user(self) -> typing.Optional[str]:
     """The username of the lock owner. Value is None if lock is unclaimed."""
     lockfile = self.read(self.path)
-    if lockfile.HasField('owner_user'):
+    if lockfile.HasField("owner_user"):
       return lockfile.owner_user
     else:
       return None
@@ -155,12 +156,12 @@ class LockFile:
     return self.hostname == system.HOSTNAME and self.pid == os.getpid()
 
   def acquire(
-      self,
-      replace_stale: bool = False,
-      force: bool = False,
-      pid: int = None,
-      block: bool = False,
-  ) -> 'LockFile':
+    self,
+    replace_stale: bool = False,
+    force: bool = False,
+    pid: int = None,
+    block: bool = False,
+  ) -> "LockFile":
     """Acquire the lock.
 
     A lock can be claimed if any of these conditions are true:
@@ -191,14 +192,15 @@ class LockFile:
 
     def _create_lock():
       lockfile = lockfile_pb2.LockFile(
-          owner_process_id=os.getpid() if pid is None else pid,
-          owner_process_argv=' '.join(sys.argv),
-          date_acquired_utc_epoch_ms=labdate.MillisecondsTimestamp(
-              labdate.GetUtcMillisecondsNow(),),
-          owner_hostname=system.HOSTNAME,
-          owner_user=system.USERNAME,
+        owner_process_id=os.getpid() if pid is None else pid,
+        owner_process_argv=" ".join(sys.argv),
+        date_acquired_utc_epoch_ms=labdate.MillisecondsTimestamp(
+          labdate.GetUtcMillisecondsNow(),
+        ),
+        owner_hostname=system.HOSTNAME,
+        owner_user=system.USERNAME,
       )
-      pbutil.ToFile(lockfile, self.path, assume_filename='LOCK.pbtxt')
+      pbutil.ToFile(lockfile, self.path, assume_filename="LOCK.pbtxt")
 
     while True:
       if self.islocked:
@@ -209,18 +211,21 @@ class LockFile:
         elif force:
           _create_lock()
           break
-        elif (replace_stale and self.hostname == system.HOSTNAME and
-              not system.isprocess(lock_owner_pid)):
+        elif (
+          replace_stale
+          and self.hostname == system.HOSTNAME
+          and not system.isprocess(lock_owner_pid)
+        ):
           _create_lock()
           break
         elif not block:
           raise UnableToAcquireLockError(self)
         # Block and try again later.
         app.Log(
-            1,
-            'Blocking on lockfile %s for %s seconds',
-            self.path,
-            humanize.Duration(FLAGS.lockfile_block_seconds),
+          1,
+          "Blocking on lockfile %s for %s seconds",
+          self.path,
+          humanize.Duration(FLAGS.lockfile_block_seconds),
         )
         time.sleep(FLAGS.lockfile_block_seconds)
       else:  # new lock
@@ -272,9 +277,7 @@ class LockFile:
     if path.is_file():
       try:
         return pbutil.FromFile(
-            path,
-            lockfile_pb2.LockFile(),
-            assume_filename='LOCK.pbtxt',
+          path, lockfile_pb2.LockFile(), assume_filename="LOCK.pbtxt",
         )
       except pbutil.DecodeError:
         raise MalformedLockfileError(path)
@@ -307,9 +310,9 @@ class AutoLockFile(LockFile):
   """
 
   def __init__(
-      self,
-      root: typing.Union[str, pathlib.Path] = '/tmp/phd/labm8/autolockfiles',
-      granularity: str = 'line',
+    self,
+    root: typing.Union[str, pathlib.Path] = "/tmp/phd/labm8/autolockfiles",
+    granularity: str = "line",
   ):
     """Constructor
 
@@ -332,15 +335,16 @@ class AutoLockFile(LockFile):
     function_name = frame.function
     lineno = frame.lineno
 
-    if granularity == 'line':
-      path = root / f'{module_name}_{function_name}_{lineno}.pbtxt'
-    elif granularity == 'function':
-      path = root / f'{module_name}_{function_name}.pbtxt'
-    elif granularity == 'module':
-      path = root / f'{module_name}.pbtxt'
+    if granularity == "line":
+      path = root / f"{module_name}_{function_name}_{lineno}.pbtxt"
+    elif granularity == "function":
+      path = root / f"{module_name}_{function_name}.pbtxt"
+    elif granularity == "module":
+      path = root / f"{module_name}.pbtxt"
     else:
       raise TypeError(
-          f"Invalid granularity '{granularity}'. Must be one of: "
-          f'{{line,function,module}}',)
+        f"Invalid granularity '{granularity}'. Must be one of: "
+        f"{{line,function,module}}",
+      )
 
     super(AutoLockFile, self).__init__(path)

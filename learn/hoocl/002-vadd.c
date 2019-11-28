@@ -23,42 +23,40 @@
 #define DEVICE CL_DEVICE_TYPE_DEFAULT
 #endif
 
-extern double wtime();  // wtime.c
+extern double wtime();                        // wtime.c
 extern int output_device_info(cl_device_id);  // device_info.c
 
 #define TOL (0.001f)
 #define LENGTH ((size_t)1024)
 
-
-const char *KernelSource =
-    "\n" \
-    "__kernel void vadd(\n" \
-    "   __global float* a,\n" \
-    "   __global float* b,\n" \
-    "   __global float* c,\n" \
-    "   const unsigned int count)\n" \
-    "{\n" \
-    "   int i = get_global_id(0);\n" \
-    "   if(i < count)\n" \
-    "       c[i] = a[i] + b[i];\n" \
-    "}\n" \
+const char* KernelSource =
+    "\n"
+    "__kernel void vadd(\n"
+    "   __global float* a,\n"
+    "   __global float* b,\n"
+    "   __global float* c,\n"
+    "   const unsigned int count)\n"
+    "{\n"
+    "   int i = get_global_id(0);\n"
+    "   if(i < count)\n"
+    "       c[i] = a[i] + b[i];\n"
+    "}\n"
     "\n";
-
 
 int main(int argc, char** argv) {
   int err;
 
-  float* h_a = (float*) calloc(LENGTH, sizeof(float));  // a vector
-  float* h_b = (float*) calloc(LENGTH, sizeof(float));  // b vector
-  float* h_c = (float*) calloc(LENGTH, sizeof(float));  // c vector (a+b)
+  float* h_a = (float*)calloc(LENGTH, sizeof(float));  // a vector
+  float* h_b = (float*)calloc(LENGTH, sizeof(float));  // b vector
+  float* h_c = (float*)calloc(LENGTH, sizeof(float));  // c vector (a+b)
 
-  unsigned int correct; // number of correct results
-  size_t global; // global domain size
+  unsigned int correct;  // number of correct results
+  size_t global;         // global domain size
 
-  cl_context context;  // compute context
+  cl_context context;         // compute context
   cl_command_queue commands;  // compute command queue
-  cl_program program;  // compute program
-  cl_kernel ko_vadd;  // compute kernel
+  cl_program program;         // compute program
+  cl_kernel ko_vadd;          // compute kernel
 
   cl_mem d_a;  // device memory used for the input  a vector
   cl_mem d_b;  // device memory used for the input  b vector
@@ -66,7 +64,7 @@ int main(int argc, char** argv) {
 
   // Fill vectors a and b with random float values:
   size_t i = 0;
-  for (i = 0; i < LENGTH; i++){
+  for (i = 0; i < LENGTH; i++) {
     h_a[i] = rand() / (float)RAND_MAX;
     h_b[i] = rand() / (float)RAND_MAX;
   }
@@ -78,15 +76,14 @@ int main(int argc, char** argv) {
   // Find number of platforms
   err = clGetPlatformIDs(0, NULL, &numPlatforms);
   checkError(err, "Finding platforms");
-  if (numPlatforms == 0)
-  {
+  if (numPlatforms == 0) {
     printf("Found 0 platforms!\n");
     return EXIT_FAILURE;
   }
 
   // Get all platforms
-  cl_platform_id *Platform = (cl_platform_id*)malloc(
-      sizeof(Platform) * numPlatforms);
+  cl_platform_id* Platform =
+      (cl_platform_id*)malloc(sizeof(Platform) * numPlatforms);
   err = clGetPlatformIDs(numPlatforms, Platform, NULL);
   checkError(err, "Getting platforms");
 
@@ -94,14 +91,12 @@ int main(int argc, char** argv) {
   cl_device_id device_id = NULL;
   for (i = 0; i < numPlatforms; i++) {
     err = clGetDeviceIDs(Platform[i], DEVICE, 1, &device_id, NULL);
-    if (err == CL_SUCCESS)
-      break;
+    if (err == CL_SUCCESS) break;
   }
 
   free(Platform);
 
-  if (device_id == NULL)
-    checkError(err, "Finding a device");
+  if (device_id == NULL) checkError(err, "Finding a device");
 
   err = output_device_info(device_id);
   checkError(err, "Printing device output");
@@ -115,8 +110,7 @@ int main(int argc, char** argv) {
   checkError(err, "Creating command queue");
 
   // Create the compute program from the source buffer
-  program = clCreateProgramWithSource(context, 1,
-                                      (const char **)&KernelSource,
+  program = clCreateProgramWithSource(context, 1, (const char**)&KernelSource,
                                       NULL, &err);
   checkError(err, "Creating program");
 
@@ -138,21 +132,21 @@ int main(int argc, char** argv) {
   checkError(err, "Creating kernel");
 
   // Create the input (a, b) and output (c) arrays in device memory
-  d_a  = clCreateBuffer(context, CL_MEM_READ_ONLY,
-                        sizeof(float) * LENGTH, NULL, &err);
+  d_a = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(float) * LENGTH, NULL,
+                       &err);
   checkError(err, "Creating buffer d_a");
 
-  d_b  = clCreateBuffer(context, CL_MEM_READ_ONLY,
-                        sizeof(float) * LENGTH, NULL, &err);
+  d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(float) * LENGTH, NULL,
+                       &err);
   checkError(err, "Creating buffer d_b");
 
-  d_c  = clCreateBuffer(context,  CL_MEM_WRITE_ONLY,
-                        sizeof(float) * LENGTH, NULL, &err);
+  d_c = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(float) * LENGTH, NULL,
+                       &err);
   checkError(err, "Creating buffer d_c");
 
   // Write a and b vectors into compute device memory
-  err = clEnqueueWriteBuffer(commands, d_a, CL_TRUE, 0,
-                             sizeof(float) * LENGTH, h_a, 0, NULL, NULL);
+  err = clEnqueueWriteBuffer(commands, d_a, CL_TRUE, 0, sizeof(float) * LENGTH,
+                             h_a, 0, NULL, NULL);
   checkError(err, "Copying h_a to device at d_a");
 
   err = clEnqueueWriteBuffer(commands, d_b, CL_TRUE, 0, sizeof(float) * LENGTH,
@@ -172,8 +166,8 @@ int main(int argc, char** argv) {
   // Execute the kernel over the entire range of our 1d input data set
   // letting the OpenCL runtime choose the work-group size
   global = LENGTH;
-  err = clEnqueueNDRangeKernel(commands, ko_vadd, 1, NULL, &global, NULL,
-                               0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(commands, ko_vadd, 1, NULL, &global, NULL, 0,
+                               NULL, NULL);
   checkError(err, "Enqueueing kernel");
 
   // Wait for the commands to complete before stopping the timer
@@ -181,11 +175,11 @@ int main(int argc, char** argv) {
   checkError(err, "Waiting for kernel to finish");
 
   rtime = wtime() - rtime;
-  printf("\nThe kernel ran in %lf seconds\n",rtime);
+  printf("\nThe kernel ran in %lf seconds\n", rtime);
 
   // Read back the results from the compute device
-  err = clEnqueueReadBuffer(commands, d_c, CL_TRUE, 0,
-                            sizeof(float) * LENGTH, h_c, 0, NULL, NULL);
+  err = clEnqueueReadBuffer(commands, d_c, CL_TRUE, 0, sizeof(float) * LENGTH,
+                            h_c, 0, NULL, NULL);
   if (err != CL_SUCCESS) {
     printf("Error: Failed to read output array!\n%s\n", err_code(err));
     exit(1);
@@ -195,14 +189,13 @@ int main(int argc, char** argv) {
   correct = 0;
   float tmp;
 
-  for(i = 0; i < LENGTH; i++) {
+  for (i = 0; i < LENGTH; i++) {
     tmp = h_a[i] + h_b[i];  // assign element i of a+b to tmp
-    tmp -= h_c[i];  // compute deviation of expected and output result
+    tmp -= h_c[i];          // compute deviation of expected and output result
     if (tmp * tmp < TOL * TOL)
       ++correct;
     else {
-      printf(" tmp %f h_a %f h_b %f h_c %f \n",
-             tmp, h_a[i], h_b[i], h_c[i]);
+      printf(" tmp %f h_a %f h_b %f h_c %f \n", tmp, h_a[i], h_b[i], h_c[i]);
     }
   }
 

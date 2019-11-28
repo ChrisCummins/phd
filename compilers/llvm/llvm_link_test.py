@@ -26,26 +26,26 @@ FLAGS = app.FLAGS
 
 def test_LinkBitcodeFilesToBytecode_empty_file(tempdir: pathlib.Path):
   """llvm-link with an empty file."""
-  input_path = tempdir / 'empty.ll'
-  output_path = tempdir / 'linked.ll'
-  fs.Write(input_path, ''.encode('utf-8'))
-  llvm_link.LinkBitcodeFilesToBytecode([input_path],
-                                       output_path,
-                                       timeout_seconds=5)
+  input_path = tempdir / "empty.ll"
+  output_path = tempdir / "linked.ll"
+  fs.Write(input_path, "".encode("utf-8"))
+  llvm_link.LinkBitcodeFilesToBytecode(
+    [input_path], output_path, timeout_seconds=5
+  )
   assert output_path.is_file()
 
 
 def test_LinkBitcodeFilesToBytecode_syntax_error(tempdir: pathlib.Path):
   """llvm-link fails when a file contains invalid syntax."""
-  input_path = tempdir / 'empty.ll'
-  output_path = tempdir / 'linked.ll'
-  fs.Write(input_path, 'syntax error!'.encode('utf-8'))
+  input_path = tempdir / "empty.ll"
+  output_path = tempdir / "linked.ll"
+  fs.Write(input_path, "syntax error!".encode("utf-8"))
   with pytest.raises(ValueError) as e_ctx:
-    llvm_link.LinkBitcodeFilesToBytecode([input_path],
-                                         output_path,
-                                         timeout_seconds=5)
-  assert str(e_ctx.value).startswith('Failed to link bytecode: ')
+    llvm_link.LinkBitcodeFilesToBytecode(
+      [input_path], output_path, timeout_seconds=5
+    )
+  assert str(e_ctx.value).startswith("Failed to link bytecode: ")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

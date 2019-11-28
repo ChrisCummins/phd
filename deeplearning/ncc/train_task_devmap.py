@@ -77,20 +77,26 @@ from labm8.py import bazelutil
 from labm8.py import fs
 
 # Parameters of devmap
-app.DEFINE_string('input_data', '/tmp/phd/deeplearning/ncc/task/devmap',
-                  'Path to input data')
 app.DEFINE_string(
-    'out', '/tmp/phd/deeplearning/ncc/task/devmap',
-    'Path to folder in which to write saved Keras models and predictions')
+  "input_data", "/tmp/phd/deeplearning/ncc/task/devmap", "Path to input data"
+)
 app.DEFINE_string(
-    'vocabulary_zip_path', None,
-    'Path to the vocabulary zip file associated with those embeddings')
-app.DEFINE_string('device', 'all',
-                  'Device to evaluate model on. Options: all, amd, nvidia')
-app.DEFINE_integer('num_epochs', 50, 'number of training epochs')
-app.DEFINE_integer('batch_size', 64, 'training batch size')
-app.DEFINE_integer('dense_layer', 32, 'dense layer size')
-app.DEFINE_boolean('print_summary', False, 'Print summary of Keras model')
+  "out",
+  "/tmp/phd/deeplearning/ncc/task/devmap",
+  "Path to folder in which to write saved Keras models and predictions",
+)
+app.DEFINE_string(
+  "vocabulary_zip_path",
+  None,
+  "Path to the vocabulary zip file associated with those embeddings",
+)
+app.DEFINE_string(
+  "device", "all", "Device to evaluate model on. Options: all, amd, nvidia"
+)
+app.DEFINE_integer("num_epochs", 50, "number of training epochs")
+app.DEFINE_integer("batch_size", 64, "training batch size")
+app.DEFINE_integer("dense_layer", 32, "dense layer size")
+app.DEFINE_boolean("print_summary", False, "Print summary of Keras model")
 
 FLAGS = app.FLAGS
 
@@ -105,7 +111,7 @@ def platform2str(platform: str) -> str:
 
 
 def escape_suite_name(g: str) -> str:
-  c = g.split('-')
+  c = g.split("-")
   if c[0] == "amd" or c[0] == "nvidia":
     return c[0].upper() + " SDK"
   if c[0] == "npb" or c[0] == "shoc":
@@ -117,15 +123,12 @@ def escape_suite_name(g: str) -> str:
 
 
 def escape_benchmark_name(g: str) -> str:
-  c = g.split('-')
+  c = g.split("-")
   return escape_suite_name(c[0]).split()[0] + "." + c[-2]
 
 
 def auxiliary_inputs(df: pd.DataFrame) -> np.array:
-  return np.array([
-      df["transfer"].values,
-      df["wgsize"].values,
-  ]).T
+  return np.array([df["transfer"].values, df["wgsize"].values,]).T
 
 
 def encode_1hot(y: np.array) -> np.array:
@@ -144,41 +147,50 @@ def encode_srcs(data_folder, df: pd.DataFrame) -> np.array:
     unk_index = vocab.unknown_token_index
 
   # Get list of source file names
-  data_folder = os.path.join(data_folder, 'kernels_seq')
+  data_folder = os.path.join(data_folder, "kernels_seq")
   input_files = df["benchmark"].values  # list of strings of benchmark names
   dataset = df["dataset"].values  # list of strings of dataset descriptions
   num_files = len(input_files)
   num_unks = 0
   seq_lengths = list()
 
-  app.Log(1, 'Preparing to read %d input files from folder %s', num_files,
-          data_folder)
+  app.Log(
+    1, "Preparing to read %d input files from folder %s", num_files, data_folder
+  )
   seqs = list()
   for i in range(num_files):
     file = input_files[i]
     dat = dataset[i]
     if file[:3] == "npb":
       # concatenate data set size
-      file += '_' + str(dat)
-    file = os.path.join(data_folder, file + '_seq.csv')
+      file += "_" + str(dat)
+    file = os.path.join(data_folder, file + "_seq.csv")
     if os.path.exists(file):
       # load sequence
-      with open(file, 'r') as f:
+      with open(file, "r") as f:
         seq = f.read().splitlines()
-        assert len(seq) > 0, 'Found empty file: ' + file
+        assert len(seq) > 0, "Found empty file: " + file
       num_unks += seq.count(str(unk_index))
       seq_lengths.append(len(seq))
       seqs.append([int(s) for s in seq])
     else:
-      assert True, 'input file not found: ' + file
+      assert True, "input file not found: " + file
 
   max_len = max(seq_lengths)
-  app.Log(1, 'Sequence lengths: min=%d, avg=%.2f, max=%d', min(seq_lengths),
-          np.mean(seq_lengths), max_len)
-  app.Log(1, 'Number of \'UNK\': %d', num_unks)
-  app.Log(1, 'Percentage of \'UNK\': %.3f %% among all stmts',
-          (num_unks * 100) / sum(seq_lengths))
-  app.Log(1, '\'UNK\' index: %d', unk_index)
+  app.Log(
+    1,
+    "Sequence lengths: min=%d, avg=%.2f, max=%d",
+    min(seq_lengths),
+    np.mean(seq_lengths),
+    max_len,
+  )
+  app.Log(1, "Number of 'UNK': %d", num_unks)
+  app.Log(
+    1,
+    "Percentage of 'UNK': %.3f %% among all stmts",
+    (num_unks * 100) / sum(seq_lengths),
+  )
+  app.Log(1, "'UNK' index: %d", unk_index)
 
   encoded = np.array(pad_sequences(seqs, maxlen=max_len, value=unk_index))
   return np.vstack([np.expand_dims(x, axis=0) for x in encoded]), max_len
@@ -190,8 +202,9 @@ class NCC_devmap:
   __name__ = "NCC_devmap"
   __basename__ = "ncc_devmap"
 
-  def init(self, seed: int, maxlen: int, embedding_dim: int,
-           dense_layer_size: int):
+  def init(
+    self, seed: int, maxlen: int, embedding_dim: int, dense_layer_size: int
+  ):
     from keras.layers import Input, LSTM, Dense
     from keras.layers.merge import Concatenate
     from keras.layers.normalization import BatchNormalization
@@ -200,14 +213,10 @@ class NCC_devmap:
     np.random.seed(seed)
 
     # Keras model
-    inp = Input(shape=(
-        maxlen,
-        embedding_dim,
-    ), dtype="float32", name="code_in")
-    x = LSTM(embedding_dim,
-             implementation=1,
-             return_sequences=True,
-             name="lstm_1")(inp)
+    inp = Input(shape=(maxlen, embedding_dim,), dtype="float32", name="code_in")
+    x = LSTM(
+      embedding_dim, implementation=1, return_sequences=True, name="lstm_1"
+    )(inp)
     x = LSTM(embedding_dim, implementation=1, name="lstm_2")(x)
     langmodel_out = Dense(2, activation="sigmoid")(x)
 
@@ -218,14 +227,16 @@ class NCC_devmap:
     x = Dense(dense_layer_size, activation="relu")(x)
     out = Dense(2, activation="sigmoid")(x)
 
-    self.model = Model(inputs=[auxiliary_inputs, inp],
-                       outputs=[out, langmodel_out])
+    self.model = Model(
+      inputs=[auxiliary_inputs, inp], outputs=[out, langmodel_out]
+    )
     self.model.compile(
-        optimizer="adam",
-        metrics=['accuracy'],
-        loss=["categorical_crossentropy", "categorical_crossentropy"],
-        loss_weights=[1., .2])
-    app.Log(1, 'Built Keras model')
+      optimizer="adam",
+      metrics=["accuracy"],
+      loss=["categorical_crossentropy", "categorical_crossentropy"],
+      loss_weights=[1.0, 0.2],
+    )
+    app.Log(1, "Built Keras model")
 
     return self
 
@@ -234,21 +245,27 @@ class NCC_devmap:
 
   def restore(self, inpath):
     from keras.models import load_model
+
     self.model = load_model(inpath)
 
   def train(self, epochs: int, batch_size: int, **train) -> None:
-    self.model.fit([train["aux_in"], train["sequences"]],
-                   [train["y_1hot"], train["y_1hot"]],
-                   epochs=epochs,
-                   batch_size=batch_size,
-                   verbose=train["verbose"],
-                   shuffle=True)
+    self.model.fit(
+      [train["aux_in"], train["sequences"]],
+      [train["y_1hot"], train["y_1hot"]],
+      epochs=epochs,
+      batch_size=batch_size,
+      verbose=train["verbose"],
+      shuffle=True,
+    )
 
   def predict(self, batch_size, **test):
     p = np.array(
-        self.model.predict([test["aux_in"], test["sequences"]],
-                           batch_size=batch_size,
-                           verbose=test["verbose"]))
+      self.model.predict(
+        [test["aux_in"], test["sequences"]],
+        batch_size=batch_size,
+        verbose=test["verbose"],
+      )
+    )
     indices = [np.argmax(x) for x in p[0]]
     return indices
 
@@ -260,13 +277,21 @@ class NCC_devmap:
 seed = 204
 
 
-def evaluate(model, device, data_folder, out_folder, embeddings,
-             dense_layer_size, print_summary, num_epochs,
-             batch_size) -> pd.DataFrame:
+def evaluate(
+  model,
+  device,
+  data_folder,
+  out_folder,
+  embeddings,
+  dense_layer_size,
+  print_summary,
+  num_epochs,
+  batch_size,
+) -> pd.DataFrame:
   from sklearn.model_selection import StratifiedKFold
 
   # Create device list
-  if device == 'all':
+  if device == "all":
     device_list = ["amd", "nvidia"]
   else:
     device_list = [device]
@@ -277,7 +302,7 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 
     # Load runtime data
     data_file = os.path.join(data_folder, "cgo17-{}.csv".format(platform))
-    print('\n--- Read data from', data_file)
+    print("\n--- Read data from", data_file)
     df = pd.read_csv(data_file)
 
     # Encode input source codes
@@ -285,6 +310,7 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
 
     # Load embeddings
     import tensorflow as tf  # for embeddings lookup
+
     embedding_matrix_normalized = tf.nn.l2_normalize(embeddings, axis=1)
     vocabulary_size, embedding_dimension = embedding_matrix_normalized.shape
     seq_ = tf.compat.v1.placeholder(dtype=tf.int32)
@@ -304,21 +330,26 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
     n_splits = 10
     kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     for j, (train_index, test_index) in enumerate(kf.split(sequences, y)):
-      print('--- Cross validation step [', j, '/ ', n_splits, ']')
+      print("--- Cross validation step [", j, "/ ", n_splits, "]")
 
       model_basename = model.__basename__
       model_path = os.path.join(
-          out_folder, "models/{model_basename}-{platform}-{j}.model".format(
-              model_basename=model_basename, platform=platform, j=j))
+        out_folder,
+        "models/{model_basename}-{platform}-{j}.model".format(
+          model_basename=model_basename, platform=platform, j=j
+        ),
+      )
       predictions_path = os.path.join(
-          out_folder,
-          "predictions/{model_basename}-{platform}-{j}.result".format(
-              model_basename=model_basename, platform=platform, j=j))
+        out_folder,
+        "predictions/{model_basename}-{platform}-{j}.result".format(
+          model_basename=model_basename, platform=platform, j=j
+        ),
+      )
 
       if fs.exists(predictions_path):
         # load result from cache
         print("\tFound predictions in", predictions_path, ", skipping...")
-        with open(predictions_path, 'rb') as infile:
+        with open(predictions_path, "rb") as infile:
           p = pickle.load(infile)
       else:
 
@@ -329,88 +360,104 @@ def evaluate(model, device, data_folder, out_folder, embeddings,
         else:
 
           # Initialize model and print summary
-          model.init(seed=seed,
-                     maxlen=maxlen,
-                     embedding_dim=int(embedding_dimension),
-                     dense_layer_size=dense_layer_size)
+          model.init(
+            seed=seed,
+            maxlen=maxlen,
+            embedding_dim=int(embedding_dimension),
+            dense_layer_size=dense_layer_size,
+          )
           if print_summary:
             model.model.summary()
 
           # Train and cache a model
-          print('\n--- Training model... ')
-          model.train(df=df,
-                      aux_in=aux_in[train_index],
-                      sequences=embedding_input[train_index, :, :],
-                      y=y[train_index],
-                      y_1hot=y_1hot[train_index],
-                      verbose=False,
-                      epochs=num_epochs,
-                      batch_size=batch_size)
+          print("\n--- Training model... ")
+          model.train(
+            df=df,
+            aux_in=aux_in[train_index],
+            sequences=embedding_input[train_index, :, :],
+            y=y[train_index],
+            y_1hot=y_1hot[train_index],
+            verbose=False,
+            epochs=num_epochs,
+            batch_size=batch_size,
+          )
           fs.mkdir(fs.dirname(model_path))
           model.save(model_path)
-          print('\tsaved model to', model_path)
+          print("\tsaved model to", model_path)
 
         # test model
-        print('\n--- Testing model... ')
-        p = model.predict(batch_size=batch_size,
-                          aux_in=aux_in[test_index],
-                          sequences=embedding_input[test_index, :, :],
-                          y=y[test_index],
-                          y_1hot=y_1hot[test_index],
-                          verbose=False)
+        print("\n--- Testing model... ")
+        p = model.predict(
+          batch_size=batch_size,
+          aux_in=aux_in[test_index],
+          sequences=embedding_input[test_index, :, :],
+          y=y[test_index],
+          y_1hot=y_1hot[test_index],
+          verbose=False,
+        )
 
         # cache results
         fs.mkdir(fs.dirname(predictions_path))
-        with open(predictions_path, 'wb') as outfile:
+        with open(predictions_path, "wb") as outfile:
           pickle.dump(p, outfile)
-        print('\tsaved predictions to', predictions_path)
+        print("\tsaved predictions to", predictions_path)
 
-      benchmarks = df['benchmark'].values[test_index]  # benchmarks names
+      benchmarks = df["benchmark"].values[test_index]  # benchmarks names
       o = y[test_index]  # oracle device mappings (true values)
       correct = p == o  # predictions' correctness
       # runtimes of baseline mapping (CPU on AMD, GPU on NVIDIA)
       zero_r_dev = "runtime_cpu" if platform == "amd" else "runtime_gpu"
       zer_r_runtimes = df[zero_r_dev][test_index]
       # speedups of predictions
-      runtimes = df[['runtime_cpu', 'runtime_gpu']].values[test_index]
+      runtimes = df[["runtime_cpu", "runtime_gpu"]].values[test_index]
       p_runtimes = [r[p_] for p_, r in zip(p, runtimes)]
       p_speedup = zer_r_runtimes / p_runtimes
 
       # sanity check
-      assert (len(benchmarks) == len(o) == len(correct) == len(p) ==
-              len(p_speedup))
+      assert (
+        len(benchmarks) == len(o) == len(correct) == len(p) == len(p_speedup)
+      )
 
       # record results
       for benchmark_, o_, p_, correct_, p_speedup_ in zip(
-          benchmarks, o, p, correct, p_speedup):
-        data.append({
+        benchmarks, o, p, correct, p_speedup
+      ):
+        data.append(
+          {
             "Model": model_basename,
             "Platform": platform_name,
-            'Benchmark': escape_benchmark_name(benchmark_),
-            'Benchmark Suite': escape_suite_name(benchmark_),
+            "Benchmark": escape_benchmark_name(benchmark_),
+            "Benchmark Suite": escape_suite_name(benchmark_),
             "Oracle Mapping": o_,
             "Predicted Mapping": p_,
             "Correct?": correct_,
             "Speedup": p_speedup_,
-        })
+          }
+        )
 
-  return pd.DataFrame(data,
-                      index=range(1,
-                                  len(data) + 1),
-                      columns=[
-                          "Model", "Platform", "Benchmark", "Benchmark Suite",
-                          "Oracle Mapping", "Predicted Mapping", "Correct?",
-                          "Speedup"
-                      ])
+  return pd.DataFrame(
+    data,
+    index=range(1, len(data) + 1),
+    columns=[
+      "Model",
+      "Platform",
+      "Benchmark",
+      "Benchmark Suite",
+      "Oracle Mapping",
+      "Predicted Mapping",
+      "Correct?",
+      "Speedup",
+    ],
+  )
 
 
 def main(argv):
   if len(argv) > 1:
-    raise app.UsageError('Unrecognized command line flags.')
+    raise app.UsageError("Unrecognized command line flags.")
 
   # Don't truncate output when printing pandas tables.
-  pd.set_option('display.max_columns', None)
-  pd.set_option('display.max_rows', None)
+  pd.set_option("display.max_columns", None)
+  pd.set_option("display.max_rows", None)
 
   # Setup
   # Get flag values
@@ -419,8 +466,11 @@ def main(argv):
   if not os.path.exists(out):
     os.makedirs(out)
   device = FLAGS.device
-  assert device in ['all', 'amd', 'nvidia'], \
-    'Choose device among: all, amd, nvidia'
+  assert device in [
+    "all",
+    "amd",
+    "nvidia",
+  ], "Choose device among: all, amd, nvidia"
   dense_layer_size = FLAGS.dense_layer
   print_summary = FLAGS.print_summary
   num_epochs = FLAGS.num_epochs
@@ -428,13 +478,14 @@ def main(argv):
   input_data = FLAGS.input_data
 
   # Unpack data archive if necessary.
-  if not os.path.exists(os.path.join(input_data, 'kernels_ir')):
+  if not os.path.exists(os.path.join(input_data, "kernels_ir")):
     dataset = bazelutil.DataArchive(
-        'phd/deeplearning/ncc/published_results/task_devmap.zip')
+      "phd/deeplearning/ncc/published_results/task_devmap.zip"
+    )
     dataset.ExtractAll(pathlib.Path(input_data))
 
   with vocabulary.VocabularyZipFile(FLAGS.vocabulary_zip_path) as vocab:
-    task_utils.CreateSeqDirFromIr(os.path.join(input_data, 'kernels_ir'), vocab)
+    task_utils.CreateSeqDirFromIr(os.path.join(input_data, "kernels_ir"), vocab)
 
   # Reference values copied from:
   # https://github.com/ChrisCummins/paper-end2end-dl/blob/master/code/Case%20Study%20A.ipynb
@@ -453,59 +504,83 @@ def main(argv):
 
   # Train model
   app.Log(1, "Evaluating ncc model")
-  ncc_devmap = evaluate(NCC_devmap(), device, input_data, out, embeddings,
-                        dense_layer_size, print_summary, num_epochs, batch_size)
+  ncc_devmap = evaluate(
+    NCC_devmap(),
+    device,
+    input_data,
+    out,
+    embeddings,
+    dense_layer_size,
+    print_summary,
+    num_epochs,
+    batch_size,
+  )
 
   # Print results
-  print('--- Prediction results')
+  print("--- Prediction results")
   print(
-      ncc_devmap.groupby(
-          ['Platform',
-           'Benchmark Suite'])['Platform', 'Correct?', 'Speedup'].mean())
-  print('--- Prediction results (summarized)')
+    ncc_devmap.groupby(["Platform", "Benchmark Suite"])[
+      "Platform", "Correct?", "Speedup"
+    ].mean()
+  )
+  print("--- Prediction results (summarized)")
   print(
-      ncc_devmap.groupby(
-          ['Platform'])['Platform', 'Correct?', 'Speedup'].mean())
+    ncc_devmap.groupby(["Platform"])["Platform", "Correct?", "Speedup"].mean()
+  )
 
   # Model comparison: prediction accuracy
-  print('--- Model comparison: prediction accuracy')
+  print("--- Model comparison: prediction accuracy")
   d = list()
   d.append(np.append(static_pred_vals, static_pred_mean))
   d.append(np.append(grewe_pred_vals, grewe_pred_mean))
   d.append(np.append(deeptune_pred_vals, deeptune_pred_mean))
   d.append(
-      np.append(
-          ncc_devmap.groupby(['Platform'])['Correct?'].mean().values * 100,
-          ncc_devmap['Correct?'].mean() * 100))
+    np.append(
+      ncc_devmap.groupby(["Platform"])["Correct?"].mean().values * 100,
+      ncc_devmap["Correct?"].mean() * 100,
+    )
+  )
   d = np.array(d).T.reshape(3, 4)
   print(
-      pd.DataFrame(d,
-                   columns=[
-                       'Static mapping', 'Grewe et al.', 'DeepTune',
-                       'DeepTuneInst2Vec'
-                   ],
-                   index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
+    pd.DataFrame(
+      d,
+      columns=[
+        "Static mapping",
+        "Grewe et al.",
+        "DeepTune",
+        "DeepTuneInst2Vec",
+      ],
+      index=["AMD Tahiti 7970", "NVIDIA GTX 970", "Average"],
+    )
+  )
 
   # Model comparison: speedups
-  print('--- Model comparison: speedups')
+  print("--- Model comparison: speedups")
   d = list()
   d.append(np.append(static_sp_vals, static_sp_mean))
   d.append(np.append(grewe_sp_vals, grewe_sp_mean))
   d.append(np.append(deeptune_sp_vals, deeptune_sp_mean))
   d.append(
-      np.append(
-          ncc_devmap.groupby(['Platform'])['Speedup'].mean().values,
-          ncc_devmap['Speedup'].mean()))
+    np.append(
+      ncc_devmap.groupby(["Platform"])["Speedup"].mean().values,
+      ncc_devmap["Speedup"].mean(),
+    )
+  )
   d = np.array(d).T.reshape(3, 4)
   print(
-      pd.DataFrame(d,
-                   columns=[
-                       'Static mapping', 'Grewe et al.', 'DeepTune',
-                       'DeepTuneInst2Vec'
-                   ],
-                   index=['AMD Tahiti 7970', 'NVIDIA GTX 970', 'Average']))
-  app.Log(1, 'done')
+    pd.DataFrame(
+      d,
+      columns=[
+        "Static mapping",
+        "Grewe et al.",
+        "DeepTune",
+        "DeepTuneInst2Vec",
+      ],
+      index=["AMD Tahiti 7970", "NVIDIA GTX 970", "Average"],
+    )
+  )
+  app.Log(1, "done")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

@@ -14,47 +14,51 @@ FLAGS = app.FLAGS
 # TODO(github.com/ChrisCummins/ml4pl/issues/2): Remove this flag once early-exit
 # data flow count is implemented.
 app.DEFINE_boolean(
-    'only_entry_blocks_for_liveness_root_nodes', False,
-    'Use only CFG entry blocks as the root nodes for creating liveness graphs. '
-    'This is a workaround for github.com/ChrisCummins/ml4pl/issues/2')
+  "only_entry_blocks_for_liveness_root_nodes",
+  False,
+  "Use only CFG entry blocks as the root nodes for creating liveness graphs. "
+  "This is a workaround for github.com/ChrisCummins/ml4pl/issues/2",
+)
 
 
 def GetDefsAndSuccessors(g: nx.MultiDiGraph, node: str) -> typing.List[str]:
   defs, successors = [], []
-  for src, dst, flow in g.out_edges(node, data='flow', default='control'):
-    if flow == 'data':
+  for src, dst, flow in g.out_edges(node, data="flow", default="control"):
+    if flow == "data":
       defs.append(dst)
-    elif flow == 'control':
+    elif flow == "control":
       successors.append(dst)
   return defs, successors
 
 
 def GetUsesAndPredecessors(g: nx.MultiDiGraph, node: str) -> typing.List[str]:
   uses, predecessors = [], []
-  for src, dst, flow in g.in_edges(node, data='flow', default='control'):
-    if flow == 'data':
+  for src, dst, flow in g.in_edges(node, data="flow", default="control"):
+    if flow == "data":
       uses.append(src)
-    elif flow == 'control':
+    elif flow == "control":
       predecessors.append(src)
   return uses, predecessors
 
 
 @decorators.timeout(seconds=60)
-def AnnotateLiveness(g: nx.MultiDiGraph,
-                     root_node: str,
-                     x_label: str = 'x',
-                     y_label: str = 'y',
-                     true: typing.Any = True,
-                     false: typing.Any = False) -> typing.Tuple[int, int]:
+def AnnotateLiveness(
+  g: nx.MultiDiGraph,
+  root_node: str,
+  x_label: str = "x",
+  y_label: str = "y",
+  true: typing.Any = True,
+  false: typing.Any = False,
+) -> typing.Tuple[int, int]:
   # Liveness analysis begins at the exit block and works backwards. Since we
   # can't guarantee that input graphs have a single exit point, add a temporary
   # exit block which we will remove after computing liveness results.
   exit_blocks = list(node for node, _ in iterators.ExitBlockIterator(g))
   if not exit_blocks:
     raise ValueError("No exit blocks")
-  g.add_node('__liveness_starting_point__', type='statement')
+  g.add_node("__liveness_starting_point__", type="statement")
   for node in exit_blocks:
-    g.add_edge(node, '__liveness_starting_point__', flow='control')
+    g.add_edge(node, "__liveness_starting_point__", flow="control")
 
   # Ignore the __liveness_start_point__ block when totalling up the data flow
   # steps.
@@ -63,7 +67,7 @@ def AnnotateLiveness(g: nx.MultiDiGraph,
   in_sets = {node: set() for node in g.nodes()}
   out_sets = {node: set() for node in g.nodes()}
 
-  work_list = collections.deque(['__liveness_starting_point__'])
+  work_list = collections.deque(["__liveness_starting_point__"])
   while work_list:
     data_flow_steps += 1
     node = work_list.popleft()
@@ -97,7 +101,7 @@ def AnnotateLiveness(g: nx.MultiDiGraph,
     out_sets[node] = new_out_set
 
   # Remove the temporary singular exit block.
-  g.remove_node('__liveness_starting_point__')
+  g.remove_node("__liveness_starting_point__")
 
   # Now that we've computed the liveness results, annotate the graph.
   for _, data in g.nodes(data=True):
@@ -112,10 +116,7 @@ def AnnotateLiveness(g: nx.MultiDiGraph,
 
 
 def MakeLivenessGraphs(
-    g: nx.MultiDiGraph,
-    n: typing.Optional[int] = None,
-    false=False,
-    true=True,
+  g: nx.MultiDiGraph, n: typing.Optional[int] = None, false=False, true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
   """Produce up to `n` liveness graphs from the given unlabelled graph.
 
@@ -143,6 +144,8 @@ def MakeLivenessGraphs(
 
   for root_node in root_statements[:n]:
     labelled = g.copy()
-    labelled.live_out_count, labelled.data_flow_max_steps_required = (
-        AnnotateLiveness(labelled, root_node, false=false, true=true))
+    (
+      labelled.live_out_count,
+      labelled.data_flow_max_steps_required,
+    ) = AnnotateLiveness(labelled, root_node, false=false, true=true)
     yield labelled

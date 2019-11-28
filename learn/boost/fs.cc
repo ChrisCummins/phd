@@ -29,7 +29,6 @@ namespace fs = boost::filesystem;
 
 namespace file {
 
-
 //
 // My implementation of boost::filesystem::recursive_diretory_iterator.
 //
@@ -49,7 +48,7 @@ class recursive_directory_iterator {
       : _stack({decltype(_stack)::value_type{std::move(root)}}),
         _base(*_stack.top()) {}
 
-  explicit recursive_directory_iterator(const decltype(_stack)& stack)
+  explicit recursive_directory_iterator(const decltype(_stack) & stack)
       : _stack(stack) {}
 
   auto& operator++() {
@@ -69,9 +68,7 @@ class recursive_directory_iterator {
     return *this;
   }
 
-  auto operator*() const {
-    return *_stack.top();
-  }
+  auto operator*() const { return *_stack.top(); }
 
   auto operator==(const recursive_directory_iterator& rhs) const {
     return _stack.top() == rhs._stack.top();
@@ -85,8 +82,6 @@ class recursive_directory_iterator {
     return operator*() < *rhs;
   }
 };
-
-
 
 std::string md5sum(const fs::path& path) {
   auto file_descript = open(path.string().c_str(), O_RDONLY);
@@ -113,16 +108,14 @@ std::string md5sum(const fs::path& path) {
   return os.str();
 }
 
-
 //
 // Walk the files in a filesystem, applying unwary op to each regular
 // file, starting at root.
 //
-template<typename UnaryOp>
+template <typename UnaryOp>
 void walk_files(const fs::path& root, UnaryOp op,
                 const bool follow_symlinks = false) {
-  if (fs::is_symlink(root) && !follow_symlinks)
-    return;
+  if (fs::is_symlink(root) && !follow_symlinks) return;
 
   if (!fs::exists(root)) {
     std::cerr << "warning: " << root << " not found.\n";
@@ -135,9 +128,7 @@ void walk_files(const fs::path& root, UnaryOp op,
     for (const auto& entry : fs::directory_iterator(root))
       // Recurse into directories in a new thread.
       if (fs::is_directory(entry.path())) {
-        std::async(std::launch::async, [&]() {
-            walk_files(entry.path(), op);
-          });
+        std::async(std::launch::async, [&]() { walk_files(entry.path(), op); });
       } else {
         walk_files(entry.path(), op);
       }
@@ -154,11 +145,10 @@ auto get_files_in_dir(const fs::path& root) {
   getcwd(currwd, sizeof(currwd));
 
   // Change to the root directory
-  if (chdir(root.string().c_str()))
-    throw std::runtime_error("chrdir()");
+  if (chdir(root.string().c_str())) throw std::runtime_error("chrdir()");
 
   std::vector<const fs::path> files;
-  file::walk_files(".", [&files](const auto& path){ files.push_back(path); });
+  file::walk_files(".", [&files](const auto& path) { files.push_back(path); });
 
   // Return to working directory;
   chdir(currwd);
@@ -167,10 +157,9 @@ auto get_files_in_dir(const fs::path& root) {
 }
 
 bool files_are_identical(const fs::path& lhs, const fs::path& rhs) {
-  return fs::file_size(lhs) == fs::file_size(rhs)
-      && file::md5sum(lhs) == file::md5sum(rhs);
+  return fs::file_size(lhs) == fs::file_size(rhs) &&
+         file::md5sum(lhs) == file::md5sum(rhs);
 }
-
 
 //
 // Print the differences between the contents of two contents:
@@ -197,7 +186,8 @@ void dir_diff(const fs::path& lhs, const fs::path& rhs) {
         //
         std::cout << "M " << (*left).path() << '\n';
       }
-      ++left; ++right;
+      ++left;
+      ++right;
     } else if (*left < *right) {
       //
       // File only exists on left. Copy left -> right.
@@ -230,7 +220,6 @@ void dir_diff(const fs::path& lhs, const fs::path& rhs) {
   }
 }
 
-
 //
 // Recursively print the md5sum of every file in directory and
 // sub directories, starting at root.
@@ -252,7 +241,6 @@ void print_dir_md5sums(const fs::path& root) {
   file::walk_files(root, op, false);
 }
 
-
 int main(int argc, char** argv) {
   std::cout << "Hello, boost!\n";
 
@@ -261,7 +249,6 @@ int main(int argc, char** argv) {
   } else if (argc == 3) {
     dir_diff(argv[1], argv[2]);
   } else {
-    for (auto i = 1; i < argc; i++)
-      print_dir_md5sums(argv[i]);
+    for (auto i = 1; i < argc; i++) print_dir_md5sums(argv[i]);
   }
 }

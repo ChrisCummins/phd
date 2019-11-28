@@ -26,16 +26,19 @@ from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 app.DEFINE_boolean(
-    'github_scraper_import_repo_active', True,
-    "Specify whether newly created Github repositories are marked as active "
-    "or not.")
+  "github_scraper_import_repo_active",
+  True,
+  "Specify whether newly created Github repositories are marked as active "
+  "or not.",
+)
 
 Base = declarative.declarative_base()
 
 
 class Meta(Base):
   """The meta table."""
-  __tablename__ = 'meta'
+
+  __tablename__ = "meta"
 
   key: str = sql.Column(sql.String(512), primary_key=True)
   value: str = sql.Column(sql.String(1024), nullable=False)
@@ -43,12 +46,14 @@ class Meta(Base):
 
 class GitHubRepository(Base):
   """A GitHub repository record."""
-  __tablename__ = 'repositories'
+
+  __tablename__ = "repositories"
 
   owner: str = sql.Column(sql.String(512), nullable=False)
   name: str = sql.Column(sql.String(512), nullable=False)
-  clone_from_url: str = sql.Column(sqlutil.ColumnTypes.IndexableString(),
-                                   primary_key=True)
+  clone_from_url: str = sql.Column(
+    sqlutil.ColumnTypes.IndexableString(), primary_key=True
+  )
   num_stars: int = sql.Column(sql.Integer, nullable=False)
   num_forks: int = sql.Column(sql.Integer, nullable=False)
   num_watchers: int = sql.Column(sql.Integer, nullable=False)
@@ -62,57 +67,70 @@ class GitHubRepository(Base):
   # A flag to signal that a repo has been processed / exported.
   exported: bool = sql.Column(sql.Boolean, nullable=False, default=False)
 
-  contentfiles: typing.List['ContentFile'] = orm.relationship(
-      'ContentFile', back_populates='repo')
+  contentfiles: typing.List["ContentFile"] = orm.relationship(
+    "ContentFile", back_populates="repo"
+  )
 
   @staticmethod
-  def _GetArgsFromProto(proto: scrape_repos_pb2.GitHubRepoMetadata
-                       ) -> typing.Dict[str, typing.Any]:
+  def _GetArgsFromProto(
+    proto: scrape_repos_pb2.GitHubRepoMetadata,
+  ) -> typing.Dict[str, typing.Any]:
     date_scraped = labdate.DatetimeFromMillisecondsTimestamp(
-        proto.scraped_utc_epoch_ms)
+      proto.scraped_utc_epoch_ms
+    )
     return {
-        "clone_from_url": proto.clone_from_url,
-        "owner": proto.owner,
-        "name": proto.name,
-        "num_stars": proto.num_stars,
-        "num_forks": proto.num_forks,
-        "num_watchers": proto.num_watchers,
-        "date_scraped": date_scraped,
-        "active": FLAGS.github_scraper_import_repo_active,
+      "clone_from_url": proto.clone_from_url,
+      "owner": proto.owner,
+      "name": proto.name,
+      "num_stars": proto.num_stars,
+      "num_forks": proto.num_forks,
+      "num_watchers": proto.num_watchers,
+      "date_scraped": date_scraped,
+      "active": FLAGS.github_scraper_import_repo_active,
     }
 
   @classmethod
-  def FromProto(cls,
-                proto: scrape_repos_pb2.GitHubRepoMetadata) -> \
-      'GitHubRepository':
+  def FromProto(
+    cls, proto: scrape_repos_pb2.GitHubRepoMetadata
+  ) -> "GitHubRepository":
     return cls(**cls._GetArgsFromProto(proto))
 
   @classmethod
   def GetOrAdd(
-      cls, session: orm.session.Session,
-      proto: scrape_repos_pb2.GitHubRepoMetadata) -> 'GitHubRepository':
+    cls,
+    session: orm.session.Session,
+    proto: scrape_repos_pb2.GitHubRepoMetadata,
+  ) -> "GitHubRepository":
     return sqlutil.GetOrAdd(session, cls, **cls._GetArgsFromProto(proto))
 
   @classmethod
-  def IsInDatabase(cls, session: orm.session.Session,
-                   proto: scrape_repos_pb2.GitHubRepoMetadata) -> bool:
+  def IsInDatabase(
+    cls,
+    session: orm.session.Session,
+    proto: scrape_repos_pb2.GitHubRepoMetadata,
+  ) -> bool:
     # TODO(cec): At some point it would be nice to have an expiration date for
     # scraped repos, after which the contents are considered "stale" and the
     # repo is re-scraped. This would require extending the behaviour of
     # ShouldImportRepo() to check the expiry date.
-    instance = session.query(cls.clone_from_url)\
-        .filter(cls.clone_from_url == proto.clone_from_url).first()
+    instance = (
+      session.query(cls.clone_from_url)
+      .filter(cls.clone_from_url == proto.clone_from_url)
+      .first()
+    )
     return True if instance else False
 
 
 class ContentFile(Base):
   """A single content file record."""
-  __tablename__ = 'contentfiles'
+
+  __tablename__ = "contentfiles"
 
   id: int = sql.Column(sql.Integer, primary_key=True)
   clone_from_url: str = sql.Column(
-      sqlutil.ColumnTypes.IndexableString(),
-      sql.ForeignKey('repositories.clone_from_url'))
+    sqlutil.ColumnTypes.IndexableString(),
+    sql.ForeignKey("repositories.clone_from_url"),
+  )
   # Relative path within the repository. This can be a duplicate.
   relpath: str = sql.Column(sql.String(1024), nullable=False)
   # Index into the content file. Use this to differentiate multiple content
@@ -127,34 +145,38 @@ class ContentFile(Base):
   sha256: str = sql.Column(sql.String(64), nullable=False)
   charcount = sql.Column(sql.Integer, nullable=False)
   linecount = sql.Column(sql.Integer, nullable=False)
-  text: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                         nullable=False)
-  date_added: datetime.datetime = sql.Column(sql.DateTime,
-                                             nullable=False,
-                                             default=datetime.datetime.utcnow)
-  __table_args__ = (sql.UniqueConstraint('clone_from_url',
-                                         'relpath',
-                                         'artifact_index',
-                                         name='uniq_contentfile'),)
+  text: str = sql.Column(
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
+  date_added: datetime.datetime = sql.Column(
+    sql.DateTime, nullable=False, default=datetime.datetime.utcnow
+  )
+  __table_args__ = (
+    sql.UniqueConstraint(
+      "clone_from_url", "relpath", "artifact_index", name="uniq_contentfile"
+    ),
+  )
 
-  repo: GitHubRepository = orm.relationship('GitHubRepository',
-                                            back_populates='contentfiles')
+  repo: GitHubRepository = orm.relationship(
+    "GitHubRepository", back_populates="contentfiles"
+  )
 
   @staticmethod
   def _GetArgsFromProto(
-      proto: scrape_repos_pb2.ContentFile) -> typing.Dict[str, typing.Any]:
+    proto: scrape_repos_pb2.ContentFile,
+  ) -> typing.Dict[str, typing.Any]:
     return {
-        "clone_from_url": proto.clone_from_url,
-        "relpath": proto.relpath,
-        'artifact_index': proto.artifact_index,
-        'sha256': proto.sha256,
-        'charcount': proto.charcount,
-        'linecount': proto.linecount,
-        'text': proto.text
+      "clone_from_url": proto.clone_from_url,
+      "relpath": proto.relpath,
+      "artifact_index": proto.artifact_index,
+      "sha256": proto.sha256,
+      "charcount": proto.charcount,
+      "linecount": proto.linecount,
+      "text": proto.text,
     }
 
   @classmethod
-  def FromProto(cls, proto: scrape_repos_pb2.ContentFile) -> 'ContentFile':
+  def FromProto(cls, proto: scrape_repos_pb2.ContentFile) -> "ContentFile":
     """Instantiate a record from a proto buffer.
 
     Args:
@@ -165,8 +187,9 @@ class ContentFile(Base):
     """
     return cls(**cls._GetArgsFromProto(proto))
 
-  def SetProto(self, proto: scrape_repos_pb2.ContentFile
-              ) -> scrape_repos_pb2.ContentFile:
+  def SetProto(
+    self, proto: scrape_repos_pb2.ContentFile
+  ) -> scrape_repos_pb2.ContentFile:
     """Set fields of a protocol buffer representation.
 
     Returns:

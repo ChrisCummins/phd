@@ -1,5 +1,4 @@
 #!/usr/bin/env python3.6
-
 import datetime
 import json
 import re
@@ -23,25 +22,25 @@ auth = requests.auth.HTTPBasicAuth(config["auth"], "api_token")
 
 
 class Colors:
-  PURPLE = '\033[95m'
-  CYAN = '\033[96m'
-  DARKCYAN = '\033[36m'
-  BLUE = '\033[94m'
-  GREEN = '\033[92m'
-  YELLOW = '\033[93m'
-  RED = '\033[91m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
-  END = '\033[0m'
+  PURPLE = "\033[95m"
+  CYAN = "\033[96m"
+  DARKCYAN = "\033[36m"
+  BLUE = "\033[94m"
+  GREEN = "\033[92m"
+  YELLOW = "\033[93m"
+  RED = "\033[91m"
+  BOLD = "\033[1m"
+  UNDERLINE = "\033[4m"
+  END = "\033[0m"
 
 
 class _getch_unix:
-
   def __init__(self):
     pass
 
   def __call__(self):
     import sys, tty, termios
+
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -53,17 +52,16 @@ class _getch_unix:
 
 
 class _getch_windows:
-
   def __init__(self):
     pass
 
   def __call__(self):
     import msvcrt
+
     return msvcrt.getch()
 
 
 class getch:
-
   def __init__(self):
     try:
       self.impl = _getch_windows()
@@ -74,8 +72,9 @@ class getch:
     return self.impl()
 
 
-def assert_or_fail(condition: bool, error_msg: str = "",
-                   returncode: int = 1) -> None:
+def assert_or_fail(
+  condition: bool, error_msg: str = "", returncode: int = 1
+) -> None:
   if not condition:
     msg = f"fatal: {error_msg}" if len(error_msg) else "fatal error!"
     print(msg, file=sys.stderr)
@@ -128,7 +127,7 @@ def prompt_for_choice(choices: List[chr], default=None) -> chr:
   get_char = getch()
   while True:
     char = str(get_char()).lower()
-    if char == '\x03':
+    if char == "\x03":
       raise KeyboardInterrupt
     if char in choices:
       return char
@@ -146,16 +145,13 @@ def stop_timer() -> None:
 def start_timer(pid: int, tags: List[str]) -> None:
   stop_timer()
   payload = {
-      "time_entry": {
-          "pid": pid,
-          "created_with": "Command Line",
-          "tags": tags,
-      }
+    "time_entry": {"pid": pid, "created_with": "Command Line", "tags": tags,}
   }
   POST(
-      "https://www.toggl.com/api/v8/time_entries/start",
-      headers={"Content-Type": "application/json"},
-      data=json.dumps(payload))
+    "https://www.toggl.com/api/v8/time_entries/start",
+    headers={"Content-Type": "application/json"},
+    data=json.dumps(payload),
+  )
 
 
 def prompt_for_project():
@@ -181,15 +177,16 @@ def prompt_for_project():
     project_name = input("Name new project: ").strip()
 
     project = {
-        "name": project_name,
-        "wid": config["workspace"],
-        "is_private": False,
+      "name": project_name,
+      "wid": config["workspace"],
+      "is_private": False,
     }
 
     r = POST(
-        "https://www.toggl.com/api/v8/projects",
-        headers={"Content-Type": "application/json"},
-        data=json.dumps({"project": project}))
+      "https://www.toggl.com/api/v8/projects",
+      headers={"Content-Type": "application/json"},
+      data=json.dumps({"project": project}),
+    )
     pid = r.json()["data"]["id"]
   else:
     project_name = choices[choice_index]
@@ -240,8 +237,8 @@ def tui():
   choices = []
   if timer != "🚫 No Timer":
     choices += [
-        (f"[{Colors.BOLD}S{Colors.END}]top timer", "s"),
-        (f"[{Colors.BOLD}D{Colors.END}]elete timer", "d"),
+      (f"[{Colors.BOLD}S{Colors.END}]top timer", "s"),
+      (f"[{Colors.BOLD}D{Colors.END}]elete timer", "d"),
     ]
   choices.append((f"[{Colors.BOLD}N{Colors.END}]ew timer", "n"))
 

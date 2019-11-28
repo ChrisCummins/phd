@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <vector>
 
-template<typename T, size_t stack_size = 2>
+template <typename T, size_t stack_size = 2>
 class SetOfStacks {
  public:
   using stack_type = std::stack<T>;
@@ -33,32 +33,28 @@ class SetOfStacks {
 
   SetOfStacks(std::initializer_list<T> il) : SetOfStacks() {
     auto it = il.begin();
-    while (it != il.end())
-      push(*it++);
+    while (it != il.end()) push(*it++);
   }
 
   void push(const T& val) {
     auto& stack = _stacks.back();
     stack.push(val);
 
-    if (stack.size() == stack_size)
-      _stacks.emplace_back();
+    if (stack.size() == stack_size) _stacks.emplace_back();
   }
 
   void push(T&& val) {
     auto& stack = _stacks.back();
     stack.push(std::move(val));
 
-    if (stack.size() == stack_size)
-      _stacks.emplace_back();
+    if (stack.size() == stack_size) _stacks.emplace_back();
   }
 
   T pop() {
     while (_stacks.back().empty() && !_stacks.empty())
       _stacks.erase(_stacks.end() - 1);
 
-    if (_stacks.empty())
-      _stacks.push_back(stack_type{});
+    if (_stacks.empty()) _stacks.push_back(stack_type{});
 
     return popAt(static_cast<int>(_stacks.size() - 1u));
   }
@@ -82,16 +78,15 @@ class SetOfStacks {
   }
 
   size_t size() const {
-    return std::accumulate(_stacks.begin(), _stacks.end(), size_t{0},
-                           [](auto acc, const auto& stack)
-                           { return acc + stack.size(); });
+    return std::accumulate(
+        _stacks.begin(), _stacks.end(), size_t{0},
+        [](auto acc, const auto& stack) { return acc + stack.size(); });
   }
 
   friend std::ostream& operator<<(std::ostream& out, const SetOfStacks& s) {
     for (auto& stack : s._stacks) {
       out << "stack(" << stack.size() << ") ";
-      if (!stack.empty())
-        out << "top = " << stack.top();
+      if (!stack.empty()) out << "top = " << stack.top();
       out << std::endl;
     }
     return out;
@@ -100,7 +95,6 @@ class SetOfStacks {
  private:
   stacks_list _stacks;
 };
-
 
 ///////////
 // Tests //

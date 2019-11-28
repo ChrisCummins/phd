@@ -13,63 +13,56 @@ FLAGS = app.FLAGS
 
 def CreateDataFrame() -> pd.DataFrame:
   """Create a test dataframe."""
-  return pd.DataFrame([
-      ("foo", 1),
-      ("bar", 2),
-      ("car", 3),
-  ],
-                      columns=['label', 'num'])
+  return pd.DataFrame(
+    [("foo", 1), ("bar", 2), ("car", 3),], columns=["label", "num"]
+  )
 
 
 def CreateTableHtml(df: pd.DataFrame, max_rows: int = 10):
   """Create HTML element for a table."""
   return html.Table(
-      # Header
-      [html.Tr([html.Th(col) for col in df.columns])] +
-
-      # Body
-      [
-          html.Tr([html.Td(df.iloc[i][col])
-                   for col in df.columns])
-          for i in range(min(len(df), max_rows))
-      ])
+    # Header
+    [html.Tr([html.Th(col) for col in df.columns])]
+    +
+    # Body
+    [
+      html.Tr([html.Td(df.iloc[i][col]) for col in df.columns])
+      for i in range(min(len(df), max_rows))
+    ]
+  )
 
 
 def CreateApp() -> dash.Dash:
   """Create dash app."""
   dash_app = dash.Dash(__name__)
 
-  dash_app.layout = html.Div(children=[
+  dash_app.layout = html.Div(
+    children=[
       html.H1(children="Hello World"),
-      html.Div(children=[
-          dcc.Markdown(children="""
+      html.Div(
+        children=[
+          dcc.Markdown(
+            children="""
 ## Markdown Section.
 
 Rendered markdown.
-""")
-      ]),
+"""
+          )
+        ]
+      ),
       CreateTableHtml(CreateDataFrame()),
-      dcc.Graph(id="example-graph",
-                figure={
-                    "data": [
-                        {
-                            "x": [1, 2, 3],
-                            "y": [4, 1, 2],
-                            "type": "bar",
-                            "name": "SF"
-                        },
-                        {
-                            "x": [1, 2, 3],
-                            "y": [2, 4, 5],
-                            "type": "bar",
-                            "name": "Montréal"
-                        },
-                    ],
-                    "layout": {
-                        "title": "My Graph"
-                    }
-                })
-  ])
+      dcc.Graph(
+        id="example-graph",
+        figure={
+          "data": [
+            {"x": [1, 2, 3], "y": [4, 1, 2], "type": "bar", "name": "SF"},
+            {"x": [1, 2, 3], "y": [2, 4, 5], "type": "bar", "name": "Montréal"},
+          ],
+          "layout": {"title": "My Graph"},
+        },
+      ),
+    ]
+  )
   return dash_app
 
 

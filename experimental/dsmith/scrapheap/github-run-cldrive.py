@@ -2,29 +2,22 @@
 # import clgen
 # import progressbar
 # import re
-
 # from argparse import ArgumentParser
 # from collections import namedtuple
 # from labm8 import fs
 # from subprocess import Popen, PIPE
 # from time import time
 # from typing import Dict, List, Tuple, NewType
-
 # import dsmith
 # from dsmith import cldrive
-
 # from dsmith import db
 # from dsmith.db import *
 # from dsmith.lib import *
-
 # status_t = NewType('status_t', int)
 # return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
-
-
 # def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
 #     """ invoke cldrive on source """
 #     start_time = time()
-
 #     try:
 #         src = clgen.compiler_preprocess_cl(program.src)
 #         process = Popen(cli, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -34,20 +27,15 @@
 #         status = 1024
 #         stdout = "".encode('utf-8')
 #         stderr = str(e).encode('utf-8')
-
 #     runtime = time() - start_time
-
 #     return return_t(
 #         runtime=runtime, status=status_t(status),
 #         stdout=stdout, stderr=stderr.decode('utf-8'))
-
-
 # def verify_params(platform: str, device: str, optimizations: bool,
 #                   global_size: tuple, local_size: tuple,
 #                   stderr: str) -> None:
 #     """ verify that expected params match actual as reported by cldrive """
 #     optimizations = "on" if optimizations else "off"
-
 #     actual_platform = None
 #     actual_device = None
 #     actual_optimizations = None
@@ -60,17 +48,14 @@
 #             actual_device_name = re.sub(r"^\[cldrive\] Device: ", "", line).rstrip()
 #         elif line.startswith("[cldrive] OpenCL optimizations: "):
 #             actual_optimizations = re.sub(r"^\[cldrive\] OpenCL optimizations: ", "", line).rstrip()
-
 #         # global size
 #         match = re.match('^\[cldrive\] 3-D global size \d+ = \[(\d+), (\d+), (\d+)\]', line)
 #         if match:
 #             actual_global_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-
 #         # local size
 #         match = re.match('^\[cldrive\] 3-D local size \d+ = \[(\d+), (\d+), (\d+)\]', line)
 #         if match:
 #             actual_local_size = (int(match.group(1)), int(match.group(2)), int(match.group(3)))
-
 #         # check if we've collected everything:
 #         if (actual_platform and actual_device and actual_optimizations and
 #             actual_global_size and actual_local_size):
@@ -80,8 +65,6 @@
 #             assert(actual_global_size == global_size)
 #             assert(actual_local_size == local_size)
 #             return
-
-
 # def get_num_progs_to_run(session: db.session_t,
 #                          testbed: Testbed, params: cldriveParams):
 #     subquery = session.query(GitHubResult.program_id).filter(
@@ -91,8 +74,6 @@
 #         GitHubResult.testbed == testbed)
 #     total = session.query(GitHubProgram.id).count()
 #     return num_ran, total
-
-
 # if __name__ == "__main__":
 #     parser = ArgumentParser()
 #     parser.add_argument(
@@ -121,15 +102,11 @@
 #         "-l", "--lsize", type=str, default="32,1,1",
 #         help="Comma separated global sizes (default: 32,1,1)")
 #     args = parser.parse_args()
-
 #     gsize = cldrive.NDRange.from_str(args.gsize)
 #     lsize = cldrive.NDRange.from_str(args.lsize)
-
 #     db.init(args.hostname)  # initialize db engine
-
 #     with Session(commit=False) as session:
 #         testbed = get_testbed(session, args.platform, args.device)
-
 #         params = db.get_or_create(
 #             session, cldriveParams, size=args.size, generator=args.generator,
 #             scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
@@ -137,14 +114,11 @@
 #             optimizations=not args.no_opts)
 #         flags = params.to_flags()
 #         cli = cldrive_cli(args.platform, args.device, *flags)
-
 #         print(testbed)
 #         print(" ".join(cli))
-
 #         # progress bar
 #         num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
 #         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
-
 #         # main execution loop:
 #         while True:
 #             # get the next program to run
@@ -152,32 +126,25 @@
 #                 GitHubResult.testbed == testbed, GitHubResult.params == params)
 #             program = session.query(GitHubProgram).filter(
 #                 ~GitHubProgram.id.in_(subquery)).order_by(GitHubProgram.id).first()
-
 #             # we have no program to run
 #             if not program:
 #                 break
-
 #             runtime, status, stdout, stderr = drive(cli, program.src)
-
 #             # assert that executed params match expected
 #             verify_params(platform=args.platform, device=args.device,
 #                           optimizations=params.optimizations,
 #                           global_size=params.gsize, local_size=params.lsize,
 #                           stderr=stderr)
-
 #             # create new result
 #             result = GitHubResult(
 #                 program=program, params=params, testbed=testbed,
 #                 cli=" ".join(cli), status=status, runtime=runtime,
 #                 stdout=stdout, stderr=stderr)
-
 #             # record result
 #             session.add(result)
 #             session.commit()
-
 #             # update progress bar
 #             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
 #             bar.max_value = num_to_run
 #             bar.update(min(num_ran, num_to_run))
-
 #     print("done.")

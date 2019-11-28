@@ -1,7 +1,7 @@
 #include "./benchmarks.h"
 
-#include <vector>
 #include <ustl/vector>
+#include <vector>
 
 static unsigned int seed = 0xCEC;
 

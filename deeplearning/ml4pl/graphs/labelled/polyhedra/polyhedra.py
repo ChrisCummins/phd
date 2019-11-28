@@ -7,7 +7,9 @@ import pydot
 
 from compilers.llvm import opt
 from compilers.llvm import opt_util
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import control_and_data_flow_graph as cdfg
+from deeplearning.ml4pl.graphs.unlabelled.cdfg import (
+  control_and_data_flow_graph as cdfg,
+)
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from labm8.py import app
 from labm8.py import decorators
@@ -15,9 +17,11 @@ from labm8.py import decorators
 FLAGS = app.FLAGS
 
 
-def RecursePydot(subgraph: pydot.Dot,
-                 func: typing.Callable[[pydot.Dot, typing.Any], None],
-                 state: typing.Any):
+def RecursePydot(
+  subgraph: pydot.Dot,
+  func: typing.Callable[[pydot.Dot, typing.Any], None],
+  state: typing.Any,
+):
   func(subgraph, state)
   for ss in subgraph.get_subgraphs():
     RecursePydot(ss, func, state)
@@ -28,7 +32,7 @@ def SubNodes(subgraph: pydot.Dot, nodes: typing.List[typing.Any]):
 
 
 def GetSubgraph(subgraph: pydot.Dot, state: typing.Dict[pydot.Dot, typing.Any]):
-  if subgraph.get('style') == 'filled':
+  if subgraph.get("style") == "filled":
     nodes = []
     RecursePydot(subgraph, SubNodes, nodes)
     state[subgraph] = nodes
@@ -46,22 +50,27 @@ class PolyhedralRegionAnnotator(llvm_util.TagHook):
 
   def OnNode(self, node: pydot.Node) -> typing.Dict[str, typing.Any]:
     for region in self.regions.values():
-      if node.get_name() in [str(r)[:-1] for r in region
-                            ]:  # Need to cut off semicolon
-        return {'polyhedral': True}
+      if node.get_name() in [
+        str(r)[:-1] for r in region
+      ]:  # Need to cut off semicolon
+        return {"polyhedral": True}
 
-    return {'polyhedral': False}
+    return {"polyhedral": False}
 
-  def OnInstruction(self, node_attrs: typing.Dict[str, typing.Any],
-                    instruction: str) -> typing.Dict[str, typing.Any]:
-    return {'polyhedral': node_attrs.get('polyhedral', False)}
+  def OnInstruction(
+    self, node_attrs: typing.Dict[str, typing.Any], instruction: str
+  ) -> typing.Dict[str, typing.Any]:
+    return {"polyhedral": node_attrs.get("polyhedral", False)}
 
-  def OnIdentifier(self, stmt_node: typing.Dict[str, typing.Any],
-                   identifier_node: typing.Dict[str, typing.Any],
-                   definition_type: str) -> typing.Dict[str, typing.Any]:
-    if definition_type == 'def':
-      if 'polyhedral' in stmt_node:
-        return {'polyhedral': stmt_node['polyhedral']}
+  def OnIdentifier(
+    self,
+    stmt_node: typing.Dict[str, typing.Any],
+    identifier_node: typing.Dict[str, typing.Any],
+    definition_type: str,
+  ) -> typing.Dict[str, typing.Any]:
+    if definition_type == "def":
+      if "polyhedral" in stmt_node:
+        return {"polyhedral": stmt_node["polyhedral"]}
 
     # TODO(talbn): Perhaps no need for definition_type == 'use' (may come from outside region)
 
@@ -70,11 +79,13 @@ class PolyhedralRegionAnnotator(llvm_util.TagHook):
 
 @decorators.timeout(seconds=60)
 def BytecodeToPollyCanonicalized(source: str) -> str:
-  process = opt.Exec(['-polly-canonicalize', '-S', '-', '-o', '-'],
-                     stdin=source)
+  process = opt.Exec(
+    ["-polly-canonicalize", "-S", "-", "-o", "-"], stdin=source
+  )
   if process.returncode:
     raise opt.OptException(
-        'Error in canonicalization opt execution (%d)' % process.returncode)
+      "Error in canonicalization opt execution (%d)" % process.returncode
+    )
   return process.stdout
 
 
@@ -85,12 +96,14 @@ def CreateCDFG(bytecode: str) -> nx.MultiDiGraph:
 
 
 @decorators.timeout(seconds=60)
-def AnnotatePolyhedra(g: nx.MultiDiGraph,
-                      annotated_cdfgs: typing.List[nx.MultiDiGraph],
-                      x_label: str = 'x',
-                      y_label: str = 'y',
-                      false=False,
-                      true=True) -> None:
+def AnnotatePolyhedra(
+  g: nx.MultiDiGraph,
+  annotated_cdfgs: typing.List[nx.MultiDiGraph],
+  x_label: str = "x",
+  y_label: str = "y",
+  false=False,
+  true=True,
+) -> None:
   """
 
   Args:
@@ -115,7 +128,7 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
   for cdfg in annotated_cdfgs:
     # Mark the nodes in the polyhedral regions
     for node, ndata in cdfg.nodes(data=True):
-      if not ndata.get('polyhedral'):
+      if not ndata.get("polyhedral"):
         continue
 
       entities += 1
@@ -125,16 +138,16 @@ def AnnotatePolyhedra(g: nx.MultiDiGraph,
       g.nodes[node][y_label] = true
 
   if mismatched_entities > 0:
-    app.Warning('%d (%f%%) mismatched entities in code', mismatched_entities,
-                mismatched_entities / entities * 100)
+    app.Warning(
+      "%d (%f%%) mismatched entities in code",
+      mismatched_entities,
+      mismatched_entities / entities * 100,
+    )
 
 
 @decorators.timeout(seconds=120)
 def MakePolyhedralGraphs(
-    bytecode: str,
-    n: typing.Optional[int] = None,
-    false=False,
-    true=True,
+  bytecode: str, n: typing.Optional[int] = None, false=False, true=True,
 ) -> typing.Iterable[nx.MultiDiGraph]:
   """Create an annotated graph from a bytecode that potentially contains
      polyhedral loops.
@@ -166,10 +179,16 @@ def MakePolyhedralGraphs(
   g = CreateCDFG(bytecode)
 
   # Build the polyhedral building blocks
-  scop_graphs, _ = opt_util.DotGraphsFromBytecode(bytecode, [
-      '-O1', '-polly-process-unprofitable', '-polly-optimized-scops',
-      '-polly-dot', '-polly-optimizer=none'
-  ])
+  scop_graphs, _ = opt_util.DotGraphsFromBytecode(
+    bytecode,
+    [
+      "-O1",
+      "-polly-process-unprofitable",
+      "-polly-optimized-scops",
+      "-polly-dot",
+      "-polly-optimizer=none",
+    ],
+  )
 
   # Loop over each function
   max_steps = 0
@@ -181,8 +200,11 @@ def MakePolyhedralGraphs(
     builder = cdfg.ControlAndDataFlowGraphBuilder()
     annotated_cdfg = builder.BuildFromControlFlowGraph(cfg)
 
-    steps = sum(1 for nid, node in annotated_cdfg.nodes(data=True)
-                if node.get('polyhedral'))
+    steps = sum(
+      1
+      for nid, node in annotated_cdfg.nodes(data=True)
+      if node.get("polyhedral")
+    )
     max_steps = max(max_steps, steps)
     cdfgs.append(annotated_cdfg)
 

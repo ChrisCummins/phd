@@ -179,28 +179,29 @@ digraph "CFG for 'DoSomething' function" {
 
 def test_DotCallGraphAndControlFlowGraphs_simple_c_program():
   cg, cfgs = opt_util.DotCallGraphAndControlFlowGraphsFromBytecode(
-      SIMPLE_C_BYTECODE)
+    SIMPLE_C_BYTECODE
+  )
   assert len(cfgs) == 2
   assert cg
-  assert 'Call graph' in cg
-  assert "CFG for 'DoSomething' function" in '\n'.join(cfgs)
-  assert "CFG for 'main' function" in '\n'.join(cfgs)
+  assert "Call graph" in cg
+  assert "CFG for 'DoSomething' function" in "\n".join(cfgs)
+  assert "CFG for 'main' function" in "\n".join(cfgs)
 
 
 def test_DotCallGraphFromBytecode_simple_c_program():
   """Test that simple C program produces two Dot CFGs."""
   dot_cfgs = list(opt_util.DotControlFlowGraphsFromBytecode(SIMPLE_C_BYTECODE))
   assert len(dot_cfgs) == 2
-  assert "CFG for 'DoSomething' function" in '\n'.join(dot_cfgs)
-  assert "CFG for 'main' function" in '\n'.join(dot_cfgs)
+  assert "CFG for 'DoSomething' function" in "\n".join(dot_cfgs)
+  assert "CFG for 'main' function" in "\n".join(dot_cfgs)
 
 
 def test_DotControlFlowGraphsFromBytecode_simple_c_program():
   """Test that simple C program produces two Dot CFGs."""
   dot_cfgs = list(opt_util.DotControlFlowGraphsFromBytecode(SIMPLE_C_BYTECODE))
   assert len(dot_cfgs) == 2
-  assert "CFG for 'DoSomething' function" in '\n'.join(dot_cfgs)
-  assert "CFG for 'main' function" in '\n'.join(dot_cfgs)
+  assert "CFG for 'DoSomething' function" in "\n".join(dot_cfgs)
+  assert "CFG for 'main' function" in "\n".join(dot_cfgs)
 
 
 def test_DotControlFlowGraphsFromBytecode_invalid_bytecode():
@@ -211,7 +212,7 @@ def test_DotControlFlowGraphsFromBytecode_invalid_bytecode():
   assert e_ctx.value.stderr
 
 
-@pytest.mark.parametrize('cflags', [['-O0'], ['-O1'], ['-O2'], ['-O3']])
+@pytest.mark.parametrize("cflags", [["-O0"], ["-O1"], ["-O2"], ["-O3"]])
 def test_GetOptArgs_black_box(cflags: typing.List[str]):
   """Black box opt args test."""
   args = opt_util.GetOptArgs(cflags)
@@ -223,22 +224,23 @@ def test_GetOptArgs_black_box(cflags: typing.List[str]):
 def test_GetOptArgs_bad_args():
   """Error is raised if invalid args are passed."""
   with pytest.raises(llvm.LlvmError):
-    opt_util.GetOptArgs(['-not-a-real-arg!'])
+    opt_util.GetOptArgs(["-not-a-real-arg!"])
 
 
 def test_GetAliasSetsByFunction_no_alias_sets():
   """Sample bytecode contains no alias sets."""
   alias_sets = opt_util.GetAliasSetsByFunction(SIMPLE_C_BYTECODE)
-  assert 'DoSomething' in alias_sets
-  assert 'main' in alias_sets
+  assert "DoSomething" in alias_sets
+  assert "main" in alias_sets
   assert len(alias_sets) == 2
-  assert alias_sets['DoSomething'] == []
-  assert alias_sets['main'] == []
+  assert alias_sets["DoSomething"] == []
+  assert alias_sets["main"] == []
 
 
 def test_GetAliasSetsByFunction_aliases():
   """Sample bytecode that contains alias sets."""
-  alias_sets = opt_util.GetAliasSetsByFunction("""
+  alias_sets = opt_util.GetAliasSetsByFunction(
+    """
 %struct.foo = type { i32 }
 
 define i32 @A() #0 {
@@ -288,58 +290,64 @@ define i32 @A() #0 {
   %29 = load i32, i32* %1, align 4
   ret i32 %29
 }
-""")
-  assert 'A' in alias_sets
+"""
+  )
+  assert "A" in alias_sets
   assert len(alias_sets) == 1
-  assert alias_sets['A'] == [
-      opt_util.AliasSet(
-          type='must alias',
-          mod_ref='Mod/Ref',
-          pointers=[opt_util.Pointer(type='i32*', identifier='%2', size=4)]),
-      opt_util.AliasSet(type='may alias',
-                        mod_ref='Ref',
-                        pointers=[
-                            opt_util.Pointer(type='i8*',
-                                             identifier='%15',
-                                             size=1),
-                            opt_util.Pointer(type='(i8*',
-                                             identifier='%21',
-                                             size=1)
-                        ]),
-      opt_util.AliasSet(
-          type='must alias',
-          mod_ref='Mod',
-          pointers=[opt_util.Pointer(type='i8*', identifier='%17', size=1)]),
-      opt_util.AliasSet(
-          type='must alias',
-          mod_ref='Mod',
-          pointers=[opt_util.Pointer(type='i8*', identifier='%23', size=1)]),
-      opt_util.AliasSet(
-          type='must alias',
-          mod_ref='Mod',
-          pointers=[opt_util.Pointer(type='i32**', identifier='%6', size=8)]),
-      opt_util.AliasSet(type='must alias',
-                        mod_ref='Mod',
-                        pointers=[
-                            opt_util.Pointer(type='%struct.foo**',
-                                             identifier='%7',
-                                             size=8)
-                        ]),
-      opt_util.AliasSet(
-          type='must alias',
-          mod_ref='Mod',
-          pointers=[opt_util.Pointer(type='i32**', identifier='%8', size=8)]),
-      opt_util.AliasSet(
-          type='must alias',
-          mod_ref='Ref',
-          pointers=[opt_util.Pointer(type='i32*', identifier='%1', size=4)])
+  assert alias_sets["A"] == [
+    opt_util.AliasSet(
+      type="must alias",
+      mod_ref="Mod/Ref",
+      pointers=[opt_util.Pointer(type="i32*", identifier="%2", size=4)],
+    ),
+    opt_util.AliasSet(
+      type="may alias",
+      mod_ref="Ref",
+      pointers=[
+        opt_util.Pointer(type="i8*", identifier="%15", size=1),
+        opt_util.Pointer(type="(i8*", identifier="%21", size=1),
+      ],
+    ),
+    opt_util.AliasSet(
+      type="must alias",
+      mod_ref="Mod",
+      pointers=[opt_util.Pointer(type="i8*", identifier="%17", size=1)],
+    ),
+    opt_util.AliasSet(
+      type="must alias",
+      mod_ref="Mod",
+      pointers=[opt_util.Pointer(type="i8*", identifier="%23", size=1)],
+    ),
+    opt_util.AliasSet(
+      type="must alias",
+      mod_ref="Mod",
+      pointers=[opt_util.Pointer(type="i32**", identifier="%6", size=8)],
+    ),
+    opt_util.AliasSet(
+      type="must alias",
+      mod_ref="Mod",
+      pointers=[
+        opt_util.Pointer(type="%struct.foo**", identifier="%7", size=8)
+      ],
+    ),
+    opt_util.AliasSet(
+      type="must alias",
+      mod_ref="Mod",
+      pointers=[opt_util.Pointer(type="i32**", identifier="%8", size=8)],
+    ),
+    opt_util.AliasSet(
+      type="must alias",
+      mod_ref="Ref",
+      pointers=[opt_util.Pointer(type="i32*", identifier="%1", size=4)],
+    ),
   ]
 
 
-@pytest.mark.xfail(reason='opt exception')
+@pytest.mark.xfail(reason="opt exception")
 def test_GetAliasSetsByFunction_regression_test_1():
   """Regression test for bytecode which trips up pointer set size."""
-  alias_sets = opt_util.GetAliasSetsByFunction("""
+  alias_sets = opt_util.GetAliasSetsByFunction(
+    """
 ; ModuleID = '/scratch/talbn/classifyapp_code/train//71/149.txt.cpp'
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
@@ -509,14 +517,15 @@ attributes #3 = { nounwind uwtable "disable-tail-calls"="false" "less-precise-fp
 !2 = !{!"int", !3, i64 0}
 !3 = !{!"omnipotent char", !4, i64 0}
 !4 = !{!"Simple C/C++ TBAA"}
-  """)
+  """
+  )
   assert len(alias_sets) == 1
 
 
 def test_RunAnalysisPasses():
   analyses = list(
-      opt_util.RunAnalysisPasses(
-          """
+    opt_util.RunAnalysisPasses(
+      """
 %struct.foo = type { i32 }
 
 define i32 @A() #0 {
@@ -566,17 +575,20 @@ define i32 @A() #0 {
   %29 = load i32, i32* %1, align 4
   ret i32 %29
 }
-""", ['-instcount', '-iv-users', '-loops']))
+""",
+      ["-instcount", "-iv-users", "-loops"],
+    )
+  )
   analyses = sorted(analyses, key=lambda a: (a.analysis, a.function))
 
   assert len(analyses) == 2
 
-  assert analyses[0].analysis == 'Counts the various types of Instructions'
-  assert analyses[0].function == 'A'
+  assert analyses[0].analysis == "Counts the various types of Instructions"
+  assert analyses[0].function == "A"
 
-  assert analyses[1].analysis == 'Induction Variable Users'
+  assert analyses[1].analysis == "Induction Variable Users"
   assert analyses[1].lines
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -22,13 +22,16 @@ Base = declarative.declarative_base()
 
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   """Key-value database metadata store."""
+
   key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(sqlutil.ColumnTypes.UnboundedUnicodeText(),
-                          nullable=False)
+  value: str = sql.Column(
+    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  )
 
 
 class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A description running a batch of graphs through a model."""
+
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run. An experiment run
@@ -74,14 +77,14 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   f1: float = sql.Column(sql.Float, nullable=False)
 
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False,
-      default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
+    nullable=False,
+    default=labdate.GetUtcMillisecondsNow,
+  )
 
-  batch_log: 'BatchLog' = sql.orm.relationship('BatchLog',
-                                               uselist=False,
-                                               cascade="all",
-                                               back_populates="meta")
+  batch_log: "BatchLog" = sql.orm.relationship(
+    "BatchLog", uselist=False, cascade="all", back_populates="meta"
+  )
 
   # Convenience properties to access data in the joined 'BatchLog' table. If
   # accessing many of these properties, consider using
@@ -98,14 +101,16 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @property
   def accuracies(self) -> typing.Any:
     # Accuracies are stored with zlib compression.
-    return pickle.loads(codecs.decode(self.batch_log.pickled_accuracies,
-                                      'zlib'))
+    return pickle.loads(
+      codecs.decode(self.batch_log.pickled_accuracies, "zlib")
+    )
 
   @accuracies.setter
   def accuracies(self, data) -> None:
     # Accuracies are stored with zlib compression.
-    self.batch_log.pickled_accuracies = codecs.encode(pickle.dumps(data),
-                                                      'zlib')
+    self.batch_log.pickled_accuracies = codecs.encode(
+      pickle.dumps(data), "zlib"
+    )
 
   @property
   def predictions(self) -> typing.Any:
@@ -131,16 +136,17 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   def __repr__(self) -> str:
     return (
-        f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type} batch: "
-        f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
-        f"loss={self.loss:.4f} | "
-        f"acc={self.accuracy:.4%} | "
-        f"pr={self.precision:.4f} | "
-        f"rec={self.recall:.4f}")
+      f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type} batch: "
+      f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
+      f"loss={self.loss:.4f} | "
+      f"acc={self.accuracy:.4%} | "
+      f"pr={self.precision:.4f} | "
+      f"rec={self.recall:.4f}"
+    )
 
-  __table_args__ = (sql.UniqueConstraint('run_id',
-                                         'global_step',
-                                         name='unique_global_step'),)
+  __table_args__ = (
+    sql.UniqueConstraint("run_id", "global_step", name="unique_global_step"),
+  )
 
 
 class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -148,34 +154,40 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   In practise, this table will grow large.
   """
-  id: int = sql.Column(sql.Integer,
-                       sql.ForeignKey('batch_log_metas.id'),
-                       primary_key=True)
+
+  id: int = sql.Column(
+    sql.Integer, sql.ForeignKey("batch_log_metas.id"), primary_key=True
+  )
 
   # A pickled array of GraphMeta.id values.
-  pickled_graph_indices: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                            nullable=False)
+  pickled_graph_indices: bytes = sql.Column(
+    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+  )
 
   # A pickled array of accuracies, of shape
   # [num_instances * num_targets_per_instance]. The number of targets per
   # instance will depend on the type of classification problem. For graph-level
   # classification, there is one target per instance. For node-level
   # classification, there are num_nodes targets for each graph.
-  pickled_accuracies: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                         nullable=False)
+  pickled_accuracies: bytes = sql.Column(
+    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+  )
 
   # A pickled array of sparse model predictions, of shape
   # [num_instances * num_targets_per_instance, num_classes]. See
   # pickled_accuracies for a description of row count.
-  pickled_predictions: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                          nullable=False)
+  pickled_predictions: bytes = sql.Column(
+    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+  )
 
-  meta: BatchLogMeta = sql.orm.relationship(BatchLogMeta,
-                                            back_populates="batch_log")
+  meta: BatchLogMeta = sql.orm.relationship(
+    BatchLogMeta, back_populates="batch_log"
+  )
 
 
 class ParameterType(enum.Enum):
   """The valid types for parameters."""
+
   MODEL_FLAG = 1
   FLAG = 2
   BUILD_INFO = 3
@@ -183,34 +195,38 @@ class ParameterType(enum.Enum):
 
 class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A description of an experimental parameter."""
+
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
   run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
 
   # One of: {model_flag,flags,build_info}
-  type: ParameterType = sql.Column(sql.Enum(ParameterType),
-                                   nullable=False,
-                                   index=True)
+  type: ParameterType = sql.Column(
+    sql.Enum(ParameterType), nullable=False, index=True
+  )
 
   # The name of the parameter.
   parameter: str = sql.Column(sql.String(1024), nullable=False)
   # The value for the parameter.
-  pickled_value: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                    nullable=False)
+  pickled_value: bytes = sql.Column(
+    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+  )
 
   @property
   def value(self) -> typing.Any:
     return pickle.loads(self.pickled_value)
 
-  __table_args__ = (sql.UniqueConstraint('run_id',
-                                         'type',
-                                         'parameter',
-                                         name='unique_parameter'),)
+  __table_args__ = (
+    sql.UniqueConstraint(
+      "run_id", "type", "parameter", name="unique_parameter"
+    ),
+  )
 
 
-class ModelCheckpointMeta(Base,
-                          sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+class ModelCheckpointMeta(
+  Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin
+):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
@@ -226,40 +242,52 @@ class ModelCheckpointMeta(Base,
   validation_accuracy: float = sql.Column(sql.Float, nullable=False)
 
   date_added: datetime.datetime = sql.Column(
-      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), 'mysql'),
-      nullable=False,
-      default=labdate.GetUtcMillisecondsNow)
+    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
+    nullable=False,
+    default=labdate.GetUtcMillisecondsNow,
+  )
 
-  model_checkpoint: 'ModelCheckpoint' = sql.orm.relationship(
-      'ModelCheckpoint', uselist=False, cascade="all", back_populates="meta")
+  model_checkpoint: "ModelCheckpoint" = sql.orm.relationship(
+    "ModelCheckpoint", uselist=False, cascade="all", back_populates="meta"
+  )
 
-  __table_args__ = (sql.UniqueConstraint('run_id',
-                                         'epoch',
-                                         name='unique_epoch_checkpoint'),)
+  __table_args__ = (
+    sql.UniqueConstraint("run_id", "epoch", name="unique_epoch_checkpoint"),
+  )
 
   @property
   def data(self) -> typing.Any:
     # Checkpoints are stored with zlib compression.
     return pickle.loads(
-        codecs.decode(self.model_checkpoint.pickled_data, 'zlib'))
+      codecs.decode(self.model_checkpoint.pickled_data, "zlib")
+    )
 
   @data.setter
   def data(self, data) -> None:
     # Checkpoints are stored with zlib compression.
-    self.model_checkpoint.pickled_data = codecs.encode(pickle.dumps(data),
-                                                       'zlib')
+    self.model_checkpoint.pickled_data = codecs.encode(
+      pickle.dumps(data), "zlib"
+    )
 
   @classmethod
-  def Create(cls, run_id: str, epoch: int, global_step: int,
-             validation_accuracy: float, data: typing.Any):
+  def Create(
+    cls,
+    run_id: str,
+    epoch: int,
+    global_step: int,
+    validation_accuracy: float,
+    data: typing.Any,
+  ):
     """Instantiate a model checkpoint. Use this convenience method rather than
     constructing objects directly to ensure that fields are encoded correctly.
     """
-    checkpoint = ModelCheckpointMeta(run_id=run_id,
-                                     epoch=epoch,
-                                     global_step=global_step,
-                                     validation_accuracy=validation_accuracy,
-                                     model_checkpoint=ModelCheckpoint())
+    checkpoint = ModelCheckpointMeta(
+      run_id=run_id,
+      epoch=epoch,
+      global_step=global_step,
+      validation_accuracy=validation_accuracy,
+      model_checkpoint=ModelCheckpoint(),
+    )
     checkpoint.data = data
     return checkpoint
 
@@ -268,21 +296,23 @@ class ModelCheckpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """The sister table of ModelCheckpointMeta, which stores the actual data of
   a model, as returned by classifier_base.ModelDataToSave().
   """
-  id: int = sql.Column(sql.Integer,
-                       sql.ForeignKey('model_checkpoint_metas.id'),
-                       primary_key=True)
+
+  id: int = sql.Column(
+    sql.Integer, sql.ForeignKey("model_checkpoint_metas.id"), primary_key=True
+  )
 
   # The model data. This is stored as a zlib pickled dump of the data returned
   # by a model's ModelDataToSave() method.
-  pickled_data: bytes = sql.Column(sqlutil.ColumnTypes.LargeBinary(),
-                                   nullable=False)
+  pickled_data: bytes = sql.Column(
+    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+  )
 
   meta: ModelCheckpointMeta = sql.orm.relationship(
-      'ModelCheckpointMeta', back_populates="model_checkpoint")
+    "ModelCheckpointMeta", back_populates="model_checkpoint"
+  )
 
 
 class Database(sqlutil.Database):
-
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
@@ -299,24 +329,27 @@ class Database(sqlutil.Database):
     """
     with self.Session() as session:
       q = session.query(
-          BatchLogMeta.epoch,
-          BatchLogMeta.type,
-          sql.func.count(BatchLogMeta.epoch).label("num_batches"),
-          sql.func.min(BatchLogMeta.date_added).label('timestamp'),
-          sql.func.min(BatchLogMeta.global_step).label("global_step"),
-          sql.func.avg(BatchLogMeta.loss).label("loss"),
-          sql.func.avg(BatchLogMeta.iteration_count).label("iteration_count"),
-          sql.func.avg(BatchLogMeta.model_converged).label("converged"),
-          sql.func.avg(BatchLogMeta.accuracy * 100).label("accuracy"),
-          sql.func.avg(BatchLogMeta.precision).label("precision"),
-          sql.func.avg(BatchLogMeta.recall).label("recall"),
-          sql.func.avg(BatchLogMeta.f1).label("f1"),
-          sql.func.sum(
-              BatchLogMeta.elapsed_time_seconds).label("elapsed_time_seconds"),
-          sql.sql.expression.cast(sql.func.sum(BatchLogMeta.graph_count),
-                                  sql.Integer).label("graph_count"),
-          sql.sql.expression.cast(sql.func.sum(BatchLogMeta.node_count),
-                                  sql.Integer).label("node_count"),
+        BatchLogMeta.epoch,
+        BatchLogMeta.type,
+        sql.func.count(BatchLogMeta.epoch).label("num_batches"),
+        sql.func.min(BatchLogMeta.date_added).label("timestamp"),
+        sql.func.min(BatchLogMeta.global_step).label("global_step"),
+        sql.func.avg(BatchLogMeta.loss).label("loss"),
+        sql.func.avg(BatchLogMeta.iteration_count).label("iteration_count"),
+        sql.func.avg(BatchLogMeta.model_converged).label("converged"),
+        sql.func.avg(BatchLogMeta.accuracy * 100).label("accuracy"),
+        sql.func.avg(BatchLogMeta.precision).label("precision"),
+        sql.func.avg(BatchLogMeta.recall).label("recall"),
+        sql.func.avg(BatchLogMeta.f1).label("f1"),
+        sql.func.sum(BatchLogMeta.elapsed_time_seconds).label(
+          "elapsed_time_seconds"
+        ),
+        sql.sql.expression.cast(
+          sql.func.sum(BatchLogMeta.graph_count), sql.Integer
+        ).label("graph_count"),
+        sql.sql.expression.cast(
+          sql.func.sum(BatchLogMeta.node_count), sql.Integer
+        ).label("node_count"),
       )
 
       q = q.filter(BatchLogMeta.run_id == run_id)
@@ -326,14 +359,15 @@ class Database(sqlutil.Database):
       # Group each individual step. Since there is only one log per step,
       # this means return all rows without grouping.
       if per_global_step:
-        q = q.group_by(BatchLogMeta.global_step) \
-          .order_by(BatchLogMeta.global_step)
+        q = q.group_by(BatchLogMeta.global_step).order_by(
+          BatchLogMeta.global_step
+        )
 
       q = q.order_by(BatchLogMeta.epoch, BatchLogMeta.type)
 
       df = pdutil.QueryToDataFrame(session, q)
 
-      df['reltime'] = [t - df['timestamp'][0] for t in df['timestamp']]
+      df["reltime"] = [t - df["timestamp"][0] for t in df["timestamp"]]
 
       return df
 
@@ -350,43 +384,52 @@ class Database(sqlutil.Database):
     # Because the cascaded delete is broken, we first delete the BatchLog child
     # rows, then the parents.
     with self.Session() as session:
-      query = session.query(BatchLogMeta.id) \
-        .filter(BatchLogMeta.run_id == run_id)
+      query = session.query(BatchLogMeta.id).filter(
+        BatchLogMeta.run_id == run_id
+      )
       ids_to_delete = [row.id for row in query]
 
     if ids_to_delete:
-      app.Log(1, "Deleting %s batch logs for run %s",
-              humanize.Commas(len(ids_to_delete)), run_id)
-      delete = sql.delete(BatchLog) \
-        .where(BatchLog.id.in_(ids_to_delete))
+      app.Log(
+        1,
+        "Deleting %s batch logs for run %s",
+        humanize.Commas(len(ids_to_delete)),
+        run_id,
+      )
+      delete = sql.delete(BatchLog).where(BatchLog.id.in_(ids_to_delete))
       self.engine.execute(delete)
 
-      delete = sql.delete(BatchLogMeta) \
-        .where(BatchLogMeta.run_id == run_id)
+      delete = sql.delete(BatchLogMeta).where(BatchLogMeta.run_id == run_id)
       self.engine.execute(delete)
 
     # Because the cascaded delete is broken, we first delete the checkpoint
     # child rows, then the parents.
     with self.Session() as session:
-      query = session.query(ModelCheckpointMeta.id) \
-        .filter(ModelCheckpointMeta.run_id == run_id)
+      query = session.query(ModelCheckpointMeta.id).filter(
+        ModelCheckpointMeta.run_id == run_id
+      )
       ids_to_delete = [row.id for row in query]
 
     if ids_to_delete:
-      app.Log(1, "Deleting %s model checkpoints for run %s",
-              humanize.Commas(len(ids_to_delete)), run_id)
-      delete = sql.delete(ModelCheckpoint) \
-        .where(ModelCheckpoint.id.in_(ids_to_delete))
+      app.Log(
+        1,
+        "Deleting %s model checkpoints for run %s",
+        humanize.Commas(len(ids_to_delete)),
+        run_id,
+      )
+      delete = sql.delete(ModelCheckpoint).where(
+        ModelCheckpoint.id.in_(ids_to_delete)
+      )
       self.engine.execute(delete)
 
-      delete = sql.delete(ModelCheckpointMeta) \
-        .where(ModelCheckpointMeta.run_id == run_id)
+      delete = sql.delete(ModelCheckpointMeta).where(
+        ModelCheckpointMeta.run_id == run_id
+      )
       self.engine.execute(delete)
 
     # Delete the parameters for this Run ID.
     app.Log(1, "Deleting model parameters for run %s", run_id)
-    delete = sql.delete(Parameter) \
-      .where(Parameter.run_id == run_id)
+    delete = sql.delete(Parameter).where(Parameter.run_id == run_id)
     self.engine.execute(delete)
 
   def ModelFlagsToDict(self, run_id: str):
@@ -408,21 +451,22 @@ class Database(sqlutil.Database):
       A pandas dataframe.
     """
     with self.Session() as session:
-      query = session.query(Parameter.parameter,
-                            Parameter.pickled_value.label('value'))
+      query = session.query(
+        Parameter.parameter, Parameter.pickled_value.label("value")
+      )
       query = query.filter(Parameter.run_id == run_id)
       query = query.filter(sql.func.lower(Parameter.type) == parameter_type)
       query = query.order_by(Parameter.parameter)
       df = pdutil.QueryToDataFrame(session, query)
       # Strip the prefix, 'foo.bar' -> 'foo':
-      pdutil.RewriteColumn(df, 'parameter', lambda x: x.split('.')[-1])
+      pdutil.RewriteColumn(df, "parameter", lambda x: x.split(".")[-1])
       # Un-pickle the parameter values:
-      pdutil.RewriteColumn(df, 'value', lambda x: pickle.loads(x))
-      return df.set_index('parameter')
+      pdutil.RewriteColumn(df, "value", lambda x: pickle.loads(x))
+      return df.set_index("parameter")
 
   @property
   def run_ids(self) -> typing.List[str]:
     """Get a list of all run IDs in the databse."""
     with self.Session() as session:
-      query = session.query(Parameter.run_id.distinct().label('run_id'))
+      query = session.query(Parameter.run_id.distinct().label("run_id"))
       return [row.run_id for row in query]

@@ -14,20 +14,25 @@ from labm8.py import app
 from labm8.py import humanize
 
 app.DEFINE_integer(
-    'graph_reader_buffer_size', 1024,
-    'The number of graphs to read from the database per SQL '
-    'query. A larger number means fewer costly SQL queries, '
-    'but requires more memory.')
+  "graph_reader_buffer_size",
+  1024,
+  "The number of graphs to read from the database per SQL "
+  "query. A larger number means fewer costly SQL queries, "
+  "but requires more memory.",
+)
 app.DEFINE_string(
-    'graph_reader_order', 'batch_random',
-    'The order to read graphs from. See BufferedGraphReaderOrder. One of'
-    '{in_order,global_random,batch_random}')
+  "graph_reader_order",
+  "batch_random",
+  "The order to read graphs from. See BufferedGraphReaderOrder. One of"
+  "{in_order,global_random,batch_random}",
+)
 
 FLAGS = app.FLAGS
 
 
 class GraphBatchOptions(typing.NamedTuple):
   """A tuple of options for constructing graph batches."""
+
   # The maximum number of graphs to include in a batch. If zero, the number of
   # graphs is not limited.
   max_graphs: int = 0
@@ -44,8 +49,9 @@ class GraphBatchOptions(typing.NamedTuple):
   # number of data flow steps. A value of zero means no limit.
   data_flow_max_steps_required: int = 0
 
-  def ShouldAddToBatch(self, graph: graph_database.GraphMeta,
-                       log: log_database.BatchLogMeta) -> bool:
+  def ShouldAddToBatch(
+    self, graph: graph_database.GraphMeta, log: log_database.BatchLogMeta
+  ) -> bool:
     """Return whether the given graph should be added to the batch.
 
     Args:
@@ -78,13 +84,17 @@ class GraphBatchOptions(typing.NamedTuple):
     filters = []
     if self.max_nodes:
       filters.append(
-          lambda: graph_database.GraphMeta.node_count <= self.max_nodes)
+        lambda: graph_database.GraphMeta.node_count <= self.max_nodes
+      )
     if self.groups:
       filters.append(lambda: graph_database.GraphMeta.group.in_(self.groups))
     if self.data_flow_max_steps_required:
       filters.append(
-          lambda: (graph_database.GraphMeta.data_flow_max_steps_required <= self
-                   .data_flow_max_steps_required))
+        lambda: (
+          graph_database.GraphMeta.data_flow_max_steps_required
+          <= self.data_flow_max_steps_required
+        )
+      )
     return filters
 
 
@@ -171,8 +181,9 @@ class GraphBatch(typing.NamedTuple):
 
   @staticmethod
   def NextGraph(
-      graphs: typing.Iterable[graph_database.GraphMeta],
-      options: GraphBatchOptions) -> typing.Optional[graph_database.GraphMeta]:
+    graphs: typing.Iterable[graph_database.GraphMeta],
+    options: GraphBatchOptions,
+  ) -> typing.Optional[graph_database.GraphMeta]:
     """Read the next graph from graph iterable, or None if no more graphs.
 
     Args:
@@ -188,17 +199,20 @@ class GraphBatch(typing.NamedTuple):
       graph = next(graphs)
       if options.max_nodes and graph.node_count > options.max_nodes:
         raise ValueError(
-            f"Graph `{graph.id}` with {graph.node_count} is larger "
-            f"than batch size {options.max_nodes}")
+          f"Graph `{graph.id}` with {graph.node_count} is larger "
+          f"than batch size {options.max_nodes}"
+        )
       return graph
     except StopIteration:  # We have run out of graphs.
       return None
 
   @classmethod
   def CreateFromGraphMetas(
-      cls, graphs: typing.Iterable[graph_database.GraphMeta],
-      stats: graph_stats.GraphTupleDatabaseStats,
-      options: GraphBatchOptions) -> typing.Optional['GraphBatch']:
+    cls,
+    graphs: typing.Iterable[graph_database.GraphMeta],
+    stats: graph_stats.GraphTupleDatabaseStats,
+    options: GraphBatchOptions,
+  ) -> typing.Optional["GraphBatch"]:
     """Construct a graph batch.
 
     Args:
@@ -220,9 +234,9 @@ class GraphBatch(typing.NamedTuple):
 
     # The batch log contains properties describing the batch (such as the list
     # of graphs used).
-    log = log_database.BatchLogMeta(graph_count=0,
-                                    node_count=0,
-                                    group=graph.group)
+    log = log_database.BatchLogMeta(
+      graph_count=0, node_count=0, group=graph.group
+    )
 
     graph_ids: typing.List[int] = []
     bytecode_ids: typing.List[int] = []
@@ -259,15 +273,15 @@ class GraphBatch(typing.NamedTuple):
       bytecode_ids.append(graph.bytecode_id)
 
       graph_nodes_list.append(
-          np.full(
-              shape=[graph.node_count],
-              fill_value=log.graph_count,
-              dtype=np.int32,
-          ))
+        np.full(
+          shape=[graph.node_count], fill_value=log.graph_count, dtype=np.int32,
+        )
+      )
 
       # Offset the adjacency list node indices.
       for edge_type, (adjacency_list, position_list) in enumerate(
-          zip(graph_tuple.adjacency_lists, graph_tuple.edge_positions)):
+        zip(graph_tuple.adjacency_lists, graph_tuple.edge_positions)
+      ):
         if adjacency_list.size:
           offset = np.array((log.node_count, log.node_count), dtype=np.int32)
           adjacency_lists[edge_type].append(adjacency_list + offset)
@@ -297,8 +311,9 @@ class GraphBatch(typing.NamedTuple):
       graph = cls.NextGraph(graphs, options)
       if not graph:  # We have run out of graphs.
         break
-      data_flow_max_steps_required = max(data_flow_max_steps_required,
-                                         graph.data_flow_max_steps_required)
+      data_flow_max_steps_required = max(
+        data_flow_max_steps_required, graph.data_flow_max_steps_required
+      )
       max_edge_count = max(max_edge_count, graph.edge_count)
 
     # Empty batch
@@ -337,23 +352,23 @@ class GraphBatch(typing.NamedTuple):
     # TODO(cec): Setting an attribute on a mapped object at run time like this
     # is shitty. Rethink.
     log._transient_data = {
-        'graph_indices': graph_ids,
-        'bytecode_ids': bytecode_ids,
-        'data_flow_max_steps_required': data_flow_max_steps_required,
-        'max_edge_count': max_edge_count,
+      "graph_indices": graph_ids,
+      "bytecode_ids": bytecode_ids,
+      "data_flow_max_steps_required": data_flow_max_steps_required,
+      "max_edge_count": max_edge_count,
     }
 
     return cls(
-        adjacency_lists=adjacency_lists,
-        edge_positions=position_lists,
-        incoming_edge_counts=incoming_edge_counts,
-        node_x_indices=node_x_indices,
-        node_y=node_y,
-        graph_x=graph_x,
-        graph_y=graph_y,
-        graph_nodes_list=graph_nodes_list,
-        graph_count=log.graph_count,
-        log=log,
+      adjacency_lists=adjacency_lists,
+      edge_positions=position_lists,
+      incoming_edge_counts=incoming_edge_counts,
+      node_x_indices=node_x_indices,
+      node_y=node_y,
+      graph_x=graph_x,
+      graph_y=graph_y,
+      graph_nodes_list=graph_nodes_list,
+      graph_count=log.graph_count,
+      log=log,
     )
 
   def ToNetworkXGraphs(self) -> typing.Iterable[nx.MultiDiGraph]:
@@ -386,8 +401,10 @@ class GraphBatch(typing.NamedTuple):
         # node in the list of this graph's nodes.
         srcs = adjacency_list[:, 0]
         adjacency_list_indices = np.where(
-            np.logical_and(srcs >= node_count,
-                           srcs < node_count + graph_node_count))
+          np.logical_and(
+            srcs >= node_count, srcs < node_count + graph_node_count
+          )
+        )
         adjacency_list = adjacency_list[adjacency_list_indices]
         position_list = position_list[adjacency_list_indices]
 
@@ -399,21 +416,26 @@ class GraphBatch(typing.NamedTuple):
         for (src, dst), position in zip(adjacency_list, position_list):
           g.add_edge(src, dst, flow=edge_type, position=position)
 
-      node_x_embedding_indices = self.node_x_indices[node_count:node_count +
-                                                     graph_node_count]
+      node_x_embedding_indices = self.node_x_indices[
+        node_count : node_count + graph_node_count
+      ]
       if len(node_x_embedding_indices) != g.number_of_nodes():
-        raise ValueError(f"Graph has {g.number_of_nodes()} nodes but "
-                         f"expected {len(node_x_embedding_indices)}")
+        raise ValueError(
+          f"Graph has {g.number_of_nodes()} nodes but "
+          f"expected {len(node_x_embedding_indices)}"
+        )
       for i, x in enumerate(node_x_embedding_indices):
-        g.nodes[i]['x'] = x
+        g.nodes[i]["x"] = x
 
       if self.has_node_y:
-        node_y = self.node_y[node_count:node_count + graph_node_count]
+        node_y = self.node_y[node_count : node_count + graph_node_count]
         if len(node_y) != g.number_of_nodes():
-          raise ValueError(f"Graph has {g.number_of_nodes()} nodes but "
-                           f"expected {len(node_y)}")
+          raise ValueError(
+            f"Graph has {g.number_of_nodes()} nodes but "
+            f"expected {len(node_y)}"
+          )
         for i, values in enumerate(node_y):
-          g.nodes[i]['y'] = values
+          g.nodes[i]["y"] = values
 
       if self.has_graph_x:
         g.x = self.graph_x[graph_count]
@@ -456,12 +478,13 @@ class GraphBatcher(object):
     return num_rows
 
   def MakeGraphBatchIterator(
-      self,
-      options: GraphBatchOptions,
-      # TODO(cec): This duplicates the logic of the
-      # GraphTuplesOptions field. Consolidate these.
-      max_instance_count: int = 0,
-      print_context: typing.Any = None) -> typing.Iterable[GraphBatch]:
+    self,
+    options: GraphBatchOptions,
+    # TODO(cec): This duplicates the logic of the
+    # GraphTuplesOptions field. Consolidate these.
+    max_instance_count: int = 0,
+    print_context: typing.Any = None,
+  ) -> typing.Iterable[GraphBatch]:
     """Make a batch iterator over the given group.
 
     Args:
@@ -473,26 +496,28 @@ class GraphBatcher(object):
     """
     filters = options.GetDatabaseQueryFilters()
 
-    if FLAGS.graph_reader_order == 'in_order':
+    if FLAGS.graph_reader_order == "in_order":
       order = graph_readers.BufferedGraphReaderOrder.IN_ORDER
-    elif FLAGS.graph_reader_order == 'global_random':
+    elif FLAGS.graph_reader_order == "global_random":
       order = graph_readers.BufferedGraphReaderOrder.GLOBAL_RANDOM
-    elif FLAGS.graph_reader_order == 'batch_random':
+    elif FLAGS.graph_reader_order == "batch_random":
       order = graph_readers.BufferedGraphReaderOrder.BATCH_RANDOM
     else:
       raise app.UsageError(
-          f"Unknown --graph_reader_order=`{FLAGS.graph_reader_order}`.")
+        f"Unknown --graph_reader_order=`{FLAGS.graph_reader_order}`."
+      )
 
     graph_reader = graph_readers.BufferedGraphReader(
-        self.db,
-        filters=filters,
-        order=order,
-        eager_graph_loading=True,
-        # Magic constant to try and get a reasonable balance between memory
-        # requirements and database round trips.
-        buffer_size=FLAGS.graph_reader_buffer_size,
-        limit=max_instance_count,
-        print_context=print_context)
+      self.db,
+      filters=filters,
+      order=order,
+      eager_graph_loading=True,
+      # Magic constant to try and get a reasonable balance between memory
+      # requirements and database round trips.
+      buffer_size=FLAGS.graph_reader_buffer_size,
+      limit=max_instance_count,
+      print_context=print_context,
+    )
 
     # Batch creation outer-loop.
     while True:
@@ -500,13 +525,15 @@ class GraphBatcher(object):
       batch = GraphBatch.CreateFromGraphMetas(graph_reader, self.stats, options)
       if batch:
         elapsed_time = time.time() - start_time
-        app.Log(5, "Created batch of %s graphs (%s nodes) in %s "
-                "(%s graphs/sec)",
-                humanize.Commas(batch.log.graph_count),
-                humanize.Commas(batch.log.node_count),
-                humanize.Duration(elapsed_time),
-                humanize.Commas(batch.log.graph_count / elapsed_time),
-                print_context=print_context)
+        app.Log(
+          5,
+          "Created batch of %s graphs (%s nodes) in %s " "(%s graphs/sec)",
+          humanize.Commas(batch.log.graph_count),
+          humanize.Commas(batch.log.node_count),
+          humanize.Duration(elapsed_time),
+          humanize.Commas(batch.log.graph_count / elapsed_time),
+          print_context=print_context,
+        )
         assert batch.log.graph_count > 0
         yield batch
       else:

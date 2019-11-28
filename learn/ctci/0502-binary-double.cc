@@ -7,16 +7,16 @@
 #include "./ctci.h"
 
 #include <iostream>
-#include <string>
 #include <set>
+#include <string>
 
 /*
  * TODO: This is not a solution for the actual problem! What I have
  * done here is implement a function which prints the binary _data_
  * from a double.
  */
-template<typename T>
-std::ostream& print_bits(std::ostream &out, const T &d,
+template <typename T>
+std::ostream &print_bits(std::ostream &out, const T &d,
                          std::initializer_list<size_t> il = {}) {
   const std::size_t size = sizeof(T);
   const char *const data = reinterpret_cast<const char *>(&d);
@@ -29,8 +29,7 @@ std::ostream& print_bits(std::ostream &out, const T &d,
 
       // Print spaces where appropriate.
       const size_t k = static_cast<size_t>(j) * 8 + static_cast<size_t>(i);
-      if (spaces.find(nbits - k) != spaces.end())
-        out << ' ';
+      if (spaces.find(nbits - k) != spaces.end()) out << ' ';
     }
   }
 
@@ -41,17 +40,16 @@ std::ostream& print_bits(std::ostream &out, const T &d,
 // Template specialisation to add separator spaces between sign bit,
 // exponent, and fraction.
 //
-std::ostream& print_bits(std::ostream &out, const double &d) {
+std::ostream &print_bits(std::ostream &out, const double &d) {
   return print_bits(out, d, {1, 11});
 }
 
 //
 // Template specialisation to add separator spaces between bytes.
 //
-std::ostream& print_bits(std::ostream &out, const int &d) {
+std::ostream &print_bits(std::ostream &out, const int &d) {
   return print_bits(out, d, {8, 16, 24});
 }
-
 
 ///////////
 // Tests //
@@ -61,7 +59,7 @@ TEST(challenge, tests) {
   std::ostringstream stream;
 
   std::string out =
-          "1 0111111111 10000000000000000000000000000000000000000000000000000";
+      "1 0111111111 10000000000000000000000000000000000000000000000000000";
   print_bits(stream, -1.0);
   ASSERT_EQ(stream.str(), out);
   stream.str(std::string());  // clear stream

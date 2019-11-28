@@ -31,12 +31,13 @@ https://github.com/jrprice/Oclgrind
 
 # Path to helper binary.
 OCLGRIND_WORKING_BIN = bazelutil.DataPath(
-    'phd/gpu/oclgrind/test/data/oclgrind_working')
+  "phd/gpu/oclgrind/test/data/oclgrind_working"
+)
 
 
 def test_Exec_version():
   """Test that the version of oclgrind is as expected."""
-  proc = oclgrind.Exec(['--version'])
+  proc = oclgrind.Exec(["--version"])
   # This test will of course fail if the @oclgrind package is updated.
   assert proc.stdout == VERSION
   assert proc.returncode == 0
@@ -46,9 +47,9 @@ def test_Exec_opencl_working_app():
   """Run a binary which checks for oclgrind device availability."""
   proc = oclgrind.Exec([str(OCLGRIND_WORKING_BIN)])
   print(proc.stderr)
-  assert 'done' in proc.stderr
+  assert "done" in proc.stderr
   assert proc.returncode == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

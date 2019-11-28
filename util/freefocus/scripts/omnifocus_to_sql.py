@@ -6,8 +6,9 @@ from util.freefocus.sql import *
 
 
 OMNIFOCUS_DB_PATH = (
-    "~/Library/Containers/com.omnigroup.OmniFocus2/Data/Library/Caches/"
-    "com.omnigroup.OmniFocus2/OmniFocusDatabase2")
+  "~/Library/Containers/com.omnigroup.OmniFocus2/Data/Library/Caches/"
+  "com.omnigroup.OmniFocus2/OmniFocusDatabase2"
+)
 
 
 class Task(object):
@@ -18,10 +19,10 @@ def load_of_session(path):
   import sqlalchemy as sql
   from sqlalchemy import create_engine, MetaData, Table
 
-  engine = create_engine('sqlite:///%s' % path, echo=True)
+  engine = create_engine("sqlite:///%s" % path, echo=True)
   metadata = MetaData(engine)
 
-  sql.orm.mapper(Task, Table('Task', metadata, autoload=True))
+  sql.orm.mapper(Task, Table("Task", metadata, autoload=True))
 
   return sql.orm.sessionmaker(bind=engine)()
 

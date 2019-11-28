@@ -12,8 +12,9 @@ import progressbar
 
 from compilers.llvm import clang
 from compilers.llvm import opt_util
-from datasets.opencl.device_mapping import \
-  opencl_device_mapping_dataset as ocl_dataset
+from datasets.opencl.device_mapping import (
+  opencl_device_mapping_dataset as ocl_dataset,
+)
 from deeplearning.clgen.preprocessors import opencl
 from deeplearning.ml4pl import ml4pl_pb2
 from deeplearning.ml4pl.bytecode import bytecode_database
@@ -24,12 +25,17 @@ from labm8.py import decorators
 
 FLAGS = app.FLAGS
 
-app.DEFINE_database('bytecode_db', bytecode_database.Database, None,
-                    'Path of database to populate.')
+app.DEFINE_database(
+  "bytecode_db",
+  bytecode_database.Database,
+  None,
+  "Path of database to populate.",
+)
 
 
-def BytecodeFromOpenClString(opencl_string: str,
-                             optimization_level: str) -> str:
+def BytecodeFromOpenClString(
+  opencl_string: str, optimization_level: str
+) -> str:
   """Create bytecode from OpenCL source string.
 
   Args:
@@ -45,27 +51,29 @@ def BytecodeFromOpenClString(opencl_string: str,
   """
   # Use -O3 to reduce CFGs.
   clang_args = opencl.GetClangArgs(use_shim=False) + [
-      clang.ValidateOptimizationLevel(optimization_level),
-      '-S',
-      '-emit-llvm',
-      '-o',
-      '-',
-      '-i',
-      '-',
-      '-Wno-everything',  # No warnings please.
+    clang.ValidateOptimizationLevel(optimization_level),
+    "-S",
+    "-emit-llvm",
+    "-o",
+    "-",
+    "-i",
+    "-",
+    "-Wno-everything",  # No warnings please.
   ]
   process = clang.Exec(clang_args, stdin=opencl_string)
   if process.returncode:
-    raise clang.ClangException("clang failed",
-                               returncode=process.returncode,
-                               stderr=process.stderr,
-                               command=clang_args)
+    raise clang.ClangException(
+      "clang failed",
+      returncode=process.returncode,
+      stderr=process.stderr,
+      command=clang_args,
+    )
   return process.stdout, clang_args
 
 
 def CreateControlFlowGraphFromOpenClKernel(
-    kernel_name: str,
-    opencl_kernel: str) -> typing.Optional[cfg.ControlFlowGraph]:
+  kernel_name: str, opencl_kernel: str
+) -> typing.Optional[cfg.ControlFlowGraph]:
   """Try to create a CFG proto from an opencl kernel.
 
   Args:
@@ -80,7 +88,7 @@ def CreateControlFlowGraphFromOpenClKernel(
     ClangException: If compiling to bytecode fails.
     ValueError: If opencl_kernel contains multiple functions.
   """
-  bytecode, _ = BytecodeFromOpenClString(opencl_kernel, '-O0')
+  bytecode, _ = BytecodeFromOpenClString(opencl_kernel, "-O0")
 
   # Extract a single dot source from the bytecode.
   dot_generator = opt_util.DotControlFlowGraphsFromBytecode(bytecode)
@@ -96,70 +104,76 @@ def CreateControlFlowGraphFromOpenClKernel(
 
   # Set the name of the graph to the kernel name. This is because the src code
   # has been preprocessed, so that each kernel is named 'A'.
-  graph.graph['name'] = kernel_name
+  graph.graph["name"] = kernel_name
 
   return graph
 
 
-def ProcessProgramDfIterItem(row: typing.Dict[str, str]
-                            ) -> typing.Optional[typing.Dict[str, typing.Any]]:
-  benchmark_suite_name = row['program:benchmark_suite_name']
-  benchmark_name = row['program:benchmark_name']
-  kernel_name = row['program:opencl_kernel_name']
-  src = row['program:opencl_src']
+def ProcessProgramDfIterItem(
+  row: typing.Dict[str, str]
+) -> typing.Optional[typing.Dict[str, typing.Any]]:
+  benchmark_suite_name = row["program:benchmark_suite_name"]
+  benchmark_name = row["program:benchmark_name"]
+  kernel_name = row["program:opencl_kernel_name"]
+  src = row["program:opencl_src"]
 
   try:
     graph = CreateControlFlowGraphFromOpenClKernel(
-        kernel_name, src).ValidateControlFlowGraph(strict=False)
+      kernel_name, src
+    ).ValidateControlFlowGraph(strict=False)
   except (clang.ClangException, cfg.MalformedControlFlowGraphError):
     return None
 
   row = CfgDfRowFromControlFlowGraph(graph)
-  row.update({
-      'program:benchmark_suite_name': benchmark_suite_name,
-      'program:benchmark_name': benchmark_name,
-      'program:opencl_kernel_name': kernel_name,
-  })
+  row.update(
+    {
+      "program:benchmark_suite_name": benchmark_suite_name,
+      "program:benchmark_name": benchmark_name,
+      "program:opencl_kernel_name": kernel_name,
+    }
+  )
   return row
 
 
 def CfgDfRowFromControlFlowGraph(
-    graph: cfg.ControlFlowGraph) -> typing.Dict[str, typing.Any]:
+  graph: cfg.ControlFlowGraph,
+) -> typing.Dict[str, typing.Any]:
   return {
-      'cfg:graph': graph,
-      'cfg:block_count': graph.number_of_nodes(),
-      'cfg:edge_count': graph.number_of_edges(),
-      'cfg:edge_density': graph.edge_density,
-      'cfg:is_valid': graph.IsValidControlFlowGraph(strict=False),
-      'cfg:is_strict_valid': graph.IsValidControlFlowGraph(strict=True),
+    "cfg:graph": graph,
+    "cfg:block_count": graph.number_of_nodes(),
+    "cfg:edge_count": graph.number_of_edges(),
+    "cfg:edge_density": graph.edge_density,
+    "cfg:is_valid": graph.IsValidControlFlowGraph(strict=False),
+    "cfg:is_strict_valid": graph.IsValidControlFlowGraph(strict=True),
   }
 
 
 def ProcessOpenClProgramDfBytecode(
-    row: typing.Dict[str, str]) -> ml4pl_pb2.LlvmBytecode:
-  benchmark_suite_name = row['program:benchmark_suite_name']
-  benchmark_name = row['program:benchmark_name']
-  kernel_name = row['program:opencl_kernel_name']
-  src = row['program:opencl_src']
+  row: typing.Dict[str, str]
+) -> ml4pl_pb2.LlvmBytecode:
+  benchmark_suite_name = row["program:benchmark_suite_name"]
+  benchmark_name = row["program:benchmark_name"]
+  kernel_name = row["program:opencl_kernel_name"]
+  src = row["program:opencl_src"]
 
   try:
-    bytecode, cflags = BytecodeFromOpenClString(src, '-O0')
+    bytecode, cflags = BytecodeFromOpenClString(src, "-O0")
     clang_returncode = 0
-    error_message = ''
+    error_message = ""
   except clang.ClangException as e:
-    bytecode = ''
+    bytecode = ""
     cflags = e.command
     clang_returncode = e.returncode
     error_message = e.stderr
 
   return ml4pl_pb2.LlvmBytecode(
-      source_name='pact17_opencl_devmap',
-      relpath=f'{benchmark_suite_name}:{benchmark_name}:{kernel_name}',
-      lang='opencl',
-      cflags=' '.join(cflags),
-      bytecode=bytecode,
-      clang_returncode=clang_returncode,
-      error_message=error_message,
+    source_name="pact17_opencl_devmap",
+    relpath=f"{benchmark_suite_name}:{benchmark_name}:{kernel_name}",
+    lang="opencl",
+    cflags=" ".join(cflags),
+    bytecode=bytecode,
+    clang_returncode=clang_returncode,
+    error_message=error_message,
   )
 
 
@@ -179,9 +193,9 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     cfg:is_strict_valid (bool): Whether the CFG is valid when strict.
   """
 
-  def PopulateBytecodeTable(self,
-                            db: bytecode_database.Database,
-                            commit_every: int = 1000):
+  def PopulateBytecodeTable(
+    self, db: bytecode_database.Database, commit_every: int = 1000
+  ):
     programs_df = self.programs_df.reset_index()
     bar = progressbar.ProgressBar()
     bar.max_value = len(programs_df)
@@ -190,12 +204,16 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     pool = multiprocessing.Pool()
     with db.Session(commit=True) as s:
       for i, proto in enumerate(
-          pool.imap_unordered(ProcessOpenClProgramDfBytecode,
-                              [d for _, d in programs_df.iterrows()])):
+        pool.imap_unordered(
+          ProcessOpenClProgramDfBytecode, [d for _, d in programs_df.iterrows()]
+        )
+      ):
         bar.update(i)
         s.add(
-            bytecode_database.LlvmBytecode(
-                **bytecode_database.LlvmBytecode.FromProto(proto)))
+          bytecode_database.LlvmBytecode(
+            **bytecode_database.LlvmBytecode.FromProto(proto)
+          )
+        )
         if not (i % commit_every):
           s.commit()
 
@@ -206,31 +224,36 @@ class OpenClDeviceMappingsDataset(ocl_dataset.OpenClDeviceMappingsDataset):
     # Process each row of the table in parallel.
     pool = multiprocessing.Pool()
     rows = []
-    for row in pool.imap_unordered(ProcessProgramDfIterItem,
-                                   [d for i, d in programs_df.iterrows()]):
+    for row in pool.imap_unordered(
+      ProcessProgramDfIterItem, [d for i, d in programs_df.iterrows()]
+    ):
       if row:
         rows.append(row)
 
     # Create the output table.
-    df = pd.DataFrame(rows,
-                      columns=[
-                          'program:benchmark_suite_name',
-                          'program:benchmark_name',
-                          'program:opencl_kernel_name',
-                          'cfg:graph',
-                          'cfg:block_count',
-                          'cfg:edge_count',
-                          'cfg:edge_density',
-                          'cfg:is_valid',
-                          'cfg:is_strict_valid',
-                      ])
+    df = pd.DataFrame(
+      rows,
+      columns=[
+        "program:benchmark_suite_name",
+        "program:benchmark_name",
+        "program:opencl_kernel_name",
+        "cfg:graph",
+        "cfg:block_count",
+        "cfg:edge_count",
+        "cfg:edge_density",
+        "cfg:is_valid",
+        "cfg:is_strict_valid",
+      ],
+    )
 
-    df.set_index([
-        'program:benchmark_suite_name',
-        'program:benchmark_name',
-        'program:opencl_kernel_name',
-    ],
-                 inplace=True)
+    df.set_index(
+      [
+        "program:benchmark_suite_name",
+        "program:benchmark_name",
+        "program:opencl_kernel_name",
+      ],
+      inplace=True,
+    )
     df.sort_index(inplace=True)
     return df
 
@@ -241,5 +264,5 @@ def main():
   dataset.PopulateBytecodeTable(db)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

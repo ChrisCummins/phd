@@ -13,19 +13,19 @@ from labm8.py import app
 from util.photolib import dashcam
 
 FLAGS = app.FLAGS
-app.DEFINE_input_path("working_dir",
-                      os.getcwd(),
-                      "Working directory.",
-                      is_dir=True)
-app.DEFINE_integer("minutes", 0,
-                   "The number of minutes to offset timestamps by.")
+app.DEFINE_input_path(
+  "working_dir", os.getcwd(), "Working directory.", is_dir=True
+)
+app.DEFINE_integer(
+  "minutes", 0, "The number of minutes to offset timestamps by."
+)
 
 
 def main():
   """Main entry point."""
   working_dir = FLAGS.working_dir
 
-  files = [x for x in working_dir.iterdir() if not x.name.startswith('.')]
+  files = [x for x in working_dir.iterdir() if not x.name.startswith(".")]
 
   offset = datetime.timedelta(seconds=FLAGS.minutes * 60)
 

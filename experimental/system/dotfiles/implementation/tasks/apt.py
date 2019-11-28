@@ -1,5 +1,5 @@
-from experimental.system.dotfiles.implementation.host import CheckShellCommand, \
-  ShellCommand
+from experimental.system.dotfiles.implementation.host import CheckShellCommand
+from experimental.system.dotfiles.implementation.host import ShellCommand
 
 
 class Apt(object):
@@ -8,9 +8,11 @@ class Apt(object):
   def install_package(self, package):
     """ install a package using apt-get, return True if installed """
     if not CheckShellCommand(
-        "dpkg -s '{package}' &>/dev/null".format(package=package)):
+      "dpkg -s '{package}' &>/dev/null".format(package=package)
+    ):
       ShellCommand(
-          "sudo apt-get install -y '{package}'".format(package=package))
+        "sudo apt-get install -y '{package}'".format(package=package)
+      )
       return True
 
   def update(self):

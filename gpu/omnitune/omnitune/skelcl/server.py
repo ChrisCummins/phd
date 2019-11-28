@@ -13,6 +13,7 @@ from phd import labm8 as lab
 from labm8.py import cache
 from labm8.py import fs
 from labm8.py import io
+
 # Local imports.
 
 SESSION_NAME = "org.omnitune"
@@ -41,12 +42,24 @@ class Server(omnitune.Server):
     # Create an in-memory sample strategy cache.
     self.strategies = cache.TransientCache()
 
-  @dbus.service.method(INTERFACE_NAME,
-                       in_signature='siiiiiiiisss',
-                       out_signature='(nn)')
-  def RequestTrainingStencilParams(self, device_name, device_count, north,
-                                   south, east, west, data_width, data_height,
-                                   type_in, type_out, source, max_wg_size):
+  @dbus.service.method(
+    INTERFACE_NAME, in_signature="siiiiiiiisss", out_signature="(nn)"
+  )
+  def RequestTrainingStencilParams(
+    self,
+    device_name,
+    device_count,
+    north,
+    south,
+    east,
+    west,
+    data_width,
+    data_height,
+    type_in,
+    type_out,
+    source,
+    max_wg_size,
+  ):
     """
     Request training parameter values for a SkelCL stencil operation.
 
@@ -92,12 +105,24 @@ class Server(omnitune.Server):
 
     return wg
 
-  @dbus.service.method(INTERFACE_NAME,
-                       in_signature='siiiiiiiisss',
-                       out_signature='(nn)')
-  def RequestStencilParams(self, device_name, device_count, north, south, east,
-                           west, data_width, data_height, type_in, type_out,
-                           source, max_wg_size):
+  @dbus.service.method(
+    INTERFACE_NAME, in_signature="siiiiiiiisss", out_signature="(nn)"
+  )
+  def RequestStencilParams(
+    self,
+    device_name,
+    device_count,
+    north,
+    south,
+    east,
+    west,
+    data_width,
+    data_height,
+    type_in,
+    type_out,
+    source,
+    max_wg_size,
+  ):
     """
     Request parameter values for a SkelCL stencil operation.
 
@@ -146,19 +171,38 @@ class Server(omnitune.Server):
 
     end_time = time.time()
 
-    io.debug(("RequestStencilParams() -> "
-              "({c}, {r}) [{t:.3f}s]".format(c=wg[0],
-                                             r=wg[1],
-                                             t=end_time - start_time)))
+    io.debug(
+      (
+        "RequestStencilParams() -> "
+        "({c}, {r}) [{t:.3f}s]".format(
+          c=wg[0], r=wg[1], t=end_time - start_time
+        )
+      )
+    )
 
     return wg
 
-  @dbus.service.method(INTERFACE_NAME,
-                       in_signature='siiiiiiisssiiid',
-                       out_signature='')
-  def AddStencilRuntime(self, device_name, device_count, north, south, east,
-                        west, data_width, data_height, type_in, type_out,
-                        source, max_wg_size, wg_c, wg_r, runtime):
+  @dbus.service.method(
+    INTERFACE_NAME, in_signature="siiiiiiisssiiid", out_signature=""
+  )
+  def AddStencilRuntime(
+    self,
+    device_name,
+    device_count,
+    north,
+    south,
+    east,
+    west,
+    data_width,
+    data_height,
+    type_in,
+    type_out,
+    source,
+    max_wg_size,
+    wg_c,
+    wg_r,
+    runtime,
+  ):
     """
     Add a new stencil runtime.
 
@@ -209,15 +253,34 @@ class Server(omnitune.Server):
     self.db.add_runtime(scenario, params, runtime)
     self.db.commit()
 
-    io.debug(("AddStencilRuntime({scenario}, {params}, {runtime})".format(
-        scenario=scenario[:8], params=params, runtime=runtime)))
+    io.debug(
+      (
+        "AddStencilRuntime({scenario}, {params}, {runtime})".format(
+          scenario=scenario[:8], params=params, runtime=runtime
+        )
+      )
+    )
 
-  @dbus.service.method(INTERFACE_NAME,
-                       in_signature='siiiiiiisssiii',
-                       out_signature='')
-  def RefuseStencilParams(self, device_name, device_count, north, south, east,
-                          west, data_width, data_height, type_in, type_out,
-                          source, max_wg_size, wg_c, wg_r):
+  @dbus.service.method(
+    INTERFACE_NAME, in_signature="siiiiiiisssiii", out_signature=""
+  )
+  def RefuseStencilParams(
+    self,
+    device_name,
+    device_count,
+    north,
+    south,
+    east,
+    west,
+    data_width,
+    data_height,
+    type_in,
+    type_out,
+    source,
+    max_wg_size,
+    wg_c,
+    wg_r,
+  ):
     """
     Mark a set of parameters as bad.
 
@@ -266,8 +329,13 @@ class Server(omnitune.Server):
     self.db.refuse_params(scenario, params)
     self.db.commit()
 
-    io.debug(("RefuseStencilParams({scenario}, {params})".format(
-        scenario=scenario[:8], params=params, runtime=runtime)))
+    io.debug(
+      (
+        "RefuseStencilParams({scenario}, {params})".format(
+          scenario=scenario[:8], params=params, runtime=runtime
+        )
+      )
+    )
 
 
 def main():

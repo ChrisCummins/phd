@@ -21,7 +21,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 """Template variations"""
-
 import itertools
 import math
 import random
@@ -29,7 +28,6 @@ import string
 
 
 class TemplateVar(object):
-
   def __iter__(self):
     raise NotImplementedError
 
@@ -41,7 +39,6 @@ class TemplateVar(object):
 
 
 class RangeVar(TemplateVar):
-
   def __init__(self, start, stop, skip, *args, **kwargs):
     self.start = start
     self.stop = stop
@@ -59,7 +56,6 @@ class RangeVar(TemplateVar):
 
 
 class ValueListVar(TemplateVar):
-
   def __init__(self, values, *args, **kwargs):
     self.values = values
     return super().__init__(*args, **kwargs)
@@ -75,13 +71,11 @@ class ValueListVar(TemplateVar):
 
 
 class BoolVar(ValueListVar):
-
   def __init__(self):
-    super().__init__(['false', 'true'])
+    super().__init__(["false", "true"])
 
 
 class PermutationVar(TemplateVar):
-
   def __init__(self, values):
     self.values = values
 
@@ -96,13 +90,13 @@ class PermutationVar(TemplateVar):
 
 
 class RandomStrVar(TemplateVar):
-
   def __len__(self):
     return 1
 
   def _randomize(self):
-    return ''.join(
-        random.choice(string.ascii_letters + string.digits) for _ in range(10))
+    return "".join(
+      random.choice(string.ascii_letters + string.digits) for _ in range(10)
+    )
 
   def __getitem__(self, index):
     return self._randomize()
@@ -113,13 +107,21 @@ class RandomStrVar(TemplateVar):
 
 
 _TYPES = [
-    'int8_t', 'int16_t', 'int32_t', 'int64_t', 'uint8_t', 'uint16_t',
-    'uint32_t', 'uint64_t', 'float', 'double', 'std::complex<float>',
-    'std::complex<double>'
+  "int8_t",
+  "int16_t",
+  "int32_t",
+  "int64_t",
+  "uint8_t",
+  "uint16_t",
+  "uint32_t",
+  "uint64_t",
+  "float",
+  "double",
+  "std::complex<float>",
+  "std::complex<double>",
 ]
 
 
 class TypeVar(ValueListVar):
-
   def __init__(self):
     return super().__init__(_TYPES)

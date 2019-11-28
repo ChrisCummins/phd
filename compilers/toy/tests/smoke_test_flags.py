@@ -6,4 +6,4 @@ from labm8.py import app
 
 FLAGS = app.FLAGS
 
-app.DEFINE_integer('stage', 1, 'The stage to test.')
+app.DEFINE_integer("stage", 1, "The stage to test.")

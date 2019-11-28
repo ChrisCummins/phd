@@ -22,40 +22,43 @@ from labm8.py import pbutil
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('working_dir', str(
-    pathlib.Path('~/.cache/clgen').expanduser()),
-                  'The path to the CLgen working directory.')
+app.DEFINE_string(
+  "working_dir",
+  str(pathlib.Path("~/.cache/clgen").expanduser()),
+  "The path to the CLgen working directory.",
+)
 
 
 def LsModels(cache_root: pathlib.Path) -> None:
-  for model_dir in (cache_root / 'model').iterdir():
-    meta_file = model_dir / 'META.pbtxt'
+  for model_dir in (cache_root / "model").iterdir():
+    meta_file = model_dir / "META.pbtxt"
     if pbutil.ProtoIsReadable(meta_file, internal_pb2.ModelMeta()):
       model = models.Model(
-          pbutil.FromFile(meta_file, internal_pb2.ModelMeta()).config)
+        pbutil.FromFile(meta_file, internal_pb2.ModelMeta()).config
+      )
       telemetry = list(model.TrainingTelemetry())
       num_epochs = model.config.training.num_epochs
       n = len(telemetry)
-      print(f'{model_dir} {n} / {num_epochs} epochs')
+      print(f"{model_dir} {n} / {num_epochs} epochs")
     elif meta_file.is_file():
-      app.Warning('Meta file %s cannot be read.', meta_file)
+      app.Warning("Meta file %s cannot be read.", meta_file)
     else:
-      app.Warning('Meta file %s not found.', meta_file)
+      app.Warning("Meta file %s not found.", meta_file)
 
 
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments: '{}'.".format(' '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments: '{}'.".format(" ".join(argv[1:])))
 
   if not FLAGS.working_dir:
-    raise app.UsageError('--working_dir must be set')
+    raise app.UsageError("--working_dir must be set")
   working_dir = pathlib.Path(FLAGS.working_dir)
   if working_dir.exists() and not working_dir.is_dir():
-    raise app.UsageError('--working_dir must be a directory')
+    raise app.UsageError("--working_dir must be a directory")
 
   LsModels(working_dir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

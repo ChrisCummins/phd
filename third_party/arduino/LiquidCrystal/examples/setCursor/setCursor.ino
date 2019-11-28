@@ -56,7 +56,7 @@ void loop() {
   // loop from ASCII 'a' to ASCII 'z':
   for (int thisLetter = 'a'; thisLetter <= 'z'; thisLetter++) {
     // loop over the columns:
-    for (int  thisRow = 0; thisRow < numRows; thisRow++) {
+    for (int thisRow = 0; thisRow < numRows; thisRow++) {
       // loop over the rows:
       for (int thisCol = 0; thisCol < numCols; thisCol++) {
         // set the cursor position:
@@ -68,5 +68,3 @@ void loop() {
     }
   }
 }
-
-

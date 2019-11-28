@@ -28,7 +28,9 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 app.DEFINE_string(
-    'me_db_acceptance_tests_inbox', None,
-    'If set, this sets the inbox path to be used by the '
-    'acceptance test suite. This overrides the default path of '
-    '//datasets/me_db/tests/test_inbox.')
+  "me_db_acceptance_tests_inbox",
+  None,
+  "If set, this sets the inbox path to be used by the "
+  "acceptance test suite. This overrides the default path of "
+  "//datasets/me_db/tests/test_inbox.",
+)

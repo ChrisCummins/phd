@@ -24,7 +24,7 @@ def test_SaveSampleTextObserver(tempdir: pathlib.Path):
   sample = model_pb2.Sample(text=contents)
 
   assert observer.OnSample(sample)
-  path = tempdir / f'{crypto.sha256_str(contents)}.txt'
+  path = tempdir / f"{crypto.sha256_str(contents)}.txt"
   assert path.is_file()
   assert fs.Read(path) == contents
 
@@ -35,12 +35,15 @@ def test_PrintSampleObserver(capsys):
 
   assert observer.OnSample(sample)
   captured = capsys.readouterr()
-  assert captured.out == """\
+  assert (
+    captured.out
+    == """\
 === CLGEN SAMPLE ===
 
 Hello, world!
 
 """
+  )
 
 
 def test_InMemorySampleSaver():
@@ -56,5 +59,5 @@ def test_InMemorySampleSaver():
   assert observer.samples[-1].text == "Hello, world!"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

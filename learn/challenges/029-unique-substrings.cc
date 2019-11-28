@@ -5,8 +5,8 @@
 #include <gtest/gtest.h>
 
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 std::unordered_map<std::string, int> histogram(
     const std::vector<std::string>& input) {
@@ -22,7 +22,6 @@ std::unordered_map<std::string, int> histogram(
 
   return m;
 }
-
 
 void _substrings(const std::vector<std::string>& input,
                  std::vector<std::string>* substrings) {
@@ -47,11 +46,9 @@ void _substrings(const std::vector<std::string>& input,
       }
     }
 
-    if (!repeat)
-      return;
+    if (!repeat) return;
   }
 }
-
 
 std::vector<std::string> substrings(const std::vector<std::string>& input) {
   // If strings cannot be uniquely disambiguated, raises an error.
@@ -66,14 +63,12 @@ std::vector<std::string> substrings(const std::vector<std::string>& input) {
   return out;
 }
 
-
 TEST(unique_substrings, empty) {
   const std::vector<std::string> in;
 
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 0);
 }
-
 
 TEST(unique_substrings, one_char) {
   const std::vector<std::string> in{"a"};
@@ -83,18 +78,16 @@ TEST(unique_substrings, one_char) {
   ASSERT_EQ(out[0], "a");
 }
 
-
 TEST(unique_substrings, one) {
-  const std::vector<std::string> in {"abc"};
+  const std::vector<std::string> in{"abc"};
 
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 1);
   ASSERT_EQ(out[0], "a");
 }
 
-
 TEST(unique_substrings, two) {
-  const std::vector<std::string> in {"a", "b"};
+  const std::vector<std::string> in{"a", "b"};
 
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 2);
@@ -102,9 +95,8 @@ TEST(unique_substrings, two) {
   ASSERT_EQ(out[1], "b");
 }
 
-
 TEST(unique_substrings, two_char) {
-  const std::vector<std::string> in {"ab", "ac"};
+  const std::vector<std::string> in{"ab", "ac"};
 
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 2);
@@ -112,9 +104,8 @@ TEST(unique_substrings, two_char) {
   ASSERT_EQ(out[1], "ac");
 }
 
-
 TEST(unique_substrings, three_char) {
-  const std::vector<std::string> in {"aab", "acc"};
+  const std::vector<std::string> in{"aab", "acc"};
 
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 2);
@@ -122,9 +113,8 @@ TEST(unique_substrings, three_char) {
   ASSERT_EQ(out[1], "ac");
 }
 
-
 TEST(unique_substrings, four_char) {
-  const std::vector<std::string> in {"a", "ba", "bbe", "bbd", "c", "be"};
+  const std::vector<std::string> in{"a", "ba", "bbe", "bbd", "c", "be"};
 
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 6);
@@ -136,15 +126,14 @@ TEST(unique_substrings, four_char) {
   ASSERT_EQ(out[5], "be");
 }
 
-
 TEST(unique_substrings, nonunique) {
-  const std::vector<std::string> in {"a", "a"};
+  const std::vector<std::string> in{"a", "a"};
 
   auto out = substrings(in);
   ASSERT_EQ(out.size(), 0);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

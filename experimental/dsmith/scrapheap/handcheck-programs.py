@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import random
 import sys
 from argparse import ArgumentParser
@@ -18,9 +17,17 @@ def yes_no_or_skip(question, default="skip"):
 
   The "answer" return value is True for "yes" or False for "no".
   """
-  valid = {"yes": "yes", "y": "yes", "ye": "yes",
-           "no": "no", "n": "no",
-           "skip": "skip", "ski": "skip", "sk": "skip", "s": "skip", }
+  valid = {
+    "yes": "yes",
+    "y": "yes",
+    "ye": "yes",
+    "no": "no",
+    "n": "no",
+    "skip": "skip",
+    "ski": "skip",
+    "sk": "skip",
+    "s": "skip",
+  }
   if default is None:
     prompt = "[y/n/s]"
   elif default == "yes":
@@ -35,7 +42,7 @@ def yes_no_or_skip(question, default="skip"):
   while True:
     sys.stdout.write(f"{question} {prompt} ")
     choice = input().lower()
-    if default is not None and choice == '':
+    if default is not None and choice == "":
       return valid[default]
     elif choice in valid:
       return valid[choice]
@@ -46,20 +53,27 @@ def yes_no_or_skip(question, default="skip"):
 def handcheck(recheck=False, include_all=False):
   program = None
   with Session() as session:
-    program_ids = [x[0] for x in session.execute(f"""
+    program_ids = [
+      x[0]
+      for x in session.execute(
+        f"""
 SELECT program_id
 FROM CLgenResults
 LEFT JOIN CLgenTestCases ON CLgenResults.testcase_id = CLgenTestCases.id
 LEFT JOIN CLgenClassifications ON CLgenResults.id = CLgenClassifications.id
 WHERE classification = {CLASSIFICATIONS_TO_INT["w"]}
 GROUP BY program_id
-""")]
+"""
+      )
+    ]
 
     num_todo = len(program_ids)
     if num_todo:
-      program = session.query(CLgenProgram) \
-        .filter(CLgenProgram.id == random.choice(program_ids)) \
+      program = (
+        session.query(CLgenProgram)
+        .filter(CLgenProgram.id == random.choice(program_ids))
         .scalar()
+      )
 
       print()
       print(f"{num_todo} kernels to check")
@@ -73,8 +87,9 @@ GROUP BY program_id
         valid = 1 if answer == "yes" else 0
         print(valid)
         print()
-        handcheck = get_or_create(session, CLgenHandcheck,
-                                  id=program.id, handchecked=valid)
+        handcheck = get_or_create(
+          session, CLgenHandcheck, id=program.id, handchecked=valid
+        )
         session.add(handcheck)
 
   # next check
@@ -84,12 +99,22 @@ GROUP BY program_id
 
 def main():
   parser = ArgumentParser(description="Collect difftest results for a device")
-  parser.add_argument("-H", "--hostname", type=str, default="cc1",
-                      help="MySQL database hostname")
-  parser.add_argument("-r", "--recheck", action="store_true",
-                      help="include previously checked kernels")
-  parser.add_argument("-a", "--all", dest="include_all", action="store_true",
-                      help="include all kernels, not just wrong-code")
+  parser.add_argument(
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
+  parser.add_argument(
+    "-r",
+    "--recheck",
+    action="store_true",
+    help="include previously checked kernels",
+  )
+  parser.add_argument(
+    "-a",
+    "--all",
+    dest="include_all",
+    action="store_true",
+    help="include all kernels, not just wrong-code",
+  )
   args = parser.parse_args()
 
   # get testbed information

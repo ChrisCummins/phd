@@ -36,26 +36,30 @@ from labm8.py import system
 
 FLAGS = app.FLAGS
 
-app.DEFINE_string('clang_format_file_suffix', '.c',
-                  'The file name suffix to assume for files.')
-app.DEFINE_integer('clang_format_timeout_seconds', 60,
-                   'The maximum number of seconds to allow process to run.')
+app.DEFINE_string(
+  "clang_format_file_suffix", ".c", "The file name suffix to assume for files."
+)
+app.DEFINE_integer(
+  "clang_format_timeout_seconds",
+  60,
+  "The maximum number of seconds to allow process to run.",
+)
 
-_LLVM_REPO = 'llvm_linux' if system.is_linux() else 'llvm_mac'
+_LLVM_REPO = "llvm_linux" if system.is_linux() else "llvm_mac"
 
 # Path to clang-format binary.
-CLANG_FORMAT = bazelutil.DataPath(f'{_LLVM_REPO}/bin/clang-format')
+CLANG_FORMAT = bazelutil.DataPath(f"{_LLVM_REPO}/bin/clang-format")
 
 
 class ClangFormatException(llvm.LlvmError):
   """An error from clang-format."""
+
   pass
 
 
-def Exec(text: str,
-         suffix: str,
-         args: typing.List[str],
-         timeout_seconds: int = 60) -> str:
+def Exec(
+  text: str, suffix: str, args: typing.List[str], timeout_seconds: int = 60
+) -> str:
   """Run clang-format on a source.
 
   Args:
@@ -73,19 +77,24 @@ def Exec(text: str,
     LlvmTimeout: If clang-format does not complete before timeout_seconds.
   """
   cmd = [
-      'timeout', '-s9',
-      str(timeout_seconds),
-      str(CLANG_FORMAT), '-assume-filename', f'input{suffix}'
+    "timeout",
+    "-s9",
+    str(timeout_seconds),
+    str(CLANG_FORMAT),
+    "-assume-filename",
+    f"input{suffix}",
   ] + args
-  app.Log(3, '$ %s', ' '.join(cmd))
-  process = subprocess.Popen(cmd,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             universal_newlines=True)
+  app.Log(3, "$ %s", " ".join(cmd))
+  process = subprocess.Popen(
+    cmd,
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    universal_newlines=True,
+  )
   stdout, stderr = process.communicate(text)
   if process.returncode == 9:
-    raise llvm.LlvmTimeout(f'clang-format timed out after {timeout_seconds}s')
+    raise llvm.LlvmTimeout(f"clang-format timed out after {timeout_seconds}s")
   elif process.returncode != 0:
     raise ClangFormatException(stderr)
   return stdout
@@ -95,14 +104,17 @@ def main(argv):
   """Main entry point."""
   try:
     print(
-        Exec(fileinput.input(),
-             FLAGS.clang_format_file_suffix,
-             argv[1:],
-             timeout_seconds=FLAGS.clang_format_timeout_seconds))
+      Exec(
+        fileinput.input(),
+        FLAGS.clang_format_file_suffix,
+        argv[1:],
+        timeout_seconds=FLAGS.clang_format_timeout_seconds,
+      )
+    )
   except (llvm.LlvmTimeout, ClangFormatException) as e:
     print(e, file=sys.stderr)
     sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

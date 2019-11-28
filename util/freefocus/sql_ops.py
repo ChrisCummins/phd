@@ -10,7 +10,6 @@ make_session = None
 
 
 class System:
-
   @staticmethod
   def helo():
     global make_session
@@ -25,13 +24,12 @@ class System:
 
   @staticmethod
   def new_person(**fields):
-    q = session.query(Person) \
-      .filter(Person.name == github_user.login,
-              Person.created == github_user.created_at)
+    q = session.query(Person).filter(
+      Person.name == github_user.login, Person.created == github_user.created_at
+    )
 
     if github_user.email:
-      q = q.join(Email) \
-        .filter(Email.address == github_user.email)
+      q = q.join(Email).filter(Email.address == github_user.email)
 
     if q.count():
       return q.one()

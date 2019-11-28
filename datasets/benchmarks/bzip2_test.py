@@ -8,15 +8,15 @@ FLAGS = app.FLAGS
 
 def test_Exec_compress_decompress():
   """Test compressing and de-compressing a string."""
-  compress = bzip2.Exec('Hello, bzip2!'.encode('utf-8'), ['-z'])
+  compress = bzip2.Exec("Hello, bzip2!".encode("utf-8"), ["-z"])
   assert not compress.stderr
   assert not compress.returncode
-  assert compress.stdout != 'Hello, bzip2!'.encode('utf-8')
+  assert compress.stdout != "Hello, bzip2!".encode("utf-8")
 
-  decompress = bzip2.Exec(compress.stdout, ['-d'])
+  decompress = bzip2.Exec(compress.stdout, ["-d"])
   assert not decompress.stderr
   assert not decompress.returncode
-  assert decompress.stdout == 'Hello, bzip2!'.encode('utf-8')
+  assert decompress.stdout == "Hello, bzip2!".encode("utf-8")
 
 
 def test_BZIP2_SRCS():
@@ -25,5 +25,5 @@ def test_BZIP2_SRCS():
     assert path.is_file()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -4,7 +4,6 @@
 Usage:
   $ python run_filters.py <results_dir>
 """
-
 from __future__ import print_function
 
 import os
@@ -31,16 +30,16 @@ def LoadResultProto(path):
 
 def WriteResultProto(path, result):
   """Write a Result proto to file."""
-  with open(path, 'wt') as f:
+  with open(path, "wt") as f:
     f.write(google.protobuf.text_format.MessageToString(result))
 
 
 def main():
   """Main entry point."""
-  results_dir = '.'
+  results_dir = "."
   filter_modules = list(AllFilterModules())
   all_result_paths = [
-      os.path.join(results_dir, x) for x in os.listdir(results_dir)
+    os.path.join(results_dir, x) for x in os.listdir(results_dir)
   ]
 
   for result_path in all_result_paths:
@@ -48,14 +47,19 @@ def main():
       result = LoadResultProto(result_path)
     except google.protobuf.text_format.ParseError as e:
       print(
-          "Failed to read result: '{result_path}'.\n{e}".format(
-              result_path=result_path, e=e),
-          file=sys.stderr)
+        "Failed to read result: '{result_path}'.\n{e}".format(
+          result_path=result_path, e=e
+        ),
+        file=sys.stderr,
+      )
       continue
 
     for module in filter_modules:
-      print("Running filter: '{modname}' on '{basename}' ...".format(
-          modname=module.__name__, basename=os.path.basename(result_path)))
+      print(
+        "Running filter: '{modname}' on '{basename}' ...".format(
+          modname=module.__name__, basename=os.path.basename(result_path)
+        )
+      )
       result = module.Filter(result)
       if not result:
         break
@@ -67,5 +71,5 @@ def main():
       os.unlink(result_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   main()

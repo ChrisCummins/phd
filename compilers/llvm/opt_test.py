@@ -28,12 +28,14 @@ def test_ValidateOptimizationLevel_valid(o: str):
 
 
 @pytest.mark.parametrize(
-    "o",
-    (
-        "O0",  # missing leading '-'
-        "-Ofast",  # valid for clang, not for opt
-        "-O4",  # not a real value
-        "foo"))  # not a real value
+  "o",
+  (
+    "O0",  # missing leading '-'
+    "-Ofast",  # valid for clang, not for opt
+    "-O4",  # not a real value
+    "foo",
+  ),
+)  # not a real value
 def test_ValidateOptimizationLevel_invalid(o: str):
   """Test that invalid optimization levels raise an error."""
   with pytest.raises(ValueError) as e_ctx:
@@ -41,5 +43,5 @@ def test_ValidateOptimizationLevel_invalid(o: str):
   assert o in str(e_ctx.value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

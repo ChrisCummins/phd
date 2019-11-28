@@ -10,17 +10,17 @@ from labm8.py import test
 FLAGS = test.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db(tempdir: pathlib.Path) -> samples_database.SamplesDatabase:
-  yield samples_database.SamplesDatabase(f'sqlite:///{tempdir}/db')
+  yield samples_database.SamplesDatabase(f"sqlite:///{tempdir}/db")
 
 
 def test_SamplesDatabaseObserver_add_one(db: samples_database.SamplesDatabase):
   sample_proto = model_pb2.Sample(
-      text='Hello, observer',
-      num_tokens=10,
-      wall_time_ms=5,
-      sample_start_epoch_ms_utc=1000,
+    text="Hello, observer",
+    num_tokens=10,
+    wall_time_ms=5,
+    sample_start_epoch_ms_utc=1000,
   )
 
   with db.Observer() as obs:
@@ -31,5 +31,5 @@ def test_SamplesDatabaseObserver_add_one(db: samples_database.SamplesDatabase):
     assert s.query(samples_database.Sample).one().ToProto() == sample_proto
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

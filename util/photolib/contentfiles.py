@@ -12,9 +12,13 @@ FLAGS = app.FLAGS
 
 
 class Contentfile(object):
-
-  def __init__(self, abspath: str, relpath: str, filename: str,
-               xmp_cache_: xmp_cache.XmpCache):
+  def __init__(
+    self,
+    abspath: str,
+    relpath: str,
+    filename: str,
+    xmp_cache_: xmp_cache.XmpCache,
+  ):
     self.path = pathlib.Path(abspath)
     self.abspath = abspath
     self.relpath = relpath
@@ -37,19 +41,21 @@ class Contentfile(object):
 
   @property
   def is_composite_file(self) -> bool:
-    return (self.filename_noext.endswith('-HDR') or
-            self.filename_noext.endswith('-Pano') or
-            self.filename_noext.endswith('-Edit'))
+    return (
+      self.filename_noext.endswith("-HDR")
+      or self.filename_noext.endswith("-Pano")
+      or self.filename_noext.endswith("-Edit")
+    )
 
   @decorators.memoized_property
   def composite_file_types(self) -> typing.Optional[typing.List[str]]:
     if not self.is_composite_file:
       return None
-    components = self.filename.split('-')
-    return [c for c in components if c in {'HDR', 'Pano', 'Edit'}]
+    components = self.filename.split("-")
+    return [c for c in components if c in {"HDR", "Pano", "Edit"}]
 
   @decorators.memoized_property
-  def composite_file_base(self) -> typing.Optional['Contentfile']:
+  def composite_file_base(self) -> typing.Optional["Contentfile"]:
     """Guess the base file for a composite."""
     if not self.is_composite_file:
       return None
@@ -57,19 +63,23 @@ class Contentfile(object):
     # Get the length of the shared prefix for all other file names in the
     # directory.
     names_and_prefixes = [
-        (path.name, _GetLengthOfCommonPrefix(path.name, self.filename))
-        for path in self.path.parent.iterdir()
-        if path.name != self.filename and path.suffix in
-        common.KNOWN_IMG_FILE_EXTENSIONS and len(path.name) < len(self.filename)
+      (path.name, _GetLengthOfCommonPrefix(path.name, self.filename))
+      for path in self.path.parent.iterdir()
+      if path.name != self.filename
+      and path.suffix in common.KNOWN_IMG_FILE_EXTENSIONS
+      and len(path.name) < len(self.filename)
     ]
     if not names_and_prefixes:
       return None
 
     # Select the file which has the longest shared file name prefix.
     closest_match = list(sorted(names_and_prefixes, key=lambda x: x[1]))[-1][0]
-    return Contentfile(str(self.path.absolute().parent / closest_match),
-                       self.relpath[:-len(self.filename)] + closest_match,
-                       closest_match, self.xmp_cache)
+    return Contentfile(
+      str(self.path.absolute().parent / closest_match),
+      self.relpath[: -len(self.filename)] + closest_match,
+      closest_match,
+      self.xmp_cache,
+    )
 
 
 def _GetLengthOfCommonPrefix(a: str, b: str) -> int:
@@ -81,7 +91,8 @@ def _GetLengthOfCommonPrefix(a: str, b: str) -> int:
 
 
 def get_yyyy(
-    string: str) -> typing.Tuple[typing.Optional[int], typing.Optional[str]]:
+  string: str,
+) -> typing.Tuple[typing.Optional[int], typing.Optional[str]]:
   """Parse string or return error."""
   if len(string) != 4:
     return None, f"'{string}' should be a four digit year"
@@ -98,7 +109,8 @@ def get_yyyy(
 
 
 def get_mm(
-    string: str) -> typing.Tuple[typing.Optional[int], typing.Optional[str]]:
+  string: str,
+) -> typing.Tuple[typing.Optional[int], typing.Optional[str]]:
   """Parse string or return error."""
   if len(string) != 2:
     return None, f"'{string}' should be a two digit month"
@@ -115,7 +127,8 @@ def get_mm(
 
 
 def get_dd(
-    string: str) -> typing.Tuple[typing.Optional[int], typing.Optional[str]]:
+  string: str,
+) -> typing.Tuple[typing.Optional[int], typing.Optional[str]]:
   """Parse string or return error."""
   if len(string) != 2:
     return None, f"'{string}' should be a two digit day"
@@ -132,9 +145,10 @@ def get_dd(
 
 
 def get_yyyy_mm(
-    string: str
-) -> typing.Tuple[typing.Tuple[typing.Optional[int], typing.
-                               Optional[int]], typing.Optional[str]]:
+  string: str,
+) -> typing.Tuple[
+  typing.Tuple[typing.Optional[int], typing.Optional[int]], typing.Optional[str]
+]:
   """Parse string or return error."""
   string_components = string.split("-")
   if len(string_components) != 2:
@@ -152,10 +166,13 @@ def get_yyyy_mm(
 
 
 def get_yyyy_mm_dd(
-    string: str
-) -> typing.Tuple[typing.Tuple[typing.Optional[int], typing.
-                               Optional[int], typing.Optional[int]], typing.
-                  Optional[str]]:
+  string: str,
+) -> typing.Tuple[
+  typing.Tuple[
+    typing.Optional[int], typing.Optional[int], typing.Optional[int]
+  ],
+  typing.Optional[str],
+]:
   """Parse string or return error."""
   string_components = string.split("-")
   if len(string_components) != 3:

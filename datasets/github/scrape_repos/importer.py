@@ -30,12 +30,14 @@ from labm8.py import humanize
 from labm8.py import pbutil
 
 FLAGS = app.FLAGS
-app.DEFINE_string('importer_clone_list', None,
-                  'The path to a LanguageCloneList file.')
+app.DEFINE_string(
+  "importer_clone_list", None, "The path to a LanguageCloneList file."
+)
 
 
-def ShouldImportRepo(session: orm.session.Session,
-                     metafile: pathlib.Path) -> bool:
+def ShouldImportRepo(
+  session: orm.session.Session, metafile: pathlib.Path
+) -> bool:
   """Determine if the repository described by a metafile should be imported.
 
   A repository should be imported iff:
@@ -43,44 +45,56 @@ def ShouldImportRepo(session: orm.session.Session,
     * The clone directory specified in the metafile appears to be a github repo.
     * The repo does not exist in the contentfiles database.
   """
-  if not (metafile.is_file() and pbutil.ProtoIsReadable(
-      metafile, scrape_repos_pb2.GitHubRepoMetadata())):
+  if not (
+    metafile.is_file()
+    and pbutil.ProtoIsReadable(metafile, scrape_repos_pb2.GitHubRepoMetadata())
+  ):
     return False
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
-  clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
-  if not (clone_dir / '.git').is_dir():
+  clone_dir = metafile.parent / f"{meta.owner}_{meta.name}"
+  if not (clone_dir / ".git").is_dir():
     return False
   return not contentfiles.GitHubRepository.IsInDatabase(session, meta)
 
 
-def ImportWorker(job: scrape_repos_pb2.ImportWorker
-                ) -> typing.List[contentfiles.ContentFile]:
+def ImportWorker(
+  job: scrape_repos_pb2.ImportWorker,
+) -> typing.List[contentfiles.ContentFile]:
   """Import a content file."""
-  relpath = job.abspath[len(str(job.clone_dir)) + 1:]
+  relpath = job.abspath[len(str(job.clone_dir)) + 1 :]
   outputs: typing.List[contentfiles.ContentFile] = []
   try:
-    texts = preprocessors.Preprocess(pathlib.Path(job.clone_dir), relpath,
-                                     job.all_files_relpaths, job.preprocessors)
+    texts = preprocessors.Preprocess(
+      pathlib.Path(job.clone_dir),
+      relpath,
+      job.all_files_relpaths,
+      job.preprocessors,
+    )
     for i, text in enumerate(texts):
-      encoded_text = text.encode('ascii', 'ignore')
+      encoded_text = text.encode("ascii", "ignore")
       sha256 = hashlib.sha256(encoded_text).hexdigest()
-      text = encoded_text.decode('ascii')
+      text = encoded_text.decode("ascii")
       outputs.append(
-          contentfiles.ContentFile(clone_from_url=job.clone_from_url,
-                                   relpath=relpath,
-                                   artifact_index=i,
-                                   sha256=sha256,
-                                   charcount=len(text),
-                                   linecount=len(text.split('\n')),
-                                   text=text))
+        contentfiles.ContentFile(
+          clone_from_url=job.clone_from_url,
+          relpath=relpath,
+          artifact_index=i,
+          sha256=sha256,
+          charcount=len(text),
+          linecount=len(text.split("\n")),
+          text=text,
+        )
+      )
   except UnicodeDecodeError:
-    app.Warning('Failed to decode %s', relpath)
+    app.Warning("Failed to decode %s", relpath)
   return outputs
 
 
-def ImportRepo(session: orm.session.Session,
-               language: scrape_repos_pb2.LanguageToClone,
-               metafile: pathlib.Path) -> None:
+def ImportRepo(
+  session: orm.session.Session,
+  language: scrape_repos_pb2.LanguageToClone,
+  metafile: pathlib.Path,
+) -> None:
   """Import contentfiles from repository.
 
   Args:
@@ -89,30 +103,43 @@ def ImportRepo(session: orm.session.Session,
     metafile: The repo metafile.
   """
   meta = pbutil.FromFile(metafile, scrape_repos_pb2.GitHubRepoMetadata())
-  clone_dir = metafile.parent / f'{meta.owner}_{meta.name}'
+  clone_dir = metafile.parent / f"{meta.owner}_{meta.name}"
   repo = contentfiles.GitHubRepository.GetOrAdd(session, meta)
   repo.language = language.language
   session.flush()
 
   for importer in language.importer:
     if not importer.source_code_pattern:
-      app.Error('No source_code_pattern specified! Stopping now.')
+      app.Error("No source_code_pattern specified! Stopping now.")
       return
 
     pat = importer.source_code_pattern
-    pat = f'{clone_dir}/{pat[1:]}' if pat[0] == '^' else f'{clone_dir}/{pat}'
+    pat = f"{clone_dir}/{pat[1:]}" if pat[0] == "^" else f"{clone_dir}/{pat}"
     cmd = [
-        'find',
-        str(clone_dir), '-type', 'f', '-regex', pat, '-not', '-path', '*/.git/*'
+      "find",
+      str(clone_dir),
+      "-type",
+      "f",
+      "-regex",
+      pat,
+      "-not",
+      "-path",
+      "*/.git/*",
     ]
-    app.Log(2, '$ %s', ' '.join(cmd))
-    paths = subprocess.check_output(
-        cmd, universal_newlines=True).rstrip().split('\n')
+    app.Log(2, "$ %s", " ".join(cmd))
+    paths = (
+      subprocess.check_output(cmd, universal_newlines=True).rstrip().split("\n")
+    )
     if len(paths) == 1 and not paths[0]:
-      app.Log(2, 'No files to import from %s', clone_dir)
+      app.Log(2, "No files to import from %s", clone_dir)
       return
-    app.Log(1, "Importing %s '%s' files from %s ...", humanize.Commas(
-        len(paths)), importer.source_code_pattern, clone_dir.name)
+    app.Log(
+      1,
+      "Importing %s '%s' files from %s ...",
+      humanize.Commas(len(paths)),
+      importer.source_code_pattern,
+      clone_dir.name,
+    )
     all_files_relpaths = public.GetAllFilesRelativePaths(clone_dir)
 
     # Use progress bar if there's a lot of files to process.
@@ -123,18 +150,19 @@ def ImportRepo(session: orm.session.Session,
 
     for path in bar(paths):
       job = scrape_repos_pb2.ImportWorker(
-          clone_from_url=repo.clone_from_url,
-          clone_dir=str(clone_dir),
-          abspath=path,
-          all_files_relpaths=all_files_relpaths,
-          preprocessors=importer.preprocessor,
+        clone_from_url=repo.clone_from_url,
+        clone_dir=str(clone_dir),
+        abspath=path,
+        all_files_relpaths=all_files_relpaths,
+        preprocessors=importer.preprocessor,
       )
       for output in ImportWorker(job):
         session.add(output)
 
 
-def ImportFromLanguage(db: contentfiles.ContentFiles,
-                       language: scrape_repos_pb2.LanguageToClone) -> None:
+def ImportFromLanguage(
+  db: contentfiles.ContentFiles, language: scrape_repos_pb2.LanguageToClone
+) -> None:
   """Import contentfiles from a language specification.
 
   Args:
@@ -145,41 +173,48 @@ def ImportFromLanguage(db: contentfiles.ContentFiles,
     ValueError: If importer field not set.
   """
   if not language.importer:
-    raise ValueError('LanguageToClone.importer field not set')
+    raise ValueError("LanguageToClone.importer field not set")
 
   with db.Session() as session:
     repos_to_import = [
-        pathlib.Path(language.destination_directory / f)
-        for f in pathlib.Path(language.destination_directory).iterdir()
-        if ShouldImportRepo(session,
-                            pathlib.Path(language.destination_directory / f))
+      pathlib.Path(language.destination_directory / f)
+      for f in pathlib.Path(language.destination_directory).iterdir()
+      if ShouldImportRepo(
+        session, pathlib.Path(language.destination_directory / f)
+      )
     ]
   random.shuffle(repos_to_import)
-  app.Log(1, 'Importing %s %s repos ...', humanize.Commas(len(repos_to_import)),
-          language.language.capitalize())
+  app.Log(
+    1,
+    "Importing %s %s repos ...",
+    humanize.Commas(len(repos_to_import)),
+    language.language.capitalize(),
+  )
   for metafile in repos_to_import:
     with db.Session(commit=True) as session:
       ImportRepo(session, language, metafile)
 
 
 def GetContentfilesDatabase(
-    language: scrape_repos_pb2.LanguageToClone) -> contentfiles.ContentFiles:
+  language: scrape_repos_pb2.LanguageToClone,
+) -> contentfiles.ContentFiles:
   """Return a connection to the language database from clone list."""
   d = pathlib.Path(language.destination_directory)
-  d = d.parent / (str(d.name) + '.db')
-  return contentfiles.ContentFiles(f'sqlite:///{d}')
+  d = d.parent / (str(d.name) + ".db")
+  return contentfiles.ContentFiles(f"sqlite:///{d}")
 
 
 def main(argv):
   """Main entry point."""
   if len(argv) > 1:
-    raise app.UsageError("Unknown arguments '{}'".format(', '.join(argv[1:])))
+    raise app.UsageError("Unknown arguments '{}'".format(", ".join(argv[1:])))
 
   clone_list_path = pathlib.Path(FLAGS.importer_clone_list or "")
   if not clone_list_path.is_file():
-    raise app.UsageError('--clone_list is not a file.')
-  clone_list = pbutil.FromFile(clone_list_path,
-                               scrape_repos_pb2.LanguageCloneList())
+    raise app.UsageError("--clone_list is not a file.")
+  clone_list = pbutil.FromFile(
+    clone_list_path, scrape_repos_pb2.LanguageCloneList()
+  )
 
   # Error early if the config contains invalid preprocessors.
   for language in clone_list.language:
@@ -192,5 +227,5 @@ def main(argv):
       ImportFromLanguage(db, language)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(main)

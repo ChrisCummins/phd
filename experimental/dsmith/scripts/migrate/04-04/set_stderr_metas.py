@@ -13,13 +13,14 @@ if __name__ == "__main__":
 
   with Session() as s:
     print("Setting metadata for stderrs ...")
-    bar = progressbar.ProgressBar(max_value=s.query(Stderr).count(),
-                                  redirect_stdout=True)
+    bar = progressbar.ProgressBar(
+      max_value=s.query(Stderr).count(), redirect_stdout=True
+    )
 
     for i, stderr in enumerate(paginate(s.query(Stderr), page_size=1000)):
       bar.update(i)
 
-      lines = stderr.stderr.split('\n')
+      lines = stderr.stderr.split("\n")
       stderr.assertion = Stderr._get_assertion(s, lines)
       stderr.unreachable = Stderr._get_unreachable(s, lines)
       stderr.stackdump = Stderr._get_stackdump(s, lines)

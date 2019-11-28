@@ -19,14 +19,14 @@ from labm8.py import test
 def test_EscapeList():
   # Empty list
   words = []
-  assert shell.ShellEscapeList(words) == ''
+  assert shell.ShellEscapeList(words) == ""
 
   # Empty string
-  words = ['']
+  words = [""]
   assert shell.ShellEscapeList(words) == "''"
 
   # Single word
-  words = ['foo']
+  words = ["foo"]
   assert shell.ShellEscapeList(words) == "'foo'"
 
   # Single word with single quote
@@ -39,19 +39,19 @@ def test_EscapeList():
   assert shell.ShellEscapeList(words) == expected
 
   # Multiple words
-  words = ['foo', 'bar']
+  words = ["foo", "bar"]
   assert shell.ShellEscapeList(words) == "'foo' 'bar'"
 
   # Words with spaces
-  words = ['foo', 'bar', "foo'' ''bar"]
+  words = ["foo", "bar", "foo'' ''bar"]
   expected = """   'foo' 'bar' 'foo'"'"''"'"' '"'"''"'"'bar'   """.strip()
   assert shell.ShellEscapeList(words) == expected
 
   # Now I'm just being mean
-  words = ['foo', 'bar', """   ""'"'"   """.strip()]
+  words = ["foo", "bar", """   ""'"'"   """.strip()]
   expected = """   'foo' 'bar' '""'"'"'"'"'"'"'   """.strip()
   assert shell.ShellEscapeList(words) == expected
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

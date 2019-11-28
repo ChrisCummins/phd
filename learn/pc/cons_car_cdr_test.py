@@ -12,7 +12,6 @@ MODULE_UNDER_TEST = None  # No coverage.
 
 
 def cons(a, b):
-
   def pair(f):
     return f(a, b)
 
@@ -50,5 +49,5 @@ def test_cdr():
   assert cdr(cons(3, 4)) == 4
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

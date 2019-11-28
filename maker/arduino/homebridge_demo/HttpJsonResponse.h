@@ -12,10 +12,10 @@ class HttpJsonResponse {
 
   void SendToClient(WiFiClient& client) {
     // Create a string response, format it, and return it to the client.
-    client.print(
-        String("HTTP/1.1 ") + response_line + "\r\n"
-        "Server: ESP12E\r\n"
-        "Content-Type: application/json\r\n\r\n" +
-        json_string + "\r\n");
+    client.print(String("HTTP/1.1 ") + response_line +
+                 "\r\n"
+                 "Server: ESP12E\r\n"
+                 "Content-Type: application/json\r\n\r\n" +
+                 json_string + "\r\n");
   }
 };

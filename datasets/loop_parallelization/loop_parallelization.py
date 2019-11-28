@@ -11,7 +11,7 @@ from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-DATASET_CSV = bazelutil.DataPath('phd/datasets/ppar_metrics/ppar_metrics.csv')
+DATASET_CSV = bazelutil.DataPath("phd/datasets/ppar_metrics/ppar_metrics.csv")
 
 
 def LoopDatasetToDataFrame() -> pd.DataFrame():

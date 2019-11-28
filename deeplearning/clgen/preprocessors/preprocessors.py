@@ -39,10 +39,11 @@ def _ImportPreprocessorFromFile(module_path: pathlib.Path, function_name: str):
     module = importlib_util.module_from_spec(spec)
     spec.loader.exec_module(module)
   except ImportError as e:
-    raise errors.UserError(f'Failed to import module {module_path}: {e}')
+    raise errors.UserError(f"Failed to import module {module_path}: {e}")
   if not hasattr(module, function_name):
     raise errors.UserError(
-        f'Function {function_name} not found in module {module_path}')
+      f"Function {function_name} not found in module {module_path}"
+    )
   return getattr(module, function_name)
 
 
@@ -51,14 +52,16 @@ def _ImportPreprocessorFromModule(module_name: str, function_name: str):
   try:
     module = importlib.import_module(module_name)
   except (ModuleNotFoundError, AttributeError):
-    raise errors.UserError(f'Module {module_name} not found.')
+    raise errors.UserError(f"Module {module_name} not found.")
   if not hasattr(module, function_name):
     raise errors.UserError(
-        f'Function {function_name} not found in module {module_name}')
+      f"Function {function_name} not found in module {module_name}"
+    )
   function_ = getattr(module, function_name)
-  if not function_.__dict__.get('is_clgen_preprocessor'):
+  if not function_.__dict__.get("is_clgen_preprocessor"):
     raise errors.UserError(
-        f'Preprocessor {function_name} not decorated with @clgen_preprocessor')
+      f"Preprocessor {function_name} not decorated with @clgen_preprocessor"
+    )
   return function_
 
 
@@ -84,11 +87,11 @@ def GetPreprocessorFunction(name: str) -> public.PreprocessorFunction:
     UserError: If the requested name cannot be found or is not a
       @clgen_preprocessor decorated function.
   """
-  components = name.split(':')
+  components = name.split(":")
   if len(components) != 2:
-    raise errors.UserError(f'Invalid preprocessor name {name}')
+    raise errors.UserError(f"Invalid preprocessor name {name}")
   module_name, function_name = components
-  if module_name[0] == '/':
+  if module_name[0] == "/":
     return _ImportPreprocessorFromFile(pathlib.Path(module_name), function_name)
   else:
     return _ImportPreprocessorFromModule(module_name, function_name)
@@ -121,8 +124,9 @@ def Preprocess(text: str, preprocessors: typing.List[str]) -> str:
   return text
 
 
-def PreprocessFile(path: str, preprocessors: typing.List[str],
-                   inplace: bool) -> str:
+def PreprocessFile(
+  path: str, preprocessors: typing.List[str], inplace: bool
+) -> str:
   """Preprocess a file and optionally update it.
 
   Args:
@@ -145,7 +149,7 @@ def PreprocessFile(path: str, preprocessors: typing.List[str],
     contents = infile.read()
   preprocessed = Preprocess(contents, preprocessors)
   if inplace:
-    with open(path, 'w') as outfile:
+    with open(path, "w") as outfile:
       outfile.write(preprocessed)
   return preprocessed
 

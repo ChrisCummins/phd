@@ -12,16 +12,14 @@ from progressbar import ProgressBar
 if __name__ == "__main__":
   parser = ArgumentParser(description=__doc__)
   parser.add_argument(
-      "-H",
-      "--hostname",
-      type=str,
-      default="cc1",
-      help="MySQL database hostname")
+    "-H", "--hostname", type=str, default="cc1", help="MySQL database hostname"
+  )
   parser.add_argument(
-      "-r",
-      "--recheck",
-      action="store_true",
-      help="Re-run on previously verified programs")
+    "-r",
+    "--recheck",
+    action="store_true",
+    help="Re-run on previously verified programs",
+  )
   args = parser.parse_args()
 
   db.init(args.hostname)

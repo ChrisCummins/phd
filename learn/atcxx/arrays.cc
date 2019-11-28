@@ -1,20 +1,17 @@
 #include <iostream>
 
 void print_arr1(int* arr, size_t n) {
-  for (size_t i = 0; i < n; ++i)
-    std::cout << arr[i] << ' ';
+  for (size_t i = 0; i < n; ++i) std::cout << arr[i] << ' ';
   std::cout << std::endl;
 }
 
 void print_arr2(int arr[5]) {
-  for (size_t i = 0; i < 5; ++i)
-    std::cout << arr[i] << ' ';
+  for (size_t i = 0; i < 5; ++i) std::cout << arr[i] << ' ';
   std::cout << std::endl;
 }
 
 void double_arr(int arr[5]) {
-  for (size_t i = 0; i < 5; ++i)
-    arr[i] *= 2;
+  for (size_t i = 0; i < 5; ++i) arr[i] *= 2;
 }
 
 int main() {

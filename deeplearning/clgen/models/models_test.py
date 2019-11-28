@@ -28,7 +28,7 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 # The Model.hash for an instance of abc_model_config.
-ABC_MODEL_HASH = 'bf95e335177883a9204a560617990caf3fd1efc6'
+ABC_MODEL_HASH = "bf95e335177883a9204a560617990caf3fd1efc6"
 
 
 def test_Model_config_type_error():
@@ -55,8 +55,9 @@ def test_Model_config_hash_different_options(clgen_cache_dir, abc_model_config):
   assert m1.hash != m2.hash
 
 
-def test_Model_config_hash_different_num_epochs(clgen_cache_dir,
-                                                abc_model_config):
+def test_Model_config_hash_different_num_epochs(
+  clgen_cache_dir, abc_model_config
+):
   """Test that different num_eopchs doesn't affect model hash."""
   del clgen_cache_dir
   abc_model_config.training.num_epochs = 10
@@ -69,15 +70,16 @@ def test_Model_config_hash_different_num_epochs(clgen_cache_dir,
 def test_Model_config_hash_different_corpus(clgen_cache_dir, abc_model_config):
   """Test that different corpuses produce different model hashes."""
   del clgen_cache_dir
-  abc_model_config.corpus.contentfile_separator = '\n\n'
+  abc_model_config.corpus.contentfile_separator = "\n\n"
   m1 = models.Model(abc_model_config)
-  abc_model_config.corpus.contentfile_separator = 'abc'
+  abc_model_config.corpus.contentfile_separator = "abc"
   m2 = models.Model(abc_model_config)
   assert m1.hash != m2.hash
 
 
-def test_Model_config_sequence_length_not_set(clgen_cache_dir,
-                                              abc_model_config):
+def test_Model_config_sequence_length_not_set(
+  clgen_cache_dir, abc_model_config
+):
   """Test that an error is raised if sequence_length is < 1."""
   del clgen_cache_dir
   abc_model_config.training.sequence_length = -1
@@ -107,39 +109,41 @@ def test_Model_directories(clgen_cache_dir, abc_model_config):
   """A newly instantiated model's cache has checkpoint and sample dirs."""
   del clgen_cache_dir
   m = models.Model(abc_model_config)
-  assert (m.cache.path / 'checkpoints').is_dir()
-  assert (m.cache.path / 'samples').is_dir()
+  assert (m.cache.path / "checkpoints").is_dir()
+  assert (m.cache.path / "samples").is_dir()
   # There should be nothing in these directories yet.
-  assert not list((m.cache.path / 'checkpoints').iterdir())
-  assert not list((m.cache.path / 'samples').iterdir())
+  assert not list((m.cache.path / "checkpoints").iterdir())
+  assert not list((m.cache.path / "samples").iterdir())
 
 
 def test_Model_metafile(clgen_cache_dir, abc_model_config):
   """A newly instantiated model's cache has a metafile."""
   del clgen_cache_dir
   m = models.Model(abc_model_config)
-  assert (m.cache.path / 'META.pbtxt').is_file()
-  assert pbutil.ProtoIsReadable(m.cache.path / 'META.pbtxt',
-                                internal_pb2.ModelMeta())
+  assert (m.cache.path / "META.pbtxt").is_file()
+  assert pbutil.ProtoIsReadable(
+    m.cache.path / "META.pbtxt", internal_pb2.ModelMeta()
+  )
 
 
 def test_Model_corpus_symlink(clgen_cache_dir, abc_model_config):
   """Test path of symlink to corpus files."""
   del clgen_cache_dir
   m = models.Model(abc_model_config)
-  assert (m.cache.path / 'corpus').is_symlink()
-  path = str((m.cache.path / 'corpus').resolve())
+  assert (m.cache.path / "corpus").is_symlink()
+  path = str((m.cache.path / "corpus").resolve())
   # We can't do a literal comparison because of bazel sandboxing.
   assert path.endswith(
-      str(pathlib.Path(m.corpus.encoded.url[len('sqlite:///'):]).parent))
+    str(pathlib.Path(m.corpus.encoded.url[len("sqlite:///") :]).parent)
+  )
 
 
 def test_Model_atomizer_symlink(clgen_cache_dir, abc_model_config):
   """Test path of symlink to atomizer."""
   del clgen_cache_dir
   m = models.Model(abc_model_config)
-  assert (m.cache.path / 'atomizer').is_symlink()
-  path = str((m.cache.path / 'atomizer').resolve())
+  assert (m.cache.path / "atomizer").is_symlink()
+  path = str((m.cache.path / "atomizer").resolve())
   # We can't do a literal comparison because of bazel sandboxing.
   assert path.endswith(str(m.corpus.atomizer_path))
 
@@ -153,8 +157,9 @@ def test_Model_atomizer_symlink(clgen_cache_dir, abc_model_config):
 # Benchmarks.
 
 
-def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
-                                       benchmark):
+def test_benchmark_Model_instantiation(
+  clgen_cache_dir, abc_model_config, benchmark
+):
   """Benchmark model instantiation.
 
   We can expect the first iteration of this benchmark to take a little more
@@ -164,5 +169,5 @@ def test_benchmark_Model_instantiation(clgen_cache_dir, abc_model_config,
   benchmark(models.Model, abc_model_config)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

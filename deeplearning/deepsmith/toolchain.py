@@ -18,4 +18,4 @@ from deeplearning.deepsmith import db
 
 class Toolchain(db.StringTable):
   id_t = db.StringTable.id_t
-  __tablename__ = 'toolchains'
+  __tablename__ = "toolchains"

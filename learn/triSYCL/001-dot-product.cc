@@ -18,14 +18,12 @@ static unsigned int seed = 0xCEC;
 //
 // Baseline, sequential dot product.
 //
-template<typename T>
+template <typename T>
 auto dot_product(const std::vector<T>& a, const std::vector<T>& b) {
-  if (a.size() != b.size())
-    throw std::invalid_argument("a.size() != b.size()");
+  if (a.size() != b.size()) throw std::invalid_argument("a.size() != b.size()");
 
   float c = 0;
-  for (size_t i = 0; i < a.size(); i++)
-    c += a[i] * b[i];
+  for (size_t i = 0; i < a.size(); i++) c += a[i] * b[i];
 
   return c;
 }
@@ -37,8 +35,7 @@ auto dot_product(const std::vector<T>& a, const std::vector<T>& b) {
 // float specialization
 auto sycl_dot_product(const std::vector<float>& a,
                       const std::vector<float>& b) {
-  if (a.size() != b.size())
-    throw std::invalid_argument("a.size() != b.size()");
+  if (a.size() != b.size()) throw std::invalid_argument("a.size() != b.size()");
 
   float c = 0;
   {  // Nested {} block encapsulates SYCL tasks
@@ -51,28 +48,24 @@ auto sycl_dot_product(const std::vector<float>& a,
 
     // The command group describing all operations needed for the
     // kernel execution:
-    myQueue.submit([&](cl::sycl::handler &cgh) {
-        // Accessors:
-        auto ka = dev_a.get_access<cl::sycl::access::read>(cgh);
-        auto kb = dev_b.get_access<cl::sycl::access::read>(cgh);
-        auto kc = dev_c.get_access<cl::sycl::access::read_write>(cgh);
-        // Kernel:
-        cgh.parallel_for(
-            cl::sycl::range<1>{a.size()},
-            [=](const cl::sycl::id<1> i) {
-              kc[0] += ka[i] * kb[i];
-            });
-      });
+    myQueue.submit([&](cl::sycl::handler& cgh) {
+      // Accessors:
+      auto ka = dev_a.get_access<cl::sycl::access::read>(cgh);
+      auto kb = dev_b.get_access<cl::sycl::access::read>(cgh);
+      auto kc = dev_c.get_access<cl::sycl::access::read_write>(cgh);
+      // Kernel:
+      cgh.parallel_for(
+          cl::sycl::range<1>{a.size()},
+          [=](const cl::sycl::id<1> i) { kc[0] += ka[i] * kb[i]; });
+    });
   }
 
   return c;
 }
 
 // int specialization
-auto sycl_dot_product(const std::vector<int>& a,
-                      const std::vector<int>& b) {
-  if (a.size() != b.size())
-    throw std::invalid_argument("a.size() != b.size()");
+auto sycl_dot_product(const std::vector<int>& a, const std::vector<int>& b) {
+  if (a.size() != b.size()) throw std::invalid_argument("a.size() != b.size()");
 
   int c = 0;
   {  // Nested {} block encapsulates SYCL tasks
@@ -85,30 +78,27 @@ auto sycl_dot_product(const std::vector<int>& a,
 
     // The command group describing all operations needed for the
     // kernel execution:
-    myQueue.submit([&](cl::sycl::handler &cgh) {
-        // Accessors:
-        auto ka = dev_a.get_access<cl::sycl::access::read>(cgh);
-        auto kb = dev_b.get_access<cl::sycl::access::read>(cgh);
-        auto kc = dev_c.get_access<cl::sycl::access::read_write>(cgh);
-        // Kernel:
-        cgh.parallel_for(
-            cl::sycl::range<1>{a.size()},
-            [=](const cl::sycl::id<1> i) {
-              kc[0] += ka[i] * kb[i];
-            });
-      });
+    myQueue.submit([&](cl::sycl::handler& cgh) {
+      // Accessors:
+      auto ka = dev_a.get_access<cl::sycl::access::read>(cgh);
+      auto kb = dev_b.get_access<cl::sycl::access::read>(cgh);
+      auto kc = dev_c.get_access<cl::sycl::access::read_write>(cgh);
+      // Kernel:
+      cgh.parallel_for(
+          cl::sycl::range<1>{a.size()},
+          [=](const cl::sycl::id<1> i) { kc[0] += ka[i] * kb[i]; });
+    });
   }
 
   return c;
 }
-
 
 ///////////
 // Tests //
 ///////////
 
 static const std::vector<float> test1_a{.5, 2, 3, 0, -1};
-static const std::vector<float> test1_b{.5, 2, 3, 1,  1};
+static const std::vector<float> test1_b{.5, 2, 3, 1, 1};
 static const float test1_c = 12.25;
 
 static const std::vector<int> test2_a{1, 2, 3};
@@ -123,7 +113,6 @@ TEST(Implementations, sycl_dot_product_float) {
   ASSERT_FLOAT_EQ(test1_c, sycl_dot_product(test1_a, test1_b));
 }
 
-
 TEST(Implementations, dot_product_int) {
   ASSERT_EQ(test2_c, dot_product(test2_a, test2_b));
 }
@@ -131,7 +120,6 @@ TEST(Implementations, dot_product_int) {
 TEST(Implementations, sycl_dot_product_int) {
   ASSERT_EQ(test2_c, sycl_dot_product(test2_a, test2_b));
 }
-
 
 ////////////////
 // Benchmarks //

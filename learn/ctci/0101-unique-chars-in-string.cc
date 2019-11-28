@@ -18,7 +18,7 @@ static unsigned int seed = 0xCEC;
 //
 // O(n) time, O(n) space.
 //
-template<typename Container>
+template <typename Container>
 bool unique(const Container &cont) {
   std::unordered_set<typename Container::value_type> set;
 
@@ -30,7 +30,6 @@ bool unique(const Container &cont) {
 
   return true;
 }
-
 
 //
 // Second solution. By specializing to strings, we can remove the
@@ -53,7 +52,6 @@ bool str_unique(const std::string &str) {
   return true;
 }
 
-
 //
 // Additional constraint: no extra data structures. This requires us
 // to iterate over every the remaining element of the container,
@@ -66,21 +64,19 @@ bool str_unique(const std::string &str) {
 //
 // O(n^2) time, O(1) space.
 //
-template<typename Container>
+template <typename Container>
 bool inplace_unique(const Container &cont) {
   auto left = cont.begin();
 
   while (left != cont.end()) {
     auto right = left + 1;
     while (right != cont.end())
-      if (*left == *right++)
-        return false;
+      if (*left == *right++) return false;
     left++;
   }
 
   return true;
 }
-
 
 ////////////////
 // Unit tests //
@@ -104,7 +100,6 @@ TEST(Unique, inplace_unique) {
   ASSERT_FALSE(inplace_unique(TEST_not_unique));
 }
 
-
 ////////////////
 // Benchmarks //
 ////////////////
@@ -112,12 +107,11 @@ TEST(Unique, inplace_unique) {
 static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
-void BM_unique(benchmark::State& state) {
+void BM_unique(benchmark::State &state) {
   std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
-    for (auto &c : t)
-      c = rand_r(&seed) % std::numeric_limits<char>::max();
+    for (auto &c : t) c = rand_r(&seed) % std::numeric_limits<char>::max();
 
     unique(t);
     benchmark::DoNotOptimize(t.data());
@@ -125,12 +119,11 @@ void BM_unique(benchmark::State& state) {
 }
 BENCHMARK(BM_unique)->Range(BM_length_min, BM_length_max);
 
-void BM_str_unique(benchmark::State& state) {
+void BM_str_unique(benchmark::State &state) {
   std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
-    for (auto &c : t)
-      c = rand_r(&seed) % std::numeric_limits<char>::max();
+    for (auto &c : t) c = rand_r(&seed) % std::numeric_limits<char>::max();
 
     str_unique(t);
     benchmark::DoNotOptimize(t.data());
@@ -138,12 +131,11 @@ void BM_str_unique(benchmark::State& state) {
 }
 BENCHMARK(BM_str_unique)->Range(BM_length_min, BM_length_max);
 
-void BM_inplace_unique(benchmark::State& state) {
+void BM_inplace_unique(benchmark::State &state) {
   std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
-    for (auto &c : t)
-      c = rand_r(&seed) % std::numeric_limits<char>::max();
+    for (auto &c : t) c = rand_r(&seed) % std::numeric_limits<char>::max();
 
     inplace_unique(t);
     benchmark::DoNotOptimize(t.data());

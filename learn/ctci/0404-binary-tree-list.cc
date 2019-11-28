@@ -6,10 +6,10 @@
 #include "./ctci.h"
 
 #include <functional>
-#include <vector>
 #include <list>
+#include <vector>
 
-template<typename T>
+template <typename T>
 class node {
  public:
   explicit node(const T& _data, node* _left = nullptr, node* _right = nullptr)
@@ -23,30 +23,25 @@ class node {
   node* right;
 };
 
-template<typename T>
+template <typename T>
 using tree_lists = std::vector<std::list<const node<T>*>>;
 
-template<typename T>
-tree_lists<T> tree_to_lists(const node<T>*const tree) {
-  std::function<void(const node<T>*const tree,
-                     tree_lists<T>& out, size_t depth)
-                > _tree_to_lists = [&](const auto* root,
-                                       auto& out, auto depth) {
-    while (out.size() <= depth)
-      out.emplace_back();
-    out[depth].push_back(root);
+template <typename T>
+tree_lists<T> tree_to_lists(const node<T>* const tree) {
+  std::function<void(const node<T>* const tree, tree_lists<T>& out,
+                     size_t depth)>
+      _tree_to_lists = [&](const auto* root, auto& out, auto depth) {
+        while (out.size() <= depth) out.emplace_back();
+        out[depth].push_back(root);
 
-    if (root->left)
-      _tree_to_lists(root->left, out, depth + 1);
-    if (root->right)
-      _tree_to_lists(root->right, out, depth + 1);
-  };
+        if (root->left) _tree_to_lists(root->left, out, depth + 1);
+        if (root->right) _tree_to_lists(root->right, out, depth + 1);
+      };
 
   tree_lists<T> lists;
   _tree_to_lists(tree, lists, 0);
   return lists;
 }
-
 
 ///////////
 // Tests //
@@ -54,15 +49,11 @@ tree_lists<T> tree_to_lists(const node<T>*const tree) {
 
 TEST(BinaryTreeToList, tree_to_list) {
   node<int> _nodes[] = {
-    node<int>(0),
-    node<int>(1),
-    node<int>(2),
-    node<int>(3),
-    node<int>(4),
-    node<int>(5),
+      node<int>(0), node<int>(1), node<int>(2),
+      node<int>(3), node<int>(4), node<int>(5),
   };
 
-  node<int>*const tree = _nodes;
+  node<int>* const tree = _nodes;
 
   tree->left = &_nodes[1];
   tree->right = &_nodes[2];

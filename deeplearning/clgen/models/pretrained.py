@@ -44,14 +44,16 @@ class PreTrainedModel(object):
     self.path = path.absolute()
     self.cache = cache.FSCache(self.path)
     self.corpus = NullCorpus()
-    self.config = pbutil.FromFile(self.path / 'META.pbtxt',
-                                  internal_pb2.ModelMeta()).config
-    self.atomizer = atomizers.AtomizerBase.FromFile(self.path / 'atomizer')
+    self.config = pbutil.FromFile(
+      self.path / "META.pbtxt", internal_pb2.ModelMeta()
+    ).config
+    self.atomizer = atomizers.AtomizerBase.FromFile(self.path / "atomizer")
     self.backend = {
-        model_pb2.NetworkArchitecture.TENSORFLOW:
-        tensorflow_backend.TensorFlowBackend,
-        model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
-    }[self.config.architecture.backend](self.config, self.cache, self.atomizer)
+      model_pb2.NetworkArchitecture.TENSORFLOW: tensorflow_backend.TensorFlowBackend,
+      model_pb2.NetworkArchitecture.KERAS: keras_backend.KerasBackend,
+    }[self.config.architecture.backend](
+      self.config, self.cache, self.atomizer
+    )
 
   def Train(self):
     """The training process for a pre-trained model is a no-op."""
@@ -59,15 +61,17 @@ class PreTrainedModel(object):
 
   def TrainingTelemetry(self) -> typing.List[telemetry_pb2.ModelEpochTelemetry]:
     """Get the training telemetry data."""
-    return telemetry.TrainingLogger(self.cache.path / 'logs').EpochTelemetry()
+    return telemetry.TrainingLogger(self.cache.path / "logs").EpochTelemetry()
 
   def _SampleBatch(
-      self, sampler: samplers.Sampler, atomizer: atomizers.AtomizerBase,
-      sample_observers: typing.List[sample_observers_lib.SampleObserver]
+    self,
+    sampler: samplers.Sampler,
+    atomizer: atomizers.AtomizerBase,
+    sample_observers: typing.List[sample_observers_lib.SampleObserver],
   ) -> typing.List[model_pb2.Sample]:
     """Run a single iteration of the batched sample inner-loop."""
     samples_in_progress = [
-        sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
+      sampler.tokenized_start_text.copy() for _ in range(sampler.batch_size)
     ]
     done = np.zeros(sampler.batch_size, dtype=np.bool)
     start_time = labdate.MillisecondsTimestamp()
@@ -94,14 +98,17 @@ class PreTrainedModel(object):
           if sampler.SampleIsComplete(samples_in_progress[i]):
             end_time = labdate.MillisecondsTimestamp()
             done[i] = 1
-            sample = model_pb2.Sample(text=''.join(samples_in_progress[i]),
-                                      sample_start_epoch_ms_utc=start_time,
-                                      sample_time_ms=end_time - start_time,
-                                      wall_time_ms=end_time - wall_time_start,
-                                      num_tokens=len(samples_in_progress[i]))
+            sample = model_pb2.Sample(
+              text="".join(samples_in_progress[i]),
+              sample_start_epoch_ms_utc=start_time,
+              sample_time_ms=end_time - start_time,
+              wall_time_ms=end_time - wall_time_start,
+              num_tokens=len(samples_in_progress[i]),
+            )
             # Notify sample observers.
             continue_sampling &= all(
-                [not obs.OnSample(sample) for obs in sample_observers])
+              [not obs.OnSample(sample) for obs in sample_observers]
+            )
 
             # Wall sample time is the difference between the end of the previous
             # sample and the end of the current sample.
@@ -110,10 +117,12 @@ class PreTrainedModel(object):
 
     return continue_sampling
 
-  def Sample(self,
-             sampler: samplers.Sampler,
-             sample_observers: typing.List[sample_observers_lib.SampleObserver],
-             seed: int = None) -> None:
+  def Sample(
+    self,
+    sampler: samplers.Sampler,
+    sample_observers: typing.List[sample_observers_lib.SampleObserver],
+    seed: int = None,
+  ) -> None:
     """Sample a model.
 
     This method uses the observer model, returning nothing. To access the
@@ -157,10 +166,13 @@ class PreTrainedModel(object):
 
     time_now = labdate.MillisecondsTimestamp()
     app.Log(
-        1, 'Produced %s sample batches at a rate of %s ms / batch.',
-        humanize.Commas(batch_count),
-        humanize.Commas(
-            int((time_now - sample_start_time) / max(batch_count, 1))))
+      1,
+      "Produced %s sample batches at a rate of %s ms / batch.",
+      humanize.Commas(batch_count),
+      humanize.Commas(
+        int((time_now - sample_start_time) / max(batch_count, 1))
+      ),
+    )
 
   def SamplerCache(self, sampler: samplers.Sampler) -> pathlib.Path:
     """Get the path to a sampler cache.
@@ -172,7 +184,7 @@ class PreTrainedModel(object):
       A path to a directory. Note that this directory may not exist - it is
       created only after a call to Sample().
     """
-    return self.cache.path / 'samples' / sampler.hash
+    return self.cache.path / "samples" / sampler.hash
 
 
 class NullCorpus(object):

@@ -16,6 +16,7 @@ def test_Numpy_import(benchmark):
 
   def Benchmark():
     import numpy as np
+
     a = np.ndarray(1)
     del a
 
@@ -27,6 +28,7 @@ def test_Keras_import(benchmark):
 
   def Benchmark():
     from keras import models
+
     m = models.Sequential()
     del m
 
@@ -38,11 +40,12 @@ def test_Tensorflow_import(benchmark):
 
   def Benchmark():
     import tensorflow as tf
+
     a = tf.Variable(1)
     del a
 
   benchmark(Benchmark)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

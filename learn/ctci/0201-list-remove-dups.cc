@@ -19,13 +19,12 @@ static unsigned int seed = 0xCEC;
 //
 // O(n) time, O(n) space;
 //
-template<typename T>
+template <typename T>
 void remove_dups(std::forward_list<T>& list) {
   std::unordered_map<T, size_t> freqs;
 
   auto it = list.begin();
-  while (it != list.end())
-    freqs[*it++]++;
+  while (it != list.end()) freqs[*it++]++;
 
   it = list.begin();
   auto prev = list.before_begin();
@@ -44,14 +43,13 @@ void remove_dups(std::forward_list<T>& list) {
   }
 }
 
-
 //
 // In place version. For every element in the list, iterate to the end
 // of the list and remove and duplicates.
 //
 // O(n^2) time, O(1) space.
 //
-template<typename T>
+template <typename T>
 void inplace_remove_dups(std::forward_list<T>& list) {
   auto it = list.begin();
 
@@ -74,7 +72,6 @@ void inplace_remove_dups(std::forward_list<T>& list) {
     it++;
   }
 }
-
 
 ///////////
 // Tests //
@@ -106,7 +103,6 @@ TEST(Duplicates, remove_dups) {
   ASSERT_TRUE(l4 == l4a);
 }
 
-
 TEST(Duplicates, inplace_remove_dups) {
   std::forward_list<int> l1{1, 2, 3, 4, 5, 1, 2, 6};
   const std::forward_list<int> l1a{1, 2, 3, 4, 5, 6};
@@ -132,7 +128,6 @@ TEST(Duplicates, inplace_remove_dups) {
   inplace_remove_dups(l4);
   ASSERT_TRUE(l4 == l4a);
 }
-
 
 ////////////////
 // Benchmarks //

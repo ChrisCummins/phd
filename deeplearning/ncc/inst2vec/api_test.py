@@ -12,7 +12,8 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 VOCABULARY_PATH = bazelutil.DataPath(
-    'phd/deeplearning/ncc/published_results/vocabulary.zip')
+  "phd/deeplearning/ncc/published_results/vocabulary.zip"
+)
 
 # An example LLVM IR, taken from the SHOC benchmark suite.
 EXAMPLE_OPENCL_IR = """\
@@ -66,16 +67,16 @@ attributes #3 = { nounwind readnone }
 """
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def llvm_ir_dir(tempdir: pathlib.Path) -> str:
   """A test fixture which returns the path to a directory containing LLVM IR."""
-  (tempdir / 'llvm_ir').mkdir()
-  with open(tempdir / 'llvm_ir' / 'program.ll', 'w') as f:
+  (tempdir / "llvm_ir").mkdir()
+  with open(tempdir / "llvm_ir" / "program.ll", "w") as f:
     f.write(EXAMPLE_OPENCL_IR)
-  yield str(tempdir / 'llvm_ir')
+  yield str(tempdir / "llvm_ir")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def vocab() -> vocabulary.VocabularyZipFile:
   """Test fixture which yields a vocabulary zip file instance as a ctx mngr."""
   with vocabulary.VocabularyZipFile(VOCABULARY_PATH) as v:
@@ -91,7 +92,8 @@ def test_Inst2Vec(vocab: vocabulary.VocabularyZipFile):
 def test_LlvmBytecodeToContextualFlowGraph_simple_function():
   """Test XFG creation for simple bytecode."""
   # Input bytecode corresponds to C function: `int main() { return 10; }`.
-  xfg = api.LlvmBytecodeToContextualFlowGraph("""
+  xfg = api.LlvmBytecodeToContextualFlowGraph(
+    """
 ; ModuleID = 'foo.c'
 source_filename = "foo.c"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
@@ -113,8 +115,9 @@ attributes #0 = { noinline nounwind optnone ssp uwtable "correctly-rounded-divid
 !1 = !{i32 1, !"wchar_size", i32 4}
 !2 = !{i32 7, !"PIC Level", i32 2}
 !3 = !{!"Apple LLVM version 10.0.1 (clang-1001.0.46.4)"}
-""")
+"""
+  )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

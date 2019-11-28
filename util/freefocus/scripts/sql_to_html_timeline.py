@@ -6,25 +6,25 @@ from util.freefocus.sql import *
 
 
 def escape(string):
-  line = str(string).strip().split('\n')[0]
+  line = str(string).strip().split("\n")[0]
   return line
 
 
 def make_id(item, type):
   if type == "workspace":
-    return escape(f'Workspace: {item.uid}')
+    return escape(f"Workspace: {item.uid}")
   elif type == "person":
     return escape(f"Person: {item.name}")
   elif type == "group":
-    return escape(f'Group: {item.body}')
-  elif type == 'asset':
-    return escape(f'Asset: {item.body}')
-  elif type == 'tag':
-    return escape(f'Tag: {item.body}')
-  elif type == 'task':
-    return escape(f'Task: {item.body}')
-  elif type == 'comment':
-    return escape(f'Comment: {item.body}')
+    return escape(f"Group: {item.body}")
+  elif type == "asset":
+    return escape(f"Asset: {item.body}")
+  elif type == "tag":
+    return escape(f"Tag: {item.body}")
+  elif type == "task":
+    return escape(f"Task: {item.body}")
+  elif type == "comment":
+    return escape(f"Comment: {item.body}")
   else:
     raise LookupError(type)
 
@@ -48,36 +48,41 @@ if __name__ == "__main__":
 
   def add_event(item, type):
     event = {
-        'id': len(timeline) + 1,
-        'content': make_id(item, type),
-        'start': item.created.isoformat(),
-        'group': type,
+      "id": len(timeline) + 1,
+      "content": make_id(item, type),
+      "start": item.created.isoformat(),
+      "group": type,
     }
 
-    if hasattr(item, 'completed'):
+    if hasattr(item, "completed"):
       if item.completed != None:
-        event['end'] = item.completed.isoformat()
+        event["end"] = item.completed.isoformat()
 
     timeline.append(event)
 
-  add_event(workspace, 'workspace')
+  add_event(workspace, "workspace")
   for person in session.query(Person):
-    add_event(person, 'person')
+    add_event(person, "person")
   for group in session.query(Group):
-    add_event(group, 'group')
+    add_event(group, "group")
   for task in session.query(Task):
-    add_event(task, 'task')
+    add_event(task, "task")
   for tag in session.query(Tag):
-    add_event(tag, 'tag')
+    add_event(tag, "tag")
   for asset in session.query(Asset):
-    add_event(asset, 'asset')
+    add_event(asset, "asset")
   for table in [
-      WorkspaceComment, GroupComment, TagComment, TaskComment, AssetComment
+    WorkspaceComment,
+    GroupComment,
+    TagComment,
+    TaskComment,
+    AssetComment,
   ]:
     for comment in session.query(table):
-      add_event(comment, 'comment')
+      add_event(comment, "comment")
 
-  print("""\
+  print(
+    """\
 <!DOCTYPE HTML>
 <!-- http://visjs.org/docs/timeline/#Example -->
 <html>
@@ -111,4 +116,6 @@ if __name__ == "__main__":
 </script>
 </body>
 </html>\
-""" % json.dumps(timeline))
+"""
+    % json.dumps(timeline)
+  )

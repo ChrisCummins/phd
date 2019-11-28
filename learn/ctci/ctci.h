@@ -6,13 +6,13 @@
 
 #include <stdlib.h>
 
-#define CTCI_MAIN() \
-  int main(int argc, char **argv) { \
+#define CTCI_MAIN()                       \
+  int main(int argc, char **argv) {       \
     testing::InitGoogleTest(&argc, argv); \
-    const auto ret = RUN_ALL_TESTS(); \
-    benchmark::Initialize(&argc, argv); \
-    benchmark::RunSpecifiedBenchmarks(); \
-    return ret; \
+    const auto ret = RUN_ALL_TESTS();     \
+    benchmark::Initialize(&argc, argv);   \
+    benchmark::RunSpecifiedBenchmarks();  \
+    return ret;                           \
   }
 
 #endif  // CTCI_H

@@ -9,5 +9,5 @@ def main():
   app.Log(1, "Tests pass.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

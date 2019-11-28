@@ -14,56 +14,58 @@ from labm8.py import test
 FLAGS = app.FLAGS
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db(tempdir: pathlib.Path):
-  yield graph_database.Database(f'sqlite:///{tempdir}/db1')
+  yield graph_database.Database(f"sqlite:///{tempdir}/db1")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db2(tempdir: pathlib.Path):
-  yield graph_database.Database(f'sqlite:///{tempdir}/db2')
+  yield graph_database.Database(f"sqlite:///{tempdir}/db2")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db3(tempdir: pathlib.Path):
-  yield graph_database.Database(f'sqlite:///{tempdir}/db3')
+  yield graph_database.Database(f"sqlite:///{tempdir}/db3")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def db4(tempdir: pathlib.Path):
-  yield graph_database.Database(f'sqlite:///{tempdir}/db4')
+  yield graph_database.Database(f"sqlite:///{tempdir}/db4")
 
 
 def test_GetAnnotatedGraphGenerators_unknown_analysis():
   with pytest.raises(app.UsageError):
-    make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators('foo')
+    make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators("foo")
 
 
 def test_GetAnnotatedGraphGenerators_with_requested_analyses():
   """Test requesting analyses by name."""
   annotators = make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
-      'reachability', 'domtree')
+    "reachability", "domtree"
+  )
   annotator_names = {a.name for a in annotators}
 
-  assert annotator_names == {'reachability', 'domtree'}
+  assert annotator_names == {"reachability", "domtree"}
 
 
 def MakeGraphMeta(bytecode_id: int):
   """Construct a graph meta, where only bytecode_id is important."""
   return graph_database.GraphMeta(
-      group='foo',
-      bytecode_id=bytecode_id,
-      source_name='foo',
-      relpath='foo',
-      language='c',
-      node_count=10,
-      edge_count=100,
-      node_type_count=1,
-      edge_type_count=6,
-      edge_position_max=5,
-      loop_connectedness=0,
-      undirected_diameter=0,
-      graph=graph_database.Graph(pickled_data=pickle.dumps('123')))
+    group="foo",
+    bytecode_id=bytecode_id,
+    source_name="foo",
+    relpath="foo",
+    language="c",
+    node_count=10,
+    edge_count=100,
+    node_type_count=1,
+    edge_type_count=6,
+    edge_position_max=5,
+    loop_connectedness=0,
+    undirected_diameter=0,
+    graph=graph_database.Graph(pickled_data=pickle.dumps("123")),
+  )
 
 
 def AddGraphMetas(db_: graph_database.Database, bytecode_ids: typing.List[int]):
@@ -79,8 +81,12 @@ def test_GetBytecodeIdsToProcess_empty_output_databases(db, db2, db3, db4):
   input_db = AddGraphMetas(db, [1, 2, 3, 5, 10])
   output_dbs = [db2, db3, db4]
 
-  all_ids, ids_by_output = make_data_flow_analysis_dataset.GetBytecodeIdsToProcess(
-      {1, 2, 3, 5, 10}, output_dbs, 16)
+  (
+    all_ids,
+    ids_by_output,
+  ) = make_data_flow_analysis_dataset.GetBytecodeIdsToProcess(
+    {1, 2, 3, 5, 10}, output_dbs, 16
+  )
 
   assert np.array_equal(all_ids, [1, 2, 3, 5, 10])
   assert ids_by_output.shape == (3, 5)
@@ -91,23 +97,17 @@ def test_GetBytecodeIdsToProcess_empty_output_databases(db, db2, db3, db4):
 def test_GetBytecodeIdsToProcess_with_some_outputs(db, db2, db3, db4):
   input_db = AddGraphMetas(db, [1, 2, 3, 5, 10])
   output_dbs = [
-      AddGraphMetas(db2, [
-          1,
-      ]),
-      AddGraphMetas(db3, [
-          1,
-          2,
-          3,
-          5,
-      ]),
-      AddGraphMetas(db4, [
-          1,
-          5,
-      ]),
+    AddGraphMetas(db2, [1,]),
+    AddGraphMetas(db3, [1, 2, 3, 5,]),
+    AddGraphMetas(db4, [1, 5,]),
   ]
 
-  all_ids, ids_by_output = make_data_flow_analysis_dataset.GetBytecodeIdsToProcess(
-      {1, 2, 3, 5, 10}, output_dbs, 16)
+  (
+    all_ids,
+    ids_by_output,
+  ) = make_data_flow_analysis_dataset.GetBytecodeIdsToProcess(
+    {1, 2, 3, 5, 10}, output_dbs, 16
+  )
 
   assert np.array_equal(sorted(all_ids), [2, 3, 5, 10])
   assert ids_by_output.shape == (3, 4)
@@ -123,14 +123,23 @@ def test_GetBytecodeIdsToProcess_with_some_outputs(db, db2, db3, db4):
 def test_ResilientAddUnique_empty_db(db: graph_database.Database):
   just_done = [1, 1, 1, 2]
   make_data_flow_analysis_dataset.ResilientAddUnique(
-      db, [MakeGraphMeta(i) for i in just_done], 'foo')
+    db, [MakeGraphMeta(i) for i in just_done], "foo"
+  )
 
   with db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 4
-    assert session.query(graph_database.GraphMeta).filter(
-        graph_database.GraphMeta.bytecode_id == 1).count() == 3
-    assert session.query(graph_database.GraphMeta).filter(
-        graph_database.GraphMeta.bytecode_id == 2).count() == 1
+    assert (
+      session.query(graph_database.GraphMeta)
+      .filter(graph_database.GraphMeta.bytecode_id == 1)
+      .count()
+      == 3
+    )
+    assert (
+      session.query(graph_database.GraphMeta)
+      .filter(graph_database.GraphMeta.bytecode_id == 2)
+      .count()
+      == 1
+    )
 
 
 def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
@@ -140,22 +149,35 @@ def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
 
   db = AddGraphMetas(db, already_done)
   make_data_flow_analysis_dataset.ResilientAddUnique(
-      db, [MakeGraphMeta(i) for i in just_done], 'foo')
+    db, [MakeGraphMeta(i) for i in just_done], "foo"
+  )
 
   with db.Session() as session:
     assert session.query(graph_database.GraphMeta).count() == 7
-    assert session.query(graph_database.GraphMeta).filter(
-        graph_database.GraphMeta.bytecode_id == 1).count() == 2
-    assert session.query(graph_database.GraphMeta).filter(
-        graph_database.GraphMeta.bytecode_id == 2).count() == 3
-    assert session.query(graph_database.GraphMeta).filter(
-        graph_database.GraphMeta.bytecode_id == 3).count() == 2
+    assert (
+      session.query(graph_database.GraphMeta)
+      .filter(graph_database.GraphMeta.bytecode_id == 1)
+      .count()
+      == 2
+    )
+    assert (
+      session.query(graph_database.GraphMeta)
+      .filter(graph_database.GraphMeta.bytecode_id == 2)
+      .count()
+      == 3
+    )
+    assert (
+      session.query(graph_database.GraphMeta)
+      .filter(graph_database.GraphMeta.bytecode_id == 3)
+      .count()
+      == 2
+    )
 
 
 # DataFlowAnalysisGraphExporter() tests.
 
 
-@pytest.mark.xfail(reason='TODO(cec): Debug the failure here')
+@pytest.mark.xfail(reason="TODO(cec): Debug the failure here")
 def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
   """Test end-to-end dataset export with three annotators."""
   all_bytecode_ids = [1, 2, 3, 5, 10]
@@ -167,26 +189,29 @@ def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
   def MakeOutput(annotator_name, db_):
     """Generate an output from the given name and database."""
     return make_data_flow_analysis_dataset.Output(
-        annotator=make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
-            annotator_name)[0],
-        db=db_)
+      annotator=make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
+        annotator_name
+      )[0],
+      db=db_,
+    )
 
   outputs = [
-      MakeOutput('reachability', output_dbs[0]),
-      MakeOutput('liveness', output_dbs[1]),
-      MakeOutput('domtree', output_dbs[2]),
+    MakeOutput("reachability", output_dbs[0]),
+    MakeOutput("liveness", output_dbs[1]),
+    MakeOutput("domtree", output_dbs[2]),
   ]
 
   exporter = make_data_flow_analysis_dataset.DataFlowAnalysisGraphExporter(
-      outputs)
+    outputs
+  )
   exporter(input_db, output_dbs)
 
   # Check that all databases have an entry.
   for output_db in output_dbs:
     with output_db.Session() as session:
       bytecode_ids = [
-          row.bytecode_id
-          for row in session.query(graph_database.GraphMeta.bytecode_id)
+        row.bytecode_id
+        for row in session.query(graph_database.GraphMeta.bytecode_id)
       ]
       assert sorted(bytecode_ids) == [1, 2, 3, 5, 10]
 
@@ -198,11 +223,11 @@ def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
   for output_db in output_dbs:
     with output_db.Session() as session:
       bytecode_ids = [
-          row.bytecode_id
-          for row in session.query(graph_database.GraphMeta.bytecode_id)
+        row.bytecode_id
+        for row in session.query(graph_database.GraphMeta.bytecode_id)
       ]
       assert sorted(bytecode_ids) == [1, 2, 3, 5, 10]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

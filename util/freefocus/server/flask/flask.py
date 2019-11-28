@@ -7,7 +7,8 @@ from contextlib import contextmanager
 import flask
 import flask_cors
 import sqlalchemy
-from flask import abort, request
+from flask import abort
+from flask import request
 
 from util.freefocus import freefocus
 from util.freefocus import sql
@@ -15,7 +16,7 @@ from util.freefocus import sql
 
 app = flask.Flask(__name__)
 flask_cors.CORS(app)
-app.config.from_object('config')
+app.config.from_object("config")
 
 make_session = None
 
@@ -35,47 +36,49 @@ def Session(commit: bool = False) -> sqlalchemy.orm.session.Session:
     session.close()
 
 
-API_BASE = f'/api/v{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}'
-URL_STUB = 'http://' + app.config.get('SERVER_NAME', '') + API_BASE
+API_BASE = f"/api/v{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}"
+URL_STUB = "http://" + app.config.get("SERVER_NAME", "") + API_BASE
 
 
 def active_task_graph():
-
   def build_graph(session, task: sql.Task):
     return {
       "id": task.id,
-      "body": task.body.split('\n')[0],
+      "body": task.body.split("\n")[0],
       "completed": True if task.completed else False,
-      "children": [build_graph(session, child) for child in
-                   session.query(sql.Task) \
-                     .filter(sql.Task.parent_id == task.id) \
-                     .order_by(sql.Task.created.desc())]
+      "children": [
+        build_graph(session, child)
+        for child in session.query(sql.Task)
+        .filter(sql.Task.parent_id == task.id)
+        .order_by(sql.Task.created.desc())
+      ],
     }
 
   with Session() as session:
     # List 'root' tasks
-    q = session.query(sql.Task) \
-      .filter(sql.Task.parent_id == None) \
+    q = (
+      session.query(sql.Task)
+      .filter(sql.Task.parent_id == None)
       .order_by(sql.Task.created.desc())
+    )
 
     r = [build_graph(session, t) for t in q]
     return r
 
 
-@app.route('/')
+@app.route("/")
 def index():
   data = {
-      "freefocus": {
-          "version":
-          f"{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}.{freefocus.SPEC_MICRO}",
-      },
-      "assets": {
-          "cache_tag": 1,
-          "bootstrap_css": flask.url_for('static', filename='bootstrap.css'),
-          "styles_css": flask.url_for('static', filename='styles.css'),
-          "site_js": flask.url_for('static', filename='site.js'),
-      },
-      "tasks": active_task_graph(),
+    "freefocus": {
+      "version": f"{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}.{freefocus.SPEC_MICRO}",
+    },
+    "assets": {
+      "cache_tag": 1,
+      "bootstrap_css": flask.url_for("static", filename="bootstrap.css"),
+      "styles_css": flask.url_for("static", filename="styles.css"),
+      "site_js": flask.url_for("static", filename="site.js"),
+    },
+    "tasks": active_task_graph(),
   }
 
   return flask.render_template("lists.html", **data)
@@ -93,25 +96,25 @@ def paginated_response(iterable: typing.Iterable):
 
 
 def truncate(string: str, maxlen=144):
-  suffix = '...'
+  suffix = "..."
 
   if len(string) > maxlen:
-    truncated = string[:maxlen - len(suffix)] + suffix
+    truncated = string[: maxlen - len(suffix)] + suffix
     return {"data": truncated, "truncated": True}
   else:
     return {"data": string, "truncated": False}
 
 
 def task_url(task: sql.Task):
-  return URL_STUB + f'/tasks/{task.id}'
+  return URL_STUB + f"/tasks/{task.id}"
 
 
 def group_url(group: sql.Group):
-  return URL_STUB + f'/groups/{group.id}'
+  return URL_STUB + f"/groups/{group.id}"
 
 
 def asset_url(asset: sql.Asset):
-  return URL_STUB + f'/assets/{group.id}'
+  return URL_STUB + f"/assets/{group.id}"
 
 
 def date(d):
@@ -133,14 +136,14 @@ def not_found(error):
   return make_response(jsonify({"error": "Bad Request"}), 400)
 
 
-@app.route(API_BASE + '/persons', methods=["GET"])
+@app.route(API_BASE + "/persons", methods=["GET"])
 def get_persons():
   with Session() as session:
     q = session.query(sql.Person)
     return paginated_response(p.json() for p in q)
 
 
-@app.route(API_BASE + '/persons/<int:person_uid>', methods=["GET"])
+@app.route(API_BASE + "/persons/<int:person_uid>", methods=["GET"])
 def get_person(person_uid: int):
   with Session() as session:
     p = session.query(sql.Person).filter(sql.Person.uid == person_uid).first()
@@ -149,7 +152,7 @@ def get_person(person_uid: int):
     return response(p.json())
 
 
-@app.route(API_BASE + '/persons/<int:person_uid>/groups', methods=["GET"])
+@app.route(API_BASE + "/persons/<int:person_uid>/groups", methods=["GET"])
 def get_person_groups(person_uid: int):
   with Session() as session:
     p = session.query(sql.Person).filter(sql.Person.uid == person_uid).first()
@@ -158,17 +161,18 @@ def get_person_groups(person_uid: int):
     return paginated_response(g.json() for g in p.groups)
 
 
-@app.route(API_BASE + '/tasks', methods=["GET"])
+@app.route(API_BASE + "/tasks", methods=["GET"])
 def get_tasks():
-
   def build_graph(session, task: sql.Task = None):
     parent = None if task is None else task.id
-    q = session.query(sql.Task) \
-      .filter(sql.Task.parent_id == parent) \
+    q = (
+      session.query(sql.Task)
+      .filter(sql.Task.parent_id == parent)
       .order_by(sql.Task.created.desc())
+    )
 
     # "Completed" request parameter
-    completed = request.args.get('completed', None)
+    completed = request.args.get("completed", None)
     if completed is not None:
       if completed == "true":
         q = q.filter(sql.Task.completed)
@@ -183,24 +187,25 @@ def get_tasks():
       return children
     else:
       return {
-          "url": task_url(task),
-          "body": truncate(task.body),
-          "status": task.status,
-          "assigned": [g.id for g in task.assigned],
-          "children": children,
+        "url": task_url(task),
+        "body": truncate(task.body),
+        "status": task.status,
+        "assigned": [g.id for g in task.assigned],
+        "children": children,
       }
 
   with Session() as session:
     return paginated_response(build_graph(session))
 
 
-@app.route(API_BASE + '/tasks/<int:task_id>', methods=["GET"])
+@app.route(API_BASE + "/tasks/<int:task_id>", methods=["GET"])
 def get_task(task_id: int):
   with Session() as session:
     t = session.query(sql.Task).filter(sql.Task.id == task_id).first()
     if not t:
       abort(404)
-    return response({
+    return response(
+      {
         "body": t.body,
         "assigned": t.is_assigned,
         "blocked": t.is_blocked,
@@ -210,14 +215,12 @@ def get_task(task_id: int):
         "due": date(t.due),
         "started": date(t.started),
         "completed": date(t.completed),
-        "created": {
-            "at": date(t.created),
-            "by": group_url(t.created_by),
-        }
-    })
+        "created": {"at": date(t.created), "by": group_url(t.created_by),},
+      }
+    )
 
 
-@app.route(API_BASE + '/tasks/<int:task_id>/owners', methods=["GET"])
+@app.route(API_BASE + "/tasks/<int:task_id>/owners", methods=["GET"])
 def get_task_owners(task_id: int):
   with Session() as session:
     t = session.query(sql.Task).filter(sql.Task.id == task_id).first()
@@ -227,7 +230,7 @@ def get_task_owners(task_id: int):
     return paginated_response(group_url(g) for g in t.owners)
 
 
-@app.route(API_BASE + '/tasks/<int:task_id>/assigned', methods=["GET"])
+@app.route(API_BASE + "/tasks/<int:task_id>/assigned", methods=["GET"])
 def get_task_assigned(task_id: int):
   with Session() as session:
     t = session.query(sql.Task).filter(sql.Task.id == task_id).first()
@@ -237,7 +240,7 @@ def get_task_assigned(task_id: int):
     return paginated_response(group_url(g) for g in t.assigned)
 
 
-@app.route(API_BASE + '/tasks', methods=["POST"])
+@app.route(API_BASE + "/tasks", methods=["POST"])
 def add_task():
   with Session(commit=True) as session:
     pass
@@ -257,7 +260,7 @@ def main():
   sql.Base.metadata.bind = engine
   make_session = sqlalchemy.orm.sessionmaker(bind=engine)
 
-  app.RunWithArgs(debug=True, host='0.0.0.0')
+  app.RunWithArgs(debug=True, host="0.0.0.0")
 
 
 if __name__ == "__main__":

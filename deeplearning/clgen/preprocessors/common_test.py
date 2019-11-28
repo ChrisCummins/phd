@@ -28,26 +28,31 @@ FLAGS = app.FLAGS
 def test_MinimumLineCount3_empty_input():
   """Test that MinimumLineCount3 rejects an empty input."""
   with pytest.raises(errors.NoCodeException):
-    common.MinimumLineCount3('')
+    common.MinimumLineCount3("")
 
 
 def test_MinimumLineCount3_whitespace_does_not_count():
   """Test that MinimumLineCount3 rejects ignores whitespace."""
   with pytest.raises(errors.NoCodeException):
-    common.MinimumLineCount3('\n\n  \n\n  \n\n   \n\n')
+    common.MinimumLineCount3("\n\n  \n\n  \n\n   \n\n")
 
 
 def test_MinimumLineCount3_simple_program():
   """Test that MinimumLineCount3 accepts a program with 3 lines."""
-  assert common.MinimumLineCount3("""
-int main(int argc, char** argv) {
-  return 0;
-}  
-""") == """
+  assert (
+    common.MinimumLineCount3(
+      """
 int main(int argc, char** argv) {
   return 0;
 }  
 """
+    )
+    == """
+int main(int argc, char** argv) {
+  return 0;
+}  
+"""
+  )
 
 
 # StripDuplicateEmptyLines() tests.
@@ -55,7 +60,7 @@ int main(int argc, char** argv) {
 
 def test_StripDuplicateEmptyLines_empty_input():
   """Test StripDuplicateEmptyLines accepts an empty input."""
-  assert common.StripDuplicateEmptyLines('') == ''
+  assert common.StripDuplicateEmptyLines("") == ""
 
 
 # Benchmarks.
@@ -80,5 +85,5 @@ def test_benchmark_StripDuplicateEmptyLines_c_hello_world(benchmark):
   benchmark(common.StripDuplicateEmptyLines, HELLO_WORLD_C)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

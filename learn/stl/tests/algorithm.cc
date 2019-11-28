@@ -6,8 +6,8 @@
 #include <array>
 #include <ustl/array>
 
-#include <vector>
 #include <ustl/vector>
+#include <vector>
 
 // all_of
 
@@ -79,8 +79,7 @@ TEST(std_algorithm, for_each) {
 
   std::for_each(in.begin(), in.end(), increment);
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(in[i], out[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(in[i], out[i]);
 }
 
 TEST(ustl_algorithm, for_each) {
@@ -89,8 +88,7 @@ TEST(ustl_algorithm, for_each) {
 
   ustl::for_each(in.begin(), in.end(), increment);
 
-  for (size_t i = 0; i < 5; i++)
-    ASSERT_EQ(in[i], out[i]);
+  for (size_t i = 0; i < 5; i++) ASSERT_EQ(in[i], out[i]);
 }
 
 // find
@@ -154,10 +152,10 @@ TEST(std_algorithm, find_end) {
   std::vector<int> seq{1, 2, 3};
   std::vector<int> notseq{0, 1};
 
-  ASSERT_EQ(a.begin() + 6, std::find_end(a.begin(), a.end(),
-                                         seq.begin(), seq.end()));
-  ASSERT_EQ(a.end(), std::find_end(a.begin(), a.end(),
-                                   notseq.begin(), notseq.end()));
+  ASSERT_EQ(a.begin() + 6,
+            std::find_end(a.begin(), a.end(), seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(),
+            std::find_end(a.begin(), a.end(), notseq.begin(), notseq.end()));
 }
 
 TEST(ustl_algorithm, find_end) {
@@ -165,10 +163,10 @@ TEST(ustl_algorithm, find_end) {
   ustl::vector<int> seq{1, 2, 3};
   ustl::vector<int> notseq{0, 1};
 
-  ASSERT_EQ(a.begin() + 6, ustl::find_end(a.begin(), a.end(),
-                                          seq.begin(), seq.end()));
-  ASSERT_EQ(a.end(), ustl::find_end(a.begin(), a.end(),
-                                    notseq.begin(), notseq.end()));
+  ASSERT_EQ(a.begin() + 6,
+            ustl::find_end(a.begin(), a.end(), seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(),
+            ustl::find_end(a.begin(), a.end(), notseq.begin(), notseq.end()));
 }
 
 // find_first_of()
@@ -178,10 +176,10 @@ TEST(std_algorithm, find_first_of) {
   std::vector<int> seq{-1, 2, 3};
   std::vector<int> notseq{0, -1};
 
-  ASSERT_EQ(a.begin() + 1, std::find_first_of(a.begin(), a.end(),
-                                              seq.begin(), seq.end()));
-  ASSERT_EQ(a.end(), std::find_first_of(a.begin(), a.end(),
-                                        notseq.begin(), notseq.end()));
+  ASSERT_EQ(a.begin() + 1,
+            std::find_first_of(a.begin(), a.end(), seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(), std::find_first_of(a.begin(), a.end(), notseq.begin(),
+                                        notseq.end()));
 }
 
 TEST(ustl_algorithm, find_first_of) {
@@ -189,10 +187,10 @@ TEST(ustl_algorithm, find_first_of) {
   ustl::vector<int> seq{-1, 2, 3};
   ustl::vector<int> notseq{0, -1};
 
-  ASSERT_EQ(a.begin() + 1, ustl::find_first_of(a.begin(), a.end(),
-                                               seq.begin(), seq.end()));
-  ASSERT_EQ(a.end(), ustl::find_first_of(a.begin(), a.end(),
-                                         notseq.begin(), notseq.end()));
+  ASSERT_EQ(a.begin() + 1,
+            ustl::find_first_of(a.begin(), a.end(), seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(), ustl::find_first_of(a.begin(), a.end(), notseq.begin(),
+                                         notseq.end()));
 }
 
 // adjacent_find()
@@ -330,10 +328,10 @@ TEST(std_algorithm, search) {
   std::vector<int> seq{1, 2, 3};
   std::vector<int> notseq{-10, -11};
 
-  ASSERT_EQ(a.begin() + 1, std::search(a.begin(), a.end(),
-                                       seq.begin(), seq.end()));
-  ASSERT_EQ(a.end(), std::search(a.begin(), a.end(),
-                                 notseq.begin(), notseq.end()));
+  ASSERT_EQ(a.begin() + 1,
+            std::search(a.begin(), a.end(), seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(),
+            std::search(a.begin(), a.end(), notseq.begin(), notseq.end()));
 }
 
 TEST(ustl_algorithm, search) {
@@ -341,10 +339,10 @@ TEST(ustl_algorithm, search) {
   ustl::vector<int> seq{1, 2, 3};
   ustl::vector<int> notseq{-10, -11};
 
-  ASSERT_EQ(a.begin() + 1, ustl::search(a.begin(), a.end(),
-                                        seq.begin(), seq.end()));
-  ASSERT_EQ(a.end(), ustl::search(a.begin(), a.end(),
-                                  notseq.begin(), notseq.end()));
+  ASSERT_EQ(a.begin() + 1,
+            ustl::search(a.begin(), a.end(), seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(),
+            ustl::search(a.begin(), a.end(), notseq.begin(), notseq.end()));
 }
 
 // search_n()
@@ -385,8 +383,7 @@ TEST(std_algorithm, merge) {
 
   std::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin());
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, merge) {
@@ -397,8 +394,7 @@ TEST(ustl_algorithm, merge) {
 
   ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin());
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 TEST(std_algorithm, merge_comp_lambda) {
@@ -410,8 +406,7 @@ TEST(std_algorithm, merge_comp_lambda) {
   std::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
              [](int x, int y) { return x > y; });
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, merge_comp_lambda) {
@@ -423,8 +418,7 @@ TEST(ustl_algorithm, merge_comp_lambda) {
   ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
               [](int x, int y) { return x > y; });
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 TEST(std_algorithm, merge_comp_funcobj) {
@@ -436,8 +430,7 @@ TEST(std_algorithm, merge_comp_funcobj) {
   std::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
              InverseComp<int>());
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, merge_comp_funcobj) {
@@ -449,8 +442,7 @@ TEST(ustl_algorithm, merge_comp_funcobj) {
   ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
               InverseComp<int>());
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 TEST(std_algorithm, merge_comp_func_ptr) {
@@ -459,11 +451,9 @@ TEST(std_algorithm, merge_comp_func_ptr) {
   std::array<int, 10> c;
   const std::array<int, 10> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
-  std::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
-             inverse_comp);
+  std::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(), inverse_comp);
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, merge_comp_func_ptr) {
@@ -472,11 +462,9 @@ TEST(ustl_algorithm, merge_comp_func_ptr) {
   ustl::array<int, 10> c;
   const ustl::array<int, 10> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
-  ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
-              inverse_comp);
+  ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(), inverse_comp);
 
-  for (size_t i = 0; i < c.size(); i++)
-    ASSERT_EQ(c[i], sorted[i]);
+  for (size_t i = 0; i < c.size(); i++) ASSERT_EQ(c[i], sorted[i]);
 }
 
 // Sort
@@ -489,11 +477,9 @@ TEST(std_algorithm, sort) {
   std::sort(a.begin(), a.end());
   std::sort(b.begin(), b.end());
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 
-  for (size_t i = 0; i < b.size(); i++)
-    ASSERT_EQ(b[i], sorted[i]);
+  for (size_t i = 0; i < b.size(); i++) ASSERT_EQ(b[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, sort) {
@@ -504,11 +490,9 @@ TEST(ustl_algorithm, sort) {
   ustl::sort(a.begin(), a.end());
   ustl::sort(b.begin(), b.end());
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 
-  for (size_t i = 0; i < b.size(); i++)
-    ASSERT_EQ(b[i], sorted[i]);
+  for (size_t i = 0; i < b.size(); i++) ASSERT_EQ(b[i], sorted[i]);
 }
 
 TEST(std_algorithm, sort_comp_lambda) {
@@ -517,8 +501,7 @@ TEST(std_algorithm, sort_comp_lambda) {
 
   std::sort(a.begin(), a.end(), [](int x, int y) { return x > y; });
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, sort_comp_lambda) {
@@ -527,8 +510,7 @@ TEST(ustl_algorithm, sort_comp_lambda) {
 
   ustl::sort(a.begin(), a.end(), [](int x, int y) { return x > y; });
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 }
 
 TEST(std_algorithm, sort_comp_funcobj) {
@@ -537,8 +519,7 @@ TEST(std_algorithm, sort_comp_funcobj) {
 
   std::sort(a.begin(), a.end(), InverseComp<int>());
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, sort_comp_funcobj) {
@@ -547,8 +528,7 @@ TEST(ustl_algorithm, sort_comp_funcobj) {
 
   ustl::sort(a.begin(), a.end(), InverseComp<int>());
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 }
 
 TEST(std_algorithm, sort_comp_func_ptr) {
@@ -557,8 +537,7 @@ TEST(std_algorithm, sort_comp_func_ptr) {
 
   std::sort(a.begin(), a.end(), &inverse_comp);
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 }
 
 TEST(ustl_algorithm, sort_comp_func_ptr) {
@@ -567,44 +546,35 @@ TEST(ustl_algorithm, sort_comp_func_ptr) {
 
   ustl::sort(a.begin(), a.end(), &inverse_comp);
 
-  for (size_t i = 0; i < a.size(); i++)
-    ASSERT_EQ(a[i], sorted[i]);
+  for (size_t i = 0; i < a.size(); i++) ASSERT_EQ(a[i], sorted[i]);
 }
 
 // Stable sort
 
 TEST(std_algorithm, stable_sort) {
-  std::vector<Comparable<int>> a{
-    Comparable<int>(0, 0),
-    Comparable<int>(2),
-    Comparable<int>(0, 1),
-    Comparable<int>(1)
-  };
+  std::vector<Comparable<int>> a{Comparable<int>(0, 0), Comparable<int>(2),
+                                 Comparable<int>(0, 1), Comparable<int>(1)};
 
   std::stable_sort(a.begin(), a.end());
 
   ASSERT_EQ(a[0].data, 0);
-  ASSERT_EQ(a[0].nc,   0);
+  ASSERT_EQ(a[0].nc, 0);
   ASSERT_EQ(a[1].data, 0);
-  ASSERT_EQ(a[1].nc,   1);
+  ASSERT_EQ(a[1].nc, 1);
   ASSERT_EQ(a[2].data, 1);
   ASSERT_EQ(a[3].data, 2);
 }
 
 TEST(ustl_algorithm, stable_sort) {
-  ustl::vector<Comparable<int>> a{
-    Comparable<int>(0, 0),
-    Comparable<int>(2),
-    Comparable<int>(0, 1),
-    Comparable<int>(1)
-  };
+  ustl::vector<Comparable<int>> a{Comparable<int>(0, 0), Comparable<int>(2),
+                                  Comparable<int>(0, 1), Comparable<int>(1)};
 
   ustl::stable_sort(a.begin(), a.end());
 
   ASSERT_EQ(a[0].data, 0);
-  ASSERT_EQ(a[0].nc,   0);
+  ASSERT_EQ(a[0].nc, 0);
   ASSERT_EQ(a[1].data, 0);
-  ASSERT_EQ(a[1].nc,   1);
+  ASSERT_EQ(a[1].nc, 1);
   ASSERT_EQ(a[2].data, 1);
   ASSERT_EQ(a[3].data, 2);
 }

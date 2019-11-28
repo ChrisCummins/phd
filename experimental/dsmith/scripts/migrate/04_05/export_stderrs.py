@@ -4,8 +4,9 @@ Add stderrs linecount and charcount metadata, and truncate original strings.
 """
 import dsmith
 import progressbar
-# from dsmith.sol.db import *
 from dsmith.opencl.db import *
+
+# from dsmith.sol.db import *
 
 
 if __name__ == "__main__":
@@ -14,8 +15,9 @@ if __name__ == "__main__":
 
   with Session() as s:
     print("Setting metadata for stderrs ...")
-    bar = progressbar.ProgressBar(max_value=s.query(Stderr).count(),
-                                  redirect_stdout=True)
+    bar = progressbar.ProgressBar(
+      max_value=s.query(Stderr).count(), redirect_stdout=True
+    )
 
     fs.mkdir("stderrs")
     for i, stderr in enumerate(s.query(Stderr).yield_per(2000)):
@@ -27,10 +29,10 @@ if __name__ == "__main__":
       with open(f"stderrs/{checksum}.pb", "wb") as f:
         f.write(buf)
 
-      stderr.linecount = len(stderr.stderr.split('\n'))
+      stderr.linecount = len(stderr.stderr.split("\n"))
       stderr.charcount = len(stderr.stderr)
       stderr.truncated = stderr.charcount > stderr.max_chars
-      stderr.stderr = stderr.stderr[:stderr.max_chars]
+      stderr.stderr = stderr.stderr[: stderr.max_chars]
 
       # if not i % 2000:
       #     s.commit()

@@ -22,9 +22,9 @@
 
 // GCC and clang++ provide a C99 `restrict'-like keyword.
 #ifdef __GNUC__
-# define restrict __restrict__
+#define restrict __restrict__
 #else
-# define restrict
+#define restrict
 #endif
 
 #endif  // RT_RESTRICT_H_

@@ -45,31 +45,40 @@ class SolidityGenerator(Generator):
   def num_programs(self, session: session_t = None) -> int:
     """ return the number of generated programs in the database """
     with ReuseSession(session) as s:
-      return s.query(func.count(Program.id)) \
-        .filter(Program.generator == self.id) \
+      return (
+        s.query(func.count(Program.id))
+        .filter(Program.generator == self.id)
         .scalar()
+      )
 
   def sloc_total(self, session: session_t = None) -> int:
     """ return the total linecount of generated programs """
     with ReuseSession(session) as s:
-      return s.query(func.sum(Program.linecount)) \
-        .filter(Program.generator == self.id) \
+      return (
+        s.query(func.sum(Program.linecount))
+        .filter(Program.generator == self.id)
         .scalar()
+      )
 
   def generation_time(self, session: session_t = None) -> float:
     """ return the total generation time of all programs """
     with ReuseSession(session) as s:
-      return s.query(func.sum(Program.generation_time)) \
-               .filter(Program.generator == self.id) \
-               .scalar() or 0
+      return (
+        s.query(func.sum(Program.generation_time))
+        .filter(Program.generator == self.id)
+        .scalar()
+        or 0
+      )
 
   def num_testcases(self, session: session_t = None) -> int:
     """ return the total number of testcases """
     with ReuseSession(session) as s:
-      return s.query(func.count(Testcase.id)) \
-        .join(Program) \
-        .filter(Program.generator == self.id) \
+      return (
+        s.query(func.count(Testcase.id))
+        .join(Program)
+        .filter(Program.generator == self.id)
         .scalar()
+      )
 
   def generate(self, n: int = math.inf, up_to: int = math.inf) -> None:
     """ generate 'n' new programs 'up_to' this many exist in db """
@@ -89,24 +98,30 @@ class SolidityGenerator(Generator):
 
       # Exit early if possible:
       if num_progs >= max_value:
-        print(f"There are already {Colors.BOLD}{num_progs}{Colors.END} "
-              "programs in the database. Nothing to be done.")
+        print(
+          f"There are already {Colors.BOLD}{num_progs}{Colors.END} "
+          "programs in the database. Nothing to be done."
+        )
         return
 
       # Print a preamble message:
       num_to_generate = max_value - num_progs
       if num_to_generate < math.inf:
         estimated_time = (
-            self.generation_time(s) / max(num_progs, 1)) * num_to_generate
+          self.generation_time(s) / max(num_progs, 1)
+        ) * num_to_generate
         eta = humanize.Duration(estimated_time)
-        print(f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
-              "to be generated. Estimated generation time is " +
-              f"{Colors.BOLD}{eta}{Colors.END}.")
+        print(
+          f"{Colors.BOLD}{num_to_generate}{Colors.END} programs are "
+          "to be generated. Estimated generation time is "
+          + f"{Colors.BOLD}{eta}{Colors.END}."
+        )
       else:
         print(f"Generating programs {Colors.BOLD}forever{Colors.END} ...")
 
       bar = progressbar.ProgressBar(
-          initial_value=num_progs, max_value=bar_max, redirect_stdout=True)
+        initial_value=num_progs, max_value=bar_max, redirect_stdout=True
+      )
 
       # The actual generation loop:
       buf = []
@@ -122,8 +137,10 @@ class SolidityGenerator(Generator):
           num_progs = self.num_programs(s)
           buf = []
       save_proxies_uniq_on(s, buf, "sha1")
-    print(f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
-          f"{self} programs in the database")
+    print(
+      f"All done! You now have {Colors.BOLD}{num_progs}{Colors.END} "
+      f"{self} programs in the database"
+    )
 
   def import_from_dir(self, indir: Path) -> None:
     """ import program sources from a directory """
@@ -137,16 +154,19 @@ class SolidityGenerator(Generator):
         app.Warning(getattr(type(programs[0]), "sha1"))
 
         import sys
+
         sys.exit(0)
 
         # Filter duplicates in the set of new records:
         programs = dict(
-            (program.sha1, program) for program in programs).values()
+          (program.sha1, program) for program in programs
+        ).values()
 
         # Fetch a list of dupe keys already in the database:
         sha1s = [program.sha1 for program in programs]
         dupes = set(
-            x[0] for x in s.query(Program.sha1).filter(Program.sha1.in_(sha1s)))
+          x[0] for x in s.query(Program.sha1).filter(Program.sha1.in_(sha1s))
+        )
 
         # Filter the list of records to import, excluding dupes:
         uniq = [program for program in programs if program.sha1 not in dupes]
@@ -163,8 +183,9 @@ class SolidityGenerator(Generator):
       # Print a preamble message:
       paths = fs.ls(indir, abspaths=True)
       num_to_import = humanize.Commas(len(paths))
-      print(f"{Colors.BOLD}{num_to_import}{Colors.END} files are "
-            "to be imported.")
+      print(
+        f"{Colors.BOLD}{num_to_import}{Colors.END} files are " "to be imported."
+      )
 
       bar = progressbar.ProgressBar(redirect_stdout=True)
 
@@ -180,17 +201,20 @@ class SolidityGenerator(Generator):
 
     num_imported = humanize.Commas(self.num_programs(s) - start_num_progs)
     num_progs = humanize.Commas(self.num_programs(s))
-    print(f"All done! Imported {Colors.BOLD}{num_imported}{Colors.END} "
-          f"new {self} programs. You now have "
-          f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "
-          "database")
+    print(
+      f"All done! Imported {Colors.BOLD}{num_imported}{Colors.END} "
+      f"new {self} programs. You now have "
+      f"{Colors.BOLD}{num_progs}{Colors.END} {self} programs in the "
+      "database"
+    )
 
-  def import_from_file(self, session: session_t,
-                       path: Path) -> Union[None, ProgramProxy]:
+  def import_from_file(
+    self, session: session_t, path: Path
+  ) -> Union[None, ProgramProxy]:
     """ Import a program from a file. """
     # app.Log(2, f"importing '{path}'")
     # Simply ignore non-ASCII chars:
-    src = ''.join([i if ord(i) < 128 else '' for i in fs.Read(path).strip()])
+    src = "".join([i if ord(i) < 128 else "" for i in fs.Read(path).strip()])
     return ProgramProxy(generator=self.id, generation_time=0, src=src)
 
 
@@ -199,6 +223,7 @@ class RandChar(SolidityGenerator):
   This generator produces a uniformly random sequence of ASCII characters, of
   a random length.
   """
+
   __name__ = "randchar"
   id = Generators.RANDCHAR
 
@@ -209,7 +234,7 @@ class RandChar(SolidityGenerator):
     """ Generate a single program. """
     start_time = time()
     charcount = random.randint(*self.charcount_range)
-    src = ''.join(random.choices(string.printable, k=charcount))
+    src = "".join(random.choices(string.printable, k=charcount))
     runtime = time() - start_time
 
     return ProgramProxy(generator=self.id, generation_time=runtime, src=src)
@@ -219,6 +244,7 @@ class GitHub(SolidityGenerator):
   """
   Programs mined from GitHub.
   """
+
   __name__ = "github"
   id = Generators.GITHUB
 

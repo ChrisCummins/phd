@@ -36,9 +36,9 @@ def test_string_concat(benchmark, iterations):
 
   def Benchmark():
     """Benchmark inner loop."""
-    a = 'a'
+    a = "a"
     for _ in range(iterations):
-      a += 'a'
+      a += "a"
     return a
 
   benchmark(Benchmark)
@@ -50,13 +50,13 @@ def test_string_join(benchmark, iterations):
 
   def Benchmark():
     """Benchmark inner loop."""
-    a = ['a']
+    a = ["a"]
     for _ in range(iterations):
-      a.append('a')
-    return ''.join(a)
+      a.append("a")
+    return "".join(a)
 
   benchmark(Benchmark)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

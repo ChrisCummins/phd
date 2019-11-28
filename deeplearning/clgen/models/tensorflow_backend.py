@@ -34,15 +34,21 @@ from labm8.py import humanize
 FLAGS = app.FLAGS
 
 app.DEFINE_boolean(
-    'clgen_tf_backend_reset_inference_state_between_batches', False,
-    'If set, reset the network state between sample batches. Else, the model '
-    'state is unaffected.')
+  "clgen_tf_backend_reset_inference_state_between_batches",
+  False,
+  "If set, reset the network state between sample batches. Else, the model "
+  "state is unaffected.",
+)
 app.DEFINE_integer(
-    'clgen_tf_backend_tensorboard_summary_step_count', 25,
-    'The number of steps between writing tensorboard summaries.')
+  "clgen_tf_backend_tensorboard_summary_step_count",
+  25,
+  "The number of steps between writing tensorboard summaries.",
+)
 app.DEFINE_integer(
-    'clgen_per_epoch_test_samples', 12,
-    'The number of samples to make at the end of each training epoch.')
+  "clgen_per_epoch_test_samples",
+  12,
+  "The number of samples to make at the end of each training epoch.",
+)
 
 
 class TensorFlowBackend(backends.BackendBase):
@@ -81,15 +87,20 @@ class TensorFlowBackend(backends.BackendBase):
     # Create the summary writer, shared between Train() and
     # _EndOfEpochTestSample().
     import tensorflow as tf
-    tensorboard_dir = f'{self.cache.path}/tensorboard'
-    app.Log(
-        1, 'Using tensorboard to log training progress. View progress using:\n'
-        f"    $ tensorboard --logdir='{tensorboard_dir}'")
-    self.summary_writer = tf.compat.v1.summary.FileWriter(tensorboard_dir,
-                                                          graph=None)
 
-  def InitTfGraph(self,
-                  sampler: typing.Optional[samplers.Sampler] = None) -> 'tf':
+    tensorboard_dir = f"{self.cache.path}/tensorboard"
+    app.Log(
+      1,
+      "Using tensorboard to log training progress. View progress using:\n"
+      f"    $ tensorboard --logdir='{tensorboard_dir}'",
+    )
+    self.summary_writer = tf.compat.v1.summary.FileWriter(
+      tensorboard_dir, graph=None
+    )
+
+  def InitTfGraph(
+    self, sampler: typing.Optional[samplers.Sampler] = None
+  ) -> "tf":
     """Instantiate a TensorFlow graph for training or inference.
 
     The tensorflow graph is different for training and inference, so must be
@@ -106,7 +117,7 @@ class TensorFlowBackend(backends.BackendBase):
 
     # Quiet tensorflow.
     # See: https://github.com/tensorflow/tensorflow/issues/1258
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     # Deferred importing of TensorFlow.
     import tensorflow as tf
@@ -115,9 +126,9 @@ class TensorFlowBackend(backends.BackendBase):
     from deeplearning.clgen.models import helper
 
     cell_type = {
-        model_pb2.NetworkArchitecture.LSTM: rnn.LSTMBlockCell,
-        model_pb2.NetworkArchitecture.GRU: rnn.GRUBlockCellV2,
-        model_pb2.NetworkArchitecture.RNN: rnn.BasicRNNCell,
+      model_pb2.NetworkArchitecture.LSTM: rnn.LSTMBlockCell,
+      model_pb2.NetworkArchitecture.GRU: rnn.GRUBlockCellV2,
+      model_pb2.NetworkArchitecture.RNN: rnn.BasicRNNCell,
     }.get(self.config.architecture.neuron_type, None)
     if cell_type is None:
       raise NotImplementedError
@@ -138,10 +149,12 @@ class TensorFlowBackend(backends.BackendBase):
       cells_lst.append(cell_type(self.config.architecture.neurons_per_layer))
     self.cell = cell = rnn.MultiRNNCell(cells_lst, state_is_tuple=True)
 
-    self.input_data = tf.compat.v1.placeholder(tf.int32,
-                                               [batch_size, sequence_length])
-    self.targets = tf.compat.v1.placeholder(tf.int32,
-                                            [batch_size, sequence_length])
+    self.input_data = tf.compat.v1.placeholder(
+      tf.int32, [batch_size, sequence_length]
+    )
+    self.targets = tf.compat.v1.placeholder(
+      tf.int32, [batch_size, sequence_length]
+    )
     self.initial_state = self.cell.zero_state(batch_size, tf.float32)
     self.temperature = tf.Variable(1.0, trainable=False)
     self.seed_length = tf.Variable(32, trainable=False)
@@ -151,37 +164,44 @@ class TensorFlowBackend(backends.BackendBase):
     else:
       self.lengths = tf.fill([batch_size], sequence_length)
 
-    scope_name = 'rnnlm'
+    scope_name = "rnnlm"
     with tf.compat.v1.variable_scope(scope_name):
-      with tf.device('/cpu:0'):
+      with tf.device("/cpu:0"):
         embedding = tf.compat.v1.get_variable(
-            'embedding',
-            [vocab_size, self.config.architecture.neurons_per_layer])
+          "embedding", [vocab_size, self.config.architecture.neurons_per_layer]
+        )
         inputs = tf.nn.embedding_lookup(embedding, self.input_data)
 
     if sampler:
       decode_helper = helper.CustomInferenceHelper(
-          inputs, self.lengths, self.seed_length, embedding, self.temperature)
+        inputs, self.lengths, self.seed_length, embedding, self.temperature
+      )
     else:
-      decode_helper = seq2seq.TrainingHelper(inputs,
-                                             self.lengths,
-                                             time_major=False)
+      decode_helper = seq2seq.TrainingHelper(
+        inputs, self.lengths, time_major=False
+      )
 
-    decoder = seq2seq.BasicDecoder(cell, decode_helper, self.initial_state,
-                                   tf.compat.v1.layers.Dense(vocab_size))
+    decoder = seq2seq.BasicDecoder(
+      cell,
+      decode_helper,
+      self.initial_state,
+      tf.compat.v1.layers.Dense(vocab_size),
+    )
     outputs, self.final_state, _ = seq2seq.dynamic_decode(
-        decoder,
-        output_time_major=False,
-        impute_finished=True,
-        swap_memory=True,
-        scope=scope_name)
+      decoder,
+      output_time_major=False,
+      impute_finished=True,
+      swap_memory=True,
+      scope=scope_name,
+    )
 
     self.generated = outputs.sample_id
     self.logits = outputs.rnn_output
 
     sequence_weigths = tf.ones([batch_size, sequence_length])
-    self.loss = seq2seq.sequence_loss(self.logits, self.targets,
-                                      sequence_weigths)
+    self.loss = seq2seq.sequence_loss(
+      self.logits, self.targets, sequence_weigths
+    )
 
     self.learning_rate = tf.Variable(0.0, trainable=False)
     self.epoch = tf.Variable(0, trainable=False)
@@ -189,33 +209,37 @@ class TensorFlowBackend(backends.BackendBase):
 
     # TODO(cec): Support non-adam optimizers.
     grads, _ = tf.clip_by_global_norm(
-        tf.gradients(self.loss, trainable_variables, aggregation_method=2),
-        self.config.training.adam_optimizer.normalized_gradient_clip_micros /
-        1e6)
+      tf.gradients(self.loss, trainable_variables, aggregation_method=2),
+      self.config.training.adam_optimizer.normalized_gradient_clip_micros / 1e6,
+    )
     optimizer = tf.compat.v1.train.AdamOptimizer(self.learning_rate)
     self.train_op = optimizer.apply_gradients(zip(grads, trainable_variables))
 
     if not sampler:
       # Create tensorboard summary writers for training progress.
-      tf.compat.v1.summary.scalar('loss', self.loss)
-      tf.compat.v1.summary.scalar('learning_rate', self.learning_rate)
-      tf.compat.v1.summary.scalar('epoch_num', self.epoch)
+      tf.compat.v1.summary.scalar("loss", self.loss)
+      tf.compat.v1.summary.scalar("learning_rate", self.learning_rate)
+      tf.compat.v1.summary.scalar("epoch_num", self.epoch)
 
     num_trainable_params = int(
-        np.sum([np.prod(v.shape) for v in tf.compat.v1.trainable_variables()]))
+      np.sum([np.prod(v.shape) for v in tf.compat.v1.trainable_variables()])
+    )
     app.Log(
-        1, 'Instantiated TensorFlow graph with %s trainable parameters '
-        'in %s ms.', humanize.Commas(num_trainable_params),
-        humanize.Commas(int((time.time() - start_time) * 1000)))
+      1,
+      "Instantiated TensorFlow graph with %s trainable parameters " "in %s ms.",
+      humanize.Commas(num_trainable_params),
+      humanize.Commas(int((time.time() - start_time) * 1000)),
+    )
 
     return tf
 
   def GetShortSummary(self) -> str:
     return (
-        f'{self.config.architecture.neurons_per_layer}×'
-        f'{self.config.architecture.num_layers} '
-        f'{model_pb2.NetworkArchitecture.NeuronType.Name(self.config.architecture.neuron_type)} '
-        'network')
+      f"{self.config.architecture.neurons_per_layer}×"
+      f"{self.config.architecture.num_layers} "
+      f"{model_pb2.NetworkArchitecture.NeuronType.Name(self.config.architecture.neuron_type)} "
+      "network"
+    )
 
   @property
   def epoch_checkpoints(self) -> typing.Set[int]:
@@ -227,30 +251,31 @@ class TensorFlowBackend(backends.BackendBase):
     Returns:
       A mapping of epoch numbers to paths.
     """
-    if not (self.cache.path / 'checkpoints' / 'checkpoints'):
+    if not (self.cache.path / "checkpoints" / "checkpoints"):
       # No saver file means no checkpoints.
       return {}
 
     # Count the number of checkpoint files which TensorFlow has created.
     checkpoint_files = [
-        f.stem
-        for f in (self.cache.path / 'checkpoints').iterdir()
-        if f.name.startswith('checkpoint-') and f.name.endswith('.meta')
+      f.stem
+      for f in (self.cache.path / "checkpoints").iterdir()
+      if f.name.startswith("checkpoint-") and f.name.endswith(".meta")
     ]
     # The checkpoint paths are appended with the epoch number.
-    epoch_nums = [int(x.split('-')[-1]) for x in checkpoint_files]
+    epoch_nums = [int(x.split("-")[-1]) for x in checkpoint_files]
     return set(epoch_nums)
 
-  def GetParamsPath(self, checkpoint_state
-                   ) -> typing.Tuple[typing.Optional[str], typing.List[str]]:
+  def GetParamsPath(
+    self, checkpoint_state
+  ) -> typing.Tuple[typing.Optional[str], typing.List[str]]:
     """Return path to checkpoint closest to target num of epochs."""
     # Checkpoints are saved with relative path, so we must prepend cache paths.
     paths = [
-        str(self.cache.path / 'checkpoints' / p)
-        for p in checkpoint_state.all_model_checkpoint_paths
+      str(self.cache.path / "checkpoints" / p)
+      for p in checkpoint_state.all_model_checkpoint_paths
     ]
     # The checkpoint paths are appended with the epoch number.
-    epoch_nums = [int(x.split('-')[-1]) for x in paths]
+    epoch_nums = [int(x.split("-")[-1]) for x in paths]
     diffs = [self.config.training.num_epochs - e for e in epoch_nums]
     pairs = zip(paths, diffs)
     positive_only = [p for p in pairs if p[1] >= 0]
@@ -264,30 +289,34 @@ class TensorFlowBackend(backends.BackendBase):
     """
     # The TensorFlow save file.
     paths = [
-        self.cache.path / 'checkpoints' / 'checkpoint',
+      self.cache.path / "checkpoints" / "checkpoint",
     ]
     # Export only the TensorFlow checkpoint files for the target number of
     # epochs.
     paths += [
-        path.absolute()
-        for path in (self.cache.path / 'checkpoints').iterdir()
-        if path.name.startswith(f'checkpoint-{self.config.training.num_epochs}')
+      path.absolute()
+      for path in (self.cache.path / "checkpoints").iterdir()
+      if path.name.startswith(f"checkpoint-{self.config.training.num_epochs}")
     ]
     # Include the epoch telemetry. This is not strictly required, but the files
     # are small and contain useful information for describing the model, such as
     # the total training time and model loss.
     paths += [
-        path.absolute()
-        for path in (self.cache.path / 'logs').iterdir()
-        if (path.name.startswith('epoch_') and
-            path.name.endswith('_telemetry.pbtxt'))
+      path.absolute()
+      for path in (self.cache.path / "logs").iterdir()
+      if (
+        path.name.startswith("epoch_")
+        and path.name.endswith("_telemetry.pbtxt")
+      )
     ]
     return sorted(paths)
 
-  def Train(self,
-            corpus,
-            test_sampler: typing.Optional[samplers.Sampler] = None,
-            **unused_kwargs) -> None:
+  def Train(
+    self,
+    corpus,
+    test_sampler: typing.Optional[samplers.Sampler] = None,
+    **unused_kwargs,
+  ) -> None:
     """Locked training.
 
     If there are cached epoch checkpoints, the one closest to the target number
@@ -304,10 +333,11 @@ class TensorFlowBackend(backends.BackendBase):
       return
 
     data_generator = data_generators.TensorflowBatchGenerator(
-        corpus, self.config.training)
+      corpus, self.config.training
+    )
     tf = self.InitTfGraph()
 
-    logger = telemetry.TrainingLogger(self.cache.path / 'logs')
+    logger = telemetry.TrainingLogger(self.cache.path / "logs")
 
     # Create and merge the tensorboard summary ops.
     merged = tf.compat.v1.summary.merge_all()
@@ -315,36 +345,38 @@ class TensorFlowBackend(backends.BackendBase):
     # training options
     # TODO(cec): Enable support for multiple optimizers:
     initial_learning_rate = (
-        self.config.training.adam_optimizer.initial_learning_rate_micros / 1e6)
+      self.config.training.adam_optimizer.initial_learning_rate_micros / 1e6
+    )
     decay_rate = (
-        self.config.training.adam_optimizer.learning_rate_decay_per_epoch_micros
-        / 1e6)
+      self.config.training.adam_optimizer.learning_rate_decay_per_epoch_micros
+      / 1e6
+    )
 
     # # resume from prior checkpoint
     ckpt_path, ckpt_paths = None, None
-    if (self.cache.path / 'checkpoints' / 'checkpoint').exists():
+    if (self.cache.path / "checkpoints" / "checkpoint").exists():
       checkpoint_state = tf.train.get_checkpoint_state(
-          self.cache.path / 'checkpoints')
+        self.cache.path / "checkpoints"
+      )
       assert checkpoint_state
       assert checkpoint_state.model_checkpoint_path
       ckpt_path, ckpt_paths = self.GetParamsPath(checkpoint_state)
 
     with tf.compat.v1.Session() as sess, self.dashboard_db.Session() as dbs:
-      dbs.query(dashboard_db.TrainingTelemetry)\
-            .filter(dashboard_db.TrainingTelemetry.model_id == self.dashboard_model_id)\
-            .filter(dashboard_db.TrainingTelemetry.pending == True)\
-            .delete()
+      dbs.query(dashboard_db.TrainingTelemetry).filter(
+        dashboard_db.TrainingTelemetry.model_id == self.dashboard_model_id
+      ).filter(dashboard_db.TrainingTelemetry.pending == True).delete()
 
       tf.compat.v1.global_variables_initializer().run()
 
       # Keep all checkpoints.
-      saver = tf.compat.v1.train.Saver(tf.global_variables(),
-                                       max_to_keep=100,
-                                       save_relative_paths=True)
+      saver = tf.compat.v1.train.Saver(
+        tf.global_variables(), max_to_keep=100, save_relative_paths=True
+      )
 
       # restore model from closest checkpoint.
       if ckpt_path:
-        app.Log(1, 'Restoring checkpoint {}'.format(ckpt_path))
+        app.Log(1, "Restoring checkpoint {}".format(ckpt_path))
         saver.restore(sess, ckpt_path)
 
       # make sure we don't lose track of other checkpoints
@@ -361,14 +393,15 @@ class TensorFlowBackend(backends.BackendBase):
 
         # decay and set learning rate
         new_learning_rate = initial_learning_rate * (
-            (float(100 - decay_rate) / 100.0)**(epoch_num - 1))
+          (float(100 - decay_rate) / 100.0) ** (epoch_num - 1)
+        )
         sess.run(tf.compat.v1.assign(self.learning_rate, new_learning_rate))
         sess.run(tf.compat.v1.assign(self.epoch, epoch_num))
 
         # TODO(cec): refactor data generator to a Python generator.
         data_generator.CreateBatches()
 
-        app.Log(1, 'Epoch %d/%d:', epoch_num, self.config.training.num_epochs)
+        app.Log(1, "Epoch %d/%d:", epoch_num, self.config.training.num_epochs)
         state = sess.run(self.initial_state)
         # Per-batch inner loop.
         bar = progressbar.ProgressBar(max_value=data_generator.num_batches)
@@ -379,7 +412,8 @@ class TensorFlowBackend(backends.BackendBase):
           for j, (c, h) in enumerate(self.initial_state):
             feed[c], feed[h] = state[j].c, state[j].h
           summary, loss, state, _ = sess.run(
-              [merged, self.loss, self.final_state, self.train_op], feed)
+            [merged, self.loss, self.final_state, self.train_op], feed
+          )
 
           # Periodically write progress to tensorboard.
           if i % FLAGS.clgen_tf_backend_tensorboard_summary_step_count == 0:
@@ -390,36 +424,43 @@ class TensorFlowBackend(backends.BackendBase):
             now = time.time()
             duration_ns = int((now - last_log_time) * 1e6)
             dbs.add(
-                dashboard_db.TrainingTelemetry(
-                    model_id=self.dashboard_model_id,
-                    epoch=epoch_num,
-                    step=step,
-                    training_loss=loss,
-                    learning_rate=new_learning_rate,
-                    ns_per_batch=int(duration_ns) /
-                    FLAGS.clgen_tf_backend_tensorboard_summary_step_count))
+              dashboard_db.TrainingTelemetry(
+                model_id=self.dashboard_model_id,
+                epoch=epoch_num,
+                step=step,
+                training_loss=loss,
+                learning_rate=new_learning_rate,
+                ns_per_batch=int(duration_ns)
+                / FLAGS.clgen_tf_backend_tensorboard_summary_step_count,
+              )
+            )
             last_log_time = now
             dbs.commit()
 
         # Log the loss and delta.
-        app.Log(1, 'Loss: %.6f.', loss)
+        app.Log(1, "Loss: %.6f.", loss)
 
         # Save after every epoch.
         start_time = time.time()
         global_step = epoch_num
-        checkpoint_prefix = (self.cache.path / 'checkpoints' / 'checkpoint')
-        checkpoint_path = saver.save(sess,
-                                     checkpoint_prefix,
-                                     global_step=global_step)
-        app.Log(1, 'Saved checkpoint %s in %s ms.', checkpoint_path,
-                humanize.Commas(int((time.time() - start_time) * 1000)))
-        dbs.query(dashboard_db.TrainingTelemetry)\
-            .filter(dashboard_db.TrainingTelemetry.pending == True)\
-            .update({'pending': False})
+        checkpoint_prefix = self.cache.path / "checkpoints" / "checkpoint"
+        checkpoint_path = saver.save(
+          sess, checkpoint_prefix, global_step=global_step
+        )
+        app.Log(
+          1,
+          "Saved checkpoint %s in %s ms.",
+          checkpoint_path,
+          humanize.Commas(int((time.time() - start_time) * 1000)),
+        )
+        dbs.query(dashboard_db.TrainingTelemetry).filter(
+          dashboard_db.TrainingTelemetry.pending == True
+        ).update({"pending": False})
         dbs.commit()
         assert pathlib.Path(
-            f'{checkpoint_prefix}-{global_step}.index').is_file()
-        assert pathlib.Path(f'{checkpoint_prefix}-{global_step}.meta').is_file()
+          f"{checkpoint_prefix}-{global_step}.index"
+        ).is_file()
+        assert pathlib.Path(f"{checkpoint_prefix}-{global_step}.meta").is_file()
 
         logger.EpochEndCallback(epoch_num, loss)
         # If we have a sampler that we can use at the end of epochs, then
@@ -433,10 +474,12 @@ class TensorFlowBackend(backends.BackendBase):
       self._EndOfEpochTestSample(corpus, test_sampler, step, epoch_num)
       self.Train(corpus, test_sampler)
 
-  def _EndOfEpochTestSample(self, corpus, sampler: samplers.Sampler, step: int,
-                            epoch_num: int):
+  def _EndOfEpochTestSample(
+    self, corpus, sampler: samplers.Sampler, step: int, epoch_num: int
+  ):
     """Run sampler"""
     import tensorflow as tf
+
     atomizer = corpus.atomizer
     sampler.Specialize(atomizer)
     sampler.batch_size = 1
@@ -461,42 +504,47 @@ class TensorFlowBackend(backends.BackendBase):
             continue
 
           stats.append(
-              (len(sample_in_progress), int((time.time() - start_time) * 1000)))
-          sample = ''.join(sample_in_progress)
+            (len(sample_in_progress), int((time.time() - start_time) * 1000))
+          )
+          sample = "".join(sample_in_progress)
           samples.append(sample)
-          app.Log(1, 'End-of-epoch sample %d:\n%s', i + 1, sample)
+          app.Log(1, "End-of-epoch sample %d:\n%s", i + 1, sample)
           done[0] = True
           break
 
     # Write samples to file.
     with self.dashboard_db.Session(commit=True) as dbs:
-      dbs.add_all([
+      dbs.add_all(
+        [
           dashboard_db.TrainingSample(
-              model_id=self.dashboard_model_id,
-              epoch=epoch_num,
-              step=step,
-              sample=sample,
-              token_count=stats[0],
-              sample_time=stats[1],
-          ) for sample, stats in zip(samples, stats)
-      ])
+            model_id=self.dashboard_model_id,
+            epoch=epoch_num,
+            step=step,
+            sample=sample,
+            token_count=stats[0],
+            sample_time=stats[1],
+          )
+          for sample, stats in zip(samples, stats)
+        ]
+      )
     samples_as_markdown = [
-        self.FormatCodeAsMarkdown(sample) for sample in samples
+      self.FormatCodeAsMarkdown(sample) for sample in samples
     ]
     samples_tensor = tf.convert_to_tensor(samples_as_markdown, dtype=tf.string)
-    summary_op = tf.summary.text('samples', samples_tensor)
+    summary_op = tf.summary.text("samples", samples_tensor)
     summary = self.inference_sess.run(summary_op)
     self.summary_writer.add_summary(summary, step)
 
   @staticmethod
   def FormatCodeAsMarkdown(text: str) -> str:
-    return f'<pre>{text.strip()}</pre>'
+    return f"<pre>{text.strip()}</pre>"
 
-  def InitSampling(self,
-                   sampler: samplers.Sampler,
-                   seed: typing.Optional[int] = None) -> None:
+  def InitSampling(
+    self, sampler: samplers.Sampler, seed: typing.Optional[int] = None
+  ) -> None:
     """Initialize model for sampling."""
     import tensorflow as tf
+
     # Delete any previous sampling session.
     if self.inference_tf:
       del self.inference_tf
@@ -515,14 +563,17 @@ class TensorFlowBackend(backends.BackendBase):
     # is reset at the beginning of every sample batch. Else, this is the only
     # place it is initialized.
     self.inference_state = self.inference_sess.run(
-        self.cell.zero_state(sampler.batch_size, self.inference_tf.float32))
+      self.cell.zero_state(sampler.batch_size, self.inference_tf.float32)
+    )
 
     self.inference_tf.global_variables_initializer().run(
-        session=self.inference_sess)
+      session=self.inference_sess
+    )
     # Restore trained model weights.
     saver = self.inference_tf.train.Saver(self.inference_tf.global_variables())
     checkpoint_state = self.inference_tf.train.get_checkpoint_state(
-        self.cache.path / 'checkpoints')
+      self.cache.path / "checkpoints"
+    )
 
     # These assertions will fail if the model has no checkpoints. Since this
     # should only ever be called after Train(), there is no good reason for
@@ -532,14 +583,17 @@ class TensorFlowBackend(backends.BackendBase):
 
     saver.restore(self.inference_sess, checkpoint_state.model_checkpoint_path)
     self.inference_sess.run(
-        tf.compat.v1.assign(self.temperature, sampler.temperature))
+      tf.compat.v1.assign(self.temperature, sampler.temperature)
+    )
 
   def InitSampleBatch(self, sampler: samplers.Sampler) -> None:
     if FLAGS.clgen_tf_backend_reset_inference_state_between_batches:
       self.inference_state = self.inference_sess.run(
-          self.cell.zero_state(sampler.batch_size, self.inference_tf.float32))
-    self.inference_indices = np.tile(sampler.encoded_start_text,
-                                     [sampler.batch_size, 1])
+        self.cell.zero_state(sampler.batch_size, self.inference_tf.float32)
+      )
+    self.inference_indices = np.tile(
+      sampler.encoded_start_text, [sampler.batch_size, 1]
+    )
 
   def SampleNextIndices(self, sampler: samplers.Sampler, done: np.ndarray):
     length = self.inference_indices.shape[1]
@@ -549,26 +603,29 @@ class TensorFlowBackend(backends.BackendBase):
     synthesized_lengths = np.full([sampler.batch_size], sampler.sequence_length)
     synthesized_lengths[done] = 0
     feed = {
-        self.initial_state: self.inference_state,
-        self.input_data: expanded_indices,
-        self.lengths: synthesized_lengths,
-        self.seed_length: length,
+      self.initial_state: self.inference_state,
+      self.input_data: expanded_indices,
+      self.lengths: synthesized_lengths,
+      self.seed_length: length,
     }
 
     generated, self.inference_state = self.inference_sess.run(
-        [self.generated, self.final_state], feed)
+      [self.generated, self.final_state], feed
+    )
     self.inference_indices = generated[:, -1].reshape((sampler.batch_size, 1))
     if length > 1:
-      generated = generated[:, length - 1:]
+      generated = generated[:, length - 1 :]
     return generated
 
   def RandomizeSampleState(self) -> None:
     import tensorflow as tf
+
     self.inference_state = [
-        tf.nn.rnn_cell.LSTMStateTuple(
-            st1 + np.random.normal(scale=0.2, size=np.shape(st1)),
-            st2 + np.random.normal(scale=0.2, size=np.shape(st2)))
-        for st1, st2 in self.inference_state
+      tf.nn.rnn_cell.LSTMStateTuple(
+        st1 + np.random.normal(scale=0.2, size=np.shape(st1)),
+        st2 + np.random.normal(scale=0.2, size=np.shape(st2)),
+      )
+      for st1, st2 in self.inference_state
     ]
 
   def ResetSampleState(self, sampler: samplers.Sampler, state, seed) -> None:
@@ -587,10 +644,10 @@ class TensorFlowBackend(backends.BackendBase):
     synthesized_lengths = np.full([sampler.batch_size], length)
 
     feed = {
-        self.initial_state: self.inference_state,
-        self.input_data: expanded_indices,
-        self.lengths: synthesized_lengths,
-        self.seed_length: length,
+      self.initial_state: self.inference_state,
+      self.input_data: expanded_indices,
+      self.lengths: synthesized_lengths,
+      self.seed_length: length,
     }
 
     self.inference_state = self.inference_sess.run([self.final_state], feed)
@@ -605,9 +662,9 @@ class TensorFlowBackend(backends.BackendBase):
     """Determine if model has been trained."""
     # Count the number of checkpoint files which TensorFlow has created.
     checkpoint_files = [
-        f.stem
-        for f in (self.cache.path / 'checkpoints').iterdir()
-        if f.name.startswith('checkpoint-') and f.name.endswith('.meta')
+      f.stem
+      for f in (self.cache.path / "checkpoints").iterdir()
+      if f.name.startswith("checkpoint-") and f.name.endswith(".meta")
     ]
-    epoch_nums = [int(x.split('-')[-1]) for x in checkpoint_files]
+    epoch_nums = [int(x.split("-")[-1]) for x in checkpoint_files]
     return self.config.training.num_epochs in epoch_nums

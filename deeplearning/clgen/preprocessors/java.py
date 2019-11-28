@@ -28,11 +28,12 @@ from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-CLASS_NAME_RE = re.compile(r'public\s+class\s+(\w+)')
+CLASS_NAME_RE = re.compile(r"public\s+class\s+(\w+)")
 
 # Path to the compiled java rewriter.
 JAVA_REWRITER = bazelutil.DataPath(
-    'phd/deeplearning/clgen/preprocessors/JavaRewriter')
+  "phd/deeplearning/clgen/preprocessors/JavaRewriter"
+)
 
 
 @public.clgen_preprocessor
@@ -49,13 +50,15 @@ def ClangFormat(text: str) -> str:
     ClangFormatException: In case of an error.
     ClangTimeout: If clang-format does not complete before timeout_seconds.
   """
-  return clang.ClangFormat(text, '.java')
+  return clang.ClangFormat(text, ".java")
 
 
-def Javac(text: str,
-          class_name: str,
-          cflags: typing.List[str],
-          timeout_seconds: int = 60) -> str:
+def Javac(
+  text: str,
+  class_name: str,
+  cflags: typing.List[str],
+  timeout_seconds: int = 60,
+) -> str:
   """Run code through javac.
 
   Args:
@@ -67,19 +70,21 @@ def Javac(text: str,
   Returns:
     The unmodified input code.
   """
-  with tempfile.TemporaryDirectory('w', prefix='clgen_javac_') as d:
-    path = pathlib.Path(d) / (class_name + '.java')
-    with open(path, 'w') as f:
+  with tempfile.TemporaryDirectory("w", prefix="clgen_javac_") as d:
+    path = pathlib.Path(d) / (class_name + ".java")
+    with open(path, "w") as f:
       f.write(text)
-    cmd = ['timeout', '-s9', str(timeout_seconds), 'javac', f.name] + cflags
-    app.Log(2, '$ %s', ' '.join(cmd))
-    process = subprocess.Popen(cmd,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               universal_newlines=True)
+    cmd = ["timeout", "-s9", str(timeout_seconds), "javac", f.name] + cflags
+    app.Log(2, "$ %s", " ".join(cmd))
+    process = subprocess.Popen(
+      cmd,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      universal_newlines=True,
+    )
     stdout, stderr = process.communicate()
   if process.returncode == 9:
-    raise errors.BadCodeException(f'Javac timed out after {timeout_seconds}s')
+    raise errors.BadCodeException(f"Javac timed out after {timeout_seconds}s")
   elif process.returncode != 0:
     raise errors.BadCodeException(stderr)
   return text
@@ -97,7 +102,7 @@ def Compile(text: str) -> str:
   """
   match = CLASS_NAME_RE.search(text)
   if not match:
-    raise errors.BadCodeException('Failed to determine class name')
+    raise errors.BadCodeException("Failed to determine class name")
   class_name = match.group(1)
   return Javac(text, class_name, [])
 
@@ -174,16 +179,18 @@ def JavaRewrite(text: str) -> str:
     RewriterError: If rewriter found nothing to rewrite.
     ClangTimeout: If rewriter fails to complete within timeout_seconds.
   """
-  cmd = ['timeout', '-s9', '60', str(JAVA_REWRITER)]
-  process = subprocess.Popen(cmd,
-                             stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             universal_newlines=True)
-  app.Log(2, '$ %s', ' '.join(cmd))
+  cmd = ["timeout", "-s9", "60", str(JAVA_REWRITER)]
+  process = subprocess.Popen(
+    cmd,
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    universal_newlines=True,
+  )
+  app.Log(2, "$ %s", " ".join(cmd))
   stdout, stderr = process.communicate(text)
   if process.returncode == 9:
-    raise errors.RewriterException('JavaRewriter failed to complete after 60s')
+    raise errors.RewriterException("JavaRewriter failed to complete after 60s")
   elif process.returncode:
     raise errors.RewriterException(stderr)
-  return stdout.strip() + '\n'
+  return stdout.strip() + "\n"

@@ -1,17 +1,17 @@
 #include <algorithm>
 #include <iostream>
 
-template<typename T>
+template <typename T>
 class BST {
-public:
+ public:
   T data;
-  BST* left;
-  BST* right;
+  BST *left;
+  BST *right;
 
-  BST(const T& val, BST *const left=nullptr, BST *const right=nullptr)
-    : data(val), left(left), right(right) {}
+  BST(const T &val, BST *const left = nullptr, BST *const right = nullptr)
+      : data(val), left(left), right(right) {}
 
-  void insert(const T& val) {
+  void insert(const T &val) {
     if (val > data) {
       if (right) {
         right->insert(val);
@@ -27,16 +27,14 @@ public:
     }
   }
 
-  friend std::ostream& operator<<(std::ostream &o, const BST& t) {
+  friend std::ostream &operator<<(std::ostream &o, const BST &t) {
     o << t.data << " ";
     return o;
   }
 
-  int height() {
-    return _height(1);
-  }
+  int height() { return _height(1); }
 
-private:
+ private:
   int _height(int h) {
     int hleft = h;
     int hright = h;
@@ -52,7 +50,7 @@ private:
   }
 };
 
-template<typename T>
+template <typename T>
 void inorder_traverse(const BST<T> *const root) {
   if (root) {
     if (root->left) {
@@ -69,32 +67,24 @@ void inorder_traverse(const BST<T> *const root) {
   }
 }
 
-template<typename T>
+template <typename T>
 void preorder_traverse(const BST<T> *const root) {
   if (root) {
     std::cout << root->data;
-    if (root->left || root->right)
-      std::cout << "(";
-    if (root->left)
-      preorder_traverse(root->left);
-    if (root->right)
-      preorder_traverse(root->right);
-    if (root->left || root->right)
-        std::cout << ")";
+    if (root->left || root->right) std::cout << "(";
+    if (root->left) preorder_traverse(root->left);
+    if (root->right) preorder_traverse(root->right);
+    if (root->left || root->right) std::cout << ")";
   }
 }
 
-
-template<typename T>
+template <typename T>
 void invert(BST<T> *const root) {
-  if (root->left)
-    invert(root->left);
-  if (root->right)
-    invert(root->right);
+  if (root->left) invert(root->left);
+  if (root->right) invert(root->right);
 
   std::swap(root->left, root->right);
 }
-
 
 int main(int argc, char **argv) {
   auto root = BST<int>(10);

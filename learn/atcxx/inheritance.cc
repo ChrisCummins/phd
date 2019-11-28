@@ -32,7 +32,6 @@ struct D3 : public D2 {
   virtual void bar() const { std::cout << "D3"; }
 };
 
-
 // Struct inheritance: (because why not)
 
 struct mystruct {
@@ -49,14 +48,9 @@ class notastruct : public struct2 {
   int data2 = 100;
 };
 
+void call_foo(const Base& b) { b.foo(); }
 
-void call_foo(const Base& b) {
-  b.foo();
-}
-
-void call_bar(const Base& b) {
-  b.bar();
-}
+void call_bar(const Base& b) { b.bar(); }
 
 int main() {
   Base b;

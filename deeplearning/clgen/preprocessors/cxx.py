@@ -27,29 +27,44 @@ from labm8.py import bazelutil
 
 FLAGS = app.FLAGS
 
-_UNAME = 'mac' if sys.platform == 'darwin' else 'linux'
-LIBCXX_HEADERS = bazelutil.DataPath(f'libcxx_{_UNAME}/include/c++/v1')
-CLANG_HEADERS = bazelutil.DataPath(f'libcxx_{_UNAME}/lib/clang/6.0.0/include')
+_UNAME = "mac" if sys.platform == "darwin" else "linux"
+LIBCXX_HEADERS = bazelutil.DataPath(f"libcxx_{_UNAME}/include/c++/v1")
+CLANG_HEADERS = bazelutil.DataPath(f"libcxx_{_UNAME}/lib/clang/6.0.0/include")
 
 C_COMMENT_RE = re.compile(
-    r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-    re.DOTALL | re.MULTILINE)
+  r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+  re.DOTALL | re.MULTILINE,
+)
 
 # Flags to compile C++ files with. I've replicated the default search path,
 # but substituted the sandboxed header locations in place of the defaults.
 #   bazel-phd/bazel-out/*-py3-opt/bin/deeplearning/clgen/preprocessors/\
 #     cxx_test.runfiles/llvm_mac/bin/clang -xc++ -E - -v
 CLANG_ARGS = [
-    '-xc++', '-isystem',
-    str(LIBCXX_HEADERS), '-isystem', '/usr/local/include', '-isystem',
-    str(CLANG_HEADERS), '-isystem', '/usr/include', '-Wno-ignored-pragmas',
-    '-ferror-limit=1', '-Wno-implicit-function-declaration',
-    '-Wno-incompatible-library-redeclaration', '-Wno-macro-redefined',
-    '-Wno-unused-parameter', '-Wno-long-long', '-Wcovered-switch-default',
-    '-Wdelete-non-virtual-dtor', '-Wstring-conversion',
-    '-DLLVM_BUILD_GLOBAL_ISEL', '-D__STDC_CONSTANT_MACROS',
-    '-D__STDC_FORMAT_MACROS', '-D__STDC_LIMIT_MACROS',
-    '-D_LIBCPP_HAS_C_ATOMIC_IMP'
+  "-xc++",
+  "-isystem",
+  str(LIBCXX_HEADERS),
+  "-isystem",
+  "/usr/local/include",
+  "-isystem",
+  str(CLANG_HEADERS),
+  "-isystem",
+  "/usr/include",
+  "-Wno-ignored-pragmas",
+  "-ferror-limit=1",
+  "-Wno-implicit-function-declaration",
+  "-Wno-incompatible-library-redeclaration",
+  "-Wno-macro-redefined",
+  "-Wno-unused-parameter",
+  "-Wno-long-long",
+  "-Wcovered-switch-default",
+  "-Wdelete-non-virtual-dtor",
+  "-Wstring-conversion",
+  "-DLLVM_BUILD_GLOBAL_ISEL",
+  "-D__STDC_CONSTANT_MACROS",
+  "-D__STDC_FORMAT_MACROS",
+  "-D__STDC_LIMIT_MACROS",
+  "-D_LIBCPP_HAS_C_ATOMIC_IMP",
 ]
 
 
@@ -71,7 +86,7 @@ def Compile(text: str) -> str:
   Returns:
     The input code, unmodified.
   """
-  clang.CompileLlvmBytecode(text, '.cpp', CLANG_ARGS)
+  clang.CompileLlvmBytecode(text, ".cpp", CLANG_ARGS)
   return text
 
 
@@ -89,7 +104,7 @@ def ClangFormat(text: str) -> str:
     ClangFormatException: In case of an error.
     ClangTimeout: If clang-format does not complete before timeout_seconds.
   """
-  return clang.ClangFormat(text, '.cpp')
+  return clang.ClangFormat(text, ".cpp")
 
 
 @public.clgen_preprocessor
@@ -106,7 +121,7 @@ def NormalizeIdentifiers(text: str) -> str:
     RewriterException: If rewriter found nothing to rewrite.
     ClangTimeout: If rewriter fails to complete within timeout_seconds.
   """
-  return normalizer.NormalizeIdentifiers(text, '.cpp', CLANG_ARGS)
+  return normalizer.NormalizeIdentifiers(text, ".cpp", CLANG_ARGS)
 
 
 @public.clgen_preprocessor
@@ -119,7 +134,7 @@ def StripComments(text: str) -> str:
   def Replacer(match):
     """Regex replacement callback."""
     s = match.group(0)
-    if s.startswith('/'):
+    if s.startswith("/"):
       return " "  # note: a space and not an empty string
     else:
       return s

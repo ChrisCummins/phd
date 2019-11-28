@@ -13,30 +13,42 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 app.DEFINE_output_path(
-    'java_clgen_working_dir',
-    '/var/phd/experimental/deeplearning/deepsmith/java_fuzz/clgen_cache',
-    'Path to store CLgen cache files.')
+  "java_clgen_working_dir",
+  "/var/phd/experimental/deeplearning/deepsmith/java_fuzz/clgen_cache",
+  "Path to store CLgen cache files.",
+)
 app.DEFINE_database(
-    'samples_db', samples_database.SamplesDatabase,
-    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/samples.db',
-    'Database to store CLgen samples.')
+  "samples_db",
+  samples_database.SamplesDatabase,
+  "sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/samples.db",
+  "Database to store CLgen samples.",
+)
 app.DEFINE_database(
-    'java_encoded_contentfiles', encoded.EncodedContentFiles,
-    'sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/encoded.db',
-    'URL of the database of encoded Java methods.')
-app.DEFINE_integer('java_training_epochs', 50,
-                   'The number of epochs to train for.')
-app.DEFINE_integer('neurons_per_layer', 1024,
-                   'The number of neurons in a layer.')
-app.DEFINE_integer('num_layers', 2, 'The number of layers.')
-app.DEFINE_string('java_seed_text', 'public ',
-                  'The text to initialize sampling with.')
+  "java_encoded_contentfiles",
+  encoded.EncodedContentFiles,
+  "sqlite:////var/phd/experimental/deeplearning/deepsmith/java_fuzz/encoded.db",
+  "URL of the database of encoded Java methods.",
+)
+app.DEFINE_integer(
+  "java_training_epochs", 50, "The number of epochs to train for."
+)
+app.DEFINE_integer(
+  "neurons_per_layer", 1024, "The number of neurons in a layer."
+)
+app.DEFINE_integer("num_layers", 2, "The number of layers.")
+app.DEFINE_string(
+  "java_seed_text", "public ", "The text to initialize sampling with."
+)
 
 
 def MakeClgenInstanceConfig(
-    working_dir: pathlib.Path, encoded_db: encoded.EncodedContentFiles,
-    num_training_epochs: int, seed_text: str, neurons_per_layer: int,
-    num_layers: int) -> clgen_pb2.Instance:
+  working_dir: pathlib.Path,
+  encoded_db: encoded.EncodedContentFiles,
+  num_training_epochs: int,
+  seed_text: str,
+  neurons_per_layer: int,
+  num_layers: int,
+) -> clgen_pb2.Instance:
   """Construct a CLgen instance.
 
   Args:
@@ -47,66 +59,69 @@ def MakeClgenInstanceConfig(
     neurons_per_layer: Number of neurons in a layer.
   """
   return clgen_pb2.Instance(
-      working_dir=str(working_dir),
-      model=model_pb2.Model(
-          corpus=corpus_pb2.Corpus(pre_encoded_corpus_url=encoded_db.url,),
-          architecture=model_pb2.NetworkArchitecture(
-              backend=model_pb2.NetworkArchitecture.TENSORFLOW,
-              neuron_type=model_pb2.NetworkArchitecture.LSTM,
-              neurons_per_layer=neurons_per_layer,
-              num_layers=num_layers,
-              post_layer_dropout_micros=0,
-          ),
-          training=model_pb2.TrainingOptions(
-              num_epochs=num_training_epochs,
-              sequence_length=64,
-              batch_size=64,
-              shuffle_corpus_contentfiles_between_epochs=True,
-              adam_optimizer=model_pb2.AdamOptimizer(
-                  initial_learning_rate_micros=2000,
-                  learning_rate_decay_per_epoch_micros=50000,
-                  beta_1_micros=900000,
-                  beta_2_micros=999000,
-                  normalized_gradient_clip_micros=5000000,
-              ),
-          ),
+    working_dir=str(working_dir),
+    model=model_pb2.Model(
+      corpus=corpus_pb2.Corpus(pre_encoded_corpus_url=encoded_db.url,),
+      architecture=model_pb2.NetworkArchitecture(
+        backend=model_pb2.NetworkArchitecture.TENSORFLOW,
+        neuron_type=model_pb2.NetworkArchitecture.LSTM,
+        neurons_per_layer=neurons_per_layer,
+        num_layers=num_layers,
+        post_layer_dropout_micros=0,
       ),
-      sampler=sampler_pb2.Sampler(
-          start_text=seed_text,
-          batch_size=64,
-          sequence_length=1024,
-          temperature_micros=1000000,  # = 1.0 real value
-          termination_criteria=[
-              sampler_pb2.SampleTerminationCriterion(
-                  symtok=sampler_pb2.SymmetricalTokenDepth(
-                      depth_increase_token="{",
-                      depth_decrease_token="}",
-                  )),
-              sampler_pb2.SampleTerminationCriterion(
-                  maxlen=sampler_pb2.MaxTokenLength(
-                      maximum_tokens_in_sample=20000,)),
-          ],
+      training=model_pb2.TrainingOptions(
+        num_epochs=num_training_epochs,
+        sequence_length=64,
+        batch_size=64,
+        shuffle_corpus_contentfiles_between_epochs=True,
+        adam_optimizer=model_pb2.AdamOptimizer(
+          initial_learning_rate_micros=2000,
+          learning_rate_decay_per_epoch_micros=50000,
+          beta_1_micros=900000,
+          beta_2_micros=999000,
+          normalized_gradient_clip_micros=5000000,
+        ),
       ),
+    ),
+    sampler=sampler_pb2.Sampler(
+      start_text=seed_text,
+      batch_size=64,
+      sequence_length=1024,
+      temperature_micros=1000000,  # = 1.0 real value
+      termination_criteria=[
+        sampler_pb2.SampleTerminationCriterion(
+          symtok=sampler_pb2.SymmetricalTokenDepth(
+            depth_increase_token="{", depth_decrease_token="}",
+          )
+        ),
+        sampler_pb2.SampleTerminationCriterion(
+          maxlen=sampler_pb2.MaxTokenLength(maximum_tokens_in_sample=20000,)
+        ),
+      ],
+    ),
   )
 
 
 def TrainAndSampleInstance(
-    instance: clgen.Instance,
-    samples_db: samples_database.SamplesDatabase) -> None:
+  instance: clgen.Instance, samples_db: samples_database.SamplesDatabase
+) -> None:
   with samples_db.Observer() as observer:
     clgen.DoFlagsAction(instance, [observer])
 
 
 def main():
   """Main entry point."""
-  config = MakeClgenInstanceConfig(FLAGS.java_clgen_working_dir,
-                                   FLAGS.java_encoded_contentfiles(),
-                                   FLAGS.java_training_epochs,
-                                   FLAGS.java_seed_text,
-                                   FLAGS.neurons_per_layer, FLAGS.num_layers)
+  config = MakeClgenInstanceConfig(
+    FLAGS.java_clgen_working_dir,
+    FLAGS.java_encoded_contentfiles(),
+    FLAGS.java_training_epochs,
+    FLAGS.java_seed_text,
+    FLAGS.neurons_per_layer,
+    FLAGS.num_layers,
+  )
   samples_db = FLAGS.samples_db()
   TrainAndSampleInstance(clgen.Instance(config), samples_db)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.Run(main)

@@ -34,21 +34,25 @@ FLAGS = app.FLAGS
 
 
 def ClgenInstanceToGenerator(
-    instance: sample.Instance) -> deepsmith_pb2.Generator:
+  instance: sample.Instance,
+) -> deepsmith_pb2.Generator:
   """Convert a CLgen instance to a DeepSmith generator proto."""
   g = deepsmith_pb2.Generator()
-  g.name = 'clgen'
-  g.opts['model'] = str(instance.model.path)
-  g.opts['sampler'] = instance.sampler.hash
+  g.name = "clgen"
+  g.opts["model"] = str(instance.model.path)
+  g.opts["sampler"] = instance.sampler.hash
   return g
 
 
 class SampleObserver(sample_observers.SampleObserver):
   """A CLgen model sample observer."""
 
-  def __init__(self, config: generator_pb2.ClgenGenerator,
-               response: generator_pb2.GenerateTestcasesResponse,
-               num_testcases: int):
+  def __init__(
+    self,
+    config: generator_pb2.ClgenGenerator,
+    response: generator_pb2.GenerateTestcasesResponse,
+    num_testcases: int,
+  ):
     self.config = config
     self.response = response
     self.num_testcases = num_testcases
@@ -57,32 +61,33 @@ class SampleObserver(sample_observers.SampleObserver):
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample observer."""
     self.sample_count += 1
-    app.Log(1, 'Generated sample %d.', self.sample_count)
+    app.Log(1, "Generated sample %d.", self.sample_count)
     self.response.testcases.extend(self.SampleToTestcases(sample))
     return len(self.response.testcases) >= self.num_testcases
 
   def SampleToTestcases(
-      self, sample_: model_pb2.Sample) -> typing.List[deepsmith_pb2.Testcase]:
+    self, sample_: model_pb2.Sample
+  ) -> typing.List[deepsmith_pb2.Testcase]:
     """Convert a CLgen sample to a list of DeepSmith testcase protos."""
     testcases = []
     for skeleton in self.config.testcase_skeleton:
       t = deepsmith_pb2.Testcase()
       t.CopyFrom(skeleton)
       p = t.profiling_events.add()
-      p.type = 'generation'
+      p.type = "generation"
       p.duration_ms = sample_.wall_time_ms
       p.event_start_epoch_ms = sample_.sample_start_epoch_ms_utc
-      t.inputs['src'] = sample_.text
+      t.inputs["src"] = sample_.text
       testcases.append(t)
     return testcases
 
 
-class ClgenGenerator(generator.GeneratorServiceBase,
-                     generator_pb2_grpc.GeneratorServiceServicer):
-
-  def __init__(self,
-               config: generator_pb2.ClgenGenerator,
-               no_init: bool = False):
+class ClgenGenerator(
+  generator.GeneratorServiceBase, generator_pb2_grpc.GeneratorServiceServicer
+):
+  def __init__(
+    self, config: generator_pb2.ClgenGenerator, no_init: bool = False
+  ):
     """
 
     Args:
@@ -92,35 +97,39 @@ class ClgenGenerator(generator.GeneratorServiceBase,
     super(ClgenGenerator, self).__init__(config)
     if not no_init:
       self.instance = sample.Instance(self.config.instance)
-      self.toolchain = 'opencl'
+      self.toolchain = "opencl"
       self.generator = ClgenInstanceToGenerator(self.instance)
       if not self.config.testcase_skeleton:
-        raise ValueError('No testcase skeletons provided')
+        raise ValueError("No testcase skeletons provided")
       for skeleton in self.config.testcase_skeleton:
         skeleton.generator.CopyFrom(self.generator)
 
   def GetGeneratorCapabilities(
-      self, request: generator_pb2.GetGeneratorCapabilitiesRequest,
-      context) -> generator_pb2.GetGeneratorCapabilitiesResponse:
+    self, request: generator_pb2.GetGeneratorCapabilitiesRequest, context
+  ) -> generator_pb2.GetGeneratorCapabilitiesResponse:
     del context
     response = services.BuildDefaultResponse(
-        generator_pb2.GetGeneratorCapabilitiesRequest)
+      generator_pb2.GetGeneratorCapabilitiesRequest
+    )
     response.toolchain = self.config.model.corpus.language
     response.generator = self.generator
     return response
 
-  def GenerateTestcases(self, request: generator_pb2.GenerateTestcasesRequest,
-                        context) -> generator_pb2.GenerateTestcasesResponse:
+  def GenerateTestcases(
+    self, request: generator_pb2.GenerateTestcasesRequest, context
+  ) -> generator_pb2.GenerateTestcasesResponse:
     del context
     response = services.BuildDefaultResponse(
-        generator_pb2.GenerateTestcasesResponse)
+      generator_pb2.GenerateTestcasesResponse
+    )
     with self.instance.Session():
-      sample_observer = SampleObserver(self.config, response,
-                                       request.num_testcases)
+      sample_observer = SampleObserver(
+        self.config, response, request.num_testcases
+      )
       self.instance.model.Sample(self.instance.sampler, [sample_observer])
 
     return response
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.RunWithArgs(ClgenGenerator.Main(generator_pb2.ClgenGenerator))

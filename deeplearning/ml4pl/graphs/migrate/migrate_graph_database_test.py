@@ -12,5 +12,5 @@ def test_TODO():
   assert migrate_graph_database
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()

@@ -14,9 +14,10 @@ MODULE_UNDER_TEST = None  # No coverage.
 def test_Git(tempdir: pathlib.Path):
   """Test that git module can be imported."""
   import git
+
   with pytest.raises(git.InvalidGitRepositoryError):
     git.Repo(str(tempdir))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.Main()
