@@ -12,7 +12,22 @@ py3_image(
     name = "image",
     srcs = [":foo"],
     main = ["foo.py"],
-    base = "@base_java//image",
+    base = "@phd_base_java//image",
     deps = [":foo"],
+)
+```
+
+## Updating [chriscummins/phd_base_java](https://hub.docker.com/r/chriscummins/phd_base_java)
+
+1. Modify `tools/docker/phd_base/Dockerfile` with your desired changes.
+2. Build and export the image using: `$ ./tools/docker/phd_base/export.sh`.
+3. Update the digest in the `WORKSPACE` file:
+
+```
+container_pull(
+    name = "phd_base_java",
+    digest = "sha256:<new_digest>",
+    registry = "index.docker.io",
+    repository = "chriscummins/phd_base_java",
 )
 ```
