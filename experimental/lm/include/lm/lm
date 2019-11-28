@@ -84,7 +84,7 @@ class Vector {
       v *= x;
   }
 
-  void operator*(const Scalar& x) {
+  Vector operator*(const Scalar& x) {
     Vector ret(*this);
     ret *= x;
     return ret;
@@ -95,7 +95,7 @@ class Vector {
       v /= x;
   }
 
-  void operator/(const Scalar& x) {
+  Vector operator/(const Scalar& x) {
     Vector ret(*this);
     ret /= x;
     return ret;
