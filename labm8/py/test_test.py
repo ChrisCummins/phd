@@ -59,7 +59,7 @@ def test_mark_slow():
   pass
 
 
-@test.Flaky(max_runs=100, min_passes=2)
+@test.Flaky(max_runs=100, min_passes=2, reason="Test is nondeterministic.")
 def test_mark_flaky():
   """A test which is flaky is one where there is (legitimate) reason for it to
   fail, e.g. because a timeout may or may not trigger depending on system load.
@@ -67,7 +67,12 @@ def test_mark_flaky():
   assert random.random() <= 0.5
 
 
-@test.Flaky(max_runs=100, min_passes=2, expected_exception=IndexError)
+@test.Flaky(
+  max_runs=100,
+  min_passes=2,
+  expected_exception=IndexError,
+  reason="Test is nondeterministic.",
+)
 def test_mark_flaky_with_expected_exception():
   """Test that expected_exception can be used to trigger re-runs."""
   if random.random() > 0.5:
@@ -75,7 +80,7 @@ def test_mark_flaky_with_expected_exception():
 
 
 @test.XFail(reason="Test is designed to fail.")
-@test.Flaky(expected_exception=IndexError)
+@test.Flaky(expected_exception=IndexError, reason="Test is nondeterministic.")
 def test_mark_flaky_with_invalid_expected_exception():
   """Test that only expected_exception triggers a re-run."""
   raise TypeError("woops!")

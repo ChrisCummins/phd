@@ -29,8 +29,11 @@ def test_105975(builder: cdfg.ControlAndDataFlowGraphBuilder):
   builder.Build(fs.Read(REGRESSION_TESTS / "105975.ll"))
 
 
-# This is a large graph which may timeout on a loaded / slow system.
-@test.Flaky(max_runs=3, expected_exception=TimeoutError)
+@test.Flaky(
+  max_runs=5,
+  expected_exception=TimeoutError,
+  reason="This is a large graph which may timeout on a loaded system.",
+)
 def test_115532(builder: cdfg.ControlAndDataFlowGraphBuilder):
   """Number of callsites does not correlate with callgraph."""
   builder.Build(fs.Read(REGRESSION_TESTS / "115532.ll"))

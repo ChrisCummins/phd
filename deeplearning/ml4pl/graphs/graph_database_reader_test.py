@@ -78,8 +78,7 @@ def test_BufferedGraphReader_filters(
 
 
 # TODO(cec): Fix me.
-# There is a possibility that random order returns all rows in order!
-# @test.Flaky
+# @test.Flaky(reason='There is a possibility that random order returns all rows in order!')
 # @test.Parametrize('buffer_size', [25, 10000])
 # @test.Parametrize('order', [reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
 #                                    reader.BufferedGraphReaderOrder.BATCH_RANDOM])
