@@ -9,6 +9,13 @@ message ProgramGraph {
   repeated Node node = 1;
   repeated Edge edge = 2;
   repeated Function function = 3;
+
+  // Optional vectors of graph-level features and labels.
+  repeated float discrete_x = 4;
+  repeated float discrete_y = 6;
+
+  repeated float real_x = 5;
+  repeated float real_y = 7;
 }
 
 message Function {
@@ -37,8 +44,12 @@ message Node {
   // The pre-processed text of a node. This is the
   optional string preprocessed_text = 4;
 
-  // An encoded value representing this node.
-  optional int64 encoded = 5;
+  // Optional vectors of node-level features and labels.
+  repeated int64 discrete_x = 5;
+  repeated float discrete_y = 7;
+
+  repeated int64 real_x = 6;
+  repeated float real_y = 8;
 }
 
 message Edge {

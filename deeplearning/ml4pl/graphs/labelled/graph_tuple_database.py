@@ -1,4 +1,4 @@
-"""A database of unlabelled ProGraML ProgramGraph protocol buffers."""
+"""A database of labelled graph tuples."""
 import datetime
 import pickle
 import typing
@@ -7,6 +7,7 @@ import sqlalchemy as sql
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
+from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
 from deeplearning.ml4pl.graphs.unlabelled import programl_pb2
 from labm8.py import app
 from labm8.py import crypto
@@ -23,12 +24,12 @@ class Meta(Base, sqlutil.TablenameFromClassNameMixin):
 
   key: str = sql.Column(sql.String(64), primary_key=True)
   pickled_value: str = sql.Column(
-    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+      sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow,
   )
 
   @property
@@ -40,16 +41,15 @@ class Meta(Base, sqlutil.TablenameFromClassNameMixin):
     return Meta(key=key, pickled_value=pickle.dumps(value))
 
 
-class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """A table of ProGraML program graphs.
+class GraphTuple(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """A table of graph tuples.
 
-  For every ProgramGraph, there should be a corresponding ProgramGraphData row
-  containing the encoded protocol buffer as a binary blob. The reason for
-  dividing the data horizontally across two tables is to enable fast scanning
-  of proto metadata, without needing to churn through a table of binary proto
-  strings.
+  For every GraphTuple, there should be a corresponding GraphTupleData row
+  containing the pickled graph tuple as a binary blob. The reason for dividing
+  the data horizontally across two tables is to enable fast scanning
+  of graph metadata, without needing to churn through a table of pickled binary
+  blobs.
   """
-
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A reference to the 'id' column of a
@@ -57,6 +57,10 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # row. There is no foreign key relationship here because they are separate
   # databases.
   ir_id: int = sql.Column(sql.Integer, nullable=False, index=True)
+
+  # A string name to split the graphs in a database into discrete buckets, e.g.
+  # "train", "val", "test"; or "1", "2", ... k for k-fold classification.
+  split: str = sql.Column(sql.String(8), nullable=False, index=True)
 
   # The size of the program graph.
   node_count: int = sql.Column(sql.Integer, nullable=False)
@@ -66,55 +70,54 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   node_type_count: int = sql.Column(sql.Integer, nullable=False)
   edge_type_count: int = sql.Column(sql.Integer, nullable=False)
 
-  # The number of nodes which have a {text, preprocessed_text, encoded}
-  # attribute, and the number of distinct (non-null) values.
-  node_text_count: int = sql.Column(sql.Integer, nullable=False)
-  node_unique_text_count: int = sql.Column(sql.Integer, nullable=False)
-
-  node_preprocessed_text_count: int = sql.Column(sql.Integer, nullable=False)
-  node_unique_preprocessed_text_count: int = sql.Column(
-    sql.Integer, nullable=False
+  # The dimensionality of node-level features and labels.
+  node_features_dimensionality: int = sql.Column(
+      sql.Integer, default=0, nullable=False
+  )
+  node_labels_dimensionality: int = sql.Column(
+      sql.Integer, default=0, nullable=False
   )
 
-  node_encoded_count: int = sql.Column(sql.Integer, nullable=False)
-  node_unique_encoded_count: int = sql.Column(sql.Integer, nullable=False)
+  # The dimensionality of graph-level features and labels.
+  graph_features_dimensionality: int = sql.Column(
+      sql.Integer, default=0, nullable=False
+  )
+  graph_labels_dimensionality: int = sql.Column(
+      sql.Integer, default=0, nullable=False
+  )
 
   # The maximum value of the 'position' attribute of edges.
   edge_position_max: int = sql.Column(sql.Integer, nullable=False)
 
-  # The size of the serialized proto in bytes.
-  serialized_proto_size: int = sql.Column(sql.Integer, nullable=False)
+  # The size of the pickled graph tuple in bytes.
+  graph_tuple_size: int = sql.Column(sql.Integer, nullable=False)
 
   date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
+      sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
+      nullable=False,
+      default=labdate.GetUtcMillisecondsNow,
   )
 
-  # Create the one-to-one relationship from ProgramGraphs to ProgramGraphData.
-  data: "ProgramGraphData" = sql.orm.relationship(
-    "ProgramGraphData", uselist=False, cascade="all, delete-orphan"
+  # Create the one-to-one relationship from GraphTuple to GraphTupleData.
+  data: "GraphTupleData" = sql.orm.relationship(
+      "GraphTupleData", uselist=False, cascade="all, delete-orphan"
   )
 
   # Joined table accessors:
 
   @property
   def sha1(self) -> str:
-    """Return the sha1 of the serialized proto."""
+    """Return the sha1 of the graph tuple."""
     return self.data.sha1
 
   @property
-  def proto(
-    self, proto: programl_pb2.ProgramGraph = None
-  ) -> programl_pb2.ProgramGraph:
+  def tuple(self) -> graph_tuple.GraphTuple:
     """Deserialize and load the protocol buffer."""
-    proto = proto or programl_pb2.ProgramGraph()
-    proto.ParseFromString(self.data.serialized_proto)
-    return proto
+    return pickle.loads(self.data.pickled_graph_tuple)
 
   @classmethod
-  def Create(cls, proto: programl_pb2.ProgramGraph, split: str, ir_id: int) -> 'ProgramGraph':
-    """Create a ProgramGraph from the given protocol buffer.
+  def Create(cls, unlabelled_graph: unlabelled_graph_database.ProgramGraph):
+    """Create a GraphTuple from the given protocol buffer.
 
     This is the preferred method of populating databases of program graphs, as
     it contains the boilerplate to extract and set the metadata columns, and
@@ -125,7 +128,7 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       split: The name of the split that this graph belongs to.
 
     Returns:
-      A ProgramGraph instance.
+      A GraphTuple instance.
     """
     # Gather the edge attributes in a single pass of the proto.
     edge_attributes = [(edge.type, edge.position) for edge in proto.edge]
@@ -149,37 +152,37 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
     serialized_proto = proto.SerializeToString()
 
-    return ProgramGraph(
-      split=split,
-      ir_id=ir_id,
-      node_count=len(proto.node),
-      edge_count=len(proto.edge),
-      node_type_count=len(node_types),
-      edge_type_count=len(edge_types),
-      node_text_count=len(node_texts),
-      node_unique_text_count=len(set(node_texts)),
-      node_preprocessed_text_count=len(node_preprocessed_texts),
-      node_unique_preprocessed_text_count=len(set(node_preprocessed_texts)),
-      node_encoded_count=len(node_encodeds),
-      node_unique_encoded_count=len(set(node_encodeds)),
-      edge_position_max=edge_position_max,
-      serialized_proto_size=len(serialized_proto),
-      data=ProgramGraphData(
-        sha1=crypto.sha1(serialized_proto), serialized_proto=serialized_proto,
-      ),
+    return GraphTuple(
+        split=split,
+        ir_id=ir_id,
+        node_count=len(proto.node),
+        edge_count=len(proto.edge),
+        node_type_count=len(node_types),
+        edge_type_count=len(edge_types),
+        node_text_count=len(node_texts),
+        node_unique_text_count=len(set(node_texts)),
+        node_preprocessed_text_count=len(node_preprocessed_texts),
+        node_unique_preprocessed_text_count=len(set(node_preprocessed_texts)),
+        node_encoded_count=len(node_encodeds),
+        node_unique_encoded_count=len(set(node_encodeds)),
+        edge_position_max=edge_position_max,
+        serialized_proto_size=len(serialized_proto),
+        data=GraphTupleData(
+            sha1=crypto.sha1(serialized_proto), serialized_proto=serialized_proto,
+        ),
     )
 
 
-class ProgramGraphData(
-  Base, sqlutil.TablenameFromCamelCapsClassNameMixin
+class GraphTupleData(
+    Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin
 ):
   """The protocol buffer of a program graph.
 
-  See ProgramGraph for the parent table.
+  See GraphTuple for the parent table.
   """
 
   id: int = sql.Column(
-    sql.Integer, sql.ForeignKey("program_graphs.id"), primary_key=True
+      sql.Integer, sql.ForeignKey("program_graphs.id"), primary_key=True
   )
 
   # The sha1sum of the 'serialized_proto' column. There is no requirement
@@ -187,14 +190,14 @@ class ProgramGraphData(
   # you can group by this sha1 column and prune the duplicates.
   sha1: str = sql.Column(sql.String(40), nullable=False, index=True)
 
-  # A binary-serialized ProgramGraph protocol buffer.
+  # A binary-serialized GraphTuple protocol buffer.
   serialized_proto: bytes = sql.Column(
-    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+      sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
 
 class Database(sqlutil.Database):
-  """A database of ProgramGraph protocol buffers."""
+  """A database of GraphTuple protocol buffers."""
 
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
