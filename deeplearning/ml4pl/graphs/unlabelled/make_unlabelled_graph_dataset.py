@@ -1,4 +1,6 @@
 """This module produces datasets of unlabelled graphs."""
+# TODO(github.com/ChrisCummins/ProGraML/issues/2): Refactor this file to
+# generate graph protos.
 import pathlib
 import sys
 import traceback
