@@ -2,7 +2,7 @@
 import networkx as nx
 import numpy as np
 
-from deeplearning.ml4pl import programl_pb2
+from deeplearning.ml4pl.graphs import programl_pb2
 from labm8.py import app
 
 FLAGS = app.FLAGS
@@ -53,9 +53,9 @@ def ProgramGraphToNetworkX(proto: programl_pb2) -> nx.MultiDiGraph:
     data = {
       "type": node.type,
       "text": node.text,
-      "preprocessed": node.preprocessed_text,
+      "preprocessed_text": node.preprocessed_text,
     }
-    if node.function:
+    if node.HasField("function"):
       data["function"]: str = proto.function[node.function].name
     if node.discrete_x:
       data["discrete_x"] = np.array(node.discrete_x, dtype=np.int32)
@@ -72,13 +72,27 @@ def ProgramGraphToNetworkX(proto: programl_pb2) -> nx.MultiDiGraph:
     g.add_edge(
       edge.source_node,
       edge.destination_node,
-      type=edge.type,
+      flow=edge.flow,
       position=edge.position,
     )
 
+  app.Log(
+    1, "ProgramGraphToNetworkX PROTO FUNCTION COUNT %s", len(proto.function)
+  )
+  app.Log(
+    1,
+    "ProgramGraphToNetworkX GRAPH FUNCTION COUNT %s",
+    len(set(fn for _, fn in g.nodes(data="function") if fn)),
+  )
+
+  return g
+
 
 def NetworkXToProgramGraph(g: nx.MultiDiGraph) -> programl_pb2.ProgramGraph:
-  """Perform the inverse transformation from networkx graph -> protobuf."""
+  """Perform the inverse transformation from networkx graph -> protobuf.
+
+  See ProgramGraphToNetworkX() for details.
+  """
   proto = programl_pb2.ProgramGraph()
 
   # Create a map from function name to function ID.
@@ -126,3 +140,5 @@ def NetworkXToProgramGraph(g: nx.MultiDiGraph) -> programl_pb2.ProgramGraph:
     edge_proto.destination_node = dst
     edge_proto.flow = data["flow"]
     edge_proto.position = data["position"]
+
+  return proto
