@@ -1,4 +1,6 @@
 """Unit tests for //deeplearning/ml4pl/ggnn:graph_database_reader."""
+import pickle
+
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as reader
 from deeplearning.ml4pl.testing import testing_databases
