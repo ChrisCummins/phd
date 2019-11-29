@@ -150,6 +150,8 @@ def GraphMetaToProgramGraph(
     proto, split=graph_meta.group, ir_id=graph_meta.bytecode_id
   )
   program_graph.id = graph_meta.id
+  program_graph.data.id = graph_meta.id
+  program_graph.date_added = graph_meta.date_added
   return program_graph
 
 
