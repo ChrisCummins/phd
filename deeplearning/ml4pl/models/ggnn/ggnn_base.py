@@ -214,7 +214,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     self,
   ) -> typing.Tuple[tf.Tensor, tf.Tensor]:
     """Read the embeddings table and return as a tensorflow variable."""
-    # TODO(github.com/ChrisCummins/ml4pl/issues/12): In the future we may want
+    # TODO(github.com/ChrisCummins/ProGraML/issues/12): In the future we may want
     # to be more flexible in supporting multiple types of embeddings tables, but
     # for now I have hardcoded this to always return a tuple
     # <inst2vec_embeddings, selector_embeddings>, where inst2vec_embeddings

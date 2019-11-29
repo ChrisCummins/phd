@@ -89,7 +89,7 @@ def FastCreateRandom():
         data["text"] = "!UNK"
       elif type_ == "immediate":
         node_renamings[node] = f"{node}_immediate"
-        # TODO(github.com/ChrisCummins/ml4pl/issues/6): Update.
+        # TODO(github.com/ChrisCummins/ProGraML/issues/9): Update.
         data["type"] = "identifier"
         data["text"] = "!IDENTIFIER"
         # Immediates have no in-edges.

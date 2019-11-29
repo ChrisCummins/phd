@@ -118,7 +118,7 @@ def AnnotateGraphMetas(
         graph = input_graph_meta.data
 
         # Add a second embedding table index with constant value.
-        # This is a workaround for github.com/ChrisCummins/ml4pl/issues/12,
+        # This is a workaround for github.com/ChrisCummins/ProGraML/issues/12,
         # which means that the input graphs have a single embedding index,
         # wheras we want to produce labelled graphs with a 2D embedding index.
         for _, data in graph.nodes(data=True):

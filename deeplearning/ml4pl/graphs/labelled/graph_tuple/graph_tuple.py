@@ -14,7 +14,7 @@ IncomingEdgeCount = typing.Dict[int, int]
 # Perform the mapping between 'flow' property of edges and an index into a
 # list of adjacency lists.
 #
-# TODO(github.com/ChrisCummins/ml4pl/issues/7): Replace the string constants
+# TODO(github.com/ChrisCummins/ProGraML/issues/2): Replace the string constants
 # with an enum for flow types.
 FLOW_TO_EDGE_INDEX = {"control": 0, "data": 1, "call": 2}
 # Perform the reverse maddping from index into adjacency list to 'flow'

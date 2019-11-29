@@ -147,10 +147,7 @@ def FindCallSites(graph, src, dst):
   return call_sites
 
 
-def _LoopConnectedness(graph, root) -> int:
-  # TODO(github.com/ChrisCummins/ml4pl/issues/5): This overestimates the loop
-  # connectedness by counting *all* back edges, not just the ones on the longest
-  # acyclic path through the graph.
+def _CountControlBackEdges(graph, root) -> int:
   visited = set()
   back_edge_count = 0
 
@@ -170,17 +167,17 @@ def _LoopConnectedness(graph, root) -> int:
   return back_edge_count
 
 
-def LoopConnectedness(graph) -> int:
-  """Return the loop connectedness of a graph.
+def CountControlBackEdges(graph) -> int:
+  """Return the number of control back edges in the graph.
 
   Args:
-    graph: The graph to compute the loop connectedness of.
+    graph: The graph to count the back edges of.
 
   Returns:
-    A non-negative loop connectedness value.
+    A non-negative integer.
   """
   entries = [dst for _, dst in graph.out_edges("root")]
-  return max([_LoopConnectedness(graph, entry) for entry in entries] or [0])
+  return max([_CountControlBackEdges(graph, entry) for entry in entries] or [0])
 
 
 def GetStatementsForNode(

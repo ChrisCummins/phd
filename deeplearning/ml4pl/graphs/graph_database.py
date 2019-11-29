@@ -159,11 +159,8 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       node_labels_dimensionality=node_labels_dimensionality,
       graph_features_dimensionality=graph_features_dimensionality,
       graph_labels_dimensionality=graph_labels_dimensionality,
-      # TODO(github.com/ChrisCummins/ml4pl/issues/5): Compute loop stats.
       loop_connectedness=0,
       undirected_diameter=0,
-      # loop_connectedness=query.LoopConnectedness(g),
-      # undirected_diameter=nx.diameter(g.to_undirected()),
       data_flow_max_steps_required=data_flow_max_steps_required,
       graph=Graph.CreateFromPickled(graph_tuple),
     )
@@ -204,11 +201,8 @@ class GraphMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       ),
       graph_features_dimensionality=getattr(g, "x", 0),
       graph_labels_dimensionality=getattr(g, "y", 0),
-      # TODO(github.com/ChrisCummins/ml4pl/issues/5): Compute loop stats.
       loop_connectedness=0,
       undirected_diameter=0,
-      # loop_connectedness=query.LoopConnectedness(g),
-      # undirected_diameter=nx.diameter(g.to_undirected()),
       data_flow_max_steps_required=getattr(
         g, "data_flow_max_steps_required", 0
       ),
@@ -249,7 +243,7 @@ class Database(sqlutil.Database):
   @decorators.memoized_property
   def embeddings_tables(self) -> typing.List[np.array]:
     """Return the embeddings tables."""
-    # TODO(github.com/ChrisCummins/ml4pl/issues/12): In the future we may want
+    # TODO(github.com/ChrisCummins/ProGraML/issues/12): In the future we may want
     # to add support for different numbers of embeddings tables, or embeddings
     # tables with different types. This is hardcoded to support only two
     # embeddings tables: our augmented inst2vec statement embeddings, and

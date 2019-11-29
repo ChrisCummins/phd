@@ -11,13 +11,10 @@ from labm8.py import decorators
 
 FLAGS = app.FLAGS
 
-# TODO(github.com/ChrisCummins/ml4pl/issues/2): Remove this flag once early-exit
-# data flow count is implemented.
 app.DEFINE_boolean(
   "only_entry_blocks_for_liveness_root_nodes",
   False,
-  "Use only CFG entry blocks as the root nodes for creating liveness graphs. "
-  "This is a workaround for github.com/ChrisCummins/ml4pl/issues/2",
+  "Use only CFG entry blocks as the root nodes for creating liveness graphs.",
 )
 
 
@@ -83,8 +80,7 @@ def AnnotateLiveness(
     # No need to visit predecessors if the in-set is non-empty and has not
     # changed.
     #
-    # TODO(github.com/ChrisCummins/ml4pl/issues/2): Is it possible to exit early
-    # when root_node is not the entry block?
+    # Is it possible to exit early when root_node is not the entry block?
     if not new_in_set or new_in_set != in_sets[node]:
       work_list.extend([p for p in predecessors if p not in work_list])
 
@@ -135,8 +131,6 @@ def MakeLivenessGraphs(
     the statement nodes, and additionally 'live_out_count' and
     'data_flow_max_steps_required' attributes.
   """
-  # TODO(github.com/ChrisCummins/ml4pl/issues/2): Remove this once early-exit
-  # data flow count is implemented.
   if FLAGS.only_entry_blocks_for_liveness_root_nodes:
     root_statements = [node for node, _ in iterators.EntryBlockIterator(g)]
   else:

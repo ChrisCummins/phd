@@ -45,7 +45,7 @@ def test_4180(builder: cdfg.ControlAndDataFlowGraphBuilder):
   builder.Build(fs.Read(REGRESSION_TESTS / "4180.ll"))
 
 
-# TODO(github.com/ChrisCummins/ml4pl/issues/8): Add support for functions
+# TODO(github.com/ChrisCummins/ProGraML/issues/11): Add support for functions
 # without exit blocks. They will have no call return edges.
 @test.XFail(reason="Cannot currently handle no exit blocks")
 def test_560(builder: cdfg.ControlAndDataFlowGraphBuilder):

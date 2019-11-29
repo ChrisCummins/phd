@@ -423,7 +423,7 @@ class ControlAndDataFlowGraphBuilder(object):
     edges_to_add: typing.List[typing.Tuple[str, str, str, int]] = []
 
     for statement, data in iterators.StatementNodeIterator(g):
-      # TODO(github.com/ChrisCummins/ml4pl/issues/6): Separate !IDENTIFIER
+      # TODO(github.com/ChrisCummins/ProGraML/issues/9): Separate !IDENTIFIER
       # and !IMMEDIATE uses.
       def_, uses = GetLlvmStatementDefAndUses(
         data["text"], store_destination_is_def=self.store_destination_is_def
@@ -458,7 +458,7 @@ class ControlAndDataFlowGraphBuilder(object):
     ) in edges_to_add:
       g.add_edge(src, dst, flow="data", position=position)
       node = g.nodes[identifier]
-      # TODO(github.com/ChrisCummins/ml4pl/issues/6): Separate !IDENTIFIER
+      # TODO(github.com/ChrisCummins/ProGraML/issues/9): Separate !IDENTIFIER
       # and !IMMEDIATE nodes.
       node["type"] = "identifier"
       node["name"] = name
