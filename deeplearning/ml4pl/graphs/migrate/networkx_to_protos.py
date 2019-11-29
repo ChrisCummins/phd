@@ -212,20 +212,17 @@ def MigrateGraphDatabase(
   # batch is of size 'batch_size', and each batch is divided across the
   # multiprocessing pool into chunks of size 'chunk_size'.
   max_reader_queue_size = 5
-  batch_size = 256
+  batch_size = 1024
   chunk_size = max(batch_size // 16, 1)
 
   # Setup: Get the IDs of the graphs to process.
 
-  # Get the list of graphs that have already been processed.
+  # Get graphs that have already been processed.
   with output_db.Session() as out_session:
-    already_done = set(
-      [
-        row.id
-        for row in out_session.query(unlabelled_graph_database.ProgramGraph.id)
-      ]
-    )
-    already_done_count = len(already_done)
+    already_done_max, already_done_count = out_session.query(
+      sql.func.max(unlabelled_graph_database.ProgramGraph.id),
+      sql.func.count(unlabelled_graph_database.ProgramGraph.id)).one()
+    already_done_max = already_done_max or -1
 
   # Get the total number of graphs to process, and the number of graphs already
   # processed.
@@ -236,7 +233,7 @@ def MigrateGraphDatabase(
     ids_to_do = [
       row.id
       for row in in_session.query(graph_database.GraphMeta.id)
-      .filter(~graph_database.GraphMeta.id.in_(already_done))
+      .filter(~graph_database.GraphMeta.id > already_done_max)
       .order_by(graph_database.GraphMeta.id)
     ]
 
@@ -287,6 +284,12 @@ def MigrateGraphDatabase(
     bar.n = migrator.exported_count
     bar.refresh()
     migrator.join(0.25)
+
+  with output_db.Session() as out_session:
+    program_graph_count = out_session.query(sql.func.count(unlabelled_graph_database.ProgramGraph.id)).scalar()
+  if program_graph_count != total_graph_count:
+    app.FatalWithoutStackTrace("networkx_graph_count(%s) != program_graph_count(%s)",
+      total_graph_count, program_graph_count)
 
   app.Log(1, "Done!")
 
