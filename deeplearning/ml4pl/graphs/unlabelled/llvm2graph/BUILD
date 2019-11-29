@@ -24,7 +24,7 @@ py_binary(
     srcs = ["llvm2graph.py"],
     deps = [
         ":graph_builder",
-        "//deeplearning/ml4pl/graphs/unlabelled:programl_pb_py",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
         "//labm8/py:pbutil",
     ],
@@ -34,7 +34,7 @@ py_library(
     name = "graph_builder",
     srcs = ["graph_builder.py"],
     deps = [
-        "//deeplearning/ml4pl/graphs/unlabelled:programl_pb_py",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
     ],
 )

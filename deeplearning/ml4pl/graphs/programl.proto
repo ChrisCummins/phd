@@ -11,8 +11,8 @@ message ProgramGraph {
   repeated Function function = 3;
 
   // Optional vectors of graph-level features and labels.
-  repeated float discrete_x = 4;
-  repeated float discrete_y = 6;
+  repeated int32 discrete_x = 4;
+  repeated int32 discrete_y = 6;
 
   repeated float real_x = 5;
   repeated float real_y = 7;

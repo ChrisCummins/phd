@@ -12,7 +12,7 @@ import sqlalchemy as sql
 import tqdm
 
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.unlabelled import programl_pb2
+from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from labm8.py import app
 from labm8.py import humanize

@@ -12,7 +12,7 @@ import networkx as nx
 from compilers.llvm import opt_util
 from deeplearning.ml4pl.graphs import graph_iterators as iterators
 from deeplearning.ml4pl.graphs import graph_query as query
-from deeplearning.ml4pl.graphs.unlabelled import programl_pb2
+from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled.cfg import llvm_util
 from deeplearning.ml4pl.graphs.unlabelled.cg import call_graph as cg
 from deeplearning.ncc.inst2vec import inst2vec_preprocess

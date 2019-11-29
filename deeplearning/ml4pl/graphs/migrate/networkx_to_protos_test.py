@@ -6,8 +6,8 @@ import typing
 import networkx as nx
 
 from deeplearning.ml4pl.graphs import graph_database
+from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
-from deeplearning.ml4pl.graphs.unlabelled import programl_pb2
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
 from labm8.py import bazelutil

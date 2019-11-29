@@ -7,7 +7,7 @@ import sqlalchemy as sql
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-from deeplearning.ml4pl.graphs.unlabelled import programl_pb2
+from deeplearning.ml4pl.graphs import programl_pb2
 from labm8.py import app
 from labm8.py import crypto
 from labm8.py import labdate
