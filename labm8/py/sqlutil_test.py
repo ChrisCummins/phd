@@ -410,5 +410,57 @@ def test_PluralTablenameFromCamelCapsClassNameMixin():
   assert FooBar.__tablename__ == "foo_bars"
 
 
+def test_EnableSqliteForeignKeysCallback_delete_cascade():
+  """Test that parent can't be deleted with foreign key constraints set."""
+  FLAGS.sqlite_enable_foreign_keys = True
+
+  base = declarative.declarative_base()
+
+  class Parent(base, sqlutil.TablenameFromClassNameMixin):
+    id = sql.Column(sql.Integer, primary_key=True)
+    child = sql.orm.relationship(
+      "Child", uselist=False, cascade="all, delete-orphan"
+    )
+
+  class Child(base, sqlutil.TablenameFromClassNameMixin):
+    id = sql.Column(sql.Integer, sql.ForeignKey("parent.id"), primary_key=True)
+
+  db = sqlutil.Database("sqlite://", base)
+  with db.Session() as session:
+    session.add(Parent(id=1, child=Child(id=1)))
+    session.commit()
+
+    with test.Raises(sql.exc.IntegrityError):
+      session.query(Parent).filter(Parent.id == 1).delete()
+
+
+def test_EnableSqliteForeignKeysCallback_delete_cascade_without_foreign_key_constraints():
+  """Test that parent can't be deleted with foreign key constraints set."""
+  FLAGS.sqlite_enable_foreign_keys = False
+
+  base = declarative.declarative_base()
+
+  class Parent(base, sqlutil.TablenameFromClassNameMixin):
+    id = sql.Column(sql.Integer, primary_key=True)
+    child = sql.orm.relationship(
+      "Child", uselist=False, cascade="all, delete-orphan"
+    )
+
+  class Child(base, sqlutil.TablenameFromClassNameMixin):
+    id = sql.Column(sql.Integer, sql.ForeignKey("parent.id"), primary_key=True)
+
+  db = sqlutil.Database("sqlite://", base)
+  with db.Session() as session:
+    session.add(Parent(id=1, child=Child(id=1)))
+    session.commit()
+
+    # WARNING: As this test demonstrates this, when
+    # --sqlite_enable_foreign_keys=false foreign key constraints are not
+    # enforced by SQLite. This database is now in a corrupt state where an
+    # orphaned child exists without a parent, be careful of this!!
+    session.query(Parent).filter(Parent.id == 1).delete()
+    session.commit()
+
+
 if __name__ == "__main__":
   test.Main()
