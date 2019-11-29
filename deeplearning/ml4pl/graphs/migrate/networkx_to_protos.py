@@ -132,11 +132,12 @@ def BatchedGraphReader(
     for i in range(0, len(ids_to_read), batch_size):
       ids_batch = ids_to_read[i : i + batch_size]
       with profiler(f"[reader] Read {len(ids_batch)} input graphs"):
-        yield session.query(graph_database.GraphMeta).filter(
+        graphs = session.query(graph_database.GraphMeta).filter(
           graph_database.GraphMeta.id >= ids_batch[0]
         ).filter(graph_database.GraphMeta.id <= ids_batch[-1]).options(
           sql.orm.joinedload(graph_database.GraphMeta.graph)
         ).all()
+      yield graphs
 
 
 def GraphMetaToProgramGraph(
