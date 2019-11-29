@@ -1,7 +1,8 @@
 """Unit tests for //deeplearning/ml4pl/graphs/migrate:networkx_to_protos."""
 import pathlib
 import pickle
-import typing
+from typing import Iterable
+from typing import Tuple
 
 import networkx as nx
 
@@ -17,7 +18,7 @@ from labm8.py import test
 
 FLAGS = test.FLAGS
 
-GRAPH_PROTOS_ARCHIVE = bazelutil.DataArchive(
+NETWORKX_GRAPHS_ARCHIVE = bazelutil.DataArchive(
   "phd/deeplearning/ml4pl/testing/data/100_unlabelled_networkx_graphs.tar.bz2"
 )
 
@@ -103,24 +104,22 @@ def test_NetworkXGraphToProgramGraphProto_returns_proto(
   assert isinstance(proto, programl_pb2.ProgramGraph)
 
 
-def ReadPickledNetworkxGraphs() -> typing.Iterable[
-  typing.Tuple[str, nx.MultiDiGraph]
-]:
+def ReadPickledNetworkxGraphs() -> Iterable[Tuple[str, nx.MultiDiGraph]]:
   """Read the pickled networkx graphs."""
-  with GRAPH_PROTOS_ARCHIVE as pickled_dir:
+  with NETWORKX_GRAPHS_ARCHIVE as pickled_dir:
     for path in pickled_dir.iterdir():
       with open(path, "rb") as f:
         yield path.name, pickle.load(f)
 
 
 @test.Fixture(scope="function", params=list(ReadPickledNetworkxGraphs()))
-def pickled_networkx_graph(request) -> int:
+def pickled_networkx_graph(request) -> Tuple[str, nx.MultiDiGraph]:
   """A parametrized test fixture."""
   return request.param
 
 
 def test_NetworkXGraphToProgramGraphProto_random_100(
-  pickled_networkx_graph: typing.Tuple[str, nx.MultiDiGraph]
+  pickled_networkx_graph: Tuple[str, nx.MultiDiGraph]
 ):
   """Test networkx -> proto conversion over the 100 test graphs."""
   name, g = pickled_networkx_graph
