@@ -49,8 +49,9 @@ def EnumerateTestingDatabaseUrls() -> List[str]:
   Returns:
     A list of database URLs.
   """
-  # Always test with in-memory SQLite database:
-  db_urls = ["sqlite://"]
+  # Always test with a file-backed SQLite database. Don't test with in-memory
+  # SQLite database as these don't work with multi-threaded code.
+  db_urls = [f"sqlite:////tmp/test_{run_id.RUN_ID}.db"]
 
   for path in TEST_DB_FILES:
     if path.is_file():
