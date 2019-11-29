@@ -48,8 +48,15 @@ def NetworkXGraphToProgramGraphProto(
   proto = programl_pb2.ProgramGraph()
 
   # Create the map from function IDs to function names.
-  functions = set([fn for _, fn in g.nodes(data="function") if fn])
-  function_to_idx_map = {fn: i for i, fn in enumerate(sorted(functions))}
+  function_names = list(
+    sorted(set([fn for _, fn in g.nodes(data="function") if fn]))
+  )
+  function_to_idx_map = {fn: i for i, fn in enumerate(function_names)}
+
+  # Create the function list.
+  for function_name in function_names:
+    function_proto = proto.function.add()
+    function_proto.name = function_name
 
   # Build a translation map from node names to node list indices.
   if "root" not in g.nodes:
@@ -96,15 +103,9 @@ def NetworkXGraphToProgramGraphProto(
       node_proto.discrete_x.extend([x])
 
     # Set the node function.
-    function = function_to_idx_map.get(node.get("function"))
+    function = node.get("function")
     if function:
-      node_proto.function = function
-
-  # Create the function list.
-  idx_to_function_map = {v: k for k, v in function_to_idx_map.items()}
-  for fn_idx in range(len(function_to_idx_map)):
-    function = proto.function.add()
-    function.name = idx_to_function_map[fn_idx]
+      node_proto.function = function_to_idx_map[function]
 
   # Create the edge list.
   for src, dst, data in g.edges(data=True):
