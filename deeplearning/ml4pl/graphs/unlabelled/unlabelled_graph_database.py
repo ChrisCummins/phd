@@ -4,13 +4,12 @@ import pickle
 import typing
 
 import sqlalchemy as sql
-from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
+from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.graphs import programl_pb2
 from labm8.py import app
 from labm8.py import crypto
-from labm8.py import labdate
 from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
@@ -19,24 +18,30 @@ Base = declarative.declarative_base()
 
 
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
-  """Key-value database metadata store."""
+  """A key-value database metadata store, with additional run ID."""
 
-  key: str = sql.Column(sql.String(64), primary_key=True)
-  pickled_value: str = sql.Column(
+  # Unused integer ID for this row.
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # The run ID that generated this <key,value> pair.
+  run_id: str = run_id.RunId.SqlStringColumn()
+
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
+
+  # The <key,value> pair.
+  key: str = sql.Column(sql.String(128), index=True)
+  pickled_value: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
-  )
-  date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
   )
 
   @property
   def value(self) -> typing.Any:
+    """De-pickle the column value."""
     return pickle.loads(self.pickled_value)
 
   @classmethod
   def Create(cls, key: str, value: typing.Any):
+    """Construct a table entry."""
     return Meta(key=key, pickled_value=pickle.dumps(value))
 
 
@@ -62,22 +67,35 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   node_count: int = sql.Column(sql.Integer, nullable=False)
   edge_count: int = sql.Column(sql.Integer, nullable=False)
 
-  # The number of distinct node and edge types.
+  # The number of distinct node types and edge flows, respectively.
   node_type_count: int = sql.Column(sql.Integer, nullable=False)
-  edge_type_count: int = sql.Column(sql.Integer, nullable=False)
+  edge_flow_count: int = sql.Column(sql.Integer, nullable=False)
 
-  # The number of nodes which have a {text, preprocessed_text, encoded}
-  # attribute, and the number of distinct (non-null) values.
-  node_text_count: int = sql.Column(sql.Integer, nullable=False)
+  # The number of unique {text, preprocessed_text} attributes.
   node_unique_text_count: int = sql.Column(sql.Integer, nullable=False)
-
-  node_preprocessed_text_count: int = sql.Column(sql.Integer, nullable=False)
   node_unique_preprocessed_text_count: int = sql.Column(
     sql.Integer, nullable=False
   )
 
-  node_encoded_count: int = sql.Column(sql.Integer, nullable=False)
-  node_unique_encoded_count: int = sql.Column(sql.Integer, nullable=False)
+  # The number of {discrete, real} graph-level {x, y} values.
+  graph_discrete_x_count: int = sql.Column(
+    sql.Integer, nullable=False, default=0
+  )
+  graph_real_x_count: int = sql.Column(sql.Integer, nullable=False, default=0)
+  graph_discrete_y_count: int = sql.Column(
+    sql.Integer, nullable=False, default=0
+  )
+  graph_real_y_count: int = sql.Column(sql.Integer, nullable=False, default=0)
+
+  # The number of {discrete, real} node-level {x, y} values.
+  node_discrete_x_count: int = sql.Column(
+    sql.Integer, nullable=False, default=0
+  )
+  node_real_x_count: int = sql.Column(sql.Integer, nullable=False, default=0)
+  node_discrete_y_count: int = sql.Column(
+    sql.Integer, nullable=False, default=0
+  )
+  node_real_y_count: int = sql.Column(sql.Integer, nullable=False, default=0)
 
   # The maximum value of the 'position' attribute of edges.
   edge_position_max: int = sql.Column(sql.Integer, nullable=False)
@@ -85,11 +103,7 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The size of the serialized proto in bytes.
   serialized_proto_size: int = sql.Column(sql.Integer, nullable=False)
 
-  date_added: datetime.datetime = sql.Column(
-    sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
-    nullable=False,
-    default=labdate.GetUtcMillisecondsNow,
-  )
+  timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
 
   # Create the one-to-one relationship from ProgramGraphs to ProgramGraphData.
   data: "ProgramGraphData" = sql.orm.relationship(
@@ -113,7 +127,9 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     return proto
 
   @classmethod
-  def Create(cls, proto: programl_pb2.ProgramGraph, split: str, ir_id: int) -> 'ProgramGraph':
+  def Create(
+    cls, proto: programl_pb2.ProgramGraph, ir_id: int
+  ) -> "ProgramGraph":
     """Create a ProgramGraph from the given protocol buffer.
 
     This is the preferred method of populating databases of program graphs, as
@@ -122,46 +138,70 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
     Args:
       proto: The protocol buffer to instantiate a program graph from.
-      split: The name of the split that this graph belongs to.
+      ir_id: The ID of the intermidiate representation for this program graph.
 
     Returns:
       A ProgramGraph instance.
     """
     # Gather the edge attributes in a single pass of the proto.
-    edge_attributes = [(edge.type, edge.position) for edge in proto.edge]
-    edge_types = set([x[0] for x in edge_attributes])
+    edge_attributes = [(edge.flow, edge.position) for edge in proto.edge]
+    edge_flows = set([x[0] for x in edge_attributes])
     edge_position_max = max([x[1] for x in edge_attributes])
     del edge_attributes
 
     # Gather the node attributes in a single pass.
     node_types = set()
-    node_texts = []
-    node_preprocessed_texts = []
-    node_encodeds = []
+    node_texts = set()
+    node_preprocessed_texts = set()
+    node_discrete_x_counts = set()
+    node_discrete_y_counts = set()
+    node_real_x_counts = set()
+    node_real_y_counts = set()
+
     for node in proto.node:
       node_types.add(node.type)
-      if node.HasField("text"):
-        node_texts.append(node.text)
-      if node.HasField("preprocessed_text"):
-        node_preprocessed_texts.append(node.preprocessed_text)
-      if node.HasField("encoded"):
-        node_encodeds.append(node.encoded)
+      node_texts.add(node.text)
+      node_preprocessed_texts.add(node.preprocessed_text)
+      node_discrete_x_counts.add(len(node.discrete_x))
+      node_discrete_y_counts.add(len(node.discrete_y))
+      node_real_x_counts.add(len(node.real_x))
+      node_real_y_counts.add(len(node.real_y))
+
+    if len(node_discrete_x_counts) != 1:
+      raise ValueError(
+        "Graph contains multiple node-level discrete_x counts: "
+        f"{node_discrete_x_counts}"
+      )
+    if len(node_discrete_y_counts) != 1:
+      raise ValueError(
+        "Graph contains multiple node-level discrete_y counts: "
+        f"{node_discrete_y_counts}"
+      )
+    if len(node_real_x_counts) != 1:
+      raise ValueError(
+        "Graph contains multiple node-level real_x counts: "
+        f"{node_real_x_counts}"
+      )
+    if len(node_real_y_counts) != 1:
+      raise ValueError(
+        "Graph contains multiple node-level real_y counts: "
+        f"{node_real_y_counts}"
+      )
 
     serialized_proto = proto.SerializeToString()
 
     return ProgramGraph(
-      split=split,
       ir_id=ir_id,
       node_count=len(proto.node),
       edge_count=len(proto.edge),
       node_type_count=len(node_types),
-      edge_type_count=len(edge_types),
-      node_text_count=len(node_texts),
-      node_unique_text_count=len(set(node_texts)),
-      node_preprocessed_text_count=len(node_preprocessed_texts),
-      node_unique_preprocessed_text_count=len(set(node_preprocessed_texts)),
-      node_encoded_count=len(node_encodeds),
-      node_unique_encoded_count=len(set(node_encodeds)),
+      edge_flow_count=len(edge_flows),
+      node_unique_text_count=len(node_texts),
+      node_unique_preprocessed_text_count=len(node_preprocessed_texts),
+      node_discrete_x_count=list(node_discrete_x_counts)[0],
+      node_discrete_y_count=list(node_discrete_y_counts)[0],
+      node_real_x_count=list(node_real_x_counts)[0],
+      node_real_y_count=list(node_real_y_counts)[0],
       edge_position_max=edge_position_max,
       serialized_proto_size=len(serialized_proto),
       data=ProgramGraphData(
@@ -170,16 +210,16 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     )
 
 
-class ProgramGraphData(
-  Base, sqlutil.TablenameFromCamelCapsClassNameMixin
-):
+class ProgramGraphData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """The protocol buffer of a program graph.
 
   See ProgramGraph for the parent table.
   """
 
   id: int = sql.Column(
-    sql.Integer, sql.ForeignKey("program_graphs.id"), primary_key=True
+    sql.Integer,
+    sql.ForeignKey("program_graphs.id", onupdate="CASCADE", ondelete="CASCADE"),
+    primary_key=True,
   )
 
   # The sha1sum of the 'serialized_proto' column. There is no requirement

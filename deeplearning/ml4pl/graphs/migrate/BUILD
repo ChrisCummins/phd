@@ -57,6 +57,7 @@ py_test(
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs/unlabelled:unlabelled_graph_database",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:decorators",
         "//labm8/py:test",
         "//third_party/py/networkx",

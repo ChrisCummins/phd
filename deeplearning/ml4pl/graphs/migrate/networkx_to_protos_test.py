@@ -10,6 +10,7 @@ from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
+from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import bazelutil
 from labm8.py import decorators
 from labm8.py import test
@@ -135,6 +136,7 @@ def test_NetworkXGraphToProgramGraphProto_random_100(
 
 @test.Fixture(scope="function")
 def populated_graph_db() -> graph_database.Database:
+  """Test fixture which returns a database of 100 "real" networkx graphs."""
   with GRAPH_DB as db_dir:
     assert (db_dir / "100_unlabelled_networkx_graphs.db").is_file()
     yield graph_database.Database(
@@ -142,11 +144,12 @@ def populated_graph_db() -> graph_database.Database:
     )
 
 
-@test.Fixture(scope="function")
-def empty_output_db(
-  tempdir: pathlib.Path,
-) -> unlabelled_graph_database.Database:
-  yield unlabelled_graph_database.Database(f"sqlite:///{tempdir}/output_db.db")
+@test.Fixture(scope="function", params=testing_databases.TEST_DB_URLS)
+def empty_output_db(request) -> unlabelled_graph_database.Database:
+  """Test fixture which returns an empty output database."""
+  yield from testing_databases.YieldDatabase(
+    unlabelled_graph_database.Database, request.param
+  )
 
 
 @test.Parametrize("nproc", (1, 2, 4))

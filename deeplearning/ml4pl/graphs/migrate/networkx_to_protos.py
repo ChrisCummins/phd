@@ -19,6 +19,7 @@ from labm8.py import humanize
 from labm8.py import ppar
 from labm8.py import prof
 
+
 FLAGS = app.FLAGS
 
 app.DEFINE_database(
@@ -46,7 +47,7 @@ def NetworkXGraphToProgramGraphProto(
   graph builder to a ProGraML graph proto."""
   proto = programl_pb2.ProgramGraph()
 
-  # Create the map from nodes to function names.
+  # Create the map from function IDs to function names.
   functions = set([fn for _, fn in g.nodes(data="function") if fn])
   function_to_idx_map = {fn: i for i, fn in enumerate(sorted(functions))}
 
@@ -92,7 +93,7 @@ def NetworkXGraphToProgramGraphProto(
     # Set the encoded representation of the node.
     x = node.get("x", None)
     if x is not None:
-      node_proto.encoded = x
+      node_proto.discrete_x.extend([x])
 
     # Set the node function.
     function = function_to_idx_map.get(node.get("function"))
@@ -108,7 +109,7 @@ def NetworkXGraphToProgramGraphProto(
   # Create the edge list.
   for src, dst, data in g.edges(data=True):
     edge = proto.edge.add()
-    edge.type = {
+    edge.flow = {
       "call": programl_pb2.Edge.CALL,
       "control": programl_pb2.Edge.CONTROL,
       "data": programl_pb2.Edge.DATA,
@@ -132,11 +133,13 @@ def BatchedGraphReader(
     for i in range(0, len(ids_to_read), batch_size):
       ids_batch = ids_to_read[i : i + batch_size]
       with profiler(f"[reader] Read {len(ids_batch)} input graphs"):
-        graphs = session.query(graph_database.GraphMeta).filter(
-          graph_database.GraphMeta.id >= ids_batch[0]
-        ).filter(graph_database.GraphMeta.id <= ids_batch[-1]).options(
-          sql.orm.joinedload(graph_database.GraphMeta.graph)
-        ).all()
+        graphs = (
+          session.query(graph_database.GraphMeta)
+          .filter(graph_database.GraphMeta.id >= ids_batch[0])
+          .filter(graph_database.GraphMeta.id <= ids_batch[-1])
+          .options(sql.orm.joinedload(graph_database.GraphMeta.graph))
+          .all()
+        )
       yield graphs
 
 
@@ -147,11 +150,11 @@ def GraphMetaToProgramGraph(
   graph: nx.MultiDiGraph = graph_meta.data
   proto = NetworkXGraphToProgramGraphProto(graph)
   program_graph = unlabelled_graph_database.ProgramGraph.Create(
-    proto, split=graph_meta.group, ir_id=graph_meta.bytecode_id
+    proto, ir_id=graph_meta.bytecode_id
   )
   program_graph.id = graph_meta.id
   program_graph.data.id = graph_meta.id
-  program_graph.date_added = graph_meta.date_added
+  program_graph.timestamp = graph_meta.date_added
   return program_graph
 
 
@@ -221,7 +224,8 @@ def MigrateGraphDatabase(
   with output_db.Session() as out_session:
     already_done_max, already_done_count = out_session.query(
       sql.func.max(unlabelled_graph_database.ProgramGraph.id),
-      sql.func.count(unlabelled_graph_database.ProgramGraph.id)).one()
+      sql.func.count(unlabelled_graph_database.ProgramGraph.id),
+    ).one()
     already_done_max = already_done_max or -1
 
   # Get the total number of graphs to process, and the number of graphs already
@@ -246,6 +250,12 @@ def MigrateGraphDatabase(
       total_graph_count,
     )
 
+  with output_db.Session(commit=True) as out_session:
+    out_session.add(
+      unlabelled_graph_database.Meta.Create(
+        key="Graph counts", value=(already_done_count, total_graph_count)
+      )
+    )
   app.Log(
     1, "Selected %s graphs to process", humanize.Plural(len(ids_to_do), "graph")
   )
@@ -286,10 +296,15 @@ def MigrateGraphDatabase(
     migrator.join(0.25)
 
   with output_db.Session() as out_session:
-    program_graph_count = out_session.query(sql.func.count(unlabelled_graph_database.ProgramGraph.id)).scalar()
+    program_graph_count = out_session.query(
+      sql.func.count(unlabelled_graph_database.ProgramGraph.id)
+    ).scalar()
   if program_graph_count != total_graph_count:
-    app.FatalWithoutStackTrace("networkx_graph_count(%s) != program_graph_count(%s)",
-      total_graph_count, program_graph_count)
+    app.FatalWithoutStackTrace(
+      "networkx_graph_count(%s) != program_graph_count(%s)",
+      total_graph_count,
+      program_graph_count,
+    )
 
   app.Log(1, "Done!")
 

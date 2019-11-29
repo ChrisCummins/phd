@@ -19,6 +19,7 @@ py_library(
     srcs = ["unlabelled_graph_database.py"],
     visibility = ["//visibility:public"],
     deps = [
+        "//deeplearning/ml4pl:run_id",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//labm8/py:app",
         "//labm8/py:crypto",
@@ -36,8 +37,10 @@ py_test(
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:app",
         "//labm8/py:decorators",
         "//labm8/py:test",
+        "//third_party/py/sqlalchemy",
     ],
 )
