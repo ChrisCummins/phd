@@ -76,7 +76,8 @@ def test_ControlFlowGraph_ToSuccessorsString_while_loop():
   g.add_edge(0, 1)
   g.add_edge(1, 0)
   g.add_edge(0, 2)
-  # TODO(cec): I don't beleive these. Why isn't self included?
+  # TODO(github.com/ChrisCummins/ProGraML/issues/19): I don't believe these.
+  # Why isn't self included?
   assert (
     g.ToSuccessorsString()
     == """\
@@ -107,7 +108,8 @@ def test_ControlFlowGraph_ToSuccessorsString_while_loop_with_exit():
   g.add_edge(2, 0)
   g.add_edge(0, 3)
   g.add_edge(1, 3)
-  # TODO(cec): I don't beleive these. Why isn't self included?
+  # TODO(github.com/ChrisCummins/ProGraML/issues/19): I don't beleive these.
+  # Why isn't self included?
   assert (
     g.ToSuccessorsString()
     == """\

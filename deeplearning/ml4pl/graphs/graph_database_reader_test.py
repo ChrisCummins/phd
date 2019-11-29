@@ -77,23 +77,32 @@ def test_BufferedGraphReader_filters(
   assert len(graphs) == 127
 
 
-# TODO(cec): Fix me.
-# @test.Flaky(reason='There is a possibility that random order returns all rows in order!')
-# @test.Parametrize('buffer_size', [25, 10000])
-# @test.Parametrize('order', [reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
-#                                    reader.BufferedGraphReaderOrder.BATCH_RANDOM])
-# def test_BufferedGraphReader_random_orders(
-#     graph_db_512: graph_database.Database,
-#     buffer_size: int,
-#     order: reader.BufferedGraphReaderOrder):
-#   """Test using `order_by_random` arg to randomize row order."""
-#   graphs = list(reader.BufferedGraphReader(
-#       graph_db_512, buffer_size=buffer_size, order=order))
-#   node_counts = [g.node_count for g in graphs]
-#   assert sorted(node_counts) != node_counts
+@test.Flaky(
+  reason="There is a possibility that random order returns all rows in order"
+)
+@test.Parametrize("buffer_size", [25, 10000])
+@test.Parametrize(
+  "order",
+  [
+    reader.BufferedGraphReaderOrder.GLOBAL_RANDOM,
+    reader.BufferedGraphReaderOrder.BATCH_RANDOM,
+  ],
+)
+def test_BufferedGraphReader_random_orders(
+  graph_db_512: graph_database.Database,
+  buffer_size: int,
+  order: reader.BufferedGraphReaderOrder,
+):
+  """Test using `order_by_random` arg to randomize row order."""
+  graphs = list(
+    reader.BufferedGraphReader(
+      graph_db_512, buffer_size=buffer_size, order=order
+    )
+  )
+  node_counts = [g.node_count for g in graphs]
+  assert sorted(node_counts) != node_counts
 
 
-# TODO(cec): Test with 'limit=1'.
 @test.Parametrize("buffer_size", [1, 25, 10000])
 @test.Parametrize(
   "order",
@@ -104,7 +113,7 @@ def test_BufferedGraphReader_filters(
     reader.BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED,
   ],
 )
-@test.Parametrize("limit", [25, 10000])
+@test.Parametrize("limit", [1, 25, 10000])
 def test_BufferedGraphReader_limit(
   graph_db_512: graph_database.Database,
   buffer_size: int,

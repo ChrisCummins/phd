@@ -476,7 +476,7 @@ class LstmNodeClassifierModel(classifier_base.ClassifierBase):
 
 def main():
   """Main entry point."""
-  # TODO(cec): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
+  # TODO(github.com/ChrisCummins/ProGraML/issues/13): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
   warnings.filterwarnings("ignore")
 
   # Hopefully not required as a solution. Instead I maybe discard the last batch

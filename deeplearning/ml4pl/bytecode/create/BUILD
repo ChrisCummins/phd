@@ -48,7 +48,7 @@ py_library(
     ],
 )
 
-# TODO(cec): Linux build is broken. Investigate later.
+# TODO(github.com/ChrisCummins/ProGraML/issues/7): Linux build is broken.
 #py_test(
 #    name = "import_from_linux_test",
 #    srcs = ["import_from_linux_test.py"],

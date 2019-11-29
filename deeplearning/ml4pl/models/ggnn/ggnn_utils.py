@@ -197,9 +197,9 @@ def MakePlaceholders(
     name="raw_node_input_features",
   )
 
-  # TODO(cec): Is there ever a case where --hiden_size does not need to equal
-  # node_embeddings_concatenated_width? If not, then lets remove the hidden_size
-  # flag and instead derive it.
+  # TODO(github.com/ChrisCummins/ProGraML/issues/16): Is there ever a case where
+  # --hiden_size does not need to equal node_embeddings_concatenated_width? If
+  # not, then lets remove the hidden_size flag and instead derive it.
   if FLAGS.hidden_size != stats.node_embeddings_concatenated_width:
     raise ValueError(
       f"--hidden_size={FLAGS.hidden_size} != "

@@ -377,7 +377,7 @@ class DataFlowAnalysisGraphExporter(database_exporters.DatabaseExporterBase):
 
     all_exported_graph_count = 0
     exported_graph_count = self._Export(input_db, input_ids, pool, batch_size)
-    while True:  # TODO(cec): exported_graph_count
+    while True:  # Should be `exported_graph_count`.
       all_exported_graph_count += exported_graph_count
       exported_graph_count = self._Export(input_db, input_ids, pool, batch_size)
 
@@ -679,8 +679,8 @@ def CreateAnnotatedGraphs(
       }
 
       if annotator.requires_graphs:
-        # TODO(cec): Rename this argument 'graph' and refactor the graph
-        # annotators.
+        # TODO(github.com/ChrisCummins/ProGraML/issues/2): Rename this argument
+        # 'graph' and refactor the graph annotators.
         kwargs["g"] = graph_meta.data
       if annotator.requires_bytecodes:
         kwargs["bytecode"] = bytecodes[i]

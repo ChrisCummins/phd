@@ -8,7 +8,7 @@ MODULE_UNDER_TEST = None
 
 
 def test_TODO():
-  """TODO: Short summary of test."""
+  """TODO(github.com/ChrisCummins/ProGraML/issues/5): Short summary of test."""
   assert migrate_graph_database
 
 

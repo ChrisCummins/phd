@@ -155,17 +155,19 @@ def MakePolyhedralGraphs(
   Args:
     bytecode: The bytecode which produced the input graph.
     n: The maximum number of graphs to produce. This value is ignored and one graph
-       will be produced with all polyhedral regions annotated.
-    false: TODO(cec): Unused. This method is hardcoded to use 2-class 1-hots.
-    true: TODO(cec): Unused. This method is hardcoded to use 2-class 1-hots.
+      will be produced with all polyhedral regions annotated.
+    false: TODO(github.com/ChrisCummins/ProGraML/issues/2): Unused. This method
+      is hardcoded to use 2-class 1-hots.
+    true: TODO(github.com/ChrisCummins/ProGraML/issues/2): Unused. This method
+      is hardcoded to use 2-class 1-hots.
 
   Returns:
     A generator of annotated graphs, where each graph has 'x' and 'y' labels on
     the statement nodes, and additionally a 'data_flow_max_steps_required'
     attribute which is set to the largest number of statements in a polyhedral block.
   """
-  # TODO(cec): Replace true/false args with a list of class values for all
-  # graph annotator functions.
+  # TODO(github.com/ChrisCummins/ProGraML/issues/2): Replace true/false args
+  # with a list of class values for all graph annotator functions.
   del false
   del true
   del n

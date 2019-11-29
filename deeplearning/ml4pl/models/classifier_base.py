@@ -223,8 +223,8 @@ class ClassifierBase(object):
     """Constructor. Subclasses should call this first."""
     self._initialized = False  # Set by LoadModel() or InitializeModel()
 
-    # TODO(cec): Check in the database that the run ID is unique. If not,
-    # wait a second.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/15): Check in the database
+    # that the run ID is unique. If not, wait a second.
     # had to solve it for the batch scheduler to work reliably...
     unique = binascii.b2a_hex(os.urandom(15))[:5].decode()
     self.run_id: str = (
@@ -305,14 +305,14 @@ class ClassifierBase(object):
     epoch_accuracies = []
 
     # FANCY PROGRESS BAR
-    # TODO(cec) method still not working.
+    # TODO(cec): method still not working.
     # epoch_size = self.batcher.GetGraphsInGroupCount(groups)
     epoch_size = 2 ** 30
     if "devmap" in self.graph_db.url:
       epoch_size = 544 if epoch_type == "train" else 68
     elif "alias" in self.graph_db.url:
       epoch_size = 269000 if epoch_type == "train" else 31500
-    # TODO(cec) please have a look at the preceding line, i think the method is rotten:
+    # TODO(cec): please have a look at the preceding line, i think the method is rotten:
     #  q = s.query(sql.func.count(graph_database.GraphMeta)) \
     # "Object %r is not legal as a SQL literal value" % value
     # sqlalchemy.exc.ArgumentError: Object <class 'deeplearning.ml4pl.graphs.graph_database.GraphMeta'> is not legal as a SQL literal value
@@ -399,9 +399,6 @@ class ClassifierBase(object):
         labels=self.labels,
         average=FLAGS.batch_scores_averaging_method,
       )
-
-      # TODO(cec) redundant with above assignment?
-      log.accuracy = accuracies.mean()
 
       # Only create a batch log for test runs.
       if record_batch_logs:
@@ -770,11 +767,7 @@ class ClassifierBase(object):
           run_id=self.run_id,
           type=type_,
           parameter=str(key),
-          # TODO(cec): Total hack to support pickling database URLs rather
-          # than the values.
-          pickled_value=pickle.dumps(
-            value().url if (key.endswith("_db") and value) else value
-          ),
+          pickled_value=pickle.dumps(value),
         )
         for key, value in key_value_dict.items()
       ]

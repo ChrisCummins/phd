@@ -238,7 +238,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
             messages = tf.concat(messages, axis=0)  # Shape [M, D]
 
-            # TODO: not well understood
+            # TODO(github.com/ChrisCummins/ProGraML/issues/18): not well understood
             if FLAGS.use_propagation_attention:
               message_source_states = tf.concat(
                 message_source_states, axis=0
@@ -663,7 +663,7 @@ def RunKFoldOrDie():
 
 def main():
   """Main entry point."""
-  # TODO(cec): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
+  # TODO(github.com/ChrisCummins/ProGraML/issues/13): Only filter https://scikit-learn.org/stable/modules/generated/sklearn.exceptions.UndefinedMetricWarning.html
   warnings.filterwarnings("ignore")
 
   if not FLAGS.log_db:

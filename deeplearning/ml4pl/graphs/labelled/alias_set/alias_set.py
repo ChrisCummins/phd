@@ -84,16 +84,18 @@ def MakeAliasSetGraphs(
       1 <= x <= min(num_alias_sets, n), where num_alias_sets is the number of
       alias sets larger than --alias_set_min_size. If n is None, num_alias_sets
       graphs will be produced.
-    false: TODO(cec): Unused. This method is hardcoded to use 3-class 1-hots.
-    true: TODO(cec): Unused. This method is hardcoded to use 3-class 1-hots.
+    false: TODO(github.com/ChrisCummins/ProGraML/issues/2): Unused. This method
+      is hardcoded to use 3-class 1-hots.
+    true: TODO(github.com/ChrisCummins/ProGraML/issues/2): Unused. This method
+      is hardcoded to use 3-class 1-hots.
 
   Returns:
     A generator of annotated graphs, where each graph has 'x' and 'y' labels on
     the statement nodes, and additionally a 'data_flow_max_steps_required'
     attribute which is set to the number of pointers in the alias set.
   """
-  # TODO(cec): Replace true/false args with a list of class values for all
-  # graph annotator functions.
+  # TODO(github.com/ChrisCummins/ProGraML/issues/2): Replace true/false args
+  # with a list of class values for all graph annotator functions.
   del false
   del true
 

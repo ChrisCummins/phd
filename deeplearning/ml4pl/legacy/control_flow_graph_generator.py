@@ -118,7 +118,7 @@ class ControlFlowGraphGenerator(object):
     Returns:
       A ControlFlowGraph instance.
     """
-    # TODO(cec): Several issues here:
+    # Several issues here:
     #   * Non-terminating while loops when we can't match the expected edge
     #     density.
     #   * Parallel edges being created.

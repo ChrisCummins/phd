@@ -349,8 +349,8 @@ class GraphBatch(typing.NamedTuple):
       graph_y = np.array(graph_y)
 
     # Record the graphs that we used in this batch to an unmapped property.
-    # TODO(cec): Setting an attribute on a mapped object at run time like this
-    # is shitty. Rethink.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/17): Setting an attribute on
+    # a mapped object at run time like this is shitty. Rethink.
     log._transient_data = {
       "graph_indices": graph_ids,
       "bytecode_ids": bytecode_ids,
@@ -480,8 +480,8 @@ class GraphBatcher(object):
   def MakeGraphBatchIterator(
     self,
     options: GraphBatchOptions,
-    # TODO(cec): This duplicates the logic of the
-    # GraphTuplesOptions field. Consolidate these.
+    # TODO(cec): This duplicates the logic of the GraphTuplesOptions field.
+    # Consolidate these.
     max_instance_count: int = 0,
     print_context: typing.Any = None,
   ) -> typing.Iterable[GraphBatch]:

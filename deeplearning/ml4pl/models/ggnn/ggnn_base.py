@@ -40,7 +40,7 @@ classifier_base.MODEL_FLAGS.add("layer_timesteps")
 app.DEFINE_float("learning_rate", 0.001, "The initial learning rate.")
 classifier_base.MODEL_FLAGS.add("learning_rate")
 
-# TODO(cec): Poorly understood:
+# TODO(github.com/ChrisCummins/ProGraML/issues/18): Poorly understood:
 app.DEFINE_float("clamp_gradient_norm", 1.0, "Clip gradients to L-2 norm.")
 classifier_base.MODEL_FLAGS.add("clamp_gradient_norm")
 
@@ -101,7 +101,7 @@ app.DEFINE_string(
 )
 classifier_base.MODEL_FLAGS.add("position_embeddings")
 
-# TODO(cec): Poorly understood.
+# TODO(github.com/ChrisCummins/ProGraML/issues/18): Poorly understood.
 app.DEFINE_boolean("freeze_graph_model", False, "???")
 #
 ##### End of flag declarations.
@@ -295,7 +295,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
       "raw_node_output_features": self.ops["raw_node_output_features"]
     }
 
-    # TODO(cec): Investigate this.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/18): Investigate this.
     feed_dict.update(loop_feed)
 
     node_states = utils.RunWithFetchDict(self.sess, loop_fetch, feed_dict)[
@@ -389,7 +389,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     feed_dict.update(
       {
         # Add the actual input features that we computed above.
-        # TODO(cec): Why??
+        # TODO(github.com/ChrisCummins/ProGraML/issues/18): Why??
         self.placeholders["raw_node_input_features"]: initial_node_states,
         self.placeholders["raw_node_output_features"]: node_states,
       }

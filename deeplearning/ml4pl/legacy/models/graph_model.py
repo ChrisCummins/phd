@@ -264,7 +264,7 @@ class MLPGraphNetwork(snt.AbstractModule):
         edge_model_fn=MakeMultilayerPerceptron,
         node_model_fn=MakeMultilayerPerceptron,
         global_model_fn=MakeMultilayerPerceptron,
-        # TODO(cec): To disable redundant feature values:
+        # To disable redundant feature values:
         # edge_block_opt={
         #   'use_edges': False,
         #   'use_globals': False,

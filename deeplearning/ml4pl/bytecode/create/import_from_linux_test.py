@@ -27,7 +27,7 @@ def test_TryToCreateControlFlowGraphsFromLinuxSrc_known_file():
   path = linux.LinuxSourcesDataset().src_tree_root / "kernel" / "exit.c"
   assert path.is_file()  # If this fails, the linux source tree is broken.
 
-  # TODO(cec): No stable value.
+  # TODO(github.com/ChrisCummins/ProGraML/issues/7): No stable value.
   assert len(linux.TryToCreateControlFlowGraphsFromLinuxSrc(path)) < 20
 
 
@@ -42,7 +42,8 @@ def test_TryToCreateControlFlowGraphsFromLinuxSrc_graphs_are_valid():
 
 def test_LinuxSourcesDataset_df_count(linux_dataset: linux.LinuxSourcesDataset):
   """Test that dataset has expected number of rows."""
-  # TODO(cec): This doesn't seem to be deterministic.
+  # TODO(github.com/ChrisCummins/ProGraML/issues/7): This doesn't seem to be
+  # deterministic.
   assert len(linux_dataset.cfgs_df) >= 1600
 
 

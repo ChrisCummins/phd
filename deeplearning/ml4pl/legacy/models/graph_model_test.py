@@ -125,7 +125,7 @@ def test_CompilerGraphNeuralNetwork_TrainAndEvaluate_telemetry_files(
   assert (trained_model.model.outdir / "telemetry").is_dir()
   telemetry_files = list((trained_model.model.outdir / "telemetry").iterdir())
   # There should be one telemetry file per epoch.
-  # FIXME(cec): A test shouldn't depend on a flag value!
+  # A test shouldn't depend on a flag value!
   assert len(telemetry_files) == FLAGS.num_epochs
 
   # Verify telemetry files.
@@ -155,7 +155,7 @@ def test_CompilerGraphNeuralNetwork_TrainAndEvaluate_test_output_files(
   assert (trained_model.model.outdir / "test_outputs").is_dir()
   output_files = list((trained_model.model.outdir / "test_outputs").iterdir())
   # There should be one outputs file per epoch.
-  # FIXME(cec): A test shouldn't depend on a flag value!
+  # A test shouldn't depend on a flag value!
   assert len(output_files) == FLAGS.num_epochs
 
   # Verify output files.

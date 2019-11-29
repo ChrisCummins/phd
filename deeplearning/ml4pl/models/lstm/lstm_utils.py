@@ -12,8 +12,8 @@ app.DEFINE_boolean(
   "If set, use CuDNNLSTM implementation. Else use default "
   "Keras implementation",
 )
-# TODO(cec): Are weights of CuDNNLSTM and LSTM compatible? If so, no need for
-# this to be a model flag.
+# This must be a model flag because the CuDNNLSTM and LSTM implementations are
+# not compatible, and do not even compute the same thing.
 classifier_base.MODEL_FLAGS.add("cudnn_lstm")
 
 FLAGS = app.FLAGS

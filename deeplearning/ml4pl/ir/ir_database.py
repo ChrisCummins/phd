@@ -129,7 +129,7 @@ class IntermediateRepresentationFileContents(
   id: int = sql.Column(sql.Integer, sql.ForeignKey("intermediate_representation_files.id") primary_key=True)
 
   contents: str = sql.Column(
-    sqlutil.ColumnTypes.Un # TODO
+    sqlutil.ColumnTypes.Un  # TODO(github.com/ChrisCummins/ProGraML/issues/6): Implement!
     nullable=False,
   )
 
@@ -138,7 +138,7 @@ class IntermediateRepresentationFileError(
   id: int = sql.Column(sql.Integer, sql.ForeignKey("intermediate_representation_files.id") primary_key=True)
 
   error: str = sql.Column(
-    sqlutil.ColumnTypes.Un # TODO
+    sqlutil.ColumnTypes.Un  # TODO(github.com/ChrisCummins/ProGraML/issues/6): Implement!
     nullable=False,
   )
 

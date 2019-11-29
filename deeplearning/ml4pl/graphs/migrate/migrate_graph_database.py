@@ -25,12 +25,12 @@ def RemoveBackwardEdges(graph: graph_tuple.GraphTuple):
 
 def UpdateGraphMetas(graph: graph_database.GraphMeta):
   """Update column values on graph metas."""
-  # TODO
+  # TODO(github.com/ChrisCummins/ProGraML/issues/5): Implement!
 
 
 def main():
   """Main entry point."""
-  # TODO: Implement!
+  # TODO(github.com/ChrisCummins/ProGraML/issues/5): Implement!
 
 
 if __name__ == "__main__":

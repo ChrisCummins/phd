@@ -401,8 +401,9 @@ class BytecodeEncoder(EncoderBase):
 class Inst2VecEncoder(BytecodeEncoder):
   """Translate bytecode IDs to inst2vec encoded sequences."""
 
-  # TODO(cec): There is no need to inherit from BytecodeEncoder, and this causes
-  # confusion with having to set the max_sequence_length twice. Refactor.
+  # TODO(github.com/ChrisCummins/ProGraML/issues/20): There is no need to
+  # inherit from BytecodeEncoder, and this causes confusion with having to set
+  # the max_sequence_length twice. Refactor.
 
   def __init__(self):
     self.vocab = inst2vec_vocab.VocabularyZipFile.CreateFromPublishedResults()

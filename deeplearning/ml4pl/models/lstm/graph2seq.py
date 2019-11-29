@@ -165,7 +165,8 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
 
     self.graph_to_bytecode_ids = {}
 
-    # TODO(cec): Implement LRU cache for encoded bytecodes.
+    # TODO(github.com/ChrisCummins/ProGraML/issues/20): Implement LRU cache for
+    # encoded bytecodes.
     self.graph_to_bytecode_grouping: typing.Dict[
       int, EncodedBytecodeGrouping
     ] = {}
@@ -255,7 +256,8 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
 
     # Fetch the graph data.
     with self.unlabelled_graph_db.Session() as session:
-      # TODO: Rebuild networkx from graph tuples.
+      # TODO(github.com/ChrisCummins/ProGraML/issues/20): Rebuild networkx from
+      # graph tuples.
       query = (
         session.query(
           graph_database.GraphMeta.bytecode_id,
@@ -289,7 +291,8 @@ class GraphToBytecodeGroupingsEncoder(EncoderBase):
 
   def EncodeBytecodes(self, bytecode_ids: typing.List[int]):
     with self.unlabelled_graph_db.Session() as session:
-      # TODO: Rebuild networkx from graph tuples.
+      # TODO(github.com/ChrisCummins/ProGraML/issues/20): Rebuild networkx from
+      # graph tuples.
       query = (
         session.query(
           graph_database.GraphMeta.bytecode_id,
