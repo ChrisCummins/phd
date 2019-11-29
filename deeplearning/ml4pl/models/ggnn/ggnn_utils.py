@@ -107,7 +107,7 @@ def BuildRnnCell(
 
   cell_type = cell_type.lower()
   if cell_type == "gru":
-    return tf.nn.rnn_cell.GRUCell(
+    return tf.compat.v1.nn.rnn_cell.GRUCell(
       hidden_size, activation=activation_function, name=name
     )
   elif cell_type == "cudnncompatiblegrucell":
@@ -119,7 +119,7 @@ def BuildRnnCell(
       )
     return cudnn_rnn.CudnnCompatibleGRUCell(hidden_size, name=name)
   elif cell_type == "rnn":
-    return tf.nn.rnn_cell.BasicRNNCell(
+    return tf.compat.v1.nn.rnn_cell.BasicRNNCell(
       hidden_size, activation=activation_function, name=name
     )
   else:
