@@ -343,7 +343,7 @@ define i32 @A() #0 {
   ]
 
 
-@test.Xfail(reason="opt exception")
+@test.XFail(reason="opt exception")
 def test_GetAliasSetsByFunction_regression_test_1():
   """Regression test for bytecode which trips up pointer set size."""
   alias_sets = opt_util.GetAliasSetsByFunction(

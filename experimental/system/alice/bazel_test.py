@@ -109,7 +109,7 @@ def test_BazelClient_Run_process_id(
   assert process.pid != system.PID
 
 
-@test.Xfail(reason="FIXME")
+@test.XFail(reason="FIXME")
 def test_BazelClient_Run_stderr(workspace: pathlib.Path, tempdir: pathlib.Path):
   """Check stderr of test target."""
   client = bazel.BazelClient(workspace, tempdir)

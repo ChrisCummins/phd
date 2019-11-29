@@ -177,7 +177,7 @@ def test_ResilientAddUnique_with_dupes(db: graph_database.Database):
 # DataFlowAnalysisGraphExporter() tests.
 
 
-@test.Xfail(reason="TODO(cec): Debug the failure here")
+@test.XFail(reason="TODO(cec): Debug the failure here")
 def test_DataFlowAnalysisGraphExporter_integration_test(db, db2, db3, db4):
   """Test end-to-end dataset export with three annotators."""
   all_bytecode_ids = [1, 2, 3, 5, 10]

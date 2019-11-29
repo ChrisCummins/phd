@@ -28,7 +28,7 @@ def mymethod(a, b):
   return c
 
 
-# @test.Xfail(reason="FIXME: cli.run() returning None")
+# @test.XFail(reason="FIXME: cli.run() returning None")
 def test_run():
   assert cli.run(mymethod, 4, 2) == 2
 
