@@ -190,9 +190,9 @@ class Migrator(threading.Thread):
         )
         # Record the generated program graphs.
         with self.profiler(f"[writer] Wrote {len(graph_batch)} program graphs"):
-          for program_graphs in workers:
-            # self.exported_count += len(program_graphs)
-            out_session.add(program_graphs)
+          for program_graph in workers:
+            self.exported_count += 1
+            out_session.add(program_graph)
           out_session.commit()
 
 
