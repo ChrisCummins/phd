@@ -12,6 +12,7 @@ import sqlalchemy as sql
 import tqdm
 
 import build_info
+from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
 from deeplearning.ml4pl.models import base_utils as utils
@@ -223,13 +224,7 @@ class ClassifierBase(object):
     """Constructor. Subclasses should call this first."""
     self._initialized = False  # Set by LoadModel() or InitializeModel()
 
-    # TODO(github.com/ChrisCummins/ProGraML/issues/15): Check in the database
-    # that the run ID is unique. If not, wait a second.
-    # had to solve it for the batch scheduler to work reliably...
-    unique = binascii.b2a_hex(os.urandom(15))[:5].decode()
-    self.run_id: str = (
-      f"{time.strftime('%Y%m%dT%H%M%S')}-{unique}@" f"{system.HOSTNAME}"
-    )
+    self.run_id: str = str(run_id.RunId.GenerateGlobalUnique())
     app.Log(1, "Run ID: %s", self.run_id)
 
     self.batcher = graph_batcher.GraphBatcher(db)
@@ -479,7 +474,7 @@ class ClassifierBase(object):
       initial=self.epoch_num,
       total=self.epoch_num + num_epochs,
       position=0,
-      desc=f"(Grps:{test_group}|{val_group}) " + self.run_id,
+      desc=f"(Grps:{test_group}|{val_group}) {self.run_id}",
     ):
       self.epoch_num = epoch_num + 1
       epoch_start_time = time.time()

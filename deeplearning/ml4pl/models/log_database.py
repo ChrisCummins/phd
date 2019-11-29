@@ -9,6 +9,7 @@ import sqlalchemy as sql
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
+from deeplearning.ml4pl import run_id
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import labdate
@@ -34,9 +35,8 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   id: int = sql.Column(sql.Integer, primary_key=True)
 
-  # A string to uniquely identify the given experiment run. An experiment run
-  # is a timestamp and a hostname.
-  run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
+  # A string to uniquely identify the given experiment run.
+  run_id: str = run_id.RunId.SqlStringColumn(default=None)
 
   # The epoch number, >= 1.
   epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
@@ -230,7 +230,7 @@ class ModelCheckpointMeta(
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
+  run_id: str = run_id.RunId.SqlStringColumn(default=None)
 
   # The epoch number, >= 1.
   epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
