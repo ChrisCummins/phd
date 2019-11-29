@@ -620,7 +620,7 @@ class CompilerGraphNeuralNetwork(object):
     random_state = np.random.RandomState(FLAGS.model_seed)
 
     # Seed tensorflow and initialize model.
-    tf.set_random_seed(FLAGS.model_seed)
+    tf.compat.v1.set_random_seed(FLAGS.model_seed)
     sess.run(tf.global_variables_initializer())
 
     # Split the dataframe into training, validation, and test data. Make a copy
