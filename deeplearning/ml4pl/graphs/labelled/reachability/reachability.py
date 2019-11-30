@@ -1,6 +1,5 @@
 """Library for labelling program graphs with reachability information."""
 import collections
-import enum
 
 import networkx as nx
 
@@ -11,7 +10,7 @@ from labm8.py import app
 FLAGS = app.FLAGS
 
 
-# The discrete_y arrays for node reachability:
+# The real_y arrays for node reachability:
 REACHABLE_NO = [1, 0]
 REACHABLE_YES = [0, 1]
 
@@ -32,9 +31,8 @@ class ReachabilityAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
   ) -> data_flow_graphs.DataFlowAnnotatedGraph:
     """Annotate nodes in the graph with their reachability.
 
-    The 'root node' annotation is a [0,1] value appended to discrete_x node
-    attributes. The reachability label is a 1-hot binary vector set to
-    discrete_y node attributes.
+    The 'root node' annotation is a [0,1] value appended to node x vectors.
+    The reachability label is a 1-hot binary vector set to y node vectors.
 
     Args:
       g: The graph to annotate.
@@ -46,9 +44,9 @@ class ReachabilityAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
     # Initialize all nodes as unreachable and not root node, except the root
     # node.
     for node, data in g.nodes(data=True):
-      data["discrete_x"].append(data_flow_graphs.ROOT_NODE_NO)
-      data["discrete_y"] = REACHABLE_NO
-    g.nodes[root_node]["discrete_x"][-1] = data_flow_graphs.ROOT_NODE_YES
+      data["x"].append(data_flow_graphs.ROOT_NODE_NO)
+      data["y"] = REACHABLE_NO
+    g.nodes[root_node]["x"][-1] = data_flow_graphs.ROOT_NODE_YES
 
     # Perform a breadth-first traversal to mark reachable nodes.
     data_flow_steps = 0
@@ -63,7 +61,7 @@ class ReachabilityAnnotator(data_flow_graphs.DataFlowGraphAnnotator):
     while q:
       node, data_flow_steps = q.popleft()
       reachable_node_count += 1
-      g.nodes[node]["discrete_y"] = REACHABLE_YES
+      g.nodes[node]["y"] = REACHABLE_YES
       visited.add(node)
 
       for _, next, flow in g.out_edges(node, data="flow"):

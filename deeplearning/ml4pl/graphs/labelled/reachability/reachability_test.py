@@ -22,10 +22,10 @@ NETWORKX_GRAPHS_ARCHIVE = bazelutil.DataArchive(
 @test.Fixture(scope="function")
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
-  g.add_node(0, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
-  g.add_node(1, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
-  g.add_node(2, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
-  g.add_node(3, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
+  g.add_node(0, type=programl_pb2.Node.STATEMENT, x=[0])
+  g.add_node(1, type=programl_pb2.Node.STATEMENT, x=[0])
+  g.add_node(2, type=programl_pb2.Node.STATEMENT, x=[0])
+  g.add_node(3, type=programl_pb2.Node.STATEMENT, x=[0])
   g.add_edge(0, 1, flow=programl_pb2.Edge.CONTROL)
   g.add_edge(1, 2, flow=programl_pb2.Edge.CONTROL)
   g.add_edge(2, 3, flow=programl_pb2.Edge.CONTROL)
@@ -69,20 +69,20 @@ def test_Annotate_node_x(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 0)
-  assert annotated.g.nodes[0]["discrete_x"] == [0, 1]
-  assert annotated.g.nodes[1]["discrete_x"] == [0, 0]
-  assert annotated.g.nodes[2]["discrete_x"] == [0, 0]
-  assert annotated.g.nodes[3]["discrete_x"] == [0, 0]
+  assert annotated.g.nodes[0]["x"] == [0, 1]
+  assert annotated.g.nodes[1]["x"] == [0, 0]
+  assert annotated.g.nodes[2]["x"] == [0, 0]
+  assert annotated.g.nodes[3]["x"] == [0, 0]
 
 
 def test_Annotate_node_y(
   graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
 ):
   annotated = annotator.Annotate(graph, 1)
-  assert annotated.g.nodes[0]["discrete_y"] == [1, 0]
-  assert annotated.g.nodes[1]["discrete_y"] == [0, 1]
-  assert annotated.g.nodes[2]["discrete_y"] == [0, 1]
-  assert annotated.g.nodes[3]["discrete_y"] == [0, 1]
+  assert annotated.g.nodes[0]["y"] == [1, 0]
+  assert annotated.g.nodes[1]["y"] == [0, 1]
+  assert annotated.g.nodes[2]["y"] == [0, 1]
+  assert annotated.g.nodes[3]["y"] == [0, 1]
 
 
 def ReadPickledNetworkxGraphs() -> Iterable[nx.MultiDiGraph]:

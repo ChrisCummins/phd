@@ -17,17 +17,17 @@ FLAGS = app.FLAGS
 @test.Fixture(scope="function")
 def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
-  g.add_node(0, type=programl_pb2.Node.STATEMENT, discrete_x=[4, 0])
-  g.add_node(1, type=programl_pb2.Node.STATEMENT, discrete_x=[0, 0])
-  g.add_node(2, type=programl_pb2.Node.STATEMENT, discrete_x=[1, 0])
-  g.add_node(3, type=programl_pb2.Node.STATEMENT, discrete_x=[2, 1])
-  g.add_node(4, type=programl_pb2.Node.IDENTIFIER, discrete_x=[3, 0])
+  g.add_node(0, type=programl_pb2.Node.STATEMENT, x=[4, 0])
+  g.add_node(1, type=programl_pb2.Node.STATEMENT, x=[0, 0])
+  g.add_node(2, type=programl_pb2.Node.STATEMENT, x=[1, 0])
+  g.add_node(3, type=programl_pb2.Node.STATEMENT, x=[2, 1])
+  g.add_node(4, type=programl_pb2.Node.IDENTIFIER, x=[3, 0])
   g.add_edge(0, 1, flow=programl_pb2.Edge.CALL, position=0)
   g.add_edge(1, 2, flow=programl_pb2.Edge.CONTROL, position=0)
   g.add_edge(2, 3, flow=programl_pb2.Edge.CONTROL, position=0)
   g.add_edge(4, 3, flow=programl_pb2.Edge.DATA, position=0)
-  g.graph["discrete_x"] = []
-  g.graph["discrete_y"] = []
+  g.graph["x"] = []
+  g.graph["y"] = []
   return g
 
 
@@ -81,11 +81,11 @@ def test_CreateFromNetworkX_node_x(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_node_y(graph: nx.MultiDiGraph):
-  graph.nodes[0]["real_y"] = [4, 1, 0]
-  graph.nodes[1]["real_y"] = [3, 1, 0]
-  graph.nodes[2]["real_y"] = [2, 1, 0]
-  graph.nodes[3]["real_y"] = [1, 1, 0]
-  graph.nodes[4]["real_y"] = [0, 1, 0]
+  graph.nodes[0]["y"] = [4, 1, 0]
+  graph.nodes[1]["y"] = [3, 1, 0]
+  graph.nodes[2]["y"] = [2, 1, 0]
+  graph.nodes[3]["y"] = [1, 1, 0]
+  graph.nodes[4]["y"] = [0, 1, 0]
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
 
   assert d.has_node_y
@@ -93,14 +93,14 @@ def test_CreateFromNetworkX_node_y(graph: nx.MultiDiGraph):
   assert not d.has_graph_y
 
   assert d.node_y.shape == (5, 3)
-  assert d.node_y.dtype == np.float32
+  assert d.node_y.dtype == np.int32
   assert np.array_equal(
     d.node_y, np.array([(4, 1, 0), (3, 1, 0), (2, 1, 0), (1, 1, 0), (0, 1, 0),])
   )
 
 
 def test_CreateFromNetworkX_graph_x(graph: nx.MultiDiGraph):
-  graph.graph["discrete_x"] = [0, 1, 2, 3]
+  graph.graph["x"] = [0, 1, 2, 3]
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
 
   assert not d.has_node_y
@@ -112,7 +112,7 @@ def test_CreateFromNetworkX_graph_x(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_graph_y(graph: nx.MultiDiGraph):
-  graph.graph["discrete_y"] = [0, 1, 2, 3]
+  graph.graph["y"] = [0, 1, 2, 3]
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
 
   assert not d.has_node_y
@@ -157,33 +157,33 @@ def test_ToNetworkx_edge_position(graph: nx.MultiDiGraph):
 def test_ToNetworkx_node_x(graph: nx.MultiDiGraph):
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
-  assert g.nodes[0]["discrete_x"] == [4, 0]
-  assert g.nodes[1]["discrete_x"] == [0, 0]
-  assert g.nodes[2]["discrete_x"] == [1, 0]
-  assert g.nodes[3]["discrete_x"] == [2, 1]
-  assert g.nodes[4]["discrete_x"] == [3, 0]
+  assert g.nodes[0]["x"] == [4, 0]
+  assert g.nodes[1]["x"] == [0, 0]
+  assert g.nodes[2]["x"] == [1, 0]
+  assert g.nodes[3]["x"] == [2, 1]
+  assert g.nodes[4]["x"] == [3, 0]
 
 
 def test_ToNetworkx_node_y(graph: nx.MultiDiGraph):
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
-  assert g.nodes[0]["real_y"] == []
-  assert g.nodes[1]["real_y"] == []
-  assert g.nodes[2]["real_y"] == []
-  assert g.nodes[3]["real_y"] == []
-  assert g.nodes[4]["real_y"] == []
+  assert g.nodes[0]["y"] == []
+  assert g.nodes[1]["y"] == []
+  assert g.nodes[2]["y"] == []
+  assert g.nodes[3]["y"] == []
+  assert g.nodes[4]["y"] == []
 
 
 def test_ToNetworkx_graph_x(graph: nx.MultiDiGraph):
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
-  assert g.graph["discrete_x"] == []
+  assert g.graph["x"] == []
 
 
 def test_ToNetworkx_graph_y(graph: nx.MultiDiGraph):
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
-  assert g.graph["discrete_y"] == []
+  assert g.graph["y"] == []
 
 
 def CreateRandomNetworkx() -> programl_pb2.ProgramGraph:

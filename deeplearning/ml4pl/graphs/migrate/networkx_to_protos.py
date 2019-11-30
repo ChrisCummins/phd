@@ -100,7 +100,7 @@ def NetworkXGraphToProgramGraphProto(
     # Set the encoded representation of the node.
     x = node.get("x", None)
     if x is not None:
-      node_proto.discrete_x.extend([x])
+      node_proto.x.extend([x])
 
     # Set the node function.
     function = node.get("function")
@@ -146,14 +146,13 @@ def BatchedGraphReader(
 
 def GraphMetaToProgramGraph(
   graph_meta: graph_database.GraphMeta,
-) -> List[unlabelled_graph_database.ProgramGraph]:
-  """Convert a list of graph metas to a list of program graphs."""
+) -> unlabelled_graph_database.ProgramGraph:
+  """Migrate an old GraphMeta to a ProgramGraph."""
   graph: nx.MultiDiGraph = graph_meta.data
   proto = NetworkXGraphToProgramGraphProto(graph)
   program_graph = unlabelled_graph_database.ProgramGraph.Create(
     proto, ir_id=graph_meta.bytecode_id
   )
-  program_graph.id = graph_meta.id
   program_graph.data.id = graph_meta.id
   program_graph.timestamp = graph_meta.date_added
   return program_graph
@@ -224,8 +223,8 @@ def MigrateGraphDatabase(
   # Get graphs that have already been processed.
   with output_db.Session() as out_session:
     already_done_max, already_done_count = out_session.query(
-      sql.func.max(unlabelled_graph_database.ProgramGraph.id),
-      sql.func.count(unlabelled_graph_database.ProgramGraph.id),
+      sql.func.max(unlabelled_graph_database.ProgramGraph.ir_id),
+      sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id),
     ).one()
     already_done_max = already_done_max or -1
 
@@ -296,9 +295,10 @@ def MigrateGraphDatabase(
     bar.refresh()
     migrator.join(0.25)
 
+  # Sanity check the number of generated program graphs.
   with output_db.Session() as out_session:
     program_graph_count = out_session.query(
-      sql.func.count(unlabelled_graph_database.ProgramGraph.id)
+      sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
     ).scalar()
   if program_graph_count != total_graph_count:
     app.FatalWithoutStackTrace(

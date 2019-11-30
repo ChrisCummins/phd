@@ -18,8 +18,7 @@ FLAGS = app.FLAGS
 class DataFlowAnnotatedGraph(NamedTuple):
   """A networkx graph with data flow analysis annotations."""
 
-  # A graph with {discrete_x, discrete_y, real_x, real_y} {node, graph}-level
-  # annotations set.
+  # A graph with {x, y} {node, graph}-level annotations set.
   g: nx.MultiDiGraph
   # For iterative data flow analyses which have a defined "starting point", this
   # is the node index of that starting point.
@@ -79,6 +78,6 @@ class DataFlowGraphAnnotator(object):
       yield self.Annotate(g.copy(), root_node)
 
 
-# The discrete_x value for specifying the root node.
+# The x value for specifying the root node.
 ROOT_NODE_NO = 0
 ROOT_NODE_YES = 1

@@ -76,25 +76,21 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     sql.Integer, nullable=False
   )
 
-  # The number of {discrete, real} graph-level {x, y} values.
-  graph_discrete_x_count: int = sql.Column(
+  # The dimensionality of graph-level {x, y} vectors.
+  graph_x_dimensionality: int = sql.Column(
     sql.Integer, nullable=False, default=0
   )
-  graph_real_x_count: int = sql.Column(sql.Integer, nullable=False, default=0)
-  graph_discrete_y_count: int = sql.Column(
+  graph_y_dimensionality: int = sql.Column(
     sql.Integer, nullable=False, default=0
   )
-  graph_real_y_count: int = sql.Column(sql.Integer, nullable=False, default=0)
 
-  # The number of {discrete, real} node-level {x, y} values.
-  node_discrete_x_count: int = sql.Column(
+  # The dimensionality of node-level {x, y} vectors.
+  node_x_dimensionality: int = sql.Column(
     sql.Integer, nullable=False, default=0
   )
-  node_real_x_count: int = sql.Column(sql.Integer, nullable=False, default=0)
-  node_discrete_y_count: int = sql.Column(
+  node_y_dimensionality: int = sql.Column(
     sql.Integer, nullable=False, default=0
   )
-  node_real_y_count: int = sql.Column(sql.Integer, nullable=False, default=0)
 
   # The maximum value of the 'position' attribute of edges.
   edge_position_max: int = sql.Column(sql.Integer, nullable=False)
@@ -152,39 +148,25 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     node_types = set()
     node_texts = set()
     node_preprocessed_texts = set()
-    node_discrete_x_counts = set()
-    node_discrete_y_counts = set()
-    node_real_x_counts = set()
-    node_real_y_counts = set()
+    node_x_dimensionalities = set()
+    node_y_dimensionalities = set()
 
     for node in proto.node:
       node_types.add(node.type)
       node_texts.add(node.text)
       node_preprocessed_texts.add(node.preprocessed_text)
-      node_discrete_x_counts.add(len(node.discrete_x))
-      node_discrete_y_counts.add(len(node.discrete_y))
-      node_real_x_counts.add(len(node.real_x))
-      node_real_y_counts.add(len(node.real_y))
+      node_x_dimensionalities.add(len(node.x))
+      node_y_dimensionalities.add(len(node.y))
 
-    if len(node_discrete_x_counts) != 1:
+    if len(node_x_dimensionalities) != 1:
       raise ValueError(
-        "Graph contains multiple node-level discrete_x counts: "
-        f"{node_discrete_x_counts}"
+        "Graph contains multiple node-level x dimensionalities: "
+        f"{node_x_dimensionalities}"
       )
-    if len(node_discrete_y_counts) != 1:
+    if len(node_y_dimensionalities) != 1:
       raise ValueError(
-        "Graph contains multiple node-level discrete_y counts: "
-        f"{node_discrete_y_counts}"
-      )
-    if len(node_real_x_counts) != 1:
-      raise ValueError(
-        "Graph contains multiple node-level real_x counts: "
-        f"{node_real_x_counts}"
-      )
-    if len(node_real_y_counts) != 1:
-      raise ValueError(
-        "Graph contains multiple node-level real_y counts: "
-        f"{node_real_y_counts}"
+        "Graph contains multiple node-level y dimensionalities: "
+        f"{node_y_dimensionalities}"
       )
 
     serialized_proto = proto.SerializeToString()
@@ -197,10 +179,10 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       edge_flow_count=len(edge_flows),
       node_unique_text_count=len(node_texts),
       node_unique_preprocessed_text_count=len(node_preprocessed_texts),
-      node_discrete_x_count=list(node_discrete_x_counts)[0],
-      node_discrete_y_count=list(node_discrete_y_counts)[0],
-      node_real_x_count=list(node_real_x_counts)[0],
-      node_real_y_count=list(node_real_y_counts)[0],
+      graph_x_dimensionality=len(proto.x),
+      graph_y_dimensionality=len(proto.y),
+      node_x_dimensionality=list(node_x_dimensionalities)[0],
+      node_y_dimensionality=list(node_y_dimensionalities)[0],
       edge_position_max=edge_position_max,
       serialized_proto_size=len(serialized_proto),
       data=ProgramGraphData(
