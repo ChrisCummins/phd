@@ -180,14 +180,20 @@ def test_CreateFromGraphTuple_attributes():
   assert a.edge_position_max == graph_tuple.edge_position_max
 
 
-def test_CreateFromGraphTuple_node_x_dimensionality():
+def test_CreateFromGraphTuple_node_x_dimensionality(
+  db_session: graph_tuple_database.Database.SessionType,
+):
   """Test node feature dimensionality."""
   graph_tuple = CreateRandomGraphTuple()
   a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
   assert a.node_x_dimensionality == 1
+  db_session.add(a)
+  db_session.commit()
 
 
-def test_CreateFromGraphTuple_node_y_dimensionality():
+def test_CreateFromGraphTuple_node_y_dimensionality(
+  db_session: graph_tuple_database.Database.SessionType,
+):
   """Test node label dimensionality."""
   graph_tuple = CreateRandomGraphTuple(node_y_dimensionality=0)
   a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
@@ -197,8 +203,13 @@ def test_CreateFromGraphTuple_node_y_dimensionality():
   b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
   assert b.node_y_dimensionality == 2
 
+  db_session.add_all([a, b])
+  db_session.commit()
 
-def test_CreateFromGraphTuple_graph_x_dimensionality():
+
+def test_CreateFromGraphTuple_graph_x_dimensionality(
+  db_session: graph_tuple_database.Database.SessionType,
+):
   """Check graph label dimensionality."""
   graph_tuple = CreateRandomGraphTuple(graph_x_dimensionality=0)
   a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
@@ -208,8 +219,13 @@ def test_CreateFromGraphTuple_graph_x_dimensionality():
   b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
   assert b.graph_x_dimensionality == 2
 
+  db_session.add_all([a, b])
+  db_session.commit()
 
-def test_CreateFromGraphTuple_graph_y_dimensionality():
+
+def test_CreateFromGraphTuple_graph_y_dimensionality(
+  db_session: graph_tuple_database.Database.SessionType,
+):
   """Check graph label dimensionality."""
   graph_tuple = CreateRandomGraphTuple(graph_y_dimensionality=0)
   a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
@@ -219,16 +235,37 @@ def test_CreateFromGraphTuple_graph_y_dimensionality():
   b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
   assert b.graph_y_dimensionality == 2
 
+  db_session.add_all([a, b])
+  db_session.commit()
+
+
+def test_CreteEmpty(db_session: graph_tuple_database.Database.SessionType):
+  a = graph_tuple_database.GraphTuple.CreateEmpty(ir_id=1)
+  assert a.ir_id == 1
+
+  db_session.add(a)
+  db_session.commit()
+
 
 @decorators.loop_for(seconds=10)
 def test_fuzz_GraphTuple_Create(db: graph_tuple_database.Database):
   """Fuzz the networkx -> proto conversion using randomly generated graphs."""
   with db.Session(commit=True) as session:
-    session.add(
-      graph_tuple_database.GraphTuple.CreateFromGraphTuple(
-        graph_tuple=CreateRandomGraphTuple(), ir_id=random.randint(0, int(4e6))
-      )
+    graph_tuple = CreateRandomGraphTuple()
+    t = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+      graph_tuple=graph_tuple, ir_id=random.randint(0, int(4e6))
     )
+    assert t.edge_count == (
+      t.control_edge_count + t.data_edge_count + t.call_edge_count
+    )
+    assert len(t.sha1) == 40
+    assert t.node_count == graph_tuple.node_count
+    assert t.edge_count == graph_tuple.edge_count
+    assert t.tuple.node_count == graph_tuple.node_count
+    assert t.tuple.edge_count == graph_tuple.edge_count
+    assert len(t.tuple.adjacency_lists) == 3
+    assert len(t.tuple.edge_positions) == 3
+    session.add(t)
 
 
 if __name__ == "__main__":
