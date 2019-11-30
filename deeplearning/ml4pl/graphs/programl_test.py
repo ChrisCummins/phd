@@ -43,7 +43,9 @@ def CreateRandomProto() -> programl_pb2.ProgramGraph:
   return networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
 
 
-def test_ProgramGraphToNetworkX(random_100_proto: programl_pb2.ProgramGraph):
+def test_proto_networkx_equivalence(
+  random_100_proto: programl_pb2.ProgramGraph,
+):
   """Test proto -> networkx -> proto on 100 "real" graphs."""
   # proto -> networkx
   g = programl.ProgramGraphToNetworkX(random_100_proto)
@@ -52,6 +54,25 @@ def test_ProgramGraphToNetworkX(random_100_proto: programl_pb2.ProgramGraph):
 
   # networkx -> proto
   proto_out = programl.NetworkXToProgramGraph(g)
+  assert proto_out.function == random_100_proto.function
+  assert proto_out.node == random_100_proto.node
+  assert proto_out.edge == random_100_proto.edge
+
+
+def test_proto_networkx_equivalence_with_preallocated_proto(
+  random_100_proto: programl_pb2.ProgramGraph,
+):
+  """Test proto -> networkx -> proto on 100 "real" graphs using the same
+  proto instance."""
+  # proto -> networkx
+  g = programl.ProgramGraphToNetworkX(random_100_proto)
+  assert g.number_of_nodes() == len(random_100_proto.node)
+  assert g.number_of_edges() == len(random_100_proto.edge)
+
+  # networkx -> proto
+  # Allocate the proto ahead of time:
+  proto_out = programl_pb2.ProgramGraph()
+  programl.NetworkXToProgramGraph(g, proto=proto_out)
   assert proto_out.function == random_100_proto.function
   assert proto_out.node == random_100_proto.node
   assert proto_out.edge == random_100_proto.edge
