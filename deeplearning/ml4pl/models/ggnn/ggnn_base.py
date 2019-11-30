@@ -57,7 +57,7 @@ classifier_base.MODEL_FLAGS.add("inst2vec_embeddings")
 
 app.DEFINE_boolean(
   "tensorboard_logging",
-  True,
+  False,
   "If true, write tensorboard logs to '<working_dir>/tensorboard'.",
 )
 
@@ -162,21 +162,23 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
                 self.placeholders["raw_node_input_features"]
               )
 
+          # TODO(github.com/ChrisCummins/ProGraML/issues/21): Re-implement.
           # Modular Tensorboard summaries
-          self.ops["modular_summary_loss"] = tf.summary.scalar(
-            "modular_loss", self.ops["modular_loss"], family="loss"
-          )
-          self.ops["modular_summary_accuracy"] = tf.summary.scalar(
-            "modular_accuracy", self.ops["modular_accuracy"], family="accuracy"
-          )
+          # self.ops["modular_summary_loss"] = tf.summary.scalar(
+          #   "modular_loss", self.ops["modular_loss"], family="loss"
+          # )
+          # self.ops["modular_summary_accuracy"] = tf.summary.scalar(
+          #   "modular_accuracy", self.ops["modular_accuracy"], family="accuracy"
+          # )
 
+        # TODO(github.com/ChrisCummins/ProGraML/issues/21): Re-implement.
         # Tensorboard summaries.
-        self.ops["summary_loss"] = tf.summary.scalar(
-          "loss", self.ops["loss"], family="loss"
-        )
-        self.ops["summary_accuracy"] = tf.summary.scalar(
-          "accuracy", self.ops["accuracy"], family="accuracy"
-        )
+        # self.ops["summary_loss"] = tf.summary.scalar(
+        #   "loss", self.ops["loss"], family="loss"
+        # )
+        # self.ops["summary_accuracy"] = tf.summary.scalar(
+        #   "accuracy", self.ops["accuracy"], family="accuracy"
+        # )
 
         if not FLAGS.test_only:
           with prof.Profile("Make training step"):
@@ -184,21 +186,22 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
               self.ops["train_step"] = self._MakeTrainStep()
 
     # Tensorboard logging.
-    if FLAGS.tensorboard_logging:
-      tensorboard_dir = self.working_dir / "tensorboard" / self.run_id
-      app.Log(1, f"Writing tensorboard logs to: `{tensorboard_dir}`")
-      tensorboard_dir.mkdir(parents=True, exist_ok=True)
-      self.summary_writers = {
-        "train": tf.compat.v1.summary.FileWriter(
-          tensorboard_dir / "train", self.sess.graph
-        ),
-        "val": tf.compat.v1.summary.FileWriter(
-          tensorboard_dir / "val", self.sess.graph
-        ),
-        "test": tf.compat.v1.summary.FileWriter(
-          tensorboard_dir / "test", self.sess.graph
-        ),
-      }
+    # TODO(github.com/ChrisCummins/ProGraML/issues/21): Re-implement.
+    # if FLAGS.tensorboard_logging:
+    #   tensorboard_dir = self.working_dir / "tensorboard" / self.run_id
+    #   app.Log(1, f"Writing tensorboard logs to: `{tensorboard_dir}`")
+    #   tensorboard_dir.mkdir(parents=True, exist_ok=True)
+    #   self.summary_writers = {
+    #     "train": tf.compat.v1.summary.FileWriter(
+    #       tensorboard_dir / "train", self.sess.graph
+    #     ),
+    #     "val": tf.compat.v1.summary.FileWriter(
+    #       tensorboard_dir / "val", self.sess.graph
+    #     ),
+    #     "test": tf.compat.v1.summary.FileWriter(
+    #       tensorboard_dir / "test", self.sess.graph
+    #     ),
+    #   }
 
   def _GetPositionEmbeddingsAsTensorflowVariable(self) -> tf.Tensor:
     """It's probably a good memory/compute trade-off to have this additional embedding table instead of computing it on the fly."""
@@ -461,8 +464,9 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         "accuracies": self.ops["accuracies"],
         "accuracy": self.ops["accuracy"],
         "predictions": self.ops["predictions"],
-        "summary_loss": self.ops["summary_loss"],
-        "summary_accuracy": self.ops["summary_accuracy"],
+        # TODO(github.com/ChrisCummins/ProGraML/issues/21): Re-implement.
+        # "summary_loss": self.ops["summary_loss"],
+        # "summary_accuracy": self.ops["summary_accuracy"],
       }
       if log.type == "train":
         fetch_dict["train_step"] = self.ops["train_step"]
@@ -473,6 +477,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         "accuracies": self.ops["modular_accuracies"],
         "accuracy": self.ops["modular_accuracy"],
         "predictions": self.ops["modular_predictions"],
+        # TODO(github.com/ChrisCummins/ProGraML/issues/21): Re-implement.
         # "summary_loss": self.ops["modular_summary_loss"],
         # "summary_accuracy": self.ops["modular_summary_accuracy"],
       }
