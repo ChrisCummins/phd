@@ -15,11 +15,12 @@ def opencl_dataset() -> opencl.OpenClDeviceMappingsDataset:
   yield opencl.OpenClDeviceMappingsDataset()
 
 
+@test.XFail(reason="github.com/ChrisCummins/ProGraML/issues/7")
 def test_OpenClDeviceMappingsDataset_cfgs_df_count(
   opencl_dataset: opencl.OpenClDeviceMappingsDataset,
 ):
   """Test that dataset has expected number of rows."""
-  # FIXME(github.com/ChrisCummins/ProGraML/issues/7): This doesn't seem to be
+  # TODO(github.com/ChrisCummins/ProGraML/issues/7): This doesn't seem to be
   # deterministic.
   assert len(opencl_dataset.cfgs_df) >= 185
 
