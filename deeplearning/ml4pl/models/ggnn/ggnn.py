@@ -132,7 +132,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
   ) -> tf.Tensor:
     """
     Takes node input states (raw vectors) and returns the transformed and updated final raw node states
-    
+
     Depends many attributes existing:
         self.placeholders: dict,
         self.layer_timesteps,
@@ -277,7 +277,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
               message_attention_scores_exped = tf.exp(
                 message_attention_scores
               )  # Shape [M]
-              message_attention_score_sum_per_target = tf.unsorted_segment_sum(
+              message_attention_score_sum_per_target = tf.math.unsorted_segment_sum(
                 data=message_attention_scores_exped,
                 segment_ids=message_targets,
                 num_segments=num_nodes_in_batch,
@@ -293,7 +293,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
               # Step (4): Weigh messages using the attention prob:
               messages = messages * tf.expand_dims(message_attention, -1)
 
-            incoming_messages = tf.unsorted_segment_sum(
+            incoming_messages = tf.math.unsorted_segment_sum(
               data=messages,
               segment_ids=message_targets,
               num_segments=num_nodes_in_batch,
@@ -454,7 +454,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
     if self.stats.graph_features_dimensionality:
       # Sum node representations across graph (per graph).
-      computed_graph_only_values = tf.unsorted_segment_sum(
+      computed_graph_only_values = tf.math.unsorted_segment_sum(
         predictions,
         segment_ids=self.placeholders["graph_nodes_list"],
         num_segments=self.placeholders["graph_count"],
@@ -502,10 +502,10 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
     if self.stats.graph_labels_dimensionality:
-      graph_only_loss = tf.losses.softmax_cross_entropy(
+      graph_only_loss = tf.compat.v1.losses.softmax_cross_entropy(
         self.placeholders["graph_y"], computed_graph_only_values
       )
-      _loss = tf.losses.softmax_cross_entropy(
+      _loss = tf.compat.v1.losses.softmax_cross_entropy(
         self.placeholders["graph_y"], predictions
       )
       loss = _loss + FLAGS.intermediate_loss_discount_factor * graph_only_loss
@@ -521,7 +521,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
         loss = (self.make_dsc_loss(p1, y1) + self.make_dsc_loss(p2, y2)) / 2.0
       else:
-        loss = tf.losses.softmax_cross_entropy(
+        loss = tf.compat.v1.losses.softmax_cross_entropy(
           self.placeholders["node_y"], predictions
         )
         # loss = 0.0
@@ -641,7 +641,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
     accuracy = tf.reduce_mean(tf.cast(accuracies, tf.float32))
 
-    loss = tf.losses.softmax_cross_entropy(
+    loss = tf.compat.v1.losses.softmax_cross_entropy(
       self.placeholders["node_y"], predictions
     )
 

@@ -514,7 +514,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     with self.graph.as_default():
       weights_to_save = {}
       for variable in self.sess.graph.get_collection(
-        tf.GraphKeys.GLOBAL_VARIABLES
+        tf.compat.v1.GraphKeys.GLOBAL_VARIABLES
       ):
         assert variable.name not in weights_to_save
         weights_to_save[variable.name] = self.sess.run(variable)
@@ -527,7 +527,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
         restore_ops = []
         used_vars = set()
         for variable in self.sess.graph.get_collection(
-          tf.GraphKeys.GLOBAL_VARIABLES
+          tf.compat.v1.GraphKeys.GLOBAL_VARIABLES
         ):
           used_vars.add(variable.name)
           if variable.name in data_to_load:
@@ -569,12 +569,12 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
   def _MakeTrainStep(self) -> tf.Tensor:
     """Helper function."""
     trainable_vars = self.sess.graph.get_collection(
-      tf.GraphKeys.TRAINABLE_VARIABLES
+      tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES
     )
     if FLAGS.freeze_graph_model:
       graph_vars = set(
         self.sess.graph.get_collection(
-          tf.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"
+          tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope="graph_model"
         )
       )
       filtered_vars = []
@@ -601,7 +601,7 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     train_step = optimizer.apply_gradients(clipped_grads)
 
     # Also run batch_norm update ops, if any.
-    update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)
+    update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
     train_step = tf.group([train_step, update_ops])
 
     # Initialize newly-introduced variables:
