@@ -1,10 +1,9 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/graph_batcher."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled:make_data_flow_analysis_dataset."""
 import pathlib
 import pickle
 import typing
 
 import numpy as np
-import pytest
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import make_data_flow_analysis_dataset
@@ -35,18 +34,9 @@ def db4(tempdir: pathlib.Path):
 
 
 def test_GetAnnotatedGraphGenerators_unknown_analysis():
+  """Test that unknown analysis raises error."""
   with test.Raises(app.UsageError):
-    make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators("foo")
-
-
-def test_GetAnnotatedGraphGenerators_with_requested_analyses():
-  """Test requesting analyses by name."""
-  annotators = make_data_flow_analysis_dataset.GetAnnotatedGraphGenerators(
-    "reachability", "domtree"
-  )
-  annotator_names = {a.name for a in annotators}
-
-  assert annotator_names == {"reachability", "domtree"}
+    make_data_flow_analysis_dataset.GetDataFlowGraphAnnotator("foo")
 
 
 def MakeGraphMeta(bytecode_id: int):

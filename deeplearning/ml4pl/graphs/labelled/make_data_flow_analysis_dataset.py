@@ -1,9 +1,11 @@
 """This module prepares datasets for data flow analyses."""
 import multiprocessing
+import os
 import pathlib
 import signal
 import sys
 import threading
+import time
 import traceback
 from typing import Iterable
 from typing import List
@@ -26,7 +28,6 @@ from deeplearning.ml4pl.graphs.labelled.subexpressions import subexpressions
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
 from labm8.py import app
 from labm8.py import humanize
-from labm8.py import labtypes
 from labm8.py import ppar
 from labm8.py import prof
 
@@ -74,12 +75,12 @@ app.DEFINE_integer(
 )
 app.DEFINE_integer(
   "proto_batch_mb",
-  32,
+  4,
   "Tuning parameter. The number of megabytes of protocol buffers to read in "
   "a batch.",
 )
 app.DEFINE_integer(
-  "max_reader_queue_size", 5, "Tuning parameter. The maximum number of proto."
+  "max_reader_queue_size", 1, "Tuning parameter. The maximum number of proto."
 )
 app.DEFINE_integer(
   "chunk_size", 32, "Tuning parameter. The number of processes to spawn."
@@ -117,6 +118,12 @@ class ProgressContext(object):
       print_to=lambda x: app.Log(level, x, print_context=self.print_context),
     )
 
+  def Warning(self, *args, **kwargs):
+    app.Warning(*args, **kwargs, print_context=self.print_context)
+
+  def Error(self, *args, **kwargs):
+    app.Error(*args, **kwargs, print_context=self.print_context)
+
 
 def BatchedGraphReader(
   graph_db: unlabelled_graph_database.Database,
@@ -140,8 +147,8 @@ def BatchedGraphReader(
     with graph_db.Session() as session:
       with ctx.Profile(
         2,
-        f"[reader] Read {humanize.BinaryPrefix(batch_size, 'B')} "
-        f"batch of {end_i - i} graph protos",
+        f"[reader {os.getpid()}] Read {humanize.BinaryPrefix(batch_size, 'B')} "
+        f"batch of {end_i - i} unlabelled graphs",
       ):
         start_id = ids_and_sizes_to_do[i][0]
         end_id = ids_and_sizes_to_do[end_i - 1][0]
@@ -185,48 +192,60 @@ def AnnotateWithTimeout(
     signal.signal(signal.SIGALRM, signal.SIG_IGN)
 
 
-def MakeAnnotatedGraphs(packed_args) -> List[graph_tuple_database.GraphTuple]:
+def MakeAnnotatedGraphs(
+  packed_args,
+) -> Tuple[int, List[graph_tuple_database.GraphTuple]]:
   """Multiprocess worker."""
   analysis: str = packed_args[0]
   graphs: List[unlabelled_graph_database.ProgramGraph] = packed_args[1]
+  ctx: ProgressContext = packed_args[2]
+
+  ctx.Log(3, "[worker %s] Processing %s graphs", os.getpid(), len(graphs))
+
   annotator = GetDataFlowGraphAnnotator(analysis)
 
   graph_tuples: List[graph_tuple_database.GraphTuple] = []
-  for program_graph in graphs:
-    graph = programl.ProgramGraphToNetworkX(program_graph.proto)
-    try:
-      # Create annotated graphs.
-      annotated_graphs = AnnotateWithTimeout(
-        annotator, graph, FLAGS.max_instances_per_graph, FLAGS.annotator_timeout
-      )
-      # Create GraphTuple database instances from annotated graphs.
-      graph_tuples += [
-        graph_tuple_database.GraphTuple.CreateFromDataFlowAnnotatedGraph(
-          a, program_graph.ir_id
+  for i, program_graph in enumerate(graphs):
+    with ctx.Profile(
+      3, f"[worker {os.getpid()}] Processed graph [{i+1}/{len(graphs)}]"
+    ):
+      graph = programl.ProgramGraphToNetworkX(program_graph.proto)
+      try:
+        # Create annotated graphs.
+        annotated_graphs = AnnotateWithTimeout(
+          annotator,
+          graph,
+          FLAGS.max_instances_per_graph,
+          FLAGS.annotator_timeout,
         )
-        for a in annotated_graphs
-      ]
-    except Exception as e:
-      graph_tuples.append(
-        graph_tuple_database.GraphTuple.CreateEmpty(ir_id=program_graph.ir_id)
-      )
-      _, _, tb = sys.exc_info()
-      tb = traceback.extract_tb(tb, 2)
-      filename, line_number, function_name, *_ = tb[-1]
-      filename = pathlib.Path(filename).name
-      app.Error(
-        "Failed to annotate graph for ProgramGraph.ir_id=%d: %s "
-        "(%s:%s:%s() -> %s)",
-        program_graph.ir_id,
-        e,
-        filename,
-        line_number,
-        function_name,
-        type(e).__name__,
-      )
-      if FLAGS.error:
-        raise e
-  return graph_tuples
+        # Create GraphTuple database instances from annotated graphs.
+        graph_tuples += [
+          graph_tuple_database.GraphTuple.CreateFromDataFlowAnnotatedGraph(
+            a, program_graph.ir_id
+          )
+          for a in annotated_graphs
+        ]
+      except Exception as e:
+        graph_tuples.append(
+          graph_tuple_database.GraphTuple.CreateEmpty(ir_id=program_graph.ir_id)
+        )
+        _, _, tb = sys.exc_info()
+        tb = traceback.extract_tb(tb, 2)
+        filename, line_number, function_name, *_ = tb[-1]
+        filename = pathlib.Path(filename).name
+        ctx.Error(
+          "Failed to annotate graph for ProgramGraph.ir_id=%d: %s "
+          "(%s:%s:%s() -> %s)",
+          program_graph.ir_id,
+          e,
+          filename,
+          line_number,
+          function_name,
+          type(e).__name__,
+        )
+        if FLAGS.error:
+          raise e
+  return len(graphs), graph_tuples
 
 
 class DatasetGenerator(threading.Thread):
@@ -255,30 +274,33 @@ class DatasetGenerator(threading.Thread):
 
     self.graph_reader.Start()
 
-    for graph_batch in self.graph_reader:
-      self.exported_count += len(graph_batch)
-      with self.output_db.Session() as out_session:
-        exported_graph_tuples = 0
-        # Divide the graphs into jobs for individual processes.
-        packed_args = [
-          (self.analysis, graph_chunk)
-          for graph_chunk in labtypes.Chunkify(graph_batch, FLAGS.chunk_size)
-        ]
-        workers = pool.imap_unordered(MakeAnnotatedGraphs, packed_args)
-        # Record the generated annotated graphs.
-        with self.ctx.Profile(
-          2,
-          lambda x: (
-            "[writer] Processed "
-            f"{len(graph_batch)} "
-            f"graphs ({exported_graph_tuples} "
-            "graph tuples)"
-          ),
-        ):
-          for graph_tuples in workers:
-            exported_graph_tuples += len(graph_tuples)
-            out_session.add_all(graph_tuples)
-            out_session.commit()
+    def MakeAnnotatedGraphsArgsGenerator(graph_reader):
+      """Generate packed arguments for a multiprocessing worker."""
+      for graph_batch in graph_reader:
+        yield (self.analysis, graph_batch, self.ctx)
+
+    # Have a thread generating inputs, and a multiprocessing pool consuming
+    # them.
+    worker_args = MakeAnnotatedGraphsArgsGenerator(self.graph_reader)
+    workers = pool.imap_unordered(MakeAnnotatedGraphs, worker_args)
+    start_time = time.time()
+    for graph_count, graph_tuples in workers:
+      self.exported_count += graph_count
+      # Record the generated annotated graphs.
+      tuples_size = sum(t.pickled_graph_tuple_size for t in graph_tuples)
+      with self.output_db.Session(commit=True) as out_session:
+        out_session.add_all(graph_tuples)
+      end_time = time.time()
+      self.ctx.Log(
+        2,
+        "[writer %s] Processed %s graphs (%s graph tuples, %s) in %s",
+        os.getpid(),
+        graph_count,
+        len(graph_tuples),
+        humanize.BinaryPrefix(tuples_size, "B"),
+        humanize.Duration(end_time - start_time),
+      )
+      start_time = end_time
 
 
 def MakeDataFlowAnalysisDataset(
@@ -333,7 +355,7 @@ def MakeDataFlowAnalysisDataset(
     1,
     "Selected %s of %s to process",
     humanize.Commas(len(ids_and_sizes_to_do)),
-    humanize.Plural(total_graph_count, "unlabelled graphs"),
+    humanize.Plural(total_graph_count, "unlabelled graph"),
   )
 
   bar = tqdm.tqdm(
