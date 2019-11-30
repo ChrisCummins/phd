@@ -1,6 +1,8 @@
 """Unit tests for //deeplearning/ml4pl/ggnn:graph_database_reader."""
 import pickle
 
+import numpy as np
+
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_reader as reader
 from deeplearning.ml4pl.testing import testing_databases
@@ -120,7 +122,7 @@ def test_BufferedGraphReader_filters(
 @test.Flaky(
   reason="There is a possibility that random order returns all rows in order"
 )
-@test.Parametrize("buffer_size", [25, 10000])
+@test.Parametrize("buffer_size", [25, 100, 10000])
 @test.Parametrize(
   "order",
   [
@@ -140,7 +142,7 @@ def test_BufferedGraphReader_random_orders(
     )
   )
   node_counts = [g.node_count for g in graphs]
-  assert sorted(node_counts) != node_counts
+  assert node_counts != sorted(node_counts)
 
 
 @test.Parametrize("buffer_size", [1, 25, 10000])
