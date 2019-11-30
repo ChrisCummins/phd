@@ -1,7 +1,6 @@
 """This module defines a base class for implementing data flow analyses over
 networkx graphs.
 """
-import enum
 import random
 from typing import Iterable
 from typing import List
