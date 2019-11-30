@@ -163,7 +163,7 @@ def test_cascaded_delete_using_query(
   assert session.query(graph_tuple_database.GraphTuple.ir_id).scalar() == 2
 
 
-#
+# CreateFromGraphTuple() tests.
 
 
 def test_CreateFromGraphTuple_attributes():
@@ -173,6 +173,10 @@ def test_CreateFromGraphTuple_attributes():
   assert a.ir_id == 1
   assert a.node_count == graph_tuple.node_count
   assert a.edge_count == graph_tuple.edge_count
+  assert a.control_edge_count == graph_tuple.control_edge_count
+  assert a.data_edge_count == graph_tuple.data_edge_count
+  assert a.call_edge_count == graph_tuple.call_edge_count
+
   assert a.edge_position_max == graph_tuple.edge_position_max
 
 

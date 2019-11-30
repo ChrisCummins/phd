@@ -154,6 +154,23 @@ def test_CreateFromNetworkX_graph_y(graph: nx.MultiDiGraph):
   assert np.array_equal(d.graph_y, np.array([0, 1, 2, 3]))
 
 
+def test_CreateFromNetworkX_node_count(graph: nx.MultiDiGraph):
+  """Test the node count."""
+  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
+
+  assert d.node_count == 5
+
+
+def test_CreateFromNetworkX_edge_counts(graph: nx.MultiDiGraph):
+  """Test the typed edge counts."""
+  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
+
+  assert d.edge_count == 4
+  assert d.control_edge_count == 2
+  assert d.data_edge_count == 1
+  assert d.call_edge_count == 1
+
+
 # GraphTuple -> nx.MultiDiGraph tests.
 
 
@@ -256,6 +273,8 @@ def fuzz_graph_tuple_networkx():
   """Fuzz graph tuples with randomly generated graphs."""
   g = CreateRandomNetworkx()
   t = graph_tuple.GraphTuple.CreateFromNetworkX(g)
+  assert t.node_count == g.number_of_nodes()
+  assert t.edge_count == g.number_of_edges()
   g_out = t.ToNetworkx()
   assert g.number_of_nodes() == g_out.number_of_nodes()
   assert g.number_of_edges() == g_out.number_of_edges()
