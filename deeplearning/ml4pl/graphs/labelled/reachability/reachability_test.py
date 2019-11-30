@@ -1,61 +1,112 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled/reachability."""
-import networkx as nx
-import pytest
+import pickle
+from typing import Iterable
 
+import networkx as nx
+
+from deeplearning.ml4pl.graphs import programl
+from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled.reachability import reachability
-from labm8.py import app
+from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
+from labm8.py import bazelutil
 from labm8.py import test
 
-FLAGS = app.FLAGS
+FLAGS = test.FLAGS
+
+
+NETWORKX_GRAPHS_ARCHIVE = bazelutil.DataArchive(
+  "phd/deeplearning/ml4pl/testing/data/100_unlabelled_networkx_graphs.tar.bz2"
+)
 
 
 @test.Fixture(scope="function")
-def graph():
+def graph() -> nx.MultiDiGraph:
   g = nx.MultiDiGraph()
-  g.add_node("A", type="statement", x=-1)
-  g.add_node("B", type="statement", x=-1)
-  g.add_node("C", type="statement", x=-1)
-  g.add_node("D", type="statement", x=-1)
-  g.add_edge("A", "B", flow="control")
-  g.add_edge("B", "C", flow="control")
-  g.add_edge("C", "D", flow="control")
+  g.add_node(0, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
+  g.add_node(1, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
+  g.add_node(2, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
+  g.add_node(3, type=programl_pb2.Node.STATEMENT, discrete_x=[0])
+  g.add_edge(0, 1, flow=programl_pb2.Edge.CONTROL)
+  g.add_edge(1, 2, flow=programl_pb2.Edge.CONTROL)
+  g.add_edge(2, 3, flow=programl_pb2.Edge.CONTROL)
   return g
 
 
-def test_SetReachableNodes_reachable_node_count_D(graph):
-  reachable_node_count, _ = reachability.SetReachableNodes(graph, "D")
-  assert reachable_node_count == 1
+@test.Fixture(scope="function")
+def annotator() -> reachability.ReachabilityAnnotator:
+  return reachability.ReachabilityAnnotator()
 
 
-def test_SetReachableNodes_reachable_node_count_A(graph):
-  reachable_node_count, _ = reachability.SetReachableNodes(graph, "A")
-  assert reachable_node_count == 4
+def test_Annotate_reachable_node_count_D(
+  graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
+):
+  annotated = annotator.Annotate(graph, 3)
+  assert annotated.positive_node_count == 1
 
 
-def test_SetReachableNodes_data_flow_steps_D(graph):
-  _, data_flow_steps = reachability.SetReachableNodes(graph, "D")
-  assert data_flow_steps == 1
+def test_Annotate_reachable_node_count_A(
+  graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
+):
+  annotated = annotator.Annotate(graph, 0)
+  assert annotated.positive_node_count == 4
 
 
-def test_SetReachableNodes_data_flow_steps_A(graph):
-  _, data_flow_steps = reachability.SetReachableNodes(graph, "A")
-  assert data_flow_steps == 4
+def test_Annotate_data_flow_steps_D(
+  graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
+):
+  annotated = annotator.Annotate(graph, 3)
+  assert annotated.data_flow_steps == 1
 
 
-def test_SetReachableNodes_node_x(graph):
-  _ = reachability.SetReachableNodes(graph, "A")
-  assert graph.nodes["A"]["x"] == [-1, 1]
-  assert graph.nodes["B"]["x"] == [-1, 0]
-  assert graph.nodes["C"]["x"] == [-1, 0]
-  assert graph.nodes["D"]["x"] == [-1, 0]
+def test_Annotate_data_flow_steps_A(
+  graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
+):
+  annotated = annotator.Annotate(graph, 0)
+  assert annotated.data_flow_steps == 4
 
 
-def test_SetReachableNodes_node_y(graph):
-  _ = reachability.SetReachableNodes(graph, "B")
-  assert not graph.nodes["A"]["y"]
-  assert graph.nodes["B"]["y"]
-  assert graph.nodes["C"]["y"]
-  assert graph.nodes["D"]["y"]
+def test_Annotate_node_x(
+  graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
+):
+  annotated = annotator.Annotate(graph, 0)
+  assert annotated.g.nodes[0]["discrete_x"] == [0, 1]
+  assert annotated.g.nodes[1]["discrete_x"] == [0, 0]
+  assert annotated.g.nodes[2]["discrete_x"] == [0, 0]
+  assert annotated.g.nodes[3]["discrete_x"] == [0, 0]
+
+
+def test_Annotate_node_y(
+  graph: nx.MultiDiGraph, annotator: reachability.ReachabilityAnnotator
+):
+  annotated = annotator.Annotate(graph, 1)
+  assert annotated.g.nodes[0]["discrete_y"] == [1, 0]
+  assert annotated.g.nodes[1]["discrete_y"] == [0, 1]
+  assert annotated.g.nodes[2]["discrete_y"] == [0, 1]
+  assert annotated.g.nodes[3]["discrete_y"] == [0, 1]
+
+
+def ReadPickledNetworkxGraphs() -> Iterable[nx.MultiDiGraph]:
+  """Read the pickled networkx graphs."""
+  with NETWORKX_GRAPHS_ARCHIVE as pickled_dir:
+    for path in pickled_dir.iterdir():
+      with open(path, "rb") as f:
+        yield pickle.load(f)
+
+
+@test.Fixture(scope="function", params=list(ReadPickledNetworkxGraphs()))
+def random_100_graph(request) -> nx.MultiDiGraph:
+  """A test fixture which yields one of 100 "real" graphs."""
+  original_graph = request.param
+  proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(original_graph)
+  return programl.ProgramGraphToNetworkX(proto)
+
+
+def test_Annotate_random_100(
+  random_100_graph: nx.MultiDiGraph,
+  annotator: reachability.ReachabilityAnnotator,
+):
+  """Opaque black-box test of reachability annotator."""
+  list(annotator.MakeAnnotated(random_100_graph, n=100))
 
 
 if __name__ == "__main__":

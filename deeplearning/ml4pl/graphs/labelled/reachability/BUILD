@@ -5,19 +5,26 @@ py_library(
     srcs = ["reachability.py"],
     visibility = ["//deeplearning/ml4pl/graphs/labelled:__subpackages__"],
     deps = [
-        "//deeplearning/ml4pl/graphs:graph_query",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/labelled:data_flow_graphs",
         "//labm8/py:app",
-        "//labm8/py:decorators",
         "//third_party/py/networkx",
     ],
 )
 
 py_test(
     name = "reachability_test",
+    timeout = "long",
     srcs = ["reachability_test.py"],
+    data = [
+        "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs",
+    ],
     deps = [
         ":reachability",
-        "//labm8/py:app",
+        "//deeplearning/ml4pl/graphs:programl",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
+        "//labm8/py:bazelutil",
         "//labm8/py:test",
         "//third_party/py/networkx",
     ],
