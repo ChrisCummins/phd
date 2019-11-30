@@ -55,13 +55,12 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   strings.
   """
 
-  id: int = sql.Column(sql.Integer, primary_key=True)
-
   # A reference to the 'id' column of a
   # deeplearning.ml4pl.ir.ir_database.IntermediateRepresentationFile database
   # row. There is no foreign key relationship here because they are separate
-  # databases.
-  ir_id: int = sql.Column(sql.Integer, nullable=False, index=True)
+  # databases. There is a one-to-one mapping from intermediate representation
+  # to ProgramGraph.
+  ir_id: int = sql.Column(sql.Integer, primary_key=True)
 
   # The size of the program graph.
   node_count: int = sql.Column(sql.Integer, nullable=False)
@@ -138,7 +137,7 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
     Args:
       proto: The protocol buffer to instantiate a program graph from.
-      ir_id: The ID of the intermidiate representation for this program graph.
+      ir_id: The ID of the intermediate representation for this program graph.
 
     Returns:
       A ProgramGraph instance.
@@ -216,9 +215,11 @@ class ProgramGraphData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   See ProgramGraph for the parent table.
   """
 
-  id: int = sql.Column(
+  ir_id: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("program_graphs.id", onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey(
+      "program_graphs.ir_id", onupdate="CASCADE", ondelete="CASCADE"
+    ),
     primary_key=True,
   )
 

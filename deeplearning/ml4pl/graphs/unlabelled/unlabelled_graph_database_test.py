@@ -34,10 +34,10 @@ def two_graph_db_session(
   db: unlabelled_graph_database.Database,
 ) -> unlabelled_graph_database.Database.SessionType:
   a = unlabelled_graph_database.ProgramGraph.Create(
-    proto=CreateRandomProto(), ir_id=0
+    proto=CreateRandomProto(), ir_id=1
   )
   b = unlabelled_graph_database.ProgramGraph.Create(
-    proto=CreateRandomProto(), ir_id=1
+    proto=CreateRandomProto(), ir_id=2
   )
 
   with db.Session() as session:
@@ -47,13 +47,13 @@ def two_graph_db_session(
     # Sanity check that the graphs have been added to the database.
     assert (
       session.query(
-        sql.func.count(unlabelled_graph_database.ProgramGraph.id)
+        sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
       ).scalar()
       == 2
     )
     assert (
       session.query(
-        sql.func.count(unlabelled_graph_database.ProgramGraphData.id)
+        sql.func.count(unlabelled_graph_database.ProgramGraphData.ir_id)
       ).scalar()
       == 2
     )
@@ -73,7 +73,7 @@ def test_cascaded_delete_from_session(
   # Delete the first graph.
   a = (
     session.query(unlabelled_graph_database.ProgramGraph)
-    .filter(unlabelled_graph_database.ProgramGraph.ir_id == 0)
+    .filter(unlabelled_graph_database.ProgramGraph.ir_id == 1)
     .one()
   )
   session.delete(a)
@@ -82,18 +82,18 @@ def test_cascaded_delete_from_session(
   # Check that only the one program remains.
   assert (
     session.query(
-      sql.func.count(unlabelled_graph_database.ProgramGraph.id)
+      sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
     ).scalar()
     == 1
   )
   assert (
     session.query(
-      sql.func.count(unlabelled_graph_database.ProgramGraphData.id)
+      sql.func.count(unlabelled_graph_database.ProgramGraphData.ir_id)
     ).scalar()
     == 1
   )
   assert (
-    session.query(unlabelled_graph_database.ProgramGraph.ir_id).scalar() == 1
+    session.query(unlabelled_graph_database.ProgramGraph.ir_id).scalar() == 2
   )
 
 
@@ -106,25 +106,25 @@ def test_cascaded_delete_using_query(
   # Delete the first graph. Don't synchronize the session as we don't care
   # about the mapped objects.
   session.query(unlabelled_graph_database.ProgramGraph).filter(
-    unlabelled_graph_database.ProgramGraph.ir_id == 0
+    unlabelled_graph_database.ProgramGraph.ir_id == 1
   ).delete()
   session.commit()
 
   # Check that only the one program remains.
   assert (
     session.query(
-      sql.func.count(unlabelled_graph_database.ProgramGraph.id)
+      sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
     ).scalar()
     == 1
   )
   assert (
     session.query(
-      sql.func.count(unlabelled_graph_database.ProgramGraphData.id)
+      sql.func.count(unlabelled_graph_database.ProgramGraphData.ir_id)
     ).scalar()
     == 1
   )
   assert (
-    session.query(unlabelled_graph_database.ProgramGraph.ir_id).scalar() == 1
+    session.query(unlabelled_graph_database.ProgramGraph.ir_id).scalar() == 2
   )
 
 
