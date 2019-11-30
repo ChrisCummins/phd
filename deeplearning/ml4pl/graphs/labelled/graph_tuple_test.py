@@ -31,7 +31,11 @@ def graph() -> nx.MultiDiGraph:
   return g
 
 
+# nx.MultiDiGraph -> GraphTuple.
+
+
 def test_CreateFromNetworkX_adjacency_lists(graph: nx.MultiDiGraph):
+  """Test adjacency list size and values."""
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
 
   assert d.adjacency_lists.shape == (3,)
@@ -52,6 +56,7 @@ def test_CreateFromNetworkX_adjacency_lists(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_edge_positions(graph: nx.MultiDiGraph):
+  """Test edge positions size and values."""
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
 
   assert d.edge_positions.shape == (3,)
@@ -68,11 +73,17 @@ def test_CreateFromNetworkX_edge_positions(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_node_x(graph: nx.MultiDiGraph):
+  """Test node features dimensionality and values."""
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
 
   assert not d.has_node_y
   assert not d.has_graph_x
   assert not d.has_graph_y
+
+  assert d.node_x_dimensionality == 2
+  assert d.node_y_dimensionality == 0
+  assert d.graph_x_dimensionality == 0
+  assert d.graph_y_dimensionality == 0
 
   assert d.node_x.dtype == np.int32
   assert np.array_equal(
@@ -81,6 +92,8 @@ def test_CreateFromNetworkX_node_x(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_node_y(graph: nx.MultiDiGraph):
+  """Test node labels dimensionality and values."""
+
   graph.nodes[0]["y"] = [4, 1, 0]
   graph.nodes[1]["y"] = [3, 1, 0]
   graph.nodes[2]["y"] = [2, 1, 0]
@@ -92,6 +105,11 @@ def test_CreateFromNetworkX_node_y(graph: nx.MultiDiGraph):
   assert not d.has_graph_x
   assert not d.has_graph_y
 
+  assert d.node_x_dimensionality == 2
+  assert d.node_y_dimensionality == 3
+  assert d.graph_x_dimensionality == 0
+  assert d.graph_y_dimensionality == 0
+
   assert d.node_y.shape == (5, 3)
   assert d.node_y.dtype == np.int32
   assert np.array_equal(
@@ -100,8 +118,14 @@ def test_CreateFromNetworkX_node_y(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_graph_x(graph: nx.MultiDiGraph):
+  """Test graph features dimensionality and values."""
   graph.graph["x"] = [0, 1, 2, 3]
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
+
+  assert d.node_x_dimensionality == 2
+  assert d.node_y_dimensionality == 0
+  assert d.graph_x_dimensionality == 4
+  assert d.graph_y_dimensionality == 0
 
   assert not d.has_node_y
   assert d.has_graph_x
@@ -112,8 +136,15 @@ def test_CreateFromNetworkX_graph_x(graph: nx.MultiDiGraph):
 
 
 def test_CreateFromNetworkX_graph_y(graph: nx.MultiDiGraph):
+  """Test graph labels dimensionality and values."""
+
   graph.graph["y"] = [0, 1, 2, 3]
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
+
+  assert d.node_x_dimensionality == 2
+  assert d.node_y_dimensionality == 0
+  assert d.graph_x_dimensionality == 0
+  assert d.graph_y_dimensionality == 4
 
   assert not d.has_node_y
   assert not d.has_graph_x
@@ -123,7 +154,12 @@ def test_CreateFromNetworkX_graph_y(graph: nx.MultiDiGraph):
   assert np.array_equal(d.graph_y, np.array([0, 1, 2, 3]))
 
 
+# GraphTuple -> nx.MultiDiGraph tests.
+
+
 def test_ToNetworkx_node_and_edge_count(graph: nx.MultiDiGraph):
+  """Test graph shape."""
+
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
   assert g.number_of_nodes() == 5
@@ -131,6 +167,7 @@ def test_ToNetworkx_node_and_edge_count(graph: nx.MultiDiGraph):
 
 
 def test_ToNetworkx_edge_flow(graph: nx.MultiDiGraph):
+  """Test graph edge flows."""
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
   assert g.edges[0, 1, programl_pb2.Edge.CALL]["flow"] == programl_pb2.Edge.CALL
@@ -146,6 +183,7 @@ def test_ToNetworkx_edge_flow(graph: nx.MultiDiGraph):
 
 
 def test_ToNetworkx_edge_position(graph: nx.MultiDiGraph):
+  """Test graph edge positions."""
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
   assert g.edges[0, 1, programl_pb2.Edge.CALL]["position"] == 0
@@ -155,6 +193,7 @@ def test_ToNetworkx_edge_position(graph: nx.MultiDiGraph):
 
 
 def test_ToNetworkx_node_x(graph: nx.MultiDiGraph):
+  """Test graph node features."""
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
   assert g.nodes[0]["x"] == [4, 0]
@@ -165,6 +204,7 @@ def test_ToNetworkx_node_x(graph: nx.MultiDiGraph):
 
 
 def test_ToNetworkx_node_y(graph: nx.MultiDiGraph):
+  """Test graph node labels."""
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
   assert g.nodes[0]["y"] == []
@@ -174,16 +214,34 @@ def test_ToNetworkx_node_y(graph: nx.MultiDiGraph):
   assert g.nodes[4]["y"] == []
 
 
-def test_ToNetworkx_graph_x(graph: nx.MultiDiGraph):
+def test_ToNetworkx_graph_x_not_set(graph: nx.MultiDiGraph):
+  """Test missing graph features."""
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
   assert g.graph["x"] == []
 
 
-def test_ToNetworkx_graph_y(graph: nx.MultiDiGraph):
+def test_ToNetworkx_graph_x_set(graph: nx.MultiDiGraph):
+  """Test graph features."""
+  graph.graph["x"] = [1, 2, 3]
+  g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
+
+  assert g.graph["x"] == [1, 2, 3]
+
+
+def test_ToNetworkx_graph_y_not_set(graph: nx.MultiDiGraph):
+  """Test missing graph labels."""
   g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
 
   assert g.graph["y"] == []
+
+
+def test_ToNetworkx_graph_y_set(graph: nx.MultiDiGraph):
+  """Test graph labels."""
+  graph.graph["y"] = [1, 2]
+  g = graph_tuple.GraphTuple.CreateFromNetworkX(graph).ToNetworkx()
+
+  assert g.graph["y"] == [1, 2]
 
 
 def CreateRandomNetworkx() -> programl_pb2.ProgramGraph:
@@ -195,6 +253,7 @@ def CreateRandomNetworkx() -> programl_pb2.ProgramGraph:
 
 @decorators.loop_for(seconds=10)
 def fuzz_graph_tuple_networkx():
+  """Fuzz graph tuples with randomly generated graphs."""
   g = CreateRandomNetworkx()
   t = graph_tuple.GraphTuple.CreateFromNetworkX(g)
   g_out = t.ToNetworkx()
