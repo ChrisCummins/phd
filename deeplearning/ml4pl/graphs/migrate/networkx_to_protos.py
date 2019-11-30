@@ -228,8 +228,7 @@ def MigrateGraphDatabase(
     ).one()
     already_done_max = already_done_max or -1
 
-  # Get the total number of graphs to process, and the number of graphs already
-  # processed.
+  # Get the total number of graphs to process.
   with input_db.Session() as in_session:
     total_graph_count = in_session.query(
       sql.func.count(graph_database.GraphMeta.id)
@@ -237,7 +236,7 @@ def MigrateGraphDatabase(
     ids_to_do = [
       row.id
       for row in in_session.query(graph_database.GraphMeta.id)
-      .filter(~graph_database.GraphMeta.id > already_done_max)
+      .filter(graph_database.GraphMeta.id > already_done_max)
       .order_by(graph_database.GraphMeta.id)
     ]
 
@@ -273,9 +272,7 @@ def MigrateGraphDatabase(
     print_to=lambda msg: app.Log(1, msg, print_context=bar.external_write_mode),
   )
 
-  graph_reader: Iterable[
-    List[graph_database.GraphMeta]
-  ] = ppar.ThreadedIterator(
+  graph_reader = ppar.ThreadedIterator(
     BatchedGraphReader(input_db, ids_to_do, batch_size, profiler=profiler),
     max_queue_size=max_reader_queue_size,
     start=False,
