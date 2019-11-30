@@ -4,7 +4,6 @@ import random
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import programl
-from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
@@ -24,10 +23,46 @@ def db(request) -> graph_tuple_database.Database:
   )
 
 
-def CreateRandomGraphTuple() -> graph_tuple.GraphTuple:
-  """Generate a random graph tuple."""
+@test.Fixture(scope="function")
+def db_session(
+  db: graph_tuple_database.Database,
+) -> graph_tuple_database.Database.SessionType:
+  with db.Session() as session:
+    yield session
+
+
+def CreateRandomGraphTuple(
+  node_y_dimensionality: int = 0,
+  graph_x_dimensionality: int = 0,
+  graph_y_dimensionality: int = 0,
+) -> graph_tuple.GraphTuple:
+  """Generate a random graph tuple.
+
+  Args:
+    node_y_dimensionality: The dimensionality of node y vectors.
+    graph_x_dimensionality: The dimensionality of graph x vectors.
+    graph_y_dimensionality: The dimensionality of graph y vectors.
+
+  Returns:
+    A graph tuple.
+  """
+
+  def RandomList(n: int):
+    return [random.randint(0, 10) for _ in range(n)]
+
   g = random_cdfg_generator.FastCreateRandom()
   proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
+
+  if node_y_dimensionality:
+    for node in proto.node:
+      node.y[:] = RandomList(node_y_dimensionality)
+
+  if graph_x_dimensionality:
+    proto.x[:] = RandomList(graph_x_dimensionality)
+
+  if graph_y_dimensionality:
+    proto.y[:] = RandomList(graph_y_dimensionality)
+
   g = programl.ProgramGraphToNetworkX(proto)
   return graph_tuple.GraphTuple.CreateFromNetworkX(g)
 
@@ -126,6 +161,59 @@ def test_cascaded_delete_using_query(
     == 1
   )
   assert session.query(graph_tuple_database.GraphTuple.ir_id).scalar() == 2
+
+
+#
+
+
+def test_CreateFromGraphTuple_attributes():
+  """Test that attributes are copied over."""
+  graph_tuple = CreateRandomGraphTuple()
+  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert a.ir_id == 1
+  assert a.node_count == graph_tuple.node_count
+  assert a.edge_count == graph_tuple.edge_count
+  assert a.edge_position_max == graph_tuple.edge_position_max
+
+
+def test_CreateFromGraphTuple_node_x_dimensionality():
+  """Test node feature dimensionality."""
+  graph_tuple = CreateRandomGraphTuple()
+  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert a.node_x_dimensionality == 1
+
+
+def test_CreateFromGraphTuple_node_y_dimensionality():
+  """Test node label dimensionality."""
+  graph_tuple = CreateRandomGraphTuple(node_y_dimensionality=0)
+  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert a.node_y_dimensionality == 0
+
+  graph_tuple = CreateRandomGraphTuple(node_y_dimensionality=2)
+  b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert b.node_y_dimensionality == 2
+
+
+def test_CreateFromGraphTuple_graph_x_dimensionality():
+  """Check graph label dimensionality."""
+  graph_tuple = CreateRandomGraphTuple(graph_x_dimensionality=0)
+  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert a.graph_x_dimensionality == 0
+
+  graph_tuple = CreateRandomGraphTuple(graph_x_dimensionality=2)
+  b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert b.graph_x_dimensionality == 2
+
+
+def test_CreateFromGraphTuple_graph_y_dimensionality():
+  """Check graph label dimensionality."""
+  graph_tuple = CreateRandomGraphTuple(graph_y_dimensionality=0)
+  a = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert a.graph_y_dimensionality == 0
+
+  graph_tuple = CreateRandomGraphTuple(graph_y_dimensionality=2)
+  b = graph_tuple_database.GraphTuple.CreateFromGraphTuple(graph_tuple, ir_id=1)
+  assert b.graph_y_dimensionality == 2
 
 
 @decorators.loop_for(seconds=10)
