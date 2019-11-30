@@ -84,16 +84,17 @@ def BufferedGraphReader(
 
       # If we are ordering with global random then we can scan through the
       # graph table using index range checks, so we need the IDs sorted.
-      if order == BufferedGraphReaderOrder.GLOBAL_RANDOM:
-        query = query.order_by(db.Random())
-      elif order == BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED:
+      if order == BufferedGraphReaderOrder.DATA_FLOW_MAX_STEPS_REQUIRED:
         query = query.order_by(
           graph_database.GraphMeta.data_flow_max_steps_required
         )
-      else:
+      elif order != BufferedGraphReaderOrder.GLOBAL_RANDOM:
         query = query.order_by(graph_database.GraphMeta.id)
 
       ids = [r[0] for r in query.all()]
+
+      if order == BufferedGraphReaderOrder.GLOBAL_RANDOM:
+        random.shuffle(ids)
 
   if not ids:
     raise ValueError(f"Query on database `{db.url}` returned no results: `{q}`")
@@ -146,9 +147,11 @@ def BufferedGraphReader(
         f"received {len(graph_metas)}"
       )
 
-    # For batch-level random ordering, shuffle the result of the (in-order)
-    # graph query.
-    if order == BufferedGraphReaderOrder.BATCH_RANDOM:
+    # For random orders, shuffle the result of the graph query.
+    if (
+      order == BufferedGraphReaderOrder.BATCH_RANDOM
+      or order == BufferedGraphReaderOrder.GLOBAL_RANDOM
+    ):
       random.shuffle(graph_metas)
 
     yield from graph_metas
