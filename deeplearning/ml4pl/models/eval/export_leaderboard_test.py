@@ -8,13 +8,14 @@ from deeplearning.ml4pl.models.eval import google_sheets
 MODULE_UNDER_TEST = None
 
 requires_google_sheets_credentials_file = test.SkipIf(
-  not FLAGS.google_sheets_credentials.is_file(),
+  lambda: not FLAGS.google_sheets_credentials.is_file(),
   reason="google sheets credentials not found",
 )
 
 
+@requires_google_sheets_credentials_file(reason="google sheets")
 def test_TODO():
-  del google_sheets
+  _ = google_sheets
 
 
 if __name__ == "__main__":

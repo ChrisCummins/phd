@@ -8,7 +8,7 @@ from oauth2client import service_account
 
 from labm8.py import app
 
-app.DEFINE_input_path(
+app.DEFINE_output_path(
   "google_sheets_credentials",
   "/var/phd/deeplearning/ml4pl/google_sheets_credentials.json",
   "The path to a google service account credentials JSON file.",
