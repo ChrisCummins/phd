@@ -194,8 +194,10 @@ def AnnotateWithTimeout(
 
 def MakeAnnotatedGraphs(
   packed_args,
-) -> Tuple[int, List[graph_tuple_database.GraphTuple]]:
+) -> Tuple[float, int, List[graph_tuple_database.GraphTuple]]:
   """Multiprocess worker."""
+  start_time = time.time()
+
   analysis: str = packed_args[0]
   graphs: List[unlabelled_graph_database.ProgramGraph] = packed_args[1]
   ctx: ProgressContext = packed_args[2]
@@ -245,7 +247,7 @@ def MakeAnnotatedGraphs(
         )
         if FLAGS.error:
           raise e
-  return len(graphs), graph_tuples
+  return time.time() - start_time, len(graphs), graph_tuples
 
 
 class DatasetGenerator(threading.Thread):
@@ -283,8 +285,7 @@ class DatasetGenerator(threading.Thread):
     # them.
     worker_args = MakeAnnotatedGraphsArgsGenerator(self.graph_reader)
     workers = pool.imap_unordered(MakeAnnotatedGraphs, worker_args)
-    start_time = time.time()
-    for graph_count, graph_tuples in workers:
+    for elapsed_time, graph_count, graph_tuples in workers:
       self.exported_count += graph_count
       # Record the generated annotated graphs.
       tuples_size = sum(t.pickled_graph_tuple_size for t in graph_tuples)
@@ -298,9 +299,8 @@ class DatasetGenerator(threading.Thread):
         graph_count,
         len(graph_tuples),
         humanize.BinaryPrefix(tuples_size, "B"),
-        humanize.Duration(end_time - start_time),
+        humanize.Duration(elapsed_time),
       )
-      start_time = end_time
 
 
 def MakeDataFlowAnalysisDataset(
