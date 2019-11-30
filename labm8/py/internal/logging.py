@@ -109,13 +109,23 @@ def Fatal(msg, *args, **kwargs):
 @absl_logging.skip_log_prefix
 def Error(msg, *args, **kwargs):
   """Logs an error message."""
-  absl_logging.error(msg, *args, **kwargs)
+  print_context = kwargs.pop("print_context", None)
+  if print_context:
+    with print_context():
+      absl_logging.error(msg, *args, **kwargs)
+  else:
+    absl_logging.error(msg, *args, **kwargs)
 
 
 @absl_logging.skip_log_prefix
 def Warning(msg, *args, **kwargs):
   """Logs a warning message."""
-  absl_logging.warning(msg, *args, **kwargs)
+  print_context = kwargs.pop("print_context", None)
+  if print_context:
+    with print_context():
+      absl_logging.warning(msg, *args, **kwargs)
+  else:
+    absl_logging.warning(msg, *args, **kwargs)
 
 
 def FlushLogs():
