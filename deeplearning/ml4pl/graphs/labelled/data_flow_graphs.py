@@ -1,6 +1,7 @@
 """This module defines a base class for implementing data flow analyses over
 networkx graphs.
 """
+import copy
 import random
 from typing import Iterable
 from typing import List
@@ -75,7 +76,9 @@ class DataFlowGraphAnnotator(object):
       root_nodes = root_nodes[:n]
 
     for root_node in root_nodes:
-      yield self.Annotate(g.copy(), root_node)
+      # Note that a deep copy is required to ensure that x/y lists are
+      # duplicated.
+      yield self.Annotate(copy.deepcopy(g), root_node)
 
 
 # The x value for specifying the root node.
