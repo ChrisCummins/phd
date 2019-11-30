@@ -14,7 +14,7 @@ py_binary(
     srcs = ["migrate_graph_database.py"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled/graph_tuple",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
         "//labm8/py:app",
     ],
 )
@@ -69,7 +69,7 @@ py_binary(
     srcs = ["one_hot_x_features_to_embeddings.py"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled/graph_tuple",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
         "//labm8/py:app",
         "//labm8/py:humanize",
         "//labm8/py:prof",
@@ -83,7 +83,7 @@ py_binary(
     srcs = ["reapply_split.py"],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled/graph_tuple:graph_batcher",
+        "//deeplearning/ml4pl/graphs/labelled:graph_batcher",
         "//labm8/py:app",
         "//labm8/py:humanize",
         "//third_party/py/numpy",

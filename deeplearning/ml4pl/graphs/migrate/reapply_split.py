@@ -6,7 +6,7 @@ import sqlalchemy as sql
 from sklearn import model_selection
 
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.graphs.labelled import graph_batcher
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import prof

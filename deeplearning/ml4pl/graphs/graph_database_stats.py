@@ -183,10 +183,10 @@ class GraphDatabaseStats(object):
 class GraphTupleDatabaseStats(GraphDatabaseStats):
   """Aggregation of stats of databases of graph tuples.
 
-  This stats object is specialized to databases which store pickled graph_tuple
-  dictionaries as their Graph.data column. See
-  //deeplearning/ml4pl/graphs/labelled/graph_tuple for the schema of graph_tuple
-  dictionaries.
+  This stats object is specialized to databases which store as their Graph.data
+  column. See
+  deeplearning.ml4pl.graphs.labelled.graph_tuple.GraphTuple for the schema of
+  graph tuples.
   """
 
   @decorators.memoized_property

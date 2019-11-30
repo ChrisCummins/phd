@@ -5,7 +5,7 @@ import keras
 import numpy as np
 from keras import models
 
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.graphs.labelled import graph_batcher
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.models.lstm import bytecode2seq

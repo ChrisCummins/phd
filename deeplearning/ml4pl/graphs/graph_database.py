@@ -9,9 +9,7 @@ import sqlalchemy as sql
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import (
-  graph_tuple as graph_tuples,
-)
+from deeplearning.ml4pl.graphs.labelled import graph_tuple as graph_tuples
 from labm8.py import app
 from labm8.py import bazelutil
 from labm8.py import decorators

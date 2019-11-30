@@ -1,9 +1,8 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/graph_tuple."""
+"""Unit tests for //deeplearning/ml4pl/graphs/graph_tuple."""
 import networkx as nx
 import numpy as np
-import pytest
 
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
+from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from labm8.py import app
 from labm8.py import test
 

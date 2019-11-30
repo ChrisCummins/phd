@@ -3,11 +3,10 @@ import pathlib
 import pickle
 
 import numpy as np
-import pytest
 
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs import graph_database_stats as stats
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
+from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from labm8.py import app
 from labm8.py import test
 

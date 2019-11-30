@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 import tensorflow as tf
 
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.graphs.labelled import graph_batcher
 from deeplearning.ml4pl.models import base_utils
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import log_database

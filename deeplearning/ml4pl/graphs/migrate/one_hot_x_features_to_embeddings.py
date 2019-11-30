@@ -9,9 +9,7 @@ import numpy as np
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import (
-  graph_tuple as graph_tuples,
-)
+from deeplearning.ml4pl.graphs.labelled import graph_tuple as graph_tuples
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import prof

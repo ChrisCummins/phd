@@ -1,6 +1,4 @@
 """Base class for implementing classifier models."""
-import binascii
-import os
 import pickle
 import random
 import time
@@ -14,7 +12,7 @@ import tqdm
 import build_info
 from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_batcher
+from deeplearning.ml4pl.graphs.labelled import graph_batcher
 from deeplearning.ml4pl.models import base_utils as utils
 from deeplearning.ml4pl.models import log_database
 from labm8.py import app
@@ -24,7 +22,7 @@ from labm8.py import jsonutil
 from labm8.py import pbutil
 from labm8.py import ppar
 from labm8.py import prof
-from labm8.py import system
+
 
 FLAGS = app.FLAGS
 

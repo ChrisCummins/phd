@@ -4,7 +4,7 @@ This updates the graph tuple representation based on my experience in initial
 experiments.
 """
 from deeplearning.ml4pl.graphs import graph_database
-from deeplearning.ml4pl.graphs.labelled.graph_tuple import graph_tuple
+from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from labm8.py import app
 
 FLAGS = app.FLAGS
