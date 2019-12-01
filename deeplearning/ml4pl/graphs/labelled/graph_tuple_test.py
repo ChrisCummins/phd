@@ -34,24 +34,24 @@ def graph() -> nx.MultiDiGraph:
 # nx.MultiDiGraph -> GraphTuple.
 
 
-def test_CreateFromNetworkX_adjacency_lists(graph: nx.MultiDiGraph):
+def test_CreateFromNetworkX_adjacencies(graph: nx.MultiDiGraph):
   """Test adjacency list size and values."""
   d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
 
-  assert d.adjacency_lists.shape == (3,)
+  assert d.adjacencies.shape == (3,)
 
-  assert d.adjacency_lists[programl_pb2.Edge.CONTROL].dtype == np.int32
-  assert d.adjacency_lists[programl_pb2.Edge.DATA].dtype == np.int32
-  assert d.adjacency_lists[programl_pb2.Edge.CALL].dtype == np.int32
+  assert d.adjacencies[programl_pb2.Edge.CONTROL].dtype == np.int32
+  assert d.adjacencies[programl_pb2.Edge.DATA].dtype == np.int32
+  assert d.adjacencies[programl_pb2.Edge.CALL].dtype == np.int32
 
   assert np.array_equal(
-    d.adjacency_lists[programl_pb2.Edge.CONTROL], np.array([(1, 2), (2, 3)])
+    d.adjacencies[programl_pb2.Edge.CONTROL], np.array([(1, 2), (2, 3)])
   )
   assert np.array_equal(
-    d.adjacency_lists[programl_pb2.Edge.DATA], np.array([(4, 3)])
+    d.adjacencies[programl_pb2.Edge.DATA], np.array([(4, 3)])
   )
   assert np.array_equal(
-    d.adjacency_lists[programl_pb2.Edge.CALL], np.array([(0, 1)])
+    d.adjacencies[programl_pb2.Edge.CALL], np.array([(0, 1)])
   )
 
 
@@ -171,6 +171,14 @@ def test_CreateFromNetworkX_edge_counts(graph: nx.MultiDiGraph):
   assert d.call_edge_count == 1
 
 
+def test_CreateFromNetworkX_not_disjoint(graph: nx.MultiDiGraph):
+  """Test that a single graph is not disjoint."""
+  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
+
+  assert not d.is_disjoint_graph
+  assert d.graph_count == 1
+
+
 # GraphTuple -> nx.MultiDiGraph tests.
 
 
@@ -266,6 +274,9 @@ def CreateRandomNetworkx() -> programl_pb2.ProgramGraph:
   g = random_cdfg_generator.FastCreateRandom()
   proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
   return programl.ProgramGraphToNetworkX(proto)
+
+
+# Fuzz:
 
 
 @decorators.loop_for(seconds=10)
