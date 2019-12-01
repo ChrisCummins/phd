@@ -30,6 +30,7 @@ from labm8.py import app
 from labm8.py import humanize
 from labm8.py import ppar
 from labm8.py import prof
+from labm8.py import progress
 
 app.DEFINE_string("analysis", None, "The name of the analysis to run.")
 app.DEFINE_database(
@@ -103,33 +104,11 @@ def GetDataFlowGraphAnnotator(
     raise app.UsageError(f"Unknown analyses '{name}'")
 
 
-class ProgressContext(object):
-  """The context for logging and profiling within a progress bar."""
-
-  def __init__(self, print_context):
-    self.print_context = print_context
-
-  def Log(self, *args, **kwargs):
-    app.Log(*args, **kwargs, print_context=self.print_context)
-
-  def Profile(self, level: int, msg):
-    return prof.Profile(
-      msg,
-      print_to=lambda x: app.Log(level, x, print_context=self.print_context),
-    )
-
-  def Warning(self, *args, **kwargs):
-    app.Warning(*args, **kwargs, print_context=self.print_context)
-
-  def Error(self, *args, **kwargs):
-    app.Error(*args, **kwargs, print_context=self.print_context)
-
-
 def BatchedGraphReader(
   graph_db: unlabelled_graph_database.Database,
   ids_and_sizes_to_do: List[Tuple[int, int]],
   batch_size_in_bytes: int,
-  ctx: ProgressContext,
+  ctx: progress.ProgressBarContext,
 ) -> Iterable[List[unlabelled_graph_database.ProgramGraph]]:
   """Read from the given list of graph IDs in batches."""
   ids_and_sizes_to_do = sorted(ids_and_sizes_to_do, key=lambda x: x[0])
@@ -171,7 +150,7 @@ def AnnotateWithTimeout(
   g: nx.MultiDiGraph,
   n: int,
   seconds: int,
-) -> List[data_flow_graphs.DataFlowAnnotatedGraph]:
+) -> Iterable[data_flow_graphs.DataFlowAnnotatedGraph]:
   """Run the given annotator with a timeout."""
 
   def _RaiseTimoutError(signum, frame):
@@ -201,7 +180,7 @@ def MakeAnnotatedGraphs(
 
   analysis: str = packed_args[0]
   graphs: List[unlabelled_graph_database.ProgramGraph] = packed_args[1]
-  ctx: ProgressContext = packed_args[2]
+  ctx: progress.ProgressBarContext = packed_args[2]
 
   ctx.Log(3, "[worker %s] Processing %s graphs", thread_id, len(graphs))
 
@@ -251,48 +230,102 @@ def MakeAnnotatedGraphs(
   return time.time() - start_time, len(graphs), graph_tuples
 
 
-class DatasetGenerator(threading.Thread):
+class DatasetGenerator(progress.Progress):
   """Worker thread for dataset."""
 
   def __init__(
     self,
-    graph_reader: ppar.ThreadedIterator,
+    input_db: unlabelled_graph_database.Database,
     analysis: str,
     output_db: graph_tuple_database.Database,
-    ctx: ProgressContext,
-    exported_count: int = 0,
   ):
-    self.graph_reader = graph_reader
     self.analysis = analysis
     self.output_db = output_db
-    self.ctx = ctx
-    self.exported_count = exported_count
 
-    super(DatasetGenerator, self).__init__()
-    self.start()
+    # Create an annotator now to crash-early if the analysis name is invalid.
+    GetDataFlowGraphAnnotator(analysis)
 
-  def run(self):
+    # Get the graphs that have already been processed.
+    with output_db.Session() as out_session:
+      already_done_max, already_done_count = out_session.query(
+        sql.func.max(graph_tuple_database.GraphTuple.ir_id),
+        sql.func.count(
+          sql.func.distinct(graph_tuple_database.GraphTuple.ir_id)
+        ),
+      ).one()
+      already_done_max = already_done_max or -1
+
+    # Get the total number of graphs to process, and the IDs of the graphs to
+    # process.
+    with input_db.Session() as in_session:
+      total_graph_count = in_session.query(
+        sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
+      ).scalar()
+      ids_and_sizes_to_do = [
+        (row.ir_id, row.serialized_proto_size)
+        for row in in_session.query(
+          unlabelled_graph_database.ProgramGraph.ir_id,
+          unlabelled_graph_database.ProgramGraph.serialized_proto_size,
+        )
+        .filter(unlabelled_graph_database.ProgramGraph.ir_id > already_done_max)
+        .order_by(unlabelled_graph_database.ProgramGraph.ir_id)
+      ]
+
+    # Sanity check.
+    if len(ids_and_sizes_to_do) + already_done_count != total_graph_count:
+      app.FatalWithoutStackTrace(
+        "ids_to_do(%s) + already_done(%s) != total_rows(%s)",
+        len(ids_and_sizes_to_do),
+        already_done_count,
+        total_graph_count,
+      )
+
+    with output_db.Session(commit=True) as out_session:
+      out_session.add(
+        unlabelled_graph_database.Meta.Create(
+          key="Graph counts", value=(already_done_count, total_graph_count)
+        )
+      )
+    app.Log(
+      1,
+      "Selected %s of %s to process",
+      humanize.Commas(len(ids_and_sizes_to_do)),
+      humanize.Plural(total_graph_count, "unlabelled graph"),
+    )
+
+    super(DatasetGenerator, self).__init__(
+      name=analysis, i=already_done_count, n=total_graph_count, unit="protos"
+    )
+
+    self.graph_reader = ppar.ThreadedIterator(
+      BatchedGraphReader(
+        input_db,
+        ids_and_sizes_to_do,
+        FLAGS.proto_batch_mb * 1024 * 1024,
+        self.ctx.ToProgressContext(),
+      ),
+      max_queue_size=FLAGS.max_reader_queue_size,
+    )
+
+  def Run(self):
     """Run the dataset generation."""
     pool = multiprocessing.Pool(FLAGS.nproc)
-
-    self.graph_reader.Start()
 
     def MakeAnnotatedGraphsArgsGenerator(graph_reader):
       """Generate packed arguments for a multiprocessing worker."""
       for graph_batch in graph_reader:
-        yield (self.analysis, graph_batch, self.ctx)
+        yield (self.analysis, graph_batch, self.ctx.ToProgressContext())
 
     # Have a thread generating inputs, and a multiprocessing pool consuming
     # them.
     worker_args = MakeAnnotatedGraphsArgsGenerator(self.graph_reader)
     workers = pool.imap_unordered(MakeAnnotatedGraphs, worker_args)
     for elapsed_time, graph_count, graph_tuples in workers:
-      self.exported_count += graph_count
+      self.ctx.i += graph_count
       # Record the generated annotated graphs.
       tuples_size = sum(t.pickled_graph_tuple_size for t in graph_tuples)
       with self.output_db.Session(commit=True) as out_session:
         out_session.add_all(graph_tuples)
-      end_time = time.time()
       self.ctx.Log(
         2,
         "[writer] Processed %s graphs (%s graph tuples, %s) in %s",
@@ -302,111 +335,23 @@ class DatasetGenerator(threading.Thread):
         humanize.Duration(elapsed_time),
       )
 
-
-def MakeDataFlowAnalysisDataset(
-  analysis: str,
-  input_db: unlabelled_graph_database.Database,
-  output_db: graph_tuple_database.Database,
-):
-  """Run the given analysis."""
-  # Create an annotator now to crash-early if the analysis name is invalid.
-  GetDataFlowGraphAnnotator(analysis)
-
-  # Get the graphs that have already been processed.
-  with output_db.Session() as out_session:
-    already_done_max, already_done_count = out_session.query(
-      sql.func.max(graph_tuple_database.GraphTuple.ir_id),
-      sql.func.count(sql.func.distinct(graph_tuple_database.GraphTuple.ir_id)),
-    ).one()
-    already_done_max = already_done_max or -1
-
-  # Get the total number of graphs to process, and the IDs of the graphs to
-  # process.
-  with input_db.Session() as in_session:
-    total_graph_count = in_session.query(
-      sql.func.count(unlabelled_graph_database.ProgramGraph.ir_id)
-    ).scalar()
-    ids_and_sizes_to_do = [
-      (row.ir_id, row.serialized_proto_size)
-      for row in in_session.query(
-        unlabelled_graph_database.ProgramGraph.ir_id,
-        unlabelled_graph_database.ProgramGraph.serialized_proto_size,
+    # Sanity check the number of generated program graphs.
+    if self.ctx.i != self.ctx.n:
+      app.FatalWithoutStackTrace(
+        "unlabelled_graph_count(%s) != exported_count(%s)",
+        self.ctx.n,
+        self.ctx.i,
       )
-      .filter(unlabelled_graph_database.ProgramGraph.ir_id > already_done_max)
-      .order_by(unlabelled_graph_database.ProgramGraph.ir_id)
-    ]
-
-  # Sanity check.
-  if len(ids_and_sizes_to_do) + already_done_count != total_graph_count:
-    app.FatalWithoutStackTrace(
-      "ids_to_do(%s) + already_done(%s) != total_rows(%s)",
-      len(ids_and_sizes_to_do),
-      already_done_count,
-      total_graph_count,
-    )
-
-  with output_db.Session(commit=True) as out_session:
-    out_session.add(
-      unlabelled_graph_database.Meta.Create(
-        key="Graph counts", value=(already_done_count, total_graph_count)
+    with self.output_db.Session() as out_session:
+      annotated_graph_count = out_session.query(
+        sql.func.count(sql.func.distinct(graph_tuple_database.GraphTuple.ir_id))
+      ).scalar()
+    if annotated_graph_count != self.ctx.n:
+      app.FatalWithoutStackTrace(
+        "unlabelled_graph_count(%s) != annotated_graph_count(%s)",
+        self.ctx.n,
+        annotated_graph_count,
       )
-    )
-  app.Log(
-    1,
-    "Selected %s of %s to process",
-    humanize.Commas(len(ids_and_sizes_to_do)),
-    humanize.Plural(total_graph_count, "unlabelled graph"),
-  )
-
-  bar = tqdm.tqdm(
-    initial=already_done_count,
-    total=total_graph_count,
-    desc=analysis,
-    unit=" protos",
-    position=0,
-  )
-  ctx = ProgressContext(bar.external_write_mode)
-
-  graph_reader = ppar.ThreadedIterator(
-    BatchedGraphReader(
-      input_db, ids_and_sizes_to_do, FLAGS.proto_batch_mb * 1024 * 1024, ctx
-    ),
-    max_queue_size=FLAGS.max_reader_queue_size,
-    start=False,
-  )
-
-  # Run migration asynchronously so that we can keep the progress bar updating.
-  generator = DatasetGenerator(
-    graph_reader=graph_reader,
-    analysis=analysis,
-    output_db=output_db,
-    ctx=ctx,
-    exported_count=already_done_count,
-  )
-  while generator.is_alive():
-    bar.n = generator.exported_count
-    bar.refresh()
-    generator.join(0.25)
-
-  # Sanity check the number of generated program graphs.
-  if generator.exported_count != total_graph_count:
-    app.FatalWithoutStackTrace(
-      "unlabelled_graph_count(%s) != exported_count(%s)",
-      total_graph_count,
-      generator.exported_count,
-    )
-  with output_db.Session() as out_session:
-    annotated_graph_count = out_session.query(
-      sql.func.count(sql.func.distinct(graph_tuple_database.GraphTuple.ir_id))
-    ).scalar()
-  if annotated_graph_count != total_graph_count:
-    app.FatalWithoutStackTrace(
-      "unlabelled_graph_count(%s) != annotated_graph_count(%s)",
-      total_graph_count,
-      annotated_graph_count,
-    )
-
-  ctx.Log(1, "Done!")
 
 
 def main():
@@ -414,7 +359,7 @@ def main():
   input_db = FLAGS.input_db()
   output_db = FLAGS.output_db()
 
-  MakeDataFlowAnalysisDataset(FLAGS.analysis, input_db, output_db)
+  progress.Run(DatasetGenerator(input_db, FLAGS.analysis, output_db))
 
 
 if __name__ == "__main__":
