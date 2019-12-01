@@ -42,7 +42,7 @@ def FastCreateRandom():
   for i, j in np.argwhere(adjacency_matrix):
     # CFG nodes cannot be connected to themselves.
     if i != j:
-      g.add_edge(i, j)
+      g.add_edge(i, j, key=0)
 
   # Make sure that every node has one output. This ensures that the graph is
   # fully connected, but does not ensure that each node has an incoming
@@ -54,7 +54,7 @@ def FastCreateRandom():
         dst = node
         while dst == node:
           dst = random.randint(0, num_nodes)
-        g.add_edge(node, dst)
+        g.add_edge(node, dst, key=0)
         break
     else:
       # We iterated through all nodes without making any modifications: we're
@@ -140,9 +140,9 @@ def FastCreateRandom():
       else:
         # Abort, try again.
         return FastCreateRandom()
-      g.add_edge("root", random_statement, flow="call")
+      g.add_edge("root", random_statement, flow="call", key=0)
     else:
-      g.add_edge("root", node, flow="call")
+      g.add_edge("root", node, flow="call", key=0)
 
   # Abort, try again.
   if not g.number_of_nodes():
