@@ -147,7 +147,7 @@ def BatchedGraphReader(
     with graph_db.Session() as session:
       with ctx.Profile(
         2,
-        f"[reader {os.getpid()}] Read {humanize.BinaryPrefix(batch_size, 'B')} "
+        f"[reader] Read {humanize.BinaryPrefix(batch_size, 'B')} "
         f"batch of {end_i - i} unlabelled graphs",
       ):
         start_id = ids_and_sizes_to_do[i][0]
@@ -197,19 +197,20 @@ def MakeAnnotatedGraphs(
 ) -> Tuple[float, int, List[graph_tuple_database.GraphTuple]]:
   """Multiprocess worker."""
   start_time = time.time()
+  thread_id = app.UnsignedThreadId()
 
   analysis: str = packed_args[0]
   graphs: List[unlabelled_graph_database.ProgramGraph] = packed_args[1]
   ctx: ProgressContext = packed_args[2]
 
-  ctx.Log(3, "[worker %s] Processing %s graphs", os.getpid(), len(graphs))
+  ctx.Log(3, "[worker %s] Processing %s graphs", thread_id, len(graphs))
 
   annotator = GetDataFlowGraphAnnotator(analysis)
 
   graph_tuples: List[graph_tuple_database.GraphTuple] = []
   for i, program_graph in enumerate(graphs):
     with ctx.Profile(
-      3, f"[worker {os.getpid()}] Processed graph [{i+1}/{len(graphs)}]"
+      3, f"[worker {thread_id}] Processed graph [{i+1}/{len(graphs)}]"
     ):
       graph = programl.ProgramGraphToNetworkX(program_graph.proto)
       try:
@@ -294,8 +295,7 @@ class DatasetGenerator(threading.Thread):
       end_time = time.time()
       self.ctx.Log(
         2,
-        "[writer %s] Processed %s graphs (%s graph tuples, %s) in %s",
-        os.getpid(),
+        "[writer] Processed %s graphs (%s graph tuples, %s) in %s",
         graph_count,
         len(graph_tuples),
         humanize.BinaryPrefix(tuples_size, "B"),
