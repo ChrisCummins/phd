@@ -187,3 +187,6 @@ def _MyLoggingPrefix(record):
 
 # Swap out absl's logging formatter for my own.
 absl_logging.get_absl_log_prefix = _MyLoggingPrefix
+
+# A function that computes the thread ID.
+UnsignedThreadId = absl_logging._get_thread_id
