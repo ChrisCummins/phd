@@ -1,7 +1,9 @@
 """Internal logging library implementation."""
 import fnmatch
 import functools
+import logging
 import sys
+import time
 
 from absl import flags as absl_flags
 from absl import logging as absl_logging
@@ -148,3 +150,40 @@ def SetLogLevel(level: int) -> None:
     level: the verbosity level as an integer.
   """
   absl_logging.set_verbosity(level)
+
+
+def _MyLoggingPrefix(record):
+  """Returns the log prefix for the log record.
+
+  This is a copy of absl_logging.get_absl_log_prefix(), but with reduced
+  timestamp precision (no microseconds), and no thread ID.
+
+  Args:
+    record: logging.LogRecord, the record to get prefix for.
+  """
+  created_tuple = time.localtime(record.created)
+
+  critical_prefix = ""
+  level = record.levelno
+  if absl_logging._is_non_absl_fatal_record(record):
+    # When the level is FATAL, but not logged from absl, lower the level so
+    # it's treated as ERROR.
+    level = logging.ERROR
+    critical_prefix = absl_logging._CRITICAL_PREFIX
+  severity = absl_logging.converter.get_initial_for_level(level)
+
+  return "%c%02d%02d %02d:%02d:%02d %s:%d] %s" % (
+    severity,
+    created_tuple.tm_mon,
+    created_tuple.tm_mday,
+    created_tuple.tm_hour,
+    created_tuple.tm_min,
+    created_tuple.tm_sec,
+    record.filename,
+    record.lineno,
+    critical_prefix,
+  )
+
+
+# Swap out absl's logging formatter for my own.
+absl_logging.get_absl_log_prefix = _MyLoggingPrefix
