@@ -86,6 +86,13 @@ app.DEFINE_integer(
 classifier_base.MODEL_FLAGS.add("auxiliary_inputs_dense_layer_size")
 
 app.DEFINE_boolean(
+  "use_lr_schedule",
+  False,
+  "Whether to use a warmup-train-finetune learning rate schedule.",
+)
+classifier_base.MODEL_FLAGS.add("use_lr_schedule")
+
+app.DEFINE_boolean(
   "use_dsc_loss",
   False,
   "Whether to use the DSC loss instead of Cross Entropy."
@@ -582,7 +589,7 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
             self.placeholders[
               "learning_rate_multiple"
             ]: base_utils.WarmUpAndFinetuneLearningRateSchedule(
-              self.epoch_num, FLAGS.num_epochs
+              self.epoch_num, FLAGS.epoch_count
             )
             if FLAGS.use_lr_schedule
             else 1.0,
@@ -649,15 +656,15 @@ class GgnnClassifier(ggnn.GgnnBaseModel):
 
 
 def RunKFoldOrDie():
-  for test_group in FLAGS.groups:
-    app.Log(1, "Testing group %s on database %s", test_group, FLAGS.graph_db)
+  for test_split in FLAGS.groups:
+    app.Log(1, "Testing group %s on database %s", test_split, FLAGS.graph_db)
 
-    test_group_as_num = int(test_group)
-    assert 10 > test_group_as_num >= 0
-    val_group = str((test_group_as_num + 1) % 10)
+    test_split_as_num = int(test_split)
+    assert 10 > test_split_as_num >= 0
+    val_split = str((test_split_as_num + 1) % 10)
 
-    FLAGS.test_group = test_group
-    FLAGS.val_group = val_group
+    FLAGS.test_split = test_split
+    FLAGS.val_split = val_split
     classifier_base.Run(GgnnClassifier)
 
 

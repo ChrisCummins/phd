@@ -11,7 +11,7 @@ def stamp(stuff):
 
 
 def ggnn_devmap_hyperopt(
-  start_step=0, gpus=[0, 1, 2, 3], how_many=None, test_groups="kfold"
+  start_step=0, gpus=[0, 1, 2, 3], how_many=None, test_splits="kfold"
 ):
   # GGNN DEVMAP HYPER OPT SERIES
   # fix
@@ -81,7 +81,7 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
 --graph_db='sqlite:////users/zfisches/db/devmap_{dataset}_20191113.db' \
 --log_db='sqlite:////users/zfisches/{log_db}' \
 --working_dir='/users/zfisches/logs_ggnn_devmap_20191117' \
---num_epochs=150 \
+--epoch_count=150 \
 --alsologtostderr \
 --position_embeddings={pos} \
 --layer_timesteps={timesteps} \
@@ -95,12 +95,12 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
 
   build_command = "bazel build //deeplearning/ml4pl/models/ggnn"
 
-  if test_groups == "kfold":
+  if test_splits == "kfold":
     template += " --kfold"
-    test_groups = ["kfold"]
+    test_splits = ["kfold"]
   else:
-    template += " --test_group={test_group} --val_group={val_group}"
-  for g in test_groups:
+    template += " --test_split={test_split} --val_split={val_split}"
+  for g in test_splits:
     path = base_path / str(g)
     path.mkdir(parents=True, exist_ok=True)
     readme = open(path / "README.txt", "w")
@@ -122,7 +122,7 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
       )
       if not g == "kfold":
         config.update(
-          {"timelimit": "00:30:00", "test_group": g, "val_group": (g + 1) % 9}
+          {"timelimit": "00:30:00", "test_split": g, "val_split": (g + 1) % 9}
         )
       else:  # kfold 4h
         config.update({"timelimit": "04:00:00"})
@@ -153,4 +153,4 @@ if __name__ == "__main__":
   base_path = Path(
     "/users/zfisches/phd/deeplearning/ml4pl/scripts/devmap_runs/"
   )
-  ggnn_devmap_hyperopt(test_groups=tgs)
+  ggnn_devmap_hyperopt(test_splits=tgs)

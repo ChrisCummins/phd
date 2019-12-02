@@ -24,10 +24,10 @@ def db(tempdir: pathlib.Path) -> log_database.Database:
   return log_database.Database(f"sqlite:///{tempdir}/db")
 
 
-def GenerateRandomBatchLogs(run_id: str, num_epochs: int = 3):
+def GenerateRandomBatchLogs(run_id: str, epoch_count: int = 3):
   """Generate batch logs with fake data."""
   global_step = 0
-  for epoch_num in range(num_epochs):
+  for epoch_num in range(epoch_count):
     for epoch_type in ["train", "val", "test"]:
       for batch_num in range(100):
         log = log_database.BatchLogMeta(

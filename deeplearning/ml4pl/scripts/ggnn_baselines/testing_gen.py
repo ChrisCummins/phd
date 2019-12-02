@@ -35,7 +35,7 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
     --log_db='{log_db}' \
     --working_dir='/users/zfisches/logs_20191117' \
     --layer_timesteps=30 \
-    --num_epochs=120 \
+    --epoch_count=120 \
     --batch_scores_averaging_method=binary \
     --max_train_per_epoch=10000 \
     --max_val_per_epoch=2000 \

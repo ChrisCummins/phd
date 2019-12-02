@@ -182,7 +182,7 @@ def test_Train(
 
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
-  model.Train(num_epochs=1)
+  model.Train(epoch_count=1)
   assert model.best_epoch_num == 1
 
 
@@ -197,11 +197,11 @@ def test_Train_epoch_num(
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
   assert model.epoch_num == 0
-  model.Train(num_epochs=1)
+  model.Train(epoch_count=1)
   assert model.epoch_num == 1
-  model.Train(num_epochs=1)
+  model.Train(epoch_count=1)
   assert model.epoch_num == 2
-  model.Train(num_epochs=2)
+  model.Train(epoch_count=2)
   assert model.epoch_num == 4
 
 
@@ -215,7 +215,7 @@ def test_Train_batch_log_count(
 
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
-  model.Train(num_epochs=1)
+  model.Train(epoch_count=1)
   with log_db.Session() as session:
     # 10 train + 10 val + 10 test logs
     assert session.query(log_database.BatchLogMeta).count() == 30
@@ -232,7 +232,7 @@ def test_Train_batch_log_count(
     for batch_log_meta in query:
       assert not batch_log_meta.batch_log
 
-  model.Train(num_epochs=1)
+  model.Train(epoch_count=1)
   with log_db.Session() as session:
     # + 10 train + 10 train (no change to val acc so there's no new test logs)
     assert session.query(log_database.BatchLogMeta).count() == 50
@@ -249,7 +249,7 @@ def test_Train_keeps_a_single_checkpoint_and_set_of_batch_logs(
 
   model = MockModel(graph_db, log_db)
   model.InitializeModel()
-  model.Train(num_epochs=1)
+  model.Train(epoch_count=1)
 
   # Force the model to believe that it performed worse than it did so that when
   # we next call Train() it bumps the "best" accuracy.
@@ -260,7 +260,7 @@ def test_Train_keeps_a_single_checkpoint_and_set_of_batch_logs(
   )
   assert model.best_epoch_validation_accuracy == -1  # Sanity check
 
-  model.Train(num_epochs=1)
+  model.Train(epoch_count=1)
   # assert model.best_epoch_validation_accuracy == 1  # Sanity check
 
   with log_db.Session() as session:

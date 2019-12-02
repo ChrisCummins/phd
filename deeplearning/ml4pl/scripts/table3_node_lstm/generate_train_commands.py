@@ -32,7 +32,7 @@ bazel run deeplearning/ml4pl/models/lstm:lstm_node_classifier -- \
 --max_train_per_epoch=10000 \
 --max_val_per_epoch=2000 \
 --notest_on_improvement \
---num_epochs=50 \
+--epoch_count=50 \
     "
   for device, dataset in zip(devices, datasets):
     if dataset == "ml4pl_liveness":

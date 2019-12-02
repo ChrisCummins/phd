@@ -47,7 +47,7 @@ GGNN = bazelutil.DataPath("phd/deeplearning/ml4pl/models/ggnn/ggnn")
 
 
 def GetModelCommandFromFlagsOrDie(
-  graph_db: str, val_group: str, test_group: str
+  graph_db: str, val_split: str, test_split: str
 ):
   if not FLAGS.log_db:
     app.FatalWithoutStackTrace("--log_db must be set")
@@ -63,10 +63,10 @@ def GetModelCommandFromFlagsOrDie(
     FLAGS.working_dir,
     "--batch_scores_averaging_method",
     "weighted",
-    "--test_group",
-    test_group,
-    "--val_group",
-    val_group,
+    "--test_split",
+    test_split,
+    "--val_split",
+    val_split,
     "--graph_reader_buffer_size",
     FLAGS.graph_reader_buffer_size,
   ]
@@ -86,7 +86,7 @@ def GetModelCommandFromFlagsOrDie(
   if FLAGS.model == "zero_r":
     return [
       str(ZERO_R),
-      "--num_epochs",
+      "--epoch_count",
       "1",
       "--batch_size",
       "100000",
@@ -96,7 +96,7 @@ def GetModelCommandFromFlagsOrDie(
       app.FatalWithoutStackTrace("--bytecode_db must be set")
     lstm_flags = [
       str(LSTM),
-      "--num_epochs",
+      "--epoch_count",
       "50",
       "--bytecode_db",
       FLAGS.bytecode_db,
@@ -120,7 +120,7 @@ def GetModelCommandFromFlagsOrDie(
     return lstm_flags
   elif FLAGS.model == "ggnn":
     return (
-      [str(GGNN), "--num_epochs", "300", "--vmodule", "*=4",]
+      [str(GGNN), "--epoch_count", "300", "--vmodule", "*=4",]
       + base_flags
       + ggnn_flags
     )
@@ -129,12 +129,12 @@ def GetModelCommandFromFlagsOrDie(
 
 
 def RunKFoldOnGraphsOrDie(graph_db: str):
-  for test_group in FLAGS.groups:
-    app.Log(1, "Testing group %s on database %s", test_group, graph_db)
-    test_group_as_num = int(test_group)
-    assert 10 > test_group_as_num >= 0
-    val_group = str((test_group_as_num + 1) % 10)
-    cmd = GetModelCommandFromFlagsOrDie(graph_db, val_group, test_group)
+  for test_split in FLAGS.groups:
+    app.Log(1, "Testing group %s on database %s", test_split, graph_db)
+    test_split_as_num = int(test_split)
+    assert 10 > test_split_as_num >= 0
+    val_split = str((test_split_as_num + 1) % 10)
+    cmd = GetModelCommandFromFlagsOrDie(graph_db, val_split, test_split)
     app.Log(1, "$ %s", " ".join(cmd))
     process = subprocess.Popen(cmd)
     process.communicate()

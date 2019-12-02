@@ -133,7 +133,6 @@ class GgnnBaseModel(classifier_base.ClassifierBase):
     self.sess = tf.compat.v1.Session(graph=self.graph, config=config)
 
     with self.graph.as_default():
-      tf.compat.v1.set_random_seed(FLAGS.random_seed)
       with prof.Profile("Made model"):
         self.placeholders = utils.MakePlaceholders(self.stats)
 

@@ -209,11 +209,11 @@ def GetLeaderboard(
     )
     query = query.filter(
       log_database.Parameter.parameter
-      == "deeplearning.ml4pl.models.classifier_base.test_group"
+      == "deeplearning.ml4pl.models.classifier_base.test_split"
     )
-    test_group_df = pdutil.QueryToDataFrame(session, query)
-    test_group_df["test"] = [pickle.loads(x) for x in test_group_df["test"]]
-    test_group_df.set_index("run_id", inplace=True)
+    test_split_df = pdutil.QueryToDataFrame(session, query)
+    test_split_df["test"] = [pickle.loads(x) for x in test_split_df["test"]]
+    test_split_df.set_index("run_id", inplace=True)
 
     # Create a table with the names of the val groups.
     query = session.query(
@@ -225,11 +225,11 @@ def GetLeaderboard(
     )
     query = query.filter(
       log_database.Parameter.parameter
-      == "deeplearning.ml4pl.models.classifier_base.val_group"
+      == "deeplearning.ml4pl.models.classifier_base.val_split"
     )
-    val_group_df = pdutil.QueryToDataFrame(session, query)
-    val_group_df["val"] = [pickle.loads(x) for x in val_group_df["val"]]
-    val_group_df.set_index("run_id", inplace=True)
+    val_split_df = pdutil.QueryToDataFrame(session, query)
+    val_split_df["val"] = [pickle.loads(x) for x in val_split_df["val"]]
+    val_split_df.set_index("run_id", inplace=True)
 
     # Create a table with the names of the models.
     query = session.query(
@@ -247,7 +247,7 @@ def GetLeaderboard(
     model_df.set_index("run_id", inplace=True)
 
     df = graph_df.join(
-      [model_df, test_group_df, val_group_df, batch_df, checkpoint_df]
+      [model_df, test_split_df, val_split_df, batch_df, checkpoint_df]
     )
 
     best_epoch_df = GetBestEpochStats(session, df)

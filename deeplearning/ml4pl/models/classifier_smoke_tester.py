@@ -99,7 +99,7 @@ def RunSmokeTest(
       model.InitializeModel()
 
     with prof.Profile("Trained model"):
-      model.Train(num_epochs=2)
+      model.Train(epoch_count=2)
 
     # Check a properties of logs.
     with log_db.Session() as session:

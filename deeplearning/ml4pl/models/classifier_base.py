@@ -1,8 +1,10 @@
 """Base class for implementing classifier models."""
+import enum
 import pickle
 import random
 import time
-import typing
+from typing import Any
+from typing import Iterable
 
 import numpy as np
 import sklearn.metrics
@@ -13,8 +15,10 @@ import build_info
 from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.graphs import graph_database
 from deeplearning.ml4pl.graphs.labelled import graph_batcher
+from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import base_utils as utils
 from deeplearning.ml4pl.models import log_database
+from deeplearning.ml4pl.models import logger
 from labm8.py import app
 from labm8.py import decorators
 from labm8.py import humanize
@@ -22,75 +26,14 @@ from labm8.py import jsonutil
 from labm8.py import pbutil
 from labm8.py import ppar
 from labm8.py import prof
+from labm8.py import progress
 
 
 FLAGS = app.FLAGS
 
-##### Beginning of flag declarations.
-#
-# Some of these flags define parameters which must be equal when restoring from
-# file, such as the hidden layer sizes. Other parameters may change between
-# runs of the same model, such as the input data batch size. To accomodate for
-# this, a ClassifierBase.GetModelFlagNames() method returns the list of flags
-# which must be consistent between runs of the same model.
-#
-# For the sake of readability, these important model flags are saved into a
-# global set MODEL_FLAGS here, so that the declaration of model flags is local
-# to the declaration of the flag.
-MODEL_FLAGS = set()
-
-app.DEFINE_output_path(
-  "working_dir",
-  "/tmp/deeplearning/ml4pl/models/",
-  "The directory to write files to.",
-  is_dir=True,
-)
-
 app.DEFINE_database(
   "log_db", log_database.Database, None, "The database to write logs to."
 )
-
-app.DEFINE_integer("num_epochs", 300, "The number of epochs to train for.")
-
-app.DEFINE_integer("random_seed", 42, "A random seed value.")
-
-app.DEFINE_string(
-  "batch_scores_averaging_method",
-  "weighted",
-  "Selects the averaging method to use when computing recall/precision/F1 "
-  "scores. See <https://scikit-learn.org/stable/modules/generated/sklearn"
-  ".metrics.f1_score.html>",
-)
-MODEL_FLAGS.add("batch_scores_averaging_method")
-
-app.DEFINE_boolean(
-  "test_on_improvement",
-  True,
-  "If true, test model accuracy on test data when the validation accuracy "
-  "improves.",
-)
-
-app.DEFINE_integer(
-  "batch_size",
-  80000,
-  "The maximum number of nodes to include in each graph batch.",
-)
-
-app.DEFINE_integer(
-  "max_train_per_epoch",
-  None,
-  "Use this flag to limit the maximum number of instances used in a single "
-  "training epoch. For k-fold cross-validation, each of the k folds will "
-  "train on a maximum of this many graphs.",
-)
-
-app.DEFINE_integer(
-  "max_val_per_epoch",
-  None,
-  "Use this flag to limit the maximum number of instances used in a single "
-  "validation epoch.",
-)
-
 app.DEFINE_string(
   "restore_model",
   None,
@@ -100,58 +43,19 @@ app.DEFINE_string(
   "the most recent epoch is used. Model checkpoints are loaded from "
   "the log database.",
 )
-MODEL_FLAGS.add("restore_model")
-
 app.DEFINE_boolean(
   "test_only",
   False,
   "If this flag is set, only a single pass of the test set is ran.",
 )
 
-app.DEFINE_string(
-  "val_group",
-  "val",
-  "The name of the group to be used for validating model performance. All "
-  "groups except --val_group and --test_group will be used for training.",
-)
-
-app.DEFINE_string(
-  "test_group",
-  "test",
-  "The name of the hold-out group to be used for testing. All groups "
-  "except --val_group and --test_group will be used for training.",
-)
-
-app.DEFINE_integer(
-  "patience",
-  300,
-  "The number of epochs to train for without any improvement in validation "
-  "accuracy before stopping.",
-)
-
-app.DEFINE_list(
-  "batch_log_types",
-  ["val", "test"],
-  "The types of epochs to record per-instance batch logs for.",
-)
-
-app.DEFINE_boolean(
-  "use_lr_schedule",
-  False,
-  "whether to use a warmup-train-finetune learning rate schedule."
-  "doesn't support LSTMs with keras currently.",
-)
-
-##### End of flag declarations.
-
-
 
 class ClassifierBase(object):
   """Abstract base class for implementing classification models.
 
   Subclasses must implement the following methods:
-    MakeMinibatchIterator()
-    RunMinibatch()
+    MakeBatch()
+    RunBatch()
 
   And may optionally wish to implement these additional methods:
     InitializeModel()
@@ -160,9 +64,7 @@ class ClassifierBase(object):
     CheckThatModelFlagsAreEquivalent()
   """
 
-  def MakeMinibatchIterator(
-    self, epoch_type: str, groups: typing.List[str], print_context: typing.Any
-  ) -> typing.Iterable[typing.Tuple[log_database.BatchLogMeta, typing.Any]]:
+  def MakeBatch(self, graphs: Iterable[graph_tuple_database.GraphTuple]) -> Any:
     """Create and return an iterator over mini-batches of data.
 
     Args:
@@ -172,83 +74,33 @@ class ClassifierBase(object):
 
     Returns:
       An iterator of mini-batches and batch logs, where each
-      mini-batch will be passed as an argument to RunMinibatch().
+      mini-batch will be passed as an argument to RunBatch().
     """
     raise NotImplementedError("abstract class")
 
-  # The result of running a minibatch. Return 1-hot target values and the raw
-  # 1-hot outputs of the model. These are used to compute evaluation metrics.
-  class MinibatchResults(typing.NamedTuple):
-    y_true_1hot: np.array  # Shape [num_labels,num_classes]
-    y_pred_1hot: np.array  # Shape [num_labels,num_classes]
-
-  def RunMinibatch(
-    self,
-    log: log_database.BatchLogMeta,
-    batch: typing.Any,
-    print_context: typing.Any = None,
-  ) -> MinibatchResults:
+  def RunBatch(self, batch: Any) -> logger.MinibatchResults:
     """Process a mini-batch of data using the model.
 
     Args:
-      log: The mini-batch log returned by MakeMinibatchIterator().
-      batch: The batch data returned by MakeMinibatchIterator().
+      log: The mini-batch log returned by MakeBatch().
+      batch: The batch data returned by MakeBatch().
 
     Returns:
       The target values for the batch, and the predicted values.
     """
     raise NotImplementedError("abstract class")
 
-  def GetModelFlagNames(self) -> typing.Iterable[str]:
-    """Return the 'model flags', a subset of all flags which are used to
-    describe the model architecture. These flags must be consistent across runs
-    of the same model. Subclasses may extend this method to mark additional
-    flags as important.
-    """
-    return MODEL_FLAGS
-
-  def __init__(
-    self, db: graph_database.Database, log_db: log_database.Database
-  ):
+  def __init__(self, graph_db: graph_tuple_database.Database):
     """Constructor. Subclasses should call this first."""
-    self._initialized = False  # Set by LoadModel() or InitializeModel()
+    # Set by LoadModel() or InitializeModel().
+    self._initialized = False
 
-    self.run_id: str = str(run_id.RunId.GenerateGlobalUnique())
-    app.Log(1, "Run ID: %s", self.run_id)
-
-    self.batcher = graph_batcher.GraphBatcher(db)
-    self.graph_db = db
-    self.stats = self.batcher.stats
-
-    self.working_dir = FLAGS.working_dir
-    self.working_dir.mkdir(exist_ok=True, parents=True)
-
-    # Write app.Log() calls to file.
-    FLAGS.alsologtostderr = True
-    app.Log(1, "Writing logs to `%s`", self.working_dir)
-    app.LogToDirectory(self.working_dir, self.run_id)
-
-    self.log_db = log_db
-    app.Log(1, "Writing batch logs to `%s`", self.log_db.url)
-    self._CreateExperimentalParameters()
-
-    app.Log(
-      1,
-      "Build information: %s",
-      jsonutil.format_json(pbutil.ToJson(build_info.GetBuildInfo())),
-    )
-
-    app.Log(1, "Model flags: %s", jsonutil.format_json(self.ModelFlagsToDict()))
-
-    app.Log(1, "All Flags set in this run: \n%s", FLAGS.flags_into_string())
-
-    random.seed(FLAGS.random_seed)
-    np.random.seed(FLAGS.random_seed)
+    self.graph_db = graph_db
 
     # Progress counters. These are saved and restored from file.
     self.epoch_num = 0
-    self.global_training_step = 0
     self.best_epoch_num = 0
+    self.global_step = 0
 
   @decorators.memoized_property
   def labels_dimensionality(self) -> int:
@@ -310,7 +162,7 @@ class ClassifierBase(object):
 
     bar = tqdm.tqdm(
       total=epoch_size,
-      desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.num_epochs}",
+      desc=epoch_type + f" epoch {self.epoch_num}/{FLAGS.epoch_count}",
       unit="graphs",
       position=1,
     )
@@ -321,9 +173,7 @@ class ClassifierBase(object):
 
     batch_type = typing.Tuple[log_database.BatchLogMeta, typing.Any]
     batch_generator: typing.Iterable[batch_type] = ppar.ThreadedIterator(
-      self.MakeMinibatchIterator(
-        epoch_type, groups, print_context=bar.external_write_mode
-      ),
+      self.MakeBatch(epoch_type, groups, print_context=bar.external_write_mode),
       max_queue_size=5,
     )
 
@@ -340,7 +190,7 @@ class ClassifierBase(object):
       log.run_id = self.run_id
 
       # at this point we are pretty sure that batch_data has in fact at least one sequence.
-      targets, predictions = self.RunMinibatch(log, batch_data)
+      targets, predictions = self.RunBatch(log, batch_data)
 
       if targets.shape != predictions.shape:
         raise TypeError(
@@ -432,15 +282,15 @@ class ClassifierBase(object):
     return np.mean(epoch_accuracies)
 
   def Train(
-    self, num_epochs: int, val_group: str = "val", test_group: str = "test"
+    self, epoch_count: int, val_split: str = "val", test_split: str = "test"
   ) -> float:
     """Train and evaluate the model.
 
     Args:
       num_epoch: The number of epochs to run for training and validation.
-      val_group: The name of the dataset group to use for validating model
+      val_split: The name of the dataset group to use for validating model
         performance.
-      test_group: The name of the dataset group to use as holdout test data.
+      test_split: The name of the dataset group to use as holdout test data.
         This group is only used during training if the --test_on_improvement
         flag is set, in which case test group performance is evaluated every
         time that validation accuracy improves.
@@ -448,22 +298,22 @@ class ClassifierBase(object):
     Returns:
       The best validation accuracy of the model.
     """
-    if val_group == test_group:
+    if val_split == test_split:
       raise app.UsageError(
-        f"val_group `{val_group}` == test_group `{test_group}`!"
+        f"val_split `{val_split}` == test_split `{test_split}`!"
       )
     # We train on everything except the validation and test data.
     train_groups = list(
-      set(self.batcher.stats.groups) - {val_group, test_group}
+      set(self.batcher.stats.groups) - {val_split, test_split}
     )
 
     for epoch_num in tqdm.tqdm(
-      range(self.epoch_num, self.epoch_num + num_epochs),
+      range(self.epoch_num, self.epoch_num + epoch_count),
       unit="ep",
       initial=self.epoch_num,
-      total=self.epoch_num + num_epochs,
+      total=self.epoch_num + epoch_count,
       position=0,
-      desc=f"(Grps:{test_group}|{val_group}) {self.run_id}",
+      desc=f"(Grps:{test_split}|{val_split}) {self.run_id}",
     ):
       self.epoch_num = epoch_num + 1
       epoch_start_time = time.time()
@@ -480,7 +330,7 @@ class ClassifierBase(object):
         1,
         "Epoch %s/%s completed in %s. Train " "accuracy: %.2f%%",
         self.epoch_num,
-        FLAGS.num_epochs,
+        FLAGS.epoch_count,
         humanize.Duration(time.time() - epoch_start_time),
         train_acc * 100,
       )
@@ -489,7 +339,7 @@ class ClassifierBase(object):
           1,
           "learning_rate_multiple for next epoch is: %s",
           utils.WarmUpAndFinetuneLearningRateSchedule(
-            self.epoch_num, FLAGS.num_epochs
+            self.epoch_num, FLAGS.epoch_count
           ),
         )
 
@@ -497,7 +347,7 @@ class ClassifierBase(object):
       previous_best_val_acc = self.best_epoch_validation_accuracy
 
       # Validate.
-      val_acc = self.RunEpoch("val", [val_group])
+      val_acc = self.RunEpoch("val", [val_split])
       app.Log(
         1,
         "Epoch %s completed in %s. Validation "
@@ -516,7 +366,9 @@ class ClassifierBase(object):
         # Compute the ratio of the new best validation accuracy against the
         # old best validation accuracy.
         if previous_best_val_acc:
-          accuracy_ratio = val_acc / max(previous_best_val_acc, SMALL_NUMBER)
+          accuracy_ratio = val_acc / max(
+            previous_best_val_acc, utils.SMALL_NUMBER
+          )
           relative_increase = f", (+{accuracy_ratio - 1:.3%} relative)"
         else:
           relative_increase = ""
@@ -561,7 +413,7 @@ class ClassifierBase(object):
 
         # Run on test set if we haven't already.
         if FLAGS.test_on_improvement:
-          test_acc = self.RunEpoch("test", [test_group])
+          test_acc = self.RunEpoch("test", [test_split])
           app.Log(
             1,
             "Test accuracy at epoch %s: %.3f%%",
@@ -836,11 +688,11 @@ def Run(model_class):
       model.InitializeModel()
 
   if FLAGS.test_only:
-    test_acc = model.RunEpoch("test", [FLAGS.test_group])
+    test_acc = model.RunEpoch("test", [FLAGS.test_split])
     app.Log(1, "Test accuracy %.4f%%", test_acc * 100)
   else:
     model.Train(
-      num_epochs=FLAGS.num_epochs,
-      val_group=FLAGS.val_group,
-      test_group=FLAGS.test_group,
+      epoch_count=FLAGS.epoch_count,
+      val_split=FLAGS.val_split,
+      test_split=FLAGS.test_split,
     )
