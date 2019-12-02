@@ -47,14 +47,6 @@ app.DEFINE_output_path(
 )
 
 app.DEFINE_database(
-  "graph_db",
-  graph_database.Database,
-  None,
-  "The database to read graph data from.",
-  must_exist=True,
-)
-
-app.DEFINE_database(
   "log_db", log_database.Database, None, "The database to write logs to."
 )
 
