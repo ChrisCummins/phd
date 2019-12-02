@@ -152,7 +152,6 @@ app.DEFINE_boolean(
 
 ##### End of flag declarations.
 
-SMALL_NUMBER = 1e-7
 
 
 class ClassifierBase(object):

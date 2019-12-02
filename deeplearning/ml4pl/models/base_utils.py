@@ -53,6 +53,8 @@ def WarmUpAndFinetuneLearningRateSchedule(curr_epoch, total_epochs):
   return factor
 
 
+SMALL_NUMBER = 1e-7
+
 # alternatively could use something like this:
 
 # def GetLearningRate(epoch_num: int) -> float:
