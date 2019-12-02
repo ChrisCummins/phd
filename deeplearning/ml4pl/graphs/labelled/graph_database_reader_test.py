@@ -153,7 +153,6 @@ def test_BufferedGraphReader_limit(
   assert len(graphs) == min(limit, 10000)
 
 
-@test.XFail(reason="Class-based reader implementation is not an iterator")
 @test.Parametrize("buffer_size_mb", READER_BUFFER_SIZES)
 @test.Parametrize("order", ALL_READER_ORDERS)
 def test_BufferedGraphReader_next(
