@@ -7,6 +7,16 @@ FLAGS = test.FLAGS
 
 
 @decorators.loop_for(seconds=2)
+@test.Parametrize("node_count", (5, 10, 20))
+def test_CreateRandomGraphTuple_node_count(node_count: int):
+  """Test generating protos with specific node counts."""
+  graph_tuple = random_graph_tuple_generator.CreateRandomGraphTuple(
+    node_count=node_count
+  )
+  assert graph_tuple.node_count == node_count
+
+
+@decorators.loop_for(seconds=2)
 @test.Parametrize("disjoint_graph_count", (1, 2, 3))
 @test.Parametrize("node_x_dimensionality", (1, 2))
 @test.Parametrize("node_y_dimensionality", (0, 1, 2))

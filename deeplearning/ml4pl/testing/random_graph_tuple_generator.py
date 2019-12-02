@@ -16,6 +16,7 @@ def CreateRandomGraphTuple(
   node_y_dimensionality: int = 0,
   graph_x_dimensionality: int = 0,
   graph_y_dimensionality: int = 0,
+  node_count: int = None,
 ) -> graph_tuple.GraphTuple:
   """Generate a random graph tuple.
 
@@ -36,6 +37,7 @@ def CreateRandomGraphTuple(
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=graph_x_dimensionality,
       graph_y_dimensionality=graph_y_dimensionality,
+      node_count=node_count,
     )
     for _ in range(disjoint_graph_count)
   ]

@@ -16,6 +16,7 @@ def CreateRandomGraph(
   node_y_dimensionality: int = 0,
   graph_x_dimensionality: int = 0,
   graph_y_dimensionality: int = 0,
+  node_count: int = None,
 ) -> nx.MultiDiGraph:
   """Generate a random graph.
 
@@ -35,6 +36,7 @@ def CreateRandomGraph(
     node_y_dimensionality=node_y_dimensionality,
     graph_x_dimensionality=graph_x_dimensionality,
     graph_y_dimensionality=graph_y_dimensionality,
+    node_count=node_count,
   )
   return programl.ProgramGraphToNetworkX(proto)
 

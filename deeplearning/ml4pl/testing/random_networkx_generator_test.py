@@ -7,6 +7,14 @@ FLAGS = test.FLAGS
 
 
 @decorators.loop_for(seconds=2)
+@test.Parametrize("node_count", (5, 10, 20))
+def test_CreateRandomGraph_node_count(node_count: int):
+  """Test generating protos with specific node counts."""
+  g = random_networkx_generator.CreateRandomGraph(node_count=node_count)
+  assert g.number_of_nodes() == node_count
+
+
+@decorators.loop_for(seconds=2)
 @test.Parametrize("node_x_dimensionality", (1, 2))
 @test.Parametrize("node_y_dimensionality", (0, 1, 2))
 @test.Parametrize("graph_x_dimensionality", (0, 1, 2))
@@ -24,8 +32,9 @@ def test_CreateRandomGraph(
     graph_x_dimensionality=graph_x_dimensionality,
     graph_y_dimensionality=graph_y_dimensionality,
   )
-  assert len(g.nodes[0]["x"]) == node_x_dimensionality
-  assert len(g.nodes[0]["y"]) == node_y_dimensionality
+  for _, data in g.nodes(data=True):
+    assert len(data["x"]) == node_x_dimensionality
+    assert len(data["y"]) == node_y_dimensionality
   assert len(g.graph["x"]) == graph_x_dimensionality
   assert len(g.graph["y"]) == graph_y_dimensionality
 

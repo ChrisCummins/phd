@@ -7,6 +7,14 @@ FLAGS = test.FLAGS
 
 
 @decorators.loop_for(seconds=2)
+@test.Parametrize("node_count", (5, 10, 20))
+def test_CreateRandomProto_node_count(node_count: int):
+  """Test generating protos with specific node counts."""
+  proto = random_programl_generator.CreateRandomProto(node_count=node_count)
+  assert len(proto.node) == node_count
+
+
+@decorators.loop_for(seconds=2)
 @test.Parametrize("node_x_dimensionality", (1, 2))
 @test.Parametrize("node_y_dimensionality", (0, 1, 2))
 @test.Parametrize("graph_x_dimensionality", (0, 1, 2))
@@ -25,6 +33,16 @@ def test_CreateRandomProto(
     graph_y_dimensionality=graph_y_dimensionality,
   )
   assert proto.IsInitialized()
+  for node in proto.node:
+    assert len(node.x) == node_x_dimensionality
+    assert len(node.y) == node_y_dimensionality
+    if node.function:
+      assert node.function <= len(proto.function)
+  for edge in proto.edge:
+    assert edge.source_node < len(proto.node)
+    assert edge.destination_node < len(proto.node)
+  assert len(proto.x) == graph_x_dimensionality
+  assert len(proto.y) == graph_y_dimensionality
 
 
 def test_EnumerateProtoTestSet():

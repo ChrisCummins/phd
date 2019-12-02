@@ -61,7 +61,6 @@ py_library(
         "//deeplearning/ml4pl/graphs:programl",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
         "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
-        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
         "//labm8/py:bazelutil",
         "//labm8/py:test",
     ],
