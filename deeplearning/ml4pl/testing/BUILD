@@ -6,7 +6,7 @@ py_library(
     srcs = ["random_graph_tuple_generator.py"],
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
-        ":random_programl_generator",
+        ":random_networkx_generator",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
         "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
         "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
@@ -18,6 +18,30 @@ py_test(
     name = "random_graph_tuple_generator_test",
     timeout = "long",
     srcs = ["random_graph_tuple_generator_test.py"],
+    deps = [
+        ":random_graph_tuple_generator",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
+
+py_library(
+    name = "random_networkx_generator",
+    testonly = 1,
+    srcs = ["random_networkx_generator.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        ":random_programl_generator",
+        "//deeplearning/ml4pl/graphs:programl",
+        "//labm8/py:test",
+        "//third_party/py/networkx",
+    ],
+)
+
+py_test(
+    name = "random_networkx_generator_test",
+    timeout = "long",
+    srcs = ["random_networkx_generator_test.py"],
     deps = [
         ":random_graph_tuple_generator",
         "//labm8/py:decorators",

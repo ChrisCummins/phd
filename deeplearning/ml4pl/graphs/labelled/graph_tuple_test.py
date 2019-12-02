@@ -5,11 +5,10 @@ import random
 import networkx as nx
 import numpy as np
 
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs import programl_pb2
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
-from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
+from deeplearning.ml4pl.testing import random_graph_tuple_generator
+from deeplearning.ml4pl.testing import random_networkx_generator
 from labm8.py import app
 from labm8.py import decorators
 from labm8.py import fs
@@ -273,63 +272,42 @@ def test_ToNetworkx_graph_y_set(graph: nx.MultiDiGraph):
   assert g.graph["y"] == [1, 2]
 
 
+@test.Fixture(
+  scope="function",
+  params=list(random_networkx_generator.EnumerateGraphTestSet()),
+)
+def real_nx_graph(request) -> nx.MultiDiGraph:
+  return request.param
+
+
+def test_on_real_graph(real_nx_graph: nx.MultiDiGraph):
+  """Test on real graphs."""
+  t = graph_tuple.GraphTuple.CreateFromNetworkX(real_nx_graph)
+  g = t.ToNetworkx()
+  assert g.number_of_nodes() == real_nx_graph.number_of_nodes()
+  assert g.number_of_edges() == real_nx_graph.number_of_edges()
+
+
 # Disjoint graph tests:
 
 
-def CreateRandomGraphTuple(
-  node_y_dimensionality: int = 0,
-  graph_x_dimensionality: int = 0,
-  graph_y_dimensionality: int = 0,
-) -> graph_tuple.GraphTuple:
-  """Generate a random graph tuple.
-
-  Args:
-    node_y_dimensionality: The dimensionality of node y vectors.
-    graph_x_dimensionality: The dimensionality of graph x vectors.
-    graph_y_dimensionality: The dimensionality of graph y vectors.
-
-  Returns:
-    A graph tuple.
-  """
-
-  def RandomList(n: int):
-    return [random.randint(0, 10) for _ in range(n)]
-
-  g = random_cdfg_generator.FastCreateRandom()
-  proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
-
-  if node_y_dimensionality:
-    for node in proto.node:
-      node.y[:] = RandomList(node_y_dimensionality)
-
-  if graph_x_dimensionality:
-    proto.x[:] = RandomList(graph_x_dimensionality)
-
-  if graph_y_dimensionality:
-    proto.y[:] = RandomList(graph_y_dimensionality)
-
-  g = programl.ProgramGraphToNetworkX(proto)
-  return graph_tuple.GraphTuple.CreateFromNetworkX(g)
-
-
 @decorators.loop_for(seconds=5)
+@test.Parametrize("node_x_dimensionality", (1, 2, 3))
 @test.Parametrize("node_y_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_x_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_y_dimensionality", (0, 1, 2, 3))
 def test_FromGraphTuples_single_tuple(
+  node_x_dimensionality: int,
   node_y_dimensionality: int,
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
 ) -> graph_tuple.GraphTuple:
-  t = CreateRandomGraphTuple(
+  t = random_graph_tuple_generator.CreateRandomGraphTuple(
+    node_x_dimensionality=node_x_dimensionality,
     node_y_dimensionality=node_y_dimensionality,
     graph_x_dimensionality=graph_x_dimensionality,
     graph_y_dimensionality=graph_y_dimensionality,
   )
-  # Sanity check the generated tuple.
-  assert t.node_y_dimensionality == node_y_dimensionality
-  assert t.graph_x_dimensionality == graph_x_dimensionality
-  assert t.graph_y_dimensionality == graph_y_dimensionality
 
   # Create a disjoint GraphTuple.
   d = graph_tuple.GraphTuple.FromGraphTuples([t])
@@ -347,14 +325,14 @@ def test_FromGraphTuples_single_tuple(
     # Dimensionalities.
     assert d.node_x_dimensionality == t.node_x_dimensionality
     assert d.node_y_dimensionality == t.node_y_dimensionality
-    # assert d.graph_x_dimensionality == t.graph_x_dimensionality
-    # assert d.graph_y_dimensionality == t.graph_y_dimensionality
+    assert d.graph_x_dimensionality == t.graph_x_dimensionality
+    assert d.graph_y_dimensionality == t.graph_y_dimensionality
 
     # Feature and label vectors.
     assert np.array_equal(d.node_x, t.node_x)
     assert np.array_equal(d.node_y, t.node_y)
-    # assert np.array_equal(d.graph_x, t.graph_x)
-    # assert np.array_equal(d.graph_y, t.graph_y)
+    assert np.array_equal(d.graph_x, t.graph_x)
+    assert np.array_equal(d.graph_y, t.graph_y)
   except AssertionError as e:
     fs.Write("/tmp/graph_tuple_in.pickle", pickle.dumps(t))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(d))
@@ -366,21 +344,25 @@ def test_FromGraphTuples_single_tuple(
 
 
 @decorators.loop_for(seconds=5)
+@test.Parametrize("node_x_dimensionality", (1, 2, 3))
 @test.Parametrize("node_y_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_x_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_y_dimensionality", (0, 1, 2, 3))
 def test_FromGraphTuples_two_tuples(
+  node_x_dimensionality: int,
   node_y_dimensionality: int,
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
 ) -> graph_tuple.GraphTuple:
   tuples_in = [
-    CreateRandomGraphTuple(
+    random_graph_tuple_generator.CreateRandomGraphTuple(
+      node_x_dimensionality=node_x_dimensionality,
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=graph_x_dimensionality,
       graph_y_dimensionality=graph_y_dimensionality,
     ),
-    CreateRandomGraphTuple(
+    random_graph_tuple_generator.CreateRandomGraphTuple(
+      node_x_dimensionality=node_x_dimensionality,
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=graph_x_dimensionality,
       graph_y_dimensionality=graph_y_dimensionality,
@@ -426,21 +408,27 @@ def test_FromGraphTuples_two_tuples(
 # Fuzzers:
 
 
-def CreateRandomNetworkx() -> programl_pb2.ProgramGraph:
-  """Generate a random graph proto."""
-  g = random_cdfg_generator.FastCreateRandom()
-  proto = networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
-  return programl.ProgramGraphToNetworkX(proto)
-
-
 @decorators.loop_for(seconds=60)
 def test_fuzz_graph_tuple_networkx():
   """Fuzz graph tuples with randomly generated graphs."""
-  graph_in = CreateRandomNetworkx()
+  node_x_dimensionality = random.randint(1, 3)
+  node_y_dimensionality = random.randint(0, 3)
+  graph_x_dimensionality = random.randint(0, 3)
+  graph_y_dimensionality = random.randint(0, 3)
+  graph_in = random_networkx_generator.CreateRandomGraph(
+    node_x_dimensionality=node_x_dimensionality,
+    node_y_dimensionality=node_y_dimensionality,
+    graph_x_dimensionality=graph_x_dimensionality,
+    graph_y_dimensionality=graph_y_dimensionality,
+  )
   t = graph_tuple.GraphTuple.CreateFromNetworkX(graph_in)
   try:
     assert t.node_count == graph_in.number_of_nodes()
     assert t.edge_count == graph_in.number_of_edges()
+    assert t.node_x_dimensionality == node_x_dimensionality
+    assert t.node_y_dimensionality == node_y_dimensionality
+    assert t.graph_x_dimensionality == graph_x_dimensionality
+    assert t.graph_y_dimensionality == graph_y_dimensionality
   except AssertionError as e:
     fs.Write("/tmp/graph_in.pickle", pickle.dumps(graph_in))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
@@ -454,6 +442,10 @@ def test_fuzz_graph_tuple_networkx():
     g_out = t.ToNetworkx()
     assert graph_in.number_of_nodes() == g_out.number_of_nodes()
     assert graph_in.number_of_edges() == g_out.number_of_edges()
+    assert len(g_out.nodes[0]["x"]) == node_x_dimensionality
+    assert len(g_out.nodes[0]["y"]) == node_y_dimensionality
+    assert len(g_out.graph["x"]) == graph_x_dimensionality
+    assert len(g_out.graph["y"]) == graph_y_dimensionality
   except AssertionError as e:
     fs.Write("/tmp/graph_in.pickle", pickle.dumps(graph_in))
     fs.Write("/tmp/graph_out.pickle", pickle.dumps(g_out))
@@ -467,18 +459,35 @@ def test_fuzz_graph_tuple_networkx():
 @decorators.loop_for(seconds=60)
 def test_fuzz_disjoint_graph_tuples():
   """Fuzz graph tuples with randomly generated graphs."""
-  num_graphs = random.randint(2, 30)
-  graph_tuples_in = [CreateRandomGraphTuple() for _ in range(num_graphs)]
+  disjoint_graph_count = random.randint(2, 10)
+  node_x_dimensionality = random.randint(1, 3)
+  node_y_dimensionality = random.randint(0, 3)
+  graph_x_dimensionality = random.randint(0, 3)
+  graph_y_dimensionality = random.randint(0, 3)
+
+  graph_tuples_in = [
+    random_graph_tuple_generator.CreateRandomGraphTuple(
+      node_x_dimensionality=node_x_dimensionality,
+      node_y_dimensionality=node_y_dimensionality,
+      graph_x_dimensionality=graph_x_dimensionality,
+      graph_y_dimensionality=graph_y_dimensionality,
+    )
+    for _ in range(disjoint_graph_count)
+  ]
 
   t = graph_tuple.GraphTuple.FromGraphTuples(graph_tuples_in)
 
   try:
-    assert t.disjoint_graph_count == num_graphs
+    assert t.disjoint_graph_count == disjoint_graph_count
     assert t.node_count == sum([d.node_count for d in graph_tuples_in])
     assert t.edge_count == sum([d.edge_count for d in graph_tuples_in])
     assert t.edge_position_max == max(
       [d.edge_position_max for d in graph_tuples_in]
     )
+    assert t.node_x_dimensionality == node_x_dimensionality
+    assert t.node_y_dimensionality == node_y_dimensionality
+    assert t.graph_x_dimensionality == graph_x_dimensionality
+    assert t.graph_y_dimensionality == graph_y_dimensionality
   except AssertionError as e:
     fs.Write("/tmp/graph_tuples_in.pickle", pickle.dumps(graph_tuples_in))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
@@ -492,6 +501,10 @@ def test_fuzz_disjoint_graph_tuples():
   try:
     assert len(graph_tuples_in) == len(graph_tuples_out)
     for tuple_in, tuple_out in zip(graph_tuples_in, graph_tuples_out):
+      assert tuple_out.node_x_dimensionality == node_x_dimensionality
+      assert tuple_out.node_y_dimensionality == node_y_dimensionality
+      assert tuple_out.graph_x_dimensionality == graph_x_dimensionality
+      assert tuple_out.graph_y_dimensionality == graph_y_dimensionality
       for i, (a, b) in enumerate(
         zip(tuple_in.adjacencies, tuple_out.adjacencies)
       ):

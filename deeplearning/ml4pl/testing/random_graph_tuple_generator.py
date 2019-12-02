@@ -4,7 +4,7 @@ from typing import Iterable
 
 from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
-from deeplearning.ml4pl.testing import random_programl_generator
+from deeplearning.ml4pl.testing import random_networkx_generator
 from labm8.py import test
 
 FLAGS = test.FLAGS
@@ -30,8 +30,8 @@ def CreateRandomGraphTuple(
     5. Edges have positions.
     6. The graph is strongly connected.
   """
-  protos = [
-    random_programl_generator.CreateRandomProto(
+  graphs = [
+    random_networkx_generator.CreateRandomGraph(
       node_x_dimensionality=node_x_dimensionality,
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=graph_x_dimensionality,
@@ -40,7 +40,6 @@ def CreateRandomGraphTuple(
     for _ in range(disjoint_graph_count)
   ]
 
-  graphs = [programl.ProgramGraphToNetworkX(proto) for proto in protos]
   graph_tuples = [
     graph_tuple.GraphTuple.CreateFromNetworkX(graph) for graph in graphs
   ]
@@ -53,6 +52,5 @@ def CreateRandomGraphTuple(
 @functools.lru_cache(maxsize=2)
 def EnumerateGraphTupleTestSet() -> Iterable[graph_tuple.GraphTuple]:
   """Enumerate a test set of "real" graph tuples."""
-  for proto in random_programl_generator.EnumerateProtoTestSet():
-    g = programl.ProgramGraphToNetworkX(proto)
-    yield graph_tuple.GraphTuple.CreateFromNetworkX(g)
+  for graph in random_networkx_generator.EnumerateGraphTestSet():
+    yield graph_tuple.GraphTuple.CreateFromNetworkX(graph)
