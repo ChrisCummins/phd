@@ -30,9 +30,22 @@ py_binary(
     visibility = ["//deeplearning/ml4pl:__subpackages__"],
     deps = [
         ":random_graph_tuple_generator",
-        "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
+    ],
+)
+
+py_test(
+    name = "random_graph_tuple_database_generator_test",
+    timeout = "long",
+    srcs = ["random_graph_tuple_database_generator_test.py"],
+    deps = [
+        ":random_graph_tuple_database_generator",
+        ":testing_databases",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
     ],
 )
 
