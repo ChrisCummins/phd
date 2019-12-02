@@ -331,8 +331,14 @@ def test_FromGraphTuples_single_tuple(
     # Feature and label vectors.
     assert np.array_equal(d.node_x, t.node_x)
     assert np.array_equal(d.node_y, t.node_y)
-    assert np.array_equal(d.graph_x, t.graph_x)
-    assert np.array_equal(d.graph_y, t.graph_y)
+    if t.has_graph_x:
+      assert np.array_equal(d.graph_x[0], t.graph_x)
+    else:
+      assert d.graph_x == t.graph_x
+    if t.has_graph_y:
+      assert np.array_equal(d.graph_y[0], t.graph_y)
+    else:
+      assert d.graph_y == t.graph_y
   except AssertionError as e:
     fs.Write("/tmp/graph_tuple_in.pickle", pickle.dumps(t))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(d))
