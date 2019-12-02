@@ -1,13 +1,11 @@
 """Unit tests for //deeplearning/ml4pl/graphs/labelled:graph_tuple_database."""
-import copy
 import random
-from typing import List
-from typing import NamedTuple
 
 import pytest
 import sqlalchemy as sql
 
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.testing import random_graph_tuple_database_generator
 from deeplearning.ml4pl.testing import random_graph_tuple_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import decorators
@@ -225,25 +223,25 @@ def test_CreateEmpty(db_session: graph_tuple_database.Database.SessionType):
   db_session.commit()
 
 
-# @decorators.loop_for(seconds=10)
-# def test_fuzz_GraphTuple_Create(db: graph_tuple_database.Database):
-#   """Fuzz the networkx -> proto conversion using randomly generated graphs."""
-#   with db.Session(commit=True) as session:
-#     graph_tuple = random_graph_tuple_generator.CreateRandomGraphTuple()
-#     t = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
-#       graph_tuple=graph_tuple, ir_id=random.randint(0, int(4e6))
-#     )
-#     assert t.edge_count == (
-#       t.control_edge_count + t.data_edge_count + t.call_edge_count
-#     )
-#     assert len(t.sha1) == 40
-#     assert t.node_count == graph_tuple.node_count
-#     assert t.edge_count == graph_tuple.edge_count
-#     assert t.tuple.node_count == graph_tuple.node_count
-#     assert t.tuple.edge_count == graph_tuple.edge_count
-#     assert len(t.tuple.adjacencies) == 3
-#     assert len(t.tuple.edge_positions) == 3
-#     session.add(t)
+@decorators.loop_for(seconds=10)
+def test_fuzz_GraphTuple_Create(db: graph_tuple_database.Database):
+  """Fuzz the networkx -> proto conversion using randomly generated graphs."""
+  with db.Session(commit=True) as session:
+    graph_tuple = random_graph_tuple_generator.CreateRandomGraphTuple()
+    t = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
+      graph_tuple=graph_tuple, ir_id=random.randint(0, int(4e6))
+    )
+    assert t.edge_count == (
+      t.control_edge_count + t.data_edge_count + t.call_edge_count
+    )
+    assert len(t.sha1) == 40
+    assert t.node_count == graph_tuple.node_count
+    assert t.edge_count == graph_tuple.edge_count
+    assert t.tuple.node_count == graph_tuple.node_count
+    assert t.tuple.edge_count == graph_tuple.edge_count
+    assert len(t.tuple.adjacencies) == 3
+    assert len(t.tuple.edge_positions) == 3
+    session.add(t)
 
 
 # Fixtures for enumerating populated databases.
@@ -274,11 +272,9 @@ def graph_y_dimensionality(request) -> int:
   return request.param
 
 
-class DatabaseAndRows(NamedTuple):
-  """"A graph tuple database and the rows that populate it."""
-
-  db: graph_tuple_database.Database
-  rows: List[graph_tuple_database.GraphTuple]
+@test.Fixture(scope="function", params=(False, True))
+def with_data_flow(request) -> int:
+  return request.param
 
 
 @test.Fixture(scope="function")
@@ -289,30 +285,18 @@ def populated_db_and_rows(
   node_y_dimensionality: int,
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
-) -> DatabaseAndRows:
+  with_data_flow: int,
+) -> random_graph_tuple_database_generator.DatabaseAndRows:
   """Generate a populated database and a list of rows."""
-  # Generate some random graph rows.
-  graph_pool = [
-    graph_tuple_database.GraphTuple.CreateFromGraphTuple(
-      graph_tuple=random_graph_tuple_generator.CreateRandomGraphTuple(
-        node_x_dimensionality=node_x_dimensionality,
-        node_y_dimensionality=node_y_dimensionality,
-        graph_x_dimensionality=graph_x_dimensionality,
-        graph_y_dimensionality=graph_y_dimensionality,
-      ),
-      ir_id=random.randint(0, int(4e6)),
-    )
-    for _ in range(min(graph_count, 128))
-  ]
-
-  # Generate a full list of graph rows by randomly selecting from the graph
-  # pool.
-  rows = [copy.deepcopy(random.choice(graph_pool)) for _ in range(graph_count)]
-
-  with db.Session(commit=True) as session:
-    session.add_all([copy.deepcopy(t) for t in rows])
-
-  return DatabaseAndRows(db, rows)
+  return random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
+    db,
+    graph_count,
+    node_x_dimensionality=node_x_dimensionality,
+    node_y_dimensionality=node_y_dimensionality,
+    graph_x_dimensionality=graph_x_dimensionality,
+    graph_y_dimensionality=graph_y_dimensionality,
+    with_data_flow=with_data_flow,
+  )
 
 
 # Database stats tests.
@@ -326,7 +310,9 @@ def test_fuzz_database_stats_on_empty_db(db: graph_tuple_database.Database):
 
 # Repeat test repeatedly to test memoized property accessor.
 @decorators.loop_for(min_iteration_count=3)
-def test_fuzz_database_stats(populated_db_and_rows: DatabaseAndRows):
+def test_fuzz_database_stats(
+  populated_db_and_rows: random_graph_tuple_database_generator.DatabaseAndRows,
+):
   db, rows = populated_db_and_rows
 
   # Graph and IR counts.
@@ -348,7 +334,7 @@ def test_fuzz_database_stats(populated_db_and_rows: DatabaseAndRows):
   assert db.call_edge_count_max == max(r.call_edge_count for r in rows)
 
   # Edge position max.
-  # FIXME: assert db.edge_position_max == max(t.edge_position_max for t in rows)
+  assert db.edge_position_max == max(t.edge_position_max for t in rows)
 
   # Feature and label dimensionalities.
   assert db.node_x_dimensionality == rows[0].node_x_dimensionality
@@ -364,14 +350,20 @@ def test_fuzz_database_stats(populated_db_and_rows: DatabaseAndRows):
     sum(r.pickled_graph_tuple_size for r in rows) / len(rows),
   )
 
-  # TODO: Add data flow steps generation.
-  assert db.data_flow_steps_min is None
-  assert db.data_flow_steps_max is None
-  assert db.data_flow_steps_avg is None
-
-  assert db.data_flow_positive_node_count_min is None
-  assert db.data_flow_positive_node_count_max is None
-  assert db.data_flow_positive_node_count_avg is None
+  if rows[0].data_flow_steps is None:
+    assert db.data_flow_steps_min is None
+    assert db.data_flow_steps_max is None
+    assert db.data_flow_steps_avg is None
+    assert db.data_flow_positive_node_count_min is None
+    assert db.data_flow_positive_node_count_max is None
+    assert db.data_flow_positive_node_count_avg is None
+  else:
+    assert db.data_flow_steps_min >= 0
+    assert db.data_flow_steps_max >= 0
+    assert db.data_flow_steps_avg >= 0
+    assert db.data_flow_positive_node_count_min >= 0
+    assert db.data_flow_positive_node_count_max >= 0
+    assert db.data_flow_positive_node_count_avg >= 0
 
 
 if __name__ == "__main__":

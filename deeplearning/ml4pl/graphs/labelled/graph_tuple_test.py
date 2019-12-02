@@ -28,7 +28,7 @@ def graph() -> nx.MultiDiGraph:
   g.add_edge(0, 1, flow=programl_pb2.Edge.CALL, position=0)
   g.add_edge(1, 2, flow=programl_pb2.Edge.CONTROL, position=0)
   g.add_edge(2, 3, flow=programl_pb2.Edge.CONTROL, position=0)
-  g.add_edge(4, 3, flow=programl_pb2.Edge.DATA, position=0)
+  g.add_edge(4, 3, flow=programl_pb2.Edge.DATA, position=1)
   g.graph["x"] = []
   g.graph["y"] = []
   return g
@@ -71,8 +71,15 @@ def test_CreateFromNetworkX_edge_positions(graph: nx.MultiDiGraph):
   assert np.array_equal(
     d.edge_positions[programl_pb2.Edge.CONTROL], np.array([0, 0])
   )
-  assert np.array_equal(d.edge_positions[programl_pb2.Edge.DATA], np.array([0]))
+  assert np.array_equal(d.edge_positions[programl_pb2.Edge.DATA], np.array([1]))
   assert np.array_equal(d.edge_positions[programl_pb2.Edge.CALL], np.array([0]))
+
+
+def test_CreateFromNetworkX_edge_position_max(graph: nx.MultiDiGraph):
+  """Test edge position max."""
+  d = graph_tuple.GraphTuple.CreateFromNetworkX(graph)
+
+  assert d.edge_position_max == 1
 
 
 def test_CreateFromNetworkX_node_x(graph: nx.MultiDiGraph):
@@ -217,7 +224,7 @@ def test_ToNetworkx_edge_position(graph: nx.MultiDiGraph):
   assert g.edges[0, 1, programl_pb2.Edge.CALL]["position"] == 0
   assert g.edges[1, 2, programl_pb2.Edge.CONTROL]["position"] == 0
   assert g.edges[2, 3, programl_pb2.Edge.CONTROL]["position"] == 0
-  assert g.edges[4, 3, programl_pb2.Edge.DATA]["position"] == 0
+  assert g.edges[4, 3, programl_pb2.Edge.DATA]["position"] == 1
 
 
 def test_ToNetworkx_node_x(graph: nx.MultiDiGraph):
@@ -292,16 +299,17 @@ def test_on_real_graph(real_nx_graph: nx.MultiDiGraph):
 
 
 @decorators.loop_for(seconds=5)
-@test.Parametrize("node_x_dimensionality", (1, 2, 3))
-@test.Parametrize("node_y_dimensionality", (0, 1, 2, 3))
-@test.Parametrize("graph_x_dimensionality", (0, 1, 2, 3))
-@test.Parametrize("graph_y_dimensionality", (0, 1, 2, 3))
+@test.Parametrize("node_x_dimensionality", (1, 3))
+@test.Parametrize("node_y_dimensionality", (0, 3))
+@test.Parametrize("graph_x_dimensionality", (0, 3))
+@test.Parametrize("graph_y_dimensionality", (0, 3))
 def test_FromGraphTuples_single_tuple(
   node_x_dimensionality: int,
   node_y_dimensionality: int,
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
 ) -> graph_tuple.GraphTuple:
+  """Test disjoint graph creation from a single graph."""
   t = random_graph_tuple_generator.CreateRandomGraphTuple(
     node_x_dimensionality=node_x_dimensionality,
     node_y_dimensionality=node_y_dimensionality,
@@ -316,6 +324,7 @@ def test_FromGraphTuples_single_tuple(
     assert d.disjoint_graph_count == 1
     assert d.node_count == t.node_count
     assert d.edge_count == t.edge_count
+    assert d.edge_position_max == t.edge_position_max
 
     # Only a single graph means an array of all zeros.
     assert np.array_equal(
@@ -350,16 +359,17 @@ def test_FromGraphTuples_single_tuple(
 
 
 @decorators.loop_for(seconds=5)
-@test.Parametrize("node_x_dimensionality", (1, 2, 3))
-@test.Parametrize("node_y_dimensionality", (0, 1, 2, 3))
-@test.Parametrize("graph_x_dimensionality", (0, 1, 2, 3))
-@test.Parametrize("graph_y_dimensionality", (0, 1, 2, 3))
+@test.Parametrize("node_x_dimensionality", (1, 3))
+@test.Parametrize("node_y_dimensionality", (0, 3))
+@test.Parametrize("graph_x_dimensionality", (0, 3))
+@test.Parametrize("graph_y_dimensionality", (0, 3))
 def test_FromGraphTuples_two_tuples(
   node_x_dimensionality: int,
   node_y_dimensionality: int,
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
-) -> graph_tuple.GraphTuple:
+):
+  """Test disjoint graph creation from a pair of input graphs."""
   tuples_in = [
     random_graph_tuple_generator.CreateRandomGraphTuple(
       node_x_dimensionality=node_x_dimensionality,
@@ -382,6 +392,9 @@ def test_FromGraphTuples_two_tuples(
     assert disjoint_tuple.disjoint_graph_count == 2
     assert disjoint_tuple.node_count == sum(t.node_count for t in tuples_in)
     assert disjoint_tuple.edge_count == sum(t.edge_count for t in tuples_in)
+    assert disjoint_tuple.edge_position_max == max(
+      t.edge_position_max for t in tuples_in
+    )
 
     # Only a single graph means an array of all zeros.
     assert np.array_equal(
@@ -435,6 +448,9 @@ def test_fuzz_graph_tuple_networkx():
     assert t.node_y_dimensionality == node_y_dimensionality
     assert t.graph_x_dimensionality == graph_x_dimensionality
     assert t.graph_y_dimensionality == graph_y_dimensionality
+    assert t.edge_position_max == max(
+      position for _, _, position in graph_in.edges(data="position")
+    )
   except AssertionError as e:
     fs.Write("/tmp/graph_in.pickle", pickle.dumps(graph_in))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
@@ -488,7 +504,7 @@ def test_fuzz_disjoint_graph_tuples():
     assert t.node_count == sum([d.node_count for d in graph_tuples_in])
     assert t.edge_count == sum([d.edge_count for d in graph_tuples_in])
     assert t.edge_position_max == max(
-      [d.edge_position_max for d in graph_tuples_in]
+      d.edge_position_max for d in graph_tuples_in
     )
     assert t.node_x_dimensionality == node_x_dimensionality
     assert t.node_y_dimensionality == node_y_dimensionality
