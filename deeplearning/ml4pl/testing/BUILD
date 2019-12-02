@@ -23,6 +23,19 @@ py_test(
     ],
 )
 
+py_binary(
+    name = "random_graph_tuple_database_generator",
+    testonly = 1,
+    srcs = ["random_graph_tuple_database_generator.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        ":random_graph_tuple_generator",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//labm8/py:app",
+    ],
+)
+
 py_library(
     name = "random_networkx_generator",
     testonly = 1,
