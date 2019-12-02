@@ -1,6 +1,59 @@
 # This package contains utility code for writing tests.
 
 py_library(
+    name = "random_graph_tuple_generator",
+    testonly = 1,
+    srcs = ["random_graph_tuple_generator.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        ":random_programl_generator",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
+        "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
+        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//labm8/py:test",
+    ],
+)
+
+py_test(
+    name = "random_graph_tuple_generator_test",
+    timeout = "long",
+    srcs = ["random_graph_tuple_generator_test.py"],
+    deps = [
+        ":random_graph_tuple_generator",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
+
+py_library(
+    name = "random_programl_generator",
+    testonly = 1,
+    srcs = ["random_programl_generator.py"],
+    data = [
+        "//deeplearning/ml4pl/testing/data:100_unlabelled_networkx_graphs",
+    ],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        "//deeplearning/ml4pl/graphs:programl",
+        "//deeplearning/ml4pl/graphs:programl_pb_py",
+        "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
+        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//labm8/py:bazelutil",
+        "//labm8/py:test",
+    ],
+)
+
+py_test(
+    name = "random_programl_generator_test",
+    srcs = ["random_programl_generator_test.py"],
+    deps = [
+        ":random_programl_generator",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
+
+py_library(
     name = "testing_databases",
     testonly = 1,
     srcs = ["testing_databases.py"],

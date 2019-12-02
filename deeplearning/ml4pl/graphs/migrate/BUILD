@@ -31,7 +31,10 @@ py_test(
 py_binary(
     name = "networkx_to_protos",
     srcs = ["networkx_to_protos.py"],
-    visibility = ["//deeplearning/ml4pl/graphs:__subpackages__"],
+    visibility = [
+        "//deeplearning/ml4pl/graphs:__subpackages__",
+        "//deeplearning/ml4pl/testing:__subpackages__",
+    ],
     deps = [
         "//deeplearning/ml4pl/graphs:graph_database",
         "//deeplearning/ml4pl/graphs:programl_pb_py",
