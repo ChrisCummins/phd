@@ -2,7 +2,6 @@
 import functools
 from typing import Iterable
 
-from deeplearning.ml4pl.graphs import programl
 from deeplearning.ml4pl.graphs.labelled import graph_tuple
 from deeplearning.ml4pl.testing import random_networkx_generator
 from labm8.py import test

@@ -8,8 +8,6 @@ py_library(
     deps = [
         ":random_networkx_generator",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple",
-        "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
-        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
         "//labm8/py:test",
     ],
 )

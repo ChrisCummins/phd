@@ -51,6 +51,10 @@ def CreateRandomProto(
     6. The graph is strongly connected.
   """
   node_count = node_count or random.randint(5, 50)
+
+  if node_count < 2:
+    raise ValueError("node_count < 2")
+
   proto = programl_pb2.ProgramGraph()
 
   def _RandomDst(src: int) -> int:
