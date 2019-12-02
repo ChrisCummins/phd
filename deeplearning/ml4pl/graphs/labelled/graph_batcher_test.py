@@ -1,72 +1,135 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/labelled/graph_batcher."""
-from deeplearning.ml4pl.graphs import graph_database
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled:graph_batcher."""
+from typing import Iterable
+from typing import List
+
 from deeplearning.ml4pl.graphs.labelled import graph_batcher
-from deeplearning.ml4pl.models import log_database
-from labm8.py import app
+from deeplearning.ml4pl.graphs.labelled import graph_tuple
+from deeplearning.ml4pl.testing import random_graph_tuple_generator
+from labm8.py import decorators
 from labm8.py import test
 
-FLAGS = app.FLAGS
+FLAGS = test.FLAGS
 
 
-def _MakeIterator(graphs):
+def MockIterator(
+  graphs: List[graph_tuple.GraphTuple],
+) -> Iterable[graph_tuple.GraphTuple]:
+  """Return an iterator over graphs."""
   for graph in graphs:
     yield graph
 
 
-def test_NextGraph_empty_list():
-  """Empty iterator returns none."""
-  options = graph_batcher.GraphBatchOptions(max_nodes=100)
-  graph = graph_batcher.GraphBatch.NextGraph(_MakeIterator([]), options)
-  assert graph is None
+def test_GraphBatcher_empty_graphs_list():
+  """Test input with empty graph """
+  batcher = graph_batcher.GraphBatcher(MockIterator([]))
+  with test.Raises(StopIteration):
+    next(batcher)
 
 
-def test_NextGraph_larger_than_batch_size():
-  """Error is raised when graph is larger than batch size."""
-  big_graph = graph_database.GraphMeta(node_count=10000)
-
-  options = graph_batcher.GraphBatchOptions(max_nodes=100)
-  with test.Raises(ValueError):
-    graph_batcher.GraphBatch.NextGraph(_MakeIterator([big_graph]), options)
-
-  options = graph_batcher.GraphBatchOptions(max_nodes=9999999)
-  graph = graph_batcher.GraphBatch.NextGraph(
-    _MakeIterator([big_graph]), options
+@test.Parametrize("graph_count", (1, 5, 10))
+def test_GraphBatcher_collect_all_inputs(graph_count: int):
+  batcher = graph_batcher.GraphBatcher(
+    MockIterator(
+      [
+        random_graph_tuple_generator.CreateRandomGraphTuple()
+        for _ in range(graph_count)
+      ]
+    )
   )
-  assert graph.node_count == big_graph.node_count
+  batches = list(batcher)
+  assert len(batches) == 1
+  assert batches[0].is_disjoint_graph
+  assert batches[0].disjoint_graph_count == graph_count
 
 
-def test_GraphBatchOptions_ShouldAddToBatch_no_filters():
-  options = graph_batcher.GraphBatchOptions(max_graphs=0, max_nodes=0)
-  log = log_database.BatchLogMeta(node_count=0, graph_count=0)
-  graph = graph_database.GraphMeta(node_count=0, graph=graph_database.Graph())
-  assert options.ShouldAddToBatch(graph, log)
+def test_GraphBatcher_first_graph_larger_than_max():
+  """Error is raised when graph is larger than max node count."""
+  big_graph = random_graph_tuple_generator.CreateRandomGraphTuple(node_count=10)
+
+  batcher = graph_batcher.GraphBatcher(
+    MockIterator([big_graph]), max_node_count=5
+  )
+
+  with test.Raises(ValueError):
+    next(batcher)
 
 
-def test_GraphBatchOptions_ShouldAddToBatch_no_data():
-  options = graph_batcher.GraphBatchOptions(max_graphs=0, max_nodes=0)
-  log = log_database.BatchLogMeta(node_count=0, graph_count=0)
-  graph = graph_database.GraphMeta(node_count=0, graph=None)
-  assert not options.ShouldAddToBatch(graph, log)
+def test_GraphBatcher_divisible_node_count():
+  """Test the number of batches returned with evenly divisible node counts."""
+  batcher = graph_batcher.GraphBatcher(
+    MockIterator(
+      [
+        random_graph_tuple_generator.CreateRandomGraphTuple(node_count=5),
+        random_graph_tuple_generator.CreateRandomGraphTuple(node_count=5),
+        random_graph_tuple_generator.CreateRandomGraphTuple(node_count=5),
+        random_graph_tuple_generator.CreateRandomGraphTuple(node_count=5),
+      ]
+    ),
+    max_node_count=10,
+  )
+
+  batches = list(batcher)
+  assert len(batches) == 2
+  assert batches[0].is_disjoint_graph
+  assert batches[0].disjoint_graph_count == 2
+  assert batches[1].is_disjoint_graph
+  assert batches[1].disjoint_graph_count == 2
 
 
-def test_GraphBatchOptions_ShouldAddToBatch_node_count_filter():
-  options = graph_batcher.GraphBatchOptions(max_graphs=0, max_nodes=100)
-  log = log_database.BatchLogMeta(node_count=30, graph_count=0)
-  graph = graph_database.GraphMeta(node_count=50, graph=graph_database.Graph())
-  assert options.ShouldAddToBatch(graph, log)
+def test_GraphBatcher_max_graph_count():
+  """Test the number of batches when max graphs are filtered."""
+  batcher = graph_batcher.GraphBatcher(
+    MockIterator(
+      [random_graph_tuple_generator.CreateRandomGraphTuple() for _ in range(7)]
+    ),
+    max_graph_count=3,
+  )
 
-  graph = graph_database.GraphMeta(node_count=80)
-  assert not options.ShouldAddToBatch(graph, log)
+  batches = list(batcher)
+  assert len(batches) == 3
+  assert batches[0].disjoint_graph_count == 3
+  assert batches[1].disjoint_graph_count == 3
+  assert batches[2].disjoint_graph_count == 1
 
 
-def test_GraphBatchOptions_ShouldAddToBatch_graph_count_filter():
-  options = graph_batcher.GraphBatchOptions(max_graphs=10, max_nodes=0)
-  log = log_database.BatchLogMeta(node_count=0, graph_count=0)
-  graph = graph_database.GraphMeta(node_count=0, graph=graph_database.Graph())
-  assert options.ShouldAddToBatch(graph, log)
+def test_GraphBatcher_exact_graph_count():
+  """Test the number of batches when exact graph counts are required."""
+  batcher = graph_batcher.GraphBatcher(
+    MockIterator(
+      [random_graph_tuple_generator.CreateRandomGraphTuple() for _ in range(7)]
+    ),
+    exact_graph_count=3,
+  )
 
-  log.graph_count = 10
-  assert not options.ShouldAddToBatch(graph, log)
+  batches = list(batcher)
+  assert len(batches) == 2
+  assert batches[0].disjoint_graph_count == 3
+  assert batches[1].disjoint_graph_count == 3
+  # The last graph is ignored because we have exactly the right number of
+  # graphs.
+
+
+@decorators.loop_for(seconds=5)
+@test.Parametrize("graph_count", (1, 10, 100))
+@test.Parametrize("max_node_count", (50, 100))
+@test.Parametrize("max_graph_count", (0, 3, 10))
+def test_fuzz_GraphBatcher(
+  graph_count: int, max_graph_count: int, max_node_count: int
+):
+  """Fuzz the graph batcher with a range of parameter choices and input
+  sizes.
+  """
+  graphs = MockIterator(
+    [
+      random_graph_tuple_generator.CreateRandomGraphTuple()
+      for _ in range(graph_count)
+    ]
+  )
+  batcher = graph_batcher.GraphBatcher(
+    graphs, max_node_count=max_node_count, max_graph_count=max_graph_count
+  )
+  batches = list(batcher)
+  assert sum(b.disjoint_graph_count for b in batches) == graph_count
 
 
 if __name__ == "__main__":
