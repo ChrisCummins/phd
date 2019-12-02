@@ -1,4 +1,4 @@
-"""Unit tests for //deeplearning/ml4pl/graphs/graph_tuple."""
+"""Unit tests for //deeplearning/ml4pl/graphs/labelled:graph_tuple."""
 import pickle
 import random
 
@@ -312,7 +312,7 @@ def CreateRandomGraphTuple(
   return graph_tuple.GraphTuple.CreateFromNetworkX(g)
 
 
-@decorators.loop_for(seconds=1)
+@decorators.loop_for(seconds=5)
 @test.Parametrize("node_y_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_x_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_y_dimensionality", (0, 1, 2, 3))
@@ -365,7 +365,7 @@ def test_FromGraphTuples_single_tuple(
     raise e
 
 
-@decorators.loop_for(seconds=1)
+@decorators.loop_for(seconds=5)
 @test.Parametrize("node_y_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_x_dimensionality", (0, 1, 2, 3))
 @test.Parametrize("graph_y_dimensionality", (0, 1, 2, 3))
@@ -374,7 +374,7 @@ def test_FromGraphTuples_two_tuples(
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
 ) -> graph_tuple.GraphTuple:
-  t = [
+  tuples_in = [
     CreateRandomGraphTuple(
       node_y_dimensionality=node_y_dimensionality,
       graph_x_dimensionality=graph_x_dimensionality,
@@ -388,32 +388,34 @@ def test_FromGraphTuples_two_tuples(
   ]
 
   # Create a disjoint GraphTuple.
-  d = graph_tuple.GraphTuple.FromGraphTuples(t)
+  disjoint_tuple = graph_tuple.GraphTuple.FromGraphTuples(tuples_in)
 
   try:
-    assert d.disjoint_graph_count == 2
-    assert d.node_count == sum(ta.node_count for ta in t)
-    assert d.edge_count == sum(ta.edge_count for ta in t)
+    assert disjoint_tuple.disjoint_graph_count == 2
+    assert disjoint_tuple.node_count == sum(t.node_count for t in tuples_in)
+    assert disjoint_tuple.edge_count == sum(t.edge_count for t in tuples_in)
 
     # Only a single graph means an array of all zeros.
     assert np.array_equal(
-      d.disjoint_nodes_list,
+      disjoint_tuple.disjoint_nodes_list,
       np.concatenate(
         [
-          np.zeros(t[0].node_count, dtype=np.int32),
-          np.ones(t[1].node_count, dtype=np.int32),
+          np.zeros(tuples_in[0].node_count, dtype=np.int32),
+          np.ones(tuples_in[1].node_count, dtype=np.int32),
         ]
       ),
     )
 
     # Dimensionalities.
-    assert d.node_x_dimensionality == t[0].node_x_dimensionality
-    assert d.node_y_dimensionality == node_y_dimensionality
-    assert d.graph_x_dimensionality == graph_x_dimensionality
-    assert d.graph_y_dimensionality == graph_y_dimensionality
+    assert (
+      disjoint_tuple.node_x_dimensionality == tuples_in[0].node_x_dimensionality
+    )
+    assert disjoint_tuple.node_y_dimensionality == node_y_dimensionality
+    assert disjoint_tuple.graph_x_dimensionality == graph_x_dimensionality
+    assert disjoint_tuple.graph_y_dimensionality == graph_y_dimensionality
   except AssertionError as e:
-    fs.Write("/tmp/graph_tuples_in.pickle", pickle.dumps(t))
-    fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(d))
+    fs.Write("/tmp/graph_tuples_in.pickle", pickle.dumps(tuples_in))
+    fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(disjoint_tuple))
     app.Error(
       "Assertion failed! Wrote graphs to /tmp/graph_tuples_in.pickle "
       "and /tmp/graph_tuple_out.pickle"
@@ -431,16 +433,16 @@ def CreateRandomNetworkx() -> programl_pb2.ProgramGraph:
   return programl.ProgramGraphToNetworkX(proto)
 
 
-@decorators.loop_for(seconds=30)
+@decorators.loop_for(seconds=60)
 def test_fuzz_graph_tuple_networkx():
   """Fuzz graph tuples with randomly generated graphs."""
-  g = CreateRandomNetworkx()
-  t = graph_tuple.GraphTuple.CreateFromNetworkX(g)
+  graph_in = CreateRandomNetworkx()
+  t = graph_tuple.GraphTuple.CreateFromNetworkX(graph_in)
   try:
-    assert t.node_count == g.number_of_nodes()
-    assert t.edge_count == g.number_of_edges()
+    assert t.node_count == graph_in.number_of_nodes()
+    assert t.edge_count == graph_in.number_of_edges()
   except AssertionError as e:
-    fs.Write("/tmp/graph_in.pickle", pickle.dumps(g))
+    fs.Write("/tmp/graph_in.pickle", pickle.dumps(graph_in))
     fs.Write("/tmp/graph_tuple_out.pickle", pickle.dumps(t))
     app.Error(
       "Assertion failed! Wrote graphs to /tmp/graphs_in.pickle "
@@ -450,10 +452,10 @@ def test_fuzz_graph_tuple_networkx():
 
   try:
     g_out = t.ToNetworkx()
-    assert g.number_of_nodes() == g_out.number_of_nodes()
-    assert g.number_of_edges() == g_out.number_of_edges()
+    assert graph_in.number_of_nodes() == g_out.number_of_nodes()
+    assert graph_in.number_of_edges() == g_out.number_of_edges()
   except AssertionError as e:
-    fs.Write("/tmp/graph_in.pickle", pickle.dumps(g))
+    fs.Write("/tmp/graph_in.pickle", pickle.dumps(graph_in))
     fs.Write("/tmp/graph_out.pickle", pickle.dumps(g_out))
     app.Error(
       "Assertion failed! Wrote graphs to /tmp/graphs_in.pickle "
@@ -462,7 +464,7 @@ def test_fuzz_graph_tuple_networkx():
     raise e
 
 
-@decorators.loop_for(seconds=10)
+@decorators.loop_for(seconds=60)
 def test_fuzz_disjoint_graph_tuples():
   """Fuzz graph tuples with randomly generated graphs."""
   num_graphs = random.randint(2, 30)
@@ -489,21 +491,19 @@ def test_fuzz_disjoint_graph_tuples():
   graph_tuples_out = list(t.ToGraphTuples())
   try:
     assert len(graph_tuples_in) == len(graph_tuples_out)
-    for t_in, t_out in zip(graph_tuples_in, graph_tuples_out):
-      # TODO(github.com/ChrisCummins/ProGraML/issues/22): Fix me!
-      # for i, (a, b) in enumerate(zip(t_in.adjacencies, t_out.adjacencies)):
-      #   app.Log(1, '%s %s %s', t.adjacencies[i].shape, a.shape, b.shape)
-      #   assert a.shape == b.shape
-      #   assert np.array_equal(a, b)
-      # for a, b in zip(t_in.edge_positions, t_out.edge_positions):
-      #   assert a.shape == b.shape
-      #   assert np.array_equal(a, b)
-      # assert len(t_in.edge_positions) == len(t_out.edge_positions)
-      # assert np.array_equal(t_in.edge_positions, t_out.edge_positions)
-      assert np.array_equal(t_in.node_x, t_out.node_x)
-      assert np.array_equal(t_in.node_y, t_out.node_y)
-      assert np.array_equal(t_in.graph_x, t_out.graph_x)
-      assert np.array_equal(t_in.graph_y, t_out.graph_y)
+    for tuple_in, tuple_out in zip(graph_tuples_in, graph_tuples_out):
+      for i, (a, b) in enumerate(
+        zip(tuple_in.adjacencies, tuple_out.adjacencies)
+      ):
+        assert a.shape == b.shape
+        assert np.array_equal(a, b)
+      for a, b in zip(tuple_in.edge_positions, tuple_out.edge_positions):
+        assert a.shape == b.shape
+        assert np.array_equal(a, b)
+      assert np.array_equal(tuple_in.node_x, tuple_out.node_x)
+      assert np.array_equal(tuple_in.node_y, tuple_out.node_y)
+      assert np.array_equal(tuple_in.graph_x, tuple_out.graph_x)
+      assert np.array_equal(tuple_in.graph_y, tuple_out.graph_y)
   except AssertionError as e:
     fs.Write("/tmp/graph_tuples_in.pickle", pickle.dumps(graph_tuples_in))
     fs.Write("/tmp/graph_tuples_out.pickle", pickle.dumps(graph_tuples_out))
