@@ -273,7 +273,12 @@ def graph_y_dimensionality(request) -> int:
 
 
 @test.Fixture(scope="function", params=(False, True))
-def with_data_flow(request) -> int:
+def with_data_flow(request) -> bool:
+  return request.param
+
+
+@test.Fixture(scope="function", params=(0, 2))
+def split_count(request) -> int:
   return request.param
 
 
@@ -285,7 +290,8 @@ def populated_db_and_rows(
   node_y_dimensionality: int,
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
-  with_data_flow: int,
+  with_data_flow: bool,
+  split_count: int,
 ) -> random_graph_tuple_database_generator.DatabaseAndRows:
   """Generate a populated database and a list of rows."""
   return random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
@@ -296,6 +302,7 @@ def populated_db_and_rows(
     graph_x_dimensionality=graph_x_dimensionality,
     graph_y_dimensionality=graph_y_dimensionality,
     with_data_flow=with_data_flow,
+    split_count=split_count,
   )
 
 
@@ -318,6 +325,7 @@ def test_fuzz_database_stats(
   # Graph and IR counts.
   assert db.graph_count == len(rows)
   assert db.ir_count == len(set(r.ir_id for r in rows))
+  assert db.split_count == split_count
 
   # Node and edge attributes.
   assert db.node_count == sum(r.node_count for r in rows)

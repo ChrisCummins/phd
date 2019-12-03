@@ -34,6 +34,11 @@ app.DEFINE_boolean(
   "with_data_flow", False, "Whether to generate data flow columns."
 )
 app.DEFINE_integer(
+  "split_count",
+  10,
+  "The number of splits for random graphs. If 0, no splits are assigned.",
+)
+app.DEFINE_integer(
   "random_graph_pool_size",
   128,
   "The maximum number of random graphs to generate.",
@@ -46,6 +51,7 @@ def CreateRandomGraphTuple(
   graph_x_dimensionality: int = 0,
   graph_y_dimensionality: int = 0,
   with_data_flow: bool = False,
+  split_count: int = 0,
 ) -> graph_tuple_database.GraphTuple:
   """Create a random graph tuple."""
   mapped = graph_tuple_database.GraphTuple.CreateFromGraphTuple(
@@ -56,6 +62,7 @@ def CreateRandomGraphTuple(
       graph_y_dimensionality=graph_y_dimensionality,
     ),
     ir_id=random.randint(0, int(4e6)),
+    split=random.randint(1, split_count) if split_count else None,
   )
 
   if with_data_flow:
@@ -83,6 +90,7 @@ def PopulateDatabaseWithRandomGraphTuples(
   graph_x_dimensionality: int = 0,
   graph_y_dimensionality: int = 0,
   with_data_flow: bool = False,
+  split_count: int = 0,
   random_graph_pool_size: int = 0,
 ) -> DatabaseAndRows:
   """Populate a database of random graph tuples."""
@@ -97,6 +105,7 @@ def PopulateDatabaseWithRandomGraphTuples(
       graph_x_dimensionality=graph_x_dimensionality,
       graph_y_dimensionality=graph_y_dimensionality,
       with_data_flow=with_data_flow,
+      split_count=split_count,
     )
     for _ in range(random_graph_pool_size)
   ]
@@ -122,6 +131,7 @@ def Main():
     graph_x_dimensionality=FLAGS.graph_x_dimensionality,
     graph_y_dimensionality=FLAGS.graph_y_dimensionality,
     with_data_flow=FLAGS.with_data_flow,
+    split_count=FLAGS.split_count,
   )
 
 

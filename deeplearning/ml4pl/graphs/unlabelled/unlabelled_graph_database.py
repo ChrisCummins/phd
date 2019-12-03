@@ -62,8 +62,9 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # to ProgramGraph.
   ir_id: int = sql.Column(sql.Integer, primary_key=True)
 
-  # An integer used to split databases of graphs into separate graphs.
-  split: int = sql.Column(sql.Integer, nullable=True)
+  # An integer used to split databases of graphs into separate graphs, e.g.
+  # train/val/test split.
+  split: Optional[int] = sql.Column(sql.Integer, nullable=True, index=True)
 
   # The size of the program graph.
   node_count: int = sql.Column(sql.Integer, nullable=False)

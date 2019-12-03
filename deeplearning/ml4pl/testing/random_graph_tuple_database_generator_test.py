@@ -83,6 +83,11 @@ def with_data_flow(request) -> int:
   return request.param
 
 
+@test.Fixture(scope="function", params=(0, 2))
+def split_count(request) -> int:
+  return request.param
+
+
 def test_PopulateDatahaseithRandomGraphTuples(
   db: graph_tuple_database.Database,
   graph_count: int,
@@ -91,6 +96,7 @@ def test_PopulateDatahaseithRandomGraphTuples(
   graph_x_dimensionality: int,
   graph_y_dimensionality: int,
   with_data_flow: bool,
+  split_count: int,
 ):
   """Test populating databases."""
   random_graph_tuple_database_generator.PopulateDatabaseWithRandomGraphTuples(
@@ -99,6 +105,7 @@ def test_PopulateDatahaseithRandomGraphTuples(
     graph_x_dimensionality=graph_x_dimensionality,
     graph_y_dimensionality=graph_y_dimensionality,
     with_data_flow=with_data_flow,
+    split_count=split_count,
   )
   with db.Session() as session:
     assert (
