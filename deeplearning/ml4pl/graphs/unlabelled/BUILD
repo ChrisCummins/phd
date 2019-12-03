@@ -34,9 +34,7 @@ py_test(
     srcs = ["unlabelled_graph_database_test.py"],
     deps = [
         ":unlabelled_graph_database",
-        "//deeplearning/ml4pl/graphs:programl_pb_py",
-        "//deeplearning/ml4pl/graphs/migrate:networkx_to_protos",
-        "//deeplearning/ml4pl/graphs/unlabelled/cdfg:random_cdfg_generator",
+        "//deeplearning/ml4pl/testing:random_programl_generator",
         "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:app",
         "//labm8/py:decorators",

@@ -1,10 +1,10 @@
 """A database of unlabelled ProGraML ProgramGraph protocol buffers."""
 import datetime
 import pickle
-import typing
+from typing import Any
+from typing import Optional
 
 import sqlalchemy as sql
-from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.graphs import programl_pb2
@@ -14,7 +14,7 @@ from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
 
-Base = declarative.declarative_base()
+Base = sql.ext.declarative.declarative_base()
 
 
 class Meta(Base, sqlutil.TablenameFromClassNameMixin):
@@ -35,12 +35,12 @@ class Meta(Base, sqlutil.TablenameFromClassNameMixin):
   )
 
   @property
-  def value(self) -> typing.Any:
+  def value(self) -> Any:
     """De-pickle the column value."""
     return pickle.loads(self.pickled_value)
 
   @classmethod
-  def Create(cls, key: str, value: typing.Any):
+  def Create(cls, key: str, value: Any):
     """Construct a table entry."""
     return Meta(key=key, pickled_value=pickle.dumps(value))
 
@@ -61,6 +61,9 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # databases. There is a one-to-one mapping from intermediate representation
   # to ProgramGraph.
   ir_id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # An integer used to split databases of graphs into separate graphs.
+  split: int = sql.Column(sql.Integer, nullable=True)
 
   # The size of the program graph.
   node_count: int = sql.Column(sql.Integer, nullable=False)
@@ -123,7 +126,10 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   @classmethod
   def Create(
-    cls, proto: programl_pb2.ProgramGraph, ir_id: int
+    cls,
+    proto: programl_pb2.ProgramGraph,
+    ir_id: int,
+    split: Optional[int] = None,
   ) -> "ProgramGraph":
     """Create a ProgramGraph from the given protocol buffer.
 
@@ -134,6 +140,7 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     Args:
       proto: The protocol buffer to instantiate a program graph from.
       ir_id: The ID of the intermediate representation for this program graph.
+      split: The split of the proto buf.
 
     Returns:
       A ProgramGraph instance.
@@ -173,6 +180,7 @@ class ProgramGraph(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
     return ProgramGraph(
       ir_id=ir_id,
+      split=split,
       node_count=len(proto.node),
       edge_count=len(proto.edge),
       node_type_count=len(node_types),

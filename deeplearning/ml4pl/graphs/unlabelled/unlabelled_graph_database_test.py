@@ -3,10 +3,8 @@ import random
 
 import sqlalchemy as sql
 
-from deeplearning.ml4pl.graphs import programl_pb2
-from deeplearning.ml4pl.graphs.migrate import networkx_to_protos
 from deeplearning.ml4pl.graphs.unlabelled import unlabelled_graph_database
-from deeplearning.ml4pl.graphs.unlabelled.cdfg import random_cdfg_generator
+from deeplearning.ml4pl.testing import random_programl_generator
 from deeplearning.ml4pl.testing import testing_databases
 from labm8.py import app
 from labm8.py import decorators
@@ -23,21 +21,15 @@ def db(request) -> unlabelled_graph_database.Database:
   )
 
 
-def CreateRandomProto() -> programl_pb2.ProgramGraph:
-  """Generate a random graph proto."""
-  g = random_cdfg_generator.FastCreateRandom()
-  return networkx_to_protos.NetworkXGraphToProgramGraphProto(g)
-
-
 @test.Fixture(scope="function")
 def two_graph_db_session(
   db: unlabelled_graph_database.Database,
 ) -> unlabelled_graph_database.Database.SessionType:
   a = unlabelled_graph_database.ProgramGraph.Create(
-    proto=CreateRandomProto(), ir_id=1
+    proto=random_programl_generator.CreateRandomProto(), ir_id=1
   )
   b = unlabelled_graph_database.ProgramGraph.Create(
-    proto=CreateRandomProto(), ir_id=2
+    proto=random_programl_generator.CreateRandomProto(), ir_id=2
   )
 
   with db.Session() as session:
@@ -128,13 +120,21 @@ def test_cascaded_delete_using_query(
   )
 
 
-@decorators.loop_for(seconds=10)
+# Global counter for test_fuzz_ProgramGraph_Create() to generate unique values.
+ir_id = 0
+
+
+@decorators.loop_for(seconds=30)
 def test_fuzz_ProgramGraph_Create(db: unlabelled_graph_database.Database):
   """Fuzz the networkx -> proto conversion using randomly generated graphs."""
+  global ir_id
+  ir_id += 1
   with db.Session(commit=True) as session:
     session.add(
       unlabelled_graph_database.ProgramGraph.Create(
-        proto=CreateRandomProto(), ir_id=random.randint(0, int(4e6))
+        proto=random_programl_generator.CreateRandomProto(),
+        ir_id=ir_id,
+        split=random.randint(0, 10) if random.random() < 0.5 else None,
       )
     )
 

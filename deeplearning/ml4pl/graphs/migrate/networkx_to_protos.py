@@ -151,7 +151,7 @@ def GraphMetaToProgramGraph(
   graph: nx.MultiDiGraph = graph_meta.data
   proto = NetworkXGraphToProgramGraphProto(graph)
   program_graph = unlabelled_graph_database.ProgramGraph.Create(
-    proto, ir_id=graph_meta.bytecode_id
+    proto, ir_id=graph_meta.bytecode_id, split=int(graph_meta.group)
   )
   program_graph.data.id = graph_meta.id
   program_graph.timestamp = graph_meta.date_added
