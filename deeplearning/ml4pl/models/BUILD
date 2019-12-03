@@ -11,17 +11,27 @@ py_library(
 )
 
 py_library(
+    name = "batch",
+    srcs = ["batch.py"],
+    deps = [
+        "//labm8/py:app",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_library(
     name = "classifier_base",
     srcs = ["classifier_base.py"],
     data = ["//deeplearning/ml4pl/graphs/unlabelled/cdfg/node_embeddings:embeddings"],
     visibility = ["//visibility:public"],
     deps = [
         ":base_utils",
+        ":epoch",
+        ":logger",
         "//:build_info",
         "//deeplearning/ml4pl:run_id",
-        "//deeplearning/ml4pl/graphs:graph_database",
-        "//deeplearning/ml4pl/graphs/labelled:graph_batcher",
-        "//deeplearning/ml4pl/models:log_database",
+        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
         "//labm8/py:bazelutil",
         "//labm8/py:decorators",
@@ -29,6 +39,7 @@ py_library(
         "//labm8/py:jsonutil",
         "//labm8/py:ppar",
         "//labm8/py:prof",
+        "//labm8/py:progress",
         "//labm8/py:system",
         "//third_party/py/numpy",
         "//third_party/py/scikit_learn",
@@ -74,6 +85,14 @@ py_binary(
         "//labm8/py:app",
         "//labm8/py:prof",
         "//labm8/py:sqlutil",
+    ],
+)
+
+py_library(
+    name = "epoch",
+    srcs = ["epoch.py"],
+    deps = [
+        "//labm8/py:app",
     ],
 )
 
@@ -135,5 +154,33 @@ py_test(
         "//labm8/py:test",
         "//third_party/py/numpy",
         "//third_party/py/pytest",
+    ],
+)
+
+py_library(
+    name = "logger",
+    srcs = ["logger.py"],
+    deps = [
+        ":batch",
+        ":epoch",
+        ":log_database",
+        "//deeplearning/ml4pl:run_id",
+        "//labm8/py:app",
+        "//third_party/py/numpy",
+    ],
+)
+
+py_binary(
+    name = "run",
+    srcs = ["run.py"],
+    deps = [
+        ":classifier_base",
+        ":epoch",
+        ":logger",
+        "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
+        "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
+        "//labm8/py:app",
+        "//labm8/py:prof",
+        "//labm8/py:progress",
     ],
 )

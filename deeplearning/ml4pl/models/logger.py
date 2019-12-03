@@ -2,10 +2,15 @@
 
 TODO: Detailed explanation of the file.
 """
+from typing import Any
 from typing import NamedTuple
 
 import numpy as np
 
+from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.models import batch
+from deeplearning.ml4pl.models import epoch
+from deeplearning.ml4pl.models import log_database
 from labm8.py import app
 
 
@@ -32,3 +37,38 @@ app.DEFINE_list(
 class MinibatchResults(NamedTuple):
   y_true_1hot: np.array  # Shape [num_labels,num_classes]
   y_pred_1hot: np.array  # Shape [num_labels,num_classes]
+
+
+class Logger(object):
+  def __init__(self, db: log_database.Database):
+    self.db = db
+
+  def Save(self, run_id: run_id_lib.RunId, data_to_save: Any) -> None:
+    # TODO: raise NotImplementedError
+    pass
+
+  def Load(self, run_id: run_id_lib.RunId) -> Any:
+    # TODO: raise NotImplementedError
+    pass
+
+  def OnBatch(
+    self,
+    run_id: run_id_lib.RunId,
+    epoch_type: epoch.Type,
+    results: batch.Results,
+  ):
+    pass
+
+  def OnEpochEnd(
+    self,
+    run_id: run_id_lib.RunId,
+    epoch_tupe: epoch.Type,
+    results: epoch.Results,
+  ):
+    pass
+
+  @classmethod
+  def FromFlags(cls) -> "Logger":
+    if not FLAGS.log_db:
+      raise app.UsageError("--log_db not set")
+    return Logger(FLAGS.log_db())

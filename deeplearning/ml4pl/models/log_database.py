@@ -17,6 +17,8 @@ from labm8.py import pdutil
 from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
+# Note that log_db flag is declared at the bottom of this file, after Database
+# class is defined.
 
 Base = declarative.declarative_base()
 
@@ -471,3 +473,8 @@ class Database(sqlutil.Database):
     with self.Session() as session:
       query = session.query(Parameter.run_id.distinct().label("run_id"))
       return [row.run_id for row in query]
+
+
+app.DEFINE_database(
+  "log_db", Database, None, "The database to write model logs to."
+)
