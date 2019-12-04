@@ -41,7 +41,7 @@ class Logger(object):
     max_buffer_size: int,
     max_buffer_length: int,
     max_seconds_since_flush: float,
-    log_level: int = 3,
+    log_level: int = 2,
     ctx: progress.ProgressContext = progress.NullContext,
   ):
     self.db = db

@@ -19,6 +19,7 @@ from labm8.py import app
 from labm8.py import ppar
 from labm8.py import prof
 from labm8.py import progress
+from labm8.py import shell
 
 
 FLAGS = app.FLAGS
@@ -153,9 +154,9 @@ def _RunEpoch(
   """
 
   def _EpochLabel(results: epoch.Results):
-    # TODO: Compare best train/val/test
     return (
-      f"{model.run_id} {epoch_name} "
+      f"{shell.ShellEscapeCodes.BLUE}{model.run_id}{shell.ShellEscapeCodes.END} "
+      f"{epoch_name} "
       f"{results.ToFormattedString(model.best_results[epoch_type].results)}"
     )
 
