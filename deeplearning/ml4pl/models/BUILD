@@ -13,9 +13,22 @@ py_library(
 py_library(
     name = "batch",
     srcs = ["batch.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         "//labm8/py:app",
+        "//labm8/py:decorators",
+        "//labm8/py:progress",
         "//third_party/py/numpy",
+        "//third_party/py/scikit_learn",
+    ],
+)
+
+py_library(
+    name = "checkpoints",
+    srcs = ["checkpoint.py"],
+    deps = [
+        "//deeplearning/ml4pl:run_id",
+        "//labm8/py:app",
     ],
 )
 
@@ -26,6 +39,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":base_utils",
+        ":checkpoints",
         ":epoch",
         ":logger",
         "//:build_info",
@@ -33,14 +47,8 @@ py_library(
         "//deeplearning/ml4pl/graphs/labelled:graph_database_reader",
         "//deeplearning/ml4pl/graphs/labelled:graph_tuple_database",
         "//labm8/py:app",
-        "//labm8/py:bazelutil",
-        "//labm8/py:decorators",
-        "//labm8/py:humanize",
-        "//labm8/py:jsonutil",
         "//labm8/py:ppar",
-        "//labm8/py:prof",
         "//labm8/py:progress",
-        "//labm8/py:system",
         "//third_party/py/numpy",
         "//third_party/py/scikit_learn",
         "//third_party/py/tqdm",
@@ -91,6 +99,7 @@ py_binary(
 py_library(
     name = "epoch",
     srcs = ["epoch.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         "//labm8/py:app",
     ],
@@ -173,6 +182,7 @@ py_library(
 py_binary(
     name = "run",
     srcs = ["run.py"],
+    visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
         ":classifier_base",
         ":epoch",

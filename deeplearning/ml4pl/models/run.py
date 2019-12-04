@@ -3,17 +3,22 @@
 TODO: Detailed explanation of the file.
 """
 from typing import Callable
+from typing import Dict
 from typing import List
+from typing import Optional
+from typing import Tuple
 
+from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
+from deeplearning.ml4pl.models import batch as batchs
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logger_lib
 from labm8.py import app
+from labm8.py import ppar
 from labm8.py import prof
 from labm8.py import progress
-from labm8.py import shell
 
 
 FLAGS = app.FLAGS
@@ -67,6 +72,12 @@ app.DEFINE_list(
   "The name of the hold-out splits to be used for testing. All splits "
   "except --val_split and --test_split will be used for training.",
 )
+app.DEFINE_integer(
+  "batch_queue_size",
+  10,
+  "Tuning parameter. The maximum number of batches to generate before "
+  "waiting for the model to complete. Must be >= 1.",
+)
 
 
 def SplitStringsToInts(split_strings: List[str]):
@@ -79,14 +90,72 @@ def SplitStringsToInts(split_strings: List[str]):
     )
 
 
+def RunIdAndEpochNumFromString(
+  string: str,
+) -> Tuple[run_id_lib.RunId, Optional[int]]:
+  try:
+    if "@" in string:
+      # TODO: Split run_id@epoch_num:
+      components = string.split("@")
+      assert len(components) == 2
+      run_id_string, epoch_num_string = components
+      run_id = run_id_lib.RunId.FromString(run_id_string)
+      epoch_num = int(epoch_num_string)
+    else:
+      run_id = run_id_lib.RunId.FromString(string)
+      epoch_num = None
+
+    return run_id, epoch_num
+  except Exception:
+    raise app.UsageError(f"Invalid run ID and epoch format: {string}")
+
+
+def MakeBatchIterator(
+  epoch_type: epoch.Type,
+  model: classifier_base.ClassifierBase,
+  graph_db: graph_tuple_database.Database,
+  ctx: progress.ProgressContext = progress.NullContext,
+) -> batchs.BatchIterator:
+  """Create an iterator over batches."""
+  # Filter the graph database to load graphs from the requested splits.
+  val_splits = SplitStringsToInts(FLAGS.val_split)
+  test_splits = SplitStringsToInts(FLAGS.test_split)
+
+  if epoch_type == epoch.Type.TRAIN:
+    splits = list(set(graph_db.splits) - set(val_splits) - set(test_splits))
+  elif epoch_type == epoch.Type.VAL:
+    splits = val_splits
+  elif epoch_type == epoch.Type.TEST:
+    splits = test_splits
+  ctx.Log(
+    3, "Using %s graph splits %s", epoch_type.name.lower(), sorted(splits)
+  )
+
+  if len(splits) == 1:
+    split_filter = lambda: graph_tuple_database.GraphTuple.split == splits[0]
+  else:
+    split_filter = lambda: graph_tuple_database.GraphTuple.split.in_(splits)
+
+  graph_reader = graph_database_reader.BufferedGraphReader.CreateFromFlags(
+    filters=[split_filter], ctx=ctx
+  )
+
+  return batchs.BatchIterator(
+    batches=ppar.ThreadedIterator(
+      model.BatchIterator(graph_reader), max_queue_size=FLAGS.batch_queue_size
+    ),
+    graph_count=graph_reader.n,
+  )
+
+
 def _RunEpoch(
   epoch_name: str,
   model: classifier_base.ClassifierBase,
-  graph_db: graph_tuple_database.Database,
+  batch_iterator: batchs.BatchIterator,
   epoch_type: epoch.Type,
   logger: logger_lib.Logger,
   ctx: progress.Progress = progress.NullContext,
-) -> epoch.Results:
+) -> Tuple[epoch.Results, int]:
   """
 
   Args:
@@ -100,43 +169,22 @@ def _RunEpoch(
   """
 
   def _EpochLabel(results: epoch.Results):
-    if results >= model.best_val_results:
-      color = shell.ShellEscapeCodes.GREEN
-    else:
-      color = shell.ShellEscapeCodes.RED
-
+    # TODO: Compare best train/val/test
     return (
       f"{model.run_id} {epoch_name} "
-      f"{shell.ShellEscapeCodes.BOLD}{color}{results}{shell.ShellEscapeCodes.END}"
+      f"{results.ToFormattedString(model.best_results[epoch_type].results)}"
     )
 
   with prof.Profile(lambda t: _EpochLabel(results), print_to=ctx.print):
-    # Filter the graph database to load graphs from the requested splits.
-    val_splits = SplitStringsToInts(FLAGS.val_split)
-    test_splits = SplitStringsToInts(FLAGS.test_split)
-
-    if epoch_type == epoch.Type.TRAIN:
-      splits = list(set(graph_db.splits) - set(val_splits) - set(test_splits))
-    elif epoch_type == epoch.Type.VAL:
-      splits = val_splits
-    elif epoch_type == epoch.Type.TEST:
-      splits = test_splits
-    ctx.Log(
-      3, "Using %s graph splits %s", epoch_type.name.lower(), sorted(splits)
+    results = model(
+      epoch_type, batch_iterator.batches, logger, batch_iterator.graph_count
     )
 
-    if len(splits) == 1:
-      split_filter = lambda: graph_tuple_database.GraphTuple.split == splits[0]
-    else:
-      split_filter = lambda: graph_tuple_database.GraphTuple.split.in_(splits)
+  improved = model.UpdateBestResults(
+    epoch_type, model.epoch_num, results, ctx=ctx
+  )
 
-    graph_reader = graph_database_reader.BufferedGraphReader.CreateFromFlags(
-      filters=[split_filter], ctx=ctx
-    )
-
-    results = model(epoch_type, graph_reader, logger)
-
-  return results
+  return results, improved
 
 
 class Train(progress.Progress):
@@ -166,47 +214,72 @@ class Train(progress.Progress):
   def Run(self) -> epoch.Results:
     """Run the train/val/test loop."""
     # Set later.
-    test_results = epoch.Results.NullResults()
+    test_results = epoch.Results()
 
+    # Epoch loop.
     for self.ctx.i in range(self.ctx.i + 1, self.ctx.n + 1):
-      self.model.epoch_num = self.ctx.i
-      self._RunEpoch(epoch.Type.TRAIN)
-      val_results = self._RunEpoch(epoch.Type.VAL)
-
-      if val_results > self.model.best_val_results:
-        self.ctx.Log(
-          2,
-          "Validation results improved:\n  from: %s\n    to: %s",
-          self.model.best_val_results,
-          val_results,
+      # Create the batch iterators ahead of time so that they can asynchronously
+      # start reading from the graph database.
+      batch_iterators = {
+        epoch_type: MakeBatchIterator(
+          epoch_type, self.model, self.graph_db, self.ctx
         )
-        self.model.best_val_results = val_results
+        for epoch_type in [epoch.Type.TRAIN, epoch.Type.VAL, epoch.Type.TEST]
+      }
+
+      self.model.epoch_num = self.ctx.i
+      train_results, _ = self._RunEpoch(epoch.Type.TRAIN, batch_iterators)
+      self.model.UpdateBestResults(
+        epoch.Type.TRAIN, self.model.epoch_num, train_results, ctx=self.ctx
+      )
+
+      val_results, val_improved = self._RunEpoch(
+        epoch.Type.VAL, batch_iterators
+      )
+
+      if val_improved:
         self.logger.Save(self.model.run_id, self.model.ModelDataToSave())
 
         if FLAGS.test_on == "improvement":
-          test_results = self._RunEpoch(epoch.Type.TEST)
+          test_results, _ = self._RunEpoch(epoch.Type.TEST, batch_iterators)
 
       if FLAGS.test_on == "every":
-        test_results = self._RunEpoch(epoch.Type.TEST)
+        test_results, _ = self._RunEpoch(epoch.Type.TEST, batch_iterators)
+        self.model.UpdateBestResults(
+          epoch.Type.TEST, self.model.epoch_num, train_results, ctx=self.ctx
+        )
 
     # We have reached the end of training. If we haven't been doing incremental
     # testing, then run the test set.
     if FLAGS.test_on == "end":
-      self.model.LoadModelData(self.logger.Load(FLAGS.restore_model))
-      test_results = self._RunEpoch(epoch.Type.TEST)
+      self.model.LoadModelData(
+        self.logger.Load(*RunIdAndEpochNumFromString(FLAGS.restore_model))
+      )
+      test_results, _ = self._RunEpoch(epoch.Type.TEST, batch_iterators)
 
     return test_results
 
-  def _RunEpoch(self, epoch_type: epoch.Type):
+  def _RunEpoch(
+    self,
+    epoch_type: epoch.Type,
+    batch_iterators: Dict[epoch.Type, batchs.BatchIterator],
+  ) -> Tuple[epoch.Results, int]:
     """Run an epoch of the given type."""
     epoch_name = (
       f"{epoch_type.name.lower():>5} " f"[{self.ctx.i:3d} / {self.ctx.n:3d}]"
     )
     return _RunEpoch(
-      epoch_name, self.model, self.graph_db, epoch_type, self.logger, self.ctx
+      epoch_name=epoch_name,
+      model=self.model,
+      batch_iterator=batch_iterators[epoch_type],
+      epoch_type=epoch_type,
+      logger=self.logger,
+      ctx=self.ctx,
     )
 
 
+# Type annotation for a classifier_base.ClassifierBase subclass. Note this is
+# the type itself, not an instance of that type.
 ModelClass = Callable[
   [graph_tuple_database.Database], classifier_base.ClassifierBase
 ]
@@ -216,21 +289,30 @@ def Run(model_class: ModelClass):
   graph_db: graph_tuple_database.Database = FLAGS.graph_db()
   logger = logger_lib.Logger.FromFlags()
 
-  # TODO(github.com/ChrisCummins/ProGraML/issues/24): Add split db.
-  # split_db = FLAGS.split_db()
-
   # Instantiate a model.
-  with prof.Profile(lambda t: f"Initialized {model.run_id}"):
+  with prof.Profile(
+    lambda t: f"Initialized {model.run_id}",
+    print_to=lambda msg: app.Log(2, msg),
+  ):
     model = model_class(graph_db)
     if FLAGS.restore_model:
       # TODO(github.com/ChrisCummins/ProGraML/issues/24): Implement model
       # restoring.
       model.LoadModelData(logger.GetModelData(FLAGS.restore_model))
     else:
-      model.Initialize()
+      model.CreateModelData()
 
   if FLAGS.test_only:
-    _RunEpoch("test", model, graph_db, logger, epoch.Type.TEST)
+    batch_iterator = MakeBatchIterator(
+      epoch_type=epoch.Type.TEST, model=model, graph_db=graph_db
+    )
+    _RunEpoch(
+      epoch_name="test",
+      model=model,
+      batch_iterator=batch_iterator,
+      epoch_type=epoch.Type.TEST,
+      logger=logger,
+    )
   else:
     progress.Run(Train(model, graph_db, logger))
 
