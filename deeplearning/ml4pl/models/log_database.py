@@ -25,6 +25,11 @@ FLAGS = app.FLAGS
 Base = declarative.declarative_base()
 
 
+###############################################################################
+# Parameters.
+###############################################################################
+
+
 class ParameterType(enum.Enum):
   """The parameter type."""
 
@@ -79,6 +84,11 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       Parameter.Create(run_id=run_id, type=type, name=name, value=value,)
       for name, value in parameters.items()
     ]
+
+
+###############################################################################
+# Batch logs.
+###############################################################################
 
 
 class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -236,6 +246,16 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   )
 
 
+###############################################################################
+# Epochs.
+###############################################################################
+
+
+###############################################################################
+# Checkpoints.
+###############################################################################
+
+
 class ModelCheckpointMeta(
   Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin
 ):
@@ -322,6 +342,11 @@ class ModelCheckpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   meta: ModelCheckpointMeta = sql.orm.relationship(
     "ModelCheckpointMeta", back_populates="model_checkpoint"
   )
+
+
+###############################################################################
+# Database.
+###############################################################################
 
 
 class Database(sqlutil.Database):
