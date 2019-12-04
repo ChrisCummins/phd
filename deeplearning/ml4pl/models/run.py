@@ -300,6 +300,8 @@ def Run(model_class: ModelClass):
   else:
     progress.Run(Train(model, graph_db, logger))
 
+  logger.Flush()
+
   print("\rdone")
 
 

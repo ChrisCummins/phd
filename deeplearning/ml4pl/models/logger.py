@@ -2,6 +2,9 @@
 
 TODO: Detailed explanation of the file.
 """
+import contextlib
+import threading
+import time
 from typing import Any
 from typing import NamedTuple
 from typing import Optional
@@ -31,32 +34,25 @@ class Logger(object):
   ):
     self.db = db
     self.ctx = ctx
-    self.writer = sqlutil.BufferedDatabaseWriter(
-      self.db, flush_secs=10, max_queue=256
-    )
+    self.writer = LogWriter(db, ctx)
 
+  @contextlib.contextmanager
   def Session(self):
-    return self.writer.Session()
+    try:
+      yield
+    finally:
+      self.writer.Flush()
+
+  def Flush(self) -> None:
+    self.writer.Flush()
 
   #############################################################################
   # Event callbacks.
   #############################################################################
 
-  def OnStartRun(self, run_id: run_id_lib) -> None:
+  def OnStartRun(self, run_id: run_id_lib.RunId) -> None:
     """Record model parameters."""
-    flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
-    self.writer.AddMany(
-      log_database.Parameter.CreateManyFromDict(
-        run_id, log_database.ParameterType.FLAG, flags
-      )
-    )
-    self.writer.AddMany(
-      log_database.Parameter.CreateManyFromDict(
-        run_id,
-        log_database.ParameterType.BUILD_INFO,
-        pbutil.ToJson(build_info.GetBuildInfo()),
-      )
-    )
+    self.writer.WriteParameters(run_id)
 
   def OnBatchEnd(
     self,
@@ -184,3 +180,33 @@ class Logger(object):
     if not FLAGS.log_db:
       raise app.UsageError("--log_db not set")
     return Logger(FLAGS.log_db())
+
+
+class LogWriter(threading.Thread):
+  def __init__(self, db: log_database.Database, ctx: progress.ProgressContext):
+    self.db = db
+    self.ctx = ctx
+
+    self.to_commit = []
+    self.last_commit = time.time()
+
+  def WriteParameters(self, run_id: run_id_lib.RunId) -> None:
+    """Record model parameters."""
+    flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
+    self.to_commit += log_database.Parameter.CreateManyFromDict(
+      run_id, log_database.ParameterType.FLAG, flags
+    )
+    self.to_commit += log_database.Parameter.CreateManyFromDict(
+      run_id,
+      log_database.ParameterType.BUILD_INFO,
+      pbutil.ToJson(build_info.GetBuildInfo()),
+    )
+
+  def Flush(self) -> None:
+    failures = sqlutil.ResilientAddManyAndCommit(self.db, self.to_commit)
+    if len(failures):
+      self.ctx.Error(
+        "Logger failed to commit %d objects", len(failures),
+      )
+    self.to_commit = []
+    self.last_commit = time.time()
