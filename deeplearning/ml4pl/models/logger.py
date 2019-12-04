@@ -8,28 +8,80 @@ from typing import Optional
 
 import numpy as np
 
+import build_info
 from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.models import batch
+from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from labm8.py import app
+from labm8.py import pbutil
+from labm8.py import progress
+from labm8.py import sqlutil
 
 
 FLAGS = app.FLAGS
 
-app.DEFINE_list(
-  "batch_log_types",
-  ["val", "test"],
-  "The types of epochs to record per-instance batch logs for.",
-)
-
 
 class Logger(object):
-  def __init__(self, db: log_database.Database):
+  def __init__(
+    self,
+    db: log_database.Database,
+    ctx: progress.ProgressContext = progress.NullContext,
+  ):
     self.db = db
+    self.ctx = ctx
+    self.writer = sqlutil.BufferedDatabaseWriter(
+      self.db, flush_secs=10, max_queue=256
+    )
 
-  def Save(self, run_id: run_id_lib.RunId, data_to_save: Any) -> None:
+  def Session(self):
+    return self.writer.Session()
+
+  #############################################################################
+  # Event callbacks.
+  #############################################################################
+
+  def OnStartRun(self, run_id: run_id_lib) -> None:
+    """Record model parameters."""
+    flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
+    self.writer.AddMany(
+      log_database.Parameter.CreateManyFromDict(
+        run_id, log_database.ParameterType.FLAG, flags
+      )
+    )
+    self.writer.AddMany(
+      log_database.Parameter.CreateManyFromDict(
+        run_id,
+        log_database.ParameterType.BUILD_INFO,
+        pbutil.ToJson(build_info.GetBuildInfo()),
+      )
+    )
+
+  def OnBatchEnd(
+    self,
+    run_id: run_id_lib.RunId,
+    epoch_type: epoch.Type,
+    data: batch.Data,
+    results: batch.Results,
+  ):
     pass
+
+  def OnEpochEnd(
+    self,
+    run_id: run_id_lib.RunId,
+    epoch_type: epoch.Type,
+    epoch_num: epoch.Type,
+    results: epoch.Results,
+  ):
+    pass
+
+  #############################################################################
+  # Save and restore checkpoints.
+  #############################################################################
+
+  def Save(self, checkpoint: checkpoints.Checkpoint) -> None:
+    self.ctx.Log(1, "Save")
     # TODO(github.com/ChrisCummins/ProGraML/issues/24): Port old code:
     #     with self.log_db.Session(commit=True) as session:
     #       # Check for an existing model with this state.
@@ -78,6 +130,7 @@ class Logger(object):
       EnvironmentError: If the flags in the saved model do not match the current
         model flags.
     """
+    self.ctx.Log(1, "Load")
     # TODO(github.com/ChrisCummins/ProGraML/issues/24): Port old code:
     #     with self.log_db.Session() as session:
     #       # Fetch the corresponding checkpoint from the database.
@@ -125,52 +178,6 @@ class Logger(object):
     #       self.LoadModelData(checkpoint.data)
     #
     #     self._initialized = True
-
-  def OnStartRun(self, run_id: run_id_lib) -> None:
-    pass
-    # TODO(github.com/ChrisCummins/ProGraML/issues/24): Port old code:
-    #   def _CreateExperimentalParameters(self):
-    #     """Private helper method to populate parameters table."""
-    #
-    #     def ToParams(type_: log_database.ParameterType, key_value_dict):
-    #       return [
-    #         log_database.Parameter(
-    #           run_id=self.run_id,
-    #           type=type_,
-    #           parameter=str(key),
-    #           pickled_value=pickle.dumps(value),
-    #         )
-    #         for key, value in key_value_dict.items()
-    #       ]
-    #
-    #     with self.log_db.Session(commit=True) as session:
-    #       session.add_all(
-    #         ToParams(log_database.ParameterType.FLAG, app.FlagsToDict())
-    #         + ToParams(
-    #           log_database.ParameterType.MODEL_FLAG, self.ModelFlagsToDict()
-    #         )
-    #         + ToParams(
-    #           log_database.ParameterType.BUILD_INFO,
-    #           pbutil.ToJson(build_info.GetBuildInfo()),
-    #         )
-    #       )
-
-  def OnBatchEnd(
-    self,
-    run_id: run_id_lib.RunId,
-    epoch_type: epoch.Type,
-    data: batch.Data,
-    results: batch.Results,
-  ):
-    pass
-
-  def OnEpochEnd(
-    self,
-    run_id: run_id_lib.RunId,
-    epoch_type: epoch.Type,
-    results: epoch.Results,
-  ):
-    pass
 
   @classmethod
   def FromFlags(cls) -> "Logger":

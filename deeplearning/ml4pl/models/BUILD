@@ -173,11 +173,17 @@ py_library(
     srcs = ["logger.py"],
     deps = [
         ":batch",
+        ":checkpoints",
         ":epoch",
         ":log_database",
+        "//:build_info",
         "//deeplearning/ml4pl:run_id",
         "//labm8/py:app",
+        "//labm8/py:pbutil",
+        "//labm8/py:progress",
+        "//labm8/py:sqlutil",
         "//third_party/py/numpy",
+        "//third_party/py/sqlalchemy",
     ],
 )
 

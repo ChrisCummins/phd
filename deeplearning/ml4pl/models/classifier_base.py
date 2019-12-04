@@ -301,4 +301,6 @@ class EpochThread(progress.Progress):
       )
 
     self.results = epoch.Results.FromRollingResults(rolling_results)
-    self.logger.OnEpochEnd(self.model.run_id, self.epoch_type, self.results)
+    self.logger.OnEpochEnd(
+      self.model.run_id, self.epoch_type, self.model.epoch_num, self.results
+    )

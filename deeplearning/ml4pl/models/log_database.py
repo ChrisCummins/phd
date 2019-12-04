@@ -4,12 +4,14 @@ import datetime
 import enum
 import pickle
 import typing
+from typing import Any
+from typing import Dict
 
 import sqlalchemy as sql
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
-from deeplearning.ml4pl import run_id
+from deeplearning.ml4pl import run_id as run_id_lib
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import labdate
@@ -23,13 +25,60 @@ FLAGS = app.FLAGS
 Base = declarative.declarative_base()
 
 
-class Meta(Base, sqlutil.TablenameFromClassNameMixin):
-  """Key-value database metadata store."""
+class ParameterType(enum.Enum):
+  """The parameter type."""
 
-  key: str = sql.Column(sql.String(64), primary_key=True)
-  value: str = sql.Column(
-    sqlutil.ColumnTypes.UnboundedUnicodeText(), nullable=False
+  FLAG = 1
+  BUILD_INFO = 2
+
+
+class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """A description of an experimental parameter."""
+
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  # A string to uniquely identify the given experiment run.
+  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None)
+
+  type: ParameterType = sql.Column(
+    sql.Enum(ParameterType), nullable=False, index=True
   )
+
+  # The name of the parameter.
+  name: str = sql.Column(sql.String(1024), nullable=False)
+  # The value for the parameter.
+  pickled_value: bytes = sql.Column(
+    sqlutil.ColumnTypes.LargeBinary(), nullable=False
+  )
+
+  @property
+  def value(self) -> typing.Any:
+    return pickle.loads(self.pickled_value)
+
+  __table_args__ = (
+    sql.UniqueConstraint("run_id", "type", "name", name="unique_parameter"),
+  )
+
+  @classmethod
+  def Create(cls, run_id: run_id_lib.RunId, type: str, name: str, value: Any):
+    return cls(
+      run_id=run_id,
+      type=type,
+      name=str(name),
+      pickled_value=pickle.dumps(value),
+    )
+
+  @classmethod
+  def CreateManyFromDict(
+    cls,
+    run_id: run_id_lib.RunId,
+    type: ParameterType,
+    parameters: Dict[str, Any],
+  ):
+    return [
+      Parameter.Create(run_id=run_id, type=type, name=name, value=value,)
+      for name, value in parameters.items()
+    ]
 
 
 class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
@@ -38,7 +87,7 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = run_id.RunId.SqlStringColumn(default=None)
+  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None)
 
   # The epoch number, >= 1.
   epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
@@ -187,52 +236,13 @@ class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   )
 
 
-class ParameterType(enum.Enum):
-  """The valid types for parameters."""
-
-  MODEL_FLAG = 1
-  FLAG = 2
-  BUILD_INFO = 3
-
-
-class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """A description of an experimental parameter."""
-
-  id: int = sql.Column(sql.Integer, primary_key=True)
-
-  # A string to uniquely identify the given experiment run.
-  run_id: str = sql.Column(sql.String(64), nullable=False, index=True)
-
-  # One of: {model_flag,flags,build_info}
-  type: ParameterType = sql.Column(
-    sql.Enum(ParameterType), nullable=False, index=True
-  )
-
-  # The name of the parameter.
-  parameter: str = sql.Column(sql.String(1024), nullable=False)
-  # The value for the parameter.
-  pickled_value: bytes = sql.Column(
-    sqlutil.ColumnTypes.LargeBinary(), nullable=False
-  )
-
-  @property
-  def value(self) -> typing.Any:
-    return pickle.loads(self.pickled_value)
-
-  __table_args__ = (
-    sql.UniqueConstraint(
-      "run_id", "type", "parameter", name="unique_parameter"
-    ),
-  )
-
-
 class ModelCheckpointMeta(
   Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin
 ):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = run_id.RunId.SqlStringColumn(default=None)
+  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None)
 
   # The epoch number, >= 1.
   epoch: int = sql.Column(sql.Integer, nullable=False, index=True)

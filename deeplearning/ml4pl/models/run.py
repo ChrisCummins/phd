@@ -159,7 +159,9 @@ def _RunEpoch(
       f"{results.ToFormattedString(model.best_results[epoch_type].results)}"
     )
 
-  with prof.Profile(lambda t: _EpochLabel(results), print_to=ctx.print):
+  with prof.Profile(
+    lambda t: _EpochLabel(results), print_to=ctx.print
+  ), logger.Session():
     results = model(epoch_type, batch_iterator, logger)
 
   improved = model.UpdateBestResults(
@@ -192,6 +194,7 @@ class Train(progress.Progress):
       vertical_position=1,
       leave=False,
     )
+    self.logger.ctx = self.ctx
 
   def Run(self) -> epoch.Results:
     """Run the train/val/test loop."""
@@ -220,7 +223,7 @@ class Train(progress.Progress):
       )
 
       if val_improved:
-        self.logger.Save(self.model.run_id, self.model.ModelDataToSave())
+        self.logger.Save(self.model.GetCheckpoint())
 
         if FLAGS.test_on == "improvement":
           test_results, _ = self._RunEpoch(epoch.Type.TEST, batch_iterators)
@@ -268,16 +271,20 @@ def Run(model_class: ModelClass):
     lambda t: f"Initialized {model.run_id}",
     print_to=lambda msg: app.Log(2, msg),
   ):
-    model = model_class(
-      node_y_dimensionality=graph_db.node_y_dimensionality,
-      graph_y_dimensionality=graph_db.graph_y_dimensionality,
-    )
     if FLAGS.restore_model:
-      # TODO(github.com/ChrisCummins/ProGraML/issues/24): Implement model
-      # restoring.
-      model.LoadModelData(logger.GetModelData(FLAGS.restore_model))
+      model_class.FromCheckpoint(
+        logger.Load(
+          *checkpoints.RunIdAndEpochNumFromString(FLAGS.restore_model)
+        )
+      )
     else:
+      model = model_class(
+        node_y_dimensionality=graph_db.node_y_dimensionality,
+        graph_y_dimensionality=graph_db.graph_y_dimensionality,
+      )
       model.Initialize()
+
+  logger.OnStartRun(model.run_id)
 
   if FLAGS.test_only:
     batch_iterator = MakeBatchIterator(
