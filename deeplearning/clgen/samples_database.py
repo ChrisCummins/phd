@@ -91,11 +91,13 @@ class SamplesDatabaseObserver(sample_observers.SampleObserver):
     commit_sample_frequency: int = 1024,
   ):
     self._writer = sqlutil.BufferedDatabaseWriter(
-      db, flush_secs=flush_secs, max_queue=commit_sample_frequency
+      db,
+      max_seconds_since_flush=flush_secs,
+      max_buffer_length=commit_sample_frequency,
     )
 
   def __del__(self):
-    self.Flush()
+    self._writer.Close()
 
   def OnSample(self, sample: model_pb2.Sample) -> bool:
     """Sample receive callback."""

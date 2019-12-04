@@ -369,15 +369,34 @@ def test_ResilientAddManyAndCommit_conflicting_primary_key():
   assert failures[3].col == 1
 
 
-def test_BufferedDatabaseWriter_add_one():
-  base = declarative.declarative_base()
+Base = declarative.declarative_base()
 
-  class Table(base):
-    __tablename__ = "test"
-    col = sql.Column(sql.Integer, primary_key=1)
 
-  db = sqlutil.Database("sqlite://", base)
-  with sqlutil.BufferedDatabaseWriter(db).Session() as writer:
+class Table(Base):
+  __tablename__ = "test"
+  col = sql.Column(sql.Integer, primary_key=1)
+
+
+@test.Fixture(scope="function")
+def db(tempdir: pathlib.Path) -> Table:
+  yield sqlutil.Database(f"sqlite:///{tempdir}/db", Base)
+
+
+@test.Parametrize("max_buffer_size", (1, 1024))
+@test.Parametrize("max_buffer_length", (1, 5))
+@test.Parametrize("max_seconds_since_flush", (1, 10))
+def test_BufferedDatabaseWriter_add_one(
+  db: sqlutil.Database,
+  max_buffer_size: int,
+  max_buffer_length: int,
+  max_seconds_since_flush: float,
+):
+  with sqlutil.BufferedDatabaseWriter(
+    db,
+    max_buffer_length=max_buffer_length,
+    max_buffer_size=max_buffer_size,
+    max_seconds_since_flush=max_seconds_since_flush,
+  ) as writer:
     writer.AddOne(Table(col=1))
     writer.AddOne(Table(col=2))
     writer.AddOne(Table(col=3))
@@ -386,15 +405,21 @@ def test_BufferedDatabaseWriter_add_one():
     assert s.query(Table).count() == 3
 
 
-def test_BufferedDatabaseWriter_add_many():
-  base = declarative.declarative_base()
-
-  class Table(base):
-    __tablename__ = "test"
-    col = sql.Column(sql.Integer, primary_key=1)
-
-  db = sqlutil.Database("sqlite://", base)
-  with sqlutil.BufferedDatabaseWriter(db).Session() as writer:
+@test.Parametrize("max_buffer_size", (1, 1024))
+@test.Parametrize("max_buffer_length", (1, 5))
+@test.Parametrize("max_seconds_since_flush", (1, 10))
+def test_BufferedDatabaseWriter_add_many(
+  db: sqlutil.Database,
+  max_buffer_size: int,
+  max_buffer_length: int,
+  max_seconds_since_flush: float,
+):
+  with sqlutil.BufferedDatabaseWriter(
+    db,
+    max_buffer_length=max_buffer_length,
+    max_buffer_size=max_buffer_size,
+    max_seconds_since_flush=max_seconds_since_flush,
+  ) as writer:
     writer.AddMany([Table(col=1), Table(col=2), Table(col=3)])
 
   with db.Session() as s:

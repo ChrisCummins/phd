@@ -101,7 +101,7 @@ def ImportFromNpb(
   """Import the cmake files from the given build root."""
   bytecodes_to_process = FindBitcodesToImport(cmake_build_root)
   i = 0
-  with sqlutil.BufferedDatabaseWriter(db, max_queue=10).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(db, max_buffer_length=10) as writer:
     for i, bytecode in enumerate(
       [ProcessBitcode(b) for b in (bytecodes_to_process)]
     ):

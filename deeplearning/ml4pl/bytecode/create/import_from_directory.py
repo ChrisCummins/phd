@@ -32,7 +32,7 @@ def main():
   paths = [pathlib.Path(result) for result in paths.split("\n") if result]
 
   i = 0
-  with sqlutil.BufferedDatabaseWriter(FLAGS.bytecode_db()).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(FLAGS.bytecode_db()) as writer:
     for i, path in enumerate(paths):
       bytecode = fs.Read(path)
       relpath = os.path.relpath(path, FLAGS.directory)

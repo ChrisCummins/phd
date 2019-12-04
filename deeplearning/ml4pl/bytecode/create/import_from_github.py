@@ -218,8 +218,6 @@ def PopulateBytecodeTable(
   db: bytecode_database.Database,
   pool: typing.Optional[multiprocessing.Pool] = None,
 ):
-  writer = sqlutil.BufferedDatabaseWriter(db, max_queue=10)
-
   # Only one process at a time can run this method.
   mutex = lockfile.AutoLockFile(granularity="function")
 
@@ -247,7 +245,9 @@ def PopulateBytecodeTable(
       )[0]
     )
 
-  with mutex, cf.Session() as cf_s:
+  with mutex, cf.Session() as cf_s, sqlutil.BufferedDatabaseWriter(
+    db, max_buffer_length=10
+  ) as writer:
     # Get the ID of the last contentfile to process.
     n = (
       cf_s.query(contentfiles.ContentFile.id)
@@ -278,25 +278,24 @@ def PopulateBytecodeTable(
       q, batch_size=FLAGS.batch_size
     )
 
-    with writer.Session() as writer:
-      for i, batch in zip(range(resume_from, n + 1), row_batches):
-        app.Log(
-          1,
-          "Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)",
-          FLAGS.batch_size,
-          humanize.Commas(i),
-          humanize.Commas(n),
-          (i / n) * 100,
-        )
-        protos = GetBytecodesFromContentFiles(source_name, language, batch.rows)
-        writer.AddMany(
-          [
-            bytecode_database.LlvmBytecode(
-              **bytecode_database.LlvmBytecode.FromProto(proto)
-            )
-            for proto in protos
-          ]
-        )
+    for i, batch in zip(range(resume_from, n + 1), row_batches):
+      app.Log(
+        1,
+        "Processing batch of %d contentfiles -> bytecodes, %s / %s (%.1f%%)",
+        FLAGS.batch_size,
+        humanize.Commas(i),
+        humanize.Commas(n),
+        (i / n) * 100,
+      )
+      protos = GetBytecodesFromContentFiles(source_name, language, batch.rows)
+      writer.AddMany(
+        [
+          bytecode_database.LlvmBytecode(
+            **bytecode_database.LlvmBytecode.FromProto(proto)
+          )
+          for proto in protos
+        ]
+      )
 
 
 def main(argv):

@@ -144,9 +144,7 @@ def MakeOpenClDevmapDataset(
   """Create a labelled dataset for the given GPU."""
   dataset = opencl_device_mapping_dataset.OpenClDeviceMappingsDataset()
 
-  with sqlutil.BufferedDatabaseWriter(
-    output_db, max_queue=8
-  ).Session() as writer:
+  with sqlutil.BufferedDatabaseWriter(output_db, max_buffer_length=8) as writer:
     df = MakeGpuDataFrame(dataset.df, gpu)
 
     for graph in AnnotateGraphMetas(input_db, df):
