@@ -3,19 +3,24 @@ import codecs
 import datetime
 import enum
 import pickle
-import typing
 from typing import Any
 from typing import Dict
+from typing import List
+from typing import Optional
 
+import numpy as np
 import sqlalchemy as sql
 from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl import run_id as run_id_lib
+from deeplearning.ml4pl.models import batch as batches
+from deeplearning.ml4pl.models import epoch
 from labm8.py import app
 from labm8.py import humanize
 from labm8.py import labdate
 from labm8.py import pdutil
+from labm8.py import prof
 from labm8.py import sqlutil
 
 FLAGS = app.FLAGS
@@ -52,13 +57,17 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The name of the parameter.
   name: str = sql.Column(sql.String(1024), nullable=False)
   # The value for the parameter.
-  pickled_value: bytes = sql.Column(
+  binary_value: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
   @property
-  def value(self) -> typing.Any:
-    return pickle.loads(self.pickled_value)
+  def value(self) -> Any:
+    return pickle.loads(self.binary_value)
+
+  @value.setter
+  def value(self, data: Any) -> None:
+    self.binary_value = pickle.dumps(data)
 
   __table_args__ = (
     sql.UniqueConstraint("run_id", "type", "name", name="unique_parameter"),
@@ -70,7 +79,7 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
       run_id=run_id,
       type=type,
       name=str(name),
-      pickled_value=pickle.dumps(value),
+      binary_value=pickle.dumps(value),
     )
 
   @classmethod
@@ -87,11 +96,11 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
 
 ###############################################################################
-# Batch logs.
+# Batches.
 ###############################################################################
 
 
-class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A description running a batch of graphs through a model."""
 
   id: int = sql.Column(sql.Integer, primary_key=True)
@@ -100,150 +109,160 @@ class BatchLogMeta(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   run_id: str = run_id_lib.RunId.SqlStringColumn(default=None)
 
   # The epoch number, >= 1.
-  epoch: int = sql.Column(sql.Integer, nullable=False, index=True)
+  epoch_num: int = sql.Column(sql.Integer, nullable=False, index=True)
 
-  # The batch number within the epoch, >= 1.
-  batch: int = sql.Column(sql.Integer, nullable=False)
+  epoch_type: int = sql.Column(sql.Enum(epoch.Type), nullable=False, index=True)
 
-  # The type of batch. One of {train,test,val}
-  type: str = sql.Column(sql.String(32), nullable=False)
+  # The batch number within the epoch, in range [1, epoch_batch_count].
+  batch_num: int = sql.Column(sql.Integer, nullable=False)
 
-  # The GraphMeta.group column that this batch of graphs came from.
-  group: str = sql.Column(sql.String(32), nullable=False)
-
-  # The batch number across all epochs.
-  global_step: int = sql.Column(sql.Integer, nullable=False)
-
-  # The duration of the batch.
-  elapsed_time_seconds: float = sql.Column(sql.Float, nullable=False)
-
-  # The number of model iterations to compute the final results. This is used
-  # by iterative models such as message passing networks.
-  iteration_count: int = sql.Column(sql.Integer, nullable=False, default=1)
-  # For iterative models, this indicates whether the state of the model at
-  # iteration_count had converged on a solution.
-  model_converged: bool = sql.Column(sql.Boolean, nullable=True)
+  # The elapsed time of the batch.
+  elapsed_time_ms: int = sql.Column(sql.Integer, nullable=False)
 
   # The number of graphs in the batch.
   graph_count: int = sql.Column(sql.Integer, nullable=False)
 
-  # The number of nodes in the batch.
-  node_count: int = sql.Column(sql.Integer, nullable=False)
-
-  # Metrics describing model performance.
+  # Batch-level average performance metrics.
+  iteration_count: int = sql.Column(sql.Integer, nullable=False)
+  model_converged: bool = sql.Column(sql.Boolean, nullable=False)
   loss: float = sql.Column(sql.Float, nullable=True)
   accuracy: float = sql.Column(sql.Float, nullable=False)
   precision: float = sql.Column(sql.Float, nullable=False)
   recall: float = sql.Column(sql.Float, nullable=False)
   f1: float = sql.Column(sql.Float, nullable=False)
 
-  date_added: datetime.datetime = sql.Column(
+  timestamp: datetime.datetime = sql.Column(
     sql.DateTime().with_variant(mysql.DATETIME(fsp=3), "mysql"),
     nullable=False,
     default=labdate.GetUtcMillisecondsNow,
   )
 
-  batch_log: "BatchLog" = sql.orm.relationship(
-    "BatchLog", uselist=False, cascade="all", back_populates="meta"
+  # Create the one-to-one relationship from batch to details.
+  details: "BatchDetails" = sql.orm.relationship(
+    "BatchDetails", uselist=False, cascade="all, delete-orphan"
   )
 
-  # Convenience properties to access data in the joined 'BatchLog' table. If
-  # accessing many of these properties, consider using
-  # sql.orm.joinedload(BatchLogMeta.batch) to eagerly load the joined table.
-
-  @property
-  def graph_indices(self) -> typing.List[int]:
-    return pickle.loads(self.batch_log.pickled_graph_indices)
-
-  @graph_indices.setter
-  def graph_indices(self, data) -> None:
-    self.batch_log.pickled_graph_indices = pickle.dumps(data)
-
-  @property
-  def accuracies(self) -> typing.Any:
-    # Accuracies are stored with zlib compression.
-    return pickle.loads(
-      codecs.decode(self.batch_log.pickled_accuracies, "zlib")
-    )
-
-  @accuracies.setter
-  def accuracies(self, data) -> None:
-    # Accuracies are stored with zlib compression.
-    self.batch_log.pickled_accuracies = codecs.encode(
-      pickle.dumps(data), "zlib"
-    )
-
-  @property
-  def predictions(self) -> typing.Any:
-    return pickle.loads(self.batch_log.pickled_predictions)
-
-  @predictions.setter
-  def predictions(self, data) -> None:
-    self.batch_log.pickled_predictions = pickle.dumps(data)
-
-  @property
-  def graphs_per_second(self):
-    if self.elapsed_time_seconds:
-      return max(self.graph_count, 1) / self.elapsed_time_seconds
-    else:
-      return 0
-
-  @property
-  def nodes_per_second(self):
-    if self.elapsed_time_seconds:
-      return max(self.node_count, 1) / self.elapsed_time_seconds
-    else:
-      return 0
-
-  def __repr__(self) -> str:
-    return (
-      f"{self.run_id} Epoch {humanize.Commas(self.epoch)} {self.type} batch: "
-      f"graphs/sec={humanize.DecimalPrefix(self.graphs_per_second, '')} | "
-      f"loss={self.loss:.4f} | "
-      f"acc={self.accuracy:.4%} | "
-      f"pr={self.precision:.4f} | "
-      f"rec={self.recall:.4f}"
-    )
-
+  # Unique batch results.
   __table_args__ = (
-    sql.UniqueConstraint("run_id", "global_step", name="unique_global_step"),
+    sql.UniqueConstraint(
+      "run_id", "epoch_num", "epoch_type", "batch_num", name="unique_batch"
+    ),
   )
 
+  @property
+  def elapsed_time(self) -> float:
+    return self.elapsed_time_ms * 1000
 
-class BatchLog(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
-  """The per-instance results of a batch log.
+  @property
+  def graphs_per_second(self) -> float:
+    if self.elapsed_time:
+      return self.graph_count / self.elapsed_time
+    else:
+      return 0
 
-  In practise, this table will grow large.
-  """
+  @property
+  def nodes_per_second(self) -> float:
+    if self.elapsed_time:
+      return self.graph_count / self.elapsed_time
+    else:
+      return 0
+
+  @classmethod
+  def Create(
+    cls,
+    run_id: run_id_lib.RunId,
+    epoch_type: epoch.Type,
+    epoch_num: int,
+    batch_num: int,
+    timer: prof.ProfileTimer,
+    data: batches.Data,
+    results: batches.Results,
+    details: Optional["BatchDetails"] = None,
+  ):
+    return cls(
+      run_id=str(run_id),
+      epoch_type=epoch_type,
+      epoch_num=epoch_num,
+      batch_num=batch_num,
+      elapsed_time_ms=timer.elapsed_ms,
+      graph_count=data.graph_count,
+      iteration_count=results.iteration_count,
+      model_converged=results.model_converged,
+      loss=results.loss,
+      accuracy=results.accuracy,
+      precision=results.precision,
+      recall=results.recall,
+      f1=results.f1,
+      timestamp=timer.start,
+      details=details,
+    )
+
+  #############################################################################
+  # Batch details.
+  # Convenience properties to set and get columns from the joined BathDetails
+  # table. If accessing many of these properties, consider using
+  # sql.orm.joinedload(Batch.details) to eagerly load the joined table when
+  # querying batches.
+  #############################################################################
+
+  @property
+  def has_details(self) -> bool:
+    return self.details is not None
+
+  @property
+  def graph_ids(self) -> List[int]:
+    return pickle.loads(self.details.binary_graph_ids)
+
+  @property
+  def true_y(self) -> Any:
+    return pickle.loads(codecs.decode(self.details.binary_true_y, "zlib"))
+
+  @property
+  def predictions(self) -> Any:
+    return pickle.loads(self.details.binary_predictions)
+
+
+class BatchDetails(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
+  """The per-instance results of a batch."""
 
   id: int = sql.Column(
-    sql.Integer, sql.ForeignKey("batch_log_metas.id"), primary_key=True
+    sql.Integer,
+    sql.ForeignKey("batches.id", onupdate="CASCADE", ondelete="CASCADE"),
+    primary_key=True,
   )
 
-  # A pickled array of GraphMeta.id values.
-  pickled_graph_indices: bytes = sql.Column(
+  # A pickled array of
+  # deeplearning.ml4pl.graphs.labelled.graph_tuple_database.GraphTuple.id
+  # values.
+  binary_graph_ids: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
-  # A pickled array of accuracies, of shape
-  # [num_instances * num_targets_per_instance]. The number of targets per
-  # instance will depend on the type of classification problem. For graph-level
-  # classification, there is one target per instance. For node-level
-  # classification, there are num_nodes targets for each graph.
-  pickled_accuracies: bytes = sql.Column(
+  # A pickled array of labels, of shape (target_count), dtype int32. The number
+  # of targets per instance will depend on the type of classification problem.
+  # For graph-level classification, there is graph_count values.
+  # For node-level classification, there are
+  # sum(graph.node_count for graph in batch.data) targets.
+  binary_true_y: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
-  # A pickled array of sparse model predictions, of shape
-  # [num_instances * num_targets_per_instance, num_classes]. See
-  # pickled_accuracies for a description of row count.
-  pickled_predictions: bytes = sql.Column(
+  # A pickled array of 1-hot model predictions, of shape
+  # (target_count, y_dimensionality), dtype float32. See binary_true_y for a
+  # description of target_count.
+  binary_predictions: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
-  meta: BatchLogMeta = sql.orm.relationship(
-    BatchLogMeta, back_populates="batch_log"
-  )
+  @classmethod
+  def Create(cls, data: batches.Data, results: batches.Results):
+    return cls(
+      binary_graph_ids=pickle.dumps(data.graph_ids),
+      binary_true_y=codecs.encode(
+        pickle.dumps(np.argmax(results.targets, axis=1)), "zlib"
+      ),
+      binary_predictions=pickle.dumps(results.predictions),
+    )
 
 
 ###############################################################################
@@ -288,16 +307,16 @@ class ModelCheckpointMeta(
   )
 
   @property
-  def data(self) -> typing.Any:
+  def data(self) -> Any:
     # Checkpoints are stored with zlib compression.
     return pickle.loads(
-      codecs.decode(self.model_checkpoint.pickled_data, "zlib")
+      codecs.decode(self.model_checkpoint.binary_data, "zlib")
     )
 
   @data.setter
   def data(self, data) -> None:
     # Checkpoints are stored with zlib compression.
-    self.model_checkpoint.pickled_data = codecs.encode(
+    self.model_checkpoint.binary_data = codecs.encode(
       pickle.dumps(data), "zlib"
     )
 
@@ -308,7 +327,7 @@ class ModelCheckpointMeta(
     epoch: int,
     global_step: int,
     validation_accuracy: float,
-    data: typing.Any,
+    data: Any,
   ):
     """Instantiate a model checkpoint. Use this convenience method rather than
     constructing objects directly to ensure that fields are encoded correctly.
@@ -335,7 +354,7 @@ class ModelCheckpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # The model data. This is stored as a zlib pickled dump of the data returned
   # by a model's ModelDataToSave() method.
-  pickled_data: bytes = sql.Column(
+  binary_data: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
@@ -490,7 +509,7 @@ class Database(sqlutil.Database):
     """
     with self.Session() as session:
       query = session.query(
-        Parameter.parameter, Parameter.pickled_value.label("value")
+        Parameter.parameter, Parameter.binary_value.label("value")
       )
       query = query.filter(Parameter.run_id == run_id)
       query = query.filter(sql.func.lower(Parameter.type) == parameter_type)
@@ -503,7 +522,7 @@ class Database(sqlutil.Database):
       return df.set_index("parameter")
 
   @property
-  def run_ids(self) -> typing.List[str]:
+  def run_ids(self) -> List[str]:
     """Get a list of all run IDs in the databse."""
     with self.Session() as session:
       query = session.query(Parameter.run_id.distinct().label("run_id"))

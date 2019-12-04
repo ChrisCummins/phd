@@ -3,7 +3,6 @@
 TODO: Detailed explanation of the file.
 """
 import enum
-from typing import Any
 from typing import NamedTuple
 from typing import Optional
 
@@ -23,6 +22,8 @@ class Type(enum.Enum):
 
 class Results(NamedTuple):
   batch_count: int = 0
+  iteration_count: float = 0
+  model_converged: float = 1
   loss: Optional[float] = None
   accuracy: float = 0
   precision: float = 0
@@ -73,6 +74,8 @@ class Results(NamedTuple):
   ) -> "Results":
     return cls(
       batch_count=rolling_results.batch_count,
+      iteration_count=rolling_results.iteration_count,
+      model_converged=rolling_results.model_converged,
       loss=rolling_results.loss,
       accuracy=rolling_results.accuracy,
       precision=rolling_results.precision,

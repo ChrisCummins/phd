@@ -285,12 +285,25 @@ class EpochThread(progress.Progress):
         raise OSError("No batches generated!")
 
       # Run the batch through the model.
-      with self.ctx.Profile(3, f"Run batch of {batch.graph_count} graphs"):
+      with self.ctx.Profile(
+        3,
+        lambda t: (
+          f"Batch {i+1} with "
+          f"{batch.graph_count} graphs: "
+          f"{batch_results}"
+        ),
+      ) as batch_timer:
         batch_results = self.model.RunBatch(self.epoch_type, batch)
 
       # Record the batch results.
       self.logger.OnBatchEnd(
-        self.model.run_id, self.epoch_type, batch, batch_results
+        run_id=self.model.run_id,
+        epoch_type=self.epoch_type,
+        epoch_num=self.model.epoch_num,
+        batch_num=i + 1,
+        timer=batch_timer,
+        data=batch,
+        results=batch_results,
       )
       rolling_results.Update(batch_results)
       self.ctx.bar.set_postfix(

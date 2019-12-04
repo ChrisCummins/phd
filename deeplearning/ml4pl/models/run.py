@@ -159,9 +159,7 @@ def _RunEpoch(
       f"{results.ToFormattedString(model.best_results[epoch_type].results)}"
     )
 
-  with prof.Profile(
-    lambda t: _EpochLabel(results), print_to=ctx.print
-  ), logger.Session():
+  with prof.Profile(lambda t: _EpochLabel(results), print_to=ctx.print):
     results = model(epoch_type, batch_iterator, logger)
 
   improved = model.UpdateBestResults(
@@ -262,10 +260,11 @@ ModelClass = Callable[
 ]
 
 
-def Run(model_class: ModelClass):
-  graph_db: graph_tuple_database.Database = FLAGS.graph_db()
-  logger = logger_lib.Logger.FromFlags()
-
+def _RunWithLogger(
+  model_class: ModelClass,
+  graph_db: graph_tuple_database.Database,
+  logger: logger_lib.Logger,
+):
   # Instantiate a model.
   with prof.Profile(
     lambda t: f"Initialized {model.run_id}",
@@ -300,9 +299,13 @@ def Run(model_class: ModelClass):
   else:
     progress.Run(Train(model, graph_db, logger))
 
-  logger.Flush()
-
   print("\rdone")
+
+
+def Run(model_class: ModelClass):
+  graph_db: graph_tuple_database.Database = FLAGS.graph_db()
+  with logger_lib.Logger.FromFlags() as logger:
+    _RunWithLogger(model_class, graph_db, logger)
 
 
 def Main():

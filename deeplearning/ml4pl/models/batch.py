@@ -12,8 +12,6 @@ import numpy as np
 import sklearn.metrics
 
 from labm8.py import app
-from labm8.py import decorators
-from labm8.py import progress
 
 
 FLAGS = app.FLAGS
@@ -42,6 +40,7 @@ class BatchIterator(NamedTuple):
   """A batch iterator"""
 
   batches: Iterable[Data]
+  # The total number of graphs in all of the batches.
   graph_count: int
 
 
@@ -50,6 +49,13 @@ class Results(NamedTuple):
 
   targets: np.array
   predictions: np.array
+  # The number of model iterations to compute the final results. This is used
+  # by iterative models such as message passing networks.
+  iteration_count: int
+  # For iterative models, this indicates whether the state of the model at
+  # iteration_count had converged on a solution.
+  model_converged: bool
+  # Batch-level average performance metrics.
   loss: Optional[float]
   accuracy: float
   precision: float
@@ -69,6 +75,14 @@ class Results(NamedTuple):
     """
     return self.targets.shape[1]
 
+  def __repr__(self) -> str:
+    return (
+      f"accuracy={self.accuracy:.2%}%, "
+      f"precision={self.precision:.3f}, "
+      f"recall={self.recall:.3f}, "
+      f"f1={self.f1:.3f}"
+    )
+
   def __eq__(self, rhs: "Results"):
     """Compare batch results."""
     return self.accuracy == rhs.accuracy
@@ -78,7 +92,14 @@ class Results(NamedTuple):
     return self.accuracy > rhs.accuracy
 
   @classmethod
-  def Create(cls, targets: np.array, predictions: np.array, loss: float = None):
+  def Create(
+    cls,
+    targets: np.array,
+    predictions: np.array,
+    iteration_count: int = 1,
+    model_converged: bool = True,
+    loss: Optional[float] = None,
+  ):
     """Construct a results instance from 1-hot targets and predictions.
 
     This is the preferred means of construct a Results instance, which takes
@@ -90,6 +111,9 @@ class Results(NamedTuple):
         shape (y_count, y_dimensionality), dtype int32.
       predictions: An array of 1-hot prediction vectors with
         shape (y_count, y_dimensionality), dtype int32.
+      iteration_count: For iterative models, the number of model iterations to
+        compute the final result.
+      model_converged: For iterative models, whether model converged.
       loss: The model loss, or None if model does not have loss.
 
     Returns:
@@ -118,6 +142,8 @@ class Results(NamedTuple):
     return cls(
       targets=targets,
       predictions=predictions,
+      iteration_count=iteration_count,
+      model_converged=model_converged,
       loss=loss,
       accuracy=sklearn.metrics.accuracy_score(true_y, pred_y),
       precision=sklearn.metrics.precision_score(
@@ -144,6 +170,8 @@ class Results(NamedTuple):
 class RollingResults:
   def __init__(self):
     self.batch_count = 0
+    self.iteration_count_sum = 0
+    self.model_converged_sum = 0
     self.has_loss = False
     self.loss_sum = 0
     self.accuracy_sum = 0
@@ -153,6 +181,8 @@ class RollingResults:
 
   def Update(self, results: Results):
     self.batch_count += 1
+    self.iteration_count_sum += 1
+    self.model_converged_sum += 1 if results.model_converged else 0
     if results.has_loss:
       self.has_loss = True
       self.loss_sum += results.loss
@@ -160,6 +190,14 @@ class RollingResults:
     self.precision_sum += results.precision
     self.recall_sum += results.recall
     self.f1_sum += results.f1
+
+  @property
+  def iteration_count(self) -> float:
+    return self.iteration_count_sum / max(self.batch_count, 1)
+
+  @property
+  def model_converged(self) -> float:
+    return self.model_converged_sum / max(self.batch_count, 1)
 
   @property
   def loss(self) -> Optional[float]:

@@ -148,6 +148,7 @@ py_library(
     deps = [
         "//deeplearning/ml4pl:run_id",
         "//labm8/py:app",
+        "//labm8/py:decorators",
         "//labm8/py:humanize",
         "//labm8/py:labdate",
         "//labm8/py:pdutil",

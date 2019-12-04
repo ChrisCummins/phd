@@ -2,14 +2,8 @@
 
 TODO: Detailed explanation of the file.
 """
-import contextlib
-import threading
-import time
 from typing import Any
-from typing import NamedTuple
 from typing import Optional
-
-import numpy as np
 
 import build_info
 from deeplearning.ml4pl import run_id as run_id_lib
@@ -19,6 +13,7 @@ from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import log_database
 from labm8.py import app
 from labm8.py import pbutil
+from labm8.py import prof
 from labm8.py import progress
 from labm8.py import sqlutil
 
@@ -26,25 +21,48 @@ from labm8.py import sqlutil
 FLAGS = app.FLAGS
 
 
+app.DEFINE_integer(
+  "logger_buffer_size_mb",
+  32,
+  "The maximum size of the log buffer, in megabytes.",
+)
+app.DEFINE_integer(
+  "logger_buffer_length", 1024, "The maximum length of the log buffer."
+)
+app.DEFINE_integer(
+  "logger_flush_seconds", 10, "The maximum number of seconds between flushes."
+)
+
+
 class Logger(object):
   def __init__(
     self,
     db: log_database.Database,
+    max_buffer_size: int,
+    max_buffer_length: int,
+    max_seconds_since_flush: float,
+    log_level: int = 3,
     ctx: progress.ProgressContext = progress.NullContext,
   ):
     self.db = db
     self.ctx = ctx
-    self.writer = LogWriter(db, ctx)
+    self._writer = sqlutil.BufferedDatabaseWriter(
+      db,
+      ctx=ctx,
+      max_buffer_size=max_buffer_size,
+      max_buffer_length=max_buffer_length,
+      max_seconds_since_flush=max_seconds_since_flush,
+      log_level=log_level,
+    )
 
-  @contextlib.contextmanager
-  def Session(self):
-    try:
-      yield
-    finally:
-      self.writer.Flush()
+  def __enter__(self):
+    return self
 
-  def Flush(self) -> None:
-    self.writer.Flush()
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    del exc_type
+    del exc_val
+    del exc_tb
+    self._writer.Close()
 
   #############################################################################
   # Event callbacks.
@@ -52,16 +70,41 @@ class Logger(object):
 
   def OnStartRun(self, run_id: run_id_lib.RunId) -> None:
     """Record model parameters."""
-    self.writer.WriteParameters(run_id)
+    flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
+    self._writer.AddMany(
+      log_database.Parameter.CreateManyFromDict(
+        run_id, log_database.ParameterType.FLAG, flags
+      )
+    )
+    self._writer.AddMany(
+      log_database.Parameter.CreateManyFromDict(
+        run_id,
+        log_database.ParameterType.BUILD_INFO,
+        pbutil.ToJson(build_info.GetBuildInfo()),
+      )
+    )
 
   def OnBatchEnd(
     self,
     run_id: run_id_lib.RunId,
     epoch_type: epoch.Type,
+    epoch_num: int,
+    batch_num: int,
+    timer: prof.ProfileTimer,
     data: batch.Data,
     results: batch.Results,
   ):
-    pass
+    batch = log_database.Batch.Create(
+      run_id=run_id,
+      epoch_type=epoch_type,
+      epoch_num=epoch_num,
+      batch_num=batch_num,
+      timer=timer,
+      data=data,
+      results=results,
+      details=log_database.BatchDetails.Create(data=data, results=results),
+    )
+    self._writer.AddOne(batch)
 
   def OnEpochEnd(
     self,
@@ -176,37 +219,14 @@ class Logger(object):
     #     self._initialized = True
 
   @classmethod
-  def FromFlags(cls) -> "Logger":
+  def FromFlags(cls, ctx: progress.ProgressContext = progress.NullContext):
     if not FLAGS.log_db:
       raise app.UsageError("--log_db not set")
-    return Logger(FLAGS.log_db())
 
-
-class LogWriter(threading.Thread):
-  def __init__(self, db: log_database.Database, ctx: progress.ProgressContext):
-    self.db = db
-    self.ctx = ctx
-
-    self.to_commit = []
-    self.last_commit = time.time()
-
-  def WriteParameters(self, run_id: run_id_lib.RunId) -> None:
-    """Record model parameters."""
-    flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
-    self.to_commit += log_database.Parameter.CreateManyFromDict(
-      run_id, log_database.ParameterType.FLAG, flags
+    return cls(
+      FLAGS.log_db(),
+      ctx=ctx,
+      max_buffer_size=FLAGS.logger_buffer_size_mb * 1024 * 1024,
+      max_buffer_length=FLAGS.logger_buffer_length,
+      max_seconds_since_flush=FLAGS.logger_flush_seconds,
     )
-    self.to_commit += log_database.Parameter.CreateManyFromDict(
-      run_id,
-      log_database.ParameterType.BUILD_INFO,
-      pbutil.ToJson(build_info.GetBuildInfo()),
-    )
-
-  def Flush(self) -> None:
-    failures = sqlutil.ResilientAddManyAndCommit(self.db, self.to_commit)
-    if len(failures):
-      self.ctx.Error(
-        "Logger failed to commit %d objects", len(failures),
-      )
-    self.to_commit = []
-    self.last_commit = time.time()
