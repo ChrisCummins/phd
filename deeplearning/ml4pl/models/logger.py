@@ -24,13 +24,6 @@ app.DEFINE_list(
 )
 
 
-# The result of running a minibatch. Return 1-hot target values and the raw
-# 1-hot outputs of the model. These are used to compute evaluation metrics.
-class MinibatchResults(NamedTuple):
-  y_true_1hot: np.array  # Shape [num_labels,num_classes]
-  y_pred_1hot: np.array  # Shape [num_labels,num_classes]
-
-
 class Logger(object):
   def __init__(self, db: log_database.Database):
     self.db = db

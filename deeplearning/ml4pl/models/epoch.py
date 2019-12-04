@@ -7,6 +7,7 @@ from typing import Any
 from typing import NamedTuple
 from typing import Optional
 
+from deeplearning.ml4pl.models import batch
 from labm8.py import app
 from labm8.py import shell
 
@@ -21,12 +22,16 @@ class Type(enum.Enum):
 
 
 class Results(NamedTuple):
+  batch_count: int = 0
+  loss: Optional[float] = None
   accuracy: float = 0
   precision: float = 0
   recall: float = 0
   f1: float = 0
-  batch_count: int = None
-  loss: float = None
+
+  @property
+  def has_loss(self) -> bool:
+    return self.loss is not None
 
   def __repr__(self) -> str:
     return (
@@ -45,14 +50,35 @@ class Results(NamedTuple):
       else:
         return f"{shell.ShellEscapeCodes.BOLD}{shell.ShellEscapeCodes.RED}{string}{shell.ShellEscapeCodes.END}"
 
-    accuracy = Colorize(
-      self.accuracy, previous.accuracy, f"accuracy={self.accuracy:.2%}"
+    strings = [
+      Colorize(
+        self.accuracy, previous.accuracy, f"accuracy={self.accuracy:.2%}"
+      ),
+      Colorize(
+        self.precision, previous.precision, f"precision={self.precision:.3f}"
+      ),
+      Colorize(self.recall, previous.recall, f"recall={self.recall:.3f}"),
+    ]
+
+    if self.has_loss:
+      strings.append(
+        Colorize(self.loss, previous.loss or 0, f"loss={self.loss:.6f}")
+      )
+
+    return ", ".join(strings)
+
+  @classmethod
+  def FromRollingResults(
+    cls, rolling_results: batch.RollingResults
+  ) -> "Results":
+    return cls(
+      batch_count=rolling_results.batch_count,
+      loss=rolling_results.loss,
+      accuracy=rolling_results.accuracy,
+      precision=rolling_results.precision,
+      recall=rolling_results.recall,
+      f1=rolling_results.f1,
     )
-    precision = Colorize(
-      self.precision, previous.precision, f"precision={self.precision:.3f}"
-    )
-    recall = Colorize(self.recall, previous.recall, f"recall={self.recall:.3f}")
-    return f"{accuracy}, {precision}, {recall}"
 
   def __eq__(self, rhs: "Results"):
     return self.accuracy == rhs.accuracy

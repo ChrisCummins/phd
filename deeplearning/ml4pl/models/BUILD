@@ -102,6 +102,7 @@ py_library(
     srcs = ["epoch.py"],
     visibility = ["//deeplearning/ml4pl/models:__subpackages__"],
     deps = [
+        ":batch",
         "//labm8/py:app",
     ],
 )

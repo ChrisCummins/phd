@@ -82,32 +82,16 @@ app.DEFINE_integer(
 
 def SplitStringsToInts(split_strings: List[str]):
   """Convert string split names to integers."""
-  try:
-    return [int(split) for split in split_strings]
-  except Exception:
-    raise app.UsageError(
-      f"Splits must be a list of integers, found {split_strings}"
-    )
 
+  def MakeInt(split: str):
+    try:
+      return int(split)
+    except Exception:
+      raise app.UsageError(
+        f"Splits must be a list of integers, found '{split}'"
+      )
 
-def RunIdAndEpochNumFromString(
-  string: str,
-) -> Tuple[run_id_lib.RunId, Optional[int]]:
-  try:
-    if "@" in string:
-      # TODO: Split run_id@epoch_num:
-      components = string.split("@")
-      assert len(components) == 2
-      run_id_string, epoch_num_string = components
-      run_id = run_id_lib.RunId.FromString(run_id_string)
-      epoch_num = int(epoch_num_string)
-    else:
-      run_id = run_id_lib.RunId.FromString(string)
-      epoch_num = None
-
-    return run_id, epoch_num
-  except Exception:
-    raise app.UsageError(f"Invalid run ID and epoch format: {string}")
+  return [MakeInt(split) for split in split_strings]
 
 
 def MakeBatchIterator(
@@ -194,7 +178,7 @@ class Train(progress.Progress):
     graph_db: graph_tuple_database.Database,
     logger: logger_lib.Logger,
   ):
-    if FLAGS.test_on not in {"none", "every", "improvement", "end"}:
+    if FLAGS.test_on not in {"none", "improvement", "every"}:
       raise app.UsageError("Unknown --test_on option")
 
     self.model = model
@@ -247,14 +231,6 @@ class Train(progress.Progress):
           epoch.Type.TEST, self.model.epoch_num, train_results, ctx=self.ctx
         )
 
-    # We have reached the end of training. If we haven't been doing incremental
-    # testing, then run the test set.
-    if FLAGS.test_on == "end":
-      self.model.LoadModelData(
-        self.logger.Load(*RunIdAndEpochNumFromString(FLAGS.restore_model))
-      )
-      test_results, _ = self._RunEpoch(epoch.Type.TEST, batch_iterators)
-
     return test_results
 
   def _RunEpoch(
@@ -292,13 +268,16 @@ def Run(model_class: ModelClass):
     lambda t: f"Initialized {model.run_id}",
     print_to=lambda msg: app.Log(2, msg),
   ):
-    model = model_class(graph_db)
+    model = model_class(
+      node_y_dimensionality=graph_db.node_y_dimensionality,
+      graph_y_dimensionality=graph_db.graph_y_dimensionality,
+    )
     if FLAGS.restore_model:
       # TODO(github.com/ChrisCummins/ProGraML/issues/24): Implement model
       # restoring.
       model.LoadModelData(logger.GetModelData(FLAGS.restore_model))
     else:
-      model.CreateModelData()
+      model.Initialize()
 
   if FLAGS.test_only:
     batch_iterator = MakeBatchIterator(

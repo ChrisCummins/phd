@@ -2,6 +2,7 @@
 from typing import Any
 from typing import Dict
 from typing import Iterable
+from typing import Optional
 
 from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
@@ -17,26 +18,57 @@ FLAGS = app.FLAGS
 
 
 class ClassifierBase(object):
-  """Abstract base class for implementing classification models.
+  """Abstract base class for implementing classifiers.
+
+  Before feeding any data through a model, you must call Initialize(). Else
+  use the FromCheckpoint() class constructor to construct and initialize a
+  model from a checkpoint.
 
   Subclasses must implement the following methods:
-    MakeBatch()
-    RunBatch()
+    MakeBatch()        # construct a batch from input graphs.
+    RunBatch()         # run the model on the batch.
 
   And may optionally wish to implement these additional methods:
-    CreateModelData()
-    ModelDataToSave()
-    LoadModelData()
+    CreateModelData()  # initialize an untrained model.
+    ModelDataToSave()  # get model data to save.
+    LoadModelData()    # load model data.
   """
 
-  def __init__(self, graph_db: graph_tuple_database.Database):
-    """Constructor."""
-    # Set by LoadModel() or Initialize().
+  def __init__(
+    self,
+    node_y_dimensionality: int,
+    graph_y_dimensionality: int,
+    restored_from: Optional[run_id.RunId] = None,
+  ):
+    """Constructor.
+
+    Args:
+      node_y_dimensionality: The dimensionality of per-node labels.
+      graph_y_dimensionality: The dimensionality of per-graph labels.
+
+    Raises:
+      NotImplementedError: If both node and graph labels are set.
+      TypeError: If neither graph or node labels are set.
+    """
+    # Set by FromCheckpoint() or Initialize().
     self._initialized = False
 
+    # The unique ID of this model instance.
     self.run_id: run_id.RunId = run_id.RunId.GenerateUnique(type(self).__name__)
 
-    self.graph_db = graph_db
+    self.restored_from = restored_from
+    self.node_y_dimensionality = node_y_dimensionality
+    self.graph_y_dimensionality = graph_y_dimensionality
+
+    # Determine the label dimensionality.
+    if node_y_dimensionality and graph_y_dimensionality:
+      raise NotImplementedError(
+        "Both node and graph labels are set. This is currently not supported. "
+        "See <github.com/ChrisCummins/ProGraML/issues/26>"
+      )
+    self.y_dimensionality = node_y_dimensionality or graph_y_dimensionality
+    if not self.y_dimensionality:
+      raise TypeError("Neither node or graph dimensionalities are set")
 
     # Progress counters. These are saved and restored from file.
     self.epoch_num = 0
@@ -90,50 +122,20 @@ class ClassifierBase(object):
     Use this method to perform any model-specific initialisation such as
     randomizing starting weights. When restoring a model from a checkpoint, this
     method is *not* called. Instead, LoadModelData() will be called.
+
+    Note that subclasses must call this superclass method first.
     """
-    self._initialized = True
+    pass
 
   def LoadModelData(self, data_to_load: Any) -> None:
-    self._initialized = True
-    # TODO: Figure out how to restore self.epoch_num and self.best_results.
     return None
 
   def GetModelData(self) -> Any:
     return None
 
   #############################################################################
-  # Automatic methods and properties.
+  # Automatic methods.
   #############################################################################
-
-  @property
-  def y_dimensionality(self) -> int:
-    """Return the label dimensionality.
-
-    Returns:
-      The label dimensionality, > 1.
-
-    Raises:
-      TypeError: If node or graph labels are not set, or if both are set.
-    """
-    # NOTE(github.com/ChrisCummins/ProGraML/issues/26): Currently, only
-    # graph-level *or* node-level classification is supported.
-    if (
-      self.graph_db.node_y_dimensionality
-      and self.graph_db.graph_y_dimensionality
-    ):
-      raise TypeError(
-        "Both node and graph labels are set. This is currently "
-        "not supported. See "
-        "<github.com/ChrisCummins/ProGraML/issues/26>."
-      )
-    dimensionality = (
-      self.graph_db.node_y_dimensionality
-      or self.graph_db.graph_y_dimensionality
-    )
-    if not dimensionality:
-      raise TypeError("Neither node or graph dimensionalities are set")
-
-    return dimensionality
 
   def BatchIterator(
     self, graphs: Iterable[graph_tuple_database.GraphTuple]
@@ -171,7 +173,7 @@ class ClassifierBase(object):
     """
     if not self._initialized:
       raise TypeError(
-        "Model called before CreateModelData() or LoadModelData() " "invoked"
+        "Model called before Initialize() or FromCheckpoint() invoked"
       )
 
     thread = EpochThread(self, epoch_type, batch_iterator, logger)
@@ -200,8 +202,32 @@ class ClassifierBase(object):
       return False
 
   #############################################################################
-  # Saving and restoring checkpoints.
+  # Initializing, restoring, and saving models.
   #############################################################################
+
+  def Initialize(self) -> None:
+    if self._initialized:
+      raise TypeError("CreateModelData() called on already-initialized model")
+
+    self._initialized = True
+    self.CreateModelData()
+
+  @classmethod
+  def FromCheckpoint(cls, checkpoint: checkpoints.Checkpoint):
+    """Construct a model from checkpoint data."""
+    if self._initialized:
+      raise TypeError("LoadModelData() called on already-initialized model")
+
+    model = cls(
+      node_y_dimensionality=node_y_dimensionality,
+      graph_y_dimensionality=graph_y_dimensionality,
+      restored_from=checkpoint.run_id,
+    )
+    model._initialized = True
+    model.epoch_num = checkpoint.epoch_num
+    model.best_results = checkpoint.best_results
+    model.LoadModelData(checkpoint.model_data)
+    return model
 
   def GetCheckpoint(self) -> checkpoints.Checkpoint:
     return checkpoints.Checkpoint(
@@ -210,11 +236,6 @@ class ClassifierBase(object):
       best_results=self.best_results,
       model_data=self.GetModelData(),
     )
-
-  @classmethod
-  def FromCeheckpoint(cls, checkpoint: checkpoints.Checkpoint):
-    # TODO: Implement
-    pass
 
 
 class EpochThread(progress.Progress):
@@ -279,5 +300,5 @@ class EpochThread(progress.Progress):
         rec=rolling_results.recall,
       )
 
-    self.results = rolling_results.ToEpochResults()
+    self.results = epoch.Results.FromRollingResults(rolling_results)
     self.logger.OnEpochEnd(self.model.run_id, self.epoch_type, self.results)

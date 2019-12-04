@@ -6,11 +6,11 @@ from typing import Any
 from typing import Iterable
 from typing import List
 from typing import NamedTuple
+from typing import Optional
 
 import numpy as np
 import sklearn.metrics
 
-from deeplearning.ml4pl.models import epoch
 from labm8.py import app
 from labm8.py import decorators
 from labm8.py import progress
@@ -28,6 +28,8 @@ app.DEFINE_string(
 
 
 class Data(NamedTuple):
+  """The model data for a batch."""
+
   graph_ids: List[int]
   data: Any
 
@@ -44,29 +46,51 @@ class BatchIterator(NamedTuple):
 
 
 class Results(NamedTuple):
+  """The results of running a batch through a model."""
+
   targets: np.array
   predictions: np.array
-
-  # Derived metrics.
-  loss: float
+  loss: Optional[float]
   accuracy: float
   precision: float
   recall: float
   f1: float
 
   @property
+  def has_loss(self):
+    return self.loss is not None
+
+  @property
   def target_count(self) -> int:
+    """Get the number of targets in the batch.
+
+    For graph-level classifiers, this will be equal to Data.graph_count, else
+    it's equal to the batch node count.
+    """
     return self.targets.shape[1]
 
+  def __eq__(self, rhs: "Results"):
+    """Compare batch results."""
+    return self.accuracy == rhs.accuracy
+
+  def __gt__(self, rhs: "Results"):
+    """Compare batch results."""
+    return self.accuracy > rhs.accuracy
+
   @classmethod
-  def Create(cls, targets: np.array, predictions: np.array, loss: float = 0):
-    """
+  def Create(cls, targets: np.array, predictions: np.array, loss: float = None):
+    """Construct a results instance from 1-hot targets and predictions.
+
+    This is the preferred means of construct a Results instance, which takes
+    care of evaluating all of the metrics for you. The behavior of metrics
+    calculation is dependent on the --batch_scores_averaging_method flag.
 
     Args:
       targets: An array of 1-hot target vectors with
         shape (y_count, y_dimensionality), dtype int32.
       predictions: An array of 1-hot prediction vectors with
         shape (y_count, y_dimensionality), dtype int32.
+      loss: The model loss, or None if model does not have loss.
 
     Returns:
       A Results instance.
@@ -87,8 +111,8 @@ class Results(NamedTuple):
     true_y = np.argmax(targets, axis=1)
     pred_y = np.argmax(predictions, axis=1)
 
-    # NOTE(github.com/ChrisCummins/ProGraML/issues/22): This requires that
-    # labels have values [0,...n).
+    # NOTE(github.com/ChrisCummins/ProGraML/issues/22): This assumes that
+    # labels use the values [0,...n).
     labels = np.arange(y_dimensionality, dtype=np.int32)
 
     return cls(
@@ -116,16 +140,11 @@ class Results(NamedTuple):
       ),
     )
 
-  def __eq__(self, rhs: "Results"):
-    return self.accuracy == rhs.accuracy
-
-  def __gt__(self, rhs: "Results"):
-    return self.accuracy > rhs.accuracy
-
 
 class RollingResults:
   def __init__(self):
     self.batch_count = 0
+    self.has_loss = False
     self.loss_sum = 0
     self.accuracy_sum = 0
     self.precision_sum = 0
@@ -134,15 +153,18 @@ class RollingResults:
 
   def Update(self, results: Results):
     self.batch_count += 1
-    self.loss_sum += results.loss
+    if results.has_loss:
+      self.has_loss = True
+      self.loss_sum += results.loss
     self.accuracy_sum += results.accuracy
     self.precision_sum += results.precision
     self.recall_sum += results.recall
     self.f1_sum += results.f1
 
   @property
-  def loss(self) -> float:
-    return self.loss_sum / max(self.batch_count, 1)
+  def loss(self) -> Optional[float]:
+    if self.has_loss:
+      return self.loss_sum / max(self.batch_count, 1)
 
   @property
   def accuracy(self) -> float:
@@ -159,13 +181,3 @@ class RollingResults:
   @property
   def f1(self) -> float:
     return self.f1_sum / max(self.batch_count, 1)
-
-  def ToEpochResults(self) -> epoch.Results:
-    return epoch.Results(
-      batch_count=self.batch_count,
-      loss=self.loss,
-      accuracy=self.accuracy,
-      precision=self.precision,
-      recall=self.recall,
-      f1=self.f1,
-    )

@@ -19,8 +19,8 @@ FLAGS = app.FLAGS
 class ZeroRClassifier(classifier_base.ClassifierBase):
   """A Zero-R classifier that supports node-level or graph-level labels.
 
-  A Zero-R classifier always predicts the mode value from the training set. It
-  is used as a baseline for comparing the performance of other classifiers.
+  Zero-R classifiers predict the mode value from the training set. It is used
+  as a baseline for comparing the performance of other classifiers.
   """
 
   def __init__(self, *args, **kwargs):
@@ -57,7 +57,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
 
       # Add the graph data to the batch.
       graph_ids.append(graph)
-      if self.graph_db.node_y_dimensionality:
+      if self.node_y_dimensionality:
         batch_size += graph.tuple.node_y.size
         targets.append(graph.tuple.node_y)
       else:
@@ -65,7 +65,7 @@ class ZeroRClassifier(classifier_base.ClassifierBase):
         targets = graph.tuple.graph_y
 
     # Flatten per-graph node y to a single array.
-    if self.graph_db.node_y_dimensionality and targets:
+    if self.node_y_dimensionality and targets:
       targets = np.vstack(targets)
 
     return batchs.Data(graph_ids=graph_ids, data=targets)
