@@ -176,9 +176,7 @@ def _RunEpoch(
     )
 
   with prof.Profile(lambda t: _EpochLabel(results), print_to=ctx.print):
-    results = model(
-      epoch_type, batch_iterator.batches, logger, batch_iterator.graph_count
-    )
+    results = model(epoch_type, batch_iterator, logger)
 
   improved = model.UpdateBestResults(
     epoch_type, model.epoch_num, results, ctx=ctx

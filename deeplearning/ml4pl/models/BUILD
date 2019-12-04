@@ -25,8 +25,9 @@ py_library(
 
 py_library(
     name = "checkpoints",
-    srcs = ["checkpoint.py"],
+    srcs = ["checkpoints.py"],
     deps = [
+        ":epoch",
         "//deeplearning/ml4pl:run_id",
         "//labm8/py:app",
     ],

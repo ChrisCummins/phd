@@ -46,17 +46,9 @@ class ClassifierBase(object):
       epoch.Type.TEST: epoch.BestResults(),
     }
 
-  @property
-  def y_dimensionality(self):
-    if (
-      self.graph_db.node_y_dimensionality
-      and self.graph_db.graph_y_dimensionality
-    ):
-      raise TypeError("Both node and graph labels are set!")
-    return (
-      self.graph_db.node_y_dimensionality
-      or self.graph_db.graph_y_dimensionality
-    )
+  #############################################################################
+  # Interface methods. Subclasses must implement these.
+  #############################################################################
 
   def MakeBatch(
     self,
@@ -106,17 +98,42 @@ class ClassifierBase(object):
     # TODO: Figure out how to restore self.epoch_num and self.best_results.
     return None
 
-  def ModelDataToSave(self) -> Any:
+  def GetModelData(self) -> Any:
     return None
 
-  def GetCheckpoint(self) -> checkpoints.Checkpoint:
-    # TODO: Implement
-    pass
+  #############################################################################
+  # Automatic methods and properties.
+  #############################################################################
 
-  @classmethod
-  def FromCeheckpoint(cls, checkpoint: checkpoints.Checkpoint):
-    # TODO: Implement
-    pass
+  @property
+  def y_dimensionality(self) -> int:
+    """Return the label dimensionality.
+
+    Returns:
+      The label dimensionality, > 1.
+
+    Raises:
+      TypeError: If node or graph labels are not set, or if both are set.
+    """
+    # NOTE(github.com/ChrisCummins/ProGraML/issues/26): Currently, only
+    # graph-level *or* node-level classification is supported.
+    if (
+      self.graph_db.node_y_dimensionality
+      and self.graph_db.graph_y_dimensionality
+    ):
+      raise TypeError(
+        "Both node and graph labels are set. This is currently "
+        "not supported. See "
+        "<github.com/ChrisCummins/ProGraML/issues/26>."
+      )
+    dimensionality = (
+      self.graph_db.node_y_dimensionality
+      or self.graph_db.graph_y_dimensionality
+    )
+    if not dimensionality:
+      raise TypeError("Neither node or graph dimensionalities are set")
+
+    return dimensionality
 
   def BatchIterator(
     self, graphs: Iterable[graph_tuple_database.GraphTuple]
@@ -127,7 +144,7 @@ class ClassifierBase(object):
       graphs: The graphs to construct batches from.
 
     Returns:
-      An iterator of batch data.
+      A batch iterator.
     """
     while True:
       batch = self.MakeBatch(graphs)
@@ -139,15 +156,15 @@ class ClassifierBase(object):
   def __call__(
     self,
     epoch_type: epoch.Type,
-    batch_iterator: Iterable[batchs.Data],
+    batch_iterator: batchs.BatchIterator,
     logger: logging.Logger,
-    graph_count: int,
   ) -> epoch.Results:
     """Run the model over the given graphs.
 
     Args:
       epoch_type: The type of epoch to run.
-      batch_iterator: The input batches to process.
+      batch_iterator: The batches to process.
+      logger: A logger instance to log results to.
 
     Returns:
       The average accuracy of the model over all batches.
@@ -157,7 +174,7 @@ class ClassifierBase(object):
         "Model called before CreateModelData() or LoadModelData() " "invoked"
       )
 
-    thread = EpochThread(self, epoch_type, batch_iterator, logger, graph_count)
+    thread = EpochThread(self, epoch_type, batch_iterator, logger)
     progress.Run(thread)
     return thread.results
 
@@ -182,6 +199,23 @@ class ClassifierBase(object):
     else:
       return False
 
+  #############################################################################
+  # Saving and restoring checkpoints.
+  #############################################################################
+
+  def GetCheckpoint(self) -> checkpoints.Checkpoint:
+    return checkpoints.Checkpoint(
+      run_id=self.run_id,
+      epoch_num=self.epoch_num,
+      best_results=self.best_results,
+      model_data=self.GetModelData(),
+    )
+
+  @classmethod
+  def FromCeheckpoint(cls, checkpoint: checkpoints.Checkpoint):
+    # TODO: Implement
+    pass
+
 
 class EpochThread(progress.Progress):
   """A thread which runs a single epoch of a model."""
@@ -190,9 +224,8 @@ class EpochThread(progress.Progress):
     self,
     model: ClassifierBase,
     epoch_type: epoch.Type,
-    batch_iterator: Iterable[batchs.Data],
+    batch_iterator: batchs.BatchIterator,
     logger: logging.Logger,
-    graph_count: int,
   ):
     """Constructor.
 
@@ -201,7 +234,6 @@ class EpochThread(progress.Progress):
       epoch_type:
       batch_iterator:
       logger:
-      graph_count: The total number of graphs.
     """
     self.model = model
     self.epoch_type = epoch_type
@@ -214,7 +246,7 @@ class EpochThread(progress.Progress):
     super(EpochThread, self).__init__(
       f"{epoch_type.name.capitalize()} epoch {model.epoch_num}",
       0,
-      graph_count,
+      batch_iterator.graph_count,
       unit="graph",
       vertical_position=0,
       leave=False,
@@ -224,7 +256,7 @@ class EpochThread(progress.Progress):
     """Run the epoch."""
     rolling_results = batchs.RollingResults()
 
-    for i, batch in enumerate(self.batch_iterator):
+    for i, batch in enumerate(self.batch_iterator.batches):
       self.ctx.i += batch.graph_count
 
       # Check that at least one batch is produced.
