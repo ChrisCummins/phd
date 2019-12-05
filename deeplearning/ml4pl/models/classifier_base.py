@@ -38,6 +38,7 @@ class ClassifierBase(object):
     self,
     node_y_dimensionality: int,
     graph_y_dimensionality: int,
+    edge_position_max: int,
     restored_from: Optional[run_id.RunId] = None,
   ):
     """Constructor.
@@ -45,6 +46,7 @@ class ClassifierBase(object):
     Args:
       node_y_dimensionality: The dimensionality of per-node labels.
       graph_y_dimensionality: The dimensionality of per-graph labels.
+      edge_position_max: The maximum edge position.
 
     Raises:
       NotImplementedError: If both node and graph labels are set.
@@ -59,6 +61,7 @@ class ClassifierBase(object):
     self.restored_from = restored_from
     self.node_y_dimensionality = node_y_dimensionality
     self.graph_y_dimensionality = graph_y_dimensionality
+    self.edge_position_max = edge_position_max
 
     # Determine the label dimensionality.
     if node_y_dimensionality and graph_y_dimensionality:

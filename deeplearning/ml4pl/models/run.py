@@ -5,13 +5,12 @@ TODO: Detailed explanation of the file.
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
 
-from deeplearning.ml4pl import run_id as run_id_lib
 from deeplearning.ml4pl.graphs.labelled import graph_database_reader
 from deeplearning.ml4pl.graphs.labelled import graph_tuple_database
 from deeplearning.ml4pl.models import batch as batchs
+from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import classifier_base
 from deeplearning.ml4pl.models import epoch
 from deeplearning.ml4pl.models import logger as logger_lib
@@ -281,6 +280,7 @@ def _RunWithLogger(
       model = model_class(
         node_y_dimensionality=graph_db.node_y_dimensionality,
         graph_y_dimensionality=graph_db.graph_y_dimensionality,
+        edge_position_max=graph_db.edge_position_max,
       )
       model.Initialize()
 
