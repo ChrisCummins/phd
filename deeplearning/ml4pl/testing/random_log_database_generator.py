@@ -53,8 +53,13 @@ class RandomLogDatabaseGenerator(object):
       max_batch_count: The maximum number of batches to generate for an epoch of
         a given type.
     """
-    run_id = run_id or run_id_lib.RunId.GenerateUnique(
-      f"rand{random.randint(0, 10000):04d}"
+    run_id = log_database.RunId(
+      run_id=str(
+        run_id
+        or run_id_lib.RunId.GenerateUnique(
+          f"rand{random.randint(0, 10000):04d}"
+        )
+      )
     )
     parameters = self._CreateRandomParameters(
       run_id, max_param_count=max_param_count
@@ -91,7 +96,7 @@ class RandomLogDatabaseGenerator(object):
   #############################################################################
 
   def _CreateRandomParameters(
-    self, run_id: run_id_lib.RunId, max_param_count: Optional[int] = None
+    self, run_id: log_database.RunId, max_param_count: Optional[int] = None
   ) -> List[log_database.Parameter]:
     """Generate random parameter logs.
 
@@ -111,7 +116,7 @@ class RandomLogDatabaseGenerator(object):
 
   def _CreateRandomBatches(
     self,
-    run_id: run_id_lib.RunId,
+    run_id: log_database.RunId,
     max_epoch_count: Optional[int] = None,
     max_batch_count: Optional[int] = None,
   ) -> List[log_database.Batch]:
@@ -232,9 +237,7 @@ def Main():
   log_db = FLAGS.log_db()
 
   log_db_generator = RandomLogDatabaseGenerator()
-  for _ in range(FLAGS.run_count):
-    with log_db.Session(commit=True) as session:
-      session.add_all(log_db_generator.CreateRandomRunLogs().all)
+  log_db_generator.PopulateLogDatabase(log_db, run_count=FLAGS.run_count)
 
 
 if __name__ == "__main__":

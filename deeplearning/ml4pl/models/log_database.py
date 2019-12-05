@@ -31,6 +31,42 @@ FLAGS = app.FLAGS
 Base = declarative.declarative_base()
 
 ###############################################################################
+# Run IDs.
+###############################################################################
+
+
+class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
+  """A run ID."""
+
+  id: int = sql.Column(sql.Integer, primary_key=True)
+
+  run_id: str = sql.Column(
+    run_id_lib.RunId.SqlStringColumnType(),
+    default=None,
+    index=True,
+    unique=True,
+    nullable=False,
+  )
+
+  # Relationships to data.
+  parameters: "Parameter" = sql.orm.relationship(
+    "Parameter", cascade="all, delete-orphan", back_populates="run_id"
+  )
+  batches: "Batch" = sql.orm.relationship(
+    "Batch", cascade="all, delete-orphan", back_populates="run_id"
+  )
+  checkpoints: "Checkpoint" = sql.orm.relationship(
+    "Checkpoint", cascade="all, delete-orphan", back_populates="run_id"
+  )
+
+  def __repr__(self):
+    return str(self.run_id)
+
+  def __eq__(self, rhs: "RunId"):
+    return self.run_id == rhs.run_id
+
+
+###############################################################################
 # Parameters.
 ###############################################################################
 
@@ -47,8 +83,17 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   id: int = sql.Column(sql.Integer, primary_key=True)
 
-  # A string to uniquely identify the given experiment run.
-  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None, index=True)
+  # The run ID.
+  run_id_num: int = sql.Column(
+    sql.Integer,
+    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+    default=None,
+    index=True,
+    nullable=False,
+  )
+  run_id: RunId = sql.orm.relationship(
+    "run_ids.run_id", uselist=False, back_populates="parameters"
+  )
 
   # The numeric value of the ParameterType num. Use type property to access enum
   # value.
@@ -81,7 +126,9 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     self.binary_value = pickle.dumps(data)
 
   __table_args__ = (
-    sql.UniqueConstraint("run_id", "type_num", "name", name="unique_parameter"),
+    sql.UniqueConstraint(
+      "run_id_num", "type_num", "name", name="unique_parameter"
+    ),
   )
 
   @classmethod
@@ -108,18 +155,27 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     ]
 
 
-###############################################################################
-# Batches.
-###############################################################################
-
-
+# ###############################################################################
+# # Batches.
+# ###############################################################################
+#
+#
 class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A description running a batch of graphs through a model."""
 
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None)
+  run_id_num: int = sql.Column(
+    sql.Integer,
+    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+    default=None,
+    index=True,
+    nullable=False,
+  )
+  run_id: RunId = sql.orm.relationship(
+    "RunId", uselist=False, back_populates="batches"
+  )
 
   # The epoch number, >= 1.
   epoch_num: int = sql.Column(sql.Integer, nullable=False, index=True)
@@ -156,7 +212,11 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # Unique batch results.
   __table_args__ = (
     sql.UniqueConstraint(
-      "run_id", "epoch_num", "epoch_type_num", "batch_num", name="unique_batch"
+      "run_id_num",
+      "epoch_num",
+      "epoch_type_num",
+      "batch_num",
+      name="unique_batch",
     ),
   )
 
@@ -298,7 +358,16 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None, index=True)
+  run_id_num: int = sql.Column(
+    sql.Integer,
+    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+    default=None,
+    index=True,
+    nullable=False,
+  )
+  run_id: RunId = sql.orm.relationship(
+    "RunId", uselist=False, back_populates="checkpoints"
+  )
 
   # The epoch number, >= 1.
   epoch_num: int = sql.Column(sql.Integer, nullable=False, index=True)
@@ -311,7 +380,7 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # Unique checkpoint.
   __table_args__ = (
-    sql.UniqueConstraint("run_id", "epoch_num", name="unique_checkpoint"),
+    sql.UniqueConstraint("run_id_num", "epoch_num", name="unique_checkpoint"),
   )
 
   @property
@@ -337,9 +406,7 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     )
 
 
-class CheckpointModelData(
-  Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin
-):
+class CheckpointModelData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
   """The sister table of Checkpoint, which stores the actual data of a model,
   as returned by classifier_base.GetModelData().
   """
@@ -363,7 +430,7 @@ class CheckpointModelData(
 class RunLogs(NamedTuple):
   """All of the logs for a single run."""
 
-  run_id: run_id_lib.RunId
+  run_id: RunId
   parameters: List[Parameter]
   batches: List[Batch]
   checkpoints: List[Checkpoint]

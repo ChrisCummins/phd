@@ -165,6 +165,8 @@ py_test(
     srcs = ["log_database_test.py"],
     deps = [
         ":log_database",
+        "//deeplearning/ml4pl/testing:random_log_database_generator",
+        "//deeplearning/ml4pl/testing:testing_databases",
         "//labm8/py:app",
         "//labm8/py:test",
         "//third_party/py/numpy",
