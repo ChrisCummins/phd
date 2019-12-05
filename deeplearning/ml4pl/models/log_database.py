@@ -50,13 +50,13 @@ class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # Relationships to data.
   parameters: "Parameter" = sql.orm.relationship(
-    "Parameter", cascade="all, delete-orphan", back_populates="run_id"
+    "Parameter", back_populates="run_id", cascade="all, delete-orphan"
   )
   batches: "Batch" = sql.orm.relationship(
-    "Batch", cascade="all, delete-orphan", back_populates="run_id"
+    "Batch", back_populates="run_id",  # cascade="all, delete-orphan"
   )
   checkpoints: "Checkpoint" = sql.orm.relationship(
-    "Checkpoint", cascade="all, delete-orphan", back_populates="run_id"
+    "Checkpoint", back_populates="run_id",  # cascade="all, delete-orphan"
   )
 
   def __repr__(self):
@@ -92,7 +92,7 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     nullable=False,
   )
   run_id: RunId = sql.orm.relationship(
-    "run_ids.run_id", uselist=False, back_populates="parameters"
+    RunId, back_populates="parameters", uselist=False
   )
 
   # The numeric value of the ParameterType num. Use type property to access enum
@@ -168,13 +168,13 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # A string to uniquely identify the given experiment run.
   run_id_num: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("run_ids.id"),  # , onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
     nullable=False,
   )
   run_id: RunId = sql.orm.relationship(
-    "RunId", uselist=False, back_populates="batches"
+    RunId, back_populates="batches",  # uselist=False,
   )
 
   # The epoch number, >= 1.
@@ -306,7 +306,7 @@ class BatchDetails(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   id: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("batches.id", onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("batches.id"),  # , onupdate="CASCADE", ondelete="CASCADE"),
     primary_key=True,
   )
 
@@ -360,13 +360,13 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # A string to uniquely identify the given experiment run.
   run_id_num: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("run_ids.id"),  # , onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
     nullable=False,
   )
   run_id: RunId = sql.orm.relationship(
-    "RunId", uselist=False, back_populates="checkpoints"
+    RunId, back_populates="checkpoints",  # uselist=False,
   )
 
   # The epoch number, >= 1.
@@ -413,7 +413,9 @@ class CheckpointModelData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   id: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("checkpoints.id", onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey(
+      "checkpoints.id"
+    ),  # , onupdate="CASCADE", ondelete="CASCADE"),
     primary_key=True,
   )
 
