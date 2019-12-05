@@ -92,7 +92,7 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     nullable=False,
   )
   run_id: RunId = sql.orm.relationship(
-    RunId, back_populates="parameters", uselist=False
+    "RunId", back_populates="parameters", uselist=False
   )
 
   # The numeric value of the ParameterType num. Use type property to access enum
@@ -168,13 +168,13 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # A string to uniquely identify the given experiment run.
   run_id_num: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("run_ids.id"),  # , onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
     nullable=False,
   )
   run_id: RunId = sql.orm.relationship(
-    RunId, back_populates="batches",  # uselist=False,
+    "RunId", back_populates="batches", uselist=False,
   )
 
   # The epoch number, >= 1.
@@ -249,7 +249,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   @classmethod
   def Create(
     cls,
-    run_id: run_id_lib.RunId,
+    run_id: RunId,
     epoch_type: epoch.Type,
     epoch_num: int,
     batch_num: int,
@@ -259,7 +259,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     details: Optional["BatchDetails"] = None,
   ):
     return cls(
-      run_id=str(run_id),
+      run_id=run_id,
       epoch_type_num=epoch_type.value,
       epoch_num=epoch_num,
       batch_num=batch_num,
@@ -306,7 +306,7 @@ class BatchDetails(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   id: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("batches.id"),  # , onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("batches.id", onupdate="CASCADE", ondelete="CASCADE"),
     primary_key=True,
   )
 
@@ -345,11 +345,6 @@ class BatchDetails(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
 
 ###############################################################################
-# Epochs.
-###############################################################################
-
-
-###############################################################################
 # Checkpoints.
 ###############################################################################
 
@@ -360,13 +355,13 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # A string to uniquely identify the given experiment run.
   run_id_num: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("run_ids.id"),  # , onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
     nullable=False,
   )
   run_id: RunId = sql.orm.relationship(
-    RunId, back_populates="checkpoints",  # uselist=False,
+    "RunId", back_populates="checkpoints", uselist=False,
   )
 
   # The epoch number, >= 1.
@@ -413,9 +408,7 @@ class CheckpointModelData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
   id: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey(
-      "checkpoints.id"
-    ),  # , onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("checkpoints.id", onupdate="CASCADE", ondelete="CASCADE"),
     primary_key=True,
   )
 
@@ -425,7 +418,7 @@ class CheckpointModelData(Base, sqlutil.TablenameFromCamelCapsClassNameMixin):
 
 
 ###############################################################################
-# Database.
+# RunLogs collection.
 ###############################################################################
 
 
@@ -441,6 +434,11 @@ class RunLogs(NamedTuple):
   def all(self) -> List[Union[Parameter, Batch, Checkpoint]]:
     """Return all mapped database entries."""
     return self.parameters + self.batches + self.checkpoints
+
+
+###############################################################################
+# Database.
+###############################################################################
 
 
 class Database(sqlutil.Database):

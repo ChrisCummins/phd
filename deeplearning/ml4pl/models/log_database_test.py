@@ -1,6 +1,8 @@
 """Unit tests for //deeplearning/ml4pl/models:log_database."""
 from typing import NamedTuple
 
+import sqlalchemy as sql
+
 from deeplearning.ml4pl import run_id
 from deeplearning.ml4pl.models import log_database
 from deeplearning.ml4pl.testing import random_log_database_generator
@@ -33,43 +35,49 @@ def generator() -> random_log_database_generator.RandomLogDatabaseGenerator:
 def test_add_a_run_id(db_session: log_database.Database.SessionType):
   """Test adding a run ID to the database."""
   db_session.add(log_database.RunId(run_id="foo"))
-  # db_session.commit()
+  db_session.commit()
 
 
-# class DatabaseSessionWithRunLogs(NamedTuple):
-#   """Tuple for a test fixture which returns a database session with run logs."""
-#
-#   session: log_database.Database.SessionType
-#   a: log_database.RunLogs
-#   b: log_database.RunLogs
-#
-#
-# @test.Fixture(scope="function")
-# def two_run_id_session(
-#   db: log_database.Database,
-#   generator: random_log_database_generator.RandomLogDatabaseGenerator,
-# ) -> log_database.Database.SessionType:
-#   """A test fixture which yields a database with two runs."""
-#   a = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("a"))
-#   b = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("b"))
-#
-#   with db.Session() as session:
-#     session.add_all(a.parameters)
-#     session.commit()
-#     session.add_all(a.batches)
-#     session.commit()
-#     session.add_all(a.checkpoints)
-#     session.commit()
-#     yield DatabaseSessionWithRunLogs(session=session, a=a, b=b)
-#
-#
-# def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
-#   session = two_run_id_session.session
-#
-#   session.query(log_database.Batch).filter(
-#     log_database.Batch.run_id == two_run_id_session.a.run_id
-#   ).delete()
-#   session.commit()
+class DatabaseSessionWithRunLogs(NamedTuple):
+  """Tuple for a test fixture which returns a database session with run logs."""
+
+  session: log_database.Database.SessionType
+  a: log_database.RunLogs
+  b: log_database.RunLogs
+
+
+@test.Fixture(scope="function")
+def two_run_id_session(
+  db: log_database.Database,
+  generator: random_log_database_generator.RandomLogDatabaseGenerator,
+) -> log_database.Database.SessionType:
+  """A test fixture which yields a database with two runs."""
+  a = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("a"))
+  b = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("b"))
+
+  with db.Session() as session:
+    session.add_all(a.parameters)
+    session.commit()
+    session.add_all(a.batches)
+    session.commit()
+    session.add_all(a.checkpoints)
+    session.commit()
+    yield DatabaseSessionWithRunLogs(session=session, a=a, b=b)
+
+
+def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
+  session = two_run_id_session.session
+
+  session.query(log_database.Batch).filter(
+    log_database.Batch.run_id == two_run_id_session.a.run_id
+  ).delete()
+  session.commit()
+
+  assert (
+    session.query(sql.func.distinct(log_database.Batch.run_id_num)).scalar()
+    == two_run_id_session.b.run_id.id
+  )
+
 
 # with db.Session() as session:
 #   log = session.query(log_database.BatchLogMeta).first()

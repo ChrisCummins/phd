@@ -167,7 +167,7 @@ class RandomLogDatabaseGenerator(object):
     """
     return [
       log_database.Parameter.Create(
-        run_id=run_id_lib.RUN_ID,
+        run_id=None,
         type=random.choice(list(log_database.ParameterType)),
         name=f"param_{i:03d}",
         value=random.random(),
@@ -188,7 +188,7 @@ class RandomLogDatabaseGenerator(object):
       data = random.choice(self.random_batch_data)
       results = random.choice(self.random_batch_results)
       batch = log_database.Batch.Create(
-        run_id=run_id_lib.RUN_ID,
+        run_id=None,
         epoch_type=epoch.Type.TRAIN,
         epoch_num=0,
         batch_num=batch_num,
