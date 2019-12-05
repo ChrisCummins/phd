@@ -449,6 +449,58 @@ def test_BufferedDatabaseWriter_add_many(
     assert s.query(Table).count() == 3
 
 
+@test.Parametrize("max_buffer_size", (1, 1024))
+@test.Parametrize("max_buffer_length", (1, 5))
+@test.Parametrize("max_seconds_since_flush", (1, 10))
+def test_BufferedDatabaseWriter_lambda_op(
+  db: sqlutil.Database,
+  max_buffer_size: int,
+  max_buffer_length: int,
+  max_seconds_since_flush: float,
+):
+  """Test buffered writer when there is a lambda op in the buffer."""
+  with sqlutil.BufferedDatabaseWriter(
+    db,
+    max_buffer_length=max_buffer_length,
+    max_buffer_size=max_buffer_size,
+    max_seconds_since_flush=max_seconds_since_flush,
+  ) as writer:
+    writer.AddOne(Table(col=1))
+    writer.AddLambdaOp(lambda session: None)
+    writer.AddOne(Table(col=2))
+
+  with db.Session() as session:
+    assert session.query(Table).count() == 2
+
+
+@test.Parametrize("max_buffer_size", (1, 1024))
+@test.Parametrize("max_buffer_length", (1, 5))
+@test.Parametrize("max_seconds_since_flush", (1, 10))
+def test_BufferedDatabaseWriter_lambda_op_deletes_previous_entry(
+  db: sqlutil.Database,
+  max_buffer_size: int,
+  max_buffer_length: int,
+  max_seconds_since_flush: float,
+):
+  """Test buffered writer when there is a lambda op that deletes entries that
+  still buffered, and haven't yet been committed to the database."""
+  with sqlutil.BufferedDatabaseWriter(
+    db,
+    max_buffer_length=max_buffer_length,
+    max_buffer_size=max_buffer_size,
+    max_seconds_since_flush=max_seconds_since_flush,
+  ) as writer:
+    writer.AddMany([Table(col=i) for i in range(64)])
+    # This op deletes all of the table entries added above.
+    writer.AddLambdaOp(
+      lambda session: session.query(Table).delete(synchronize_session=False)
+    )
+    writer.AddOne(Table(col=2))
+
+  with db.Session() as session:
+    assert session.query(Table).count() == 1
+
+
 def test_PluralTablenameFromCamelCapsClassNameMixin():
   base = declarative.declarative_base()
 
