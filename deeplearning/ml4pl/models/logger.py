@@ -73,6 +73,12 @@ app.DEFINE_integer(
 
 
 class Logger(object):
+  """An database-backed logger with asynchronous writes.
+
+  This class exposes callbacks for recording logging events during the execution
+  of a model.
+  """
+
   def __init__(
     self,
     db: log_database.Database,
@@ -107,7 +113,10 @@ class Logger(object):
   #############################################################################
 
   def OnStartRun(self, run_id: run_id_lib.RunId) -> None:
-    """Record model parameters."""
+    """Register the creation of a new run ID.
+
+    This records the experimental parameters of a run.
+    """
     flags = {k.split(".")[-1]: v for k, v in app.FlagsToDict().items()}
     self._writer.AddMany(
       log_database.Parameter.CreateManyFromDict(
