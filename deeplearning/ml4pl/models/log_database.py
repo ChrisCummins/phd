@@ -6,11 +6,12 @@ import pickle
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import NamedTuple
 from typing import Optional
+from typing import Union
 
 import numpy as np
 import sqlalchemy as sql
-from sqlalchemy.dialects import mysql
 from sqlalchemy.ext import declarative
 
 from deeplearning.ml4pl import run_id as run_id_lib
@@ -19,7 +20,6 @@ from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from labm8.py import app
 from labm8.py import humanize
-from labm8.py import labdate
 from labm8.py import pdutil
 from labm8.py import prof
 from labm8.py import sqlutil
@@ -29,7 +29,6 @@ FLAGS = app.FLAGS
 # class is defined.
 
 Base = declarative.declarative_base()
-
 
 ###############################################################################
 # Parameters.
@@ -49,20 +48,29 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None)
+  run_id: str = run_id_lib.RunId.SqlStringColumn(default=None, index=True)
 
-  type: ParameterType = sql.Column(
-    sql.Enum(ParameterType), nullable=False, index=True
-  )
+  # The numeric value of the ParameterType num. Use type property to access enum
+  # value.
+  type_num: int = sql.Column(sql.Integer, nullable=False, index=True)
 
   # The name of the parameter.
-  name: str = sql.Column(sql.String(1024), nullable=False)
+  name: str = sql.Column(sql.String(128), nullable=False, index=True)
+
   # The value for the parameter.
   binary_value: bytes = sql.Column(
     sqlutil.ColumnTypes.LargeBinary(), nullable=False
   )
 
   timestamp: datetime.datetime = sqlutil.ColumnFactory.MillisecondDatetime()
+
+  @property
+  def type(self) -> ParameterType:
+    return ParameterType(self.type_num)
+
+  @type.setter
+  def type(self, value: ParameterType) -> None:
+    self.type_num = value.value
 
   @property
   def value(self) -> Any:
@@ -73,14 +81,16 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     self.binary_value = pickle.dumps(data)
 
   __table_args__ = (
-    sql.UniqueConstraint("run_id", "type", "name", name="unique_parameter"),
+    sql.UniqueConstraint("run_id", "type_num", "name", name="unique_parameter"),
   )
 
   @classmethod
-  def Create(cls, run_id: run_id_lib.RunId, type: str, name: str, value: Any):
+  def Create(
+    cls, run_id: run_id_lib.RunId, type: ParameterType, name: str, value: Any
+  ):
     return cls(
       run_id=run_id,
-      type=type,
+      type_num=type.value,
       name=str(name),
       binary_value=pickle.dumps(value),
     )
@@ -114,7 +124,9 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # The epoch number, >= 1.
   epoch_num: int = sql.Column(sql.Integer, nullable=False, index=True)
 
-  epoch_type: int = sql.Column(sql.Enum(epoch.Type), nullable=False, index=True)
+  # The numeric value of the epoch type, use the epoch_type property to access
+  # the enum value.
+  epoch_type_num: int = sql.Column(sql.Integer, nullable=False, index=True)
 
   # The batch number within the epoch, in range [1, epoch_batch_count].
   batch_num: int = sql.Column(sql.Integer, nullable=False)
@@ -144,7 +156,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # Unique batch results.
   __table_args__ = (
     sql.UniqueConstraint(
-      "run_id", "epoch_num", "epoch_type", "batch_num", name="unique_batch"
+      "run_id", "epoch_num", "epoch_type_num", "batch_num", name="unique_batch"
     ),
   )
 
@@ -166,6 +178,14 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     else:
       return 0
 
+  @property
+  def epoch_type(self) -> epoch.Type:
+    return epoch.Type(self.epoch_type_num)
+
+  @epoch_type.setter
+  def epoch_type(self, value: epoch.Type) -> None:
+    self.epoch_type_num = value.value
+
   @classmethod
   def Create(
     cls,
@@ -180,7 +200,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   ):
     return cls(
       run_id=str(run_id),
-      epoch_type=epoch_type,
+      epoch_type_num=epoch_type.value,
       epoch_num=epoch_num,
       batch_num=batch_num,
       elapsed_time_ms=timer.elapsed_ms,
@@ -198,8 +218,8 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   #############################################################################
   # Batch details.
-  # Convenience properties to set and get columns from the joined BathDetails
-  # table. If accessing many of these properties, consider using
+  # Convenience properties to get columns from the joined BathDetails table.
+  # If accessing many of these properties, consider using
   # sql.orm.joinedload(Batch.details) to eagerly load the joined table when
   # querying batches.
   #############################################################################
@@ -340,9 +360,60 @@ class CheckpointModelData(
 ###############################################################################
 
 
+class RunLogs(NamedTuple):
+  """All of the logs for a single run."""
+
+  run_id: run_id_lib.RunId
+  parameters: List[Parameter]
+  batches: List[Batch]
+  checkpoints: List[Checkpoint]
+
+  @property
+  def all(self) -> List[Union[Parameter, Batch, Checkpoint]]:
+    """Return all mapped database entries."""
+    return self.parameters + self.batches + self.checkpoints
+
+
 class Database(sqlutil.Database):
+  """A database of model logs."""
+
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
+
+  def GetRunIds(self, session: Optional[sqlutil.Database.SessionType] = None):
+    with self.Session(session=session) as session:
+      return [
+        run_id_lib.RunId.FromString(row.run_id)
+        for row in session.query(
+          sql.func.distinct(Parameter.run_id).label("run_id")
+        )
+      ]
+
+  def GetRunLogs(
+    self,
+    run_id=run_id_lib.RunId,
+    eager_batch_details: bool = True,
+    eager_checkpoint_data: bool = True,
+    session: Optional[sqlutil.Database.SessionType] = None,
+  ):
+    with self.Session(session=session) as session:
+      parameters = session.query(Parameter).filter(Parameter.run_id == run_id)
+      batches = session.query(Batch).filter(Batch.run_id == run_id)
+      if eager_batch_details:
+        batches = batches.options(sql.orm.joinedload(Batch.details))
+
+      checkpoints = (
+        session.query(Checkpoint).filter(Checkpoint.run_id == run_id).all()
+      )
+      if eager_checkpoint_data:
+        checkpoints = checkpoints.options(sql.orm.joinedload(Checkpoint.data))
+
+      return RunLogs(
+        run_id=run_id,
+        parameters=parameters.all(),
+        batches=batches.all(),
+        checkpoints=checkpoints.all(),
+      )
 
   def BatchLogsToDataFrame(self, run_id: str, per_global_step: bool = False):
     """Return a table of log stats for the given run_id.
