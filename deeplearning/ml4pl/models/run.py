@@ -309,6 +309,21 @@ def Run(model_class: ModelClass):
     _RunWithLogger(model_class, graph_db, logger)
 
 
+# TODO(github.com/ChrisCummins/ProGraML/issues/24): Update to automatically run
+# k-fold validation over all splits in a database.
+# def RunKFoldOrDie():
+#   for test_split in FLAGS.groups:
+#     app.Log(1, "Testing group %s on database %s", test_split, FLAGS.graph_db)
+#
+#     test_split_as_num = int(test_split)
+#     assert 10 > test_split_as_num >= 0
+#     val_split = str((test_split_as_num + 1) % 10)
+#
+#     FLAGS.test_split = test_split
+#     FLAGS.val_split = val_split
+#     classifier_base.Run(Ggnn)
+
+
 def Main():
   Run(classifier_base.ClassifierBase)
 
