@@ -150,8 +150,14 @@ def GraphMetaToProgramGraph(
   """Migrate an old GraphMeta to a ProgramGraph."""
   graph: nx.MultiDiGraph = graph_meta.data
   proto = NetworkXGraphToProgramGraphProto(graph)
+
+  # Replace the legacy string "group" name with integer split number.
+  split = {"train": 0, "val": 1, "test": 2,}.get(
+    graph_meta.group, int(graph_meta.group)
+  )
+
   program_graph = unlabelled_graph_database.ProgramGraph.Create(
-    proto, ir_id=graph_meta.bytecode_id, split=int(graph_meta.group)
+    proto, ir_id=graph_meta.bytecode_id, split=split
   )
   program_graph.data.id = graph_meta.id
   program_graph.timestamp = graph_meta.date_added
