@@ -121,9 +121,9 @@ def GetLeaderboard(
       df = df.join(aux_df)
 
     extra_flags = [
-      "unroll_strategy",
-      "unroll_factor",
-      "layer_timesteps",
+      "ggnn_unroll_strategy",
+      "ggnn_unroll_factor",
+      "ggnn_layer_timesteps",
     ] + FLAGS.extra_flags
     for flag in extra_flags:
       # Strip the fully qualified flag name, e.g. "foo.bar.flag" -> "flag".

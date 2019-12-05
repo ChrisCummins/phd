@@ -84,7 +84,7 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
 --epoch_count=150 \
 --alsologtostderr \
 --position_embeddings={pos} \
---layer_timesteps={timesteps} \
+--ggnn_layer_timesteps={timesteps} \
 --inst2vec_embeddings={emb} \
 --output_layer_dropout_keep_prob={out_drop} \
 --graph_state_dropout_keep_prob={state_drop} \

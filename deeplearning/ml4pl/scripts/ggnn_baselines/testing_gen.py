@@ -34,7 +34,7 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
     --graph_db='file:///users/zfisches/cc1.mysql?{database}?charset=utf8' \
     --log_db='{log_db}' \
     --working_dir='/users/zfisches/logs_20191117' \
-    --layer_timesteps=30 \
+    --ggnn_layer_timesteps=30 \
     --epoch_count=120 \
     --batch_scores_averaging_method=binary \
     --max_train_per_epoch=10000 \
@@ -49,8 +49,8 @@ srun ./bazel-bin/deeplearning/ml4pl/models/ggnn \
     --restore_model={restore} \
     --test_only \
     --graph_reader_buffer_size=4096 \
-    --unroll_strategy={unroll_strategy} \
-    --unroll_factor={unroll_factor}
+    --ggnn_unroll_strategy={ggnn_unroll_strategy} \
+    --ggnn_unroll_factor={ggnn_unroll_factor}
 
 """
 
@@ -103,8 +103,8 @@ def generate():
       "log_db": log_db,
       "restore": model[1],
       "database": model[0],
-      "unroll_strategy": mode[0],
-      "unroll_factor": mode[1],
+      "ggnn_unroll_strategy": mode[0],
+      "ggnn_unroll_factor": mode[1],
     }
 
     print(f"{i:03d}: {fmtdic}", file=readme)
@@ -117,7 +117,7 @@ def generate():
       + "\n"
     )
 
-    filename = f"run_{i:03d}_{fmtdic['database']}_{fmtdic['unroll_strategy']}_{fmtdic['unroll_factor']}.sh"
+    filename = f"run_{i:03d}_{fmtdic['database']}_{fmtdic['ggnn_unroll_strategy']}_{fmtdic['ggnn_unroll_factor']}.sh"
     path = base_path / filename
     write_file(path, jobstr)
   readme.close()

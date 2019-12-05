@@ -1,19 +1,19 @@
-"""Unit tests for //deeplearning/ml4pl/models/ggnn:ggnn_base"""
+"""Unit tests for //deeplearning/ml4pl/models/ggnn"""
 import typing
 
 from deeplearning.ml4pl.models import log_database
-from deeplearning.ml4pl.models.ggnn import ggnn_base
+from deeplearning.ml4pl.models.ggnn import ggnn
 from labm8.py import app
 from labm8.py import test
 
 FLAGS = app.FLAGS
 
 
-class MockModel(ggnn_base.GgnnBaseModel):
+class MockModel(ggnn.Ggnn):
   """A mock GGNN model class."""
 
-  def __init__(self, layer_timesteps: typing.List[int] = [30]):
-    FLAGS.layer_timesteps = layer_timesteps
+  def __init__(self, ggnn_layer_timesteps: typing.List[int] = [30]):
+    FLAGS.ggnn_layer_timesteps = ggnn_layer_timesteps
 
 
 # GetUnrollFactor() tests.

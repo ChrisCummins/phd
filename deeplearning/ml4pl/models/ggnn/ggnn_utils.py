@@ -170,8 +170,8 @@ def MakePlaceholders(
     "is_training": tf.compat.v1.placeholder(
       dtype=tf.bool, shape=[], name="is_training"
     ),
-    "learning_rate_multiple": tf.compat.v1.placeholder(
-      dtype=tf.float32, shape=[], name="learning_rate_multiple"
+    "learning_rate": tf.compat.v1.placeholder(
+      dtype=tf.float32, shape=[], name="learning_rate"
     ),
   }
 
@@ -271,9 +271,7 @@ def BatchDictToFeedDict(
   if batch.has_graph_y:
     feed_dict[placeholders["graph_y"]] = batch.graph_y
 
-  assert (
-    placeholders["learning_rate_multiple"] is not None
-  ), "learning_rate_multiple is None"
+  assert placeholders["learning_rate"] is not None, "learning_rate is None"
 
   return feed_dict
 

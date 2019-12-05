@@ -7,6 +7,13 @@ from labm8.py import app
 
 FLAGS = app.FLAGS
 
+app.DEFINE_float("initial_learning_rate", 0.001, "The initial learning rate.")
+app.DEFINE_boolean(
+  "use_lr_schedule",
+  False,
+  "Whether to use a warmup-train-finetune learning rate schedule.",
+)
+
 
 def pos_emb(
   positions: Union[int, List[int], np.array], demb: int = 200, dpad: int = 2
@@ -31,7 +38,9 @@ def pos_emb(
   return pos_emb
 
 
-def WarmUpAndFinetuneLearningRateSchedule(curr_epoch, total_epochs):
+def WarmUpAndFinetuneLearningRateSchedule(
+  curr_epoch: int, total_epochs: int
+) -> float:
   """splits epochs into warmup, training, and finetuning:
       10% but minimum 1 and maximum 10 epochs of quadratic warmup from 0 to learning_rate,
       60% training with learning_rate
@@ -40,6 +49,9 @@ def WarmUpAndFinetuneLearningRateSchedule(curr_epoch, total_epochs):
   """
   assert total_epochs is not None
   assert curr_epoch is not None
+
+  if not FLAGS.use_lr_schedule:
+    return 1.0
 
   warmup_epochs = float(np.clip(total_epochs * 0.1, 1, 10))
   if curr_epoch <= warmup_epochs:
@@ -67,4 +79,4 @@ SMALL_NUMBER = 1e-7
 #     A learning rate, in range (0,inf).
 #  """
 #  return FLAGS.initial_learning_rate / (
-#      1 + FLAGS.learning_rate_exponential_decay * epoch_num)
+#      1 + FLAGS.initial_learning_rate_exponential_decay * epoch_num)
