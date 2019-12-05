@@ -23,14 +23,6 @@ def db(request) -> graph_tuple_database.Database:
 
 
 @test.Fixture(scope="function")
-def db_session(
-  db: graph_tuple_database.Database,
-) -> graph_tuple_database.Database.SessionType:
-  with db.Session() as session:
-    yield session
-
-
-@test.Fixture(scope="function")
 def two_graph_db_session(
   db: graph_tuple_database.Database,
 ) -> graph_tuple_database.Database.SessionType:
