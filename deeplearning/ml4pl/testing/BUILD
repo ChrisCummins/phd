@@ -49,6 +49,32 @@ py_test(
     ],
 )
 
+py_binary(
+    name = "random_log_database_generator",
+    testonly = 1,
+    srcs = ["random_log_database_generator.py"],
+    visibility = ["//deeplearning/ml4pl:__subpackages__"],
+    deps = [
+        "//deeplearning/ml4pl:run_id",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8/py:app",
+    ],
+)
+
+py_test(
+    name = "random_log_database_generator_test",
+    timeout = "long",
+    srcs = ["random_log_database_generator_test.py"],
+    deps = [
+        ":random_log_database_generator",
+        ":testing_databases",
+        "//deeplearning/ml4pl:run_id",
+        "//deeplearning/ml4pl/models:log_database",
+        "//labm8/py:decorators",
+        "//labm8/py:test",
+    ],
+)
+
 py_library(
     name = "random_networkx_generator",
     testonly = 1,
