@@ -4,10 +4,12 @@ import datetime
 import enum
 import pickle
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import NamedTuple
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
 import numpy as np
@@ -20,6 +22,7 @@ from deeplearning.ml4pl.models import checkpoints
 from deeplearning.ml4pl.models import epoch
 from labm8.py import app
 from labm8.py import humanize
+from labm8.py import jsonutil
 from labm8.py import pdutil
 from labm8.py import prof
 from labm8.py import sqlutil
@@ -38,25 +41,26 @@ Base = declarative.declarative_base()
 class RunId(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   """A run ID."""
 
-  id: int = sql.Column(sql.Integer, primary_key=True)
-
   run_id: str = sql.Column(
     run_id_lib.RunId.SqlStringColumnType(),
     default=None,
-    index=True,
-    unique=True,
+    primary_key=True,
     nullable=False,
   )
 
   # Relationships to data.
   parameters: "Parameter" = sql.orm.relationship(
-    "Parameter", back_populates="run_id", cascade="all, delete-orphan"
+    "Parameter",
+    back_populates="run_id_relationship",
+    cascade="all, delete-orphan",
   )
   batches: "Batch" = sql.orm.relationship(
-    "Batch", back_populates="run_id",  # cascade="all, delete-orphan"
+    "Batch", back_populates="run_id_relationship", cascade="all, delete-orphan"
   )
   checkpoints: "Checkpoint" = sql.orm.relationship(
-    "Checkpoint", back_populates="run_id",  # cascade="all, delete-orphan"
+    "Checkpoint",
+    back_populates="run_id_relationship",
+    cascade="all, delete-orphan",
   )
 
   def __repr__(self):
@@ -84,14 +88,14 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # The run ID.
-  run_id_num: int = sql.Column(
-    sql.Integer,
-    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+  run_id: str = sql.Column(
+    run_id_lib.RunId.SqlStringColumnType(),
+    sql.ForeignKey("run_ids.run_id", onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
     nullable=False,
   )
-  run_id: RunId = sql.orm.relationship(
+  run_id_relationship: RunId = sql.orm.relationship(
     "RunId", back_populates="parameters", uselist=False
   )
 
@@ -126,9 +130,7 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     self.binary_value = pickle.dumps(data)
 
   __table_args__ = (
-    sql.UniqueConstraint(
-      "run_id_num", "type_num", "name", name="unique_parameter"
-    ),
+    sql.UniqueConstraint("run_id", "type_num", "name", name="unique_parameter"),
   )
 
   @classmethod
@@ -136,7 +138,7 @@ class Parameter(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     cls, run_id: run_id_lib.RunId, type: ParameterType, name: str, value: Any
   ):
     return cls(
-      run_id=run_id,
+      run_id=str(run_id),
       type_num=type.value,
       name=str(name),
       binary_value=pickle.dumps(value),
@@ -166,14 +168,14 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id_num: int = sql.Column(
-    sql.Integer,
-    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+  run_id: int = sql.Column(
+    run_id_lib.RunId.SqlStringColumnType(),
+    sql.ForeignKey("run_ids.run_id", onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
     nullable=False,
   )
-  run_id: RunId = sql.orm.relationship(
+  run_id_relationship: RunId = sql.orm.relationship(
     "RunId", back_populates="batches", uselist=False,
   )
 
@@ -212,11 +214,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   # Unique batch results.
   __table_args__ = (
     sql.UniqueConstraint(
-      "run_id_num",
-      "epoch_num",
-      "epoch_type_num",
-      "batch_num",
-      name="unique_batch",
+      "run_id", "epoch_num", "epoch_type_num", "batch_num", name="unique_batch",
     ),
   )
 
@@ -259,7 +257,7 @@ class Batch(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
     details: Optional["BatchDetails"] = None,
   ):
     return cls(
-      run_id=run_id,
+      run_id=str(run_id),
       epoch_type_num=epoch_type.value,
       epoch_num=epoch_num,
       batch_num=batch_num,
@@ -353,14 +351,14 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
   id: int = sql.Column(sql.Integer, primary_key=True)
 
   # A string to uniquely identify the given experiment run.
-  run_id_num: int = sql.Column(
+  run_id: int = sql.Column(
     sql.Integer,
-    sql.ForeignKey("run_ids.id", onupdate="CASCADE", ondelete="CASCADE"),
+    sql.ForeignKey("run_ids.run_id", onupdate="CASCADE", ondelete="CASCADE"),
     default=None,
     index=True,
     nullable=False,
   )
-  run_id: RunId = sql.orm.relationship(
+  run_id_relationship: RunId = sql.orm.relationship(
     "RunId", back_populates="checkpoints", uselist=False,
   )
 
@@ -375,7 +373,7 @@ class Checkpoint(Base, sqlutil.PluralTablenameFromCamelCapsClassNameMixin):
 
   # Unique checkpoint.
   __table_args__ = (
-    sql.UniqueConstraint("run_id_num", "epoch_num", name="unique_checkpoint"),
+    sql.UniqueConstraint("run_id", "epoch_num", name="unique_checkpoint"),
   )
 
   @property
@@ -433,12 +431,27 @@ class RunLogs(NamedTuple):
   @property
   def all(self) -> List[Union[Parameter, Batch, Checkpoint]]:
     """Return all mapped database entries."""
-    return self.parameters + self.batches + self.checkpoints
+    return [self.run_id] + self.parameters + self.batches + self.checkpoints
 
 
 ###############################################################################
 # Database.
 ###############################################################################
+
+
+# A registry of database statics, where each entry is a <name, property> tuple.
+database_statistics_registry: List[Tuple[str, Callable[["Database"], Any]]] = []
+
+
+def database_statistic(func):
+  """A decorator to mark a method on a Database as a database static.
+
+  Database statistics can be accessed using Database.stats_json property to
+  retrieve a <name, vale> dictionary.
+  """
+  global database_statistics_registry
+  database_statistics_registry.append((func.__name__, func))
+  return property(func)
 
 
 class Database(sqlutil.Database):
@@ -447,8 +460,9 @@ class Database(sqlutil.Database):
   def __init__(self, url: str, must_exist: bool = False):
     super(Database, self).__init__(url, Base, must_exist=must_exist)
 
-  def GetRunIds(self, session: Optional[sqlutil.Database.SessionType] = None):
-    with self.Session(session=session) as session:
+  @database_statistic
+  def run_ids(self):
+    with self.Session() as session:
       return [
         run_id_lib.RunId.FromString(row.run_id)
         for row in session.query(
@@ -537,108 +551,17 @@ class Database(sqlutil.Database):
 
       return df
 
-  # TODO(github.com/ChrisCummins/ProGraML/issues/14): Add a
-  # DeleteLogsForRunIds() method which accepts a list of run ids, allowing us
-  # to perform a single delete query for all.
-  def DeleteLogsForRunId(self, run_id: str) -> None:
-    """Delete the logs for this run.
-
-    This deletes the batch logs, model checkpoints, and model parameters.
-
-    Args:
-      run_id: The ID of the run to delete.
-    """
-    # Because the cascaded delete is broken, we first delete the BatchLog child
-    # rows, then the parents.
-    with self.Session() as session:
-      query = session.query(BatchLogMeta.id).filter(
-        BatchLogMeta.run_id == run_id
-      )
-      ids_to_delete = [row.id for row in query]
-
-    if ids_to_delete:
-      app.Log(
-        1,
-        "Deleting %s batch logs for run %s",
-        humanize.Commas(len(ids_to_delete)),
-        run_id,
-      )
-      delete = sql.delete(BatchLog).where(BatchLog.id.in_(ids_to_delete))
-      self.engine.execute(delete)
-
-      delete = sql.delete(BatchLogMeta).where(BatchLogMeta.run_id == run_id)
-      self.engine.execute(delete)
-
-    # Because the cascaded delete is broken, we first delete the checkpoint
-    # child rows, then the parents.
-    with self.Session() as session:
-      query = session.query(ModelCheckpointMeta.id).filter(
-        ModelCheckpointMeta.run_id == run_id
-      )
-      ids_to_delete = [row.id for row in query]
-
-    if ids_to_delete:
-      app.Log(
-        1,
-        "Deleting %s model checkpoints for run %s",
-        humanize.Commas(len(ids_to_delete)),
-        run_id,
-      )
-      delete = sql.delete(ModelCheckpoint).where(
-        ModelCheckpoint.id.in_(ids_to_delete)
-      )
-      self.engine.execute(delete)
-
-      delete = sql.delete(ModelCheckpointMeta).where(
-        ModelCheckpointMeta.run_id == run_id
-      )
-      self.engine.execute(delete)
-
-    # Delete the parameters for this Run ID.
-    app.Log(1, "Deleting model parameters for run %s", run_id)
-    delete = sql.delete(Parameter).where(Parameter.run_id == run_id)
-    self.engine.execute(delete)
-
-  def ModelFlagsToDict(self, run_id: str):
-    """Load the model flags for the given run ID to a {flag: value} dict."""
-    with self.Session() as session:
-      q = session.query(Parameter)
-      q = q.filter(Parameter.run_id == run_id)
-      q = q.filter(Parameter.type == ParameterType.MODEL_FLAG)
-      return {param.parameter: param.value for param in q.all()}
-
-  def ParametersToDataFrame(self, run_id: str, parameter_type: str):
-    """Return a table of parameters of the given type for the specified run.
-
-    Args:
-      run_id: The run ID to return the parameters of.
-      parameter_type: The type of parameter to return.
-
-    Returns:
-      A pandas dataframe.
-    """
-    with self.Session() as session:
-      query = session.query(
-        Parameter.parameter, Parameter.binary_value.label("value")
-      )
-      query = query.filter(Parameter.run_id == run_id)
-      query = query.filter(sql.func.lower(Parameter.type) == parameter_type)
-      query = query.order_by(Parameter.parameter)
-      df = pdutil.QueryToDataFrame(session, query)
-      # Strip the prefix, 'foo.bar' -> 'foo':
-      pdutil.RewriteColumn(df, "parameter", lambda x: x.split(".")[-1])
-      # Un-pickle the parameter values:
-      pdutil.RewriteColumn(df, "value", lambda x: pickle.loads(x))
-      return df.set_index("parameter")
-
-  @property
-  def run_ids(self) -> List[str]:
-    """Get a list of all run IDs in the databse."""
-    with self.Session() as session:
-      query = session.query(Parameter.run_id.distinct().label("run_id"))
-      return [row.run_id for row in query]
-
 
 app.DEFINE_database(
   "log_db", Database, None, "The database to write model logs to."
 )
+
+
+def Main():
+  """Main entry point."""
+  log_db = FLAGS.log_db()
+  print(jsonutil.format_json(log_db.stats_json))
+
+
+if __name__ == "__main__":
+  app.Run(Main)

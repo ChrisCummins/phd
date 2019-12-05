@@ -153,6 +153,7 @@ py_library(
         "//labm8/py:app",
         "//labm8/py:decorators",
         "//labm8/py:humanize",
+        "//labm8/py:jsonutil",
         "//labm8/py:labdate",
         "//labm8/py:pdutil",
         "//labm8/py:sqlutil",

@@ -54,7 +54,7 @@ class RandomLogDatabaseGenerator(object):
         a given type.
     """
     run_id = log_database.RunId(
-      run_id=str(
+      run_id=(
         run_id
         or run_id_lib.RunId.GenerateUnique(
           f"rand{random.randint(0, 10000):04d}"
@@ -111,7 +111,7 @@ class RandomLogDatabaseGenerator(object):
       copy.deepcopy(self.random_parameters[i]) for i in range(param_count)
     ]
     for param in params:
-      param.run_id = run_id
+      param.run_id = run_id.run_id
     return params
 
   def _CreateRandomBatches(
@@ -151,7 +151,7 @@ class RandomLogDatabaseGenerator(object):
           for _ in range(batch_count)
         ]
         for i, batch in enumerate(epoch_batches):
-          batch.run_id = run_id
+          batch.run_id = run_id.run_id
           batch.epoch_num = epoch_num
           batch.epoch_type = epoch_type
           batch.batch_num = i + 1

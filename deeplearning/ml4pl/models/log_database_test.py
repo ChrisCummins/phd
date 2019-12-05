@@ -56,12 +56,7 @@ def two_run_id_session(
   b = generator.CreateRandomRunLogs(run_id=run_id.RunId.GenerateUnique("b"))
 
   with db.Session() as session:
-    session.add_all(a.parameters)
-    session.commit()
-    session.add_all(a.batches)
-    session.commit()
-    session.add_all(a.checkpoints)
-    session.commit()
+    session.add_all(a.all + b.all)
     yield DatabaseSessionWithRunLogs(session=session, a=a, b=b)
 
 
@@ -72,25 +67,24 @@ def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
   detailed_a_batch_count = (
     session.query(sql.func.count(log_database.Batch.id))
     .join(log_database.BatchDetails)
-    .filter(log_database.Batch.run_id == two_run_id_session.a.run_id)
+    .filter(log_database.Batch.run_id == str(two_run_id_session.a.run_id))
     .scalar()
   )
   assert detailed_a_batch_count
 
   session.query(log_database.Batch).filter(
-    log_database.Batch.run_id == two_run_id_session.a.run_id
+    log_database.Batch.run_id == str(two_run_id_session.a.run_id)
   ).delete()
   session.commit()
 
-  assert (
-    session.query(sql.func.distinct(log_database.Batch.run_id_num)).scalar()
-    == two_run_id_session.b.run_id.id
-  )
+  assert session.query(
+    sql.func.distinct(log_database.Batch.run_id)
+  ).scalar() == str(two_run_id_session.b.run_id)
 
   assert (
     session.query(sql.func.count(log_database.Batch.id))
     .join(log_database.BatchDetails)
-    .filter(log_database.Batch.run_id == two_run_id_session.a.run_id)
+    .filter(log_database.Batch.run_id == str(two_run_id_session.a.run_id))
     .scalar()
     == 0
   )
@@ -100,30 +94,29 @@ def test_RunId_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
   session = two_run_id_session.session
 
   session.query(log_database.RunId).filter(
-    log_database.RunId.run_id == two_run_id_session.a.run_id.run_id
+    log_database.RunId.run_id == str(two_run_id_session.a.run_id.run_id)
   ).delete()
   session.commit()
 
-  assert (
-    session.query(sql.func.distinct(log_database.Batch.run_id_num)).scalar()
-    == two_run_id_session.b.run_id.id
-  )
+  assert session.query(
+    sql.func.distinct(log_database.Batch.run_id)
+  ).scalar() == str(two_run_id_session.b.run_id)
 
   assert (
     session.query(sql.func.count(log_database.Parameter.id))
-    .filter(log_database.Parameter.run_id == two_run_id_session.a.run_id)
+    .filter(log_database.Parameter.run_id == str(two_run_id_session.a.run_id))
     .scalar()
     == 0
   )
   assert (
     session.query(sql.func.count(log_database.Batch.id))
-    .filter(log_database.Batch.run_id == two_run_id_session.a.run_id)
+    .filter(log_database.Batch.run_id == str(two_run_id_session.a.run_id))
     .scalar()
     == 0
   )
   assert (
     session.query(sql.func.count(log_database.Checkpoint.id))
-    .filter(log_database.Checkpoint.run_id == two_run_id_session.a.run_id)
+    .filter(log_database.Checkpoint.run_id == str(two_run_id_session.a.run_id))
     .scalar()
     == 0
   )
