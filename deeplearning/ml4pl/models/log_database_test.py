@@ -68,6 +68,15 @@ def two_run_id_session(
 def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
   session = two_run_id_session.session
 
+  # Sanity check that there are detailed batches.
+  detailed_a_batch_count = (
+    session.query(sql.func.count(log_database.Batch.id))
+    .join(log_database.BatchDetails)
+    .filter(log_database.Batch.run_id == two_run_id_session.a.run_id)
+    .scalar()
+  )
+  assert detailed_a_batch_count
+
   session.query(log_database.Batch).filter(
     log_database.Batch.run_id == two_run_id_session.a.run_id
   ).delete()
@@ -78,80 +87,46 @@ def test_Batch_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
     == two_run_id_session.b.run_id.id
   )
 
-
-# with db.Session() as session:
-#   log = session.query(log_database.BatchLogMeta).first()
-#   assert log.run_id == "20191023@foo"
-#   assert log.epoch == 10
-#   assert log.batch == 0
-#   assert log.global_step == 1024
-#   assert log.elapsed_time_seconds == 0.5
-#   assert log.graph_count == 100
-#   assert log.node_count == 500
-#   assert log.loss == 0.25
-#   assert log.precision == 0.5
-#   assert log.recall == 0.5
-#   assert log.f1 == 0.5
-#   assert log.accuracy == 0.75
-#   assert log.type == "train"
-#   assert log.group == "0"
-#   assert log.graph_indices == [0, 1, 2, 3]
-#   assert np.array_equal(log.predictions, np.array([0, 1, 2, 3]))
-#   assert np.array_equal(log.accuracies, np.array([True, False, False]))
+  assert (
+    session.query(sql.func.count(log_database.Batch.id))
+    .join(log_database.BatchDetails)
+    .filter(log_database.Batch.run_id == two_run_id_session.a.run_id)
+    .scalar()
+    == 0
+  )
 
 
-def test_DeleteLogsForRunId():
-  """Test that delete batch log meta cascades to batch log."""
-  pass
-  # with db.Session(commit=True) as session:
-  #   log = MakeBatchLog()
-  #   run_id = log.run_id
-  #   session.add(log)
-  #
-  #   session.add(
-  #     log_database.Parameter(
-  #       run_id=run_id,
-  #       parameter="foo",
-  #       type=log_database.ParameterType.MODEL_FLAG,
-  #       pickled_value=pickle.dumps("foo"),
-  #     )
-  #   )
-  #
-  # db.DeleteLogsForRunId(run_id)
-  #
-  # with db.Session() as session:
-  #   assert not session.query(log_database.BatchLogMeta.id).count()
-  #   assert not session.query(log_database.BatchLog.id).count()
-  #   assert not session.query(log_database.Parameter.id).count()
+def test_RunId_cascaded_delete(two_run_id_session: DatabaseSessionWithRunLogs):
+  session = two_run_id_session.session
 
+  session.query(log_database.RunId).filter(
+    log_database.RunId.run_id == two_run_id_session.a.run_id.run_id
+  ).delete()
+  session.commit()
 
-def test_run_ids():
-  """Test that property returns all run IDs."""
-  pass
-  # with db.Session(commit=True) as session:
-  #   session.add_all(
-  #     [
-  #       log_database.Parameter(
-  #         run_id="a",
-  #         type=log_database.ParameterType.MODEL_FLAG,
-  #         parameter="foo",
-  #         pickled_value=pickle.dumps("foo"),
-  #       ),
-  #       log_database.Parameter(
-  #         run_id="a",
-  #         type=log_database.ParameterType.MODEL_FLAG,
-  #         parameter="bar",
-  #         pickled_value=pickle.dumps("bar"),
-  #       ),
-  #       log_database.Parameter(
-  #         run_id="b",
-  #         type=log_database.ParameterType.MODEL_FLAG,
-  #         parameter="foo",
-  #         pickled_value=pickle.dumps("foo"),
-  #       ),
-  #     ]
-  #   )
-  # assert db.run_ids == ["a", "b"]
+  assert (
+    session.query(sql.func.distinct(log_database.Batch.run_id_num)).scalar()
+    == two_run_id_session.b.run_id.id
+  )
+
+  assert (
+    session.query(sql.func.count(log_database.Parameter.id))
+    .filter(log_database.Parameter.run_id == two_run_id_session.a.run_id)
+    .scalar()
+    == 0
+  )
+  assert (
+    session.query(sql.func.count(log_database.Batch.id))
+    .filter(log_database.Batch.run_id == two_run_id_session.a.run_id)
+    .scalar()
+    == 0
+  )
+  assert (
+    session.query(sql.func.count(log_database.Checkpoint.id))
+    .filter(log_database.Checkpoint.run_id == two_run_id_session.a.run_id)
+    .scalar()
+    == 0
+  )
 
 
 if __name__ == "__main__":
